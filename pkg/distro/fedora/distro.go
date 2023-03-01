@@ -175,7 +175,7 @@ var (
 		buildPipelines:      []string{"build"},
 		payloadPipelines:    []string{"ostree-deployment", "image", "xz", "coi-tree", "efiboot-tree", "bootiso-tree", "bootiso"},
 		exports:             []string{"bootiso"},
-		basePartitionTables: iotBasePartitionTables,
+		basePartitionTables: iotSimplifiedInstallerPartitionTables,
 	}
 
 	iotRawImgType = imageType{
