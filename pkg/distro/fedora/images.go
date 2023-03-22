@@ -357,12 +357,27 @@ func iotCommitImage(workload workload.Workload,
 	parentCommit, commitRef := makeOSTreeParentCommit(options.OSTree, t.OSTreeRef())
 	img := image.NewOSTreeArchive(commitRef)
 
+	d := t.arch.distro
+
 	img.Platform = t.platform
 	img.OSCustomizations = osCustomizations(t, packageSets[osPkgsKey], containers, customizations)
+	if !common.VersionLessThan(d.Releasever(), "38") {
+		// see https://github.com/ostreedev/ostree/issues/2840
+		img.OSCustomizations.Presets = []osbuild.Preset{
+			{
+				Name:  "ignition-firstboot-complete.service",
+				State: osbuild.StateEnable,
+			},
+			{
+				Name:  "coreos-ignition-write-issues.service",
+				State: osbuild.StateEnable,
+			},
+		}
+	}
 	img.Environment = t.environment
 	img.Workload = workload
 	img.OSTreeParent = parentCommit
-	img.OSVersion = t.arch.distro.osVersion
+	img.OSVersion = d.osVersion
 	img.Filename = t.Filename()
 	img.InstallWeakDeps = false
 
@@ -379,14 +394,27 @@ func iotContainerImage(workload workload.Workload,
 
 	parentCommit, commitRef := makeOSTreeParentCommit(options.OSTree, t.OSTreeRef())
 	img := image.NewOSTreeContainer(commitRef)
-
+	d := t.arch.distro
 	img.Platform = t.platform
 	img.OSCustomizations = osCustomizations(t, packageSets[osPkgsKey], containers, customizations)
+	if !common.VersionLessThan(d.Releasever(), "38") {
+		// see https://github.com/ostreedev/ostree/issues/2840
+		img.OSCustomizations.Presets = []osbuild.Preset{
+			{
+				Name:  "ignition-firstboot-complete.service",
+				State: osbuild.StateEnable,
+			},
+			{
+				Name:  "coreos-ignition-write-issues.service",
+				State: osbuild.StateEnable,
+			},
+		}
+	}
 	img.ContainerLanguage = img.OSCustomizations.Language
 	img.Environment = t.environment
 	img.Workload = workload
 	img.OSTreeParent = parentCommit
-	img.OSVersion = t.arch.distro.osVersion
+	img.OSVersion = d.osVersion
 	img.ExtraContainerPackages = packageSets[containerPkgsKey]
 	img.Filename = t.Filename()
 
@@ -620,6 +648,7 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 			rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
 		}
 	}
+
 	// TODO: move generation into LiveImage
 	pt, err := t.getPartitionTable(customizations.GetFilesystems(), options, rng)
 	if err != nil {

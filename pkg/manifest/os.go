@@ -123,6 +123,7 @@ type OSCustomizations struct {
 	WSLConfig            *osbuild.WSLConfStageOptions
 	LeapSecTZ            *string
 	FactAPIType          *facts.APIType
+	Presets              []osbuild.Preset
 
 	Subscription *subscription.ImageOptions
 	RHSMConfig   map[subscription.RHSMStatus]*osbuild.RHSMStageOptions
@@ -730,6 +731,12 @@ func (p *OS) serialize() osbuild.Pipeline {
 	// hardened image
 	if p.OpenSCAPConfig != nil {
 		pipeline.AddStage(osbuild.NewOscapRemediationStage(p.OpenSCAPConfig))
+	}
+
+	if len(p.Presets) != 0 {
+		pipeline.AddStage(osbuild.NewSystemdPresetStage(&osbuild.SystemdPresetStageOptions{
+			Presets: p.Presets,
+		}))
 	}
 
 	if p.SElinux != "" {
