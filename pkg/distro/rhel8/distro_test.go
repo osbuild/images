@@ -522,6 +522,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"tar",
 				"image-installer",
 				"oci",
+				"wsl",
 			},
 		},
 		{
@@ -540,6 +541,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"edge-raw-image",
 				"tar",
 				"image-installer",
+				"wsl",
 			},
 		},
 		{
