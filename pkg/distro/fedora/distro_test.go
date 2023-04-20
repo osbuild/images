@@ -105,6 +105,14 @@ func TestFilenameFromType(t *testing.T) {
 			},
 		},
 		{
+			name: "wsl",
+			args: args{"wsl"},
+			want: wantResult{
+				filename: "wsl.tar",
+				mimeType: "application/x-tar",
+			},
+		},
+		{
 			name: "iot-commit",
 			args: args{"iot-commit"},
 			want: wantResult{
@@ -292,6 +300,7 @@ func TestImageType_Name(t *testing.T) {
 				"image-installer",
 				"live-installer",
 				"minimal-raw",
+				"wsl",
 			},
 		},
 		{
@@ -474,6 +483,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"image-installer",
 				"live-installer",
 				"minimal-raw",
+				"wsl",
 			},
 		},
 		{
