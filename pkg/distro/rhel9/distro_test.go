@@ -510,6 +510,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"tar",
 				"image-installer",
 				"oci",
+				"wsl",
 			},
 		},
 		{
@@ -529,6 +530,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"image-installer",
 				"vhd",
 				"azure-rhui",
+				"wsl",
 			},
 		},
 		{
