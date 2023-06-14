@@ -43,9 +43,9 @@ require (
 	github.com/ubccr/kerby v0.0.0-20170626144437-201a958fc453
 	github.com/vmware/govmomi v0.29.0
 	golang.org/x/exp v0.0.0-20230307190834-24139beb5833
-	golang.org/x/oauth2 v0.8.0
+	golang.org/x/oauth2 v0.9.0
 	golang.org/x/sync v0.2.0
-	golang.org/x/sys v0.8.0
+	golang.org/x/sys v0.9.0
 	google.golang.org/api v0.126.0
 	gopkg.in/ini.v1 v1.67.0
 )
@@ -149,11 +149,11 @@ require (
 	go.etcd.io/bbolt v1.3.6 // indirect
 	go.mozilla.org/pkcs7 v0.0.0-20200128120323-432b2356ecb1 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	golang.org/x/crypto v0.9.0 // indirect
+	golang.org/x/crypto v0.10.0 // indirect
 	golang.org/x/mod v0.8.0 // indirect
-	golang.org/x/net v0.10.0 // indirect
-	golang.org/x/term v0.8.0 // indirect
-	golang.org/x/text v0.9.0 // indirect
+	golang.org/x/net v0.11.0 // indirect
+	golang.org/x/term v0.9.0 // indirect
+	golang.org/x/text v0.10.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.6.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
