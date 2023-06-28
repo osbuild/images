@@ -372,6 +372,10 @@ func iotCommitImage(workload workload.Workload,
 				Name:  "coreos-ignition-write-issues.service",
 				State: osbuild.StateEnable,
 			},
+			{
+				Name:  "fdo-client-linuxapp.service",
+				State: osbuild.StateEnable,
+			},
 		}
 	}
 	img.Environment = t.environment
@@ -406,6 +410,10 @@ func iotContainerImage(workload workload.Workload,
 			},
 			{
 				Name:  "coreos-ignition-write-issues.service",
+				State: osbuild.StateEnable,
+			},
+			{
+				Name:  "fdo-client-linuxapp.service",
 				State: osbuild.StateEnable,
 			},
 		}
