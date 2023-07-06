@@ -330,6 +330,7 @@ func newDistro(name string, minor int) *distribution {
 			UEFIVendor: rd.vendor,
 		},
 		edgeSimplifiedInstallerImgType,
+		minimalrawImgType,
 	)
 
 	x86_64.addImageTypes(
@@ -374,6 +375,7 @@ func newDistro(name string, minor int) *distribution {
 			UEFIVendor: rd.vendor,
 		},
 		edgeRawImgType,
+		minimalrawImgType,
 	)
 
 	aarch64.addImageTypes(
