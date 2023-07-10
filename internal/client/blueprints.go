@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/osbuild/osbuild-composer/internal/blueprint"
-	"github.com/osbuild/osbuild-composer/internal/weldr"
+	"github.com/osbuild/images/internal/weldr"
+	"github.com/osbuild/images/pkg/blueprint"
 )
 
 // PostTOMLBlueprintV0 sends a TOML blueprint string to the API

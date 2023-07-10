@@ -12,22 +12,22 @@ import (
 	"path"
 	"strings"
 
-	"github.com/osbuild/osbuild-composer/internal/container"
-	"github.com/osbuild/osbuild-composer/internal/osbuild"
-	"github.com/osbuild/osbuild-composer/internal/upload/oci"
+	"github.com/osbuild/images/internal/upload/oci"
+	"github.com/osbuild/images/pkg/container"
+	"github.com/osbuild/images/pkg/osbuild"
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 
-	"github.com/osbuild/osbuild-composer/internal/cloud/awscloud"
-	"github.com/osbuild/osbuild-composer/internal/cloud/gcp"
-	"github.com/osbuild/osbuild-composer/internal/common"
-	"github.com/osbuild/osbuild-composer/internal/target"
-	"github.com/osbuild/osbuild-composer/internal/upload/azure"
-	"github.com/osbuild/osbuild-composer/internal/upload/koji"
-	"github.com/osbuild/osbuild-composer/internal/upload/vmware"
-	"github.com/osbuild/osbuild-composer/internal/worker"
-	"github.com/osbuild/osbuild-composer/internal/worker/clienterrors"
+	"github.com/osbuild/images/internal/cloud/awscloud"
+	"github.com/osbuild/images/internal/cloud/gcp"
+	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/target"
+	"github.com/osbuild/images/internal/upload/azure"
+	"github.com/osbuild/images/internal/upload/koji"
+	"github.com/osbuild/images/internal/upload/vmware"
+	"github.com/osbuild/images/internal/worker"
+	"github.com/osbuild/images/internal/worker/clienterrors"
 )
 
 type GCPConfiguration struct {
@@ -150,21 +150,21 @@ func (impl *OSBuildJobImpl) getAWSForS3Target(options *target.AWSS3TargetOptions
 // getGCP returns an *gcp.GCP object using credentials based on the following
 // predefined preference:
 //
-// 1. If the provided `credentials` parameter is not `nil`, it is used to
-//    authenticate with GCP.
+//  1. If the provided `credentials` parameter is not `nil`, it is used to
+//     authenticate with GCP.
 //
-// 2. If a path to GCP credentials file was provided in the worker's
-//    configuration, it is used to authenticate with GCP.
+//  2. If a path to GCP credentials file was provided in the worker's
+//     configuration, it is used to authenticate with GCP.
 //
-// 3. Use Application Default Credentials from the Google library, which tries
-//    to automatically find a way to authenticate using the following options:
+//  3. Use Application Default Credentials from the Google library, which tries
+//     to automatically find a way to authenticate using the following options:
 //
-//    3a. If `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set, it
-//        tries to load and use credentials form the file pointed to by the
-//        variable.
+//     3a. If `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set, it
+//     tries to load and use credentials form the file pointed to by the
+//     variable.
 //
-//    3b. It tries to authenticate using the service account attached to the
-//        resource which is running the code (e.g. Google Compute Engine VM).
+//     3b. It tries to authenticate using the service account attached to the
+//     resource which is running the code (e.g. Google Compute Engine VM).
 func (impl *OSBuildJobImpl) getGCP(credentials []byte) (*gcp.GCP, error) {
 	if credentials != nil {
 		logrus.Info("[GCP] 🔑 using credentials provided with the job request")

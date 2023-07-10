@@ -13,12 +13,12 @@ import (
 	"github.com/openshift-online/ocm-sdk-go/authentication"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osbuild/osbuild-composer/pkg/jobqueue"
+	"github.com/osbuild/images/pkg/jobqueue"
 
-	"github.com/osbuild/osbuild-composer/internal/cloudapi/v2"
-	"github.com/osbuild/osbuild-composer/internal/distro/test_distro"
-	"github.com/osbuild/osbuild-composer/internal/test"
-	"github.com/osbuild/osbuild-composer/internal/worker"
+	"github.com/osbuild/images/internal/cloudapi/v2"
+	"github.com/osbuild/images/internal/test"
+	"github.com/osbuild/images/internal/worker"
+	"github.com/osbuild/images/pkg/distro/test_distro"
 )
 
 func kojiRequest() string {

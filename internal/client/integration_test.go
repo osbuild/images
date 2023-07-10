@@ -10,7 +10,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/osbuild/osbuild-composer/internal/test"
+	"github.com/osbuild/images/internal/test"
 )
 
 // Hold test state to share between tests

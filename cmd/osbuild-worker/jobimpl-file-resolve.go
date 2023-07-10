@@ -3,9 +3,9 @@ package main
 import (
 	"github.com/sirupsen/logrus"
 
-	"github.com/osbuild/osbuild-composer/internal/remotefile"
-	"github.com/osbuild/osbuild-composer/internal/worker"
-	"github.com/osbuild/osbuild-composer/internal/worker/clienterrors"
+	"github.com/osbuild/images/internal/remotefile"
+	"github.com/osbuild/images/internal/worker"
+	"github.com/osbuild/images/internal/worker/clienterrors"
 )
 
 type FileResolveJobImpl struct{}

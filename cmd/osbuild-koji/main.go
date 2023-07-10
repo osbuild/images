@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/osbuild/osbuild-composer/internal/rpmmd"
-	"github.com/osbuild/osbuild-composer/internal/upload/koji"
+	"github.com/osbuild/images/internal/upload/koji"
+	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/sirupsen/logrus"
 )
 

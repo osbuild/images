@@ -20,8 +20,8 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/sirupsen/logrus"
 
-	"github.com/osbuild/osbuild-composer/internal/common/slogger"
-	"github.com/osbuild/osbuild-composer/pkg/jobqueue"
+	"github.com/osbuild/images/internal/common/slogger"
+	"github.com/osbuild/images/pkg/jobqueue"
 )
 
 const (

@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/osbuild/osbuild-composer/internal/common"
-	"github.com/osbuild/osbuild-composer/internal/store"
+	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/store"
 )
 
 type ComposeEntry struct {

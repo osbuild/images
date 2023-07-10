@@ -20,11 +20,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/sirupsen/logrus"
 
-	"github.com/osbuild/osbuild-composer/internal/common"
-	"github.com/osbuild/osbuild-composer/internal/dnfjson"
-	"github.com/osbuild/osbuild-composer/internal/upload/azure"
-	"github.com/osbuild/osbuild-composer/internal/upload/koji"
-	"github.com/osbuild/osbuild-composer/internal/worker"
+	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/dnfjson"
+	"github.com/osbuild/images/internal/upload/azure"
+	"github.com/osbuild/images/internal/upload/koji"
+	"github.com/osbuild/images/internal/worker"
 )
 
 const configFile = "/etc/osbuild-worker/osbuild-worker.toml"

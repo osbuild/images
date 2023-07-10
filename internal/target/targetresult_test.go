@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/osbuild/osbuild-composer/internal/worker/clienterrors"
+	"github.com/osbuild/images/internal/worker/clienterrors"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -16,14 +16,14 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/osbuild/osbuild-composer/internal/distro/test_distro"
-	"github.com/osbuild/osbuild-composer/internal/distroregistry"
-	"github.com/osbuild/osbuild-composer/internal/dnfjson"
-	dnfjson_mock "github.com/osbuild/osbuild-composer/internal/mocks/dnfjson"
-	rpmmd_mock "github.com/osbuild/osbuild-composer/internal/mocks/rpmmd"
-	"github.com/osbuild/osbuild-composer/internal/reporegistry"
-	"github.com/osbuild/osbuild-composer/internal/rpmmd"
-	"github.com/osbuild/osbuild-composer/internal/weldr"
+	"github.com/osbuild/images/internal/dnfjson"
+	dnfjson_mock "github.com/osbuild/images/internal/mocks/dnfjson"
+	rpmmd_mock "github.com/osbuild/images/internal/mocks/rpmmd"
+	"github.com/osbuild/images/internal/reporegistry"
+	"github.com/osbuild/images/internal/weldr"
+	"github.com/osbuild/images/pkg/distro/test_distro"
+	"github.com/osbuild/images/pkg/distroregistry"
+	"github.com/osbuild/images/pkg/rpmmd"
 )
 
 // Hold test state to share between tests

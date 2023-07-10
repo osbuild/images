@@ -7,7 +7,7 @@ import (
 	"math/big"
 	"os"
 
-	"github.com/osbuild/osbuild-composer/internal/upload/oci"
+	"github.com/osbuild/images/internal/upload/oci"
 	"github.com/spf13/cobra"
 )
 

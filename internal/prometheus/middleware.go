@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/osbuild/osbuild-composer/internal/auth"
+	"github.com/osbuild/images/internal/auth"
 )
 
 func MetricsMiddleware(next echo.HandlerFunc) echo.HandlerFunc {

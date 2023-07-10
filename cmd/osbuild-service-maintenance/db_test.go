@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osbuild/osbuild-composer/pkg/jobqueue/dbjobqueue"
+	"github.com/osbuild/images/pkg/jobqueue/dbjobqueue"
 )
 
 const url = "postgres://postgres:foobar@localhost:5432/osbuildcomposer"

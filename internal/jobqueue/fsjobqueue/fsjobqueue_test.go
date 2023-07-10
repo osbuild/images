@@ -3,11 +3,11 @@ package fsjobqueue_test
 import (
 	"testing"
 
-	"github.com/osbuild/osbuild-composer/pkg/jobqueue"
+	"github.com/osbuild/images/pkg/jobqueue"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osbuild/osbuild-composer/internal/jobqueue/fsjobqueue"
-	"github.com/osbuild/osbuild-composer/internal/jobqueue/jobqueuetest"
+	"github.com/osbuild/images/internal/jobqueue/fsjobqueue"
+	"github.com/osbuild/images/internal/jobqueue/jobqueuetest"
 )
 
 func TestJobQueueInterface(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/osbuild/osbuild-composer/internal/worker/clienterrors"
+	"github.com/osbuild/images/internal/worker/clienterrors"
 )
 
 type TargetResult struct {

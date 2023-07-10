@@ -10,19 +10,19 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osbuild/osbuild-composer/pkg/jobqueue"
+	"github.com/osbuild/images/pkg/jobqueue"
 
-	v2 "github.com/osbuild/osbuild-composer/internal/cloudapi/v2"
-	"github.com/osbuild/osbuild-composer/internal/distro/test_distro"
-	"github.com/osbuild/osbuild-composer/internal/jobqueue/fsjobqueue"
-	distro_mock "github.com/osbuild/osbuild-composer/internal/mocks/distro"
-	"github.com/osbuild/osbuild-composer/internal/osbuild"
-	"github.com/osbuild/osbuild-composer/internal/ostree/mock_ostree_repo"
-	"github.com/osbuild/osbuild-composer/internal/rpmmd"
-	"github.com/osbuild/osbuild-composer/internal/target"
-	"github.com/osbuild/osbuild-composer/internal/test"
-	"github.com/osbuild/osbuild-composer/internal/worker"
-	"github.com/osbuild/osbuild-composer/internal/worker/clienterrors"
+	v2 "github.com/osbuild/images/internal/cloudapi/v2"
+	"github.com/osbuild/images/internal/jobqueue/fsjobqueue"
+	distro_mock "github.com/osbuild/images/internal/mocks/distro"
+	"github.com/osbuild/images/internal/target"
+	"github.com/osbuild/images/internal/test"
+	"github.com/osbuild/images/internal/worker"
+	"github.com/osbuild/images/internal/worker/clienterrors"
+	"github.com/osbuild/images/pkg/distro/test_distro"
+	"github.com/osbuild/images/pkg/osbuild"
+	"github.com/osbuild/images/pkg/ostree/mock_ostree_repo"
+	"github.com/osbuild/images/pkg/rpmmd"
 )
 
 func newV2Server(t *testing.T, dir string, depsolveChannels []string, enableJWT bool, failDepsolve bool) (*v2.Server, *worker.Server, jobqueue.JobQueue, context.CancelFunc) {

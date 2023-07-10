@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
-	"github.com/osbuild/osbuild-composer/internal/auth"
+	"github.com/osbuild/images/internal/auth"
 )
 
 const TenantCtxKey string = "tenant"

@@ -5,10 +5,10 @@ package weldr
 import (
 	"github.com/google/uuid"
 
-	"github.com/osbuild/osbuild-composer/internal/blueprint"
-	"github.com/osbuild/osbuild-composer/internal/common"
-	"github.com/osbuild/osbuild-composer/internal/rpmmd"
-	"github.com/osbuild/osbuild-composer/internal/store"
+	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/store"
+	"github.com/osbuild/images/pkg/blueprint"
+	"github.com/osbuild/images/pkg/rpmmd"
 )
 
 // StatusV0 is the response to /api/status from a v0+ server

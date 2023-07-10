@@ -13,9 +13,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/osbuild/osbuild-composer/cmd/osbuild-image-tests/constants"
-	"github.com/osbuild/osbuild-composer/internal/common"
-	"github.com/osbuild/osbuild-composer/internal/platform"
+	"github.com/osbuild/images/cmd/osbuild-image-tests/constants"
+	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/platform"
 )
 
 // WithNetworkNamespace provides the function f with a new network namespace

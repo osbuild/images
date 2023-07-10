@@ -8,7 +8,7 @@ import (
 	"net/http"
 	//	"strings"
 
-	"github.com/osbuild/osbuild-composer/internal/weldr"
+	"github.com/osbuild/images/internal/weldr"
 )
 
 // ListSourcesV0 returns a list of source names

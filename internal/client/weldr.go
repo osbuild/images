@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/osbuild/osbuild-composer/internal/weldr"
+	"github.com/osbuild/images/internal/weldr"
 )
 
 // GetStatusV0 makes a GET request to /api/status and returns the v0 response as a StatusResponseV0

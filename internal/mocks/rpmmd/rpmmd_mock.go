@@ -1,9 +1,9 @@
 package rpmmd_mock
 
 import (
-	dnfjson_mock "github.com/osbuild/osbuild-composer/internal/mocks/dnfjson"
-	"github.com/osbuild/osbuild-composer/internal/store"
-	"github.com/osbuild/osbuild-composer/internal/worker"
+	dnfjson_mock "github.com/osbuild/images/internal/mocks/dnfjson"
+	"github.com/osbuild/images/internal/store"
+	"github.com/osbuild/images/internal/worker"
 )
 
 type Fixture struct {

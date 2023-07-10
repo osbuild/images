@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/osbuild/osbuild-composer/internal/common"
+	"github.com/osbuild/images/internal/common"
 )
 
 func TestNewPathTrieFromMap(t *testing.T) {

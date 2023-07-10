@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/osbuild/osbuild-composer/internal/common"
+	"github.com/osbuild/images/internal/common"
 )
 
 type TargetName string
