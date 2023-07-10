@@ -17,20 +17,20 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/sirupsen/logrus"
 
-	"github.com/osbuild/osbuild-composer/pkg/jobqueue"
+	"github.com/osbuild/images/pkg/jobqueue"
 
-	"github.com/osbuild/osbuild-composer/internal/auth"
-	"github.com/osbuild/osbuild-composer/internal/blueprint"
-	"github.com/osbuild/osbuild-composer/internal/common"
-	"github.com/osbuild/osbuild-composer/internal/container"
-	"github.com/osbuild/osbuild-composer/internal/distro"
-	"github.com/osbuild/osbuild-composer/internal/distroregistry"
-	"github.com/osbuild/osbuild-composer/internal/manifest"
-	"github.com/osbuild/osbuild-composer/internal/ostree"
-	"github.com/osbuild/osbuild-composer/internal/prometheus"
-	"github.com/osbuild/osbuild-composer/internal/target"
-	"github.com/osbuild/osbuild-composer/internal/worker"
-	"github.com/osbuild/osbuild-composer/internal/worker/clienterrors"
+	"github.com/osbuild/images/internal/auth"
+	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/prometheus"
+	"github.com/osbuild/images/internal/target"
+	"github.com/osbuild/images/internal/worker"
+	"github.com/osbuild/images/internal/worker/clienterrors"
+	"github.com/osbuild/images/pkg/blueprint"
+	"github.com/osbuild/images/pkg/container"
+	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distroregistry"
+	"github.com/osbuild/images/pkg/manifest"
+	"github.com/osbuild/images/pkg/ostree"
 )
 
 // Server represents the state of the cloud Server

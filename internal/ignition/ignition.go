@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"errors"
 
-	"github.com/osbuild/osbuild-composer/internal/blueprint"
+	"github.com/osbuild/images/pkg/blueprint"
 )
 
 type FirstBootOptions struct {

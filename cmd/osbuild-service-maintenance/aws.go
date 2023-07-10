@@ -8,7 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/semaphore"
 
-	"github.com/osbuild/osbuild-composer/internal/cloud/awscloud"
+	"github.com/osbuild/images/internal/cloud/awscloud"
 )
 
 func AWSCleanup(maxConcurrentRequests int, dryRun bool, accessKeyID, accessKey string, cutoff time.Time) error {

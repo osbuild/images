@@ -1,6 +1,6 @@
 package remotefile
 
-import "github.com/osbuild/osbuild-composer/internal/worker/clienterrors"
+import "github.com/osbuild/images/internal/worker/clienterrors"
 
 type Spec struct {
 	URL             string

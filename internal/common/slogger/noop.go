@@ -1,7 +1,7 @@
 package slogger
 
 import (
-	"github.com/osbuild/osbuild-composer/pkg/jobqueue"
+	"github.com/osbuild/images/pkg/jobqueue"
 )
 
 type noopLogger struct {

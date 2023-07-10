@@ -25,7 +25,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/ubccr/kerby/khttp"
 
-	"github.com/osbuild/osbuild-composer/internal/rpmmd"
+	"github.com/osbuild/images/pkg/rpmmd"
 )
 
 type Koji struct {
@@ -243,13 +243,17 @@ func (k *Koji) CGInitBuild(name, version, release string) (*CGInitBuildResult, e
 	return &result, nil
 }
 
-/* from `koji/__init__.py`
+/*
+	from `koji/__init__.py`
+
 BUILD_STATES = Enum((
-    'BUILDING',
-    'COMPLETE',
-    'DELETED',
-    'FAILED',
-    'CANCELED',
+
+	'BUILDING',
+	'COMPLETE',
+	'DELETED',
+	'FAILED',
+	'CANCELED',
+
 ))
 */
 const (

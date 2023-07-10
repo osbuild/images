@@ -1,6 +1,6 @@
 package fdo
 
-import "github.com/osbuild/osbuild-composer/internal/blueprint"
+import "github.com/osbuild/images/pkg/blueprint"
 
 type Options struct {
 	ManufacturingServerURL string

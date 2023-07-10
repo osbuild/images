@@ -19,8 +19,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osbuild/osbuild-composer/internal/blueprint"
-	"github.com/osbuild/osbuild-composer/internal/weldr"
+	"github.com/osbuild/images/pkg/blueprint"
+	"github.com/osbuild/images/internal/weldr"
 )
 
 func TestComposeCommands(t *testing.T) {

@@ -23,7 +23,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/pageblob"
 	"github.com/google/uuid"
 
-	"github.com/osbuild/osbuild-composer/internal/common"
+	"github.com/osbuild/images/internal/common"
 )
 
 // StorageClient is a client for the Azure Storage API,

@@ -8,10 +8,10 @@ import (
 	"testing"
 
 	"github.com/jackc/pgx/v4"
-	"github.com/osbuild/osbuild-composer/pkg/jobqueue"
-	"github.com/osbuild/osbuild-composer/pkg/jobqueue/dbjobqueue"
+	"github.com/osbuild/images/pkg/jobqueue"
+	"github.com/osbuild/images/pkg/jobqueue/dbjobqueue"
 
-	"github.com/osbuild/osbuild-composer/internal/jobqueue/jobqueuetest"
+	"github.com/osbuild/images/internal/jobqueue/jobqueuetest"
 )
 
 const url = "postgres://postgres:foobar@localhost:5432/osbuildcomposer"

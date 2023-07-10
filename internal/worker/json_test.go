@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/osbuild/osbuild-composer/internal/distro"
-	"github.com/osbuild/osbuild-composer/internal/target"
-	"github.com/osbuild/osbuild-composer/internal/worker/clienterrors"
+	"github.com/osbuild/images/internal/target"
+	"github.com/osbuild/images/internal/worker/clienterrors"
+	"github.com/osbuild/images/pkg/distro"
 	"github.com/stretchr/testify/assert"
 )
 

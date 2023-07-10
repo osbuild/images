@@ -25,8 +25,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/osbuild/osbuild-composer/internal/rhsm"
-	"github.com/osbuild/osbuild-composer/internal/rpmmd"
+	"github.com/osbuild/images/pkg/rhsm"
+	"github.com/osbuild/images/pkg/rpmmd"
 )
 
 // BaseSolver defines the basic solver configuration without platform
@@ -490,6 +490,7 @@ type Request struct {
 }
 
 // Hash returns a hash of the unique aspects of the Request
+//
 //nolint:errcheck
 func (r *Request) Hash() string {
 	h := sha256.New()

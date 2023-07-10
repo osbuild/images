@@ -9,8 +9,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osbuild/osbuild-composer/internal/jobqueue/fsjobqueue"
-	"github.com/osbuild/osbuild-composer/internal/worker"
+	"github.com/osbuild/images/internal/jobqueue/fsjobqueue"
+	"github.com/osbuild/images/internal/worker"
 )
 
 // newTestWorkerServer returns 3 strings:

@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/osbuild/osbuild-composer/internal/weldr"
+	"github.com/osbuild/images/internal/weldr"
 )
 
 // PostComposeV0 sends a JSON compose string to the API

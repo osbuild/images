@@ -8,8 +8,8 @@ import (
 	"net/http"
 	//	"strings"
 
-	"github.com/osbuild/osbuild-composer/internal/rpmmd"
-	"github.com/osbuild/osbuild-composer/internal/weldr"
+	"github.com/osbuild/images/internal/weldr"
+	"github.com/osbuild/images/pkg/rpmmd"
 )
 
 // ListAllModulesV0 returns a list of all the available module names

@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osbuild/osbuild-composer/internal/common"
-	"github.com/osbuild/osbuild-composer/internal/rpmmd"
+	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/rpmmd"
 )
 
 func TestSplitExtension(t *testing.T) {

@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/BurntSushi/toml"
-	"github.com/osbuild/osbuild-composer/internal/upload/azure"
+	"github.com/osbuild/images/internal/upload/azure"
 	"github.com/sirupsen/logrus"
 )
 

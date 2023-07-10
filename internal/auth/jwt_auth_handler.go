@@ -10,7 +10,7 @@ import (
 	"github.com/openshift-online/ocm-sdk-go/authentication"
 	"github.com/openshift-online/ocm-sdk-go/logging"
 
-	"github.com/osbuild/osbuild-composer/internal/common"
+	"github.com/osbuild/images/internal/common"
 )
 
 // When using this handler for auth, it should be run as high up as possible.

@@ -15,7 +15,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/osbuild/osbuild-composer/internal/worker/api"
+	"github.com/osbuild/images/internal/worker/api"
 )
 
 type Client struct {

@@ -8,7 +8,7 @@ import (
 	"github.com/openshift-online/ocm-sdk-go/authentication"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osbuild/osbuild-composer/internal/auth"
+	"github.com/osbuild/images/internal/auth"
 )
 
 func TestChannelFromContext(t *testing.T) {

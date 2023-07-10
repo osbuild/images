@@ -23,8 +23,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osbuild/osbuild-composer/internal/rpmmd"
-	"github.com/osbuild/osbuild-composer/internal/upload/koji"
+	"github.com/osbuild/images/pkg/rpmmd"
+	"github.com/osbuild/images/internal/upload/koji"
 )
 
 func TestKojiRefund(t *testing.T) {

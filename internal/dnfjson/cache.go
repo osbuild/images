@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/osbuild/osbuild-composer/internal/rpmmd"
+	"github.com/osbuild/images/pkg/rpmmd"
 
 	"github.com/gobwas/glob"
 )

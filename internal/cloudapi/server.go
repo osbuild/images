@@ -3,10 +3,10 @@ package cloudapi
 import (
 	"net/http"
 
-	"github.com/osbuild/osbuild-composer/internal/distroregistry"
-	"github.com/osbuild/osbuild-composer/internal/worker"
+	"github.com/osbuild/images/internal/worker"
+	"github.com/osbuild/images/pkg/distroregistry"
 
-	v2 "github.com/osbuild/osbuild-composer/internal/cloudapi/v2"
+	v2 "github.com/osbuild/images/internal/cloudapi/v2"
 )
 
 type Server struct {

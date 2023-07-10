@@ -7,7 +7,7 @@
 # This is used internally during nightly pipeline testing!
 %bcond_with relax_requires
 
-%global goipath         github.com/osbuild/osbuild-composer
+%global goipath         github.com/osbuild/images
 
 Version:        85
 
@@ -83,9 +83,9 @@ export GOFLAGS+=" -mod=vendor"
 # was used to build it. This has to be set explicitly when calling rpmbuild,
 # this script will not attempt to automatically discover it.
 %if %{?commit:1}0
-export LDFLAGS="${LDFLAGS} -X 'github.com/osbuild/osbuild-composer/internal/common.GitRev=%{commit}'"
+export LDFLAGS="${LDFLAGS} -X 'github.com/osbuild/images/internal/common.GitRev=%{commit}'"
 %endif
-export LDFLAGS="${LDFLAGS} -X 'github.com/osbuild/osbuild-composer/internal/common.RpmVersion=%{name}-%{?epoch:%epoch:}%{version}-%{release}.%{_arch}'"
+export LDFLAGS="${LDFLAGS} -X 'github.com/osbuild/images/internal/common.RpmVersion=%{name}-%{?epoch:%epoch:}%{version}-%{release}.%{_arch}'"
 
 %gobuild -o _bin/osbuild-composer %{goipath}/cmd/osbuild-composer
 %gobuild -o _bin/osbuild-worker %{goipath}/cmd/osbuild-worker

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/osbuild/osbuild-composer/cmd/osbuild-image-tests/constants"
+	"github.com/osbuild/images/cmd/osbuild-image-tests/constants"
 )
 
 // loadDeploymentTemplate loads the deployment template from the specified

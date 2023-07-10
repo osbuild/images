@@ -1,4 +1,4 @@
-module github.com/osbuild/osbuild-composer
+module github.com/osbuild/images
 
 go 1.18
 

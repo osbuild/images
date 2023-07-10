@@ -16,7 +16,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/osbuild/osbuild-composer/internal/dnfjson"
+	"github.com/osbuild/images/internal/dnfjson"
 )
 
 func maybeFail(err error) {

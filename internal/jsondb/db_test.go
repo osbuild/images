@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osbuild/osbuild-composer/internal/jsondb"
+	"github.com/osbuild/images/internal/jsondb"
 )
 
 type document struct {
