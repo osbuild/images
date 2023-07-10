@@ -1,7 +1,0 @@
-# Ansible playbook for configuring our AWS images.
----
-
-- hosts: all
-  become: yes
-  roles:
-    - common
