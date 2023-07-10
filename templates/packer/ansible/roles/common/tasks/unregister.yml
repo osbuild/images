@@ -1,8 +1,0 @@
----
-
-- name: Unregister
-  become: yes
-  tags:
-    - subscribe
-  shell: >-
-    subscription-manager unregister
