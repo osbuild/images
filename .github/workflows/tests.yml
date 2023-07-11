@@ -15,7 +15,7 @@ jobs:
     name: "🕵️ Inspect manifests"
     runs-on: ubuntu-20.04
     container:
-      image: registry.fedoraproject.org/fedora:38
+      image: registry.fedoraproject.org/fedora:latest
 
     steps:
       # gcc is needed to build the mock dnf-json binary for the unit tests
@@ -42,7 +42,7 @@ jobs:
     name: "🛃 Unit tests"
     runs-on: ubuntu-20.04
     container:
-      image: registry.fedoraproject.org/fedora:37
+      image: registry.fedoraproject.org/fedora:latest
 
     steps:
         # krb5-devel is needed to test internal/upload/koji package
@@ -72,7 +72,7 @@ jobs:
     name: "🐍 Lint (dnf-json)"
     runs-on: ubuntu-latest
     container:
-      image: registry.fedoraproject.org/fedora:37
+      image: registry.fedoraproject.org/fedora:latest
     steps:
 
       - name: Install build and test dependencies
