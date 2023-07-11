@@ -11,6 +11,33 @@ on:
       - main
 
 jobs:
+  inspect-manifests:
+    name: "🕵️ Inspect manifests"
+    runs-on: ubuntu-20.04
+    container:
+      image: registry.fedoraproject.org/fedora:38
+
+    steps:
+      # gcc is needed to build the mock dnf-json binary for the unit tests
+      # gpgme-devel is needed for container upload dependencies
+      - name: Install build and test dependencies
+        run: dnf -y install gcc gpgme-devel git-core go osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux jq
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Mark the working directory as safe for git
+        run: git config --global --add safe.directory "$(pwd)"
+
+      - name: Generate all manifests (public sources only)
+        run: go run ./cmd/gen-manifests -workers 50 -cache /rpmmd --output /manifests --distros 'fedora*,centos*'
+
+      - name: Inspect all generated manifests
+        run: ./test/cases/inspect-manifests /manifests/*.json
+
+
   unit-tests:
     name: "🛃 Unit tests"
     runs-on: ubuntu-20.04
