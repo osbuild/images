@@ -97,7 +97,7 @@ func (img *LiveImage) InstantiateManifest(m *manifest.Manifest,
 		vmdkPipeline := manifest.NewVMDK(m, buildPipeline, imagePipeline, nil)
 		ovfPipeline := manifest.NewOVF(m, buildPipeline, vmdkPipeline)
 		artifactPipeline := manifest.NewTar(m, buildPipeline, ovfPipeline, "archive")
-		artifactPipeline.Format = osbuild.TarArchiveFormatOldgnu
+		artifactPipeline.Format = osbuild.TarArchiveFormatUstar
 		artifactPipeline.RootNode = osbuild.TarRootNodeOmit
 		artifactPipeline.Filename = img.Filename
 		artifact = artifactPipeline.Export()
