@@ -1,0 +1,92 @@
+# inspired by rhinstaller/anaconda
+
+name: Trigger GitLab CI
+
+on:
+  workflow_run:
+    workflows: ["Tests"]
+    types: [completed]
+
+jobs:
+  trigger-gitlab:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    env:
+      IMAGEBUILDER_BOT_GITLAB_SSH_KEY: ${{ secrets.IMAGEBUILDER_BOT_GITLAB_SSH_KEY }}
+    steps:
+      - name: Report status
+        uses: haya14busa/action-workflow_run-status@v1
+
+      - name: Install Dependencies
+        run: |
+          sudo apt install -y jq
+
+      - name: Clone repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - uses: octokit/request-action@v2.x
+        id: fetch_pulls
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          route: GET /repos/${{ github.repository }}/pulls
+          per_page: 100
+
+      - name: Checkout branch
+        id: pr_data
+        run: |
+          PR_DATA=$(mktemp)
+          # use uuid as a file terminator to avoid conflicts with data content
+          cat > "$PR_DATA" <<'a21b3e7f-d5eb-44a3-8be0-c2412851d2e6'
+          ${{ steps.fetch_pulls.outputs.data }}
+          a21b3e7f-d5eb-44a3-8be0-c2412851d2e6
+
+          PR=$(jq -rc '.[] | select(.head.sha | contains("${{ github.event.workflow_run.head_sha }}")) | select(.state | contains("open"))' "$PR_DATA" | jq -r .number)
+          if [ ! -z "$PR" ]; then
+            echo "pr_branch=PR-$PR" >> "$GITHUB_OUTPUT"
+            git checkout -b PR-$PR
+          else
+            git checkout ${{ github.event.workflow_run.head_branch }}
+          fi
+
+      - name: Download artifacts
+        uses: actions/github-script@v6
+        with:
+          script: |
+            let allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               run_id: context.payload.workflow_run.id,
+            });
+            let matchArtifact = allArtifacts.data.artifacts.filter((artifact) => {
+              return artifact.name == "PR_STATUS"
+            })[0];
+            let download = await github.rest.actions.downloadArtifact({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               artifact_id: matchArtifact.id,
+               archive_format: 'zip',
+            });
+            let fs = require('fs');
+            fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/PR_STATUS.zip`, Buffer.from(download.data));
+
+      - name: Unzip artifact
+        run: unzip PR_STATUS.zip
+
+      - name: Push to gitlab
+        run: |
+          mkdir -p ~/.ssh
+          echo "${IMAGEBUILDER_BOT_GITLAB_SSH_KEY}" > ~/.ssh/id_rsa
+          chmod 400 ~/.ssh/id_rsa
+          touch ~/.ssh/known_hosts
+          ssh-keyscan -t rsa gitlab.com >> ~/.ssh/known_hosts
+          git remote add ci git@gitlab.com:redhat/services/products/image-builder/ci/images.git
+          SKIP_CI=$(cat SKIP_CI.txt)
+          if [[ "${SKIP_CI}" == true ]];then
+            git push -f -o ci.variable="SKIP_CI=true" ci
+          else
+            git push -f ci 
+          fi
