@@ -17,6 +17,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/gobwas/glob"
 	"github.com/osbuild/images/internal/dnfjson"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
@@ -422,6 +423,31 @@ func mergeOverrides(base, overrides composeRequest) composeRequest {
 	return merged
 }
 
+// resolveArgValues returns a list of valid values from the list of values on the
+// command line. Invalid values are returned separately. Globs are expanded.
+// If the args are empty, the valueList is returned as is.
+func resolveArgValues(args multiValue, valueList []string) ([]string, []string) {
+	if len(args) == 0 {
+		return valueList, nil
+	}
+	selection := make([]string, 0, len(args))
+	invalid := make([]string, 0, len(args))
+	for _, arg := range args {
+		g := glob.MustCompile(arg)
+		match := false
+		for _, v := range valueList {
+			if g.Match(v) {
+				selection = append(selection, v)
+				match = true
+			}
+		}
+		if !match {
+			invalid = append(invalid, arg)
+		}
+	}
+	return selection, invalid
+}
+
 func main() {
 	// common args
 	var outputDir, cacheRoot string
@@ -432,9 +458,9 @@ func main() {
 
 	// manifest selection args
 	var arches, distros, imgTypes multiValue
-	flag.Var(&arches, "arches", "comma-separated list of architectures")
-	flag.Var(&distros, "distros", "comma-separated list of distributions")
-	flag.Var(&imgTypes, "images", "comma-separated list of image types")
+	flag.Var(&arches, "arches", "comma-separated list of architectures (globs supported)")
+	flag.Var(&distros, "distros", "comma-separated list of distributions (globs supported)")
+	flag.Var(&imgTypes, "images", "comma-separated list of image types (globs supported)")
 
 	flag.Parse()
 
@@ -451,36 +477,33 @@ func main() {
 	}
 
 	fmt.Println("Collecting jobs")
-	if len(distros) == 0 {
-		distros = distroReg.List()
+	distros, invalidDistros := resolveArgValues(distros, distroReg.List())
+	if len(invalidDistros) > 0 {
+		fmt.Fprintf(os.Stderr, "WARNING: invalid distro names: [%s]\n", strings.Join(invalidDistros, ","))
 	}
 	for _, distroName := range distros {
 		distribution := distroReg.GetDistro(distroName)
-		if distribution == nil {
-			fmt.Fprintf(os.Stderr, "invalid distro name %q\n", distroName)
-			continue
-		}
 
-		distroArches := arches
-		if len(distroArches) == 0 {
-			distroArches = distribution.ListArches()
+		distroArches, invalidArches := resolveArgValues(arches, distribution.ListArches())
+		if len(invalidArches) > 0 {
+			fmt.Fprintf(os.Stderr, "WARNING: invalid arch names [%s] for distro %q\n", strings.Join(invalidArches, ","), distroName)
 		}
 		for _, archName := range distroArches {
 			arch, err := distribution.GetArch(archName)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "invalid arch name %q for distro %q: %s\n", archName, distroName, err.Error())
-				continue
+				// resolveArgValues should prevent this
+				panic(fmt.Sprintf("invalid arch name %q for distro %q: %s\n", archName, distroName, err.Error()))
 			}
 
-			daImgTypes := imgTypes
-			if len(daImgTypes) == 0 {
-				daImgTypes = arch.ListImageTypes()
+			daImgTypes, invalidImageTypes := resolveArgValues(imgTypes, arch.ListImageTypes())
+			if len(invalidImageTypes) > 0 {
+				fmt.Fprintf(os.Stderr, "WARNING: invalid image type names [%s] for distro %q and arch %q\n", strings.Join(invalidImageTypes, ","), distroName, archName)
 			}
 			for _, imgTypeName := range daImgTypes {
 				imgType, err := arch.GetImageType(imgTypeName)
 				if err != nil {
-					fmt.Fprintf(os.Stderr, "invalid image type %q for distro %q and arch %q: %s\n", imgTypeName, distroName, archName, err.Error())
-					continue
+					// resolveArgValues should prevent this
+					panic(fmt.Sprintf("invalid image type %q for distro %q and arch %q: %s\n", imgTypeName, distroName, archName, err.Error()))
 				}
 
 				// get repositories
