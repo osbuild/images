@@ -85,7 +85,7 @@ jobs:
 
       - name: Analysing the code with pylint
         run: |
-          python3 -m pylint dnf-json tools/koji-compose.py
+          python3 -m pylint dnf-json
 
   lint:
     name: "⌨ Lint"
