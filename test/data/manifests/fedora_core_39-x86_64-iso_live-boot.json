@@ -2,7 +2,7 @@
   "compose-request": {
     "distro": "fedora-core-39",
     "arch": "x86_64",
-    "image-type": "raw",
+    "image-type": "iso-live",
     "repositories": [
       {
         "name": "fedora",
@@ -31,7 +31,7 @@
         "metadata_expire": "6h"
       }
     ],
-    "filename": "raw.img",
+    "filename": "live.iso",
     "blueprint": {}
   },
   "manifest": {
@@ -273,6 +273,22 @@
                     }
                   },
                   {
+                    "id": "sha256:e6652262bf73cfe7e98446725aa5e793568bff122636815ad951fac77454681f",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
+                    "id": "sha256:8ff9a034c4cc68941868d2fab9fb0489fb7d2f7667ce3fc645c296b70ecb408d",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
                     "id": "sha256:520526f02bb7b8b5ba3723829dc520d7d0c72c0893dcfeac5eac21dae7be7911",
                     "options": {
                       "metadata": {
@@ -505,6 +521,38 @@
                     }
                   },
                   {
+                    "id": "sha256:767173f9cbfadb1d521f0790c335386d3c78258f9180dfb9e25d2c7b9c196f03",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
+                    "id": "sha256:21e37bd0141df1c58801551e7c76442c74680f6f04f8222a1175048a873729b6",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
+                    "id": "sha256:d443ebfba6fde905569c33f41c3a9e08dd42019edd227e21dd86de24ab16d749",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
+                    "id": "sha256:40340aeb187b05a0d5bae52f5c3d5e4faf7d24f00e2df0f6172ba617347d18fb",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
                     "id": "sha256:d57d2d449e5a93eb7b30b1b6cc9724f8b688cbaad9a7e36aee19bdd0c85234f3",
                     "options": {
                       "metadata": {
@@ -530,6 +578,14 @@
                   },
                   {
                     "id": "sha256:2ee988694d3c875dcaa4741453ee07b4dc1da31205abb035065dbc7c8c72c0da",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
+                    "id": "sha256:4af38f58f506870f383aa2126c90dba293412c86eb3848b88f46312ced00ff1f",
                     "options": {
                       "metadata": {
                         "rpm.check_gpg": true
@@ -569,7 +625,23 @@
                     }
                   },
                   {
+                    "id": "sha256:37da3f48de32bdb844332f15eaa453385abe72716b7933899a7306fc1deb0d4c",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
                     "id": "sha256:a8003e886f65342e06c75edaef2bc54b1f313a9b19ba3d8b573b7b72a9583d87",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
+                    "id": "sha256:62b04362175ea9adba3c0df5f940fa250e606f8e162d225338bcb04c34f38b48",
                     "options": {
                       "metadata": {
                         "rpm.check_gpg": true
@@ -658,6 +730,14 @@
                   },
                   {
                     "id": "sha256:8cc10856c47acece791b63f4b71dc77fb8f4bb3147804d560313c37caba1832b",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
+                    "id": "sha256:65ceef2495fdc2a5e91297c9bae9e4962c119b605a2509d88868d33fd9436df2",
                     "options": {
                       "metadata": {
                         "rpm.check_gpg": true
@@ -770,6 +850,22 @@
                   },
                   {
                     "id": "sha256:e24b40ad581933d9ca22b525c434777d90a46cb4c0b097c497c788e49fd946d4",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
+                    "id": "sha256:322ce35683b25fcace96689a28446cb1196c83a2bad49b118e5875ca3befbcc3",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
+                    "id": "sha256:101a4abb20cdf0e2fbfd9cb7bc08b6545486ef07ba64280c03df82b3b9044abe",
                     "options": {
                       "metadata": {
                         "rpm.check_gpg": true
@@ -1033,6 +1129,14 @@
                     }
                   },
                   {
+                    "id": "sha256:229c871fbe7fafbb99a80e7c6cec9e8a264b674fb2890d66aaa89f3d836d6b8a",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
                     "id": "sha256:d7c0d81cb8f51af66460df06dc8266ca59ba0fe11b9af6649268e3aed51c73b9",
                     "options": {
                       "metadata": {
@@ -1049,6 +1153,14 @@
                     }
                   },
                   {
+                    "id": "sha256:fa3d842fa6c4670b6157050baddb4f2fbb3145ef6249e12ff4d7a75661e552e7",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
                     "id": "sha256:c98c47d647f33a5a552c0031d1c7b035a9f54a8a0ba64d220f1b90d4cb990926",
                     "options": {
                       "metadata": {
@@ -1058,6 +1170,14 @@
                   },
                   {
                     "id": "sha256:4dce785f0955e4bc212f5642fbf76752e8e758fddaf31d423c76064442c382a4",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
+                    "id": "sha256:8f5dd93fc2beffecfce0cf87735e2e124bdb76d769072b66e735825d08c12792",
                     "options": {
                       "metadata": {
                         "rpm.check_gpg": true
@@ -1321,7 +1441,39 @@
                     }
                   },
                   {
+                    "id": "sha256:174bda41056c4cac41ef9bf8a7adb06affd92bcb18a258d319b9153bf0f00686",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
                     "id": "sha256:f9a4e4bec35320e2668d3701265bf4482235c55bc9091e6c0ea898d20cf3976b",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
+                    "id": "sha256:baaa6804b373559b3baa54cadaea444c10cdec73fb05190ee932946dc2d7a205",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
+                    "id": "sha256:29127ab06c22574589f2f566bf395446460cfd734692a1b4f036cba77c241238",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
+                    "id": "sha256:a24bd42a7e88cf22b3dcc949bcb5ea3b9fec7882e3d7da4bd17de7356a2cc183",
                     "options": {
                       "metadata": {
                         "rpm.check_gpg": true
@@ -1417,6 +1569,14 @@
                     }
                   },
                   {
+                    "id": "sha256:45b50ec7c49cdaf0d9116037718e11de09c6684633ee8a6123dd1dab0016723e",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
                     "id": "sha256:05607ec505c430d28c980e96d63a399495ec87366c2893031e9fb16baf4a954e",
                     "options": {
                       "metadata": {
@@ -1426,6 +1586,14 @@
                   },
                   {
                     "id": "sha256:85ededeacb3d04ce61b64599a4bce972dc5109adf665edd8a9a23f8d73a0d1b4",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
+                    "id": "sha256:3d2558055825754ef1801c9d605c2633108f8ac8009a0795fd5d4200126d48a4",
                     "options": {
                       "metadata": {
                         "rpm.check_gpg": true
@@ -1483,13 +1651,6 @@
         "name": "os",
         "build": "name:build",
         "stages": [
-          {
-            "type": "org.osbuild.kernel-cmdline",
-            "options": {
-              "root_fs_uuid": "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
-              "kernel_opts": "ro no_timer_check console=ttyS0,115200n8 biosdevname=0 net.ifnames=0"
-            }
-          },
           {
             "type": "org.osbuild.rpm",
             "inputs": {
@@ -1858,6 +2019,22 @@
                     }
                   },
                   {
+                    "id": "sha256:2f556129fbacf1324f5ca88a683a32012dc33a496c100ccb7fc6053c19bfda98",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
+                    "id": "sha256:d4382363f0f4a81076c91b4bc53158ef9fe330f033fb6b1d701066e9512d313a",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
                     "id": "sha256:4928acfd884ee06d6447ff1b91fcd5e0de795e7219fac59a9931a2bbeea0c324",
                     "options": {
                       "metadata": {
@@ -1970,6 +2147,14 @@
                     }
                   },
                   {
+                    "id": "sha256:e542d95988c4bf9b14288bb20558cf1048515ab06548bf7606b74a2d5462705b",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
                     "id": "sha256:995811c97c1d86b6de83c033c62e96f491239762995c64c1ccf24e6657f58424",
                     "options": {
                       "metadata": {
@@ -2067,6 +2252,22 @@
                   },
                   {
                     "id": "sha256:41c5785009571d8e5af5135f5bb74b04734d99cd33d66dd1fef57c30e1741c3c",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
+                    "id": "sha256:d949521c5b898a94e9c3e2ffed751671b652687b34016ceca4bef650c68eb3ae",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
+                    "id": "sha256:707cfba4c1091ef07fd9e19db9a04a815592f720d803bde96a7ca0e36326de18",
                     "options": {
                       "metadata": {
                         "rpm.check_gpg": true
@@ -2306,6 +2507,22 @@
                     }
                   },
                   {
+                    "id": "sha256:d443ebfba6fde905569c33f41c3a9e08dd42019edd227e21dd86de24ab16d749",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
+                    "id": "sha256:40340aeb187b05a0d5bae52f5c3d5e4faf7d24f00e2df0f6172ba617347d18fb",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
                     "id": "sha256:d57d2d449e5a93eb7b30b1b6cc9724f8b688cbaad9a7e36aee19bdd0c85234f3",
                     "options": {
                       "metadata": {
@@ -2419,6 +2636,22 @@
                   },
                   {
                     "id": "sha256:ff9b182201219150cd36918b197e7c911de32b906080caa88c3c21fed06ce6a2",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
+                    "id": "sha256:0799fbfa0827402f0ff03ad42f743e1f18e37634d7895833674bf731a759fa77",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
+                    "id": "sha256:e01d30e9953d8f96af6a2d46dc0b128ee632569f27a0596db77fb7a2b32cf897",
                     "options": {
                       "metadata": {
                         "rpm.check_gpg": true
@@ -3498,6 +3731,14 @@
                     }
                   },
                   {
+                    "id": "sha256:3ece18900f119ff66e18d08a3e5c02c4c359a4811456dee2c80c832adf8ba2d2",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
                     "id": "sha256:a15680ef137aa970d29b233a1fc4da4889201e633daae0c8bb59303903ba65da",
                     "options": {
                       "metadata": {
@@ -3554,6 +3795,14 @@
                     }
                   },
                   {
+                    "id": "sha256:9f33f0a0b88d5a2b2f0e8c93abc9307477414374dd9594093dc790f3eac72d8a",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
                     "id": "sha256:413818b86694e41fc850a0c1e5ef271a5768abc42ba50896aff6f66a78d9505f",
                     "options": {
                       "metadata": {
@@ -3587,6 +3836,14 @@
                   },
                   {
                     "id": "sha256:50beba3a931f38b071bd76e80aa0b8560fb43e3972b07ffbfc22fd7835c0acca",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
+                    "id": "sha256:8f5dd93fc2beffecfce0cf87735e2e124bdb76d769072b66e735825d08c12792",
                     "options": {
                       "metadata": {
                         "rpm.check_gpg": true
@@ -3714,7 +3971,23 @@
                     }
                   },
                   {
+                    "id": "sha256:9399ac1e4ecc4eafdf18ca49b0d7c2282172fbe35aac9acf24f9a0877560ce6b",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
                     "id": "sha256:061e9593b25a36f9f430ae56c97fc7b63840583d105bde98d0cdb774d1e9bdb7",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
+                    "id": "sha256:83f76b18bbc0ce270890993f918e5bdba93d36a6e9e2f726d7f485ad01c7de46",
                     "options": {
                       "metadata": {
                         "rpm.check_gpg": true
@@ -4306,6 +4579,22 @@
                     }
                   },
                   {
+                    "id": "sha256:29127ab06c22574589f2f566bf395446460cfd734692a1b4f036cba77c241238",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
+                    "id": "sha256:a24bd42a7e88cf22b3dcc949bcb5ea3b9fec7882e3d7da4bd17de7356a2cc183",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
                     "id": "sha256:62a46a4a5362d50021c8c01314f007130217722403f4626f797e28afa86a6672",
                     "options": {
                       "metadata": {
@@ -4347,6 +4636,14 @@
                   },
                   {
                     "id": "sha256:f1d022be88dac330f03060de21bd8234c1547b1b2f6bb19feffb86e244ee4b8a",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
+                    "id": "sha256:ef8c53c3edd4b526ab6cc71ecbb794ece9333764a0d86fdc596512f27b4ff74f",
                     "options": {
                       "metadata": {
                         "rpm.check_gpg": true
@@ -4442,6 +4739,14 @@
                     }
                   },
                   {
+                    "id": "sha256:45b50ec7c49cdaf0d9116037718e11de09c6684633ee8a6123dd1dab0016723e",
+                    "options": {
+                      "metadata": {
+                        "rpm.check_gpg": true
+                      }
+                    }
+                  },
+                  {
                     "id": "sha256:05607ec505c430d28c980e96d63a399495ec87366c2893031e9fb16baf4a954e",
                     "options": {
                       "metadata": {
@@ -4527,9 +4832,7 @@
           },
           {
             "type": "org.osbuild.fix-bls",
-            "options": {
-              "prefix": ""
-            }
+            "options": {}
           },
           {
             "type": "org.osbuild.locale",
@@ -4550,46 +4853,61 @@
             }
           },
           {
-            "type": "org.osbuild.fstab",
+            "type": "org.osbuild.users",
             "options": {
-              "filesystems": [
-                {
-                  "uuid": "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
-                  "vfs_type": "ext4",
-                  "path": "/",
-                  "options": "defaults"
-                },
-                {
-                  "uuid": "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
-                  "vfs_type": "ext4",
-                  "path": "/boot",
-                  "options": "defaults"
-                },
-                {
-                  "uuid": "7B77-95E7",
-                  "vfs_type": "vfat",
-                  "path": "/boot/efi",
-                  "options": "defaults,uid=0,gid=0,umask=077,shortname=winnt",
-                  "passno": 2
+              "users": {
+                "root": {
+                  "password": "$6$FH0KiRcvEQbnyXQz$w4boAY5OUlXqzRyOGlM3FFht.gyV33pxK.n01q5Lz61/oLD8ySUdJQ5CTIagJWIn.43WryLDUL7KmtCqX16nl1"
                 }
-              ]
+              }
             }
           },
           {
-            "type": "org.osbuild.grub2",
+            "type": "org.osbuild.buildstamp",
             "options": {
-              "root_fs_uuid": "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
-              "boot_fs_uuid": "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
-              "kernel_opts": "ro no_timer_check console=ttyS0,115200n8 biosdevname=0 net.ifnames=0",
-              "uefi": {
-                "vendor": "fedora",
-                "unified": true
-              },
-              "saved_entry": "ffffffffffffffffffffffffffffffff-6.5.0-0.rc1.11.fc39.x86_64",
-              "write_cmdline": false,
-              "config": {
-                "default": "saved"
-              }
+              "arch": "x86_64",
+              "product": "Fedora",
+              "version": "39",
+              "final": true,
+              "variant": "",
+              "bugurl": ""
+            }
+          },
+          {
+            "type": "org.osbuild.dracut",
+            "options": {
+              "kernel": [
+                "6.5.0-0.rc1.11.fc39.x86_64"
+              ],
+              "modules": [
+                "bash",
+                "systemd",
+                "fips",
+                "systemd-initrd",
+                "i18n",
+                "convertfs",
+                "drm",
+                "crypt",
+                "dm",
+                "dmsquash-live",
+                "kernel-modules",
+                "kernel-modules-extra",
+                "qemu",
+                "resume",
+                "rootfs-block",
+                "terminfo",
+                "udev-rules",
+                "dracut-systemd",
+                "pollcdrom",
+                "usrmount",
+                "base",
+                "fs-lib",
+                "shutdown",
+                "lunmask"
+              ],
+              "install": [
+                "/.buildstamp"
+              ]
             }
           },
           {
@@ -4601,46 +4919,57 @@
         ]
       },
       {
-        "name": "image",
+        "name": "rootfs-image",
         "build": "name:build",
         "stages": [
           {
-            "type": "org.osbuild.truncate",
+            "type": "org.osbuild.mkdir",
             "options": {
-              "filename": "raw.img",
-              "size": "3958374400"
+              "paths": [
+                {
+                  "path": "LiveOS"
+                }
+              ]
             }
           },
           {
-            "type": "org.osbuild.sfdisk",
+            "type": "org.osbuild.truncate",
             "options": {
-              "label": "gpt",
-              "uuid": "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
-              "partitions": [
+              "filename": "LiveOS/rootfs.img",
+              "size": "8589934592"
+            }
+          },
+          {
+            "type": "org.osbuild.mkfs.ext4",
+            "options": {
+              "uuid": "2fe99653-f7ff-44fd-bea8-fa70107524fb",
+              "label": "Anaconda"
+            },
+            "devices": {
+              "device": {
+                "type": "org.osbuild.loopback",
+                "options": {
+                  "filename": "LiveOS/rootfs.img"
+                }
+              }
+            }
+          },
+          {
+            "type": "org.osbuild.copy",
+            "inputs": {
+              "tree": {
+                "type": "org.osbuild.tree",
+                "origin": "org.osbuild.pipeline",
+                "references": [
+                  "name:os"
+                ]
+              }
+            },
+            "options": {
+              "paths": [
                 {
-                  "bootable": true,
-                  "size": 2048,
-                  "start": 2048,
-                  "type": "21686148-6449-6E6F-744E-656564454649",
-                  "uuid": "FAC7F1FB-3E8D-4137-A512-961DE09A5549"
-                },
-                {
-                  "size": 409600,
-                  "start": 4096,
-                  "type": "C12A7328-F81F-11D2-BA4B-00A0C93EC93B",
-                  "uuid": "68B2905B-DF3E-4FB3-80FA-49D1E773AA33"
-                },
-                {
-                  "size": 1024000,
-                  "start": 413696,
-                  "type": "0FC63DAF-8483-4772-8E79-3D69D8477DE4",
-                  "uuid": "CB07C243-BC44-4717-853E-28852021225B"
-                },
-                {
-                  "size": 6293471,
-                  "start": 1437696,
-                  "type": "0FC63DAF-8483-4772-8E79-3D69D8477DE4",
-                  "uuid": "6264D520-3FB9-423F-8AB8-7A0A8E3D3562"
+                  "from": "input://tree/",
+                  "to": "mount://device/"
                 }
               ]
             },
@@ -4648,60 +4977,167 @@
               "device": {
                 "type": "org.osbuild.loopback",
                 "options": {
-                  "filename": "raw.img",
-                  "lock": true
+                  "filename": "LiveOS/rootfs.img"
                 }
               }
+            },
+            "mounts": [
+              {
+                "name": "device",
+                "type": "org.osbuild.ext4",
+                "source": "device",
+                "target": "/"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "efiboot-tree",
+        "build": "name:build",
+        "stages": [
+          {
+            "type": "org.osbuild.grub2.iso",
+            "options": {
+              "product": {
+                "name": "Fedora",
+                "version": "39"
+              },
+              "kernel": {
+                "dir": "/images/pxeboot",
+                "opts": [
+                  "root=live:CDLABEL=Fedora-39-BaseOS-x86_64",
+                  "rd.live.image",
+                  "quiet",
+                  "rhgb"
+                ]
+              },
+              "isolabel": "Fedora-39-BaseOS-x86_64",
+              "architectures": [
+                "X64"
+              ],
+              "vendor": "fedora"
+            }
+          }
+        ]
+      },
+      {
+        "name": "bootiso-tree",
+        "build": "name:build",
+        "stages": [
+          {
+            "type": "org.osbuild.mkdir",
+            "options": {
+              "paths": [
+                {
+                  "path": "images"
+                },
+                {
+                  "path": "images/pxeboot"
+                }
+              ]
+            }
+          },
+          {
+            "type": "org.osbuild.mkdir",
+            "options": {
+              "paths": [
+                {
+                  "path": "LiveOS"
+                }
+              ]
+            }
+          },
+          {
+            "type": "org.osbuild.copy",
+            "inputs": {
+              "tree": {
+                "type": "org.osbuild.tree",
+                "origin": "org.osbuild.pipeline",
+                "references": [
+                  "name:os"
+                ]
+              }
+            },
+            "options": {
+              "paths": [
+                {
+                  "from": "input://tree/boot/vmlinuz-6.5.0-0.rc1.11.fc39.x86_64",
+                  "to": "tree:///images/pxeboot/vmlinuz"
+                },
+                {
+                  "from": "input://tree/boot/initramfs-6.5.0-0.rc1.11.fc39.x86_64.img",
+                  "to": "tree:///images/pxeboot/initrd.img"
+                }
+              ]
+            }
+          },
+          {
+            "type": "org.osbuild.squashfs",
+            "inputs": {
+              "tree": {
+                "type": "org.osbuild.tree",
+                "origin": "org.osbuild.pipeline",
+                "references": [
+                  "name:rootfs-image"
+                ]
+              }
+            },
+            "options": {
+              "filename": "LiveOS/squashfs.img",
+              "compression": {
+                "method": "xz",
+                "options": {
+                  "bcj": "x86"
+                }
+              }
+            }
+          },
+          {
+            "type": "org.osbuild.isolinux",
+            "inputs": {
+              "data": {
+                "type": "org.osbuild.tree",
+                "origin": "org.osbuild.pipeline",
+                "references": [
+                  "name:os"
+                ]
+              }
+            },
+            "options": {
+              "product": {
+                "name": "Fedora",
+                "version": "39"
+              },
+              "kernel": {
+                "dir": "/images/pxeboot",
+                "opts": [
+                  "root=live:CDLABEL=Fedora-39-BaseOS-x86_64",
+                  "rd.live.image",
+                  "quiet",
+                  "rhgb"
+                ]
+              }
+            }
+          },
+          {
+            "type": "org.osbuild.truncate",
+            "options": {
+              "filename": "images/efiboot.img",
+              "size": "20971520"
             }
           },
           {
             "type": "org.osbuild.mkfs.fat",
             "options": {
-              "volid": "7B7795E7"
+              "volid": "0194fdc2"
             },
             "devices": {
               "device": {
                 "type": "org.osbuild.loopback",
                 "options": {
-                  "filename": "raw.img",
-                  "start": 4096,
-                  "size": 409600,
-                  "lock": true
-                }
-              }
-            }
-          },
-          {
-            "type": "org.osbuild.mkfs.ext4",
-            "options": {
-              "uuid": "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
-              "label": "boot"
-            },
-            "devices": {
-              "device": {
-                "type": "org.osbuild.loopback",
-                "options": {
-                  "filename": "raw.img",
-                  "start": 413696,
-                  "size": 1024000,
-                  "lock": true
-                }
-              }
-            }
-          },
-          {
-            "type": "org.osbuild.mkfs.ext4",
-            "options": {
-              "uuid": "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
-              "label": "root"
-            },
-            "devices": {
-              "device": {
-                "type": "org.osbuild.loopback",
-                "options": {
-                  "filename": "raw.img",
-                  "start": 1437696,
-                  "size": 6293471,
+                  "filename": "images/efiboot.img",
+                  "size": 40960,
                   "lock": true
                 }
               }
@@ -4714,7 +5150,7 @@
                 "type": "org.osbuild.tree",
                 "origin": "org.osbuild.pipeline",
                 "references": [
-                  "name:os"
+                  "name:efiboot-tree"
                 ]
               }
             },
@@ -4727,51 +5163,85 @@
               ]
             },
             "devices": {
-              "boot": {
-                "type": "org.osbuild.loopback",
-                "options": {
-                  "filename": "raw.img",
-                  "start": 413696,
-                  "size": 1024000
-                }
-              },
-              "boot.efi": {
-                "type": "org.osbuild.loopback",
-                "options": {
-                  "filename": "raw.img",
-                  "start": 4096,
-                  "size": 409600
-                }
-              },
               "root": {
                 "type": "org.osbuild.loopback",
                 "options": {
-                  "filename": "raw.img",
-                  "start": 1437696,
-                  "size": 6293471
+                  "filename": "images/efiboot.img",
+                  "size": 40960
                 }
               }
             },
             "mounts": [
               {
                 "name": "root",
-                "type": "org.osbuild.ext4",
+                "type": "org.osbuild.fat",
                 "source": "root",
                 "target": "/"
-              },
-              {
-                "name": "boot",
-                "type": "org.osbuild.ext4",
-                "source": "boot",
-                "target": "/boot"
-              },
-              {
-                "name": "boot.efi",
-                "type": "org.osbuild.fat",
-                "source": "boot.efi",
-                "target": "/boot/efi"
               }
             ]
+          },
+          {
+            "type": "org.osbuild.copy",
+            "inputs": {
+              "root-tree": {
+                "type": "org.osbuild.tree",
+                "origin": "org.osbuild.pipeline",
+                "references": [
+                  "name:efiboot-tree"
+                ]
+              }
+            },
+            "options": {
+              "paths": [
+                {
+                  "from": "input://root-tree/EFI",
+                  "to": "tree:///"
+                }
+              ]
+            }
+          },
+          {
+            "type": "org.osbuild.discinfo",
+            "options": {
+              "basearch": "x86_64",
+              "release": "Fedora 39"
+            }
+          }
+        ]
+      },
+      {
+        "name": "bootiso",
+        "build": "name:build",
+        "stages": [
+          {
+            "type": "org.osbuild.xorrisofs",
+            "inputs": {
+              "tree": {
+                "type": "org.osbuild.tree",
+                "origin": "org.osbuild.pipeline",
+                "references": [
+                  "name:bootiso-tree"
+                ]
+              }
+            },
+            "options": {
+              "filename": "live.iso",
+              "volid": "Fedora-39-BaseOS-x86_64",
+              "sysid": "LINUX",
+              "boot": {
+                "image": "isolinux/isolinux.bin",
+                "catalog": "isolinux/boot.cat"
+              },
+              "efi": "images/efiboot.img",
+              "isohybridmbr": "/usr/share/syslinux/isohdpfx.bin",
+              "isolevel": 3
+            }
+          },
+          {
+            "type": "org.osbuild.implantisomd5",
+            "options": {
+              "filename": "live.iso"
+            }
           }
         ]
       }
@@ -4802,6 +5272,9 @@
           },
           "sha256:0675ea464b8c2367f3a4f5cc6ef37e80d30c05c129db8bedb853dcbaebfa1efb": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/k/kbd-2.6.1-1.fc39.x86_64.rpm"
+          },
+          "sha256:0799fbfa0827402f0ff03ad42f743e1f18e37634d7895833674bf731a759fa77": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/i/iwlwifi-dvm-firmware-20230625-151.fc39.noarch.rpm"
           },
           "sha256:07fd4c1d62469973c4e1a273c3569b0041c071c879abe896ab67e3ea6625631e": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/e/elfutils-default-yama-scope-0.189-3.fc39.noarch.rpm"
@@ -4841,6 +5314,9 @@
           },
           "sha256:0feb558b33968f095ee259de9bc738867d70010052bc9d0ca39a7e23601b3aea": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/l/libsss_nss_idmap-2.9.1-2.fc39.x86_64.rpm"
+          },
+          "sha256:101a4abb20cdf0e2fbfd9cb7bc08b6545486ef07ba64280c03df82b3b9044abe": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/l/libisofs-1.5.6-1.fc39.x86_64.rpm"
           },
           "sha256:116aee0ae4bd9f8148267b013cac98e1c12ec4bd861dbc62149f12f8069d0533": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/f/fedora-release-common-39-0.21.noarch.rpm"
@@ -4917,6 +5393,9 @@
           "sha256:212cb1084c3d5a05d12308d768417dd12678a860ccfc89c2f70dada566e11259": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/g/gdbm-libs-1.23-3.fc38.x86_64.rpm"
           },
+          "sha256:21e37bd0141df1c58801551e7c76442c74680f6f04f8222a1175048a873729b6": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/g/grub2-efi-x64-cdboot-2.06-95.fc39.x86_64.rpm"
+          },
           "sha256:226e0c3b489b58da0e92bf2abadcc2fe2b10ef286692642c6d197d523091ed34": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/f/file-5.44-4.fc39.x86_64.rpm"
           },
@@ -4953,6 +5432,9 @@
           "sha256:275ccd754e79e283e410610759d31b02dad8b90e559f24ba20585ad52b9de0ae": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/u/udisks2-2.10.0-1.fc39.x86_64.rpm"
           },
+          "sha256:29127ab06c22574589f2f566bf395446460cfd734692a1b4f036cba77c241238": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/s/syslinux-6.04-0.24.fc38.x86_64.rpm"
+          },
           "sha256:2af61bff099ba092381fc3bcfad33abeb46e0bbd80d39957160ebeeeae6662af": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/e/expat-2.5.0-2.fc38.x86_64.rpm"
           },
@@ -4983,6 +5465,9 @@
           "sha256:2ee988694d3c875dcaa4741453ee07b4dc1da31205abb035065dbc7c8c72c0da": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/g/gzip-1.12-3.fc38.x86_64.rpm"
           },
+          "sha256:2f556129fbacf1324f5ca88a683a32012dc33a496c100ccb7fc6053c19bfda98": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/d/dracut-live-059-8.fc39.x86_64.rpm"
+          },
           "sha256:2f95ec8a9e82166735d2a0dad196caf86d3b03b1d751333664fdc49af04652e3": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/l/libsigsegv-2.14-4.fc38.x86_64.rpm"
           },
@@ -4991,6 +5476,9 @@
           },
           "sha256:311e1517a2fbfb238aa72f236c2f12bb722055d0c5162e63f1e073fa16951006": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/z/zram-generator-1.1.2-7.fc39.x86_64.rpm"
+          },
+          "sha256:322ce35683b25fcace96689a28446cb1196c83a2bad49b118e5875ca3befbcc3": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/l/libisoburn-1.5.6-1.fc39.x86_64.rpm"
           },
           "sha256:32cb05348436981a821e183274c7dc9492f5bc833878878eaedb7bdaaada0902": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/k/kernel-6.5.0-0.rc1.11.fc39.x86_64.rpm"
@@ -5013,6 +5501,9 @@
           "sha256:37cbb04722c8e82f89705c9a68b0b7f68e0d8dba8ec82c549acee20968f98d84": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/l/libzstd-1.5.5-1.fc39.x86_64.rpm"
           },
+          "sha256:37da3f48de32bdb844332f15eaa453385abe72716b7933899a7306fc1deb0d4c": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/k/kde-filesystem-4-69.fc38.x86_64.rpm"
+          },
           "sha256:37e71790208f46ea301306760e10488ef3701968b71c83d87dd78a3f91bb3498": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/k/kpartx-0.9.5-1.fc39.x86_64.rpm"
           },
@@ -5034,6 +5525,9 @@
           "sha256:3d099f56457cac6b78d5a7fa1a288449b2fd40940ba79c38f3a8cdf72de08d0b": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/p/p11-kit-0.24.1-6.fc38.x86_64.rpm"
           },
+          "sha256:3d2558055825754ef1801c9d605c2633108f8ac8009a0795fd5d4200126d48a4": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/x/xorriso-1.5.6-1.fc39.x86_64.rpm"
+          },
           "sha256:3d29bac5a98a1d4219d8a4648ed62b3cc653a33ff9e6f9016d5610807bd39e54": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/k/kernel-modules-core-6.5.0-0.rc1.11.fc39.x86_64.rpm"
           },
@@ -5052,11 +5546,17 @@
           "sha256:3e585e584ef648a5d19c71ea6eaabdf19f56c3e212d4e71b6e8dbfd53e7fa588": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/n/nss-3.91.0-1.fc39.x86_64.rpm"
           },
+          "sha256:3ece18900f119ff66e18d08a3e5c02c4c359a4811456dee2c80c832adf8ba2d2": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/l/livesys-scripts-0.4.3-1.fc39.noarch.rpm"
+          },
           "sha256:3ed298c957602edb7ce91e0d06c4cc876c645d5e9848cd9553b5521ab1dba8a0": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/c/ca-certificates-2023.2.60-2.fc38.noarch.rpm"
           },
           "sha256:3ef78d18839e5117e451223d13cd54479534302857ab8954f198d8b3f9d1228e": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/n/nftables-1.0.7-2.fc39.x86_64.rpm"
+          },
+          "sha256:40340aeb187b05a0d5bae52f5c3d5e4faf7d24f00e2df0f6172ba617347d18fb": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/g/grub2-pc-modules-2.06-95.fc39.noarch.rpm"
           },
           "sha256:40a11002f05bd7a8c7d91fec045093b12d34aa2a26ffc253960f3bbf8353d2b8": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/l/libnftnl-1.2.5-1.fc39.x86_64.rpm"
@@ -5078,6 +5578,9 @@
           },
           "sha256:459ddfae2aa574b688c5fbd7c4d7cbf8e82c4a036c488f86e40cbcf7b1e0ec4e": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/f/fwupd-1.9.2-1.fc39.x86_64.rpm"
+          },
+          "sha256:45b50ec7c49cdaf0d9116037718e11de09c6684633ee8a6123dd1dab0016723e": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/w/which-2.21-39.fc39.x86_64.rpm"
           },
           "sha256:45b81fa215c5df7f340ee2a3aeadfc6d911db2958bd92bf5c957669722f63375": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/l/libtdb-1.4.8-2.fc39.x86_64.rpm"
@@ -5105,6 +5608,9 @@
           },
           "sha256:4a0fe49c4b65bce80cd427d683e3b9a53302bd7da9ddb50cc2bb082a46f666a3": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/l/libndp-1.8-5.fc38.x86_64.rpm"
+          },
+          "sha256:4af38f58f506870f383aa2126c90dba293412c86eb3848b88f46312ced00ff1f": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/i/isomd5sum-1.2.3-20.fc39.x86_64.rpm"
           },
           "sha256:4af884ec1c30ab55d14f240fbbf26cc53408210163db42f2d5cb57312c5114ad": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/l/libqrtr-glib-1.2.2-2.fc38.x86_64.rpm"
@@ -5214,11 +5720,17 @@
           "sha256:62a46a4a5362d50021c8c01314f007130217722403f4626f797e28afa86a6672": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/s/systemd-253.5-6.fc39.x86_64.rpm"
           },
+          "sha256:62b04362175ea9adba3c0df5f940fa250e606f8e162d225338bcb04c34f38b48": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/k/kf5-filesystem-5.108.0-1.fc39.x86_64.rpm"
+          },
           "sha256:655894d3d949f51eba70feeb3c87aea68c46b89f61420028ca10f9f42edf26d3": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/g/geolite2-country-20191217-9.fc39.noarch.rpm"
           },
           "sha256:659d34979d8b2b3426f04db38658175865fdf3bcc2b134a0f1b3e8cae90192fe": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/n/nano-default-editor-7.2-3.fc39.noarch.rpm"
+          },
+          "sha256:65ceef2495fdc2a5e91297c9bae9e4962c119b605a2509d88868d33fd9436df2": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/l/libburn-1.5.6-1.fc39.x86_64.rpm"
           },
           "sha256:670a2e4edfc87da4f053f7e7d093b6973db9f161cd946eb752621108ec242443": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/l/libedit-3.1-45.20221030cvs.fc38.x86_64.rpm"
@@ -5252,6 +5764,9 @@
           },
           "sha256:6fca62e62915318aaf9b2e2ce9e54b5c2cc55c1549f10d43b39c07e881fe8b88": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/u/util-linux-core-2.39.1-2.fc39.x86_64.rpm"
+          },
+          "sha256:707cfba4c1091ef07fd9e19db9a04a815592f720d803bde96a7ca0e36326de18": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/f/fuse-common-3.14.1-2.fc39.x86_64.rpm"
           },
           "sha256:70a7b76c6aa853ef743f3646b0f9a400ad155c78f47507ea400b5537645c8d20": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/g/gawk-5.2.2-1.fc39.x86_64.rpm"
@@ -5340,6 +5855,9 @@
           "sha256:82901ddecb681c92e88d4c9c260afce3aa6cec21ad0284d3a4bed10f00a3dc87": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/l/libgudev-238-1.fc39.x86_64.rpm"
           },
+          "sha256:83f76b18bbc0ce270890993f918e5bdba93d36a6e9e2f726d7f485ad01c7de46": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/n/ntfs-3g-system-compression-1.0-13.fc39.x86_64.rpm"
+          },
           "sha256:84208cd007ffdbe4d5e020c4fde8ad8fe9448a864178e0d127b8dffca55b043a": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/e/elfutils-libs-0.189-3.fc39.x86_64.rpm"
           },
@@ -5421,6 +5939,9 @@
           "sha256:8f5d6e98714b6f940c98db3c5027712c215e96ec9d2373852ae356b7da498c50": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/i/inih-57-1.fc39.x86_64.rpm"
           },
+          "sha256:8f5dd93fc2beffecfce0cf87735e2e124bdb76d769072b66e735825d08c12792": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/m/mtools-4.0.43-1.fc39.x86_64.rpm"
+          },
           "sha256:8f692cd7369a4f0ab03a165121e64d24e4c1af199e1c0478c2eada6766ac40aa": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/c/crypto-policies-20230614-1.git5f3458e.fc39.noarch.rpm"
           },
@@ -5444,6 +5965,9 @@
           },
           "sha256:92e30f1c5dc24f3ba10dc175f9699e009b55c97a215c57a0e32945e71f31d535": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/j/jq-1.6-15.fc38.x86_64.rpm"
+          },
+          "sha256:9399ac1e4ecc4eafdf18ca49b0d7c2282172fbe35aac9acf24f9a0877560ce6b": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/n/ntfs-3g-2022.10.3-2.fc38.x86_64.rpm"
           },
           "sha256:95cb44a04e8a50599b080f472044fee1bf8cf7809737ccbeae9a9f3d568190ab": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/p/python3.11-3.11.4-2.fc39.x86_64.rpm"
@@ -5484,6 +6008,9 @@
           "sha256:9f196c1696af163c77062c566618e52a7df7fe6d0f76744596d00d15a86a3ca7": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/o/os-prober-1.81-3.fc38.x86_64.rpm"
           },
+          "sha256:9f33f0a0b88d5a2b2f0e8c93abc9307477414374dd9594093dc790f3eac72d8a": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/m/microcode_ctl-2.1-55.fc39.x86_64.rpm"
+          },
           "sha256:9f64664f41a1bf02f8a62e9cefb792f672caaa50ea7843c91aeffea76b60d42a": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/l/libbasicobjects-0.1.1-53.fc38.x86_64.rpm"
           },
@@ -5501,6 +6028,9 @@
           },
           "sha256:a15680ef137aa970d29b233a1fc4da4889201e633daae0c8bb59303903ba65da": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/l/lmdb-libs-0.9.30-1.fc39.x86_64.rpm"
+          },
+          "sha256:a24bd42a7e88cf22b3dcc949bcb5ea3b9fec7882e3d7da4bd17de7356a2cc183": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/s/syslinux-nonlinux-6.04-0.24.fc38.noarch.rpm"
           },
           "sha256:a31d4c70ae37c6060c4c5c24b53dff0349cf6156f0638ae5d94e7c7b1ef673ec": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/g/gnupg2-2.4.3-1.fc39.x86_64.rpm"
@@ -5603,6 +6133,9 @@
           },
           "sha256:b9c9a205f9485ac2d48a9ac7e7031b9d748df571298c0f97a728ef966666cb75": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/b/bash-completion-2.11-11.fc39.noarch.rpm"
+          },
+          "sha256:baaa6804b373559b3baa54cadaea444c10cdec73fb05190ee932946dc2d7a205": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/s/squashfs-tools-4.6.1-1.fc39.x86_64.rpm"
           },
           "sha256:bb3770305f56cb6ea6dfec0ea8c0d6edc0c3db54f7a5fd9855c5c25057dbf01a": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/l/libsemanage-3.5-3.fc39.x86_64.rpm"
@@ -5715,6 +6248,12 @@
           "sha256:d268e37c04086d3ab838d08773d7e59b8d3cc29468aee480f371f3ca7d344eb1": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/l/libutempter-1.2.1-9.fc39.x86_64.rpm"
           },
+          "sha256:d4382363f0f4a81076c91b4bc53158ef9fe330f033fb6b1d701066e9512d313a": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/d/dracut-network-059-8.fc39.x86_64.rpm"
+          },
+          "sha256:d443ebfba6fde905569c33f41c3a9e08dd42019edd227e21dd86de24ab16d749": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/g/grub2-pc-2.06-95.fc39.x86_64.rpm"
+          },
           "sha256:d45e2b5838a71bdbf93d8d4e67b3f4ef292397412217a1351a533059fc7dbde0": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/f/firewalld-2.0.0-2.fc39.noarch.rpm"
           },
@@ -5742,6 +6281,9 @@
           "sha256:d914973c1c5ab87febdb540e4365eb83009d493448edba3e1b3644ce6607c0ef": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/p/pcsc-lite-2.0.0-1.fc39.x86_64.rpm"
           },
+          "sha256:d949521c5b898a94e9c3e2ffed751671b652687b34016ceca4bef650c68eb3ae": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/f/fuse-2.9.9-16.fc38.x86_64.rpm"
+          },
           "sha256:d9680b775716719f4bfae1b18fd68b860eee071bc767af9d20d84ade04e2bf12": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/r/realtek-firmware-20230625-151.fc39.noarch.rpm"
           },
@@ -5766,6 +6308,9 @@
           "sha256:e016382b96b9e4dcf1881e6cb0703465348444e60934ecf3c9316046b0bbb75a": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/m/man-db-2.11.2-3.fc39.x86_64.rpm"
           },
+          "sha256:e01d30e9953d8f96af6a2d46dc0b128ee632569f27a0596db77fb7a2b32cf897": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/i/iwlwifi-mvm-firmware-20230625-151.fc39.noarch.rpm"
+          },
           "sha256:e0214026e8899bf3455f97bed98c287644e52f9350ce977fd0ccab05dbb35b77": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/b/bzip2-libs-1.0.8-13.fc38.x86_64.rpm"
           },
@@ -5789,6 +6334,9 @@
           },
           "sha256:e477b21ea3b8434b4e06f30284e5fcae4243500dabffa3b5a2794b48eaf50aa2": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/l/libxmlb-0.3.11-1.fc39.x86_64.rpm"
+          },
+          "sha256:e542d95988c4bf9b14288bb20558cf1048515ab06548bf7606b74a2d5462705b": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/f/fedora-logos-38.1.0-1.fc39.noarch.rpm"
           },
           "sha256:e54e9aab6d46943e43c97fb605af34f49819a9bfcda6131d5f7c1a163daa4edf": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/l/libuser-0.64-3.fc39.x86_64.rpm"
@@ -5840,6 +6388,9 @@
           },
           "sha256:ef133f1f3219df080095e1ebdab24ec3fd072da0e58fd8e0697cfa5130bd6320": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/d/dmidecode-3.4-3.fc38.x86_64.rpm"
+          },
+          "sha256:ef8c53c3edd4b526ab6cc71ecbb794ece9333764a0d86fdc596512f27b4ff74f": {
+            "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/t/tar-1.34-8.fc39.x86_64.rpm"
           },
           "sha256:f03bb26119424e796e044e7ad3418c634a6258e09f82ea3f329e1e4cb1878916": {
             "url": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/p/python-unversioned-command-3.12.0~b3-2.fc39.noarch.rpm"
@@ -6197,6 +6748,26 @@
         "check_gpg": true
       },
       {
+        "name": "efi-filesystem",
+        "epoch": 0,
+        "version": "5",
+        "release": "8.fc39",
+        "arch": "noarch",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/e/efi-filesystem-5-8.fc39.noarch.rpm",
+        "checksum": "sha256:e6652262bf73cfe7e98446725aa5e793568bff122636815ad951fac77454681f",
+        "check_gpg": true
+      },
+      {
+        "name": "efivar-libs",
+        "epoch": 0,
+        "version": "38",
+        "release": "7.fc38",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/e/efivar-libs-38-7.fc38.x86_64.rpm",
+        "checksum": "sha256:8ff9a034c4cc68941868d2fab9fb0489fb7d2f7667ce3fc645c296b70ecb408d",
+        "check_gpg": true
+      },
+      {
         "name": "elfutils-debuginfod-client",
         "epoch": 0,
         "version": "0.189",
@@ -6487,6 +7058,46 @@
         "check_gpg": true
       },
       {
+        "name": "grub2-efi-x64",
+        "epoch": 1,
+        "version": "2.06",
+        "release": "95.fc39",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/g/grub2-efi-x64-2.06-95.fc39.x86_64.rpm",
+        "checksum": "sha256:767173f9cbfadb1d521f0790c335386d3c78258f9180dfb9e25d2c7b9c196f03",
+        "check_gpg": true
+      },
+      {
+        "name": "grub2-efi-x64-cdboot",
+        "epoch": 1,
+        "version": "2.06",
+        "release": "95.fc39",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/g/grub2-efi-x64-cdboot-2.06-95.fc39.x86_64.rpm",
+        "checksum": "sha256:21e37bd0141df1c58801551e7c76442c74680f6f04f8222a1175048a873729b6",
+        "check_gpg": true
+      },
+      {
+        "name": "grub2-pc",
+        "epoch": 1,
+        "version": "2.06",
+        "release": "95.fc39",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/g/grub2-pc-2.06-95.fc39.x86_64.rpm",
+        "checksum": "sha256:d443ebfba6fde905569c33f41c3a9e08dd42019edd227e21dd86de24ab16d749",
+        "check_gpg": true
+      },
+      {
+        "name": "grub2-pc-modules",
+        "epoch": 1,
+        "version": "2.06",
+        "release": "95.fc39",
+        "arch": "noarch",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/g/grub2-pc-modules-2.06-95.fc39.noarch.rpm",
+        "checksum": "sha256:40340aeb187b05a0d5bae52f5c3d5e4faf7d24f00e2df0f6172ba617347d18fb",
+        "check_gpg": true
+      },
+      {
         "name": "grub2-tools",
         "epoch": 1,
         "version": "2.06",
@@ -6524,6 +7135,16 @@
         "arch": "x86_64",
         "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/g/gzip-1.12-3.fc38.x86_64.rpm",
         "checksum": "sha256:2ee988694d3c875dcaa4741453ee07b4dc1da31205abb035065dbc7c8c72c0da",
+        "check_gpg": true
+      },
+      {
+        "name": "isomd5sum",
+        "epoch": 1,
+        "version": "1.2.3",
+        "release": "20.fc39",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/i/isomd5sum-1.2.3-20.fc39.x86_64.rpm",
+        "checksum": "sha256:4af38f58f506870f383aa2126c90dba293412c86eb3848b88f46312ced00ff1f",
         "check_gpg": true
       },
       {
@@ -6567,6 +7188,16 @@
         "check_gpg": true
       },
       {
+        "name": "kde-filesystem",
+        "epoch": 0,
+        "version": "4",
+        "release": "69.fc38",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/k/kde-filesystem-4-69.fc38.x86_64.rpm",
+        "checksum": "sha256:37da3f48de32bdb844332f15eaa453385abe72716b7933899a7306fc1deb0d4c",
+        "check_gpg": true
+      },
+      {
         "name": "keyutils-libs",
         "epoch": 0,
         "version": "1.6.1",
@@ -6574,6 +7205,16 @@
         "arch": "x86_64",
         "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/k/keyutils-libs-1.6.1-6.fc38.x86_64.rpm",
         "checksum": "sha256:a8003e886f65342e06c75edaef2bc54b1f313a9b19ba3d8b573b7b72a9583d87",
+        "check_gpg": true
+      },
+      {
+        "name": "kf5-filesystem",
+        "epoch": 0,
+        "version": "5.108.0",
+        "release": "1.fc39",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/k/kf5-filesystem-5.108.0-1.fc39.x86_64.rpm",
+        "checksum": "sha256:62b04362175ea9adba3c0df5f940fa250e606f8e162d225338bcb04c34f38b48",
         "check_gpg": true
       },
       {
@@ -6684,6 +7325,16 @@
         "arch": "x86_64",
         "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/l/libbrotli-1.0.9-12.fc39.x86_64.rpm",
         "checksum": "sha256:8cc10856c47acece791b63f4b71dc77fb8f4bb3147804d560313c37caba1832b",
+        "check_gpg": true
+      },
+      {
+        "name": "libburn",
+        "epoch": 0,
+        "version": "1.5.6",
+        "release": "1.fc39",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/l/libburn-1.5.6-1.fc39.x86_64.rpm",
+        "checksum": "sha256:65ceef2495fdc2a5e91297c9bae9e4962c119b605a2509d88868d33fd9436df2",
         "check_gpg": true
       },
       {
@@ -6824,6 +7475,26 @@
         "arch": "x86_64",
         "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/l/libidn2-2.3.4-2.fc38.x86_64.rpm",
         "checksum": "sha256:e24b40ad581933d9ca22b525c434777d90a46cb4c0b097c497c788e49fd946d4",
+        "check_gpg": true
+      },
+      {
+        "name": "libisoburn",
+        "epoch": 0,
+        "version": "1.5.6",
+        "release": "1.fc39",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/l/libisoburn-1.5.6-1.fc39.x86_64.rpm",
+        "checksum": "sha256:322ce35683b25fcace96689a28446cb1196c83a2bad49b118e5875ca3befbcc3",
+        "check_gpg": true
+      },
+      {
+        "name": "libisofs",
+        "epoch": 0,
+        "version": "1.5.6",
+        "release": "1.fc39",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/l/libisofs-1.5.6-1.fc39.x86_64.rpm",
+        "checksum": "sha256:101a4abb20cdf0e2fbfd9cb7bc08b6545486ef07ba64280c03df82b3b9044abe",
         "check_gpg": true
       },
       {
@@ -7147,6 +7818,16 @@
         "check_gpg": true
       },
       {
+        "name": "lzo",
+        "epoch": 0,
+        "version": "2.10",
+        "release": "8.fc38",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/l/lzo-2.10-8.fc38.x86_64.rpm",
+        "checksum": "sha256:229c871fbe7fafbb99a80e7c6cec9e8a264b674fb2890d66aaa89f3d836d6b8a",
+        "check_gpg": true
+      },
+      {
         "name": "memstrack",
         "epoch": 0,
         "version": "0.2.5",
@@ -7167,6 +7848,16 @@
         "check_gpg": true
       },
       {
+        "name": "mokutil",
+        "epoch": 2,
+        "version": "0.6.0",
+        "release": "6.fc38",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/m/mokutil-0.6.0-6.fc38.x86_64.rpm",
+        "checksum": "sha256:fa3d842fa6c4670b6157050baddb4f2fbb3145ef6249e12ff4d7a75661e552e7",
+        "check_gpg": true
+      },
+      {
         "name": "mpdecimal",
         "epoch": 0,
         "version": "2.5.1",
@@ -7184,6 +7875,16 @@
         "arch": "x86_64",
         "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/m/mpfr-4.1.1-3.fc38.x86_64.rpm",
         "checksum": "sha256:4dce785f0955e4bc212f5642fbf76752e8e758fddaf31d423c76064442c382a4",
+        "check_gpg": true
+      },
+      {
+        "name": "mtools",
+        "epoch": 0,
+        "version": "4.0.43",
+        "release": "1.fc39",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/m/mtools-4.0.43-1.fc39.x86_64.rpm",
+        "checksum": "sha256:8f5dd93fc2beffecfce0cf87735e2e124bdb76d769072b66e735825d08c12792",
         "check_gpg": true
       },
       {
@@ -7507,6 +8208,16 @@
         "check_gpg": true
       },
       {
+        "name": "shim-x64",
+        "epoch": 0,
+        "version": "15.6",
+        "release": "2",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/s/shim-x64-15.6-2.x86_64.rpm",
+        "checksum": "sha256:174bda41056c4cac41ef9bf8a7adb06affd92bcb18a258d319b9153bf0f00686",
+        "check_gpg": true
+      },
+      {
         "name": "sqlite-libs",
         "epoch": 0,
         "version": "3.42.0",
@@ -7514,6 +8225,36 @@
         "arch": "x86_64",
         "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/s/sqlite-libs-3.42.0-1.fc39.x86_64.rpm",
         "checksum": "sha256:f9a4e4bec35320e2668d3701265bf4482235c55bc9091e6c0ea898d20cf3976b",
+        "check_gpg": true
+      },
+      {
+        "name": "squashfs-tools",
+        "epoch": 0,
+        "version": "4.6.1",
+        "release": "1.fc39",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/s/squashfs-tools-4.6.1-1.fc39.x86_64.rpm",
+        "checksum": "sha256:baaa6804b373559b3baa54cadaea444c10cdec73fb05190ee932946dc2d7a205",
+        "check_gpg": true
+      },
+      {
+        "name": "syslinux",
+        "epoch": 0,
+        "version": "6.04",
+        "release": "0.24.fc38",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/s/syslinux-6.04-0.24.fc38.x86_64.rpm",
+        "checksum": "sha256:29127ab06c22574589f2f566bf395446460cfd734692a1b4f036cba77c241238",
+        "check_gpg": true
+      },
+      {
+        "name": "syslinux-nonlinux",
+        "epoch": 0,
+        "version": "6.04",
+        "release": "0.24.fc38",
+        "arch": "noarch",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/s/syslinux-nonlinux-6.04-0.24.fc38.noarch.rpm",
+        "checksum": "sha256:a24bd42a7e88cf22b3dcc949bcb5ea3b9fec7882e3d7da4bd17de7356a2cc183",
         "check_gpg": true
       },
       {
@@ -7627,6 +8368,16 @@
         "check_gpg": true
       },
       {
+        "name": "which",
+        "epoch": 0,
+        "version": "2.21",
+        "release": "39.fc39",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/w/which-2.21-39.fc39.x86_64.rpm",
+        "checksum": "sha256:45b50ec7c49cdaf0d9116037718e11de09c6684633ee8a6123dd1dab0016723e",
+        "check_gpg": true
+      },
+      {
         "name": "whois-nls",
         "epoch": 0,
         "version": "5.5.17",
@@ -7644,6 +8395,16 @@
         "arch": "noarch",
         "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/x/xkeyboard-config-2.39-1.fc39.noarch.rpm",
         "checksum": "sha256:85ededeacb3d04ce61b64599a4bce972dc5109adf665edd8a9a23f8d73a0d1b4",
+        "check_gpg": true
+      },
+      {
+        "name": "xorriso",
+        "epoch": 0,
+        "version": "1.5.6",
+        "release": "1.fc39",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/x/xorriso-1.5.6-1.fc39.x86_64.rpm",
+        "checksum": "sha256:3d2558055825754ef1801c9d605c2633108f8ac8009a0795fd5d4200126d48a4",
         "check_gpg": true
       },
       {
@@ -8129,6 +8890,26 @@
         "check_gpg": true
       },
       {
+        "name": "dracut-live",
+        "epoch": 0,
+        "version": "059",
+        "release": "8.fc39",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/d/dracut-live-059-8.fc39.x86_64.rpm",
+        "checksum": "sha256:2f556129fbacf1324f5ca88a683a32012dc33a496c100ccb7fc6053c19bfda98",
+        "check_gpg": true
+      },
+      {
+        "name": "dracut-network",
+        "epoch": 0,
+        "version": "059",
+        "release": "8.fc39",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/d/dracut-network-059-8.fc39.x86_64.rpm",
+        "checksum": "sha256:d4382363f0f4a81076c91b4bc53158ef9fe330f033fb6b1d701066e9512d313a",
+        "check_gpg": true
+      },
+      {
         "name": "duktape",
         "epoch": 0,
         "version": "2.7.0",
@@ -8269,6 +9050,16 @@
         "check_gpg": true
       },
       {
+        "name": "fedora-logos",
+        "epoch": 0,
+        "version": "38.1.0",
+        "release": "1.fc39",
+        "arch": "noarch",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/f/fedora-logos-38.1.0-1.fc39.noarch.rpm",
+        "checksum": "sha256:e542d95988c4bf9b14288bb20558cf1048515ab06548bf7606b74a2d5462705b",
+        "check_gpg": true
+      },
+      {
         "name": "fedora-release",
         "epoch": 0,
         "version": "39",
@@ -8396,6 +9187,26 @@
         "arch": "x86_64",
         "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/f/fmt-10.0.0-2.fc39.x86_64.rpm",
         "checksum": "sha256:41c5785009571d8e5af5135f5bb74b04734d99cd33d66dd1fef57c30e1741c3c",
+        "check_gpg": true
+      },
+      {
+        "name": "fuse",
+        "epoch": 0,
+        "version": "2.9.9",
+        "release": "16.fc38",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/f/fuse-2.9.9-16.fc38.x86_64.rpm",
+        "checksum": "sha256:d949521c5b898a94e9c3e2ffed751671b652687b34016ceca4bef650c68eb3ae",
+        "check_gpg": true
+      },
+      {
+        "name": "fuse-common",
+        "epoch": 0,
+        "version": "3.14.1",
+        "release": "2.fc39",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/f/fuse-common-3.14.1-2.fc39.x86_64.rpm",
+        "checksum": "sha256:707cfba4c1091ef07fd9e19db9a04a815592f720d803bde96a7ca0e36326de18",
         "check_gpg": true
       },
       {
@@ -8689,6 +9500,26 @@
         "check_gpg": true
       },
       {
+        "name": "grub2-pc",
+        "epoch": 1,
+        "version": "2.06",
+        "release": "95.fc39",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/g/grub2-pc-2.06-95.fc39.x86_64.rpm",
+        "checksum": "sha256:d443ebfba6fde905569c33f41c3a9e08dd42019edd227e21dd86de24ab16d749",
+        "check_gpg": true
+      },
+      {
+        "name": "grub2-pc-modules",
+        "epoch": 1,
+        "version": "2.06",
+        "release": "95.fc39",
+        "arch": "noarch",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/g/grub2-pc-modules-2.06-95.fc39.noarch.rpm",
+        "checksum": "sha256:40340aeb187b05a0d5bae52f5c3d5e4faf7d24f00e2df0f6172ba617347d18fb",
+        "check_gpg": true
+      },
+      {
         "name": "grub2-tools",
         "epoch": 1,
         "version": "2.06",
@@ -8836,6 +9667,26 @@
         "arch": "x86_64",
         "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/i/iputils-20221126-2.fc38.x86_64.rpm",
         "checksum": "sha256:ff9b182201219150cd36918b197e7c911de32b906080caa88c3c21fed06ce6a2",
+        "check_gpg": true
+      },
+      {
+        "name": "iwlwifi-dvm-firmware",
+        "epoch": 0,
+        "version": "20230625",
+        "release": "151.fc39",
+        "arch": "noarch",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/i/iwlwifi-dvm-firmware-20230625-151.fc39.noarch.rpm",
+        "checksum": "sha256:0799fbfa0827402f0ff03ad42f743e1f18e37634d7895833674bf731a759fa77",
+        "check_gpg": true
+      },
+      {
+        "name": "iwlwifi-mvm-firmware",
+        "epoch": 0,
+        "version": "20230625",
+        "release": "151.fc39",
+        "arch": "noarch",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/i/iwlwifi-mvm-firmware-20230625-151.fc39.noarch.rpm",
+        "checksum": "sha256:e01d30e9953d8f96af6a2d46dc0b128ee632569f27a0596db77fb7a2b32cf897",
         "check_gpg": true
       },
       {
@@ -10179,6 +11030,16 @@
         "check_gpg": true
       },
       {
+        "name": "livesys-scripts",
+        "epoch": 0,
+        "version": "0.4.3",
+        "release": "1.fc39",
+        "arch": "noarch",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/l/livesys-scripts-0.4.3-1.fc39.noarch.rpm",
+        "checksum": "sha256:3ece18900f119ff66e18d08a3e5c02c4c359a4811456dee2c80c832adf8ba2d2",
+        "check_gpg": true
+      },
+      {
         "name": "lmdb-libs",
         "epoch": 0,
         "version": "0.9.30",
@@ -10249,6 +11110,16 @@
         "check_gpg": true
       },
       {
+        "name": "microcode_ctl",
+        "epoch": 2,
+        "version": "2.1",
+        "release": "55.fc39",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/m/microcode_ctl-2.1-55.fc39.x86_64.rpm",
+        "checksum": "sha256:9f33f0a0b88d5a2b2f0e8c93abc9307477414374dd9594093dc790f3eac72d8a",
+        "check_gpg": true
+      },
+      {
         "name": "mkpasswd",
         "epoch": 0,
         "version": "5.5.17",
@@ -10296,6 +11167,16 @@
         "arch": "noarch",
         "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/m/mt7xxx-firmware-20230625-151.fc39.noarch.rpm",
         "checksum": "sha256:50beba3a931f38b071bd76e80aa0b8560fb43e3972b07ffbfc22fd7835c0acca",
+        "check_gpg": true
+      },
+      {
+        "name": "mtools",
+        "epoch": 0,
+        "version": "4.0.43",
+        "release": "1.fc39",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/m/mtools-4.0.43-1.fc39.x86_64.rpm",
+        "checksum": "sha256:8f5dd93fc2beffecfce0cf87735e2e124bdb76d769072b66e735825d08c12792",
         "check_gpg": true
       },
       {
@@ -10449,6 +11330,16 @@
         "check_gpg": true
       },
       {
+        "name": "ntfs-3g",
+        "epoch": 2,
+        "version": "2022.10.3",
+        "release": "2.fc38",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/n/ntfs-3g-2022.10.3-2.fc38.x86_64.rpm",
+        "checksum": "sha256:9399ac1e4ecc4eafdf18ca49b0d7c2282172fbe35aac9acf24f9a0877560ce6b",
+        "check_gpg": true
+      },
+      {
         "name": "ntfs-3g-libs",
         "epoch": 2,
         "version": "2022.10.3",
@@ -10456,6 +11347,16 @@
         "arch": "x86_64",
         "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/n/ntfs-3g-libs-2022.10.3-2.fc38.x86_64.rpm",
         "checksum": "sha256:061e9593b25a36f9f430ae56c97fc7b63840583d105bde98d0cdb774d1e9bdb7",
+        "check_gpg": true
+      },
+      {
+        "name": "ntfs-3g-system-compression",
+        "epoch": 0,
+        "version": "1.0",
+        "release": "13.fc39",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/n/ntfs-3g-system-compression-1.0-13.fc39.x86_64.rpm",
+        "checksum": "sha256:83f76b18bbc0ce270890993f918e5bdba93d36a6e9e2f726d7f485ad01c7de46",
         "check_gpg": true
       },
       {
@@ -11189,6 +12090,26 @@
         "check_gpg": true
       },
       {
+        "name": "syslinux",
+        "epoch": 0,
+        "version": "6.04",
+        "release": "0.24.fc38",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/s/syslinux-6.04-0.24.fc38.x86_64.rpm",
+        "checksum": "sha256:29127ab06c22574589f2f566bf395446460cfd734692a1b4f036cba77c241238",
+        "check_gpg": true
+      },
+      {
+        "name": "syslinux-nonlinux",
+        "epoch": 0,
+        "version": "6.04",
+        "release": "0.24.fc38",
+        "arch": "noarch",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/s/syslinux-nonlinux-6.04-0.24.fc38.noarch.rpm",
+        "checksum": "sha256:a24bd42a7e88cf22b3dcc949bcb5ea3b9fec7882e3d7da4bd17de7356a2cc183",
+        "check_gpg": true
+      },
+      {
         "name": "systemd",
         "epoch": 0,
         "version": "253.5",
@@ -11246,6 +12167,16 @@
         "arch": "x86_64",
         "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/s/systemd-udev-253.5-6.fc39.x86_64.rpm",
         "checksum": "sha256:f1d022be88dac330f03060de21bd8234c1547b1b2f6bb19feffb86e244ee4b8a",
+        "check_gpg": true
+      },
+      {
+        "name": "tar",
+        "epoch": 2,
+        "version": "1.34",
+        "release": "8.fc39",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/t/tar-1.34-8.fc39.x86_64.rpm",
+        "checksum": "sha256:ef8c53c3edd4b526ab6cc71ecbb794ece9333764a0d86fdc596512f27b4ff74f",
         "check_gpg": true
       },
       {
@@ -11356,6 +12287,16 @@
         "arch": "x86_64",
         "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/v/volume_key-libs-0.3.12-19.fc39.x86_64.rpm",
         "checksum": "sha256:0aef12f6550a16a25446165ea90f1f5a19c9d0be212f287cf7c134d56cf1ec67",
+        "check_gpg": true
+      },
+      {
+        "name": "which",
+        "epoch": 0,
+        "version": "2.21",
+        "release": "39.fc39",
+        "arch": "x86_64",
+        "remote_location": "http://mirror.nl.leaseweb.net/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/w/which-2.21-39.fc39.x86_64.rpm",
+        "checksum": "sha256:45b50ec7c49cdaf0d9116037718e11de09c6684633ee8a6123dd1dab0016723e",
         "check_gpg": true
       },
       {

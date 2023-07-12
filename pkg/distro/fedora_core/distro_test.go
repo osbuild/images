@@ -40,11 +40,19 @@ func TestFilenameFromType(t *testing.T) {
 		want wantResult
 	}{
 		{
-			name: "raw",
-			args: args{"raw"},
+			name: "disk-raw",
+			args: args{"disk-raw"},
 			want: wantResult{
 				filename: "raw.img",
 				mimeType: "application/disk",
+			},
+		},
+		{
+			name: "iso-live",
+			args: args{"iso-live"},
+			want: wantResult{
+				filename: "live.iso",
+				mimeType: "application/x-iso9660-image",
 			},
 		},
 	}
@@ -136,13 +144,13 @@ func TestImageType_Name(t *testing.T) {
 		{
 			arch: "x86_64",
 			imgNames: []string{
-				"raw",
+				"disk-raw",
 			},
 		},
 		{
 			arch: "aarch64",
 			imgNames: []string{
-				"raw",
+				"disk-raw",
 			},
 		},
 	}
@@ -206,13 +214,15 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 		{
 			arch: "x86_64",
 			imgNames: []string{
-				"raw",
+				"disk-raw",
+				"iso-live",
 			},
 		},
 		{
 			arch: "aarch64",
 			imgNames: []string{
-				"raw",
+				"disk-raw",
+				"iso-live",
 			},
 		},
 	}

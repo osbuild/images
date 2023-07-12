@@ -715,6 +715,31 @@ func (p *OS) serialize() osbuild.Pipeline {
 		pipeline.AddStage(osbuild.NewWSLConfStage(wslConf))
 	}
 
+	/// XXX XXX XXX
+	pipeline.AddStage(osbuild.NewBuildstampStage(&osbuild.BuildstampStageOptions{
+		Arch:    p.platform.GetArch().String(),
+		Product: "Fedora",
+		Variant: "",
+		Version: "39",
+		Final:   true,
+	}))
+
+	// XXX XXX XXX
+	dracutModules := []string{
+		//"anaconda",
+		//"rdma",
+		//"rngd",
+		//"multipath",
+		//"fcoe",
+		//"fcoe-uefi",
+		//"iscsi",
+		"lunmask",
+		//"nfs",
+	}
+
+	dracutOptions := dracutStageOptions(p.kernelVer, false, dracutModules)
+	pipeline.AddStage(osbuild.NewDracutStage(dracutOptions))
+
 	if p.SElinux != "" {
 		pipeline.AddStage(osbuild.NewSELinuxStage(&osbuild.SELinuxStageOptions{
 			FileContexts:     fmt.Sprintf("etc/selinux/%s/contexts/files/file_contexts", p.SElinux),
@@ -793,4 +818,8 @@ func (p *OS) getInline() []string {
 	}
 
 	return inlineData
+}
+
+func (p *OS) GetKernelVersion() string {
+	return p.kernelVer
 }

@@ -152,3 +152,7 @@ func chmodStageOptions(path, mode string, recursive bool) *osbuild.ChmodStageOpt
 func (p *OSTreeCommitServer) GetPlatform() platform.Platform {
 	return p.platform
 }
+
+func (p *OSTreeCommitServer) GetKernelVersion() string {
+	return ""
+}

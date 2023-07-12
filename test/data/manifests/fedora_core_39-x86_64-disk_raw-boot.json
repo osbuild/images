@@ -2,7 +2,7 @@
   "compose-request": {
     "distro": "fedora-core-39",
     "arch": "x86_64",
-    "image-type": "raw",
+    "image-type": "disk-raw",
     "repositories": [
       {
         "name": "fedora",
@@ -4590,6 +4590,54 @@
               "config": {
                 "default": "saved"
               }
+            }
+          },
+          {
+            "type": "org.osbuild.buildstamp",
+            "options": {
+              "arch": "x86_64",
+              "product": "Fedora",
+              "version": "39",
+              "final": true,
+              "variant": "",
+              "bugurl": ""
+            }
+          },
+          {
+            "type": "org.osbuild.dracut",
+            "options": {
+              "kernel": [
+                "6.5.0-0.rc1.11.fc39.x86_64"
+              ],
+              "modules": [
+                "bash",
+                "systemd",
+                "fips",
+                "systemd-initrd",
+                "i18n",
+                "convertfs",
+                "drm",
+                "crypt",
+                "dm",
+                "dmsquash-live",
+                "kernel-modules",
+                "kernel-modules-extra",
+                "qemu",
+                "resume",
+                "rootfs-block",
+                "terminfo",
+                "udev-rules",
+                "dracut-systemd",
+                "pollcdrom",
+                "usrmount",
+                "base",
+                "fs-lib",
+                "shutdown",
+                "lunmask"
+              ],
+              "install": [
+                "/.buildstamp"
+              ]
             }
           },
           {

@@ -33,12 +33,12 @@ var (
 		oscap.Standard,
 	}
 
-	rawImgType = imageType{
-		name:     "raw",
+	diskRawImgType = imageType{
+		name:     "disk-raw",
 		filename: "raw.img",
 		mimeType: "application/disk",
 		packageSets: map[string]packageSetFunc{
-			osPkgsKey: corePackageSet,
+			osPkgsKey: diskRawPackageSet,
 		},
 		rpmOstree:           false,
 		kernelOptions:       defaultKernelOptions,
@@ -49,6 +49,23 @@ var (
 		payloadPipelines:    []string{"os", "image"},
 		exports:             []string{"image"},
 		basePartitionTables: defaultBasePartitionTables,
+	}
+
+	isoLiveImgType = imageType{
+		name:        "iso-live",
+		nameAliases: []string{},
+		filename:    "live.iso",
+		mimeType:    "application/x-iso9660-image",
+		packageSets: map[string]packageSetFunc{
+			osPkgsKey: isoLivePackageSet,
+		},
+		bootable:         true,
+		bootISO:          true,
+		rpmOstree:        false,
+		image:            liveImage,
+		buildPipelines:   []string{"build"},
+		payloadPipelines: []string{"os", "rootfs-image", "efiboot-tree", "bootiso-tree", "bootiso"},
+		exports:          []string{"bootiso"},
 	}
 )
 
@@ -215,11 +232,6 @@ func newDistro(version int) distro.Distro {
 		distro: &rd,
 	}
 
-	aarch64 := architecture{
-		name:   platform.ARCH_AARCH64.String(),
-		distro: &rd,
-	}
-
 	x86_64.addImageTypes(
 		&platform.X86{
 			UEFIVendor: "fedora",
@@ -227,8 +239,37 @@ func newDistro(version int) distro.Distro {
 				ImageFormat: platform.FORMAT_RAW,
 			},
 		},
-		rawImgType,
+		diskRawImgType,
 	)
+
+	x86_64.addImageTypes(
+		&platform.X86{
+			BIOS:       true,
+			UEFIVendor: "fedora",
+			BasePlatform: platform.BasePlatform{
+				FirmwarePackages: []string{
+					"microcode_ctl", // ??
+					"iwl1000-firmware",
+					"iwl100-firmware",
+					"iwl105-firmware",
+					"iwl135-firmware",
+					"iwl2000-firmware",
+					"iwl2030-firmware",
+					"iwl3160-firmware",
+					"iwl5000-firmware",
+					"iwl5150-firmware",
+					"iwl6000-firmware",
+					"iwl6050-firmware",
+				},
+			},
+		},
+		isoLiveImgType,
+	)
+
+	aarch64 := architecture{
+		name:   platform.ARCH_AARCH64.String(),
+		distro: &rd,
+	}
 
 	aarch64.addImageTypes(
 		&platform.Aarch64{
@@ -237,7 +278,21 @@ func newDistro(version int) distro.Distro {
 				ImageFormat: platform.FORMAT_RAW,
 			},
 		},
-		rawImgType,
+		diskRawImgType,
+	)
+
+	aarch64.addImageTypes(
+		&platform.Aarch64{
+			UEFIVendor: "fedora",
+			BasePlatform: platform.BasePlatform{
+				FirmwarePackages: []string{
+					"uboot-images-armv8", // ??
+					"bcm283x-firmware",
+					"arm-image-installer", // ??
+				},
+			},
+		},
+		isoLiveImgType,
 	)
 
 	rd.addArches(x86_64, aarch64)
