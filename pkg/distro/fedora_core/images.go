@@ -205,7 +205,7 @@ func diskImage(workload workload.Workload,
 	containers []container.SourceSpec,
 	rng *rand.Rand) (image.ImageKind, error) {
 
-	img := image.NewLiveImage()
+	img := image.NewDiskImage()
 	img.Platform = t.platform
 	img.OSCustomizations = osCustomizations(t, packageSets[osPkgsKey], containers, customizations)
 	img.Environment = t.environment
