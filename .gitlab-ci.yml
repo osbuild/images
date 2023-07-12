@@ -45,7 +45,7 @@ Manifest-diff:
   script:
     - ./test/cases/diff-manifests.sh
   variables:
-    RUNNER: aws/rhel-9.2-ga-x86_64
+    RUNNER: aws/rhel-9.3-nightly-x86_64
     INTERNAL_NETWORK: "true"
     GIT_STRATEGY: "clone"
     GIT_CHECKOUT: "true"
