@@ -24,12 +24,12 @@ greenprint "Getting base branch name"
 basebranch=$(curl  \
     -u "${SCHUTZBOT_LOGIN}" \
     -H 'Accept: application/vnd.github.v3+json' \
-    "https://api.github.com/repos/osbuild/osbuild-composer/pulls/${prnum}" | jq -r ".base.ref")
+    "https://api.github.com/repos/osbuild/images/pulls/${prnum}" | jq -r ".base.ref")
 
 greenprint "Adding upstream GitHub remote"
 # distro version branches aren't synced to GitLab, so we will need to fetch
 # them from GitHub directly
-git remote add gh https://github.com/osbuild/osbuild-composer
+git remote add gh https://github.com/osbuild/images
 git remote show gh
 
 greenprint "Fetching gh/${basebranch}"
@@ -47,12 +47,8 @@ fi
 
 # We are compiling things, install the build requirements
 greenprint "Installing build dependencies"
-# first we need to install the rpm macros so that dnf can parse our spec file
-sudo dnf install -y redhat-rpm-config
-# we need to have access to codeready-builder repos for the dependencies
-sudo dnf config-manager --set-enabled codeready-builder-for-rhel-9-rhui-rpms
 # now install our build requirements
-sudo dnf build-dep -y osbuild-composer.spec
+sudo dnf install -y go gpgme-devel gcc
 
 manifestdir=$(mktemp -d)
 
@@ -103,7 +99,7 @@ comment_status=$(curl \
     --show-error \
     --write-out '%{http_code}' \
     --output "${comment_req_out}" \
-    "https://api.github.com/repos/osbuild/osbuild-composer/pulls/${prnum}/reviews" \
+    "https://api.github.com/repos/osbuild/images/pulls/${prnum}/reviews" \
     -d @"${review_data_file}")
 
 cat "${comment_req_out}"
