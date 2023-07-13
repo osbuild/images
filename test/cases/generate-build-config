@@ -1,0 +1,105 @@
+#!/usr/bin/env python3
+#
+# Generates gitlab child pipelines for building images.
+# Each pipeline should build a single image configuration test.
+import json
+import os
+import subprocess as sp
+import sys
+
+CONFIGS_PATH = "./test/configs"
+
+# TEST SELECTION
+ARCHITECTURES = ["x86_64", "aarch64"]
+# configuration files to use based on image type name
+CONFIGS = {
+    "edge-commit": ["ostree", "embed-containers"],
+    "edge-container": ["ostree", "embed-containers-2"],
+    "iot-commit": ["ostree", "kernel-debug"],
+    "iot-container": ["ostree", "iot-customizations-full"],
+    "qcow2": ["empty", "all-customizations"],
+}
+# skip image types that we can't test right now
+SKIPS = [
+    "edge-ami"
+    "edge-installer",
+    "edge-raw-image",
+    "edge-simplified-installer",
+    "iot-installer",
+    "iot-raw-image",
+    "iot-simplified-installer",
+]
+
+# base and terraform bits copied from main .gitlab-ci.yml
+# needed for status reporting and defining the runners
+BASE_CONFIG = """
+.base:
+  before_script:
+    - mkdir -p /tmp/artifacts
+    - schutzbot/ci_details.sh > /tmp/artifacts/ci-details-before-run.txt
+    - cat schutzbot/team_ssh_keys.txt | tee -a ~/.ssh/authorized_keys > /dev/null
+  after_script:
+    - schutzbot/ci_details.sh > /tmp/artifacts/ci-details-after-run.txt || true
+    - schutzbot/update_github_status.sh update || true
+    - schutzbot/save_journal.sh || true
+    - schutzbot/upload_artifacts.sh
+  interruptible: true
+  retry: 1
+  tags:
+    - terraform
+
+.terraform:
+  extends: .base
+  tags:
+    - terraform
+"""
+
+JOB_TEMPLATE = """
+build/{distro}/{arch}/{image_type}/{config_name}:
+  stage: test
+  script:
+    - sudo dnf install -y go gpgme-devel gcc osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux
+    - sudo go run ./cmd/build -distro "{distro}" -image "{image_type}" -config {config}
+  extends: .terraform
+  variables:
+    RUNNER: aws/fedora-38-{arch}
+    INTERNAL_NETWORK: "{internal}"
+"""
+
+
+def list_images():
+    arches_arg = ",".join(ARCHITECTURES)
+    output = sp.check_output(["go", "run", "./cmd/list-images", "-json", "-arches", arches_arg])
+    return json.loads(output)
+
+
+def generate_configs(images, config_file):
+    for image in images:
+        distro = image["distro"]
+        arch = image["arch"]
+        image_type = image["image-type"]
+
+        if image_type in SKIPS:
+            continue
+
+        test_configs = CONFIGS.get(image_type, ["empty"])  # default to empty
+        for config_name in test_configs:
+            config_path = os.path.join(CONFIGS_PATH, config_name + ".json")
+            config_file.write(JOB_TEMPLATE.format(distro=distro, arch=arch, image_type=image_type,
+                                                  config_name=config_name, config=config_path,
+                                                  internal="true" if "rhel" in distro else "false"))
+
+
+def main():
+    config_path = sys.argv[1]
+
+    images = list_images()
+
+    with open(config_path, "w") as config_file:
+        config_file.write(BASE_CONFIG)
+
+        generate_configs(images, config_file)
+
+
+if __name__ == "__main__":
+    main()
