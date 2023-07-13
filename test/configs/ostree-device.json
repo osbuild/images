@@ -1,0 +1,12 @@
+{
+  "name": "ostree-device",
+  "blueprint": {
+    "customizations": {
+      "installation_device": "/dev/null"
+    }
+  },
+  "ostree": {
+    "ref": "test/fedora/iot",
+    "url": "http://fedora.example.com/repo"
+  }
+}
