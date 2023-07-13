@@ -1,0 +1,10 @@
+{
+  "name": "kernel-rt",
+  "blueprint": {
+    "customizations": {
+      "kernel": {
+        "name": "kernel-rt"
+      }
+    }
+  }
+}

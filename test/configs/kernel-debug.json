@@ -1,0 +1,10 @@
+{
+  "name": "kernel-debug",
+  "blueprint": {
+    "customizations": {
+      "kernel": {
+        "name": "kernel-debug"
+      }
+    }
+  }
+}

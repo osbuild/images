@@ -1,0 +1,16 @@
+{
+  "name": "simplified-installer",
+  "ostree": {
+    "ref": "test/edge",
+    "url": "http://edge.example.com/repo"
+  },
+  "blueprint": {
+    "customizations": {
+      "installation_device": "/dev/vda",
+      "fdo": {
+        "manufacturing_server_url": "https://fdo.example.com",
+        "diun_pub_key_insecure": "true"
+      }
+    }
+  }
+}
