@@ -1,8 +1,4 @@
 // Standalone executable for building a test image.
-// Must be run from the root of the repository and reads
-// tools/test-case-generators/repos.json for repositories
-// tools/test-case-generators/format-request-map.json for customizations
-
 package main
 
 import (
@@ -27,6 +23,17 @@ import (
 	"github.com/osbuild/images/pkg/rhsm/facts"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
+
+func fail(msg string) {
+	fmt.Fprintln(os.Stderr, msg)
+	os.Exit(1)
+}
+
+func check(err error) {
+	if err != nil {
+		fail(err.Error())
+	}
+}
 
 type repository struct {
 	Name           string   `json:"name"`
@@ -63,55 +70,42 @@ type crBlueprint struct {
 	Distro         string                    `json:"distro,omitempty"`
 }
 
-type composeRequest struct {
-	Distro       string         `json:"distro,omitempty"`
-	Arch         string         `json:"arch,omitempty"`
-	ImageType    string         `json:"image-type,omitempty"`
-	Repositories []repository   `json:"repositories,omitempty"`
-	Filename     string         `json:"filename,omitempty"`
-	OSTree       *ostreeOptions `json:"ostree,omitempty"`
-	Blueprint    *crBlueprint   `json:"blueprint,omitempty"`
+type buildConfig struct {
+	Name      string         `json:"name"`
+	OSTree    *ostreeOptions `json:"ostree,omitempty"`
+	Blueprint *crBlueprint   `json:"blueprint,omitempty"`
 }
 
-type manifestRequest struct {
-	ComposeRequest  composeRequest            `json:"compose-request"`
-	Overrides       map[string]composeRequest `json:"overrides"`
-	SupportedArches []string                  `json:"supported_arches"`
-}
-
-type formatRequestMap map[string]manifestRequest
-
-func loadFormatRequestMap() formatRequestMap {
-	requestMapPath := "./tools/test-case-generators/format-request-map.json"
-	fp, err := os.Open(requestMapPath)
+func loadConfig(filepath string) buildConfig {
+	fp, err := os.Open(filepath)
 	if err != nil {
-		panic(fmt.Sprintf("failed to open format request map %q: %s", requestMapPath, err.Error()))
+		fail(fmt.Sprintf("failed to open config file %q: %s", filepath, err.Error()))
 	}
 	defer fp.Close()
 	data, err := io.ReadAll(fp)
 	if err != nil {
-		panic(fmt.Sprintf("failed to read format request map %q: %s", requestMapPath, err.Error()))
+		fail(fmt.Sprintf("failed to read config file %q: %s", filepath, err.Error()))
 	}
-	var frm formatRequestMap
-	if err := json.Unmarshal(data, &frm); err != nil {
-		panic(fmt.Sprintf("failed to unmarshal format request map %q: %s", requestMapPath, err.Error()))
+	var config buildConfig
+	if err := json.Unmarshal(data, &config); err != nil {
+		fail(fmt.Sprintf("failed to unmarshal config %q: %s", filepath, err.Error()))
 	}
-
-	return frm
+	if config.Name == "" {
+		fail(fmt.Sprintf("config %q does not specify a name", filepath))
+	}
+	return config
 }
 
-type manifestJob func(chan string) error
-
-func makeManifest(name string, imgType distro.ImageType, cr composeRequest, distribution distro.Distro, archName string, seedArg int64, cacheRoot string) (manifest.OSBuildManifest, error) {
+func makeManifest(imgType distro.ImageType, config buildConfig, distribution distro.Distro, repos []rpmmd.RepoConfig, archName string, seedArg int64, cacheRoot string) (manifest.OSBuildManifest, error) {
 	cacheDir := filepath.Join(cacheRoot, archName+distribution.Name())
 
 	options := distro.ImageOptions{Size: 0}
-	if cr.OSTree != nil {
+	if config.OSTree != nil {
 		options.OSTree = &ostree.ImageOptions{
-			URL:       cr.OSTree.URL,
-			ImageRef:  cr.OSTree.Ref,
-			ParentRef: cr.OSTree.Parent,
-			RHSM:      cr.OSTree.RHSM,
+			URL:       config.OSTree.URL,
+			ImageRef:  config.OSTree.Ref,
+			ParentRef: config.OSTree.Parent,
+			RHSM:      config.OSTree.RHSM,
 		}
 	}
 
@@ -120,10 +114,9 @@ func makeManifest(name string, imgType distro.ImageType, cr composeRequest, dist
 		APIType: facts.TEST_APITYPE,
 	}
 
-	repos := convertRepos(cr.Repositories)
 	var bp blueprint.Blueprint
-	if cr.Blueprint != nil {
-		bp = blueprint.Blueprint(*cr.Blueprint)
+	if config.Blueprint != nil {
+		bp = blueprint.Blueprint(*config.Blueprint)
 	}
 
 	manifest, warnings, err := imgType.Manifest(&bp, options, repos, seedArg)
@@ -142,8 +135,8 @@ func makeManifest(name string, imgType distro.ImageType, cr composeRequest, dist
 		return nil, fmt.Errorf("[ERROR] depsolve did not return any packages")
 	}
 
-	if cr.Blueprint != nil {
-		bp = blueprint.Blueprint(*cr.Blueprint)
+	if config.Blueprint != nil {
+		bp = blueprint.Blueprint(*config.Blueprint)
 	}
 
 	containerSpecs, err := resolvePipelineContainers(manifest.GetContainerSourceSpecs(), archName)
@@ -204,15 +197,15 @@ func readRepos() DistroArchRepoMap {
 	var darm DistroArchRepoMap
 	fp, err := os.Open(file)
 	if err != nil {
-		panic(err)
+		check(err)
 	}
 	defer fp.Close()
 	data, err := io.ReadAll(fp)
 	if err != nil {
-		panic(err)
+		check(err)
 	}
 	if err := json.Unmarshal(data, &darm); err != nil {
-		panic(err)
+		check(err)
 	}
 	return darm
 }
@@ -297,80 +290,8 @@ func save(ms manifest.OSBuildManifest, fpath string) error {
 	return nil
 }
 
-func filterRepos(repos []repository, typeName string) []repository {
-	filtered := make([]repository, 0)
-	for _, repo := range repos {
-		if len(repo.ImageTypeTags) == 0 {
-			filtered = append(filtered, repo)
-		} else {
-			for _, tt := range repo.ImageTypeTags {
-				if tt == typeName {
-					filtered = append(filtered, repo)
-					break
-				}
-			}
-		}
-	}
-	return filtered
-}
-
-// collects requests from a formatRequestMap based on image type
-func requestsByImageType(requestMap formatRequestMap) map[string]map[string]manifestRequest {
-	imgTypeRequestMap := make(map[string]map[string]manifestRequest)
-
-	for name, req := range requestMap {
-		it := req.ComposeRequest.ImageType
-		reqs := imgTypeRequestMap[it]
-		if reqs == nil {
-			reqs = make(map[string]manifestRequest)
-		}
-		reqs[name] = req
-		imgTypeRequestMap[it] = reqs
-	}
-	return imgTypeRequestMap
-}
-
-func archIsSupported(req manifestRequest, arch string) bool {
-	if len(req.SupportedArches) == 0 {
-		// none specified: all arches supported implicitly
-		return true
-	}
-	for _, supportedArch := range req.SupportedArches {
-		if supportedArch == arch {
-			return true
-		}
-	}
-	return false
-}
-
-func mergeOverrides(base, overrides composeRequest) composeRequest {
-	// NOTE: in most cases overrides are only used for blueprints and probably
-	// doesn't make sense to use them for most fields, but let's merge all
-	// regardless
-	merged := composeRequest(base)
-	if overrides.Blueprint != nil {
-		merged.Blueprint = overrides.Blueprint
-	}
-
-	if overrides.Filename != "" {
-		merged.Filename = overrides.Filename
-	}
-	if overrides.ImageType != "" {
-		merged.ImageType = overrides.ImageType
-	}
-	if overrides.OSTree != nil {
-		merged.OSTree = overrides.OSTree
-	}
-	if overrides.Distro != "" {
-		merged.Distro = overrides.Distro
-	}
-	if overrides.Arch != "" {
-		merged.Arch = overrides.Arch
-	}
-	if len(overrides.Repositories) > 0 {
-		merged.Repositories = overrides.Repositories
-	}
-	return merged
+func u(s string) string {
+	return strings.Replace(s, "-", "_", -1)
 }
 
 func main() {
@@ -381,13 +302,14 @@ func main() {
 	flag.StringVar(&rpmCacheRoot, "rpmmd", "/tmp/rpmmd", "rpm metadata cache directory")
 
 	// image selection args
-	var distroName, imgTypeName string
+	var distroName, imgTypeName, configFile string
 	flag.StringVar(&distroName, "distro", "", "distribution (required)")
 	flag.StringVar(&imgTypeName, "image", "", "image type name (required)")
+	flag.StringVar(&configFile, "config", "", "build config file (required)")
 
 	flag.Parse()
 
-	if distroName == "" || imgTypeName == "" {
+	if distroName == "" || imgTypeName == "" || configFile == "" {
 		flag.Usage()
 		os.Exit(1)
 	}
@@ -396,74 +318,58 @@ func main() {
 	darm := readRepos()
 	distroReg := distroregistry.NewDefault()
 
-	requestMap := loadFormatRequestMap()
-	itRequestMap := requestsByImageType(requestMap)
+	config := loadConfig(configFile)
 
-	if err := os.MkdirAll(outputDir, 0770); err != nil {
-		panic(fmt.Sprintf("failed to create target directory: %s", err.Error()))
+	if err := os.MkdirAll(outputDir, 0777); err != nil {
+		fail(fmt.Sprintf("failed to create target directory: %s", err.Error()))
 	}
 
 	distribution := distroReg.GetDistro(distroName)
 	if distribution == nil {
-		panic(fmt.Sprintf("invalid or unsupported distribution: %q", distroName))
+		fail(fmt.Sprintf("invalid or unsupported distribution: %q", distroName))
 	}
 
 	archName := common.CurrentArch()
 	arch, err := distribution.GetArch(archName)
 	if err != nil {
-		panic(fmt.Sprintf("invalid arch name %q for distro %q: %s\n", archName, distroName, err.Error()))
+		fail(fmt.Sprintf("invalid arch name %q for distro %q: %s\n", archName, distroName, err.Error()))
 	}
+
+	buildName := fmt.Sprintf("%s-%s-%s-%s", u(distroName), u(archName), u(imgTypeName), u(config.Name))
+	buildDir := filepath.Join(outputDir, buildName)
+	if err := os.MkdirAll(buildDir, 0777); err != nil {
+		fail(fmt.Sprintf("failed to create target directory: %s", err.Error()))
+	}
+
 	imgType, err := arch.GetImageType(imgTypeName)
 	if err != nil {
-		panic(fmt.Sprintf("invalid image type %q for distro %q and arch %q: %s\n", imgTypeName, distroName, archName, err.Error()))
+		fail(fmt.Sprintf("invalid image type %q for distro %q and arch %q: %s\n", imgTypeName, distroName, archName, err.Error()))
 	}
 
 	// get repositories
-	repos := darm[distroName][archName]
+	repos := convertRepos(darm[distroName][archName])
 	if len(repos) == 0 {
-		panic(fmt.Sprintf("no repositories defined for %s/%s\n", distroName, archName))
+		fail(fmt.Sprintf("no repositories defined for %s/%s\n", distroName, archName))
 	}
 
-	// run through jobs from request map that match the image type
-	for jobName, req := range itRequestMap[imgTypeName] {
-		// skip if architecture is not supported
-		if !archIsSupported(req, archName) {
-			continue
-		}
-
-		// check for distro-specific overrides
-		if or, exist := req.Overrides[distroName]; exist {
-			req.ComposeRequest = mergeOverrides(req.ComposeRequest, or)
-		}
-
-		composeReq := req.ComposeRequest
-		composeReq.Repositories = filterRepos(repos, imgTypeName)
-
-		fmt.Printf("Generating manifest for %s: ", jobName)
-		mf, err := makeManifest(jobName, imgType, composeReq, distribution, archName, seedArg, rpmCacheRoot)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Print("DONE\n")
-		distroName := distribution.Name()
-
-		u := func(s string) string {
-			return strings.Replace(s, "-", "_", -1)
-		}
-		fileBasename := fmt.Sprintf("%s-%s-%s", u(distroName), u(archName), u(jobName))
-		filename := fileBasename + ".json"
-		manifestPath := filepath.Join(outputDir, filename)
-		if err := save(mf, manifestPath); err != nil {
-			panic(err)
-		}
-
-		fmt.Printf("Building manifest: %s\n", manifestPath)
-
-		jobOutput := filepath.Join(outputDir, fileBasename)
-		if _, err := osbuild.RunOSBuild(mf, osbuildStore, jobOutput, imgType.Exports(), nil, nil, false, os.Stderr); err != nil {
-			panic(err)
-		}
-
+	fmt.Printf("Generating manifest for %s: ", config.Name)
+	mf, err := makeManifest(imgType, config, distribution, repos, archName, seedArg, rpmCacheRoot)
+	if err != nil {
+		check(err)
 	}
+	fmt.Print("DONE\n")
+
+	manifestPath := filepath.Join(buildDir, "manifest.json")
+	if err := save(mf, manifestPath); err != nil {
+		check(err)
+	}
+
+	fmt.Printf("Building manifest: %s\n", manifestPath)
+
+	jobOutput := filepath.Join(outputDir, buildName)
+	if _, err := osbuild.RunOSBuild(mf, osbuildStore, jobOutput, imgType.Exports(), nil, nil, false, os.Stderr); err != nil {
+		check(err)
+	}
+
 	fmt.Printf("Jobs done. Results saved in\n%s\n", outputDir)
 }
