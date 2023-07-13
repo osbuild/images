@@ -1,5 +1,6 @@
 stages:
   - init
+  - gen
   - test
   - finish
 
@@ -53,6 +54,26 @@ Manifest-diff:
   artifacts:
     paths:
       - manifests.diff
+
+generate-build-config:
+  stage: gen
+  # using alpine for quicker setup
+  # we're just running a go binary and a python script
+  image: alpine:latest
+  script:
+    - apk add -U go python3 gpgme-dev
+    - ./test/cases/generate-build-config build-config.yml
+  artifacts:
+    paths:
+      - build-config.yml
+
+image-build-trigger:
+  stage: test
+  trigger:
+    include:
+      - artifact: build-config.yml
+        job: generate-build-config
+    strategy: depend
 
 finish:
   stage: finish
