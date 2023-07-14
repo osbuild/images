@@ -65,10 +65,21 @@ build/{distro}/{arch}/{image_type}/{config_name}:
 """
 
 
+def runcmd(cmd):
+    job = sp.run(cmd, capture_output=True)
+    if job.returncode > 0:
+        print(f"Command failed: {cmd}")
+        print(job.stdout)
+        print(job.stderr)
+        sys.exit(job.returncode)
+
+    return job.stdout, job.stderr
+
+
 def list_images():
     arches_arg = ",".join(ARCHITECTURES)
-    output = sp.check_output(["go", "run", "./cmd/list-images", "-json", "-arches", arches_arg])
-    return json.loads(output)
+    out, err = runcmd(["go", "run", "./cmd/list-images", "-json", "-arches", arches_arg])
+    return json.loads(out)
 
 
 def generate_configs(images, config_file):
