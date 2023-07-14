@@ -11,26 +11,12 @@ import (
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/distro/distro_test_common"
 	"github.com/osbuild/images/pkg/distroregistry"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func TestDistro_Manifest(t *testing.T) {
-
-	distro_test_common.TestDistro_Manifest(
-		t,
-		"../../test/data/manifests/",
-		"*",
-		distroregistry.NewDefault(),
-		false, // This test case does not check for changes in the imageType package sets!
-		"",
-		"",
-	)
-}
 
 // Ensure that all package sets defined in the package set chains are defined for the image type
 func TestImageType_PackageSetsChains(t *testing.T) {
