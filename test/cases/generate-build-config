@@ -126,28 +126,27 @@ def s3_auth_args():
     return [f"--access_key={s3_key_id}", f"--secret_key={s3_key}"]
 
 
-def check_s3():
+def dl_s3_configs(destination):
     """
-    Check if the bucket exists and we can read it. Otherwise, we shouldn't try to download any configs.
+    Downloads all the configs from the s3 bucket.
     """
     s3url = f"{S3_BUCKET}/{S3_PREFIX}"
-    job = sp.run(["s3cmd", *s3_auth_args(), "ls", s3url], capture_output=True)
+    print(f"Downloading configs from {s3url}")
+    job = sp.run(["s3cmd", *s3_auth_args(), "sync", s3url, destination], capture_output=True)
     ok = job.returncode == 0
     if not ok:
-        print(f"Failed to list contents of {s3url}:")
+        print(f"Failed to sync contents of {s3url}:")
         print(job.stderr.decode())
-        print("Skipping config checks and filtering")
     return ok
 
 
 def filter_builds(manifest_dir):
     print("Filtering build configurations")
-    dl_path = os.path.join(TEST_CACHE_ROOT, "s3manifests")
+    dl_path = os.path.join(TEST_CACHE_ROOT, "s3configs")
     os.makedirs(dl_path, exist_ok=True)
     build_requests = []
 
-    s3ok = check_s3()
-    auth_args = s3_auth_args()
+    dl_s3_configs(dl_path)
 
     for manifest_file in os.listdir(manifest_dir):
         manifest_path = os.path.join(manifest_dir, manifest_file)
@@ -163,17 +162,13 @@ def filter_builds(manifest_dir):
         arch = build_request["arch"]
         filename = manifest_hash + ".json"
 
-        if s3ok:
-            dl_config_path = os.path.join(dl_path, filename)
-            s3url = f"{S3_BUCKET}/{S3_PREFIX}/{distro}/{arch}/{filename}"
-            job = sp.run(["s3cmd", *auth_args, "get", "--skip-existing", s3url, dl_config_path], capture_output=True)
-            if job.returncode == 0:
-                with open(dl_config_path) as dl_config_fp:
-                    dl_config = json.load(dl_config_fp)
-                commit = dl_config["commit"]
-                print(f"Manifest {manifest_file} was successfully built in commit {commit}")
-            else:
-                build_requests.append(build_request)
+        # check if the file exists in the synced directory
+        dl_config_path = os.path.join(dl_path, "builds", distro, arch, filename)
+        if os.path.exists(dl_config_path):
+            with open(dl_config_path) as dl_config_fp:
+                dl_config = json.load(dl_config_fp)
+            commit = dl_config["commit"]
+            print(f"Manifest {manifest_file} was successfully built in commit {commit}")
         else:
             build_requests.append(build_request)
 
