@@ -46,7 +46,7 @@ Manifest-diff:
   script:
     - ./test/cases/diff-manifests.sh
   variables:
-    RUNNER: aws/rhel-9.3-nightly-x86_64
+    RUNNER: aws/fedora-38-x86_64
     INTERNAL_NETWORK: "true"
     GIT_STRATEGY: "clone"
     GIT_CHECKOUT: "true"
@@ -57,11 +57,12 @@ Manifest-diff:
 
 generate-build-config:
   stage: gen
-  # using alpine for quicker setup
-  # we're just running a go binary and a python script
-  image: alpine:latest
+  extends: .terraform
+  variables:
+    RUNNER: aws/fedora-38-x86_64
+    INTERNAL_NETWORK: "true"
   script:
-    - apk add -U go python3 gpgme-dev
+    - sudo dnf -y install go python3 gpgme-devel s3cmd
     - ./test/cases/generate-build-config build-config.yml
   artifacts:
     paths:
