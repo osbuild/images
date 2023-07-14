@@ -294,6 +294,23 @@ func u(s string) string {
 	return strings.Replace(s, "-", "_", -1)
 }
 
+func filterRepos(repos []repository, typeName string) []repository {
+	filtered := make([]repository, 0)
+	for _, repo := range repos {
+		if len(repo.ImageTypeTags) == 0 {
+			filtered = append(filtered, repo)
+		} else {
+			for _, tt := range repo.ImageTypeTags {
+				if tt == typeName {
+					filtered = append(filtered, repo)
+					break
+				}
+			}
+		}
+	}
+	return filtered
+}
+
 func main() {
 	// common args
 	var outputDir, osbuildStore, rpmCacheRoot string
@@ -347,13 +364,14 @@ func main() {
 	}
 
 	// get repositories
-	repos := convertRepos(darm[distroName][archName])
+	repos := filterRepos(darm[distroName][archName], imgTypeName)
+	rpmmdRepos := convertRepos(repos)
 	if len(repos) == 0 {
 		fail(fmt.Sprintf("no repositories defined for %s/%s\n", distroName, archName))
 	}
 
 	fmt.Printf("Generating manifest for %s: ", config.Name)
-	mf, err := makeManifest(imgType, config, distribution, repos, archName, seedArg, rpmCacheRoot)
+	mf, err := makeManifest(imgType, config, distribution, rpmmdRepos, archName, seedArg, rpmCacheRoot)
 	if err != nil {
 		check(err)
 	}
