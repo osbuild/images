@@ -57,9 +57,7 @@ BASE_CONFIG = """
 JOB_TEMPLATE = """
 build/{distro}/{arch}/{image_type}/{config_name}:
   stage: test
-  script:
-    - sudo dnf install -y go gpgme-devel gcc osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux
-    - sudo go run ./cmd/build -distro "{distro}" -image "{image_type}" -config {config}
+  script: ./test/cases/build-image.sh "{distro}" "{image_type}" "{config}"
   extends: .terraform
   variables:
     RUNNER: aws/fedora-38-{arch}
