@@ -2,23 +2,24 @@
 #
 # Generates gitlab child pipelines for building images.
 # Each pipeline should build a single image configuration test.
+import hashlib
 import json
 import os
+import pathlib
 import subprocess as sp
 import sys
 
+TEST_CACHE_ROOT = os.path.expanduser("~/.cache/osbuild-images")
+
 CONFIGS_PATH = "./test/configs"
+CONFIG_MAP = "./test/config-map.json"
+
+S3_BUCKET = "s3://image-builder-ci-artifacts"
+S3_PREFIX = "images/builds"
 
 # TEST SELECTION
 ARCHITECTURES = ["x86_64", "aarch64"]
-# configuration files to use based on image type name
-CONFIGS = {
-    "edge-commit": ["ostree", "embed-containers"],
-    "edge-container": ["ostree", "embed-containers-2"],
-    "iot-commit": ["ostree", "kernel-debug"],
-    "iot-container": ["ostree", "iot-customizations-full"],
-    "qcow2": ["empty", "all-customizations"],
-}
+
 # skip image types that we can't test right now
 SKIPS = [
     "edge-ami"
@@ -66,14 +67,118 @@ build/{distro}/{arch}/{image_type}/{config_name}:
 
 
 def runcmd(cmd):
+    print(f"Running: {' '.join(cmd)}")
     job = sp.run(cmd, capture_output=True)
     if job.returncode > 0:
         print(f"Command failed: {cmd}")
-        print(job.stdout)
-        print(job.stderr)
+        if job.stdout:
+            print(job.stdout.decode())
+        if job.stderr:
+            print(job.stderr.decode())
         sys.exit(job.returncode)
 
     return job.stdout, job.stderr
+
+
+def check_config_names():
+    """
+    Check that all the configs we rely on have names that match the file name, otherwise the test skipping and pipeline
+    generation will be incorrect.
+    """
+    bad_configs = []
+    for file in pathlib.Path(CONFIGS_PATH).glob("*.json"):
+        config = json.loads(file.read_text())
+        if file.stem != config["name"]:
+            bad_configs.append(str(file))
+
+    if bad_configs:
+        print("ERROR: The following test configs have names that don't match their filenames.")
+        print("\n".join(bad_configs))
+        print("This will produce incorrect test generation and results.")
+        print("Aborting.")
+        sys.exit(1)
+
+
+def generate_manifests(outputdir):
+    arches_arg = ",".join(ARCHITECTURES)
+    out, err = runcmd(["go", "run", "./cmd/gen-manifests",
+                       "-cache", os.path.join(TEST_CACHE_ROOT, "rpmmd"),
+                       "-output", outputdir,
+                       "-workers", "100",
+                       "-arches", arches_arg])
+
+    # print stderr in case there were errors or warnings about skipped configurations
+    # but filter out the annoying ones
+    stderr = err.decode().splitlines()
+    for line in stderr:
+        if "No match for group package" in line:
+            continue
+        if "Failed to load consumer certs" in line:
+            continue
+        print(line)
+
+    print("Manifest generation done!\n")
+
+
+def s3_auth_args():
+    s3_key = os.environ["V2_AWS_SECRET_ACCESS_KEY"]
+    s3_key_id = os.environ["V2_AWS_ACCESS_KEY_ID"]
+    return [f"--access_key={s3_key_id}", f"--secret_key={s3_key}"]
+
+
+def check_s3():
+    """
+    Check if the bucket exists and we can read it. Otherwise, we shouldn't try to download any configs.
+    """
+    s3url = f"{S3_BUCKET}/{S3_PREFIX}"
+    job = sp.run(["s3cmd", *s3_auth_args(), "ls", s3url], capture_output=True)
+    ok = job.returncode == 0
+    if not ok:
+        print(f"Failed to list contents of {s3url}:")
+        print(job.stderr.decode())
+        print("Skipping config checks and filtering")
+    return ok
+
+
+def filter_builds(manifest_dir):
+    print("Filtering build configurations")
+    dl_path = os.path.join(TEST_CACHE_ROOT, "s3manifests")
+    os.makedirs(dl_path, exist_ok=True)
+    build_requests = []
+
+    s3ok = check_s3()
+    auth_args = s3_auth_args()
+
+    for manifest_file in os.listdir(manifest_dir):
+        manifest_path = os.path.join(manifest_dir, manifest_file)
+        with open(manifest_path) as manifest_fp:
+            data = json.load(manifest_fp)
+
+        manifest_data = data["manifest"]
+        build_request = data["build-request"]
+        manifest_serialised = json.dumps(manifest_data, indent="  ") + "\n"  # must match format used in ./cmd/build
+        manifest_hash = hashlib.sha256(manifest_serialised.encode()).hexdigest()
+
+        distro = build_request["distro"]
+        arch = build_request["arch"]
+        filename = manifest_hash + ".json"
+
+        if s3ok:
+            dl_config_path = os.path.join(dl_path, filename)
+            s3url = f"{S3_BUCKET}/{S3_PREFIX}/{distro}/{arch}/{filename}"
+            job = sp.run(["s3cmd", *auth_args, "get", "--skip-existing", s3url, dl_config_path], capture_output=True)
+            if job.returncode == 0:
+                with open(dl_config_path) as dl_config_fp:
+                    dl_config = json.load(dl_config_fp)
+                commit = dl_config["commit"]
+                print(f"Manifest {manifest_file} was successfully built in commit {commit}")
+            else:
+                build_requests.append(build_request)
+        else:
+            build_requests.append(build_request)
+
+    print("Config filtering done!\n")
+    return build_requests
 
 
 def list_images():
@@ -82,32 +187,42 @@ def list_images():
     return json.loads(out)
 
 
-def generate_configs(images, config_file):
-    for image in images:
-        distro = image["distro"]
-        arch = image["arch"]
-        image_type = image["image-type"]
+def generate_configs(build_requests, pipeline_file):
+    print(f"Generating dynamic pipelines for {len(build_requests)} builds")
+    for build in build_requests:
+        distro = build["distro"]
+        arch = build["arch"]
+        image_type = build["image-type"]
+        config = build["config"]
 
         if image_type in SKIPS:
             continue
 
-        test_configs = CONFIGS.get(image_type, ["empty"])  # default to empty
-        for config_name in test_configs:
-            config_path = os.path.join(CONFIGS_PATH, config_name + ".json")
-            config_file.write(JOB_TEMPLATE.format(distro=distro, arch=arch, image_type=image_type,
-                                                  config_name=config_name, config=config_path,
-                                                  internal="true" if "rhel" in distro else "false"))
+        config_name = config["name"]
+        config_path = os.path.join(CONFIGS_PATH, config_name+".json")
+        pipeline_file.write(JOB_TEMPLATE.format(distro=distro, arch=arch, image_type=image_type,
+                                                config_name=config_name, config=config_path,
+                                                internal="true" if "rhel" in distro else "false"))
+    print("DONE!")
 
 
 def main():
     config_path = sys.argv[1]
 
-    images = list_images()
+    check_config_names()
 
     with open(config_path, "w") as config_file:
-        config_file.write(BASE_CONFIG)
 
-        generate_configs(images, config_file)
+        manifest_dir = os.path.join(TEST_CACHE_ROOT, "manifests")
+        generate_manifests(manifest_dir)
+        build_requests = filter_builds(manifest_dir)
+
+        if len(build_requests) == 0:
+            print("No manifest changes detected. Skipping dynamic pipeline generation.")
+            return
+
+        config_file.write(BASE_CONFIG)
+        generate_configs(build_requests, config_file)
 
 
 if __name__ == "__main__":
