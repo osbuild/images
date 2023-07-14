@@ -65,6 +65,12 @@ build/{distro}/{arch}/{image_type}/{config_name}:
     INTERNAL_NETWORK: "{internal}"
 """
 
+NULL_CONFIG = """
+NullBuild:
+  stage: test
+  script: "true"
+"""
+
 
 def runcmd(cmd):
     print(f"Running: {' '.join(cmd)}")
@@ -213,7 +219,8 @@ def main():
         build_requests = filter_builds(manifest_dir)
 
         if len(build_requests) == 0:
-            print("No manifest changes detected. Skipping dynamic pipeline generation.")
+            print("No manifest changes detected. Generating null config.")
+            config_file.write(NULL_CONFIG)
             return
 
         config_file.write(BASE_CONFIG)
