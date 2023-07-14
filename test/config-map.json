@@ -1,0 +1,48 @@
+{
+  "default": [
+    "./test/configs/empty.json"
+  ],
+  "edge-ami": [
+    "./test/configs/ostree.json"
+  ],
+  "edge-commit": [
+    "./test/configs/ostree.json",
+    "./test/configs/embed-containers.json"
+  ],
+  "edge-container": [
+    "./test/configs/ostree.json",
+    "./test/configs/embed-containers-2.json"
+  ],
+  "edge-installer": [
+    "./test/configs/ostree.json"
+  ],
+  "edge-raw-image": [
+    "./test/configs/ostree.json"
+  ],
+  "edge-simplified-installer": [
+    "./test/configs/ostree-device.json"
+  ],
+  "iot-ami": [
+    "./test/configs/ostree.json"
+  ],
+  "iot-commit": [
+    "./test/configs/kernel-debug.json"
+  ],
+  "iot-container": [
+    "./test/configs/ostree.json",
+    "./test/configs/iot-customizations-full.json"
+  ],
+  "iot-installer": [
+    "./test/configs/ostree.json"
+  ],
+  "iot-raw-image": [
+    "./test/configs/ostree.json"
+  ],
+  "iot-simplified-installer": [
+    "./test/configs/ostree-device.json"
+  ],
+  "qcow2": [
+    "./test/configs/empty.json",
+    "./test/configs/all-customizations.json"
+  ]
+}

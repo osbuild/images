@@ -1,9 +1,9 @@
 // Standalone executable for generating all test manifests in parallel.
 // Collects list of image types from the distro list.  Must be run from the
 // root of the repository and reads tools/test-case-generators/repos.json for
-// repositories tools/test-case-generators/format-request-map.json for
-// customizations Collects errors and failures and prints them after all jobs
-// are finished.
+// repositories test/config-map.json to match image types with configuration
+// files.
+// Collects errors and failures and prints them after all jobs are finished.
 
 package main
 
@@ -76,60 +76,85 @@ type crBlueprint struct {
 	Distro         string                    `json:"distro,omitempty"`
 }
 
-type composeRequest struct {
-	Distro       string         `json:"distro,omitempty"`
-	Arch         string         `json:"arch,omitempty"`
-	ImageType    string         `json:"image-type,omitempty"`
-	Repositories []repository   `json:"repositories,omitempty"`
-	Filename     string         `json:"filename,omitempty"`
-	OSTree       *ostreeOptions `json:"ostree,omitempty"`
-	Blueprint    *crBlueprint   `json:"blueprint,omitempty"`
+type buildRequest struct {
+	Distro       string       `json:"distro,omitempty"`
+	Arch         string       `json:"arch,omitempty"`
+	ImageType    string       `json:"image-type,omitempty"`
+	Repositories []repository `json:"repositories,omitempty"`
+	Config       *buildConfig `json:"config"`
 }
 
-type manifestRequest struct {
-	ComposeRequest  composeRequest            `json:"compose-request"`
-	Overrides       map[string]composeRequest `json:"overrides"`
-	SupportedArches []string                  `json:"supported_arches"`
+type buildConfig struct {
+	Name      string         `json:"name"`
+	OSTree    *ostreeOptions `json:"ostree,omitempty"`
+	Blueprint *crBlueprint   `json:"blueprint,omitempty"`
 }
 
-type formatRequestMap map[string]manifestRequest
+type configMap map[string][]buildConfig
 
-func loadFormatRequestMap() formatRequestMap {
-	requestMapPath := "./tools/test-case-generators/format-request-map.json"
-	fp, err := os.Open(requestMapPath)
+func loadConfig(path string) buildConfig {
+	fp, err := os.Open(path)
 	if err != nil {
-		panic(fmt.Sprintf("failed to open format request map %q: %s", requestMapPath, err.Error()))
+		panic(fmt.Sprintf("failed to open config %q: %s", path, err.Error()))
 	}
 	defer fp.Close()
 	data, err := io.ReadAll(fp)
 	if err != nil {
-		panic(fmt.Sprintf("failed to read format request map %q: %s", requestMapPath, err.Error()))
+		panic(fmt.Sprintf("failed to read config %q: %s", path, err.Error()))
 	}
-	var frm formatRequestMap
-	if err := json.Unmarshal(data, &frm); err != nil {
-		panic(fmt.Sprintf("failed to unmarshal format request map %q: %s", requestMapPath, err.Error()))
+	var conf buildConfig
+	if err := json.Unmarshal(data, &conf); err != nil {
+		panic(fmt.Sprintf("failed to unmarshal config %q: %s", path, err.Error()))
+	}
+	return conf
+}
+
+func loadConfigMap() configMap {
+	configPath := "./test/config-map.json"
+	fp, err := os.Open(configPath)
+	if err != nil {
+		panic(fmt.Sprintf("failed to open config map %q: %s", configPath, err.Error()))
+	}
+	defer fp.Close()
+	data, err := io.ReadAll(fp)
+	if err != nil {
+		panic(fmt.Sprintf("failed to read config map %q: %s", configPath, err.Error()))
+	}
+	configPaths := make(map[string][]string)
+	if err := json.Unmarshal(data, &configPaths); err != nil {
+		panic(fmt.Sprintf("failed to unmarshal config map %q: %s", configPath, err.Error()))
 	}
 
-	return frm
+	// load each config from its path
+	cm := make(configMap)
+	for it, paths := range configPaths {
+		configs := make([]buildConfig, len(paths))
+		for idx, path := range paths {
+			configs[idx] = loadConfig(path)
+		}
+		cm[it] = configs
+	}
+
+	return cm
 }
 
 type manifestJob func(chan string) error
 
-func makeManifestJob(name string, imgType distro.ImageType, cr composeRequest, distribution distro.Distro, archName string, seedArg int64, path string, cacheRoot string, metadata bool) manifestJob {
+func makeManifestJob(name string, imgType distro.ImageType, bc buildConfig, distribution distro.Distro, repos []repository, archName string, seedArg int64, path string, cacheRoot string, metadata bool) manifestJob {
 	distroName := distribution.Name()
 	u := func(s string) string {
 		return strings.Replace(s, "-", "_", -1)
 	}
-	filename := fmt.Sprintf("%s-%s-%s-boot.json", u(distroName), u(archName), u(name))
+	filename := fmt.Sprintf("%s-%s-%s-%s-boot.json", u(distroName), u(archName), u(imgType.Name()), u(name))
 	cacheDir := filepath.Join(cacheRoot, archName+distribution.Name())
 
 	options := distro.ImageOptions{Size: 0}
-	if cr.OSTree != nil {
+	if bc.OSTree != nil {
 		options.OSTree = &ostree.ImageOptions{
-			URL:       cr.OSTree.URL,
-			ImageRef:  cr.OSTree.Ref,
-			ParentRef: cr.OSTree.Parent,
-			RHSM:      cr.OSTree.RHSM,
+			URL:       bc.OSTree.URL,
+			ImageRef:  bc.OSTree.Ref,
+			ParentRef: bc.OSTree.Parent,
+			RHSM:      bc.OSTree.RHSM,
 		}
 	}
 
@@ -147,13 +172,13 @@ func makeManifestJob(name string, imgType distro.ImageType, cr composeRequest, d
 			msgq <- msg
 		}()
 		msgq <- fmt.Sprintf("Starting job %s", filename)
-		repos := convertRepos(cr.Repositories)
+		rpmrepos := convertRepos(repos)
 		var bp blueprint.Blueprint
-		if cr.Blueprint != nil {
-			bp = blueprint.Blueprint(*cr.Blueprint)
+		if bc.Blueprint != nil {
+			bp = blueprint.Blueprint(*bc.Blueprint)
 		}
 
-		manifest, _, err := imgType.Manifest(&bp, options, repos, seedArg)
+		manifest, _, err := imgType.Manifest(&bp, options, rpmrepos, seedArg)
 		if err != nil {
 			err = fmt.Errorf("[%s] failed: %s", filename, err)
 			return
@@ -169,8 +194,8 @@ func makeManifestJob(name string, imgType distro.ImageType, cr composeRequest, d
 			return
 		}
 
-		if cr.Blueprint != nil {
-			bp = blueprint.Blueprint(*cr.Blueprint)
+		if bc.Blueprint != nil {
+			bp = blueprint.Blueprint(*bc.Blueprint)
 		}
 
 		containerSpecs, err := resolvePipelineContainers(manifest.GetContainerSourceSpecs(), archName)
@@ -185,14 +210,12 @@ func makeManifestJob(name string, imgType distro.ImageType, cr composeRequest, d
 			return fmt.Errorf("[%s] manifest serialization failed: %s", filename, err.Error())
 		}
 
-		request := composeRequest{
+		request := buildRequest{
 			Distro:       distribution.Name(),
 			Arch:         archName,
-			ImageType:    cr.ImageType,
-			Repositories: cr.Repositories,
-			Filename:     cr.Filename,
-			Blueprint:    cr.Blueprint,
-			OSTree:       cr.OSTree,
+			ImageType:    imgType.Name(),
+			Repositories: repos,
+			Config:       &bc,
 		}
 		err = save(mf, packageSpecs, containerSpecs, commitSpecs, request, path, filename, metadata)
 		return
@@ -319,16 +342,16 @@ func depsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d dist
 	return depsolvedSets, nil
 }
 
-func save(ms manifest.OSBuildManifest, pkgs map[string][]rpmmd.PackageSpec, containers map[string][]container.Spec, commits map[string][]ostree.CommitSpec, cr composeRequest, path, filename string, metadata bool) error {
+func save(ms manifest.OSBuildManifest, pkgs map[string][]rpmmd.PackageSpec, containers map[string][]container.Spec, commits map[string][]ostree.CommitSpec, cr buildRequest, path, filename string, metadata bool) error {
 	var data interface{}
 	if metadata {
 		data = struct {
-			ComposeRequest composeRequest                 `json:"compose-request"`
-			Manifest       manifest.OSBuildManifest       `json:"manifest"`
-			RPMMD          map[string][]rpmmd.PackageSpec `json:"rpmmd"`
-			Containers     map[string][]container.Spec    `json:"containers,omitempty"`
-			OSTreeCommits  map[string][]ostree.CommitSpec `json:"ostree-commits,omitempty"`
-			NoImageInfo    bool                           `json:"no-image-info"`
+			BuidRequest   buildRequest                   `json:"build-request"`
+			Manifest      manifest.OSBuildManifest       `json:"manifest"`
+			RPMMD         map[string][]rpmmd.PackageSpec `json:"rpmmd"`
+			Containers    map[string][]container.Spec    `json:"containers,omitempty"`
+			OSTreeCommits map[string][]ostree.CommitSpec `json:"ostree-commits,omitempty"`
+			NoImageInfo   bool                           `json:"no-image-info"`
 		}{
 			cr, ms, pkgs, containers, commits, true,
 		}
@@ -367,65 +390,6 @@ func filterRepos(repos []repository, typeName string) []repository {
 		}
 	}
 	return filtered
-}
-
-// collects requests from a formatRequestMap based on image type
-func requestsByImageType(requestMap formatRequestMap) map[string]map[string]manifestRequest {
-	imgTypeRequestMap := make(map[string]map[string]manifestRequest)
-
-	for name, req := range requestMap {
-		it := req.ComposeRequest.ImageType
-		reqs := imgTypeRequestMap[it]
-		if reqs == nil {
-			reqs = make(map[string]manifestRequest)
-		}
-		reqs[name] = req
-		imgTypeRequestMap[it] = reqs
-	}
-	return imgTypeRequestMap
-}
-
-func archIsSupported(req manifestRequest, arch string) bool {
-	if len(req.SupportedArches) == 0 {
-		// none specified: all arches supported implicitly
-		return true
-	}
-	for _, supportedArch := range req.SupportedArches {
-		if supportedArch == arch {
-			return true
-		}
-	}
-	return false
-}
-
-func mergeOverrides(base, overrides composeRequest) composeRequest {
-	// NOTE: in most cases overrides are only used for blueprints and probably
-	// doesn't make sense to use them for most fields, but let's merge all
-	// regardless
-	merged := composeRequest(base)
-	if overrides.Blueprint != nil {
-		merged.Blueprint = overrides.Blueprint
-	}
-
-	if overrides.Filename != "" {
-		merged.Filename = overrides.Filename
-	}
-	if overrides.ImageType != "" {
-		merged.ImageType = overrides.ImageType
-	}
-	if overrides.OSTree != nil {
-		merged.OSTree = overrides.OSTree
-	}
-	if overrides.Distro != "" {
-		merged.Distro = overrides.Distro
-	}
-	if overrides.Arch != "" {
-		merged.Arch = overrides.Arch
-	}
-	if len(overrides.Repositories) > 0 {
-		merged.Repositories = overrides.Repositories
-	}
-	return merged
 }
 
 // resolveArgValues returns a list of valid values from the list of values on the
@@ -476,8 +440,7 @@ func main() {
 	distroReg := distroregistry.NewDefault()
 	jobs := make([]manifestJob, 0)
 
-	requestMap := loadFormatRequestMap()
-	itRequestMap := requestsByImageType(requestMap)
+	configs := loadConfigMap()
 
 	if err := os.MkdirAll(outputDir, 0770); err != nil {
 		panic(fmt.Sprintf("failed to create target directory: %s", err.Error()))
@@ -515,28 +478,25 @@ func main() {
 
 				// get repositories
 				repos := darm[distroName][archName]
+				repos = filterRepos(repos, imgTypeName)
 				if len(repos) == 0 {
-					fmt.Printf("no repositories defined for %s/%s\n", distroName, archName)
+					fmt.Printf("no repositories defined for %s/%s/%s\n", distroName, archName, imgTypeName)
 					fmt.Println("Skipping")
 					continue
 				}
 
-				// run through jobs from request map that match the image type
-				for jobName, req := range itRequestMap[imgTypeName] {
-					// skip if architecture is not supported
-					if !archIsSupported(req, archName) {
-						continue
-					}
+				imgTypeConfigs := configs[imgTypeName]
+				if len(imgTypeConfigs) == 0 {
+					// No configs specified. Use default.
+					imgTypeConfigs = configs["default"]
+				}
 
-					// check for distro-specific overrides
-					if or, exist := req.Overrides[distroName]; exist {
-						req.ComposeRequest = mergeOverrides(req.ComposeRequest, or)
-					}
+				if len(imgTypeConfigs) == 0 {
+					panic(fmt.Sprintf("no configs found for image type %q and no default defined", imgTypeName))
+				}
 
-					composeReq := req.ComposeRequest
-					composeReq.Repositories = filterRepos(repos, imgTypeName)
-
-					job := makeManifestJob(jobName, imgType, composeReq, distribution, archName, seedArg, outputDir, cacheRoot, metadata)
+				for _, itConfig := range imgTypeConfigs {
+					job := makeManifestJob(itConfig.Name, imgType, itConfig, distribution, repos, archName, seedArg, outputDir, cacheRoot, metadata)
 					jobs = append(jobs, job)
 				}
 			}
