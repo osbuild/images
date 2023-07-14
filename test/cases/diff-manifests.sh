@@ -53,7 +53,7 @@ sudo dnf install -y go gpgme-devel gcc
 manifestdir=$(mktemp -d)
 
 greenprint "Generating all manifests for HEAD (PR #${prnum})"
-if ! go run ./cmd/gen-manifests --output "${manifestdir}/PR" --workers 50; then
+if ! go run ./cmd/gen-manifests -metadata=false --output "${manifestdir}/PR" --workers 50; then
     redprint "Manifest generation on PR HEAD failed"
     exit 1
 fi
@@ -68,7 +68,7 @@ greenprint "Generating all manifests for merge-base (${mergebase})"
 # branch can be broken in a PR that fixes it.
 # As long as the generation on the PR HEAD succeeds, the job should succeed.
 merge_base_fail=""
-if ! go run ./cmd/gen-manifests --output "${manifestdir}/${mergebase}" --workers 50; then
+if ! go run ./cmd/gen-manifests -metadata=false --output "${manifestdir}/${mergebase}" --workers 50; then
     redprint "Manifest generation on merge-base failed"
     merge_base_fail="**NOTE:** Manifest generation on merge-base with \`${basebranch}\` (${mergebase}) failed.\n\n"
 fi
