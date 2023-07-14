@@ -115,7 +115,7 @@ func loadFormatRequestMap() formatRequestMap {
 
 type manifestJob func(chan string) error
 
-func makeManifestJob(name string, imgType distro.ImageType, cr composeRequest, distribution distro.Distro, archName string, seedArg int64, path string, cacheRoot string) manifestJob {
+func makeManifestJob(name string, imgType distro.ImageType, cr composeRequest, distribution distro.Distro, archName string, seedArg int64, path string, cacheRoot string, metadata bool) manifestJob {
 	distroName := distribution.Name()
 	u := func(s string) string {
 		return strings.Replace(s, "-", "_", -1)
@@ -194,7 +194,7 @@ func makeManifestJob(name string, imgType distro.ImageType, cr composeRequest, d
 			Blueprint:    cr.Blueprint,
 			OSTree:       cr.OSTree,
 		}
-		err = save(mf, packageSpecs, containerSpecs, commitSpecs, request, path, filename)
+		err = save(mf, packageSpecs, containerSpecs, commitSpecs, request, path, filename, metadata)
 		return
 	}
 	return job
@@ -319,16 +319,21 @@ func depsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d dist
 	return depsolvedSets, nil
 }
 
-func save(ms manifest.OSBuildManifest, pkgs map[string][]rpmmd.PackageSpec, containers map[string][]container.Spec, commits map[string][]ostree.CommitSpec, cr composeRequest, path, filename string) error {
-	data := struct {
-		ComposeRequest composeRequest                 `json:"compose-request"`
-		Manifest       manifest.OSBuildManifest       `json:"manifest"`
-		RPMMD          map[string][]rpmmd.PackageSpec `json:"rpmmd"`
-		Containers     map[string][]container.Spec    `json:"containers,omitempty"`
-		OSTreeCommits  map[string][]ostree.CommitSpec `json:"ostree-commits,omitempty"`
-		NoImageInfo    bool                           `json:"no-image-info"`
-	}{
-		cr, ms, pkgs, containers, commits, true,
+func save(ms manifest.OSBuildManifest, pkgs map[string][]rpmmd.PackageSpec, containers map[string][]container.Spec, commits map[string][]ostree.CommitSpec, cr composeRequest, path, filename string, metadata bool) error {
+	var data interface{}
+	if metadata {
+		data = struct {
+			ComposeRequest composeRequest                 `json:"compose-request"`
+			Manifest       manifest.OSBuildManifest       `json:"manifest"`
+			RPMMD          map[string][]rpmmd.PackageSpec `json:"rpmmd"`
+			Containers     map[string][]container.Spec    `json:"containers,omitempty"`
+			OSTreeCommits  map[string][]ostree.CommitSpec `json:"ostree-commits,omitempty"`
+			NoImageInfo    bool                           `json:"no-image-info"`
+		}{
+			cr, ms, pkgs, containers, commits, true,
+		}
+	} else {
+		data = ms
 	}
 	b, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
@@ -452,9 +457,11 @@ func main() {
 	// common args
 	var outputDir, cacheRoot string
 	var nWorkers int
+	var metadata bool
 	flag.StringVar(&outputDir, "output", "test/data/manifests/", "manifest store directory")
 	flag.IntVar(&nWorkers, "workers", 16, "number of workers to run concurrently")
 	flag.StringVar(&cacheRoot, "cache", "/tmp/rpmmd", "rpm metadata cache directory")
+	flag.BoolVar(&metadata, "metadata", true, "store metadata in the file")
 
 	// manifest selection args
 	var arches, distros, imgTypes multiValue
@@ -529,7 +536,7 @@ func main() {
 					composeReq := req.ComposeRequest
 					composeReq.Repositories = filterRepos(repos, imgTypeName)
 
-					job := makeManifestJob(jobName, imgType, composeReq, distribution, archName, seedArg, outputDir, cacheRoot)
+					job := makeManifestJob(jobName, imgType, composeReq, distribution, archName, seedArg, outputDir, cacheRoot, metadata)
 					jobs = append(jobs, job)
 				}
 			}
