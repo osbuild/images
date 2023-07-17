@@ -149,6 +149,17 @@ def dl_s3_configs(destination):
     return ok
 
 
+def serialise(data):
+    """
+    Serialises a manifest to match the way we save manifests in ./cmd/build.
+    - Indents with 2 spaces.
+    - Adds newline at the end of the file.
+    - Escapes < and > in a string to match the behaviour of Go's MarshalJSON.
+    """
+    serialised = json.dumps(data, indent="  ") + "\n"
+    return serialised.replace("<", r"\u003c").replace(">", r"\u003e")
+
+
 def filter_builds(manifest_dir):
     print("Filtering build configurations")
     dl_path = os.path.join(TEST_CACHE_ROOT, "s3configs")
@@ -164,7 +175,7 @@ def filter_builds(manifest_dir):
 
         manifest_data = data["manifest"]
         build_request = data["build-request"]
-        manifest_serialised = json.dumps(manifest_data, indent="  ") + "\n"  # must match format used in ./cmd/build
+        manifest_serialised = serialise(manifest_data)
         manifest_hash = hashlib.sha256(manifest_serialised.encode()).hexdigest()
 
         distro = build_request["distro"]
