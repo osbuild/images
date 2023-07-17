@@ -250,7 +250,7 @@ func TestError(t *testing.T) {
 
 }
 
-// This tests calling all the functions on a Blueprint with no Customizations
+//This tests calling all the functions on a Blueprint with no Customizations
 func TestNoCustomizationsInBlueprint(t *testing.T) {
 
 	TestBP := Blueprint{}
@@ -271,7 +271,7 @@ func TestNoCustomizationsInBlueprint(t *testing.T) {
 	assert.Nil(t, nilNTPServers)
 }
 
-// This tests additional scenarios where GetPrimaryLocale() returns nil values
+//This tests additional scenarios where GetPrimaryLocale() returns nil values
 func TestNilGetPrimaryLocale(t *testing.T) {
 
 	//Case empty Customization
@@ -299,7 +299,7 @@ func TestNilGetPrimaryLocale(t *testing.T) {
 
 }
 
-// This tests additional scenario where GetTimezoneSEtting() returns nil values
+//This tests additional scenario where GetTimezoneSEtting() returns nil values
 func TestNilGetTimezoneSettings(t *testing.T) {
 
 	TestCustomizationsEmpty := Customizations{}
@@ -386,4 +386,28 @@ func TestGetOpenSCAPConfig(t *testing.T) {
 	retOpenSCAPCustomiztions := TestCustomizations.GetOpenSCAP()
 
 	assert.EqualValues(t, expectedOscap, *retOpenSCAPCustomiztions)
+}
+
+func TestGetSysconfig(t *testing.T) {
+
+	expectedDesktop := SysconfigDesktopCustomization{
+		Preferred:      "/usr/bin/sway",
+		DisplayManager: "/bin/sddm",
+	}
+	expectedLivesys := SysconfigLivesysCustomization{
+		Session: "gnome",
+	}
+
+	expectedSysconfig := SysconfigCustomization{
+		Desktop: &expectedDesktop,
+		Livesys: &expectedLivesys,
+	}
+
+	TestCustomizations := Customizations{
+		Sysconfig: &expectedSysconfig,
+	}
+
+	retSysconfig := TestCustomizations.GetSysconfig()
+
+	assert.Equal(t, &expectedSysconfig, retSysconfig)
 }
