@@ -1,8 +1,7 @@
 {
   "name": "iot-customizations-full",
   "ostree": {
-    "ref": "test/fedora/iot",
-    "url": "http://fedora.example.com/repo"
+    "ref": "test/fedora/iot"
   },
   "blueprint": {
     "customizations": {
