@@ -74,7 +74,7 @@ NullBuild:
 
 
 def runcmd(cmd):
-    print(f"Running: {' '.join(cmd)}")
+    print(f"Running: {' '.join(cmd)}", flush=True)
     job = sp.run(cmd, capture_output=True)
     if job.returncode > 0:
         print(f"Command failed: {cmd}")
