@@ -211,8 +211,10 @@ def filter_builds(manifest_dir):
         build_requests.append(build_request)
 
     print("Config filtering done!\n")
-    print("Errors:")
-    print("\n".join(errors))
+    if errors:
+        # print errors at the end so they're visible
+        print("Errors:")
+        print("\n".join(errors))
     return build_requests
 
 
