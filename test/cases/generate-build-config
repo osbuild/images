@@ -182,7 +182,11 @@ def filter_builds(manifest_dir):
 
         distro = build_request["distro"]
         arch = build_request["arch"]
+        image_type = build_request["image-type"]
         filename = manifest_hash + ".json"
+
+        if image_type in SKIPS:
+            continue
 
         # check if the file exists in the synced directory
         dl_config_path = os.path.join(dl_path, "builds", distro, arch, filename)
@@ -194,7 +198,6 @@ def filter_builds(manifest_dir):
                 print(f"Manifest {manifest_file} was successfully built in commit {commit}")
                 continue
             except json.JSONDecodeError as jd:
-                image_type = build_request["image-type"]
                 config_name = build_request["config"]["name"]
                 errors.append((
                         f"failed to parse {dl_config_path}\n"
@@ -203,6 +206,8 @@ def filter_builds(manifest_dir):
                         f"Config: {distro}/{arch}/{image_type}/{config_name}\n"
                 ))
 
+        print("Adding build request")
+        print(build_request)
         build_requests.append(build_request)
 
     print("Config filtering done!\n")
@@ -224,9 +229,6 @@ def generate_configs(build_requests, pipeline_file):
         arch = build["arch"]
         image_type = build["image-type"]
         config = build["config"]
-
-        if image_type in SKIPS:
-            continue
 
         config_name = config["name"]
         config_path = os.path.join(CONFIGS_PATH, config_name+".json")
