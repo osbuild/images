@@ -168,6 +168,8 @@ def filter_builds(manifest_dir):
 
     dl_s3_configs(dl_path)
 
+    errors = []
+
     for manifest_file in os.listdir(manifest_dir):
         manifest_path = os.path.join(manifest_dir, manifest_file)
         with open(manifest_path) as manifest_fp:
@@ -185,14 +187,27 @@ def filter_builds(manifest_dir):
         # check if the file exists in the synced directory
         dl_config_path = os.path.join(dl_path, "builds", distro, arch, filename)
         if os.path.exists(dl_config_path):
-            with open(dl_config_path) as dl_config_fp:
-                dl_config = json.load(dl_config_fp)
-            commit = dl_config["commit"]
-            print(f"Manifest {manifest_file} was successfully built in commit {commit}")
-        else:
-            build_requests.append(build_request)
+            try:
+                with open(dl_config_path) as dl_config_fp:
+                    dl_config = json.load(dl_config_fp)
+                commit = dl_config["commit"]
+                print(f"Manifest {manifest_file} was successfully built in commit {commit}")
+                continue
+            except json.JSONDecodeError as jd:
+                image_type = build_request["image-type"]
+                config_name = build_request["config"]["name"]
+                errors.append((
+                        f"failed to parse {dl_config_path}\n"
+                        f"{jd.msg}\n"
+                        "Scheduling config for rebuild\n"
+                        f"Config: {distro}/{arch}/{image_type}/{config_name}\n"
+                ))
+
+        build_requests.append(build_request)
 
     print("Config filtering done!\n")
+    print("Errors:")
+    print("\n".join(errors))
     return build_requests
 
 
