@@ -2,7 +2,6 @@
 package main
 
 import (
-	"crypto/sha256"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -144,7 +143,10 @@ func makeManifest(imgType distro.ImageType, config buildConfig, distribution dis
 		return nil, fmt.Errorf("[ERROR] container resolution failed: %s", err.Error())
 	}
 
-	commitSpecs := resolvePipelineCommits(manifest.GetOSTreeSourceSpecs())
+	commitSpecs, err := resolvePipelineCommits(manifest.GetOSTreeSourceSpecs())
+	if err != nil {
+		return nil, fmt.Errorf("[ERROR] ostree commit resolution failed: %s\n", err.Error())
+	}
 
 	mf, err := manifest.Serialize(packageSpecs, containerSpecs, commitSpecs)
 	if err != nil {
@@ -232,31 +234,20 @@ func resolvePipelineContainers(containerSources map[string][]container.SourceSpe
 	return containerSpecs, nil
 }
 
-func resolveCommit(commitSource ostree.SourceSpec) ostree.CommitSpec {
-	// "resolve" ostree commits by hashing the URL + ref to create a
-	// realistic-looking commit ID in a deterministic way
-	checksum := fmt.Sprintf("%x", sha256.Sum256([]byte(commitSource.URL+commitSource.Ref)))
-	spec := ostree.CommitSpec{
-		Ref:      commitSource.Ref,
-		URL:      commitSource.URL,
-		Checksum: checksum,
-	}
-	if commitSource.RHSM {
-		spec.Secrets = "org.osbuild.rhsm.consumer"
-	}
-	return spec
-}
-
-func resolvePipelineCommits(commitSources map[string][]ostree.SourceSpec) map[string][]ostree.CommitSpec {
+func resolvePipelineCommits(commitSources map[string][]ostree.SourceSpec) (map[string][]ostree.CommitSpec, error) {
 	commits := make(map[string][]ostree.CommitSpec, len(commitSources))
 	for name, commitSources := range commitSources {
 		commitSpecs := make([]ostree.CommitSpec, len(commitSources))
 		for idx, commitSource := range commitSources {
-			commitSpecs[idx] = resolveCommit(commitSource)
+			var err error
+			commitSpecs[idx], err = ostree.Resolve(commitSource)
+			if err != nil {
+				return nil, err
+			}
 		}
 		commits[name] = commitSpecs
 	}
-	return commits
+	return commits, nil
 }
 
 func depsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string][]rpmmd.PackageSpec, error) {
