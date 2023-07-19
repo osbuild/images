@@ -3,7 +3,7 @@
     "./test/configs/empty.json"
   ],
   "edge-ami": [
-    "./test/configs/ostree-deploy.json"
+    "./test/configs/ostree-example.json"
   ],
   "edge-commit": [
     "./test/configs/ostree.json",
@@ -14,19 +14,19 @@
     "./test/configs/embed-containers-2.json"
   ],
   "edge-installer": [
-    "./test/configs/ostree-deploy.json"
+    "./test/configs/ostree-example.json"
   ],
   "edge-raw-image": [
-    "./test/configs/ostree-deploy.json"
+    "./test/configs/ostree-example.json"
   ],
   "edge-simplified-installer": [
     "./test/configs/ostree-device.json"
   ],
   "edge-vsphere": [
-    "./test/configs/ostree-deploy.json"
+    "./test/configs/ostree-example.json"
   ],
   "iot-ami": [
-    "./test/configs/ostree-deploy.json"
+    "./test/configs/ostree-example.json"
   ],
   "iot-commit": [
     "./test/configs/kernel-debug.json"
@@ -36,10 +36,10 @@
     "./test/configs/iot-customizations-full.json"
   ],
   "iot-installer": [
-    "./test/configs/ostree-deploy.json"
+    "./test/configs/ostree-example.json"
   ],
   "iot-raw-image": [
-    "./test/configs/ostree-deploy.json"
+    "./test/configs/ostree-example.json"
   ],
   "iot-simplified-installer": [
     "./test/configs/ostree-device.json"
