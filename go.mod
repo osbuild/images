@@ -22,7 +22,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gophercloud/gophercloud v1.5.0
 	github.com/hashicorp/go-retryablehttp v0.7.4
-	github.com/jackc/pgtype v1.12.0
+	github.com/jackc/pgtype v1.14.0
 	github.com/jackc/pgx/v4 v4.17.2
 	github.com/kolo/xmlrpc v0.0.0-20201022064351-38db28db192b
 	github.com/labstack/echo/v4 v4.10.2
