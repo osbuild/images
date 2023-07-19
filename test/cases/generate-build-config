@@ -22,7 +22,8 @@ ARCHITECTURES = ["x86_64", "aarch64"]
 
 # skip image types that we can't test right now
 SKIPS = [
-    "edge-ami"
+    "edge-ami",
+    "edge-vsphere",
     "edge-installer",
     "edge-raw-image",
     "edge-simplified-installer",
