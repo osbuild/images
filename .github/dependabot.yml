@@ -20,6 +20,7 @@ updates:
       time: "04:00"
     groups:
       go-deps:
-        - "*"  # group all dependency updates into one PR
+        patterns:
+          - "*"  # group all dependency updates into one PR
     open-pull-requests-limit: 1
     rebase-strategy: "auto"
