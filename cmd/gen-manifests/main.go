@@ -154,7 +154,7 @@ func makeManifestJob(
 	metadata bool,
 ) manifestJob {
 	distroName := distribution.Name()
-	filename := fmt.Sprintf("%s-%s-%s-%s-boot.json", u(distroName), u(archName), u(imgType.Name()), u(name))
+	filename := fmt.Sprintf("%s-%s-%s-%s.json", u(distroName), u(archName), u(imgType.Name()), u(name))
 	cacheDir := filepath.Join(cacheRoot, archName+distribution.Name())
 
 	options := distro.ImageOptions{Size: 0}
