@@ -1,5 +1,5 @@
 {
-  "name": "ostree-deploy",
+  "name": "ostree-example",
   "ostree": {
     "ref": "test/fedora/iot",
     "url": "http://fedora.example.com/repo"
