@@ -1,55 +1,86 @@
 {
-  "default": [
-    "./test/configs/empty.json"
-  ],
-  "edge-ami": [
-    "./test/configs/ostree-example.json"
-  ],
-  "edge-commit": [
-    "./test/configs/ostree.json",
-    "./test/configs/embed-containers.json"
-  ],
-  "edge-container": [
-    "./test/configs/empty.json",
-    "./test/configs/ostree.json",
-    "./test/configs/embed-containers-2.json"
-  ],
-  "edge-installer": [
-    "./test/configs/ostree-example.json"
-  ],
-  "edge-raw-image": [
-    "./test/configs/ostree-example.json"
-  ],
-  "edge-simplified-installer": [
-    "./test/configs/ostree-device.json"
-  ],
-  "edge-vsphere": [
-    "./test/configs/ostree-example.json"
-  ],
-  "iot-ami": [
-    "./test/configs/ostree-example.json"
-  ],
-  "iot-commit": [
-    "./test/configs/kernel-debug.json"
-  ],
-  "iot-container": [
-    "./test/configs/empty.json",
-    "./test/configs/ostree.json",
-    "./test/configs/iot-customizations-full.json"
-  ],
-  "iot-installer": [
-    "./test/configs/ostree-example.json"
-  ],
-  "iot-raw-image": [
-    "./test/configs/ostree-example.json"
-  ],
-  "iot-simplified-installer": [
-    "./test/configs/ostree-device.json"
-  ],
-  "qcow2": [
-    "./test/configs/empty.json"
-  ],
-  "ami": [
-    "./test/configs/all-customizations.json"
-  ]
+  "./test/configs/all-customizations.json": {
+    "image-types": [
+      "qcow2"
+    ],
+    "distros": [
+      "rhel-9*",
+      "rhel-8*",
+      "centos*",
+      "fedora*"
+    ]
+  },
+  "./test/configs/embed-containers-2.json": {
+    "image-types": [
+      "edge-container"
+    ]
+  },
+  "./test/configs/embed-containers.json": {
+    "image-types": [
+      "edge-commit"
+    ]
+  },
+  "./test/configs/empty.json": {
+    "arches": [],
+    "distros": [],
+    "image-types": [
+      "ami",
+      "azure-eap7-rhui",
+      "azure-rhui",
+      "azure-sap-rhui",
+      "container",
+      "ec2",
+      "ec2-ha",
+      "ec2-sap",
+      "edge-container",
+      "gce",
+      "gce-rhui",
+      "image-installer",
+      "iot-container",
+      "live-installer",
+      "minimal-raw",
+      "oci",
+      "openstack",
+      "ova",
+      "qcow2",
+      "tar",
+      "vhd",
+      "vmdk",
+      "wsl"
+    ]
+  },
+  "./test/configs/iot-customizations-full.json": {
+    "image-types": [
+      "iot-container"
+    ]
+  },
+  "./test/configs/kernel-debug.json": {
+    "image-types": [
+      "iot-commit"
+    ]
+  },
+  "./test/configs/ostree-device.json": {
+    "image-types": [
+      "edge-simplified-installer",
+      "iot-simplified-installer"
+    ]
+  },
+  "./test/configs/ostree-example.json": {
+    "image-types": [
+      "edge-ami",
+      "edge-installer",
+      "edge-raw-image",
+      "edge-vsphere",
+      "iot-ami",
+      "iot-installer",
+      "iot-raw-image"
+    ]
+  },
+  "./test/configs/ostree.json": {
+    "image-types": [
+      "edge-commit",
+      "edge-container",
+      "iot-container"
+    ]
+  }
 }

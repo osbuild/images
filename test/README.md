@@ -8,6 +8,6 @@ sudo go run ./cmd/build -output ./buildtest -rpmmd /tmp/rpmmd -distro fedora-38 
 ```
 will build a Fedora 38 qcow2 image using the configuration specified in the file `embed-containers.json`
 
-- `./cmd/gen-manifests` generates manifests based on the configs specified in `./test/config-map.json`. The config map maps configuration files to image types and also sets a default configuration for any image type that's not specified.
+- `./cmd/gen-manifests` generates manifests based on the configs specified in `./test/config-map.json`. The config map maps configuration files to image types, distributions, and architectures.  An empty list means it applies to all values.  Globs are supported.
 
 The config map is also used in CI to dynamically generate test builds using the `./test/cases/generate-build-config` scripts.
