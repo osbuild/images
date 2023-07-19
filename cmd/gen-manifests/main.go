@@ -222,7 +222,15 @@ func makeManifestJob(
 			containerSpecs = mockResolveContainers(manifest.GetContainerSourceSpecs())
 		}
 
-		commitSpecs := mockResolveCommits(manifest.GetOSTreeSourceSpecs())
+		var commitSpecs map[string][]ostree.CommitSpec
+		if content["commits"] {
+			commitSpecs, err = resolvePipelineCommits(manifest.GetOSTreeSourceSpecs())
+			if err != nil {
+				return fmt.Errorf("[%s] ostree commit resolution failed: %s", filename, err.Error())
+			}
+		} else {
+			commitSpecs = mockResolveCommits(manifest.GetOSTreeSourceSpecs())
+		}
 
 		mf, err := manifest.Serialize(packageSpecs, containerSpecs, commitSpecs)
 		if err != nil {
@@ -345,6 +353,22 @@ func mockResolveContainers(containerSources map[string][]container.SourceSpec) m
 		containerSpecs[plName] = specs
 	}
 	return containerSpecs
+}
+
+func resolvePipelineCommits(commitSources map[string][]ostree.SourceSpec) (map[string][]ostree.CommitSpec, error) {
+	commits := make(map[string][]ostree.CommitSpec, len(commitSources))
+	for name, commitSources := range commitSources {
+		commitSpecs := make([]ostree.CommitSpec, len(commitSources))
+		for idx, commitSource := range commitSources {
+			var err error
+			commitSpecs[idx], err = ostree.Resolve(commitSource)
+			if err != nil {
+				return nil, err
+			}
+		}
+		commits[name] = commitSpecs
+	}
+	return commits, nil
 }
 
 func mockResolveCommits(commitSources map[string][]ostree.SourceSpec) map[string][]ostree.CommitSpec {
