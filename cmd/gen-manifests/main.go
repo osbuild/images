@@ -140,11 +140,20 @@ func loadConfigMap() configMap {
 
 type manifestJob func(chan string) error
 
-func makeManifestJob(name string, imgType distro.ImageType, bc buildConfig, distribution distro.Distro, repos []repository, archName string, seedArg int64, path string, cacheRoot string, metadata bool) manifestJob {
+func makeManifestJob(
+	name string,
+	imgType distro.ImageType,
+	bc buildConfig,
+	distribution distro.Distro,
+	repos []repository,
+	archName string,
+	seedArg int64,
+	path string,
+	cacheRoot string,
+	content map[string]bool,
+	metadata bool,
+) manifestJob {
 	distroName := distribution.Name()
-	u := func(s string) string {
-		return strings.Replace(s, "-", "_", -1)
-	}
 	filename := fmt.Sprintf("%s-%s-%s-%s-boot.json", u(distroName), u(archName), u(imgType.Name()), u(name))
 	cacheDir := filepath.Join(cacheRoot, archName+distribution.Name())
 
@@ -184,23 +193,33 @@ func makeManifestJob(name string, imgType distro.ImageType, bc buildConfig, dist
 			return
 		}
 
-		packageSpecs, err := depsolve(cacheDir, manifest.GetPackageSetChains(), distribution, archName)
-		if err != nil {
-			err = fmt.Errorf("[%s] depsolve failed: %s", filename, err.Error())
-			return
-		}
-		if packageSpecs == nil {
-			err = fmt.Errorf("[%s] nil package specs", filename)
-			return
+		var packageSpecs map[string][]rpmmd.PackageSpec
+		if content["packages"] {
+			packageSpecs, err = depsolve(cacheDir, manifest.GetPackageSetChains(), distribution, archName)
+			if err != nil {
+				err = fmt.Errorf("[%s] depsolve failed: %s", filename, err.Error())
+				return
+			}
+			if packageSpecs == nil {
+				err = fmt.Errorf("[%s] nil package specs", filename)
+				return
+			}
+
+			if bc.Blueprint != nil {
+				bp = blueprint.Blueprint(*bc.Blueprint)
+			}
+		} else {
+			packageSpecs = mockDepsolve(manifest.GetPackageSetChains())
 		}
 
-		if bc.Blueprint != nil {
-			bp = blueprint.Blueprint(*bc.Blueprint)
-		}
-
-		containerSpecs, err := resolvePipelineContainers(manifest.GetContainerSourceSpecs(), archName)
-		if err != nil {
-			return fmt.Errorf("[%s] container resolution failed: %s", filename, err.Error())
+		var containerSpecs map[string][]container.Spec
+		if content["containers"] {
+			containerSpecs, err = resolvePipelineContainers(manifest.GetContainerSourceSpecs(), archName)
+			if err != nil {
+				return fmt.Errorf("[%s] container resolution failed: %s", filename, err.Error())
+			}
+		} else {
+			containerSpecs = mockResolveContainers(manifest.GetContainerSourceSpecs())
 		}
 
 		commitSpecs := resolvePipelineCommits(manifest.GetOSTreeSourceSpecs())
@@ -301,6 +320,33 @@ func resolvePipelineContainers(containerSources map[string][]container.SourceSpe
 	return containerSpecs, nil
 }
 
+func mockResolveContainers(containerSources map[string][]container.SourceSpec) map[string][]container.Spec {
+	containerSpecs := make(map[string][]container.Spec, len(containerSources))
+	for plName, sourceSpecs := range containerSources {
+		specs := make([]container.Spec, len(sourceSpecs))
+		for idx, src := range sourceSpecs {
+			digest := fmt.Sprintf("sha256:%x", sha256.Sum256([]byte(src.Name+src.Source+"digest")))
+			id := fmt.Sprintf("sha256:%x", sha256.Sum256([]byte(src.Name+src.Source+"imageid")))
+			listDigest := fmt.Sprintf("sha256:%x", sha256.Sum256([]byte(src.Name+src.Source+"list-digest")))
+			name := src.Name
+			if name == "" {
+				name = src.Source
+			}
+			spec := container.Spec{
+				Source:     src.Source,
+				Digest:     digest,
+				TLSVerify:  src.TLSVerify,
+				ImageID:    id,
+				LocalName:  name,
+				ListDigest: listDigest,
+			}
+			specs[idx] = spec
+		}
+		containerSpecs[plName] = specs
+	}
+	return containerSpecs
+}
+
 func resolveCommit(commitSource ostree.SourceSpec) ostree.CommitSpec {
 	// "resolve" ostree commits by hashing the URL + ref to create a
 	// realistic-looking commit ID in a deterministic way
@@ -340,6 +386,30 @@ func depsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d dist
 		depsolvedSets[name] = res
 	}
 	return depsolvedSets, nil
+}
+
+func mockDepsolve(packageSets map[string][]rpmmd.PackageSet) map[string][]rpmmd.PackageSpec {
+	depsolvedSets := make(map[string][]rpmmd.PackageSpec)
+	for name, pkgSetChain := range packageSets {
+		specSet := make([]rpmmd.PackageSpec, 0)
+		for _, pkgSet := range pkgSetChain {
+			for _, pkgName := range pkgSet.Include {
+				checksum := fmt.Sprintf("%x", sha256.Sum256([]byte(pkgName)))
+				spec := rpmmd.PackageSpec{
+					Name:           pkgName,
+					Epoch:          0,
+					Version:        "0",
+					Release:        "0",
+					Arch:           "noarch",
+					RemoteLocation: fmt.Sprintf("https://example.com/repo/packages/%s", pkgName),
+					Checksum:       "sha256:" + checksum,
+				}
+				specSet = append(specSet, spec)
+			}
+		}
+		depsolvedSets[name] = specSet
+	}
+	return depsolvedSets
 }
 
 func save(ms manifest.OSBuildManifest, pkgs map[string][]rpmmd.PackageSpec, containers map[string][]container.Spec, commits map[string][]ostree.CommitSpec, cr buildRequest, path, filename string, metadata bool) error {
@@ -417,6 +487,10 @@ func resolveArgValues(args multiValue, valueList []string) ([]string, []string) 
 	return selection, invalid
 }
 
+func u(s string) string {
+	return strings.Replace(s, "-", "_", -1)
+}
+
 func main() {
 	// common args
 	var outputDir, cacheRoot string
@@ -426,6 +500,12 @@ func main() {
 	flag.IntVar(&nWorkers, "workers", 16, "number of workers to run concurrently")
 	flag.StringVar(&cacheRoot, "cache", "/tmp/rpmmd", "rpm metadata cache directory")
 	flag.BoolVar(&metadata, "metadata", true, "store metadata in the file")
+
+	// content args
+	var packages, containers, commits bool
+	flag.BoolVar(&packages, "packages", true, "depsolve package sets")
+	flag.BoolVar(&containers, "containers", true, "resolve container checksums")
+	flag.BoolVar(&commits, "commits", false, "resolve ostree commit IDs")
 
 	// manifest selection args
 	var arches, distros, imgTypes multiValue
@@ -439,6 +519,12 @@ func main() {
 	darm := readRepos()
 	distroReg := distroregistry.NewDefault()
 	jobs := make([]manifestJob, 0)
+
+	contentResolve := map[string]bool{
+		"packages":   packages,
+		"containers": containers,
+		"commits":    commits,
+	}
 
 	configs := loadConfigMap()
 
@@ -496,7 +582,7 @@ func main() {
 				}
 
 				for _, itConfig := range imgTypeConfigs {
-					job := makeManifestJob(itConfig.Name, imgType, itConfig, distribution, repos, archName, seedArg, outputDir, cacheRoot, metadata)
+					job := makeManifestJob(itConfig.Name, imgType, itConfig, distribution, repos, archName, seedArg, outputDir, cacheRoot, contentResolve, metadata)
 					jobs = append(jobs, job)
 				}
 			}
