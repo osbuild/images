@@ -222,7 +222,7 @@ func makeManifestJob(
 			containerSpecs = mockResolveContainers(manifest.GetContainerSourceSpecs())
 		}
 
-		commitSpecs := resolvePipelineCommits(manifest.GetOSTreeSourceSpecs())
+		commitSpecs := mockResolveCommits(manifest.GetOSTreeSourceSpecs())
 
 		mf, err := manifest.Serialize(packageSpecs, containerSpecs, commitSpecs)
 		if err != nil {
@@ -347,27 +347,21 @@ func mockResolveContainers(containerSources map[string][]container.SourceSpec) m
 	return containerSpecs
 }
 
-func resolveCommit(commitSource ostree.SourceSpec) ostree.CommitSpec {
-	// "resolve" ostree commits by hashing the URL + ref to create a
-	// realistic-looking commit ID in a deterministic way
-	checksum := fmt.Sprintf("%x", sha256.Sum256([]byte(commitSource.URL+commitSource.Ref)))
-	spec := ostree.CommitSpec{
-		Ref:      commitSource.Ref,
-		URL:      commitSource.URL,
-		Checksum: checksum,
-	}
-	if commitSource.RHSM {
-		spec.Secrets = "org.osbuild.rhsm.consumer"
-	}
-	return spec
-}
-
-func resolvePipelineCommits(commitSources map[string][]ostree.SourceSpec) map[string][]ostree.CommitSpec {
+func mockResolveCommits(commitSources map[string][]ostree.SourceSpec) map[string][]ostree.CommitSpec {
 	commits := make(map[string][]ostree.CommitSpec, len(commitSources))
 	for name, commitSources := range commitSources {
 		commitSpecs := make([]ostree.CommitSpec, len(commitSources))
 		for idx, commitSource := range commitSources {
-			commitSpecs[idx] = resolveCommit(commitSource)
+			checksum := fmt.Sprintf("%x", sha256.Sum256([]byte(commitSource.URL+commitSource.Ref)))
+			spec := ostree.CommitSpec{
+				Ref:      commitSource.Ref,
+				URL:      commitSource.URL,
+				Checksum: checksum,
+			}
+			if commitSource.RHSM {
+				spec.Secrets = "org.osbuild.rhsm.consumer"
+			}
+			commitSpecs[idx] = spec
 		}
 		commits[name] = commitSpecs
 	}
