@@ -227,11 +227,13 @@ func (p *OS) getPackageSetChain(Distro) []rpmmd.PackageSet {
 	}
 
 	osRepos := append(p.repos, p.ExtraBaseRepos...)
+
 	chain := []rpmmd.PackageSet{
 		{
-			Include:      append(packages, p.ExtraBasePackages...),
-			Exclude:      p.ExcludeBasePackages,
-			Repositories: osRepos,
+			Include:         append(packages, p.ExtraBasePackages...),
+			Exclude:         p.ExcludeBasePackages,
+			Repositories:    osRepos,
+			InstallWeakDeps: true,
 		},
 	}
 

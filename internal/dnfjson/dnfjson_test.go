@@ -44,7 +44,7 @@ func TestDepsolver(t *testing.T) {
 	solver.SetDNFJSONPath("../../dnf-json")
 
 	{ // single depsolve
-		pkgsets := []rpmmd.PackageSet{{Include: []string{"kernel", "vim-minimal", "tmux", "zsh"}, Repositories: []rpmmd.RepoConfig{s.RepoConfig}}} // everything you'll ever need
+		pkgsets := []rpmmd.PackageSet{{Include: []string{"kernel", "vim-minimal", "tmux", "zsh"}, Repositories: []rpmmd.RepoConfig{s.RepoConfig}, InstallWeakDeps: true}} // everything you'll ever need
 
 		deps, err := solver.Depsolve(pkgsets)
 		if err != nil {
@@ -56,7 +56,7 @@ func TestDepsolver(t *testing.T) {
 
 	{ // chain depsolve of the same packages in order should produce the same result (at least in this case)
 		pkgsets := []rpmmd.PackageSet{
-			{Include: []string{"kernel"}, Repositories: []rpmmd.RepoConfig{s.RepoConfig}},
+			{Include: []string{"kernel"}, Repositories: []rpmmd.RepoConfig{s.RepoConfig}, InstallWeakDeps: true},
 			{Include: []string{"vim-minimal", "tmux", "zsh"}, Repositories: []rpmmd.RepoConfig{s.RepoConfig}},
 		}
 		deps, err := solver.Depsolve(pkgsets)
@@ -102,13 +102,15 @@ func TestMakeDepsolveRequest(t *testing.T) {
 						baseOS,
 						appstream,
 					},
+					InstallWeakDeps: true,
 				},
 			},
 			args: []transactionArgs{
 				{
-					PackageSpecs: []string{"pkg1"},
-					ExcludeSpecs: []string{"pkg2"},
-					RepoIDs:      []string{baseOS.Hash(), appstream.Hash()},
+					PackageSpecs:    []string{"pkg1"},
+					ExcludeSpecs:    []string{"pkg2"},
+					RepoIDs:         []string{baseOS.Hash(), appstream.Hash()},
+					InstallWeakDeps: true,
 				},
 			},
 			wantRepos: []repoConfig{
@@ -130,9 +132,10 @@ func TestMakeDepsolveRequest(t *testing.T) {
 		{
 			packageSets: []rpmmd.PackageSet{
 				{
-					Include:      []string{"pkg1"},
-					Exclude:      []string{"pkg2"},
-					Repositories: []rpmmd.RepoConfig{baseOS, appstream},
+					Include:         []string{"pkg1"},
+					Exclude:         []string{"pkg2"},
+					Repositories:    []rpmmd.RepoConfig{baseOS, appstream},
+					InstallWeakDeps: true,
 				},
 				{
 					Include:      []string{"pkg3"},
@@ -141,9 +144,10 @@ func TestMakeDepsolveRequest(t *testing.T) {
 			},
 			args: []transactionArgs{
 				{
-					PackageSpecs: []string{"pkg1"},
-					ExcludeSpecs: []string{"pkg2"},
-					RepoIDs:      []string{baseOS.Hash(), appstream.Hash()},
+					PackageSpecs:    []string{"pkg1"},
+					ExcludeSpecs:    []string{"pkg2"},
+					RepoIDs:         []string{baseOS.Hash(), appstream.Hash()},
+					InstallWeakDeps: true,
 				},
 				{
 					PackageSpecs: []string{"pkg3"},
@@ -175,9 +179,10 @@ func TestMakeDepsolveRequest(t *testing.T) {
 		{
 			packageSets: []rpmmd.PackageSet{
 				{
-					Include:      []string{"pkg1"},
-					Exclude:      []string{"pkg2"},
-					Repositories: []rpmmd.RepoConfig{baseOS, appstream},
+					Include:         []string{"pkg1"},
+					Exclude:         []string{"pkg2"},
+					Repositories:    []rpmmd.RepoConfig{baseOS, appstream},
+					InstallWeakDeps: true,
 				},
 				{
 					Include:      []string{"pkg3"},
@@ -186,9 +191,10 @@ func TestMakeDepsolveRequest(t *testing.T) {
 			},
 			args: []transactionArgs{
 				{
-					PackageSpecs: []string{"pkg1"},
-					ExcludeSpecs: []string{"pkg2"},
-					RepoIDs:      []string{baseOS.Hash(), appstream.Hash()},
+					PackageSpecs:    []string{"pkg1"},
+					ExcludeSpecs:    []string{"pkg2"},
+					RepoIDs:         []string{baseOS.Hash(), appstream.Hash()},
+					InstallWeakDeps: true,
 				},
 				{
 					PackageSpecs: []string{"pkg3"},
@@ -214,9 +220,10 @@ func TestMakeDepsolveRequest(t *testing.T) {
 		{
 			packageSets: []rpmmd.PackageSet{
 				{
-					Include:      []string{"pkg1"},
-					Exclude:      []string{"pkg2"},
-					Repositories: []rpmmd.RepoConfig{baseOS, appstream},
+					Include:         []string{"pkg1"},
+					Exclude:         []string{"pkg2"},
+					Repositories:    []rpmmd.RepoConfig{baseOS, appstream},
+					InstallWeakDeps: true,
 				},
 				{
 					Include:      []string{"pkg3"},
@@ -229,9 +236,10 @@ func TestMakeDepsolveRequest(t *testing.T) {
 			},
 			args: []transactionArgs{
 				{
-					PackageSpecs: []string{"pkg1"},
-					ExcludeSpecs: []string{"pkg2"},
-					RepoIDs:      []string{baseOS.Hash(), appstream.Hash()},
+					PackageSpecs:    []string{"pkg1"},
+					ExcludeSpecs:    []string{"pkg2"},
+					RepoIDs:         []string{baseOS.Hash(), appstream.Hash()},
+					InstallWeakDeps: true,
 				},
 				{
 					PackageSpecs: []string{"pkg3"},
@@ -268,9 +276,10 @@ func TestMakeDepsolveRequest(t *testing.T) {
 		{
 			packageSets: []rpmmd.PackageSet{
 				{
-					Include:      []string{"pkg1"},
-					Exclude:      []string{"pkg2"},
-					Repositories: []rpmmd.RepoConfig{baseOS, appstream},
+					Include:         []string{"pkg1"},
+					Exclude:         []string{"pkg2"},
+					Repositories:    []rpmmd.RepoConfig{baseOS, appstream},
+					InstallWeakDeps: true,
 				},
 				{
 					Include:      []string{"pkg3"},
@@ -283,9 +292,10 @@ func TestMakeDepsolveRequest(t *testing.T) {
 			},
 			args: []transactionArgs{
 				{
-					PackageSpecs: []string{"pkg1"},
-					ExcludeSpecs: []string{"pkg2"},
-					RepoIDs:      []string{baseOS.Hash(), appstream.Hash()},
+					PackageSpecs:    []string{"pkg1"},
+					ExcludeSpecs:    []string{"pkg2"},
+					RepoIDs:         []string{baseOS.Hash(), appstream.Hash()},
+					InstallWeakDeps: true,
 				},
 				{
 					PackageSpecs: []string{"pkg3"},
@@ -327,9 +337,10 @@ func TestMakeDepsolveRequest(t *testing.T) {
 		{
 			packageSets: []rpmmd.PackageSet{
 				{
-					Include:      []string{"pkg1"},
-					Exclude:      []string{"pkg2"},
-					Repositories: []rpmmd.RepoConfig{baseOS, appstream},
+					Include:         []string{"pkg1"},
+					Exclude:         []string{"pkg2"},
+					Repositories:    []rpmmd.RepoConfig{baseOS, appstream},
+					InstallWeakDeps: true,
 				},
 				{
 					Include:      []string{"pkg3"},
@@ -346,9 +357,10 @@ func TestMakeDepsolveRequest(t *testing.T) {
 		{
 			packageSets: []rpmmd.PackageSet{
 				{
-					Include:      []string{"pkg1"},
-					Exclude:      []string{"pkg2"},
-					Repositories: []rpmmd.RepoConfig{baseOS, appstream},
+					Include:         []string{"pkg1"},
+					Exclude:         []string{"pkg2"},
+					Repositories:    []rpmmd.RepoConfig{baseOS, appstream},
+					InstallWeakDeps: true,
 				},
 				{
 					Include:      []string{"pkg3"},
