@@ -1,6 +1,6 @@
 {
   "name": "ostree",
   "ostree": {
-    "ref": "test/fedora/iot"
+    "ref": "osbuild/images/ostree/test"
   }
 }
