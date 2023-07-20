@@ -218,8 +218,6 @@ def filter_builds(manifest_dir):
                         f"Config: {distro}/{arch}/{image_type}/{config_name}\n"
                 ))
 
-        print("Adding build request")
-        print(build_request)
         build_requests.append(build_request)
 
     print("Config filtering done!\n")
