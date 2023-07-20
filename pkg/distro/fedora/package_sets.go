@@ -30,7 +30,7 @@ func qcow2CommonPackageSet(t *imageType) rpmmd.PackageSet {
 }
 
 func vhdCommonPackageSet(t *imageType) rpmmd.PackageSet {
-	ps := rpmmd.PackageSet{
+	return rpmmd.PackageSet{
 		Include: []string{
 			"@core",
 			"chrony",
@@ -48,12 +48,10 @@ func vhdCommonPackageSet(t *imageType) rpmmd.PackageSet {
 			"zram-generator-defaults",
 		},
 	}
-
-	return ps
 }
 
 func vmdkCommonPackageSet(t *imageType) rpmmd.PackageSet {
-	ps := rpmmd.PackageSet{
+	return rpmmd.PackageSet{
 		Include: []string{
 			"@Fedora Cloud Server",
 			"chrony",
@@ -74,13 +72,11 @@ func vmdkCommonPackageSet(t *imageType) rpmmd.PackageSet {
 			"extlinux-bootloader",
 		},
 	}
-
-	return ps
 }
 
 // fedora iot commit OS package set
 func iotCommitPackageSet(t *imageType) rpmmd.PackageSet {
-	ps := rpmmd.PackageSet{
+	return rpmmd.PackageSet{
 		Include: []string{
 			"fedora-release-iot",
 			"glibc",
@@ -175,15 +171,12 @@ func iotCommitPackageSet(t *imageType) rpmmd.PackageSet {
 			"greenboot-default-health-checks",
 		},
 	}
-
-	return ps
-
 }
 
 // INSTALLER PACKAGE SET
 
 func installerPackageSet(t *imageType) rpmmd.PackageSet {
-	ps := rpmmd.PackageSet{
+	return rpmmd.PackageSet{
 		Include: []string{
 			"anaconda-dracut",
 			"curl",
@@ -216,8 +209,6 @@ func installerPackageSet(t *imageType) rpmmd.PackageSet {
 			"xz",
 		},
 	}
-
-	return ps
 }
 
 func anacondaPackageSet(t *imageType) rpmmd.PackageSet {
@@ -479,7 +470,7 @@ func imageInstallerPackageSet(t *imageType) rpmmd.PackageSet {
 }
 
 func containerPackageSet(t *imageType) rpmmd.PackageSet {
-	ps := rpmmd.PackageSet{
+	return rpmmd.PackageSet{
 		Include: []string{
 			"bash",
 			"coreutils",
@@ -528,8 +519,6 @@ func containerPackageSet(t *imageType) rpmmd.PackageSet {
 			"xkeyboard-config",
 		},
 	}
-
-	return ps
 }
 
 func minimalrpmPackageSet(t *imageType) rpmmd.PackageSet {
