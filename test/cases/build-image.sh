@@ -5,6 +5,7 @@
 set -euxo pipefail
 
 distro="${1}"
+arch=$(uname -m)
 imgtype="${2}"
 config="${3}"
 
@@ -19,11 +20,16 @@ echo "Build finished!!"
 
 echo "Registering successful build in S3"
 
+u() {
+    echo "${1}" | tr - _
+}
+
+
 config_name=$(jq -r .name "${config}")
-manifest=(./build/*/manifest.json)  # there should only be one
+builddir="./build/$(u "${distro}")-$(u "${arch}")-$(u "${imgtype}")-$(u "${config_name}")"
+manifest="${builddir}/manifest.json"
 manifest_hash=$(sha256sum "${manifest[0]}" | awk '{ print $1 }')
 
-arch=$(uname -m)
 osbuild_ver=$(osbuild --version)
 
 # TODO: Include osbuild commit hash
