@@ -10,6 +10,7 @@
     "./test/configs/embed-containers.json"
   ],
   "edge-container": [
+    "./test/configs/empty.json",
     "./test/configs/ostree.json",
     "./test/configs/embed-containers-2.json"
   ],
@@ -32,6 +33,7 @@
     "./test/configs/kernel-debug.json"
   ],
   "iot-container": [
+    "./test/configs/empty.json",
     "./test/configs/ostree.json",
     "./test/configs/iot-customizations-full.json"
   ],
