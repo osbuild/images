@@ -32,6 +32,12 @@ SKIPS = [
     "iot-simplified-installer",
 ]
 
+# ostree containers are pushed to the CI registry to be reused by dependants
+OSTREE_CONTAINERS = [
+    "iot-container",
+    "edge-container"
+]
+
 # base and terraform bits copied from main .gitlab-ci.yml
 # needed for status reporting and defining the runners
 BASE_CONFIG = """
@@ -59,7 +65,9 @@ BASE_CONFIG = """
 JOB_TEMPLATE = """
 build/{distro}/{arch}/{image_type}/{config_name}:
   stage: test
-  script: ./test/cases/build-image.sh "{distro}" "{image_type}" "{config}"
+  script: |
+    ./test/cases/build-image.sh "{distro}" "{image_type}" "{config}"
+    {extra_commands}
   extends: .terraform
   variables:
     RUNNER: aws/fedora-38-{arch}
@@ -186,6 +194,9 @@ def filter_builds(manifest_dir):
         image_type = build_request["image-type"]
         filename = manifest_hash + ".json"
 
+        # add manifest checksum to build request
+        build_request["manifest-checksum"] = manifest_hash
+
         if image_type in SKIPS:
             continue
 
@@ -225,6 +236,10 @@ def list_images():
     return json.loads(out)
 
 
+def u(s):
+    return s.replace("-", "_")
+
+
 def generate_configs(build_requests, pipeline_file):
     print(f"Generating dynamic pipelines for {len(build_requests)} builds")
     for build in build_requests:
@@ -232,11 +247,22 @@ def generate_configs(build_requests, pipeline_file):
         arch = build["arch"]
         image_type = build["image-type"]
         config = build["config"]
+        man_checksum = build["manifest-checksum"]
 
         config_name = config["name"]
+
+        extra_cmds = []
+        if image_type in OSTREE_CONTAINERS:
+            # push to container registry and label with checksum
+            build_name = f"{u(distro)}-{u(arch)}-{u(image_type)}-{u(config_name)}"
+            # NOTE: the artifact path and filename depend on the names in the manifest
+            container_path = f"./build/{build_name}/container/container.tar"
+            extra_cmds.append(f'./tools/ci/push-container.sh "{container_path}" "{build_name}:build-{man_checksum}"')
+
         config_path = os.path.join(CONFIGS_PATH, config_name+".json")
         pipeline_file.write(JOB_TEMPLATE.format(distro=distro, arch=arch, image_type=image_type,
                                                 config_name=config_name, config=config_path,
+                                                extra_commands="\n".join(extra_cmds),
                                                 internal="true" if "rhel" in distro else "false"))
     print("DONE!")
 
