@@ -1,9 +1,0 @@
-[Unit]
-Description=OSBuild remote worker API socket
-
-[Socket]
-Service=osbuild-composer.service
-ListenStream=8700
-
-[Install]
-WantedBy=sockets.target
