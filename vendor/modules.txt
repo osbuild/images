@@ -473,13 +473,6 @@ github.com/kolo/xmlrpc
 # github.com/kr/text v0.2.0
 ## explicit
 github.com/kr/text
-# github.com/labstack/echo/v4 v4.11.1
-## explicit; go 1.17
-github.com/labstack/echo/v4
-# github.com/labstack/gommon v0.4.0
-## explicit; go 1.12
-github.com/labstack/gommon/color
-github.com/labstack/gommon/log
 # github.com/letsencrypt/boulder v0.0.0-20230213213521-fdfea0d469b6
 ## explicit; go 1.18
 github.com/letsencrypt/boulder/core
@@ -493,12 +486,6 @@ github.com/letsencrypt/boulder/revocation
 github.com/mailru/easyjson/buffer
 github.com/mailru/easyjson/jlexer
 github.com/mailru/easyjson/jwriter
-# github.com/mattn/go-colorable v0.1.13
-## explicit; go 1.15
-github.com/mattn/go-colorable
-# github.com/mattn/go-isatty v0.0.19
-## explicit; go 1.15
-github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.14
 ## explicit; go 1.9
 github.com/mattn/go-runewidth
@@ -559,9 +546,6 @@ github.com/proglottis/gpgme
 # github.com/rivo/uniseg v0.4.4
 ## explicit; go 1.18
 github.com/rivo/uniseg
-# github.com/segmentio/ksuid v1.0.4
-## explicit; go 1.12
-github.com/segmentio/ksuid
 # github.com/sigstore/fulcio v1.3.1
 ## explicit; go 1.20
 github.com/sigstore/fulcio/pkg/certificate
@@ -612,12 +596,6 @@ github.com/ulikunitz/xz
 github.com/ulikunitz/xz/internal/hash
 github.com/ulikunitz/xz/internal/xlog
 github.com/ulikunitz/xz/lzma
-# github.com/valyala/bytebufferpool v1.0.0
-## explicit
-github.com/valyala/bytebufferpool
-# github.com/valyala/fasttemplate v1.2.2
-## explicit; go 1.12
-github.com/valyala/fasttemplate
 # github.com/vbatts/tar-split v0.11.3
 ## explicit; go 1.15
 github.com/vbatts/tar-split/archive/tar
@@ -711,8 +689,6 @@ go.opencensus.io/trace/propagation
 go.opencensus.io/trace/tracestate
 # golang.org/x/crypto v0.11.0
 ## explicit; go 1.17
-golang.org/x/crypto/acme
-golang.org/x/crypto/acme/autocert
 golang.org/x/crypto/cast5
 golang.org/x/crypto/chacha20
 golang.org/x/crypto/chacha20poly1305
@@ -746,7 +722,6 @@ golang.org/x/exp/slices
 golang.org/x/net/context
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
-golang.org/x/net/http2/h2c
 golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/internal/timeseries
