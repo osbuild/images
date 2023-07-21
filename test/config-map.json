@@ -90,5 +90,19 @@
       "edge-container",
       "iot-container"
     ]
+  },
+  "./configs/all-with-oscap.json": {
+    "image-types": [
+      "qcow2"
+    ],
+    "distros": [
+      "rhel-91",
+      "rhel-92",
+      "rhel-87",
+      "rhel-88",
+      "rhel-89",
+      "centos*",
+      "fedora*"
+    ]
   }
 }
