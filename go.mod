@@ -15,7 +15,6 @@ require (
 	github.com/aws/aws-sdk-go v1.44.305
 	github.com/containers/common v0.55.2
 	github.com/containers/image/v5 v5.26.1
-	github.com/coreos/go-semver v0.3.1
 	github.com/gobwas/glob v0.2.3
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/go-cmp v0.5.9
