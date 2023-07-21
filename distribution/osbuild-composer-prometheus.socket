@@ -1,9 +1,0 @@
-[Unit]
-Description=OSBuild Composer prometheus socket
-
-[Socket]
-Service=osbuild-composer.service
-ListenStream=8008
-
-[Install]
-WantedBy=sockets.target
