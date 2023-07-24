@@ -109,8 +109,7 @@ func loadConfig(path string) buildConfig {
 	return conf
 }
 
-func loadConfigMap() configMap {
-	configPath := "./test/config-map.json"
+func loadConfigMap(configPath string) configMap {
 	fp, err := os.Open(configPath)
 	if err != nil {
 		panic(fmt.Sprintf("failed to open config map %q: %s", configPath, err.Error()))
@@ -511,13 +510,14 @@ func u(s string) string {
 
 func main() {
 	// common args
-	var outputDir, cacheRoot string
+	var outputDir, cacheRoot, configPath string
 	var nWorkers int
 	var metadata bool
 	flag.StringVar(&outputDir, "output", "test/data/manifests/", "manifest store directory")
 	flag.IntVar(&nWorkers, "workers", 16, "number of workers to run concurrently")
 	flag.StringVar(&cacheRoot, "cache", "/tmp/rpmmd", "rpm metadata cache directory")
 	flag.BoolVar(&metadata, "metadata", true, "store metadata in the file")
+	flag.StringVar(&configPath, "config", "test/config-map.json", "configuration file mapping image types to configs")
 
 	// content args
 	var packages, containers, commits bool
@@ -544,7 +544,7 @@ func main() {
 		"commits":    commits,
 	}
 
-	configs := loadConfigMap()
+	configs := loadConfigMap(configPath)
 
 	if err := os.MkdirAll(outputDir, 0770); err != nil {
 		panic(fmt.Sprintf("failed to create target directory: %s", err.Error()))
