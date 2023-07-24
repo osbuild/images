@@ -255,17 +255,6 @@ func liveInstallerImage(workload workload.Workload,
 
 	img := image.NewAnacondaLiveInstaller()
 
-	distro := t.Arch().Distro()
-
-	// If the live installer is generated for Fedora 39 or higher then we enable the web ui
-	// kernel options. This is a temporary thing as the check for this should really lie with
-	// anaconda and their `liveinst` script to determine which frontend to start.
-	if common.VersionLessThan(distro.Releasever(), "39") {
-		img.AdditionalKernelOpts = []string{}
-	} else {
-		img.AdditionalKernelOpts = []string{"inst.webui"}
-	}
-
 	img.Platform = t.platform
 	img.Workload = workload
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
