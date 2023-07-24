@@ -2,7 +2,14 @@ stages:
   - init
   - gen
   - test
+  - gen-ostree
+  - test-ostree
   - finish
+
+variables:
+  # Set the parent pipeline ID as a global variable so that the child pipeline
+  # jobs can use it to retrieve artifacts.
+  PARENT_PIPELINE_ID: $CI_PIPELINE_ID
 
 .base:
   before_script:
@@ -57,6 +64,53 @@ image-build-trigger:
     include:
       - artifact: build-config.yml
         job: generate-build-config
+    strategy: depend
+
+generate-ostree-build-config-x86_64:
+  stage: gen-ostree
+  extends: .terraform
+  variables:
+    RUNNER: aws/fedora-38-x86_64
+    INTERNAL_NETWORK: "true"
+  script:
+    - sudo dnf -y install go python3 gpgme-devel s3cmd
+      osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux podman
+    - ./test/generate-ostree-build-config build-config.yml build-configs
+  artifacts:
+    paths:
+      - build-config.yml
+      - build-configs
+
+generate-ostree-build-config-aarch64:
+  stage: gen-ostree
+  extends: .terraform
+  variables:
+    RUNNER: aws/fedora-38-aarch64
+    INTERNAL_NETWORK: "true"
+    PYTHONUNBUFFERED: 1
+  script:
+    - sudo dnf -y install go python3 gpgme-devel s3cmd
+      osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux podman
+    - ./test/generate-ostree-build-config build-config.yml build-configs
+  artifacts:
+    paths:
+      - build-config.yml
+      - build-configs
+
+image-build-ostree-trigger-x86_64:
+  stage: test-ostree
+  trigger:
+    include:
+      - artifact: build-config.yml
+        job: generate-ostree-build-config-x86_64
+    strategy: depend
+
+image-build-ostree-trigger-aarch64:
+  stage: test-ostree
+  trigger:
+    include:
+      - artifact: build-config.yml
+        job: generate-ostree-build-config-aarch64
     strategy: depend
 
 finish:
