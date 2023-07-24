@@ -270,12 +270,11 @@ def main():
 
     check_config_names()
 
+    manifest_dir = os.path.join(TEST_CACHE_ROOT, "manifests")
+    generate_manifests(manifest_dir)
+    build_requests = filter_builds(manifest_dir)
+
     with open(config_path, "w") as config_file:
-
-        manifest_dir = os.path.join(TEST_CACHE_ROOT, "manifests")
-        generate_manifests(manifest_dir)
-        build_requests = filter_builds(manifest_dir)
-
         if len(build_requests) == 0:
             print("No manifest changes detected. Generating null config.")
             config_file.write(NULL_CONFIG)
