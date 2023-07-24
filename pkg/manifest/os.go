@@ -328,7 +328,7 @@ func (p *OS) getContainerSpecs() []container.Spec {
 }
 
 func (p *OS) serializeStart(packages []rpmmd.PackageSpec, containers []container.Spec, commits []ostree.CommitSpec) {
-	if len(p.packageSpecs) > 0 {
+	if len(p.getPackageSpecs()) > 0 {
 		panic("double call to serializeStart()")
 	}
 
@@ -342,12 +342,12 @@ func (p *OS) serializeStart(packages []rpmmd.PackageSpec, containers []container
 	}
 
 	if p.KernelName != "" {
-		p.kernelVer = rpmmd.GetVerStrFromPackageSpecListPanic(p.packageSpecs, p.KernelName)
+		p.kernelVer = rpmmd.GetVerStrFromPackageSpecListPanic(p.getPackageSpecs(), p.KernelName)
 	}
 }
 
 func (p *OS) serializeEnd() {
-	if len(p.packageSpecs) == 0 {
+	if len(p.getPackageSpecs()) == 0 {
 		panic("serializeEnd() call when serialization not in progress")
 	}
 	p.kernelVer = ""
@@ -357,7 +357,7 @@ func (p *OS) serializeEnd() {
 }
 
 func (p *OS) serialize() osbuild.Pipeline {
-	if len(p.packageSpecs) == 0 {
+	if len(p.getPackageSpecs()) == 0 {
 		panic("serialization not started")
 	}
 
@@ -384,7 +384,8 @@ func (p *OS) serialize() osbuild.Pipeline {
 		rpmOptions.OSTreeBooted = common.ToPtr(true)
 		rpmOptions.DBPath = "/usr/share/rpm"
 	}
-	pipeline.AddStage(osbuild.NewRPMStage(rpmOptions, osbuild.NewRpmStageSourceFilesInputs(p.packageSpecs)))
+
+	pipeline.AddStage(osbuild.NewRPMStage(rpmOptions, osbuild.NewRpmStageSourceFilesInputs(p.getPackageSpecs())))
 
 	if !p.NoBLS {
 		// If the /boot is on a separate partition, the prefix for the BLS stage must be ""
@@ -619,7 +620,7 @@ func (p *OS) serialize() osbuild.Pipeline {
 					Nick:    p.OSNick,
 				}
 
-				_, err := rpmmd.GetVerStrFromPackageSpecList(p.packageSpecs, "dracut-config-rescue")
+				_, err := rpmmd.GetVerStrFromPackageSpecList(p.getPackageSpecs(), "dracut-config-rescue")
 				hasRescue := err == nil
 				bootloader = osbuild.NewGrub2LegacyStage(
 					osbuild.NewGrub2LegacyStageOptions(
