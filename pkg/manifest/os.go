@@ -87,6 +87,8 @@ type OSCustomizations struct {
 	// Do not install documentation
 	ExcludeDocs bool
 
+	MarkPackages bool
+
 	Groups []users.Group
 	Users  []users.User
 
@@ -261,6 +263,9 @@ func (p *OS) getContainerSources() []container.SourceSpec {
 
 func (p *OS) getBuildPackages(distro Distro) []string {
 	packages := p.platform.GetBuildPackages()
+	if p.MarkPackages {
+		packages = append(packages, "dnf")
+	}
 	if p.PartitionTable != nil {
 		packages = append(packages, p.PartitionTable.GetBuildPackages()...)
 	}
@@ -386,6 +391,10 @@ func (p *OS) serialize() osbuild.Pipeline {
 	}
 
 	pipeline.AddStage(osbuild.NewRPMStage(rpmOptions, osbuild.NewRpmStageSourceFilesInputs(p.getPackageSpecs())))
+
+	if p.MarkPackages {
+		pipeline.AddStage(osbuild.NewDNF4MarkStageFromPackageSpecs(p.getPackageSpecs()))
+	}
 
 	if !p.NoBLS {
 		// If the /boot is on a separate partition, the prefix for the BLS stage must be ""

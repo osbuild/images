@@ -50,6 +50,10 @@ func osCustomizations(
 	osc.ExcludeBasePackages = osPackageSet.Exclude
 	osc.ExtraBaseRepos = osPackageSet.Repositories
 
+	if !t.rpmOstree {
+		osc.MarkPackages = true
+	}
+
 	osc.Containers = containers
 
 	osc.GPGKeyFiles = imageConfig.GPGKeyFiles

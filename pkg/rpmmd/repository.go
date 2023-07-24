@@ -168,6 +168,8 @@ type PackageSpec struct {
 	Secrets        string `json:"secrets,omitempty"`
 	CheckGPG       bool   `json:"check_gpg,omitempty"`
 	IgnoreSSL      bool   `json:"ignore_ssl,omitempty"`
+	Reason         string `json:"reason,omitempty"`
+	ReasonGroup    string `json:"reason_group,omitempty"`
 }
 
 type PackageSource struct {

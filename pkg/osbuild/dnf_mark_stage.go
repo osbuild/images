@@ -4,53 +4,61 @@ import (
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
-type DNFMarkStagePackageOptions struct {
-	Name  string `json:"name"`
-	Mark  string `json:"mark"`
-	Group string `json:"group,omitempty"`
+type DNF4MarkStagePackageOptions struct {
+	Name string `json:"name"`
+	Mark string `json:"mark"`
 }
 
-type DNFMarkStageOptions struct {
-	Packages []DNFMarkStagePackageOptions `json:"packages"`
+type DNF4MarkStageOptions struct {
+	Packages []DNF4MarkStagePackageOptions `json:"packages"`
 }
 
-func (o DNFMarkStageOptions) isStageOptions() {}
+func (o DNF4MarkStageOptions) isStageOptions() {}
 
-func (o DNFMarkStageOptions) validate() error {
+func (o DNF4MarkStageOptions) validate() error {
 	return nil
 }
 
-func NewDNFMarkStageOptions(packages []DNFMarkStagePackageOptions) *DNFMarkStageOptions {
-	return &DNFMarkStageOptions{
+func NewDNF4MarkStageOptions(packages []DNF4MarkStagePackageOptions) *DNF4MarkStageOptions {
+	return &DNF4MarkStageOptions{
 		Packages: packages,
 	}
 }
 
-type DNFMarkStage struct {
-}
-
-func NewDNFMarkStage(options *DNFMarkStageOptions) *Stage {
+func NewDNF4MarkStage(options *DNF4MarkStageOptions) *Stage {
 	if err := options.validate(); err != nil {
 		panic(err)
 	}
 
 	return &Stage{
-		Type:    "org.osbuild.dnf.mark",
+		Type:    "org.osbuild.dnf4.mark",
 		Options: options,
 	}
 }
 
-func NewDNFMarkStageFromPackageSpecs(packageSpecs []rpmmd.PackageSpec) *Stage {
-	var packages []DNFMarkStagePackageOptions
+func NewDNF4MarkStageFromPackageSpecs(packageSpecs []rpmmd.PackageSpec) *Stage {
+	var packages []DNF4MarkStagePackageOptions
 
 	for _, ps := range packageSpecs {
-		packages = append(packages, DNFMarkStagePackageOptions{
+		var reason string
+
+		// For dnf4 the CLI interface which is used by the stage only accepts
+		// `install`, `group`, and `remove`. Filter out and translate.
+		if ps.Reason == "user" {
+			reason = "install"
+		} else if ps.Reason == "group" {
+			reason = "group"
+		} else {
+			continue
+		}
+
+		packages = append(packages, DNF4MarkStagePackageOptions{
 			Name: ps.Name,
-			Mark: ps.Reason,
+			Mark: reason,
 		})
 	}
 
-	options := NewDNFMarkStageOptions(packages)
+	options := NewDNF4MarkStageOptions(packages)
 
-	return NewDNFMarkStage(options)
+	return NewDNF4MarkStage(options)
 }

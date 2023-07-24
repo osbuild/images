@@ -33,6 +33,9 @@ type ImageConfig struct {
 	// Disable documentation
 	ExcludeDocs *bool
 
+	// Mark packages in DNF state databases during build
+	MarkPackages *bool
+
 	ShellInit []shell.InitFile
 
 	// for RHSM configuration, we need to potentially distinguish the case

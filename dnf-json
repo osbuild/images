@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # pylint: disable=invalid-name
+# pylint: disable=fixme
 
 """
 A JSON-based interface for depsolving using DNF.
@@ -14,7 +15,12 @@ import tempfile
 from datetime import datetime
 
 import dnf
+import libdnf
 import hawkey
+
+
+def package_nevra(pkg):
+    return f"{pkg.name}-{pkg.evr}.{pkg.arch}"
 
 
 class Solver():
@@ -199,6 +205,21 @@ class Solver():
     def depsolve(self, transactions):
         last_transaction = []
 
+        # Here's a tricky bit; because we do a chain of depsolves and select
+        # all packages from the previous depsolve with `package_install`
+        # `dnf` thinks they are all user-requested (as if `dnf install
+        # $package`)
+
+        # The reasons describe *why* the package was added to the transaction.
+        # Either 'user' (user-selected), 'group' (group-selected), or 'dependency'
+        # when neither of the above ('weak-dependency' also exists).
+
+        # So we have a separate dict keyed on NEVRA containing (reason,
+        # reason_group). If the NEVRA already exists in there we keep it,
+        # restoring the original reason the package was selected but only based
+        # on some 'business logic'.
+        historical_reasons = {}
+
         for transaction in transactions:
             self.base.reset(goal=True)
             self.base.sack.reset_excludes()
@@ -224,10 +245,64 @@ class Solver():
                 # a stable order
                 if tsi.action not in dnf.transaction.FORWARD_ACTIONS:
                     continue
+
                 last_transaction.append(tsi.pkg)
+
+                # if we haven't seen this package yet in other transactions then
+                # store the reason the package was added to the historical reasons,
+                # this lets us uncover the original reason and decide if we want to
+                # change the reason
+                if package_nevra(tsi.pkg) not in historical_reasons:
+                    # XXX: Note that `get_group()` is currently empty:
+                    # XXX: https://github.com/rpm-software-management/libdnf/issues/1608
+                    historical_reasons[package_nevra(tsi.pkg)] = (
+                        libdnf.transaction.TransactionItemReasonToString(tsi.reason),
+                        tsi.get_group()
+                    )
+
+                # a special thing happens when a package was historically a
+                # `dependency` or `weak-dependency` and is currently `user`
+                # in that case we upgrade the reason to `user` *if* the package
+                # was directly requested in the package specs
+
+                # similarly, `weak-dependency` *can* be upgraded to `dependency`
+
+                # XXX note; we will need to do the same for `group` packages but
+                # XXX we don't yet have that information; a package can upgrade
+                # XXX to group if the group reason was directly in the package
+                # XXX specs
+
+                # take the previous and current reason for the package being in
+                # the transaction
+                previous, current = (
+                    libdnf.transaction.TransactionItemReasonToString(tsi.reason),
+                    historical_reasons[package_nevra(tsi.pkg)]
+                )
+
+                if (
+                        previous in ("dependency", "weak-dependency") and
+                        current == "user" and
+                        tsi.pkg.name in transaction.get("package-specs")
+                ):
+                    historical_reasons[package_nevra(tsi.pk)] = current
+                elif (
+                        previous == "weak-dependency" and
+                        current == "dependency"
+                ):
+                    historical_reasons[package_nevra(tsi.pk)] = current
+
 
         dependencies = []
         for package in last_transaction:
+            # get the initial reason for the package
+            reason, reason_group = historical_reasons[package_nevra(package)]
+
+            # XXX since the group reason is always empty we will mark all
+            # XXX 'group' packages as 'user' for now we're doing that here
+            # XXX in `dnf-json` so other code won't have to change later
+            # XXX when the group becomes available
+            reason = "user" if reason == "group" else reason
+
             dependencies.append({
                 "name": package.name,
                 "epoch": package.epoch,
@@ -240,7 +315,9 @@ class Solver():
                 "checksum": (
                     f"{hawkey.chksum_name(package.chksum[0])}:"
                     f"{package.chksum[1].hex()}"
-                )
+                ),
+                "reason": reason,
+                "reason_group": reason_group,
             })
 
         return dependencies

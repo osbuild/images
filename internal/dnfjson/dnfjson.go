@@ -459,6 +459,10 @@ func (pkgs packageSpecs) toRPMMD(repos map[string]rpmmd.RepoConfig) []rpmmd.Pack
 		rpmDependencies[i].Arch = dep.Arch
 		rpmDependencies[i].RemoteLocation = dep.RemoteLocation
 		rpmDependencies[i].Checksum = dep.Checksum
+
+		rpmDependencies[i].Reason = dep.Reason
+		rpmDependencies[i].ReasonGroup = dep.ReasonGroup
+
 		if repo.CheckGPG != nil {
 			rpmDependencies[i].CheckGPG = *repo.CheckGPG
 		}
@@ -558,6 +562,8 @@ type PackageSpec struct {
 	RemoteLocation string `json:"remote_location,omitempty"`
 	Checksum       string `json:"checksum,omitempty"`
 	Secrets        string `json:"secrets,omitempty"`
+	Reason         string `json:"reason,omitempty"`
+	ReasonGroup    string `json:"reason_group,omitempty"`
 }
 
 // dnf-json error structure
