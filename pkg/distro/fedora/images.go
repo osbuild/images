@@ -334,6 +334,7 @@ func iotCommitImage(workload workload.Workload,
 	img.OSTreeParent = parentCommit
 	img.OSVersion = t.arch.distro.osVersion
 	img.Filename = t.Filename()
+	img.InstallWeakDeps = false
 
 	return img, nil
 }
