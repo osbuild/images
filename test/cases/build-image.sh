@@ -28,19 +28,21 @@ u() {
 config_name=$(jq -r .name "${config}")
 builddir="./build/$(u "${distro}")-$(u "${arch}")-$(u "${imgtype}")-$(u "${config_name}")"
 manifest="${builddir}/manifest.json"
-manifest_hash=$(sha256sum "${manifest[0]}" | awk '{ print $1 }')
+
+# calculate manifest ID based on hash of concatenated stage IDs
+manifest_id=$(osbuild --inspect "${manifest}" | jq -r '.pipelines[-1].stages[-1].id')
 
 osbuild_ver=$(osbuild --version)
 
 # TODO: Include osbuild commit hash
-filename="${manifest_hash}.json"
+filename="${manifest_id}.json"
 cat << EOF > "${filename}"
 {
   "distro": "${distro}",
   "arch": "${arch}",
   "image-type": "${imgtype}",
   "config": "${config_name}",
-  "manifest-checksum": "${manifest_hash}",
+  "manifest-checksum": "${manifest_id}",
   "obuild-version": "${osbuild_ver}",
   "commit": "${CI_COMMIT_SHA}"
 }
