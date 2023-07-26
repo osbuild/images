@@ -76,7 +76,7 @@ func vmdkCommonPackageSet(t *imageType) rpmmd.PackageSet {
 
 // fedora iot commit OS package set
 func iotCommitPackageSet(t *imageType) rpmmd.PackageSet {
-	return rpmmd.PackageSet{
+	ps := rpmmd.PackageSet{
 		Include: []string{
 			"aardvark-dns",
 			"atheros-firmware",
@@ -105,7 +105,6 @@ func iotCommitPackageSet(t *imageType) rpmmd.PackageSet {
 			"dracut-network",
 			"e2fsprogs",
 			"efibootmgr",
-			"fdo-client",
 			"fedora-release-iot",
 			"firewalld",
 			"fwupd",
@@ -177,6 +176,16 @@ func iotCommitPackageSet(t *imageType) rpmmd.PackageSet {
 			"zram-generator",
 		},
 	}
+
+	if !common.VersionLessThan(t.arch.distro.osVersion, "38") {
+		ps = ps.Append(rpmmd.PackageSet{
+			Include: []string{
+				"fdo-client", // added in F38
+			},
+		})
+	}
+
+	return ps
 }
 
 // INSTALLER PACKAGE SET
