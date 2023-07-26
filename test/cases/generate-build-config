@@ -81,9 +81,8 @@ NullBuild:
 """
 
 
-def runcmd(cmd):
-    print(f"Running: {' '.join(cmd)}", flush=True)
-    job = sp.run(cmd, capture_output=True)
+def runcmd(cmd, stdin=None):
+    job = sp.run(cmd, input=stdin, capture_output=True)
     if job.returncode > 0:
         print(f"Command failed: {cmd}")
         if job.stdout:
@@ -116,11 +115,13 @@ def check_config_names():
 
 def generate_manifests(outputdir):
     arches_arg = ",".join(ARCHITECTURES)
-    out, err = runcmd(["go", "run", "./cmd/gen-manifests",
-                       "-cache", os.path.join(TEST_CACHE_ROOT, "rpmmd"),
-                       "-output", outputdir,
-                       "-workers", "100",
-                       "-arches", arches_arg])
+    cmd = ["go", "run", "./cmd/gen-manifests",
+           "-cache", os.path.join(TEST_CACHE_ROOT, "rpmmd"),
+           "-output", outputdir,
+           "-workers", "100",
+           "-arches", arches_arg]
+    print(f"Running: {' '.join(cmd)}", flush=True)
+    out, err = runcmd(cmd)
 
     # print stderr in case there were errors or warnings about skipped configurations
     # but filter out the annoying ones
@@ -169,6 +170,26 @@ def serialise(data):
     return serialised.replace("<", r"\u003c").replace(">", r"\u003e")
 
 
+def get_manifest_id(manifest_data):
+    md = json.dumps(manifest_data).encode()
+    out, _ = runcmd(["osbuild", "--inspect", "-"], stdin=md)
+    data = json.loads(out)
+    # last stage ID depends on all previous stage IDs, so we can use it as a manifest ID
+    return data["pipelines"][-1]["stages"][-1]["id"]
+
+
+def resync_s3_configs(source):
+    s3url = f"{S3_BUCKET}/{S3_PREFIX}/"
+    print(f"Uploading configs to {s3url}")
+    job = sp.run(["s3cmd", *s3_auth_args(), "sync", "--no-delete-removed", "--skip-existing", source, s3url],
+                 capture_output=True)
+    ok = job.returncode == 0
+    if not ok:
+        print(f"Failed to sync contents of {s3url}:")
+        print(job.stderr.decode())
+    return ok
+
+
 def filter_builds(manifest_dir):
     print("Filtering build configurations")
     dl_path = os.path.join(TEST_CACHE_ROOT, "s3configs")
@@ -181,30 +202,59 @@ def filter_builds(manifest_dir):
 
     for manifest_file in os.listdir(manifest_dir):
         manifest_path = os.path.join(manifest_dir, manifest_file)
+
+        # generate old-style manifest hash for now
+        # TODO: remove after conversion
         with open(manifest_path) as manifest_fp:
             data = json.load(manifest_fp)
 
         manifest_data = data["manifest"]
-        build_request = data["build-request"]
+
+        # generate manifest id based on concatenated stage IDs calculated from osbuild
+        manifest_id = get_manifest_id(manifest_data)
+        id_fname = manifest_id + ".json"
+
         manifest_serialised = serialise(manifest_data)
         manifest_hash = hashlib.sha256(manifest_serialised.encode()).hexdigest()
+        hash_fname = manifest_hash + ".json"
 
+        build_request = data["build-request"]
         distro = build_request["distro"]
         arch = build_request["arch"]
         image_type = build_request["image-type"]
-        filename = manifest_hash + ".json"
 
-        # add manifest checksum to build request
-        build_request["manifest-checksum"] = manifest_hash
+        # add manifest id to build request
+        build_request["manifest-checksum"] = manifest_id
 
         if image_type in SKIPS:
             continue
 
-        # check if the file exists in the synced directory
-        dl_config_path = os.path.join(dl_path, "builds", distro, arch, filename)
-        if os.path.exists(dl_config_path):
+        # check if the hash_fname exists in the synced directory
+        dl_config_dir = os.path.join(dl_path, "builds", distro, arch)
+        hash_config_path = os.path.join(dl_config_dir, hash_fname)
+        id_config_path = os.path.join(dl_config_dir, id_fname)
+
+        # TODO: remove after conversion
+        if os.path.exists(hash_config_path):
             try:
-                with open(dl_config_path) as dl_config_fp:
+                with open(hash_config_path) as dl_config_fp:
+                    dl_config = json.load(dl_config_fp)
+                commit = dl_config["commit"]
+                print(f"Manifest {manifest_file} was successfully built in commit {commit}")
+                # rename file in local s3 dir to new naming scheme
+                os.rename(hash_config_path, id_config_path)
+                continue
+            except json.JSONDecodeError as jd:
+                config_name = build_request["config"]["name"]
+                errors.append((
+                        f"failed to parse {hash_config_path}\n"
+                        f"{jd.msg}\n"
+                ))
+
+        # check if the id_fname exists in the synced directory
+        if os.path.exists(id_config_path):
+            try:
+                with open(id_config_path) as dl_config_fp:
                     dl_config = json.load(dl_config_fp)
                 commit = dl_config["commit"]
                 print(f"Manifest {manifest_file} was successfully built in commit {commit}")
@@ -212,7 +262,7 @@ def filter_builds(manifest_dir):
             except json.JSONDecodeError as jd:
                 config_name = build_request["config"]["name"]
                 errors.append((
-                        f"failed to parse {dl_config_path}\n"
+                        f"failed to parse {id_config_path}\n"
                         f"{jd.msg}\n"
                         "Scheduling config for rebuild\n"
                         f"Config: {distro}/{arch}/{image_type}/{config_name}\n"
@@ -225,6 +275,9 @@ def filter_builds(manifest_dir):
         # print errors at the end so they're visible
         print("Errors:")
         print("\n".join(errors))
+
+    print("Syncing new files to s3 build cache")
+    resync_s3_configs(dl_path)
     return build_requests
 
 
