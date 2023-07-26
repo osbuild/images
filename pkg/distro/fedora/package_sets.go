@@ -470,14 +470,13 @@ func imageInstallerPackageSet(t *imageType) rpmmd.PackageSet {
 }
 
 func containerPackageSet(t *imageType) rpmmd.PackageSet {
-	return rpmmd.PackageSet{
+	ps := rpmmd.PackageSet{
 		Include: []string{
 			"bash",
 			"coreutils",
 			"dnf-yum",
 			"dnf",
 			"fedora-release-container",
-			"fedora-repos-modular",
 			"glibc-minimal-langpack",
 			"rootfiles",
 			"rpm",
@@ -519,6 +518,16 @@ func containerPackageSet(t *imageType) rpmmd.PackageSet {
 			"xkeyboard-config",
 		},
 	}
+
+	if common.VersionLessThan(t.arch.distro.osVersion, "39") {
+		ps = ps.Append(rpmmd.PackageSet{
+			Include: []string{
+				"fedora-repos-modular",
+			},
+		})
+	}
+
+	return ps
 }
 
 func minimalrpmPackageSet(t *imageType) rpmmd.PackageSet {
