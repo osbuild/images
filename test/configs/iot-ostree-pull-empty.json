@@ -1,0 +1,10 @@
+{
+  "name": "iot-ostree-pull-empty",
+  "ostree": {
+    "url": "http://example.com/repo"
+  },
+  "depends": {
+    "image-type": "iot-container",
+    "config": "empty.json"
+  }
+}

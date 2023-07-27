@@ -1,0 +1,10 @@
+{
+  "name": "edge-ostree-pull-empty",
+  "ostree": {
+    "url": "http://example.com/repo"
+  },
+  "depends": {
+    "image-type": "edge-container",
+    "config": "empty.json"
+  }
+}

@@ -10,6 +10,14 @@
       "fedora*"
     ]
   },
+  "./configs/edge-ostree-pull-empty.json": {
+    "image-types": [
+      "edge-ami",
+      "edge-installer",
+      "edge-raw-image",
+      "edge-vsphere"
+    ]
+  },
   "./configs/embed-containers-2.json": {
     "image-types": [
       "edge-container"
@@ -54,6 +62,13 @@
       "iot-container"
     ]
   },
+  "./configs/iot-ostree-pull-empty.json": {
+    "image-types": [
+      "iot-ami",
+      "iot-installer",
+      "iot-raw-image"
+    ]
+  },
   "./configs/kernel-debug.json": {
     "image-types": [
       "iot-commit"
@@ -63,17 +78,6 @@
     "image-types": [
       "edge-simplified-installer",
       "iot-simplified-installer"
-    ]
-  },
-  "./configs/ostree-example.json": {
-    "image-types": [
-      "edge-ami",
-      "edge-installer",
-      "edge-raw-image",
-      "edge-vsphere",
-      "iot-ami",
-      "iot-installer",
-      "iot-raw-image"
     ]
   },
   "./configs/ostree.json": {
