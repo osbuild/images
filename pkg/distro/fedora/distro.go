@@ -46,7 +46,6 @@ var (
 	iotServices = []string{
 		"NetworkManager.service",
 		"firewalld.service",
-		"rngd.service",
 		"sshd.service",
 		"zezere_ignition.timer",
 		"zezere_ignition_banner.service",
