@@ -46,7 +46,7 @@ generate-build-config:
   script:
     - sudo dnf -y install go python3 gpgme-devel s3cmd
       osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux
-    - ./test/cases/generate-build-config build-config.yml
+    - ./test/generate-build-config build-config.yml
   artifacts:
     paths:
       - build-config.yml
