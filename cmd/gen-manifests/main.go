@@ -193,6 +193,11 @@ func loadConfigMap(configPath string) BuildConfigs {
 	// load each config from its path
 	cm := make(BuildConfigs)
 	for path, filters := range cfgMap {
+		// config paths can be relative to the location of the config map
+		if !filepath.IsAbs(path) {
+			cfgDir := filepath.Dir(configPath)
+			path = filepath.Join(cfgDir, path)
+		}
 		config := loadConfig(path)
 		for _, d := range emptyFallback(filters.Distros) {
 			for _, a := range emptyFallback(filters.Arches) {
@@ -581,12 +586,13 @@ func main() {
 	// common args
 	var outputDir, cacheRoot, configPath string
 	var nWorkers int
-	var metadata bool
+	var metadata, skipNoconfig bool
 	flag.StringVar(&outputDir, "output", "test/data/manifests/", "manifest store directory")
 	flag.IntVar(&nWorkers, "workers", 16, "number of workers to run concurrently")
 	flag.StringVar(&cacheRoot, "cache", "/tmp/rpmmd", "rpm metadata cache directory")
 	flag.BoolVar(&metadata, "metadata", true, "store metadata in the file")
 	flag.StringVar(&configPath, "config", "test/config-map.json", "configuration file mapping image types to configs")
+	flag.BoolVar(&skipNoconfig, "skip-noconfig", false, "skip distro-arch-image configurations that have no config (otherwise fail)")
 
 	// content args
 	var packages, containers, commits bool
@@ -660,6 +666,9 @@ func main() {
 
 				imgTypeConfigs := configs.Get(distroName, archName, imgTypeName)
 				if len(imgTypeConfigs) == 0 {
+					if skipNoconfig {
+						continue
+					}
 					panic(fmt.Sprintf("no configs defined for image type %q", imgTypeName))
 				}
 
