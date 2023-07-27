@@ -517,6 +517,11 @@ func newDistro(version int) distro.Distro {
 		distro: &rd,
 	}
 
+	ppc64le := architecture{
+		distro: &rd,
+		name:   platform.ARCH_PPC64LE.String(),
+	}
+
 	ociImgType := qcow2ImgType
 	ociImgType.name = "oci"
 
@@ -745,6 +750,13 @@ func newDistro(version int) distro.Distro {
 		minimalrawImgType,
 	)
 
-	rd.addArches(x86_64, aarch64)
+	ppc64le.addImageTypes(
+		&platform.PPC64LE{
+			BIOS: true,
+		},
+		liveInstallerImgType,
+	)
+
+	rd.addArches(x86_64, aarch64, ppc64le)
 	return &rd
 }

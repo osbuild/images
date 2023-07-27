@@ -252,6 +252,7 @@ func TestImageType_BuildPackages(t *testing.T) {
 	buildPackages := map[string][]string{
 		"x86_64":  x8664BuildPackages,
 		"aarch64": aarch64BuildPackages,
+		"ppc64le": []string{},
 	}
 	for _, dist := range fedoraFamilyDistros {
 		t.Run(dist.name, func(t *testing.T) {
@@ -316,6 +317,12 @@ func TestImageType_Name(t *testing.T) {
 				"iot-raw-image",
 				"image-installer",
 				"minimal-raw",
+			},
+		},
+		{
+			arch: "ppc64le",
+			imgNames: []string{
+				"live-installer",
 			},
 		},
 	}
@@ -526,7 +533,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 
 func TestFedora_ListArches(t *testing.T) {
 	arches := fedora.NewF37().ListArches()
-	assert.Equal(t, []string{"aarch64", "x86_64"}, arches)
+	assert.Equal(t, []string{"aarch64", "ppc64le", "x86_64"}, arches)
 }
 
 func TestFedora37_GetArch(t *testing.T) {
@@ -542,11 +549,10 @@ func TestFedora37_GetArch(t *testing.T) {
 			name: "aarch64",
 		},
 		{
-			name:          "s390x",
-			errorExpected: true,
+			name: "ppc64le",
 		},
 		{
-			name:          "ppc64le",
+			name:          "s390x",
 			errorExpected: true,
 		},
 		{

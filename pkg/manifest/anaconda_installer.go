@@ -122,6 +122,10 @@ func (p *AnacondaInstaller) anacondaBootPackageSet() []string {
 			"grub2-efi-aa64",
 			"shim-aa64",
 		)
+	case platform.ARCH_PPC64LE:
+		packages = append(packages,
+			"grub2-ppc64le-modules",
+		)
 	default:
 		panic(fmt.Sprintf("unsupported arch: %s", p.platform.GetArch()))
 	}

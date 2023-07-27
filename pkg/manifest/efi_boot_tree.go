@@ -39,6 +39,8 @@ func (p *EFIBootTree) serialize() osbuild.Pipeline {
 		architectures = []string{"X64"}
 	} else if arch == platform.ARCH_AARCH64.String() {
 		architectures = []string{"AA64"}
+	} else if arch == platform.ARCH_PPC64LE.String() {
+		architectures = []string{"PPC64"}
 	} else {
 		panic("unsupported architecture")
 	}

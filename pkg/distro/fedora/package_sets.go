@@ -378,7 +378,8 @@ func anacondaPackageSet(t *imageType) rpmmd.PackageSet {
 				"dmidecode",
 			},
 		})
-
+	case platform.ARCH_PPC64LE.String():
+		// XXX what goes here for PPC64LE?
 	default:
 		panic(fmt.Sprintf("unsupported arch: %s", t.Arch().Name()))
 	}
