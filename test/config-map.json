@@ -1,5 +1,5 @@
 {
-  "./test/configs/all-customizations.json": {
+  "./configs/all-customizations.json": {
     "image-types": [
       "qcow2"
     ],
@@ -10,17 +10,17 @@
       "fedora*"
     ]
   },
-  "./test/configs/embed-containers-2.json": {
+  "./configs/embed-containers-2.json": {
     "image-types": [
       "edge-container"
     ]
   },
-  "./test/configs/embed-containers.json": {
+  "./configs/embed-containers.json": {
     "image-types": [
       "edge-commit"
     ]
   },
-  "./test/configs/empty.json": {
+  "./configs/empty.json": {
     "arches": [],
     "distros": [],
     "image-types": [
@@ -49,23 +49,23 @@
       "wsl"
     ]
   },
-  "./test/configs/iot-customizations-full.json": {
+  "./configs/iot-customizations-full.json": {
     "image-types": [
       "iot-container"
     ]
   },
-  "./test/configs/kernel-debug.json": {
+  "./configs/kernel-debug.json": {
     "image-types": [
       "iot-commit"
     ]
   },
-  "./test/configs/ostree-device.json": {
+  "./configs/ostree-device.json": {
     "image-types": [
       "edge-simplified-installer",
       "iot-simplified-installer"
     ]
   },
-  "./test/configs/ostree-example.json": {
+  "./configs/ostree-example.json": {
     "image-types": [
       "edge-ami",
       "edge-installer",
@@ -76,7 +76,7 @@
       "iot-raw-image"
     ]
   },
-  "./test/configs/ostree.json": {
+  "./configs/ostree.json": {
     "image-types": [
       "edge-commit",
       "edge-container",
