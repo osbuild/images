@@ -81,18 +81,68 @@ type buildRequest struct {
 	Arch         string       `json:"arch,omitempty"`
 	ImageType    string       `json:"image-type,omitempty"`
 	Repositories []repository `json:"repositories,omitempty"`
-	Config       *buildConfig `json:"config"`
+	Config       *BuildConfig `json:"config"`
 }
 
-type buildConfig struct {
+type BuildConfig struct {
 	Name      string         `json:"name"`
 	OSTree    *ostreeOptions `json:"ostree,omitempty"`
 	Blueprint *crBlueprint   `json:"blueprint,omitempty"`
 }
 
-type configMap map[string][]buildConfig
+type BuildDependency struct {
+	Config    string `json:"config"`
+	ImageType string `json:"image-type"`
+}
 
-func loadConfig(path string) buildConfig {
+// BuildConfigs is a nested map representing the configs to use for each
+// distro/arch/image-type. If any component is empty, it maps to all values.
+type BuildConfigs map[string]map[string]map[string][]BuildConfig
+
+func (bc BuildConfigs) Insert(distro, arch, imageType string, cfg BuildConfig) {
+	distroCfgs := bc[distro]
+	if distroCfgs == nil {
+		distroCfgs = make(map[string]map[string][]BuildConfig)
+	}
+
+	distroArchCfgs := distroCfgs[arch]
+	if distroArchCfgs == nil {
+		distroArchCfgs = make(map[string][]BuildConfig)
+	}
+
+	distroArchItCfgs := distroArchCfgs[imageType]
+	if distroArchItCfgs == nil {
+		distroArchItCfgs = make([]BuildConfig, 0)
+	}
+
+	distroArchItCfgs = append(distroArchItCfgs, cfg)
+	distroArchCfgs[imageType] = distroArchItCfgs
+	distroCfgs[arch] = distroArchCfgs
+	bc[distro] = distroCfgs
+}
+
+func (bc BuildConfigs) Get(distro, arch, imageType string) []BuildConfig {
+	configs := make([]BuildConfig, 0)
+	for distroName, distroCfgs := range bc {
+		distroGlob := glob.MustCompile(distroName)
+		if distroGlob.Match(distro) {
+			for archName, distroArchCfgs := range distroCfgs {
+				archGlob := glob.MustCompile(archName)
+				if archGlob.Match(arch) {
+					for itName, distroArchItCfgs := range distroArchCfgs {
+						itGlob := glob.MustCompile(itName)
+						if itGlob.Match(imageType) {
+							configs = append(configs, distroArchItCfgs...)
+						}
+					}
+				}
+			}
+		}
+	}
+	return configs
+}
+
+func loadConfig(path string) BuildConfig {
 	fp, err := os.Open(path)
 	if err != nil {
 		panic(fmt.Sprintf("failed to open config %q: %s", path, err.Error()))
@@ -102,14 +152,21 @@ func loadConfig(path string) buildConfig {
 	if err != nil {
 		panic(fmt.Sprintf("failed to read config %q: %s", path, err.Error()))
 	}
-	var conf buildConfig
+	var conf BuildConfig
 	if err := json.Unmarshal(data, &conf); err != nil {
 		panic(fmt.Sprintf("failed to unmarshal config %q: %s", path, err.Error()))
 	}
 	return conf
 }
 
-func loadConfigMap(configPath string) configMap {
+func loadConfigMap(configPath string) BuildConfigs {
+	type configFilters struct {
+		ImageTypes []string `json:"image-types"`
+		Distros    []string `json:"distros"`
+		Arches     []string `json:"arches"`
+	}
+	type configMap map[string]configFilters
+
 	fp, err := os.Open(configPath)
 	if err != nil {
 		panic(fmt.Sprintf("failed to open config map %q: %s", configPath, err.Error()))
@@ -119,19 +176,31 @@ func loadConfigMap(configPath string) configMap {
 	if err != nil {
 		panic(fmt.Sprintf("failed to read config map %q: %s", configPath, err.Error()))
 	}
-	configPaths := make(map[string][]string)
-	if err := json.Unmarshal(data, &configPaths); err != nil {
+	var cfgMap configMap
+	if err := json.Unmarshal(data, &cfgMap); err != nil {
 		panic(fmt.Sprintf("failed to unmarshal config map %q: %s", configPath, err.Error()))
 	}
 
-	// load each config from its path
-	cm := make(configMap)
-	for it, paths := range configPaths {
-		configs := make([]buildConfig, len(paths))
-		for idx, path := range paths {
-			configs[idx] = loadConfig(path)
+	emptyFallback := func(list []string) []string {
+		if len(list) == 0 {
+			// empty list means everything so let's add the * to catch
+			// everything with glob
+			return []string{"*"}
 		}
-		cm[it] = configs
+		return list
+	}
+
+	// load each config from its path
+	cm := make(BuildConfigs)
+	for path, filters := range cfgMap {
+		config := loadConfig(path)
+		for _, d := range emptyFallback(filters.Distros) {
+			for _, a := range emptyFallback(filters.Arches) {
+				for _, it := range emptyFallback(filters.ImageTypes) {
+					cm.Insert(d, a, it, config)
+				}
+			}
+		}
 	}
 
 	return cm
@@ -142,7 +211,7 @@ type manifestJob func(chan string) error
 func makeManifestJob(
 	name string,
 	imgType distro.ImageType,
-	bc buildConfig,
+	bc BuildConfig,
 	distribution distro.Distro,
 	repos []repository,
 	archName string,
@@ -589,14 +658,9 @@ func main() {
 					continue
 				}
 
-				imgTypeConfigs := configs[imgTypeName]
+				imgTypeConfigs := configs.Get(distroName, archName, imgTypeName)
 				if len(imgTypeConfigs) == 0 {
-					// No configs specified. Use default.
-					imgTypeConfigs = configs["default"]
-				}
-
-				if len(imgTypeConfigs) == 0 {
-					panic(fmt.Sprintf("no configs found for image type %q and no default defined", imgTypeName))
+					panic(fmt.Sprintf("no configs defined for image type %q", imgTypeName))
 				}
 
 				for _, itConfig := range imgTypeConfigs {
