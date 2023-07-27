@@ -58,15 +58,15 @@ type ostreeOptions struct {
 }
 
 type crBlueprint struct {
-	Name           string                    `json:"name,omitempty"`
-	Description    string                    `json:"description,omitempty"`
-	Version        string                    `json:"version,omitempty"`
-	Packages       []blueprint.Package       `json:"packages,omitempty"`
-	Modules        []blueprint.Package       `json:"modules,omitempty"`
-	Groups         []blueprint.Group         `json:"groups,omitempty"`
-	Containers     []blueprint.Container     `json:"containers,omitempty"`
-	Customizations *blueprint.Customizations `json:"customizations,omitempty"`
-	Distro         string                    `json:"distro,omitempty"`
+	Name            string                    `json:"name,omitempty"`
+	Description     string                    `json:"description,omitempty"`
+	Version         string                    `json:"version,omitempty"`
+	PackagesInclude []blueprint.Package       `json:"packages,omitempty"`
+	ModulesInclude  []blueprint.Package       `json:"modules,omitempty"`
+	GroupsInclude   []blueprint.Group         `json:"groups,omitempty"`
+	Containers      []blueprint.Container     `json:"containers,omitempty"`
+	Customizations  *blueprint.Customizations `json:"customizations,omitempty"`
+	Distro          string                    `json:"distro,omitempty"`
 }
 
 type buildConfig struct {

@@ -437,7 +437,7 @@ func TestPipelineRepositories(t *testing.T) {
 							}
 							bp := blueprint.Blueprint{
 								Customizations: customizations,
-								Packages: []blueprint.Package{
+								PackagesInclude: []blueprint.Package{
 									{Name: "filesystem"},
 								},
 							}

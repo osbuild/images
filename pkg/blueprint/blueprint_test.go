@@ -53,20 +53,20 @@ size = "20 GB"
 	assert.Equal(t, uint64(20*1024*1024*1024), bp.Customizations.Filesystem[0].MinSize)
 }
 
-func TestGetPackages(t *testing.T) {
+func TestGetPackagesInclude(t *testing.T) {
 
 	bp := Blueprint{
 		Name:        "packages-test",
-		Description: "Testing GetPackages function",
+		Description: "Testing GetPackagesInclude function",
 		Version:     "0.0.1",
-		Packages: []Package{
+		PackagesInclude: []Package{
 			{Name: "tmux", Version: "1.2"}},
-		Modules: []Package{
+		ModulesInclude: []Package{
 			{Name: "openssh-server", Version: "*"}},
-		Groups: []Group{
+		GroupsInclude: []Group{
 			{Name: "anaconda-tools"}},
 	}
-	Received_packages := bp.GetPackages()
+	Received_packages := bp.GetPackagesInclude()
 	assert.ElementsMatch(t, []string{"tmux-1.2", "openssh-server", "@anaconda-tools", "kernel"}, Received_packages)
 }
 
@@ -77,13 +77,13 @@ func TestKernelNameCustomization(t *testing.T) {
 		// kernel in customizations
 		bp := Blueprint{
 			Name:        "kernel-test",
-			Description: "Testing GetPackages function with custom Kernel",
+			Description: "Testing GetPackagesInclude function with custom Kernel",
 			Version:     "0.0.1",
-			Packages: []Package{
+			PackagesInclude: []Package{
 				{Name: "tmux", Version: "1.2"}},
-			Modules: []Package{
+			ModulesInclude: []Package{
 				{Name: "openssh-server", Version: "*"}},
-			Groups: []Group{
+			GroupsInclude: []Group{
 				{Name: "anaconda-tools"}},
 			Customizations: &Customizations{
 				Kernel: &KernelCustomization{
@@ -91,7 +91,7 @@ func TestKernelNameCustomization(t *testing.T) {
 				},
 			},
 		}
-		Received_packages := bp.GetPackages()
+		Received_packages := bp.GetPackagesInclude()
 		assert.ElementsMatch(t, []string{"tmux-1.2", "openssh-server", "@anaconda-tools", k}, Received_packages)
 	}
 
@@ -99,18 +99,18 @@ func TestKernelNameCustomization(t *testing.T) {
 		// kernel in packages
 		bp := Blueprint{
 			Name:        "kernel-test",
-			Description: "Testing GetPackages function with custom Kernel",
+			Description: "Testing GetPackagesInclude function with custom Kernel",
 			Version:     "0.0.1",
-			Packages: []Package{
+			PackagesInclude: []Package{
 				{Name: "tmux", Version: "1.2"},
 				{Name: k},
 			},
-			Modules: []Package{
+			ModulesInclude: []Package{
 				{Name: "openssh-server", Version: "*"}},
-			Groups: []Group{
+			GroupsInclude: []Group{
 				{Name: "anaconda-tools"}},
 		}
-		Received_packages := bp.GetPackages()
+		Received_packages := bp.GetPackagesInclude()
 
 		// adds default kernel as well
 		assert.ElementsMatch(t, []string{"tmux-1.2", k, "openssh-server", "@anaconda-tools", "kernel"}, Received_packages)
@@ -121,15 +121,15 @@ func TestKernelNameCustomization(t *testing.T) {
 			// all combos of both kernels
 			bp := Blueprint{
 				Name:        "kernel-test",
-				Description: "Testing GetPackages function with custom Kernel",
+				Description: "Testing GetPackagesInclude function with custom Kernel",
 				Version:     "0.0.1",
-				Packages: []Package{
+				PackagesInclude: []Package{
 					{Name: "tmux", Version: "1.2"},
 					{Name: bk},
 				},
-				Modules: []Package{
+				ModulesInclude: []Package{
 					{Name: "openssh-server", Version: "*"}},
-				Groups: []Group{
+				GroupsInclude: []Group{
 					{Name: "anaconda-tools"}},
 				Customizations: &Customizations{
 					Kernel: &KernelCustomization{
@@ -137,7 +137,7 @@ func TestKernelNameCustomization(t *testing.T) {
 					},
 				},
 			}
-			Received_packages := bp.GetPackages()
+			Received_packages := bp.GetPackagesInclude()
 			// both kernels are included, even if they're the same
 			assert.ElementsMatch(t, []string{"tmux-1.2", bk, "openssh-server", "@anaconda-tools", ck}, Received_packages)
 		}

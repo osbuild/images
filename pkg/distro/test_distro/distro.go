@@ -235,7 +235,7 @@ func (t *TestImageType) Manifest(b *blueprint.Blueprint, options distro.ImageOpt
 			return nil, nil, fmt.Errorf("The following custom mountpoints are not supported %+q", invalidMountpoints)
 		}
 
-		bpPkgs = b.GetPackages()
+		bpPkgs = b.GetPackagesInclude()
 	}
 
 	var ostreeSources []ostree.SourceSpec

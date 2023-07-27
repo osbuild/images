@@ -3,15 +3,15 @@ package blueprint
 
 // A Blueprint is a high-level description of an image.
 type Blueprint struct {
-	Name           string          `json:"name" toml:"name"`
-	Description    string          `json:"description" toml:"description"`
-	Version        string          `json:"version,omitempty" toml:"version,omitempty"`
-	Packages       []Package       `json:"packages" toml:"packages"`
-	Modules        []Package       `json:"modules" toml:"modules"`
-	Groups         []Group         `json:"groups" toml:"groups"`
-	Containers     []Container     `json:"containers,omitempty" toml:"containers,omitempty"`
-	Customizations *Customizations `json:"customizations,omitempty" toml:"customizations"`
-	Distro         string          `json:"distro" toml:"distro"`
+	Name            string          `json:"name" toml:"name"`
+	Description     string          `json:"description" toml:"description"`
+	Version         string          `json:"version,omitempty" toml:"version,omitempty"`
+	PackagesInclude []Package       `json:"packages" toml:"packages"`
+	ModulesInclude  []Package       `json:"modules" toml:"modules"`
+	GroupsInclude   []Group         `json:"groups" toml:"groups"`
+	Containers      []Container     `json:"containers,omitempty" toml:"containers,omitempty"`
+	Customizations  *Customizations `json:"customizations,omitempty" toml:"customizations"`
+	Distro          string          `json:"distro" toml:"distro"`
 }
 
 type Change struct {
@@ -42,19 +42,19 @@ type Container struct {
 
 // packages, modules, and groups all resolve to rpm packages right now. This
 // function returns a combined list of "name-version" strings.
-func (b *Blueprint) GetPackages() []string {
-	return b.GetPackagesEx(true)
+func (b *Blueprint) GetPackagesInclude() []string {
+	return b.GetPackagesIncludeEx(true)
 }
 
-func (b *Blueprint) GetPackagesEx(bootable bool) []string {
+func (b *Blueprint) GetPackagesIncludeEx(bootable bool) []string {
 	packages := []string{}
-	for _, pkg := range b.Packages {
+	for _, pkg := range b.PackagesInclude {
 		packages = append(packages, pkg.ToNameVersion())
 	}
-	for _, pkg := range b.Modules {
+	for _, pkg := range b.ModulesInclude {
 		packages = append(packages, pkg.ToNameVersion())
 	}
-	for _, group := range b.Groups {
+	for _, group := range b.GroupsInclude {
 		packages = append(packages, "@"+group.Name)
 	}
 

@@ -241,7 +241,7 @@ func (p *OS) getPackageSetChain(Distro) []rpmmd.PackageSet {
 	}
 
 	if p.Workload != nil {
-		workloadPackages := p.Workload.GetPackages()
+		workloadPackages := p.Workload.GetPackagesInclude()
 		if len(workloadPackages) > 0 {
 			chain = append(chain, rpmmd.PackageSet{
 				Include:      workloadPackages,

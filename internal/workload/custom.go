@@ -2,13 +2,13 @@ package workload
 
 type Custom struct {
 	BaseWorkload
-	Packages         []string
+	PackagesInclude  []string
 	Services         []string
 	DisabledServices []string
 }
 
-func (p *Custom) GetPackages() []string {
-	return p.Packages
+func (p *Custom) GetPackagesInclude() []string {
+	return p.PackagesInclude
 }
 
 func (p *Custom) GetServices() []string {

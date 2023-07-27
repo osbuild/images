@@ -3,7 +3,7 @@ package workload
 import "github.com/osbuild/images/pkg/rpmmd"
 
 type Workload interface {
-	GetPackages() []string
+	GetPackagesInclude() []string
 	GetRepos() []rpmmd.RepoConfig
 	GetServices() []string
 	GetDisabledServices() []string
@@ -13,7 +13,7 @@ type BaseWorkload struct {
 	Repos []rpmmd.RepoConfig
 }
 
-func (p BaseWorkload) GetPackages() []string {
+func (p BaseWorkload) GetPackagesInclude() []string {
 	return []string{}
 }
 
