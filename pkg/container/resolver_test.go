@@ -2,7 +2,6 @@ package container_test
 
 import (
 	"fmt"
-	"sort"
 	"testing"
 	"time"
 
@@ -11,14 +10,6 @@ import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/container"
 )
-
-type lessCompare func(i, j int) bool
-
-func makeSpecSorter(specs []container.Spec) lessCompare {
-	return func(i, j int) bool {
-		return specs[i].Digest < specs[j].Digest
-	}
-}
 
 func TestResolver(t *testing.T) {
 
@@ -59,9 +50,6 @@ func TestResolver(t *testing.T) {
 		assert.NoError(t, err)
 		want[i] = spec
 	}
-
-	sort.Slice(have, makeSpecSorter(have))
-	sort.Slice(want, makeSpecSorter(want))
 
 	assert.ElementsMatch(t, have, want)
 }
