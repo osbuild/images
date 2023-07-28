@@ -2,6 +2,7 @@
 import json
 import os
 import sys
+from contextlib import contextmanager
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 
 import imgtestlib as testlib
@@ -141,16 +142,21 @@ def default_ref(distro, arch):
     return f"{name}/{version}/{arch}/{product}"
 
 
+@contextmanager
 def setup_dependencies(manifest_dir, config_map):
     """
     For each config in the config map, list all image configurations (distro, arch, image type) that it applies to and
     use the manifests in the manifest dir to find the corresponding manifest IDs. Pull and run the corresponding
     dependency container from the registry and write a new config (and config map) that replaces the ostree options with
     the container URL and port.
-    The config map and configs returned by this function can be used to generate manifests with ostree commits resolved.
+    The config map and configs that function yields can be used to generate manifests with ostree commits resolved.
+    The containers are stopped when the context exits.
     """
+    container_ids = []
     new_config_map: dict[str, dict] = {}
     new_configs = []
+
+    container_ports: dict[str, int] = {}
     for config_path, filters in config_map.items():
         with open(config_path) as config_file:
             config_data = json.load(config_file)
@@ -169,7 +175,7 @@ def setup_dependencies(manifest_dir, config_map):
                                             arches=arches,
                                             images=filters.get("image-types"))
 
-        for idx, image_config in enumerate(image_configs):
+        for image_config in image_configs:
             distro = image_config["distro"]
             arch = image_config["arch"]
             image_type = image_config["image-type"]
@@ -180,12 +186,13 @@ def setup_dependencies(manifest_dir, config_map):
             manifest_id = testlib.get_manifest_id(manifest_data["manifest"])
             container = f"{testlib.REGISTRY}/{dep_build_name}:build-{manifest_id}"
 
-            # Pulling and launching the container will fail if the specific container config was never built.  This can
-            # happen if a dependency is specified that does not exist in the config-map.
-            port = 42000 + idx
-            print(f"Starting container {container} {port}")
-            testlib.runcmd(["podman", "run", "-d", "--rm", f"-p{port}:8080",
-                            "--name", f"commitsrv{port}", container])
+            # start each container once on an incremental port
+            port = container_ports.get(container)
+            if not port:
+                # Pulling and launching the container will fail if the specific container config was never built.  This
+                # can happen if a dependency is specified that does not exist in the config-map.
+                port = 42000 + len(container_ports)
+                container_ports[container] = port
 
             # modify image config with container address and ref
             config_name = config_data["name"]
@@ -198,6 +205,12 @@ def setup_dependencies(manifest_dir, config_map):
                     "ref": config_data.get("ostree", {}).get("ref", default_ref(distro, arch)),
                 },
                 "blueprint": config_data.get("blueprint"),
+
+                # this is not part of the standard config, but it's convenient to add it and it wont interfere
+                "container": {
+                    "name": container,
+                    "port": port,
+                }
             }
             new_configs.append(new_config)
 
@@ -208,7 +221,20 @@ def setup_dependencies(manifest_dir, config_map):
             new_filters["image-types"].append(image_type)
             new_config_map[config_fname] = new_filters
 
-    return new_config_map, new_configs
+    try:
+        for config in new_configs:
+            container = config["container"]["name"]
+            port = config["container"]["port"]
+            print(f"Starting container {container} {port}")
+            cont_id, _ = testlib.runcmd(["podman", "run", "-d", "--rm", f"-p{port}:8080", container])
+            container_ids.append(cont_id.strip().decode())
+
+        yield new_config_map, new_configs
+    finally:
+        print("Stopping containers")
+        print("\n".join(container_ids))
+        for cont_id in container_ids:
+            testlib.runcmd(["podman", "stop", cont_id])
 
 
 def main():
@@ -220,10 +246,9 @@ def main():
     dep_manifest_dir = os.path.join(testlib.TEST_CACHE_ROOT, "dependencies")
     gen_dependency_manifests(config_map, dep_manifest_dir)
 
-    config_map, configs = setup_dependencies(dep_manifest_dir, config_map)
-
-    manifest_dir = os.path.join(testlib.TEST_CACHE_ROOT, "manifests")
-    gen_image_manifests(config_map, configs, manifest_dir)
+    with setup_dependencies(dep_manifest_dir, config_map) as (config_map, configs):
+        manifest_dir = os.path.join(testlib.TEST_CACHE_ROOT, "manifests")
+        gen_image_manifests(config_map, configs, manifest_dir)
 
     build_requests = testlib.filter_builds(manifest_dir)
     with open(config_path, "w") as config_file:
