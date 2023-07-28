@@ -110,13 +110,12 @@ def check_config_names():
         sys.exit(1)
 
 
-def generate_manifests(outputdir, arch_arg, distro_arg):
+def generate_manifests(outputdir, arch_arg):
     cmd = ["go", "run", "./cmd/gen-manifests",
            "-cache", os.path.join(TEST_CACHE_ROOT, "rpmmd"),
            "-output", outputdir,
            "-workers", "100",
-           "-arches", arch_arg,
-           "-distros", distro_arg]
+           "-arches", arch_arg]
     print(f"Running: {' '.join(cmd)}", flush=True)
     out, err = runcmd(cmd)
 
@@ -317,12 +316,11 @@ def generate_configs(build_requests, pipeline_file):
 def main():
     config_path = sys.argv[1]
     arch_arg = sys.argv[2]
-    distro_arg = sys.argv[3]
 
     check_config_names()
 
     manifest_dir = os.path.join(TEST_CACHE_ROOT, "manifests")
-    generate_manifests(manifest_dir, arch_arg, distro_arg)
+    generate_manifests(manifest_dir, arch_arg)
     build_requests = filter_builds(manifest_dir)
 
     with open(config_path, "w") as config_file:
