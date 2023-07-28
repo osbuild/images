@@ -37,7 +37,7 @@ init:
   script:
     - schutzbot/update_github_status.sh start
 
-generate-build-config:
+generate-build-config-x86_64:
   stage: gen
   extends: .terraform
   variables:
@@ -46,17 +46,33 @@ generate-build-config:
   script:
     - sudo dnf -y install go python3 gpgme-devel s3cmd
       osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux
-    - ./test/cases/generate-build-config build-config.yml
+    - ./test/cases/generate-build-config build-config.yml x86_64
   artifacts:
     paths:
-      - build-config.yml
+      - build-config-x86_64.yml
+
+generate-build-config-aarch64:
+  stage: gen
+  extends: .terraform
+  variables:
+    RUNNER: aws/fedora-38-x86_64
+    INTERNAL_NETWORK: "true"
+  script:
+    - sudo dnf -y install go python3 gpgme-devel s3cmd
+      osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux
+    - ./test/cases/generate-build-config build-config.yml aarch64
+  artifacts:
+    paths:
+      - build-config-aarch64.yml
 
 image-build-trigger:
   stage: test
   trigger:
     include:
-      - artifact: build-config.yml
-        job: generate-build-config
+      - artifact: build-config-x86_64.yml
+        job: generate-build-config-x86_64
+      - artifact: build-config-aarch64.yml
+        job: generate-build-config-aarch64
     strategy: depend
 
 finish:
