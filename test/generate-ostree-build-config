@@ -7,6 +7,21 @@ from tempfile import NamedTemporaryFile, TemporaryDirectory
 
 import imgtestlib as testlib
 
+JOB_TEMPLATE = """
+build/{distro}/{arch}/{image_type}/{config_name}:
+  stage: test
+  script:
+    - {start_container}
+    - ./test/cases/build-image.sh "{distro}" "{image_type}" "{config}"
+  extends: .terraform
+  variables:
+    RUNNER: aws/fedora-38-{arch}
+    INTERNAL_NETWORK: "{internal}"
+  needs:
+    - pipeline: "$PARENT_PIPELINE_ID"
+      job: generate-ostree-build-config-{arch}
+"""
+
 
 def read_config_map():
     with open(testlib.CONFIG_MAP, "r", encoding="utf-8") as config_map_file:
@@ -237,6 +252,27 @@ def setup_dependencies(manifest_dir, config_map):
             testlib.runcmd(["podman", "stop", cont_id])
 
 
+def generate_configs(build_requests, pipeline_file):
+    print(f"Generating dynamic pipelines for {len(build_requests)} builds")
+    for build in build_requests:
+        distro = build["distro"]
+        arch = build["arch"]
+        image_type = build["image-type"]
+        config = build["config"]
+
+        config_name = config["name"]
+
+        # TODO: start container command
+        # TODO: write config in artifact path and insert path to config into template
+
+        config_path = os.path.join(testlib.CONFIGS_PATH, config_name+".json")
+        pipeline_file.write(JOB_TEMPLATE.format(distro=distro, arch=arch, image_type=image_type,
+                                                config_name=config_name, config=config_path,
+                                                start_container="",
+                                                internal="true" if "rhel" in distro else "false"))
+    print("DONE!")
+
+
 def main():
     config_path = sys.argv[1]
 
@@ -261,6 +297,7 @@ def main():
             return
 
         config_file.write(testlib.BASE_CONFIG)
+        generate_configs(build_requests, config_file)
 
 
 if __name__ == "__main__":
