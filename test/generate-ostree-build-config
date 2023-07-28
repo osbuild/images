@@ -250,7 +250,7 @@ def main():
         manifest_dir = os.path.join(testlib.TEST_CACHE_ROOT, "manifests")
         gen_image_manifests(config_map, configs, manifest_dir)
 
-    build_requests = testlib.filter_builds(manifest_dir)
+    build_requests = testlib.filter_builds(manifest_dir, skip_ostree_pull=False)
     with open(config_path, "w") as config_file:
         if len(build_requests) == 0:
             print("No manifest changes detected. Generating null config.")

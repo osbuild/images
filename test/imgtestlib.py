@@ -14,19 +14,6 @@ S3_PREFIX = "images/builds"
 REGISTRY = "registry.gitlab.com/redhat/services/products/image-builder/ci/images"
 
 
-# skip image types that we can't test right now
-SKIPS = [
-    "edge-ami",
-    "edge-vsphere",
-    "edge-installer",
-    "edge-raw-image",
-    "edge-simplified-installer",
-    "iot-installer",
-    "iot-raw-image",
-    "iot-simplified-installer",
-]
-
-
 # ostree containers are pushed to the CI registry to be reused by dependants
 OSTREE_CONTAINERS = [
     "iot-container",
@@ -151,7 +138,7 @@ def check_config_names():
         sys.exit(1)
 
 
-def filter_builds(manifest_dir):
+def filter_builds(manifest_dir, skip_ostree_pull=True):
     """
     Returns a list of build requests for manifests in manifest_dir that have no matching config in the test build cache.
     """
@@ -180,12 +167,16 @@ def filter_builds(manifest_dir):
         distro = build_request["distro"]
         arch = build_request["arch"]
         image_type = build_request["image-type"]
+        config = build_request["config"]
+        config_name = config["name"]
+
+        # check if the config specifies an ostree URL and skip it if requested
+        if skip_ostree_pull and config.get("ostree", {}).get("url"):
+            print(f"Skipping {distro}/{arch}/{image_type}/{config_name} (ostree dependency)")
+            continue
 
         # add manifest id to build request
         build_request["manifest-checksum"] = manifest_id
-
-        if image_type in SKIPS:
-            continue
 
         # check if the hash_fname exists in the synced directory
         dl_config_dir = os.path.join(dl_path, distro, arch)
@@ -200,7 +191,6 @@ def filter_builds(manifest_dir):
                 print(f"Manifest {manifest_file} was successfully built in commit {commit}")
                 continue
             except json.JSONDecodeError as jd:
-                config_name = build_request["config"]["name"]
                 errors.append((
                         f"failed to parse {id_config_path}\n"
                         f"{jd.msg}\n"
