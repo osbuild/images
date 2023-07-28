@@ -47,7 +47,9 @@
     "./test/configs/ostree-device.json"
   ],
   "qcow2": [
-    "./test/configs/empty.json",
+    "./test/configs/empty.json"
+  ],
+  "ami": [
     "./test/configs/all-customizations.json"
   ]
 }
