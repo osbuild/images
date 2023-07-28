@@ -4,6 +4,7 @@
 # Each pipeline should build a single image configuration test.
 import os
 import sys
+from tempfile import TemporaryDirectory
 
 import imgtestlib as testlib
 
@@ -79,9 +80,9 @@ def main():
 
     testlib.check_config_names()
 
-    manifest_dir = os.path.join(testlib.TEST_CACHE_ROOT, "manifests")
-    generate_manifests(manifest_dir)
-    build_requests = testlib.filter_builds(manifest_dir)
+    with TemporaryDirectory() as manifest_dir:
+        generate_manifests(manifest_dir)
+        build_requests = testlib.filter_builds(manifest_dir)
 
     with open(config_path, "w") as config_file:
         if len(build_requests) == 0:
