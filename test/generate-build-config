@@ -11,13 +11,18 @@ import imgtestlib as testlib
 # TEST SELECTION
 ARCHITECTURES = ["x86_64", "aarch64"]
 
+PUSH_CONTAINER = "./tools/ci/push-container.sh"
+
 
 JOB_TEMPLATE = """
 build/{distro}/{arch}/{image_type}/{config_name}:
   stage: test
-  script: |
-    ./test/cases/build-image.sh "{distro}" "{image_type}" "{config}"
-    {extra_commands}
+  script:
+    - sudo dnf install -y go gpgme-devel gcc
+      osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux
+      s3cmd
+    - ./test/cases/build-image.sh "{distro}" "{image_type}" "{config}"
+    {container_push}
   extends: .terraform
   variables:
     RUNNER: aws/fedora-38-{arch}
@@ -64,18 +69,18 @@ def generate_configs(build_requests, pipeline_file):
 
         config_name = config["name"]
 
-        extra_cmds = []
+        container_push_cmd = ""
         if image_type in testlib.OSTREE_CONTAINERS:
             # push to container registry and label with checksum
             build_name = testlib.gen_build_name(distro, arch, image_type, config_name)
             # NOTE: the artifact path and filename depend on the names in the manifest
             container_path = f"./build/{build_name}/container/container.tar"
-            extra_cmds.append(f'./tools/ci/push-container.sh "{container_path}" "{build_name}:build-{man_checksum}"')
+            container_push_cmd = f'- {PUSH_CONTAINER} "{container_path}" "{build_name}:build-{man_checksum}"'
 
         config_path = os.path.join(testlib.CONFIGS_PATH, config_name+".json")
         pipeline_file.write(JOB_TEMPLATE.format(distro=distro, arch=arch, image_type=image_type,
                                                 config_name=config_name, config=config_path,
-                                                extra_commands="\n".join(extra_cmds),
+                                                container_push=container_push_cmd,
                                                 internal="true" if "rhel" in distro else "false"))
     print("DONE!")
 
