@@ -41,7 +41,7 @@ def generate_manifests(outputdir):
            "-output", outputdir,
            "-workers", "100",
            "-arches", arches_arg]
-    print(f"Running: {' '.join(cmd)}", flush=True)
+    print(f"Running: {' '.join(cmd)}")
     out, err = testlib.runcmd(cmd)
 
     # print stderr in case there were errors or warnings about skipped configurations
