@@ -116,7 +116,7 @@ def gen_image_manifests(config_map, configs, outputdir):
     arches_arg = os.uname().machine
     with TemporaryDirectory() as tmpdir:
         # write each config to a separate file
-        for config in configs:
+        for config in configs.values():
             with open(os.path.join(tmpdir, config["name"] + ".json"), "w", encoding="utf-8") as config_file:
                 json.dump(config, config_file)
 
@@ -175,7 +175,7 @@ def setup_dependencies(manifests, config_map):
     """
     container_ids = []
     new_config_map: dict[str, dict] = {}
-    new_configs = []
+    new_configs = {}
 
     container_ports: dict[str, int] = {}
     for config_path, filters in config_map.items():
@@ -230,7 +230,7 @@ def setup_dependencies(manifests, config_map):
                     "port": port,
                 }
             }
-            new_configs.append(new_config)
+            new_configs[config_name] = new_config
 
             config_fname = config_name + ".json"
             new_filters = new_config_map.get(config_fname, {"distros": [], "arches": [], "image-types": []})
@@ -240,7 +240,7 @@ def setup_dependencies(manifests, config_map):
             new_config_map[config_fname] = new_filters
 
     try:
-        for config in new_configs:
+        for config in new_configs.values():
             container = config["container"]["name"]
             port = config["container"]["port"]
             print(f"Starting container {container} {port}")
@@ -255,8 +255,9 @@ def setup_dependencies(manifests, config_map):
             testlib.runcmd(["podman", "stop", cont_id])
 
 
-def generate_configs(build_requests, pipeline_file):
+def generate_configs(build_requests, pull_configs, pipeline_file, configs_dir):
     print(f"Generating dynamic pipelines for {len(build_requests)} builds")
+    os.makedirs(configs_dir, exist_ok=True)
     for build in build_requests:
         distro = build["distro"]
         arch = build["arch"]
@@ -265,19 +266,27 @@ def generate_configs(build_requests, pipeline_file):
 
         config_name = config["name"]
 
-        # TODO: start container command
-        # TODO: write config in artifact path and insert path to config into template
+        # write the config to the artifacts directory
+        build_config_path = os.path.join(configs_dir, config_name + ".json")
+        with open(build_config_path, "w", encoding="utf-8") as build_config_file:
+            json.dump(config, build_config_file)
 
-        config_path = os.path.join(testlib.CONFIGS_PATH, config_name+".json")
+        # generate script line to pull and start container
+        container = pull_configs[config_name]["container"]
+        container_name = container["name"]
+        container_port = container["port"]
+        container_cmd = f"podman run -d --rm -p{container_port}:8080 {container_name}"
+
         pipeline_file.write(JOB_TEMPLATE.format(distro=distro, arch=arch, image_type=image_type,
-                                                config_name=config_name, config=config_path,
-                                                start_container="",
+                                                config_name=config_name, config=build_config_path,
+                                                start_container=container_cmd,
                                                 internal="true" if "rhel" in distro else "false"))
     print("DONE!")
 
 
 def main():
     config_path = sys.argv[1]
+    configs_dir = sys.argv[2]
 
     testlib.check_config_names()
 
@@ -300,7 +309,7 @@ def main():
             return
 
         config_file.write(testlib.BASE_CONFIG)
-        generate_configs(build_requests, config_file)
+        generate_configs(build_requests, pull_configs, config_file, configs_dir)
 
 
 if __name__ == "__main__":
