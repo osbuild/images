@@ -50,6 +50,7 @@ generate-build-config:
   variables:
     RUNNER: aws/fedora-38-x86_64
     INTERNAL_NETWORK: "true"
+    PYTHONUNBUFFERED: 1
   script:
     - sudo dnf -y install go python3 gpgme-devel s3cmd
       osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux
@@ -72,6 +73,7 @@ generate-ostree-build-config-x86_64:
   variables:
     RUNNER: aws/fedora-38-x86_64
     INTERNAL_NETWORK: "true"
+    PYTHONUNBUFFERED: 1
   script:
     - sudo dnf -y install go python3 gpgme-devel s3cmd
       osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux podman

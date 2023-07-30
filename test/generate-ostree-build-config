@@ -91,7 +91,7 @@ def gen_dependency_manifests(config_map, outputdir):
                "-images", ",".join(gen_image_types),
                "-config", tmpfile.name,
                "-arches", arches_arg]
-        print(" ".join(cmd), flush=True)
+        print(" ".join(cmd))
         out, err = testlib.runcmd(cmd)
 
     # print stderr in case there were errors or warnings about skipped configurations
