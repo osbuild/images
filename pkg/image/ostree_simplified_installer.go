@@ -127,6 +127,9 @@ func (img *OSTreeSimplifiedInstaller) InstantiateManifest(m *manifest.Manifest,
 		if img.FDO.DiunPubKeyRootCerts != "" {
 			kernelOpts = append(kernelOpts, "fdo.diun_pub_key_root_certs=/fdo_diun_pub_key_root_certs.pem")
 		}
+		if img.FDO.DiMfgStringTypeMacIface != "" {
+			kernelOpts = append(kernelOpts, "fdo.di_mfg_string_type_mac_iface="+img.FDO.DiMfgStringTypeMacIface)
+		}
 	}
 
 	bootTreePipeline.KernelOpts = kernelOpts
