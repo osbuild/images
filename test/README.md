@@ -18,6 +18,12 @@ The config map is also used in CI to dynamically generate test builds using the 
 
 Images are built in GitLab CI when a change in an image definition is detected. The config generator scripts generate all the manifests and create a child pipeline with one job for each manifest and builds the image. On successful build, the result is stored in an s3 bucket by manifest ID. Subsequent runs of the generator script check the cache and only build manifests when their ID is not found in the cache.
 
+
+### Dynamic pipelines
+
+Jobs are created dynamically using GitLab CI's [Dynamic child pipelines](https://docs.gitlab.com/ee/ci/pipelines/downstream_pipelines.html#dynamic-child-pipelines) feature. A simple example of how this works that mimics the setup of the pipeline generation in this project (but with very simple bash scripts) can be found in the [image-builder/ci/dynamic-pipeline-demo](https://gitlab.com/redhat/services/products/image-builder/ci/dynamic-pipeline-demo) project on GitLab. The project contains an [annotated `.gitlab-ci.yml` file](https://gitlab.com/redhat/services/products/image-builder/ci/dynamic-pipeline-demo/-/blob/5914c7432eaa810cfea7ca35ffb9f01700197b02/.gitlab-ci.yml) and [a couple of bash scripts](https://gitlab.com/redhat/services/products/image-builder/ci/dynamic-pipeline-demo/-/tree/5914c7432eaa810cfea7ca35ffb9f01700197b02/scripts) that generate pipeline configurations dynamically.
+
+
 ### Workflow details
 
 #### 1. Generate build config
