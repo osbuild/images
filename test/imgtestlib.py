@@ -138,11 +138,30 @@ def check_config_names():
         sys.exit(1)
 
 
-def filter_builds(manifest_dir, skip_ostree_pull=True):
+def read_manifests(path):
     """
-    Returns a list of build requests for manifests in manifest_dir that have no matching config in the test build cache.
+    Read all manifests in the given path, calculate their IDs, and return a dictionary mapping each filename to the data
+    and its ID.
     """
-    print("Filtering build configurations")
+    print(f"Reading manifests in {path}")
+    manifests = {}
+    for manifest_fname in os.listdir(path):
+        manifest_path = os.path.join(path, manifest_fname)
+        with open(manifest_path) as manifest_file:
+            manifest_data = json.load(manifest_file)
+        manifests[manifest_fname] = {
+            "data": manifest_data,
+            "id": get_manifest_id(manifest_data["manifest"]),
+        }
+    print("Done")
+    return manifests
+
+
+def filter_builds(manifests, skip_ostree_pull=True):
+    """
+    Returns a list of build requests for the manifests that have no matching config in the test build cache.
+    """
+    print(f"Filtering {len(manifests)} build configurations")
     dl_path = os.path.join(TEST_CACHE_ROOT, "s3configs", "builds/")
     os.makedirs(dl_path, exist_ok=True)
     build_requests = []
@@ -151,18 +170,11 @@ def filter_builds(manifest_dir, skip_ostree_pull=True):
 
     errors = []
 
-    for manifest_file in os.listdir(manifest_dir):
-        manifest_path = os.path.join(manifest_dir, manifest_file)
-
-        with open(manifest_path) as manifest_fp:
-            data = json.load(manifest_fp)
-
-        manifest_data = data["manifest"]
-
-        # generate manifest id based on concatenated stage IDs calculated from osbuild
-        manifest_id = get_manifest_id(manifest_data)
+    for manifest_fname, data in manifests.items():
+        manifest_id = data["id"]
         id_fname = manifest_id + ".json"
 
+        data = data.get("data")
         build_request = data["build-request"]
         distro = build_request["distro"]
         arch = build_request["arch"]
@@ -188,7 +200,7 @@ def filter_builds(manifest_dir, skip_ostree_pull=True):
                 with open(id_config_path) as dl_config_fp:
                     dl_config = json.load(dl_config_fp)
                 commit = dl_config["commit"]
-                print(f"Manifest {manifest_file} was successfully built in commit {commit}")
+                print(f"Manifest {manifest_fname} was successfully built in commit {commit}")
                 continue
             except json.JSONDecodeError as jd:
                 errors.append((
