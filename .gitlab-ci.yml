@@ -56,7 +56,7 @@ generate-build-config-x86_64:
   script:
     - sudo dnf -y install go python3 gpgme-devel s3cmd
       osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux
-    - ./test/generate-build-config build-config.yml
+    - ./test/generators/generate-build-config build-config.yml
   artifacts:
     paths:
       - build-config.yml
@@ -71,7 +71,7 @@ generate-build-config-aarch64:
   script:
     - sudo dnf -y install go python3 gpgme-devel s3cmd
       osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux
-    - ./test/generate-build-config build-config.yml
+    - ./test/generators/generate-build-config build-config.yml
   artifacts:
     paths:
       - build-config.yml
@@ -102,7 +102,7 @@ generate-ostree-build-config-x86_64:
   script:
     - sudo dnf -y install go python3 gpgme-devel s3cmd
       osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux podman
-    - ./test/generate-ostree-build-config build-config.yml build-configs
+    - ./test/generators/generate-ostree-build-config build-config.yml build-configs
   artifacts:
     paths:
       - build-config.yml
@@ -118,7 +118,7 @@ generate-ostree-build-config-aarch64:
   script:
     - sudo dnf -y install go python3 gpgme-devel s3cmd
       osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux podman
-    - ./test/generate-ostree-build-config build-config.yml build-configs
+    - ./test/generators/generate-ostree-build-config build-config.yml build-configs
   artifacts:
     paths:
       - build-config.yml
