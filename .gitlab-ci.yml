@@ -3,14 +3,7 @@ stages:
   - init
   - gen
   - test
-  - gen-ostree
-  - test-ostree
   - finish
-
-variables:
-  # Set the parent pipeline ID as a global variable so that the child pipeline
-  # jobs can use it to retrieve artifacts.
-  PARENT_PIPELINE_ID: $CI_PIPELINE_ID
 
 .base:
   before_script:
@@ -46,98 +39,24 @@ init:
   script:
     - schutzbot/update_github_status.sh start
 
-generate-build-config-x86_64:
+configure-generators:
   stage: gen
-  extends: .terraform
+  image: alpine:latest
   variables:
-    RUNNER: aws/fedora-38-x86_64
-    INTERNAL_NETWORK: "true"
     PYTHONUNBUFFERED: 1
   script:
-    - sudo dnf -y install go python3 gpgme-devel s3cmd
-      osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux
-    - ./test/generators/generate-build-config build-config.yml
+    - apk add -U go python3 gpgme-dev
+    - ./test/generators/configure-generators generator-config.yml
   artifacts:
     paths:
-      - build-config.yml
+      - generator-config.yml
 
-generate-build-config-aarch64:
-  stage: gen
-  extends: .terraform
-  variables:
-    RUNNER: aws/fedora-38-aarch64
-    INTERNAL_NETWORK: "true"
-    PYTHONUNBUFFERED: 1
-  script:
-    - sudo dnf -y install go python3 gpgme-devel s3cmd
-      osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux
-    - ./test/generators/generate-build-config build-config.yml
-  artifacts:
-    paths:
-      - build-config.yml
-
-image-build-trigger-x86_64:
+generator-trigger:
   stage: test
   trigger:
     include:
-      - artifact: build-config.yml
-        job: generate-build-config-x86_64
-    strategy: depend
-
-image-build-trigger-aarch64:
-  stage: test
-  trigger:
-    include:
-      - artifact: build-config.yml
-        job: generate-build-config-aarch64
-    strategy: depend
-
-generate-ostree-build-config-x86_64:
-  stage: gen-ostree
-  extends: .terraform
-  variables:
-    RUNNER: aws/fedora-38-x86_64
-    INTERNAL_NETWORK: "true"
-    PYTHONUNBUFFERED: 1
-  script:
-    - sudo dnf -y install go python3 gpgme-devel s3cmd
-      osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux podman
-    - ./test/generators/generate-ostree-build-config build-config.yml build-configs
-  artifacts:
-    paths:
-      - build-config.yml
-      - build-configs
-
-generate-ostree-build-config-aarch64:
-  stage: gen-ostree
-  extends: .terraform
-  variables:
-    RUNNER: aws/fedora-38-aarch64
-    INTERNAL_NETWORK: "true"
-    PYTHONUNBUFFERED: 1
-  script:
-    - sudo dnf -y install go python3 gpgme-devel s3cmd
-      osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux podman
-    - ./test/generators/generate-ostree-build-config build-config.yml build-configs
-  artifacts:
-    paths:
-      - build-config.yml
-      - build-configs
-
-image-build-ostree-trigger-x86_64:
-  stage: test-ostree
-  trigger:
-    include:
-      - artifact: build-config.yml
-        job: generate-ostree-build-config-x86_64
-    strategy: depend
-
-image-build-ostree-trigger-aarch64:
-  stage: test-ostree
-  trigger:
-    include:
-      - artifact: build-config.yml
-        job: generate-ostree-build-config-aarch64
+      - artifact: generator-config.yml
+        job: configure-generators
     strategy: depend
 
 finish:

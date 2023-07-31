@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import json
 import os
-import sys
 from contextlib import contextmanager
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 
@@ -22,7 +21,7 @@ build/{distro}/{arch}/{image_type}/{config_name}:
     INTERNAL_NETWORK: "{internal}"
   needs:
     - pipeline: "$PARENT_PIPELINE_ID"
-      job: generate-ostree-build-config-{arch}
+      job: generate-ostree-build-config-{distro}-{arch}
 """
 
 
@@ -50,7 +49,7 @@ def configs_with_deps(configs):
     return with_deps
 
 
-def gen_dependency_manifests(config_map, outputdir):
+def gen_dependency_manifests(config_map, distro, arch, outputdir):
     """
     Generate manifests for the dependencies of the configs in config map. The function generates a temporary config map
     that maps each config that appears in a dependency to the dependency image type and runs gen-manifests with that
@@ -59,7 +58,6 @@ def gen_dependency_manifests(config_map, outputdir):
     Returns a dictionary mapping manifest file name (without path) to the manifest data and its ID.
     """
     print("Generating manifests for dependencies")
-    arches_arg = os.uname().machine
     dep_config_map: dict = {}  # config map for the dependencies
     gen_image_types = set()  # set of all the image types to generate manifests for
 
@@ -90,7 +88,9 @@ def gen_dependency_manifests(config_map, outputdir):
                "-workers", "100",
                "-images", ",".join(gen_image_types),
                "-config", tmpfile.name,
-               "-arches", arches_arg]
+               "-arches", arch]
+        if distro:
+            cmd.extend(["-distros", distro])
         print(" ".join(cmd))
         out, err = testlib.runcmd(cmd)
 
@@ -108,7 +108,7 @@ def gen_dependency_manifests(config_map, outputdir):
     return testlib.read_manifests(outputdir)
 
 
-def gen_image_manifests(config_map, configs, outputdir):
+def gen_image_manifests(config_map, configs, distro, arch, outputdir):
     """
     Write the config map and configs to a temporary directory and generate the corresponding manifests in the output
     directory. The manifest generation skips any distro + arch + image-type configuration that isn't covered by the
@@ -116,7 +116,6 @@ def gen_image_manifests(config_map, configs, outputdir):
 
     Returns a dictionary mapping manifest file name (without path) to the manifest data and its ID.
     """
-    arches_arg = os.uname().machine
     with TemporaryDirectory() as tmpdir:
         # write each config to a separate file
         for config in configs.values():
@@ -135,7 +134,9 @@ def gen_image_manifests(config_map, configs, outputdir):
                "-config", config_map_path,
                "-commits=true",  # resolve ostree commit sources
                "-skip-noconfig",  # skip configs that aren't in the config-map
-               "-arches", arches_arg]
+               "-arches", arch]
+        if distro:
+            cmd.extend(["-distros", distro])
         print(" ".join(cmd))
         out, err = testlib.runcmd(cmd)
 
@@ -167,7 +168,7 @@ def default_ref(distro, arch):
 
 
 @contextmanager
-def setup_dependencies(manifests, config_map):
+def setup_dependencies(manifests, config_map, distro, arch):
     """
     For each config in the config map, list all image configurations (distro, arch, image type) that it applies to and
     use the manifests to find the corresponding manifest IDs. Pull and run the corresponding dependency container from
@@ -194,8 +195,11 @@ def setup_dependencies(manifests, config_map):
         dep_image_type = config_data["depends"]["image-type"]
 
         # get all image configurations that this config applies to
-        arches = [os.uname().machine]
-        image_configs = testlib.list_images(distros=filters.get("distros"),
+        distros = filters.get("distros")
+        if distro:
+            distros = [distro]
+        arches = [arch]
+        image_configs = testlib.list_images(distros=distros,
                                             arches=arches,
                                             images=filters.get("image-types"))
 
@@ -288,8 +292,14 @@ def generate_configs(build_requests, pull_configs, pipeline_file, configs_dir):
 
 
 def main():
-    config_path = sys.argv[1]
-    configs_dir = sys.argv[2]
+    parser = testlib.clargs()
+    parser.add_argument("build_configs", type=str, help="directory to write individual build configs")
+    args = parser.parse_args()
+
+    config_path = args.config
+    configs_dir = args.build_configs
+    distro = args.distro
+    arch = args.arch
 
     testlib.check_config_names()
 
@@ -297,11 +307,11 @@ def main():
 
     with TemporaryDirectory() as cache_root:
         dep_manifest_dir = os.path.join(cache_root, "dependencies")
-        dep_manifests = gen_dependency_manifests(config_map, dep_manifest_dir)
+        dep_manifests = gen_dependency_manifests(config_map, distro, arch, dep_manifest_dir)
 
-        with setup_dependencies(dep_manifests, config_map) as (pull_config_map, pull_configs):
+        with setup_dependencies(dep_manifests, config_map, distro, arch) as (pull_config_map, pull_configs):
             manifest_dir = os.path.join(cache_root, "manifests")
-            manifests = gen_image_manifests(pull_config_map, pull_configs, manifest_dir)
+            manifests = gen_image_manifests(pull_config_map, pull_configs, distro, arch, manifest_dir)
 
         build_requests = testlib.filter_builds(manifests, skip_ostree_pull=False)
 

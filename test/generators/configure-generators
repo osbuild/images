@@ -1,0 +1,111 @@
+#!/usr/bin/env python3
+#
+# Create a job for each distro+arch to run test generators and triggers.
+import sys
+
+import imgtestlib as testlib
+
+ARCHITECTURES = ["x86_64", "aarch64"]
+
+
+BASE_CONFIG = """
+stages:
+  - gen
+  - build
+  - ostree-gen
+  - ostree-build
+
+variables:
+  # Set the parent pipeline ID as a global variable so that the child pipeline
+  # jobs can use it to retrieve artifacts.
+  PARENT_PIPELINE_ID: $CI_PIPELINE_ID
+
+"""
+
+GEN_TEMPLATE = """
+generate-build-config-{distro}-{arch}:
+  stage: gen
+  extends: .terraform
+  variables:
+    RUNNER: aws/fedora-38-{arch}
+    INTERNAL_NETWORK: "true"
+    PYTHONUNBUFFERED: 1
+  script:
+    - sudo dnf -y install go python3 gpgme-devel s3cmd
+      osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux
+    - ./test/generators/generate-build-config --distro {distro} --arch {arch} build-config.yml
+  artifacts:
+    paths:
+      - build-config.yml
+"""
+
+TRIGGER_TEMPLATE = """
+image-build-trigger-{distro}-{arch}:
+  stage: build
+  trigger:
+    include:
+      - artifact: build-config.yml
+        job: generate-build-config-{distro}-{arch}
+    strategy: depend
+"""
+
+OSTREE_GEN_TEMPLATE = """
+generate-ostree-build-config-{distro}-{arch}:
+  stage: ostree-gen
+  extends: .terraform
+  variables:
+    RUNNER: aws/fedora-38-{arch}
+    INTERNAL_NETWORK: "true"
+    PYTHONUNBUFFERED: 1
+  script:
+    - sudo dnf -y install go python3 gpgme-devel s3cmd
+      osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux podman
+    - ./test/generators/generate-ostree-build-config --distro {distro} --arch {arch} build-config.yml build-configs
+  artifacts:
+    paths:
+      - build-config.yml
+      - build-configs
+"""
+
+OSTREE_TRIGGER_TEMPLATE = """
+image-build-ostree-trigger-{distro}-{arch}:
+  stage: ostree-build
+  trigger:
+    include:
+      - artifact: build-config.yml
+        job: generate-ostree-build-config-{distro}-{arch}
+    strategy: depend
+"""
+
+
+def main():
+    config_path = sys.argv[1]
+    images = testlib.list_images(arches=ARCHITECTURES)
+    combos = set()
+
+    gen_stage = []
+    trigger_stage = []
+    ostree_gen_stage = []
+    ostree_trigger_stage = []
+    for img in images:
+        combo = (img["distro"], img["arch"])
+        if combo in combos:
+            continue
+
+        combos.add(combo)
+        gen_stage.append(GEN_TEMPLATE.format(distro=img["distro"], arch=img["arch"]))
+        trigger_stage.append(TRIGGER_TEMPLATE.format(distro=img["distro"], arch=img["arch"]))
+        ostree_gen_stage.append(OSTREE_GEN_TEMPLATE.format(distro=img["distro"], arch=img["arch"]))
+        ostree_trigger_stage.append(OSTREE_TRIGGER_TEMPLATE.format(distro=img["distro"], arch=img["arch"]))
+
+    with open(config_path, "w", encoding="utf-8") as config_file:
+        config_file.write(BASE_CONFIG)
+        config_file.write(testlib.BASE_CONFIG)
+        config_file.write("\n".join(gen_stage))
+        config_file.write("\n".join(trigger_stage))
+        config_file.write("\n".join(ostree_gen_stage))
+        config_file.write("\n".join(ostree_trigger_stage))
+
+
+if __name__ == "__main__":
+    main()
