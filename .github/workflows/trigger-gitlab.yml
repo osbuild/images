@@ -1,33 +1,22 @@
----
+# inspired by rhinstaller/anaconda
+
 name: Trigger GitLab CI
 
 on:
-  pull_request:
-    branches:
-      - "*"
-  # for merge queue
-  merge_group:
+  workflow_run:
+    workflows: ["GitLab", "Tests"]
+    types: [completed]
 
 jobs:
-  gitlab-ci-helper:
-    name: "Gitlab CI trigger helper"
-    runs-on: ubuntu-latest
-    env:
-      SKIP_CI: ${{ (github.event.pull_request.draft == true || contains(github.event.pull_request.labels.*.name, 'WIP')) && !contains(github.event.pull_request.labels.*.name, 'WIP+test') }}
-    steps:
-      - name: Write PR status
-        run: echo "$SKIP_CI" > SKIP_CI.txt
-      - name: Upload status
-        uses: actions/upload-artifact@v3
-        with:
-          name: PR_STATUS
-          path: SKIP_CI.txt
-
   trigger-gitlab:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     env:
       IMAGEBUILDER_BOT_GITLAB_SSH_KEY: ${{ secrets.IMAGEBUILDER_BOT_GITLAB_SSH_KEY }}
     steps:
+      - name: Report status
+        uses: haya14busa/action-workflow_run-status@v1
+
       - name: Install Dependencies
         run: |
           sudo apt install -y jq
@@ -35,11 +24,8 @@ jobs:
       - name: Clone repository
         uses: actions/checkout@v3
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
-
-      - name: Mark the working directory as safe for git
-        run: git config --global --add safe.directory "$(pwd)"
 
       - uses: octokit/request-action@v2.x
         id: fetch_pulls
@@ -58,18 +44,37 @@ jobs:
           ${{ steps.fetch_pulls.outputs.data }}
           a21b3e7f-d5eb-44a3-8be0-c2412851d2e6
 
-          PR=$(jq -rc '.[] | select(.head.sha | contains("${{ github.event.pull_request.head.sha }}")) | select(.state | contains("open"))' "$PR_DATA" | jq -r .number)
+          PR=$(jq -rc '.[] | select(.head.sha | contains("${{ github.event.workflow_run.head_sha }}")) | select(.state | contains("open"))' "$PR_DATA" | jq -r .number)
           if [ ! -z "$PR" ]; then
             echo "pr_branch=PR-$PR" >> "$GITHUB_OUTPUT"
             git checkout -b PR-$PR
           else
-            git checkout ${{ github.event.pull_request.head.ref }}
+            git checkout ${{ github.event.workflow_run.head_branch }}
           fi
 
-      - name: Download PR_STATUS artifact
-        uses: actions/download-artifact@v3
+      - name: Download artifacts
+        uses: actions/github-script@v6
         with:
-          name: PR_STATUS
+          script: |
+            let allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               run_id: context.payload.workflow_run.id,
+            });
+            let matchArtifact = allArtifacts.data.artifacts.filter((artifact) => {
+              return artifact.name == "PR_STATUS"
+            })[0];
+            let download = await github.rest.actions.downloadArtifact({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               artifact_id: matchArtifact.id,
+               archive_format: 'zip',
+            });
+            let fs = require('fs');
+            fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/PR_STATUS.zip`, Buffer.from(download.data));
+
+      - name: Unzip artifact
+        run: unzip PR_STATUS.zip
 
       - name: Push to gitlab
         run: |
@@ -83,5 +88,5 @@ jobs:
           if [[ "${SKIP_CI}" == true ]];then
             git push -f -o ci.variable="SKIP_CI=true" ci
           else
-            git push -f ci
+            git push -f ci 
           fi
