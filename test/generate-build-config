@@ -26,6 +26,10 @@ build/{distro}/{arch}/{image_type}/{config_name}:
 
 
 def generate_manifests(outputdir):
+    """
+    Generate all manifest using the default config map and return a dictionary mapping each manifest file to the
+    manifest data and its ID.
+    """
     arches_arg = ",".join(ARCHITECTURES)
     cmd = ["go", "run", "./cmd/gen-manifests",
            "-cache", os.path.join(testlib.TEST_CACHE_ROOT, "rpmmd"),
@@ -46,6 +50,7 @@ def generate_manifests(outputdir):
         print(line)
 
     print("Manifest generation done!\n")
+    return testlib.read_manifests(outputdir)
 
 
 def generate_configs(build_requests, pipeline_file):
@@ -81,8 +86,8 @@ def main():
     testlib.check_config_names()
 
     with TemporaryDirectory() as manifest_dir:
-        generate_manifests(manifest_dir)
-        build_requests = testlib.filter_builds(manifest_dir)
+        manifests = generate_manifests(manifest_dir)
+        build_requests = testlib.filter_builds(manifests)
 
     with open(config_path, "w") as config_file:
         if len(build_requests) == 0:

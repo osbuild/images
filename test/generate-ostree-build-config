@@ -52,6 +52,8 @@ def gen_dependency_manifests(config_map, outputdir):
     Generate manifests for the dependencies of the configs in config map. The function generates a temporary config map
     that maps each config that appears in a dependency to the dependency image type and runs gen-manifests with that
     config map.
+
+    Returns a dictionary mapping manifest file name (without path) to the manifest data and its ID.
     """
     print("Generating manifests for dependencies")
     arches_arg = os.uname().machine
@@ -100,6 +102,7 @@ def gen_dependency_manifests(config_map, outputdir):
         print(line)
 
     print("Manifest generation done!\n")
+    return testlib.read_manifests(outputdir)
 
 
 def gen_image_manifests(config_map, configs, outputdir):
@@ -107,6 +110,8 @@ def gen_image_manifests(config_map, configs, outputdir):
     Write the config map and configs to a temporary directory and generate the corresponding manifests in the output
     directory. The manifest generation skips any distro + arch + image-type configuration that isn't covered by the
     config map.
+
+    Returns a dictionary mapping manifest file name (without path) to the manifest data and its ID.
     """
     arches_arg = os.uname().machine
     with TemporaryDirectory() as tmpdir:
@@ -142,6 +147,7 @@ def gen_image_manifests(config_map, configs, outputdir):
         print(line)
 
     print("Manifest generation done!\n")
+    return testlib.read_manifests(outputdir)
 
 
 def default_ref(distro, arch):
@@ -158,12 +164,12 @@ def default_ref(distro, arch):
 
 
 @contextmanager
-def setup_dependencies(manifest_dir, config_map):
+def setup_dependencies(manifests, config_map):
     """
     For each config in the config map, list all image configurations (distro, arch, image type) that it applies to and
-    use the manifests in the manifest dir to find the corresponding manifest IDs. Pull and run the corresponding
-    dependency container from the registry and write a new config (and config map) that replaces the ostree options with
-    the container URL and port.
+    use the manifests to find the corresponding manifest IDs. Pull and run the corresponding dependency container from
+    the registry and write a new config (and config map) that replaces the ostree options with the container URL and
+    port.
     The config map and configs that function yields can be used to generate manifests with ostree commits resolved.
     The containers are stopped when the context exits.
     """
@@ -195,10 +201,7 @@ def setup_dependencies(manifest_dir, config_map):
             arch = image_config["arch"]
             image_type = image_config["image-type"]
             dep_build_name = testlib.gen_build_name(distro, arch, dep_image_type, dep_config_name)
-            manifest_path = os.path.join(manifest_dir, dep_build_name + ".json")
-            with open(manifest_path) as manifest_file:
-                manifest_data = json.load(manifest_file)
-            manifest_id = testlib.get_manifest_id(manifest_data["manifest"])
+            manifest_id = manifests[dep_build_name + ".json"]["id"]
             container = f"{testlib.REGISTRY}/{dep_build_name}:build-{manifest_id}"
 
             # start each container once on an incremental port
@@ -282,13 +285,13 @@ def main():
 
     with TemporaryDirectory() as cache_root:
         dep_manifest_dir = os.path.join(cache_root, "dependencies")
-        gen_dependency_manifests(config_map, dep_manifest_dir)
+        dep_manifests = gen_dependency_manifests(config_map, dep_manifest_dir)
 
-        with setup_dependencies(dep_manifest_dir, config_map) as (config_map, configs):
+        with setup_dependencies(dep_manifests, config_map) as (pull_config_map, pull_configs):
             manifest_dir = os.path.join(cache_root, "manifests")
-            gen_image_manifests(config_map, configs, manifest_dir)
+            manifests = gen_image_manifests(pull_config_map, pull_configs, manifest_dir)
 
-        build_requests = testlib.filter_builds(manifest_dir, skip_ostree_pull=False)
+        build_requests = testlib.filter_builds(manifests, skip_ostree_pull=False)
 
     with open(config_path, "w") as config_file:
         if len(build_requests) == 0:
