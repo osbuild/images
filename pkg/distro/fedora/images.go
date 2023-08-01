@@ -3,7 +3,6 @@ package fedora
 import (
 	"fmt"
 	"math/rand"
-	"strings"
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/oscap"
@@ -311,7 +310,7 @@ func imageInstallerImage(workload workload.Workload,
 
 	// Enable anaconda-webui for Fedora > 38
 	distro := t.Arch().Distro()
-	if strings.HasPrefix(distro.Name(), "fedora") && !common.VersionLessThan(distro.Releasever(), "38") {
+	if !common.VersionLessThan(distro.Releasever(), "38") {
 		img.AdditionalAnacondaModules = []string{
 			"org.fedoraproject.Anaconda.Modules.Security",
 			"org.fedoraproject.Anaconda.Modules.Timezone",
@@ -448,7 +447,7 @@ func iotRawImage(workload workload.Workload,
 
 	// Set sysroot read-only only for Fedora 37+
 	distro := t.Arch().Distro()
-	if strings.HasPrefix(distro.Name(), "fedora") && !common.VersionLessThan(distro.Releasever(), "37") {
+	if !common.VersionLessThan(distro.Releasever(), "37") {
 		img.SysrootReadOnly = true
 	}
 
