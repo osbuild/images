@@ -604,18 +604,10 @@ func newDistro(version int) distro.Distro {
 		&platform.X86{
 			BasePlatform: platform.BasePlatform{
 				FirmwarePackages: []string{
-					"microcode_ctl", // ??
-					"iwl1000-firmware",
-					"iwl100-firmware",
-					"iwl105-firmware",
-					"iwl135-firmware",
-					"iwl2000-firmware",
-					"iwl2030-firmware",
-					"iwl3160-firmware",
-					"iwl5000-firmware",
-					"iwl5150-firmware",
-					"iwl6000-firmware",
-					"iwl6050-firmware",
+					"biosdevname",
+					"iwlwifi-dvm-firmware",
+					"iwlwifi-mvm-firmware",
+					"microcode_ctl",
 				},
 			},
 			BIOS:       true,
@@ -674,9 +666,10 @@ func newDistro(version int) distro.Distro {
 		&platform.Aarch64{
 			BasePlatform: platform.BasePlatform{
 				FirmwarePackages: []string{
-					"uboot-images-armv8", // ??
-					"bcm283x-firmware",
 					"arm-image-installer", // ??
+					"bcm283x-firmware",
+					"iwl7260-firmware",
+					"uboot-images-armv8", // ??
 				},
 			},
 			UEFIVendor: "fedora",
