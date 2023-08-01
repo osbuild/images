@@ -180,7 +180,10 @@ func iotCommitPackageSet(t *imageType) rpmmd.PackageSet {
 	if !common.VersionLessThan(t.arch.distro.osVersion, "38") {
 		ps = ps.Append(rpmmd.PackageSet{
 			Include: []string{
-				"fdo-client", // added in F38
+				"fdo-client",
+				"fdo-owner-cli",
+				"ignition-edge",
+				"ssh-key-dir",
 			},
 		})
 	}
