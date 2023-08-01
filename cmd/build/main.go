@@ -195,19 +195,33 @@ func convertRepos(rr []repository) []rpmmd.RepoConfig {
 }
 
 func readRepos() DistroArchRepoMap {
-	file := "./tools/test-case-generators/repos.json"
-	var darm DistroArchRepoMap
-	fp, err := os.Open(file)
+	reposDir := "./test/data/repositories/"
+	darm := make(DistroArchRepoMap)
+	filelist, err := os.ReadDir(reposDir)
 	if err != nil {
-		check(err)
+		panic(err)
 	}
-	defer fp.Close()
-	data, err := io.ReadAll(fp)
-	if err != nil {
-		check(err)
-	}
-	if err := json.Unmarshal(data, &darm); err != nil {
-		check(err)
+	for _, file := range filelist {
+		filename := file.Name()
+		if !strings.HasSuffix(filename, ".json") {
+			continue
+		}
+		reposFilepath := filepath.Join(reposDir, filename)
+		fp, err := os.Open(reposFilepath)
+		if err != nil {
+			panic(err)
+		}
+		defer fp.Close()
+		data, err := io.ReadAll(fp)
+		if err != nil {
+			panic(err)
+		}
+		repos := make(map[string][]repository)
+		if err := json.Unmarshal(data, &repos); err != nil {
+			panic(err)
+		}
+		distro := strings.TrimSuffix(filename, filepath.Ext(filename))
+		darm[distro] = repos
 	}
 	return darm
 }
