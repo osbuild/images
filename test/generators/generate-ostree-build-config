@@ -247,9 +247,7 @@ def setup_dependencies(manifests, config_map, distro, arch):
             new_config_map[config_fname] = new_filters
 
     try:
-        for config in new_configs.values():
-            container = config["container"]["name"]
-            port = config["container"]["port"]
+        for container, port in container_ports.items():
             print(f"Starting container {container} {port}")
             cont_id, _ = testlib.runcmd(["podman", "run", "-d", "--rm", f"-p{port}:8080", container])
             container_ids.append(cont_id.strip().decode())
