@@ -3,6 +3,7 @@ stages:
   - init
   - gen
   - test
+  - verify
   - finish
 
 .base:
@@ -58,6 +59,15 @@ generator-trigger:
       - artifact: generator-config.yml
         job: configure-generators
     strategy: depend
+
+check-build-coverage:
+  stage: verify
+  image: alpine:latest
+  variables:
+    PYTHONUNBUFFERED: 1
+  script:
+    - apk add -U go python3 gpgme-dev s3cmd
+    - ./test/generators/check-build-coverage ./s3configs/
 
 finish:
   stage: finish
