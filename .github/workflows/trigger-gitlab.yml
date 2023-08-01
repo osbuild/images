@@ -1,10 +1,10 @@
 # inspired by rhinstaller/anaconda
 
-name: Trigger GitLab CI
+name: Start GitLab CI
 
 on:
   workflow_run:
-    workflows: ["GitLab", "Tests"]
+    workflows: ["GitLab"]
     types: [completed]
 
 jobs:
