@@ -74,9 +74,13 @@
       "iot-commit"
     ]
   },
-  "./configs/ostree-device.json": {
+  "./configs/edge-ostree-pull-device.json": {
     "image-types": [
-      "edge-simplified-installer",
+      "edge-simplified-installer"
+    ]
+  },
+  "./configs/iot-ostree-pull-device.json": {
+    "image-types": [
       "iot-simplified-installer"
     ]
   },

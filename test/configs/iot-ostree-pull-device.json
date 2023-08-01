@@ -1,0 +1,15 @@
+{
+  "name": "iot-ostree-pull-device",
+  "blueprint": {
+    "customizations": {
+      "installation_device": "/dev/sda"
+    }
+  },
+  "ostree": {
+    "url": "http://example.com/repo"
+  },
+  "depends": {
+    "image-type": "iot-container",
+    "config": "empty.json"
+  }
+}
