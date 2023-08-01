@@ -18,6 +18,23 @@ The config map is also used in CI to dynamically generate test builds using the 
 
 Images are built in GitLab CI when a change in an image definition is detected. The config generator scripts generate all the manifests and create a child pipeline with one job for each manifest and builds the image. On successful build, the result is stored in an s3 bucket by manifest ID. Subsequent runs of the generator script check the cache and only build manifests when their ID is not found in the cache.
 
+Each generator script is run separately for every distribution and architecture combination that the project supports. These are also generated dynamically using `./cmd/list-images`. The dynamic test generation workflow looks like this:
+
+```
+configure-generators
+    |
+    | (Dynamic: For each distro/arch)
+    |-- generate-build-configs-<distro>-<arch>
+    |         |
+    |         | (Dynamic: For each modified image type and config)
+    |         |-- Build <distro>-<arch>-<image>-<config>
+    |
+    |-- generate-ostree-build-configs-<distro>-<arch>
+              |
+              | (Dynamic: For each modified image type and config)
+              |-- Build <distro>-<arch>-<image>-<config>
+```
+
 
 ### Dynamic pipelines
 
@@ -26,12 +43,14 @@ Jobs are created dynamically using GitLab CI's [Dynamic child pipelines](https:/
 
 ### Workflow details
 
+The following describe the stages that are run for each distro-arch combination.
+
 #### 1. Generate build config
 
 The first stage of the workflow runs the `./test/generate-build-config` script.
 
 The config generator:
-- Generates all the manifests for a given architecture using the `./cmd/gen-manifests` tool.
+- Generates all the manifests for a given distribution and architecture using the `./cmd/gen-manifests` tool.
 - Downloads the test build cache.
 - Filters out any manifest with an ID that exists in the build cache.
   - It also filters out any manifest that depends on an ostree commit because these can't be built without an ostree repository to pull from.
@@ -81,7 +100,7 @@ for example:
 This stage of the workflow runs the `./test/generate-ostree-build-config` script. It has the same purpose as the config generator in the first step, but it sets up ostree containers to serve commits to generate manifests for the image types that depend on them.
 
 The config generator:
-- Generates all the manifests for build config dependencies for a given architecture using the `./cmd/gen-manifests` tool.
+- Generates all the manifests for build config dependencies for a given distribution and architecture using the `./cmd/gen-manifests` tool.
   - Build config dependencies are image type and config pairings that appear in the `depends` part of a build config .
   - For example [iot-ostree-pull-empty](./configs/iot-ostree-pull-empty.json)) will cause a manifest to be generated for `iot-container` with the `empty` config for all distros.
 - Determines the container name and tag from the build name and manifest ID and pulls each container from the registry.
