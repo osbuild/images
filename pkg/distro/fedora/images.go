@@ -452,6 +452,10 @@ func iotRawImage(workload workload.Workload,
 		img.SysrootReadOnly = true
 	}
 
+	if !common.VersionLessThan(distro.Releasever(), "38") {
+		img.Ignition = true
+	}
+
 	img.Users = users.UsersFromBP(customizations.GetUsers())
 	img.Groups = users.GroupsFromBP(customizations.GetGroups())
 
