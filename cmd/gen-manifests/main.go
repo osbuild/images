@@ -1,8 +1,7 @@
 // Standalone executable for generating all test manifests in parallel.
 // Collects list of image types from the distro list.  Must be run from the
-// root of the repository and reads tools/test-case-generators/repos.json for
-// repositories test/config-map.json to match image types with configuration
-// files.
+// root of the repository and reads test/data/repositories for repositories
+// test/config-map.json to match image types with configuration files.
 // Collects errors and failures and prints them after all jobs are finished.
 
 package main
@@ -362,19 +361,33 @@ func convertRepos(rr []repository) []rpmmd.RepoConfig {
 }
 
 func readRepos() DistroArchRepoMap {
-	file := "./tools/test-case-generators/repos.json"
-	var darm DistroArchRepoMap
-	fp, err := os.Open(file)
+	reposDir := "./test/data/repositories/"
+	darm := make(DistroArchRepoMap)
+	filelist, err := os.ReadDir(reposDir)
 	if err != nil {
 		panic(err)
 	}
-	defer fp.Close()
-	data, err := io.ReadAll(fp)
-	if err != nil {
-		panic(err)
-	}
-	if err := json.Unmarshal(data, &darm); err != nil {
-		panic(err)
+	for _, file := range filelist {
+		filename := file.Name()
+		if !strings.HasSuffix(filename, ".json") {
+			continue
+		}
+		reposFilepath := filepath.Join(reposDir, filename)
+		fp, err := os.Open(reposFilepath)
+		if err != nil {
+			panic(err)
+		}
+		defer fp.Close()
+		data, err := io.ReadAll(fp)
+		if err != nil {
+			panic(err)
+		}
+		repos := make(map[string][]repository)
+		if err := json.Unmarshal(data, &repos); err != nil {
+			panic(err)
+		}
+		distro := strings.TrimSuffix(filename, filepath.Ext(filename))
+		darm[distro] = repos
 	}
 	return darm
 }
