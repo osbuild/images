@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+import argparse
+import json
+import os
+import sys
+
+import imgtestlib as testlib
+
+# Don't check for these image types
+SKIPS = [
+    "oci",  # OCI is identical to qcow2, so the manifests are identical and it's never built
+]
+
+
+def check_build_coverage(cachedir):
+    tests = set()
+    for root, dirs, files in os.walk(cachedir):
+        for fname in files:
+            _, ext = os.path.splitext(fname)
+            if ext != ".json":
+                continue
+
+            fpath = os.path.join(root, fname)
+            build_info = json.load(open(fpath))
+            distro = build_info["distro"]
+            arch = build_info["arch"]
+            image = build_info["image-type"]
+            tests.add((distro, arch, image))
+
+    all_combos = set()
+    for config in testlib.list_images(arches=["x86_64", "aarch64"]):
+        distro = config["distro"]
+        arch = config["arch"]
+        image = config["image-type"]
+        if image in SKIPS:
+            continue
+        all_combos.add((distro, arch, image))
+
+    missing = all_combos - tests
+    return missing
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("cachedir", type=str, help="path to download the build test cache")
+    args = parser.parse_args()
+    cachedir = args.cachedir
+    testlib.dl_s3_configs(cachedir)
+
+    missing = check_build_coverage(cachedir)
+    if missing:
+        print(f"{len(missing)} distro/arch/image combinations have no builds in the cache")
+        for idx, m in enumerate(missing, start=1):
+            print(f" {idx:3d}: " + "/".join(m))
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
