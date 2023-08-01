@@ -33,7 +33,7 @@ func TestImageType_PackageSetsChains(t *testing.T) {
 
 					// set up bare minimum args for image type
 					var customizations *blueprint.Customizations
-					if imageType.Name() == "edge-simplified-installer" {
+					if imageType.Name() == "edge-simplified-installer" || imageType.Name() == "iot-simplified-installer" {
 						customizations = &blueprint.Customizations{
 							InstallationDevice: "/dev/null",
 						}
@@ -108,7 +108,7 @@ func TestImageTypePipelineNames(t *testing.T) {
 
 					// set up bare minimum args for image type
 					var customizations *blueprint.Customizations
-					if imageType.Name() == "edge-simplified-installer" {
+					if imageType.Name() == "edge-simplified-installer" || imageType.Name() == "iot-simplified-installer" {
 						customizations = &blueprint.Customizations{
 							InstallationDevice: "/dev/null",
 						}
@@ -430,7 +430,7 @@ func TestPipelineRepositories(t *testing.T) {
 
 							// set up bare minimum args for image type
 							var customizations *blueprint.Customizations
-							if imageType.Name() == "edge-simplified-installer" {
+							if imageType.Name() == "edge-simplified-installer" || imageType.Name() == "iot-simplified-installer" {
 								customizations = &blueprint.Customizations{
 									InstallationDevice: "/dev/null",
 								}

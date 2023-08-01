@@ -157,6 +157,27 @@ var (
 		exports:          []string{"bootiso"},
 	}
 
+	iotSimplifiedInstallerImgType = imageType{
+		name:     "iot-simplified-installer",
+		filename: "simplified-installer.iso",
+		mimeType: "application/x-iso9660-image",
+		packageSets: map[string]packageSetFunc{
+			installerPkgsKey: iotSimplifiedInstallerPackageSet,
+		},
+		defaultImageConfig: &distro.ImageConfig{
+			EnabledServices: iotServices,
+		},
+		defaultSize:         10 * common.GibiByte,
+		rpmOstree:           true,
+		bootable:            true,
+		bootISO:             true,
+		image:               iotSimplifiedInstallerImage,
+		buildPipelines:      []string{"build"},
+		payloadPipelines:    []string{"ostree-deployment", "image", "xz", "coi-tree", "efiboot-tree", "bootiso-tree", "bootiso"},
+		exports:             []string{"bootiso"},
+		basePartitionTables: iotBasePartitionTables,
+	}
+
 	iotRawImgType = imageType{
 		name:        "iot-raw-image",
 		nameAliases: []string{"fedora-iot-raw-image"},
@@ -629,6 +650,7 @@ func newDistro(version int) distro.Distro {
 		},
 		iotRawImgType,
 	)
+
 	aarch64.addImageTypes(
 		&platform.Aarch64{
 			UEFIVendor: "fedora",
@@ -674,10 +696,10 @@ func newDistro(version int) distro.Distro {
 			},
 			UEFIVendor: "fedora",
 		},
-		iotCommitImgType,
-		iotOCIImgType,
-		iotInstallerImgType,
 		imageInstallerImgType,
+		iotCommitImgType,
+		iotInstallerImgType,
+		iotOCIImgType,
 		liveInstallerImgType,
 	)
 	aarch64.addImageTypes(
@@ -739,6 +761,39 @@ func newDistro(version int) distro.Distro {
 		},
 		minimalrawImgType,
 	)
+
+	if !common.VersionLessThan(rd.Releasever(), "38") {
+		// iot simplified installer was introduced in F38
+		x86_64.addImageTypes(
+			&platform.X86{
+				BasePlatform: platform.BasePlatform{
+					ImageFormat: platform.FORMAT_RAW,
+					FirmwarePackages: []string{
+						"biosdevname",
+						"iwlwifi-dvm-firmware",
+						"iwlwifi-mvm-firmware",
+						"microcode_ctl",
+					},
+				},
+				BIOS:       false,
+				UEFIVendor: "fedora",
+			},
+			iotSimplifiedInstallerImgType,
+		)
+		aarch64.addImageTypes(
+			&platform.Aarch64{
+				BasePlatform: platform.BasePlatform{
+					FirmwarePackages: []string{
+						"uboot-images-armv8",
+						"bcm283x-firmware",
+						"arm-image-installer",
+					},
+				},
+				UEFIVendor: "fedora",
+			},
+			iotSimplifiedInstallerImgType,
+		)
+	}
 
 	rd.addArches(x86_64, aarch64)
 	return &rd

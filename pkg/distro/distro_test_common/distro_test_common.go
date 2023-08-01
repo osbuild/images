@@ -70,13 +70,14 @@ func TestDistro_KernelOption(t *testing.T, d distro.Distro) {
 		// Ostree installers and raw images download a payload to embed or
 		// deploy.  The kernel is part of the payload so it doesn't appear in
 		// the image type's package lists.
-		"iot-installer":             true,
-		"edge-installer":            true,
-		"edge-simplified-installer": true,
-		"iot-raw-image":             true,
-		"edge-raw-image":            true,
 		"edge-ami":                  true,
+		"edge-installer":            true,
+		"edge-raw-image":            true,
+		"edge-simplified-installer": true,
 		"edge-vsphere":              true,
+		"iot-installer":             true,
+		"iot-raw-image":             true,
+		"iot-simplified-installer":  true,
 
 		// the tar image type is a minimal image type which is not expected to
 		// be usable without a blueprint (see commit 83a63aaf172f556f6176e6099ffaa2b5357b58f5).
