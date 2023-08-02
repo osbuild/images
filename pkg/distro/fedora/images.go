@@ -464,11 +464,8 @@ func iotRawImage(workload workload.Workload,
 	img.Keyboard = "us"
 	img.Locale = "C.UTF-8"
 
-	// Set sysroot read-only only for Fedora 37+
-	if !common.VersionLessThan(distro.Releasever(), "37") {
-		img.SysrootReadOnly = true
-		img.KernelOptionsAppend = append(img.KernelOptionsAppend, "rw")
-	}
+	img.SysrootReadOnly = true
+	img.KernelOptionsAppend = append(img.KernelOptionsAppend, "rw")
 
 	img.Platform = t.platform
 	img.Workload = workload
