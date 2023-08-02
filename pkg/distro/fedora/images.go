@@ -17,6 +17,7 @@ import (
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/ostree"
+	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
@@ -432,7 +433,7 @@ func iotInstallerImage(workload workload.Workload,
 	return img, nil
 }
 
-func iotRawImage(workload workload.Workload,
+func iotImage(workload workload.Workload,
 	t *imageType,
 	customizations *blueprint.Customizations,
 	options distro.ImageOptions,
@@ -444,7 +445,7 @@ func iotRawImage(workload workload.Workload,
 	if err != nil {
 		return nil, fmt.Errorf("%s: %s", t.Name(), err.Error())
 	}
-	img := image.NewOSTreeRawImage(commit)
+	img := image.NewOSTreeDiskImage(commit)
 
 	distro := t.Arch().Distro()
 
@@ -480,9 +481,14 @@ func iotRawImage(workload workload.Workload,
 
 	if !common.VersionLessThan(distro.Releasever(), "38") {
 		img.Ignition = true
-		img.IgnitionPlatform = "metal"
-		if bpIgnition := customizations.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
-			img.KernelOptionsAppend = append(img.KernelOptionsAppend, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
+		switch img.Platform.GetImageFormat() {
+		case platform.FORMAT_RAW:
+			img.IgnitionPlatform = "metal"
+			if bpIgnition := customizations.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
+				img.KernelOptionsAppend = append(img.KernelOptionsAppend, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
+			}
+		case platform.FORMAT_QCOW2:
+			img.IgnitionPlatform = "qemu"
 		}
 	}
 
@@ -515,7 +521,7 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 	if err != nil {
 		return nil, fmt.Errorf("%s: %s", t.Name(), err.Error())
 	}
-	rawImg := image.NewOSTreeRawImage(commit)
+	rawImg := image.NewOSTreeDiskImage(commit)
 
 	rawImg.Users = users.UsersFromBP(customizations.GetUsers())
 	rawImg.Groups = users.GroupsFromBP(customizations.GetGroups())

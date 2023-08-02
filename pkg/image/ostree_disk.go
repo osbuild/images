@@ -16,7 +16,7 @@ import (
 	"github.com/osbuild/images/pkg/runner"
 )
 
-type OSTreeRawImage struct {
+type OSTreeDiskImage struct {
 	Base
 
 	Platform       platform.Platform
@@ -47,14 +47,14 @@ type OSTreeRawImage struct {
 	Files       []*fsnode.File
 }
 
-func NewOSTreeRawImage(commit ostree.SourceSpec) *OSTreeRawImage {
-	return &OSTreeRawImage{
+func NewOSTreeDiskImage(commit ostree.SourceSpec) *OSTreeDiskImage {
+	return &OSTreeDiskImage{
 		Base:         NewBase("ostree-raw-image"),
 		CommitSource: commit,
 	}
 }
 
-func baseRawOstreeImage(img *OSTreeRawImage, m *manifest.Manifest, buildPipeline *manifest.Build) *manifest.RawOSTreeImage {
+func baseRawOstreeImage(img *OSTreeDiskImage, m *manifest.Manifest, buildPipeline *manifest.Build) *manifest.RawOSTreeImage {
 	osPipeline := manifest.NewOSTreeDeployment(buildPipeline, m, img.CommitSource, img.OSName, img.Ignition, img.IgnitionPlatform, img.Platform)
 	osPipeline.PartitionTable = img.PartitionTable
 	osPipeline.Remote = img.Remote
@@ -74,36 +74,45 @@ func baseRawOstreeImage(img *OSTreeRawImage, m *manifest.Manifest, buildPipeline
 	return manifest.NewRawOStreeImage(buildPipeline, osPipeline, img.Platform)
 }
 
-func (img *OSTreeRawImage) InstantiateManifest(m *manifest.Manifest,
+func (img *OSTreeDiskImage) InstantiateManifest(m *manifest.Manifest,
 	repos []rpmmd.RepoConfig,
 	runner runner.Runner,
 	rng *rand.Rand) (*artifact.Artifact, error) {
 	buildPipeline := manifest.NewBuild(m, runner, repos)
 	buildPipeline.Checkpoint()
 
+	// don't support compressing non-raw images
+	imgFormat := img.Platform.GetImageFormat()
+	if imgFormat == platform.FORMAT_UNSET {
+		// treat unset as raw for this check
+		imgFormat = platform.FORMAT_RAW
+	}
+	if imgFormat != platform.FORMAT_RAW && img.Compression != "" {
+		panic(fmt.Sprintf("no compression is allowed with %q format for %q", imgFormat, img.name))
+	}
+
 	baseImage := baseRawOstreeImage(img, m, buildPipeline)
-	var art *artifact.Artifact
 	switch img.Platform.GetImageFormat() {
 	case platform.FORMAT_VMDK:
-		if img.Compression != "" {
-			panic(fmt.Sprintf("no compression is allowed with VMDK format for %q", img.name))
-		}
 		vmdkPipeline := manifest.NewVMDK(buildPipeline, baseImage)
 		vmdkPipeline.SetFilename(img.Filename)
-		art = vmdkPipeline.Export()
+		return vmdkPipeline.Export(), nil
+	case platform.FORMAT_QCOW2:
+		qcow2Pipeline := manifest.NewQCOW2(buildPipeline, baseImage)
+		qcow2Pipeline.Compat = img.Platform.GetQCOW2Compat()
+		qcow2Pipeline.SetFilename(img.Filename)
+		return qcow2Pipeline.Export(), nil
 	default:
 		switch img.Compression {
 		case "xz":
 			compressedImage := manifest.NewXZ(buildPipeline, baseImage)
 			compressedImage.SetFilename(img.Filename)
-			art = compressedImage.Export()
+			return compressedImage.Export(), nil
 		case "":
 			baseImage.SetFilename(img.Filename)
-			art = baseImage.Export()
+			return baseImage.Export(), nil
 		default:
 			panic(fmt.Sprintf("unsupported compression type %q on %q", img.Compression, img.name))
 		}
 	}
-
-	return art, nil
 }
