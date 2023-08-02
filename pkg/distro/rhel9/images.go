@@ -401,6 +401,7 @@ func edgeRawImage(workload workload.Workload,
 
 	if !common.VersionLessThan(t.arch.distro.osVersion, "9.2") || t.arch.distro.osVersion == "9-stream" {
 		img.Ignition = true
+		img.IgnitionPlatform = "metal"
 	}
 
 	img.Users = users.UsersFromBP(customizations.GetUsers())
@@ -461,6 +462,7 @@ func edgeSimplifiedInstallerImage(workload workload.Workload,
 	rawImg := image.NewOSTreeRawImage(commit)
 	if !common.VersionLessThan(t.arch.distro.osVersion, "9.2") || t.arch.distro.osVersion == "9-stream" {
 		rawImg.Ignition = true
+		rawImg.IgnitionPlatform = "metal"
 	}
 
 	rawImg.Users = users.UsersFromBP(customizations.GetUsers())

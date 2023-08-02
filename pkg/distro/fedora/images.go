@@ -444,13 +444,9 @@ func iotRawImage(workload workload.Workload,
 	if err != nil {
 		return nil, fmt.Errorf("%s: %s", t.Name(), err.Error())
 	}
-
 	img := image.NewOSTreeRawImage(commit)
 
 	distro := t.Arch().Distro()
-	if !common.VersionLessThan(distro.Releasever(), "38") {
-		img.Ignition = true
-	}
 
 	img.Users = users.UsersFromBP(customizations.GetUsers())
 	img.Groups = users.GroupsFromBP(customizations.GetGroups())
@@ -485,8 +481,12 @@ func iotRawImage(workload workload.Workload,
 	}
 	img.OSName = "fedora-iot"
 
-	if bpIgnition := customizations.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
-		img.KernelOptionsAppend = append(img.KernelOptionsAppend, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
+	if !common.VersionLessThan(distro.Releasever(), "38") {
+		img.Ignition = true
+		img.IgnitionPlatform = "metal"
+		if bpIgnition := customizations.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
+			img.KernelOptionsAppend = append(img.KernelOptionsAppend, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
+		}
 	}
 
 	if kopts := customizations.GetKernel(); kopts != nil && kopts.Append != "" {
@@ -519,9 +519,6 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 		return nil, fmt.Errorf("%s: %s", t.Name(), err.Error())
 	}
 	rawImg := image.NewOSTreeRawImage(commit)
-	if !common.VersionLessThan(t.arch.distro.osVersion, "38") {
-		rawImg.Ignition = true
-	}
 
 	rawImg.Users = users.UsersFromBP(customizations.GetUsers())
 	rawImg.Groups = users.GroupsFromBP(customizations.GetGroups())
@@ -543,6 +540,13 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 	}
 	rawImg.OSName = "fedora"
 
+	if !common.VersionLessThan(t.arch.distro.osVersion, "38") {
+		rawImg.Ignition = true
+		rawImg.IgnitionPlatform = "metal"
+		if bpIgnition := customizations.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
+			rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
+		}
+	}
 	// TODO: move generation into LiveImage
 	pt, err := t.getPartitionTable(customizations.GetFilesystems(), options, rng)
 	if err != nil {
@@ -551,10 +555,6 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 	rawImg.PartitionTable = pt
 
 	rawImg.Filename = t.Filename()
-
-	if bpIgnition := customizations.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
-		rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
-	}
 
 	if kopts := customizations.GetKernel(); kopts != nil && kopts.Append != "" {
 		rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, kopts.Append)

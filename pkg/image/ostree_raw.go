@@ -39,9 +39,9 @@ type OSTreeRawImage struct {
 
 	Filename string
 
-	Compression string
-
-	Ignition bool
+	Ignition         bool
+	IgnitionPlatform string
+	Compression      string
 
 	Directories []*fsnode.Directory
 	Files       []*fsnode.File
@@ -64,7 +64,7 @@ func ostreeCompressedImagePipelines(img *OSTreeRawImage, m *manifest.Manifest, b
 }
 
 func baseRawOstreeImage(img *OSTreeRawImage, m *manifest.Manifest, buildPipeline *manifest.Build) *manifest.RawOSTreeImage {
-	osPipeline := manifest.NewOSTreeDeployment(m, buildPipeline, img.CommitSource, img.OSName, img.Ignition, img.Platform)
+	osPipeline := manifest.NewOSTreeDeployment(m, buildPipeline, img.CommitSource, img.OSName, img.Ignition, img.IgnitionPlatform, img.Platform)
 	osPipeline.PartitionTable = img.PartitionTable
 	osPipeline.Remote = img.Remote
 	osPipeline.KernelOptionsAppend = img.KernelOptionsAppend
