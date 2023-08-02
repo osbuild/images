@@ -79,7 +79,9 @@ func (img *OSTreeSimplifiedInstaller) InstantiateManifest(m *manifest.Manifest,
 
 	// create the raw image
 	img.rawImage.Filename = rawImageFilename
-	rawImage := ostreeCompressedImagePipelines(img.rawImage, m, buildPipeline)
+
+	// image in simplified installer is always compressed
+	compressedImage := ostreeCompressedImagePipelines(img.rawImage, m, buildPipeline)
 
 	coiPipeline := manifest.NewCoreOSInstaller(m,
 		buildPipeline,
@@ -149,7 +151,7 @@ func (img *OSTreeSimplifiedInstaller) InstantiateManifest(m *manifest.Manifest,
 
 	isoTreePipeline := manifest.NewCoreOSISOTree(m,
 		buildPipeline,
-		rawImage,
+		compressedImage,
 		coiPipeline,
 		bootTreePipeline,
 		isoLabel)
