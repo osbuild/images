@@ -12,7 +12,7 @@ require (
 	github.com/Azure/go-autorest/autorest v0.11.29
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.12
 	github.com/BurntSushi/toml v1.3.2
-	github.com/aws/aws-sdk-go v1.44.313
+	github.com/aws/aws-sdk-go v1.44.314
 	github.com/containers/common v0.55.2
 	github.com/containers/image/v5 v5.26.1
 	github.com/gobwas/glob v0.2.3
