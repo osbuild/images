@@ -21,7 +21,7 @@ type OSTreeSimplifiedInstaller struct {
 	Base
 
 	// Raw image that will be created and embedded
-	rawImage *OSTreeRawImage
+	rawImage *OSTreeDiskImage
 
 	Platform         platform.Platform
 	OSCustomizations manifest.OSCustomizations
@@ -60,7 +60,7 @@ type OSTreeSimplifiedInstaller struct {
 	AdditionalDracutModules []string
 }
 
-func NewOSTreeSimplifiedInstaller(rawImage *OSTreeRawImage, installDevice string) *OSTreeSimplifiedInstaller {
+func NewOSTreeSimplifiedInstaller(rawImage *OSTreeDiskImage, installDevice string) *OSTreeSimplifiedInstaller {
 	return &OSTreeSimplifiedInstaller{
 		Base:          NewBase("ostree-simplified-installer"),
 		rawImage:      rawImage,

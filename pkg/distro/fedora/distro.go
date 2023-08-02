@@ -191,7 +191,7 @@ var (
 		defaultSize:         4 * common.GibiByte,
 		rpmOstree:           true,
 		bootable:            true,
-		image:               iotRawImage,
+		image:               iotImage,
 		buildPipelines:      []string{"build"},
 		payloadPipelines:    []string{"ostree-deployment", "image", "xz"},
 		exports:             []string{"xz"},
