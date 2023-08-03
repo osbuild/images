@@ -75,13 +75,11 @@ func (img *OSTreeSimplifiedInstaller) InstantiateManifest(m *manifest.Manifest,
 	buildPipeline := manifest.NewBuild(m, runner, repos)
 	buildPipeline.Checkpoint()
 
-	rawImageFilename := "image.raw.xz"
-
-	// create the raw image
-	img.rawImage.Filename = rawImageFilename
+	imageFilename := "image.raw.xz"
 
 	// image in simplified installer is always compressed
-	compressedImage := ostreeCompressedImagePipelines(img.rawImage, m, buildPipeline)
+	compressedImage := manifest.NewXZ(buildPipeline, baseRawOstreeImage(img.rawImage, m, buildPipeline))
+	compressedImage.SetFilename(imageFilename)
 
 	coiPipeline := manifest.NewCoreOSInstaller(m,
 		buildPipeline,
@@ -111,7 +109,7 @@ func (img *OSTreeSimplifiedInstaller) InstantiateManifest(m *manifest.Manifest,
 		"coreos.inst.crypt_root=1",
 		"coreos.inst.isoroot=" + isoLabel,
 		"coreos.inst.install_dev=" + img.installDevice,
-		fmt.Sprintf("coreos.inst.image_file=/run/media/iso/%s", rawImageFilename),
+		fmt.Sprintf("coreos.inst.image_file=/run/media/iso/%s", imageFilename),
 		"coreos.inst.insecure",
 	}
 
@@ -153,7 +151,7 @@ func (img *OSTreeSimplifiedInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoTreePipeline.KernelOpts = kernelOpts
 	isoTreePipeline.PartitionTable = rootfsPartitionTable
 	isoTreePipeline.OSName = img.OSName
-	isoTreePipeline.PayloadPath = fmt.Sprintf("/%s", rawImageFilename)
+	isoTreePipeline.PayloadPath = fmt.Sprintf("/%s", imageFilename)
 	isoTreePipeline.ISOLinux = isoLinuxEnabled
 
 	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, isoLabel)
