@@ -24,19 +24,14 @@ func (p *OCIContainer) SetFilename(filename string) {
 	p.filename = filename
 }
 
-func NewOCIContainer(m *Manifest,
-	buildPipeline *Build,
-	treePipeline TreePipeline) *OCIContainer {
+func NewOCIContainer(buildPipeline *Build, treePipeline TreePipeline) *OCIContainer {
 	p := &OCIContainer{
-		Base:         NewBase(m, "container", buildPipeline),
+		Base:         NewBase(treePipeline.Manifest(), "container", buildPipeline),
 		treePipeline: treePipeline,
 		filename:     "oci-archive.tar",
 	}
-	if treePipeline.Manifest() != m {
-		panic("tree pipeline from different manifest")
-	}
 	buildPipeline.addDependent(p)
-	m.addPipeline(p)
+	treePipeline.Manifest().addPipeline(p)
 	return p
 }
 

@@ -35,25 +35,27 @@ type CoreOSISOTree struct {
 	KernelOpts []string
 }
 
-func NewCoreOSISOTree(m *Manifest,
+func NewCoreOSISOTree(
 	buildPipeline *Build,
 	payloadPipeline *XZ,
 	coiPipeline *CoreOSInstaller,
-	bootTreePipeline *EFIBootTree,
-	isoLabel string) *CoreOSISOTree {
+	bootTreePipeline *EFIBootTree) *CoreOSISOTree {
+
+	// the three pipelines should all belong to the same manifest
+	if payloadPipeline.Manifest() != coiPipeline.Manifest() ||
+		payloadPipeline.Manifest() != bootTreePipeline.Manifest() {
+		panic("pipelines from different manifests")
+	}
 
 	p := &CoreOSISOTree{
-		Base:             NewBase(m, "bootiso-tree", buildPipeline),
+		Base:             NewBase(coiPipeline.Manifest(), "bootiso-tree", buildPipeline),
 		payloadPipeline:  payloadPipeline,
 		coiPipeline:      coiPipeline,
 		bootTreePipeline: bootTreePipeline,
-		isoLabel:         isoLabel,
+		isoLabel:         bootTreePipeline.ISOLabel,
 	}
 	buildPipeline.addDependent(p)
-	if coiPipeline.Base.manifest != m {
-		panic("anaconda pipeline from different manifest")
-	}
-	m.addPipeline(p)
+	coiPipeline.Manifest().addPipeline(p)
 	return p
 }
 

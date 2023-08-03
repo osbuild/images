@@ -58,7 +58,7 @@ func (img *DiskImage) InstantiateManifest(m *manifest.Manifest,
 	osPipeline.OSVersion = img.OSVersion
 	osPipeline.OSNick = img.OSNick
 
-	imagePipeline := manifest.NewRawImage(m, buildPipeline, osPipeline)
+	imagePipeline := manifest.NewRawImage(buildPipeline, osPipeline)
 	imagePipeline.PartTool = img.PartTool
 
 	var artifact *artifact.Artifact
@@ -79,7 +79,7 @@ func (img *DiskImage) InstantiateManifest(m *manifest.Manifest,
 		artifactPipeline = qcow2Pipeline
 		artifact = qcow2Pipeline.Export()
 	case platform.FORMAT_VHD:
-		vpcPipeline := manifest.NewVPC(m, buildPipeline, imagePipeline)
+		vpcPipeline := manifest.NewVPC(buildPipeline, imagePipeline)
 		if img.Compression == "" {
 			vpcPipeline.SetFilename(img.Filename)
 		}
@@ -87,16 +87,16 @@ func (img *DiskImage) InstantiateManifest(m *manifest.Manifest,
 		artifactPipeline = vpcPipeline
 		artifact = vpcPipeline.Export()
 	case platform.FORMAT_VMDK:
-		vmdkPipeline := manifest.NewVMDK(m, buildPipeline, imagePipeline, nil)
+		vmdkPipeline := manifest.NewVMDK(buildPipeline, imagePipeline)
 		if img.Compression == "" {
 			vmdkPipeline.SetFilename(img.Filename)
 		}
 		artifactPipeline = vmdkPipeline
 		artifact = vmdkPipeline.Export()
 	case platform.FORMAT_OVA:
-		vmdkPipeline := manifest.NewVMDK(m, buildPipeline, imagePipeline, nil)
-		ovfPipeline := manifest.NewOVF(m, buildPipeline, vmdkPipeline)
-		artifactPipeline := manifest.NewTar(m, buildPipeline, ovfPipeline, "archive")
+		vmdkPipeline := manifest.NewVMDK(buildPipeline, imagePipeline)
+		ovfPipeline := manifest.NewOVF(buildPipeline, vmdkPipeline)
+		artifactPipeline := manifest.NewTar(buildPipeline, ovfPipeline, "archive")
 		artifactPipeline.Format = osbuild.TarArchiveFormatUstar
 		artifactPipeline.RootNode = osbuild.TarRootNodeOmit
 		artifactPipeline.SetFilename(img.Filename)
@@ -105,7 +105,7 @@ func (img *DiskImage) InstantiateManifest(m *manifest.Manifest,
 		// NOTE(akoutsou): temporary workaround; filename required for GCP
 		// TODO: define internal raw filename on image type
 		imagePipeline.SetFilename("disk.raw")
-		archivePipeline := manifest.NewTar(m, buildPipeline, imagePipeline, "archive")
+		archivePipeline := manifest.NewTar(buildPipeline, imagePipeline, "archive")
 		archivePipeline.Format = osbuild.TarArchiveFormatOldgnu
 		archivePipeline.RootNode = osbuild.TarRootNodeOmit
 		// these are required to successfully import the image to GCP

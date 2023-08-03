@@ -25,21 +25,15 @@ func (p *RawOSTreeImage) SetFilename(filename string) {
 	p.filename = filename
 }
 
-func NewRawOStreeImage(m *Manifest,
-	buildPipeline *Build,
-	platform platform.Platform,
-	treePipeline *OSTreeDeployment) *RawOSTreeImage {
+func NewRawOStreeImage(buildPipeline *Build, treePipeline *OSTreeDeployment, platform platform.Platform) *RawOSTreeImage {
 	p := &RawOSTreeImage{
-		Base:         NewBase(m, "image", buildPipeline),
+		Base:         NewBase(treePipeline.Manifest(), "image", buildPipeline),
 		treePipeline: treePipeline,
 		filename:     "disk.img",
 		platform:     platform,
 	}
 	buildPipeline.addDependent(p)
-	if treePipeline.Base.manifest != m {
-		panic("tree pipeline from different manifest")
-	}
-	m.addPipeline(p)
+	treePipeline.Manifest().addPipeline(p)
 	return p
 }
 
