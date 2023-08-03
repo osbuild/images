@@ -71,7 +71,7 @@ func (img *DiskImage) InstantiateManifest(m *manifest.Manifest,
 		artifactPipeline = imagePipeline
 		artifact = imagePipeline.Export()
 	case platform.FORMAT_QCOW2:
-		qcow2Pipeline := manifest.NewQCOW2(m, buildPipeline, imagePipeline)
+		qcow2Pipeline := manifest.NewQCOW2(buildPipeline, imagePipeline)
 		if img.Compression == "" {
 			qcow2Pipeline.SetFilename(img.Filename)
 		}
@@ -119,7 +119,7 @@ func (img *DiskImage) InstantiateManifest(m *manifest.Manifest,
 
 	switch img.Compression {
 	case "xz":
-		xzPipeline := manifest.NewXZ(m, buildPipeline, artifactPipeline)
+		xzPipeline := manifest.NewXZ(buildPipeline, artifactPipeline)
 		xzPipeline.SetFilename(img.Filename)
 		artifact = xzPipeline.Export()
 	case "":

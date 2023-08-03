@@ -57,7 +57,7 @@ func NewOSTreeRawImage(commit ostree.SourceSpec) *OSTreeRawImage {
 func ostreeCompressedImagePipelines(img *OSTreeRawImage, m *manifest.Manifest, buildPipeline *manifest.Build) *manifest.XZ {
 	imagePipeline := baseRawOstreeImage(img, m, buildPipeline)
 
-	xzPipeline := manifest.NewXZ(m, buildPipeline, imagePipeline)
+	xzPipeline := manifest.NewXZ(buildPipeline, imagePipeline)
 	xzPipeline.SetFilename(img.Filename)
 
 	return xzPipeline
