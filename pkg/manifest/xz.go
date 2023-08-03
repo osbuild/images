@@ -23,16 +23,14 @@ func (p *XZ) SetFilename(filename string) {
 
 // NewXZ creates a new XZ pipeline. imgPipeline is the pipeline producing the
 // raw image that will be xz compressed.
-func NewXZ(m *Manifest,
-	buildPipeline *Build,
-	imgPipeline Pipeline) *XZ {
+func NewXZ(buildPipeline *Build, imgPipeline Pipeline) *XZ {
 	p := &XZ{
-		Base:        NewBase(m, "xz", buildPipeline),
+		Base:        NewBase(imgPipeline.Manifest(), "xz", buildPipeline),
 		filename:    "image.xz",
 		imgPipeline: imgPipeline,
 	}
 	buildPipeline.addDependent(p)
-	m.addPipeline(p)
+	imgPipeline.Manifest().addPipeline(p)
 	return p
 }
 

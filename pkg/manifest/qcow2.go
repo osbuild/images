@@ -11,7 +11,7 @@ type QCOW2 struct {
 	filename string
 	Compat   string
 
-	imgPipeline *RawImage
+	imgPipeline FilePipeline
 }
 
 func (p QCOW2) Filename() string {
@@ -25,19 +25,14 @@ func (p *QCOW2) SetFilename(filename string) {
 // NewQCOW2 createsa new QCOW2 pipeline. imgPipeline is the pipeline producing the
 // raw image. The pipeline name is the name of the new pipeline. Filename is the name
 // of the produced qcow2 image.
-func NewQCOW2(m *Manifest,
-	buildPipeline *Build,
-	imgPipeline *RawImage) *QCOW2 {
+func NewQCOW2(buildPipeline *Build, imgPipeline FilePipeline) *QCOW2 {
 	p := &QCOW2{
-		Base:        NewBase(m, "qcow2", buildPipeline),
+		Base:        NewBase(imgPipeline.Manifest(), "qcow2", buildPipeline),
 		imgPipeline: imgPipeline,
 		filename:    "image.qcow2",
 	}
-	if imgPipeline.Base.manifest != m {
-		panic("live image pipeline from different manifest")
-	}
 	buildPipeline.addDependent(p)
-	m.addPipeline(p)
+	imgPipeline.Manifest().addPipeline(p)
 	return p
 }
 
