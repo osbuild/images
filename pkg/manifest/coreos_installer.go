@@ -185,6 +185,6 @@ func (p *CoreOSInstaller) serialize() osbuild.Pipeline {
 	return pipeline
 }
 
-func (p *CoreOSInstaller) GetPlatform() platform.Platform {
+func (p *CoreOSInstaller) Platform() platform.Platform {
 	return p.platform
 }

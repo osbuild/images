@@ -32,7 +32,7 @@ func NewOCIContainer(m *Manifest,
 		treePipeline: treePipeline,
 		filename:     "oci-archive.tar",
 	}
-	if treePipeline.GetManifest() != m {
+	if treePipeline.Manifest() != m {
 		panic("tree pipeline from different manifest")
 	}
 	buildPipeline.addDependent(p)
@@ -44,7 +44,7 @@ func (p *OCIContainer) serialize() osbuild.Pipeline {
 	pipeline := p.Base.serialize()
 
 	options := &osbuild.OCIArchiveStageOptions{
-		Architecture: p.treePipeline.GetPlatform().GetArch().String(),
+		Architecture: p.treePipeline.Platform().GetArch().String(),
 		Filename:     p.Filename(),
 		Config: &osbuild.OCIArchiveConfig{
 			Cmd:          p.Cmd,
