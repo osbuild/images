@@ -66,6 +66,7 @@
     "image-types": [
       "iot-ami",
       "iot-installer",
+      "iot-qcow2-image",
       "iot-raw-image"
     ]
   },

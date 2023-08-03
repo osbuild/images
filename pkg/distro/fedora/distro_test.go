@@ -330,6 +330,7 @@ func TestImageType_Name(t *testing.T) {
 				"iot-commit",
 				"iot-container",
 				"iot-installer",
+				"iot-qcow2-image",
 				"iot-raw-image",
 				"live-installer",
 				"minimal-raw",
@@ -355,6 +356,7 @@ func TestImageType_Name(t *testing.T) {
 				"iot-commit",
 				"iot-container",
 				"iot-installer",
+				"iot-qcow2-image",
 				"iot-raw-image",
 				"minimal-raw",
 				"oci",
@@ -492,7 +494,7 @@ func TestDistro_ManifestError(t *testing.T) {
 				assert.EqualError(t, err, fmt.Sprintf("unsupported blueprint customizations found for boot ISO image type \"%s\": (allowed: User, Group)", imgTypeName))
 			} else if imgTypeName == "live-installer" {
 				assert.EqualError(t, err, fmt.Sprintf("unsupported blueprint customizations found for boot ISO image type \"%s\": (allowed: None)", imgTypeName))
-			} else if imgTypeName == "iot-raw-image" {
+			} else if imgTypeName == "iot-raw-image" || imgTypeName == "iot-qcow2-image" {
 				assert.EqualError(t, err, fmt.Sprintf("unsupported blueprint customizations found for image type %q: (allowed: User, Group, Directories, Files, Services)", imgTypeName))
 			} else {
 				assert.NoError(t, err)
@@ -516,6 +518,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"iot-commit",
 				"iot-container",
 				"iot-installer",
+				"iot-qcow2-image",
 				"iot-raw-image",
 				"live-installer",
 				"minimal-raw",
@@ -542,6 +545,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"iot-commit",
 				"iot-container",
 				"iot-installer",
+				"iot-qcow2-image",
 				"iot-raw-image",
 				"live-installer",
 				"minimal-raw",
@@ -653,7 +657,7 @@ func TestDistro_CustomFileSystemManifestError(t *testing.T) {
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
 			if imgTypeName == "iot-commit" || imgTypeName == "iot-container" {
 				assert.EqualError(t, err, "Custom mountpoints are not supported for ostree types")
-			} else if imgTypeName == "iot-raw-image" {
+			} else if imgTypeName == "iot-raw-image" || imgTypeName == "iot-qcow2-image" {
 				assert.EqualError(t, err, fmt.Sprintf("unsupported blueprint customizations found for image type %q: (allowed: User, Group, Directories, Files, Services)", imgTypeName))
 			} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "image-installer" {
 				continue
@@ -685,7 +689,7 @@ func TestDistro_TestRootMountPoint(t *testing.T) {
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
 			if imgTypeName == "iot-commit" || imgTypeName == "iot-container" {
 				assert.EqualError(t, err, "Custom mountpoints are not supported for ostree types")
-			} else if imgTypeName == "iot-raw-image" {
+			} else if imgTypeName == "iot-raw-image" || imgTypeName == "iot-qcow2-image" {
 				assert.EqualError(t, err, fmt.Sprintf("unsupported blueprint customizations found for image type %q: (allowed: User, Group, Directories, Files, Services)", imgTypeName))
 			} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "image-installer" {
 				continue
@@ -829,7 +833,7 @@ func TestDistro_CustomFileSystemPatternMatching(t *testing.T) {
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
 			if imgTypeName == "iot-commit" || imgTypeName == "iot-container" {
 				assert.EqualError(t, err, "Custom mountpoints are not supported for ostree types")
-			} else if imgTypeName == "iot-raw-image" {
+			} else if imgTypeName == "iot-raw-image" || imgTypeName == "iot-qcow2-image" {
 				assert.EqualError(t, err, fmt.Sprintf("unsupported blueprint customizations found for image type %q: (allowed: User, Group, Directories, Files, Services)", imgTypeName))
 			} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "image-installer" {
 				continue
@@ -861,7 +865,7 @@ func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
 			if imgTypeName == "iot-commit" || imgTypeName == "iot-container" {
 				assert.EqualError(t, err, "Custom mountpoints are not supported for ostree types")
-			} else if imgTypeName == "iot-raw-image" {
+			} else if imgTypeName == "iot-raw-image" || imgTypeName == "iot-qcow2-image" {
 				assert.EqualError(t, err, fmt.Sprintf("unsupported blueprint customizations found for image type %q: (allowed: User, Group, Directories, Files, Services)", imgTypeName))
 			} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "image-installer" {
 				continue

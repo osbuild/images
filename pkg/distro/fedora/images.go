@@ -3,6 +3,7 @@ package fedora
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/fdo"
@@ -505,6 +506,75 @@ func iotImage(workload workload.Workload,
 
 	img.Filename = t.Filename()
 	img.Compression = t.compression
+
+	return img, nil
+}
+
+func iotQcow2Image(workload workload.Workload,
+	t *imageType,
+	customizations *blueprint.Customizations,
+	options distro.ImageOptions,
+	packageSets map[string]rpmmd.PackageSet,
+	containers []container.SourceSpec,
+	rng *rand.Rand) (image.ImageKind, error) {
+
+	commit, err := makeOSTreePayloadCommit(options.OSTree, t.OSTreeRef())
+	if err != nil {
+		return nil, fmt.Errorf("%s: %s", t.Name(), err.Error())
+	}
+	img := image.NewOSTreeDiskImage(commit)
+
+	distro := t.Arch().Distro()
+
+	img.Users = users.UsersFromBP(customizations.GetUsers())
+	img.Groups = users.GroupsFromBP(customizations.GetGroups())
+
+	img.Directories, err = blueprint.DirectoryCustomizationsToFsNodeDirectories(customizations.GetDirectories())
+	if err != nil {
+		return nil, err
+	}
+	img.Files, err = blueprint.FileCustomizationsToFsNodeFiles(customizations.GetFiles())
+	if err != nil {
+		return nil, err
+	}
+
+	img.KernelOptionsAppend = []string{"modprobe.blacklist=vc4"}
+	img.Keyboard = "us"
+	img.Locale = "C.UTF-8"
+
+	// Set sysroot read-only only for Fedora 37+
+	if !common.VersionLessThan(distro.Releasever(), "37") {
+		img.SysrootReadOnly = true
+		img.KernelOptionsAppend = append(img.KernelOptionsAppend, "rw")
+	}
+
+	img.Platform = t.platform
+	img.Workload = workload
+
+	img.Remote = ostree.Remote{
+		Name:        "fedora-iot",
+		URL:         "https://ostree.fedoraproject.org/iot",
+		ContentURL:  "mirrorlist=https://ostree.fedoraproject.org/iot/mirrorlist",
+		GPGKeyPaths: []string{"/etc/pki/rpm-gpg/"},
+	}
+	img.OSName = "fedora-iot"
+
+	if strings.HasPrefix(distro.Name(), "fedora") && !common.VersionLessThan(distro.Releasever(), "38") {
+		img.Ignition = true
+		img.IgnitionPlatform = "qemu"
+	}
+
+	if kopts := customizations.GetKernel(); kopts != nil && kopts.Append != "" {
+		img.KernelOptionsAppend = append(img.KernelOptionsAppend, kopts.Append)
+	}
+
+	pt, err := t.getPartitionTable(customizations.GetFilesystems(), options, rng)
+	if err != nil {
+		return nil, err
+	}
+	img.PartitionTable = pt
+
+	img.Filename = t.Filename()
 
 	return img, nil
 }
