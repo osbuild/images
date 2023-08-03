@@ -191,6 +191,7 @@ func (p Base) serialize() osbuild.Pipeline {
 type TreePipeline interface {
 	Name() string
 	Manifest() *Manifest
+	BuildPipeline() *Build
 	Platform() platform.Platform
 }
 

@@ -25,34 +25,14 @@ func (p *VMDK) SetFilename(filename string) {
 // raw image. imgOstreePipeline is the pipeline producing the raw ostree image.
 // Either imgPipeline or imgOStreePipeline are required, but not both at the same time.
 // Filename is the name of the produced image.
-func NewVMDK(m *Manifest,
-	buildPipeline *Build,
-	imgPipeline *RawImage, imgOstreePipeline *RawOSTreeImage) *VMDK {
-	if imgPipeline != nil && imgOstreePipeline != nil {
-		panic("NewVMDK requires either RawImage or RawOSTreeImage")
-	}
-	var p *VMDK
-	if imgPipeline != nil {
-		p = &VMDK{
-			Base:        NewBase(m, "vmdk", buildPipeline),
-			imgPipeline: imgPipeline,
-			filename:    "image.vmdk",
-		}
-		if imgPipeline.Base.manifest != m {
-			panic("live image pipeline from different manifest")
-		}
-	} else {
-		p = &VMDK{
-			Base:        NewBase(m, "vmdk", buildPipeline),
-			imgPipeline: imgOstreePipeline,
-			filename:    "image.vmdk",
-		}
-		if imgOstreePipeline.Base.manifest != m {
-			panic("live image pipeline from different manifest")
-		}
+func NewVMDK(buildPipeline *Build, imgPipeline FilePipeline) *VMDK {
+	p := &VMDK{
+		Base:        NewBase(imgPipeline.Manifest(), "vmdk", buildPipeline),
+		imgPipeline: imgPipeline,
+		filename:    "image.vmdk",
 	}
 	buildPipeline.addDependent(p)
-	m.addPipeline(p)
+	imgPipeline.Manifest().addPipeline(p)
 	return p
 }
 

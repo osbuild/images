@@ -23,20 +23,15 @@ func (p *RawImage) SetFilename(filename string) {
 	p.filename = filename
 }
 
-func NewRawImage(m *Manifest,
-	buildPipeline *Build,
-	treePipeline *OS) *RawImage {
+func NewRawImage(buildPipeline *Build, treePipeline *OS) *RawImage {
 	p := &RawImage{
-		Base:         NewBase(m, "image", buildPipeline),
+		Base:         NewBase(treePipeline.Manifest(), "image", buildPipeline),
 		treePipeline: treePipeline,
 		filename:     "disk.img",
 	}
 	buildPipeline.addDependent(p)
-	if treePipeline.Base.manifest != m {
-		panic("tree pipeline from different manifest")
-	}
 	p.PartTool = osbuild.PTSfdisk // default; can be changed after initialisation
-	m.addPipeline(p)
+	treePipeline.Manifest().addPipeline(p)
 	return p
 }
 

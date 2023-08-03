@@ -64,7 +64,7 @@ func ostreeCompressedImagePipelines(img *OSTreeRawImage, m *manifest.Manifest, b
 }
 
 func baseRawOstreeImage(img *OSTreeRawImage, m *manifest.Manifest, buildPipeline *manifest.Build) *manifest.RawOSTreeImage {
-	osPipeline := manifest.NewOSTreeDeployment(m, buildPipeline, img.CommitSource, img.OSName, img.Ignition, img.IgnitionPlatform, img.Platform)
+	osPipeline := manifest.NewOSTreeDeployment(buildPipeline, m, img.CommitSource, img.OSName, img.Ignition, img.IgnitionPlatform, img.Platform)
 	osPipeline.PartitionTable = img.PartitionTable
 	osPipeline.Remote = img.Remote
 	osPipeline.KernelOptionsAppend = img.KernelOptionsAppend
@@ -80,7 +80,7 @@ func baseRawOstreeImage(img *OSTreeRawImage, m *manifest.Manifest, buildPipeline
 	osPipeline.EnabledServices = img.Workload.GetServices()
 	osPipeline.DisabledServices = img.Workload.GetDisabledServices()
 
-	return manifest.NewRawOStreeImage(m, buildPipeline, img.Platform, osPipeline)
+	return manifest.NewRawOStreeImage(buildPipeline, osPipeline, img.Platform)
 }
 
 func (img *OSTreeRawImage) InstantiateManifest(m *manifest.Manifest,
@@ -97,7 +97,7 @@ func (img *OSTreeRawImage) InstantiateManifest(m *manifest.Manifest,
 			panic(fmt.Sprintf("no compression is allowed with VMDK format for %q", img.name))
 		}
 		ostreeBase := baseRawOstreeImage(img, m, buildPipeline)
-		vmdkPipeline := manifest.NewVMDK(m, buildPipeline, nil, ostreeBase)
+		vmdkPipeline := manifest.NewVMDK(buildPipeline, ostreeBase)
 		vmdkPipeline.SetFilename(img.Filename)
 		art = vmdkPipeline.Export()
 	default:
