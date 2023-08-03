@@ -797,7 +797,7 @@ func usersFirstBootOptions(users []users.User) *osbuild.FirstBootStageOptions {
 	return options
 }
 
-func (p *OS) GetPlatform() platform.Platform {
+func (p *OS) Platform() platform.Platform {
 	return p.platform
 }
 
