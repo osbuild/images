@@ -58,7 +58,7 @@ func ostreeCompressedImagePipelines(img *OSTreeRawImage, m *manifest.Manifest, b
 	imagePipeline := baseRawOstreeImage(img, m, buildPipeline)
 
 	xzPipeline := manifest.NewXZ(m, buildPipeline, imagePipeline)
-	xzPipeline.Filename = img.Filename
+	xzPipeline.SetFilename(img.Filename)
 
 	return xzPipeline
 }
@@ -98,7 +98,7 @@ func (img *OSTreeRawImage) InstantiateManifest(m *manifest.Manifest,
 		}
 		ostreeBase := baseRawOstreeImage(img, m, buildPipeline)
 		vmdkPipeline := manifest.NewVMDK(m, buildPipeline, nil, ostreeBase)
-		vmdkPipeline.Filename = img.Filename
+		vmdkPipeline.SetFilename(img.Filename)
 		art = vmdkPipeline.Export()
 	default:
 		switch img.Compression {
@@ -107,7 +107,7 @@ func (img *OSTreeRawImage) InstantiateManifest(m *manifest.Manifest,
 			art = ostreeCompressed.Export()
 		case "":
 			ostreeBase := baseRawOstreeImage(img, m, buildPipeline)
-			ostreeBase.Filename = img.Filename
+			ostreeBase.SetFilename(img.Filename)
 			art = ostreeBase.Export()
 		default:
 			panic(fmt.Sprintf("unsupported compression type %q on %q", img.Compression, img.name))

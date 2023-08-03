@@ -157,7 +157,7 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoTreePipeline.ISOLinux = isoLinuxEnabled
 
 	isoPipeline := manifest.NewISO(m, buildPipeline, isoTreePipeline, isoLabel)
-	isoPipeline.Filename = img.Filename
+	isoPipeline.SetFilename(img.Filename)
 	isoPipeline.ISOLinux = isoLinuxEnabled
 
 	artifact := isoPipeline.Export()

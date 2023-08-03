@@ -176,8 +176,16 @@ func (p Base) serialize() osbuild.Pipeline {
 	return pipeline
 }
 
-type Tree interface {
+// TreePipeline is any pipeline that produces a directory tree.
+type TreePipeline interface {
 	Name() string
 	GetManifest() *Manifest
 	GetPlatform() platform.Platform
+}
+
+// FilePipeline is any pipeline that produces a single file (typically an image file).
+type FilePipeline interface {
+	Pipeline
+	Filename() string
+	SetFilename(fname string)
 }

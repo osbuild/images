@@ -66,14 +66,14 @@ func (img *DiskImage) InstantiateManifest(m *manifest.Manifest,
 	switch img.Platform.GetImageFormat() {
 	case platform.FORMAT_RAW:
 		if img.Compression == "" {
-			imagePipeline.Filename = img.Filename
+			imagePipeline.SetFilename(img.Filename)
 		}
 		artifactPipeline = imagePipeline
 		artifact = imagePipeline.Export()
 	case platform.FORMAT_QCOW2:
 		qcow2Pipeline := manifest.NewQCOW2(m, buildPipeline, imagePipeline)
 		if img.Compression == "" {
-			qcow2Pipeline.Filename = img.Filename
+			qcow2Pipeline.SetFilename(img.Filename)
 		}
 		qcow2Pipeline.Compat = img.Platform.GetQCOW2Compat()
 		artifactPipeline = qcow2Pipeline
@@ -81,7 +81,7 @@ func (img *DiskImage) InstantiateManifest(m *manifest.Manifest,
 	case platform.FORMAT_VHD:
 		vpcPipeline := manifest.NewVPC(m, buildPipeline, imagePipeline)
 		if img.Compression == "" {
-			vpcPipeline.Filename = img.Filename
+			vpcPipeline.SetFilename(img.Filename)
 		}
 		vpcPipeline.ForceSize = img.ForceSize
 		artifactPipeline = vpcPipeline
@@ -89,7 +89,7 @@ func (img *DiskImage) InstantiateManifest(m *manifest.Manifest,
 	case platform.FORMAT_VMDK:
 		vmdkPipeline := manifest.NewVMDK(m, buildPipeline, imagePipeline, nil)
 		if img.Compression == "" {
-			vmdkPipeline.Filename = img.Filename
+			vmdkPipeline.SetFilename(img.Filename)
 		}
 		artifactPipeline = vmdkPipeline
 		artifact = vmdkPipeline.Export()
@@ -99,12 +99,12 @@ func (img *DiskImage) InstantiateManifest(m *manifest.Manifest,
 		artifactPipeline := manifest.NewTar(m, buildPipeline, ovfPipeline, "archive")
 		artifactPipeline.Format = osbuild.TarArchiveFormatUstar
 		artifactPipeline.RootNode = osbuild.TarRootNodeOmit
-		artifactPipeline.Filename = img.Filename
+		artifactPipeline.SetFilename(img.Filename)
 		artifact = artifactPipeline.Export()
 	case platform.FORMAT_GCE:
 		// NOTE(akoutsou): temporary workaround; filename required for GCP
 		// TODO: define internal raw filename on image type
-		imagePipeline.Filename = "disk.raw"
+		imagePipeline.SetFilename("disk.raw")
 		archivePipeline := manifest.NewTar(m, buildPipeline, imagePipeline, "archive")
 		archivePipeline.Format = osbuild.TarArchiveFormatOldgnu
 		archivePipeline.RootNode = osbuild.TarRootNodeOmit
@@ -112,7 +112,7 @@ func (img *DiskImage) InstantiateManifest(m *manifest.Manifest,
 		archivePipeline.ACLs = common.ToPtr(false)
 		archivePipeline.SELinux = common.ToPtr(false)
 		archivePipeline.Xattrs = common.ToPtr(false)
-		archivePipeline.Filename = img.Filename // filename extension will determine compression
+		archivePipeline.SetFilename(img.Filename) // filename extension will determine compression
 	default:
 		panic("invalid image format for image kind")
 	}
@@ -120,7 +120,7 @@ func (img *DiskImage) InstantiateManifest(m *manifest.Manifest,
 	switch img.Compression {
 	case "xz":
 		xzPipeline := manifest.NewXZ(m, buildPipeline, artifactPipeline)
-		xzPipeline.Filename = img.Filename
+		xzPipeline.SetFilename(img.Filename)
 		artifact = xzPipeline.Export()
 	case "":
 		// do nothing

@@ -8,10 +8,18 @@ import (
 // A QCOW2 turns a raw image file into qcow2 image.
 type QCOW2 struct {
 	Base
-	Filename string
+	filename string
 	Compat   string
 
 	imgPipeline *RawImage
+}
+
+func (p QCOW2) Filename() string {
+	return p.filename
+}
+
+func (p *QCOW2) SetFilename(filename string) {
+	p.filename = filename
 }
 
 // NewQCOW2 createsa new QCOW2 pipeline. imgPipeline is the pipeline producing the
@@ -23,7 +31,7 @@ func NewQCOW2(m *Manifest,
 	p := &QCOW2{
 		Base:        NewBase(m, "qcow2", buildPipeline),
 		imgPipeline: imgPipeline,
-		Filename:    "image.qcow2",
+		filename:    "image.qcow2",
 	}
 	if imgPipeline.Base.manifest != m {
 		panic("live image pipeline from different manifest")
@@ -37,12 +45,12 @@ func (p *QCOW2) serialize() osbuild.Pipeline {
 	pipeline := p.Base.serialize()
 
 	pipeline.AddStage(osbuild.NewQEMUStage(
-		osbuild.NewQEMUStageOptions(p.Filename,
+		osbuild.NewQEMUStageOptions(p.Filename(),
 			osbuild.QEMUFormatQCOW2,
 			osbuild.QCOW2Options{
 				Compat: p.Compat,
 			}),
-		osbuild.NewQemuStagePipelineFilesInputs(p.imgPipeline.Name(), p.imgPipeline.Filename),
+		osbuild.NewQemuStagePipelineFilesInputs(p.imgPipeline.Name(), p.imgPipeline.Filename()),
 	))
 
 	return pipeline
@@ -55,5 +63,5 @@ func (p *QCOW2) getBuildPackages(Distro) []string {
 func (p *QCOW2) Export() *artifact.Artifact {
 	p.Base.export = true
 	mimeType := "application/x-qemu-disk"
-	return artifact.New(p.Name(), p.Filename, &mimeType)
+	return artifact.New(p.Name(), p.Filename(), &mimeType)
 }

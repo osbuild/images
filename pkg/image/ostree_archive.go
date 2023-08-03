@@ -60,7 +60,7 @@ func (img *OSTreeArchive) InstantiateManifest(m *manifest.Manifest,
 	ostreeCommitPipeline.OSVersion = img.OSVersion
 
 	tarPipeline := manifest.NewTar(m, buildPipeline, &ostreeCommitPipeline.Base, "commit-archive")
-	tarPipeline.Filename = img.Filename
+	tarPipeline.SetFilename(img.Filename)
 	artifact := tarPipeline.Export()
 
 	return artifact, nil

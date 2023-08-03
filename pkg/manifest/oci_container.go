@@ -9,20 +9,28 @@ import (
 // tree created by another Pipeline.
 type OCIContainer struct {
 	Base
-	Filename     string
+	filename     string
 	Cmd          []string
 	ExposedPorts []string
 
-	treePipeline Tree
+	treePipeline TreePipeline
+}
+
+func (p OCIContainer) Filename() string {
+	return p.filename
+}
+
+func (p *OCIContainer) SetFilename(filename string) {
+	p.filename = filename
 }
 
 func NewOCIContainer(m *Manifest,
 	buildPipeline *Build,
-	treePipeline Tree) *OCIContainer {
+	treePipeline TreePipeline) *OCIContainer {
 	p := &OCIContainer{
 		Base:         NewBase(m, "container", buildPipeline),
 		treePipeline: treePipeline,
-		Filename:     "oci-archive.tar",
+		filename:     "oci-archive.tar",
 	}
 	if treePipeline.GetManifest() != m {
 		panic("tree pipeline from different manifest")
@@ -37,7 +45,7 @@ func (p *OCIContainer) serialize() osbuild.Pipeline {
 
 	options := &osbuild.OCIArchiveStageOptions{
 		Architecture: p.treePipeline.GetPlatform().GetArch().String(),
-		Filename:     p.Filename,
+		Filename:     p.Filename(),
 		Config: &osbuild.OCIArchiveConfig{
 			Cmd:          p.Cmd,
 			ExposedPorts: p.ExposedPorts,
@@ -57,5 +65,5 @@ func (p *OCIContainer) getBuildPackages(Distro) []string {
 func (p *OCIContainer) Export() *artifact.Artifact {
 	p.Base.export = true
 	mimeType := "application/x-tar"
-	return artifact.New(p.Name(), p.Filename, &mimeType)
+	return artifact.New(p.Name(), p.Filename(), &mimeType)
 }

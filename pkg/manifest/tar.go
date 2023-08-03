@@ -8,7 +8,7 @@ import (
 // A Tar represents the contents of another pipeline in a tar file
 type Tar struct {
 	Base
-	Filename string
+	filename string
 
 	Format   osbuild.TarArchiveFormat
 	RootNode osbuild.TarRootNode
@@ -17,6 +17,14 @@ type Tar struct {
 	Xattrs   *bool
 
 	inputPipeline Pipeline
+}
+
+func (p Tar) Filename() string {
+	return p.filename
+}
+
+func (p *Tar) SetFilename(filename string) {
+	p.filename = filename
 }
 
 // NewTar creates a new TarPipeline. The inputPipeline represents the
@@ -29,7 +37,7 @@ func NewTar(m *Manifest,
 	p := &Tar{
 		Base:          NewBase(m, pipelinename, buildPipeline),
 		inputPipeline: inputPipeline,
-		Filename:      "image.tar",
+		filename:      "image.tar",
 	}
 	buildPipeline.addDependent(p)
 	m.addPipeline(p)
@@ -40,7 +48,7 @@ func (p *Tar) serialize() osbuild.Pipeline {
 	pipeline := p.Base.serialize()
 
 	tarOptions := &osbuild.TarStageOptions{
-		Filename: p.Filename,
+		Filename: p.Filename(),
 		Format:   p.Format,
 		ACLs:     p.ACLs,
 		SELinux:  p.SELinux,
@@ -60,5 +68,5 @@ func (p *Tar) getBuildPackages(Distro) []string {
 func (p *Tar) Export() *artifact.Artifact {
 	p.Base.export = true
 	mimeType := "application/x-tar"
-	return artifact.New(p.Name(), p.Filename, &mimeType)
+	return artifact.New(p.Name(), p.Filename(), &mimeType)
 }

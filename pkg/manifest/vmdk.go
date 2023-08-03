@@ -8,9 +8,17 @@ import (
 // A VMDK turns a raw image file or a raw ostree image file into vmdk image.
 type VMDK struct {
 	Base
-	Filename string
+	filename string
 
 	imgPipeline Pipeline
+}
+
+func (p VMDK) Filename() string {
+	return p.filename
+}
+
+func (p *VMDK) SetFilename(filename string) {
+	p.filename = filename
 }
 
 // NewVMDK creates a new VMDK pipeline. imgPipeline is the pipeline producing the
@@ -28,7 +36,7 @@ func NewVMDK(m *Manifest,
 		p = &VMDK{
 			Base:        NewBase(m, "vmdk", buildPipeline),
 			imgPipeline: imgPipeline,
-			Filename:    "image.vmdk",
+			filename:    "image.vmdk",
 		}
 		if imgPipeline.Base.manifest != m {
 			panic("live image pipeline from different manifest")
@@ -37,7 +45,7 @@ func NewVMDK(m *Manifest,
 		p = &VMDK{
 			Base:        NewBase(m, "vmdk", buildPipeline),
 			imgPipeline: imgOstreePipeline,
-			Filename:    "image.vmdk",
+			filename:    "image.vmdk",
 		}
 		if imgOstreePipeline.Base.manifest != m {
 			panic("live image pipeline from different manifest")
@@ -52,7 +60,7 @@ func (p *VMDK) serialize() osbuild.Pipeline {
 	pipeline := p.Base.serialize()
 
 	pipeline.AddStage(osbuild.NewQEMUStage(
-		osbuild.NewQEMUStageOptions(p.Filename, osbuild.QEMUFormatVMDK, osbuild.VMDKOptions{
+		osbuild.NewQEMUStageOptions(p.Filename(), osbuild.QEMUFormatVMDK, osbuild.VMDKOptions{
 			Subformat: osbuild.VMDKSubformatStreamOptimized,
 		}),
 		osbuild.NewQemuStagePipelineFilesInputs(p.imgPipeline.Name(), p.imgPipeline.Export().Filename()),
@@ -68,5 +76,5 @@ func (p *VMDK) getBuildPackages(Distro) []string {
 func (p *VMDK) Export() *artifact.Artifact {
 	p.Base.export = true
 	mimeType := "application/x-vmdk"
-	return artifact.New(p.Name(), p.Filename, &mimeType)
+	return artifact.New(p.Name(), p.Filename(), &mimeType)
 }

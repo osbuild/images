@@ -64,12 +64,12 @@ func (p *CoreOSISOTree) serialize() osbuild.Pipeline {
 		&osbuild.CopyStageOptions{
 			Paths: []osbuild.CopyStagePath{
 				{
-					From: fmt.Sprintf("input://file/%s", p.payloadPipeline.Filename),
+					From: fmt.Sprintf("input://file/%s", p.payloadPipeline.Filename()),
 					To:   fmt.Sprintf("tree://%s", p.PayloadPath),
 				},
 			},
 		},
-		osbuild.NewXzStageInputs(osbuild.NewFilesInputPipelineObjectRef(p.payloadPipeline.Name(), p.payloadPipeline.Filename, nil)),
+		osbuild.NewXzStageInputs(osbuild.NewFilesInputPipelineObjectRef(p.payloadPipeline.Name(), p.payloadPipeline.Filename(), nil)),
 	))
 
 	if p.coiPipeline.Ignition != nil {

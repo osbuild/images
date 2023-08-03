@@ -8,11 +8,19 @@ import (
 // A VPC turns a raw image file into qemu-based image format, such as qcow2.
 type VPC struct {
 	Base
-	Filename string
+	filename string
 
 	ForceSize *bool
 
 	imgPipeline *RawImage
+}
+
+func (p VPC) Filename() string {
+	return p.filename
+}
+
+func (p *VPC) SetFilename(filename string) {
+	p.filename = filename
 }
 
 // NewVPC createsa new Qemu pipeline. imgPipeline is the pipeline producing the
@@ -24,7 +32,7 @@ func NewVPC(m *Manifest,
 	p := &VPC{
 		Base:        NewBase(m, "vpc", buildPipeline),
 		imgPipeline: imgPipeline,
-		Filename:    "image.vhd",
+		filename:    "image.vhd",
 	}
 	if imgPipeline.Base.manifest != m {
 		panic("live image pipeline from different manifest")
@@ -40,8 +48,8 @@ func (p *VPC) serialize() osbuild.Pipeline {
 	formatOptions := osbuild.VPCOptions{ForceSize: p.ForceSize}
 
 	pipeline.AddStage(osbuild.NewQEMUStage(
-		osbuild.NewQEMUStageOptions(p.Filename, osbuild.QEMUFormatVPC, formatOptions),
-		osbuild.NewQemuStagePipelineFilesInputs(p.imgPipeline.Name(), p.imgPipeline.Filename),
+		osbuild.NewQEMUStageOptions(p.Filename(), osbuild.QEMUFormatVPC, formatOptions),
+		osbuild.NewQemuStagePipelineFilesInputs(p.imgPipeline.Name(), p.imgPipeline.Filename()),
 	))
 
 	return pipeline
@@ -54,5 +62,5 @@ func (p *VPC) getBuildPackages(Distro) []string {
 func (p *VPC) Export() *artifact.Artifact {
 	p.Base.export = true
 	mimeType := "application/x-vhd"
-	return artifact.New(p.Name(), p.Filename, &mimeType)
+	return artifact.New(p.Name(), p.Filename(), &mimeType)
 }
