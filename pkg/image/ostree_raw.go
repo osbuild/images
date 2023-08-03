@@ -54,15 +54,6 @@ func NewOSTreeRawImage(commit ostree.SourceSpec) *OSTreeRawImage {
 	}
 }
 
-func ostreeCompressedImagePipelines(img *OSTreeRawImage, m *manifest.Manifest, buildPipeline *manifest.Build) *manifest.XZ {
-	imagePipeline := baseRawOstreeImage(img, m, buildPipeline)
-
-	xzPipeline := manifest.NewXZ(buildPipeline, imagePipeline)
-	xzPipeline.SetFilename(img.Filename)
-
-	return xzPipeline
-}
-
 func baseRawOstreeImage(img *OSTreeRawImage, m *manifest.Manifest, buildPipeline *manifest.Build) *manifest.RawOSTreeImage {
 	osPipeline := manifest.NewOSTreeDeployment(buildPipeline, m, img.CommitSource, img.OSName, img.Ignition, img.IgnitionPlatform, img.Platform)
 	osPipeline.PartitionTable = img.PartitionTable
@@ -90,25 +81,25 @@ func (img *OSTreeRawImage) InstantiateManifest(m *manifest.Manifest,
 	buildPipeline := manifest.NewBuild(m, runner, repos)
 	buildPipeline.Checkpoint()
 
+	baseImage := baseRawOstreeImage(img, m, buildPipeline)
 	var art *artifact.Artifact
 	switch img.Platform.GetImageFormat() {
 	case platform.FORMAT_VMDK:
 		if img.Compression != "" {
 			panic(fmt.Sprintf("no compression is allowed with VMDK format for %q", img.name))
 		}
-		ostreeBase := baseRawOstreeImage(img, m, buildPipeline)
-		vmdkPipeline := manifest.NewVMDK(buildPipeline, ostreeBase)
+		vmdkPipeline := manifest.NewVMDK(buildPipeline, baseImage)
 		vmdkPipeline.SetFilename(img.Filename)
 		art = vmdkPipeline.Export()
 	default:
 		switch img.Compression {
 		case "xz":
-			ostreeCompressed := ostreeCompressedImagePipelines(img, m, buildPipeline)
-			art = ostreeCompressed.Export()
+			compressedImage := manifest.NewXZ(buildPipeline, baseImage)
+			compressedImage.SetFilename(img.Filename)
+			art = compressedImage.Export()
 		case "":
-			ostreeBase := baseRawOstreeImage(img, m, buildPipeline)
-			ostreeBase.SetFilename(img.Filename)
-			art = ostreeBase.Export()
+			baseImage.SetFilename(img.Filename)
+			art = baseImage.Export()
 		default:
 			panic(fmt.Sprintf("unsupported compression type %q on %q", img.Compression, img.name))
 		}
