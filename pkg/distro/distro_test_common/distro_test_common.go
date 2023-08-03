@@ -76,6 +76,7 @@ func TestDistro_KernelOption(t *testing.T, d distro.Distro) {
 		"edge-simplified-installer": true,
 		"edge-vsphere":              true,
 		"iot-installer":             true,
+		"iot-qcow2-image":           true,
 		"iot-raw-image":             true,
 		"iot-simplified-installer":  true,
 
@@ -174,6 +175,7 @@ func TestDistro_OSTreeOptions(t *testing.T, d distro.Distro) {
 		"edge-simplified-installer": true,
 		"iot-ami":                   true,
 		"iot-installer":             true,
+		"iot-qcow2-image":           true,
 		"iot-raw-image":             true,
 		"iot-simplified-installer":  true,
 	}
