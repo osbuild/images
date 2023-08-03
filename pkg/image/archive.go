@@ -40,7 +40,7 @@ func (img *Archive) InstantiateManifest(m *manifest.Manifest,
 	osPipeline.Workload = img.Workload
 
 	tarPipeline := manifest.NewTar(m, buildPipeline, &osPipeline.Base, "archive")
-	tarPipeline.Filename = img.Filename
+	tarPipeline.SetFilename(img.Filename)
 	artifact := tarPipeline.Export()
 
 	return artifact, nil

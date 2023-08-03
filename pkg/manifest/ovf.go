@@ -46,7 +46,7 @@ func (p *OVF) serialize() osbuild.Pipeline {
 	))
 
 	pipeline.AddStage(osbuild.NewOVFStage(&osbuild.OVFStageOptions{
-		Vmdk: p.imgPipeline.Filename,
+		Vmdk: p.imgPipeline.Filename(),
 	}))
 
 	return pipeline

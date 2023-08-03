@@ -10,10 +10,18 @@ import (
 type ISO struct {
 	Base
 	ISOLinux bool
-	Filename string
+	filename string
 
 	treePipeline Pipeline
 	isoLabel     string
+}
+
+func (p ISO) Filename() string {
+	return p.filename
+}
+
+func (p *ISO) SetFilename(filename string) {
+	p.filename = filename
 }
 
 func NewISO(m *Manifest,
@@ -23,7 +31,7 @@ func NewISO(m *Manifest,
 	p := &ISO{
 		Base:         NewBase(m, "bootiso", buildPipeline),
 		treePipeline: treePipeline,
-		Filename:     "image.iso",
+		filename:     "image.iso",
 		isoLabel:     isoLabel,
 	}
 	buildPipeline.addDependent(p)
@@ -41,8 +49,8 @@ func (p *ISO) getBuildPackages(Distro) []string {
 func (p *ISO) serialize() osbuild.Pipeline {
 	pipeline := p.Base.serialize()
 
-	pipeline.AddStage(osbuild.NewXorrisofsStage(xorrisofsStageOptions(p.Filename, p.isoLabel, p.ISOLinux), p.treePipeline.Name()))
-	pipeline.AddStage(osbuild.NewImplantisomd5Stage(&osbuild.Implantisomd5StageOptions{Filename: p.Filename}))
+	pipeline.AddStage(osbuild.NewXorrisofsStage(xorrisofsStageOptions(p.Filename(), p.isoLabel, p.ISOLinux), p.treePipeline.Name()))
+	pipeline.AddStage(osbuild.NewImplantisomd5Stage(&osbuild.Implantisomd5StageOptions{Filename: p.Filename()}))
 
 	return pipeline
 }
@@ -71,5 +79,5 @@ func xorrisofsStageOptions(filename, isolabel string, isolinux bool) *osbuild.Xo
 func (p *ISO) Export() *artifact.Artifact {
 	p.Base.export = true
 	mimeType := "application/x-iso9660-image"
-	return artifact.New(p.Name(), p.Filename, &mimeType)
+	return artifact.New(p.Name(), p.Filename(), &mimeType)
 }

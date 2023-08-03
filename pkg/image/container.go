@@ -40,7 +40,7 @@ func (img *BaseContainer) InstantiateManifest(m *manifest.Manifest,
 	osPipeline.Workload = img.Workload
 
 	ociPipeline := manifest.NewOCIContainer(m, buildPipeline, osPipeline)
-	ociPipeline.Filename = img.Filename
+	ociPipeline.SetFilename(img.Filename)
 	artifact := ociPipeline.Export()
 
 	return artifact, nil
