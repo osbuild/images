@@ -69,33 +69,31 @@ type crBlueprint struct {
 	Distro         string                    `json:"distro,omitempty"`
 }
 
-type buildConfig struct {
+type BuildConfig struct {
 	Name      string         `json:"name"`
 	OSTree    *ostreeOptions `json:"ostree,omitempty"`
 	Blueprint *crBlueprint   `json:"blueprint,omitempty"`
+	Depends   interface{}    `json:"depends,omitempty"` // ignored
 }
 
-func loadConfig(filepath string) buildConfig {
-	fp, err := os.Open(filepath)
+func loadConfig(path string) BuildConfig {
+	fp, err := os.Open(path)
 	if err != nil {
-		fail(fmt.Sprintf("failed to open config file %q: %s", filepath, err.Error()))
+		fail(fmt.Sprintf("failed to open config %q: %s", path, err.Error()))
 	}
 	defer fp.Close()
-	data, err := io.ReadAll(fp)
-	if err != nil {
-		fail(fmt.Sprintf("failed to read config file %q: %s", filepath, err.Error()))
+
+	dec := json.NewDecoder(fp)
+	dec.DisallowUnknownFields()
+	var conf BuildConfig
+
+	if err := dec.Decode(&conf); err != nil {
+		fail(fmt.Sprintf("failed to unmarshal config %q: %s", path, err.Error()))
 	}
-	var config buildConfig
-	if err := json.Unmarshal(data, &config); err != nil {
-		fail(fmt.Sprintf("failed to unmarshal config %q: %s", filepath, err.Error()))
-	}
-	if config.Name == "" {
-		fail(fmt.Sprintf("config %q does not specify a name", filepath))
-	}
-	return config
+	return conf
 }
 
-func makeManifest(imgType distro.ImageType, config buildConfig, distribution distro.Distro, repos []rpmmd.RepoConfig, archName string, seedArg int64, cacheRoot string) (manifest.OSBuildManifest, error) {
+func makeManifest(imgType distro.ImageType, config BuildConfig, distribution distro.Distro, repos []rpmmd.RepoConfig, archName string, seedArg int64, cacheRoot string) (manifest.OSBuildManifest, error) {
 	cacheDir := filepath.Join(cacheRoot, archName+distribution.Name())
 
 	options := distro.ImageOptions{Size: 0}
