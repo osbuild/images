@@ -27,12 +27,11 @@ generate-build-config-{distro}-{arch}:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-38-{arch}
+    RUNNER: aws/rhel-9.2-ga-{arch}
     INTERNAL_NETWORK: "true"
     PYTHONUNBUFFERED: 1
   script:
-    - sudo dnf -y install go python3 gpgme-devel s3cmd
-      osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux
+    - sudo dnf -y install osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux
     - ./test/generators/generate-build-config --distro {distro} --arch {arch} build-config.yml
   artifacts:
     paths:
@@ -54,12 +53,11 @@ generate-ostree-build-config-{distro}-{arch}:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-38-{arch}
+    RUNNER: aws/rhel-9.2-ga-{arch}
     INTERNAL_NETWORK: "true"
     PYTHONUNBUFFERED: 1
   script:
-    - sudo dnf -y install go python3 gpgme-devel s3cmd
-      osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux podman
+    - sudo dnf -y install osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux
     - ./test/generators/generate-ostree-build-config --distro {distro} --arch {arch} build-config.yml build-configs
   artifacts:
     paths:
