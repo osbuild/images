@@ -9,13 +9,13 @@ arch=$(uname -m)
 imgtype="${2}"
 config="${3}"
 
-echo "Building image ${distro}/${imgtype} using config ${config}"
+echo "👷 Building image ${distro}/${imgtype} using config ${config}"
 cat "${config}"  # print the config for logging
 sudo go run ./cmd/build -output ./build -distro "${distro}" -image "${imgtype}" -config "${config}"
 
-echo "Build finished!!"
+echo "✅ Build finished!!"
 
-echo "Registering successful build in S3"
+echo "☁️ Registering successful build in S3"
 
 u() {
     echo "${1}" | tr - _
@@ -50,7 +50,9 @@ EOF
 
 s3url="s3://image-builder-ci-artifacts/images/builds/${distro}/${arch}/${manifest_id}/"
 
-echo "Uploading ${builddir} to ${s3url}"
+echo "⬆️ Uploading ${builddir} to ${s3url}"
 AWS_SECRET_ACCESS_KEY="$V2_AWS_SECRET_ACCESS_KEY" \
 AWS_ACCESS_KEY_ID="$V2_AWS_ACCESS_KEY_ID" \
 s3cmd --acl-private put --recursive "${builddir}/" "${s3url}"
+
+echo "✅ DONE!!"

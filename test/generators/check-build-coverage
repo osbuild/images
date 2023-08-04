@@ -49,7 +49,7 @@ def main():
 
     missing = check_build_coverage(cachedir)
     if missing:
-        print(f"{len(missing)} distro/arch/image combinations have no builds in the cache")
+        print(f"❌ {len(missing)} distro/arch/image combinations have no builds in the cache")
         for idx, m in enumerate(missing, start=1):
             print(f" {idx:3d}: " + "/".join(m))
         sys.exit(1)

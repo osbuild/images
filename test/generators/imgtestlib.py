@@ -56,7 +56,7 @@ NullBuild:
 def runcmd(cmd, stdin=None):
     job = sp.run(cmd, input=stdin, capture_output=True)
     if job.returncode > 0:
-        print(f"Command failed: {cmd}")
+        print(f"❌ Command failed: {cmd}")
         if job.stdout:
             print(job.stdout.decode())
         if job.stderr:
@@ -96,7 +96,7 @@ def dl_s3_configs(destination):
     """
     s3url = f"{S3_BUCKET}/{S3_PREFIX}/"
 
-    print(f"Downloading configs from {s3url}")
+    print(f"⬇️ Downloading configs from {s3url}")
     # only download info.json (exclude everything, then include) files, otherwise we get manifests and whole images
     job = sp.run(["s3cmd", *s3_auth_args(), "sync",
                   "--exclude=*",
@@ -106,7 +106,7 @@ def dl_s3_configs(destination):
                  capture_output=True)
     ok = job.returncode == 0
     if not ok:
-        print(f"Failed to sync contents of {s3url}:")
+        print(f"⚠️ Failed to sync contents of {s3url}:")
         print(job.stderr.decode())
     return ok
 
@@ -139,7 +139,7 @@ def check_config_names():
             bad_configs.append(str(file))
 
     if bad_configs:
-        print("ERROR: The following test configs have names that don't match their filenames.")
+        print("☠️ ERROR: The following test configs have names that don't match their filenames.")
         print("\n".join(bad_configs))
         print("This will produce incorrect test generation and results.")
         print("Aborting.")
@@ -151,7 +151,7 @@ def read_manifests(path):
     Read all manifests in the given path, calculate their IDs, and return a dictionary mapping each filename to the data
     and its ID.
     """
-    print(f"Reading manifests in {path}")
+    print(f"📖 Reading manifests in {path}")
     manifests = {}
     for manifest_fname in os.listdir(path):
         manifest_path = os.path.join(path, manifest_fname)
@@ -161,7 +161,7 @@ def read_manifests(path):
             "data": manifest_data,
             "id": get_manifest_id(manifest_data["manifest"]),
         }
-    print("Done")
+    print("✅ Done")
     return manifests
 
 
@@ -169,7 +169,7 @@ def filter_builds(manifests, skip_ostree_pull=True):
     """
     Returns a list of build requests for the manifests that have no matching config in the test build cache.
     """
-    print(f"Filtering {len(manifests)} build configurations")
+    print(f"⚙️ Filtering {len(manifests)} build configurations")
     dl_path = os.path.join(TEST_CACHE_ROOT, "s3configs", "builds/")
     os.makedirs(dl_path, exist_ok=True)
     build_requests = []
@@ -190,7 +190,7 @@ def filter_builds(manifests, skip_ostree_pull=True):
 
         # check if the config specifies an ostree URL and skip it if requested
         if skip_ostree_pull and config.get("ostree", {}).get("url"):
-            print(f"Skipping {distro}/{arch}/{image_type}/{config_name} (ostree dependency)")
+            print(f"🦘 Skipping {distro}/{arch}/{image_type}/{config_name} (ostree dependency)")
             continue
 
         # add manifest id to build request
@@ -207,7 +207,7 @@ def filter_builds(manifests, skip_ostree_pull=True):
                     dl_config = json.load(build_info_fp)
                 commit = dl_config["commit"]
                 url = f"https://github.com/osbuild/images/commit/{commit}"
-                print(f"Manifest {manifest_fname} was successfully built in commit {commit}\n  {url}")
+                print(f"🖼️ Manifest {manifest_fname} was successfully built in commit {commit}\n  {url}")
                 continue
             except json.JSONDecodeError as jd:
                 errors.append((
@@ -219,10 +219,10 @@ def filter_builds(manifests, skip_ostree_pull=True):
 
         build_requests.append(build_request)
 
-    print("Config filtering done!\n")
+    print("✅ Config filtering done!\n")
     if errors:
         # print errors at the end so they're visible
-        print("Errors:")
+        print("⚠️ Errors:")
         print("\n".join(errors))
 
     return build_requests
