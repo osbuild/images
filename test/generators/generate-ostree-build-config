@@ -189,6 +189,7 @@ def setup_dependencies(manifests, config_map, distro, arch):
     container_ids = []
     new_config_map: dict[str, dict] = {}
     new_configs = {}
+    container_configs = {}
 
     container_ports: dict[str, int] = {}
     for config_path, filters in config_map.items():
@@ -239,14 +240,13 @@ def setup_dependencies(manifests, config_map, distro, arch):
                     "ref": config_data.get("ostree", {}).get("ref", default_ref(distro, arch)),
                 },
                 "blueprint": config_data.get("blueprint"),
-
-                # this is not part of the standard config, but it's convenient to add it and it wont interfere
-                "container": {
-                    "name": container,
-                    "port": port,
-                }
             }
             new_configs[config_name] = new_config
+
+            container_configs[config_name] = {
+                "name": container,
+                "port": port,
+            }
 
             config_fname = config_name + ".json"
             new_filters = new_config_map.get(config_fname, {"distros": [], "arches": [], "image-types": []})
@@ -261,7 +261,7 @@ def setup_dependencies(manifests, config_map, distro, arch):
             cont_id, _ = testlib.runcmd(["podman", "run", "-d", "--rm", f"-p{port}:8080", container])
             container_ids.append(cont_id.strip().decode())
 
-        yield new_config_map, new_configs
+        yield new_config_map, new_configs, container_configs
     finally:
         if container_ids:
             print("📦 Stopping containers")
@@ -269,7 +269,7 @@ def setup_dependencies(manifests, config_map, distro, arch):
             print(out.decode())
 
 
-def generate_configs(build_requests, pull_configs, pipeline_file, configs_dir):
+def generate_configs(build_requests, pull_configs, container_configs, pipeline_file, configs_dir):
     print(f"🧪 Generating dynamic pipelines for {len(build_requests)} builds")
     os.makedirs(configs_dir, exist_ok=True)
     for build in build_requests:
@@ -280,13 +280,14 @@ def generate_configs(build_requests, pull_configs, pipeline_file, configs_dir):
 
         config_name = config["name"]
 
+        # generate script line to pull and start container
+        container = container_configs[config_name]["container"]
+
         # write the config to the artifacts directory
         build_config_path = os.path.join(configs_dir, config_name + ".json")
         with open(build_config_path, "w", encoding="utf-8") as build_config_file:
             json.dump(config, build_config_file)
 
-        # generate script line to pull and start container
-        container = pull_configs[config_name]["container"]
         container_name = container["name"]
         container_port = container["port"]
         container_cmd = f"podman run -d --rm -p{container_port}:8080 {container_name}"
@@ -316,7 +317,7 @@ def main():
         dep_manifest_dir = os.path.join(cache_root, "dependencies")
         dep_manifests = gen_dependency_manifests(config_map, distro, arch, dep_manifest_dir)
 
-        with setup_dependencies(dep_manifests, config_map, distro, arch) as (pull_config_map, pull_configs):
+        with setup_dependencies(dep_manifests, config_map, distro, arch) as (pull_config_map, pull_configs, containers):
             manifest_dir = os.path.join(cache_root, "manifests")
             manifests = gen_image_manifests(pull_config_map, pull_configs, distro, arch, manifest_dir)
 
@@ -329,7 +330,7 @@ def main():
             return
 
         config_file.write(testlib.BASE_CONFIG)
-        generate_configs(build_requests, pull_configs, config_file, configs_dir)
+        generate_configs(build_requests, pull_configs, containers, config_file, configs_dir)
 
 
 if __name__ == "__main__":
