@@ -78,18 +78,14 @@ type BuildConfig struct {
 
 func loadConfig(path string) BuildConfig {
 	fp, err := os.Open(path)
-	if err != nil {
-		fail(fmt.Sprintf("failed to open config %q: %s", path, err.Error()))
-	}
+	check(err)
 	defer fp.Close()
 
 	dec := json.NewDecoder(fp)
 	dec.DisallowUnknownFields()
 	var conf BuildConfig
 
-	if err := dec.Decode(&conf); err != nil {
-		fail(fmt.Sprintf("failed to unmarshal config %q: %s", path, err.Error()))
-	}
+	check(dec.Decode(&conf))
 	return conf
 }
 
@@ -196,9 +192,7 @@ func readRepos() DistroArchRepoMap {
 	reposDir := "./test/data/repositories/"
 	darm := make(DistroArchRepoMap)
 	filelist, err := os.ReadDir(reposDir)
-	if err != nil {
-		panic(err)
-	}
+	check(err)
 	for _, file := range filelist {
 		filename := file.Name()
 		if !strings.HasSuffix(filename, ".json") {
@@ -206,18 +200,12 @@ func readRepos() DistroArchRepoMap {
 		}
 		reposFilepath := filepath.Join(reposDir, filename)
 		fp, err := os.Open(reposFilepath)
-		if err != nil {
-			panic(err)
-		}
+		check(err)
 		defer fp.Close()
 		data, err := io.ReadAll(fp)
-		if err != nil {
-			panic(err)
-		}
+		check(err)
 		repos := make(map[string][]repository)
-		if err := json.Unmarshal(data, &repos); err != nil {
-			panic(err)
-		}
+		check(json.Unmarshal(data, &repos))
 		distro := strings.TrimSuffix(filename, filepath.Ext(filename))
 		darm[distro] = repos
 	}
