@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-# Build an image and store the hash of the manifest in S3 if successful.
+# Build an image and store the image, its manifest, and some build metadata in s3 if successful.
 
-set -euxo pipefail
+set -euo pipefail
 
 distro="${1}"
 arch=$(uname -m)
@@ -26,14 +26,17 @@ config_name=$(jq -r .name "${config}")
 builddir="./build/$(u "${distro}")-$(u "${arch}")-$(u "${imgtype}")-$(u "${config_name}")"
 manifest="${builddir}/manifest.json"
 
+# Build artifacts are owned by root. Make them world accessible.
+sudo chmod a+rwX -R "${builddir}"
+
+
 # calculate manifest ID based on hash of concatenated stage IDs
 manifest_id=$(osbuild --inspect "${manifest}" | jq -r '.pipelines[-1].stages[-1].id')
 
 osbuild_ver=$(osbuild --version)
 
 # TODO: Include osbuild commit hash
-filename="${manifest_id}.json"
-cat << EOF > "${filename}"
+cat << EOF > "${builddir}/info.json"
 {
   "distro": "${distro}",
   "arch": "${arch}",
@@ -45,9 +48,9 @@ cat << EOF > "${filename}"
 }
 EOF
 
-s3url="s3://image-builder-ci-artifacts/images/builds/${distro}/${arch}/${filename}"
+s3url="s3://image-builder-ci-artifacts/images/builds/${distro}/${arch}/${manifest_id}/"
 
-echo "Uploading ${filename} to ${s3url}"
+echo "Uploading ${builddir} to ${s3url}"
 AWS_SECRET_ACCESS_KEY="$V2_AWS_SECRET_ACCESS_KEY" \
 AWS_ACCESS_KEY_ID="$V2_AWS_ACCESS_KEY_ID" \
-s3cmd --acl-private put "${filename}" "${s3url}"
+s3cmd --acl-private put --recursive "${builddir}/" "${s3url}"
