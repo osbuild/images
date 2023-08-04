@@ -31,6 +31,11 @@ def generate_manifests(outputdir, distro, arch):
     Generate all manifest using the default config map and return a dictionary mapping each manifest file to the
     manifest data and its ID.
     """
+    target = arch
+    if distro:
+        target = distro + "/" + arch
+
+    print(f"🗒️ Generating all manifests using the default config map for {target}")
     cmd = ["go", "run", "./cmd/gen-manifests",
            "-cache", os.path.join(testlib.TEST_CACHE_ROOT, "rpmmd"),
            "-output", outputdir,
@@ -38,7 +43,8 @@ def generate_manifests(outputdir, distro, arch):
            "-arches", arch]
     if distro:
         cmd.extend(["-distros", distro])
-    print(f"Running: {' '.join(cmd)}")
+
+    print("⌨️" + " ".join(cmd))
     out, err = testlib.runcmd(cmd)
 
     # print stderr in case there were errors or warnings about skipped configurations
@@ -51,12 +57,12 @@ def generate_manifests(outputdir, distro, arch):
             continue
         print(line)
 
-    print("Manifest generation done!\n")
+    print("✅ Manifest generation done!\n")
     return testlib.read_manifests(outputdir)
 
 
 def generate_configs(build_requests, pipeline_file):
-    print(f"Generating dynamic pipelines for {len(build_requests)} builds")
+    print(f"🧪 Generating dynamic pipelines for {len(build_requests)} builds")
     for build in build_requests:
         distro = build["distro"]
         arch = build["arch"]
@@ -79,7 +85,7 @@ def generate_configs(build_requests, pipeline_file):
                                                 config_name=config_name, config=config_path,
                                                 container_push=container_push_cmd,
                                                 internal="true" if "rhel" in distro else "false"))
-    print("DONE!")
+    print("✅ DONE!")
 
 
 def main():
@@ -98,7 +104,7 @@ def main():
 
     with open(config_path, "w") as config_file:
         if len(build_requests) == 0:
-            print("No manifest changes detected. Generating null config.")
+            print("⚫ No manifest changes detected. Generating null config.")
             config_file.write(testlib.NULL_CONFIG)
             return
 
