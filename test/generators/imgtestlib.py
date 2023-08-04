@@ -201,7 +201,8 @@ def filter_builds(manifests, skip_ostree_pull=True):
                 with open(id_config_path) as dl_config_fp:
                     dl_config = json.load(dl_config_fp)
                 commit = dl_config["commit"]
-                print(f"Manifest {manifest_fname} was successfully built in commit {commit}")
+                url = f"https://github.com/osbuild/images/commit/{commit}"
+                print(f"Manifest {manifest_fname} was successfully built in commit {commit}\n  {url}")
                 continue
             except json.JSONDecodeError as jd:
                 errors.append((
