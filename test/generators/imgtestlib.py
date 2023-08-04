@@ -95,8 +95,15 @@ def dl_s3_configs(destination):
     Downloads all the configs from the s3 bucket.
     """
     s3url = f"{S3_BUCKET}/{S3_PREFIX}/"
+
     print(f"Downloading configs from {s3url}")
-    job = sp.run(["s3cmd", *s3_auth_args(), "sync", "--delete-removed", s3url, destination], capture_output=True)
+    # only download info.json (exclude everything, then include) files, otherwise we get manifests and whole images
+    job = sp.run(["s3cmd", *s3_auth_args(), "sync",
+                  "--exclude=*",
+                  "--include=info.json",
+                  "--delete-removed",
+                  s3url, destination],
+                 capture_output=True)
     ok = job.returncode == 0
     if not ok:
         print(f"Failed to sync contents of {s3url}:")
@@ -173,8 +180,6 @@ def filter_builds(manifests, skip_ostree_pull=True):
 
     for manifest_fname, data in manifests.items():
         manifest_id = data["id"]
-        id_fname = manifest_id + ".json"
-
         data = data.get("data")
         build_request = data["build-request"]
         distro = build_request["distro"]
@@ -193,20 +198,20 @@ def filter_builds(manifests, skip_ostree_pull=True):
 
         # check if the hash_fname exists in the synced directory
         dl_config_dir = os.path.join(dl_path, distro, arch)
-        id_config_path = os.path.join(dl_config_dir, id_fname)
+        build_info_path = os.path.join(dl_config_dir, manifest_id, "info.json")
 
         # check if the id_fname exists in the synced directory
-        if os.path.exists(id_config_path):
+        if os.path.exists(build_info_path):
             try:
-                with open(id_config_path) as dl_config_fp:
-                    dl_config = json.load(dl_config_fp)
+                with open(build_info_path) as build_info_fp:
+                    dl_config = json.load(build_info_fp)
                 commit = dl_config["commit"]
                 url = f"https://github.com/osbuild/images/commit/{commit}"
                 print(f"Manifest {manifest_fname} was successfully built in commit {commit}\n  {url}")
                 continue
             except json.JSONDecodeError as jd:
                 errors.append((
-                        f"failed to parse {id_config_path}\n"
+                        f"failed to parse {build_info_path}\n"
                         f"{jd.msg}\n"
                         "Scheduling config for rebuild\n"
                         f"Config: {distro}/{arch}/{image_type}/{config_name}\n"
