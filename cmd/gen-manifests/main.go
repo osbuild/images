@@ -83,9 +83,10 @@ type buildRequest struct {
 }
 
 type BuildConfig struct {
-	Name      string         `json:"name"`
-	OSTree    *ostreeOptions `json:"ostree,omitempty"`
-	Blueprint *crBlueprint   `json:"blueprint,omitempty"`
+	Name      string          `json:"name"`
+	OSTree    *ostreeOptions  `json:"ostree,omitempty"`
+	Blueprint *crBlueprint    `json:"blueprint,omitempty"`
+	Depends   BuildDependency `json:"depends,omitempty"`
 }
 
 type BuildDependency struct {
@@ -146,12 +147,12 @@ func loadConfig(path string) BuildConfig {
 		panic(fmt.Sprintf("failed to open config %q: %s", path, err.Error()))
 	}
 	defer fp.Close()
-	data, err := io.ReadAll(fp)
-	if err != nil {
-		panic(fmt.Sprintf("failed to read config %q: %s", path, err.Error()))
-	}
+
+	dec := json.NewDecoder(fp)
+	dec.DisallowUnknownFields()
 	var conf BuildConfig
-	if err := json.Unmarshal(data, &conf); err != nil {
+
+	if err := dec.Decode(&conf); err != nil {
 		panic(fmt.Sprintf("failed to unmarshal config %q: %s", path, err.Error()))
 	}
 	return conf
