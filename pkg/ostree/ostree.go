@@ -109,7 +109,7 @@ func ResolveRef(location, ref string, consumerCerts bool, subs *rhsm.Subscriptio
 		if ca != nil {
 			caCertPEM, err := os.ReadFile(*ca)
 			if err != nil {
-				return "", NewResolveRefError("error adding rhsm certificates when resolving ref")
+				return "", NewResolveRefError("error adding rhsm certificates when resolving ref: %s", err)
 			}
 			roots := x509.NewCertPool()
 			ok := roots.AppendCertsFromPEM(caCertPEM)
@@ -121,7 +121,7 @@ func ResolveRef(location, ref string, consumerCerts bool, subs *rhsm.Subscriptio
 
 		cert, err := tls.LoadX509KeyPair(subs.Consumer.ConsumerCert, subs.Consumer.ConsumerKey)
 		if err != nil {
-			return "", NewResolveRefError("error adding rhsm certificates when resolving ref")
+			return "", NewResolveRefError("error adding rhsm certificates when resolving ref: %s", err)
 		}
 		tlsConf.Certificates = []tls.Certificate{cert}
 
@@ -137,7 +137,7 @@ func ResolveRef(location, ref string, consumerCerts bool, subs *rhsm.Subscriptio
 
 	req, err := http.NewRequest(http.MethodGet, u.String(), nil)
 	if err != nil {
-		return "", NewResolveRefError("error adding rhsm certificates when resolving ref")
+		return "", NewResolveRefError("error preparing ostree resolve request: %s", err)
 	}
 
 	resp, err := client.Do(req)
