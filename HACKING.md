@@ -5,7 +5,7 @@
 The build-requirements for Fedora (and other rpm-based distributions) are:
 - `gpgme-devel`
 
-To build images, you will also need to install `obsuild` and its sub-packages.
+To build images, you will also need to install `osbuild` and its sub-packages.
 
 ### Useful cmds
 
