@@ -215,24 +215,35 @@ func ResolveRef(location, ref string, consumerCerts bool, subs *rhsm.Subscriptio
 	return checksum, nil
 }
 
-// Resolve the ostree source specification into a  commit specification.
+// Resolve the ostree source specification to a commit specification.
 //
 // If a URL is defined in the source specification, the checksum of the ref is
 // resolved, otherwise the checksum is an empty string. Failure to resolve the
 // checksum results in a ResolveRefError.
 //
+// If the ref is already a checksum (64 alphanumeric characters), it is not
+// resolved or checked against the repository.
+//
 // If the ref is malformed, the function returns with a RefError.
 func Resolve(source SourceSpec) (CommitSpec, error) {
-	if !verifyRef(source.Ref) {
-		return CommitSpec{}, NewRefError("Invalid ostree ref %q", source.Ref)
-	}
-
 	commit := CommitSpec{
 		Ref: source.Ref,
 		URL: source.URL,
 	}
+
 	if source.RHSM {
 		commit.Secrets = "org.osbuild.rhsm.consumer"
+	}
+
+	if verifyChecksum(source.Ref) {
+		// the ref is a commit: return as is
+		commit.Checksum = source.Ref
+		return commit, nil
+	}
+
+	if !verifyRef(source.Ref) {
+		// the ref is not a commit and it's also an invalid ref
+		return CommitSpec{}, NewRefError("Invalid ostree ref or commit %q", source.Ref)
 	}
 
 	// URL set: Resolve checksum
