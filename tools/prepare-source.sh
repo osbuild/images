@@ -10,12 +10,9 @@ GO_BINARY=$(go env GOPATH)/bin/go$GO_VERSION
 go install golang.org/dl/go$GO_VERSION@latest
 $GO_BINARY download
 
-# ensure that go.mod and go.sum are up to date, ...
+# Ensure that go.mod and go.sum are up to date.
 $GO_BINARY mod tidy
 $GO_BINARY mod vendor
 
-# ... the code is formatted correctly, ...
+# Ensure the code is formatted correctly.
 $GO_BINARY fmt ./...
-
-# ... and all code has been regenerated from its sources.
-$GO_BINARY generate ./...
