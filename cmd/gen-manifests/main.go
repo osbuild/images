@@ -155,6 +155,9 @@ func loadConfig(path string) BuildConfig {
 	if err := dec.Decode(&conf); err != nil {
 		panic(fmt.Sprintf("failed to unmarshal config %q: %s", path, err.Error()))
 	}
+	if dec.More() {
+		panic(fmt.Sprintf("multiple configuration objects or extra data found in %q", path))
+	}
 	return conf
 }
 

@@ -86,6 +86,9 @@ func loadConfig(path string) BuildConfig {
 	var conf BuildConfig
 
 	check(dec.Decode(&conf))
+	if dec.More() {
+		fail(fmt.Sprintf("multiple configuration objects or extra data found in %q", path))
+	}
 	return conf
 }
 
