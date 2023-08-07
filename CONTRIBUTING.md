@@ -1,64 +1,32 @@
-# Contributing to osbuild-composer
+# Contributing to osbuild/images
 
-First of all, thank you for taking the time to contribute to osbuild-composer.
-In this document you will find information that can help you with your
-contribution.
-For more information feel free to read our [developer guide](https://www.osbuild.org/guides/developer-guide/developer-guide.html).
+First of all, thank you for taking the time to contribute.  In this document
+you will find information that can help you with your contribution.  For more
+information feel free to read our [developer
+guide](https://www.osbuild.org/guides/developer-guide/index.html).
 
-### Running from sources
+## Local development environment
 
-We recommend using the latest stable Fedora for development but latest minor
-release of RHEL/CentOS 8 should work just fine as well. To run osbuild-composer
-from sources, follow these steps:
+This project is intended as a library for defining images and generating
+manifests for osbuild. The main interface is the public types and methods
+defined under [`pkg/`](https://pkg.go.dev/github.com/osbuild/images@main/pkg).
+However, there are several command line tools defined in
+[`cmd/`](https://pkg.go.dev/github.com/osbuild/images@main/cmd) that can help
+during development and testing.
 
-1. Clone the repository and create a local checkout:
+The build-requirements for Fedora and rpm-based distributions are:
+- `gpgme-devel`
 
-```
-$ git clone https://github.com/osbuild/osbuild-composer.git
-$ cd osbuild-composer
-```
+To build images, you will also need to install `obsuild` and its sub-packages.
 
-2. To install the build-requirements for Fedora and friends, use:
+See the [HACKING guide](HACKING.md) for more information on development
+utilities and workflows.
 
-```
-$ sudo dnf group install -y 'RPM Development Tools'   # Install rpmbuild
-$ sudo dnf builddep -y osbuild-composer.spec          # Install build-time dependencies
-$ sudo dnf -y install cockpit-composer             # Optional: Install cockpit integration
-$ sudo systemctl start cockpit.socket              # Optional: Start cockpit
-```
-
-3. Finally, use the following to compile the project from the working
-directory, install it, and then run it:
-
-```
-$ rm -rf rpmbuild/
-$ make rpm
-$ sudo dnf -y install rpmbuild/RPMS/x86_64/*
-$ sudo systemctl start osbuild-composer.socket
-```
-
-You can now open https://localhost:9090 in your browser to open cockpit console
-and check the "Image Builder" section.
-
-Alternatively you can use `composer-cli` to interact with the Weldr API. We
-don't have any client for the RCM API, so the only option there is a
-plain `curl`.
-
-When developing the code, use `go` executable to generate, build, run, and test you
-code [1], alternatively you can use the script `tools/prepare-source.sh`:
-
-```
-$ go test ./...
-$ go build ./...
-$ go generate ./...
-$ go run ./cmd/osbuild-pipeline/
-```
-
-### Testing
+## Testing
 
 See [test/README.md](test/README.md) for more information about testing.
 
-### Planning the work
+## Planning the work
 
 In general we encourage you to first fill in an issue and discuss the feature
 you would like to work on before you start. This can prevent the scenario where
@@ -67,22 +35,25 @@ you work on something we don't want to include in our code.
 That being said, you are of course welcome to implement an example of what you
 would like to achieve.
 
-### Creating a PR
+## Creating a PR
 
-The commits in the PR should have these properties:
-
-* Preferably minimal and well documented
+* The commits in the PR should be minimal and well documented:
   * Where minimal means: don't do unrelated changes even if the code is
-    obviously wrong
-  * Well documented: both code and commit message
-  * The commit message should start with the module you work on,
-    like: `weldr: `, or `distro:`
-* The code should compile and the composer should start, so that we can run
-  `git bisect` on it
-* All code should be covered by unit-tests
+    obviously wrong.
+  * Well documented: both code and commit message.
+  * The commit message should start with the module you work on, like:
+    `manifest:`, or `distro:`
+* All code should be formatted using `go fmt ./...` in each commit.
 
-### Notes:
+The following requirements can be relaxed in extreme cases where they would
+conflict with the above (for example, if making tests pass makes a commit too
+large and difficult to read):
+* The code should compile, so that we can run `git bisect` on it.
+* The unit tests should pass (`go test ./...`).
+* All code should be covered by unit-tests.
 
-[1] If you are running macOS, you can still compile osbuild-composer. If it
-    doesn't work out of the box, use `-tags macos` together with any `go`
-    command, for example: `go test -tags macos ./...`
+## Notes:
+
+[1] If you are running macOS, you can still compile the binaries. If it doesn't
+work out of the box, use `-tags macos` together with any `go` command, for
+example: `go test -tags macos ./...`
