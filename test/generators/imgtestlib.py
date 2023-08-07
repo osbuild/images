@@ -27,14 +27,10 @@ OSTREE_CONTAINERS = [
 BASE_CONFIG = """
 .base:
   before_script:
-    - mkdir -p /tmp/artifacts
-    - schutzbot/ci_details.sh > /tmp/artifacts/ci-details-before-run.txt
-    - cat schutzbot/team_ssh_keys.txt | tee -a ~/.ssh/authorized_keys > /dev/null
+    - cat schutzbot/team_ssh_keys.txt |
+        tee -a ~/.ssh/authorized_keys > /dev/null
   after_script:
-    - schutzbot/ci_details.sh > /tmp/artifacts/ci-details-after-run.txt || true
     - schutzbot/update_github_status.sh update || true
-    - schutzbot/save_journal.sh || true
-    - schutzbot/upload_artifacts.sh
   interruptible: true
   retry: 1
   tags:
