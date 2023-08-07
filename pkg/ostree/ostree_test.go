@@ -115,6 +115,6 @@ func TestVerifyRef(t *testing.T) {
 	}
 
 	for in, expOut := range cases {
-		assert.Equal(t, expOut, VerifyRef(in), in)
+		assert.Equal(t, expOut, verifyRef(in), in)
 	}
 }
