@@ -1,83 +1,93 @@
-# Hacking on osbuild-composer
+# Hacking on osbuild/images
 
-## Virtual Machine
+## Local development environment
 
-*osbuild-composer* cannot be run from the source tree, but has to be installed
-onto a system. We recommend doing this by building rpms, with:
+The build-requirements for Fedora (and other rpm-based distributions) are:
+- `gpgme-devel`
 
-    make rpm
+To build images, you will also need to install `obsuild` and its sub-packages.
 
-This will build rpms from the latest git HEAD (remember to commit changes), for
-the current operating system, with a version that contains the commit hash. The
-packages end up in `./rpmbuild/RPMS/$arch`.
+### Useful cmds
 
-RPMS are easiest to deal with when they're in a dnf repository. To turn this
-directory into a dnf repository and serve it on localhost:8000, run:
+The following utilities, defined in the `cmd/` directory, are useful for
+development and testing. They **should not** be relied on for production
+purposes. In particular, command line options and default behaviour can change
+at any time.
 
-    createrepo_c ./rpmbuild/RPMS/x86_64
-    python3 -m http.server --directory ./rpmbuild/RPMS/x86_64 8000
+The following are high level descriptions of what some of the utilities can do
+and how they can be used during development. For specific flags and options,
+refer to each command's help output and doc strings.
 
-To start a ephemeral virtual machine using this repository, run:
+Each utility can be compiled using `go build -o <outputfile> ./cmd/<utility>`
+or run directly using `go run ./cmd/<utility>`. Use `go run ./cmd/<utility>
+-help` for option descriptions (e.g. `go run ./cmd/gen-manifests -help`).
 
-    tools/deploy-qemu IMAGE tools/deploy/test
+#### Manifest generation
 
-`IMAGE` has to be a path to an cloud-init-enabled image matching the host
-operating system, because that's what the packages were built for above.
-Note that the Fedora/RHEL cloud images might be too small for some tests
-to pass. Run `qemu-img resize IMAGE 10G` to grow them, cloud-init's growpart
-module will grow the root partition automatically during boot. 
+The `gen-manifests` tool can be used to generate all or a subset of the
+manifests for the images defined in the repository. This is useful for quickly
+seeing the effects of changes in image definitions on the manifest and the
+image build itself. While manifests are meant to be machine readable, it is
+often much faster to inspect the difference between two manifests (before and
+after a change in code) to evaluate if a change is having the desired effect.
 
-The second argument points to a directory from which cloud-init user-data is
-generated (see `tools/gen-user-data` for details). The one given above tries to
-mimic what is run on *osbuild-composer*'s continuous integration
-infrastructure, i.e., installing `osbuild-composer-tests` and starting the
-service.
+Manifests can be generated with or without content resolution (e.g. package
+depsolving, containers, ostree commits). If you are working on changes in image
+definitions that do not rely on content (e.g. an image type's partition table),
+manifests without resolved content can be generated almost instantly. Note that
+even though content is not resolved and packages are not depsolved, the
+selected packages without their dependencies are still added to generated
+manifests, so disabling package depsolving can also be used to inspect package
+selection without dependencies.
 
-The virtual machine uses qemu's [user networking][1], forwarding port 22 to
-the host's 2222 and 443 to 4430. You can log into the running machine with
+Manifests should be generated with all content enabled if they are going to be
+built. A common workflow when working on changing image definitions, or adding
+a new image type, might be:
+1. Generate the manifests for the image types that you will be working on.
+2. Make changes in an existing image definition or add a new image type.
+3. Add appropriate configuration changes:
+  - If a new image type is added, add it to the [config
+    map](test/config-map.json) under an appropriate configuration file or write
+    a new one.
+  - If an existing image type is being modified, and the change depends on an
+    image customization, make sure the modification is covered by an existing
+    [test config](test/configs).
+4. Generate the relevant manifests without content (`-packages=false
+   -containers=false -commits=false`).
+  - If the change depends on a customization, it might be more useful to
+    generate multiple manifests with different configuration options set and
+    inspect the differences between them.
+5. Inspect the differences between manifests generated in steps 0 and 3.
+6. Generate manifest with all content enabled for the relevant image types.
+7. Build at least one of the manifests using `osuild` and inspect the output
+   (boot the image or mount it to look for the desired changes).
 
-    ssh admin@localhost -p 2222
+_NOTE: By default, manifests created with the `gen-manifest` tool contain extra
+metadata. The manifest itself is stored under the key "manifest". You can
+extract the actual manifest using `jq .manifest
+<manifestfile>.json`. Alternatively, you can generate manifests without
+metadata using the `-metadata=false` option._
 
-The password is `foobar`. Stopping the machine loses all data.
+#### Building images
 
-For a quick compile and debug cycle, we recommend iterating code using thorough
-unit tests before going through the full workflow described above.
+You can build an image by generating its manifest and then running
+osbuild. Alternatively, the `cmd/build` tool can perform both steps in one
+call. It will generate a manifest, build the image, and store both the image
+and its manifest in the output directory.
 
-[1]: https://wiki.qemu.org/Documentation/Networking#User_Networking_.28SLIRP.29
+The build tool must be run as root because image building with osbuild requires
+superuser privileges. It is **not recommended** to run `sudo go run
+./cmd/build` however. The `go run` command can make changes to the go build
+cache and if these changes are made as root, it can cause issues when running
+other go commands in the future as a regular user. Instead, it is recommended
+to first build the binary and then run it as root:
+```
+go build -o build ./cmd/build
+sudo ./build ...
+```
 
-## Containers
+#### Listing available image type configurations
 
-*osbuild-composer* and *osbuild-composer-worker* can be run using Docker
-containers. Building and starting containers is generally faster than building
-RPMs and installing them in a VM, so this method is more convenient for
-developing and testing changes quickly. However, using this method has several
-downsides:
-- It doesn't build the RPMs so the `.spec` file isn't tested.
-- The environment is quite different from production (e.g., installation paths,
-  privileges and permissions).
-- The setup is not complete for all required services, so some functionality
-  isn't available for testing this way (e.g., Koji Hub and all its dependent
-  services).
-
-The containers are a good way to quickly test small changes, but before
-submitting a Pull Request, it's recommended to run through all the tests using
-the [Virtual Machine](#virtual-machine) setup described above.
-
-### Build and run
-
-To build the containers run:
-
-    docker-compose build
-
-To start the containers run:
-
-    docker-compose up
-
-You can send requests to the *osbuild-composer* container by entering the devel
-container and running:
-
-    curl -k --cert /etc/osbuild-composer/client-crt.pem --key /etc/osbuild-composer/client-key.pem https://172.30.0.10:8080/api/composer-koji/v1/status
-
-To rebuild the containers after a change, add the `--build` flag to the `docker-compose` command:
-
-    docker-compose up --build
+The `cmd/list-images` utility simply lists all available combinations of
+distribution, architecture, and image type. It also supports filtering one or
+more of those three variables.
