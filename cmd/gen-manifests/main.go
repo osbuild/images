@@ -3,7 +3,6 @@
 // root of the repository and reads test/data/repositories for repositories
 // test/config-map.json to match image types with configuration files.
 // Collects errors and failures and prints them after all jobs are finished.
-
 package main
 
 import (
