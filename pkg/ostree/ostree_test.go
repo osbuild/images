@@ -55,12 +55,12 @@ func TestOstreeResolveRef(t *testing.T) {
 		Subs *rhsm.Subscriptions
 	}
 	srvConfs := []srvConfig{
-		srvConfig{
+		{
 			Srv:  srv,
 			RHSM: false,
 			Subs: nil,
 		},
-		srvConfig{
+		{
 			Srv:  srv2,
 			RHSM: true,
 			Subs: subs,
