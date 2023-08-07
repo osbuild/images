@@ -118,3 +118,99 @@ func TestVerifyRef(t *testing.T) {
 		assert.Equal(t, expOut, verifyRef(in), in)
 	}
 }
+
+func TestValidate(t *testing.T) {
+
+	type testCase struct {
+		options ImageOptions
+		valid   bool
+	}
+
+	cases := map[string]testCase{
+		"empty": {
+			options: ImageOptions{
+				ImageRef:   "",
+				ParentRef:  "",
+				URL:        "",
+				ContentURL: "",
+			},
+			valid: true,
+		},
+		"fedora-ref-valid": {
+			options: ImageOptions{
+				ImageRef:   "fedora/39/x86_64/iot",
+				ParentRef:  "",
+				URL:        "",
+				ContentURL: "",
+			},
+			valid: true,
+		},
+		"fedora-ref-invalid": {
+			options: ImageOptions{
+				ImageRef:   "fedora/39/x86_64/ιοτ",
+				ParentRef:  "",
+				URL:        "",
+				ContentURL: "",
+			},
+			valid: false,
+		},
+		"fedora-parent-valid": {
+			options: ImageOptions{
+				ImageRef:   "fedora/39/x86_64/iot",
+				ParentRef:  "fedora/39/x86_64/iot",
+				URL:        "https://repo.example.com",
+				ContentURL: "",
+			},
+			valid: true,
+		},
+		"fedora-parent-invalid": {
+			options: ImageOptions{
+				ImageRef:   "fedora/39/x86_64/iot",
+				ParentRef:  "-bad",
+				URL:        "https://repo.example.com",
+				ContentURL: "",
+			},
+			valid: false,
+		},
+		"parent-without-url": {
+			options: ImageOptions{
+				ParentRef:  "parent/ref/without/a/URL",
+				ContentURL: "",
+			},
+			valid: false,
+		},
+		"bad-url": {
+			options: ImageOptions{
+				URL:        "this-is-not-a-url",
+				ContentURL: "",
+			},
+			valid: false,
+		},
+		"bad-content-url": {
+			options: ImageOptions{
+				ContentURL: "http;;//where-is-my-shift-key.com",
+			},
+			valid: false,
+		},
+		"checksum-ref": {
+			options: ImageOptions{
+				ImageRef: "c70e4ceff1726cb986eafd0230e2e1b0e5ebe590d0498a9f7c370c8ec3797deb",
+			},
+			valid: false,
+		},
+		"checksum-parent": {
+			options: ImageOptions{
+				ImageRef:  "the-ref",
+				ParentRef: "c70e4ceff1726cb986eafd0230e2e1b0e5ebe590d0498a9f7c370c8ec3797deb",
+			},
+			valid: false,
+		},
+	}
+
+	for name, testCase := range cases {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, testCase.valid, testCase.options.Validate() == nil)
+		})
+	}
+
+}
