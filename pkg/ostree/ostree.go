@@ -17,7 +17,10 @@ import (
 	"github.com/osbuild/images/pkg/rhsm"
 )
 
-var ostreeRefRE = regexp.MustCompile(`^(?:[\w\d][-._\w\d]*\/)*[\w\d][-._\w\d]*$`)
+var (
+	ostreeRefRE    = regexp.MustCompile(`^(?:[\w\d][-._\w\d]*\/)*[\w\d][-._\w\d]*$`)
+	ostreeCommitRE = regexp.MustCompile("^[0-9a-f]{64}$")
+)
 
 // SourceSpec serves as input for ResolveParams, and contains all necessary
 // variables to resolve a ref, which can then be turned into a CommitSpec.
@@ -71,6 +74,54 @@ type ImageOptions struct {
 	RHSM bool `json:"rhsm"`
 }
 
+// Validate the image options. This doesn't verify the existence of any remote
+// objects and does not guarantee that refs will be successfully resolved. It
+// only checks that the values and value combinations are valid.
+//
+// The function checks the following:
+// - The ImageRef, if specified, is a valid ref and does not look like a
+// checksum.
+// - The ParentRef, if specified, must be a valid ref or a checksum.
+// - If the ParentRef is specified, the URL must also be specified.
+// - URLs must be valid.
+func (options ImageOptions) Validate() error {
+	if ref := options.ImageRef; ref != "" {
+		// image ref must not look like a checksum
+		if verifyChecksum(ref) {
+			return NewRefError("ostree image ref looks like a checksum %q", ref)
+		}
+		if !verifyRef(ref) {
+			return NewRefError("invalid ostree image ref %q", ref)
+		}
+	}
+
+	if parent := options.ParentRef; parent != "" {
+		if !verifyChecksum(parent) && !verifyRef(parent) {
+			return NewRefError("invalid ostree parent ref or commit %q", parent)
+		}
+
+		// valid URL required
+		if purl := options.URL; purl == "" {
+			return NewParameterComboError("ostree parent ref specified, but no URL to retrieve it")
+		}
+	}
+
+	// whether required or not, any URL specified must be valid
+	if purl := options.URL; purl != "" {
+		if _, err := url.ParseRequestURI(purl); err != nil {
+			return fmt.Errorf("ostree URL %q is invalid", purl)
+		}
+	}
+
+	if curl := options.ContentURL; curl != "" {
+		if _, err := url.ParseRequestURI(curl); err != nil {
+			return fmt.Errorf("ostree content URL %q is invalid", curl)
+		}
+	}
+
+	return nil
+}
+
 // Remote defines the options that can be set for an OSTree Remote configuration.
 type Remote struct {
 	Name        string
@@ -79,8 +130,12 @@ type Remote struct {
 	GPGKeyPaths []string
 }
 
-func VerifyRef(ref string) bool {
+func verifyRef(ref string) bool {
 	return len(ref) > 0 && ostreeRefRE.MatchString(ref)
+}
+
+func verifyChecksum(commit string) bool {
+	return len(commit) > 0 && ostreeCommitRE.MatchString(commit)
 }
 
 // ResolveRef resolves the URL path specified by the location and ref
@@ -168,7 +223,7 @@ func ResolveRef(location, ref string, consumerCerts bool, subs *rhsm.Subscriptio
 //
 // If the ref is malformed, the function returns with a RefError.
 func Resolve(source SourceSpec) (CommitSpec, error) {
-	if !VerifyRef(source.Ref) {
+	if !verifyRef(source.Ref) {
 		return CommitSpec{}, NewRefError("Invalid ostree ref %q", source.Ref)
 	}
 
