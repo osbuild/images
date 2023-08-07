@@ -489,11 +489,11 @@ func TestDistro_ManifestError(t *testing.T) {
 			if imgTypeName == "edge-commit" || imgTypeName == "edge-container" {
 				assert.EqualError(t, err, "kernel boot parameter customizations are not supported for ostree types")
 			} else if imgTypeName == "edge-raw-image" {
-				assert.EqualError(t, err, "edge raw images require specifying a URL from which to retrieve the OSTree commit")
+				assert.EqualError(t, err, fmt.Sprintf("%q images require specifying a URL from which to retrieve the OSTree commit", imgTypeName))
 			} else if imgTypeName == "edge-installer" || imgTypeName == "edge-simplified-installer" {
-				assert.EqualError(t, err, fmt.Sprintf("boot ISO image type \"%s\" requires specifying a URL from which to retrieve the OSTree commit", imgTypeName))
+				assert.EqualError(t, err, fmt.Sprintf("boot ISO image type %q requires specifying a URL from which to retrieve the OSTree commit", imgTypeName))
 			} else if imgTypeName == "azure-eap7-rhui" {
-				assert.EqualError(t, err, fmt.Sprintf("image type \"%s\" does not support customizations", imgTypeName))
+				assert.EqualError(t, err, fmt.Sprintf("image type %q does not support customizations", imgTypeName))
 			} else {
 				assert.NoError(t, err)
 			}
