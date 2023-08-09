@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/gobwas/glob"
+
 	"github.com/osbuild/images/internal/dnfjson"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
@@ -602,13 +603,14 @@ func main() {
 	// common args
 	var outputDir, cacheRoot, configPath string
 	var nWorkers int
-	var metadata, skipNoconfig bool
+	var metadata, skipNoconfig, skipNorepos bool
 	flag.StringVar(&outputDir, "output", "test/data/manifests/", "manifest store directory")
 	flag.IntVar(&nWorkers, "workers", 16, "number of workers to run concurrently")
 	flag.StringVar(&cacheRoot, "cache", "/tmp/rpmmd", "rpm metadata cache directory")
 	flag.BoolVar(&metadata, "metadata", true, "store metadata in the file")
 	flag.StringVar(&configPath, "config", "test/config-map.json", "configuration file mapping image types to configs")
 	flag.BoolVar(&skipNoconfig, "skip-noconfig", false, "skip distro-arch-image configurations that have no config (otherwise fail)")
+	flag.BoolVar(&skipNorepos, "skip-norepos", false, "skip distro-arch-image configurations that have no repositories (otherwise fail)")
 
 	// content args
 	var packages, containers, commits bool
@@ -676,8 +678,11 @@ func main() {
 				repos = filterRepos(repos, imgTypeName)
 				if len(repos) == 0 {
 					fmt.Printf("no repositories defined for %s/%s/%s\n", distroName, archName, imgTypeName)
-					fmt.Println("Skipping")
-					continue
+					if skipNorepos {
+						fmt.Println("Skipping")
+						continue
+					}
+					panic("no repositories found, pass --skip-norepos to skip")
 				}
 
 				imgTypeConfigs := configs.Get(distroName, archName, imgTypeName)
