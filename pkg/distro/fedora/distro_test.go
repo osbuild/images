@@ -32,6 +32,10 @@ var fedoraFamilyDistros = []fedoraFamilyDistro{
 		name:   "fedora",
 		distro: fedora.NewF39(),
 	},
+	{
+		name:   "fedora",
+		distro: fedora.NewF40(),
+	},
 }
 
 func TestFilenameFromType(t *testing.T) {
