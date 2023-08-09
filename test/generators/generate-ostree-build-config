@@ -281,7 +281,7 @@ def generate_configs(build_requests, pull_configs, container_configs, pipeline_f
         config_name = config["name"]
 
         # generate script line to pull and start container
-        container = container_configs[config_name]["container"]
+        container = container_configs[config_name]
 
         # write the config to the artifacts directory
         build_config_path = os.path.join(configs_dir, config_name + ".json")
