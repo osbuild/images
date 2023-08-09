@@ -32,6 +32,7 @@ BASE_CONFIG = """
   after_script:
     - schutzbot/update_github_status.sh update || true
   interruptible: true
+  retry: 1
   tags:
     - terraform
 
