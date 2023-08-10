@@ -10,6 +10,7 @@ import (
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distrolist"
 	"github.com/osbuild/images/pkg/distroregistry"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/ostree"
@@ -391,6 +392,21 @@ func NewRegistry() *distroregistry.Registry {
 	// Override the host's architecture name with the test's name
 	registry.SetHostArchName(TestArchName)
 	return registry
+}
+
+func NewDistroRegistry() *distrolist.List {
+	td := New()
+	registry := distrolist.New([]distrolist.Factory{
+		func(name string) distro.Distro {
+			if name != td.name {
+				return nil
+			}
+
+			return td
+		},
+	})
+
+	return &registry
 }
 
 // New2 returns new instance of TestDistro named "test-distro-2".
