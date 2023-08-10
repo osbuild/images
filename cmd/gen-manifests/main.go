@@ -18,10 +18,10 @@ import (
 	"github.com/gobwas/glob"
 
 	"github.com/osbuild/images/internal/dnfjson"
+	"github.com/osbuild/images/internal/testdistrolist"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/distroregistry"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rhsm/facts"
@@ -628,7 +628,7 @@ func main() {
 
 	seedArg := int64(0)
 	darm := readRepos()
-	distroReg := distroregistry.NewDefault()
+	distroReg := testdistrolist.New()
 	jobs := make([]manifestJob, 0)
 
 	contentResolve := map[string]bool{
@@ -644,7 +644,7 @@ func main() {
 	}
 
 	fmt.Println("Collecting jobs")
-	distros, invalidDistros := resolveArgValues(distros, distroReg.List())
+	distros, invalidDistros := resolveArgValues(distros, distroReg.ListTested())
 	if len(invalidDistros) > 0 {
 		fmt.Fprintf(os.Stderr, "WARNING: invalid distro names: [%s]\n", strings.Join(invalidDistros, ","))
 	}

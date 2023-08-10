@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/osbuild/images/internal/testdistrolist"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/distroregistry"
 	"github.com/osbuild/images/pkg/ostree"
 )
 
@@ -29,7 +29,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	dr := distroregistry.NewDefault()
+	dr := testdistrolist.New()
 
 	d := dr.GetDistro(distroName)
 	if d == nil {

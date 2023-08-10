@@ -15,7 +15,7 @@ import (
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/distroregistry"
+	"github.com/osbuild/images/pkg/distrolist"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/ostree"
@@ -327,7 +327,7 @@ func main() {
 
 	seedArg := int64(0)
 	darm := readRepos()
-	distroReg := distroregistry.NewDefault()
+	distroReg := distrolist.NewDefault()
 
 	config := loadConfig(configFile)
 

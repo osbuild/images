@@ -10,7 +10,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/distroregistry"
+	"github.com/osbuild/images/pkg/distrolist"
 	"github.com/osbuild/images/pkg/image"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
@@ -72,12 +72,13 @@ func main() {
 		}
 	}
 
-	distros := distroregistry.NewDefault()
+	distros := distrolist.NewDefault()
 	var d distro.Distro
+	var err error
 	if distroArg == "host" {
-		d = distros.FromHost()
-		if d == nil {
-			panic("host distro not supported")
+		distroArg, _, _, err = common.GetHostDistroName()
+		if err != nil {
+			panic(fmt.Sprintf("cannot infer host distro: %v", err))
 		}
 	} else {
 		d = distros.GetDistro(distroArg)

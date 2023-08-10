@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/osbuild/images/pkg/distroregistry"
+	"github.com/osbuild/images/internal/testdistrolist"
 )
 
 func main() {
 	definitions := map[string]map[string][]string{}
-	distroRegistry := distroregistry.NewDefault()
+	distroRegistry := testdistrolist.New()
 
-	for _, distroName := range distroRegistry.List() {
+	for _, distroName := range distroRegistry.ListTested() {
 		distro := distroRegistry.GetDistro(distroName)
 		for _, archName := range distro.ListArches() {
 			arch, err := distro.GetArch(archName)

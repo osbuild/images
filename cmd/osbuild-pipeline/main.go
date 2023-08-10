@@ -10,9 +10,10 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/dnfjson"
+	"github.com/osbuild/images/internal/testdistrolist"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/distroregistry"
+	distrolist2 "github.com/osbuild/images/pkg/distrolist"
 	"github.com/osbuild/images/pkg/ostree"
 
 	"github.com/osbuild/images/pkg/blueprint"
@@ -111,11 +112,12 @@ func main() {
 		}
 	}
 
-	distros := distroregistry.NewDefault()
+	distros := distrolist2.NewDefault()
 	d := distros.GetDistro(composeRequest.Distro)
 	if d == nil {
-		_, _ = fmt.Fprintf(os.Stderr, "The provided distribution '%s' is not supported. Use one of these:\n", composeRequest.Distro)
-		for _, d := range distros.List() {
+		_, _ = fmt.Fprintf(os.Stderr, "The provided distribution '%s' is not supported. Use one of these (non-exhaustive list):\n", composeRequest.Distro)
+		dl := testdistrolist.New()
+		for _, d := range dl.ListTested() {
 			_, _ = fmt.Fprintln(os.Stderr, " *", d)
 		}
 		return

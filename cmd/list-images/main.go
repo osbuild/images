@@ -10,7 +10,8 @@ import (
 	"strings"
 
 	"github.com/gobwas/glob"
-	"github.com/osbuild/images/pkg/distroregistry"
+
+	"github.com/osbuild/images/internal/testdistrolist"
 )
 
 type multiValue []string
@@ -74,8 +75,8 @@ func main() {
 	flag.BoolVar(&json, "json", false, "print configs as json")
 	flag.Parse()
 
-	distroReg := distroregistry.NewDefault()
-	distros, invalidDistros := resolveArgValues(distros, distroReg.List())
+	distroReg := testdistrolist.New()
+	distros, invalidDistros := resolveArgValues(distros, distroReg.ListTested())
 	if len(invalidDistros) > 0 {
 		fmt.Fprintf(os.Stderr, "WARNING: invalid distro names: [%s]\n", strings.Join(invalidDistros, ","))
 	}
