@@ -233,3 +233,19 @@ func newDistro(distroName string) distro.Distro {
 
 	return &rd
 }
+
+func NewFromID(idStr string) distro.Distro {
+	id, err := distro.ParseName(idStr)
+	if err != nil {
+		return nil
+	}
+	if id.Name != "rhel" {
+		return nil
+	}
+
+	if id.MajorVersion != 7 {
+		return nil
+	}
+
+	return newDistro("rhel-7")
+}

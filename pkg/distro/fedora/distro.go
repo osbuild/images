@@ -750,3 +750,16 @@ func newDistro(version int) distro.Distro {
 	rd.addArches(x86_64, aarch64)
 	return &rd
 }
+
+func New(idStr string) distro.Distro {
+	id, err := distro.ParseName(idStr)
+	if err != nil {
+		return nil
+	}
+
+	if id.Name != "fedora" {
+		return nil
+	}
+
+	return newDistro(id.MajorVersion)
+}

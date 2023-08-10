@@ -512,3 +512,24 @@ func newDistro(name string, minor int) *distribution {
 	rd.addArches(x86_64, aarch64, ppc64le)
 	return &rd
 }
+
+func NewFromID(idStr string) distro.Distro {
+	id, err := distro.ParseName(idStr)
+	if err != nil {
+		return nil
+	}
+
+	if id.MajorVersion != 8 {
+		return nil
+	}
+
+	if id.Name == "centos" {
+		return NewCentos()
+	}
+
+	if id.Name != "rhel" {
+		return nil
+	}
+
+	return newDistro("rhel", id.MinorVersion)
+}
