@@ -494,6 +494,12 @@ func NewFromID(idStr string) distro.Distro {
 		return nil
 	}
 
+	// compat for rhel-94 and friends
+	if id.MajorVersion >= 90 && id.MajorVersion < 100 {
+		id.MinorVersion = id.MajorVersion % 10
+		id.MajorVersion = 9
+	}
+
 	if id.MajorVersion != 9 {
 		return nil
 	}
