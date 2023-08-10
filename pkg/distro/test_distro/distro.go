@@ -382,6 +382,7 @@ func New() *TestDistro {
 	return newTestDistro(TestDistroName, TestDistroModulePlatformID, TestDistroReleasever)
 }
 
+// Deprecated: use NewDistroRegistry
 func NewRegistry() *distroregistry.Registry {
 	td := New()
 	registry, err := distroregistry.New(td, td)

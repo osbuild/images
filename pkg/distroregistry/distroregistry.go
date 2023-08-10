@@ -40,12 +40,14 @@ var supportedDistros = []func() distro.Distro{
 	rhel9.NewCentOS9,
 }
 
+// Deprecated: Use distrolist.List
 type Registry struct {
 	distros      map[string]distro.Distro
 	hostDistro   distro.Distro
 	hostArchName string
 }
 
+// Deprecated: Use distrolist.New
 func New(hostDistro distro.Distro, distros ...distro.Distro) (*Registry, error) {
 	reg := &Registry{
 		distros:      make(map[string]distro.Distro),
@@ -65,6 +67,8 @@ func New(hostDistro distro.Distro, distros ...distro.Distro) (*Registry, error) 
 // NewDefault creates a Registry with all distributions supported by
 // osbuild-composer. If you need to add a distribution here, see the
 // supportedDistros variable.
+//
+// Deprecated: Use distrolist.NewDefault
 func NewDefault() *Registry {
 	var distros []distro.Distro
 	var hostDistro distro.Distro
