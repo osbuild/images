@@ -47,6 +47,8 @@ image-build-trigger-{distro}-{arch}:
       - artifact: build-config.yml
         job: generate-build-config-{distro}-{arch}
     strategy: depend
+  needs:
+    - generate-build-config-{distro}-{arch}
 """
 
 OSTREE_GEN_TEMPLATE = """
@@ -65,6 +67,8 @@ generate-ostree-build-config-{distro}-{arch}:
     paths:
       - build-config.yml
       - build-configs
+  needs:
+    - image-build-trigger-{distro}-{arch}
 """
 
 OSTREE_TRIGGER_TEMPLATE = """
@@ -75,6 +79,8 @@ image-build-ostree-trigger-{distro}-{arch}:
       - artifact: build-config.yml
         job: generate-ostree-build-config-{distro}-{arch}
     strategy: depend
+  needs:
+    - generate-ostree-build-config-{distro}-{arch}
 """
 
 
