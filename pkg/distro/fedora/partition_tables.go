@@ -13,13 +13,13 @@ var defaultBasePartitionTables = distro.BasePartitionTableMap{
 		Type: "gpt",
 		Partitions: []disk.Partition{
 			{
-				Size:     1 * common.MebiByte, // 1MB
+				Size:     1 * common.MebiByte,
 				Bootable: true,
 				Type:     disk.BIOSBootPartitionGUID,
 				UUID:     disk.BIOSBootPartitionUUID,
 			},
 			{
-				Size: 200 * common.MebiByte, // 200 MB
+				Size: 200 * common.MebiByte,
 				Type: disk.EFISystemPartitionGUID,
 				UUID: disk.EFISystemPartitionUUID,
 				Payload: &disk.Filesystem{
@@ -33,7 +33,7 @@ var defaultBasePartitionTables = distro.BasePartitionTableMap{
 				},
 			},
 			{
-				Size: 500 * common.MebiByte, // 500 MB
+				Size: 500 * common.MebiByte,
 				Type: disk.FilesystemDataGUID,
 				UUID: disk.FilesystemDataUUID,
 				Payload: &disk.Filesystem{
@@ -46,7 +46,7 @@ var defaultBasePartitionTables = distro.BasePartitionTableMap{
 				},
 			},
 			{
-				Size: 2 * common.GibiByte, // 2GiB
+				Size: 2 * common.GibiByte,
 				Type: disk.FilesystemDataGUID,
 				UUID: disk.RootPartitionUUID,
 				Payload: &disk.Filesystem{
@@ -65,7 +65,7 @@ var defaultBasePartitionTables = distro.BasePartitionTableMap{
 		Type: "gpt",
 		Partitions: []disk.Partition{
 			{
-				Size: 200 * common.MebiByte, // 200 MB
+				Size: 200 * common.MebiByte,
 				Type: disk.EFISystemPartitionGUID,
 				UUID: disk.EFISystemPartitionUUID,
 				Payload: &disk.Filesystem{
@@ -79,7 +79,7 @@ var defaultBasePartitionTables = distro.BasePartitionTableMap{
 				},
 			},
 			{
-				Size: 500 * common.MebiByte, // 500 MB
+				Size: 500 * common.MebiByte,
 				Type: disk.FilesystemDataGUID,
 				UUID: disk.FilesystemDataUUID,
 				Payload: &disk.Filesystem{
@@ -92,7 +92,7 @@ var defaultBasePartitionTables = distro.BasePartitionTableMap{
 				},
 			},
 			{
-				Size: 2 * common.GibiByte, // 2GiB
+				Size: 2 * common.GibiByte,
 				Type: disk.FilesystemDataGUID,
 				UUID: disk.RootPartitionUUID,
 				Payload: &disk.Filesystem{
@@ -114,7 +114,7 @@ var iotBasePartitionTables = distro.BasePartitionTableMap{
 		Type: "gpt",
 		Partitions: []disk.Partition{
 			{
-				Size: 501 * common.MebiByte, // 501 MiB
+				Size: 501 * common.MebiByte,
 				Type: disk.EFISystemPartitionGUID,
 				UUID: disk.EFISystemPartitionUUID,
 				Payload: &disk.Filesystem{
@@ -128,7 +128,7 @@ var iotBasePartitionTables = distro.BasePartitionTableMap{
 				},
 			},
 			{
-				Size: 1 * common.GibiByte, // 1 GiB
+				Size: 1 * common.GibiByte,
 				Type: disk.FilesystemDataGUID,
 				UUID: disk.FilesystemDataUUID,
 				Payload: &disk.Filesystem{
@@ -141,7 +141,7 @@ var iotBasePartitionTables = distro.BasePartitionTableMap{
 				},
 			},
 			{
-				Size: 2569 * common.MebiByte, // 2.5 GiB
+				Size: 2569 * common.MebiByte,
 				Type: disk.FilesystemDataGUID,
 				UUID: disk.RootPartitionUUID,
 				Payload: &disk.Filesystem{
@@ -160,7 +160,7 @@ var iotBasePartitionTables = distro.BasePartitionTableMap{
 		Type: "dos",
 		Partitions: []disk.Partition{
 			{
-				Size:     501 * common.MebiByte, // 501 MiB
+				Size:     501 * common.MebiByte,
 				Type:     "06",
 				Bootable: true,
 				Payload: &disk.Filesystem{
@@ -174,7 +174,7 @@ var iotBasePartitionTables = distro.BasePartitionTableMap{
 				},
 			},
 			{
-				Size: 1 * common.GibiByte, // 1 GiB
+				Size: 1 * common.GibiByte,
 				Type: "83",
 				Payload: &disk.Filesystem{
 					Type:         "ext4",
@@ -186,7 +186,7 @@ var iotBasePartitionTables = distro.BasePartitionTableMap{
 				},
 			},
 			{
-				Size: 2569 * common.MebiByte, // 2.5 GiB
+				Size: 2569 * common.MebiByte,
 				Type: "83",
 				Payload: &disk.Filesystem{
 					Type:         "ext4",
