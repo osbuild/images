@@ -31,6 +31,7 @@ generate-build-config-{distro}-{arch}:
     INTERNAL_NETWORK: "true"
     PYTHONUNBUFFERED: 1
   script:
+    - sudo ./schutzbot/setup-osbuild-repo
     - sudo dnf -y install go python3 gpgme-devel s3cmd
       osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux
     - ./test/generators/generate-build-config --distro {distro} --arch {arch} build-config.yml
@@ -60,6 +61,7 @@ generate-ostree-build-config-{distro}-{arch}:
     INTERNAL_NETWORK: "true"
     PYTHONUNBUFFERED: 1
   script:
+    - sudo ./schutzbot/setup-osbuild-repo
     - sudo dnf -y install go python3 gpgme-devel s3cmd
       osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux podman
     - ./test/generators/generate-ostree-build-config --distro {distro} --arch {arch} build-config.yml build-configs
