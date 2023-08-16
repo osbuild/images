@@ -797,10 +797,17 @@ func newDistro(version int) distro.Distro {
 				BasePlatform: platform.BasePlatform{
 					ImageFormat: platform.FORMAT_RAW,
 					FirmwarePackages: []string{
-						"biosdevname",
+						"grub2-efi-x64-cdboot",
+						"grub2-pc",
+						"grub2-pc-modules",
+						"grub2-tools",
+						"grub2-tools-extra",
+						"grub2-tools-minimal",
 						"iwlwifi-dvm-firmware",
 						"iwlwifi-mvm-firmware",
 						"microcode_ctl",
+						"syslinux",
+						"syslinux-nonlinux",
 					},
 				},
 				BIOS:       false,
@@ -812,9 +819,14 @@ func newDistro(version int) distro.Distro {
 			&platform.Aarch64{
 				BasePlatform: platform.BasePlatform{
 					FirmwarePackages: []string{
-						"uboot-images-armv8",
-						"bcm283x-firmware",
 						"arm-image-installer",
+						"bcm283x-firmware",
+						"grub2-efi-aa64",
+						"grub2-efi-aa64-cdboot",
+						"grub2-tools",
+						"grub2-tools-extra",
+						"grub2-tools-minimal",
+						"uboot-images-armv8",
 					},
 				},
 				UEFIVendor: "fedora",
