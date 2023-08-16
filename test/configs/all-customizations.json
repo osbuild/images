@@ -76,7 +76,7 @@
       },
       "services": {
         "enabled": [
-          "sshd.socket",
+          "sshd.service",
           "custom.service"
         ],
         "disabled": [
