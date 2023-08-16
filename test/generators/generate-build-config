@@ -14,6 +14,7 @@ JOB_TEMPLATE = """
 build/{distro}/{arch}/{image_type}/{config_name}:
   stage: test
   script:
+    - sudo ./schutzbot/setup-osbuild-repo
     - sudo dnf install -y go gpgme-devel gcc
       osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux
       s3cmd
