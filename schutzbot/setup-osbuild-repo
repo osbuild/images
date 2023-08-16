@@ -1,0 +1,72 @@
+#!/usr/bin/env python3
+#
+# Add a repository configuration to install the osbuild rpm at a specific
+# commit if specified.
+import json
+import os
+
+SCHUTZFILE = "Schutzfile"
+OS_RELEASE_FILE = "/etc/os-release"
+REPO_FILE = "/etc/yum.repos.d/osbuild.repo"
+
+REPO_TEMPLATE = """
+[osbuild]
+name=osbuild {commit}
+baseurl=http://osbuild-composer-repos.s3-website.us-east-2.amazonaws.com/{repo_path}
+enabled=1
+gpgcheck=0
+priority=10
+"""
+
+
+def read_osrelease(path):
+    """Read Operating System Information from `os-release`
+
+    This creates a dictionary with information describing the running operating system. It reads the information from
+    the path array provided as `paths`.  The first available file takes precedence. It must be formatted according to
+    the rules in `os-release(5)`.
+    """
+    osrelease = {}
+
+    with open(path, encoding="utf8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            if line[0] == "#":
+                continue
+            key, value = line.split("=", 1)
+            osrelease[key] = value.strip('"')
+
+    return osrelease
+
+
+def get_osbuild_commit(distro_version):
+    with open(SCHUTZFILE) as schutzfile:
+        data = json.load(schutzfile)
+
+    return data.get(distro_version, {}).get("dependencies", {}).get("osbuild", {}).get("commit", None)
+
+
+def write_repo(commit, distro_version):
+    arch = os.uname().machine
+    repo_path = f"osbuild/{distro_version}/{arch}/{commit}"
+    print(f"Setting up dnf repository for {commit} ({repo_path})")
+    with open("/etc/yum.repos.d/osbuild.repo", "w") as repofile:
+        repofile.write(REPO_TEMPLATE.format(commit=commit, repo_path=repo_path))
+
+
+def main():
+    osrelease = read_osrelease(OS_RELEASE_FILE)
+
+    distro_version = osrelease["ID"] + "-" + osrelease["VERSION_ID"]
+    commit_id = get_osbuild_commit(distro_version)
+    if not commit_id:
+        print("No commit ID defined for osbuild")
+        return
+
+    write_repo(commit_id, distro_version)
+
+
+if __name__ == "__main__":
+    main()
