@@ -9,7 +9,7 @@ import (
 func TestPathPolicyCheck(t *testing.T) {
 	assert := assert.New(t)
 
-	entires := map[string]PathPolicy{
+	entries := map[string]PathPolicy{
 		"/":          {Exact: true},
 		"/boot":      {Exact: true},
 		"/boot/efi":  {Exact: true},
@@ -19,7 +19,7 @@ func TestPathPolicyCheck(t *testing.T) {
 		"/home":      {},
 	}
 
-	policies := NewPathPolicies(entires)
+	policies := NewPathPolicies(entries)
 	assert.NotNil(policies)
 
 	tests := map[string]bool{
