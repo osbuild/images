@@ -214,7 +214,7 @@ var (
 		defaultSize:         10 * common.GibiByte,
 		rpmOstree:           true,
 		bootable:            true,
-		image:               iotQcow2Image,
+		image:               iotImage,
 		buildPipelines:      []string{"build"},
 		payloadPipelines:    []string{"ostree-deployment", "image", "qcow2"},
 		exports:             []string{"qcow2"},
