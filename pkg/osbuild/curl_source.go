@@ -3,9 +3,13 @@ package osbuild
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"regexp"
 
 	"github.com/osbuild/images/pkg/rpmmd"
 )
+
+var curlDigestPattern = regexp.MustCompile(`(md5|sha1|sha256|sha384|sha512):[0-9a-f]{32,128}`)
 
 type CurlSource struct {
 	Items map[string]CurlSourceItem `json:"items"`
@@ -25,7 +29,10 @@ func NewCurlSource() *CurlSource {
 	}
 }
 
-func NewCurlPackageItem(pkg rpmmd.PackageSpec) CurlSourceItem {
+func NewCurlPackageItem(pkg rpmmd.PackageSpec) (CurlSourceItem, error) {
+	if !curlDigestPattern.MatchString(pkg.Checksum) {
+		return nil, fmt.Errorf("curl package source item has invalid digest")
+	}
 	item := new(CurlSourceOptions)
 	item.URL = pkg.RemoteLocation
 	if pkg.Secrets == "org.osbuild.rhsm" {
@@ -34,14 +41,18 @@ func NewCurlPackageItem(pkg rpmmd.PackageSpec) CurlSourceItem {
 		}
 	}
 	item.Insecure = pkg.IgnoreSSL
-	return item
+	return item, nil
 }
 
-// AddPackage adds a pkg to the curl source to download. Will panic if any of
-// the supplied options are invalid or missing.
-func (source *CurlSource) AddPackage(pkg rpmmd.PackageSpec) {
-	item := NewCurlPackageItem(pkg)
+// AddPackage adds a pkg to the curl source to download. Will return an error
+// if any of the supplied options are invalid or missing.
+func (source *CurlSource) AddPackage(pkg rpmmd.PackageSpec) error {
+	item, err := NewCurlPackageItem(pkg)
+	if err != nil {
+		return err
+	}
 	source.Items[pkg.Checksum] = item
+	return nil
 }
 
 type URL string
