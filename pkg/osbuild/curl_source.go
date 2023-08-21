@@ -3,6 +3,8 @@ package osbuild
 import (
 	"bytes"
 	"encoding/json"
+
+	"github.com/osbuild/images/pkg/rpmmd"
 )
 
 type CurlSource struct {
@@ -15,6 +17,31 @@ func (CurlSource) isSource() {}
 // provider
 type CurlSourceItem interface {
 	isCurlSourceItem()
+}
+
+func NewCurlSource() *CurlSource {
+	return &CurlSource{
+		Items: make(map[string]CurlSourceItem),
+	}
+}
+
+func NewCurlPackageItem(pkg rpmmd.PackageSpec) CurlSourceItem {
+	item := new(CurlSourceOptions)
+	item.URL = pkg.RemoteLocation
+	if pkg.Secrets == "org.osbuild.rhsm" {
+		item.Secrets = &URLSecrets{
+			Name: "org.osbuild.rhsm",
+		}
+	}
+	item.Insecure = pkg.IgnoreSSL
+	return item
+}
+
+// AddPackage adds a pkg to the curl source to download. Will panic if any of
+// the supplied options are invalid or missing.
+func (source *CurlSource) AddPackage(pkg rpmmd.PackageSpec) {
+	item := NewCurlPackageItem(pkg)
+	source.Items[pkg.Checksum] = item
 }
 
 type URL string
