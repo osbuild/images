@@ -56,43 +56,25 @@ func (sources *Sources) UnmarshalJSON(data []byte) error {
 
 func GenSources(packages []rpmmd.PackageSpec, ostreeCommits []ostree.CommitSpec, inlineData []string, containers []container.Spec) Sources {
 	sources := Sources{}
-	curl := &CurlSource{
-		Items: make(map[string]CurlSourceItem),
-	}
 
 	// collect rpm package sources
-	for _, pkg := range packages {
-		item := new(CurlSourceOptions)
-		item.URL = pkg.RemoteLocation
-		if pkg.Secrets == "org.osbuild.rhsm" {
-			item.Secrets = &URLSecrets{
-				Name: "org.osbuild.rhsm",
-			}
+	if len(packages) > 0 {
+		curl := NewCurlSource()
+		for _, pkg := range packages {
+			curl.AddPackage(pkg)
 		}
-		item.Insecure = pkg.IgnoreSSL
-		curl.Items[pkg.Checksum] = item
-	}
-	if len(curl.Items) > 0 {
 		sources["org.osbuild.curl"] = curl
 	}
 
 	// collect ostree commit sources
-	ostree := &OSTreeSource{
-		Items: make(map[string]OSTreeSourceItem),
-	}
-	for _, commit := range ostreeCommits {
-		item := new(OSTreeSourceItem)
-		item.Remote.URL = commit.URL
-		item.Remote.ContentURL = commit.ContentURL
-		if commit.Secrets == "org.osbuild.rhsm.consumer" {
-			item.Remote.Secrets = &OSTreeSourceRemoteSecrets{
-				Name: "org.osbuild.rhsm.consumer",
-			}
+	if len(ostreeCommits) > 0 {
+		ostree := NewOSTreeSource()
+		for _, commit := range ostreeCommits {
+			ostree.AddItem(commit)
 		}
-		ostree.Items[commit.Checksum] = *item
-	}
-	if len(ostree.Items) > 0 {
-		sources["org.osbuild.ostree"] = ostree
+		if len(ostree.Items) > 0 {
+			sources["org.osbuild.ostree"] = ostree
+		}
 	}
 
 	// collect inline data sources
@@ -106,22 +88,23 @@ func GenSources(packages []rpmmd.PackageSpec, ostreeCommits []ostree.CommitSpec,
 	}
 
 	// collect skopeo container sources
-	skopeo := NewSkopeoSource()
-	skopeoIndex := NewSkopeoIndexSource()
-	for _, c := range containers {
-		skopeo.AddItem(c.Source, c.Digest, c.ImageID, c.TLSVerify)
+	if len(containers) > 0 {
+		skopeo := NewSkopeoSource()
+		skopeoIndex := NewSkopeoIndexSource()
+		for _, c := range containers {
+			skopeo.AddItem(c.Source, c.Digest, c.ImageID, c.TLSVerify)
 
-		// if we have a list digest, add a skopeo-index source as well
-		if c.ListDigest != "" {
-			skopeoIndex.AddItem(c.Source, c.ListDigest, c.TLSVerify)
+			// if we have a list digest, add a skopeo-index source as well
+			if c.ListDigest != "" {
+				skopeoIndex.AddItem(c.Source, c.ListDigest, c.TLSVerify)
+			}
 		}
-	}
-
-	if len(skopeo.Items) > 0 {
-		sources["org.osbuild.skopeo"] = skopeo
-	}
-	if len(skopeoIndex.Items) > 0 {
-		sources["org.osbuild.skopeo-index"] = skopeoIndex
+		if len(skopeo.Items) > 0 {
+			sources["org.osbuild.skopeo"] = skopeo
+		}
+		if len(skopeoIndex.Items) > 0 {
+			sources["org.osbuild.skopeo-index"] = skopeoIndex
+		}
 	}
 
 	return sources
