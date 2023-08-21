@@ -59,6 +59,8 @@ func GenSources(packages []rpmmd.PackageSpec, ostreeCommits []ostree.CommitSpec,
 	curl := &CurlSource{
 		Items: make(map[string]CurlSourceItem),
 	}
+
+	// collect rpm package sources
 	for _, pkg := range packages {
 		item := new(CurlSourceOptions)
 		item.URL = pkg.RemoteLocation
@@ -74,6 +76,7 @@ func GenSources(packages []rpmmd.PackageSpec, ostreeCommits []ostree.CommitSpec,
 		sources["org.osbuild.curl"] = curl
 	}
 
+	// collect ostree commit sources
 	ostree := &OSTreeSource{
 		Items: make(map[string]OSTreeSourceItem),
 	}
@@ -92,6 +95,7 @@ func GenSources(packages []rpmmd.PackageSpec, ostreeCommits []ostree.CommitSpec,
 		sources["org.osbuild.ostree"] = ostree
 	}
 
+	// collect inline data sources
 	if len(inlineData) > 0 {
 		ils := NewInlineSource()
 		for _, data := range inlineData {
@@ -101,6 +105,7 @@ func GenSources(packages []rpmmd.PackageSpec, ostreeCommits []ostree.CommitSpec,
 		sources["org.osbuild.inline"] = ils
 	}
 
+	// collect skopeo container sources
 	skopeo := NewSkopeoSource()
 	skopeoIndex := NewSkopeoIndexSource()
 	for _, c := range containers {
