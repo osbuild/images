@@ -36,3 +36,21 @@ func (o SystemdPresetStageOptions) validate() error {
 	}
 	return nil
 }
+
+// GenServicesPresetStage creates a new systemd preset stage for the given
+// list of services to enable and disable.
+func GenServicesPresetStage(enabled, disabled []string) *Stage {
+	if len(enabled) == 0 && len(disabled) == 0 {
+		return nil
+	}
+
+	presets := make([]Preset, 0, len(enabled)+len(disabled))
+	for _, name := range enabled {
+		presets = append(presets, Preset{Name: name, State: StateEnable})
+	}
+	for _, name := range disabled {
+		presets = append(presets, Preset{Name: name, State: StateDisable})
+	}
+
+	return NewSystemdPresetStage(&SystemdPresetStageOptions{Presets: presets})
+}
