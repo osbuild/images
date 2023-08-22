@@ -12,13 +12,13 @@ require (
 	github.com/Azure/go-autorest/autorest v0.11.29
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.12
 	github.com/BurntSushi/toml v1.3.2
-	github.com/aws/aws-sdk-go v1.44.327
+	github.com/aws/aws-sdk-go v1.44.328
 	github.com/containers/common v0.55.3
 	github.com/containers/image/v5 v5.27.0
 	github.com/gobwas/glob v0.2.3
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/go-cmp v0.5.9
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.3.1
 	github.com/gophercloud/gophercloud v1.5.0
 	github.com/hashicorp/go-retryablehttp v0.7.4
 	github.com/kolo/xmlrpc v0.0.0-20201022064351-38db28db192b
