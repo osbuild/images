@@ -247,6 +247,18 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 				"systemd.condition-first-boot=true",
 			},
 		}))
+
+		// We enable / disable services below using the systemd stage, but its effect
+		// may be overridden by systemd which may reset enabled / disabled services on
+		// firstboot (which happend on F37+). This behavior, if available, is triggered
+		// only when Ignition is used. To prevent this and to not have a special cases
+		// in the code based on distro version, we enable / disable services also by
+		// creating a preset file.
+		if len(p.EnabledServices) != 0 || len(p.DisabledServices) != 0 {
+			presetsStage := osbuild.GenServicesPresetStage(p.EnabledServices, p.DisabledServices)
+			presetsStage.MountOSTree(p.osName, commit.Ref, 0)
+			pipeline.AddStage(presetsStage)
+		}
 	}
 
 	// if no root password is set, lock the root account
