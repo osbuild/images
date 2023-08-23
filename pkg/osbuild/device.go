@@ -250,7 +250,7 @@ func genMountsDevicesFromPt(filename string, pt *disk.PartitionTable) (string, [
 			mount = NewExt4Mount(name, name, mountpoint)
 		case "btrfs":
 			if subvol, isSubvol := mnt.(*disk.BtrfsSubvolume); isSubvol {
-				mount = NewBtrfsMount(subvol.Name, name, mountpoint, subvol.Name, "")
+				mount = NewBtrfsMount(subvol.Name, name, mountpoint, subvol.Name, subvol.Compress)
 				fsRootMntName = subvol.Name
 			} else {
 				panic("mounting bare btrfs partition unsupported!")

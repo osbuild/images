@@ -43,7 +43,7 @@ func MakeFakeBtrfsPartitionTable(mntPoints ...string) *disk.PartitionTable {
 		if name == "/" {
 			name = "root"
 		}
-		subvolumes = append(subvolumes, disk.BtrfsSubvolume{Mountpoint: mntPoint, Name: name})
+		subvolumes = append(subvolumes, disk.BtrfsSubvolume{Mountpoint: mntPoint, Name: name, Compress: "zstd:1"})
 	}
 
 	return &disk.PartitionTable{

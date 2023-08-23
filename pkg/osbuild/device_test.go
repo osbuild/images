@@ -213,7 +213,7 @@ func TestMountsDeviceFromBrfs(t *testing.T) {
 	require.Nil(t, err)
 	assert.Equal(t, fsRootMntName, "root")
 	assert.Equal(t, mounts, []Mount{
-		{Name: "root", Type: "org.osbuild.btrfs", Source: "btrfs-6264", Target: "/", Options: btrfsMountOptions{Subvol: "root"}},
+		{Name: "root", Type: "org.osbuild.btrfs", Source: "btrfs-6264", Target: "/", Options: btrfsMountOptions{Subvol: "root", Compress: "zstd:1"}},
 		{Name: "boot", Type: "org.osbuild.ext4", Source: "boot", Target: "/boot"},
 	})
 	assert.Equal(t, devices, map[string]Device{
