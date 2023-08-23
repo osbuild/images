@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+
 	"github.com/osbuild/images/pkg/disk"
 )
 
@@ -122,6 +123,11 @@ func GenImageKernelOptions(pt *disk.PartitionTable) []string {
 		case *disk.LUKSContainer:
 			karg := "luks.uuid=" + ent.UUID
 			cmdline = append(cmdline, karg)
+		case *disk.BtrfsSubvolume:
+			if ent.Mountpoint == "/" {
+				karg := "rootflags=subvol=" + ent.Name
+				cmdline = append(cmdline, karg)
+			}
 		}
 		return nil
 	}

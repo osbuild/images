@@ -42,6 +42,12 @@ func TestGenImageKernelOptions(t *testing.T) {
 	assert.Subset(cmdline, []string{"luks.uuid=" + uuid})
 }
 
+func TestGenImageKernelOptionsBtrfs(t *testing.T) {
+	pt := testdisk.MakeFakeBtrfsPartitionTable("/")
+	actual := GenImageKernelOptions(pt)
+	assert.Equal(t, []string{"rootflags=subvol=root"}, actual)
+}
+
 func TestGenImagePrepareStages(t *testing.T) {
 	pt := testdisk.MakeFakeBtrfsPartitionTable("/")
 	filename := "image.raw"
