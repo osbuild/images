@@ -249,7 +249,12 @@ func genMountsDevicesFromPt(filename string, pt *disk.PartitionTable) (string, [
 		case "ext4":
 			mount = NewExt4Mount(name, name, mountpoint)
 		case "btrfs":
-			mount = NewBtrfsMount(name, name, mountpoint)
+			if subvol, isSubvol := mnt.(*disk.BtrfsSubvolume); isSubvol {
+				mount = NewBtrfsMount(subvol.Name, name, mountpoint, subvol.Name, "")
+				fsRootMntName = subvol.Name
+			} else {
+				panic("mounting bare btrfs partition unsupported!")
+			}
 		default:
 			return fmt.Errorf("unknown fs type " + t)
 		}

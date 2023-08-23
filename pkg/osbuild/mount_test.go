@@ -10,12 +10,13 @@ func TestNewMounts(t *testing.T) {
 	assert := assert.New(t)
 
 	{ // btrfs
-		actual := NewBtrfsMount("btrfs", "/dev/sda1", "/mnt/btrfs")
+		actual := NewBtrfsMount("btrfs", "/dev/sda1", "/mnt/btrfs", "", "")
 		expected := &Mount{
-			Name:   "btrfs",
-			Type:   "org.osbuild.btrfs",
-			Source: "/dev/sda1",
-			Target: "/mnt/btrfs",
+			Name:    "btrfs",
+			Type:    "org.osbuild.btrfs",
+			Source:  "/dev/sda1",
+			Target:  "/mnt/btrfs",
+			Options: btrfsMountOptions{},
 		}
 		assert.Equal(expected, actual)
 	}

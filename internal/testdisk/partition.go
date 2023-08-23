@@ -1,6 +1,7 @@
 package testdisk
 
 import (
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/disk"
 )
 
@@ -30,5 +31,40 @@ func MakeFakePartitionTable(mntPoints ...string) *disk.PartitionTable {
 	return &disk.PartitionTable{
 		Type:       "gpt",
 		Partitions: partitions,
+	}
+}
+
+// MakeFakeBtrfsPartitionTable is similar to MakeFakePartitionTable but
+// creates a btrfs-based partition table.
+func MakeFakeBtrfsPartitionTable(mntPoints ...string) *disk.PartitionTable {
+	var subvolumes []disk.BtrfsSubvolume
+	for _, mntPoint := range mntPoints {
+		name := mntPoint
+		if name == "/" {
+			name = "root"
+		}
+		subvolumes = append(subvolumes, disk.BtrfsSubvolume{Mountpoint: mntPoint, Name: name})
+	}
+
+	return &disk.PartitionTable{
+		Type: "gpt",
+		Size: 10 * common.GiB,
+		Partitions: []disk.Partition{
+			{
+				Size: 1 * common.GiB,
+				Payload: &disk.Filesystem{
+					Type:       "ext4",
+					Mountpoint: "/boot",
+				},
+			},
+			{
+				Start: 1 * common.GiB,
+				Size:  9 * common.GiB,
+				Payload: &disk.Btrfs{
+					UUID:       disk.RootPartitionUUID,
+					Subvolumes: subvolumes,
+				},
+			},
+		},
 	}
 }
