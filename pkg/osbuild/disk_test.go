@@ -1,6 +1,9 @@
 package osbuild
 
 import (
+	"fmt"
+	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/testdisk"
 	"math/rand"
 	"testing"
 
@@ -37,4 +40,107 @@ func TestGenImageKernelOptions(t *testing.T) {
 	cmdline := GenImageKernelOptions(pt)
 
 	assert.Subset(cmdline, []string{"luks.uuid=" + uuid})
+}
+
+func TestGenImagePrepareStages(t *testing.T) {
+	pt := testdisk.MakeFakeBtrfsPartitionTable("/")
+	filename := "image.raw"
+	actualStages := GenImagePrepareStages(pt, filename, PTSfdisk)
+
+	assert.Equal(t, []*Stage{
+		{
+			Type: "org.osbuild.truncate",
+			Options: &TruncateStageOptions{
+				Filename: filename,
+				Size:     fmt.Sprintf("%d", 10*common.GiB),
+			},
+		},
+		{
+			Type: "org.osbuild.sfdisk",
+			Options: &SfdiskStageOptions{
+				Label: "gpt",
+				Partitions: []SfdiskPartition{
+					{
+						Size: 1 * common.GiB / 512,
+					},
+					{
+						Start: 1 * common.GiB / 512,
+						Size:  9 * common.GiB / 512,
+					},
+				},
+			},
+			Devices: map[string]Device{
+				"device": {
+					Type: "org.osbuild.loopback",
+					Options: &LoopbackDeviceOptions{
+						Filename: filename,
+						Lock:     true,
+					},
+				},
+			},
+		},
+		{
+			Type: "org.osbuild.mkfs.ext4",
+			Devices: map[string]Device{
+				"device": {
+					Type: "org.osbuild.loopback",
+					Options: &LoopbackDeviceOptions{
+						Filename: filename,
+						Start:    0,
+						Size:     1 * common.GiB / 512,
+						Lock:     true,
+					},
+				},
+			},
+			Options: &MkfsExt4StageOptions{},
+		},
+		{
+			Type: "org.osbuild.mkfs.btrfs",
+			Devices: map[string]Device{
+				"device": {
+					Type: "org.osbuild.loopback",
+					Options: &LoopbackDeviceOptions{
+						Filename: filename,
+						Start:    1 * common.GiB / 512,
+						Size:     9 * common.GiB / 512,
+						Lock:     true,
+					},
+				},
+			},
+			Options: &MkfsBtrfsStageOptions{
+				UUID: "6264D520-3FB9-423F-8AB8-7A0A8E3D3562",
+			},
+		},
+		{
+			Type: "org.osbuild.btrfs.subvol",
+			Devices: map[string]Device{
+				"btrfs-6264": {
+					Type: "org.osbuild.loopback",
+					Options: &LoopbackDeviceOptions{
+						Filename: filename,
+						Start:    1 * common.GiB / 512,
+						Size:     9 * common.GiB / 512,
+						Lock:     false,
+					},
+				},
+			},
+			Mounts: []Mount{
+				{
+					Name:    "btrfs-6264",
+					Type:    "org.osbuild.btrfs",
+					Source:  "btrfs-6264",
+					Target:  "/",
+					Options: btrfsMountOptions{},
+				},
+			},
+			Options: &BtrfsSubVolOptions{
+				Subvolumes: []BtrfsSubVol{
+					{
+						Name: "/root",
+					},
+				},
+			},
+		},
+	}, actualStages)
+
 }
