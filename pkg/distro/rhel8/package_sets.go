@@ -78,6 +78,9 @@ func minimalrpmPackageSet(t *imageType) rpmmd.PackageSet {
 	return rpmmd.PackageSet{
 		Include: []string{
 			"@core",
+			"NetworkManager-wifi",
+			"iwl7260-firmware",
+			"iwl3160-firmware",
 		},
 	}
 }
