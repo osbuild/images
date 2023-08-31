@@ -184,7 +184,7 @@ var (
 			osPkgsKey: minimalrpmPackageSet,
 		},
 		rpmOstree:           false,
-		kernelOptions:       "ro no_timer_check console=ttyS0,115200n8 biosdevname=0 net.ifnames=0",
+		kernelOptions:       "ro",
 		bootable:            true,
 		defaultSize:         2 * common.GibiByte,
 		image:               diskImage,
