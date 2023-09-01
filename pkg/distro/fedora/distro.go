@@ -711,7 +711,9 @@ func newDistro(version int) distro.Distro {
 				FirmwarePackages: []string{
 					"arm-image-installer", // ??
 					"bcm283x-firmware",
-					"iwl7260-firmware",
+					"brcmfmac-firmware",
+					"iwlwifi-mvm-firmware",
+					"realtek-firmware",
 					"uboot-images-armv8", // ??
 				},
 			},
@@ -796,8 +798,10 @@ func newDistro(version int) distro.Distro {
 						"grub2-tools",
 						"grub2-tools-extra",
 						"grub2-tools-minimal",
+						"brcmfmac-firmware",
 						"iwlwifi-dvm-firmware",
 						"iwlwifi-mvm-firmware",
+						"realtek-firmware",
 						"microcode_ctl",
 						"syslinux",
 						"syslinux-nonlinux",
@@ -819,6 +823,10 @@ func newDistro(version int) distro.Distro {
 						"grub2-tools",
 						"grub2-tools-extra",
 						"grub2-tools-minimal",
+						"brcmfmac-firmware",
+						"iwlwifi-dvm-firmware",
+						"iwlwifi-mvm-firmware",
+						"realtek-firmware",
 						"uboot-images-armv8",
 					},
 				},
