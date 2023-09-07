@@ -54,14 +54,17 @@ func (sources *Sources) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func GenSources(packages []rpmmd.PackageSpec, ostreeCommits []ostree.CommitSpec, inlineData []string, containers []container.Spec) Sources {
+func GenSources(packages []rpmmd.PackageSpec, ostreeCommits []ostree.CommitSpec, inlineData []string, containers []container.Spec) (Sources, error) {
 	sources := Sources{}
 
 	// collect rpm package sources
 	if len(packages) > 0 {
 		curl := NewCurlSource()
 		for _, pkg := range packages {
-			curl.AddPackage(pkg)
+			err := curl.AddPackage(pkg)
+			if err != nil {
+				return nil, err
+			}
 		}
 		sources["org.osbuild.curl"] = curl
 	}
@@ -107,5 +110,5 @@ func GenSources(packages []rpmmd.PackageSpec, ostreeCommits []ostree.CommitSpec,
 		}
 	}
 
-	return sources
+	return sources, nil
 }
