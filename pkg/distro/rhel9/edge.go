@@ -5,6 +5,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/environment"
+	"github.com/osbuild/images/internal/fsnode"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/osbuild"
@@ -186,6 +187,9 @@ var (
 		defaultImageConfig: &distro.ImageConfig{
 			EnabledServices: minimalrawServices,
 			SystemdUnit:     systemdUnits,
+			// NOTE: temporary workaround for a bug in initial-setup that
+			// requires a kickstart file in the root directory.
+			Files: []*fsnode.File{initialSetupKickstart()},
 		},
 		rpmOstree:           false,
 		kernelOptions:       "ro",

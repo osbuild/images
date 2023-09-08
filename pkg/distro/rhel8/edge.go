@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/fsnode"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -150,6 +151,9 @@ func minimalRawImgType(rd distribution) imageType {
 		},
 		defaultImageConfig: &distro.ImageConfig{
 			EnabledServices: minimalrawServices(rd),
+			// NOTE: temporary workaround for a bug in initial-setup that
+			// requires a kickstart file in the root directory.
+			Files: []*fsnode.File{initialSetupKickstart()},
 		},
 		rpmOstree:           false,
 		kernelOptions:       "ro",
