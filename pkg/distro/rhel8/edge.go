@@ -148,6 +148,9 @@ func minimalRawImgType(rd distribution) imageType {
 		packageSets: map[string]packageSetFunc{
 			osPkgsKey: minimalrpmPackageSet,
 		},
+		defaultImageConfig: &distro.ImageConfig{
+			EnabledServices: minimalrawServices(rd),
+		},
 		rpmOstree:           false,
 		kernelOptions:       "ro",
 		bootable:            true,
@@ -400,4 +403,11 @@ func edgeServices(rd distribution) []string {
 	}
 
 	return edgeServices
+}
+
+func minimalrawServices(rd distribution) []string {
+	// Common Services
+	var minimalrawServices = []string{"NetworkManager.service", "firewalld.service", "sshd.service", "initial-setup.service"}
+
+	return minimalrawServices
 }
