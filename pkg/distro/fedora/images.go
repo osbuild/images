@@ -224,6 +224,9 @@ func osCustomizations(
 	osc.PwQuality = imageConfig.PwQuality
 	osc.WSLConfig = imageConfig.WSLConfig
 
+	osc.Files = append(osc.Files, imageConfig.Files...)
+	osc.Directories = append(osc.Directories, imageConfig.Directories...)
+
 	return osc
 }
 
