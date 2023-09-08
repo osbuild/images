@@ -64,6 +64,13 @@ var (
 		"dbus-parsec",
 	}
 
+	minimalRawServices = []string{
+		"NetworkManager.service",
+		"firewalld.service",
+		"initial-setup.service",
+		"sshd.service",
+	}
+
 	// Image Definitions
 	imageInstallerImgType = imageType{
 		name:        "image-installer",
@@ -348,6 +355,9 @@ var (
 		mimeType:    "application/xz",
 		packageSets: map[string]packageSetFunc{
 			osPkgsKey: minimalrpmPackageSet,
+		},
+		defaultImageConfig: &distro.ImageConfig{
+			EnabledServices: minimalRawServices,
 		},
 		rpmOstree:           false,
 		kernelOptions:       defaultKernelOptions,
@@ -709,12 +719,12 @@ func newDistro(version int) distro.Distro {
 		&platform.Aarch64{
 			BasePlatform: platform.BasePlatform{
 				FirmwarePackages: []string{
-					"arm-image-installer", // ??
+					"arm-image-installer",
 					"bcm283x-firmware",
 					"brcmfmac-firmware",
 					"iwlwifi-mvm-firmware",
 					"realtek-firmware",
-					"uboot-images-armv8", // ??
+					"uboot-images-armv8",
 				},
 			},
 			UEFIVendor: "fedora",
@@ -726,7 +736,7 @@ func newDistro(version int) distro.Distro {
 		liveInstallerImgType,
 	)
 	aarch64.addImageTypes(
-		&platform.Aarch64_IoT{
+		&platform.Aarch64_Fedora{
 			BasePlatform: platform.BasePlatform{
 				ImageFormat: platform.FORMAT_RAW,
 			},
@@ -776,10 +786,18 @@ func newDistro(version int) distro.Distro {
 		minimalrawImgType,
 	)
 	aarch64.addImageTypes(
-		&platform.Aarch64{
+		&platform.Aarch64_Fedora{
 			UEFIVendor: "fedora",
 			BasePlatform: platform.BasePlatform{
 				ImageFormat: platform.FORMAT_RAW,
+				FirmwarePackages: []string{
+					"arm-image-installer",
+					"bcm283x-firmware",
+					"uboot-images-armv8",
+				},
+			},
+			BootFiles: [][2]string{
+				{"/usr/share/uboot/rpi_arm64/u-boot.bin", "/boot/efi/rpi-u-boot.bin"},
 			},
 		},
 		minimalrawImgType,
