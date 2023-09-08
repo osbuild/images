@@ -31,8 +31,11 @@ const (
 	// blueprint package set name
 	blueprintPkgsKey = "blueprint"
 
-	//Kernel options for ami, qcow2, openstack, vhd and vmdk types
-	defaultKernelOptions = "ro no_timer_check console=ttyS0,115200n8 biosdevname=0 net.ifnames=0"
+	//Default kernel command line
+	defaultKernelOptions = "ro"
+
+	// Added kernel command line options for ami, qcow2, openstack, vhd and vmdk types
+	cloudKernelOptions = "ro no_timer_check console=ttyS0,115200n8 biosdevname=0 net.ifnames=0"
 )
 
 var (
@@ -237,7 +240,7 @@ var (
 				"cloud-init-local.service",
 			},
 		},
-		kernelOptions:       defaultKernelOptions,
+		kernelOptions:       cloudKernelOptions,
 		bootable:            true,
 		defaultSize:         5 * common.GibiByte,
 		image:               diskImage,
@@ -265,7 +268,7 @@ var (
 			osPkgsKey: vmdkCommonPackageSet,
 		},
 		defaultImageConfig:  vmdkDefaultImageConfig,
-		kernelOptions:       defaultKernelOptions,
+		kernelOptions:       cloudKernelOptions,
 		bootable:            true,
 		defaultSize:         2 * common.GibiByte,
 		image:               diskImage,
@@ -283,7 +286,7 @@ var (
 			osPkgsKey: vmdkCommonPackageSet,
 		},
 		defaultImageConfig:  vmdkDefaultImageConfig,
-		kernelOptions:       defaultKernelOptions,
+		kernelOptions:       cloudKernelOptions,
 		bootable:            true,
 		defaultSize:         2 * common.GibiByte,
 		image:               diskImage,
