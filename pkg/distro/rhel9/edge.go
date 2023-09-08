@@ -183,6 +183,10 @@ var (
 		packageSets: map[string]packageSetFunc{
 			osPkgsKey: minimalrpmPackageSet,
 		},
+		defaultImageConfig: &distro.ImageConfig{
+			EnabledServices: minimalrawServices,
+			SystemdUnit:     systemdUnits,
+		},
 		rpmOstree:           false,
 		kernelOptions:       "ro",
 		bootable:            true,
@@ -198,6 +202,9 @@ var (
 	edgeServices = []string{
 		// TODO(runcom): move fdo-client-linuxapp.service to presets?
 		"NetworkManager.service", "firewalld.service", "sshd.service", "fdo-client-linuxapp.service",
+	}
+	minimalrawServices = []string{
+		"NetworkManager.service", "firewalld.service", "sshd.service", "initial-setup.service",
 	}
 	//dropin to disable grub-boot-success.timer if greenboot present
 	systemdUnits = []*osbuild.SystemdUnitStageOptions{
