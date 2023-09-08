@@ -386,7 +386,7 @@ var (
 		buildPipelines:      []string{"build"},
 		payloadPipelines:    []string{"os", "image", "xz"},
 		exports:             []string{"xz"},
-		basePartitionTables: defaultBasePartitionTables,
+		basePartitionTables: minimalrawPartitionTables,
 	}
 )
 
