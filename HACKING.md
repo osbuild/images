@@ -57,7 +57,7 @@ a new image type, might be:
     - If the change depends on a customization, it might be more useful to
       generate multiple manifests with different configuration options set and
       inspect the differences between them.
-5. Inspect the differences between manifests generated in steps 0 and 3.
+5. Inspect the differences between manifests generated in steps 1 and 4.
 6. Generate manifest with all content enabled for the relevant image types.
 7. Build at least one of the manifests using `osuild` and inspect the output
    (boot the image or mount it to look for the desired changes).
