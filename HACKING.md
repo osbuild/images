@@ -46,17 +46,17 @@ a new image type, might be:
 1. Generate the manifests for the image types that you will be working on.
 2. Make changes in an existing image definition or add a new image type.
 3. Add appropriate configuration changes:
-  - If a new image type is added, add it to the [config
-    map](test/config-map.json) under an appropriate configuration file or write
-    a new one.
-  - If an existing image type is being modified, and the change depends on an
-    image customization, make sure the modification is covered by an existing
-    [test config](test/configs).
+    - If a new image type is added, add it to the [config
+      map](test/config-map.json) under an appropriate configuration file or
+      write a new one.
+    - If an existing image type is being modified, and the change depends on an
+      image customization, make sure the modification is covered by an existing
+      [test config](test/configs).
 4. Generate the relevant manifests without content (`-packages=false
    -containers=false -commits=false`).
-  - If the change depends on a customization, it might be more useful to
-    generate multiple manifests with different configuration options set and
-    inspect the differences between them.
+    - If the change depends on a customization, it might be more useful to
+      generate multiple manifests with different configuration options set and
+      inspect the differences between them.
 5. Inspect the differences between manifests generated in steps 0 and 3.
 6. Generate manifest with all content enabled for the relevant image types.
 7. Build at least one of the manifests using `osuild` and inspect the output
