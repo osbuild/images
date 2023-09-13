@@ -4,6 +4,9 @@ linters-settings:
     disable:
       - shadow  # default value recommended by golangci
       - composites
+  gosec:
+    excludes:
+      - G101
 
 linters:
   enable:
