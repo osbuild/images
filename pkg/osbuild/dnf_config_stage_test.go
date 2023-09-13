@@ -123,7 +123,8 @@ func TestDNFConfigValidate(t *testing.T) {
 			false,
 		},
 	}
-	for _, test := range tests {
+	for idx := range tests {
+		test := tests[idx]
 		if test.valid {
 			require.NotPanics(t, func() { NewDNFConfigStage(&test.options) })
 		} else {

@@ -64,7 +64,8 @@ func TestModprobeStageOptionsValidate(t *testing.T) {
 			err: false,
 		},
 	}
-	for idx, tt := range tests {
+	for idx := range tests {
+		tt := tests[idx]
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.err {
 				assert.Errorf(t, tt.options.validate(), "%q didn't return an error [idx: %d]", tt.name, idx)
