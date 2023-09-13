@@ -1,9 +1,10 @@
+---
 linters-settings:
   govet:
     disable:
-      - shadow # default value recommended by golangci
+      - shadow  # default value recommended by golangci
       - composites
-  
+
 linters:
   enable:
     - gosec
@@ -17,5 +18,6 @@ issues:
   # Maximum issues count per one linter. Set to 0 to disable. Default is 50.
   max-issues-per-linter: 0
 
-  # Maximum count of issues with the same text. Set to 0 to disable. Default is 3.
+  # Maximum count of issues with the same text. Set to 0 to disable. Default
+  # is 3.
   max-same-issues: 0
