@@ -44,7 +44,8 @@ func TestSystemdJournaldStage_ValidateInvalid(t *testing.T) {
 			},
 		},
 	}
-	for idx, te := range tests {
+	for idx := range tests {
+		te := tests[idx]
 		t.Run(te.name, func(t *testing.T) {
 			assert.Errorf(t, te.options.validate(), "%q didn't return an error [idx: %d]", te.name, idx)
 			assert.Panics(t, func() { NewSystemdJournaldStage(&te.options) })
