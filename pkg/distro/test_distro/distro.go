@@ -1,14 +1,11 @@
 package test_distro
 
 import (
-	"crypto/sha256"
 	"errors"
 	"fmt"
 	"sort"
 
-	dnfjson_mock "github.com/osbuild/images/internal/mocks/dnfjson"
 	"github.com/osbuild/images/pkg/blueprint"
-	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distroregistry"
 	"github.com/osbuild/images/pkg/manifest"
@@ -391,48 +388,4 @@ func NewRegistry() *distroregistry.Registry {
 	// Override the host's architecture name with the test's name
 	registry.SetHostArchName(TestArchName)
 	return registry
-}
-
-// New2 returns new instance of TestDistro named "test-distro-2".
-func New2() *TestDistro {
-	return newTestDistro(TestDistro2Name, TestDistro2ModulePlatformID, TestDistro2Releasever)
-}
-
-// ResolveContent transforms content source specs into resolved specs for serialization.
-// For packages, it uses the dnfjson_mock.BaseDeps() every time, but retains
-// the map keys from the input.
-// For ostree commits it hashes the URL+Ref to create a checksum.
-func ResolveContent(pkgs map[string][]rpmmd.PackageSet, containers map[string][]container.SourceSpec, commits map[string][]ostree.SourceSpec) (map[string][]rpmmd.PackageSpec, map[string][]container.Spec, map[string][]ostree.CommitSpec) {
-
-	pkgSpecs := make(map[string][]rpmmd.PackageSpec, len(pkgs))
-	for name := range pkgs {
-		pkgSpecs[name] = dnfjson_mock.BaseDeps()
-	}
-
-	containerSpecs := make(map[string][]container.Spec, len(containers))
-	for name := range containers {
-		containerSpecs[name] = make([]container.Spec, len(containers[name]))
-		for idx := range containers[name] {
-			containerSpecs[name][idx] = container.Spec{
-				Source:    containers[name][idx].Source,
-				TLSVerify: containers[name][idx].TLSVerify,
-				LocalName: containers[name][idx].Name,
-			}
-		}
-	}
-
-	commitSpecs := make(map[string][]ostree.CommitSpec, len(commits))
-	for name := range commits {
-		commitSpecs[name] = make([]ostree.CommitSpec, len(commits[name]))
-		for idx := range commits[name] {
-			commitSpecs[name][idx] = ostree.CommitSpec{
-				Ref:      commits[name][idx].Ref,
-				URL:      commits[name][idx].URL,
-				Checksum: fmt.Sprintf("%x", sha256.Sum256([]byte(commits[name][idx].URL+commits[name][idx].Ref))),
-			}
-			fmt.Printf("Test distro spec: %+v\n", commitSpecs[name][idx])
-		}
-	}
-
-	return pkgSpecs, containerSpecs, commitSpecs
 }
