@@ -294,13 +294,13 @@ func (t *TestImageType) Manifest(b *blueprint.Blueprint, options distro.ImageOpt
 	return m, nil, nil
 }
 
-// newTestDistro returns a new instance of TestDistro with the
+// NewTestDistro returns a new instance of TestDistro with the
 // given name and modulePlatformID.
 //
 // It contains two architectures "test_arch" and "test_arch2".
 // "test_arch" contains one image type "test_type".
 // "test_arch2" contains two image types "test_type" and "test_type2".
-func newTestDistro(name, modulePlatformID, releasever string) *TestDistro {
+func NewTestDistro(name, modulePlatformID, releasever string) *TestDistro {
 	td := TestDistro{
 		name:             name,
 		releasever:       releasever,
@@ -375,7 +375,7 @@ func newTestDistro(name, modulePlatformID, releasever string) *TestDistro {
 
 // New returns new instance of TestDistro named "test-distro".
 func New() *TestDistro {
-	return newTestDistro(TestDistroName, TestDistroModulePlatformID, TestDistroReleasever)
+	return NewTestDistro(TestDistroName, TestDistroModulePlatformID, TestDistroReleasever)
 }
 
 func NewRegistry() *distroregistry.Registry {
