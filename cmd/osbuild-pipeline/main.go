@@ -140,14 +140,15 @@ func main() {
 	}
 
 	repos := make([]rpmmd.RepoConfig, len(composeRequest.Repositories))
-	for i, repo := range composeRequest.Repositories {
+	for idx := range composeRequest.Repositories {
+		repo := composeRequest.Repositories[idx]
 		repoName := repo.Name
 		if repoName == "" {
-			repoName = fmt.Sprintf("repo-%d", i)
+			repoName = fmt.Sprintf("repo-%d", idx)
 		}
 		repoId := repo.Id
 		if repoId == "" {
-			repoId = fmt.Sprintf("repo-%d", i)
+			repoId = fmt.Sprintf("repo-%d", idx)
 		}
 		var urls []string
 		if repo.BaseURL != "" {
@@ -158,7 +159,7 @@ func main() {
 			keys = []string{repo.GPGKey}
 		}
 
-		repos[i] = rpmmd.RepoConfig{
+		repos[idx] = rpmmd.RepoConfig{
 			Id:           repoId,
 			Name:         repoName,
 			BaseURLs:     urls,
