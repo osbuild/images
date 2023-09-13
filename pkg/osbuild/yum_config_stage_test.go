@@ -103,7 +103,8 @@ func TestYumConfigValidate(t *testing.T) {
 			true,
 		},
 	}
-	for _, test := range tests {
+	for idx := range tests {
+		test := tests[idx]
 		if test.valid {
 			require.NotPanics(t, func() { NewYumConfigStage(&test.options) })
 		} else {
