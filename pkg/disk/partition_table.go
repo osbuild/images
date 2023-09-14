@@ -632,57 +632,69 @@ func (pt *PartitionTable) ensureLVM() error {
 	return nil
 }
 
-func (pt *PartitionTable) GetBuildPackages() []string {
-	packages := []string{}
+type partitionTableFeatures struct {
+	LVM   bool
+	Btrfs bool
+	XFS   bool
+	FAT   bool
+	EXT4  bool
+	LUKS  bool
+}
 
-	hasLVM := false
-	hasBtrfs := false
-	hasXFS := false
-	hasFAT := false
-	hasEXT4 := false
-	hasLUKS := false
+// features examines all of the PartitionTable entities
+// and returns a struct with flags set for each feature used
+func (pt *PartitionTable) features() partitionTableFeatures {
+	var ptFeatures partitionTableFeatures
 
 	introspectPT := func(e Entity, path []Entity) error {
 		switch ent := e.(type) {
 		case *LVMLogicalVolume:
-			hasLVM = true
+			ptFeatures.LVM = true
 		case *Btrfs:
-			hasBtrfs = true
+			ptFeatures.Btrfs = true
 		case *Filesystem:
 			switch ent.GetFSType() {
 			case "vfat":
-				hasFAT = true
+				ptFeatures.FAT = true
 			case "btrfs":
-				hasBtrfs = true
+				ptFeatures.Btrfs = true
 			case "xfs":
-				hasXFS = true
+				ptFeatures.XFS = true
 			case "ext4":
-				hasEXT4 = true
+				ptFeatures.EXT4 = true
 			}
 		case *LUKSContainer:
-			hasLUKS = true
+			ptFeatures.LUKS = true
 		}
 		return nil
 	}
 	_ = pt.ForEachEntity(introspectPT)
 
-	// TODO: LUKS
-	if hasLVM {
+	return ptFeatures
+}
+
+// GetBuildPackages returns an array of packages needed to support the features used in the PartitionTable.
+func (pt *PartitionTable) GetBuildPackages() []string {
+	packages := []string{}
+
+	features := pt.features()
+
+	if features.LVM {
 		packages = append(packages, "lvm2")
 	}
-	if hasBtrfs {
+	if features.Btrfs {
 		packages = append(packages, "btrfs-progs")
 	}
-	if hasXFS {
+	if features.XFS {
 		packages = append(packages, "xfsprogs")
 	}
-	if hasFAT {
+	if features.FAT {
 		packages = append(packages, "dosfstools")
 	}
-	if hasEXT4 {
+	if features.EXT4 {
 		packages = append(packages, "e2fsprogs")
 	}
-	if hasLUKS {
+	if features.LUKS {
 		packages = append(packages,
 			"clevis",
 			"clevis-luks",
