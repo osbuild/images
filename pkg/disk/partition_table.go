@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/google/uuid"
+
 	"github.com/osbuild/images/pkg/blueprint"
 )
 
@@ -20,14 +21,46 @@ type PartitionTable struct {
 	StartOffset  uint64 // Starting offset of the first partition in the table (Mb)
 }
 
-func NewPartitionTable(basePT *PartitionTable, mountpoints []blueprint.FilesystemCustomization, imageSize uint64, lvmify bool, requiredSizes map[string]uint64, rng *rand.Rand) (*PartitionTable, error) {
+type PartitioningMode string
+
+const (
+	// AutoLVMPartitioningMode creates a LVM layout if the filesystem
+	// contains a mountpoint that's not defined in the base partition table
+	// of the specified image type. In the other case, a raw layout is used.
+	AutoLVMPartitioningMode PartitioningMode = "auto-lvm"
+
+	// LVMPartitioningMode always creates an LVM layout.
+	LVMPartitioningMode PartitioningMode = "lvm"
+
+	// RawPartitioningMode always creates a raw layout.
+	RawPartitioningMode PartitioningMode = "raw"
+
+	// DefaultPartitioningMode is AutoLVMPartitioningMode and is the empty state
+	DefaultPartitioningMode PartitioningMode = ""
+)
+
+func NewPartitionTable(basePT *PartitionTable, mountpoints []blueprint.FilesystemCustomization, imageSize uint64, mode PartitioningMode, requiredSizes map[string]uint64, rng *rand.Rand) (*PartitionTable, error) {
 	newPT := basePT.Clone().(*PartitionTable)
+
+	if basePT.features().LVM && mode == RawPartitioningMode {
+		return nil, fmt.Errorf("raw partitioning mode set for a base partition table with LVM, this is unsupported")
+	}
 
 	// first pass: enlarge existing mountpoints and collect new ones
 	newMountpoints, _ := newPT.applyCustomization(mountpoints, false)
 
-	// if there is any new mountpoint and lvmify is enabled, ensure we have LVM layout
-	if lvmify && len(newMountpoints) > 0 {
+	var ensureLVM bool
+	switch mode {
+	case LVMPartitioningMode:
+		ensureLVM = true
+	case RawPartitioningMode:
+		ensureLVM = false
+	case DefaultPartitioningMode, AutoLVMPartitioningMode:
+		ensureLVM = len(newMountpoints) > 0
+	default:
+		return nil, fmt.Errorf("unsupported partitioning mode %q", mode)
+	}
+	if ensureLVM {
 		err := newPT.ensureLVM()
 		if err != nil {
 			return nil, err
@@ -626,7 +659,7 @@ func (pt *PartitionTable) ensureLVM() error {
 		}
 
 	} else {
-		panic("unsupported parent for LVM")
+		return fmt.Errorf("Unsupported parent for LVM")
 	}
 
 	return nil

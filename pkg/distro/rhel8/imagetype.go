@@ -156,9 +156,13 @@ func (t *imageType) getPartitionTable(
 
 	imageSize := t.Size(options.Size)
 
-	lvmify := !t.rpmOstree
+	partitioningMode := disk.AutoLVMPartitioningMode
+	if t.rpmOstree {
+		// Edge supports only raw, force it.
+		partitioningMode = disk.RawPartitioningMode
+	}
 
-	return disk.NewPartitionTable(&basePartitionTable, mountpoints, imageSize, lvmify, nil, rng)
+	return disk.NewPartitionTable(&basePartitionTable, mountpoints, imageSize, partitioningMode, nil, rng)
 }
 
 func (t *imageType) getDefaultImageConfig() *distro.ImageConfig {
