@@ -12,7 +12,7 @@ require (
 	github.com/Azure/go-autorest/autorest v0.11.29
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.12
 	github.com/BurntSushi/toml v1.3.2
-	github.com/aws/aws-sdk-go v1.45.9
+	github.com/aws/aws-sdk-go v1.45.10
 	github.com/containers/common v0.56.0
 	github.com/containers/image/v5 v5.28.0
 	github.com/gobwas/glob v0.2.3
@@ -23,7 +23,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.4
 	github.com/kolo/xmlrpc v0.0.0-20201022064351-38db28db192b
 	github.com/opencontainers/go-digest v1.0.0
-	github.com/opencontainers/image-spec v1.1.0-rc4
+	github.com/opencontainers/image-spec v1.1.0-rc5
 	github.com/oracle/oci-go-sdk/v54 v54.0.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
@@ -33,7 +33,7 @@ require (
 	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63
 	golang.org/x/oauth2 v0.12.0
 	golang.org/x/sys v0.12.0
-	google.golang.org/api v0.140.0
+	google.golang.org/api v0.141.0
 	gopkg.in/ini.v1 v1.67.0
 )
 
