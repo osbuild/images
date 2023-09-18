@@ -54,7 +54,7 @@ The config generator:
 - Downloads the test build cache.
 - Filters out any manifest with an ID that exists in the build cache.
   - It also filters out any manifest that depends on an ostree commit because these can't be built without an ostree repository to pull from.
-- For each remaining manifest, creates a build job which runs the `./test/cases/build-image.sh` script for a given distro, image type, and config file.
+- For each remaining manifest, creates a build job which runs the `./test/scripts/build-image.sh` script for a given distro, image type, and config file.
   - For ostree container image types (`iot-container` and `edge-container`), it also adds a call to the `./tools/ci/push-container.sh` script to push the container to the GitLab registry. The name and tag for each container is `<build name>:<manifest ID>` (see [Definitions](#definitions) below).
   - If no builds are needed, it generates a `NullConfig`, which is a simple shell runner that exits successfully. This is required because the child pipeline config cannot be empty.
 
@@ -111,7 +111,7 @@ The config generator:
   - Note that this manifest generation step uses the `-skip-noconfig` flag, which means that any image type not defined in the map is skipped.
 - Downloads the test build cache.
 - Filters out any manifest with an ID that exists in the build cache.
-- For each remaining manifest, creates a build job which runs the ostree container that was used to generate the manifest and runs `./test/cases/build-image.sh` script for a given distro, image type, and config file.
+- For each remaining manifest, creates a build job which runs the ostree container that was used to generate the manifest and runs `./test/scripts/build-image.sh` script for a given distro, image type, and config file.
   - If no builds are needed, it generates a `NullConfig`, which is a simple shell runner that exits successfully. This is required because the child pipeline config cannot be empty.
 
 
