@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # NOTE: This script is executed differently in .gitlab-ci.yml so use a relative path
-source ./test/cases/shared_lib.sh
+source ./test/scripts/shared_lib.sh
 
 function revert_to_head {
    git checkout "$head"

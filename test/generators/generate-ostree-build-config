@@ -15,7 +15,7 @@ build/{distro}/{arch}/{image_type}/{config_name}:
       osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux
       s3cmd podman
     - {start_container}
-    - ./test/cases/build-image.sh "{distro}" "{image_type}" "{config}"
+    - ./test/scripts/build-image.sh "{distro}" "{image_type}" "{config}"
   extends: .terraform
   variables:
     RUNNER: aws/fedora-38-{arch}
