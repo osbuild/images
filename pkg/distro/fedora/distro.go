@@ -276,7 +276,7 @@ var (
 				"loadmodules.service",
 			},
 		},
-		kernelOptions:       defaultKernelOptions,
+		kernelOptions:       cloudKernelOptions,
 		bootable:            true,
 		defaultSize:         2 * common.GibiByte,
 		image:               diskImage,
