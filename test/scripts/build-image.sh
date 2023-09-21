@@ -48,7 +48,8 @@ cat << EOF > "${builddir}/info.json"
 }
 EOF
 
-s3url="s3://image-builder-ci-artifacts/images/builds/${distro}/${arch}/${manifest_id}/"
+AWS_BUCKET="${AWS_BUCKET:-image-builder-ci-artifacts}"
+s3url="s3://${AWS_BUCKET}/images/builds/${distro}/${arch}/${manifest_id}/"
 
 echo "⬆️ Uploading ${builddir} to ${s3url}"
 AWS_SECRET_ACCESS_KEY="$V2_AWS_SECRET_ACCESS_KEY" \

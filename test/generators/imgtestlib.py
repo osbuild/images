@@ -9,7 +9,7 @@ TEST_CACHE_ROOT = os.path.expanduser("~/.cache/osbuild-images")
 CONFIGS_PATH = "./test/configs"
 CONFIG_MAP = "./test/config-map.json"
 
-S3_BUCKET = "s3://image-builder-ci-artifacts"
+S3_BUCKET = "s3://{bucket}".format(bucket=os.environ.get("AWS_BUCKET", "image-builder-ci-artifacts"))
 S3_PREFIX = "images/builds"
 
 REGISTRY = "registry.gitlab.com/redhat/services/products/image-builder/ci/images"
