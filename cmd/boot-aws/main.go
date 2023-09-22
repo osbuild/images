@@ -4,26 +4,23 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"os"
+	"os/exec"
+	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 
 	"github.com/osbuild/images/internal/cloud/awscloud"
 )
 
-func check(err error) {
-	if err != nil {
-		fmt.Fprintf(os.Stderr, err.Error())
-		os.Exit(1)
-	}
-}
-
 // createUserData creates cloud-init's user-data that contains user redhat with
 // the specified public key
 func createUserData(username, publicKeyFile string) (string, error) {
 	publicKey, err := os.ReadFile(publicKeyFile)
 	if err != nil {
-		return "", fmt.Errorf("cannot read the public key: %v", err)
+		return "", err
 	}
 
 	userData := fmt.Sprintf(`#cloud-config
@@ -35,7 +32,7 @@ ssh_authorized_keys:
 	return userData, nil
 }
 
-func main() {
+func uploadAndBoot() int {
 	var accessKeyID string
 	var secretAccessKey string
 	var sessionToken string
@@ -65,11 +62,23 @@ func main() {
 	flag.StringVar(&sshKey, "ssh-key", "", "path to user's public ssh key")
 	flag.Parse()
 
+	userData, err := createUserData(username, sshKey)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "createUserData(): %s\n", err.Error())
+		return 1
+	}
+
 	a, err := awscloud.New(region, accessKeyID, secretAccessKey, sessionToken)
-	check(err)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "awscloud.New() failed: %s\n", err.Error())
+		return 1
+	}
 
 	uploadOutput, err := a.Upload(filename, bucketName, keyName)
-	check(err)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Upload() failed: %s\n", err.Error())
+		return 1
+	}
 
 	fmt.Printf("file uploaded to %s\n", aws.StringValue(&uploadOutput.Location))
 
@@ -83,42 +92,157 @@ func main() {
 		bootModePtr = &bootMode
 	}
 
-	ami, _, err := a.Register(imageName, bucketName, keyName, share, arch, bootModePtr)
-	check(err)
+	ami, snapshot, err := a.Register(imageName, bucketName, keyName, share, arch, bootModePtr)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Register(): %s\n", err.Error())
+		return 1
+	}
 
 	fmt.Printf("AMI registered: %s\n", aws.StringValue(ami))
 
-	// TODO: defer deregister AMI
-
-	userData, err := createUserData(username, sshKey)
-	check(err)
+	defer func() {
+		fmt.Printf("deleting EC2 image %s and snapshot %s\n", *ami, *snapshot)
+		if err := a.DeleteEC2Image(ami, snapshot); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to deregister image: %v\n", err)
+		}
+	}()
 
 	securityGroup, err := a.CreateSecurityGroupEC2("image-tests", "image-tests-security-group")
-	check(err)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "CreateSecurityGroup(): %s\n", err.Error())
+		return 1
+	}
 
 	defer func() {
+		fmt.Printf("deleting security group %s\n", *securityGroup.GroupId)
 		if _, err := a.DeleteSecurityGroupEC2(securityGroup.GroupId); err != nil {
 			fmt.Fprintf(os.Stderr, "cannot delete the security group: %v\n", err)
 		}
 	}()
 
 	_, err = a.AuthorizeSecurityGroupIngressEC2(securityGroup.GroupId, "0.0.0.0/0", 22, 22, "tcp")
-	check(err)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "AuthorizeSecurityGroupIngressEC2(): %s\n", err.Error())
+		return 1
+	}
 
 	runResult, err := a.RunInstanceEC2(ami, securityGroup.GroupId, userData, "t3.micro")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "RunInstanceEC2(): %s\n", err.Error())
+		return 1
+	}
 	instanceID := runResult.Instances[0].InstanceId
 
-	ip, err := a.GetInstanceAddress(instanceID)
-	check(err)
-
-	fmt.Printf("Instance %s is running and has IP address %s\n", *instanceID, ip)
-
 	defer func() {
+		fmt.Printf("terminating instance %s\n", *instanceID)
 		if _, err := a.TerminateInstanceEC2(instanceID); err != nil {
 			fmt.Fprintf(os.Stderr, "failed to terminate instance: %v\n", err)
 		}
 	}()
 
-	fmt.Printf("Press RETURN to terminate instance")
-	bufio.NewReader(os.Stdin).ReadBytes('\n')
+	ip, err := a.GetInstanceAddress(instanceID)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "GetInstanceAddress(): %s\n", err.Error())
+		return 1
+	}
+	fmt.Printf("Instance %s is running and has IP address %s\n", *instanceID, ip)
+
+	hostsfile := "/tmp/test_hosts"
+	if err := keyscan(ip, hostsfile); err != nil {
+		fmt.Fprintf(os.Stderr, "keyscan(): %s\n", err.Error())
+		fmt.Printf("Press RETURN to clean up")
+		bufio.NewReader(os.Stdin).ReadBytes('\n')
+		return 1
+	}
+
+	key := strings.TrimSuffix(sshKey, ".pub")
+	if err := sshCheck(ip, username, key, hostsfile); err != nil {
+		fmt.Fprintf(os.Stderr, "sshCheck(): %s\n", err.Error())
+		return 1
+	}
+
+	return 0
+}
+
+func run(c string, args ...string) ([]byte, []byte, error) {
+	fmt.Printf("> %s %s\n", c, strings.Join(args, " "))
+	cmd := exec.Command(c, args...)
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if err := cmd.Start(); err != nil {
+		return nil, nil, err
+	}
+
+	cmdout, err := io.ReadAll(stdout)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	cmderr, err := io.ReadAll(stderr)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	err = cmd.Wait()
+	if len(cmdout) > 0 {
+		fmt.Println(string(cmdout))
+	}
+	if len(cmderr) > 0 {
+		fmt.Fprintf(os.Stderr, string(cmderr)+"\n")
+	}
+	return cmdout, cmderr, err
+}
+
+func sshCheck(ip, user, key, hostsfile string) error {
+	_, _, err := run("ssh", "-i", key, "-o", fmt.Sprintf("UserKnownHostsFile=%s", hostsfile), "-l", user, ip, "rpm", "-qa")
+	if err != nil {
+		return err
+	}
+
+	_, _, err = run("ssh", "-i", key, "-o", fmt.Sprintf("UserKnownHostsFile=%s", hostsfile), "-l", user, ip, "cat", "/etc/os-release")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func keyscan(ip, filepath string) error {
+	var keys []byte
+	maxTries := 10
+	var keyscanErr error
+	for try := 0; try < maxTries; try++ {
+		keys, _, keyscanErr = run("ssh-keyscan", ip)
+		if keyscanErr == nil {
+			break
+		}
+		time.Sleep(10 * time.Second)
+	}
+	if keyscanErr != nil {
+		return keyscanErr
+	}
+
+	fmt.Printf("Creating known hosts file: %s\n", filepath)
+	hostsFile, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Writing to known hosts file: %s\n", filepath)
+	if _, err := hostsFile.Write(keys); err != nil {
+		return err
+	}
+	return nil
+}
+
+func main() {
+	os.Exit(uploadAndBoot())
 }
