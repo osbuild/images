@@ -47,6 +47,9 @@ func main() {
 	var shareWith string
 	var arch string
 	var bootMode string
+	var username string
+	var sshKey string
+
 	flag.StringVar(&accessKeyID, "access-key-id", "", "access key ID")
 	flag.StringVar(&secretAccessKey, "secret-access-key", "", "secret access key")
 	flag.StringVar(&sessionToken, "session-token", "", "session token")
@@ -58,6 +61,8 @@ func main() {
 	flag.StringVar(&shareWith, "account-id", "", "account id to share image with")
 	flag.StringVar(&arch, "arch", "", "arch (x86_64 or aarch64)")
 	flag.StringVar(&bootMode, "boot-mode", "", "boot mode (legacy-bios, uefi, uefi-preferred)")
+	flag.StringVar(&username, "username", "", "name of the user to create on the system")
+	flag.StringVar(&sshKey, "ssh-key", "", "path to user's public ssh key")
 	flag.Parse()
 
 	a, err := awscloud.New(region, accessKeyID, secretAccessKey, sessionToken)
@@ -85,8 +90,7 @@ func main() {
 
 	// TODO: defer deregister AMI
 
-	// TODO: read from flags
-	userData, err := createUserData("user", "/home/user/.ssh/id_rsa.pub")
+	userData, err := createUserData(username, sshKey)
 	check(err)
 
 	securityGroup, err := a.CreateSecurityGroupEC2("image-tests", "image-tests-security-group")
