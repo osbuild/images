@@ -1,5 +1,3 @@
-//go:build integration
-
 package main
 
 import (
@@ -29,8 +27,8 @@ import (
 	"github.com/osbuild/images/internal/boot/openstacktest"
 	"github.com/osbuild/images/internal/boot/vmwaretest"
 	"github.com/osbuild/images/internal/common"
-	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/internal/test"
+	"github.com/osbuild/images/pkg/platform"
 )
 
 type testcaseStruct struct {
