@@ -2,6 +2,7 @@ package awscloud
 
 import (
 	"crypto/tls"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"os"
@@ -619,4 +620,84 @@ func (a *AWS) Regions() ([]string, error) {
 		result = append(result, aws.StringValue(r.RegionName))
 	}
 	return result, nil
+}
+
+func (a *AWS) CreateSecurityGroupEC2(name, description string) (*ec2.CreateSecurityGroupOutput, error) {
+	return a.ec2.CreateSecurityGroup(&ec2.CreateSecurityGroupInput{
+		GroupName:   aws.String(name),
+		Description: aws.String(description),
+	})
+}
+
+func (a *AWS) DeleteSecurityGroupEC2(groupID *string) (*ec2.DeleteSecurityGroupOutput, error) {
+	return a.ec2.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
+		GroupId: groupID,
+	})
+}
+
+func (a *AWS) AuthorizeSecurityGroupIngressEC2(groupID *string, address string, from, to int64, proto string) (*ec2.AuthorizeSecurityGroupIngressOutput, error) {
+	return a.ec2.AuthorizeSecurityGroupIngress(&ec2.AuthorizeSecurityGroupIngressInput{
+		CidrIp:     aws.String(address),
+		GroupId:    groupID,
+		FromPort:   aws.Int64(from),
+		ToPort:     aws.Int64(to),
+		IpProtocol: aws.String(proto),
+	})
+}
+
+func (a *AWS) RunInstanceEC2(imageID, secGroupID *string, userData, instanceType string) (*ec2.Reservation, error) {
+	reservation, err := a.ec2.RunInstances(&ec2.RunInstancesInput{
+		MaxCount:         aws.Int64(1),
+		MinCount:         aws.Int64(1),
+		ImageId:          imageID,
+		InstanceType:     aws.String(instanceType),
+		SecurityGroupIds: []*string{secGroupID},
+		UserData:         aws.String(encodeBase64(userData)),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if err := a.ec2.WaitUntilInstanceRunning(describeInstanceInput(reservation.Instances[0].InstanceId)); err != nil {
+		return nil, err
+	}
+	return reservation, nil
+}
+
+func (a *AWS) TerminateInstanceEC2(instanceID *string) (*ec2.TerminateInstancesOutput, error) {
+	// We need to terminate the instance now and wait until the termination is done.
+	// Otherwise, it wouldn't be possible to delete the image.
+	res, err := a.ec2.TerminateInstances(&ec2.TerminateInstancesInput{
+		InstanceIds: []*string{
+			instanceID,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if err := a.ec2.WaitUntilInstanceTerminated(describeInstanceInput(instanceID)); err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (a *AWS) GetInstanceAddress(instanceID *string) (string, error) {
+	desc, err := a.ec2.DescribeInstances(describeInstanceInput(instanceID))
+	if err != nil {
+		return "", err
+	}
+
+	return *desc.Reservations[0].Instances[0].PublicIpAddress, nil
+}
+
+// encodeBase64 encodes string to base64-encoded string
+func encodeBase64(input string) string {
+	return base64.StdEncoding.EncodeToString([]byte(input))
+}
+
+func describeInstanceInput(id *string) *ec2.DescribeInstancesInput {
+	return &ec2.DescribeInstancesInput{
+		InstanceIds: []*string{id},
+	}
 }
