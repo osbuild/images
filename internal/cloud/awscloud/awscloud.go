@@ -213,7 +213,8 @@ func WaitUntilImportSnapshotTaskCompletedWithContext(c *ec2.EC2, ctx aws.Context
 // The caller can optionally specify the boot mode of the AMI. If the boot
 // mode is not specified, then the instances launched from this AMI use the
 // default boot mode value of the instance type.
-func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch string, bootMode *string) (*string, error) {
+// Returns the image ID and the snapshot ID.
+func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch string, bootMode *string) (*string, *string, error) {
 	rpmArchToEC2Arch := map[string]string{
 		"x86_64":  "x86_64",
 		"aarch64": "arm64",
@@ -221,12 +222,12 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch str
 
 	ec2Arch, validArch := rpmArchToEC2Arch[rpmArch]
 	if !validArch {
-		return nil, fmt.Errorf("ec2 doesn't support the following arch: %s", rpmArch)
+		return nil, nil, fmt.Errorf("ec2 doesn't support the following arch: %s", rpmArch)
 	}
 
 	if bootMode != nil {
 		if !slices.Contains(ec2.BootModeValues_Values(), *bootMode) {
-			return nil, fmt.Errorf("ec2 doesn't support the following boot mode: %s", *bootMode)
+			return nil, nil, fmt.Errorf("ec2 doesn't support the following boot mode: %s", *bootMode)
 		}
 	}
 
@@ -245,7 +246,7 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch str
 	)
 	if err != nil {
 		logrus.Warnf("[AWS] error importing snapshot: %s", err)
-		return nil, err
+		return nil, nil, err
 	}
 
 	logrus.Infof("[AWS] 🚚 Waiting for snapshot to finish importing: %s", *importTaskOutput.ImportTaskId)
@@ -258,7 +259,7 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch str
 		},
 	)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// we no longer need the object in s3, let's just delete it
@@ -268,7 +269,7 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch str
 		Key:    aws.String(key),
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	importOutput, err := a.ec2.DescribeImportSnapshotTasks(
@@ -279,7 +280,7 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch str
 		},
 	)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	snapshotID := importOutput.ImportSnapshotTasks[0].SnapshotTaskDetail.SnapshotId
@@ -298,7 +299,7 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch str
 	)
 	err = req.Send()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	logrus.Infof("[AWS] 📋 Registering AMI from imported snapshot: %s", *snapshotID)
@@ -321,7 +322,7 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch str
 		},
 	)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	logrus.Infof("[AWS] 🎉 AMI registered: %s", *registerOutput.ImageId)
@@ -340,21 +341,21 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch str
 	)
 	err = req.Send()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if len(shareWith) > 0 {
 		err = a.shareSnapshot(snapshotID, shareWith)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		err = a.shareImage(registerOutput.ImageId, shareWith)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
-	return registerOutput.ImageId, nil
+	return registerOutput.ImageId, snapshotID, nil
 }
 
 // target region is determined by the region configured in the aws session
@@ -689,6 +690,31 @@ func (a *AWS) GetInstanceAddress(instanceID *string) (string, error) {
 	}
 
 	return *desc.Reservations[0].Instances[0].PublicIpAddress, nil
+}
+
+// DeleteEC2Image deletes the specified image and its associated snapshot
+func (a *AWS) DeleteEC2Image(imageID, snapshotID *string) error {
+	var retErr error
+
+	// firstly, deregister the image
+	_, err := a.ec2.DeregisterImage(&ec2.DeregisterImageInput{
+		ImageId: imageID,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	// now it's possible to delete the snapshot
+	_, err = a.ec2.DeleteSnapshot(&ec2.DeleteSnapshotInput{
+		SnapshotId: snapshotID,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return retErr
 }
 
 // encodeBase64 encodes string to base64-encoded string
