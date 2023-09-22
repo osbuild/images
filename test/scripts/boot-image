@@ -1,0 +1,104 @@
+#!/usr/bin/env python3
+import argparse
+import contextlib
+import json
+import os
+import subprocess as sp
+import sys
+import uuid
+from tempfile import TemporaryDirectory
+
+
+def runcmd(cmd, stdin=None):
+    job = sp.run(cmd)
+    if job.returncode > 0:
+        print(f"❌ Command failed: {cmd}")
+        sys.exit(job.returncode)
+
+
+def get_aws_config():
+    return {
+        "key_id": os.environ.get("AWS_ACCESS_KEY_ID"),
+        "secret_key": os.environ.get("AWS_SECRET_ACCESS_KEY"),
+        "bucket": os.environ.get("AWS_BUCKET"),
+        "region": os.environ.get("AWS_REGION")
+    }
+
+
+@contextlib.contextmanager
+def create_ssh_key():
+    with TemporaryDirectory() as tmpdir:
+        # create an ssh key pair with empty password
+        keypath = os.path.join(tmpdir, "testkey")
+        cmd = ["ssh-keygen", "-N", "", "-f", keypath]
+        runcmd(cmd)
+        yield keypath, keypath + ".pub"
+
+
+def boot_ami(distro, arch, image_type, image_path):
+    aws_config = get_aws_config()
+    with create_ssh_key() as (privkey, pubkey):
+        image_name = f"image-boot-test-{distro}-{arch}-{image_type}-" + str(uuid.uuid4())
+        cmd = ["go", "run", "./cmd/boot-aws", "run",
+               "--access-key-id", aws_config["key_id"],
+               "--secret-access-key", aws_config["secret_key"],
+               "--region", aws_config["region"],
+               "--bucket", aws_config["bucket"],
+               "--arch", arch,
+               "--name", image_name,
+               "--key", f"images/boot/{image_name}",
+               "--username", "osbuild",
+               "--ssh-key", pubkey,
+               image_path, "test/scripts/base-host-check.sh"]
+        runcmd(cmd)
+
+
+def find_image_file(build_path: str) -> str:
+    """
+    Find the path to the image by reading the manifest to get the name of the last pipeline and searching for the file
+    under the directory named after the pipeline. Raises RuntimeError if no or multiple files are found in the expected
+    path.
+    """
+    manifest_file = os.path.join(build_path, "manifest.json")
+    with open(manifest_file) as manifest:
+        data = json.load(manifest)
+
+    last_pipeline = data["pipelines"][-1]["name"]
+    files = os.listdir(os.path.join(build_path, last_pipeline))
+    if len(files) > 1:
+        error = ("Multiple files found in build path while searching for image file")
+        error += "\n".join(files)
+        raise RuntimeError(error)
+
+    if len(files) == 0:
+        raise RuntimeError("No found in build path while searching for image file")
+
+    return os.path.join(build_path, last_pipeline, files[0])
+
+
+def main():
+    desc = "Boot an image in the cloud environment it is built for and validate the configuration"
+    parser = argparse.ArgumentParser(description=desc)
+    parser.add_argument("distro", type=str, default=None, help="distro for the image to boot test")
+    parser.add_argument("arch", type=str, default=None, help="architecture of the image to boot test")
+    parser.add_argument("image_type", type=str, default=None, help="type of the image to boot test")
+    parser.add_argument("image_search_path", type=str, help="path to search for image file")
+
+    args = parser.parse_args()
+    distro = args.distro
+    arch = args.arch
+    image_type = args.image_type
+    search_path = args.image_search_path
+
+    image_path = find_image_file(search_path)
+
+    print(f"Testing image at {image_path}")
+    match image_type:
+        case "ami":
+            boot_ami(distro, arch, image_type, image_path)
+        case _:
+            print(f"{image_type} boot tests are not supported yet")
+
+
+if __name__ == "__main__":
+    main()
