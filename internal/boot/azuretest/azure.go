@@ -1,5 +1,3 @@
-//go:build integration
-
 package azuretest
 
 import (
@@ -12,6 +10,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/blob"
+
 	// NOTE these are deprecated and will need replacement, see issue #2977
 	//nolint:staticcheck
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-09-01/network"
