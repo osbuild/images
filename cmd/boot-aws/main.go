@@ -83,7 +83,7 @@ func main() {
 		bootModePtr = &bootMode
 	}
 
-	ami, err := a.Register(imageName, bucketName, keyName, share, arch, bootModePtr)
+	ami, _, err := a.Register(imageName, bucketName, keyName, share, arch, bootModePtr)
 	check(err)
 
 	fmt.Printf("AMI registered: %s\n", aws.StringValue(ami))
