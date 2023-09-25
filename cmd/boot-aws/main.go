@@ -32,6 +32,40 @@ ssh_authorized_keys:
 	return userData, nil
 }
 
+// resources created or allocated for an instance that can be cleaned up when
+// tearing down.
+type resources struct {
+	AMI           *string `json:"ami,omitempty"`
+	Snapshot      *string `json:"snapshot,omitempty"`
+	SecurityGroup *string `json:"security-group,omitempty"`
+	InstanceID    *string `json:"instance,omitempty"`
+}
+
+func tearDown(aws *awscloud.AWS, res *resources) {
+	fmt.Println("Tearing down")
+	if res.InstanceID != nil {
+		fmt.Printf("terminating instance %s\n", *res.InstanceID)
+		if _, err := aws.TerminateInstanceEC2(res.InstanceID); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to terminate instance: %v\n", err)
+		}
+	}
+
+	if res.SecurityGroup != nil {
+		fmt.Printf("deleting security group %s\n", *res.SecurityGroup)
+		if _, err := aws.DeleteSecurityGroupEC2(res.SecurityGroup); err != nil {
+			fmt.Fprintf(os.Stderr, "cannot delete the security group: %v\n", err)
+		}
+	}
+
+	if res.AMI != nil {
+		fmt.Printf("deleting EC2 image %s and snapshot %s\n", *res.AMI, *res.Snapshot)
+		if err := aws.DeleteEC2Image(res.AMI, res.Snapshot); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to deregister image: %v\n", err)
+		}
+	}
+
+}
+
 func uploadAndBoot() int {
 	var accessKeyID string
 	var secretAccessKey string
@@ -92,20 +126,19 @@ func uploadAndBoot() int {
 		bootModePtr = &bootMode
 	}
 
+	res := &resources{}
+	defer tearDown(a, res)
+
 	ami, snapshot, err := a.Register(imageName, bucketName, keyName, share, arch, bootModePtr)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Register(): %s\n", err.Error())
 		return 1
 	}
 
-	fmt.Printf("AMI registered: %s\n", aws.StringValue(ami))
+	res.AMI = ami
+	res.Snapshot = snapshot
 
-	defer func() {
-		fmt.Printf("deleting EC2 image %s and snapshot %s\n", *ami, *snapshot)
-		if err := a.DeleteEC2Image(ami, snapshot); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to deregister image: %v\n", err)
-		}
-	}()
+	fmt.Printf("AMI registered: %s\n", aws.StringValue(ami))
 
 	securityGroup, err := a.CreateSecurityGroupEC2("image-tests", "image-tests-security-group")
 	if err != nil {
@@ -113,12 +146,7 @@ func uploadAndBoot() int {
 		return 1
 	}
 
-	defer func() {
-		fmt.Printf("deleting security group %s\n", *securityGroup.GroupId)
-		if _, err := a.DeleteSecurityGroupEC2(securityGroup.GroupId); err != nil {
-			fmt.Fprintf(os.Stderr, "cannot delete the security group: %v\n", err)
-		}
-	}()
+	res.SecurityGroup = securityGroup.GroupId
 
 	_, err = a.AuthorizeSecurityGroupIngressEC2(securityGroup.GroupId, "0.0.0.0/0", 22, 22, "tcp")
 	if err != nil {
@@ -132,13 +160,7 @@ func uploadAndBoot() int {
 		return 1
 	}
 	instanceID := runResult.Instances[0].InstanceId
-
-	defer func() {
-		fmt.Printf("terminating instance %s\n", *instanceID)
-		if _, err := a.TerminateInstanceEC2(instanceID); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to terminate instance: %v\n", err)
-		}
-	}()
+	res.InstanceID = instanceID
 
 	ip, err := a.GetInstanceAddress(instanceID)
 	if err != nil {
