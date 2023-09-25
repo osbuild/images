@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -94,17 +95,50 @@ func uploadAndBoot() int {
 	flag.StringVar(&bootMode, "boot-mode", "", "boot mode (legacy-bios, uefi, uefi-preferred)")
 	flag.StringVar(&username, "username", "", "name of the user to create on the system")
 	flag.StringVar(&sshKey, "ssh-key", "", "path to user's public ssh key")
-	flag.Parse()
 
-	userData, err := createUserData(username, sshKey)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "createUserData(): %s\n", err.Error())
-		return 1
-	}
+	var resourcesFile string
+	flag.StringVar(&resourcesFile, "tear-down", "", "path to resources file to use for tear-down")
+	flag.Parse()
 
 	a, err := awscloud.New(region, accessKeyID, secretAccessKey, sessionToken)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "awscloud.New() failed: %s\n", err.Error())
+		return 1
+	}
+
+	res := &resources{}
+
+	if len(resourcesFile) > 0 {
+		resfile, err := os.Open(resourcesFile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to open resources file: %s\n", err.Error())
+			return 1
+		}
+		resdata, err := io.ReadAll(resfile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to read resources file: %s\n", err.Error())
+			return 1
+		}
+		if err := json.Unmarshal(resdata, res); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to unmarshal resources data: %s\n", err.Error())
+			return 1
+		}
+		defer tearDown(a, res)
+		return 0
+	}
+
+	defer func() {
+		resdata, err := json.MarshalIndent(res, "", "  ")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to marshal resources data: %s\n", err.Error())
+			return
+		}
+		fmt.Println(string(resdata))
+	}()
+
+	userData, err := createUserData(username, sshKey)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "createUserData(): %s\n", err.Error())
 		return 1
 	}
 
@@ -125,9 +159,6 @@ func uploadAndBoot() int {
 	if bootMode != "" {
 		bootModePtr = &bootMode
 	}
-
-	res := &resources{}
-	defer tearDown(a, res)
 
 	ami, snapshot, err := a.Register(imageName, bucketName, keyName, share, arch, bootModePtr)
 	if err != nil {
