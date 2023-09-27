@@ -111,7 +111,6 @@ func iotCommitPackageSet(t *imageType) rpmmd.PackageSet {
 			"glibc-minimal-langpack",
 			"gnupg2",
 			"greenboot",
-			"greenboot-default-health-checks",
 			"gzip",
 			"hostname",
 			"ignition",

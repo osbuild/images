@@ -547,7 +547,6 @@ func edgeCommitPackageSet(t *imageType) rpmmd.PackageSet {
 			"clevis-dracut",
 			"clevis-luks",
 			"greenboot",
-			"greenboot-default-health-checks",
 			"fdo-client",
 			"fdo-owner-cli",
 			"sos",

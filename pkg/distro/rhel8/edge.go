@@ -270,7 +270,6 @@ func edgeCommitPackageSet(t *imageType) rpmmd.PackageSet {
 			Include: []string{
 				"fdo-client",
 				"fdo-owner-cli",
-				"greenboot-default-health-checks",
 				"sos",
 			},
 		})
