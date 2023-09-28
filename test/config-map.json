@@ -105,5 +105,21 @@
       "centos*",
       "fedora*"
     ]
+  },
+  "./configs/minimal.json": {
+    "image-types": [
+      "qcow2"
+    ],
+    "distros": [
+      "fedora*"
+    ]
+  },
+  "./configs/minimal-pkgs.json": {
+    "image-types": [
+      "qcow2"
+    ],
+    "distros": [
+      "fedora*"
+    ]
   }
 }
