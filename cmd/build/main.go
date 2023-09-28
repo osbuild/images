@@ -67,6 +67,7 @@ type crBlueprint struct {
 	Containers     []blueprint.Container     `json:"containers,omitempty"`
 	Customizations *blueprint.Customizations `json:"customizations,omitempty"`
 	Distro         string                    `json:"distro,omitempty"`
+	Minimal        bool                      `json:"minimal,omitempty"`
 }
 
 type BuildConfig struct {

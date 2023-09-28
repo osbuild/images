@@ -12,6 +12,7 @@ type Blueprint struct {
 	Containers     []Container     `json:"containers,omitempty" toml:"containers,omitempty"`
 	Customizations *Customizations `json:"customizations,omitempty" toml:"customizations"`
 	Distro         string          `json:"distro" toml:"distro"`
+	Minimal        bool            `json:"minimal" toml:"minimal"`
 }
 
 // A Package specifies an RPM package.
