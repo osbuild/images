@@ -14,14 +14,6 @@ type Blueprint struct {
 	Distro         string          `json:"distro" toml:"distro"`
 }
 
-type Change struct {
-	Commit    string    `json:"commit" toml:"commit"`
-	Message   string    `json:"message" toml:"message"`
-	Revision  *int      `json:"revision" toml:"revision"`
-	Timestamp string    `json:"timestamp" toml:"timestamp"`
-	Blueprint Blueprint `json:"-" toml:"-"`
-}
-
 // A Package specifies an RPM package.
 type Package struct {
 	Name    string `json:"name" toml:"name"`
