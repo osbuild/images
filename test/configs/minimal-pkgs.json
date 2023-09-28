@@ -1,0 +1,14 @@
+{
+  "name": "minimal-pkgs",
+  "blueprint": {
+    "minimal": true,
+    "packages": [
+      {
+        "name": "tmux"
+      },
+      {
+        "name": "vim-enhanced"
+      }
+    ]
+  }
+}

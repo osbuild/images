@@ -1,0 +1,6 @@
+{
+  "name": "minimal",
+  "blueprint": {
+    "minimal": true
+  }
+}
