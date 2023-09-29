@@ -247,6 +247,10 @@ func diskImage(workload workload.Workload,
 	img.Environment = t.environment
 	img.Workload = workload
 	img.Compression = t.compression
+	if bp.Minimal {
+		// Disable weak dependencies if the 'minimal' option is enabled
+		img.InstallWeakDeps = common.ToPtr(false)
+	}
 	// TODO: move generation into LiveImage
 	pt, err := t.getPartitionTable(bp.Customizations.GetFilesystems(), options, rng)
 	if err != nil {
