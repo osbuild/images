@@ -177,6 +177,12 @@ func azureRhuiPackageSet(t *imageType) rpmmd.PackageSet {
 // PARTITION TABLES
 
 func azureRhuiBasePartitionTables(t *imageType) (disk.PartitionTable, bool) {
+	// RHEL >= 9.3 needs to have a bigger /boot, see RHEL-7999
+	bootSize := uint64(600) * common.MebiByte
+	if common.VersionLessThan(t.arch.distro.osVersion, "9.3") && t.arch.distro.isRHEL() {
+		bootSize = 500 * common.MebiByte
+	}
+
 	switch t.platform.GetArch() {
 	case platform.ARCH_X86_64:
 		return disk.PartitionTable{
@@ -198,7 +204,7 @@ func azureRhuiBasePartitionTables(t *imageType) (disk.PartitionTable, bool) {
 					},
 				},
 				{
-					Size: 500 * common.MebiByte,
+					Size: bootSize,
 					Type: disk.FilesystemDataGUID,
 					UUID: disk.FilesystemDataUUID,
 					Payload: &disk.Filesystem{
@@ -307,7 +313,7 @@ func azureRhuiBasePartitionTables(t *imageType) (disk.PartitionTable, bool) {
 					},
 				},
 				{
-					Size: 500 * common.MebiByte,
+					Size: bootSize,
 					Type: disk.FilesystemDataGUID,
 					UUID: disk.FilesystemDataUUID,
 					Payload: &disk.Filesystem{

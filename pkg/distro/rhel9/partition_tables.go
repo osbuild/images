@@ -7,6 +7,12 @@ import (
 )
 
 func defaultBasePartitionTables(t *imageType) (disk.PartitionTable, bool) {
+	// RHEL >= 9.3 needs to have a bigger /boot, see RHEL-7999
+	bootSize := uint64(600) * common.MebiByte
+	if common.VersionLessThan(t.arch.distro.osVersion, "9.3") && t.arch.distro.isRHEL() {
+		bootSize = 500 * common.MebiByte
+	}
+
 	switch t.platform.GetArch() {
 	case platform.ARCH_X86_64:
 		return disk.PartitionTable{
@@ -34,7 +40,7 @@ func defaultBasePartitionTables(t *imageType) (disk.PartitionTable, bool) {
 					},
 				},
 				{
-					Size: 500 * common.MebiByte,
+					Size: bootSize,
 					Type: disk.XBootLDRPartitionGUID,
 					UUID: disk.FilesystemDataUUID,
 					Payload: &disk.Filesystem{
@@ -81,7 +87,7 @@ func defaultBasePartitionTables(t *imageType) (disk.PartitionTable, bool) {
 					},
 				},
 				{
-					Size: 500 * common.MebiByte,
+					Size: bootSize,
 					Type: disk.XBootLDRPartitionGUID,
 					UUID: disk.FilesystemDataUUID,
 					Payload: &disk.Filesystem{
@@ -119,7 +125,7 @@ func defaultBasePartitionTables(t *imageType) (disk.PartitionTable, bool) {
 					Bootable: true,
 				},
 				{
-					Size: 500 * common.MebiByte,
+					Size: bootSize,
 					Payload: &disk.Filesystem{
 						Type:         "xfs",
 						Mountpoint:   "/boot",
@@ -148,7 +154,7 @@ func defaultBasePartitionTables(t *imageType) (disk.PartitionTable, bool) {
 			Type: "dos",
 			Partitions: []disk.Partition{
 				{
-					Size: 500 * common.MebiByte,
+					Size: bootSize,
 					Payload: &disk.Filesystem{
 						Type:         "xfs",
 						Mountpoint:   "/boot",
