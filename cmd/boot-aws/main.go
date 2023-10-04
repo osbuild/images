@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -21,7 +22,7 @@ import (
 // error code after any other defers are run in the same scope.
 func exitCheck(err error) {
 	if err != nil {
-		fmt.Fprintf(os.Stderr, err.Error())
+		fmt.Fprint(os.Stderr, err.Error()+"\n")
 		os.Exit(1)
 	}
 }
@@ -76,13 +77,18 @@ func run(c string, args ...string) ([]byte, []byte, error) {
 	return stdout, stderr, err
 }
 
-func sshCheck(ip, user, key, hostsfile string) error {
-	_, _, err := run("ssh", "-i", key, "-o", fmt.Sprintf("UserKnownHostsFile=%s", hostsfile), "-l", user, ip, "rpm", "-qa")
+func sshRun(ip, user, key, hostsfile string, command ...string) error {
+	sshargs := []string{"-i", key, "-o", fmt.Sprintf("UserKnownHostsFile=%s", hostsfile), "-l", user, ip}
+	sshargs = append(sshargs, command...)
+	_, _, err := run("ssh", sshargs...)
 	if err != nil {
 		return err
 	}
+	return nil
+}
 
-	_, _, err = run("ssh", "-i", key, "-o", fmt.Sprintf("UserKnownHostsFile=%s", hostsfile), "-l", user, ip, "cat", "/etc/os-release")
+func scpFile(ip, user, key, hostsfile, source, dest string) error {
+	_, _, err := run("scp", "-i", key, "-o", fmt.Sprintf("UserKnownHostsFile=%s", hostsfile), "--", source, fmt.Sprintf("%s@%s:%s", user, ip, dest))
 	if err != nil {
 		return err
 	}
@@ -150,7 +156,7 @@ func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resour
 
 	userData, err := createUserData(username, sshKey)
 	if err != nil {
-		return fmt.Errorf("createUserData(): %s\n", err.Error())
+		return fmt.Errorf("createUserData(): %s", err.Error())
 	}
 
 	bucketName, err := flags.GetString("bucket")
@@ -164,7 +170,7 @@ func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resour
 
 	uploadOutput, err := a.Upload(filename, bucketName, keyName)
 	if err != nil {
-		return fmt.Errorf("Upload() failed: %s\n", err.Error())
+		return fmt.Errorf("Upload() failed: %s", err.Error())
 	}
 
 	fmt.Printf("file uploaded to %s\n", aws.StringValue(&uploadOutput.Location))
@@ -195,7 +201,7 @@ func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resour
 
 	ami, snapshot, err := a.Register(imageName, bucketName, keyName, share, arch, bootModePtr)
 	if err != nil {
-		return fmt.Errorf("Register(): %s\n", err.Error())
+		return fmt.Errorf("Register(): %s", err.Error())
 	}
 
 	res.AMI = ami
@@ -205,115 +211,118 @@ func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resour
 
 	securityGroup, err := a.CreateSecurityGroupEC2("image-tests", "image-tests-security-group")
 	if err != nil {
-		return fmt.Errorf("CreateSecurityGroup(): %s\n", err.Error())
+		return fmt.Errorf("CreateSecurityGroup(): %s", err.Error())
 	}
 
 	res.SecurityGroup = securityGroup.GroupId
 
 	_, err = a.AuthorizeSecurityGroupIngressEC2(securityGroup.GroupId, "0.0.0.0/0", 22, 22, "tcp")
 	if err != nil {
-		return fmt.Errorf("AuthorizeSecurityGroupIngressEC2(): %s\n", err.Error())
+		return fmt.Errorf("AuthorizeSecurityGroupIngressEC2(): %s", err.Error())
 	}
 
 	runResult, err := a.RunInstanceEC2(ami, securityGroup.GroupId, userData, "t3.micro")
 	if err != nil {
-		return fmt.Errorf("RunInstanceEC2(): %s\n", err.Error())
+		return fmt.Errorf("RunInstanceEC2(): %s", err.Error())
 	}
 	instanceID := runResult.Instances[0].InstanceId
 	res.InstanceID = instanceID
 
 	ip, err := a.GetInstanceAddress(instanceID)
 	if err != nil {
-		return fmt.Errorf("GetInstanceAddress(): %s\n", err.Error())
+		return fmt.Errorf("GetInstanceAddress(): %s", err.Error())
 	}
 	fmt.Printf("Instance %s is running and has IP address %s\n", *instanceID, ip)
-
-	hostsfile := "/tmp/test_hosts"
-	if err := keyscan(ip, hostsfile); err != nil {
-		return fmt.Errorf("keyscan(): %s\n", err.Error())
-	}
-
-	key := strings.TrimSuffix(sshKey, ".pub")
-	if err := sshCheck(ip, username, key, hostsfile); err != nil {
-		return fmt.Errorf("sshCheck(): %s\n", err.Error())
-	}
-
 	return nil
 }
 
 func setup(cmd *cobra.Command, args []string) {
-	var err error
-	defer func() { exitCheck(err) }()
+	var fnerr error
+	defer func() { exitCheck(fnerr) }()
 
 	filename := args[0]
 	flags := cmd.Flags()
 
 	a, err := newClientFromArgs(flags)
 	if err != nil {
+		fnerr = err
 		return
 	}
 
 	// collect resources into res and write them out when the function returns
 	resourcesFile, err := flags.GetString("resourcefile")
 	if err != nil {
+		fnerr = err
 		return
 	}
 	res := &resources{}
-	defer func() {
-		resdata, err := json.MarshalIndent(res, "", "  ")
-		if err != nil {
-			err = fmt.Errorf("failed to marshal resources data: %s\n", err.Error())
-			return
-		}
-		resfile, err := os.Create(resourcesFile)
-		if err != nil {
-			err = fmt.Errorf("failed to create resources file: %s\n", err.Error())
-			return
-		}
-		_, err = resfile.Write(resdata)
-		if err != nil {
-			err = fmt.Errorf("failed to write resources file: %s\n", err.Error())
-			return
-		}
-		fmt.Printf("IDs for any newly created resources are stored in %s. Use the teardown command to clean them up.\n", resourcesFile)
-		err = resfile.Close()
-	}()
 
-	err = doSetup(a, filename, flags, res)
+	fnerr = doSetup(a, filename, flags, res)
+	if fnerr != nil {
+		fmt.Fprintf(os.Stderr, "setup() failed: %s\n", fnerr.Error())
+		fmt.Fprint(os.Stderr, "tearing down resources\n")
+		tderr := doTeardown(a, res)
+		if tderr != nil {
+			fmt.Fprintf(os.Stderr, "teardown(): %s\n", tderr.Error())
+		}
+	}
+
+	resdata, err := json.MarshalIndent(res, "", "  ")
+	if err != nil {
+		fnerr = fmt.Errorf("failed to marshal resources data: %s", err.Error())
+		return
+	}
+	resfile, err := os.Create(resourcesFile)
+	if err != nil {
+		fnerr = fmt.Errorf("failed to create resources file: %s", err.Error())
+		return
+	}
+	_, err = resfile.Write(resdata)
+	if err != nil {
+		fnerr = fmt.Errorf("failed to write resources file: %s", err.Error())
+		return
+	}
+	fmt.Printf("IDs for any newly created resources are stored in %s. Use the teardown command to clean them up.\n", resourcesFile)
+	if err = resfile.Close(); err != nil {
+		fmt.Fprintf(os.Stderr, "error closing resources file: %s\n", err.Error())
+		fnerr = err
+		return
+	}
 }
 
 func doTeardown(aws *awscloud.AWS, res *resources) error {
 	if res.InstanceID != nil {
 		fmt.Printf("terminating instance %s\n", *res.InstanceID)
 		if _, err := aws.TerminateInstanceEC2(res.InstanceID); err != nil {
-			return fmt.Errorf("failed to terminate instance: %v\n", err)
+			return fmt.Errorf("failed to terminate instance: %v", err)
 		}
 	}
 
 	if res.SecurityGroup != nil {
 		fmt.Printf("deleting security group %s\n", *res.SecurityGroup)
 		if _, err := aws.DeleteSecurityGroupEC2(res.SecurityGroup); err != nil {
-			return fmt.Errorf("cannot delete the security group: %v\n", err)
+			return fmt.Errorf("cannot delete the security group: %v", err)
 		}
 	}
 
 	if res.AMI != nil {
 		fmt.Printf("deleting EC2 image %s and snapshot %s\n", *res.AMI, *res.Snapshot)
 		if err := aws.DeleteEC2Image(res.AMI, res.Snapshot); err != nil {
-			return fmt.Errorf("failed to deregister image: %v\n", err)
+			return fmt.Errorf("failed to deregister image: %v", err)
 		}
 	}
 	return nil
 }
 
 func teardown(cmd *cobra.Command, args []string) {
-	var err error
-	defer func() { exitCheck(err) }()
+	var fnerr error
+	defer func() { exitCheck(fnerr) }()
 
 	flags := cmd.Flags()
 
 	a, err := newClientFromArgs(flags)
 	if err != nil {
+		fnerr = err
 		return
 	}
 
@@ -323,23 +332,98 @@ func teardown(cmd *cobra.Command, args []string) {
 	}
 
 	res := &resources{}
-
 	resfile, err := os.Open(resourcesFile)
 	if err != nil {
-		err = fmt.Errorf("failed to open resources file: %s\n", err.Error())
+		fnerr = fmt.Errorf("failed to open resources file: %s", err.Error())
 		return
 	}
 	resdata, err := io.ReadAll(resfile)
 	if err != nil {
-		err = fmt.Errorf("failed to read resources file: %s\n", err.Error())
+		fnerr = fmt.Errorf("failed to read resources file: %s", err.Error())
 		return
 	}
 	if err := json.Unmarshal(resdata, res); err != nil {
-		err = fmt.Errorf("failed to unmarshal resources data: %s\n", err.Error())
+		fnerr = fmt.Errorf("failed to unmarshal resources data: %s", err.Error())
 		return
 	}
 
-	err = doTeardown(a, res)
+	fnerr = doTeardown(a, res)
+}
+
+func doRunExec(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resources) error {
+	sshKey, err := flags.GetString("ssh-key")
+	if err != nil {
+		return err
+	}
+
+	username, err := flags.GetString("username")
+	if err != nil {
+		return err
+	}
+
+	tmpdir, err := os.MkdirTemp("", "boot-test-*")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(tmpdir)
+
+	hostsfile := filepath.Join(tmpdir, "known_hosts")
+	ip, err := a.GetInstanceAddress(res.InstanceID)
+	if err != nil {
+		return err
+	}
+	if err := keyscan(ip, hostsfile); err != nil {
+		return err
+	}
+
+	// TODO: remove this assumption and add a private key flag
+	key := strings.TrimSuffix(sshKey, ".pub")
+
+	// ssh into the remote machine and exit immediately to check connection
+	if err := sshRun(ip, username, key, hostsfile, "exit"); err != nil {
+		return err
+	}
+
+	// copy the executable without its path to the remote host
+	destination := filepath.Base(filename)
+
+	// copy the executable
+	if err := scpFile(ip, username, key, hostsfile, filename, destination); err != nil {
+		return err
+	}
+
+	// run the executable
+	return sshRun(ip, username, key, hostsfile, fmt.Sprintf("./%s", destination))
+}
+
+func runExec(cmd *cobra.Command, args []string) {
+	var fnerr error
+	defer func() { exitCheck(fnerr) }()
+	image := args[0]
+
+	executable := args[1]
+	flags := cmd.Flags()
+
+	a, fnerr := newClientFromArgs(flags)
+	if fnerr != nil {
+		return
+	}
+
+	res := &resources{}
+	defer func() {
+		tderr := doTeardown(a, res)
+		if tderr != nil {
+			// report it but let the exitCheck() handle fnerr
+			fmt.Fprintf(os.Stderr, "teardown(): %s\n", tderr.Error())
+		}
+	}()
+
+	fnerr = doSetup(a, image, flags, res)
+	if fnerr != nil {
+		return
+	}
+
+	fnerr = doRunExec(a, executable, flags, res)
 }
 
 func setupCLI() *cobra.Command {
@@ -402,10 +486,18 @@ func setupCLI() *cobra.Command {
 	teardownCmd.Flags().StringP("resourcefile", "r", "resources.json", "path to store the resource IDs")
 	rootCmd.AddCommand(teardownCmd)
 
+	runCmd := &cobra.Command{
+		Use:   "run <image> <executable>",
+		Short: "upload and boot an image, then upload the specified executable and run it on the remote host",
+		Args:  cobra.ExactArgs(2),
+		Run:   runExec,
+	}
+	rootCmd.AddCommand(runCmd)
+
 	return rootCmd
 }
 
 func main() {
 	cmd := setupCLI()
-	cmd.Execute()
+	exitCheck(cmd.Execute())
 }
