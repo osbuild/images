@@ -1,0 +1,67 @@
+#!/usr/bin/env python3
+import argparse
+import json
+import os
+import subprocess as sp
+import sys
+
+import imgtestlib as testlib
+
+
+def main():
+    desc = "Boot an image in the cloud environment it is built for and validate the configuration"
+    parser = argparse.ArgumentParser(description=desc)
+    parser.add_argument("distro", type=str, default=None, help="distro for the image to boot test")
+    parser.add_argument("image_type", type=str, default=None, help="type of the image to boot test")
+    parser.add_argument("config", type=str, help="config used to build the image")
+
+    args = parser.parse_args()
+    distro = args.distro
+    image_type = args.image_type
+    config_path = args.config
+
+    print(f"👷 Building image {distro}/{image_type} using config {config_path}")
+
+    # print the config for logging
+    with open(config_path, "r") as config_file:
+        config = json.load(config_file)
+        print(json.dumps(config, indent=2))
+        config_name = config["name"]
+
+    testlib.runcmd(["go", "build", "-o", "./bin/build", "./cmd/build"])
+    cmd = ["sudo", "./bin/build", "-output", "./build", "-distro", distro, "-image", image_type, "-config", config_path]
+    job = sp.run(cmd, capture_output=False)  # print live output
+    if job.returncode > 0:
+        print(f"❌ Build failed: {cmd}")
+        sys.exit(job.returncode)
+
+    print("✅ Build finished!!")
+
+    # Build artifacts are owned by root. Make them world accessible.
+    testlib.runcmd(["sudo", "chmod", "a+rwX", "-R", "./build"])
+
+    arch = os.uname().machine
+    build_dir = os.path.join("build", testlib.gen_build_name(distro, arch, image_type, config_name))
+    manifest_path = os.path.join(build_dir, "manifest.json")
+    with open(manifest_path, "r") as manifest_fp:
+        manifest_data = json.load(manifest_fp)
+    manifest_id = testlib.get_manifest_id(manifest_data)
+
+    osbuild_ver, _ = testlib.runcmd(["osbuild", "--version"])
+
+    build_info = {
+      "distro": distro,
+      "arch": arch,
+      "image-type": image_type,
+      "config": config_name,
+      "manifest-checksum": manifest_id,
+      "obuild-version": osbuild_ver.decode(),
+      "commit": os.environ.get("CI_COMMIT_SHA", "N/A")
+    }
+    info_file_path = os.path.join(build_dir, "info.json")
+    with open(info_file_path, "w") as info_fp:
+        json.dump(build_info, info_fp, indent=2)
+
+
+if __name__ == "__main__":
+    main()

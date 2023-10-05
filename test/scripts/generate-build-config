@@ -18,9 +18,10 @@ build/{distro}/{arch}/{image_type}/{config_name}:
     - sudo dnf install -y go gpgme-devel gcc
       osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux
       s3cmd
-    - ./test/scripts/build-image.sh "{distro}" "{image_type}" "{config}"
+    - ./test/scripts/build-image "{distro}" "{image_type}" "{config}"
+    - ./test/scripts/boot-image "{distro}" "{arch}" "{image_type}" "{image_path}"
+    - ./test/scripts/upload-results "{distro}" "{image_type}" "{config}"
     {container_push}
-    - ./test/scripts/boot-image "{distro}" "{arch}" "{image_type}" "{config}" "{image_path}"
   extends: .terraform
   variables:
     RUNNER: aws/fedora-38-{arch}

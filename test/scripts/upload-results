@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+import argparse
+import json
+import os
+
+import imgtestlib as testlib
+
+
+def main():
+    desc = "Upload the results of a successful build (and boot) test to s3"
+    parser = argparse.ArgumentParser(description=desc)
+    parser.add_argument("distro", type=str, default=None, help="distro for the image to boot test")
+    parser.add_argument("image_type", type=str, default=None, help="type of the image to boot test")
+    parser.add_argument("config", type=str, help="config used to build the image")
+
+    args = parser.parse_args()
+    distro = args.distro
+    image_type = args.image_type
+    config_path = args.config
+    arch = os.uname().machine
+
+    with open(config_path, "r") as config_file:
+        config = json.load(config_file)
+        config_name = config["name"]
+
+    build_dir = os.path.join("build", testlib.gen_build_name(distro, arch, image_type, config_name))
+    manifest_path = os.path.join(build_dir, "manifest.json")
+    with open(manifest_path, "r") as manifest_fp:
+        manifest_data = json.load(manifest_fp)
+    manifest_id = testlib.get_manifest_id(manifest_data)
+
+    bucket = os.environ.get("AWS_BUCKET", "image-builder-ci-artifacts")
+    s3url = f"s3://{bucket}/images/builds/{distro}/{arch}/{manifest_id}/"
+
+    print(f"⬆️ Uploading {build_dir} to {s3url}")
+    testlib.runcmd(["s3cmd", *testlib.s3_auth_args(), "--acl-private", "put", "--recursive", build_dir+"/", s3url])
+    print("✅ DONE!!")
+
+
+if __name__ == "__main__":
+    main()
