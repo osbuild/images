@@ -21,7 +21,7 @@ configure-generators:
     PYTHONUNBUFFERED: 1
   script:
     - apk add -U go python3 gpgme-dev
-    - ./test/generators/configure-generators generator-config.yml
+    - ./test/scripts/configure-generators generator-config.yml
   artifacts:
     paths:
       - generator-config.yml
@@ -41,7 +41,7 @@ check-build-coverage:
     PYTHONUNBUFFERED: 1
   script:
     - apk add -U go python3 gpgme-dev s3cmd
-    - ./test/generators/check-build-coverage ./s3configs/
+    - ./test/scripts/check-build-coverage ./s3configs/
 
 finish:
   stage: finish
