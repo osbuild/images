@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
@@ -209,7 +210,8 @@ func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resour
 
 	fmt.Printf("AMI registered: %s\n", aws.StringValue(ami))
 
-	securityGroup, err := a.CreateSecurityGroupEC2("image-tests", "image-tests-security-group")
+	securityGroupName := fmt.Sprintf("image-boot-tests-%s", uuid.New().String())
+	securityGroup, err := a.CreateSecurityGroupEC2(securityGroupName, "image-tests-security-group")
 	if err != nil {
 		return fmt.Errorf("CreateSecurityGroup(): %s", err.Error())
 	}
