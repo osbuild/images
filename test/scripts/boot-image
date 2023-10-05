@@ -97,7 +97,19 @@ def main():
         case "ami":
             boot_ami(distro, arch, image_type, image_path)
         case _:
+            # skip
             print(f"{image_type} boot tests are not supported yet")
+            return
+
+    print("✅ Marking boot successful")
+    # amend build info with boot success
+    # search_path is the root of the build path (build/build_name)
+    info_file_path = os.path.join(search_path, "info.json")
+    with open(info_file_path) as info_fp:
+        build_info = json.load(info_fp)
+    build_info["boot-success"] = True
+    with open(info_file_path, "w") as info_fp:
+        json.dump(build_info, info_fp, indent=2)
 
 
 if __name__ == "__main__":
