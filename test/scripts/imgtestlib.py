@@ -21,6 +21,11 @@ OSTREE_CONTAINERS = [
     "edge-container"
 ]
 
+# image types that can be boot tested
+CAN_BOOT_TEST = [
+    "ami"
+]
+
 
 # base and terraform bits copied from main .gitlab-ci.yml
 # needed for status reporting and defining the runners
@@ -204,7 +209,13 @@ def filter_builds(manifests, skip_ostree_pull=True):
                 commit = dl_config["commit"]
                 url = f"https://github.com/osbuild/images/commit/{commit}"
                 print(f"🖼️ Manifest {manifest_fname} was successfully built in commit {commit}\n  {url}")
-                continue
+                if image_type not in CAN_BOOT_TEST:
+                    print(f"  Boot testing for {image_type} is not yet supported")
+                    continue
+                # boot testing supported: check if it's been tested, otherwise queue it for rebuild and boot
+                if dl_config.get("boot-success", False):
+                    print("  This image was successfully boot tested")
+                    continue
             except json.JSONDecodeError as jd:
                 errors.append((
                         f"failed to parse {build_info_path}\n"
