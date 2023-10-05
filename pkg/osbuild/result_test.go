@@ -285,8 +285,8 @@ func TestWrite(t *testing.T) {
 	var b bytes.Buffer
 	assert.NoError(result.Write(&b))
 	expectedOutput :=
-		`Pipeline build
-Stage org.osbuild.rpm
+		`Pipeline: build
+Stage: org.osbuild.rpm
 Output:
 <rpm stage output>
 Metadata:
@@ -305,16 +305,17 @@ Metadata:
   ]
 }
 
-Stage org.osbuild.selinux
+Stage: org.osbuild.selinux
 Output:
 <selinux stage output>
 
-Pipeline final-pipeline
-Stage org.osbuild.qcow2
+Pipeline: final-pipeline
+Stage: org.osbuild.qcow2
 Output:
 assmelber the image
-Pipeline os
-Stage org.osbuild.rpm
+
+Pipeline: os
+Stage: org.osbuild.rpm
 Output:
 <os rpm stage output>
 Metadata:
