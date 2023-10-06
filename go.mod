@@ -12,7 +12,7 @@ require (
 	github.com/Azure/go-autorest/autorest v0.11.29
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.12
 	github.com/BurntSushi/toml v1.3.2
-	github.com/aws/aws-sdk-go v1.45.19
+	github.com/aws/aws-sdk-go v1.45.23
 	github.com/containers/common v0.56.0
 	github.com/containers/image/v5 v5.28.0
 	github.com/gobwas/glob v0.2.3
@@ -32,8 +32,8 @@ require (
 	github.com/vmware/govmomi v0.32.0
 	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63
 	golang.org/x/oauth2 v0.12.0
-	golang.org/x/sys v0.12.0
-	google.golang.org/api v0.143.0
+	golang.org/x/sys v0.13.0
+	google.golang.org/api v0.145.0
 	gopkg.in/ini.v1 v1.67.0
 )
 
@@ -138,7 +138,7 @@ require (
 	google.golang.org/genproto v0.0.0-20230913181813-007df8e322eb // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230913181813-007df8e322eb // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230920204549-e6e6cdab5c13 // indirect
-	google.golang.org/grpc v1.57.0 // indirect
+	google.golang.org/grpc v1.58.2 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/go-jose/go-jose.v2 v2.6.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
