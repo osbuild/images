@@ -343,6 +343,12 @@ func edgeBasePartitionTables(t *imageType) (disk.PartitionTable, bool) {
 			Type: "gpt",
 			Partitions: []disk.Partition{
 				{
+					Size:     1 * common.MebiByte, // 1MB
+					Bootable: true,
+					Type:     disk.BIOSBootPartitionGUID,
+					UUID:     disk.BIOSBootPartitionUUID,
+				},
+				{
 					Size: 127 * common.MebiByte, // 127 MB
 					Type: disk.EFISystemPartitionGUID,
 					UUID: disk.EFISystemPartitionUUID,
