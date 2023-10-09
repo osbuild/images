@@ -30,6 +30,7 @@ var supportedDistros = []func() distro.Distro{
 	rhel8.NewRHEL87,
 	rhel8.NewRHEL88,
 	rhel8.NewRHEL89,
+	rhel8.NewRHEL810,
 	rhel8.NewCentos,
 
 	rhel9.New,

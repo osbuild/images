@@ -155,6 +155,10 @@ func NewRHEL89() distro.Distro {
 	return newDistro("rhel", 9)
 }
 
+func NewRHEL810() distro.Distro {
+	return newDistro("rhel", 10)
+}
+
 func NewCentos() distro.Distro {
 	return newDistro("centos", 0)
 }
