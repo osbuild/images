@@ -61,7 +61,7 @@ func ec2ImgTypeX86_64(rd distribution) imageType {
 func ec2HaImgTypeX86_64(rd distribution) imageType {
 	basePartitionTables := ec2BasePartitionTables
 	// use legacy partition tables for RHEL 8.8 and older
-	if common.VersionLessThan(rd.osVersion, "8.9") {
+	if rd.isRHEL() && common.VersionLessThan(rd.osVersion, "8.9") {
 		basePartitionTables = ec2LegacyBasePartitionTables
 	}
 
