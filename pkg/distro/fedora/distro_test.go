@@ -481,24 +481,26 @@ func TestDistro_ManifestError(t *testing.T) {
 	for _, archName := range fedoraDistro.ListArches() {
 		arch, _ := fedoraDistro.GetArch(archName)
 		for _, imgTypeName := range arch.ListImageTypes() {
-			imgType, _ := arch.GetImageType(imgTypeName)
-			imgOpts := distro.ImageOptions{
-				Size: imgType.Size(0),
-			}
-			_, _, err := imgType.Manifest(&bp, imgOpts, nil, 0)
-			if imgTypeName == "iot-commit" || imgTypeName == "iot-container" {
-				assert.EqualError(t, err, "kernel boot parameter customizations are not supported for ostree types")
-			} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" {
-				assert.EqualError(t, err, fmt.Sprintf("boot ISO image type \"%s\" requires specifying a URL from which to retrieve the OSTree commit", imgTypeName))
-			} else if imgTypeName == "image-installer" {
-				assert.EqualError(t, err, fmt.Sprintf("unsupported blueprint customizations found for boot ISO image type \"%s\": (allowed: User, Group)", imgTypeName))
-			} else if imgTypeName == "live-installer" {
-				assert.EqualError(t, err, fmt.Sprintf("unsupported blueprint customizations found for boot ISO image type \"%s\": (allowed: None)", imgTypeName))
-			} else if imgTypeName == "iot-raw-image" || imgTypeName == "iot-qcow2-image" {
-				assert.EqualError(t, err, fmt.Sprintf("unsupported blueprint customizations found for image type %q: (allowed: User, Group, Directories, Files, Services)", imgTypeName))
-			} else {
-				assert.NoError(t, err)
-			}
+			t.Run(fmt.Sprintf("%s/%s", archName, imgTypeName), func(t *testing.T) {
+				imgType, _ := arch.GetImageType(imgTypeName)
+				imgOpts := distro.ImageOptions{
+					Size: imgType.Size(0),
+				}
+				_, _, err := imgType.Manifest(&bp, imgOpts, nil, 0)
+				if imgTypeName == "iot-commit" || imgTypeName == "iot-container" {
+					assert.EqualError(t, err, "kernel boot parameter customizations are not supported for ostree types")
+				} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" {
+					assert.EqualError(t, err, fmt.Sprintf("boot ISO image type \"%s\" requires specifying a URL from which to retrieve the OSTree commit", imgTypeName))
+				} else if imgTypeName == "image-installer" {
+					assert.EqualError(t, err, fmt.Sprintf("unsupported blueprint customizations found for boot ISO image type \"%s\": (allowed: User, Group)", imgTypeName))
+				} else if imgTypeName == "live-installer" {
+					assert.EqualError(t, err, fmt.Sprintf("unsupported blueprint customizations found for boot ISO image type \"%s\": (allowed: None)", imgTypeName))
+				} else if imgTypeName == "iot-raw-image" || imgTypeName == "iot-qcow2-image" {
+					assert.EqualError(t, err, fmt.Sprintf("unsupported blueprint customizations found for image type %q: (allowed: User, Group, Directories, Files, Services)", imgTypeName))
+				} else {
+					assert.NoError(t, err)
+				}
+			})
 		}
 	}
 }
@@ -559,6 +561,20 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"40": {"iot-simplified-installer"},
 			},
 		},
+		{
+			arch: "ppc64le",
+			imgNames: []string{
+				"container",
+				"qcow2",
+			},
+		},
+		{
+			arch: "s390x",
+			imgNames: []string{
+				"container",
+				"qcow2",
+			},
+		},
 	}
 
 	for _, dist := range fedoraFamilyDistros {
@@ -580,7 +596,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 
 func TestFedora_ListArches(t *testing.T) {
 	arches := fedora.NewF37().ListArches()
-	assert.Equal(t, []string{"aarch64", "x86_64"}, arches)
+	assert.Equal(t, []string{"aarch64", "ppc64le", "s390x", "x86_64"}, arches)
 }
 
 func TestFedora37_GetArch(t *testing.T) {
@@ -596,12 +612,10 @@ func TestFedora37_GetArch(t *testing.T) {
 			name: "aarch64",
 		},
 		{
-			name:          "s390x",
-			errorExpected: true,
+			name: "s390x",
 		},
 		{
-			name:          "ppc64le",
-			errorExpected: true,
+			name: "ppc64le",
 		},
 		{
 			name:          "foo-arch",
