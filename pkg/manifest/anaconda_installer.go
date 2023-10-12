@@ -30,9 +30,10 @@ type AnacondaInstaller struct {
 	// manifest.
 	Type AnacondaInstallerType
 
-	// Packages to install in addition to the ones required by the
+	// Packages to install and/or exclude in addition to the ones required by the
 	// pipeline.
-	ExtraPackages []string
+	ExtraPackages   []string
+	ExcludePackages []string
 
 	// Extra repositories to install packages from
 	ExtraRepos []rpmmd.RepoConfig
@@ -146,6 +147,7 @@ func (p *AnacondaInstaller) getPackageSetChain(Distro) []rpmmd.PackageSet {
 	return []rpmmd.PackageSet{
 		{
 			Include:         append(packages, p.ExtraPackages...),
+			Exclude:         p.ExcludePackages,
 			Repositories:    append(p.repos, p.ExtraRepos...),
 			InstallWeakDeps: true,
 		},
