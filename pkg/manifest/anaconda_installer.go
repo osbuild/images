@@ -275,18 +275,32 @@ func (p *AnacondaInstaller) serialize() osbuild.Pipeline {
 		}))
 	}
 
-	dracutModules := append(
-		p.AdditionalDracutModules,
-		"anaconda",
-		"rdma",
-		"rngd",
-		"multipath",
-		"fcoe",
-		"fcoe-uefi",
-		"iscsi",
-		"lunmask",
-		"nfs",
-	)
+	var dracutModules []string
+
+	if p.Type == AnacondaInstallerTypePayload {
+		dracutModules = append(
+			p.AdditionalDracutModules,
+			"anaconda",
+			"rdma",
+			"rngd",
+			"multipath",
+			"fcoe",
+			"fcoe-uefi",
+			"iscsi",
+			"lunmask",
+			"nfs",
+		)
+	} else if p.Type == AnacondaInstallerTypeLive {
+		dracutModules = append(
+			p.AdditionalDracutModules,
+			"anaconda",
+			"rdma",
+			"rngd",
+		)
+	} else {
+		panic("invalid anaconda installer type")
+	}
+
 	dracutOptions := dracutStageOptions(p.kernelVer, p.Biosdevname, dracutModules)
 	dracutOptions.AddDrivers = p.AdditionalDrivers
 	pipeline.AddStage(osbuild.NewDracutStage(dracutOptions))
