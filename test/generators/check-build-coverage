@@ -13,7 +13,9 @@ SKIPS = [
 
 
 def check_build_coverage(cachedir):
+    ci_commit = os.environ.get("CI_COMMIT_SHA")
     tests = set()
+    built_now = set()
     for root, dirs, files in os.walk(cachedir):
         for fname in files:
             _, ext = os.path.splitext(fname)
@@ -27,6 +29,12 @@ def check_build_coverage(cachedir):
             image = build_info["image-type"]
             tests.add((distro, arch, image))
 
+            commit = build_info["commit"]
+            config = build_info["config"]
+            if commit == ci_commit:
+                # config was rebuilt in this run: collect and report
+                built_now.add((distro, arch, image, config))
+
     all_combos = set()
     for config in testlib.list_images(arches=["x86_64", "aarch64"]):
         distro = config["distro"]
@@ -37,7 +45,7 @@ def check_build_coverage(cachedir):
         all_combos.add((distro, arch, image))
 
     missing = all_combos - tests
-    return missing
+    return missing, built_now
 
 
 def main():
@@ -47,7 +55,16 @@ def main():
     cachedir = args.cachedir
     testlib.dl_s3_configs(cachedir)
 
-    missing = check_build_coverage(cachedir)
+    missing, now = check_build_coverage(cachedir)
+
+    if now:
+        print("Configurations built in this pipeline")
+        for build in now:
+            distro, arch, image, config = build
+            print(f"✅ {distro} {arch} {image} {config}")
+    else:
+        print("⭕ No images were built in this pipeline")
+
     if missing:
         print(f"❌ {len(missing)} distro/arch/image combinations have no builds in the cache")
         for idx, m in enumerate(missing, start=1):
