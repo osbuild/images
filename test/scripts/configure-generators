@@ -29,7 +29,6 @@ generate-build-config-{distro}-{arch}:
   variables:
     RUNNER: aws/fedora-38-{arch}
     INTERNAL_NETWORK: "true"
-    PYTHONUNBUFFERED: 1
   script:
     - sudo ./schutzbot/setup-osbuild-repo
     - sudo dnf -y install go python3 gpgme-devel s3cmd
@@ -59,7 +58,6 @@ generate-ostree-build-config-{distro}-{arch}:
   variables:
     RUNNER: aws/fedora-38-{arch}
     INTERNAL_NETWORK: "true"
-    PYTHONUNBUFFERED: 1
   script:
     - sudo ./schutzbot/setup-osbuild-repo
     - sudo dnf -y install go python3 gpgme-devel s3cmd
