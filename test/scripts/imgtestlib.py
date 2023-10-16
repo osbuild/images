@@ -40,6 +40,8 @@ BASE_CONFIG = """
   retry: 1
   tags:
     - terraform
+  variables:
+    PYTHONUNBUFFERED: 1
 
 .terraform:
   extends: .base
