@@ -62,10 +62,8 @@ func run(c string, args ...string) ([]byte, []byte, error) {
 	cmd.Stdout = &cmdout
 	cmd.Stderr = &cmderr
 	err := cmd.Run()
-	if err != nil {
-		return nil, nil, err
-	}
 
+	// print any output even if the call failed
 	stdout := cmdout.Bytes()
 	if len(stdout) > 0 {
 		fmt.Println(string(stdout))
