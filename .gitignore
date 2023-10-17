@@ -7,5 +7,5 @@ __pycache__
 /containers/config/
 /bin
 /rpmbuild
-
+/test/data/manifests
 /tools/appsre-ansible/inventory
