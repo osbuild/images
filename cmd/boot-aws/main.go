@@ -78,6 +78,17 @@ func run(c string, args ...string) ([]byte, []byte, error) {
 	return stdout, stderr, err
 }
 
+func getInstanceType(arch string) (string, error) {
+	switch arch {
+	case "x86_64":
+		return "t3.small", nil
+	case "aarch64":
+		return "t4g.small", nil
+	default:
+		return "", fmt.Errorf("getInstanceType(): unknown architecture %q", arch)
+	}
+}
+
 func sshRun(ip, user, key, hostsfile string, command ...string) error {
 	sshargs := []string{"-i", key, "-o", fmt.Sprintf("UserKnownHostsFile=%s", hostsfile), "-l", user, ip}
 	sshargs = append(sshargs, command...)
@@ -223,7 +234,11 @@ func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resour
 		return fmt.Errorf("AuthorizeSecurityGroupIngressEC2(): %s", err.Error())
 	}
 
-	runResult, err := a.RunInstanceEC2(ami, securityGroup.GroupId, userData, "t3.micro")
+	instance, err := getInstanceType(arch)
+	if err != nil {
+		return err
+	}
+	runResult, err := a.RunInstanceEC2(ami, securityGroup.GroupId, userData, instance)
 	if err != nil {
 		return fmt.Errorf("RunInstanceEC2(): %s", err.Error())
 	}
