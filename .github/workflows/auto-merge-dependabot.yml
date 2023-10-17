@@ -1,7 +1,7 @@
 # Taken from https://docs.github.com/en/code-security/dependabot/working-with-dependabot/automating-dependabot-with-github-actions#common-dependabot-automations
 
 name: Dependabot auto-approve and auto-merge
-on: pull_request
+on: pull_request_target
 
 permissions: write-all
 
@@ -14,10 +14,10 @@ jobs:
         run: gh pr review --approve "$PR_URL"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GITHUB_TOKEN: ${{secrets.SCHUTZBOT_GITHUB_ACCESS_TOKEN}}
 
       - name: Enable auto-merge for Dependabot PRs
         run: gh pr merge --auto --rebase "$PR_URL"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GITHUB_TOKEN: ${{secrets.SCHUTZBOT_GITHUB_ACCESS_TOKEN}}
