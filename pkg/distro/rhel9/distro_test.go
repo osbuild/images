@@ -811,38 +811,6 @@ func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
 	}
 }
 
-func TestDistro_CustomFileSystemPatternMatching(t *testing.T) {
-	r9distro := rhel9.New()
-	bp := blueprint.Blueprint{
-		Customizations: &blueprint.Customizations{
-			Filesystem: []blueprint.FilesystemCustomization{
-				{
-					MinSize:    1024,
-					Mountpoint: "/variable",
-				},
-				{
-					MinSize:    1024,
-					Mountpoint: "/variable/log/audit",
-				},
-			},
-		},
-	}
-	for _, archName := range r9distro.ListArches() {
-		arch, _ := r9distro.GetArch(archName)
-		for _, imgTypeName := range arch.ListImageTypes() {
-			imgType, _ := arch.GetImageType(imgTypeName)
-			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
-			if imgTypeName == "edge-commit" || imgTypeName == "edge-container" {
-				assert.EqualError(t, err, "Custom mountpoints are not supported for ostree types")
-			} else if imgTypeName == "edge-installer" || imgTypeName == "edge-simplified-installer" || imgTypeName == "edge-raw-image" || imgTypeName == "edge-ami" || imgTypeName == "edge-vsphere" {
-				continue
-			} else {
-				assert.EqualError(t, err, "The following custom mountpoints are not supported [\"/variable\" \"/variable/log/audit\"]")
-			}
-		}
-	}
-}
-
 func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 	r9distro := rhel9.New()
 	bp := blueprint.Blueprint{

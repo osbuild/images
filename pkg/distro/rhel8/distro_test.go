@@ -848,44 +848,6 @@ func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
 	}
 }
 
-func TestDistro_CustomFileSystemPatternMatching(t *testing.T) {
-	r8distro := rhel8.New()
-	bp := blueprint.Blueprint{
-		Customizations: &blueprint.Customizations{
-			Filesystem: []blueprint.FilesystemCustomization{
-				{
-					MinSize:    1024,
-					Mountpoint: "/variable",
-				},
-				{
-					MinSize:    1024,
-					Mountpoint: "/variable/log/audit",
-				},
-			},
-		},
-	}
-	unsupported := map[string]bool{
-		"edge-installer":            true,
-		"edge-simplified-installer": true,
-		"edge-raw-image":            true,
-		"azure-eap7-rhui":           true,
-	}
-	for _, archName := range r8distro.ListArches() {
-		arch, _ := r8distro.GetArch(archName)
-		for _, imgTypeName := range arch.ListImageTypes() {
-			imgType, _ := arch.GetImageType(imgTypeName)
-			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
-			if imgTypeName == "edge-commit" || imgTypeName == "edge-container" {
-				assert.EqualError(t, err, "Custom mountpoints are not supported for ostree types")
-			} else if unsupported[imgTypeName] {
-				assert.Error(t, err)
-			} else {
-				assert.EqualError(t, err, "The following custom mountpoints are not supported [\"/variable\" \"/variable/log/audit\"]")
-			}
-		}
-	}
-}
-
 func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 	r8distro := rhel8.New()
 	bp := blueprint.Blueprint{

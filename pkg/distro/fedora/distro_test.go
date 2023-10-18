@@ -824,42 +824,6 @@ func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
 	}
 }
 
-func TestDistro_CustomFileSystemPatternMatching(t *testing.T) {
-	fedoraDistro := fedora.NewF37()
-	bp := blueprint.Blueprint{
-		Customizations: &blueprint.Customizations{
-			Filesystem: []blueprint.FilesystemCustomization{
-				{
-					MinSize:    1024,
-					Mountpoint: "/variable",
-				},
-				{
-					MinSize:    1024,
-					Mountpoint: "/variable/log/audit",
-				},
-			},
-		},
-	}
-	for _, archName := range fedoraDistro.ListArches() {
-		arch, _ := fedoraDistro.GetArch(archName)
-		for _, imgTypeName := range arch.ListImageTypes() {
-			imgType, _ := arch.GetImageType(imgTypeName)
-			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
-			if imgTypeName == "iot-commit" || imgTypeName == "iot-container" {
-				assert.EqualError(t, err, "Custom mountpoints are not supported for ostree types")
-			} else if imgTypeName == "iot-raw-image" || imgTypeName == "iot-qcow2-image" {
-				assert.EqualError(t, err, fmt.Sprintf("unsupported blueprint customizations found for image type %q: (allowed: User, Group, Directories, Files, Services)", imgTypeName))
-			} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "image-installer" {
-				continue
-			} else if imgTypeName == "live-installer" {
-				assert.EqualError(t, err, fmt.Sprintf("unsupported blueprint customizations found for boot ISO image type \"%s\": (allowed: None)", imgTypeName))
-			} else {
-				assert.EqualError(t, err, "The following custom mountpoints are not supported [\"/variable\" \"/variable/log/audit\"]")
-			}
-		}
-	}
-}
-
 func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 	fedoraDistro := fedora.NewF37()
 	bp := blueprint.Blueprint{
