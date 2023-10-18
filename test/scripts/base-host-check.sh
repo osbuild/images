@@ -1,8 +1,39 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+running_wait() {
+    # simple implementation of 'systemctl is-system-running --wait' for older
+    # versions of systemd that don't support the option (EL8)
+    #
+    # From SYSTEMCTL(1)
+    #   If --wait is in use, states initializing or starting will not be
+    #   reported, instead the command will block until a later state (such as
+    #   running or degraded) is reached.
+    while true; do
+        state=$(sudo systemctl is-system-running)
+        echo "${state}"
+
+        # keep iterating on initializing and starting
+        case "${state}" in
+        "initializing" | "starting")
+            sleep 3
+            continue
+            ;;
+
+        # the only good state
+        "running")
+            return 0
+            ;;
+
+        # fail on anything else
+        *)
+            return 1
+        esac
+    done
+}
+
 echo "❓ Checking system status"
-if ! sudo systemctl is-system-running --wait; then
+if ! running_wait; then
 
     echo "❌ Listing units and exiting with failure"
     # system is not fully operational
