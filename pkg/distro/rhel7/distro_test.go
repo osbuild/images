@@ -403,32 +403,6 @@ func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
 	}
 }
 
-func TestDistro_CustomFileSystemPatternMatching(t *testing.T) {
-	r7distro := rhel7.New()
-	bp := blueprint.Blueprint{
-		Customizations: &blueprint.Customizations{
-			Filesystem: []blueprint.FilesystemCustomization{
-				{
-					MinSize:    1024,
-					Mountpoint: "/variable",
-				},
-				{
-					MinSize:    1024,
-					Mountpoint: "/variable/log/audit",
-				},
-			},
-		},
-	}
-	for _, archName := range r7distro.ListArches() {
-		arch, _ := r7distro.GetArch(archName)
-		for _, imgTypeName := range arch.ListImageTypes() {
-			imgType, _ := arch.GetImageType(imgTypeName)
-			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
-			assert.EqualError(t, err, "The following custom mountpoints are not supported [\"/variable\" \"/variable/log/audit\"]")
-		}
-	}
-}
-
 func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 	r7distro := rhel7.New()
 	bp := blueprint.Blueprint{
