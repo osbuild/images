@@ -81,7 +81,7 @@ func getInstanceType(arch string) (string, error) {
 	case "x86_64":
 		return "t3.small", nil
 	case "aarch64":
-		return "t4g.small", nil
+		return "t4g.medium", nil
 	default:
 		return "", fmt.Errorf("getInstanceType(): unknown architecture %q", arch)
 	}
