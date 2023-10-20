@@ -35,22 +35,42 @@ def create_ssh_key():
         yield keypath, keypath + ".pub"
 
 
+@contextlib.contextmanager
+def ensure_uncompressed(filepath):
+    """
+    If the file at the given path is compressed, decompress it and return the new file path.
+    """
+    base, ext = os.path.splitext(filepath)
+    if ext == ".xz":
+        print(f"Uncompressing {filepath}")
+        # needs to run as root to set perms and ownership on uncompressed file
+        runcmd(["sudo", "unxz", "--verbose", "--keep", filepath])
+        yield base
+        # cleanup when done so the uncompressed file doesn't get uploaded to the build cache
+        os.unlink(base)
+
+    else:
+        # we only do xz for now so it must be raw: return as is and hope for the best
+        yield filepath
+
+
 def boot_ami(distro, arch, image_type, image_path):
     aws_config = get_aws_config()
-    with create_ssh_key() as (privkey, pubkey):
-        image_name = f"image-boot-test-{distro}-{arch}-{image_type}-" + str(uuid.uuid4())
-        cmd = ["go", "run", "./cmd/boot-aws", "run",
-               "--access-key-id", aws_config["key_id"],
-               "--secret-access-key", aws_config["secret_key"],
-               "--region", aws_config["region"],
-               "--bucket", aws_config["bucket"],
-               "--arch", arch,
-               "--name", image_name,
-               "--key", f"images/boot/{image_name}",
-               "--username", "osbuild",
-               "--ssh-key", pubkey,
-               image_path, "test/scripts/base-host-check.sh"]
-        runcmd(cmd)
+    with ensure_uncompressed(image_path) as raw_image_path:
+        with create_ssh_key() as (privkey, pubkey):
+            image_name = f"image-boot-test-{distro}-{arch}-{image_type}-" + str(uuid.uuid4())
+            cmd = ["go", "run", "./cmd/boot-aws", "run",
+                   "--access-key-id", aws_config["key_id"],
+                   "--secret-access-key", aws_config["secret_key"],
+                   "--region", aws_config["region"],
+                   "--bucket", aws_config["bucket"],
+                   "--arch", arch,
+                   "--name", image_name,
+                   "--key", f"images/boot/{image_name}",
+                   "--username", "osbuild",
+                   "--ssh-key", pubkey,
+                   raw_image_path, "test/scripts/base-host-check.sh"]
+            runcmd(cmd)
 
 
 def find_image_file(build_path: str) -> str:
