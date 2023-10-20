@@ -7,6 +7,8 @@ var MountpointPolicies = NewPathPolicies(map[string]PathPolicy{
 	"/var":  {},
 	"/opt":  {},
 	"/srv":  {},
+	// /etc must be on the root filesystem
+	"/etc": {Deny: true},
 	// NB: any mountpoints under /usr are not supported by systemd fstab
 	// generator in initram before the switch-root, so we don't allow them.
 	"/usr":  {Exact: true},
@@ -14,6 +16,22 @@ var MountpointPolicies = NewPathPolicies(map[string]PathPolicy{
 	"/data": {},
 	"/home": {},
 	"/tmp":  {},
+	// API filesystems
+	"/sys":  {Deny: true},
+	"/proc": {Deny: true},
+	"/dev":  {Deny: true},
+	"/run":  {Deny: true},
+	// not allowed due to merged-usr
+	"/bin":   {Deny: true},
+	"/sbin":  {Deny: true},
+	"/lib":   {Deny: true},
+	"/lib64": {Deny: true},
+	// used by ext filesystems
+	"/lost+found": {Deny: true},
+	// used by EFI
+	"/boot/efi": {Deny: true},
+	// used by systemd / ostree
+	"/sysroot": {Deny: true},
 })
 
 // CustomDirectoriesPolicies is a set of default policies for custom directories
