@@ -5,7 +5,7 @@ import pathlib
 import subprocess as sp
 import sys
 
-TEST_CACHE_ROOT = os.path.expanduser("~/.cache/osbuild-images")
+TEST_CACHE_ROOT = ".cache/osbuild-images"
 CONFIGS_PATH = "./test/configs"
 CONFIG_MAP = "./test/config-map.json"
 
