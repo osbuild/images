@@ -13,7 +13,7 @@ build/{distro}/{arch}/{image_type}/{config_name}:
     - sudo ./schutzbot/setup-osbuild-repo
     - sudo dnf install -y go gpgme-devel gcc
       osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux
-      s3cmd podman
+      s3cmd podman xz
     - {start_container}
     - ./test/scripts/build-image "{distro}" "{image_type}" "{config}"
     - ./test/scripts/upload-results "{distro}" "{image_type}" "{config}"
