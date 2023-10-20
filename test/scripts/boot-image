@@ -94,7 +94,7 @@ def main():
 
     print(f"Testing image at {image_path}")
     match image_type:
-        case "ami":
+        case "ami" | "ec2" | "ec2-ha" | "ec2-sap" | "edge-ami":
             boot_ami(distro, arch, image_type, image_path)
         case _:
             # skip

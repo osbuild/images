@@ -23,7 +23,11 @@ OSTREE_CONTAINERS = [
 
 # image types that can be boot tested
 CAN_BOOT_TEST = [
-    "ami"
+    "ami",
+    "ec2",
+    "ec2-ha",
+    "ec2-sap",
+    "edge-ami",
 ]
 
 
