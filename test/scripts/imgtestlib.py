@@ -209,8 +209,11 @@ def filter_builds(manifests, skip_ostree_pull=True):
                 with open(build_info_path) as build_info_fp:
                     dl_config = json.load(build_info_fp)
                 commit = dl_config["commit"]
+                pr = dl_config.get("pr")
                 url = f"https://github.com/osbuild/images/commit/{commit}"
                 print(f"🖼️ Manifest {manifest_fname} was successfully built in commit {commit}\n  {url}")
+                if pr:
+                    print(f"  PR-{pr}: https://github.com/osbuild/images/pull/{pr}")
                 if image_type not in CAN_BOOT_TEST:
                     print(f"  Boot testing for {image_type} is not yet supported")
                     continue
