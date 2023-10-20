@@ -16,6 +16,7 @@ build/{distro}/{arch}/{image_type}/{config_name}:
       s3cmd podman xz
     - {start_container}
     - ./test/scripts/build-image "{distro}" "{image_type}" "{config}"
+    - ./test/scripts/boot-image "{distro}" "{arch}" "{image_type}" "{image_path}"
     - ./test/scripts/upload-results "{distro}" "{image_type}" "{config}"
   extends: .terraform
   variables:
@@ -282,6 +283,8 @@ def generate_configs(build_requests, pull_configs, container_configs, pipeline_f
 
         config_name = config["name"]
 
+        build_name = testlib.gen_build_name(distro, arch, image_type, config_name)
+        image_path = f"./build/{build_name}"
         # generate script line to pull and start container
         container = container_configs[config_name]
 
@@ -297,7 +300,8 @@ def generate_configs(build_requests, pull_configs, container_configs, pipeline_f
         pipeline_file.write(JOB_TEMPLATE.format(distro=distro, arch=arch, image_type=image_type,
                                                 config_name=config_name, config=build_config_path,
                                                 start_container=container_cmd,
-                                                internal="true" if "rhel" in distro else "false"))
+                                                internal="true" if "rhel" in distro else "false",
+                                                image_path=image_path))
     print("✅ DONE!")
 
 
