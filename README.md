@@ -4,9 +4,9 @@ Images
 ### Project
 
  * **Website**: <https://www.osbuild.org>
- * **Bug Tracker**: <https://github.com/osbuild/osbuild-composer/issues>
+ * **Bug Tracker**: <https://github.com/osbuild/images/issues>
  * **IRC**: #osbuild on [Libera.Chat](https://libera.chat/)
- * **Changelog**: <https://github.com/osbuild/osbuild-composer/releases>
+ * **Changelog**: <https://github.com/osbuild/images/releases>
 
 #### Contributing
 
