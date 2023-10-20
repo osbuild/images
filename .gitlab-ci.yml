@@ -42,6 +42,10 @@ check-build-coverage:
   script:
     - apk add -U go python3 gpgme-dev s3cmd
     - ./test/scripts/check-build-coverage ./s3configs/
+  cache:
+    key: testcache
+    paths:
+      - .cache/osbuild-images
 
 finish:
   stage: finish

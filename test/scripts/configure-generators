@@ -37,6 +37,10 @@ generate-build-config-{distro}-{arch}:
   artifacts:
     paths:
       - build-config.yml
+  cache:
+    key: testcache
+    paths:
+      - {cache}
 """
 
 TRIGGER_TEMPLATE = """
@@ -69,6 +73,10 @@ generate-ostree-build-config-{distro}-{arch}:
       - build-configs
   needs:
     - image-build-trigger-{distro}-{arch}
+  cache:
+    key: testcache
+    paths:
+      - {cache}
 """
 
 OSTREE_TRIGGER_TEMPLATE = """
@@ -89,6 +97,8 @@ def main():
     images = testlib.list_images(arches=ARCHITECTURES)
     combos = set()
 
+    cache = testlib.TEST_CACHE_ROOT
+
     gen_stage = []
     trigger_stage = []
     ostree_gen_stage = []
@@ -99,10 +109,10 @@ def main():
             continue
 
         combos.add(combo)
-        gen_stage.append(GEN_TEMPLATE.format(distro=img["distro"], arch=img["arch"]))
-        trigger_stage.append(TRIGGER_TEMPLATE.format(distro=img["distro"], arch=img["arch"]))
-        ostree_gen_stage.append(OSTREE_GEN_TEMPLATE.format(distro=img["distro"], arch=img["arch"]))
-        ostree_trigger_stage.append(OSTREE_TRIGGER_TEMPLATE.format(distro=img["distro"], arch=img["arch"]))
+        gen_stage.append(GEN_TEMPLATE.format(distro=img["distro"], arch=img["arch"], cache=cache))
+        trigger_stage.append(TRIGGER_TEMPLATE.format(distro=img["distro"], arch=img["arch"], cache=cache))
+        ostree_gen_stage.append(OSTREE_GEN_TEMPLATE.format(distro=img["distro"], arch=img["arch"], cache=cache))
+        ostree_trigger_stage.append(OSTREE_TRIGGER_TEMPLATE.format(distro=img["distro"], arch=img["arch"], cache=cache))
 
     with open(config_path, "w", encoding="utf-8") as config_file:
         config_file.write(BASE_CONFIG)
