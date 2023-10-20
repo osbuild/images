@@ -12,22 +12,25 @@ func TestMountpointPolicies(t *testing.T) {
 		{"/", true},
 
 		{"/bin", false},
-		{"/custom", false},
 		{"/dev", false},
 		{"/etc", false},
 		{"/lib", false},
 		{"/lib64", false},
 		{"/lost+found", false},
-		{"/mnt", false},
 		{"/proc", false},
-		{"/root", false},
 		{"/run", false},
 		{"/sbin", false},
 		{"/sys", false},
 		{"/sysroot", false},
 
+		{"/mnt", true},
+		{"/root", true},
+
+		{"/custom", true},
+		{"/custom/dir", true},
+
 		{"/boot", true},
-		{"/boot/dir", false},
+		{"/boot/dir", true},
 		{"/boot/efi", false},
 
 		{"/var", true},

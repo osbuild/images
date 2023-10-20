@@ -2,20 +2,12 @@ package pathpolicy
 
 // MountpointPolicies is a set of default mountpoint policies used for filesystem customizations
 var MountpointPolicies = NewPathPolicies(map[string]PathPolicy{
-	"/":     {Exact: true},
-	"/boot": {Exact: true},
-	"/var":  {},
-	"/opt":  {},
-	"/srv":  {},
+	"/": {},
 	// /etc must be on the root filesystem
 	"/etc": {Deny: true},
 	// NB: any mountpoints under /usr are not supported by systemd fstab
 	// generator in initram before the switch-root, so we don't allow them.
-	"/usr":  {Exact: true},
-	"/app":  {},
-	"/data": {},
-	"/home": {},
-	"/tmp":  {},
+	"/usr": {Exact: true},
 	// API filesystems
 	"/sys":  {Deny: true},
 	"/proc": {Deny: true},
