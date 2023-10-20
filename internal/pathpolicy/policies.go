@@ -7,7 +7,9 @@ var MountpointPolicies = NewPathPolicies(map[string]PathPolicy{
 	"/var":  {},
 	"/opt":  {},
 	"/srv":  {},
-	"/usr":  {},
+	// NB: any mountpoints under /usr are not supported by systemd fstab
+	// generator in initram before the switch-root, so we don't allow them.
+	"/usr":  {Exact: true},
 	"/app":  {},
 	"/data": {},
 	"/home": {},

@@ -41,12 +41,12 @@ func TestMountpointPolicies(t *testing.T) {
 		{"/srv/www", true},
 
 		{"/usr", true},
-		{"/usr/bin", true},
-		{"/usr/sbin", true},
-		{"/usr/local", true},
-		{"/usr/local/bin", true},
-		{"/usr/lib", true},
-		{"/usr/lib64", true},
+		{"/usr/bin", false},
+		{"/usr/sbin", false},
+		{"/usr/local", false},
+		{"/usr/local/bin", false},
+		{"/usr/lib", false},
+		{"/usr/lib64", false},
 
 		{"/tmp", true},
 		{"/tmp/foo", true},
