@@ -85,8 +85,8 @@ def list_images(distros=None, arches=None, images=None):
 
 
 def s3_auth_args():
-    s3_key = os.environ.get("V2_AWS_SECRET_ACCESS_KEY")
-    s3_key_id = os.environ.get("V2_AWS_ACCESS_KEY_ID")
+    s3_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
+    s3_key_id = os.environ.get("AWS_ACCESS_KEY_ID")
     if s3_key and s3_key_id:
         return [f"--access_key={s3_key_id}", f"--secret_key={s3_key}"]
 
