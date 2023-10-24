@@ -4,7 +4,8 @@
 
 - `./cmd/build` takes a config file as argument to build an image.  For example:
 ```
-sudo go run ./cmd/build -output ./buildtest -rpmmd /tmp/rpmmd -distro fedora-38 -image qcow2 -config test/configs/embed-containers.json
+go build -o bin/build ./cmd/build
+sudo ./bin/build -output ./buildtest -rpmmd /tmp/rpmmd -distro fedora-38 -image qcow2 -config test/configs/embed-containers.json
 ```
 will build a Fedora 38 qcow2 image using the configuration specified in the file `embed-containers.json`
 
@@ -29,6 +30,7 @@ configure-generators
     |         | (Dynamic: For each modified image type and config)
     |         |-- Build <distro>-<arch>-<image>-<config>
     |
+    | (Dynamic: For each distro/arch)
     |-- generate-ostree-build-configs-<distro>-<arch>
               |
               | (Dynamic: For each modified image type and config)
@@ -54,16 +56,18 @@ The config generator:
 - Downloads the test build cache.
 - Filters out any manifest with an ID that exists in the build cache.
   - It also filters out any manifest that depends on an ostree commit because these can't be built without an ostree repository to pull from.
-- For each remaining manifest, creates a build job which runs the `./test/scripts/build-image.sh` script for a given distro, image type, and config file.
+- For each remaining manifest, creates a job which builds, boots (if applicable), and uploads the results to the build cache for a given distro, image type, and config file.
+  - `./test/scripts/build-image` builds the image using osbuild.
+  - `./test/scripts/boot-image` boots the image in the appropriate cloud or virtual environment (if supported).
+  - `./test/scripts/upload-results` uploads the results (manifest, image file, and build info) to the CI S3 bucket, so that rebuilds of the same manifest ID can be skipped.
   - For ostree container image types (`iot-container` and `edge-container`), it also adds a call to the `./tools/ci/push-container.sh` script to push the container to the GitLab registry. The name and tag for each container is `<build name>:<manifest ID>` (see [Definitions](#definitions) below).
-  - If no builds are needed, it generates a `NullConfig`, which is a simple shell runner that exits successfully. This is required because the child pipeline config cannot be empty.
-
+- If no builds are needed, it generates a `NullConfig`, which is a simple shell runner that exits successfully. This is required because the child pipeline config cannot be empty.
 
 #### 2. Dynamic build job
 
 Each build job runs in parallel. For each image that is successfully built, a file is added to the test build cache under the following path:
 ```
-<distro>/<arch>/<manifest ID>.json
+<distro>/<arch>/<manifest ID>/info.json
 ```
 
 Each file in the cache stores information relevant to the build,
@@ -76,7 +80,8 @@ in the form
   "config": "<config name>",
   "manifest-checksum": "<manifest ID>",
   "obuild-version": "<osbuild version>",
-  "commit": "<commit ID>"
+  "commit": "<commit ID>",
+  "pr": "<PR number>"
 }
 ```
 
@@ -91,7 +96,8 @@ for example:
   "config": "all-customizations",
   "manifest-checksum": "8c0ce3987d78fe6f3307494cd57ceed861de61c3b04786d6a7f570faacbdb5df",
   "obuild-version": "osbuild 89",
-  "commit": "52ecfdf1eb345e09c6a6edf4a8d3dd5c8079c51c"
+  "commit": "52ecfdf1eb345e09c6a6edf4a8d3dd5c8079c51c",
+  "pr": 42
 }
 ```
 
@@ -111,8 +117,11 @@ The config generator:
   - Note that this manifest generation step uses the `-skip-noconfig` flag, which means that any image type not defined in the map is skipped.
 - Downloads the test build cache.
 - Filters out any manifest with an ID that exists in the build cache.
-- For each remaining manifest, creates a build job which runs the ostree container that was used to generate the manifest and runs `./test/scripts/build-image.sh` script for a given distro, image type, and config file.
-  - If no builds are needed, it generates a `NullConfig`, which is a simple shell runner that exits successfully. This is required because the child pipeline config cannot be empty.
+- For each remaining manifest, creates a job which builds, boots (if applicable), and uploads the results to the build cache for a given distro, image type, and config file.
+  - `./test/scripts/build-image` builds the image using osbuild.
+  - `./test/scripts/boot-image` boots the image in the appropriate cloud or virtual environment (if supported).
+  - `./test/scripts/upload-results` uploads the results (manifest, image file, and build info) to the CI S3 bucket, so that rebuilds of the same manifest ID can be skipped.
+- If no builds are needed, it generates a `NullConfig`, which is a simple shell runner that exits successfully. This is required because the child pipeline config cannot be empty.
 
 
 #### 4. Dynamic ostree build job

@@ -82,8 +82,8 @@ cache and if these changes are made as root, it can cause issues when running
 other go commands in the future as a regular user. Instead, it is recommended
 to first build the binary and then run it as root:
 ```
-go build -o build ./cmd/build
-sudo ./build ...
+go build -o bin/build ./cmd/build
+sudo ./bin/build ...
 ```
 
 #### Listing available image type configurations
