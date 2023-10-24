@@ -1,13 +1,32 @@
 {
   "./configs/all-customizations.json": {
-    "image-types": [
-      "qcow2"
-    ],
     "distros": [
       "rhel-9*",
       "rhel-8*",
       "centos*",
       "fedora*"
+    ],
+    "image-types": [
+      "qcow2"
+    ]
+  },
+  "./configs/all-with-oscap.json": {
+    "distros": [
+      "rhel-91",
+      "rhel-92",
+      "rhel-87",
+      "rhel-88",
+      "rhel-89",
+      "centos*",
+      "fedora*"
+    ],
+    "image-types": [
+      "qcow2"
+    ]
+  },
+  "./configs/edge-ostree-pull-device.json": {
+    "image-types": [
+      "edge-simplified-installer"
     ]
   },
   "./configs/edge-ostree-pull-empty.json": {
@@ -62,6 +81,11 @@
       "iot-container"
     ]
   },
+  "./configs/iot-ostree-pull-device.json": {
+    "image-types": [
+      "iot-simplified-installer"
+    ]
+  },
   "./configs/iot-ostree-pull-empty.json": {
     "image-types": [
       "iot-ami",
@@ -75,14 +99,20 @@
       "iot-commit"
     ]
   },
-  "./configs/edge-ostree-pull-device.json": {
+  "./configs/minimal-pkgs.json": {
+    "distros": [
+      "fedora*"
+    ],
     "image-types": [
-      "edge-simplified-installer"
+      "qcow2"
     ]
   },
-  "./configs/iot-ostree-pull-device.json": {
+  "./configs/minimal.json": {
+    "distros": [
+      "fedora*"
+    ],
     "image-types": [
-      "iot-simplified-installer"
+      "qcow2"
     ]
   },
   "./configs/ostree.json": {
@@ -90,36 +120,6 @@
       "edge-commit",
       "edge-container",
       "iot-container"
-    ]
-  },
-  "./configs/all-with-oscap.json": {
-    "image-types": [
-      "qcow2"
-    ],
-    "distros": [
-      "rhel-91",
-      "rhel-92",
-      "rhel-87",
-      "rhel-88",
-      "rhel-89",
-      "centos*",
-      "fedora*"
-    ]
-  },
-  "./configs/minimal.json": {
-    "image-types": [
-      "qcow2"
-    ],
-    "distros": [
-      "fedora*"
-    ]
-  },
-  "./configs/minimal-pkgs.json": {
-    "image-types": [
-      "qcow2"
-    ],
-    "distros": [
-      "fedora*"
     ]
   }
 }
