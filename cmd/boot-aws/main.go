@@ -159,12 +159,12 @@ func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resour
 	if err != nil {
 		return err
 	}
-	sshKey, err := flags.GetString("ssh-key")
+	sshPubKey, err := flags.GetString("ssh-pubkey")
 	if err != nil {
 		return err
 	}
 
-	userData, err := createUserData(username, sshKey)
+	userData, err := createUserData(username, sshPubKey)
 	if err != nil {
 		return fmt.Errorf("createUserData(): %s", err.Error())
 	}
@@ -366,7 +366,7 @@ func teardown(cmd *cobra.Command, args []string) {
 }
 
 func doRunExec(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resources) error {
-	sshKey, err := flags.GetString("ssh-key")
+	privKey, err := flags.GetString("ssh-privkey")
 	if err != nil {
 		return err
 	}
@@ -391,11 +391,8 @@ func doRunExec(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *reso
 		return err
 	}
 
-	// TODO: remove this assumption and add a private key flag
-	key := strings.TrimSuffix(sshKey, ".pub")
-
 	// ssh into the remote machine and exit immediately to check connection
-	if err := sshRun(ip, username, key, hostsfile, "exit"); err != nil {
+	if err := sshRun(ip, username, privKey, hostsfile, "exit"); err != nil {
 		return err
 	}
 
@@ -403,12 +400,12 @@ func doRunExec(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *reso
 	destination := filepath.Base(filename)
 
 	// copy the executable
-	if err := scpFile(ip, username, key, hostsfile, filename, destination); err != nil {
+	if err := scpFile(ip, username, privKey, hostsfile, filename, destination); err != nil {
 		return err
 	}
 
 	// run the executable
-	return sshRun(ip, username, key, hostsfile, fmt.Sprintf("./%s", destination))
+	return sshRun(ip, username, privKey, hostsfile, fmt.Sprintf("./%s", destination))
 }
 
 func runExec(cmd *cobra.Command, args []string) {
@@ -460,7 +457,8 @@ func setupCLI() *cobra.Command {
 	rootFlags.String("arch", "", "arch (x86_64 or aarch64)")
 	rootFlags.String("boot-mode", "", "boot mode (legacy-bios, uefi, uefi-preferred)")
 	rootFlags.String("username", "", "name of the user to create on the system")
-	rootFlags.String("ssh-key", "", "path to user's public ssh key")
+	rootFlags.String("ssh-pubkey", "", "path to user's public ssh key")
+	rootFlags.String("ssh-privkey", "", "path to user's private ssh key")
 
 	exitCheck(rootCmd.MarkPersistentFlagRequired("access-key-id"))
 	exitCheck(rootCmd.MarkPersistentFlagRequired("secret-access-key"))
@@ -478,9 +476,10 @@ func setupCLI() *cobra.Command {
 	// TODO: make it optional and use a default
 	exitCheck(rootCmd.MarkPersistentFlagRequired("username"))
 
-	// TODO: make ssh key optional for 'run' and if not specified generate a
-	// temporary key pair
-	exitCheck(rootCmd.MarkPersistentFlagRequired("ssh-key"))
+	// TODO: make ssh key pair optional for 'run' and if not specified generate
+	// a temporary key pair
+	exitCheck(rootCmd.MarkPersistentFlagRequired("ssh-privkey"))
+	exitCheck(rootCmd.MarkPersistentFlagRequired("ssh-pubkey"))
 
 	setupCmd := &cobra.Command{
 		Use:                   "setup [--resourcefile <filename>] <filename>",
