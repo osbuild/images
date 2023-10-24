@@ -1,0 +1,16 @@
+#!/usr/bin/env python3
+import argparse
+
+import imgtestlib as testlib
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("cachedir", type=str, help="path to download the build test cache")
+    args = parser.parse_args()
+    cachedir = args.cachedir
+    testlib.dl_s3_configs(cachedir)
+
+
+if __name__ == "__main__":
+    main()
