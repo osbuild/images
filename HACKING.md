@@ -86,6 +86,84 @@ go build -o bin/build ./cmd/build
 sudo ./bin/build ...
 ```
 
+#### Booting images
+
+You can boot an image in its target environment by using the appropriate
+command from `cmd/`. _Currently, only AWS is supported._
+
+For example, to boot an AMI or EC2 image, you can use the `./cmd/boot-aws`
+command with the `setup` subcommand:
+```bash
+go run ./cmd/boot-aws setup \
+     --access-key-id "${AWS_ACCESS_KEY_ID}" \
+     --secret-access-key "${AWS_SECRET_ACCESS_KEY}" \
+     --region "${AWS_REGION}" \
+     --bucket "${AWS_BUCKET}" \
+     --ami-name "${IMAGE_NAME}" \
+     --s3-key "${IMAGE_KEY}" \
+     --username "${USERNAME}" \
+     --arch "${IMAGE_ARCHITECTURE}" \
+     --ssh-pubkey "${PATH_TO_SSH_PUBLIC_KEY}" \
+     --ssh-privkey "${PATH_TO_SSH_PRIVATE_KEY}" \
+     --resourcefile ./aws-test-resources.json \
+     ${PATH_TO_IMAGE_FILE}
+```
+where:
+- `${AWS_ACCESS_KEY_ID}` and `${AWS_SECRET_ACCESS_KEY}` are the AWS credentials,
+- `${AWS_REGION}` is the AWS region to use,
+- `${AWS_BUCKET}` is an S3 bucket (that must already exist),
+- `${IMAGE_NAME}` is the name to use for registering the AMI,
+- `${IMAGE_KEY}` is the key (filename) to use for the file in S3,
+- `${USERNAME}` is the username to set up on the instance,
+- `${IMAGE_ARCHITECTURE}` is the hardware architecture of the image being
+  uploaded and booted,
+- `${PATH_TO_SSH_PUBLIC_KEY}` and `${PATH_TO_SSH_PRIVATE_KEY}` point to an
+  public/private SSH key pair.
+
+This command will upload the image to S3, register the image as an AMI, create
+a security group configured to allow SSH access, and launch an instance from
+the AMI. It will then wait until the instance is ready and print its public IP
+address. It will also use the public ssh key and provided username to configure
+cloud-init to create a user and set the ssh key on first boot.
+
+The IDs of all created resources are stored in the file specified by the
+`--resourcefile` flag. This can be used to tear down all the resources created
+by the `setup` subcommand:
+```bash
+go run ./cmd/boot-aws teardown \
+     --access-key-id "${AWS_ACCESS_KEY_ID}" \
+     --secret-access-key "${AWS_SECRET_ACCESS_KEY}" \
+     --region "${AWS_REGION}" \
+     --bucket "${AWS_BUCKET}" \
+     --name "${IMAGE_NAME}" \
+     --key "${IMAGE_KEY}" \
+     --username "${USERNAME}" \
+     --arch "${IMAGE_ARCHITECTURE}" \
+     --ssh-pubkey "${PATH_TO_SSH_PUBLIC_KEY}" \
+     --ssh-privkey "${PATH_TO_SSH_PRIVATE_KEY}" \
+     --resourcefile ./aws-test-resources.json
+```
+
+Alternatively, a setup-test-teardown procedure can be run in a single command using the `run` subcommand:
+```bash
+go run ./cmd/boot-aws run \
+     --access-key-id "${AWS_ACCESS_KEY_ID}" \
+     --secret-access-key "${AWS_SECRET_ACCESS_KEY}" \
+     --region "${AWS_REGION}" \
+     --bucket "${AWS_BUCKET}" \
+     --ami-name "${IMAGE_NAME}" \
+     --s3-key "${IMAGE_KEY}" \
+     --username "${USERNAME}" \
+     --arch "${IMAGE_ARCHITECTURE}" \
+     --ssh-pubkey "${PATH_TO_SSH_PUBLIC_KEY}" \
+     --ssh-privkey "${PATH_TO_SSH_PRIVATE_KEY}" \
+     ${PATH_TO_IMAGE_FILE} ${PATH_TO_SCRIPT}
+```
+
+This will perform the same steps as the `setup` subcommand, then upload the
+script specified by `${PATH_TO_SCRIPT}` to the instance, run it, and then
+perform the same actions as the `teardown` subcommand.
+
 #### Listing available image type configurations
 
 The `cmd/list-images` utility simply lists all available combinations of
