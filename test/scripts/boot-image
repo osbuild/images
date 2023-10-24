@@ -8,6 +8,8 @@ import sys
 import uuid
 from tempfile import TemporaryDirectory
 
+import imgtestlib as testlib
+
 
 def runcmd(cmd, stdin=None):
     job = sp.run(cmd)
@@ -28,10 +30,24 @@ def get_aws_config():
 @contextlib.contextmanager
 def create_ssh_key():
     with TemporaryDirectory() as tmpdir:
-        # create an ssh key pair with empty password
         keypath = os.path.join(tmpdir, "testkey")
-        cmd = ["ssh-keygen", "-N", "", "-f", keypath]
-        runcmd(cmd)
+        if ci_priv_key := os.environ.get("CI_PRIV_SSH_KEY"):
+            # running in CI: use key from env
+            with open(keypath, "w") as keyfile:
+                keyfile.write(ci_priv_key + "\n")
+            os.chmod(keypath, 0o600)
+
+            # get public key from priv key and write it out
+            cmd = ["ssh-keygen", "-y", "-f", keypath]
+            out, _ = testlib.runcmd(cmd)
+            pubkey = out.decode()
+            with open(keypath + ".pub", "w") as pubkeyfile:
+                pubkeyfile.write(pubkey)
+        else:
+            # create an ssh key pair with empty password
+            cmd = ["ssh-keygen", "-N", "", "-f", keypath]
+            runcmd(cmd)
+
         yield keypath, keypath + ".pub"
 
 
