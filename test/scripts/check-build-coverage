@@ -56,10 +56,9 @@ def check_build_coverage(cachedir):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("cachedir", type=str, help="path to download the build test cache")
+    parser.add_argument("cachedir", type=str, help="path to existing build cache")
     args = parser.parse_args()
     cachedir = args.cachedir
-    testlib.dl_s3_configs(cachedir)
 
     missing, now, pr = check_build_coverage(cachedir)
 

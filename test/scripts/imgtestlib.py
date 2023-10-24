@@ -93,7 +93,7 @@ def s3_auth_args():
     return []
 
 
-def dl_s3_configs(destination):
+def dl_build_info(destination):
     """
     Downloads all the configs from the s3 bucket.
     """
@@ -173,11 +173,8 @@ def filter_builds(manifests, skip_ostree_pull=True):
     Returns a list of build requests for the manifests that have no matching config in the test build cache.
     """
     print(f"⚙️ Filtering {len(manifests)} build configurations")
-    dl_path = os.path.join(TEST_CACHE_ROOT, "builds/")
-    os.makedirs(dl_path, exist_ok=True)
+    build_info_root = os.path.join(TEST_CACHE_ROOT, "builds/")
     build_requests = []
-
-    dl_s3_configs(dl_path)
 
     errors = []
 
@@ -200,8 +197,8 @@ def filter_builds(manifests, skip_ostree_pull=True):
         build_request["manifest-checksum"] = manifest_id
 
         # check if the hash_fname exists in the synced directory
-        dl_config_dir = os.path.join(dl_path, distro, arch)
-        build_info_path = os.path.join(dl_config_dir, manifest_id, "info.json")
+        distro_arch_dir = os.path.join(build_info_root, distro, arch)
+        build_info_path = os.path.join(distro_arch_dir, manifest_id, "info.json")
 
         # check if the id_fname exists in the synced directory
         if os.path.exists(build_info_path):

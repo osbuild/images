@@ -57,6 +57,7 @@ check-build-coverage:
     PYTHONUNBUFFERED: 1
   script:
     - apk add -U go python3 gpgme-dev s3cmd
+    - ./test/scripts/dl-build-info .cache/osbuild-images/builds/
     - ./test/scripts/check-build-coverage .cache/osbuild-images/builds/
   cache:
     key: buildinfo

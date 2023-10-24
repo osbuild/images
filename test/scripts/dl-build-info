@@ -9,7 +9,7 @@ def main():
     parser.add_argument("cachedir", type=str, help="path to download the build test cache")
     args = parser.parse_args()
     cachedir = args.cachedir
-    testlib.dl_s3_configs(cachedir)
+    testlib.dl_build_info(cachedir)
 
 
 if __name__ == "__main__":

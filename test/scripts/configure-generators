@@ -41,9 +41,11 @@ generate-build-config-{distro}-{arch}:
     - key: buildinfo
       paths:
         - {cache}/builds
+      policy: pull
     - key: rpmmd
       paths:
         - {cache}/rpmmd
+      policy: pull-push
 """
 
 TRIGGER_TEMPLATE = """
@@ -80,9 +82,11 @@ generate-ostree-build-config-{distro}-{arch}:
     - key: buildinfo
       paths:
         - {cache}/builds
+      policy: pull
     - key: rpmmd
       paths:
         - {cache}/rpmmd
+      policy: pull-push
 """
 
 OSTREE_TRIGGER_TEMPLATE = """
