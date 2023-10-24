@@ -31,10 +31,14 @@
   },
   "./configs/edge-ostree-pull-empty.json": {
     "image-types": [
-      "edge-ami",
       "edge-installer",
       "edge-raw-image",
       "edge-vsphere"
+    ]
+  },
+  "./configs/edge-ostree-pull-user.json": {
+    "image-types": [
+      "edge-ami"
     ]
   },
   "./configs/embed-containers-2.json": {
@@ -88,10 +92,14 @@
   },
   "./configs/iot-ostree-pull-empty.json": {
     "image-types": [
-      "iot-ami",
       "iot-installer",
       "iot-qcow2-image",
       "iot-raw-image"
+    ]
+  },
+  "./configs/iot-ostree-pull-user.json": {
+    "image-types": [
+      "iot-ami"
     ]
   },
   "./configs/kernel-debug.json": {

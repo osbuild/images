@@ -1,0 +1,23 @@
+{
+  "name": "iot-ostree-pull-user",
+  "blueprint": {
+    "customizations": {
+      "user": [
+        {
+          "groups": [
+            "wheel"
+          ],
+          "key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPDyeUyVWvuSSOdrikiDWgNoCz0oYP4Ir68jJecn+XYc github.com/osbuild/images",
+          "name": "osbuild"
+        }
+      ]
+    }
+  },
+  "depends": {
+    "config": "empty.json",
+    "image-type": "iot-container"
+  },
+  "ostree": {
+    "url": "http://example.com/repo"
+  }
+}
