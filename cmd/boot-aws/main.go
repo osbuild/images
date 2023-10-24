@@ -173,7 +173,7 @@ func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resour
 	if err != nil {
 		return err
 	}
-	keyName, err := flags.GetString("key")
+	keyName, err := flags.GetString("s3-key")
 	if err != nil {
 		return err
 	}
@@ -192,7 +192,7 @@ func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resour
 		return err
 	}
 
-	imageName, err := flags.GetString("name")
+	imageName, err := flags.GetString("ami-name")
 	if err != nil {
 		return err
 	}
@@ -444,8 +444,8 @@ func setupCLI() *cobra.Command {
 	rootFlags.String("session-token", "", "session token")
 	rootFlags.String("region", "", "target region")
 	rootFlags.String("bucket", "", "target S3 bucket name")
-	rootFlags.String("key", "", "target S3 key name")
-	rootFlags.String("name", "", "AMI name")
+	rootFlags.String("s3-key", "", "target S3 key name")
+	rootFlags.String("ami-name", "", "AMI name")
 	rootFlags.String("arch", "", "arch (x86_64 or aarch64)")
 	rootFlags.String("boot-mode", "", "boot mode (legacy-bios, uefi, uefi-preferred)")
 	rootFlags.String("username", "", "name of the user to create on the system")
@@ -458,10 +458,10 @@ func setupCLI() *cobra.Command {
 	exitCheck(rootCmd.MarkPersistentFlagRequired("bucket"))
 
 	// TODO: make it optional and use UUID if not specified
-	exitCheck(rootCmd.MarkPersistentFlagRequired("key"))
+	exitCheck(rootCmd.MarkPersistentFlagRequired("s3-key"))
 
 	// TODO: make it optional and use UUID if not specified
-	exitCheck(rootCmd.MarkPersistentFlagRequired("name"))
+	exitCheck(rootCmd.MarkPersistentFlagRequired("ami-name"))
 
 	exitCheck(rootCmd.MarkPersistentFlagRequired("arch"))
 
