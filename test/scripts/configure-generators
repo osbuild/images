@@ -38,9 +38,12 @@ generate-build-config-{distro}-{arch}:
     paths:
       - build-config.yml
   cache:
-    key: testcache
-    paths:
-      - {cache}
+    - key: buildinfo
+      paths:
+        - {cache}/builds
+    - key: rpmmd
+      paths:
+        - {cache}/rpmmd
 """
 
 TRIGGER_TEMPLATE = """
@@ -74,9 +77,12 @@ generate-ostree-build-config-{distro}-{arch}:
   needs:
     - image-build-trigger-{distro}-{arch}
   cache:
-    key: testcache
-    paths:
-      - {cache}
+    - key: buildinfo
+      paths:
+        - {cache}/builds
+    - key: rpmmd
+      paths:
+        - {cache}/rpmmd
 """
 
 OSTREE_TRIGGER_TEMPLATE = """
