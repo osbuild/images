@@ -23,7 +23,13 @@ cache-init:
     PYTHONUNBUFFERED: 1
   script:
     - apk add -U python3 s3cmd
+    - ls -la
+    - mkdir -p .cache/osbuild-images/builds
+    - find .cache/osbuild-images/builds -type f | wc -l
+    - du -hs .cache/osbuild-images/builds
     - ./test/scripts/dl-build-info .cache/osbuild-images/builds/
+    - find .cache/osbuild-images/builds -type f | wc -l
+    - du -hs .cache/osbuild-images/builds
   cache:
     key: buildinfo
     paths:

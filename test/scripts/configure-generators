@@ -30,6 +30,11 @@ generate-build-config-{distro}-{arch}:
     RUNNER: aws/fedora-38-{arch}
     INTERNAL_NETWORK: "true"
   script:
+    - ls -la
+    - mkdir -p .cache/osbuild-images/builds
+    - find .cache/osbuild-images/builds -type f | wc -l
+    - du -hs .cache/osbuild-images/builds
+
     - sudo ./schutzbot/setup-osbuild-repo
     - sudo dnf -y install go python3 gpgme-devel s3cmd
       osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux
