@@ -185,13 +185,6 @@ func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resour
 
 	fmt.Printf("file uploaded to %s\n", aws.StringValue(&uploadOutput.Location))
 
-	var share []string
-	if shareWith, err := flags.GetString("account-id"); shareWith != "" {
-		share = append(share, shareWith)
-	} else if err != nil {
-		return err
-	}
-
 	var bootModePtr *string
 	if bootMode, err := flags.GetString("boot-mode"); bootMode != "" {
 		bootModePtr = &bootMode
@@ -209,7 +202,7 @@ func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resour
 		return err
 	}
 
-	ami, snapshot, err := a.Register(imageName, bucketName, keyName, share, arch, bootModePtr)
+	ami, snapshot, err := a.Register(imageName, bucketName, keyName, nil, arch, bootModePtr)
 	if err != nil {
 		return fmt.Errorf("Register(): %s", err.Error())
 	}
@@ -453,7 +446,6 @@ func setupCLI() *cobra.Command {
 	rootFlags.String("bucket", "", "target S3 bucket name")
 	rootFlags.String("key", "", "target S3 key name")
 	rootFlags.String("name", "", "AMI name")
-	rootFlags.String("account-id", "", "account id to share image with")
 	rootFlags.String("arch", "", "arch (x86_64 or aarch64)")
 	rootFlags.String("boot-mode", "", "boot mode (legacy-bios, uefi, uefi-preferred)")
 	rootFlags.String("username", "", "name of the user to create on the system")
