@@ -72,7 +72,8 @@
   },
   "./configs/kernel-debug.json": {
     "image-types": [
-      "iot-commit"
+      "iot-commit",
+      "qcow2"
     ]
   },
   "./configs/edge-ostree-pull-device.json": {

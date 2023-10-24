@@ -234,6 +234,14 @@ def filter_builds(manifests, skip_ostree_pull=True):
         print("⚠️ Errors:")
         print("\n".join(errors))
 
+    for build_request in build_requests:
+        distro = build_request["distro"]
+        arch = build_request["arch"]
+        image_type = build_request["image-type"]
+        config = build_request["config"]
+        config_name = config["name"]
+        print(f"🛠️ Adding build for {distro}/{arch}/{image_type}/{config_name}")
+
     return build_requests
 
 
