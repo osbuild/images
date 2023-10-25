@@ -10,7 +10,7 @@ running_wait() {
     #   reported, instead the command will block until a later state (such as
     #   running or degraded) is reached.
     while true; do
-        state=$(sudo systemctl is-system-running)
+        state=$(systemctl is-system-running)
         echo "${state}"
 
         # keep iterating on initializing and starting
