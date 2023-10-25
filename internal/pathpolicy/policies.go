@@ -24,6 +24,10 @@ var MountpointPolicies = NewPathPolicies(map[string]PathPolicy{
 	"/boot/efi": {Deny: true},
 	// used by systemd / ostree
 	"/sysroot": {Deny: true},
+	// symlink to ../run which is on tmpfs
+	"/var/run": {Deny: true},
+	// symlink to ../run/lock which is on tmpfs
+	"/var/lock": {Deny: true},
 })
 
 // CustomDirectoriesPolicies is a set of default policies for custom directories

@@ -36,6 +36,9 @@ func TestMountpointPolicies(t *testing.T) {
 		{"/var", true},
 		{"/var/lib", true},
 		{"/var/log", true},
+		{"/var/tmp", true},
+		{"/var/run", false},
+		{"/var/lock", false},
 
 		{"/opt", true},
 		{"/opt/fancyapp", true},
