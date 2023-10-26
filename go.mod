@@ -12,7 +12,7 @@ require (
 	github.com/Azure/go-autorest/autorest v0.11.29
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.12
 	github.com/BurntSushi/toml v1.3.2
-	github.com/aws/aws-sdk-go v1.46.3
+	github.com/aws/aws-sdk-go v1.46.4
 	github.com/containers/common v0.56.0
 	github.com/containers/image/v5 v5.28.0
 	github.com/gobwas/glob v0.2.3
@@ -31,7 +31,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
 	github.com/ubccr/kerby v0.0.0-20170626144437-201a958fc453
-	github.com/vmware/govmomi v0.32.0
+	github.com/vmware/govmomi v0.33.0
 	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63
 	golang.org/x/oauth2 v0.13.0
 	golang.org/x/sys v0.13.0
