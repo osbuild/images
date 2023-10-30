@@ -145,6 +145,7 @@ var (
 		defaultImageConfig: &distro.ImageConfig{
 			Locale: common.ToPtr("en_US.UTF-8"),
 		},
+		kernelOptions:       amiKernelOptions,
 		defaultSize:         10 * common.GibiByte,
 		rpmOstree:           true,
 		bootable:            true,
