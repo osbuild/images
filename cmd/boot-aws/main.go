@@ -107,7 +107,7 @@ func scpFile(ip, user, key, hostsfile, source, dest string) error {
 
 func keyscan(ip, filepath string) error {
 	var keys []byte
-	maxTries := 10
+	maxTries := 30 // wait for at least 5 mins
 	var keyscanErr error
 	for try := 0; try < maxTries; try++ {
 		keys, _, keyscanErr = run("ssh-keyscan", ip)
