@@ -157,7 +157,7 @@ func deviceName(p disk.Entity) string {
 	case *disk.LUKSContainer:
 		return "luks-" + payload.UUID[:4]
 	case *disk.LVMVolumeGroup:
-		return payload.Name + "vg"
+		return payload.Name
 	case *disk.LVMLogicalVolume:
 		return payload.Name
 	}
