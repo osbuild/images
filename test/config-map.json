@@ -24,6 +24,14 @@
       "qcow2"
     ]
   },
+  "./configs/disable-lm_sensors.json": {
+    "distros": [
+      "rhel-84"
+    ],
+    "image-types": [
+      "ec2-sap"
+    ]
+  },
   "./configs/edge-ostree-pull-device.json": {
     "image-types": [
       "edge-simplified-installer"
@@ -62,7 +70,6 @@
       "container",
       "ec2",
       "ec2-ha",
-      "ec2-sap",
       "edge-container",
       "gce",
       "gce-rhui",
@@ -128,6 +135,33 @@
       "edge-commit",
       "edge-container",
       "iot-container"
+    ]
+  },
+  "./configs/ec2-sap-empty.json": {
+    "distros": [
+      "centos-8",
+      "centos-9",
+      "fedora-37",
+      "fedora-38",
+      "fedora-39",
+      "fedora-40",
+      "rhel-7",
+      "rhel-8",
+      "rhel-810",
+      "rhel-85",
+      "rhel-86",
+      "rhel-87",
+      "rhel-88",
+      "rhel-89",
+      "rhel-9",
+      "rhel-90",
+      "rhel-91",
+      "rhel-92",
+      "rhel-93",
+      "rhel-94"
+    ],
+    "image-types": [
+      "ec2-sap"
     ]
   }
 }
