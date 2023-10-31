@@ -2,6 +2,7 @@ package osbuild
 
 import (
 	"fmt"
+	"reflect"
 	"sort"
 
 	"github.com/osbuild/images/pkg/disk"
@@ -86,6 +87,13 @@ func GenCopyFSTreeOptions(inputName, inputPipeline, filename string, pt *disk.Pa
 
 		// update devices map with new elements from stageDevices
 		for devName := range stageDevices {
+			if existingDevice, exists := devices[devName]; exists {
+				// It is usual that the a device is generated twice for the same Entity e.g. LVM VG, which is OK.
+				// Therefore fail only if a device with the same name is generated for two different Entities.
+				if !reflect.DeepEqual(existingDevice, stageDevices[devName]) {
+					panic(fmt.Sprintf("the device name %q has been generated for two different devices", devName))
+				}
+			}
 			devices[devName] = stageDevices[devName]
 		}
 		return nil
