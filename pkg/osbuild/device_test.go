@@ -140,3 +140,29 @@ func TestGenDeviceFinishStagesOrderWithLVMClevisBind(t *testing.T) {
 	// followed by "org.osbuild.luks2.remove-key"
 	assert.Equal("org.osbuild.luks2.remove-key", luks.Type)
 }
+
+func TestPathEscape(t *testing.T) {
+	testCases := []struct {
+		path     string
+		expected string
+	}{
+		{"", "-"},
+		{"/", "-"},
+		{"/root", "root"},
+		{"/root/", "root"},
+		{"/home/shadowman", "home-shadowman"},
+		{"/home/s.o.s", "home-s.o.s"},
+		{"/path/to/dir", "path-to-dir"},
+		{"/path/with\\backslash", "path-with\\x5cbackslash"},
+		{"/path-with-dash", "path\\x2dwith\\x2ddash"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.path, func(t *testing.T) {
+			result := pathEscape(tc.path)
+			if result != tc.expected {
+				t.Errorf("pathEscape(%q) = %q; expected %q", tc.path, result, tc.expected)
+			}
+		})
+	}
+}
