@@ -5,14 +5,14 @@ go 1.19
 exclude github.com/mattn/go-sqlite3 v2.0.3+incompatible
 
 require (
-	cloud.google.com/go/compute v1.23.2
-	cloud.google.com/go/storage v1.34.0
+	cloud.google.com/go/compute v1.23.3
+	cloud.google.com/go/storage v1.34.1
 	github.com/Azure/azure-sdk-for-go v68.0.0+incompatible
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.2.0
 	github.com/Azure/go-autorest/autorest v0.11.29
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.12
 	github.com/BurntSushi/toml v1.3.2
-	github.com/aws/aws-sdk-go v1.47.0
+	github.com/aws/aws-sdk-go v1.47.1
 	github.com/containers/common v0.56.0
 	github.com/containers/image/v5 v5.28.0
 	github.com/gobwas/glob v0.2.3
