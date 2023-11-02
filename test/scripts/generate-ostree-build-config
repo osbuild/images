@@ -94,7 +94,7 @@ def gen_dependency_manifests(config_map, distro, arch, outputdir):
                "-output", outputdir,
                "-workers", "100",
                "-images", ",".join(gen_image_types),
-               "-config", tmpfile.name,
+               "-config-map", tmpfile.name,
                "-arches", arch]
         if distro:
             cmd.extend(["-distros", distro])
@@ -143,7 +143,7 @@ def gen_image_manifests(config_map, configs, distro, arch, outputdir):
                "-cache", os.path.join(testlib.TEST_CACHE_ROOT, "rpmmd"),
                "-output", outputdir,
                "-workers", "100",
-               "-config", config_map_path,
+               "-config-map", config_map_path,
                "-commits=true",  # resolve ostree commit sources
                "-skip-noconfig",  # skip configs that aren't in the config-map
                "-arches", arch]

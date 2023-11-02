@@ -215,6 +215,16 @@ func loadConfigMap(configPath string) BuildConfigs {
 	return cm
 }
 
+// loadImgConfig loads a single image config from a file and returns a
+// a BuildConfigs map with the config mapped to all distros, arches, and
+// image types.
+func loadImgConfig(configPath string) BuildConfigs {
+	cm := make(BuildConfigs)
+	config := loadConfig(configPath)
+	cm.Insert("*", "*", "*", config)
+	return cm
+}
+
 type manifestJob func(chan string) error
 
 func makeManifestJob(
@@ -602,14 +612,15 @@ func u(s string) string {
 
 func main() {
 	// common args
-	var outputDir, cacheRoot, configPath string
+	var outputDir, cacheRoot, configPath, configMapPath string
 	var nWorkers int
 	var metadata, skipNoconfig, skipNorepos bool
 	flag.StringVar(&outputDir, "output", "test/data/manifests/", "manifest store directory")
 	flag.IntVar(&nWorkers, "workers", 16, "number of workers to run concurrently")
 	flag.StringVar(&cacheRoot, "cache", "/tmp/rpmmd", "rpm metadata cache directory")
 	flag.BoolVar(&metadata, "metadata", true, "store metadata in the file")
-	flag.StringVar(&configPath, "config", "test/config-map.json", "configuration file mapping image types to configs")
+	flag.StringVar(&configPath, "config", "", "image config file to use for all images (overrides -config-map)")
+	flag.StringVar(&configMapPath, "config-map", "test/config-map.json", "configuration file mapping image types to configs")
 	flag.BoolVar(&skipNoconfig, "skip-noconfig", false, "skip distro-arch-image configurations that have no config (otherwise fail)")
 	flag.BoolVar(&skipNorepos, "skip-norepos", false, "skip distro-arch-image configurations that have no repositories (otherwise fail)")
 
@@ -638,7 +649,13 @@ func main() {
 		"commits":    commits,
 	}
 
-	configs := loadConfigMap(configPath)
+	var configs BuildConfigs
+	if configPath != "" {
+		fmt.Println("'-config' was provided, thus ignoring '-config-map' option")
+		configs = loadImgConfig(configPath)
+	} else {
+		configs = loadConfigMap(configMapPath)
+	}
 
 	if err := os.MkdirAll(outputDir, 0770); err != nil {
 		panic(fmt.Sprintf("failed to create target directory: %s", err.Error()))
