@@ -24,8 +24,12 @@ type OSTreeDeployment struct {
 
 	OSVersion string
 
+	// commitSource represents the source that will be used to retrieve the
+	// ostree commit for this pipeline.
 	commitSource ostree.SourceSpec
-	ostreeSpecs  []ostree.CommitSpec
+
+	// ostreeSpec is the resolved commit that will be deployed in this pipeline.
+	ostreeSpec *ostree.CommitSpec
 
 	SysrootReadOnly bool
 
@@ -88,7 +92,10 @@ func (p *OSTreeDeployment) getBuildPackages(Distro) []string {
 }
 
 func (p *OSTreeDeployment) getOSTreeCommits() []ostree.CommitSpec {
-	return p.ostreeSpecs
+	if p.ostreeSpec == nil {
+		panic("getOSTreeCommits(): ostree commit not set for pipeline")
+	}
+	return []ostree.CommitSpec{*p.ostreeSpec}
 }
 
 func (p *OSTreeDeployment) getOSTreeCommitSources() []ostree.SourceSpec {
@@ -98,7 +105,7 @@ func (p *OSTreeDeployment) getOSTreeCommitSources() []ostree.SourceSpec {
 }
 
 func (p *OSTreeDeployment) serializeStart(packages []rpmmd.PackageSpec, containers []container.Spec, commits []ostree.CommitSpec) {
-	if len(p.ostreeSpecs) > 0 {
+	if p.ostreeSpec != nil {
 		panic("double call to serializeStart()")
 	}
 
@@ -106,25 +113,22 @@ func (p *OSTreeDeployment) serializeStart(packages []rpmmd.PackageSpec, containe
 		panic("pipeline requires exactly one ostree commit")
 	}
 
-	p.ostreeSpecs = commits
+	p.ostreeSpec = &commits[0]
 }
 
 func (p *OSTreeDeployment) serializeEnd() {
-	if len(p.ostreeSpecs) == 0 {
+	if p.ostreeSpec == nil {
 		panic("serializeEnd() call when serialization not in progress")
 	}
 
-	p.ostreeSpecs = nil
+	p.ostreeSpec = nil
 }
 
 func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
-	if len(p.ostreeSpecs) == 0 {
+	if p.ostreeSpec == nil {
 		panic("serialization not started")
 	}
-	if len(p.ostreeSpecs) > 1 {
-		panic("multiple ostree commit specs found; this is a programming error")
-	}
-	commit := p.ostreeSpecs[0]
+	commit := *p.ostreeSpec
 
 	const repoPath = "/ostree/repo"
 
