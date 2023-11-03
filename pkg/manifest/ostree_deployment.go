@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -26,10 +27,18 @@ type OSTreeDeployment struct {
 
 	// commitSource represents the source that will be used to retrieve the
 	// ostree commit for this pipeline.
-	commitSource ostree.SourceSpec
+	commitSource *ostree.SourceSpec
 
 	// ostreeSpec is the resolved commit that will be deployed in this pipeline.
 	ostreeSpec *ostree.CommitSpec
+
+	// containerSource represents the source that will be used to retrieve the
+	// ostree native container for this pipeline.
+	containerSource *container.SourceSpec
+
+	// containerSpec is the resolved ostree native container that will be
+	// deployed in this pipeline.
+	containerSpec *container.Spec
 
 	SysrootReadOnly bool
 
@@ -73,7 +82,7 @@ func NewOSTreeDeployment(buildPipeline *Build,
 
 	p := &OSTreeDeployment{
 		Base:             NewBase(m, "ostree-deployment", buildPipeline),
-		commitSource:     commit,
+		commitSource:     &commit,
 		osName:           osName,
 		platform:         platform,
 		ignition:         ignition,
@@ -93,42 +102,73 @@ func (p *OSTreeDeployment) getBuildPackages(Distro) []string {
 
 func (p *OSTreeDeployment) getOSTreeCommits() []ostree.CommitSpec {
 	if p.ostreeSpec == nil {
-		panic("getOSTreeCommits(): ostree commit not set for pipeline")
+		return []ostree.CommitSpec{}
 	}
 	return []ostree.CommitSpec{*p.ostreeSpec}
 }
 
 func (p *OSTreeDeployment) getOSTreeCommitSources() []ostree.SourceSpec {
+	if p.commitSource == nil {
+		return []ostree.SourceSpec{}
+	}
 	return []ostree.SourceSpec{
-		p.commitSource,
+		*p.commitSource,
+	}
+}
+
+func (p *OSTreeDeployment) getContainerSpecs() []container.Spec {
+	if p.containerSpec == nil {
+		return []container.Spec{}
+	}
+	return []container.Spec{*p.containerSpec}
+}
+
+func (p *OSTreeDeployment) getContainerSources() []container.SourceSpec {
+	if p.containerSource == nil {
+		return []container.SourceSpec{}
+	}
+	return []container.SourceSpec{
+		*p.containerSource,
 	}
 }
 
 func (p *OSTreeDeployment) serializeStart(packages []rpmmd.PackageSpec, containers []container.Spec, commits []ostree.CommitSpec) {
-	if p.ostreeSpec != nil {
+	if p.ostreeSpec != nil || p.containerSpec != nil {
 		panic("double call to serializeStart()")
 	}
 
-	if len(commits) != 1 {
-		panic("pipeline requires exactly one ostree commit")
+	switch {
+	case len(commits) == 1:
+		p.ostreeSpec = &commits[0]
+	case len(containers) == 1:
+		p.containerSpec = &containers[0]
+	default:
+		panic(fmt.Sprintf("pipeline requires exactly one ostree commit or one container (have commits: %v; containers: %v)", commits, containers))
 	}
-
-	p.ostreeSpec = &commits[0]
 }
 
 func (p *OSTreeDeployment) serializeEnd() {
-	if p.ostreeSpec == nil {
+	switch {
+	case p.ostreeSpec == nil && p.containerSpec == nil:
 		panic("serializeEnd() call when serialization not in progress")
+	case p.ostreeSpec != nil && p.containerSpec != nil:
+		panic("serializeEnd() multiple payload sources defined")
 	}
 
 	p.ostreeSpec = nil
+	p.containerSpec = nil
 }
 
 func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
-	if p.ostreeSpec == nil {
+	var commit ostree.CommitSpec
+	switch {
+	case p.ostreeSpec != nil:
+		commit = *p.ostreeSpec
+	case p.containerSpec != nil:
+		panic("deploying an ostree container is not yet supported")
+	default:
 		panic("serialization not started")
 	}
-	commit := *p.ostreeSpec
 
 	const repoPath = "/ostree/repo"
 
