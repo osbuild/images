@@ -527,7 +527,6 @@ func iotImage(workload workload.Workload,
 	img.OSName = "fedora-iot"
 
 	if !common.VersionLessThan(distro.Releasever(), "38") {
-		img.Ignition = true
 		switch img.Platform.GetImageFormat() {
 		case platform.FORMAT_RAW:
 			img.IgnitionPlatform = "metal"
@@ -592,7 +591,6 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 	rawImg.OSName = "fedora"
 
 	if !common.VersionLessThan(t.arch.distro.osVersion, "38") {
-		rawImg.Ignition = true
 		rawImg.IgnitionPlatform = "metal"
 		if bpIgnition := customizations.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
 			rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)

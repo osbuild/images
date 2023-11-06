@@ -56,11 +56,9 @@ type OSTreeDeployment struct {
 
 	PartitionTable *disk.PartitionTable
 
-	// Whether ignition is in use or not
-	ignition bool
-
-	// Specifies the ignition platform to use
-	ignitionPlatform string
+	// Specifies the ignition platform to use.
+	// If empty, ignition is not enabled.
+	IgnitionPlatform string
 
 	Directories []*fsnode.Directory
 	Files       []*fsnode.File
@@ -75,17 +73,13 @@ func NewOSTreeCommitDeployment(buildPipeline *Build,
 	m *Manifest,
 	commit *ostree.SourceSpec,
 	osName string,
-	ignition bool,
-	ignitionPlatform string,
 	platform platform.Platform) *OSTreeDeployment {
 
 	p := &OSTreeDeployment{
-		Base:             NewBase(m, "ostree-deployment", buildPipeline),
-		commitSource:     commit,
-		osName:           osName,
-		platform:         platform,
-		ignition:         ignition,
-		ignitionPlatform: ignitionPlatform,
+		Base:         NewBase(m, "ostree-deployment", buildPipeline),
+		commitSource: commit,
+		osName:       osName,
+		platform:     platform,
 	}
 	buildPipeline.addDependent(p)
 	m.addPipeline(p)
@@ -99,18 +93,14 @@ func NewOSTreeContainerDeployment(buildPipeline *Build,
 	container *container.SourceSpec,
 	ref string,
 	osName string,
-	ignition bool,
-	ignitionPlatform string,
 	platform platform.Platform) *OSTreeDeployment {
 
 	p := &OSTreeDeployment{
-		Base:             NewBase(m, "ostree-deployment", buildPipeline),
-		containerSource:  container,
-		osName:           osName,
-		ref:              ref,
-		platform:         platform,
-		ignition:         ignition,
-		ignitionPlatform: ignitionPlatform,
+		Base:            NewBase(m, "ostree-deployment", buildPipeline),
+		containerSource: container,
+		osName:          osName,
+		ref:             ref,
+		platform:        platform,
 	}
 	buildPipeline.addDependent(p)
 	m.addPipeline(p)
@@ -204,13 +194,10 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 	kernelOpts := osbuild.GenImageKernelOptions(p.PartitionTable)
 	kernelOpts = append(kernelOpts, p.KernelOptionsAppend...)
 
-	if p.ignition {
-		if p.ignitionPlatform == "" {
-			panic("ignition is enabled but ignition platform ID is not set")
-		}
+	if p.IgnitionPlatform != "" {
 		kernelOpts = append(kernelOpts,
 			"coreos.no_persist_ip", // users cannot add connections as we don't have a live iso, this prevents connections to bleed into the system from the ign initrd
-			"ignition.platform.id="+p.ignitionPlatform,
+			"ignition.platform.id="+p.IgnitionPlatform,
 			"$ignition_firstboot",
 		)
 	}
@@ -318,7 +305,7 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 		pipeline.AddStage(grpStage)
 	}
 
-	if p.ignition {
+	if p.IgnitionPlatform != "" {
 		pipeline.AddStage(osbuild.NewIgnitionStage(&osbuild.IgnitionStageOptions{
 			// This is a workaround to make the systemd believe it's firstboot when ignition runs on real firstboot.
 			// Right now, since we ship /etc/machine-id, systemd thinks it's not firstboot and ignition depends on it
@@ -391,7 +378,7 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 		p.platform.GetBIOSPlatform(),
 		p.platform.GetUEFIVendor(), true)
 	grubOptions.Greenboot = true
-	grubOptions.Ignition = p.ignition
+	grubOptions.Ignition = p.IgnitionPlatform != ""
 	grubOptions.Config = &osbuild.GRUB2Config{
 		Default:        "saved",
 		Timeout:        1,
