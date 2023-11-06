@@ -1,4 +1,9 @@
 {
+  "./configs/ostree-container-pull.json": {
+    "image-types": [
+      "coreos-qcow2"
+    ]
+  },
   "./configs/all-customizations.json": {
     "distros": [
       "rhel-9*",
