@@ -419,7 +419,6 @@ func edgeRawImage(workload workload.Workload,
 	}
 
 	if !common.VersionLessThan(t.arch.distro.osVersion, "9.2") || !t.arch.distro.isRHEL() {
-		img.Ignition = true
 		img.IgnitionPlatform = "metal"
 		if bpIgnition := customizations.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
 			img.KernelOptionsAppend = append(img.KernelOptionsAppend, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
@@ -487,7 +486,6 @@ func edgeSimplifiedInstallerImage(workload workload.Workload,
 	rawImg.OSName = "redhat"
 
 	if !common.VersionLessThan(t.arch.distro.osVersion, "9.2") || !t.arch.distro.isRHEL() {
-		rawImg.Ignition = true
 		rawImg.IgnitionPlatform = "metal"
 		if bpIgnition := customizations.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
 			rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)

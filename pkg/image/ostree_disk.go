@@ -42,7 +42,6 @@ type OSTreeDiskImage struct {
 
 	Filename string
 
-	Ignition         bool
 	IgnitionPlatform string
 	Compression      string
 
@@ -68,9 +67,9 @@ func NewOSTreeDiskImageFromContainer(container container.SourceSpec, ref string)
 func baseRawOstreeImage(img *OSTreeDiskImage, m *manifest.Manifest, buildPipeline *manifest.Build) *manifest.RawOSTreeImage {
 	var osPipeline *manifest.OSTreeDeployment
 	if img.CommitSource != nil {
-		osPipeline = manifest.NewOSTreeCommitDeployment(buildPipeline, m, img.CommitSource, img.OSName, img.Ignition, img.IgnitionPlatform, img.Platform)
+		osPipeline = manifest.NewOSTreeCommitDeployment(buildPipeline, m, img.CommitSource, img.OSName, img.Platform)
 	} else if img.ContainerSource != nil {
-		osPipeline = manifest.NewOSTreeContainerDeployment(buildPipeline, m, img.ContainerSource, img.Ref, img.OSName, img.Ignition, img.IgnitionPlatform, img.Platform)
+		osPipeline = manifest.NewOSTreeContainerDeployment(buildPipeline, m, img.ContainerSource, img.Ref, img.OSName, img.Platform)
 	} else {
 		panic("no content source defined for ostree image")
 	}
@@ -84,6 +83,7 @@ func baseRawOstreeImage(img *OSTreeDiskImage, m *manifest.Manifest, buildPipelin
 	osPipeline.SysrootReadOnly = img.SysrootReadOnly
 	osPipeline.Directories = img.Directories
 	osPipeline.Files = img.Files
+	osPipeline.IgnitionPlatform = img.IgnitionPlatform
 
 	// other image types (e.g. live) pass the workload to the pipeline.
 	osPipeline.EnabledServices = img.Workload.GetServices()
