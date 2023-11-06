@@ -49,6 +49,10 @@ func osCustomizations(
 		}
 	}
 
+	if c.GetFIPS() {
+		osc.KernelOptionsAppend = append(osc.KernelOptionsAppend, "fips=1")
+	}
+
 	osc.ExtraBasePackages = osPackageSet.Include
 	osc.ExcludeBasePackages = osPackageSet.Exclude
 	osc.ExtraBaseRepos = osPackageSet.Repositories
@@ -410,6 +414,10 @@ func edgeInstallerImage(workload workload.Workload,
 	img.Users = users.UsersFromBP(customizations.GetUsers())
 	img.Groups = users.GroupsFromBP(customizations.GetGroups())
 
+	if customizations.GetFIPS() {
+		img.KernelOptionsAppend = append(img.KernelOptionsAppend, "fips=1")
+	}
+
 	img.SquashfsCompression = "xz"
 	img.AdditionalDracutModules = []string{"prefixdevname", "prefixdevname-tools"}
 
@@ -449,6 +457,10 @@ func edgeRawImage(workload workload.Workload,
 	img.Groups = users.GroupsFromBP(customizations.GetGroups())
 
 	img.KernelOptionsAppend = []string{"modprobe.blacklist=vc4"}
+	if customizations.GetFIPS() {
+		img.KernelOptionsAppend = append(img.KernelOptionsAppend, "fips=1")
+	}
+
 	// TODO: move to image config
 	img.Keyboard = "us"
 	img.Locale = "C.UTF-8"
@@ -494,6 +506,9 @@ func edgeSimplifiedInstallerImage(workload workload.Workload,
 	rawImg.Groups = users.GroupsFromBP(customizations.GetGroups())
 
 	rawImg.KernelOptionsAppend = []string{"modprobe.blacklist=vc4"}
+	if customizations.GetFIPS() {
+		rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, "fips=1")
+	}
 	rawImg.Keyboard = "us"
 	rawImg.Locale = "C.UTF-8"
 

@@ -46,6 +46,10 @@ func osCustomizations(
 		osc.KernelOptionsAppend = kernelOptions
 	}
 
+	if c.GetFIPS() {
+		osc.KernelOptionsAppend = append(osc.KernelOptionsAppend, "fips=1")
+	}
+
 	osc.ExtraBasePackages = osPackageSet.Include
 	osc.ExcludeBasePackages = osPackageSet.Exclude
 	osc.ExtraBaseRepos = osPackageSet.Repositories
@@ -438,6 +442,9 @@ func edgeRawImage(workload workload.Workload,
 	if kopts := customizations.GetKernel(); kopts != nil && kopts.Append != "" {
 		img.KernelOptionsAppend = append(img.KernelOptionsAppend, kopts.Append)
 	}
+	if customizations.GetFIPS() {
+		img.KernelOptionsAppend = append(img.KernelOptionsAppend, "fips=1")
+	}
 
 	// TODO: move generation into LiveImage
 	pt, err := t.getPartitionTable(customizations.GetFilesystems(), options, rng)
@@ -506,6 +513,9 @@ func edgeSimplifiedInstallerImage(workload workload.Workload,
 	// 92+ only
 	if kopts := customizations.GetKernel(); kopts != nil && kopts.Append != "" {
 		rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, kopts.Append)
+	}
+	if customizations.GetFIPS() {
+		rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, "fips=1")
 	}
 
 	img := image.NewOSTreeSimplifiedInstaller(rawImg, customizations.InstallationDevice)
