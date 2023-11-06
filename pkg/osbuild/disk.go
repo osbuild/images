@@ -117,7 +117,18 @@ func GenImageKernelOptions(pt *disk.PartitionTable) []string {
 		case *disk.LUKSContainer:
 			karg := "luks.uuid=" + ent.UUID
 			cmdline = append(cmdline, karg)
+		case *disk.Filesystem:
+			if ent.Mountpoint == "/boot" {
+				if label := ent.Label; label != "" {
+					karg := "boot=LABEL=" + label
+					cmdline = append(cmdline, karg)
+				} else if uuid := ent.UUID; uuid != "" {
+					karg := "boot=UID=" + uuid
+					cmdline = append(cmdline, karg)
+				}
+			}
 		}
+
 		return nil
 	}
 
