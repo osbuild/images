@@ -337,7 +337,8 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 		}
 	}
 
-	if !hasRoot {
+	if !hasRoot && p.ostreeSpec != nil {
+		// NOTE: fails on container-based deployments
 		userOptions := &osbuild.UsersStageOptions{
 			Users: map[string]osbuild.UsersStageOptionsUser{
 				"root": {
