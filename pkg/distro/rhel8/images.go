@@ -461,6 +461,7 @@ func edgeRawImage(workload workload.Workload,
 		ContentURL: options.OSTree.ContentURL,
 	}
 	img.OSName = "redhat"
+	img.LockRoot = true
 
 	// TODO: move generation into LiveImage
 	pt, err := t.getPartitionTable(customizations.GetFilesystems(), options, rng)
@@ -505,6 +506,7 @@ func edgeSimplifiedInstallerImage(workload workload.Workload,
 		ContentURL: options.OSTree.ContentURL,
 	}
 	rawImg.OSName = "redhat"
+	rawImg.LockRoot = true
 
 	// TODO: move generation into LiveImage
 	pt, err := t.getPartitionTable(customizations.GetFilesystems(), options, rng)

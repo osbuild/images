@@ -49,6 +49,10 @@ type OSTreeDiskImage struct {
 	Files       []*fsnode.File
 
 	FIPS bool
+
+	// Lock the root account in the deployment unless the user defined root
+	// user options in the build configuration.
+	LockRoot bool
 }
 
 func NewOSTreeDiskImageFromCommit(commit ostree.SourceSpec) *OSTreeDiskImage {
@@ -89,6 +93,7 @@ func baseRawOstreeImage(img *OSTreeDiskImage, m *manifest.Manifest, buildPipelin
 	osPipeline.Files = img.Files
 	osPipeline.FIPS = img.FIPS
 	osPipeline.IgnitionPlatform = img.IgnitionPlatform
+	osPipeline.LockRoot = img.LockRoot
 
 	// other image types (e.g. live) pass the workload to the pipeline.
 	osPipeline.EnabledServices = img.Workload.GetServices()

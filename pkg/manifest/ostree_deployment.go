@@ -67,6 +67,10 @@ type OSTreeDeployment struct {
 	DisabledServices []string
 
 	FIPS bool
+
+	// Lock the root account in the deployment unless the user defined root
+	// user options in the build configuration.
+	LockRoot bool
 }
 
 // NewOSTreeCommitDeployment creates a pipeline for an ostree deployment from a
@@ -352,7 +356,7 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 		}
 	}
 
-	if !hasRoot {
+	if p.LockRoot && !hasRoot {
 		userOptions := &osbuild.UsersStageOptions{
 			Users: map[string]osbuild.UsersStageOptionsUser{
 				"root": {

@@ -522,6 +522,7 @@ func iotImage(workload workload.Workload,
 		Name: "fedora-iot",
 	}
 	img.OSName = "fedora-iot"
+	img.LockRoot = true
 
 	if !common.VersionLessThan(distro.Releasever(), "38") {
 		switch img.Platform.GetImageFormat() {
@@ -584,6 +585,7 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 		Name: "fedora-iot",
 	}
 	rawImg.OSName = "fedora"
+	rawImg.LockRoot = true
 
 	if !common.VersionLessThan(t.arch.distro.osVersion, "38") {
 		rawImg.IgnitionPlatform = "metal"
