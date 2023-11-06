@@ -70,6 +70,7 @@ func TestDistro_KernelOption(t *testing.T, d distro.Distro) {
 		// Ostree installers and raw images download a payload to embed or
 		// deploy.  The kernel is part of the payload so it doesn't appear in
 		// the image type's package lists.
+		"coreos-qcow2":              true,
 		"edge-ami":                  true,
 		"edge-installer":            true,
 		"edge-raw-image":            true,
@@ -168,16 +169,20 @@ func TestDistro_OSTreeOptions(t *testing.T, d distro.Distro) {
 	}
 
 	typesWithPayload := map[string]bool{
-		"edge-vsphere":              true,
 		"edge-ami":                  true,
 		"edge-installer":            true,
 		"edge-raw-image":            true,
 		"edge-simplified-installer": true,
+		"edge-vsphere":              true,
 		"iot-ami":                   true,
 		"iot-installer":             true,
 		"iot-qcow2-image":           true,
 		"iot-raw-image":             true,
 		"iot-simplified-installer":  true,
+	}
+
+	typesWithContainerPayload := map[string]bool{
+		"coreos-qcow2": true,
 	}
 
 	assert := assert.New(t)
@@ -205,6 +210,10 @@ func TestDistro_OSTreeOptions(t *testing.T, d distro.Distro) {
 					ostreeOptions.URL = "https://example.com/repo"
 				}
 				options := distro.ImageOptions{OSTree: &ostreeOptions}
+
+				if typesWithContainerPayload[typeName] {
+					ostreeOptions.Container = "https://registry.example.com/image"
+				}
 
 				m, _, err := imgType.Manifest(bp, options, nil, 0)
 				assert.NoError(err)
@@ -254,6 +263,10 @@ func TestDistro_OSTreeOptions(t *testing.T, d distro.Distro) {
 					// payload types require URL
 					ostreeOptions.URL = "https://example.com/repo"
 				}
+				if typesWithContainerPayload[typeName] {
+					ostreeOptions.Container = "https://registry.example.com/image"
+				}
+
 				options := distro.ImageOptions{OSTree: &ostreeOptions}
 				m, _, err := imgType.Manifest(bp, options, nil, 0)
 				assert.NoError(err)
@@ -300,6 +313,10 @@ func TestDistro_OSTreeOptions(t *testing.T, d distro.Distro) {
 					ImageRef: "test/x86_64/01",
 					URL:      "https://example.com/repo",
 				}
+				if typesWithContainerPayload[typeName] {
+					ostreeOptions.Container = "https://registry.example.com/image"
+				}
+
 				options := distro.ImageOptions{OSTree: &ostreeOptions}
 				m, _, err := imgType.Manifest(bp, options, nil, 0)
 				assert.NoError(err)
@@ -344,6 +361,10 @@ func TestDistro_OSTreeOptions(t *testing.T, d distro.Distro) {
 					ParentRef: "test/x86_64/01",
 					URL:       "https://example.com/repo",
 				}
+				if typesWithContainerPayload[typeName] {
+					ostreeOptions.Container = "https://registry.example.com/image"
+				}
+
 				options := distro.ImageOptions{OSTree: &ostreeOptions}
 				m, _, err := imgType.Manifest(bp, options, nil, 0)
 				assert.NoError(err)
@@ -398,6 +419,10 @@ func TestDistro_OSTreeOptions(t *testing.T, d distro.Distro) {
 					ParentRef: "test/x86_64/02",
 					URL:       "https://example.com/repo",
 				}
+				if typesWithContainerPayload[typeName] {
+					ostreeOptions.Container = "https://registry.example.com/image"
+				}
+
 				options := distro.ImageOptions{OSTree: &ostreeOptions}
 				m, _, err := imgType.Manifest(bp, options, nil, 0)
 				assert.NoError(err)

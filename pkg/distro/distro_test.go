@@ -46,6 +46,10 @@ func TestImageType_PackageSetsChains(t *testing.T) {
 							URL: "https://example.com", // required by some image types
 						},
 					}
+					if imageType.Name() == "coreos-qcow2" {
+						options.OSTree.Container = "https://registry.example.com/image"
+					}
+
 					manifest, _, err := imageType.Manifest(&bp, options, nil, 0)
 					require.NoError(t, err)
 					imagePkgSets := manifest.GetPackageSetChains()
@@ -134,6 +138,9 @@ func TestImageTypePipelineNames(t *testing.T) {
 					options.OSTree = &ostree.ImageOptions{
 						URL: "https://example.com",
 					}
+					if imageType.Name() == "coreos-qcow2" {
+						options.OSTree.Container = "https://registry.example.com/image"
+					}
 
 					// Pipelines that require package sets will fail if none
 					// are defined. OS pipelines require a kernel.
@@ -167,6 +174,18 @@ func TestImageTypePipelineNames(t *testing.T) {
 							}
 						}
 						commits[name] = commitSpecs
+					}
+					if options.OSTree.Container != "" {
+						for name, containerSources := range m.GetContainerSourceSpecs() {
+							containers[name] = []container.Spec{
+								{
+									Source:    options.OSTree.Container,
+									Digest:    fmt.Sprintf("sha256:%x", sha256.Sum256([]byte(containerSources[0].Source))),
+									TLSVerify: containerSources[0].TLSVerify,
+									ImageID:   fmt.Sprintf("sha256:%x", sha256.Sum256([]byte(containerSources[0].Source))),
+								},
+							}
+						}
 					}
 					mf, err := m.Serialize(packageSets, containers, commits)
 					assert.NoError(err)
@@ -445,7 +464,8 @@ func TestPipelineRepositories(t *testing.T) {
 
 							// Add ostree options for image types that require them
 							options.OSTree = &ostree.ImageOptions{
-								URL: "https://example.com",
+								URL:       "https://example.com",
+								Container: "https://registry.example.com/image",
 							}
 
 							repos := tCase.repos
