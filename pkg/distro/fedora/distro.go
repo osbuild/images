@@ -368,6 +368,24 @@ var (
 		exports:             []string{"xz"},
 		basePartitionTables: minimalrawPartitionTables,
 	}
+
+	coreosQcow2ImgType = imageType{
+		name:        "coreos-qcow2",
+		filename:    "image.qcow2",
+		mimeType:    "application/x-qemu-disk",
+		packageSets: map[string]packageSetFunc{},
+		defaultImageConfig: &distro.ImageConfig{
+			Locale: common.ToPtr("en_US.UTF-8"),
+		},
+		defaultSize:         10 * common.GibiByte,
+		rpmOstree:           true,
+		bootable:            true,
+		image:               coreosImage,
+		buildPipelines:      []string{"build"},
+		payloadPipelines:    []string{"ostree-deployment", "image", "qcow2"},
+		exports:             []string{"qcow2"},
+		basePartitionTables: iotBasePartitionTables,
+	}
 )
 
 type distribution struct {
@@ -689,6 +707,7 @@ func newDistro(version int) distro.Distro {
 			UEFIVendor: "fedora",
 		},
 		iotQcow2ImgType,
+		coreosQcow2ImgType,
 	)
 	aarch64.addImageTypes(
 		&platform.Aarch64{
