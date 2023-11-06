@@ -24,6 +24,7 @@ type Customizations struct {
 	Directories        []DirectoryCustomization  `json:"directories,omitempty" toml:"directories,omitempty"`
 	Files              []FileCustomization       `json:"files,omitempty" toml:"files,omitempty"`
 	Repositories       []RepositoryCustomization `json:"repositories,omitempty" toml:"repositories,omitempty"`
+	FIPS               *bool                     `json:"fips,omitempty" toml:"fips,omitempty"`
 }
 
 type IgnitionCustomization struct {
@@ -312,6 +313,13 @@ func (c *Customizations) GetFDO() *FDOCustomization {
 		return nil
 	}
 	return c.FDO
+}
+
+func (c *Customizations) GetFIPS() bool {
+	if c == nil || c.FIPS == nil {
+		return false
+	}
+	return *c.FIPS
 }
 
 func (c *Customizations) GetOpenSCAP() *OpenSCAPCustomization {
