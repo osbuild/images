@@ -58,6 +58,11 @@ type ImageOptions struct {
 	// embedded in the installer or deployed in the image.
 	ImageRef string `json:"ref"`
 
+	// For ostree installers and images, the source of the container to be
+	// embedded in the installer or deployed in the image.
+	// This conflicts with ImageRef and URL.
+	Container string `json:"container"`
+
 	// For ostree commit and container types: The ParentRef specifies the parent
 	// ostree commit that the new commit will be based on.
 	// For ostree installers and raw images: The ParentRef does not apply.
@@ -72,6 +77,9 @@ type ImageOptions struct {
 	// Indicate if the 'org.osbuild.rhsm.consumer' secret should be added when pulling from the
 	// remote.
 	RHSM bool `json:"rhsm"`
+
+	// TLS verification for container sources.
+	TLSVerify *bool `json:"tls-verify"`
 }
 
 // Validate the image options. This doesn't verify the existence of any remote
