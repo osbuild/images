@@ -40,55 +40,19 @@ func (mv *multiValue) Set(v string) error {
 	return nil
 }
 
-type repository struct {
-	Name           string   `json:"name"`
-	Id             string   `json:"id,omitempty"`
-	BaseURL        string   `json:"baseurl,omitempty"`
-	Metalink       string   `json:"metalink,omitempty"`
-	MirrorList     string   `json:"mirrorlist,omitempty"`
-	GPGKey         string   `json:"gpgkey,omitempty"`
-	CheckGPG       bool     `json:"check_gpg,omitempty"`
-	CheckRepoGPG   bool     `json:"check_repo_gpg,omitempty"`
-	IgnoreSSL      bool     `json:"ignore_ssl,omitempty"`
-	RHSM           bool     `json:"rhsm,omitempty"`
-	MetadataExpire string   `json:"metadata_expire,omitempty"`
-	ImageTypeTags  []string `json:"image_type_tags,omitempty"`
-	PackageSets    []string `json:"package-sets,omitempty"`
-}
-
-type ostreeOptions struct {
-	Ref    string `json:"ref"`
-	URL    string `json:"url"`
-	Parent string `json:"parent"`
-	RHSM   bool   `json:"rhsm"`
-}
-
-type crBlueprint struct {
-	Name           string                    `json:"name,omitempty"`
-	Description    string                    `json:"description,omitempty"`
-	Version        string                    `json:"version,omitempty"`
-	Packages       []blueprint.Package       `json:"packages,omitempty"`
-	Modules        []blueprint.Package       `json:"modules,omitempty"`
-	Groups         []blueprint.Group         `json:"groups,omitempty"`
-	Containers     []blueprint.Container     `json:"containers,omitempty"`
-	Customizations *blueprint.Customizations `json:"customizations,omitempty"`
-	Distro         string                    `json:"distro,omitempty"`
-	Minimal        bool                      `json:"minimal,omitempty"`
-}
-
 type buildRequest struct {
-	Distro       string       `json:"distro,omitempty"`
-	Arch         string       `json:"arch,omitempty"`
-	ImageType    string       `json:"image-type,omitempty"`
-	Repositories []repository `json:"repositories,omitempty"`
-	Config       *BuildConfig `json:"config"`
+	Distro       string             `json:"distro,omitempty"`
+	Arch         string             `json:"arch,omitempty"`
+	ImageType    string             `json:"image-type,omitempty"`
+	Repositories []rpmmd.RepoConfig `json:"repositories,omitempty"`
+	Config       *BuildConfig       `json:"config"`
 }
 
 type BuildConfig struct {
-	Name      string          `json:"name"`
-	OSTree    *ostreeOptions  `json:"ostree,omitempty"`
-	Blueprint *crBlueprint    `json:"blueprint,omitempty"`
-	Depends   BuildDependency `json:"depends,omitempty"`
+	Name      string               `json:"name"`
+	OSTree    *ostree.ImageOptions `json:"ostree,omitempty"`
+	Blueprint *blueprint.Blueprint `json:"blueprint,omitempty"`
+	Depends   BuildDependency      `json:"depends,omitempty"`
 }
 
 type BuildDependency struct {
@@ -232,7 +196,7 @@ func makeManifestJob(
 	imgType distro.ImageType,
 	bc BuildConfig,
 	distribution distro.Distro,
-	repos []repository,
+	repos []rpmmd.RepoConfig,
 	archName string,
 	seedArg int64,
 	path string,
@@ -245,13 +209,11 @@ func makeManifestJob(
 	cacheDir := filepath.Join(cacheRoot, archName+distribution.Name())
 
 	options := distro.ImageOptions{Size: 0}
-	if bc.OSTree != nil {
-		options.OSTree = &ostree.ImageOptions{
-			URL:       bc.OSTree.URL,
-			ImageRef:  bc.OSTree.Ref,
-			ParentRef: bc.OSTree.Parent,
-			RHSM:      bc.OSTree.RHSM,
-		}
+	options.OSTree = bc.OSTree
+
+	var bp blueprint.Blueprint
+	if bc.Blueprint != nil {
+		bp = *bc.Blueprint
 	}
 
 	// add RHSM fact to detect changes
@@ -268,13 +230,8 @@ func makeManifestJob(
 			msgq <- msg
 		}()
 		msgq <- fmt.Sprintf("Starting job %s", filename)
-		rpmrepos := convertRepos(repos)
-		var bp blueprint.Blueprint
-		if bc.Blueprint != nil {
-			bp = blueprint.Blueprint(*bc.Blueprint)
-		}
 
-		manifest, _, err := imgType.Manifest(&bp, options, rpmrepos, seedArg)
+		manifest, _, err := imgType.Manifest(&bp, options, repos, seedArg)
 		if err != nil {
 			err = fmt.Errorf("[%s] failed: %s", filename, err)
 			return
@@ -290,10 +247,6 @@ func makeManifestJob(
 			if packageSpecs == nil {
 				err = fmt.Errorf("[%s] nil package specs", filename)
 				return
-			}
-
-			if bc.Blueprint != nil {
-				bp = blueprint.Blueprint(*bc.Blueprint)
 			}
 		} else {
 			packageSpecs = mockDepsolve(manifest.GetPackageSetChains())
@@ -337,43 +290,7 @@ func makeManifestJob(
 	return job
 }
 
-type DistroArchRepoMap map[string]map[string][]repository
-
-func convertRepo(r repository) rpmmd.RepoConfig {
-	var urls []string
-	if r.BaseURL != "" {
-		urls = []string{r.BaseURL}
-	}
-
-	var keys []string
-	if r.GPGKey != "" {
-		keys = []string{r.GPGKey}
-	}
-
-	return rpmmd.RepoConfig{
-		Id:             r.Id,
-		Name:           r.Name,
-		BaseURLs:       urls,
-		Metalink:       r.Metalink,
-		MirrorList:     r.MirrorList,
-		GPGKeys:        keys,
-		CheckGPG:       &r.CheckGPG,
-		CheckRepoGPG:   &r.CheckRepoGPG,
-		IgnoreSSL:      &r.IgnoreSSL,
-		MetadataExpire: r.MetadataExpire,
-		RHSM:           r.RHSM,
-		ImageTypeTags:  r.ImageTypeTags,
-		PackageSets:    r.PackageSets,
-	}
-}
-
-func convertRepos(rr []repository) []rpmmd.RepoConfig {
-	cr := make([]rpmmd.RepoConfig, len(rr))
-	for idx, r := range rr {
-		cr[idx] = convertRepo(r)
-	}
-	return cr
-}
+type DistroArchRepoMap map[string]map[string][]rpmmd.RepoConfig
 
 func readRepos() DistroArchRepoMap {
 	reposDir := "./test/data/repositories/"
@@ -397,7 +314,7 @@ func readRepos() DistroArchRepoMap {
 		if err != nil {
 			panic(err)
 		}
-		repos := make(map[string][]repository)
+		repos := make(map[string][]rpmmd.RepoConfig)
 		if err := json.Unmarshal(data, &repos); err != nil {
 			panic(err)
 		}
@@ -564,8 +481,8 @@ func save(ms manifest.OSBuildManifest, pkgs map[string][]rpmmd.PackageSpec, cont
 	return nil
 }
 
-func filterRepos(repos []repository, typeName string) []repository {
-	filtered := make([]repository, 0)
+func filterRepos(repos []rpmmd.RepoConfig, typeName string) []rpmmd.RepoConfig {
+	filtered := make([]rpmmd.RepoConfig, 0)
 	for _, repo := range repos {
 		if len(repo.ImageTypeTags) == 0 {
 			filtered = append(filtered, repo)
