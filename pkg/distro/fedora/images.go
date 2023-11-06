@@ -634,6 +634,80 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 	return img, nil
 }
 
+func coreosImage(workload workload.Workload,
+	t *imageType,
+	bp *blueprint.Blueprint,
+	options distro.ImageOptions,
+	_ map[string]rpmmd.PackageSet,
+	_ []container.SourceSpec,
+	rng *rand.Rand) (image.ImageKind, error) {
+
+	container, ref, err := makeOSTreePayloadContainer(options.OSTree, t.OSTreeRef())
+	if err != nil {
+		return nil, fmt.Errorf("%s: %s", t.Name(), err.Error())
+	}
+	img := image.NewOSTreeDiskImageFromContainer(container, ref)
+
+	distro := t.Arch().Distro()
+
+	customizations := bp.Customizations
+	img.Users = users.UsersFromBP(customizations.GetUsers())
+	img.Groups = users.GroupsFromBP(customizations.GetGroups())
+
+	img.Directories, err = blueprint.DirectoryCustomizationsToFsNodeDirectories(customizations.GetDirectories())
+	if err != nil {
+		return nil, err
+	}
+	img.Files, err = blueprint.FileCustomizationsToFsNodeFiles(customizations.GetFiles())
+	if err != nil {
+		return nil, err
+	}
+
+	img.KernelOptionsAppend = []string{
+		"rw",
+		"console=tty0",
+		"console=ttyS0",
+	}
+
+	img.SysrootReadOnly = true
+
+	img.Platform = t.platform
+	img.Workload = workload
+
+	img.OSName = "fedora-coreos"
+	img.Remote = ostree.Remote{
+		Name: "fedora",
+	}
+
+	if !common.VersionLessThan(distro.Releasever(), "38") {
+		switch img.Platform.GetImageFormat() {
+		case platform.FORMAT_RAW:
+			img.IgnitionPlatform = "metal"
+			if bpIgnition := customizations.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
+				img.KernelOptionsAppend = append(img.KernelOptionsAppend, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
+			}
+		case platform.FORMAT_QCOW2:
+			img.IgnitionPlatform = "qemu"
+		}
+	}
+
+	if kopts := customizations.GetKernel(); kopts != nil && kopts.Append != "" {
+		img.KernelOptionsAppend = append(img.KernelOptionsAppend, kopts.Append)
+	}
+
+	// TODO: move generation into LiveImage
+	pt, err := t.getPartitionTable(customizations.GetFilesystems(), options, rng)
+	if err != nil {
+		return nil, err
+	}
+	img.PartitionTable = pt
+
+	img.Filename = t.Filename()
+	img.Compression = t.compression
+
+	return img, nil
+}
+
 // Create an ostree SourceSpec to define an ostree parent commit using the user
 // options and the default ref for the image type.  Additionally returns the
 // ref to be used for the new commit to be created.
@@ -688,6 +762,26 @@ func makeOSTreePayloadCommit(options *ostree.ImageOptions, defaultRef string) (o
 		Ref:  commitRef,
 		RHSM: options.RHSM,
 	}, nil
+}
+
+// Create a container Sourcespec to define an encapsulated ostree payload using
+// the user options and the default ref for the image type.
+func makeOSTreePayloadContainer(options *ostree.ImageOptions, defaultRef string) (container.SourceSpec, string, error) {
+	if options == nil || options.Container == "" {
+		return container.SourceSpec{}, "", fmt.Errorf("ostree container source required")
+	}
+
+	ref := defaultRef
+	if options.ImageRef != "" {
+		// user option overrides default ref
+		ref = options.ImageRef
+	}
+
+	return container.SourceSpec{
+		Source:    options.Container,
+		Name:      options.Container,
+		TLSVerify: options.TLSVerify,
+	}, ref, nil
 }
 
 // initialSetupKickstart returns the File configuration for a kickstart file
