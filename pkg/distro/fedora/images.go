@@ -491,7 +491,7 @@ func iotImage(workload workload.Workload,
 	if err != nil {
 		return nil, fmt.Errorf("%s: %s", t.Name(), err.Error())
 	}
-	img := image.NewOSTreeDiskImage(commit)
+	img := image.NewOSTreeDiskImageFromCommit(commit)
 
 	distro := t.Arch().Distro()
 
@@ -565,7 +565,7 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 	if err != nil {
 		return nil, fmt.Errorf("%s: %s", t.Name(), err.Error())
 	}
-	rawImg := image.NewOSTreeDiskImage(commit)
+	rawImg := image.NewOSTreeDiskImageFromCommit(commit)
 
 	customizations := bp.Customizations
 	rawImg.Users = users.UsersFromBP(customizations.GetUsers())
