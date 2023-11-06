@@ -42,6 +42,7 @@ type OSTreeDeployment struct {
 	SysrootReadOnly bool
 
 	osName string
+	ref    string
 
 	KernelOptionsAppend []string
 	Keyboard            string
@@ -67,11 +68,11 @@ type OSTreeDeployment struct {
 	DisabledServices []string
 }
 
-// NewOSTreeDeployment creates a pipeline for an ostree deployment from a
+// NewOSTreeCommitDeployment creates a pipeline for an ostree deployment from a
 // commit.
-func NewOSTreeDeployment(buildPipeline *Build,
+func NewOSTreeCommitDeployment(buildPipeline *Build,
 	m *Manifest,
-	commit ostree.SourceSpec,
+	commit *ostree.SourceSpec,
 	osName string,
 	ignition bool,
 	ignitionPlatform string,
@@ -79,8 +80,33 @@ func NewOSTreeDeployment(buildPipeline *Build,
 
 	p := &OSTreeDeployment{
 		Base:             NewBase(m, "ostree-deployment", buildPipeline),
-		commitSource:     &commit,
+		commitSource:     commit,
 		osName:           osName,
+		platform:         platform,
+		ignition:         ignition,
+		ignitionPlatform: ignitionPlatform,
+	}
+	buildPipeline.addDependent(p)
+	m.addPipeline(p)
+	return p
+}
+
+// NewOSTreeDeployment creates a pipeline for an ostree deployment from a
+// container
+func NewOSTreeContainerDeployment(buildPipeline *Build,
+	m *Manifest,
+	container *container.SourceSpec,
+	ref string,
+	osName string,
+	ignition bool,
+	ignitionPlatform string,
+	platform platform.Platform) *OSTreeDeployment {
+
+	p := &OSTreeDeployment{
+		Base:             NewBase(m, "ostree-deployment", buildPipeline),
+		containerSource:  container,
+		osName:           osName,
+		ref:              ref,
 		platform:         platform,
 		ignition:         ignition,
 		ignitionPlatform: ignitionPlatform,
