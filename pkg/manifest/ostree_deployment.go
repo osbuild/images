@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -264,7 +265,23 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 			},
 		))
 	} else if p.containerSpec != nil {
-		panic("deploying an ostree container is not yet supported")
+		cont := *p.containerSpec
+		ref = p.ref
+
+		options := &osbuild.OSTreeDeployContainerStageOptions{
+			OsName:     p.osName,
+			KernelOpts: p.KernelOptionsAppend,
+			// NOTE: setting the target imgref to be the container source but
+			// we should make this configurable
+			TargetImgref: fmt.Sprintf("ostree-remote-registry:%s:%s", p.Remote.Name, p.containerSpec.Source),
+			Mounts:       []string{"/boot", "/boot/efi"},
+		}
+		images := osbuild.NewContainersInputForSources([]container.Spec{cont})
+		pipeline.AddStage(osbuild.NewOSTreeDeployContainerStage(options, images))
+	} else {
+		// this should be caught at the top of the function, but let's check
+		// again to avoid bugs from bad refactoring.
+		panic("no content source defined for ostree deployment")
 	}
 
 	configStage := osbuild.NewOSTreeConfigStage(
