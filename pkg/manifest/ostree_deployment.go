@@ -166,10 +166,6 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 	pipeline := p.Base.serialize()
 
 	pipeline.AddStage(osbuild.OSTreeInitFsStage())
-	pipeline.AddStage(osbuild.NewOSTreePullStage(
-		&osbuild.OSTreePullStageOptions{Repo: repoPath, Remote: p.Remote.Name},
-		osbuild.NewOstreePullStageInputs("org.osbuild.source", commit.Checksum, commit.Ref),
-	))
 	pipeline.AddStage(osbuild.NewOSTreeOsInitStage(
 		&osbuild.OSTreeOsInitStageOptions{
 			OSName: p.osName,
@@ -196,6 +192,11 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 			"$ignition_firstboot",
 		)
 	}
+
+	pipeline.AddStage(osbuild.NewOSTreePullStage(
+		&osbuild.OSTreePullStageOptions{Repo: repoPath, Remote: p.Remote.Name},
+		osbuild.NewOstreePullStageInputs("org.osbuild.source", commit.Checksum, commit.Ref),
+	))
 
 	pipeline.AddStage(osbuild.NewOSTreeDeployStage(
 		&osbuild.OSTreeDeployStageOptions{
