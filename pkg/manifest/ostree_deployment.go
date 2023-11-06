@@ -344,6 +344,14 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 		pipeline.AddStage(systemdStage)
 	}
 
+	if osbuild.ContainsFIPSKernelOption(p.KernelOptionsAppend) {
+		fipsStage := osbuild.NewFIPSStage(&osbuild.FIPSStageOptions{
+			BootCfg: false,
+		})
+		fipsStage.MountOSTree(p.osName, commit.Ref, 0)
+		pipeline.AddStage(fipsStage)
+	}
+
 	pipeline.AddStage(osbuild.NewOSTreeSelinuxStage(
 		&osbuild.OSTreeSelinuxStageOptions{
 			Deployment: osbuild.OSTreeDeployment{

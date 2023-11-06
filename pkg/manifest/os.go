@@ -742,6 +742,13 @@ func (p *OS) serialize() osbuild.Pipeline {
 		}))
 	}
 
+	if osbuild.ContainsFIPSKernelOption(p.KernelOptionsAppend) {
+		fipsStage := osbuild.NewFIPSStage(&osbuild.FIPSStageOptions{
+			BootCfg: false,
+		})
+		pipeline.AddStage(fipsStage)
+	}
+
 	if p.SElinux != "" {
 		pipeline.AddStage(osbuild.NewSELinuxStage(&osbuild.SELinuxStageOptions{
 			FileContexts:     fmt.Sprintf("etc/selinux/%s/contexts/files/file_contexts", p.SElinux),
