@@ -8,6 +8,7 @@ import (
 	"github.com/osbuild/images/internal/users"
 	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/artifact"
+	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/ostree"
@@ -26,12 +27,14 @@ type OSTreeDiskImage struct {
 	Users  []users.User
 	Groups []users.Group
 
-	CommitSource ostree.SourceSpec
+	CommitSource    *ostree.SourceSpec
+	ContainerSource *container.SourceSpec
 
 	SysrootReadOnly bool
 
 	Remote ostree.Remote
 	OSName string
+	Ref    string
 
 	KernelOptionsAppend []string
 	Keyboard            string
@@ -49,15 +52,32 @@ type OSTreeDiskImage struct {
 	FIPS bool
 }
 
-func NewOSTreeDiskImage(commit ostree.SourceSpec) *OSTreeDiskImage {
+func NewOSTreeDiskImageFromCommit(commit ostree.SourceSpec) *OSTreeDiskImage {
 	return &OSTreeDiskImage{
 		Base:         NewBase("ostree-raw-image"),
-		CommitSource: commit,
+		CommitSource: &commit,
+	}
+}
+
+func NewOSTreeDiskImageFromContainer(container container.SourceSpec, ref string) *OSTreeDiskImage {
+	return &OSTreeDiskImage{
+		Base:            NewBase("ostree-raw-image"),
+		ContainerSource: &container,
+		Ref:             ref,
 	}
 }
 
 func baseRawOstreeImage(img *OSTreeDiskImage, m *manifest.Manifest, buildPipeline *manifest.Build) *manifest.RawOSTreeImage {
-	osPipeline := manifest.NewOSTreeCommitDeployment(buildPipeline, m, &img.CommitSource, img.OSName, img.Ignition, img.IgnitionPlatform, img.Platform)
+	var osPipeline *manifest.OSTreeDeployment
+	switch {
+	case img.CommitSource != nil:
+		osPipeline = manifest.NewOSTreeCommitDeployment(buildPipeline, m, img.CommitSource, img.OSName, img.Ignition, img.IgnitionPlatform, img.Platform)
+	case img.ContainerSource != nil:
+		osPipeline = manifest.NewOSTreeContainerDeployment(buildPipeline, m, img.ContainerSource, img.Ref, img.OSName, img.Ignition, img.IgnitionPlatform, img.Platform)
+	default:
+		panic("no content source defined for ostree image")
+	}
+
 	osPipeline.PartitionTable = img.PartitionTable
 	osPipeline.Remote = img.Remote
 	osPipeline.KernelOptionsAppend = img.KernelOptionsAppend
