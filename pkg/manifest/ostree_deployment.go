@@ -160,14 +160,11 @@ func (p *OSTreeDeployment) serializeEnd() {
 }
 
 func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
-	var commit ostree.CommitSpec
 	switch {
-	case p.ostreeSpec != nil:
-		commit = *p.ostreeSpec
-	case p.containerSpec != nil:
-		panic("deploying an ostree container is not yet supported")
-	default:
+	case p.ostreeSpec == nil && p.containerSpec == nil:
 		panic("serialization not started")
+	case p.ostreeSpec != nil && p.containerSpec != nil:
+		panic("serialize() multiple payload sources defined")
 	}
 
 	const repoPath = "/ostree/repo"
@@ -207,48 +204,55 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 		p.Files = append(p.Files, osbuild.GenFIPSFiles()...)
 	}
 
-	pipeline.AddStage(osbuild.NewOSTreePullStage(
-		&osbuild.OSTreePullStageOptions{Repo: repoPath, Remote: p.Remote.Name},
-		osbuild.NewOstreePullStageInputs("org.osbuild.source", commit.Checksum, commit.Ref),
-	))
+	var ref string
+	if p.ostreeSpec != nil {
+		commit := *p.ostreeSpec
+		ref = commit.Ref
+		pipeline.AddStage(osbuild.NewOSTreePullStage(
+			&osbuild.OSTreePullStageOptions{Repo: repoPath, Remote: p.Remote.Name},
+			osbuild.NewOstreePullStageInputs("org.osbuild.source", commit.Checksum, ref),
+		))
 
-	pipeline.AddStage(osbuild.NewOSTreeDeployStage(
-		&osbuild.OSTreeDeployStageOptions{
-			OsName: p.osName,
-			Ref:    commit.Ref,
-			Remote: p.Remote.Name,
-			Mounts: []string{"/boot", "/boot/efi"},
-			Rootfs: osbuild.Rootfs{
-				Label: "root",
+		pipeline.AddStage(osbuild.NewOSTreeDeployStage(
+			&osbuild.OSTreeDeployStageOptions{
+				OsName: p.osName,
+				Ref:    ref,
+				Remote: p.Remote.Name,
+				Mounts: []string{"/boot", "/boot/efi"},
+				Rootfs: osbuild.Rootfs{
+					Label: "root",
+				},
+				KernelOpts: kernelOpts,
 			},
-			KernelOpts: kernelOpts,
-		},
-	))
+		))
 
-	if p.Remote.URL != "" {
-		pipeline.AddStage(osbuild.NewOSTreeRemotesStage(
-			&osbuild.OSTreeRemotesStageOptions{
-				Repo: "/ostree/repo",
-				Remotes: []osbuild.OSTreeRemote{
-					{
-						Name:        p.Remote.Name,
-						URL:         p.Remote.URL,
-						ContentURL:  p.Remote.ContentURL,
-						GPGKeyPaths: p.Remote.GPGKeyPaths,
+		if p.Remote.URL != "" {
+			pipeline.AddStage(osbuild.NewOSTreeRemotesStage(
+				&osbuild.OSTreeRemotesStageOptions{
+					Repo: "/ostree/repo",
+					Remotes: []osbuild.OSTreeRemote{
+						{
+							Name:        p.Remote.Name,
+							URL:         p.Remote.URL,
+							ContentURL:  p.Remote.ContentURL,
+							GPGKeyPaths: p.Remote.GPGKeyPaths,
+						},
 					},
+				},
+			))
+		}
+
+		pipeline.AddStage(osbuild.NewOSTreeFillvarStage(
+			&osbuild.OSTreeFillvarStageOptions{
+				Deployment: osbuild.OSTreeDeployment{
+					OSName: p.osName,
+					Ref:    ref,
 				},
 			},
 		))
+	} else if p.containerSpec != nil {
+		panic("deploying an ostree container is not yet supported")
 	}
-
-	pipeline.AddStage(osbuild.NewOSTreeFillvarStage(
-		&osbuild.OSTreeFillvarStageOptions{
-			Deployment: osbuild.OSTreeDeployment{
-				OSName: p.osName,
-				Ref:    commit.Ref,
-			},
-		},
-	))
 
 	configStage := osbuild.NewOSTreeConfigStage(
 		&osbuild.OSTreeConfigStageOptions{
@@ -261,12 +265,12 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 			},
 		},
 	)
-	configStage.MountOSTree(p.osName, commit.Ref, 0)
+	configStage.MountOSTree(p.osName, ref, 0)
 	pipeline.AddStage(configStage)
 
 	fstabOptions := osbuild.NewFSTabStageOptions(p.PartitionTable)
 	fstabStage := osbuild.NewFSTabStage(fstabOptions)
-	fstabStage.MountOSTree(p.osName, commit.Ref, 0)
+	fstabStage.MountOSTree(p.osName, ref, 0)
 	pipeline.AddStage(fstabStage)
 
 	if len(p.Users) > 0 {
@@ -274,13 +278,13 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 		if err != nil {
 			panic("password encryption failed")
 		}
-		usersStage.MountOSTree(p.osName, commit.Ref, 0)
+		usersStage.MountOSTree(p.osName, ref, 0)
 		pipeline.AddStage(usersStage)
 	}
 
 	if len(p.Groups) > 0 {
 		grpStage := osbuild.GenGroupsStage(p.Groups)
-		grpStage.MountOSTree(p.osName, commit.Ref, 0)
+		grpStage.MountOSTree(p.osName, ref, 0)
 		pipeline.AddStage(grpStage)
 	}
 
@@ -305,7 +309,7 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 		// creating a preset file.
 		if len(p.EnabledServices) != 0 || len(p.DisabledServices) != 0 {
 			presetsStage := osbuild.GenServicesPresetStage(p.EnabledServices, p.DisabledServices)
-			presetsStage.MountOSTree(p.osName, commit.Ref, 0)
+			presetsStage.MountOSTree(p.osName, ref, 0)
 			pipeline.AddStage(presetsStage)
 		}
 	}
@@ -328,7 +332,7 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 			},
 		}
 		rootLockStage := osbuild.NewUsersStage(userOptions)
-		rootLockStage.MountOSTree(p.osName, commit.Ref, 0)
+		rootLockStage.MountOSTree(p.osName, ref, 0)
 		pipeline.AddStage(rootLockStage)
 	}
 
@@ -337,7 +341,7 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 			Keymap: p.Keyboard,
 		}
 		keymapStage := osbuild.NewKeymapStage(options)
-		keymapStage.MountOSTree(p.osName, commit.Ref, 0)
+		keymapStage.MountOSTree(p.osName, ref, 0)
 		pipeline.AddStage(keymapStage)
 	}
 
@@ -346,13 +350,13 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 			Language: p.Locale,
 		}
 		localeStage := osbuild.NewLocaleStage(options)
-		localeStage.MountOSTree(p.osName, commit.Ref, 0)
+		localeStage.MountOSTree(p.osName, ref, 0)
 		pipeline.AddStage(localeStage)
 	}
 
 	if p.FIPS {
 		for _, stage := range osbuild.GenFIPSStages() {
-			stage.MountOSTree(p.osName, commit.Ref, 0)
+			stage.MountOSTree(p.osName, ref, 0)
 			pipeline.AddStage(stage)
 		}
 	}
@@ -371,14 +375,14 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 		TerminalOutput: []string{"console"},
 	}
 	bootloader := osbuild.NewGRUB2Stage(grubOptions)
-	bootloader.MountOSTree(p.osName, commit.Ref, 0)
+	bootloader.MountOSTree(p.osName, ref, 0)
 	pipeline.AddStage(bootloader)
 
 	// First create custom directories, because some of the files may depend on them
 	if len(p.Directories) > 0 {
 		dirStages := osbuild.GenDirectoryNodesStages(p.Directories)
 		for _, stage := range dirStages {
-			stage.MountOSTree(p.osName, commit.Ref, 0)
+			stage.MountOSTree(p.osName, ref, 0)
 		}
 		pipeline.AddStages(dirStages...)
 	}
@@ -386,7 +390,7 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 	if len(p.Files) > 0 {
 		fileStages := osbuild.GenFileNodesStages(p.Files)
 		for _, stage := range fileStages {
-			stage.MountOSTree(p.osName, commit.Ref, 0)
+			stage.MountOSTree(p.osName, ref, 0)
 		}
 		pipeline.AddStages(fileStages...)
 	}
@@ -396,7 +400,7 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 			EnabledServices:  p.EnabledServices,
 			DisabledServices: p.DisabledServices,
 		})
-		systemdStage.MountOSTree(p.osName, commit.Ref, 0)
+		systemdStage.MountOSTree(p.osName, ref, 0)
 		pipeline.AddStage(systemdStage)
 	}
 
@@ -404,7 +408,7 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 		&osbuild.OSTreeSelinuxStageOptions{
 			Deployment: osbuild.OSTreeDeployment{
 				OSName: p.osName,
-				Ref:    commit.Ref,
+				Ref:    ref,
 			},
 		},
 	))
