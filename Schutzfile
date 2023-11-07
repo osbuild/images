@@ -1,10 +1,5 @@
 {
   "fedora-38": {
-    "dependencies": {
-      "osbuild": {
-        "commit": "61da6124edee4f9735d50a412d5ecc16c8eec674"
-      }
-    },
     "repos": [
       {
         "file": "/etc/yum.repos.d/fedora.repo",
