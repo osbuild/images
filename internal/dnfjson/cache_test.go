@@ -172,6 +172,38 @@ func TestCacheRead(t *testing.T) {
 	}
 }
 
+func TestMultiDirCacheRead(t *testing.T) {
+	assert := assert.New(t)
+	t.Run("MultiDir", func(t *testing.T) {
+		testCacheRoot := t.TempDir()
+		// Cache is now per-distro, use the name of the config as a distro name
+		size1 := createTestCache(filepath.Join(testCacheRoot, "rhel84-aarch64"), testCfgs["rhel84-aarch64"])
+		size2 := createTestCache(filepath.Join(testCacheRoot, "fake-real"), testCfgs["fake-real"])
+
+		// Cache covers all distros, pass in top directory
+		cache := newRPMCache(testCacheRoot, 1048576) // 1 MiB, but doesn't matter for this test
+
+		nrepos := len(getRepoIDs(testCfgs["rhel84-aarch64"])) + len(getRepoIDs(testCfgs["fake-real"]))
+		assert.Equal(size1+size2, cache.size)
+		assert.Equal(nrepos, len(cache.repoElements))
+		assert.Equal(nrepos, len(cache.repoRecency))
+
+		// Check sorting by mtime
+		var last int64 = -1
+		for _, f := range cache.repoRecency {
+			var cur int64
+			if val, ok := testCfgs["rhel84-aarch64"][f]; ok {
+				cur = val.mtime
+			}
+			if val, ok := testCfgs["fake-real"][f]; ok {
+				cur = val.mtime
+			}
+			assert.GreaterOrEqual(cur, last)
+			last = cur
+		}
+	})
+}
+
 func sizeSum(cfg testCache, repoIDFilter ...string) uint64 {
 	var sum uint64
 	for path, info := range cfg {
