@@ -76,8 +76,8 @@ func loadConfig(path string) BuildConfig {
 	return conf
 }
 
-func makeManifest(config *BuildConfig, repos []rpmmd.RepoConfig, archName string, seedArg int64, cacheRoot string) (manifest.OSBuildManifest, error) {
-	manifest, err := Manifest(config, repos, archName, seedArg)
+func makeManifest(imageref string, config *BuildConfig, repos []rpmmd.RepoConfig, archName string, seedArg int64, cacheRoot string) (manifest.OSBuildManifest, error) {
+	manifest, err := Manifest(imageref, config, repos, archName, seedArg)
 	check(err)
 
 	// depsolve packages
@@ -142,6 +142,10 @@ func main() {
 
 	flag.Parse()
 
+	if imageref == "" {
+		fail("imageref is required")
+	}
+
 	if err := os.MkdirAll(outputDir, 0777); err != nil {
 		fail(fmt.Sprintf("failed to create target directory: %s", err.Error()))
 	}
@@ -156,7 +160,7 @@ func main() {
 	seedArg := int64(0)
 
 	fmt.Printf("Generating manifest for %s: ", config.Name)
-	mf, err := makeManifest(&config, repos, arch, seedArg, rpmCacheRoot)
+	mf, err := makeManifest(imageref, &config, repos, arch, seedArg, rpmCacheRoot)
 	if err != nil {
 		check(err)
 	}

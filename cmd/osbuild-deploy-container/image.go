@@ -18,7 +18,7 @@ import (
 	"github.com/osbuild/images/pkg/runner"
 )
 
-func Manifest(config *BuildConfig, repos []rpmmd.RepoConfig, arch string, seed int64) (*manifest.Manifest, error) {
+func Manifest(imageref string, config *BuildConfig, repos []rpmmd.RepoConfig, arch string, seed int64) (*manifest.Manifest, error) {
 
 	source := rand.NewSource(seed)
 
@@ -27,7 +27,7 @@ func Manifest(config *BuildConfig, repos []rpmmd.RepoConfig, arch string, seed i
 	rng := rand.New(source)
 
 	baseImage := &ostree.ImageOptions{
-		Container: "quay.io/centos-boot/fedora-tier-1:eln",
+		Container: imageref,
 		TLSVerify: common.ToPtr(true),
 	}
 
