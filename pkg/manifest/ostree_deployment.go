@@ -277,6 +277,9 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 			// we should make this configurable
 			TargetImgref: fmt.Sprintf("ostree-remote-registry:%s:%s", p.Remote.Name, p.containerSpec.Source),
 			Mounts:       []string{"/boot", "/boot/efi"},
+			Rootfs: &osbuild.Rootfs{
+				Label: "root",
+			},
 		}
 		images := osbuild.NewContainersInputForSources([]container.Spec{cont})
 		pipeline.AddStage(osbuild.NewOSTreeDeployContainerStage(options, images))
