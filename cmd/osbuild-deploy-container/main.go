@@ -8,7 +8,9 @@ import (
 	"os"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/dnfjson"
 	"github.com/osbuild/images/pkg/blueprint"
+	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -16,6 +18,12 @@ import (
 
 //go:embed fedora-eln.json
 var reposStr string
+
+const (
+	distroName       = "fedora-39"
+	modulePlatformID = "platform:f39"
+	releaseVersion   = "39"
+)
 
 func fail(msg string) {
 	fmt.Fprintln(os.Stderr, msg)
@@ -66,9 +74,41 @@ func loadConfig(path string) BuildConfig {
 	return conf
 }
 
-func makeManifest(config BuildConfig, repos []rpmmd.RepoConfig, archName string, seedArg int64, cacheRoot string) (manifest.OSBuildManifest, error) {
-	return manifest.OSBuildManifest{}, nil
+func makeManifest(config *BuildConfig, repos []rpmmd.RepoConfig, archName string, seedArg int64, cacheRoot string) (manifest.OSBuildManifest, error) {
+	manifest, err := Manifest(config, repos, archName, seedArg)
+	check(err)
+
+	// depsolve packages
+	solver := dnfjson.NewSolver(modulePlatformID, releaseVersion, archName, distroName, cacheRoot)
+	solver.SetDNFJSONPath("./dnf-json")
+	depsolvedSets := make(map[string][]rpmmd.PackageSpec)
+	for name, pkgSet := range manifest.GetPackageSetChains() {
+		res, err := solver.Depsolve(pkgSet)
+		if err != nil {
+			return nil, err
+		}
+		depsolvedSets[name] = res
+	}
+
+	// resolve container
+	resolver := container.NewResolver(archName)
+	containerSpecs := make(map[string][]container.Spec)
+	for plName, sourceSpecs := range manifest.GetContainerSourceSpecs() {
+		for _, c := range sourceSpecs {
+			resolver.Add(c)
+		}
+		containerSpecs[plName], err = resolver.Finish()
+		if err != nil {
+			return nil, err
+		}
+	}
+	mf, err := manifest.Serialize(depsolvedSets, containerSpecs, nil)
+	if err != nil {
+		fail(fmt.Sprintf("[ERROR] manifest serialization failed: %s", err.Error()))
+	}
+	return mf, nil
 }
+
 func main() {
 
 	arch := common.CurrentArch()
@@ -97,10 +137,9 @@ func main() {
 	seedArg := int64(0)
 
 	fmt.Printf("Generating manifest for %s: ", config.Name)
-	mf, err := makeManifest(config, repos, arch, seedArg, rpmCacheRoot)
+	mf, err := makeManifest(&config, repos, arch, seedArg, rpmCacheRoot)
 	if err != nil {
 		check(err)
 	}
-	fmt.Printf("%+v\n", mf)
-
+	fmt.Printf("%+v\n", string(mf))
 }
