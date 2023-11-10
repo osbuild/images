@@ -13,6 +13,12 @@ var partitionTables = distro.BasePartitionTableMap{
 		Type: "gpt",
 		Partitions: []disk.Partition{
 			{
+				Size:     1 * common.MebiByte,
+				Bootable: true,
+				Type:     disk.BIOSBootPartitionGUID,
+				UUID:     disk.BIOSBootPartitionUUID,
+			},
+			{
 				Size: 501 * common.MebiByte,
 				Type: disk.EFISystemPartitionGUID,
 				UUID: disk.EFISystemPartitionUUID,
@@ -40,7 +46,7 @@ var partitionTables = distro.BasePartitionTableMap{
 				},
 			},
 			{
-				Size: 2569 * common.MebiByte,
+				Size: 2 * common.GibiByte,
 				Type: disk.FilesystemDataGUID,
 				UUID: disk.RootPartitionUUID,
 				Payload: &disk.Filesystem{

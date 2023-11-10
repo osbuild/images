@@ -71,12 +71,23 @@ func pipelines(baseImage *ostree.ImageOptions, config *BuildConfig, arch string,
 
 	img.SysrootReadOnly = true
 
-	img.Platform = &platform.X86{
-		BasePlatform: platform.BasePlatform{
-			ImageFormat: platform.FORMAT_QCOW2,
-		},
-		BIOS:       false,
-		UEFIVendor: "fedora",
+	switch arch {
+	case platform.ARCH_X86_64.String():
+		img.Platform = &platform.X86{
+			BasePlatform: platform.BasePlatform{
+				ImageFormat: platform.FORMAT_QCOW2,
+			},
+			BIOS:       true,
+			UEFIVendor: "fedora",
+		}
+	case platform.ARCH_AARCH64.String():
+		img.Platform = &platform.Aarch64{
+			UEFIVendor: "fedora",
+			BasePlatform: platform.BasePlatform{
+				ImageFormat: platform.FORMAT_QCOW2,
+				QCOW2Compat: "1.1",
+			},
+		}
 	}
 
 	img.OSName = "default"
