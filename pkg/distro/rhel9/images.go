@@ -382,6 +382,7 @@ func edgeInstallerImage(workload workload.Workload,
 	img.OSName = "rhel"
 	img.OSVersion = d.osVersion
 	img.Release = fmt.Sprintf("%s %s", d.product, d.osVersion)
+	img.FIPS = customizations.GetFIPS()
 
 	img.Filename = t.Filename()
 
