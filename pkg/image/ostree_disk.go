@@ -45,6 +45,8 @@ type OSTreeDiskImage struct {
 
 	Directories []*fsnode.Directory
 	Files       []*fsnode.File
+
+	FIPS bool
 }
 
 func NewOSTreeDiskImage(commit ostree.SourceSpec) *OSTreeDiskImage {
