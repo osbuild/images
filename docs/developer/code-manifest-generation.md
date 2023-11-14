@@ -24,12 +24,26 @@ Manifests are generated in two general stages: _Instantiation_ and _Serializatio
     source specifications (package specs, container specs, ostree commit
     specs). See [Resolving Content](#resolving-content).
 
+The `makeManifest()` function in `cmd/build/main.go` is a straightforward
+implementation of the sequence of actions required to generate a manifest
+described below.
+
 ## Manifest Instantiation
 
 Instantiating a manifest involves generating an array of
 [Pipelines][godoc-manifest-pipeline] that will produce an image. Each pipeline
 supports different options that will affect the stages and stage options it
 will generate.
+
+Typically, manifest instantiation happens inside the
+[`ImageType.Manifest()`][godoc-distro-imagetype] function, which each distro
+implements separately. The function is responsible for:
+- Validating blueprint customizations for the selected image type.
+- Collecting static package sets for the distro and image type.
+- Collecting container source specs from the blueprint customizations.
+- Calling the image function for the image type, which creates an
+  [`image.ImageKind`][godoc-image-imagekind] object, and
+- Instantiating the manifest using `ImageKind.InstantiateManifest()`.
 
 ### The OS pipeline
 
@@ -151,6 +165,7 @@ function.
 
 [godoc-manifest-manifest]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/manifest#Manifest
 [godoc-manifest-pipeline]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/manifest#Pipeline
+[godoc-distro-imagetype]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/distro/ImageType
 [godoc-manifest-osbuildmanifest]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/manifest#OSBuildManifest
 [godoc-rpmmd-packageset]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/rpmmd#PackageSet
 [godoc-rpmmd-packagespec]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/rpmmd#PackageSpec
@@ -168,3 +183,4 @@ function.
 [godoc-manifest-manifest-getpackagesetchains]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/manifest#Manifest.GetPackageSetChains
 [godoc-manifest-manifest-serialize]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/manifest#Manifest.Serialize
 [godoc-json-marshal]: https://pkg.go.dev/encoding/json#Marshal
+[godoc-image-imagekind]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/image#ImageKind
