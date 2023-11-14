@@ -1,0 +1,16 @@
+{
+  "name": "edge-ostree-pull-device-fips",
+  "blueprint": {
+    "customizations": {
+      "fips": true,
+      "installation_device": "/dev/vda"
+    }
+  },
+  "ostree": {
+    "url": "http://example.com/repo"
+  },
+  "depends": {
+    "image-type": "edge-container",
+    "config": "empty.json"
+  }
+}

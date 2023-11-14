@@ -1,0 +1,24 @@
+{
+  "name": "edge-ostree-pull-user-fips",
+  "blueprint": {
+    "customizations": {
+      "fips": true,
+      "user": [
+        {
+          "groups": [
+            "wheel"
+          ],
+          "key": "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBNebAh6SjpAn8wB53K4695cGnHGuCtl4RdaX3futZgJUultHyzeYHnzMO7d4++qnRL+Rworew62LKP560uvtncc= github.com/osbuild/images",
+          "name": "osbuild"
+        }
+      ]
+    }
+  },
+  "depends": {
+    "config": "empty.json",
+    "image-type": "edge-container"
+  },
+  "ostree": {
+    "url": "http://example.com/repo"
+  }
+}
