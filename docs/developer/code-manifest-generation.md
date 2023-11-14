@@ -83,6 +83,22 @@ source specs are added to the resolver with the
 retrieved with the [`Resolver.Finish()`][godoc-container-resolver-finish]
 method.
 
+### OSTree Commits
+
+**Source specification**: The source specification for ostree commits is the
+[`ostree.SourceSpec`][godoc-ostree-sourcespec]. It contains a URL to an ostree
+repository and a ref to resolve.
+
+**Content specification**: The content specification for ostree commits is the
+[`ostree.CommitSpec`][godoc-ostree-commitspec]. Each ostree commit spec
+contains the URL and ref from the source spec as well as the checksum of the
+commit.
+
+**Resolving**: Resolving **ostree source specs** to **ostree commit specs** is
+done using the [`ostree.Resolve`][godoc-ostree-resolve] function. Resolving an
+ostree source spec mainly involves resolving the content of the file at
+`<URL>/refs/heads/<REF>`.
+
 
 ----
 
@@ -97,3 +113,6 @@ method.
 [godoc-container-resolver]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/container#Resolver
 [godoc-container-resolver-add]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/container#Resolver.Add
 [godoc-container-resolver-finish]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/container#Resolver.Finish
+[godoc-ostree-sourcespec]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/ostree#SourceSpec
+[godoc-ostree-commitspec]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/ostree#CommitSpec
+[godoc-ostree-resolve]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/ostree#Resolve
