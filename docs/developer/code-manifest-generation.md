@@ -134,6 +134,18 @@ done using the [`ostree.Resolve`][godoc-ostree-resolve] function. Resolving an
 ostree source spec mainly involves resolving the content of the file at
 `<URL>/refs/heads/<REF>`.
 
+## Manifest Serialization
+
+When a manifest is serialized by calling its
+[`Manifest.Serialize()`][godoc-manifest-manifest-serialize], it runs the
+private `serialize()` method on each pipeline in its array. Each pipeline in
+turn creates an array of stages with the appropriate options based on the
+customizations and options set on the pipeline.
+
+The final JSON representation of the manifest that can be used with osbuild can
+be created by using the standard library [`json.Marshal()`][godoc-json-marshal]
+function.
+
 
 ----
 
@@ -153,4 +165,6 @@ ostree source spec mainly involves resolving the content of the file at
 [godoc-ostree-resolve]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/ostree#Resolve
 [godoc-manifest-os]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/manifest#OS
 [godoc-manifest-build]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/manifest#Build
-[godoc-manifest-manifest-getpackagesetchains]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/manifest?m=all#Manifest.GetPackageSetChains
+[godoc-manifest-manifest-getpackagesetchains]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/manifest#Manifest.GetPackageSetChains
+[godoc-manifest-manifest-serialize]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/manifest#Manifest.Serialize
+[godoc-json-marshal]: https://pkg.go.dev/encoding/json#Marshal
