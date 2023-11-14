@@ -26,6 +26,41 @@ Manifests are generated in two general stages: _Instantiation_ and _Serializatio
 
 ## Manifest Instantiation
 
+Instantiating a manifest involves generating an array of
+[Pipelines][godoc-manifest-pipeline] that will produce an image. Each pipeline
+supports different options that will affect the stages and stage options it
+will generate.
+
+### The OS pipeline
+
+The [OS][godoc-manifest-os] pipeline is the biggest and most central
+pipeline. It is responsible for generating the stages that will create the main
+OS tree of the resulting image. Almost all customizations that control specific
+options for a bootable image are defined on this pipeline.
+
+### The Build pipeline
+
+The [Build][godoc-manifest-build] pipeline is used in every manifest to define
+a build root for all the following pipelines to run in. It is always added
+first and is almost never customized beyond package selection.
+
+### Package Selection
+
+The OS pipeline's private `getPackageSetChains()` method (which is called by
+[`Manifest.GetPackageSetChains()`][godoc-manifest-manifest-getpackagesetchains])
+is a good example of dynamic package selection based on enabled features and
+customizations. Packages are selected based on features that will be required
+on the running system. For example, if NTP servers are defined for the image,
+the `chrony` package is selected.
+
+The build pipeline is special in that extra packages are added to it
+dynamically based on the requirements of subsequent pipelines. Pipelines can
+define build packages that they require in the `getBuildPackages()` private
+method. These packages will be merged with the static packages that are defined
+for the build root. For example, if a container will be embedded in the OS
+pipeline, the `skopeo` package is added to the build root to copy the container
+into the OS container store.
+
 ## Resolving Content
 
 [`Manifest`][godoc-manifest-manifest] objects should provide source
@@ -116,3 +151,6 @@ ostree source spec mainly involves resolving the content of the file at
 [godoc-ostree-sourcespec]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/ostree#SourceSpec
 [godoc-ostree-commitspec]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/ostree#CommitSpec
 [godoc-ostree-resolve]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/ostree#Resolve
+[godoc-manifest-os]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/manifest#OS
+[godoc-manifest-build]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/manifest#Build
+[godoc-manifest-manifest-getpackagesetchains]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/manifest?m=all#Manifest.GetPackageSetChains
