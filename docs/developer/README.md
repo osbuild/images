@@ -10,3 +10,4 @@ To build images, you will also need to install `osbuild` and its sub-packages.
 ## Topics
 
 - [Useful cmds](./cmds.md) for development and testing.
+- [Manifest generation code](./code-manifest-generation.md)
