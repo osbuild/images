@@ -28,7 +28,7 @@ Manifests are generated in two general stages: _Instantiation_ and _Serializatio
 
 ## Resolving Content
 
-[`Manifest` objects][godoc-manifest-manifest] should provide source
+[`Manifest`][godoc-manifest-manifest] objects should provide source
 specifications for the content they need. Each **source specification** should be
 resolved to a **content specification** and passed to the serialization function to
 create the final manifest
@@ -44,7 +44,7 @@ resolved.
 ### Package sets
 
 **Source specification**: The source specification for packages is the
-[PackageSet][godoc-rpmmd-packageset]. Each package set defines a list of
+[`rpmmd.PackageSet`][godoc-rpmmd-packageset]. Each package set defines a list of
 package names to include, a list to exclude, and a set of RPM repositories to
 use to resolve and retrieve the packages.
 
@@ -56,7 +56,7 @@ result of a depsolve of each package set in the chain is merged with the
 subsequent set and the result is a single array of package specs.
 
 **Content specification**: The content specification for packages is the
-[PackageSpec][godoc-rpmmd-packagespec]. Each package spec is a fully resolved
+[`rpmmd.PackageSpec`][godoc-rpmmd-packagespec]. Each package spec is a fully resolved
 description of an RPM, with metadata, a checksum, and a URL from which to
 retrieve the package.
 
@@ -65,6 +65,23 @@ the [`dnfjson.Solver.Depsolve()`][godoc-dnfjson-solver-depsolve] function. This
 call resolves the dependencies of an array of package sets and returns all the
 packages that were specified, their dependencies, and the metadata for each
 package.
+
+### Containers
+
+**Source specification**: The source specification for containers is the
+[`container.SourceSpec`][godoc-container-sourcespec]. The main component is the
+`Source`, which is a full ref to a container in a registry.
+
+**Content specification**: The content specification for containers is the
+[`container.Spec`][godoc-container-spec]. Each container spec is a fully
+resolved description of a container.
+
+**Resolving**: Resolving **container source specs** to **container specs** is
+done using the [`container.Resolver`][godoc-container-resolver] type. Container
+source specs are added to the resolver with the
+[`Resolver.Add()`][godoc-container-resolver-add] method and all results are
+retrieved with the [`Resolver.Finish()`][godoc-container-resolver-finish]
+method.
 
 
 ----
@@ -75,3 +92,8 @@ package.
 [godoc-rpmmd-packageset]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/rpmmd#PackageSet
 [godoc-rpmmd-packagespec]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/rpmmd#PackageSpec
 [godoc-dnfjson-solver-depsolve]: https://pkg.go.dev/github.com/osbuild/images@main/internal/dnfjson#Solver.Depsolve
+[godoc-container-sourcespec]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/container#SourceSpec
+[godoc-container-spec]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/container#Spec
+[godoc-container-resolver]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/container#Resolver
+[godoc-container-resolver-add]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/container#Resolver.Add
+[godoc-container-resolver-finish]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/container#Resolver.Finish
