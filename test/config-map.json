@@ -37,7 +37,27 @@
       "edge-simplified-installer"
     ]
   },
+  "./configs/edge-ostree-pull-device-fips.json": {
+    "distros": [
+      "rhel-93",
+      "rhel-94"
+    ],
+    "image-types": [
+      "edge-simplified-installer"
+    ]
+  },
   "./configs/edge-ostree-pull-empty.json": {
+    "image-types": [
+      "edge-installer",
+      "edge-raw-image",
+      "edge-vsphere"
+    ]
+  },
+ "./configs/edge-ostree-pull-fips.json": {
+    "distros": [
+      "rhel-93",
+      "rhel-94"
+    ],
     "image-types": [
       "edge-installer",
       "edge-raw-image",
@@ -49,6 +69,16 @@
       "edge-ami"
     ]
   },
+  "./configs/edge-ostree-pull-user-fips.json": {
+    "distros": [
+      "rhel-93",
+      "rhel-94"
+    ],
+    "image-types": [
+      "edge-ami"
+    ]
+  },
+
   "./configs/embed-containers-2.json": {
     "image-types": [
       "edge-container"
