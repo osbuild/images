@@ -173,24 +173,21 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 		},
 	))
 
-	remoteURL := p.Remote.URL
-	if remoteURL == "" {
-		// if the remote URL for the image is not specified, use the source commit URL
-		remoteURL = commit.URL
-	}
-	pipeline.AddStage(osbuild.NewOSTreeRemotesStage(
-		&osbuild.OSTreeRemotesStageOptions{
-			Repo: "/ostree/repo",
-			Remotes: []osbuild.OSTreeRemote{
-				{
-					Name:        p.Remote.Name,
-					URL:         remoteURL,
-					ContentURL:  p.Remote.ContentURL,
-					GPGKeyPaths: p.Remote.GPGKeyPaths,
+	if p.Remote.URL != "" {
+		pipeline.AddStage(osbuild.NewOSTreeRemotesStage(
+			&osbuild.OSTreeRemotesStageOptions{
+				Repo: "/ostree/repo",
+				Remotes: []osbuild.OSTreeRemote{
+					{
+						Name:        p.Remote.Name,
+						URL:         p.Remote.URL,
+						ContentURL:  p.Remote.ContentURL,
+						GPGKeyPaths: p.Remote.GPGKeyPaths,
+					},
 				},
 			},
-		},
-	))
+		))
+	}
 
 	pipeline.AddStage(osbuild.NewOSTreeFillvarStage(
 		&osbuild.OSTreeFillvarStageOptions{
