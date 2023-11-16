@@ -131,6 +131,20 @@ var (
 		exports:          []string{"commit-archive"},
 	}
 
+	iotBootableContainer = imageType{
+		name:     "iot-bootable-container",
+		filename: "iot-bootable-container.tar",
+		mimeType: "application/x-tar",
+		packageSets: map[string]packageSetFunc{
+			osPkgsKey: bootableContainerPackageSet,
+		},
+		rpmOstree:        true,
+		image:            bootableContainerImage,
+		buildPipelines:   []string{"build"},
+		payloadPipelines: []string{"os", "ostree-commit", "ostree-encapsulate"},
+		exports:          []string{"ostree-encapsulate"},
+	}
+
 	iotOCIImgType = imageType{
 		name:        "iot-container",
 		nameAliases: []string{"fedora-iot-container"},
@@ -843,6 +857,7 @@ func newDistro(version int) distro.Distro {
 			},
 			iotSimplifiedInstallerImgType,
 		)
+
 		aarch64.addImageTypes(
 			&platform.Aarch64{
 				BasePlatform: platform.BasePlatform{
@@ -865,6 +880,63 @@ func newDistro(version int) distro.Distro {
 				UEFIVendor: "fedora",
 			},
 			iotSimplifiedInstallerImgType,
+		)
+	}
+
+	if !common.VersionLessThan(rd.Releasever(), "39") {
+		// bootc was introduced in F39
+		x86_64.addImageTypes(
+			&platform.X86{
+				BasePlatform: platform.BasePlatform{
+					FirmwarePackages: []string{
+						"biosdevname",
+						"iwlwifi-dvm-firmware",
+						"iwlwifi-mvm-firmware",
+						"microcode_ctl",
+					},
+				},
+				BIOS:       true,
+				UEFIVendor: "fedora",
+			},
+			iotBootableContainer,
+		)
+		aarch64.addImageTypes(
+			&platform.Aarch64{
+				BasePlatform: platform.BasePlatform{
+					FirmwarePackages: []string{
+						"arm-image-installer",
+						"bcm283x-firmware",
+						"brcmfmac-firmware",
+						"iwlwifi-mvm-firmware",
+						"realtek-firmware",
+						"uboot-images-armv8",
+					},
+				},
+				UEFIVendor: "fedora",
+			},
+			iotBootableContainer,
+		)
+
+		ppc64le.addImageTypes(
+			&platform.PPC64LE{
+				BIOS: true,
+				BasePlatform: platform.BasePlatform{
+					ImageFormat: platform.FORMAT_QCOW2,
+					QCOW2Compat: "1.1",
+				},
+			},
+			iotBootableContainer,
+		)
+
+		s390x.addImageTypes(
+			&platform.S390X{
+				Zipl: true,
+				BasePlatform: platform.BasePlatform{
+					ImageFormat: platform.FORMAT_QCOW2,
+					QCOW2Compat: "1.1",
+				},
+			},
+			iotBootableContainer,
 		)
 	}
 
