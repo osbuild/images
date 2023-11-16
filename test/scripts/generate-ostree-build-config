@@ -33,7 +33,7 @@ def read_config_map():
         return json.load(config_map_file)
 
 
-def configs_with_deps(configs):
+def configs_with_deps(configs, distro=None):
     """
     Return a config map with only the config files that have dependencies.
     """
@@ -45,6 +45,9 @@ def configs_with_deps(configs):
         with open(config_path, "r", encoding="utf-8") as config_file:
             data = json.load(config_file)
         if not data.get("depends"):
+            continue
+        config_distro = filters.get("distros", [])
+        if config_distro and distro and distro not in config_distro:
             continue
 
         with_deps[config_path] = filters
@@ -317,7 +320,7 @@ def main():
 
     testlib.check_config_names()
 
-    config_map = configs_with_deps(read_config_map())  # filtered config map: only configs with deps
+    config_map = configs_with_deps(read_config_map(), distro)  # filtered config map: only configs with deps
 
     with TemporaryDirectory() as cache_root:
         dep_manifest_dir = os.path.join(cache_root, "dependencies")
