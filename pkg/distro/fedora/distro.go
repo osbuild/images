@@ -126,6 +126,23 @@ var (
 		exports:          []string{"commit-archive"},
 	}
 
+	iotBootableContainer = imageType{
+		name:     "iot-bootable-container",
+		filename: "ostree-container.tar",
+		mimeType: "application/x-tar",
+		packageSets: map[string]packageSetFunc{
+			osPkgsKey: iotCommitPackageSet,
+		},
+		defaultImageConfig: &distro.ImageConfig{
+			EnabledServices: iotServices,
+		},
+		rpmOstree:        true,
+		image:            iotBootableContainerImage,
+		buildPipelines:   []string{"build"},
+		payloadPipelines: []string{"os", "ostree-commit", "ostree-encapsulate"},
+		exports:          []string{"ostree-encapsulate"},
+	}
+
 	iotOCIImgType = imageType{
 		name:        "iot-container",
 		nameAliases: []string{"fedora-iot-container"},
@@ -684,6 +701,7 @@ func newDistro(version int) distro.Distro {
 		},
 		iotOCIImgType,
 		iotCommitImgType,
+		iotBootableContainer,
 		iotInstallerImgType,
 		imageInstallerImgType,
 		liveInstallerImgType,
@@ -759,6 +777,7 @@ func newDistro(version int) distro.Distro {
 		},
 		imageInstallerImgType,
 		iotCommitImgType,
+		iotBootableContainer,
 		iotInstallerImgType,
 		iotOCIImgType,
 		liveInstallerImgType,
