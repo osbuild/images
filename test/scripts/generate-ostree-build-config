@@ -226,10 +226,10 @@ def setup_dependencies(manifests, config_map, distro, arch):
                                             images=filters.get("image-types"))
 
         for image_config in image_configs:
-            distro = image_config["distro"]
-            arch = image_config["arch"]
-            image_type = image_config["image-type"]
-            dep_build_name = testlib.gen_build_name(distro, arch, dep_image_type, dep_config_name)
+            ic_distro = image_config["distro"]
+            ic_arch = image_config["arch"]
+            ic_image_type = image_config["image-type"]
+            dep_build_name = testlib.gen_build_name(ic_distro, ic_arch, dep_image_type, dep_config_name)
             manifest_id = manifests[dep_build_name + ".json"]["id"]
             container = f"{testlib.REGISTRY}/{dep_build_name}:build-{manifest_id}"
 
@@ -249,7 +249,7 @@ def setup_dependencies(manifests, config_map, distro, arch):
                 "ostree": {
                     "url": f"http://localhost:{port}/repo",
                     # get the ref from the current config, or compute the default if unset
-                    "ref": config_data.get("ostree", {}).get("ref", default_ref(distro, arch)),
+                    "ref": config_data.get("ostree", {}).get("ref", default_ref(ic_distro, ic_arch)),
                 },
                 "blueprint": config_data.get("blueprint"),
             }
@@ -262,9 +262,9 @@ def setup_dependencies(manifests, config_map, distro, arch):
 
             config_fname = config_name + ".json"
             new_filters = new_config_map.get(config_fname, {"distros": [], "arches": [], "image-types": []})
-            new_filters["distros"].append(distro)
-            new_filters["arches"].append(arch)
-            new_filters["image-types"].append(image_type)
+            new_filters["distros"].append(ic_distro)
+            new_filters["arches"].append(ic_arch)
+            new_filters["image-types"].append(ic_image_type)
             new_config_map[config_fname] = new_filters
 
     try:
