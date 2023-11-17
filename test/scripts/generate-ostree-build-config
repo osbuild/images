@@ -33,9 +33,10 @@ def read_config_map():
         return json.load(config_map_file)
 
 
-def configs_with_deps(configs, distro=None):
+def configs_with_deps(configs, distro=None, arch=None):
     """
     Return a config map with only the config files that have dependencies.
+    Filter on distro and arch if specified.
     """
     with_deps: dict[str, str] = {}
     config_map_dir = os.path.abspath(os.path.dirname(testlib.CONFIG_MAP))
@@ -46,8 +47,13 @@ def configs_with_deps(configs, distro=None):
             data = json.load(config_file)
         if not data.get("depends"):
             continue
-        config_distro = filters.get("distros", [])
-        if config_distro and distro and distro not in config_distro:
+
+        # filter on distro and arch
+        distro_filters = filters.get("distros", [])
+        if distro_filters and distro and distro not in distro_filters:
+            continue
+        arch_filters = filters.get("arches", [])
+        if arch_filters and arch and arch not in arch_filters:
             continue
 
         with_deps[config_path] = filters
@@ -320,7 +326,7 @@ def main():
 
     testlib.check_config_names()
 
-    config_map = configs_with_deps(read_config_map(), distro)  # filtered config map: only configs with deps
+    config_map = configs_with_deps(read_config_map(), distro, arch)  # filtered config map: only configs with deps
 
     with TemporaryDirectory() as cache_root:
         dep_manifest_dir = os.path.join(cache_root, "dependencies")
