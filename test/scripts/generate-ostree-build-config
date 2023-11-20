@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import fnmatch
 import json
 import os
 from contextlib import contextmanager
@@ -33,6 +34,10 @@ def read_config_map():
         return json.load(config_map_file)
 
 
+def matches(name: str, filters: list[str]) -> bool:
+    return any(fnmatch.fnmatch(name, i) for i in filters)
+
+
 def configs_with_deps(configs, distro=None, arch=None):
     """
     Return a config map with only the config files that have dependencies.
@@ -50,10 +55,10 @@ def configs_with_deps(configs, distro=None, arch=None):
 
         # filter on distro and arch
         distro_filters = filters.get("distros", [])
-        if distro_filters and distro and distro not in distro_filters:
+        if distro_filters and distro and not matches(distro, distro_filters):
             continue
         arch_filters = filters.get("arches", [])
-        if arch_filters and arch and arch not in arch_filters:
+        if arch_filters and arch and not matches(arch, arch_filters):
             continue
 
         with_deps[config_path] = filters
