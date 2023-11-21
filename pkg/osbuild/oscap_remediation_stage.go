@@ -15,6 +15,7 @@ type OscapRemediationStageOptions struct {
 	DataDir string      `json:"data_dir,omitempty"`
 	Config  OscapConfig `json:"config"`
 }
+
 type OscapConfig struct {
 	Datastream   string              `json:"datastream" toml:"datastream"`
 	ProfileID    string              `json:"profile_id" toml:"profile_id"`
@@ -23,7 +24,7 @@ type OscapConfig struct {
 	BenchmarkID  string              `json:"benchmark_id,omitempty" toml:"benchmark_id,omitempty"`
 	Tailoring    string              `json:"tailoring,omitempty" toml:"tailoring,omitempty"`
 	TailoringID  string              `json:"tailoring_id,omitempty" toml:"tailoring_id,omitempty"`
-	ArfResult    string              `json:"arf_result,omitempty" toml:"arf_result,omitempty"`
+	ArfResult    string              `json:"arf_results,omitempty" toml:"arf_results,omitempty"`
 	HtmlReport   string              `json:"html_report,omitempty" toml:"html_report,omitempty"`
 	VerboseLog   string              `json:"verbose_log,omitempty" toml:"verbose_log,omitempty"`
 	VerboseLevel OscapVerbosityLevel `json:"verbose_level,omitempty" toml:"verbose_level,omitempty"`
