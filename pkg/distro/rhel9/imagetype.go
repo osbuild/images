@@ -40,6 +40,9 @@ const (
 
 	// blueprint package set name
 	blueprintPkgsKey = "blueprint"
+
+	// location for saving openscap remediation data
+	oscapDataDir = "/oscap_data"
 )
 
 type imageFunc func(workload workload.Workload, t *imageType, customizations *blueprint.Customizations, options distro.ImageOptions, packageSets map[string]rpmmd.PackageSet, containers []container.SourceSpec, rng *rand.Rand) (image.ImageKind, error)

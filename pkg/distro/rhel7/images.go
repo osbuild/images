@@ -131,6 +131,7 @@ func osCustomizations(
 
 	if oscapConfig := c.GetOpenSCAP(); oscapConfig != nil {
 		osc.OpenSCAPConfig = osbuild.NewOscapRemediationStageOptions(
+			oscapDataDir,
 			osbuild.OscapConfig{
 				Datastream: oscapConfig.DataStream,
 				ProfileID:  oscapConfig.ProfileID,
