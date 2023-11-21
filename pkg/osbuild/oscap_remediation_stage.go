@@ -28,6 +28,7 @@ type OscapConfig struct {
 	HtmlReport   string              `json:"html_report,omitempty" toml:"html_report,omitempty"`
 	VerboseLog   string              `json:"verbose_log,omitempty" toml:"verbose_log,omitempty"`
 	VerboseLevel OscapVerbosityLevel `json:"verbose_level,omitempty" toml:"verbose_level,omitempty"`
+	Compression  bool                `json:"compress_results,omitempty" toml:"compress_results,omitempty"`
 }
 
 func (OscapRemediationStageOptions) isStageOptions() {}
@@ -85,6 +86,7 @@ func NewOscapRemediationStageOptions(dataDir string, options OscapConfig) *Oscap
 			HtmlReport:   options.HtmlReport,
 			VerboseLog:   options.VerboseLog,
 			VerboseLevel: options.VerboseLevel,
+			Compression:  options.Compression,
 		},
 	}
 }

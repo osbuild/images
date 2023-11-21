@@ -220,7 +220,7 @@ func (p *OS) getPackageSetChain(Distro) []rpmmd.PackageSet {
 	}
 
 	if p.OpenSCAPConfig != nil {
-		packages = append(packages, "openscap-scanner", "scap-security-guide")
+		packages = append(packages, "openscap-scanner", "scap-security-guide", "xz")
 	}
 
 	// Make sure the right packages are included for subscriptions

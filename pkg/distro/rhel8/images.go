@@ -202,8 +202,9 @@ func osCustomizations(
 		}
 
 		oscapStageOptions := osbuild.OscapConfig{
-			Datastream: datastream,
-			ProfileID:  oscapConfig.ProfileID,
+			Datastream:  datastream,
+			ProfileID:   oscapConfig.ProfileID,
+			Compression: true,
 		}
 
 		if oscapConfig.Tailoring != nil {
