@@ -71,8 +71,9 @@ func NewOscapRemediationStage(options *OscapRemediationStageOptions) *Stage {
 	}
 }
 
-func NewOscapRemediationStageOptions(options OscapConfig) *OscapRemediationStageOptions {
+func NewOscapRemediationStageOptions(dataDir string, options OscapConfig) *OscapRemediationStageOptions {
 	return &OscapRemediationStageOptions{
+		DataDir: dataDir,
 		Config: OscapConfig{
 			ProfileID:    options.ProfileID,
 			Datastream:   options.Datastream,
