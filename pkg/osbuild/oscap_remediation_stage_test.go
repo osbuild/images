@@ -66,6 +66,7 @@ func TestOscapRemediationStageOptionsValidate(t *testing.T) {
 					Datastream:   "test-datastream",
 					ProfileID:    "test-profile",
 					VerboseLevel: "INFO",
+					Compression:  true,
 				},
 			},
 			err: false,
