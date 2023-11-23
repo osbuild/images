@@ -182,14 +182,15 @@ func osCustomizations(
 			}
 
 			tailoringOptions := osbuild.OscapAutotailorConfig{
+				NewProfile: newProfile,
+				Datastream: datastream,
+				ProfileID:  oscapConfig.ProfileID,
 				Selected:   oscapConfig.Tailoring.Selected,
 				Unselected: oscapConfig.Tailoring.Unselected,
-				NewProfile: newProfile,
 			}
 
 			osc.OpenSCAPTailorConfig = osbuild.NewOscapAutotailorStageOptions(
 				tailoringFilepath,
-				oscapStageOptions,
 				tailoringOptions,
 			)
 

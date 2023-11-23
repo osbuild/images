@@ -10,10 +10,8 @@ func TestNewOscapAutotailorStage(t *testing.T) {
 	stageOptions := &OscapAutotailorStageOptions{
 		Filepath: "tailoring.xml",
 		Config: OscapAutotailorConfig{
-			OscapConfig: OscapConfig{
-				Datastream: "test_stream",
-				ProfileID:  "test_profile",
-			},
+			Datastream: "test_stream",
+			ProfileID:  "test_profile",
 			NewProfile: "test_profile_osbuild_profile",
 			Selected:   []string{"fast_rule"},
 			Unselected: []string{"slow_rule"},
@@ -43,10 +41,7 @@ func TestOscapAutotailorStageOptionsValidate(t *testing.T) {
 			name: "empty-datastream",
 			options: OscapAutotailorStageOptions{
 				Config: OscapAutotailorConfig{
-					OscapConfig: OscapConfig{
-
-						ProfileID: "test-profile",
-					},
+					ProfileID: "test-profile",
 				},
 			},
 			err: true,
@@ -55,9 +50,7 @@ func TestOscapAutotailorStageOptionsValidate(t *testing.T) {
 			name: "empty-profile-id",
 			options: OscapAutotailorStageOptions{
 				Config: OscapAutotailorConfig{
-					OscapConfig: OscapConfig{
-						Datastream: "test-datastream",
-					},
+					Datastream: "test-datastream",
 				},
 			},
 			err: true,
@@ -66,10 +59,8 @@ func TestOscapAutotailorStageOptionsValidate(t *testing.T) {
 			name: "empty-new-profile-name",
 			options: OscapAutotailorStageOptions{
 				Config: OscapAutotailorConfig{
-					OscapConfig: OscapConfig{
-						ProfileID:  "test-profile",
-						Datastream: "test-datastream",
-					},
+					ProfileID:  "test-profile",
+					Datastream: "test-datastream",
 				},
 			},
 			err: true,
@@ -78,10 +69,8 @@ func TestOscapAutotailorStageOptionsValidate(t *testing.T) {
 			name: "valid-data",
 			options: OscapAutotailorStageOptions{
 				Config: OscapAutotailorConfig{
-					OscapConfig: OscapConfig{
-						ProfileID:  "test-profile",
-						Datastream: "test-datastream",
-					},
+					ProfileID:  "test-profile",
+					Datastream: "test-datastream",
 					NewProfile: "test-profile-osbuild-profile",
 				},
 			},
