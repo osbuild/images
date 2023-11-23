@@ -119,14 +119,14 @@ func NewSolver(modulePlatformID, releaseVer, arch, distro, cacheDir string) *Sol
 
 // GetCacheDir returns a distro specific rpm cache directory
 // It ensures that the distro name is below the root cache directory, and if there is
-// a problem it returns the root cache intead of an error.
+// a problem it returns the root cache instead of an error.
 func (s *Solver) GetCacheDir() string {
-	b := filepath.Base(s.distro)
+	b := filepath.Base(strings.Join([]string{s.modulePlatformID, s.releaseVer, s.arch}, "-"))
 	if b == "." || b == "/" {
 		return s.cache.root
 	}
 
-	return filepath.Join(s.cache.root, s.distro)
+	return filepath.Join(s.cache.root, b)
 }
 
 // Depsolve the list of required package sets with explicit excludes using
