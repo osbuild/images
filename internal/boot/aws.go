@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 
 	"github.com/osbuild/images/internal/cloud/awscloud"
-	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/arch"
 )
 
 type awsCredentials struct {
@@ -97,7 +97,7 @@ func UploadImageToAWS(c *awsCredentials, imagePath string, imageName string) err
 	if err != nil {
 		return fmt.Errorf("cannot upload the image: %v", err)
 	}
-	_, _, err = uploader.Register(imageName, c.Bucket, imageName, nil, common.CurrentArch(), nil)
+	_, _, err = uploader.Register(imageName, c.Bucket, imageName, nil, arch.Current().String(), nil)
 	if err != nil {
 		return fmt.Errorf("cannot register the image: %v", err)
 	}

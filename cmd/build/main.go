@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
@@ -341,7 +341,7 @@ func main() {
 		fail(fmt.Sprintf("invalid or unsupported distribution: %q", distroName))
 	}
 
-	archName := common.CurrentArch()
+	archName := arch.Current().String()
 	arch, err := distribution.GetArch(archName)
 	if err != nil {
 		fail(fmt.Sprintf("invalid arch name %q for distro %q: %s\n", archName, distroName, err.Error()))
