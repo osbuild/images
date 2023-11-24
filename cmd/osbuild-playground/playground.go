@@ -6,8 +6,8 @@ import (
 	"os"
 	"path"
 
-	"github.com/osbuild/images/internal/dnfjson"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/image"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
