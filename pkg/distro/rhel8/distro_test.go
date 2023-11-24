@@ -7,11 +7,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/distro_test_common"
 	"github.com/osbuild/images/pkg/distro/rhel8"
-	"github.com/osbuild/images/pkg/platform"
 )
 
 type rhelFamilyDistro struct {
@@ -369,7 +369,7 @@ func TestImageType_Name(t *testing.T) {
 	for _, dist := range rhelFamilyDistros {
 		t.Run(dist.name, func(t *testing.T) {
 			for _, mapping := range imgMap {
-				if mapping.arch == platform.ARCH_S390X.String() && dist.name == "centos" {
+				if mapping.arch == arch.ARCH_S390X.String() && dist.name == "centos" {
 					continue
 				}
 				arch, err := dist.distro.GetArch(mapping.arch)

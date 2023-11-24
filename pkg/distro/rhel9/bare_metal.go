@@ -3,7 +3,7 @@ package rhel9
 import (
 	"fmt"
 
-	"github.com/osbuild/images/pkg/platform"
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
@@ -148,7 +148,7 @@ func installerPackageSet(t *imageType) rpmmd.PackageSet {
 	})
 
 	switch t.arch.Name() {
-	case platform.ARCH_X86_64.String():
+	case arch.ARCH_X86_64.String():
 		ps = ps.Append(rpmmd.PackageSet{
 			Include: []string{
 				"biosdevname",
@@ -306,7 +306,7 @@ func anacondaPackageSet(t *imageType) rpmmd.PackageSet {
 	ps = ps.Append(anacondaBootPackageSet(t))
 
 	switch t.arch.Name() {
-	case platform.ARCH_X86_64.String():
+	case arch.ARCH_X86_64.String():
 		ps = ps.Append(rpmmd.PackageSet{
 			Include: []string{
 				"biosdevname",
@@ -316,7 +316,7 @@ func anacondaPackageSet(t *imageType) rpmmd.PackageSet {
 			},
 		})
 
-	case platform.ARCH_AARCH64.String():
+	case arch.ARCH_AARCH64.String():
 		ps = ps.Append(rpmmd.PackageSet{
 			Include: []string{
 				"dmidecode",
