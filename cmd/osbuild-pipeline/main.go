@@ -9,10 +9,10 @@ import (
 	"path"
 
 	"github.com/osbuild/images/internal/common"
-	"github.com/osbuild/images/internal/dnfjson"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distroregistry"
+	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/ostree"
 
 	"github.com/osbuild/images/pkg/blueprint"
