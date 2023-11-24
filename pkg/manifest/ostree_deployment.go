@@ -210,7 +210,6 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 
 	if p.IgnitionPlatform != "" {
 		kernelOpts = append(kernelOpts,
-			"coreos.no_persist_ip", // users cannot add connections as we don't have a live iso, this prevents connections to bleed into the system from the ign initrd
 			"ignition.platform.id="+p.IgnitionPlatform,
 			"$ignition_firstboot",
 		)
