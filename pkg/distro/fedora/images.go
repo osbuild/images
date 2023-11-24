@@ -525,6 +525,7 @@ func iotImage(workload workload.Workload,
 	img.LockRoot = true
 
 	if !common.VersionLessThan(distro.Releasever(), "38") {
+		img.KernelOptionsAppend = append(img.KernelOptionsAppend, "coreos.no_persist_ip")
 		switch img.Platform.GetImageFormat() {
 		case platform.FORMAT_RAW:
 			img.IgnitionPlatform = "metal"
@@ -589,6 +590,7 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 
 	if !common.VersionLessThan(t.arch.distro.osVersion, "38") {
 		rawImg.IgnitionPlatform = "metal"
+		rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, "coreos.no_persist_ip")
 		if bpIgnition := customizations.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
 			rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
 		}
