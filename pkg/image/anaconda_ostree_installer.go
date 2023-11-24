@@ -130,6 +130,9 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 
 	isoTreePipeline.OSTreeCommitSource = &img.Commit
 	isoTreePipeline.ISOLinux = isoLinuxEnabled
+	if img.FIPS {
+		isoTreePipeline.KernelOpts = append(isoTreePipeline.KernelOpts, "fips=1")
+	}
 
 	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, isoLabel)
 	isoPipeline.SetFilename(img.Filename)
