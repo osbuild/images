@@ -44,3 +44,16 @@ func TestCurrentArchUnsupported(t *testing.T) {
 	runtimeGOARCH = "UKNOWN"
 	assert.PanicsWithValue(t, "unsupported architecture", func() { Current() })
 }
+
+func TestFromStringUnsupported(t *testing.T) {
+	assert.PanicsWithValue(t, "unsupported architecture", func() { FromString("UNKNOWN") })
+}
+
+func TestFromString(t *testing.T) {
+	assert.Equal(t, ARCH_AARCH64, FromString("arm64"))
+	assert.Equal(t, ARCH_AARCH64, FromString("aarch64"))
+	assert.Equal(t, ARCH_X86_64, FromString("amd64"))
+	assert.Equal(t, ARCH_X86_64, FromString("x86_64"))
+	assert.Equal(t, ARCH_S390X, FromString("s390x"))
+	assert.Equal(t, ARCH_PPC64LE, FromString("ppc64le"))
+}
