@@ -179,6 +179,75 @@ func (p *OSTreeDeployment) serializeEnd() {
 	p.containerSpec = nil
 }
 
+func (p *OSTreeDeployment) doOSTreeSpec(pipeline *osbuild.Pipeline, repoPath string, kernelOpts []string) string {
+	commit := *p.ostreeSpec
+	ref := commit.Ref
+	pipeline.AddStage(osbuild.NewOSTreePullStage(
+		&osbuild.OSTreePullStageOptions{Repo: repoPath, Remote: p.Remote.Name},
+		osbuild.NewOstreePullStageInputs("org.osbuild.source", commit.Checksum, ref),
+	))
+
+	pipeline.AddStage(osbuild.NewOSTreeDeployStage(
+		&osbuild.OSTreeDeployStageOptions{
+			OsName: p.osName,
+			Ref:    ref,
+			Remote: p.Remote.Name,
+			Mounts: []string{"/boot", "/boot/efi"},
+			Rootfs: osbuild.Rootfs{
+				Label: "root",
+			},
+			KernelOpts: kernelOpts,
+		},
+	))
+
+	if p.Remote.URL != "" {
+		pipeline.AddStage(osbuild.NewOSTreeRemotesStage(
+			&osbuild.OSTreeRemotesStageOptions{
+				Repo: "/ostree/repo",
+				Remotes: []osbuild.OSTreeRemote{
+					{
+						Name:        p.Remote.Name,
+						URL:         p.Remote.URL,
+						ContentURL:  p.Remote.ContentURL,
+						GPGKeyPaths: p.Remote.GPGKeyPaths,
+					},
+				},
+			},
+		))
+	}
+
+	pipeline.AddStage(osbuild.NewOSTreeFillvarStage(
+		&osbuild.OSTreeFillvarStageOptions{
+			Deployment: osbuild.OSTreeDeployment{
+				OSName: p.osName,
+				Ref:    ref,
+			},
+		},
+	))
+
+	return ref
+}
+
+func (p *OSTreeDeployment) doOSTreeContainerSpec(pipeline *osbuild.Pipeline, repoPath string, kernelOpts []string) string {
+	cont := *p.containerSpec
+	ref := p.ref
+
+	options := &osbuild.OSTreeDeployContainerStageOptions{
+		OsName:     p.osName,
+		KernelOpts: p.KernelOptionsAppend,
+		// NOTE: setting the target imgref to be the container source but
+		// we should make this configurable
+		TargetImgref: fmt.Sprintf("ostree-remote-registry:%s:%s", p.Remote.Name, p.containerSpec.Source),
+		Mounts:       []string{"/boot", "/boot/efi"},
+		Rootfs: &osbuild.Rootfs{
+			Label: "root",
+		},
+	}
+	images := osbuild.NewContainersInputForSources([]container.Spec{cont})
+	pipeline.AddStage(osbuild.NewOSTreeDeployContainerStage(options, images))
+	return ref
+}
+
 func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 	switch {
 	case p.ostreeSpec == nil && p.containerSpec == nil:
@@ -221,69 +290,12 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 	}
 
 	var ref string
-	if p.ostreeSpec != nil {
-		commit := *p.ostreeSpec
-		ref = commit.Ref
-		pipeline.AddStage(osbuild.NewOSTreePullStage(
-			&osbuild.OSTreePullStageOptions{Repo: repoPath, Remote: p.Remote.Name},
-			osbuild.NewOstreePullStageInputs("org.osbuild.source", commit.Checksum, ref),
-		))
-
-		pipeline.AddStage(osbuild.NewOSTreeDeployStage(
-			&osbuild.OSTreeDeployStageOptions{
-				OsName: p.osName,
-				Ref:    ref,
-				Remote: p.Remote.Name,
-				Mounts: []string{"/boot", "/boot/efi"},
-				Rootfs: osbuild.Rootfs{
-					Label: "root",
-				},
-				KernelOpts: kernelOpts,
-			},
-		))
-
-		if p.Remote.URL != "" {
-			pipeline.AddStage(osbuild.NewOSTreeRemotesStage(
-				&osbuild.OSTreeRemotesStageOptions{
-					Repo: "/ostree/repo",
-					Remotes: []osbuild.OSTreeRemote{
-						{
-							Name:        p.Remote.Name,
-							URL:         p.Remote.URL,
-							ContentURL:  p.Remote.ContentURL,
-							GPGKeyPaths: p.Remote.GPGKeyPaths,
-						},
-					},
-				},
-			))
-		}
-
-		pipeline.AddStage(osbuild.NewOSTreeFillvarStage(
-			&osbuild.OSTreeFillvarStageOptions{
-				Deployment: osbuild.OSTreeDeployment{
-					OSName: p.osName,
-					Ref:    ref,
-				},
-			},
-		))
-	} else if p.containerSpec != nil {
-		cont := *p.containerSpec
-		ref = p.ref
-
-		options := &osbuild.OSTreeDeployContainerStageOptions{
-			OsName:     p.osName,
-			KernelOpts: p.KernelOptionsAppend,
-			// NOTE: setting the target imgref to be the container source but
-			// we should make this configurable
-			TargetImgref: fmt.Sprintf("ostree-remote-registry:%s:%s", p.Remote.Name, p.containerSpec.Source),
-			Mounts:       []string{"/boot", "/boot/efi"},
-			Rootfs: &osbuild.Rootfs{
-				Label: "root",
-			},
-		}
-		images := osbuild.NewContainersInputForSources([]container.Spec{cont})
-		pipeline.AddStage(osbuild.NewOSTreeDeployContainerStage(options, images))
-	} else {
+	switch {
+	case p.ostreeSpec != nil:
+		ref = p.doOSTreeSpec(&pipeline, repoPath, kernelOpts)
+	case p.containerSpec != nil:
+		ref = p.doOSTreeContainerSpec(&pipeline, repoPath, kernelOpts)
+	default:
 		// this should be caught at the top of the function, but let's check
 		// again to avoid bugs from bad refactoring.
 		panic("no content source defined for ostree deployment")
