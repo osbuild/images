@@ -53,6 +53,10 @@ type OSTreeDiskImage struct {
 	// Lock the root account in the deployment unless the user defined root
 	// user options in the build configuration.
 	LockRoot bool
+
+	// Container buildable tweaks the buildroot to be container friendly,
+	// i.e. to not rely on an installed osbuild-selinux
+	ContainerBuildable bool
 }
 
 func NewOSTreeDiskImageFromCommit(commit ostree.SourceSpec) *OSTreeDiskImage {
@@ -102,11 +106,15 @@ func baseRawOstreeImage(img *OSTreeDiskImage, m *manifest.Manifest, buildPipelin
 	return manifest.NewRawOStreeImage(buildPipeline, osPipeline, img.Platform)
 }
 
+// replaced in testing
+var manifestNewBuild = manifest.NewBuild
+
 func (img *OSTreeDiskImage) InstantiateManifest(m *manifest.Manifest,
 	repos []rpmmd.RepoConfig,
 	runner runner.Runner,
 	rng *rand.Rand) (*artifact.Artifact, error) {
-	buildPipeline := manifest.NewBuild(m, runner, repos)
+	buildPipeline := manifestNewBuild(m, runner, repos)
+	buildPipeline.ContainerBuildable = img.ContainerBuildable
 	buildPipeline.Checkpoint()
 
 	// don't support compressing non-raw images
