@@ -24,6 +24,19 @@
       "qcow2"
     ]
   },
+  "./configs/all-with-fips.json": {
+    "distros": [
+      "rhel-93",
+      "rhel-94",
+      "rhel-89",
+      "rhel-810",
+      "centos*",
+      "fedora*"
+    ],
+    "image-types": [
+      "qcow2"
+    ]
+  },
   "./configs/disable-lm_sensors.json": {
     "distros": [
       "rhel-84"
