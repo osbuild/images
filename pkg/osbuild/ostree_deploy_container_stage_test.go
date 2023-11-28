@@ -21,12 +21,14 @@ func TestOSTreeDeployContainersStageOptionsValidate(t *testing.T) {
 	type testCase struct {
 		options OSTreeDeployContainerStageOptions
 		valid   bool
+		err     string
 	}
 
 	testCases := map[string]testCase{
 		"empty": {
 			options: OSTreeDeployContainerStageOptions{},
 			valid:   false,
+			err:     "osname is required",
 		},
 		"minimal": {
 			options: OSTreeDeployContainerStageOptions{
@@ -40,12 +42,14 @@ func TestOSTreeDeployContainersStageOptionsValidate(t *testing.T) {
 				OsName: "os",
 			},
 			valid: false,
+			err:   "doesn't conform to schema",
 		},
 		"no-os": {
 			options: OSTreeDeployContainerStageOptions{
 				TargetImgref: "ostree-image-unverified-registry:example.org/registry/image",
 			},
 			valid: false,
+			err:   "osname is required",
 		},
 		"bad-target": {
 			options: OSTreeDeployContainerStageOptions{
@@ -53,6 +57,7 @@ func TestOSTreeDeployContainersStageOptionsValidate(t *testing.T) {
 				TargetImgref: "bad",
 			},
 			valid: false,
+			err:   "doesn't conform to schema",
 		},
 		"full": {
 			options: OSTreeDeployContainerStageOptions{
@@ -78,7 +83,7 @@ func TestOSTreeDeployContainersStageOptionsValidate(t *testing.T) {
 				assert.NoError(tc.options.validate())
 				assert.NotPanics(func() { NewOSTreeDeployContainerStage(&tc.options, validInputs) })
 			} else {
-				assert.Error(tc.options.validate())
+				assert.ErrorContains(tc.options.validate(), tc.err)
 				assert.Panics(func() { NewOSTreeDeployContainerStage(&tc.options, validInputs) })
 			}
 		})
@@ -95,12 +100,14 @@ func TestOSTreeDeployContainersStageInputsValidate(t *testing.T) {
 	type testCase struct {
 		inputs OSTreeDeployContainerInputs
 		valid  bool
+		err    string
 	}
 
 	testCases := map[string]testCase{
 		"empty": {
 			inputs: OSTreeDeployContainerInputs{},
 			valid:  false,
+			err:    "stage requires exactly 1 input container (got nil References)",
 		},
 		"nil": {
 			inputs: OSTreeDeployContainerInputs{
@@ -109,12 +116,14 @@ func TestOSTreeDeployContainersStageInputsValidate(t *testing.T) {
 				},
 			},
 			valid: false,
+			err:   "stage requires exactly 1 input container (got nil References)",
 		},
 		"zero": {
 			inputs: OSTreeDeployContainerInputs{
 				Images: NewContainersInputForSources([]container.Spec{}),
 			},
 			valid: false,
+			err:   "stage requires exactly 1 input container (got 0)",
 		},
 		"one": {
 			inputs: OSTreeDeployContainerInputs{
@@ -141,6 +150,7 @@ func TestOSTreeDeployContainersStageInputsValidate(t *testing.T) {
 				}),
 			},
 			valid: false,
+			err:   "stage requires exactly 1 input container (got 2)",
 		},
 	}
 	for name := range testCases {
@@ -151,7 +161,7 @@ func TestOSTreeDeployContainersStageInputsValidate(t *testing.T) {
 				assert.NoError(tc.inputs.validate())
 				assert.NotPanics(func() { NewOSTreeDeployContainerStage(validOptions, tc.inputs.Images) })
 			} else {
-				assert.Error(tc.inputs.validate())
+				assert.ErrorContains(tc.inputs.validate(), tc.err)
 				assert.Panics(func() { NewOSTreeDeployContainerStage(validOptions, tc.inputs.Images) })
 			}
 		})
