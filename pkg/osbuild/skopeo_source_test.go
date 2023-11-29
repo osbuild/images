@@ -1,10 +1,12 @@
 package osbuild
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/osbuild/images/internal/assertx"
 	"github.com/osbuild/images/internal/common"
 )
 
@@ -33,27 +35,30 @@ func TestNewSkopeoSource(t *testing.T) {
 	assert.Nil(t, item.Image.TLSVerify)
 
 	// empty name
-	assert.Panics(t, func() {
+	expectedErr := regexp.MustCompile(`source item osbuild.SkopeoSourceItem.* has empty name`)
+	assertx.PanicsWithErrorRegexp(t, expectedErr, func() {
 		source.AddItem("", testDigest, imageID, nil)
 	})
 
 	// empty digest
-	assert.Panics(t, func() {
+	expectedErr = regexp.MustCompile(`source item osbuild.SkopeoSourceItem.* has invalid digest`)
+	assertx.PanicsWithErrorRegexp(t, expectedErr, func() {
 		source.AddItem("name", "", imageID, nil)
 	})
 
 	// empty image id
-	assert.Panics(t, func() {
+	assert.PanicsWithError(t, `item "" has invalid image id`, func() {
 		source.AddItem("name", testDigest, "", nil)
 	})
 
 	// invalid digest
-	assert.Panics(t, func() {
+	expectedErr = regexp.MustCompile(`item osbuild.SkopeoSourceItem.* has invalid digest`)
+	assertx.PanicsWithErrorRegexp(t, expectedErr, func() {
 		source.AddItem("name", "foo", imageID, nil)
 	})
 
 	// invalid image id
-	assert.Panics(t, func() {
+	assert.PanicsWithError(t, `item "sha256:foo" has invalid image id`, func() {
 		source.AddItem("name", testDigest, "sha256:foo", nil)
 	})
 }
