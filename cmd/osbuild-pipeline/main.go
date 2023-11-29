@@ -194,7 +194,7 @@ func main() {
 	// Set cache size to 3 GiB
 	// osbuild-pipeline is often used to generate a lot of manifests in a row
 	// let the cache grow to fit much more repository metadata than we usually allow
-	solver.SetMaxCacheSize(3 * 1024 * 1024 * 1024)
+	solver.SetMaxCacheSize(3 * common.GiB)
 
 	manifest, _, err := imageType.Manifest(&composeRequest.Blueprint, options, repos, seedArg)
 	if err != nil {

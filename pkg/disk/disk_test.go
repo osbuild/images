@@ -9,13 +9,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/blueprint"
 )
 
 const (
-	KiB = 1024
-	MiB = 1024 * KiB
-	GiB = 1024 * MiB
+	KiB = common.KiB
+	MiB = common.MiB
+	GiB = common.GiB
 )
 
 func TestDisk_AlignUp(t *testing.T) {
