@@ -7,6 +7,8 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/osbuild/images/internal/common"
 )
 
 func TestBlueprintParse(t *testing.T) {
@@ -35,7 +37,7 @@ size = "20 GB"
 	assert.Equal(t, "/var", bp.Customizations.Filesystem[0].Mountpoint)
 	assert.Equal(t, uint64(2147483648), bp.Customizations.Filesystem[0].MinSize)
 	assert.Equal(t, "/opt", bp.Customizations.Filesystem[1].Mountpoint)
-	assert.Equal(t, uint64(20*1000*1000*1000), bp.Customizations.Filesystem[1].MinSize)
+	assert.Equal(t, uint64(20*common.GB), bp.Customizations.Filesystem[1].MinSize)
 
 	blueprint = `{
 		"name": "test",
@@ -50,7 +52,7 @@ size = "20 GB"
 	require.Nil(t, err)
 	assert.Equal(t, bp.Name, "test")
 	assert.Equal(t, "/opt", bp.Customizations.Filesystem[0].Mountpoint)
-	assert.Equal(t, uint64(20*1024*1024*1024), bp.Customizations.Filesystem[0].MinSize)
+	assert.Equal(t, uint64(20*common.GiB), bp.Customizations.Filesystem[0].MinSize)
 }
 
 func TestGetPackages(t *testing.T) {

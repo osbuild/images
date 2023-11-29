@@ -400,7 +400,7 @@ func edgeBasePartitionTables(t *imageType) (disk.PartitionTable, bool) {
 							Description: "built with lvm2 and osbuild",
 							LogicalVolumes: []disk.LVMLogicalVolume{
 								{
-									Size: 9 * 1024 * 1024 * 1024, // 9 GB
+									Size: 9 * common.GiB, // 9 GiB
 									Name: "rootlv",
 									Payload: &disk.Filesystem{
 										Type:         "xfs",
@@ -471,7 +471,7 @@ func edgeBasePartitionTables(t *imageType) (disk.PartitionTable, bool) {
 							Description: "built with lvm2 and osbuild",
 							LogicalVolumes: []disk.LVMLogicalVolume{
 								{
-									Size: 9 * 1024 * 1024 * 1024, // 9 GB
+									Size: 9 * common.GiB, // 9 GiB
 									Name: "rootlv",
 									Payload: &disk.Filesystem{
 										Type:         "xfs",
