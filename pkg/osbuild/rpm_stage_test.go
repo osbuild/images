@@ -2,7 +2,6 @@ package osbuild
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -62,8 +61,9 @@ func Test_OSBuildMetadataToRPMs(t *testing.T) {
 	metadata := new(PipelineMetadata)
 	err := json.Unmarshal([]byte(raw), metadata)
 	require.NoError(t, err)
+	require.NotNil(t, metadata)
+	require.Len(t, *metadata, 1)
 
-	fmt.Printf("Result: %#v", metadata)
 	rpms := OSBuildMetadataToRPMs(*metadata)
 
 	require.Len(t, rpms, 3)
