@@ -1018,7 +1018,7 @@ func TestEnsureDirectorySizes(t *testing.T) {
 			rootVG := rootLUKS.Payload.(*LVMVolumeGroup)
 			rootLV := rootVG.LogicalVolumes[0]
 			homeLV := rootVG.LogicalVolumes[1]
-			assert.Equal(uint64(17*GiB)+rootVG.MetadataSize(), rootPart.Size)
+			assert.Equal(uint64(17*GiB)+rootVG.MetadataSize()+rootLUKS.MetadataSize(), rootPart.Size)
 			assert.Equal(uint64(7*GiB), rootLV.Size)
 			assert.Equal(uint64(10*GiB), homeLV.Size)
 

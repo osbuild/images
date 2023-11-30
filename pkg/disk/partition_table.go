@@ -588,6 +588,13 @@ func resizeEntityBranch(path []Entity, size uint64) {
 				break
 			}
 		}
+		// If containerSize is 0, it means it doesn't have any direct sizeable
+		// children (e.g., a LUKS container with a VG child).  In that case,
+		// set the containerSize to the desired size for the branch before
+		// adding any metadata.
+		if containerSize == 0 {
+			containerSize = size
+		}
 		if vc, ok := element.(VolumeContainer); ok {
 			containerSize += vc.MetadataSize()
 		}
