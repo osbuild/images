@@ -567,6 +567,19 @@ func TestCreatePartitionTableLVMOnly(t *testing.T) {
 			// the root partition is the second to last entity in the path (the last is the partition table itself)
 			rootTop := rootPath[len(rootPath)-2]
 			vgPart, ok := rootTop.(*Partition)
+
+			// if the VG is in a LUKS container, check that there's enough space for the header too
+			{
+				vgParent := rootPath[3]
+				luksContainer, ok := vgParent.(*LUKSContainer)
+				if ok {
+					// this isn't the lvsum anymore, but the lvsum + the luks
+					// header, which should regardless be equal to or smaller
+					// than the partition
+					lvsum += luksContainer.MetadataSize()
+				}
+			}
+
 			assert.True(ok, "PT %q BP %q: root VG top level entity (%+v) is not a partition", ptName, bpName, rootTop)
 			assert.GreaterOrEqualf(vgPart.Size, lvsum, "PT %q BP %q: VG partition's size (%d) is smaller than the sum of logical volumes (%d)", ptName, bpName, vgPart.Size, lvsum)
 		}
