@@ -7,8 +7,9 @@ import (
 	"math/big"
 	"os"
 
-	"github.com/osbuild/images/internal/upload/oci"
 	"github.com/spf13/cobra"
+
+	"github.com/osbuild/images/pkg/upload/oci"
 )
 
 var (
