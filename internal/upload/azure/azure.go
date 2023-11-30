@@ -92,6 +92,7 @@ func (ac Client) CreateStorageAccount(ctx context.Context, subscriptionID, resou
 		Sku: &storage.Sku{
 			Name: storage.StandardLRS,
 			Tier: storage.Standard,
+			Kind: storage.StorageV2,
 		},
 		Location: &location,
 		Tags: map[string]*string{
