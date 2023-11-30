@@ -536,9 +536,39 @@ func TestCreatePartitionTableLVMOnly(t *testing.T) {
 			}
 
 			// root should always be on a LVM
-			parent := rootPath[1]
-			_, ok := parent.(*LVMLogicalVolume)
-			assert.True(ok, "PT %q BP %q: root's parent (%q) is not an LVM logical volume", ptName, bpName, parent)
+			rootParent := rootPath[1]
+			{
+				_, ok := rootParent.(*LVMLogicalVolume)
+				assert.True(ok, "PT %q BP %q: root's parent (%+v) is not an LVM logical volume", ptName, bpName, rootParent)
+			}
+
+			// check logical volume sizes against blueprint
+			var lvsum uint64
+			for _, mnt := range tbp {
+				if mnt.Mountpoint == "/boot" {
+					// not on LVM; skipping
+					continue
+				}
+				mntPath := entityPath(mpt, mnt.Mountpoint)
+				mntParent := mntPath[1]
+				mntLV, ok := mntParent.(*LVMLogicalVolume) // the partition's parent should be the logical volume
+				assert.True(ok, "PT %q BP %q: %s's parent (%+v) is not an LVM logical volume", ptName, bpName, mnt.Mountpoint, mntParent)
+				assert.GreaterOrEqualf(mntLV.Size, mnt.MinSize, "PT %q BP %q: %s's size (%d) is smaller than the requested minsize (%d)", ptName, bpName, mnt.Mountpoint, mntLV.Size, mnt.MinSize)
+				lvsum += mntLV.Size
+			}
+
+			// root LV's parent should be the VG
+			lvParent := rootPath[2]
+			{
+				_, ok := lvParent.(*LVMVolumeGroup)
+				assert.True(ok, "PT %q BP %q: root LV's parent (%+v) is not an LVM volume group", ptName, bpName, lvParent)
+			}
+
+			// the root partition is the second to last entity in the path (the last is the partition table itself)
+			rootTop := rootPath[len(rootPath)-2]
+			vgPart, ok := rootTop.(*Partition)
+			assert.True(ok, "PT %q BP %q: root VG top level entity (%+v) is not a partition", ptName, bpName, rootTop)
+			assert.GreaterOrEqualf(vgPart.Size, lvsum, "PT %q BP %q: VG partition's size (%d) is smaller than the sum of logical volumes (%d)", ptName, bpName, vgPart.Size, lvsum)
 		}
 	}
 }
