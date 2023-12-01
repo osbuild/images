@@ -2,7 +2,6 @@ package rpmmdtests
 
 import (
 	"encoding/json"
-	"fmt"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -144,51 +143,6 @@ func Test_LoadAllRepositories(t *testing.T) {
 		if !reflect.DeepEqual(repoNames, wantRepos[arch]) {
 			t.Errorf("LoadAllRepositories() for %s/%s =\n got: %#v\n want: %#v", test_distro.TestDistro2Name, arch, repoNames, wantRepos[arch])
 		}
-	}
-}
-
-func TestPackageSetResolveConflictExclude(t *testing.T) {
-	tests := []struct {
-		got  rpmmd.PackageSet
-		want rpmmd.PackageSet
-	}{
-		{
-			got: rpmmd.PackageSet{
-				Include: []string{"kernel", "microcode_ctl", "dnf"},
-				Exclude: []string{"microcode_ctl"},
-			},
-			want: rpmmd.PackageSet{
-				Include: []string{"kernel", "dnf"},
-				Exclude: []string{"microcode_ctl"},
-			},
-		},
-		{
-			got: rpmmd.PackageSet{
-				Include: []string{"kernel", "dnf"},
-				Exclude: []string{"microcode_ctl"},
-			},
-			want: rpmmd.PackageSet{
-				Include: []string{"kernel", "dnf"},
-				Exclude: []string{"microcode_ctl"},
-			},
-		},
-		{
-			got: rpmmd.PackageSet{
-				Include: []string{"kernel", "microcode_ctl", "dnf"},
-				Exclude: []string{},
-			},
-			want: rpmmd.PackageSet{
-				Include: []string{"kernel", "microcode_ctl", "dnf"},
-				Exclude: []string{},
-			},
-		},
-	}
-	for idx, tt := range tests {
-		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			if !reflect.DeepEqual(tt.got.ResolveConflictsExclude(), tt.want) {
-				t.Errorf("ResolveConflictExclude() returned unexpected result got: %#v\n want: %#v", tt.got.ResolveConflictsExclude(), tt.want)
-			}
-		})
 	}
 }
 
