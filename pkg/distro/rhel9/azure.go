@@ -149,14 +149,6 @@ func azureCommonPackageSet(t *imageType) rpmmd.PackageSet {
 		},
 	}.Append(distroSpecificPackageSet(t))
 
-	if t.arch.distro.isRHEL() {
-		ps.Append(rpmmd.PackageSet{
-			Include: []string{
-				"rhc",
-			},
-		})
-	}
-
 	return ps
 }
 
