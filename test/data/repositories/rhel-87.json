@@ -64,7 +64,7 @@
     },
     {
       "name": "sap-rhui-azure",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el8/el8-x86_64-sap-rhui-azure-20231101",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el8/el8-x86_64-sap-rhui-azure-20231201",
       "image_type_tags": [
         "azure-sap-rhui"
       ],
@@ -75,7 +75,7 @@
     },
     {
       "name": "ansible",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el8/el8-x86_64-ansible-2-20231101",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el8/el8-x86_64-ansible-2-20231201",
       "image_type_tags": [
         "ec2-sap"
       ],
@@ -86,7 +86,7 @@
     },
     {
       "name": "rhui",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el8/el8-x86_64-rhui-3-20231101",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el8/el8-x86_64-rhui-3-20231201",
       "image_type_tags": [
         "ec2",
         "ec2-ha",
@@ -99,7 +99,7 @@
     },
     {
       "name": "rhui-azure",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el8/el8-x86_64-rhui-azure-20231101",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el8/el8-x86_64-rhui-azure-20231201",
       "image_type_tags": [
         "azure-rhui",
         "azure-eap7-rhui"
@@ -111,7 +111,7 @@
     },
     {
       "name": "google-compute-engine",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/el8/el8-x86_64-google-compute-engine-20231101",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/el8/el8-x86_64-google-compute-engine-20231201",
       "check_gpg": false,
       "image_type_tags": [
         "gce",
@@ -120,7 +120,7 @@
     },
     {
       "name": "google-cloud-sdk",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/el8/el8-x86_64-google-cloud-sdk-20231101",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/el8/el8-x86_64-google-cloud-sdk-20231201",
       "check_gpg": false,
       "image_type_tags": [
         "gce",
@@ -129,7 +129,7 @@
     },
     {
       "name": "jbeap7",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el8/el8-x86_64-jbeap7-20231101",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el8/el8-x86_64-jbeap7-20231201",
       "check_gpg": false,
       "image_type_tags": [
         "azure-eap7-rhui"
@@ -155,7 +155,7 @@
     },
     {
       "name": "rhui",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el8/el8-aarch64-rhui-3-20231101",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el8/el8-aarch64-rhui-3-20231201",
       "image_type_tags": [
         "ec2"
       ],
@@ -166,7 +166,7 @@
     },
     {
       "name": "rhui-azure",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el8/el8-x86_64-rhui-azure-20231101",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el8/el8-x86_64-rhui-azure-20231201",
       "image_type_tags": [
         "azure-rhui"
       ],
