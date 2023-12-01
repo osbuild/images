@@ -113,8 +113,7 @@ func (img *OSTreeDiskImage) InstantiateManifest(m *manifest.Manifest,
 	repos []rpmmd.RepoConfig,
 	runner runner.Runner,
 	rng *rand.Rand) (*artifact.Artifact, error) {
-	buildPipeline := manifestNewBuild(m, runner, repos)
-	buildPipeline.ContainerBuildable = img.ContainerBuildable
+	buildPipeline := manifestNewBuild(m, runner, repos, &manifest.BuildOptions{ContainerBuildable: img.ContainerBuildable})
 	buildPipeline.Checkpoint()
 
 	// don't support compressing non-raw images

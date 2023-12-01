@@ -27,14 +27,16 @@ func TestOSTreeDiskImageManifestSetsContainerBuildable(t *testing.T) {
 		Name:   "name",
 	}
 
-	var buildPipeline *manifest.Build
-	restore := image.MockManifestNewBuild(func(m *manifest.Manifest, r runner.Runner, repos []rpmmd.RepoConfig) *manifest.Build {
-		buildPipeline = manifest.NewBuild(m, r, repos)
-		return buildPipeline
+	var buildOpts []*manifest.BuildOptions
+	restore := image.MockManifestNewBuild(func(m *manifest.Manifest, r runner.Runner, repos []rpmmd.RepoConfig, opts *manifest.BuildOptions) *manifest.Build {
+		buildOpts = append(buildOpts, opts)
+		return manifest.NewBuild(m, r, repos, opts)
 	})
 	defer restore()
 
 	for _, containerBuildable := range []bool{true, false} {
+		buildOpts = nil
+
 		mf := manifest.New()
 		img := image.NewOSTreeDiskImageFromContainer(containerSource, ref)
 		require.NotNil(t, img)
@@ -52,8 +54,8 @@ func TestOSTreeDiskImageManifestSetsContainerBuildable(t *testing.T) {
 		_, err := img.InstantiateManifest(&mf, repos, r, rng)
 		require.Nil(t, err)
 		require.NotNil(t, img)
-		require.NotNil(t, buildPipeline)
 
-		require.Equal(t, buildPipeline.ContainerBuildable, containerBuildable)
+		require.Equal(t, len(buildOpts), 1)
+		require.Equal(t, buildOpts[0].ContainerBuildable, containerBuildable)
 	}
 }

@@ -18,7 +18,7 @@ func NewTestOS() *OS {
 	repos := []rpmmd.RepoConfig{}
 	manifest := New()
 	runner := &runner.Fedora{Version: 37}
-	build := NewBuild(&manifest, runner, repos)
+	build := NewBuild(&manifest, runner, repos, nil)
 	build.Checkpoint()
 
 	// create an x86_64 platform with bios boot
