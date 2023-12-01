@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/osbuild/images/internal/common"
-	"github.com/osbuild/images/internal/fsnode"
+	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/stretchr/testify/assert"
 )
