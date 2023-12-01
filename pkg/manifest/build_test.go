@@ -14,7 +14,7 @@ func TestBuildContainerBuildableNo(t *testing.T) {
 	mf := New()
 	runner := &runner.Fedora{Version: 39}
 
-	build := NewBuild(&mf, runner, repos)
+	build := NewBuild(&mf, runner, repos, nil)
 	require.NotNil(t, build)
 
 	for _, tc := range []struct {
@@ -76,7 +76,7 @@ func TestBuildContainerBuildableNo(t *testing.T) {
 		},
 	} {
 		build.packageSpecs = tc.packageSpec
-		build.ContainerBuildable = tc.containerBuildable
+		build.containerBuildable = tc.containerBuildable
 
 		labels := build.getSELinuxLabels()
 		require.Equal(t, labels, tc.expectedSELinuxLabels)
