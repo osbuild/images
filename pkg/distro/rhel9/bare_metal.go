@@ -47,6 +47,7 @@ var (
 func bareMetalPackageSet(t *imageType) rpmmd.PackageSet {
 	ps := rpmmd.PackageSet{
 		Include: []string{
+			"@core",
 			"authselect-compat",
 			"chrony",
 			"cockpit-system",
@@ -82,8 +83,12 @@ func bareMetalPackageSet(t *imageType) rpmmd.PackageSet {
 			"rsync",
 			"tar",
 			"tcpdump",
+			"tuned",
 		},
-	}.Append(coreOsCommonPackageSet(t)).Append(distroBuildPackageSet(t))
+		Exclude: []string{
+			"dracut-config-rescue",
+		},
+	}.Append(distroBuildPackageSet(t))
 
 	// Ensure to not pull in subscription-manager on non-RHEL distro
 	if t.arch.distro.isRHEL() {
