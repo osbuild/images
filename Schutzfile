@@ -2,7 +2,7 @@
   "fedora-38": {
     "dependencies": {
       "osbuild": {
-        "commit": "f3d740aaf8531e55b99632f579f2fae13f1511b7"
+        "commit": "0767ebccc120eb4a43e274fec64eb95646a66761"
       }
     },
     "repos": [
