@@ -108,17 +108,6 @@ type ServicesCustomization struct {
 	Disabled []string `json:"disabled,omitempty" toml:"disabled,omitempty"`
 }
 
-type OpenSCAPCustomization struct {
-	Datastream string                           `json:"datastream,omitempty" toml:"datastream,omitempty"`
-	ProfileID  string                           `json:"profile_id,omitempty" toml:"profile_id,omitempty"`
-	Tailoring  *OpenSCAPTailoringCustomizations `json:"tailoring,omitempty" toml:"tailoring,omitempty"`
-}
-
-type OpenSCAPTailoringCustomizations struct {
-	Selected   []string `json:"selected,omitempty" toml:"selected,omitempty"`
-	Unselected []string `json:"unselected,omitempty" toml:"unselected,omitempty"`
-}
-
 type CustomizationError struct {
 	Message string
 }
@@ -314,13 +303,6 @@ func (c *Customizations) GetFDO() *FDOCustomization {
 		return nil
 	}
 	return c.FDO
-}
-
-func (c *Customizations) GetOpenSCAP() *OpenSCAPCustomization {
-	if c == nil {
-		return nil
-	}
-	return c.OpenSCAP
 }
 
 func (c *Customizations) GetIgnition() *IgnitionCustomization {
