@@ -1,6 +1,7 @@
 package rpmmd
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -26,7 +27,6 @@ func TestPackageSpecGetEVRA(t *testing.T) {
 
 	assert.Equal(t, "3.3a-3.fc38.x86_64", specs[0].GetEVRA())
 	assert.Equal(t, "1:2.06-94.fc38.noarch", specs[1].GetEVRA())
-
 }
 
 func TestPackageSpecGetNEVRA(t *testing.T) {
@@ -49,5 +49,10 @@ func TestPackageSpecGetNEVRA(t *testing.T) {
 
 	assert.Equal(t, "tmux-3.3a-3.fc38.x86_64", specs[0].GetNEVRA())
 	assert.Equal(t, "grub2-1:2.06-94.fc38.noarch", specs[1].GetNEVRA())
+}
 
+func TestRepoConfigMarshalEmpty(t *testing.T) {
+	repoCfg := &RepoConfig{}
+	js, _ := json.Marshal(repoCfg)
+	assert.Equal(t, string(js), `{}`)
 }

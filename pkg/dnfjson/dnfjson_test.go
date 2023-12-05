@@ -1,6 +1,7 @@
 package dnfjson
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -661,4 +662,11 @@ func TestRequestHash(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 64, len(req.Hash()))
 	assert.NotEqual(t, hash, req.Hash())
+}
+
+func TestRepoConfigMarshalAlsmostEmpty(t *testing.T) {
+	repoCfg := &repoConfig{}
+	js, _ := json.Marshal(repoCfg)
+	// double check here that anything that uses pointers has "omitempty" set
+	assert.Equal(t, string(js), `{"id":"","gpgcheck":false,"check_repogpg":false,"ignoressl":false}`)
 }
