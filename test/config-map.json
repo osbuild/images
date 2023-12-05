@@ -234,5 +234,27 @@
     "image-types": [
       "image-installer"
     ]
+  },
+  "./configs/ostree-filesystem-customizations-installer.json": {
+    "image-types": [
+      "edge-simplified-installer"
+    ],
+    "distros": [
+      "rhel-9.2",
+      "rhel-9.3",
+      "rhel-9.4"
+    ]
+  },
+  "./configs/ostree-filesystem-customizations.json": {
+    "image-types": [
+      "edge-raw-image",
+      "edge-ami",
+      "edge-vsphere"
+    ],
+    "distros": [
+      "rhel-9.2",
+      "rhel-9.3",
+      "rhel-9.4"
+    ]
   }
 }

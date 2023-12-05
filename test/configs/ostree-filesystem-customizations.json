@@ -1,0 +1,53 @@
+{
+  "name": "ostree-filesystem-customizations",
+  "ostree": {
+    "url": "http://example.com/repo"
+  },
+  "blueprint": {
+    "customizations": {
+      "user": [
+        {
+          "groups": [
+            "wheel"
+          ],
+          "key": "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBNebAh6SjpAn8wB53K4695cGnHGuCtl4RdaX3futZgJUultHyzeYHnzMO7d4++qnRL+Rworew62LKP560uvtncc= github.com/osbuild/images",
+          "name": "osbuild"
+        }
+      ],
+      "filesystem": [
+        {
+          "mountpoint": "/foo",
+          "minsize": "2147483648"
+        },
+        {
+          "mountpoint": "/foo/bar",
+          "minsize": "2 GiB"
+        },
+        {
+          "mountpoint": "/root",
+          "minsize": "1 GiB"
+        },
+        {
+          "mountpoint": "/mnt",
+          "minsize": "3 GiB"
+        },
+        {
+          "mountpoint": "/srv",
+          "minsize": "4 GiB"
+        },
+        {
+          "mountpoint": "/opt",
+          "minsize": "1 GiB"
+        },
+        {
+          "mountpoint": "/var/mydata",
+          "minsize": "1 GiB"
+        }
+      ]
+    }
+  },
+  "depends": {
+    "image-type": "edge-container",
+    "config": "empty.json"
+  }
+}
