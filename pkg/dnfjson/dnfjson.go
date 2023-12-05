@@ -317,7 +317,7 @@ type repoConfig struct {
 	SSLClientKey   string   `json:"sslclientkey,omitempty"`
 	SSLClientCert  string   `json:"sslclientcert,omitempty"`
 	MetadataExpire string   `json:"metadata_expire,omitempty"`
-	ModuleHotfixes *bool    `json:"module_hotfixes,omitempty"`
+	ModuleHotfixes *bool    `json:"module_hotfixes"`
 	// set the repo hass from `rpmmd.RepoConfig.Hash()` function
 	// rather than re-calculating it
 	repoHash string
