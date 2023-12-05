@@ -193,5 +193,18 @@
     "image-types": [
       "ec2-sap"
     ]
+  },
+  "./configs/ostree-filesystem-customizations.json": {
+    "image-types": [
+      "edge-raw-image",
+      "edge-ami",
+      "edge-vsphere",
+      "simplified-installer"
+    ],
+    "distros": [
+      "rhel-92",
+      "rhel-93",
+      "rhel-94"
+    ]
   }
 }
