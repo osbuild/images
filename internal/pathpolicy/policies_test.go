@@ -78,3 +78,36 @@ func TestMountpointPolicies(t *testing.T) {
 		})
 	}
 }
+
+func TestOstreeMountpointPolicies(t *testing.T) {
+	type testCase struct {
+		path    string
+		allowed bool
+	}
+
+	testCases := []testCase{
+		{"/ostree", false},
+		{"/ostree/foo", false},
+
+		{"/foo", true},
+		{"/foo/bar", true},
+
+		{"/var", true},
+		{"/var/myfiles", true},
+		{"/var/roothome", false},
+
+		{"/home", false},
+		{"/home/shadowman", false},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.path, func(t *testing.T) {
+			err := OstreeMountpointPolicies.Check(tc.path)
+			if err != nil && tc.allowed {
+				t.Errorf("expected %s to be allowed, but got error: %v", tc.path, err)
+			} else if err == nil && !tc.allowed {
+				t.Errorf("expected %s to be denied, but got no error", tc.path)
+			}
+		})
+	}
+}
