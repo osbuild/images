@@ -517,3 +517,39 @@ func newDistro(name string, minor int) *distribution {
 	rd.addArches(x86_64, aarch64, ppc64le)
 	return &rd
 }
+
+func DistroFactory(idStr string) distro.Distro {
+	id, err := distro.DistroIDParser(idStr)
+	if err != nil {
+		return nil
+	}
+
+	// Backward compatibility layer for "rhel-84" or "rhel-810"
+	if id.Name == "rhel" && id.MinorVersion == -1 {
+		if id.MajorVersion/10 == 8 {
+			// handle single digit minor version
+			id.MinorVersion = id.MajorVersion % 10
+			id.MajorVersion = 8
+		} else if id.MajorVersion/100 == 8 {
+			// handle two digit minor version
+			id.MinorVersion = id.MajorVersion % 100
+			id.MajorVersion = 8
+		}
+	}
+
+	if id.MajorVersion != 8 {
+		return nil
+	}
+
+	// CentOS does not use minor version
+	if id.Name == "centos" && id.MinorVersion == -1 {
+		return NewCentos()
+	}
+
+	// RHEL uses minor version
+	if id.Name != "rhel" || id.MinorVersion == -1 {
+		return nil
+	}
+
+	return newDistro("rhel", id.MinorVersion)
+}

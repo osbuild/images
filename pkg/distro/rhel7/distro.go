@@ -51,7 +51,7 @@ var defaultDistroImageConfig = &distro.ImageConfig{
 // distribution objects without the arches > image types
 var distroMap = map[string]distribution{
 	"rhel-7": {
-		name:               "rhel-7",
+		name:               "rhel-7", // TODO: this should be "rhel-7.9"
 		product:            "Red Hat Enterprise Linux",
 		osVersion:          "7.9",
 		nick:               "Maipo",
@@ -236,4 +236,25 @@ func newDistro(distroName string) distro.Distro {
 	)
 
 	return &rd
+}
+
+func DistroFactory(idStr string) distro.Distro {
+	id, err := distro.DistroIDParser(idStr)
+	if err != nil {
+		return nil
+	}
+	if id.Name != "rhel" {
+		return nil
+	}
+
+	if id.MajorVersion != 7 {
+		return nil
+	}
+
+	// TODO: we should probably support also the minor version, specifically "7.9"
+	if id.MinorVersion != -1 {
+		return nil
+	}
+
+	return newDistro("rhel-7")
 }

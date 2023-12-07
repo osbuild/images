@@ -973,3 +973,20 @@ func newDistro(version int) distro.Distro {
 	rd.addArches(x86_64, aarch64, ppc64le, s390x)
 	return &rd
 }
+
+func DistroFactory(idStr string) distro.Distro {
+	id, err := distro.DistroIDParser(idStr)
+	if err != nil {
+		return nil
+	}
+
+	if id.Name != "fedora" {
+		return nil
+	}
+
+	if id.MinorVersion != -1 {
+		return nil
+	}
+
+	return newDistro(id.MajorVersion)
+}
