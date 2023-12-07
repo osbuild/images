@@ -102,4 +102,15 @@ func TestResolverFail(t *testing.T) {
 	specs, err = resolver.Finish()
 	assert.Error(t, err)
 	assert.Len(t, specs, 0)
+
+	resolver.Add(container.SourceSpec{registry.GetRef("repo"),
+		"",
+		common.ToPtr(""),
+		common.ToPtr(false),
+		common.ToPtr("fake-transport"),
+		nil,
+	})
+	specs, err = resolver.Finish()
+	assert.Error(t, err)
+	assert.Len(t, specs, 0)
 }
