@@ -145,3 +145,52 @@ func TestKernelNameCustomization(t *testing.T) {
 		}
 	}
 }
+
+func TestContainerValidation(t *testing.T) {
+	tests := []struct {
+		name      string
+		container Container
+		wantErr   bool
+	}{
+		{
+			name:      "no transport",
+			container: Container{},
+			wantErr:   false,
+		},
+		{
+			name:      "docker transport",
+			container: Container{ContainersTransport: common.ToPtr("docker")},
+			wantErr:   false,
+		},
+		{
+			name:      "containers-storage transport",
+			container: Container{ContainersTransport: common.ToPtr("containers-storage")},
+			wantErr:   false,
+		},
+		{
+			name:      "invalid transport",
+			container: Container{ContainersTransport: common.ToPtr("invalid-transport")},
+			wantErr:   true,
+		},
+		{
+			name:      "no transport for storage",
+			container: Container{StoragePath: common.ToPtr("/data/containers/storage")},
+			wantErr:   true,
+		},
+		{
+			name: "invalid transport for storage",
+			container: Container{
+				ContainersTransport: common.ToPtr("docker"),
+				StoragePath:         common.ToPtr("/data/containers/storage"),
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		if err := tt.container.Validate(); tt.wantErr {
+			assert.Error(t, err)
+		} else {
+			assert.NoError(t, err)
+		}
+	}
+}

@@ -11,12 +11,14 @@ import (
 // at the Source via Digest and ImageID. The latter one
 // should remain the same in the target image as well.
 type Spec struct {
-	Source     string // does not include the manifest digest
-	Digest     string // digest of the manifest at the Source
-	TLSVerify  *bool  // controls TLS verification
-	ImageID    string // container image identifier
-	LocalName  string // name to use inside the image
-	ListDigest string // digest of the list manifest at the Source (optional)
+	Source              string  // does not include the manifest digest
+	Digest              string  // digest of the manifest at the Source
+	TLSVerify           *bool   // controls TLS verification
+	ImageID             string  // container image identifier
+	LocalName           string  // name to use inside the image
+	ListDigest          string  // digest of the list manifest at the Source (optional)
+	ContainersTransport *string // the type of transport used for the container
+	StoragePath         *string // location of the local containers-storage
 }
 
 // NewSpec creates a new Spec from the essential information.
