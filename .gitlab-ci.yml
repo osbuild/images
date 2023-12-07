@@ -20,7 +20,7 @@ configure-generators:
   variables:
     PYTHONUNBUFFERED: 1
   script:
-    - dnf install -qy golang python3 gpgme-devel
+    - ./test/scripts/install-dependencies
     - ./test/scripts/configure-generators generator-config.yml
   artifacts:
     paths:
@@ -40,7 +40,7 @@ check-build-coverage:
   variables:
     PYTHONUNBUFFERED: 1
   script:
-    - dnf install -qy golang python3 gpgme-devel s3cmd
+    - ./test/scripts/install-dependencies
     - ./test/scripts/check-build-coverage ./s3configs/
   cache:
     key: testcache

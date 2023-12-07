@@ -15,7 +15,7 @@ However, there are several command line tools defined in
 during development and testing.
 
 The build-requirements for Fedora and rpm-based distributions are:
-- `gpgme-devel`
+- `gpgme-devel`, `btrfs-progs-devel`, `device-mapper-devel`
 
 To build images, you will also need to install `osbuild` and its sub-packages.
 
