@@ -71,3 +71,101 @@ func TestDistro_Ec2PartitionTables(t *testing.T) {
 		}
 	}
 }
+
+func TestDistroFactory(t *testing.T) {
+	type testCase struct {
+		strID    string
+		expected distro.Distro
+	}
+
+	testCases := []testCase{
+		{
+			strID:    "rhel-8.0",
+			expected: newDistro("rhel", 0),
+		},
+		{
+			strID:    "rhel-80",
+			expected: newDistro("rhel", 0),
+		},
+		{
+			strID:    "rhel-8.4",
+			expected: NewRHEL84(),
+		},
+		{
+			strID:    "rhel-84",
+			expected: NewRHEL84(),
+		},
+		{
+			strID:    "rhel-8.10",
+			expected: NewRHEL810(),
+		},
+		{
+			strID:    "rhel-810",
+			expected: NewRHEL810(),
+		},
+		{
+			strID:    "centos-8",
+			expected: NewCentos(),
+		},
+		{
+			strID:    "centos-8.4",
+			expected: nil,
+		},
+		{
+			strID:    "rhel-8",
+			expected: nil,
+		},
+		{
+			strID:    "rhel-8.4.1",
+			expected: nil,
+		},
+		{
+			strID:    "rhel-7",
+			expected: nil,
+		},
+		{
+			strID:    "rhel-79",
+			expected: nil,
+		},
+		{
+			strID:    "rhel-7.9",
+			expected: nil,
+		},
+		{
+			strID:    "fedora-37",
+			expected: nil,
+		},
+		{
+			strID:    "fedora-38.1",
+			expected: nil,
+		},
+		{
+			strID:    "fedora",
+			expected: nil,
+		},
+		{
+			strID:    "rhel-9",
+			expected: nil,
+		},
+		{
+			strID:    "rhel-910",
+			expected: nil,
+		},
+		{
+			strID:    "rhel-9.10",
+			expected: nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.strID, func(t *testing.T) {
+			d := DistroFactory(tc.strID)
+			if tc.expected == nil {
+				assert.Nil(t, d)
+			} else {
+				assert.NotNil(t, d)
+				assert.Equal(t, tc.expected.Name(), d.Name())
+			}
+		})
+	}
+}

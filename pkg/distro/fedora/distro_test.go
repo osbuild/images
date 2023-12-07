@@ -911,3 +911,53 @@ func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 		}
 	}
 }
+
+func TestDistroFactory(t *testing.T) {
+	type testCase struct {
+		strID    string
+		expected distro.Distro
+	}
+
+	testCases := []testCase{
+		{
+			strID:    "fedora-37",
+			expected: fedora.NewF37(),
+		},
+		{
+			strID:    "fedora-38.1",
+			expected: nil,
+		},
+		{
+			strID:    "fedora",
+			expected: nil,
+		},
+		{
+			strID:    "rhel-9",
+			expected: nil,
+		},
+		{
+			strID:    "rhel-8.4",
+			expected: nil,
+		},
+		{
+			strID:    "rhel-810",
+			expected: nil,
+		},
+		{
+			strID:    "rhel-8.4.1",
+			expected: nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.strID, func(t *testing.T) {
+			d := fedora.DistroFactory(tc.strID)
+			if tc.expected == nil {
+				assert.Nil(t, d)
+			} else {
+				assert.NotNil(t, d)
+				assert.Equal(t, tc.expected.Name(), d.Name())
+			}
+		})
+	}
+}
