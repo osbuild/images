@@ -8,14 +8,14 @@ type KickstartStageOptions struct {
 
 	OSTree *OSTreeOptions `json:"ostree,omitempty"`
 
-	LiveIMG *LiveIMG `json:"liveimg,omitempty"`
+	LiveIMG *LiveIMGOptions `json:"liveimg,omitempty"`
 
 	Users map[string]UsersStageOptionsUser `json:"users,omitempty"`
 
 	Groups map[string]GroupsStageOptionsGroup `json:"groups,omitempty"`
 }
 
-type LiveIMG struct {
+type LiveIMGOptions struct {
 	URL string `json:"url"`
 }
 
@@ -67,9 +67,9 @@ func NewKickstartStageOptions(
 		}
 	}
 
-	var liveImg *LiveIMG
+	var liveImg *LiveIMGOptions
 	if imageURL != "" {
-		liveImg = &LiveIMG{
+		liveImg = &LiveIMGOptions{
 			URL: imageURL,
 		}
 	}
