@@ -6,7 +6,7 @@ type KickstartStageOptions struct {
 	// Where to place the kickstart file
 	Path string `json:"path"`
 
-	OSTree *OSTreeOptions `json:"ostree,omitempty"`
+	OSTreeCommit *OSTreeCommitOptions `json:"ostree,omitempty"`
 
 	LiveIMG *LiveIMGOptions `json:"liveimg,omitempty"`
 
@@ -19,7 +19,7 @@ type LiveIMGOptions struct {
 	URL string `json:"url"`
 }
 
-type OSTreeOptions struct {
+type OSTreeCommitOptions struct {
 	OSName string `json:"osname"`
 	URL    string `json:"url"`
 	Ref    string `json:"ref"`
@@ -57,9 +57,9 @@ func NewKickstartStageOptions(
 		groups = groupsOptions.Groups
 	}
 
-	var ostreeOptions *OSTreeOptions
+	var ostreeCommitOptions *OSTreeCommitOptions
 	if ostreeURL != "" {
-		ostreeOptions = &OSTreeOptions{
+		ostreeCommitOptions = &OSTreeCommitOptions{
 			OSName: osName,
 			URL:    ostreeURL,
 			Ref:    ostreeRef,
@@ -74,10 +74,10 @@ func NewKickstartStageOptions(
 		}
 	}
 	return &KickstartStageOptions{
-		Path:    path,
-		OSTree:  ostreeOptions,
-		LiveIMG: liveImg,
-		Users:   users,
-		Groups:  groups,
+		Path:         path,
+		OSTreeCommit: ostreeCommitOptions,
+		LiveIMG:      liveImg,
+		Users:        users,
+		Groups:       groups,
 	}, nil
 }
