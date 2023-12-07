@@ -12,6 +12,9 @@ Images
 
 Please refer to the [developer guide](https://www.osbuild.org/guides/developer-guide/developer-guide.html) to learn about our workflow, code style and more.
 
+The build-requirements for Fedora and rpm-based distributions are:
+- `gpgme-devel`, `btrfs-progs-devel`, `device-mapper-devel`
+
 ### Repository:
 
  - **web**:   <https://github.com/osbuild/images>
