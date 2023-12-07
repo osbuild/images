@@ -35,7 +35,7 @@ func TestClientResolve(t *testing.T) {
 	ctx := context.Background()
 
 	client.SetArchitectureChoice("amd64")
-	spec, err := client.Resolve(ctx, "")
+	spec, err := client.Resolve(ctx, "", nil)
 
 	assert.NoError(t, err)
 	assert.Equal(t, container.Spec{
@@ -48,7 +48,7 @@ func TestClientResolve(t *testing.T) {
 	}, spec)
 
 	client.SetArchitectureChoice("ppc64le")
-	spec, err = client.Resolve(ctx, "")
+	spec, err = client.Resolve(ctx, "", nil)
 
 	assert.NoError(t, err)
 	assert.Equal(t, container.Spec{
@@ -62,7 +62,7 @@ func TestClientResolve(t *testing.T) {
 
 	// don't have that architecture
 	client.SetArchitectureChoice("s390x")
-	_, err = client.Resolve(ctx, "")
+	_, err = client.Resolve(ctx, "", nil)
 
 	assert.Error(t, err)
 }

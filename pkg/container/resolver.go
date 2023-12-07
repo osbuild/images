@@ -55,7 +55,7 @@ func (r *Resolver) Add(spec SourceSpec) {
 	}
 
 	go func() {
-		spec, err := client.Resolve(r.ctx, spec.Name)
+		spec, err := client.Resolve(r.ctx, spec.Name, &spec)
 		if err != nil {
 			err = fmt.Errorf("'%s': %w", spec.Source, err)
 		}
