@@ -23,9 +23,12 @@ type Resolver struct {
 }
 
 type SourceSpec struct {
-	Source    string
-	Name      string
-	TLSVerify *bool
+	Source              string
+	Name                string
+	Digest              *string
+	TLSVerify           *bool
+	ContainersTransport *string
+	StoragePath         *string
 }
 
 func NewResolver(arch string) Resolver {
