@@ -6,7 +6,8 @@ type KickstartStageOptions struct {
 	// Where to place the kickstart file
 	Path string `json:"path"`
 
-	OSTreeCommit *OSTreeCommitOptions `json:"ostree,omitempty"`
+	OSTreeCommit    *OSTreeCommitOptions    `json:"ostree,omitempty"`
+	OSTreeContainer *OSTreeContainerOptions `json:"ostreecontainer,omitempty"`
 
 	LiveIMG *LiveIMGOptions `json:"liveimg,omitempty"`
 
@@ -24,6 +25,14 @@ type OSTreeCommitOptions struct {
 	URL    string `json:"url"`
 	Ref    string `json:"ref"`
 	GPG    bool   `json:"gpg"`
+}
+
+type OSTreeContainerOptions struct {
+	StateRoot             string `json:"stateroot"`
+	URL                   string `json:"url"`
+	Transport             string `json:"transport"`
+	Remote                string `json:"remote"`
+	SignatureVerification bool   `json:"signatureverification"`
 }
 
 func (KickstartStageOptions) isStageOptions() {}
@@ -85,6 +94,36 @@ func NewKickstartStageOptionsWithOSTreeCommit(
 		}
 
 		options.OSTreeCommit = ostreeCommitOptions
+	}
+
+	return options, nil
+}
+
+func NewKickstartStageOptionsWithOSTreeContainer(
+	path string,
+	userCustomizations []users.User,
+	groupCustomizations []users.Group,
+	containerURL string,
+	containerTransport string,
+	containerRemote string,
+	containerStateRoot string) (*KickstartStageOptions, error) {
+
+	options, err := NewKickstartStageOptions(path, userCustomizations, groupCustomizations)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if containerURL != "" {
+		ostreeContainerOptions := &OSTreeContainerOptions{
+			StateRoot:             containerStateRoot,
+			URL:                   containerURL,
+			Remote:                containerRemote,
+			Transport:             containerTransport,
+			SignatureVerification: false,
+		}
+
+		options.OSTreeContainer = ostreeContainerOptions
 	}
 
 	return options, nil
