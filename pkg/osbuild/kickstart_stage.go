@@ -38,12 +38,8 @@ func NewKickstartStage(options *KickstartStageOptions) *Stage {
 
 func NewKickstartStageOptions(
 	path string,
-	imageURL string,
 	userCustomizations []users.User,
-	groupCustomizations []users.Group,
-	ostreeURL string,
-	ostreeRef string,
-	osName string) (*KickstartStageOptions, error) {
+	groupCustomizations []users.Group) (*KickstartStageOptions, error) {
 
 	var users map[string]UsersStageOptionsUser
 	if usersOptions, err := NewUsersStageOptions(userCustomizations, false); err != nil {
@@ -57,27 +53,61 @@ func NewKickstartStageOptions(
 		groups = groupsOptions.Groups
 	}
 
-	var ostreeCommitOptions *OSTreeCommitOptions
+	return &KickstartStageOptions{
+		Path:         path,
+		OSTreeCommit: nil,
+		LiveIMG:      nil,
+		Users:        users,
+		Groups:       groups,
+	}, nil
+}
+
+func NewKickstartStageOptionsWithOSTreeCommit(
+	path string,
+	userCustomizations []users.User,
+	groupCustomizations []users.Group,
+	ostreeURL string,
+	ostreeRef string,
+	osName string) (*KickstartStageOptions, error) {
+
+	options, err := NewKickstartStageOptions(path, userCustomizations, groupCustomizations)
+
+	if err != nil {
+		return nil, err
+	}
+
 	if ostreeURL != "" {
-		ostreeCommitOptions = &OSTreeCommitOptions{
+		ostreeCommitOptions := &OSTreeCommitOptions{
 			OSName: osName,
 			URL:    ostreeURL,
 			Ref:    ostreeRef,
 			GPG:    false,
 		}
+
+		options.OSTreeCommit = ostreeCommitOptions
 	}
 
-	var liveImg *LiveIMGOptions
+	return options, nil
+}
+
+func NewKickstartStageOptionsWithLiveIMG(
+	path string,
+	userCustomizations []users.User,
+	groupCustomizations []users.Group,
+	imageURL string) (*KickstartStageOptions, error) {
+
+	options, err := NewKickstartStageOptions(path, userCustomizations, groupCustomizations)
+
+	if err != nil {
+		return nil, err
+	}
+
 	if imageURL != "" {
-		liveImg = &LiveIMGOptions{
+		liveImg := &LiveIMGOptions{
 			URL: imageURL,
 		}
+		options.LiveIMG = liveImg
 	}
-	return &KickstartStageOptions{
-		Path:         path,
-		OSTreeCommit: ostreeCommitOptions,
-		LiveIMG:      liveImg,
-		Users:        users,
-		Groups:       groups,
-	}, nil
+
+	return options, nil
 }
