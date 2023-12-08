@@ -309,14 +309,11 @@ func (p *AnacondaInstaller) serialize() osbuild.Pipeline {
 
 	if p.Type == AnacondaInstallerTypePayload {
 		if p.InteractiveDefaults != nil {
-			kickstartOptions, err := osbuild.NewKickstartStageOptions(
+			kickstartOptions, err := osbuild.NewKickstartStageOptionsWithLiveIMG(
 				"/usr/share/anaconda/interactive-defaults.ks",
-				p.InteractiveDefaults.TarPath,
 				p.Users,
 				p.Groups,
-				"",
-				"",
-				"",
+				p.InteractiveDefaults.TarPath,
 			)
 
 			if err != nil {
