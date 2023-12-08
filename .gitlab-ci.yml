@@ -16,11 +16,11 @@ init:
 
 configure-generators:
   stage: gen
-  image: alpine:latest
+  image: fedora:latest
   variables:
     PYTHONUNBUFFERED: 1
   script:
-    - apk add -U go python3 gpgme-dev
+    - dnf install -qy golang python3 gpgme-devel
     - ./test/scripts/configure-generators generator-config.yml
   artifacts:
     paths:
@@ -36,11 +36,11 @@ generator-trigger:
 
 check-build-coverage:
   stage: verify
-  image: alpine:latest
+  image: fedora:latest
   variables:
     PYTHONUNBUFFERED: 1
   script:
-    - apk add -U go python3 gpgme-dev s3cmd
+    - dnf install -qy golang python3 gpgme-devel s3cmd
     - ./test/scripts/check-build-coverage ./s3configs/
   cache:
     key: testcache
