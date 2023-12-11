@@ -3,6 +3,7 @@ package distrofactory
 import (
 	"fmt"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/fedora"
 	"github.com/osbuild/images/pkg/distro/rhel7"
@@ -36,6 +37,13 @@ func (f *Factory) GetDistro(name string) distro.Distro {
 	}
 
 	return match
+}
+
+// FromHost returns a distro.Distro instance, that is specific to the host.
+// If the host distro is not supported, nil is returned.
+func (f *Factory) FromHost() distro.Distro {
+	hostDistroName, _, _, _ := common.GetHostDistroName()
+	return f.GetDistro(hostDistroName)
 }
 
 // New returns a Factory of distro.Distro factories for the given distros.
