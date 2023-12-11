@@ -12,6 +12,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	testDistroName  = "test-distro"
+	testDistro2Name = "test-distro-2"
+)
+
 func getConfPaths(t *testing.T) []string {
 	confPaths := []string{
 		"./confpaths/priority1",
@@ -41,7 +46,7 @@ func TestLoadRepositoriesExisting(t *testing.T) {
 		{
 			name: "duplicate distro definition, load first encounter",
 			args: args{
-				distro: test_distro.TestDistroName,
+				distro: testDistroName,
 			},
 			want: map[string][]string{
 				test_distro.TestArchName:  {"fedora-p1", "updates-p1", "fedora-modular-p1", "updates-modular-p1"},
@@ -51,7 +56,7 @@ func TestLoadRepositoriesExisting(t *testing.T) {
 		{
 			name: "single distro definition",
 			args: args{
-				distro: test_distro.TestDistro2Name,
+				distro: testDistro2Name,
 			},
 			want: map[string][]string{
 				test_distro.TestArchName:  {"baseos-p2", "appstream-p2"},
@@ -98,7 +103,7 @@ func Test_LoadAllRepositories(t *testing.T) {
 	assert.Equal(t, len(distroReposMap), 2)
 
 	// test-distro
-	testDistroRepos, exists := distroReposMap[test_distro.TestDistroName]
+	testDistroRepos, exists := distroReposMap[testDistroName]
 	assert.True(t, exists)
 	assert.Equal(t, len(testDistroRepos), 2)
 
@@ -116,12 +121,12 @@ func Test_LoadAllRepositories(t *testing.T) {
 		wantRepos := []string{"fedora-p1", "updates-p1", "fedora-modular-p1", "updates-modular-p1"}
 
 		if !reflect.DeepEqual(repoNames, wantRepos) {
-			t.Errorf("LoadAllRepositories() for %s/%s =\n got: %#v\n want: %#v", test_distro.TestDistroName, arch, repoNames, wantRepos)
+			t.Errorf("LoadAllRepositories() for %s/%s =\n got: %#v\n want: %#v", testDistroName, arch, repoNames, wantRepos)
 		}
 	}
 
 	// test-distro-2
-	testDistro2Repos, exists := distroReposMap[test_distro.TestDistro2Name]
+	testDistro2Repos, exists := distroReposMap[testDistro2Name]
 	assert.True(t, exists)
 	assert.Equal(t, len(testDistro2Repos), 2)
 
@@ -141,7 +146,7 @@ func Test_LoadAllRepositories(t *testing.T) {
 		}
 
 		if !reflect.DeepEqual(repoNames, wantRepos[arch]) {
-			t.Errorf("LoadAllRepositories() for %s/%s =\n got: %#v\n want: %#v", test_distro.TestDistro2Name, arch, repoNames, wantRepos[arch])
+			t.Errorf("LoadAllRepositories() for %s/%s =\n got: %#v\n want: %#v", testDistro2Name, arch, repoNames, wantRepos[arch])
 		}
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/osbuild/images/pkg/distro/rhel7"
 	"github.com/osbuild/images/pkg/distro/rhel8"
 	"github.com/osbuild/images/pkg/distro/rhel9"
+	"github.com/osbuild/images/pkg/distro/test_distro"
 )
 
 // FactoryFunc is a function that returns a distro.Distro for a given distro
@@ -50,5 +51,12 @@ func NewDefault() *Factory {
 		rhel7.DistroFactory,
 		rhel8.DistroFactory,
 		rhel9.DistroFactory,
+	)
+}
+
+// NewTestDefault returns a Factory of distro.Distro factory for the test_distro.
+func NewTestDefault() *Factory {
+	return New(
+		test_distro.DistroFactory,
 	)
 }
