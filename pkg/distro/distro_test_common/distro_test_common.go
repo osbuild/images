@@ -6,7 +6,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
+	"github.com/osbuild/images/internal/reporegistry"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/ostree"
@@ -161,10 +163,11 @@ func TestDistro_KernelOption(t *testing.T, d distro.Distro) {
 func TestDistro_OSTreeOptions(t *testing.T, d distro.Distro) {
 	// test that ostree parameters are properly resolved by image functions that should support them
 	typesWithParent := map[string]bool{ // image types that support specifying a parent commit
-		"edge-commit":    true,
-		"edge-container": true,
-		"iot-commit":     true,
-		"iot-container":  true,
+		"edge-commit":            true,
+		"edge-container":         true,
+		"iot-commit":             true,
+		"iot-container":          true,
+		"iot-bootable-container": true,
 	}
 
 	typesWithPayload := map[string]bool{
@@ -456,4 +459,11 @@ func TestDistro_OSTreeOptions(t *testing.T, d distro.Distro) {
 			}
 		}
 	}
+}
+
+// ListTestedDistros returns a list of distro names that are explicitly tested
+func ListTestedDistros(t *testing.T) []string {
+	testRepoRegistry, err := reporegistry.NewTestedDefault()
+	require.Nil(t, err)
+	return testRepoRegistry.ListDistros()
 }

@@ -10,7 +10,7 @@ import (
 
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/distroregistry"
+	"github.com/osbuild/images/pkg/distrofactory"
 	"github.com/osbuild/images/pkg/image"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
@@ -55,15 +55,15 @@ func main() {
 		}
 	}
 
-	distros := distroregistry.NewDefault()
+	distroFac := distrofactory.NewDefault()
 	var d distro.Distro
 	if distroArg == "host" {
-		d = distros.FromHost()
+		d = distroFac.FromHost()
 		if d == nil {
 			panic("host distro not supported")
 		}
 	} else {
-		d = distros.GetDistro(distroArg)
+		d = distroFac.GetDistro(distroArg)
 		if d == nil {
 			panic(fmt.Sprintf("distro '%s' not supported\n", distroArg))
 		}
