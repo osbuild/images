@@ -21,7 +21,7 @@ import (
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/distroregistry"
+	"github.com/osbuild/images/pkg/distrofactory"
 	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/ostree"
@@ -293,6 +293,14 @@ func makeManifestJob(
 
 type DistroArchRepoMap map[string]map[string][]rpmmd.RepoConfig
 
+func (d DistroArchRepoMap) ListDistros() []string {
+	distros := make([]string, 0, len(d))
+	for distro := range d {
+		distros = append(distros, distro)
+	}
+	return distros
+}
+
 func readRepos() DistroArchRepoMap {
 	reposDir := "./test/data/repositories/"
 	darm := make(DistroArchRepoMap)
@@ -560,7 +568,7 @@ func main() {
 		panic(err)
 	}
 	darm := readRepos()
-	distroReg := distroregistry.NewDefault()
+	distroFac := distrofactory.NewDefault()
 	jobs := make([]manifestJob, 0)
 
 	contentResolve := map[string]bool{
@@ -582,12 +590,17 @@ func main() {
 	}
 
 	fmt.Println("Collecting jobs")
-	distros, invalidDistros := resolveArgValues(distros, distroReg.List())
+
+	distros, invalidDistros := resolveArgValues(distros, darm.ListDistros())
 	if len(invalidDistros) > 0 {
 		fmt.Fprintf(os.Stderr, "WARNING: invalid distro names: [%s]\n", strings.Join(invalidDistros, ","))
 	}
 	for _, distroName := range distros {
-		distribution := distroReg.GetDistro(distroName)
+		distribution := distroFac.GetDistro(distroName)
+		if distribution == nil {
+			fmt.Fprintf(os.Stderr, "WARNING: invalid distro name %q\n", distroName)
+			continue
+		}
 
 		distroArches, invalidArches := resolveArgValues(arches, distribution.ListArches())
 		if len(invalidArches) > 0 {

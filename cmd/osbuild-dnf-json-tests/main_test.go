@@ -13,7 +13,7 @@ import (
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/distro"
-	rhel "github.com/osbuild/images/pkg/distro/rhel8"
+	"github.com/osbuild/images/pkg/distro/rhel9"
 	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -27,20 +27,20 @@ func TestCrossArchDepsolve(t *testing.T) {
 	repoDir := "/usr/share/tests/osbuild-composer"
 
 	// NOTE: we can add RHEL, but don't make it hard requirement because it will fail outside of VPN
-	cs9 := rhel.NewCentos()
+	c9s := rhel9.DistroFactory("centos-9")
 
 	// Set up temporary directory for rpm/dnf cache
 	dir := t.TempDir()
 	baseSolver := dnfjson.NewBaseSolver(dir)
 
-	repos, err := rpmmd.LoadRepositories([]string{repoDir}, cs9.Name())
-	require.NoErrorf(t, err, "Failed to LoadRepositories %v", cs9.Name())
+	repos, err := rpmmd.LoadRepositories([]string{repoDir}, c9s.Name())
+	require.NoErrorf(t, err, "Failed to LoadRepositories %v", c9s.Name())
 
-	for _, archStr := range cs9.ListArches() {
+	for _, archStr := range c9s.ListArches() {
 		t.Run(archStr, func(t *testing.T) {
-			arch, err := cs9.GetArch(archStr)
+			arch, err := c9s.GetArch(archStr)
 			require.NoError(t, err)
-			solver := baseSolver.NewWithConfig(cs9.ModulePlatformID(), cs9.Releasever(), archStr, cs9.Name())
+			solver := baseSolver.NewWithConfig(c9s.ModulePlatformID(), c9s.Releasever(), archStr, c9s.Name())
 			for _, imgTypeStr := range arch.ListImageTypes() {
 				t.Run(imgTypeStr, func(t *testing.T) {
 					imgType, err := arch.GetImageType(imgTypeStr)
@@ -81,26 +81,26 @@ func TestDepsolvePackageSets(t *testing.T) {
 	repoDir := "/usr/share/tests/osbuild-composer"
 
 	// NOTE: we can add RHEL, but don't make it hard requirement because it will fail outside of VPN
-	cs9 := rhel.NewCentos()
+	c9s := rhel9.DistroFactory("centos-9")
 
 	// Set up temporary directory for rpm/dnf cache
 	dir := t.TempDir()
-	solver := dnfjson.NewSolver(cs9.ModulePlatformID(), cs9.Releasever(), arch.ARCH_X86_64.String(), cs9.Name(), dir)
+	solver := dnfjson.NewSolver(c9s.ModulePlatformID(), c9s.Releasever(), arch.ARCH_X86_64.String(), c9s.Name(), dir)
 
-	repos, err := rpmmd.LoadRepositories([]string{repoDir}, cs9.Name())
-	require.NoErrorf(t, err, "Failed to LoadRepositories %v", cs9.Name())
+	repos, err := rpmmd.LoadRepositories([]string{repoDir}, c9s.Name())
+	require.NoErrorf(t, err, "Failed to LoadRepositories %v", c9s.Name())
 	x86Repos, ok := repos[arch.ARCH_X86_64.String()]
-	require.Truef(t, ok, "failed to get %q repos for %q", arch.ARCH_X86_64.String(), cs9.Name())
+	require.Truef(t, ok, "failed to get %q repos for %q", arch.ARCH_X86_64.String(), c9s.Name())
 
-	x86Arch, err := cs9.GetArch(arch.ARCH_X86_64.String())
-	require.Nilf(t, err, "failed to get %q arch of %q distro", arch.ARCH_X86_64.String(), cs9.Name())
+	x86Arch, err := c9s.GetArch(arch.ARCH_X86_64.String())
+	require.Nilf(t, err, "failed to get %q arch of %q distro", arch.ARCH_X86_64.String(), c9s.Name())
 
 	qcow2ImageTypeName := "qcow2"
 	qcow2Image, err := x86Arch.GetImageType(qcow2ImageTypeName)
-	require.Nilf(t, err, "failed to get %q image type of %q/%q distro/arch", qcow2ImageTypeName, cs9.Name(), arch.ARCH_X86_64.String())
+	require.Nilf(t, err, "failed to get %q image type of %q/%q distro/arch", qcow2ImageTypeName, c9s.Name(), arch.ARCH_X86_64.String())
 
 	manifestSource, _, err := qcow2Image.Manifest(&blueprint.Blueprint{Packages: []blueprint.Package{{Name: "bind"}}}, distro.ImageOptions{}, x86Repos, 0)
-	require.Nilf(t, err, "failed to initialise manifest for %q image type of %q/%q distro/arch", qcow2ImageTypeName, cs9.Name(), arch.ARCH_X86_64.String())
+	require.Nilf(t, err, "failed to initialise manifest for %q image type of %q/%q distro/arch", qcow2ImageTypeName, c9s.Name(), arch.ARCH_X86_64.String())
 	imagePkgSets := manifestSource.GetPackageSetChains()
 
 	gotPackageSpecsSets := make(map[string][]rpmmd.PackageSpec, len(imagePkgSets))

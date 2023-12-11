@@ -7,7 +7,6 @@ import (
 
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/distroregistry"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -391,16 +390,4 @@ func DistroFactory(idStr string) distro.Distro {
 // New returns new instance of TestDistro named "test-distro-1".
 func New() *TestDistro {
 	return newTestDistro("1")
-}
-
-func NewRegistry() *distroregistry.Registry {
-	td := New()
-	registry, err := distroregistry.New(td, td)
-	if err != nil {
-		panic(err)
-	}
-
-	// Override the host's architecture name with the test's name
-	registry.SetHostArchName(TestArchName)
-	return registry
 }

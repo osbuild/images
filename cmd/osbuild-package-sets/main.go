@@ -10,7 +10,7 @@ import (
 
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/distroregistry"
+	"github.com/osbuild/images/pkg/distrofactory"
 	"github.com/osbuild/images/pkg/ostree"
 )
 
@@ -29,9 +29,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	dr := distroregistry.NewDefault()
+	df := distrofactory.NewDefault()
 
-	d := dr.GetDistro(distroName)
+	d := df.GetDistro(distroName)
 	if d == nil {
 		panic(fmt.Errorf("Distro %q does not exist", distroName))
 	}

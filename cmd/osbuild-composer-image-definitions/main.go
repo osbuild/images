@@ -5,15 +5,26 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/osbuild/images/pkg/distroregistry"
+	"github.com/osbuild/images/internal/reporegistry"
+	"github.com/osbuild/images/pkg/distrofactory"
 )
 
 func main() {
 	definitions := map[string]map[string][]string{}
-	distroRegistry := distroregistry.NewDefault()
+	distroFac := distrofactory.NewDefault()
 
-	for _, distroName := range distroRegistry.List() {
-		distro := distroRegistry.GetDistro(distroName)
+	testedRepoRegistry, err := reporegistry.NewTestedDefault()
+	if err != nil {
+		panic(fmt.Sprintf("failed to create repo registry with tested distros: %v", err))
+	}
+
+	for _, distroName := range testedRepoRegistry.ListDistros() {
+		distro := distroFac.GetDistro(distroName)
+		if distro == nil {
+			fmt.Fprintf(os.Stderr, "WARNING: invalid distro name %q", distroName)
+			continue
+		}
+
 		for _, archName := range distro.ListArches() {
 			arch, err := distro.GetArch(archName)
 			if err != nil {
@@ -28,7 +39,7 @@ func main() {
 	}
 
 	encoder := json.NewEncoder(os.Stdout)
-	err := encoder.Encode(definitions)
+	err = encoder.Encode(definitions)
 	if err != nil {
 		panic(err)
 	}

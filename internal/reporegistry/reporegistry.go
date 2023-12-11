@@ -26,6 +26,13 @@ func New(repoConfigPaths []string) (*RepoRegistry, error) {
 	return &RepoRegistry{repositories}, nil
 }
 
+// NewTestedDefault returns a new RepoRegistry instance with the data
+// loaded from the default test repositories
+func NewTestedDefault() (*RepoRegistry, error) {
+	testReposPath := []string{"./test/data"}
+	return New(testReposPath)
+}
+
 func NewFromDistrosRepoConfigs(distrosRepoConfigs rpmmd.DistrosRepoConfigs) *RepoRegistry {
 	return &RepoRegistry{distrosRepoConfigs}
 }
@@ -111,4 +118,14 @@ func (r *RepoRegistry) DistroHasRepos(distro, arch string) (repos []rpmmd.RepoCo
 	repos, found = distroRepos[arch]
 
 	return repos, found
+}
+
+// ListDistros returns a list of all distros which have a repository defined
+// in the registry.
+func (r *RepoRegistry) ListDistros() []string {
+	distros := make([]string, 0, len(r.repos))
+	for name := range r.repos {
+		distros = append(distros, name)
+	}
+	return distros
 }

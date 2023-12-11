@@ -10,7 +10,8 @@ import (
 	"strings"
 
 	"github.com/gobwas/glob"
-	"github.com/osbuild/images/pkg/distroregistry"
+	"github.com/osbuild/images/internal/reporegistry"
+	"github.com/osbuild/images/pkg/distrofactory"
 )
 
 type multiValue []string
@@ -74,15 +75,23 @@ func main() {
 	flag.BoolVar(&json, "json", false, "print configs as json")
 	flag.Parse()
 
-	distroReg := distroregistry.NewDefault()
-	distros, invalidDistros := resolveArgValues(distros, distroReg.List())
+	testedRepoRegistry, err := reporegistry.NewTestedDefault()
+	if err != nil {
+		panic(fmt.Sprintf("failed to create repo registry with tested distros: %v", err))
+	}
+	distroFac := distrofactory.NewDefault()
+	distros, invalidDistros := resolveArgValues(distros, testedRepoRegistry.ListDistros())
 	if len(invalidDistros) > 0 {
 		fmt.Fprintf(os.Stderr, "WARNING: invalid distro names: [%s]\n", strings.Join(invalidDistros, ","))
 	}
 
 	configs := make([]config, 0)
 	for _, distroName := range distros {
-		distribution := distroReg.GetDistro(distroName)
+		distribution := distroFac.GetDistro(distroName)
+		if distribution == nil {
+			fmt.Fprintf(os.Stderr, "WARNING: invalid distro name %q", distroName)
+			continue
+		}
 
 		distroArches, invalidArches := resolveArgValues(arches, distribution.ListArches())
 		if len(invalidArches) > 0 {

@@ -15,7 +15,7 @@ import (
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/distroregistry"
+	"github.com/osbuild/images/pkg/distrofactory"
 	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
@@ -250,7 +250,7 @@ func main() {
 	rngSeed, err := cmdutil.NewRNGSeed()
 	check(err)
 	darm := readRepos()
-	distroReg := distroregistry.NewDefault()
+	distroFac := distrofactory.NewDefault()
 
 	config := loadConfig(configFile)
 
@@ -258,7 +258,7 @@ func main() {
 		fail(fmt.Sprintf("failed to create target directory: %s", err.Error()))
 	}
 
-	distribution := distroReg.GetDistro(distroName)
+	distribution := distroFac.GetDistro(distroName)
 	if distribution == nil {
 		fail(fmt.Sprintf("invalid or unsupported distribution: %q", distroName))
 	}
