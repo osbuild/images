@@ -16,6 +16,7 @@ RUN dnf install -y \
     osbuild-lvm2 \
     osbuild-luks2 \
     osbuild-ostree \
+    osbuild-depsolve-dnf \
     osbuild-tools
 # install the language server
 RUN go install -v golang.org/x/tools/gopls@latest
