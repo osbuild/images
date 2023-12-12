@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/osbuild/images/cmd/osbuild-image-tests/constants"
-	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
+	"github.com/osbuild/images/pkg/distro"
 )
 
 // WithNetworkNamespace provides the function f with a new network namespace
@@ -112,7 +112,7 @@ func WithBootedQemuImage(image string, ns NetNS, f func() error) error {
 
 		var qemuCmd *exec.Cmd
 		if arch.IsX86_64() {
-			hostDistroName, err := common.GetHostDistroName()
+			hostDistroName, err := distro.GetHostDistroName()
 			if err != nil {
 				return fmt.Errorf("cannot determing the current distro: %v", err)
 			}
