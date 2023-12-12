@@ -42,7 +42,6 @@ func TestDepsolver(t *testing.T) {
 
 	tmpdir := t.TempDir()
 	solver := NewSolver("platform:el9", "9", "x86_64", "rhel9.0", tmpdir)
-	solver.SetDNFJSONPath("../../dnf-json")
 
 	{ // single depsolve
 		pkgsets := []rpmmd.PackageSet{{Include: []string{"kernel", "vim-minimal", "tmux", "zsh"}, Repositories: []rpmmd.RepoConfig{s.RepoConfig}, InstallWeakDeps: true}} // everything you'll ever need
@@ -602,7 +601,6 @@ func TestErrorRepoInfo(t *testing.T) {
 	}
 
 	solver := NewSolver("f38", "38", "x86_64", "fedora-38", "/tmp/cache")
-	solver.SetDNFJSONPath("../../dnf-json")
 	for idx, tc := range testCases {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
 			_, err := solver.Depsolve([]rpmmd.PackageSet{
@@ -632,7 +630,6 @@ func TestRepoConfigHash(t *testing.T) {
 	}
 
 	solver := NewSolver("f38", "38", "x86_64", "fedora-38", "/tmp/cache")
-	solver.SetDNFJSONPath("../../dnf-json")
 
 	rcs, err := solver.reposFromRPMMD(repos)
 	assert.Nil(t, err)

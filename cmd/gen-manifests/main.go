@@ -412,7 +412,6 @@ func mockResolveCommits(commitSources map[string][]ostree.SourceSpec) map[string
 
 func depsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string][]rpmmd.PackageSpec, error) {
 	solver := dnfjson.NewSolver(d.ModulePlatformID(), d.Releasever(), arch, d.Name(), cacheDir)
-	solver.SetDNFJSONPath("./dnf-json")
 	depsolvedSets := make(map[string][]rpmmd.PackageSpec)
 	for name, pkgSet := range packageSets {
 		res, err := solver.Depsolve(pkgSet)

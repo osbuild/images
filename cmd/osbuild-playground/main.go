@@ -21,23 +21,6 @@ func AddImageType(img image.ImageKind) {
 	ImageTypes[img.Name()] = img
 }
 
-// osbuild-playground is a utility command and is often run from within the
-// source tree.  Find the dnf-json binary in case the osbuild-composer package
-// isn't installed.  This prioritises the local source version over the system
-// version if run from within the source tree.
-func findDnfJsonBin() string {
-	locations := []string{"./dnf-json", "/usr/libexec/osbuild-composer/dnf-json", "/usr/lib/osbuild-composer/dnf-json"}
-	for _, djPath := range locations {
-		_, err := os.Stat(djPath)
-		if !os.IsNotExist(err) {
-			return djPath
-		}
-	}
-
-	// can't run: panic
-	panic(fmt.Sprintf("could not find 'dnf-json' in any of the known paths: %+v", locations))
-}
-
 func main() {
 	var distroArg string
 	flag.StringVar(&distroArg, "distro", "host", "distro to build from")

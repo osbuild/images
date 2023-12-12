@@ -19,7 +19,6 @@ import (
 func RunPlayground(img image.ImageKind, d distro.Distro, arch distro.Arch, repos map[string][]rpmmd.RepoConfig, state_dir string) {
 
 	solver := dnfjson.NewSolver(d.ModulePlatformID(), d.Releasever(), arch.Name(), d.Name(), path.Join(state_dir, "rpmmd"))
-	solver.SetDNFJSONPath(findDnfJsonBin())
 
 	// Set cache size to 1 GiB
 	solver.SetMaxCacheSize(1 * common.GiB)
