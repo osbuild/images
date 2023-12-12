@@ -16,7 +16,7 @@ build/{distro}/{arch}/{image_type}/{config_name}:
   script:
     - sudo ./schutzbot/setup-osbuild-repo
     - sudo dnf install -y go gpgme-devel gcc
-      osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux
+      osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux osbuild-depsolve-dnf
       s3cmd xz
     - ./test/scripts/build-image "{distro}" "{image_type}" "{config}"
     - ./test/scripts/boot-image "{distro}" "{arch}" "{image_type}" "{image_path}"

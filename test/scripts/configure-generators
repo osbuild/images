@@ -32,7 +32,7 @@ generate-build-config-{distro}-{arch}:
   script:
     - sudo ./schutzbot/setup-osbuild-repo
     - sudo dnf -y install go python3 gpgme-devel s3cmd
-      osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux
+      osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux osbuild-depsolve-dnf
     - ./test/scripts/generate-build-config --distro {distro} --arch {arch} build-config.yml
   artifacts:
     paths:
@@ -65,7 +65,7 @@ generate-ostree-build-config-{distro}-{arch}:
   script:
     - sudo ./schutzbot/setup-osbuild-repo
     - sudo dnf -y install go python3 gpgme-devel s3cmd
-      osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux podman
+      osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux osbuild-depsolve-dnf podman
     - ./test/scripts/generate-ostree-build-config --distro {distro} --arch {arch} build-config.yml build-configs
   artifacts:
     paths:
