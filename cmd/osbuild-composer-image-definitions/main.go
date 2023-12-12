@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/osbuild/images/internal/reporegistry"
 	"github.com/osbuild/images/pkg/distrofactory"
+	"github.com/osbuild/images/pkg/reporegistry"
 )
 
 func main() {
