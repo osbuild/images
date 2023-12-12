@@ -37,10 +37,27 @@ type BaseSolver struct {
 	// Cache information
 	cache *rpmCache
 
-	// Path to the dnf-json binary and optional args (default: "/usr/libexec/osbuild-composer/dnf-json")
+	// Path to the dnf-json binary and optional args (default: "/usr/libexec/osbuild-depsolve-dnf")
 	dnfJsonCmd []string
 
 	resultCache *dnfCache
+}
+
+// Find the osbuild-depsolve-dnf script. This checks the default location in
+// /usr/libexec but also /usr/lib in case it's used on a distribution that
+// doesn't use libexec.
+func findDepsolveDnf() string {
+	locations := []string{"/usr/libexec/osbuild-depsolve-dnf", "/usr/lib/osbuild/osbuild-depsolve-dnf"}
+	for _, djPath := range locations {
+		_, err := os.Stat(djPath)
+		if !os.IsNotExist(err) {
+			return djPath
+		}
+	}
+
+	// if it's not found, return empty string; the run() function will fail if
+	// it's used before setting.
+	return locations[0]
 }
 
 // Create a new unconfigured BaseSolver (without platform information). It can
@@ -49,7 +66,7 @@ type BaseSolver struct {
 func NewBaseSolver(cacheDir string) *BaseSolver {
 	return &BaseSolver{
 		cache:       newRPMCache(cacheDir, 1024*1024*1024), // 1 GiB
-		dnfJsonCmd:  []string{"/usr/libexec/osbuild-composer/dnf-json"},
+		dnfJsonCmd:  []string{findDepsolveDnf()},
 		resultCache: NewDNFCache(60 * time.Second),
 	}
 }
@@ -620,7 +637,7 @@ func ParseError(data []byte) Error {
 
 func run(dnfJsonCmd []string, req *Request) ([]byte, error) {
 	if len(dnfJsonCmd) == 0 {
-		return nil, fmt.Errorf("dnf-json command undefined")
+		return nil, fmt.Errorf("osbuild-depsolve-dnf command undefined")
 	}
 	ex := dnfJsonCmd[0]
 	args := make([]string, len(dnfJsonCmd)-1)
