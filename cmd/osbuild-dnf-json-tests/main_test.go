@@ -16,6 +16,7 @@ import (
 	"github.com/osbuild/images/pkg/distro/rhel9"
 	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/ostree"
+	"github.com/osbuild/images/pkg/reporegistry"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
@@ -33,7 +34,7 @@ func TestCrossArchDepsolve(t *testing.T) {
 	dir := t.TempDir()
 	baseSolver := dnfjson.NewBaseSolver(dir)
 
-	repos, err := rpmmd.LoadRepositories([]string{repoDir}, c9s.Name())
+	repos, err := reporegistry.LoadRepositories([]string{repoDir}, c9s.Name())
 	require.NoErrorf(t, err, "Failed to LoadRepositories %v", c9s.Name())
 
 	for _, archStr := range c9s.ListArches() {
@@ -87,7 +88,7 @@ func TestDepsolvePackageSets(t *testing.T) {
 	dir := t.TempDir()
 	solver := dnfjson.NewSolver(c9s.ModulePlatformID(), c9s.Releasever(), arch.ARCH_X86_64.String(), c9s.Name(), dir)
 
-	repos, err := rpmmd.LoadRepositories([]string{repoDir}, c9s.Name())
+	repos, err := reporegistry.LoadRepositories([]string{repoDir}, c9s.Name())
 	require.NoErrorf(t, err, "Failed to LoadRepositories %v", c9s.Name())
 	x86Repos, ok := repos[arch.ARCH_X86_64.String()]
 	require.Truef(t, ok, "failed to get %q repos for %q", arch.ARCH_X86_64.String(), c9s.Name())

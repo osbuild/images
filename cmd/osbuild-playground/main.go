@@ -12,7 +12,7 @@ import (
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distrofactory"
 	"github.com/osbuild/images/pkg/image"
-	"github.com/osbuild/images/pkg/rpmmd"
+	"github.com/osbuild/images/pkg/reporegistry"
 )
 
 var ImageTypes = make(map[string]image.ImageKind)
@@ -74,7 +74,7 @@ func main() {
 		panic(fmt.Sprintf("arch '%s' not supported\n", archArg))
 	}
 
-	repos, err := rpmmd.LoadRepositories([]string{"./"}, d.Name())
+	repos, err := reporegistry.LoadRepositories([]string{"./"}, d.Name())
 	if err != nil {
 		panic("could not load repositories for distro " + d.Name())
 	}
