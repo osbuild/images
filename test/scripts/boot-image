@@ -86,6 +86,7 @@ def boot_ami(distro, arch, image_type, image_path):
                    "--username", "osbuild",
                    "--ssh-privkey", privkey,
                    "--ssh-pubkey", pubkey,
+                   "--boot-mode" , "uefi",
                    raw_image_path, "test/scripts/base-host-check.sh"]
             runcmd(cmd)
 
