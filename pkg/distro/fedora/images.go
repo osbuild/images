@@ -147,6 +147,10 @@ func osCustomizations(
 		osc.ContainersStorage = &storagePath
 	}
 
+	if containerStorage := c.GetContainerStorage(); containerStorage != nil {
+		osc.ContainersStorage = containerStorage.StoragePath
+	}
+
 	customRepos, err := c.GetRepositories()
 	if err != nil {
 		// This shouldn't happen and since the repos
