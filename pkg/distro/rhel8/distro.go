@@ -518,10 +518,14 @@ func newDistro(name string, minor int) *distribution {
 	return &rd
 }
 
-func DistroFactory(idStr string) distro.Distro {
-	id, err := distro.DistroIDParser(idStr)
+func ParseID(idStr string) (*distro.ID, error) {
+	id, err := distro.ParseID(idStr)
 	if err != nil {
-		return nil
+		return nil, err
+	}
+
+	if id.Name != "rhel" && id.Name != "centos" {
+		return nil, fmt.Errorf("invalid distro name: %s", id.Name)
 	}
 
 	// Backward compatibility layer for "rhel-84" or "rhel-810"
@@ -538,17 +542,30 @@ func DistroFactory(idStr string) distro.Distro {
 	}
 
 	if id.MajorVersion != 8 {
-		return nil
+		return nil, fmt.Errorf("invalid distro major version: %d", id.MajorVersion)
 	}
 
 	// CentOS does not use minor version
-	if id.Name == "centos" && id.MinorVersion == -1 {
-		return NewCentos()
+	if id.Name == "centos" && id.MinorVersion != -1 {
+		return nil, fmt.Errorf("centos does not use minor version, but got: %d", id.MinorVersion)
 	}
 
 	// RHEL uses minor version
-	if id.Name != "rhel" || id.MinorVersion == -1 {
+	if id.Name == "rhel" && id.MinorVersion == -1 {
+		return nil, fmt.Errorf("rhel requires minor version, but got: %d", id.MinorVersion)
+	}
+
+	return id, nil
+}
+
+func DistroFactory(idStr string) distro.Distro {
+	id, err := ParseID(idStr)
+	if err != nil {
 		return nil
+	}
+
+	if id.Name == "centos" {
+		return NewCentos()
 	}
 
 	return newDistro("rhel", id.MinorVersion)
