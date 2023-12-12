@@ -14,6 +14,14 @@ type ID struct {
 	MinorVersion int
 }
 
+func (id ID) String() string {
+	if id.MinorVersion == -1 {
+		return fmt.Sprintf("%s-%d", id.Name, id.MajorVersion)
+	}
+
+	return fmt.Sprintf("%s-%d.%d", id.Name, id.MajorVersion, id.MinorVersion)
+}
+
 type ParseError struct {
 	ToParse string
 	Msg     string
