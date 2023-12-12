@@ -10,25 +10,22 @@ import (
 	"github.com/hashicorp/go-version"
 )
 
-func GetHostDistroName() (string, bool, bool, error) {
+// GetHostDistroName returns the name of the host distribution, such as
+// "fedora-32" or "rhel-8.2". It does so by reading the /etc/os-release file.
+func GetHostDistroName() (string, error) {
 	f, err := os.Open("/etc/os-release")
 	if err != nil {
-		return "", false, false, err
+		return "", err
 	}
 	defer f.Close()
 	osrelease, err := readOSRelease(f)
 	if err != nil {
-		return "", false, false, err
+		return "", err
 	}
 
-	isStream := osrelease["NAME"] == "CentOS Stream"
+	name := osrelease["ID"] + "-" + osrelease["VERSION_ID"]
 
-	version := strings.Split(osrelease["VERSION_ID"], ".")
-	name := osrelease["ID"] + "-" + strings.Join(version, "")
-
-	// TODO: We should probably index these things by the full CPE
-	beta := strings.Contains(osrelease["CPE_NAME"], "beta")
-	return name, beta, isStream, nil
+	return name, nil
 }
 
 func readOSRelease(r io.Reader) (map[string]string, error) {

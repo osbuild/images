@@ -42,7 +42,7 @@ func (f *Factory) GetDistro(name string) distro.Distro {
 // FromHost returns a distro.Distro instance, that is specific to the host.
 // If the host distro is not supported, nil is returned.
 func (f *Factory) FromHost() distro.Distro {
-	hostDistroName, _, _, _ := common.GetHostDistroName()
+	hostDistroName, _ := common.GetHostDistroName()
 	return f.GetDistro(hostDistroName)
 }
 
