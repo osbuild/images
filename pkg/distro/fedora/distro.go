@@ -974,17 +974,26 @@ func newDistro(version int) distro.Distro {
 	return &rd
 }
 
-func DistroFactory(idStr string) distro.Distro {
-	id, err := distro.DistroIDParser(idStr)
+func ParseID(idStr string) (*distro.ID, error) {
+	id, err := distro.ParseID(idStr)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
 	if id.Name != "fedora" {
-		return nil
+		return nil, fmt.Errorf("invalid distro name: %s", id.Name)
 	}
 
 	if id.MinorVersion != -1 {
+		return nil, fmt.Errorf("fedora distro does not support minor versions")
+	}
+
+	return id, nil
+}
+
+func DistroFactory(idStr string) distro.Distro {
+	id, err := ParseID(idStr)
+	if err != nil {
 		return nil
 	}
 

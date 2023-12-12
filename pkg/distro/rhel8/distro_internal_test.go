@@ -132,6 +132,10 @@ func TestDistroFactory(t *testing.T) {
 			expected: nil,
 		},
 		{
+			strID:    "fedora-8",
+			expected: nil,
+		},
+		{
 			strID:    "fedora-37",
 			expected: nil,
 		},
