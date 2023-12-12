@@ -18,7 +18,7 @@ type RepoRegistry struct {
 // New returns a new RepoRegistry instance with the data
 // loaded from the given repoConfigPaths
 func New(repoConfigPaths []string) (*RepoRegistry, error) {
-	repositories, err := rpmmd.LoadAllRepositories(repoConfigPaths)
+	repositories, err := LoadAllRepositories(repoConfigPaths)
 	if err != nil {
 		return nil, err
 	}
