@@ -287,7 +287,7 @@ func (p *OS) getBuildPackages(distro Distro) []string {
 	}
 
 	if len(p.OSCustomizations.Containers) > 0 {
-		if p.OSTreeRef != "" {
+		if p.OSCustomizations.ContainersStorage != nil {
 			switch distro {
 			case DISTRO_EL8:
 				packages = append(packages, "python3-pytoml")
