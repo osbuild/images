@@ -161,6 +161,10 @@ func osCustomizations(
 		osc.ContainersStorage = &storagePath
 	}
 
+	if containerStorage := c.GetContainerStorage(); containerStorage != nil {
+		osc.ContainersStorage = containerStorage.StoragePath
+	}
+
 	// set yum repos first, so it doesn't get overridden by
 	// imageConfig.YUMRepos
 	osc.YUMRepos = imageConfig.YUMRepos
