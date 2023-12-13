@@ -1,8 +1,6 @@
 package oscap
 
 import (
-	"fmt"
-	"path/filepath"
 	"strings"
 
 	"github.com/osbuild/images/pkg/distro"
@@ -90,10 +88,4 @@ func IsProfileAllowed(profile string, allowlist []Profile) bool {
 	}
 
 	return false
-}
-
-func GetTailoringFile(profile string) (string, string) {
-	newProfile := fmt.Sprintf("%s_osbuild_tailoring", profile)
-	path := filepath.Join(tailoringDirPath, "tailoring.xml")
-	return newProfile, path
 }

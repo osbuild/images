@@ -192,25 +192,14 @@ func osCustomizations(
 			Compression: true,
 		}
 
-		if oscapConfig.Tailoring != nil {
-			newProfile, tailoringFilepath := oscap.GetTailoringFile(oscapConfig.ProfileID)
+		osc.OpenSCAPTailorConfig = oscap.CreateTailoringStageOptions(
+			oscapConfig,
+			t.arch.distro,
+		)
 
-			tailoringOptions := osbuild.OscapAutotailorConfig{
-				NewProfile: newProfile,
-				Datastream: datastream,
-				ProfileID:  oscapConfig.ProfileID,
-				Selected:   oscapConfig.Tailoring.Selected,
-				Unselected: oscapConfig.Tailoring.Unselected,
-			}
-
-			osc.OpenSCAPTailorConfig = osbuild.NewOscapAutotailorStageOptions(
-				tailoringFilepath,
-				tailoringOptions,
-			)
-
-			// overwrite the profile id with the new tailoring id
-			oscapStageOptions.ProfileID = newProfile
-			oscapStageOptions.Tailoring = tailoringFilepath
+		if tailorConfig := osc.OpenSCAPTailorConfig; tailorConfig != nil {
+			oscapStageOptions.ProfileID = tailorConfig.Config.NewProfile
+			oscapStageOptions.Tailoring = tailorConfig.Filepath
 		}
 
 		directories, err := oscap.CreateRequiredDirectories(oscapConfig.Tailoring == nil)

@@ -2,8 +2,12 @@ package oscap
 
 import (
 	"fmt"
+	"path/filepath"
 
+	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
+	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/osbuild"
 )
 
 func CreateRequiredDirectories(createTailoring bool) ([]*fsnode.Directory, error) {
@@ -28,4 +32,35 @@ func CreateRequiredDirectories(createTailoring bool) ([]*fsnode.Directory, error
 	}
 
 	return directories, nil
+}
+
+func getTailoringProfileID(profileID string) string {
+	return fmt.Sprintf("%s_osbuild_tailoring", profileID)
+}
+
+func CreateTailoringStageOptions(oscapConfig *blueprint.OpenSCAPCustomization, d distro.Distro) *osbuild.OscapAutotailorStageOptions {
+	if oscapConfig == nil {
+		return nil
+	}
+
+	datastream := GetDatastream(oscapConfig.Datastream, d)
+
+	tailoringConfig := oscapConfig.Tailoring
+	if tailoringConfig == nil {
+		return nil
+	}
+
+	newProfile := getTailoringProfileID(oscapConfig.ProfileID)
+	path := filepath.Join(tailoringDirPath, "tailoring.xml")
+
+	return osbuild.NewOscapAutotailorStageOptions(
+		path,
+		osbuild.OscapAutotailorConfig{
+			ProfileID:  oscapConfig.ProfileID,
+			Datastream: datastream,
+			Selected:   tailoringConfig.Selected,
+			Unselected: tailoringConfig.Unselected,
+			NewProfile: newProfile,
+		},
+	)
 }
