@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/distro"
 )
 
@@ -41,7 +40,8 @@ const (
 	defaultRHEL8Datastream   string = "/usr/share/xml/scap/ssg/content/ssg-rhel8-ds.xml"
 	defaultRHEL9Datastream   string = "/usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml"
 
-	// tailoring directory path
+	// directory paths
+	dataDirPath      string = "/oscap_data"
 	tailoringDirPath string = "/usr/share/xml/osbuild-openscap-data"
 )
 
@@ -92,14 +92,8 @@ func IsProfileAllowed(profile string, allowlist []Profile) bool {
 	return false
 }
 
-func GetTailoringFile(profile string) (string, string, *fsnode.Directory, error) {
+func GetTailoringFile(profile string) (string, string) {
 	newProfile := fmt.Sprintf("%s_osbuild_tailoring", profile)
 	path := filepath.Join(tailoringDirPath, "tailoring.xml")
-
-	tailoringDir, err := fsnode.NewDirectory(tailoringDirPath, nil, nil, nil, true)
-	if err != nil {
-		return "", "", nil, err
-	}
-
-	return newProfile, path, tailoringDir, nil
+	return newProfile, path
 }

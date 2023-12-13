@@ -184,15 +184,6 @@ func osCustomizations(
 			panic("unexpected oscap options for ostree image type")
 		}
 
-		// although the osbuild stage will create this directory,
-		// it's probably better to ensure that it is created here
-		dataDirNode, err := fsnode.NewDirectory(oscapDataDir, nil, nil, nil, true)
-		if err != nil {
-			panic("unexpected error creating OpenSCAP data directory")
-		}
-
-		osc.Directories = append(osc.Directories, dataDirNode)
-
 		var datastream = oscap.GetDatastream(oscapConfig.Datastream, t.arch.distro)
 
 		oscapStageOptions := osbuild.OscapConfig{
@@ -202,10 +193,7 @@ func osCustomizations(
 		}
 
 		if oscapConfig.Tailoring != nil {
-			newProfile, tailoringFilepath, tailoringDir, err := oscap.GetTailoringFile(oscapConfig.ProfileID)
-			if err != nil {
-				panic(fmt.Sprintf("unexpected error creating tailoring file options: %v", err))
-			}
+			newProfile, tailoringFilepath := oscap.GetTailoringFile(oscapConfig.ProfileID)
 
 			tailoringOptions := osbuild.OscapAutotailorConfig{
 				NewProfile: newProfile,
@@ -223,9 +211,15 @@ func osCustomizations(
 			// overwrite the profile id with the new tailoring id
 			oscapStageOptions.ProfileID = newProfile
 			oscapStageOptions.Tailoring = tailoringFilepath
+		}
 
-			// add the parent directory for the tailoring file
-			osc.Directories = append(osc.Directories, tailoringDir)
+		directories, err := oscap.CreateRequiredDirectories(oscapConfig.Tailoring == nil)
+		if err != nil {
+			panic(err)
+		}
+
+		if len(directories) > 0 {
+			osc.Directories = append(osc.Directories, directories...)
 		}
 
 		osc.OpenSCAPConfig = osbuild.NewOscapRemediationStageOptions(oscapDataDir, oscapStageOptions)
