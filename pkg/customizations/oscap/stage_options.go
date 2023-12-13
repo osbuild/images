@@ -10,7 +10,7 @@ import (
 	"github.com/osbuild/images/pkg/osbuild"
 )
 
-func CreateRequiredDirectories(createTailoring bool) ([]*fsnode.Directory, error) {
+func createRequiredDirectories(createTailoring bool) ([]*fsnode.Directory, error) {
 	var directories []*fsnode.Directory
 
 	// although the osbuild stage will create this directory,
@@ -43,7 +43,7 @@ func CreateTailoringStageOptions(oscapConfig *blueprint.OpenSCAPCustomization, d
 		return nil
 	}
 
-	datastream := GetDatastream(oscapConfig.Datastream, d)
+	datastream := getDatastream(oscapConfig.Datastream, d)
 
 	tailoringConfig := oscapConfig.Tailoring
 	if tailoringConfig == nil {
@@ -63,4 +63,39 @@ func CreateTailoringStageOptions(oscapConfig *blueprint.OpenSCAPCustomization, d
 			NewProfile: newProfile,
 		},
 	)
+}
+
+func CreateRemediationStageOptions(
+	oscapConfig *blueprint.OpenSCAPCustomization,
+	isOSTree bool,
+	d distro.Distro,
+) (*osbuild.OscapRemediationStageOptions, []*fsnode.Directory, error) {
+	if oscapConfig == nil {
+		return nil, nil, nil
+	}
+
+	if isOSTree {
+		return nil, nil, fmt.Errorf("unexpected oscap options for ostree image type")
+	}
+
+	datastream := getDatastream(oscapConfig.Datastream, d)
+
+	profileID := oscapConfig.ProfileID
+	if oscapConfig.Tailoring != nil {
+		profileID = getTailoringProfileID(profileID)
+	}
+
+	directories, err := createRequiredDirectories(oscapConfig.Tailoring == nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return osbuild.NewOscapRemediationStageOptions(
+		dataDirPath,
+		osbuild.OscapConfig{
+			Datastream:  datastream,
+			ProfileID:   profileID,
+			Compression: true,
+		},
+	), directories, nil
 }

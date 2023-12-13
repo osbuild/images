@@ -179,39 +179,22 @@ func osCustomizations(
 		osc.YUMRepos = append(osc.YUMRepos, osbuild.NewYumReposStageOptions(filename, repos))
 	}
 
-	if oscapConfig := c.GetOpenSCAP(); oscapConfig != nil {
-		if t.rpmOstree {
-			panic("unexpected oscap options for ostree image type")
-		}
+	var directories []*fsnode.Directory
+	osc.OpenSCAPTailorConfig = oscap.CreateTailoringStageOptions(
+		c.GetOpenSCAP(),
+		t.arch.distro,
+	)
+	osc.OpenSCAPConfig, directories, err = oscap.CreateRemediationStageOptions(
+		c.GetOpenSCAP(),
+		t.rpmOstree,
+		t.arch.distro,
+	)
+	if err != nil {
+		panic(err)
+	}
 
-		var datastream = oscap.GetDatastream(oscapConfig.Datastream, t.arch.distro)
-
-		oscapStageOptions := osbuild.OscapConfig{
-			Datastream:  datastream,
-			ProfileID:   oscapConfig.ProfileID,
-			Compression: true,
-		}
-
-		osc.OpenSCAPTailorConfig = oscap.CreateTailoringStageOptions(
-			oscapConfig,
-			t.arch.distro,
-		)
-
-		if tailorConfig := osc.OpenSCAPTailorConfig; tailorConfig != nil {
-			oscapStageOptions.ProfileID = tailorConfig.Config.NewProfile
-			oscapStageOptions.Tailoring = tailorConfig.Filepath
-		}
-
-		directories, err := oscap.CreateRequiredDirectories(oscapConfig.Tailoring == nil)
-		if err != nil {
-			panic(err)
-		}
-
-		if len(directories) > 0 {
-			osc.Directories = append(osc.Directories, directories...)
-		}
-
-		osc.OpenSCAPConfig = osbuild.NewOscapRemediationStageOptions(oscapDataDir, oscapStageOptions)
+	if len(directories) > 0 {
+		osc.Directories = append(osc.Directories, directories...)
 	}
 
 	osc.ShellInit = imageConfig.ShellInit

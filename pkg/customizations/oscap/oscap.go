@@ -43,7 +43,7 @@ const (
 	tailoringDirPath string = "/usr/share/xml/osbuild-openscap-data"
 )
 
-func GetDatastream(datastream string, d distro.Distro) string {
+func getDatastream(datastream string, d distro.Distro) string {
 	if datastream != "" {
 		return datastream
 	}
