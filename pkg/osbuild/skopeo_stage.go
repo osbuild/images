@@ -1,13 +1,13 @@
 package osbuild
 
-type SkopeoDestination struct {
+type SkopeoDestinationContainersStorage struct {
 	Type          string `json:"type"`
 	StoragePath   string `json:"storage-path,omitempty"`
 	StorageDriver string `json:"storage-driver,omitempty"`
 }
 
 type SkopeoStageOptions struct {
-	Destination SkopeoDestination `json:"destination"`
+	DestinationContainersStorage SkopeoDestinationContainersStorage `json:"destination"`
 }
 
 func (o SkopeoStageOptions) isStageOptions() {}
@@ -19,7 +19,7 @@ type SkopeoStageInputs struct {
 
 func (SkopeoStageInputs) isStageInputs() {}
 
-func NewSkopeoStage(path string, images ContainersInput, manifests *FilesInput) *Stage {
+func NewSkopeoStageWithContainersStorage(path string, images ContainersInput, manifests *FilesInput) *Stage {
 
 	inputs := SkopeoStageInputs{
 		Images:        images,
@@ -29,7 +29,7 @@ func NewSkopeoStage(path string, images ContainersInput, manifests *FilesInput) 
 	return &Stage{
 		Type: "org.osbuild.skopeo",
 		Options: &SkopeoStageOptions{
-			Destination: SkopeoDestination{
+			DestinationContainersStorage: SkopeoDestinationContainersStorage{
 				Type:        "containers-storage",
 				StoragePath: path,
 			},
