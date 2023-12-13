@@ -53,6 +53,14 @@ func CreateTailoringStageOptions(oscapConfig *blueprint.OpenSCAPCustomization, d
 	newProfile := getTailoringProfileID(oscapConfig.ProfileID)
 	path := filepath.Join(tailoringDirPath, "tailoring.xml")
 
+	var overrides []osbuild.OscapAutotailorOverride
+	for _, override := range tailoringConfig.Overrides {
+		overrides = append(overrides, osbuild.OscapAutotailorOverride{
+			Var:   override.Var,
+			Value: override.Value,
+		})
+	}
+
 	return osbuild.NewOscapAutotailorStageOptions(
 		path,
 		osbuild.OscapAutotailorConfig{
@@ -60,6 +68,7 @@ func CreateTailoringStageOptions(oscapConfig *blueprint.OpenSCAPCustomization, d
 			Datastream: datastream,
 			Selected:   tailoringConfig.Selected,
 			Unselected: tailoringConfig.Unselected,
+			Overrides:  overrides,
 			NewProfile: newProfile,
 		},
 	)
