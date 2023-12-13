@@ -14,6 +14,8 @@ S3_PREFIX = "images/builds"
 
 REGISTRY = "registry.gitlab.com/redhat/services/products/image-builder/ci/images"
 
+SCHUTZFILE = "Schutzfile"
+OS_RELEASE_FILE = "/etc/os-release"
 
 # ostree containers are pushed to the CI registry to be reused by dependants
 OSTREE_CONTAINERS = [
@@ -254,3 +256,32 @@ def clargs():
                         help="architecture to generate configs for (defaults to host architecture)")
 
     return parser
+
+
+def read_osrelease():
+    """Read Operating System Information from `os-release`
+
+    This creates a dictionary with information describing the running operating system. It reads the information from
+    the path array provided as `paths`.  The first available file takes precedence. It must be formatted according to
+    the rules in `os-release(5)`.
+    """
+    osrelease = {}
+
+    with open(OS_RELEASE_FILE, encoding="utf8") as orf:
+        for line in orf:
+            line = line.strip()
+            if not line:
+                continue
+            if line[0] == "#":
+                continue
+            key, value = line.split("=", 1)
+            osrelease[key] = value.strip('"')
+
+    return osrelease
+
+
+def get_osbuild_commit(distro_version):
+    with open(SCHUTZFILE, encoding="utf-8") as schutzfile:
+        data = json.load(schutzfile)
+
+    return data.get(distro_version, {}).get("dependencies", {}).get("osbuild", {}).get("commit", None)
