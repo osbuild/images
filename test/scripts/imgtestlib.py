@@ -174,6 +174,58 @@ def read_manifests(path):
     return manifests
 
 
+def check_for_build(manifest_fname, build_info_path, osbuild_ver, osbuild_commit, errors):
+    # rebuild if matching build info is not found
+    if not os.path.exists(build_info_path):
+        return True
+
+    try:
+        with open(build_info_path, encoding="utf-8") as build_info_fp:
+            dl_config = json.load(build_info_fp)
+    except json.JSONDecodeError as jd:
+        errors.append((
+                f"failed to parse {build_info_path}\n"
+                f"{jd.msg}\n"
+                "Scheduling config for rebuild\n"
+        ))
+
+    # check if osbuild version matches
+    config_osbuild_commit = dl_config.get("osbuild-commit", None)
+    config_osbuild_ver = dl_config.get("osbuild-version", None)
+    if config_osbuild_commit is None:
+        # TODO: remove this check when all the build infos get updated
+        print("osbuild commit ID not found in build info. Scheduling config for rebuild.")
+        return True
+
+    osbuild_id = f"{osbuild_ver}:{osbuild_commit}"
+    config_osbuild_id = f"{config_osbuild_ver}:{config_osbuild_commit}"
+
+    if osbuild_id != config_osbuild_id:
+        print(f"🖼️ Manifest {manifest_fname} was built with {config_osbuild_id}")
+        print(f"  Testing {osbuild_id}")
+        return True
+
+    commit = dl_config["commit"]
+    pr = dl_config.get("pr")
+    url = f"https://github.com/osbuild/images/commit/{commit}"
+    print(f"🖼️ Manifest {manifest_fname} was successfully built in commit {commit}\n  {url}")
+    if pr:
+        print(f"  PR-{pr}: https://github.com/osbuild/images/pull/{pr}")
+
+    image_type = dl_config["image-type"]
+    if image_type not in CAN_BOOT_TEST:
+        print(f"  Boot testing for {image_type} is not yet supported")
+        return False
+
+    # boot testing supported: check if it's been tested, otherwise queue it for rebuild and boot
+    if dl_config.get("boot-success", False):
+        print("  This image was successfully boot tested")
+        return False
+
+    # default to build
+    return True
+
+
 def filter_builds(manifests, skip_ostree_pull=True):
     """
     Returns a list of build requests for the manifests that have no matching config in the test build cache.
@@ -186,6 +238,14 @@ def filter_builds(manifests, skip_ostree_pull=True):
     dl_s3_configs(dl_path)
 
     errors = []
+
+    osrelease = read_osrelease()
+    distro_version = osrelease["ID"] + "-" + osrelease["VERSION_ID"]
+    osbuild_commit = get_osbuild_commit(distro_version)
+    if osbuild_commit is None:
+        osbuild_commit = "RELEASE"
+    osbuild_ver, _ = runcmd(["osbuild", "--version"])
+    osbuild_ver = osbuild_ver.decode().strip()
 
     for manifest_fname, data in manifests.items():
         manifest_id = data["id"]
@@ -209,33 +269,8 @@ def filter_builds(manifests, skip_ostree_pull=True):
         dl_config_dir = os.path.join(dl_path, distro, arch)
         build_info_path = os.path.join(dl_config_dir, manifest_id, "info.json")
 
-        # check if the id_fname exists in the synced directory
-        if os.path.exists(build_info_path):
-            try:
-                with open(build_info_path) as build_info_fp:
-                    dl_config = json.load(build_info_fp)
-                commit = dl_config["commit"]
-                pr = dl_config.get("pr")
-                url = f"https://github.com/osbuild/images/commit/{commit}"
-                print(f"🖼️ Manifest {manifest_fname} was successfully built in commit {commit}\n  {url}")
-                if pr:
-                    print(f"  PR-{pr}: https://github.com/osbuild/images/pull/{pr}")
-                if image_type not in CAN_BOOT_TEST:
-                    print(f"  Boot testing for {image_type} is not yet supported")
-                    continue
-                # boot testing supported: check if it's been tested, otherwise queue it for rebuild and boot
-                if dl_config.get("boot-success", False):
-                    print("  This image was successfully boot tested")
-                    continue
-            except json.JSONDecodeError as jd:
-                errors.append((
-                        f"failed to parse {build_info_path}\n"
-                        f"{jd.msg}\n"
-                        "Scheduling config for rebuild\n"
-                        f"Config: {distro}/{arch}/{image_type}/{config_name}\n"
-                ))
-
-        build_requests.append(build_request)
+        if check_for_build(manifest_fname, build_info_path, osbuild_ver, osbuild_commit, errors):
+            build_requests.append(build_request)
 
     print("✅ Config filtering done!\n")
     if errors:
