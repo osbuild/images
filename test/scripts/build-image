@@ -23,7 +23,7 @@ def main():
     print(f"👷 Building image {distro}/{image_type} using config {config_path}")
 
     # print the config for logging
-    with open(config_path, "r") as config_file:
+    with open(config_path, "r", encoding="utf-8") as config_file:
         config = json.load(config_file)
         print(json.dumps(config, indent=2))
         config_name = config["name"]
@@ -43,23 +43,30 @@ def main():
     arch = os.uname().machine
     build_dir = os.path.join("build", testlib.gen_build_name(distro, arch, image_type, config_name))
     manifest_path = os.path.join(build_dir, "manifest.json")
-    with open(manifest_path, "r") as manifest_fp:
+    with open(manifest_path, "r", encoding="utf-8") as manifest_fp:
         manifest_data = json.load(manifest_fp)
     manifest_id = testlib.get_manifest_id(manifest_data)
 
     osbuild_ver, _ = testlib.runcmd(["osbuild", "--version"])
 
+    osrelease = testlib.read_osrelease()
+    distro_version = osrelease["ID"] + "-" + osrelease["VERSION_ID"]
+    osbuild_commit = testlib.get_osbuild_commit(distro_version)
+    if osbuild_commit is None:
+        osbuild_commit = "RELEASE"
+
     build_info = {
-      "distro": distro,
-      "arch": arch,
-      "image-type": image_type,
-      "config": config_name,
-      "manifest-checksum": manifest_id,
-      "obuild-version": osbuild_ver.decode(),
-      "commit": os.environ.get("CI_COMMIT_SHA", "N/A")
+        "distro": distro,
+        "arch": arch,
+        "image-type": image_type,
+        "config": config_name,
+        "manifest-checksum": manifest_id,
+        "osbuild-version": osbuild_ver.decode().strip(),
+        "osbuild-commit": osbuild_commit,
+        "commit": os.environ.get("CI_COMMIT_SHA", "N/A")
     }
     info_file_path = os.path.join(build_dir, "info.json")
-    with open(info_file_path, "w") as info_fp:
+    with open(info_file_path, "w", encoding="utf-8") as info_fp:
         json.dump(build_info, info_fp, indent=2)
 
 

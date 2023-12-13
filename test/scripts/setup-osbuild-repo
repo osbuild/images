@@ -22,7 +22,7 @@ def write_repo(commit, distro_version):
     arch = os.uname().machine
     repo_path = f"osbuild/{distro_version}/{arch}/{commit}"
     print(f"Setting up dnf repository for {commit} ({repo_path})")
-    with open("/etc/yum.repos.d/osbuild.repo", "w", endoding="utf-8") as repofile:
+    with open("/etc/yum.repos.d/osbuild.repo", "w", encoding="utf-8") as repofile:
         repofile.write(REPO_TEMPLATE.format(commit=commit, repo_path=repo_path))
 
 
