@@ -3,7 +3,7 @@ package osbuild
 type SkopeoDestination struct {
 	Type          string `json:"type"`
 	StoragePath   string `json:"storage-path,omitempty"`
-	StorageDriver string `json:"sotrage-driver,omitempty"`
+	StorageDriver string `json:"storage-driver,omitempty"`
 }
 
 type SkopeoStageOptions struct {
