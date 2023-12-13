@@ -79,7 +79,7 @@ in the form
   "image-type": "<image type>",
   "config": "<config name>",
   "manifest-checksum": "<manifest ID>",
-  "obuild-version": "<osbuild version>",
+  "osbuild-version": "<osbuild version>",
   "commit": "<commit ID>",
   "pr": "<PR number>"
 }
@@ -95,7 +95,7 @@ for example:
   "image-type": "qcow2",
   "config": "all-customizations",
   "manifest-checksum": "8c0ce3987d78fe6f3307494cd57ceed861de61c3b04786d6a7f570faacbdb5df",
-  "obuild-version": "osbuild 89",
+  "osbuild-version": "osbuild 89",
   "commit": "52ecfdf1eb345e09c6a6edf4a8d3dd5c8079c51c",
   "pr": 42
 }
