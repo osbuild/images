@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/osbuild/images/pkg/customizations/fsnode"
+	"github.com/osbuild/images/pkg/distro"
 )
 
 type Profile string
@@ -44,22 +45,35 @@ const (
 	tailoringDirPath string = "/usr/share/xml/osbuild-openscap-data"
 )
 
-func DefaultFedoraDatastream() string {
-	return defaultFedoraDatastream
-}
-
-func DefaultRHEL8Datastream(isRHEL bool) string {
-	if isRHEL {
-		return defaultRHEL8Datastream
+func GetDatastream(datastream string, d distro.Distro) string {
+	if datastream != "" {
+		return datastream
 	}
-	return defaultCentos8Datastream
+
+	s := strings.ToLower(d.Name())
+	if strings.HasPrefix(s, "fedora") {
+		return defaultFedoraDatastream
+	}
+
+	if strings.HasPrefix(s, "centos") {
+		return defaultCentosDatastream(d.Releasever())
+	}
+
+	return defaultRHELDatastream(d.Releasever())
 }
 
-func DefaultRHEL9Datastream(isRHEL bool) string {
-	if isRHEL {
-		return defaultRHEL9Datastream
+func defaultCentosDatastream(releaseVer string) string {
+	if releaseVer == "8" {
+		return defaultCentos8Datastream
 	}
 	return defaultCentos9Datastream
+}
+
+func defaultRHELDatastream(releaseVer string) string {
+	if releaseVer == "8" {
+		return defaultRHEL8Datastream
+	}
+	return defaultRHEL9Datastream
 }
 
 func IsProfileAllowed(profile string, allowlist []Profile) bool {

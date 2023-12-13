@@ -196,10 +196,7 @@ func osCustomizations(
 
 		osc.Directories = append(osc.Directories, dataDirNode)
 
-		var datastream = oscapConfig.DataStream
-		if datastream == "" {
-			datastream = oscap.DefaultRHEL8Datastream(t.arch.distro.isRHEL())
-		}
+		datastream := oscap.GetDatastream(oscapConfig.Datastream, t.arch.distro)
 
 		oscapStageOptions := osbuild.OscapConfig{
 			Datastream:  datastream,

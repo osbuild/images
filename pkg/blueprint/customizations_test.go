@@ -375,7 +375,7 @@ func TestGetFilesystemsMinSizeNonSectorSize(t *testing.T) {
 func TestGetOpenSCAPConfig(t *testing.T) {
 
 	expectedOscap := OpenSCAPCustomization{
-		DataStream: "test-data-stream.xml",
+		Datastream: "test-data-stream.xml",
 		ProfileID:  "test_profile",
 		Tailoring: &OpenSCAPTailoringCustomizations{
 			Selected:   []string{"quick_rule"},

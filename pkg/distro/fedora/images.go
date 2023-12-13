@@ -175,10 +175,7 @@ func osCustomizations(
 
 		osc.Directories = append(osc.Directories, dataDirNode)
 
-		var datastream = oscapConfig.DataStream
-		if datastream == "" {
-			datastream = oscap.DefaultFedoraDatastream()
-		}
+		datastream := oscap.GetDatastream(oscapConfig.Datastream, t.arch.distro)
 
 		oscapStageOptions := osbuild.OscapConfig{
 			Datastream:  datastream,
