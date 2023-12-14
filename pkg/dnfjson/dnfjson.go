@@ -57,7 +57,7 @@ func findDepsolveDnf() string {
 
 	// if it's not found, return empty string; the run() function will fail if
 	// it's used before setting.
-	return locations[0]
+	return ""
 }
 
 // Create a new unconfigured BaseSolver (without platform information). It can
