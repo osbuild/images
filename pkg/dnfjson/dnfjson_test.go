@@ -33,6 +33,10 @@ func TestDepsolver(t *testing.T) {
 		if !dnfInstalled() {
 			t.Skip()
 		}
+
+		if findDepsolveDnf() == "" {
+			t.Skip("Test needs an installed osbuild-depsolve-dnf")
+		}
 	}
 
 	s := rpmrepo.NewTestServer()
@@ -557,6 +561,10 @@ func TestErrorRepoInfo(t *testing.T) {
 		// dnf tests aren't forced: skip them if the dnf sniff check fails
 		if !dnfInstalled() {
 			t.Skip()
+		}
+
+		if findDepsolveDnf() == "" {
+			t.Skip("Test needs an installed osbuild-depsolve-dnf")
 		}
 	}
 
