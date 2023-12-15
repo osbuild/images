@@ -5,6 +5,7 @@ import (
 	"path"
 
 	"github.com/osbuild/images/pkg/container"
+	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/osbuild"
@@ -55,6 +56,8 @@ type AnacondaInstallerISOTree struct {
 
 	// Enable ISOLinux stage
 	ISOLinux bool
+
+	Files []*fsnode.File
 }
 
 func NewAnacondaInstallerISOTree(buildPipeline *Build, anacondaPipeline *AnacondaInstaller, rootfsPipeline *ISORootfsImg, bootTreePipeline *EFIBootTree) *AnacondaInstallerISOTree {
@@ -109,6 +112,16 @@ func (p *AnacondaInstallerISOTree) getContainerSources() []container.SourceSpec 
 	}
 }
 
+func (p *AnacondaInstallerISOTree) getInline() []string {
+	inlineData := []string{}
+
+	// inline data for custom files
+	for _, file := range p.Files {
+		inlineData = append(inlineData, string(file.Data()))
+	}
+
+	return inlineData
+}
 func (p *AnacondaInstallerISOTree) getBuildPackages(_ Distro) []string {
 	packages := []string{
 		"squashfs-tools",
@@ -350,20 +363,28 @@ func (p *AnacondaInstallerISOTree) serialize() osbuild.Pipeline {
 			images,
 			nil))
 
-		kickstartOptions, err := osbuild.NewKickstartStageOptionsWithOSTreeContainer(
-			p.KSPath,
-			p.Users,
-			p.Groups,
-			path.Join("/run/install/repo", p.PayloadPath),
-			"oci",
-			"",
-			"")
+		kickstartFile, err := fsnode.NewFile(p.KSPath, nil, nil, nil, []byte(`
+ostreecontainer --url=/run/install/repo/container --transport=oci --no-signature-verification
+rootpw --lock
+user --name fedora --groups wheel
+lang en_US.UTF-8
+keyboard us
+timezone UTC
+clearpart --all
+part /boot/efi --fstype=efi --size=512 --fsoptions="umask=0077"
+part /boot --fstype=ext2 --size=1024 --label=boot
+part swap --fstype=swap --size=1024
+part / --fstype=ext4 --grow
+reboot --eject
+`))
 
 		if err != nil {
-			panic("failed to create kickstartstage options")
+			panic(err)
 		}
 
-		pipeline.AddStage(osbuild.NewKickstartStage(kickstartOptions))
+		p.Files = []*fsnode.File{kickstartFile}
+
+		pipeline.AddStages(osbuild.GenFileNodesStages(p.Files)...)
 	}
 
 	if p.OSPipeline != nil {
