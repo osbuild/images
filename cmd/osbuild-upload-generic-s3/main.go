@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 
-	"github.com/osbuild/images/internal/cloud/awscloud"
+	"github.com/osbuild/images/pkg/cloud/awscloud"
 )
 
 func main() {
