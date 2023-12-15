@@ -11,8 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 
-	"github.com/osbuild/images/internal/cloud/awscloud"
 	"github.com/osbuild/images/pkg/arch"
+	"github.com/osbuild/images/pkg/cloud/awscloud"
 )
 
 type awsCredentials struct {

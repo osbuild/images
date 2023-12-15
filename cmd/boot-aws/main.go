@@ -16,7 +16,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/osbuild/images/internal/cloud/awscloud"
+	"github.com/osbuild/images/pkg/cloud/awscloud"
 )
 
 // exitCheck can be deferred from the top of command functions to exit with an
