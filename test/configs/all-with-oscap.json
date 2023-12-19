@@ -9,6 +9,10 @@
       {
         "name": "bluez",
         "version": "*"
+      },
+      {
+        "name": "openscap-utils",
+        "version": "*"
       }
     ],
     "modules": [],
@@ -146,6 +150,12 @@
           "unselected": [
             "rpm_verify_hashes",
             "enable_fips_mode"
+          ],
+          "overrides": [
+            {
+              "var": "sshd_idle_timeout_value",
+              "value": 600
+            }
           ]
         }
       }

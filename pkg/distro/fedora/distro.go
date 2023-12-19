@@ -38,9 +38,6 @@ const (
 
 	// Added kernel command line options for ami, qcow2, openstack, vhd and vmdk types
 	cloudKernelOptions = "ro no_timer_check console=ttyS0,115200n8 biosdevname=0 net.ifnames=0"
-
-	// location for saving openscap remediation data
-	oscapDataDir = "/oscap_data"
 )
 
 var (

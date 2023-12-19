@@ -133,7 +133,7 @@ func osCustomizations(
 		osc.OpenSCAPConfig = osbuild.NewOscapRemediationStageOptions(
 			oscapDataDir,
 			osbuild.OscapConfig{
-				Datastream:  oscapConfig.DataStream,
+				Datastream:  oscapConfig.Datastream,
 				ProfileID:   oscapConfig.ProfileID,
 				Compression: true,
 			},

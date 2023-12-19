@@ -1,11 +1,9 @@
 package oscap
 
 import (
-	"fmt"
-	"path/filepath"
 	"strings"
 
-	"github.com/osbuild/images/pkg/customizations/fsnode"
+	"github.com/osbuild/images/pkg/distro"
 )
 
 type Profile string
@@ -40,26 +38,40 @@ const (
 	defaultRHEL8Datastream   string = "/usr/share/xml/scap/ssg/content/ssg-rhel8-ds.xml"
 	defaultRHEL9Datastream   string = "/usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml"
 
-	// tailoring directory path
+	// directory paths
+	dataDirPath      string = "/oscap_data"
 	tailoringDirPath string = "/usr/share/xml/osbuild-openscap-data"
 )
 
-func DefaultFedoraDatastream() string {
-	return defaultFedoraDatastream
-}
-
-func DefaultRHEL8Datastream(isRHEL bool) string {
-	if isRHEL {
-		return defaultRHEL8Datastream
+func getDatastream(datastream string, d distro.Distro) string {
+	if datastream != "" {
+		return datastream
 	}
-	return defaultCentos8Datastream
+
+	s := strings.ToLower(d.Name())
+	if strings.HasPrefix(s, "fedora") {
+		return defaultFedoraDatastream
+	}
+
+	if strings.HasPrefix(s, "centos") {
+		return defaultCentosDatastream(d.Releasever())
+	}
+
+	return defaultRHELDatastream(d.Releasever())
 }
 
-func DefaultRHEL9Datastream(isRHEL bool) string {
-	if isRHEL {
-		return defaultRHEL9Datastream
+func defaultCentosDatastream(releaseVer string) string {
+	if releaseVer == "8" {
+		return defaultCentos8Datastream
 	}
 	return defaultCentos9Datastream
+}
+
+func defaultRHELDatastream(releaseVer string) string {
+	if releaseVer == "8" {
+		return defaultRHEL8Datastream
+	}
+	return defaultRHEL9Datastream
 }
 
 func IsProfileAllowed(profile string, allowlist []Profile) bool {
@@ -76,16 +88,4 @@ func IsProfileAllowed(profile string, allowlist []Profile) bool {
 	}
 
 	return false
-}
-
-func GetTailoringFile(profile string) (string, string, *fsnode.Directory, error) {
-	newProfile := fmt.Sprintf("%s_osbuild_tailoring", profile)
-	path := filepath.Join(tailoringDirPath, "tailoring.xml")
-
-	tailoringDir, err := fsnode.NewDirectory(tailoringDirPath, nil, nil, nil, true)
-	if err != nil {
-		return "", "", nil, err
-	}
-
-	return newProfile, path, tailoringDir, nil
 }

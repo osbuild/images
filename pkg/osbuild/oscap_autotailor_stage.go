@@ -8,11 +8,17 @@ type OscapAutotailorStageOptions struct {
 }
 
 type OscapAutotailorConfig struct {
-	NewProfile string   `json:"new_profile"`
-	Datastream string   `json:"datastream" toml:"datastream"`
-	ProfileID  string   `json:"profile_id" toml:"profile_id"`
-	Selected   []string `json:"selected,omitempty"`
-	Unselected []string `json:"unselected,omitempty"`
+	NewProfile string                    `json:"new_profile"`
+	Datastream string                    `json:"datastream" toml:"datastream"`
+	ProfileID  string                    `json:"profile_id" toml:"profile_id"`
+	Selected   []string                  `json:"selected,omitempty"`
+	Unselected []string                  `json:"unselected,omitempty"`
+	Overrides  []OscapAutotailorOverride `json:"overrides,omitempty"`
+}
+
+type OscapAutotailorOverride struct {
+	Var   string      `json:"var"`
+	Value interface{} `json:"value"`
 }
 
 func (OscapAutotailorStageOptions) isStageOptions() {}
@@ -26,6 +32,17 @@ func (c OscapAutotailorConfig) validate() error {
 	}
 	if c.NewProfile == "" {
 		return fmt.Errorf("'new_profile' must be specified")
+	}
+	for _, override := range c.Overrides {
+		if _, ok := override.Value.(uint64); ok {
+			continue
+		}
+
+		if _, ok := override.Value.(string); ok {
+			continue
+		}
+
+		return fmt.Errorf("override 'value' must be an integere or a string")
 	}
 	return nil
 }
@@ -50,6 +67,7 @@ func NewOscapAutotailorStageOptions(filepath string, autotailorOptions OscapAuto
 			ProfileID:  autotailorOptions.ProfileID,
 			Selected:   autotailorOptions.Selected,
 			Unselected: autotailorOptions.Unselected,
+			Overrides:  autotailorOptions.Overrides,
 		},
 	}
 }
