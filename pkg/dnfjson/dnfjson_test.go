@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"os"
-	"os/exec"
 	"strings"
 	"testing"
 
@@ -17,23 +15,9 @@ import (
 
 var forceDNF = flag.Bool("force-dnf", false, "force dnf testing, making them fail instead of skip if dnf isn't installed")
 
-func dnfInstalled() bool {
-	cmd := exec.Command("python3", "-c", "import dnf")
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to import dnf: %s\n", err.Error())
-		return false
-	}
-	return true
-}
-
 func TestDepsolver(t *testing.T) {
 	if !*forceDNF {
 		// dnf tests aren't forced: skip them if the dnf sniff check fails
-		if !dnfInstalled() {
-			t.Skip()
-		}
-
 		if findDepsolveDnf() == "" {
 			t.Skip("Test needs an installed osbuild-depsolve-dnf")
 		}
@@ -559,10 +543,6 @@ func expectedResult(repo rpmmd.RepoConfig) []rpmmd.PackageSpec {
 func TestErrorRepoInfo(t *testing.T) {
 	if !*forceDNF {
 		// dnf tests aren't forced: skip them if the dnf sniff check fails
-		if !dnfInstalled() {
-			t.Skip()
-		}
-
 		if findDepsolveDnf() == "" {
 			t.Skip("Test needs an installed osbuild-depsolve-dnf")
 		}
