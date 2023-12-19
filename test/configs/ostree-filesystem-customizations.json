@@ -28,15 +28,43 @@
           "minsize": "1 GiB"
         },
         {
+          "mountpoint": "/home",
+          "minsize": "1 GiB"
+        },
+        {
+          "mountpoint": "/home/foo",
+          "minsize": "1 GiB"
+        },
+        {
           "mountpoint": "/mnt",
           "minsize": "3 GiB"
         },
         {
           "mountpoint": "/srv",
-          "minsize": "4 GiB"
+          "minsize": "1 GiB"
         },
         {
           "mountpoint": "/opt",
+          "minsize": "1 GiB"
+        },
+        {
+          "mountpoint": "/var/home",
+          "minsize": "1 GiB"
+        },
+        {
+          "mountpoint": "/var/roothome",
+          "minsize": "1 GiB"
+        },
+        {
+          "mountpoint": "/var/mnt",
+          "minsize": "1 GiB"
+        },
+        {
+          "mountpoint": "/var/srv",
+          "minsize": "1 GiB"
+        },
+        {
+          "mountpoint": "/var/opt",
           "minsize": "1 GiB"
         },
         {
