@@ -11,6 +11,7 @@ import (
 	"github.com/osbuild/images/internal/mocks/rpmrepo"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var forceDNF = flag.Bool("force-dnf", false, "force dnf testing, making them fail instead of skip if dnf isn't installed")
@@ -18,8 +19,8 @@ var forceDNF = flag.Bool("force-dnf", false, "force dnf testing, making them fai
 func TestDepsolver(t *testing.T) {
 	if !*forceDNF {
 		// dnf tests aren't forced: skip them if the dnf sniff check fails
-		if findDepsolveDnf() == "" {
-			t.Skip("Test needs an installed osbuild-depsolve-dnf")
+		if _, err := findDepsolveDnf(); err != nil {
+			t.Skipf("Test needs an installed osbuild-depsolve-dnf: %v", err)
 		}
 	}
 
@@ -29,7 +30,8 @@ func TestDepsolver(t *testing.T) {
 	assert := assert.New(t)
 
 	tmpdir := t.TempDir()
-	solver := NewSolver("platform:el9", "9", "x86_64", "rhel9.0", tmpdir)
+	solver, err := NewSolver("platform:el9", "9", "x86_64", "rhel9.0", tmpdir)
+	require.Nil(t, err)
 
 	{ // single depsolve
 		pkgsets := []rpmmd.PackageSet{{Include: []string{"kernel", "vim-minimal", "tmux", "zsh"}, Repositories: []rpmmd.RepoConfig{s.RepoConfig}, InstallWeakDeps: true}} // everything you'll ever need
@@ -57,6 +59,13 @@ func TestDepsolver(t *testing.T) {
 }
 
 func TestMakeDepsolveRequest(t *testing.T) {
+	if !*forceDNF {
+		// dnf tests aren't forced: skip them if the dnf sniff check fails
+		if _, err := findDepsolveDnf(); err != nil {
+			t.Skipf("Test needs an installed osbuild-depsolve-dnf: %v", err)
+		}
+	}
+
 	baseOS := rpmmd.RepoConfig{
 		Name:     "baseos",
 		BaseURLs: []string{"https://example.org/baseos"},
@@ -402,7 +411,8 @@ func TestMakeDepsolveRequest(t *testing.T) {
 			},
 		},
 	}
-	solver := NewSolver("", "", "", "", "")
+	solver, err := NewSolver("", "", "", "", "")
+	require.Nil(t, err)
 	for idx, tt := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
 			req, _, err := solver.makeDepsolveRequest(tt.packageSets)
@@ -543,8 +553,8 @@ func expectedResult(repo rpmmd.RepoConfig) []rpmmd.PackageSpec {
 func TestErrorRepoInfo(t *testing.T) {
 	if !*forceDNF {
 		// dnf tests aren't forced: skip them if the dnf sniff check fails
-		if findDepsolveDnf() == "" {
-			t.Skip("Test needs an installed osbuild-depsolve-dnf")
+		if _, err := findDepsolveDnf(); err != nil {
+			t.Skipf("Test needs an installed osbuild-depsolve-dnf: %v", err)
 		}
 	}
 
@@ -588,7 +598,8 @@ func TestErrorRepoInfo(t *testing.T) {
 		},
 	}
 
-	solver := NewSolver("f38", "38", "x86_64", "fedora-38", "/tmp/cache")
+	solver, err := NewSolver("f38", "38", "x86_64", "fedora-38", "/tmp/cache")
+	require.Nil(t, err)
 	for idx, tc := range testCases {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
 			_, err := solver.Depsolve([]rpmmd.PackageSet{
@@ -605,6 +616,13 @@ func TestErrorRepoInfo(t *testing.T) {
 }
 
 func TestRepoConfigHash(t *testing.T) {
+	if !*forceDNF {
+		// dnf tests aren't forced: skip them if the dnf sniff check fails
+		if _, err := findDepsolveDnf(); err != nil {
+			t.Skipf("Test needs an installed osbuild-depsolve-dnf: %v", err)
+		}
+	}
+
 	repos := []rpmmd.RepoConfig{
 		{
 			Id:        "repoid-1",
@@ -617,7 +635,8 @@ func TestRepoConfigHash(t *testing.T) {
 		},
 	}
 
-	solver := NewSolver("f38", "38", "x86_64", "fedora-38", "/tmp/cache")
+	solver, err := NewSolver("f38", "38", "x86_64", "fedora-38", "/tmp/cache")
+	require.Nil(t, err)
 
 	rcs, err := solver.reposFromRPMMD(repos)
 	assert.Nil(t, err)
@@ -629,7 +648,15 @@ func TestRepoConfigHash(t *testing.T) {
 }
 
 func TestRequestHash(t *testing.T) {
-	solver := NewSolver("f38", "38", "x86_64", "fedora-38", "/tmp/cache")
+	if !*forceDNF {
+		// dnf tests aren't forced: skip them if the dnf sniff check fails
+		if _, err := findDepsolveDnf(); err != nil {
+			t.Skipf("Test needs an installed osbuild-depsolve-dnf: %v", err)
+		}
+	}
+
+	solver, err := NewSolver("f38", "38", "x86_64", "fedora-38", "/tmp/cache")
+	require.Nil(t, err)
 	repos := []rpmmd.RepoConfig{
 		rpmmd.RepoConfig{
 			Name:      "A test repository",
@@ -654,4 +681,14 @@ func TestRepoConfigMarshalAlsmostEmpty(t *testing.T) {
 	js, _ := json.Marshal(repoCfg)
 	// double check here that anything that uses pointers has "omitempty" set
 	assert.Equal(t, string(js), `{"id":"","gpgcheck":false,"check_repogpg":false,"ignoressl":false}`)
+}
+
+func TestFindDepsolveDnfError(t *testing.T) {
+	old := depSolveDnfPaths
+	depSolveDnfPaths = []string{"/rando1", "/rando2"}
+	defer func() { depSolveDnfPaths = old }()
+
+	path, err := findDepsolveDnf()
+	assert.Equal(t, path, "")
+	assert.EqualError(t, err, `cannot find required osbuild-depsolve-dnf in any of ["/rando1" "/rando2"]`)
 }
