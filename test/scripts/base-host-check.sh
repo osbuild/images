@@ -54,5 +54,11 @@ cat /etc/os-release
 echo "ℹ️ system information"
 uname -a
 
+echo "ℹ️ mounted filesystems"
+mount
+
+echo "ℹ️ list fs root"
+ls -l /
+
 echo "🕰️ uptime"
 uptime
