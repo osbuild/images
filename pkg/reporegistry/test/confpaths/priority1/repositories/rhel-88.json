@@ -1,0 +1,30 @@
+{
+  "test_arch": [
+    {
+      "name": "rhel-8.8-baseos-p1",
+      "baseurl": "https://example.com/rhel-8.8-baseos-p1/test_arch",
+      "gpgkey": "FAKE-GPG-KEY",
+      "check_gpg": true
+    },
+    {
+      "name": "rhel-8.8-appstream-p1",
+      "baseurl": "https://example.com/rhel-8.8-appstream-p1/test_arch",
+      "gpgkey": "FAKE-GPG-KEY",
+      "check_gpg": true
+    }
+  ],
+  "test_arch2": [
+    {
+      "name": "rhel-8.8-baseos-p1",
+      "baseurl": "https://example.com/rhel-8.8-baseos-p1/test_arch2",
+      "gpgkey": "FAKE-GPG-KEY",
+      "check_gpg": true
+    },
+    {
+      "name": "rhel-8.8-appstream-p1",
+      "baseurl": "https://example.com/rhel-8.8-appstream-p1/test_arch2",
+      "gpgkey": "FAKE-GPG-KEY",
+      "check_gpg": true
+    }
+  ]
+}

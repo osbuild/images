@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/osbuild/images/pkg/distroidparser"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
@@ -33,7 +34,14 @@ func LoadAllRepositories(confPaths []string) (rpmmd.DistrosRepoConfigs, error) {
 
 			// distro repositories definition is expected to be named "<distro_name>.json"
 			if strings.HasSuffix(fileEntry.Name(), ".json") {
-				distro := strings.TrimSuffix(fileEntry.Name(), ".json")
+				distroIDStr := strings.TrimSuffix(fileEntry.Name(), ".json")
+
+				// compatibility layer to support old repository definition filenames
+				// without a dot to separate major and minor release versions
+				distro, err := distroidparser.DefaultParser.Standardize(distroIDStr)
+				if err != nil {
+					return nil, fmt.Errorf("failed to parse distro ID string: %v", err)
+				}
 
 				// skip the distro repos definition, if it has been already read
 				_, ok := distrosRepoConfigs[distro]
