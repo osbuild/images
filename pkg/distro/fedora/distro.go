@@ -533,20 +533,6 @@ func (a *architecture) Distro() distro.Distro {
 	return a.distro
 }
 
-// New creates a new distro object, defining the supported architectures and image types
-func NewF37() distro.Distro {
-	return newDistro(37)
-}
-func NewF38() distro.Distro {
-	return newDistro(38)
-}
-func NewF39() distro.Distro {
-	return newDistro(39)
-}
-func NewF40() distro.Distro {
-	return newDistro(40)
-}
-
 func newDistro(version int) distro.Distro {
 	rd := getDistro(version)
 

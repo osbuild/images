@@ -21,20 +21,20 @@ type fedoraFamilyDistro struct {
 
 var fedoraFamilyDistros = []fedoraFamilyDistro{
 	{
-		name:   "fedora",
-		distro: fedora.NewF37(),
+		name:   "fedora-37",
+		distro: fedora.DistroFactory("fedora-37"),
 	},
 	{
-		name:   "fedora",
-		distro: fedora.NewF38(),
+		name:   "fedora-38",
+		distro: fedora.DistroFactory("fedora-38"),
 	},
 	{
-		name:   "fedora",
-		distro: fedora.NewF39(),
+		name:   "fedora-39",
+		distro: fedora.DistroFactory("fedora-39"),
 	},
 	{
-		name:   "fedora",
-		distro: fedora.NewF40(),
+		name:   "fedora-40",
+		distro: fedora.DistroFactory("fedora-40"),
 	},
 }
 
@@ -497,7 +497,6 @@ func TestImageTypeAliases(t *testing.T) {
 func TestDistro_ManifestError(t *testing.T) {
 	// Currently, the only unsupported configuration is OSTree commit types
 	// with Kernel boot options
-	fedoraDistro := fedora.NewF37()
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Kernel: &blueprint.KernelCustomization{
@@ -506,29 +505,32 @@ func TestDistro_ManifestError(t *testing.T) {
 		},
 	}
 
-	for _, archName := range fedoraDistro.ListArches() {
-		arch, _ := fedoraDistro.GetArch(archName)
-		for _, imgTypeName := range arch.ListImageTypes() {
-			t.Run(fmt.Sprintf("%s/%s", archName, imgTypeName), func(t *testing.T) {
-				imgType, _ := arch.GetImageType(imgTypeName)
-				imgOpts := distro.ImageOptions{
-					Size: imgType.Size(0),
-				}
-				_, _, err := imgType.Manifest(&bp, imgOpts, nil, 0)
-				if imgTypeName == "iot-commit" || imgTypeName == "iot-container" {
-					assert.EqualError(t, err, "kernel boot parameter customizations are not supported for ostree types")
-				} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" {
-					assert.EqualError(t, err, fmt.Sprintf("boot ISO image type \"%s\" requires specifying a URL from which to retrieve the OSTree commit", imgTypeName))
-				} else if imgTypeName == "image-installer" {
-					assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, FIPS"))
-				} else if imgTypeName == "live-installer" {
-					assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
-				} else if imgTypeName == "iot-raw-image" || imgTypeName == "iot-qcow2-image" {
-					assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, Directories, Files, Services, FIPS"))
-				} else {
-					assert.NoError(t, err)
-				}
-			})
+	for _, dist := range fedoraFamilyDistros {
+		fedoraDistro := dist.distro
+		for _, archName := range fedoraDistro.ListArches() {
+			arch, _ := fedoraDistro.GetArch(archName)
+			for _, imgTypeName := range arch.ListImageTypes() {
+				t.Run(fmt.Sprintf("%s/%s", archName, imgTypeName), func(t *testing.T) {
+					imgType, _ := arch.GetImageType(imgTypeName)
+					imgOpts := distro.ImageOptions{
+						Size: imgType.Size(0),
+					}
+					_, _, err := imgType.Manifest(&bp, imgOpts, nil, 0)
+					if imgTypeName == "iot-commit" || imgTypeName == "iot-container" || imgTypeName == "iot-bootable-container" {
+						assert.EqualError(t, err, "kernel boot parameter customizations are not supported for ostree types")
+					} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" {
+						assert.EqualError(t, err, fmt.Sprintf("boot ISO image type \"%s\" requires specifying a URL from which to retrieve the OSTree commit", imgTypeName))
+					} else if imgTypeName == "image-installer" {
+						assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, FIPS"))
+					} else if imgTypeName == "live-installer" {
+						assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
+					} else if imgTypeName == "iot-raw-image" || imgTypeName == "iot-qcow2-image" {
+						assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, Directories, Files, Services, FIPS"))
+					} else {
+						assert.NoError(t, err)
+					}
+				})
+			}
 		}
 	}
 }
@@ -651,8 +653,13 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 }
 
 func TestFedora_ListArches(t *testing.T) {
-	arches := fedora.NewF37().ListArches()
-	assert.Equal(t, []string{"aarch64", "ppc64le", "s390x", "x86_64"}, arches)
+	for _, dist := range fedoraFamilyDistros {
+		fedoraDistro := dist.distro
+		t.Run(dist.name, func(t *testing.T) {
+			arches := fedoraDistro.ListArches()
+			assert.Equal(t, []string{"aarch64", "ppc64le", "s390x", "x86_64"}, arches)
+		})
+	}
 }
 
 func TestFedora37_GetArch(t *testing.T) {
@@ -695,21 +702,34 @@ func TestFedora37_GetArch(t *testing.T) {
 	}
 }
 
-func TestFedora37_Name(t *testing.T) {
-	distro := fedora.NewF37()
-	assert.Equal(t, "fedora-37", distro.Name())
+func TestFedora_Name(t *testing.T) {
+	for _, dist := range fedoraFamilyDistros {
+		fedoraDistro := dist.distro
+		t.Run(dist.name, func(t *testing.T) {
+			assert.Equal(t, dist.name, fedoraDistro.Name())
+		})
+	}
 }
 
-func TestFedora37_KernelOption(t *testing.T) {
-	distro_test_common.TestDistro_KernelOption(t, fedora.NewF37())
+func TestFedora_KernelOption(t *testing.T) {
+	for _, dist := range fedoraFamilyDistros {
+		fedoraDistro := dist.distro
+		t.Run(dist.name, func(t *testing.T) {
+			distro_test_common.TestDistro_KernelOption(t, fedoraDistro)
+		})
+	}
 }
 
 func TestFedora_OSTreeOptions(t *testing.T) {
-	distro_test_common.TestDistro_OSTreeOptions(t, fedora.NewF37())
+	for _, dist := range fedoraFamilyDistros {
+		fedoraDistro := dist.distro
+		t.Run(dist.name, func(t *testing.T) {
+			distro_test_common.TestDistro_OSTreeOptions(t, fedoraDistro)
+		})
+	}
 }
 
 func TestDistro_CustomFileSystemManifestError(t *testing.T) {
-	fedoraDistro := fedora.NewF37()
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -720,28 +740,30 @@ func TestDistro_CustomFileSystemManifestError(t *testing.T) {
 			},
 		},
 	}
-	for _, archName := range fedoraDistro.ListArches() {
-		arch, _ := fedoraDistro.GetArch(archName)
-		for _, imgTypeName := range arch.ListImageTypes() {
-			imgType, _ := arch.GetImageType(imgTypeName)
-			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
-			if imgTypeName == "iot-commit" || imgTypeName == "iot-container" {
-				assert.EqualError(t, err, "Custom mountpoints are not supported for ostree types")
-			} else if imgTypeName == "iot-raw-image" || imgTypeName == "iot-qcow2-image" {
-				assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, Directories, Files, Services, FIPS"))
-			} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "image-installer" {
-				continue
-			} else if imgTypeName == "live-installer" {
-				assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
-			} else {
-				assert.EqualError(t, err, "The following custom mountpoints are not supported [\"/etc\"]")
+	for _, dist := range fedoraFamilyDistros {
+		fedoraDistro := dist.distro
+		for _, archName := range fedoraDistro.ListArches() {
+			arch, _ := fedoraDistro.GetArch(archName)
+			for _, imgTypeName := range arch.ListImageTypes() {
+				imgType, _ := arch.GetImageType(imgTypeName)
+				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
+				if imgTypeName == "iot-commit" || imgTypeName == "iot-container" || imgTypeName == "iot-bootable-container" {
+					assert.EqualError(t, err, "Custom mountpoints are not supported for ostree types")
+				} else if imgTypeName == "iot-raw-image" || imgTypeName == "iot-qcow2-image" {
+					assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, Directories, Files, Services, FIPS"))
+				} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "image-installer" {
+					continue
+				} else if imgTypeName == "live-installer" {
+					assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
+				} else {
+					assert.EqualError(t, err, "The following custom mountpoints are not supported [\"/etc\"]")
+				}
 			}
 		}
 	}
 }
 
 func TestDistro_TestRootMountPoint(t *testing.T) {
-	fedoraDistro := fedora.NewF37()
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -752,28 +774,30 @@ func TestDistro_TestRootMountPoint(t *testing.T) {
 			},
 		},
 	}
-	for _, archName := range fedoraDistro.ListArches() {
-		arch, _ := fedoraDistro.GetArch(archName)
-		for _, imgTypeName := range arch.ListImageTypes() {
-			imgType, _ := arch.GetImageType(imgTypeName)
-			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
-			if imgTypeName == "iot-commit" || imgTypeName == "iot-container" {
-				assert.EqualError(t, err, "Custom mountpoints are not supported for ostree types")
-			} else if imgTypeName == "iot-raw-image" || imgTypeName == "iot-qcow2-image" {
-				assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, Directories, Files, Services, FIPS"))
-			} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "image-installer" {
-				continue
-			} else if imgTypeName == "live-installer" {
-				assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
-			} else {
-				assert.NoError(t, err)
+	for _, dist := range fedoraFamilyDistros {
+		fedoraDistro := dist.distro
+		for _, archName := range fedoraDistro.ListArches() {
+			arch, _ := fedoraDistro.GetArch(archName)
+			for _, imgTypeName := range arch.ListImageTypes() {
+				imgType, _ := arch.GetImageType(imgTypeName)
+				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
+				if imgTypeName == "iot-commit" || imgTypeName == "iot-container" || imgTypeName == "iot-bootable-container" {
+					assert.EqualError(t, err, "Custom mountpoints are not supported for ostree types")
+				} else if imgTypeName == "iot-raw-image" || imgTypeName == "iot-qcow2-image" {
+					assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, Directories, Files, Services, FIPS"))
+				} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "image-installer" {
+					continue
+				} else if imgTypeName == "live-installer" {
+					assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
+				} else {
+					assert.NoError(t, err)
+				}
 			}
 		}
 	}
 }
 
 func TestDistro_CustomFileSystemSubDirectories(t *testing.T) {
-	fedoraDistro := fedora.NewF37()
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -788,24 +812,26 @@ func TestDistro_CustomFileSystemSubDirectories(t *testing.T) {
 			},
 		},
 	}
-	for _, archName := range fedoraDistro.ListArches() {
-		arch, _ := fedoraDistro.GetArch(archName)
-		for _, imgTypeName := range arch.ListImageTypes() {
-			imgType, _ := arch.GetImageType(imgTypeName)
-			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
-			if strings.HasPrefix(imgTypeName, "iot-") || strings.HasPrefix(imgTypeName, "image-") {
-				continue
-			} else if imgTypeName == "live-installer" {
-				assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
-			} else {
-				assert.NoError(t, err)
+	for _, dist := range fedoraFamilyDistros {
+		fedoraDistro := dist.distro
+		for _, archName := range fedoraDistro.ListArches() {
+			arch, _ := fedoraDistro.GetArch(archName)
+			for _, imgTypeName := range arch.ListImageTypes() {
+				imgType, _ := arch.GetImageType(imgTypeName)
+				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
+				if strings.HasPrefix(imgTypeName, "iot-") || strings.HasPrefix(imgTypeName, "image-") {
+					continue
+				} else if imgTypeName == "live-installer" {
+					assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
+				} else {
+					assert.NoError(t, err)
+				}
 			}
 		}
 	}
 }
 
 func TestDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
-	fedoraDistro := fedora.NewF37()
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -828,24 +854,26 @@ func TestDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
 			},
 		},
 	}
-	for _, archName := range fedoraDistro.ListArches() {
-		arch, _ := fedoraDistro.GetArch(archName)
-		for _, imgTypeName := range arch.ListImageTypes() {
-			imgType, _ := arch.GetImageType(imgTypeName)
-			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
-			if strings.HasPrefix(imgTypeName, "iot-") || strings.HasPrefix(imgTypeName, "image-") {
-				continue
-			} else if imgTypeName == "live-installer" {
-				assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
-			} else {
-				assert.NoError(t, err)
+	for _, dist := range fedoraFamilyDistros {
+		fedoraDistro := dist.distro
+		for _, archName := range fedoraDistro.ListArches() {
+			arch, _ := fedoraDistro.GetArch(archName)
+			for _, imgTypeName := range arch.ListImageTypes() {
+				imgType, _ := arch.GetImageType(imgTypeName)
+				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
+				if strings.HasPrefix(imgTypeName, "iot-") || strings.HasPrefix(imgTypeName, "image-") {
+					continue
+				} else if imgTypeName == "live-installer" {
+					assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
+				} else {
+					assert.NoError(t, err)
+				}
 			}
 		}
 	}
 }
 
 func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
-	fedoraDistro := fedora.NewF37()
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -864,24 +892,26 @@ func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
 			},
 		},
 	}
-	for _, archName := range fedoraDistro.ListArches() {
-		arch, _ := fedoraDistro.GetArch(archName)
-		for _, imgTypeName := range arch.ListImageTypes() {
-			imgType, _ := arch.GetImageType(imgTypeName)
-			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
-			if strings.HasPrefix(imgTypeName, "iot-") || strings.HasPrefix(imgTypeName, "image-") {
-				continue
-			} else if imgTypeName == "live-installer" {
-				assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
-			} else {
-				assert.EqualError(t, err, "The following custom mountpoints are not supported [\"//\" \"/var//\" \"/var//log/audit/\"]")
+	for _, dist := range fedoraFamilyDistros {
+		fedoraDistro := dist.distro
+		for _, archName := range fedoraDistro.ListArches() {
+			arch, _ := fedoraDistro.GetArch(archName)
+			for _, imgTypeName := range arch.ListImageTypes() {
+				imgType, _ := arch.GetImageType(imgTypeName)
+				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
+				if strings.HasPrefix(imgTypeName, "iot-") || strings.HasPrefix(imgTypeName, "image-") {
+					continue
+				} else if imgTypeName == "live-installer" {
+					assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
+				} else {
+					assert.EqualError(t, err, "The following custom mountpoints are not supported [\"//\" \"/var//\" \"/var//log/audit/\"]")
+				}
 			}
 		}
 	}
 }
 
 func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
-	fedoraDistro := fedora.NewF37()
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -892,21 +922,24 @@ func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 			},
 		},
 	}
-	for _, archName := range fedoraDistro.ListArches() {
-		arch, _ := fedoraDistro.GetArch(archName)
-		for _, imgTypeName := range arch.ListImageTypes() {
-			imgType, _ := arch.GetImageType(imgTypeName)
-			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
-			if imgTypeName == "iot-commit" || imgTypeName == "iot-container" {
-				assert.EqualError(t, err, "Custom mountpoints are not supported for ostree types")
-			} else if imgTypeName == "iot-raw-image" || imgTypeName == "iot-qcow2-image" {
-				assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, Directories, Files, Services, FIPS"))
-			} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "image-installer" {
-				continue
-			} else if imgTypeName == "live-installer" {
-				assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
-			} else {
-				assert.NoError(t, err)
+	for _, dist := range fedoraFamilyDistros {
+		fedoraDistro := dist.distro
+		for _, archName := range fedoraDistro.ListArches() {
+			arch, _ := fedoraDistro.GetArch(archName)
+			for _, imgTypeName := range arch.ListImageTypes() {
+				imgType, _ := arch.GetImageType(imgTypeName)
+				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
+				if imgTypeName == "iot-commit" || imgTypeName == "iot-container" || imgTypeName == "iot-bootable-container" {
+					assert.EqualError(t, err, "Custom mountpoints are not supported for ostree types")
+				} else if imgTypeName == "iot-raw-image" || imgTypeName == "iot-qcow2-image" {
+					assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, Directories, Files, Services, FIPS"))
+				} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "image-installer" {
+					continue
+				} else if imgTypeName == "live-installer" {
+					assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
+				} else {
+					assert.NoError(t, err)
+				}
 			}
 		}
 	}
@@ -921,7 +954,7 @@ func TestDistroFactory(t *testing.T) {
 	testCases := []testCase{
 		{
 			strID:    "fedora-37",
-			expected: fedora.NewF37(),
+			expected: fedora.DistroFactory("fedora-37"),
 		},
 		{
 			strID:    "fedora-38.1",
