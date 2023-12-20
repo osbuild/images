@@ -14,8 +14,8 @@ func TestGetDistroDefaultList(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			strID:              "rhel-7",
-			expectedDistroName: "rhel-7",
+			strID:              "rhel-7.9",
+			expectedDistroName: "rhel-79",
 		},
 		{
 			strID:              "rhel-89",
