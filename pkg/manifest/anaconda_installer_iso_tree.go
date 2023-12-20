@@ -363,18 +363,39 @@ func (p *AnacondaInstallerISOTree) serialize() osbuild.Pipeline {
 			images,
 			nil))
 
+		// do what we can in our kickstart stage
+		kickstartOptions, err := osbuild.NewKickstartStageOptionsWithOSTreeContainer(
+			"/osbuild-base.ks",
+			p.Users,
+			p.Groups,
+			path.Join("/run/install/repo", p.PayloadPath),
+			"oci",
+			"",
+			"")
+
+		if err != nil {
+			panic("failed to create kickstartstage options")
+		}
+
+		pipeline.AddStage(osbuild.NewKickstartStage(kickstartOptions))
+
+		// and what we can't do in a separate kickstart that we include
+
 		kickstartFile, err := fsnode.NewFile(p.KSPath, nil, nil, nil, []byte(`
-ostreecontainer --url=/run/install/repo/container --transport=oci --no-signature-verification
+%include /run/install/repo/osbuild-base.ks
+
 rootpw --lock
-user --name fedora --groups wheel
+
 lang en_US.UTF-8
 keyboard us
 timezone UTC
+
 clearpart --all
 part /boot/efi --fstype=efi --size=512 --fsoptions="umask=0077"
 part /boot --fstype=ext2 --size=1024 --label=boot
 part swap --fstype=swap --size=1024
 part / --fstype=ext4 --grow
+
 reboot --eject
 `))
 
