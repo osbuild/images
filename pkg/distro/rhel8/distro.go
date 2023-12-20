@@ -123,47 +123,6 @@ func (d *distribution) getDefaultImageConfig() *distro.ImageConfig {
 	return d.defaultImageConfig
 }
 
-// New creates a new distro object, defining the supported architectures and image types
-func New() distro.Distro {
-	// default minor: create default minor version (current GA) and rename it
-	d := newDistro("rhel", 10)
-	d.name = "rhel-8"
-	return d
-
-}
-
-func NewRHEL84() distro.Distro {
-	return newDistro("rhel", 4)
-}
-
-func NewRHEL85() distro.Distro {
-	return newDistro("rhel", 5)
-}
-
-func NewRHEL86() distro.Distro {
-	return newDistro("rhel", 6)
-}
-
-func NewRHEL87() distro.Distro {
-	return newDistro("rhel", 7)
-}
-
-func NewRHEL88() distro.Distro {
-	return newDistro("rhel", 8)
-}
-
-func NewRHEL89() distro.Distro {
-	return newDistro("rhel", 9)
-}
-
-func NewRHEL810() distro.Distro {
-	return newDistro("rhel", 10)
-}
-
-func NewCentos() distro.Distro {
-	return newDistro("centos", 0)
-}
-
 func newDistro(name string, minor int) *distribution {
 	var rd distribution
 	switch name {
@@ -564,9 +523,5 @@ func DistroFactory(idStr string) distro.Distro {
 		return nil
 	}
 
-	if id.Name == "centos" {
-		return NewCentos()
-	}
-
-	return newDistro("rhel", id.MinorVersion)
+	return newDistro(id.Name, id.MinorVersion)
 }

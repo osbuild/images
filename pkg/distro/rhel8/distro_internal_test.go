@@ -28,6 +28,18 @@ var mountpoints = []blueprint.FilesystemCustomization{
 	},
 }
 
+type rhelFamilyDistro struct {
+	name   string
+	distro distro.Distro
+}
+
+var rhelFamilyDistros = []rhelFamilyDistro{
+	{
+		name:   "rhel-810",
+		distro: DistroFactory("rhel-810"),
+	},
+}
+
 // math/rand is good enough in this case
 /* #nosec G404 */
 var rng = rand.New(rand.NewSource(0))
@@ -41,7 +53,7 @@ func TestDistro_UnsupportedArch(t *testing.T) {
 }
 
 func TestDistro_DefaultPartitionTables(t *testing.T) {
-	rhel8distro := New()
+	rhel8distro := rhelFamilyDistros[0].distro
 	for _, archName := range rhel8distro.ListArches() {
 		testBasicImageType.arch = &architecture{
 			name: archName,
@@ -55,7 +67,7 @@ func TestDistro_DefaultPartitionTables(t *testing.T) {
 }
 
 func TestDistro_Ec2PartitionTables(t *testing.T) {
-	rhel8distro := New()
+	rhel8distro := rhelFamilyDistros[0].distro
 	for _, archName := range rhel8distro.ListArches() {
 		testEc2ImageType.arch = &architecture{
 			name: archName,
@@ -89,23 +101,23 @@ func TestDistroFactory(t *testing.T) {
 		},
 		{
 			strID:    "rhel-8.4",
-			expected: NewRHEL84(),
+			expected: newDistro("rhel", 4),
 		},
 		{
 			strID:    "rhel-84",
-			expected: NewRHEL84(),
+			expected: newDistro("rhel", 4),
 		},
 		{
 			strID:    "rhel-8.10",
-			expected: NewRHEL810(),
+			expected: newDistro("rhel", 10),
 		},
 		{
 			strID:    "rhel-810",
-			expected: NewRHEL810(),
+			expected: newDistro("rhel", 10),
 		},
 		{
 			strID:    "centos-8",
-			expected: NewCentos(),
+			expected: newDistro("centos", -1),
 		},
 		{
 			strID:    "centos-8.4",

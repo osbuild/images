@@ -21,8 +21,8 @@ type rhelFamilyDistro struct {
 
 var rhelFamilyDistros = []rhelFamilyDistro{
 	{
-		name:   "rhel",
-		distro: rhel8.New(),
+		name:   "rhel-810",
+		distro: rhel8.DistroFactory("rhel-810"),
 	},
 }
 
@@ -469,7 +469,7 @@ func TestImageTypeAliases(t *testing.T) {
 func TestDistro_ManifestError(t *testing.T) {
 	// Currently, the only unsupported configuration is OSTree commit types
 	// with Kernel boot options
-	r8distro := rhel8.New()
+	r8distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Kernel: &blueprint.KernelCustomization{
@@ -592,7 +592,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 }
 
 func TestRHEL8_ListArches(t *testing.T) {
-	arches := rhel8.New().ListArches()
+	arches := rhelFamilyDistros[0].distro.ListArches()
 	assert.Equal(t, []string{"aarch64", "ppc64le", "s390x", "x86_64"}, arches)
 }
 
@@ -637,25 +637,25 @@ func TestRHEL8_GetArch(t *testing.T) {
 }
 
 func TestRhel8_Name(t *testing.T) {
-	distro := rhel8.New()
-	assert.Equal(t, "rhel-8", distro.Name())
+	distro := rhelFamilyDistros[0].distro
+	assert.Equal(t, "rhel-810", distro.Name())
 }
 
 func TestRhel8_ModulePlatformID(t *testing.T) {
-	distro := rhel8.New()
+	distro := rhelFamilyDistros[0].distro
 	assert.Equal(t, "platform:el8", distro.ModulePlatformID())
 }
 
 func TestRhel86_KernelOption(t *testing.T) {
-	distro_test_common.TestDistro_KernelOption(t, rhel8.New())
+	distro_test_common.TestDistro_KernelOption(t, rhelFamilyDistros[0].distro)
 }
 
 func TestRhel8_OSTreeOptions(t *testing.T) {
-	distro_test_common.TestDistro_OSTreeOptions(t, rhel8.New())
+	distro_test_common.TestDistro_OSTreeOptions(t, rhelFamilyDistros[0].distro)
 }
 
 func TestDistro_CustomFileSystemManifestError(t *testing.T) {
-	r8distro := rhel8.New()
+	r8distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -689,7 +689,7 @@ func TestDistro_CustomFileSystemManifestError(t *testing.T) {
 }
 
 func TestDistro_TestRootMountPoint(t *testing.T) {
-	r8distro := rhel8.New()
+	r8distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -723,7 +723,7 @@ func TestDistro_TestRootMountPoint(t *testing.T) {
 }
 
 func TestDistro_CustomFileSystemSubDirectories(t *testing.T) {
-	r8distro := rhel8.New()
+	r8distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -761,7 +761,7 @@ func TestDistro_CustomFileSystemSubDirectories(t *testing.T) {
 }
 
 func TestDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
-	r8distro := rhel8.New()
+	r8distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -807,7 +807,7 @@ func TestDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
 }
 
 func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
-	r8distro := rhel8.New()
+	r8distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -849,7 +849,7 @@ func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
 }
 
 func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
-	r8distro := rhel8.New()
+	r8distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
