@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/osbuild/images/internal/cmdutil"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
@@ -246,7 +247,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	seedArg := int64(0)
+	rngSeed, err := cmdutil.NewRNGSeed()
+	check(err)
 	darm := readRepos()
 	distroReg := distroregistry.NewDefault()
 
@@ -285,7 +287,7 @@ func main() {
 	}
 
 	fmt.Printf("Generating manifest for %s: ", config.Name)
-	mf, err := makeManifest(imgType, config, distribution, repos, archName, seedArg, rpmCacheRoot)
+	mf, err := makeManifest(imgType, config, distribution, repos, archName, rngSeed, rpmCacheRoot)
 	if err != nil {
 		check(err)
 	}

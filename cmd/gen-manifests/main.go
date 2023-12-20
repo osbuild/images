@@ -17,6 +17,7 @@ import (
 
 	"github.com/gobwas/glob"
 
+	"github.com/osbuild/images/internal/cmdutil"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
@@ -554,7 +555,10 @@ func main() {
 
 	flag.Parse()
 
-	seedArg := int64(0)
+	rngSeed, err := cmdutil.NewRNGSeed()
+	if err != nil {
+		panic(err)
+	}
 	darm := readRepos()
 	distroReg := distroregistry.NewDefault()
 	jobs := make([]manifestJob, 0)
@@ -628,7 +632,7 @@ func main() {
 				}
 
 				for _, itConfig := range imgTypeConfigs {
-					job := makeManifestJob(itConfig.Name, imgType, itConfig, distribution, repos, archName, seedArg, outputDir, cacheRoot, contentResolve, metadata)
+					job := makeManifestJob(itConfig.Name, imgType, itConfig, distribution, repos, archName, rngSeed, outputDir, cacheRoot, contentResolve, metadata)
 					jobs = append(jobs, job)
 				}
 			}
