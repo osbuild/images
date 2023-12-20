@@ -19,8 +19,8 @@ type rhelFamilyDistro struct {
 
 var rhelFamilyDistros = []rhelFamilyDistro{
 	{
-		name:   "rhel",
-		distro: rhel7.New(),
+		name:   "rhel-79",
+		distro: rhel7.DistroFactory("rhel-7.9"),
 	},
 }
 
@@ -163,7 +163,7 @@ func TestImageType_Name(t *testing.T) {
 // Check that Manifest() function returns an error for unsupported
 // configurations.
 func TestDistro_ManifestError(t *testing.T) {
-	r7distro := rhel7.New()
+	r7distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Kernel: &blueprint.KernelCustomization{
@@ -220,7 +220,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 }
 
 func TestRhel7_ListArches(t *testing.T) {
-	arches := rhel7.New().ListArches()
+	arches := rhelFamilyDistros[0].distro.ListArches()
 	assert.Equal(t, []string{"x86_64"}, arches)
 }
 
@@ -256,21 +256,21 @@ func TestRhel7_GetArch(t *testing.T) {
 }
 
 func TestRhel7_Name(t *testing.T) {
-	distro := rhel7.New()
-	assert.Equal(t, "rhel-7", distro.Name())
+	distro := rhelFamilyDistros[0].distro
+	assert.Equal(t, "rhel-79", distro.Name())
 }
 
 func TestRhel7_ModulePlatformID(t *testing.T) {
-	distro := rhel7.New()
+	distro := rhelFamilyDistros[0].distro
 	assert.Equal(t, "platform:el7", distro.ModulePlatformID())
 }
 
 func TestRhel7_KernelOption(t *testing.T) {
-	distro_test_common.TestDistro_KernelOption(t, rhel7.New())
+	distro_test_common.TestDistro_KernelOption(t, rhelFamilyDistros[0].distro)
 }
 
 func TestDistro_CustomFileSystemManifestError(t *testing.T) {
-	r7distro := rhel7.New()
+	r7distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -292,7 +292,7 @@ func TestDistro_CustomFileSystemManifestError(t *testing.T) {
 }
 
 func TestDistro_TestRootMountPoint(t *testing.T) {
-	r7distro := rhel7.New()
+	r7distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -314,7 +314,7 @@ func TestDistro_TestRootMountPoint(t *testing.T) {
 }
 
 func TestDistro_CustomFileSystemSubDirectories(t *testing.T) {
-	r7distro := rhel7.New()
+	r7distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -340,7 +340,7 @@ func TestDistro_CustomFileSystemSubDirectories(t *testing.T) {
 }
 
 func TestDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
-	r7distro := rhel7.New()
+	r7distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -374,7 +374,7 @@ func TestDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
 }
 
 func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
-	r7distro := rhel7.New()
+	r7distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -404,7 +404,7 @@ func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
 }
 
 func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
-	r7distro := rhel7.New()
+	r7distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -434,15 +434,15 @@ func TestDistroFactory(t *testing.T) {
 	testCases := []testCase{
 		{
 			strID:    "rhel-7",
-			expected: rhel7.New(),
-		},
-		{
-			strID:    "rhel-79", // TODO: this should be supported
 			expected: nil,
 		},
 		{
-			strID:    "rhel-7.9", // TODO: this should be supported
+			strID:    "rhel-79", // this is intentionally not supported for el7
 			expected: nil,
+		},
+		{
+			strID:    "rhel-7.9",
+			expected: rhel7.DistroFactory("rhel-7.9"),
 		},
 		{
 			strID:    "fedora-37",
