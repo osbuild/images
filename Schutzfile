@@ -1,4 +1,5 @@
 {
+  "rngseed": 0,
   "fedora-38": {
     "dependencies": {
       "osbuild": {
