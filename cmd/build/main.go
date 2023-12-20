@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -20,6 +19,7 @@ import (
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/ostree"
+	"github.com/osbuild/images/pkg/reporegistry"
 	"github.com/osbuild/images/pkg/rhsm/facts"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
@@ -110,32 +110,6 @@ func makeManifest(imgType distro.ImageType, config BuildConfig, distribution dis
 	}
 
 	return mf, nil
-}
-
-type DistroArchRepoMap map[string]map[string][]rpmmd.RepoConfig
-
-func readRepos() DistroArchRepoMap {
-	reposDir := "./test/data/repositories/"
-	darm := make(DistroArchRepoMap)
-	filelist, err := os.ReadDir(reposDir)
-	check(err)
-	for _, file := range filelist {
-		filename := file.Name()
-		if !strings.HasSuffix(filename, ".json") {
-			continue
-		}
-		reposFilepath := filepath.Join(reposDir, filename)
-		fp, err := os.Open(reposFilepath)
-		check(err)
-		defer fp.Close()
-		data, err := io.ReadAll(fp)
-		check(err)
-		repos := make(map[string][]rpmmd.RepoConfig)
-		check(json.Unmarshal(data, &repos))
-		distro := strings.TrimSuffix(filename, filepath.Ext(filename))
-		darm[distro] = repos
-	}
-	return darm
 }
 
 func resolveContainers(containers []container.SourceSpec, archName string) ([]container.Spec, error) {
@@ -249,7 +223,11 @@ func main() {
 
 	rngSeed, err := cmdutil.NewRNGSeed()
 	check(err)
-	darm := readRepos()
+
+	testedRepoRegistry, err := reporegistry.NewTestedDefault()
+	if err != nil {
+		panic(fmt.Sprintf("failed to create repo registry with tested distros: %v", err))
+	}
 	distroFac := distrofactory.NewDefault()
 
 	config := loadConfig(configFile)
@@ -281,7 +259,11 @@ func main() {
 	}
 
 	// get repositories
-	repos := filterRepos(darm[distroName][archName], imgTypeName)
+	repos, err := testedRepoRegistry.ReposByArchName(distroName, archName, true)
+	if err != nil {
+		panic(fmt.Sprintf("failed to get repositories for %s/%s: %v", distroName, archName, err))
+	}
+	repos = filterRepos(repos, imgTypeName)
 	if len(repos) == 0 {
 		fail(fmt.Sprintf("no repositories defined for %s/%s\n", distroName, archName))
 	}
