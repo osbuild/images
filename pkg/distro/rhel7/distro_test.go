@@ -257,7 +257,7 @@ func TestRhel7_GetArch(t *testing.T) {
 
 func TestRhel7_Name(t *testing.T) {
 	distro := rhelFamilyDistros[0].distro
-	assert.Equal(t, "rhel-79", distro.Name())
+	assert.Equal(t, "rhel-7.9", distro.Name())
 }
 
 func TestRhel7_ModulePlatformID(t *testing.T) {

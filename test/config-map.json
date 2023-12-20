@@ -12,11 +12,11 @@
   },
   "./configs/all-with-oscap.json": {
     "distros": [
-      "rhel-91",
-      "rhel-92",
-      "rhel-87",
-      "rhel-88",
-      "rhel-89",
+      "rhel-9.1",
+      "rhel-9.2",
+      "rhel-8.7",
+      "rhel-8.8",
+      "rhel-8.9",
       "centos*",
       "fedora*"
     ],
@@ -26,10 +26,10 @@
   },
   "./configs/all-with-fips.json": {
     "distros": [
-      "rhel-93",
-      "rhel-94",
-      "rhel-89",
-      "rhel-810",
+      "rhel-9.3",
+      "rhel-9.4",
+      "rhel-8.9",
+      "rhel-8.10",
       "centos*",
       "fedora*"
     ],
@@ -39,7 +39,7 @@
   },
   "./configs/disable-lm_sensors.json": {
     "distros": [
-      "rhel-84"
+      "rhel-8.4"
     ],
     "image-types": [
       "ec2-sap"
@@ -52,8 +52,8 @@
   },
   "./configs/edge-ostree-pull-device-fips.json": {
     "distros": [
-      "rhel-93",
-      "rhel-94"
+      "rhel-9.3",
+      "rhel-9.4"
     ],
     "image-types": [
       "edge-simplified-installer"
@@ -68,8 +68,8 @@
   },
   "./configs/edge-ostree-pull-fips.json": {
     "distros": [
-      "rhel-93",
-      "rhel-94"
+      "rhel-9.3",
+      "rhel-9.4"
     ],
     "image-types": [
       "edge-installer",
@@ -84,8 +84,8 @@
   },
   "./configs/edge-ostree-pull-user-fips.json": {
     "distros": [
-      "rhel-93",
-      "rhel-94"
+      "rhel-9.3",
+      "rhel-9.4"
     ],
     "image-types": [
       "edge-ami"
@@ -188,18 +188,18 @@
       "fedora-38",
       "fedora-39",
       "fedora-40",
-      "rhel-79",
-      "rhel-810",
-      "rhel-85",
-      "rhel-86",
-      "rhel-87",
-      "rhel-88",
-      "rhel-89",
-      "rhel-90",
-      "rhel-91",
-      "rhel-92",
-      "rhel-93",
-      "rhel-94"
+      "rhel-7.9",
+      "rhel-8.10",
+      "rhel-8.5",
+      "rhel-8.6",
+      "rhel-8.7",
+      "rhel-8.8",
+      "rhel-8.9",
+      "rhel-9.0",
+      "rhel-9.1",
+      "rhel-9.2",
+      "rhel-9.3",
+      "rhel-9.4"
     ],
     "image-types": [
       "ec2-sap"
@@ -213,9 +213,9 @@
       "simplified-installer"
     ],
     "distros": [
-      "rhel-92",
-      "rhel-93",
-      "rhel-94"
+      "rhel-9.2",
+      "rhel-9.3",
+      "rhel-9.4"
     ]
   }
 }
