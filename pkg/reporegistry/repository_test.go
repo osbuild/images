@@ -5,13 +5,10 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/distro/test_distro"
+	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/stretchr/testify/assert"
-)
-
-const (
-	testDistroName  = "test-distro"
-	testDistro2Name = "test-distro-2"
 )
 
 func getConfPaths(t *testing.T) []string {
@@ -43,21 +40,21 @@ func TestLoadRepositoriesExisting(t *testing.T) {
 		{
 			name: "duplicate distro definition, load first encounter",
 			args: args{
-				distro: testDistroName,
+				distro: "fedora-33",
 			},
 			want: map[string][]string{
-				test_distro.TestArchName:  {"fedora-p1", "updates-p1", "fedora-modular-p1", "updates-modular-p1"},
-				test_distro.TestArch2Name: {"fedora-p1", "updates-p1", "fedora-modular-p1", "updates-modular-p1"},
+				test_distro.TestArchName:  {"fedora-33-p1", "updates-33-p1"},
+				test_distro.TestArch2Name: {"fedora-33-p1", "updates-33-p1"},
 			},
 		},
 		{
 			name: "single distro definition",
 			args: args{
-				distro: testDistro2Name,
+				distro: "fedora-34",
 			},
 			want: map[string][]string{
-				test_distro.TestArchName:  {"baseos-p2", "appstream-p2"},
-				test_distro.TestArch2Name: {"baseos-p2", "appstream-p2", "google-compute-engine", "google-cloud-sdk"},
+				test_distro.TestArchName:  {"fedora-34-p2", "updates-34-p2"},
+				test_distro.TestArch2Name: {"fedora-34-p2", "updates-34-p2"},
 			},
 		},
 	}
@@ -92,58 +89,209 @@ func TestLoadRepositoriesNonExisting(t *testing.T) {
 }
 
 func Test_LoadAllRepositories(t *testing.T) {
+	expectedReposMap := rpmmd.DistrosRepoConfigs{
+		"fedora-33": {
+			test_distro.TestArchName: {
+				{
+					Name:     "fedora-33-p1",
+					BaseURLs: []string{"https://example.com/fedora-33-p1/test_arch"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+				{
+					Name:     "updates-33-p1",
+					BaseURLs: []string{"https://example.com/updates-33-p1/test_arch"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+			},
+			test_distro.TestArch2Name: {
+				{
+					Name:     "fedora-33-p1",
+					BaseURLs: []string{"https://example.com/fedora-33-p1/test_arch2"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+				{
+					Name:     "updates-33-p1",
+					BaseURLs: []string{"https://example.com/updates-33-p1/test_arch2"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+			},
+		},
+		"fedora-34": {
+			test_distro.TestArchName: {
+				{
+					Name:     "fedora-34-p2",
+					BaseURLs: []string{"https://example.com/fedora-34-p2/test_arch"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+				{
+					Name:     "updates-34-p2",
+					BaseURLs: []string{"https://example.com/updates-34-p2/test_arch"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+			},
+			test_distro.TestArch2Name: {
+				{
+					Name:     "fedora-34-p2",
+					BaseURLs: []string{"https://example.com/fedora-34-p2/test_arch2"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+				{
+					Name:     "updates-34-p2",
+					BaseURLs: []string{"https://example.com/updates-34-p2/test_arch2"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+			},
+		},
+		"rhel-8.7": {
+			test_distro.TestArchName: {
+				{
+					Name:     "rhel-8.7-baseos-p1",
+					BaseURLs: []string{"https://example.com/rhel-8.7-baseos-p1/test_arch"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+				{
+					Name:     "rhel-8.7-appstream-p1",
+					BaseURLs: []string{"https://example.com/rhel-8.7-appstream-p1/test_arch"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+			},
+			test_distro.TestArch2Name: {
+				{
+					Name:     "rhel-8.7-baseos-p1",
+					BaseURLs: []string{"https://example.com/rhel-8.7-baseos-p1/test_arch2"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+				{
+					Name:     "rhel-8.7-appstream-p1",
+					BaseURLs: []string{"https://example.com/rhel-8.7-appstream-p1/test_arch2"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+			},
+		},
+		"rhel-8.8": {
+			test_distro.TestArchName: {
+				{
+					Name:     "rhel-8.8-baseos-p1",
+					BaseURLs: []string{"https://example.com/rhel-8.8-baseos-p1/test_arch"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+				{
+					Name:     "rhel-8.8-appstream-p1",
+					BaseURLs: []string{"https://example.com/rhel-8.8-appstream-p1/test_arch"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+			},
+			test_distro.TestArch2Name: {
+				{
+					Name:     "rhel-8.8-baseos-p1",
+					BaseURLs: []string{"https://example.com/rhel-8.8-baseos-p1/test_arch2"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+				{
+					Name:     "rhel-8.8-appstream-p1",
+					BaseURLs: []string{"https://example.com/rhel-8.8-appstream-p1/test_arch2"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+			},
+		},
+		"rhel-8.9": {
+			test_distro.TestArchName: {
+				{
+					Name:     "rhel-8.9-baseos-p2",
+					BaseURLs: []string{"https://example.com/rhel-8.9-baseos-p2/test_arch"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+				{
+					Name:     "rhel-8.9-appstream-p2",
+					BaseURLs: []string{"https://example.com/rhel-8.9-appstream-p2/test_arch"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+			},
+			test_distro.TestArch2Name: {
+				{
+					Name:     "rhel-8.9-baseos-p2",
+					BaseURLs: []string{"https://example.com/rhel-8.9-baseos-p2/test_arch2"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+				{
+					Name:     "rhel-8.9-appstream-p2",
+					BaseURLs: []string{"https://example.com/rhel-8.9-appstream-p2/test_arch2"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+			},
+		},
+		"rhel-8.10": {
+			test_distro.TestArchName: {
+				{
+					Name:     "rhel-8.10-baseos-p1",
+					BaseURLs: []string{"https://example.com/rhel-8.10-baseos-p1/test_arch"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+				{
+					Name:     "rhel-8.10-appstream-p1",
+					BaseURLs: []string{"https://example.com/rhel-8.10-appstream-p1/test_arch"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+			},
+			test_distro.TestArch2Name: {
+				{
+					Name:     "rhel-8.10-baseos-p1",
+					BaseURLs: []string{"https://example.com/rhel-8.10-baseos-p1/test_arch2"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+				{
+					Name:     "rhel-8.10-appstream-p1",
+					BaseURLs: []string{"https://example.com/rhel-8.10-appstream-p1/test_arch2"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+			},
+		},
+	}
+
 	confPaths := getConfPaths(t)
 
 	distroReposMap, err := LoadAllRepositories(confPaths)
 	assert.NotNil(t, distroReposMap)
 	assert.Nil(t, err)
-	assert.Equal(t, len(distroReposMap), 2)
+	assert.Equal(t, len(distroReposMap), len(expectedReposMap))
 
-	// test-distro
-	testDistroRepos, exists := distroReposMap[testDistroName]
-	assert.True(t, exists)
-	assert.Equal(t, len(testDistroRepos), 2)
+	for expectedDistroName, expectedDistroArchRepos := range expectedReposMap {
+		t.Run(expectedDistroName, func(t *testing.T) {
+			distroArchRepos, exists := distroReposMap[expectedDistroName]
+			assert.True(t, exists)
+			assert.Equal(t, len(distroArchRepos), len(expectedDistroArchRepos))
 
-	// test-distro - arches
-	for _, arch := range []string{test_distro.TestArchName, test_distro.TestArch2Name} {
-		testDistroArchRepos, exists := testDistroRepos[arch]
-		assert.True(t, exists)
-		assert.Equal(t, len(testDistroArchRepos), 4)
-
-		var repoNames []string
-		for _, r := range testDistroArchRepos {
-			repoNames = append(repoNames, r.Name)
-		}
-
-		wantRepos := []string{"fedora-p1", "updates-p1", "fedora-modular-p1", "updates-modular-p1"}
-
-		if !reflect.DeepEqual(repoNames, wantRepos) {
-			t.Errorf("LoadAllRepositories() for %s/%s =\n got: %#v\n want: %#v", testDistroName, arch, repoNames, wantRepos)
-		}
-	}
-
-	// test-distro-2
-	testDistro2Repos, exists := distroReposMap[testDistro2Name]
-	assert.True(t, exists)
-	assert.Equal(t, len(testDistro2Repos), 2)
-
-	// test-distro-2 - arches
-	wantRepos := map[string][]string{
-		test_distro.TestArchName:  {"baseos-p2", "appstream-p2"},
-		test_distro.TestArch2Name: {"baseos-p2", "appstream-p2", "google-compute-engine", "google-cloud-sdk"},
-	}
-	for _, arch := range []string{test_distro.TestArchName, test_distro.TestArch2Name} {
-		testDistro2ArchRepos, exists := testDistro2Repos[arch]
-		assert.True(t, exists)
-		assert.Equal(t, len(testDistro2ArchRepos), len(wantRepos[arch]))
-
-		var repoNames []string
-		for _, r := range testDistro2ArchRepos {
-			repoNames = append(repoNames, r.Name)
-		}
-
-		if !reflect.DeepEqual(repoNames, wantRepos[arch]) {
-			t.Errorf("LoadAllRepositories() for %s/%s =\n got: %#v\n want: %#v", testDistro2Name, arch, repoNames, wantRepos[arch])
-		}
+			for expectedArch, expectedRepos := range expectedDistroArchRepos {
+				repos, exists := distroArchRepos[expectedArch]
+				assert.True(t, exists)
+				if !reflect.DeepEqual(repos, expectedRepos) {
+					t.Errorf("LoadAllRepositories() for %s/%s =\n got: %#v\n want: %#v", expectedDistroName, expectedArch, repos, expectedRepos)
+				}
+			}
+		})
 	}
 }

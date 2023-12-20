@@ -8,6 +8,8 @@ import (
 	"github.com/osbuild/images/pkg/distro/rhel9"
 )
 
+var DefaultParser = NewDefaultParser()
+
 type ParserFunc func(idStr string) (*distro.ID, error)
 
 // Parser is a list of distro-specific idStr parsers.
@@ -45,6 +47,17 @@ func (p *Parser) Parse(idStr string) (*distro.ID, error) {
 	}
 
 	return match, nil
+}
+
+// Standardize returns the standardized distro ID string for the given distro ID
+// string. If the given distro ID string is not valid, it returns an error.
+func (p *Parser) Standardize(idStr string) (string, error) {
+	id, err := p.Parse(idStr)
+	if err != nil {
+		return "", err
+	}
+
+	return id.String(), nil
 }
 
 func NewDefaultParser() *Parser {

@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distroidparser"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
@@ -92,9 +93,9 @@ func (r *RepoRegistry) reposByImageTypeName(distro, arch, imageType string) ([]r
 func (r *RepoRegistry) ReposByArchName(distro, arch string, includeTagged bool) ([]rpmmd.RepoConfig, error) {
 	repositories := []rpmmd.RepoConfig{}
 
-	archRepos, found := r.DistroHasRepos(distro, arch)
-	if !found {
-		return nil, fmt.Errorf("there are no repositories for distribution '%s' and architecture '%s'", distro, arch)
+	archRepos, err := r.DistroHasRepos(distro, arch)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get repositories for distribution '%s' and architecture '%s': %v", distro, arch, err)
 	}
 
 	for _, repo := range archRepos {
@@ -110,14 +111,24 @@ func (r *RepoRegistry) ReposByArchName(distro, arch string, includeTagged bool) 
 }
 
 // DistroHasRepos returns the repositories for the distro+arch, and a found flag
-func (r *RepoRegistry) DistroHasRepos(distro, arch string) (repos []rpmmd.RepoConfig, found bool) {
-	distroRepos, found := r.repos[distro]
-	if !found {
-		return repos, false
+func (r *RepoRegistry) DistroHasRepos(distro, arch string) ([]rpmmd.RepoConfig, error) {
+	// compatibility layer to support old repository definition filenames
+	// without a dot to separate major and minor release versions
+	stdDistroName, err := distroidparser.DefaultParser.Standardize(distro)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse distro ID string: %v", err)
 	}
-	repos, found = distroRepos[arch]
 
-	return repos, found
+	distroRepos, found := r.repos[stdDistroName]
+	if !found {
+		return nil, fmt.Errorf("there are no repositories for distribution '%s'", stdDistroName)
+	}
+	repos, found := distroRepos[arch]
+	if !found {
+		return nil, fmt.Errorf("there are no repositories for distribution '%s' and architecture '%s'", stdDistroName, arch)
+	}
+
+	return repos, nil
 }
 
 // ListDistros returns a list of all distros which have a repository defined
