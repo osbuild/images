@@ -25,6 +25,7 @@ import (
 	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/ostree"
+	"github.com/osbuild/images/pkg/reporegistry"
 	"github.com/osbuild/images/pkg/rhsm/facts"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
@@ -291,48 +292,6 @@ func makeManifestJob(
 	return job
 }
 
-type DistroArchRepoMap map[string]map[string][]rpmmd.RepoConfig
-
-func (d DistroArchRepoMap) ListDistros() []string {
-	distros := make([]string, 0, len(d))
-	for distro := range d {
-		distros = append(distros, distro)
-	}
-	return distros
-}
-
-func readRepos() DistroArchRepoMap {
-	reposDir := "./test/data/repositories/"
-	darm := make(DistroArchRepoMap)
-	filelist, err := os.ReadDir(reposDir)
-	if err != nil {
-		panic(err)
-	}
-	for _, file := range filelist {
-		filename := file.Name()
-		if !strings.HasSuffix(filename, ".json") {
-			continue
-		}
-		reposFilepath := filepath.Join(reposDir, filename)
-		fp, err := os.Open(reposFilepath)
-		if err != nil {
-			panic(err)
-		}
-		defer fp.Close()
-		data, err := io.ReadAll(fp)
-		if err != nil {
-			panic(err)
-		}
-		repos := make(map[string][]rpmmd.RepoConfig)
-		if err := json.Unmarshal(data, &repos); err != nil {
-			panic(err)
-		}
-		distro := strings.TrimSuffix(filename, filepath.Ext(filename))
-		darm[distro] = repos
-	}
-	return darm
-}
-
 func resolveContainers(containers []container.SourceSpec, archName string) ([]container.Spec, error) {
 	resolver := container.NewResolver(archName)
 
@@ -567,7 +526,12 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	darm := readRepos()
+
+	testedRepoRegistry, err := reporegistry.NewTestedDefault()
+	if err != nil {
+		panic(fmt.Sprintf("failed to create repo registry with tested distros: %v", err))
+	}
+
 	distroFac := distrofactory.NewDefault()
 	jobs := make([]manifestJob, 0)
 
@@ -591,7 +555,7 @@ func main() {
 
 	fmt.Println("Collecting jobs")
 
-	distros, invalidDistros := resolveArgValues(distros, darm.ListDistros())
+	distros, invalidDistros := resolveArgValues(distros, testedRepoRegistry.ListDistros())
 	if len(invalidDistros) > 0 {
 		fmt.Fprintf(os.Stderr, "WARNING: invalid distro names: [%s]\n", strings.Join(invalidDistros, ","))
 	}
@@ -625,7 +589,10 @@ func main() {
 				}
 
 				// get repositories
-				repos := darm[distroName][archName]
+				repos, err := testedRepoRegistry.ReposByArchName(distroName, archName, true)
+				if err != nil {
+					panic(fmt.Sprintf("failed to get repositories for %s/%s: %v", distroName, archName, err))
+				}
 				repos = filterRepos(repos, imgTypeName)
 				if len(repos) == 0 {
 					fmt.Printf("no repositories defined for %s/%s/%s\n", distroName, archName, imgTypeName)
