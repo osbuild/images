@@ -183,7 +183,7 @@ func newDistro(name string, minor int) *distribution {
 	switch name {
 	case "rhel":
 		rd = distribution{
-			name:               fmt.Sprintf("rhel-7%d", minor),
+			name:               fmt.Sprintf("rhel-7.%d", minor),
 			product:            "Red Hat Enterprise Linux",
 			osVersion:          fmt.Sprintf("7.%d", minor),
 			nick:               "Maipo",
