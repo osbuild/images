@@ -17,19 +17,19 @@ func TestDistroFactory(t *testing.T) {
 	testCases := []testCase{
 		{
 			strID:    "rhel-90",
-			expected: NewRHEL90(),
+			expected: newDistro("rhel", 0),
 		},
 		{
 			strID:    "rhel-9.0",
-			expected: NewRHEL90(),
+			expected: newDistro("rhel", 0),
 		},
 		{
 			strID:    "rhel-93",
-			expected: NewRHEL93(),
+			expected: newDistro("rhel", 3),
 		},
 		{
 			strID:    "rhel-9.3",
-			expected: NewRHEL93(),
+			expected: newDistro("rhel", 3),
 		},
 		{
 			strID:    "rhel-910", // this is intentionally not supported for el9
@@ -41,7 +41,7 @@ func TestDistroFactory(t *testing.T) {
 		},
 		{
 			strID:    "centos-9",
-			expected: NewCentOS9(),
+			expected: newDistro("centos", -1),
 		},
 		{
 			strID:    "centos-9.0",

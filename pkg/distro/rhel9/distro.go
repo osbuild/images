@@ -125,37 +125,6 @@ func (d *distribution) getDefaultImageConfig() *distro.ImageConfig {
 	return d.defaultImageConfig
 }
 
-func New() distro.Distro {
-	// default minor: create default minor version (current GA) and rename it
-	d := newDistro("rhel", 4)
-	d.name = "rhel-9"
-	return d
-}
-
-func NewCentOS9() distro.Distro {
-	return newDistro("centos", 0)
-}
-
-func NewRHEL90() distro.Distro {
-	return newDistro("rhel", 0)
-}
-
-func NewRHEL91() distro.Distro {
-	return newDistro("rhel", 1)
-}
-
-func NewRHEL92() distro.Distro {
-	return newDistro("rhel", 2)
-}
-
-func NewRHEL93() distro.Distro {
-	return newDistro("rhel", 3)
-}
-
-func NewRHEL94() distro.Distro {
-	return newDistro("rhel", 4)
-}
-
 func newDistro(name string, minor int) *distribution {
 	var rd distribution
 	switch name {
@@ -538,9 +507,5 @@ func DistroFactory(idStr string) distro.Distro {
 		return nil
 	}
 
-	if id.Name == "centos" {
-		return NewCentOS9()
-	}
-
-	return newDistro("rhel", id.MinorVersion)
+	return newDistro(id.Name, id.MinorVersion)
 }
