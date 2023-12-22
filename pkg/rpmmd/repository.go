@@ -18,6 +18,7 @@ type repository struct {
 	Metalink       string   `json:"metalink,omitempty"`
 	MirrorList     string   `json:"mirrorlist,omitempty"`
 	GPGKey         string   `json:"gpgkey,omitempty"`
+	GPGKeys        []string `json:"gpgkeys,omitempty"`
 	CheckGPG       bool     `json:"check_gpg,omitempty"`
 	IgnoreSSL      bool     `json:"ignore_ssl,omitempty"`
 	RHSM           bool     `json:"rhsm,omitempty"`
@@ -239,6 +240,9 @@ func LoadRepositoriesFromFile(filename string) (map[string][]RepoConfig, error) 
 			var keys []string
 			if repo.GPGKey != "" {
 				keys = []string{repo.GPGKey}
+			}
+			if len(repo.GPGKeys) > 0 {
+				keys = append(keys, repo.GPGKeys...)
 			}
 			config := RepoConfig{
 				Name:           repo.Name,
