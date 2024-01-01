@@ -18,7 +18,7 @@
     },
     {
       "name": "rhui",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el9/el9-aarch64-rhui-4-20231201",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el9/el9-aarch64-rhui-4-20240101",
       "image_type_tags": [
         "ec2"
       ],
@@ -29,7 +29,7 @@
     },
     {
       "name": "rhui-azure",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el9/el9-x86_64-rhui-azure-20231201",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el9/el9-x86_64-rhui-azure-20240101",
       "image_type_tags": [
         "azure-rhui"
       ],
@@ -140,7 +140,7 @@
     },
     {
       "name": "rhui",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el9/el9-x86_64-rhui-4-20231201",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el9/el9-x86_64-rhui-4-20240101",
       "image_type_tags": [
         "ec2",
         "ec2-ha",
@@ -153,7 +153,7 @@
     },
     {
       "name": "rhui-azure",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el9/el9-x86_64-rhui-azure-20231201",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el9/el9-x86_64-rhui-azure-20240101",
       "image_type_tags": [
         "azure-rhui",
         "azure-eap7-rhui"
@@ -176,7 +176,7 @@
     },
     {
       "name": "google-compute-engine",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/el9/el9-x86_64-google-compute-engine-20231201",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/el9/el9-x86_64-google-compute-engine-20240101",
       "check_gpg": false,
       "image_type_tags": [
         "gce",
@@ -185,7 +185,7 @@
     },
     {
       "name": "google-cloud-sdk",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/el9/el9-x86_64-google-cloud-sdk-20231201",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/el9/el9-x86_64-google-cloud-sdk-20240101",
       "check_gpg": false,
       "image_type_tags": [
         "gce",
