@@ -102,8 +102,8 @@ def list_images(distros=None, arches=None, images=None):
     images_arg = "*"
     if images:
         images_arg = ",".join(images)
-    out, err = runcmd(["go", "run", "./cmd/list-images", "-json",
-                       "-distros", distros_arg, "-arches", arches_arg, "-images", images_arg])
+    out, _ = runcmd(["go", "run", "./cmd/list-images", "--json",
+                     "--distros", distros_arg, "--arches", arches_arg, "--images", images_arg])
     return json.loads(out)
 
 
