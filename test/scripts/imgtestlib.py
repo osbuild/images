@@ -320,3 +320,19 @@ def get_osbuild_commit(distro_version):
         data = json.load(schutzfile)
 
     return data.get(distro_version, {}).get("dependencies", {}).get("osbuild", {}).get("commit", None)
+
+
+def rng_seed_env():
+    """
+    Read the rng seed from the Schutzfile and return it as a map to use as an environment variable with the appropriate
+    key. Assumes the file exists and that it contains the key 'rngseed', otherwise raises an exception.
+    """
+
+    with open(SCHUTZFILE, encoding="utf-8") as schutzfile:
+        data = json.load(schutzfile)
+
+    seed = data.get("rngseed")
+    if seed is None:
+        raise RuntimeError("'rngseed' not found in Schutzfile")
+
+    return {"OSBUILD_TESTING_RNG_SEED": str(seed)}
