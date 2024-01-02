@@ -35,20 +35,13 @@ def generate_manifests(outputdir, distro, arch):
     manifest data and its ID.
     """
     target = arch
+    distros = None
     if distro:
         target = distro + "/" + arch
+        distros = [distro]
 
     print(f"🗒️ Generating all manifests using the default config map for {target}")
-    cmd = ["go", "run", "./cmd/gen-manifests",
-           "-cache", os.path.join(testlib.TEST_CACHE_ROOT, "rpmmd"),
-           "-output", outputdir,
-           "-workers", "100",
-           "-arches", arch]
-    if distro:
-        cmd.extend(["-distros", distro])
-
-    print("⌨️" + " ".join(cmd))
-    out, err = testlib.runcmd(cmd)
+    err = testlib.gen_manifests(outputdir, arches=[arch], distros=distros)
 
     # print stderr in case there were errors or warnings about skipped configurations
     # but filter out the annoying ones

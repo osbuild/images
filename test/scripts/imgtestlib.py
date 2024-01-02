@@ -172,6 +172,30 @@ def check_config_names():
         sys.exit(1)
 
 
+def gen_manifests(outputdir, config_map=None, distros=None, arches=None, images=None,
+                  commits=False, skip_no_config=False):
+    # pylint: disable=too-many-arguments
+    cmd = ["go", "run", "./cmd/gen-manifests",
+           "--cache", os.path.join(TEST_CACHE_ROOT, "rpmmd"),
+           "--output", outputdir,
+           "--workers", "100"]
+    if config_map:
+        cmd.extend(["--config-map", config_map])
+    if distros:
+        cmd.extend(["--distros", ",".join(distros)])
+    if arches:
+        cmd.extend(["--arches", ",".join(arches)])
+    if images:
+        cmd.extend(["--images", ",".join(images)])
+    if commits:
+        cmd.append("--commits")
+    if skip_no_config:
+        cmd.append("--skip-noconfig")
+    print("⌨️" + " ".join(cmd))
+    _, stderr = runcmd(cmd, extra_env=rng_seed_env())
+    return stderr
+
+
 def read_manifests(path):
     """
     Read all manifests in the given path, calculate their IDs, and return a dictionary mapping each filename to the data
