@@ -42,8 +42,8 @@ def main():
         with open(info_path, "w") as info_fp:
             json.dump(build_info, info_fp, indent=2)
 
-    bucket = os.environ.get("AWS_BUCKET", "image-builder-ci-artifacts")
-    s3url = f"s3://{bucket}/images/builds/{distro}/{arch}/{manifest_id}/"
+    bucket = testlib.S3_BUCKET
+    s3url = f"{bucket}/images/builds/{distro}/{arch}/{manifest_id}/"
 
     print(f"⬆️ Uploading {build_dir} to {s3url}")
     testlib.runcmd(["s3cmd", *testlib.s3_auth_args(), "--acl-private", "put", "--recursive", build_dir+"/", s3url])
