@@ -3,19 +3,10 @@ import argparse
 import contextlib
 import json
 import os
-import subprocess as sp
-import sys
 import uuid
 from tempfile import TemporaryDirectory
 
 import imgtestlib as testlib
-
-
-def runcmd(cmd, stdin=None):
-    job = sp.run(cmd)
-    if job.returncode > 0:
-        print(f"❌ Command failed: {cmd}")
-        sys.exit(job.returncode)
 
 
 def get_aws_config():
@@ -46,7 +37,7 @@ def create_ssh_key():
         else:
             # create an ssh key pair with empty password
             cmd = ["ssh-keygen", "-t", "ecdsa", "-b", "256", "-m", "pem", "-N", "", "-f", keypath]
-            runcmd(cmd)
+            testlib.runcmd_nc(cmd)
 
         yield keypath, keypath + ".pub"
 
@@ -60,7 +51,7 @@ def ensure_uncompressed(filepath):
     if ext == ".xz":
         print(f"Uncompressing {filepath}")
         # needs to run as root to set perms and ownership on uncompressed file
-        runcmd(["sudo", "unxz", "--verbose", "--keep", filepath])
+        testlib.runcmd_nc(["sudo", "unxz", "--verbose", "--keep", filepath])
         yield base
         # cleanup when done so the uncompressed file doesn't get uploaded to the build cache
         os.unlink(base)
@@ -87,7 +78,7 @@ def boot_ami(distro, arch, image_type, image_path):
                    "--ssh-privkey", privkey,
                    "--ssh-pubkey", pubkey,
                    raw_image_path, "test/scripts/base-host-check.sh"]
-            runcmd(cmd)
+            testlib.runcmd_nc(cmd)
 
 
 def find_image_file(build_path: str) -> str:
