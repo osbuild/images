@@ -2,8 +2,6 @@
 import argparse
 import json
 import os
-import subprocess as sp
-import sys
 
 import imgtestlib as testlib
 
@@ -29,11 +27,9 @@ def main():
         config_name = config["name"]
 
     testlib.runcmd(["go", "build", "-o", "./bin/build", "./cmd/build"])
+
     cmd = ["sudo", "./bin/build", "-output", "./build", "-distro", distro, "-image", image_type, "-config", config_path]
-    job = sp.run(cmd, capture_output=False)  # print live output
-    if job.returncode > 0:
-        print(f"❌ Build failed: {cmd}")
-        sys.exit(job.returncode)
+    testlib.runcmd_nc(cmd, extra_env=testlib.rng_seed_env())
 
     print("✅ Build finished!!")
 
