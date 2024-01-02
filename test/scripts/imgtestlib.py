@@ -63,6 +63,11 @@ NullBuild:
 
 
 def runcmd(cmd, stdin=None, extra_env=None, capture_output=True):
+    """
+    Run the cmd using sp.run() and exit with the returncode if it is non-zero.
+    Output is captured and both stdout and stderr are returned if the run succeeds.
+    If it fails, the output is printed before exiting.
+    """
     env = None
     if extra_env:
         env = os.environ
