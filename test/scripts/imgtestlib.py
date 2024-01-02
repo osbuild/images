@@ -232,12 +232,8 @@ def check_for_build(manifest_fname, build_info_path, osbuild_ver, osbuild_commit
         ))
 
     # check if osbuild version matches
-    config_osbuild_commit = dl_config.get("osbuild-commit", None)
-    config_osbuild_ver = dl_config.get("osbuild-version", None)
-    if config_osbuild_commit is None:
-        # TODO: remove this check when all the build infos get updated
-        print("osbuild commit ID not found in build info. Scheduling config for rebuild.")
-        return True
+    config_osbuild_commit = dl_config["osbuild-commit"]
+    config_osbuild_ver = dl_config["osbuild-version"]
 
     osbuild_id = f"{osbuild_ver}:{osbuild_commit}"
     config_osbuild_id = f"{config_osbuild_ver}:{config_osbuild_commit}"
