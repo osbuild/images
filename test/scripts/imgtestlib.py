@@ -62,8 +62,12 @@ NullBuild:
 """
 
 
-def runcmd(cmd, stdin=None):
-    job = sp.run(cmd, input=stdin, capture_output=True)
+def runcmd(cmd, stdin=None, extra_env=None):
+    env = None
+    if extra_env:
+        env = os.environ
+        env.update(extra_env)
+    job = sp.run(cmd, input=stdin, capture_output=True, env=env, check=False)
     if job.returncode > 0:
         print(f"❌ Command failed: {cmd}")
         if job.stdout:
