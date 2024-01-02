@@ -18,14 +18,15 @@ def check_build_coverage(cachedir):
     tests = set()
     built_now = set()
     built_pr = set()
-    for root, dirs, files in os.walk(cachedir):
+    for root, _, files in os.walk(cachedir):
         for fname in files:
             _, ext = os.path.splitext(fname)
             if ext != ".json":
                 continue
 
             fpath = os.path.join(root, fname)
-            build_info = json.load(open(fpath))
+            with open(fpath, encoding="utf-8") as info_file:
+                build_info = json.load(info_file)
             distro = build_info["distro"]
             arch = build_info["arch"]
             image = build_info["image-type"]

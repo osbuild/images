@@ -24,7 +24,7 @@ def create_ssh_key():
         keypath = os.path.join(tmpdir, "testkey")
         if ci_priv_key := os.environ.get("CI_PRIV_SSH_KEY_2"):
             # running in CI: use key from env
-            with open(keypath, "w") as keyfile:
+            with open(keypath, "w", encoding="utf-8") as keyfile:
                 keyfile.write(ci_priv_key + "\n")
             os.chmod(keypath, 0o600)
 
@@ -32,7 +32,7 @@ def create_ssh_key():
             cmd = ["ssh-keygen", "-y", "-f", keypath]
             out, _ = testlib.runcmd(cmd)
             pubkey = out.decode()
-            with open(keypath + ".pub", "w") as pubkeyfile:
+            with open(keypath + ".pub", "w", encoding="utf-8") as pubkeyfile:
                 pubkeyfile.write(pubkey)
         else:
             # create an ssh key pair with empty password
@@ -88,13 +88,13 @@ def find_image_file(build_path: str) -> str:
     path.
     """
     manifest_file = os.path.join(build_path, "manifest.json")
-    with open(manifest_file) as manifest:
+    with open(manifest_file, encoding="utf-8") as manifest:
         data = json.load(manifest)
 
     last_pipeline = data["pipelines"][-1]["name"]
     files = os.listdir(os.path.join(build_path, last_pipeline))
     if len(files) > 1:
-        error = ("Multiple files found in build path while searching for image file")
+        error = "Multiple files found in build path while searching for image file"
         error += "\n".join(files)
         raise RuntimeError(error)
 
@@ -133,10 +133,10 @@ def main():
     # amend build info with boot success
     # search_path is the root of the build path (build/build_name)
     info_file_path = os.path.join(search_path, "info.json")
-    with open(info_file_path) as info_fp:
+    with open(info_file_path, encoding="utf-8") as info_fp:
         build_info = json.load(info_fp)
     build_info["boot-success"] = True
-    with open(info_file_path, "w") as info_fp:
+    with open(info_file_path, "w", encoding="utf-8") as info_fp:
         json.dump(build_info, info_fp, indent=2)
 
 

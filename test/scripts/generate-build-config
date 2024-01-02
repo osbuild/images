@@ -101,7 +101,7 @@ def main():
         manifests = generate_manifests(manifest_dir, distro, arch)
         build_requests = testlib.filter_builds(manifests)
 
-    with open(config_path, "w") as config_file:
+    with open(config_path, "w", encoding="utf-8") as config_file:
         if len(build_requests) == 0:
             print("⚫ No manifest changes detected. Generating null config.")
             config_file.write(testlib.NULL_CONFIG)

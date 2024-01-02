@@ -86,7 +86,7 @@ def gen_dependency_manifests(config_map, distro, arch, outputdir):
 
     # generate a config map for the dependencies
     for config_path in config_map.keys():
-        with open(config_path) as config_file:
+        with open(config_path, encoding="utf-8") as config_file:
             cfg = json.load(config_file)
 
         dep = cfg["depends"]
@@ -194,13 +194,13 @@ def setup_dependencies(manifests, config_map, distro, arch):
 
     container_ports: dict[str, int] = {}
     for config_path, filters in config_map.items():
-        with open(config_path) as config_file:
+        with open(config_path, encoding="utf-8") as config_file:
             config_data = json.load(config_file)
         config_name = config_data["name"]
 
         # dependency config path is relative to config file
         dep_config_path = os.path.join(os.path.dirname(config_path), config_data["depends"]["config"])
-        with open(dep_config_path) as dep_config_file:
+        with open(dep_config_path, encoding="utf-8") as dep_config_file:
             dep_config_data = json.load(dep_config_file)
         dep_config_name = dep_config_data["name"]
         dep_image_type = config_data["depends"]["image-type"]
@@ -270,7 +270,7 @@ def setup_dependencies(manifests, config_map, distro, arch):
             print(out.decode())
 
 
-def generate_configs(build_requests, pull_configs, container_configs, pipeline_file, configs_dir):
+def generate_configs(build_requests, container_configs, pipeline_file, configs_dir):
     print(f"🧪 Generating dynamic pipelines for {len(build_requests)} builds")
     os.makedirs(configs_dir, exist_ok=True)
     for build in build_requests:
@@ -327,14 +327,14 @@ def main():
 
         build_requests = testlib.filter_builds(manifests, skip_ostree_pull=False)
 
-    with open(config_path, "w") as config_file:
+    with open(config_path, "w", encoding="utf-8") as config_file:
         if len(build_requests) == 0:
             print("⚫ No manifest changes detected. Generating null config.")
             config_file.write(testlib.NULL_CONFIG)
             return
 
         config_file.write(testlib.BASE_CONFIG)
-        generate_configs(build_requests, pull_configs, containers, config_file, configs_dir)
+        generate_configs(build_requests, containers, config_file, configs_dir)
 
 
 if __name__ == "__main__":

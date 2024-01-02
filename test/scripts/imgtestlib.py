@@ -129,7 +129,8 @@ def dl_s3_configs(destination):
                   "--include=info.json",
                   "--delete-removed",
                   s3url, destination],
-                 capture_output=True)
+                 capture_output=True,
+                 check=False)
     ok = job.returncode == 0
     if not ok:
         print(f"⚠️ Failed to sync contents of {s3url}:")
@@ -205,7 +206,7 @@ def read_manifests(path):
     manifests = {}
     for manifest_fname in os.listdir(path):
         manifest_path = os.path.join(path, manifest_fname)
-        with open(manifest_path) as manifest_file:
+        with open(manifest_path, encoding="utf-8") as manifest_file:
             manifest_data = json.load(manifest_file)
         manifests[manifest_fname] = {
             "data": manifest_data,
