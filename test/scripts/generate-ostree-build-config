@@ -75,8 +75,10 @@ def gen_dependency_manifests(config_map, distro, arch, outputdir):
     Returns a dictionary mapping manifest file name (without path) to the manifest data and its ID.
     """
     target = arch
+    distros = None
     if distro:
         target = distro + "/" + arch
+        distros = [distro]
 
     print(f"🗒️ Generating manifests for dependencies for {target}")
     dep_config_map: dict = {}  # config map for the dependencies
@@ -103,18 +105,8 @@ def gen_dependency_manifests(config_map, distro, arch, outputdir):
     with NamedTemporaryFile(mode="w") as tmpfile:
         json.dump(dep_config_map, tmpfile)
         tmpfile.flush()
-        cmd = ["go", "run", "./cmd/gen-manifests",
-               "-cache", os.path.join(testlib.TEST_CACHE_ROOT, "rpmmd"),
-               "-output", outputdir,
-               "-workers", "100",
-               "-images", ",".join(gen_image_types),
-               "-config-map", tmpfile.name,
-               "-arches", arch]
-        if distro:
-            cmd.extend(["-distros", distro])
-        print("⌨️" + " ".join(cmd))
-        out, err = testlib.runcmd(cmd)
-
+        err = testlib.gen_manifests(outputdir, config_map=tmpfile.name,
+                                    distros=distros, arches=[arch], images=gen_image_types)
     # print stderr in case there were errors or warnings about skipped configurations
     # but filter out the annoying ones
     stderr = err.decode().splitlines()
@@ -138,8 +130,10 @@ def gen_image_manifests(config_map, configs, distro, arch, outputdir):
     Returns a dictionary mapping manifest file name (without path) to the manifest data and its ID.
     """
     target = arch
+    distros = None
     if distro:
         target = distro + "/" + arch
+        distros = [distro]
 
     print(f"🗒️ Generating manifests for ostree-based images for {target}")
     with TemporaryDirectory() as tmpdir:
@@ -153,18 +147,8 @@ def gen_image_manifests(config_map, configs, distro, arch, outputdir):
         with open(config_map_path, "w", encoding="utf-8") as config_map_file:
             json.dump(config_map, config_map_file)
 
-        cmd = ["go", "run", "./cmd/gen-manifests",
-               "-cache", os.path.join(testlib.TEST_CACHE_ROOT, "rpmmd"),
-               "-output", outputdir,
-               "-workers", "100",
-               "-config-map", config_map_path,
-               "-commits=true",  # resolve ostree commit sources
-               "-skip-noconfig",  # skip configs that aren't in the config-map
-               "-arches", arch]
-        if distro:
-            cmd.extend(["-distros", distro])
-        print("⌨️" + " ".join(cmd))
-        out, err = testlib.runcmd(cmd)
+        err = testlib.gen_manifests(outputdir, config_map=config_map_path,
+                                    arches=[arch], distros=distros, commits=True, skip_no_config=True)
 
     # print stderr in case there were errors or warnings about skipped configurations
     # but filter out the annoying ones
