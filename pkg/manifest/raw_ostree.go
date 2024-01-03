@@ -27,7 +27,7 @@ func (p *RawOSTreeImage) SetFilename(filename string) {
 
 func NewRawOStreeImage(buildPipeline *Build, treePipeline *OSTreeDeployment, platform platform.Platform) *RawOSTreeImage {
 	p := &RawOSTreeImage{
-		Base:         NewBase(treePipeline.Manifest(), "image", buildPipeline),
+		Base:         NewBase("image", buildPipeline),
 		treePipeline: treePipeline,
 		filename:     "disk.img",
 		platform:     platform,

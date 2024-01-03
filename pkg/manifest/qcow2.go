@@ -27,7 +27,7 @@ func (p *QCOW2) SetFilename(filename string) {
 // of the produced qcow2 image.
 func NewQCOW2(buildPipeline *Build, imgPipeline FilePipeline) *QCOW2 {
 	p := &QCOW2{
-		Base:        NewBase(imgPipeline.Manifest(), "qcow2", buildPipeline),
+		Base:        NewBase("qcow2", buildPipeline),
 		imgPipeline: imgPipeline,
 		filename:    "image.qcow2",
 	}

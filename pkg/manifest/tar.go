@@ -32,7 +32,7 @@ func (p *Tar) SetFilename(filename string) {
 // is the name of the pipeline. The filename is the name of the output tar file.
 func NewTar(buildPipeline *Build, inputPipeline Pipeline, pipelinename string) *Tar {
 	p := &Tar{
-		Base:          NewBase(inputPipeline.Manifest(), pipelinename, buildPipeline),
+		Base:          NewBase(pipelinename, buildPipeline),
 		inputPipeline: inputPipeline,
 		filename:      "image.tar",
 	}

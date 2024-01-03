@@ -82,7 +82,7 @@ func NewOSTreeCommitDeployment(buildPipeline *Build,
 	platform platform.Platform) *OSTreeDeployment {
 
 	p := &OSTreeDeployment{
-		Base:         NewBase(m, "ostree-deployment", buildPipeline),
+		Base:         NewBase("ostree-deployment", buildPipeline),
 		commitSource: commit,
 		osName:       osName,
 		platform:     platform,
@@ -102,7 +102,7 @@ func NewOSTreeContainerDeployment(buildPipeline *Build,
 	platform platform.Platform) *OSTreeDeployment {
 
 	p := &OSTreeDeployment{
-		Base:            NewBase(m, "ostree-deployment", buildPipeline),
+		Base:            NewBase("ostree-deployment", buildPipeline),
 		containerSource: container,
 		osName:          osName,
 		ref:             ref,

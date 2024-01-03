@@ -22,7 +22,7 @@ type EFIBootTree struct {
 
 func NewEFIBootTree(m *Manifest, buildPipeline *Build, product, version string) *EFIBootTree {
 	p := &EFIBootTree{
-		Base:    NewBase(m, "efiboot-tree", buildPipeline),
+		Base:    NewBase("efiboot-tree", buildPipeline),
 		product: product,
 		version: version,
 	}
