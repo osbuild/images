@@ -288,22 +288,17 @@ func main() {
 
 	fmt.Printf("Generating manifest for %s: ", config.Name)
 	mf, err := makeManifest(imgType, config, distribution, repos, archName, rngSeed, rpmCacheRoot)
-	if err != nil {
-		check(err)
-	}
+	check(err)
 	fmt.Print("DONE\n")
 
 	manifestPath := filepath.Join(buildDir, "manifest.json")
-	if err := save(mf, manifestPath); err != nil {
-		check(err)
-	}
+	check(save(mf, manifestPath))
 
 	fmt.Printf("Building manifest: %s\n", manifestPath)
 
 	jobOutput := filepath.Join(outputDir, buildName)
-	if _, err := osbuild.RunOSBuild(mf, osbuildStore, jobOutput, imgType.Exports(), nil, nil, false, os.Stderr); err != nil {
-		check(err)
-	}
+	_, err = osbuild.RunOSBuild(mf, osbuildStore, jobOutput, imgType.Exports(), nil, nil, false, os.Stderr)
+	check(err)
 
 	fmt.Printf("Jobs done. Results saved in\n%s\n", outputDir)
 }
