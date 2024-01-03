@@ -32,7 +32,6 @@ func NewQCOW2(buildPipeline *Build, imgPipeline FilePipeline) *QCOW2 {
 		filename:    "image.qcow2",
 	}
 	buildPipeline.addDependent(p)
-	imgPipeline.Manifest().addPipeline(p)
 	return p
 }
 

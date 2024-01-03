@@ -58,14 +58,15 @@ func (img *AnacondaContainerInstaller) InstantiateManifest(m *manifest.Manifest,
 	buildPipeline := manifest.NewBuild(m, runner, repos, &manifest.BuildOptions{ContainerBuildable: true})
 	buildPipeline.Checkpoint()
 
-	anacondaPipeline := manifest.NewAnacondaInstaller(m,
+	anacondaPipeline := manifest.NewAnacondaInstaller(
 		manifest.AnacondaInstallerTypePayload,
 		buildPipeline,
 		img.Platform,
 		repos,
 		"kernel",
 		img.Product,
-		img.OSVersion)
+		img.OSVersion,
+	)
 
 	// This is only built with ELN for now
 	anacondaPipeline.UseRHELLoraxTemplates = true
@@ -109,7 +110,7 @@ func (img *AnacondaContainerInstaller) InstantiateManifest(m *manifest.Manifest,
 	rootfsImagePipeline := manifest.NewISORootfsImg(buildPipeline, anacondaPipeline)
 	rootfsImagePipeline.Size = 4 * common.GibiByte
 
-	bootTreePipeline := manifest.NewEFIBootTree(m, buildPipeline, img.Product, img.OSVersion)
+	bootTreePipeline := manifest.NewEFIBootTree(buildPipeline, img.Product, img.OSVersion)
 	bootTreePipeline.Platform = img.Platform
 	bootTreePipeline.UEFIVendor = img.Platform.GetUEFIVendor()
 	bootTreePipeline.ISOLabel = isoLabel
