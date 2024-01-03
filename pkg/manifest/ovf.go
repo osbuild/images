@@ -20,7 +20,6 @@ func NewOVF(buidPipeline *Build, imgPipeline *VMDK) *OVF {
 		imgPipeline: imgPipeline,
 	}
 	buidPipeline.addDependent(p)
-	imgPipeline.Manifest().addPipeline(p)
 	return p
 }
 

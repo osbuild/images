@@ -20,7 +20,6 @@ func NewISORootfsImg(buildPipeline *Build, installerPipeline Pipeline) *ISORootf
 		installerPipeline: installerPipeline,
 	}
 	buildPipeline.addDependent(p)
-	installerPipeline.Manifest().addPipeline(p)
 	return p
 }
 

@@ -55,7 +55,6 @@ func NewCoreOSISOTree(
 		isoLabel:         bootTreePipeline.ISOLabel,
 	}
 	buildPipeline.addDependent(p)
-	coiPipeline.Manifest().addPipeline(p)
 	return p
 }
 

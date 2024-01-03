@@ -31,7 +31,6 @@ func NewRawImage(buildPipeline *Build, treePipeline *OS) *RawImage {
 	}
 	buildPipeline.addDependent(p)
 	p.PartTool = osbuild.PTSfdisk // default; can be changed after initialisation
-	treePipeline.Manifest().addPipeline(p)
 	return p
 }
 

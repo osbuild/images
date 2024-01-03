@@ -30,7 +30,6 @@ func NewXZ(buildPipeline *Build, imgPipeline FilePipeline) *XZ {
 		imgPipeline: imgPipeline,
 	}
 	buildPipeline.addDependent(p)
-	imgPipeline.Manifest().addPipeline(p)
 	return p
 }
 

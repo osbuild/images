@@ -26,7 +26,7 @@ func NewTestOS() *OS {
 		BIOS: true,
 	}
 
-	os := NewOS(&manifest, build, platform, repos)
+	os := NewOS(build, platform, repos)
 	packages := []rpmmd.PackageSpec{
 		{Name: "pkg1", Checksum: "sha1:c02524e2bd19490f2a7167958f792262754c5f46"},
 	}

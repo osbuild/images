@@ -33,7 +33,6 @@ func NewRawOStreeImage(buildPipeline *Build, treePipeline *OSTreeDeployment, pla
 		platform:     platform,
 	}
 	buildPipeline.addDependent(p)
-	treePipeline.Manifest().addPipeline(p)
 	return p
 }
 

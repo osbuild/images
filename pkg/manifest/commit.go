@@ -23,7 +23,6 @@ func NewOSTreeCommit(buildPipeline *Build, treePipeline *OS, ref string) *OSTree
 		ref:          ref,
 	}
 	buildPipeline.addDependent(p)
-	treePipeline.Manifest().addPipeline(p)
 	return p
 }
 

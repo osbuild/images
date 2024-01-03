@@ -32,7 +32,6 @@ func NewVMDK(buildPipeline *Build, imgPipeline FilePipeline) *VMDK {
 		filename:    "image.vmdk",
 	}
 	buildPipeline.addDependent(p)
-	imgPipeline.Manifest().addPipeline(p)
 	return p
 }
 

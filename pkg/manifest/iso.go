@@ -32,7 +32,6 @@ func NewISO(buildPipeline *Build, treePipeline Pipeline, isoLabel string) *ISO {
 		isoLabel:     isoLabel,
 	}
 	buildPipeline.addDependent(p)
-	treePipeline.Manifest().addPipeline(p)
 	return p
 }
 
