@@ -30,6 +30,8 @@ type Pipeline interface {
 	// Manifest returns a reference to the Manifest which this Pipeline belongs to.
 	Manifest() *Manifest
 
+	setManifest(*Manifest)
+
 	getCheckpoint() bool
 
 	getExport() bool
@@ -110,6 +112,10 @@ func (p Base) Manifest() *Manifest {
 	return p.manifest
 }
 
+func (p *Base) setManifest(m *Manifest) {
+	p.manifest = m
+}
+
 func (p Base) getBuildPackages(Distro) []string {
 	return []string{}
 }
@@ -150,16 +156,10 @@ func (p Base) getInline() []string {
 // the build host's filesystem is used as the build root. The runner specifies how to use this
 // pipeline as a build pipeline, by naming the distro it contains. When the host system is used
 // as a build root, then the necessary runner is autodetected.
-func NewBase(m *Manifest, name string, build *Build) Base {
+func NewBase(name string, build *Build) Base {
 	p := Base{
-		manifest: m,
-		name:     name,
-		build:    build,
-	}
-	if build != nil {
-		if build.Base.manifest != m {
-			panic("build pipeline from a different manifest")
-		}
+		name:  name,
+		build: build,
 	}
 	return p
 }

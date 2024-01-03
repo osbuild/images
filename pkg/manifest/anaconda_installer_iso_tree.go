@@ -68,7 +68,7 @@ func NewAnacondaInstallerISOTree(buildPipeline *Build, anacondaPipeline *Anacond
 		panic("pipelines from different manifests")
 	}
 	p := &AnacondaInstallerISOTree{
-		Base:             NewBase(anacondaPipeline.Manifest(), "bootiso-tree", buildPipeline),
+		Base:             NewBase("bootiso-tree", buildPipeline),
 		anacondaPipeline: anacondaPipeline,
 		rootfsPipeline:   rootfsPipeline,
 		bootTreePipeline: bootTreePipeline,

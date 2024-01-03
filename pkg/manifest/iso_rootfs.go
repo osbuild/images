@@ -16,7 +16,7 @@ type ISORootfsImg struct {
 
 func NewISORootfsImg(buildPipeline *Build, installerPipeline Pipeline) *ISORootfsImg {
 	p := &ISORootfsImg{
-		Base:              NewBase(installerPipeline.Manifest(), "rootfs-image", buildPipeline),
+		Base:              NewBase("rootfs-image", buildPipeline),
 		installerPipeline: installerPipeline,
 	}
 	buildPipeline.addDependent(p)
