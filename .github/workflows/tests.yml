@@ -119,6 +119,25 @@ jobs:
         # allow seemingly unreachable commands
         SHELLCHECK_OPTS: -e SC1091 -e SC2002 -e SC2317
 
+  python-test:
+    name: "🐍 pytest (imgtestlib)"
+    runs-on: ubuntu-latest
+    container:
+      image: registry.fedoraproject.org/fedora:latest
+    steps:
+
+      - name: Install build and test dependencies
+        run: dnf -y install python3-pytest
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Testing imgtestlib
+        run: |
+          python3 -m pytest -v
+
   python-lint:
     name: "🐍 Lint (test scripts)"
     runs-on: ubuntu-latest
