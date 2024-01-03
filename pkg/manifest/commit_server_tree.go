@@ -36,8 +36,7 @@ type OSTreeCommitServer struct {
 // is a pipeline producing an ostree commit to be served. nginxConfigPath
 // is the path to the main nginx config file and listenPort is the port
 // nginx will be listening on.
-func NewOSTreeCommitServer(m *Manifest,
-	buildPipeline *Build,
+func NewOSTreeCommitServer(buildPipeline *Build,
 	platform platform.Platform,
 	repos []rpmmd.RepoConfig,
 	commitPipeline *OSTreeCommit,
@@ -53,11 +52,7 @@ func NewOSTreeCommitServer(m *Manifest,
 		listenPort:      listenPort,
 		Language:        "en_US",
 	}
-	if commitPipeline.Base.manifest != m {
-		panic("commit pipeline from different manifest")
-	}
 	buildPipeline.addDependent(p)
-	m.addPipeline(p)
 	return p
 }
 

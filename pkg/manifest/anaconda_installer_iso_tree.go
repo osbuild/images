@@ -75,7 +75,6 @@ func NewAnacondaInstallerISOTree(buildPipeline *Build, anacondaPipeline *Anacond
 		isoLabel:         bootTreePipeline.ISOLabel,
 	}
 	buildPipeline.addDependent(p)
-	anacondaPipeline.Manifest().addPipeline(p)
 	return p
 }
 

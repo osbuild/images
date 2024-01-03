@@ -31,7 +31,6 @@ func NewOCIContainer(buildPipeline *Build, treePipeline TreePipeline) *OCIContai
 		filename:     "oci-archive.tar",
 	}
 	buildPipeline.addDependent(p)
-	treePipeline.Manifest().addPipeline(p)
 	return p
 }
 

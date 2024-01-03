@@ -33,7 +33,6 @@ func NewVPC(buildPipeline *Build, imgPipeline *RawImage) *VPC {
 		filename:    "image.vhd",
 	}
 	buildPipeline.addDependent(p)
-	imgPipeline.Manifest().addPipeline(p)
 	return p
 }
 

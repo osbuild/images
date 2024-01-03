@@ -37,7 +37,6 @@ func NewTar(buildPipeline *Build, inputPipeline Pipeline, pipelinename string) *
 		filename:      "image.tar",
 	}
 	buildPipeline.addDependent(p)
-	inputPipeline.Manifest().addPipeline(p)
 	return p
 }
 

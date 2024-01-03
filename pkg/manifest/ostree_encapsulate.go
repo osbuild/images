@@ -19,7 +19,6 @@ func NewOSTreeEncapsulate(buildPipeline *Build, inputPipeline Pipeline, pipeline
 		filename:      "bootable-container.tar",
 	}
 	buildPipeline.addDependent(p)
-	inputPipeline.Manifest().addPipeline(p)
 	return p
 }
 

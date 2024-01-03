@@ -77,8 +77,7 @@ type AnacondaInstaller struct {
 	UseRHELLoraxTemplates bool
 }
 
-func NewAnacondaInstaller(m *Manifest,
-	installerType AnacondaInstallerType,
+func NewAnacondaInstaller(installerType AnacondaInstallerType,
 	buildPipeline *Build,
 	platform platform.Platform,
 	repos []rpmmd.RepoConfig,
@@ -96,7 +95,6 @@ func NewAnacondaInstaller(m *Manifest,
 		version:    version,
 	}
 	buildPipeline.addDependent(p)
-	m.addPipeline(p)
 	return p
 }
 
