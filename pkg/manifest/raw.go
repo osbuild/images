@@ -25,7 +25,7 @@ func (p *RawImage) SetFilename(filename string) {
 
 func NewRawImage(buildPipeline *Build, treePipeline *OS) *RawImage {
 	p := &RawImage{
-		Base:         NewBase(treePipeline.Manifest(), "image", buildPipeline),
+		Base:         NewBase("image", buildPipeline),
 		treePipeline: treePipeline,
 		filename:     "disk.img",
 	}

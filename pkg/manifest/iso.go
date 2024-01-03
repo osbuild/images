@@ -26,7 +26,7 @@ func (p *ISO) SetFilename(filename string) {
 
 func NewISO(buildPipeline *Build, treePipeline Pipeline, isoLabel string) *ISO {
 	p := &ISO{
-		Base:         NewBase(treePipeline.Manifest(), "bootiso", buildPipeline),
+		Base:         NewBase("bootiso", buildPipeline),
 		treePipeline: treePipeline,
 		filename:     "image.iso",
 		isoLabel:     isoLabel,

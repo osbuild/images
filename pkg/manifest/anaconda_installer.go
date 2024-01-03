@@ -87,7 +87,7 @@ func NewAnacondaInstaller(m *Manifest,
 	version string) *AnacondaInstaller {
 	name := "anaconda-tree"
 	p := &AnacondaInstaller{
-		Base:       NewBase(m, name, buildPipeline),
+		Base:       NewBase(name, buildPipeline),
 		Type:       installerType,
 		platform:   platform,
 		repos:      filterRepos(repos, name),

@@ -28,7 +28,7 @@ func (p *VPC) SetFilename(filename string) {
 // of the produced image.
 func NewVPC(buildPipeline *Build, imgPipeline *RawImage) *VPC {
 	p := &VPC{
-		Base:        NewBase(imgPipeline.Manifest(), "vpc", buildPipeline),
+		Base:        NewBase("vpc", buildPipeline),
 		imgPipeline: imgPipeline,
 		filename:    "image.vhd",
 	}

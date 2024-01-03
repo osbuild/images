@@ -45,7 +45,7 @@ func NewOSTreeCommitServer(m *Manifest,
 	listenPort string) *OSTreeCommitServer {
 	name := "container-tree"
 	p := &OSTreeCommitServer{
-		Base:            NewBase(m, name, buildPipeline),
+		Base:            NewBase(name, buildPipeline),
 		platform:        platform,
 		repos:           filterRepos(repos, name),
 		commitPipeline:  commitPipeline,

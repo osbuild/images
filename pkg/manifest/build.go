@@ -41,11 +41,10 @@ func NewBuild(m *Manifest, runner runner.Runner, repos []rpmmd.RepoConfig, opts 
 
 	name := "build"
 	pipeline := &Build{
-		Base:       NewBase(m, name, nil),
-		runner:     runner,
-		dependents: make([]Pipeline, 0),
-		repos:      filterRepos(repos, name),
-
+		Base:               NewBase(name, nil),
+		runner:             runner,
+		dependents:         make([]Pipeline, 0),
+		repos:              filterRepos(repos, name),
 		containerBuildable: opts.ContainerBuildable,
 	}
 	m.addPipeline(pipeline)

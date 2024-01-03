@@ -25,7 +25,7 @@ func (p *XZ) SetFilename(filename string) {
 // raw image that will be xz compressed.
 func NewXZ(buildPipeline *Build, imgPipeline FilePipeline) *XZ {
 	p := &XZ{
-		Base:        NewBase(imgPipeline.Manifest(), "xz", buildPipeline),
+		Base:        NewBase("xz", buildPipeline),
 		filename:    "image.xz",
 		imgPipeline: imgPipeline,
 	}

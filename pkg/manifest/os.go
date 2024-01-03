@@ -185,7 +185,7 @@ func NewOS(m *Manifest,
 	repos []rpmmd.RepoConfig) *OS {
 	name := "os"
 	p := &OS{
-		Base:            NewBase(m, name, buildPipeline),
+		Base:            NewBase(name, buildPipeline),
 		repos:           filterRepos(repos, name),
 		platform:        platform,
 		InstallWeakDeps: true,
