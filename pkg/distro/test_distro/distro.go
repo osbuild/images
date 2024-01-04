@@ -197,6 +197,14 @@ func (t *TestImageType) BootMode() distro.BootMode {
 	return distro.BOOT_HYBRID
 }
 
+func (r *TestImageType) RequiredCustomizations() []string {
+	return nil
+}
+
+func (r *TestImageType) SupportedCustomizations() []string {
+	return nil
+}
+
 func (t *TestImageType) BuildPipelines() []string {
 	return distro.BuildPipelinesFallback()
 }

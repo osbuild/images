@@ -149,6 +149,14 @@ func (t *imageType) BootMode() distro.BootMode {
 	return distro.BOOT_NONE
 }
 
+func (r *imageType) RequiredCustomizations() []string {
+	return nil
+}
+
+func (r *imageType) SupportedCustomizations() []string {
+	return nil
+}
+
 func (t *imageType) getPartitionTable(
 	mountpoints []blueprint.FilesystemCustomization,
 	options distro.ImageOptions,
