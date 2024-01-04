@@ -11,9 +11,10 @@ import (
 )
 
 func getTestingRepoRegistry() *RepoRegistry {
+	testDistro := test_distro.New()
 	return &RepoRegistry{
 		map[string]map[string][]rpmmd.RepoConfig{
-			test_distro.TestDistroName: {
+			testDistro.Name(): {
 				test_distro.TestArchName: {
 					{
 						Name:     "baseos",
@@ -135,6 +136,7 @@ func TestInvalidReposByImageType(t *testing.T) {
 // TestInvalidreposByImageTypeName tests return values from reposByImageTypeName
 // for invalid distro name, arch and image type
 func TestInvalidreposByImageTypeName(t *testing.T) {
+	testDistro := test_distro.New()
 	rr := getTestingRepoRegistry()
 
 	type args struct {
@@ -150,7 +152,7 @@ func TestInvalidreposByImageTypeName(t *testing.T) {
 		{
 			name: "invalid distro, valid arch and image type",
 			args: args{
-				distro:    test_distro.TestDistroName + "-invalid",
+				distro:    testDistro.Name() + "-invalid",
 				arch:      test_distro.TestArchName,
 				imageType: test_distro.TestImageTypeName,
 			},
@@ -165,7 +167,7 @@ func TestInvalidreposByImageTypeName(t *testing.T) {
 		{
 			name: "invalid arch, valid distro and image type",
 			args: args{
-				distro:    test_distro.TestDistroName,
+				distro:    testDistro.Name(),
 				arch:      test_distro.TestArchName + "-invalid",
 				imageType: test_distro.TestImageTypeName,
 			},
@@ -180,7 +182,7 @@ func TestInvalidreposByImageTypeName(t *testing.T) {
 		{
 			name: "invalid image type, valid distro and arch, without tagged repos",
 			args: args{
-				distro:    test_distro.TestDistroName,
+				distro:    testDistro.Name(),
 				arch:      test_distro.TestArchName,
 				imageType: test_distro.TestImageTypeName + "-invalid",
 			},
@@ -200,7 +202,7 @@ func TestInvalidreposByImageTypeName(t *testing.T) {
 		{
 			name: "invalid image type, valid distro and arch, with tagged repos",
 			args: args{
-				distro:    test_distro.TestDistroName,
+				distro:    testDistro.Name(),
 				arch:      test_distro.TestArch2Name,
 				imageType: test_distro.TestImageTypeName + "-invalid",
 			},
@@ -311,6 +313,7 @@ func TestInvalidReposByArch(t *testing.T) {
 // TestInvalidReposByArchName tests return values from ReposByArchName
 // for invalid distro name and arch
 func TestInvalidReposByArchName(t *testing.T) {
+	testDistro := test_distro.New()
 	rr := getTestingRepoRegistry()
 
 	type args struct {
@@ -326,7 +329,7 @@ func TestInvalidReposByArchName(t *testing.T) {
 		{
 			name: "invalid distro, valid arch, without tagged repos",
 			args: args{
-				distro:      test_distro.TestDistroName + "-invalid",
+				distro:      testDistro.Name() + "-invalid",
 				arch:        test_distro.TestArch2Name,
 				taggedRepos: false,
 			},
@@ -341,7 +344,7 @@ func TestInvalidReposByArchName(t *testing.T) {
 		{
 			name: "invalid distro, valid arch, with tagged repos",
 			args: args{
-				distro:      test_distro.TestDistroName + "-invalid",
+				distro:      testDistro.Name() + "-invalid",
 				arch:        test_distro.TestArch2Name,
 				taggedRepos: true,
 			},
@@ -356,7 +359,7 @@ func TestInvalidReposByArchName(t *testing.T) {
 		{
 			name: "invalid arch, valid distro, without tagged repos",
 			args: args{
-				distro:      test_distro.TestDistroName,
+				distro:      testDistro.Name(),
 				arch:        test_distro.TestArch2Name + "-invalid",
 				taggedRepos: false,
 			},
@@ -371,7 +374,7 @@ func TestInvalidReposByArchName(t *testing.T) {
 		{
 			name: "invalid arch, valid distro, with tagged repos",
 			args: args{
-				distro:      test_distro.TestDistroName,
+				distro:      testDistro.Name(),
 				arch:        test_distro.TestArch2Name + "-invalid",
 				taggedRepos: true,
 			},

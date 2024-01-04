@@ -7,7 +7,6 @@ import (
 
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/distroregistry"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -46,12 +45,7 @@ type TestImageType struct {
 }
 
 const (
-	TestDistroName              = "test-distro"
-	TestDistro2Name             = "test-distro-2"
-	TestDistroReleasever        = "1"
-	TestDistro2Releasever       = "2"
-	TestDistroModulePlatformID  = "platform:test"
-	TestDistro2ModulePlatformID = "platform:test-2"
+	testDistroName = "test_distro"
 
 	TestArchName  = "test_arch"
 	TestArch2Name = "test_arch2"
@@ -294,18 +288,18 @@ func (t *TestImageType) Manifest(b *blueprint.Blueprint, options distro.ImageOpt
 	return m, nil, nil
 }
 
-// NewTestDistro returns a new instance of TestDistro with the
-// given name and modulePlatformID.
+// newTestDistro returns a new instance of TestDistro with the
+// given release version.
 //
 // It contains two architectures "test_arch" and "test_arch2".
 // "test_arch" contains one image type "test_type".
 // "test_arch2" contains two image types "test_type" and "test_type2".
-func NewTestDistro(name, modulePlatformID, releasever string) *TestDistro {
+func newTestDistro(releasever string) *TestDistro {
 	td := TestDistro{
-		name:             name,
+		name:             fmt.Sprintf("%s-%s", testDistroName, releasever),
 		releasever:       releasever,
-		modulePlatformID: modulePlatformID,
-		ostreeRef:        "test/13/x86_64/edge",
+		modulePlatformID: fmt.Sprintf("platform:%s-%s", testDistroName, releasever),
+		ostreeRef:        fmt.Sprintf("test/%s/x86_64/edge", releasever),
 	}
 
 	ta1 := TestArch{
@@ -373,19 +367,24 @@ func NewTestDistro(name, modulePlatformID, releasever string) *TestDistro {
 	return &td
 }
 
-// New returns new instance of TestDistro named "test-distro".
-func New() *TestDistro {
-	return NewTestDistro(TestDistroName, TestDistroModulePlatformID, TestDistroReleasever)
-}
-
-func NewRegistry() *distroregistry.Registry {
-	td := New()
-	registry, err := distroregistry.New(td, td)
+func DistroFactory(idStr string) distro.Distro {
+	id, err := distro.ParseID(idStr)
 	if err != nil {
-		panic(err)
+		return nil
 	}
 
-	// Override the host's architecture name with the test's name
-	registry.SetHostArchName(TestArchName)
-	return registry
+	if id.Name != testDistroName {
+		return nil
+	}
+
+	if id.MinorVersion != -1 {
+		return nil
+	}
+
+	return newTestDistro(fmt.Sprint(id.MajorVersion))
+}
+
+// New returns new instance of TestDistro named "test-distro-1".
+func New() *TestDistro {
+	return newTestDistro("1")
 }

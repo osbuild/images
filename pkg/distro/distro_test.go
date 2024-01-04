@@ -11,7 +11,8 @@ import (
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/distroregistry"
+	"github.com/osbuild/images/pkg/distro/distro_test_common"
+	"github.com/osbuild/images/pkg/distrofactory"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/stretchr/testify/assert"
@@ -20,9 +21,10 @@ import (
 
 // Ensure that all package sets defined in the package set chains are defined for the image type
 func TestImageType_PackageSetsChains(t *testing.T) {
-	distros := distroregistry.NewDefault()
-	for _, distroName := range distros.List() {
-		d := distros.GetDistro(distroName)
+	distroFactory := distrofactory.NewDefault()
+	distros := distro_test_common.ListTestedDistros(t)
+	for _, distroName := range distros {
+		d := distroFactory.GetDistro(distroName)
 		for _, archName := range d.ListArches() {
 			arch, err := d.GetArch(archName)
 			require.Nil(t, err)
@@ -95,9 +97,10 @@ func TestImageTypePipelineNames(t *testing.T) {
 	}
 
 	assert := assert.New(t)
-	distros := distroregistry.NewDefault()
-	for _, distroName := range distros.List() {
-		d := distros.GetDistro(distroName)
+	distroFactory := distrofactory.NewDefault()
+	distros := distro_test_common.ListTestedDistros(t)
+	for _, distroName := range distros {
+		d := distroFactory.GetDistro(distroName)
 		for _, archName := range d.ListArches() {
 			arch, err := d.GetArch(archName)
 			assert.Nil(err)
@@ -406,11 +409,12 @@ func TestPipelineRepositories(t *testing.T) {
 		},
 	}
 
-	distros := distroregistry.NewDefault()
+	distroFactory := distrofactory.NewDefault()
+	distros := distro_test_common.ListTestedDistros(t)
 	for tName, tCase := range testCases {
 		t.Run(tName, func(t *testing.T) {
-			for _, distroName := range distros.List() {
-				d := distros.GetDistro(distroName)
+			for _, distroName := range distros {
+				d := distroFactory.GetDistro(distroName)
 				for _, archName := range d.ListArches() {
 					arch, err := d.GetArch(archName)
 					require.Nil(err)

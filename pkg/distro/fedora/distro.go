@@ -519,20 +519,6 @@ func (a *architecture) Distro() distro.Distro {
 	return a.distro
 }
 
-// New creates a new distro object, defining the supported architectures and image types
-func NewF37() distro.Distro {
-	return newDistro(37)
-}
-func NewF38() distro.Distro {
-	return newDistro(38)
-}
-func NewF39() distro.Distro {
-	return newDistro(39)
-}
-func NewF40() distro.Distro {
-	return newDistro(40)
-}
-
 func newDistro(version int) distro.Distro {
 	rd := getDistro(version)
 
@@ -900,4 +886,30 @@ func newDistro(version int) distro.Distro {
 
 	rd.addArches(x86_64, aarch64, ppc64le, s390x)
 	return &rd
+}
+
+func ParseID(idStr string) (*distro.ID, error) {
+	id, err := distro.ParseID(idStr)
+	if err != nil {
+		return nil, err
+	}
+
+	if id.Name != "fedora" {
+		return nil, fmt.Errorf("invalid distro name: %s", id.Name)
+	}
+
+	if id.MinorVersion != -1 {
+		return nil, fmt.Errorf("fedora distro does not support minor versions")
+	}
+
+	return id, nil
+}
+
+func DistroFactory(idStr string) distro.Distro {
+	id, err := ParseID(idStr)
+	if err != nil {
+		return nil
+	}
+
+	return newDistro(id.MajorVersion)
 }

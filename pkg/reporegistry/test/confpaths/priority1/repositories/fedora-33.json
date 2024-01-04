@@ -1,0 +1,30 @@
+{
+  "test_arch": [
+    {
+      "name": "fedora-33-p1",
+      "baseurl": "https://example.com/fedora-33-p1/test_arch",
+      "gpgkey": "FAKE-GPG-KEY",
+      "check_gpg": true
+    },
+    {
+      "name": "updates-33-p1",
+      "baseurl": "https://example.com/updates-33-p1/test_arch",
+      "gpgkey": "FAKE-GPG-KEY",
+      "check_gpg": true
+    }
+  ],
+  "test_arch2": [
+    {
+      "name": "fedora-33-p1",
+      "baseurl": "https://example.com/fedora-33-p1/test_arch2",
+      "gpgkey": "FAKE-GPG-KEY",
+      "check_gpg": true
+    },
+    {
+      "name": "updates-33-p1",
+      "baseurl": "https://example.com/updates-33-p1/test_arch2",
+      "gpgkey": "FAKE-GPG-KEY",
+      "check_gpg": true
+    }
+  ]
+}

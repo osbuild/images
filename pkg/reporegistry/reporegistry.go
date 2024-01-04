@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distroidparser"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
@@ -18,12 +19,19 @@ type RepoRegistry struct {
 // New returns a new RepoRegistry instance with the data
 // loaded from the given repoConfigPaths
 func New(repoConfigPaths []string) (*RepoRegistry, error) {
-	repositories, err := rpmmd.LoadAllRepositories(repoConfigPaths)
+	repositories, err := LoadAllRepositories(repoConfigPaths)
 	if err != nil {
 		return nil, err
 	}
 
 	return &RepoRegistry{repositories}, nil
+}
+
+// NewTestedDefault returns a new RepoRegistry instance with the data
+// loaded from the default test repositories
+func NewTestedDefault() (*RepoRegistry, error) {
+	testReposPath := []string{"./test/data"}
+	return New(testReposPath)
 }
 
 func NewFromDistrosRepoConfigs(distrosRepoConfigs rpmmd.DistrosRepoConfigs) *RepoRegistry {
@@ -85,9 +93,9 @@ func (r *RepoRegistry) reposByImageTypeName(distro, arch, imageType string) ([]r
 func (r *RepoRegistry) ReposByArchName(distro, arch string, includeTagged bool) ([]rpmmd.RepoConfig, error) {
 	repositories := []rpmmd.RepoConfig{}
 
-	archRepos, found := r.DistroHasRepos(distro, arch)
-	if !found {
-		return nil, fmt.Errorf("there are no repositories for distribution '%s' and architecture '%s'", distro, arch)
+	archRepos, err := r.DistroHasRepos(distro, arch)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get repositories for distribution '%s' and architecture '%s': %v", distro, arch, err)
 	}
 
 	for _, repo := range archRepos {
@@ -103,12 +111,32 @@ func (r *RepoRegistry) ReposByArchName(distro, arch string, includeTagged bool) 
 }
 
 // DistroHasRepos returns the repositories for the distro+arch, and a found flag
-func (r *RepoRegistry) DistroHasRepos(distro, arch string) (repos []rpmmd.RepoConfig, found bool) {
-	distroRepos, found := r.repos[distro]
-	if !found {
-		return repos, false
+func (r *RepoRegistry) DistroHasRepos(distro, arch string) ([]rpmmd.RepoConfig, error) {
+	// compatibility layer to support old repository definition filenames
+	// without a dot to separate major and minor release versions
+	stdDistroName, err := distroidparser.DefaultParser.Standardize(distro)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse distro ID string: %v", err)
 	}
-	repos, found = distroRepos[arch]
 
-	return repos, found
+	distroRepos, found := r.repos[stdDistroName]
+	if !found {
+		return nil, fmt.Errorf("there are no repositories for distribution '%s'", stdDistroName)
+	}
+	repos, found := distroRepos[arch]
+	if !found {
+		return nil, fmt.Errorf("there are no repositories for distribution '%s' and architecture '%s'", stdDistroName, arch)
+	}
+
+	return repos, nil
+}
+
+// ListDistros returns a list of all distros which have a repository defined
+// in the registry.
+func (r *RepoRegistry) ListDistros() []string {
+	distros := make([]string, 0, len(r.repos))
+	for name := range r.repos {
+		distros = append(distros, name)
+	}
+	return distros
 }
