@@ -514,6 +514,14 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 	return warnings, nil
 }
 
+func (t *imageType) RequiredCustomizations() []string {
+	return nil
+}
+
+func (t *imageType) SupportedCustomizations() []string {
+	return nil
+}
+
 func bootstrapContainerFor(t *imageType) string {
 	a := common.Must(arch.FromString(t.arch.name))
 	return t.arch.distro.DistroYAML.BootstrapContainers[a]
