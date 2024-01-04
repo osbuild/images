@@ -326,6 +326,14 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 	}
 }
 
+func (t *imageType) RequiredBlueprintOptions() []string {
+	return t.ImageTypeYAML.RequiredBlueprintOptions
+}
+
+func (t *imageType) SupportedBlueprintOptions() []string {
+	return t.ImageTypeYAML.SupportedBlueprintOptions
+}
+
 func bootstrapContainerFor(t *imageType) string {
 	return t.arch.distro.DistroYAML.BootstrapContainers[t.arch.arch]
 }

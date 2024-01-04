@@ -388,6 +388,9 @@ type ImageTypeYAML struct {
 
 	SupportedPartitioningModes []partition.PartitioningMode `yaml:"supported_partitioning_modes"`
 
+	SupportedBlueprintOptions []string `yaml:"supported_blueprint_options"`
+	RequiredBlueprintOptions  []string `yaml:"required_blueprint_options"`
+
 	// name is set by the loader
 	name string
 }
