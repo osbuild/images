@@ -31,7 +31,8 @@ func TestCrossArchDepsolve(t *testing.T) {
 
 	// Set up temporary directory for rpm/dnf cache
 	dir := t.TempDir()
-	baseSolver := dnfjson.NewBaseSolver(dir)
+	baseSolver, err := dnfjson.NewBaseSolver(dir)
+	require.Nil(t, err)
 
 	repos, err := rpmmd.LoadRepositories([]string{repoDir}, cs9.Name())
 	require.NoErrorf(t, err, "Failed to LoadRepositories %v", cs9.Name())

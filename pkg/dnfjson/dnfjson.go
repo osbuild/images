@@ -43,32 +43,37 @@ type BaseSolver struct {
 	resultCache *dnfCache
 }
 
+var depSolveDnfPaths = []string{"/usr/libexec/", "/usr/lib/osbuild/"}
+
 // Find the osbuild-depsolve-dnf script. This checks the default location in
 // /usr/libexec but also /usr/lib in case it's used on a distribution that
 // doesn't use libexec.
-func findDepsolveDnf() string {
-	locations := []string{"/usr/libexec/osbuild-depsolve-dnf", "/usr/lib/osbuild/osbuild-depsolve-dnf"}
-	for _, djPath := range locations {
-		_, err := os.Stat(djPath)
+func findDepsolveDnf() (string, error) {
+	for _, djPath := range depSolveDnfPaths {
+		_, err := os.Stat(filepath.Join(djPath, "osbuild-depsolve-dnf"))
 		if !os.IsNotExist(err) {
-			return djPath
+			return djPath, nil
 		}
 	}
 
 	// if it's not found, return empty string; the run() function will fail if
 	// it's used before setting.
-	return locations[0]
+	return "", fmt.Errorf("cannot find required osbuild-depsolve-dnf in any of %q", depSolveDnfPaths)
 }
 
 // Create a new unconfigured BaseSolver (without platform information). It can
 // be used to create configured Solver instances with the NewWithConfig()
 // method.
-func NewBaseSolver(cacheDir string) *BaseSolver {
+func NewBaseSolver(cacheDir string) (*BaseSolver, error) {
+	depsolveDnf, err := findDepsolveDnf()
+	if err != nil {
+		return nil, err
+	}
 	return &BaseSolver{
 		cache:       newRPMCache(cacheDir, 1024*1024*1024), // 1 GiB
-		dnfJsonCmd:  []string{findDepsolveDnf()},
+		dnfJsonCmd:  []string{depsolveDnf},
 		resultCache: NewDNFCache(60 * time.Second),
-	}
+	}, nil
 }
 
 // SetMaxCacheSize sets the maximum size for the global repository metadata
@@ -129,9 +134,12 @@ type Solver struct {
 }
 
 // Create a new Solver with the given configuration. Initialising a Solver also loads system subscription information.
-func NewSolver(modulePlatformID, releaseVer, arch, distro, cacheDir string) *Solver {
-	s := NewBaseSolver(cacheDir)
-	return s.NewWithConfig(modulePlatformID, releaseVer, arch, distro)
+func NewSolver(modulePlatformID, releaseVer, arch, distro, cacheDir string) (*Solver, error) {
+	s, err := NewBaseSolver(cacheDir)
+	if err != nil {
+		return nil, err
+	}
+	return s.NewWithConfig(modulePlatformID, releaseVer, arch, distro), nil
 }
 
 // GetCacheDir returns a distro specific rpm cache directory
