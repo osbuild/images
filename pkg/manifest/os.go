@@ -125,6 +125,7 @@ type OSCustomizations struct {
 	LeapSecTZ            *string
 	FactAPIType          *facts.APIType
 	Presets              []osbuild.Preset
+	ContainersStorage    *string
 
 	Subscription *subscription.ImageOptions
 	RHSMConfig   map[subscription.RHSMStatus]*osbuild.RHSMStageOptions
@@ -290,7 +291,7 @@ func (p *OS) getBuildPackages(distro Distro) []string {
 	}
 
 	if len(p.OSCustomizations.Containers) > 0 {
-		if p.OSTreeRef != "" {
+		if p.OSCustomizations.ContainersStorage != nil {
 			switch distro {
 			case DISTRO_EL8:
 				packages = append(packages, "python3-pytoml")
@@ -406,12 +407,8 @@ func (p *OS) serialize() osbuild.Pipeline {
 
 		var storagePath string
 
-		// OSTree commits do not include data in `/var` since that is tied to the
-		// deployment, rather than the commit. Therefore the containers need to be
-		// stored in a different location, like `/usr/share`, and the container
-		// storage engine configured accordingly.
-		if p.OSTreeRef != "" {
-			storagePath = "/usr/share/containers/storage"
+		if containerStore := p.OSCustomizations.ContainersStorage; containerStore != nil {
+			storagePath = *containerStore
 			storageConf := "/etc/containers/storage.conf"
 
 			containerStoreOpts := osbuild.NewContainerStorageOptions(storageConf, storagePath)
