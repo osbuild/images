@@ -50,6 +50,9 @@ const (
 	// release version.
 	TestDistroNameBase = "test-distro"
 
+	// An ID string for a Test Distro instance with release version 1.
+	TestDistro1Name = TestDistroNameBase + "-1"
+
 	TestArchName  = "test_arch"
 	TestArch2Name = "test_arch2"
 	TestArch3Name = "test_arch3"
@@ -385,9 +388,4 @@ func DistroFactory(idStr string) distro.Distro {
 	}
 
 	return newTestDistro(fmt.Sprint(id.MajorVersion))
-}
-
-// New returns new instance of TestDistro named "test-distro-1".
-func New() *TestDistro {
-	return newTestDistro("1")
 }
