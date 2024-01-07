@@ -14,12 +14,11 @@ type OSTreeEncapsulate struct {
 
 func NewOSTreeEncapsulate(buildPipeline *Build, inputPipeline Pipeline, pipelinename string) *OSTreeEncapsulate {
 	p := &OSTreeEncapsulate{
-		Base:          NewBase(inputPipeline.Manifest(), pipelinename, buildPipeline),
+		Base:          NewBase(pipelinename, buildPipeline),
 		inputPipeline: inputPipeline,
 		filename:      "bootable-container.tar",
 	}
 	buildPipeline.addDependent(p)
-	inputPipeline.Manifest().addPipeline(p)
 	return p
 }
 

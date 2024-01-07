@@ -41,11 +41,10 @@ func NewBuild(m *Manifest, runner runner.Runner, repos []rpmmd.RepoConfig, opts 
 
 	name := "build"
 	pipeline := &Build{
-		Base:       NewBase(m, name, nil),
-		runner:     runner,
-		dependents: make([]Pipeline, 0),
-		repos:      filterRepos(repos, name),
-
+		Base:               NewBase(name, nil),
+		runner:             runner,
+		dependents:         make([]Pipeline, 0),
+		repos:              filterRepos(repos, name),
 		containerBuildable: opts.ContainerBuildable,
 	}
 	m.addPipeline(pipeline)
@@ -54,6 +53,11 @@ func NewBuild(m *Manifest, runner runner.Runner, repos []rpmmd.RepoConfig, opts 
 
 func (p *Build) addDependent(dep Pipeline) {
 	p.dependents = append(p.dependents, dep)
+	man := p.Manifest()
+	if man == nil {
+		panic("cannot add build dependent without a manifest")
+	}
+	man.addPipeline(dep)
 }
 
 func (p *Build) getPackageSetChain(distro Distro) []rpmmd.PackageSet {

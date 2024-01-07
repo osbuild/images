@@ -27,12 +27,11 @@ func (p *VMDK) SetFilename(filename string) {
 // Filename is the name of the produced image.
 func NewVMDK(buildPipeline *Build, imgPipeline FilePipeline) *VMDK {
 	p := &VMDK{
-		Base:        NewBase(imgPipeline.Manifest(), "vmdk", buildPipeline),
+		Base:        NewBase("vmdk", buildPipeline),
 		imgPipeline: imgPipeline,
 		filename:    "image.vmdk",
 	}
 	buildPipeline.addDependent(p)
-	imgPipeline.Manifest().addPipeline(p)
 	return p
 }
 

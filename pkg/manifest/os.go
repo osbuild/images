@@ -179,19 +179,15 @@ type OS struct {
 // NewOS creates a new OS pipeline. build is the build pipeline to use for
 // building the OS pipeline. platform is the target platform for the final
 // image. repos are the repositories to install RPMs from.
-func NewOS(m *Manifest,
-	buildPipeline *Build,
-	platform platform.Platform,
-	repos []rpmmd.RepoConfig) *OS {
+func NewOS(buildPipeline *Build, platform platform.Platform, repos []rpmmd.RepoConfig) *OS {
 	name := "os"
 	p := &OS{
-		Base:            NewBase(m, name, buildPipeline),
+		Base:            NewBase(name, buildPipeline),
 		repos:           filterRepos(repos, name),
 		platform:        platform,
 		InstallWeakDeps: true,
 	}
 	buildPipeline.addDependent(p)
-	m.addPipeline(p)
 	return p
 }
 

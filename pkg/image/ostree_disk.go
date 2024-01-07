@@ -74,13 +74,13 @@ func NewOSTreeDiskImageFromContainer(container container.SourceSpec, ref string)
 	}
 }
 
-func baseRawOstreeImage(img *OSTreeDiskImage, m *manifest.Manifest, buildPipeline *manifest.Build) *manifest.RawOSTreeImage {
+func baseRawOstreeImage(img *OSTreeDiskImage, buildPipeline *manifest.Build) *manifest.RawOSTreeImage {
 	var osPipeline *manifest.OSTreeDeployment
 	switch {
 	case img.CommitSource != nil:
-		osPipeline = manifest.NewOSTreeCommitDeployment(buildPipeline, m, img.CommitSource, img.OSName, img.Platform)
+		osPipeline = manifest.NewOSTreeCommitDeployment(buildPipeline, img.CommitSource, img.OSName, img.Platform)
 	case img.ContainerSource != nil:
-		osPipeline = manifest.NewOSTreeContainerDeployment(buildPipeline, m, img.ContainerSource, img.Ref, img.OSName, img.Platform)
+		osPipeline = manifest.NewOSTreeContainerDeployment(buildPipeline, img.ContainerSource, img.Ref, img.OSName, img.Platform)
 	default:
 		panic("no content source defined for ostree image")
 	}
@@ -126,7 +126,7 @@ func (img *OSTreeDiskImage) InstantiateManifest(m *manifest.Manifest,
 		panic(fmt.Sprintf("no compression is allowed with %q format for %q", imgFormat, img.name))
 	}
 
-	baseImage := baseRawOstreeImage(img, m, buildPipeline)
+	baseImage := baseRawOstreeImage(img, buildPipeline)
 	switch img.Platform.GetImageFormat() {
 	case platform.FORMAT_VMDK:
 		vmdkPipeline := manifest.NewVMDK(buildPipeline, baseImage)

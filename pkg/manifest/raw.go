@@ -25,13 +25,12 @@ func (p *RawImage) SetFilename(filename string) {
 
 func NewRawImage(buildPipeline *Build, treePipeline *OS) *RawImage {
 	p := &RawImage{
-		Base:         NewBase(treePipeline.Manifest(), "image", buildPipeline),
+		Base:         NewBase("image", buildPipeline),
 		treePipeline: treePipeline,
 		filename:     "disk.img",
 	}
 	buildPipeline.addDependent(p)
 	p.PartTool = osbuild.PTSfdisk // default; can be changed after initialisation
-	treePipeline.Manifest().addPipeline(p)
 	return p
 }
 

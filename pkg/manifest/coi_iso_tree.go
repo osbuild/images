@@ -48,14 +48,13 @@ func NewCoreOSISOTree(
 	}
 
 	p := &CoreOSISOTree{
-		Base:             NewBase(coiPipeline.Manifest(), "bootiso-tree", buildPipeline),
+		Base:             NewBase("bootiso-tree", buildPipeline),
 		payloadPipeline:  payloadPipeline,
 		coiPipeline:      coiPipeline,
 		bootTreePipeline: bootTreePipeline,
 		isoLabel:         bootTreePipeline.ISOLabel,
 	}
 	buildPipeline.addDependent(p)
-	coiPipeline.Manifest().addPipeline(p)
 	return p
 }
 

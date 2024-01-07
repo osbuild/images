@@ -18,12 +18,11 @@ type OSTreeCommit struct {
 // ref is the ref to create the commit under.
 func NewOSTreeCommit(buildPipeline *Build, treePipeline *OS, ref string) *OSTreeCommit {
 	p := &OSTreeCommit{
-		Base:         NewBase(treePipeline.Manifest(), "ostree-commit", buildPipeline),
+		Base:         NewBase("ostree-commit", buildPipeline),
 		treePipeline: treePipeline,
 		ref:          ref,
 	}
 	buildPipeline.addDependent(p)
-	treePipeline.Manifest().addPipeline(p)
 	return p
 }
 
