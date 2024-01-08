@@ -3,8 +3,11 @@ package manifest
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osbuild/images/pkg/container"
+	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/runner"
 )
@@ -82,4 +85,36 @@ func TestBuildContainerBuildableNo(t *testing.T) {
 		labels := build.getSELinuxLabels()
 		require.Equal(t, labels, tc.expectedSELinuxLabels)
 	}
+}
+
+func TestNewBuildFromContainerSpecs(t *testing.T) {
+	containers := []container.SourceSpec{
+		{
+			Name:   "Build container",
+			Source: "ghcr.io/ondrejbudai/booc:fedora",
+		},
+	}
+	mf := New()
+	runner := &runner.Fedora{Version: 39}
+
+	buildIf := NewBuildFromContainer(&mf, runner, containers, nil)
+	require.NotNil(t, buildIf)
+	build := buildIf.(*BuildrootFromContainer)
+
+	fakeContainerSpecs := []container.Spec{
+		{
+			ImageID: "id-0",
+			Source:  "registry.example.org/reg/img",
+		},
+	}
+	build.serializeStart(nil, fakeContainerSpecs, nil)
+	osbuildPipeline := build.serialize()
+	require.Len(t, osbuildPipeline.Stages, 2)
+	assert.Equal(t, osbuildPipeline.Stages[0].Type, "org.osbuild.container-deploy")
+	// one container src input is added
+	assert.Equal(t, len(osbuildPipeline.Stages[0].Inputs.(osbuild.ContainerDeployInputs).Images.References), 1)
+
+	assert.Equal(t, osbuildPipeline.Stages[1].Type, "org.osbuild.selinux")
+	assert.Equal(t, len(osbuildPipeline.Stages[1].Options.(*osbuild.SELinuxStageOptions).Labels), 1)
+	assert.Equal(t, osbuildPipeline.Stages[1].Options.(*osbuild.SELinuxStageOptions).Labels["/usr/bin/ostree"], "system_u:object_r:install_exec_t:s0")
 }
