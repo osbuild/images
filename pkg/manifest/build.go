@@ -146,3 +146,86 @@ func (p *BuildrootFromPackages) getSELinuxLabels() map[string]string {
 	}
 	return labels
 }
+
+type BuildrootFromContainer struct {
+	Base
+
+	runner     runner.Runner
+	dependents []Pipeline
+
+	containers     []container.SourceSpec
+	containerSpecs []container.Spec
+
+	containerBuildable bool
+}
+
+// NewBuildFromContainer creates a new build pipeline from the given
+// containers specs
+func NewBuildFromContainer(m *Manifest, runner runner.Runner, containerSources []container.SourceSpec, opts *BuildOptions) Build {
+	if opts == nil {
+		opts = &BuildOptions{}
+	}
+
+	name := "build"
+	pipeline := &BuildrootFromContainer{
+		Base:       NewBase(name, nil),
+		runner:     runner,
+		dependents: make([]Pipeline, 0),
+		containers: containerSources,
+
+		containerBuildable: opts.ContainerBuildable,
+	}
+	m.addPipeline(pipeline)
+	return pipeline
+}
+
+func (p *BuildrootFromContainer) addDependent(dep Pipeline) {
+	p.dependents = append(p.dependents, dep)
+	man := p.Manifest()
+	if man == nil {
+		panic("cannot add build dependent without a manifest")
+	}
+	man.addPipeline(dep)
+}
+
+func (p *BuildrootFromContainer) getContainerSources() []container.SourceSpec {
+	return p.containers
+}
+
+func (p *BuildrootFromContainer) serializeStart(_ []rpmmd.PackageSpec, containerSpecs []container.Spec, _ []ostree.CommitSpec) {
+	if len(p.containerSpecs) > 0 {
+		panic("double call to serializeStart()")
+	}
+	p.containerSpecs = containerSpecs
+}
+
+func (p *BuildrootFromContainer) serializeEnd() {
+	if len(p.containerSpecs) == 0 {
+		panic("serializeEnd() call when serialization not in progress")
+	}
+	p.containerSpecs = nil
+}
+
+func (p *BuildrootFromContainer) serialize() osbuild.Pipeline {
+	if len(p.containerSpecs) == 0 {
+		panic("serialization not started")
+	}
+	pipeline := p.Base.serialize()
+	pipeline.Runner = p.runner.String()
+
+	stage, err := osbuild.NewContainerDeployStage(osbuild.NewContainersInputForSources(p.containerSpecs))
+	if err != nil {
+		panic(err)
+	}
+	pipeline.AddStage(stage)
+	pipeline.AddStage(osbuild.NewSELinuxStage(
+		&osbuild.SELinuxStageOptions{
+			FileContexts: "etc/selinux/targeted/contexts/files/file_contexts",
+			Labels: map[string]string{
+				"/usr/bin/ostree": "system_u:object_r:install_exec_t:s0",
+			},
+		},
+	))
+
+	return pipeline
+}
