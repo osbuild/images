@@ -576,8 +576,7 @@ func TestDistro_ManifestFIPSWarning(t *testing.T) {
 		"azure-eap7-rhui",
 	}
 
-	distroFactory, err := distrofactory.NewDefault(nil)
-	require.NoError(t, err)
+	distroFactory := distrofactory.NewDefault()
 	distros := distro_test_common.ListTestedDistros(t)
 	for _, distroName := range distros {
 		// FIPS blueprint customization is not supported for RHEL 7 images
