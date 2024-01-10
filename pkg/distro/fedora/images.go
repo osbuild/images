@@ -498,7 +498,8 @@ func iotInstallerImage(workload workload.Workload,
 	img.ISOLabelTempl = d.isolabelTmpl
 	img.Product = d.product
 	img.Variant = "IoT"
-	img.OSName = "fedora"
+	img.OSName = "fedora-iot"
+	img.Remote = "fedora-iot"
 	img.OSVersion = d.osVersion
 	img.Release = fmt.Sprintf("%s %s", d.product, d.osVersion)
 

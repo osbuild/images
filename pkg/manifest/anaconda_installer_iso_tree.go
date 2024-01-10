@@ -23,6 +23,7 @@ type AnacondaInstallerISOTree struct {
 	// TODO: review optional and mandatory fields and their meaning
 	OSName  string
 	Release string
+	Remote  string
 	Users   []users.User
 	Groups  []users.Group
 
@@ -336,6 +337,7 @@ func (p *AnacondaInstallerISOTree) serialize() osbuild.Pipeline {
 			p.Groups,
 			makeISORootPath(p.PayloadPath),
 			p.ostreeCommitSpec.Ref,
+			p.Remote,
 			p.OSName)
 
 		if err != nil {
