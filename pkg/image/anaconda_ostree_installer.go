@@ -31,6 +31,7 @@ type AnacondaOSTreeInstaller struct {
 	OSName        string
 	OSVersion     string
 	Release       string
+	Remote        string
 
 	Commit ostree.SourceSpec
 
@@ -120,6 +121,7 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoTreePipeline.PartitionTable = rootfsPartitionTable
 	isoTreePipeline.Release = img.Release
 	isoTreePipeline.OSName = img.OSName
+	isoTreePipeline.Remote = img.Remote
 	isoTreePipeline.Users = img.Users
 	isoTreePipeline.Groups = img.Groups
 
