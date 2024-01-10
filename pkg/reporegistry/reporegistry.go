@@ -2,9 +2,7 @@ package reporegistry
 
 import (
 	"fmt"
-	"reflect"
 
-	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distroidparser"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
@@ -38,26 +36,12 @@ func NewFromDistrosRepoConfigs(distrosRepoConfigs rpmmd.DistrosRepoConfigs) *Rep
 	return &RepoRegistry{distrosRepoConfigs}
 }
 
-// ReposByImageType returns a slice of rpmmd.RepoConfig instances, which should be used for building the specific
-// image type. All repositories for the associated distribution and architecture, without any ImageTypeTags set,
-// are always part of the returned slice. In addition, if there are repositories tagged with the specific image
-// type name, these are added to the returned slice as well.
-func (r *RepoRegistry) ReposByImageType(imageType distro.ImageType) ([]rpmmd.RepoConfig, error) {
-	if imageType.Arch() == nil || reflect.ValueOf(imageType.Arch()).IsNil() {
-		return nil, fmt.Errorf("there is no architecture associated with the provided image type")
-	}
-	if imageType.Arch().Distro() == nil || reflect.ValueOf(imageType.Arch().Distro()).IsNil() {
-		return nil, fmt.Errorf("there is no distribution associated with the architecture associated with the provided image type")
-	}
-	return r.reposByImageTypeName(imageType.Arch().Distro().Name(), imageType.Arch().Name(), imageType.Name())
-}
-
-// reposByImageTypeName returns a slice of rpmmd.RepoConfig instances, which should be used for building the specific
+// ReposByImageTypeName returns a slice of rpmmd.RepoConfig instances, which should be used for building the specific
 // image type name (of a given distribution and architecture). The method does not verify
 // if the given image type name is actually part of the architecture definition of the provided name.
 // Therefore in general, all common distro-arch-specific repositories are returned for any image type name,
 // even for non-existing ones.
-func (r *RepoRegistry) reposByImageTypeName(distro, arch, imageType string) ([]rpmmd.RepoConfig, error) {
+func (r *RepoRegistry) ReposByImageTypeName(distro, arch, imageType string) ([]rpmmd.RepoConfig, error) {
 	repositories := []rpmmd.RepoConfig{}
 
 	archRepos, err := r.ReposByArchName(distro, arch, true)
