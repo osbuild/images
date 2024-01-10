@@ -95,21 +95,9 @@ func TestReposByImageType_reposByImageTypeName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := rr.ReposByImageType(tt.args.input)
+			got, err := rr.ReposByImageTypeName(tt.args.input.Arch().Distro().Name(), tt.args.input.Arch().Name(), tt.args.input.Name())
 			assert.Nil(t, err)
-
-			var gotNames []string
-			for _, r := range got {
-				gotNames = append(gotNames, r.Name)
-			}
-
-			if !reflect.DeepEqual(gotNames, tt.want) {
-				t.Errorf("ReposByImageType() =\n got: %#v\n want: %#v", gotNames, tt.want)
-			}
-
-			got, err = rr.reposByImageTypeName(tt.args.input.Arch().Distro().Name(), tt.args.input.Arch().Name(), tt.args.input.Name())
-			assert.Nil(t, err)
-			gotNames = []string{}
+			gotNames := []string{}
 			for _, r := range got {
 				gotNames = append(gotNames, r.Name)
 			}
@@ -119,18 +107,6 @@ func TestReposByImageType_reposByImageTypeName(t *testing.T) {
 			}
 		})
 	}
-}
-
-// TestInvalidReposByImageType tests return values from ReposByImageType
-// for invalid values
-func TestInvalidReposByImageType(t *testing.T) {
-	rr := getTestingRepoRegistry()
-
-	ti := test_distro.TestImageType{}
-
-	repos, err := rr.ReposByImageType(&ti)
-	assert.Nil(t, repos)
-	assert.NotNil(t, err)
 }
 
 // TestInvalidreposByImageTypeName tests return values from reposByImageTypeName
@@ -222,7 +198,7 @@ func TestInvalidreposByImageTypeName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := rr.reposByImageTypeName(tt.args.distro, tt.args.arch, tt.args.imageType)
+			got, err := rr.ReposByImageTypeName(tt.args.distro, tt.args.arch, tt.args.imageType)
 			assert.True(t, tt.want(got, err))
 		})
 	}
