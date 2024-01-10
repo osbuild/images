@@ -78,7 +78,7 @@ type AnacondaInstaller struct {
 }
 
 func NewAnacondaInstaller(installerType AnacondaInstallerType,
-	buildPipeline *Build,
+	buildPipeline Build,
 	platform platform.Platform,
 	repos []rpmmd.RepoConfig,
 	kernelName,

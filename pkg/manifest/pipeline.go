@@ -25,7 +25,7 @@ type Pipeline interface {
 
 	// BuildPipeline returns a reference to the pipeline that creates the build
 	// root for this pipeline. For build pipelines, it should return nil.
-	BuildPipeline() *Build
+	BuildPipeline() Build
 
 	// Manifest returns a reference to the Manifest which this Pipeline belongs to.
 	Manifest() *Manifest
@@ -76,7 +76,7 @@ type Pipeline interface {
 type Base struct {
 	manifest   *Manifest
 	name       string
-	build      *Build
+	build      Build
 	checkpoint bool
 	export     bool
 }
@@ -104,7 +104,7 @@ func (p Base) getExport() bool {
 	return p.export
 }
 
-func (p Base) BuildPipeline() *Build {
+func (p Base) BuildPipeline() Build {
 	return p.build
 }
 
@@ -156,7 +156,7 @@ func (p Base) getInline() []string {
 // the build host's filesystem is used as the build root. The runner specifies how to use this
 // pipeline as a build pipeline, by naming the distro it contains. When the host system is used
 // as a build root, then the necessary runner is autodetected.
-func NewBase(name string, build *Build) Base {
+func NewBase(name string, build Build) Base {
 	p := Base{
 		name:  name,
 		build: build,
@@ -191,7 +191,7 @@ func (p Base) serialize() osbuild.Pipeline {
 type TreePipeline interface {
 	Name() string
 	Manifest() *Manifest
-	BuildPipeline() *Build
+	BuildPipeline() Build
 	Platform() platform.Platform
 }
 

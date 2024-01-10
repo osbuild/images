@@ -28,7 +28,7 @@ func TestOSTreeDiskImageManifestSetsContainerBuildable(t *testing.T) {
 	}
 
 	var buildOpts []*manifest.BuildOptions
-	restore := image.MockManifestNewBuild(func(m *manifest.Manifest, r runner.Runner, repos []rpmmd.RepoConfig, opts *manifest.BuildOptions) *manifest.Build {
+	restore := image.MockManifestNewBuild(func(m *manifest.Manifest, r runner.Runner, repos []rpmmd.RepoConfig, opts *manifest.BuildOptions) manifest.Build {
 		buildOpts = append(buildOpts, opts)
 		return manifest.NewBuild(m, r, repos, opts)
 	})

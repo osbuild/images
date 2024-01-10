@@ -75,7 +75,7 @@ type OSTreeDeployment struct {
 
 // NewOSTreeCommitDeployment creates a pipeline for an ostree deployment from a
 // commit.
-func NewOSTreeCommitDeployment(buildPipeline *Build,
+func NewOSTreeCommitDeployment(buildPipeline Build,
 	commit *ostree.SourceSpec,
 	osName string,
 	platform platform.Platform) *OSTreeDeployment {
@@ -92,7 +92,7 @@ func NewOSTreeCommitDeployment(buildPipeline *Build,
 
 // NewOSTreeDeployment creates a pipeline for an ostree deployment from a
 // container
-func NewOSTreeContainerDeployment(buildPipeline *Build,
+func NewOSTreeContainerDeployment(buildPipeline Build,
 	container *container.SourceSpec,
 	ref string,
 	osName string,

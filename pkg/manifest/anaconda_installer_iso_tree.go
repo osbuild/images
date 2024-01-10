@@ -60,7 +60,7 @@ type AnacondaInstallerISOTree struct {
 	Files []*fsnode.File
 }
 
-func NewAnacondaInstallerISOTree(buildPipeline *Build, anacondaPipeline *AnacondaInstaller, rootfsPipeline *ISORootfsImg, bootTreePipeline *EFIBootTree) *AnacondaInstallerISOTree {
+func NewAnacondaInstallerISOTree(buildPipeline Build, anacondaPipeline *AnacondaInstaller, rootfsPipeline *ISORootfsImg, bootTreePipeline *EFIBootTree) *AnacondaInstallerISOTree {
 
 	// the three pipelines should all belong to the same manifest
 	if anacondaPipeline.Manifest() != rootfsPipeline.Manifest() ||

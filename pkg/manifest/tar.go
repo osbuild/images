@@ -30,7 +30,7 @@ func (p *Tar) SetFilename(filename string) {
 // NewTar creates a new TarPipeline. The inputPipeline represents the
 // filesystem tree which will be the contents of the tar file. The pipelinename
 // is the name of the pipeline. The filename is the name of the output tar file.
-func NewTar(buildPipeline *Build, inputPipeline Pipeline, pipelinename string) *Tar {
+func NewTar(buildPipeline Build, inputPipeline Pipeline, pipelinename string) *Tar {
 	p := &Tar{
 		Base:          NewBase(pipelinename, buildPipeline),
 		inputPipeline: inputPipeline,
