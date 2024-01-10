@@ -14,7 +14,7 @@ type ISORootfsImg struct {
 	installerPipeline Pipeline
 }
 
-func NewISORootfsImg(buildPipeline *Build, installerPipeline Pipeline) *ISORootfsImg {
+func NewISORootfsImg(buildPipeline Build, installerPipeline Pipeline) *ISORootfsImg {
 	p := &ISORootfsImg{
 		Base:              NewBase("rootfs-image", buildPipeline),
 		installerPipeline: installerPipeline,

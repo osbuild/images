@@ -12,7 +12,7 @@ type OSTreeEncapsulate struct {
 	inputPipeline Pipeline
 }
 
-func NewOSTreeEncapsulate(buildPipeline *Build, inputPipeline Pipeline, pipelinename string) *OSTreeEncapsulate {
+func NewOSTreeEncapsulate(buildPipeline Build, inputPipeline Pipeline, pipelinename string) *OSTreeEncapsulate {
 	p := &OSTreeEncapsulate{
 		Base:          NewBase(pipelinename, buildPipeline),
 		inputPipeline: inputPipeline,

@@ -23,7 +23,7 @@ func (p *RawImage) SetFilename(filename string) {
 	p.filename = filename
 }
 
-func NewRawImage(buildPipeline *Build, treePipeline *OS) *RawImage {
+func NewRawImage(buildPipeline Build, treePipeline *OS) *RawImage {
 	p := &RawImage{
 		Base:         NewBase("image", buildPipeline),
 		treePipeline: treePipeline,

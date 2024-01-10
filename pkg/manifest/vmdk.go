@@ -25,7 +25,7 @@ func (p *VMDK) SetFilename(filename string) {
 // raw image. imgOstreePipeline is the pipeline producing the raw ostree image.
 // Either imgPipeline or imgOStreePipeline are required, but not both at the same time.
 // Filename is the name of the produced image.
-func NewVMDK(buildPipeline *Build, imgPipeline FilePipeline) *VMDK {
+func NewVMDK(buildPipeline Build, imgPipeline FilePipeline) *VMDK {
 	p := &VMDK{
 		Base:        NewBase("vmdk", buildPipeline),
 		imgPipeline: imgPipeline,

@@ -74,7 +74,7 @@ func NewOSTreeDiskImageFromContainer(container container.SourceSpec, ref string)
 	}
 }
 
-func baseRawOstreeImage(img *OSTreeDiskImage, buildPipeline *manifest.Build) *manifest.RawOSTreeImage {
+func baseRawOstreeImage(img *OSTreeDiskImage, buildPipeline manifest.Build) *manifest.RawOSTreeImage {
 	var osPipeline *manifest.OSTreeDeployment
 	switch {
 	case img.CommitSource != nil:

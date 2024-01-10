@@ -36,7 +36,7 @@ type CoreOSISOTree struct {
 }
 
 func NewCoreOSISOTree(
-	buildPipeline *Build,
+	buildPipeline Build,
 	payloadPipeline *XZ,
 	coiPipeline *CoreOSInstaller,
 	bootTreePipeline *EFIBootTree) *CoreOSISOTree {

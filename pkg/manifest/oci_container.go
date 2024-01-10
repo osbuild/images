@@ -24,7 +24,7 @@ func (p *OCIContainer) SetFilename(filename string) {
 	p.filename = filename
 }
 
-func NewOCIContainer(buildPipeline *Build, treePipeline TreePipeline) *OCIContainer {
+func NewOCIContainer(buildPipeline Build, treePipeline TreePipeline) *OCIContainer {
 	p := &OCIContainer{
 		Base:         NewBase("container", buildPipeline),
 		treePipeline: treePipeline,

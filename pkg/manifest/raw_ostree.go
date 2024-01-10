@@ -25,7 +25,7 @@ func (p *RawOSTreeImage) SetFilename(filename string) {
 	p.filename = filename
 }
 
-func NewRawOStreeImage(buildPipeline *Build, treePipeline *OSTreeDeployment, platform platform.Platform) *RawOSTreeImage {
+func NewRawOStreeImage(buildPipeline Build, treePipeline *OSTreeDeployment, platform platform.Platform) *RawOSTreeImage {
 	p := &RawOSTreeImage{
 		Base:         NewBase("image", buildPipeline),
 		treePipeline: treePipeline,

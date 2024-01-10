@@ -26,7 +26,7 @@ func (p *VPC) SetFilename(filename string) {
 // NewVPC createsa new Qemu pipeline. imgPipeline is the pipeline producing the
 // raw image. The pipeline name is the name of the new pipeline. Filename is the name
 // of the produced image.
-func NewVPC(buildPipeline *Build, imgPipeline *RawImage) *VPC {
+func NewVPC(buildPipeline Build, imgPipeline *RawImage) *VPC {
 	p := &VPC{
 		Base:        NewBase("vpc", buildPipeline),
 		imgPipeline: imgPipeline,

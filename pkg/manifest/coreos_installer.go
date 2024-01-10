@@ -47,7 +47,7 @@ type CoreOSInstaller struct {
 }
 
 // NewCoreOSInstaller creates an CoreOS installer pipeline object.
-func NewCoreOSInstaller(buildPipeline *Build,
+func NewCoreOSInstaller(buildPipeline Build,
 	platform platform.Platform,
 	repos []rpmmd.RepoConfig,
 	kernelName,

@@ -14,7 +14,8 @@ func TestBuildContainerBuildableNo(t *testing.T) {
 	mf := New()
 	runner := &runner.Fedora{Version: 39}
 
-	build := NewBuild(&mf, runner, repos, nil)
+	buildIf := NewBuild(&mf, runner, repos, nil)
+	build := buildIf.(*BuildrootFromPackages)
 	require.NotNil(t, build)
 
 	for _, tc := range []struct {

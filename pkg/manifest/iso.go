@@ -24,7 +24,7 @@ func (p *ISO) SetFilename(filename string) {
 	p.filename = filename
 }
 
-func NewISO(buildPipeline *Build, treePipeline Pipeline, isoLabel string) *ISO {
+func NewISO(buildPipeline Build, treePipeline Pipeline, isoLabel string) *ISO {
 	p := &ISO{
 		Base:         NewBase("bootiso", buildPipeline),
 		treePipeline: treePipeline,
