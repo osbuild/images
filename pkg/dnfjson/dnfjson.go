@@ -66,7 +66,6 @@ func findDepsolveDnf() string {
 func NewBaseSolver(cacheDir string) *BaseSolver {
 	return &BaseSolver{
 		cache:       newRPMCache(cacheDir, 1024*1024*1024), // 1 GiB
-		dnfJsonCmd:  []string{findDepsolveDnf()},
 		resultCache: NewDNFCache(60 * time.Second),
 	}
 }
@@ -636,6 +635,9 @@ func ParseError(data []byte) Error {
 }
 
 func run(dnfJsonCmd []string, req *Request) ([]byte, error) {
+	if len(dnfJsonCmd) == 0 {
+		dnfJsonCmd = []string{findDepsolveDnf()}
+	}
 	if len(dnfJsonCmd) == 0 {
 		return nil, fmt.Errorf("osbuild-depsolve-dnf command undefined")
 	}
