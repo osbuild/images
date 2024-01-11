@@ -40,7 +40,11 @@ func LoadAllRepositories(confPaths []string) (rpmmd.DistrosRepoConfigs, error) {
 				// without a dot to separate major and minor release versions
 				distro, err := distroidparser.DefaultParser.Standardize(distroIDStr)
 				if err != nil {
-					return nil, fmt.Errorf("failed to parse distro ID string: %v", err)
+					log.Printf("failed to parse distro ID string, using it as is: %v", err)
+					// NB: Before the introduction of distro ID standardization, the filename
+					//     was used as the distro ID. This is kept for backward compatibility
+					//     if the filename can't be parsed.
+					distro = distroIDStr
 				}
 
 				// skip the distro repos definition, if it has been already read
