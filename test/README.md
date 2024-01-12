@@ -5,7 +5,7 @@
 - `./cmd/build` takes a config file as argument to build an image.  For example:
 ```
 go build -o bin/build ./cmd/build
-sudo ./bin/build -output ./buildtest -rpmmd /tmp/rpmmd -distro fedora-39 -image qcow2 -config test/configs/embed-containers.json
+sudo ./bin/build --output ./buildtest --rpmmd /tmp/rpmmd --distro fedora-39 --image qcow2 --config test/configs/embed-containers.json
 ```
 will build a Fedora 38 qcow2 image using the configuration specified in the file `embed-containers.json`
 
