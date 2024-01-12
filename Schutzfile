@@ -1,6 +1,6 @@
 {
-  "rngseed": 0,
-  "fedora-38": {
+  "rngseed": 1,
+  "fedora-39": {
     "dependencies": {
       "osbuild": {
         "commit": "dfd59a38d9ec7458944f9a901a6aa6e1202a7efb"
@@ -13,31 +13,14 @@
           {
             "title": "fedora",
             "name": "fedora",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f38/f38-x86_64-fedora-20230413"
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f39/f39-x86_64-fedora-20231109"
           }
         ],
         "aarch64": [
           {
             "title": "fedora",
             "name": "fedora",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f38/f38-aarch64-fedora-20230413"
-          }
-        ]
-      },
-      {
-        "file": "/etc/yum.repos.d/fedora-modular.repo",
-        "x86_64": [
-          {
-            "title": "fedora-modular",
-            "name": "fedora-modular",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f38/f38-x86_64-fedora-modular-20230413"
-          }
-        ],
-        "aarch64": [
-          {
-            "title": "fedora-modular",
-            "name": "fedora-modular",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f38/f38-aarch64-fedora-modular-20230413"
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f39/f39-aarch64-fedora-20231109"
           }
         ]
       },
@@ -47,31 +30,14 @@
           {
             "title": "updates",
             "name": "updates",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f38/f38-x86_64-updates-released-20240101"
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f39/f39-x86_64-updates-released-20240101"
           }
         ],
         "aarch64": [
           {
             "title": "updates",
             "name": "updates",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f38/f38-aarch64-updates-released-20240101"
-          }
-        ]
-      },
-      {
-        "file": "/etc/yum.repos.d/fedora-updates-modular.repo",
-        "x86_64": [
-          {
-            "title": "updates-modular",
-            "name": "updates-modular",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f38/f38-x86_64-updates-released-modular-20240101"
-          }
-        ],
-        "aarch64": [
-          {
-            "title": "updates-modular",
-            "name": "updates-modular",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f38/f38-aarch64-updates-released-modular-20240101"
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f39/f39-aarch64-updates-released-20240101"
           }
         ]
       }
