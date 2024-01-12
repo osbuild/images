@@ -390,6 +390,8 @@ keyboard us
 timezone UTC
 
 clearpart --all
+
+part biosboot --size=1 --fstype=biosboot
 part /boot/efi --fstype=efi --size=512 --fsoptions="umask=0077"
 part /boot --fstype=ext2 --size=1024 --label=boot
 part swap --fstype=swap --size=1024
