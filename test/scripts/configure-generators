@@ -27,7 +27,7 @@ generate-build-config-{distro}-{arch}:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-38-{arch}
+    RUNNER: aws/fedora-39-{arch}
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -59,7 +59,7 @@ generate-ostree-build-config-{distro}-{arch}:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-38-{arch}
+    RUNNER: aws/fedora-39-{arch}
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo

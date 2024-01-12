@@ -22,7 +22,7 @@ build/{distro}/{arch}/{image_type}/{config_name}:
     {container_push}
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-38-{arch}
+    RUNNER: aws/fedora-39-{arch}
     INTERNAL_NETWORK: "{internal}"
 """
 
