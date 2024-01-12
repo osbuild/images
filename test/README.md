@@ -5,7 +5,7 @@
 - `./cmd/build` takes a config file as argument to build an image.  For example:
 ```
 go build -o bin/build ./cmd/build
-sudo ./bin/build -output ./buildtest -rpmmd /tmp/rpmmd -distro fedora-38 -image qcow2 -config test/configs/embed-containers.json
+sudo ./bin/build -output ./buildtest -rpmmd /tmp/rpmmd -distro fedora-39 -image qcow2 -config test/configs/embed-containers.json
 ```
 will build a Fedora 38 qcow2 image using the configuration specified in the file `embed-containers.json`
 
@@ -90,7 +90,7 @@ in the form
 for example:
 ```json
 {
-  "distro": "fedora-38",
+  "distro": "fedora-39",
   "arch": "x86_64",
   "image-type": "qcow2",
   "config": "all-customizations",
@@ -131,7 +131,7 @@ Each build job runs in parallel. For each image that is successfully built, a fi
 
 ## Definitions
 
-- `<distro>`: distribution name and version (e.g. `fedora-38`).
+- `<distro>`: distribution name and version (e.g. `fedora-39`).
 - `<arch>`: architecture (one of `x86_64`, `aarch64`, `ppc64le`, `s390x`).
 - `<image type>`: name of the image type (e.g. `qcow2`).
 - `<config name>`: name of a build configuration like the ones found in `./test/configs/` (e.g. `all-customizations`).
