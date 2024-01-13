@@ -216,6 +216,14 @@ func TestFilenameFromType(t *testing.T) {
 		},
 		"39": {
 			{
+				name: "iot-bootable-container",
+				args: args{"iot-bootable-container"},
+				want: wantResult{
+					filename: "iot-bootable-container.tar",
+					mimeType: "application/x-tar",
+				},
+			},
+			{
 				name: "iot-simplified-installer",
 				args: args{"iot-simplified-installer"},
 				want: wantResult{
@@ -225,6 +233,14 @@ func TestFilenameFromType(t *testing.T) {
 			},
 		},
 		"40": {
+			{
+				name: "iot-bootable-container",
+				args: args{"iot-bootable-container"},
+				want: wantResult{
+					filename: "iot-bootable-container.tar",
+					mimeType: "application/x-tar",
+				},
+			},
 			{
 				name: "iot-simplified-installer",
 				args: args{"iot-simplified-installer"},
@@ -236,7 +252,7 @@ func TestFilenameFromType(t *testing.T) {
 		},
 	}
 	for _, dist := range fedoraFamilyDistros {
-		t.Run(dist.name, func(t *testing.T) {
+		t.Run(dist.distro.Name(), func(t *testing.T) {
 			allTests := append(tests, verTypes[dist.distro.Releasever()]...)
 			for _, tt := range allTests {
 				t.Run(tt.name, func(t *testing.T) {
@@ -292,7 +308,7 @@ func TestImageType_BuildPackages(t *testing.T) {
 		"aarch64": aarch64BuildPackages,
 	}
 	for _, dist := range fedoraFamilyDistros {
-		t.Run(dist.name, func(t *testing.T) {
+		t.Run(dist.distro.Name(), func(t *testing.T) {
 			d := dist.distro
 			for _, archLabel := range d.ListArches() {
 				archStruct, err := d.GetArch(archLabel)
@@ -344,8 +360,14 @@ func TestImageType_Name(t *testing.T) {
 			},
 			verTypes: map[string][]string{
 				"38": {"iot-simplified-installer"},
-				"39": {"iot-simplified-installer"},
-				"40": {"iot-simplified-installer"},
+				"39": {
+					"iot-bootable-container",
+					"iot-simplified-installer",
+				},
+				"40": {
+					"iot-bootable-container",
+					"iot-simplified-installer",
+				},
 			},
 		},
 		{
@@ -365,14 +387,20 @@ func TestImageType_Name(t *testing.T) {
 			},
 			verTypes: map[string][]string{
 				"38": {"iot-simplified-installer"},
-				"39": {"iot-simplified-installer"},
-				"40": {"iot-simplified-installer"},
+				"39": {
+					"iot-bootable-container",
+					"iot-simplified-installer",
+				},
+				"40": {
+					"iot-bootable-container",
+					"iot-simplified-installer",
+				},
 			},
 		},
 	}
 
 	for _, dist := range fedoraFamilyDistros {
-		t.Run(dist.name, func(t *testing.T) {
+		t.Run(dist.distro.Name(), func(t *testing.T) {
 			for _, mapping := range imgMap {
 				arch, err := dist.distro.GetArch(mapping.arch)
 				if assert.NoError(t, err) {
@@ -534,8 +562,14 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 			},
 			verTypes: map[string][]string{
 				"38": {"iot-simplified-installer"},
-				"39": {"iot-simplified-installer"},
-				"40": {"iot-simplified-installer"},
+				"39": {
+					"iot-bootable-container",
+					"iot-simplified-installer",
+				},
+				"40": {
+					"iot-bootable-container",
+					"iot-simplified-installer",
+				},
 			},
 		},
 		{
@@ -557,8 +591,14 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 			},
 			verTypes: map[string][]string{
 				"38": {"iot-simplified-installer"},
-				"39": {"iot-simplified-installer"},
-				"40": {"iot-simplified-installer"},
+				"39": {
+					"iot-bootable-container",
+					"iot-simplified-installer",
+				},
+				"40": {
+					"iot-bootable-container",
+					"iot-simplified-installer",
+				},
 			},
 		},
 		{
@@ -567,6 +607,14 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"container",
 				"qcow2",
 			},
+			verTypes: map[string][]string{
+				"39": {
+					"iot-bootable-container",
+				},
+				"40": {
+					"iot-bootable-container",
+				},
+			},
 		},
 		{
 			arch: "s390x",
@@ -574,11 +622,19 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"container",
 				"qcow2",
 			},
+			verTypes: map[string][]string{
+				"39": {
+					"iot-bootable-container",
+				},
+				"40": {
+					"iot-bootable-container",
+				},
+			},
 		},
 	}
 
 	for _, dist := range fedoraFamilyDistros {
-		t.Run(dist.name, func(t *testing.T) {
+		t.Run(dist.distro.Name(), func(t *testing.T) {
 			for _, mapping := range imgMap {
 				arch, err := dist.distro.GetArch(mapping.arch)
 				require.NoError(t, err)
@@ -624,7 +680,7 @@ func TestFedora37_GetArch(t *testing.T) {
 	}
 
 	for _, dist := range fedoraFamilyDistros {
-		t.Run(dist.name, func(t *testing.T) {
+		t.Run(dist.distro.Name(), func(t *testing.T) {
 			for _, a := range arches {
 				actualArch, err := dist.distro.GetArch(a.name)
 				if a.errorExpected {
