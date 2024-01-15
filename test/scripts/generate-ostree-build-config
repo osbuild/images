@@ -323,7 +323,7 @@ def main():
             manifest_dir = os.path.join(cache_root, "manifests")
             manifests = gen_image_manifests(pull_config_map, pull_configs, distro, arch, manifest_dir)
 
-        build_requests = testlib.filter_builds(manifests, skip_ostree_pull=False)
+        build_requests = testlib.filter_builds(manifests, distro=distro, arch=arch, skip_ostree_pull=False)
 
     with open(config_path, "w", encoding="utf-8") as config_file:
         if len(build_requests) == 0:
