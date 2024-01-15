@@ -1,24 +1,24 @@
 # osbuild/images testing information
 
-`./test/configs/` contains configuration files for building images for testing. The files are used by the following tools:
+[./test/configs/](./configs/) contains configuration files for building images for testing. The files are used by the following tools:
 
-- `./cmd/build` takes a config file as argument to build an image.  For example:
+- [./cmd/build](../cmd/build) takes a config file as argument to build an image.  For example:
 ```
 go build -o bin/build ./cmd/build
 sudo ./bin/build --output ./buildtest --rpmmd /tmp/rpmmd --distro fedora-39 --image qcow2 --config test/configs/embed-containers.json
 ```
 will build a Fedora 38 qcow2 image using the configuration specified in the file `embed-containers.json`
 
-- `./cmd/gen-manifests` generates manifests based on the configs specified in `./test/config-map.json`. The config map maps configuration files to image types, distributions, and architectures.  An empty list means it applies to all values.  Globs are supported.
+- [./cmd/gen-manifests](../cmd/gen-manifests) generates manifests based on the configs specified in [./test/config-map.json](./config-map.json). The config map maps configuration files to image types, distributions, and architectures.  An empty list means it applies to all values.  Globs are supported.
 
-The config map is also used in CI to dynamically generate test builds using the `./test/generate-build-config` and `./test/generate-ostree-build-config` scripts.
+The config map is also used in CI to dynamically generate test builds using the [./test/scripts/generate-build-config](./scripts/generate-build-config) and [./test/scripts/generate-ostree-build-config](./scripts/generate-ostree-build-config) scripts.
 
-- `./test/data/repositories/` contains repository configurations for manifest generation (`./cmd/gen-manifests`) and image building (`./cmd/builds`).
+- [./test/data/repositories/](./data/repositories/) contains repository configurations for manifest generation ([./cmd/gen-manifests](../cmd/gen-manifests)) and image building ([./cmd/build](../cmd/build)).
 
 - `Schutzfile` defines content sources and test variables:
     - `rngseed` is the random number generator seed that is used by all the test scripts and commands. It ensures manifests are always generated with the same random values (e.g. for partition UUIDs) so tests can be skipped when an image hasn't changed (see [Workflow details](#workflow-details)) below. This value can be changed (incremented) when a rebuild of all test images is required. For example, if a test script changes in a way that will not affect the manifests, this value can be used to make sure all test images are built.
     - The following are defined in an object keyed by a distro name (e.g. `fedora-39`). The distribution name and version must match the version of the CI runners.
-    - `dependencies.osbuild.commit`: the version of osbuild to use, as a commit ID. This must be a commit that was successfully built in osbuild's CI, so that RPMs will be available. It is used by `./test/scripts/setup-osbuild-repo`.
+    - `dependencies.osbuild.commit`: the version of osbuild to use, as a commit ID. This must be a commit that was successfully built in osbuild's CI, so that RPMs will be available. It is used by [./test/scripts/setup-osbuild-repo](./scripts/setup-osbuild-repo).
     - `repos`: the repository configurations to use on the runners to install packages such as build dependencies and test tools.
 
 ## Image build tests in GitLab CI
