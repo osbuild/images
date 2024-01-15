@@ -30,6 +30,7 @@ CAN_BOOT_TEST = [
     "ec2-ha",
     "ec2-sap",
     "edge-ami",
+    "iot-bootable-container",
 ]
 
 
