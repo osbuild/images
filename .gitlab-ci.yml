@@ -54,3 +54,11 @@ finish:
     - shell
   script:
     - schutzbot/update_github_status.sh finish
+
+fail:
+  stage: finish
+  tags:
+    - shell
+  script:
+    - schutzbot/update_github_status.sh fail
+  when: on_failure
