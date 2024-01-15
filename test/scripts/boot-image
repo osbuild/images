@@ -61,24 +61,84 @@ def ensure_uncompressed(filepath):
         yield filepath
 
 
-def boot_ami(distro, arch, image_type, image_path):
+def cmd_boot_aws(arch, image_name, privkey, pubkey, image_path):
     aws_config = get_aws_config()
+    cmd = ["go", "run", "./cmd/boot-aws", "run",
+           "--access-key-id", aws_config["key_id"],
+           "--secret-access-key", aws_config["secret_key"],
+           "--region", aws_config["region"],
+           "--bucket", aws_config["bucket"],
+           "--arch", arch,
+           "--ami-name", image_name,
+           "--s3-key", f"images/boot/{image_name}",
+           "--username", "osbuild",
+           "--ssh-privkey", privkey,
+           "--ssh-pubkey", pubkey,
+           image_path, "test/scripts/base-host-check.sh"]
+    testlib.runcmd_nc(cmd)
+
+
+def boot_ami(distro, arch, image_type, image_path):
     with ensure_uncompressed(image_path) as raw_image_path:
         with create_ssh_key() as (privkey, pubkey):
             image_name = f"image-boot-test-{distro}-{arch}-{image_type}-" + str(uuid.uuid4())
-            cmd = ["go", "run", "./cmd/boot-aws", "run",
-                   "--access-key-id", aws_config["key_id"],
-                   "--secret-access-key", aws_config["secret_key"],
-                   "--region", aws_config["region"],
-                   "--bucket", aws_config["bucket"],
-                   "--arch", arch,
-                   "--ami-name", image_name,
-                   "--s3-key", f"images/boot/{image_name}",
-                   "--username", "osbuild",
-                   "--ssh-privkey", privkey,
-                   "--ssh-pubkey", pubkey,
-                   raw_image_path, "test/scripts/base-host-check.sh"]
+            cmd_boot_aws(arch, image_name, privkey, pubkey, raw_image_path)
+
+
+def boot_container(distro, arch, image_type, image_path, manifest_id):
+    """
+    Use bootc-image-builder to build an AMI and boot it.
+    """
+    # push container to registry so we can build it with BIB
+    # remove when BIB can pull from containers-storage: https://github.com/osbuild/bootc-image-builder/pull/120
+    container_name = f"iot-bootable-container:{distro}-{arch}-{manifest_id}"
+    cmd = ["./tools/ci/push-container.sh", image_path, container_name]
+    testlib.runcmd_nc(cmd)
+    container_ref = f"{testlib.REGISTRY}/{container_name}"
+
+    with TemporaryDirectory() as tmpdir:
+        with create_ssh_key() as (privkey_file, pubkey_file):
+            with open(pubkey_file, encoding="utf-8") as pubkey_fp:
+                pubkey = pubkey_fp.read()
+
+            # write a config to create a user
+            config_file = os.path.join(tmpdir, "config.json")
+            with open(config_file, "w", encoding="utf-8") as cfg_fp:
+                config = {
+                    "blueprint": {
+                        "customizations": {
+                            "user": [
+                                {
+                                    "name": "osbuild",
+                                    "key": pubkey,
+                                    "groups": [
+                                        "wheel"
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                }
+                json.dump(config, cfg_fp)
+
+            # build an AMI
+            cmd = ["sudo", "podman", "run",
+                   "--rm", "-it",
+                   "--privileged",
+                   "--pull=newer",
+                   "--security-opt", "label=type:unconfined_t",
+                   "-v", f"{tmpdir}:/output",
+                   "-v", f"{config_file}:/config.json",
+                   "quay.io/centos-bootc/bootc-image-builder:latest",
+                   "--type=ami",
+                   "--config=/config.json",
+                   container_ref]
             testlib.runcmd_nc(cmd)
+
+            # boot it
+            image_name = f"image-boot-test-{distro}-{arch}-{image_type}-" + str(uuid.uuid4())
+            raw_image_path = f"{tmpdir}/image/disk.raw"
+            cmd_boot_aws(arch, image_name, privkey_file, pubkey_file, raw_image_path)
 
 
 def find_image_file(build_path: str) -> str:
@@ -124,6 +184,12 @@ def main():
     match image_type:
         case "ami" | "ec2" | "ec2-ha" | "ec2-sap" | "edge-ami":
             boot_ami(distro, arch, image_type, image_path)
+        case "iot-bootable-container":
+            info_file_path = os.path.join(search_path, "info.json")
+            with open(info_file_path, encoding="utf-8") as info_fp:
+                build_info = json.load(info_fp)
+            manifest_id = build_info["manifest-checksum"]
+            boot_container(distro, arch, image_type, image_path, manifest_id)
         case _:
             # skip
             print(f"{image_type} boot tests are not supported yet")
