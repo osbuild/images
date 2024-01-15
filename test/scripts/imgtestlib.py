@@ -114,11 +114,16 @@ def s3_auth_args():
     return []
 
 
-def dl_s3_configs(destination):
+def dl_s3_configs(destination, distro=None, arch=None):
     """
     Downloads all the configs from the s3 bucket.
     """
-    s3url = f"{S3_BUCKET}/{S3_PREFIX}/"
+    s3url = f"{S3_BUCKET}/{S3_PREFIX}"
+    if distro and arch:
+        # only take them into account if both are defined
+        s3url = f"{s3url}/{distro}/{arch}"
+
+    s3url += "/"
 
     print(f"⬇️ Downloading configs from {s3url}")
     # only download info.json (exclude everything, then include) files, otherwise we get manifests and whole images
@@ -266,16 +271,16 @@ def check_for_build(manifest_fname, build_info_path, osbuild_ver, osbuild_commit
     return True
 
 
-def filter_builds(manifests, skip_ostree_pull=True):
+def filter_builds(manifests, distro=None, arch=None, skip_ostree_pull=True):
     """
     Returns a list of build requests for the manifests that have no matching config in the test build cache.
     """
     print(f"⚙️ Filtering {len(manifests)} build configurations")
-    dl_path = os.path.join(TEST_CACHE_ROOT, "s3configs", "builds/")
+    dl_path = os.path.join(TEST_CACHE_ROOT, "s3configs", f"builds/{distro}/{arch}/")
     os.makedirs(dl_path, exist_ok=True)
     build_requests = []
 
-    dl_s3_configs(dl_path)
+    dl_s3_configs(dl_path, distro=distro, arch=arch)
 
     errors = []
 
@@ -306,8 +311,7 @@ def filter_builds(manifests, skip_ostree_pull=True):
         build_request["manifest-checksum"] = manifest_id
 
         # check if the hash_fname exists in the synced directory
-        dl_config_dir = os.path.join(dl_path, distro, arch)
-        build_info_path = os.path.join(dl_config_dir, manifest_id, "info.json")
+        build_info_path = os.path.join(dl_path, manifest_id, "info.json")
 
         if check_for_build(manifest_fname, build_info_path, osbuild_ver, osbuild_commit, errors):
             build_requests.append(build_request)

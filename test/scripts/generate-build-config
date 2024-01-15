@@ -97,7 +97,7 @@ def main():
 
     with TemporaryDirectory() as manifest_dir:
         manifests = generate_manifests(manifest_dir, distro, arch)
-        build_requests = testlib.filter_builds(manifests)
+        build_requests = testlib.filter_builds(manifests, distro=distro, arch=arch)
 
     with open(config_path, "w", encoding="utf-8") as config_file:
         if len(build_requests) == 0:
