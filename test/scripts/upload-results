@@ -36,9 +36,8 @@ def main():
         info_path = os.path.join(build_dir, "info.json")
         with open(info_path, "r", encoding="utf-8") as info_fp:
             build_info = json.load(info_fp)
-        build_info["pr"] = pr_number
         # strip the PR prefix
-        pr_number = pr_number.lstrip("PR-")
+        build_info["pr"] = pr_number.lstrip("PR-")
         with open(info_path, "w", encoding="utf-8") as info_fp:
             json.dump(build_info, info_fp, indent=2)
 
