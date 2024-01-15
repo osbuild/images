@@ -40,8 +40,6 @@ BASE_CONFIG = """
   before_script:
     - cat schutzbot/team_ssh_keys.txt |
         tee -a ~/.ssh/authorized_keys > /dev/null
-  after_script:
-    - schutzbot/update_github_status.sh update || true
   interruptible: true
   retry: 1
   tags:
