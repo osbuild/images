@@ -247,8 +247,12 @@ def check_for_build(manifest_fname, build_info_path, osbuild_ver, osbuild_commit
     pr = dl_config.get("pr")
     url = f"https://github.com/osbuild/images/commit/{commit}"
     print(f"🖼️ Manifest {manifest_fname} was successfully built in commit {commit}\n  {url}")
-    if pr:
+    if "gh-readonly-queue" in pr:
+        print(f"  This commit was on a merge queue: {pr}")
+    elif pr:
         print(f"  PR-{pr}: https://github.com/osbuild/images/pull/{pr}")
+    else:
+        print("  No PR/branch info available")
 
     image_type = dl_config["image-type"]
     if image_type not in CAN_BOOT_TEST:
