@@ -10,7 +10,7 @@ import (
 	"github.com/osbuild/images/pkg/osbuild"
 )
 
-func makeOsbuildMounts(targets ...string) osbuild.Mounts {
+func makeOsbuildMounts(targets ...string) []osbuild.Mount {
 	var mnts []osbuild.Mount
 	for _, target := range targets {
 		mnts = append(mnts, osbuild.Mount{
@@ -46,7 +46,7 @@ func TestBootupdStageNewHappy(t *testing.T) {
 		Devices: devices,
 		Mounts:  mounts,
 	}
-	stage, err := osbuild.NewBootupdStage(opts, &devices, &mounts)
+	stage, err := osbuild.NewBootupdStage(opts, &devices, mounts)
 	require.Nil(t, err)
 	assert.Equal(t, stage, expectedStage)
 }
@@ -58,7 +58,7 @@ func TestBootupdStageMissingMounts(t *testing.T) {
 	devices := makeOsbuildDevices("dev-/")
 	mounts := makeOsbuildMounts("/")
 
-	stage, err := osbuild.NewBootupdStage(opts, &devices, &mounts)
+	stage, err := osbuild.NewBootupdStage(opts, &devices, mounts)
 	assert.ErrorContains(t, err, "required mounts for bootupd stage [/boot /boot/efi] missing")
 	require.Nil(t, stage)
 }
@@ -72,7 +72,7 @@ func TestBootupdStageMissingDevice(t *testing.T) {
 	devices := makeOsbuildDevices("dev-/", "dev-/boot", "dev-/boot/efi")
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
 
-	stage, err := osbuild.NewBootupdStage(opts, &devices, &mounts)
+	stage, err := osbuild.NewBootupdStage(opts, &devices, mounts)
 	assert.ErrorContains(t, err, `cannot find expected device "disk" for bootupd bios option in [dev-/ dev-/boot dev-/boot/efi]`)
 	require.Nil(t, stage)
 }
@@ -91,7 +91,7 @@ func TestBootupdStageJsonHappy(t *testing.T) {
 	devices := makeOsbuildDevices("disk", "dev-/", "dev-/boot", "dev-/boot/efi")
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
 
-	stage, err := osbuild.NewBootupdStage(opts, &devices, &mounts)
+	stage, err := osbuild.NewBootupdStage(opts, &devices, mounts)
 	require.Nil(t, err)
 	stageJson, err := json.MarshalIndent(stage, "", "  ")
 	require.Nil(t, err)

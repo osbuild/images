@@ -26,13 +26,13 @@ type CopyStagePath struct {
 
 func (CopyStageOptions) isStageOptions() {}
 
-func NewCopyStage(options *CopyStageOptions, inputs Inputs, devices *Devices, mounts *Mounts) *Stage {
+func NewCopyStage(options *CopyStageOptions, inputs Inputs, devices *Devices, mounts []Mount) *Stage {
 	return &Stage{
 		Type:    "org.osbuild.copy",
 		Options: options,
 		Inputs:  inputs,
 		Devices: *devices,
-		Mounts:  *mounts,
+		Mounts:  mounts,
 	}
 }
 
@@ -60,7 +60,7 @@ func (*CopyStageFilesInputs) isStageInputs() {}
 func GenCopyFSTreeOptions(inputName, inputPipeline, filename string, pt *disk.PartitionTable) (
 	*CopyStageOptions,
 	*Devices,
-	*Mounts,
+	[]Mount,
 ) {
 
 	devices := make(map[string]Device, len(pt.Partitions))
@@ -118,7 +118,6 @@ func GenCopyFSTreeOptions(inputName, inputPipeline, filename string, pt *disk.Pa
 		panic("no mount found for the filesystem root")
 	}
 
-	stageMounts := Mounts(mounts)
 	stageDevices := Devices(devices)
 
 	options := CopyStageOptions{
@@ -130,5 +129,5 @@ func GenCopyFSTreeOptions(inputName, inputPipeline, filename string, pt *disk.Pa
 		},
 	}
 
-	return &options, &stageDevices, &stageMounts
+	return &options, &stageDevices, mounts
 }

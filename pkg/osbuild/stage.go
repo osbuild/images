@@ -10,7 +10,7 @@ type Stage struct {
 	Inputs  Inputs       `json:"inputs,omitempty"`
 	Options StageOptions `json:"options,omitempty"`
 	Devices Devices      `json:"devices,omitempty"`
-	Mounts  Mounts       `json:"mounts,omitempty"`
+	Mounts  []Mount      `json:"mounts,omitempty"`
 }
 
 // StageOptions specify the operations of a given stage-type.

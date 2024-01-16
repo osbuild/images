@@ -85,7 +85,7 @@ func (p *RawOSTreeImage) serialize() osbuild.Pipeline {
 		// Find the FS root mount name to use as the destination root
 		// for the target when copying the boot files.
 		var fsRootMntName string
-		for _, mnt := range *bootCopyMounts {
+		for _, mnt := range bootCopyMounts {
 			if mnt.Target == "/" {
 				fsRootMntName = mnt.Name
 				break
