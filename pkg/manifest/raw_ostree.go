@@ -110,11 +110,45 @@ func (p *RawOSTreeImage) serialize() osbuild.Pipeline {
 		pipeline.AddStage(stage)
 	}
 
-	if grubLegacy := p.treePipeline.platform.GetBIOSPlatform(); grubLegacy != "" {
-		pipeline.AddStage(osbuild.NewGrub2InstStage(osbuild.NewGrub2InstStageOption(p.Filename(), pt, grubLegacy)))
+	if p.treePipeline.UseBootupd {
+		p.addBootupdStage(&pipeline)
+	} else {
+		p.maybeAddGrubInstStage(&pipeline)
 	}
 
 	return pipeline
+}
+
+func (p *RawOSTreeImage) addBootupdStage(pipeline *osbuild.Pipeline) {
+	pt := p.treePipeline.PartitionTable
+
+	treeBootupdDevices, treeBootupdMounts := osbuild.GenBootupdDevicesMounts(p.Filename(), pt)
+	opts := &osbuild.BootupdStageOptions{
+		Deployment: &osbuild.OSTreeDeployment{
+			OSName: p.treePipeline.osName,
+			Ref:    p.treePipeline.ref,
+		},
+		StaticConfigs: true,
+	}
+	if legacyBios := p.treePipeline.platform.GetBIOSPlatform(); legacyBios != "" {
+		opts.Bios = &osbuild.BootupdStageOptionsBios{
+			Device: "disk",
+		}
+	}
+	bootupd, err := osbuild.NewBootupdStage(opts, treeBootupdDevices, treeBootupdMounts)
+	if err != nil {
+		panic(err)
+	}
+
+	pipeline.AddStage(bootupd)
+}
+
+func (p *RawOSTreeImage) maybeAddGrubInstStage(pipeline *osbuild.Pipeline) {
+	pt := p.treePipeline.PartitionTable
+
+	if grubLegacy := p.treePipeline.platform.GetBIOSPlatform(); grubLegacy != "" {
+		pipeline.AddStage(osbuild.NewGrub2InstStage(osbuild.NewGrub2InstStageOption(p.Filename(), pt, grubLegacy)))
+	}
 }
 
 func (p *RawOSTreeImage) Export() *artifact.Artifact {
