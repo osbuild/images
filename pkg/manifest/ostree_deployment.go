@@ -159,7 +159,7 @@ func (p *OSTreeDeployment) serializeStart(packages []rpmmd.PackageSpec, containe
 	case len(containers) == 1:
 		p.containerSpec = &containers[0]
 	default:
-		panic(fmt.Sprintf("pipeline requires exactly one ostree commit or one container (have commits: %v; containers: %v)", commits, containers))
+		panic(fmt.Sprintf("pipeline %s requires exactly one ostree commit or one container (have commits: %v; containers: %v)", p.Name(), commits, containers))
 	}
 }
 
