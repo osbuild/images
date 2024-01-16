@@ -7,8 +7,6 @@ import (
 	"github.com/osbuild/images/pkg/disk"
 )
 
-type Devices map[string]Device
-
 type Device struct {
 	Type    string        `json:"type"`
 	Parent  string        `json:"parent,omitempty"`

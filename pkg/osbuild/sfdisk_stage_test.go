@@ -24,7 +24,7 @@ func TestNewSfdiskStage(t *testing.T) {
 	}
 
 	device := NewLoopbackDevice(&LoopbackDeviceOptions{Filename: "disk.raw"})
-	devices := Devices{"device": *device}
+	devices := map[string]Device{"device": *device}
 
 	expectedStage := &Stage{
 		Type:    "org.osbuild.sfdisk",
