@@ -31,7 +31,12 @@ func NewQCOW2(buildPipeline Build, imgPipeline FilePipeline) *QCOW2 {
 		imgPipeline: imgPipeline,
 		filename:    "image.qcow2",
 	}
-	buildPipeline.addDependent(p)
+	// qcow2 can run outside the build pipeline for e.g. "bib"
+	if buildPipeline != nil {
+		buildPipeline.addDependent(p)
+	} else {
+		imgPipeline.Manifest().addPipeline(p)
+	}
 	return p
 }
 
