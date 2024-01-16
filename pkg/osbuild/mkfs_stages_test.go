@@ -30,7 +30,7 @@ func TestNewMkfsStage(t *testing.T) {
 	mkbtrfsExpected := &Stage{
 		Type:    "org.osbuild.mkfs.btrfs",
 		Options: btrfsOptions,
-		Devices: Devices{"device": *device},
+		Devices: map[string]Device{"device": *device},
 	}
 	assert.Equal(t, mkbtrfsExpected, mkbtrfs)
 
@@ -42,7 +42,7 @@ func TestNewMkfsStage(t *testing.T) {
 	mkext4Expected := &Stage{
 		Type:    "org.osbuild.mkfs.ext4",
 		Options: ext4Options,
-		Devices: Devices{"device": *device},
+		Devices: map[string]Device{"device": *device},
 	}
 	assert.Equal(t, mkext4Expected, mkext4)
 
@@ -55,7 +55,7 @@ func TestNewMkfsStage(t *testing.T) {
 	mkfatExpected := &Stage{
 		Type:    "org.osbuild.mkfs.fat",
 		Options: fatOptions,
-		Devices: Devices{"device": *device},
+		Devices: map[string]Device{"device": *device},
 	}
 	assert.Equal(t, mkfatExpected, mkfat)
 
@@ -67,7 +67,7 @@ func TestNewMkfsStage(t *testing.T) {
 	mkxfsExpected := &Stage{
 		Type:    "org.osbuild.mkfs.xfs",
 		Options: xfsOptions,
-		Devices: Devices{"device": *device},
+		Devices: map[string]Device{"device": *device},
 	}
 	assert.Equal(t, mkxfsExpected, mkxfs)
 }

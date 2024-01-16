@@ -39,8 +39,7 @@ func TestNewCopyStage(t *testing.T) {
 		Mounts:  mounts,
 	}
 	// convert to alias types
-	stageDevices := Devices(devices)
-	actualStage := NewCopyStage(&CopyStageOptions{paths}, NewPipelineTreeInputs("tree-input", "input-pipeline"), &stageDevices, mounts)
+	actualStage := NewCopyStage(&CopyStageOptions{paths}, NewPipelineTreeInputs("tree-input", "input-pipeline"), devices, mounts)
 	assert.Equal(t, expectedStage, actualStage)
 }
 
