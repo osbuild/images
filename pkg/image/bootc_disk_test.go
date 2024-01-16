@@ -35,15 +35,24 @@ func makeFakeDigest(t *testing.T) string {
 	return "sha256:" + hex.EncodeToString(data[:])
 }
 
-func makeFakePlatform() platform.Platform {
+type bootcDiskImageTestOpts struct {
+	BIOS bool
+}
+
+func makeFakePlatform(opts *bootcDiskImageTestOpts) platform.Platform {
 	return &platform.X86{
 		BasePlatform: platform.BasePlatform{
 			ImageFormat: platform.FORMAT_QCOW2,
 		},
+		BIOS: opts.BIOS,
 	}
 }
 
-func TestBootcDiskImageInstantiateNoBuildpipelineForQcow2(t *testing.T) {
+func makeBootcDiskImageOsbuildManifest(t *testing.T, opts *bootcDiskImageTestOpts) manifest.OSBuildManifest {
+	if opts == nil {
+		opts = &bootcDiskImageTestOpts{}
+	}
+
 	containerSource := container.SourceSpec{
 		Source: "some-src",
 		Name:   "name",
@@ -52,35 +61,92 @@ func TestBootcDiskImageInstantiateNoBuildpipelineForQcow2(t *testing.T) {
 
 	img := image.NewBootcDiskImage(containerSource)
 	require.NotNil(t, img)
-	img.Platform = makeFakePlatform()
-	img.PartitionTable = testdisk.MakeFakePartitionTable("/")
+	img.Platform = makeFakePlatform(opts)
+	img.PartitionTable = testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi")
 
 	m := &manifest.Manifest{}
 	runi := &runner.Fedora{}
 	_, err := img.InstantiateManifestFromContainers(m, containers, runi, nil)
 	require.Nil(t, err)
-	sourceSpecs := map[string][]container.Spec{
+
+	fakeSourceSpecs := map[string][]container.Spec{
 		"build":             []container.Spec{{Source: "some-src", Digest: makeFakeDigest(t), ImageID: makeFakeDigest(t)}},
 		"ostree-deployment": []container.Spec{{Source: "other-src", Digest: makeFakeDigest(t), ImageID: makeFakeDigest(t)}},
 	}
-	osbuildManifest, err := m.Serialize(nil, sourceSpecs, nil)
+
+	osbuildManifest, err := m.Serialize(nil, fakeSourceSpecs, nil)
 	require.Nil(t, err)
 
+	return osbuildManifest
+}
+
+func findPipelineFromOsbuildManifest(t *testing.T, osbm manifest.OSBuildManifest, pipelineName string) map[string]interface{} {
 	var mani map[string]interface{}
-	err = json.Unmarshal(osbuildManifest, &mani)
+
+	err := json.Unmarshal(osbm, &mani)
 	require.Nil(t, err)
+
 	pipelines := mani["pipelines"].([]interface{})
-	findQcowStage := func() map[string]interface{} {
-		for _, stageIf := range pipelines {
-			stage := stageIf.(map[string]interface{})
-			if stage["name"].(string) == "qcow2" {
-				return stage
-			}
+	for _, pipelineIf := range pipelines {
+		pipeline := pipelineIf.(map[string]interface{})
+		if pipeline["name"].(string) == pipelineName {
+			return pipeline
 		}
-		return nil
 	}
-	qcowStage := findQcowStage()
-	require.NotNil(t, qcowStage)
+	return nil
+}
+
+func findStageFromOsbuildPipeline(t *testing.T, pipeline map[string]interface{}, stageName string) map[string]interface{} {
+	stages := pipeline["stages"].([]interface{})
+	for _, stageIf := range stages {
+		stage := stageIf.(map[string]interface{})
+		if stage["type"].(string) == stageName {
+			return stage
+		}
+	}
+	return nil
+}
+
+func TestBootcDiskImageInstantiateNoBuildpipelineForQcow2(t *testing.T) {
+	osbuildManifest := makeBootcDiskImageOsbuildManifest(t, nil)
+
+	qcowPipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "qcow2")
+	require.NotNil(t, qcowPipeline)
 	// no build pipeline for qcow2
-	assert.Equal(t, qcowStage["build"], nil)
+	assert.Equal(t, qcowPipeline["build"], nil)
+}
+
+func TestBootcDiskImageUsesBootupd(t *testing.T) {
+	osbuildManifest := makeBootcDiskImageOsbuildManifest(t, nil)
+
+	// check that bootupd is part of the "image" pipeline
+	imagePipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "image")
+	require.NotNil(t, imagePipeline)
+	bootupdStage := findStageFromOsbuildPipeline(t, imagePipeline, "org.osbuild.bootupd")
+	require.NotNil(t, bootupdStage)
+
+	// ensure that "grub2" is not part of the ostree pipeline
+	ostreeDeployPipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "ostree-deployment")
+	require.NotNil(t, ostreeDeployPipeline)
+	grubStage := findStageFromOsbuildPipeline(t, ostreeDeployPipeline, "org.osbuild.grub2")
+	require.Nil(t, grubStage)
+}
+
+func TestBootcDiskImageBootupdBiosSupport(t *testing.T) {
+	for _, withBios := range []bool{false, true} {
+		osbuildManifest := makeBootcDiskImageOsbuildManifest(t, &bootcDiskImageTestOpts{BIOS: withBios})
+
+		imagePipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "image")
+		require.NotNil(t, imagePipeline)
+		bootupdStage := findStageFromOsbuildPipeline(t, imagePipeline, "org.osbuild.bootupd")
+		require.NotNil(t, bootupdStage)
+
+		opts := bootupdStage["options"].(map[string]interface{})
+		if withBios {
+			biosOpts := opts["bios"].(map[string]interface{})
+			assert.Equal(t, biosOpts["device"], "disk")
+		} else {
+			require.Nil(t, opts["bios"])
+		}
+	}
 }

@@ -3,6 +3,8 @@ package osbuild
 import (
 	"fmt"
 	"sort"
+
+	"github.com/osbuild/images/pkg/disk"
 )
 
 type BootupdStageOptionsBios struct {
@@ -72,4 +74,19 @@ func NewBootupdStage(opts *BootupdStageOptions, devices map[string]Device, mount
 		Devices: devices,
 		Mounts:  mounts,
 	}, nil
+}
+
+func GenBootupdDevicesMounts(filename string, pt *disk.PartitionTable) (map[string]Device, []Mount) {
+	_, mounts, devices, err := genMountsDevicesFromPt(filename, pt)
+	if err != nil {
+		panic(err)
+	}
+	devices["disk"] = Device{
+		Type: "org.osbuild.loopback",
+		Options: &LoopbackDeviceOptions{
+			Filename: filename,
+		},
+	}
+
+	return devices, mounts
 }
