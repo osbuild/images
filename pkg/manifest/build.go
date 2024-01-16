@@ -192,6 +192,10 @@ func (p *BuildrootFromContainer) getContainerSources() []container.SourceSpec {
 	return p.containers
 }
 
+func (p *BuildrootFromContainer) getContainerSpecs() []container.Spec {
+	return p.containerSpecs
+}
+
 func (p *BuildrootFromContainer) serializeStart(_ []rpmmd.PackageSpec, containerSpecs []container.Spec, _ []ostree.CommitSpec) {
 	if len(p.containerSpecs) > 0 {
 		panic("double call to serializeStart()")

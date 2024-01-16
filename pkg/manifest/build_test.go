@@ -107,7 +107,11 @@ func TestNewBuildFromContainerSpecs(t *testing.T) {
 			Source:  "registry.example.org/reg/img",
 		},
 	}
+	// containerSpecs is "nil" until serializeStart populates it
+	require.Nil(t, build.getContainerSpecs())
 	build.serializeStart(nil, fakeContainerSpecs, nil)
+	assert.Equal(t, build.getContainerSpecs(), fakeContainerSpecs)
+
 	osbuildPipeline := build.serialize()
 	require.Len(t, osbuildPipeline.Stages, 2)
 	assert.Equal(t, osbuildPipeline.Stages[0].Type, "org.osbuild.container-deploy")
@@ -117,4 +121,8 @@ func TestNewBuildFromContainerSpecs(t *testing.T) {
 	assert.Equal(t, osbuildPipeline.Stages[1].Type, "org.osbuild.selinux")
 	assert.Equal(t, len(osbuildPipeline.Stages[1].Options.(*osbuild.SELinuxStageOptions).Labels), 1)
 	assert.Equal(t, osbuildPipeline.Stages[1].Options.(*osbuild.SELinuxStageOptions).Labels["/usr/bin/ostree"], "system_u:object_r:install_exec_t:s0")
+
+	// serializeEnd "cleans up"
+	build.serializeEnd()
+	require.Nil(t, build.getContainerSpecs())
 }
