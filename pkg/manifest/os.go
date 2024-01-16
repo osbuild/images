@@ -641,7 +641,7 @@ func (p *OS) serialize() osbuild.Pipeline {
 					),
 				)
 			} else {
-				options := osbuild.NewGrub2StageOptionsUnified(pt,
+				options := osbuild.NewGrub2StageOptions(pt,
 					strings.Join(kernelOptions, " "),
 					p.kernelVer,
 					p.platform.GetUEFIVendor() != "",

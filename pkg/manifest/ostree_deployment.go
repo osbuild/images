@@ -404,7 +404,7 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 		}
 	}
 
-	grubOptions := osbuild.NewGrub2StageOptionsUnified(p.PartitionTable,
+	grubOptions := osbuild.NewGrub2StageOptions(p.PartitionTable,
 		strings.Join(kernelOpts, " "),
 		"",
 		p.platform.GetUEFIVendor() != "",

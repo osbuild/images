@@ -52,7 +52,7 @@ func NewGRUB2Stage(options *GRUB2StageOptions) *Stage {
 	}
 }
 
-func NewGrub2StageOptionsUnified(pt *disk.PartitionTable,
+func NewGrub2StageOptions(pt *disk.PartitionTable,
 	kernelOptions string,
 	kernelVer string,
 	uefi bool,
