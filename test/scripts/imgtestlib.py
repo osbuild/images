@@ -222,6 +222,8 @@ def read_manifests(path):
 def check_for_build(manifest_fname, build_info_path, osbuild_ver, osbuild_commit, errors):
     # rebuild if matching build info is not found
     if not os.path.exists(build_info_path):
+        print(f"Build info not found: {build_info_path}")
+        print("  Adding config to build pipeline.")
         return True
 
     try:
@@ -231,7 +233,7 @@ def check_for_build(manifest_fname, build_info_path, osbuild_ver, osbuild_commit
         errors.append((
                 f"failed to parse {build_info_path}\n"
                 f"{jd.msg}\n"
-                "Scheduling config for rebuild\n"
+                "  Adding config to build pipeline.\n"
         ))
 
     # check if osbuild version matches
@@ -244,6 +246,7 @@ def check_for_build(manifest_fname, build_info_path, osbuild_ver, osbuild_commit
     if osbuild_id != config_osbuild_id:
         print(f"🖼️ Manifest {manifest_fname} was built with {config_osbuild_id}")
         print(f"  Testing {osbuild_id}")
+        print("  Adding config to build pipeline.")
         return True
 
     commit = dl_config["commit"]
@@ -266,8 +269,10 @@ def check_for_build(manifest_fname, build_info_path, osbuild_ver, osbuild_commit
     if dl_config.get("boot-success", False):
         print("  This image was successfully boot tested")
         return False
+    print("  Boot test success not found.")
 
     # default to build
+    print("  Adding config to build pipeline.")
     return True
 
 
