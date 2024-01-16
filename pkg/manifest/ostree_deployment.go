@@ -228,12 +228,19 @@ func (p *OSTreeDeployment) doOSTreeContainerSpec(pipeline *osbuild.Pipeline, rep
 	cont := *p.containerSpec
 	ref := p.ref
 
+	var targetImgref string
+	// The ostree-remote case is unusual; it may be used by FCOS/Silverblue for example to handle
+	// embedded GPG signatures
+	if p.Remote.Name != "" {
+		targetImgref = fmt.Sprintf("ostree-remote-registry:%s:%s", p.Remote.Name, p.containerSpec.Source)
+	} else {
+		targetImgref = fmt.Sprintf("ostree-unverified-registry:%s", p.containerSpec.Source)
+	}
+
 	options := &osbuild.OSTreeDeployContainerStageOptions{
-		OsName:     p.osName,
-		KernelOpts: p.KernelOptionsAppend,
-		// NOTE: setting the target imgref to be the container source but
-		// we should make this configurable
-		TargetImgref: fmt.Sprintf("ostree-remote-registry:%s:%s", p.Remote.Name, p.containerSpec.Source),
+		OsName:       p.osName,
+		KernelOpts:   p.KernelOptionsAppend,
+		TargetImgref: targetImgref,
 		Mounts:       []string{"/boot", "/boot/efi"},
 		Rootfs: &osbuild.Rootfs{
 			Label: "root",
