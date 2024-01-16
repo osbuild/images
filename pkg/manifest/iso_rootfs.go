@@ -63,7 +63,7 @@ func (p *ISORootfsImg) serialize() osbuild.Pipeline {
 		},
 	}
 	copyStageInputs := osbuild.NewPipelineTreeInputs(inputName, p.installerPipeline.Name())
-	copyStageMounts := &osbuild.Mounts{*osbuild.NewExt4Mount(devName, devName, "/")}
+	copyStageMounts := []osbuild.Mount{*osbuild.NewExt4Mount(devName, devName, "/")}
 	copyStage := osbuild.NewCopyStage(copyStageOptions, copyStageInputs, &devices, copyStageMounts)
 	pipeline.AddStage(copyStage)
 	return pipeline

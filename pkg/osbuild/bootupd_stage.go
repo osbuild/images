@@ -58,8 +58,8 @@ func validateBootupdMounts(mounts []Mount) error {
 // NewBootupdStage creates a new stage for the org.osbuild.bootupd stage. It
 // requires a mount setup of "/", "/boot" and "/boot/efi" right now so that
 // bootupd can find and install all required bootloader bits.
-func NewBootupdStage(opts *BootupdStageOptions, devices *Devices, mounts *Mounts) (*Stage, error) {
-	if err := validateBootupdMounts(*mounts); err != nil {
+func NewBootupdStage(opts *BootupdStageOptions, devices *Devices, mounts []Mount) (*Stage, error) {
+	if err := validateBootupdMounts(mounts); err != nil {
 		return nil, err
 	}
 	if err := opts.validate(*devices); err != nil {
@@ -70,6 +70,6 @@ func NewBootupdStage(opts *BootupdStageOptions, devices *Devices, mounts *Mounts
 		Type:    "org.osbuild.bootupd",
 		Options: opts,
 		Devices: *devices,
-		Mounts:  *mounts,
+		Mounts:  mounts,
 	}, nil
 }
