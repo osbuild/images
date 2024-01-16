@@ -232,9 +232,9 @@ func (p *OSTreeDeployment) doOSTreeContainerSpec(pipeline *osbuild.Pipeline, rep
 	// The ostree-remote case is unusual; it may be used by FCOS/Silverblue for example to handle
 	// embedded GPG signatures
 	if p.Remote.Name != "" {
-		targetImgref = fmt.Sprintf("ostree-remote-registry:%s:%s", p.Remote.Name, p.containerSpec.Source)
+		targetImgref = fmt.Sprintf("ostree-remote-registry:%s:%s", p.Remote.Name, p.containerSpec.LocalName)
 	} else {
-		targetImgref = fmt.Sprintf("ostree-unverified-registry:%s", p.containerSpec.Source)
+		targetImgref = fmt.Sprintf("ostree-unverified-registry:%s", p.containerSpec.LocalName)
 	}
 
 	options := &osbuild.OSTreeDeployContainerStageOptions{
