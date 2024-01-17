@@ -122,12 +122,11 @@ def dl_s3_configs(destination, distro=None, arch=None):
                   "--exclude=*",
                   "--include=*/info.json",
                   s3url, destination],
-                 capture_output=True,
+                 capture_output=False,
                  check=False)
     ok = job.returncode == 0
     if not ok:
         print(f"⚠️ Failed to sync contents of {s3url}:")
-        print(job.stderr.decode())
     return ok
 
 
