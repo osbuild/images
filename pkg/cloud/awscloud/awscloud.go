@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"time"
@@ -139,13 +140,16 @@ func (a *AWS) Upload(filename, bucket, key string) (*s3manager.UploadOutput, err
 			logrus.Warnf("[AWS] ‼ Failed to close the file uploaded to S3️: %v", err)
 		}
 	}()
+	return a.UploadFromReader(file, bucket, key)
+}
 
+func (a *AWS) UploadFromReader(r io.Reader, bucket, key string) (*s3manager.UploadOutput, error) {
 	logrus.Infof("[AWS] 🚀 Uploading image to S3: %s/%s", bucket, key)
 	return a.uploader.Upload(
 		&s3manager.UploadInput{
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key),
-			Body:   file,
+			Body:   r,
 		},
 	)
 }
