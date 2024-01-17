@@ -45,7 +45,7 @@ def main():
     s3url = f"{bucket}/images/builds/{distro}/{arch}/{manifest_id}/"
 
     print(f"⬆️ Uploading {build_dir} to {s3url}")
-    testlib.runcmd(["s3cmd", *testlib.s3_auth_args(), "--acl-private", "put", "--recursive", build_dir+"/", s3url])
+    testlib.runcmd(["aws", "s3", "cp", "--acl=private", "--recursive", build_dir+"/", s3url])
     print("✅ DONE!!")
 
 

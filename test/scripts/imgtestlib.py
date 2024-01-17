@@ -127,10 +127,9 @@ def dl_s3_configs(destination, distro=None, arch=None):
 
     print(f"⬇️ Downloading configs from {s3url}")
     # only download info.json (exclude everything, then include) files, otherwise we get manifests and whole images
-    job = sp.run(["s3cmd", *s3_auth_args(), "sync",
+    job = sp.run(["aws", "s3", "sync",
                   "--exclude=*",
-                  "--include=info.json",
-                  "--delete-removed",
+                  "--include=*/info.json",
                   s3url, destination],
                  capture_output=True,
                  check=False)
