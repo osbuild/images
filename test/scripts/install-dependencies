@@ -1,5 +1,18 @@
 #!/usr/bin/env bash
 
-dnf -y install go gcc python3 gpgme-devel s3cmd xz podman \
-  osbuild osbuild-luks2 osbuild-lvm2 osbuild-ostree osbuild-selinux osbuild-depsolve-dnf \
-  btrfs-progs-devel device-mapper-devel
+dnf -y install \
+    btrfs-progs-devel \
+    device-mapper-devel \
+    gcc \
+    go \
+    gpgme-devel \
+    osbuild \
+    osbuild-depsolve-dnf \
+    osbuild-luks2 \
+    osbuild-lvm2 \
+    osbuild-ostree \
+    osbuild-selinux \
+    podman \
+    python3 \
+    s3cmd \
+    xz
