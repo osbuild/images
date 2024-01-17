@@ -137,6 +137,9 @@ def boot_container(distro, arch, image_type, image_path, manifest_id):
 
             # boot it
             image_name = f"image-boot-test-{distro}-{arch}-{image_type}-" + str(uuid.uuid4())
+
+            # Build artifacts are owned by root. Make them world accessible.
+            testlib.runcmd(["sudo", "chmod", "a+rwX", "-R", tmpdir])
             raw_image_path = f"{tmpdir}/image/disk.raw"
             cmd_boot_aws(arch, image_name, privkey_file, pubkey_file, raw_image_path)
 
