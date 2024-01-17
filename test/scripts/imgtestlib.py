@@ -105,15 +105,6 @@ def list_images(distros=None, arches=None, images=None):
     return json.loads(out)
 
 
-def s3_auth_args():
-    s3_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
-    s3_key_id = os.environ.get("AWS_ACCESS_KEY_ID")
-    if s3_key and s3_key_id:
-        return [f"--access_key={s3_key_id}", f"--secret_key={s3_key}"]
-
-    return []
-
-
 def dl_s3_configs(destination, distro=None, arch=None):
     """
     Downloads all the configs from the s3 bucket.
