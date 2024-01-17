@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 dnf -y install \
+    awscli2 \
     btrfs-progs-devel \
     device-mapper-devel \
     gcc \
@@ -14,5 +15,4 @@ dnf -y install \
     osbuild-selinux \
     podman \
     python3 \
-    s3cmd \
     xz
