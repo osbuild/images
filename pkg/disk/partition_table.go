@@ -36,6 +36,9 @@ const (
 	// RawPartitioningMode always creates a raw layout.
 	RawPartitioningMode PartitioningMode = "raw"
 
+	// BtrfsPartitioningMode creates a btrfs layout.
+	BtfrsPartitioningMode PartitioningMode = "btrfs"
+
 	// DefaultPartitioningMode is AutoLVMPartitioningMode and is the empty state
 	DefaultPartitioningMode PartitioningMode = ""
 )
@@ -43,14 +46,15 @@ const (
 func NewPartitionTable(basePT *PartitionTable, mountpoints []blueprint.FilesystemCustomization, imageSize uint64, mode PartitioningMode, requiredSizes map[string]uint64, rng *rand.Rand) (*PartitionTable, error) {
 	newPT := basePT.Clone().(*PartitionTable)
 
-	if basePT.features().LVM && mode == RawPartitioningMode {
-		return nil, fmt.Errorf("raw partitioning mode set for a base partition table with LVM, this is unsupported")
+	if basePT.features().LVM && (mode == RawPartitioningMode || mode == BtfrsPartitioningMode) {
+		return nil, fmt.Errorf("%s partitioning mode set for a base partition table with LVM, this is unsupported", mode)
 	}
 
 	// first pass: enlarge existing mountpoints and collect new ones
 	newMountpoints, _ := newPT.applyCustomization(mountpoints, false)
 
 	var ensureLVM bool
+	ensureBtrfs := false
 	switch mode {
 	case LVMPartitioningMode:
 		ensureLVM = true
@@ -58,11 +62,18 @@ func NewPartitionTable(basePT *PartitionTable, mountpoints []blueprint.Filesyste
 		ensureLVM = false
 	case DefaultPartitioningMode, AutoLVMPartitioningMode:
 		ensureLVM = len(newMountpoints) > 0
+	case BtfrsPartitioningMode:
+		ensureBtrfs = true
 	default:
 		return nil, fmt.Errorf("unsupported partitioning mode %q", mode)
 	}
 	if ensureLVM {
 		err := newPT.ensureLVM()
+		if err != nil {
+			return nil, err
+		}
+	} else if ensureBtrfs {
+		err := newPT.ensureBtrfs()
 		if err != nil {
 			return nil, err
 		}
@@ -673,6 +684,62 @@ func (pt *PartitionTable) ensureLVM() error {
 
 	} else {
 		return fmt.Errorf("Unsupported parent for LVM")
+	}
+
+	return nil
+}
+
+// ensureBtrfs will ensure that the root partition is on a btrfs subvolume, i.e. if
+// it currently is not, it will wrap it in one
+func (pt *PartitionTable) ensureBtrfs() error {
+
+	rootPath := entityPath(pt, "/")
+	if rootPath == nil {
+		panic("no root mountpoint for PartitionTable")
+	}
+
+	// we need a /boot partition to boot btrfs, ensure one exists
+	bootPath := entityPath(pt, "/boot")
+	if bootPath == nil {
+		_, err := pt.CreateMountpoint("/boot", 512*common.MiB)
+
+		if err != nil {
+			return err
+		}
+
+		rootPath = entityPath(pt, "/")
+	}
+
+	parent := rootPath[1] // NB: entityPath has reversed order
+
+	if _, ok := parent.(*Btrfs); ok {
+		return nil
+	} else if part, ok := parent.(*Partition); ok {
+		btrfs := &Btrfs{
+			Label: "root",
+			Subvolumes: []BtrfsSubvolume{
+				{
+					Name:       "root",
+					Mountpoint: "/",
+					Compress:   "zstd:1",
+				},
+			},
+		}
+
+		// replace the top-level partition payload with a new btrfs filesystem
+		part.Payload = btrfs
+
+		// reset the btrfs partition size - it will be grown later
+		part.Size = 0
+
+		if pt.Type == "gpt" {
+			part.Type = FilesystemDataGUID
+		} else {
+			part.Type = "83"
+		}
+
+	} else {
+		return fmt.Errorf("Unsupported parent for btrfs")
 	}
 
 	return nil
