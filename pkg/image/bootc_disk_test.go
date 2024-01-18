@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osbuild/images/internal/testdisk"
 	"github.com/osbuild/images/pkg/container"
-	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/image"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/platform"
@@ -43,21 +43,6 @@ func makeFakePlatform() platform.Platform {
 	}
 }
 
-func makeFakePartitionTable() *disk.PartitionTable {
-	return &disk.PartitionTable{
-		Type: "gpt",
-		Partitions: []disk.Partition{
-			{
-				Payload: &disk.Filesystem{
-					Type:       "ext4",
-					UUID:       disk.RootPartitionUUID,
-					Mountpoint: "/",
-				},
-			},
-		},
-	}
-}
-
 func TestBootcDiskImageInstantiateNoBuildpipelineForQcow2(t *testing.T) {
 	containerSource := container.SourceSpec{
 		Source: "some-src",
@@ -68,7 +53,7 @@ func TestBootcDiskImageInstantiateNoBuildpipelineForQcow2(t *testing.T) {
 	img := image.NewBootcDiskImage(containerSource)
 	require.NotNil(t, img)
 	img.Platform = makeFakePlatform()
-	img.PartitionTable = makeFakePartitionTable()
+	img.PartitionTable = testdisk.MakeFakePartitionTable("/")
 
 	m := &manifest.Manifest{}
 	runi := &runner.Fedora{}
