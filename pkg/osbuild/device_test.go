@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/disk"
@@ -165,4 +166,62 @@ func TestPathEscape(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMountsDeviceFromPtEmptyErrors(t *testing.T) {
+	filename := "fake-disk.img"
+	fakePt := &disk.PartitionTable{}
+	fsRootMntName, mounts, devices, err := genMountsDevicesFromPt(filename, fakePt)
+	assert.ErrorContains(t, err, "no mount found for the filesystem root")
+	assert.Equal(t, fsRootMntName, "")
+	require.Nil(t, mounts)
+	require.Nil(t, devices)
+}
+
+func TestMountsDeviceFromPtNoRootErrors(t *testing.T) {
+	filename := "fake-disk.img"
+	fakePt := &disk.PartitionTable{
+		Type: "gpt",
+		Partitions: []disk.Partition{
+			{
+				Payload: &disk.Filesystem{
+					Type:       "ext4",
+					UUID:       disk.RootPartitionUUID,
+					Mountpoint: "/not-root",
+				},
+			},
+		},
+	}
+	_, _, _, err := genMountsDevicesFromPt(filename, fakePt)
+	assert.ErrorContains(t, err, "no mount found for the filesystem root")
+}
+
+func TestMountsDeviceFromPtHappy(t *testing.T) {
+	filename := "fake-disk.img"
+	fakePt := &disk.PartitionTable{
+		Type: "gpt",
+		Partitions: []disk.Partition{
+			{
+				Payload: &disk.Filesystem{
+					Type:       "ext4",
+					UUID:       disk.RootPartitionUUID,
+					Mountpoint: "/",
+				},
+			},
+		},
+	}
+	fsRootMntName, mounts, devices, err := genMountsDevicesFromPt(filename, fakePt)
+	require.Nil(t, err)
+	assert.Equal(t, fsRootMntName, "-")
+	assert.Equal(t, mounts, []Mount{
+		{Name: "-", Type: "org.osbuild.ext4", Source: "-", Target: "/"},
+	})
+	assert.Equal(t, devices, map[string]Device{
+		"-": {
+			Type: "org.osbuild.loopback",
+			Options: &LoopbackDeviceOptions{
+				Filename: "fake-disk.img",
+			},
+		},
+	})
 }
