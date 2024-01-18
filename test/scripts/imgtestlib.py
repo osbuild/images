@@ -105,7 +105,7 @@ def list_images(distros=None, arches=None, images=None):
     return json.loads(out)
 
 
-def dl_s3_configs(destination, distro=None, arch=None):
+def dl_build_info(destination, distro=None, arch=None):
     """
     Downloads all the configs from the s3 bucket.
     """
@@ -128,6 +128,7 @@ def dl_s3_configs(destination, distro=None, arch=None):
     ok = job.returncode == 0
     if not ok:
         print(f"⚠️ Failed to sync contents of {s3url}:")
+        print(job.stdout.decode())
         print(job.stderr.decode())
     return job.stdout.decode(), ok
 
@@ -276,7 +277,7 @@ def filter_builds(manifests, distro=None, arch=None, skip_ostree_pull=True):
     os.makedirs(dl_path, exist_ok=True)
     build_requests = []
 
-    out, dl_ok = dl_s3_configs(dl_path, distro=distro, arch=arch)
+    out, dl_ok = dl_build_info(dl_path, distro=distro, arch=arch)
     # continue even if the dl failed; will build all configs
     if dl_ok:
         # print output which includes list of downloaded files for CI job log

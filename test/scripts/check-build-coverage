@@ -60,7 +60,7 @@ def main():
     parser.add_argument("cachedir", type=str, help="path to download the build test cache")
     args = parser.parse_args()
     cachedir = args.cachedir
-    _, ok = testlib.dl_s3_configs(cachedir)
+    _, ok = testlib.dl_build_info(cachedir)
     # fail the job if the sync failed
     if not ok:
         sys.exit(1)
