@@ -159,7 +159,7 @@ github.com/acarl005/stripansi
 # github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 ## explicit; go 1.13
 github.com/asaskevich/govalidator
-# github.com/aws/aws-sdk-go v1.49.22
+# github.com/aws/aws-sdk-go v1.49.23
 ## explicit; go 1.19
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/arn
@@ -229,7 +229,7 @@ github.com/containerd/stargz-snapshotter/estargz/errorutil
 # github.com/containers/common v0.57.1
 ## explicit; go 1.18
 github.com/containers/common/pkg/retry
-# github.com/containers/image/v5 v5.29.0
+# github.com/containers/image/v5 v5.29.1
 ## explicit; go 1.19
 github.com/containers/image/v5/copy
 github.com/containers/image/v5/directory
