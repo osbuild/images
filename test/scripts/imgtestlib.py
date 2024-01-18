@@ -119,15 +119,17 @@ def dl_s3_configs(destination, distro=None, arch=None):
     print(f"⬇️ Downloading configs from {s3url}")
     # only download info.json (exclude everything, then include) files, otherwise we get manifests and whole images
     job = sp.run(["aws", "s3", "sync",
+                  "--no-progress",  # wont show progress but will print file list
                   "--exclude=*",
                   "--include=*/info.json",
                   s3url, destination],
-                 capture_output=False,
+                 capture_output=True,
                  check=False)
     ok = job.returncode == 0
     if not ok:
         print(f"⚠️ Failed to sync contents of {s3url}:")
-    return ok
+        print(job.stderr.decode())
+    return job.stdout.decode(), ok
 
 
 def get_manifest_id(manifest_data):
@@ -274,7 +276,11 @@ def filter_builds(manifests, distro=None, arch=None, skip_ostree_pull=True):
     os.makedirs(dl_path, exist_ok=True)
     build_requests = []
 
-    dl_s3_configs(dl_path, distro=distro, arch=arch)
+    out, dl_ok = dl_s3_configs(dl_path, distro=distro, arch=arch)
+    # continue even if the dl failed; will build all configs
+    if dl_ok:
+        # print output which includes list of downloaded files for CI job log
+        print(out)
 
     errors = []
 
