@@ -8,7 +8,6 @@ import (
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/artifact"
 	"github.com/osbuild/images/pkg/customizations/users"
-	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/platform"
@@ -84,21 +83,6 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 	}
 	anacondaPipeline.AdditionalDrivers = img.AdditionalDrivers
 
-	rootfsPartitionTable := &disk.PartitionTable{
-		Size: 20 * common.MebiByte,
-		Partitions: []disk.Partition{
-			{
-				Start: 0,
-				Size:  20 * common.MebiByte,
-				Payload: &disk.Filesystem{
-					Type:       "vfat",
-					Mountpoint: "/",
-					UUID:       disk.NewVolIDFromRand(rng),
-				},
-			},
-		},
-	}
-
 	// TODO: replace isoLabelTmpl with more high-level properties
 	isoLabel := fmt.Sprintf(img.ISOLabelTempl, img.Platform.GetArch())
 
@@ -118,7 +102,7 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoLinuxEnabled := img.Platform.GetArch() == arch.ARCH_X86_64
 
 	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
-	isoTreePipeline.PartitionTable = rootfsPartitionTable
+	isoTreePipeline.PartitionTable = efiBootPartitionTable(rng)
 	isoTreePipeline.Release = img.Release
 	isoTreePipeline.OSName = img.OSName
 	isoTreePipeline.Remote = img.Remote
