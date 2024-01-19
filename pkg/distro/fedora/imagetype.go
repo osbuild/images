@@ -392,5 +392,10 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 		return nil, err
 	}
 
+	if customizations.GetFIPS() && !common.IsBuildHostFIPSEnabled() {
+		w := fmt.Sprintln(common.FIPSEnabledImageWarning)
+		return []string{w}, nil
+	}
+
 	return nil, nil
 }
