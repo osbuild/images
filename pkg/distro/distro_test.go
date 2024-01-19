@@ -16,6 +16,7 @@ import (
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slices"
 )
 
 // Ensure that all package sets defined in the package set chains are defined for the image type
@@ -549,4 +550,64 @@ func (s stringSet) Merge(other stringSet) stringSet {
 		merged.Add(elem)
 	}
 	return merged
+}
+
+// Check that Manifest() function returns an warning when FIPS
+// customization is enabled and the host is not FIPS
+func TestDistro_ManifestFIPSWarning(t *testing.T) {
+	ostreeImages := []string{
+		"edge-installer",
+		"edge-raw-image",
+		"edge-ami",
+		"edge-vsphere",
+		"edge-simplified-installer",
+		"edge-qcow2-image",
+		"iot-installer",
+		"iot-raw-image",
+		"iot-simplified-installer",
+		"iot-qcow2-image",
+	}
+	noCustomizableImages := []string{
+		"live-installer",
+		"azure-eap7-rhui",
+	}
+	distros := distroregistry.NewDefault()
+	for _, distroName := range distros.List() {
+		// FIPS blueprint customization is not supported for RHEL 7 images
+		if distroName == "rhel-7" {
+			continue
+		}
+		d := distros.GetDistro(distroName)
+		fips_enabled := true
+		msg := common.FIPSEnabledImageWarning + "\n"
+
+		for _, archName := range d.ListArches() {
+			arch, _ := d.GetArch(archName)
+			for _, imgTypeName := range arch.ListImageTypes() {
+				bp := blueprint.Blueprint{
+					Customizations: &blueprint.Customizations{
+						FIPS: &fips_enabled,
+					},
+				}
+				imgType, _ := arch.GetImageType(imgTypeName)
+				imgOpts := distro.ImageOptions{
+					Size: imgType.Size(0),
+				}
+				if slices.Contains(ostreeImages, imgTypeName) {
+					imgOpts.OSTree = &ostree.ImageOptions{URL: "http://localhost/repo"}
+				}
+				if strings.HasSuffix(imgTypeName, "simplified-installer") {
+					bp.Customizations.InstallationDevice = "/dev/dummy"
+				}
+				_, warn, err := imgType.Manifest(&bp, imgOpts, nil, 0)
+				if err != nil {
+					assert.True(t, slices.Contains(noCustomizableImages, imgTypeName))
+					assert.Equal(t, err, fmt.Errorf(distro.NoCustomizationsAllowedError, imgTypeName))
+				} else {
+					assert.Equal(t, slices.Contains(warn, msg), !common.IsBuildHostFIPSEnabled(),
+						"FIPS warning not shown for image: distro='%s', imgTypeName='%s', archName='%s', warn='%v'", distroName, imgTypeName, archName, warn)
+				}
+			}
+		}
+	}
 }
