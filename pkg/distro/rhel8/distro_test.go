@@ -493,7 +493,7 @@ func TestDistro_ManifestError(t *testing.T) {
 			} else if imgTypeName == "edge-installer" || imgTypeName == "edge-simplified-installer" {
 				assert.EqualError(t, err, fmt.Sprintf("boot ISO image type %q requires specifying a URL from which to retrieve the OSTree commit", imgTypeName))
 			} else if imgTypeName == "azure-eap7-rhui" {
-				assert.EqualError(t, err, fmt.Sprintf("image type %q does not support customizations", imgTypeName))
+				assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
 			} else {
 				assert.NoError(t, err)
 			}
