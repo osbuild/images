@@ -20,6 +20,24 @@ import (
 
 const kspath = "/osbuild.ks"
 
+func efiBootPartitionTable(rng *rand.Rand) *disk.PartitionTable {
+	var efibootImageSize uint64 = 20 * common.MebiByte
+	return &disk.PartitionTable{
+		Size: efibootImageSize,
+		Partitions: []disk.Partition{
+			{
+				Start: 0,
+				Size:  efibootImageSize,
+				Payload: &disk.Filesystem{
+					Type:       "vfat",
+					Mountpoint: "/",
+					UUID:       disk.NewVolIDFromRand(rng),
+				},
+			},
+		},
+	}
+}
+
 type AnacondaTarInstaller struct {
 	Base
 	Platform         platform.Platform
@@ -102,21 +120,6 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 
 	anacondaPipeline.Checkpoint()
 
-	rootfsPartitionTable := &disk.PartitionTable{
-		Size: 20 * common.MebiByte,
-		Partitions: []disk.Partition{
-			{
-				Start: 0,
-				Size:  20 * common.MebiByte,
-				Payload: &disk.Filesystem{
-					Type:       "vfat",
-					Mountpoint: "/",
-					UUID:       disk.NewVolIDFromRand(rng),
-				},
-			},
-		},
-	}
-
 	// TODO: replace isoLabelTmpl with more high-level properties
 	isoLabel := fmt.Sprintf(img.ISOLabelTempl, img.Platform.GetArch())
 
@@ -147,7 +150,7 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoLinuxEnabled := img.Platform.GetArch() == arch.ARCH_X86_64
 
 	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
-	isoTreePipeline.PartitionTable = rootfsPartitionTable
+	isoTreePipeline.PartitionTable = efiBootPartitionTable(rng)
 	isoTreePipeline.Release = img.Release
 	isoTreePipeline.OSName = img.OSName
 	isoTreePipeline.Users = img.Users
