@@ -17,9 +17,8 @@ import (
 
 // Options defines the option to retry.
 type Options struct {
-	MaxRetry         int           // The number of times to possibly retry.
-	Delay            time.Duration // The delay to use between retries, if set.
-	IsErrorRetryable func(error) bool
+	MaxRetry int           // The number of times to possibly retry.
+	Delay    time.Duration // The delay to use between retries, if set.
 }
 
 // RetryOptions is deprecated, use Options.
@@ -32,12 +31,6 @@ func RetryIfNecessary(ctx context.Context, operation func() error, options *Opti
 
 // IfNecessary retries the operation in exponential backoff with the retry Options.
 func IfNecessary(ctx context.Context, operation func() error, options *Options) error {
-	var isRetryable func(error) bool
-	if options.IsErrorRetryable != nil {
-		isRetryable = options.IsErrorRetryable
-	} else {
-		isRetryable = IsErrorRetryable
-	}
 	err := operation()
 	for attempt := 0; err != nil && isRetryable(err) && attempt < options.MaxRetry; attempt++ {
 		delay := time.Duration(int(math.Pow(2, float64(attempt)))) * time.Second
@@ -56,11 +49,7 @@ func IfNecessary(ctx context.Context, operation func() error, options *Options) 
 	return err
 }
 
-// IsErrorRetryable makes a HEURISTIC determination whether it is worth retrying upon encountering an error.
-// That heuristic is NOT STABLE and it CAN CHANGE AT ANY TIME.
-// Callers that have a hard requirement for specific treatment of a class of errors should make their own check
-// instead of relying on this function maintaining its past behavior.
-func IsErrorRetryable(err error) bool {
+func isRetryable(err error) bool {
 	switch err {
 	case nil:
 		return false
@@ -74,6 +63,7 @@ func IsErrorRetryable(err error) bool {
 	}
 
 	switch e := err.(type) {
+
 	case errcode.Error:
 		switch e.Code {
 		case errcode.ErrorCodeUnauthorized, errcode.ErrorCodeDenied,
@@ -82,18 +72,18 @@ func IsErrorRetryable(err error) bool {
 		}
 		return true
 	case *net.OpError:
-		return IsErrorRetryable(e.Err)
+		return isRetryable(e.Err)
 	case *url.Error: // This includes errors returned by the net/http client.
 		if e.Err == io.EOF { // Happens when a server accepts a HTTP connection and sends EOF
 			return true
 		}
-		return IsErrorRetryable(e.Err)
+		return isRetryable(e.Err)
 	case syscall.Errno:
 		return isErrnoRetryable(e)
 	case errcode.Errors:
 		// if this error is a group of errors, process them all in turn
 		for i := range e {
-			if !IsErrorRetryable(e[i]) {
+			if !isRetryable(e[i]) {
 				return false
 			}
 		}
@@ -101,7 +91,7 @@ func IsErrorRetryable(err error) bool {
 	case *multierror.Error:
 		// if this error is a group of errors, process them all in turn
 		for i := range e.Errors {
-			if !IsErrorRetryable(e.Errors[i]) {
+			if !isRetryable(e.Errors[i]) {
 				return false
 			}
 		}
@@ -112,11 +102,11 @@ func IsErrorRetryable(err error) bool {
 		}
 		if unwrappable, ok := e.(unwrapper); ok {
 			err = unwrappable.Unwrap()
-			return IsErrorRetryable(err)
+			return isRetryable(err)
 		}
 	case unwrapper: // Test this last, because various error types might implement .Unwrap()
 		err = e.Unwrap()
-		return IsErrorRetryable(err)
+		return isRetryable(err)
 	}
 
 	return false
