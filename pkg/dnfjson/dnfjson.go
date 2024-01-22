@@ -283,8 +283,11 @@ func (s *Solver) reposFromRPMMD(rpmRepos []rpmmd.RepoConfig) ([]repoConfig, erro
 			MirrorList:     rr.MirrorList,
 			GPGKeys:        rr.GPGKeys,
 			MetadataExpire: rr.MetadataExpire,
-			ModuleHotfixes: rr.ModuleHotfixes,
 			repoHash:       rr.Hash(),
+		}
+		if rr.ModuleHotfixes != nil {
+			val := *rr.ModuleHotfixes
+			dr.ModuleHotfixes = &val
 		}
 
 		if rr.CheckGPG != nil {
