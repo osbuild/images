@@ -36,9 +36,8 @@ type Group struct {
 }
 
 type Container struct {
-	Source string  `json:"source,omitempty" toml:"source"`
-	Name   string  `json:"name,omitempty" toml:"name,omitempty"`
-	Digest *string `json:"digest,omitempty" toml:"digest,omitempty"`
+	Source string `json:"source,omitempty" toml:"source"`
+	Name   string `json:"name,omitempty" toml:"name,omitempty"`
 
 	TLSVerify           *bool   `json:"tls-verify,omitempty" toml:"tls-verify,omitempty"`
 	ContainersTransport *string `json:"containers-transport,omitempty" toml:"containers-transport,omitempty"`
