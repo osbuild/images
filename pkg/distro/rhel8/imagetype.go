@@ -10,7 +10,6 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/environment"
-	"github.com/osbuild/images/internal/pathpolicy"
 	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
@@ -20,6 +19,7 @@ import (
 	"github.com/osbuild/images/pkg/image"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/platform"
+	"github.com/osbuild/images/pkg/policies"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
@@ -383,7 +383,7 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 		return warnings, fmt.Errorf("Custom mountpoints are not supported for ostree types")
 	}
 
-	err := blueprint.CheckMountpointsPolicy(mountpoints, pathpolicy.MountpointPolicies)
+	err := blueprint.CheckMountpointsPolicy(mountpoints, policies.MountpointPolicies)
 	if err != nil {
 		return warnings, err
 	}
@@ -411,12 +411,12 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 	if err != nil {
 		return warnings, err
 	}
-	err = blueprint.CheckDirectoryCustomizationsPolicy(dc, pathpolicy.CustomDirectoriesPolicies)
+	err = blueprint.CheckDirectoryCustomizationsPolicy(dc, policies.CustomDirectoriesPolicies)
 	if err != nil {
 		return warnings, err
 	}
 
-	err = blueprint.CheckFileCustomizationsPolicy(fc, pathpolicy.CustomFilesPolicies)
+	err = blueprint.CheckFileCustomizationsPolicy(fc, policies.CustomFilesPolicies)
 	if err != nil {
 		return warnings, err
 	}
