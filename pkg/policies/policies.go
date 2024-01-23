@@ -1,7 +1,11 @@
-package pathpolicy
+package policies
+
+import (
+	"github.com/osbuild/images/internal/pathpolicy"
+)
 
 // MountpointPolicies is a set of default mountpoint policies used for filesystem customizations
-var MountpointPolicies = NewPathPolicies(map[string]PathPolicy{
+var MountpointPolicies = pathpolicy.NewPathPolicies(map[string]pathpolicy.PathPolicy{
 	"/": {},
 	// /etc must be on the root filesystem
 	"/etc": {Deny: true},
@@ -31,13 +35,13 @@ var MountpointPolicies = NewPathPolicies(map[string]PathPolicy{
 })
 
 // CustomDirectoriesPolicies is a set of default policies for custom directories
-var CustomDirectoriesPolicies = NewPathPolicies(map[string]PathPolicy{
+var CustomDirectoriesPolicies = pathpolicy.NewPathPolicies(map[string]pathpolicy.PathPolicy{
 	"/":    {Deny: true},
 	"/etc": {},
 })
 
 // CustomFilesPolicies is a set of default policies for custom files
-var CustomFilesPolicies = NewPathPolicies(map[string]PathPolicy{
+var CustomFilesPolicies = pathpolicy.NewPathPolicies(map[string]pathpolicy.PathPolicy{
 	"/":           {Deny: true},
 	"/etc":        {},
 	"/root":       {},
@@ -48,7 +52,7 @@ var CustomFilesPolicies = NewPathPolicies(map[string]PathPolicy{
 })
 
 // MountpointPolicies for ostree
-var OstreeMountpointPolicies = NewPathPolicies(map[string]PathPolicy{
+var OstreeMountpointPolicies = pathpolicy.NewPathPolicies(map[string]pathpolicy.PathPolicy{
 	"/":             {},
 	"/ostree":       {Deny: true},
 	"/home":         {Deny: true},

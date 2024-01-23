@@ -1,4 +1,4 @@
-package pathpolicy
+package policies
 
 import "testing"
 
