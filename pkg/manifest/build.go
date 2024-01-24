@@ -217,7 +217,11 @@ func (p *BuildrootFromContainer) serialize() osbuild.Pipeline {
 	pipeline := p.Base.serialize()
 	pipeline.Runner = p.runner.String()
 
-	stage, err := osbuild.NewContainerDeployStage(osbuild.NewContainersInputForSources(p.containerSpecs))
+	inputs := osbuild.NewContainersInputForSources(p.containerSpecs)
+	options := &osbuild.ContainerDeployOptions{
+		Exclude: []string{"/sysroot"},
+	}
+	stage, err := osbuild.NewContainerDeployStage(inputs, options)
 	if err != nil {
 		panic(err)
 	}

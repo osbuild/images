@@ -18,7 +18,7 @@ func TestContainersDeployStageInputs(t *testing.T) {
 			Source:  "registry.example.org/reg/img",
 		},
 	})
-	stage, err := osbuild.NewContainerDeployStage(inputs)
+	stage, err := osbuild.NewContainerDeployStage(inputs, nil)
 	require.NotNil(t, stage)
 	require.Nil(t, err)
 
@@ -26,7 +26,7 @@ func TestContainersDeployStageInputs(t *testing.T) {
 	assert.Equal(t, stage.Inputs.(osbuild.ContainerDeployInputs).Images, inputs)
 }
 
-func TestContainersDeployStageOptionsJson(t *testing.T) {
+func TestContainersDeployStageInputsInputsJson(t *testing.T) {
 	expectedJson := `{
         "images": {
                 "type": "org.osbuild.containers",
@@ -49,6 +49,21 @@ func TestContainersDeployStageOptionsJson(t *testing.T) {
 				ListDigest: "some-list-digest",
 			},
 		}),
+	}
+	json, err := json.MarshalIndent(cdi, "", "        ")
+	require.Nil(t, err)
+	assert.Equal(t, string(json), expectedJson)
+}
+
+func TestContainersDeployStageOptionsJson(t *testing.T) {
+	expectedJson := `{
+        "exclude": [
+                "/sysroot",
+                "/other"
+        ]
+}`
+	cdi := osbuild.ContainerDeployOptions{
+		Exclude: []string{"/sysroot", "/other"},
 	}
 	json, err := json.MarshalIndent(cdi, "", "        ")
 	require.Nil(t, err)
@@ -109,7 +124,7 @@ func TestContainersDeployStageInputsValidate(t *testing.T) {
 	for name := range testCases {
 		tc := testCases[name]
 		t.Run(name, func(t *testing.T) {
-			stage, err := osbuild.NewContainerDeployStage(tc.inputs.Images)
+			stage, err := osbuild.NewContainerDeployStage(tc.inputs.Images, nil)
 			if tc.err == "" {
 				require.NotNil(t, stage)
 				require.Nil(t, err)
