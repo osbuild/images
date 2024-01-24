@@ -8,6 +8,12 @@ type ContainerDeployInputs struct {
 
 func (ContainerDeployInputs) isStageInputs() {}
 
+type ContainerDeployOptions struct {
+	Exclude []string `json:"exclude"`
+}
+
+func (ContainerDeployOptions) isStageOptions() {}
+
 func (inputs ContainerDeployInputs) validate() error {
 	if inputs.Images.References == nil {
 		return fmt.Errorf("stage requires exactly 1 input container (got nil References)")
@@ -18,7 +24,7 @@ func (inputs ContainerDeployInputs) validate() error {
 	return nil
 }
 
-func NewContainerDeployStage(images ContainersInput) (*Stage, error) {
+func NewContainerDeployStage(images ContainersInput, options *ContainerDeployOptions) (*Stage, error) {
 	inputs := ContainerDeployInputs{
 		Images: images,
 	}
@@ -26,7 +32,8 @@ func NewContainerDeployStage(images ContainersInput) (*Stage, error) {
 		return nil, err
 	}
 	return &Stage{
-		Type:   "org.osbuild.container-deploy",
-		Inputs: inputs,
+		Type:    "org.osbuild.container-deploy",
+		Inputs:  inputs,
+		Options: options,
 	}, nil
 }
