@@ -12,25 +12,14 @@ import (
 
 	"github.com/containers/image/v5/internal/imagesource/impl"
 	"github.com/containers/image/v5/internal/imagesource/stubs"
-	"github.com/containers/image/v5/internal/manifest"
 	"github.com/containers/image/v5/internal/private"
+	"github.com/containers/image/v5/manifest"
 	"github.com/containers/image/v5/pkg/tlsclientconfig"
 	"github.com/containers/image/v5/types"
 	"github.com/docker/go-connections/tlsconfig"
 	"github.com/opencontainers/go-digest"
 	imgspecv1 "github.com/opencontainers/image-spec/specs-go/v1"
 )
-
-// ImageNotFoundError is used when the OCI structure, in principle, exists and seems valid enough,
-// but nothing matches the “image” part of the provided reference.
-type ImageNotFoundError struct {
-	ref ociReference
-	// We may make members public, or add methods, in the future.
-}
-
-func (e ImageNotFoundError) Error() string {
-	return fmt.Sprintf("no descriptor found for reference %q", e.ref.image)
-}
 
 type ociImageSource struct {
 	impl.Compat
@@ -60,7 +49,7 @@ func newImageSource(sys *types.SystemContext, ref ociReference) (private.ImageSo
 
 	client := &http.Client{}
 	client.Transport = tr
-	descriptor, _, err := ref.getManifestDescriptor()
+	descriptor, err := ref.getManifestDescriptor()
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +83,6 @@ func (s *ociImageSource) Reference() types.ImageReference {
 
 // Close removes resources associated with an initialized ImageSource, if any.
 func (s *ociImageSource) Close() error {
-	s.client.CloseIdleConnections()
 	return nil
 }
 
@@ -108,7 +96,7 @@ func (s *ociImageSource) GetManifest(ctx context.Context, instanceDigest *digest
 	var err error
 
 	if instanceDigest == nil {
-		dig = s.descriptor.Digest
+		dig = digest.Digest(s.descriptor.Digest)
 		mimeType = s.descriptor.MediaType
 	} else {
 		dig = *instanceDigest
