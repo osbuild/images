@@ -126,3 +126,23 @@ func TestNewBuildFromContainerSpecs(t *testing.T) {
 	build.serializeEnd()
 	require.Nil(t, build.getContainerSpecs())
 }
+
+func TestBuildFromContainerSpecsGetSelinuxLabelsNotBuildable(t *testing.T) {
+	build := &BuildrootFromContainer{}
+
+	assert.Equal(t, build.getSELinuxLabels(), map[string]string{
+		"/usr/bin/ostree": "system_u:object_r:install_exec_t:s0",
+	})
+}
+
+func TestBuildFromContainerSpecsGetSelinuxLabelsWithContainerBuildable(t *testing.T) {
+	build := &BuildrootFromContainer{
+		containerBuildable: true,
+	}
+
+	assert.Equal(t, build.getSELinuxLabels(), map[string]string{
+		"/usr/bin/ostree": "system_u:object_r:install_exec_t:s0",
+		"/usr/bin/mount":  "system_u:object_r:install_exec_t:s0",
+		"/usr/bin/umount": "system_u:object_r:install_exec_t:s0",
+	})
+}
