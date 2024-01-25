@@ -210,6 +210,17 @@ func (p *BuildrootFromContainer) serializeEnd() {
 	p.containerSpecs = nil
 }
 
+func (p *BuildrootFromContainer) getSELinuxLabels() map[string]string {
+	labels := map[string]string{
+		"/usr/bin/ostree": "system_u:object_r:install_exec_t:s0",
+	}
+	if p.containerBuildable {
+		labels["/usr/bin/mount"] = "system_u:object_r:install_exec_t:s0"
+		labels["/usr/bin/umount"] = "system_u:object_r:install_exec_t:s0"
+	}
+	return labels
+}
+
 func (p *BuildrootFromContainer) serialize() osbuild.Pipeline {
 	if len(p.containerSpecs) == 0 {
 		panic("serialization not started")
@@ -229,9 +240,7 @@ func (p *BuildrootFromContainer) serialize() osbuild.Pipeline {
 	pipeline.AddStage(osbuild.NewSELinuxStage(
 		&osbuild.SELinuxStageOptions{
 			FileContexts: "etc/selinux/targeted/contexts/files/file_contexts",
-			Labels: map[string]string{
-				"/usr/bin/ostree": "system_u:object_r:install_exec_t:s0",
-			},
+			Labels:       p.getSELinuxLabels(),
 		},
 	))
 
