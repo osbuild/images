@@ -129,7 +129,7 @@ def boot_container(distro, arch, image_type, image_path, manifest_id):
                    "--security-opt", "label=type:unconfined_t",
                    "-v", f"{tmpdir}:/output",
                    "-v", f"{config_file}:/config.json",
-                   "quay.io/centos-bootc/bootc-image-builder:latest",
+                   testlib.BIB_REF,
                    "--type=ami",
                    "--config=/config.json",
                    container_ref]
@@ -184,6 +184,7 @@ def main():
     image_path = find_image_file(search_path)
 
     print(f"Testing image at {image_path}")
+    bib_image_id = ""
     match image_type:
         case "ami" | "ec2" | "ec2-ha" | "ec2-sap" | "edge-ami":
             boot_ami(distro, arch, image_type, image_path)
@@ -193,6 +194,10 @@ def main():
                 build_info = json.load(info_fp)
             manifest_id = build_info["manifest-checksum"]
             boot_container(distro, arch, image_type, image_path, manifest_id)
+            # get the image ID from the local store so we know it's the one we used in the test
+            # (in case the container in the registry was updated while we were testing)
+            bib_image_id = testlib.skopeo_inspect_id(f"containers-storage:{testlib.BIB_REF}",
+                                                     testlib.host_container_arch())
         case _:
             # skip
             print(f"{image_type} boot tests are not supported yet")
@@ -205,6 +210,8 @@ def main():
     with open(info_file_path, encoding="utf-8") as info_fp:
         build_info = json.load(info_fp)
     build_info["boot-success"] = True
+    if bib_image_id:
+        build_info["bib-id"] = bib_image_id
     with open(info_file_path, "w", encoding="utf-8") as info_fp:
         json.dump(build_info, info_fp, indent=2)
 
