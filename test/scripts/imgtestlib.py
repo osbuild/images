@@ -17,6 +17,8 @@ REGISTRY = "registry.gitlab.com/redhat/services/products/image-builder/ci/images
 SCHUTZFILE = "Schutzfile"
 OS_RELEASE_FILE = "/etc/os-release"
 
+BIB_REF = "quay.io/centos-bootc/bootc-image-builder:latest"
+
 # ostree containers are pushed to the CI registry to be reused by dependants
 OSTREE_CONTAINERS = [
     "iot-container",
