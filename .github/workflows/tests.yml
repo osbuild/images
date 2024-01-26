@@ -127,7 +127,7 @@ jobs:
     steps:
 
       - name: Install build and test dependencies
-        run: dnf -y install python3-pytest
+        run: dnf -y install python3-pytest podman skopeo
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v4
@@ -146,7 +146,7 @@ jobs:
     steps:
 
       - name: Install build and test dependencies
-        run: dnf -y install python3-pylint git-core grep
+        run: dnf -y install python3-pylint git-core grep python3-pytest
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v4
