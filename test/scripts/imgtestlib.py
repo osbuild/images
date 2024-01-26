@@ -401,3 +401,62 @@ def rng_seed_env():
         raise RuntimeError("'rngseed' not found in Schutzfile")
 
     return {"OSBUILD_TESTING_RNG_SEED": str(seed)}
+
+
+def host_container_arch():
+    host_arch = os.uname().machine
+    match host_arch:
+        case "x86_64":
+            return "amd64"
+        case "aarch64":
+            return "arm64"
+    return host_arch
+
+
+def is_manifest_list(data):
+    """Inspect a manifest determine if it's a multi-image manifest-list."""
+    media_type = data.get("mediaType")
+    #  Check if mediaType is set according to docker or oci specifications
+    if media_type in ("application/vnd.docker.distribution.manifest.list.v2+json",
+                      "application/vnd.oci.image.index.v1+json"):
+        return True
+
+    # According to the OCI spec, setting mediaType is not mandatory. So, if it is not set at all, check for the
+    # existence of manifests
+    if media_type is None and data.get("manifests") is not None:
+        return True
+
+    return False
+
+
+def skopeo_inspect_id(image_name: str, arch: str) -> str:
+    """
+    Returns the image ID (config digest) of the container image. If the image resolves to a manifest list, the config
+    digest of the given architecture is resolved.
+
+    Runs with 'sudo' when inspecting a local container because in our tests we need to read the root container storage.
+    """
+    cmd = ["skopeo", "inspect", "--raw", image_name]
+    if image_name.startswith("containers-storage"):
+        cmd = ["sudo"] + cmd
+    out, _ = runcmd(cmd)
+    data = json.loads(out)
+    if not is_manifest_list(data):
+        return data["config"]["digest"]
+
+    for manifest in data.get("manifests", []):
+        platform = manifest.get("platform", {})
+        img_arch = platform.get("architecture", "")
+        img_ostype = platform.get("os", "")
+
+        if arch != img_arch or img_ostype != "linux":
+            continue
+
+        image_no_tag = ":".join(image_name.split(":")[:-1])
+        manifest_digest = manifest["digest"]
+        arch_image_name = f"{image_no_tag}@{manifest_digest}"
+        # inspect the arch-specific manifest to get the image ID (config digest)
+        return skopeo_inspect_id(arch_image_name, arch)
+
+    # don't error out, just return an empty string and let the caller handle it
+    return ""
