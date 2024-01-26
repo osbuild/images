@@ -35,6 +35,10 @@ CAN_BOOT_TEST = [
     "iot-bootable-container",
 ]
 
+BIB_TYPES = [
+    "iot-bootable-container"
+]
+
 
 # base and terraform bits copied from main .gitlab-ci.yml
 # needed for status reporting and defining the runners
@@ -277,6 +281,17 @@ def check_for_build(manifest_fname, build_info_path, errors):
     # boot testing supported: check if it's been tested, otherwise queue it for rebuild and boot
     if dl_config.get("boot-success", False):
         print("  This image was successfully boot tested")
+
+        # check if it's a BIB type and compare image IDs
+        if image_type in BIB_TYPES:
+            booted_id = dl_config.get("bib-id", None)
+            current_id = skopeo_inspect_id(f"docker://{BIB_REF}", host_container_arch())
+            if booted_id != current_id:
+                print(f"Container disk image was built with bootc-image-builder {booted_id}")
+                print(f"  Testing {current_id}")
+                print("  Adding config to build pipeline.")
+                return True
+
         return False
     print("  Boot test success not found.")
 
