@@ -84,44 +84,6 @@
           "bluetooth.service"
         ]
       },
-      "filesystem": [
-        {
-          "mountpoint": "/home",
-          "minsize": 2147483648
-        },
-        {
-          "mountpoint": "/home/shadowman",
-          "minsize": "500MiB"
-        },
-        {
-          "mountpoint": "/foo",
-          "minsize": "1GiB"
-        },
-        {
-          "mountpoint": "/usr",
-          "minsize": "4GiB"
-        },
-        {
-          "mountpoint": "/opt",
-          "minsize": "1GiB"
-        },
-        {
-          "mountpoint": "/media",
-          "minsize": "1GiB"
-        },
-        {
-          "mountpoint": "/root",
-          "minsize": "1GiB"
-        },
-        {
-          "mountpoint": "/srv",
-          "minsize": "1GiB"
-        },
-        {
-          "mountpoint": "/mnt",
-          "minsize": "1GiB"
-        }
-      ],
       "directories": [
         {
           "path": "/etc/systemd/system/custom.service.d"
