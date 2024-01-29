@@ -611,7 +611,6 @@ func (p *OS) serialize() osbuild.Pipeline {
 				Kernel:     []string{p.kernelVer},
 				AddModules: []string{"fips"},
 			}))
-			p.Files = append(p.Files, osbuild.GenFIPSFiles()...)
 		}
 
 		if !p.KernelOptionsBootloader {
@@ -733,6 +732,7 @@ func (p *OS) serialize() osbuild.Pipeline {
 	}
 
 	if p.FIPS {
+		p.Files = append(p.Files, osbuild.GenFIPSFiles()...)
 		for _, stage := range osbuild.GenFIPSStages() {
 			pipeline.AddStage(stage)
 		}
