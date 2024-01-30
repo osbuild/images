@@ -1,17 +1,19 @@
-package osbuild
+package osbuild_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/osbuild/images/pkg/osbuild"
 )
 
 func TestNewMounts(t *testing.T) {
 	assert := assert.New(t)
 
 	{ // btrfs
-		actual := NewBtrfsMount("btrfs", "/dev/sda1", "/mnt/btrfs")
-		expected := &Mount{
+		actual := osbuild.NewBtrfsMount("btrfs", "/dev/sda1", "/mnt/btrfs")
+		expected := &osbuild.Mount{
 			Name:   "btrfs",
 			Type:   "org.osbuild.btrfs",
 			Source: "/dev/sda1",
@@ -21,8 +23,8 @@ func TestNewMounts(t *testing.T) {
 	}
 
 	{ // ext4
-		actual := NewExt4Mount("ext4", "/dev/sda2", "/mnt/ext4")
-		expected := &Mount{
+		actual := osbuild.NewExt4Mount("ext4", "/dev/sda2", "/mnt/ext4")
+		expected := &osbuild.Mount{
 			Name:   "ext4",
 			Type:   "org.osbuild.ext4",
 			Source: "/dev/sda2",
@@ -32,8 +34,8 @@ func TestNewMounts(t *testing.T) {
 	}
 
 	{ // fat
-		actual := NewFATMount("fat", "/dev/sda3", "/mnt/fat")
-		expected := &Mount{
+		actual := osbuild.NewFATMount("fat", "/dev/sda3", "/mnt/fat")
+		expected := &osbuild.Mount{
 			Name:   "fat",
 			Type:   "org.osbuild.fat",
 			Source: "/dev/sda3",
@@ -43,8 +45,8 @@ func TestNewMounts(t *testing.T) {
 	}
 
 	{ // xfs
-		actual := NewXfsMount("xfs", "/dev/sda4", "/mnt/xfs")
-		expected := &Mount{
+		actual := osbuild.NewXfsMount("xfs", "/dev/sda4", "/mnt/xfs")
+		expected := &osbuild.Mount{
 			Name:   "xfs",
 			Type:   "org.osbuild.xfs",
 			Source: "/dev/sda4",
