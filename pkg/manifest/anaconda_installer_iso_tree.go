@@ -381,8 +381,19 @@ func (p *AnacondaInstallerISOTree) serialize() osbuild.Pipeline {
 		pipeline.AddStage(osbuild.NewKickstartStage(kickstartOptions))
 
 		// and what we can't do in a separate kickstart that we include
+		targetContainerTransport := "registry"
+		if p.containerSpec.ContainersTransport != nil {
+			targetContainerTransport = *p.containerSpec.ContainersTransport
+		}
+		// Canonicalize to registry, as that's what the bootc stack wants
+		if targetContainerTransport == "docker://" {
+			targetContainerTransport = "registry"
+		}
 
-		kickstartFile, err := fsnode.NewFile(p.KSPath, nil, nil, nil, []byte(`
+		// Because osbuild core only supports a subset of options, we append to the
+		// base here with some more hardcoded defaults
+		// that should very likely become configurable.
+		hardcodedKickstartBits := `
 %include /run/install/repo/osbuild-base.ks
 
 rootpw --lock
@@ -399,7 +410,15 @@ part swap --fstype=swap --size=1024
 part / --fstype=ext4 --grow
 
 reboot --eject
-`))
+`
+
+		// Workaround for lack of --target-imgref in Anaconda, xref https://github.com/osbuild/images/issues/380
+		hardcodedKickstartBits += fmt.Sprintf(`%%post
+bootc switch --mutate-in-place --transport %s %s
+%%end
+`, targetContainerTransport, p.containerSpec.LocalName)
+
+		kickstartFile, err := fsnode.NewFile(p.KSPath, nil, nil, nil, []byte(hardcodedKickstartBits))
 
 		if err != nil {
 			panic(err)
