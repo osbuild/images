@@ -45,7 +45,7 @@ type storageImageSource struct {
 }
 
 // newImageSource sets up an image for reading.
-func newImageSource(sys *types.SystemContext, imageRef storageReference) (*storageImageSource, error) {
+func newImageSource(ctx context.Context, sys *types.SystemContext, imageRef storageReference) (*storageImageSource, error) {
 	// First, locate the image.
 	img, err := imageRef.resolveImage(sys)
 	if err != nil {
@@ -89,93 +89,70 @@ func (s *storageImageSource) Close() error {
 // The Digest field in BlobInfo is guaranteed to be provided, Size may be -1 and MediaType may be optionally provided.
 // May update BlobInfoCache, preferably after it knows for certain that a blob truly exists at a specific location.
 func (s *storageImageSource) GetBlob(ctx context.Context, info types.BlobInfo, cache types.BlobInfoCache) (rc io.ReadCloser, n int64, err error) {
-	// We need a valid digest value.
-	digest := info.Digest
-	err = digest.Validate()
-	if err != nil {
-		return nil, 0, err
-	}
-
-	if digest == image.GzippedEmptyLayerDigest {
+	if info.Digest == image.GzippedEmptyLayerDigest {
 		return io.NopCloser(bytes.NewReader(image.GzippedEmptyLayer)), int64(len(image.GzippedEmptyLayer)), nil
-	}
-
-	// Check if the blob corresponds to a diff that was used to initialize any layers.  Our
-	// callers should try to retrieve layers using their uncompressed digests, so no need to
-	// check if they're using one of the compressed digests, which we can't reproduce anyway.
-	layers, _ := s.imageRef.transport.store.LayersByUncompressedDigest(digest)
-
-	// If it's not a layer, then it must be a data item.
-	if len(layers) == 0 {
-		b, err := s.imageRef.transport.store.ImageBigData(s.image.ID, digest.String())
-		if err != nil {
-			return nil, 0, err
-		}
-		r := bytes.NewReader(b)
-		logrus.Debugf("exporting opaque data as blob %q", digest.String())
-		return io.NopCloser(r), int64(r.Len()), nil
 	}
 
 	// NOTE: the blob is first written to a temporary file and subsequently
 	// closed.  The intention is to keep the time we own the storage lock
 	// as short as possible to allow other processes to access the storage.
-	rc, n, _, err = s.getBlobAndLayerID(digest, layers)
+	rc, n, _, err = s.getBlobAndLayerID(info)
 	if err != nil {
 		return nil, 0, err
 	}
 	defer rc.Close()
 
-	tmpFile, err := tmpdir.CreateBigFileTemp(s.systemContext, "")
+	tmpFile, err := os.CreateTemp(tmpdir.TemporaryDirectoryForBigFiles(s.systemContext), "")
 	if err != nil {
 		return nil, 0, err
-	}
-	success := false
-	tmpFileRemovePending := true
-	defer func() {
-		if !success {
-			tmpFile.Close()
-			if tmpFileRemovePending {
-				os.Remove(tmpFile.Name())
-			}
-		}
-	}()
-	// On Unix and modern Windows (2022 at least) we can eagerly unlink the file to ensure it's automatically
-	// cleaned up on process termination (or if the caller forgets to invoke Close())
-	// On older versions of Windows we will have to fallback to relying on the caller to invoke Close()
-	if err := os.Remove(tmpFile.Name()); err != nil {
-		tmpFileRemovePending = false
 	}
 
 	if _, err := io.Copy(tmpFile, rc); err != nil {
 		return nil, 0, err
 	}
-	if _, err := tmpFile.Seek(0, io.SeekStart); err != nil {
+
+	if _, err := tmpFile.Seek(0, 0); err != nil {
 		return nil, 0, err
 	}
 
-	success = true
+	wrapper := ioutils.NewReadCloserWrapper(tmpFile, func() error {
+		defer os.Remove(tmpFile.Name())
+		return tmpFile.Close()
+	})
 
-	if tmpFileRemovePending {
-		return ioutils.NewReadCloserWrapper(tmpFile, func() error {
-			tmpFile.Close()
-			return os.Remove(tmpFile.Name())
-		}), n, nil
-	}
-
-	return tmpFile, n, nil
+	return wrapper, n, err
 }
 
 // getBlobAndLayer reads the data blob or filesystem layer which matches the digest and size, if given.
-func (s *storageImageSource) getBlobAndLayerID(digest digest.Digest, layers []storage.Layer) (rc io.ReadCloser, n int64, layerID string, err error) {
+func (s *storageImageSource) getBlobAndLayerID(info types.BlobInfo) (rc io.ReadCloser, n int64, layerID string, err error) {
 	var layer storage.Layer
 	var diffOptions *storage.DiffOptions
+	// We need a valid digest value.
+	err = info.Digest.Validate()
+	if err != nil {
+		return nil, -1, "", err
+	}
+	// Check if the blob corresponds to a diff that was used to initialize any layers.  Our
+	// callers should try to retrieve layers using their uncompressed digests, so no need to
+	// check if they're using one of the compressed digests, which we can't reproduce anyway.
+	layers, _ := s.imageRef.transport.store.LayersByUncompressedDigest(info.Digest)
 
+	// If it's not a layer, then it must be a data item.
+	if len(layers) == 0 {
+		b, err := s.imageRef.transport.store.ImageBigData(s.image.ID, info.Digest.String())
+		if err != nil {
+			return nil, -1, "", err
+		}
+		r := bytes.NewReader(b)
+		logrus.Debugf("exporting opaque data as blob %q", info.Digest.String())
+		return io.NopCloser(r), int64(r.Len()), "", nil
+	}
 	// Step through the list of matching layers.  Tests may want to verify that if we have multiple layers
 	// which claim to have the same contents, that we actually do have multiple layers, otherwise we could
 	// just go ahead and use the first one every time.
 	s.getBlobMutex.Lock()
-	i := s.layerPosition[digest]
-	s.layerPosition[digest] = i + 1
+	i := s.layerPosition[info.Digest]
+	s.layerPosition[info.Digest] = i + 1
 	s.getBlobMutex.Unlock()
 	if len(layers) > 0 {
 		layer = layers[i%len(layers)]
@@ -191,7 +168,7 @@ func (s *storageImageSource) getBlobAndLayerID(digest digest.Digest, layers []st
 	} else {
 		n = layer.UncompressedSize
 	}
-	logrus.Debugf("exporting filesystem layer %q without compression for blob %q", layer.ID, digest)
+	logrus.Debugf("exporting filesystem layer %q without compression for blob %q", layer.ID, info.Digest)
 	rc, err = s.imageRef.transport.store.Diff("", layer.ID, diffOptions)
 	if err != nil {
 		return nil, -1, "", err
@@ -200,7 +177,7 @@ func (s *storageImageSource) getBlobAndLayerID(digest digest.Digest, layers []st
 }
 
 // GetManifest() reads the image's manifest.
-func (s *storageImageSource) GetManifest(ctx context.Context, instanceDigest *digest.Digest) (manifestBlob []byte, mimeType string, err error) {
+func (s *storageImageSource) GetManifest(ctx context.Context, instanceDigest *digest.Digest) (manifestBlob []byte, MIMEType string, err error) {
 	if instanceDigest != nil {
 		key := manifestBigDataKey(*instanceDigest)
 		blob, err := s.imageRef.transport.store.ImageBigData(s.image.ID, key)
@@ -307,7 +284,7 @@ func buildLayerInfosForCopy(manifestInfos []manifest.LayerInfo, physicalInfos []
 			if nextPhysical >= len(physicalInfos) {
 				return nil, fmt.Errorf("expected more than %d physical layers to exist", len(physicalInfos))
 			}
-			res[i] = physicalInfos[nextPhysical] // FIXME? Should we preserve more data in manifestInfos? Notably the current approach correctly removes zstd:chunked metadata annotations.
+			res[i] = physicalInfos[nextPhysical]
 			nextPhysical++
 		}
 	}
