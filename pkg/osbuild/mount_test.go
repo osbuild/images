@@ -1,10 +1,13 @@
 package osbuild_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/osbuild"
 )
 
@@ -54,4 +57,39 @@ func TestNewMounts(t *testing.T) {
 		}
 		assert.Equal(expected, actual)
 	}
+}
+
+func TestMountJsonAll(t *testing.T) {
+	mnt := &osbuild.Mount{
+		Name:   "xfs",
+		Type:   "org.osbuild.xfs",
+		Source: "/dev/sda4",
+		Target: "/mnt/xfs",
+		//TODO: test "Options:" too
+		Partition: common.ToPtr(1),
+	}
+	json, err := json.MarshalIndent(mnt, "", "  ")
+	require.Nil(t, err)
+	assert.Equal(t, string(json), `
+{
+  "name": "xfs",
+  "type": "org.osbuild.xfs",
+  "source": "/dev/sda4",
+  "target": "/mnt/xfs",
+  "partition": 1
+}`[1:])
+}
+
+func TestMountJsonOmitEmptyHonored(t *testing.T) {
+	mnt := &osbuild.Mount{
+		Name: "xfs",
+		Type: "org.osbuild.xfs",
+	}
+	json, err := json.MarshalIndent(mnt, "", "  ")
+	require.Nil(t, err)
+	assert.Equal(t, string(json), `
+{
+  "name": "xfs",
+  "type": "org.osbuild.xfs"
+}`[1:])
 }
