@@ -99,7 +99,7 @@ func TestDefaltParser(t *testing.T) {
 		},
 		{
 			idStr:    "rhel-910",
-			expected: &distro.ID{Name: "rhel", MajorVersion: 910, MinorVersion: -1},
+			expected: &distro.ID{Name: "rhel", MajorVersion: 9, MinorVersion: 10},
 		},
 		{
 			idStr:    "rhel-9.10",
