@@ -32,8 +32,8 @@ func TestDistroFactory(t *testing.T) {
 			expected: newDistro("rhel", 3),
 		},
 		{
-			strID:    "rhel-910", // this is intentionally not supported for el9
-			expected: nil,
+			strID:    "rhel-910",
+			expected: newDistro("rhel", 10),
 		},
 		{
 			strID:    "rhel-9.10",
