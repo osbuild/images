@@ -1,0 +1,101 @@
+name: "[osbuild-composer integration]"
+
+on:
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  unit-tests:
+    name: "🛃 Unit tests"
+    runs-on: ubuntu-20.04
+    container:
+      image: registry.fedoraproject.org/fedora:latest
+
+    steps:
+        # krb5-devel is needed to test internal/upload/koji package
+        # gcc is needed to build the mock depsolver binary for the unit tests
+        # gpgme-devel is needed for container upload dependencies
+      - name: Install build and test dependencies
+        run: dnf -y install krb5-devel gcc git-core go gpgme-devel osbuild-depsolve-dnf btrfs-progs-devel device-mapper-devel
+
+      - name: Check out osbuild-composer main branch
+        uses: actions/checkout@v4
+        with:
+          path: osbuild-composer
+          repository: osbuild/osbuild-composer
+          ref: main
+
+      - name: Check out the osbuild/images code
+        uses: actions/checkout@v4
+        with:
+          path: images
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Update the osbuild/images reference
+        run: |
+          cd osbuild-composer
+          go mod edit -replace github.com/osbuild/images=../images
+          ./tools/prepare-source.sh
+
+      - name: Mark the working directory as safe for git
+        run: git config --global --add safe.directory "$(pwd)"
+
+      - name: Run unit tests
+        working-directory: osbuild-composer
+        run: go test -race ./...
+
+  lint:
+    name: "⌨ Golang Lint"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go 1.19
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.19
+        id: go
+
+      - name: Check out osbuild-composer main branch
+        uses: actions/checkout@v4
+        with:
+          path: osbuild-composer
+          repository: osbuild/osbuild-composer
+          ref: main
+
+      - name: Check out the osbuild/images code
+        uses: actions/checkout@v4
+        with:
+          path: images
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Update the osbuild/images reference
+        working-directory: osbuild-composer
+        run: |
+          go mod edit -replace github.com/osbuild/images=../images
+          ./tools/prepare-source.sh
+
+      - name: Allow replacing the osbuild/images module in .golangci.yml
+        working-directory: osbuild-composer
+        run: |
+          awk '/replace-local: false/ {print "    replace-local: true"; print "    replace-allow-list:\n      - github.com/osbuild/images"; next} 1' .golangci.yml > .golangci.yml.new
+          mv .golangci.yml.new .golangci.yml
+
+      - name: Apt update
+        run: sudo apt update
+
+      # This is needed to lint internal/upload/koji package
+      - name: Install kerberos devel package
+        run: sudo apt install -y libkrb5-dev
+
+      # This is needed for the container upload dependencies
+      - name: Install libgpgme devel package
+        run: sudo apt install -y libgpgme-dev libbtrfs-dev libdevmapper-dev
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.54.2
+          working-directory: osbuild-composer
+          args: --verbose --timeout 5m0s
+          # Needed due to https://github.com/golangci/golangci-lint-action/issues/135
+          skip-pkg-cache: true
