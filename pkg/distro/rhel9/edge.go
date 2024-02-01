@@ -99,6 +99,7 @@ var (
 		defaultImageConfig: &distro.ImageConfig{
 			Locale:          common.ToPtr("en_US.UTF-8"),
 			EnabledServices: edgeServices,
+			WheelNoPasswd:   common.ToPtr(true),
 		},
 		rpmOstree:        true,
 		bootISO:          true,
