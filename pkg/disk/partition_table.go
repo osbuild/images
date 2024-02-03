@@ -721,7 +721,7 @@ func (pt *PartitionTable) ensureBtrfs() error {
 				{
 					Name:       "root",
 					Mountpoint: "/",
-					Compress:   "zstd:1",
+					Compress:   DefaultBtrfsCompression,
 				},
 			},
 		}
