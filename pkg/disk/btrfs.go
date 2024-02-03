@@ -8,6 +8,8 @@ import (
 	"github.com/google/uuid"
 )
 
+const DefaultBtrfsCompression = "zstd:1"
+
 type Btrfs struct {
 	UUID       string
 	Label      string
@@ -69,6 +71,7 @@ func (b *Btrfs) CreateMountpoint(mountpoint string, size uint64) (Entity, error)
 		GroupID:    0,
 		UUID:       b.UUID, // subvolumes inherit UUID of main volume
 		Name:       name,
+		Compress:   DefaultBtrfsCompression,
 	}
 
 	b.Subvolumes = append(b.Subvolumes, subvolume)
