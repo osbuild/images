@@ -81,7 +81,7 @@ func MakeFakeBtrfsPartitionTable(mntPoints ...string) *disk.PartitionTable {
 					Mountpoint: mntPoint,
 					Name:       name,
 					UUID:       disk.RootPartitionUUID,
-					Compress:   "zstd:1",
+					Compress:   disk.DefaultBtrfsCompression,
 				},
 			)
 		}
