@@ -159,7 +159,7 @@ github.com/acarl005/stripansi
 # github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 ## explicit; go 1.13
 github.com/asaskevich/govalidator
-# github.com/aws/aws-sdk-go v1.50.9
+# github.com/aws/aws-sdk-go v1.50.10
 ## explicit; go 1.19
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/arn
@@ -548,9 +548,10 @@ github.com/googleapis/gax-go/v2/apierror
 github.com/googleapis/gax-go/v2/apierror/internal/proto
 github.com/googleapis/gax-go/v2/callctx
 github.com/googleapis/gax-go/v2/internal
-# github.com/gophercloud/gophercloud v1.8.0
+# github.com/gophercloud/gophercloud v1.9.0
 ## explicit; go 1.14
 github.com/gophercloud/gophercloud
+github.com/gophercloud/gophercloud/internal/ctxt
 github.com/gophercloud/gophercloud/openstack
 github.com/gophercloud/gophercloud/openstack/compute/v2/servers
 github.com/gophercloud/gophercloud/openstack/identity/v2/tenants
