@@ -4,9 +4,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/customizations/users"
 )
 
 func TestNewUsersStage(t *testing.T) {
@@ -56,4 +58,44 @@ func TestNewUsersStageOptionsPassword(t *testing.T) {
 
 	// homer's password should still be nil (locked account)
 	assert.Nil(t, options.Users["homer"].Password)
+}
+
+func TestGenUsersStageSameAsNewUsersStageOptions(t *testing.T) {
+	users := []users.User{
+		{
+			Name: "user1", UID: common.ToPtr(1000), GID: common.ToPtr(1000),
+			Groups:      []string{"grp1"},
+			Description: common.ToPtr("some-descr"),
+			Home:        common.ToPtr("/home/user1"),
+			Shell:       common.ToPtr("/bin/zsh"),
+			Key:         common.ToPtr("some-key"),
+		},
+	}
+	expected := &UsersStageOptions{
+		Users: map[string]UsersStageOptionsUser{
+			"user1": {
+				UID:         common.ToPtr(1000),
+				GID:         common.ToPtr(1000),
+				Groups:      []string{"grp1"},
+				Description: common.ToPtr("some-descr"),
+				Home:        common.ToPtr("/home/user1"),
+				Shell:       common.ToPtr("/bin/zsh"),
+				Key:         common.ToPtr("some-key")},
+		},
+	}
+
+	// check that NewUsersStageOptions creates the expected user options
+	opts, err := NewUsersStageOptions(users, false)
+	require.Nil(t, err)
+	assert.Equal(t, opts, expected)
+
+	// check that GenUsersStage creates the expected user options
+	st, err := GenUsersStage(users, false)
+	require.Nil(t, err)
+	usrStageOptions := st.Options.(*UsersStageOptions)
+	assert.Equal(t, usrStageOptions, expected)
+
+	// and (for good measure, not really needed) check that both gen
+	// the same
+	assert.Equal(t, usrStageOptions, opts)
 }
