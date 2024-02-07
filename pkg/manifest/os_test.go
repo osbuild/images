@@ -35,21 +35,29 @@ func NewTestOS() *OS {
 	return os
 }
 
+func findStage(name string, stages []*osbuild.Stage) *osbuild.Stage {
+	for _, s := range stages {
+		if s.Type == name {
+			return s
+		}
+	}
+	return nil
+}
+
 // CheckFirstBootStageOptions checks the Command strings
 func CheckFirstBootStageOptions(t *testing.T, stages []*osbuild.Stage, commands []string) {
 	// Find the FirstBootStage
-	for _, s := range stages {
-		if s.Type == "org.osbuild.first-boot" {
-			require.NotNil(t, s.Options)
-			options, ok := s.Options.(*osbuild.FirstBootStageOptions)
-			require.True(t, ok)
-			require.Equal(t, len(options.Commands), len(commands))
+	s := findStage("org.osbuild.first-boot", stages)
+	require.NotNil(t, s)
 
-			// Make sure the commands are the same
-			for idx, cmd := range commands {
-				assert.Equal(t, cmd, options.Commands[idx])
-			}
-		}
+	require.NotNil(t, s.Options)
+	options, ok := s.Options.(*osbuild.FirstBootStageOptions)
+	require.True(t, ok)
+	require.Equal(t, len(options.Commands), len(commands))
+
+	// Make sure the commands are the same
+	for idx, cmd := range commands {
+		assert.Equal(t, cmd, options.Commands[idx])
 	}
 }
 
@@ -151,4 +159,13 @@ func TestRhcInsightsPackages(t *testing.T) {
 		Rhc:           true,
 	}
 	CheckPkgSetInclude(t, os.getPackageSetChain(DISTRO_NULL), []string{"rhc", "subscription-manager", "insights-client"})
+}
+
+func TestBootupdStage(t *testing.T) {
+	os := NewTestOS()
+	os.OSTreeRef = "some/ref"
+	os.Bootupd = true
+	pipeline := os.serialize()
+	st := findStage("org.osbuild.bootupd.gen-metadata", pipeline.Stages)
+	require.NotNil(t, st)
 }
