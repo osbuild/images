@@ -160,6 +160,8 @@ func deviceName(p disk.Entity) string {
 		return payload.Name
 	case *disk.LVMLogicalVolume:
 		return payload.Name
+	case *disk.Btrfs:
+		return "btrfs-" + payload.UUID[:4]
 	}
 	panic(fmt.Sprintf("unsupported device type in deviceName: '%T'", p))
 }
@@ -247,7 +249,12 @@ func genMountsDevicesFromPt(filename string, pt *disk.PartitionTable) (string, [
 		case "ext4":
 			mount = NewExt4Mount(name, name, mountpoint)
 		case "btrfs":
-			mount = NewBtrfsMount(name, name, mountpoint)
+			if subvol, isSubvol := mnt.(*disk.BtrfsSubvolume); isSubvol {
+				mount = NewBtrfsMount(subvol.Name, name, mountpoint, subvol.Name, subvol.Compress)
+				fsRootMntName = subvol.Name
+			} else {
+				panic("mounting bare btrfs partition unsupported!")
+			}
 		default:
 			return fmt.Errorf("unknown fs type " + t)
 		}

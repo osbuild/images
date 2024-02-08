@@ -18,10 +18,7 @@ func GenMkfsStages(pt *disk.PartitionTable, device *Device) []*Stage {
 		panic("GenMkfsStages: failed to convert device options to loopback options")
 	}
 
-	genStage := func(mnt disk.Mountable, path []disk.Entity) error {
-		t := mnt.GetFSType()
-		var stage *Stage
-
+	genStage := func(e disk.Entity, path []disk.Entity) error {
 		stageDevices, lastName := getDevices(path, devOptions.Filename, true)
 
 		// the last device on the PartitionTable must be named "device"
@@ -29,6 +26,26 @@ func GenMkfsStages(pt *disk.PartitionTable, device *Device) []*Stage {
 		delete(stageDevices, lastName)
 		stageDevices["device"] = lastDevice
 
+		// firstly, handle btrfs (disk.Btrfs isn't disk.Mountable)
+		if btrfs, isBtrfs := e.(*disk.Btrfs); isBtrfs {
+			options := &MkfsBtrfsStageOptions{
+				UUID:  btrfs.UUID,
+				Label: btrfs.Label,
+			}
+			stage := NewMkfsBtrfsStage(options, stageDevices)
+			stages = append(stages, stage)
+
+			return nil
+		}
+
+		mnt, isMountable := e.(disk.Mountable)
+		if !isMountable {
+			// if the thing is not mountable nor btrfs, there's no fs to be created
+			return nil
+		}
+
+		var stage *Stage
+		t := mnt.GetFSType()
 		fsSpec := mnt.GetFSSpec()
 		switch t {
 		case "xfs":
@@ -43,11 +60,9 @@ func GenMkfsStages(pt *disk.PartitionTable, device *Device) []*Stage {
 			}
 			stage = NewMkfsFATStage(options, stageDevices)
 		case "btrfs":
-			options := &MkfsBtrfsStageOptions{
-				UUID:  fsSpec.UUID,
-				Label: fsSpec.Label,
-			}
-			stage = NewMkfsBtrfsStage(options, stageDevices)
+			// A mountable btrfs entity means that it's a subvolume, no need to mkfs it.
+			// Subvolumes are handled separately
+			return nil
 		case "ext4":
 			options := &MkfsExt4StageOptions{
 				UUID:  fsSpec.UUID,
@@ -62,6 +77,6 @@ func GenMkfsStages(pt *disk.PartitionTable, device *Device) []*Stage {
 		return nil
 	}
 
-	_ = pt.ForEachMountable(genStage) // genStage always returns nil
+	_ = pt.ForEachEntity(genStage) // genStage always returns nil
 	return stages
 }
