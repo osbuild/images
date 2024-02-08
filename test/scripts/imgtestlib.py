@@ -239,7 +239,7 @@ def read_manifests(path):
     return manifests
 
 
-def check_for_build(manifest_fname, build_info_path, osbuild_ver, osbuild_commit, errors):
+def check_for_build(manifest_fname, build_info_path, errors):
     # rebuild if matching build info is not found
     if not os.path.exists(build_info_path):
         print(f"Build info not found: {build_info_path}")
@@ -255,19 +255,6 @@ def check_for_build(manifest_fname, build_info_path, osbuild_ver, osbuild_commit
                 f"{jd.msg}\n"
                 "  Adding config to build pipeline.\n"
         ))
-
-    # check if osbuild version matches
-    config_osbuild_commit = dl_config["osbuild-commit"]
-    config_osbuild_ver = dl_config["osbuild-version"]
-
-    osbuild_id = f"{osbuild_ver}:{osbuild_commit}"
-    config_osbuild_id = f"{config_osbuild_ver}:{config_osbuild_commit}"
-
-    if osbuild_id != config_osbuild_id:
-        print(f"🖼️ Manifest {manifest_fname} was built with {config_osbuild_id}")
-        print(f"  Testing {osbuild_id}")
-        print("  Adding config to build pipeline.")
-        return True
 
     commit = dl_config["commit"]
     pr = dl_config.get("pr")
@@ -311,16 +298,9 @@ def filter_builds(manifests, distro=None, arch=None, skip_ostree_pull=True):
         # print output which includes list of downloaded files for CI job log
         print(out)
 
-    errors = []
+    osbuild_ver = get_osbuild_nevra()
 
-    osrelease = read_osrelease()
-    distro_version = osrelease["ID"] + "-" + osrelease["VERSION_ID"]
-    osbuild_commit = get_osbuild_commit(distro_version)
-    if osbuild_commit is None:
-        osbuild_commit = "RELEASE"
-    osbuild_ver, _ = runcmd(["osbuild", "--version"])
-    osbuild_ver = osbuild_ver.decode().strip()
-
+    errors: list[str] = []
     for manifest_fname, data in manifests.items():
         manifest_id = data["id"]
         data = data.get("data")
@@ -340,9 +320,9 @@ def filter_builds(manifests, distro=None, arch=None, skip_ostree_pull=True):
         build_request["manifest-checksum"] = manifest_id
 
         # check if the hash_fname exists in the synced directory
-        build_info_path = os.path.join(dl_path, manifest_id, "info.json")
+        build_info_path = gen_build_info_path(dl_path, osbuild_ver, manifest_id)
 
-        if check_for_build(manifest_fname, build_info_path, osbuild_ver, osbuild_commit, errors):
+        if check_for_build(manifest_fname, build_info_path, errors):
             build_requests.append(build_request)
 
     print("✅ Config filtering done!\n")
