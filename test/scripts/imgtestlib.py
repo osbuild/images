@@ -372,6 +372,14 @@ def get_osbuild_commit(distro_version):
     return data.get(distro_version, {}).get("dependencies", {}).get("osbuild", {}).get("commit", None)
 
 
+def get_osbuild_nevra():
+    """
+    Returned the installed osbuild version. Exits with an error if osbuild is not installed.
+    """
+    out, _ = runcmd(["rpm", "-q", "--qf", "%{nevra}", "osbuild"])
+    return out.decode().strip()
+
+
 def rng_seed_env():
     """
     Read the rng seed from the Schutzfile and return it as a map to use as an environment variable with the appropriate
