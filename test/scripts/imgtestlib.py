@@ -150,6 +150,33 @@ def gen_build_name(distro, arch, image_type, config_name):
     return f"{_u(distro)}-{_u(arch)}-{_u(image_type)}-{_u(config_name)}"
 
 
+def gen_build_info_dir_path(root, osbuild_ver, manifest_id):
+    """
+    Generates the path to the directory that contains the build info.
+    This is a simple os.path.join() of the components, but ensures that paths are consistent.
+    """
+    return os.path.join(root, osbuild_ver, manifest_id, "")
+
+
+def gen_build_info_path(root, osbuild_ver, manifest_id):
+    """
+    Generates the path to the info.json.
+    This is a simple os.path.join() of the components, but ensures that paths are consistent.
+    """
+    return os.path.join(gen_build_info_dir_path(root, osbuild_ver, manifest_id), "info.json")
+
+
+def gen_build_info_s3(distro, arch, manifest_id):
+    """
+    Generates the s3 URL for the location where build info and artifacts will be stored for a specific build
+    configuration.
+    This is a simple concatenation of the components, but ensures that paths are consistent.
+    """
+    osbuild_ver = get_osbuild_nevra()
+    build_info_prefix = f"{S3_BUCKET}/images/builds/{distro}/{arch}"
+    return gen_build_info_dir_path(build_info_prefix, osbuild_ver, manifest_id)
+
+
 def check_config_names():
     """
     Check that all the configs we rely on have names that match the file name, otherwise the test skipping and pipeline
