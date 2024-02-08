@@ -362,6 +362,10 @@ def read_osrelease():
 
 
 def get_osbuild_commit(distro_version):
+    """
+    Get the osbuild commit defined in the Schutzfile for the host distro.
+    If not set, returns None.
+    """
     with open(SCHUTZFILE, encoding="utf-8") as schutzfile:
         data = json.load(schutzfile)
 
