@@ -424,7 +424,6 @@ func edgeInstallerImage(workload workload.Workload,
 	rng *rand.Rand) (image.ImageKind, error) {
 
 	d := t.arch.distro
-	imageConfig := t.getDefaultImageConfig()
 
 	commit, err := makeOSTreePayloadCommit(options.OSTree, t.OSTreeRef())
 	if err != nil {
@@ -437,11 +436,10 @@ func edgeInstallerImage(workload workload.Workload,
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
 	img.Users = users.UsersFromBP(customizations.GetUsers())
 	img.Groups = users.GroupsFromBP(customizations.GetGroups())
-	if imageConfig.WheelNoPasswd != nil {
-		img.WheelNoPasswd = *imageConfig.WheelNoPasswd
-	}
-	if imageConfig.UnattendedKickstart != nil {
-		img.UnattendedKickstart = *imageConfig.UnattendedKickstart
+
+	if instCust := customizations.GetInstaller(); instCust != nil {
+		img.WheelNoPasswd = instCust.WheelSudoNopasswd
+		img.UnattendedKickstart = instCust.Unattended
 	}
 
 	img.SquashfsCompression = "xz"
