@@ -21,9 +21,11 @@ type AnacondaOSTreeInstaller struct {
 	ExtraBasePackages rpmmd.PackageSet
 	Users             []users.User
 	Groups            []users.Group
-	// whether to create sudoer file for wheel group with NOPASSWD option
+
+	// Create a sudoers drop-in file for wheel group with NOPASSWD option
 	WheelNoPasswd bool
-	// Whether an unattended kickstart was requested
+
+	// Add kickstart options to make the installation fully unattended
 	UnattendedKickstart bool
 
 	SquashfsCompression string
