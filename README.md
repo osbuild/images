@@ -1,14 +1,21 @@
 Images
 ======
 
-### Project
+## Project
 
  * **Website**: <https://www.osbuild.org>
  * **Bug Tracker**: <https://github.com/osbuild/images/issues>
  * **IRC**: #osbuild on [Libera.Chat](https://libera.chat/)
  * **Changelog**: <https://github.com/osbuild/images/releases>
 
-#### Contributing
+### Principles
+1. The image definitions API is internal and can therefore be broken. The blueprint API is the stable API.
+2. Nonsensical manifests should not compile (at the Golang level).
+3. OSBuild units (stages, sources, inputs, mounts, devices) should be directly mapped into Go objects.
+4. Image definitions don’t test distributions that are end-of-life. Respective code-paths should be dropped.
+5. Image definitions need to support the oldest supported target distribution.
+
+### Contributing
 
 Please refer to the [developer guide](https://www.osbuild.org/guides/developer-guide/developer-guide.html) to learn about our workflow, code style and more.
 
