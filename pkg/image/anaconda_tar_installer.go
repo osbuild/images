@@ -54,6 +54,12 @@ type AnacondaTarInstaller struct {
 	// default /usr/share/anaconda/interactive-defaults.ks in the rootfs.
 	ISORootKickstart bool
 
+	// Create a sudoers drop-in file for wheel group with NOPASSWD option
+	WheelNoPasswd bool
+
+	// Add kickstart options to make the installation fully unattended
+	UnattendedKickstart bool
+
 	SquashfsCompression string
 
 	ISOLabelTempl string
@@ -160,6 +166,8 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 		isoTreePipeline.KSPath = kspath
 	}
 
+	isoTreePipeline.WheelNoPasswd = img.WheelNoPasswd
+	isoTreePipeline.UnattendedKickstart = img.UnattendedKickstart
 	isoTreePipeline.SquashfsCompression = img.SquashfsCompression
 
 	isoTreePipeline.OSPipeline = osPipeline
