@@ -440,6 +440,9 @@ func edgeInstallerImage(workload workload.Workload,
 	if imageConfig.WheelNoPasswd != nil {
 		img.WheelNoPasswd = *imageConfig.WheelNoPasswd
 	}
+	if imageConfig.UnattendedKickstart != nil {
+		img.UnattendedKickstart = *imageConfig.UnattendedKickstart
+	}
 
 	img.SquashfsCompression = "xz"
 	img.AdditionalDracutModules = []string{"prefixdevname", "prefixdevname-tools"}

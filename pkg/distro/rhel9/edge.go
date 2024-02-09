@@ -97,9 +97,10 @@ var (
 			installerPkgsKey: edgeInstallerPackageSet,
 		},
 		defaultImageConfig: &distro.ImageConfig{
-			Locale:          common.ToPtr("en_US.UTF-8"),
-			EnabledServices: edgeServices,
-			WheelNoPasswd:   common.ToPtr(true),
+			Locale:              common.ToPtr("en_US.UTF-8"),
+			EnabledServices:     edgeServices,
+			WheelNoPasswd:       common.ToPtr(true),
+			UnattendedKickstart: common.ToPtr(true),
 		},
 		rpmOstree:        true,
 		bootISO:          true,
