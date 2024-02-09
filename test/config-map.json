@@ -217,5 +217,24 @@
       "edge-container",
       "iot-container"
     ]
+  },
+  "./configs/unattended-iso-edge.json": {
+    "image-types": [
+      "edge-installer"
+    ]
+  },
+  "./configs/unattended-iso-iot.json": {
+    "image-types": [
+      "iot-installer"
+    ]
+  },
+  "./configs/unattended-iso.json": {
+    "distros": [
+      "rhel-*",
+      "centos-*"
+    ],
+    "image-types": [
+      "image-installer"
+    ]
   }
 }
