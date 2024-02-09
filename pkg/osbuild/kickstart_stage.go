@@ -14,6 +14,17 @@ type KickstartStageOptions struct {
 	Users map[string]UsersStageOptionsUser `json:"users,omitempty"`
 
 	Groups map[string]GroupsStageOptionsGroup `json:"groups,omitempty"`
+
+	Lang         string               `json:"lang,omitempty"`
+	Keyboard     string               `json:"keyboard,omitempty"`
+	TimeZone     string               `json:"timezone,omitempty"`
+	DisplayMode  string               `json:"display_mode,omitempty"`
+	Reboot       *RebootOptions       `json:"reboot,omitempty"`
+	RootPassword *RootPasswordOptions `json:"rootpw,omitempty"`
+	ZeroMBR      bool                 `json:"zerombr,omitempty"`
+	ClearPart    *ClearPartOptions    `json:"clearpart,omitempty"`
+	AutoPart     *AutoPartOptions     `json:"autopart,omitempty"`
+	Network      []NetworkOptions     `json:"network,omitempty"`
 }
 
 type LiveIMGOptions struct {
@@ -34,6 +45,60 @@ type OSTreeContainerOptions struct {
 	Transport             string `json:"transport"`
 	Remote                string `json:"remote"`
 	SignatureVerification bool   `json:"signatureverification"`
+}
+
+type RebootOptions struct {
+	Eject bool `json:"eject,omitempty"`
+	KExec bool `json:"kexec,omitempty"`
+}
+
+type ClearPartOptions struct {
+	All       bool     `json:"all,omitempty"`
+	InitLabel bool     `json:"initlabel,omitempty"`
+	Drives    []string `json:"drives,omitempty"`
+	List      []string `json:"list,omitempty"`
+	Linux     bool     `json:"linux,omitempty"`
+}
+
+type AutoPartOptions struct {
+	Type             string `json:"type,omitempty"`
+	FSType           string `json:"fstype,omitempty"`
+	NoLVM            bool   `json:"nolvm,omitempty"`
+	Encrypted        bool   `json:"encrypted,omitempty"`
+	PassPhrase       string `json:"passphrase,omitempty"`
+	EscrowCert       string `json:"escrowcert,omitempty"`
+	BackupPassPhrase bool   `json:"backuppassphrase,omitempty"`
+	Cipher           string `json:"cipher,omitempty"`
+	LuksVersion      string `json:"luks-version,omitempty"`
+	PBKdf            string `json:"pbkdf,omitempty"`
+	PBKdfMemory      int    `json:"pbkdf-memory,omitempty"`
+	PBKdfTime        int    `json:"pbkdf-time,omitempty"`
+	PBKdfIterations  int    `json:"pbkdf-iterations,omitempty"`
+	NoHome           bool   `json:"nohome,omitempty"`
+}
+
+type NetworkOptions struct {
+	Activate    *bool    `json:"activate,omitempty"`
+	BootProto   string   `json:"bootproto,omitempty"`
+	Device      string   `json:"device,omitempty"`
+	OnBoot      string   `json:"onboot,omitempty"`
+	IP          string   `json:"ip,omitempty"`
+	IPV6        string   `json:"ipv6,omitempty"`
+	Gateway     string   `json:"gateway,omitempty"`
+	IPV6Gateway string   `json:"ipv6gateway,omitempty"`
+	Nameservers []string `json:"nameservers,omitempty"`
+	Netmask     string   `json:"netmask,omitempty"`
+	Hostname    string   `json:"hostname,omitempty"`
+	ESSid       string   `json:"essid,omitempty"`
+	WPAKey      string   `json:"wpakey,omitempty"`
+}
+
+type RootPasswordOptions struct {
+	Lock      bool   `json:"lock,omitempty"`
+	PlainText bool   `json:"plaintext,omitempty"`
+	IsCrypted bool   `json:"iscrypted,omitempty"`
+	AllowSSH  bool   `json:"allow_ssh,omitempty"`
+	Password  string `json:"password,omitempty"`
 }
 
 func (KickstartStageOptions) isStageOptions() {}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/users"
@@ -28,6 +29,8 @@ type AnacondaInstallerISOTree struct {
 	Groups  []users.Group
 	// whether to create sudoer file for wheel group with NOPASSWD option
 	WheelNoPasswd bool
+	// Whether an unattended kickstart was requested
+	UnattendedKickstart bool
 
 	PartitionTable *disk.PartitionTable
 
@@ -351,6 +354,25 @@ func (p *AnacondaInstallerISOTree) serialize() osbuild.Pipeline {
 
 		if err != nil {
 			panic("failed to create kickstartstage options")
+		}
+
+		if p.UnattendedKickstart {
+			// set the default options for Unattended kickstart
+			kickstartOptions.DisplayMode = "text"
+			kickstartOptions.Lang = "en_US.UTF-8"
+			kickstartOptions.Keyboard = "us"
+			kickstartOptions.TimeZone = "UTC"
+
+			kickstartOptions.Reboot = &osbuild.RebootOptions{Eject: true}
+			kickstartOptions.RootPassword = &osbuild.RootPasswordOptions{Lock: true}
+
+			kickstartOptions.ZeroMBR = true
+			kickstartOptions.ClearPart = &osbuild.ClearPartOptions{All: true, InitLabel: true}
+			kickstartOptions.AutoPart = &osbuild.AutoPartOptions{Type: "plain", FSType: "xfs", NoHome: true}
+
+			kickstartOptions.Network = []osbuild.NetworkOptions{
+				{BootProto: "dhcp", Device: "link", Activate: common.ToPtr(true), OnBoot: "on"},
+			}
 		}
 
 		pipeline.AddStage(osbuild.NewKickstartStage(kickstartOptions))
