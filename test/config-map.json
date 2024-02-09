@@ -10,13 +10,12 @@
       "qcow2"
     ]
   },
-  "./configs/all-with-oscap.json": {
+  "./configs/all-with-fips.json": {
     "distros": [
-      "rhel-9.1",
-      "rhel-9.2",
-      "rhel-8.7",
-      "rhel-8.8",
+      "rhel-9.3",
+      "rhel-9.4",
       "rhel-8.9",
+      "rhel-8.10",
       "centos*",
       "fedora*"
     ],
@@ -24,12 +23,13 @@
       "qcow2"
     ]
   },
-  "./configs/all-with-fips.json": {
+  "./configs/all-with-oscap.json": {
     "distros": [
-      "rhel-9.3",
-      "rhel-9.4",
+      "rhel-9.1",
+      "rhel-9.2",
+      "rhel-8.7",
+      "rhel-8.8",
       "rhel-8.9",
-      "rhel-8.10",
       "centos*",
       "fedora*"
     ],
@@ -45,9 +45,29 @@
       "ec2-sap"
     ]
   },
-  "./configs/edge-ostree-pull-device.json": {
+  "./configs/ec2-sap-empty.json": {
+    "distros": [
+      "centos-8",
+      "centos-9",
+      "fedora-37",
+      "fedora-38",
+      "fedora-39",
+      "fedora-40",
+      "rhel-7.9",
+      "rhel-8.10",
+      "rhel-8.5",
+      "rhel-8.6",
+      "rhel-8.7",
+      "rhel-8.8",
+      "rhel-8.9",
+      "rhel-9.0",
+      "rhel-9.1",
+      "rhel-9.2",
+      "rhel-9.3",
+      "rhel-9.4"
+    ],
     "image-types": [
-      "edge-simplified-installer"
+      "ec2-sap"
     ]
   },
   "./configs/edge-ostree-pull-device-fips.json": {
@@ -55,6 +75,11 @@
       "rhel-9.3",
       "rhel-9.4"
     ],
+    "image-types": [
+      "edge-simplified-installer"
+    ]
+  },
+  "./configs/edge-ostree-pull-device.json": {
     "image-types": [
       "edge-simplified-installer"
     ]
@@ -77,16 +102,16 @@
       "edge-vsphere"
     ]
   },
-  "./configs/edge-ostree-pull-user.json": {
-    "image-types": [
-      "edge-ami"
-    ]
-  },
   "./configs/edge-ostree-pull-user-fips.json": {
     "distros": [
       "rhel-9.3",
       "rhel-9.4"
     ],
+    "image-types": [
+      "edge-ami"
+    ]
+  },
+  "./configs/edge-ostree-pull-user.json": {
     "image-types": [
       "edge-ami"
     ]
@@ -173,49 +198,24 @@
       "qcow2"
     ]
   },
-  "./configs/ostree.json": {
-    "image-types": [
-      "edge-commit",
-      "edge-container",
-      "iot-container"
-    ]
-  },
-  "./configs/ec2-sap-empty.json": {
+  "./configs/ostree-filesystem-customizations.json": {
     "distros": [
-      "centos-8",
-      "centos-9",
-      "fedora-37",
-      "fedora-38",
-      "fedora-39",
-      "fedora-40",
-      "rhel-7.9",
-      "rhel-8.10",
-      "rhel-8.5",
-      "rhel-8.6",
-      "rhel-8.7",
-      "rhel-8.8",
-      "rhel-8.9",
-      "rhel-9.0",
-      "rhel-9.1",
       "rhel-9.2",
       "rhel-9.3",
       "rhel-9.4"
     ],
-    "image-types": [
-      "ec2-sap"
-    ]
-  },
-  "./configs/ostree-filesystem-customizations.json": {
     "image-types": [
       "edge-raw-image",
       "edge-ami",
       "edge-vsphere",
       "simplified-installer"
-    ],
-    "distros": [
-      "rhel-9.2",
-      "rhel-9.3",
-      "rhel-9.4"
+    ]
+  },
+  "./configs/ostree.json": {
+    "image-types": [
+      "edge-commit",
+      "edge-container",
+      "iot-container"
     ]
   }
 }
