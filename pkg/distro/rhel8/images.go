@@ -331,6 +331,11 @@ func imageInstallerImage(workload workload.Workload,
 	img.AdditionalDracutModules = []string{"prefixdevname", "prefixdevname-tools"}
 	img.AdditionalAnacondaModules = []string{"org.fedoraproject.Anaconda.Modules.Users"}
 
+	if instCust := customizations.GetInstaller(); instCust != nil {
+		img.WheelNoPasswd = instCust.WheelSudoNopasswd
+		img.UnattendedKickstart = instCust.Unattended
+	}
+
 	img.SquashfsCompression = "xz"
 
 	// put the kickstart file in the root of the iso

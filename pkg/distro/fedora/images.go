@@ -366,6 +366,11 @@ func imageInstallerImage(workload workload.Workload,
 	img.Users = users.UsersFromBP(customizations.GetUsers())
 	img.Groups = users.GroupsFromBP(customizations.GetGroups())
 
+	if instCust := customizations.GetInstaller(); instCust != nil {
+		img.WheelNoPasswd = instCust.WheelSudoNopasswd
+		img.UnattendedKickstart = instCust.Unattended
+	}
+
 	img.SquashfsCompression = "lz4"
 
 	d := t.arch.distro
@@ -517,6 +522,11 @@ func iotInstallerImage(workload workload.Workload,
 		"org.fedoraproject.Anaconda.Modules.Timezone",
 		"org.fedoraproject.Anaconda.Modules.Localization",
 		"org.fedoraproject.Anaconda.Modules.Users",
+	}
+
+	if instCust := customizations.GetInstaller(); instCust != nil {
+		img.WheelNoPasswd = instCust.WheelSudoNopasswd
+		img.UnattendedKickstart = instCust.Unattended
 	}
 
 	img.SquashfsCompression = "lz4"
