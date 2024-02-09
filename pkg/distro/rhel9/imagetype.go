@@ -355,7 +355,7 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 				}
 			}
 		} else if t.name == "edge-installer" {
-			allowed := []string{"User", "Group", "FIPS"}
+			allowed := []string{"User", "Group", "FIPS", "Installer"}
 			if err := customizations.CheckAllowed(allowed...); err != nil {
 				return warnings, fmt.Errorf(distro.UnsupportedCustomizationError, t.name, strings.Join(allowed, ", "))
 			}
@@ -452,6 +452,13 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 		w := fmt.Sprintln(common.FIPSEnabledImageWarning)
 		log.Print(w)
 		warnings = append(warnings, w)
+	}
+
+	if customizations.GetInstaller() != nil {
+		// only supported by the Anaconda installer
+		if slices.Index([]string{"image-installer", "edge-installer", "live-installer"}, t.name) == -1 {
+			return warnings, fmt.Errorf("installer customizations are not supported for %q", t.name)
+		}
 	}
 
 	return warnings, nil

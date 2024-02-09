@@ -521,7 +521,7 @@ func TestDistro_ManifestError(t *testing.T) {
 					} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" {
 						assert.EqualError(t, err, fmt.Sprintf("boot ISO image type \"%s\" requires specifying a URL from which to retrieve the OSTree commit", imgTypeName))
 					} else if imgTypeName == "image-installer" {
-						assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, FIPS"))
+						assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, FIPS, Installer"))
 					} else if imgTypeName == "live-installer" {
 						assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
 					} else if imgTypeName == "iot-raw-image" || imgTypeName == "iot-qcow2-image" {
