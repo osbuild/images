@@ -20,10 +20,6 @@ type ImageConfig struct {
 	DisabledServices    []string
 	DefaultTarget       *string
 	Sysconfig           []*osbuild.SysconfigStageOptions
-	// whether to create sudoer file for wheel group with NOPASSWD option
-	WheelNoPasswd *bool
-	// Whether an unattended kickstart was requested
-	UnattendedKickstart *bool
 
 	// List of files from which to import GPG keys into the RPM database
 	GPGKeyFiles []string

@@ -100,9 +100,7 @@ func edgeInstallerImgType(rd distribution) imageType {
 			installerPkgsKey: edgeInstallerPackageSet,
 		},
 		defaultImageConfig: &distro.ImageConfig{
-			EnabledServices:     edgeServices(rd),
-			WheelNoPasswd:       common.ToPtr(true),
-			UnattendedKickstart: common.ToPtr(true),
+			EnabledServices: edgeServices(rd),
 		},
 		rpmOstree:        true,
 		bootISO:          true,

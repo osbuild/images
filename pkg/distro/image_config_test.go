@@ -70,8 +70,6 @@ func TestImageConfigInheritFrom(t *testing.T) {
 					},
 					LeapsecTz: common.ToPtr(""),
 				},
-				WheelNoPasswd:       common.ToPtr(true),
-				UnattendedKickstart: common.ToPtr(true),
 			},
 			expectedConfig: &ImageConfig{
 				Timezone: common.ToPtr("UTC"),
@@ -91,11 +89,9 @@ func TestImageConfigInheritFrom(t *testing.T) {
 				Keyboard: &osbuild.KeymapStageOptions{
 					Keymap: "us",
 				},
-				EnabledServices:     []string{"sshd"},
-				DisabledServices:    []string{"named"},
-				DefaultTarget:       common.ToPtr("multi-user.target"),
-				WheelNoPasswd:       common.ToPtr(true),
-				UnattendedKickstart: common.ToPtr(true),
+				EnabledServices:  []string{"sshd"},
+				DisabledServices: []string{"named"},
+				DefaultTarget:    common.ToPtr("multi-user.target"),
 				Sysconfig: []*osbuild.SysconfigStageOptions{
 					{
 						Kernel: &osbuild.SysconfigKernelOptions{
@@ -134,11 +130,9 @@ func TestImageConfigInheritFrom(t *testing.T) {
 				Keyboard: &osbuild.KeymapStageOptions{
 					Keymap: "us",
 				},
-				EnabledServices:     []string{"sshd"},
-				DisabledServices:    []string{"named"},
-				DefaultTarget:       common.ToPtr("multi-user.target"),
-				WheelNoPasswd:       common.ToPtr(true),
-				UnattendedKickstart: common.ToPtr(true),
+				EnabledServices:  []string{"sshd"},
+				DisabledServices: []string{"named"},
+				DefaultTarget:    common.ToPtr("multi-user.target"),
 			},
 			imageConfig: &ImageConfig{},
 			expectedConfig: &ImageConfig{
@@ -150,11 +144,9 @@ func TestImageConfigInheritFrom(t *testing.T) {
 				Keyboard: &osbuild.KeymapStageOptions{
 					Keymap: "us",
 				},
-				EnabledServices:     []string{"sshd"},
-				DisabledServices:    []string{"named"},
-				DefaultTarget:       common.ToPtr("multi-user.target"),
-				WheelNoPasswd:       common.ToPtr(true),
-				UnattendedKickstart: common.ToPtr(true),
+				EnabledServices:  []string{"sshd"},
+				DisabledServices: []string{"named"},
+				DefaultTarget:    common.ToPtr("multi-user.target"),
 			},
 		},
 		{
@@ -169,11 +161,9 @@ func TestImageConfigInheritFrom(t *testing.T) {
 				Keyboard: &osbuild.KeymapStageOptions{
 					Keymap: "us",
 				},
-				EnabledServices:     []string{"sshd"},
-				DisabledServices:    []string{"named"},
-				DefaultTarget:       common.ToPtr("multi-user.target"),
-				WheelNoPasswd:       common.ToPtr(true),
-				UnattendedKickstart: common.ToPtr(true),
+				EnabledServices:  []string{"sshd"},
+				DisabledServices: []string{"named"},
+				DefaultTarget:    common.ToPtr("multi-user.target"),
 			},
 			expectedConfig: &ImageConfig{
 				Timezone: common.ToPtr("America/New_York"),
@@ -184,11 +174,9 @@ func TestImageConfigInheritFrom(t *testing.T) {
 				Keyboard: &osbuild.KeymapStageOptions{
 					Keymap: "us",
 				},
-				EnabledServices:     []string{"sshd"},
-				DisabledServices:    []string{"named"},
-				DefaultTarget:       common.ToPtr("multi-user.target"),
-				WheelNoPasswd:       common.ToPtr(true),
-				UnattendedKickstart: common.ToPtr(true),
+				EnabledServices:  []string{"sshd"},
+				DisabledServices: []string{"named"},
+				DefaultTarget:    common.ToPtr("multi-user.target"),
 			},
 		},
 		{
@@ -203,11 +191,9 @@ func TestImageConfigInheritFrom(t *testing.T) {
 				Keyboard: &osbuild.KeymapStageOptions{
 					Keymap: "us",
 				},
-				EnabledServices:     []string{"sshd"},
-				DisabledServices:    []string{"named"},
-				DefaultTarget:       common.ToPtr("multi-user.target"),
-				WheelNoPasswd:       common.ToPtr(true),
-				UnattendedKickstart: common.ToPtr(true),
+				EnabledServices:  []string{"sshd"},
+				DisabledServices: []string{"named"},
+				DefaultTarget:    common.ToPtr("multi-user.target"),
 			},
 			expectedConfig: &ImageConfig{
 				Timezone: common.ToPtr("America/New_York"),
@@ -218,11 +204,9 @@ func TestImageConfigInheritFrom(t *testing.T) {
 				Keyboard: &osbuild.KeymapStageOptions{
 					Keymap: "us",
 				},
-				EnabledServices:     []string{"sshd"},
-				DisabledServices:    []string{"named"},
-				DefaultTarget:       common.ToPtr("multi-user.target"),
-				WheelNoPasswd:       common.ToPtr(true),
-				UnattendedKickstart: common.ToPtr(true),
+				EnabledServices:  []string{"sshd"},
+				DisabledServices: []string{"named"},
+				DefaultTarget:    common.ToPtr("multi-user.target"),
 			},
 		},
 	}
