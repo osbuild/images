@@ -1,6 +1,13 @@
 package osbuild
 
-import "github.com/osbuild/images/pkg/customizations/users"
+import (
+	"fmt"
+	"path/filepath"
+	"strings"
+
+	"github.com/osbuild/images/pkg/customizations/fsnode"
+	"github.com/osbuild/images/pkg/customizations/users"
+)
 
 type KickstartStageOptions struct {
 	// Where to place the kickstart file
@@ -217,4 +224,27 @@ func NewKickstartStageOptionsWithLiveIMG(
 	}
 
 	return options, nil
+}
+
+// IncludeRaw is used for adding raw text as an extension to the kickstart
+// file. First it changes the filename of the existing kickstart stage options
+// and then creates a new file with the given raw content and an %include
+// statement at the top that points to the renamed file. The new raw content is
+// generated in place of the original file and is returned as an fsnode.File.
+// The raw content *should not* contain the %include statement.
+func (options *KickstartStageOptions) IncludeRaw(raw string) (*fsnode.File, error) {
+	origPath := options.Path
+	origName := filepath.Base(origPath)
+
+	ext := filepath.Ext(origName)
+
+	// file.ext -> file-base.ext
+	newBaseName := strings.TrimSuffix(origName, ext) + "-base" + ext
+	options.Path = filepath.Join("/", newBaseName)
+
+	// include must point to full path when booted
+	includePath := filepath.Join("/run/install/repo", newBaseName)
+
+	rawBits := fmt.Sprintf("%%include %s\n%s", includePath, raw)
+	return fsnode.NewFile(origPath, nil, nil, nil, []byte(rawBits))
 }
