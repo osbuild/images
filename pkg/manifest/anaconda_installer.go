@@ -197,11 +197,11 @@ func (p *AnacondaInstaller) serialize() osbuild.Pipeline {
 	// being serialized
 	if p.Type == AnacondaInstallerTypeLive {
 		if len(p.Users) != 0 || len(p.Groups) != 0 {
-			panic("anaconda installer type payload does not support users and groups customization")
+			panic("anaconda installer type live does not support users and groups customization")
 		}
 
 		if p.InteractiveDefaults != nil {
-			panic("anaconda installer type payload does not support interactive defaults")
+			panic("anaconda installer type live does not support interactive defaults")
 		}
 	} else if p.Type == AnacondaInstallerTypePayload {
 	} else {
