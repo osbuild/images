@@ -23,6 +23,10 @@ type AnacondaOSTreeInstaller struct {
 	Users             []users.User
 	Groups            []users.Group
 
+	Language *string
+	Keyboard *string
+	Timezone *string
+
 	// Create a sudoers drop-in file for wheel group with NOPASSWD option
 	WheelNoPasswd bool
 
@@ -120,6 +124,9 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoTreePipeline.WheelNoPasswd = img.WheelNoPasswd
 	isoTreePipeline.UnattendedKickstart = img.UnattendedKickstart
 	isoTreePipeline.SquashfsCompression = img.SquashfsCompression
+	isoTreePipeline.Language = img.Language
+	isoTreePipeline.Keyboard = img.Keyboard
+	isoTreePipeline.Timezone = img.Timezone
 
 	// For ostree installers, always put the kickstart file in the root of the ISO
 	isoTreePipeline.KSPath = kspath
