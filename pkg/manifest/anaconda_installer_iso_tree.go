@@ -374,49 +374,10 @@ func (p *AnacondaInstallerISOTree) ostreeCommitStages() []*osbuild.Stage {
 		p.OSName)
 
 	if err != nil {
-		panic("failed to create kickstartstage options")
+		panic("failed to create kickstart stage options")
 	}
 
-	if p.UnattendedKickstart {
-		// set the default options for Unattended kickstart
-		kickstartOptions.DisplayMode = "text"
-		kickstartOptions.Lang = "en_US.UTF-8"
-		kickstartOptions.Keyboard = "us"
-		kickstartOptions.TimeZone = "UTC"
-
-		kickstartOptions.Reboot = &osbuild.RebootOptions{Eject: true}
-		kickstartOptions.RootPassword = &osbuild.RootPasswordOptions{Lock: true}
-
-		kickstartOptions.ZeroMBR = true
-		kickstartOptions.ClearPart = &osbuild.ClearPartOptions{All: true, InitLabel: true}
-		kickstartOptions.AutoPart = &osbuild.AutoPartOptions{Type: "plain", FSType: "xfs", NoHome: true}
-
-		kickstartOptions.Network = []osbuild.NetworkOptions{
-			{BootProto: "dhcp", Device: "link", Activate: common.ToPtr(true), OnBoot: "on"},
-		}
-	}
-
-	stages = append(stages, osbuild.NewKickstartStage(kickstartOptions))
-
-	if p.WheelNoPasswd {
-		// Because osbuild core only supports a subset of options,
-		// we append to the base here with hardcoded wheel group with NOPASSWD option
-		hardcodedKickstartBits := `
-%post
-echo -e "%wheel\tALL=(ALL)\tNOPASSWD: ALL" > "/etc/sudoers.d/wheel"
-chmod 0440 /etc/sudoers.d/wheel
-restorecon -rvF /etc/sudoers.d
-%end
-`
-		kickstartFile, err := kickstartOptions.IncludeRaw(hardcodedKickstartBits)
-		if err != nil {
-			panic(err)
-		}
-
-		p.Files = []*fsnode.File{kickstartFile}
-
-		stages = append(stages, osbuild.GenFileNodesStages(p.Files)...)
-	}
+	stages = append(stages, p.makeKickstartStages(kickstartOptions)...)
 
 	return stages
 }
@@ -449,6 +410,10 @@ func (p *AnacondaInstallerISOTree) ostreeContainerStages() []*osbuild.Stage {
 		"oci",
 		"",
 		"")
+
+	// NOTE: these are similar to the unattended kickstart options in the
+	// other two payload configurations but partitioning is different and
+	// we need to add that separately, so we can't use makeKickstartStage
 	kickstartOptions.RootPassword = &osbuild.RootPasswordOptions{
 		Lock: true,
 	}
@@ -520,10 +485,58 @@ func (p *AnacondaInstallerISOTree) tarPayloadStages() []*osbuild.Stage {
 			makeISORootPath(p.PayloadPath))
 
 		if err != nil {
-			panic("failed to create kickstartstage options")
+			panic("failed to create kickstart stage options")
 		}
 
-		stages = append(stages, osbuild.NewKickstartStage(kickstartOptions))
+		stages = append(stages, p.makeKickstartStages(kickstartOptions)...)
+	}
+	return stages
+}
+
+// Create the base kickstart stage with any options required for unattended
+// installation if set and with any extra file insertion stage required for
+// extra kickstart content.
+func (p *AnacondaInstallerISOTree) makeKickstartStages(kickstartOptions *osbuild.KickstartStageOptions) []*osbuild.Stage {
+	stages := make([]*osbuild.Stage, 0)
+	if p.UnattendedKickstart {
+		// set the default options for Unattended kickstart
+		kickstartOptions.DisplayMode = "text"
+		kickstartOptions.Lang = "en_US.UTF-8"
+		kickstartOptions.Keyboard = "us"
+		kickstartOptions.TimeZone = "UTC"
+
+		kickstartOptions.Reboot = &osbuild.RebootOptions{Eject: true}
+		kickstartOptions.RootPassword = &osbuild.RootPasswordOptions{Lock: true}
+
+		kickstartOptions.ZeroMBR = true
+		kickstartOptions.ClearPart = &osbuild.ClearPartOptions{All: true, InitLabel: true}
+		kickstartOptions.AutoPart = &osbuild.AutoPartOptions{Type: "plain", FSType: "xfs", NoHome: true}
+
+		kickstartOptions.Network = []osbuild.NetworkOptions{
+			{BootProto: "dhcp", Device: "link", Activate: common.ToPtr(true), OnBoot: "on"},
+		}
+	}
+
+	stages = append(stages, osbuild.NewKickstartStage(kickstartOptions))
+
+	if p.WheelNoPasswd {
+		// Because osbuild core only supports a subset of options,
+		// we append to the base here with hardcoded wheel group with NOPASSWD option
+		hardcodedKickstartBits := `
+%post
+echo -e "%wheel\tALL=(ALL)\tNOPASSWD: ALL" > "/etc/sudoers.d/wheel"
+chmod 0440 /etc/sudoers.d/wheel
+restorecon -rvF /etc/sudoers.d
+%end
+`
+		kickstartFile, err := kickstartOptions.IncludeRaw(hardcodedKickstartBits)
+		if err != nil {
+			panic(err)
+		}
+
+		p.Files = []*fsnode.File{kickstartFile}
+
+		stages = append(stages, osbuild.GenFileNodesStages(p.Files)...)
 	}
 	return stages
 }
