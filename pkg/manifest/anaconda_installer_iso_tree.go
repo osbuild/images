@@ -337,16 +337,9 @@ func (p *AnacondaInstallerISOTree) serialize() osbuild.Pipeline {
 			osbuild.NewOstreePullStageInputs("org.osbuild.source", p.ostreeCommitSpec.Checksum, p.ostreeCommitSpec.Ref),
 		))
 
-		baseksPath := p.KSPath
-		if p.WheelNoPasswd {
-			// move the base kickstart to another file so we can write the
-			// %post kickstart snippet in the default location and include the
-			// base
-			baseksPath = "/osbuild-base.ks"
-		}
 		// Configure the kickstart file with the payload and any user options
 		kickstartOptions, err := osbuild.NewKickstartStageOptionsWithOSTreeCommit(
-			baseksPath,
+			p.KSPath,
 			p.Users,
 			p.Groups,
 			makeISORootPath(p.PayloadPath),
@@ -383,15 +376,13 @@ func (p *AnacondaInstallerISOTree) serialize() osbuild.Pipeline {
 			// Because osbuild core only supports a subset of options,
 			// we append to the base here with hardcoded wheel group with NOPASSWD option
 			hardcodedKickstartBits := `
-%include /run/install/repo/osbuild-base.ks
-
 %post
 echo -e "%wheel\tALL=(ALL)\tNOPASSWD: ALL" > "/etc/sudoers.d/wheel"
 chmod 0440 /etc/sudoers.d/wheel
 restorecon -rvF /etc/sudoers.d
 %end
 `
-			kickstartFile, err := fsnode.NewFile(p.KSPath, nil, nil, nil, []byte(hardcodedKickstartBits))
+			kickstartFile, err := kickstartOptions.IncludeRaw(hardcodedKickstartBits)
 			if err != nil {
 				panic(err)
 			}
@@ -421,7 +412,7 @@ restorecon -rvF /etc/sudoers.d
 
 		// do what we can in our kickstart stage
 		kickstartOptions, err := osbuild.NewKickstartStageOptionsWithOSTreeContainer(
-			"/osbuild-base.ks",
+			p.KSPath,
 			p.Users,
 			p.Groups,
 			path.Join("/run/install/repo", p.PayloadPath),
@@ -458,8 +449,6 @@ restorecon -rvF /etc/sudoers.d
 		// base here with some more hardcoded defaults
 		// that should very likely become configurable.
 		hardcodedKickstartBits := `
-%include /run/install/repo/osbuild-base.ks
-
 reqpart --add-boot
 
 part swap --fstype=swap --size=1024
@@ -474,8 +463,7 @@ bootc switch --mutate-in-place --transport %s %s
 %%end
 `, targetContainerTransport, p.containerSpec.LocalName)
 
-		kickstartFile, err := fsnode.NewFile(p.KSPath, nil, nil, nil, []byte(hardcodedKickstartBits))
-
+		kickstartFile, err := kickstartOptions.IncludeRaw(hardcodedKickstartBits)
 		if err != nil {
 			panic(err)
 		}
