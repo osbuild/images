@@ -423,7 +423,7 @@ func (p *AnacondaInstallerISOTree) ostreeContainerStages() []*osbuild.Stage {
 	}
 	kickstartOptions.Lang = "en_US.UTF-8"
 	kickstartOptions.Keyboard = "us"
-	kickstartOptions.TimeZone = "UTC"
+	kickstartOptions.Timezone = "UTC"
 	kickstartOptions.ClearPart = &osbuild.ClearPartOptions{
 		All: true,
 	}
@@ -517,9 +517,9 @@ func (p *AnacondaInstallerISOTree) makeKickstartStages(kickstartOptions *osbuild
 			kickstartOptions.Keyboard = *p.Keyboard
 		}
 
-		kickstartOptions.TimeZone = "UTC"
+		kickstartOptions.Timezone = "UTC"
 		if p.Timezone != nil {
-			kickstartOptions.TimeZone = *p.Timezone
+			kickstartOptions.Timezone = *p.Timezone
 		}
 
 		kickstartOptions.Reboot = &osbuild.RebootOptions{Eject: true}
