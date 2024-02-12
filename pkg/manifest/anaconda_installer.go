@@ -195,16 +195,16 @@ func (p *AnacondaInstaller) serialize() osbuild.Pipeline {
 
 	// Let's do a bunch of sanity checks that are dependent on the installer type
 	// being serialized
-	if p.Type == AnacondaInstallerTypeLive {
+	switch p.Type {
+	case AnacondaInstallerTypeLive:
 		if len(p.Users) != 0 || len(p.Groups) != 0 {
 			panic("anaconda installer type live does not support users and groups customization")
 		}
-
 		if p.InteractiveDefaults != nil {
 			panic("anaconda installer type live does not support interactive defaults")
 		}
-	} else if p.Type == AnacondaInstallerTypePayload {
-	} else {
+	case AnacondaInstallerTypePayload:
+	default:
 		panic("invalid anaconda installer type")
 	}
 
@@ -227,7 +227,14 @@ func (p *AnacondaInstaller) serialize() osbuild.Pipeline {
 
 	var usersStageOptions *osbuild.UsersStageOptions
 
-	if p.Type == AnacondaInstallerTypePayload {
+	switch p.Type {
+	case AnacondaInstallerTypeLive:
+		usersStageOptions = &osbuild.UsersStageOptions{
+			Users: map[string]osbuild.UsersStageOptionsUser{
+				"root": rootUser,
+			},
+		}
+	case AnacondaInstallerTypePayload:
 		installUID := 0
 		installGID := 0
 		installHome := "/root"
@@ -247,17 +254,16 @@ func (p *AnacondaInstaller) serialize() osbuild.Pipeline {
 				"install": installUser,
 			},
 		}
-	} else if p.Type == AnacondaInstallerTypeLive {
-		usersStageOptions = &osbuild.UsersStageOptions{
-			Users: map[string]osbuild.UsersStageOptionsUser{
-				"root": rootUser,
-			},
-		}
+	default:
+		// Repeat of the check above.
+		// Keep it in case this switch block gets moved around.
+		panic("invalid anaconda installer type")
 	}
 
 	pipeline.AddStage(osbuild.NewUsersStage(usersStageOptions))
 
-	if p.Type == AnacondaInstallerTypeLive {
+	switch p.Type {
+	case AnacondaInstallerTypeLive:
 		systemdStageOptions := &osbuild.SystemdStageOptions{
 			EnabledServices: []string{
 				"livesys.service",
@@ -277,9 +283,7 @@ func (p *AnacondaInstaller) serialize() osbuild.Pipeline {
 		p.Files = []*fsnode.File{livesysFile}
 
 		pipeline.AddStages(osbuild.GenFileNodesStages(p.Files)...)
-	}
-
-	if p.Type == AnacondaInstallerTypePayload {
+	case AnacondaInstallerTypePayload:
 		var LoraxPath string
 
 		if p.UseRHELLoraxTemplates {
@@ -293,11 +297,23 @@ func (p *AnacondaInstaller) serialize() osbuild.Pipeline {
 			Path:     LoraxPath,
 			BaseArch: p.platform.GetArch().String(),
 		}))
+	default:
+		// Repeat of the check above.
+		// Keep it in case this switch block gets moved around.
+		panic("invalid anaconda installer type")
 	}
 
 	var dracutModules []string
 
-	if p.Type == AnacondaInstallerTypePayload {
+	switch p.Type {
+	case AnacondaInstallerTypeLive:
+		dracutModules = append(
+			p.AdditionalDracutModules,
+			"anaconda",
+			"rdma",
+			"rngd",
+		)
+	case AnacondaInstallerTypePayload:
 		dracutModules = append(
 			p.AdditionalDracutModules,
 			"anaconda",
@@ -310,14 +326,9 @@ func (p *AnacondaInstaller) serialize() osbuild.Pipeline {
 			"lunmask",
 			"nfs",
 		)
-	} else if p.Type == AnacondaInstallerTypeLive {
-		dracutModules = append(
-			p.AdditionalDracutModules,
-			"anaconda",
-			"rdma",
-			"rngd",
-		)
-	} else {
+	default:
+		// Repeat of the check above.
+		// Keep it in case this switch block gets moved around.
 		panic("invalid anaconda installer type")
 	}
 
@@ -326,7 +337,10 @@ func (p *AnacondaInstaller) serialize() osbuild.Pipeline {
 	pipeline.AddStage(osbuild.NewDracutStage(dracutOptions))
 	pipeline.AddStage(osbuild.NewSELinuxConfigStage(&osbuild.SELinuxConfigStageOptions{State: osbuild.SELinuxStatePermissive}))
 
-	if p.Type == AnacondaInstallerTypePayload {
+	switch p.Type {
+	case AnacondaInstallerTypeLive:
+	case AnacondaInstallerTypePayload:
+		// TODO: change kickstart path when making unattended ISO
 		if p.InteractiveDefaults != nil {
 			kickstartOptions, err := osbuild.NewKickstartStageOptionsWithLiveIMG(
 				osbuild.KickstartPathInteractiveDefaults,
@@ -341,6 +355,10 @@ func (p *AnacondaInstaller) serialize() osbuild.Pipeline {
 
 			pipeline.AddStage(osbuild.NewKickstartStage(kickstartOptions))
 		}
+	default:
+		// Repeat of the check above.
+		// Keep it in case this switch block gets moved around.
+		panic("invalid anaconda installer type")
 	}
 
 	return pipeline
