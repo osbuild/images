@@ -11,6 +11,15 @@
           "name": "osbuild"
         }
       ],
+      "locale": {
+        "languages": [
+          "en_GB.UTF-8"
+        ],
+        "keyboard": "uk"
+      },
+      "timezone": {
+        "timezone": "Europe/Berlin"
+      },
       "installer": {
         "unattended": true,
         "wheel-sudo-nopasswd": true
