@@ -390,6 +390,9 @@ func edgeInstallerImage(workload workload.Workload,
 	img.Users = users.UsersFromBP(customizations.GetUsers())
 	img.Groups = users.GroupsFromBP(customizations.GetGroups())
 
+	img.Language, img.Keyboard = customizations.GetPrimaryLocale()
+	img.Timezone, _ = customizations.GetTimezoneSettings()
+
 	if instCust := customizations.GetInstaller(); instCust != nil {
 		img.WheelNoPasswd = instCust.WheelSudoNopasswd
 		img.UnattendedKickstart = instCust.Unattended

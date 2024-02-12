@@ -334,7 +334,7 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 			}
 		} else if t.name == "iot-installer" || t.name == "image-installer" {
 			// "Installer" is actually not allowed for image-installer right now, but this is checked at the end
-			allowed := []string{"User", "Group", "FIPS", "Installer"}
+			allowed := []string{"User", "Group", "FIPS", "Installer", "Timezone", "Locale"}
 			if err := customizations.CheckAllowed(allowed...); err != nil {
 				return nil, fmt.Errorf(distro.UnsupportedCustomizationError, t.name, strings.Join(allowed, ", "))
 			}
