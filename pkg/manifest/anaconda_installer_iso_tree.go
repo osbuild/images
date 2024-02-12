@@ -28,6 +28,10 @@ type AnacondaInstallerISOTree struct {
 	Users   []users.User
 	Groups  []users.Group
 
+	Language *string
+	Keyboard *string
+	Timezone *string
+
 	// Create a sudoers drop-in file for wheel group with NOPASSWD option
 	WheelNoPasswd bool
 
@@ -501,9 +505,22 @@ func (p *AnacondaInstallerISOTree) makeKickstartStages(kickstartOptions *osbuild
 	if p.UnattendedKickstart {
 		// set the default options for Unattended kickstart
 		kickstartOptions.DisplayMode = "text"
+
+		// override options that can be configured by the image type or the user
 		kickstartOptions.Lang = "en_US.UTF-8"
+		if p.Language != nil {
+			kickstartOptions.Lang = *p.Language
+		}
+
 		kickstartOptions.Keyboard = "us"
+		if p.Keyboard != nil {
+			kickstartOptions.Keyboard = *p.Keyboard
+		}
+
 		kickstartOptions.TimeZone = "UTC"
+		if p.Timezone != nil {
+			kickstartOptions.TimeZone = *p.Timezone
+		}
 
 		kickstartOptions.Reboot = &osbuild.RebootOptions{Eject: true}
 		kickstartOptions.RootPassword = &osbuild.RootPasswordOptions{Lock: true}
