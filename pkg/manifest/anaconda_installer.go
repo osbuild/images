@@ -288,7 +288,6 @@ func (p *AnacondaInstaller) payloadStages() []*osbuild.Stage {
 
 	stages = append(stages, osbuild.NewSELinuxConfigStage(&osbuild.SELinuxConfigStageOptions{State: osbuild.SELinuxStatePermissive}))
 
-	// TODO: change kickstart path when making unattended ISO
 	if p.InteractiveDefaults != nil {
 		kickstartOptions, err := osbuild.NewKickstartStageOptionsWithLiveIMG(
 			osbuild.KickstartPathInteractiveDefaults,
