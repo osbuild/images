@@ -29,7 +29,7 @@ type KickstartStageOptions struct {
 
 	Lang         string               `json:"lang,omitempty"`
 	Keyboard     string               `json:"keyboard,omitempty"`
-	TimeZone     string               `json:"timezone,omitempty"`
+	Timezone     string               `json:"timezone,omitempty"`
 	DisplayMode  string               `json:"display_mode,omitempty"`
 	Reboot       *RebootOptions       `json:"reboot,omitempty"`
 	RootPassword *RootPasswordOptions `json:"rootpw,omitempty"`
