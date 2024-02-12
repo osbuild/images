@@ -13,12 +13,11 @@ import (
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/manifest"
+	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/runner"
 )
-
-const kspath = "/osbuild.ks"
 
 func efiBootPartitionTable(rng *rand.Rand) *disk.PartitionTable {
 	var efibootImageSize uint64 = 20 * common.MebiByte
@@ -49,9 +48,10 @@ type AnacondaTarInstaller struct {
 	Users             []users.User
 	Groups            []users.Group
 
-	// If set, the kickstart file will be added to the bootiso-tree as
-	// /osbuild.ks, otherwise any kickstart options will be configured in the
-	// default /usr/share/anaconda/interactive-defaults.ks in the rootfs.
+	// If set, the kickstart file will be added to the bootiso-tree at the
+	// default path for osbuild, otherwise any kickstart options will be
+	// configured in the default location for interactive defaults in the
+	// rootfs.
 	ISORootKickstart bool
 
 	// Create a sudoers drop-in file for wheel group with NOPASSWD option
@@ -137,6 +137,7 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	bootTreePipeline.UEFIVendor = img.Platform.GetUEFIVendor()
 	bootTreePipeline.ISOLabel = isoLabel
 
+	kspath := osbuild.KickstartPathOSBuild
 	kernelOpts := []string{fmt.Sprintf("inst.stage2=hd:LABEL=%s", isoLabel)}
 	if img.ISORootKickstart {
 		kernelOpts = append(kernelOpts, fmt.Sprintf("inst.ks=hd:LABEL=%s:%s", isoLabel, kspath))

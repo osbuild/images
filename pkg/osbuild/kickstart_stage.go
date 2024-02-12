@@ -9,6 +9,11 @@ import (
 	"github.com/osbuild/images/pkg/customizations/users"
 )
 
+const (
+	KickstartPathInteractiveDefaults = "/usr/share/anaconda/interactive-defaults.ks"
+	KickstartPathOSBuild             = "/osbuild.ks"
+)
+
 type KickstartStageOptions struct {
 	// Where to place the kickstart file
 	Path string `json:"path"`
