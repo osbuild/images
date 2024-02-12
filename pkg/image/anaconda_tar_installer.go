@@ -51,13 +51,17 @@ type AnacondaTarInstaller struct {
 	// If set, the kickstart file will be added to the bootiso-tree at the
 	// default path for osbuild, otherwise any kickstart options will be
 	// configured in the default location for interactive defaults in the
-	// rootfs.
+	// rootfs. Enabling UnattendedKickstart automatically enables this option
+	// because automatic installations cannot be configured using interactive
+	// defaults.
 	ISORootKickstart bool
 
 	// Create a sudoers drop-in file for wheel group with NOPASSWD option
 	WheelNoPasswd bool
 
-	// Add kickstart options to make the installation fully unattended
+	// Add kickstart options to make the installation fully unattended.
+	// Enabling this option also automatically enables the ISORootKickstart
+	// option.
 	UnattendedKickstart bool
 
 	SquashfsCompression string
@@ -89,6 +93,12 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	rng *rand.Rand) (*artifact.Artifact, error) {
 	buildPipeline := manifest.NewBuild(m, runner, repos, nil)
 	buildPipeline.Checkpoint()
+
+	if img.UnattendedKickstart {
+		// if we're building an unattended installer, override the
+		// ISORootKickstart option
+		img.ISORootKickstart = true
+	}
 
 	anacondaPipeline := manifest.NewAnacondaInstaller(
 		manifest.AnacondaInstallerTypePayload,
