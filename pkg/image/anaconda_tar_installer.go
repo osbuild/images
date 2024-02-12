@@ -172,6 +172,14 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoTreePipeline.OSName = img.OSName
 	isoTreePipeline.Users = img.Users
 	isoTreePipeline.Groups = img.Groups
+	isoTreePipeline.Keyboard = img.OSCustomizations.Keyboard
+
+	if img.OSCustomizations.Language != "" {
+		isoTreePipeline.Language = &img.OSCustomizations.Language
+	}
+	if img.OSCustomizations.Timezone != "" {
+		isoTreePipeline.Timezone = &img.OSCustomizations.Timezone
+	}
 	isoTreePipeline.PayloadPath = tarPath
 	if img.ISORootKickstart {
 		isoTreePipeline.KSPath = kspath
