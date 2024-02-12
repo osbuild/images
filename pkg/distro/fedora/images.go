@@ -529,6 +529,10 @@ func iotInstallerImage(workload workload.Workload,
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
 	img.Users = users.UsersFromBP(customizations.GetUsers())
 	img.Groups = users.GroupsFromBP(customizations.GetGroups())
+
+	img.Language, img.Keyboard = customizations.GetPrimaryLocale()
+	img.Timezone, _ = customizations.GetTimezoneSettings()
+
 	img.AdditionalAnacondaModules = []string{
 		"org.fedoraproject.Anaconda.Modules.Timezone",
 		"org.fedoraproject.Anaconda.Modules.Localization",
