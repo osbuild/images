@@ -428,6 +428,15 @@ restorecon -rvF /etc/sudoers.d
 			"oci",
 			"",
 			"")
+		kickstartOptions.RootPassword = &osbuild.RootPasswordOptions{
+			Lock: true,
+		}
+		kickstartOptions.Lang = "en_US.UTF-8"
+		kickstartOptions.Keyboard = "us"
+		kickstartOptions.TimeZone = "UTC"
+		kickstartOptions.ClearPart = &osbuild.ClearPartOptions{
+			All: true,
+		}
 
 		if err != nil {
 			panic("failed to create kickstartstage options")
@@ -450,14 +459,6 @@ restorecon -rvF /etc/sudoers.d
 		// that should very likely become configurable.
 		hardcodedKickstartBits := `
 %include /run/install/repo/osbuild-base.ks
-
-rootpw --lock
-
-lang en_US.UTF-8
-keyboard us
-timezone UTC
-
-clearpart --all
 
 reqpart --add-boot
 
