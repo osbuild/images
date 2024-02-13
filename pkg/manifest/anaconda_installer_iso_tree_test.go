@@ -130,3 +130,68 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		checkISOTreeStages(t, sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"))
 	})
 }
+
+func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
+	ostreeCommit := ostree.CommitSpec{
+		Ref:      "test/99/ostree",
+		URL:      "http://example.com/ostree/repo",
+		Checksum: "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+	}
+	payloadStages := []string{
+		"org.osbuild.ostree.init",
+		"org.osbuild.ostree.pull",
+		"org.osbuild.kickstart",
+	}
+
+	t.Run("plain", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.serializeStart(nil, nil, []ostree.CommitSpec{ostreeCommit})
+		sp := pipeline.serialize()
+		pipeline.serializeEnd()
+		checkISOTreeStages(t, sp.Stages, payloadStages)
+	})
+
+	// enable ISOLinux and check for stage
+	t.Run("isolinux", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.ISOLinux = true
+		pipeline.serializeStart(nil, nil, []ostree.CommitSpec{ostreeCommit})
+		sp := pipeline.serialize()
+		pipeline.serializeEnd()
+		checkISOTreeStages(t, sp.Stages, append(payloadStages, "org.osbuild.isolinux"))
+	})
+}
+
+func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
+
+	containerPayload := container.Spec{
+		Source:    "example.org/registry/org/image",
+		Digest:    "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+		ImageID:   "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+		LocalName: "local.example.org/registry/org/image",
+	}
+	payloadStages := []string{
+		"org.osbuild.skopeo",
+		"org.osbuild.kickstart",
+	}
+
+	t.Run("kspath", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.KSPath = "/test.ks"
+		pipeline.serializeStart(nil, []container.Spec{containerPayload}, nil)
+		sp := pipeline.serialize()
+		pipeline.serializeEnd()
+		checkISOTreeStages(t, sp.Stages, payloadStages)
+	})
+
+	// enable ISOLinux and check again
+	t.Run("isolinux", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.KSPath = "/test.ks"
+		pipeline.ISOLinux = true
+		pipeline.serializeStart(nil, []container.Spec{containerPayload}, nil)
+		sp := pipeline.serialize()
+		pipeline.serializeEnd()
+		checkISOTreeStages(t, sp.Stages, append(payloadStages, "org.osbuild.isolinux"))
+	})
+}
