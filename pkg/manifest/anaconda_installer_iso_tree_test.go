@@ -15,6 +15,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	testKsPath     = "/test.ks"
+	testBaseKsPath = "/test-base.ks"
+)
+
 // newTestAnacondaISOTree returns a base AnacondaInstallerISOTree pipeline.
 func newTestAnacondaISOTree() *AnacondaInstallerISOTree {
 	m := &Manifest{}
@@ -86,6 +91,90 @@ func checkISOTreeStages(stages []*osbuild.Stage, expected, exclude []string) err
 	return nil
 }
 
+func getKickstartOptions(stages []*osbuild.Stage) *osbuild.KickstartStageOptions {
+	ksStage := findStage("org.osbuild.kickstart", stages)
+	options, ok := ksStage.Options.(*osbuild.KickstartStageOptions)
+	if !ok {
+		panic("kickstart stage options conversion failed")
+	}
+	return options
+}
+
+func checkRawKickstartFileStage(stages []*osbuild.Stage) bool {
+	// the pipeline can have more than one copy stage - find the one that has
+	// the expected destination for the kickstart file
+	for _, stage := range stages {
+		if stage.Type == "org.osbuild.copy" {
+			options, ok := stage.Options.(*osbuild.CopyStageOptions)
+			if !ok {
+				panic("copy stage options conversion failed")
+			}
+			if options.Paths[0].To == "tree://"+testKsPath {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func checkKickstartUnattendedOptions(stages []*osbuild.Stage, sudobits bool) error {
+	rawKsFound := checkRawKickstartFileStage(stages)
+	if sudobits && !rawKsFound { // sudobits enabled - raw kickstart stage (file stage) should exist
+		return fmt.Errorf("expected raw kickstart file for sudoers but not found")
+	} else if !sudobits && rawKsFound { // sudobits disabled - no raw kickstart file stage should be found
+		return fmt.Errorf("found raw kickstart file for sudoers but was not expected")
+	}
+
+	ksOptions := getKickstartOptions(stages)
+
+	// check the kickstart path depending on whether we have sudobits enabled
+	if sudobits && ksOptions.Path != testBaseKsPath {
+		return fmt.Errorf("kickstart file path should be %q but is %q", testBaseKsPath, ksOptions.Path)
+	} else if !sudobits && ksOptions.Path != testKsPath {
+		return fmt.Errorf("kickstart file path should be %q but is %q", testKsPath, ksOptions.Path)
+	}
+
+	// check that the unattended kickstart options are set
+	if ksOptions.DisplayMode != "text" {
+		return fmt.Errorf("unexpected kickstart display mode for unattended: %q", ksOptions.DisplayMode)
+	}
+	if !ksOptions.Reboot.Eject {
+		return fmt.Errorf("unattended reboot.eject kickstart option unset")
+	}
+	if !ksOptions.RootPassword.Lock {
+		return fmt.Errorf("unattended rootpassword.lock kickstart option unset")
+	}
+	if !ksOptions.ZeroMBR {
+		return fmt.Errorf("unattended zerombr kickstart option unset")
+	}
+	if !ksOptions.ClearPart.All {
+		return fmt.Errorf("unattended clearpart.all kickstart option unset")
+	}
+	if !ksOptions.ClearPart.InitLabel {
+		return fmt.Errorf("unattended clearpart.initlabel kickstart option unset")
+	}
+
+	// just check that some options are set to anything since at this level the
+	// values don't matter and can change based on distro defaults
+	if ksOptions.Lang == "" {
+		return fmt.Errorf("unattended lang kickstart option unset")
+	}
+	if ksOptions.Timezone == "" {
+		return fmt.Errorf("unattended timezone kickstart option unset")
+	}
+	if ksOptions.Keyboard == "" {
+		return fmt.Errorf("unattended keyboard kickstart option unset")
+	}
+	if ksOptions.AutoPart == nil {
+		return fmt.Errorf("unattended autopart kickstart option unset")
+	}
+	if ksOptions.Network == nil {
+		return fmt.Errorf("unattended network kickstart option unset")
+	}
+
+	return nil
+}
+
 func TestAnacondaISOTreePayloadsBad(t *testing.T) {
 	assert := assert.New(t)
 	pipeline := newTestAnacondaISOTree()
@@ -128,7 +217,7 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 	t.Run("kspath", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.OSPipeline = osPayload
-		pipeline.KSPath = "/test.ks"
+		pipeline.KSPath = testKsPath
 		pipeline.serializeStart(nil, nil, nil)
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
@@ -140,7 +229,7 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 	t.Run("kspath+isolinux", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.OSPipeline = osPayload
-		pipeline.KSPath = "/test.ks"
+		pipeline.KSPath = testKsPath
 		pipeline.ISOLinux = true
 		pipeline.serializeStart(nil, nil, nil)
 		sp := pipeline.serialize()
@@ -148,6 +237,36 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"),
 			variantStages))
 	})
+
+	t.Run("unattended", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.OSPipeline = osPayload
+		pipeline.KSPath = testKsPath
+		pipeline.ISOLinux = true
+		pipeline.UnattendedKickstart = true
+		pipeline.serializeStart(nil, nil, nil)
+		sp := pipeline.serialize()
+		pipeline.serializeEnd()
+		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"),
+			variantStages))
+		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, false))
+	})
+
+	t.Run("unattended+sudo", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.OSPipeline = osPayload
+		pipeline.KSPath = testKsPath
+		pipeline.ISOLinux = true
+		pipeline.UnattendedKickstart = true
+		pipeline.WheelNoPasswd = true
+		pipeline.serializeStart(nil, nil, nil)
+		sp := pipeline.serialize()
+		pipeline.serializeEnd()
+		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"),
+			variantStages))
+		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, true))
+	})
+
 }
 
 func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
@@ -171,6 +290,7 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 
 	t.Run("plain", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
+		pipeline.KSPath = testKsPath
 		pipeline.serializeStart(nil, nil, []ostree.CommitSpec{ostreeCommit})
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
@@ -181,11 +301,37 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 	// enable ISOLinux and check for stage
 	t.Run("isolinux", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
+		pipeline.KSPath = testKsPath
 		pipeline.ISOLinux = true
 		pipeline.serializeStart(nil, nil, []ostree.CommitSpec{ostreeCommit})
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
+	})
+
+	t.Run("unattended", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.KSPath = testKsPath
+		pipeline.ISOLinux = true
+		pipeline.UnattendedKickstart = true
+		pipeline.serializeStart(nil, nil, []ostree.CommitSpec{ostreeCommit})
+		sp := pipeline.serialize()
+		pipeline.serializeEnd()
+		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
+		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, false))
+	})
+
+	t.Run("unattended+sudo", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.KSPath = testKsPath
+		pipeline.ISOLinux = true
+		pipeline.UnattendedKickstart = true
+		pipeline.WheelNoPasswd = true
+		pipeline.serializeStart(nil, nil, []ostree.CommitSpec{ostreeCommit})
+		sp := pipeline.serialize()
+		pipeline.serializeEnd()
+		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
+		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, true))
 	})
 }
 
@@ -211,7 +357,7 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 
 	t.Run("kspath", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
-		pipeline.KSPath = "/test.ks"
+		pipeline.KSPath = testKsPath
 		pipeline.serializeStart(nil, []container.Spec{containerPayload}, nil)
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
@@ -222,7 +368,7 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 	// enable ISOLinux and check again
 	t.Run("isolinux", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
-		pipeline.KSPath = "/test.ks"
+		pipeline.KSPath = testKsPath
 		pipeline.ISOLinux = true
 		pipeline.serializeStart(nil, []container.Spec{containerPayload}, nil)
 		sp := pipeline.serialize()
