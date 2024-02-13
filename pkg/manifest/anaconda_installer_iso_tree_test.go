@@ -103,7 +103,15 @@ func TestAnacondaISOTreePayloadsBad(t *testing.T) {
 func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 	osPayload := NewTestOS()
 
+	// stages required for the payload type
 	payloadStages := []string{"org.osbuild.tar"}
+
+	// stages that should only appear for the other variants of the pipeline
+	variantStages := []string{
+		"org.osbuild.ostree.init",
+		"org.osbuild.ostree.pull",
+		"org.osbuild.skopeo",
+	}
 
 	t.Run("plain", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
@@ -111,7 +119,8 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		pipeline.serializeStart(nil, nil, nil)
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
-		assert.NoError(t, checkISOTreeStages(sp.Stages, payloadStages, []string{"org.osbuild.kickstart", "org.osbuild.isolinux"}))
+		assert.NoError(t, checkISOTreeStages(sp.Stages, payloadStages,
+			append(variantStages, []string{"org.osbuild.kickstart", "org.osbuild.isolinux"}...)))
 	})
 
 	// the os payload variant of the pipeline only adds the kickstart file if
@@ -123,7 +132,8 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		pipeline.serializeStart(nil, nil, nil)
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
-		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.kickstart"), []string{"org.osbuild.isolinux"}))
+		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.kickstart"),
+			append(variantStages, "org.osbuild.isolinux")))
 	})
 
 	// enable ISOLinux and check for stage
@@ -135,7 +145,8 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		pipeline.serializeStart(nil, nil, nil)
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
-		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"), nil))
+		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"),
+			variantStages))
 	})
 }
 
@@ -145,10 +156,17 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 		URL:      "http://example.com/ostree/repo",
 		Checksum: "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
 	}
+	// stages required for the payload type
 	payloadStages := []string{
 		"org.osbuild.ostree.init",
 		"org.osbuild.ostree.pull",
 		"org.osbuild.kickstart",
+	}
+
+	// stages that should only appear for the other variants of the pipeline
+	variantStages := []string{
+		"org.osbuild.tar",
+		"org.osbuild.skopeo",
 	}
 
 	t.Run("plain", func(t *testing.T) {
@@ -156,7 +174,8 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 		pipeline.serializeStart(nil, nil, []ostree.CommitSpec{ostreeCommit})
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
-		assert.NoError(t, checkISOTreeStages(sp.Stages, payloadStages, []string{"org.osbuild.isolinux"}))
+		assert.NoError(t, checkISOTreeStages(sp.Stages, payloadStages,
+			append(variantStages, "org.osbuild.isolinux")))
 	})
 
 	// enable ISOLinux and check for stage
@@ -166,7 +185,7 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 		pipeline.serializeStart(nil, nil, []ostree.CommitSpec{ostreeCommit})
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
-		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), nil))
+		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
 	})
 }
 
@@ -183,13 +202,21 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 		"org.osbuild.kickstart",
 	}
 
+	// stages that should only appear for the other variants of the pipeline
+	variantStages := []string{
+		"org.osbuild.tar",
+		"org.osbuild.ostree.init",
+		"org.osbuild.ostree.pull",
+	}
+
 	t.Run("kspath", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.KSPath = "/test.ks"
 		pipeline.serializeStart(nil, []container.Spec{containerPayload}, nil)
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
-		assert.NoError(t, checkISOTreeStages(sp.Stages, payloadStages, []string{"org.osbuild.isolinux"}))
+		assert.NoError(t, checkISOTreeStages(sp.Stages, payloadStages,
+			append(variantStages, "org.osbuild.isolinux")))
 	})
 
 	// enable ISOLinux and check again
@@ -200,6 +227,6 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 		pipeline.serializeStart(nil, []container.Spec{containerPayload}, nil)
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
-		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), nil))
+		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
 	})
 }
