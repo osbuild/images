@@ -15,8 +15,8 @@ func makeOsbuildMounts(targets ...string) []osbuild.Mount {
 	for _, target := range targets {
 		mnts = append(mnts, osbuild.Mount{
 			Type:   "org.osbuild.ext4",
-			Name:   "mnt-" + target,
-			Source: "dev-" + target,
+			Name:   "mnt-for-" + target,
+			Source: "dev-for-" + target,
 			Target: target,
 		})
 	}
@@ -37,7 +37,7 @@ func TestBootupdStageNewHappy(t *testing.T) {
 	opts := &osbuild.BootupdStageOptions{
 		StaticConfigs: true,
 	}
-	devices := makeOsbuildDevices("dev-/", "dev-/boot", "dev-/boot/efi")
+	devices := makeOsbuildDevices("dev-for-/", "dev-for-/boot", "dev-for-/boot/efi")
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
 
 	expectedStage := &osbuild.Stage{
@@ -55,7 +55,7 @@ func TestBootupdStageMissingMounts(t *testing.T) {
 	opts := &osbuild.BootupdStageOptions{
 		StaticConfigs: true,
 	}
-	devices := makeOsbuildDevices("dev-/")
+	devices := makeOsbuildDevices("dev-for-/")
 	mounts := makeOsbuildMounts("/")
 
 	stage, err := osbuild.NewBootupdStage(opts, devices, mounts)
@@ -69,11 +69,11 @@ func TestBootupdStageMissingDevice(t *testing.T) {
 			Device: "disk",
 		},
 	}
-	devices := makeOsbuildDevices("dev-/", "dev-/boot", "dev-/boot/efi")
+	devices := makeOsbuildDevices("dev-for-/", "dev-for-/boot", "dev-for-/boot/efi")
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
 
 	stage, err := osbuild.NewBootupdStage(opts, devices, mounts)
-	assert.ErrorContains(t, err, `cannot find expected device "disk" for bootupd bios option in [dev-/ dev-/boot dev-/boot/efi]`)
+	assert.ErrorContains(t, err, `cannot find expected device "disk" for bootupd bios option in [dev-for-/ dev-for-/boot dev-for-/boot/efi]`)
 	require.Nil(t, stage)
 }
 
@@ -88,7 +88,7 @@ func TestBootupdStageJsonHappy(t *testing.T) {
 			Device: "disk",
 		},
 	}
-	devices := makeOsbuildDevices("disk", "dev-/", "dev-/boot", "dev-/boot/efi")
+	devices := makeOsbuildDevices("disk", "dev-for-/", "dev-for-/boot", "dev-for-/boot/efi")
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
 
 	stage, err := osbuild.NewBootupdStage(opts, devices, mounts)
@@ -108,13 +108,13 @@ func TestBootupdStageJsonHappy(t *testing.T) {
     }
   },
   "devices": {
-    "dev-/": {
+    "dev-for-/": {
       "type": "org.osbuild.loopback"
     },
-    "dev-/boot": {
+    "dev-for-/boot": {
       "type": "org.osbuild.loopback"
     },
-    "dev-/boot/efi": {
+    "dev-for-/boot/efi": {
       "type": "org.osbuild.loopback"
     },
     "disk": {
@@ -123,21 +123,21 @@ func TestBootupdStageJsonHappy(t *testing.T) {
   },
   "mounts": [
     {
-      "name": "mnt-/",
+      "name": "mnt-for-/",
       "type": "org.osbuild.ext4",
-      "source": "dev-/",
+      "source": "dev-for-/",
       "target": "/"
     },
     {
-      "name": "mnt-/boot",
+      "name": "mnt-for-/boot",
       "type": "org.osbuild.ext4",
-      "source": "dev-/boot",
+      "source": "dev-for-/boot",
       "target": "/boot"
     },
     {
-      "name": "mnt-/boot/efi",
+      "name": "mnt-for-/boot/efi",
       "type": "org.osbuild.ext4",
-      "source": "dev-/boot/efi",
+      "source": "dev-for-/boot/efi",
       "target": "/boot/efi"
     }
   ]
