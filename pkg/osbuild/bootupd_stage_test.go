@@ -27,7 +27,7 @@ func makeOsbuildDevices(devnames ...string) map[string]osbuild.Device {
 	devices := make(map[string]osbuild.Device)
 	for _, devname := range devnames {
 		devices[devname] = osbuild.Device{
-			Type: "orgosbuild.loopback",
+			Type: "org.osbuild.loopback",
 		}
 	}
 	return devices
@@ -109,16 +109,16 @@ func TestBootupdStageJsonHappy(t *testing.T) {
   },
   "devices": {
     "dev-/": {
-      "type": "orgosbuild.loopback"
+      "type": "org.osbuild.loopback"
     },
     "dev-/boot": {
-      "type": "orgosbuild.loopback"
+      "type": "org.osbuild.loopback"
     },
     "dev-/boot/efi": {
-      "type": "orgosbuild.loopback"
+      "type": "org.osbuild.loopback"
     },
     "disk": {
-      "type": "orgosbuild.loopback"
+      "type": "org.osbuild.loopback"
     }
   },
   "mounts": [
