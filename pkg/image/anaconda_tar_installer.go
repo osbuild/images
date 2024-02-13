@@ -167,6 +167,7 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoLinuxEnabled := img.Platform.GetArch() == arch.ARCH_X86_64
 
 	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
+	// TODO: the partition table is required - make it a ctor arg or set a default one in the pipeline
 	isoTreePipeline.PartitionTable = efiBootPartitionTable(rng)
 	isoTreePipeline.Release = img.Release
 	isoTreePipeline.OSName = img.OSName
