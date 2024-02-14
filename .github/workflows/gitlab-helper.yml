@@ -1,3 +1,4 @@
+---
 name: GitLab
 
 # NOTE(mhayden): Restricting branches prevents jobs from being doubled since
@@ -10,16 +11,40 @@ on:
   merge_group:
 
 jobs:
-  gitlab-ci-helper:
-    name: "Gitlab CI trigger helper"
-    runs-on: ubuntu-latest
-    env:
-      SKIP_CI: ${{ (github.event.pull_request.draft == true || contains(github.event.pull_request.labels.*.name, 'WIP')) && !contains(github.event.pull_request.labels.*.name, 'WIP+test') }}
+  quick-manifest-diff:
+    name: "Quick-check for manifest changes"
+    runs-on: ubuntu-22.04
+    container:
+      image: registry.fedoraproject.org/fedora:latest
+
     steps:
-      - name: Write PR status
-        run: echo "$SKIP_CI" > SKIP_CI.txt
-      - name: Upload status
-        uses: actions/upload-artifact@v4
+      # krb5-devel is needed to test internal/upload/koji package
+      # gcc is needed to build the mock depsolver binary for the unit tests
+      # gpgme-devel is needed for container upload dependencies
+      - name: Install build and test dependencies
+        run: dnf -y install krb5-devel gcc git-core go gpgme-devel osbuild-depsolve-dnf btrfs-progs-devel device-mapper-devel
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v4
         with:
-          name: PR_STATUS
-          path: SKIP_CI.txt
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0  # let's get the whole history so we can diff with the the merge-base
+
+      - name: Mark the working directory as safe for git
+        run: git config --global --add safe.directory "$(pwd)"
+
+      - name: Generate quick manifests
+        run: go run ./cmd/gen-manifests --output /manifests/HEAD --packages=false --commits=false --containers=false --metadata=false
+
+      - name: Checkout merge base and generate again
+        run: |
+          git checkout $(git merge-base HEAD ${GITHUB_BASE_REF})
+          go run ./cmd/gen-manifests --output /manifests/merge-base --packages=false --commits=false --containers=false --metadata=false
+
+      - name: Trigger gitlab if there are any diffs
+        run: |
+          if diff -qr /manifests/HEAD /manifests/merge-base; then
+            echo "No manifest changes detected. Skipping GitLab builsd."
+            exit 0
+          fi
+          echo "Starting the build train!!"
