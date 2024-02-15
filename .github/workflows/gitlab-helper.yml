@@ -34,10 +34,17 @@ jobs:
         run: git config --global --add safe.directory "$(pwd)"
 
       - name: Generate quick manifests
-        run: go run ./cmd/gen-manifests --output /manifests/HEAD --packages=false --commits=false --containers=false --metadata=false
+        run: |
+          OSBUILD_TESTING_RNG_SEED="$(jq -r .rngseed Schutzfile)"
+          echo "Using seed ${OSBUILD_TESTING_RNG_SEED}"
+          export OSBUILD_TESTING_RNG_SEED
+          go run ./cmd/gen-manifests --output /manifests/HEAD --packages=false --commits=false --containers=false --metadata=false
 
       - name: Checkout merge base and generate again
         run: |
+          OSBUILD_TESTING_RNG_SEED="$(jq -r .rngseed Schutzfile)"
+          echo "Using seed ${OSBUILD_TESTING_RNG_SEED}"
+          export OSBUILD_TESTING_RNG_SEED
           git checkout $(git merge-base HEAD ${GITHUB_BASE_REF})
           go run ./cmd/gen-manifests --output /manifests/merge-base --packages=false --commits=false --containers=false --metadata=false
 
