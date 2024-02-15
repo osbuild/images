@@ -424,6 +424,10 @@ func (p *AnacondaInstallerISOTree) ostreeContainerStages() []*osbuild.Stage {
 	kickstartOptions.RootPassword = &osbuild.RootPasswordOptions{
 		Lock: true,
 	}
+
+	// NOTE: These were decided somewhat arbitrarily for the BIB installer. We
+	// might want to drop them here and move them into the bib code as
+	// project-specific defaults.
 	kickstartOptions.Lang = "en_US.UTF-8"
 	kickstartOptions.Keyboard = "us"
 	kickstartOptions.Timezone = "UTC"
