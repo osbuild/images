@@ -22,7 +22,7 @@ jobs:
       # gcc is needed to build the mock depsolver binary for the unit tests
       # gpgme-devel is needed for container upload dependencies
       - name: Install build and test dependencies
-        run: dnf -y install krb5-devel gcc git-core go gpgme-devel osbuild-depsolve-dnf btrfs-progs-devel device-mapper-devel
+        run: dnf -y install krb5-devel gcc git-core go gpgme-devel osbuild-depsolve-dnf btrfs-progs-devel device-mapper-devel jq
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v4
