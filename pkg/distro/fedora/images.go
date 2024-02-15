@@ -531,6 +531,8 @@ func iotInstallerImage(workload workload.Workload,
 	img.Groups = users.GroupsFromBP(customizations.GetGroups())
 
 	img.Language, img.Keyboard = customizations.GetPrimaryLocale()
+	// ignore ntp servers - we don't currently support setting these in the
+	// kickstart though kickstart does support setting them
 	img.Timezone, _ = customizations.GetTimezoneSettings()
 
 	img.AdditionalAnacondaModules = []string{
