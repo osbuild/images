@@ -378,7 +378,7 @@ func (p *AnacondaInstallerISOTree) ostreeCommitStages() []*osbuild.Stage {
 		p.OSName)
 
 	if err != nil {
-		panic("failed to create kickstart stage options")
+		panic(fmt.Sprintf("failed to create kickstart stage options: %v", err))
 	}
 
 	stages = append(stages, p.makeKickstartStages(kickstartOptions)...)
@@ -414,6 +414,9 @@ func (p *AnacondaInstallerISOTree) ostreeContainerStages() []*osbuild.Stage {
 		"oci",
 		"",
 		"")
+	if err != nil {
+		panic(fmt.Sprintf("failed to create kickstart stage options: %v", err))
+	}
 
 	// NOTE: these are similar to the unattended kickstart options in the
 	// other two payload configurations but partitioning is different and
@@ -426,10 +429,6 @@ func (p *AnacondaInstallerISOTree) ostreeContainerStages() []*osbuild.Stage {
 	kickstartOptions.Timezone = "UTC"
 	kickstartOptions.ClearPart = &osbuild.ClearPartOptions{
 		All: true,
-	}
-
-	if err != nil {
-		panic("failed to create kickstartstage options")
 	}
 
 	stages = append(stages, osbuild.NewKickstartStage(kickstartOptions))
@@ -489,7 +488,7 @@ func (p *AnacondaInstallerISOTree) tarPayloadStages() []*osbuild.Stage {
 			makeISORootPath(p.PayloadPath))
 
 		if err != nil {
-			panic("failed to create kickstart stage options")
+			panic(fmt.Sprintf("failed to create kickstart stage options: %v", err))
 		}
 
 		stages = append(stages, p.makeKickstartStages(kickstartOptions)...)

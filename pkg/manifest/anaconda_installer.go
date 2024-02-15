@@ -297,7 +297,7 @@ func (p *AnacondaInstaller) payloadStages() []*osbuild.Stage {
 		)
 
 		if err != nil {
-			panic("failed to create kickstartstage options for interactive defaults")
+			panic(fmt.Sprintf("failed to create kickstart stage options for interactive defaults: %v", err))
 		}
 
 		stages = append(stages, osbuild.NewKickstartStage(kickstartOptions))
