@@ -90,16 +90,22 @@ func GenSources(packages []rpmmd.PackageSpec, ostreeCommits []ostree.CommitSpec,
 		sources["org.osbuild.inline"] = ils
 	}
 
-	// collect skopeo container sources
+	// collect skopeo and local container sources
 	if len(containers) > 0 {
 		skopeo := NewSkopeoSource()
 		skopeoIndex := NewSkopeoIndexSource()
+		localContainers := NewContainersStorageSource()
 		for _, c := range containers {
-			skopeo.AddItem(c.Source, c.Digest, c.ImageID, c.TLSVerify, c.ContainersTransport, c.StoragePath)
+			if c.StoragePath == nil {
+				skopeo.AddItem(c.Source, c.Digest, c.ImageID, c.TLSVerify, c.ContainersTransport, c.StoragePath)
 
-			// if we have a list digest, add a skopeo-index source as well
-			if c.ListDigest != "" {
-				skopeoIndex.AddItem(c.Source, c.ListDigest, c.TLSVerify, c.ContainersTransport, c.StoragePath)
+				// if we have a list digest, add a skopeo-index source as well
+				if c.ListDigest != "" {
+					skopeoIndex.AddItem(c.Source, c.ListDigest, c.TLSVerify, c.ContainersTransport, c.StoragePath)
+				}
+			} else {
+
+				localContainers.AddItem(c.ImageID)
 			}
 		}
 		if len(skopeo.Items) > 0 {
@@ -107,6 +113,9 @@ func GenSources(packages []rpmmd.PackageSpec, ostreeCommits []ostree.CommitSpec,
 		}
 		if len(skopeoIndex.Items) > 0 {
 			sources["org.osbuild.skopeo-index"] = skopeoIndex
+		}
+		if len(localContainers.Items) > 0 {
+			sources["org.osbuild.containers-storage"] = localContainers
 		}
 	}
 
