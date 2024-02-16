@@ -439,13 +439,6 @@ func (p *AnacondaInstallerISOTree) ostreeContainerStages() []*osbuild.Stage {
 
 	// and what we can't do in a separate kickstart that we include
 	targetContainerTransport := "registry"
-	if p.containerSpec.ContainersTransport != nil {
-		targetContainerTransport = *p.containerSpec.ContainersTransport
-	}
-	// Canonicalize to registry, as that's what the bootc stack wants
-	if targetContainerTransport == "docker://" {
-		targetContainerTransport = "registry"
-	}
 
 	// Because osbuild core only supports a subset of options, we append to the
 	// base here with some more hardcoded defaults
