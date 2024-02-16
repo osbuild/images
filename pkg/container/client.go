@@ -497,7 +497,6 @@ func (cl *Client) resolveRawManifest(ctx context.Context, rm RawManifest) (resol
 func (cl *Client) Resolve(ctx context.Context, name string, local bool) (Spec, error) {
 
 	raw, err := cl.GetManifest(ctx, "", local)
-
 	if err != nil {
 		return Spec{}, fmt.Errorf("error getting manifest: %w", err)
 	}
