@@ -249,7 +249,6 @@ func genMountsDevicesFromPt(filename string, pt *disk.PartitionTable) (string, [
 	genMounts := func(mnt disk.Mountable, path []disk.Entity) error {
 		stageDevices, name := getDevices(path, filename, false)
 		mountpoint := mnt.GetMountpoint()
-
 		if mountpoint == "/" {
 			fsRootMntName = name
 		}
