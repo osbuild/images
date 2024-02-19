@@ -200,6 +200,7 @@ func TestMountsDeviceFromPtHappy(t *testing.T) {
 			Type: "org.osbuild.loopback",
 			Options: &LoopbackDeviceOptions{
 				Filename: "fake-disk.img",
+				Size:     testdisk.FakePartitionSize / 512,
 			},
 		},
 	})
