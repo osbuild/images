@@ -17,7 +17,7 @@ func defaultBasePartitionTables(t *imageType) (disk.PartitionTable, bool) {
 		bootSize = 600 * common.MebiByte
 	default:
 		// RHEL >= 9.4 needs to have even a bigger /boot, see COMPOSER-2155
-		bootSize = uint64(600) * common.MebiByte
+		bootSize = 1 * common.GibiByte
 	}
 
 	switch t.platform.GetArch() {
