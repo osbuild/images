@@ -3,7 +3,10 @@ package rhel8
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 	"testing"
+
+	"github.com/osbuild/images/internal/common"
 
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/distro"
@@ -15,12 +18,6 @@ var testBasicImageType = imageType{
 	name:                "test",
 	basePartitionTables: defaultBasePartitionTables,
 }
-
-var testEc2ImageType = imageType{
-	name:                "test_ec2",
-	basePartitionTables: ec2BasePartitionTables,
-}
-
 var mountpoints = []blueprint.FilesystemCustomization{
 	{
 		MinSize:    1024,
@@ -66,21 +63,63 @@ func TestDistro_DefaultPartitionTables(t *testing.T) {
 	}
 }
 
-func TestDistro_Ec2PartitionTables(t *testing.T) {
-	rhel8distro := rhelFamilyDistros[0].distro
-	for _, archName := range rhel8distro.ListArches() {
-		testEc2ImageType.arch = &architecture{
-			name: archName,
-		}
-		pt, err := testEc2ImageType.getPartitionTable(mountpoints, distro.ImageOptions{}, rng)
-		if _, exists := testEc2ImageType.basePartitionTables[archName]; exists {
-			require.Nil(t, err)
-			for _, m := range mountpoints {
-				assert.True(t, pt.ContainsMountpoint(m.Mountpoint))
+func TestEC2Partitioning(t *testing.T) {
+	testCases := []struct {
+		distro             string
+		aarch64bootSizeMiB uint64
+	}{
+		{
+			distro:             "rhel-8.8",
+			aarch64bootSizeMiB: 512,
+		},
+		{
+			distro:             "rhel-8.9",
+			aarch64bootSizeMiB: 512,
+		},
+		{
+			distro:             "rhel-8.10",
+			aarch64bootSizeMiB: 1024,
+		},
+		{
+			distro:             "centos-8",
+			aarch64bootSizeMiB: 1024,
+		},
+	}
+
+	for _, tt := range testCases {
+		for _, arch := range []string{"x86_64", "aarch64"} {
+			for _, it := range []string{"ami", "ec2", "ec2-ha", "ec2-sap"} {
+				// skip non-existing combos
+				if strings.HasPrefix(it, "ec2") && strings.HasPrefix(tt.distro, "centos") {
+					continue
+				}
+				if arch == "aarch64" && (it == "ec2-ha" || it == "ec2-sap") {
+					continue
+				}
+				t.Run(fmt.Sprintf("%s/%s/%s", tt.distro, arch, it), func(t *testing.T) {
+					a, err := DistroFactory(tt.distro).GetArch(arch)
+					require.NoError(t, err)
+					i, err := a.GetImageType(it)
+					require.NoError(t, err)
+
+					it := i.(*imageType)
+					pt, err := it.getPartitionTable([]blueprint.FilesystemCustomization{}, distro.ImageOptions{}, rng)
+					require.NoError(t, err)
+
+					// x86_64 is /boot-less, check that
+					if arch == "x86_64" {
+						require.Nil(t, err, pt.FindMountable("/boot"))
+						return
+					}
+
+					bootSize, err := pt.GetMountpointSize("/boot")
+					require.NoError(t, err)
+					require.Equal(t, tt.aarch64bootSizeMiB*common.MiB, bootSize)
+				})
+
 			}
-		} else {
-			require.EqualError(t, err, fmt.Sprintf("no partition table defined for architecture %q for image type %q", testEc2ImageType.arch.name, testEc2ImageType.name))
 		}
+
 	}
 }
 
