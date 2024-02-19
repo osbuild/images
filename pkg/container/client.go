@@ -397,6 +397,21 @@ func (cl *Client) GetManifest(ctx context.Context, digest digest.Digest, contain
 		return
 	}
 
+	img, err := ref.NewImage(ctx, cl.sysCtx)
+	if err != nil {
+		return r, err
+	}
+	defer img.Close()
+
+	info, err := img.Inspect(ctx)
+	if err != nil {
+		return r, err
+	}
+	wantArch := cl.sysCtx.ArchitectureChoice
+	if wantArch != "" && (wantArch != info.Architecture) {
+		return r, fmt.Errorf("cannot use image %v: architecture mismatch %v != %v", digest, wantArch, info.Architecture)
+	}
+
 	src, err := ref.NewImageSource(ctx, cl.sysCtx)
 	if err != nil {
 		return
