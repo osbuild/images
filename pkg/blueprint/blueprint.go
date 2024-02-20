@@ -36,7 +36,7 @@ type Group struct {
 }
 
 type Container struct {
-	Source string `json:"source,omitempty" toml:"source"`
+	Source string `json:"source" toml:"source"`
 	Name   string `json:"name,omitempty" toml:"name,omitempty"`
 
 	TLSVerify           *bool   `json:"tls-verify,omitempty" toml:"tls-verify,omitempty"`
