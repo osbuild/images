@@ -16,7 +16,7 @@ func TestNewSkopeoSource(t *testing.T) {
 
 	source := NewSkopeoSource()
 
-	source.AddItem("name", testDigest, imageID, common.ToPtr(false), nil, nil)
+	source.AddItem("name", testDigest, imageID, common.ToPtr(false))
 	assert.Len(t, source.Items, 1)
 
 	item, ok := source.Items[imageID]
@@ -28,7 +28,7 @@ func TestNewSkopeoSource(t *testing.T) {
 	testDigest = "sha256:d49eebefb6c7ce5505594bef652bd4adc36f413861bd44209d9b9486310b1264"
 	imageID = "sha256:d2ab8fea7f08a22f03b30c13c6ea443121f25e87202a7496e93736efa6fe345a"
 
-	source.AddItem("name2", testDigest, imageID, nil, nil, nil)
+	source.AddItem("name2", testDigest, imageID, nil)
 	assert.Len(t, source.Items, 2)
 	item, ok = source.Items[imageID]
 	assert.True(t, ok)
@@ -37,33 +37,28 @@ func TestNewSkopeoSource(t *testing.T) {
 	// empty name
 	expectedErr := regexp.MustCompile(`source item osbuild.SkopeoSourceItem.* has empty name`)
 	assertx.PanicsWithErrorRegexp(t, expectedErr, func() {
-		source.AddItem("", testDigest, imageID, nil, nil, nil)
+		source.AddItem("", testDigest, imageID, nil)
 	})
 
 	// empty digest
 	expectedErr = regexp.MustCompile(`source item osbuild.SkopeoSourceItem.* has invalid digest`)
 	assertx.PanicsWithErrorRegexp(t, expectedErr, func() {
-		source.AddItem("name", "", imageID, nil, nil, nil)
+		source.AddItem("name", "", imageID, nil)
 	})
 
 	// empty image id
 	assert.PanicsWithError(t, `item "" has invalid image id`, func() {
-		source.AddItem("name", testDigest, "", nil, nil, nil)
+		source.AddItem("name", testDigest, "", nil)
 	})
 
 	// invalid digest
 	expectedErr = regexp.MustCompile(`item osbuild.SkopeoSourceItem.* has invalid digest`)
 	assertx.PanicsWithErrorRegexp(t, expectedErr, func() {
-		source.AddItem("name", "foo", imageID, nil, nil, nil)
+		source.AddItem("name", "foo", imageID, nil)
 	})
 
 	// invalid image id
 	assert.PanicsWithError(t, `item "sha256:foo" has invalid image id`, func() {
-		source.AddItem("name", testDigest, "sha256:foo", nil, nil, nil)
-	})
-
-	// invalid image transport
-	assert.PanicsWithError(t, `invalid container transport: invalid-transport`, func() {
-		source.AddItem("name", testDigest, testDigest, nil, common.ToPtr("invalid-transport"), nil)
+		source.AddItem("name", testDigest, "sha256:foo", nil)
 	})
 }

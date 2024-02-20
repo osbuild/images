@@ -97,14 +97,13 @@ func GenSources(packages []rpmmd.PackageSpec, ostreeCommits []ostree.CommitSpec,
 		localContainers := NewContainersStorageSource()
 		for _, c := range containers {
 			if c.StoragePath == nil {
-				skopeo.AddItem(c.Source, c.Digest, c.ImageID, c.TLSVerify, c.ContainersTransport, c.StoragePath)
+				skopeo.AddItem(c.Source, c.Digest, c.ImageID, c.TLSVerify)
 
 				// if we have a list digest, add a skopeo-index source as well
 				if c.ListDigest != "" {
-					skopeoIndex.AddItem(c.Source, c.ListDigest, c.TLSVerify, c.ContainersTransport, c.StoragePath)
+					skopeoIndex.AddItem(c.Source, c.ListDigest, c.TLSVerify)
 				}
 			} else {
-
 				localContainers.AddItem(c.ImageID)
 			}
 		}
