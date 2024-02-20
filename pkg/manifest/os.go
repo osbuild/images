@@ -407,6 +407,7 @@ func (p *OS) serialize() osbuild.Pipeline {
 
 	if len(p.containerSpecs) > 0 {
 		images := osbuild.NewContainersInputForSources(p.containerSpecs)
+		localImages := osbuild.NewLocalContainersInputForSources(p.containerSpecs)
 
 		var storagePath string
 
@@ -418,9 +419,16 @@ func (p *OS) serialize() osbuild.Pipeline {
 			pipeline.AddStage(osbuild.NewContainersStorageConfStage(containerStoreOpts))
 		}
 
-		manifests := osbuild.NewFilesInputForManifestLists(p.containerSpecs)
-		skopeo := osbuild.NewSkopeoStageWithContainersStorage(storagePath, images, manifests)
-		pipeline.AddStage(skopeo)
+		if len(images.References) > 0 {
+			manifests := osbuild.NewFilesInputForManifestLists(p.containerSpecs)
+			skopeo := osbuild.NewSkopeoStageWithContainersStorage(storagePath, images, manifests)
+			pipeline.AddStage(skopeo)
+		}
+
+		if len(localImages.References) > 0 {
+			skopeo := osbuild.NewSkopeoStageWithContainersStorage(storagePath, localImages, nil)
+			pipeline.AddStage(skopeo)
+		}
 	}
 
 	pipeline.AddStage(osbuild.NewLocaleStage(&osbuild.LocaleStageOptions{Language: p.Language}))

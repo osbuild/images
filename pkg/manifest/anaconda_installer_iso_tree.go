@@ -389,7 +389,12 @@ func (p *AnacondaInstallerISOTree) ostreeCommitStages() []*osbuild.Stage {
 func (p *AnacondaInstallerISOTree) ostreeContainerStages() []*osbuild.Stage {
 	stages := make([]*osbuild.Stage, 0)
 
-	images := osbuild.NewContainersInputForSources([]container.Spec{*p.containerSpec})
+	var images osbuild.ContainersInput
+	if p.containerSpec.LocalStorage {
+		images = osbuild.NewLocalContainersInputForSources([]container.Spec{*p.containerSpec})
+	} else {
+		images = osbuild.NewContainersInputForSources([]container.Spec{*p.containerSpec})
+	}
 
 	stages = append(stages, osbuild.NewMkdirStage(&osbuild.MkdirStageOptions{
 		Paths: []osbuild.MkdirStagePath{

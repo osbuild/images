@@ -249,7 +249,14 @@ func (p *OSTreeDeployment) doOSTreeContainerSpec(pipeline *osbuild.Pipeline, rep
 			Label: "root",
 		},
 	}
-	images := osbuild.NewContainersInputForSources([]container.Spec{cont})
+
+	var images osbuild.ContainersInput
+	if cont.LocalStorage {
+		images = osbuild.NewLocalContainersInputForSources([]container.Spec{cont})
+	} else {
+		images = osbuild.NewContainersInputForSources([]container.Spec{cont})
+	}
+
 	pipeline.AddStage(osbuild.NewOSTreeDeployContainerStage(options, images))
 	return ref
 }
