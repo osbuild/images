@@ -228,15 +228,25 @@ func (p *BuildrootFromContainer) serialize() osbuild.Pipeline {
 	pipeline := p.Base.serialize()
 	pipeline.Runner = p.runner.String()
 
-	inputs := osbuild.NewContainersInputForSources(p.containerSpecs)
+	images := osbuild.NewContainersInputForSources(p.containerSpecs)
 	options := &osbuild.ContainerDeployOptions{
 		Exclude: []string{"/sysroot"},
 	}
-	stage, err := osbuild.NewContainerDeployStage(inputs, options)
-	if err != nil {
-		panic(err)
+	if len(images.References) > 0 {
+		stage, err := osbuild.NewContainerDeployStage(images, options)
+		if err != nil {
+			panic(err)
+		}
+		pipeline.AddStage(stage)
 	}
-	pipeline.AddStage(stage)
+	localImages := osbuild.NewLocalContainersInputForSources(p.containerSpecs)
+	if len(localImages.References) > 0 {
+		stage, err := osbuild.NewContainerDeployStage(localImages, options)
+		if err != nil {
+			panic(err)
+		}
+		pipeline.AddStage(stage)
+	}
 	pipeline.AddStage(osbuild.NewSELinuxStage(
 		&osbuild.SELinuxStageOptions{
 			FileContexts: "etc/selinux/targeted/contexts/files/file_contexts",
