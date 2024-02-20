@@ -414,8 +414,10 @@ func azureRhuiBasePartitionTables(t *imageType) (disk.PartitionTable, bool) {
 	}
 }
 
-var defaultAzureKernelOptions = "ro console=tty1 console=ttyS0 earlyprintk=ttyS0 rootdelay=300"
+// use loglevel=3 as described in the RHEL documentation and used in existing RHEL images built by MSFT
+var defaultAzureKernelOptions = "ro loglevel=3 console=tty1 console=ttyS0 earlyprintk=ttyS0 rootdelay=300"
 
+// based on https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/deploying_rhel_9_on_microsoft_azure/assembly_deploying-a-rhel-image-as-a-virtual-machine-on-microsoft-azure_cloud-content-azure#making-configuration-changes_configure-the-image-azure
 var defaultAzureImageConfig = &distro.ImageConfig{
 	Timezone: common.ToPtr("Etc/UTC"),
 	Locale:   common.ToPtr("en_US.UTF-8"),
@@ -457,6 +459,12 @@ var defaultAzureImageConfig = &distro.ImageConfig{
 			},
 		},
 		{
+			Filename: "blacklist-intel-cstate.conf",
+			Commands: osbuild.ModprobeConfigCmdList{
+				osbuild.NewModprobeConfigCmdBlacklist("intel_cstate"),
+			},
+		},
+		{
 			Filename: "blacklist-floppy.conf",
 			Commands: osbuild.ModprobeConfigCmdList{
 				osbuild.NewModprobeConfigCmdBlacklist("floppy"),
@@ -467,6 +475,12 @@ var defaultAzureImageConfig = &distro.ImageConfig{
 			Commands: osbuild.ModprobeConfigCmdList{
 				osbuild.NewModprobeConfigCmdBlacklist("nouveau"),
 				osbuild.NewModprobeConfigCmdBlacklist("lbm-nouveau"),
+			},
+		},
+		{
+			Filename: "blacklist-skylake-edac.conf",
+			Commands: osbuild.ModprobeConfigCmdList{
+				osbuild.NewModprobeConfigCmdBlacklist("skx_edac"),
 			},
 		},
 	},
@@ -515,10 +529,13 @@ var defaultAzureImageConfig = &distro.ImageConfig{
 		},
 	},
 	Grub2Config: &osbuild.GRUB2Config{
-		TerminalInput:  []string{"serial", "console"},
-		TerminalOutput: []string{"serial", "console"},
-		Serial:         "serial --speed=115200 --unit=0 --word=8 --parity=no --stop=1",
-		Timeout:        10,
+		DisableRecovery: common.ToPtr(true),
+		DisableSubmenu:  common.ToPtr(true),
+		Distributor:     "$(sed 's, release .*$,,g' /etc/system-release)",
+		Terminal:        []string{"serial", "console"},
+		Serial:          "serial --speed=115200 --unit=0 --word=8 --parity=no --stop=1",
+		Timeout:         10,
+		TimeoutStyle:    osbuild.GRUB2ConfigTimeoutStyleCountdown,
 	},
 	UdevRules: &osbuild.UdevRulesStageOptions{
 		Filename: "/etc/udev/rules.d/68-azure-sriov-nm-unmanaged.rules",
