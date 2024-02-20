@@ -3,7 +3,7 @@
   "fedora-39": {
     "dependencies": {
       "osbuild": {
-        "commit": "6e12f08a2965e15cfae479fbe8f80a64ba474e5b"
+        "commit": "b42e1afddc37dae3199e039f2a3d3cb10f01485c"
       }
     },
     "repos": [
