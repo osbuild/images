@@ -3,7 +3,7 @@
 First of all, thank you for taking the time to contribute.  In this document
 you will find information that can help you with your contribution.  For more
 information feel free to read our [developer
-guide](https://www.osbuild.org/guides/developer-guide/index.html).
+guide](https://www.osbuild.org/docs/developer-guide/index).
 
 ## Local development environment
 
