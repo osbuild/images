@@ -485,6 +485,10 @@ func edgeRawImage(workload workload.Workload,
 		return nil, err
 	}
 	img.PartitionTable = pt
+	customServiceFile := createFilesystemMounpointService(customizations)
+	if customServiceFile != nil {
+		img.Files = append(img.Files, customServiceFile)
+	}
 
 	img.Filename = t.Filename()
 	img.Compression = t.compression
@@ -548,6 +552,11 @@ func edgeSimplifiedInstallerImage(workload workload.Workload,
 	// 92+ only
 	if kopts := customizations.GetKernel(); kopts != nil && kopts.Append != "" {
 		rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, kopts.Append)
+	}
+
+	customServiceFile := createFilesystemMounpointService(customizations)
+	if customServiceFile != nil {
+		rawImg.Files = append(rawImg.Files, customServiceFile)
 	}
 
 	img := image.NewOSTreeSimplifiedInstaller(rawImg, customizations.InstallationDevice)
@@ -712,4 +721,28 @@ func initialSetupKickstart() *fsnode.File {
 		panic(err)
 	}
 	return file
+}
+
+// fixes: https://github.com/osbuild/images/issues/352
+// Creates a unit file that create mountpoints if it doesnot exits.
+// This ensures that the filesystem created using image builder continues to work after upgrade.
+func createFilesystemMounpointService(customizations *blueprint.Customizations) *fsnode.File {
+	mntpnts := customizations.GetFilesystems()
+	if mntpnts != nil {
+		customServiceUnit := "[Unit]\nDescription=Create mountpoints if does not exists\nDefaultDependencies=no\n"
+		ExecStartPre := "/bin/sh -c 'if [ -z \"$(grep -Uq composefs /run/ostree-booted)\" ]; then chattr -i /; fi'"
+		ExecStopPost := "/bin/sh -c 'if [ -z \"$(grep -Uq composefs /run/ostree-booted)\" ]; then chattr +i /; fi'"
+		customService := "[Service]\nType=oneshot\nRemainAfterExit=yes\nExecStartPre=" + ExecStartPre + "\nExecStopPost=" + ExecStopPost + "\nExecStart=mkdir -p"
+		for _, mountpoint := range mntpnts {
+			customServiceUnit = customServiceUnit + "ConditionPathExists=|!" + mountpoint.Mountpoint + "\n"
+			customService = customService + " " + mountpoint.Mountpoint
+		}
+		finalCustomService := customServiceUnit + customService + "\n" + "[Install]\nWantedBy=local-fs.target\n"
+		file, err := fsnode.NewFile("/etc/systemd/system/osbuild-ostree-mountpoints.service", nil, nil, nil, []byte(finalCustomService))
+		if err != nil {
+			panic(err)
+		}
+		return file
+	}
+	return nil
 }

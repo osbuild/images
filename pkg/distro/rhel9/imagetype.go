@@ -239,6 +239,10 @@ func (t *imageType) Manifest(bp *blueprint.Blueprint,
 			cw.Services = services.Enabled
 			cw.DisabledServices = services.Disabled
 		}
+		//enable custom-service that creates mountpoints , refer func: createFilesystemMounpointService
+		if filesystemCustomization := bp.Customizations.GetFilesystems(); filesystemCustomization != nil {
+			cw.Services = append(cw.Services, "osbuild-ostree-mountpoints.service")
+		}
 		w = cw
 	}
 
