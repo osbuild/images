@@ -77,6 +77,7 @@ type OSCustomizations struct {
 	Timezone         string
 	EnabledServices  []string
 	DisabledServices []string
+	MaskedServices   []string
 	DefaultTarget    string
 
 	// SELinux policy, when set it enables the labeling of the tree with the
@@ -706,8 +707,10 @@ func (p *OS) serialize() osbuild.Pipeline {
 
 	enabledServices := []string{}
 	disabledServices := []string{}
+	maskedServices := []string{}
 	enabledServices = append(enabledServices, p.EnabledServices...)
 	disabledServices = append(disabledServices, p.DisabledServices...)
+	maskedServices = append(maskedServices, p.MaskedServices...)
 	if p.Environment != nil {
 		enabledServices = append(enabledServices, p.Environment.GetServices()...)
 	}
@@ -716,10 +719,12 @@ func (p *OS) serialize() osbuild.Pipeline {
 		disabledServices = append(disabledServices, p.Workload.GetDisabledServices()...)
 	}
 	if len(enabledServices) != 0 ||
-		len(disabledServices) != 0 || p.DefaultTarget != "" {
+		len(disabledServices) != 0 ||
+		len(maskedServices) != 0 || p.DefaultTarget != "" {
 		pipeline.AddStage(osbuild.NewSystemdStage(&osbuild.SystemdStageOptions{
 			EnabledServices:  enabledServices,
 			DisabledServices: disabledServices,
+			MaskedServices:   maskedServices,
 			DefaultTarget:    p.DefaultTarget,
 		}))
 	}
