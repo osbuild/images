@@ -357,7 +357,7 @@ func getImageRef(target reference.Named, transport string, storagePath string) (
 		if storagePath != "" {
 			storage = fmt.Sprintf("[overlay@%s]", storagePath)
 		}
-		ref, err := alltransports.ParseImageName(fmt.Sprintf("%s:%s%s", transport, storage, target.Name()))
+		ref, err := alltransports.ParseImageName(fmt.Sprintf("%s:%s%s", transport, storage, target))
 		if err != nil {
 			return nil, err
 		}
