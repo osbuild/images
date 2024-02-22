@@ -198,19 +198,6 @@
       "qcow2"
     ]
   },
-  "./configs/ostree-filesystem-customizations.json": {
-    "distros": [
-      "rhel-9.2",
-      "rhel-9.3",
-      "rhel-9.4"
-    ],
-    "image-types": [
-      "edge-raw-image",
-      "edge-ami",
-      "edge-vsphere",
-      "simplified-installer"
-    ]
-  },
   "./configs/ostree.json": {
     "image-types": [
       "edge-commit",
