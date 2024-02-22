@@ -81,6 +81,11 @@
         ],
         "disabled": [
           "bluetooth.service"
+        ],
+        "masked": [
+          "nfs-server",
+          "rpcbind",
+          "nftables"
         ]
       },
       "filesystem": [
