@@ -5,26 +5,28 @@ import (
 	"math/rand"
 
 	"github.com/osbuild/images/pkg/container"
+	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
+	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/runner"
 )
 
 type BootcDiskImage struct {
-	*OSTreeDiskImage
+	Base
+
+	Platform       platform.Platform
+	PartitionTable *disk.PartitionTable
+
+	Filename string
+
+	ContainerSource *container.SourceSpec
 }
 
 func NewBootcDiskImage(container container.SourceSpec) *BootcDiskImage {
-	// XXX: hardcoded for now
-	ref := "ostree/1/1/0"
-
 	return &BootcDiskImage{
-		&OSTreeDiskImage{
-			Base:            NewBase("bootc-raw-image"),
-			ContainerSource: &container,
-			Ref:             ref,
-			OSName:          "default",
-		},
+		Base:            NewBase("bootc-raw-image"),
+		ContainerSource: &container,
 	}
 }
 
@@ -40,14 +42,15 @@ func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifes
 	// this is signified by passing nil to the below pipelines.
 	var hostPipeline manifest.Build
 
-	opts := &baseRawOstreeImageOpts{useBootupd: true}
-
-	fileBasename := img.Filename
+	// XXX: no support for customization right now, at least /etc/fstab
+	// and very basic user (root only?) should be supported
+	baseImage := manifest.NewRawBootcImage(buildPipeline, containers, img.Platform)
+	baseImage.PartitionTable = img.PartitionTable
 
 	// In BIB, we export multiple images from the same pipeline so we use the
 	// filename as the basename for each export and set the extensions based on
 	// each file format.
-	baseImage := baseRawOstreeImage(img.OSTreeDiskImage, buildPipeline, opts)
+	fileBasename := img.Filename
 	baseImage.SetFilename(fmt.Sprintf("%s.raw", fileBasename))
 
 	qcow2Pipeline := manifest.NewQCOW2(hostPipeline, baseImage)
