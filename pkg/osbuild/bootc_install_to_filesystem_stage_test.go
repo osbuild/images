@@ -11,14 +11,17 @@ import (
 	"github.com/osbuild/images/pkg/osbuild"
 )
 
-func makeFakeContainerInputs() osbuild.ContainersInput {
-	return osbuild.NewContainersInputForSources([]container.Spec{
-		{
-			ImageID:   "id-0",
-			Source:    "registry.example.org/reg/img",
-			LocalName: "local-name",
+func makeFakeContainerInputs() osbuild.ContainerDeployInputs {
+	return osbuild.ContainerDeployInputs{
+		Images: osbuild.NewContainersInputForSources([]container.Spec{
+			{
+				ImageID:   "id-0",
+				Source:    "registry.example.org/reg/img",
+				LocalName: "local-name",
+			},
 		},
-	})
+		),
+	}
 }
 
 func TestBootcInstallToFilesystemStageNewHappy(t *testing.T) {
@@ -40,7 +43,7 @@ func TestBootcInstallToFilesystemStageNewHappy(t *testing.T) {
 func TestBootcInstallToFilesystemStageNewNoContainers(t *testing.T) {
 	devices := makeOsbuildDevices("dev-for-/", "dev-for-/boot", "dev-for-/boot/efi")
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
-	inputs := osbuild.ContainersInput{}
+	inputs := osbuild.ContainerDeployInputs{}
 
 	_, err := osbuild.NewBootcInstallToFilesystemStage(inputs, devices, mounts)
 	assert.EqualError(t, err, "expected exactly one container input but got: 0 (map[])")
@@ -49,10 +52,12 @@ func TestBootcInstallToFilesystemStageNewNoContainers(t *testing.T) {
 func TestBootcInstallToFilesystemStageNewTwoContainers(t *testing.T) {
 	devices := makeOsbuildDevices("dev-for-/", "dev-for-/boot", "dev-for-/boot/efi")
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
-	inputs := osbuild.ContainersInput{
-		References: map[string]osbuild.ContainersInputSourceRef{
-			"1": {},
-			"2": {},
+	inputs := osbuild.ContainerDeployInputs{
+		Images: osbuild.ContainersInput{
+			References: map[string]osbuild.ContainersInputSourceRef{
+				"1": {},
+				"2": {},
+			},
 		},
 	}
 
@@ -83,11 +88,13 @@ func TestBootcInstallToFilesystemStageJsonHappy(t *testing.T) {
 	assert.Equal(t, string(stageJson), `{
   "type": "org.osbuild.bootc.install-to-filesystem",
   "inputs": {
-    "type": "org.osbuild.containers",
-    "origin": "org.osbuild.source",
-    "references": {
-      "id-0": {
-        "name": "local-name"
+    "images": {
+      "type": "org.osbuild.containers",
+      "origin": "org.osbuild.source",
+      "references": {
+        "id-0": {
+          "name": "local-name"
+        }
       }
     }
   },
