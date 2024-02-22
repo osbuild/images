@@ -25,7 +25,7 @@ func TestBootcDiskImageNew(t *testing.T) {
 
 	img := image.NewBootcDiskImage(containerSource)
 	require.NotNil(t, img)
-	assert.Equal(t, img.OSTreeDiskImage.Base.Name(), "bootc-raw-image")
+	assert.Equal(t, img.Base.Name(), "bootc-raw-image")
 }
 
 func makeFakeDigest(t *testing.T) string {
@@ -63,6 +63,7 @@ func makeBootcDiskImageOsbuildManifest(t *testing.T, opts *bootcDiskImageTestOpt
 	containers := []container.SourceSpec{containerSource}
 
 	img := image.NewBootcDiskImage(containerSource)
+	img.Filename = "fake-disk"
 	require.NotNil(t, img)
 	img.Platform = makeFakePlatform(opts)
 	img.PartitionTable = testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi")
@@ -73,8 +74,8 @@ func makeBootcDiskImageOsbuildManifest(t *testing.T, opts *bootcDiskImageTestOpt
 	require.Nil(t, err)
 
 	fakeSourceSpecs := map[string][]container.Spec{
-		"build":             []container.Spec{{Source: "some-src", Digest: makeFakeDigest(t), ImageID: makeFakeDigest(t)}},
-		"ostree-deployment": []container.Spec{{Source: "other-src", Digest: makeFakeDigest(t), ImageID: makeFakeDigest(t)}},
+		"build": []container.Spec{{Source: "some-src", Digest: makeFakeDigest(t), ImageID: makeFakeDigest(t)}},
+		"image": []container.Spec{{Source: "other-src", Digest: makeFakeDigest(t), ImageID: makeFakeDigest(t)}},
 	}
 
 	osbuildManifest, err := m.Serialize(nil, fakeSourceSpecs, nil)
@@ -127,39 +128,25 @@ func TestBootcDiskImageInstantiateVmdk(t *testing.T) {
 	require.NotNil(t, pipeline)
 }
 
-func TestBootcDiskImageUsesBootupd(t *testing.T) {
+func TestBootcDiskImageUsesBootcInstallToFs(t *testing.T) {
 	osbuildManifest := makeBootcDiskImageOsbuildManifest(t, nil)
 
-	// check that bootupd is part of the "image" pipeline
+	// check that bootc.install-to-filesystem is part of the "image" pipeline
 	imagePipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "image")
 	require.NotNil(t, imagePipeline)
-	bootupdStage := findStageFromOsbuildPipeline(t, imagePipeline, "org.osbuild.bootupd")
-	require.NotNil(t, bootupdStage)
+	bootcStage := findStageFromOsbuildPipeline(t, imagePipeline, "org.osbuild.bootc.install-to-filesystem")
+	require.NotNil(t, bootcStage)
 
-	// ensure that "grub2" is not part of the ostree pipeline
-	ostreeDeployPipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "ostree-deployment")
-	require.NotNil(t, ostreeDeployPipeline)
-	grubStage := findStageFromOsbuildPipeline(t, ostreeDeployPipeline, "org.osbuild.grub2")
-	require.Nil(t, grubStage)
-}
-
-func TestBootcDiskImageBootupdBiosSupport(t *testing.T) {
-	for _, withBios := range []bool{false, true} {
-		osbuildManifest := makeBootcDiskImageOsbuildManifest(t, &bootcDiskImageTestOpts{BIOS: withBios, ImageFormat: platform.FORMAT_QCOW2})
-
-		imagePipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "image")
-		require.NotNil(t, imagePipeline)
-		bootupdStage := findStageFromOsbuildPipeline(t, imagePipeline, "org.osbuild.bootupd")
-		require.NotNil(t, bootupdStage)
-
-		opts := bootupdStage["options"].(map[string]interface{})
-		if withBios {
-			biosOpts := opts["bios"].(map[string]interface{})
-			assert.Equal(t, biosOpts["device"], "disk")
-		} else {
-			require.Nil(t, opts["bios"])
-		}
+	// ensure loopback for the entire disk with partscan is used or install
+	// to-filesystem will fail
+	devicesDisk := bootcStage["devices"].(map[string]interface{})["disk"].(map[string]interface{})
+	assert.Equal(t, "org.osbuild.loopback", devicesDisk["type"])
+	devicesDiskOpts := devicesDisk["options"].(map[string]interface{})
+	expectedDiskOpts := map[string]interface{}{
+		"partscan": true,
+		"filename": "fake-disk.raw",
 	}
+	assert.Equal(t, expectedDiskOpts, devicesDiskOpts)
 }
 
 func TestBootcDiskImageExportPipelines(t *testing.T) {
