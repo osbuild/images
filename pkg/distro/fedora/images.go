@@ -369,8 +369,6 @@ func imageInstallerImage(workload workload.Workload,
 			// time since they might be running headless and a UI is
 			// unnecessary.
 			img.AdditionalKernelOpts = []string{"inst.text", "inst.noninteractive"}
-		} else {
-			img.AdditionalKernelOpts = []string{"inst.webui", "inst.webui.remote"}
 		}
 	}
 	img.AdditionalAnacondaModules = append(img.AdditionalAnacondaModules, "org.fedoraproject.Anaconda.Modules.Users")
