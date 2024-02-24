@@ -271,6 +271,19 @@ func getEc2PartitionTables(osVersion string, isRHEL bool) distro.BasePartitionTa
 					UUID:     disk.BIOSBootPartitionUUID,
 				},
 				{
+					Size: 200 * common.MebiByte,
+					Type: disk.EFISystemPartitionGUID,
+					UUID: disk.EFISystemPartitionUUID,
+					Payload: &disk.Filesystem{
+						Type:         "vfat",
+						UUID:         disk.EFIFilesystemUUID,
+						Mountpoint:   "/boot/efi",
+						FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+						FSTabFreq:    0,
+						FSTabPassNo:  2,
+					},
+				},
+				{
 					Size: 2 * common.GibiByte,
 					Type: disk.FilesystemDataGUID,
 					UUID: disk.RootPartitionUUID,
