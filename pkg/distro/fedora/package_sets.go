@@ -4,7 +4,6 @@ package fedora
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
@@ -498,13 +497,7 @@ func iotInstallerPackageSet(t *imageType) rpmmd.PackageSet {
 	// include anaconda packages
 	ps := anacondaPackageSet(t)
 
-	releasever := t.Arch().Distro().Releasever()
-	version, err := strconv.Atoi(releasever)
-	if err != nil {
-		panic("cannot convert releasever to int: " + err.Error())
-	}
-
-	if version >= 38 {
+	if !common.VersionLessThan(t.arch.distro.osVersion, "39") {
 		ps = ps.Append(rpmmd.PackageSet{
 			Include: []string{
 				"fedora-release-iot",
@@ -560,14 +553,8 @@ func liveInstallerPackageSet(t *imageType) rpmmd.PackageSet {
 func imageInstallerPackageSet(t *imageType) rpmmd.PackageSet {
 	ps := anacondaPackageSet(t)
 
-	releasever := t.Arch().Distro().Releasever()
-	version, err := strconv.Atoi(releasever)
-	if err != nil {
-		panic("cannot convert releasever to int: " + err.Error())
-	}
-
 	// We want to generate a preview image when rawhide is built
-	if version >= 38 {
+	if !common.VersionLessThan(t.arch.distro.osVersion, "39") {
 		ps = ps.Append(rpmmd.PackageSet{
 			Include: []string{
 				"anaconda-webui",
