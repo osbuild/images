@@ -353,9 +353,9 @@ func imageInstallerImage(workload workload.Workload,
 		img.UnattendedKickstart = instCust.Unattended
 	}
 
-	// Enable anaconda-webui for Fedora > 38
+	// Enable anaconda-webui for Fedora >= 39
 	distro := t.Arch().Distro()
-	if !common.VersionLessThan(distro.Releasever(), "38") {
+	if !common.VersionLessThan(distro.Releasever(), "39") {
 		img.AdditionalAnacondaModules = []string{
 			"org.fedoraproject.Anaconda.Modules.Security",
 			"org.fedoraproject.Anaconda.Modules.Timezone",
