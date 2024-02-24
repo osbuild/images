@@ -173,7 +173,7 @@ func iotCommitPackageSet(t *imageType) rpmmd.PackageSet {
 		},
 	}
 
-	if !common.VersionLessThan(t.arch.distro.osVersion, "38") {
+	if common.VersionGreaterThanOrEqual(t.arch.distro.osVersion, "38") {
 		ps = ps.Append(rpmmd.PackageSet{
 			Include: []string{
 				"fdo-client",
@@ -497,7 +497,7 @@ func iotInstallerPackageSet(t *imageType) rpmmd.PackageSet {
 	// include anaconda packages
 	ps := anacondaPackageSet(t)
 
-	if !common.VersionLessThan(t.arch.distro.osVersion, "39") {
+	if common.VersionGreaterThanOrEqual(t.arch.distro.osVersion, "39") {
 		ps = ps.Append(rpmmd.PackageSet{
 			Include: []string{
 				"fedora-release-iot",
@@ -538,7 +538,7 @@ func liveInstallerPackageSet(t *imageType) rpmmd.PackageSet {
 		},
 	}
 
-	if !common.VersionLessThan(t.arch.distro.osVersion, "39") {
+	if common.VersionGreaterThanOrEqual(t.arch.distro.osVersion, "39") {
 		ps = ps.Append(rpmmd.PackageSet{
 			Include: []string{
 				"anaconda-webui",
@@ -552,7 +552,7 @@ func liveInstallerPackageSet(t *imageType) rpmmd.PackageSet {
 func imageInstallerPackageSet(t *imageType) rpmmd.PackageSet {
 	ps := anacondaPackageSet(t)
 
-	if !common.VersionLessThan(t.arch.distro.osVersion, "39") {
+	if common.VersionGreaterThanOrEqual(t.arch.distro.osVersion, "39") {
 		ps = ps.Append(rpmmd.PackageSet{
 			Include: []string{
 				"anaconda-webui",

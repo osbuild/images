@@ -818,7 +818,7 @@ func newDistro(version int) distro.Distro {
 		minimalrawImgType,
 	)
 
-	if !common.VersionLessThan(rd.Releasever(), "38") {
+	if common.VersionGreaterThanOrEqual(rd.Releasever(), "38") {
 		// iot simplified installer was introduced in F38
 		x86_64.addImageTypes(
 			&platform.X86{
@@ -869,7 +869,7 @@ func newDistro(version int) distro.Distro {
 		)
 	}
 
-	if !common.VersionLessThan(rd.Releasever(), "39") {
+	if common.VersionGreaterThanOrEqual(rd.Releasever(), "39") {
 		// bootc was introduced in F39
 		x86_64.addImageTypes(
 			&platform.X86{
