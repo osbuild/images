@@ -355,7 +355,7 @@ func imageInstallerImage(workload workload.Workload,
 
 	// Enable anaconda-webui for Fedora >= 39
 	distro := t.Arch().Distro()
-	if !common.VersionLessThan(distro.Releasever(), "39") {
+	if common.VersionGreaterThanOrEqual(distro.Releasever(), "39") {
 		img.AdditionalAnacondaModules = []string{
 			"org.fedoraproject.Anaconda.Modules.Security",
 			"org.fedoraproject.Anaconda.Modules.Timezone",
@@ -410,7 +410,7 @@ func iotCommitImage(workload workload.Workload,
 
 	img.Platform = t.platform
 	img.OSCustomizations = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
-	if !common.VersionLessThan(d.Releasever(), "38") {
+	if common.VersionGreaterThanOrEqual(d.Releasever(), "38") {
 		// see https://github.com/ostreedev/ostree/issues/2840
 		img.OSCustomizations.Presets = []osbuild.Preset{
 			{
@@ -476,7 +476,7 @@ func iotContainerImage(workload workload.Workload,
 	d := t.arch.distro
 	img.Platform = t.platform
 	img.OSCustomizations = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
-	if !common.VersionLessThan(d.Releasever(), "38") {
+	if common.VersionGreaterThanOrEqual(d.Releasever(), "38") {
 		// see https://github.com/ostreedev/ostree/issues/2840
 		img.OSCustomizations.Presets = []osbuild.Preset{
 			{
@@ -605,7 +605,7 @@ func iotImage(workload workload.Workload,
 	img.OSName = "fedora-iot"
 	img.LockRoot = true
 
-	if !common.VersionLessThan(distro.Releasever(), "38") {
+	if common.VersionGreaterThanOrEqual(distro.Releasever(), "38") {
 		img.KernelOptionsAppend = append(img.KernelOptionsAppend, "coreos.no_persist_ip")
 		switch img.Platform.GetImageFormat() {
 		case platform.FORMAT_RAW:
@@ -657,7 +657,7 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 	rawImg.KernelOptionsAppend = []string{"modprobe.blacklist=vc4"}
 	rawImg.Keyboard = "us"
 	rawImg.Locale = "C.UTF-8"
-	if !common.VersionLessThan(t.arch.distro.osVersion, "38") {
+	if common.VersionGreaterThanOrEqual(t.arch.distro.osVersion, "38") {
 		rawImg.SysrootReadOnly = true
 		rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, "rw")
 	}
@@ -670,7 +670,7 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 	rawImg.OSName = "fedora"
 	rawImg.LockRoot = true
 
-	if !common.VersionLessThan(t.arch.distro.osVersion, "38") {
+	if common.VersionGreaterThanOrEqual(t.arch.distro.osVersion, "38") {
 		rawImg.IgnitionPlatform = "metal"
 		rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, "coreos.no_persist_ip")
 		if bpIgnition := customizations.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
