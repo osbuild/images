@@ -73,6 +73,9 @@ func vmdkCommonPackageSet(t *imageType) rpmmd.PackageSet {
 func iotCommitPackageSet(t *imageType) rpmmd.PackageSet {
 	ps := rpmmd.PackageSet{
 		Include: []string{
+			"NetworkManager",
+			"NetworkManager-wifi",
+			"NetworkManager-wwan",
 			"aardvark-dns",
 			"atheros-firmware",
 			"attr",
@@ -86,8 +89,8 @@ func iotCommitPackageSet(t *imageType) rpmmd.PackageSet {
 			"clevis-dracut",
 			"clevis-luks",
 			"clevis-pin-tpm2",
-			"containernetworking-plugins",
 			"container-selinux",
+			"containernetworking-plugins",
 			"coreutils",
 			"cracklib-dicts",
 			"criu",
@@ -100,6 +103,8 @@ func iotCommitPackageSet(t *imageType) rpmmd.PackageSet {
 			"dracut-network",
 			"e2fsprogs",
 			"efibootmgr",
+			"fdo-client",
+			"fdo-owner-cli",
 			"fedora-iot-config",
 			"fedora-release-iot",
 			"firewalld",
@@ -115,6 +120,7 @@ func iotCommitPackageSet(t *imageType) rpmmd.PackageSet {
 			"gzip",
 			"hostname",
 			"ignition",
+			"ignition-edge",
 			"ima-evm-utils",
 			"iproute",
 			"iputils",
@@ -127,9 +133,6 @@ func iotCommitPackageSet(t *imageType) rpmmd.PackageSet {
 			"linux-firmware",
 			"lvm2",
 			"netavark",
-			"NetworkManager",
-			"NetworkManager-wifi",
-			"NetworkManager-wwan",
 			"nss-altfiles",
 			"openssh-clients",
 			"openssh-server",
@@ -153,6 +156,7 @@ func iotCommitPackageSet(t *imageType) rpmmd.PackageSet {
 			"shadow-utils",
 			"skopeo",
 			"slirp4netns",
+			"ssh-key-dir",
 			"sssd-client",
 			"sudo",
 			"systemd",
@@ -171,17 +175,6 @@ func iotCommitPackageSet(t *imageType) rpmmd.PackageSet {
 			"zezere-ignition",
 			"zram-generator",
 		},
-	}
-
-	if common.VersionGreaterThanOrEqual(t.arch.distro.osVersion, "38") {
-		ps = ps.Append(rpmmd.PackageSet{
-			Include: []string{
-				"fdo-client",
-				"fdo-owner-cli",
-				"ignition-edge",
-				"ssh-key-dir",
-			},
-		})
 	}
 
 	return ps

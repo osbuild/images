@@ -445,7 +445,7 @@ func TestDistroFactory(t *testing.T) {
 			expected: rhel7.DistroFactory("rhel-7.9"),
 		},
 		{
-			strID:    "fedora-37",
+			strID:    "fedora-38",
 			expected: nil,
 		},
 		{
