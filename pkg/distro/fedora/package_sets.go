@@ -538,7 +538,6 @@ func liveInstallerPackageSet(t *imageType) rpmmd.PackageSet {
 		},
 	}
 
-	// We want to generate a preview image when rawhide is built
 	if !common.VersionLessThan(t.arch.distro.osVersion, "39") {
 		ps = ps.Append(rpmmd.PackageSet{
 			Include: []string{
@@ -553,7 +552,6 @@ func liveInstallerPackageSet(t *imageType) rpmmd.PackageSet {
 func imageInstallerPackageSet(t *imageType) rpmmd.PackageSet {
 	ps := anacondaPackageSet(t)
 
-	// We want to generate a preview image when rawhide is built
 	if !common.VersionLessThan(t.arch.distro.osVersion, "39") {
 		ps = ps.Append(rpmmd.PackageSet{
 			Include: []string{
