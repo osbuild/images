@@ -21,10 +21,6 @@ type fedoraFamilyDistro struct {
 
 var fedoraFamilyDistros = []fedoraFamilyDistro{
 	{
-		name:   "fedora-37",
-		distro: fedora.DistroFactory("fedora-37"),
-	},
-	{
 		name:   "fedora-38",
 		distro: fedora.DistroFactory("fedora-38"),
 	},
@@ -662,7 +658,7 @@ func TestFedora_ListArches(t *testing.T) {
 	}
 }
 
-func TestFedora37_GetArch(t *testing.T) {
+func TestFedora38_GetArch(t *testing.T) {
 	arches := []struct {
 		name                  string
 		errorExpected         bool
@@ -953,8 +949,8 @@ func TestDistroFactory(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			strID:    "fedora-37",
-			expected: fedora.DistroFactory("fedora-37"),
+			strID:    "fedora-38",
+			expected: fedora.DistroFactory("fedora-38"),
 		},
 		{
 			strID:    "fedora-38.1",

@@ -17,7 +17,7 @@ import (
 func NewTestOS() *OS {
 	repos := []rpmmd.RepoConfig{}
 	manifest := New()
-	runner := &runner.Fedora{Version: 37}
+	runner := &runner.Fedora{Version: 38}
 	build := NewBuild(&manifest, runner, repos, nil)
 	build.Checkpoint()
 

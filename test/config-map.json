@@ -49,7 +49,6 @@
     "distros": [
       "centos-8",
       "centos-9",
-      "fedora-37",
       "fedora-38",
       "fedora-39",
       "fedora-40",
