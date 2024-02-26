@@ -12,7 +12,7 @@ require (
 	github.com/Azure/go-autorest/autorest v0.11.29
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.12
 	github.com/BurntSushi/toml v1.3.2
-	github.com/aws/aws-sdk-go v1.50.24
+	github.com/aws/aws-sdk-go v1.50.25
 	github.com/containers/common v0.57.4
 	github.com/containers/image/v5 v5.29.2
 	github.com/gobwas/glob v0.2.3
@@ -35,7 +35,7 @@ require (
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
 	golang.org/x/oauth2 v0.17.0
 	golang.org/x/sys v0.17.0
-	google.golang.org/api v0.166.0
+	google.golang.org/api v0.167.0
 	gopkg.in/ini.v1 v1.67.0
 )
 
