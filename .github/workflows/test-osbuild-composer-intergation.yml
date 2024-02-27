@@ -1,4 +1,4 @@
-name: "[osbuild-composer integration]"
+name: "[integration]"
 
 on:
   pull_request:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   unit-tests:
-    name: "🛃 Unit tests"
+    name: "🛃 osbuild-composer unit tests"
     runs-on: ubuntu-20.04
     container:
       image: registry.fedoraproject.org/fedora:latest
@@ -46,7 +46,7 @@ jobs:
         run: go test -race ./...
 
   lint:
-    name: "⌨ Golang Lint"
+    name: "⌨ osbuild-composer Golang Lint"
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go 1.19
