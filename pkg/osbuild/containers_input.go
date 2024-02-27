@@ -50,3 +50,13 @@ func NewContainersInputForSources(containers []container.Spec) ContainersInput {
 func NewLocalContainersInputForSources(containers []container.Spec) ContainersInput {
 	return newContainersInputForSources(containers, true)
 }
+
+// NewContainersInputForSingleSource will return a containers input for a
+// single container spec. It will automatically select the right local or
+// remote input.
+func NewContainersInputForSingleSource(spec container.Spec) ContainersInput {
+	if spec.LocalStorage {
+		return NewLocalContainersInputForSources([]container.Spec{spec})
+	}
+	return NewContainersInputForSources([]container.Spec{spec})
+}

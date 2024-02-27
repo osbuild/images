@@ -228,7 +228,6 @@ func (p *OSTreeDeployment) doOSTreeSpec(pipeline *osbuild.Pipeline, repoPath str
 }
 
 func (p *OSTreeDeployment) doOSTreeContainerSpec(pipeline *osbuild.Pipeline, repoPath string, kernelOpts []string) string {
-	cont := *p.containerSpec
 	ref := p.ref
 
 	var targetImgref string
@@ -250,13 +249,7 @@ func (p *OSTreeDeployment) doOSTreeContainerSpec(pipeline *osbuild.Pipeline, rep
 		},
 	}
 
-	var images osbuild.ContainersInput
-	if cont.LocalStorage {
-		images = osbuild.NewLocalContainersInputForSources([]container.Spec{cont})
-	} else {
-		images = osbuild.NewContainersInputForSources([]container.Spec{cont})
-	}
-
+	images := osbuild.NewContainersInputForSingleSource(*p.containerSpec)
 	pipeline.AddStage(osbuild.NewOSTreeDeployContainerStage(options, images))
 	return ref
 }
