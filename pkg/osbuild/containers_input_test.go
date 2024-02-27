@@ -78,3 +78,42 @@ func TestNewLocalContainersInputForSource(t *testing.T) {
 	require.Nil(t, err)
 	assert.Equal(t, string(json), expectedJson)
 }
+
+func TestNewContainersInputForSingleSourceLocal(t *testing.T) {
+	expectedJson := `{
+  "type": "org.osbuild.containers-storage",
+  "origin": "org.osbuild.source",
+  "references": {
+    "id1": {
+      "name": "local-name1"
+    }
+  }
+}`
+	containerInputs := osbuild.NewContainersInputForSingleSource(container.Spec{
+		ImageID:      "id1",
+		LocalName:    "local-name1",
+		LocalStorage: true,
+	})
+	json, err := json.MarshalIndent(containerInputs, "", "  ")
+	require.Nil(t, err)
+	assert.Equal(t, string(json), expectedJson)
+}
+
+func TestNewContainersInputForSingleSourceNotLocal(t *testing.T) {
+	expectedJson := `{
+  "type": "org.osbuild.containers",
+  "origin": "org.osbuild.source",
+  "references": {
+    "id1": {
+      "name": "name1"
+    }
+  }
+}`
+	containerInputs := osbuild.NewContainersInputForSingleSource(container.Spec{
+		ImageID:   "id1",
+		LocalName: "name1",
+	})
+	json, err := json.MarshalIndent(containerInputs, "", "  ")
+	require.Nil(t, err)
+	assert.Equal(t, string(json), expectedJson)
+}
