@@ -33,6 +33,11 @@ func TestNewContainersInputForSource(t *testing.T) {
 			ImageID:   "id2",
 			LocalName: "local-name2",
 		},
+		{
+			ImageID:      "id-local",
+			LocalName:    "local-container",
+			LocalStorage: true,
+		},
 	})
 	json, err := json.MarshalIndent(containerInputs, "", "  ")
 	require.Nil(t, err)
@@ -62,6 +67,11 @@ func TestNewLocalContainersInputForSource(t *testing.T) {
 			ImageID:      "id2",
 			LocalName:    "local-name2",
 			LocalStorage: true,
+		},
+		{
+			ImageID:      "id-not-local",
+			LocalName:    "not-local",
+			LocalStorage: false,
 		},
 	})
 	json, err := json.MarshalIndent(containerInputs, "", "  ")
