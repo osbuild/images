@@ -1,6 +1,7 @@
 package osbuild
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -33,4 +34,30 @@ func TestNewContainersStorageSource(t *testing.T) {
 	assert.PanicsWithError(t, `item "sha256:foo" has invalid image id`, func() {
 		source.AddItem("sha256:foo")
 	})
+}
+
+func TestNewContainersStorageSourceJSON(t *testing.T) {
+	imageID := "sha256:c2ecf25cf190e76b12b07436ad5140d4ba53d8a136d498705e57a006837a720f"
+	source := NewContainersStorageSource()
+	source.AddItem(imageID)
+
+	jsonOutput, err := json.MarshalIndent(source, "", "  ")
+	assert.NoError(t, err)
+	assert.Equal(t, string(jsonOutput), `{
+  "items": {
+    "sha256:c2ecf25cf190e76b12b07436ad5140d4ba53d8a136d498705e57a006837a720f": {}
+  }
+}`)
+
+	// add a second
+	imageID = "sha256:aabbcc5cf190e76b12b07436ad5140d4ba53d8a136d498705e57a006837a720f"
+	source.AddItem(imageID)
+	jsonOutput, err = json.MarshalIndent(source, "", "  ")
+	assert.NoError(t, err)
+	assert.Equal(t, string(jsonOutput), `{
+  "items": {
+    "sha256:aabbcc5cf190e76b12b07436ad5140d4ba53d8a136d498705e57a006837a720f": {},
+    "sha256:c2ecf25cf190e76b12b07436ad5140d4ba53d8a136d498705e57a006837a720f": {}
+  }
+}`)
 }
