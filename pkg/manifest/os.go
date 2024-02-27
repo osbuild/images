@@ -406,28 +406,13 @@ func (p *OS) serialize() osbuild.Pipeline {
 	}
 
 	if len(p.containerSpecs) > 0 {
-		images := osbuild.NewContainersInputForSources(p.containerSpecs)
-		localImages := osbuild.NewLocalContainersInputForSources(p.containerSpecs)
-
 		var storagePath string
-
 		if containerStore := p.OSCustomizations.ContainersStorage; containerStore != nil {
 			storagePath = *containerStore
-			storageConf := "/etc/containers/storage.conf"
-
-			containerStoreOpts := osbuild.NewContainerStorageOptions(storageConf, storagePath)
-			pipeline.AddStage(osbuild.NewContainersStorageConfStage(containerStoreOpts))
 		}
 
-		if len(images.References) > 0 {
-			manifests := osbuild.NewFilesInputForManifestLists(p.containerSpecs)
-			skopeo := osbuild.NewSkopeoStageWithContainersStorage(storagePath, images, manifests)
-			pipeline.AddStage(skopeo)
-		}
-
-		if len(localImages.References) > 0 {
-			skopeo := osbuild.NewSkopeoStageWithContainersStorage(storagePath, localImages, nil)
-			pipeline.AddStage(skopeo)
+		for _, stage := range osbuild.GenContainerStorageStages(storagePath, p.containerSpecs) {
+			pipeline.AddStage(stage)
 		}
 	}
 
