@@ -5,6 +5,10 @@ import (
 	"encoding/json"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/osbuild/images/pkg/container"
 )
 
 func TestSource_UnmarshalJSON(t *testing.T) {
@@ -112,4 +116,104 @@ func TestSource_UnmarshalJSON(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGenSourcesTrivial(t *testing.T) {
+	sources, err := GenSources(nil, nil, nil, nil)
+	assert.NoError(t, err)
+
+	jsonOutput, err := json.MarshalIndent(sources, "", "  ")
+	assert.NoError(t, err)
+	assert.Equal(t, string(jsonOutput), `{}`)
+}
+
+func TestGenSourcesContainerStorage(t *testing.T) {
+	imageID := "sha256:c2ecf25cf190e76b12b07436ad5140d4ba53d8a136d498705e57a006837a720f"
+	containers := []container.Spec{
+		{
+			ImageID:      imageID,
+			LocalStorage: true,
+		},
+	}
+	sources, err := GenSources(nil, nil, nil, containers)
+	assert.NoError(t, err)
+
+	jsonOutput, err := json.MarshalIndent(sources, "", "  ")
+	assert.NoError(t, err)
+	assert.Equal(t, string(jsonOutput), `{
+  "org.osbuild.containers-storage": {
+    "items": {
+      "sha256:c2ecf25cf190e76b12b07436ad5140d4ba53d8a136d498705e57a006837a720f": {}
+    }
+  }
+}`)
+}
+
+func TestGenSourcesSkopeo(t *testing.T) {
+	imageID := "sha256:c2ecf25cf190e76b12b07436ad5140d4ba53d8a136d498705e57a006837a720f"
+	digest := "sha256:aabbcc5cf190e76b12b07436ad5140d4ba53d8a136d498705e57a006837a720f"
+	containers := []container.Spec{
+		{
+			Source:  "some-source",
+			Digest:  digest,
+			ImageID: imageID,
+		},
+	}
+	sources, err := GenSources(nil, nil, nil, containers)
+	assert.NoError(t, err)
+
+	jsonOutput, err := json.MarshalIndent(sources, "", "  ")
+	assert.NoError(t, err)
+	assert.Equal(t, string(jsonOutput), `{
+  "org.osbuild.skopeo": {
+    "items": {
+      "sha256:c2ecf25cf190e76b12b07436ad5140d4ba53d8a136d498705e57a006837a720f": {
+        "image": {
+          "name": "some-source",
+          "digest": "sha256:aabbcc5cf190e76b12b07436ad5140d4ba53d8a136d498705e57a006837a720f"
+        }
+      }
+    }
+  }
+}`)
+}
+
+func TestGenSourcesWithSkopeoIndex(t *testing.T) {
+	imageID := "sha256:c2ecf25cf190e76b12b07436ad5140d4ba53d8a136d498705e57a006837a720f"
+	digest := "sha256:aabbcc5cf190e76b12b07436ad5140d4ba53d8a136d498705e57a006837a720f"
+	listDigest := "sha256:ffeeaabbcc90e76b12b07436ad5140d4ba53d8a136d498705e57a006837a720f"
+	containers := []container.Spec{
+		{
+			Source:     "some-source",
+			Digest:     digest,
+			ListDigest: listDigest,
+			ImageID:    imageID,
+		},
+	}
+	sources, err := GenSources(nil, nil, nil, containers)
+	assert.NoError(t, err)
+
+	jsonOutput, err := json.MarshalIndent(sources, "", "  ")
+	assert.NoError(t, err)
+	assert.Equal(t, string(jsonOutput), `{
+  "org.osbuild.skopeo": {
+    "items": {
+      "sha256:c2ecf25cf190e76b12b07436ad5140d4ba53d8a136d498705e57a006837a720f": {
+        "image": {
+          "name": "some-source",
+          "digest": "sha256:aabbcc5cf190e76b12b07436ad5140d4ba53d8a136d498705e57a006837a720f"
+        }
+      }
+    }
+  },
+  "org.osbuild.skopeo-index": {
+    "items": {
+      "sha256:ffeeaabbcc90e76b12b07436ad5140d4ba53d8a136d498705e57a006837a720f": {
+        "image": {
+          "name": "some-source"
+        }
+      }
+    }
+  }
+}`)
 }
