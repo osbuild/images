@@ -342,21 +342,11 @@ func (m RawManifest) Digest() (digest.Digest, error) {
 }
 
 func getImageRef(target reference.Named, local bool) (types.ImageReference, error) {
-
-	if !local {
-		ref, err := docker.NewReference(target)
-		if err != nil {
-			return nil, err
-		}
-		return ref, nil
-	} else {
-		ref, err := alltransports.ParseImageName(fmt.Sprintf("containers-storage:%s", target))
-		if err != nil {
-			fmt.Printf("FAILED %s\n", err)
-			return nil, err
-		}
-		return ref, nil
+	if local {
+		return alltransports.ParseImageName(fmt.Sprintf("containers-storage:%s", target))
 	}
+
+	return docker.NewReference(target)
 }
 
 // GetManifest fetches the raw manifest data from the server. If digest is not empty
