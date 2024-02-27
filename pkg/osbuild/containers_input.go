@@ -13,11 +13,12 @@ type ContainersInput struct {
 	References map[string]ContainersInputSourceRef `json:"references"`
 }
 
-func NewContainersInputForSources(containers []container.Spec) ContainersInput {
+func (c ContainersInput) isStageInputs() {}
+
+func newContainersInputForSources(containers []container.Spec, forLocal bool) ContainersInput {
 	refs := make(map[string]ContainersInputSourceRef, len(containers))
 	for _, c := range containers {
-		if c.LocalStorage {
-			// skip containers that are coming from local containers storage
+		if forLocal != c.LocalStorage {
 			continue
 		}
 		ref := ContainersInputSourceRef{
@@ -26,35 +27,26 @@ func NewContainersInputForSources(containers []container.Spec) ContainersInput {
 		refs[c.ImageID] = ref
 	}
 
+	var sourceType string
+	if forLocal {
+		sourceType = "org.osbuild.containers-storage"
+	} else {
+		sourceType = "org.osbuild.containers"
+	}
+
 	return ContainersInput{
 		References: refs,
 		inputCommon: inputCommon{
-			Type:   "org.osbuild.containers",
+			Type:   sourceType,
 			Origin: InputOriginSource,
 		},
 	}
+}
+
+func NewContainersInputForSources(containers []container.Spec) ContainersInput {
+	return newContainersInputForSources(containers, false)
 }
 
 func NewLocalContainersInputForSources(containers []container.Spec) ContainersInput {
-	refs := make(map[string]ContainersInputSourceRef, len(containers))
-	for _, c := range containers {
-		if !c.LocalStorage {
-			// skip containers that are not in the local containers storage
-			continue
-		}
-		ref := ContainersInputSourceRef{
-			Name: c.LocalName,
-		}
-		refs[c.ImageID] = ref
-	}
-
-	return ContainersInput{
-		References: refs,
-		inputCommon: inputCommon{
-			Type:   "org.osbuild.containers-storage",
-			Origin: InputOriginSource,
-		},
-	}
+	return newContainersInputForSources(containers, true)
 }
-
-func (c ContainersInput) isStageInputs() {}
