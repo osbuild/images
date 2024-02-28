@@ -75,8 +75,8 @@ func validateSupportedConfig(supported []string, conf reflect.Value) *validation
 			}
 			continue
 		}
-		tag := field.Tag.Get("json")
-		tag = strings.Split(tag, ",")[0] // strip things like omitempty
+
+		tag := jsonTagFor(field)
 		if subList, listed := subMap[tag]; listed {
 			subStruct := conf.Field(fieldIdx)
 			if subStruct.IsZero() {
@@ -118,9 +118,138 @@ func validateSupportedConfig(supported []string, conf reflect.Value) *validation
 	return nil
 }
 
+func jsonTagFor(f reflect.StructField) string {
+	tag := f.Tag.Get("json")
+	return strings.Split(tag, ",")[0]
+}
+
+func fieldByTag(p reflect.Value, tag string) (reflect.Value, error) {
+	for idx := 0; idx < p.Type().NumField(); idx++ {
+		c := p.Type().Field(idx)
+		if c.Anonymous {
+			// embedded struct: flatten with the parent
+			value, err := fieldByTag(p.Field(idx), tag)
+			if err != nil {
+				// tag not found in embedded struct, continue to check the rest
+				continue
+			}
+			return value, nil
+		}
+		if jsonTagFor(c) == tag {
+			return p.Field(idx), nil
+		}
+	}
+
+	return reflect.Value{}, fmt.Errorf("%s does not have a field with JSON tag %q", p.Type().Name(), tag)
+}
+
+func validateRequiredConfig(required []string, conf reflect.Value) *validationError {
+	// create two maps from the required list:
+	//
+	// 1. requiredMap contains the keys that must exist at this level as
+	//    non-zero values. A key in this map can be the name of a substructure
+	//    of the blueprint, like "Kernel", in which case that indicates that
+	//    the "Kernel" section should be non-zero, regardless of which subparts
+	//    of that structure are required or supported.
+	//    This differs from the supportedMap in validateSupportedConfig() in
+	//    that the requiredMap also lists keys that have required subparts,
+	//    whether they are wholly required or not.
+	//
+	// 2. subMap contains the keys that have sub-parts that are required. Each
+	//    substructure will have to be checked recursively until we reach
+	//    required leaf nodes.
+
+	requiredMap := make(map[string]bool)
+	subMap := make(map[string][]string)
+	for _, key := range required {
+		if strings.Contains(key, ".") {
+			// nested key: add to sub
+			parts := strings.SplitN(key, ".", 2)
+			subList := subMap[parts[0]]
+			subList = append(subList, parts[1])
+			subMap[parts[0]] = subList
+
+			// if any subkey is required, then the top level one is as well
+			requiredMap[parts[0]] = true
+		} else {
+			requiredMap[key] = true
+		}
+	}
+
+	for key := range requiredMap {
+		// requiredMap contains keys that are required at this level, whether
+		// they have subkeys or not.
+		// Their values should be non-zero but only for certain types:
+		//   Struct, Pointer, Slice, and String
+		// The Zero value for other types could be a valid value, so we
+		// shouldn't assume that a zero value is the same as a missing one.
+		value, err := fieldByTag(conf, key)
+		if err != nil {
+			return &validationError{message: err.Error(), revPath: []string{key}}
+		}
+		switch value.Kind() {
+		case reflect.Ptr, reflect.Struct, reflect.String, reflect.Slice:
+			// Required should only be used for Pointer, String, and Slice types.
+			// For other types, the zero value can be valid and not indicate a
+			// missing value.
+			if value.IsZero() {
+				return &validationError{message: "required", revPath: []string{key}}
+			}
+		}
+	}
+
+	for key := range subMap {
+		// subMap contains keys that should contain specific subkeys.
+		// If the key's value is Zero, that's an error, but that should be
+		// caught by the requiredMap checks above.
+		// If it's a Struct, descend into it.
+		// If it's s Slice, descend into each element.
+		value, err := fieldByTag(conf, key)
+		if err != nil {
+			return &validationError{message: err.Error(), revPath: []string{key}}
+		}
+		if value.Kind() == reflect.Ptr {
+			// Dereference pointer before validating.
+			// We don't need to worry about Zero values because of the previous
+			// check in iteration through requiredMap above.
+			value = value.Elem()
+		}
+		switch value.Kind() {
+		case reflect.Struct:
+			// Descend into map
+			if err := validateRequiredConfig(subMap[key], value); err != nil {
+				err.revPath = append(err.revPath, key)
+				return err
+			}
+		case reflect.Slice:
+			// iterate over slice and validate each element
+			for idx := 0; idx < value.Len(); idx++ {
+				if err := validateRequiredConfig(subMap[key], value.Index(idx)); err != nil {
+					err.revPath = append(err.revPath, fmt.Sprintf("%s[%d]", key, idx))
+					return err
+				}
+			}
+		case reflect.Ptr:
+			// if it's a pointer, it's already been checked for zero value
+			// above, so dereference and descend
+			if err := validateRequiredConfig(subMap[key], value.Elem()); err != nil {
+				err.revPath = append(err.revPath, key)
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 func ValidateConfig(t ImageTypeValidator, bp blueprint.Blueprint) error {
 	bpv := reflect.ValueOf(bp)
 	if err := validateSupportedConfig(t.SupportedBlueprintOptions(), bpv); err != nil {
+		return err
+	}
+
+	// note that validateRequiredConfig() returns a *validationError not a
+	// normal "error", hence the special handling below
+	if err := validateRequiredConfig(t.RequiredBlueprintOptions(), bpv); err != nil {
 		return err
 	}
 
