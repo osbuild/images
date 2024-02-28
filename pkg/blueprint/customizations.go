@@ -149,11 +149,15 @@ type CACustomization struct {
 }
 
 type CustomizationError struct {
+	// Reverse path to the customization that caused the error.
+	RevPath []string
 	Message string
 }
 
-func (e *CustomizationError) Error() string {
-	return e.Message
+func (e CustomizationError) Error() string {
+	path := e.RevPath
+	slices.Reverse(path)
+	return fmt.Sprintf("%s: %s", strings.Join(path, "."), e.Message)
 }
 
 // CheckCustomizations returns an error of type `CustomizationError`
@@ -196,7 +200,7 @@ func (c *Customizations) CheckAllowed(allowed ...string) error {
 		}
 
 		if !empty && !allowMap[t.Field(i).Name] {
-			return &CustomizationError{fmt.Sprintf("'%s' is not allowed", t.Field(i).Name)}
+			return &CustomizationError{Message: "is not allowed", RevPath: []string{t.Field(i).Name}}
 		}
 	}
 
