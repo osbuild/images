@@ -9,19 +9,27 @@ import (
 )
 
 func validateSupportedConfig(supported []string, conf reflect.Value) error {
-	// split supported list into two maps:
+
+	// Construct two maps:
+	//  - subMap represents the keys on the current level of the recursion that
+	//  have sub-keys in the list of supported customizations:
+	//  - supportedMap represents the keys on the current level that are fully
+	//  supported.
 	//
-	// 1. supportedMap contains the keys that can exist at this level as
-	//    non-zero values. A key in this map indicates that the option is
-	//    supported and, in the case of objects/structures, the whole
-	//    substructure is supported.
+	// For example, for the following customizations
+	//   customizations.kernel.name
+	//   customizations.locale
 	//
-	// 2. subMap contains the keys that have sub-parts that are supported. Each
-	//    substructure will have to be checked recursively until we reach leaf
-	//    nodes.
+	// subMap will be
+	//   {"customizations": ["kernel.name", "locale"]}
+	//
+	// When the function is then recursively called with just the "locale"
+	// element, supportedMap will be
+	//   {"locale": true}
 
 	supportedMap := make(map[string]bool)
 	subMap := make(map[string][]string)
+
 	for _, key := range supported {
 		if strings.Contains(key, ".") {
 			// nested key: add top level component as key in subMap and the
@@ -77,12 +85,6 @@ func validateSupportedConfig(supported []string, conf reflect.Value) error {
 	}
 
 	return nil
-}
-
-func fieldByTag(p reflect.Value, tag string) reflect.Value {
-	for idx := 0; idx < p.Len(); idx++ {
-		if p.FieldByIndex(idx).
-	}
 }
 
 func validateRequiredConfig(required []string, conf reflect.Value) error {
