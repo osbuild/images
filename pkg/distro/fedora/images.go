@@ -354,18 +354,16 @@ func imageInstallerImage(workload workload.Workload,
 		img.UnattendedKickstart = instCust.Unattended
 	}
 
-	distro := t.Arch().Distro()
-	if common.VersionGreaterThanOrEqual(distro.Releasever(), "39") {
-		if img.UnattendedKickstart {
-			// NOTE: this is not supported right now because the
-			// image-installer on Fedora isn't working when unattended.
-			// These options are probably necessary but could change.
-			// Unattended/non-interactive installations are better set to text
-			// time since they might be running headless and a UI is
-			// unnecessary.
-			img.AdditionalKernelOpts = []string{"inst.text", "inst.noninteractive"}
-		}
+	if img.UnattendedKickstart {
+		// NOTE: this is not supported right now because the
+		// image-installer on Fedora isn't working when unattended.
+		// These options are probably necessary but could change.
+		// Unattended/non-interactive installations are better set to text
+		// time since they might be running headless and a UI is
+		// unnecessary.
+		img.AdditionalKernelOpts = []string{"inst.text", "inst.noninteractive"}
 	}
+
 	img.AdditionalAnacondaModules = append(img.AdditionalAnacondaModules, "org.fedoraproject.Anaconda.Modules.Users")
 
 	img.Platform = t.platform
