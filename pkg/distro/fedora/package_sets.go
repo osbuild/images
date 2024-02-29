@@ -546,7 +546,7 @@ func liveInstallerPackageSet(t *imageType) rpmmd.PackageSet {
 		},
 	}
 
-	if common.VersionGreaterThanOrEqual(t.arch.distro.osVersion, "41") {
+	if common.VersionGreaterThanOrEqual(t.arch.distro.osVersion, RAWHIDE) {
 		ps = ps.Append(rpmmd.PackageSet{
 			Include: []string{
 				"anaconda-webui",
@@ -560,7 +560,7 @@ func liveInstallerPackageSet(t *imageType) rpmmd.PackageSet {
 func imageInstallerPackageSet(t *imageType) rpmmd.PackageSet {
 	ps := anacondaPackageSet(t)
 
-	if common.VersionGreaterThanOrEqual(t.arch.distro.osVersion, "41") {
+	if common.VersionGreaterThanOrEqual(t.arch.distro.osVersion, RAWHIDE) {
 		ps = ps.Append(rpmmd.PackageSet{
 			Include: []string{
 				"anaconda-webui",
