@@ -356,11 +356,6 @@ func imageInstallerImage(workload workload.Workload,
 
 	distro := t.Arch().Distro()
 	if common.VersionGreaterThanOrEqual(distro.Releasever(), "39") {
-		img.AdditionalAnacondaModules = []string{
-			"org.fedoraproject.Anaconda.Modules.Security",
-			"org.fedoraproject.Anaconda.Modules.Timezone",
-			"org.fedoraproject.Anaconda.Modules.Localization",
-		}
 		if img.UnattendedKickstart {
 			// NOTE: this is not supported right now because the
 			// image-installer on Fedora isn't working when unattended.
