@@ -364,8 +364,6 @@ func imageInstallerImage(workload workload.Workload,
 		img.AdditionalKernelOpts = []string{"inst.text", "inst.noninteractive"}
 	}
 
-	img.AdditionalAnacondaModules = append(img.AdditionalAnacondaModules, "org.fedoraproject.Anaconda.Modules.Users")
-
 	img.Platform = t.platform
 	img.Workload = workload
 	img.OSCustomizations = osCustomizations(t, packageSets[osPkgsKey], containers, customizations)
