@@ -23,7 +23,6 @@ import (
 	"github.com/containers/image/v5/types"
 	"github.com/containers/storage"
 	"github.com/containers/storage/pkg/archive"
-	"github.com/containers/storage/pkg/ioutils"
 	digest "github.com/opencontainers/go-digest"
 	imgspecv1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/sirupsen/logrus"
@@ -125,25 +124,20 @@ func (s *storageImageSource) GetBlob(ctx context.Context, info types.BlobInfo, c
 	}
 	defer rc.Close()
 
-	tmpFile, err := tmpdir.CreateBigFileTemp(s.systemContext, "")
+	tmpFile, err := os.CreateTemp(tmpdir.TemporaryDirectoryForBigFiles(s.systemContext), "")
 	if err != nil {
 		return nil, 0, err
 	}
 	success := false
-	tmpFileRemovePending := true
 	defer func() {
 		if !success {
 			tmpFile.Close()
-			if tmpFileRemovePending {
-				os.Remove(tmpFile.Name())
-			}
 		}
 	}()
 	// On Unix and modern Windows (2022 at least) we can eagerly unlink the file to ensure it's automatically
 	// cleaned up on process termination (or if the caller forgets to invoke Close())
-	// On older versions of Windows we will have to fallback to relying on the caller to invoke Close()
 	if err := os.Remove(tmpFile.Name()); err != nil {
-		tmpFileRemovePending = false
+		return nil, 0, err
 	}
 
 	if _, err := io.Copy(tmpFile, rc); err != nil {
@@ -154,14 +148,6 @@ func (s *storageImageSource) GetBlob(ctx context.Context, info types.BlobInfo, c
 	}
 
 	success = true
-
-	if tmpFileRemovePending {
-		return ioutils.NewReadCloserWrapper(tmpFile, func() error {
-			tmpFile.Close()
-			return os.Remove(tmpFile.Name())
-		}), n, nil
-	}
-
 	return tmpFile, n, nil
 }
 
