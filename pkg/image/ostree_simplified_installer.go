@@ -30,7 +30,7 @@ type OSTreeSimplifiedInstaller struct {
 	ExtraBasePackages rpmmd.PackageSet
 
 	// ISO label template (architecture-free)
-	ISOLabelTempl string
+	ISOLabelTmpl string
 
 	// Product string for ISO buildstamp
 	Product string
@@ -97,7 +97,7 @@ func (img *OSTreeSimplifiedInstaller) InstantiateManifest(m *manifest.Manifest,
 	coiPipeline.Variant = img.Variant
 	coiPipeline.AdditionalDracutModules = img.AdditionalDracutModules
 
-	isoLabel := fmt.Sprintf(img.ISOLabelTempl, img.Platform.GetArch())
+	isoLabel := fmt.Sprintf(img.ISOLabelTmpl, img.Platform.GetArch())
 
 	bootTreePipeline := manifest.NewEFIBootTree(buildPipeline, img.Product, img.OSVersion)
 	bootTreePipeline.Platform = img.Platform

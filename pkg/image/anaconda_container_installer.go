@@ -25,13 +25,13 @@ type AnacondaContainerInstaller struct {
 
 	SquashfsCompression string
 
-	ISOLabelTempl string
-	Product       string
-	Variant       string
-	OSName        string
-	Ref           string
-	OSVersion     string
-	Release       string
+	ISOLabelTmpl string
+	Product      string
+	Variant      string
+	OSName       string
+	Ref          string
+	OSVersion    string
+	Release      string
 
 	ContainerSource container.SourceSpec
 
@@ -90,7 +90,7 @@ func (img *AnacondaContainerInstaller) InstantiateManifest(m *manifest.Manifest,
 	anacondaPipeline.AdditionalDrivers = img.AdditionalDrivers
 
 	// TODO: replace isoLabelTmpl with more high-level properties
-	isoLabel := fmt.Sprintf(img.ISOLabelTempl, img.Platform.GetArch())
+	isoLabel := fmt.Sprintf(img.ISOLabelTmpl, img.Platform.GetArch())
 
 	rootfsImagePipeline := manifest.NewISORootfsImg(buildPipeline, anacondaPipeline)
 	rootfsImagePipeline.Size = 4 * common.GibiByte
