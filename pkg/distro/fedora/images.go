@@ -326,7 +326,7 @@ func liveInstallerImage(workload workload.Workload,
 
 	d := t.arch.distro
 
-	img.ISOLabelTempl = d.isolabelTmpl
+	img.ISOLabelTmpl = d.isolabelTmpl
 	img.Product = d.product
 	img.OSName = "fedora"
 	img.OSVersion = d.osVersion
@@ -375,7 +375,7 @@ func imageInstallerImage(workload workload.Workload,
 
 	d := t.arch.distro
 
-	img.ISOLabelTempl = d.isolabelTmpl
+	img.ISOLabelTmpl = d.isolabelTmpl
 	img.Product = d.product
 	img.OSName = "fedora"
 	img.OSVersion = d.osVersion
@@ -537,7 +537,7 @@ func iotInstallerImage(workload workload.Workload,
 
 	img.SquashfsCompression = "lz4"
 
-	img.ISOLabelTempl = d.isolabelTmpl
+	img.ISOLabelTmpl = d.isolabelTmpl
 	img.Product = d.product
 	img.Variant = "IoT"
 	img.OSName = "fedora-iot"
@@ -694,7 +694,7 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 	}
 
 	d := t.arch.distro
-	img.ISOLabelTempl = d.isolabelTmpl
+	img.ISOLabelTmpl = d.isolabelTmpl
 	img.Product = d.product
 	img.Variant = "iot"
 	img.OSName = "fedora"
