@@ -35,6 +35,7 @@ type AnacondaOSTreeInstaller struct {
 
 	SquashfsCompression string
 
+	ISOLabel     string
 	ISOLabelTmpl string
 	Product      string
 	Variant      string
@@ -94,8 +95,14 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 	}
 	anacondaPipeline.AdditionalDrivers = img.AdditionalDrivers
 
-	// TODO: replace isoLabelTmpl with more high-level properties
-	isoLabel := fmt.Sprintf(img.ISOLabelTmpl, img.Platform.GetArch())
+	var isoLabel string
+
+	if len(img.ISOLabel) > 0 {
+		isoLabel = img.ISOLabel
+	} else {
+		// TODO: replace isoLabelTmpl with more high-level properties
+		isoLabel = fmt.Sprintf(img.ISOLabelTmpl, img.Platform.GetArch())
+	}
 
 	rootfsImagePipeline := manifest.NewISORootfsImg(buildPipeline, anacondaPipeline)
 	rootfsImagePipeline.Size = 4 * common.GibiByte
