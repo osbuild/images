@@ -696,7 +696,7 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 	d := t.arch.distro
 	img.ISOLabelTmpl = d.isolabelTmpl
 	img.Product = d.product
-	img.Variant = "iot"
+	img.Variant = "IoT"
 	img.OSName = "fedora"
 	img.OSVersion = d.osVersion
 
