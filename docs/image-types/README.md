@@ -23,6 +23,6 @@ the uncompressed image to any bootable device such as an SD card.
 
 ``` bash
 
-xz -d <uuid-minimal-raw.img.xz> -o <minimal-raw.img>
+xz -d <uuid-minimal-disk.raw.xz> -o <minimal-disk.raw>
 
 ```
