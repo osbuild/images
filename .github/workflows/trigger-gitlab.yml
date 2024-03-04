@@ -87,9 +87,4 @@ jobs:
           touch ~/.ssh/known_hosts
           ssh-keyscan -t rsa gitlab.com >> ~/.ssh/known_hosts
           git remote add ci git@gitlab.com:redhat/services/products/image-builder/ci/images.git
-          SKIP_CI=$(cat SKIP_CI.txt)
-          if [[ "${SKIP_CI}" == true ]];then
-            git push -f -o ci.variable="SKIP_CI=true" ci
-          else
-            git push -f ci 
-          fi
+          git push -f ci
