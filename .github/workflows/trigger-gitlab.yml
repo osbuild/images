@@ -1,5 +1,6 @@
-# inspired by rhinstaller/anaconda
-
+# This workflow runs on success of the GitLab workflow.
+# If we run it on PR or merge_group, then we can't use secrets.
+---
 name: Start GitLab CI
 
 on:
@@ -9,6 +10,7 @@ on:
 
 jobs:
   trigger-gitlab:
+    # this should never fail, but check it anyway in case we ever change it
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     env:
@@ -30,7 +32,10 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
 
-      - uses: octokit/request-action@v2.x
+      - name: Get open PRs
+        # Since this workflow doesn't run on a PR trigger, we need to find the
+        # PR number by querying the GH API and selecting on the commit ID
+        uses: octokit/request-action@v2.x
         id: fetch_pulls
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -49,6 +54,7 @@ jobs:
 
           PR=$(jq -rc '.[] | select(.head.sha | contains("${{ github.event.workflow_run.head_sha }}")) | select(.state | contains("open"))' "$PR_DATA" | jq -r .number)
           if [ ! -z "$PR" ]; then
+            # Create branch named PR-<number> to push to GitLab
             echo "pr_branch=PR-$PR" >> "$GITHUB_OUTPUT"
             git checkout -b PR-$PR
           else
@@ -91,5 +97,5 @@ jobs:
           if [[ "${SKIP_CI}" == true ]];then
             git push -f -o ci.variable="SKIP_CI=true" ci
           else
-            git push -f ci 
+            git push -f ci
           fi
