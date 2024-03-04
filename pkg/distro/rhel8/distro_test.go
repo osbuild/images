@@ -220,7 +220,7 @@ func TestFilenameFromType(t *testing.T) {
 			name: "minimal-raw",
 			args: args{"minimal-raw"},
 			want: wantResult{
-				filename: "raw.img.xz",
+				filename: "disk.raw.xz",
 				mimeType: "application/xz",
 			},
 		},
