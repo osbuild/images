@@ -46,7 +46,13 @@ jobs:
       - name: Checkout branch
         id: pr_data
         run: |
-          PR=$(jq -rc '.[] | select(.head.sha | contains("${{ github.event.workflow_run.head_sha }}")) | select(.state | contains("open"))' <<< ${{ steps.fetch_pulls.outputs.data }} | jq -r .number)
+          PR_DATA=$(mktemp)
+          # use uuid as a file terminator to avoid conflicts with data content
+          cat > "$PR_DATA" <<'a21b3e7f-d5eb-44a3-8be0-c2412851d2e6'
+          ${{ steps.fetch_pulls.outputs.data }}
+          a21b3e7f-d5eb-44a3-8be0-c2412851d2e6
+
+          PR=$(jq -rc '.[] | select(.head.sha | contains("${{ github.event.workflow_run.head_sha }}")) | select(.state | contains("open"))' "$PR_DATA" | jq -r .number)
           if [ ! -z "$PR" ]; then
             # Create branch named PR-<number> to push to GitLab
             echo "pr_branch=PR-$PR" >> "$GITHUB_OUTPUT"
