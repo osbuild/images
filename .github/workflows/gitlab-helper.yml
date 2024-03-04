@@ -1,7 +1,9 @@
+# This workflow runs on PRs and the merge queue and is only responsible for
+# starting the "Start GitLab CI" workflow in a way that makes it possible to
+# use secrets.
+---
 name: GitLab
 
-# NOTE(mhayden): Restricting branches prevents jobs from being doubled since
-# a push to a pull request triggers two events.
 on:
   pull_request:
     branches:
