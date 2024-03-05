@@ -23,21 +23,6 @@
       "qcow2"
     ]
   },
-  "./configs/all-with-oscap.json": {
-    "distros": [
-      "rhel-9.1",
-      "rhel-9.2",
-      "rhel-8.7",
-      "rhel-8.8",
-      "rhel-8.9",
-      "centos-8",
-      "centos-9",
-      "fedora*"
-    ],
-    "image-types": [
-      "qcow2"
-    ]
-  },
   "./configs/disable-lm_sensors.json": {
     "distros": [
       "rhel-8.4"
@@ -192,6 +177,21 @@
   },
   "./configs/minimal.json": {
     "distros": [
+      "fedora*"
+    ],
+    "image-types": [
+      "qcow2"
+    ]
+  },
+  "./configs/oscap-generic.json": {
+    "distros": [
+      "rhel-9.1",
+      "rhel-9.2",
+      "rhel-8.7",
+      "rhel-8.8",
+      "rhel-8.9",
+      "centos-8",
+      "centos-9",
       "fedora*"
     ],
     "image-types": [
