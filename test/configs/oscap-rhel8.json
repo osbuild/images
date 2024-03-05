@@ -1,0 +1,16 @@
+{
+  "name": "oscap-rhel8",
+  "blueprint": {
+    "customizations": {
+      "openscap": {
+        "profile_id": "xccdf_org.ssgproject.content_profile_cis",
+        "datastream": "/usr/share/xml/scap/ssg/content/ssg-rhel8-ds.xml",
+        "tailoring": {
+          "unselected": [
+            "grub2_password"
+          ]
+        }
+      }
+    }
+  }
+}

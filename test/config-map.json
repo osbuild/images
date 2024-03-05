@@ -198,6 +198,22 @@
       "qcow2"
     ]
   },
+  "./configs/oscap-rhel8.json": {
+    "distros": [
+      "rhel-8.10"
+    ],
+    "image-types": [
+      "ami"
+    ]
+  },
+  "./configs/oscap-rhel9.json": {
+    "distros": [
+      "rhel-9.4"
+    ],
+    "image-types": [
+      "ami"
+    ]
+  },
   "./configs/ostree.json": {
     "image-types": [
       "edge-commit",
