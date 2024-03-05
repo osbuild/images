@@ -182,6 +182,12 @@ func iotCommitPackageSet(t *imageType) rpmmd.PackageSet {
 				"podman-plugins", // deprecated in podman 5
 			},
 		})
+	} else {
+		ps = ps.Append(rpmmd.PackageSet{
+			Include: []string{
+				"bootupd", // added in F40+
+			},
+		})
 	}
 
 	return ps
