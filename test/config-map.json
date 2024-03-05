@@ -214,6 +214,17 @@
       "iot-installer"
     ]
   },
+  "./configs/bigiso.json": {
+    "distros": [
+      "rhel-9.4"
+    ],
+    "arches": [
+      "x86_64"
+    ],
+    "image-types": [
+      "image-installer"
+    ]
+  },
   "./configs/unattended-iso.json": {
     "distros": [
       "rhel-*",
