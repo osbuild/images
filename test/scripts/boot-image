@@ -8,6 +8,8 @@ from tempfile import TemporaryDirectory
 
 import imgtestlib as testlib
 
+BASE_TEST_SCRIPT = "test/scripts/base-host-check.sh"
+
 
 def get_aws_config():
     return {
@@ -61,7 +63,8 @@ def ensure_uncompressed(filepath):
         yield filepath
 
 
-def cmd_boot_aws(arch, image_name, privkey, pubkey, image_path):
+def cmd_boot_aws(arch, image_name, privkey, pubkey, image_path, script_cmd):
+    # pylint: disable=too-many-arguments
     aws_config = get_aws_config()
     cmd = ["go", "run", "./cmd/boot-aws", "run",
            "--access-key-id", aws_config["key_id"],
@@ -74,16 +77,16 @@ def cmd_boot_aws(arch, image_name, privkey, pubkey, image_path):
            "--username", "osbuild",
            "--ssh-privkey", privkey,
            "--ssh-pubkey", pubkey,
-           image_path, "test/scripts/base-host-check.sh"]
+           image_path, *script_cmd]
     testlib.runcmd_nc(cmd)
 
 
 def boot_ami(distro, arch, image_type, image_path, config):
-    # TODO: use the config file to verify customizations in the image
+    cmd = [BASE_TEST_SCRIPT, config]
     with ensure_uncompressed(image_path) as raw_image_path:
         with create_ssh_key() as (privkey, pubkey):
             image_name = f"image-boot-test-{distro}-{arch}-{image_type}-" + str(uuid.uuid4())
-            cmd_boot_aws(arch, image_name, privkey, pubkey, raw_image_path)
+            cmd_boot_aws(arch, image_name, privkey, pubkey, raw_image_path, cmd)
 
 
 def boot_container(distro, arch, image_type, image_path, manifest_id):
@@ -142,7 +145,7 @@ def boot_container(distro, arch, image_type, image_path, manifest_id):
             # Build artifacts are owned by root. Make them world accessible.
             testlib.runcmd(["sudo", "chmod", "a+rwX", "-R", tmpdir])
             raw_image_path = f"{tmpdir}/image/disk.raw"
-            cmd_boot_aws(arch, image_name, privkey_file, pubkey_file, raw_image_path)
+            cmd_boot_aws(arch, image_name, privkey_file, pubkey_file, raw_image_path, [BASE_TEST_SCRIPT])
 
 
 def find_image_file(build_path: str) -> str:
