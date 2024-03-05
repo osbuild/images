@@ -167,6 +167,12 @@ def find_image_file(build_path: str) -> str:
     return os.path.join(build_path, last_pipeline, files[0])
 
 
+def read_build_info(path):
+    info_file_path = os.path.join(path, "info.json")
+    with open(info_file_path, encoding="utf-8") as info_fp:
+        return json.load(info_fp)
+
+
 def main():
     desc = "Boot an image in the cloud environment it is built for and validate the configuration"
     parser = argparse.ArgumentParser(description=desc)
@@ -182,6 +188,7 @@ def main():
     search_path = args.image_search_path
 
     image_path = find_image_file(search_path)
+    build_info = read_build_info(search_path)
 
     print(f"Testing image at {image_path}")
     bib_image_id = ""
@@ -189,9 +196,6 @@ def main():
         case "ami" | "ec2" | "ec2-ha" | "ec2-sap" | "edge-ami":
             boot_ami(distro, arch, image_type, image_path)
         case "iot-bootable-container":
-            info_file_path = os.path.join(search_path, "info.json")
-            with open(info_file_path, encoding="utf-8") as info_fp:
-                build_info = json.load(info_fp)
             manifest_id = build_info["manifest-checksum"]
             boot_container(distro, arch, image_type, image_path, manifest_id)
             bib_ref = testlib.get_bib_ref()
@@ -204,12 +208,10 @@ def main():
     print("✅ Marking boot successful")
     # amend build info with boot success
     # search_path is the root of the build path (build/build_name)
-    info_file_path = os.path.join(search_path, "info.json")
-    with open(info_file_path, encoding="utf-8") as info_fp:
-        build_info = json.load(info_fp)
     build_info["boot-success"] = True
     if bib_image_id:
         build_info["bib-id"] = bib_image_id
+    info_file_path = os.path.join(search_path, "info.json")
     with open(info_file_path, "w", encoding="utf-8") as info_fp:
         json.dump(build_info, info_fp, indent=2)
 
