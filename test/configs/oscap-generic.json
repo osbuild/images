@@ -1,5 +1,5 @@
 {
-  "name": "all-with-oscap",
+  "name": "oscap-generic",
   "blueprint": {
     "packages": [
       {
