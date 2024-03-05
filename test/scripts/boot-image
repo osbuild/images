@@ -78,7 +78,8 @@ def cmd_boot_aws(arch, image_name, privkey, pubkey, image_path):
     testlib.runcmd_nc(cmd)
 
 
-def boot_ami(distro, arch, image_type, image_path):
+def boot_ami(distro, arch, image_type, image_path, config):
+    # TODO: use the config file to verify customizations in the image
     with ensure_uncompressed(image_path) as raw_image_path:
         with create_ssh_key() as (privkey, pubkey):
             image_name = f"image-boot-test-{distro}-{arch}-{image_type}-" + str(uuid.uuid4())
@@ -189,12 +190,14 @@ def main():
 
     image_path = find_image_file(search_path)
     build_info = read_build_info(search_path)
+    build_config_name = build_info["config"]
+    build_config_path = f"test/configs/{build_config_name}.json"
 
     print(f"Testing image at {image_path}")
     bib_image_id = ""
     match image_type:
         case "ami" | "ec2" | "ec2-ha" | "ec2-sap" | "edge-ami":
-            boot_ami(distro, arch, image_type, image_path)
+            boot_ami(distro, arch, image_type, image_path, build_config_path)
         case "iot-bootable-container":
             manifest_id = build_info["manifest-checksum"]
             boot_container(distro, arch, image_type, image_path, manifest_id)
