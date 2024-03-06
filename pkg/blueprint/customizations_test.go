@@ -19,7 +19,7 @@ func TestCheckAllowed(t *testing.T) {
 	GID := 321
 
 	expectedUsers := []UserCustomization{
-		UserCustomization{
+		{
 			Name:        "John",
 			Description: &Desc,
 			Password:    &Pass,
@@ -32,7 +32,7 @@ func TestCheckAllowed(t *testing.T) {
 		},
 	}
 
-	var expectedHostname = "Hostname"
+	expectedHostname := "Hostname"
 
 	x := Customizations{Hostname: &expectedHostname, User: expectedUsers}
 
@@ -49,8 +49,7 @@ func TestCheckAllowed(t *testing.T) {
 }
 
 func TestGetHostname(t *testing.T) {
-
-	var expectedHostname = "Hostname"
+	expectedHostname := "Hostname"
 
 	TestCustomizations := Customizations{
 		Hostname: &expectedHostname,
@@ -58,11 +57,9 @@ func TestGetHostname(t *testing.T) {
 
 	retHostname := TestCustomizations.GetHostname()
 	assert.Equal(t, &expectedHostname, retHostname)
-
 }
 
 func TestGetKernel(t *testing.T) {
-
 	expectedKernel := KernelCustomization{
 		Append: "--test",
 		Name:   "kernel",
@@ -78,9 +75,8 @@ func TestGetKernel(t *testing.T) {
 }
 
 func TestSSHKey(t *testing.T) {
-
 	expectedSSHKeys := []SSHKeyCustomization{
-		SSHKeyCustomization{
+		{
 			User: "test-user",
 			Key:  "test-key",
 		},
@@ -94,11 +90,9 @@ func TestSSHKey(t *testing.T) {
 
 	assert.Equal(t, expectedSSHKeys[0].User, retUser)
 	assert.Equal(t, expectedSSHKeys[0].Key, retKey)
-
 }
 
 func TestGetUsers(t *testing.T) {
-
 	Desc := "Test descritpion"
 	Pass := "testpass"
 	Key := "testkey"
@@ -111,7 +105,7 @@ func TestGetUsers(t *testing.T) {
 	GID := 321
 
 	expectedUsers := []UserCustomization{
-		UserCustomization{
+		{
 			Name:        "John",
 			Description: &Desc,
 			Password:    &Pass,
@@ -134,10 +128,9 @@ func TestGetUsers(t *testing.T) {
 }
 
 func TestGetGroups(t *testing.T) {
-
 	GID := 1234
 	expectedGroups := []GroupCustomization{
-		GroupCustomization{
+		{
 			Name: "TestGroup",
 			GID:  &GID,
 		},
@@ -153,7 +146,6 @@ func TestGetGroups(t *testing.T) {
 }
 
 func TestGetTimezoneSettings(t *testing.T) {
-
 	expectedTimezone := "testZONE"
 	expectedNTPServers := []string{
 		"server",
@@ -172,11 +164,9 @@ func TestGetTimezoneSettings(t *testing.T) {
 
 	assert.Equal(t, expectedTimezone, *retTimezone)
 	assert.Equal(t, expectedNTPServers, retNTPServers)
-
 }
 
 func TestGetPrimaryLocale(t *testing.T) {
-
 	expectedLanguages := []string{
 		"enUS",
 	}
@@ -198,7 +188,6 @@ func TestGetPrimaryLocale(t *testing.T) {
 }
 
 func TestGetFirewall(t *testing.T) {
-
 	expectedPorts := []string{"22", "9090"}
 
 	expectedServices := FirewallServicesCustomization{
@@ -223,7 +212,6 @@ func TestGetFirewall(t *testing.T) {
 }
 
 func TestGetServices(t *testing.T) {
-
 	expectedServices := ServicesCustomization{
 		Enabled:  []string{"cockpit", "osbuild-composer"},
 		Disabled: []string{"sshd", "ftp"},
@@ -249,12 +237,10 @@ func TestError(t *testing.T) {
 	retError := expectedError.Error()
 
 	assert.Equal(t, expectedError.Message, retError)
-
 }
 
 // This tests calling all the functions on a Blueprint with no Customizations
 func TestNoCustomizationsInBlueprint(t *testing.T) {
-
 	TestBP := Blueprint{}
 
 	assert.Nil(t, TestBP.Customizations.GetHostname())
@@ -275,8 +261,7 @@ func TestNoCustomizationsInBlueprint(t *testing.T) {
 
 // This tests additional scenarios where GetPrimaryLocale() returns nil values
 func TestNilGetPrimaryLocale(t *testing.T) {
-
-	//Case empty Customization
+	// Case empty Customization
 	TestCustomizationsEmpty := Customizations{}
 
 	retLanguage, retKeyboard := TestCustomizationsEmpty.GetPrimaryLocale()
@@ -284,7 +269,7 @@ func TestNilGetPrimaryLocale(t *testing.T) {
 	assert.Nil(t, retLanguage)
 	assert.Nil(t, retKeyboard)
 
-	//Case empty Languages
+	// Case empty Languages
 	expectedKeyboard := "en"
 	expectedLocaleCustomization := LocaleCustomization{
 		Keyboard: &expectedKeyboard,
@@ -298,12 +283,10 @@ func TestNilGetPrimaryLocale(t *testing.T) {
 
 	assert.Nil(t, retLanguage)
 	assert.Equal(t, expectedKeyboard, *retKeyboard)
-
 }
 
 // This tests additional scenario where GetTimezoneSEtting() returns nil values
 func TestNilGetTimezoneSettings(t *testing.T) {
-
 	TestCustomizationsEmpty := Customizations{}
 
 	retTimezone, retNTPServers := TestCustomizationsEmpty.GetTimezoneSettings()
@@ -313,7 +296,6 @@ func TestNilGetTimezoneSettings(t *testing.T) {
 }
 
 func TestGetFilesystems(t *testing.T) {
-
 	expectedFilesystems := []FilesystemCustomization{
 		{
 			MinSize:    1024,
@@ -331,7 +313,6 @@ func TestGetFilesystems(t *testing.T) {
 }
 
 func TestGetFilesystemsMinSize(t *testing.T) {
-
 	expectedFilesystems := []FilesystemCustomization{
 		{
 			MinSize:    1024,
@@ -353,7 +334,6 @@ func TestGetFilesystemsMinSize(t *testing.T) {
 }
 
 func TestGetFilesystemsMinSizeNonSectorSize(t *testing.T) {
-
 	expectedFilesystems := []FilesystemCustomization{
 		{
 			MinSize:    1025,
@@ -375,7 +355,6 @@ func TestGetFilesystemsMinSizeNonSectorSize(t *testing.T) {
 }
 
 func TestGetOpenSCAPConfig(t *testing.T) {
-
 	expectedOscap := OpenSCAPCustomization{
 		DataStream: "test-data-stream.xml",
 		ProfileID:  "test_profile",
