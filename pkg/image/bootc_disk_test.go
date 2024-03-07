@@ -36,13 +36,14 @@ func makeFakeDigest(t *testing.T) string {
 }
 
 type bootcDiskImageTestOpts struct {
-	BIOS bool
+	ImageFormat platform.ImageFormat
+	BIOS        bool
 }
 
 func makeFakePlatform(opts *bootcDiskImageTestOpts) platform.Platform {
 	return &platform.X86{
 		BasePlatform: platform.BasePlatform{
-			ImageFormat: platform.FORMAT_QCOW2,
+			ImageFormat: opts.ImageFormat,
 		},
 		BIOS: opts.BIOS,
 	}
@@ -50,7 +51,9 @@ func makeFakePlatform(opts *bootcDiskImageTestOpts) platform.Platform {
 
 func makeBootcDiskImageOsbuildManifest(t *testing.T, opts *bootcDiskImageTestOpts) manifest.OSBuildManifest {
 	if opts == nil {
-		opts = &bootcDiskImageTestOpts{}
+		opts = &bootcDiskImageTestOpts{
+			ImageFormat: platform.FORMAT_QCOW2,
+		}
 	}
 
 	containerSource := container.SourceSpec{
@@ -116,6 +119,14 @@ func TestBootcDiskImageInstantiateNoBuildpipelineForQcow2(t *testing.T) {
 	assert.Equal(t, qcowPipeline["build"], nil)
 }
 
+func TestBootcDiskImageInstantiateVmdk(t *testing.T) {
+	opts := &bootcDiskImageTestOpts{ImageFormat: platform.FORMAT_VMDK}
+	osbuildManifest := makeBootcDiskImageOsbuildManifest(t, opts)
+
+	pipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "vmdk")
+	require.NotNil(t, pipeline)
+}
+
 func TestBootcDiskImageUsesBootupd(t *testing.T) {
 	osbuildManifest := makeBootcDiskImageOsbuildManifest(t, nil)
 
@@ -134,7 +145,7 @@ func TestBootcDiskImageUsesBootupd(t *testing.T) {
 
 func TestBootcDiskImageBootupdBiosSupport(t *testing.T) {
 	for _, withBios := range []bool{false, true} {
-		osbuildManifest := makeBootcDiskImageOsbuildManifest(t, &bootcDiskImageTestOpts{BIOS: withBios})
+		osbuildManifest := makeBootcDiskImageOsbuildManifest(t, &bootcDiskImageTestOpts{BIOS: withBios, ImageFormat: platform.FORMAT_QCOW2})
 
 		imagePipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "image")
 		require.NotNil(t, imagePipeline)
