@@ -49,6 +49,11 @@ func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifes
 
 	opts := &baseRawOstreeImageOpts{useBootupd: true}
 	baseImage := baseRawOstreeImage(img.OSTreeDiskImage, buildPipeline, opts)
+
+	// In BIB, we intend to export multiple images from the same pipeline and
+	// this is the expected filename for the raw images. Set it so that it's
+	// always disk.raw even when we're building a qcow2 or other image type.
+	baseImage.SetFilename("disk.raw")
 	switch imgFormat {
 	case platform.FORMAT_QCOW2:
 		// qcow2 runs without a build pipeline directly from "bib"
