@@ -58,17 +58,6 @@ func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifes
 		Filename:    img.Filename,
 	}
 	imagePipeline := makeImagePipeline(img.Platform.GetImageFormat(), baseImage, hostPipeline, opts)
-
-	// todo: refactor
-	switch img.Compression {
-	case "xz":
-		compressedImage := manifest.NewXZ(buildPipeline, imagePipeline)
-		compressedImage.SetFilename(img.Filename)
-		return compressedImage.Export(), nil
-	case "":
-		imagePipeline.SetFilename(img.Filename)
-		return imagePipeline.Export(), nil
-	default:
-		panic(fmt.Sprintf("unsupported compression type %q on %q", img.Compression, img.name))
-	}
+	compressionPipeline := makeCompressionPipeline(img.Compression, img.Filename, imagePipeline, buildPipeline)
+	return compressionPipeline.Export(), nil
 }

@@ -105,6 +105,22 @@ func makeImagePipeline(imgType platform.ImageFormat, rawImagePipeline manifest.F
 	return imagePipeline
 }
 
+func makeCompressionPipeline(compression, filename string, imagePipeline manifest.FilePipeline, buildPipeline manifest.Build) manifest.FilePipeline {
+	compressionPipeline := imagePipeline
+
+	switch compression {
+	case "xz":
+		compressionPipeline = manifest.NewXZ(buildPipeline, imagePipeline)
+	case "":
+		// nothing to do
+	default:
+		// panic on unknown strings
+		panic(fmt.Sprintf("unsupported compression type %q", compression))
+	}
+	compressionPipeline.SetFilename(filename)
+	return compressionPipeline
+}
+
 func NewDiskImage() *DiskImage {
 	return &DiskImage{
 		Base:     NewBase("disk"),
@@ -141,18 +157,6 @@ func (img *DiskImage) InstantiateManifest(m *manifest.Manifest,
 		Filename:    img.Filename,
 	}
 	imagePipeline := makeImagePipeline(img.Platform.GetImageFormat(), rawImagePipeline, buildPipeline, opts)
-
-	switch img.Compression {
-	case "xz":
-		xzPipeline := manifest.NewXZ(buildPipeline, imagePipeline)
-		xzPipeline.SetFilename(img.Filename)
-		return xzPipeline.Export(), nil
-	case "":
-		// don't compress, but make sure the pipeline's filename is set
-		imagePipeline.SetFilename(img.Filename)
-		return imagePipeline.Export(), nil
-	default:
-		// panic on unknown strings
-		panic(fmt.Sprintf("unsupported compression type %q", img.Compression))
-	}
+	compressionPipeline := makeCompressionPipeline(img.Compression, img.Filename, imagePipeline, buildPipeline)
+	return compressionPipeline.Export(), nil
 }
