@@ -19,6 +19,8 @@ const ( // image format enum
 
 func (f ImageFormat) String() string {
 	switch f {
+	case FORMAT_UNSET:
+		return "unset"
 	case FORMAT_RAW:
 		return "raw"
 	case FORMAT_ISO:

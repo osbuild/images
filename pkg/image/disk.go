@@ -40,6 +40,71 @@ type DiskImage struct {
 	InstallWeakDeps *bool
 }
 
+type imagePipelineOpts struct {
+	QCOW2Compat string
+	ForceSize   *bool
+	Filename    string
+}
+
+func makeImagePipeline(imgType platform.ImageFormat, rawImagePipeline manifest.FilePipeline, buildPipeline manifest.Build, opts *imagePipelineOpts) manifest.FilePipeline {
+	if opts == nil {
+		opts = &imagePipelineOpts{}
+	}
+
+	var imagePipeline manifest.FilePipeline
+	switch imgType {
+	case platform.FORMAT_UNSET:
+		// edge image do not set image types and assume unset is
+		// raw
+		// TODO: fix edge definitions
+		// a logger would be nice here to tell the world about this
+		fallthrough
+	case platform.FORMAT_RAW:
+		imagePipeline = rawImagePipeline
+	case platform.FORMAT_QCOW2:
+		qcow2Pipeline := manifest.NewQCOW2(buildPipeline, rawImagePipeline)
+		qcow2Pipeline.Compat = opts.QCOW2Compat
+		imagePipeline = qcow2Pipeline
+	case platform.FORMAT_VHD:
+		vpcPipeline := manifest.NewVPC(buildPipeline, rawImagePipeline)
+		vpcPipeline.ForceSize = opts.ForceSize
+		imagePipeline = vpcPipeline
+	case platform.FORMAT_VMDK:
+		imagePipeline = manifest.NewVMDK(buildPipeline, rawImagePipeline)
+	case platform.FORMAT_OVA:
+		vmdkPipeline := manifest.NewVMDK(buildPipeline, rawImagePipeline)
+		ovfPipeline := manifest.NewOVF(buildPipeline, vmdkPipeline)
+		tarPipeline := manifest.NewTar(buildPipeline, ovfPipeline, "archive")
+		tarPipeline.Format = osbuild.TarArchiveFormatUstar
+		tarPipeline.SetFilename(opts.Filename)
+		extLess := strings.TrimSuffix(opts.Filename, filepath.Ext(opts.Filename))
+		// The .ovf descriptor needs to be the first file in the archive
+		tarPipeline.Paths = []string{
+			fmt.Sprintf("%s.ovf", extLess),
+			fmt.Sprintf("%s.mf", extLess),
+			fmt.Sprintf("%s.vmdk", extLess),
+		}
+		imagePipeline = tarPipeline
+	case platform.FORMAT_GCE:
+		// NOTE(akoutsou): temporary workaround; filename required for GCP
+		// TODO: define internal raw filename on image type
+		rawImagePipeline.SetFilename("disk.raw")
+		tarPipeline := manifest.NewTar(buildPipeline, rawImagePipeline, "archive")
+		tarPipeline.Format = osbuild.TarArchiveFormatOldgnu
+		tarPipeline.RootNode = osbuild.TarRootNodeOmit
+		// these are required to successfully import the image to GCP
+		tarPipeline.ACLs = common.ToPtr(false)
+		tarPipeline.SELinux = common.ToPtr(false)
+		tarPipeline.Xattrs = common.ToPtr(false)
+		tarPipeline.SetFilename(opts.Filename) // filename extension will determine compression
+		imagePipeline = tarPipeline
+	default:
+		panic(fmt.Sprintf("invalid image format %v for image kind", imgType))
+	}
+
+	return imagePipeline
+}
+
 func NewDiskImage() *DiskImage {
 	return &DiskImage{
 		Base:     NewBase("disk"),
@@ -70,50 +135,12 @@ func (img *DiskImage) InstantiateManifest(m *manifest.Manifest,
 	rawImagePipeline := manifest.NewRawImage(buildPipeline, osPipeline)
 	rawImagePipeline.PartTool = img.PartTool
 
-	var imagePipeline manifest.FilePipeline
-	switch img.Platform.GetImageFormat() {
-	case platform.FORMAT_RAW:
-		imagePipeline = rawImagePipeline
-	case platform.FORMAT_QCOW2:
-		qcow2Pipeline := manifest.NewQCOW2(buildPipeline, rawImagePipeline)
-		qcow2Pipeline.Compat = img.Platform.GetQCOW2Compat()
-		imagePipeline = qcow2Pipeline
-	case platform.FORMAT_VHD:
-		vpcPipeline := manifest.NewVPC(buildPipeline, rawImagePipeline)
-		vpcPipeline.ForceSize = img.ForceSize
-		imagePipeline = vpcPipeline
-	case platform.FORMAT_VMDK:
-		imagePipeline = manifest.NewVMDK(buildPipeline, rawImagePipeline)
-	case platform.FORMAT_OVA:
-		vmdkPipeline := manifest.NewVMDK(buildPipeline, rawImagePipeline)
-		ovfPipeline := manifest.NewOVF(buildPipeline, vmdkPipeline)
-		tarPipeline := manifest.NewTar(buildPipeline, ovfPipeline, "archive")
-		tarPipeline.Format = osbuild.TarArchiveFormatUstar
-		tarPipeline.SetFilename(img.Filename)
-		extLess := strings.TrimSuffix(img.Filename, filepath.Ext(img.Filename))
-		// The .ovf descriptor needs to be the first file in the archive
-		tarPipeline.Paths = []string{
-			fmt.Sprintf("%s.ovf", extLess),
-			fmt.Sprintf("%s.mf", extLess),
-			fmt.Sprintf("%s.vmdk", extLess),
-		}
-		imagePipeline = tarPipeline
-	case platform.FORMAT_GCE:
-		// NOTE(akoutsou): temporary workaround; filename required for GCP
-		// TODO: define internal raw filename on image type
-		rawImagePipeline.SetFilename("disk.raw")
-		tarPipeline := manifest.NewTar(buildPipeline, rawImagePipeline, "archive")
-		tarPipeline.Format = osbuild.TarArchiveFormatOldgnu
-		tarPipeline.RootNode = osbuild.TarRootNodeOmit
-		// these are required to successfully import the image to GCP
-		tarPipeline.ACLs = common.ToPtr(false)
-		tarPipeline.SELinux = common.ToPtr(false)
-		tarPipeline.Xattrs = common.ToPtr(false)
-		tarPipeline.SetFilename(img.Filename) // filename extension will determine compression
-		imagePipeline = tarPipeline
-	default:
-		panic("invalid image format for image kind")
+	opts := &imagePipelineOpts{
+		QCOW2Compat: img.Platform.GetQCOW2Compat(),
+		ForceSize:   img.ForceSize,
+		Filename:    img.Filename,
 	}
+	imagePipeline := makeImagePipeline(img.Platform.GetImageFormat(), rawImagePipeline, buildPipeline, opts)
 
 	switch img.Compression {
 	case "xz":

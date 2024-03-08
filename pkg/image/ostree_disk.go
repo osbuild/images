@@ -137,27 +137,22 @@ func (img *OSTreeDiskImage) InstantiateManifest(m *manifest.Manifest,
 	}
 
 	baseImage := baseRawOstreeImage(img, buildPipeline, nil)
-	switch img.Platform.GetImageFormat() {
-	case platform.FORMAT_VMDK:
-		vmdkPipeline := manifest.NewVMDK(buildPipeline, baseImage)
-		vmdkPipeline.SetFilename(img.Filename)
-		return vmdkPipeline.Export(), nil
-	case platform.FORMAT_QCOW2:
-		qcow2Pipeline := manifest.NewQCOW2(buildPipeline, baseImage)
-		qcow2Pipeline.Compat = img.Platform.GetQCOW2Compat()
-		qcow2Pipeline.SetFilename(img.Filename)
-		return qcow2Pipeline.Export(), nil
+
+	opts := &imagePipelineOpts{
+		QCOW2Compat: img.Platform.GetQCOW2Compat(),
+		Filename:    img.Filename,
+	}
+	imagePipeline := makeImagePipeline(img.Platform.GetImageFormat(), baseImage, buildPipeline, opts)
+
+	switch img.Compression {
+	case "xz":
+		compressedImage := manifest.NewXZ(buildPipeline, imagePipeline)
+		compressedImage.SetFilename(img.Filename)
+		return compressedImage.Export(), nil
+	case "":
+		imagePipeline.SetFilename(img.Filename)
+		return imagePipeline.Export(), nil
 	default:
-		switch img.Compression {
-		case "xz":
-			compressedImage := manifest.NewXZ(buildPipeline, baseImage)
-			compressedImage.SetFilename(img.Filename)
-			return compressedImage.Export(), nil
-		case "":
-			baseImage.SetFilename(img.Filename)
-			return baseImage.Export(), nil
-		default:
-			panic(fmt.Sprintf("unsupported compression type %q on %q", img.Compression, img.name))
-		}
+		panic(fmt.Sprintf("unsupported compression type %q on %q", img.Compression, img.name))
 	}
 }
