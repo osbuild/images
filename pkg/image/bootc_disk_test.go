@@ -3,6 +3,7 @@ package image_test
 import (
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"testing"
 
@@ -125,6 +126,22 @@ func TestBootcDiskImageInstantiateVmdk(t *testing.T) {
 
 	pipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "vmdk")
 	require.NotNil(t, pipeline)
+	// no build pipeline
+	assert.Equal(t, pipeline["build"], nil)
+}
+
+func TestBootcDiskImageInstantiateOva(t *testing.T) {
+	opts := &bootcDiskImageTestOpts{ImageFormat: platform.FORMAT_OVA}
+	osbuildManifest := makeBootcDiskImageOsbuildManifest(t, opts)
+
+	for _, piplName := range []string{"vmdk", "ovf", "archive"} {
+		t.Run(fmt.Sprintf("pipeline %v", piplName), func(t *testing.T) {
+			pipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, piplName)
+			require.NotNil(t, pipeline)
+			// no build pipeline
+			assert.Equal(t, pipeline["build"], nil)
+		})
+	}
 }
 
 func TestBootcDiskImageUsesBootupd(t *testing.T) {
