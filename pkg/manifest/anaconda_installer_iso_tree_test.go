@@ -110,6 +110,9 @@ func checkRawKickstartFileStage(stages []*osbuild.Stage) bool {
 				panic("copy stage options conversion failed")
 			}
 			if options.Paths[0].To == "tree://"+testKsPath {
+				if options.Paths[0].From != "input://file-479a4230cf9f5e3c4b6f2e1c626d27096c00baf2d94eab96961660405d75877f/sha256:479a4230cf9f5e3c4b6f2e1c626d27096c00baf2d94eab96961660405d75877f" {
+					panic("content mismatch: " + options.Paths[0].From)
+				}
 				return true
 			}
 		}
@@ -258,7 +261,7 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		pipeline.KSPath = testKsPath
 		pipeline.ISOLinux = true
 		pipeline.UnattendedKickstart = true
-		pipeline.WheelNoPasswd = true
+		pipeline.NoPasswd = []string{`%wheel`, `%sudo`}
 		pipeline.serializeStart(nil, nil, nil)
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
@@ -326,7 +329,7 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 		pipeline.KSPath = testKsPath
 		pipeline.ISOLinux = true
 		pipeline.UnattendedKickstart = true
-		pipeline.WheelNoPasswd = true
+		pipeline.NoPasswd = []string{`%wheel`}
 		pipeline.serializeStart(nil, nil, []ostree.CommitSpec{ostreeCommit})
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
