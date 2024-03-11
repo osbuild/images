@@ -23,7 +23,8 @@
       "installer": {
         "unattended": true,
         "sudo-nopasswd": [
-          "%wheel"
+          "%wheel",
+          "%sudo"
         ]
       }
     }
