@@ -379,3 +379,23 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
 	})
 }
+
+func TestMakeKickstartSudoersPostEmpty(t *testing.T) {
+	assert.Equal(t, "", makeKickstartSudoersPost(nil))
+}
+
+func TestMakeKickstartSudoersPost(t *testing.T) {
+	exp := `
+%post
+echo -e "%group31\tALL=(ALL)\tNOPASSWD: ALL" > "/etc/sudoers.d/%group31"
+chmod 0440 /etc/sudoers.d/%group31
+echo -e "user42\tALL=(ALL)\tNOPASSWD: ALL" > "/etc/sudoers.d/user42"
+chmod 0440 /etc/sudoers.d/user42
+restorecon -rvF /etc/sudoers.d
+%end
+`
+	assert.Equal(t, exp, makeKickstartSudoersPost([]string{"user42", "%group31"}))
+	assert.Equal(t, exp, makeKickstartSudoersPost([]string{"%group31", "user42"}))
+	assert.Equal(t, exp, makeKickstartSudoersPost([]string{"%group31", "user42", "%group31"}))
+	assert.Equal(t, exp, makeKickstartSudoersPost([]string{"%group31", "user42", "%group31", "%group31", "user42", "%group31", "%group31", "user42", "%group31"}))
+}
