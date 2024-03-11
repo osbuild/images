@@ -100,7 +100,7 @@ func getKickstartOptions(stages []*osbuild.Stage) *osbuild.KickstartStageOptions
 	return options
 }
 
-func checkRawKickstartFileStage(stages []*osbuild.Stage) bool {
+func findRawKickstartFileStage(stages []*osbuild.Stage) *osbuild.CopyStageOptions {
 	// the pipeline can have more than one copy stage - find the one that has
 	// the expected destination for the kickstart file
 	for _, stage := range stages {
@@ -110,22 +110,27 @@ func checkRawKickstartFileStage(stages []*osbuild.Stage) bool {
 				panic("copy stage options conversion failed")
 			}
 			if options.Paths[0].To == "tree://"+testKsPath {
-				if options.Paths[0].From != "input://file-479a4230cf9f5e3c4b6f2e1c626d27096c00baf2d94eab96961660405d75877f/sha256:479a4230cf9f5e3c4b6f2e1c626d27096c00baf2d94eab96961660405d75877f" {
-					panic("content mismatch: " + options.Paths[0].From)
-				}
-				return true
+				return options
 			}
 		}
 	}
-	return false
+	return nil
 }
 
 func checkKickstartUnattendedOptions(stages []*osbuild.Stage, sudobits bool) error {
-	rawKsFound := checkRawKickstartFileStage(stages)
-	if sudobits && !rawKsFound { // sudobits enabled - raw kickstart stage (file stage) should exist
+	ksCopyStageOptions := findRawKickstartFileStage(stages)
+	if sudobits && ksCopyStageOptions == nil { // sudobits enabled - raw kickstart stage (file stage) should exist
 		return fmt.Errorf("expected raw kickstart file for sudoers but not found")
-	} else if !sudobits && rawKsFound { // sudobits disabled - no raw kickstart file stage should be found
+	} else if !sudobits && ksCopyStageOptions != nil { // sudobits disabled - no raw kickstart file stage should be found
 		return fmt.Errorf("found raw kickstart file for sudoers but was not expected")
+	}
+
+	if ksCopyStageOptions != nil {
+		expContentID := "input://file-d9cb9d34781b23069d70465e2e00b7dc4a2e63cf4cf8559b8c09b13ef10ed592/sha256:d9cb9d34781b23069d70465e2e00b7dc4a2e63cf4cf8559b8c09b13ef10ed592"
+		// inline file IDs are the hash of their content so this is the hash of the expected content
+		if inlineID := ksCopyStageOptions.Paths[0].From; inlineID != expContentID {
+			return fmt.Errorf("raw kickstart content mismatch: %s != %s", expContentID, inlineID)
+		}
 	}
 
 	ksOptions := getKickstartOptions(stages)
@@ -329,7 +334,7 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 		pipeline.KSPath = testKsPath
 		pipeline.ISOLinux = true
 		pipeline.UnattendedKickstart = true
-		pipeline.NoPasswd = []string{`%wheel`}
+		pipeline.NoPasswd = []string{`%wheel`, `%sudo`}
 		pipeline.serializeStart(nil, nil, []ostree.CommitSpec{ostreeCommit})
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
