@@ -4,6 +4,15 @@ import (
 	"fmt"
 )
 
+type BootcInstallToFilesystemOptions struct {
+	// options for --root-ssh-authorized-keys
+	RootSSHAuthorizedKeys []string `json:"root-ssh-authorized-keys,omitempty"`
+	// options for --karg
+	Kargs []string `json:"kernel-args,omitempty"`
+}
+
+func (BootcInstallToFilesystemOptions) isStageOptions() {}
+
 // NewBootcInstallToFilesystem creates a new stage for the
 // org.osbuild.bootc.install-to-filesystem stage.
 //
@@ -12,7 +21,7 @@ import (
 // bootc/bootupd find and install all required bootloader bits.
 //
 // The mounts input should be generated with GenBootupdDevicesMounts.
-func NewBootcInstallToFilesystemStage(inputs ContainerDeployInputs, devices map[string]Device, mounts []Mount) (*Stage, error) {
+func NewBootcInstallToFilesystemStage(options *BootcInstallToFilesystemOptions, inputs ContainerDeployInputs, devices map[string]Device, mounts []Mount) (*Stage, error) {
 	if err := validateBootupdMounts(mounts); err != nil {
 		return nil, err
 	}
@@ -23,6 +32,7 @@ func NewBootcInstallToFilesystemStage(inputs ContainerDeployInputs, devices map[
 
 	return &Stage{
 		Type:    "org.osbuild.bootc.install-to-filesystem",
+		Options: options,
 		Inputs:  inputs,
 		Devices: devices,
 		Mounts:  mounts,

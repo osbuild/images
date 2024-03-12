@@ -5,6 +5,7 @@ import (
 
 	"github.com/osbuild/images/pkg/artifact"
 	"github.com/osbuild/images/pkg/container"
+	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/ostree"
@@ -27,6 +28,12 @@ type RawBootcImage struct {
 	// tree, with `bootc install to-filesystem` we can only work
 	// with the image itself
 	PartitionTable *disk.PartitionTable
+
+	// "Users" is a bit misleading as only root and its ssh key is supported
+	// right now because that is all that bootc gives us by default but that
+	// will most likely change over time.
+	// See https://github.com/containers/bootc/pull/267
+	Users []users.User
 }
 
 func (p RawBootcImage) Filename() string {
@@ -76,7 +83,14 @@ func (p *RawBootcImage) serialize() osbuild.Pipeline {
 
 	pt := p.PartitionTable
 	if pt == nil {
-		panic("no partition table in live image")
+		panic(fmt.Errorf("no partition table in live image"))
+	}
+
+	if len(p.Users) > 1 {
+		panic(fmt.Errorf("raw bootc image only supports a single root key for user customization, got %v", p.Users))
+	}
+	if len(p.Users) == 1 && p.Users[0].Name != "root" {
+		panic(fmt.Errorf("raw bootc image only supports the root user, got %v", p.Users))
 	}
 
 	for _, stage := range osbuild.GenImagePrepareStages(pt, p.filename, osbuild.PTSfdisk) {
@@ -84,7 +98,11 @@ func (p *RawBootcImage) serialize() osbuild.Pipeline {
 	}
 
 	if len(p.containerSpecs) != 1 {
-		panic(fmt.Sprintf("expected a single container input got %v", p.containerSpecs))
+		panic(fmt.Errorf("expected a single container input got %v", p.containerSpecs))
+	}
+	opts := &osbuild.BootcInstallToFilesystemOptions{}
+	if len(p.Users) == 1 && p.Users[0].Key != nil {
+		opts.RootSSHAuthorizedKeys = []string{*p.Users[0].Key}
 	}
 	inputs := osbuild.ContainerDeployInputs{
 		Images: osbuild.NewContainersInputForSingleSource(p.containerSpecs[0]),
@@ -93,7 +111,7 @@ func (p *RawBootcImage) serialize() osbuild.Pipeline {
 	if err != nil {
 		panic(err)
 	}
-	st, err := osbuild.NewBootcInstallToFilesystemStage(inputs, devices, mounts)
+	st, err := osbuild.NewBootcInstallToFilesystemStage(opts, inputs, devices, mounts)
 	if err != nil {
 		panic(err)
 	}
