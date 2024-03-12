@@ -46,9 +46,6 @@ func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifes
 		// treat unset as raw for this check
 		imgFormat = platform.FORMAT_RAW
 	}
-	if imgFormat != platform.FORMAT_RAW && img.Compression != "" {
-		panic(fmt.Sprintf("no compression is allowed with %q format for %q", imgFormat, img.name))
-	}
 
 	// In the bootc flow, we reuse the host container context for tools;
 	// this is signified by passing nil to the below pipelines.
@@ -88,16 +85,6 @@ func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifes
 		}
 		return tarPipeline.Export(), nil
 	}
-
-	switch img.Compression {
-	case "xz":
-		compressedImage := manifest.NewXZ(buildPipeline, baseImage)
-		compressedImage.SetFilename(img.Filename)
-		return compressedImage.Export(), nil
-	case "":
-		baseImage.SetFilename(img.Filename)
-		return baseImage.Export(), nil
-	default:
-		panic(fmt.Sprintf("unsupported compression type %q on %q", img.Compression, img.name))
-	}
+	baseImage.SetFilename(img.Filename)
+	return baseImage.Export(), nil
 }
