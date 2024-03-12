@@ -69,7 +69,7 @@ func makeBootcDiskImageOsbuildManifest(t *testing.T, opts *bootcDiskImageTestOpt
 
 	m := &manifest.Manifest{}
 	runi := &runner.Fedora{}
-	_, err := img.InstantiateManifestFromContainers(m, containers, runi, nil)
+	err := img.InstantiateManifestFromContainers(m, containers, runi, nil)
 	require.Nil(t, err)
 
 	fakeSourceSpecs := map[string][]container.Spec{
@@ -160,4 +160,28 @@ func TestBootcDiskImageBootupdBiosSupport(t *testing.T) {
 			require.Nil(t, opts["bios"])
 		}
 	}
+}
+
+func TestBootcDiskImageExportPipelines(t *testing.T) {
+	require := require.New(t)
+
+	osbuildManifest := makeBootcDiskImageOsbuildManifest(t, &bootcDiskImageTestOpts{BIOS: true, ImageFormat: platform.FORMAT_QCOW2})
+	imagePipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "image")
+	require.NotNil(imagePipeline)
+	truncateStage := findStageFromOsbuildPipeline(t, imagePipeline, "org.osbuild.truncate") // check the truncate stage that creates the disk file
+	require.NotNil(truncateStage)
+	sfdiskStage := findStageFromOsbuildPipeline(t, imagePipeline, "org.osbuild.sfdisk") // and the sfdisk stage that creates partitions
+	require.NotNil(sfdiskStage)
+
+	// qcow2 pipeline for the qcow2
+	qcowPipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "qcow2")
+	require.NotNil(qcowPipeline)
+
+	// vmdk pipeline for the vmdk
+	vmdkPipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "vmdk")
+	require.NotNil(vmdkPipeline)
+
+	// tar pipeline for ova
+	tarPipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "archive")
+	require.NotNil(tarPipeline)
 }
