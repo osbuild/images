@@ -1,5 +1,5 @@
 {
-  "rngseed": 1,
+  "rngseed": 2,
   "fedora-39": {
     "dependencies": {
       "osbuild": {
