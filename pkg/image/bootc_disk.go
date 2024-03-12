@@ -3,14 +3,10 @@ package image
 import (
 	"fmt"
 	"math/rand"
-	"path/filepath"
-	"strings"
 
-	"github.com/osbuild/images/pkg/artifact"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
-	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/runner"
 )
 
@@ -35,56 +31,41 @@ func NewBootcDiskImage(container container.SourceSpec) *BootcDiskImage {
 func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifest,
 	containers []container.SourceSpec,
 	runner runner.Runner,
-	rng *rand.Rand) (*artifact.Artifact, error) {
+	rng *rand.Rand) error {
 
 	buildPipeline := manifest.NewBuildFromContainer(m, runner, containers, &manifest.BuildOptions{ContainerBuildable: true})
 	buildPipeline.Checkpoint()
-
-	// don't support compressing non-raw images
-	imgFormat := img.Platform.GetImageFormat()
-	if imgFormat == platform.FORMAT_UNSET {
-		// treat unset as raw for this check
-		imgFormat = platform.FORMAT_RAW
-	}
 
 	// In the bootc flow, we reuse the host container context for tools;
 	// this is signified by passing nil to the below pipelines.
 	var hostPipeline manifest.Build
 
 	opts := &baseRawOstreeImageOpts{useBootupd: true}
-	baseImage := baseRawOstreeImage(img.OSTreeDiskImage, buildPipeline, opts)
 
-	// In BIB, we intend to export multiple images from the same pipeline and
-	// this is the expected filename for the raw images. Set it so that it's
-	// always disk.raw even when we're building a qcow2 or other image type.
-	baseImage.SetFilename("disk.raw")
-	switch imgFormat {
-	case platform.FORMAT_QCOW2:
-		qcow2Pipeline := manifest.NewQCOW2(hostPipeline, baseImage)
-		qcow2Pipeline.Compat = img.Platform.GetQCOW2Compat()
-		qcow2Pipeline.SetFilename(img.Filename)
-		return qcow2Pipeline.Export(), nil
-	// TODO: refactor to share this with disk.go; note here the build pipeline runs
-	// on the host (that's the nil)
-	case platform.FORMAT_VMDK:
-		vmdkPipeline := manifest.NewVMDK(hostPipeline, baseImage)
-		vmdkPipeline.SetFilename(img.Filename)
-		return vmdkPipeline.Export(), nil
-	case platform.FORMAT_OVA:
-		vmdkPipeline := manifest.NewVMDK(hostPipeline, baseImage)
-		ovfPipeline := manifest.NewOVF(hostPipeline, vmdkPipeline)
-		tarPipeline := manifest.NewTar(hostPipeline, ovfPipeline, "archive")
-		tarPipeline.Format = osbuild.TarArchiveFormatUstar
-		tarPipeline.SetFilename(img.Filename)
-		extLess := strings.TrimSuffix(img.Filename, filepath.Ext(img.Filename))
-		// The .ovf descriptor needs to be the first file in the archive
-		tarPipeline.Paths = []string{
-			fmt.Sprintf("%s.ovf", extLess),
-			fmt.Sprintf("%s.mf", extLess),
-			fmt.Sprintf("%s.vmdk", extLess),
-		}
-		return tarPipeline.Export(), nil
+	fileBasename := img.Filename
+
+	// In BIB, we export multiple images from the same pipeline so we use the
+	// filename as the basename for each export and set the extensions based on
+	// each file format.
+	baseImage := baseRawOstreeImage(img.OSTreeDiskImage, buildPipeline, opts)
+	baseImage.SetFilename(fmt.Sprintf("%s.raw", fileBasename))
+
+	qcow2Pipeline := manifest.NewQCOW2(hostPipeline, baseImage)
+	qcow2Pipeline.Compat = img.Platform.GetQCOW2Compat()
+	qcow2Pipeline.SetFilename(fmt.Sprintf("%s.qcow2", fileBasename))
+
+	vmdkPipeline := manifest.NewVMDK(hostPipeline, baseImage)
+	vmdkPipeline.SetFilename(fmt.Sprintf("%s.vmdk", fileBasename))
+
+	ovfPipeline := manifest.NewOVF(hostPipeline, vmdkPipeline)
+	tarPipeline := manifest.NewTar(hostPipeline, ovfPipeline, "archive")
+	tarPipeline.Format = osbuild.TarArchiveFormatUstar
+	tarPipeline.SetFilename(fmt.Sprintf("%s.tar", fileBasename))
+	// The .ovf descriptor needs to be the first file in the archive
+	tarPipeline.Paths = []string{
+		fmt.Sprintf("%s.ovf", fileBasename),
+		fmt.Sprintf("%s.mf", fileBasename),
+		fmt.Sprintf("%s.vmdk", fileBasename),
 	}
-	baseImage.SetFilename(img.Filename)
-	return baseImage.Export(), nil
+	return nil
 }
