@@ -31,11 +31,12 @@ func TestBootcInstallToFilesystemStageNewHappy(t *testing.T) {
 
 	expectedStage := &osbuild.Stage{
 		Type:    "org.osbuild.bootc.install-to-filesystem",
+		Options: (*osbuild.BootcInstallToFilesystemOptions)(nil),
 		Inputs:  inputs,
 		Devices: devices,
 		Mounts:  mounts,
 	}
-	stage, err := osbuild.NewBootcInstallToFilesystemStage(inputs, devices, mounts)
+	stage, err := osbuild.NewBootcInstallToFilesystemStage(nil, inputs, devices, mounts)
 	require.Nil(t, err)
 	assert.Equal(t, stage, expectedStage)
 }
@@ -45,7 +46,7 @@ func TestBootcInstallToFilesystemStageNewNoContainers(t *testing.T) {
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
 	inputs := osbuild.ContainerDeployInputs{}
 
-	_, err := osbuild.NewBootcInstallToFilesystemStage(inputs, devices, mounts)
+	_, err := osbuild.NewBootcInstallToFilesystemStage(nil, inputs, devices, mounts)
 	assert.EqualError(t, err, "expected exactly one container input but got: 0 (map[])")
 }
 
@@ -61,7 +62,7 @@ func TestBootcInstallToFilesystemStageNewTwoContainers(t *testing.T) {
 		},
 	}
 
-	_, err := osbuild.NewBootcInstallToFilesystemStage(inputs, devices, mounts)
+	_, err := osbuild.NewBootcInstallToFilesystemStage(nil, inputs, devices, mounts)
 	assert.EqualError(t, err, "expected exactly one container input but got: 2 (map[1:{} 2:{}])")
 }
 
@@ -70,7 +71,7 @@ func TestBootcInstallToFilesystemStageMissingMounts(t *testing.T) {
 	mounts := makeOsbuildMounts("/")
 	inputs := makeFakeContainerInputs()
 
-	stage, err := osbuild.NewBootcInstallToFilesystemStage(inputs, devices, mounts)
+	stage, err := osbuild.NewBootcInstallToFilesystemStage(nil, inputs, devices, mounts)
 	// XXX: rename error
 	assert.ErrorContains(t, err, "required mounts for bootupd stage [/boot /boot/efi] missing")
 	require.Nil(t, stage)
@@ -81,7 +82,7 @@ func TestBootcInstallToFilesystemStageJsonHappy(t *testing.T) {
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
 	inputs := makeFakeContainerInputs()
 
-	stage, err := osbuild.NewBootcInstallToFilesystemStage(inputs, devices, mounts)
+	stage, err := osbuild.NewBootcInstallToFilesystemStage(nil, inputs, devices, mounts)
 	require.Nil(t, err)
 	stageJson, err := json.MarshalIndent(stage, "", "  ")
 	require.Nil(t, err)
@@ -98,6 +99,7 @@ func TestBootcInstallToFilesystemStageJsonHappy(t *testing.T) {
       }
     }
   },
+  "options": null,
   "devices": {
     "dev-for-/": {
       "type": "org.osbuild.loopback"
