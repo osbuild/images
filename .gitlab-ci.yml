@@ -42,10 +42,6 @@ check-build-coverage:
   script:
     - ./test/scripts/install-dependencies
     - ./test/scripts/check-build-coverage ./s3configs/
-  cache:
-    key: testcache
-    paths:
-      - .cache/osbuild-images
 
 finish:
   stage: finish
