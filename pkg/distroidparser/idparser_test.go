@@ -126,6 +126,36 @@ func TestDefaltParser(t *testing.T) {
 			idStr: "centos-9.2.2",
 			err:   true,
 		},
+		// RHEL-10
+		{
+			idStr:    "rhel-10",
+			expected: &distro.ID{Name: "rhel", MajorVersion: 10, MinorVersion: -1},
+		},
+		{
+			idStr:    "rhel-10.0",
+			expected: &distro.ID{Name: "rhel", MajorVersion: 10, MinorVersion: 0},
+		},
+		{
+			idStr:    "rhel-10.10",
+			expected: &distro.ID{Name: "rhel", MajorVersion: 10, MinorVersion: 10},
+		},
+		{
+			idStr: "rhel-10.1.1",
+			err:   true,
+		},
+		// CentOS-10
+		{
+			idStr:    "centos-10",
+			expected: &distro.ID{Name: "centos", MajorVersion: 10, MinorVersion: -1},
+		},
+		{
+			idStr:    "centos-10.2",
+			expected: &distro.ID{Name: "centos", MajorVersion: 10, MinorVersion: 2},
+		},
+		{
+			idStr: "centos-10.2.2",
+			err:   true,
+		},
 		// Non-existing distro
 		{
 			idStr:    "tuxdistro-1",
