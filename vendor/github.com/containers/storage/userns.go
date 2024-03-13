@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"fmt"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -12,6 +11,7 @@ import (
 	"github.com/containers/storage/pkg/unshare"
 	"github.com/containers/storage/types"
 	libcontainerUser "github.com/opencontainers/runc/libcontainer/user"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -78,10 +78,6 @@ func (s *store) getAvailableIDs() (*idSet, *idSet, error) {
 	return u, g, nil
 }
 
-// nobodyUser returns the UID and GID of the "nobody" user.  Hardcode its value
-// for simplicity.
-const nobodyUser = 65534
-
 // parseMountedFiles returns the maximum UID and GID found in the /etc/passwd and
 // /etc/group files.
 func parseMountedFiles(containerMount, passwdFile, groupFile string) uint32 {
@@ -102,10 +98,10 @@ func parseMountedFiles(containerMount, passwdFile, groupFile string) uint32 {
 			if u.Name == "nobody" {
 				continue
 			}
-			if u.Uid > size && u.Uid != nobodyUser {
+			if u.Uid > size {
 				size = u.Uid
 			}
-			if u.Gid > size && u.Gid != nobodyUser {
+			if u.Gid > size {
 				size = u.Gid
 			}
 		}
@@ -117,7 +113,7 @@ func parseMountedFiles(containerMount, passwdFile, groupFile string) uint32 {
 			if g.Name == "nobody" {
 				continue
 			}
-			if g.Gid > size && g.Gid != nobodyUser {
+			if g.Gid > size {
 				size = g.Gid
 			}
 		}
@@ -127,9 +123,16 @@ func parseMountedFiles(containerMount, passwdFile, groupFile string) uint32 {
 }
 
 // getMaxSizeFromImage returns the maximum ID used by the specified image.
-// On entry, rlstore must be locked for writing, and lstores must be locked for reading.
-func (s *store) getMaxSizeFromImage(image *Image, rlstore rwLayerStore, lstores []roLayerStore, passwdFile, groupFile string) (_ uint32, retErr error) {
-	layerStores := append([]roLayerStore{rlstore}, lstores...)
+// The layer stores must be already locked.
+func (s *store) getMaxSizeFromImage(id string, image *Image, passwdFile, groupFile string) (uint32, error) {
+	lstore, err := s.LayerStore()
+	if err != nil {
+		return 0, err
+	}
+	lstores, err := s.ROLayerStores()
+	if err != nil {
+		return 0, err
+	}
 
 	size := uint32(0)
 
@@ -137,7 +140,7 @@ func (s *store) getMaxSizeFromImage(image *Image, rlstore rwLayerStore, lstores 
 	layerName := image.TopLayer
 outer:
 	for {
-		for _, ls := range layerStores {
+		for _, ls := range append([]ROLayerStore{lstore}, lstores...) {
 			layer, err := ls.Get(layerName)
 			if err != nil {
 				continue
@@ -161,7 +164,12 @@ outer:
 			}
 			continue outer
 		}
-		return 0, fmt.Errorf("cannot find layer %q", layerName)
+		return 0, errors.Errorf("cannot find layer %q", layerName)
+	}
+
+	rlstore, err := s.LayerStore()
+	if err != nil {
+		return 0, err
 	}
 
 	layerOptions := &LayerOptions{
@@ -175,19 +183,11 @@ outer:
 
 	// We need to create a temporary layer so we can mount it and lookup the
 	// maximum IDs used.
-	clayer, _, err := rlstore.create("", topLayer, nil, "", nil, layerOptions, false, nil)
+	clayer, err := rlstore.Create(id, topLayer, nil, "", nil, layerOptions, false)
 	if err != nil {
 		return 0, err
 	}
-	defer func() {
-		if err2 := rlstore.Delete(clayer.ID); err2 != nil {
-			if retErr == nil {
-				retErr = fmt.Errorf("deleting temporary layer %#v: %w", clayer.ID, err2)
-			} else {
-				logrus.Errorf("Error deleting temporary layer %#v: %v", clayer.ID, err2)
-			}
-		}
-	}()
+	defer rlstore.Delete(clayer.ID)
 
 	mountOptions := drivers.MountOpts{
 		MountLabel: "",
@@ -200,15 +200,7 @@ outer:
 	if err != nil {
 		return 0, err
 	}
-	defer func() {
-		if _, err2 := rlstore.unmount(clayer.ID, true, false); err2 != nil {
-			if retErr == nil {
-				retErr = fmt.Errorf("unmounting temporary layer %#v: %w", clayer.ID, err2)
-			} else {
-				logrus.Errorf("Error unmounting temporary layer %#v: %v", clayer.ID, err2)
-			}
-		}
-	}()
+	defer rlstore.Unmount(clayer.ID, true)
 
 	userFilesSize := parseMountedFiles(mountpoint, passwdFile, groupFile)
 	if userFilesSize > size {
@@ -219,8 +211,7 @@ outer:
 }
 
 // getAutoUserNS creates an automatic user namespace
-// If image != nil, On entry, rlstore must be locked for writing, and lstores must be locked for reading.
-func (s *store) getAutoUserNS(options *types.AutoUserNsOptions, image *Image, rlstore rwLayerStore, lstores []roLayerStore) ([]idtools.IDMap, []idtools.IDMap, error) {
+func (s *store) getAutoUserNS(id string, options *types.AutoUserNsOptions, image *Image) ([]idtools.IDMap, []idtools.IDMap, error) {
 	requestedSize := uint32(0)
 	initialSize := uint32(1)
 	if options.Size > 0 {
@@ -232,10 +223,10 @@ func (s *store) getAutoUserNS(options *types.AutoUserNsOptions, image *Image, rl
 
 	availableUIDs, availableGIDs, err := s.getAvailableIDs()
 	if err != nil {
-		return nil, nil, fmt.Errorf("cannot read mappings: %w", err)
+		return nil, nil, errors.Wrapf(err, "cannot read mappings")
 	}
 
-	// Look at every container that is using a user namespace and store
+	// Look every container that is using a user namespace and store
 	// the intervals that are already used.
 	containers, err := s.Containers()
 	if err != nil {
@@ -259,7 +250,7 @@ func (s *store) getAutoUserNS(options *types.AutoUserNsOptions, image *Image, rl
 			size = s.autoNsMinSize
 		}
 		if image != nil {
-			sizeFromImage, err := s.getMaxSizeFromImage(image, rlstore, lstores, options.PasswdFile, options.GroupFile)
+			sizeFromImage, err := s.getMaxSizeFromImage(id, image, options.PasswdFile, options.GroupFile)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -268,7 +259,7 @@ func (s *store) getAutoUserNS(options *types.AutoUserNsOptions, image *Image, rl
 			}
 		}
 		if s.autoNsMaxSize > 0 && size > s.autoNsMaxSize {
-			return nil, nil, fmt.Errorf("the container needs a user namespace with size %v that is bigger than the maximum value allowed with userns=auto %v", size, s.autoNsMaxSize)
+			return nil, nil, errors.Errorf("the container needs a user namespace with size %q that is bigger than the maximum value allowed with userns=auto %q", size, s.autoNsMaxSize)
 		}
 	}
 

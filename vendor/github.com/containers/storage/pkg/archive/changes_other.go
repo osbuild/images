@@ -1,11 +1,9 @@
-//go:build !linux
 // +build !linux
 
 package archive
 
 import (
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -43,12 +41,7 @@ func collectFileInfoForChanges(oldDir, newDir string, oldIDMap, newIDMap *idtool
 func collectFileInfo(sourceDir string, idMappings *idtools.IDMappings) (*FileInfo, error) {
 	root := newRootFileInfo(idMappings)
 
-	sourceStat, err := system.Lstat(sourceDir)
-	if err != nil {
-		return nil, err
-	}
-
-	err = filepath.WalkDir(sourceDir, func(path string, d fs.DirEntry, err error) error {
+	err := filepath.Walk(sourceDir, func(path string, f os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -91,15 +84,8 @@ func collectFileInfo(sourceDir string, idMappings *idtools.IDMappings) (*FileInf
 		if err != nil {
 			return err
 		}
-
-		// Don't cross mount points. This ignores file mounts to avoid
-		// generating a diff which deletes all files following the
-		// mount.
-		if s.Dev() != sourceStat.Dev() && s.IsDir() {
-			return filepath.SkipDir
-		}
-
 		info.stat = s
+
 		info.capability, _ = system.Lgetxattr(path, "security.capability")
 
 		parent.children[info.name] = info

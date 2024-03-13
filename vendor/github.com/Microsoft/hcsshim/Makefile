@@ -13,10 +13,6 @@ GO_FLAGS_EXTRA:=
 ifeq "$(GOMODVENDOR)" "1"
 GO_FLAGS_EXTRA += -mod=vendor
 endif
-GO_BUILD_TAGS:=
-ifneq ($(strip $(GO_BUILD_TAGS)),)
-GO_FLAGS_EXTRA += -tags="$(GO_BUILD_TAGS)"
-endif
 GO_BUILD:=CGO_ENABLED=$(CGO_ENABLED) $(GO) build $(GO_FLAGS) $(GO_FLAGS_EXTRA)
 
 SRCROOT=$(dir $(abspath $(firstword $(MAKEFILE_LIST))))
@@ -94,9 +90,23 @@ out/delta.tar.gz: bin/init bin/vsockexec bin/cmd/gcs bin/cmd/gcstools bin/cmd/ho
 	tar -zcf $@ -C rootfs .
 	rm -rf rootfs
 
-bin/cmd/gcs bin/cmd/gcstools bin/cmd/hooks/wait-paths bin/cmd/tar2ext4 bin/internal/tools/snp-report:
+-include deps/cmd/gcs.gomake
+-include deps/cmd/gcstools.gomake
+-include deps/cmd/hooks/wait-paths.gomake
+-include deps/cmd/tar2ext4.gomake
+-include deps/internal/tools/snp-report.gomake
+
+# Implicit rule for includes that define Go targets.
+%.gomake: $(SRCROOT)/Makefile
 	@mkdir -p $(dir $@)
-	GOOS=linux $(GO_BUILD) -o $@ $(SRCROOT)/$(@:bin/%=%)
+	@/bin/echo $(@:deps/%.gomake=bin/%): $(SRCROOT)/hack/gomakedeps.sh > $@.new
+	@/bin/echo -e '\t@mkdir -p $$(dir $$@) $(dir $@)' >> $@.new
+	@/bin/echo -e '\t$$(GO_BUILD) -o $$@.new $$(SRCROOT)/$$(@:bin/%=%)' >> $@.new
+	@/bin/echo -e '\tGO="$(GO)" $$(SRCROOT)/hack/gomakedeps.sh $$@ $$(SRCROOT)/$$(@:bin/%=%) $$(GO_FLAGS) $$(GO_FLAGS_EXTRA) > $(@:%.gomake=%.godeps).new' >> $@.new
+	@/bin/echo -e '\tmv $(@:%.gomake=%.godeps).new $(@:%.gomake=%.godeps)' >> $@.new
+	@/bin/echo -e '\tmv $$@.new $$@' >> $@.new
+	@/bin/echo -e '-include $(@:%.gomake=%.godeps)' >> $@.new
+	mv $@.new $@
 
 bin/vsockexec: vsockexec/vsockexec.o vsockexec/vsock.o
 	@mkdir -p bin

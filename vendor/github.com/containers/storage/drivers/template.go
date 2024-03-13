@@ -1,8 +1,9 @@
 package graphdriver
 
 import (
-	"github.com/containers/storage/pkg/idtools"
 	"github.com/sirupsen/logrus"
+
+	"github.com/containers/storage/pkg/idtools"
 )
 
 // TemplateDriver is just barely enough of a driver that we can implement a
@@ -34,7 +35,6 @@ func NaiveCreateFromTemplate(d TemplateDriver, id, template string, templateIDMa
 		}
 		return err
 	}
-	defer diff.Close()
 
 	applyOptions := ApplyDiffOpts{
 		Diff:              diff,

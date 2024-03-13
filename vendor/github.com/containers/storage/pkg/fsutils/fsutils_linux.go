@@ -1,10 +1,10 @@
-//go:build linux
 // +build linux
 
 package fsutils
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"unsafe"
 
@@ -12,14 +12,14 @@ import (
 )
 
 func locateDummyIfEmpty(path string) (string, error) {
-	children, err := os.ReadDir(path)
+	children, err := ioutil.ReadDir(path)
 	if err != nil {
 		return "", err
 	}
 	if len(children) != 0 {
 		return "", nil
 	}
-	dummyFile, err := os.CreateTemp(path, "fsutils-dummy")
+	dummyFile, err := ioutil.TempFile(path, "fsutils-dummy")
 	if err != nil {
 		return "", err
 	}

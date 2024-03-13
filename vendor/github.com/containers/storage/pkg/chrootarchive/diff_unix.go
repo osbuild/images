@@ -1,5 +1,4 @@
-//go:build !windows && !darwin
-// +build !windows,!darwin
+//+build !windows
 
 package chrootarchive
 
@@ -8,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -15,7 +15,7 @@ import (
 	"github.com/containers/storage/pkg/archive"
 	"github.com/containers/storage/pkg/reexec"
 	"github.com/containers/storage/pkg/system"
-	"github.com/containers/storage/pkg/unshare"
+	"github.com/opencontainers/runc/libcontainer/userns"
 )
 
 type applyLayerResponse struct {
@@ -26,6 +26,7 @@ type applyLayerResponse struct {
 // used on Windows as it does not support chroot, hence no point sandboxing
 // through chroot and rexec.
 func applyLayer() {
+
 	var (
 		tmpDir  string
 		err     error
@@ -34,7 +35,7 @@ func applyLayer() {
 	runtime.LockOSThread()
 	flag.Parse()
 
-	inUserns := unshare.IsRootless()
+	inUserns := userns.RunningInUserNS()
 	if err := chroot(flag.Arg(0)); err != nil {
 		fatal(err)
 	}
@@ -54,7 +55,7 @@ func applyLayer() {
 		options.InUserNS = true
 	}
 
-	if tmpDir, err = os.MkdirTemp("/", "temp-storage-extract"); err != nil {
+	if tmpDir, err = ioutil.TempDir("/", "temp-storage-extract"); err != nil {
 		fatal(err)
 	}
 
@@ -67,7 +68,7 @@ func applyLayer() {
 
 	encoder := json.NewEncoder(os.Stdout)
 	if err := encoder.Encode(applyLayerResponse{size}); err != nil {
-		fatal(fmt.Errorf("unable to encode layerSize JSON: %w", err))
+		fatal(fmt.Errorf("unable to encode layerSize JSON: %s", err))
 	}
 
 	if _, err := flush(os.Stdin); err != nil {
@@ -93,7 +94,7 @@ func applyLayerHandler(dest string, layer io.Reader, options *archive.TarOptions
 	}
 	if options == nil {
 		options = &archive.TarOptions{}
-		if unshare.IsRootless() {
+		if userns.RunningInUserNS() {
 			options.InUserNS = true
 		}
 	}
@@ -103,25 +104,25 @@ func applyLayerHandler(dest string, layer io.Reader, options *archive.TarOptions
 
 	data, err := json.Marshal(options)
 	if err != nil {
-		return 0, fmt.Errorf("ApplyLayer json encode: %w", err)
+		return 0, fmt.Errorf("ApplyLayer json encode: %v", err)
 	}
 
 	cmd := reexec.Command("storage-applyLayer", dest)
 	cmd.Stdin = layer
-	cmd.Env = append(os.Environ(), fmt.Sprintf("OPT=%s", data))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("OPT=%s", data))
 
 	outBuf, errBuf := new(bytes.Buffer), new(bytes.Buffer)
 	cmd.Stdout, cmd.Stderr = outBuf, errBuf
 
 	if err = cmd.Run(); err != nil {
-		return 0, fmt.Errorf("ApplyLayer stdout: %s stderr: %s %w", outBuf, errBuf, err)
+		return 0, fmt.Errorf("ApplyLayer %s stdout: %s stderr: %s", err, outBuf, errBuf)
 	}
 
 	// Stdout should be a valid JSON struct representing an applyLayerResponse.
 	response := applyLayerResponse{}
 	decoder := json.NewDecoder(outBuf)
 	if err = decoder.Decode(&response); err != nil {
-		return 0, fmt.Errorf("unable to decode ApplyLayer JSON response: %w", err)
+		return 0, fmt.Errorf("unable to decode ApplyLayer JSON response: %s", err)
 	}
 
 	return response.LayerSize, nil

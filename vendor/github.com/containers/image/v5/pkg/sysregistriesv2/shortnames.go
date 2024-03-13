@@ -1,7 +1,6 @@
 package sysregistriesv2
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -13,8 +12,7 @@ import (
 	"github.com/containers/image/v5/types"
 	"github.com/containers/storage/pkg/homedir"
 	"github.com/containers/storage/pkg/lockfile"
-	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/maps"
+	"github.com/pkg/errors"
 )
 
 // defaultShortNameMode is the default mode of registries.conf files if the
@@ -167,7 +165,7 @@ func editShortNameAlias(ctx *types.SystemContext, name string, value *string) er
 	} else {
 		// If the name does not exist, throw an error.
 		if _, exists := conf.Aliases[name]; !exists {
-			return fmt.Errorf("short-name alias %q not found in %q: please check registries.conf files", name, confPath)
+			return errors.Errorf("short-name alias %q not found in %q: please check registries.conf files", name, confPath)
 		}
 
 		delete(conf.Aliases, name)
@@ -211,25 +209,25 @@ func RemoveShortNameAlias(ctx *types.SystemContext, name string) error {
 func parseShortNameValue(alias string) (reference.Named, error) {
 	ref, err := reference.Parse(alias)
 	if err != nil {
-		return nil, fmt.Errorf("parsing alias %q: %w", alias, err)
+		return nil, errors.Wrapf(err, "parsing alias %q", alias)
 	}
 
 	if _, ok := ref.(reference.Digested); ok {
-		return nil, fmt.Errorf("invalid alias %q: must not contain digest", alias)
+		return nil, errors.Errorf("invalid alias %q: must not contain digest", alias)
 	}
 
 	if _, ok := ref.(reference.Tagged); ok {
-		return nil, fmt.Errorf("invalid alias %q: must not contain tag", alias)
+		return nil, errors.Errorf("invalid alias %q: must not contain tag", alias)
 	}
 
 	named, ok := ref.(reference.Named)
 	if !ok {
-		return nil, fmt.Errorf("invalid alias %q: must contain registry and repository", alias)
+		return nil, errors.Errorf("invalid alias %q: must contain registry and repository", alias)
 	}
 
 	registry := reference.Domain(named)
 	if !(strings.ContainsAny(registry, ".:") || registry == "localhost") {
-		return nil, fmt.Errorf("invalid alias %q: must contain registry and repository", alias)
+		return nil, errors.Errorf("invalid alias %q: must contain registry and repository", alias)
 	}
 
 	// A final parse to make sure that docker.io references are correctly
@@ -243,25 +241,25 @@ func parseShortNameValue(alias string) (reference.Named, error) {
 func validateShortName(name string) error {
 	repo, err := reference.Parse(name)
 	if err != nil {
-		return fmt.Errorf("cannot parse short name: %q: %w", name, err)
+		return errors.Wrapf(err, "cannot parse short name: %q", name)
 	}
 
 	if _, ok := repo.(reference.Digested); ok {
-		return fmt.Errorf("invalid short name %q: must not contain digest", name)
+		return errors.Errorf("invalid short name %q: must not contain digest", name)
 	}
 
 	if _, ok := repo.(reference.Tagged); ok {
-		return fmt.Errorf("invalid short name %q: must not contain tag", name)
+		return errors.Errorf("invalid short name %q: must not contain tag", name)
 	}
 
 	named, ok := repo.(reference.Named)
 	if !ok {
-		return fmt.Errorf("invalid short name %q: no name", name)
+		return errors.Errorf("invalid short name %q: no name", name)
 	}
 
 	registry := reference.Domain(named)
 	if strings.ContainsAny(registry, ".:") || registry == "localhost" {
-		return fmt.Errorf("invalid short name %q: must not contain registry", name)
+		return errors.Errorf("invalid short name %q: must not contain registry", name)
 	}
 	return nil
 }
@@ -299,7 +297,7 @@ func newShortNameAliasCache(path string, conf *shortNameAliasConf) (*shortNameAl
 	if len(errs) > 0 {
 		err := errs[0]
 		for i := 1; i < len(errs); i++ {
-			err = fmt.Errorf("%v\n: %w", errs[i], err)
+			err = errors.Wrapf(err, "%v\n", errs[i])
 		}
 		return nil, err
 	}
@@ -309,32 +307,31 @@ func newShortNameAliasCache(path string, conf *shortNameAliasConf) (*shortNameAl
 // updateWithConfigurationFrom updates c with configuration from updates.
 // In case of conflict, updates is preferred.
 func (c *shortNameAliasCache) updateWithConfigurationFrom(updates *shortNameAliasCache) {
-	maps.Copy(c.namedAliases, updates.namedAliases)
+	for name, value := range updates.namedAliases {
+		c.namedAliases[name] = value
+	}
 }
 
 func loadShortNameAliasConf(confPath string) (*shortNameAliasConf, *shortNameAliasCache, error) {
 	conf := shortNameAliasConf{}
 
-	meta, err := toml.DecodeFile(confPath, &conf)
+	_, err := toml.DecodeFile(confPath, &conf)
 	if err != nil && !os.IsNotExist(err) {
 		// It's okay if the config doesn't exist.  Other errors are not.
-		return nil, nil, fmt.Errorf("loading short-name aliases config file %q: %w", confPath, err)
-	}
-	if keys := meta.Undecoded(); len(keys) > 0 {
-		logrus.Debugf("Failed to decode keys %q from %q", keys, confPath)
+		return nil, nil, errors.Wrapf(err, "loading short-name aliases config file %q", confPath)
 	}
 
 	// Even if we don’t always need the cache, doing so validates the machine-generated config.  The
 	// file could still be corrupted by another process or user.
 	cache, err := newShortNameAliasCache(confPath, &conf)
 	if err != nil {
-		return nil, nil, fmt.Errorf("loading short-name aliases config file %q: %w", confPath, err)
+		return nil, nil, errors.Wrapf(err, "loading short-name aliases config file %q", confPath)
 	}
 
 	return &conf, cache, nil
 }
 
-func shortNameAliasesConfPathAndLock(ctx *types.SystemContext) (string, *lockfile.LockFile, error) {
+func shortNameAliasesConfPathAndLock(ctx *types.SystemContext) (string, lockfile.Locker, error) {
 	shortNameAliasesConfPath, err := shortNameAliasesConfPath(ctx)
 	if err != nil {
 		return "", nil, err
@@ -345,6 +342,6 @@ func shortNameAliasesConfPathAndLock(ctx *types.SystemContext) (string, *lockfil
 	}
 
 	lockPath := shortNameAliasesConfPath + ".lock"
-	locker, err := lockfile.GetLockFile(lockPath)
+	locker, err := lockfile.GetLockfile(lockPath)
 	return shortNameAliasesConfPath, locker, err
 }

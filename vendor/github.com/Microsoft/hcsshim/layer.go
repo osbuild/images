@@ -32,7 +32,6 @@ func CreateScratchLayer(info DriverInfo, layerId, parentId string, parentLayerPa
 func DeactivateLayer(info DriverInfo, id string) error {
 	return wclayer.DeactivateLayer(context.Background(), layerPath(&info, id))
 }
-
 func DestroyLayer(info DriverInfo, id string) error {
 	return wclayer.DestroyLayer(context.Background(), layerPath(&info, id))
 }
@@ -70,9 +69,6 @@ func ProcessUtilityVMImage(path string) error {
 }
 func UnprepareLayer(info DriverInfo, layerId string) error {
 	return wclayer.UnprepareLayer(context.Background(), layerPath(&info, layerId))
-}
-func ConvertToBaseLayer(path string) error {
-	return wclayer.ConvertToBaseLayer(context.Background(), path)
 }
 
 type DriverInfo struct {

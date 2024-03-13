@@ -1,12 +1,13 @@
-//go:build !linux && !windows && !freebsd && !solaris && !darwin
-// +build !linux,!windows,!freebsd,!solaris,!darwin
+// +build !linux,!windows,!freebsd,!solaris
 
 package graphdriver
 
-// Slice of drivers that should be used in an order
-var Priority = []string{
-	"unsupported",
-}
+var (
+	// Slice of drivers that should be used in an order
+	priority = []string{
+		"unsupported",
+	}
+)
 
 // GetFSMagic returns the filesystem id given the path.
 func GetFSMagic(rootpath string) (FsMagic, error) {

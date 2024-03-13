@@ -1,9 +1,11 @@
 package graphdriver
 
-// Slice of drivers that should be used in order
-var Priority = []string{
-	"windowsfilter",
-}
+var (
+	// Slice of drivers that should be used in order
+	priority = []string{
+		"windowsfilter",
+	}
+)
 
 // GetFSMagic returns the filesystem id given the path.
 func GetFSMagic(rootpath string) (FsMagic, error) {

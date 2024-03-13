@@ -2,16 +2,16 @@ package archive
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/containers/image/v5/docker/internal/tarfile"
 	"github.com/containers/image/v5/docker/reference"
-	ctrImage "github.com/containers/image/v5/internal/image"
+	ctrImage "github.com/containers/image/v5/image"
 	"github.com/containers/image/v5/transports"
 	"github.com/containers/image/v5/types"
+	"github.com/pkg/errors"
 )
 
 func init() {
@@ -53,39 +53,40 @@ type archiveReference struct {
 	// file, not necessarily path precisely).
 	archiveReader *tarfile.Reader
 	// If not nil, must have been created for path
-	writer *Writer
+	archiveWriter *tarfile.Writer
 }
 
 // ParseReference converts a string, which should not start with the ImageTransport.Name prefix, into an Docker ImageReference.
 func ParseReference(refString string) (types.ImageReference, error) {
 	if refString == "" {
-		return nil, fmt.Errorf("docker-archive reference %s isn't of the form <path>[:<reference>]", refString)
+		return nil, errors.Errorf("docker-archive reference %s isn't of the form <path>[:<reference>]", refString)
 	}
 
-	path, tagOrIndex, gotTagOrIndex := strings.Cut(refString, ":")
+	parts := strings.SplitN(refString, ":", 2)
+	path := parts[0]
 	var nt reference.NamedTagged
 	sourceIndex := -1
 
-	if gotTagOrIndex {
+	if len(parts) == 2 {
 		// A :tag or :@index was specified.
-		if len(tagOrIndex) > 0 && tagOrIndex[0] == '@' {
-			i, err := strconv.Atoi(tagOrIndex[1:])
+		if len(parts[1]) > 0 && parts[1][0] == '@' {
+			i, err := strconv.Atoi(parts[1][1:])
 			if err != nil {
-				return nil, fmt.Errorf("Invalid source index %s: %w", tagOrIndex, err)
+				return nil, errors.Wrapf(err, "Invalid source index %s", parts[1])
 			}
 			if i < 0 {
-				return nil, fmt.Errorf("Invalid source index @%d: must not be negative", i)
+				return nil, errors.Errorf("Invalid source index @%d: must not be negative", i)
 			}
 			sourceIndex = i
 		} else {
-			ref, err := reference.ParseNormalizedNamed(tagOrIndex)
+			ref, err := reference.ParseNormalizedNamed(parts[1])
 			if err != nil {
-				return nil, fmt.Errorf("docker-archive parsing reference: %w", err)
+				return nil, errors.Wrapf(err, "docker-archive parsing reference")
 			}
 			ref = reference.TagNameOnly(ref)
 			refTagged, isTagged := ref.(reference.NamedTagged)
 			if !isTagged { // If ref contains a digest, TagNameOnly does not change it
-				return nil, fmt.Errorf("reference does not include a tag: %s", ref.String())
+				return nil, errors.Errorf("reference does not include a tag: %s", ref.String())
 			}
 			nt = refTagged
 		}
@@ -107,25 +108,25 @@ func NewIndexReference(path string, sourceIndex int) (types.ImageReference, erro
 // newReference returns a docker archive reference for a path, an optional reference or sourceIndex,
 // and optionally a tarfile.Reader and/or a tarfile.Writer matching path.
 func newReference(path string, ref reference.NamedTagged, sourceIndex int,
-	archiveReader *tarfile.Reader, writer *Writer) (types.ImageReference, error) {
+	archiveReader *tarfile.Reader, archiveWriter *tarfile.Writer) (types.ImageReference, error) {
 	if strings.Contains(path, ":") {
-		return nil, fmt.Errorf("Invalid docker-archive: reference: colon in path %q is not supported", path)
+		return nil, errors.Errorf("Invalid docker-archive: reference: colon in path %q is not supported", path)
 	}
 	if ref != nil && sourceIndex != -1 {
-		return nil, fmt.Errorf("Invalid docker-archive: reference: cannot use both a tag and a source index")
+		return nil, errors.Errorf("Invalid docker-archive: reference: cannot use both a tag and a source index")
 	}
 	if _, isDigest := ref.(reference.Canonical); isDigest {
-		return nil, fmt.Errorf("docker-archive doesn't support digest references: %s", ref.String())
+		return nil, errors.Errorf("docker-archive doesn't support digest references: %s", ref.String())
 	}
 	if sourceIndex != -1 && sourceIndex < 0 {
-		return nil, fmt.Errorf("Invalid docker-archive: reference: index @%d must not be negative", sourceIndex)
+		return nil, errors.Errorf("Invalid docker-archive: reference: index @%d must not be negative", sourceIndex)
 	}
 	return archiveReference{
 		path:          path,
 		ref:           ref,
 		sourceIndex:   sourceIndex,
 		archiveReader: archiveReader,
-		writer:        writer,
+		archiveWriter: archiveWriter,
 	}, nil
 }
 
@@ -136,7 +137,7 @@ func (ref archiveReference) Transport() types.ImageTransport {
 // StringWithinTransport returns a string representation of the reference, which MUST be such that
 // reference.Transport().ParseReference(reference.StringWithinTransport()) returns an equivalent reference.
 // NOTE: The returned string is not promised to be equal to the original input to ParseReference;
-// e.g. default attribute values omitted by the user may be filled in the return value, or vice versa.
+// e.g. default attribute values omitted by the user may be filled in in the return value, or vice versa.
 // WARNING: Do not use the return value in the UI to describe an image, it does not contain the Transport().Name() prefix.
 func (ref archiveReference) StringWithinTransport() string {
 	switch {
@@ -184,13 +185,17 @@ func (ref archiveReference) PolicyConfigurationNamespaces() []string {
 // verify that UnparsedImage, and convert it into a real Image via image.FromUnparsedImage.
 // WARNING: This may not do the right thing for a manifest list, see image.FromSource for details.
 func (ref archiveReference) NewImage(ctx context.Context, sys *types.SystemContext) (types.ImageCloser, error) {
-	return ctrImage.FromReference(ctx, sys, ref)
+	src, err := newImageSource(ctx, sys, ref)
+	if err != nil {
+		return nil, err
+	}
+	return ctrImage.FromSource(ctx, sys, src)
 }
 
 // NewImageSource returns a types.ImageSource for this reference.
 // The caller must call .Close() on the returned ImageSource.
 func (ref archiveReference) NewImageSource(ctx context.Context, sys *types.SystemContext) (types.ImageSource, error) {
-	return newImageSource(sys, ref)
+	return newImageSource(ctx, sys, ref)
 }
 
 // NewImageDestination returns a types.ImageDestination for this reference.

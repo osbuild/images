@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"errors"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -254,7 +255,7 @@ func PrepareArchiveCopy(srcContent io.Reader, srcInfo, dstInfo CopyInfo) (dstDir
 		// The destination exists as a directory. No alteration
 		// to srcContent is needed as its contents can be
 		// simply extracted to the destination directory.
-		return dstInfo.Path, io.NopCloser(srcContent), nil
+		return dstInfo.Path, ioutil.NopCloser(srcContent), nil
 	case dstInfo.Exists && srcInfo.IsDir:
 		// The destination exists as some type of file and the source
 		// content is a directory. This is an error condition since
@@ -297,6 +298,7 @@ func PrepareArchiveCopy(srcContent io.Reader, srcInfo, dstInfo CopyInfo) (dstDir
 		}
 		return dstDir, RebaseArchiveEntries(srcContent, srcBase, dstBase), nil
 	}
+
 }
 
 // RebaseArchiveEntries rewrites the given srcContent archive replacing

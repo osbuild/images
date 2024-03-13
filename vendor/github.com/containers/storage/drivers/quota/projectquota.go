@@ -50,15 +50,14 @@ struct fsxattr {
 #endif
 */
 import "C"
-
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"math"
 	"os"
 	"path"
 	"path/filepath"
-	"sync"
 	"syscall"
 	"unsafe"
 
@@ -68,10 +67,6 @@ import (
 )
 
 const projectIDsAllocatedPerQuotaHome = 10000
-
-// BackingFsBlockDeviceLink is the name of a file that we place in
-// the home directory of a driver that uses this package.
-const BackingFsBlockDeviceLink = "backingFsBlockDev"
 
 // Quota limit params - currently we only control blocks hard limit and inodes
 type Quota struct {
@@ -84,7 +79,7 @@ type Quota struct {
 type Control struct {
 	backingFsBlockDev string
 	nextProjectID     uint32
-	quotas            *sync.Map
+	quotas            map[string]uint32
 	basePath          string
 }
 
@@ -99,7 +94,8 @@ func generateUniqueProjectID(path string) (uint32, error) {
 	}
 	stat, ok := fileinfo.Sys().(*syscall.Stat_t)
 	if !ok {
-		return 0, fmt.Errorf("not a syscall.Stat_t %s", path)
+		return 0, fmt.Errorf("Not a syscall.Stat_t %s", path)
+
 	}
 	projectID := projectIDsAllocatedPerQuotaHome + (stat.Ino*projectIDsAllocatedPerQuotaHome)%(math.MaxUint32-projectIDsAllocatedPerQuotaHome)
 	return uint32(projectID), nil
@@ -169,7 +165,7 @@ func NewControl(basePath string) (*Control, error) {
 	q := Control{
 		backingFsBlockDev: backingFsBlockDev,
 		nextProjectID:     minProjectID + 1,
-		quotas:            &sync.Map{},
+		quotas:            make(map[string]uint32),
 		basePath:          basePath,
 	}
 
@@ -192,11 +188,8 @@ func NewControl(basePath string) (*Control, error) {
 // SetQuota - assign a unique project id to directory and set the quota limits
 // for that project id
 func (q *Control) SetQuota(targetPath string, quota Quota) error {
-	var projectID uint32
-	value, ok := q.quotas.Load(targetPath)
-	if ok {
-		projectID, ok = value.(uint32)
-	}
+
+	projectID, ok := q.quotas[targetPath]
 	if !ok {
 		projectID = q.nextProjectID
 
@@ -208,7 +201,7 @@ func (q *Control) SetQuota(targetPath string, quota Quota) error {
 			return err
 		}
 
-		q.quotas.Store(targetPath, projectID)
+		q.quotas[targetPath] = projectID
 		q.nextProjectID++
 	}
 
@@ -217,12 +210,6 @@ func (q *Control) SetQuota(targetPath string, quota Quota) error {
 	//
 	logrus.Debugf("SetQuota path=%s, size=%d, inodes=%d, projectID=%d", targetPath, quota.Size, quota.Inodes, projectID)
 	return q.setProjectQuota(projectID, quota)
-}
-
-// ClearQuota removes the map entry in the quotas map for targetPath.
-// It does so to prevent the map leaking entries as directories are deleted.
-func (q *Control) ClearQuota(targetPath string) {
-	q.quotas.Delete(targetPath)
 }
 
 // setProjectQuota - set the quota for project id on xfs block device
@@ -243,7 +230,7 @@ func (q *Control) setProjectQuota(projectID uint32, quota Quota) error {
 		d.d_ino_softlimit = d.d_ino_hardlimit
 	}
 
-	cs := C.CString(q.backingFsBlockDev)
+	var cs = C.CString(q.backingFsBlockDev)
 	defer C.free(unsafe.Pointer(cs))
 
 	runQuotactl := func() syscall.Errno {
@@ -302,11 +289,8 @@ func (q *Control) GetDiskUsage(targetPath string, usage *directory.DiskUsage) er
 
 func (q *Control) fsDiskQuotaFromPath(targetPath string) (C.fs_disk_quota_t, error) {
 	var d C.fs_disk_quota_t
-	var projectID uint32
-	value, ok := q.quotas.Load(targetPath)
-	if ok {
-		projectID, ok = value.(uint32)
-	}
+
+	projectID, ok := q.quotas[targetPath]
 	if !ok {
 		return d, fmt.Errorf("quota not found for path : %s", targetPath)
 	}
@@ -314,15 +298,15 @@ func (q *Control) fsDiskQuotaFromPath(targetPath string) (C.fs_disk_quota_t, err
 	//
 	// get the quota limit for the container's project id
 	//
-	cs := C.CString(q.backingFsBlockDev)
+	var cs = C.CString(q.backingFsBlockDev)
 	defer C.free(unsafe.Pointer(cs))
 
 	_, _, errno := unix.Syscall6(unix.SYS_QUOTACTL, C.Q_XGETPQUOTA,
 		uintptr(unsafe.Pointer(cs)), uintptr(C.__u32(projectID)),
 		uintptr(unsafe.Pointer(&d)), 0, 0)
 	if errno != 0 {
-		return d, fmt.Errorf("failed to get quota limit for projid %d on %s: %w",
-			projectID, q.backingFsBlockDev, errno)
+		return d, fmt.Errorf("Failed to get quota limit for projid %d on %s: %v",
+			projectID, q.backingFsBlockDev, errno.Error())
 	}
 
 	return d, nil
@@ -340,7 +324,7 @@ func getProjectID(targetPath string) (uint32, error) {
 	_, _, errno := unix.Syscall(unix.SYS_IOCTL, getDirFd(dir), C.FS_IOC_FSGETXATTR,
 		uintptr(unsafe.Pointer(&fsx)))
 	if errno != 0 {
-		return 0, fmt.Errorf("failed to get projid for %s: %w", targetPath, errno)
+		return 0, fmt.Errorf("Failed to get projid for %s: %v", targetPath, errno.Error())
 	}
 
 	return uint32(fsx.fsx_projid), nil
@@ -358,14 +342,14 @@ func setProjectID(targetPath string, projectID uint32) error {
 	_, _, errno := unix.Syscall(unix.SYS_IOCTL, getDirFd(dir), C.FS_IOC_FSGETXATTR,
 		uintptr(unsafe.Pointer(&fsx)))
 	if errno != 0 {
-		return fmt.Errorf("failed to get projid for %s: %w", targetPath, errno)
+		return fmt.Errorf("Failed to get projid for %s: %v", targetPath, errno.Error())
 	}
 	fsx.fsx_projid = C.__u32(projectID)
 	fsx.fsx_xflags |= C.FS_XFLAG_PROJINHERIT
 	_, _, errno = unix.Syscall(unix.SYS_IOCTL, getDirFd(dir), C.FS_IOC_FSSETXATTR,
 		uintptr(unsafe.Pointer(&fsx)))
 	if errno != 0 {
-		return fmt.Errorf("failed to set projid for %s: %w", targetPath, errno)
+		return fmt.Errorf("Failed to set projid for %s: %v", targetPath, errno.Error())
 	}
 
 	return nil
@@ -374,7 +358,7 @@ func setProjectID(targetPath string, projectID uint32) error {
 // findNextProjectID - find the next project id to be used for containers
 // by scanning driver home directory to find used project ids
 func (q *Control) findNextProjectID() error {
-	files, err := os.ReadDir(q.basePath)
+	files, err := ioutil.ReadDir(q.basePath)
 	if err != nil {
 		return fmt.Errorf("read directory failed : %s", q.basePath)
 	}
@@ -388,7 +372,7 @@ func (q *Control) findNextProjectID() error {
 			return err
 		}
 		if projid > 0 {
-			q.quotas.Store(path, projid)
+			q.quotas[path] = projid
 		}
 		if q.nextProjectID <= projid {
 			q.nextProjectID = projid + 1
@@ -406,9 +390,9 @@ func openDir(path string) (*C.DIR, error) {
 	Cpath := C.CString(path)
 	defer free(Cpath)
 
-	dir, errno := C.opendir(Cpath)
+	dir := C.opendir(Cpath)
 	if dir == nil {
-		return nil, fmt.Errorf("can't open dir %v: %w", Cpath, errno)
+		return nil, fmt.Errorf("Can't open dir")
 	}
 	return dir, nil
 }
@@ -432,21 +416,11 @@ func makeBackingFsDev(home string) (string, error) {
 		return "", err
 	}
 
-	backingFsBlockDev := path.Join(home, BackingFsBlockDeviceLink)
-	backingFsBlockDevTmp := backingFsBlockDev + ".tmp"
+	backingFsBlockDev := path.Join(home, "backingFsBlockDev")
 	// Re-create just in case someone copied the home directory over to a new device
-	if err := unix.Mknod(backingFsBlockDevTmp, unix.S_IFBLK|0o600, int(stat.Dev)); err != nil {
-		if !errors.Is(err, unix.EEXIST) {
-			return "", fmt.Errorf("failed to mknod %s: %w", backingFsBlockDevTmp, err)
-		}
-		// On EEXIST, try again after unlinking any potential leftover.
-		_ = unix.Unlink(backingFsBlockDevTmp)
-		if err := unix.Mknod(backingFsBlockDevTmp, unix.S_IFBLK|0o600, int(stat.Dev)); err != nil {
-			return "", fmt.Errorf("failed to mknod %s: %w", backingFsBlockDevTmp, err)
-		}
-	}
-	if err := unix.Rename(backingFsBlockDevTmp, backingFsBlockDev); err != nil {
-		return "", fmt.Errorf("failed to rename %s to %s: %w", backingFsBlockDevTmp, backingFsBlockDev, err)
+	unix.Unlink(backingFsBlockDev)
+	if err := unix.Mknod(backingFsBlockDev, unix.S_IFBLK|0600, int(stat.Dev)); err != nil {
+		return "", fmt.Errorf("Failed to mknod %s: %v", backingFsBlockDev, err)
 	}
 
 	return backingFsBlockDev, nil

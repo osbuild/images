@@ -1,4 +1,3 @@
-//go:build !windows
 // +build !windows
 
 package idtools
@@ -47,9 +46,6 @@ func mkdirAs(path string, mode os.FileMode, ownerUID, ownerGID int, mkAll, chown
 		// walk back to "/" looking for directories which do not exist
 		// and add them to the paths array for chown after creation
 		dirPath := path
-		if !filepath.IsAbs(dirPath) {
-			return fmt.Errorf("path: %s should be absolute", dirPath)
-		}
 		for {
 			dirPath = filepath.Dir(dirPath)
 			if dirPath == "/" {
@@ -91,13 +87,13 @@ func CanAccess(path string, pair IDPair) bool {
 }
 
 func accessible(isOwner, isGroup bool, perms os.FileMode) bool {
-	if isOwner && (perms&0o100 == 0o100) {
+	if isOwner && (perms&0100 == 0100) {
 		return true
 	}
-	if isGroup && (perms&0o010 == 0o010) {
+	if isGroup && (perms&0010 == 0010) {
 		return true
 	}
-	if perms&0o001 == 0o001 {
+	if perms&0001 == 0001 {
 		return true
 	}
 	return false

@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -56,7 +57,7 @@ func (change *Change) String() string {
 	return fmt.Sprintf("%s %s", change.Kind, change.Path)
 }
 
-// changesByPath implements sort.Interface.
+// for sort.Sort
 type changesByPath []Change
 
 func (c changesByPath) Less(i, j int) bool { return c[i].Path < c[j].Path }
@@ -131,11 +132,9 @@ func isENOTDIR(err error) bool {
 	return false
 }
 
-type (
-	skipChange     func(string) (bool, error)
-	deleteChange   func(string, string, os.FileInfo) (string, error)
-	whiteoutChange func(string, string) (bool, error)
-)
+type skipChange func(string) (bool, error)
+type deleteChange func(string, string, os.FileInfo) (string, error)
+type whiteoutChange func(string, string) (bool, error)
 
 func changes(layers []string, rw string, dc deleteChange, sc skipChange, wc whiteoutChange) ([]Change, error) {
 	var (
@@ -301,6 +300,7 @@ func (info *FileInfo) path() string {
 }
 
 func (info *FileInfo) addChanges(oldInfo *FileInfo, changes *[]Change) {
+
 	sizeAtEntry := len(*changes)
 
 	if oldInfo == nil {
@@ -374,6 +374,7 @@ func (info *FileInfo) addChanges(oldInfo *FileInfo, changes *[]Change) {
 		copy((*changes)[sizeAtEntry+1:], (*changes)[sizeAtEntry:])
 		(*changes)[sizeAtEntry] = change
 	}
+
 }
 
 // Changes add changes to file information.
@@ -398,9 +399,11 @@ func newRootFileInfo(idMappings *idtools.IDMappings) *FileInfo {
 // ChangesDirs compares two directories and generates an array of Change objects describing the changes.
 // If oldDir is "", then all files in newDir will be Add-Changes.
 func ChangesDirs(newDir string, newMappings *idtools.IDMappings, oldDir string, oldMappings *idtools.IDMappings) ([]Change, error) {
-	var oldRoot, newRoot *FileInfo
+	var (
+		oldRoot, newRoot *FileInfo
+	)
 	if oldDir == "" {
-		emptyDir, err := os.MkdirTemp("", "empty")
+		emptyDir, err := ioutil.TempDir("", "empty")
 		if err != nil {
 			return nil, err
 		}

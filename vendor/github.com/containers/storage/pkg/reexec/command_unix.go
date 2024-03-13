@@ -1,5 +1,4 @@
-//go:build solaris || darwin
-// +build solaris darwin
+// +build freebsd solaris darwin
 
 package reexec
 
@@ -18,7 +17,6 @@ func Self() string {
 // For example if current binary is "docker" at "/usr/bin/", then cmd.Path will
 // be set to "/usr/bin/docker".
 func Command(args ...string) *exec.Cmd {
-	panicIfNotInitialized()
 	cmd := exec.Command(Self())
 	cmd.Args = args
 	return cmd
@@ -26,7 +24,6 @@ func Command(args ...string) *exec.Cmd {
 
 // CommandContext returns *exec.Cmd which has Path as current binary.
 func CommandContext(ctx context.Context, args ...string) *exec.Cmd {
-	panicIfNotInitialized()
 	cmd := exec.CommandContext(ctx, Self())
 	cmd.Args = args
 	return cmd

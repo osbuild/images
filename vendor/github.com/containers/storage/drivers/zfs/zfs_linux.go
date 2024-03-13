@@ -1,11 +1,9 @@
 package zfs
 
 import (
-	"fmt"
-
 	graphdriver "github.com/containers/storage/drivers"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/sys/unix"
 )
 
 func checkRootdirFs(rootDir string) error {
@@ -20,7 +18,7 @@ func checkRootdirFs(rootDir string) error {
 
 	if fsMagic != graphdriver.FsMagicZfs {
 		logrus.WithField("root", rootDir).WithField("backingFS", backingFS).WithField("storage-driver", "zfs").Error("No zfs dataset found for root")
-		return fmt.Errorf("no zfs dataset found for rootdir '%s': %w", rootDir, graphdriver.ErrPrerequisites)
+		return errors.Wrapf(graphdriver.ErrPrerequisites, "no zfs dataset found for rootdir '%s'", rootDir)
 	}
 
 	return nil
@@ -28,8 +26,4 @@ func checkRootdirFs(rootDir string) error {
 
 func getMountpoint(id string) string {
 	return id
-}
-
-func detachUnmount(mountpoint string) error {
-	return unix.Unmount(mountpoint, unix.MNT_DETACH)
 }

@@ -1,14 +1,18 @@
-//go:build openbsd
-// +build openbsd
+// +build !linux,!solaris
 
 package kernel
 
 import (
-	"fmt"
-	"runtime"
+	"errors"
 )
 
-// A stub called by kernel_unix.go .
+// Utsname represents the system name structure.
+// It is defined here to make it portable as it is available on linux but not
+// on windows.
+type Utsname struct {
+	Release [65]byte
+}
+
 func uname() (*Utsname, error) {
-	return nil, fmt.Errorf("Kernel version detection is not available on %s", runtime.GOOS)
+	return nil, errors.New("Kernel version detection is available only on linux")
 }

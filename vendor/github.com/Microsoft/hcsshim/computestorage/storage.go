@@ -7,11 +7,11 @@ import (
 	hcsschema "github.com/Microsoft/hcsshim/internal/hcs/schema2"
 )
 
-//go:generate go run github.com/Microsoft/go-winio/tools/mkwinsyscall -output zsyscall_windows.go storage.go
+//go:generate go run ../mksyscall_windows.go -output zsyscall_windows.go storage.go
 
 //sys hcsImportLayer(layerPath string, sourceFolderPath string, layerData string) (hr error) = computestorage.HcsImportLayer?
 //sys hcsExportLayer(layerPath string, exportFolderPath string, layerData string, options string) (hr error) = computestorage.HcsExportLayer?
-//sys hcsDestroyLayer(layerPath string) (hr error) = computestorage.HcsDestroyLayer?
+//sys hcsDestroyLayer(layerPath string) (hr error) = computestorage.HcsDestoryLayer?
 //sys hcsSetupBaseOSLayer(layerPath string, handle windows.Handle, options string) (hr error) = computestorage.HcsSetupBaseOSLayer?
 //sys hcsInitializeWritableLayer(writableLayerPath string, layerData string, options string) (hr error) = computestorage.HcsInitializeWritableLayer?
 //sys hcsAttachLayerStorageFilter(layerPath string, layerData string) (hr error) = computestorage.HcsAttachLayerStorageFilter?

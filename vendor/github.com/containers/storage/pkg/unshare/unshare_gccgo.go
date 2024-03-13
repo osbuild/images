@@ -1,11 +1,10 @@
-//go:build linux && cgo && gccgo
 // +build linux,cgo,gccgo
 
 package unshare
 
 // #cgo CFLAGS: -Wall -Wextra
 // extern void _containers_unshare(void);
-// static void __attribute__((constructor)) init(void) {
+// void __attribute__((constructor)) init(void) {
 //   _containers_unshare();
 // }
 import "C"

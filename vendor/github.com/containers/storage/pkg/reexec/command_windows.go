@@ -1,4 +1,3 @@
-//go:build windows
 // +build windows
 
 package reexec
@@ -18,7 +17,6 @@ func Self() string {
 // For example if current binary is "docker.exe" at "C:\", then cmd.Path will
 // be set to "C:\docker.exe".
 func Command(args ...string) *exec.Cmd {
-	panicIfNotInitialized()
 	cmd := exec.Command(Self())
 	cmd.Args = args
 	return cmd
@@ -28,7 +26,6 @@ func Command(args ...string) *exec.Cmd {
 // For example if current binary is "docker.exe" at "C:\", then cmd.Path will
 // be set to "C:\docker.exe".
 func CommandContext(ctx context.Context, args ...string) *exec.Cmd {
-	panicIfNotInitialized()
 	cmd := exec.CommandContext(ctx, Self())
 	cmd.Args = args
 	return cmd

@@ -11,7 +11,6 @@ type StatT struct {
 	mode os.FileMode
 	size int64
 	mtim time.Time
-	platformStatT
 }
 
 // Size returns file's size.
@@ -43,15 +42,6 @@ func (s StatT) GID() uint32 {
 	return 0
 }
 
-// Dev returns a unique identifier for owning filesystem
-func (s StatT) Dev() uint64 {
-	return 0
-}
-
-func (s StatT) IsDir() bool {
-	return s.Mode().IsDir()
-}
-
 // Stat takes a path to a file and returns
 // a system.StatT type pertaining to that file.
 //
@@ -69,6 +59,5 @@ func fromStatT(fi *os.FileInfo) (*StatT, error) {
 	return &StatT{
 		size: (*fi).Size(),
 		mode: (*fi).Mode(),
-		mtim: (*fi).ModTime(),
-	}, nil
+		mtim: (*fi).ModTime()}, nil
 }

@@ -3,6 +3,7 @@ package chrootarchive
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -29,7 +30,7 @@ func applyLayerHandler(dest string, layer io.Reader, options *archive.TarOptions
 		layer = decompressed
 	}
 
-	tmpDir, err := os.MkdirTemp(os.Getenv("temp"), "temp-storage-extract")
+	tmpDir, err := ioutil.TempDir(os.Getenv("temp"), "temp-storage-extract")
 	if err != nil {
 		return 0, fmt.Errorf("ApplyLayer failed to create temp-storage-extract under %s. %s", dest, err)
 	}

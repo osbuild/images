@@ -17,4 +17,5 @@ func DefaultPathEnv(platform string) string {
 		return ""
 	}
 	return defaultUnixPathEnv
+
 }
