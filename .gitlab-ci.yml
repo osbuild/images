@@ -40,7 +40,7 @@ check-build-coverage:
   variables:
     PYTHONUNBUFFERED: 1
   script:
-    - ./test/scripts/install-dependencies
+    - dnf -y install awscli2 python3
     - ./test/scripts/check-build-coverage ./s3configs/
 
 finish:
