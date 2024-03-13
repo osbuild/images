@@ -82,31 +82,31 @@ func TestDistroFactory(t *testing.T) {
 	testCases := []testCase{
 		{
 			strID:    "rhel-90",
-			expected: newDistro("rhel", 0),
+			expected: newDistro("rhel", 9, 0),
 		},
 		{
 			strID:    "rhel-9.0",
-			expected: newDistro("rhel", 0),
+			expected: newDistro("rhel", 9, 0),
 		},
 		{
 			strID:    "rhel-93",
-			expected: newDistro("rhel", 3),
+			expected: newDistro("rhel", 9, 3),
 		},
 		{
 			strID:    "rhel-9.3",
-			expected: newDistro("rhel", 3),
+			expected: newDistro("rhel", 9, 3),
 		},
 		{
 			strID:    "rhel-910",
-			expected: newDistro("rhel", 10),
+			expected: newDistro("rhel", 9, 10),
 		},
 		{
 			strID:    "rhel-9.10",
-			expected: newDistro("rhel", 10),
+			expected: newDistro("rhel", 9, 10),
 		},
 		{
 			strID:    "centos-9",
-			expected: newDistro("centos", -1),
+			expected: newDistro("centos", 9, -1),
 		},
 		{
 			strID:    "centos-9.0",

@@ -125,10 +125,10 @@ func (d *distribution) getDefaultImageConfig() *distro.ImageConfig {
 	return d.defaultImageConfig
 }
 
-func newDistro(name string, minor int) *distribution {
+func newDistro(name string, major, minor int) *distribution {
 	var rd distribution
-	switch name {
-	case "rhel":
+	switch fmt.Sprintf("%s-%d", name, major) {
+	case "rhel-9":
 		rd = distribution{
 			name:               fmt.Sprintf("rhel-9.%d", minor),
 			product:            "Red Hat Enterprise Linux",
@@ -141,7 +141,20 @@ func newDistro(name string, minor int) *distribution {
 			runner:             &runner.RHEL{Major: uint64(9), Minor: uint64(minor)},
 			defaultImageConfig: defaultDistroImageConfig,
 		}
-	case "centos":
+	case "rhel-10":
+		rd = distribution{
+			name:               fmt.Sprintf("rhel-10.%d", minor),
+			product:            "Red Hat Enterprise Linux",
+			osVersion:          fmt.Sprintf("10.%d", minor),
+			releaseVersion:     "10",
+			modulePlatformID:   "platform:el10",
+			vendor:             "redhat",
+			ostreeRefTmpl:      "rhel/10/%s/edge",
+			isolabelTmpl:       fmt.Sprintf("RHEL-10-%d-0-BaseOS-%%s", minor),
+			runner:             &runner.RHEL{Major: uint64(10), Minor: uint64(minor)},
+			defaultImageConfig: defaultDistroImageConfig,
+		}
+	case "centos-9":
 		rd = distribution{
 			name:               "centos-9",
 			product:            "CentOS Stream",
@@ -154,8 +167,21 @@ func newDistro(name string, minor int) *distribution {
 			runner:             &runner.CentOS{Version: uint64(9)},
 			defaultImageConfig: defaultDistroImageConfig,
 		}
+	case "centos-10":
+		rd = distribution{
+			name:               "centos-10",
+			product:            "CentOS Stream",
+			osVersion:          "10-stream",
+			releaseVersion:     "10",
+			modulePlatformID:   "platform:el10",
+			vendor:             "centos",
+			ostreeRefTmpl:      "centos/10/%s/edge",
+			isolabelTmpl:       "CentOS-Stream-10-BaseOS-%s",
+			runner:             &runner.CentOS{Version: uint64(10)},
+			defaultImageConfig: defaultDistroImageConfig,
+		}
 	default:
-		panic(fmt.Sprintf("unknown distro name: %s", name))
+		panic(fmt.Sprintf("unknown distro name: %s and major: %d", name, major))
 	}
 
 	// Architecture definitions
@@ -510,5 +536,41 @@ func DistroFactory(idStr string) distro.Distro {
 		return nil
 	}
 
-	return newDistro(id.Name, id.MinorVersion)
+	return newDistro(id.Name, 9, id.MinorVersion)
+}
+
+func ParseIDEl10(idStr string) (*distro.ID, error) {
+	id, err := distro.ParseID(idStr)
+	if err != nil {
+		return nil, err
+	}
+
+	if id.Name != "rhel" && id.Name != "centos" {
+		return nil, fmt.Errorf("invalid distro name: %s", id.Name)
+	}
+
+	if id.MajorVersion != 10 {
+		return nil, fmt.Errorf("invalid distro major version: %d", id.MajorVersion)
+	}
+
+	// CentOS does not use minor version
+	if id.Name == "centos" && id.MinorVersion != -1 {
+		return nil, fmt.Errorf("centos does not use minor version, but got: %d", id.MinorVersion)
+	}
+
+	// RHEL uses minor version
+	if id.Name == "rhel" && id.MinorVersion == -1 {
+		return nil, fmt.Errorf("rhel requires minor version, but got: %d", id.MinorVersion)
+	}
+
+	return id, nil
+}
+
+func DistroFactoryEl10(idStr string) distro.Distro {
+	id, err := ParseIDEl10(idStr)
+	if err != nil {
+		return nil
+	}
+
+	return newDistro(id.Name, 10, id.MinorVersion)
 }

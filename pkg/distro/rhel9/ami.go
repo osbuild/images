@@ -296,10 +296,9 @@ func ec2BuildPackageSet(t *imageType) rpmmd.PackageSet {
 }
 
 func ec2CommonPackageSet(t *imageType) rpmmd.PackageSet {
-	return rpmmd.PackageSet{
+	ps := rpmmd.PackageSet{
 		Include: []string{
 			"@core",
-			"authselect-compat",
 			"chrony",
 			"cloud-init",
 			"cloud-utils-growpart",
@@ -350,6 +349,12 @@ func ec2CommonPackageSet(t *imageType) rpmmd.PackageSet {
 			"qemu-guest-agent",
 		},
 	}.Append(distroSpecificPackageSet(t))
+
+	if common.VersionLessThan(t.arch.distro.osVersion, "10.0") {
+		ps.Include = append(ps.Include, "authselect-compat")
+	}
+
+	return ps
 }
 
 // common rhel ec2 RHUI image package set
