@@ -93,7 +93,7 @@ func qcow2CommonPackageSet(t *imageType) rpmmd.PackageSet {
 		},
 	}.Append(distroSpecificPackageSet(t))
 
-	if common.VersionLessThan(t.arch.distro.osVersion, "10.0") {
+	if t.arch.distro.releaseVersion == "9" {
 		ps.Include = append(ps.Include, "authselect-compat")
 	}
 
