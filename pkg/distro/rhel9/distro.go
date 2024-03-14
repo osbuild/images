@@ -356,8 +356,8 @@ func newDistro(name string, major, minor int) *distribution {
 	}
 
 	if rd.isRHEL() { // RHEL-only (non-CentOS) image types
-		x86_64.addImageTypes(azureX64Platform, azureByosImgType)
-		aarch64.addImageTypes(azureAarch64Platform, azureByosImgType)
+		x86_64.addImageTypes(azureX64Platform, azureByosImgType(rd))
+		aarch64.addImageTypes(azureAarch64Platform, azureByosImgType(rd))
 	} else {
 		x86_64.addImageTypes(azureX64Platform, azureImgType)
 		aarch64.addImageTypes(azureAarch64Platform, azureImgType)
@@ -466,8 +466,8 @@ func newDistro(name string, major, minor int) *distribution {
 		)
 
 		if rd.isRHEL() { // RHEL-only (non-CentOS) image types
-			x86_64.addImageTypes(azureX64Platform, azureRhuiImgType, azureByosImgType)
-			aarch64.addImageTypes(azureAarch64Platform, azureRhuiImgType, azureByosImgType)
+			x86_64.addImageTypes(azureX64Platform, azureRhuiImgType, azureByosImgType(rd))
+			aarch64.addImageTypes(azureAarch64Platform, azureRhuiImgType, azureByosImgType(rd))
 
 			x86_64.addImageTypes(azureX64Platform, azureSapRhuiImgType(rd))
 
