@@ -233,21 +233,6 @@ func newDistro(name string, major, minor int) *distribution {
 		openstackImgType,
 	)
 
-	azureX64Platform := &platform.X86{
-		BIOS:       true,
-		UEFIVendor: rd.vendor,
-		BasePlatform: platform.BasePlatform{
-			ImageFormat: platform.FORMAT_VHD,
-		},
-	}
-
-	azureAarch64Platform := &platform.Aarch64{
-		UEFIVendor: rd.vendor,
-		BasePlatform: platform.BasePlatform{
-			ImageFormat: platform.FORMAT_VHD,
-		},
-	}
-
 	x86_64.addImageTypes(
 		&platform.X86{
 			BIOS:       true,
@@ -268,80 +253,6 @@ func newDistro(name string, major, minor int) *distribution {
 			},
 		},
 		ovaImgType,
-	)
-
-	ec2X86Platform := &platform.X86{
-		BIOS:       true,
-		UEFIVendor: rd.vendor,
-		BasePlatform: platform.BasePlatform{
-			ImageFormat: platform.FORMAT_RAW,
-		},
-	}
-	x86_64.addImageTypes(
-		ec2X86Platform,
-		mkAMIImgTypeX86_64(),
-	)
-
-	gceX86Platform := &platform.X86{
-		UEFIVendor: rd.vendor,
-		BasePlatform: platform.BasePlatform{
-			ImageFormat: platform.FORMAT_GCE,
-		},
-	}
-	x86_64.addImageTypes(
-		gceX86Platform,
-		mkGCEImageType(),
-	)
-
-	x86_64.addImageTypes(
-		&platform.X86{
-			BasePlatform: platform.BasePlatform{
-				FirmwarePackages: []string{
-					"microcode_ctl", // ??
-					"iwl1000-firmware",
-					"iwl100-firmware",
-					"iwl105-firmware",
-					"iwl135-firmware",
-					"iwl2000-firmware",
-					"iwl2030-firmware",
-					"iwl3160-firmware",
-					"iwl5000-firmware",
-					"iwl5150-firmware",
-					"iwl6050-firmware",
-				},
-			},
-			BIOS:       true,
-			UEFIVendor: rd.vendor,
-		},
-		edgeOCIImgType,
-		edgeCommitImgType,
-		edgeInstallerImgType,
-		edgeRawImgType,
-		imageInstaller,
-		edgeAMIImgType,
-	)
-
-	x86_64.addImageTypes(
-		&platform.X86{
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_VMDK,
-			},
-			BIOS:       true,
-			UEFIVendor: rd.vendor,
-		},
-		edgeVsphereImgType,
-	)
-
-	x86_64.addImageTypes(
-		&platform.X86{
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_RAW,
-			},
-			BIOS:       false,
-			UEFIVendor: rd.vendor,
-		},
-		edgeSimplifiedInstallerImgType,
-		minimalrawImgType,
 	)
 
 	x86_64.addImageTypes(
@@ -368,40 +279,6 @@ func newDistro(name string, major, minor int) *distribution {
 
 	aarch64.addImageTypes(
 		&platform.Aarch64{
-			BasePlatform: platform.BasePlatform{},
-			UEFIVendor:   rd.vendor,
-		},
-		edgeCommitImgType,
-		edgeOCIImgType,
-		edgeInstallerImgType,
-		edgeSimplifiedInstallerImgType,
-		imageInstaller,
-		edgeAMIImgType,
-	)
-
-	aarch64.addImageTypes(
-		&platform.Aarch64{
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_VMDK,
-			},
-			UEFIVendor: rd.vendor,
-		},
-		edgeVsphereImgType,
-	)
-
-	aarch64.addImageTypes(
-		&platform.Aarch64{
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_RAW,
-			},
-			UEFIVendor: rd.vendor,
-		},
-		edgeRawImgType,
-		minimalrawImgType,
-	)
-
-	aarch64.addImageTypes(
-		&platform.Aarch64{
 			UEFIVendor: rd.vendor,
 			BasePlatform: platform.BasePlatform{
 				ImageFormat: platform.FORMAT_QCOW2,
@@ -409,15 +286,6 @@ func newDistro(name string, major, minor int) *distribution {
 			},
 		},
 		qcow2ImgType,
-	)
-	aarch64.addImageTypes(
-		&platform.Aarch64{
-			UEFIVendor: rd.vendor,
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_RAW,
-			},
-		},
-		mkAMIImgTypeAarch64(),
 	)
 
 	ppc64le.addImageTypes(
@@ -450,42 +318,187 @@ func newDistro(name string, major, minor int) *distribution {
 		tarImgType,
 	)
 
-	if rd.isRHEL() {
-		// add azure to RHEL distro only
-		x86_64.addImageTypes(azureX64Platform, azureRhuiImgType, azureByosImgType)
-		aarch64.addImageTypes(azureAarch64Platform, azureRhuiImgType, azureByosImgType)
+	ec2X86Platform := &platform.X86{
+		BIOS:       true,
+		UEFIVendor: rd.vendor,
+		BasePlatform: platform.BasePlatform{
+			ImageFormat: platform.FORMAT_RAW,
+		},
+	}
+	x86_64.addImageTypes(
+		ec2X86Platform,
+		mkAMIImgTypeX86_64(),
+	)
 
-		x86_64.addImageTypes(azureX64Platform, azureSapRhuiImgType(rd))
-
-		// keep the RHEL EC2 x86_64 images before 9.3 BIOS-only for backward compatibility
-		if common.VersionLessThan(rd.osVersion, "9.3") {
-			ec2X86Platform = &platform.X86{
-				BIOS: true,
-				BasePlatform: platform.BasePlatform{
-					ImageFormat: platform.FORMAT_RAW,
-				},
-			}
-		}
-
-		// add ec2 image types to RHEL distro only
-		x86_64.addImageTypes(ec2X86Platform, mkEc2ImgTypeX86_64(rd.osVersion, rd.isRHEL()), mkEc2HaImgTypeX86_64(rd.osVersion, rd.isRHEL()), mkEC2SapImgTypeX86_64(rd.osVersion, rd.isRHEL()))
-
-		aarch64.addImageTypes(
-			&platform.Aarch64{
-				UEFIVendor: rd.vendor,
-				BasePlatform: platform.BasePlatform{
-					ImageFormat: platform.FORMAT_RAW,
-				},
+	aarch64.addImageTypes(
+		&platform.Aarch64{
+			UEFIVendor: rd.vendor,
+			BasePlatform: platform.BasePlatform{
+				ImageFormat: platform.FORMAT_RAW,
 			},
-			mkEC2ImgTypeAarch64(rd.osVersion, rd.isRHEL()),
-		)
+		},
+		mkAMIImgTypeAarch64(),
+	)
 
-		// add GCE RHUI image to RHEL only
-		x86_64.addImageTypes(gceX86Platform, mkGCERHUIImageType())
+	azureX64Platform := &platform.X86{
+		BIOS:       true,
+		UEFIVendor: rd.vendor,
+		BasePlatform: platform.BasePlatform{
+			ImageFormat: platform.FORMAT_VHD,
+		},
+	}
+
+	azureAarch64Platform := &platform.Aarch64{
+		UEFIVendor: rd.vendor,
+		BasePlatform: platform.BasePlatform{
+			ImageFormat: platform.FORMAT_VHD,
+		},
+	}
+
+	if rd.isRHEL() { // RHEL-only (non-CentOS) image types
+		x86_64.addImageTypes(azureX64Platform, azureByosImgType)
+		aarch64.addImageTypes(azureAarch64Platform, azureByosImgType)
 	} else {
 		x86_64.addImageTypes(azureX64Platform, azureImgType)
 		aarch64.addImageTypes(azureAarch64Platform, azureImgType)
 	}
+
+	// NOTE: This condition is a temporary separation of EL9 and EL10 while we
+	// add support for all image types on EL10.  Currently only a small subset
+	// is supported on EL10 because of package availability.  This big
+	// conditional separation should be removed when most image types become
+	// available in EL10.
+	if major == 9 {
+		gceX86Platform := &platform.X86{
+			UEFIVendor: rd.vendor,
+			BasePlatform: platform.BasePlatform{
+				ImageFormat: platform.FORMAT_GCE,
+			},
+		}
+		x86_64.addImageTypes(
+			gceX86Platform,
+			mkGCEImageType(),
+		)
+
+		x86_64.addImageTypes(
+			&platform.X86{
+				BasePlatform: platform.BasePlatform{
+					FirmwarePackages: []string{
+						"microcode_ctl", // ??
+						"iwl1000-firmware",
+						"iwl100-firmware",
+						"iwl105-firmware",
+						"iwl135-firmware",
+						"iwl2000-firmware",
+						"iwl2030-firmware",
+						"iwl3160-firmware",
+						"iwl5000-firmware",
+						"iwl5150-firmware",
+						"iwl6050-firmware",
+					},
+				},
+				BIOS:       true,
+				UEFIVendor: rd.vendor,
+			},
+			edgeOCIImgType,
+			edgeCommitImgType,
+			edgeInstallerImgType,
+			edgeRawImgType,
+			imageInstaller,
+			edgeAMIImgType,
+		)
+
+		x86_64.addImageTypes(
+			&platform.X86{
+				BasePlatform: platform.BasePlatform{
+					ImageFormat: platform.FORMAT_VMDK,
+				},
+				BIOS:       true,
+				UEFIVendor: rd.vendor,
+			},
+			edgeVsphereImgType,
+		)
+
+		x86_64.addImageTypes(
+			&platform.X86{
+				BasePlatform: platform.BasePlatform{
+					ImageFormat: platform.FORMAT_RAW,
+				},
+				BIOS:       false,
+				UEFIVendor: rd.vendor,
+			},
+			edgeSimplifiedInstallerImgType,
+			minimalrawImgType,
+		)
+
+		aarch64.addImageTypes(
+			&platform.Aarch64{
+				BasePlatform: platform.BasePlatform{},
+				UEFIVendor:   rd.vendor,
+			},
+			edgeCommitImgType,
+			edgeOCIImgType,
+			edgeInstallerImgType,
+			edgeSimplifiedInstallerImgType,
+			imageInstaller,
+			edgeAMIImgType,
+		)
+
+		aarch64.addImageTypes(
+			&platform.Aarch64{
+				BasePlatform: platform.BasePlatform{
+					ImageFormat: platform.FORMAT_VMDK,
+				},
+				UEFIVendor: rd.vendor,
+			},
+			edgeVsphereImgType,
+		)
+
+		aarch64.addImageTypes(
+			&platform.Aarch64{
+				BasePlatform: platform.BasePlatform{
+					ImageFormat: platform.FORMAT_RAW,
+				},
+				UEFIVendor: rd.vendor,
+			},
+			edgeRawImgType,
+			minimalrawImgType,
+		)
+
+		if rd.isRHEL() { // RHEL-only (non-CentOS) image types
+			x86_64.addImageTypes(azureX64Platform, azureRhuiImgType, azureByosImgType)
+			aarch64.addImageTypes(azureAarch64Platform, azureRhuiImgType, azureByosImgType)
+
+			x86_64.addImageTypes(azureX64Platform, azureSapRhuiImgType(rd))
+
+			// keep the RHEL EC2 x86_64 images before 9.3 BIOS-only for backward compatibility
+			if common.VersionLessThan(rd.osVersion, "9.3") {
+				ec2X86Platform = &platform.X86{
+					BIOS: true,
+					BasePlatform: platform.BasePlatform{
+						ImageFormat: platform.FORMAT_RAW,
+					},
+				}
+			}
+
+			// add ec2 image types to RHEL distro only
+			x86_64.addImageTypes(ec2X86Platform, mkEc2ImgTypeX86_64(rd.osVersion, rd.isRHEL()), mkEc2HaImgTypeX86_64(rd.osVersion, rd.isRHEL()), mkEC2SapImgTypeX86_64(rd.osVersion, rd.isRHEL()))
+
+			aarch64.addImageTypes(
+				&platform.Aarch64{
+					UEFIVendor: rd.vendor,
+					BasePlatform: platform.BasePlatform{
+						ImageFormat: platform.FORMAT_RAW,
+					},
+				},
+				mkEC2ImgTypeAarch64(rd.osVersion, rd.isRHEL()),
+			)
+
+			// add GCE RHUI image to RHEL only
+			x86_64.addImageTypes(gceX86Platform, mkGCERHUIImageType())
+		}
+	}
+
 	rd.addArches(x86_64, aarch64, ppc64le, s390x)
 	return &rd
 }
