@@ -30,7 +30,8 @@
       "rhel-8.7",
       "rhel-8.8",
       "rhel-8.9",
-      "centos*",
+      "centos-8",
+      "centos-9",
       "fedora*"
     ],
     "image-types": [
