@@ -103,6 +103,7 @@ func TestGetUsers(t *testing.T) {
 	}
 	UID := 123
 	GID := 321
+	ExpireDate := 12345
 
 	expectedUsers := []UserCustomization{
 		{
@@ -115,6 +116,7 @@ func TestGetUsers(t *testing.T) {
 			Groups:      Groups,
 			UID:         &UID,
 			GID:         &GID,
+			ExpireDate:  &ExpireDate,
 		},
 	}
 
