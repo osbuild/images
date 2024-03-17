@@ -31,6 +31,8 @@ func newTestAnacondaISOTree() *AnacondaInstallerISOTree {
 	product := ""
 	osversion := ""
 
+	preview := false
+
 	anacondaPipeline := NewAnacondaInstaller(
 		AnacondaInstallerTypePayload,
 		build,
@@ -39,6 +41,7 @@ func newTestAnacondaISOTree() *AnacondaInstallerISOTree {
 		"kernel",
 		product,
 		osversion,
+		preview,
 	)
 	rootfsImagePipeline := NewISORootfsImg(build, anacondaPipeline)
 	bootTreePipeline := NewEFIBootTree(build, product, osversion)
