@@ -413,9 +413,9 @@ def rng_seed_env():
     with open(SCHUTZFILE, encoding="utf-8") as schutzfile:
         data = json.load(schutzfile)
 
-    seed = data.get("rngseed")
+    seed = data.get("common", {}).get("rngseed")
     if seed is None:
-        raise RuntimeError("'rngseed' not found in Schutzfile")
+        raise RuntimeError("'common.rngseed' not found in Schutzfile")
 
     return {"OSBUILD_TESTING_RNG_SEED": str(seed)}
 
