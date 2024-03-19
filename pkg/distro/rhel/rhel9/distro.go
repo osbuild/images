@@ -1,18 +1,15 @@
 package rhel9
 
 import (
-	"errors"
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/osbuild"
+	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/osbuild/images/pkg/platform"
-	"github.com/osbuild/images/pkg/runner"
 )
 
 var (
@@ -42,259 +39,111 @@ var (
 	}
 )
 
-type distribution struct {
-	name               string
-	product            string
-	osVersion          string
-	releaseVersion     string
-	modulePlatformID   string
-	vendor             string
-	ostreeRefTmpl      string
-	runner             runner.Runner
-	arches             map[string]distro.Arch
-	defaultImageConfig *distro.ImageConfig
-}
+func distroISOLabelFunc(t *rhel.ImageType) string {
+	const RHEL_ISO_LABEL = "RHEL-%s-%s-0-BaseOS-%s"
+	const CS_ISO_LABEL = "CentOS-Stream-%s-BaseOS-%s"
 
-// CentOS- and RHEL-based OS image configuration defaults
-var defaultDistroImageConfig = &distro.ImageConfig{
-	Timezone: common.ToPtr("America/New_York"),
-	Locale:   common.ToPtr("C.UTF-8"),
-	Sysconfig: []*osbuild.SysconfigStageOptions{
-		{
-			Kernel: &osbuild.SysconfigKernelOptions{
-				UpdateDefault: true,
-				DefaultKernel: "kernel",
-			},
-			Network: &osbuild.SysconfigNetworkOptions{
-				Networking: true,
-				NoZeroConf: true,
-			},
-		},
-	},
-}
-
-func (d *distribution) Name() string {
-	return d.name
-}
-
-func (d *distribution) Releasever() string {
-	return d.releaseVersion
-}
-
-func (d *distribution) OsVersion() string {
-	return d.osVersion
-}
-
-func (d *distribution) Product() string {
-	return d.product
-}
-
-func (d *distribution) ModulePlatformID() string {
-	return d.modulePlatformID
-}
-
-func (d *distribution) OSTreeRef() string {
-	return d.ostreeRefTmpl
-}
-
-func (d *distribution) ListArches() []string {
-	archNames := make([]string, 0, len(d.arches))
-	for name := range d.arches {
-		archNames = append(archNames, name)
-	}
-	sort.Strings(archNames)
-	return archNames
-}
-
-func (d *distribution) GetArch(name string) (distro.Arch, error) {
-	arch, exists := d.arches[name]
-	if !exists {
-		return nil, errors.New("invalid architecture: " + name)
-	}
-	return arch, nil
-}
-
-func (d *distribution) addArches(arches ...architecture) {
-	if d.arches == nil {
-		d.arches = map[string]distro.Arch{}
-	}
-
-	// Do not make copies of architectures, as opposed to image types,
-	// because architecture definitions are not used by more than a single
-	// distro definition.
-	for idx := range arches {
-		d.arches[arches[idx].name] = &arches[idx]
+	if t.IsRHEL() {
+		osVer := strings.Split(t.Arch().Distro().OsVersion(), ".")
+		return fmt.Sprintf(RHEL_ISO_LABEL, osVer[0], osVer[1], t.Arch().Name())
+	} else {
+		return fmt.Sprintf(CS_ISO_LABEL, t.Arch().Distro().Releasever(), t.Arch().Name())
 	}
 }
 
-func (d *distribution) isRHEL() bool {
-	return strings.HasPrefix(d.name, "rhel")
-}
-
-func (d *distribution) getDefaultImageConfig() *distro.ImageConfig {
-	return d.defaultImageConfig
-}
-
-func newDistro(name string, major, minor int) *distribution {
-	var rd distribution
-	switch fmt.Sprintf("%s-%d", name, major) {
-	case "rhel-9":
-		rd = distribution{
-			name:               fmt.Sprintf("rhel-9.%d", minor),
-			product:            "Red Hat Enterprise Linux",
-			osVersion:          fmt.Sprintf("9.%d", minor),
-			releaseVersion:     "9",
-			modulePlatformID:   "platform:el9",
-			vendor:             "redhat",
-			ostreeRefTmpl:      "rhel/9/%s/edge",
-			runner:             &runner.RHEL{Major: uint64(9), Minor: uint64(minor)},
-			defaultImageConfig: defaultDistroImageConfig,
-		}
-	case "rhel-10":
-		rd = distribution{
-			name:               fmt.Sprintf("rhel-10.%d", minor),
-			product:            "Red Hat Enterprise Linux",
-			osVersion:          fmt.Sprintf("10.%d", minor),
-			releaseVersion:     "10",
-			modulePlatformID:   "platform:el10",
-			vendor:             "redhat",
-			ostreeRefTmpl:      "rhel/10/%s/edge",
-			runner:             &runner.RHEL{Major: uint64(10), Minor: uint64(minor)},
-			defaultImageConfig: defaultDistroImageConfig,
-		}
-	case "centos-9":
-		rd = distribution{
-			name:               "centos-9",
-			product:            "CentOS Stream",
-			osVersion:          "9-stream",
-			releaseVersion:     "9",
-			modulePlatformID:   "platform:el9",
-			vendor:             "centos",
-			ostreeRefTmpl:      "centos/9/%s/edge",
-			runner:             &runner.CentOS{Version: uint64(9)},
-			defaultImageConfig: defaultDistroImageConfig,
-		}
-	case "centos-10":
-		rd = distribution{
-			name:               "centos-10",
-			product:            "CentOS Stream",
-			osVersion:          "10-stream",
-			releaseVersion:     "10",
-			modulePlatformID:   "platform:el10",
-			vendor:             "centos",
-			ostreeRefTmpl:      "centos/10/%s/edge",
-			runner:             &runner.CentOS{Version: uint64(10)},
-			defaultImageConfig: defaultDistroImageConfig,
-		}
-	default:
-		panic(fmt.Sprintf("unknown distro name: %s and major: %d", name, major))
+func newDistro(name string, major, minor int) *rhel.Distribution {
+	rd, err := rhel.NewDistribution(name, major, minor)
+	if err != nil {
+		panic(err)
 	}
+	rd.CheckOptions = checkOptions
 
 	// Architecture definitions
-	x86_64 := architecture{
-		name:   arch.ARCH_X86_64.String(),
-		distro: &rd,
-	}
+	x86_64 := rhel.NewArchitecture(rd, arch.ARCH_X86_64)
+	aarch64 := rhel.NewArchitecture(rd, arch.ARCH_AARCH64)
+	ppc64le := rhel.NewArchitecture(rd, arch.ARCH_PPC64LE)
+	s390x := rhel.NewArchitecture(rd, arch.ARCH_S390X)
 
-	aarch64 := architecture{
-		name:   arch.ARCH_AARCH64.String(),
-		distro: &rd,
-	}
-
-	ppc64le := architecture{
-		distro: &rd,
-		name:   arch.ARCH_PPC64LE.String(),
-	}
-
-	s390x := architecture{
-		distro: &rd,
-		name:   arch.ARCH_S390X.String(),
-	}
-
-	qcow2ImgType := mkQcow2ImgType(rd)
-	ociImgType := qcow2ImgType
-	ociImgType.name = "oci"
-
-	x86_64.addImageTypes(
+	x86_64.AddImageTypes(
 		&platform.X86{
 			BIOS:       true,
-			UEFIVendor: rd.vendor,
+			UEFIVendor: rd.Vendor(),
 			BasePlatform: platform.BasePlatform{
 				ImageFormat: platform.FORMAT_QCOW2,
 				QCOW2Compat: "1.1",
 			},
 		},
-		qcow2ImgType,
-		ociImgType,
+		mkQcow2ImgType(rd),
+		mkOCIImgType(rd),
 	)
 
-	x86_64.addImageTypes(
+	x86_64.AddImageTypes(
 		&platform.X86{
 			BIOS:       true,
-			UEFIVendor: rd.vendor,
+			UEFIVendor: rd.Vendor(),
 			BasePlatform: platform.BasePlatform{
 				ImageFormat: platform.FORMAT_QCOW2,
 			},
 		},
-		openstackImgType,
+		mkOpenstackImgType(),
 	)
 
-	x86_64.addImageTypes(
+	x86_64.AddImageTypes(
 		&platform.X86{
 			BIOS:       true,
-			UEFIVendor: rd.vendor,
+			UEFIVendor: rd.Vendor(),
 			BasePlatform: platform.BasePlatform{
 				ImageFormat: platform.FORMAT_VMDK,
 			},
 		},
-		vmdkImgType,
+		mkVMDKImgType(),
 	)
 
-	x86_64.addImageTypes(
+	x86_64.AddImageTypes(
 		&platform.X86{
 			BIOS:       true,
-			UEFIVendor: rd.vendor,
+			UEFIVendor: rd.Vendor(),
 			BasePlatform: platform.BasePlatform{
 				ImageFormat: platform.FORMAT_OVA,
 			},
 		},
-		ovaImgType,
+		mkOVAImgType(),
 	)
 
-	x86_64.addImageTypes(
+	x86_64.AddImageTypes(
 		&platform.X86{},
-		tarImgType,
-		wslImgType,
+		mkTarImgType(),
+		mkWSLImgType(),
 	)
 
-	aarch64.addImageTypes(
+	aarch64.AddImageTypes(
 		&platform.Aarch64{
-			UEFIVendor: rd.vendor,
+			UEFIVendor: rd.Vendor(),
 			BasePlatform: platform.BasePlatform{
 				ImageFormat: platform.FORMAT_QCOW2,
 			},
 		},
-		openstackImgType,
+		mkOpenstackImgType(),
 	)
 
-	aarch64.addImageTypes(
+	aarch64.AddImageTypes(
 		&platform.Aarch64{},
-		tarImgType,
-		wslImgType,
+		mkTarImgType(),
+		mkWSLImgType(),
 	)
 
-	aarch64.addImageTypes(
+	aarch64.AddImageTypes(
 		&platform.Aarch64{
-			UEFIVendor: rd.vendor,
+			UEFIVendor: rd.Vendor(),
 			BasePlatform: platform.BasePlatform{
 				ImageFormat: platform.FORMAT_QCOW2,
 				QCOW2Compat: "1.1",
 			},
 		},
-		qcow2ImgType,
+		mkQcow2ImgType(rd),
 	)
 
-	ppc64le.addImageTypes(
+	ppc64le.AddImageTypes(
 		&platform.PPC64LE{
 			BIOS: true,
 			BasePlatform: platform.BasePlatform{
@@ -302,14 +151,14 @@ func newDistro(name string, major, minor int) *distribution {
 				QCOW2Compat: "1.1",
 			},
 		},
-		qcow2ImgType,
+		mkQcow2ImgType(rd),
 	)
-	ppc64le.addImageTypes(
+	ppc64le.AddImageTypes(
 		&platform.PPC64LE{},
-		tarImgType,
+		mkTarImgType(),
 	)
 
-	s390x.addImageTypes(
+	s390x.AddImageTypes(
 		&platform.S390X{
 			Zipl: true,
 			BasePlatform: platform.BasePlatform{
@@ -317,28 +166,28 @@ func newDistro(name string, major, minor int) *distribution {
 				QCOW2Compat: "1.1",
 			},
 		},
-		qcow2ImgType,
+		mkQcow2ImgType(rd),
 	)
-	s390x.addImageTypes(
+	s390x.AddImageTypes(
 		&platform.S390X{},
-		tarImgType,
+		mkTarImgType(),
 	)
 
 	ec2X86Platform := &platform.X86{
 		BIOS:       true,
-		UEFIVendor: rd.vendor,
+		UEFIVendor: rd.Vendor(),
 		BasePlatform: platform.BasePlatform{
 			ImageFormat: platform.FORMAT_RAW,
 		},
 	}
-	x86_64.addImageTypes(
+	x86_64.AddImageTypes(
 		ec2X86Platform,
 		mkAMIImgTypeX86_64(),
 	)
 
-	aarch64.addImageTypes(
+	aarch64.AddImageTypes(
 		&platform.Aarch64{
-			UEFIVendor: rd.vendor,
+			UEFIVendor: rd.Vendor(),
 			BasePlatform: platform.BasePlatform{
 				ImageFormat: platform.FORMAT_RAW,
 			},
@@ -348,25 +197,25 @@ func newDistro(name string, major, minor int) *distribution {
 
 	azureX64Platform := &platform.X86{
 		BIOS:       true,
-		UEFIVendor: rd.vendor,
+		UEFIVendor: rd.Vendor(),
 		BasePlatform: platform.BasePlatform{
 			ImageFormat: platform.FORMAT_VHD,
 		},
 	}
 
 	azureAarch64Platform := &platform.Aarch64{
-		UEFIVendor: rd.vendor,
+		UEFIVendor: rd.Vendor(),
 		BasePlatform: platform.BasePlatform{
 			ImageFormat: platform.FORMAT_VHD,
 		},
 	}
 
-	if rd.isRHEL() { // RHEL-only (non-CentOS) image types
-		x86_64.addImageTypes(azureX64Platform, azureByosImgType(rd))
-		aarch64.addImageTypes(azureAarch64Platform, azureByosImgType(rd))
+	if rd.IsRHEL() { // RHEL-only (non-CentOS) image types
+		x86_64.AddImageTypes(azureX64Platform, mkAzureByosImgType(rd))
+		aarch64.AddImageTypes(azureAarch64Platform, mkAzureByosImgType(rd))
 	} else {
-		x86_64.addImageTypes(azureX64Platform, azureImgType)
-		aarch64.addImageTypes(azureAarch64Platform, azureImgType)
+		x86_64.AddImageTypes(azureX64Platform, mkAzureImgType())
+		aarch64.AddImageTypes(azureAarch64Platform, mkAzureImgType())
 	}
 
 	// NOTE: This condition is a temporary separation of EL9 and EL10 while we
@@ -376,17 +225,17 @@ func newDistro(name string, major, minor int) *distribution {
 	// available in EL10.
 	if major == 9 {
 		gceX86Platform := &platform.X86{
-			UEFIVendor: rd.vendor,
+			UEFIVendor: rd.Vendor(),
 			BasePlatform: platform.BasePlatform{
 				ImageFormat: platform.FORMAT_GCE,
 			},
 		}
-		x86_64.addImageTypes(
+		x86_64.AddImageTypes(
 			gceX86Platform,
 			mkGCEImageType(),
 		)
 
-		x86_64.addImageTypes(
+		x86_64.AddImageTypes(
 			&platform.X86{
 				BasePlatform: platform.BasePlatform{
 					FirmwarePackages: []string{
@@ -404,81 +253,81 @@ func newDistro(name string, major, minor int) *distribution {
 					},
 				},
 				BIOS:       true,
-				UEFIVendor: rd.vendor,
+				UEFIVendor: rd.Vendor(),
 			},
-			edgeOCIImgType,
-			edgeCommitImgType,
-			edgeInstallerImgType,
-			edgeRawImgType,
-			imageInstaller,
-			edgeAMIImgType,
+			mkEdgeOCIImgType(),
+			mkEdgeCommitImgType(),
+			mkEdgeInstallerImgType(),
+			mkEdgeRawImgType(),
+			mkImageInstallerImgType(),
+			mkEdgeAMIImgType(),
 		)
 
-		x86_64.addImageTypes(
+		x86_64.AddImageTypes(
 			&platform.X86{
 				BasePlatform: platform.BasePlatform{
 					ImageFormat: platform.FORMAT_VMDK,
 				},
 				BIOS:       true,
-				UEFIVendor: rd.vendor,
+				UEFIVendor: rd.Vendor(),
 			},
-			edgeVsphereImgType,
+			mkEdgeVsphereImgType(),
 		)
 
-		x86_64.addImageTypes(
+		x86_64.AddImageTypes(
 			&platform.X86{
 				BasePlatform: platform.BasePlatform{
 					ImageFormat: platform.FORMAT_RAW,
 				},
 				BIOS:       false,
-				UEFIVendor: rd.vendor,
+				UEFIVendor: rd.Vendor(),
 			},
-			edgeSimplifiedInstallerImgType,
-			minimalrawImgType,
+			mkEdgeSimplifiedInstallerImgType(),
+			mkMinimalrawImgType(),
 		)
 
-		aarch64.addImageTypes(
+		aarch64.AddImageTypes(
 			&platform.Aarch64{
 				BasePlatform: platform.BasePlatform{},
-				UEFIVendor:   rd.vendor,
+				UEFIVendor:   rd.Vendor(),
 			},
-			edgeCommitImgType,
-			edgeOCIImgType,
-			edgeInstallerImgType,
-			edgeSimplifiedInstallerImgType,
-			imageInstaller,
-			edgeAMIImgType,
+			mkEdgeOCIImgType(),
+			mkEdgeCommitImgType(),
+			mkEdgeInstallerImgType(),
+			mkEdgeSimplifiedInstallerImgType(),
+			mkImageInstallerImgType(),
+			mkEdgeAMIImgType(),
 		)
 
-		aarch64.addImageTypes(
+		aarch64.AddImageTypes(
 			&platform.Aarch64{
 				BasePlatform: platform.BasePlatform{
 					ImageFormat: platform.FORMAT_VMDK,
 				},
-				UEFIVendor: rd.vendor,
+				UEFIVendor: rd.Vendor(),
 			},
-			edgeVsphereImgType,
+			mkEdgeVsphereImgType(),
 		)
 
-		aarch64.addImageTypes(
+		aarch64.AddImageTypes(
 			&platform.Aarch64{
 				BasePlatform: platform.BasePlatform{
 					ImageFormat: platform.FORMAT_RAW,
 				},
-				UEFIVendor: rd.vendor,
+				UEFIVendor: rd.Vendor(),
 			},
-			edgeRawImgType,
-			minimalrawImgType,
+			mkEdgeRawImgType(),
+			mkMinimalrawImgType(),
 		)
 
-		if rd.isRHEL() { // RHEL-only (non-CentOS) image types
-			x86_64.addImageTypes(azureX64Platform, azureRhuiImgType, azureByosImgType(rd))
-			aarch64.addImageTypes(azureAarch64Platform, azureRhuiImgType, azureByosImgType(rd))
+		if rd.IsRHEL() { // RHEL-only (non-CentOS) image types
+			x86_64.AddImageTypes(azureX64Platform, mkAzureRhuiImgType(), mkAzureByosImgType(rd))
+			aarch64.AddImageTypes(azureAarch64Platform, mkAzureRhuiImgType(), mkAzureByosImgType(rd))
 
-			x86_64.addImageTypes(azureX64Platform, azureSapRhuiImgType(rd))
+			x86_64.AddImageTypes(azureX64Platform, mkAzureSapRhuiImgType(rd))
 
 			// keep the RHEL EC2 x86_64 images before 9.3 BIOS-only for backward compatibility
-			if common.VersionLessThan(rd.osVersion, "9.3") {
+			if common.VersionLessThan(rd.OsVersion(), "9.3") {
 				ec2X86Platform = &platform.X86{
 					BIOS: true,
 					BasePlatform: platform.BasePlatform{
@@ -488,25 +337,25 @@ func newDistro(name string, major, minor int) *distribution {
 			}
 
 			// add ec2 image types to RHEL distro only
-			x86_64.addImageTypes(ec2X86Platform, mkEc2ImgTypeX86_64(rd.osVersion, rd.isRHEL()), mkEc2HaImgTypeX86_64(rd.osVersion, rd.isRHEL()), mkEC2SapImgTypeX86_64(rd.osVersion, rd.isRHEL()))
+			x86_64.AddImageTypes(ec2X86Platform, mkEc2ImgTypeX86_64(rd.OsVersion(), rd.IsRHEL()), mkEc2HaImgTypeX86_64(rd.OsVersion(), rd.IsRHEL()), mkEC2SapImgTypeX86_64(rd.OsVersion(), rd.IsRHEL()))
 
-			aarch64.addImageTypes(
+			aarch64.AddImageTypes(
 				&platform.Aarch64{
-					UEFIVendor: rd.vendor,
+					UEFIVendor: rd.Vendor(),
 					BasePlatform: platform.BasePlatform{
 						ImageFormat: platform.FORMAT_RAW,
 					},
 				},
-				mkEC2ImgTypeAarch64(rd.osVersion, rd.isRHEL()),
+				mkEC2ImgTypeAarch64(rd.OsVersion(), rd.IsRHEL()),
 			)
 
 			// add GCE RHUI image to RHEL only
-			x86_64.addImageTypes(gceX86Platform, mkGCERHUIImageType())
+			x86_64.AddImageTypes(gceX86Platform, mkGCERHUIImageType())
 		}
 	}
 
-	rd.addArches(x86_64, aarch64, ppc64le, s390x)
-	return &rd
+	rd.AddArches(x86_64, aarch64, ppc64le, s390x)
+	return rd
 }
 
 func ParseID(idStr string) (*distro.ID, error) {
