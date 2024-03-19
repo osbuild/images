@@ -6,13 +6,14 @@ import (
 	"fmt"
 
 	"github.com/osbuild/images/pkg/arch"
+	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
 // BUILD PACKAGE SETS
 
 // distro-wide build package set
-func distroBuildPackageSet(t *imageType) rpmmd.PackageSet {
+func distroBuildPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	ps := rpmmd.PackageSet{
 		Include: []string{
 			"dnf",
@@ -33,7 +34,7 @@ func distroBuildPackageSet(t *imageType) rpmmd.PackageSet {
 		},
 	}
 
-	switch t.arch.Name() {
+	switch t.Arch().Name() {
 
 	case arch.ARCH_X86_64.String():
 		ps = ps.Append(x8664BuildPackageSet(t))
@@ -46,7 +47,7 @@ func distroBuildPackageSet(t *imageType) rpmmd.PackageSet {
 }
 
 // x86_64 build package set
-func x8664BuildPackageSet(t *imageType) rpmmd.PackageSet {
+func x8664BuildPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return rpmmd.PackageSet{
 		Include: []string{
 			"grub2-pc",
@@ -55,7 +56,7 @@ func x8664BuildPackageSet(t *imageType) rpmmd.PackageSet {
 }
 
 // ppc64le build package set
-func ppc64leBuildPackageSet(t *imageType) rpmmd.PackageSet {
+func ppc64leBuildPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return rpmmd.PackageSet{
 		Include: []string{
 			"grub2-ppc64le",
@@ -66,7 +67,7 @@ func ppc64leBuildPackageSet(t *imageType) rpmmd.PackageSet {
 
 // installer boot package sets, needed for booting and
 // also in the build host
-func anacondaBootPackageSet(t *imageType) rpmmd.PackageSet {
+func anacondaBootPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	ps := rpmmd.PackageSet{}
 
 	grubCommon := rpmmd.PackageSet{
@@ -83,7 +84,7 @@ func anacondaBootPackageSet(t *imageType) rpmmd.PackageSet {
 		},
 	}
 
-	switch t.arch.Name() {
+	switch t.Arch().Name() {
 	case arch.ARCH_X86_64.String():
 		ps = ps.Append(grubCommon)
 		ps = ps.Append(efiCommon)
@@ -110,7 +111,7 @@ func anacondaBootPackageSet(t *imageType) rpmmd.PackageSet {
 		})
 
 	default:
-		panic(fmt.Sprintf("unsupported arch: %s", t.arch.Name()))
+		panic(fmt.Sprintf("unsupported arch: %s", t.Arch().Name()))
 	}
 
 	return ps
@@ -119,8 +120,8 @@ func anacondaBootPackageSet(t *imageType) rpmmd.PackageSet {
 // OS package sets
 
 // packages that are only in some (sub)-distributions
-func distroSpecificPackageSet(t *imageType) rpmmd.PackageSet {
-	if t.arch.distro.isRHEL() {
+func distroSpecificPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
+	if t.IsRHEL() {
 		return rpmmd.PackageSet{
 			Include: []string{
 				"insights-client",
@@ -130,7 +131,7 @@ func distroSpecificPackageSet(t *imageType) rpmmd.PackageSet {
 	return rpmmd.PackageSet{}
 }
 
-func minimalrpmPackageSet(t *imageType) rpmmd.PackageSet {
+func minimalrpmPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return rpmmd.PackageSet{
 		Include: []string{
 			"@core",

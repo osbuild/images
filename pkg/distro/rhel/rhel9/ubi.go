@@ -3,18 +3,26 @@ package rhel9
 import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
-var wslImgType = imageType{
-	name:     "wsl",
-	filename: "disk.tar.gz",
-	mimeType: "application/x-tar",
-	packageSets: map[string]packageSetFunc{
-		osPkgsKey: ubiCommonPackageSet,
-	},
-	defaultImageConfig: &distro.ImageConfig{
+func mkWSLImgType() *rhel.ImageType {
+	it := rhel.NewImageType(
+		"wsl",
+		"disk.tar.gz",
+		"application/x-tar",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: ubiCommonPackageSet,
+		},
+		rhel.TarImage,
+		[]string{"build"},
+		[]string{"os", "archive"},
+		[]string{"archive"},
+	)
+
+	it.DefaultImageConfig = &distro.ImageConfig{
 		Locale:    common.ToPtr("en_US.UTF-8"),
 		NoSElinux: common.ToPtr(true),
 		WSLConfig: &osbuild.WSLConfStageOptions{
@@ -22,15 +30,12 @@ var wslImgType = imageType{
 				Systemd: true,
 			},
 		},
-	},
-	bootable:         false,
-	image:            tarImage,
-	buildPipelines:   []string{"build"},
-	payloadPipelines: []string{"os", "archive"},
-	exports:          []string{"archive"},
+	}
+
+	return it
 }
 
-func ubiCommonPackageSet(t *imageType) rpmmd.PackageSet {
+func ubiCommonPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	ps := rpmmd.PackageSet{
 		Include: []string{
 			"alternatives",

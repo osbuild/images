@@ -4,15 +4,16 @@ import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/disk"
+	"github.com/osbuild/images/pkg/distro/rhel"
 )
 
-func defaultBasePartitionTables(t *imageType) (disk.PartitionTable, bool) {
+func defaultBasePartitionTables(t *rhel.ImageType) (disk.PartitionTable, bool) {
 	var bootSize uint64
 	switch {
-	case common.VersionLessThan(t.arch.distro.osVersion, "9.3") && t.arch.distro.isRHEL():
+	case common.VersionLessThan(t.Arch().Distro().OsVersion(), "9.3") && t.IsRHEL():
 		// RHEL <= 9.2 had only 500 MiB /boot
 		bootSize = 500 * common.MebiByte
-	case common.VersionLessThan(t.arch.distro.osVersion, "9.4") && t.arch.distro.isRHEL():
+	case common.VersionLessThan(t.Arch().Distro().OsVersion(), "9.4") && t.IsRHEL():
 		// RHEL 9.3 had 600 MiB /boot, see RHEL-7999
 		bootSize = 600 * common.MebiByte
 	default:
@@ -20,8 +21,8 @@ func defaultBasePartitionTables(t *imageType) (disk.PartitionTable, bool) {
 		bootSize = 1 * common.GibiByte
 	}
 
-	switch t.platform.GetArch() {
-	case arch.ARCH_X86_64:
+	switch t.Arch().Name() {
+	case arch.ARCH_X86_64.String():
 		return disk.PartitionTable{
 			UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
 			Type: "gpt",
@@ -74,7 +75,7 @@ func defaultBasePartitionTables(t *imageType) (disk.PartitionTable, bool) {
 				},
 			},
 		}, true
-	case arch.ARCH_AARCH64:
+	case arch.ARCH_AARCH64.String():
 		return disk.PartitionTable{
 			UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
 			Type: "gpt",
@@ -121,7 +122,7 @@ func defaultBasePartitionTables(t *imageType) (disk.PartitionTable, bool) {
 				},
 			},
 		}, true
-	case arch.ARCH_PPC64LE:
+	case arch.ARCH_PPC64LE.String():
 		return disk.PartitionTable{
 			UUID: "0x14fc63d2",
 			Type: "dos",
@@ -155,7 +156,7 @@ func defaultBasePartitionTables(t *imageType) (disk.PartitionTable, bool) {
 			},
 		}, true
 
-	case arch.ARCH_S390X:
+	case arch.ARCH_S390X.String():
 		return disk.PartitionTable{
 			UUID: "0x14fc63d2",
 			Type: "dos",

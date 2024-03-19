@@ -3,34 +3,84 @@ package rhel9
 import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/subscription"
 )
 
-var (
-	openstackImgType = imageType{
-		name:     "openstack",
-		filename: "disk.qcow2",
-		mimeType: "application/x-qemu-disk",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: openstackCommonPackageSet,
+func mkQcow2ImgType(d *rhel.Distribution) *rhel.ImageType {
+	it := rhel.NewImageType(
+		"qcow2",
+		"disk.qcow2",
+		"application/x-qemu-disk",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: qcow2CommonPackageSet,
 		},
-		defaultImageConfig: &distro.ImageConfig{
-			Locale: common.ToPtr("en_US.UTF-8"),
-		},
-		kernelOptions:       "ro net.ifnames=0",
-		bootable:            true,
-		defaultSize:         4 * common.GibiByte,
-		image:               diskImage,
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"os", "image", "qcow2"},
-		exports:             []string{"qcow2"},
-		basePartitionTables: defaultBasePartitionTables,
-	}
-)
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "qcow2"},
+		[]string{"qcow2"},
+	)
 
-func qcow2CommonPackageSet(t *imageType) rpmmd.PackageSet {
+	it.DefaultImageConfig = qcowImageConfig(d)
+	it.KernelOptions = "console=tty0 console=ttyS0,115200n8 no_timer_check net.ifnames=0"
+	it.DefaultSize = 10 * common.GibiByte
+	it.Bootable = true
+	it.BasePartitionTables = defaultBasePartitionTables
+
+	return it
+}
+
+func mkOCIImgType(d *rhel.Distribution) *rhel.ImageType {
+	it := rhel.NewImageType(
+		"oci",
+		"disk.qcow2",
+		"application/x-qemu-disk",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: qcow2CommonPackageSet,
+		},
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "qcow2"},
+		[]string{"qcow2"},
+	)
+
+	it.DefaultImageConfig = qcowImageConfig(d)
+	it.KernelOptions = "console=tty0 console=ttyS0,115200n8 no_timer_check net.ifnames=0"
+	it.DefaultSize = 10 * common.GibiByte
+	it.Bootable = true
+	it.BasePartitionTables = defaultBasePartitionTables
+
+	return it
+}
+
+func mkOpenstackImgType() *rhel.ImageType {
+	it := rhel.NewImageType(
+		"openstack",
+		"disk.qcow2",
+		"application/x-qemu-disk",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: openstackCommonPackageSet,
+		},
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "qcow2"},
+		[]string{"qcow2"},
+	)
+
+	it.DefaultImageConfig = &distro.ImageConfig{
+		Locale: common.ToPtr("en_US.UTF-8"),
+	}
+	it.KernelOptions = "ro net.ifnames=0"
+	it.DefaultSize = 4 * common.GibiByte
+	it.Bootable = true
+	it.BasePartitionTables = defaultBasePartitionTables
+
+	return it
+}
+
+func qcow2CommonPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	ps := rpmmd.PackageSet{
 		Include: []string{
 			"@core",
@@ -93,12 +143,12 @@ func qcow2CommonPackageSet(t *imageType) rpmmd.PackageSet {
 		},
 	}.Append(distroSpecificPackageSet(t))
 
-	if t.arch.distro.releaseVersion == "9" {
+	if t.Arch().Distro().Releasever() == "9" {
 		ps.Include = append(ps.Include, "authselect-compat")
 	}
 
 	// Ensure to not pull in subscription-manager on non-RHEL distro
-	if t.arch.distro.isRHEL() {
+	if t.IsRHEL() {
 		ps = ps.Append(rpmmd.PackageSet{
 			Include: []string{
 				"subscription-manager-cockpit",
@@ -109,7 +159,7 @@ func qcow2CommonPackageSet(t *imageType) rpmmd.PackageSet {
 	return ps
 }
 
-func openstackCommonPackageSet(t *imageType) rpmmd.PackageSet {
+func openstackCommonPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	ps := rpmmd.PackageSet{
 		Include: []string{
 			// Defaults
@@ -131,11 +181,11 @@ func openstackCommonPackageSet(t *imageType) rpmmd.PackageSet {
 	return ps
 }
 
-func qcowImageConfig(d distribution) *distro.ImageConfig {
+func qcowImageConfig(d *rhel.Distribution) *distro.ImageConfig {
 	ic := &distro.ImageConfig{
 		DefaultTarget: common.ToPtr("multi-user.target"),
 	}
-	if d.isRHEL() {
+	if d.IsRHEL() {
 		ic.RHSMConfig = map[subscription.RHSMStatus]*osbuild.RHSMStageOptions{
 			subscription.RHSMConfigNoSubscription: {
 				DnfPlugins: &osbuild.RHSMStageOptionsDnfPlugins{
@@ -151,25 +201,4 @@ func qcowImageConfig(d distribution) *distro.ImageConfig {
 
 	}
 	return ic
-}
-
-func mkQcow2ImgType(d distribution) imageType {
-	it := imageType{
-		name:          "qcow2",
-		filename:      "disk.qcow2",
-		mimeType:      "application/x-qemu-disk",
-		kernelOptions: "console=tty0 console=ttyS0,115200n8 no_timer_check net.ifnames=0",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: qcow2CommonPackageSet,
-		},
-		bootable:            true,
-		defaultSize:         10 * common.GibiByte,
-		image:               diskImage,
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"os", "image", "qcow2"},
-		exports:             []string{"qcow2"},
-		basePartitionTables: defaultBasePartitionTables,
-	}
-	it.defaultImageConfig = qcowImageConfig(d)
-	return it
 }
