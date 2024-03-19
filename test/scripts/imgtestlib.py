@@ -479,7 +479,10 @@ def skopeo_inspect_id(image_name: str, arch: str) -> str:
         if arch != img_arch or img_ostype != "linux":
             continue
 
-        image_no_tag = ":".join(image_name.split(":")[:-1])
+        if "@" in image_name:
+            image_no_tag = image_name.split("@")[0]
+        else:
+            image_no_tag = ":".join(image_name.split(":")[:-1])
         manifest_digest = manifest["digest"]
         arch_image_name = f"{image_no_tag}@{manifest_digest}"
         # inspect the arch-specific manifest to get the image ID (config digest)
