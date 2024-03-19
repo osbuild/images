@@ -1,6 +1,9 @@
 {
   "common": {
-    "rngseed": 1
+    "rngseed": 1,
+    "bootc-image-builder": {
+      "ref": "quay.io/centos-bootc/bootc-image-builder:latest"
+    }
   },
   "fedora-39": {
     "dependencies": {

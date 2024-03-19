@@ -17,8 +17,6 @@ REGISTRY = "registry.gitlab.com/redhat/services/products/image-builder/ci/images
 SCHUTZFILE = "Schutzfile"
 OS_RELEASE_FILE = "/etc/os-release"
 
-BIB_REF = "quay.io/centos-bootc/bootc-image-builder:latest"
-
 # ostree containers are pushed to the CI registry to be reused by dependants
 OSTREE_CONTAINERS = [
     "iot-container",
@@ -285,7 +283,8 @@ def check_for_build(manifest_fname, build_info_path, errors):
         # check if it's a BIB type and compare image IDs
         if image_type in BIB_TYPES:
             booted_id = dl_config.get("bib-id", None)
-            current_id = skopeo_inspect_id(f"docker://{BIB_REF}", host_container_arch())
+            bib_ref = get_bib_ref()
+            current_id = skopeo_inspect_id(f"docker://{bib_ref}", host_container_arch())
             if booted_id != current_id:
                 print(f"Container disk image was built with bootc-image-builder {booted_id}")
                 print(f"  Testing {current_id}")
@@ -394,6 +393,17 @@ def get_osbuild_commit(distro_version):
         data = json.load(schutzfile)
 
     return data.get(distro_version, {}).get("dependencies", {}).get("osbuild", {}).get("commit", None)
+
+
+def get_bib_ref():
+    """
+    Get the bootc-image-builder ref defined in the Schutzfile for the host distro.
+    If not set, returns None.
+    """
+    with open(SCHUTZFILE, encoding="utf-8") as schutzfile:
+        data = json.load(schutzfile)
+
+    return data.get("common", {}).get("bootc-image-builder", {}).get("ref", None)
 
 
 def get_osbuild_nevra():
