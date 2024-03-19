@@ -190,7 +190,7 @@ var minimalrawPartitionTables = distro.BasePartitionTableMap{
 				},
 			},
 			{
-				Size: 500 * common.MebiByte,
+				Size: 1 * common.GibiByte,
 				Type: disk.XBootLDRPartitionGUID,
 				UUID: disk.FilesystemDataUUID,
 				Payload: &disk.Filesystem{
@@ -237,7 +237,7 @@ var minimalrawPartitionTables = distro.BasePartitionTableMap{
 				},
 			},
 			{
-				Size: 500 * common.MebiByte,
+				Size: 1 * common.GibiByte,
 				Type: "83",
 				Payload: &disk.Filesystem{
 					Type:         "ext4",
