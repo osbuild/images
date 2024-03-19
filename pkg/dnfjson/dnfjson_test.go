@@ -78,6 +78,14 @@ func TestMakeDepsolveRequest(t *testing.T) {
 		BaseURLs:       []string{"https://example.org/nginx"},
 		ModuleHotfixes: common.ToPtr(true),
 	}
+	mtlsRepo := rpmmd.RepoConfig{
+		Name:          "mtls",
+		BaseURLs:      []string{"https://example.org/mtls"},
+		SSLCACert:     "/cacert",
+		SSLClientCert: "/cert",
+		SSLClientKey:  "/key",
+	}
+
 	tests := []struct {
 		packageSets []rpmmd.PackageSet
 		args        []transactionArgs
@@ -398,6 +406,44 @@ func TestMakeDepsolveRequest(t *testing.T) {
 					BaseURLs:       []string{"https://example.org/nginx"},
 					ModuleHotfixes: common.ToPtr(true),
 					repoHash:       "b7d998ee8657964c17709e35ea7eaaffe4c84f9e41cc05250a1d16e8352d52e4",
+				},
+			},
+		},
+		// mtls certs passed
+		{
+			packageSets: []rpmmd.PackageSet{
+				{
+					Include:      []string{"pkg1"},
+					Repositories: []rpmmd.RepoConfig{baseOS, appstream, mtlsRepo},
+				},
+			},
+			args: []transactionArgs{
+				{
+					PackageSpecs: []string{"pkg1"},
+					RepoIDs:      []string{baseOS.Hash(), appstream.Hash(), mtlsRepo.Hash()},
+				},
+			},
+			wantRepos: []repoConfig{
+				{
+					ID:       baseOS.Hash(),
+					Name:     "baseos",
+					BaseURLs: []string{"https://example.org/baseos"},
+					repoHash: "f177f580cf201f52d1c62968d5b85cddae3e06cb9d5058987c07de1dbd769d4b",
+				},
+				{
+					ID:       appstream.Hash(),
+					Name:     "appstream",
+					BaseURLs: []string{"https://example.org/appstream"},
+					repoHash: "5c4a57bbb1b6a1886291819f2ceb25eb7c92e80065bc986a75c5837cf3d55a1f",
+				},
+				{
+					ID:            mtlsRepo.Hash(),
+					Name:          "mtls",
+					BaseURLs:      []string{"https://example.org/mtls"},
+					SSLCACert:     "/cacert",
+					SSLClientCert: "/cert",
+					SSLClientKey:  "/key",
+					repoHash:      "a1e83d633e76a8c6bcf5df21f010f4e97b864f2fa296c3dac214da10efad650a",
 				},
 			},
 		},
