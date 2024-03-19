@@ -33,8 +33,9 @@ jobs:
       - name: Open PR
         working-directory: ./images
         env:
-          GITHUB_TOKEN: ${{ secrets.SCHUTZBOT_GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.SCHUTZBOT_GITHUB_ACCESS_TOKEN }}
         run: |
+          git config --unset-all http.https://github.com/.extraheader
           git config user.name "schutzbot"
           git config user.email "schutzbot@gmail.com"
           branch="schutzfile-bib-$(date -I)"
