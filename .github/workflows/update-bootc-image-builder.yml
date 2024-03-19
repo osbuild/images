@@ -42,7 +42,7 @@ jobs:
           git add Schutzfile
           git commit -m "schutzfile: Update bootc-image-builder ref"
           git push https://"$GITHUB_TOKEN"@github.com/schutzbot/images.git
-          echo "Updating bootc-image-builder test container ref to latest"
+          echo "Updating bootc-image-builder test container ref to latest" > body
           gh pr create \
             -t "Update bootc-image-builder ref to latest" \
             -F "body" \
