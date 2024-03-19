@@ -129,7 +129,7 @@ def boot_container(distro, arch, image_type, image_path, manifest_id):
                    "--security-opt", "label=type:unconfined_t",
                    "-v", f"{tmpdir}:/output",
                    "-v", f"{config_file}:/config.json",
-                   testlib.BIB_REF,
+                   testlib.get_bib_ref(),
                    "--type=ami",
                    "--config=/config.json",
                    container_ref]
@@ -194,10 +194,8 @@ def main():
                 build_info = json.load(info_fp)
             manifest_id = build_info["manifest-checksum"]
             boot_container(distro, arch, image_type, image_path, manifest_id)
-            # get the image ID from the local store so we know it's the one we used in the test
-            # (in case the container in the registry was updated while we were testing)
-            bib_image_id = testlib.skopeo_inspect_id(f"containers-storage:{testlib.BIB_REF}",
-                                                     testlib.host_container_arch())
+            bib_ref = testlib.get_bib_ref()
+            bib_image_id = testlib.skopeo_inspect_id(f"docker://{bib_ref}", testlib.host_container_arch())
         case _:
             # skip
             print(f"{image_type} boot tests are not supported yet")
