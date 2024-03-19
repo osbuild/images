@@ -18,10 +18,20 @@ jobs:
       - name: Install Dependencies
         run: sudo apt install -y skopeo python3
 
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          path: images
+          ref: main
+
       - name: Update Schutzfile
-        run: ./test/scripts/update-schutzfile-bib
+        working-directory: ./images
+        run: |
+          ./test/scripts/update-schutzfile-bib
+          git diff
 
       - name: Open PR
+        working-directory: ./images
         env:
           GITHUB_TOKEN: ${{ secrets.SCHUTZBOT_GH_TOKEN }}
         run: |
