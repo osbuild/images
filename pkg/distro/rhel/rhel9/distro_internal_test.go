@@ -8,6 +8,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/blueprint"
+	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -58,8 +59,8 @@ func TestEC2Partitioning(t *testing.T) {
 					i, err := a.GetImageType(it)
 					require.NoError(t, err)
 
-					it := i.(*imageType)
-					pt, err := it.getPartitionTable([]blueprint.FilesystemCustomization{}, distro.ImageOptions{}, rng)
+					it := i.(*rhel.ImageType)
+					pt, err := it.GetPartitionTable([]blueprint.FilesystemCustomization{}, distro.ImageOptions{}, rng)
 					require.NoError(t, err)
 
 					bootSize, err := pt.GetMountpointSize("/boot")

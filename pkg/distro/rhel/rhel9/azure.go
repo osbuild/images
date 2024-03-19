@@ -5,98 +5,113 @@ import (
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/subscription"
 )
 
-var (
-	// Azure non-RHEL image type
-	azureImgType = imageType{
-		name:     "vhd",
-		filename: "disk.vhd",
-		mimeType: "application/x-vhd",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: azurePackageSet,
+// Azure non-RHEL image type
+func mkAzureImgType() *rhel.ImageType {
+	it := rhel.NewImageType(
+		"vhd",
+		"disk.vhd",
+		"application/x-vhd",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: azurePackageSet,
 		},
-		defaultImageConfig:  defaultAzureImageConfig,
-		kernelOptions:       defaultAzureKernelOptions,
-		bootable:            true,
-		defaultSize:         4 * common.GibiByte,
-		image:               diskImage,
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"os", "image", "vpc"},
-		exports:             []string{"vpc"},
-		basePartitionTables: defaultBasePartitionTables,
-	}
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "vpc"},
+		[]string{"vpc"},
+	)
 
-	// Azure RHUI image type
-	azureRhuiImgType = imageType{
-		name:        "azure-rhui",
-		filename:    "disk.vhd.xz",
-		mimeType:    "application/xz",
-		compression: "xz",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: azureRhuiPackageSet,
-		},
-		defaultImageConfig:  defaultAzureRhuiImageConfig.InheritFrom(defaultAzureImageConfig),
-		kernelOptions:       defaultAzureKernelOptions,
-		bootable:            true,
-		defaultSize:         64 * common.GibiByte,
-		image:               diskImage,
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"os", "image", "vpc", "xz"},
-		exports:             []string{"xz"},
-		basePartitionTables: azureRhuiBasePartitionTables,
-	}
-)
+	it.KernelOptions = defaultAzureKernelOptions
+	it.Bootable = true
+	it.DefaultSize = 4 * common.GibiByte
+	it.DefaultImageConfig = defaultAzureImageConfig
+	it.BasePartitionTables = defaultBasePartitionTables
 
-// Azure BYOS image type
-func azureByosImgType(rd distribution) imageType {
-	return imageType{
-		name:     "vhd",
-		filename: "disk.vhd",
-		mimeType: "application/x-vhd",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: azurePackageSet,
-		},
-		defaultImageConfig:  defaultAzureByosImageConfig(rd).InheritFrom(defaultAzureImageConfig),
-		kernelOptions:       defaultAzureKernelOptions,
-		bootable:            true,
-		defaultSize:         4 * common.GibiByte,
-		image:               diskImage,
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"os", "image", "vpc"},
-		exports:             []string{"vpc"},
-		basePartitionTables: defaultBasePartitionTables,
-	}
+	return it
 }
 
-func azureSapRhuiImgType(rd distribution) imageType {
-	return imageType{
-		name:        "azure-sap-rhui",
-		filename:    "disk.vhd.xz",
-		mimeType:    "application/xz",
-		compression: "xz",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: azureSapPackageSet,
+// Azure BYOS image type
+func mkAzureByosImgType(rd distro.Distro) *rhel.ImageType {
+	it := rhel.NewImageType(
+		"vhd",
+		"disk.vhd",
+		"application/x-vhd",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: azurePackageSet,
 		},
-		defaultImageConfig:  defaultAzureRhuiImageConfig.InheritFrom(sapAzureImageConfig(rd)),
-		kernelOptions:       defaultAzureKernelOptions,
-		bootable:            true,
-		defaultSize:         64 * common.GibiByte,
-		image:               diskImage,
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"os", "image", "vpc", "xz"},
-		exports:             []string{"xz"},
-		basePartitionTables: azureRhuiBasePartitionTables,
-	}
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "vpc"},
+		[]string{"vpc"},
+	)
+
+	it.KernelOptions = defaultAzureKernelOptions
+	it.Bootable = true
+	it.DefaultSize = 4 * common.GibiByte
+	it.DefaultImageConfig = defaultAzureByosImageConfig(rd).InheritFrom(defaultAzureImageConfig)
+	it.BasePartitionTables = defaultBasePartitionTables
+
+	return it
+}
+
+// Azure RHUI image type
+func mkAzureRhuiImgType() *rhel.ImageType {
+	it := rhel.NewImageType(
+		"azure-rhui",
+		"disk.vhd.xz",
+		"application/xz",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: azureRhuiPackageSet,
+		},
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "vpc", "xz"},
+		[]string{"xz"},
+	)
+
+	it.Compression = "xz"
+	it.KernelOptions = defaultAzureKernelOptions
+	it.Bootable = true
+	it.DefaultSize = 64 * common.GibiByte
+	it.DefaultImageConfig = defaultAzureRhuiImageConfig.InheritFrom(defaultAzureImageConfig)
+	it.BasePartitionTables = azureRhuiBasePartitionTables
+
+	return it
+}
+
+func mkAzureSapRhuiImgType(rd distro.Distro) *rhel.ImageType {
+	it := rhel.NewImageType(
+		"azure-sap-rhui",
+		"disk.vhd.xz",
+		"application/xz",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: azureSapPackageSet,
+		},
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "vpc", "xz"},
+		[]string{"xz"},
+	)
+
+	it.Compression = "xz"
+	it.KernelOptions = defaultAzureKernelOptions
+	it.Bootable = true
+	it.DefaultSize = 64 * common.GibiByte
+	it.DefaultImageConfig = defaultAzureRhuiImageConfig.InheritFrom(sapAzureImageConfig(rd))
+	it.BasePartitionTables = azureRhuiBasePartitionTables
+
+	return it
 }
 
 // PACKAGE SETS
 
 // Common Azure image package set
-func azureCommonPackageSet(t *imageType) rpmmd.PackageSet {
+func azureCommonPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	ps := rpmmd.PackageSet{
 		Include: []string{
 			"@Server",
@@ -176,12 +191,12 @@ func azureCommonPackageSet(t *imageType) rpmmd.PackageSet {
 }
 
 // Azure BYOS image package set
-func azurePackageSet(t *imageType) rpmmd.PackageSet {
+func azurePackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return azureCommonPackageSet(t)
 }
 
 // Azure RHUI image package set
-func azureRhuiPackageSet(t *imageType) rpmmd.PackageSet {
+func azureRhuiPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return rpmmd.PackageSet{
 		Include: []string{
 			"rhui-azure-rhel9",
@@ -189,17 +204,28 @@ func azureRhuiPackageSet(t *imageType) rpmmd.PackageSet {
 	}.Append(azureCommonPackageSet(t))
 }
 
+// Azure SAP image package set
+// Includes the common azure package set, the common SAP packages, and
+// the azure rhui sap package.
+func azureSapPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
+	return rpmmd.PackageSet{
+		Include: []string{
+			"rhui-azure-rhel9-sap-ha",
+		},
+	}.Append(azureCommonPackageSet(t)).Append(SapPackageSet(t))
+}
+
 // PARTITION TABLES
 
-func azureRhuiBasePartitionTables(t *imageType) (disk.PartitionTable, bool) {
+func azureRhuiBasePartitionTables(t *rhel.ImageType) (disk.PartitionTable, bool) {
 	// RHEL >= 9.3 needs to have a bigger /boot, see RHEL-7999
 	bootSize := uint64(600) * common.MebiByte
-	if common.VersionLessThan(t.arch.distro.osVersion, "9.3") && t.arch.distro.isRHEL() {
+	if common.VersionLessThan(t.Arch().Distro().OsVersion(), "9.3") && t.IsRHEL() {
 		bootSize = 500 * common.MebiByte
 	}
 
-	switch t.platform.GetArch() {
-	case arch.ARCH_X86_64:
+	switch t.Arch().Name() {
+	case arch.ARCH_X86_64.String():
 		return disk.PartitionTable{
 			UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
 			Type: "gpt",
@@ -308,7 +334,7 @@ func azureRhuiBasePartitionTables(t *imageType) (disk.PartitionTable, bool) {
 				},
 			},
 		}, true
-	case arch.ARCH_AARCH64:
+	case arch.ARCH_AARCH64.String():
 		return disk.PartitionTable{
 			UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
 			Type: "gpt",
@@ -416,8 +442,10 @@ func azureRhuiBasePartitionTables(t *imageType) (disk.PartitionTable, bool) {
 	}
 }
 
+// IMAGE CONFIG
+
 // use loglevel=3 as described in the RHEL documentation and used in existing RHEL images built by MSFT
-var defaultAzureKernelOptions = "ro loglevel=3 console=tty1 console=ttyS0 earlyprintk=ttyS0 rootdelay=300"
+const defaultAzureKernelOptions = "ro loglevel=3 console=tty1 console=ttyS0 earlyprintk=ttyS0 rootdelay=300"
 
 // based on https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/deploying_rhel_9_on_microsoft_azure/assembly_deploying-a-rhel-image-as-a-virtual-machine-on-microsoft-azure_cloud-content-azure#making-configuration-changes_configure-the-image-azure
 var defaultAzureImageConfig = &distro.ImageConfig{
@@ -576,7 +604,7 @@ var defaultAzureImageConfig = &distro.ImageConfig{
 // Diff of the default Image Config compare to the `defaultAzureImageConfig`
 // The configuration for non-RHUI images does not touch the RHSM configuration at all.
 // https://issues.redhat.com/browse/COMPOSER-2157
-func defaultAzureByosImageConfig(rd distribution) *distro.ImageConfig {
+func defaultAzureByosImageConfig(rd distro.Distro) *distro.ImageConfig {
 	ic := &distro.ImageConfig{}
 	// NOTE RHEL 10 content is currently unsigned - remove this when GPG keys get added to the repos
 	if rd.Releasever() == "9" {
@@ -624,17 +652,6 @@ var defaultAzureRhuiImageConfig = &distro.ImageConfig{
 	},
 }
 
-// Azure SAP image package set
-// Includes the common azure package set, the common SAP packages, and
-// the azure rhui sap package.
-func azureSapPackageSet(t *imageType) rpmmd.PackageSet {
-	return rpmmd.PackageSet{
-		Include: []string{
-			"rhui-azure-rhel9-sap-ha",
-		},
-	}.Append(azureCommonPackageSet(t)).Append(SapPackageSet(t))
-}
-
-func sapAzureImageConfig(rd distribution) *distro.ImageConfig {
-	return sapImageConfig(rd.osVersion).InheritFrom(defaultAzureRhuiImageConfig.InheritFrom(defaultAzureImageConfig))
+func sapAzureImageConfig(rd distro.Distro) *distro.ImageConfig {
+	return sapImageConfig(rd.OsVersion()).InheritFrom(defaultAzureRhuiImageConfig.InheritFrom(defaultAzureImageConfig))
 }

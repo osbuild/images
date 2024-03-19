@@ -2,6 +2,7 @@ package rhel9
 
 import (
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
@@ -118,7 +119,7 @@ func sapImageConfig(osVersion string) *distro.ImageConfig {
 	}
 }
 
-func SapPackageSet(t *imageType) rpmmd.PackageSet {
+func SapPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return rpmmd.PackageSet{
 		Include: []string{
 			// RHBZ#2076763
