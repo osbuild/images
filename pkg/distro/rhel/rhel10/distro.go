@@ -1,10 +1,8 @@
-package rhel9
+package rhel10
 
 import (
 	"fmt"
-	"strings"
 
-	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/distro"
@@ -21,9 +19,6 @@ var (
 		oscap.AnssiBp28High,
 		oscap.AnssiBp28Intermediary,
 		oscap.AnssiBp28Minimal,
-		oscap.CcnAdvanced,
-		oscap.CcnBasic,
-		oscap.CcnIntermediate,
 		oscap.Cis,
 		oscap.CisServerL1,
 		oscap.CisWorkstationL1,
@@ -38,18 +33,6 @@ var (
 		oscap.StigGui,
 	}
 )
-
-func distroISOLabelFunc(t *rhel.ImageType) string {
-	const RHEL_ISO_LABEL = "RHEL-%s-%s-0-BaseOS-%s"
-	const CS_ISO_LABEL = "CentOS-Stream-%s-BaseOS-%s"
-
-	if t.IsRHEL() {
-		osVer := strings.Split(t.Arch().Distro().OsVersion(), ".")
-		return fmt.Sprintf(RHEL_ISO_LABEL, osVer[0], osVer[1], t.Arch().Name())
-	} else {
-		return fmt.Sprintf(CS_ISO_LABEL, t.Arch().Distro().Releasever(), t.Arch().Name())
-	}
-}
 
 func newDistro(name string, major, minor int) *rhel.Distribution {
 	rd, err := rhel.NewDistribution(name, major, minor)
@@ -218,135 +201,6 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 		aarch64.AddImageTypes(azureAarch64Platform, mkAzureImgType())
 	}
 
-	gceX86Platform := &platform.X86{
-		UEFIVendor: rd.Vendor(),
-		BasePlatform: platform.BasePlatform{
-			ImageFormat: platform.FORMAT_GCE,
-		},
-	}
-	x86_64.AddImageTypes(
-		gceX86Platform,
-		mkGCEImageType(),
-	)
-
-	x86_64.AddImageTypes(
-		&platform.X86{
-			BasePlatform: platform.BasePlatform{
-				FirmwarePackages: []string{
-					"microcode_ctl", // ??
-					"iwl1000-firmware",
-					"iwl100-firmware",
-					"iwl105-firmware",
-					"iwl135-firmware",
-					"iwl2000-firmware",
-					"iwl2030-firmware",
-					"iwl3160-firmware",
-					"iwl5000-firmware",
-					"iwl5150-firmware",
-					"iwl6050-firmware",
-				},
-			},
-			BIOS:       true,
-			UEFIVendor: rd.Vendor(),
-		},
-		mkEdgeOCIImgType(),
-		mkEdgeCommitImgType(),
-		mkEdgeInstallerImgType(),
-		mkEdgeRawImgType(),
-		mkImageInstallerImgType(),
-		mkEdgeAMIImgType(),
-	)
-
-	x86_64.AddImageTypes(
-		&platform.X86{
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_VMDK,
-			},
-			BIOS:       true,
-			UEFIVendor: rd.Vendor(),
-		},
-		mkEdgeVsphereImgType(),
-	)
-
-	x86_64.AddImageTypes(
-		&platform.X86{
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_RAW,
-			},
-			BIOS:       false,
-			UEFIVendor: rd.Vendor(),
-		},
-		mkEdgeSimplifiedInstallerImgType(),
-		mkMinimalrawImgType(),
-	)
-
-	aarch64.AddImageTypes(
-		&platform.Aarch64{
-			BasePlatform: platform.BasePlatform{},
-			UEFIVendor:   rd.Vendor(),
-		},
-		mkEdgeOCIImgType(),
-		mkEdgeCommitImgType(),
-		mkEdgeInstallerImgType(),
-		mkEdgeSimplifiedInstallerImgType(),
-		mkImageInstallerImgType(),
-		mkEdgeAMIImgType(),
-	)
-
-	aarch64.AddImageTypes(
-		&platform.Aarch64{
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_VMDK,
-			},
-			UEFIVendor: rd.Vendor(),
-		},
-		mkEdgeVsphereImgType(),
-	)
-
-	aarch64.AddImageTypes(
-		&platform.Aarch64{
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_RAW,
-			},
-			UEFIVendor: rd.Vendor(),
-		},
-		mkEdgeRawImgType(),
-		mkMinimalrawImgType(),
-	)
-
-	if rd.IsRHEL() { // RHEL-only (non-CentOS) image types
-		x86_64.AddImageTypes(azureX64Platform, mkAzureRhuiImgType(), mkAzureByosImgType(rd))
-		aarch64.AddImageTypes(azureAarch64Platform, mkAzureRhuiImgType(), mkAzureByosImgType(rd))
-
-		x86_64.AddImageTypes(azureX64Platform, mkAzureSapRhuiImgType(rd))
-
-		// keep the RHEL EC2 x86_64 images before 9.3 BIOS-only for backward compatibility
-		if common.VersionLessThan(rd.OsVersion(), "9.3") {
-			ec2X86Platform = &platform.X86{
-				BIOS: true,
-				BasePlatform: platform.BasePlatform{
-					ImageFormat: platform.FORMAT_RAW,
-				},
-			}
-		}
-
-		// add ec2 image types to RHEL distro only
-		x86_64.AddImageTypes(ec2X86Platform, mkEc2ImgTypeX86_64(rd.OsVersion(), rd.IsRHEL()), mkEc2HaImgTypeX86_64(rd.OsVersion(), rd.IsRHEL()), mkEC2SapImgTypeX86_64(rd.OsVersion(), rd.IsRHEL()))
-
-		aarch64.AddImageTypes(
-			&platform.Aarch64{
-				UEFIVendor: rd.Vendor(),
-				BasePlatform: platform.BasePlatform{
-					ImageFormat: platform.FORMAT_RAW,
-				},
-			},
-			mkEC2ImgTypeAarch64(rd.OsVersion(), rd.IsRHEL()),
-		)
-
-		// add GCE RHUI image to RHEL only
-		x86_64.AddImageTypes(gceX86Platform, mkGCERHUIImageType())
-	}
-
 	rd.AddArches(x86_64, aarch64, ppc64le, s390x)
 	return rd
 }
@@ -361,20 +215,7 @@ func ParseID(idStr string) (*distro.ID, error) {
 		return nil, fmt.Errorf("invalid distro name: %s", id.Name)
 	}
 
-	// Backward compatibility layer for "rhel-93" or "rhel-910"
-	if id.Name == "rhel" && id.MinorVersion == -1 {
-		if id.MajorVersion/10 == 9 {
-			// handle single digit minor version
-			id.MinorVersion = id.MajorVersion % 10
-			id.MajorVersion = 9
-		} else if id.MajorVersion/100 == 9 {
-			// handle two digit minor version
-			id.MinorVersion = id.MajorVersion % 100
-			id.MajorVersion = 9
-		}
-	}
-
-	if id.MajorVersion != 9 {
+	if id.MajorVersion != 10 {
 		return nil, fmt.Errorf("invalid distro major version: %d", id.MajorVersion)
 	}
 
@@ -397,5 +238,5 @@ func DistroFactory(idStr string) distro.Distro {
 		return nil
 	}
 
-	return newDistro(id.Name, 9, id.MinorVersion)
+	return newDistro(id.Name, 10, id.MinorVersion)
 }
