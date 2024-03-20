@@ -11,7 +11,7 @@ import (
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/distro_test_common"
-	"github.com/osbuild/images/pkg/distro/rhel8"
+	"github.com/osbuild/images/pkg/distro/rhel/rhel8"
 )
 
 type rhelFamilyDistro struct {
