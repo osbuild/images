@@ -139,6 +139,8 @@ type Solver struct {
 	// for each distribution.
 	distro string
 
+	reposDir string
+
 	subscriptions *rhsm.Subscriptions
 }
 
@@ -146,6 +148,13 @@ type Solver struct {
 func NewSolver(modulePlatformID, releaseVer, arch, distro, cacheDir string) *Solver {
 	s := NewBaseSolver(cacheDir)
 	return s.NewWithConfig(modulePlatformID, releaseVer, arch, distro)
+}
+
+// SetReposDir sets a path from which repository configurations are loaded
+// during depsolve, instead of (or in addition to) the repositories included in
+// each depsolve request.
+func (s *Solver) SetReposDir(path string) {
+	s.reposDir = path
 }
 
 // GetCacheDir returns a distro specific rpm cache directory
@@ -426,6 +435,7 @@ func (s *Solver) makeDepsolveRequest(pkgSets []rpmmd.PackageSet) (*Request, map[
 	}
 	args := arguments{
 		Repos:        dnfRepoMap,
+		ReposDir:     s.reposDir,
 		Transactions: transactions,
 	}
 
@@ -572,6 +582,9 @@ type arguments struct {
 
 	// Depsolve package sets and repository mappings for this request
 	Transactions []transactionArgs `json:"transactions"`
+
+	// Load repository configurations from a directory
+	ReposDir string `json:"repos_dir"`
 }
 
 type searchArgs struct {
