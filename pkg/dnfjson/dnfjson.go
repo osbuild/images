@@ -140,6 +140,8 @@ type Solver struct {
 	// for each distribution.
 	distro string
 
+	rootDir string
+
 	subscriptions *rhsm.Subscriptions
 }
 
@@ -147,6 +149,13 @@ type Solver struct {
 func NewSolver(modulePlatformID, releaseVer, arch, distro, cacheDir string) *Solver {
 	s := NewBaseSolver(cacheDir)
 	return s.NewWithConfig(modulePlatformID, releaseVer, arch, distro)
+}
+
+// SetRootDir sets a path from which repository configurations, gpg keys, and
+// vars are loaded during depsolve, instead of (or in addition to) the
+// repositories and keys included in each depsolve request.
+func (s *Solver) SetRootDir(path string) {
+	s.rootDir = path
 }
 
 // GetCacheDir returns a distro specific rpm cache directory
@@ -432,6 +441,7 @@ func (s *Solver) makeDepsolveRequest(pkgSets []rpmmd.PackageSet) (*Request, map[
 	}
 	args := arguments{
 		Repos:        dnfRepoMap,
+		RootDir:      s.rootDir,
 		Transactions: transactions,
 	}
 
@@ -439,6 +449,7 @@ func (s *Solver) makeDepsolveRequest(pkgSets []rpmmd.PackageSet) (*Request, map[
 		Command:          "depsolve",
 		ModulePlatformID: s.modulePlatformID,
 		Arch:             s.arch,
+		Releasever:       s.releaseVer,
 		CacheDir:         s.GetCacheDir(),
 		Arguments:        args,
 	}
@@ -456,6 +467,7 @@ func (s *Solver) makeDumpRequest(repos []rpmmd.RepoConfig) (*Request, error) {
 		Command:          "dump",
 		ModulePlatformID: s.modulePlatformID,
 		Arch:             s.arch,
+		Releasever:       s.releaseVer,
 		CacheDir:         s.GetCacheDir(),
 		Arguments: arguments{
 			Repos: dnfRepos,
@@ -475,6 +487,7 @@ func (s *Solver) makeSearchRequest(repos []rpmmd.RepoConfig, packages []string) 
 		ModulePlatformID: s.modulePlatformID,
 		Arch:             s.arch,
 		CacheDir:         s.GetCacheDir(),
+		Releasever:       s.releaseVer,
 		Arguments: arguments{
 			Repos: dnfRepos,
 			Search: searchArgs{
@@ -528,6 +541,9 @@ type Request struct {
 	// Platform ID, e.g., "platform:el8"
 	ModulePlatformID string `json:"module_platform_id"`
 
+	// Distro Releasever, e.e., "8"
+	Releasever string `json:"releasever"`
+
 	// System architecture
 	Arch string `json:"arch"`
 
@@ -566,6 +582,10 @@ type arguments struct {
 
 	// Depsolve package sets and repository mappings for this request
 	Transactions []transactionArgs `json:"transactions"`
+
+	// Load repository configurations, gpg keys, and vars from an os-root-like
+	// tree.
+	RootDir string `json:"root_dir"`
 }
 
 type searchArgs struct {
