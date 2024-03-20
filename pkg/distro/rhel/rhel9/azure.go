@@ -53,7 +53,7 @@ func mkAzureByosImgType(rd distro.Distro) *rhel.ImageType {
 	it.KernelOptions = defaultAzureKernelOptions
 	it.Bootable = true
 	it.DefaultSize = 4 * common.GibiByte
-	it.DefaultImageConfig = defaultAzureByosImageConfig(rd).InheritFrom(defaultAzureImageConfig)
+	it.DefaultImageConfig = defaultAzureByosImageConfig.InheritFrom(defaultAzureImageConfig)
 	it.BasePartitionTables = defaultBasePartitionTables
 
 	return it
@@ -604,18 +604,10 @@ var defaultAzureImageConfig = &distro.ImageConfig{
 // Diff of the default Image Config compare to the `defaultAzureImageConfig`
 // The configuration for non-RHUI images does not touch the RHSM configuration at all.
 // https://issues.redhat.com/browse/COMPOSER-2157
-func defaultAzureByosImageConfig(rd distro.Distro) *distro.ImageConfig {
-	ic := &distro.ImageConfig{}
-	// NOTE RHEL 10 content is currently unsigned - remove this when GPG keys get added to the repos
-	if rd.Releasever() == "9" {
-		ic = &distro.ImageConfig{
-			GPGKeyFiles: []string{
-				"/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release",
-			},
-		}
-	}
-	return ic
-
+var defaultAzureByosImageConfig = &distro.ImageConfig{
+	GPGKeyFiles: []string{
+		"/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release",
+	},
 }
 
 // Diff of the default Image Config compare to the `defaultAzureImageConfig`
