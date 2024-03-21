@@ -26,6 +26,26 @@ type AWS struct {
 	s3       *s3.S3
 }
 
+// S3Permission Implementing an "enum type" for aws-sdk-go permission constants
+type S3Permission string
+
+const (
+	S3PermissionRead        S3Permission = s3.PermissionRead
+	S3PermissionWrite       S3Permission = s3.PermissionWrite
+	S3PermissionFullControl S3Permission = s3.PermissionFullControl
+	S3PermissionReadAcp     S3Permission = s3.PermissionReadAcp
+	S3PermissionWriteAcp    S3Permission = s3.PermissionWriteAcp
+)
+
+// PermissionsMatrix Maps a requested permission to all permissions that are sufficient for the requested one
+var PermissionsMatrix = map[S3Permission][]S3Permission{
+	S3PermissionRead:        {S3PermissionRead, S3PermissionWrite, S3PermissionFullControl},
+	S3PermissionWrite:       {S3PermissionWrite, S3PermissionFullControl},
+	S3PermissionFullControl: {S3PermissionFullControl},
+	S3PermissionReadAcp:     {S3PermissionReadAcp, S3PermissionWriteAcp},
+	S3PermissionWriteAcp:    {S3PermissionWriteAcp},
+}
+
 // Create a new session from the credentials and the region and returns an *AWS object initialized with it.
 func newAwsFromCreds(creds *credentials.Credentials, region string) (*AWS, error) {
 	// Create a Session with a custom region
@@ -624,7 +644,55 @@ func (a *AWS) Regions() ([]string, error) {
 	for _, r := range out.Regions {
 		result = append(result, aws.StringValue(r.RegionName))
 	}
+
 	return result, nil
+}
+
+func (a *AWS) Buckets() ([]string, error) {
+	out, err := a.s3.ListBuckets(nil)
+	if err != nil {
+		return nil, err
+	}
+
+	result := []string{}
+	for _, b := range out.Buckets {
+		result = append(result, aws.StringValue(b.Name))
+	}
+
+	return result, nil
+}
+
+// checkAWSPermissionMatrix internal helper function, checks if the requiredPermission is
+// covered by the currentPermission (consulting the PermissionsMatrix)
+func checkAWSPermissionMatrix(requiredPermission S3Permission, currentPermission S3Permission) bool {
+	requiredPermissions, exists := PermissionsMatrix[requiredPermission]
+	if !exists {
+		return false
+	}
+
+	for _, permission := range requiredPermissions {
+		if permission == currentPermission {
+			return true
+		}
+	}
+	return false
+}
+
+// CheckBucketPermission check if the current account (of a.s3) has the `permission` on the given bucket
+func (a *AWS) CheckBucketPermission(bucketName string, permission S3Permission) (bool, error) {
+	resp, err := a.s3.GetBucketAcl(&s3.GetBucketAclInput{
+		Bucket: aws.String(bucketName),
+	})
+	if err != nil {
+		return false, err
+	}
+
+	for _, grant := range resp.Grants {
+		if checkAWSPermissionMatrix(permission, S3Permission(*grant.Permission)) {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 func (a *AWS) CreateSecurityGroupEC2(name, description string) (*ec2.CreateSecurityGroupOutput, error) {
