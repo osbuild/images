@@ -293,6 +293,18 @@ func (t *imageType) Manifest(bp *blueprint.Blueprint,
 	return &mf, warnings, err
 }
 
+func distroISOLabelFunc(t *imageType) string {
+	const RHEL_ISO_LABEL = "RHEL-%s-%s-0-BaseOS-%s"
+	const CS_ISO_LABEL = "CentOS-Stream-%s-BaseOS-%s"
+
+	if t.arch.distro.isRHEL() {
+		osVer := strings.Split(t.Arch().Distro().OsVersion(), ".")
+		return fmt.Sprintf(RHEL_ISO_LABEL, osVer[0], osVer[1], t.Arch().Name())
+	} else {
+		return fmt.Sprintf(CS_ISO_LABEL, t.Arch().Distro().Releasever(), t.Arch().Name())
+	}
+}
+
 // checkOptions checks the validity and compatibility of options and customizations for the image type.
 // Returns ([]string, error) where []string, if non-nil, will hold any generated warnings (e.g. deprecation notices).
 func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOptions) ([]string, error) {
