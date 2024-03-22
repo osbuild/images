@@ -3,139 +3,157 @@ package rhel8
 import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/subscription"
 )
 
-func amiImgTypeX86_64(rd distribution) imageType {
-	it := imageType{
-		name:     "ami",
-		filename: "image.raw",
-		mimeType: "application/octet-stream",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: ec2CommonPackageSet,
+const (
+	amiX86KernelOptions     = "console=ttyS0,115200n8 console=tty0 net.ifnames=0 rd.blacklist=nouveau nvme_core.io_timeout=4294967295 crashkernel=auto"
+	amiAarch64KernelOptions = "console=ttyS0,115200n8 console=tty0 net.ifnames=0 rd.blacklist=nouveau nvme_core.io_timeout=4294967295 iommu.strict=0 crashkernel=auto"
+	amiSapKernelOptions     = "console=ttyS0,115200n8 console=tty0 net.ifnames=0 rd.blacklist=nouveau nvme_core.io_timeout=4294967295 crashkernel=auto processor.max_cstate=1 intel_idle.max_cstate=1"
+)
+
+func mkAmiImgTypeX86_64() *rhel.ImageType {
+	it := rhel.NewImageType(
+		"ami",
+		"image.raw",
+		"application/octet-stream",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: ec2CommonPackageSet,
 		},
-		defaultImageConfig:  defaultAMIImageConfigX86_64(),
-		kernelOptions:       "console=ttyS0,115200n8 console=tty0 net.ifnames=0 rd.blacklist=nouveau nvme_core.io_timeout=4294967295 crashkernel=auto",
-		bootable:            true,
-		defaultSize:         10 * common.GibiByte,
-		image:               diskImage,
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"os", "image"},
-		exports:             []string{"image"},
-		basePartitionTables: getEc2PartitionTables(rd.osVersion, rd.isRHEL()),
-	}
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image"},
+		[]string{"image"},
+	)
+
+	it.DefaultImageConfig = defaultAMIImageConfigX86_64()
+	it.KernelOptions = amiX86KernelOptions
+	it.Bootable = true
+	it.DefaultSize = 10 * common.GibiByte
+	it.BasePartitionTables = ec2PartitionTables
 
 	return it
 }
 
-func ec2ImgTypeX86_64(rd distribution) imageType {
-	it := imageType{
-		name:        "ec2",
-		filename:    "image.raw.xz",
-		mimeType:    "application/xz",
-		compression: "xz",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: rhelEc2PackageSet,
+func mkEc2ImgTypeX86_64(rd *rhel.Distribution) *rhel.ImageType {
+	it := rhel.NewImageType(
+		"ec2",
+		"image.raw.xz",
+		"application/xz",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: rhelEc2PackageSet,
 		},
-		defaultImageConfig:  defaultEc2ImageConfigX86_64(rd),
-		kernelOptions:       "console=ttyS0,115200n8 console=tty0 net.ifnames=0 rd.blacklist=nouveau nvme_core.io_timeout=4294967295 crashkernel=auto",
-		bootable:            true,
-		defaultSize:         10 * common.GibiByte,
-		image:               diskImage,
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"os", "image", "xz"},
-		exports:             []string{"xz"},
-		basePartitionTables: getEc2PartitionTables(rd.osVersion, rd.isRHEL()),
-	}
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "xz"},
+		[]string{"xz"},
+	)
+
+	it.Compression = "xz"
+	it.DefaultImageConfig = defaultEc2ImageConfigX86_64(rd)
+	it.KernelOptions = amiX86KernelOptions
+	it.Bootable = true
+	it.DefaultSize = 10 * common.GibiByte
+	it.BasePartitionTables = ec2PartitionTables
+
 	return it
 }
 
-func ec2HaImgTypeX86_64(rd distribution) imageType {
-	it := imageType{
-		name:        "ec2-ha",
-		filename:    "image.raw.xz",
-		mimeType:    "application/xz",
-		compression: "xz",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: rhelEc2HaPackageSet,
+func mkEc2HaImgTypeX86_64(rd *rhel.Distribution) *rhel.ImageType {
+	it := rhel.NewImageType(
+		"ec2-ha",
+		"image.raw.xz",
+		"application/xz",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: rhelEc2HaPackageSet,
 		},
-		defaultImageConfig:  defaultEc2ImageConfigX86_64(rd),
-		kernelOptions:       "console=ttyS0,115200n8 console=tty0 net.ifnames=0 rd.blacklist=nouveau nvme_core.io_timeout=4294967295 crashkernel=auto",
-		bootable:            true,
-		defaultSize:         10 * common.GibiByte,
-		image:               diskImage,
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"os", "image", "xz"},
-		exports:             []string{"xz"},
-		basePartitionTables: getEc2PartitionTables(rd.osVersion, rd.isRHEL()),
-	}
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "xz"},
+		[]string{"xz"},
+	)
+
+	it.Compression = "xz"
+	it.DefaultImageConfig = defaultEc2ImageConfigX86_64(rd)
+	it.KernelOptions = amiX86KernelOptions
+	it.Bootable = true
+	it.DefaultSize = 10 * common.GibiByte
+	it.BasePartitionTables = ec2PartitionTables
+
 	return it
 }
 
-func amiImgTypeAarch64(rd distribution) imageType {
-	it := imageType{
-		name:     "ami",
-		filename: "image.raw",
-		mimeType: "application/octet-stream",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: ec2CommonPackageSet,
+func mkAmiImgTypeAarch64() *rhel.ImageType {
+	it := rhel.NewImageType(
+		"ami",
+		"image.raw",
+		"application/octet-stream",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: ec2CommonPackageSet,
 		},
-		defaultImageConfig:  defaultAMIImageConfig(),
-		kernelOptions:       "console=ttyS0,115200n8 console=tty0 net.ifnames=0 rd.blacklist=nouveau nvme_core.io_timeout=4294967295 iommu.strict=0 crashkernel=auto",
-		bootable:            true,
-		defaultSize:         10 * common.GibiByte,
-		image:               diskImage,
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"os", "image"},
-		exports:             []string{"image"},
-		basePartitionTables: getEc2PartitionTables(rd.osVersion, rd.isRHEL()),
-	}
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image"},
+		[]string{"image"},
+	)
+
+	it.DefaultImageConfig = defaultAMIImageConfig()
+	it.KernelOptions = amiAarch64KernelOptions
+	it.Bootable = true
+	it.DefaultSize = 10 * common.GibiByte
+	it.BasePartitionTables = ec2PartitionTables
+
 	return it
 }
 
-func ec2ImgTypeAarch64(rd distribution) imageType {
-	it := imageType{
-		name:        "ec2",
-		filename:    "image.raw.xz",
-		mimeType:    "application/xz",
-		compression: "xz",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: rhelEc2PackageSet,
+func mkEc2ImgTypeAarch64(rd *rhel.Distribution) *rhel.ImageType {
+	it := rhel.NewImageType(
+		"ec2",
+		"image.raw.xz",
+		"application/xz",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: rhelEc2PackageSet,
 		},
-		defaultImageConfig:  defaultEc2ImageConfig(rd),
-		kernelOptions:       "console=ttyS0,115200n8 console=tty0 net.ifnames=0 rd.blacklist=nouveau nvme_core.io_timeout=4294967295 iommu.strict=0 crashkernel=auto",
-		bootable:            true,
-		defaultSize:         10 * common.GibiByte,
-		image:               diskImage,
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"os", "image", "xz"},
-		exports:             []string{"xz"},
-		basePartitionTables: getEc2PartitionTables(rd.osVersion, rd.isRHEL()),
-	}
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "xz"},
+		[]string{"xz"},
+	)
+
+	it.Compression = "xz"
+	it.DefaultImageConfig = defaultEc2ImageConfig(rd)
+	it.KernelOptions = amiAarch64KernelOptions
+	it.Bootable = true
+	it.DefaultSize = 10 * common.GibiByte
+	it.BasePartitionTables = ec2PartitionTables
+
 	return it
 }
 
-func ec2SapImgTypeX86_64(rd distribution) imageType {
-	it := imageType{
-		name:        "ec2-sap",
-		filename:    "image.raw.xz",
-		mimeType:    "application/xz",
-		compression: "xz",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: rhelEc2SapPackageSet,
+func mkEc2SapImgTypeX86_64(rd *rhel.Distribution) *rhel.ImageType {
+	it := rhel.NewImageType(
+		"ec2-sap",
+		"image.raw.xz",
+		"application/xz",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: rhelEc2SapPackageSet,
 		},
-		defaultImageConfig:  defaultEc2SapImageConfigX86_64(rd),
-		kernelOptions:       "console=ttyS0,115200n8 console=tty0 net.ifnames=0 rd.blacklist=nouveau nvme_core.io_timeout=4294967295 crashkernel=auto processor.max_cstate=1 intel_idle.max_cstate=1",
-		bootable:            true,
-		defaultSize:         10 * common.GibiByte,
-		image:               diskImage,
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"os", "image", "xz"},
-		exports:             []string{"xz"},
-		basePartitionTables: getEc2PartitionTables(rd.osVersion, rd.isRHEL()),
-	}
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "xz"},
+		[]string{"xz"},
+	)
+
+	it.Compression = "xz"
+	it.DefaultImageConfig = defaultEc2SapImageConfigX86_64(rd)
+	it.KernelOptions = amiSapKernelOptions
+	it.Bootable = true
+	it.DefaultSize = 10 * common.GibiByte
+	it.BasePartitionTables = ec2PartitionTables
+
 	return it
 }
 
@@ -267,11 +285,11 @@ func baseEc2ImageConfig() *distro.ImageConfig {
 	}
 }
 
-func defaultEc2ImageConfig(rd distribution) *distro.ImageConfig {
+func defaultEc2ImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
 	ic := baseEc2ImageConfig()
 	// The RHSM configuration should not be applied since 8.7, but it is instead done by installing the
 	// redhat-cloud-client-configuration package. See COMPOSER-1804 for more information.
-	if rd.isRHEL() && common.VersionLessThan(rd.osVersion, "8.7") {
+	if rd.IsRHEL() && common.VersionLessThan(rd.OsVersion(), "8.7") {
 		ic = appendRHSM(ic)
 		// Disable RHSM redhat.repo management
 		rhsmConf := ic.RHSMConfig[subscription.RHSMConfigNoSubscription]
@@ -282,7 +300,7 @@ func defaultEc2ImageConfig(rd distribution) *distro.ImageConfig {
 	return ic
 }
 
-func defaultEc2ImageConfigX86_64(rd distribution) *distro.ImageConfig {
+func defaultEc2ImageConfigX86_64(rd *rhel.Distribution) *distro.ImageConfig {
 	ic := defaultEc2ImageConfig(rd)
 	return appendEC2DracutX86_64(ic)
 }
@@ -302,13 +320,13 @@ func defaultAMIImageConfigX86_64() *distro.ImageConfig {
 	return appendEC2DracutX86_64(ic)
 }
 
-func defaultEc2SapImageConfigX86_64(rd distribution) *distro.ImageConfig {
+func defaultEc2SapImageConfigX86_64(rd *rhel.Distribution) *distro.ImageConfig {
 	// default EC2-SAP image config (x86_64)
 	return sapImageConfig(rd).InheritFrom(defaultEc2ImageConfigX86_64(rd))
 }
 
 // common package set for RHEL (BYOS/RHUI) and CentOS Stream images
-func ec2CommonPackageSet(t *imageType) rpmmd.PackageSet {
+func ec2CommonPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return rpmmd.PackageSet{
 		Include: []string{
 			"@core",
@@ -365,17 +383,17 @@ func ec2CommonPackageSet(t *imageType) rpmmd.PackageSet {
 }
 
 // common rhel ec2 RHUI image package set
-func rhelEc2CommonPackageSet(t *imageType) rpmmd.PackageSet {
+func rhelEc2CommonPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	ps := ec2CommonPackageSet(t)
 	// Include "redhat-cloud-client-configuration" on 8.7+ (COMPOSER-1804)
-	if common.VersionGreaterThanOrEqual(t.arch.distro.osVersion, "8.7") {
+	if common.VersionGreaterThanOrEqual(t.Arch().Distro().OsVersion(), "8.7") {
 		ps.Include = append(ps.Include, "redhat-cloud-client-configuration")
 	}
 	return ps
 }
 
 // rhel-ec2 image package set
-func rhelEc2PackageSet(t *imageType) rpmmd.PackageSet {
+func rhelEc2PackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	ec2PackageSet := rhelEc2CommonPackageSet(t)
 	ec2PackageSet.Include = append(ec2PackageSet.Include, "rh-amazon-rhui-client")
 	ec2PackageSet.Exclude = append(ec2PackageSet.Exclude, "alsa-lib")
@@ -383,7 +401,7 @@ func rhelEc2PackageSet(t *imageType) rpmmd.PackageSet {
 }
 
 // rhel-ha-ec2 image package set
-func rhelEc2HaPackageSet(t *imageType) rpmmd.PackageSet {
+func rhelEc2HaPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	ec2HaPackageSet := rhelEc2CommonPackageSet(t)
 	ec2HaPackageSet.Include = append(ec2HaPackageSet.Include,
 		"fence-agents-all",
@@ -398,7 +416,7 @@ func rhelEc2HaPackageSet(t *imageType) rpmmd.PackageSet {
 // rhel-sap-ec2 image package set
 // Includes the common ec2 package set, the common SAP packages, and
 // the amazon rhui sap package
-func rhelEc2SapPackageSet(t *imageType) rpmmd.PackageSet {
+func rhelEc2SapPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return rpmmd.PackageSet{
 		Include: []string{
 			"rh-amazon-rhui-client-sap-bundle-e4s",

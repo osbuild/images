@@ -2,50 +2,57 @@ package rhel8
 
 import (
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
 const vmdkKernelOptions = "ro net.ifnames=0"
 
-func vmdkImgType() imageType {
-	return imageType{
-		name:     "vmdk",
-		filename: "disk.vmdk",
-		mimeType: "application/x-vmdk",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: vmdkCommonPackageSet,
+func mkVmdkImgType() *rhel.ImageType {
+	it := rhel.NewImageType(
+		"vmdk",
+		"disk.vmdk",
+		"application/x-vmdk",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: vmdkCommonPackageSet,
 		},
-		kernelOptions:       vmdkKernelOptions,
-		bootable:            true,
-		defaultSize:         4 * common.GibiByte,
-		image:               diskImage,
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"os", "image", "vmdk"},
-		exports:             []string{"vmdk"},
-		basePartitionTables: defaultBasePartitionTables,
-	}
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "vmdk"},
+		[]string{"vmdk"},
+	)
+
+	it.KernelOptions = vmdkKernelOptions
+	it.Bootable = true
+	it.DefaultSize = 4 * common.GibiByte
+	it.BasePartitionTables = defaultBasePartitionTables
+
+	return it
 }
 
-func ovaImgType() imageType {
-	return imageType{
-		name:     "ova",
-		filename: "image.ova",
-		mimeType: "application/ovf",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: vmdkCommonPackageSet,
+func mkOvaImgType() *rhel.ImageType {
+	it := rhel.NewImageType(
+		"ova",
+		"image.ova",
+		"application/ovf",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: vmdkCommonPackageSet,
 		},
-		kernelOptions:       vmdkKernelOptions,
-		bootable:            true,
-		defaultSize:         4 * common.GibiByte,
-		image:               diskImage,
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"os", "image", "vmdk", "ovf", "archive"},
-		exports:             []string{"archive"},
-		basePartitionTables: defaultBasePartitionTables,
-	}
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "vmdk", "ovf", "archive"},
+		[]string{"archive"},
+	)
+
+	it.KernelOptions = vmdkKernelOptions
+	it.Bootable = true
+	it.DefaultSize = 4 * common.GibiByte
+	it.BasePartitionTables = defaultBasePartitionTables
+
+	return it
 }
 
-func vmdkCommonPackageSet(t *imageType) rpmmd.PackageSet {
+func vmdkCommonPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return rpmmd.PackageSet{
 		Include: []string{
 			"@core",

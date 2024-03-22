@@ -10,58 +10,14 @@ import (
 
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-var testBasicImageType = imageType{
-	name:                "test",
-	basePartitionTables: defaultBasePartitionTables,
-}
-var mountpoints = []blueprint.FilesystemCustomization{
-	{
-		MinSize:    1024,
-		Mountpoint: "/usr",
-	},
-}
-
-type rhelFamilyDistro struct {
-	name   string
-	distro distro.Distro
-}
-
-var rhelFamilyDistros = []rhelFamilyDistro{
-	{
-		name:   "rhel-810",
-		distro: DistroFactory("rhel-810"),
-	},
-}
-
 // math/rand is good enough in this case
 /* #nosec G404 */
 var rng = rand.New(rand.NewSource(0))
-
-func TestDistro_UnsupportedArch(t *testing.T) {
-	testBasicImageType.arch = &architecture{
-		name: "unsupported_arch",
-	}
-	_, err := testBasicImageType.getPartitionTable(mountpoints, distro.ImageOptions{}, rng)
-	require.EqualError(t, err, fmt.Sprintf("no partition table defined for architecture %q for image type %q", testBasicImageType.arch.name, testBasicImageType.name))
-}
-
-func TestDistro_DefaultPartitionTables(t *testing.T) {
-	rhel8distro := rhelFamilyDistros[0].distro
-	for _, archName := range rhel8distro.ListArches() {
-		testBasicImageType.arch = &architecture{
-			name: archName,
-		}
-		pt, err := testBasicImageType.getPartitionTable(mountpoints, distro.ImageOptions{}, rng)
-		require.Nil(t, err)
-		for _, m := range mountpoints {
-			assert.True(t, pt.ContainsMountpoint(m.Mountpoint))
-		}
-	}
-}
 
 func TestEC2Partitioning(t *testing.T) {
 	testCases := []struct {
@@ -102,8 +58,8 @@ func TestEC2Partitioning(t *testing.T) {
 					i, err := a.GetImageType(it)
 					require.NoError(t, err)
 
-					it := i.(*imageType)
-					pt, err := it.getPartitionTable([]blueprint.FilesystemCustomization{}, distro.ImageOptions{}, rng)
+					it := i.(*rhel.ImageType)
+					pt, err := it.GetPartitionTable([]blueprint.FilesystemCustomization{}, distro.ImageOptions{}, rng)
 					require.NoError(t, err)
 
 					// x86_64 is /boot-less, check that

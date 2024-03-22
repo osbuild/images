@@ -5,56 +5,62 @@ import (
 
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
-func imageInstaller() imageType {
-	return imageType{
-		name:     "image-installer",
-		filename: "installer.iso",
-		mimeType: "application/x-iso9660-image",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey:        bareMetalPackageSet,
-			installerPkgsKey: anacondaPackageSet,
+func mkImageInstaller() *rhel.ImageType {
+	it := rhel.NewImageType(
+		"image-installer",
+		"installer.iso",
+		"application/x-iso9660-image",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey:        bareMetalPackageSet,
+			rhel.InstallerPkgsKey: anacondaPackageSet,
 		},
-		defaultInstallerConfig: &distro.InstallerConfig{
-			AdditionalDracutModules: []string{
-				"prefixdevname",
-				"prefixdevname-tools",
-			},
+		rhel.ImageInstallerImage,
+		[]string{"build"},
+		[]string{"anaconda-tree", "rootfs-image", "efiboot-tree", "os", "bootiso-tree", "bootiso"},
+		[]string{"bootiso"},
+	)
+
+	it.BootISO = true
+	it.Bootable = true
+	it.ISOLabelFn = distroISOLabelFunc
+
+	it.DefaultInstallerConfig = &distro.InstallerConfig{
+		AdditionalDracutModules: []string{
+			"prefixdevname",
+			"prefixdevname-tools",
 		},
-		rpmOstree:        false,
-		bootISO:          true,
-		bootable:         true,
-		image:            imageInstallerImage,
-		isoLabel:         distroISOLabelFunc,
-		buildPipelines:   []string{"build"},
-		payloadPipelines: []string{"anaconda-tree", "rootfs-image", "efiboot-tree", "os", "bootiso-tree", "bootiso"},
-		exports:          []string{"bootiso"},
 	}
+
+	return it
 }
 
-func tarImgType() imageType {
-	return imageType{
-		name:     "tar",
-		filename: "root.tar.xz",
-		mimeType: "application/x-tar",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: func(t *imageType) rpmmd.PackageSet {
+func mkTarImgType() *rhel.ImageType {
+	it := rhel.NewImageType(
+		"tar",
+		"root.tar.xz",
+		"application/x-tar",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: func(t *rhel.ImageType) rpmmd.PackageSet {
 				return rpmmd.PackageSet{
 					Include: []string{"policycoreutils", "selinux-policy-targeted"},
 					Exclude: []string{"rng-tools"},
 				}
 			},
 		},
-		image:            tarImage,
-		buildPipelines:   []string{"build"},
-		payloadPipelines: []string{"os", "archive"},
-		exports:          []string{"archive"},
-	}
+		rhel.TarImage,
+		[]string{"build"},
+		[]string{"os", "archive"},
+		[]string{"archive"},
+	)
+
+	return it
 }
 
-func bareMetalPackageSet(t *imageType) rpmmd.PackageSet {
+func bareMetalPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	ps := rpmmd.PackageSet{
 		Include: []string{
 			"@core",
@@ -105,7 +111,7 @@ func bareMetalPackageSet(t *imageType) rpmmd.PackageSet {
 	}.Append(distroSpecificPackageSet(t))
 
 	// Ensure to not pull in subscription-manager on non-RHEL distro
-	if t.arch.distro.isRHEL() {
+	if t.IsRHEL() {
 		ps = ps.Append(rpmmd.PackageSet{
 			Include: []string{
 				"subscription-manager-cockpit",
@@ -116,7 +122,7 @@ func bareMetalPackageSet(t *imageType) rpmmd.PackageSet {
 	return ps
 }
 
-func installerPackageSet(t *imageType) rpmmd.PackageSet {
+func installerPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	ps := rpmmd.PackageSet{
 		Include: []string{
 			"anaconda-dracut",
@@ -153,7 +159,7 @@ func installerPackageSet(t *imageType) rpmmd.PackageSet {
 		},
 	}
 
-	switch t.arch.Name() {
+	switch t.Arch().Name() {
 	case arch.ARCH_X86_64.String():
 		ps = ps.Append(rpmmd.PackageSet{
 			Include: []string{
@@ -165,7 +171,7 @@ func installerPackageSet(t *imageType) rpmmd.PackageSet {
 	return ps
 }
 
-func anacondaPackageSet(t *imageType) rpmmd.PackageSet {
+func anacondaPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 
 	// common installer packages
 	ps := installerPackageSet(t)
@@ -285,7 +291,7 @@ func anacondaPackageSet(t *imageType) rpmmd.PackageSet {
 
 	ps = ps.Append(anacondaBootPackageSet(t))
 
-	switch t.arch.Name() {
+	switch t.Arch().Name() {
 	case arch.ARCH_X86_64.String():
 		ps = ps.Append(rpmmd.PackageSet{
 			Include: []string{
@@ -303,7 +309,7 @@ func anacondaPackageSet(t *imageType) rpmmd.PackageSet {
 		})
 
 	default:
-		panic(fmt.Sprintf("unsupported arch: %s", t.arch.Name()))
+		panic(fmt.Sprintf("unsupported arch: %s", t.Arch().Name()))
 	}
 
 	return ps

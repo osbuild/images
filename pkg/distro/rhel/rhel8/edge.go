@@ -6,97 +6,106 @@ import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
+	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
-func edgeCommitImgType(rd distribution) imageType {
-	it := imageType{
-		name:        "edge-commit",
-		nameAliases: []string{"rhel-edge-commit"},
-		filename:    "commit.tar",
-		mimeType:    "application/x-tar",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: edgeCommitPackageSet,
+func mkEdgeCommitImgType(rd *rhel.Distribution) *rhel.ImageType {
+	it := rhel.NewImageType(
+		"edge-commit",
+		"commit.tar",
+		"application/x-tar",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: edgeCommitPackageSet,
 		},
-		defaultImageConfig: &distro.ImageConfig{
-			EnabledServices: edgeServices(rd),
-			DracutConf:      []*osbuild.DracutConfStageOptions{osbuild.FIPSDracutConfStageOptions},
-		},
-		rpmOstree:        true,
-		image:            edgeCommitImage,
-		buildPipelines:   []string{"build"},
-		payloadPipelines: []string{"os", "ostree-commit", "commit-archive"},
-		exports:          []string{"commit-archive"},
+		rhel.EdgeCommitImage,
+		[]string{"build"},
+		[]string{"os", "ostree-commit", "commit-archive"},
+		[]string{"commit-archive"},
+	)
+
+	it.NameAliases = []string{"rhel-edge-commit"}
+	it.DefaultImageConfig = &distro.ImageConfig{
+		EnabledServices: edgeServices(rd),
+		DracutConf:      []*osbuild.DracutConfStageOptions{osbuild.FIPSDracutConfStageOptions},
 	}
+	it.RPMOSTree = true
+
 	return it
 }
 
-func edgeOCIImgType(rd distribution) imageType {
-	it := imageType{
-		name:        "edge-container",
-		nameAliases: []string{"rhel-edge-container"},
-		filename:    "container.tar",
-		mimeType:    "application/x-tar",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: edgeCommitPackageSet,
-			containerPkgsKey: func(t *imageType) rpmmd.PackageSet {
+func mkEdgeOCIImgType(rd *rhel.Distribution) *rhel.ImageType {
+	it := rhel.NewImageType(
+		"edge-container",
+		"container.tar",
+		"application/x-tar",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: edgeCommitPackageSet,
+			rhel.ContainerPkgsKey: func(t *rhel.ImageType) rpmmd.PackageSet {
 				return rpmmd.PackageSet{
 					Include: []string{"nginx"},
 				}
 			},
 		},
-		defaultImageConfig: &distro.ImageConfig{
-			EnabledServices: edgeServices(rd),
-			DracutConf:      []*osbuild.DracutConfStageOptions{osbuild.FIPSDracutConfStageOptions},
-		},
-		rpmOstree:        true,
-		bootISO:          false,
-		image:            edgeContainerImage,
-		buildPipelines:   []string{"build"},
-		payloadPipelines: []string{"os", "ostree-commit", "container-tree", "container"},
-		exports:          []string{"container"},
+		rhel.EdgeContainerImage,
+		[]string{"build"},
+		[]string{"os", "ostree-commit", "container-tree", "container"},
+		[]string{"container"},
+	)
+
+	it.NameAliases = []string{"rhel-edge-container"}
+	it.DefaultImageConfig = &distro.ImageConfig{
+		EnabledServices: edgeServices(rd),
+		DracutConf:      []*osbuild.DracutConfStageOptions{osbuild.FIPSDracutConfStageOptions},
 	}
+	it.RPMOSTree = true
+
 	return it
 }
 
-func edgeRawImgType() imageType {
-	it := imageType{
-		name:        "edge-raw-image",
-		nameAliases: []string{"rhel-edge-raw-image"},
-		filename:    "image.raw.xz",
-		compression: "xz",
-		mimeType:    "application/xz",
-		image:       edgeRawImage,
-		packageSets: nil,
-		defaultImageConfig: &distro.ImageConfig{
-			Keyboard: &osbuild.KeymapStageOptions{
-				Keymap: "us",
-			},
-			Locale:       common.ToPtr("C.UTF-8"),
-			LockRootUser: common.ToPtr(true),
+func mkEdgeRawImgType() *rhel.ImageType {
+	it := rhel.NewImageType(
+		"edge-raw-image",
+		"image.raw.xz",
+		"application/xz",
+		nil,
+		rhel.EdgeRawImage,
+		[]string{"build"},
+		[]string{"ostree-deployment", "image", "xz"},
+		[]string{"xz"},
+	)
+
+	it.NameAliases = []string{"rhel-edge-raw-image"}
+	it.Compression = "xz"
+	it.KernelOptions = "modprobe.blacklist=vc4"
+	it.DefaultImageConfig = &distro.ImageConfig{
+		Keyboard: &osbuild.KeymapStageOptions{
+			Keymap: "us",
 		},
-		defaultSize:         10 * common.GibiByte,
-		rpmOstree:           true,
-		bootable:            true,
-		bootISO:             false,
-		kernelOptions:       "modprobe.blacklist=vc4",
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"ostree-deployment", "image", "xz"},
-		exports:             []string{"xz"},
-		basePartitionTables: edgeBasePartitionTables,
+		Locale:       common.ToPtr("C.UTF-8"),
+		LockRootUser: common.ToPtr(true),
 	}
+	it.DefaultSize = 10 * common.GibiByte
+	it.RPMOSTree = true
+	it.Bootable = true
+	it.BasePartitionTables = edgeBasePartitionTables
+	it.UnsupportedPartitioningModes = []disk.PartitioningMode{
+		disk.AutoLVMPartitioningMode,
+		disk.LVMPartitioningMode,
+	}
+
 	return it
 }
 
-func edgeInstallerImgType(rd distribution) imageType {
-	it := imageType{
-		name:        "edge-installer",
-		nameAliases: []string{"rhel-edge-installer"},
-		filename:    "installer.iso",
-		mimeType:    "application/x-iso9660-image",
-		packageSets: map[string]packageSetFunc{
+func mkEdgeInstallerImgType(rd *rhel.Distribution) *rhel.ImageType {
+	it := rhel.NewImageType(
+		"edge-installer",
+		"installer.iso",
+		"application/x-iso9660-image",
+		map[string]rhel.PackageSetFunc{
 			// TODO: non-arch-specific package set handling for installers
 			// This image type requires build packages for installers and
 			// ostree/edge.  For now we only have x86-64 installer build
@@ -104,35 +113,37 @@ func edgeInstallerImgType(rd distribution) imageType {
 			// for other architectures, this will need to be moved to the
 			// architecture and the merging will happen in the PackageSets()
 			// method like the other sets.
-			installerPkgsKey: edgeInstallerPackageSet,
+			rhel.InstallerPkgsKey: edgeInstallerPackageSet,
 		},
-		defaultImageConfig: &distro.ImageConfig{
-			EnabledServices: edgeServices(rd),
-		},
-		defaultInstallerConfig: &distro.InstallerConfig{
-			AdditionalDracutModules: []string{
-				"prefixdevname",
-				"prefixdevname-tools",
-			},
-		},
-		rpmOstree:        true,
-		bootISO:          true,
-		image:            edgeInstallerImage,
-		isoLabel:         distroISOLabelFunc,
-		buildPipelines:   []string{"build"},
-		payloadPipelines: []string{"anaconda-tree", "rootfs-image", "efiboot-tree", "bootiso-tree", "bootiso"},
-		exports:          []string{"bootiso"},
+		rhel.EdgeInstallerImage,
+		[]string{"build"},
+		[]string{"anaconda-tree", "rootfs-image", "efiboot-tree", "bootiso-tree", "bootiso"},
+		[]string{"bootiso"},
+	)
+
+	it.NameAliases = []string{"rhel-edge-installer"}
+	it.DefaultImageConfig = &distro.ImageConfig{
+		EnabledServices: edgeServices(rd),
 	}
+	it.DefaultInstallerConfig = &distro.InstallerConfig{
+		AdditionalDracutModules: []string{
+			"prefixdevname",
+			"prefixdevname-tools",
+		},
+	}
+	it.RPMOSTree = true
+	it.BootISO = true
+	it.ISOLabelFn = distroISOLabelFunc
+
 	return it
 }
 
-func edgeSimplifiedInstallerImgType(rd distribution) imageType {
-	it := imageType{
-		name:        "edge-simplified-installer",
-		nameAliases: []string{"rhel-edge-simplified-installer"},
-		filename:    "simplified-installer.iso",
-		mimeType:    "application/x-iso9660-image",
-		packageSets: map[string]packageSetFunc{
+func mkEdgeSimplifiedInstallerImgType(rd *rhel.Distribution) *rhel.ImageType {
+	it := rhel.NewImageType(
+		"edge-simplified-installer",
+		"simplified-installer.iso",
+		"application/x-iso9660-image",
+		map[string]rhel.PackageSetFunc{
 			// TODO: non-arch-specific package set handling for installers
 			// This image type requires build packages for installers and
 			// ostree/edge.  For now we only have x86-64 installer build
@@ -140,67 +151,75 @@ func edgeSimplifiedInstallerImgType(rd distribution) imageType {
 			// for other architectures, this will need to be moved to the
 			// architecture and the merging will happen in the PackageSets()
 			// method like the other sets.
-			installerPkgsKey: edgeSimplifiedInstallerPackageSet,
+			rhel.InstallerPkgsKey: edgeSimplifiedInstallerPackageSet,
 		},
-		defaultImageConfig: &distro.ImageConfig{
-			EnabledServices: edgeServices(rd),
-			Keyboard: &osbuild.KeymapStageOptions{
-				Keymap: "us",
-			},
-			Locale:       common.ToPtr("C.UTF-8"),
-			LockRootUser: common.ToPtr(true),
+		rhel.EdgeSimplifiedInstallerImage,
+		[]string{"build"},
+		[]string{"ostree-deployment", "image", "xz", "coi-tree", "efiboot-tree", "bootiso-tree", "bootiso"},
+		[]string{"bootiso"},
+	)
+
+	it.NameAliases = []string{"rhel-edge-simplified-installer"}
+	it.KernelOptions = "modprobe.blacklist=vc4"
+	it.DefaultImageConfig = &distro.ImageConfig{
+		EnabledServices: edgeServices(rd),
+		Keyboard: &osbuild.KeymapStageOptions{
+			Keymap: "us",
 		},
-		defaultInstallerConfig: &distro.InstallerConfig{
-			AdditionalDracutModules: []string{
-				"prefixdevname",
-				"prefixdevname-tools",
-			},
-		},
-		defaultSize:         10 * common.GibiByte,
-		rpmOstree:           true,
-		bootable:            true,
-		bootISO:             true,
-		kernelOptions:       "modprobe.blacklist=vc4",
-		image:               edgeSimplifiedInstallerImage,
-		isoLabel:            distroISOLabelFunc,
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"ostree-deployment", "image", "xz", "coi-tree", "efiboot-tree", "bootiso-tree", "bootiso"},
-		exports:             []string{"bootiso"},
-		basePartitionTables: edgeBasePartitionTables,
+		Locale:       common.ToPtr("C.UTF-8"),
+		LockRootUser: common.ToPtr(true),
 	}
+	it.DefaultInstallerConfig = &distro.InstallerConfig{
+		AdditionalDracutModules: []string{
+			"prefixdevname",
+			"prefixdevname-tools",
+		},
+	}
+	it.DefaultSize = 10 * common.GibiByte
+	it.RPMOSTree = true
+	it.Bootable = true
+	it.BootISO = true
+	it.ISOLabelFn = distroISOLabelFunc
+	it.BasePartitionTables = edgeBasePartitionTables
+	it.UnsupportedPartitioningModes = []disk.PartitioningMode{
+		disk.AutoLVMPartitioningMode,
+		disk.LVMPartitioningMode,
+	}
+
 	return it
 }
 
-func minimalRawImgType(rd distribution) imageType {
-	it := imageType{
-		name:        "minimal-raw",
-		filename:    "disk.raw.xz",
-		compression: "xz",
-		mimeType:    "application/xz",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: minimalrpmPackageSet,
+func mkMinimalRawImgType() *rhel.ImageType {
+	it := rhel.NewImageType(
+		"minimal-raw",
+		"disk.raw.xz",
+		"application/xz",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: minimalrpmPackageSet,
 		},
-		defaultImageConfig: &distro.ImageConfig{
-			EnabledServices: minimalrawServices(rd),
-			// NOTE: temporary workaround for a bug in initial-setup that
-			// requires a kickstart file in the root directory.
-			Files: []*fsnode.File{initialSetupKickstart()},
-		},
-		rpmOstree:           false,
-		kernelOptions:       "ro",
-		bootable:            true,
-		defaultSize:         2 * common.GibiByte,
-		image:               diskImage,
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"os", "image", "xz"},
-		exports:             []string{"xz"},
-		basePartitionTables: defaultBasePartitionTables,
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "xz"},
+		[]string{"xz"},
+	)
+
+	it.Compression = "xz"
+	it.DefaultImageConfig = &distro.ImageConfig{
+		EnabledServices: minimalrawServices,
+		// NOTE: temporary workaround for a bug in initial-setup that
+		// requires a kickstart file in the root directory.
+		Files: []*fsnode.File{initialSetupKickstart()},
 	}
+	it.KernelOptions = "ro"
+	it.Bootable = true
+	it.DefaultSize = 2 * common.GibiByte
+	it.BasePartitionTables = defaultBasePartitionTables
+
 	return it
 }
 
 // edge commit OS package set
-func edgeCommitPackageSet(t *imageType) rpmmd.PackageSet {
+func edgeCommitPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	ps := rpmmd.PackageSet{
 		Include: []string{
 			"attr",
@@ -278,7 +297,7 @@ func edgeCommitPackageSet(t *imageType) rpmmd.PackageSet {
 		Exclude: []string{"rng-tools"},
 	}
 
-	switch t.arch.Name() {
+	switch t.Arch().Name() {
 	case arch.ARCH_X86_64.String():
 		ps = ps.Append(x8664EdgeCommitPackageSet(t))
 
@@ -286,7 +305,7 @@ func edgeCommitPackageSet(t *imageType) rpmmd.PackageSet {
 		ps = ps.Append(aarch64EdgeCommitPackageSet(t))
 	}
 
-	if t.arch.distro.isRHEL() && common.VersionLessThan(t.arch.distro.osVersion, "8.6") {
+	if t.IsRHEL() && common.VersionLessThan(t.Arch().Distro().OsVersion(), "8.6") {
 		ps = ps.Append(rpmmd.PackageSet{
 			Include: []string{
 				"greenboot-grub2",
@@ -311,7 +330,7 @@ func edgeCommitPackageSet(t *imageType) rpmmd.PackageSet {
 
 }
 
-func x8664EdgeCommitPackageSet(t *imageType) rpmmd.PackageSet {
+func x8664EdgeCommitPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return rpmmd.PackageSet{
 		Include: []string{
 			"efibootmgr",
@@ -336,7 +355,7 @@ func x8664EdgeCommitPackageSet(t *imageType) rpmmd.PackageSet {
 	}
 }
 
-func aarch64EdgeCommitPackageSet(t *imageType) rpmmd.PackageSet {
+func aarch64EdgeCommitPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return rpmmd.PackageSet{
 		Include: []string{
 			"efibootmgr",
@@ -348,11 +367,11 @@ func aarch64EdgeCommitPackageSet(t *imageType) rpmmd.PackageSet {
 	}
 }
 
-func edgeInstallerPackageSet(t *imageType) rpmmd.PackageSet {
+func edgeInstallerPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return anacondaPackageSet(t)
 }
 
-func edgeSimplifiedInstallerPackageSet(t *imageType) rpmmd.PackageSet {
+func edgeSimplifiedInstallerPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	// common installer packages
 	ps := installerPackageSet(t)
 
@@ -398,7 +417,7 @@ func edgeSimplifiedInstallerPackageSet(t *imageType) rpmmd.PackageSet {
 		Exclude: nil,
 	})
 
-	switch t.arch.Name() {
+	switch t.Arch().Name() {
 
 	case arch.ARCH_X86_64.String():
 		ps = ps.Append(x8664EdgeCommitPackageSet(t))
@@ -406,17 +425,17 @@ func edgeSimplifiedInstallerPackageSet(t *imageType) rpmmd.PackageSet {
 		ps = ps.Append(aarch64EdgeCommitPackageSet(t))
 
 	default:
-		panic(fmt.Sprintf("unsupported arch: %s", t.arch.Name()))
+		panic(fmt.Sprintf("unsupported arch: %s", t.Arch().Name()))
 	}
 
 	return ps
 }
 
-func edgeServices(rd distribution) []string {
+func edgeServices(rd *rhel.Distribution) []string {
 	// Common Services
 	var edgeServices = []string{"NetworkManager.service", "firewalld.service", "sshd.service"}
 
-	if rd.osVersion == "8.4" {
+	if rd.OsVersion() == "8.4" {
 		// greenboot services aren't enabled by default in 8.4
 		edgeServices = append(edgeServices,
 			"greenboot-grub2-set-counter",
@@ -430,7 +449,7 @@ func edgeServices(rd distribution) []string {
 
 	}
 
-	if !(rd.isRHEL() && common.VersionLessThan(rd.osVersion, "8.6")) {
+	if !(rd.IsRHEL() && common.VersionLessThan(rd.OsVersion(), "8.6")) {
 		// enable fdo-client only on RHEL 8.6+ and CS8
 
 		// TODO(runcom): move fdo-client-linuxapp.service to presets?
@@ -440,9 +459,19 @@ func edgeServices(rd distribution) []string {
 	return edgeServices
 }
 
-func minimalrawServices(rd distribution) []string {
-	// Common Services
-	var minimalrawServices = []string{"NetworkManager.service", "firewalld.service", "sshd.service", "initial-setup.service"}
+var minimalrawServices = []string{
+	"NetworkManager.service",
+	"firewalld.service",
+	"sshd.service",
+	"initial-setup.service",
+}
 
-	return minimalrawServices
+// initialSetupKickstart returns the File configuration for a kickstart file
+// that's required to enable initial-setup to run on first boot.
+func initialSetupKickstart() *fsnode.File {
+	file, err := fsnode.NewFile("/root/anaconda-ks.cfg", nil, "root", "root", []byte("# Run initial-setup on first boot\n# Created by osbuild\nfirstboot --reconfig\nlang en_US.UTF-8\n"))
+	if err != nil {
+		panic(err)
+	}
+	return file
 }

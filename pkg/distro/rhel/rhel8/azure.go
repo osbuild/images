@@ -6,6 +6,7 @@ import (
 	"github.com/osbuild/images/pkg/customizations/shell"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/subscription"
@@ -14,115 +15,130 @@ import (
 // use loglevel=3 as described in the RHEL documentation and used in existing RHEL images built by MSFT
 const defaultAzureKernelOptions = "ro loglevel=3 crashkernel=auto console=tty1 console=ttyS0 earlyprintk=ttyS0 rootdelay=300"
 
-func azureRhuiImgType() imageType {
-	return imageType{
-		name:        "azure-rhui",
-		filename:    "disk.vhd.xz",
-		mimeType:    "application/xz",
-		compression: "xz",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: azureRhuiPackageSet,
+func mkAzureRhuiImgType() *rhel.ImageType {
+	it := rhel.NewImageType(
+		"azure-rhui",
+		"disk.vhd.xz",
+		"application/xz",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: azureRhuiPackageSet,
 		},
-		defaultImageConfig:  defaultAzureRhuiImageConfig.InheritFrom(defaultVhdImageConfig()),
-		kernelOptions:       defaultAzureKernelOptions,
-		bootable:            true,
-		defaultSize:         64 * common.GibiByte,
-		image:               diskImage,
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"os", "image", "vpc", "xz"},
-		exports:             []string{"xz"},
-		basePartitionTables: azureRhuiBasePartitionTables,
-	}
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "vpc", "xz"},
+		[]string{"xz"},
+	)
+
+	it.Compression = "xz"
+	it.DefaultImageConfig = defaultAzureRhuiImageConfig.InheritFrom(defaultVhdImageConfig())
+	it.KernelOptions = defaultAzureKernelOptions
+	it.Bootable = true
+	it.DefaultSize = 64 * common.GibiByte
+	it.BasePartitionTables = azureRhuiBasePartitionTables
+
+	return it
 }
 
-func azureSapRhuiImgType(rd distribution) imageType {
-	return imageType{
-		name:        "azure-sap-rhui",
-		filename:    "disk.vhd.xz",
-		mimeType:    "application/xz",
-		compression: "xz",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: azureSapPackageSet,
+func mkAzureSapRhuiImgType(rd *rhel.Distribution) *rhel.ImageType {
+	it := rhel.NewImageType(
+		"azure-sap-rhui",
+		"disk.vhd.xz",
+		"application/xz",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: azureSapPackageSet,
 		},
-		defaultImageConfig:  defaultAzureRhuiImageConfig.InheritFrom(sapAzureImageConfig(rd)),
-		kernelOptions:       defaultAzureKernelOptions,
-		bootable:            true,
-		defaultSize:         64 * common.GibiByte,
-		image:               diskImage,
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"os", "image", "vpc", "xz"},
-		exports:             []string{"xz"},
-		basePartitionTables: azureRhuiBasePartitionTables,
-	}
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "vpc", "xz"},
+		[]string{"xz"},
+	)
+
+	it.Compression = "xz"
+	it.DefaultImageConfig = defaultAzureRhuiImageConfig.InheritFrom(sapAzureImageConfig(rd))
+	it.KernelOptions = defaultAzureKernelOptions
+	it.Bootable = true
+	it.DefaultSize = 64 * common.GibiByte
+	it.BasePartitionTables = azureRhuiBasePartitionTables
+
+	return it
 }
 
-func azureByosImgType() imageType {
-	return imageType{
-		name:     "vhd",
-		filename: "disk.vhd",
-		mimeType: "application/x-vhd",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: azurePackageSet,
+func mkAzureByosImgType() *rhel.ImageType {
+	it := rhel.NewImageType(
+		"vhd",
+		"disk.vhd",
+		"application/x-vhd",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: azurePackageSet,
 		},
-		defaultImageConfig:  defaultAzureByosImageConfig.InheritFrom(defaultVhdImageConfig()),
-		kernelOptions:       defaultAzureKernelOptions,
-		bootable:            true,
-		defaultSize:         4 * common.GibiByte,
-		image:               diskImage,
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"os", "image", "vpc"},
-		exports:             []string{"vpc"},
-		basePartitionTables: defaultBasePartitionTables,
-	}
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "vpc"},
+		[]string{"vpc"},
+	)
+
+	it.DefaultImageConfig = defaultAzureByosImageConfig.InheritFrom(defaultVhdImageConfig())
+	it.KernelOptions = defaultAzureKernelOptions
+	it.Bootable = true
+	it.DefaultSize = 4 * common.GibiByte
+	it.BasePartitionTables = defaultBasePartitionTables
+
+	return it
 }
 
 // Azure non-RHEL image type
-func azureImgType() imageType {
-	return imageType{
-		name:     "vhd",
-		filename: "disk.vhd",
-		mimeType: "application/x-vhd",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: azurePackageSet,
+func mkAzureImgType() *rhel.ImageType {
+	it := rhel.NewImageType(
+		"vhd",
+		"disk.vhd",
+		"application/x-vhd",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: azurePackageSet,
 		},
-		defaultImageConfig:  defaultVhdImageConfig(),
-		kernelOptions:       defaultAzureKernelOptions,
-		bootable:            true,
-		defaultSize:         4 * common.GibiByte,
-		image:               diskImage,
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"os", "image", "vpc"},
-		exports:             []string{"vpc"},
-		basePartitionTables: defaultBasePartitionTables,
-	}
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "vpc"},
+		[]string{"vpc"},
+	)
+
+	it.DefaultImageConfig = defaultVhdImageConfig()
+	it.KernelOptions = defaultAzureKernelOptions
+	it.Bootable = true
+	it.DefaultSize = 4 * common.GibiByte
+	it.BasePartitionTables = defaultBasePartitionTables
+
+	return it
 }
 
-func azureEap7RhuiImgType() imageType {
-	return imageType{
-		name:        "azure-eap7-rhui",
-		workload:    eapWorkload(),
-		filename:    "disk.vhd.xz",
-		mimeType:    "application/xz",
-		compression: "xz",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: azureEapPackageSet,
+func mkAzureEap7RhuiImgType() *rhel.ImageType {
+	it := rhel.NewImageType(
+		"azure-eap7-rhui",
+		"disk.vhd.xz",
+		"application/xz",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: azureEapPackageSet,
 		},
-		defaultImageConfig:  defaultAzureEapImageConfig.InheritFrom(defaultAzureRhuiImageConfig.InheritFrom(defaultAzureImageConfig)),
-		kernelOptions:       defaultAzureKernelOptions,
-		bootable:            true,
-		defaultSize:         64 * common.GibiByte,
-		image:               diskImage,
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"os", "image", "vpc", "xz"},
-		exports:             []string{"xz"},
-		basePartitionTables: azureRhuiBasePartitionTables,
-	}
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "vpc", "xz"},
+		[]string{"xz"},
+	)
+
+	it.Compression = "xz"
+	it.DefaultImageConfig = defaultAzureEapImageConfig.InheritFrom(defaultAzureRhuiImageConfig.InheritFrom(defaultAzureImageConfig))
+	it.KernelOptions = defaultAzureKernelOptions
+	it.Bootable = true
+	it.DefaultSize = 64 * common.GibiByte
+	it.BasePartitionTables = azureRhuiBasePartitionTables
+	it.Workload = eapWorkload()
+
+	return it
 }
 
 // PACKAGE SETS
 
 // Common Azure image package set
-func azureCommonPackageSet(t *imageType) rpmmd.PackageSet {
+func azureCommonPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	ps := rpmmd.PackageSet{
 		Include: []string{
 			"@Server",
@@ -199,7 +215,7 @@ func azureCommonPackageSet(t *imageType) rpmmd.PackageSet {
 		},
 	}.Append(distroSpecificPackageSet(t))
 
-	if t.arch.distro.isRHEL() {
+	if t.IsRHEL() {
 		ps.Append(rpmmd.PackageSet{
 			Include: []string{
 				"insights-client",
@@ -212,7 +228,7 @@ func azureCommonPackageSet(t *imageType) rpmmd.PackageSet {
 }
 
 // Azure BYOS image package set
-func azurePackageSet(t *imageType) rpmmd.PackageSet {
+func azurePackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return rpmmd.PackageSet{
 		Include: []string{
 			"firewalld",
@@ -224,7 +240,7 @@ func azurePackageSet(t *imageType) rpmmd.PackageSet {
 }
 
 // Azure RHUI image package set
-func azureRhuiPackageSet(t *imageType) rpmmd.PackageSet {
+func azureRhuiPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return rpmmd.PackageSet{
 		Include: []string{
 			"firewalld",
@@ -239,7 +255,7 @@ func azureRhuiPackageSet(t *imageType) rpmmd.PackageSet {
 // Azure SAP image package set
 // Includes the common azure package set, the common SAP packages, and
 // the azure rhui sap package.
-func azureSapPackageSet(t *imageType) rpmmd.PackageSet {
+func azureSapPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return rpmmd.PackageSet{
 		Include: []string{
 			"firewalld",
@@ -248,7 +264,7 @@ func azureSapPackageSet(t *imageType) rpmmd.PackageSet {
 	}.Append(azureCommonPackageSet(t)).Append(SapPackageSet(t))
 }
 
-func azureEapPackageSet(t *imageType) rpmmd.PackageSet {
+func azureEapPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return rpmmd.PackageSet{
 		Include: []string{
 			"rhui-azure-rhel8",
@@ -261,217 +277,225 @@ func azureEapPackageSet(t *imageType) rpmmd.PackageSet {
 
 // PARTITION TABLES
 
-var azureRhuiBasePartitionTables = distro.BasePartitionTableMap{
-	arch.ARCH_X86_64.String(): disk.PartitionTable{
-		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
-		Type: "gpt",
-		Size: 64 * common.GibiByte,
-		Partitions: []disk.Partition{
-			{
-				Size: 500 * common.MebiByte,
-				Type: disk.EFISystemPartitionGUID,
-				UUID: disk.EFISystemPartitionUUID,
-				Payload: &disk.Filesystem{
-					Type:         "vfat",
-					UUID:         disk.EFIFilesystemUUID,
-					Mountpoint:   "/boot/efi",
-					FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
-					FSTabFreq:    0,
-					FSTabPassNo:  2,
+func azureRhuiBasePartitionTables(t *rhel.ImageType) (disk.PartitionTable, bool) {
+	switch t.Arch().Name() {
+	case arch.ARCH_X86_64.String():
+		return disk.PartitionTable{
+			UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
+			Type: "gpt",
+			Size: 64 * common.GibiByte,
+			Partitions: []disk.Partition{
+				{
+					Size: 500 * common.MebiByte,
+					Type: disk.EFISystemPartitionGUID,
+					UUID: disk.EFISystemPartitionUUID,
+					Payload: &disk.Filesystem{
+						Type:         "vfat",
+						UUID:         disk.EFIFilesystemUUID,
+						Mountpoint:   "/boot/efi",
+						FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+						FSTabFreq:    0,
+						FSTabPassNo:  2,
+					},
 				},
-			},
-			{
-				Size: 500 * common.MebiByte,
-				Type: disk.FilesystemDataGUID,
-				UUID: disk.FilesystemDataUUID,
-				Payload: &disk.Filesystem{
-					Type:         "xfs",
-					Mountpoint:   "/boot",
-					FSTabOptions: "defaults",
-					FSTabFreq:    0,
-					FSTabPassNo:  0,
+				{
+					Size: 500 * common.MebiByte,
+					Type: disk.FilesystemDataGUID,
+					UUID: disk.FilesystemDataUUID,
+					Payload: &disk.Filesystem{
+						Type:         "xfs",
+						Mountpoint:   "/boot",
+						FSTabOptions: "defaults",
+						FSTabFreq:    0,
+						FSTabPassNo:  0,
+					},
 				},
-			},
-			{
-				Size:     2 * common.MebiByte,
-				Bootable: true,
-				Type:     disk.BIOSBootPartitionGUID,
-				UUID:     disk.BIOSBootPartitionUUID,
-			},
-			{
-				Type: disk.LVMPartitionGUID,
-				UUID: disk.RootPartitionUUID,
-				Payload: &disk.LVMVolumeGroup{
-					Name:        "rootvg",
-					Description: "built with lvm2 and osbuild",
-					LogicalVolumes: []disk.LVMLogicalVolume{
-						{
-							Size: 1 * common.GibiByte,
-							Name: "homelv",
-							Payload: &disk.Filesystem{
-								Type:         "xfs",
-								Label:        "home",
-								Mountpoint:   "/home",
-								FSTabOptions: "defaults",
-								FSTabFreq:    0,
-								FSTabPassNo:  0,
+				{
+					Size:     2 * common.MebiByte,
+					Bootable: true,
+					Type:     disk.BIOSBootPartitionGUID,
+					UUID:     disk.BIOSBootPartitionUUID,
+				},
+				{
+					Type: disk.LVMPartitionGUID,
+					UUID: disk.RootPartitionUUID,
+					Payload: &disk.LVMVolumeGroup{
+						Name:        "rootvg",
+						Description: "built with lvm2 and osbuild",
+						LogicalVolumes: []disk.LVMLogicalVolume{
+							{
+								Size: 1 * common.GibiByte,
+								Name: "homelv",
+								Payload: &disk.Filesystem{
+									Type:         "xfs",
+									Label:        "home",
+									Mountpoint:   "/home",
+									FSTabOptions: "defaults",
+									FSTabFreq:    0,
+									FSTabPassNo:  0,
+								},
 							},
-						},
-						{
-							Size: 2 * common.GibiByte,
-							Name: "rootlv",
-							Payload: &disk.Filesystem{
-								Type:         "xfs",
-								Label:        "root",
-								Mountpoint:   "/",
-								FSTabOptions: "defaults",
-								FSTabFreq:    0,
-								FSTabPassNo:  0,
+							{
+								Size: 2 * common.GibiByte,
+								Name: "rootlv",
+								Payload: &disk.Filesystem{
+									Type:         "xfs",
+									Label:        "root",
+									Mountpoint:   "/",
+									FSTabOptions: "defaults",
+									FSTabFreq:    0,
+									FSTabPassNo:  0,
+								},
 							},
-						},
-						{
-							Size: 2 * common.GibiByte,
-							Name: "tmplv",
-							Payload: &disk.Filesystem{
-								Type:         "xfs",
-								Label:        "tmp",
-								Mountpoint:   "/tmp",
-								FSTabOptions: "defaults",
-								FSTabFreq:    0,
-								FSTabPassNo:  0,
+							{
+								Size: 2 * common.GibiByte,
+								Name: "tmplv",
+								Payload: &disk.Filesystem{
+									Type:         "xfs",
+									Label:        "tmp",
+									Mountpoint:   "/tmp",
+									FSTabOptions: "defaults",
+									FSTabFreq:    0,
+									FSTabPassNo:  0,
+								},
 							},
-						},
-						{
-							Size: 10 * common.GibiByte,
-							Name: "usrlv",
-							Payload: &disk.Filesystem{
-								Type:         "xfs",
-								Label:        "usr",
-								Mountpoint:   "/usr",
-								FSTabOptions: "defaults",
-								FSTabFreq:    0,
-								FSTabPassNo:  0,
+							{
+								Size: 10 * common.GibiByte,
+								Name: "usrlv",
+								Payload: &disk.Filesystem{
+									Type:         "xfs",
+									Label:        "usr",
+									Mountpoint:   "/usr",
+									FSTabOptions: "defaults",
+									FSTabFreq:    0,
+									FSTabPassNo:  0,
+								},
 							},
-						},
-						{
-							Size: 10 * common.GibiByte,
-							Name: "varlv",
-							Payload: &disk.Filesystem{
-								Type:         "xfs",
-								Label:        "var",
-								Mountpoint:   "/var",
-								FSTabOptions: "defaults",
-								FSTabFreq:    0,
-								FSTabPassNo:  0,
+							{
+								Size: 10 * common.GibiByte,
+								Name: "varlv",
+								Payload: &disk.Filesystem{
+									Type:         "xfs",
+									Label:        "var",
+									Mountpoint:   "/var",
+									FSTabOptions: "defaults",
+									FSTabFreq:    0,
+									FSTabPassNo:  0,
+								},
 							},
 						},
 					},
 				},
 			},
-		},
-	},
-	arch.ARCH_AARCH64.String(): disk.PartitionTable{
-		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
-		Type: "gpt",
-		Size: 64 * common.GibiByte,
-		Partitions: []disk.Partition{
-			{
-				Size: 500 * common.MebiByte,
-				Type: disk.EFISystemPartitionGUID,
-				UUID: disk.EFISystemPartitionUUID,
-				Payload: &disk.Filesystem{
-					Type:         "vfat",
-					UUID:         disk.EFIFilesystemUUID,
-					Mountpoint:   "/boot/efi",
-					FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
-					FSTabFreq:    0,
-					FSTabPassNo:  2,
+		}, true
+
+	case arch.ARCH_AARCH64.String():
+		return disk.PartitionTable{
+			UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
+			Type: "gpt",
+			Size: 64 * common.GibiByte,
+			Partitions: []disk.Partition{
+				{
+					Size: 500 * common.MebiByte,
+					Type: disk.EFISystemPartitionGUID,
+					UUID: disk.EFISystemPartitionUUID,
+					Payload: &disk.Filesystem{
+						Type:         "vfat",
+						UUID:         disk.EFIFilesystemUUID,
+						Mountpoint:   "/boot/efi",
+						FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+						FSTabFreq:    0,
+						FSTabPassNo:  2,
+					},
 				},
-			},
-			{
-				Size: 500 * common.MebiByte,
-				Type: disk.FilesystemDataGUID,
-				UUID: disk.FilesystemDataUUID,
-				Payload: &disk.Filesystem{
-					Type:         "xfs",
-					Mountpoint:   "/boot",
-					FSTabOptions: "defaults",
-					FSTabFreq:    0,
-					FSTabPassNo:  0,
+				{
+					Size: 500 * common.MebiByte,
+					Type: disk.FilesystemDataGUID,
+					UUID: disk.FilesystemDataUUID,
+					Payload: &disk.Filesystem{
+						Type:         "xfs",
+						Mountpoint:   "/boot",
+						FSTabOptions: "defaults",
+						FSTabFreq:    0,
+						FSTabPassNo:  0,
+					},
 				},
-			},
-			{
-				Type: disk.LVMPartitionGUID,
-				UUID: disk.RootPartitionUUID,
-				Payload: &disk.LVMVolumeGroup{
-					Name:        "rootvg",
-					Description: "built with lvm2 and osbuild",
-					LogicalVolumes: []disk.LVMLogicalVolume{
-						{
-							Size: 1 * common.GibiByte,
-							Name: "homelv",
-							Payload: &disk.Filesystem{
-								Type:         "xfs",
-								Label:        "home",
-								Mountpoint:   "/home",
-								FSTabOptions: "defaults",
-								FSTabFreq:    0,
-								FSTabPassNo:  0,
+				{
+					Type: disk.LVMPartitionGUID,
+					UUID: disk.RootPartitionUUID,
+					Payload: &disk.LVMVolumeGroup{
+						Name:        "rootvg",
+						Description: "built with lvm2 and osbuild",
+						LogicalVolumes: []disk.LVMLogicalVolume{
+							{
+								Size: 1 * common.GibiByte,
+								Name: "homelv",
+								Payload: &disk.Filesystem{
+									Type:         "xfs",
+									Label:        "home",
+									Mountpoint:   "/home",
+									FSTabOptions: "defaults",
+									FSTabFreq:    0,
+									FSTabPassNo:  0,
+								},
 							},
-						},
-						{
-							Size: 2 * common.GibiByte,
-							Name: "rootlv",
-							Payload: &disk.Filesystem{
-								Type:         "xfs",
-								Label:        "root",
-								Mountpoint:   "/",
-								FSTabOptions: "defaults",
-								FSTabFreq:    0,
-								FSTabPassNo:  0,
+							{
+								Size: 2 * common.GibiByte,
+								Name: "rootlv",
+								Payload: &disk.Filesystem{
+									Type:         "xfs",
+									Label:        "root",
+									Mountpoint:   "/",
+									FSTabOptions: "defaults",
+									FSTabFreq:    0,
+									FSTabPassNo:  0,
+								},
 							},
-						},
-						{
-							Size: 2 * common.GibiByte,
-							Name: "tmplv",
-							Payload: &disk.Filesystem{
-								Type:         "xfs",
-								Label:        "tmp",
-								Mountpoint:   "/tmp",
-								FSTabOptions: "defaults",
-								FSTabFreq:    0,
-								FSTabPassNo:  0,
+							{
+								Size: 2 * common.GibiByte,
+								Name: "tmplv",
+								Payload: &disk.Filesystem{
+									Type:         "xfs",
+									Label:        "tmp",
+									Mountpoint:   "/tmp",
+									FSTabOptions: "defaults",
+									FSTabFreq:    0,
+									FSTabPassNo:  0,
+								},
 							},
-						},
-						{
-							Size: 10 * common.GibiByte,
-							Name: "usrlv",
-							Payload: &disk.Filesystem{
-								Type:         "xfs",
-								Label:        "usr",
-								Mountpoint:   "/usr",
-								FSTabOptions: "defaults",
-								FSTabFreq:    0,
-								FSTabPassNo:  0,
+							{
+								Size: 10 * common.GibiByte,
+								Name: "usrlv",
+								Payload: &disk.Filesystem{
+									Type:         "xfs",
+									Label:        "usr",
+									Mountpoint:   "/usr",
+									FSTabOptions: "defaults",
+									FSTabFreq:    0,
+									FSTabPassNo:  0,
+								},
 							},
-						},
-						{
-							Size: 10 * common.GibiByte,
-							Name: "varlv",
-							Payload: &disk.Filesystem{
-								Type:         "xfs",
-								Label:        "var",
-								Mountpoint:   "/var",
-								FSTabOptions: "defaults",
-								FSTabFreq:    0,
-								FSTabPassNo:  0,
+							{
+								Size: 10 * common.GibiByte,
+								Name: "varlv",
+								Payload: &disk.Filesystem{
+									Type:         "xfs",
+									Label:        "var",
+									Mountpoint:   "/var",
+									FSTabOptions: "defaults",
+									FSTabFreq:    0,
+									FSTabPassNo:  0,
+								},
 							},
 						},
 					},
 				},
 			},
-		},
-	},
+		}, true
+
+	default:
+		return disk.PartitionTable{}, false
+	}
 }
 
 // based on https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/deploying_rhel_8_on_microsoft_azure/assembly_deploying-a-rhel-image-as-a-virtual-machine-on-microsoft-azure_cloud-content-azure#making-configuration-changes_configure-the-image-azure
@@ -699,6 +723,6 @@ func defaultVhdImageConfig() *distro.ImageConfig {
 	return imageConfig.InheritFrom(defaultAzureImageConfig)
 }
 
-func sapAzureImageConfig(rd distribution) *distro.ImageConfig {
+func sapAzureImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
 	return sapImageConfig(rd).InheritFrom(defaultVhdImageConfig())
 }
