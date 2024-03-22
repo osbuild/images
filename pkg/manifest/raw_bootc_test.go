@@ -49,6 +49,7 @@ func TestRawBootcImageSerialize(t *testing.T) {
 	rawBootcPipeline := manifest.NewRawBootcImage(build, nil, nil)
 	rawBootcPipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi")
 	rawBootcPipeline.Users = []users.User{{Name: "root", Key: common.ToPtr("some-ssh-key")}}
+	rawBootcPipeline.KernelOptionsAppend = []string{"karg1", "karg2"}
 
 	rawBootcPipeline.SerializeStart(nil, []container.Spec{{Source: "foo"}}, nil)
 	imagePipeline := rawBootcPipeline.Serialize()
@@ -58,6 +59,7 @@ func TestRawBootcImageSerialize(t *testing.T) {
 	require.NotNil(t, bootcInst)
 	opts := bootcInst.Options.(*osbuild.BootcInstallToFilesystemOptions)
 	assert.Equal(t, []string{"some-ssh-key"}, opts.RootSSHAuthorizedKeys)
+	assert.Equal(t, []string{"karg1", "karg2"}, opts.Kargs)
 }
 
 func TestRawBootcImageSerializeMountsValidated(t *testing.T) {
