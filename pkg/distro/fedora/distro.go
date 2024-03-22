@@ -433,6 +433,14 @@ func (d *distribution) Releasever() string {
 	return d.releaseVersion
 }
 
+func (d *distribution) OsVersion() string {
+	return d.releaseVersion
+}
+
+func (d *distribution) Product() string {
+	return d.product
+}
+
 func (d *distribution) ModulePlatformID() string {
 	return d.modulePlatformID
 }
