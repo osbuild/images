@@ -62,9 +62,9 @@ type ImageType struct {
 	// properties which can't be set when defining the image type
 	arch     *Architecture
 	platform platform.Platform
-	workload workload.Workload
 
 	Environment            environment.Environment
+	Workload               workload.Workload
 	NameAliases            []string
 	Compression            string // TODO: remove from image definition and make it a transport option
 	DefaultImageConfig     *distro.ImageConfig
@@ -228,7 +228,7 @@ func (t *ImageType) Manifest(bp *blueprint.Blueprint,
 	repos []rpmmd.RepoConfig,
 	seed int64) (*manifest.Manifest, []string, error) {
 
-	if t.workload != nil {
+	if t.Workload != nil {
 		// For now, if an image type defines its own workload, don't allow any
 		// user customizations.
 		// Soon we will have more workflows and each will define its allowed
@@ -268,7 +268,7 @@ func (t *ImageType) Manifest(bp *blueprint.Blueprint,
 		}
 	}
 
-	w := t.workload
+	w := t.Workload
 	if w == nil {
 		cw := &workload.Custom{
 			BaseWorkload: workload.BaseWorkload{
@@ -305,6 +305,8 @@ func (t *ImageType) Manifest(bp *blueprint.Blueprint,
 	mf := manifest.New()
 
 	switch t.Arch().Distro().Releasever() {
+	case "8":
+		mf.Distro = manifest.DISTRO_EL8
 	case "9":
 		mf.Distro = manifest.DISTRO_EL9
 	case "10":

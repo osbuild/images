@@ -3,6 +3,7 @@ package rhel8
 import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/subscription"
@@ -10,51 +11,57 @@ import (
 
 const gceKernelOptions = "net.ifnames=0 biosdevname=0 scsi_mod.use_blk_mq=Y crashkernel=auto console=ttyS0,38400n8d"
 
-func gceImgType(rd distribution) imageType {
-	return imageType{
-		name:     "gce",
-		filename: "image.tar.gz",
-		mimeType: "application/gzip",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: gcePackageSet,
+func mkGceImgType(rd distro.Distro) *rhel.ImageType {
+	it := rhel.NewImageType(
+		"gce",
+		"image.tar.gz",
+		"application/gzip",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: gcePackageSet,
 		},
-		defaultImageConfig: defaultGceByosImageConfig(rd),
-		kernelOptions:      gceKernelOptions,
-		bootable:           true,
-		defaultSize:        20 * common.GibiByte,
-		image:              diskImage,
-		buildPipelines:     []string{"build"},
-		payloadPipelines:   []string{"os", "image", "archive"},
-		exports:            []string{"archive"},
-		// TODO: the base partition table still contains the BIOS boot partition, but the image is UEFI-only
-		basePartitionTables: defaultBasePartitionTables,
-	}
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "archive"},
+		[]string{"archive"},
+	)
+
+	it.DefaultImageConfig = defaultGceByosImageConfig(rd)
+	it.KernelOptions = gceKernelOptions
+	it.Bootable = true
+	it.DefaultSize = 20 * common.GibiByte
+	// TODO: the base partition table still contains the BIOS boot partition, but the image is UEFI-only
+	it.BasePartitionTables = defaultBasePartitionTables
+
+	return it
 }
 
-func gceRhuiImgType(rd distribution) imageType {
-	return imageType{
-		name:     "gce-rhui",
-		filename: "image.tar.gz",
-		mimeType: "application/gzip",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: gceRhuiPackageSet,
+func mkGceRhuiImgType(rd distro.Distro) *rhel.ImageType {
+	it := rhel.NewImageType(
+		"gce-rhui",
+		"image.tar.gz",
+		"application/gzip",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: gceRhuiPackageSet,
 		},
-		defaultImageConfig: defaultGceRhuiImageConfig(rd),
-		kernelOptions:      gceKernelOptions,
-		bootable:           true,
-		defaultSize:        20 * common.GibiByte,
-		image:              diskImage,
-		buildPipelines:     []string{"build"},
-		payloadPipelines:   []string{"os", "image", "archive"},
-		exports:            []string{"archive"},
-		// TODO: the base partition table still contains the BIOS boot partition, but the image is UEFI-only
-		basePartitionTables: defaultBasePartitionTables,
-	}
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "archive"},
+		[]string{"archive"},
+	)
+
+	it.DefaultImageConfig = defaultGceRhuiImageConfig(rd)
+	it.KernelOptions = gceKernelOptions
+	it.Bootable = true
+	it.DefaultSize = 20 * common.GibiByte
+	// TODO: the base partition table still contains the BIOS boot partition, but the image is UEFI-only
+	it.BasePartitionTables = defaultBasePartitionTables
+
+	return it
 }
 
 // The configuration for non-RHUI images does not touch the RHSM configuration at all.
 // https://issues.redhat.com/browse/COMPOSER-2157
-func defaultGceByosImageConfig(rd distribution) *distro.ImageConfig {
+func defaultGceByosImageConfig(rd distro.Distro) *distro.ImageConfig {
 	ic := &distro.ImageConfig{
 		Timezone: common.ToPtr("UTC"),
 		TimeSynchronization: &osbuild.ChronyStageOptions{
@@ -145,7 +152,7 @@ func defaultGceByosImageConfig(rd distribution) *distro.ImageConfig {
 			},
 		},
 	}
-	if rd.osVersion == "8.4" {
+	if rd.OsVersion() == "8.4" {
 		// NOTE(akoutsou): these are enabled in the package preset, but for
 		// some reason do not get enabled on 8.4.
 		// the reason is unknown and deeply mysterious
@@ -161,7 +168,7 @@ func defaultGceByosImageConfig(rd distribution) *distro.ImageConfig {
 	return ic
 }
 
-func defaultGceRhuiImageConfig(rd distribution) *distro.ImageConfig {
+func defaultGceRhuiImageConfig(rd distro.Distro) *distro.ImageConfig {
 	ic := &distro.ImageConfig{
 		RHSMConfig: map[subscription.RHSMStatus]*osbuild.RHSMStageOptions{
 			subscription.RHSMConfigNoSubscription: {
@@ -190,7 +197,7 @@ func defaultGceRhuiImageConfig(rd distribution) *distro.ImageConfig {
 }
 
 // common GCE image
-func gceCommonPackageSet(t *imageType) rpmmd.PackageSet {
+func gceCommonPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return rpmmd.PackageSet{
 		Include: []string{
 			"@core",
@@ -260,12 +267,12 @@ func gceCommonPackageSet(t *imageType) rpmmd.PackageSet {
 }
 
 // GCE BYOS image
-func gcePackageSet(t *imageType) rpmmd.PackageSet {
+func gcePackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return gceCommonPackageSet(t)
 }
 
 // GCE RHUI image
-func gceRhuiPackageSet(t *imageType) rpmmd.PackageSet {
+func gceRhuiPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return rpmmd.PackageSet{
 		Include: []string{
 			"google-rhui-client-rhel8",

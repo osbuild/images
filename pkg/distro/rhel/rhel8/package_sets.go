@@ -6,13 +6,14 @@ import (
 	"fmt"
 
 	"github.com/osbuild/images/pkg/arch"
+	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
 // installer boot package sets, needed for booting and
 // also in the build host
 
-func anacondaBootPackageSet(t *imageType) rpmmd.PackageSet {
+func anacondaBootPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	ps := rpmmd.PackageSet{}
 
 	grubCommon := rpmmd.PackageSet{
@@ -29,7 +30,7 @@ func anacondaBootPackageSet(t *imageType) rpmmd.PackageSet {
 		},
 	}
 
-	switch t.arch.Name() {
+	switch t.Arch().Name() {
 	case arch.ARCH_X86_64.String():
 		ps = ps.Append(grubCommon)
 		ps = ps.Append(efiCommon)
@@ -58,15 +59,15 @@ func anacondaBootPackageSet(t *imageType) rpmmd.PackageSet {
 		})
 
 	default:
-		panic(fmt.Sprintf("unsupported arch: %s", t.arch.Name()))
+		panic(fmt.Sprintf("unsupported arch: %s", t.Arch().Name()))
 	}
 
 	return ps
 }
 
 // packages that are only in some (sub)-distributions
-func distroSpecificPackageSet(t *imageType) rpmmd.PackageSet {
-	if t.arch.distro.isRHEL() {
+func distroSpecificPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
+	if t.IsRHEL() {
 		return rpmmd.PackageSet{
 			Include: []string{"insights-client"},
 		}
@@ -74,7 +75,7 @@ func distroSpecificPackageSet(t *imageType) rpmmd.PackageSet {
 	return rpmmd.PackageSet{}
 }
 
-func minimalrpmPackageSet(t *imageType) rpmmd.PackageSet {
+func minimalrpmPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return rpmmd.PackageSet{
 		Include: []string{
 			"@core",

@@ -3,12 +3,13 @@ package rhel8
 import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
 // sapImageConfig returns the SAP specific ImageConfig data
-func sapImageConfig(rd distribution) *distro.ImageConfig {
+func sapImageConfig(rd distro.Distro) *distro.ImageConfig {
 	return &distro.ImageConfig{
 		SELinuxConfig: &osbuild.SELinuxConfigStageOptions{
 			State: osbuild.SELinuxStatePermissive,
@@ -110,7 +111,7 @@ func sapImageConfig(rd distribution) *distro.ImageConfig {
 				[]osbuild.DNFVariable{
 					{
 						Name:  "releasever",
-						Value: rd.osVersion,
+						Value: rd.OsVersion(),
 					},
 				},
 				nil,
@@ -119,7 +120,7 @@ func sapImageConfig(rd distribution) *distro.ImageConfig {
 	}
 }
 
-func SapPackageSet(t *imageType) rpmmd.PackageSet {
+func SapPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	packageSet := rpmmd.PackageSet{
 		Include: []string{
 			// RHBZ#2074107
@@ -160,7 +161,7 @@ func SapPackageSet(t *imageType) rpmmd.PackageSet {
 		},
 	}
 
-	if common.VersionLessThan(t.arch.distro.osVersion, "8.6") {
+	if common.VersionLessThan(t.Arch().Distro().OsVersion(), "8.6") {
 		packageSet = packageSet.Append(rpmmd.PackageSet{
 			Include: []string{"ansible"},
 		})
