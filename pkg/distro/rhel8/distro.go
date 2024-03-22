@@ -45,7 +45,6 @@ type distribution struct {
 	modulePlatformID   string
 	vendor             string
 	ostreeRefTmpl      string
-	isolabelTmpl       string
 	runner             runner.Runner
 	arches             map[string]distro.Arch
 	defaultImageConfig *distro.ImageConfig
@@ -143,7 +142,6 @@ func newDistro(name string, minor int) *distribution {
 			modulePlatformID:   "platform:el8",
 			vendor:             "redhat",
 			ostreeRefTmpl:      "rhel/8/%s/edge",
-			isolabelTmpl:       fmt.Sprintf("RHEL-8-%d-0-BaseOS-%%s", minor),
 			runner:             &runner.RHEL{Major: uint64(8), Minor: uint64(minor)},
 			defaultImageConfig: defaultDistroImageConfig,
 		}
@@ -156,7 +154,6 @@ func newDistro(name string, minor int) *distribution {
 			modulePlatformID:   "platform:el8",
 			vendor:             "centos",
 			ostreeRefTmpl:      "centos/8/%s/edge",
-			isolabelTmpl:       "CentOS-Stream-8-%s-dvd",
 			runner:             &runner.CentOS{Version: uint64(8)},
 			defaultImageConfig: defaultDistroImageConfig,
 		}
