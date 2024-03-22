@@ -29,6 +29,8 @@ type RawBootcImage struct {
 	// with the image itself
 	PartitionTable *disk.PartitionTable
 
+	KernelOptionsAppend []string
+
 	// "Users" is a bit misleading as only root and its ssh key is supported
 	// right now because that is all that bootc gives us by default but that
 	// will most likely change over time.
@@ -100,7 +102,9 @@ func (p *RawBootcImage) serialize() osbuild.Pipeline {
 	if len(p.containerSpecs) != 1 {
 		panic(fmt.Errorf("expected a single container input got %v", p.containerSpecs))
 	}
-	opts := &osbuild.BootcInstallToFilesystemOptions{}
+	opts := &osbuild.BootcInstallToFilesystemOptions{
+		Kargs: p.KernelOptionsAppend,
+	}
 	if len(p.Users) == 1 && p.Users[0].Key != nil {
 		opts.RootSSHAuthorizedKeys = []string{*p.Users[0].Key}
 	}

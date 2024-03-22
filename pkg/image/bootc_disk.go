@@ -23,6 +23,9 @@ type BootcDiskImage struct {
 
 	ContainerSource *container.SourceSpec
 
+	// Customizations
+	KernelOptionsAppend []string
+
 	// "Users" is a bit misleading as only root and its ssh key is supported
 	// right now because that is all that bootc gives us by default but that
 	// will most likely change over time.
@@ -54,6 +57,7 @@ func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifes
 	baseImage := manifest.NewRawBootcImage(buildPipeline, containers, img.Platform)
 	baseImage.PartitionTable = img.PartitionTable
 	baseImage.Users = img.Users
+	baseImage.KernelOptionsAppend = img.KernelOptionsAppend
 
 	// In BIB, we export multiple images from the same pipeline so we use the
 	// filename as the basename for each export and set the extensions based on

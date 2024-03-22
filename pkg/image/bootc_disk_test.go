@@ -38,6 +38,8 @@ func makeFakeDigest(t *testing.T) string {
 type bootcDiskImageTestOpts struct {
 	ImageFormat platform.ImageFormat
 	BIOS        bool
+
+	KernelOptionsAppend []string
 }
 
 func makeFakePlatform(opts *bootcDiskImageTestOpts) platform.Platform {
@@ -67,6 +69,7 @@ func makeBootcDiskImageOsbuildManifest(t *testing.T, opts *bootcDiskImageTestOpt
 	require.NotNil(t, img)
 	img.Platform = makeFakePlatform(opts)
 	img.PartitionTable = testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi")
+	img.KernelOptionsAppend = opts.KernelOptionsAppend
 
 	m := &manifest.Manifest{}
 	runi := &runner.Fedora{}
@@ -129,7 +132,10 @@ func TestBootcDiskImageInstantiateVmdk(t *testing.T) {
 }
 
 func TestBootcDiskImageUsesBootcInstallToFs(t *testing.T) {
-	osbuildManifest := makeBootcDiskImageOsbuildManifest(t, nil)
+	opts := &bootcDiskImageTestOpts{
+		KernelOptionsAppend: []string{"karg1", "karg2"},
+	}
+	osbuildManifest := makeBootcDiskImageOsbuildManifest(t, opts)
 
 	// check that bootc.install-to-filesystem is part of the "image" pipeline
 	imagePipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "image")
@@ -147,6 +153,10 @@ func TestBootcDiskImageUsesBootcInstallToFs(t *testing.T) {
 		"filename": "fake-disk.raw",
 	}
 	assert.Equal(t, expectedDiskOpts, devicesDiskOpts)
+
+	// ensure options got passed
+	bootcOpts := bootcStage["options"].(map[string]interface{})
+	assert.Equal(t, []interface{}{"karg1", "karg2"}, bootcOpts["kernel-args"])
 }
 
 func TestBootcDiskImageExportPipelines(t *testing.T) {
