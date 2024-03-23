@@ -28,13 +28,13 @@ jobs:
         working-directory: ./images
         run: |
           ./test/scripts/update-schutzfile-bib
-          git diff
 
       - name: Open PR
         working-directory: ./images
         env:
           GITHUB_TOKEN: ${{ secrets.SCHUTZBOT_GITHUB_ACCESS_TOKEN }}
         run: |
+          if git diff --exit-code; then echo "No changes"; exit 0; fi
           git config --unset-all http.https://github.com/.extraheader
           git config user.name "schutzbot"
           git config user.email "schutzbot@gmail.com"
