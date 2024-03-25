@@ -139,6 +139,8 @@ type Solver struct {
 	// for each distribution.
 	distro string
 
+	reposDir string
+
 	subscriptions *rhsm.Subscriptions
 }
 
@@ -146,6 +148,13 @@ type Solver struct {
 func NewSolver(modulePlatformID, releaseVer, arch, distro, cacheDir string) *Solver {
 	s := NewBaseSolver(cacheDir)
 	return s.NewWithConfig(modulePlatformID, releaseVer, arch, distro)
+}
+
+// SetReposDir sets a path from which repository configurations are loaded
+// during depsolve, instead of (or in addition to) the repositories included in
+// each depsolve request.
+func (s *Solver) SetReposDir(path string) {
+	s.reposDir = path
 }
 
 // GetCacheDir returns a distro specific rpm cache directory
@@ -426,6 +435,7 @@ func (s *Solver) makeDepsolveRequest(pkgSets []rpmmd.PackageSet) (*Request, map[
 	}
 	args := arguments{
 		Repos:        dnfRepoMap,
+		ReposDir:     s.reposDir,
 		Transactions: transactions,
 	}
 
@@ -483,11 +493,7 @@ func (s *Solver) makeSearchRequest(repos []rpmmd.RepoConfig, packages []string) 
 // key and subscription information based on the repository configs.
 func (pkgs packageSpecs) toRPMMD(repos map[string]rpmmd.RepoConfig) []rpmmd.PackageSpec {
 	rpmDependencies := make([]rpmmd.PackageSpec, len(pkgs))
-	for i, dep := range pkgs {
-		repo, ok := repos[dep.RepoID]
-		if !ok {
-			panic("dependency repo ID not found in repositories")
-		}
+	for i := range pkgs {
 		dep := pkgs[i]
 		rpmDependencies[i].Name = dep.Name
 		rpmDependencies[i].Epoch = dep.Epoch
@@ -496,14 +502,35 @@ func (pkgs packageSpecs) toRPMMD(repos map[string]rpmmd.RepoConfig) []rpmmd.Pack
 		rpmDependencies[i].Arch = dep.Arch
 		rpmDependencies[i].RemoteLocation = dep.RemoteLocation
 		rpmDependencies[i].Checksum = dep.Checksum
-		if repo.CheckGPG != nil {
-			rpmDependencies[i].CheckGPG = *repo.CheckGPG
-		}
-		if repo.IgnoreSSL != nil {
-			rpmDependencies[i].IgnoreSSL = *repo.IgnoreSSL
-		}
-		if repo.RHSM {
-			rpmDependencies[i].Secrets = "org.osbuild.rhsm"
+
+		repo, haveRepo := repos[dep.RepoID]
+		if haveRepo {
+			// NOTE: Temporary backwards compatibility!
+			// After the next osbuild release, change the osbuild-composer spec
+			// file to depend on the updated osbuild-depsolve-dnf and remove
+			// this block and the requirement to specify the repos argument for
+			// this method.
+			if repo.CheckGPG != nil {
+				rpmDependencies[i].CheckGPG = *repo.CheckGPG
+			}
+			if repo.IgnoreSSL != nil {
+				rpmDependencies[i].IgnoreSSL = *repo.IgnoreSSL
+			}
+			if repo.RHSM {
+				rpmDependencies[i].Secrets = "org.osbuild.rhsm"
+			}
+		} else {
+			// If the repo ID doesn't match one of the repositories we sent
+			// with the request, we can assume it was a repository loaded from
+			// a directory, in which case we should have these fields added
+			// onto each package in the response by osbuild-depsolve-dnf
+			rpmDependencies[i].CheckGPG = dep.GPGCheck
+			rpmDependencies[i].IgnoreSSL = !dep.SSLVerify
+			secrets := ""
+			if dep.SSLCACert != "" && dep.SSLClientCert != "" && dep.SSLClientKey != "" {
+				secrets = "org.osbuild.rhsm"
+			}
+			rpmDependencies[i].Secrets = secrets
 		}
 	}
 	return rpmDependencies
@@ -555,6 +582,9 @@ type arguments struct {
 
 	// Depsolve package sets and repository mappings for this request
 	Transactions []transactionArgs `json:"transactions"`
+
+	// Load repository configurations from a directory
+	ReposDir string `json:"repos_dir"`
 }
 
 type searchArgs struct {
@@ -594,7 +624,11 @@ type PackageSpec struct {
 	Path           string `json:"path,omitempty"`
 	RemoteLocation string `json:"remote_location,omitempty"`
 	Checksum       string `json:"checksum,omitempty"`
-	Secrets        string `json:"secrets,omitempty"`
+	SSLVerify      bool   `json:"sslverify"`
+	GPGCheck       bool   `json:"gpgcheck"`
+	SSLClientKey   string `json:"sslclientkey"`
+	SSLClientCert  string `json:"sslclientcert"`
+	SSLCACert      string `json:"sslcacert"`
 }
 
 // dnf-json error structure
