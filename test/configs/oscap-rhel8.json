@@ -18,7 +18,12 @@
         "datastream": "/usr/share/xml/scap/ssg/content/ssg-rhel8-ds.xml",
         "tailoring": {
           "unselected": [
-            "grub2_password"
+            "grub2_password",
+            "grub2_uefi_password",
+            "partition_for_dev_shm",
+            "mount_option_dev_shm_nosuid",
+            "mount_option_dev_shm_noexec",
+            "mount_option_dev_shm_nodev"
           ]
         }
       }
