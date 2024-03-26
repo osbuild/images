@@ -159,12 +159,21 @@ func checkOptions(t *rhel.ImageType, bp *blueprint.Blueprint, options distro.Ima
 	if err != nil {
 		return warnings, err
 	}
-	err = blueprint.CheckDirectoryCustomizationsPolicy(dc, policies.CustomDirectoriesPolicies)
+
+	dcp := policies.CustomDirectoriesPolicies
+	fcp := policies.CustomFilesPolicies
+
+	if t.RPMOSTree {
+		dcp = policies.OstreeCustomDirectoriesPolicies
+		fcp = policies.OstreeCustomFilesPolicies
+	}
+
+	err = blueprint.CheckDirectoryCustomizationsPolicy(dc, dcp)
 	if err != nil {
 		return warnings, err
 	}
 
-	err = blueprint.CheckFileCustomizationsPolicy(fc, policies.CustomFilesPolicies)
+	err = blueprint.CheckFileCustomizationsPolicy(fc, fcp)
 	if err != nil {
 		return warnings, err
 	}
