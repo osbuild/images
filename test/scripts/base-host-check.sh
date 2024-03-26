@@ -54,8 +54,9 @@ get_oscap_score() {
     echo "Hardened score: ${hardened_score}%"
 
     echo "📗 Checking for failed rules"
-    severity=$(xmlstarlet sel -N x="http://checklists.nist.gov/xccdf/1.2" -t -v "//x:rule-result[@severity='high']" results.xml | grep -c "fail" || true)
-    echo "Severity count: ${severity}"
+    high_severity=$(xmlstarlet sel -N x="http://checklists.nist.gov/xccdf/1.2" -t -v "//x:rule-result[@severity='high']" results.xml)
+    severity_count=$(echo "${high_severity}" | grep -c "fail" || true)
+    echo "Severity count: ${severity_count}"
 
     echo "🎏 Checking for test result"
     echo "Baseline score: ${baseline_score}%"
@@ -68,9 +69,11 @@ get_oscap_score() {
         exit 1
     fi
 
-    if (( severity > 0 )); then
+    if (( severity_count > 0 )); then
         echo "❌ Failed"
         echo "One or more oscap rules with high severity failed"
+        # add a line to print the failed rules
+        echo "${high_severity}" | grep -B 5 "fail"
         exit 1
     fi
 }
