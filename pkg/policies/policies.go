@@ -92,3 +92,22 @@ var OstreeMountpointPolicies = pathpolicy.NewPathPolicies(map[string]pathpolicy.
 	"/var/usrlocal": {Deny: true},
 	"/var/mnt":      {Deny: true},
 })
+
+// CustomDirectoriesPolicies for ostree
+var OstreeCustomDirectoriesPolicies = pathpolicy.NewPathPolicies(map[string]pathpolicy.PathPolicy{
+	"/":    {Deny: true},
+	"/etc": {},
+})
+
+// CustomFilesPolicies for ostree
+var OstreeCustomFilesPolicies = pathpolicy.NewPathPolicies(map[string]pathpolicy.PathPolicy{
+	"/":               {Deny: true},
+	"/etc":            {},
+	"/root":           {},
+	"/usr/local/bin":  {},
+	"/usr/local/sbin": {},
+	"/etc/fstab":      {Deny: true},
+	"/etc/shadow":     {Deny: true},
+	"/etc/passwd":     {Deny: true},
+	"/etc/group":      {Deny: true},
+})
