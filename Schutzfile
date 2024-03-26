@@ -8,7 +8,7 @@
   "fedora-39": {
     "dependencies": {
       "osbuild": {
-        "commit": "6b4bb850a77feade79d839d9ea075e29ca210ae9"
+        "commit": "ec496769c5905bc07264ffdb26f6facb3cb3cdd6"
       }
     },
     "repos": [
