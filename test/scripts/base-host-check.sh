@@ -47,6 +47,7 @@ get_oscap_score() {
         "${datastream}" || true # oscap returns exit code 2 for any failed rules
 
     echo "📄 Saving results"
+    sudo chown "$UID" results.xml
 
     echo "📗 Checking oscap score"
     hardened_score=$(xmlstarlet sel -N x="http://checklists.nist.gov/xccdf/1.2" -t -v "//x:score" results.xml)
