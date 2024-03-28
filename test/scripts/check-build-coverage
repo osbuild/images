@@ -75,7 +75,7 @@ def main():
     else:
         print("⭕ No images were built in this pipeline")
 
-    if now:
+    if pr:
         print("Configurations built in this PR")
         for build in pr:
             distro, arch, image, config, commit = build
