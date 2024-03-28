@@ -26,7 +26,7 @@ func osCustomizations(
 	options distro.ImageOptions,
 	containers []container.SourceSpec,
 	c *blueprint.Customizations,
-) manifest.OSCustomizations {
+) (manifest.OSCustomizations, error) {
 
 	imageConfig := t.getDefaultImageConfig()
 
@@ -213,7 +213,10 @@ func osCustomizations(
 
 		var datastream = oscapConfig.DataStream
 		if datastream == "" {
-			datastream = oscap.DefaultRHEL8Datastream(t.arch.distro.isRHEL())
+			if imageConfig.DefaultOSCAPDatastream == nil {
+				return manifest.OSCustomizations{}, fmt.Errorf("No OSCAP datastream specified and the distro does not have any default set")
+			}
+			datastream = *imageConfig.DefaultOSCAPDatastream
 		}
 
 		oscapStageOptions := osbuild.OscapConfig{
@@ -282,7 +285,7 @@ func osCustomizations(
 	osc.Files = append(osc.Files, imageConfig.Files...)
 	osc.Directories = append(osc.Directories, imageConfig.Directories...)
 
-	return osc
+	return osc, nil
 }
 
 func diskImage(workload workload.Workload,
@@ -295,7 +298,13 @@ func diskImage(workload workload.Workload,
 
 	img := image.NewDiskImage()
 	img.Platform = t.platform
-	img.OSCustomizations = osCustomizations(t, packageSets[osPkgsKey], options, containers, customizations)
+
+	var err error
+	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, customizations)
+	if err != nil {
+		return nil, err
+	}
+
 	img.Environment = t.environment
 	img.Workload = workload
 	img.Compression = t.compression
@@ -323,7 +332,13 @@ func imageInstallerImage(workload workload.Workload,
 
 	img.Platform = t.platform
 	img.Workload = workload
-	img.OSCustomizations = osCustomizations(t, packageSets[osPkgsKey], options, containers, customizations)
+
+	var err error
+	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, customizations)
+	if err != nil {
+		return nil, err
+	}
+
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
 	img.Users = users.UsersFromBP(customizations.GetUsers())
 	img.Groups = users.GroupsFromBP(customizations.GetGroups())
@@ -341,7 +356,6 @@ func imageInstallerImage(workload workload.Workload,
 	// put the kickstart file in the root of the iso
 	img.ISORootKickstart = true
 
-	var err error
 	img.ISOLabel, err = t.ISOLabel()
 	if err != nil {
 		return nil, err
@@ -368,7 +382,13 @@ func tarImage(workload workload.Workload,
 
 	img := image.NewArchive()
 	img.Platform = t.platform
-	img.OSCustomizations = osCustomizations(t, packageSets[osPkgsKey], options, containers, customizations)
+
+	var err error
+	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, customizations)
+	if err != nil {
+		return nil, err
+	}
+
 	img.Environment = t.environment
 	img.Workload = workload
 
@@ -390,7 +410,13 @@ func edgeCommitImage(workload workload.Workload,
 	img := image.NewOSTreeArchive(commitRef)
 
 	img.Platform = t.platform
-	img.OSCustomizations = osCustomizations(t, packageSets[osPkgsKey], options, containers, customizations)
+
+	var err error
+	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, customizations)
+	if err != nil {
+		return nil, err
+	}
+
 	img.Environment = t.environment
 	img.Workload = workload
 	img.OSTreeParent = parentCommit
@@ -412,7 +438,13 @@ func edgeContainerImage(workload workload.Workload,
 	img := image.NewOSTreeContainer(commitRef)
 
 	img.Platform = t.platform
-	img.OSCustomizations = osCustomizations(t, packageSets[osPkgsKey], options, containers, customizations)
+
+	var err error
+	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, customizations)
+	if err != nil {
+		return nil, err
+	}
+
 	img.ContainerLanguage = img.OSCustomizations.Language
 	img.Environment = t.environment
 	img.Workload = workload
