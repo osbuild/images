@@ -2,7 +2,7 @@
   "common": {
     "rngseed": 1,
     "bootc-image-builder": {
-      "ref": "quay.io/centos-bootc/bootc-image-builder@sha256:e41251219af81f03413bc16da5a8a28e0b59c22991deaf511359e5c88ca86619"
+      "ref": "quay.io/centos-bootc/bootc-image-builder@sha256:09e821547c26713d02e4694d9e44d9b538f636ab495c299c7fcecdb67034e619"
     }
   },
   "fedora-39": {
