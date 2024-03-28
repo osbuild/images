@@ -22,6 +22,10 @@ func checkOptions(t *rhel.ImageType, bp *blueprint.Blueprint, options distro.Ima
 	// holds warnings (e.g. deprecation notices)
 	var warnings []string
 
+	if slices.Contains(t.UnsupportedPartitioningModes, options.PartitioningMode) {
+		return warnings, fmt.Errorf("partitioning mode %q is not supported for %q", options.PartitioningMode, t.Name())
+	}
+
 	mountpoints := customizations.GetFilesystems()
 
 	err := blueprint.CheckMountpointsPolicy(mountpoints, policies.MountpointPolicies)
