@@ -162,6 +162,9 @@ func newDistro(name string, minor int) *distribution {
 		panic(fmt.Sprintf("unknown distro name: %s", name))
 	}
 
+	// TODO: This will be removed with move to `rhel` package
+	rd.defaultImageConfig.DefaultOSCAPDatastream = common.ToPtr(oscap.DefaultRHEL8Datastream(rd.isRHEL()))
+
 	// Architecture definitions
 	x86_64 := architecture{
 		name:   arch.ARCH_X86_64.String(),

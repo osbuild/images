@@ -28,7 +28,7 @@ func osCustomizations(
 	t *imageType,
 	osPackageSet rpmmd.PackageSet,
 	containers []container.SourceSpec,
-	c *blueprint.Customizations) manifest.OSCustomizations {
+	c *blueprint.Customizations) (manifest.OSCustomizations, error) {
 
 	imageConfig := t.getDefaultImageConfig()
 
@@ -193,7 +193,10 @@ func osCustomizations(
 
 		var datastream = oscapConfig.DataStream
 		if datastream == "" {
-			datastream = oscap.DefaultFedoraDatastream()
+			if imageConfig.DefaultOSCAPDatastream == nil {
+				return manifest.OSCustomizations{}, fmt.Errorf("No OSCAP datastream specified and the distro does not have any default set")
+			}
+			datastream = *imageConfig.DefaultOSCAPDatastream
 		}
 
 		oscapStageOptions := osbuild.OscapConfig{
@@ -256,7 +259,7 @@ func osCustomizations(
 	osc.Files = append(osc.Files, imageConfig.Files...)
 	osc.Directories = append(osc.Directories, imageConfig.Directories...)
 
-	return osc
+	return osc, nil
 }
 
 // IMAGES
@@ -271,7 +274,13 @@ func diskImage(workload workload.Workload,
 
 	img := image.NewDiskImage()
 	img.Platform = t.platform
-	img.OSCustomizations = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+
+	var err error
+	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+	if err != nil {
+		return nil, err
+	}
+
 	img.Environment = t.environment
 	img.Workload = workload
 	img.Compression = t.compression
@@ -301,7 +310,13 @@ func containerImage(workload workload.Workload,
 	img := image.NewBaseContainer()
 
 	img.Platform = t.platform
-	img.OSCustomizations = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+
+	var err error
+	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+	if err != nil {
+		return nil, err
+	}
+
 	img.Environment = t.environment
 	img.Workload = workload
 
@@ -373,7 +388,13 @@ func imageInstallerImage(workload workload.Workload,
 
 	img.Platform = t.platform
 	img.Workload = workload
-	img.OSCustomizations = osCustomizations(t, packageSets[osPkgsKey], containers, customizations)
+
+	var err error
+	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+	if err != nil {
+		return nil, err
+	}
+
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
 	img.Users = users.UsersFromBP(customizations.GetUsers())
 	img.Groups = users.GroupsFromBP(customizations.GetGroups())
@@ -394,7 +415,6 @@ func imageInstallerImage(workload workload.Workload,
 
 	img.Preview = common.VersionGreaterThanOrEqual(img.OSVersion, VERSION_BRANCHED)
 
-	var err error
 	img.ISOLabel, err = t.ISOLabel()
 	if err != nil {
 		return nil, err
@@ -419,7 +439,12 @@ func iotCommitImage(workload workload.Workload,
 	d := t.arch.distro
 
 	img.Platform = t.platform
-	img.OSCustomizations = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+
+	var err error
+	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+	if err != nil {
+		return nil, err
+	}
 
 	// see https://github.com/ostreedev/ostree/issues/2840
 	img.OSCustomizations.Presets = []osbuild.Preset{
@@ -461,7 +486,13 @@ func bootableContainerImage(workload workload.Workload,
 	d := t.arch.distro
 
 	img.Platform = t.platform
-	img.OSCustomizations = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+
+	var err error
+	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+	if err != nil {
+		return nil, err
+	}
+
 	img.Environment = t.environment
 	img.Workload = workload
 	img.OSTreeParent = parentCommit
@@ -485,7 +516,12 @@ func iotContainerImage(workload workload.Workload,
 	img := image.NewOSTreeContainer(commitRef)
 	d := t.arch.distro
 	img.Platform = t.platform
-	img.OSCustomizations = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+
+	var err error
+	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+	if err != nil {
+		return nil, err
+	}
 
 	// see https://github.com/ostreedev/ostree/issues/2840
 	img.OSCustomizations.Presets = []osbuild.Preset{

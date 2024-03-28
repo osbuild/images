@@ -413,8 +413,9 @@ type distribution struct {
 
 // Fedora based OS image configuration defaults
 var defaultDistroImageConfig = &distro.ImageConfig{
-	Timezone: common.ToPtr("UTC"),
-	Locale:   common.ToPtr("en_US"),
+	Timezone:               common.ToPtr("UTC"),
+	Locale:                 common.ToPtr("en_US"),
+	DefaultOSCAPDatastream: common.ToPtr(oscap.DefaultFedoraDatastream()),
 }
 
 func getISOLabelFunc(variant string) isoLabelFunc {

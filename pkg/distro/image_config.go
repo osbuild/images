@@ -75,6 +75,10 @@ type ImageConfig struct {
 	// This should only be used for old distros that use grub and it is
 	// applied on all architectures, except for s390x.
 	KernelOptionsBootloader *bool
+
+	// The default OSCAP datastream to use for the image as a fallback,
+	// if no datastream value is provided by the user.
+	DefaultOSCAPDatastream *string
 }
 
 // InheritFrom inherits unset values from the provided parent configuration and

@@ -10,6 +10,10 @@ import (
 	"github.com/osbuild/images/pkg/runner"
 )
 
+// DefaultDistroImageConfigFunc is a function that returns the default image
+// configuration for a distribution.
+type DefaultDistroImageConfigFunc func(d *Distribution) *distro.ImageConfig
+
 type Distribution struct {
 	name               string
 	product            string
@@ -20,7 +24,7 @@ type Distribution struct {
 	ostreeRefTmpl      string
 	runner             runner.Runner
 	arches             map[string]distro.Arch
-	defaultImageConfig *distro.ImageConfig
+	DefaultImageConfig DefaultDistroImageConfigFunc
 
 	// distro specific function to check options per image type
 	CheckOptions CheckOptionsFunc
@@ -89,7 +93,11 @@ func (d *Distribution) IsRHEL() bool {
 }
 
 func (d *Distribution) GetDefaultImageConfig() *distro.ImageConfig {
-	return d.defaultImageConfig
+	if d.DefaultImageConfig == nil {
+		return nil
+	}
+
+	return d.DefaultImageConfig(d)
 }
 
 func NewDistribution(name string, major, minor int) (*Distribution, error) {
@@ -101,15 +109,14 @@ func NewDistribution(name string, major, minor int) (*Distribution, error) {
 		}
 
 		rd = &Distribution{
-			name:               fmt.Sprintf("rhel-%d.%d", major, minor),
-			product:            "Red Hat Enterprise Linux",
-			osVersion:          fmt.Sprintf("%d.%d", major, minor),
-			releaseVersion:     fmt.Sprintf("%d", major),
-			modulePlatformID:   fmt.Sprintf("platform:el%d", major),
-			vendor:             "redhat",
-			ostreeRefTmpl:      fmt.Sprintf("rhel/%d/%%s/edge", major),
-			runner:             &runner.RHEL{Major: uint64(major), Minor: uint64(minor)},
-			defaultImageConfig: defaultDistroImageConfig,
+			name:             fmt.Sprintf("rhel-%d.%d", major, minor),
+			product:          "Red Hat Enterprise Linux",
+			osVersion:        fmt.Sprintf("%d.%d", major, minor),
+			releaseVersion:   fmt.Sprintf("%d", major),
+			modulePlatformID: fmt.Sprintf("platform:el%d", major),
+			vendor:           "redhat",
+			ostreeRefTmpl:    fmt.Sprintf("rhel/%d/%%s/edge", major),
+			runner:           &runner.RHEL{Major: uint64(major), Minor: uint64(minor)},
 		}
 	case "centos":
 		if minor != -1 {
@@ -117,15 +124,14 @@ func NewDistribution(name string, major, minor int) (*Distribution, error) {
 		}
 
 		rd = &Distribution{
-			name:               fmt.Sprintf("centos-%d", major),
-			product:            "CentOS Stream",
-			osVersion:          fmt.Sprintf("%d-stream", major),
-			releaseVersion:     fmt.Sprintf("%d", major),
-			modulePlatformID:   fmt.Sprintf("platform:el%d", major),
-			vendor:             "centos",
-			ostreeRefTmpl:      fmt.Sprintf("centos/%d/%%s/edge", major),
-			runner:             &runner.CentOS{Version: uint64(major)},
-			defaultImageConfig: defaultDistroImageConfig,
+			name:             fmt.Sprintf("centos-%d", major),
+			product:          "CentOS Stream",
+			osVersion:        fmt.Sprintf("%d-stream", major),
+			releaseVersion:   fmt.Sprintf("%d", major),
+			modulePlatformID: fmt.Sprintf("platform:el%d", major),
+			vendor:           "centos",
+			ostreeRefTmpl:    fmt.Sprintf("centos/%d/%%s/edge", major),
+			runner:           &runner.CentOS{Version: uint64(major)},
 		}
 	default:
 		return nil, fmt.Errorf("unknown distro name: %s", name)

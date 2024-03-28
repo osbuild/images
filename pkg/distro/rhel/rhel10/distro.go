@@ -3,10 +3,12 @@ package rhel10
 import (
 	"fmt"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/rhel"
+	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
 )
 
@@ -34,12 +36,32 @@ var (
 	}
 )
 
+func defaultDistroImageConfig(d *rhel.Distribution) *distro.ImageConfig {
+	return &distro.ImageConfig{
+		Timezone: common.ToPtr("America/New_York"),
+		Locale:   common.ToPtr("C.UTF-8"),
+		Sysconfig: []*osbuild.SysconfigStageOptions{
+			{
+				Kernel: &osbuild.SysconfigKernelOptions{
+					UpdateDefault: true,
+					DefaultKernel: "kernel",
+				},
+				Network: &osbuild.SysconfigNetworkOptions{
+					Networking: true,
+					NoZeroConf: true,
+				},
+			},
+		},
+	}
+}
+
 func newDistro(name string, major, minor int) *rhel.Distribution {
 	rd, err := rhel.NewDistribution(name, major, minor)
 	if err != nil {
 		panic(err)
 	}
 	rd.CheckOptions = checkOptions
+	rd.DefaultImageConfig = defaultDistroImageConfig
 
 	// Architecture definitions
 	x86_64 := rhel.NewArchitecture(rd, arch.ARCH_X86_64)
