@@ -1,4 +1,4 @@
-package rhel9
+package rhel
 
 import (
 	"fmt"
@@ -22,7 +22,7 @@ import (
 )
 
 func osCustomizations(
-	t *imageType,
+	t *ImageType,
 	osPackageSet rpmmd.PackageSet,
 	options distro.ImageOptions,
 	containers []container.SourceSpec,
@@ -33,12 +33,12 @@ func osCustomizations(
 
 	osc := manifest.OSCustomizations{}
 
-	if t.bootable || t.rpmOstree {
+	if t.Bootable || t.RPMOSTree {
 		osc.KernelName = c.GetKernel().Name
 
 		var kernelOptions []string
-		if t.kernelOptions != "" {
-			kernelOptions = append(kernelOptions, t.kernelOptions)
+		if t.KernelOptions != "" {
+			kernelOptions = append(kernelOptions, t.KernelOptions)
 		}
 		if bpKernel := c.GetKernel(); bpKernel.Append != "" {
 			kernelOptions = append(kernelOptions, bpKernel.Append)
@@ -59,7 +59,7 @@ func osCustomizations(
 		osc.ExcludeDocs = *imageConfig.ExcludeDocs
 	}
 
-	if !t.bootISO {
+	if !t.BootISO {
 		// don't put users and groups in the payload of an installer
 		// add them via kickstart instead
 		osc.Groups = users.GroupsFromBP(c.GetGroups())
@@ -134,7 +134,7 @@ func osCustomizations(
 		osc.SElinux = "targeted"
 	}
 
-	if t.arch.distro.isRHEL() && options.Facts != nil {
+	if t.IsRHEL() && options.Facts != nil {
 		osc.FactAPIType = &options.Facts.APIType
 	}
 
@@ -157,7 +157,7 @@ func osCustomizations(
 	// deployment, rather than the commit. Therefore the containers need to be
 	// stored in a different location, like `/usr/share`, and the container
 	// storage engine configured accordingly.
-	if t.rpmOstree && len(containers) > 0 {
+	if t.RPMOSTree && len(containers) > 0 {
 		storagePath := "/usr/share/containers/storage"
 		osc.ContainersStorage = &storagePath
 	}
@@ -196,7 +196,7 @@ func osCustomizations(
 	}
 
 	if oscapConfig := c.GetOpenSCAP(); oscapConfig != nil {
-		if t.rpmOstree {
+		if t.RPMOSTree {
 			panic("unexpected oscap options for ostree image type")
 		}
 
@@ -211,7 +211,8 @@ func osCustomizations(
 
 		var datastream = oscapConfig.DataStream
 		if datastream == "" {
-			datastream = oscap.DefaultRHEL9Datastream(t.arch.distro.isRHEL())
+			// TODO: make this RHEL-9 specific
+			datastream = oscap.DefaultRHEL9Datastream(t.IsRHEL())
 		}
 
 		oscapStageOptions := osbuild.OscapConfig{
@@ -283,8 +284,8 @@ func osCustomizations(
 	return osc
 }
 
-func diskImage(workload workload.Workload,
-	t *imageType,
+func DiskImage(workload workload.Workload,
+	t *ImageType,
 	customizations *blueprint.Customizations,
 	options distro.ImageOptions,
 	packageSets map[string]rpmmd.PackageSet,
@@ -293,12 +294,12 @@ func diskImage(workload workload.Workload,
 
 	img := image.NewDiskImage()
 	img.Platform = t.platform
-	img.OSCustomizations = osCustomizations(t, packageSets[osPkgsKey], options, containers, customizations)
-	img.Environment = t.environment
+	img.OSCustomizations = osCustomizations(t, packageSets[OSPkgsKey], options, containers, customizations)
+	img.Environment = t.Environment
 	img.Workload = workload
-	img.Compression = t.compression
+	img.Compression = t.Compression
 	// TODO: move generation into LiveImage
-	pt, err := t.getPartitionTable(customizations.GetFilesystems(), options, rng)
+	pt, err := t.GetPartitionTable(customizations.GetFilesystems(), options, rng)
 	if err != nil {
 		return nil, err
 	}
@@ -309,8 +310,8 @@ func diskImage(workload workload.Workload,
 	return img, nil
 }
 
-func edgeCommitImage(workload workload.Workload,
-	t *imageType,
+func EdgeCommitImage(workload workload.Workload,
+	t *ImageType,
 	customizations *blueprint.Customizations,
 	options distro.ImageOptions,
 	packageSets map[string]rpmmd.PackageSet,
@@ -321,28 +322,27 @@ func edgeCommitImage(workload workload.Workload,
 	img := image.NewOSTreeArchive(commitRef)
 
 	img.Platform = t.platform
-	img.OSCustomizations = osCustomizations(t, packageSets[osPkgsKey], options, containers, customizations)
-	img.Environment = t.environment
+	img.OSCustomizations = osCustomizations(t, packageSets[OSPkgsKey], options, containers, customizations)
+	img.Environment = t.Environment
 	img.Workload = workload
 	img.OSTreeParent = parentCommit
-	img.OSVersion = t.arch.distro.osVersion
+	img.OSVersion = t.Arch().Distro().OsVersion()
 	img.Filename = t.Filename()
 
-	if common.VersionGreaterThanOrEqual(t.arch.distro.osVersion, "9.2") || !t.arch.distro.isRHEL() {
+	if common.VersionGreaterThanOrEqual(t.Arch().Distro().OsVersion(), "9.2") || !t.IsRHEL() {
 		img.OSCustomizations.EnabledServices = append(img.OSCustomizations.EnabledServices, "ignition-firstboot-complete.service", "coreos-ignition-write-issues.service")
 	}
-	img.Environment = t.environment
 	img.Workload = workload
 
-	img.OSVersion = t.arch.distro.osVersion
+	img.OSVersion = t.Arch().Distro().OsVersion()
 
 	img.Filename = t.Filename()
 
 	return img, nil
 }
 
-func edgeContainerImage(workload workload.Workload,
-	t *imageType,
+func EdgeContainerImage(workload workload.Workload,
+	t *ImageType,
 	customizations *blueprint.Customizations,
 	options distro.ImageOptions,
 	packageSets map[string]rpmmd.PackageSet,
@@ -353,31 +353,29 @@ func edgeContainerImage(workload workload.Workload,
 	img := image.NewOSTreeContainer(commitRef)
 
 	img.Platform = t.platform
-	img.OSCustomizations = osCustomizations(t, packageSets[osPkgsKey], options, containers, customizations)
+	img.OSCustomizations = osCustomizations(t, packageSets[OSPkgsKey], options, containers, customizations)
 	img.ContainerLanguage = img.OSCustomizations.Language
-	img.Environment = t.environment
+	img.Environment = t.Environment
 	img.Workload = workload
 	img.OSTreeParent = parentCommit
-	img.OSVersion = t.arch.distro.osVersion
-	img.ExtraContainerPackages = packageSets[containerPkgsKey]
+	img.OSVersion = t.Arch().Distro().OsVersion()
+	img.ExtraContainerPackages = packageSets[ContainerPkgsKey]
 	img.Filename = t.Filename()
 
-	if common.VersionGreaterThanOrEqual(t.arch.distro.osVersion, "9.2") || !t.arch.distro.isRHEL() {
+	if common.VersionGreaterThanOrEqual(t.Arch().Distro().OsVersion(), "9.2") || !t.IsRHEL() {
 		img.OSCustomizations.EnabledServices = append(img.OSCustomizations.EnabledServices, "ignition-firstboot-complete.service", "coreos-ignition-write-issues.service")
 	}
 
 	return img, nil
 }
 
-func edgeInstallerImage(workload workload.Workload,
-	t *imageType,
+func EdgeInstallerImage(workload workload.Workload,
+	t *ImageType,
 	customizations *blueprint.Customizations,
 	options distro.ImageOptions,
 	packageSets map[string]rpmmd.PackageSet,
 	containers []container.SourceSpec,
 	rng *rand.Rand) (image.ImageKind, error) {
-
-	d := t.arch.distro
 
 	commit, err := makeOSTreePayloadCommit(options.OSTree, t.OSTreeRef())
 	if err != nil {
@@ -387,7 +385,7 @@ func edgeInstallerImage(workload workload.Workload,
 	img := image.NewAnacondaOSTreeInstaller(commit)
 
 	img.Platform = t.platform
-	img.ExtraBasePackages = packageSets[installerPkgsKey]
+	img.ExtraBasePackages = packageSets[InstallerPkgsKey]
 	img.Users = users.UsersFromBP(customizations.GetUsers())
 	img.Groups = users.GroupsFromBP(customizations.GetGroups())
 
@@ -419,11 +417,11 @@ func edgeInstallerImage(workload workload.Workload,
 		return nil, err
 	}
 
-	img.Product = d.product
+	img.Product = t.Arch().Distro().Product()
 	img.Variant = "edge"
 	img.OSName = "rhel"
-	img.OSVersion = d.osVersion
-	img.Release = fmt.Sprintf("%s %s", d.product, d.osVersion)
+	img.OSVersion = t.Arch().Distro().OsVersion()
+	img.Release = fmt.Sprintf("%s %s", t.Arch().Distro().Product(), t.Arch().Distro().OsVersion())
 	img.FIPS = customizations.GetFIPS()
 
 	img.Filename = t.Filename()
@@ -431,8 +429,8 @@ func edgeInstallerImage(workload workload.Workload,
 	return img, nil
 }
 
-func edgeRawImage(workload workload.Workload,
-	t *imageType,
+func EdgeRawImage(workload workload.Workload,
+	t *ImageType,
 	customizations *blueprint.Customizations,
 	options distro.ImageOptions,
 	packageSets map[string]rpmmd.PackageSet,
@@ -452,17 +450,17 @@ func edgeRawImage(workload workload.Workload,
 	// The kernel options defined on the image type are usually handled in
 	// osCustomiztions() but ostree images don't use OSCustomizations, so we
 	// handle them here separately.
-	if t.kernelOptions != "" {
-		img.KernelOptionsAppend = append(img.KernelOptionsAppend, t.kernelOptions)
+	if t.KernelOptions != "" {
+		img.KernelOptionsAppend = append(img.KernelOptionsAppend, t.KernelOptions)
 	}
 	img.Keyboard = "us"
 	img.Locale = "C.UTF-8"
-	if common.VersionGreaterThanOrEqual(t.arch.distro.osVersion, "9.2") || !t.arch.distro.isRHEL() {
+	if common.VersionGreaterThanOrEqual(t.Arch().Distro().OsVersion(), "9.2") || !t.IsRHEL() {
 		img.SysrootReadOnly = true
 		img.KernelOptionsAppend = append(img.KernelOptionsAppend, "rw")
 	}
 
-	if common.VersionGreaterThanOrEqual(t.arch.distro.osVersion, "9.2") || !t.arch.distro.isRHEL() {
+	if common.VersionGreaterThanOrEqual(t.Arch().Distro().OsVersion(), "9.2") || !t.IsRHEL() {
 		img.IgnitionPlatform = "metal"
 		img.KernelOptionsAppend = append(img.KernelOptionsAppend, "coreos.no_persist_ip")
 		if bpIgnition := customizations.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
@@ -485,14 +483,14 @@ func edgeRawImage(workload workload.Workload,
 	}
 
 	// TODO: move generation into LiveImage
-	pt, err := t.getPartitionTable(customizations.GetFilesystems(), options, rng)
+	pt, err := t.GetPartitionTable(customizations.GetFilesystems(), options, rng)
 	if err != nil {
 		return nil, err
 	}
 	img.PartitionTable = pt
 
 	img.Filename = t.Filename()
-	img.Compression = t.compression
+	img.Compression = t.Compression
 
 	for _, fs := range customizations.GetFilesystems() {
 		img.CustomFilesystems = append(img.CustomFilesystems, fs.Mountpoint)
@@ -501,8 +499,8 @@ func edgeRawImage(workload workload.Workload,
 	return img, nil
 }
 
-func edgeSimplifiedInstallerImage(workload workload.Workload,
-	t *imageType,
+func EdgeSimplifiedInstallerImage(workload workload.Workload,
+	t *ImageType,
 	customizations *blueprint.Customizations,
 	options distro.ImageOptions,
 	packageSets map[string]rpmmd.PackageSet,
@@ -522,7 +520,7 @@ func edgeSimplifiedInstallerImage(workload workload.Workload,
 	rawImg.KernelOptionsAppend = []string{"modprobe.blacklist=vc4"}
 	rawImg.Keyboard = "us"
 	rawImg.Locale = "C.UTF-8"
-	if common.VersionGreaterThanOrEqual(t.arch.distro.osVersion, "9.2") || !t.arch.distro.isRHEL() {
+	if common.VersionGreaterThanOrEqual(t.Arch().Distro().OsVersion(), "9.2") || !t.IsRHEL() {
 		rawImg.SysrootReadOnly = true
 		rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, "rw")
 	}
@@ -537,7 +535,7 @@ func edgeSimplifiedInstallerImage(workload workload.Workload,
 	rawImg.OSName = "redhat"
 	rawImg.LockRoot = true
 
-	if common.VersionGreaterThanOrEqual(t.arch.distro.osVersion, "9.2") || !t.arch.distro.isRHEL() {
+	if common.VersionGreaterThanOrEqual(t.Arch().Distro().OsVersion(), "9.2") || !t.IsRHEL() {
 		rawImg.IgnitionPlatform = "metal"
 		rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, "coreos.no_persist_ip")
 		if bpIgnition := customizations.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
@@ -546,7 +544,7 @@ func edgeSimplifiedInstallerImage(workload workload.Workload,
 	}
 
 	// TODO: move generation into LiveImage
-	pt, err := t.getPartitionTable(customizations.GetFilesystems(), options, rng)
+	pt, err := t.GetPartitionTable(customizations.GetFilesystems(), options, rng)
 	if err != nil {
 		return nil, err
 	}
@@ -564,7 +562,7 @@ func edgeSimplifiedInstallerImage(workload workload.Workload,
 	}
 
 	img := image.NewOSTreeSimplifiedInstaller(rawImg, customizations.InstallationDevice)
-	img.ExtraBasePackages = packageSets[installerPkgsKey]
+	img.ExtraBasePackages = packageSets[InstallerPkgsKey]
 	// img.Workload = workload
 	img.Platform = t.platform
 	img.Filename = t.Filename()
@@ -597,8 +595,8 @@ func edgeSimplifiedInstallerImage(workload workload.Workload,
 	return img, nil
 }
 
-func imageInstallerImage(workload workload.Workload,
-	t *imageType,
+func ImageInstallerImage(workload workload.Workload,
+	t *ImageType,
 	customizations *blueprint.Customizations,
 	options distro.ImageOptions,
 	packageSets map[string]rpmmd.PackageSet,
@@ -609,8 +607,8 @@ func imageInstallerImage(workload workload.Workload,
 
 	img.Platform = t.platform
 	img.Workload = workload
-	img.OSCustomizations = osCustomizations(t, packageSets[osPkgsKey], options, containers, customizations)
-	img.ExtraBasePackages = packageSets[installerPkgsKey]
+	img.OSCustomizations = osCustomizations(t, packageSets[OSPkgsKey], options, containers, customizations)
+	img.ExtraBasePackages = packageSets[InstallerPkgsKey]
 	img.Users = users.UsersFromBP(customizations.GetUsers())
 	img.Groups = users.GroupsFromBP(customizations.GetGroups())
 
@@ -649,8 +647,8 @@ func imageInstallerImage(workload workload.Workload,
 	return img, nil
 }
 
-func tarImage(workload workload.Workload,
-	t *imageType,
+func TarImage(workload workload.Workload,
+	t *ImageType,
 	customizations *blueprint.Customizations,
 	options distro.ImageOptions,
 	packageSets map[string]rpmmd.PackageSet,
@@ -659,8 +657,8 @@ func tarImage(workload workload.Workload,
 
 	img := image.NewArchive()
 	img.Platform = t.platform
-	img.OSCustomizations = osCustomizations(t, packageSets[osPkgsKey], options, containers, customizations)
-	img.Environment = t.environment
+	img.OSCustomizations = osCustomizations(t, packageSets[OSPkgsKey], options, containers, customizations)
+	img.Environment = t.Environment
 	img.Workload = workload
 
 	img.Filename = t.Filename()
@@ -723,14 +721,4 @@ func makeOSTreePayloadCommit(options *ostree.ImageOptions, defaultRef string) (o
 		Ref:  commitRef,
 		RHSM: options.RHSM,
 	}, nil
-}
-
-// initialSetupKickstart returns the File configuration for a kickstart file
-// that's required to enable initial-setup to run on first boot.
-func initialSetupKickstart() *fsnode.File {
-	file, err := fsnode.NewFile("/root/anaconda-ks.cfg", nil, "root", "root", []byte("# Run initial-setup on first boot\n# Created by osbuild\nfirstboot --reconfig\nlang en_US.UTF-8\n"))
-	if err != nil {
-		panic(err)
-	}
-	return file
 }

@@ -1,7 +1,7 @@
-package rhel8_test
+package rhel10_test
 
 import (
-	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -11,7 +11,7 @@ import (
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/distro_test_common"
-	"github.com/osbuild/images/pkg/distro/rhel8"
+	"github.com/osbuild/images/pkg/distro/rhel/rhel10"
 )
 
 type rhelFamilyDistro struct {
@@ -21,8 +21,8 @@ type rhelFamilyDistro struct {
 
 var rhelFamilyDistros = []rhelFamilyDistro{
 	{
-		name:   "rhel-810",
-		distro: rhel8.DistroFactory("rhel-810"),
+		name:   "rhel-10.0",
+		distro: rhel10.DistroFactory("rhel-10.0"),
 	},
 }
 
@@ -46,30 +46,6 @@ func TestFilenameFromType(t *testing.T) {
 			want: wantResult{
 				filename: "image.raw",
 				mimeType: "application/octet-stream",
-			},
-		},
-		{
-			name: "ec2",
-			args: args{"ec2"},
-			want: wantResult{
-				filename: "image.raw.xz",
-				mimeType: "application/xz",
-			},
-		},
-		{
-			name: "ec2-ha",
-			args: args{"ec2-ha"},
-			want: wantResult{
-				filename: "image.raw.xz",
-				mimeType: "application/xz",
-			},
-		},
-		{
-			name: "ec2-sap",
-			args: args{"ec2-sap"},
-			want: wantResult{
-				filename: "image.raw.xz",
-				mimeType: "application/xz",
 			},
 		},
 		{
@@ -97,22 +73,6 @@ func TestFilenameFromType(t *testing.T) {
 			},
 		},
 		{
-			name: "azure-rhui",
-			args: args{"azure-rhui"},
-			want: wantResult{
-				filename: "disk.vhd.xz",
-				mimeType: "application/xz",
-			},
-		},
-		{
-			name: "azure-sap-rhui",
-			args: args{"azure-sap-rhui"},
-			want: wantResult{
-				filename: "disk.vhd.xz",
-				mimeType: "application/xz",
-			},
-		},
-		{
 			name: "vmdk",
 			args: args{"vmdk"},
 			want: wantResult{
@@ -137,92 +97,9 @@ func TestFilenameFromType(t *testing.T) {
 			},
 		},
 		{
-			name: "image-installer",
-			args: args{"image-installer"},
-			want: wantResult{
-				filename: "installer.iso",
-				mimeType: "application/x-iso9660-image",
-			},
-		},
-		{
-			name: "edge-commit",
-			args: args{"edge-commit"},
-			want: wantResult{
-				filename: "commit.tar",
-				mimeType: "application/x-tar",
-			},
-		},
-		// Alias
-		{
-			name: "rhel-edge-commit",
-			args: args{"rhel-edge-commit"},
-			want: wantResult{
-				filename: "commit.tar",
-				mimeType: "application/x-tar",
-			},
-		},
-		{
-			name: "edge-container",
-			args: args{"edge-container"},
-			want: wantResult{
-				filename: "container.tar",
-				mimeType: "application/x-tar",
-			},
-		},
-		// Alias
-		{
-			name: "rhel-edge-container",
-			args: args{"rhel-edge-container"},
-			want: wantResult{
-				filename: "container.tar",
-				mimeType: "application/x-tar",
-			},
-		},
-		{
-			name: "edge-installer",
-			args: args{"edge-installer"},
-			want: wantResult{
-				filename: "installer.iso",
-				mimeType: "application/x-iso9660-image",
-			},
-		},
-		// Alias
-		{
-			name: "rhel-edge-installer",
-			args: args{"rhel-edge-installer"},
-			want: wantResult{
-				filename: "installer.iso",
-				mimeType: "application/x-iso9660-image",
-			},
-		},
-		{
-			name: "gce",
-			args: args{"gce"},
-			want: wantResult{
-				filename: "image.tar.gz",
-				mimeType: "application/gzip",
-			},
-		},
-		{
-			name: "gce-rhui",
-			args: args{"gce-rhui"},
-			want: wantResult{
-				filename: "image.tar.gz",
-				mimeType: "application/gzip",
-			},
-		},
-		{
 			name: "invalid-output-type",
 			args: args{"foobar"},
 			want: wantResult{wantErr: true},
-		},
-		{
-			name: "minimal-raw",
-			args: args{"minimal-raw"},
-			want: wantResult{
-				filename: "disk.raw.xz",
-				mimeType: "application/xz",
-			},
 		},
 	}
 	for _, dist := range rhelFamilyDistros {
@@ -316,23 +193,10 @@ func TestImageType_Name(t *testing.T) {
 				"qcow2",
 				"openstack",
 				"vhd",
-				"azure-rhui",
-				"azure-sap-rhui",
-				"azure-eap7-rhui",
 				"vmdk",
 				"ova",
 				"ami",
-				"ec2",
-				"ec2-ha",
-				"ec2-sap",
-				"gce",
-				"gce-rhui",
-				"edge-commit",
-				"edge-container",
-				"edge-installer",
 				"tar",
-				"image-installer",
-				"minimal-raw",
 			},
 		},
 		{
@@ -340,14 +204,9 @@ func TestImageType_Name(t *testing.T) {
 			imgNames: []string{
 				"qcow2",
 				"openstack",
-				"vhd",
-				"azure-rhui",
 				"ami",
-				"ec2",
-				"edge-commit",
-				"edge-container",
 				"tar",
-				"minimal-raw",
+				"vhd",
 			},
 		},
 		{
@@ -375,9 +234,6 @@ func TestImageType_Name(t *testing.T) {
 				arch, err := dist.distro.GetArch(mapping.arch)
 				if assert.NoError(t, err) {
 					for _, imgName := range mapping.imgNames {
-						if imgName == "edge-commit" && dist.name == "centos" {
-							continue
-						}
 						imgType, err := arch.GetImageType(imgName)
 						if assert.NoError(t, err) {
 							assert.Equalf(t, imgName, imgType.Name(), "arch: %s", mapping.arch)
@@ -389,87 +245,12 @@ func TestImageType_Name(t *testing.T) {
 	}
 }
 
-func TestImageTypeAliases(t *testing.T) {
-	type args struct {
-		imageTypeAliases []string
-	}
-	type wantResult struct {
-		imageTypeName string
-	}
-	tests := []struct {
-		name string
-		args args
-		want wantResult
-	}{
-		{
-			name: "edge-commit aliases",
-			args: args{
-				imageTypeAliases: []string{"rhel-edge-commit"},
-			},
-			want: wantResult{
-				imageTypeName: "edge-commit",
-			},
-		},
-		{
-			name: "edge-container aliases",
-			args: args{
-				imageTypeAliases: []string{"rhel-edge-container"},
-			},
-			want: wantResult{
-				imageTypeName: "edge-container",
-			},
-		},
-		{
-			name: "edge-installer aliases",
-			args: args{
-				imageTypeAliases: []string{"rhel-edge-installer"},
-			},
-			want: wantResult{
-				imageTypeName: "edge-installer",
-			},
-		},
-	}
-	for _, dist := range rhelFamilyDistros {
-		t.Run(dist.name, func(t *testing.T) {
-			for _, tt := range tests {
-				t.Run(tt.name, func(t *testing.T) {
-					dist := dist.distro
-					for _, archName := range dist.ListArches() {
-						t.Run(archName, func(t *testing.T) {
-							arch, err := dist.GetArch(archName)
-							require.Nilf(t, err,
-								"failed to get architecture '%s', previously listed as supported for the distro '%s'",
-								archName, dist.Name())
-							// Test image type aliases only if the aliased image type is supported for the arch
-							if _, err = arch.GetImageType(tt.want.imageTypeName); err != nil {
-								t.Skipf("aliased image type '%s' is not supported for architecture '%s'",
-									tt.want.imageTypeName, archName)
-							}
-							for _, alias := range tt.args.imageTypeAliases {
-								t.Run(fmt.Sprintf("'%s' alias for image type '%s'", alias, tt.want.imageTypeName),
-									func(t *testing.T) {
-										gotImage, err := arch.GetImageType(alias)
-										require.Nilf(t, err, "arch.GetImageType() for image type alias '%s' failed: %v",
-											alias, err)
-										assert.Equalf(t, tt.want.imageTypeName, gotImage.Name(),
-											"got unexpected image type name for alias '%s'. got = %s, want = %s",
-											alias, tt.want.imageTypeName, gotImage.Name())
-									})
-							}
-						})
-					}
-				})
-			}
-		})
-	}
-}
-
 // Check that Manifest() function returns an error for unsupported
 // configurations.
 func TestDistro_ManifestError(t *testing.T) {
 	// Currently, the only unsupported configuration is OSTree commit types
 	// with Kernel boot options
-	r8distro := rhelFamilyDistros[0].distro
+	r10distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Kernel: &blueprint.KernelCustomization{
@@ -478,25 +259,15 @@ func TestDistro_ManifestError(t *testing.T) {
 		},
 	}
 
-	for _, archName := range r8distro.ListArches() {
-		arch, _ := r8distro.GetArch(archName)
+	for _, archName := range r10distro.ListArches() {
+		arch, _ := r10distro.GetArch(archName)
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			imgOpts := distro.ImageOptions{
 				Size: imgType.Size(0),
 			}
 			_, _, err := imgType.Manifest(&bp, imgOpts, nil, 0)
-			if imgTypeName == "edge-commit" || imgTypeName == "edge-container" {
-				assert.EqualError(t, err, "kernel boot parameter customizations are not supported for ostree types")
-			} else if imgTypeName == "edge-raw-image" {
-				assert.EqualError(t, err, fmt.Sprintf("%q images require specifying a URL from which to retrieve the OSTree commit", imgTypeName))
-			} else if imgTypeName == "edge-installer" || imgTypeName == "edge-simplified-installer" {
-				assert.EqualError(t, err, fmt.Sprintf("boot ISO image type %q requires specifying a URL from which to retrieve the OSTree commit", imgTypeName))
-			} else if imgTypeName == "azure-eap7-rhui" {
-				assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
-			} else {
-				assert.NoError(t, err)
-			}
+			assert.NoError(t, err)
 		}
 	}
 }
@@ -512,28 +283,13 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 			imgNames: []string{
 				"qcow2",
 				"openstack",
+				"oci",
 				"vhd",
-				"azure-rhui",
-				"azure-sap-rhui",
-				"azure-eap7-rhui",
 				"vmdk",
 				"ova",
 				"ami",
-				"ec2",
-				"ec2-ha",
-				"ec2-sap",
-				"gce",
-				"gce-rhui",
-				"edge-commit",
-				"edge-container",
-				"edge-installer",
-				"edge-raw-image",
-				"edge-simplified-installer",
 				"tar",
-				"image-installer",
-				"oci",
 				"wsl",
-				"minimal-raw",
 			},
 		},
 		{
@@ -541,19 +297,10 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 			imgNames: []string{
 				"qcow2",
 				"openstack",
-				"vhd",
-				"azure-rhui",
 				"ami",
-				"ec2",
-				"edge-commit",
-				"edge-container",
-				"edge-installer",
-				"edge-simplified-installer",
-				"edge-raw-image",
 				"tar",
-				"image-installer",
+				"vhd",
 				"wsl",
-				"minimal-raw",
 			},
 		},
 		{
@@ -591,12 +338,12 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 	}
 }
 
-func TestRHEL8_ListArches(t *testing.T) {
+func TestRhel9_ListArches(t *testing.T) {
 	arches := rhelFamilyDistros[0].distro.ListArches()
 	assert.Equal(t, []string{"aarch64", "ppc64le", "s390x", "x86_64"}, arches)
 }
 
-func TestRHEL8_GetArch(t *testing.T) {
+func TestRhel9_GetArch(t *testing.T) {
 	arches := []struct {
 		name                  string
 		errorExpected         bool
@@ -636,26 +383,22 @@ func TestRHEL8_GetArch(t *testing.T) {
 	}
 }
 
-func TestRhel8_Name(t *testing.T) {
+func TestRhel9_Name(t *testing.T) {
 	distro := rhelFamilyDistros[0].distro
-	assert.Equal(t, "rhel-8.10", distro.Name())
+	assert.Equal(t, "rhel-10.0", distro.Name())
 }
 
-func TestRhel8_ModulePlatformID(t *testing.T) {
+func TestRhel9_ModulePlatformID(t *testing.T) {
 	distro := rhelFamilyDistros[0].distro
-	assert.Equal(t, "platform:el8", distro.ModulePlatformID())
+	assert.Equal(t, "platform:el10", distro.ModulePlatformID())
 }
 
-func TestRhel86_KernelOption(t *testing.T) {
+func TestRhel9_KernelOption(t *testing.T) {
 	distro_test_common.TestDistro_KernelOption(t, rhelFamilyDistros[0].distro)
 }
 
-func TestRhel8_OSTreeOptions(t *testing.T) {
-	distro_test_common.TestDistro_OSTreeOptions(t, rhelFamilyDistros[0].distro)
-}
-
 func TestDistro_CustomFileSystemManifestError(t *testing.T) {
-	r8distro := rhelFamilyDistros[0].distro
+	r9distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -666,30 +409,18 @@ func TestDistro_CustomFileSystemManifestError(t *testing.T) {
 			},
 		},
 	}
-	unsupported := map[string]bool{
-		"edge-installer":            true,
-		"edge-simplified-installer": true,
-		"edge-raw-image":            true,
-		"azure-eap7-rhui":           true,
-	}
-	for _, archName := range r8distro.ListArches() {
-		arch, _ := r8distro.GetArch(archName)
+	for _, archName := range r9distro.ListArches() {
+		arch, _ := r9distro.GetArch(archName)
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
-			if imgTypeName == "edge-commit" || imgTypeName == "edge-container" {
-				assert.EqualError(t, err, "Custom mountpoints are not supported for ostree types")
-			} else if unsupported[imgTypeName] {
-				assert.Error(t, err)
-			} else {
-				assert.EqualError(t, err, "The following custom mountpoints are not supported [\"/etc\"]")
-			}
+			assert.EqualError(t, err, "The following custom mountpoints are not supported [\"/etc\"]")
 		}
 	}
 }
 
 func TestDistro_TestRootMountPoint(t *testing.T) {
-	r8distro := rhelFamilyDistros[0].distro
+	r9distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -700,30 +431,18 @@ func TestDistro_TestRootMountPoint(t *testing.T) {
 			},
 		},
 	}
-	unsupported := map[string]bool{
-		"edge-installer":            true,
-		"edge-simplified-installer": true,
-		"edge-raw-image":            true,
-		"azure-eap7-rhui":           true,
-	}
-	for _, archName := range r8distro.ListArches() {
-		arch, _ := r8distro.GetArch(archName)
+	for _, archName := range r9distro.ListArches() {
+		arch, _ := r9distro.GetArch(archName)
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
-			if imgTypeName == "edge-commit" || imgTypeName == "edge-container" {
-				assert.EqualError(t, err, "Custom mountpoints are not supported for ostree types")
-			} else if unsupported[imgTypeName] {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-			}
+			assert.NoError(t, err)
 		}
 	}
 }
 
 func TestDistro_CustomFileSystemSubDirectories(t *testing.T) {
-	r8distro := rhelFamilyDistros[0].distro
+	r9distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -738,21 +457,13 @@ func TestDistro_CustomFileSystemSubDirectories(t *testing.T) {
 			},
 		},
 	}
-	unsupported := map[string]bool{
-		"edge-commit":               true,
-		"edge-container":            true,
-		"edge-installer":            true,
-		"edge-simplified-installer": true,
-		"edge-raw-image":            true,
-		"azure-eap7-rhui":           true,
-	}
-	for _, archName := range r8distro.ListArches() {
-		arch, _ := r8distro.GetArch(archName)
+	for _, archName := range r9distro.ListArches() {
+		arch, _ := r9distro.GetArch(archName)
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
-			if unsupported[imgTypeName] {
-				assert.Error(t, err)
+			if strings.HasPrefix(imgTypeName, "edge-") {
+				continue
 			} else {
 				assert.NoError(t, err)
 			}
@@ -761,7 +472,7 @@ func TestDistro_CustomFileSystemSubDirectories(t *testing.T) {
 }
 
 func TestDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
-	r8distro := rhelFamilyDistros[0].distro
+	r9distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -784,21 +495,13 @@ func TestDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
 			},
 		},
 	}
-	unsupported := map[string]bool{
-		"edge-commit":               true,
-		"edge-container":            true,
-		"edge-installer":            true,
-		"edge-simplified-installer": true,
-		"edge-raw-image":            true,
-		"azure-eap7-rhui":           true,
-	}
-	for _, archName := range r8distro.ListArches() {
-		arch, _ := r8distro.GetArch(archName)
+	for _, archName := range r9distro.ListArches() {
+		arch, _ := r9distro.GetArch(archName)
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
-			if unsupported[imgTypeName] {
-				assert.Error(t, err)
+			if strings.HasPrefix(imgTypeName, "edge-") {
+				continue
 			} else {
 				assert.NoError(t, err)
 			}
@@ -807,7 +510,7 @@ func TestDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
 }
 
 func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
-	r8distro := rhelFamilyDistros[0].distro
+	r9distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -826,30 +529,18 @@ func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
 			},
 		},
 	}
-	unsupported := map[string]bool{
-		"edge-commit":               true,
-		"edge-container":            true,
-		"edge-installer":            true,
-		"edge-simplified-installer": true,
-		"edge-raw-image":            true,
-		"azure-eap7-rhui":           true,
-	}
-	for _, archName := range r8distro.ListArches() {
-		arch, _ := r8distro.GetArch(archName)
+	for _, archName := range r9distro.ListArches() {
+		arch, _ := r9distro.GetArch(archName)
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
-			if unsupported[imgTypeName] {
-				assert.Error(t, err)
-			} else {
-				assert.EqualError(t, err, "The following custom mountpoints are not supported [\"//\" \"/var//\" \"/var//log/audit/\"]")
-			}
+			assert.EqualError(t, err, "The following custom mountpoints are not supported [\"//\" \"/var//\" \"/var//log/audit/\"]")
 		}
 	}
 }
 
 func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
-	r8distro := rhelFamilyDistros[0].distro
+	r9distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -860,24 +551,12 @@ func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 			},
 		},
 	}
-	unsupported := map[string]bool{
-		"edge-installer":            true,
-		"edge-simplified-installer": true,
-		"edge-raw-image":            true,
-		"azure-eap7-rhui":           true,
-	}
-	for _, archName := range r8distro.ListArches() {
-		arch, _ := r8distro.GetArch(archName)
+	for _, archName := range r9distro.ListArches() {
+		arch, _ := r9distro.GetArch(archName)
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
-			if imgTypeName == "edge-commit" || imgTypeName == "edge-container" {
-				assert.EqualError(t, err, "Custom mountpoints are not supported for ostree types")
-			} else if unsupported[imgTypeName] {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-			}
+			assert.NoError(t, err)
 		}
 	}
 }

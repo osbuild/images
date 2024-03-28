@@ -67,11 +67,11 @@ func TestFilenameFromType(t *testing.T) {
 					dist := dist.distro
 					arch, _ := dist.GetArch("x86_64")
 					imgType, err := arch.GetImageType(tt.args.outputFormat)
-					if (err != nil) != tt.want.wantErr {
-						t.Errorf("Arch.GetImageType() error = %v, wantErr %v", err, tt.want.wantErr)
-						return
-					}
-					if !tt.want.wantErr {
+					if tt.want.wantErr {
+						require.Error(t, err)
+					} else {
+						require.NoError(t, err)
+						require.NotNil(t, imgType)
 						gotFilename := imgType.Filename()
 						gotMIMEType := imgType.MIMEType()
 						if gotFilename != tt.want.filename {

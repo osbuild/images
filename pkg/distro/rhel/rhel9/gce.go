@@ -3,6 +3,7 @@ package rhel9
 import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/subscription"
@@ -10,55 +11,53 @@ import (
 
 const gceKernelOptions = "net.ifnames=0 biosdevname=0 scsi_mod.use_blk_mq=Y console=ttyS0,38400n8d"
 
-var (
-	gceImgType = imageType{
-		name:     "gce",
-		filename: "image.tar.gz",
-		mimeType: "application/gzip",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: gcePackageSet,
+func mkGCEImageType() *rhel.ImageType {
+	it := rhel.NewImageType(
+		"gce",
+		"image.tar.gz",
+		"application/gzip",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: gcePackageSet,
 		},
-		kernelOptions:    gceKernelOptions,
-		bootable:         true,
-		defaultSize:      20 * common.GibiByte,
-		image:            diskImage,
-		buildPipelines:   []string{"build"},
-		payloadPipelines: []string{"os", "image", "archive"},
-		exports:          []string{"archive"},
-		// TODO: the base partition table still contains the BIOS boot partition, but the image is UEFI-only
-		basePartitionTables: defaultBasePartitionTables,
-	}
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "archive"},
+		[]string{"archive"},
+	)
 
-	gceRhuiImgType = imageType{
-		name:     "gce-rhui",
-		filename: "image.tar.gz",
-		mimeType: "application/gzip",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: gceRhuiPackageSet,
-		},
-		kernelOptions:    gceKernelOptions,
-		bootable:         true,
-		defaultSize:      20 * common.GibiByte,
-		image:            diskImage,
-		buildPipelines:   []string{"build"},
-		payloadPipelines: []string{"os", "image", "archive"},
-		exports:          []string{"archive"},
-		// TODO: the base partition table still contains the BIOS boot partition, but the image is UEFI-only
-		basePartitionTables: defaultBasePartitionTables,
-	}
-)
-
-func mkGCEImageType() imageType {
-	it := gceImgType
 	// The configuration for non-RHUI images does not touch the RHSM configuration at all.
 	// https://issues.redhat.com/browse/COMPOSER-2157
-	it.defaultImageConfig = baseGCEImageConfig()
+	it.DefaultImageConfig = baseGCEImageConfig()
+	it.KernelOptions = gceKernelOptions
+	it.DefaultSize = 20 * common.GibiByte
+	it.Bootable = true
+	// TODO: the base partition table still contains the BIOS boot partition, but the image is UEFI-only
+	it.BasePartitionTables = defaultBasePartitionTables
+
 	return it
 }
 
-func mkGCERHUIImageType() imageType {
-	it := gceRhuiImgType
-	it.defaultImageConfig = defaultGceRhuiImageConfig()
+func mkGCERHUIImageType() *rhel.ImageType {
+	it := rhel.NewImageType(
+		"gce-rhui",
+		"image.tar.gz",
+		"application/gzip",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: gceRhuiPackageSet,
+		},
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "archive"},
+		[]string{"archive"},
+	)
+
+	it.DefaultImageConfig = defaultGceRhuiImageConfig()
+	it.KernelOptions = gceKernelOptions
+	it.DefaultSize = 20 * common.GibiByte
+	it.Bootable = true
+	// TODO: the base partition table still contains the BIOS boot partition, but the image is UEFI-only
+	it.BasePartitionTables = defaultBasePartitionTables
+
 	return it
 }
 
@@ -186,7 +185,7 @@ func defaultGceRhuiImageConfig() *distro.ImageConfig {
 	return ic.InheritFrom(baseGCEImageConfig())
 }
 
-func gceCommonPackageSet(t *imageType) rpmmd.PackageSet {
+func gceCommonPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	ps := rpmmd.PackageSet{
 		Include: []string{
 			"@core",
@@ -268,12 +267,12 @@ func gceCommonPackageSet(t *imageType) rpmmd.PackageSet {
 }
 
 // GCE BYOS image
-func gcePackageSet(t *imageType) rpmmd.PackageSet {
+func gcePackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return gceCommonPackageSet(t)
 }
 
 // GCE RHUI image
-func gceRhuiPackageSet(t *imageType) rpmmd.PackageSet {
+func gceRhuiPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return rpmmd.PackageSet{
 		Include: []string{
 			"google-rhui-client-rhel9",

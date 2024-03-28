@@ -1,26 +1,31 @@
-package rhel9
+package rhel
 
 import (
 	"errors"
 	"fmt"
 	"sort"
 
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/platform"
 )
 
-type architecture struct {
-	distro           *distribution
-	name             string
+type Architecture struct {
+	distro           *Distribution
+	arch             arch.Arch
 	imageTypes       map[string]distro.ImageType
 	imageTypeAliases map[string]string
 }
 
-func (a *architecture) Name() string {
-	return a.name
+func (a *Architecture) Name() string {
+	return a.arch.String()
 }
 
-func (a *architecture) ListImageTypes() []string {
+func (a *Architecture) Distro() distro.Distro {
+	return a.distro
+}
+
+func (a *Architecture) ListImageTypes() []string {
 	itNames := make([]string, 0, len(a.imageTypes))
 	for name := range a.imageTypes {
 		itNames = append(itNames, name)
@@ -29,7 +34,7 @@ func (a *architecture) ListImageTypes() []string {
 	return itNames
 }
 
-func (a *architecture) GetImageType(name string) (distro.ImageType, error) {
+func (a *Architecture) GetImageType(name string) (distro.ImageType, error) {
 	t, exists := a.imageTypes[name]
 	if !exists {
 		aliasForName, exists := a.imageTypeAliases[name]
@@ -44,7 +49,7 @@ func (a *architecture) GetImageType(name string) (distro.ImageType, error) {
 	return t, nil
 }
 
-func (a *architecture) addImageTypes(platform platform.Platform, imageTypes ...imageType) {
+func (a *Architecture) AddImageTypes(platform platform.Platform, imageTypes ...*ImageType) {
 	if a.imageTypes == nil {
 		a.imageTypes = map[string]distro.ImageType{}
 	}
@@ -52,8 +57,8 @@ func (a *architecture) addImageTypes(platform platform.Platform, imageTypes ...i
 		it := imageTypes[idx]
 		it.arch = a
 		it.platform = platform
-		a.imageTypes[it.name] = &it
-		for _, alias := range it.nameAliases {
+		a.imageTypes[it.name] = it
+		for _, alias := range it.NameAliases {
 			if a.imageTypeAliases == nil {
 				a.imageTypeAliases = map[string]string{}
 			}
@@ -65,6 +70,9 @@ func (a *architecture) addImageTypes(platform platform.Platform, imageTypes ...i
 	}
 }
 
-func (a *architecture) Distro() distro.Distro {
-	return a.distro
+func NewArchitecture(distro *Distribution, arch arch.Arch) *Architecture {
+	return &Architecture{
+		distro: distro,
+		arch:   arch,
+	}
 }

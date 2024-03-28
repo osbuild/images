@@ -12,7 +12,7 @@ import (
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/distro_test_common"
-	"github.com/osbuild/images/pkg/distro/rhel9"
+	"github.com/osbuild/images/pkg/distro/rhel/rhel9"
 )
 
 type rhelFamilyDistro struct {
@@ -233,11 +233,11 @@ func TestFilenameFromType(t *testing.T) {
 					dist := dist.distro
 					arch, _ := dist.GetArch("x86_64")
 					imgType, err := arch.GetImageType(tt.args.outputFormat)
-					if (err != nil) != tt.want.wantErr {
-						t.Errorf("Arch.GetImageType() error = %v, wantErr %v", err, tt.want.wantErr)
-						return
-					}
-					if !tt.want.wantErr {
+					if tt.want.wantErr {
+						require.Error(t, err)
+					} else {
+						require.NoError(t, err)
+						require.NotNil(t, imgType)
 						gotFilename := imgType.Filename()
 						gotMIMEType := imgType.MIMEType()
 						if gotFilename != tt.want.filename {
@@ -672,7 +672,7 @@ func TestDistro_CustomFileSystemManifestError(t *testing.T) {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
 			if imgTypeName == "edge-commit" || imgTypeName == "edge-container" {
-				assert.EqualError(t, err, "Custom mountpoints are not supported for edge-container and edge-commit")
+				assert.EqualError(t, err, "Custom mountpoints are not supported for ostree types")
 			} else if imgTypeName == "edge-installer" || imgTypeName == "edge-simplified-installer" || imgTypeName == "edge-raw-image" || imgTypeName == "edge-ami" || imgTypeName == "edge-vsphere" {
 				continue
 			} else {
@@ -700,7 +700,7 @@ func TestDistro_TestRootMountPoint(t *testing.T) {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
 			if imgTypeName == "edge-commit" || imgTypeName == "edge-container" {
-				assert.EqualError(t, err, "Custom mountpoints are not supported for edge-container and edge-commit")
+				assert.EqualError(t, err, "Custom mountpoints are not supported for ostree types")
 			} else if imgTypeName == "edge-installer" || imgTypeName == "edge-simplified-installer" || imgTypeName == "edge-raw-image" || imgTypeName == "edge-ami" || imgTypeName == "edge-vsphere" {
 				continue
 			} else {
@@ -830,7 +830,7 @@ func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
 			if imgTypeName == "edge-commit" || imgTypeName == "edge-container" {
-				assert.EqualError(t, err, "Custom mountpoints are not supported for edge-container and edge-commit")
+				assert.EqualError(t, err, "Custom mountpoints are not supported for ostree types")
 			} else if imgTypeName == "edge-installer" || imgTypeName == "edge-simplified-installer" || imgTypeName == "edge-raw-image" || imgTypeName == "edge-ami" || imgTypeName == "edge-vsphere" {
 				continue
 			} else {
