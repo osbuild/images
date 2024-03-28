@@ -66,6 +66,7 @@ var defaultDistroImageConfig = &distro.ImageConfig{
 			},
 		},
 	},
+	KernelOptionsBootloader: common.ToPtr(true),
 }
 
 func (d *distribution) Name() string {
