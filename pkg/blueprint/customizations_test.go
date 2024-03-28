@@ -104,19 +104,21 @@ func TestGetUsers(t *testing.T) {
 	UID := 123
 	GID := 321
 	ExpireDate := 12345
+	ForcePasswordReset := true
 
 	expectedUsers := []UserCustomization{
 		{
-			Name:        "John",
-			Description: &Desc,
-			Password:    &Pass,
-			Key:         &Key,
-			Home:        &Home,
-			Shell:       &Shell,
-			Groups:      Groups,
-			UID:         &UID,
-			GID:         &GID,
-			ExpireDate:  &ExpireDate,
+			Name:               "John",
+			Description:        &Desc,
+			Password:           &Pass,
+			Key:                &Key,
+			Home:               &Home,
+			Shell:              &Shell,
+			Groups:             Groups,
+			UID:                &UID,
+			GID:                &GID,
+			ExpireDate:         &ExpireDate,
+			ForcePasswordReset: &ForcePasswordReset,
 		},
 	}
 
