@@ -44,6 +44,9 @@ func osCustomizations(
 			kernelOptions = append(kernelOptions, bpKernel.Append)
 		}
 		osc.KernelOptionsAppend = kernelOptions
+		if imageConfig.KernelOptionsBootloader != nil {
+			osc.KernelOptionsBootloader = *imageConfig.KernelOptionsBootloader
+		}
 	}
 
 	osc.FIPS = c.GetFIPS()

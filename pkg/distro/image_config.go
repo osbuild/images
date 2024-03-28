@@ -67,6 +67,14 @@ type ImageConfig struct {
 
 	Files       []*fsnode.File
 	Directories []*fsnode.Directory
+
+	// KernelOptionsBootloader controls whether kernel command line options
+	// should be specified in the bootloader grubenv configuration. Otherwise
+	// they are specified in /etc/kernel/cmdline (default).
+	//
+	// This should only be used for old distros that use grub and it is
+	// applied on all architectures, except for s390x.
+	KernelOptionsBootloader *bool
 }
 
 // InheritFrom inherits unset values from the provided parent configuration and

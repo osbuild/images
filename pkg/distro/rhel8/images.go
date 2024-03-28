@@ -5,7 +5,6 @@ import (
 	"math/rand"
 
 	"github.com/osbuild/images/internal/workload"
-	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/fdo"
@@ -44,8 +43,8 @@ func osCustomizations(
 			kernelOptions = append(kernelOptions, bpKernel.Append)
 		}
 		osc.KernelOptionsAppend = kernelOptions
-		if t.platform.GetArch() != arch.ARCH_S390X {
-			osc.KernelOptionsBootloader = true
+		if imageConfig.KernelOptionsBootloader != nil {
+			osc.KernelOptionsBootloader = *imageConfig.KernelOptionsBootloader
 		}
 	}
 
