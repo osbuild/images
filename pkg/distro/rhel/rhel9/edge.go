@@ -89,6 +89,7 @@ func mkEdgeRawImgType() *rhel.ImageType {
 	it.RPMOSTree = true
 	it.Bootable = true
 	it.BasePartitionTables = edgeBasePartitionTables
+	it.UnsupportedPartitioningModes = []disk.PartitioningMode{disk.RawPartitioningMode}
 
 	return it
 }
@@ -150,6 +151,7 @@ func mkEdgeSimplifiedInstallerImgType() *rhel.ImageType {
 	it.BootISO = true
 	it.ISOLabelFn = distroISOLabelFunc
 	it.BasePartitionTables = edgeBasePartitionTables
+	it.UnsupportedPartitioningModes = []disk.PartitioningMode{disk.RawPartitioningMode}
 
 	return it
 }
@@ -174,6 +176,7 @@ func mkEdgeAMIImgType() *rhel.ImageType {
 	it.RPMOSTree = true
 	it.Bootable = true
 	it.BasePartitionTables = edgeBasePartitionTables
+	it.UnsupportedPartitioningModes = []disk.PartitioningMode{disk.RawPartitioningMode}
 	it.Environment = &environment.EC2{}
 
 	return it
@@ -199,6 +202,7 @@ func mkEdgeVsphereImgType() *rhel.ImageType {
 	it.RPMOSTree = true
 	it.Bootable = true
 	it.BasePartitionTables = edgeBasePartitionTables
+	it.UnsupportedPartitioningModes = []disk.PartitioningMode{disk.RawPartitioningMode}
 
 	return it
 }

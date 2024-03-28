@@ -119,6 +119,10 @@ func checkOptions(t *rhel.ImageType, bp *blueprint.Blueprint, options distro.Ima
 		return warnings, fmt.Errorf("kernel boot parameter customizations are not supported for ostree types")
 	}
 
+	if slices.Contains(t.UnsupportedPartitioningModes, options.PartitioningMode) {
+		return warnings, fmt.Errorf("partitioning mode %q is not supported for %q", options.PartitioningMode, t.Name())
+	}
+
 	mountpoints := customizations.GetFilesystems()
 
 	if mountpoints != nil && t.RPMOSTree && (t.Name() == "edge-container" || t.Name() == "edge-commit") {

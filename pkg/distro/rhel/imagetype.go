@@ -79,7 +79,10 @@ type ImageType struct {
 	Bootable bool
 	// List of valid arches for the image type
 	BasePartitionTables BasePartitionTableFunc
-	ISOLabelFn          ISOLabelFunc
+	// Optional list of unsupported partitioning modes
+	UnsupportedPartitioningModes []disk.PartitioningMode
+
+	ISOLabelFn ISOLabelFunc
 }
 
 func (t *ImageType) Name() string {
@@ -189,15 +192,7 @@ func (t *ImageType) GetPartitionTable(
 
 	imageSize := t.Size(options.Size)
 
-	partitioningMode := options.PartitioningMode
-	if t.RPMOSTree {
-		// Edge supports only LVM, force it.
-		// TODO Need a central location for logic like this
-
-		partitioningMode = disk.LVMPartitioningMode
-	}
-
-	return disk.NewPartitionTable(&basePartitionTable, mountpoints, imageSize, partitioningMode, nil, rng)
+	return disk.NewPartitionTable(&basePartitionTable, mountpoints, imageSize, options.PartitioningMode, nil, rng)
 }
 
 func (t *ImageType) getDefaultImageConfig() *distro.ImageConfig {
