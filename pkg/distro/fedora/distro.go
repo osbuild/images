@@ -39,6 +39,9 @@ const (
 	// Added kernel command line options for ami, qcow2, openstack, vhd and vmdk types
 	cloudKernelOptions = "ro no_timer_check console=ttyS0,115200n8 biosdevname=0 net.ifnames=0"
 
+	// Added kernel command line options for iot-raw-image and iot-qcow2-image types
+	ostreeDeploymentKernelOptions = "modprobe.blacklist=vc4 rw coreos.no_persist_ip"
+
 	// location for saving openscap remediation data
 	oscapDataDir = "/oscap_data"
 )
@@ -201,6 +204,10 @@ var (
 		},
 		defaultImageConfig: &distro.ImageConfig{
 			EnabledServices: iotServices,
+			Keyboard: &osbuild.KeymapStageOptions{
+				Keymap: "us",
+			},
+			Locale: common.ToPtr("C.UTF-8"),
 		},
 		defaultSize:         10 * common.GibiByte,
 		rpmOstree:           true,
@@ -212,6 +219,7 @@ var (
 		payloadPipelines:    []string{"ostree-deployment", "image", "xz", "coi-tree", "efiboot-tree", "bootiso-tree", "bootiso"},
 		exports:             []string{"bootiso"},
 		basePartitionTables: iotSimplifiedInstallerPartitionTables,
+		kernelOptions:       ostreeDeploymentKernelOptions,
 	}
 
 	iotRawImgType = imageType{
@@ -222,7 +230,10 @@ var (
 		mimeType:    "application/xz",
 		packageSets: map[string]packageSetFunc{},
 		defaultImageConfig: &distro.ImageConfig{
-			Locale: common.ToPtr("en_US.UTF-8"),
+			Keyboard: &osbuild.KeymapStageOptions{
+				Keymap: "us",
+			},
+			Locale: common.ToPtr("C.UTF-8"),
 		},
 		defaultSize:         4 * common.GibiByte,
 		rpmOstree:           true,
@@ -232,6 +243,7 @@ var (
 		payloadPipelines:    []string{"ostree-deployment", "image", "xz"},
 		exports:             []string{"xz"},
 		basePartitionTables: iotBasePartitionTables,
+		kernelOptions:       ostreeDeploymentKernelOptions,
 
 		// Passing an empty map into the required partition sizes disables the
 		// default partition sizes normally set so our `basePartitionTables` can
@@ -245,7 +257,10 @@ var (
 		mimeType:    "application/x-qemu-disk",
 		packageSets: map[string]packageSetFunc{},
 		defaultImageConfig: &distro.ImageConfig{
-			Locale: common.ToPtr("en_US.UTF-8"),
+			Keyboard: &osbuild.KeymapStageOptions{
+				Keymap: "us",
+			},
+			Locale: common.ToPtr("C.UTF-8"),
 		},
 		defaultSize:         10 * common.GibiByte,
 		rpmOstree:           true,
@@ -255,6 +270,7 @@ var (
 		payloadPipelines:    []string{"ostree-deployment", "image", "qcow2"},
 		exports:             []string{"qcow2"},
 		basePartitionTables: iotBasePartitionTables,
+		kernelOptions:       ostreeDeploymentKernelOptions,
 	}
 
 	qcow2ImgType = imageType{
@@ -871,6 +887,7 @@ func newDistro(version int) distro.Distro {
 	aarch64.addImageTypes(
 		&platform.Aarch64{
 			BasePlatform: platform.BasePlatform{
+				ImageFormat: platform.FORMAT_RAW,
 				FirmwarePackages: []string{
 					"arm-image-installer",
 					"bcm283x-firmware",
