@@ -528,14 +528,14 @@ func edgeRawImage(workload workload.Workload,
 
 	img := image.NewOSTreeDiskImageFromCommit(commit)
 
-	img.Users = users.UsersFromBP(customizations.GetUsers())
-	img.Groups = users.GroupsFromBP(customizations.GetGroups())
-	img.FIPS = customizations.GetFIPS()
+	img.OSTreeDeploymentCustomizations.Users = users.UsersFromBP(customizations.GetUsers())
+	img.OSTreeDeploymentCustomizations.Groups = users.GroupsFromBP(customizations.GetGroups())
+	img.OSTreeDeploymentCustomizations.FIPS = customizations.GetFIPS()
 
-	img.KernelOptionsAppend = []string{"modprobe.blacklist=vc4"}
+	img.OSTreeDeploymentCustomizations.KernelOptionsAppend = []string{"modprobe.blacklist=vc4"}
 	// TODO: move to image config
-	img.Keyboard = "us"
-	img.Locale = "C.UTF-8"
+	img.OSTreeDeploymentCustomizations.Keyboard = "us"
+	img.OSTreeDeploymentCustomizations.Locale = "C.UTF-8"
 
 	img.Platform = t.platform
 	img.Workload = workload
@@ -545,7 +545,7 @@ func edgeRawImage(workload workload.Workload,
 		ContentURL: options.OSTree.ContentURL,
 	}
 	img.OSName = "redhat"
-	img.LockRoot = true
+	img.OSTreeDeploymentCustomizations.LockRoot = true
 
 	// TODO: move generation into LiveImage
 	pt, err := t.getPartitionTable(customizations.GetFilesystems(), options, rng)
@@ -575,13 +575,13 @@ func edgeSimplifiedInstallerImage(workload workload.Workload,
 
 	rawImg := image.NewOSTreeDiskImageFromCommit(commit)
 
-	rawImg.Users = users.UsersFromBP(customizations.GetUsers())
-	rawImg.Groups = users.GroupsFromBP(customizations.GetGroups())
-	rawImg.FIPS = customizations.GetFIPS()
+	rawImg.OSTreeDeploymentCustomizations.Users = users.UsersFromBP(customizations.GetUsers())
+	rawImg.OSTreeDeploymentCustomizations.Groups = users.GroupsFromBP(customizations.GetGroups())
+	rawImg.OSTreeDeploymentCustomizations.FIPS = customizations.GetFIPS()
 
-	rawImg.KernelOptionsAppend = []string{"modprobe.blacklist=vc4"}
-	rawImg.Keyboard = "us"
-	rawImg.Locale = "C.UTF-8"
+	rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend = []string{"modprobe.blacklist=vc4"}
+	rawImg.OSTreeDeploymentCustomizations.Keyboard = "us"
+	rawImg.OSTreeDeploymentCustomizations.Locale = "C.UTF-8"
 
 	rawImg.Platform = t.platform
 	rawImg.Workload = workload
@@ -591,7 +591,7 @@ func edgeSimplifiedInstallerImage(workload workload.Workload,
 		ContentURL: options.OSTree.ContentURL,
 	}
 	rawImg.OSName = "redhat"
-	rawImg.LockRoot = true
+	rawImg.OSTreeDeploymentCustomizations.LockRoot = true
 
 	// TODO: move generation into LiveImage
 	pt, err := t.getPartitionTable(customizations.GetFilesystems(), options, rng)
