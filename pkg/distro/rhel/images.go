@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
@@ -289,6 +288,80 @@ func osCustomizations(
 	return osc, nil
 }
 
+func ostreeDeploymentCustomizations(
+	t *ImageType,
+	c *blueprint.Customizations) (manifest.OSTreeDeploymentCustomizations, error) {
+
+	if !t.RPMOSTree || !t.Bootable {
+		return manifest.OSTreeDeploymentCustomizations{}, fmt.Errorf("ostree deployment customizations are only supported for bootable rpm-ostree images")
+	}
+
+	imageConfig := t.getDefaultImageConfig()
+	deploymentConf := manifest.OSTreeDeploymentCustomizations{}
+
+	var kernelOptions []string
+	if t.KernelOptions != "" {
+		kernelOptions = append(kernelOptions, t.KernelOptions)
+	}
+	if bpKernel := c.GetKernel(); bpKernel != nil && bpKernel.Append != "" {
+		kernelOptions = append(kernelOptions, bpKernel.Append)
+	}
+
+	if imageConfig.IgnitionPlatform != nil {
+		deploymentConf.IgnitionPlatform = *imageConfig.IgnitionPlatform
+	}
+
+	switch deploymentConf.IgnitionPlatform {
+	case "metal":
+		if bpIgnition := c.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
+			kernelOptions = append(kernelOptions, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
+		}
+	}
+
+	deploymentConf.KernelOptionsAppend = kernelOptions
+
+	deploymentConf.FIPS = c.GetFIPS()
+
+	deploymentConf.Users = users.UsersFromBP(c.GetUsers())
+	deploymentConf.Groups = users.GroupsFromBP(c.GetGroups())
+
+	var err error
+	deploymentConf.Directories, err = blueprint.DirectoryCustomizationsToFsNodeDirectories(c.GetDirectories())
+	if err != nil {
+		return manifest.OSTreeDeploymentCustomizations{}, err
+	}
+	deploymentConf.Files, err = blueprint.FileCustomizationsToFsNodeFiles(c.GetFiles())
+	if err != nil {
+		return manifest.OSTreeDeploymentCustomizations{}, err
+	}
+
+	language, keyboard := c.GetPrimaryLocale()
+	if language != nil {
+		deploymentConf.Locale = *language
+	} else if imageConfig.Locale != nil {
+		deploymentConf.Locale = *imageConfig.Locale
+	}
+	if keyboard != nil {
+		deploymentConf.Keyboard = *keyboard
+	} else if imageConfig.Keyboard != nil {
+		deploymentConf.Keyboard = imageConfig.Keyboard.Keymap
+	}
+
+	if imageConfig.OSTreeConfSysrootReadOnly != nil {
+		deploymentConf.SysrootReadOnly = *imageConfig.OSTreeConfSysrootReadOnly
+	}
+
+	if imageConfig.LockRootUser != nil {
+		deploymentConf.LockRoot = *imageConfig.LockRootUser
+	}
+
+	for _, fs := range c.GetFilesystems() {
+		deploymentConf.CustomFileSystems = append(deploymentConf.CustomFileSystems, fs.Mountpoint)
+	}
+
+	return deploymentConf, nil
+}
+
 func DiskImage(workload workload.Workload,
 	t *ImageType,
 	customizations *blueprint.Customizations,
@@ -453,28 +526,11 @@ func EdgeRawImage(workload workload.Workload,
 	}
 	img := image.NewOSTreeDiskImageFromCommit(commit)
 
-	img.OSTreeDeploymentCustomizations.Users = users.UsersFromBP(customizations.GetUsers())
-	img.OSTreeDeploymentCustomizations.Groups = users.GroupsFromBP(customizations.GetGroups())
-	img.OSTreeDeploymentCustomizations.FIPS = customizations.GetFIPS()
-
-	// The kernel options defined on the image type are usually handled in
-	// osCustomiztions() but ostree images don't use OSCustomizations, so we
-	// handle them here separately.
-	if t.KernelOptions != "" {
-		img.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(img.OSTreeDeploymentCustomizations.KernelOptionsAppend, t.KernelOptions)
+	deploymentConfig, err := ostreeDeploymentCustomizations(t, customizations)
+	if err != nil {
+		return nil, err
 	}
-	img.OSTreeDeploymentCustomizations.Keyboard = "us"
-	img.OSTreeDeploymentCustomizations.Locale = "C.UTF-8"
-
-	if common.VersionGreaterThanOrEqual(t.Arch().Distro().OsVersion(), "9.2") || !t.IsRHEL() {
-		img.OSTreeDeploymentCustomizations.SysrootReadOnly = true
-
-		img.OSTreeDeploymentCustomizations.IgnitionPlatform = "metal"
-
-		if bpIgnition := customizations.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
-			img.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(img.OSTreeDeploymentCustomizations.KernelOptionsAppend, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
-		}
-	}
+	img.OSTreeDeploymentCustomizations = deploymentConfig
 
 	img.Platform = t.platform
 	img.Workload = workload
@@ -484,11 +540,6 @@ func EdgeRawImage(workload workload.Workload,
 		ContentURL: options.OSTree.ContentURL,
 	}
 	img.OSName = "redhat"
-	img.OSTreeDeploymentCustomizations.LockRoot = true
-
-	if kopts := customizations.GetKernel(); kopts != nil && kopts.Append != "" {
-		img.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(img.OSTreeDeploymentCustomizations.KernelOptionsAppend, kopts.Append)
-	}
 
 	// TODO: move generation into LiveImage
 	pt, err := t.GetPartitionTable(customizations.GetFilesystems(), options, rng)
@@ -499,10 +550,6 @@ func EdgeRawImage(workload workload.Workload,
 
 	img.Filename = t.Filename()
 	img.Compression = t.Compression
-
-	for _, fs := range customizations.GetFilesystems() {
-		img.OSTreeDeploymentCustomizations.CustomFileSystems = append(img.OSTreeDeploymentCustomizations.CustomFileSystems, fs.Mountpoint)
-	}
 
 	return img, nil
 }
@@ -521,15 +568,11 @@ func EdgeSimplifiedInstallerImage(workload workload.Workload,
 	}
 	rawImg := image.NewOSTreeDiskImageFromCommit(commit)
 
-	rawImg.OSTreeDeploymentCustomizations.Users = users.UsersFromBP(customizations.GetUsers())
-	rawImg.OSTreeDeploymentCustomizations.Groups = users.GroupsFromBP(customizations.GetGroups())
-	rawImg.OSTreeDeploymentCustomizations.FIPS = customizations.GetFIPS()
-
-	if t.KernelOptions != "" {
-		rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend, t.KernelOptions)
+	deploymentConfig, err := ostreeDeploymentCustomizations(t, customizations)
+	if err != nil {
+		return nil, err
 	}
-	rawImg.OSTreeDeploymentCustomizations.Keyboard = "us"
-	rawImg.OSTreeDeploymentCustomizations.Locale = "C.UTF-8"
+	rawImg.OSTreeDeploymentCustomizations = deploymentConfig
 
 	rawImg.Platform = t.platform
 	rawImg.Workload = workload
@@ -539,17 +582,6 @@ func EdgeSimplifiedInstallerImage(workload workload.Workload,
 		ContentURL: options.OSTree.ContentURL,
 	}
 	rawImg.OSName = "redhat"
-	rawImg.OSTreeDeploymentCustomizations.LockRoot = true
-
-	if common.VersionGreaterThanOrEqual(t.Arch().Distro().OsVersion(), "9.2") || !t.IsRHEL() {
-		rawImg.OSTreeDeploymentCustomizations.SysrootReadOnly = true
-
-		rawImg.OSTreeDeploymentCustomizations.IgnitionPlatform = "metal"
-
-		if bpIgnition := customizations.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
-			rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
-		}
-	}
 
 	// TODO: move generation into LiveImage
 	pt, err := t.GetPartitionTable(customizations.GetFilesystems(), options, rng)
@@ -559,14 +591,6 @@ func EdgeSimplifiedInstallerImage(workload workload.Workload,
 	rawImg.PartitionTable = pt
 
 	rawImg.Filename = t.Filename()
-
-	for _, fs := range customizations.GetFilesystems() {
-		rawImg.OSTreeDeploymentCustomizations.CustomFileSystems = append(rawImg.OSTreeDeploymentCustomizations.CustomFileSystems, fs.Mountpoint)
-	}
-
-	if kopts := customizations.GetKernel(); kopts != nil && kopts.Append != "" {
-		rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend, kopts.Append)
-	}
 
 	img := image.NewOSTreeSimplifiedInstaller(rawImg, customizations.InstallationDevice)
 	img.ExtraBasePackages = packageSets[InstallerPkgsKey]

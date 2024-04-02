@@ -98,7 +98,15 @@ func mkEdgeRawImgType(d *rhel.Distribution) *rhel.ImageType {
 	it.NameAliases = []string{"rhel-edge-raw-image"}
 	it.Compression = "xz"
 	it.DefaultImageConfig = &distro.ImageConfig{
-		Locale: common.ToPtr("en_US.UTF-8"),
+		Keyboard: &osbuild.KeymapStageOptions{
+			Keymap: "us",
+		},
+		Locale:       common.ToPtr("C.UTF-8"),
+		LockRootUser: common.ToPtr(true),
+	}
+	if common.VersionGreaterThanOrEqual(d.OsVersion(), "9.2") || !d.IsRHEL() {
+		it.DefaultImageConfig.OSTreeConfSysrootReadOnly = common.ToPtr(true)
+		it.DefaultImageConfig.IgnitionPlatform = common.ToPtr("metal")
 	}
 
 	it.KernelOptions = "modprobe.blacklist=vc4"
@@ -165,7 +173,17 @@ func mkEdgeSimplifiedInstallerImgType(d *rhel.Distribution) *rhel.ImageType {
 	it.NameAliases = []string{"rhel-edge-simplified-installer"}
 	it.DefaultImageConfig = &distro.ImageConfig{
 		EnabledServices: edgeServices,
+		Keyboard: &osbuild.KeymapStageOptions{
+			Keymap: "us",
+		},
+		Locale:       common.ToPtr("C.UTF-8"),
+		LockRootUser: common.ToPtr(true),
 	}
+	if common.VersionGreaterThanOrEqual(d.OsVersion(), "9.2") || !d.IsRHEL() {
+		it.DefaultImageConfig.OSTreeConfSysrootReadOnly = common.ToPtr(true)
+		it.DefaultImageConfig.IgnitionPlatform = common.ToPtr("metal")
+	}
+
 	it.DefaultSize = 10 * common.GibiByte
 	it.RPMOSTree = true
 	it.BootISO = true
@@ -195,7 +213,15 @@ func mkEdgeAMIImgType(d *rhel.Distribution) *rhel.ImageType {
 	)
 
 	it.DefaultImageConfig = &distro.ImageConfig{
-		Locale: common.ToPtr("en_US.UTF-8"),
+		Keyboard: &osbuild.KeymapStageOptions{
+			Keymap: "us",
+		},
+		Locale:       common.ToPtr("C.UTF-8"),
+		LockRootUser: common.ToPtr(true),
+	}
+	if common.VersionGreaterThanOrEqual(d.OsVersion(), "9.2") || !d.IsRHEL() {
+		it.DefaultImageConfig.OSTreeConfSysrootReadOnly = common.ToPtr(true)
+		it.DefaultImageConfig.IgnitionPlatform = common.ToPtr("metal")
 	}
 
 	it.KernelOptions = amiKernelOptions + " modprobe.blacklist=vc4"
@@ -226,7 +252,15 @@ func mkEdgeVsphereImgType(d *rhel.Distribution) *rhel.ImageType {
 	)
 
 	it.DefaultImageConfig = &distro.ImageConfig{
-		Locale: common.ToPtr("en_US.UTF-8"),
+		Keyboard: &osbuild.KeymapStageOptions{
+			Keymap: "us",
+		},
+		Locale:       common.ToPtr("C.UTF-8"),
+		LockRootUser: common.ToPtr(true),
+	}
+	if common.VersionGreaterThanOrEqual(d.OsVersion(), "9.2") || !d.IsRHEL() {
+		it.DefaultImageConfig.OSTreeConfSysrootReadOnly = common.ToPtr(true)
+		it.DefaultImageConfig.IgnitionPlatform = common.ToPtr("metal")
 	}
 
 	it.KernelOptions = "modprobe.blacklist=vc4"
