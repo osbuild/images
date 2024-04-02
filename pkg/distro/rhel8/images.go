@@ -288,6 +288,80 @@ func osCustomizations(
 	return osc, nil
 }
 
+func ostreeDeploymentCustomizations(
+	t *imageType,
+	c *blueprint.Customizations) (manifest.OSTreeDeploymentCustomizations, error) {
+
+	if !t.rpmOstree || !t.bootable {
+		return manifest.OSTreeDeploymentCustomizations{}, fmt.Errorf("ostree deployment customizations are only supported for bootable rpm-ostree images")
+	}
+
+	imageConfig := t.getDefaultImageConfig()
+	deploymentConf := manifest.OSTreeDeploymentCustomizations{}
+
+	var kernelOptions []string
+	if t.kernelOptions != "" {
+		kernelOptions = append(kernelOptions, t.kernelOptions)
+	}
+	if bpKernel := c.GetKernel(); bpKernel != nil && bpKernel.Append != "" {
+		kernelOptions = append(kernelOptions, bpKernel.Append)
+	}
+
+	if imageConfig.IgnitionPlatform != nil {
+		deploymentConf.IgnitionPlatform = *imageConfig.IgnitionPlatform
+	}
+
+	switch deploymentConf.IgnitionPlatform {
+	case "metal":
+		if bpIgnition := c.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
+			kernelOptions = append(kernelOptions, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
+		}
+	}
+
+	deploymentConf.KernelOptionsAppend = kernelOptions
+
+	deploymentConf.FIPS = c.GetFIPS()
+
+	deploymentConf.Users = users.UsersFromBP(c.GetUsers())
+	deploymentConf.Groups = users.GroupsFromBP(c.GetGroups())
+
+	var err error
+	deploymentConf.Directories, err = blueprint.DirectoryCustomizationsToFsNodeDirectories(c.GetDirectories())
+	if err != nil {
+		return manifest.OSTreeDeploymentCustomizations{}, err
+	}
+	deploymentConf.Files, err = blueprint.FileCustomizationsToFsNodeFiles(c.GetFiles())
+	if err != nil {
+		return manifest.OSTreeDeploymentCustomizations{}, err
+	}
+
+	language, keyboard := c.GetPrimaryLocale()
+	if language != nil {
+		deploymentConf.Locale = *language
+	} else if imageConfig.Locale != nil {
+		deploymentConf.Locale = *imageConfig.Locale
+	}
+	if keyboard != nil {
+		deploymentConf.Keyboard = *keyboard
+	} else if imageConfig.Keyboard != nil {
+		deploymentConf.Keyboard = imageConfig.Keyboard.Keymap
+	}
+
+	if imageConfig.OSTreeConfSysrootReadOnly != nil {
+		deploymentConf.SysrootReadOnly = *imageConfig.OSTreeConfSysrootReadOnly
+	}
+
+	if imageConfig.LockRootUser != nil {
+		deploymentConf.LockRoot = *imageConfig.LockRootUser
+	}
+
+	for _, fs := range c.GetFilesystems() {
+		deploymentConf.CustomFileSystems = append(deploymentConf.CustomFileSystems, fs.Mountpoint)
+	}
+
+	return deploymentConf, nil
+}
+
 func diskImage(workload workload.Workload,
 	t *imageType,
 	customizations *blueprint.Customizations,
@@ -528,14 +602,11 @@ func edgeRawImage(workload workload.Workload,
 
 	img := image.NewOSTreeDiskImageFromCommit(commit)
 
-	img.OSTreeDeploymentCustomizations.Users = users.UsersFromBP(customizations.GetUsers())
-	img.OSTreeDeploymentCustomizations.Groups = users.GroupsFromBP(customizations.GetGroups())
-	img.OSTreeDeploymentCustomizations.FIPS = customizations.GetFIPS()
-
-	img.OSTreeDeploymentCustomizations.KernelOptionsAppend = []string{"modprobe.blacklist=vc4"}
-	// TODO: move to image config
-	img.OSTreeDeploymentCustomizations.Keyboard = "us"
-	img.OSTreeDeploymentCustomizations.Locale = "C.UTF-8"
+	deploymentConfig, err := ostreeDeploymentCustomizations(t, customizations)
+	if err != nil {
+		return nil, err
+	}
+	img.OSTreeDeploymentCustomizations = deploymentConfig
 
 	img.Platform = t.platform
 	img.Workload = workload
@@ -545,7 +616,6 @@ func edgeRawImage(workload workload.Workload,
 		ContentURL: options.OSTree.ContentURL,
 	}
 	img.OSName = "redhat"
-	img.OSTreeDeploymentCustomizations.LockRoot = true
 
 	// TODO: move generation into LiveImage
 	pt, err := t.getPartitionTable(customizations.GetFilesystems(), options, rng)
@@ -575,13 +645,11 @@ func edgeSimplifiedInstallerImage(workload workload.Workload,
 
 	rawImg := image.NewOSTreeDiskImageFromCommit(commit)
 
-	rawImg.OSTreeDeploymentCustomizations.Users = users.UsersFromBP(customizations.GetUsers())
-	rawImg.OSTreeDeploymentCustomizations.Groups = users.GroupsFromBP(customizations.GetGroups())
-	rawImg.OSTreeDeploymentCustomizations.FIPS = customizations.GetFIPS()
-
-	rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend = []string{"modprobe.blacklist=vc4"}
-	rawImg.OSTreeDeploymentCustomizations.Keyboard = "us"
-	rawImg.OSTreeDeploymentCustomizations.Locale = "C.UTF-8"
+	deploymentConfig, err := ostreeDeploymentCustomizations(t, customizations)
+	if err != nil {
+		return nil, err
+	}
+	rawImg.OSTreeDeploymentCustomizations = deploymentConfig
 
 	rawImg.Platform = t.platform
 	rawImg.Workload = workload
@@ -591,7 +659,6 @@ func edgeSimplifiedInstallerImage(workload workload.Workload,
 		ContentURL: options.OSTree.ContentURL,
 	}
 	rawImg.OSName = "redhat"
-	rawImg.OSTreeDeploymentCustomizations.LockRoot = true
 
 	// TODO: move generation into LiveImage
 	pt, err := t.getPartitionTable(customizations.GetFilesystems(), options, rng)

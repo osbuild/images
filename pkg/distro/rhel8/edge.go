@@ -63,13 +63,20 @@ func edgeOCIImgType(rd distribution) imageType {
 
 func edgeRawImgType() imageType {
 	it := imageType{
-		name:                "edge-raw-image",
-		nameAliases:         []string{"rhel-edge-raw-image"},
-		filename:            "image.raw.xz",
-		compression:         "xz",
-		mimeType:            "application/xz",
-		image:               edgeRawImage,
-		packageSets:         nil,
+		name:        "edge-raw-image",
+		nameAliases: []string{"rhel-edge-raw-image"},
+		filename:    "image.raw.xz",
+		compression: "xz",
+		mimeType:    "application/xz",
+		image:       edgeRawImage,
+		packageSets: nil,
+		defaultImageConfig: &distro.ImageConfig{
+			Keyboard: &osbuild.KeymapStageOptions{
+				Keymap: "us",
+			},
+			Locale:       common.ToPtr("C.UTF-8"),
+			LockRootUser: common.ToPtr(true),
+		},
 		defaultSize:         10 * common.GibiByte,
 		rpmOstree:           true,
 		bootable:            true,
@@ -131,11 +138,17 @@ func edgeSimplifiedInstallerImgType(rd distribution) imageType {
 		},
 		defaultImageConfig: &distro.ImageConfig{
 			EnabledServices: edgeServices(rd),
+			Keyboard: &osbuild.KeymapStageOptions{
+				Keymap: "us",
+			},
+			Locale:       common.ToPtr("C.UTF-8"),
+			LockRootUser: common.ToPtr(true),
 		},
 		defaultSize:         10 * common.GibiByte,
 		rpmOstree:           true,
 		bootable:            true,
 		bootISO:             true,
+		kernelOptions:       "modprobe.blacklist=vc4",
 		image:               edgeSimplifiedInstallerImage,
 		isoLabel:            distroISOLabelFunc,
 		buildPipelines:      []string{"build"},
