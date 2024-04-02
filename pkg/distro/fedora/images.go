@@ -625,25 +625,25 @@ func iotImage(workload workload.Workload,
 	img := image.NewOSTreeDiskImageFromCommit(commit)
 
 	customizations := bp.Customizations
-	img.FIPS = customizations.GetFIPS()
-	img.Users = users.UsersFromBP(customizations.GetUsers())
-	img.Groups = users.GroupsFromBP(customizations.GetGroups())
+	img.OSTreeDeploymentCustomizations.FIPS = customizations.GetFIPS()
+	img.OSTreeDeploymentCustomizations.Users = users.UsersFromBP(customizations.GetUsers())
+	img.OSTreeDeploymentCustomizations.Groups = users.GroupsFromBP(customizations.GetGroups())
 
-	img.Directories, err = blueprint.DirectoryCustomizationsToFsNodeDirectories(customizations.GetDirectories())
+	img.OSTreeDeploymentCustomizations.Directories, err = blueprint.DirectoryCustomizationsToFsNodeDirectories(customizations.GetDirectories())
 	if err != nil {
 		return nil, err
 	}
-	img.Files, err = blueprint.FileCustomizationsToFsNodeFiles(customizations.GetFiles())
+	img.OSTreeDeploymentCustomizations.Files, err = blueprint.FileCustomizationsToFsNodeFiles(customizations.GetFiles())
 	if err != nil {
 		return nil, err
 	}
 
-	img.KernelOptionsAppend = []string{"modprobe.blacklist=vc4"}
-	img.Keyboard = "us"
-	img.Locale = "C.UTF-8"
+	img.OSTreeDeploymentCustomizations.KernelOptionsAppend = []string{"modprobe.blacklist=vc4"}
+	img.OSTreeDeploymentCustomizations.Keyboard = "us"
+	img.OSTreeDeploymentCustomizations.Locale = "C.UTF-8"
 
-	img.SysrootReadOnly = true
-	img.KernelOptionsAppend = append(img.KernelOptionsAppend, "rw")
+	img.OSTreeDeploymentCustomizations.SysrootReadOnly = true
+	img.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(img.OSTreeDeploymentCustomizations.KernelOptionsAppend, "rw")
 
 	img.Platform = t.platform
 	img.Workload = workload
@@ -652,21 +652,21 @@ func iotImage(workload workload.Workload,
 		Name: "fedora-iot",
 	}
 	img.OSName = "fedora-iot"
-	img.LockRoot = true
+	img.OSTreeDeploymentCustomizations.LockRoot = true
 
-	img.KernelOptionsAppend = append(img.KernelOptionsAppend, "coreos.no_persist_ip")
+	img.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(img.OSTreeDeploymentCustomizations.KernelOptionsAppend, "coreos.no_persist_ip")
 	switch img.Platform.GetImageFormat() {
 	case platform.FORMAT_RAW:
-		img.IgnitionPlatform = "metal"
+		img.OSTreeDeploymentCustomizations.IgnitionPlatform = "metal"
 		if bpIgnition := customizations.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
-			img.KernelOptionsAppend = append(img.KernelOptionsAppend, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
+			img.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(img.OSTreeDeploymentCustomizations.KernelOptionsAppend, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
 		}
 	case platform.FORMAT_QCOW2:
-		img.IgnitionPlatform = "qemu"
+		img.OSTreeDeploymentCustomizations.IgnitionPlatform = "qemu"
 	}
 
 	if kopts := customizations.GetKernel(); kopts != nil && kopts.Append != "" {
-		img.KernelOptionsAppend = append(img.KernelOptionsAppend, kopts.Append)
+		img.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(img.OSTreeDeploymentCustomizations.KernelOptionsAppend, kopts.Append)
 	}
 
 	// TODO: move generation into LiveImage
@@ -697,15 +697,15 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 	rawImg := image.NewOSTreeDiskImageFromCommit(commit)
 
 	customizations := bp.Customizations
-	rawImg.FIPS = customizations.GetFIPS()
-	rawImg.Users = users.UsersFromBP(customizations.GetUsers())
-	rawImg.Groups = users.GroupsFromBP(customizations.GetGroups())
+	rawImg.OSTreeDeploymentCustomizations.FIPS = customizations.GetFIPS()
+	rawImg.OSTreeDeploymentCustomizations.Users = users.UsersFromBP(customizations.GetUsers())
+	rawImg.OSTreeDeploymentCustomizations.Groups = users.GroupsFromBP(customizations.GetGroups())
 
-	rawImg.KernelOptionsAppend = []string{"modprobe.blacklist=vc4"}
-	rawImg.Keyboard = "us"
-	rawImg.Locale = "C.UTF-8"
-	rawImg.SysrootReadOnly = true
-	rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, "rw")
+	rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend = []string{"modprobe.blacklist=vc4"}
+	rawImg.OSTreeDeploymentCustomizations.Keyboard = "us"
+	rawImg.OSTreeDeploymentCustomizations.Locale = "C.UTF-8"
+	rawImg.OSTreeDeploymentCustomizations.SysrootReadOnly = true
+	rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend, "rw")
 
 	rawImg.Platform = t.platform
 	rawImg.Workload = workload
@@ -713,12 +713,12 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 		Name: "fedora-iot",
 	}
 	rawImg.OSName = "fedora"
-	rawImg.LockRoot = true
+	rawImg.OSTreeDeploymentCustomizations.LockRoot = true
 
-	rawImg.IgnitionPlatform = "metal"
-	rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, "coreos.no_persist_ip")
+	rawImg.OSTreeDeploymentCustomizations.IgnitionPlatform = "metal"
+	rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend, "coreos.no_persist_ip")
 	if bpIgnition := customizations.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
-		rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
+		rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
 	}
 
 	// TODO: move generation into LiveImage
@@ -731,7 +731,7 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 	rawImg.Filename = t.Filename()
 
 	if kopts := customizations.GetKernel(); kopts != nil && kopts.Append != "" {
-		rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, kopts.Append)
+		rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend, kopts.Append)
 	}
 
 	img := image.NewOSTreeSimplifiedInstaller(rawImg, customizations.InstallationDevice)

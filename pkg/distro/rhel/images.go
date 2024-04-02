@@ -453,26 +453,26 @@ func EdgeRawImage(workload workload.Workload,
 	}
 	img := image.NewOSTreeDiskImageFromCommit(commit)
 
-	img.Users = users.UsersFromBP(customizations.GetUsers())
-	img.Groups = users.GroupsFromBP(customizations.GetGroups())
-	img.FIPS = customizations.GetFIPS()
+	img.OSTreeDeploymentCustomizations.Users = users.UsersFromBP(customizations.GetUsers())
+	img.OSTreeDeploymentCustomizations.Groups = users.GroupsFromBP(customizations.GetGroups())
+	img.OSTreeDeploymentCustomizations.FIPS = customizations.GetFIPS()
 
 	// The kernel options defined on the image type are usually handled in
 	// osCustomiztions() but ostree images don't use OSCustomizations, so we
 	// handle them here separately.
 	if t.KernelOptions != "" {
-		img.KernelOptionsAppend = append(img.KernelOptionsAppend, t.KernelOptions)
+		img.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(img.OSTreeDeploymentCustomizations.KernelOptionsAppend, t.KernelOptions)
 	}
-	img.Keyboard = "us"
-	img.Locale = "C.UTF-8"
+	img.OSTreeDeploymentCustomizations.Keyboard = "us"
+	img.OSTreeDeploymentCustomizations.Locale = "C.UTF-8"
 
 	if common.VersionGreaterThanOrEqual(t.Arch().Distro().OsVersion(), "9.2") || !t.IsRHEL() {
-		img.SysrootReadOnly = true
+		img.OSTreeDeploymentCustomizations.SysrootReadOnly = true
 
-		img.IgnitionPlatform = "metal"
+		img.OSTreeDeploymentCustomizations.IgnitionPlatform = "metal"
 
 		if bpIgnition := customizations.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
-			img.KernelOptionsAppend = append(img.KernelOptionsAppend, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
+			img.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(img.OSTreeDeploymentCustomizations.KernelOptionsAppend, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
 		}
 	}
 
@@ -484,10 +484,10 @@ func EdgeRawImage(workload workload.Workload,
 		ContentURL: options.OSTree.ContentURL,
 	}
 	img.OSName = "redhat"
-	img.LockRoot = true
+	img.OSTreeDeploymentCustomizations.LockRoot = true
 
 	if kopts := customizations.GetKernel(); kopts != nil && kopts.Append != "" {
-		img.KernelOptionsAppend = append(img.KernelOptionsAppend, kopts.Append)
+		img.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(img.OSTreeDeploymentCustomizations.KernelOptionsAppend, kopts.Append)
 	}
 
 	// TODO: move generation into LiveImage
@@ -501,7 +501,7 @@ func EdgeRawImage(workload workload.Workload,
 	img.Compression = t.Compression
 
 	for _, fs := range customizations.GetFilesystems() {
-		img.CustomFilesystems = append(img.CustomFilesystems, fs.Mountpoint)
+		img.OSTreeDeploymentCustomizations.CustomFileSystems = append(img.OSTreeDeploymentCustomizations.CustomFileSystems, fs.Mountpoint)
 	}
 
 	return img, nil
@@ -521,15 +521,15 @@ func EdgeSimplifiedInstallerImage(workload workload.Workload,
 	}
 	rawImg := image.NewOSTreeDiskImageFromCommit(commit)
 
-	rawImg.Users = users.UsersFromBP(customizations.GetUsers())
-	rawImg.Groups = users.GroupsFromBP(customizations.GetGroups())
-	rawImg.FIPS = customizations.GetFIPS()
+	rawImg.OSTreeDeploymentCustomizations.Users = users.UsersFromBP(customizations.GetUsers())
+	rawImg.OSTreeDeploymentCustomizations.Groups = users.GroupsFromBP(customizations.GetGroups())
+	rawImg.OSTreeDeploymentCustomizations.FIPS = customizations.GetFIPS()
 
 	if t.KernelOptions != "" {
-		rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, t.KernelOptions)
+		rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend, t.KernelOptions)
 	}
-	rawImg.Keyboard = "us"
-	rawImg.Locale = "C.UTF-8"
+	rawImg.OSTreeDeploymentCustomizations.Keyboard = "us"
+	rawImg.OSTreeDeploymentCustomizations.Locale = "C.UTF-8"
 
 	rawImg.Platform = t.platform
 	rawImg.Workload = workload
@@ -539,15 +539,15 @@ func EdgeSimplifiedInstallerImage(workload workload.Workload,
 		ContentURL: options.OSTree.ContentURL,
 	}
 	rawImg.OSName = "redhat"
-	rawImg.LockRoot = true
+	rawImg.OSTreeDeploymentCustomizations.LockRoot = true
 
 	if common.VersionGreaterThanOrEqual(t.Arch().Distro().OsVersion(), "9.2") || !t.IsRHEL() {
-		rawImg.SysrootReadOnly = true
+		rawImg.OSTreeDeploymentCustomizations.SysrootReadOnly = true
 
-		rawImg.IgnitionPlatform = "metal"
+		rawImg.OSTreeDeploymentCustomizations.IgnitionPlatform = "metal"
 
 		if bpIgnition := customizations.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
-			rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
+			rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
 		}
 	}
 
@@ -561,11 +561,11 @@ func EdgeSimplifiedInstallerImage(workload workload.Workload,
 	rawImg.Filename = t.Filename()
 
 	for _, fs := range customizations.GetFilesystems() {
-		rawImg.CustomFilesystems = append(rawImg.CustomFilesystems, fs.Mountpoint)
+		rawImg.OSTreeDeploymentCustomizations.CustomFileSystems = append(rawImg.OSTreeDeploymentCustomizations.CustomFileSystems, fs.Mountpoint)
 	}
 
 	if kopts := customizations.GetKernel(); kopts != nil && kopts.Append != "" {
-		rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, kopts.Append)
+		rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend, kopts.Append)
 	}
 
 	img := image.NewOSTreeSimplifiedInstaller(rawImg, customizations.InstallationDevice)
