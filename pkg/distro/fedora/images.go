@@ -262,6 +262,74 @@ func osCustomizations(
 	return osc, nil
 }
 
+func ostreeDeploymentCustomizations(
+	t *imageType,
+	c *blueprint.Customizations) (manifest.OSTreeDeploymentCustomizations, error) {
+
+	if !t.rpmOstree || !t.bootable {
+		return manifest.OSTreeDeploymentCustomizations{}, fmt.Errorf("ostree deployment customizations are only supported for bootable rpm-ostree images")
+	}
+
+	imageConfig := t.getDefaultImageConfig()
+	deploymentConf := manifest.OSTreeDeploymentCustomizations{}
+
+	var kernelOptions []string
+	if t.kernelOptions != "" {
+		kernelOptions = append(kernelOptions, t.kernelOptions)
+	}
+	if bpKernel := c.GetKernel(); bpKernel != nil && bpKernel.Append != "" {
+		kernelOptions = append(kernelOptions, bpKernel.Append)
+	}
+
+	switch t.platform.GetImageFormat() {
+	case platform.FORMAT_RAW:
+		deploymentConf.IgnitionPlatform = "metal"
+		if bpIgnition := c.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
+			kernelOptions = append(kernelOptions, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
+		}
+	case platform.FORMAT_QCOW2:
+		deploymentConf.IgnitionPlatform = "qemu"
+	}
+	deploymentConf.KernelOptionsAppend = kernelOptions
+
+	deploymentConf.FIPS = c.GetFIPS()
+
+	deploymentConf.Users = users.UsersFromBP(c.GetUsers())
+	deploymentConf.Groups = users.GroupsFromBP(c.GetGroups())
+
+	var err error
+	deploymentConf.Directories, err = blueprint.DirectoryCustomizationsToFsNodeDirectories(c.GetDirectories())
+	if err != nil {
+		return manifest.OSTreeDeploymentCustomizations{}, err
+	}
+	deploymentConf.Files, err = blueprint.FileCustomizationsToFsNodeFiles(c.GetFiles())
+	if err != nil {
+		return manifest.OSTreeDeploymentCustomizations{}, err
+	}
+
+	language, keyboard := c.GetPrimaryLocale()
+	if language != nil {
+		deploymentConf.Locale = *language
+	} else if imageConfig.Locale != nil {
+		deploymentConf.Locale = *imageConfig.Locale
+	}
+	if keyboard != nil {
+		deploymentConf.Keyboard = *keyboard
+	} else if imageConfig.Keyboard != nil {
+		deploymentConf.Keyboard = imageConfig.Keyboard.Keymap
+	}
+
+	// TODO: add to ImageConfig and set it from there
+	//deploymentConf.SysrootReadOnly = true
+	//deploymentConf.LockRoot = true
+
+	for _, fs := range c.GetFilesystems() {
+		deploymentConf.CustomFileSystems = append(deploymentConf.CustomFileSystems, fs.Mountpoint)
+	}
+
+	return deploymentConf, nil
+}
+
 // IMAGES
 
 func diskImage(workload workload.Workload,
@@ -625,25 +693,16 @@ func iotImage(workload workload.Workload,
 	img := image.NewOSTreeDiskImageFromCommit(commit)
 
 	customizations := bp.Customizations
-	img.OSTreeDeploymentCustomizations.FIPS = customizations.GetFIPS()
-	img.OSTreeDeploymentCustomizations.Users = users.UsersFromBP(customizations.GetUsers())
-	img.OSTreeDeploymentCustomizations.Groups = users.GroupsFromBP(customizations.GetGroups())
-
-	img.OSTreeDeploymentCustomizations.Directories, err = blueprint.DirectoryCustomizationsToFsNodeDirectories(customizations.GetDirectories())
-	if err != nil {
-		return nil, err
-	}
-	img.OSTreeDeploymentCustomizations.Files, err = blueprint.FileCustomizationsToFsNodeFiles(customizations.GetFiles())
+	deploymentConfig, err := ostreeDeploymentCustomizations(t, customizations)
 	if err != nil {
 		return nil, err
 	}
 
-	img.OSTreeDeploymentCustomizations.KernelOptionsAppend = []string{"modprobe.blacklist=vc4"}
-	img.OSTreeDeploymentCustomizations.Keyboard = "us"
-	img.OSTreeDeploymentCustomizations.Locale = "C.UTF-8"
+	// TODO: move to ImageConfig
+	deploymentConfig.SysrootReadOnly = true
+	deploymentConfig.LockRoot = true
 
-	img.OSTreeDeploymentCustomizations.SysrootReadOnly = true
-	img.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(img.OSTreeDeploymentCustomizations.KernelOptionsAppend, "rw")
+	img.OSTreeDeploymentCustomizations = deploymentConfig
 
 	img.Platform = t.platform
 	img.Workload = workload
@@ -652,22 +711,6 @@ func iotImage(workload workload.Workload,
 		Name: "fedora-iot",
 	}
 	img.OSName = "fedora-iot"
-	img.OSTreeDeploymentCustomizations.LockRoot = true
-
-	img.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(img.OSTreeDeploymentCustomizations.KernelOptionsAppend, "coreos.no_persist_ip")
-	switch img.Platform.GetImageFormat() {
-	case platform.FORMAT_RAW:
-		img.OSTreeDeploymentCustomizations.IgnitionPlatform = "metal"
-		if bpIgnition := customizations.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
-			img.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(img.OSTreeDeploymentCustomizations.KernelOptionsAppend, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
-		}
-	case platform.FORMAT_QCOW2:
-		img.OSTreeDeploymentCustomizations.IgnitionPlatform = "qemu"
-	}
-
-	if kopts := customizations.GetKernel(); kopts != nil && kopts.Append != "" {
-		img.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(img.OSTreeDeploymentCustomizations.KernelOptionsAppend, kopts.Append)
-	}
 
 	// TODO: move generation into LiveImage
 	pt, err := t.getPartitionTable(customizations.GetFilesystems(), options, rng)
@@ -697,15 +740,16 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 	rawImg := image.NewOSTreeDiskImageFromCommit(commit)
 
 	customizations := bp.Customizations
-	rawImg.OSTreeDeploymentCustomizations.FIPS = customizations.GetFIPS()
-	rawImg.OSTreeDeploymentCustomizations.Users = users.UsersFromBP(customizations.GetUsers())
-	rawImg.OSTreeDeploymentCustomizations.Groups = users.GroupsFromBP(customizations.GetGroups())
+	deploymentConfig, err := ostreeDeploymentCustomizations(t, customizations)
+	if err != nil {
+		return nil, err
+	}
 
-	rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend = []string{"modprobe.blacklist=vc4"}
-	rawImg.OSTreeDeploymentCustomizations.Keyboard = "us"
-	rawImg.OSTreeDeploymentCustomizations.Locale = "C.UTF-8"
-	rawImg.OSTreeDeploymentCustomizations.SysrootReadOnly = true
-	rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend, "rw")
+	// TODO: move to ImageConfig
+	deploymentConfig.SysrootReadOnly = true
+	deploymentConfig.LockRoot = true
+
+	rawImg.OSTreeDeploymentCustomizations = deploymentConfig
 
 	rawImg.Platform = t.platform
 	rawImg.Workload = workload
@@ -713,13 +757,6 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 		Name: "fedora-iot",
 	}
 	rawImg.OSName = "fedora"
-	rawImg.OSTreeDeploymentCustomizations.LockRoot = true
-
-	rawImg.OSTreeDeploymentCustomizations.IgnitionPlatform = "metal"
-	rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend, "coreos.no_persist_ip")
-	if bpIgnition := customizations.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
-		rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
-	}
 
 	// TODO: move generation into LiveImage
 	pt, err := t.getPartitionTable(customizations.GetFilesystems(), options, rng)
@@ -729,10 +766,6 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 	rawImg.PartitionTable = pt
 
 	rawImg.Filename = t.Filename()
-
-	if kopts := customizations.GetKernel(); kopts != nil && kopts.Append != "" {
-		rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend = append(rawImg.OSTreeDeploymentCustomizations.KernelOptionsAppend, kopts.Append)
-	}
 
 	img := image.NewOSTreeSimplifiedInstaller(rawImg, customizations.InstallationDevice)
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
