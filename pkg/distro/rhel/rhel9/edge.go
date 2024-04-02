@@ -83,7 +83,7 @@ func mkEdgeOCIImgType(d *rhel.Distribution) *rhel.ImageType {
 	return it
 }
 
-func mkEdgeRawImgType() *rhel.ImageType {
+func mkEdgeRawImgType(d *rhel.Distribution) *rhel.ImageType {
 	it := rhel.NewImageType(
 		"edge-raw-image",
 		"image.raw.xz",
@@ -100,7 +100,12 @@ func mkEdgeRawImgType() *rhel.ImageType {
 	it.DefaultImageConfig = &distro.ImageConfig{
 		Locale: common.ToPtr("en_US.UTF-8"),
 	}
+
 	it.KernelOptions = "modprobe.blacklist=vc4"
+	if common.VersionGreaterThanOrEqual(d.OsVersion(), "9.2") || !d.IsRHEL() {
+		it.KernelOptions += " rw coreos.no_persist_ip"
+	}
+
 	it.DefaultSize = 10 * common.GibiByte
 	it.RPMOSTree = true
 	it.Bootable = true
@@ -136,7 +141,7 @@ func mkEdgeInstallerImgType() *rhel.ImageType {
 	return it
 }
 
-func mkEdgeSimplifiedInstallerImgType() *rhel.ImageType {
+func mkEdgeSimplifiedInstallerImgType(d *rhel.Distribution) *rhel.ImageType {
 	it := rhel.NewImageType(
 		"edge-simplified-installer",
 		"simplified-installer.iso",
@@ -169,10 +174,15 @@ func mkEdgeSimplifiedInstallerImgType() *rhel.ImageType {
 	it.BasePartitionTables = edgeBasePartitionTables
 	it.UnsupportedPartitioningModes = []disk.PartitioningMode{disk.RawPartitioningMode}
 
+	it.KernelOptions = "modprobe.blacklist=vc4"
+	if common.VersionGreaterThanOrEqual(d.OsVersion(), "9.2") || !d.IsRHEL() {
+		it.KernelOptions += " rw coreos.no_persist_ip"
+	}
+
 	return it
 }
 
-func mkEdgeAMIImgType() *rhel.ImageType {
+func mkEdgeAMIImgType(d *rhel.Distribution) *rhel.ImageType {
 	it := rhel.NewImageType(
 		"edge-ami",
 		"image.raw",
@@ -187,7 +197,12 @@ func mkEdgeAMIImgType() *rhel.ImageType {
 	it.DefaultImageConfig = &distro.ImageConfig{
 		Locale: common.ToPtr("en_US.UTF-8"),
 	}
+
 	it.KernelOptions = amiKernelOptions + " modprobe.blacklist=vc4"
+	if common.VersionGreaterThanOrEqual(d.OsVersion(), "9.2") || !d.IsRHEL() {
+		it.KernelOptions += " rw coreos.no_persist_ip"
+	}
+
 	it.DefaultSize = 10 * common.GibiByte
 	it.RPMOSTree = true
 	it.Bootable = true
@@ -198,7 +213,7 @@ func mkEdgeAMIImgType() *rhel.ImageType {
 	return it
 }
 
-func mkEdgeVsphereImgType() *rhel.ImageType {
+func mkEdgeVsphereImgType(d *rhel.Distribution) *rhel.ImageType {
 	it := rhel.NewImageType(
 		"edge-vsphere",
 		"image.vmdk",
@@ -213,7 +228,12 @@ func mkEdgeVsphereImgType() *rhel.ImageType {
 	it.DefaultImageConfig = &distro.ImageConfig{
 		Locale: common.ToPtr("en_US.UTF-8"),
 	}
+
 	it.KernelOptions = "modprobe.blacklist=vc4"
+	if common.VersionGreaterThanOrEqual(d.OsVersion(), "9.2") || !d.IsRHEL() {
+		it.KernelOptions += " rw coreos.no_persist_ip"
+	}
+
 	it.DefaultSize = 10 * common.GibiByte
 	it.RPMOSTree = true
 	it.Bootable = true

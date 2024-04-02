@@ -274,9 +274,9 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 		mkEdgeOCIImgType(rd),
 		mkEdgeCommitImgType(rd),
 		mkEdgeInstallerImgType(),
-		mkEdgeRawImgType(),
+		mkEdgeRawImgType(rd),
 		mkImageInstallerImgType(),
-		mkEdgeAMIImgType(),
+		mkEdgeAMIImgType(rd),
 	)
 
 	x86_64.AddImageTypes(
@@ -287,7 +287,7 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 			BIOS:       true,
 			UEFIVendor: rd.Vendor(),
 		},
-		mkEdgeVsphereImgType(),
+		mkEdgeVsphereImgType(rd),
 	)
 
 	x86_64.AddImageTypes(
@@ -298,7 +298,7 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 			BIOS:       false,
 			UEFIVendor: rd.Vendor(),
 		},
-		mkEdgeSimplifiedInstallerImgType(),
+		mkEdgeSimplifiedInstallerImgType(rd),
 		mkMinimalrawImgType(),
 	)
 
@@ -310,9 +310,9 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 		mkEdgeOCIImgType(rd),
 		mkEdgeCommitImgType(rd),
 		mkEdgeInstallerImgType(),
-		mkEdgeSimplifiedInstallerImgType(),
+		mkEdgeSimplifiedInstallerImgType(rd),
 		mkImageInstallerImgType(),
-		mkEdgeAMIImgType(),
+		mkEdgeAMIImgType(rd),
 	)
 
 	aarch64.AddImageTypes(
@@ -322,7 +322,7 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 			},
 			UEFIVendor: rd.Vendor(),
 		},
-		mkEdgeVsphereImgType(),
+		mkEdgeVsphereImgType(rd),
 	)
 
 	aarch64.AddImageTypes(
@@ -332,7 +332,7 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 			},
 			UEFIVendor: rd.Vendor(),
 		},
-		mkEdgeRawImgType(),
+		mkEdgeRawImgType(rd),
 		mkMinimalrawImgType(),
 	)
 
