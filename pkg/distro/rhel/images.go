@@ -465,14 +465,12 @@ func EdgeRawImage(workload workload.Workload,
 	}
 	img.Keyboard = "us"
 	img.Locale = "C.UTF-8"
-	if common.VersionGreaterThanOrEqual(t.Arch().Distro().OsVersion(), "9.2") || !t.IsRHEL() {
-		img.SysrootReadOnly = true
-		img.KernelOptionsAppend = append(img.KernelOptionsAppend, "rw")
-	}
 
 	if common.VersionGreaterThanOrEqual(t.Arch().Distro().OsVersion(), "9.2") || !t.IsRHEL() {
+		img.SysrootReadOnly = true
+
 		img.IgnitionPlatform = "metal"
-		img.KernelOptionsAppend = append(img.KernelOptionsAppend, "coreos.no_persist_ip")
+
 		if bpIgnition := customizations.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
 			img.KernelOptionsAppend = append(img.KernelOptionsAppend, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
 		}
@@ -527,13 +525,11 @@ func EdgeSimplifiedInstallerImage(workload workload.Workload,
 	rawImg.Groups = users.GroupsFromBP(customizations.GetGroups())
 	rawImg.FIPS = customizations.GetFIPS()
 
-	rawImg.KernelOptionsAppend = []string{"modprobe.blacklist=vc4"}
+	if t.KernelOptions != "" {
+		rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, t.KernelOptions)
+	}
 	rawImg.Keyboard = "us"
 	rawImg.Locale = "C.UTF-8"
-	if common.VersionGreaterThanOrEqual(t.Arch().Distro().OsVersion(), "9.2") || !t.IsRHEL() {
-		rawImg.SysrootReadOnly = true
-		rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, "rw")
-	}
 
 	rawImg.Platform = t.platform
 	rawImg.Workload = workload
@@ -546,8 +542,10 @@ func EdgeSimplifiedInstallerImage(workload workload.Workload,
 	rawImg.LockRoot = true
 
 	if common.VersionGreaterThanOrEqual(t.Arch().Distro().OsVersion(), "9.2") || !t.IsRHEL() {
+		rawImg.SysrootReadOnly = true
+
 		rawImg.IgnitionPlatform = "metal"
-		rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, "coreos.no_persist_ip")
+
 		if bpIgnition := customizations.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
 			rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
 		}
@@ -566,7 +564,6 @@ func EdgeSimplifiedInstallerImage(workload workload.Workload,
 		rawImg.CustomFilesystems = append(rawImg.CustomFilesystems, fs.Mountpoint)
 	}
 
-	// 92+ only
 	if kopts := customizations.GetKernel(); kopts != nil && kopts.Append != "" {
 		rawImg.KernelOptionsAppend = append(rawImg.KernelOptionsAppend, kopts.Append)
 	}
