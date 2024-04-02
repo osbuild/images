@@ -14,7 +14,7 @@ import (
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
-func mkEdgeCommitImgType() *rhel.ImageType {
+func mkEdgeCommitImgType(d *rhel.Distribution) *rhel.ImageType {
 	it := rhel.NewImageType(
 		"edge-commit",
 		"commit.tar",
@@ -29,16 +29,24 @@ func mkEdgeCommitImgType() *rhel.ImageType {
 	)
 
 	it.NameAliases = []string{"rhel-edge-commit"}
+	it.RPMOSTree = true
+
 	it.DefaultImageConfig = &distro.ImageConfig{
 		EnabledServices: edgeServices,
 		SystemdUnit:     systemdUnits,
 	}
-	it.RPMOSTree = true
+	if common.VersionGreaterThanOrEqual(d.OsVersion(), "9.2") || !d.IsRHEL() {
+		it.DefaultImageConfig.EnabledServices = append(
+			it.DefaultImageConfig.EnabledServices,
+			"ignition-firstboot-complete.service",
+			"coreos-ignition-write-issues.service",
+		)
+	}
 
 	return it
 }
 
-func mkEdgeOCIImgType() *rhel.ImageType {
+func mkEdgeOCIImgType(d *rhel.Distribution) *rhel.ImageType {
 	it := rhel.NewImageType(
 		"edge-container",
 		"container.tar",
@@ -58,11 +66,19 @@ func mkEdgeOCIImgType() *rhel.ImageType {
 	)
 
 	it.NameAliases = []string{"rhel-edge-container"}
+	it.RPMOSTree = true
+
 	it.DefaultImageConfig = &distro.ImageConfig{
 		EnabledServices: edgeServices,
 		SystemdUnit:     systemdUnits,
 	}
-	it.RPMOSTree = true
+	if common.VersionGreaterThanOrEqual(d.OsVersion(), "9.2") || !d.IsRHEL() {
+		it.DefaultImageConfig.EnabledServices = append(
+			it.DefaultImageConfig.EnabledServices,
+			"ignition-firstboot-complete.service",
+			"coreos-ignition-write-issues.service",
+		)
+	}
 
 	return it
 }

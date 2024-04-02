@@ -346,15 +346,6 @@ func EdgeCommitImage(workload workload.Workload,
 	img.OSVersion = t.Arch().Distro().OsVersion()
 	img.Filename = t.Filename()
 
-	if common.VersionGreaterThanOrEqual(t.Arch().Distro().OsVersion(), "9.2") || !t.IsRHEL() {
-		img.OSCustomizations.EnabledServices = append(img.OSCustomizations.EnabledServices, "ignition-firstboot-complete.service", "coreos-ignition-write-issues.service")
-	}
-	img.Workload = workload
-
-	img.OSVersion = t.Arch().Distro().OsVersion()
-
-	img.Filename = t.Filename()
-
 	return img, nil
 }
 
@@ -384,10 +375,6 @@ func EdgeContainerImage(workload workload.Workload,
 	img.OSVersion = t.Arch().Distro().OsVersion()
 	img.ExtraContainerPackages = packageSets[ContainerPkgsKey]
 	img.Filename = t.Filename()
-
-	if common.VersionGreaterThanOrEqual(t.Arch().Distro().OsVersion(), "9.2") || !t.IsRHEL() {
-		img.OSCustomizations.EnabledServices = append(img.OSCustomizations.EnabledServices, "ignition-firstboot-complete.service", "coreos-ignition-write-issues.service")
-	}
 
 	return img, nil
 }
