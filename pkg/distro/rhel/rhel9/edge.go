@@ -169,7 +169,7 @@ func mkEdgeSimplifiedInstallerImgType(d *rhel.Distribution) *rhel.ImageType {
 	it.DefaultSize = 10 * common.GibiByte
 	it.RPMOSTree = true
 	it.BootISO = true
-	it.BootISO = true
+	it.Bootable = true
 	it.ISOLabelFn = distroISOLabelFunc
 	it.BasePartitionTables = edgeBasePartitionTables
 	it.UnsupportedPartitioningModes = []disk.PartitioningMode{disk.RawPartitioningMode}
