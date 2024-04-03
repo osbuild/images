@@ -203,7 +203,7 @@ func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet) ([]rpmmd.PackageSpec, erro
 		return nil, err
 	}
 
-	return result.Packages.toRPMMD(repoMap), nil
+	return result.toRPMMD(repoMap), nil
 }
 
 // FetchMetadata returns the list of all the available packages in repos and
@@ -498,7 +498,8 @@ func (s *Solver) makeSearchRequest(repos []rpmmd.RepoConfig, packages []string) 
 
 // convert internal a list of PackageSpecs to the rpmmd equivalent and attach
 // key and subscription information based on the repository configs.
-func (pkgs packageSpecs) toRPMMD(repos map[string]rpmmd.RepoConfig) []rpmmd.PackageSpec {
+func (result depsolveResult) toRPMMD(repos map[string]rpmmd.RepoConfig) []rpmmd.PackageSpec {
+	pkgs := result.Packages
 	rpmDependencies := make([]rpmmd.PackageSpec, len(pkgs))
 	for i, dep := range pkgs {
 		repo, ok := repos[dep.RepoID]
