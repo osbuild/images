@@ -210,6 +210,7 @@ var (
 			Locale:                    common.ToPtr("C.UTF-8"),
 			OSTreeConfSysrootReadOnly: common.ToPtr(true),
 			LockRootUser:              common.ToPtr(true),
+			IgnitionPlatform:          common.ToPtr("metal"),
 		},
 		defaultSize:         10 * common.GibiByte,
 		rpmOstree:           true,
@@ -238,6 +239,7 @@ var (
 			Locale:                    common.ToPtr("C.UTF-8"),
 			OSTreeConfSysrootReadOnly: common.ToPtr(true),
 			LockRootUser:              common.ToPtr(true),
+			IgnitionPlatform:          common.ToPtr("metal"),
 		},
 		defaultSize:         4 * common.GibiByte,
 		rpmOstree:           true,
@@ -267,6 +269,7 @@ var (
 			Locale:                    common.ToPtr("C.UTF-8"),
 			OSTreeConfSysrootReadOnly: common.ToPtr(true),
 			LockRootUser:              common.ToPtr(true),
+			IgnitionPlatform:          common.ToPtr("qemu"),
 		},
 		defaultSize:         10 * common.GibiByte,
 		rpmOstree:           true,
@@ -893,7 +896,6 @@ func newDistro(version int) distro.Distro {
 	aarch64.addImageTypes(
 		&platform.Aarch64{
 			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_RAW,
 				FirmwarePackages: []string{
 					"arm-image-installer",
 					"bcm283x-firmware",

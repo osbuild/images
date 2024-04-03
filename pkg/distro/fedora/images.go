@@ -18,7 +18,6 @@ import (
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/ostree"
-	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
@@ -281,14 +280,15 @@ func ostreeDeploymentCustomizations(
 		kernelOptions = append(kernelOptions, bpKernel.Append)
 	}
 
-	switch t.platform.GetImageFormat() {
-	case platform.FORMAT_RAW:
-		deploymentConf.IgnitionPlatform = "metal"
+	if imageConfig.IgnitionPlatform != nil {
+		deploymentConf.IgnitionPlatform = *imageConfig.IgnitionPlatform
+	}
+
+	switch deploymentConf.IgnitionPlatform {
+	case "metal":
 		if bpIgnition := c.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
 			kernelOptions = append(kernelOptions, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
 		}
-	case platform.FORMAT_QCOW2:
-		deploymentConf.IgnitionPlatform = "qemu"
 	}
 	deploymentConf.KernelOptionsAppend = kernelOptions
 

@@ -88,6 +88,8 @@ type ImageConfig struct {
 	// Lock the root account in the deployment unless the user defined root
 	// user options in the build configuration.
 	LockRootUser *bool
+
+	IgnitionPlatform *string
 }
 
 // InheritFrom inherits unset values from the provided parent configuration and
