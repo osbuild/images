@@ -378,13 +378,11 @@ func (r *repoConfig) Hash() string {
 	return r.repoHash
 }
 
-// Helper function for creating a depsolve request payload.
-// The request defines a sequence of transactions, each depsolving one of the
-// elements of `pkgSets` in the order they appear.  The `repoConfigs` are used
-// as the base repositories for all transactions.  The extra repository configs
-// in `pkgsetsRepos` are used for each of the `pkgSets` with matching index.
-// The length of `pkgsetsRepos` must match the length of `pkgSets` or be empty
-// (nil or empty slice).
+// Helper function for creating a depsolve request payload. The request defines
+// a sequence of transactions, each depsolving one of the elements of `pkgSets`
+// in the order they appear. The repositories are collected in the request
+// arguments indexed by their ID, and each transaction lists the repositories
+// it will use for depsolving.
 //
 // NOTE: Due to implementation limitations of DNF and dnf-json, each package set
 // in the chain must use all of the repositories used by its predecessor.
