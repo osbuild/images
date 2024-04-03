@@ -187,12 +187,14 @@ func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet) ([]rpmmd.PackageSpec, erro
 	}
 	s.cache.updateInfo()
 
-	var result packageSpecs
-	if err := json.Unmarshal(output, &result); err != nil {
+	var result depsolveResult
+	dec := json.NewDecoder(bytes.NewReader(output))
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&result); err != nil {
 		return nil, err
 	}
 
-	return result.toRPMMD(repoMap), nil
+	return result.Packages.toRPMMD(repoMap), nil
 }
 
 // FetchMetadata returns the list of all the available packages in repos and
@@ -591,6 +593,11 @@ type transactionArgs struct {
 }
 
 type packageSpecs []PackageSpec
+
+type depsolveResult struct {
+	Packages packageSpecs          `json:"packages"`
+	Repos    map[string]repoConfig `json:"repos"`
+}
 
 // Package specification
 type PackageSpec struct {
