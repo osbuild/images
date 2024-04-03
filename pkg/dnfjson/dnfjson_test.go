@@ -44,6 +44,18 @@ func TestDepsolver(t *testing.T) {
 			packages: [][]string{{"kernel"}, {"vim-minimal", "tmux", "zsh"}},
 			err:      nil,
 		},
+		"bad-flat": {
+			packages: [][]string{{"this-package-does-not-exist"}},
+			err:      Error{Kind: "MarkingErrors", Reason: "Error occurred when marking packages for installation: Problems in request:\nmissing packages: this-package-does-not-exist"},
+		},
+		"bad-chain": {
+			packages: [][]string{{"kernel"}, {"this-package-does-not-exist"}},
+			err:      Error{Kind: "MarkingErrors", Reason: "Error occurred when marking packages for installation: Problems in request:\nmissing packages: this-package-does-not-exist"},
+		},
+		"bad-chain-part-deux": {
+			packages: [][]string{{"this-package-does-not-exist"}, {"vim-minimal", "tmux", "zsh"}},
+			err:      Error{Kind: "MarkingErrors", Reason: "Error occurred when marking packages for installation: Problems in request:\nmissing packages: this-package-does-not-exist"},
+		},
 	}
 
 	for tcName := range testCases {
@@ -57,8 +69,10 @@ func TestDepsolver(t *testing.T) {
 
 			deps, err := solver.Depsolve(pkgsets)
 			assert.Equal(tc.err, err)
-			exp := expectedResult(s.RepoConfig)
-			assert.Equal(deps, exp)
+			if err == nil {
+				exp := expectedResult(s.RepoConfig)
+				assert.Equal(deps, exp)
+			}
 		})
 	}
 }
