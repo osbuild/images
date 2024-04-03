@@ -1,7 +1,7 @@
 package rpmrepo
 
 import (
-	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -31,18 +31,32 @@ func (trs *testRepoServer) Close() {
 	trs.Server.Close()
 }
 
-// WriteConfig writes the repository config to the file defined by the given
-// path. Assumes the location already exists.
+// WriteConfig writes the repository config to the specified path in .repo
+// format. Assumes the location already exists.
 func (trs *testRepoServer) WriteConfig(path string) {
+	cfgtmpl := `[%[1]s]
+name=%[1]s
+baseurl=%[2]s
+gpgcheck=%[3]s
+sslverify=%[4]s
+`
+
+	checkGPG := "0"
+	if trs.RepoConfig.CheckGPG != nil && *trs.RepoConfig.CheckGPG {
+		checkGPG = "1"
+	}
+	sslverify := "1"
+	if trs.RepoConfig.IgnoreSSL != nil && *trs.RepoConfig.IgnoreSSL {
+		sslverify = "0"
+	}
+
+	config := fmt.Sprintf(cfgtmpl, trs.RepoConfig.Name, trs.RepoConfig.BaseURLs[0], checkGPG, sslverify)
+
 	fp, err := os.Create(path)
 	if err != nil {
 		panic(err)
 	}
-	data, err := json.Marshal(trs.RepoConfig)
-	if err != nil {
-		panic(err)
-	}
-	if _, err := fp.Write(data); err != nil {
+	if _, err := fp.Write([]byte(config)); err != nil {
 		panic(err)
 	}
 }
