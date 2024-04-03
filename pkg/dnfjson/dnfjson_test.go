@@ -26,33 +26,40 @@ func TestDepsolver(t *testing.T) {
 	s := rpmrepo.NewTestServer()
 	defer s.Close()
 
-	assert := assert.New(t)
+	type testCase struct {
+		packages [][]string
+		err      error
+	}
 
 	tmpdir := t.TempDir()
 	solver := NewSolver("platform:el9", "9", "x86_64", "rhel9.0", tmpdir)
 
-	{ // single depsolve
-		pkgsets := []rpmmd.PackageSet{{Include: []string{"kernel", "vim-minimal", "tmux", "zsh"}, Repositories: []rpmmd.RepoConfig{s.RepoConfig}, InstallWeakDeps: true}} // everything you'll ever need
-
-		deps, err := solver.Depsolve(pkgsets)
-		if err != nil {
-			t.Fatal(err)
-		}
-		exp := expectedResult(s.RepoConfig)
-		assert.Equal(deps, exp)
+	testCases := map[string]testCase{
+		"flat": {
+			packages: [][]string{{"kernel", "vim-minimal", "tmux", "zsh"}},
+			err:      nil,
+		},
+		"chain": {
+			// chain depsolve of the same packages in order should produce the same result (at least in this case)
+			packages: [][]string{{"kernel"}, {"vim-minimal", "tmux", "zsh"}},
+			err:      nil,
+		},
 	}
 
-	{ // chain depsolve of the same packages in order should produce the same result (at least in this case)
-		pkgsets := []rpmmd.PackageSet{
-			{Include: []string{"kernel"}, Repositories: []rpmmd.RepoConfig{s.RepoConfig}, InstallWeakDeps: true},
-			{Include: []string{"vim-minimal", "tmux", "zsh"}, Repositories: []rpmmd.RepoConfig{s.RepoConfig}},
-		}
-		deps, err := solver.Depsolve(pkgsets)
-		if err != nil {
-			t.Fatal(err)
-		}
-		exp := expectedResult(s.RepoConfig)
-		assert.Equal(deps, exp)
+	for tcName := range testCases {
+		t.Run(tcName, func(t *testing.T) {
+			assert := assert.New(t)
+			tc := testCases[tcName]
+			pkgsets := make([]rpmmd.PackageSet, len(tc.packages))
+			for idx := range tc.packages {
+				pkgsets[idx] = rpmmd.PackageSet{Include: tc.packages[idx], Repositories: []rpmmd.RepoConfig{s.RepoConfig}, InstallWeakDeps: true}
+			}
+
+			deps, err := solver.Depsolve(pkgsets)
+			assert.Equal(tc.err, err)
+			exp := expectedResult(s.RepoConfig)
+			assert.Equal(deps, exp)
+		})
 	}
 }
 
