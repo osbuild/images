@@ -10,7 +10,7 @@ import (
 	"github.com/osbuild/images/pkg/subscription"
 )
 
-// ImageConfig represents a (default) configuration applied to the image
+// ImageConfig represents a (default) configuration applied to the image payload.
 type ImageConfig struct {
 	Timezone            *string
 	TimeSynchronization *osbuild.ChronyStageOptions
@@ -79,6 +79,15 @@ type ImageConfig struct {
 	// The default OSCAP datastream to use for the image as a fallback,
 	// if no datastream value is provided by the user.
 	DefaultOSCAPDatastream *string
+
+	// OSTree specific configuration
+
+	// Read only sysroot and boot
+	OSTreeConfSysrootReadOnly *bool
+
+	// Lock the root account in the deployment unless the user defined root
+	// user options in the build configuration.
+	LockRootUser *bool
 }
 
 // InheritFrom inherits unset values from the provided parent configuration and
