@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -11,6 +13,7 @@ import (
 	"github.com/osbuild/images/internal/mocks/rpmrepo"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var forceDNF = flag.Bool("force-dnf", false, "force dnf testing, making them fail instead of skip if dnf isn't installed")
@@ -28,32 +31,69 @@ func TestDepsolver(t *testing.T) {
 
 	type testCase struct {
 		packages [][]string
+		repos    []rpmmd.RepoConfig
+		rootDir  string
 		err      error
 	}
 
 	tmpdir := t.TempDir()
 	solver := NewSolver("platform:el9", "9", "x86_64", "rhel9.0", tmpdir)
 
+	rootDir := t.TempDir()
+	reposDir := filepath.Join(rootDir, "etc", "yum.repos.d")
+	require.NoError(t, os.MkdirAll(reposDir, 0777))
+	s.WriteConfig(filepath.Join(reposDir, "test.repo"))
+
 	testCases := map[string]testCase{
 		"flat": {
 			packages: [][]string{{"kernel", "vim-minimal", "tmux", "zsh"}},
+			repos:    []rpmmd.RepoConfig{s.RepoConfig},
 			err:      nil,
 		},
 		"chain": {
 			// chain depsolve of the same packages in order should produce the same result (at least in this case)
 			packages: [][]string{{"kernel"}, {"vim-minimal", "tmux", "zsh"}},
+			repos:    []rpmmd.RepoConfig{s.RepoConfig},
 			err:      nil,
 		},
 		"bad-flat": {
 			packages: [][]string{{"this-package-does-not-exist"}},
+			repos:    []rpmmd.RepoConfig{s.RepoConfig},
 			err:      Error{Kind: "MarkingErrors", Reason: "Error occurred when marking packages for installation: Problems in request:\nmissing packages: this-package-does-not-exist"},
 		},
 		"bad-chain": {
 			packages: [][]string{{"kernel"}, {"this-package-does-not-exist"}},
+			repos:    []rpmmd.RepoConfig{s.RepoConfig},
 			err:      Error{Kind: "MarkingErrors", Reason: "Error occurred when marking packages for installation: Problems in request:\nmissing packages: this-package-does-not-exist"},
 		},
 		"bad-chain-part-deux": {
 			packages: [][]string{{"this-package-does-not-exist"}, {"vim-minimal", "tmux", "zsh"}},
+			repos:    []rpmmd.RepoConfig{s.RepoConfig},
+			err:      Error{Kind: "MarkingErrors", Reason: "Error occurred when marking packages for installation: Problems in request:\nmissing packages: this-package-does-not-exist"},
+		},
+		"flat+dir": {
+			packages: [][]string{{"kernel", "vim-minimal", "tmux", "zsh"}},
+			rootDir:  rootDir,
+			err:      nil,
+		},
+		"chain+dir": {
+			packages: [][]string{{"kernel"}, {"vim-minimal", "tmux", "zsh"}},
+			rootDir:  rootDir,
+			err:      nil,
+		},
+		"bad-flat+dir": {
+			packages: [][]string{{"this-package-does-not-exist"}},
+			rootDir:  rootDir,
+			err:      Error{Kind: "MarkingErrors", Reason: "Error occurred when marking packages for installation: Problems in request:\nmissing packages: this-package-does-not-exist"},
+		},
+		"bad-chain+dir": {
+			packages: [][]string{{"kernel"}, {"this-package-does-not-exist"}},
+			rootDir:  rootDir,
+			err:      Error{Kind: "MarkingErrors", Reason: "Error occurred when marking packages for installation: Problems in request:\nmissing packages: this-package-does-not-exist"},
+		},
+		"bad-chain-part-deux+dir": {
+			packages: [][]string{{"this-package-does-not-exist"}, {"vim-minimal", "tmux", "zsh"}},
+			rootDir:  rootDir,
 			err:      Error{Kind: "MarkingErrors", Reason: "Error occurred when marking packages for installation: Problems in request:\nmissing packages: this-package-does-not-exist"},
 		},
 	}
@@ -64,9 +104,10 @@ func TestDepsolver(t *testing.T) {
 			tc := testCases[tcName]
 			pkgsets := make([]rpmmd.PackageSet, len(tc.packages))
 			for idx := range tc.packages {
-				pkgsets[idx] = rpmmd.PackageSet{Include: tc.packages[idx], Repositories: []rpmmd.RepoConfig{s.RepoConfig}, InstallWeakDeps: true}
+				pkgsets[idx] = rpmmd.PackageSet{Include: tc.packages[idx], Repositories: tc.repos, InstallWeakDeps: true}
 			}
 
+			solver.SetRootDir(tc.rootDir)
 			deps, err := solver.Depsolve(pkgsets)
 			assert.Equal(tc.err, err)
 			if err == nil {
