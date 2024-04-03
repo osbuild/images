@@ -319,9 +319,13 @@ func ostreeDeploymentCustomizations(
 		deploymentConf.Keyboard = imageConfig.Keyboard.Keymap
 	}
 
-	// TODO: add to ImageConfig and set it from there
-	//deploymentConf.SysrootReadOnly = true
-	//deploymentConf.LockRoot = true
+	if imageConfig.OSTreeConfSysrootReadOnly != nil {
+		deploymentConf.SysrootReadOnly = *imageConfig.OSTreeConfSysrootReadOnly
+	}
+
+	if imageConfig.LockRootUser != nil {
+		deploymentConf.LockRoot = *imageConfig.LockRootUser
+	}
 
 	for _, fs := range c.GetFilesystems() {
 		deploymentConf.CustomFileSystems = append(deploymentConf.CustomFileSystems, fs.Mountpoint)
@@ -697,11 +701,6 @@ func iotImage(workload workload.Workload,
 	if err != nil {
 		return nil, err
 	}
-
-	// TODO: move to ImageConfig
-	deploymentConfig.SysrootReadOnly = true
-	deploymentConfig.LockRoot = true
-
 	img.OSTreeDeploymentCustomizations = deploymentConfig
 
 	img.Platform = t.platform
@@ -744,11 +743,6 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 	if err != nil {
 		return nil, err
 	}
-
-	// TODO: move to ImageConfig
-	deploymentConfig.SysrootReadOnly = true
-	deploymentConfig.LockRoot = true
-
 	rawImg.OSTreeDeploymentCustomizations = deploymentConfig
 
 	rawImg.Platform = t.platform

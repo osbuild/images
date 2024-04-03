@@ -207,7 +207,9 @@ var (
 			Keyboard: &osbuild.KeymapStageOptions{
 				Keymap: "us",
 			},
-			Locale: common.ToPtr("C.UTF-8"),
+			Locale:                    common.ToPtr("C.UTF-8"),
+			OSTreeConfSysrootReadOnly: common.ToPtr(true),
+			LockRootUser:              common.ToPtr(true),
 		},
 		defaultSize:         10 * common.GibiByte,
 		rpmOstree:           true,
@@ -233,7 +235,9 @@ var (
 			Keyboard: &osbuild.KeymapStageOptions{
 				Keymap: "us",
 			},
-			Locale: common.ToPtr("C.UTF-8"),
+			Locale:                    common.ToPtr("C.UTF-8"),
+			OSTreeConfSysrootReadOnly: common.ToPtr(true),
+			LockRootUser:              common.ToPtr(true),
 		},
 		defaultSize:         4 * common.GibiByte,
 		rpmOstree:           true,
@@ -260,7 +264,9 @@ var (
 			Keyboard: &osbuild.KeymapStageOptions{
 				Keymap: "us",
 			},
-			Locale: common.ToPtr("C.UTF-8"),
+			Locale:                    common.ToPtr("C.UTF-8"),
+			OSTreeConfSysrootReadOnly: common.ToPtr(true),
+			LockRootUser:              common.ToPtr(true),
 		},
 		defaultSize:         10 * common.GibiByte,
 		rpmOstree:           true,
