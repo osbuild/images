@@ -175,7 +175,7 @@ func (s *Solver) GetCacheDir() string {
 // transactions in a chain.  It returns a list of all packages (with solved
 // dependencies) that will be installed into the system.
 func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet) ([]rpmmd.PackageSpec, error) {
-	req, repoMap, err := s.makeDepsolveRequest(pkgSets)
+	req, rhsmMap, err := s.makeDepsolveRequest(pkgSets)
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +190,7 @@ func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet) ([]rpmmd.PackageSpec, erro
 	}
 	// touch repos to now
 	now := time.Now().Local()
-	for _, r := range repoMap {
+	for _, r := range req.Arguments.Repos {
 		// ignore errors
 		_ = s.cache.touchRepo(r.Hash(), now)
 	}
@@ -203,7 +203,7 @@ func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet) ([]rpmmd.PackageSpec, erro
 		return nil, err
 	}
 
-	return result.toRPMMD(repoMap), nil
+	return result.toRPMMD(rhsmMap), nil
 }
 
 // FetchMetadata returns the list of all the available packages in repos and
@@ -384,22 +384,25 @@ func (r *repoConfig) Hash() string {
 // arguments indexed by their ID, and each transaction lists the repositories
 // it will use for depsolving.
 //
+// The second return value is a map of repository IDs that have RHSM enabled.
+// The RHSM property is not part of the dnf repository configuration so it's
+// returned separately for setting the value on each package that requires it.
+//
 // NOTE: Due to implementation limitations of DNF and dnf-json, each package set
 // in the chain must use all of the repositories used by its predecessor.
 // An error is returned if this requirement is not met.
-func (s *Solver) makeDepsolveRequest(pkgSets []rpmmd.PackageSet) (*Request, map[string]rpmmd.RepoConfig, error) {
-
+func (s *Solver) makeDepsolveRequest(pkgSets []rpmmd.PackageSet) (*Request, map[string]bool, error) {
 	// dedupe repository configurations but maintain order
 	// the order in which repositories are added to the request affects the
 	// order of the dependencies in the result
 	repos := make([]rpmmd.RepoConfig, 0)
-	rpmRepoMap := make(map[string]rpmmd.RepoConfig)
+	rhsmMap := make(map[string]bool)
 
 	for _, ps := range pkgSets {
 		for _, repo := range ps.Repositories {
 			id := repo.Hash()
-			if _, ok := rpmRepoMap[id]; !ok {
-				rpmRepoMap[id] = repo
+			if _, ok := rhsmMap[id]; !ok {
+				rhsmMap[id] = repo.RHSM
 				repos = append(repos, repo)
 			}
 		}
@@ -452,7 +455,7 @@ func (s *Solver) makeDepsolveRequest(pkgSets []rpmmd.PackageSet) (*Request, map[
 		Arguments:        args,
 	}
 
-	return &req, rpmRepoMap, nil
+	return &req, rhsmMap, nil
 }
 
 // Helper function for creating a dump request payload
@@ -498,8 +501,9 @@ func (s *Solver) makeSearchRequest(repos []rpmmd.RepoConfig, packages []string) 
 
 // convert internal a list of PackageSpecs to the rpmmd equivalent and attach
 // key and subscription information based on the repository configs.
-func (result depsolveResult) toRPMMD(repos map[string]rpmmd.RepoConfig) []rpmmd.PackageSpec {
+func (result depsolveResult) toRPMMD(rhsm map[string]bool) []rpmmd.PackageSpec {
 	pkgs := result.Packages
+	repos := result.Repos
 	rpmDependencies := make([]rpmmd.PackageSpec, len(pkgs))
 	for i, dep := range pkgs {
 		repo, ok := repos[dep.RepoID]
@@ -514,16 +518,14 @@ func (result depsolveResult) toRPMMD(repos map[string]rpmmd.RepoConfig) []rpmmd.
 		rpmDependencies[i].Arch = dep.Arch
 		rpmDependencies[i].RemoteLocation = dep.RemoteLocation
 		rpmDependencies[i].Checksum = dep.Checksum
-		if repo.CheckGPG != nil {
-			rpmDependencies[i].CheckGPG = *repo.CheckGPG
-		}
-		if repo.IgnoreSSL != nil {
-			rpmDependencies[i].IgnoreSSL = *repo.IgnoreSSL
+		rpmDependencies[i].CheckGPG = repo.GPGCheck
+		if verify := repo.SSLVerify; verify != nil {
+			rpmDependencies[i].IgnoreSSL = !*verify
 		}
 
 		// The ssl secrets will also be set if rhsm is true,
 		// which should take priority.
-		if repo.RHSM {
+		if rhsm[dep.RepoID] {
 			rpmDependencies[i].Secrets = "org.osbuild.rhsm"
 		} else if repo.SSLClientKey != "" {
 			rpmDependencies[i].Secrets = "org.osbuild.mtls"
