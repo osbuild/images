@@ -109,6 +109,12 @@ func edgeInstallerImgType(rd distribution) imageType {
 		defaultImageConfig: &distro.ImageConfig{
 			EnabledServices: edgeServices(rd),
 		},
+		defaultInstallerConfig: &distro.InstallerConfig{
+			AdditionalDracutModules: []string{
+				"prefixdevname",
+				"prefixdevname-tools",
+			},
+		},
 		rpmOstree:        true,
 		bootISO:          true,
 		image:            edgeInstallerImage,
@@ -143,6 +149,12 @@ func edgeSimplifiedInstallerImgType(rd distribution) imageType {
 			},
 			Locale:       common.ToPtr("C.UTF-8"),
 			LockRootUser: common.ToPtr(true),
+		},
+		defaultInstallerConfig: &distro.InstallerConfig{
+			AdditionalDracutModules: []string{
+				"prefixdevname",
+				"prefixdevname-tools",
+			},
 		},
 		defaultSize:         10 * common.GibiByte,
 		rpmOstree:           true,

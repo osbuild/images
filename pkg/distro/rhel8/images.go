@@ -417,7 +417,15 @@ func imageInstallerImage(workload workload.Workload,
 	img.Users = users.UsersFromBP(customizations.GetUsers())
 	img.Groups = users.GroupsFromBP(customizations.GetGroups())
 
-	img.AdditionalDracutModules = []string{"prefixdevname", "prefixdevname-tools"}
+	installerConfig, err := t.getDefaultInstallerConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	if installerConfig != nil {
+		img.AdditionalDracutModules = installerConfig.AdditionalDracutModules
+	}
+
 	img.AdditionalAnacondaModules = []string{"org.fedoraproject.Anaconda.Modules.Users"}
 
 	if instCust := customizations.GetInstaller(); instCust != nil {
@@ -563,7 +571,15 @@ func edgeInstallerImage(workload workload.Workload,
 	}
 
 	img.SquashfsCompression = "xz"
-	img.AdditionalDracutModules = []string{"prefixdevname", "prefixdevname-tools"}
+
+	installerConfig, err := t.getDefaultInstallerConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	if installerConfig != nil {
+		img.AdditionalDracutModules = installerConfig.AdditionalDracutModules
+	}
 
 	if len(img.Users)+len(img.Groups) > 0 {
 		// only enable the users module if needed
@@ -701,7 +717,15 @@ func edgeSimplifiedInstallerImage(workload workload.Workload,
 	img.Variant = "edge"
 	img.OSName = "redhat"
 	img.OSVersion = d.osVersion
-	img.AdditionalDracutModules = []string{"prefixdevname", "prefixdevname-tools"}
+
+	installerConfig, err := t.getDefaultInstallerConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	if installerConfig != nil {
+		img.AdditionalDracutModules = installerConfig.AdditionalDracutModules
+	}
 
 	return img, nil
 }

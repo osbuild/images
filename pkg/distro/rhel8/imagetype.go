@@ -49,24 +49,25 @@ type packageSetFunc func(t *imageType) rpmmd.PackageSet
 type isoLabelFunc func(t *imageType) string
 
 type imageType struct {
-	arch               *architecture
-	platform           platform.Platform
-	environment        environment.Environment
-	workload           workload.Workload
-	name               string
-	nameAliases        []string
-	filename           string
-	compression        string // TODO: remove from image definition and make it a transport option
-	mimeType           string
-	packageSets        map[string]packageSetFunc
-	defaultImageConfig *distro.ImageConfig
-	kernelOptions      string
-	defaultSize        uint64
-	buildPipelines     []string
-	payloadPipelines   []string
-	exports            []string
-	image              imageFunc
-	isoLabel           isoLabelFunc
+	arch                   *architecture
+	platform               platform.Platform
+	environment            environment.Environment
+	workload               workload.Workload
+	name                   string
+	nameAliases            []string
+	filename               string
+	compression            string // TODO: remove from image definition and make it a transport option
+	mimeType               string
+	packageSets            map[string]packageSetFunc
+	defaultImageConfig     *distro.ImageConfig
+	defaultInstallerConfig *distro.InstallerConfig
+	kernelOptions          string
+	defaultSize            uint64
+	buildPipelines         []string
+	payloadPipelines       []string
+	exports                []string
+	image                  imageFunc
+	isoLabel               isoLabelFunc
 
 	// bootISO: installable ISO
 	bootISO bool
@@ -195,7 +196,14 @@ func (t *imageType) getDefaultImageConfig() *distro.ImageConfig {
 		imageConfig = &distro.ImageConfig{}
 	}
 	return imageConfig.InheritFrom(t.arch.distro.getDefaultImageConfig())
+}
 
+func (t *imageType) getDefaultInstallerConfig() (*distro.InstallerConfig, error) {
+	if !t.bootISO {
+		return nil, fmt.Errorf("image type %q is not an ISO", t.name)
+	}
+
+	return t.defaultInstallerConfig, nil
 }
 
 func (t *imageType) PartitionType() string {

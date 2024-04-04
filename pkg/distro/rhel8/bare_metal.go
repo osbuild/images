@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/osbuild/images/pkg/arch"
+	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
@@ -15,6 +16,12 @@ func imageInstaller() imageType {
 		packageSets: map[string]packageSetFunc{
 			osPkgsKey:        bareMetalPackageSet,
 			installerPkgsKey: anacondaPackageSet,
+		},
+		defaultInstallerConfig: &distro.InstallerConfig{
+			AdditionalDracutModules: []string{
+				"prefixdevname",
+				"prefixdevname-tools",
+			},
 		},
 		rpmOstree:        false,
 		bootISO:          true,
