@@ -5,6 +5,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
+	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
@@ -47,6 +48,19 @@ func mkImageInstallerImgType() *rhel.ImageType {
 	it.BootISO = true
 	it.Bootable = true
 	it.ISOLabelFn = distroISOLabelFunc
+
+	it.DefaultInstallerConfig = &distro.InstallerConfig{
+		AdditionalDracutModules: []string{
+			"nvdimm", // non-volatile DIMM firmware (provides nfit, cuse, and nd_e820)
+			"prefixdevname",
+			"prefixdevname-tools",
+		},
+		AdditionalDrivers: []string{
+			"cuse",
+			"ipmi_devintf",
+			"ipmi_msghandler",
+		},
+	}
 
 	return it
 }

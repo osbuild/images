@@ -64,12 +64,13 @@ type ImageType struct {
 	platform platform.Platform
 	workload workload.Workload
 
-	Environment        environment.Environment
-	NameAliases        []string
-	Compression        string // TODO: remove from image definition and make it a transport option
-	DefaultImageConfig *distro.ImageConfig
-	KernelOptions      string
-	DefaultSize        uint64
+	Environment            environment.Environment
+	NameAliases            []string
+	Compression            string // TODO: remove from image definition and make it a transport option
+	DefaultImageConfig     *distro.ImageConfig
+	DefaultInstallerConfig *distro.InstallerConfig
+	KernelOptions          string
+	DefaultSize            uint64
 
 	// bootISO: installable ISO
 	BootISO bool
@@ -203,6 +204,14 @@ func (t *ImageType) getDefaultImageConfig() *distro.ImageConfig {
 	}
 	return imageConfig.InheritFrom(t.arch.distro.GetDefaultImageConfig())
 
+}
+
+func (t *ImageType) getDefaultInstallerConfig() (*distro.InstallerConfig, error) {
+	if !t.BootISO {
+		return nil, fmt.Errorf("image type %q is not an ISO", t.name)
+	}
+
+	return t.DefaultInstallerConfig, nil
 }
 
 func (t *ImageType) PartitionType() string {
