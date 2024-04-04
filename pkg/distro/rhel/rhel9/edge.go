@@ -142,6 +142,18 @@ func mkEdgeInstallerImgType() *rhel.ImageType {
 		Locale:          common.ToPtr("en_US.UTF-8"),
 		EnabledServices: edgeServices,
 	}
+	it.DefaultInstallerConfig = &distro.InstallerConfig{
+		AdditionalDracutModules: []string{
+			"nvdimm", // non-volatile DIMM firmware (provides nfit, cuse, and nd_e820)
+			"prefixdevname",
+			"prefixdevname-tools",
+		},
+		AdditionalDrivers: []string{
+			"cuse",
+			"ipmi_devintf",
+			"ipmi_msghandler",
+		},
+	}
 	it.RPMOSTree = true
 	it.BootISO = true
 	it.ISOLabelFn = distroISOLabelFunc
@@ -182,6 +194,13 @@ func mkEdgeSimplifiedInstallerImgType(d *rhel.Distribution) *rhel.ImageType {
 	if common.VersionGreaterThanOrEqual(d.OsVersion(), "9.2") || !d.IsRHEL() {
 		it.DefaultImageConfig.OSTreeConfSysrootReadOnly = common.ToPtr(true)
 		it.DefaultImageConfig.IgnitionPlatform = common.ToPtr("metal")
+	}
+
+	it.DefaultInstallerConfig = &distro.InstallerConfig{
+		AdditionalDracutModules: []string{
+			"prefixdevname",
+			"prefixdevname-tools",
+		},
 	}
 
 	it.DefaultSize = 10 * common.GibiByte
