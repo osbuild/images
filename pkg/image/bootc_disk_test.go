@@ -11,6 +11,7 @@ import (
 
 	"github.com/osbuild/images/internal/testdisk"
 	"github.com/osbuild/images/pkg/container"
+	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/image"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/platform"
@@ -38,6 +39,8 @@ func makeFakeDigest(t *testing.T) string {
 type bootcDiskImageTestOpts struct {
 	ImageFormat platform.ImageFormat
 	BIOS        bool
+	SELinux     string
+	Users       []users.User
 
 	KernelOptionsAppend []string
 }
@@ -70,6 +73,8 @@ func makeBootcDiskImageOsbuildManifest(t *testing.T, opts *bootcDiskImageTestOpt
 	img.Platform = makeFakePlatform(opts)
 	img.PartitionTable = testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi")
 	img.KernelOptionsAppend = opts.KernelOptionsAppend
+	img.Users = opts.Users
+	img.SELinux = opts.SELinux
 
 	m := &manifest.Manifest{}
 	runi := &runner.Fedora{}
@@ -181,4 +186,43 @@ func TestBootcDiskImageExportPipelines(t *testing.T) {
 	// tar pipeline for ova
 	tarPipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "archive")
 	require.NotNil(tarPipeline)
+}
+
+func TestBootcDiskImageInstantiateUsers(t *testing.T) {
+	for _, withUsers := range []bool{true, false} {
+		opts := &bootcDiskImageTestOpts{}
+		if withUsers {
+			opts.Users = []users.User{{Name: "foo"}}
+		}
+		osbuildManifest := makeBootcDiskImageOsbuildManifest(t, opts)
+		imagePipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "image")
+		require.NotNil(t, imagePipeline)
+		usersStage := findStageFromOsbuildPipeline(t, imagePipeline, "org.osbuild.users")
+		if withUsers {
+			require.NotNil(t, usersStage)
+		} else {
+			require.Nil(t, usersStage)
+		}
+	}
+}
+
+func TestBootcDiskImageInstantiateSELinuxForUsers(t *testing.T) {
+	for _, withSELinux := range []string{"", "targeted"} {
+		opts := &bootcDiskImageTestOpts{
+			Users: []users.User{
+				{Name: "foo"},
+			},
+			SELinux: withSELinux,
+		}
+		osbuildManifest := makeBootcDiskImageOsbuildManifest(t, opts)
+
+		imagePipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "image")
+		require.NotNil(t, imagePipeline)
+		selinuxStage := findStageFromOsbuildPipeline(t, imagePipeline, "org.osbuild.selinux")
+		if withSELinux != "" {
+			require.NotNil(t, selinuxStage)
+		} else {
+			require.Nil(t, selinuxStage)
+		}
+	}
 }
