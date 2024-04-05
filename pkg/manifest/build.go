@@ -235,7 +235,11 @@ func (p *BuildrootFromContainer) serialize() osbuild.Pipeline {
 	pipeline.Runner = p.runner.String()
 
 	image := osbuild.NewContainersInputForSingleSource(p.containerSpecs[0])
-	stage, err := osbuild.NewContainerDeployStage(image, &osbuild.ContainerDeployOptions{})
+	options := &osbuild.ContainerDeployOptions{
+		Exclude: []string{"/sysroot"},
+	}
+
+	stage, err := osbuild.NewContainerDeployStage(image, options)
 	if err != nil {
 		panic(err)
 	}
@@ -243,7 +247,6 @@ func (p *BuildrootFromContainer) serialize() osbuild.Pipeline {
 	pipeline.AddStage(osbuild.NewSELinuxStage(
 		&osbuild.SELinuxStageOptions{
 			FileContexts: "etc/selinux/targeted/contexts/files/file_contexts",
-			ExcludePaths: []string{"/sysroot"},
 			Labels:       p.getSELinuxLabels(),
 		},
 	))

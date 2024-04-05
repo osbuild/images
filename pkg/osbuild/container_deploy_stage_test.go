@@ -70,14 +70,6 @@ func TestContainersDeployStageOptionsJson(t *testing.T) {
 	assert.Equal(t, string(json), expectedJson)
 }
 
-func TestContainersDeployStageEmptyOptionsJson(t *testing.T) {
-	expectedJson := `{}`
-	cdi := osbuild.ContainerDeployOptions{}
-	json, err := json.MarshalIndent(cdi, "", "        ")
-	require.Nil(t, err)
-	assert.Equal(t, string(json), expectedJson)
-}
-
 func TestContainersDeployStageInputsValidate(t *testing.T) {
 	type testCase struct {
 		inputs osbuild.ContainerDeployInputs

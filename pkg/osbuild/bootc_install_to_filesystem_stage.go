@@ -4,15 +4,6 @@ import (
 	"fmt"
 )
 
-type BootcInstallToFilesystemOptions struct {
-	// options for --root-ssh-authorized-keys
-	RootSSHAuthorizedKeys []string `json:"root-ssh-authorized-keys,omitempty"`
-	// options for --karg
-	Kargs []string `json:"kernel-args,omitempty"`
-}
-
-func (BootcInstallToFilesystemOptions) isStageOptions() {}
-
 // NewBootcInstallToFilesystem creates a new stage for the
 // org.osbuild.bootc.install-to-filesystem stage.
 //
@@ -21,18 +12,17 @@ func (BootcInstallToFilesystemOptions) isStageOptions() {}
 // bootc/bootupd find and install all required bootloader bits.
 //
 // The mounts input should be generated with GenBootupdDevicesMounts.
-func NewBootcInstallToFilesystemStage(options *BootcInstallToFilesystemOptions, inputs ContainerDeployInputs, devices map[string]Device, mounts []Mount) (*Stage, error) {
+func NewBootcInstallToFilesystemStage(inputs ContainersInput, devices map[string]Device, mounts []Mount) (*Stage, error) {
 	if err := validateBootupdMounts(mounts); err != nil {
 		return nil, err
 	}
 
-	if len(inputs.Images.References) != 1 {
-		return nil, fmt.Errorf("expected exactly one container input but got: %v (%v)", len(inputs.Images.References), inputs.Images.References)
+	if len(inputs.References) != 1 {
+		return nil, fmt.Errorf("expected exactly one container input but got: %v (%v)", len(inputs.References), inputs.References)
 	}
 
 	return &Stage{
 		Type:    "org.osbuild.bootc.install-to-filesystem",
-		Options: options,
 		Inputs:  inputs,
 		Devices: devices,
 		Mounts:  mounts,
