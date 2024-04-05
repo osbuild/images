@@ -1,13 +1,11 @@
 package manifest_test
 
 import (
-	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osbuild/images/internal/assertx"
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/testdisk"
 	"github.com/osbuild/images/pkg/container"
@@ -58,7 +56,9 @@ func TestRawBootcImageSerialize(t *testing.T) {
 	bootcInst := manifest.FindStage("org.osbuild.bootc.install-to-filesystem", imagePipeline.Stages)
 	require.NotNil(t, bootcInst)
 	opts := bootcInst.Options.(*osbuild.BootcInstallToFilesystemOptions)
-	assert.Equal(t, []string{"some-ssh-key"}, opts.RootSSHAuthorizedKeys)
+	// Note that the root account is customized via the "users" stage
+	// (mostly for uniformity)
+	assert.Equal(t, len(opts.RootSSHAuthorizedKeys), 0)
 	assert.Equal(t, []string{"karg1", "karg2"}, opts.Kargs)
 }
 
@@ -76,38 +76,87 @@ func TestRawBootcImageSerializeMountsValidated(t *testing.T) {
 	})
 }
 
-func TestRawBootcImageSerializeValidatesUsers(t *testing.T) {
+func findMountIdx(mounts []osbuild.Mount, mntType string) int {
+	for i, mnt := range mounts {
+		if mnt.Type == mntType {
+			return i
+		}
+	}
+	return -1
+}
+
+func makeFakeRawBootcPipeline() *manifest.RawBootcImage {
 	mani := manifest.New()
 	runner := &runner.Linux{}
 	build := manifest.NewBuildFromContainer(&mani, runner, nil, nil)
-
 	rawBootcPipeline := manifest.NewRawBootcImage(build, nil, nil)
 	rawBootcPipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi")
 	rawBootcPipeline.SerializeStart(nil, []container.Spec{{Source: "foo"}}, nil, nil)
 
+	return rawBootcPipeline
+}
+
+func TestRawBootcImageSerializeCreateUsersOptions(t *testing.T) {
+	rawBootcPipeline := makeFakeRawBootcPipeline()
+
 	for _, tc := range []struct {
-		users       []users.User
-		expectedErr string
+		users              []users.User
+		expectedUsersStage bool
 	}{
-		// good
-		{nil, ""},
-		{[]users.User{{Name: "root"}}, ""},
-		{[]users.User{{Name: "root", Key: common.ToPtr("some-key")}}, ""},
-		// bad
-		{[]users.User{{Name: "foo"}},
-			"raw bootc image only supports the root user, got.*"},
-		{[]users.User{{Name: "root"}, {Name: "foo"}},
-			"raw bootc image only supports a single root key for user customization, got.*"},
+		{nil, false},
+		{[]users.User{{Name: "root"}}, true},
+		{[]users.User{{Name: "foo"}}, true},
+		{[]users.User{{Name: "root"}, {Name: "foo"}}, true},
 	} {
 		rawBootcPipeline.Users = tc.users
 
-		if tc.expectedErr == "" {
-			rawBootcPipeline.Serialize()
+		pipeline := rawBootcPipeline.Serialize()
+		usersStage := manifest.FindStage("org.osbuild.users", pipeline.Stages)
+		if tc.expectedUsersStage {
+			// ensure options got passed
+			require.NotNil(t, usersStage)
+			userOptions := usersStage.Options.(*osbuild.UsersStageOptions)
+			for _, user := range tc.users {
+				assert.NotNil(t, userOptions.Users[user.Name])
+			}
 		} else {
-			expectedErr := regexp.MustCompile(tc.expectedErr)
-			assertx.PanicsWithErrorRegexp(t, expectedErr, func() {
-				rawBootcPipeline.Serialize()
-			})
+			require.Nil(t, usersStage)
+		}
+	}
+}
+
+func assertBootcDeploymentAndBindMount(t *testing.T, stage *osbuild.Stage) {
+	// check for bind mount to deployment is there so
+	// that the customization actually works
+	deploymentMntIdx := findMountIdx(stage.Mounts, "org.osbuild.ostree.deployment")
+	assert.True(t, deploymentMntIdx >= 0)
+	bindMntIdx := findMountIdx(stage.Mounts, "org.osbuild.bind")
+	assert.True(t, bindMntIdx >= 0)
+	// order is important, bind must happen *after* deploy
+	assert.True(t, bindMntIdx > deploymentMntIdx)
+}
+
+func TestRawBootcImageSerializeCustomizationGenCorrectStages(t *testing.T) {
+	rawBootcPipeline := makeFakeRawBootcPipeline()
+
+	for _, tc := range []struct {
+		users   []users.User
+		SELinux string
+
+		expectedStages []string
+	}{
+		{nil, "", nil},
+		{[]users.User{{Name: "foo"}}, "", []string{"org.osbuild.mkdir", "org.osbuild.users"}},
+		{[]users.User{{Name: "foo"}}, "targeted", []string{"org.osbuild.mkdir", "org.osbuild.users", "org.osbuild.selinux"}},
+	} {
+		rawBootcPipeline.Users = tc.users
+		rawBootcPipeline.SELinux = tc.SELinux
+
+		pipeline := rawBootcPipeline.Serialize()
+		for _, expectedStage := range tc.expectedStages {
+			stage := manifest.FindStage(expectedStage, pipeline.Stages)
+			assert.NotNil(t, stage)
+			assertBootcDeploymentAndBindMount(t, stage)
 		}
 	}
 }

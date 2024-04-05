@@ -2,7 +2,9 @@ package manifest
 
 import (
 	"fmt"
+	"os"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/artifact"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/users"
@@ -31,11 +33,13 @@ type RawBootcImage struct {
 
 	KernelOptionsAppend []string
 
-	// "Users" is a bit misleading as only root and its ssh key is supported
-	// right now because that is all that bootc gives us by default but that
-	// will most likely change over time.
-	// See https://github.com/containers/bootc/pull/267
+	// The users to put into the image, note that /etc/paswd (and friends)
+	// will become unmanaged state by bootc when used
 	Users []users.User
+
+	// SELinux policy, when set it enables the labeling of the tree with the
+	// selected profile
+	SELinux string
 }
 
 func (p RawBootcImage) Filename() string {
@@ -88,13 +92,6 @@ func (p *RawBootcImage) serialize() osbuild.Pipeline {
 		panic(fmt.Errorf("no partition table in live image"))
 	}
 
-	if len(p.Users) > 1 {
-		panic(fmt.Errorf("raw bootc image only supports a single root key for user customization, got %v", p.Users))
-	}
-	if len(p.Users) == 1 && p.Users[0].Name != "root" {
-		panic(fmt.Errorf("raw bootc image only supports the root user, got %v", p.Users))
-	}
-
 	for _, stage := range osbuild.GenImagePrepareStages(pt, p.filename, osbuild.PTSfdisk) {
 		pipeline.AddStage(stage)
 	}
@@ -104,9 +101,6 @@ func (p *RawBootcImage) serialize() osbuild.Pipeline {
 	}
 	opts := &osbuild.BootcInstallToFilesystemOptions{
 		Kargs: p.KernelOptionsAppend,
-	}
-	if len(p.Users) == 1 && p.Users[0].Key != nil {
-		opts.RootSSHAuthorizedKeys = []string{*p.Users[0].Key}
 	}
 	inputs := osbuild.ContainerDeployInputs{
 		Images: osbuild.NewContainersInputForSingleSource(p.containerSpecs[0]),
@@ -121,15 +115,54 @@ func (p *RawBootcImage) serialize() osbuild.Pipeline {
 	}
 	pipeline.AddStage(st)
 
-	// XXX: there is no way right now to support any customizations,
-	// we cannot touch the filesystem after bootc installed it or
-	// we risk messing with it's selinux labels or future fsverity
-	// magic.  Once we have a mechanism like --copy-etc from
-	// https://github.com/containers/bootc/pull/267 things should
-	// be a bit better
-
 	for _, stage := range osbuild.GenImageFinishStages(pt, p.filename) {
 		pipeline.AddStage(stage)
+	}
+
+	// customize the image
+	if len(p.Users) > 0 {
+		// build common devices/mounts first
+		devices, mounts, err := osbuild.GenBootupdDevicesMounts(p.filename, p.PartitionTable)
+		if err != nil {
+			panic(fmt.Sprintf("gen devices stage failed %v", err))
+		}
+		mounts = append(mounts, *osbuild.NewOSTreeDeploymentMountDefault("ostree.deployment", osbuild.OSTreeMountSourceMount))
+		mounts = append(mounts, *osbuild.NewBindMount("bind-ostree-deployment-to-tree", "mount://", "tree://"))
+
+		// ensure /var/home is available
+		mkdirStage := osbuild.NewMkdirStage(&osbuild.MkdirStageOptions{
+			Paths: []osbuild.MkdirStagePath{
+				{
+					Path:    "/var/home",
+					Mode:    common.ToPtr(os.FileMode(0755)),
+					ExistOk: true,
+				},
+			},
+		})
+		mkdirStage.Mounts = mounts
+		mkdirStage.Devices = devices
+		pipeline.AddStage(mkdirStage)
+
+		// add the users
+		usersStage, err := osbuild.GenUsersStage(p.Users, false)
+		if err != nil {
+			panic(fmt.Sprintf("user stage failed %v", err))
+		}
+		usersStage.Mounts = mounts
+		usersStage.Devices = devices
+		pipeline.AddStage(usersStage)
+
+		// add selinux
+		if p.SELinux != "" {
+			opts := &osbuild.SELinuxStageOptions{
+				FileContexts: fmt.Sprintf("etc/selinux/%s/contexts/files/file_contexts", p.SELinux),
+				ExcludePaths: []string{"/sysroot"},
+			}
+			selinuxStage := osbuild.NewSELinuxStage(opts)
+			selinuxStage.Mounts = mounts
+			selinuxStage.Devices = devices
+			pipeline.AddStage(selinuxStage)
+		}
 	}
 
 	return pipeline
