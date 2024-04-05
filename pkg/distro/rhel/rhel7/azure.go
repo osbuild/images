@@ -5,31 +5,39 @@ import (
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/subscription"
 )
 
-var azureRhuiImgType = imageType{
-	name:        "azure-rhui",
-	filename:    "disk.vhd.xz",
-	mimeType:    "application/xz",
-	compression: "xz",
-	packageSets: map[string]packageSetFunc{
-		osPkgsKey: azureRhuiCommonPackageSet,
-	},
-	packageSetChains: map[string][]string{
-		osPkgsKey: {osPkgsKey, blueprintPkgsKey},
-	},
-	defaultImageConfig:  azureDefaultImgConfig,
-	kernelOptions:       "ro crashkernel=auto console=tty1 console=ttyS0 earlyprintk=ttyS0 rootdelay=300 scsi_mod.use_blk_mq=y",
-	bootable:            true,
-	defaultSize:         64 * common.GibiByte,
-	image:               diskImage,
-	buildPipelines:      []string{"build"},
-	payloadPipelines:    []string{"os", "image", "vpc", "xz"},
-	exports:             []string{"xz"},
-	basePartitionTables: azureRhuiBasePartitionTables,
+func mkAzureRhuiImgType() *rhel.ImageType {
+	it := rhel.NewImageType(
+		"azure-rhui",
+		"disk.vhd.xz",
+		"application/xz",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: azureRhuiCommonPackageSet,
+		},
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "vpc", "xz"},
+		[]string{"xz"},
+	)
+
+	// all RHEL 7 images should use sgdisk
+	it.DiskImagePartTool = common.ToPtr(osbuild.PTSgdisk)
+	// RHEL 7 qemu vpc subformat does not support force_size
+	it.DiskImageVPCForceSize = common.ToPtr(false)
+
+	it.Compression = "xz"
+	it.KernelOptions = "ro crashkernel=auto console=tty1 console=ttyS0 earlyprintk=ttyS0 rootdelay=300 scsi_mod.use_blk_mq=y"
+	it.DefaultImageConfig = azureDefaultImgConfig
+	it.Bootable = true
+	it.DefaultSize = 64 * common.GibiByte
+	it.BasePartitionTables = azureRhuiBasePartitionTables
+
+	return it
 }
 
 var azureDefaultImgConfig = &distro.ImageConfig{
@@ -218,7 +226,7 @@ var azureDefaultImgConfig = &distro.ImageConfig{
 	DefaultTarget: common.ToPtr("multi-user.target"),
 }
 
-func azureRhuiCommonPackageSet(t *imageType) rpmmd.PackageSet {
+func azureRhuiCommonPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	ps := rpmmd.PackageSet{
 		Include: []string{
 			"@base",
@@ -261,7 +269,7 @@ func azureRhuiCommonPackageSet(t *imageType) rpmmd.PackageSet {
 		},
 	}
 
-	if t.arch.distro.isRHEL() {
+	if t.IsRHEL() {
 		ps = ps.Append(rpmmd.PackageSet{
 			Include: []string{
 				"insights-client",
@@ -272,113 +280,119 @@ func azureRhuiCommonPackageSet(t *imageType) rpmmd.PackageSet {
 	return ps
 }
 
-var azureRhuiBasePartitionTables = distro.BasePartitionTableMap{
-	arch.ARCH_X86_64.String(): disk.PartitionTable{
-		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
-		Type: "gpt",
-		Size: 64 * common.GibiByte,
-		Partitions: []disk.Partition{
-			{
-				Size: 500 * common.MebiByte,
-				Type: disk.EFISystemPartitionGUID,
-				UUID: disk.EFISystemPartitionUUID,
-				Payload: &disk.Filesystem{
-					Type:         "vfat",
-					UUID:         disk.EFIFilesystemUUID,
-					Mountpoint:   "/boot/efi",
-					FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
-					FSTabFreq:    0,
-					FSTabPassNo:  2,
+func azureRhuiBasePartitionTables(t *rhel.ImageType) (disk.PartitionTable, bool) {
+	switch t.Arch().Name() {
+	case arch.ARCH_X86_64.String():
+		return disk.PartitionTable{
+			UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
+			Type: "gpt",
+			Size: 64 * common.GibiByte,
+			Partitions: []disk.Partition{
+				{
+					Size: 500 * common.MebiByte,
+					Type: disk.EFISystemPartitionGUID,
+					UUID: disk.EFISystemPartitionUUID,
+					Payload: &disk.Filesystem{
+						Type:         "vfat",
+						UUID:         disk.EFIFilesystemUUID,
+						Mountpoint:   "/boot/efi",
+						FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+						FSTabFreq:    0,
+						FSTabPassNo:  2,
+					},
 				},
-			},
-			{
-				Size: 500 * common.MebiByte,
-				Type: disk.FilesystemDataGUID,
-				UUID: disk.FilesystemDataUUID,
-				Payload: &disk.Filesystem{
-					Type:         "xfs",
-					Mountpoint:   "/boot",
-					FSTabOptions: "defaults",
-					FSTabFreq:    0,
-					FSTabPassNo:  0,
+				{
+					Size: 500 * common.MebiByte,
+					Type: disk.FilesystemDataGUID,
+					UUID: disk.FilesystemDataUUID,
+					Payload: &disk.Filesystem{
+						Type:         "xfs",
+						Mountpoint:   "/boot",
+						FSTabOptions: "defaults",
+						FSTabFreq:    0,
+						FSTabPassNo:  0,
+					},
 				},
-			},
-			{
-				Size:     2 * common.MebiByte,
-				Bootable: true,
-				Type:     disk.BIOSBootPartitionGUID,
-				UUID:     disk.BIOSBootPartitionUUID,
-			},
-			{
-				Type: disk.LVMPartitionGUID,
-				UUID: disk.RootPartitionUUID,
-				Payload: &disk.LVMVolumeGroup{
-					Name:        "rootvg",
-					Description: "built with lvm2 and osbuild",
-					LogicalVolumes: []disk.LVMLogicalVolume{
-						{
-							Size: 1 * common.GibiByte,
-							Name: "homelv",
-							Payload: &disk.Filesystem{
-								Type:         "xfs",
-								Label:        "home",
-								Mountpoint:   "/home",
-								FSTabOptions: "defaults",
-								FSTabFreq:    0,
-								FSTabPassNo:  0,
+				{
+					Size:     2 * common.MebiByte,
+					Bootable: true,
+					Type:     disk.BIOSBootPartitionGUID,
+					UUID:     disk.BIOSBootPartitionUUID,
+				},
+				{
+					Type: disk.LVMPartitionGUID,
+					UUID: disk.RootPartitionUUID,
+					Payload: &disk.LVMVolumeGroup{
+						Name:        "rootvg",
+						Description: "built with lvm2 and osbuild",
+						LogicalVolumes: []disk.LVMLogicalVolume{
+							{
+								Size: 1 * common.GibiByte,
+								Name: "homelv",
+								Payload: &disk.Filesystem{
+									Type:         "xfs",
+									Label:        "home",
+									Mountpoint:   "/home",
+									FSTabOptions: "defaults",
+									FSTabFreq:    0,
+									FSTabPassNo:  0,
+								},
 							},
-						},
-						{
-							Size: 2 * common.GibiByte,
-							Name: "rootlv",
-							Payload: &disk.Filesystem{
-								Type:         "xfs",
-								Label:        "root",
-								Mountpoint:   "/",
-								FSTabOptions: "defaults",
-								FSTabFreq:    0,
-								FSTabPassNo:  0,
+							{
+								Size: 2 * common.GibiByte,
+								Name: "rootlv",
+								Payload: &disk.Filesystem{
+									Type:         "xfs",
+									Label:        "root",
+									Mountpoint:   "/",
+									FSTabOptions: "defaults",
+									FSTabFreq:    0,
+									FSTabPassNo:  0,
+								},
 							},
-						},
-						{
-							Size: 2 * common.GibiByte,
-							Name: "tmplv",
-							Payload: &disk.Filesystem{
-								Type:         "xfs",
-								Label:        "tmp",
-								Mountpoint:   "/tmp",
-								FSTabOptions: "defaults",
-								FSTabFreq:    0,
-								FSTabPassNo:  0,
+							{
+								Size: 2 * common.GibiByte,
+								Name: "tmplv",
+								Payload: &disk.Filesystem{
+									Type:         "xfs",
+									Label:        "tmp",
+									Mountpoint:   "/tmp",
+									FSTabOptions: "defaults",
+									FSTabFreq:    0,
+									FSTabPassNo:  0,
+								},
 							},
-						},
-						{
-							Size: 10 * common.GibiByte,
-							Name: "usrlv",
-							Payload: &disk.Filesystem{
-								Type:         "xfs",
-								Label:        "usr",
-								Mountpoint:   "/usr",
-								FSTabOptions: "defaults",
-								FSTabFreq:    0,
-								FSTabPassNo:  0,
+							{
+								Size: 10 * common.GibiByte,
+								Name: "usrlv",
+								Payload: &disk.Filesystem{
+									Type:         "xfs",
+									Label:        "usr",
+									Mountpoint:   "/usr",
+									FSTabOptions: "defaults",
+									FSTabFreq:    0,
+									FSTabPassNo:  0,
+								},
 							},
-						},
-						{
-							Size: 10 * common.GibiByte, // firedrill: 8 GB
-							Name: "varlv",
-							Payload: &disk.Filesystem{
-								Type:         "xfs",
-								Label:        "var",
-								Mountpoint:   "/var",
-								FSTabOptions: "defaults",
-								FSTabFreq:    0,
-								FSTabPassNo:  0,
+							{
+								Size: 10 * common.GibiByte, // firedrill: 8 GB
+								Name: "varlv",
+								Payload: &disk.Filesystem{
+									Type:         "xfs",
+									Label:        "var",
+									Mountpoint:   "/var",
+									FSTabOptions: "defaults",
+									FSTabFreq:    0,
+									FSTabPassNo:  0,
+								},
 							},
 						},
 					},
 				},
 			},
-		},
-	},
+		}, true
+
+	default:
+		return disk.PartitionTable{}, false
+	}
 }
