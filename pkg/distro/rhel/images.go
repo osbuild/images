@@ -285,6 +285,10 @@ func osCustomizations(
 	osc.Files = append(osc.Files, imageConfig.Files...)
 	osc.Directories = append(osc.Directories, imageConfig.Directories...)
 
+	if imageConfig.NoBLS != nil {
+		osc.NoBLS = *imageConfig.NoBLS
+	}
+
 	return osc, nil
 }
 

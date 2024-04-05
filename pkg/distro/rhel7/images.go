@@ -226,6 +226,10 @@ func osCustomizations(
 	osc.Files = append(osc.Files, imageConfig.Files...)
 	osc.Directories = append(osc.Directories, imageConfig.Directories...)
 
+	if imageConfig.NoBLS != nil {
+		osc.NoBLS = *imageConfig.NoBLS
+	}
+
 	return osc, nil
 }
 
@@ -251,7 +255,6 @@ func diskImage(workload workload.Workload,
 	img.Compression = t.compression
 	img.PartTool = osbuild.PTSgdisk        // all RHEL 7 images should use sgdisk
 	img.VPCForceSize = common.ToPtr(false) // RHEL 7 qemu vpc subformat does not support force_size
-	img.NoBLS = true                       // RHEL 7 grub does not support BLS
 	img.OSProduct = t.arch.distro.product
 	img.OSVersion = t.arch.distro.osVersion
 	img.OSNick = t.arch.distro.nick
