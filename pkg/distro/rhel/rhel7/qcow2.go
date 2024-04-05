@@ -3,27 +3,36 @@ package rhel7
 import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/subscription"
 )
 
-var qcow2ImgType = imageType{
-	name:          "qcow2",
-	filename:      "disk.qcow2",
-	mimeType:      "application/x-qemu-disk",
-	kernelOptions: "console=tty0 console=ttyS0,115200n8 no_timer_check net.ifnames=0 crashkernel=auto",
-	packageSets: map[string]packageSetFunc{
-		osPkgsKey: qcow2CommonPackageSet,
-	},
-	defaultImageConfig:  qcow2DefaultImgConfig,
-	bootable:            true,
-	defaultSize:         10 * common.GibiByte,
-	image:               diskImage,
-	buildPipelines:      []string{"build"},
-	payloadPipelines:    []string{"os", "image", "qcow2"},
-	exports:             []string{"qcow2"},
-	basePartitionTables: defaultBasePartitionTables,
+func mkQcow2ImgType() *rhel.ImageType {
+	it := rhel.NewImageType(
+		"qcow2",
+		"disk.qcow2",
+		"application/x-qemu-disk",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: qcow2CommonPackageSet,
+		},
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "qcow2"},
+		[]string{"qcow2"},
+	)
+
+	// all RHEL 7 images should use sgdisk
+	it.DiskImagePartTool = common.ToPtr(osbuild.PTSgdisk)
+
+	it.KernelOptions = "console=tty0 console=ttyS0,115200n8 no_timer_check net.ifnames=0 crashkernel=auto"
+	it.Bootable = true
+	it.DefaultSize = 10 * common.GibiByte
+	it.DefaultImageConfig = qcow2DefaultImgConfig
+	it.BasePartitionTables = defaultBasePartitionTables
+
+	return it
 }
 
 var qcow2DefaultImgConfig = &distro.ImageConfig{
@@ -68,7 +77,7 @@ var qcow2DefaultImgConfig = &distro.ImageConfig{
 	},
 }
 
-func qcow2CommonPackageSet(t *imageType) rpmmd.PackageSet {
+func qcow2CommonPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	ps := rpmmd.PackageSet{
 		Include: []string{
 			"@core",
