@@ -9,7 +9,7 @@ import (
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/distro_test_common"
-	"github.com/osbuild/images/pkg/distro/rhel7"
+	"github.com/osbuild/images/pkg/distro/rhel/rhel7"
 )
 
 type rhelFamilyDistro struct {
