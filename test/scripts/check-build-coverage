@@ -14,7 +14,7 @@ SKIPS = [
 
 def check_build_coverage(cachedir):
     ci_commit = os.environ.get("CI_COMMIT_SHA")
-    ci_branch = os.environ.get("CI_COMMIT_BRANCH")
+    ci_branch = os.environ.get("CI_COMMIT_BRANCH", "")
     tests = set()
     built_now = set()
     built_pr = set()
@@ -38,7 +38,7 @@ def check_build_coverage(cachedir):
             if commit == ci_commit:
                 # config was rebuilt in this run: collect and report
                 built_now.add((distro, arch, image, config))
-            if pr is not None and pr == ci_branch:  # make sure we don't print it when both are None
+            if pr is not None and pr == ci_branch.removeprefix("PR-"):
                 # config was rebuilt in this PR (potentially in another run): collect and report
                 built_pr.add((distro, arch, image, config, commit))
 
