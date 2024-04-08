@@ -85,7 +85,7 @@ func (s *BaseSolver) SetDNFJSONPath(cmd string, args ...string) {
 // NewWithConfig initialises a Solver with the platform information and the
 // BaseSolver's subscription info, cache directory, and dnf-json path.
 // Also loads system subscription information.
-func (bs *BaseSolver) NewWithConfig(modulePlatformID, releaseVer, arch, distro string) *Solver {
+func (bs *BaseSolver) NewWithConfig(modulePlatformID, releaseVer, arch, distro, proxy string) *Solver {
 	s := new(Solver)
 	s.BaseSolver = *bs
 	s.modulePlatformID = modulePlatformID
@@ -94,6 +94,7 @@ func (bs *BaseSolver) NewWithConfig(modulePlatformID, releaseVer, arch, distro s
 	s.distro = distro
 	subs, _ := rhsm.LoadSystemSubscriptions()
 	s.subscriptions = subs
+	s.proxy = proxy
 	return s
 }
 
@@ -139,13 +140,16 @@ type Solver struct {
 	// for each distribution.
 	distro string
 
+	// Proxy to use for depsolve
+	proxy string
+
 	subscriptions *rhsm.Subscriptions
 }
 
 // Create a new Solver with the given configuration. Initialising a Solver also loads system subscription information.
-func NewSolver(modulePlatformID, releaseVer, arch, distro, cacheDir string) *Solver {
+func NewSolver(modulePlatformID, releaseVer, arch, distro, cacheDir, proxy string) *Solver {
 	s := NewBaseSolver(cacheDir)
-	return s.NewWithConfig(modulePlatformID, releaseVer, arch, distro)
+	return s.NewWithConfig(modulePlatformID, releaseVer, arch, distro, proxy)
 }
 
 // GetCacheDir returns a distro specific rpm cache directory
@@ -437,6 +441,7 @@ func (s *Solver) makeDepsolveRequest(pkgSets []rpmmd.PackageSet) (*Request, map[
 		ModulePlatformID: s.modulePlatformID,
 		Arch:             s.arch,
 		CacheDir:         s.GetCacheDir(),
+		Proxy:            s.proxy,
 		Arguments:        args,
 	}
 
@@ -454,6 +459,7 @@ func (s *Solver) makeDumpRequest(repos []rpmmd.RepoConfig) (*Request, error) {
 		ModulePlatformID: s.modulePlatformID,
 		Arch:             s.arch,
 		CacheDir:         s.GetCacheDir(),
+		Proxy:            s.proxy,
 		Arguments: arguments{
 			Repos: dnfRepos,
 		},
@@ -472,6 +478,7 @@ func (s *Solver) makeSearchRequest(repos []rpmmd.RepoConfig, packages []string) 
 		ModulePlatformID: s.modulePlatformID,
 		Arch:             s.arch,
 		CacheDir:         s.GetCacheDir(),
+		Proxy:            s.proxy,
 		Arguments: arguments{
 			Repos: dnfRepos,
 			Search: searchArgs{
@@ -530,6 +537,9 @@ type Request struct {
 
 	// Cache directory for the DNF metadata
 	CacheDir string `json:"cachedir"`
+
+	// Proxy to use
+	Proxy string `json:"proxy"`
 
 	// Arguments for the action defined by Command
 	Arguments arguments `json:"arguments"`

@@ -29,7 +29,7 @@ func TestDepsolver(t *testing.T) {
 	assert := assert.New(t)
 
 	tmpdir := t.TempDir()
-	solver := NewSolver("platform:el9", "9", "x86_64", "rhel9.0", tmpdir)
+	solver := NewSolver("platform:el9", "9", "x86_64", "rhel9.0", tmpdir, "")
 
 	{ // single depsolve
 		pkgsets := []rpmmd.PackageSet{{Include: []string{"kernel", "vim-minimal", "tmux", "zsh"}, Repositories: []rpmmd.RepoConfig{s.RepoConfig}, InstallWeakDeps: true}} // everything you'll ever need
@@ -448,7 +448,7 @@ func TestMakeDepsolveRequest(t *testing.T) {
 			},
 		},
 	}
-	solver := NewSolver("", "", "", "", "")
+	solver := NewSolver("", "", "", "", "", "")
 	for idx, tt := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
 			req, _, err := solver.makeDepsolveRequest(tt.packageSets)
@@ -634,7 +634,7 @@ func TestErrorRepoInfo(t *testing.T) {
 		},
 	}
 
-	solver := NewSolver("f38", "38", "x86_64", "fedora-38", "/tmp/cache")
+	solver := NewSolver("f38", "38", "x86_64", "fedora-38", "/tmp/cache", "")
 	for idx, tc := range testCases {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
 			_, err := solver.Depsolve([]rpmmd.PackageSet{
@@ -663,7 +663,7 @@ func TestRepoConfigHash(t *testing.T) {
 		},
 	}
 
-	solver := NewSolver("f38", "38", "x86_64", "fedora-38", "/tmp/cache")
+	solver := NewSolver("f38", "38", "x86_64", "fedora-38", "/tmp/cache", "")
 
 	rcs, err := solver.reposFromRPMMD(repos)
 	assert.Nil(t, err)
@@ -675,7 +675,7 @@ func TestRepoConfigHash(t *testing.T) {
 }
 
 func TestRequestHash(t *testing.T) {
-	solver := NewSolver("f38", "38", "x86_64", "fedora-38", "/tmp/cache")
+	solver := NewSolver("f38", "38", "x86_64", "fedora-38", "/tmp/cache", "")
 	repos := []rpmmd.RepoConfig{
 		rpmmd.RepoConfig{
 			Name:      "A test repository",
