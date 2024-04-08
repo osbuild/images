@@ -1,5 +1,10 @@
 package osbuild
 
+import (
+	"fmt"
+	"regexp"
+)
+
 type serviceType string
 type unitPath string
 
@@ -55,7 +60,22 @@ type SystemdUnitCreateStageOptions struct {
 
 func (SystemdUnitCreateStageOptions) isStageOptions() {}
 
+func (o *SystemdUnitCreateStageOptions) validate() error {
+	vre := regexp.MustCompile(envVarRegex)
+	if service := o.Config.Service; service != nil {
+		for _, envVar := range service.Environment {
+			if !vre.MatchString(envVar.Key) {
+				return fmt.Errorf("variable name %q doesn't conform to schema (%s)", envVar.Key, envVarRegex)
+			}
+		}
+	}
+	return nil
+}
+
 func NewSystemdUnitCreateStageOptions(options *SystemdUnitCreateStageOptions) *Stage {
+	if err := options.validate(); err != nil {
+		panic(err)
+	}
 	return &Stage{
 		Type:    "org.osbuild.systemd.unit.create",
 		Options: options,
