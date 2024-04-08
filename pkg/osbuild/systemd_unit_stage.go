@@ -32,7 +32,8 @@ type SystemdServiceUnitDropin struct {
 // 'Service' configuration section of a unit file
 type SystemdUnitServiceSection struct {
 	// Sets environment variables for executed process
-	Environment string `json:"Environment,omitempty"`
+	Environment     []EnvironmentVariable `json:"Environment,omitempty"`
+	EnvironmentFile []string              `json:"EnvironmentFile,omitempty"`
 }
 
 // 'Unit' configuration section of a unit file
