@@ -37,8 +37,8 @@ func check(err error) {
 
 type BuildConfig struct {
 	Name      string               `json:"name"`
-	OSTree    *ostree.ImageOptions `json:"ostree,omitempty"`
 	Blueprint *blueprint.Blueprint `json:"blueprint,omitempty"`
+	Options   distro.ImageOptions  `json:"options"`
 	Depends   interface{}          `json:"depends,omitempty"` // ignored
 }
 
@@ -61,8 +61,7 @@ func loadConfig(path string) BuildConfig {
 func makeManifest(imgType distro.ImageType, config BuildConfig, distribution distro.Distro, repos []rpmmd.RepoConfig, archName string, seedArg int64, cacheRoot string) (manifest.OSBuildManifest, error) {
 	cacheDir := filepath.Join(cacheRoot, archName+distribution.Name())
 
-	options := distro.ImageOptions{Size: 0}
-	options.OSTree = config.OSTree
+	options := config.Options
 
 	// add RHSM fact to detect changes
 	options.Facts = &facts.ImageOptions{

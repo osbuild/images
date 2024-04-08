@@ -52,9 +52,9 @@ type buildRequest struct {
 
 type BuildConfig struct {
 	Name      string               `json:"name"`
-	OSTree    *ostree.ImageOptions `json:"ostree,omitempty"`
 	Blueprint *blueprint.Blueprint `json:"blueprint,omitempty"`
-	Depends   BuildDependency      `json:"depends,omitempty"`
+	Options   distro.ImageOptions  `json:"options"`
+	Depends   interface{}          `json:"depends,omitempty"` // ignored
 }
 
 type BuildDependency struct {
@@ -210,8 +210,7 @@ func makeManifestJob(
 	filename := fmt.Sprintf("%s-%s-%s-%s.json", u(distroName), u(archName), u(imgType.Name()), u(name))
 	cacheDir := filepath.Join(cacheRoot, archName+distribution.Name())
 
-	options := distro.ImageOptions{Size: 0}
-	options.OSTree = bc.OSTree
+	options := bc.Options
 
 	var bp blueprint.Blueprint
 	if bc.Blueprint != nil {
