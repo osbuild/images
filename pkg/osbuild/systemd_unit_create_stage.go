@@ -26,11 +26,13 @@ type Unit struct {
 }
 
 type Service struct {
-	Type            serviceType `json:"Type,omitempty"`
-	RemainAfterExit bool        `json:"RemainAfterExit,omitempty"`
-	ExecStartPre    []string    `json:"ExecStartPre,omitempty"`
-	ExecStopPost    []string    `json:"ExecStopPost,omitempty"`
-	ExecStart       []string    `json:"ExecStart,omitempty"`
+	Type            serviceType           `json:"Type,omitempty"`
+	RemainAfterExit bool                  `json:"RemainAfterExit,omitempty"`
+	ExecStartPre    []string              `json:"ExecStartPre,omitempty"`
+	ExecStopPost    []string              `json:"ExecStopPost,omitempty"`
+	ExecStart       []string              `json:"ExecStart,omitempty"`
+	Environment     []EnvironmentVariable `json:"Environment,omitempty"`
+	EnvironmentFile []string              `json:"EnvironmentFile,omitempty"`
 }
 
 type Install struct {
