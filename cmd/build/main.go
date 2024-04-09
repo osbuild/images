@@ -82,13 +82,14 @@ func makeManifest(imgType distro.ImageType, config BuildConfig, distribution dis
 		fmt.Fprintf(os.Stderr, "[WARNING]\n%s", strings.Join(warnings, "\n"))
 	}
 
-	packageSpecs, err := depsolve(cacheDir, manifest.GetPackageSetChains(), distribution, archName)
+	packageSpecs, repoConfigs, err := depsolve(cacheDir, manifest.GetPackageSetChains(), distribution, archName)
 	if err != nil {
 		return nil, fmt.Errorf("[ERROR] depsolve failed: %s", err.Error())
 	}
 	if packageSpecs == nil {
 		return nil, fmt.Errorf("[ERROR] depsolve did not return any packages")
 	}
+	_ = repoConfigs
 
 	if config.Blueprint != nil {
 		bp = blueprint.Blueprint(*config.Blueprint)
@@ -150,17 +151,19 @@ func resolvePipelineCommits(commitSources map[string][]ostree.SourceSpec) (map[s
 	return commits, nil
 }
 
-func depsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string][]rpmmd.PackageSpec, error) {
+func depsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string][]rpmmd.PackageSpec, map[string][]rpmmd.RepoConfig, error) {
 	solver := dnfjson.NewSolver(d.ModulePlatformID(), d.Releasever(), arch, d.Name(), cacheDir)
 	depsolvedSets := make(map[string][]rpmmd.PackageSpec)
+	repoSets := make(map[string][]rpmmd.RepoConfig)
 	for name, pkgSet := range packageSets {
-		pkgs, _, err := solver.Depsolve(pkgSet)
+		pkgs, repos, err := solver.Depsolve(pkgSet)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		depsolvedSets[name] = pkgs
+		repoSets[name] = repos
 	}
-	return depsolvedSets, nil
+	return depsolvedSets, repoSets, nil
 }
 
 func save(ms manifest.OSBuildManifest, fpath string) error {
