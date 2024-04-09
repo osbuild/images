@@ -154,11 +154,11 @@ func depsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d dist
 	solver := dnfjson.NewSolver(d.ModulePlatformID(), d.Releasever(), arch, d.Name(), cacheDir)
 	depsolvedSets := make(map[string][]rpmmd.PackageSpec)
 	for name, pkgSet := range packageSets {
-		res, err := solver.Depsolve(pkgSet)
+		pkgs, _, err := solver.Depsolve(pkgSet)
 		if err != nil {
 			return nil, err
 		}
-		depsolvedSets[name] = res
+		depsolvedSets[name] = pkgs
 	}
 	return depsolvedSets, nil
 }
