@@ -105,7 +105,7 @@ func makeManifest(imgType distro.ImageType, config BuildConfig, distribution dis
 		return nil, fmt.Errorf("[ERROR] ostree commit resolution failed: %s\n", err.Error())
 	}
 
-	mf, err := manifest.Serialize(packageSpecs, containerSpecs, commitSpecs)
+	mf, err := manifest.Serialize(packageSpecs, containerSpecs, commitSpecs, nil)
 	if err != nil {
 		return nil, fmt.Errorf("[ERROR] manifest serialization failed: %s", err.Error())
 	}
