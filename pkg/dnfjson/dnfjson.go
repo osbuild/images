@@ -25,6 +25,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/rhsm"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
@@ -309,15 +310,15 @@ func (s *Solver) reposFromRPMMD(rpmRepos []rpmmd.RepoConfig) ([]repoConfig, erro
 		}
 
 		if rr.CheckGPG != nil {
-			dr.CheckGPG = *rr.CheckGPG
+			dr.GPGCheck = *rr.CheckGPG
 		}
 
 		if rr.CheckRepoGPG != nil {
-			dr.CheckRepoGPG = *rr.CheckRepoGPG
+			dr.RepoGPGCheck = *rr.CheckRepoGPG
 		}
 
 		if rr.IgnoreSSL != nil {
-			dr.IgnoreSSL = *rr.IgnoreSSL
+			dr.SSLVerify = common.ToPtr(!*rr.IgnoreSSL)
 		}
 
 		if rr.RHSM {
@@ -347,9 +348,9 @@ type repoConfig struct {
 	Metalink       string   `json:"metalink,omitempty"`
 	MirrorList     string   `json:"mirrorlist,omitempty"`
 	GPGKeys        []string `json:"gpgkeys,omitempty"`
-	CheckGPG       bool     `json:"gpgcheck"`
-	CheckRepoGPG   bool     `json:"check_repogpg"`
-	IgnoreSSL      bool     `json:"ignoressl"`
+	GPGCheck       bool     `json:"gpgcheck"`
+	RepoGPGCheck   bool     `json:"repo_gpgcheck"`
+	SSLVerify      *bool    `json:"sslverify,omitempty"`
 	SSLCACert      string   `json:"sslcacert,omitempty"`
 	SSLClientKey   string   `json:"sslclientkey,omitempty"`
 	SSLClientCert  string   `json:"sslclientcert,omitempty"`

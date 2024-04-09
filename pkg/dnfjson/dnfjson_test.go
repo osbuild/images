@@ -699,5 +699,5 @@ func TestRepoConfigMarshalAlsmostEmpty(t *testing.T) {
 	repoCfg := &repoConfig{}
 	js, _ := json.Marshal(repoCfg)
 	// double check here that anything that uses pointers has "omitempty" set
-	assert.Equal(t, string(js), `{"id":"","gpgcheck":false,"check_repogpg":false,"ignoressl":false}`)
+	assert.Equal(t, string(js), `{"id":"","gpgcheck":false,"repo_gpgcheck":false}`)
 }
