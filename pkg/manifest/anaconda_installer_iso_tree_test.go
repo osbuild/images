@@ -192,11 +192,11 @@ func TestAnacondaISOTreePayloadsBad(t *testing.T) {
 
 	assert.PanicsWithValue(
 		"pipeline supports at most one ostree commit",
-		func() { pipeline.serializeStart(nil, nil, make([]ostree.CommitSpec, 2)) },
+		func() { pipeline.serializeStart(nil, nil, make([]ostree.CommitSpec, 2), nil) },
 	)
 	assert.PanicsWithValue(
 		"pipeline supports at most one container",
-		func() { pipeline.serializeStart(nil, make([]container.Spec, 2), nil) },
+		func() { pipeline.serializeStart(nil, make([]container.Spec, 2), nil, nil) },
 	)
 }
 
@@ -216,7 +216,7 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 	t.Run("plain", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.OSPipeline = osPayload
-		pipeline.serializeStart(nil, nil, nil)
+		pipeline.serializeStart(nil, nil, nil, nil)
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, payloadStages,
@@ -229,7 +229,7 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.OSPipeline = osPayload
 		pipeline.KSPath = testKsPath
-		pipeline.serializeStart(nil, nil, nil)
+		pipeline.serializeStart(nil, nil, nil, nil)
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.kickstart"),
@@ -242,7 +242,7 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		pipeline.OSPipeline = osPayload
 		pipeline.KSPath = testKsPath
 		pipeline.ISOLinux = true
-		pipeline.serializeStart(nil, nil, nil)
+		pipeline.serializeStart(nil, nil, nil, nil)
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"),
@@ -255,7 +255,7 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		pipeline.KSPath = testKsPath
 		pipeline.ISOLinux = true
 		pipeline.UnattendedKickstart = true
-		pipeline.serializeStart(nil, nil, nil)
+		pipeline.serializeStart(nil, nil, nil, nil)
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"),
@@ -270,7 +270,7 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		pipeline.ISOLinux = true
 		pipeline.UnattendedKickstart = true
 		pipeline.NoPasswd = []string{`%wheel`, `%sudo`}
-		pipeline.serializeStart(nil, nil, nil)
+		pipeline.serializeStart(nil, nil, nil, nil)
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"),
@@ -302,7 +302,7 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 	t.Run("plain", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.KSPath = testKsPath
-		pipeline.serializeStart(nil, nil, []ostree.CommitSpec{ostreeCommit})
+		pipeline.serializeStart(nil, nil, []ostree.CommitSpec{ostreeCommit}, nil)
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, payloadStages,
@@ -314,7 +314,7 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.KSPath = testKsPath
 		pipeline.ISOLinux = true
-		pipeline.serializeStart(nil, nil, []ostree.CommitSpec{ostreeCommit})
+		pipeline.serializeStart(nil, nil, []ostree.CommitSpec{ostreeCommit}, nil)
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
@@ -325,7 +325,7 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 		pipeline.KSPath = testKsPath
 		pipeline.ISOLinux = true
 		pipeline.UnattendedKickstart = true
-		pipeline.serializeStart(nil, nil, []ostree.CommitSpec{ostreeCommit})
+		pipeline.serializeStart(nil, nil, []ostree.CommitSpec{ostreeCommit}, nil)
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
@@ -338,7 +338,7 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 		pipeline.ISOLinux = true
 		pipeline.UnattendedKickstart = true
 		pipeline.NoPasswd = []string{`%wheel`, `%sudo`}
-		pipeline.serializeStart(nil, nil, []ostree.CommitSpec{ostreeCommit})
+		pipeline.serializeStart(nil, nil, []ostree.CommitSpec{ostreeCommit}, nil)
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
@@ -369,7 +369,7 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 	t.Run("kspath", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.KSPath = testKsPath
-		pipeline.serializeStart(nil, []container.Spec{containerPayload}, nil)
+		pipeline.serializeStart(nil, []container.Spec{containerPayload}, nil, nil)
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, payloadStages,
@@ -381,7 +381,7 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.KSPath = testKsPath
 		pipeline.ISOLinux = true
-		pipeline.serializeStart(nil, []container.Spec{containerPayload}, nil)
+		pipeline.serializeStart(nil, []container.Spec{containerPayload}, nil, nil)
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))

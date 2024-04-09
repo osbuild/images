@@ -150,8 +150,10 @@ func TestImageTypePipelineNames(t *testing.T) {
 					}
 
 					packageSets := make(map[string][]rpmmd.PackageSpec, len(allPipelines))
+					repoSets := make(map[string][]rpmmd.RepoConfig, len(allPipelines))
 					for _, plName := range allPipelines {
 						packageSets[plName] = minimalPackageSet
+						repoSets[plName] = repos
 					}
 
 					m, _, err := imageType.Manifest(&bp, options, repos, seed)
@@ -172,7 +174,7 @@ func TestImageTypePipelineNames(t *testing.T) {
 						}
 						commits[name] = commitSpecs
 					}
-					mf, err := m.Serialize(packageSets, containers, commits)
+					mf, err := m.Serialize(packageSets, containers, commits, repoSets)
 					assert.NoError(err)
 					pm := new(manifest)
 					err = json.Unmarshal(mf, pm)
