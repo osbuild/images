@@ -240,8 +240,9 @@ func makeManifestJob(
 		}
 
 		var packageSpecs map[string][]rpmmd.PackageSpec
+		var repoConfigs map[string][]rpmmd.RepoConfig
 		if content["packages"] {
-			packageSpecs, err = depsolve(cacheDir, manifest.GetPackageSetChains(), distribution, archName)
+			packageSpecs, repoConfigs, err = depsolve(cacheDir, manifest.GetPackageSetChains(), distribution, archName)
 			if err != nil {
 				err = fmt.Errorf("[%s] depsolve failed: %s", filename, err.Error())
 				return
@@ -251,8 +252,9 @@ func makeManifestJob(
 				return
 			}
 		} else {
-			packageSpecs = mockDepsolve(manifest.GetPackageSetChains())
+			packageSpecs, repoConfigs = mockDepsolve(manifest.GetPackageSetChains(), repos)
 		}
+		_ = repoConfigs
 
 		var containerSpecs map[string][]container.Spec
 		if content["containers"] {
@@ -378,21 +380,24 @@ func mockResolveCommits(commitSources map[string][]ostree.SourceSpec) map[string
 	return commits
 }
 
-func depsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string][]rpmmd.PackageSpec, error) {
+func depsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string][]rpmmd.PackageSpec, map[string][]rpmmd.RepoConfig, error) {
 	solver := dnfjson.NewSolver(d.ModulePlatformID(), d.Releasever(), arch, d.Name(), cacheDir)
 	depsolvedSets := make(map[string][]rpmmd.PackageSpec)
+	repoSets := make(map[string][]rpmmd.RepoConfig)
 	for name, pkgSet := range packageSets {
-		packages, _, err := solver.Depsolve(pkgSet)
+		packages, repos, err := solver.Depsolve(pkgSet)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		depsolvedSets[name] = packages
+		repoSets[name] = repos
 	}
-	return depsolvedSets, nil
+	return depsolvedSets, repoSets, nil
 }
 
-func mockDepsolve(packageSets map[string][]rpmmd.PackageSet) map[string][]rpmmd.PackageSpec {
+func mockDepsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfig) (map[string][]rpmmd.PackageSpec, map[string][]rpmmd.RepoConfig) {
 	depsolvedSets := make(map[string][]rpmmd.PackageSpec)
+	repoSets := make(map[string][]rpmmd.RepoConfig)
 	for name, pkgSetChain := range packageSets {
 		specSet := make([]rpmmd.PackageSpec, 0)
 		for _, pkgSet := range pkgSetChain {
@@ -411,8 +416,10 @@ func mockDepsolve(packageSets map[string][]rpmmd.PackageSet) map[string][]rpmmd.
 			}
 		}
 		depsolvedSets[name] = specSet
+		repoSets[name] = repos
 	}
-	return depsolvedSets
+
+	return depsolvedSets, repoSets
 }
 
 func save(ms manifest.OSBuildManifest, pkgs map[string][]rpmmd.PackageSpec, containers map[string][]container.Spec, commits map[string][]ostree.CommitSpec, cr buildRequest, path, filename string, metadata bool) error {
