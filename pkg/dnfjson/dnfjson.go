@@ -174,10 +174,10 @@ func (s *Solver) GetCacheDir() string {
 // their associated repositories.  Each package set is depsolved as a separate
 // transactions in a chain.  It returns a list of all packages (with solved
 // dependencies) that will be installed into the system.
-func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet) ([]rpmmd.PackageSpec, error) {
+func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet) ([]rpmmd.PackageSpec, []rpmmd.RepoConfig, error) {
 	req, rhsmMap, err := s.makeDepsolveRequest(pkgSets)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// get non-exclusive read lock
@@ -186,7 +186,7 @@ func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet) ([]rpmmd.PackageSpec, erro
 
 	output, err := run(s.dnfJsonCmd, req)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	// touch repos to now
 	now := time.Now().Local()
@@ -200,10 +200,11 @@ func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet) ([]rpmmd.PackageSpec, erro
 	dec := json.NewDecoder(bytes.NewReader(output))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&result); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return result.toRPMMD(rhsmMap), nil
+	packages, repos := result.toRPMMD(rhsmMap)
+	return packages, repos, nil
 }
 
 // FetchMetadata returns the list of all the available packages in repos and
@@ -499,9 +500,10 @@ func (s *Solver) makeSearchRequest(repos []rpmmd.RepoConfig, packages []string) 
 	return &req, nil
 }
 
-// convert internal a list of PackageSpecs to the rpmmd equivalent and attach
-// key and subscription information based on the repository configs.
-func (result depsolveResult) toRPMMD(rhsm map[string]bool) []rpmmd.PackageSpec {
+// convert internal a list of PackageSpecs and map of repoConfig to the rpmmd
+// equivalents and attach key and subscription information based on the
+// repository configs.
+func (result depsolveResult) toRPMMD(rhsm map[string]bool) ([]rpmmd.PackageSpec, []rpmmd.RepoConfig) {
 	pkgs := result.Packages
 	repos := result.Repos
 	rpmDependencies := make([]rpmmd.PackageSpec, len(pkgs))
@@ -531,7 +533,33 @@ func (result depsolveResult) toRPMMD(rhsm map[string]bool) []rpmmd.PackageSpec {
 			rpmDependencies[i].Secrets = "org.osbuild.mtls"
 		}
 	}
-	return rpmDependencies
+
+	repoConfigs := make([]rpmmd.RepoConfig, 0, len(repos))
+	for repoID := range repos {
+		repo := repos[repoID]
+		var ignoreSSL bool
+		if sslVerify := repo.SSLVerify; sslVerify != nil {
+			ignoreSSL = !*sslVerify
+		}
+		repoConfigs = append(repoConfigs, rpmmd.RepoConfig{
+			Id:             repo.ID,
+			Name:           repo.Name,
+			BaseURLs:       repo.BaseURLs,
+			Metalink:       repo.Metalink,
+			MirrorList:     repo.MirrorList,
+			GPGKeys:        repo.GPGKeys,
+			CheckGPG:       &repo.GPGCheck,
+			CheckRepoGPG:   &repo.RepoGPGCheck,
+			IgnoreSSL:      &ignoreSSL,
+			MetadataExpire: repo.MetadataExpire,
+			ModuleHotfixes: repo.ModuleHotfixes,
+			Enabled:        common.ToPtr(true),
+			SSLCACert:      repo.SSLCACert,
+			SSLClientKey:   repo.SSLClientKey,
+			SSLClientCert:  repo.SSLClientCert,
+		})
+	}
+	return rpmDependencies, repoConfigs
 }
 
 // Request command and arguments for dnf-json

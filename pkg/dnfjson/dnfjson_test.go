@@ -108,7 +108,7 @@ func TestDepsolver(t *testing.T) {
 			}
 
 			solver.SetRootDir(tc.rootDir)
-			deps, err := solver.Depsolve(pkgsets)
+			deps, _, err := solver.Depsolve(pkgsets)
 			assert.Equal(tc.err, err)
 			if err == nil {
 				exp := expectedResult(s.RepoConfig)
@@ -699,7 +699,7 @@ func TestErrorRepoInfo(t *testing.T) {
 	solver := NewSolver("f38", "38", "x86_64", "fedora-38", "/tmp/cache")
 	for idx, tc := range testCases {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			_, err := solver.Depsolve([]rpmmd.PackageSet{
+			_, _, err := solver.Depsolve([]rpmmd.PackageSet{
 				{
 					Include:      []string{"osbuild"},
 					Exclude:      nil,
