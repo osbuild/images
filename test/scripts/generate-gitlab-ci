@@ -151,6 +151,10 @@ generate-manifests-{distro}-{arch}:
 """
 
 
+def sort_configs(configs):
+    return sorted(configs, key=lambda img: img["distro"]+img["arch"]+img["image-type"])
+
+
 def main():
     config_path = sys.argv[1]
     images = testlib.list_images(arches=ARCHITECTURES)
@@ -162,7 +166,7 @@ def main():
     trigger_stage = []
     ostree_gen_stage = []
     ostree_trigger_stage = []
-    for img in images:
+    for img in sort_configs(images):
         combo = (img["distro"], img["arch"])
         if combo in combos:
             continue
@@ -175,7 +179,7 @@ def main():
 
     man_only_images = testlib.list_images(arches=MANIFEST_ONLY_ARCHES)
     man_gen_stage = []
-    for img in man_only_images:
+    for img in sort_configs(man_only_images):
         combo = (img["distro"], img["arch"])
         if combo in combos:
             continue
