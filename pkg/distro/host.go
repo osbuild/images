@@ -10,17 +10,22 @@ import (
 	"strings"
 )
 
+// variable so that it can be overridden in tests
+var getHostDistroNameTree = "/"
+
 // GetHostDistroName returns the name of the host distribution, such as
 // "fedora-32" or "rhel-8.2". It does so by reading the /etc/os-release file.
 func GetHostDistroName() (string, error) {
-	f, err := os.Open("/etc/os-release")
+	osrelease, err := ReadOSReleaseFromTree(getHostDistroNameTree)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("cannot get the host distro name: %w", err)
 	}
-	defer f.Close()
-	osrelease, err := readOSRelease(f)
-	if err != nil {
-		return "", err
+
+	if _, ok := osrelease["ID"]; !ok {
+		return "", errors.New("cannot get the host distro name: missing ID field in os-release")
+	}
+	if _, ok := osrelease["VERSION_ID"]; !ok {
+		return "", errors.New("cannot get the host distro name: missing VERSION_ID field in os-release")
 	}
 
 	name := osrelease["ID"] + "-" + osrelease["VERSION_ID"]

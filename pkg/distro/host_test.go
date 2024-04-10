@@ -10,6 +10,46 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestGetHostDistroName(t *testing.T) {
+	backup := getHostDistroNameTree
+	defer func() { getHostDistroNameTree = backup }()
+	getHostDistroNameTree = t.TempDir()
+
+	require.NoError(t, os.MkdirAll(path.Join(getHostDistroNameTree, "etc"), 0755))
+	require.NoError(t,
+		os.WriteFile(path.Join(getHostDistroNameTree, "etc/os-release"), []byte("ID=toucanOS\nVERSION_ID=42\n"), 0600),
+	)
+
+	name, err := GetHostDistroName()
+	require.NoError(t, err)
+	require.Equal(t, "toucanOS-42", name)
+}
+func TestGetHostDistroNameUnhappy(t *testing.T) {
+	backup := getHostDistroNameTree
+	defer func() { getHostDistroNameTree = backup }()
+	getHostDistroNameTree = t.TempDir()
+
+	require.NoError(t, os.MkdirAll(path.Join(getHostDistroNameTree, "etc"), 0755))
+
+	// no file at all
+	_, err := GetHostDistroName()
+	require.ErrorContains(t, err, "cannot get the host distro name: failed to read os-release")
+
+	// missing ID
+	require.NoError(t,
+		os.WriteFile(path.Join(getHostDistroNameTree, "etc/os-release"), []byte("VERSION_ID=toucanOS\n"), 0600),
+	)
+	_, err = GetHostDistroName()
+	require.ErrorContains(t, err, "cannot get the host distro name: missing ID field")
+
+	// missing VERSION_ID
+	require.NoError(t,
+		os.WriteFile(path.Join(getHostDistroNameTree, "etc/os-release"), []byte("ID=42\n"), 0600),
+	)
+	_, err = GetHostDistroName()
+	require.ErrorContains(t, err, "cannot get the host distro name: missing VERSION_ID field")
+}
+
 func TestOSRelease(t *testing.T) {
 	var cases = []struct {
 		Input     string
