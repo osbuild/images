@@ -15,7 +15,7 @@ on:
 jobs:
   unit-tests:
     name: "🛃 Unit tests"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     container:
       image: registry.fedoraproject.org/fedora:latest
 
@@ -42,7 +42,7 @@ jobs:
 
   unit-tests-c9s:
     name: "🛃 Unit tests (CentOS Stream 9)"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     container:
       image: quay.io/centos/centos:stream9
     env:
@@ -74,7 +74,7 @@ jobs:
 
   unit-tests-c8s:
     name: "🛃 Unit tests (CentOS Stream 8)"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     container:
       image: quay.io/centos/centos:stream8
     env:
@@ -138,7 +138,7 @@ jobs:
 
   prepare:
     name: "🔍 Check source preparation"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
 
       - name: Set up Go 1.20
@@ -166,7 +166,7 @@ jobs:
 
   shellcheck:
     name: "🐚 Shellcheck"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
       with:
