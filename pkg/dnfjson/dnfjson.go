@@ -18,6 +18,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -142,6 +143,9 @@ type Solver struct {
 
 	rootDir string
 
+	// Proxy to use while depsolving. This is used in DNF's base configuration.
+	proxy string
+
 	subscriptions *rhsm.Subscriptions
 }
 
@@ -168,6 +172,15 @@ func (s *Solver) GetCacheDir() string {
 	}
 
 	return filepath.Join(s.cache.root, b)
+}
+
+// Set the proxy to use while depsolving. The proxy will be set in DNF's base configuration.
+func (s *Solver) SetProxy(proxy string) error {
+	if _, err := url.ParseRequestURI(proxy); err != nil {
+		return fmt.Errorf("proxy URL %q is invalid", proxy)
+	}
+	s.proxy = proxy
+	return nil
 }
 
 // Depsolve the list of required package sets with explicit excludes using
@@ -453,6 +466,7 @@ func (s *Solver) makeDepsolveRequest(pkgSets []rpmmd.PackageSet) (*Request, map[
 		Arch:             s.arch,
 		Releasever:       s.releaseVer,
 		CacheDir:         s.GetCacheDir(),
+		Proxy:            s.proxy,
 		Arguments:        args,
 	}
 
@@ -471,6 +485,7 @@ func (s *Solver) makeDumpRequest(repos []rpmmd.RepoConfig) (*Request, error) {
 		Arch:             s.arch,
 		Releasever:       s.releaseVer,
 		CacheDir:         s.GetCacheDir(),
+		Proxy:            s.proxy,
 		Arguments: arguments{
 			Repos: dnfRepos,
 		},
@@ -490,6 +505,7 @@ func (s *Solver) makeSearchRequest(repos []rpmmd.RepoConfig, packages []string) 
 		Arch:             s.arch,
 		CacheDir:         s.GetCacheDir(),
 		Releasever:       s.releaseVer,
+		Proxy:            s.proxy,
 		Arguments: arguments{
 			Repos: dnfRepos,
 			Search: searchArgs{
@@ -578,6 +594,9 @@ type Request struct {
 
 	// Cache directory for the DNF metadata
 	CacheDir string `json:"cachedir"`
+
+	// Proxy to use
+	Proxy string `json:"proxy"`
 
 	// Arguments for the action defined by Command
 	Arguments arguments `json:"arguments"`
