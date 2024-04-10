@@ -1,6 +1,6 @@
 module github.com/osbuild/images
 
-go 1.19
+go 1.20
 
 exclude github.com/mattn/go-sqlite3 v2.0.3+incompatible
 
