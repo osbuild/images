@@ -100,7 +100,14 @@ generate-manifests-{distro}-{arch}:
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/install-dependencies
-    - go run ./cmd/gen-manifests --arches {arch} --distros {distro} --workers 10
+    - go run ./cmd/gen-manifests --arches {arch} --distros {distro} --workers 10 --metadata=false --output ./manifests
+    - for manifest in ./manifests/*; do
+        if osbuild --inspect $manifest > output; then
+          echo "$manifest OK";
+        else
+          cat output;
+        fi;
+      done
 """
 
 
