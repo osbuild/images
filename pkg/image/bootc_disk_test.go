@@ -1,9 +1,9 @@
 package image_test
 
 import (
+	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
-	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -30,7 +30,7 @@ func TestBootcDiskImageNew(t *testing.T) {
 
 func makeFakeDigest(t *testing.T) string {
 	data := make([]byte, 32)
-	_, err := rand.Read(data) // nolint:gosec
+	_, err := rand.Read(data)
 	require.Nil(t, err)
 	return "sha256:" + hex.EncodeToString(data[:])
 }
