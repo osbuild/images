@@ -30,21 +30,21 @@ Images are built in GitLab CI when a change in an image definition is detected. 
 Each generator script is run separately for every distribution and architecture combination that the project supports. These are also generated dynamically using `./cmd/list-images`. The dynamic test generation workflow looks like this:
 
 ```
-configure-generators
-    |
-    | (Dynamic: For each distro/arch)
-    |-- generate-build-configs-<distro>-<arch>
-    |         |
-    |         | (Dynamic: For each modified image type and config)
-    |         |-- Build <distro>-<arch>-<image>-<config>
-    |
-    | (Dynamic: For each distro/arch)
-    |-- generate-ostree-build-configs-<distro>-<arch>
-              |
-              | (Dynamic: For each modified image type and config)
-              |-- Build <distro>-<arch>-<image>-<config>
+gitlab-ci.yml
+|   For each distro/arch
+|-- generate-build-configs-<distro>-<arch>
+|         |
+|         | (Dynamic: For each modified image type and config)
+|         |-- Build <distro>-<arch>-<image>-<config>
+|
+|   For each distro/arch
+|-- generate-ostree-build-configs-<distro>-<arch>
+          |
+          | (Dynamic: For each modified image type and config)
+          |-- Build <distro>-<arch>-<image>-<config>
 ```
 
+The top-level `.gitlab-ci.yml` is generated using `./tools/prepare-source.sh` (which calls `./test/scripts/generate-gitlab-ci`) and must be updated when a change is made to the image configurations (distros, architectures, image types).  A PR will fail if the generated version does not match the one checked into the repository.
 
 ### Dynamic pipelines
 
