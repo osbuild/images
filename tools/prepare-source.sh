@@ -16,3 +16,5 @@ $GO_BINARY mod vendor
 
 # Ensure the code is formatted correctly.
 $GO_BINARY fmt ./...
+
+./test/scripts/generate-gitlab-ci ./.gitlab-ci.yml
