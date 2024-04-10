@@ -9,18 +9,58 @@ ARCHITECTURES = ["x86_64", "aarch64"]
 MANIFEST_ONLY_ARCHES = ["ppc64le", "s390x"]
 
 
-BASE_CONFIG = """
+BASE_CONFIG = """---
 stages:
+  - init
   - gen
   - build
   - ostree-gen
   - ostree-build
+  - verify
+  - finish
 
 variables:
   # Set the parent pipeline ID as a global variable so that the child pipeline
   # jobs can use it to retrieve artifacts.
   PARENT_PIPELINE_ID: $CI_PIPELINE_ID
 
+init:
+  stage: init
+  interruptible: true
+  tags:
+    - shell
+  script:
+    - schutzbot/update_github_status.sh start
+
+check-build-coverage:
+  stage: verify
+  image: fedora:latest
+  variables:
+    PYTHONUNBUFFERED: 1
+  script:
+    - ./test/scripts/install-dependencies
+    - ./test/scripts/check-build-coverage ./s3configs/
+  cache:
+    key: testcache
+    paths:
+      - .cache/osbuild-images
+
+finish:
+  stage: finish
+  dependencies: []
+  tags:
+    - shell
+  script:
+    - schutzbot/update_github_status.sh finish
+
+fail:
+  stage: finish
+  tags:
+    - shell
+  script:
+    - schutzbot/update_github_status.sh fail
+    - exit 1  # make the pipeline fail so it doesn't look like success
+  when: on_failure
 """
 
 GEN_TEMPLATE = """
