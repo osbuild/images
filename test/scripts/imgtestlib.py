@@ -432,12 +432,10 @@ def rng_seed_env():
 
 def host_container_arch():
     host_arch = os.uname().machine
-    match host_arch:
-        case "x86_64":
-            return "amd64"
-        case "aarch64":
-            return "arm64"
-    return host_arch
+    return {
+        "x86_64": "amd64",
+        "aarch64": "arm64"
+    }.get(host_arch, host_arch)
 
 
 def is_manifest_list(data):
