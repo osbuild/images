@@ -5,6 +5,20 @@
       "ref": "quay.io/centos-bootc/bootc-image-builder@sha256:3a75eeb703b4f8a711f43f37bafb2c3e84f5dd12b499c8146603f05be8cccabd"
     }
   },
+  "centos-8": {
+    "dependencies": {
+      "osbuild": {
+        "commit": "f26e62b23f547fc5ad665cb08cc52e6431657779"
+      }
+    }
+  },
+  "centos-9": {
+    "dependencies": {
+      "osbuild": {
+        "commit": "f26e62b23f547fc5ad665cb08cc52e6431657779"
+      }
+    }
+  },
   "fedora-39": {
     "dependencies": {
       "osbuild": {
