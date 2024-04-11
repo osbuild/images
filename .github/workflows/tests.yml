@@ -20,16 +20,19 @@ jobs:
       image: registry.fedoraproject.org/fedora:latest
 
     steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Set up repository for pinned osbuild commit
+        run: ./test/scripts/setup-osbuild-repo
+
         # krb5-devel is needed to test internal/upload/koji package
         # gcc is needed to build the mock depsolver binary for the unit tests
         # gpgme-devel is needed for container upload dependencies
       - name: Install build and test dependencies
         run: dnf -y install krb5-devel gcc git-core go gpgme-devel osbuild-depsolve-dnf btrfs-progs-devel device-mapper-devel
-
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Mark the working directory as safe for git
         run: git config --global --add safe.directory "$(pwd)"
@@ -55,13 +58,16 @@ jobs:
       - name: Enable crb repo
         run: dnf config-manager --set-enabled crb
 
-      - name: Install build and test dependencies
-        run: dnf -y install krb5-devel gcc git-core go gpgme-devel osbuild-depsolve-dnf device-mapper-devel
-
       - name: Check out code into the Go module directory
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Set up repository for pinned osbuild commit
+        run: ./test/scripts/setup-osbuild-repo
+
+      - name: Install build and test dependencies
+        run: dnf -y install krb5-devel gcc git-core go gpgme-devel osbuild-depsolve-dnf device-mapper-devel
 
       - name: Mark the working directory as safe for git
         run: git config --global --add safe.directory "$(pwd)"
@@ -87,13 +93,18 @@ jobs:
       - name: Enable powertools repo
         run: dnf config-manager --set-enabled powertools
 
-      - name: Install build and test dependencies
-        run: dnf -y install krb5-devel gcc git-core go gpgme-devel osbuild-depsolve-dnf device-mapper-devel
-
       - name: Check out code into the Go module directory
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Set up repository for pinned osbuild commit
+        run: |
+          dnf -y install python3
+          ./test/scripts/setup-osbuild-repo
+
+      - name: Install build and test dependencies
+        run: dnf -y install krb5-devel gcc git-core go gpgme-devel osbuild-depsolve-dnf device-mapper-devel
 
       - name: Mark the working directory as safe for git
         run: git config --global --add safe.directory "$(pwd)"
