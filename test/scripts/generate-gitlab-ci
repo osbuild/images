@@ -139,6 +139,7 @@ generate-manifests-{distro}-{arch}:
     RUNNER: aws/fedora-39-x86_64
     INTERNAL_NETWORK: "true"
   script:
+    - sudo ./test/scripts/setup-osbuild-repo
     - sudo ./test/scripts/install-dependencies
     - go run ./cmd/gen-manifests --arches {arch} --distros {distro} --workers 10 --metadata=false --output ./manifests
     - for manifest in ./manifests/*; do
