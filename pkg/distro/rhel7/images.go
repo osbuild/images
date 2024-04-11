@@ -257,7 +257,7 @@ func diskImage(workload workload.Workload,
 	img.VPCForceSize = common.ToPtr(false) // RHEL 7 qemu vpc subformat does not support force_size
 	img.OSProduct = t.arch.distro.product
 	img.OSVersion = t.arch.distro.osVersion
-	img.OSNick = t.arch.distro.nick
+	img.OSNick = t.arch.distro.codename
 
 	// TODO: move generation into LiveImage
 	pt, err := t.getPartitionTable(customizations.GetFilesystems(), options, rng)

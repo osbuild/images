@@ -54,7 +54,7 @@ var defaultDistroImageConfig = &distro.ImageConfig{
 type distribution struct {
 	name               string
 	product            string
-	nick               string
+	codename           string
 	osVersion          string
 	releaseVersion     string
 	modulePlatformID   string
@@ -66,6 +66,10 @@ type distribution struct {
 
 func (d *distribution) Name() string {
 	return d.name
+}
+
+func (d *distribution) Codename() string {
+	return d.codename
 }
 
 func (d *distribution) Releasever() string {
@@ -196,7 +200,7 @@ func newDistro(name string, minor int) *distribution {
 			name:               fmt.Sprintf("rhel-7.%d", minor),
 			product:            "Red Hat Enterprise Linux",
 			osVersion:          fmt.Sprintf("7.%d", minor),
-			nick:               "Maipo",
+			codename:           "Maipo",
 			releaseVersion:     "7",
 			modulePlatformID:   "platform:el7",
 			vendor:             "redhat",
