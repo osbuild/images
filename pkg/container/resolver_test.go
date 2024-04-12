@@ -15,7 +15,6 @@ func TestResolver(t *testing.T) {
 
 	registry := NewTestRegistry()
 	defer registry.Close()
-
 	repo := registry.AddRepo("library/osbuild")
 	ref := registry.GetRef("library/osbuild")
 

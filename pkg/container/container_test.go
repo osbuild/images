@@ -377,6 +377,7 @@ func (reg *Registry) Resolve(target, arch string) (container.Spec, error) {
 		LocalName:  target,
 		TLSVerify:  common.ToPtr(false),
 		ListDigest: listDigest,
+		Arch:       arch,
 	}, nil
 }
 

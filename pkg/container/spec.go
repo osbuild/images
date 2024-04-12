@@ -18,6 +18,8 @@ type Spec struct {
 	LocalName    string // name to use inside the image
 	ListDigest   string // digest of the list manifest at the Source (optional)
 	LocalStorage bool
+
+	Arch string // the architecture of the image
 }
 
 // NewSpec creates a new Spec from the essential information.

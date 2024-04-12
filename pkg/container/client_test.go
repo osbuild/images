@@ -45,6 +45,7 @@ func TestClientResolve(t *testing.T) {
 		TLSVerify:  client.GetTLSVerify(),
 		LocalName:  client.Target.String(),
 		ListDigest: listDigest,
+		Arch:       "amd64",
 	}, spec)
 
 	client.SetArchitectureChoice("ppc64le")
@@ -58,6 +59,7 @@ func TestClientResolve(t *testing.T) {
 		TLSVerify:  client.GetTLSVerify(),
 		LocalName:  client.Target.String(),
 		ListDigest: listDigest,
+		Arch:       "ppc64le",
 	}, spec)
 
 	// don't have that architecture
