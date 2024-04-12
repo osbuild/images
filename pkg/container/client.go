@@ -16,8 +16,6 @@ import (
 	_ "github.com/containers/image/v5/oci/layout"
 	"golang.org/x/sys/unix"
 
-	"github.com/osbuild/images/internal/common"
-
 	"github.com/containers/common/pkg/retry"
 	"github.com/containers/image/v5/copy"
 	"github.com/containers/image/v5/docker"
@@ -30,6 +28,9 @@ import (
 	"github.com/opencontainers/go-digest"
 
 	imgspecv1 "github.com/opencontainers/image-spec/specs-go/v1"
+
+	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/arch"
 )
 
 const (
@@ -334,7 +335,7 @@ func (cl *Client) UploadImage(ctx context.Context, from, tag string) (digest.Dig
 type RawManifest struct {
 	Data     []byte
 	MimeType string
-	Arch     string
+	Arch     arch.Arch
 }
 
 // Digest computes the digest from the raw manifest data
@@ -379,7 +380,7 @@ func (cl *Client) GetManifest(ctx context.Context, digest digest.Digest, local b
 	if err != nil {
 		return r, err
 	}
-	r.Arch = info.Architecture
+	r.Arch = arch.FromString(info.Architecture)
 
 	src, err := ref.NewImageSource(ctx, cl.sysCtx)
 	if err != nil {

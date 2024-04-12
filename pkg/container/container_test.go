@@ -14,11 +14,12 @@ import (
 
 	"github.com/opencontainers/go-digest"
 
-	"github.com/osbuild/images/internal/common"
-	"github.com/osbuild/images/pkg/container"
-
 	"github.com/containers/image/v5/docker/reference"
 	"github.com/containers/image/v5/manifest"
+
+	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/arch"
+	"github.com/osbuild/images/pkg/container"
 )
 
 const rootLayer = `H4sIAAAJbogA/+SWUYqDMBCG53lP4V5g9x8dzRX2Bvtc0VIhEIhKe/wSKxgU6ktjC/O9hMzAQDL8
@@ -308,7 +309,7 @@ func (reg *Registry) GetRef(repo string) string {
 	return fmt.Sprintf("%s/%s", reg.server.Listener.Addr().String(), repo)
 }
 
-func (reg *Registry) Resolve(target, arch string) (container.Spec, error) {
+func (reg *Registry) Resolve(target string, imgArch arch.Arch) (container.Spec, error) {
 
 	ref, err := reference.ParseNormalizedNamed(target)
 	if err != nil {
@@ -354,7 +355,7 @@ func (reg *Registry) Resolve(target, arch string) (container.Spec, error) {
 		checksum = ""
 
 		for _, m := range lst.Manifests {
-			if m.Platform.Architecture == arch {
+			if arch.FromString(m.Platform.Architecture) == imgArch {
 				checksum = m.Digest.String()
 				break
 			}
@@ -377,7 +378,7 @@ func (reg *Registry) Resolve(target, arch string) (container.Spec, error) {
 		LocalName:  target,
 		TLSVerify:  common.ToPtr(false),
 		ListDigest: listDigest,
-		Arch:       arch,
+		Arch:       imgArch,
 	}, nil
 }
 
