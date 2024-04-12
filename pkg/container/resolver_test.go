@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/container"
 )
 
@@ -51,7 +52,7 @@ func TestResolver(t *testing.T) {
 
 	want := make([]container.Spec, len(refs))
 	for i, r := range refs {
-		spec, err := registry.Resolve(r, "amd64")
+		spec, err := registry.Resolve(r, arch.ARCH_X86_64)
 		assert.NoError(t, err)
 		want[i] = spec
 	}

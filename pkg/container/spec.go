@@ -3,6 +3,8 @@ package container
 import (
 	"github.com/containers/image/v5/docker/reference"
 	"github.com/opencontainers/go-digest"
+
+	"github.com/osbuild/images/pkg/arch"
 )
 
 // A Spec is the specification of how to get a specific
@@ -19,7 +21,7 @@ type Spec struct {
 	ListDigest   string // digest of the list manifest at the Source (optional)
 	LocalStorage bool
 
-	Arch string // the architecture of the image
+	Arch arch.Arch // the architecture of the image
 }
 
 // NewSpec creates a new Spec from the essential information.
