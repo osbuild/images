@@ -334,6 +334,7 @@ func (cl *Client) UploadImage(ctx context.Context, from, tag string) (digest.Dig
 type RawManifest struct {
 	Data     []byte
 	MimeType string
+	Arch     string
 }
 
 // Digest computes the digest from the raw manifest data
@@ -368,6 +369,17 @@ func (cl *Client) GetManifest(ctx context.Context, digest digest.Digest, local b
 	if err != nil {
 		return
 	}
+	img, err := ref.NewImage(ctx, cl.sysCtx)
+	if err != nil {
+		return r, err
+	}
+	defer img.Close()
+
+	info, err := img.Inspect(ctx)
+	if err != nil {
+		return r, err
+	}
+	r.Arch = info.Architecture
 
 	src, err := ref.NewImageSource(ctx, cl.sysCtx)
 	if err != nil {
@@ -515,6 +527,7 @@ func (cl *Client) Resolve(ctx context.Context, name string, local bool) (Spec, e
 		name,
 		local,
 	)
+	spec.Arch = raw.Arch
 
 	return spec, nil
 }
