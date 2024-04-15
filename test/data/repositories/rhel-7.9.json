@@ -5,6 +5,10 @@
       "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el7/el7-x86_64-server-r7.9-20230809"
     },
     {
+      "name": "server-updates",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el7/el7-x86_64-server-updates-7.9-20240415"
+    },
+    {
       "name": "server-extras",
       "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el7/el7-x86_64-server-extras-r7.9-20240401"
     },
@@ -25,7 +29,17 @@
     },
     {
       "name": "azure-rhui-7",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el7/el7-x86_64-rhui-azure-20240401"
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el7/el7-x86_64-rhui-azure-20240401",
+      "image_type_tags": [
+        "azure-rhui"
+      ]
+    },
+    {
+      "name": "rhui-3",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el7/el7-x86_64-rhui-3-20240415",
+      "image_type_tags": [
+        "ec2"
+      ]
     }
   ]
 }
