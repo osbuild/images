@@ -88,7 +88,9 @@ in the form
   "config": "<config name>",
   "manifest-checksum": "<manifest ID>",
   "osbuild-version": "<osbuild version>",
+  "osbuild-commit": "<osbuild commit ID>",
   "commit": "<commit ID>",
+  "boot-success": true,
   "pr": "<PR number>"
 }
 ```
@@ -104,7 +106,9 @@ for example:
   "config": "all-customizations",
   "manifest-checksum": "8c0ce3987d78fe6f3307494cd57ceed861de61c3b04786d6a7f570faacbdb5df",
   "osbuild-version": "osbuild 89",
+  "osbuild-commit": "74392a0238dec6bfa3f030e46c840148df2814e0",
   "commit": "52ecfdf1eb345e09c6a6edf4a8d3dd5c8079c51c",
+  "boot-success": true,
   "pr": 42
 }
 ```
@@ -145,3 +149,4 @@ Each build job runs in parallel. For each image that is successfully built, a fi
 - `<config name>`: name of a build configuration like the ones found in `./test/configs/` (e.g. `all-customizations`).
 - `<build name>`: a concatenation of all the elements that define a unique build configuration. It is created as `<distro>-<arch>-<image type>-<config name>` with dashes `-` in each component replaced by underscores `_` (e.g. `fedora_38-x86_64-qcow2-all_customizations`).
 - `<manifest ID>`: the ID of the last stage of the manifest. The manifest ID is unaffected by content sources (RPM or commit URLs for example) but not by content hashes.
+- `<osbuild commit ID>`: the commit ID specified in the `Schutzfile` under `<distro>.dependencies.osbuild.commit`. If not specified, it defaults to `RELEASE` and means that osbuild version was installed from the distribution repositories and the `<osbuild version>` is the released version for the given distribution.
