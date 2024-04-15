@@ -4,6 +4,7 @@ import os
 import pathlib
 import subprocess as sp
 import sys
+from glob import glob
 
 TEST_CACHE_ROOT = ".cache/osbuild-images"
 CONFIGS_PATH = "./test/configs"
@@ -243,7 +244,8 @@ def read_manifests(path):
     return manifests
 
 
-def check_for_build(manifest_fname, build_info_path, errors):
+def check_for_build(manifest_fname, build_info_dir, errors):
+    build_info_path = os.path.join(build_info_dir, "info.json")
     # rebuild if matching build info is not found
     if not os.path.exists(build_info_path):
         print(f"Build info not found: {build_info_path}")
@@ -282,11 +284,20 @@ def check_for_build(manifest_fname, build_info_path, errors):
 
         # check if it's a BIB type and compare image IDs
         if image_type in BIB_TYPES:
-            booted_id = dl_config.get("bib-id", None)
+            # Successful boot tests with BIB add a file to the directory as bib-<image ID>. Collect them and compare.
+            bib_ids = glob("bib-*", root_dir=build_info_dir)
+            # add the _old_ bib ID that we used to keep in the info.json
+            config_bib_id = dl_config.get("bib-id")
+            if config_bib_id:
+                bib_ids.append(f"bib-{config_bib_id}")
             bib_ref = get_bib_ref()
             current_id = skopeo_inspect_id(f"docker://{bib_ref}", host_container_arch())
-            if booted_id != current_id:
-                print(f"Container disk image was built with bootc-image-builder {booted_id}")
+            if f"bib-{current_id}" not in bib_ids:
+                if bib_ids:
+                    print("  Container disk image was built with the following bootc-image-builder images:")
+                    print("    - " + "\n    -".join(bib_ids))
+                else:
+                    print("  No bib IDs found.")
                 print(f"  Testing {current_id}")
                 print("  Adding config to build pipeline.")
                 return True
@@ -336,9 +347,9 @@ def filter_builds(manifests, distro=None, arch=None, skip_ostree_pull=True):
         build_request["manifest-checksum"] = manifest_id
 
         # check if the hash_fname exists in the synced directory
-        build_info_path = gen_build_info_path(dl_path, osbuild_ver, manifest_id)
+        build_info_dir = gen_build_info_dir_path(dl_path, osbuild_ver, manifest_id)
 
-        if check_for_build(manifest_fname, build_info_path, errors):
+        if check_for_build(manifest_fname, build_info_dir, errors):
             build_requests.append(build_request)
 
     print("✅ Config filtering done!\n")
