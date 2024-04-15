@@ -44,7 +44,7 @@ def main():
     s3url = testlib.gen_build_info_s3(distro, arch, manifest_id)
 
     print(f"⬆️ Uploading {build_dir} to {s3url}")
-    testlib.runcmd(["aws", "s3", "cp", "--acl=private", "--recursive", build_dir+"/", s3url])
+    testlib.runcmd_nc(["aws", "s3", "cp", "--acl=private", "--recursive", build_dir+"/", s3url])
     print("✅ DONE!!")
 
 
