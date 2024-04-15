@@ -129,6 +129,12 @@ func (p *RawBootcImage) serialize() osbuild.Pipeline {
 	mounts = append(mounts, *osbuild.NewOSTreeDeploymentMountDefault("ostree.deployment", osbuild.OSTreeMountSourceMount))
 	mounts = append(mounts, *osbuild.NewBindMount("bind-ostree-deployment-to-tree", "mount://", "tree://"))
 
+	// we always include the fstab stage
+	fstabStage := osbuild.NewFSTabStage(osbuild.NewFSTabStageOptions(pt))
+	fstabStage.Mounts = mounts
+	fstabStage.Devices = devices
+	pipeline.AddStage(fstabStage)
+
 	// customize the image
 	if len(p.Groups) > 0 {
 		groupsStage := osbuild.GenGroupsStage(p.Groups)
