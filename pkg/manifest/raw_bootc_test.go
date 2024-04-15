@@ -191,3 +191,32 @@ func TestRawBootcImageSerializeCustomizationGenCorrectStages(t *testing.T) {
 		}
 	}
 }
+
+func RawBootcImageSerializeCommonPipelines(t *testing.T) {
+	expectedCommonStages := []string{
+		"org.osbuild.truncate",
+		"org.osbuild.sfdisk",
+		"org.osbuild.mkfs.ext4",
+		"org.osbuild.mkfs.ext4",
+		"org.osbuild.mkfs.fat",
+		"org.osbuild.bootc.install-to-filesystem",
+		"org.osbuild.fstab",
+	}
+	rawBootcPipeline := makeFakeRawBootcPipeline()
+	pipeline := rawBootcPipeline.Serialize()
+
+	pipelineStages := make([]string, len(pipeline.Stages))
+	for i, st := range pipeline.Stages {
+		pipelineStages[i] = st.Type
+	}
+	assert.Equal(t, expectedCommonStages, pipelineStages[0:len(expectedCommonStages)])
+}
+
+func RawBootcImageSerializeFstabPipelineHasBootcMounts(t *testing.T) {
+	rawBootcPipeline := makeFakeRawBootcPipeline()
+	pipeline := rawBootcPipeline.Serialize()
+
+	stage := manifest.FindStage("org.osbuild.fstab", pipeline.Stages)
+	assert.NotNil(t, stage)
+	assertBootcDeploymentAndBindMount(t, stage)
+}
