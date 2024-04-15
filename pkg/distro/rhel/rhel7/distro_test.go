@@ -55,6 +55,14 @@ func TestFilenameFromType(t *testing.T) {
 			},
 		},
 		{
+			name: "ec2",
+			args: args{"ec2"},
+			want: wantResult{
+				filename: "image.raw.xz",
+				mimeType: "application/xz",
+			},
+		},
+		{
 			name: "invalid-output-type",
 			args: args{"foobar"},
 			want: wantResult{wantErr: true},
@@ -137,6 +145,7 @@ func TestImageType_Name(t *testing.T) {
 		{
 			arch: "x86_64",
 			imgNames: []string{
+				"ec2",
 				"qcow2",
 				"azure-rhui",
 			},
@@ -194,6 +203,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 		{
 			arch: "x86_64",
 			imgNames: []string{
+				"ec2",
 				"qcow2",
 				"azure-rhui",
 			},

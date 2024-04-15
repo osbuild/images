@@ -72,6 +72,16 @@ func newDistro(name string, minor int) *rhel.Distribution {
 		mkAzureRhuiImgType(),
 	)
 
+	x86_64.AddImageTypes(
+		&platform.X86{
+			BIOS: true,
+			BasePlatform: platform.BasePlatform{
+				ImageFormat: platform.FORMAT_RAW,
+			},
+		},
+		mkEc2ImgTypeX86_64(),
+	)
+
 	rd.AddArches(
 		x86_64,
 	)
