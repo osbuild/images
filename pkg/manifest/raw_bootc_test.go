@@ -125,6 +125,35 @@ func TestRawBootcImageSerializeCreateUsersOptions(t *testing.T) {
 	}
 }
 
+func TestRawBootcImageSerializeCreateGroupOptions(t *testing.T) {
+	rawBootcPipeline := makeFakeRawBootcPipeline()
+
+	for _, tc := range []struct {
+		groups              []users.Group
+		expectedGroupsStage bool
+	}{
+		{nil, false},
+		{[]users.Group{{Name: "root"}}, true},
+		{[]users.Group{{Name: "foo"}}, true},
+		{[]users.Group{{Name: "root"}, {Name: "foo"}}, true},
+	} {
+		rawBootcPipeline.Groups = tc.groups
+
+		pipeline := rawBootcPipeline.Serialize()
+		groupsStage := manifest.FindStage("org.osbuild.groups", pipeline.Stages)
+		if tc.expectedGroupsStage {
+			// ensure options got passed
+			require.NotNil(t, groupsStage)
+			groupOptions := groupsStage.Options.(*osbuild.GroupsStageOptions)
+			for _, group := range tc.groups {
+				assert.NotNil(t, groupOptions.Groups[group.Name])
+			}
+		} else {
+			require.Nil(t, groupsStage)
+		}
+	}
+}
+
 func assertBootcDeploymentAndBindMount(t *testing.T, stage *osbuild.Stage) {
 	// check for bind mount to deployment is there so
 	// that the customization actually works
@@ -141,13 +170,15 @@ func TestRawBootcImageSerializeCustomizationGenCorrectStages(t *testing.T) {
 
 	for _, tc := range []struct {
 		users   []users.User
+		groups  []users.Group
 		SELinux string
 
 		expectedStages []string
 	}{
-		{nil, "", nil},
-		{[]users.User{{Name: "foo"}}, "", []string{"org.osbuild.mkdir", "org.osbuild.users"}},
-		{[]users.User{{Name: "foo"}}, "targeted", []string{"org.osbuild.mkdir", "org.osbuild.users", "org.osbuild.selinux"}},
+		{nil, nil, "", nil},
+		{[]users.User{{Name: "foo"}}, nil, "", []string{"org.osbuild.mkdir", "org.osbuild.users"}},
+		{[]users.User{{Name: "foo"}}, nil, "targeted", []string{"org.osbuild.mkdir", "org.osbuild.users", "org.osbuild.selinux"}},
+		{[]users.User{{Name: "foo"}}, []users.Group{{Name: "bar"}}, "targeted", []string{"org.osbuild.mkdir", "org.osbuild.users", "org.osbuild.users", "org.osbuild.selinux"}},
 	} {
 		rawBootcPipeline.Users = tc.users
 		rawBootcPipeline.SELinux = tc.SELinux
