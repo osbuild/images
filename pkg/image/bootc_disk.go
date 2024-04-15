@@ -28,7 +28,8 @@ type BootcDiskImage struct {
 
 	// The users to put into the image, note that /etc/paswd (and friends)
 	// will become unmanaged state by bootc when used
-	Users []users.User
+	Users  []users.User
+	Groups []users.Group
 
 	// SELinux policy, when set it enables the labeling of the tree with the
 	// selected profile
@@ -57,6 +58,7 @@ func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifes
 	rawImage := manifest.NewRawBootcImage(buildPipeline, containers, img.Platform)
 	rawImage.PartitionTable = img.PartitionTable
 	rawImage.Users = img.Users
+	rawImage.Groups = img.Groups
 	rawImage.KernelOptionsAppend = img.KernelOptionsAppend
 	rawImage.SELinux = img.SELinux
 

@@ -41,6 +41,7 @@ type bootcDiskImageTestOpts struct {
 	BIOS        bool
 	SELinux     string
 	Users       []users.User
+	Groups      []users.Group
 
 	KernelOptionsAppend []string
 }
@@ -74,6 +75,7 @@ func makeBootcDiskImageOsbuildManifest(t *testing.T, opts *bootcDiskImageTestOpt
 	img.PartitionTable = testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi")
 	img.KernelOptionsAppend = opts.KernelOptionsAppend
 	img.Users = opts.Users
+	img.Groups = opts.Groups
 	img.SELinux = opts.SELinux
 
 	m := &manifest.Manifest{}
@@ -223,6 +225,24 @@ func TestBootcDiskImageInstantiateSELinuxForUsers(t *testing.T) {
 			require.NotNil(t, selinuxStage)
 		} else {
 			require.Nil(t, selinuxStage)
+		}
+	}
+}
+
+func TestBootcDiskImageInstantiateGroups(t *testing.T) {
+	for _, withGroup := range []bool{true, false} {
+		opts := &bootcDiskImageTestOpts{}
+		if withGroup {
+			opts.Groups = []users.Group{{Name: "foo-grp"}}
+		}
+		osbuildManifest := makeBootcDiskImageOsbuildManifest(t, opts)
+		imagePipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "image")
+		require.NotNil(t, imagePipeline)
+		groupsStage := findStageFromOsbuildPipeline(t, imagePipeline, "org.osbuild.groups")
+		if withGroup {
+			require.NotNil(t, groupsStage)
+		} else {
+			require.Nil(t, groupsStage)
 		}
 	}
 }

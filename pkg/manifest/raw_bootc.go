@@ -35,7 +35,8 @@ type RawBootcImage struct {
 
 	// The users to put into the image, note that /etc/paswd (and friends)
 	// will become unmanaged state by bootc when used
-	Users []users.User
+	Users  []users.User
+	Groups []users.Group
 
 	// SELinux policy, when set it enables the labeling of the tree with the
 	// selected profile
@@ -119,16 +120,26 @@ func (p *RawBootcImage) serialize() osbuild.Pipeline {
 		pipeline.AddStage(stage)
 	}
 
-	// customize the image
-	if len(p.Users) > 0 {
-		// build common devices/mounts first
-		devices, mounts, err := osbuild.GenBootupdDevicesMounts(p.filename, p.PartitionTable)
-		if err != nil {
-			panic(fmt.Sprintf("gen devices stage failed %v", err))
-		}
-		mounts = append(mounts, *osbuild.NewOSTreeDeploymentMountDefault("ostree.deployment", osbuild.OSTreeMountSourceMount))
-		mounts = append(mounts, *osbuild.NewBindMount("bind-ostree-deployment-to-tree", "mount://", "tree://"))
+	// all our customizations work directly on the mounted deployment
+	// root from the image so generate the devices/mounts for all
+	devices, mounts, err = osbuild.GenBootupdDevicesMounts(p.filename, p.PartitionTable)
+	if err != nil {
+		panic(fmt.Sprintf("gen devices stage failed %v", err))
+	}
+	mounts = append(mounts, *osbuild.NewOSTreeDeploymentMountDefault("ostree.deployment", osbuild.OSTreeMountSourceMount))
+	mounts = append(mounts, *osbuild.NewBindMount("bind-ostree-deployment-to-tree", "mount://", "tree://"))
 
+	// customize the image
+	if len(p.Groups) > 0 {
+		groupsStage := osbuild.GenGroupsStage(p.Groups)
+		if err != nil {
+			panic(fmt.Sprintf("group stage failed %v", err))
+		}
+		groupsStage.Mounts = mounts
+		groupsStage.Devices = devices
+		pipeline.AddStage(groupsStage)
+	}
+	if len(p.Users) > 0 {
 		// ensure /var/home is available
 		mkdirStage := osbuild.NewMkdirStage(&osbuild.MkdirStageOptions{
 			Paths: []osbuild.MkdirStagePath{
