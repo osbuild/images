@@ -75,7 +75,7 @@ The config generator:
 
 Each build job runs in parallel. For each image that is successfully built, a file is added to the test build cache under the following path:
 ```
-<distro>/<arch>/<manifest ID>/info.json
+<distro>/<arch>/<osbuild NEVRA>/<manifest ID>/info.json
 ```
 
 Each file in the cache stores information relevant to the build,
