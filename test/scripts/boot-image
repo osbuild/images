@@ -215,11 +215,15 @@ def main():
     # amend build info with boot success
     # search_path is the root of the build path (build/build_name)
     build_info["boot-success"] = True
-    if bib_image_id:
-        build_info["bib-id"] = bib_image_id
     info_file_path = os.path.join(search_path, "info.json")
     with open(info_file_path, "w", encoding="utf-8") as info_fp:
         json.dump(build_info, info_fp, indent=2)
+    if bib_image_id:
+        # write a separate file with the bib image ID as filename to mark the boot success with that image
+        bib_id_file = os.path.join(search_path, f"bib-{bib_image_id}")
+        print(f"Writing bib image ID file: {bib_id_file}")
+        with open(bib_id_file, "w", encoding="utf-8") as fp:
+            fp.write("")
 
 
 if __name__ == "__main__":
