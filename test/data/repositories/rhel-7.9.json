@@ -19,7 +19,7 @@
     {
       "name": "rhel-eng",
       "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el7/el7-x86_64-eng-rel-20230328",
-      "package-sets": [
+      "package_sets": [
         "build"
       ]
     },
