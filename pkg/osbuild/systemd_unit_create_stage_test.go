@@ -48,7 +48,7 @@ func TestNewSystemdUnitCreateStage(t *testing.T) {
 		Options: &options,
 	}
 
-	actualStage := NewSystemdUnitCreateStageOptions(&options)
+	actualStage := NewSystemdUnitCreateStage(&options)
 	assert.Equal(t, expectedStage, actualStage)
 }
 
@@ -65,6 +65,6 @@ func TestNewSystemdUnitCreateStageInEtc(t *testing.T) {
 		Options: &options,
 	}
 
-	actualStage := NewSystemdUnitCreateStageOptions(&options)
+	actualStage := NewSystemdUnitCreateStage(&options)
 	assert.Equal(t, expectedStage, actualStage)
 }

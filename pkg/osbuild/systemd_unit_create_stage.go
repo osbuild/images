@@ -72,7 +72,7 @@ func (o *SystemdUnitCreateStageOptions) validate() error {
 	return nil
 }
 
-func NewSystemdUnitCreateStageOptions(options *SystemdUnitCreateStageOptions) *Stage {
+func NewSystemdUnitCreateStage(options *SystemdUnitCreateStageOptions) *Stage {
 	if err := options.validate(); err != nil {
 		panic(err)
 	}
