@@ -15,6 +15,12 @@ import (
 	"github.com/osbuild/images/pkg/runner"
 )
 
+var containers = []container.SourceSpec{
+	{
+		Name: "quay.io/centos-bootc/centos-bootc-dev:stream9",
+	},
+}
+
 func hasPipeline(haystack []manifest.Pipeline, needle manifest.Pipeline) bool {
 	for _, p := range haystack {
 		if p == needle {
@@ -30,7 +36,7 @@ func TestNewRawBootcImage(t *testing.T) {
 	buildIf := manifest.NewBuildFromContainer(&mani, runner, nil, nil)
 	build := buildIf.(*manifest.BuildrootFromContainer)
 
-	rawBootcPipeline := manifest.NewRawBootcImage(build, nil, nil)
+	rawBootcPipeline := manifest.NewRawBootcImage(build, containers, nil)
 	require.NotNil(t, rawBootcPipeline)
 
 	assert.True(t, hasPipeline(build.Dependents(), rawBootcPipeline))
@@ -44,7 +50,7 @@ func TestRawBootcImageSerialize(t *testing.T) {
 	runner := &runner.Linux{}
 	build := manifest.NewBuildFromContainer(&mani, runner, nil, nil)
 
-	rawBootcPipeline := manifest.NewRawBootcImage(build, nil, nil)
+	rawBootcPipeline := manifest.NewRawBootcImage(build, containers, nil)
 	rawBootcPipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi")
 	rawBootcPipeline.Users = []users.User{{Name: "root", Key: common.ToPtr("some-ssh-key")}}
 	rawBootcPipeline.KernelOptionsAppend = []string{"karg1", "karg2"}
@@ -60,6 +66,7 @@ func TestRawBootcImageSerialize(t *testing.T) {
 	// (mostly for uniformity)
 	assert.Equal(t, len(opts.RootSSHAuthorizedKeys), 0)
 	assert.Equal(t, []string{"karg1", "karg2"}, opts.Kargs)
+	assert.Equal(t, "quay.io/centos-bootc/centos-bootc-dev:stream9", opts.TargetImgref)
 }
 
 func TestRawBootcImageSerializeMountsValidated(t *testing.T) {

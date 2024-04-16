@@ -103,6 +103,9 @@ func (p *RawBootcImage) serialize() osbuild.Pipeline {
 	opts := &osbuild.BootcInstallToFilesystemOptions{
 		Kargs: p.KernelOptionsAppend,
 	}
+	if len(p.containers) > 0 {
+		opts.TargetImgref = p.containers[0].Name
+	}
 	inputs := osbuild.ContainerDeployInputs{
 		Images: osbuild.NewContainersInputForSingleSource(p.containerSpecs[0]),
 	}
