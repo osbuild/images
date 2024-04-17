@@ -82,7 +82,10 @@ func TestBootcInstallToFilesystemStageJsonHappy(t *testing.T) {
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
 	inputs := makeFakeContainerInputs()
 
-	stage, err := osbuild.NewBootcInstallToFilesystemStage(nil, inputs, devices, mounts)
+	opts := &osbuild.BootcInstallToFilesystemOptions{
+		TargetImgref: "quay.io/centos-bootc/centos-bootc-dev:stream9",
+	}
+	stage, err := osbuild.NewBootcInstallToFilesystemStage(opts, inputs, devices, mounts)
 	require.Nil(t, err)
 	stageJson, err := json.MarshalIndent(stage, "", "  ")
 	require.Nil(t, err)
@@ -99,7 +102,9 @@ func TestBootcInstallToFilesystemStageJsonHappy(t *testing.T) {
       }
     }
   },
-  "options": null,
+  "options": {
+    "target-imgref": "quay.io/centos-bootc/centos-bootc-dev:stream9"
+  },
   "devices": {
     "dev-for-/": {
       "type": "org.osbuild.loopback"
