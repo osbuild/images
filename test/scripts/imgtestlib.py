@@ -128,6 +128,7 @@ def dl_build_info(destination, distro=None, arch=None):
                   "--no-progress",  # wont show progress but will print file list
                   "--exclude=*",
                   "--include=*/info.json",
+                  "--include=*/bib-*",
                   s3url, destination],
                  capture_output=True,
                  check=False)
