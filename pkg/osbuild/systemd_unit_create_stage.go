@@ -23,7 +23,7 @@ const (
 
 type Unit struct {
 	Description              string   `json:"Description,omitempty"`
-	DefaultDependencies      bool     `json:"DefaultDependencies,omitempty"`
+	DefaultDependencies      *bool    `json:"DefaultDependencies,omitempty"`
 	ConditionPathExists      []string `json:"ConditionPathExists,omitempty"`
 	ConditionPathIsDirectory []string `json:"ConditionPathIsDirectory,omitempty"`
 	Requires                 []string `json:"Requires,omitempty"`
