@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/osbuild/images/pkg/osbuild"
@@ -44,20 +45,31 @@ func findStage(name string, stages []*osbuild.Stage) *osbuild.Stage {
 	return nil
 }
 
-// CheckFirstBootStageOptions checks the Command strings
-func CheckFirstBootStageOptions(t *testing.T, stages []*osbuild.Stage, commands []string) {
-	// Find the FirstBootStage
-	s := findStage("org.osbuild.first-boot", stages)
+// CheckSystemdStageOptions checks the Command strings
+func CheckSystemdStageOptions(t *testing.T, stages []*osbuild.Stage, commands []string) {
+	// Find the systemd.unit.create stage
+	s := findStage("org.osbuild.systemd.unit.create", stages)
 	require.NotNil(t, s)
 
 	require.NotNil(t, s.Options)
-	options, ok := s.Options.(*osbuild.FirstBootStageOptions)
+	options, ok := s.Options.(*osbuild.SystemdUnitCreateStageOptions)
 	require.True(t, ok)
-	require.Equal(t, len(options.Commands), len(commands))
+
+	// unit must be conditioned on the keyfile
+	require.Len(t, options.Config.Unit.ConditionPathExists, 1)
+	keyfile := options.Config.Unit.ConditionPathExists[0]
+	// keyfile is also the EnvironmentFile
+	require.Len(t, options.Config.Service.EnvironmentFile, 1)
+	assert.Equal(t, keyfile, options.Config.Service.EnvironmentFile[0])
+
+	execStart := options.Config.Service.ExecStart
+	// the rm command gets prepended in every case
+	commands = append(commands, fmt.Sprintf("/usr/bin/rm %s", keyfile))
+	require.Equal(t, len(execStart), len(commands))
 
 	// Make sure the commands are the same
 	for idx, cmd := range commands {
-		assert.Equal(t, cmd, options.Commands[idx])
+		assert.Equal(t, cmd, options.Config.Service.ExecStart[idx])
 	}
 }
 
@@ -84,8 +96,8 @@ func TestSubscriptionManagerCommands(t *testing.T) {
 		BaseUrl:       "http://cdn.redhat.com/",
 	}
 	pipeline := os.serialize()
-	CheckFirstBootStageOptions(t, pipeline.Stages, []string{
-		"/usr/sbin/subscription-manager register --org=2040324 --activationkey=my-secret-key --serverurl subscription.rhsm.redhat.com --baseurl http://cdn.redhat.com/",
+	CheckSystemdStageOptions(t, pipeline.Stages, []string{
+		"/usr/sbin/subscription-manager register --org=${ORG_ID} --activationkey=${ACTIVATION_KEY} --serverurl subscription.rhsm.redhat.com --baseurl http://cdn.redhat.com/",
 	})
 }
 
@@ -99,8 +111,8 @@ func TestSubscriptionManagerInsightsCommands(t *testing.T) {
 		Insights:      true,
 	}
 	pipeline := os.serialize()
-	CheckFirstBootStageOptions(t, pipeline.Stages, []string{
-		"/usr/sbin/subscription-manager register --org=2040324 --activationkey=my-secret-key --serverurl subscription.rhsm.redhat.com --baseurl http://cdn.redhat.com/",
+	CheckSystemdStageOptions(t, pipeline.Stages, []string{
+		"/usr/sbin/subscription-manager register --org=${ORG_ID} --activationkey=${ACTIVATION_KEY} --serverurl subscription.rhsm.redhat.com --baseurl http://cdn.redhat.com/",
 		"/usr/bin/insights-client --register",
 		"restorecon -R /root/.gnupg",
 	})
@@ -117,8 +129,8 @@ func TestRhcInsightsCommands(t *testing.T) {
 		Rhc:           true,
 	}
 	pipeline := os.serialize()
-	CheckFirstBootStageOptions(t, pipeline.Stages, []string{
-		"/usr/bin/rhc connect -o=2040324 -a=my-secret-key --server subscription.rhsm.redhat.com",
+	CheckSystemdStageOptions(t, pipeline.Stages, []string{
+		"/usr/bin/rhc connect -o=${ORG_ID} -a=${ACTIVATION_KEY} --server subscription.rhsm.redhat.com",
 		"restorecon -R /root/.gnupg",
 		"/usr/sbin/semanage permissive --add rhcd_t",
 	})
