@@ -3,6 +3,7 @@ package osbuild
 import (
 	"testing"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -10,6 +11,7 @@ func createSystemdUnit() SystemdServiceUnit {
 
 	var unit = Unit{
 		Description:              "Create directory and files",
+		DefaultDependencies:      common.ToPtr(true),
 		ConditionPathExists:      []string{"!/etc/myfile"},
 		ConditionPathIsDirectory: []string{"!/etc/mydir"},
 		Requires:                 []string{"dbus.service", "libvirtd.service"},

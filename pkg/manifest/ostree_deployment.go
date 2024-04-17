@@ -513,7 +513,7 @@ func createMountpointService(serviceName string, mountpoints []string) *osbuild.
 	}
 	unit := osbuild.Unit{
 		Description:              "Ensure custom filesystem mountpoints exist",
-		DefaultDependencies:      false,
+		DefaultDependencies:      common.ToPtr(false),
 		ConditionPathIsDirectory: conditionPathIsDirectory,
 	}
 	service := osbuild.Service{
