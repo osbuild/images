@@ -79,7 +79,7 @@ func run(c string, args ...string) ([]byte, []byte, error) {
 func getInstanceType(arch string) (string, error) {
 	switch arch {
 	case "x86_64":
-		return "t3.small", nil
+		return "t3.medium", nil
 	case "aarch64":
 		return "t4g.medium", nil
 	default:
