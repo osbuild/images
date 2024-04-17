@@ -558,6 +558,7 @@ func (p *OS) serialize() osbuild.Pipeline {
 	// - Register with subscription-manager, no Insights or rhc
 	// - Register with subscription-manager and enable Insights, no rhc
 	if p.Subscription != nil {
+		subkeyFilepath := "/etc/osbuild-first-boot"
 		var commands []string
 		if p.Subscription.Rhc {
 			// Use rhc for registration instead of subscription manager
@@ -577,10 +578,32 @@ func (p *OS) serialize() osbuild.Pipeline {
 			}
 		}
 
-		pipeline.AddStage(osbuild.NewFirstBootStage(&osbuild.FirstBootStageOptions{
-			Commands:       commands,
-			WaitForNetwork: true,
-		}))
+		commands = append(commands, fmt.Sprintf("/usr/bin/rm %s", subkeyFilepath))
+
+		subscribeServiceFile := "osbuild-subscription-register.service"
+		regServiceStageOptions := &osbuild.SystemdUnitCreateStageOptions{
+			Filename: subscribeServiceFile,
+			UnitType: "system",
+			UnitPath: osbuild.Usr,
+			Config: osbuild.SystemdServiceUnit{
+				Unit: &osbuild.Unit{
+					Description:         "First-boot service for registering with Red Hat subscription manager and/or insights",
+					ConditionPathExists: []string{subkeyFilepath},
+					Wants:               []string{"network-online.target"},
+					After:               []string{"network-online.target"},
+				},
+				Service: &osbuild.Service{
+					Type:            osbuild.Oneshot,
+					RemainAfterExit: false,
+					ExecStart:       commands,
+				},
+				Install: &osbuild.Install{
+					WantedBy: []string{"default.target"},
+				},
+			},
+		}
+		pipeline.AddStage(osbuild.NewSystemdUnitCreateStage(regServiceStageOptions))
+		p.EnabledServices = append(p.EnabledServices, subscribeServiceFile)
 
 		if rhsmConfig, exists := p.RHSMConfig[subscription.RHSMConfigWithSubscription]; exists {
 			pipeline.AddStage(osbuild.NewRHSMStage(rhsmConfig))
