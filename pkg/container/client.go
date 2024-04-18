@@ -14,6 +14,7 @@ import (
 	_ "github.com/containers/image/v5/docker/archive"
 	_ "github.com/containers/image/v5/oci/archive"
 	_ "github.com/containers/image/v5/oci/layout"
+	"github.com/containers/storage"
 	"golang.org/x/sys/unix"
 
 	"github.com/containers/common/pkg/retry"
@@ -343,9 +344,17 @@ func (m RawManifest) Digest() (digest.Digest, error) {
 	return manifest.Digest(m.Data)
 }
 
-func getImageRef(target reference.Named, local bool) (types.ImageReference, error) {
+func getImageRef(target reference.Named, id string, local bool) (types.ImageReference, error) {
 	if local {
-		return alltransports.ParseImageName(fmt.Sprintf("containers-storage:%s", target))
+		imageName := target.String()
+		if id != "" {
+			imageName = id
+		}
+		return alltransports.ParseImageName(fmt.Sprintf("containers-storage:%s", imageName))
+	}
+
+	if target == nil {
+		return nil, fmt.Errorf("target cannot be nil for remote image")
 	}
 
 	return docker.NewReference(target)
@@ -364,12 +373,37 @@ func (cl *Client) resolveContainerImageArch(ctx context.Context, ref types.Image
 	return info.Architecture, nil
 }
 
+func (cl *Client) getLocalImageIDFromDigest(instance digest.Digest) (string, error) {
+	store, err := storage.GetStore(storage.StoreOptions{})
+	if err != nil {
+		return "", err
+	}
+	images, err := store.ImagesByDigest(instance)
+	if err != nil {
+		return "", err
+	}
+	for _, image := range images {
+		// return first result
+		return image.ID, nil
+	}
+	// no id found
+	return "", nil
+}
+
 // GetManifest fetches the raw manifest data from the server. If digest is not empty
 // it will override any given tag for the Client's Target.
 func (cl *Client) GetManifest(ctx context.Context, instanceDigest digest.Digest, local bool) (r RawManifest, err error) {
 	target := cl.Target
 
-	ref, err := getImageRef(target, local)
+	var id string
+	if instanceDigest != "" && local {
+		id, err = cl.getLocalImageIDFromDigest(instanceDigest)
+		if err != nil {
+			return r, err
+		}
+	}
+
+	ref, err := getImageRef(target, id, local)
 	if err != nil {
 		return
 	}
@@ -391,7 +425,8 @@ func (cl *Client) GetManifest(ctx context.Context, instanceDigest digest.Digest,
 
 	if err = retry.RetryIfNecessary(ctx, func() error {
 		var secondaryDigest *digest.Digest
-		if instanceDigest != "" {
+		// passing in a digest for a local manifest list will break
+		if instanceDigest != "" && !local {
 			// We can pass the instance digest, if it is nil, then this is the primary manifest.
 			// If it is not nil, then this is the instance digest and the primary manifest is a
 			// manifest list. The `GetManifest` call will then retrieve the manifest for the
@@ -431,18 +466,18 @@ type resolvedIds struct {
 	ListManifest digest.Digest
 }
 
-func (cl *Client) resolveManifestList(ctx context.Context, list manifestList) (resolvedIds, error) {
+func (cl *Client) resolveManifestList(ctx context.Context, list manifestList, local bool) (resolvedIds, error) {
 	digest, err := list.ChooseInstance(cl.sysCtx)
 	if err != nil {
 		return resolvedIds{}, err
 	}
 
-	raw, err := cl.GetManifest(ctx, digest, false)
+	raw, err := cl.GetManifest(ctx, digest, local)
 	if err != nil {
 		return resolvedIds{}, fmt.Errorf("error getting manifest: %w", err)
 	}
 
-	ids, err := cl.resolveRawManifest(ctx, raw)
+	ids, err := cl.resolveRawManifest(ctx, raw, local)
 	if err != nil {
 		return resolvedIds{}, err
 	}
@@ -450,7 +485,7 @@ func (cl *Client) resolveManifestList(ctx context.Context, list manifestList) (r
 	return ids, err
 }
 
-func (cl *Client) resolveRawManifest(ctx context.Context, rm RawManifest) (resolvedIds, error) {
+func (cl *Client) resolveRawManifest(ctx context.Context, rm RawManifest, local bool) (resolvedIds, error) {
 
 	var imageID digest.Digest
 
@@ -462,7 +497,7 @@ func (cl *Client) resolveRawManifest(ctx context.Context, rm RawManifest) (resol
 		}
 
 		// Save digest of the manifest list as well.
-		ids, err := cl.resolveManifestList(ctx, list)
+		ids, err := cl.resolveManifestList(ctx, list, local)
 		if err != nil {
 			return resolvedIds{}, err
 		}
@@ -477,7 +512,7 @@ func (cl *Client) resolveRawManifest(ctx context.Context, rm RawManifest) (resol
 		}
 
 		// Save digest of the manifest list as well.
-		ids, err := cl.resolveManifestList(ctx, index)
+		ids, err := cl.resolveManifestList(ctx, index, local)
 		if err != nil {
 			return resolvedIds{}, err
 		}
@@ -528,7 +563,7 @@ func (cl *Client) Resolve(ctx context.Context, name string, local bool) (Spec, e
 		return Spec{}, fmt.Errorf("error getting manifest: %w", err)
 	}
 
-	ids, err := cl.resolveRawManifest(ctx, raw)
+	ids, err := cl.resolveRawManifest(ctx, raw, local)
 	if err != nil {
 		return Spec{}, err
 	}
