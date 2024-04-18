@@ -558,17 +558,27 @@ func (p *OS) serialize() osbuild.Pipeline {
 	// - Register with subscription-manager, no Insights or rhc
 	// - Register with subscription-manager and enable Insights, no rhc
 	if p.Subscription != nil {
-		subkeyFilepath := "/etc/osbuild-first-boot"
+		// Write a key file that will contain the org ID and activation key to be sourced in the systemd service.
+		// The file will also act as the ConditionFirstBoot file.
+		subkeyFilepath := "/etc/osbuild-subscription-register.env"
+		subkeyContent := fmt.Sprintf("ORG_ID=%s\nACTIVATION_KEY=%s", p.Subscription.Organization, p.Subscription.ActivationKey)
+		if subkeyFile, err := fsnode.NewFile(subkeyFilepath, nil, "root", "root", []byte(subkeyContent)); err == nil {
+			p.Files = append(p.Files, subkeyFile)
+		} else {
+			panic(err)
+		}
+
 		var commands []string
 		if p.Subscription.Rhc {
+			// TODO: replace org ID and activation key with env vars
 			// Use rhc for registration instead of subscription manager
-			commands = []string{fmt.Sprintf("/usr/bin/rhc connect -o=%s -a=%s --server %s", p.Subscription.Organization, p.Subscription.ActivationKey, p.Subscription.ServerUrl)}
+			commands = []string{fmt.Sprintf("/usr/bin/rhc connect -o=${ORG_ID} -a=${ACTIVATION_KEY} --server %s", p.Subscription.ServerUrl)}
 			// insights-client creates the .gnupg directory during boot process, and is labeled incorrectly
 			commands = append(commands, "restorecon -R /root/.gnupg")
 			// execute the rhc post install script as the selinuxenabled check doesn't work in the buildroot container
 			commands = append(commands, "/usr/sbin/semanage permissive --add rhcd_t")
 		} else {
-			commands = []string{fmt.Sprintf("/usr/sbin/subscription-manager register --org=%s --activationkey=%s --serverurl %s --baseurl %s", p.Subscription.Organization, p.Subscription.ActivationKey, p.Subscription.ServerUrl, p.Subscription.BaseUrl)}
+			commands = []string{fmt.Sprintf("/usr/sbin/subscription-manager register --org=${ORG_ID} --activationkey=${ACTIVATION_KEY} --serverurl %s --baseurl %s", p.Subscription.ServerUrl, p.Subscription.BaseUrl)}
 
 			// Insights is optional when using subscription-manager
 			if p.Subscription.Insights {
@@ -596,6 +606,7 @@ func (p *OS) serialize() osbuild.Pipeline {
 					Type:            osbuild.Oneshot,
 					RemainAfterExit: false,
 					ExecStart:       commands,
+					EnvironmentFile: []string{subkeyFilepath},
 				},
 				Install: &osbuild.Install{
 					WantedBy: []string{"default.target"},
