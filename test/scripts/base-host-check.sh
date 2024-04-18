@@ -81,10 +81,15 @@ get_oscap_score() {
 echo "❓ Checking system status"
 if ! running_wait; then
 
-    echo "❌ Listing units and exiting with failure"
+    echo "❌ Listing units"
     # system is not fully operational
     # (try to) list units so we can troubleshoot any failures
     systemctl list-units
+
+    echo "❌ Status for all failed units"
+    # the default 10 lines might be a bit too short for troubleshooting some
+    # units, 100 should be more than enough
+    systemctl status --failed --full --lines=100
 
     # exit with failure; we don't care about the exact exit code from the
     # failed condition
