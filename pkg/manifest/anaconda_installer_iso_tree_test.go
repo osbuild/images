@@ -386,6 +386,20 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
 	})
+
+	t.Run("kernel-options", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.KSPath = testKsPath
+		pipeline.KickstartKernelOptionsAppend = []string{"kernel.opt=1", "debug"}
+		pipeline.serializeStart(nil, []container.Spec{containerPayload}, nil, nil)
+		sp := pipeline.serialize()
+		pipeline.serializeEnd()
+		kickstartSt := findStage("org.osbuild.kickstart", sp.Stages)
+		assert.NotNil(t, kickstartSt)
+		opts := kickstartSt.Options.(*osbuild.KickstartStageOptions)
+		assert.Equal(t, "kernel.opt=1 debug", opts.Bootloader.Append)
+	})
+
 }
 
 func TestMakeKickstartSudoersPostEmpty(t *testing.T) {
