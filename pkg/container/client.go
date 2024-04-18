@@ -351,6 +351,20 @@ func getImageRef(target reference.Named, local bool) (types.ImageReference, erro
 	return docker.NewReference(target)
 }
 
+func (cl *Client) resolveContainerImageArch(ctx context.Context, ref types.ImageReference) (*arch.Arch, error) {
+	img, err := ref.NewImage(ctx, cl.sysCtx)
+	if err != nil {
+		return nil, err
+	}
+	defer img.Close()
+	info, err := img.Inspect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	a := arch.FromString(info.Architecture)
+	return &a, nil
+}
+
 // GetManifest fetches the raw manifest data from the server. If digest is not empty
 // it will override any given tag for the Client's Target.
 func (cl *Client) GetManifest(ctx context.Context, instanceDigest digest.Digest, local bool) (r RawManifest, err error) {
@@ -360,17 +374,6 @@ func (cl *Client) GetManifest(ctx context.Context, instanceDigest digest.Digest,
 	if err != nil {
 		return
 	}
-	img, err := ref.NewImage(ctx, cl.sysCtx)
-	if err != nil {
-		return r, err
-	}
-	defer img.Close()
-
-	info, err := img.Inspect(ctx)
-	if err != nil {
-		return r, err
-	}
-	r.Arch = arch.FromString(info.Architecture)
 
 	src, err := ref.NewImageSource(ctx, cl.sysCtx)
 	if err != nil {
@@ -398,7 +401,22 @@ func (cl *Client) GetManifest(ctx context.Context, instanceDigest digest.Digest,
 			secondaryDigest = &instanceDigest
 		}
 		r.Data, r.MimeType, err = src.GetManifest(ctx, secondaryDigest)
-		return err
+		if err != nil {
+			return err
+		}
+
+		// getting the container image arch doesn't work with local manifest lists
+		if local && (r.MimeType == imgspecv1.MediaTypeImageIndex || r.MimeType == manifest.DockerV2ListMediaType) {
+			return nil
+		}
+
+		imageArch, err := cl.resolveContainerImageArch(ctx, ref)
+		if err != nil {
+			return err
+		}
+		r.Arch = *imageArch
+
+		return nil
 	}, &retryOpts); err != nil {
 		return
 	}
