@@ -520,8 +520,8 @@ func createMountpointService(serviceName string, mountpoints []string) *osbuild.
 		Type:            osbuild.Oneshot,
 		RemainAfterExit: true,
 		//compatibility with composefs, will require transient rootfs to be enabled too.
-		ExecStartPre: []string{"/bin/sh -c \"if [ -z \"$(grep -Uq composefs /run/ostree-booted)\" ]; then chattr -i /; fi\""},
-		ExecStopPost: []string{"/bin/sh -c \"if [ -z \"$(grep -Uq composefs /run/ostree-booted)\" ]; then chattr +i /; fi\""},
+		ExecStartPre: []string{"/bin/sh -c 'grep -Uqs composefs /run/ostree-booted || chattr -i /'"},
+		ExecStopPost: []string{"/bin/sh -c 'grep -Uqs composefs /run/ostree-booted || chattr +i /'"},
 		ExecStart:    []string{"mkdir -p " + strings.Join(mountpoints[:], " ")},
 	}
 	install := osbuild.Install{
