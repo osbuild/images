@@ -37,6 +37,8 @@ type AnacondaInstallerISOTree struct {
 	// Kernel options that will be apended to the installed system
 	// (not the iso)
 	KickstartKernelOptionsAppend []string
+	// Enable networking on on boot in the installed system
+	KickstartNetworkOnBoot bool
 
 	// Create a sudoers drop-in file for each user or group to enable the
 	// NOPASSWD option
@@ -451,6 +453,11 @@ func (p *AnacondaInstallerISOTree) ostreeContainerStages() []*osbuild.Stage {
 			// https://www.kernel.org/doc/html/latest/admin-guide/kernel-parameters.html
 			// and lib/cmdline.c in the kernel source
 			Append: strings.Join(p.KickstartKernelOptionsAppend, " "),
+		}
+	}
+	if p.KickstartNetworkOnBoot {
+		kickstartOptions.Network = []osbuild.NetworkOptions{
+			{BootProto: "dhcp", Device: "link", Activate: common.ToPtr(true), OnBoot: "on"},
 		}
 	}
 

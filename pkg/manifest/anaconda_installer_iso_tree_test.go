@@ -400,6 +400,19 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 		assert.Equal(t, "kernel.opt=1 debug", opts.Bootloader.Append)
 	})
 
+	t.Run("network-on-boot", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.KSPath = testKsPath
+		pipeline.KickstartNetworkOnBoot = true
+		pipeline.serializeStart(nil, []container.Spec{containerPayload}, nil, nil)
+		sp := pipeline.serialize()
+		pipeline.serializeEnd()
+		kickstartSt := findStage("org.osbuild.kickstart", sp.Stages)
+		assert.NotNil(t, kickstartSt)
+		opts := kickstartSt.Options.(*osbuild.KickstartStageOptions)
+		assert.Equal(t, 1, len(opts.Network))
+		assert.Equal(t, "on", opts.Network[0].OnBoot)
+	})
 }
 
 func TestMakeKickstartSudoersPostEmpty(t *testing.T) {

@@ -46,6 +46,8 @@ type AnacondaContainerInstaller struct {
 	// Kernel options that will be apended to the installed system
 	// (not the iso)
 	KickstartKernelOptionsAppend []string
+	// Enable networking on on boot in the installed system
+	KickstartNetworkOnBoot bool
 }
 
 func NewAnacondaContainerInstaller(container container.SourceSpec, ref string) *AnacondaContainerInstaller {
@@ -119,6 +121,8 @@ func (img *AnacondaContainerInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoTreePipeline.Users = img.Users
 	isoTreePipeline.Groups = img.Groups
 	isoTreePipeline.KickstartKernelOptionsAppend = img.KickstartKernelOptionsAppend
+
+	isoTreePipeline.KickstartNetworkOnBoot = img.KickstartNetworkOnBoot
 
 	isoTreePipeline.SquashfsCompression = img.SquashfsCompression
 
