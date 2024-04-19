@@ -28,6 +28,7 @@ type Unit struct {
 	ConditionPathIsDirectory []string `json:"ConditionPathIsDirectory,omitempty"`
 	Requires                 []string `json:"Requires,omitempty"`
 	Wants                    []string `json:"Wants,omitempty"`
+	After                    []string `json:"After,omitempty"`
 }
 
 type Service struct {
@@ -61,6 +62,15 @@ type SystemdUnitCreateStageOptions struct {
 func (SystemdUnitCreateStageOptions) isStageOptions() {}
 
 func (o *SystemdUnitCreateStageOptions) validate() error {
+	fre := regexp.MustCompile(filenameRegex)
+	if !fre.MatchString(o.Filename) {
+		return fmt.Errorf("filename %q doesn't conform to schema (%s)", o.Filename, filenameRegex)
+	}
+
+	if o.Config.Install == nil {
+		return fmt.Errorf("Install section of systemd unit is required")
+	}
+
 	vre := regexp.MustCompile(envVarRegex)
 	if service := o.Config.Service; service != nil {
 		for _, envVar := range service.Environment {
