@@ -130,7 +130,7 @@ func TestRhcInsightsCommands(t *testing.T) {
 	}
 	pipeline := os.serialize()
 	CheckSystemdStageOptions(t, pipeline.Stages, []string{
-		"/usr/bin/rhc connect -o=${ORG_ID} -a=${ACTIVATION_KEY} --server subscription.rhsm.redhat.com",
+		"/usr/bin/rhc connect --organization=${ORG_ID} --activation-key=${ACTIVATION_KEY} --server subscription.rhsm.redhat.com",
 		"restorecon -R /root/.gnupg",
 		"/usr/sbin/semanage permissive --add rhcd_t",
 	})

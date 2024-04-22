@@ -572,7 +572,7 @@ func (p *OS) serialize() osbuild.Pipeline {
 		if p.Subscription.Rhc {
 			// TODO: replace org ID and activation key with env vars
 			// Use rhc for registration instead of subscription manager
-			commands = []string{fmt.Sprintf("/usr/bin/rhc connect -o=${ORG_ID} -a=${ACTIVATION_KEY} --server %s", p.Subscription.ServerUrl)}
+			commands = []string{fmt.Sprintf("/usr/bin/rhc connect --organization=${ORG_ID} --activation-key=${ACTIVATION_KEY} --server %s", p.Subscription.ServerUrl)}
 			// insights-client creates the .gnupg directory during boot process, and is labeled incorrectly
 			commands = append(commands, "restorecon -R /root/.gnupg")
 			// execute the rhc post install script as the selinuxenabled check doesn't work in the buildroot container
