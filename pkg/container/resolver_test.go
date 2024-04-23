@@ -2,6 +2,9 @@ package container_test
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+	"os/user"
 	"testing"
 	"time"
 
@@ -113,4 +116,79 @@ func TestResolverFail(t *testing.T) {
 	specs, err = resolver.Finish()
 	assert.Error(t, err)
 	assert.Len(t, specs, 0)
+}
+
+func TestResolverLocalManifest(t *testing.T) {
+	currentUser, err := user.Current()
+	assert.NoError(t, err)
+
+	if currentUser.Uid != "0" {
+		t.Skip("User is not root, skipping test")
+	}
+
+	_, err = exec.LookPath("podman")
+	if err != nil {
+		t.Skip("Podman not available, skipping test")
+	}
+
+	containerFile, err := os.CreateTemp(t.TempDir(), "Containerfile")
+	assert.NoError(t, err)
+
+	tmpStorage := t.TempDir()
+
+	_, err = containerFile.Write([]byte("FROM scratch"))
+	assert.NoError(t, err)
+
+	cmd := exec.Command( //nolint:gosec
+		"podman",
+		"--root", tmpStorage, // don't dirty the default store
+		"build",
+		"--platform", "linux/amd64,linux/arm64",
+		"--manifest", "multi-arch",
+		"-f", containerFile.Name(),
+		".",
+	)
+	// cleanup the containers
+	defer func() {
+		cmd := exec.Command("podman", "--root", tmpStorage, "system", "prune", "-f")
+		err := cmd.Run()
+		assert.NoError(t, err)
+	}()
+
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+
+	err = cmd.Run()
+	assert.NoError(t, err)
+
+	local := true
+	// try resolve an x86_64 container using a local manifest list
+	resolver := container.NewResolver("amd64")
+	resolver.Add(container.SourceSpec{
+		"localhost/multi-arch",
+		"",
+		common.ToPtr(""),
+		common.ToPtr(false),
+		local,
+		&tmpStorage,
+	})
+	specs, err := resolver.Finish()
+	assert.NoError(t, err)
+	assert.Len(t, specs, 1)
+	assert.Equal(t, specs[0].LocalName, "localhost/multi-arch:latest")
+
+	// try resolve an  aarch64 container using a local manifest list
+	resolver = container.NewResolver("arm64")
+	resolver.Add(container.SourceSpec{
+		"localhost/multi-arch",
+		"",
+		common.ToPtr(""),
+		common.ToPtr(false),
+		local,
+		&tmpStorage,
+	})
+	specs, err = resolver.Finish()
+	assert.NoError(t, err)
+	assert.Len(t, specs, 1)
+	assert.Equal(t, specs[0].LocalName, "localhost/multi-arch:latest")
 }
