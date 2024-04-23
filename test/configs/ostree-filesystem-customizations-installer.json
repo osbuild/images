@@ -1,7 +1,9 @@
 {
   "name": "ostree-filesystem-customizations-installer",
-  "ostree": {
-    "url": "http://example.com/repo"
+  "options": {
+    "ostree": {
+      "url": "http://example.com/repo"
+    }
   },
   "blueprint": {
     "customizations": {

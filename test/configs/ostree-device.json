@@ -5,8 +5,10 @@
       "installation_device": "/dev/null"
     }
   },
-  "ostree": {
-    "ref": "test/fedora/iot",
-    "url": "http://fedora.example.com/repo"
+  "options": {
+    "ostree": {
+      "ref": "test/fedora/iot",
+      "url": "http://fedora.example.com/repo"
+    }
   }
 }

@@ -338,9 +338,10 @@ def filter_builds(manifests, distro=None, arch=None, skip_ostree_pull=True):
         image_type = build_request["image-type"]
         config = build_request["config"]
         config_name = config["name"]
+        options = config.get("options", {})
 
         # check if the config specifies an ostree URL and skip it if requested
-        if skip_ostree_pull and config.get("ostree", {}).get("url"):
+        if skip_ostree_pull and options.get("ostree", {}).get("url"):
             print(f"🦘 Skipping {distro}/{arch}/{image_type}/{config_name} (ostree dependency)")
             continue
 

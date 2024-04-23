@@ -231,12 +231,15 @@ def setup_dependencies(manifests, config_map, distro, arch):
             # modify image config with container address and ref
             config_name = config_data["name"]
             config_name = f"{config_name}-{port}"
+            # get the ref from the current config, or compute the default if unset
+            ref = config_data.get("options", {}).get("ostree", {}).get("ref", default_ref(ic_distro, ic_arch))
             new_config = {
                 "name": config_name,
-                "ostree": {
-                    "url": f"http://localhost:{port}/repo",
-                    # get the ref from the current config, or compute the default if unset
-                    "ref": config_data.get("ostree", {}).get("ref", default_ref(ic_distro, ic_arch)),
+                "options": {
+                    "ostree": {
+                        "url": f"http://localhost:{port}/repo",
+                        "ref": ref,
+                    }
                 },
                 "blueprint": config_data.get("blueprint"),
             }

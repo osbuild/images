@@ -1,8 +1,10 @@
 {
   "name": "ostree-users",
-  "ostree": {
-    "ref": "test/iot",
-    "url": "http://iot.example.com/repo"
+  "options": {
+    "ostree": {
+      "ref": "test/iot",
+      "url": "http://iot.example.com/repo"
+    }
   },
   "blueprint": {
     "name": "iot-installer-users",
