@@ -108,6 +108,8 @@ type Client struct {
 
 	UserAgent string // user agent string to use for requests, defaults to DefaultUserAgent
 
+	Store string // another store location other than the main one, useful for testing
+
 	// internal state
 	policy *signature.Policy
 	sysCtx *types.SystemContext
@@ -167,6 +169,17 @@ func (cl *Client) SetAuthFilePath(path string) {
 // GetAuthFilePath gets the location of the `containers-auth.json(5)` file.
 func (cl *Client) GetAuthFilePath() string {
 	return cl.sysCtx.AuthFilePath
+}
+
+func (cl *Client) SetContainersStore(store string) {
+	cl.Store = store
+}
+
+func (cl *Client) GetContainersStore() string {
+	if cl.Store == "" {
+		return "/var/lib/containers/storage"
+	}
+	return cl.Store
 }
 
 func (cl *Client) SetArchitectureChoice(arch string) {
@@ -344,13 +357,14 @@ func (m RawManifest) Digest() (digest.Digest, error) {
 	return manifest.Digest(m.Data)
 }
 
-func getImageRef(target reference.Named, id string, local bool) (types.ImageReference, error) {
+func (cl *Client) getImageRef(target reference.Named, id string, local bool) (types.ImageReference, error) {
 	if local {
 		imageName := target.String()
 		if id != "" {
 			imageName = id
 		}
-		return alltransports.ParseImageName(fmt.Sprintf("containers-storage:%s", imageName))
+		options := fmt.Sprintf("containers-storage:[overlay@%s+/run/containers/storage]%s", cl.GetContainersStore(), imageName)
+		return alltransports.ParseImageName(options)
 	}
 
 	if target == nil {
@@ -375,7 +389,7 @@ func (cl *Client) resolveContainerImageArch(ctx context.Context, ref types.Image
 }
 
 func (cl *Client) getLocalImageIDFromDigest(instance digest.Digest) (string, error) {
-	store, err := storage.GetStore(storage.StoreOptions{})
+	store, err := storage.GetStore(storage.StoreOptions{GraphRoot: cl.GetContainersStore()})
 	if err != nil {
 		return "", err
 	}
@@ -406,7 +420,7 @@ func (cl *Client) GetManifest(ctx context.Context, instanceDigest digest.Digest,
 		}
 	}
 
-	ref, err := getImageRef(target, id, local)
+	ref, err := cl.getImageRef(target, id, local)
 	if err != nil {
 		return
 	}

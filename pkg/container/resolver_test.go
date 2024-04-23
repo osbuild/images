@@ -41,6 +41,7 @@ func TestResolver(t *testing.T) {
 			common.ToPtr(""),
 			common.ToPtr(false),
 			false,
+			nil,
 		})
 	}
 
@@ -69,6 +70,7 @@ func TestResolverFail(t *testing.T) {
 		common.ToPtr(""),
 		common.ToPtr(false),
 		false,
+		nil,
 	})
 	specs, err := resolver.Finish()
 	assert.Error(t, err)
@@ -83,6 +85,7 @@ func TestResolverFail(t *testing.T) {
 		common.ToPtr(""),
 		common.ToPtr(false),
 		false,
+		nil,
 	})
 	specs, err = resolver.Finish()
 	assert.Error(t, err)
@@ -94,6 +97,7 @@ func TestResolverFail(t *testing.T) {
 		common.ToPtr(""),
 		common.ToPtr(false),
 		false,
+		nil,
 	})
 	specs, err = resolver.Finish()
 	assert.Error(t, err)
@@ -104,6 +108,7 @@ func TestResolverFail(t *testing.T) {
 		common.ToPtr(""),
 		common.ToPtr(false),
 		false,
+		nil,
 	})
 	specs, err = resolver.Finish()
 	assert.Error(t, err)

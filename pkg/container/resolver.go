@@ -28,6 +28,7 @@ type SourceSpec struct {
 	Digest    *string
 	TLSVerify *bool
 	Local     bool
+	Store     *string
 }
 
 // XXX: use arch.Arch here?
@@ -52,6 +53,10 @@ func (r *Resolver) Add(spec SourceSpec) {
 	client.SetArchitectureChoice(r.Arch)
 	if r.AuthFilePath != "" {
 		client.SetAuthFilePath(r.AuthFilePath)
+	}
+
+	if spec.Store != nil {
+		client.SetContainersStore(*spec.Store)
 	}
 
 	go func() {
