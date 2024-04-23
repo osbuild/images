@@ -23,7 +23,9 @@
     "config": "empty.json",
     "image-type": "iot-container"
   },
-  "ostree": {
-    "url": "http://example.com/repo"
+  "options": {
+    "ostree": {
+      "url": "http://example.com/repo"
+    }
   }
 }

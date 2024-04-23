@@ -17,7 +17,9 @@
     "config": "empty.json",
     "image-type": "edge-container"
   },
-  "ostree": {
-    "url": "http://example.com/repo"
+  "options": {
+    "ostree": {
+      "url": "http://example.com/repo"
+    }
   }
 }
