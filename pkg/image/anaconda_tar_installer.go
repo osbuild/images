@@ -10,6 +10,7 @@ import (
 	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/artifact"
+	"github.com/osbuild/images/pkg/customizations/kickstart"
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/manifest"
@@ -170,24 +171,24 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	// TODO: the partition table is required - make it a ctor arg or set a default one in the pipeline
 	isoTreePipeline.PartitionTable = efiBootPartitionTable(rng)
 	isoTreePipeline.Release = img.Release
-	isoTreePipeline.OSName = img.OSName
-	isoTreePipeline.Users = img.Users
-	isoTreePipeline.Groups = img.Groups
-	isoTreePipeline.Keyboard = img.OSCustomizations.Keyboard
+	isoTreePipeline.Kickstart = &kickstart.Options{
+		OSTree: &kickstart.OSTree{
+			OSName: img.OSName,
+		},
+		Users:        img.Users,
+		Groups:       img.Groups,
+		SudoNopasswd: img.NoPasswd,
+		Unattended:   img.UnattendedKickstart,
+		Language:     &img.OSCustomizations.Language,
+		Keyboard:     img.OSCustomizations.Keyboard,
+		Timezone:     &img.OSCustomizations.Timezone,
+	}
 
-	if img.OSCustomizations.Language != "" {
-		isoTreePipeline.Language = &img.OSCustomizations.Language
-	}
-	if img.OSCustomizations.Timezone != "" {
-		isoTreePipeline.Timezone = &img.OSCustomizations.Timezone
-	}
 	isoTreePipeline.PayloadPath = tarPath
 	if img.ISORootKickstart {
-		isoTreePipeline.KSPath = kspath
+		isoTreePipeline.Kickstart.Path = kspath
 	}
 
-	isoTreePipeline.NoPasswd = img.NoPasswd
-	isoTreePipeline.UnattendedKickstart = img.UnattendedKickstart
 	isoTreePipeline.SquashfsCompression = img.SquashfsCompression
 
 	isoTreePipeline.OSPipeline = osPipeline
