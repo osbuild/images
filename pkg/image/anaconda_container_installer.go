@@ -8,6 +8,7 @@ import (
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/artifact"
 	"github.com/osbuild/images/pkg/container"
+	"github.com/osbuild/images/pkg/customizations/kickstart"
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
@@ -117,17 +118,20 @@ func (img *AnacondaContainerInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
 	isoTreePipeline.PartitionTable = efiBootPartitionTable(rng)
 	isoTreePipeline.Release = img.Release
-	isoTreePipeline.OSName = img.OSName
-	isoTreePipeline.Users = img.Users
-	isoTreePipeline.Groups = img.Groups
-	isoTreePipeline.KickstartKernelOptionsAppend = img.KickstartKernelOptionsAppend
-
-	isoTreePipeline.KickstartNetworkOnBoot = img.KickstartNetworkOnBoot
+	isoTreePipeline.Kickstart = &kickstart.Options{
+		OSTree: &kickstart.OSTree{
+			OSName: img.OSName,
+		},
+		Users:               img.Users,
+		Groups:              img.Groups,
+		KernelOptionsAppend: img.KickstartKernelOptionsAppend,
+		NetworkOnBoot:       img.KickstartNetworkOnBoot,
+		Path:                kspath,
+	}
 
 	isoTreePipeline.SquashfsCompression = img.SquashfsCompression
 
 	// For ostree installers, always put the kickstart file in the root of the ISO
-	isoTreePipeline.KSPath = kspath
 	isoTreePipeline.PayloadPath = "/container"
 
 	isoTreePipeline.ContainerSource = &img.ContainerSource
