@@ -471,6 +471,10 @@ bootc switch --mutate-in-place --transport %s %s
 %%end
 `, targetContainerTransport, p.containerSpec.LocalName)
 
+	if p.Kickstart.UserFile != nil {
+		hardcodedKickstartBits += "\n" + p.Kickstart.UserFile.Contents
+	}
+
 	kickstartFile, err := kickstartOptions.IncludeRaw(hardcodedKickstartBits)
 	if err != nil {
 		panic(err)
@@ -550,6 +554,9 @@ func (p *AnacondaInstallerISOTree) makeKickstartStages(stageOptions *osbuild.Kic
 	stages = append(stages, osbuild.NewKickstartStage(stageOptions))
 
 	hardcodedKickstartBits := makeKickstartSudoersPost(kickstartOptions.SudoNopasswd)
+	if kickstartOptions.UserFile != nil {
+		hardcodedKickstartBits += "\n" + kickstartOptions.UserFile.Contents
+	}
 	if hardcodedKickstartBits != "" {
 		// Because osbuild core only supports a subset of options,
 		// we append to the base here with hardcoded wheel group with NOPASSWD option
