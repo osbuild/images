@@ -112,7 +112,7 @@ func TestDepsolver(t *testing.T) {
 			assert.Equal(tc.err, err)
 			if err == nil {
 				exp := expectedResult(s.RepoConfig)
-				assert.Equal(deps, exp)
+				assert.Equal(exp, deps)
 			}
 		})
 	}
