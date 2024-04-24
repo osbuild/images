@@ -9,7 +9,6 @@ import (
 	"github.com/osbuild/images/pkg/artifact"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/kickstart"
-	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
@@ -21,15 +20,12 @@ type AnacondaContainerInstaller struct {
 	Base
 	Platform          platform.Platform
 	ExtraBasePackages rpmmd.PackageSet
-	Users             []users.User
-	Groups            []users.Group
 
 	SquashfsCompression string
 
 	ISOLabel  string
 	Product   string
 	Variant   string
-	OSName    string
 	Ref       string
 	OSVersion string
 	Release   string
@@ -44,11 +40,7 @@ type AnacondaContainerInstaller struct {
 	AdditionalDrivers         []string
 	FIPS                      bool
 
-	// Kernel options that will be apended to the installed system
-	// (not the iso)
-	KickstartKernelOptionsAppend []string
-	// Enable networking on on boot in the installed system
-	KickstartNetworkOnBoot bool
+	Kickstart *kickstart.Options
 }
 
 func NewAnacondaContainerInstaller(container container.SourceSpec, ref string) *AnacondaContainerInstaller {
@@ -83,8 +75,11 @@ func (img *AnacondaContainerInstaller) InstantiateManifest(m *manifest.Manifest,
 	anacondaPipeline.ExtraPackages = img.ExtraBasePackages.Include
 	anacondaPipeline.ExcludePackages = img.ExtraBasePackages.Exclude
 	anacondaPipeline.ExtraRepos = img.ExtraBasePackages.Repositories
-	anacondaPipeline.Users = img.Users
-	anacondaPipeline.Groups = img.Groups
+	anacondaPipeline.InteractiveDefaultsKickstart = &kickstart.Options{
+		Users:  img.Kickstart.Users,
+		Groups: img.Kickstart.Groups,
+		Path:   osbuild.KickstartPathOSBuild,
+	}
 	anacondaPipeline.Variant = img.Variant
 	anacondaPipeline.Biosdevname = (img.Platform.GetArch() == arch.ARCH_X86_64)
 	anacondaPipeline.Checkpoint()
@@ -106,8 +101,11 @@ func (img *AnacondaContainerInstaller) InstantiateManifest(m *manifest.Manifest,
 	bootTreePipeline.UEFIVendor = img.Platform.GetUEFIVendor()
 	bootTreePipeline.ISOLabel = img.ISOLabel
 
-	kspath := osbuild.KickstartPathOSBuild
-	bootTreePipeline.KernelOpts = []string{fmt.Sprintf("inst.stage2=hd:LABEL=%s", img.ISOLabel), fmt.Sprintf("inst.ks=hd:LABEL=%s:%s", img.ISOLabel, kspath)}
+	ksPath := osbuild.KickstartPathOSBuild
+	if img.Kickstart != nil && img.Kickstart.Path != "" {
+		ksPath = img.Kickstart.Path
+	}
+	bootTreePipeline.KernelOpts = []string{fmt.Sprintf("inst.stage2=hd:LABEL=%s", img.ISOLabel), fmt.Sprintf("inst.ks=hd:LABEL=%s:%s", img.ISOLabel, ksPath)}
 	if img.FIPS {
 		bootTreePipeline.KernelOpts = append(bootTreePipeline.KernelOpts, "fips=1")
 	}
@@ -118,16 +116,7 @@ func (img *AnacondaContainerInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
 	isoTreePipeline.PartitionTable = efiBootPartitionTable(rng)
 	isoTreePipeline.Release = img.Release
-	isoTreePipeline.Kickstart = &kickstart.Options{
-		OSTree: &kickstart.OSTree{
-			OSName: img.OSName,
-		},
-		Users:               img.Users,
-		Groups:              img.Groups,
-		KernelOptionsAppend: img.KickstartKernelOptionsAppend,
-		NetworkOnBoot:       img.KickstartNetworkOnBoot,
-		Path:                kspath,
-	}
+	isoTreePipeline.Kickstart = img.Kickstart
 
 	isoTreePipeline.SquashfsCompression = img.SquashfsCompression
 
