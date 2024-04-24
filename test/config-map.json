@@ -250,6 +250,14 @@
       "image-installer"
     ]
   },
+  "./configs/unattended-iso-userkickstart.json": {
+    "distros": [
+      "rhel-9.4"
+    ],
+    "image-types": [
+      "image-installer"
+    ]
+  },
   "./configs/ostree-filesystem-customizations-installer.json": {
     "image-types": [
       "edge-simplified-installer"
