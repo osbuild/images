@@ -330,7 +330,7 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"),
 			variantStages))
-		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, false, ""))
+		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, len(pipeline.Kickstart.SudoNopasswd) > 0, ""))
 	})
 
 	t.Run("unattended+sudo", func(t *testing.T) {
@@ -347,7 +347,7 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"),
 			variantStages))
-		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, true, ""))
+		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, len(pipeline.Kickstart.SudoNopasswd) > 0, ""))
 	})
 
 	t.Run("user-kickstart-without-sudo-bits", func(t *testing.T) {
@@ -367,7 +367,7 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"),
 			variantStages))
-		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, false, userks))
+		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, len(pipeline.Kickstart.SudoNopasswd) > 0, userks))
 	})
 
 	t.Run("user-kickstart-with-sudo-bits", func(t *testing.T) {
@@ -388,7 +388,7 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"),
 			variantStages))
-		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, true, userks))
+		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, len(pipeline.Kickstart.SudoNopasswd) > 0, userks))
 	})
 
 }
@@ -441,7 +441,7 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
-		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, false, ""))
+		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, len(pipeline.Kickstart.SudoNopasswd) > 0, ""))
 	})
 
 	t.Run("unattended+sudo", func(t *testing.T) {
@@ -457,7 +457,7 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
-		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, true, ""))
+		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, len(pipeline.Kickstart.SudoNopasswd) > 0, ""))
 	})
 
 	t.Run("user-kickstart-without-sudo-bits", func(t *testing.T) {
@@ -476,7 +476,7 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
-		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, false, userks))
+		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, len(pipeline.Kickstart.SudoNopasswd) > 0, userks))
 	})
 
 	t.Run("user-kickstart-with-sudo-bits", func(t *testing.T) {
@@ -496,7 +496,7 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
-		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, true, userks))
+		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, len(pipeline.Kickstart.SudoNopasswd) > 0, userks))
 	})
 }
 
