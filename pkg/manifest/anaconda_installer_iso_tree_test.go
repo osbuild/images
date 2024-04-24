@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -121,16 +122,56 @@ func findRawKickstartFileStage(stages []*osbuild.Stage) *osbuild.CopyStageOption
 	return nil
 }
 
-func checkKickstartUnattendedOptions(stages []*osbuild.Stage, sudobits bool) error {
+const (
+	ksSudoContent = `%post
+echo -e "%sudo\tALL=(ALL)\tNOPASSWD: ALL" > "/etc/sudoers.d/%sudo"
+chmod 0440 /etc/sudoers.d/%sudo
+echo -e "%wheel\tALL=(ALL)\tNOPASSWD: ALL" > "/etc/sudoers.d/%wheel"
+chmod 0440 /etc/sudoers.d/%wheel
+restorecon -rvF /etc/sudoers.d
+%end
+`
+	ksContainerContent = `reqpart --add-boot
+
+part swap --fstype=swap --size=1024
+part / --fstype=ext4 --grow
+
+reboot --eject
+%post
+bootc switch --mutate-in-place --transport registry local.example.org/registry/org/image
+%end
+`
+)
+
+func calculateInlineFileChecksum(parts ...string) string {
+	content := "%include /run/install/repo/test-base.ks\n"
+	for _, part := range parts {
+		content += "\n" + part
+	}
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(content)))
+}
+
+func checkKickstartUnattendedOptions(stages []*osbuild.Stage, sudobits bool, extra string) error {
+
+	ksParts := make([]string, 0)
+	if sudobits {
+		ksParts = append(ksParts, ksSudoContent)
+	}
+	if extra != "" {
+		ksParts = append(ksParts, extra)
+	}
+
 	ksCopyStageOptions := findRawKickstartFileStage(stages)
-	if sudobits && ksCopyStageOptions == nil { // sudobits enabled - raw kickstart stage (file stage) should exist
-		return fmt.Errorf("expected raw kickstart file for sudoers but not found")
-	} else if !sudobits && ksCopyStageOptions != nil { // sudobits disabled - no raw kickstart file stage should be found
-		return fmt.Errorf("found raw kickstart file for sudoers but was not expected")
+	expRawFile := len(ksParts) > 0
+	if expRawFile && ksCopyStageOptions == nil { // raw kickstart stage (file stage) should exist
+		return fmt.Errorf("expected raw kickstart file but not found")
+	} else if !expRawFile && ksCopyStageOptions != nil { // no raw kickstart file stage should be found
+		return fmt.Errorf("found raw kickstart file but was not expected")
 	}
 
 	if ksCopyStageOptions != nil {
-		expContentID := "input://file-d9cb9d34781b23069d70465e2e00b7dc4a2e63cf4cf8559b8c09b13ef10ed592/sha256:d9cb9d34781b23069d70465e2e00b7dc4a2e63cf4cf8559b8c09b13ef10ed592"
+		contentHash := calculateInlineFileChecksum(ksParts...)
+		expContentID := fmt.Sprintf("input://file-%[1]s/sha256:%[1]s", contentHash)
 		// inline file IDs are the hash of their content so this is the hash of the expected content
 		if inlineID := ksCopyStageOptions.Paths[0].From; inlineID != expContentID {
 			return fmt.Errorf("raw kickstart content mismatch: %s != %s", expContentID, inlineID)
@@ -139,10 +180,10 @@ func checkKickstartUnattendedOptions(stages []*osbuild.Stage, sudobits bool) err
 
 	ksOptions := getKickstartOptions(stages)
 
-	// check the kickstart path depending on whether we have sudobits enabled
-	if sudobits && ksOptions.Path != testBaseKsPath {
+	// check the kickstart path depending on whether we have extra raw content included
+	if expRawFile && ksOptions.Path != testBaseKsPath {
 		return fmt.Errorf("kickstart file path should be %q but is %q", testBaseKsPath, ksOptions.Path)
-	} else if !sudobits && ksOptions.Path != testKsPath {
+	} else if !expRawFile && ksOptions.Path != testKsPath {
 		return fmt.Errorf("kickstart file path should be %q but is %q", testKsPath, ksOptions.Path)
 	}
 
@@ -182,6 +223,35 @@ func checkKickstartUnattendedOptions(stages []*osbuild.Stage, sudobits bool) err
 	}
 	if ksOptions.Network == nil {
 		return fmt.Errorf("unattended network kickstart option unset")
+	}
+
+	return nil
+}
+
+func checkRawKickstartForContainer(stages []*osbuild.Stage, extra string) error {
+	ksParts := []string{ksContainerContent}
+	if extra != "" {
+		ksParts = append(ksParts, extra)
+	}
+	ksCopyStageOptions := findRawKickstartFileStage(stages)
+	if ksCopyStageOptions == nil { // raw kickstart stage (file stage) should exist
+		return fmt.Errorf("expected raw kickstart file but not found")
+	}
+
+	if ksCopyStageOptions != nil {
+		contentHash := calculateInlineFileChecksum(ksParts...)
+		expContentID := fmt.Sprintf("input://file-%[1]s/sha256:%[1]s", contentHash)
+		// inline file IDs are the hash of their content so this is the hash of the expected content
+		if inlineID := ksCopyStageOptions.Paths[0].From; inlineID != expContentID {
+			return fmt.Errorf("raw kickstart content mismatch: %s != %s", expContentID, inlineID)
+		}
+	}
+
+	ksOptions := getKickstartOptions(stages)
+
+	// check the kickstart path depending on whether we have extra raw content included
+	if ksOptions.Path != testBaseKsPath {
+		return fmt.Errorf("kickstart file path should be %q but is %q", testBaseKsPath, ksOptions.Path)
 	}
 
 	return nil
@@ -260,7 +330,7 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"),
 			variantStages))
-		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, false))
+		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, false, ""))
 	})
 
 	t.Run("unattended+sudo", func(t *testing.T) {
@@ -277,7 +347,48 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"),
 			variantStages))
-		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, true))
+		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, true, ""))
+	})
+
+	t.Run("user-kickstart-without-sudo-bits", func(t *testing.T) {
+		userks := "%post\necho 'Some kind of text in a file sent by post'\n%end"
+		pipeline := newTestAnacondaISOTree()
+		pipeline.OSPipeline = osPayload
+		pipeline.Kickstart = &kickstart.Options{
+			Path:       testKsPath,
+			Unattended: true,
+			UserFile: &kickstart.File{
+				Contents: userks,
+			},
+		}
+		pipeline.ISOLinux = true
+		pipeline.serializeStart(nil, nil, nil, nil)
+		sp := pipeline.serialize()
+		pipeline.serializeEnd()
+		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"),
+			variantStages))
+		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, false, userks))
+	})
+
+	t.Run("user-kickstart-with-sudo-bits", func(t *testing.T) {
+		userks := "%post\necho 'Some kind of text in a file sent by post'\n%end"
+		pipeline := newTestAnacondaISOTree()
+		pipeline.OSPipeline = osPayload
+		pipeline.Kickstart = &kickstart.Options{
+			Path:         testKsPath,
+			Unattended:   true,
+			SudoNopasswd: []string{`%wheel`, `%sudo`},
+			UserFile: &kickstart.File{
+				Contents: userks,
+			},
+		}
+		pipeline.ISOLinux = true
+		pipeline.serializeStart(nil, nil, nil, nil)
+		sp := pipeline.serialize()
+		pipeline.serializeEnd()
+		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"),
+			variantStages))
+		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, true, userks))
 	})
 
 }
@@ -330,7 +441,7 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
-		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, false))
+		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, false, ""))
 	})
 
 	t.Run("unattended+sudo", func(t *testing.T) {
@@ -346,7 +457,46 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
-		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, true))
+		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, true, ""))
+	})
+
+	t.Run("user-kickstart-without-sudo-bits", func(t *testing.T) {
+		userks := "%post\necho 'Some kind of text in a file sent by post'\n%end"
+		pipeline := newTestAnacondaISOTree()
+		pipeline.Kickstart = &kickstart.Options{
+			Path:       testKsPath,
+			Unattended: true,
+			UserFile: &kickstart.File{
+				Contents: userks,
+			},
+			OSTree: &kickstart.OSTree{},
+		}
+		pipeline.ISOLinux = true
+		pipeline.serializeStart(nil, nil, []ostree.CommitSpec{ostreeCommit}, nil)
+		sp := pipeline.serialize()
+		pipeline.serializeEnd()
+		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
+		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, false, userks))
+	})
+
+	t.Run("user-kickstart-with-sudo-bits", func(t *testing.T) {
+		userks := "%post\necho 'Some kind of text in a file sent by post'\n%end"
+		pipeline := newTestAnacondaISOTree()
+		pipeline.Kickstart = &kickstart.Options{
+			Path:         testKsPath,
+			Unattended:   true,
+			SudoNopasswd: []string{`%wheel`, `%sudo`},
+			UserFile: &kickstart.File{
+				Contents: userks,
+			},
+			OSTree: &kickstart.OSTree{},
+		}
+		pipeline.ISOLinux = true
+		pipeline.serializeStart(nil, nil, []ostree.CommitSpec{ostreeCommit}, nil)
+		sp := pipeline.serialize()
+		pipeline.serializeEnd()
+		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
+		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, true, userks))
 	})
 }
 
@@ -418,6 +568,23 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 		opts := kickstartSt.Options.(*osbuild.KickstartStageOptions)
 		assert.Equal(t, 1, len(opts.Network))
 		assert.Equal(t, "on", opts.Network[0].OnBoot)
+	})
+
+	t.Run("user-kickstart", func(t *testing.T) {
+		userks := "%post\necho 'Some kind of text in a file sent by post'\n%end"
+		pipeline := newTestAnacondaISOTree()
+		pipeline.Kickstart = &kickstart.Options{
+			Path: testKsPath,
+			UserFile: &kickstart.File{
+				Contents: userks,
+			},
+		}
+		pipeline.ISOLinux = true
+		pipeline.serializeStart(nil, []container.Spec{containerPayload}, nil, nil)
+		sp := pipeline.serialize()
+		pipeline.serializeEnd()
+		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
+		assert.NoError(t, checkRawKickstartForContainer(sp.Stages, userks))
 	})
 }
 
