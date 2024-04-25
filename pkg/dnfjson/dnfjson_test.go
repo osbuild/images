@@ -696,7 +696,7 @@ func TestErrorRepoInfo(t *testing.T) {
 		},
 	}
 
-	solver := NewSolver("f38", "38", "x86_64", "fedora-38", "/tmp/cache")
+	solver := NewSolver("platform:f38", "38", "x86_64", "fedora-38", "/tmp/cache")
 	for idx, tc := range testCases {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
 			_, _, err := solver.Depsolve([]rpmmd.PackageSet{
@@ -725,7 +725,7 @@ func TestRepoConfigHash(t *testing.T) {
 		},
 	}
 
-	solver := NewSolver("f38", "38", "x86_64", "fedora-38", "/tmp/cache")
+	solver := NewSolver("platform:f38", "38", "x86_64", "fedora-38", "/tmp/cache")
 
 	rcs, err := solver.reposFromRPMMD(repos)
 	assert.Nil(t, err)
@@ -737,7 +737,7 @@ func TestRepoConfigHash(t *testing.T) {
 }
 
 func TestRequestHash(t *testing.T) {
-	solver := NewSolver("f38", "38", "x86_64", "fedora-38", "/tmp/cache")
+	solver := NewSolver("platform:f38", "38", "x86_64", "fedora-38", "/tmp/cache")
 	repos := []rpmmd.RepoConfig{
 		rpmmd.RepoConfig{
 			Name:      "A test repository",
