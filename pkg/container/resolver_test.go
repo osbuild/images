@@ -39,12 +39,12 @@ func TestResolver(t *testing.T) {
 
 	for _, r := range refs {
 		resolver.Add(container.SourceSpec{
-			r,
-			"",
-			common.ToPtr(""),
-			common.ToPtr(false),
-			false,
-			nil,
+			Source:    r,
+			Name:      "",
+			Digest:    common.ToPtr(""),
+			TLSVerify: common.ToPtr(false),
+			Local:     false,
+			Store:     nil,
 		})
 	}
 
@@ -68,12 +68,12 @@ func TestResolverFail(t *testing.T) {
 	resolver := container.NewResolver("amd64")
 
 	resolver.Add(container.SourceSpec{
-		"invalid-reference@${IMAGE_DIGEST}",
-		"",
-		common.ToPtr(""),
-		common.ToPtr(false),
-		false,
-		nil,
+		Source:    "invalid-reference@${IMAGE_DIGEST}",
+		Name:      "",
+		Digest:    common.ToPtr(""),
+		TLSVerify: common.ToPtr(false),
+		Local:     false,
+		Store:     nil,
 	})
 	specs, err := resolver.Finish()
 	assert.Error(t, err)
@@ -83,35 +83,36 @@ func TestResolverFail(t *testing.T) {
 	defer registry.Close()
 
 	resolver.Add(container.SourceSpec{
-		registry.GetRef("repo"),
-		"",
-		common.ToPtr(""),
-		common.ToPtr(false),
-		false,
-		nil,
+		Source:    registry.GetRef("repo"),
+		Name:      "",
+		Digest:    common.ToPtr(""),
+		TLSVerify: common.ToPtr(false),
+		Local:     false,
+		Store:     nil,
 	})
 	specs, err = resolver.Finish()
 	assert.Error(t, err)
 	assert.Len(t, specs, 0)
 
 	resolver.Add(container.SourceSpec{
-		registry.GetRef("repo"),
-		"",
-		common.ToPtr(""),
-		common.ToPtr(false),
-		false,
-		nil,
+		Source:    registry.GetRef("repo"),
+		Name:      "",
+		Digest:    common.ToPtr(""),
+		TLSVerify: common.ToPtr(false),
+		Local:     false,
+		Store:     nil,
 	})
 	specs, err = resolver.Finish()
 	assert.Error(t, err)
 	assert.Len(t, specs, 0)
 
-	resolver.Add(container.SourceSpec{registry.GetRef("repo"),
-		"",
-		common.ToPtr(""),
-		common.ToPtr(false),
-		false,
-		nil,
+	resolver.Add(container.SourceSpec{
+		Source:    registry.GetRef("repo"),
+		Name:      "",
+		Digest:    common.ToPtr(""),
+		TLSVerify: common.ToPtr(false),
+		Local:     false,
+		Store:     nil,
 	})
 	specs, err = resolver.Finish()
 	assert.Error(t, err)
@@ -161,16 +162,15 @@ func TestResolverLocalManifest(t *testing.T) {
 	err = cmd.Run()
 	assert.NoError(t, err)
 
-	local := true
 	// try resolve an x86_64 container using a local manifest list
 	resolver := container.NewResolver("amd64")
 	resolver.Add(container.SourceSpec{
-		"localhost/multi-arch",
-		"",
-		common.ToPtr(""),
-		common.ToPtr(false),
-		local,
-		&tmpStorage,
+		Source:    "localhost/multi-arch",
+		Name:      "",
+		Digest:    common.ToPtr(""),
+		TLSVerify: common.ToPtr(false),
+		Local:     true,
+		Store:     &tmpStorage,
 	})
 	specs, err := resolver.Finish()
 	assert.NoError(t, err)
@@ -181,12 +181,12 @@ func TestResolverLocalManifest(t *testing.T) {
 	// try resolve an  aarch64 container using a local manifest list
 	resolver = container.NewResolver("arm64")
 	resolver.Add(container.SourceSpec{
-		"localhost/multi-arch",
-		"",
-		common.ToPtr(""),
-		common.ToPtr(false),
-		local,
-		&tmpStorage,
+		Source:    "localhost/multi-arch",
+		Name:      "",
+		Digest:    common.ToPtr(""),
+		TLSVerify: common.ToPtr(false),
+		Local:     true,
+		Store:     &tmpStorage,
 	})
 	specs, err = resolver.Finish()
 	assert.NoError(t, err)
