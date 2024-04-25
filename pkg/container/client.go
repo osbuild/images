@@ -485,26 +485,26 @@ type resolvedIds struct {
 	ListManifest digest.Digest
 }
 
-func (cl *Client) resolveManifestList(ctx context.Context, list manifestList, local bool) (resolvedIds, error) {
+func (cl *Client) resolveManifestList(ctx context.Context, list manifestList, local bool) (resolvedIds, *arch.Arch, error) {
 	digest, err := list.ChooseInstance(cl.sysCtx)
 	if err != nil {
-		return resolvedIds{}, err
+		return resolvedIds{}, nil, err
 	}
 
 	raw, err := cl.GetManifest(ctx, digest, local)
 	if err != nil {
-		return resolvedIds{}, fmt.Errorf("error getting manifest: %w", err)
+		return resolvedIds{}, nil, fmt.Errorf("error getting manifest: %w", err)
 	}
 
-	ids, err := cl.resolveRawManifest(ctx, raw, local)
+	ids, _, err := cl.resolveRawManifest(ctx, raw, local)
 	if err != nil {
-		return resolvedIds{}, err
+		return resolvedIds{}, nil, err
 	}
 
-	return ids, err
+	return ids, &raw.Arch, err
 }
 
-func (cl *Client) resolveRawManifest(ctx context.Context, rm RawManifest, local bool) (resolvedIds, error) {
+func (cl *Client) resolveRawManifest(ctx context.Context, rm RawManifest, local bool) (resolvedIds, *arch.Arch, error) {
 
 	var imageID digest.Digest
 
@@ -512,37 +512,37 @@ func (cl *Client) resolveRawManifest(ctx context.Context, rm RawManifest, local 
 	case manifest.DockerV2ListMediaType:
 		list, err := manifest.Schema2ListFromManifest(rm.Data)
 		if err != nil {
-			return resolvedIds{}, err
+			return resolvedIds{}, nil, err
 		}
 
 		// Save digest of the manifest list as well.
-		ids, err := cl.resolveManifestList(ctx, list, local)
+		ids, imageArch, err := cl.resolveManifestList(ctx, list, local)
 		if err != nil {
-			return resolvedIds{}, err
+			return resolvedIds{}, nil, err
 		}
 		// NOTE: Comment in Digest() source says this should never fail. Ignore the error.
 		ids.ListManifest, _ = rm.Digest()
-		return ids, nil
+		return ids, imageArch, nil
 
 	case imgspecv1.MediaTypeImageIndex:
 		index, err := manifest.OCI1IndexFromManifest(rm.Data)
 		if err != nil {
-			return resolvedIds{}, err
+			return resolvedIds{}, nil, err
 		}
 
 		// Save digest of the manifest list as well.
-		ids, err := cl.resolveManifestList(ctx, index, local)
+		ids, imageArch, err := cl.resolveManifestList(ctx, index, local)
 		if err != nil {
-			return resolvedIds{}, err
+			return resolvedIds{}, nil, err
 		}
 		// NOTE: Comment in Digest() source says this should never fail. Ignore the error.
 		ids.ListManifest, _ = rm.Digest()
-		return ids, nil
+		return ids, imageArch, nil
 
 	case imgspecv1.MediaTypeImageManifest:
 		m, err := manifest.OCI1FromManifest(rm.Data)
 		if err != nil {
-			return resolvedIds{}, nil
+			return resolvedIds{}, nil, nil
 		}
 		imageID = m.ConfigInfo().Digest
 
@@ -550,25 +550,25 @@ func (cl *Client) resolveRawManifest(ctx context.Context, rm RawManifest, local 
 		m, err := manifest.Schema2FromManifest(rm.Data)
 
 		if err != nil {
-			return resolvedIds{}, nil
+			return resolvedIds{}, nil, nil
 		}
 
 		imageID = m.ConfigInfo().Digest
 
 	default:
-		return resolvedIds{}, fmt.Errorf("unsupported manifest format '%s'", rm.MimeType)
+		return resolvedIds{}, nil, fmt.Errorf("unsupported manifest format '%s'", rm.MimeType)
 	}
 
 	dg, err := rm.Digest()
 
 	if err != nil {
-		return resolvedIds{}, err
+		return resolvedIds{}, nil, err
 	}
 
 	return resolvedIds{
 		Manifest: dg,
 		Config:   imageID,
-	}, nil
+	}, nil, nil
 }
 
 // Resolve the Client's Target to the manifest digest and the corresponding image id
@@ -582,7 +582,7 @@ func (cl *Client) Resolve(ctx context.Context, name string, local bool) (Spec, e
 		return Spec{}, fmt.Errorf("error getting manifest: %w", err)
 	}
 
-	ids, err := cl.resolveRawManifest(ctx, raw, local)
+	ids, imageArch, err := cl.resolveRawManifest(ctx, raw, local)
 	if err != nil {
 		return Spec{}, err
 	}
@@ -596,7 +596,12 @@ func (cl *Client) Resolve(ctx context.Context, name string, local bool) (Spec, e
 		name,
 		local,
 	)
-	spec.Arch = raw.Arch
+
+	if imageArch != nil {
+		spec.Arch = *imageArch
+	} else {
+		spec.Arch = raw.Arch
+	}
 
 	return spec, nil
 }

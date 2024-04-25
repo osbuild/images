@@ -176,6 +176,7 @@ func TestResolverLocalManifest(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, specs, 1)
 	assert.Equal(t, specs[0].LocalName, "localhost/multi-arch:latest")
+	assert.Equal(t, specs[0].Arch.String(), arch.ARCH_X86_64.String())
 
 	// try resolve an  aarch64 container using a local manifest list
 	resolver = container.NewResolver("arm64")
@@ -191,4 +192,5 @@ func TestResolverLocalManifest(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, specs, 1)
 	assert.Equal(t, specs[0].LocalName, "localhost/multi-arch:latest")
+	assert.Equal(t, specs[0].Arch.String(), arch.ARCH_AARCH64.String())
 }
