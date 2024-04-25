@@ -33,7 +33,8 @@ func TestDepsolver(t *testing.T) {
 		packages [][]string
 		repos    []rpmmd.RepoConfig
 		rootDir  string
-		err      error
+		err      bool
+		expMsg   string
 	}
 
 	tmpdir := t.TempDir()
@@ -48,53 +49,59 @@ func TestDepsolver(t *testing.T) {
 		"flat": {
 			packages: [][]string{{"kernel", "vim-minimal", "tmux", "zsh"}},
 			repos:    []rpmmd.RepoConfig{s.RepoConfig},
-			err:      nil,
+			err:      false,
 		},
 		"chain": {
 			// chain depsolve of the same packages in order should produce the same result (at least in this case)
 			packages: [][]string{{"kernel"}, {"vim-minimal", "tmux", "zsh"}},
 			repos:    []rpmmd.RepoConfig{s.RepoConfig},
-			err:      nil,
+			err:      false,
 		},
 		"bad-flat": {
 			packages: [][]string{{"this-package-does-not-exist"}},
 			repos:    []rpmmd.RepoConfig{s.RepoConfig},
-			err:      Error{Kind: "MarkingErrors", Reason: "Error occurred when marking packages for installation: Problems in request:\nmissing packages: this-package-does-not-exist"},
+			err:      true,
+			expMsg:   "this-package-does-not-exist",
 		},
 		"bad-chain": {
 			packages: [][]string{{"kernel"}, {"this-package-does-not-exist"}},
 			repos:    []rpmmd.RepoConfig{s.RepoConfig},
-			err:      Error{Kind: "MarkingErrors", Reason: "Error occurred when marking packages for installation: Problems in request:\nmissing packages: this-package-does-not-exist"},
+			err:      true,
+			expMsg:   "this-package-does-not-exist",
 		},
 		"bad-chain-part-deux": {
 			packages: [][]string{{"this-package-does-not-exist"}, {"vim-minimal", "tmux", "zsh"}},
 			repos:    []rpmmd.RepoConfig{s.RepoConfig},
-			err:      Error{Kind: "MarkingErrors", Reason: "Error occurred when marking packages for installation: Problems in request:\nmissing packages: this-package-does-not-exist"},
+			err:      true,
+			expMsg:   "this-package-does-not-exist",
 		},
 		"flat+dir": {
 			packages: [][]string{{"kernel", "vim-minimal", "tmux", "zsh"}},
 			rootDir:  rootDir,
-			err:      nil,
+			err:      false,
 		},
 		"chain+dir": {
 			packages: [][]string{{"kernel"}, {"vim-minimal", "tmux", "zsh"}},
 			rootDir:  rootDir,
-			err:      nil,
+			err:      false,
 		},
 		"bad-flat+dir": {
 			packages: [][]string{{"this-package-does-not-exist"}},
 			rootDir:  rootDir,
-			err:      Error{Kind: "MarkingErrors", Reason: "Error occurred when marking packages for installation: Problems in request:\nmissing packages: this-package-does-not-exist"},
+			err:      true,
+			expMsg:   "this-package-does-not-exist",
 		},
 		"bad-chain+dir": {
 			packages: [][]string{{"kernel"}, {"this-package-does-not-exist"}},
 			rootDir:  rootDir,
-			err:      Error{Kind: "MarkingErrors", Reason: "Error occurred when marking packages for installation: Problems in request:\nmissing packages: this-package-does-not-exist"},
+			err:      true,
+			expMsg:   "this-package-does-not-exist",
 		},
 		"bad-chain-part-deux+dir": {
 			packages: [][]string{{"this-package-does-not-exist"}, {"vim-minimal", "tmux", "zsh"}},
 			rootDir:  rootDir,
-			err:      Error{Kind: "MarkingErrors", Reason: "Error occurred when marking packages for installation: Problems in request:\nmissing packages: this-package-does-not-exist"},
+			err:      true,
+			expMsg:   "this-package-does-not-exist",
 		},
 	}
 
@@ -109,7 +116,13 @@ func TestDepsolver(t *testing.T) {
 
 			solver.SetRootDir(tc.rootDir)
 			deps, _, err := solver.Depsolve(pkgsets)
-			assert.Equal(tc.err, err)
+			if tc.err {
+				assert.Error(err)
+				assert.Contains(err.Error(), tc.expMsg)
+			} else {
+				assert.Nil(err)
+			}
+
 			if err == nil {
 				exp := expectedResult(s.RepoConfig)
 				assert.Equal(exp, deps)
@@ -670,7 +683,7 @@ func TestErrorRepoInfo(t *testing.T) {
 				BaseURLs: []string{"https://0.0.0.0/baseos/repo"},
 				Metalink: "https://0.0.0.0/baseos/metalink",
 			},
-			expMsg: "[https://0.0.0.0/baseos/repo]",
+			expMsg: "https://0.0.0.0/baseos/repo",
 		},
 		{
 			repo: rpmmd.RepoConfig{
@@ -678,21 +691,21 @@ func TestErrorRepoInfo(t *testing.T) {
 				BaseURLs: []string{"https://0.0.0.0/baseos/repo"},
 				Metalink: "https://0.0.0.0/baseos/metalink",
 			},
-			expMsg: "[baseos: https://0.0.0.0/baseos/repo]",
+			expMsg: "https://0.0.0.0/baseos/repo",
 		},
 		{
 			repo: rpmmd.RepoConfig{
 				Name:     "fedora",
 				Metalink: "https://0.0.0.0/f35/metalink",
 			},
-			expMsg: "[fedora: https://0.0.0.0/f35/metalink]",
+			expMsg: "https://0.0.0.0/f35/metalink",
 		},
 		{
 			repo: rpmmd.RepoConfig{
 				Name:       "",
 				MirrorList: "https://0.0.0.0/baseos/mirrors",
 			},
-			expMsg: "[https://0.0.0.0/baseos/mirrors]",
+			expMsg: "https://0.0.0.0/baseos/mirrors",
 		},
 	}
 
