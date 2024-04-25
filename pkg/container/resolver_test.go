@@ -1,6 +1,7 @@
 package container_test
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -13,6 +14,12 @@ import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/container"
+)
+
+var forceLocal = flag.Bool(
+	"force-local-resolver",
+	false,
+	"force local resolver, making them fail instead of skip if podman isn't installed or the user is not root",
 )
 
 func TestResolver(t *testing.T) {
@@ -123,13 +130,18 @@ func TestResolverLocalManifest(t *testing.T) {
 	currentUser, err := user.Current()
 	assert.NoError(t, err)
 
-	if currentUser.Uid != "0" {
-		t.Skip("User is not root, skipping test")
-	}
+	if !*forceLocal {
+		// local resolver tests aren't forced, so we can skip
+		// them if the user is not root or the podman executable
+		// is not installed
+		if currentUser.Uid != "0" {
+			t.Skip("User is not root, skipping test")
+		}
 
-	_, err = exec.LookPath("podman")
-	if err != nil {
-		t.Skip("Podman not available, skipping test")
+		_, err = exec.LookPath("podman")
+		if err != nil {
+			t.Skip("Podman not available, skipping test")
+		}
 	}
 
 	containerFile, err := os.CreateTemp(t.TempDir(), "Containerfile")

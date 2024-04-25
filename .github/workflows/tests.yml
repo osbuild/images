@@ -99,7 +99,7 @@ jobs:
     # We need to run the test as root, since we use the root
     # containers-storage for the local resolvers
     - name: Run unit tests
-      run: sudo go test ./pkg/container/...
+      run: sudo go test ./pkg/container/... --force-local-resolver
 
   unit-tests-c9s:
     name: "🛃 Unit tests (CentOS Stream 9)"
