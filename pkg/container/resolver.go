@@ -20,6 +20,8 @@ type Resolver struct {
 
 	Arch         string
 	AuthFilePath string
+
+	newClient func(string) (*Client, error)
 }
 
 type SourceSpec struct {
@@ -28,7 +30,6 @@ type SourceSpec struct {
 	Digest    *string
 	TLSVerify *bool
 	Local     bool
-	Store     *string
 }
 
 // XXX: use arch.Arch here?
@@ -37,11 +38,13 @@ func NewResolver(arch string) *Resolver {
 		ctx:   context.Background(),
 		queue: make(chan resolveResult, 2),
 		Arch:  arch,
+
+		newClient: NewClient,
 	}
 }
 
 func (r *Resolver) Add(spec SourceSpec) {
-	client, err := NewClient(spec.Source)
+	client, err := r.newClient(spec.Source)
 	r.jobs += 1
 
 	if err != nil {
@@ -53,10 +56,6 @@ func (r *Resolver) Add(spec SourceSpec) {
 	client.SetArchitectureChoice(r.Arch)
 	if r.AuthFilePath != "" {
 		client.SetAuthFilePath(r.AuthFilePath)
-	}
-
-	if spec.Store != nil {
-		client.SetContainersStore(*spec.Store)
 	}
 
 	go func() {

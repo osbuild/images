@@ -108,11 +108,11 @@ type Client struct {
 
 	UserAgent string // user agent string to use for requests, defaults to DefaultUserAgent
 
-	Store string // another store location other than the main one, useful for testing
-
 	// internal state
 	policy *signature.Policy
 	sysCtx *types.SystemContext
+
+	store string // another store location other than the main one, useful for testing
 }
 
 // NewClient constructs a new Client for target with default options.
@@ -156,6 +156,7 @@ func NewClient(target string) (*Client, error) {
 			AuthFilePath: GetDefaultAuthFile(),
 		},
 		policy: policy,
+		store:  "/var/lib/containers/storage",
 	}
 
 	return &client, nil
@@ -169,17 +170,6 @@ func (cl *Client) SetAuthFilePath(path string) {
 // GetAuthFilePath gets the location of the `containers-auth.json(5)` file.
 func (cl *Client) GetAuthFilePath() string {
 	return cl.sysCtx.AuthFilePath
-}
-
-func (cl *Client) SetContainersStore(store string) {
-	cl.Store = store
-}
-
-func (cl *Client) GetContainersStore() string {
-	if cl.Store == "" {
-		return "/var/lib/containers/storage"
-	}
-	return cl.Store
 }
 
 func (cl *Client) SetArchitectureChoice(arch string) {
@@ -363,7 +353,7 @@ func (cl *Client) getImageRef(id string, local bool) (types.ImageReference, erro
 		if id != "" {
 			imageName = id
 		}
-		options := fmt.Sprintf("containers-storage:[overlay@%s+/run/containers/storage]%s", cl.GetContainersStore(), imageName)
+		options := fmt.Sprintf("containers-storage:[overlay@%s+/run/containers/storage]%s", cl.store, imageName)
 		return alltransports.ParseImageName(options)
 	}
 
@@ -385,7 +375,7 @@ func (cl *Client) resolveContainerImageArch(ctx context.Context, ref types.Image
 }
 
 func (cl *Client) getLocalImageIDFromDigest(instance digest.Digest) (string, error) {
-	store, err := storage.GetStore(storage.StoreOptions{GraphRoot: cl.GetContainersStore()})
+	store, err := storage.GetStore(storage.StoreOptions{GraphRoot: cl.store})
 	if err != nil {
 		return "", err
 	}
