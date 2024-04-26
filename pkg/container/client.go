@@ -396,15 +396,26 @@ func (cl *Client) getLocalImageIDFromDigest(instance digest.Digest) (string, err
 // GetManifest fetches the raw manifest data from the server. If digest is not empty
 // it will override any given tag for the Client's Target.
 func (cl *Client) GetManifest(ctx context.Context, instanceDigest digest.Digest, local bool) (r RawManifest, err error) {
-	var id string
-	if instanceDigest != "" && local {
-		id, err = cl.getLocalImageIDFromDigest(instanceDigest)
-		if err != nil {
-			return r, err
+	var localId string
+	var overrideDigest *digest.Digest
+
+	if instanceDigest != "" {
+		if local {
+			localId, err = cl.getLocalImageIDFromDigest(instanceDigest)
+			if err != nil {
+				return r, err
+			}
+		} else {
+			// We can pass the instance digest, if it is nil, then this is the primary manifest.
+			// If it is not nil, then this is the instance digest and the primary manifest is a
+			// manifest list. The `GetManifest` call will then retrieve the manifest for the
+			// desired instance, see:
+			// https://github.com/containers/image/blob/cdb2f596a95018444f4dee0993e321d3d8bc328d/types/types.go#L252C2-L253C121
+			overrideDigest = &instanceDigest
 		}
 	}
 
-	ref, err := cl.getImageRef(id, local)
+	ref, err := cl.getImageRef(localId, local)
 	if err != nil {
 		return
 	}
@@ -425,17 +436,7 @@ func (cl *Client) GetManifest(ctx context.Context, instanceDigest digest.Digest,
 	}
 
 	if err = retry.RetryIfNecessary(ctx, func() error {
-		var secondaryDigest *digest.Digest
-		// passing in a digest for a local manifest list will break
-		if instanceDigest != "" && !local {
-			// We can pass the instance digest, if it is nil, then this is the primary manifest.
-			// If it is not nil, then this is the instance digest and the primary manifest is a
-			// manifest list. The `GetManifest` call will then retrieve the manifest for the
-			// desired instance, see:
-			// https://github.com/containers/image/blob/cdb2f596a95018444f4dee0993e321d3d8bc328d/types/types.go#L252C2-L253C121
-			secondaryDigest = &instanceDigest
-		}
-		r.Data, r.MimeType, err = src.GetManifest(ctx, secondaryDigest)
+		r.Data, r.MimeType, err = src.GetManifest(ctx, overrideDigest)
 		if err != nil {
 			return err
 		}
