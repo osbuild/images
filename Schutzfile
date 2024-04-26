@@ -24,13 +24,6 @@
       "osbuild": {
         "commit": "f255fba09f2f0c879d92df37e3d9f8e31903720d"
       }
-    }
-  },
-  "fedora-40": {
-    "dependencies": {
-      "osbuild": {
-        "commit": "5b75592fefc4ee2d9e240a15b7002f2537de31b0"
-      }
     },
     "repos": [
       {
@@ -68,5 +61,12 @@
         ]
       }
     ]
+  },
+  "fedora-40": {
+    "dependencies": {
+      "osbuild": {
+        "commit": "15213fd3cfbf480e808f86ce73bc745db08391bb"
+      }
+    }
   }
 }
