@@ -357,9 +357,9 @@ func (m RawManifest) Digest() (digest.Digest, error) {
 	return manifest.Digest(m.Data)
 }
 
-func (cl *Client) getImageRef(target reference.Named, id string, local bool) (types.ImageReference, error) {
+func (cl *Client) getImageRef(id string, local bool) (types.ImageReference, error) {
 	if local {
-		imageName := target.String()
+		imageName := cl.Target.String()
 		if id != "" {
 			imageName = id
 		}
@@ -367,11 +367,7 @@ func (cl *Client) getImageRef(target reference.Named, id string, local bool) (ty
 		return alltransports.ParseImageName(options)
 	}
 
-	if target == nil {
-		return nil, fmt.Errorf("target cannot be nil for remote image")
-	}
-
-	return docker.NewReference(target)
+	return docker.NewReference(cl.Target)
 }
 
 func (cl *Client) resolveContainerImageArch(ctx context.Context, ref types.ImageReference) (*arch.Arch, error) {
@@ -410,8 +406,6 @@ func (cl *Client) getLocalImageIDFromDigest(instance digest.Digest) (string, err
 // GetManifest fetches the raw manifest data from the server. If digest is not empty
 // it will override any given tag for the Client's Target.
 func (cl *Client) GetManifest(ctx context.Context, instanceDigest digest.Digest, local bool) (r RawManifest, err error) {
-	target := cl.Target
-
 	var id string
 	if instanceDigest != "" && local {
 		id, err = cl.getLocalImageIDFromDigest(instanceDigest)
@@ -420,7 +414,7 @@ func (cl *Client) GetManifest(ctx context.Context, instanceDigest digest.Digest,
 		}
 	}
 
-	ref, err := cl.getImageRef(target, id, local)
+	ref, err := cl.getImageRef(id, local)
 	if err != nil {
 		return
 	}
