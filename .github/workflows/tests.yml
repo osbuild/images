@@ -13,8 +13,8 @@ on:
   merge_group:
 
 jobs:
-  unit-tests:
-    name: "🛃 Unit tests"
+  unit-tests-f39:
+    name: "🛃 Unit tests (Fedora 39)"
     runs-on: ubuntu-latest
     container:
       image: registry.fedoraproject.org/fedora:39
