@@ -51,7 +51,6 @@ func TestResolver(t *testing.T) {
 			Digest:    common.ToPtr(""),
 			TLSVerify: common.ToPtr(false),
 			Local:     false,
-			Store:     nil,
 		})
 	}
 
@@ -80,7 +79,6 @@ func TestResolverFail(t *testing.T) {
 		Digest:    common.ToPtr(""),
 		TLSVerify: common.ToPtr(false),
 		Local:     false,
-		Store:     nil,
 	})
 	specs, err := resolver.Finish()
 	assert.Error(t, err)
@@ -95,7 +93,6 @@ func TestResolverFail(t *testing.T) {
 		Digest:    common.ToPtr(""),
 		TLSVerify: common.ToPtr(false),
 		Local:     false,
-		Store:     nil,
 	})
 	specs, err = resolver.Finish()
 	assert.Error(t, err)
@@ -107,7 +104,6 @@ func TestResolverFail(t *testing.T) {
 		Digest:    common.ToPtr(""),
 		TLSVerify: common.ToPtr(false),
 		Local:     false,
-		Store:     nil,
 	})
 	specs, err = resolver.Finish()
 	assert.Error(t, err)
@@ -119,7 +115,6 @@ func TestResolverFail(t *testing.T) {
 		Digest:    common.ToPtr(""),
 		TLSVerify: common.ToPtr(false),
 		Local:     false,
-		Store:     nil,
 	})
 	specs, err = resolver.Finish()
 	assert.Error(t, err)
@@ -175,14 +170,16 @@ func TestResolverLocalManifest(t *testing.T) {
 	assert.NoError(t, err)
 
 	// try resolve an x86_64 container using a local manifest list
-	resolver := container.NewResolver("amd64")
+	resolver := container.NewResolverWithTestClient("amd64", func(target string) (*container.Client, error) {
+		return container.NewClientWithTestStorage(target, tmpStorage)
+	})
+
 	resolver.Add(container.SourceSpec{
 		Source:    "localhost/multi-arch",
 		Name:      "",
 		Digest:    common.ToPtr(""),
 		TLSVerify: common.ToPtr(false),
 		Local:     true,
-		Store:     &tmpStorage,
 	})
 	specs, err := resolver.Finish()
 	assert.NoError(t, err)
@@ -191,14 +188,16 @@ func TestResolverLocalManifest(t *testing.T) {
 	assert.Equal(t, specs[0].Arch.String(), arch.ARCH_X86_64.String())
 
 	// try resolve an  aarch64 container using a local manifest list
-	resolver = container.NewResolver("arm64")
+	resolver = container.NewResolverWithTestClient("arm64", func(target string) (*container.Client, error) {
+		return container.NewClientWithTestStorage(target, tmpStorage)
+	})
+
 	resolver.Add(container.SourceSpec{
 		Source:    "localhost/multi-arch",
 		Name:      "",
 		Digest:    common.ToPtr(""),
 		TLSVerify: common.ToPtr(false),
 		Local:     true,
-		Store:     &tmpStorage,
 	})
 	specs, err = resolver.Finish()
 	assert.NoError(t, err)
