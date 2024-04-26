@@ -65,7 +65,7 @@
   "fedora-40": {
     "dependencies": {
       "osbuild": {
-        "commit": "15213fd3cfbf480e808f86ce73bc745db08391bb"
+        "commit": "226955482912ec4836279b154fa510106fa74c64"
       }
     }
   }
