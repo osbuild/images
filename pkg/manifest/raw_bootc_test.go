@@ -1,6 +1,7 @@
 package manifest_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -128,6 +129,46 @@ func TestRawBootcImageSerializeCreateUsersOptions(t *testing.T) {
 			}
 		} else {
 			require.Nil(t, usersStage)
+		}
+	}
+}
+
+func TestRawBootcImageSerializeMkdirOptions(t *testing.T) {
+	rawBootcPipeline := makeFakeRawBootcPipeline()
+
+	for _, tc := range []struct {
+		users              []users.User
+		expectedMkdirPaths []osbuild.MkdirStagePath
+	}{
+		{nil, nil},
+		{
+			[]users.User{{Name: "root"}}, []osbuild.MkdirStagePath{
+				{Path: "/var/roothome", Mode: common.ToPtr(os.FileMode(0700)), ExistOk: true},
+			},
+		},
+		{
+			[]users.User{{Name: "foo"}}, []osbuild.MkdirStagePath{
+				{Path: "/var/home", Mode: common.ToPtr(os.FileMode(0755)), ExistOk: true},
+			},
+		},
+		{
+			[]users.User{{Name: "root"}, {Name: "foo"}}, []osbuild.MkdirStagePath{
+				{Path: "/var/roothome", Mode: common.ToPtr(os.FileMode(0700)), ExistOk: true},
+				{Path: "/var/home", Mode: common.ToPtr(os.FileMode(0755)), ExistOk: true},
+			},
+		},
+	} {
+		rawBootcPipeline.Users = tc.users
+
+		pipeline := rawBootcPipeline.Serialize()
+		mkdirStage := manifest.FindStage("org.osbuild.mkdir", pipeline.Stages)
+		if len(tc.expectedMkdirPaths) > 0 {
+			// ensure options got passed
+			require.NotNil(t, mkdirStage)
+			mkdirOptions := mkdirStage.Options.(*osbuild.MkdirStageOptions)
+			assert.Equal(t, tc.expectedMkdirPaths, mkdirOptions.Paths)
+		} else {
+			require.Nil(t, mkdirStage)
 		}
 	}
 }
