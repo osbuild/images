@@ -882,3 +882,14 @@ func (p *OS) getInline() []string {
 
 	return inlineData
 }
+
+// Filename and contents for the insights-client service drop-in.
+// This is a temporary workaround until the org.osbuild.systemd.unit stage
+// gains support for all the options we need.
+func insightsClientDropin() (string, string) {
+	return "/etc/systemd/system/insights-client.service.d/override.conf", `[Unit]
+Requisite=greenboot-healthcheck.service
+After=network-online.target greenboot-healthcheck.service osbuild-first-boot.service
+[Install]
+WantedBy=multi-user.target`
+}
