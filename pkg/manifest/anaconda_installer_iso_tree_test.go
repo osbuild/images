@@ -611,6 +611,17 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
 		assert.NoError(t, checkRawKickstartForContainer(sp.Stages, userks))
 	})
+	t.Run("remove-payload-signtures", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
+		pipeline.PayloadRemoveSignatures = true
+		pipeline.serializeStart(nil, []container.Spec{containerPayload}, nil, nil)
+		sp := pipeline.serialize()
+		pipeline.serializeEnd()
+		skopeoStage := findStage("org.osbuild.skopeo", sp.Stages)
+		assert.NotNil(t, skopeoStage)
+		assert.Equal(t, skopeoStage.Options.(*osbuild.SkopeoStageOptions).RemoveSignatures, common.ToPtr(true))
+	})
 }
 
 func TestMakeKickstartSudoersPostEmpty(t *testing.T) {
