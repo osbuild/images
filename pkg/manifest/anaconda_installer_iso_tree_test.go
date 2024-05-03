@@ -525,14 +525,17 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 	})
 }
 
-func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
-
-	containerPayload := container.Spec{
+func makeFakeContainerPayload() container.Spec {
+	return container.Spec{
 		Source:    "example.org/registry/org/image",
 		Digest:    "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
 		ImageID:   "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
 		LocalName: "local.example.org/registry/org/image",
 	}
+}
+
+func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
+	containerPayload := makeFakeContainerPayload()
 	payloadStages := []string{
 		"org.osbuild.skopeo",
 		"org.osbuild.kickstart",
@@ -611,6 +614,7 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
 		assert.NoError(t, checkRawKickstartForContainer(sp.Stages, userks))
 	})
+
 	t.Run("remove-payload-signtures", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
@@ -642,4 +646,30 @@ restorecon -rvF /etc/sudoers.d
 	assert.Equal(t, exp, makeKickstartSudoersPost([]string{"%group31", "user42"}))
 	assert.Equal(t, exp, makeKickstartSudoersPost([]string{"%group31", "user42", "%group31"}))
 	assert.Equal(t, exp, makeKickstartSudoersPost([]string{"%group31", "user42", "%group31", "%group31", "user42", "%group31", "%group31", "user42", "%group31"}))
+}
+
+func stagesFrom(pipeline Pipeline) []*osbuild.Stage {
+	containerPayload := makeFakeContainerPayload()
+	pipeline.serializeStart(nil, []container.Spec{containerPayload}, nil, nil)
+	sp := pipeline.serialize()
+	pipeline.serializeEnd()
+	return sp.Stages
+}
+
+func TestPayloadRemoveSignatures(t *testing.T) {
+	for _, tc := range []struct {
+		removeSig bool
+		expected  *bool
+	}{
+		{true, common.ToPtr(true)},
+		{false, nil},
+	} {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
+		pipeline.PayloadRemoveSignatures = tc.removeSig
+
+		skopeoStage := findStage("org.osbuild.skopeo", stagesFrom(pipeline))
+		assert.NotNil(t, skopeoStage)
+		assert.Equal(t, tc.expected, skopeoStage.Options.(*osbuild.SkopeoStageOptions).RemoveSignatures)
+	}
 }
