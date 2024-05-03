@@ -136,6 +136,9 @@ def boot_container(distro, arch, image_type, image_path, manifest_id):
                    testlib.get_bib_ref(),
                    "--type=ami",
                    "--config=/config.json",
+                   # our bootable containers don't have a bootc install config yet, so we need to set the rootfs type
+                   # manually
+                   "--rootfs=ext4",
                    container_ref]
             testlib.runcmd_nc(cmd)
 
