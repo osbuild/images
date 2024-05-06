@@ -452,7 +452,9 @@ func imageInstallerImage(workload workload.Workload,
 		Timezone: &img.OSCustomizations.Timezone,
 	}
 
-	if instCust := customizations.GetInstaller(); instCust != nil {
+	if instCust, err := customizations.GetInstaller(); err != nil {
+		return nil, err
+	} else if instCust != nil {
 		img.Kickstart.SudoNopasswd = instCust.SudoNopasswd
 		img.Kickstart.Unattended = instCust.Unattended
 		if instCust.Kickstart != nil {
@@ -675,7 +677,9 @@ func iotInstallerImage(workload workload.Workload,
 		"org.fedoraproject.Anaconda.Modules.Users",
 	}
 
-	if instCust := customizations.GetInstaller(); instCust != nil {
+	if instCust, err := customizations.GetInstaller(); err != nil {
+		return nil, err
+	} else if instCust != nil {
 		img.Kickstart.SudoNopasswd = instCust.SudoNopasswd
 		img.Kickstart.Unattended = instCust.Unattended
 		if instCust.Kickstart != nil {

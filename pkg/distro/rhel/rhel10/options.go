@@ -81,11 +81,13 @@ func checkOptions(t *rhel.ImageType, bp *blueprint.Blueprint, options distro.Ima
 		warnings = append(warnings, w)
 	}
 
-	if customizations.GetInstaller() != nil {
+	if instCust, err := customizations.GetInstaller(); instCust != nil {
 		// only supported by the Anaconda installer
 		if slices.Index([]string{"image-installer", "edge-installer", "live-installer"}, t.Name()) == -1 {
 			return warnings, fmt.Errorf("installer customizations are not supported for %q", t.Name())
 		}
+	} else if err != nil {
+		return warnings, err
 	}
 
 	return warnings, nil
