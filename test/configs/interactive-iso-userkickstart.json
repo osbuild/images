@@ -1,0 +1,22 @@
+{
+  "name": "interactive-iso-userkickstart",
+  "blueprint": {
+    "customizations": {
+      "locale": {
+        "languages": [
+          "en_GB.UTF-8"
+        ],
+        "keyboard": "uk"
+      },
+      "timezone": {
+        "timezone": "Europe/Berlin"
+      },
+      "installer": {
+        "unattended": false,
+        "kickstart": {
+          "contents": "%post\n\necho \"=== Custom user kickstart ===\"\n\necho -e \"%sudo\\tALL=(ALL)\\tNOPASSWD: ALL\" > \"/etc/sudoers.d/%sudo\"\nchmod 0440 /etc/sudoers.d/%sudo\necho -e \"%wheel\\tALL=(ALL)\\tNOPASSWD: ALL\" > \"/etc/sudoers.d/%wheel\"\nchmod 0440 /etc/sudoers.d/%wheel\nrestorecon -rvF /etc/sudoers.d\n%end\n"
+        }
+      }
+    }
+  }
+}

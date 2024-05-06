@@ -250,7 +250,7 @@
       "image-installer"
     ]
   },
-  "./configs/unattended-iso-userkickstart.json": {
+  "./configs/interactive-iso-userkickstart.json": {
     "distros": [
       "rhel-9.4"
     ],
