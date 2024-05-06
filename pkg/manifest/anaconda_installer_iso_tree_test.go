@@ -146,19 +146,19 @@ bootc switch --mutate-in-place --transport registry local.example.org/registry/o
 func calculateInlineFileChecksum(parts ...string) string {
 	content := "%include /run/install/repo/test-base.ks\n"
 	for _, part := range parts {
-		content += "\n" + part
+		content += part
 	}
 	return fmt.Sprintf("%x", sha256.Sum256([]byte(content)))
 }
 
-func checkKickstartUnattendedOptions(stages []*osbuild.Stage, sudobits bool, extra string) error {
-
+func checkKickstartOptions(stages []*osbuild.Stage, unattended, sudobits bool, extra string) error {
 	ksParts := make([]string, 0)
 	if sudobits {
-		ksParts = append(ksParts, ksSudoContent)
+		ksParts = append(ksParts, "\n"+ksSudoContent)
 	}
 	if extra != "" {
-		ksParts = append(ksParts, extra)
+		// adding extra bits replaces any other inline kickstart file
+		ksParts = []string{extra}
 	}
 
 	ksCopyStageOptions := findRawKickstartFileStage(stages)
@@ -187,42 +187,44 @@ func checkKickstartUnattendedOptions(stages []*osbuild.Stage, sudobits bool, ext
 		return fmt.Errorf("kickstart file path should be %q but is %q", testKsPath, ksOptions.Path)
 	}
 
-	// check that the unattended kickstart options are set
-	if ksOptions.DisplayMode != "text" {
-		return fmt.Errorf("unexpected kickstart display mode for unattended: %q", ksOptions.DisplayMode)
-	}
-	if !ksOptions.Reboot.Eject {
-		return fmt.Errorf("unattended reboot.eject kickstart option unset")
-	}
-	if !ksOptions.RootPassword.Lock {
-		return fmt.Errorf("unattended rootpassword.lock kickstart option unset")
-	}
-	if !ksOptions.ZeroMBR {
-		return fmt.Errorf("unattended zerombr kickstart option unset")
-	}
-	if !ksOptions.ClearPart.All {
-		return fmt.Errorf("unattended clearpart.all kickstart option unset")
-	}
-	if !ksOptions.ClearPart.InitLabel {
-		return fmt.Errorf("unattended clearpart.initlabel kickstart option unset")
-	}
+	if unattended {
+		// check that the unattended kickstart options are set
+		if ksOptions.DisplayMode != "text" {
+			return fmt.Errorf("unexpected kickstart display mode for unattended: %q", ksOptions.DisplayMode)
+		}
+		if !ksOptions.Reboot.Eject {
+			return fmt.Errorf("unattended reboot.eject kickstart option unset")
+		}
+		if !ksOptions.RootPassword.Lock {
+			return fmt.Errorf("unattended rootpassword.lock kickstart option unset")
+		}
+		if !ksOptions.ZeroMBR {
+			return fmt.Errorf("unattended zerombr kickstart option unset")
+		}
+		if !ksOptions.ClearPart.All {
+			return fmt.Errorf("unattended clearpart.all kickstart option unset")
+		}
+		if !ksOptions.ClearPart.InitLabel {
+			return fmt.Errorf("unattended clearpart.initlabel kickstart option unset")
+		}
 
-	// just check that some options are set to anything since at this level the
-	// values don't matter and can change based on distro defaults
-	if ksOptions.Lang == "" {
-		return fmt.Errorf("unattended lang kickstart option unset")
-	}
-	if ksOptions.Timezone == "" {
-		return fmt.Errorf("unattended timezone kickstart option unset")
-	}
-	if ksOptions.Keyboard == "" {
-		return fmt.Errorf("unattended keyboard kickstart option unset")
-	}
-	if ksOptions.AutoPart == nil {
-		return fmt.Errorf("unattended autopart kickstart option unset")
-	}
-	if ksOptions.Network == nil {
-		return fmt.Errorf("unattended network kickstart option unset")
+		// just check that some options are set to anything since at this level the
+		// values don't matter and can change based on distro defaults
+		if ksOptions.Lang == "" {
+			return fmt.Errorf("unattended lang kickstart option unset")
+		}
+		if ksOptions.Timezone == "" {
+			return fmt.Errorf("unattended timezone kickstart option unset")
+		}
+		if ksOptions.Keyboard == "" {
+			return fmt.Errorf("unattended keyboard kickstart option unset")
+		}
+		if ksOptions.AutoPart == nil {
+			return fmt.Errorf("unattended autopart kickstart option unset")
+		}
+		if ksOptions.Network == nil {
+			return fmt.Errorf("unattended network kickstart option unset")
+		}
 	}
 
 	return nil
@@ -231,7 +233,7 @@ func checkKickstartUnattendedOptions(stages []*osbuild.Stage, sudobits bool, ext
 func checkRawKickstartForContainer(stages []*osbuild.Stage, extra string) error {
 	ksParts := []string{ksContainerContent}
 	if extra != "" {
-		ksParts = append(ksParts, extra)
+		ksParts = []string{extra}
 	}
 	ksCopyStageOptions := findRawKickstartFileStage(stages)
 	if ksCopyStageOptions == nil { // raw kickstart stage (file stage) should exist
@@ -330,7 +332,7 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"),
 			variantStages))
-		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, len(pipeline.Kickstart.SudoNopasswd) > 0, ""))
+		assert.NoError(t, checkKickstartOptions(sp.Stages, pipeline.Kickstart.Unattended, len(pipeline.Kickstart.SudoNopasswd) > 0, ""))
 	})
 
 	t.Run("unattended+sudo", func(t *testing.T) {
@@ -347,10 +349,30 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"),
 			variantStages))
-		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, len(pipeline.Kickstart.SudoNopasswd) > 0, ""))
+		assert.NoError(t, checkKickstartOptions(sp.Stages, pipeline.Kickstart.Unattended, len(pipeline.Kickstart.SudoNopasswd) > 0, ""))
 	})
 
 	t.Run("user-kickstart-without-sudo-bits", func(t *testing.T) {
+		userks := "%post\necho 'Some kind of text in a file sent by post'\n%end"
+		pipeline := newTestAnacondaISOTree()
+		pipeline.OSPipeline = osPayload
+		pipeline.Kickstart = &kickstart.Options{
+			Path:       testKsPath,
+			Unattended: false,
+			UserFile: &kickstart.File{
+				Contents: userks,
+			},
+		}
+		pipeline.ISOLinux = true
+		pipeline.serializeStart(nil, nil, nil, nil)
+		sp := pipeline.serialize()
+		pipeline.serializeEnd()
+		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"),
+			variantStages))
+		assert.NoError(t, checkKickstartOptions(sp.Stages, pipeline.Kickstart.Unattended, len(pipeline.Kickstart.SudoNopasswd) > 0, userks))
+	})
+
+	t.Run("unhappy/user-kickstart-with-unattended", func(t *testing.T) {
 		userks := "%post\necho 'Some kind of text in a file sent by post'\n%end"
 		pipeline := newTestAnacondaISOTree()
 		pipeline.OSPipeline = osPayload
@@ -363,20 +385,15 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		}
 		pipeline.ISOLinux = true
 		pipeline.serializeStart(nil, nil, nil, nil)
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
-		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"),
-			variantStages))
-		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, len(pipeline.Kickstart.SudoNopasswd) > 0, userks))
+		assert.Panics(t, func() { pipeline.serialize() })
 	})
 
-	t.Run("user-kickstart-with-sudo-bits", func(t *testing.T) {
+	t.Run("unhappy/user-kickstart-with-sudo-bits", func(t *testing.T) {
 		userks := "%post\necho 'Some kind of text in a file sent by post'\n%end"
 		pipeline := newTestAnacondaISOTree()
 		pipeline.OSPipeline = osPayload
 		pipeline.Kickstart = &kickstart.Options{
 			Path:         testKsPath,
-			Unattended:   true,
 			SudoNopasswd: []string{`%wheel`, `%sudo`},
 			UserFile: &kickstart.File{
 				Contents: userks,
@@ -384,13 +401,8 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		}
 		pipeline.ISOLinux = true
 		pipeline.serializeStart(nil, nil, nil, nil)
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
-		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"),
-			variantStages))
-		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, len(pipeline.Kickstart.SudoNopasswd) > 0, userks))
+		assert.Panics(t, func() { pipeline.serialize() })
 	})
-
 }
 
 func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
@@ -441,7 +453,7 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
-		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, len(pipeline.Kickstart.SudoNopasswd) > 0, ""))
+		assert.NoError(t, checkKickstartOptions(sp.Stages, pipeline.Kickstart.Unattended, len(pipeline.Kickstart.SudoNopasswd) > 0, ""))
 	})
 
 	t.Run("unattended+sudo", func(t *testing.T) {
@@ -457,10 +469,29 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
-		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, len(pipeline.Kickstart.SudoNopasswd) > 0, ""))
+		assert.NoError(t, checkKickstartOptions(sp.Stages, pipeline.Kickstart.Unattended, len(pipeline.Kickstart.SudoNopasswd) > 0, ""))
 	})
 
 	t.Run("user-kickstart-without-sudo-bits", func(t *testing.T) {
+		userks := "%post\necho 'Some kind of text in a file sent by post'\n%end"
+		pipeline := newTestAnacondaISOTree()
+		pipeline.Kickstart = &kickstart.Options{
+			Path:       testKsPath,
+			Unattended: false,
+			UserFile: &kickstart.File{
+				Contents: userks,
+			},
+			OSTree: &kickstart.OSTree{},
+		}
+		pipeline.ISOLinux = true
+		pipeline.serializeStart(nil, nil, []ostree.CommitSpec{ostreeCommit}, nil)
+		sp := pipeline.serialize()
+		pipeline.serializeEnd()
+		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
+		assert.NoError(t, checkKickstartOptions(sp.Stages, pipeline.Kickstart.Unattended, len(pipeline.Kickstart.SudoNopasswd) > 0, userks))
+	})
+
+	t.Run("unhappy/user-kickstart-with-unattended", func(t *testing.T) {
 		userks := "%post\necho 'Some kind of text in a file sent by post'\n%end"
 		pipeline := newTestAnacondaISOTree()
 		pipeline.Kickstart = &kickstart.Options{
@@ -473,30 +504,24 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 		}
 		pipeline.ISOLinux = true
 		pipeline.serializeStart(nil, nil, []ostree.CommitSpec{ostreeCommit}, nil)
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
-		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
-		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, len(pipeline.Kickstart.SudoNopasswd) > 0, userks))
+		assert.Panics(t, func() { pipeline.serialize() })
 	})
 
-	t.Run("user-kickstart-with-sudo-bits", func(t *testing.T) {
+	t.Run("unhappy/user-kickstart-with-sudo-bits", func(t *testing.T) {
 		userks := "%post\necho 'Some kind of text in a file sent by post'\n%end"
 		pipeline := newTestAnacondaISOTree()
 		pipeline.Kickstart = &kickstart.Options{
-			Path:         testKsPath,
-			Unattended:   true,
-			SudoNopasswd: []string{`%wheel`, `%sudo`},
+			Path:       testKsPath,
+			Unattended: false,
 			UserFile: &kickstart.File{
 				Contents: userks,
 			},
-			OSTree: &kickstart.OSTree{},
+			SudoNopasswd: []string{`%wheel`, `%sudo`},
+			OSTree:       &kickstart.OSTree{},
 		}
 		pipeline.ISOLinux = true
 		pipeline.serializeStart(nil, nil, []ostree.CommitSpec{ostreeCommit}, nil)
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
-		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
-		assert.NoError(t, checkKickstartUnattendedOptions(sp.Stages, len(pipeline.Kickstart.SudoNopasswd) > 0, userks))
+		assert.Panics(t, func() { pipeline.serialize() })
 	})
 }
 
