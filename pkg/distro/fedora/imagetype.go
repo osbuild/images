@@ -418,11 +418,13 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 		return []string{w}, nil
 	}
 
-	if customizations.GetInstaller() != nil {
+	if instCust, err := customizations.GetInstaller(); instCust != nil {
 		// only supported by the Anaconda installer
 		if slices.Index([]string{"iot-installer"}, t.name) == -1 {
-			return nil, fmt.Errorf("installer customizations are not supported for %q", t.name)
+			return nil, fmt.Errorf("installer customizations are not supported for %q", t.Name())
 		}
+	} else if err != nil {
+		return nil, err
 	}
 
 	return nil, nil

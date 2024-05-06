@@ -502,7 +502,9 @@ func EdgeInstallerImage(workload workload.Workload,
 	// kickstart though kickstart does support setting them
 	img.Kickstart.Timezone, _ = customizations.GetTimezoneSettings()
 
-	if instCust := customizations.GetInstaller(); instCust != nil {
+	if instCust, err := customizations.GetInstaller(); err != nil {
+		return nil, err
+	} else if instCust != nil {
 		img.Kickstart.SudoNopasswd = instCust.SudoNopasswd
 		img.Kickstart.Unattended = instCust.Unattended
 		if instCust.Kickstart != nil {
@@ -692,7 +694,9 @@ func ImageInstallerImage(workload workload.Workload,
 		Keyboard: img.OSCustomizations.Keyboard,
 		Timezone: &img.OSCustomizations.Timezone,
 	}
-	if instCust := customizations.GetInstaller(); instCust != nil {
+	if instCust, err := customizations.GetInstaller(); err != nil {
+		return nil, err
+	} else if instCust != nil {
 		img.Kickstart.SudoNopasswd = instCust.SudoNopasswd
 		img.Kickstart.Unattended = instCust.Unattended
 		if instCust.Kickstart != nil {
