@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"hash/fnv"
 	"io"
 	"os"
 	"path/filepath"
@@ -189,6 +190,14 @@ func makeManifestJob(
 	distroName := distribution.Name()
 	filename := fmt.Sprintf("%s-%s-%s-%s.json", u(distroName), u(archName), u(imgType.Name()), u(name))
 	cacheDir := filepath.Join(cacheRoot, archName+distribution.Name())
+
+	// ensure that each file has a unique seed based on filename
+	hash := func(s string) int64 {
+		h := fnv.New64()
+		h.Write([]byte(filename))
+		return int64(h.Sum64())
+	}
+	seedArg += hash(filename)
 
 	options := bc.Options
 
