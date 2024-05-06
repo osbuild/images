@@ -545,7 +545,42 @@ func (p *AnacondaInstallerISOTree) makeKickstartStages(stageOptions *osbuild.Kic
 	if kickstartOptions == nil {
 		kickstartOptions = new(kickstart.Options)
 	}
+
 	stages := make([]*osbuild.Stage, 0)
+
+	// users, groups, and other kickstart options are not allowed when users
+	// add their own kickstarts
+	if kickstartOptions.UserFile != nil {
+		// check if any other option is set and panic - these combinations
+		// should be verified by the caller
+		if kickstartOptions.Unattended {
+			panic("kickstart unattended options are not compatible with user-supplied kickstart content")
+		}
+
+		if len(kickstartOptions.SudoNopasswd) > 0 {
+			panic("kickstart sudo nopasswd drop-in file creation is not compatible with user-supplied kickstart content")
+		}
+
+		// options are usually already initialised from outside this function
+		// with the payload options (ostree commit or tarball), but might also
+		// have Users and Groups added
+		if len(kickstartOptions.Users)+len(kickstartOptions.Groups) > 0 {
+			panic("kickstart users and/or groups are not compatible with user-supplied kickstart content")
+		}
+
+		stages = append(stages, osbuild.NewKickstartStage(stageOptions))
+		if kickstartOptions.UserFile != nil {
+			kickstartFile, err := stageOptions.IncludeRaw(kickstartOptions.UserFile.Contents)
+			if err != nil {
+				panic(err)
+			}
+
+			p.Files = []*fsnode.File{kickstartFile}
+
+			stages = append(stages, osbuild.GenFileNodesStages(p.Files)...)
+		}
+	}
+
 	if kickstartOptions.Unattended {
 		// set the default options for Unattended kickstart
 		stageOptions.DisplayMode = "text"
@@ -581,9 +616,6 @@ func (p *AnacondaInstallerISOTree) makeKickstartStages(stageOptions *osbuild.Kic
 	stages = append(stages, osbuild.NewKickstartStage(stageOptions))
 
 	hardcodedKickstartBits := makeKickstartSudoersPost(kickstartOptions.SudoNopasswd)
-	if kickstartOptions.UserFile != nil {
-		hardcodedKickstartBits += "\n" + kickstartOptions.UserFile.Contents
-	}
 	if hardcodedKickstartBits != "" {
 		// Because osbuild core only supports a subset of options,
 		// we append to the base here with hardcoded wheel group with NOPASSWD option
