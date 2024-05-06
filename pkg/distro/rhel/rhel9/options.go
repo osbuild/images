@@ -199,6 +199,13 @@ func checkOptions(t *rhel.ImageType, bp *blueprint.Blueprint, options distro.Ima
 		if slices.Index([]string{"image-installer", "edge-installer", "live-installer"}, t.Name()) == -1 {
 			return warnings, fmt.Errorf("installer customizations are not supported for %q", t.Name())
 		}
+
+		if t.Name() == "edge-installer" &&
+			instCust.Kickstart != nil &&
+			len(instCust.Kickstart.Contents) > 0 &&
+			(customizations.GetUsers() != nil || customizations.GetGroups() != nil) {
+			return warnings, fmt.Errorf("edge-installer installer.kickstart.contents are not supported in combination with users or groups")
+		}
 	} else if err != nil {
 		return warnings, err
 	}
