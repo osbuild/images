@@ -397,9 +397,19 @@ func (p *AnacondaInstallerISOTree) ostreeContainerStages() []*osbuild.Stage {
 		image,
 		nil))
 
+	stages = append(stages, p.bootcInstallerKickstartStages()...)
+	return stages
+}
+
+// bootcInstallerKickstartStages sets up kickstart-related stages for Anaconda
+// ISOs that install a bootc bootable container.
+func (p *AnacondaInstallerISOTree) bootcInstallerKickstartStages() []*osbuild.Stage {
 	if p.Kickstart == nil {
 		panic(fmt.Sprintf("Kickstart options not set for %s pipeline", p.name))
 	}
+
+	stages := make([]*osbuild.Stage, 0)
+
 	// do what we can in our kickstart stage
 	kickstartOptions, err := osbuild.NewKickstartStageOptionsWithOSTreeContainer(
 		p.Kickstart.Path,
@@ -412,6 +422,28 @@ func (p *AnacondaInstallerISOTree) ostreeContainerStages() []*osbuild.Stage {
 	if err != nil {
 		panic(fmt.Sprintf("failed to create kickstart stage options: %v", err))
 	}
+
+	if p.Kickstart.UserFile != nil {
+		// when a user defines their own kickstart, we create a kickstart that
+		// takes care of the installation and let the user kickstart handle
+		// everything else
+
+		// users and groups are NOT allowed when users add their own kickstarts
+		if len(kickstartOptions.Users)+len(kickstartOptions.Groups) > 0 {
+			// this is a programming error - the combinations should have been verified already
+			panic("kickstart users and/or groups are not compatible with user-supplied kickstart content")
+		}
+
+		stages = append(stages, osbuild.NewKickstartStage(kickstartOptions))
+		kickstartFile, err := kickstartOptions.IncludeRaw(p.Kickstart.UserFile.Contents)
+		if err != nil {
+			panic(err)
+		}
+		p.Files = []*fsnode.File{kickstartFile}
+		return append(stages, osbuild.GenFileNodesStages(p.Files)...)
+	}
+
+	// create a fully unattended/automated kickstart
 
 	// NOTE: these are similar to the unattended kickstart options in the
 	// other two payload configurations but partitioning is different and
@@ -472,10 +504,6 @@ bootc switch --mutate-in-place --transport %s %s
 %%end
 `, targetContainerTransport, p.containerSpec.LocalName)
 
-	if p.Kickstart.UserFile != nil {
-		hardcodedKickstartBits += "\n" + p.Kickstart.UserFile.Contents
-	}
-
 	kickstartFile, err := kickstartOptions.IncludeRaw(hardcodedKickstartBits)
 	if err != nil {
 		panic(err)
@@ -483,8 +511,7 @@ bootc switch --mutate-in-place --transport %s %s
 
 	p.Files = []*fsnode.File{kickstartFile}
 
-	stages = append(stages, osbuild.GenFileNodesStages(p.Files)...)
-	return stages
+	return append(stages, osbuild.GenFileNodesStages(p.Files)...)
 }
 
 func (p *AnacondaInstallerISOTree) tarPayloadStages() []*osbuild.Stage {
