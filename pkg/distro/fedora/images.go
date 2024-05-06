@@ -415,7 +415,6 @@ func liveInstallerImage(workload workload.Workload,
 	d := t.arch.distro
 
 	img.Product = d.product
-	img.OSName = "fedora"
 	img.Variant = "Workstation"
 	img.OSVersion = d.osVersion
 	img.Release = fmt.Sprintf("%s %s", d.product, d.osVersion)
