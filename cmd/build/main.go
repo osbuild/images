@@ -42,7 +42,6 @@ func makeManifest(
 	distribution distro.Distro,
 	repos []rpmmd.RepoConfig,
 	archName string,
-	seedArg int64,
 	cacheRoot string,
 ) (manifest.OSBuildManifest, error) {
 	cacheDir := filepath.Join(cacheRoot, archName+distribution.Name())
@@ -57,6 +56,10 @@ func makeManifest(
 	var bp blueprint.Blueprint
 	if config.Blueprint != nil {
 		bp = blueprint.Blueprint(*config.Blueprint)
+	}
+	seedArg, err := cmdutil.SeedArgFor(config, imgType, distribution, archName)
+	if err != nil {
+		return nil, err
 	}
 
 	manifest, warnings, err := imgType.Manifest(&bp, options, repos, seedArg)
@@ -209,9 +212,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	rngSeed, err := cmdutil.NewRNGSeed()
-	check(err)
-
 	testedRepoRegistry, err := reporegistry.NewTestedDefault()
 	if err != nil {
 		panic(fmt.Sprintf("failed to create repo registry with tested distros: %v", err))
@@ -258,7 +258,7 @@ func main() {
 	}
 
 	fmt.Printf("Generating manifest for %s: ", config.Name)
-	mf, err := makeManifest(config, imgType, distribution, repos, archName, rngSeed, rpmCacheRoot)
+	mf, err := makeManifest(config, imgType, distribution, repos, archName, rpmCacheRoot)
 	check(err)
 	fmt.Print("DONE\n")
 

@@ -179,7 +179,6 @@ func makeManifestJob(
 	distribution distro.Distro,
 	repos []rpmmd.RepoConfig,
 	archName string,
-	seedArg int64,
 	cacheRoot string,
 	path string,
 	content map[string]bool,
@@ -189,6 +188,12 @@ func makeManifestJob(
 	distroName := distribution.Name()
 	filename := fmt.Sprintf("%s-%s-%s-%s.json", u(distroName), u(archName), u(imgType.Name()), u(name))
 	cacheDir := filepath.Join(cacheRoot, archName+distribution.Name())
+
+	// ensure that each file has a unique seed based on filename
+	seedArg, err := cmdutil.SeedArgFor(bc, imgType, distribution, archName)
+	if err != nil {
+		panic(err)
+	}
 
 	options := bc.Options
 
@@ -508,11 +513,6 @@ func main() {
 
 	flag.Parse()
 
-	rngSeed, err := cmdutil.NewRNGSeed()
-	if err != nil {
-		panic(err)
-	}
-
 	testedRepoRegistry, err := reporegistry.NewTestedDefault()
 	if err != nil {
 		panic(fmt.Sprintf("failed to create repo registry with tested distros: %v", err))
@@ -598,7 +598,7 @@ func main() {
 				}
 
 				for _, itConfig := range imgTypeConfigs {
-					job := makeManifestJob(itConfig, imgType, distribution, repos, archName, rngSeed, cacheRoot, outputDir, contentResolve, metadata)
+					job := makeManifestJob(itConfig, imgType, distribution, repos, archName, cacheRoot, outputDir, contentResolve, metadata)
 					jobs = append(jobs, job)
 				}
 			}
