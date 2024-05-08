@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/osbuild/images/internal/buildconfig"
 	"github.com/osbuild/images/internal/cmdutil"
-	"github.com/osbuild/images/internal/manifestutil"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
@@ -36,24 +36,8 @@ func check(err error) {
 	}
 }
 
-func loadConfig(path string) manifestutil.BuildConfig {
-	fp, err := os.Open(path)
-	check(err)
-	defer fp.Close()
-
-	dec := json.NewDecoder(fp)
-	dec.DisallowUnknownFields()
-	var conf manifestutil.BuildConfig
-
-	check(dec.Decode(&conf))
-	if dec.More() {
-		fail(fmt.Sprintf("multiple configuration objects or extra data found in %q", path))
-	}
-	return conf
-}
-
 func makeManifest(
-	config manifestutil.BuildConfig,
+	config *buildconfig.BuildConfig,
 	imgType distro.ImageType,
 	distribution distro.Distro,
 	repos []rpmmd.RepoConfig,
@@ -234,7 +218,8 @@ func main() {
 	}
 	distroFac := distrofactory.NewDefault()
 
-	config := loadConfig(configFile)
+	config, err := buildconfig.New(configFile)
+	check(err)
 
 	if err := os.MkdirAll(outputDir, 0777); err != nil {
 		fail(fmt.Sprintf("failed to create target directory: %s", err.Error()))
