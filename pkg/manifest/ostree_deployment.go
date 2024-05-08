@@ -508,6 +508,7 @@ func (p *OSTreeDeployment) getInline() []string {
 // Creates systemd unit stage by ingesting the servicename and mount-points
 func createMountpointService(serviceName string, mountpoints []string) *osbuild.SystemdUnitCreateStageOptions {
 	var conditionPathIsDirectory []string
+	var directories = "directories=(" + strings.Join(mountpoints[:], " ") + ");"
 	for _, mountpoint := range mountpoints {
 		conditionPathIsDirectory = append(conditionPathIsDirectory, "|!"+mountpoint)
 	}
@@ -522,7 +523,7 @@ func createMountpointService(serviceName string, mountpoints []string) *osbuild.
 		//compatibility with composefs, will require transient rootfs to be enabled too.
 		ExecStartPre: []string{"/bin/sh -c 'grep -Uqs composefs /run/ostree-booted || chattr -i /'"},
 		ExecStopPost: []string{"/bin/sh -c 'grep -Uqs composefs /run/ostree-booted || chattr +i /'"},
-		ExecStart:    []string{"mkdir -p " + strings.Join(mountpoints[:], " ")},
+		ExecStart:    []string{"/bin/bash -c '" + directories + " for dir in \"${directories[@]}\"; do if [ ! -d \"$dir\" ]; then mkdir -p \"$dir\"; fi; done'"},
 	}
 	install := osbuild.Install{
 		WantedBy: []string{"local-fs.target"},
