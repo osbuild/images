@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osbuild/images/internal/buildconfig"
 	"github.com/osbuild/images/internal/cmdutil"
 )
 
@@ -37,4 +38,32 @@ func TestNewRNGSeed(t *testing.T) {
 		_, err := cmdutil.NewRNGSeed()
 		require.EqualError(t, err, fmt.Sprintf(`failed to parse %s: strconv.ParseInt: parsing "NaN": invalid syntax`, cmdutil.RNG_SEED_ENV_KEY))
 	})
+}
+
+type fakeNamer struct {
+	fakeName string
+}
+
+func (fn fakeNamer) Name() string {
+	return fn.fakeName
+}
+
+func TestSeedArgFor(t *testing.T) {
+	t.Setenv(cmdutil.RNG_SEED_ENV_KEY, "1234")
+
+	for _, tc := range []struct {
+		bcName, imgType, distro, archName string
+		expectedSeed                      int64
+	}{
+		{"bcName", "fakeImgType", "fakeDistro", "x86_64", 9170052743323116054},
+		{"bcName1", "fakeImgType", "fakeDistro", "x86_64", -7134826073208782961},
+		{"bcName", "fakeImgType1", "fakeDistro", "x86_64", 4026045880862600579},
+		{"bcName", "fakeImgType", "fakeDistro1", "x86_64", 3669869122697339647},
+		{"bcName", "fakeImgType", "fakeDistro1", "aarch64", 47752167762999679},
+	} {
+		bc := &buildconfig.BuildConfig{Name: tc.bcName}
+		seedArg, err := cmdutil.SeedArgFor(bc, fakeNamer{tc.imgType}, fakeNamer{tc.distro}, tc.archName)
+		assert.NoError(t, err)
+		assert.Equal(t, tc.expectedSeed, seedArg)
+	}
 }
