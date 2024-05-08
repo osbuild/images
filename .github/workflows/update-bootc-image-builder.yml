@@ -5,8 +5,8 @@ name: "Update bootc-image-builder ref"
 on:
   workflow_dispatch:
   schedule:
-    # Every day at 05:00
-    - cron: "0 5 * * *"
+    # Every Sunday at 12:00
+    - cron: "0 12 * * 0"
 
 jobs:
   update-and-push:
