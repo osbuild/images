@@ -56,3 +56,18 @@ func TestDataSizeToUint64(t *testing.T) {
 		}
 	}
 }
+
+func TestSystemdMountUnit(t *testing.T) {
+	for _, tc := range []struct {
+		mountpoint   string
+		expectedName string
+	}{
+		{"/", "-.mount"},
+		{"/boot", "boot.mount"},
+		{"/boot/efi", "boot-efi.mount"},
+	} {
+		name, err := MountUnitNameFor(tc.mountpoint)
+		assert.NoError(t, err)
+		assert.Equal(t, tc.expectedName, name)
+	}
+}
