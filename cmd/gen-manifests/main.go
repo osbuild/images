@@ -18,6 +18,7 @@ import (
 	"github.com/gobwas/glob"
 
 	"github.com/osbuild/images/internal/cmdutil"
+	"github.com/osbuild/images/internal/manifestutil"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
@@ -43,18 +44,11 @@ func (mv *multiValue) Set(v string) error {
 }
 
 type buildRequest struct {
-	Distro       string             `json:"distro,omitempty"`
-	Arch         string             `json:"arch,omitempty"`
-	ImageType    string             `json:"image-type,omitempty"`
-	Repositories []rpmmd.RepoConfig `json:"repositories,omitempty"`
-	Config       *BuildConfig       `json:"config"`
-}
-
-type BuildConfig struct {
-	Name      string               `json:"name"`
-	Blueprint *blueprint.Blueprint `json:"blueprint,omitempty"`
-	Options   distro.ImageOptions  `json:"options"`
-	Depends   interface{}          `json:"depends,omitempty"` // ignored
+	Distro       string                    `json:"distro,omitempty"`
+	Arch         string                    `json:"arch,omitempty"`
+	ImageType    string                    `json:"image-type,omitempty"`
+	Repositories []rpmmd.RepoConfig        `json:"repositories,omitempty"`
+	Config       *manifestutil.BuildConfig `json:"config"`
 }
 
 type BuildDependency struct {
@@ -64,22 +58,22 @@ type BuildDependency struct {
 
 // BuildConfigs is a nested map representing the configs to use for each
 // distro/arch/image-type. If any component is empty, it maps to all values.
-type BuildConfigs map[string]map[string]map[string][]BuildConfig
+type BuildConfigs map[string]map[string]map[string][]manifestutil.BuildConfig
 
-func (bc BuildConfigs) Insert(distro, arch, imageType string, cfg BuildConfig) {
+func (bc BuildConfigs) Insert(distro, arch, imageType string, cfg manifestutil.BuildConfig) {
 	distroCfgs := bc[distro]
 	if distroCfgs == nil {
-		distroCfgs = make(map[string]map[string][]BuildConfig)
+		distroCfgs = make(map[string]map[string][]manifestutil.BuildConfig)
 	}
 
 	distroArchCfgs := distroCfgs[arch]
 	if distroArchCfgs == nil {
-		distroArchCfgs = make(map[string][]BuildConfig)
+		distroArchCfgs = make(map[string][]manifestutil.BuildConfig)
 	}
 
 	distroArchItCfgs := distroArchCfgs[imageType]
 	if distroArchItCfgs == nil {
-		distroArchItCfgs = make([]BuildConfig, 0)
+		distroArchItCfgs = make([]manifestutil.BuildConfig, 0)
 	}
 
 	distroArchItCfgs = append(distroArchItCfgs, cfg)
@@ -88,8 +82,8 @@ func (bc BuildConfigs) Insert(distro, arch, imageType string, cfg BuildConfig) {
 	bc[distro] = distroCfgs
 }
 
-func (bc BuildConfigs) Get(distro, arch, imageType string) []BuildConfig {
-	configs := make([]BuildConfig, 0)
+func (bc BuildConfigs) Get(distro, arch, imageType string) []manifestutil.BuildConfig {
+	configs := make([]manifestutil.BuildConfig, 0)
 	for distroName, distroCfgs := range bc {
 		distroGlob := glob.MustCompile(distroName)
 		if distroGlob.Match(distro) {
@@ -109,7 +103,7 @@ func (bc BuildConfigs) Get(distro, arch, imageType string) []BuildConfig {
 	return configs
 }
 
-func loadConfig(path string) BuildConfig {
+func loadConfig(path string) manifestutil.BuildConfig {
 	fp, err := os.Open(path)
 	if err != nil {
 		panic(fmt.Sprintf("failed to open config %q: %s", path, err.Error()))
@@ -118,7 +112,7 @@ func loadConfig(path string) BuildConfig {
 
 	dec := json.NewDecoder(fp)
 	dec.DisallowUnknownFields()
-	var conf BuildConfig
+	var conf manifestutil.BuildConfig
 
 	if err := dec.Decode(&conf); err != nil {
 		panic(fmt.Sprintf("failed to unmarshal config %q: %s", path, err.Error()))
@@ -194,18 +188,18 @@ func loadImgConfig(configPath string) BuildConfigs {
 type manifestJob func(chan string) error
 
 func makeManifestJob(
-	name string,
+	bc manifestutil.BuildConfig,
 	imgType distro.ImageType,
-	bc BuildConfig,
 	distribution distro.Distro,
 	repos []rpmmd.RepoConfig,
 	archName string,
 	seedArg int64,
-	path string,
 	cacheRoot string,
+	path string,
 	content map[string]bool,
 	metadata bool,
 ) manifestJob {
+	name := bc.Name
 	distroName := distribution.Name()
 	filename := fmt.Sprintf("%s-%s-%s-%s.json", u(distroName), u(archName), u(imgType.Name()), u(name))
 	cacheDir := filepath.Join(cacheRoot, archName+distribution.Name())
@@ -618,7 +612,7 @@ func main() {
 				}
 
 				for _, itConfig := range imgTypeConfigs {
-					job := makeManifestJob(itConfig.Name, imgType, itConfig, distribution, repos, archName, rngSeed, outputDir, cacheRoot, contentResolve, metadata)
+					job := makeManifestJob(itConfig, imgType, distribution, repos, archName, rngSeed, cacheRoot, outputDir, contentResolve, metadata)
 					jobs = append(jobs, job)
 				}
 			}
