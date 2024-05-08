@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/osbuild/images/internal/cmdutil"
+	"github.com/osbuild/images/internal/manifestutil"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
@@ -35,21 +36,14 @@ func check(err error) {
 	}
 }
 
-type BuildConfig struct {
-	Name      string               `json:"name"`
-	Blueprint *blueprint.Blueprint `json:"blueprint,omitempty"`
-	Options   distro.ImageOptions  `json:"options"`
-	Depends   interface{}          `json:"depends,omitempty"` // ignored
-}
-
-func loadConfig(path string) BuildConfig {
+func loadConfig(path string) manifestutil.BuildConfig {
 	fp, err := os.Open(path)
 	check(err)
 	defer fp.Close()
 
 	dec := json.NewDecoder(fp)
 	dec.DisallowUnknownFields()
-	var conf BuildConfig
+	var conf manifestutil.BuildConfig
 
 	check(dec.Decode(&conf))
 	if dec.More() {
@@ -58,7 +52,15 @@ func loadConfig(path string) BuildConfig {
 	return conf
 }
 
-func makeManifest(imgType distro.ImageType, config BuildConfig, distribution distro.Distro, repos []rpmmd.RepoConfig, archName string, seedArg int64, cacheRoot string) (manifest.OSBuildManifest, error) {
+func makeManifest(
+	config manifestutil.BuildConfig,
+	imgType distro.ImageType,
+	distribution distro.Distro,
+	repos []rpmmd.RepoConfig,
+	archName string,
+	seedArg int64,
+	cacheRoot string,
+) (manifest.OSBuildManifest, error) {
 	cacheDir := filepath.Join(cacheRoot, archName+distribution.Name())
 
 	options := config.Options
@@ -271,7 +273,7 @@ func main() {
 	}
 
 	fmt.Printf("Generating manifest for %s: ", config.Name)
-	mf, err := makeManifest(imgType, config, distribution, repos, archName, rngSeed, rpmCacheRoot)
+	mf, err := makeManifest(config, imgType, distribution, repos, archName, rngSeed, rpmCacheRoot)
 	check(err)
 	fmt.Print("DONE\n")
 
