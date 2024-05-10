@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math/rand"
 	"reflect"
-	"strings"
 
 	"github.com/google/uuid"
 )
@@ -95,8 +94,7 @@ type BtrfsSubvolume struct {
 	Size       uint64
 	Mountpoint string
 	GroupID    uint64
-
-	MntOps string
+	Compress   string
 
 	// UUID of the parent volume
 	UUID string
@@ -116,7 +114,7 @@ func (bs *BtrfsSubvolume) Clone() Entity {
 		Size:       bs.Size,
 		Mountpoint: bs.Mountpoint,
 		GroupID:    bs.GroupID,
-		MntOps:     bs.MntOps,
+		Compress:   bs.Compress,
 		UUID:       bs.UUID,
 	}
 }
@@ -162,7 +160,10 @@ func (bs *BtrfsSubvolume) GetFSTabOptions() FSTabOptions {
 		return FSTabOptions{}
 	}
 
-	ops := strings.Join([]string{bs.MntOps, fmt.Sprintf("subvol=%s", bs.Name)}, ",")
+	ops := fmt.Sprintf("subvol=%s", bs.Name)
+	if bs.Compress != "" {
+		ops += fmt.Sprintf(",compress=%s", bs.Compress)
+	}
 	return FSTabOptions{
 		MntOps: ops,
 		Freq:   0,
