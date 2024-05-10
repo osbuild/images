@@ -164,6 +164,18 @@ func deviceName(p disk.Entity) string {
 	panic(fmt.Sprintf("unsupported device type in deviceName: '%T'", p))
 }
 
+// getDevices takes an entity path, and returns osbuild devices required before being able to mount the leaf Mountable
+//
+// - path is an entity path as defined by the disk.entityPath function
+// - filename is the name of an underlying image file (which will get loop-mounted)
+// - lockLoopback determines whether the loop device will get locked after creation
+//
+// The device names are created from the payload that they are holding. This is useful to easily visually map e.g.
+// a loopback device and its mount (in the case of ordinary partitions): they should have the same, or similar name.
+//
+// The first returned value is a map of devices for the given path.
+// The second returned value is the name of the last device in the path. This is the device that should be used as the
+// source for the mount.
 func getDevices(path []disk.Entity, filename string, lockLoopback bool) (map[string]Device, string) {
 	var pt *disk.PartitionTable
 
