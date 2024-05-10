@@ -99,6 +99,15 @@ func genMountsForBootupd(source string, pt *disk.PartitionTable) ([]Mount, error
 			}
 			mount.Partition = common.ToPtr(idx + 1)
 			mounts = append(mounts, *mount)
+		case *disk.Btrfs:
+			for _, subvol := range payload.Subvolumes {
+				mount, err := genOsbuildMount(source, &subvol)
+				if err != nil {
+					return nil, err
+				}
+				mount.Partition = common.ToPtr(idx + 1)
+				mounts = append(mounts, *mount)
+			}
 		default:
 			return nil, fmt.Errorf("type %T not supported by bootupd handling yet", part.Payload)
 		}
