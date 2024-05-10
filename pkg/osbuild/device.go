@@ -257,7 +257,7 @@ func genOsbuildMount(source string, mnt disk.Mountable) (*Mount, error) {
 		return NewExt4Mount(name, source, mountpoint), nil
 	case "btrfs":
 		if subvol, isSubvol := mnt.(*disk.BtrfsSubvolume); isSubvol {
-			return NewBtrfsMount(name, source, mountpoint, subvol.Name, ""), nil
+			return NewBtrfsMount(name, source, mountpoint, subvol.Name, subvol.Compress), nil
 		} else {
 			return nil, fmt.Errorf("mounting bare btrfs partition is unsupported: %s", mountpoint)
 		}
