@@ -222,21 +222,21 @@ func TestGenBootupdDevicesMountsHappy(t *testing.T) {
 	})
 	assert.Equal(t, mounts, []osbuild.Mount{
 		{
-			Name:      "part4",
+			Name:      "-",
 			Type:      "org.osbuild.ext4",
 			Source:    "disk",
 			Target:    "/",
 			Partition: common.ToPtr(4),
 		},
 		{
-			Name:      "part3",
+			Name:      "boot",
 			Type:      "org.osbuild.ext4",
 			Source:    "disk",
 			Target:    "/boot",
 			Partition: common.ToPtr(3),
 		},
 		{
-			Name:      "part2",
+			Name:      "boot-efi",
 			Type:      "org.osbuild.fat",
 			Source:    "disk",
 			Target:    "/boot/efi",

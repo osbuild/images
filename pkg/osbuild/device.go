@@ -237,8 +237,14 @@ func pathEscape(path string) string {
 	return strings.ReplaceAll(path, "/", "-")
 }
 
-func genOsbuildMount(name, source string, mnt disk.Mountable) (*Mount, error) {
+// genOsbuildMount generates an osbuild mount from Mountable mnt
+//
+// - source is the name of the device that the mount should be created from.
+// The name of the mount is derived from the mountpoint of the mountable, escaped with pathEscape. This shouldn't
+// create any conflicts, as the mountpoint is unique within the partition table.
+func genOsbuildMount(source string, mnt disk.Mountable) (*Mount, error) {
 	mountpoint := mnt.GetMountpoint()
+	name := pathEscape(mountpoint)
 	t := mnt.GetFSType()
 	switch t {
 	case "xfs":
@@ -254,21 +260,30 @@ func genOsbuildMount(name, source string, mnt disk.Mountable) (*Mount, error) {
 	}
 }
 
+// genMountsDevicesFromPt generates osbuild mounts and devices from a disk.PartitionTable
+// filename is the name of the underlying image file (which will get loop-mounted).
+//
+// Returned values:
+// 1) the name of the mount for the filesystem root
+// 2) generated mounts
+// 3) generated devices
+// 4) error if any
 func genMountsDevicesFromPt(filename string, pt *disk.PartitionTable) (string, []Mount, map[string]Device, error) {
 	devices := make(map[string]Device, len(pt.Partitions))
 	mounts := make([]Mount, 0, len(pt.Partitions))
 	var fsRootMntName string
 	genMounts := func(mnt disk.Mountable, path []disk.Entity) error {
-		stageDevices, name := getDevices(path, filename, false)
-		mountpoint := mnt.GetMountpoint()
-		if mountpoint == "/" {
-			fsRootMntName = name
-		}
-
-		mount, err := genOsbuildMount(name, name, mnt)
+		stageDevices, leafDeviceName := getDevices(path, filename, false)
+		mount, err := genOsbuildMount(leafDeviceName, mnt)
 		if err != nil {
 			return err
 		}
+
+		mountpoint := mnt.GetMountpoint()
+		if mountpoint == "/" {
+			fsRootMntName = mount.Name
+		}
+
 		mounts = append(mounts, *mount)
 
 		// update devices map with new elements from stageDevices
