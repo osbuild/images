@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/testdisk"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/disk"
@@ -220,6 +221,35 @@ func TestMountsDeviceFromPtHappy(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestMountsDeviceFromBrfs(t *testing.T) {
+	filename := "fake-disk.img"
+	fakePt := testdisk.MakeFakeBtrfsPartitionTable("/", "/boot")
+	fsRootMntName, mounts, devices, err := genMountsDevicesFromPt(filename, fakePt)
+	require.Nil(t, err)
+	assert.Equal(t, "-", fsRootMntName)
+	assert.Equal(t, []Mount{
+		{Name: "-", Type: "org.osbuild.btrfs", Source: "btrfs-6264", Target: "/", Options: BtrfsMountOptions{Subvol: "root"}},
+		{Name: "boot", Type: "org.osbuild.ext4", Source: "boot", Target: "/boot"},
+	}, mounts)
+	assert.Equal(t, map[string]Device{
+		"boot": {
+			Type: "org.osbuild.loopback",
+			Options: &LoopbackDeviceOptions{
+				Filename: "fake-disk.img",
+				Size:     1 * common.GiB / 512,
+			},
+		},
+		"btrfs-6264": {
+			Type: "org.osbuild.loopback",
+			Options: &LoopbackDeviceOptions{
+				Filename: "fake-disk.img",
+				Start:    1 * common.GiB / 512,
+				Size:     9 * common.GiB / 512,
+			},
+		},
+	}, devices)
 }
 
 func Test_deviceName(t *testing.T) {

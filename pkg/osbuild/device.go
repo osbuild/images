@@ -256,7 +256,11 @@ func genOsbuildMount(source string, mnt disk.Mountable) (*Mount, error) {
 	case "ext4":
 		return NewExt4Mount(name, source, mountpoint), nil
 	case "btrfs":
-		return NewBtrfsMount(name, source, mountpoint), nil
+		if subvol, isSubvol := mnt.(*disk.BtrfsSubvolume); isSubvol {
+			return NewBtrfsMount(name, source, mountpoint, subvol.Name, ""), nil
+		} else {
+			return nil, fmt.Errorf("mounting bare btrfs partition is unsupported: %s", mountpoint)
+		}
 	default:
 		return nil, fmt.Errorf("unknown fs type " + t)
 	}

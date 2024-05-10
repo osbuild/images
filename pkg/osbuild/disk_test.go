@@ -131,6 +131,7 @@ func TestGenImagePrepareStages(t *testing.T) {
 					Type:   "org.osbuild.btrfs",
 					Source: "btrfs-6264",
 					Target: "/",
+					Options: BtrfsMountOptions{},
 				},
 			},
 			Options: &BtrfsSubVolOptions{

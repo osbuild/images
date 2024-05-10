@@ -58,7 +58,7 @@ func genBtrfsMountDevices(filename string, pt *disk.PartitionTable) (*map[string
 
 		stageDevices, name := getDevices(path, filename, false)
 
-		mounts = append(mounts, *NewBtrfsMount(name, name, "/"))
+		mounts = append(mounts, *NewBtrfsMount(name, name, "/", "", ""))
 
 		// update devices map with new elements from stageDevices
 		for devName := range stageDevices {
