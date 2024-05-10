@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/testdisk"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
@@ -285,4 +286,52 @@ func TestGenBootupdDevicesMountsHappy(t *testing.T) {
 			Partition: common.ToPtr(2),
 		},
 	})
+}
+
+func TestGenBootupdDevicesMountsHappyBtrfs(t *testing.T) {
+	filename := "fake-disk.img"
+
+	devices, mounts, err := osbuild.GenBootupdDevicesMounts(filename, testdisk.MakeFakeBtrfsPartitionTable("/", "/home", "/boot/efi", "/boot"))
+	require.Nil(t, err)
+	assert.Equal(t, devices, map[string]osbuild.Device{
+		"disk": {
+			Type: "org.osbuild.loopback",
+			Options: &osbuild.LoopbackDeviceOptions{
+				Filename: "fake-disk.img",
+				Partscan: true,
+			},
+		},
+	})
+	assert.Equal(t, []osbuild.Mount{
+		{
+			Name:      "-",
+			Type:      "org.osbuild.btrfs",
+			Source:    "disk",
+			Target:    "/",
+			Options:   osbuild.BtrfsMountOptions{Subvol: "root", Compress: "zstd:1"},
+			Partition: common.ToPtr(3),
+		},
+		{
+			Name:      "boot",
+			Type:      "org.osbuild.ext4",
+			Source:    "disk",
+			Target:    "/boot",
+			Partition: common.ToPtr(2),
+		},
+		{
+			Name:      "boot-efi",
+			Type:      "org.osbuild.fat",
+			Source:    "disk",
+			Target:    "/boot/efi",
+			Partition: common.ToPtr(1),
+		},
+		{
+			Name:      "home",
+			Type:      "org.osbuild.btrfs",
+			Source:    "disk",
+			Target:    "/home",
+			Options:   osbuild.BtrfsMountOptions{Subvol: "/home", Compress: "zstd:1"},
+			Partition: common.ToPtr(3),
+		},
+	}, mounts)
 }
