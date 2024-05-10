@@ -153,6 +153,19 @@ func TestGenBootupdDevicesMountsMissingRoot(t *testing.T) {
 	assert.EqualError(t, err, "required mounts for bootupd stage [/ /boot /boot/efi] missing")
 }
 
+func TestGenBootupdDevicesMountsUnexpectedEntity(t *testing.T) {
+	filename := "fake-disk.img"
+	pt := &disk.PartitionTable{
+		Partitions: []disk.Partition{
+			{
+				Payload: &disk.LVMVolumeGroup{},
+			},
+		},
+	}
+	_, _, err := osbuild.GenBootupdDevicesMounts(filename, pt)
+	assert.EqualError(t, err, "type *disk.LVMVolumeGroup not supported by bootupd handling yet")
+}
+
 var fakePt = &disk.PartitionTable{
 	UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
 	Type: "gpt",
