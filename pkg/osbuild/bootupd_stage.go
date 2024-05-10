@@ -92,8 +92,7 @@ func genMountsForBootupd(source string, pt *disk.PartitionTable) ([]Mount, error
 		}
 
 		partNum := idx + 1
-		name := fmt.Sprintf("part%v", partNum)
-		mount, err := genOsbuildMount(name, source, mnt)
+		mount, err := genOsbuildMount(source, mnt)
 		if err != nil {
 			return nil, err
 		}
