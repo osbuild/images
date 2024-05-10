@@ -102,6 +102,11 @@ func GenImagePrepareStages(pt *disk.PartitionTable, filename string, partTool Pa
 	s = GenMkfsStages(pt, filename)
 	stages = append(stages, s...)
 
+	subvolStage := GenBtrfsSubVolStage(filename, pt)
+	if subvolStage != nil {
+		stages = append(stages, subvolStage)
+	}
+
 	return stages
 }
 
