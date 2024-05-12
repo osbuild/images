@@ -2,7 +2,7 @@
   "common": {
     "rngseed": 1,
     "bootc-image-builder": {
-      "ref": "quay.io/centos-bootc/bootc-image-builder@sha256:9893e7209e5f449b86ababfd2ee02a58cca2e5990f77b06c3539227531fc8120"
+      "ref": "quay.io/centos-bootc/bootc-image-builder@sha256:a2cf57fe75b48c1a38204d0a91f9f5b1afa5e5d8fa8703bbbbe75b2fa2fee3c1"
     }
   },
   "centos-8": {
