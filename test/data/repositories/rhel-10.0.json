@@ -2,13 +2,13 @@
   "aarch64": [
     {
       "name": "baseos",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el10/el10-aarch64-baseos-n10.0-20240401",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el10/el10-aarch64-baseos-n10.0-20240513",
       "check_gpg": false,
       "gpgkeys": []
     },
     {
       "name": "appstream",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el10/el10-aarch64-appstream-n10.0-20240401",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el10/el10-aarch64-appstream-n10.0-20240513",
       "check_gpg": false,
       "gpgkeys": []
     }
@@ -16,13 +16,13 @@
   "ppc64le": [
     {
       "name": "baseos",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el10/el10-ppc64le-baseos-n10.0-20240401",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el10/el10-ppc64le-baseos-n10.0-20240513",
       "check_gpg": false,
       "gpgkeys": []
     },
     {
       "name": "appstream",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el10/el10-ppc64le-appstream-n10.0-20240401",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el10/el10-ppc64le-appstream-n10.0-20240513",
       "check_gpg": false,
       "gpgkeys": []
     }
@@ -30,13 +30,13 @@
   "s390x": [
     {
       "name": "baseos",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el10/el10-s390x-baseos-n10.0-20240401",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el10/el10-s390x-baseos-n10.0-20240513",
       "check_gpg": false,
       "gpgkeys": []
     },
     {
       "name": "appstream",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el10/el10-s390x-appstream-n10.0-20240401",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el10/el10-s390x-appstream-n10.0-20240513",
       "check_gpg": false,
       "gpgkeys": []
     }
@@ -44,19 +44,19 @@
   "x86_64": [
     {
       "name": "baseos",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el10/el10-x86_64-baseos-n10.0-20240401",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el10/el10-x86_64-baseos-n10.0-20240513",
       "check_gpg": false,
       "gpgkeys": []
     },
     {
       "name": "appstream",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el10/el10-x86_64-appstream-n10.0-20240401",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el10/el10-x86_64-appstream-n10.0-20240513",
       "check_gpg": false,
       "gpgkeys": []
     },
     {
       "name": "rt",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el10/el10-x86_64-rt-n10.0-20240401",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el10/el10-x86_64-rt-n10.0-20240513",
       "check_gpg": false,
       "image_type_tags": [
         "edge-commit"
@@ -65,7 +65,7 @@
     },
     {
       "name": "ha",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el10/el10-x86_64-ha-n10.0-20240401",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el10/el10-x86_64-ha-n10.0-20240513",
       "check_gpg": false,
       "image_type_tags": [
         "ec2-ha",
@@ -75,7 +75,7 @@
     },
     {
       "name": "sap",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el10/el10-x86_64-sap-n10.0-20240401",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el10/el10-x86_64-sap-n10.0-20240513",
       "check_gpg": false,
       "image_type_tags": [
         "ec2-sap"
@@ -84,7 +84,7 @@
     },
     {
       "name": "saphana",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el10/el10-x86_64-saphana-n10.0-20240401",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el10/el10-x86_64-saphana-n10.0-20240513",
       "check_gpg": false,
       "image_type_tags": [
         "ec2-sap",
