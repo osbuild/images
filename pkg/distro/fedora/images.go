@@ -444,23 +444,15 @@ func imageInstallerImage(workload workload.Workload,
 
 	img := image.NewAnacondaTarInstaller()
 
-	img.Kickstart = &kickstart.Options{
-		Users:    users.UsersFromBP(customizations.GetUsers()),
-		Groups:   users.GroupsFromBP(customizations.GetGroups()),
-		Language: &img.OSCustomizations.Language,
-		Keyboard: img.OSCustomizations.Keyboard,
-		Timezone: &img.OSCustomizations.Timezone,
-	}
-
-	if instCust, err := customizations.GetInstaller(); err != nil {
+	var err error
+	img.Kickstart, err = kickstart.New(customizations)
+	if err != nil {
 		return nil, err
-	} else if instCust != nil {
-		img.Kickstart.SudoNopasswd = instCust.SudoNopasswd
-		img.Kickstart.Unattended = instCust.Unattended
-		if instCust.Kickstart != nil {
-			img.Kickstart.UserFile = &kickstart.File{Contents: instCust.Kickstart.Contents}
-		}
 	}
+	img.Kickstart.Language = &img.OSCustomizations.Language
+	img.Kickstart.Keyboard = img.OSCustomizations.Keyboard
+	img.Kickstart.Timezone = &img.OSCustomizations.Timezone
+
 	if img.Kickstart.Unattended {
 		// NOTE: this is not supported right now because the
 		// image-installer on Fedora isn't working when unattended.
@@ -474,7 +466,6 @@ func imageInstallerImage(workload workload.Workload,
 	img.Platform = t.platform
 	img.Workload = workload
 
-	var err error
 	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
 	if err != nil {
 		return nil, err
@@ -656,16 +647,16 @@ func iotInstallerImage(workload workload.Workload,
 	img.FIPS = customizations.GetFIPS()
 	img.Platform = t.platform
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
-	img.Kickstart = &kickstart.Options{
-		OSTree: &kickstart.OSTree{
-			OSName: "fedora-iot",
-			Remote: "fedora-iot",
-		},
-		Users:  users.UsersFromBP(customizations.GetUsers()),
-		Groups: users.GroupsFromBP(customizations.GetGroups()),
-		Path:   osbuild.KickstartPathOSBuild,
-	}
 
+	img.Kickstart, err = kickstart.New(customizations)
+	if err != nil {
+		return nil, err
+	}
+	img.Kickstart.OSTree = &kickstart.OSTree{
+		OSName: "fedora-iot",
+		Remote: "fedora-iot",
+	}
+	img.Kickstart.Path = osbuild.KickstartPathOSBuild
 	img.Kickstart.Language, img.Kickstart.Keyboard = customizations.GetPrimaryLocale()
 	// ignore ntp servers - we don't currently support setting these in the
 	// kickstart though kickstart does support setting them
@@ -675,16 +666,6 @@ func iotInstallerImage(workload workload.Workload,
 		"org.fedoraproject.Anaconda.Modules.Timezone",
 		"org.fedoraproject.Anaconda.Modules.Localization",
 		"org.fedoraproject.Anaconda.Modules.Users",
-	}
-
-	if instCust, err := customizations.GetInstaller(); err != nil {
-		return nil, err
-	} else if instCust != nil {
-		img.Kickstart.SudoNopasswd = instCust.SudoNopasswd
-		img.Kickstart.Unattended = instCust.Unattended
-		if instCust.Kickstart != nil {
-			img.Kickstart.UserFile = &kickstart.File{Contents: instCust.Kickstart.Contents}
-		}
 	}
 
 	img.SquashfsCompression = "lz4"

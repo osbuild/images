@@ -1,6 +1,9 @@
 package kickstart
 
-import "github.com/osbuild/images/pkg/customizations/users"
+import (
+	"github.com/osbuild/images/pkg/blueprint"
+	"github.com/osbuild/images/pkg/customizations/users"
+)
 
 type File struct {
 	Contents string
@@ -44,4 +47,25 @@ type Options struct {
 
 	// User-defined kickstart files that will be added to the ISO
 	UserFile *File
+}
+
+func New(customizations *blueprint.Customizations) (*Options, error) {
+	options := &Options{
+		Users:  users.UsersFromBP(customizations.GetUsers()),
+		Groups: users.GroupsFromBP(customizations.GetGroups()),
+	}
+
+	instCust, err := customizations.GetInstaller()
+	if err != nil {
+		return nil, err
+	}
+	if instCust != nil {
+		options.SudoNopasswd = instCust.SudoNopasswd
+		options.Unattended = instCust.Unattended
+		if instCust.Kickstart != nil {
+			options.UserFile = &File{Contents: instCust.Kickstart.Contents}
+		}
+	}
+
+	return options, nil
 }
