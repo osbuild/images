@@ -525,6 +525,20 @@ func createMountpointService(serviceName string, mountpoints []string) *osbuild.
 		ExecStopPost: []string{"/bin/sh -c \"if grep -Uq composefs /run/ostree-booted; then chattr +i /; fi\""},
 		ExecStart:    []string{"mkdir -p " + strings.Join(mountpoints[:], " ")},
 	}
+
+	// For every mountpoint we want to ensure, we need to set a Before order on
+	// the mount unit itself so that our mkdir runs before any of them are
+	// mounted
+	befores := make([]string, len(mountpoints))
+	for idx, mp := range mountpoints {
+		before, err := common.MountUnitNameFor(mp)
+		if err != nil {
+			panic(err)
+		}
+		befores[idx] = before
+	}
+	unit.Before = befores
+
 	install := osbuild.Install{
 		WantedBy: []string{"local-fs.target"},
 	}
