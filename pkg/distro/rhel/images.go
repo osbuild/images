@@ -488,29 +488,19 @@ func EdgeInstallerImage(workload workload.Workload,
 
 	img.Platform = t.platform
 	img.ExtraBasePackages = packageSets[InstallerPkgsKey]
-	img.Kickstart = &kickstart.Options{
-		OSTree: &kickstart.OSTree{
-			OSName: "rhel-edge",
-		},
-		Users:  users.UsersFromBP(customizations.GetUsers()),
-		Groups: users.GroupsFromBP(customizations.GetGroups()),
-		Path:   osbuild.KickstartPathOSBuild,
-	}
 
+	img.Kickstart, err = kickstart.New(customizations)
+	if err != nil {
+		return nil, err
+	}
+	img.Kickstart.OSTree = &kickstart.OSTree{
+		OSName: "rhel-edge",
+	}
+	img.Kickstart.Path = osbuild.KickstartPathOSBuild
 	img.Kickstart.Language, img.Kickstart.Keyboard = customizations.GetPrimaryLocale()
 	// ignore ntp servers - we don't currently support setting these in the
 	// kickstart though kickstart does support setting them
 	img.Kickstart.Timezone, _ = customizations.GetTimezoneSettings()
-
-	if instCust, err := customizations.GetInstaller(); err != nil {
-		return nil, err
-	} else if instCust != nil {
-		img.Kickstart.SudoNopasswd = instCust.SudoNopasswd
-		img.Kickstart.Unattended = instCust.Unattended
-		if instCust.Kickstart != nil {
-			img.Kickstart.UserFile = &kickstart.File{Contents: instCust.Kickstart.Contents}
-		}
-	}
 
 	img.SquashfsCompression = "xz"
 
@@ -687,22 +677,14 @@ func ImageInstallerImage(workload workload.Workload,
 	}
 
 	img.ExtraBasePackages = packageSets[InstallerPkgsKey]
-	img.Kickstart = &kickstart.Options{
-		Users:    users.UsersFromBP(customizations.GetUsers()),
-		Groups:   users.GroupsFromBP(customizations.GetGroups()),
-		Language: &img.OSCustomizations.Language,
-		Keyboard: img.OSCustomizations.Keyboard,
-		Timezone: &img.OSCustomizations.Timezone,
-	}
-	if instCust, err := customizations.GetInstaller(); err != nil {
+
+	img.Kickstart, err = kickstart.New(customizations)
+	if err != nil {
 		return nil, err
-	} else if instCust != nil {
-		img.Kickstart.SudoNopasswd = instCust.SudoNopasswd
-		img.Kickstart.Unattended = instCust.Unattended
-		if instCust.Kickstart != nil {
-			img.Kickstart.UserFile = &kickstart.File{Contents: instCust.Kickstart.Contents}
-		}
 	}
+	img.Kickstart.Language = &img.OSCustomizations.Language
+	img.Kickstart.Keyboard = img.OSCustomizations.Keyboard
+	img.Kickstart.Timezone = &img.OSCustomizations.Timezone
 
 	installerConfig, err := t.getDefaultInstallerConfig()
 	if err != nil {
