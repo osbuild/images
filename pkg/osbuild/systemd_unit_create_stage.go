@@ -29,6 +29,7 @@ type Unit struct {
 	Requires                 []string `json:"Requires,omitempty"`
 	Wants                    []string `json:"Wants,omitempty"`
 	After                    []string `json:"After,omitempty"`
+	Before                   []string `json:"Before,omitempty"`
 }
 
 type Service struct {
