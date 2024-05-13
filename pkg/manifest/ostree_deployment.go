@@ -513,7 +513,7 @@ func createMountpointService(serviceName string, mountpoints []string) *osbuild.
 	}
 	unit := osbuild.Unit{
 		Description:              "Ensure custom filesystem mountpoints exist",
-		DefaultDependencies:      common.ToPtr(false),
+		DefaultDependencies:      common.ToPtr(false), // Default dependencies would interfere with our custom order (before mountpoints)
 		ConditionPathIsDirectory: conditionPathIsDirectory,
 		After:                    []string{"ostree-remount.service"},
 	}
@@ -523,7 +523,7 @@ func createMountpointService(serviceName string, mountpoints []string) *osbuild.
 		// compatibility with composefs, will require transient rootfs to be enabled too.
 		ExecStartPre: []string{"/bin/sh -c \"if grep -Uq composefs /run/ostree-booted; then chattr -i /; fi\""},
 		ExecStopPost: []string{"/bin/sh -c \"if grep -Uq composefs /run/ostree-booted; then chattr +i /; fi\""},
-		ExecStart:    []string{"mkdir -p " + strings.Join(mountpoints[:], " ")},
+		ExecStart:    []string{"mkdir -p " + strings.Join(mountpoints, " ")},
 	}
 
 	// For every mountpoint we want to ensure, we need to set a Before order on
