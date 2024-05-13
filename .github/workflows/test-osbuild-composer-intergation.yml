@@ -92,7 +92,7 @@ jobs:
         run: sudo apt install -y libgpgme-dev libbtrfs-dev libdevmapper-dev
 
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v5
+        uses: golangci/golangci-lint-action@v6
         with:
           version: v1.54.2
           working-directory: osbuild-composer
