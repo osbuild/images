@@ -175,7 +175,11 @@ func checkOptions(t *rhel.ImageType, bp *blueprint.Blueprint, options distro.Ima
 		warnings = append(warnings, w)
 	}
 
-	if instCust, err := customizations.GetInstaller(); instCust != nil {
+	instCust, err := customizations.GetInstaller()
+	if err != nil {
+		return warnings, err
+	}
+	if instCust != nil {
 		// only supported by the Anaconda installer
 		if slices.Index([]string{"image-installer", "edge-installer", "live-installer"}, t.Name()) == -1 {
 			return warnings, fmt.Errorf("installer customizations are not supported for %q", t.Name())
@@ -187,8 +191,6 @@ func checkOptions(t *rhel.ImageType, bp *blueprint.Blueprint, options distro.Ima
 			(customizations.GetUsers() != nil || customizations.GetGroups() != nil) {
 			return warnings, fmt.Errorf("edge-installer installer.kickstart.contents are not supported in combination with users or groups")
 		}
-	} else if err != nil {
-		return warnings, err
 	}
 
 	return warnings, nil
