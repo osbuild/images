@@ -515,6 +515,7 @@ func createMountpointService(serviceName string, mountpoints []string) *osbuild.
 		Description:              "Ensure custom filesystem mountpoints exist",
 		DefaultDependencies:      common.ToPtr(false),
 		ConditionPathIsDirectory: conditionPathIsDirectory,
+		After:                    []string{"ostree-remount.service"},
 	}
 	service := osbuild.Service{
 		Type:            osbuild.Oneshot,
