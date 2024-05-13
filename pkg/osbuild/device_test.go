@@ -188,15 +188,31 @@ func TestMountsDeviceFromPtNoRootErrors(t *testing.T) {
 
 func TestMountsDeviceFromPtHappy(t *testing.T) {
 	filename := "fake-disk.img"
-	fakePt := testdisk.MakeFakePartitionTable("/")
+	fakePt := testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi")
 	fsRootMntName, mounts, devices, err := genMountsDevicesFromPt(filename, fakePt)
 	require.Nil(t, err)
 	assert.Equal(t, fsRootMntName, "-")
 	assert.Equal(t, mounts, []Mount{
 		{Name: "-", Type: "org.osbuild.ext4", Source: "-", Target: "/"},
+		{Name: "boot", Type: "org.osbuild.ext4", Source: "boot", Target: "/boot"},
+		{Name: "boot-efi", Type: "org.osbuild.fat", Source: "boot-efi", Target: "/boot/efi"},
 	})
 	assert.Equal(t, devices, map[string]Device{
 		"-": {
+			Type: "org.osbuild.loopback",
+			Options: &LoopbackDeviceOptions{
+				Filename: "fake-disk.img",
+				Size:     testdisk.FakePartitionSize / 512,
+			},
+		},
+		"boot": {
+			Type: "org.osbuild.loopback",
+			Options: &LoopbackDeviceOptions{
+				Filename: "fake-disk.img",
+				Size:     testdisk.FakePartitionSize / 512,
+			},
+		},
+		"boot-efi": {
 			Type: "org.osbuild.loopback",
 			Options: &LoopbackDeviceOptions{
 				Filename: "fake-disk.img",
