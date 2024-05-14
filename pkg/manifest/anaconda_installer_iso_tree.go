@@ -422,17 +422,17 @@ func (p *AnacondaInstallerISOTree) bootcInstallerKickstartStages() []*osbuild.St
 		panic(fmt.Sprintf("failed to create kickstart stage options: %v", err))
 	}
 
+	// kickstart.New() already validates the options but they may have been
+	// modified since then, so validate them before we create the stages
+	if err := p.Kickstart.Validate(); err != nil {
+		panic(err)
+	}
+
 	if p.Kickstart.UserFile != nil {
+
 		// when a user defines their own kickstart, we create a kickstart that
 		// takes care of the installation and let the user kickstart handle
 		// everything else
-
-		// users and groups are NOT allowed when users add their own kickstarts
-		if len(kickstartOptions.Users)+len(kickstartOptions.Groups) > 0 {
-			// this is a programming error - the combinations should have been verified already
-			panic("kickstart users and/or groups are not compatible with user-supplied kickstart content")
-		}
-
 		stages = append(stages, osbuild.NewKickstartStage(kickstartOptions))
 		kickstartFile, err := kickstartOptions.IncludeRaw(p.Kickstart.UserFile.Contents)
 		if err != nil {
@@ -548,26 +548,13 @@ func (p *AnacondaInstallerISOTree) makeKickstartStages(stageOptions *osbuild.Kic
 
 	stages := make([]*osbuild.Stage, 0)
 
-	// users, groups, and other kickstart options are not allowed when users
-	// add their own kickstarts
+	// kickstart.New() already validates the options but they may have been
+	// modified since then, so validate them before we create the stages
+	if err := p.Kickstart.Validate(); err != nil {
+		panic(err)
+	}
+
 	if kickstartOptions.UserFile != nil {
-		// check if any other option is set and panic - these combinations
-		// should be verified by the caller
-		if kickstartOptions.Unattended {
-			panic("kickstart unattended options are not compatible with user-supplied kickstart content")
-		}
-
-		if len(kickstartOptions.SudoNopasswd) > 0 {
-			panic("kickstart sudo nopasswd drop-in file creation is not compatible with user-supplied kickstart content")
-		}
-
-		// options are usually already initialised from outside this function
-		// with the payload options (ostree commit or tarball), but might also
-		// have Users and Groups added
-		if len(kickstartOptions.Users)+len(kickstartOptions.Groups) > 0 {
-			panic("kickstart users and/or groups are not compatible with user-supplied kickstart content")
-		}
-
 		stages = append(stages, osbuild.NewKickstartStage(stageOptions))
 		if kickstartOptions.UserFile != nil {
 			kickstartFile, err := stageOptions.IncludeRaw(kickstartOptions.UserFile.Contents)
