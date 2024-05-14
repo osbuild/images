@@ -190,7 +190,7 @@ func makeManifestJob(
 	cacheDir := filepath.Join(cacheRoot, archName+distribution.Name())
 
 	// ensure that each file has a unique seed based on filename
-	seedArg, err := cmdutil.SeedArgFor(bc, imgType, distribution, archName)
+	seedArg, err := cmdutil.SeedArgFor(bc, imgType.Name(), distribution.Name(), archName)
 	if err != nil {
 		panic(err)
 	}
