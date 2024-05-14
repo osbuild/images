@@ -1,12 +1,15 @@
 package osbuild
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/testdisk"
+	"github.com/osbuild/images/pkg/disk"
 )
 
 func TestNewMkfsStage(t *testing.T) {
@@ -70,4 +73,76 @@ func TestNewMkfsStage(t *testing.T) {
 		Devices: map[string]Device{"device": *device},
 	}
 	assert.Equal(t, mkxfsExpected, mkxfs)
+}
+
+func TestGenMkfsStages(t *testing.T) {
+	pt := testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi")
+	stages := GenMkfsStages(pt, "file.img")
+	assert.Equal(t, []*Stage{
+		{
+			Type: "org.osbuild.mkfs.ext4",
+			Options: &MkfsExt4StageOptions{
+				UUID: disk.RootPartitionUUID,
+			},
+			Devices: map[string]Device{
+				"device": {
+					Type: "org.osbuild.loopback",
+					Options: &LoopbackDeviceOptions{
+						Filename: "file.img",
+						Size:     testdisk.FakePartitionSize / disk.DefaultSectorSize,
+						Lock:     true,
+					},
+				},
+			},
+		},
+		{
+			Type: "org.osbuild.mkfs.ext4",
+			Options: &MkfsExt4StageOptions{
+				UUID: disk.FilesystemDataUUID,
+			},
+			Devices: map[string]Device{
+				"device": {
+					Type: "org.osbuild.loopback",
+					Options: &LoopbackDeviceOptions{
+						Filename: "file.img",
+						Size:     testdisk.FakePartitionSize / disk.DefaultSectorSize,
+						Lock:     true,
+					},
+				},
+			},
+		},
+		{
+			Type: "org.osbuild.mkfs.fat",
+			Options: &MkfsFATStageOptions{
+				VolID: strings.ReplaceAll(disk.EFIFilesystemUUID, "-", ""),
+			},
+			Devices: map[string]Device{
+				"device": {
+					Type: "org.osbuild.loopback",
+					Options: &LoopbackDeviceOptions{
+						Filename: "file.img",
+						Size:     testdisk.FakePartitionSize / disk.DefaultSectorSize,
+						Lock:     true,
+					},
+				},
+			},
+		},
+	}, stages)
+}
+
+func TestGenMkfsStagesUnhappy(t *testing.T) {
+	pt := &disk.PartitionTable{
+		Type: "gpt",
+		Partitions: []disk.Partition{
+			{
+				Payload: &disk.Filesystem{
+					Type: "ext2",
+				},
+			},
+		},
+	}
+
+	assert.PanicsWithValue(t, "unknown fs type ext2", func() {
+		GenMkfsStages(pt, "file.img")
+	})
 }
