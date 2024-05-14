@@ -18,28 +18,12 @@
       ],
       "filesystem": [
         {
-          "mountpoint": "/foo",
+          "mountpoint": "/data",
           "minsize": "2147483648"
         },
         {
-          "mountpoint": "/foo/bar",
+          "mountpoint": "/data/extra",
           "minsize": "2 GiB"
-        },
-        {
-          "mountpoint": "/root",
-          "minsize": "1 GiB"
-        },
-        {
-          "mountpoint": "/mnt",
-          "minsize": "3 GiB"
-        },
-        {
-          "mountpoint": "/srv",
-          "minsize": "4 GiB"
-        },
-        {
-          "mountpoint": "/opt",
-          "minsize": "1 GiB"
         },
         {
           "mountpoint": "/var/mydata",
