@@ -130,6 +130,62 @@ func TestGenMkfsStages(t *testing.T) {
 	}, stages)
 }
 
+func TestGenMkfsStagesBtrfs(t *testing.T) {
+	// Let's put there /extra to make sure that / and /extra creates only one btrfs partition
+	pt := testdisk.MakeFakeBtrfsPartitionTable("/", "/boot", "/boot/efi", "/extra")
+	stages := GenMkfsStages(pt, "file.img")
+	assert.Equal(t, []*Stage{
+		{
+			Type:    "org.osbuild.mkfs.ext4",
+			Options: &MkfsExt4StageOptions{},
+			Devices: map[string]Device{
+				"device": {
+					Type: "org.osbuild.loopback",
+					Options: &LoopbackDeviceOptions{
+						Filename: "file.img",
+						Size:     common.GiB / disk.DefaultSectorSize,
+						Lock:     true,
+					},
+				},
+			},
+		},
+		{
+			Type: "org.osbuild.mkfs.fat",
+			Options: &MkfsFATStageOptions{
+				VolID: strings.ReplaceAll(disk.EFIFilesystemUUID, "-", ""),
+			},
+			Devices: map[string]Device{
+				"device": {
+					Type: "org.osbuild.loopback",
+					Options: &LoopbackDeviceOptions{
+						Filename: "file.img",
+						Start:    common.GiB / disk.DefaultSectorSize,
+						Size:     100 * common.MiB / disk.DefaultSectorSize,
+						Lock:     true,
+					},
+				},
+			},
+		},
+		{
+			Type: "org.osbuild.mkfs.btrfs",
+			Options: &MkfsBtrfsStageOptions{
+				UUID: disk.RootPartitionUUID,
+			},
+			Devices: map[string]Device{
+				"device": {
+					Type: "org.osbuild.loopback",
+					Options: &LoopbackDeviceOptions{
+						Filename: "file.img",
+						Start:    (common.GiB + 100*common.MiB) / disk.DefaultSectorSize,
+						Size:     9 * common.GiB / disk.DefaultSectorSize,
+						Lock:     true,
+					},
+				},
+			},
+		},
+	}, stages)
+}
+
 func TestGenMkfsStagesUnhappy(t *testing.T) {
 	pt := &disk.PartitionTable{
 		Type: "gpt",
