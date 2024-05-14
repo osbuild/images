@@ -1,6 +1,8 @@
 package kickstart
 
 import (
+	"fmt"
+
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/customizations/users"
 )
@@ -67,5 +69,25 @@ func New(customizations *blueprint.Customizations) (*Options, error) {
 		}
 	}
 
+	if err := options.Validate(); err != nil {
+		return nil, err
+	}
 	return options, nil
+}
+
+func (options Options) Validate() error {
+	if options.UserFile != nil {
+		// users, groups, and other kickstart options are not allowed when
+		// users add their own kickstarts
+		if options.Unattended {
+			return fmt.Errorf("kickstart unattended options are not compatible with user-supplied kickstart content")
+		}
+		if len(options.SudoNopasswd) > 0 {
+			return fmt.Errorf("kickstart sudo nopasswd drop-in file creation is not compatible with user-supplied kickstart content")
+		}
+		if len(options.Users)+len(options.Groups) > 0 {
+			return fmt.Errorf("kickstart users and/or groups are not compatible with user-supplied kickstart content")
+		}
+	}
+	return nil
 }
