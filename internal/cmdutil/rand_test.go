@@ -40,20 +40,12 @@ func TestNewRNGSeed(t *testing.T) {
 	})
 }
 
-type fakeNamer struct {
-	fakeName string
-}
-
-func (fn fakeNamer) Name() string {
-	return fn.fakeName
-}
-
 func TestSeedArgFor(t *testing.T) {
 	t.Setenv(cmdutil.RNG_SEED_ENV_KEY, "1234")
 
 	for _, tc := range []struct {
-		bcName, imgType, distro, archName string
-		expectedSeed                      int64
+		bcName, imgTypeName, distroName, archName string
+		expectedSeed                              int64
 	}{
 		{"bcName", "fakeImgType", "fakeDistro", "x86_64", 9170052743323116054},
 		{"bcName1", "fakeImgType", "fakeDistro", "x86_64", -7134826073208782961},
@@ -62,7 +54,7 @@ func TestSeedArgFor(t *testing.T) {
 		{"bcName", "fakeImgType", "fakeDistro1", "aarch64", 47752167762999679},
 	} {
 		bc := &buildconfig.BuildConfig{Name: tc.bcName}
-		seedArg, err := cmdutil.SeedArgFor(bc, fakeNamer{tc.imgType}, fakeNamer{tc.distro}, tc.archName)
+		seedArg, err := cmdutil.SeedArgFor(bc, tc.imgTypeName, tc.distroName, tc.archName)
 		assert.NoError(t, err)
 		assert.Equal(t, tc.expectedSeed, seedArg)
 	}

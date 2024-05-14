@@ -32,20 +32,16 @@ func newRNGSeed() (int64, error) {
 	return randSeed.Int64(), nil
 }
 
-type namer interface {
-	Name() string
-}
-
-func SeedArgFor(bc *buildconfig.BuildConfig, imgType namer, distribution namer, archName string) (int64, error) {
+func SeedArgFor(bc *buildconfig.BuildConfig, imgTypeName, distributionName, archName string) (int64, error) {
 	rngSeed, err := newRNGSeed()
 	if err != nil {
 		return 0, err
 	}
 
 	h := fnv.New64()
-	h.Write([]byte(distribution.Name()))
+	h.Write([]byte(distributionName))
 	h.Write([]byte(archName))
-	h.Write([]byte(imgType.Name()))
+	h.Write([]byte(imgTypeName))
 	h.Write([]byte(bc.Name))
 
 	return rngSeed + int64(h.Sum64()), nil

@@ -57,7 +57,7 @@ func makeManifest(
 	if config.Blueprint != nil {
 		bp = blueprint.Blueprint(*config.Blueprint)
 	}
-	seedArg, err := cmdutil.SeedArgFor(config, imgType, distribution, archName)
+	seedArg, err := cmdutil.SeedArgFor(config, imgType.Name(), distribution.Name(), archName)
 	if err != nil {
 		return nil, err
 	}
