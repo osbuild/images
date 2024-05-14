@@ -712,6 +712,11 @@ func (pt *PartitionTable) ensureBtrfs() error {
 	if _, ok := parent.(*Btrfs); ok {
 		return nil
 	} else if part, ok := parent.(*Partition); ok {
+		rootMountable, ok := rootPath[0].(Mountable)
+		if !ok {
+			return fmt.Errorf("root entity is not mountable: %T, this is a violation of entityPath() contract", rootPath[0])
+		}
+
 		btrfs := &Btrfs{
 			Label: "root",
 			Subvolumes: []BtrfsSubvolume{
@@ -719,6 +724,7 @@ func (pt *PartitionTable) ensureBtrfs() error {
 					Name:       "root",
 					Mountpoint: "/",
 					Compress:   DefaultBtrfsCompression,
+					ReadOnly:   rootMountable.GetFSTabOptions().ReadOnly(),
 				},
 			},
 		}
