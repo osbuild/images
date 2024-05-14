@@ -98,6 +98,7 @@ type BtrfsSubvolume struct {
 	Mountpoint string
 	GroupID    uint64
 	Compress   string
+	ReadOnly   bool
 
 	// UUID of the parent volume
 	UUID string
@@ -166,6 +167,9 @@ func (bs *BtrfsSubvolume) GetFSTabOptions() FSTabOptions {
 	ops := fmt.Sprintf("subvol=%s", bs.Name)
 	if bs.Compress != "" {
 		ops += fmt.Sprintf(",compress=%s", bs.Compress)
+	}
+	if bs.ReadOnly {
+		ops += ",ro"
 	}
 	return FSTabOptions{
 		MntOps: ops,

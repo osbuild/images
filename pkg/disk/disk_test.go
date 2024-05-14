@@ -1171,3 +1171,25 @@ func TestMinimumSizesWithRequiredSizes(t *testing.T) {
 		}
 	}
 }
+
+func TestFSTabOptionsReadOnly(t *testing.T) {
+	cases := []struct {
+		options string
+		ro      bool
+	}{
+		{"ro", true},
+		{"ro,relatime,seclabel,compress=zstd:1,ssd,discard=async,space_cache,subvolid=257,subvol=/root", true},
+
+		{"defaults", false},
+		{"rw", false},
+		{"rw,ro", false},
+		{"rw,relatime,seclabel,compress=zstd:1,ssd,discard=async,space_cache,subvolid=257,subvol=/root", false},
+	}
+
+	for _, c := range cases {
+		t.Run(c.options, func(t *testing.T) {
+			options := FSTabOptions{MntOps: c.options}
+			assert.Equal(t, c.ro, options.ReadOnly())
+		})
+	}
+}
