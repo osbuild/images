@@ -2,8 +2,6 @@ module github.com/osbuild/images
 
 go 1.20
 
-exclude github.com/mattn/go-sqlite3 v2.0.3+incompatible
-
 require (
 	cloud.google.com/go/compute v1.26.0
 	cloud.google.com/go/storage v1.41.0
