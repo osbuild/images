@@ -784,6 +784,8 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 		}
 	}
 
+	img.AdditionalDracutModules = append(img.AdditionalDracutModules, "dbus-broker")
+
 	d := t.arch.distro
 	img.Product = d.product
 	img.Variant = "IoT"
