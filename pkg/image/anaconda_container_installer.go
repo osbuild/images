@@ -41,6 +41,8 @@ type AnacondaContainerInstaller struct {
 	FIPS                      bool
 
 	Kickstart *kickstart.Options
+
+	UseRHELLoraxTemplates bool
 }
 
 func NewAnacondaContainerInstaller(container container.SourceSpec, ref string) *AnacondaContainerInstaller {
@@ -69,8 +71,7 @@ func (img *AnacondaContainerInstaller) InstantiateManifest(m *manifest.Manifest,
 		img.Preview,
 	)
 
-	// This is only built with ELN for now
-	anacondaPipeline.UseRHELLoraxTemplates = true
+	anacondaPipeline.UseRHELLoraxTemplates = img.UseRHELLoraxTemplates
 
 	anacondaPipeline.ExtraPackages = img.ExtraBasePackages.Include
 	anacondaPipeline.ExcludePackages = img.ExtraBasePackages.Exclude
