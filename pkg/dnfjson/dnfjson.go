@@ -640,6 +640,9 @@ type arguments struct {
 	// Load repository configurations, gpg keys, and vars from an os-root-like
 	// tree.
 	RootDir string `json:"root_dir"`
+
+	// Optional metadata to download for the repositories
+	OptionalMetadata []string `json:"optional-metadata,omitempty"`
 }
 
 type searchArgs struct {
