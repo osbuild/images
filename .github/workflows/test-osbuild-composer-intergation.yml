@@ -43,7 +43,7 @@ jobs:
 
       - name: Run unit tests
         working-directory: osbuild-composer
-        run: go test -race ./...
+        run: go test -v -race ./...
 
   lint:
     name: "⌨ osbuild-composer Golang Lint"
