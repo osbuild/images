@@ -38,10 +38,10 @@ jobs:
         run: git config --global --add safe.directory "$(pwd)"
 
       - name: Run unit tests
-        run: go test -race  ./...
+        run: go test -v -race  ./...
 
       - name: Run depsolver tests with force-dnf to make sure it's not skipped for any reason
-        run: go test -race ./pkg/dnfjson/... -force-dnf
+        run: go test -v -race ./pkg/dnfjson/... -force-dnf
 
   unit-tests-f40:
     name: "🛃 Unit tests (Fedora 40)"
@@ -68,10 +68,10 @@ jobs:
         run: git config --global --add safe.directory "$(pwd)"
 
       - name: Run unit tests
-        run: go test -race  ./...
+        run: go test -v -race  ./...
 
       - name: Run depsolver tests with force-dnf to make sure it's not skipped for any reason
-        run: go test -race ./pkg/dnfjson/... -force-dnf
+        run: go test -v -race ./pkg/dnfjson/... -force-dnf
 
   container-resolver-tests:
     name: "🛃 Container resolver tests"
@@ -99,7 +99,7 @@ jobs:
     # We need to run the test as root, since we use the root
     # containers-storage for the local resolvers
     - name: Run unit tests
-      run: sudo go test ./pkg/container/... --force-local-resolver
+      run: sudo go test -v ./pkg/container/... --force-local-resolver
 
   unit-tests-c9s:
     name: "🛃 Unit tests (CentOS Stream 9)"
@@ -131,10 +131,10 @@ jobs:
         run: git config --global --add safe.directory "$(pwd)"
 
       - name: Run unit tests
-        run: go test -race  ./...
+        run: go test -v -race  ./...
 
       - name: Run depsolver tests with force-dnf to make sure it's not skipped for any reason
-        run: go test -race ./pkg/dnfjson/... -force-dnf
+        run: go test -v -race ./pkg/dnfjson/... -force-dnf
 
   unit-tests-c8s:
     name: "🛃 Unit tests (CentOS Stream 8)"
@@ -168,10 +168,10 @@ jobs:
         run: git config --global --add safe.directory "$(pwd)"
 
       - name: Run unit tests
-        run: go test -race  ./...
+        run: go test -v -race  ./...
 
       - name: Run depsolver tests with force-dnf to make sure it's not skipped for any reason
-        run: go test -race ./pkg/dnfjson/... -force-dnf
+        run: go test -v -race ./pkg/dnfjson/... -force-dnf
 
   lint:
     name: "⌨ Lint"
