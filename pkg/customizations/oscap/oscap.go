@@ -2,6 +2,8 @@ package oscap
 
 import (
 	"strings"
+
+	"github.com/osbuild/images/pkg/blueprint"
 )
 
 type Profile string
@@ -53,6 +55,24 @@ type TailoringConfig struct {
 	NewProfile string
 	Selected   []string
 	Unselected []string
+	Overrides  []TailoringOverride
+}
+
+type TailoringOverride struct {
+	Var   string
+	Value interface{}
+}
+
+// TODO: add test
+func ConvertBlueprintTailoringOverrides(bpOverrides []blueprint.OpenSCAPTailoringOverride) []TailoringOverride {
+	var overrides = make([]TailoringOverride, len(bpOverrides))
+	for idx := range bpOverrides {
+		overrides[idx] = TailoringOverride{
+			Var:   bpOverrides[idx].Var,
+			Value: bpOverrides[idx].Value,
+		}
+	}
+	return overrides
 }
 
 func DefaultFedoraDatastream() string {
