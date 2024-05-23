@@ -40,6 +40,21 @@ const (
 	defaultRHEL9Datastream   string = "/usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml"
 )
 
+type RemediationConfig struct {
+	Datastream         string
+	ProfileID          string
+	TailoringPath      string
+	CompressionEnabled bool
+}
+
+type TailoringConfig struct {
+	RemediationConfig
+	Filepath   string
+	NewProfile string
+	Selected   []string
+	Unselected []string
+}
+
 func DefaultFedoraDatastream() string {
 	return defaultFedoraDatastream
 }
