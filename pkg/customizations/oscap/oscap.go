@@ -43,6 +43,20 @@ const (
 	DataDir string = "/oscap_data"
 )
 
+type RemediationConfig struct {
+	Datastream         string
+	ProfileID          string
+	TailoringPath      string
+	CompressionEnabled bool
+}
+
+type TailoringConfig struct {
+	RemediationConfig
+	TailoredProfileID string
+	Selected          []string
+	Unselected        []string
+}
+
 func DefaultFedoraDatastream() string {
 	return defaultFedoraDatastream
 }
