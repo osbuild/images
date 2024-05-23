@@ -1,6 +1,10 @@
 package osbuild
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/osbuild/images/pkg/customizations/oscap"
+)
 
 type OscapAutotailorStageOptions struct {
 	Filepath string                `json:"filepath"`
@@ -41,15 +45,19 @@ func NewOscapAutotailorStage(options *OscapAutotailorStageOptions) *Stage {
 	}
 }
 
-func NewOscapAutotailorStageOptions(filepath string, autotailorOptions OscapAutotailorConfig) *OscapAutotailorStageOptions {
+func NewOscapAutotailorStageOptions(options *oscap.TailoringConfig) *OscapAutotailorStageOptions {
+	if options == nil {
+		return nil
+	}
+
 	return &OscapAutotailorStageOptions{
-		Filepath: filepath,
+		Filepath: options.Filepath,
 		Config: OscapAutotailorConfig{
-			NewProfile: autotailorOptions.NewProfile,
-			Datastream: autotailorOptions.Datastream,
-			ProfileID:  autotailorOptions.ProfileID,
-			Selected:   autotailorOptions.Selected,
-			Unselected: autotailorOptions.Unselected,
+			NewProfile: options.NewProfile,
+			Datastream: options.RemediationConfig.Datastream,
+			ProfileID:  options.RemediationConfig.ProfileID,
+			Selected:   options.Selected,
+			Unselected: options.Unselected,
 		},
 	}
 }

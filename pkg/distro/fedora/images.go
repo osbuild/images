@@ -204,28 +204,20 @@ func osCustomizations(
 			CompressionEnabled: true,
 		}
 
+		var tailoringConfig *oscap.TailoringConfig
 		if oscapConfig.Tailoring != nil {
-			tailoringFilepath := filepath.Join(oscapDataDir, "tailoring.xml")
-			newProfile := fmt.Sprintf("%s_osbuild_tailoring", oscapConfig.ProfileID)
-
-			tailoringOptions := osbuild.OscapAutotailorConfig{
-				NewProfile: newProfile,
-				Datastream: datastream,
-				ProfileID:  oscapConfig.ProfileID,
-				Selected:   oscapConfig.Tailoring.Selected,
-				Unselected: oscapConfig.Tailoring.Unselected,
+			tailoringConfig = &oscap.TailoringConfig{
+				RemediationConfig: remediationConfig,
+				Filepath:          filepath.Join(oscapDataDir, "tailoring.xml"),
+				NewProfile:        fmt.Sprintf("%s_osbuild_tailoring", oscapConfig.ProfileID),
+				Selected:          oscapConfig.Tailoring.Selected,
+				Unselected:        oscapConfig.Tailoring.Unselected,
 			}
-
-			osc.OpenSCAPTailorConfig = osbuild.NewOscapAutotailorStageOptions(
-				tailoringFilepath,
-				tailoringOptions,
-			)
-
-			// overwrite the profile id with the new tailoring id
-			remediationConfig.ProfileID = newProfile
-			remediationConfig.TailoringPath = tailoringFilepath
+			remediationConfig.ProfileID = tailoringConfig.NewProfile
+			remediationConfig.TailoringPath = tailoringConfig.Filepath
 		}
 
+		osc.OpenSCAPTailorConfig = osbuild.NewOscapAutotailorStageOptions(tailoringConfig)
 		osc.OpenSCAPConfig = osbuild.NewOscapRemediationStageOptions(oscapDataDir, &remediationConfig)
 	}
 
