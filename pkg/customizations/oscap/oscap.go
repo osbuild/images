@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
-
-	"github.com/osbuild/images/pkg/customizations/fsnode"
 )
 
 type Profile string
@@ -81,14 +79,8 @@ func IsProfileAllowed(profile string, allowlist []Profile) bool {
 	return false
 }
 
-func GetTailoringFile(profile string) (string, string, *fsnode.Directory, error) {
+func GetTailoringFile(profile string) (string, string) {
 	newProfile := fmt.Sprintf("%s_osbuild_tailoring", profile)
 	path := filepath.Join(tailoringDirPath, "tailoring.xml")
-
-	tailoringDir, err := fsnode.NewDirectory(tailoringDirPath, nil, nil, nil, true)
-	if err != nil {
-		return "", "", nil, err
-	}
-
-	return newProfile, path, tailoringDir, nil
+	return newProfile, path
 }
