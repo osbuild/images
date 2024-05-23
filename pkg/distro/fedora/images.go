@@ -205,13 +205,14 @@ func osCustomizations(
 		}
 
 		var tailoringConfig *oscap.TailoringConfig
-		if oscapConfig.Tailoring != nil {
+		if tc := oscapConfig.Tailoring; tc != nil {
 			tailoringConfig = &oscap.TailoringConfig{
 				RemediationConfig: remediationConfig,
 				Filepath:          filepath.Join(oscapDataDir, "tailoring.xml"),
 				NewProfile:        fmt.Sprintf("%s_osbuild_tailoring", oscapConfig.ProfileID),
-				Selected:          oscapConfig.Tailoring.Selected,
-				Unselected:        oscapConfig.Tailoring.Unselected,
+				Selected:          tc.Selected,
+				Unselected:        tc.Unselected,
+				Overrides:         oscap.ConvertBlueprintTailoringOverrides(tc.Overrides),
 			}
 			remediationConfig.ProfileID = tailoringConfig.NewProfile
 			remediationConfig.TailoringPath = tailoringConfig.Filepath

@@ -15,6 +15,12 @@ func TestNewOscapAutotailorStage(t *testing.T) {
 			NewProfile: "test_profile_osbuild_profile",
 			Selected:   []string{"fast_rule"},
 			Unselected: []string{"slow_rule"},
+			Overrides: []AutotailorOverride{
+				{
+					Var:   "rule1",
+					Value: "value1",
+				},
+			},
 		},
 	}
 
@@ -64,6 +70,56 @@ func TestOscapAutotailorStageOptionsValidate(t *testing.T) {
 				},
 			},
 			err: true,
+		},
+		{
+			name: "invalid-override-value",
+			options: OscapAutotailorStageOptions{
+				Config: OscapAutotailorConfig{
+					ProfileID:  "test-profile",
+					Datastream: "test-datastream",
+					NewProfile: "test-profile-osbuild-profile",
+					Overrides: []AutotailorOverride{
+						{
+							Var: "test-var",
+						},
+					},
+				},
+			},
+			err: true,
+		},
+		{
+			name: "invalid-override-value-string",
+			options: OscapAutotailorStageOptions{
+				Config: OscapAutotailorConfig{
+					ProfileID:  "test-profile",
+					Datastream: "test-datastream",
+					NewProfile: "test-profile-osbuild-profile",
+					Overrides: []AutotailorOverride{
+						{
+							Var:   "test-var",
+							Value: "30",
+						},
+					},
+				},
+			},
+			err: false,
+		},
+		{
+			name: "valid-override-value-int",
+			options: OscapAutotailorStageOptions{
+				Config: OscapAutotailorConfig{
+					ProfileID:  "test-profile",
+					Datastream: "test-datastream",
+					NewProfile: "test-profile-osbuild-profile",
+					Overrides: []AutotailorOverride{
+						{
+							Var:   "test-var",
+							Value: uint64(30),
+						},
+					},
+				},
+			},
+			err: false,
 		},
 		{
 			name: "valid-data",
