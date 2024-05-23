@@ -219,10 +219,10 @@ func osCustomizations(
 			datastream = *imageConfig.DefaultOSCAPDatastream
 		}
 
-		oscapStageOptions := osbuild.OscapConfig{
-			Datastream:  datastream,
-			ProfileID:   oscapConfig.ProfileID,
-			Compression: true,
+		remediationConfig := oscap.RemediationConfig{
+			Datastream:         datastream,
+			ProfileID:          oscapConfig.ProfileID,
+			CompressionEnabled: true,
 		}
 
 		if oscapConfig.Tailoring != nil {
@@ -243,11 +243,11 @@ func osCustomizations(
 			)
 
 			// overwrite the profile id with the new tailoring id
-			oscapStageOptions.ProfileID = newProfile
-			oscapStageOptions.Tailoring = tailoringFilepath
+			remediationConfig.ProfileID = newProfile
+			remediationConfig.TailoringPath = tailoringFilepath
 		}
 
-		osc.OpenSCAPConfig = osbuild.NewOscapRemediationStageOptions(oscap.DataDir, oscapStageOptions)
+		osc.OpenSCAPConfig = osbuild.NewOscapRemediationStageOptions(oscap.DataDir, &remediationConfig)
 	}
 
 	osc.ShellInit = imageConfig.ShellInit
