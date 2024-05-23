@@ -113,17 +113,6 @@ type ServicesCustomization struct {
 	Masked   []string `json:"masked,omitempty" toml:"masked,omitempty"`
 }
 
-type OpenSCAPCustomization struct {
-	DataStream string                           `json:"datastream,omitempty" toml:"datastream,omitempty"`
-	ProfileID  string                           `json:"profile_id,omitempty" toml:"profile_id,omitempty"`
-	Tailoring  *OpenSCAPTailoringCustomizations `json:"tailoring,omitempty" toml:"tailoring,omitempty"`
-}
-
-type OpenSCAPTailoringCustomizations struct {
-	Selected   []string `json:"selected,omitempty" toml:"selected,omitempty"`
-	Unselected []string `json:"unselected,omitempty" toml:"unselected,omitempty"`
-}
-
 // Configure the container storage separately from containers, since we most likely would
 // like to use the same storage path for all of the containers.
 type ContainerStorageCustomization struct {
@@ -326,13 +315,6 @@ func (c *Customizations) GetFDO() *FDOCustomization {
 		return nil
 	}
 	return c.FDO
-}
-
-func (c *Customizations) GetOpenSCAP() *OpenSCAPCustomization {
-	if c == nil {
-		return nil
-	}
-	return c.OpenSCAP
 }
 
 func (c *Customizations) GetIgnition() *IgnitionCustomization {
