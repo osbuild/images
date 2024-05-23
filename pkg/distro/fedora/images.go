@@ -14,6 +14,7 @@ import (
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/ignition"
 	"github.com/osbuild/images/pkg/customizations/kickstart"
+	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/image"
@@ -197,10 +198,10 @@ func osCustomizations(
 			datastream = *imageConfig.DefaultOSCAPDatastream
 		}
 
-		oscapStageOptions := osbuild.OscapConfig{
-			Datastream:  datastream,
-			ProfileID:   oscapConfig.ProfileID,
-			Compression: true,
+		remediationConfig := oscap.RemediationConfig{
+			Datastream:         datastream,
+			ProfileID:          oscapConfig.ProfileID,
+			CompressionEnabled: true,
 		}
 
 		if oscapConfig.Tailoring != nil {
@@ -221,11 +222,11 @@ func osCustomizations(
 			)
 
 			// overwrite the profile id with the new tailoring id
-			oscapStageOptions.ProfileID = newProfile
-			oscapStageOptions.Tailoring = tailoringFilepath
+			remediationConfig.ProfileID = newProfile
+			remediationConfig.TailoringPath = tailoringFilepath
 		}
 
-		osc.OpenSCAPConfig = osbuild.NewOscapRemediationStageOptions(oscapDataDir, oscapStageOptions)
+		osc.OpenSCAPConfig = osbuild.NewOscapRemediationStageOptions(oscapDataDir, &remediationConfig)
 	}
 
 	osc.ShellInit = imageConfig.ShellInit
