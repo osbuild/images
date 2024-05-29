@@ -58,9 +58,11 @@ func newAwsFromCreds(creds *credentials.Credentials, region string) (*AWS, error
 	}
 
 	return &AWS{
-		uploader: s3manager.NewUploader(sess),
-		ec2:      ec2.New(sess),
-		s3:       s3.New(sess),
+		uploader: s3manager.NewUploader(sess, func(u *s3manager.Uploader) {
+			u.PartSize = 64 * 1024 * 1024 // 64MB per part
+		}),
+		ec2: ec2.New(sess),
+		s3:  s3.New(sess),
 	}, nil
 }
 
