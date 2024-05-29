@@ -171,6 +171,8 @@ def default_ref(distro, arch):
         product = "iot"
     elif name == "centos":
         product = "edge"
+    else:
+        raise ValueError(f"unknown distro name {name}")
 
     return f"{name}/{version}/{arch}/{product}"
 
