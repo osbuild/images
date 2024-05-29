@@ -165,7 +165,8 @@ def gen_image_manifests(config_map, configs, distro, arch, outputdir):
 def default_ref(distro, arch):
     name, version = distro.split("-")
     if name == "rhel":
-        version = version[0]  # this will break on RHEL 10
+        # we use dots in our RHEL versions now
+        version, *_ = version.split(".")
         product = "edge"
     elif name == "fedora":
         product = "iot"
