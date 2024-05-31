@@ -63,8 +63,8 @@
       ]
     },
     {
-      "name": "sap-rhui-azure",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el8/el8-x86_64-sap-rhui-azure-20240515",
+      "name": "base-sap-rhui-azure",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el8/el8-x86_64-base-sap-rhui-azure-20240531",
       "image_type_tags": [
         "azure-sap-rhui"
       ],
