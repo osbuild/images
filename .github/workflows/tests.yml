@@ -136,43 +136,6 @@ jobs:
       - name: Run depsolver tests with force-dnf to make sure it's not skipped for any reason
         run: go test -v -race ./pkg/dnfjson/... -force-dnf
 
-  unit-tests-c8s:
-    name: "🛃 Unit tests (CentOS Stream 8)"
-    runs-on: ubuntu-latest
-    container:
-      image: quay.io/centos/centos:stream8
-    env:
-      GOFLAGS: "-tags=exclude_graphdriver_btrfs"
-
-    steps:
-      - name: Install dnf plugins
-        run: dnf -y install dnf-plugins-core
-
-      - name: Enable powertools repo
-        run: dnf config-manager --set-enabled powertools
-
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Set up repository for pinned osbuild commit
-        run: |
-          dnf -y install python3
-          ./test/scripts/setup-osbuild-repo
-
-      - name: Install build and test dependencies
-        run: dnf -y install krb5-devel gcc git-core go gpgme-devel osbuild-depsolve-dnf device-mapper-devel
-
-      - name: Mark the working directory as safe for git
-        run: git config --global --add safe.directory "$(pwd)"
-
-      - name: Run unit tests
-        run: go test -v -race  ./...
-
-      - name: Run depsolver tests with force-dnf to make sure it's not skipped for any reason
-        run: go test -v -race ./pkg/dnfjson/... -force-dnf
-
   lint:
     name: "⌨ Lint"
     runs-on: ubuntu-latest
