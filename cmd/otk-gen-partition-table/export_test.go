@@ -1,3 +1,6 @@
 package main
 
-var Run = run
+var (
+	Run               = run
+	GenPartitionTable = genPartitionTable
+)

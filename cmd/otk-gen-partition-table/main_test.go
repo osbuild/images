@@ -3,22 +3,60 @@ package main_test
 import (
 	"bytes"
 	"encoding/json"
+	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
 	genpart "github.com/osbuild/images/cmd/otk-gen-partition-table"
+	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/disk"
 )
 
+// see https://github.com/achilleas-k/images/pull/2#issuecomment-2136025471
+var partInputsComplete = `
+{
+  "properties": {
+    "uefi": {
+      "size": "1 GiB"
+    },
+    "bios": true,
+    "type": "gpt",
+    "default_size": "10 GiB"
+  },
+  "partitions": [
+    {
+      "name": "root",
+      "mountpoint": "/",
+      "label": "root",
+      "size": "7 GiB",
+      "type": "ext4"
+    },
+    {
+      "name": "home",
+      "mountpoint": "/home",
+      "label": "home",
+      "size": "2 GiB",
+      "type": "ext4"
+    }
+  ],
+  "modifications": {
+    "partition_mode": "auto-lvm",
+    "filesystems": [
+      {"mountpoint": "/var/log", "minsize": 10241024}
+    ]
+  }
+}`
+
 var expectedInput = &genpart.Input{
-	Options: &genpart.InputOptions{
-		UEFI: &genpart.InputUEFI{
+	Properties: genpart.InputProperties{
+		UEFI: genpart.InputUEFI{
 			Size: "1 GiB",
 		},
-		BIOS: true,
-		Type: "gpt",
-		Size: "10 GiB",
+		BIOS:        true,
+		Type:        "gpt",
+		DefaultSize: "10 GiB",
 	},
 	Partitions: []*genpart.InputPartition{
 		{
@@ -35,11 +73,20 @@ var expectedInput = &genpart.Input{
 			Type:       "ext4",
 		},
 	},
+	Modifications: genpart.InputModifications{
+		PartitionMode: disk.AutoLVMPartitioningMode,
+		Filesystems: []blueprint.FilesystemCustomization{
+			{
+				Mountpoint: "/var/log",
+				MinSize:    10241024,
+			},
+		},
+	},
 }
 
 func TestUnmarshalInput(t *testing.T) {
 	var otkInput genpart.Input
-	err := json.Unmarshal([]byte(simplePartOptions), &otkInput)
+	err := json.Unmarshal([]byte(partInputsComplete), &otkInput)
 	assert.NoError(t, err)
 	assert.Equal(t, expectedInput, &otkInput)
 }
@@ -116,16 +163,15 @@ func TestUnmarshalOutput(t *testing.T) {
 	assert.Equal(t, expectedOutput, string(output))
 }
 
-// see https://github.com/achilleas-k/images/pull/2#issuecomment-2136025471
-var simplePartOptions = `
+var partInputsSimple = `
 {
-  "options": {
+  "properties": {
     "uefi": {
       "size": "1 GiB"
     },
     "bios": true,
     "type": "gpt",
-    "size": "10 GiB"
+    "default_size": "10 GiB"
   },
   "partitions": [
     {
@@ -143,8 +189,7 @@ var simplePartOptions = `
       "type": "ext4"
     }
   ]
-}
-`
+}`
 
 // XXX: anything under "internal" we don't actually need to test
 // as we do not make any gurantees to the outside
@@ -232,12 +277,218 @@ var expectedSimplePartOutput = `{
 }
 `
 
-func TestIntegration(t *testing.T) {
+func TestIntegrationRealistic(t *testing.T) {
 	t.Setenv("OSBUILD_TESTING_RNG_SEED", "0")
 
-	inp := bytes.NewBufferString(simplePartOptions)
+	inp := bytes.NewBufferString(partInputsSimple)
 	outp := bytes.NewBuffer(nil)
 	err := genpart.Run(inp, outp)
 	assert.NoError(t, err)
 	assert.Equal(t, expectedSimplePartOutput, outp.String())
+}
+
+func TestGenPartitionTableMinimal(t *testing.T) {
+	// XXX: think about what the smalltest inputs can be and validate
+	// that it's complete and/or provide defaults (e.g. for "type" for
+	// partition and filesystem type)
+	inp := &genpart.Input{
+		Properties: genpart.InputProperties{
+			Type: "dos",
+		},
+		Partitions: []*genpart.InputPartition{
+			{
+				Mountpoint: "/",
+				Size:       "10 GiB",
+				Type:       "ext4",
+			},
+		},
+	}
+	expectedOutput := &genpart.Output{
+		Const: genpart.OutputConst{
+			KernelOptsList: []string{},
+			PartitionMap: map[string]genpart.OutputPartition{
+				"root": {
+					UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+				},
+			},
+			Internal: genpart.OutputInternal{
+				PartitionTable: &disk.PartitionTable{
+					Size: 10738466816,
+					UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+					Type: "dos",
+					Partitions: []disk.Partition{
+						{
+							Start: 1048576,
+							Size:  10737418240,
+							Payload: &disk.Filesystem{
+								Type:       "ext4",
+								UUID:       "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+								Mountpoint: "/",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	output, err := genpart.GenPartitionTable(inp, rand.New(rand.NewSource(0)))
+	assert.NoError(t, err)
+	assert.Equal(t, expectedOutput, output)
+}
+
+func TestGenPartitionTableCustomizationExtraMp(t *testing.T) {
+	inp := &genpart.Input{
+		Properties: genpart.InputProperties{
+			Type: "dos",
+		},
+		Partitions: []*genpart.InputPartition{
+			{
+				Mountpoint: "/boot",
+				Size:       "2 GiB",
+				Type:       "ext4",
+			},
+			{
+				Mountpoint: "/",
+				Size:       "10 GiB",
+				Type:       "ext4",
+			},
+		},
+		Modifications: genpart.InputModifications{
+			Filesystems: []blueprint.FilesystemCustomization{
+				{
+					Mountpoint: "/var/log",
+					MinSize:    3 * common.GigaByte,
+				},
+			},
+		},
+	}
+	expectedOutput := &genpart.Output{
+		Const: genpart.OutputConst{
+			KernelOptsList: []string{},
+			PartitionMap: map[string]genpart.OutputPartition{
+				"boot": {
+					UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+				},
+			},
+			Internal: genpart.OutputInternal{
+				PartitionTable: &disk.PartitionTable{
+					Size: 15890120704,
+					UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+					Type: "dos",
+					Partitions: []disk.Partition{
+						{
+							Start: 1048576,
+							Size:  2147483648,
+							Payload: &disk.Filesystem{
+								Type:       "ext4",
+								UUID:       "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+								Mountpoint: "/boot",
+							},
+						},
+						{
+							Start: 2148532224,
+							Size:  13741588480,
+							Type:  "8e",
+							Payload: &disk.LVMVolumeGroup{
+								Name:        "rootvg",
+								Description: "created via lvm2 and osbuild",
+								LogicalVolumes: []disk.LVMLogicalVolume{
+									{
+										Name: "rootlv",
+										Size: 10737418240,
+										Payload: &disk.Filesystem{
+											Mountpoint: "/",
+											Type:       "ext4",
+											UUID:       "fb180daf-48a7-4ee0-b10d-394651850fd4",
+										},
+									}, {
+										Name: "var_loglv",
+										Size: 3003121664,
+										Payload: &disk.Filesystem{
+											Mountpoint: "/var/log",
+											// XXX: this is confusing
+											Type: "xfs",
+											UUID: "a178892e-e285-4ce1-9114-55780875d64e",
+											// XXX: is this needed?
+											FSTabOptions: "defaults",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	// default partition mode is "auto-lvm" so LVM is created by default
+	output, err := genpart.GenPartitionTable(inp, rand.New(rand.NewSource(0)))
+	assert.NoError(t, err)
+	assert.Equal(t, expectedOutput, output)
+}
+
+func TestGenPartitionTableCustomizationExtraMpPlusModificationPartitionMode(t *testing.T) {
+	inp := &genpart.Input{
+		Properties: genpart.InputProperties{
+			Type: "dos",
+		},
+		Partitions: []*genpart.InputPartition{
+			{
+				Mountpoint: "/",
+				Size:       "10 GiB",
+				Type:       "ext4",
+			},
+		},
+		Modifications: genpart.InputModifications{
+			// note that the extra partitin mode is used here
+			PartitionMode: disk.RawPartitioningMode,
+			Filesystems: []blueprint.FilesystemCustomization{
+				{
+					Mountpoint: "/var/log",
+					MinSize:    3 * common.GigaByte,
+				},
+			},
+		},
+	}
+	expectedOutput := &genpart.Output{
+		Const: genpart.OutputConst{
+			KernelOptsList: []string{},
+			PartitionMap: map[string]genpart.OutputPartition{
+				"root": {
+					UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+				},
+			},
+			Internal: genpart.OutputInternal{
+				PartitionTable: &disk.PartitionTable{
+					Size: 13739491328,
+					UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+					Type: "dos",
+					Partitions: []disk.Partition{
+						{
+							Start: 3002073088,
+							Size:  10737418240,
+							Payload: &disk.Filesystem{
+								Mountpoint: "/",
+								Type:       "ext4",
+								UUID:       "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+							},
+						}, {
+							Start: 1048576,
+							Size:  3001024512,
+							Payload: &disk.Filesystem{
+								Mountpoint: "/var/log",
+								// XXX: this is confusing
+								Type:         "xfs",
+								UUID:         "fb180daf-48a7-4ee0-b10d-394651850fd4",
+								FSTabOptions: "defaults",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	output, err := genpart.GenPartitionTable(inp, rand.New(rand.NewSource(0)))
+	assert.NoError(t, err)
+	assert.Equal(t, expectedOutput, output)
 }
