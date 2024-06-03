@@ -11,16 +11,16 @@ import (
 	"github.com/osbuild/images/pkg/disk"
 )
 
-var expectedInput = &genpart.OtkGenPartitionInput{
-	Options: &genpart.OtkPartOptions{
-		UEFI: &genpart.OtkPartUEFI{
+var expectedInput = &genpart.Input{
+	Options: &genpart.InputOptions{
+		UEFI: &genpart.InputUEFI{
 			Size: "1 GiB",
 		},
 		BIOS: true,
 		Type: "gpt",
 		Size: "10 GiB",
 	},
-	Partitions: []*genpart.OtkPartition{
+	Partitions: []*genpart.InputPartition{
 		{
 			Name:       "root",
 			Mountpoint: "/",
@@ -38,22 +38,22 @@ var expectedInput = &genpart.OtkGenPartitionInput{
 }
 
 func TestUnmarshalInput(t *testing.T) {
-	var otkInput genpart.OtkGenPartitionInput
+	var otkInput genpart.Input
 	err := json.Unmarshal([]byte(simplePartOptions), &otkInput)
 	assert.NoError(t, err)
 	assert.Equal(t, expectedInput, &otkInput)
 }
 
 func TestUnmarshalOutput(t *testing.T) {
-	fakeOtkOutput := &genpart.OtkGenPartitionsOutput{
-		Const: genpart.OtkGenPartConstOutput{
+	fakeOtkOutput := &genpart.Output{
+		Const: genpart.OutputConst{
 			KernelOptsList: []string{"root=UUID=1234"},
-			PartitionMap: map[string]genpart.OtkPublicPartition{
+			PartitionMap: map[string]genpart.OutputPartition{
 				"root": {
 					UUID: "12345",
 				},
 			},
-			Internal: genpart.OtkGenPartitionsInternal{
+			Internal: genpart.OutputInternal{
 				PartitionTable: &disk.PartitionTable{
 					Size: 911,
 					Partitions: []disk.Partition{
@@ -231,68 +231,6 @@ var expectedSimplePartOutput = `{
   }
 }
 `
-
-var expectedOutput = &genpart.OtkGenPartitionsOutput{
-	Const: genpart.OtkGenPartConstOutput{
-		KernelOptsList: []string{},
-		PartitionMap: map[string]genpart.OtkPublicPartition{
-			"root": {
-				UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
-			},
-		},
-		Internal: genpart.OtkGenPartitionsInternal{
-			PartitionTable: &disk.PartitionTable{
-				Size: 10740563968,
-				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
-				Type: "gpt",
-				Partitions: []disk.Partition{
-					{
-						Start:    1048576,
-						Size:     1048576,
-						Type:     "21686148-6449-6E6F-744E-656564454649",
-						Bootable: true,
-						UUID:     "FAC7F1FB-3E8D-4137-A512-961DE09A5549",
-					}, {
-						Start:    2097152,
-						Size:     1073741824,
-						Type:     "C12A7328-F81F-11D2-BA4B-00A0C93EC93B",
-						Bootable: false,
-						UUID:     "68B2905B-DF3E-4FB3-80FA-49D1E773AA33",
-						Payload: &disk.Filesystem{
-							Type:         "vfat",
-							UUID:         "7B77-95E7",
-							Label:        "EFI-SYSTEM",
-							Mountpoint:   "/boot/efi",
-							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
-							FSTabFreq:    0,
-							FSTabPassNo:  2,
-						},
-					}, {
-						Start: 3223322624,
-						Size:  7517224448,
-						UUID:  "a178892e-e285-4ce1-9114-55780875d64e",
-						Payload: &disk.Filesystem{
-							Type:       "ext4",
-							UUID:       "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
-							Label:      "root",
-							Mountpoint: "/",
-						},
-					}, {
-						Start: 1075838976,
-						Size:  2147483648,
-						UUID:  "e2d3d0d0-de6b-48f9-b44c-e85ff044c6b1",
-						Payload: &disk.Filesystem{
-							Type:       "ext4",
-							UUID:       "fb180daf-48a7-4ee0-b10d-394651850fd4",
-							Label:      "home",
-							Mountpoint: "/home",
-						},
-					},
-				},
-			},
-		},
-	},
-}
 
 func TestIntegration(t *testing.T) {
 	t.Setenv("OSBUILD_TESTING_RNG_SEED", "0")
