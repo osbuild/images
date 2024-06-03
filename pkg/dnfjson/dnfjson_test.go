@@ -788,3 +788,29 @@ exit 1
 	_, err = run([]string{fakeDnfJsonPath}, &Request{})
 	assert.EqualError(t, err, `DNF error occurred: InternalError: dnf-json output was empty`)
 }
+
+func TestSolverRunWithSolverNoError(t *testing.T) {
+	tmpdir := t.TempDir()
+	fakeSolver := `#!/bin/sh -e
+cat - > "$0".stdin
+echo '{"solver": "zypper"}'
+`
+	fakeSolverPath := filepath.Join(tmpdir, "fake-solver")
+	err := os.WriteFile(fakeSolverPath, []byte(fakeSolver), 0755) //nolint:gosec
+	assert.NoError(t, err)
+
+	solver := NewSolver("platform:f38", "38", "x86_64", "fedora-38", "/tmp/cache")
+	solver.dnfJsonCmd = []string{fakeSolverPath}
+	pkgSpec, repoCfg, err := solver.Depsolve(nil)
+	assert.NoError(t, err)
+
+	// prerequisite check, i.e. ensure our fake was called in the right way
+	stdin, err := os.ReadFile(fakeSolverPath + ".stdin")
+	assert.NoError(t, err)
+	assert.Contains(t, string(stdin), `"command":"depsolve"`)
+
+	// adding the "solver" did not cause any issues
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(pkgSpec))
+	assert.Equal(t, 0, len(repoCfg))
+}
