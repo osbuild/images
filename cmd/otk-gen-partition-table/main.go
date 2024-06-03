@@ -10,21 +10,24 @@ import (
 	"github.com/osbuild/images/internal/buildconfig"
 	"github.com/osbuild/images/internal/cmdutil"
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/osbuild"
 )
 
 type Input struct {
-	Options    *InputOptions     `json:"options"`
+	Properties InputProperties   `json:"properties"`
 	Partitions []*InputPartition `json:"partitions"`
+
+	Modifications InputModifications `json:"modifications"`
 }
 
-type InputOptions struct {
-	UEFI *InputUEFI `json:"uefi"`
-	BIOS bool       `json:"bios"`
-	Type string     `json:"type"`
-	Size string     `json:"size"`
-	UUID string     `json:"uuid"`
+type InputProperties struct {
+	UEFI        InputUEFI `json:"uefi"`
+	BIOS        bool      `json:"bios"`
+	Type        string    `json:"type"`
+	DefaultSize string    `json:"default_size"`
+	UUID        string    `json:"uuid"`
 
 	SectorSize uint64 `json:"sector_size"`
 }
@@ -45,6 +48,11 @@ type InputPartition struct {
 	FSPassNo   uint64 `json:"fs_passno"`
 
 	// TODO: add sectorlvm,luks, see https://github.com/achilleas-k/images/pull/2#issuecomment-2136025471
+}
+
+type InputModifications struct {
+	PartitionMode disk.PartitioningMode               `json:"partition_mode"`
+	Filesystems   []blueprint.FilesystemCustomization `json:"filesystems"`
 }
 
 type Output struct {
@@ -96,11 +104,11 @@ func makePartMap(pt *disk.PartitionTable) map[string]OutputPartition {
 
 func makePartitionTableFromOtkInput(input *Input) (*disk.PartitionTable, error) {
 	pt := &disk.PartitionTable{
-		UUID:       input.Options.UUID,
-		Type:       input.Options.Type,
-		SectorSize: input.Options.SectorSize,
+		UUID:       input.Properties.UUID,
+		Type:       input.Properties.Type,
+		SectorSize: input.Properties.SectorSize,
 	}
-	if input.Options.BIOS {
+	if input.Properties.BIOS {
 		if len(pt.Partitions) > 0 {
 			panic("internal error: bios partition *must* go first")
 		}
@@ -111,8 +119,8 @@ func makePartitionTableFromOtkInput(input *Input) (*disk.PartitionTable, error) 
 			UUID:     disk.BIOSBootPartitionUUID,
 		})
 	}
-	if input.Options.UEFI.Size != "" {
-		uintSize, err := common.DataSizeToUint64(input.Options.UEFI.Size)
+	if input.Properties.UEFI.Size != "" {
+		uintSize, err := common.DataSizeToUint64(input.Properties.UEFI.Size)
 		if err != nil {
 			return nil, err
 		}
@@ -157,16 +165,12 @@ func makePartitionTableFromOtkInput(input *Input) (*disk.PartitionTable, error) 
 	return pt, nil
 }
 
-// Missing:
-// 1. customizations^Wmodifications, e.g. extra partiton tables
-// 2. refactor, make this nicer, it sucks a bit right now
 func genPartitionTable(genPartInput *Input, rng *rand.Rand) (*Output, error) {
 	basePt, err := makePartitionTableFromOtkInput(genPartInput)
 	if err != nil {
 		return nil, err
 	}
-
-	pt, err := disk.NewPartitionTable(basePt, nil, 0, disk.DefaultPartitioningMode, nil, rng)
+	pt, err := disk.NewPartitionTable(basePt, genPartInput.Modifications.Filesystems, 0, genPartInput.Modifications.PartitionMode, nil, rng)
 	if err != nil {
 		return nil, err
 	}
@@ -198,6 +202,9 @@ func run(r io.Reader, w io.Writer) error {
 	if err := json.NewDecoder(r).Decode(&genPartInput); err != nil {
 		return err
 	}
+	// XXX: validate inputs, right now an empty "type" is not an error
+	// but it should either be an error or we should set a default
+
 	output, err := genPartitionTable(&genPartInput, rng)
 	if err != nil {
 		return fmt.Errorf("cannot generate partition table: %w", err)
