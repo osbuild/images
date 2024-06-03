@@ -161,13 +161,8 @@ func makePartitionTableFromOtkInput(input *OtkGenPartitionInput) (*disk.Partitio
 // Missing:
 // 1. customizations^Wmodifications, e.g. extra partiton tables
 // 2. refactor, make this nicer, it sucks a bit right now
-func run(r io.Reader, rng *rand.Rand) (*OtkGenPartitionsOutput, error) {
-	var genPartInput OtkGenPartitionInput
-	if err := json.NewDecoder(r).Decode(&genPartInput); err != nil {
-		return nil, err
-	}
-
-	basePt, err := makePartitionTableFromOtkInput(&genPartInput)
+func genPartitionTable(genPartInput *OtkGenPartitionInput, rng *rand.Rand) (*OtkGenPartitionsOutput, error) {
+	basePt, err := makePartitionTableFromOtkInput(genPartInput)
 	if err != nil {
 		return nil, err
 	}
@@ -191,27 +186,36 @@ func run(r io.Reader, rng *rand.Rand) (*OtkGenPartitionsOutput, error) {
 	return otkPart, nil
 }
 
-func main() {
+func run(r io.Reader, w io.Writer) error {
 	rngSeed, err := cmdutil.SeedArgFor(&buildconfig.BuildConfig{}, "", "", "")
 	if err != nil {
-		// XXX: FIXME! helper
-		panic(err)
+		return err
 	}
-	source := rand.NewSource(rngSeed)
 	// math/rand is good enough in this case
 	/* #nosec G404 */
-	rng := rand.New(source)
+	rng := rand.New(rand.NewSource(rngSeed))
 
-	output, err := run(os.Stdin, rng)
+	var genPartInput OtkGenPartitionInput
+	if err := json.NewDecoder(r).Decode(&genPartInput); err != nil {
+		return err
+	}
+	output, err := genPartitionTable(&genPartInput, rng)
 	if err != nil {
+		return fmt.Errorf("cannot generate partition table: %w", err)
+	}
+	// there is no need to output "nice" json, but it does make testing
+	// simpler
+	outputJson, err := json.MarshalIndent(output, "", "  ")
+	if err != nil {
+		return fmt.Errorf("cannot marshal response: %w", err)
+	}
+	fmt.Fprintf(w, "%s\n", outputJson)
+	return nil
+}
+
+func main() {
+	if err := run(os.Stdin, os.Stdout); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v", err.Error())
 		os.Exit(1)
 	}
-
-	outputJson, err := json.Marshal(output)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v", err.Error())
-		os.Exit(1)
-	}
-	fmt.Print(string(outputJson))
 }
