@@ -9,8 +9,8 @@ type OscapAutotailorStageOptions struct {
 
 type OscapAutotailorConfig struct {
 	NewProfile string   `json:"new_profile"`
-	Datastream string   `json:"datastream" toml:"datastream"`
-	ProfileID  string   `json:"profile_id" toml:"profile_id"`
+	Datastream string   `json:"datastream"`
+	ProfileID  string   `json:"profile_id"`
 	Selected   []string `json:"selected,omitempty"`
 	Unselected []string `json:"unselected,omitempty"`
 }
