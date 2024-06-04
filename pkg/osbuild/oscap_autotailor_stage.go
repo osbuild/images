@@ -12,12 +12,13 @@ type OscapAutotailorStageOptions struct {
 }
 
 type OscapAutotailorConfig struct {
-	NewProfile string               `json:"new_profile"`
-	Datastream string               `json:"datastream"`
-	ProfileID  string               `json:"profile_id"`
-	Selected   []string             `json:"selected,omitempty"`
-	Unselected []string             `json:"unselected,omitempty"`
-	Overrides  []AutotailorOverride `json:"overrides,omitempty"`
+	NewProfile    string               `json:"new_profile"`
+	Datastream    string               `json:"datastream"`
+	ProfileID     *string              `json:"profile_id,omitempty"`
+	TailoringFile *string              `json:"tailoring_file,omitempty"`
+	Selected      []string             `json:"selected,omitempty"`
+	Unselected    []string             `json:"unselected,omitempty"`
+	Overrides     []AutotailorOverride `json:"overrides,omitempty"`
 }
 
 type AutotailorOverride struct {
@@ -27,17 +28,29 @@ type AutotailorOverride struct {
 
 func (OscapAutotailorStageOptions) isStageOptions() {}
 
+func verifyConditionalFields(profile *string, tailoringFile *string) bool {
+	if profile == nil {
+		return tailoringFile != nil && *tailoringFile != ""
+	}
+
+	if tailoringFile == nil {
+		return profile != nil && *profile != ""
+	}
+
+	return true
+}
+
 func (c OscapAutotailorConfig) validate() error {
 	if c.Datastream == "" {
 		return fmt.Errorf("'datastream' must be specified")
 	}
 
-	if c.ProfileID == "" {
-		return fmt.Errorf("'profile_id' must be specified")
-	}
-
 	if c.NewProfile == "" {
 		return fmt.Errorf("'new_profile' must be specified")
+	}
+
+	if !verifyConditionalFields(c.ProfileID, c.TailoringFile) {
+		return fmt.Errorf("either 'profile_id' or path to json `tailoring_file` must be specified")
 	}
 
 	for _, override := range c.Overrides {
@@ -66,28 +79,41 @@ func NewOscapAutotailorStage(options *OscapAutotailorStageOptions) *Stage {
 	}
 }
 
-func NewOscapAutotailorStageOptions(options *oscap.TailoringConfig) *OscapAutotailorStageOptions {
+func NewOscapAutotailorStageOptions(options oscap.TailoringConfig) *OscapAutotailorStageOptions {
 	if options == nil {
 		return nil
 	}
 
-	var overrides []AutotailorOverride
-	for _, override := range options.Overrides {
-		overrides = append(overrides, AutotailorOverride{
-			Var:   override.Var,
-			Value: override.Value,
-		})
-	}
-
-	return &OscapAutotailorStageOptions{
-		Filepath: options.Filepath,
-		Config: OscapAutotailorConfig{
-			NewProfile: options.NewProfile,
-			Datastream: options.RemediationConfig.Datastream,
-			ProfileID:  options.RemediationConfig.ProfileID,
-			Selected:   options.Selected,
-			Unselected: options.Unselected,
-			Overrides:  overrides,
-		},
+	switch o := options.(type) {
+	case *oscap.NormalTailoring:
+		var overrides []AutotailorOverride
+		for _, override := range o.Overrides {
+			overrides = append(overrides, AutotailorOverride{
+				Var:   override.Var,
+				Value: override.Value,
+			})
+		}
+		return &OscapAutotailorStageOptions{
+			Filepath: o.Filepath,
+			Config: OscapAutotailorConfig{
+				NewProfile: o.NewProfile,
+				Datastream: o.RemediationConfig.Datastream,
+				ProfileID:  &o.RemediationConfig.ProfileID,
+				Selected:   o.Selected,
+				Unselected: o.Unselected,
+				Overrides:  overrides,
+			},
+		}
+	case *oscap.JsonTailoring:
+		return &OscapAutotailorStageOptions{
+			Filepath: o.Filepath,
+			Config: OscapAutotailorConfig{
+				NewProfile:    o.NewProfile,
+				Datastream:    o.RemediationConfig.Datastream,
+				TailoringFile: &o.TailoringFile,
+			},
+		}
+	default:
+		panic("unknown tailoring config type")
 	}
 }

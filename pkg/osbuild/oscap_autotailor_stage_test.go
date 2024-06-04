@@ -3,6 +3,7 @@ package osbuild
 import (
 	"testing"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -11,7 +12,7 @@ func TestNewOscapAutotailorStage(t *testing.T) {
 		Filepath: "tailoring.xml",
 		Config: OscapAutotailorConfig{
 			Datastream: "test_stream",
-			ProfileID:  "test_profile",
+			ProfileID:  common.ToPtr("test_profile"),
 			NewProfile: "test_profile_osbuild_profile",
 			Selected:   []string{"fast_rule"},
 			Unselected: []string{"slow_rule"},
@@ -47,7 +48,7 @@ func TestOscapAutotailorStageOptionsValidate(t *testing.T) {
 			name: "empty-datastream",
 			options: OscapAutotailorStageOptions{
 				Config: OscapAutotailorConfig{
-					ProfileID: "test-profile",
+					ProfileID: common.ToPtr("test-profile"),
 				},
 			},
 			err: true,
@@ -65,7 +66,7 @@ func TestOscapAutotailorStageOptionsValidate(t *testing.T) {
 			name: "empty-new-profile-name",
 			options: OscapAutotailorStageOptions{
 				Config: OscapAutotailorConfig{
-					ProfileID:  "test-profile",
+					ProfileID:  common.ToPtr("test-profile"),
 					Datastream: "test-datastream",
 				},
 			},
@@ -75,7 +76,7 @@ func TestOscapAutotailorStageOptionsValidate(t *testing.T) {
 			name: "invalid-override-value",
 			options: OscapAutotailorStageOptions{
 				Config: OscapAutotailorConfig{
-					ProfileID:  "test-profile",
+					ProfileID:  common.ToPtr("test-profile"),
 					Datastream: "test-datastream",
 					NewProfile: "test-profile-osbuild-profile",
 					Overrides: []AutotailorOverride{
@@ -91,7 +92,7 @@ func TestOscapAutotailorStageOptionsValidate(t *testing.T) {
 			name: "invalid-override-value-string",
 			options: OscapAutotailorStageOptions{
 				Config: OscapAutotailorConfig{
-					ProfileID:  "test-profile",
+					ProfileID:  common.ToPtr("test-profile"),
 					Datastream: "test-datastream",
 					NewProfile: "test-profile-osbuild-profile",
 					Overrides: []AutotailorOverride{
@@ -108,7 +109,7 @@ func TestOscapAutotailorStageOptionsValidate(t *testing.T) {
 			name: "valid-override-value-int",
 			options: OscapAutotailorStageOptions{
 				Config: OscapAutotailorConfig{
-					ProfileID:  "test-profile",
+					ProfileID:  common.ToPtr("test-profile"),
 					Datastream: "test-datastream",
 					NewProfile: "test-profile-osbuild-profile",
 					Overrides: []AutotailorOverride{
@@ -125,7 +126,7 @@ func TestOscapAutotailorStageOptionsValidate(t *testing.T) {
 			name: "valid-data",
 			options: OscapAutotailorStageOptions{
 				Config: OscapAutotailorConfig{
-					ProfileID:  "test-profile",
+					ProfileID:  common.ToPtr("test-profile"),
 					Datastream: "test-datastream",
 					NewProfile: "test-profile-osbuild-profile",
 				},

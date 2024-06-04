@@ -49,7 +49,11 @@ type RemediationConfig struct {
 	CompressionEnabled bool
 }
 
-type TailoringConfig struct {
+type TailoringConfig interface {
+	isTailoringConfig()
+}
+
+type NormalTailoring struct {
 	RemediationConfig
 	Filepath   string
 	NewProfile string
@@ -62,6 +66,17 @@ type TailoringOverride struct {
 	Var   string
 	Value interface{}
 }
+
+func (NormalTailoring) isTailoringConfig() {}
+
+type JsonTailoring struct {
+	RemediationConfig
+	Filepath      string
+	NewProfile    string
+	TailoringFile string
+}
+
+func (JsonTailoring) isTailoringConfig() {}
 
 // TODO: add test
 func ConvertBlueprintTailoringOverrides(bpOverrides []blueprint.OpenSCAPTailoringOverride) []TailoringOverride {
