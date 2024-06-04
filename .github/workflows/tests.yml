@@ -220,4 +220,5 @@ jobs:
 
       - name: Analysing the code with pylint
         run: |
+          python3 -m pylint --version
           python3 -m pylint $(grep -l "/usr/bin/env python3" -r test/scripts) test/scripts/*.py
