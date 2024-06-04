@@ -42,6 +42,7 @@ var partInputsComplete = `
     }
   ],
   "modifications": {
+    "min_disk_size": "20 GiB",
     "partition_mode": "auto-lvm",
     "filesystems": [
       {"mountpoint": "/var/log", "minsize": 10241024}
@@ -74,6 +75,7 @@ var expectedInput = &genpart.Input{
 		},
 	},
 	Modifications: genpart.InputModifications{
+		MinDiskSize:   "20 GiB",
 		PartitionMode: disk.AutoLVMPartitioningMode,
 		Filesystems: []blueprint.FilesystemCustomization{
 			{
@@ -481,6 +483,103 @@ func TestGenPartitionTableCustomizationExtraMpPlusModificationPartitionMode(t *t
 								Type:         "xfs",
 								UUID:         "fb180daf-48a7-4ee0-b10d-394651850fd4",
 								FSTabOptions: "defaults",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	output, err := genpart.GenPartitionTable(inp, rand.New(rand.NewSource(0)))
+	assert.NoError(t, err)
+	assert.Equal(t, expectedOutput, output)
+}
+
+func TestGenPartitionTablePropertiesDefaultSize(t *testing.T) {
+	inp := &genpart.Input{
+		Properties: genpart.InputProperties{
+			Type:        "dos",
+			DefaultSize: "15 GiB",
+		},
+		Partitions: []*genpart.InputPartition{
+			{
+				Mountpoint: "/",
+				Size:       "10 GiB",
+				Type:       "ext4",
+			},
+		},
+	}
+	expectedOutput := &genpart.Output{
+		Const: genpart.OutputConst{
+			KernelOptsList: []string{},
+			PartitionMap: map[string]genpart.OutputPartition{
+				"root": {
+					UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+				},
+			},
+			Internal: genpart.OutputInternal{
+				PartitionTable: &disk.PartitionTable{
+					Size: 16106127360,
+					UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+					Type: "dos",
+					Partitions: []disk.Partition{
+						{
+							Start: 1048576,
+							Size:  16105078784,
+							Payload: &disk.Filesystem{
+								Type:       "ext4",
+								UUID:       "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+								Mountpoint: "/",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	output, err := genpart.GenPartitionTable(inp, rand.New(rand.NewSource(0)))
+	assert.NoError(t, err)
+	assert.Equal(t, expectedOutput, output)
+}
+
+func TestGenPartitionTableModificationMinDiskSize(t *testing.T) {
+	inp := &genpart.Input{
+		Properties: genpart.InputProperties{
+			Type:        "dos",
+			DefaultSize: "15 GiB",
+		},
+		Partitions: []*genpart.InputPartition{
+			{
+				Mountpoint: "/",
+				Size:       "10 GiB",
+				Type:       "ext4",
+			},
+		},
+		Modifications: genpart.InputModifications{
+			MinDiskSize: "20 GiB",
+		},
+	}
+	expectedOutput := &genpart.Output{
+		Const: genpart.OutputConst{
+			KernelOptsList: []string{},
+			PartitionMap: map[string]genpart.OutputPartition{
+				"root": {
+					UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+				},
+			},
+			Internal: genpart.OutputInternal{
+				PartitionTable: &disk.PartitionTable{
+					Size: 21474836480,
+					UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+					Type: "dos",
+					Partitions: []disk.Partition{
+						{
+							Start: 1048576,
+							Size:  21473787904,
+							Payload: &disk.Filesystem{
+								Type:       "ext4",
+								UUID:       "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+								Mountpoint: "/",
 							},
 						},
 					},
