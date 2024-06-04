@@ -3,6 +3,7 @@ package fedora
 import (
 	"fmt"
 	"math/rand"
+	"path/filepath"
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/workload"
@@ -183,7 +184,11 @@ func osCustomizations(
 			panic("unexpected oscap options for ostree image type")
 		}
 
-		directoriesToCreate := []string{oscap.DataDir}
+		oscapDataNode, err := fsnode.NewDirectory(oscap.DataDir, nil, nil, nil, true)
+		if err != nil {
+			panic(fmt.Sprintf("unexpected error creating required OpenSCAP directory: %s", oscap.DataDir))
+		}
+		osc.Directories = append(osc.Directories, oscapDataNode)
 
 		var datastream = oscapConfig.DataStream
 		if datastream == "" {
@@ -200,9 +205,8 @@ func osCustomizations(
 		}
 
 		if oscapConfig.Tailoring != nil {
-			directoriesToCreate = append(directoriesToCreate, oscap.TailoringDirPath)
-
-			newProfile, tailoringFilepath := oscap.GetTailoringFile(oscapConfig.ProfileID)
+			tailoringFilepath := filepath.Join(oscap.DataDir, "tailoring.xml")
+			newProfile := fmt.Sprintf("%s_osbuild_tailoring", oscapConfig.ProfileID)
 
 			tailoringOptions := osbuild.OscapAutotailorConfig{
 				NewProfile: newProfile,
@@ -220,14 +224,6 @@ func osCustomizations(
 			// overwrite the profile id with the new tailoring id
 			oscapStageOptions.ProfileID = newProfile
 			oscapStageOptions.Tailoring = tailoringFilepath
-		}
-
-		for _, directory := range directoriesToCreate {
-			directoryNode, err := fsnode.NewDirectory(directory, nil, nil, nil, true)
-			if err != nil {
-				panic(fmt.Sprintf("unexpected error creating required OpenSCAP directory: %s", directory))
-			}
-			osc.Directories = append(osc.Directories, directoryNode)
 		}
 
 		osc.OpenSCAPConfig = osbuild.NewOscapRemediationStageOptions(oscap.DataDir, oscapStageOptions)
