@@ -43,7 +43,7 @@ get_oscap_score() {
     sudo oscap xccdf eval \
         --results results.xml \
         --profile "${profile}_osbuild_tailoring" \
-        --tailoring-file "/usr/share/xml/osbuild-openscap-data/tailoring.xml" \
+        --tailoring-file "/oscap_data/tailoring.xml" \
         "${datastream}" || true # oscap returns exit code 2 for any failed rules
 
     echo "📄 Saving results"
