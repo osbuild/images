@@ -53,6 +53,7 @@ type InputPartition struct {
 type InputModifications struct {
 	PartitionMode disk.PartitioningMode               `json:"partition_mode"`
 	Filesystems   []blueprint.FilesystemCustomization `json:"filesystems"`
+	MinDiskSize   string                              `json:"min_disk_size"`
 }
 
 type Output struct {
@@ -165,12 +166,38 @@ func makePartitionTableFromOtkInput(input *Input) (*disk.PartitionTable, error) 
 	return pt, nil
 }
 
+func getDiskSizeFrom(input *Input) (diskSize uint64, err error) {
+	var defaultSize, modMinSize uint64
+
+	if input.Properties.DefaultSize != "" {
+		defaultSize, err = common.DataSizeToUint64(input.Properties.DefaultSize)
+		if err != nil {
+			return 0, err
+		}
+	}
+	if input.Modifications.MinDiskSize != "" {
+		modMinSize, err = common.DataSizeToUint64(input.Modifications.MinDiskSize)
+		if err != nil {
+			return 0, err
+		}
+	}
+	// TODO: use max() once we move to go1.21
+	if defaultSize > modMinSize {
+		return defaultSize, nil
+	}
+	return modMinSize, nil
+}
+
 func genPartitionTable(genPartInput *Input, rng *rand.Rand) (*Output, error) {
 	basePt, err := makePartitionTableFromOtkInput(genPartInput)
 	if err != nil {
 		return nil, err
 	}
-	pt, err := disk.NewPartitionTable(basePt, genPartInput.Modifications.Filesystems, 0, genPartInput.Modifications.PartitionMode, nil, rng)
+	diskSize, err := getDiskSizeFrom(genPartInput)
+	if err != nil {
+		return nil, fmt.Errorf("cannot get the disk size: %w", err)
+	}
+	pt, err := disk.NewPartitionTable(basePt, genPartInput.Modifications.Filesystems, diskSize, genPartInput.Modifications.PartitionMode, nil, rng)
 	if err != nil {
 		return nil, err
 	}
