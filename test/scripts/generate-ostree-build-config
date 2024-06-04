@@ -175,7 +175,7 @@ def default_ref(distro, arch):
     else:
         raise ValueError(f"unknown distro name {name}")
 
-    return f"{name}/{version}/{arch}/{product}"
+    return f"{name}/{version}/{arch}/{product}"     #pylint: disable=possibly-used-before-assignment
 
 
 @contextmanager
