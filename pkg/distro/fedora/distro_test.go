@@ -21,10 +21,6 @@ type fedoraFamilyDistro struct {
 
 var fedoraFamilyDistros = []fedoraFamilyDistro{
 	{
-		name:   "fedora-38",
-		distro: fedora.DistroFactory("fedora-38"),
-	},
-	{
 		name:   "fedora-39",
 		distro: fedora.DistroFactory("fedora-39"),
 	},
