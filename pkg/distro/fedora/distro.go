@@ -43,8 +43,7 @@ const (
 	ostreeDeploymentKernelOptions = "modprobe.blacklist=vc4 rw coreos.no_persist_ip"
 
 	// location for saving openscap remediation data
-	oscapDataDir     = "/oscap_data"
-	tailoringDirPath = "/usr/share/xml/osbuild-openscap-data"
+	oscapDataDir = "/oscap_data"
 )
 
 var (

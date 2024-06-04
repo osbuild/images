@@ -1,8 +1,6 @@
 package oscap
 
 import (
-	"fmt"
-	"path/filepath"
 	"strings"
 )
 
@@ -40,9 +38,6 @@ const (
 	defaultCentos9Datastream string = "/usr/share/xml/scap/ssg/content/ssg-cs9-ds.xml"
 	defaultRHEL8Datastream   string = "/usr/share/xml/scap/ssg/content/ssg-rhel8-ds.xml"
 	defaultRHEL9Datastream   string = "/usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml"
-
-	// tailoring directory path
-	tailoringDirPath string = "/usr/share/xml/osbuild-openscap-data"
 )
 
 func DefaultFedoraDatastream() string {
@@ -77,10 +72,4 @@ func IsProfileAllowed(profile string, allowlist []Profile) bool {
 	}
 
 	return false
-}
-
-func GetTailoringFile(profile string) (string, string) {
-	newProfile := fmt.Sprintf("%s_osbuild_tailoring", profile)
-	path := filepath.Join(tailoringDirPath, "tailoring.xml")
-	return newProfile, path
 }

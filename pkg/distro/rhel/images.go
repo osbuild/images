@@ -3,6 +3,7 @@ package rhel
 import (
 	"fmt"
 	"math/rand"
+	"path/filepath"
 
 	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/blueprint"
@@ -11,7 +12,6 @@ import (
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/ignition"
 	"github.com/osbuild/images/pkg/customizations/kickstart"
-	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/image"
@@ -204,7 +204,11 @@ func osCustomizations(
 			panic("unexpected oscap options for ostree image type")
 		}
 
-		directoriesToCreate := []string{oscapDataDir}
+		oscapDataNode, err := fsnode.NewDirectory(oscapDataDir, nil, nil, nil, true)
+		if err != nil {
+			panic(fmt.Sprintf("unexpected error creating required OpenSCAP directory: %s", oscapDataDir))
+		}
+		osc.Directories = append(osc.Directories, oscapDataNode)
 
 		var datastream = oscapConfig.DataStream
 		if datastream == "" {
@@ -221,9 +225,8 @@ func osCustomizations(
 		}
 
 		if oscapConfig.Tailoring != nil {
-			directoriesToCreate = append(directoriesToCreate, tailoringDirPath)
-
-			newProfile, tailoringFilepath := oscap.GetTailoringFile(oscapConfig.ProfileID)
+			tailoringFilepath := filepath.Join(oscapDataDir, "tailoring.xml")
+			newProfile := fmt.Sprintf("%s_osbuild_tailoring", oscapConfig.ProfileID)
 
 			tailoringOptions := osbuild.OscapAutotailorConfig{
 				NewProfile: newProfile,
@@ -241,14 +244,6 @@ func osCustomizations(
 			// overwrite the profile id with the new tailoring id
 			oscapStageOptions.ProfileID = newProfile
 			oscapStageOptions.Tailoring = tailoringFilepath
-		}
-
-		for _, directory := range directoriesToCreate {
-			directoryNode, err := fsnode.NewDirectory(directory, nil, nil, nil, true)
-			if err != nil {
-				panic(fmt.Sprintf("unexpected error creating required OpenSCAP directory: %s", directory))
-			}
-			osc.Directories = append(osc.Directories, directoryNode)
 		}
 
 		osc.OpenSCAPConfig = osbuild.NewOscapRemediationStageOptions(oscapDataDir, oscapStageOptions)
