@@ -12,9 +12,10 @@ type OpenSCAPCustomization struct {
 }
 
 type OpenSCAPTailoringCustomizations struct {
-	Selected   []string                    `json:"selected,omitempty" toml:"selected,omitempty"`
-	Unselected []string                    `json:"unselected,omitempty" toml:"unselected,omitempty"`
-	Overrides  []OpenSCAPTailoringOverride `json:"overrides,omitempty" toml:"overrides,omitempty"`
+	TailoringFile *string                     `json:"json_tailoring,omitempty" toml:"json_tailoring,omitempty"`
+	Selected      []string                    `json:"selected,omitempty" toml:"selected,omitempty"`
+	Unselected    []string                    `json:"unselected,omitempty" toml:"unselected,omitempty"`
+	Overrides     []OpenSCAPTailoringOverride `json:"overrides,omitempty" toml:"overrides,omitempty"`
 }
 
 type OpenSCAPTailoringOverride struct {
