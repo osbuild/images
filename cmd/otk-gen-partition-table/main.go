@@ -10,6 +10,7 @@ import (
 	"github.com/osbuild/images/internal/buildconfig"
 	"github.com/osbuild/images/internal/cmdutil"
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/otk"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/osbuild"
@@ -75,9 +76,7 @@ type OutputPartition struct {
 	UUID string `json:"uuid"`
 }
 
-type OutputInternal struct {
-	PartitionTable *disk.PartitionTable `json:"partition-table"`
-}
+type OutputInternal = otk.PartitionInternal
 
 func makePartMap(pt *disk.PartitionTable) map[string]OutputPartition {
 	pm := make(map[string]OutputPartition, len(pt.Partitions))
