@@ -173,7 +173,7 @@ func TestPathEscape(t *testing.T) {
 func TestMountsDeviceFromPtEmptyErrors(t *testing.T) {
 	filename := "fake-disk.img"
 	fakePt := testdisk.MakeFakePartitionTable()
-	fsRootMntName, mounts, devices, err := genMountsDevicesFromPt(filename, fakePt)
+	fsRootMntName, mounts, devices, err := GenMountsDevicesFromPT(filename, fakePt)
 	assert.ErrorContains(t, err, "no mount found for the filesystem root")
 	assert.Equal(t, fsRootMntName, "")
 	require.Nil(t, mounts)
@@ -183,14 +183,14 @@ func TestMountsDeviceFromPtEmptyErrors(t *testing.T) {
 func TestMountsDeviceFromPtNoRootErrors(t *testing.T) {
 	filename := "fake-disk.img"
 	fakePt := testdisk.MakeFakePartitionTable("/not-root")
-	_, _, _, err := genMountsDevicesFromPt(filename, fakePt)
+	_, _, _, err := GenMountsDevicesFromPT(filename, fakePt)
 	assert.ErrorContains(t, err, "no mount found for the filesystem root")
 }
 
 func TestMountsDeviceFromPtHappy(t *testing.T) {
 	filename := "fake-disk.img"
 	fakePt := testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi")
-	fsRootMntName, mounts, devices, err := genMountsDevicesFromPt(filename, fakePt)
+	fsRootMntName, mounts, devices, err := GenMountsDevicesFromPT(filename, fakePt)
 	require.Nil(t, err)
 	assert.Equal(t, fsRootMntName, "-")
 	assert.Equal(t, mounts, []Mount{
