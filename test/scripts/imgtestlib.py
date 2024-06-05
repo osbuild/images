@@ -18,12 +18,6 @@ REGISTRY = "registry.gitlab.com/redhat/services/products/image-builder/ci/images
 SCHUTZFILE = "Schutzfile"
 OS_RELEASE_FILE = "/etc/os-release"
 
-# ostree containers are pushed to the CI registry to be reused by dependants
-OSTREE_CONTAINERS = [
-    "iot-container",
-    "edge-container"
-]
-
 # image types that can be boot tested
 CAN_BOOT_TEST = [
     "ami",
