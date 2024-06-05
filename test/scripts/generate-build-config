@@ -7,9 +7,6 @@ from tempfile import TemporaryDirectory
 
 import imgtestlib as testlib
 
-PUSH_CONTAINER = "./tools/ci/push-container.sh"
-
-
 JOB_TEMPLATE = """
 build/{distro}/{arch}/{image_type}/{config_name}:
   stage: test
@@ -19,7 +16,6 @@ build/{distro}/{arch}/{image_type}/{config_name}:
     - ./test/scripts/build-image "{distro}" "{image_type}" "{config}"
     - ./test/scripts/boot-image "{distro}" "{arch}" "{image_type}" "{image_path}"
     - ./test/scripts/upload-results "{distro}" "{image_type}" "{config}"
-    {container_push}
   extends: .terraform
   variables:
     RUNNER: aws/fedora-40-{arch}
@@ -62,24 +58,15 @@ def generate_configs(build_requests, pipeline_file):
         arch = build["arch"]
         image_type = build["image-type"]
         config = build["config"]
-        man_checksum = build["manifest-checksum"]
 
         config_name = config["name"]
 
         build_name = testlib.gen_build_name(distro, arch, image_type, config_name)
         image_path = f"./build/{build_name}"
 
-        container_push_cmd = ""
-        if image_type in testlib.OSTREE_CONTAINERS:
-            # push to container registry and label with checksum
-            # NOTE: the artifact path and filename depend on the names in the manifest
-            container_path = f"./{image_path}/container/container.tar"
-            container_push_cmd = f'- {PUSH_CONTAINER} "{container_path}" "{build_name}:build-{man_checksum}"'
-
         config_path = os.path.join(testlib.CONFIGS_PATH, config_name+".json")
         pipeline_file.write(JOB_TEMPLATE.format(distro=distro, arch=arch, image_type=image_type,
                                                 config_name=config_name, config=config_path,
-                                                container_push=container_push_cmd,
                                                 internal="true" if "rhel" in distro else "false",
                                                 image_path=image_path))
     print("✅ DONE!")
