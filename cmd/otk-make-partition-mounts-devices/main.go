@@ -6,13 +6,15 @@ import (
 	"io"
 	"os"
 
-	"github.com/osbuild/images/internal/otk"
+	"github.com/osbuild/images/internal/otkdisk"
 	"github.com/osbuild/images/pkg/osbuild"
 )
 
 type Input struct {
-	Filename string                `json:"filename"`
-	Internal otk.PartitionInternal `json:"internal"`
+	otkdisk.Data
+
+	// XXX: move filename into gen-part-stages
+	Filename string `json:"filename"`
 }
 
 type Output struct {
@@ -27,7 +29,7 @@ func run(r io.Reader, w io.Writer) error {
 		return err
 	}
 
-	rootMntName, mounts, devices, err := osbuild.GenMountsDevicesFromPT(inp.Filename, inp.Internal.PartitionTable)
+	rootMntName, mounts, devices, err := osbuild.GenMountsDevicesFromPT(inp.Filename, inp.Data.Const.Internal.PartitionTable)
 	if err != nil {
 		return err
 	}

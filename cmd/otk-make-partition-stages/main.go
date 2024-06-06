@@ -8,15 +8,15 @@ import (
 
 	"github.com/osbuild/images/pkg/osbuild"
 
-	"github.com/osbuild/images/internal/otk"
+	"github.com/osbuild/images/internal/otkdisk"
 )
 
 type Input struct {
-	Internal      InputInternal      `json:"internal"`
+	otkdisk.Data
+
+	// XXX: move filename into gen-part-stages
 	Modifications InputModifications `json:"modifications"`
 }
-
-type InputInternal = otk.PartitionInternal
 
 type InputModifications struct {
 	Filename string `json:"filename"`
@@ -32,7 +32,7 @@ func makeImagePrepareStages(inp Input, filename string) (stages []*osbuild.Stage
 	// rhel7 uses PTSgdisk, if we ever need to support this, make this
 	// configurable
 	partTool := osbuild.PTSfdisk
-	stages = osbuild.GenImagePrepareStages(inp.Internal.PartitionTable, filename, partTool)
+	stages = osbuild.GenImagePrepareStages(inp.Data.Const.Internal.PartitionTable, filename, partTool)
 	return stages, nil
 }
 

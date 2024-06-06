@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	mkdevmnt "github.com/osbuild/images/cmd/otk-make-partition-mounts-devices"
-	"github.com/osbuild/images/internal/otk"
+	"github.com/osbuild/images/internal/otkdisk"
 	"github.com/osbuild/images/internal/testdisk"
 	"github.com/stretchr/testify/assert"
 )
@@ -63,8 +63,12 @@ func TestIntegration(t *testing.T) {
 	pt := testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi")
 	input := mkdevmnt.Input{
 		Filename: "test.disk",
-		Internal: otk.PartitionInternal{
-			PartitionTable: pt,
+		Data: otkdisk.Data{
+			Const: otkdisk.Const{
+				Internal: otkdisk.Internal{
+					PartitionTable: pt,
+				},
+			},
 		},
 	}
 	inpJSON, err := json.Marshal(&input)
