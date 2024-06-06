@@ -10,6 +10,7 @@ import (
 
 	genpart "github.com/osbuild/images/cmd/otk-gen-partition-table"
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/otkdisk"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/disk"
 )
@@ -94,15 +95,15 @@ func TestUnmarshalInput(t *testing.T) {
 }
 
 func TestUnmarshalOutput(t *testing.T) {
-	fakeOtkOutput := &genpart.Output{
-		Const: genpart.OutputConst{
+	fakeOtkOutput := &otkdisk.Data{
+		Const: otkdisk.Const{
 			KernelOptsList: []string{"root=UUID=1234"},
-			PartitionMap: map[string]genpart.OutputPartition{
+			PartitionMap: map[string]otkdisk.Partition{
 				"root": {
 					UUID: "12345",
 				},
 			},
-			Internal: genpart.OutputInternal{
+			Internal: otkdisk.Internal{
 				PartitionTable: &disk.PartitionTable{
 					Size: 911,
 					Partitions: []disk.Partition{
@@ -305,15 +306,15 @@ func TestGenPartitionTableMinimal(t *testing.T) {
 			},
 		},
 	}
-	expectedOutput := &genpart.Output{
-		Const: genpart.OutputConst{
+	expectedOutput := &otkdisk.Data{
+		Const: otkdisk.Const{
 			KernelOptsList: []string{},
-			PartitionMap: map[string]genpart.OutputPartition{
+			PartitionMap: map[string]otkdisk.Partition{
 				"root": {
 					UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
 				},
 			},
-			Internal: genpart.OutputInternal{
+			Internal: otkdisk.Internal{
 				PartitionTable: &disk.PartitionTable{
 					Size: 10738466816,
 					UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
@@ -364,15 +365,15 @@ func TestGenPartitionTableCustomizationExtraMp(t *testing.T) {
 			},
 		},
 	}
-	expectedOutput := &genpart.Output{
-		Const: genpart.OutputConst{
+	expectedOutput := &otkdisk.Data{
+		Const: otkdisk.Const{
 			KernelOptsList: []string{},
-			PartitionMap: map[string]genpart.OutputPartition{
+			PartitionMap: map[string]otkdisk.Partition{
 				"boot": {
 					UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
 				},
 			},
-			Internal: genpart.OutputInternal{
+			Internal: otkdisk.Internal{
 				PartitionTable: &disk.PartitionTable{
 					Size: 15890120704,
 					UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
@@ -452,15 +453,15 @@ func TestGenPartitionTableCustomizationExtraMpPlusModificationPartitionMode(t *t
 			},
 		},
 	}
-	expectedOutput := &genpart.Output{
-		Const: genpart.OutputConst{
+	expectedOutput := &otkdisk.Data{
+		Const: otkdisk.Const{
 			KernelOptsList: []string{},
-			PartitionMap: map[string]genpart.OutputPartition{
+			PartitionMap: map[string]otkdisk.Partition{
 				"root": {
 					UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
 				},
 			},
-			Internal: genpart.OutputInternal{
+			Internal: otkdisk.Internal{
 				PartitionTable: &disk.PartitionTable{
 					Size: 13739491328,
 					UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
@@ -509,15 +510,15 @@ func TestGenPartitionTablePropertiesDefaultSize(t *testing.T) {
 			},
 		},
 	}
-	expectedOutput := &genpart.Output{
-		Const: genpart.OutputConst{
+	expectedOutput := &otkdisk.Data{
+		Const: otkdisk.Const{
 			KernelOptsList: []string{},
-			PartitionMap: map[string]genpart.OutputPartition{
+			PartitionMap: map[string]otkdisk.Partition{
 				"root": {
 					UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
 				},
 			},
-			Internal: genpart.OutputInternal{
+			Internal: otkdisk.Internal{
 				PartitionTable: &disk.PartitionTable{
 					Size: 16106127360,
 					UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
@@ -559,15 +560,15 @@ func TestGenPartitionTableModificationMinDiskSize(t *testing.T) {
 			MinDiskSize: "20 GiB",
 		},
 	}
-	expectedOutput := &genpart.Output{
-		Const: genpart.OutputConst{
+	expectedOutput := &otkdisk.Data{
+		Const: otkdisk.Const{
 			KernelOptsList: []string{},
-			PartitionMap: map[string]genpart.OutputPartition{
+			PartitionMap: map[string]otkdisk.Partition{
 				"root": {
 					UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
 				},
 			},
-			Internal: genpart.OutputInternal{
+			Internal: otkdisk.Internal{
 				PartitionTable: &disk.PartitionTable{
 					Size: 21474836480,
 					UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
