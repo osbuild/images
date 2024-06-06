@@ -270,7 +270,9 @@ def setup_dependencies(manifests, config_map, distro, arch):
                 container_archive = os.path.join(container_dir, "container.tar")
                 testlib.runcmd_nc(["aws", "s3", "cp", "--no-progress", container_s3_path, container_archive])
                 print(f"📦 Starting container oci-archive:{container_archive} {port}")
-                cont_id, _ = testlib.runcmd(["podman", "run", "-d", "--rm", f"-p{port}:8080",
+                # Running podman as root is not necessary, but currently it's failing with permission errors.
+                # Run it with sudo for now until we figure out the issue.
+                cont_id, _ = testlib.runcmd(["sudo", "podman", "run", "-d", "--rm", f"-p{port}:8080",
                                              f"oci-archive:{container_archive}"])
                 container_ids.append(cont_id.strip().decode())
 
@@ -278,7 +280,7 @@ def setup_dependencies(manifests, config_map, distro, arch):
     finally:
         if container_ids:
             print("📦 Stopping containers")
-            out, _ = testlib.runcmd(["podman", "stop", " ".join(container_ids)])
+            out, _ = testlib.runcmd(["sudo", "podman", "stop", " ".join(container_ids)])
             print(out.decode())
 
 
@@ -307,7 +309,7 @@ def generate_configs(build_requests, container_configs, pipeline_file, configs_d
         container_port = container["port"]
 
         dl_container_cmd = f"aws s3 cp --no-progress {container_s3_path} container.tar"
-        run_container_cmd = f"podman run -d --rm -p{container_port}:8080 oci-archive:container.tar"
+        run_container_cmd = f"sudo podman run -d --rm -p{container_port}:8080 oci-archive:container.tar"
 
         pipeline_file.write(JOB_TEMPLATE.format(distro=distro, arch=arch, image_type=image_type,
                                                 config_name=config_name, config=build_config_path,
