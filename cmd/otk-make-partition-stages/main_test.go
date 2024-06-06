@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	makestages "github.com/osbuild/images/cmd/otk-make-partition-stages"
+	"github.com/osbuild/images/internal/otkdisk"
 	"github.com/osbuild/images/pkg/disk"
 )
 
@@ -17,19 +18,23 @@ import (
 // disk.PartitionTable so encoding it in json here will not add
 // a benefit for the test
 var minimalInputBase = makestages.Input{
-	Internal: makestages.InputInternal{
-		PartitionTable: &disk.PartitionTable{
-			Size: 10738466816,
-			UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
-			Type: "dos",
-			Partitions: []disk.Partition{
-				{
-					Start: 1048576,
-					Size:  10737418240,
-					Payload: &disk.Filesystem{
-						Type:       "ext4",
-						UUID:       "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
-						Mountpoint: "/",
+	Data: otkdisk.Data{
+		Const: otkdisk.Const{
+			Internal: otkdisk.Internal{
+				PartitionTable: &disk.PartitionTable{
+					Size: 10738466816,
+					UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+					Type: "dos",
+					Partitions: []disk.Partition{
+						{
+							Start: 1048576,
+							Size:  10737418240,
+							Payload: &disk.Filesystem{
+								Type:       "ext4",
+								UUID:       "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+								Mountpoint: "/",
+							},
+						},
 					},
 				},
 			},

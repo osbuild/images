@@ -10,7 +10,7 @@ import (
 	"github.com/osbuild/images/internal/buildconfig"
 	"github.com/osbuild/images/internal/cmdutil"
 	"github.com/osbuild/images/internal/common"
-	"github.com/osbuild/images/internal/otk"
+	"github.com/osbuild/images/internal/otkdisk"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/osbuild"
@@ -57,29 +57,10 @@ type InputModifications struct {
 	MinDiskSize   string                              `json:"min_disk_size"`
 }
 
-type Output struct {
-	Const OutputConst `json:"const"`
-}
+type Output = otkdisk.Data
 
-type OutputConst struct {
-	KernelOptsList []string `json:"kernel_opts_list"`
-	// we generate this for convenience for otk users, so that they
-	// can write, e.g. "filesystem.partition_map.boot.uuid"
-	PartitionMap map[string]OutputPartition `json:"partition_map"`
-	Internal     OutputInternal             `json:"internal"`
-}
-
-// "exported" view of partitions, this is an API so only add things here
-// that are really needed and unlikely to change
-type OutputPartition struct {
-	// not a UUID type because fat UUIDs are not compliant
-	UUID string `json:"uuid"`
-}
-
-type OutputInternal = otk.PartitionInternal
-
-func makePartMap(pt *disk.PartitionTable) map[string]OutputPartition {
-	pm := make(map[string]OutputPartition, len(pt.Partitions))
+func makePartMap(pt *disk.PartitionTable) map[string]otkdisk.Partition {
+	pm := make(map[string]otkdisk.Partition, len(pt.Partitions))
 	// TODO: think about exposing more partitions, if we do, what labels
 	// would we use? ition.Name? what about clashes with
 	// "{r,b}oot" then?
@@ -88,11 +69,11 @@ func makePartMap(pt *disk.PartitionTable) map[string]OutputPartition {
 		case *disk.Filesystem:
 			switch pl.Mountpoint {
 			case "/":
-				pm["root"] = OutputPartition{
+				pm["root"] = otkdisk.Partition{
 					UUID: pl.UUID,
 				}
 			case "/boot":
-				pm["boot"] = OutputPartition{
+				pm["boot"] = otkdisk.Partition{
 					UUID: pl.UUID,
 				}
 			}
@@ -203,8 +184,8 @@ func genPartitionTable(genPartInput *Input, rng *rand.Rand) (*Output, error) {
 
 	kernelOptions := osbuild.GenImageKernelOptions(pt)
 	otkPart := &Output{
-		Const: OutputConst{
-			Internal: OutputInternal{
+		Const: otkdisk.Const{
+			Internal: otkdisk.Internal{
 				PartitionTable: pt,
 			},
 			KernelOptsList: kernelOptions,
