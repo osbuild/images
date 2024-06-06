@@ -103,6 +103,7 @@ func TestUnmarshalOutput(t *testing.T) {
 					UUID: "12345",
 				},
 			},
+			Filename: "disk.img",
 			Internal: otkdisk.Internal{
 				PartitionTable: &disk.PartitionTable{
 					Size: 911,
@@ -157,7 +158,8 @@ func TestUnmarshalOutput(t *testing.T) {
         "ExtraPadding": 0,
         "StartOffset": 0
       }
-    }
+    },
+    "filename": "disk.img"
   }
 }`
 	output, err := json.MarshalIndent(fakeOtkOutput, "", "  ")
@@ -270,7 +272,8 @@ var expectedSimplePartOutput = `{
         "ExtraPadding": 0,
         "StartOffset": 0
       }
-    }
+    },
+    "filename": "disk.img"
   }
 }
 `
@@ -309,6 +312,7 @@ func TestGenPartitionTableMinimal(t *testing.T) {
 					UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
 				},
 			},
+			Filename: "disk.img",
 			Internal: otkdisk.Internal{
 				PartitionTable: &disk.PartitionTable{
 					Size: 10738466816,
@@ -368,6 +372,7 @@ func TestGenPartitionTableCustomizationExtraMp(t *testing.T) {
 					UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
 				},
 			},
+			Filename: "disk.img",
 			Internal: otkdisk.Internal{
 				PartitionTable: &disk.PartitionTable{
 					Size: 15890120704,
@@ -456,6 +461,7 @@ func TestGenPartitionTableCustomizationExtraMpPlusModificationPartitionMode(t *t
 					UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
 				},
 			},
+			Filename: "disk.img",
 			Internal: otkdisk.Internal{
 				PartitionTable: &disk.PartitionTable{
 					Size: 13739491328,
@@ -513,6 +519,7 @@ func TestGenPartitionTablePropertiesDefaultSize(t *testing.T) {
 					UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
 				},
 			},
+			Filename: "disk.img",
 			Internal: otkdisk.Internal{
 				PartitionTable: &disk.PartitionTable{
 					Size: 16106127360,
@@ -563,6 +570,7 @@ func TestGenPartitionTableModificationMinDiskSize(t *testing.T) {
 					UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
 				},
 			},
+			Filename: "disk.img",
 			Internal: otkdisk.Internal{
 				PartitionTable: &disk.PartitionTable{
 					Size: 21474836480,
@@ -572,6 +580,56 @@ func TestGenPartitionTableModificationMinDiskSize(t *testing.T) {
 						{
 							Start: 1048576,
 							Size:  21473787904,
+							Payload: &disk.Filesystem{
+								Type:       "ext4",
+								UUID:       "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+								Mountpoint: "/",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	output, err := genpart.GenPartitionTable(inp, rand.New(rand.NewSource(0)))
+	assert.NoError(t, err)
+	assert.Equal(t, expectedOutput, output)
+}
+
+func TestGenPartitionTableModificationFilename(t *testing.T) {
+	inp := &genpart.Input{
+		Properties: genpart.InputProperties{
+			Type: "dos",
+		},
+		Partitions: []*genpart.InputPartition{
+			{
+				Mountpoint: "/",
+				Size:       "10 GiB",
+				Type:       "ext4",
+			},
+		},
+		Modifications: genpart.InputModifications{
+			Filename: "custom-disk.img",
+		},
+	}
+	expectedOutput := &otkdisk.Data{
+		Const: otkdisk.Const{
+			KernelOptsList: []string{},
+			PartitionMap: map[string]otkdisk.Partition{
+				"root": {
+					UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+				},
+			},
+			Filename: "custom-disk.img",
+			Internal: otkdisk.Internal{
+				PartitionTable: &disk.PartitionTable{
+					Size: 10738466816,
+					UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+					Type: "dos",
+					Partitions: []disk.Partition{
+						{
+							Start: 1048576,
+							Size:  10737418240,
 							Payload: &disk.Filesystem{
 								Type:       "ext4",
 								UUID:       "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",

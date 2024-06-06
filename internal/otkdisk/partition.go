@@ -24,6 +24,9 @@ type Const struct {
 	// directly. It makes noo external API guarantees about the content or
 	// structure.
 	Internal Internal `json:"internal"`
+
+	// Filename for the disk image.
+	Filename string `json:"filename"`
 }
 
 // Partition represents an exported view of a partition. This is an API so only

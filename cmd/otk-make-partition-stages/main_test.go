@@ -18,22 +18,20 @@ import (
 // disk.PartitionTable so encoding it in json here will not add
 // a benefit for the test
 var minimalInputBase = makestages.Input{
-	Data: otkdisk.Data{
-		Const: otkdisk.Const{
-			Internal: otkdisk.Internal{
-				PartitionTable: &disk.PartitionTable{
-					Size: 10738466816,
-					UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
-					Type: "dos",
-					Partitions: []disk.Partition{
-						{
-							Start: 1048576,
-							Size:  10737418240,
-							Payload: &disk.Filesystem{
-								Type:       "ext4",
-								UUID:       "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
-								Mountpoint: "/",
-							},
+	Const: otkdisk.Const{
+		Internal: otkdisk.Internal{
+			PartitionTable: &disk.PartitionTable{
+				Size: 10738466816,
+				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+				Type: "dos",
+				Partitions: []disk.Partition{
+					{
+						Start: 1048576,
+						Size:  10737418240,
+						Payload: &disk.Filesystem{
+							Type:       "ext4",
+							UUID:       "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+							Mountpoint: "/",
 						},
 					},
 				},
@@ -94,6 +92,7 @@ var minimalExpectedStages = `[
 
 func TestIntegration(t *testing.T) {
 	minimalInput := minimalInputBase
+	minimalInput.Const.Filename = "disk.img"
 	expectedStages := minimalExpectedStages
 
 	inpJSON, err := json.Marshal(&minimalInput)
@@ -109,7 +108,7 @@ func TestIntegration(t *testing.T) {
 
 func TestModificationFname(t *testing.T) {
 	input := minimalInputBase
-	input.Modifications.Filename = "mydisk.img2"
+	input.Const.Filename = "mydisk.img2"
 	expectedStages := strings.Replace(minimalExpectedStages, `"disk.img"`, `"mydisk.img2"`, -1)
 
 	inpJSON, err := json.Marshal(&input)

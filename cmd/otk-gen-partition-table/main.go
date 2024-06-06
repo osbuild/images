@@ -55,6 +55,7 @@ type InputModifications struct {
 	PartitionMode disk.PartitioningMode               `json:"partition_mode"`
 	Filesystems   []blueprint.FilesystemCustomization `json:"filesystems"`
 	MinDiskSize   string                              `json:"min_disk_size"`
+	Filename      string                              `json:"filename"`
 }
 
 type Output = otkdisk.Data
@@ -181,6 +182,10 @@ func genPartitionTable(genPartInput *Input, rng *rand.Rand) (*Output, error) {
 	if err != nil {
 		return nil, err
 	}
+	fname := "disk.img"
+	if genPartInput.Modifications.Filename != "" {
+		fname = genPartInput.Modifications.Filename
+	}
 
 	kernelOptions := osbuild.GenImageKernelOptions(pt)
 	otkPart := &Output{
@@ -190,6 +195,7 @@ func genPartitionTable(genPartInput *Input, rng *rand.Rand) (*Output, error) {
 			},
 			KernelOptsList: kernelOptions,
 			PartitionMap:   makePartMap(pt),
+			Filename:       fname,
 		},
 	}
 
