@@ -10,12 +10,7 @@ import (
 	"github.com/osbuild/images/pkg/osbuild"
 )
 
-type Input struct {
-	otkdisk.Data
-
-	// XXX: move filename into gen-part-stages
-	Filename string `json:"filename"`
-}
+type Input = otkdisk.Data
 
 type Output struct {
 	RootMountName string                    `json:"root_mount_name"`
@@ -29,7 +24,7 @@ func run(r io.Reader, w io.Writer) error {
 		return err
 	}
 
-	rootMntName, mounts, devices, err := osbuild.GenMountsDevicesFromPT(inp.Filename, inp.Data.Const.Internal.PartitionTable)
+	rootMntName, mounts, devices, err := osbuild.GenMountsDevicesFromPT(inp.Const.Filename, inp.Const.Internal.PartitionTable)
 	if err != nil {
 		return err
 	}

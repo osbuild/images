@@ -11,16 +11,7 @@ import (
 	"github.com/osbuild/images/internal/otkdisk"
 )
 
-type Input struct {
-	otkdisk.Data
-
-	// XXX: move filename into gen-part-stages
-	Modifications InputModifications `json:"modifications"`
-}
-
-type InputModifications struct {
-	Filename string `json:"filename"`
-}
+type Input = otkdisk.Data
 
 func makeImagePrepareStages(inp Input, filename string) (stages []*osbuild.Stage, err error) {
 	defer func() {
@@ -32,7 +23,7 @@ func makeImagePrepareStages(inp Input, filename string) (stages []*osbuild.Stage
 	// rhel7 uses PTSgdisk, if we ever need to support this, make this
 	// configurable
 	partTool := osbuild.PTSfdisk
-	stages = osbuild.GenImagePrepareStages(inp.Data.Const.Internal.PartitionTable, filename, partTool)
+	stages = osbuild.GenImagePrepareStages(inp.Const.Internal.PartitionTable, inp.Const.Filename, partTool)
 	return stages, nil
 }
 
@@ -42,11 +33,7 @@ func run(r io.Reader, w io.Writer) error {
 		return err
 	}
 
-	fname := "disk.img"
-	if inp.Modifications.Filename != "" {
-		fname = inp.Modifications.Filename
-	}
-	stages, err := makeImagePrepareStages(inp, fname)
+	stages, err := makeImagePrepareStages(inp, inp.Const.Filename)
 	if err != nil {
 		return fmt.Errorf("cannot make partition stages: %w", err)
 	}
