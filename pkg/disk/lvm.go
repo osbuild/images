@@ -2,10 +2,15 @@ package disk
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/osbuild/images/internal/common"
 )
+
+func init() {
+	entityTypes = append(entityTypes, reflect.TypeOf(LVMVolumeGroup{}))
+}
 
 // Default physical extent size in bytes: logical volumes
 // created inside the VG will be aligned to this.

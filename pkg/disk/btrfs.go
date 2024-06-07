@@ -3,10 +3,15 @@ package disk
 import (
 	"fmt"
 	"math/rand"
+	"reflect"
 	"strings"
 
 	"github.com/google/uuid"
 )
+
+func init() {
+	entityTypes = append(entityTypes, reflect.TypeOf(Btrfs{}))
+}
 
 type Btrfs struct {
 	UUID       string
