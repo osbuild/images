@@ -33,21 +33,13 @@
   },
   "./configs/ec2-sap-empty.json": {
     "distros": [
-      "centos-8",
-      "centos-9",
-      "fedora-39",
-      "fedora-40",
       "rhel-8.10",
       "rhel-8.5",
       "rhel-8.6",
       "rhel-8.7",
       "rhel-8.8",
       "rhel-8.9",
-      "rhel-9.0",
-      "rhel-9.1",
-      "rhel-9.2",
-      "rhel-9.3",
-      "rhel-9.4"
+      "rhel-9.*"
     ],
     "image-types": [
       "ec2-sap"
