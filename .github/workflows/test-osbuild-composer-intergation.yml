@@ -97,5 +97,3 @@ jobs:
           version: v1.54.2
           working-directory: osbuild-composer
           args: --verbose --timeout 5m0s
-          # Needed due to https://github.com/golangci/golangci-lint-action/issues/135
-          skip-pkg-cache: true
