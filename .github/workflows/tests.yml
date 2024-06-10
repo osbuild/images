@@ -167,6 +167,7 @@ jobs:
         with:
           version: v1.54.2
           args: --verbose --timeout 5m0s
+          skip-cache: true
 
   shellcheck:
     name: "🐚 Shellcheck"
