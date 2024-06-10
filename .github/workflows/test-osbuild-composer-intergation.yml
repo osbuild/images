@@ -49,10 +49,10 @@ jobs:
     name: "⌨ osbuild-composer Golang Lint"
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go 1.20
+      - name: Set up Go 1.21
         uses: actions/setup-go@v5
         with:
-          go-version: "1.20"
+          go-version: "1.21"
         id: go
 
       - name: Check out osbuild-composer main branch
