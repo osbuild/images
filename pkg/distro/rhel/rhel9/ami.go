@@ -240,6 +240,11 @@ func ec2CommonPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 		},
 	}.Append(distroSpecificPackageSet(t))
 
+	// Include awscli2 on RHEL 9.5+ (CLOUDX-913)
+	if common.VersionGreaterThanOrEqual(t.Arch().Distro().OsVersion(), "9.5") {
+		ps.Include = append(ps.Include, "awscli2")
+	}
+
 	return ps
 }
 
