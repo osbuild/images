@@ -361,7 +361,7 @@ func TestDirectoryCustomizationUnmarshalJSON(t *testing.T) {
 		{
 			Name: "directory-with-path",
 			JSON: `
-{	
+{
 	"name": "test",
 	"description": "Test",
 	"version": "0.0.0",

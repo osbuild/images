@@ -35,18 +35,18 @@ Certificate:
         X509v3 extensions:
             X509v3 Basic Constraints: critical
                 CA:FALSE
-            X509v3 Subject Key Identifier: 
+            X509v3 Subject Key Identifier:
                 C0:2F:23:10:5D:C6:BC:97:76:50:71:FC:93:C1:47:59:02:FD:BC:23
-            X509v3 Authority Key Identifier: 
+            X509v3 Authority Key Identifier:
                 keyid:3A:04:ED:2B:E8:99:81:4E:30:D4:F4:46:68:E4:F1:A0:78:24:4A:12
                 DirName:/CN=osbuild.org
                 serial:43:6B:7C:15:23:01:44:79:BD:E3:27:70:50:BC:90:AF:19:CA:5A:2F
 
             X509v3 Key Usage: critical
                 Digital Signature, Key Encipherment
-            X509v3 Extended Key Usage: 
+            X509v3 Extended Key Usage:
                 TLS Web Server Authentication
-            X509v3 Subject Alternative Name: 
+            X509v3 Subject Alternative Name:
                 DNS:localhost, DNS:composer, IP Address:127.0.0.1
     Signature Algorithm: sha256WithRSAEncryption
          72:f9:19:12:a1:d3:f6:62:66:5b:42:cf:da:c6:62:93:c9:29:

@@ -33,18 +33,18 @@ Certificate:
                     2f:a7
                 Exponent: 65537 (0x10001)
         X509v3 extensions:
-            X509v3 Basic Constraints: 
+            X509v3 Basic Constraints:
                 CA:FALSE
-            X509v3 Subject Key Identifier: 
+            X509v3 Subject Key Identifier:
                 8F:ED:C1:36:46:5D:80:B7:A9:3A:B9:A5:65:FD:9C:F1:07:F9:3B:A0
-            X509v3 Authority Key Identifier: 
+            X509v3 Authority Key Identifier:
                 keyid:3A:04:ED:2B:E8:99:81:4E:30:D4:F4:46:68:E4:F1:A0:78:24:4A:12
 
             X509v3 Key Usage: critical
                 Digital Signature, Non Repudiation, Key Encipherment
-            X509v3 Extended Key Usage: 
+            X509v3 Extended Key Usage:
                 TLS Web Client Authentication
-            X509v3 Subject Alternative Name: 
+            X509v3 Subject Alternative Name:
                 DNS:client.osbuild.org, IP Address:127.0.0.1
     Signature Algorithm: sha256WithRSAEncryption
          8d:4f:f2:ab:1a:08:8f:04:f8:ac:b5:7d:0d:14:7a:38:0f:d6:

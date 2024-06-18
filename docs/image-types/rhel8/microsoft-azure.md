@@ -6,7 +6,7 @@ computing platform. It conforms to Azure's [requirements for images][rhelrequire
 
 ## Implementation Choices
 
-This image is only availble for `x86_64`, because it is the only architecture available
+This image is only available for `x86_64`, because it is the only architecture available
 in Azure.
 
 
