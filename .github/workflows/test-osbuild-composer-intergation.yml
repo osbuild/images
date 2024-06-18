@@ -1,6 +1,7 @@
+---
 name: "[integration]"
 
-on:
+on:  # yamllint disable-line rule:truthy
   pull_request:
     branches:
       - "*"
@@ -13,9 +14,9 @@ jobs:
       image: registry.fedoraproject.org/fedora:latest
 
     steps:
-        # krb5-devel is needed to test internal/upload/koji package
-        # gcc is needed to build the mock depsolver binary for the unit tests
-        # gpgme-devel is needed for container upload dependencies
+      # krb5-devel is needed to test internal/upload/koji package
+      # gcc is needed to build the mock depsolver binary for the unit tests
+      # gpgme-devel is needed for container upload dependencies
       - name: Install build and test dependencies
         run: dnf -y install krb5-devel gcc git-core go gpgme-devel osbuild-depsolve-dnf btrfs-progs-devel device-mapper-devel
 
