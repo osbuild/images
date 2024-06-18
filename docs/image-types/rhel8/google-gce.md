@@ -185,7 +185,7 @@ part / --size=100 --grow --ondrive=sdb --label=root --fstype=xfs
     repo_gpgcheck=0
     gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
         https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
-    
+
     [google-cloud-sdk]
     name=Google Cloud SDK
     baseurl=https://packages.cloud.google.com/yum/repos/cloud-sdk-el8-x86_64

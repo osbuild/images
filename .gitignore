@@ -9,5 +9,6 @@ __pycache__
 /rpmbuild
 /test/data/manifests
 /tools/appsre-ansible/inventory
+dictionary.dic
 
 *~

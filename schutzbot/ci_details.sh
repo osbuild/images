@@ -43,7 +43,7 @@ rpm -qa | sort
 echo "------------------------------------------------------------------------------"
 
 # gcp runners don't use cloud-init and some of the images have python36 installed
-if [[ "$RUNNER" != *"gcp"* ]];then 
+if [[ "$RUNNER" != *"gcp"* ]];then
     if rpm --quiet -q python36; then
         echo -e "\n FAIL: python36 is installed, see #794 ..."
         exit 1

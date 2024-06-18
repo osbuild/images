@@ -2,7 +2,7 @@
 ---
 name: "Update bootc-image-builder ref"
 
-on:
+on:  # yamllint disable-line rule:truthy
   workflow_dispatch:
   # temporarily disabled until we fix the compatibility between bib and our bootc containers
   # schedule:

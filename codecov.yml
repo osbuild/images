@@ -1,9 +1,10 @@
+---
 coverage:
   status:
-    patch: no
+    patch: false
     project:
       default:
         threshold: 5%
 codecov:
-  require_ci_to_pass: no
-comment: no
+  require_ci_to_pass: false
+comment: false
