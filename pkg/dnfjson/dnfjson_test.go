@@ -776,3 +776,15 @@ func TestRepoConfigMarshalAlsmostEmpty(t *testing.T) {
 	// double check here that anything that uses pointers has "omitempty" set
 	assert.Equal(t, string(js), `{"id":"","gpgcheck":false,"repo_gpgcheck":false}`)
 }
+
+func TestRunErrorEmptyOutput(t *testing.T) {
+	fakeDnfJsonPath := filepath.Join(t.TempDir(), "dnfjson")
+	fakeDnfJsonNoOutput := `#!/bin/sh -e
+exit 1
+`
+	err := os.WriteFile(fakeDnfJsonPath, []byte(fakeDnfJsonNoOutput), 0o755)
+	assert.NoError(t, err)
+
+	_, err = run([]string{fakeDnfJsonPath}, &Request{})
+	assert.EqualError(t, err, `DNF error occurred: InternalError: dnf-json output was empty`)
+}
