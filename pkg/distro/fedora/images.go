@@ -185,7 +185,7 @@ func osCustomizations(
 
 		// although the osbuild stage will create this directory,
 		// it's probably better to ensure that it is created here
-		dataDirNode, err := fsnode.NewDirectory(oscapDataDir, nil, nil, nil, true)
+		dataDirNode, err := fsnode.NewDirectory(oscap.DataDir, nil, nil, nil, true)
 		if err != nil {
 			panic("unexpected error creating OpenSCAP data directory")
 		}
@@ -233,7 +233,7 @@ func osCustomizations(
 			osc.Directories = append(osc.Directories, tailoringDir)
 		}
 
-		osc.OpenSCAPConfig = osbuild.NewOscapRemediationStageOptions(oscapDataDir, oscapStageOptions)
+		osc.OpenSCAPConfig = osbuild.NewOscapRemediationStageOptions(oscap.DataDir, oscapStageOptions)
 	}
 
 	osc.ShellInit = imageConfig.ShellInit
