@@ -240,8 +240,8 @@ func osCustomizations(
 			remediationConfig.ProfileID = tailoringConfig.TailoredProfileID
 		}
 
-		osc.OpenSCAPTailorConfig = osbuild.NewOscapAutotailorStageOptions(tailoringConfig)
-		osc.OpenSCAPConfig = osbuild.NewOscapRemediationStageOptions(oscap.DataDir, &remediationConfig)
+		osc.OpenSCAPTailorConfig = tailoringConfig
+		osc.OpenSCAPRemediationConfig = &remediationConfig
 	}
 
 	osc.ShellInit = imageConfig.ShellInit
