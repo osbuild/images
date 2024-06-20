@@ -43,8 +43,9 @@ const (
 	defaultRHEL8Datastream   string = "/usr/share/xml/scap/ssg/content/ssg-rhel8-ds.xml"
 	defaultRHEL9Datastream   string = "/usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml"
 
-	// tailoring directory path
-	tailoringDirPath string = "/usr/share/xml/osbuild-openscap-data"
+	// oscap related directories
+	DataDir          string = "/oscap_data"
+	TailoringDirPath string = "/usr/share/xml/osbuild-openscap-data"
 )
 
 func DefaultFedoraDatastream() string {
@@ -83,9 +84,9 @@ func IsProfileAllowed(profile string, allowlist []Profile) bool {
 
 func GetTailoringFile(profile string) (string, string, *fsnode.Directory, error) {
 	newProfile := fmt.Sprintf("%s_osbuild_tailoring", profile)
-	path := filepath.Join(tailoringDirPath, "tailoring.xml")
+	path := filepath.Join(TailoringDirPath, "tailoring.xml")
 
-	tailoringDir, err := fsnode.NewDirectory(tailoringDirPath, nil, nil, nil, true)
+	tailoringDir, err := fsnode.NewDirectory(TailoringDirPath, nil, nil, nil, true)
 	if err != nil {
 		return "", "", nil, err
 	}
