@@ -73,8 +73,8 @@ github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d h1:licZJFw2RwpH
 github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d/go.mod h1:asat636LX7Bqt5lYEZ27JNDcqxfjdBQuJ/MM4CN/Lzo=
 github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 h1:DklsrG3dyBCFEj5IhUbnKptjxatkF07cF2ak3yi77so=
 github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2/go.mod h1:WaHUgvxTVq04UNunO+XhnAqY/wQc+bxr74GqbsZ/Jqw=
-github.com/aws/aws-sdk-go v1.54.5 h1:uOYrME3NWf7/J7orDdhZbF8IQCNkE7OZHATdzWS0ok0=
-github.com/aws/aws-sdk-go v1.54.5/go.mod h1:eRwEWoyTWFMVYVQzKMNHWP5/RV4xIUGMQfXQHfHkpNU=
+github.com/aws/aws-sdk-go v1.54.6 h1:HEYUib3yTt8E6vxjMWM3yAq5b+qjj/6aKA62mkgux9g=
+github.com/aws/aws-sdk-go v1.54.6/go.mod h1:eRwEWoyTWFMVYVQzKMNHWP5/RV4xIUGMQfXQHfHkpNU=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
 github.com/cenkalti/backoff/v4 v4.2.1 h1:y4OZtCnogmCPw98Zjyt5a6+QwPLGkiQsYW5oUqylYbM=
@@ -94,8 +94,8 @@ github.com/containerd/stargz-snapshotter/estargz v0.15.1 h1:eXJjw9RbkLFgioVaTG+G
 github.com/containerd/stargz-snapshotter/estargz v0.15.1/go.mod h1:gr2RNwukQ/S9Nv33Lt6UC7xEx58C+LHRdoqbEKjz1Kk=
 github.com/containers/common v0.59.1 h1:7VkmJN3YvD0jLFwaUjLHSRJ98JLffydiyOJjYr0dUTo=
 github.com/containers/common v0.59.1/go.mod h1:53VicJCZ2AD0O+Br7VVoyrS7viXF4YmwlTIocWUT8XE=
-github.com/containers/image/v5 v5.31.0 h1:eDFVlz5XaYICxe9dXpf23htEKvyosgkl62mJlIATXE4=
-github.com/containers/image/v5 v5.31.0/go.mod h1:5QfOqSackPkSbF7Qxc1DnVNnPJKQ+KWLkfEfDpK590Q=
+github.com/containers/image/v5 v5.31.1 h1:3x9soI6Biml/GiDLpkSmKrkRSwVGctxu/vONpoUdklA=
+github.com/containers/image/v5 v5.31.1/go.mod h1:5QfOqSackPkSbF7Qxc1DnVNnPJKQ+KWLkfEfDpK590Q=
 github.com/containers/libtrust v0.0.0-20230121012942-c1716e8a8d01 h1:Qzk5C6cYglewc+UyGf6lc8Mj2UaPTHy/iF2De0/77CA=
 github.com/containers/libtrust v0.0.0-20230121012942-c1716e8a8d01/go.mod h1:9rfv8iPl1ZP7aqh9YA68wnZv2NUDbXdcdPHVz0pFbPY=
 github.com/containers/ocicrypt v1.1.10 h1:r7UR6o8+lyhkEywetubUUgcKFjOWOaWz8cEBrCPX0ic=
