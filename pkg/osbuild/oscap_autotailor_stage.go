@@ -50,6 +50,12 @@ func NewOscapAutotailorStageOptions(options *oscap.TailoringConfig) *OscapAutota
 		return nil
 	}
 
+	// TODO: don't panic! unfortunately this would involve quite
+	// a big refactor and we still need to be a bit defensive here
+	if options.RemediationConfig.TailoringPath == "" {
+		panic(fmt.Errorf("The tailoring path for the OpenSCAP remediation config cannot be empty, this is a programming error"))
+	}
+
 	return &OscapAutotailorStageOptions{
 		Filepath: options.RemediationConfig.TailoringPath,
 		Config: OscapAutotailorConfig{
