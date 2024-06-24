@@ -57,6 +57,8 @@ NULL_CONFIG = """
 NullBuild:
   stage: test
   script: "true"
+  tags:
+    - "shell"
 """
 
 
