@@ -4,10 +4,9 @@ name: "Update bootc-image-builder ref"
 
 on:
   workflow_dispatch:
-  # temporarily disabled until we fix the compatibility between bib and our bootc containers
-  # schedule:
-  #   # Every Sunday at 12:00
-  #   - cron: "0 12 * * 0"
+  schedule:
+    # Every Sunday at 12:00
+    - cron: "0 12 * * 0"
 
 jobs:
   update-and-push:
