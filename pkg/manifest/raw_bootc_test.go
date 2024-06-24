@@ -13,6 +13,7 @@ import (
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
+	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/runner"
 )
 
@@ -50,8 +51,12 @@ func TestRawBootcImageSerialize(t *testing.T) {
 	mani := manifest.New()
 	runner := &runner.Linux{}
 	build := manifest.NewBuildFromContainer(&mani, runner, nil, nil)
+	pf := &platform.X86{
+		BasePlatform: platform.BasePlatform{},
+		UEFIVendor:   "test",
+	}
 
-	rawBootcPipeline := manifest.NewRawBootcImage(build, containers, nil)
+	rawBootcPipeline := manifest.NewRawBootcImage(build, containers, pf)
 	rawBootcPipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi")
 	rawBootcPipeline.Users = []users.User{{Name: "root", Key: common.ToPtr("some-ssh-key")}}
 	rawBootcPipeline.KernelOptionsAppend = []string{"karg1", "karg2"}
@@ -74,8 +79,12 @@ func TestRawBootcImageSerializeMountsValidated(t *testing.T) {
 	mani := manifest.New()
 	runner := &runner.Linux{}
 	build := manifest.NewBuildFromContainer(&mani, runner, nil, nil)
+	pf := &platform.X86{
+		BasePlatform: platform.BasePlatform{},
+		UEFIVendor:   "test",
+	}
 
-	rawBootcPipeline := manifest.NewRawBootcImage(build, nil, nil)
+	rawBootcPipeline := manifest.NewRawBootcImage(build, nil, pf)
 	// note that we create a partition table without /boot here
 	rawBootcPipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/missing-boot")
 	rawBootcPipeline.SerializeStart(nil, []container.Spec{{Source: "foo"}}, nil, nil)
@@ -96,8 +105,12 @@ func findMountIdx(mounts []osbuild.Mount, mntType string) int {
 func makeFakeRawBootcPipeline() *manifest.RawBootcImage {
 	mani := manifest.New()
 	runner := &runner.Linux{}
+	pf := &platform.X86{
+		BasePlatform: platform.BasePlatform{},
+		UEFIVendor:   "test",
+	}
 	build := manifest.NewBuildFromContainer(&mani, runner, nil, nil)
-	rawBootcPipeline := manifest.NewRawBootcImage(build, nil, nil)
+	rawBootcPipeline := manifest.NewRawBootcImage(build, nil, pf)
 	rawBootcPipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi")
 	rawBootcPipeline.SerializeStart(nil, []container.Spec{{Source: "foo"}}, nil, nil)
 

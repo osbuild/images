@@ -9,6 +9,7 @@ import (
 
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/osbuild"
+	"github.com/osbuild/images/pkg/platform"
 )
 
 func makeFakeContainerInputs() osbuild.ContainerDeployInputs {
@@ -28,6 +29,10 @@ func TestBootcInstallToFilesystemStageNewHappy(t *testing.T) {
 	devices := makeOsbuildDevices("dev-for-/", "dev-for-/boot", "dev-for-/boot/efi")
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
 	inputs := makeFakeContainerInputs()
+	pf := &platform.X86{
+		BasePlatform: platform.BasePlatform{},
+		UEFIVendor:   "test",
+	}
 
 	expectedStage := &osbuild.Stage{
 		Type:    "org.osbuild.bootc.install-to-filesystem",
@@ -36,7 +41,7 @@ func TestBootcInstallToFilesystemStageNewHappy(t *testing.T) {
 		Devices: devices,
 		Mounts:  mounts,
 	}
-	stage, err := osbuild.NewBootcInstallToFilesystemStage(nil, inputs, devices, mounts)
+	stage, err := osbuild.NewBootcInstallToFilesystemStage(nil, inputs, devices, mounts, pf)
 	require.Nil(t, err)
 	assert.Equal(t, stage, expectedStage)
 }
@@ -45,8 +50,12 @@ func TestBootcInstallToFilesystemStageNewNoContainers(t *testing.T) {
 	devices := makeOsbuildDevices("dev-for-/", "dev-for-/boot", "dev-for-/boot/efi")
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
 	inputs := osbuild.ContainerDeployInputs{}
+	pf := &platform.X86{
+		BasePlatform: platform.BasePlatform{},
+		UEFIVendor:   "test",
+	}
 
-	_, err := osbuild.NewBootcInstallToFilesystemStage(nil, inputs, devices, mounts)
+	_, err := osbuild.NewBootcInstallToFilesystemStage(nil, inputs, devices, mounts, pf)
 	assert.EqualError(t, err, "expected exactly one container input but got: 0 (map[])")
 }
 
@@ -61,8 +70,12 @@ func TestBootcInstallToFilesystemStageNewTwoContainers(t *testing.T) {
 			},
 		},
 	}
+	pf := &platform.X86{
+		BasePlatform: platform.BasePlatform{},
+		UEFIVendor:   "test",
+	}
 
-	_, err := osbuild.NewBootcInstallToFilesystemStage(nil, inputs, devices, mounts)
+	_, err := osbuild.NewBootcInstallToFilesystemStage(nil, inputs, devices, mounts, pf)
 	assert.EqualError(t, err, "expected exactly one container input but got: 2 (map[1:{} 2:{}])")
 }
 
@@ -70,8 +83,12 @@ func TestBootcInstallToFilesystemStageMissingMounts(t *testing.T) {
 	devices := makeOsbuildDevices("dev-for-/")
 	mounts := makeOsbuildMounts("/")
 	inputs := makeFakeContainerInputs()
+	pf := &platform.X86{
+		BasePlatform: platform.BasePlatform{},
+		UEFIVendor:   "test",
+	}
 
-	stage, err := osbuild.NewBootcInstallToFilesystemStage(nil, inputs, devices, mounts)
+	stage, err := osbuild.NewBootcInstallToFilesystemStage(nil, inputs, devices, mounts, pf)
 	// XXX: rename error
 	assert.ErrorContains(t, err, "required mounts for bootupd stage [/boot /boot/efi] missing")
 	require.Nil(t, stage)
@@ -81,11 +98,15 @@ func TestBootcInstallToFilesystemStageJsonHappy(t *testing.T) {
 	devices := makeOsbuildDevices("disk", "dev-for-/", "dev-for-/boot", "dev-for-/boot/efi")
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
 	inputs := makeFakeContainerInputs()
+	pf := &platform.X86{
+		BasePlatform: platform.BasePlatform{},
+		UEFIVendor:   "test",
+	}
 
 	opts := &osbuild.BootcInstallToFilesystemOptions{
 		TargetImgref: "quay.io/centos-bootc/centos-bootc-dev:stream9",
 	}
-	stage, err := osbuild.NewBootcInstallToFilesystemStage(opts, inputs, devices, mounts)
+	stage, err := osbuild.NewBootcInstallToFilesystemStage(opts, inputs, devices, mounts, pf)
 	require.Nil(t, err)
 	stageJson, err := json.MarshalIndent(stage, "", "  ")
 	require.Nil(t, err)

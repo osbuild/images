@@ -10,6 +10,7 @@ import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/osbuild"
+	"github.com/osbuild/images/pkg/platform"
 )
 
 func makeOsbuildMounts(targets ...string) []osbuild.Mount {
@@ -41,6 +42,10 @@ func TestBootupdStageNewHappy(t *testing.T) {
 	}
 	devices := makeOsbuildDevices("dev-for-/", "dev-for-/boot", "dev-for-/boot/efi")
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
+	pf := &platform.X86{
+		BasePlatform: platform.BasePlatform{},
+		UEFIVendor:   "test",
+	}
 
 	expectedStage := &osbuild.Stage{
 		Type:    "org.osbuild.bootupd",
@@ -48,7 +53,7 @@ func TestBootupdStageNewHappy(t *testing.T) {
 		Devices: devices,
 		Mounts:  mounts,
 	}
-	stage, err := osbuild.NewBootupdStage(opts, devices, mounts)
+	stage, err := osbuild.NewBootupdStage(opts, devices, mounts, pf)
 	require.Nil(t, err)
 	assert.Equal(t, stage, expectedStage)
 }
@@ -59,8 +64,12 @@ func TestBootupdStageMissingMounts(t *testing.T) {
 	}
 	devices := makeOsbuildDevices("dev-for-/")
 	mounts := makeOsbuildMounts("/")
+	pf := &platform.X86{
+		BasePlatform: platform.BasePlatform{},
+		UEFIVendor:   "test",
+	}
 
-	stage, err := osbuild.NewBootupdStage(opts, devices, mounts)
+	stage, err := osbuild.NewBootupdStage(opts, devices, mounts, pf)
 	assert.ErrorContains(t, err, "required mounts for bootupd stage [/boot /boot/efi] missing")
 	require.Nil(t, stage)
 }
@@ -73,8 +82,12 @@ func TestBootupdStageMissingDevice(t *testing.T) {
 	}
 	devices := makeOsbuildDevices("dev-for-/", "dev-for-/boot", "dev-for-/boot/efi")
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
+	pf := &platform.X86{
+		BasePlatform: platform.BasePlatform{},
+		UEFIVendor:   "test",
+	}
 
-	stage, err := osbuild.NewBootupdStage(opts, devices, mounts)
+	stage, err := osbuild.NewBootupdStage(opts, devices, mounts, pf)
 	assert.ErrorContains(t, err, `cannot find expected device "disk" for bootupd bios option in [dev-for-/ dev-for-/boot dev-for-/boot/efi]`)
 	require.Nil(t, stage)
 }
@@ -92,8 +105,12 @@ func TestBootupdStageJsonHappy(t *testing.T) {
 	}
 	devices := makeOsbuildDevices("disk", "dev-for-/", "dev-for-/boot", "dev-for-/boot/efi")
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
+	pf := &platform.X86{
+		BasePlatform: platform.BasePlatform{},
+		UEFIVendor:   "test",
+	}
 
-	stage, err := osbuild.NewBootupdStage(opts, devices, mounts)
+	stage, err := osbuild.NewBootupdStage(opts, devices, mounts, pf)
 	require.Nil(t, err)
 	stageJson, err := json.MarshalIndent(stage, "", "  ")
 	require.Nil(t, err)
@@ -149,7 +166,11 @@ func TestBootupdStageJsonHappy(t *testing.T) {
 func TestGenBootupdDevicesMountsMissingRoot(t *testing.T) {
 	filename := "fake-disk.img"
 	pt := &disk.PartitionTable{}
-	_, _, err := osbuild.GenBootupdDevicesMounts(filename, pt)
+	pf := &platform.X86{
+		BasePlatform: platform.BasePlatform{},
+		UEFIVendor:   "test",
+	}
+	_, _, err := osbuild.GenBootupdDevicesMounts(filename, pt, pf)
 	assert.EqualError(t, err, "required mounts for bootupd stage [/ /boot /boot/efi] missing")
 }
 
@@ -162,7 +183,11 @@ func TestGenBootupdDevicesMountsUnexpectedEntity(t *testing.T) {
 			},
 		},
 	}
-	_, _, err := osbuild.GenBootupdDevicesMounts(filename, pt)
+	pf := &platform.X86{
+		BasePlatform: platform.BasePlatform{},
+		UEFIVendor:   "test",
+	}
+	_, _, err := osbuild.GenBootupdDevicesMounts(filename, pt, pf)
 	assert.EqualError(t, err, "type *disk.LVMVolumeGroup not supported by bootupd handling yet")
 }
 
@@ -221,8 +246,12 @@ var fakePt = &disk.PartitionTable{
 
 func TestGenBootupdDevicesMountsHappy(t *testing.T) {
 	filename := "fake-disk.img"
+	pf := &platform.X86{
+		BasePlatform: platform.BasePlatform{},
+		UEFIVendor:   "test",
+	}
 
-	devices, mounts, err := osbuild.GenBootupdDevicesMounts(filename, fakePt)
+	devices, mounts, err := osbuild.GenBootupdDevicesMounts(filename, fakePt, pf)
 	require.Nil(t, err)
 	assert.Equal(t, devices, map[string]osbuild.Device{
 		"disk": {
