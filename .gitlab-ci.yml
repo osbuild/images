@@ -23,11 +23,13 @@ init:
 
 check-build-coverage:
   stage: verify
-  image: fedora:latest
+  extends: .terraform
   variables:
+    RUNNER: aws/fedora-40-x86_64
+    INTERNAL_NETWORK: "true"
     PYTHONUNBUFFERED: 1
   script:
-    - ./test/scripts/install-dependencies
+    - sudo ./test/scripts/install-dependencies
     - ./test/scripts/check-build-coverage ./s3configs/
   cache:
     key: testcache
