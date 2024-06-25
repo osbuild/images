@@ -76,11 +76,6 @@ func (img *AnacondaContainerInstaller) InstantiateManifest(m *manifest.Manifest,
 	anacondaPipeline.ExtraPackages = img.ExtraBasePackages.Include
 	anacondaPipeline.ExcludePackages = img.ExtraBasePackages.Exclude
 	anacondaPipeline.ExtraRepos = img.ExtraBasePackages.Repositories
-	anacondaPipeline.InteractiveDefaultsKickstart = &kickstart.Options{
-		Users:  img.Kickstart.Users,
-		Groups: img.Kickstart.Groups,
-		Path:   osbuild.KickstartPathOSBuild,
-	}
 	anacondaPipeline.Variant = img.Variant
 	anacondaPipeline.Biosdevname = (img.Platform.GetArch() == arch.ARCH_X86_64)
 	anacondaPipeline.Checkpoint()
