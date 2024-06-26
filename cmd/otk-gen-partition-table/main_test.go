@@ -650,3 +650,13 @@ func TestGenPartitionTableModificationFilename(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, expectedOutput, output)
 }
+
+func TestGenPartitionTableValidates(t *testing.T) {
+	inp := &genpart.Input{
+		Properties: genpart.InputProperties{
+			Type: "invalid-type",
+		},
+	}
+	_, err := genpart.GenPartitionTable(inp, rand.New(rand.NewSource(0)))
+	assert.EqualError(t, err, `cannot validate inputs: unsupported partition type "invalid-type"`)
+}
