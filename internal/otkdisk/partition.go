@@ -1,6 +1,10 @@
 package otkdisk
 
 import (
+	"fmt"
+
+	"golang.org/x/exp/slices"
+
 	"github.com/osbuild/images/pkg/disk"
 )
 
@@ -39,4 +43,20 @@ type Partition struct {
 
 type Internal struct {
 	PartitionTable *disk.PartitionTable `json:"partition-table"`
+}
+
+// PartType represents a partition type
+type PartType string
+
+const (
+	PartTypeUnset PartType = ""
+	PartTypeGPT   PartType = "gpt"
+	PartTypeDOS   PartType = "dos"
+)
+
+func (p PartType) Validate() error {
+	if !slices.Contains([]PartType{PartTypeGPT, PartTypeDOS}, p) {
+		return fmt.Errorf("unsupported partition type %q", p)
+	}
+	return nil
 }
