@@ -119,7 +119,7 @@
     },
     {
       "name": "google-compute-engine",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/el8/el8-x86_64-google-compute-engine-20240515",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/el8/el8-x86_64-google-compute-engine-20240522",
       "check_gpg": false,
       "image_type_tags": [
         "gce",
@@ -128,7 +128,7 @@
     },
     {
       "name": "google-cloud-sdk",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/el8/el8-x86_64-google-cloud-sdk-20240515",
+      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/el8/el8-x86_64-google-cloud-sdk-20240522",
       "check_gpg": false,
       "image_type_tags": [
         "gce",
