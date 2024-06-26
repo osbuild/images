@@ -24,11 +24,11 @@ type Input struct {
 }
 
 type InputProperties struct {
-	UEFI        InputUEFI `json:"uefi"`
-	BIOS        bool      `json:"bios"`
-	Type        string    `json:"type"`
-	DefaultSize string    `json:"default_size"`
-	UUID        string    `json:"uuid"`
+	UEFI        InputUEFI        `json:"uefi"`
+	BIOS        bool             `json:"bios"`
+	Type        otkdisk.PartType `json:"type"`
+	DefaultSize string           `json:"default_size"`
+	UUID        string           `json:"uuid"`
 
 	SectorSize uint64 `json:"sector_size"`
 }
@@ -84,10 +84,22 @@ func makePartMap(pt *disk.PartitionTable) map[string]otkdisk.Partition {
 	return pm
 }
 
+func validateInput(input *Input) error {
+	// TODO: validate more
+	if err := input.Properties.Type.Validate(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func makePartitionTableFromOtkInput(input *Input) (*disk.PartitionTable, error) {
+	if err := validateInput(input); err != nil {
+		return nil, fmt.Errorf("cannot validate inputs: %w", err)
+	}
+
 	pt := &disk.PartitionTable{
 		UUID:       input.Properties.UUID,
-		Type:       input.Properties.Type,
+		Type:       string(input.Properties.Type),
 		SectorSize: input.Properties.SectorSize,
 	}
 	if input.Properties.BIOS {
