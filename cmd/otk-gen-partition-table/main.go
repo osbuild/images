@@ -48,7 +48,8 @@ type InputPartition struct {
 	Label      string `json:"label"`
 	Size       string `json:"size"`
 	Type       string `json:"type"`
-	UUID       string `json:"uuid"`
+	PartUUID   string `json:"part_uuid"`
+	FsUUID     string `json:"fs_uuid"`
 	FSMntOps   string `json:"fs_mntops"`
 	FSFreq     uint64 `json:"fs_freq"`
 	FSPassNo   uint64 `json:"fs_passno"`
@@ -152,12 +153,13 @@ func makePartitionTableFromOtkInput(input *Input) (*disk.PartitionTable, error) 
 		}
 		pt.Partitions = append(pt.Partitions, disk.Partition{
 			Size: uintSize,
+			UUID: part.PartUUID,
 			// XXX: support lvm,luks here
 			Payload: &disk.Filesystem{
 				Label:        part.Label,
 				Type:         part.Type,
-				UUID:         part.UUID,
 				Mountpoint:   part.Mountpoint,
+				UUID:         part.FsUUID,
 				FSTabOptions: part.FSMntOps,
 				FSTabFreq:    part.FSFreq,
 				FSTabPassNo:  part.FSPassNo,
