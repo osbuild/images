@@ -15,6 +15,9 @@ type Data struct {
 	Const Const `json:"const"`
 }
 
+// Const contains partition table data that is considered "constant",
+// i.e.  that should not be modified by the consumer as there may be
+// inter-dependencies between the values
 type Const struct {
 	KernelOptsList []string `json:"kernel_opts_list"`
 
@@ -25,7 +28,7 @@ type Const struct {
 
 	// Internal representation of the full partition table. The representation
 	// is internal to the partition tools and should not be used by otk
-	// directly. It makes noo external API guarantees about the content or
+	// directly. It makes no external API guarantees about the content or
 	// structure.
 	Internal Internal `json:"internal"`
 
@@ -41,6 +44,10 @@ type Partition struct {
 	UUID string `json:"uuid"`
 }
 
+// Interal contains partition table data that is stricly internal and
+// may change in non-backward compatible ways. No "otk" manifest
+// should ever use this directly, it's strictly meant for the
+// "otk-{gen,make}-*" tools for their data exchange.
 type Internal struct {
 	PartitionTable *disk.PartitionTable `json:"partition-table"`
 }
@@ -54,6 +61,7 @@ const (
 	PartTypeDOS   PartType = "dos"
 )
 
+// Validate validates that the given PartType is valid
 func (p PartType) Validate() error {
 	if !slices.Contains([]PartType{PartTypeGPT, PartTypeDOS}, p) {
 		return fmt.Errorf("unsupported partition type %q", p)

@@ -16,6 +16,8 @@ import (
 	"github.com/osbuild/images/pkg/osbuild"
 )
 
+// Input represents the user provided inputs that will be used
+// to generate the partition table
 type Input struct {
 	Properties InputProperties   `json:"properties"`
 	Partitions []*InputPartition `json:"partitions"`
@@ -23,6 +25,7 @@ type Input struct {
 	Modifications InputModifications `json:"modifications"`
 }
 
+// InputProperties contains global properties of the partition table
 type InputProperties struct {
 	UEFI        InputUEFI        `json:"uefi"`
 	BIOS        bool             `json:"bios"`
@@ -33,10 +36,12 @@ type InputProperties struct {
 	SectorSize uint64 `json:"sector_size"`
 }
 
+// InputUEFI contains the uefi specific bits of the partition input
 type InputUEFI struct {
 	Size string `json:"size"`
 }
 
+// InputPartition represents a single user provided partition input
 type InputPartition struct {
 	Name       string `json:"name"`
 	Mountpoint string `json:"mountpoint"`
@@ -51,6 +56,8 @@ type InputPartition struct {
 	// TODO: add sectorlvm,luks, see https://github.com/achilleas-k/images/pull/2#issuecomment-2136025471
 }
 
+// InputModifications allow modifiying the partition generation to e.g.
+// increase the default disk size
 type InputModifications struct {
 	PartitionMode disk.PartitioningMode               `json:"partition_mode"`
 	Filesystems   []blueprint.FilesystemCustomization `json:"filesystems"`
@@ -58,6 +65,8 @@ type InputModifications struct {
 	Filename      string                              `json:"filename"`
 }
 
+// Output contains a full description of a disk, this can be consumed
+// by other tools like otk-make-*
 type Output = otkdisk.Data
 
 func makePartMap(pt *disk.PartitionTable) map[string]otkdisk.Partition {
