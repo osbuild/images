@@ -104,7 +104,7 @@ func makePartitionTableFromOtkInput(input *Input) (*disk.PartitionTable, error) 
 	}
 	if input.Properties.BIOS {
 		if len(pt.Partitions) > 0 {
-			panic("internal error: bios partition *must* go first")
+			return nil, fmt.Errorf("internal error: bios partition *must* go first")
 		}
 		pt.Partitions = append(pt.Partitions, disk.Partition{
 			Size:     1 * common.MebiByte,
