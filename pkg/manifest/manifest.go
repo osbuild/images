@@ -68,16 +68,16 @@ type Manifest struct {
 	// pipelines describe the build process for an image.
 	pipelines []Pipeline
 
-	// Distro defines the distribution of the image that this manifest will
+	// distro defines the distribution of the image that this manifest will
 	// generate. It is used for determining package names that differ between
 	// different distributions and version.
-	Distro Distro
+	distro Distro
 }
 
-func New() Manifest {
+func New(d Distro) Manifest {
 	return Manifest{
 		pipelines: make([]Pipeline, 0),
-		Distro:    DISTRO_NULL,
+		distro:    d,
 	}
 }
 
@@ -104,7 +104,7 @@ func (m Manifest) GetPackageSetChains() map[string][]rpmmd.PackageSet {
 	chains := make(map[string][]rpmmd.PackageSet)
 
 	for _, pipeline := range m.pipelines {
-		if chain := pipeline.getPackageSetChain(m.Distro); chain != nil {
+		if chain := pipeline.getPackageSetChain(m.distro); chain != nil {
 			chains[pipeline.Name()] = chain
 		}
 	}

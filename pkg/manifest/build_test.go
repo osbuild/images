@@ -14,7 +14,7 @@ import (
 
 func TestBuildContainerBuildableNo(t *testing.T) {
 	repos := []rpmmd.RepoConfig{}
-	mf := New()
+	mf := New(DISTRO_FEDORA)
 	runner := &runner.Fedora{Version: 39}
 
 	buildIf := NewBuild(&mf, runner, repos, nil)
@@ -94,7 +94,7 @@ func TestNewBuildFromContainerSpecs(t *testing.T) {
 			Source: "ghcr.io/ondrejbudai/booc:fedora",
 		},
 	}
-	mf := New()
+	mf := New(DISTRO_FEDORA)
 	runner := &runner.Fedora{Version: 39}
 
 	buildIf := NewBuildFromContainer(&mf, runner, containers, nil)

@@ -225,7 +225,7 @@ func instantiateAndSerialize(t *testing.T, img image.ImageKind, packages map[str
 	/* #nosec G404 */
 	rng := rand.New(source)
 
-	mf := manifest.New()
+	mf := manifest.New(manifest.DISTRO_FEDORA)
 	_, err := img.InstantiateManifest(&mf, nil, &runner.CentOS{Version: 9}, rng)
 	assert.NoError(t, err)
 

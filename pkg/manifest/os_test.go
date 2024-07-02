@@ -17,7 +17,7 @@ import (
 // NewTestOS returns a minimally populated OS struct for use in testing
 func NewTestOS() *OS {
 	repos := []rpmmd.RepoConfig{}
-	manifest := New()
+	manifest := New(DISTRO_FEDORA)
 	runner := &runner.Fedora{Version: 38}
 	build := NewBuild(&manifest, runner, repos, nil)
 	build.Checkpoint()

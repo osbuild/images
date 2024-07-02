@@ -37,7 +37,7 @@ func TestOSTreeDiskImageManifestSetsContainerBuildable(t *testing.T) {
 	for _, containerBuildable := range []bool{true, false} {
 		buildOpts = nil
 
-		mf := manifest.New()
+		mf := manifest.New(manifest.DISTRO_FEDORA)
 		img := image.NewOSTreeDiskImageFromContainer(containerSource, ref)
 		require.NotNil(t, img)
 		img.Platform = &platform.X86{

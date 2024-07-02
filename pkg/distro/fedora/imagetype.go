@@ -255,8 +255,7 @@ func (t *imageType) Manifest(bp *blueprint.Blueprint,
 	if err != nil {
 		return nil, nil, err
 	}
-	mf := manifest.New()
-	mf.Distro = manifest.DISTRO_FEDORA
+	mf := manifest.New(manifest.DISTRO_FEDORA)
 	_, err = img.InstantiateManifest(&mf, repos, t.arch.distro.runner, rng)
 	if err != nil {
 		return nil, nil, err
