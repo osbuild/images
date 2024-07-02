@@ -133,10 +133,10 @@ func TestGenImagePrepareStages(t *testing.T) {
 			},
 			Mounts: []Mount{
 				{
-					Name:   "btrfs-6264",
-					Type:   "org.osbuild.btrfs",
-					Source: "btrfs-6264",
-					Target: "/",
+					Name:    "btrfs-6264",
+					Type:    "org.osbuild.btrfs",
+					Source:  "btrfs-6264",
+					Target:  "/",
 					Options: BtrfsMountOptions{},
 				},
 			},
