@@ -1,8 +1,9 @@
 package disk
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestBtrfsSubvolume_GetFSTabOptions(t *testing.T) {
@@ -19,4 +20,12 @@ func TestBtrfsSubvolume_GetFSTabOptions(t *testing.T) {
 
 		assert.Equal(t, FSTabOptions{MntOps: tc.expectedMntOpts}, actual)
 	}
+}
+
+func TestBtrfsSubvolume_GetFSTabOptionsPanics(t *testing.T) {
+	assert.PanicsWithError(t, `internal error: BtrfsSubvolume.GetFSTabOptions() for &{Name: Size:0 Mountpoint: GroupID:0 Compress: ReadOnly:false UUID:} called without a name`, func() {
+		subvol := &BtrfsSubvolume{}
+		subvol.GetFSTabOptions()
+	})
+
 }
