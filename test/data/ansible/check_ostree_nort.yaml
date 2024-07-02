@@ -85,7 +85,7 @@
     - name: check if it is simplified-installer or raw-image
       command: df -h
       register: result_df
-    
+
     - set_fact:
         device_name: /dev/vda4
       when: "'/dev/vda4' in result_df.stdout"

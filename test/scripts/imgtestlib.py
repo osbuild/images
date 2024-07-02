@@ -254,9 +254,9 @@ def check_for_build(manifest_fname, build_info_dir, errors):
             dl_config = json.load(build_info_fp)
     except json.JSONDecodeError as jd:
         errors.append((
-                f"failed to parse {build_info_path}\n"
-                f"{jd.msg}\n"
-                "  Adding config to build pipeline.\n"
+            f"failed to parse {build_info_path}\n"
+            f"{jd.msg}\n"
+            "  Adding config to build pipeline.\n"
         ))
 
     commit = dl_config["commit"]

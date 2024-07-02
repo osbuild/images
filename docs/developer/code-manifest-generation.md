@@ -19,7 +19,7 @@ Manifests are generated in two general stages: _Instantiation_ and _Serializatio
       stage-sequences.
 - Serialization: Creates the sequence of stages based on each pipeline and
   produces [`manifest.OSBuildManifest`][godoc-manifest-osbuildmanifest], which
-  is a `[]byte` array with custom un/marshalling methods.
+  is a `[]byte` array with custom unmarshalling/marshalling methods.
   - This stage requires the content specifications resolved from the manifest
     source specifications (package specs, container specs, ostree commit
     specs). See [Resolving Content](#resolving-content).

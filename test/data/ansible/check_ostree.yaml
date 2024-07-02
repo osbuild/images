@@ -748,7 +748,7 @@
       command: journalctl -u fdo-client-linuxapp
       register: result_fdo_client_linuxapp_journalctl
 
-    - debug: 
+    - debug:
         var: result_fdo_client_linuxapp_journalctl
 
     # case: check rollback function if boot error found
@@ -844,7 +844,7 @@
       command: journalctl -u fdo-client-linuxapp
       register: result_fdo_client_linuxapp_journalctl
 
-    - debug: 
+    - debug:
         var: result_fdo_client_linuxapp_journalctl
 
     - name: wait for FDO re-encryption
@@ -867,7 +867,7 @@
       command: journalctl -u fdo-client-linuxapp
       register: result_fdo_client_linuxapp_journalctl
 
-    - debug: 
+    - debug:
         var: result_fdo_client_linuxapp_journalctl
 
     # case: check greenboot* services log again

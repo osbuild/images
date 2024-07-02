@@ -2,7 +2,7 @@
 
 The following utilities, defined in the `cmd/` directory, are useful for
 development and testing. They **should not** be relied on for production
-purposes. In particular, command line options and default behaviour can change
+purposes. In particular, command line options and default behavior can change
 at any time.
 
 The following are high level descriptions of what some of the utilities can do
