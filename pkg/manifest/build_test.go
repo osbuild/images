@@ -17,7 +17,7 @@ func TestBuildContainerBuildableNo(t *testing.T) {
 	mf := New(DISTRO_FEDORA)
 	runner := &runner.Fedora{Version: 39}
 
-	buildIf := NewBuild(&mf, runner, repos, nil)
+	buildIf := NewBuild(mf, runner, repos, nil)
 	build := buildIf.(*BuildrootFromPackages)
 	require.NotNil(t, build)
 
@@ -97,7 +97,7 @@ func TestNewBuildFromContainerSpecs(t *testing.T) {
 	mf := New(DISTRO_FEDORA)
 	runner := &runner.Fedora{Version: 39}
 
-	buildIf := NewBuildFromContainer(&mf, runner, containers, nil)
+	buildIf := NewBuildFromContainer(mf, runner, containers, nil)
 	require.NotNil(t, buildIf)
 	build := buildIf.(*BuildrootFromContainer)
 

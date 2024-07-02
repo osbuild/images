@@ -63,7 +63,17 @@ func (m *OSBuildManifest) UnmarshalJSON(payload []byte) error {
 // (PackageSetChains, ContainerSourceSpecs, OSTreeSourceSpecs) must be
 // retrieved through their corresponding Getters and resolved before
 // serializing.
-type Manifest struct {
+type Manifest interface {
+	addPipeline(p Pipeline)
+	GetPackageSetChains() map[string][]rpmmd.PackageSet
+	GetContainerSourceSpecs() map[string][]container.SourceSpec
+	GetOSTreeSourceSpecs() map[string][]ostree.SourceSpec
+	Serialize(packageSets map[string][]rpmmd.PackageSpec, containerSpecs map[string][]container.Spec, ostreeCommits map[string][]ostree.CommitSpec, rpmRepos map[string][]rpmmd.RepoConfig) (OSBuildManifest, error)
+	GetCheckpoints() []string
+	GetExports() []string
+}
+
+type IntManifest struct {
 
 	// pipelines describe the build process for an image.
 	pipelines []Pipeline
@@ -74,14 +84,14 @@ type Manifest struct {
 	distro Distro
 }
 
-func New(d Distro) Manifest {
-	return Manifest{
+func New(d Distro) *IntManifest {
+	return &IntManifest{
 		pipelines: make([]Pipeline, 0),
 		distro:    d,
 	}
 }
 
-func (m *Manifest) addPipeline(p Pipeline) {
+func (m *IntManifest) addPipeline(p Pipeline) {
 	for _, pipeline := range m.pipelines {
 		if pipeline.Name() == p.Name() {
 			panic("duplicate pipeline name in manifest")
@@ -100,7 +110,7 @@ func (m *Manifest) addPipeline(p Pipeline) {
 
 type PackageSelector func([]rpmmd.PackageSet) []rpmmd.PackageSet
 
-func (m Manifest) GetPackageSetChains() map[string][]rpmmd.PackageSet {
+func (m IntManifest) GetPackageSetChains() map[string][]rpmmd.PackageSet {
 	chains := make(map[string][]rpmmd.PackageSet)
 
 	for _, pipeline := range m.pipelines {
@@ -112,7 +122,7 @@ func (m Manifest) GetPackageSetChains() map[string][]rpmmd.PackageSet {
 	return chains
 }
 
-func (m Manifest) GetContainerSourceSpecs() map[string][]container.SourceSpec {
+func (m IntManifest) GetContainerSourceSpecs() map[string][]container.SourceSpec {
 	// Containers should only appear in the payload pipeline.
 	// Let's iterate over all pipelines to avoid assuming pipeline names, but
 	// return all the specs as a single slice.
@@ -125,7 +135,7 @@ func (m Manifest) GetContainerSourceSpecs() map[string][]container.SourceSpec {
 	return containerSpecs
 }
 
-func (m Manifest) GetOSTreeSourceSpecs() map[string][]ostree.SourceSpec {
+func (m IntManifest) GetOSTreeSourceSpecs() map[string][]ostree.SourceSpec {
 	// OSTree commits should only appear in one pipeline.
 	// Let's iterate over all pipelines to avoid assuming pipeline names, but
 	// return all the specs as a single slice if there are multiple.
@@ -138,7 +148,7 @@ func (m Manifest) GetOSTreeSourceSpecs() map[string][]ostree.SourceSpec {
 	return ostreeSpecs
 }
 
-func (m Manifest) Serialize(packageSets map[string][]rpmmd.PackageSpec, containerSpecs map[string][]container.Spec, ostreeCommits map[string][]ostree.CommitSpec, rpmRepos map[string][]rpmmd.RepoConfig) (OSBuildManifest, error) {
+func (m IntManifest) Serialize(packageSets map[string][]rpmmd.PackageSpec, containerSpecs map[string][]container.Spec, ostreeCommits map[string][]ostree.CommitSpec, rpmRepos map[string][]rpmmd.RepoConfig) (OSBuildManifest, error) {
 	pipelines := make([]osbuild.Pipeline, 0)
 	packages := make([]rpmmd.PackageSpec, 0)
 	commits := make([]ostree.CommitSpec, 0)
@@ -172,7 +182,7 @@ func (m Manifest) Serialize(packageSets map[string][]rpmmd.PackageSpec, containe
 	)
 }
 
-func (m Manifest) GetCheckpoints() []string {
+func (m IntManifest) GetCheckpoints() []string {
 	checkpoints := []string{}
 	for _, p := range m.pipelines {
 		if p.getCheckpoint() {
@@ -182,7 +192,7 @@ func (m Manifest) GetCheckpoints() []string {
 	return checkpoints
 }
 
-func (m Manifest) GetExports() []string {
+func (m IntManifest) GetExports() []string {
 	exports := []string{}
 	for _, p := range m.pipelines {
 		if p.getExport() {

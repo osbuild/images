@@ -29,7 +29,7 @@ func RunPlayground(img image.ImageKind, d distro.Distro, arch distro.Arch, repos
 	rnd := rand.New(rand.NewSource(0))
 
 	// TODO: query distro for runner
-	artifact, err := img.InstantiateManifest(&manifest, repos[arch.Name()], &runner.Fedora{Version: 36}, rnd)
+	artifact, err := img.InstantiateManifest(manifest, repos[arch.Name()], &runner.Fedora{Version: 36}, rnd)
 	if err != nil {
 		panic("InstantiateManifest() failed: " + err.Error())
 	}

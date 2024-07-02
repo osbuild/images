@@ -39,7 +39,7 @@ func init() {
 // Return nil when you are done, or an error if something
 // went wrong. Your manifest will be streamed to osbuild
 // for building.
-func (img *MyContainer) InstantiateManifest(m *manifest.Manifest,
+func (img *MyContainer) InstantiateManifest(m manifest.Manifest,
 	repos []rpmmd.RepoConfig,
 	runner runner.Runner,
 	rng *rand.Rand) (*artifact.Artifact, error) {
