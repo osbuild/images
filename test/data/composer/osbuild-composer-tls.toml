@@ -1,7 +1,0 @@
-[koji]
-allowed_domains = [ "localhost", "client.osbuild.org" ]
-ca = "/etc/osbuild-composer/ca-crt.pem"
-
-[worker]
-allowed_domains = [ "localhost", "worker.osbuild.org" ]
-ca = "/etc/osbuild-composer/ca-crt.pem"
