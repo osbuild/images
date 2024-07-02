@@ -1,3 +1,0 @@
-[koji.localhost.kerberos]
-principal = "osbuild-krb@LOCAL"
-keytab = "/etc/osbuild-worker/client.keytab"
