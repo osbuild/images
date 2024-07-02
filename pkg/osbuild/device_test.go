@@ -254,19 +254,19 @@ func TestMountsDeviceFromBrfs(t *testing.T) {
 
 func Test_deviceName(t *testing.T) {
 	tests := []struct {
-		e    disk.Entity
-		name string
+		e            disk.Entity
+		expectedName string
 	}{
-		{e: &disk.Filesystem{Mountpoint: "/toucan"}, name: "toucan"},
-		{e: &disk.BtrfsSubvolume{Mountpoint: "/ostrich"}, name: "ostrich"},
-		{e: &disk.LUKSContainer{UUID: "fb180daf-48a7-4ee0-b10d-394651850fd4"}, name: "luks-fb18"},
-		{e: &disk.LVMVolumeGroup{Name: "vg-main"}, name: "vg-main"},
-		{e: &disk.LVMLogicalVolume{Name: "lv-main"}, name: "lv-main"},
-		{e: &disk.Btrfs{UUID: "fb180daf-48a7-4ee0-b10d-394651850fd4"}, name: "btrfs-fb18"},
+		{&disk.Filesystem{Mountpoint: "/toucan"}, "toucan"},
+		{&disk.BtrfsSubvolume{Mountpoint: "/ostrich"}, "ostrich"},
+		{&disk.LUKSContainer{UUID: "fb180daf-48a7-4ee0-b10d-394651850fd4"}, "luks-fb18"},
+		{&disk.LVMVolumeGroup{Name: "vg-main"}, "vg-main"},
+		{&disk.LVMLogicalVolume{Name: "lv-main"}, "lv-main"},
+		{&disk.Btrfs{UUID: "fb180daf-48a7-4ee0-b10d-394651850fd4"}, "btrfs-fb18"},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.name, deviceName(tt.e))
+		t.Run(tt.expectedName, func(t *testing.T) {
+			assert.Equal(t, tt.expectedName, deviceName(tt.e))
 		})
 	}
 }

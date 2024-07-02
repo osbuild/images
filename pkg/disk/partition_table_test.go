@@ -42,6 +42,7 @@ func TestPartitionTable_GenerateUUIDs(t *testing.T) {
 				Size: 2 * common.GibiByte,
 				Type: disk.FilesystemDataGUID,
 				Payload: &disk.Filesystem{
+					// create mixed xfs root filesystem and a btrfs /var partition
 					Type:         "xfs",
 					Label:        "root",
 					Mountpoint:   "/",
