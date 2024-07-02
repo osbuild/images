@@ -30,7 +30,7 @@ type ContentTest struct {
 
 // NewContentTest creates a new ContentTest pipeline with a given name and
 // content sources.
-func NewContentTest(m *Manifest, name string, packageSets []rpmmd.PackageSet, containers []container.SourceSpec, commits []ostree.SourceSpec) *ContentTest {
+func NewContentTest(m Manifest, name string, packageSets []rpmmd.PackageSet, containers []container.SourceSpec, commits []ostree.SourceSpec) *ContentTest {
 	pipeline := &ContentTest{
 		Base:        NewBase(name, nil),
 		packageSets: packageSets,

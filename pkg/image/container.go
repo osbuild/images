@@ -27,7 +27,7 @@ func NewBaseContainer() *BaseContainer {
 	}
 }
 
-func (img *BaseContainer) InstantiateManifest(m *manifest.Manifest,
+func (img *BaseContainer) InstantiateManifest(m manifest.Manifest,
 	repos []rpmmd.RepoConfig,
 	runner runner.Runner,
 	rng *rand.Rand) (*artifact.Artifact, error) {

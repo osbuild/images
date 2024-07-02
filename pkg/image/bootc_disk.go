@@ -43,7 +43,7 @@ func NewBootcDiskImage(container container.SourceSpec) *BootcDiskImage {
 	}
 }
 
-func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifest,
+func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.IntManifest,
 	containers []container.SourceSpec,
 	runner runner.Runner,
 	rng *rand.Rand) error {

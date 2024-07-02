@@ -41,7 +41,7 @@ func NewAnacondaLiveInstaller() *AnacondaLiveInstaller {
 	}
 }
 
-func (img *AnacondaLiveInstaller) InstantiateManifest(m *manifest.Manifest,
+func (img *AnacondaLiveInstaller) InstantiateManifest(m manifest.Manifest,
 	repos []rpmmd.RepoConfig,
 	runner runner.Runner,
 	rng *rand.Rand) (*artifact.Artifact, error) {

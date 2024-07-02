@@ -227,7 +227,7 @@ func instantiateAndSerialize(t *testing.T, img image.ImageKind, packages map[str
 	rng := rand.New(source)
 
 	mf := manifest.New(manifest.DISTRO_FEDORA)
-	_, err := img.InstantiateManifest(&mf, nil, &runner.CentOS{Version: 9}, rng)
+	_, err := img.InstantiateManifest(mf, nil, &runner.CentOS{Version: 9}, rng)
 	assert.NoError(t, err)
 
 	mfs, err := mf.Serialize(packages, containers, commits, nil)

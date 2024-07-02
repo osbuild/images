@@ -29,7 +29,7 @@ func NewBootcLegacyDiskImage(real *BootcDiskImage) *BootcLegacyDiskImage {
 	}
 }
 
-func (img *BootcLegacyDiskImage) InstantiateManifestFromContainers(m *manifest.Manifest,
+func (img *BootcLegacyDiskImage) InstantiateManifestFromContainers(m manifest.Manifest,
 	containers []container.SourceSpec,
 	runner runner.Runner,
 	rng *rand.Rand) error {

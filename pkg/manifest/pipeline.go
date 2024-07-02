@@ -28,9 +28,9 @@ type Pipeline interface {
 	BuildPipeline() Build
 
 	// Manifest returns a reference to the Manifest which this Pipeline belongs to.
-	Manifest() *Manifest
+	Manifest() Manifest
 
-	setManifest(*Manifest)
+	setManifest(Manifest)
 
 	getCheckpoint() bool
 
@@ -74,7 +74,7 @@ type Pipeline interface {
 // A Base represents the core functionality shared between each of the pipeline
 // implementations, and the Base struct must be embedded in each of them.
 type Base struct {
-	manifest   *Manifest
+	manifest   Manifest
 	name       string
 	build      Build
 	checkpoint bool
@@ -108,11 +108,11 @@ func (p Base) BuildPipeline() Build {
 	return p.build
 }
 
-func (p Base) Manifest() *Manifest {
+func (p Base) Manifest() Manifest {
 	return p.manifest
 }
 
-func (p *Base) setManifest(m *Manifest) {
+func (p *Base) setManifest(m Manifest) {
 	p.manifest = m
 }
 
@@ -190,7 +190,7 @@ func (p Base) serialize() osbuild.Pipeline {
 // TreePipeline is any pipeline that produces a directory tree.
 type TreePipeline interface {
 	Name() string
-	Manifest() *Manifest
+	Manifest() Manifest
 	BuildPipeline() Build
 	Platform() platform.Platform
 }

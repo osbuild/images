@@ -69,7 +69,7 @@ func NewOSTreeSimplifiedInstaller(rawImage *OSTreeDiskImage, installDevice strin
 	}
 }
 
-func (img *OSTreeSimplifiedInstaller) InstantiateManifest(m *manifest.Manifest,
+func (img *OSTreeSimplifiedInstaller) InstantiateManifest(m manifest.Manifest,
 	repos []rpmmd.RepoConfig,
 	runner runner.Runner,
 	rng *rand.Rand) (*artifact.Artifact, error) {

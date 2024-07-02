@@ -23,7 +23,7 @@ func init() {
 	AddImageType(&MyImage{})
 }
 
-func (img *MyImage) InstantiateManifest(m *manifest.Manifest,
+func (img *MyImage) InstantiateManifest(m manifest.Manifest,
 	repos []rpmmd.RepoConfig,
 	runner runner.Runner,
 	rng *rand.Rand) (*artifact.Artifact, error) {

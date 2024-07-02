@@ -78,7 +78,7 @@ func makeBootcDiskImageOsbuildManifest(t *testing.T, opts *bootcDiskImageTestOpt
 	img.Groups = opts.Groups
 	img.SELinux = opts.SELinux
 
-	m := &manifest.Manifest{}
+	m := &manifest.IntManifest{}
 	runi := &runner.Fedora{}
 	err := img.InstantiateManifestFromContainers(m, containers, runi, nil)
 	require.Nil(t, err)

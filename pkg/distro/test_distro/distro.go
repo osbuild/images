@@ -236,7 +236,7 @@ func (t *TestImageType) Exports() []string {
 	return distro.ExportsFallback()
 }
 
-func (t *TestImageType) Manifest(b *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, seed int64) (*manifest.Manifest, []string, error) {
+func (t *TestImageType) Manifest(b *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, seed int64) (manifest.Manifest, []string, error) {
 	var bpPkgs []string
 	if b != nil {
 		mountpoints := b.Customizations.GetFilesystems()
@@ -297,7 +297,7 @@ func (t *TestImageType) Manifest(b *blueprint.Blueprint, options distro.ImageOpt
 		},
 	}
 
-	m := &manifest.Manifest{}
+	m := manifest.New(manifest.DISTRO_NULL)
 
 	manifest.NewContentTest(m, buildPkgsKey, buildPackages, nil, nil)
 	manifest.NewContentTest(m, osPkgsKey, osPackages, nil, ostreeSources)

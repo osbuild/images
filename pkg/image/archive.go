@@ -27,7 +27,7 @@ func NewArchive() *Archive {
 	}
 }
 
-func (img *Archive) InstantiateManifest(m *manifest.Manifest,
+func (img *Archive) InstantiateManifest(m manifest.Manifest,
 	repos []rpmmd.RepoConfig,
 	runner runner.Runner,
 	rng *rand.Rand) (*artifact.Artifact, error) {

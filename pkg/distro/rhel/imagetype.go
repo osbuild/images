@@ -231,7 +231,7 @@ func (t *ImageType) PartitionType() string {
 func (t *ImageType) Manifest(bp *blueprint.Blueprint,
 	options distro.ImageOptions,
 	repos []rpmmd.RepoConfig,
-	seed int64) (*manifest.Manifest, []string, error) {
+	seed int64) (manifest.Manifest, []string, error) {
 
 	if t.Workload != nil {
 		// For now, if an image type defines its own workload, don't allow any
@@ -322,12 +322,12 @@ func (t *ImageType) Manifest(bp *blueprint.Blueprint,
 		return nil, nil, fmt.Errorf("unsupported distro release version: %s", t.Arch().Distro().Releasever())
 	}
 
-	_, err = img.InstantiateManifest(&mf, repos, t.arch.distro.runner, rng)
+	_, err = img.InstantiateManifest(mf, repos, t.arch.distro.runner, rng)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return &mf, warnings, err
+	return mf, warnings, err
 }
 
 // checkOptions checks the validity and compatibility of options and customizations for the image type.

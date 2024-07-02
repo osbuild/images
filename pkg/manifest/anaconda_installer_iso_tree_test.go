@@ -24,7 +24,7 @@ const (
 
 // newTestAnacondaISOTree returns a base AnacondaInstallerISOTree pipeline.
 func newTestAnacondaISOTree() *AnacondaInstallerISOTree {
-	m := &Manifest{}
+	m := &IntManifest{}
 	runner := &runner.Linux{}
 	build := NewBuild(m, runner, nil, nil)
 
