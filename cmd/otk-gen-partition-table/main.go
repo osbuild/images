@@ -27,18 +27,19 @@ type Input struct {
 
 // InputProperties contains global properties of the partition table
 type InputProperties struct {
-	UEFI        InputUEFI        `json:"uefi"`
-	BIOS        bool             `json:"bios"`
 	Type        otkdisk.PartType `json:"type"`
 	DefaultSize string           `json:"default_size"`
 	UUID        string           `json:"uuid"`
+	Create      InputCreate      `json:"create"`
 
 	SectorSize uint64 `json:"sector_size"`
 }
 
-// InputUEFI contains the uefi specific bits of the partition input
-type InputUEFI struct {
-	Size string `json:"size"`
+// InputCreate contains details what partitions to auto-generate
+type InputCreate struct {
+	BIOSBootPartition bool   `json:"bios_boot_partition"`
+	EspPartition      bool   `json:"esp_partition"`
+	EspPartitionSize  string `json:"esp_partition_size"`
 }
 
 // InputPartition represents a single user provided partition input
@@ -112,7 +113,7 @@ func makePartitionTableFromOtkInput(input *Input) (*disk.PartitionTable, error) 
 		Type:       string(input.Properties.Type),
 		SectorSize: input.Properties.SectorSize,
 	}
-	if input.Properties.BIOS {
+	if input.Properties.Create.BIOSBootPartition {
 		if len(pt.Partitions) > 0 {
 			return nil, fmt.Errorf("internal error: bios partition *must* go first")
 		}
@@ -123,8 +124,12 @@ func makePartitionTableFromOtkInput(input *Input) (*disk.PartitionTable, error) 
 			UUID:     disk.BIOSBootPartitionUUID,
 		})
 	}
-	if input.Properties.UEFI.Size != "" {
-		uintSize, err := common.DataSizeToUint64(input.Properties.UEFI.Size)
+	if input.Properties.Create.EspPartition {
+		size := input.Properties.Create.EspPartitionSize
+		if size == "" {
+			size = "1 GiB"
+		}
+		uintSize, err := common.DataSizeToUint64(size)
 		if err != nil {
 			return nil, err
 		}
