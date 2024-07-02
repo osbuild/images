@@ -27,7 +27,7 @@ func TestNewCopyStage(t *testing.T) {
 	}
 
 	mounts := []Mount{
-		*NewBtrfsMount("root", "root", "/"),
+		*NewBtrfsMount("root", "root", "/", "", ""),
 	}
 
 	treeInput := NewTreeInput("name:input-pipeline")

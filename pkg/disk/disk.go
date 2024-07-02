@@ -20,8 +20,10 @@ import (
 	"encoding/hex"
 	"io"
 	"math/rand"
+	"strings"
 
 	"github.com/google/uuid"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -141,6 +143,16 @@ type FSTabOptions struct {
 	Freq uint64
 	// The sixth field of fstab(5); fs_passno
 	PassNo uint64
+}
+
+// ReadOnly returns true is the filesystem is mounted read-only
+func (o FSTabOptions) ReadOnly() bool {
+	opts := strings.Split(o.MntOps, ",")
+
+	// filesystem is mounted read-only if:
+	// - there's ro (because rw is the default)
+	// - AND there's no rw (because rw overrides ro)
+	return slices.Contains(opts, "ro") && !slices.Contains(opts, "rw")
 }
 
 // uuid generator helpers
