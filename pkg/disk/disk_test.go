@@ -1174,8 +1174,8 @@ func TestMinimumSizesWithRequiredSizes(t *testing.T) {
 
 func TestFSTabOptionsReadOnly(t *testing.T) {
 	cases := []struct {
-		options string
-		ro      bool
+		options    string
+		expectedRO bool
 	}{
 		{"ro", true},
 		{"ro,relatime,seclabel,compress=zstd:1,ssd,discard=async,space_cache,subvolid=257,subvol=/root", true},
@@ -1189,7 +1189,7 @@ func TestFSTabOptionsReadOnly(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.options, func(t *testing.T) {
 			options := FSTabOptions{MntOps: c.options}
-			assert.Equal(t, c.ro, options.ReadOnly())
+			assert.Equal(t, c.expectedRO, options.ReadOnly())
 		})
 	}
 }
