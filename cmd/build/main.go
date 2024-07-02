@@ -25,17 +25,6 @@ import (
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
-func fail(msg string) {
-	fmt.Fprintln(os.Stderr, msg)
-	os.Exit(1)
-}
-
-func check(err error) {
-	if err != nil {
-		fail(err.Error())
-	}
-}
-
 func makeManifest(
 	config *buildconfig.BuildConfig,
 	imgType distro.ImageType,
@@ -192,7 +181,7 @@ func filterRepos(repos []rpmmd.RepoConfig, typeName string) []rpmmd.RepoConfig {
 	return filtered
 }
 
-func main() {
+func run() error {
 	// common args
 	var outputDir, osbuildStore, rpmCacheRoot string
 	flag.StringVar(&outputDir, "output", ".", "artifact output directory")
@@ -214,62 +203,78 @@ func main() {
 
 	testedRepoRegistry, err := reporegistry.NewTestedDefault()
 	if err != nil {
-		panic(fmt.Sprintf("failed to create repo registry with tested distros: %v", err))
+		return fmt.Errorf("failed to create repo registry with tested distros: %v", err)
 	}
 	distroFac := distrofactory.NewDefault()
 
 	config, err := buildconfig.New(configFile)
-	check(err)
+	if err != nil {
+		return err
+	}
 
 	if err := os.MkdirAll(outputDir, 0777); err != nil {
-		fail(fmt.Sprintf("failed to create target directory: %s", err.Error()))
+		return fmt.Errorf("failed to create target directory: %s", err.Error())
 	}
 
 	distribution := distroFac.GetDistro(distroName)
 	if distribution == nil {
-		fail(fmt.Sprintf("invalid or unsupported distribution: %q", distroName))
+		return fmt.Errorf("invalid or unsupported distribution: %q", distroName)
 	}
 
 	archName := arch.Current().String()
 	arch, err := distribution.GetArch(archName)
 	if err != nil {
-		fail(fmt.Sprintf("invalid arch name %q for distro %q: %s\n", archName, distroName, err.Error()))
+		return fmt.Errorf("invalid arch name %q for distro %q: %s\n", archName, distroName, err.Error())
 	}
 
 	buildName := fmt.Sprintf("%s-%s-%s-%s", u(distroName), u(archName), u(imgTypeName), u(config.Name))
 	buildDir := filepath.Join(outputDir, buildName)
 	if err := os.MkdirAll(buildDir, 0777); err != nil {
-		fail(fmt.Sprintf("failed to create target directory: %s", err.Error()))
+		return fmt.Errorf("failed to create target directory: %s", err.Error())
 	}
 
 	imgType, err := arch.GetImageType(imgTypeName)
 	if err != nil {
-		fail(fmt.Sprintf("invalid image type %q for distro %q and arch %q: %s\n", imgTypeName, distroName, archName, err.Error()))
+		return fmt.Errorf("invalid image type %q for distro %q and arch %q: %s\n", imgTypeName, distroName, archName, err.Error())
 	}
 
 	// get repositories
 	repos, err := testedRepoRegistry.ReposByArchName(distroName, archName, true)
 	if err != nil {
-		panic(fmt.Sprintf("failed to get repositories for %s/%s: %v", distroName, archName, err))
+		return fmt.Errorf("failed to get repositories for %s/%s: %v", distroName, archName, err)
 	}
 	repos = filterRepos(repos, imgTypeName)
 	if len(repos) == 0 {
-		fail(fmt.Sprintf("no repositories defined for %s/%s\n", distroName, archName))
+		return fmt.Errorf("no repositories defined for %s/%s\n", distroName, archName)
 	}
 
 	fmt.Printf("Generating manifest for %s: ", config.Name)
 	mf, err := makeManifest(config, imgType, distribution, repos, archName, rpmCacheRoot)
-	check(err)
+	if err != nil {
+		return err
+	}
 	fmt.Print("DONE\n")
 
 	manifestPath := filepath.Join(buildDir, "manifest.json")
-	check(save(mf, manifestPath))
+	if err := save(mf, manifestPath); err != nil {
+		return err
+	}
 
 	fmt.Printf("Building manifest: %s\n", manifestPath)
 
 	jobOutput := filepath.Join(outputDir, buildName)
 	_, err = osbuild.RunOSBuild(mf, osbuildStore, jobOutput, imgType.Exports(), nil, nil, false, os.Stderr)
-	check(err)
+	if err != nil {
+		return err
+	}
 
 	fmt.Printf("Jobs done. Results saved in\n%s\n", outputDir)
+	return nil
+}
+
+func main() {
+	if err := run(); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %s\n", err)
+		os.Exit(1)
+	}
 }
