@@ -164,6 +164,9 @@ func (bs *BtrfsSubvolume) GetFSTabOptions() FSTabOptions {
 		return FSTabOptions{}
 	}
 
+	if bs.Name == "" {
+		panic(fmt.Errorf("internal error: BtrfsSubvolume.GetFSTabOptions() for %+v called without a name", bs))
+	}
 	ops := fmt.Sprintf("subvol=%s", bs.Name)
 	if bs.Compress != "" {
 		ops += fmt.Sprintf(",compress=%s", bs.Compress)
