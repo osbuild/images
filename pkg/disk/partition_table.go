@@ -704,6 +704,8 @@ func (pt *PartitionTable) ensureBtrfs() error {
 		if err != nil {
 			return fmt.Errorf("failed to create /boot partition when ensuring btrfs: %w", err)
 		}
+
+		rootPath = entityPath(pt, "/")
 	}
 
 	parent := rootPath[1] // NB: entityPath has reversed order

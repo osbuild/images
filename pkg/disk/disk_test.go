@@ -508,6 +508,43 @@ func TestCreatePartitionTableLVMify(t *testing.T) {
 	}
 }
 
+func TestCreatePartitionTableBtrfsify(t *testing.T) {
+	assert := assert.New(t)
+	// math/rand is good enough in this case
+	/* #nosec G404 */
+	rng := rand.New(rand.NewSource(13))
+	for bpName, tbp := range testBlueprints {
+		for ptName := range testPartitionTables {
+			pt := testPartitionTables[ptName]
+
+			if ptName == "auto-lvm" || ptName == "luks" || ptName == "luks+lvm" {
+				_, err := NewPartitionTable(&pt, tbp, uint64(13*MiB), BtfrsPartitioningMode, nil, rng)
+				assert.Error(err, "PT %q BP %q: should return an error with BtrfsPartitioningMode", ptName, bpName)
+				continue
+			}
+
+			mpt, err := NewPartitionTable(&pt, tbp, uint64(13*MiB), BtfrsPartitioningMode, nil, rng)
+			assert.NoError(err, "PT %q BP %q: Partition table generation failed: (%s)", ptName, bpName, err)
+
+			rootPath := entityPath(mpt, "/")
+			if rootPath == nil {
+				panic(fmt.Sprintf("PT %q BP %q: no root mountpoint", ptName, bpName))
+			}
+
+			bootPath := entityPath(mpt, "/boot")
+			if tbp != nil && bootPath == nil {
+				panic(fmt.Sprintf("PT %q BP %q: no boot mountpoint", ptName, bpName))
+			}
+
+			if tbp != nil {
+				parent := rootPath[1]
+				_, ok := parent.(*Btrfs)
+				assert.True(ok, "PT %q BP %q: root's parent (%+v) is not an btrfs volume but %T", ptName, bpName, parent, parent)
+			}
+		}
+	}
+}
+
 func TestCreatePartitionTableLVMOnly(t *testing.T) {
 	assert := assert.New(t)
 	// math/rand is good enough in this case
