@@ -1,6 +1,8 @@
 package disk
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 )
 
@@ -84,4 +86,87 @@ func (p *Partition) IsPReP() bool {
 	}
 
 	return p.Type == "41" || p.Type == PRePartitionGUID
+}
+
+func (p *Partition) MarshalJSON() ([]byte, error) {
+	type partAlias Partition
+
+	var entityName string
+	switch p.Payload.(type) {
+	case nil:
+		entityName = "no-payload"
+	case *Filesystem:
+		entityName = "filesystem"
+	case *LUKSContainer:
+		entityName = "luks"
+	case *LVMVolumeGroup:
+		entityName = "lvm"
+	case *Btrfs:
+		entityName = "btrfs"
+	default:
+		return nil, fmt.Errorf("unsupported payload type %T", p.Payload)
+	}
+
+	partWithPayloadType := struct {
+		partAlias
+		PayloadType string
+	}{
+		partAlias(*p),
+		entityName,
+	}
+
+	return json.Marshal(partWithPayloadType)
+}
+
+func (p *Partition) UnmarshalJSON(data []byte) error {
+	type partAlias Partition
+	var partWithoutPayload struct {
+		partAlias
+		Payload     json.RawMessage
+		PayloadType string
+	}
+
+	dec := json.NewDecoder(bytes.NewBuffer(data))
+	if err := dec.Decode(&partWithoutPayload); err != nil {
+		return fmt.Errorf("cannot build partition from %q: %w", data, err)
+	}
+	*p = Partition(partWithoutPayload.partAlias)
+	// no payload, e.g. bios partiton
+	if partWithoutPayload.PayloadType == "no-payload" {
+		return nil
+	}
+
+	switch partWithoutPayload.PayloadType {
+	case "":
+		return fmt.Errorf("cannot build partition from %q", data)
+	case "no-payload":
+		return nil
+	case "filesystem":
+		var ent *Filesystem
+		if err := json.Unmarshal(partWithoutPayload.Payload, &ent); err != nil {
+			return err
+		}
+		p.Payload = ent
+	case "luks":
+		var ent *LUKSContainer
+		if err := json.Unmarshal(partWithoutPayload.Payload, &ent); err != nil {
+			return err
+		}
+		p.Payload = ent
+	case "lvm":
+		var ent *LVMVolumeGroup
+		if err := json.Unmarshal(partWithoutPayload.Payload, &ent); err != nil {
+			return err
+		}
+		p.Payload = ent
+	case "btrfs":
+		var ent *Btrfs
+		if err := json.Unmarshal(partWithoutPayload.Payload, &ent); err != nil {
+			return err
+		}
+		p.Payload = ent
+
+	}
+
+	return nil
 }
