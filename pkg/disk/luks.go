@@ -3,6 +3,7 @@ package disk
 import (
 	"fmt"
 	"math/rand"
+	"reflect"
 
 	"github.com/google/uuid"
 
@@ -20,6 +21,11 @@ type ClevisBind struct {
 	Policy           string
 	RemovePassphrase bool
 }
+
+func init() {
+	entityTypes = append(entityTypes, reflect.TypeOf(LUKSContainer{}))
+}
+
 type LUKSContainer struct {
 	Passphrase string
 	UUID       string

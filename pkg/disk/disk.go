@@ -20,6 +20,7 @@ import (
 	"encoding/hex"
 	"io"
 	"math/rand"
+	"reflect"
 
 	"github.com/google/uuid"
 )
@@ -49,6 +50,10 @@ const (
 	// Extended Boot Loader Partition
 	XBootLDRPartitionGUID = "BC13C2FF-59E6-4262-A352-B275FD6F7172"
 )
+
+// entityTypes must contain all the types that implemnt "Entity"
+// in the package so that json unmarshal works transparently
+var entityTypes []reflect.Type
 
 // Entity is the base interface for all disk-related entities.
 type Entity interface {

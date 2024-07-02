@@ -2,9 +2,14 @@ package disk
 
 import (
 	"math/rand"
+	"reflect"
 
 	"github.com/google/uuid"
 )
+
+func init() {
+	entityTypes = append(entityTypes, reflect.TypeOf(Filesystem{}))
+}
 
 // Filesystem related functions
 type Filesystem struct {
