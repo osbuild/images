@@ -4,7 +4,7 @@ cloud.google.com/go/internal
 cloud.google.com/go/internal/optional
 cloud.google.com/go/internal/trace
 cloud.google.com/go/internal/version
-# cloud.google.com/go/auth v0.6.0
+# cloud.google.com/go/auth v0.6.1
 ## explicit; go 1.20
 cloud.google.com/go/auth
 cloud.google.com/go/auth/credentials
@@ -23,7 +23,7 @@ cloud.google.com/go/auth/internal/transport/cert
 # cloud.google.com/go/auth/oauth2adapt v0.2.2
 ## explicit; go 1.19
 cloud.google.com/go/auth/oauth2adapt
-# cloud.google.com/go/compute v1.27.1
+# cloud.google.com/go/compute v1.27.2
 ## explicit; go 1.20
 cloud.google.com/go/compute/apiv1
 cloud.google.com/go/compute/apiv1/computepb
@@ -176,7 +176,7 @@ github.com/acarl005/stripansi
 # github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 ## explicit; go 1.13
 github.com/asaskevich/govalidator
-# github.com/aws/aws-sdk-go v1.54.11
+# github.com/aws/aws-sdk-go v1.54.12
 ## explicit; go 1.19
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/arn
@@ -942,7 +942,7 @@ golang.org/x/text/unicode/norm
 # golang.org/x/time v0.5.0
 ## explicit; go 1.18
 golang.org/x/time/rate
-# google.golang.org/api v0.186.0
+# google.golang.org/api v0.187.0
 ## explicit; go 1.20
 google.golang.org/api/googleapi
 google.golang.org/api/googleapi/transport
@@ -960,7 +960,7 @@ google.golang.org/api/transport
 google.golang.org/api/transport/grpc
 google.golang.org/api/transport/http
 google.golang.org/api/transport/http/internal/propagation
-# google.golang.org/genproto v0.0.0-20240617180043-68d350f18fd4
+# google.golang.org/genproto v0.0.0-20240624140628-dc46fd24d27d
 ## explicit; go 1.20
 google.golang.org/genproto/googleapis/cloud/extendedops
 google.golang.org/genproto/googleapis/type/date
@@ -969,7 +969,7 @@ google.golang.org/genproto/googleapis/type/expr
 ## explicit; go 1.20
 google.golang.org/genproto/googleapis/api
 google.golang.org/genproto/googleapis/api/annotations
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20240617180043-68d350f18fd4
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20240624140628-dc46fd24d27d
 ## explicit; go 1.20
 google.golang.org/genproto/googleapis/rpc/code
 google.golang.org/genproto/googleapis/rpc/errdetails
