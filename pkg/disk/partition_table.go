@@ -703,7 +703,7 @@ func (pt *PartitionTable) ensureBtrfs() error {
 	if bootPath == nil {
 		_, err := pt.CreateMountpoint("/boot", 512*common.MiB)
 		if err != nil {
-			return fmt.Errorf("cannot create /boot partition when ensuring btrfs: %w", err)
+			return fmt.Errorf("failed to create /boot partition when ensuring btrfs: %w", err)
 		}
 	}
 
