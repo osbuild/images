@@ -31,7 +31,8 @@ type AnacondaContainerInstaller struct {
 	Release   string
 	Preview   bool
 
-	ContainerSource container.SourceSpec
+	ContainerSource           container.SourceSpec
+	ContainerRemoveSignatures bool
 
 	Filename string
 
@@ -123,6 +124,7 @@ func (img *AnacondaContainerInstaller) InstantiateManifest(m *manifest.Manifest,
 
 	// For ostree installers, always put the kickstart file in the root of the ISO
 	isoTreePipeline.PayloadPath = "/container"
+	isoTreePipeline.PayloadRemoveSignatures = img.ContainerRemoveSignatures
 
 	isoTreePipeline.ContainerSource = &img.ContainerSource
 	isoTreePipeline.ISOLinux = isoLinuxEnabled
