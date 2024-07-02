@@ -1,6 +1,7 @@
 package disk
 
 import (
+	"encoding/json"
 	"fmt"
 )
 
@@ -16,6 +17,44 @@ type Partition struct {
 
 	// If nil, the partition is raw; It doesn't contain a payload.
 	Payload Entity
+}
+
+// XXX: this needs refactoring and tests, it's kinda complicated
+func (p *Partition) UnmarshalJSON(data []byte) error {
+	type partAlias Partition
+	var aux struct {
+		partAlias
+		Payload struct {
+			// filesystem
+			Type string
+			// lvm
+			LogicalVolumes []LVMLogicalVolume
+			// btrfs
+			Subvolumes []BtrfsSubvolume
+		}
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	*p = Partition(aux.partAlias)
+
+	switch {
+	case aux.Payload.Type != "":
+		var aux2 struct {
+			Payload struct {
+				Filesystem
+			}
+		}
+		if err := json.Unmarshal(data, &aux2); err != nil {
+			return err
+		}
+		p.Payload = &aux2.Payload
+		// XXX: handle lvm/btrfs by detecting if LogicalVolumes/Subvolume is set
+	default:
+		return fmt.Errorf("cannot detect type for %s", data)
+	}
+
+	return nil
 }
 
 func (p *Partition) IsContainer() bool {
