@@ -3,6 +3,7 @@ package disk
 import (
 	"fmt"
 	"math/rand"
+	"reflect"
 	"strings"
 
 	"github.com/google/uuid"
@@ -13,6 +14,14 @@ type Btrfs struct {
 	Label      string
 	Mountpoint string
 	Subvolumes []BtrfsSubvolume
+}
+
+func init() {
+	payloadEntityMap["btrfs"] = reflect.TypeOf(Btrfs{})
+}
+
+func (b *Btrfs) EntityName() string {
+	return "btrfs"
 }
 
 func (b *Btrfs) IsContainer() bool {
