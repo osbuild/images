@@ -1,0 +1,13 @@
+---
+otk.version: "1"
+
+otk.target.osbuild.name:
+  pipelines:
+    - name: "build"
+      stages:
+        - type: "org.osbuild.rpm"
+          options:
+    - name: "os"
+      stages:
+        - type: "org.osbuild.rpm"
+          options:
