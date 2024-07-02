@@ -33,7 +33,7 @@ func hasPipeline(haystack []manifest.Pipeline, needle manifest.Pipeline) bool {
 }
 
 func TestNewRawBootcImage(t *testing.T) {
-	mani := manifest.New()
+	mani := manifest.New(manifest.DISTRO_NULL)
 	runner := &runner.Linux{}
 	buildIf := manifest.NewBuildFromContainer(&mani, runner, nil, nil)
 	build := buildIf.(*manifest.BuildrootFromContainer)
@@ -48,7 +48,7 @@ func TestNewRawBootcImage(t *testing.T) {
 }
 
 func TestRawBootcImageSerialize(t *testing.T) {
-	mani := manifest.New()
+	mani := manifest.New(manifest.DISTRO_NULL)
 	runner := &runner.Linux{}
 	build := manifest.NewBuildFromContainer(&mani, runner, nil, nil)
 	pf := &platform.X86{
@@ -76,7 +76,7 @@ func TestRawBootcImageSerialize(t *testing.T) {
 }
 
 func TestRawBootcImageSerializeMountsValidated(t *testing.T) {
-	mani := manifest.New()
+	mani := manifest.New(manifest.DISTRO_NULL)
 	runner := &runner.Linux{}
 	build := manifest.NewBuildFromContainer(&mani, runner, nil, nil)
 	pf := &platform.X86{
@@ -103,7 +103,7 @@ func findMountIdx(mounts []osbuild.Mount, mntType string) int {
 }
 
 func makeFakeRawBootcPipeline() *manifest.RawBootcImage {
-	mani := manifest.New()
+	mani := manifest.New(manifest.DISTRO_NULL)
 	runner := &runner.Linux{}
 	pf := &platform.X86{
 		BasePlatform: platform.BasePlatform{},

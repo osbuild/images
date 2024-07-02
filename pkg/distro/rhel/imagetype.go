@@ -307,17 +307,17 @@ func (t *ImageType) Manifest(bp *blueprint.Blueprint,
 	if err != nil {
 		return nil, nil, err
 	}
-	mf := manifest.New()
 
+	var mf manifest.Manifest
 	switch t.Arch().Distro().Releasever() {
 	case "7":
-		mf.Distro = manifest.DISTRO_EL7
+		mf = manifest.New(manifest.DISTRO_EL7)
 	case "8":
-		mf.Distro = manifest.DISTRO_EL8
+		mf = manifest.New(manifest.DISTRO_EL8)
 	case "9":
-		mf.Distro = manifest.DISTRO_EL9
+		mf = manifest.New(manifest.DISTRO_EL9)
 	case "10":
-		mf.Distro = manifest.DISTRO_EL10
+		mf = manifest.New(manifest.DISTRO_EL10)
 	default:
 		return nil, nil, fmt.Errorf("unsupported distro release version: %s", t.Arch().Distro().Releasever())
 	}

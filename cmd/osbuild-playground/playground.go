@@ -23,7 +23,7 @@ func RunPlayground(img image.ImageKind, d distro.Distro, arch distro.Arch, repos
 	// Set cache size to 1 GiB
 	solver.SetMaxCacheSize(1 * common.GiB)
 
-	manifest := manifest.New()
+	manifest := manifest.New(manifest.DISTRO_FEDORA)
 
 	/* #nosec G404 */
 	rnd := rand.New(rand.NewSource(0))
