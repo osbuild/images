@@ -53,8 +53,7 @@ func NewPartitionTable(basePT *PartitionTable, mountpoints []blueprint.Filesyste
 	// first pass: enlarge existing mountpoints and collect new ones
 	newMountpoints, _ := newPT.applyCustomization(mountpoints, false)
 
-	var ensureLVM bool
-	ensureBtrfs := false
+	var ensureLVM, ensureBtrfs bool
 	switch mode {
 	case LVMPartitioningMode:
 		ensureLVM = true
