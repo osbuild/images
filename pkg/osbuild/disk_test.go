@@ -49,6 +49,12 @@ func TestGenImageKernelOptionsBtrfs(t *testing.T) {
 	assert.Equal(t, []string{"rootflags=subvol=root"}, actual)
 }
 
+func TestGenImageKernelOptionsBtrfsNotRootCmdlineGenerated(t *testing.T) {
+	pt := testdisk.MakeFakeBtrfsPartitionTable("/var")
+	kopts := GenImageKernelOptions(pt)
+	assert.Equal(t, len(kopts), 0)
+}
+
 func TestGenImagePrepareStages(t *testing.T) {
 	pt := testdisk.MakeFakeBtrfsPartitionTable("/", "/boot")
 	filename := "image.raw"
