@@ -20,6 +20,7 @@ import (
 	"encoding/hex"
 	"io"
 	"math/rand"
+	"reflect"
 
 	"github.com/google/uuid"
 )
@@ -59,6 +60,15 @@ type Entity interface {
 	// Clone returns a deep copy of the entity.
 	Clone() Entity
 }
+
+type PayloadEntity interface {
+	Entity
+
+	// EntityName is the type name of the Entity, used for marshaling
+	EntityName() string
+}
+
+var payloadEntityMap = map[string]reflect.Type{}
 
 // Container is the interface for entities that can contain other entities.
 // Together with the base Entity interface this allows to model a generic
