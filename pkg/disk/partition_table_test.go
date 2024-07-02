@@ -3,8 +3,9 @@ package disk_test
 import (
 	"testing"
 
-	"github.com/osbuild/images/internal/testdisk"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/osbuild/images/internal/testdisk"
 )
 
 func TestPartitionTable_GetMountpointSize(t *testing.T) {
