@@ -19,8 +19,10 @@ import (
 var partInputsComplete = `
 {
   "properties": {
-    "uefi": {
-      "size": "1 GiB"
+    "create": {
+      "bios_boot_partition": true,
+      "esp_partition": true,
+      "esp_partition_size": "2 GiB"
     },
     "bios": true,
     "type": "gpt",
@@ -53,10 +55,11 @@ var partInputsComplete = `
 
 var expectedInput = &genpart.Input{
 	Properties: genpart.InputProperties{
-		UEFI: genpart.InputUEFI{
-			Size: "1 GiB",
+		Create: genpart.InputCreate{
+			BIOSBootPartition: true,
+			EspPartition:      true,
+			EspPartitionSize:  "2 GiB",
 		},
-		BIOS:        true,
 		Type:        "gpt",
 		DefaultSize: "10 GiB",
 	},
@@ -171,10 +174,11 @@ func TestUnmarshalOutput(t *testing.T) {
 var partInputsSimple = `
 {
   "properties": {
-    "uefi": {
-      "size": "1 GiB"
+    "create": {
+      "bios_boot_partition": true,
+      "esp_partition": true,
+      "esp_partition_size": "2 GiB"
     },
-    "bios": true,
     "type": "gpt",
     "default_size": "10 GiB"
   },
@@ -208,7 +212,7 @@ var expectedSimplePartOutput = `{
     },
     "internal": {
       "partition-table": {
-        "Size": 10740563968,
+        "Size": 11814305792,
         "UUID": "dbd21911-1c4e-4107-8a9f-14fe6e751358",
         "Type": "gpt",
         "Partitions": [
@@ -223,7 +227,7 @@ var expectedSimplePartOutput = `{
           },
           {
             "Start": 2097152,
-            "Size": 1073741824,
+            "Size": 2147483648,
             "Type": "C12A7328-F81F-11D2-BA4B-00A0C93EC93B",
             "Bootable": false,
             "UUID": "68B2905B-DF3E-4FB3-80FA-49D1E773AA33",
@@ -239,7 +243,7 @@ var expectedSimplePartOutput = `{
             "PayloadType": "filesystem"
           },
           {
-            "Start": 3223322624,
+            "Start": 4297064448,
             "Size": 7517224448,
             "Type": "",
             "Bootable": false,
@@ -256,7 +260,7 @@ var expectedSimplePartOutput = `{
             "PayloadType": "filesystem"
           },
           {
-            "Start": 1075838976,
+            "Start": 2149580800,
             "Size": 2147483648,
             "Type": "",
             "Bootable": false,
