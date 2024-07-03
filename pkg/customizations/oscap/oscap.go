@@ -76,6 +76,28 @@ func NewConfigs(oscapConfig blueprint.OpenSCAPCustomization, defaultDatastream *
 		CompressionEnabled: true,
 	}
 
+	if oscapConfig.XMLTailoring != nil && oscapConfig.Tailoring != nil {
+		return nil, nil, fmt.Errorf("Either XML tailoring file and profile ID must be set or custom rules (selected/unselected), not both")
+	}
+
+	if xmlConfigs := oscapConfig.XMLTailoring; xmlConfigs != nil {
+		if xmlConfigs.Filepath == "" {
+			return nil, nil, fmt.Errorf("Filepath to an XML tailoring file is required")
+		}
+
+		if xmlConfigs.ProfileID == "" {
+			return nil, nil, fmt.Errorf("Tailoring profile ID is required for an XML tailoring file")
+		}
+
+		remediationConfig.ProfileID = xmlConfigs.ProfileID
+		remediationConfig.TailoringPath = xmlConfigs.Filepath
+
+		// since the XML tailoring file has already been provided
+		// we don't need the autotailor stage and the config can
+		// be left empty and we can just return the `remediationConfig`
+		return remediationConfig, nil, nil
+	}
+
 	tc := oscapConfig.Tailoring
 	if tc == nil {
 		return remediationConfig, nil, nil
@@ -83,9 +105,6 @@ func NewConfigs(oscapConfig blueprint.OpenSCAPCustomization, defaultDatastream *
 
 	tailoringPath := filepath.Join(DataDir, "tailoring.xml")
 	tailoredProfileID := fmt.Sprintf("%s_osbuild_tailoring", remediationConfig.ProfileID)
-	if tc.ProfileID != nil && *tc.ProfileID != "" {
-		tailoredProfileID = *tc.ProfileID
-	}
 
 	tailoringConfig := &TailoringConfig{
 		RemediationConfig: RemediationConfig{
