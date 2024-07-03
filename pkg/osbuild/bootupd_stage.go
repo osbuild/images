@@ -41,8 +41,7 @@ func (opts *BootupdStageOptions) validate(devices map[string]Device) error {
 // to find all the bootloader configs
 func validateBootupdMounts(mounts []Mount, pf platform.Platform) error {
 	requiredMounts := map[string]bool{
-		"/":     true,
-		"/boot": true,
+		"/": true,
 	}
 	if pf.GetUEFIVendor() != "" {
 		requiredMounts["/boot/efi"] = true

@@ -70,7 +70,7 @@ func TestBootupdStageMissingMounts(t *testing.T) {
 	}
 
 	stage, err := osbuild.NewBootupdStage(opts, devices, mounts, pf)
-	assert.ErrorContains(t, err, "required mounts for bootupd stage [/boot /boot/efi] missing")
+	assert.ErrorContains(t, err, "required mounts for bootupd stage [/boot/efi] missing")
 	require.Nil(t, stage)
 }
 
@@ -171,7 +171,7 @@ func TestGenBootupdDevicesMountsMissingRoot(t *testing.T) {
 		UEFIVendor:   "test",
 	}
 	_, _, err := osbuild.GenBootupdDevicesMounts(filename, pt, pf)
-	assert.EqualError(t, err, "required mounts for bootupd stage [/ /boot /boot/efi] missing")
+	assert.EqualError(t, err, "required mounts for bootupd stage [/ /boot/efi] missing")
 }
 
 func TestGenBootupdDevicesMountsUnexpectedEntity(t *testing.T) {

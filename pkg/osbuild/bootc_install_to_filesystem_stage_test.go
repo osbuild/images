@@ -90,7 +90,7 @@ func TestBootcInstallToFilesystemStageMissingMounts(t *testing.T) {
 
 	stage, err := osbuild.NewBootcInstallToFilesystemStage(nil, inputs, devices, mounts, pf)
 	// XXX: rename error
-	assert.ErrorContains(t, err, "required mounts for bootupd stage [/boot /boot/efi] missing")
+	assert.ErrorContains(t, err, "required mounts for bootupd stage [/boot/efi] missing")
 	require.Nil(t, stage)
 }
 
