@@ -154,6 +154,12 @@ func TestTarInstallerUnsetKSPath(t *testing.T) {
 	// interactive-defaults.ks is used
 	assert.Contains(t, mfs, fmt.Sprintf(`"inst.stage2=hd:LABEL=%s"`, isolabel))
 	assert.Contains(t, mfs, fmt.Sprintf("%q", osbuild.KickstartPathInteractiveDefaults))
+
+	// enable unattended and retest
+	img.Kickstart.Unattended = true
+	mfs = instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
+	assert.Contains(t, mfs, fmt.Sprintf(`"inst.ks=hd:LABEL=%s:/osbuild.ks"`, isolabel))
+	assert.NotContains(t, mfs, osbuild.KickstartPathInteractiveDefaults)
 }
 
 func instantiateAndSerialize(t *testing.T, img image.ImageKind, packages map[string][]rpmmd.PackageSpec, containers map[string][]container.Spec, commits map[string][]ostree.CommitSpec) string {
