@@ -1,6 +1,7 @@
 package image_test
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/osbuild/images/pkg/customizations/kickstart"
 	"github.com/osbuild/images/pkg/image"
 	"github.com/osbuild/images/pkg/manifest"
+	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -83,7 +85,8 @@ func TestContainerInstallerUnsetKSOptions(t *testing.T) {
 
 	assert.NotNil(t, img)
 	img.Platform = testPlatform
-	instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil)
+	mfs := instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil)
+	assert.Contains(t, mfs, fmt.Sprintf(`"inst.ks=hd:LABEL=%s:/osbuild.ks"`, isolabel))
 }
 
 func TestContainerInstallerUnsetKSPath(t *testing.T) {
@@ -97,7 +100,8 @@ func TestContainerInstallerUnsetKSPath(t *testing.T) {
 	// set empty kickstart options (no path)
 	img.Kickstart = &kickstart.Options{}
 
-	instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil)
+	mfs := instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil)
+	assert.Contains(t, mfs, fmt.Sprintf(`"inst.ks=hd:LABEL=%s:/osbuild.ks"`, isolabel))
 }
 
 func TestOSTreeInstallerUnsetKSPath(t *testing.T) {
@@ -113,7 +117,8 @@ func TestOSTreeInstallerUnsetKSPath(t *testing.T) {
 		OSTree: &kickstart.OSTree{},
 	}
 
-	instantiateAndSerialize(t, img, mockPackageSets(), nil, mockOSTreeCommitSpecs())
+	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, mockOSTreeCommitSpecs())
+	assert.Contains(t, mfs, fmt.Sprintf(`"inst.ks=hd:LABEL=%s:/osbuild.ks"`, isolabel))
 }
 
 func TestTarInstallerUnsetKSOptions(t *testing.T) {
@@ -125,7 +130,12 @@ func TestTarInstallerUnsetKSOptions(t *testing.T) {
 	assert.NotNil(t, img)
 	img.Platform = testPlatform
 
-	instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
+	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
+	// the tar installer doesn't set a custom kickstart path unless the
+	// unattended option is enabled, so the inst.ks option isn't set and
+	// interactive-defaults.ks is used
+	assert.Contains(t, mfs, fmt.Sprintf(`"inst.stage2=hd:LABEL=%s"`, isolabel))
+	assert.Contains(t, mfs, fmt.Sprintf("%q", osbuild.KickstartPathInteractiveDefaults))
 }
 
 func TestTarInstallerUnsetKSPath(t *testing.T) {
@@ -138,10 +148,15 @@ func TestTarInstallerUnsetKSPath(t *testing.T) {
 	img.Platform = testPlatform
 	img.Kickstart = &kickstart.Options{}
 
-	instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
+	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
+	// the tar installer doesn't set a custom kickstart path unless the
+	// unattended option is enabled, so the inst.ks option isn't set and
+	// interactive-defaults.ks is used
+	assert.Contains(t, mfs, fmt.Sprintf(`"inst.stage2=hd:LABEL=%s"`, isolabel))
+	assert.Contains(t, mfs, fmt.Sprintf("%q", osbuild.KickstartPathInteractiveDefaults))
 }
 
-func instantiateAndSerialize(t *testing.T, img image.ImageKind, packages map[string][]rpmmd.PackageSpec, containers map[string][]container.Spec, commits map[string][]ostree.CommitSpec) {
+func instantiateAndSerialize(t *testing.T, img image.ImageKind, packages map[string][]rpmmd.PackageSpec, containers map[string][]container.Spec, commits map[string][]ostree.CommitSpec) string {
 	source := rand.NewSource(int64(0))
 	// math/rand is good enough in this case
 	/* #nosec G404 */
@@ -151,6 +166,8 @@ func instantiateAndSerialize(t *testing.T, img image.ImageKind, packages map[str
 	_, err := img.InstantiateManifest(&mf, nil, &runner.CentOS{Version: 9}, rng)
 	assert.NoError(t, err)
 
-	_, err = mf.Serialize(packages, containers, commits, nil)
+	mfs, err := mf.Serialize(packages, containers, commits, nil)
 	assert.NoError(t, err)
+
+	return string(mfs)
 }
