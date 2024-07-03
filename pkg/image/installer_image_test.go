@@ -69,8 +69,18 @@ var testPlatform = &platform.X86{
 	UEFIVendor: "test",
 }
 
+const (
+	product   = "Fedora"
+	osversion = "40"
+	isolabel  = "Fedora-40-Workstation-x86_64"
+)
+
 func TestContainerInstallerUnsetKSOptions(t *testing.T) {
 	img := image.NewAnacondaContainerInstaller(container.SourceSpec{}, "")
+	img.Product = product
+	img.OSVersion = osversion
+	img.ISOLabel = isolabel
+
 	assert.NotNil(t, img)
 	img.Platform = testPlatform
 	instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil)
@@ -78,6 +88,10 @@ func TestContainerInstallerUnsetKSOptions(t *testing.T) {
 
 func TestContainerInstallerUnsetKSPath(t *testing.T) {
 	img := image.NewAnacondaContainerInstaller(container.SourceSpec{}, "")
+	img.Product = product
+	img.OSVersion = osversion
+	img.ISOLabel = isolabel
+
 	assert.NotNil(t, img)
 	img.Platform = testPlatform
 	// set empty kickstart options (no path)
@@ -88,6 +102,10 @@ func TestContainerInstallerUnsetKSPath(t *testing.T) {
 
 func TestOSTreeInstallerUnsetKSPath(t *testing.T) {
 	img := image.NewAnacondaOSTreeInstaller(ostree.SourceSpec{})
+	img.Product = product
+	img.OSVersion = osversion
+	img.ISOLabel = isolabel
+
 	assert.NotNil(t, img)
 	img.Platform = testPlatform
 	img.Kickstart = &kickstart.Options{
@@ -100,6 +118,10 @@ func TestOSTreeInstallerUnsetKSPath(t *testing.T) {
 
 func TestTarInstallerUnsetKSOptions(t *testing.T) {
 	img := image.NewAnacondaTarInstaller()
+	img.Product = product
+	img.OSVersion = osversion
+	img.ISOLabel = isolabel
+
 	assert.NotNil(t, img)
 	img.Platform = testPlatform
 
@@ -108,6 +130,10 @@ func TestTarInstallerUnsetKSOptions(t *testing.T) {
 
 func TestTarInstallerUnsetKSPath(t *testing.T) {
 	img := image.NewAnacondaTarInstaller()
+	img.Product = product
+	img.OSVersion = osversion
+	img.ISOLabel = isolabel
+
 	assert.NotNil(t, img)
 	img.Platform = testPlatform
 	img.Kickstart = &kickstart.Options{}
