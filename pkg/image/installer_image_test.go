@@ -104,6 +104,23 @@ func TestContainerInstallerUnsetKSPath(t *testing.T) {
 	assert.Contains(t, mfs, fmt.Sprintf(`"inst.ks=hd:LABEL=%s:/osbuild.ks"`, isolabel))
 }
 
+func TestContainerInstallerSetKSPath(t *testing.T) {
+	img := image.NewAnacondaContainerInstaller(container.SourceSpec{}, "")
+	img.Product = product
+	img.OSVersion = osversion
+	img.ISOLabel = isolabel
+
+	assert.NotNil(t, img)
+	img.Platform = testPlatform
+	img.Kickstart = &kickstart.Options{
+		Path: "/test.ks",
+	}
+
+	mfs := instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil)
+	assert.Contains(t, mfs, fmt.Sprintf(`"inst.ks=hd:LABEL=%s:/test.ks"`, isolabel))
+	assert.NotContains(t, mfs, "osbuild.ks") // no mention of the default value anywhere
+}
+
 func TestOSTreeInstallerUnsetKSPath(t *testing.T) {
 	img := image.NewAnacondaOSTreeInstaller(ostree.SourceSpec{})
 	img.Product = product
@@ -121,6 +138,25 @@ func TestOSTreeInstallerUnsetKSPath(t *testing.T) {
 	assert.Contains(t, mfs, fmt.Sprintf(`"inst.ks=hd:LABEL=%s:/osbuild.ks"`, isolabel))
 }
 
+func TestOSTreeInstallerSetKSPath(t *testing.T) {
+	img := image.NewAnacondaOSTreeInstaller(ostree.SourceSpec{})
+	img.Product = product
+	img.OSVersion = osversion
+	img.ISOLabel = isolabel
+
+	assert.NotNil(t, img)
+	img.Platform = testPlatform
+	img.Kickstart = &kickstart.Options{
+		// the ostree options must be non-nil
+		OSTree: &kickstart.OSTree{},
+		Path:   "/test.ks",
+	}
+
+	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, mockOSTreeCommitSpecs())
+	assert.Contains(t, mfs, fmt.Sprintf(`"inst.ks=hd:LABEL=%s:/test.ks"`, isolabel))
+	assert.NotContains(t, mfs, "osbuild.ks") // no mention of the default value anywhere
+}
+
 func TestTarInstallerUnsetKSOptions(t *testing.T) {
 	img := image.NewAnacondaTarInstaller()
 	img.Product = product
@@ -136,6 +172,7 @@ func TestTarInstallerUnsetKSOptions(t *testing.T) {
 	// interactive-defaults.ks is used
 	assert.Contains(t, mfs, fmt.Sprintf(`"inst.stage2=hd:LABEL=%s"`, isolabel))
 	assert.Contains(t, mfs, fmt.Sprintf("%q", osbuild.KickstartPathInteractiveDefaults))
+	assert.NotContains(t, mfs, "osbuild.ks") // no mention of the default (custom) value
 }
 
 func TestTarInstallerUnsetKSPath(t *testing.T) {
@@ -154,12 +191,32 @@ func TestTarInstallerUnsetKSPath(t *testing.T) {
 	// interactive-defaults.ks is used
 	assert.Contains(t, mfs, fmt.Sprintf(`"inst.stage2=hd:LABEL=%s"`, isolabel))
 	assert.Contains(t, mfs, fmt.Sprintf("%q", osbuild.KickstartPathInteractiveDefaults))
+	assert.NotContains(t, mfs, "osbuild.ks") // no mention of the default (custom) value
 
 	// enable unattended and retest
 	img.Kickstart.Unattended = true
 	mfs = instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
 	assert.Contains(t, mfs, fmt.Sprintf(`"inst.ks=hd:LABEL=%s:/osbuild.ks"`, isolabel))
 	assert.NotContains(t, mfs, osbuild.KickstartPathInteractiveDefaults)
+}
+
+func TestTarInstallerSetKSPath(t *testing.T) {
+	img := image.NewAnacondaTarInstaller()
+	img.Product = product
+	img.OSVersion = osversion
+	img.ISOLabel = isolabel
+
+	assert.NotNil(t, img)
+	img.Platform = testPlatform
+	img.Kickstart = &kickstart.Options{
+		Path: "/test.ks",
+	}
+
+	// enable unattended to use the custom kickstart path instead of interactive-defaults
+	img.Kickstart.Unattended = true
+	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
+	assert.Contains(t, mfs, fmt.Sprintf(`"inst.ks=hd:LABEL=%s:/test.ks"`, isolabel))
+	assert.NotContains(t, mfs, "osbuild.ks") // no mention of the default value anywhere
 }
 
 func instantiateAndSerialize(t *testing.T, img image.ImageKind, packages map[string][]rpmmd.PackageSpec, containers map[string][]container.Spec, commits map[string][]ostree.CommitSpec) string {
