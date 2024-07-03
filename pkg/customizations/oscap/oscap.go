@@ -1,7 +1,11 @@
 package oscap
 
 import (
+	"fmt"
+	"path/filepath"
 	"strings"
+
+	"github.com/osbuild/images/pkg/blueprint"
 )
 
 type Profile string
@@ -55,6 +59,53 @@ type TailoringConfig struct {
 	TailoredProfileID string
 	Selected          []string
 	Unselected        []string
+}
+
+func NewConfigs(oscapConfig blueprint.OpenSCAPCustomization, defaultDatastream *string) (*RemediationConfig, *TailoringConfig, error) {
+	var datastream = oscapConfig.DataStream
+	if datastream == "" {
+		if defaultDatastream == nil {
+			return nil, nil, fmt.Errorf("No OSCAP datastream specified and the distro does not have any default set")
+		}
+		datastream = *defaultDatastream
+	}
+
+	remediationConfig := &RemediationConfig{
+		Datastream:         datastream,
+		ProfileID:          oscapConfig.ProfileID,
+		CompressionEnabled: true,
+	}
+
+	tc := oscapConfig.Tailoring
+	if tc == nil {
+		return remediationConfig, nil, nil
+	}
+
+	tailoringPath := filepath.Join(DataDir, "tailoring.xml")
+	tailoredProfileID := fmt.Sprintf("%s_osbuild_tailoring", remediationConfig.ProfileID)
+	if tc.ProfileID != nil && *tc.ProfileID != "" {
+		tailoredProfileID = *tc.ProfileID
+	}
+
+	tailoringConfig := &TailoringConfig{
+		RemediationConfig: RemediationConfig{
+			ProfileID:     remediationConfig.ProfileID,
+			TailoringPath: tailoringPath,
+			Datastream:    datastream,
+		},
+		TailoredProfileID: tailoredProfileID,
+		Selected:          tc.Selected,
+		Unselected:        tc.Unselected,
+	}
+
+	// the reason for changing the remediation config profile
+	// after we create the tailoring configs is that the tailoring
+	// config needs to know about the original base profile id, but
+	// the remediation config needs to know the updated profile id.
+	remediationConfig.ProfileID = tailoredProfileID
+	remediationConfig.TailoringPath = tailoringPath
+
+	return remediationConfig, tailoringConfig, nil
 }
 
 func DefaultFedoraDatastream() string {
