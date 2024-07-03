@@ -290,8 +290,12 @@ func TestGenBootupdDevicesMountsHappy(t *testing.T) {
 
 func TestGenBootupdDevicesMountsHappyBtrfs(t *testing.T) {
 	filename := "fake-disk.img"
+	pf := &platform.X86{
+		BasePlatform: platform.BasePlatform{},
+		UEFIVendor:   "test",
+	}
 
-	devices, mounts, err := osbuild.GenBootupdDevicesMounts(filename, testdisk.MakeFakeBtrfsPartitionTable("/", "/home", "/boot/efi", "/boot"))
+	devices, mounts, err := osbuild.GenBootupdDevicesMounts(filename, testdisk.MakeFakeBtrfsPartitionTable("/", "/home", "/boot/efi", "/boot"), pf)
 	require.Nil(t, err)
 	assert.Equal(t, devices, map[string]osbuild.Device{
 		"disk": {
