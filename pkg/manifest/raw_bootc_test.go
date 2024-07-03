@@ -88,7 +88,7 @@ func TestRawBootcImageSerializeMountsValidated(t *testing.T) {
 	// note that we create a partition table without /boot here
 	rawBootcPipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/missing-boot")
 	rawBootcPipeline.SerializeStart(nil, []container.Spec{{Source: "foo"}}, nil, nil)
-	assert.PanicsWithError(t, `required mounts for bootupd stage [/boot /boot/efi] missing`, func() {
+	assert.PanicsWithError(t, `required mounts for bootupd stage [/boot/efi] missing`, func() {
 		rawBootcPipeline.Serialize()
 	})
 }
