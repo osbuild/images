@@ -234,3 +234,59 @@ func instantiateAndSerialize(t *testing.T, img image.ImageKind, packages map[str
 
 	return string(mfs)
 }
+
+// NOTE(akoutsou):
+// The following tests assert that the serialization of installer image kinds
+// panics when the ISO-related properties aren't set (product name, product
+// version, and ISO label). The panics happen in the stage validation, but we
+// might want to catch them earlier (perhaps make them mandatory in the image
+// kind or pipeline constructors) in the future.
+
+func TestContainerInstallerPanics(t *testing.T) {
+	assert := assert.New(t)
+	img := image.NewAnacondaContainerInstaller(container.SourceSpec{}, "")
+	img.Platform = testPlatform
+	assert.PanicsWithError("org.osbuild.grub2.iso: product.name option is required", func() { instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil) })
+	img.Product = product
+	assert.PanicsWithError("org.osbuild.grub2.iso: product.version option is required", func() { instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil) })
+	img.OSVersion = osversion
+	assert.PanicsWithError("org.osbuild.grub2.iso: isolabel option is required", func() { instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil) })
+}
+
+func TestOSTreeInstallerPanics(t *testing.T) {
+	assert := assert.New(t)
+	img := image.NewAnacondaOSTreeInstaller(ostree.SourceSpec{})
+	img.Platform = testPlatform
+	img.Kickstart = &kickstart.Options{
+		// the ostree options must be non-nil
+		OSTree: &kickstart.OSTree{},
+	}
+
+	assert.PanicsWithError("org.osbuild.grub2.iso: product.name option is required",
+		func() { instantiateAndSerialize(t, img, mockPackageSets(), nil, mockOSTreeCommitSpecs()) })
+
+	img.Product = product
+	assert.PanicsWithError("org.osbuild.grub2.iso: product.version option is required",
+		func() { instantiateAndSerialize(t, img, mockPackageSets(), nil, mockOSTreeCommitSpecs()) })
+
+	img.OSVersion = osversion
+	assert.PanicsWithError("org.osbuild.grub2.iso: isolabel option is required",
+		func() { instantiateAndSerialize(t, img, mockPackageSets(), nil, mockOSTreeCommitSpecs()) })
+}
+
+func TestTarInstallerPanics(t *testing.T) {
+	assert := assert.New(t)
+	img := image.NewAnacondaTarInstaller()
+	img.Platform = testPlatform
+
+	assert.PanicsWithError("org.osbuild.grub2.iso: product.name option is required",
+		func() { instantiateAndSerialize(t, img, mockPackageSets(), nil, nil) })
+
+	img.Product = product
+	assert.PanicsWithError("org.osbuild.grub2.iso: product.version option is required",
+		func() { instantiateAndSerialize(t, img, mockPackageSets(), nil, nil) })
+
+	img.OSVersion = osversion
+	assert.PanicsWithError("org.osbuild.grub2.iso: isolabel option is required",
+		func() { instantiateAndSerialize(t, img, mockPackageSets(), nil, nil) })
+}
