@@ -4,13 +4,13 @@ go 1.21
 
 require (
 	cloud.google.com/go/compute v1.27.2
-	cloud.google.com/go/storage v1.42.0
+	cloud.google.com/go/storage v1.43.0
 	github.com/Azure/azure-sdk-for-go v68.0.0+incompatible
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.3.2
 	github.com/Azure/go-autorest/autorest v0.11.29
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.13
 	github.com/BurntSushi/toml v1.4.0
-	github.com/aws/aws-sdk-go v1.54.13
+	github.com/aws/aws-sdk-go v1.54.14
 	github.com/containers/common v0.59.1
 	github.com/containers/image/v5 v5.31.1
 	github.com/containers/storage v1.54.0
