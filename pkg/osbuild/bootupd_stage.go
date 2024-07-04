@@ -100,8 +100,8 @@ func genMountsForBootupd(source string, pt *disk.PartitionTable) ([]Mount, error
 			mount.Partition = common.ToPtr(idx + 1)
 			mounts = append(mounts, *mount)
 		case *disk.Btrfs:
-			for _, subvol := range payload.Subvolumes {
-				mount, err := genOsbuildMount(source, &subvol)
+			for i := range payload.Subvolumes {
+				mount, err := genOsbuildMount(source, &payload.Subvolumes[i])
 				if err != nil {
 					return nil, err
 				}
