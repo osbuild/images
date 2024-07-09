@@ -226,7 +226,7 @@ func TestMountsDeviceFromPtHappy(t *testing.T) {
 func TestMountsDeviceFromBrfs(t *testing.T) {
 	filename := "fake-disk.img"
 	fakePt := testdisk.MakeFakeBtrfsPartitionTable("/", "/boot")
-	fsRootMntName, mounts, devices, err := genMountsDevicesFromPt(filename, fakePt)
+	fsRootMntName, mounts, devices, err := GenMountsDevicesFromPT(filename, fakePt)
 	require.Nil(t, err)
 	assert.Equal(t, "-", fsRootMntName)
 	assert.Equal(t, []Mount{
