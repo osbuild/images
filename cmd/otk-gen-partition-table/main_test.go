@@ -342,7 +342,7 @@ func TestGenPartitionTableMinimal(t *testing.T) {
 			},
 		},
 	}
-	output, err := genpart.GenPartitionTable(inp, rand.New(rand.NewSource(0)))
+	output, err := genpart.GenPartitionTable(inp, rand.New(rand.NewSource(0))) /* #nosec G404 */
 	assert.NoError(t, err)
 	assert.Equal(t, expectedOutput, output)
 }
@@ -434,7 +434,7 @@ func TestGenPartitionTableCustomizationExtraMp(t *testing.T) {
 		},
 	}
 	// default partition mode is "auto-lvm" so LVM is created by default
-	output, err := genpart.GenPartitionTable(inp, rand.New(rand.NewSource(0)))
+	output, err := genpart.GenPartitionTable(inp, rand.New(rand.NewSource(0))) /* #nosec G404 */
 	assert.NoError(t, err)
 	assert.Equal(t, expectedOutput, output)
 }
@@ -501,7 +501,7 @@ func TestGenPartitionTableCustomizationExtraMpPlusModificationPartitionMode(t *t
 			},
 		},
 	}
-	output, err := genpart.GenPartitionTable(inp, rand.New(rand.NewSource(0)))
+	output, err := genpart.GenPartitionTable(inp, rand.New(rand.NewSource(0))) /* #nosec G404 */
 	assert.NoError(t, err)
 	assert.Equal(t, expectedOutput, output)
 }
@@ -549,7 +549,7 @@ func TestGenPartitionTablePropertiesDefaultSize(t *testing.T) {
 			},
 		},
 	}
-	output, err := genpart.GenPartitionTable(inp, rand.New(rand.NewSource(0)))
+	output, err := genpart.GenPartitionTable(inp, rand.New(rand.NewSource(0))) /* #nosec G404 */
 	assert.NoError(t, err)
 	assert.Equal(t, expectedOutput, output)
 }
@@ -600,7 +600,7 @@ func TestGenPartitionTableModificationMinDiskSize(t *testing.T) {
 			},
 		},
 	}
-	output, err := genpart.GenPartitionTable(inp, rand.New(rand.NewSource(0)))
+	output, err := genpart.GenPartitionTable(inp, rand.New(rand.NewSource(0))) /* #nosec G404 */
 	assert.NoError(t, err)
 	assert.Equal(t, expectedOutput, output)
 }
@@ -650,7 +650,7 @@ func TestGenPartitionTableModificationFilename(t *testing.T) {
 			},
 		},
 	}
-	output, err := genpart.GenPartitionTable(inp, rand.New(rand.NewSource(0)))
+	output, err := genpart.GenPartitionTable(inp, rand.New(rand.NewSource(0))) /* #nosec G404 */
 	assert.NoError(t, err)
 	assert.Equal(t, expectedOutput, output)
 }
@@ -661,6 +661,6 @@ func TestGenPartitionTableValidates(t *testing.T) {
 			Type: "invalid-type",
 		},
 	}
-	_, err := genpart.GenPartitionTable(inp, rand.New(rand.NewSource(0)))
+	_, err := genpart.GenPartitionTable(inp, rand.New(rand.NewSource(0))) /* #nosec G404 */
 	assert.EqualError(t, err, `cannot validate inputs: unsupported partition type "invalid-type"`)
 }
