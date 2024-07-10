@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/manifest"
@@ -290,4 +292,20 @@ func (t *otkImageType) Manifest(bp *blueprint.Blueprint,
 
 	mf := manifest.NewOTK(t.otkPath)
 	return mf, nil, nil
+}
+
+func DistroFactory(idStr string) distro.Distro {
+	otkRoot := "otk" // TODO: configurable path
+	otkDistroRoot := filepath.Join(otkRoot, idStr)
+	d, err := New(otkDistroRoot)
+	if err != nil {
+		if strings.HasPrefix(idStr, "otk") {
+			// NOTE: printing error only if the distro name is otk otherwise we
+			// get an error for every distro that's checked. When we move to
+			// having only otk-based distros, this will be a fatal error.
+			logrus.Errorf("failed to load otk distro at %q: %s", otkDistroRoot, err)
+		}
+		return nil
+	}
+	return d
 }
