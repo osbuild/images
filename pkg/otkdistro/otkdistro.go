@@ -290,7 +290,11 @@ func (t *otkImageType) Manifest(bp *blueprint.Blueprint,
 	repos []rpmmd.RepoConfig,
 	seed int64) (manifest.Manifest, []string, error) {
 
-	mf := manifest.NewOTK(t.otkPath)
+	if bp == nil {
+		bp = &blueprint.Blueprint{}
+	}
+
+	mf := manifest.NewOTK(t.otkPath, *bp)
 	return mf, nil, nil
 }
 
