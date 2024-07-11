@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os/exec"
 
+	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -13,10 +14,12 @@ import (
 type OTKManifest struct {
 	// entrypoint yaml file for this otk manifest
 	entrypoint string
+
+	blueprint blueprint.Blueprint
 }
 
-func NewOTK(path string) *OTKManifest {
-	return &OTKManifest{entrypoint: path}
+func NewOTK(path string, bp blueprint.Blueprint) *OTKManifest {
+	return &OTKManifest{entrypoint: path, blueprint: bp}
 }
 
 func (m *OTKManifest) addPipeline(p Pipeline) {}
