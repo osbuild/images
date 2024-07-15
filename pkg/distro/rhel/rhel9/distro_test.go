@@ -526,7 +526,6 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"edge-ami",
 				"edge-vsphere",
 				"gce",
-				"gce-rhui",
 				"tar",
 				"image-installer",
 				"oci",
