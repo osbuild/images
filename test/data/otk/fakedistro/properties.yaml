@@ -1,5 +1,0 @@
----
-name: "FakeDistro"
-os_version: "42.0"
-release_version: "42"
-runner: "org.osbuild.fakedistro42"
