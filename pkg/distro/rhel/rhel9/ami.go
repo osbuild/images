@@ -243,23 +243,10 @@ func ec2CommonPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return ps
 }
 
-// common rhel ec2 RHUI image package set
-func rhelEc2CommonPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
-	ps := ec2CommonPackageSet(t)
-	// Include "redhat-cloud-client-configuration" on 9.1+ (COMPOSER-1805)
-	if common.VersionGreaterThanOrEqual(t.Arch().Distro().OsVersion(), "9.1") {
-		ps.Include = append(ps.Include, "redhat-cloud-client-configuration")
-	}
-	return ps
-}
-
 // rhel-ec2 image package set
 func rhelEc2PackageSet(t *rhel.ImageType) rpmmd.PackageSet {
-	ec2PackageSet := rhelEc2CommonPackageSet(t)
+	ec2PackageSet := ec2CommonPackageSet(t)
 	ec2PackageSet = ec2PackageSet.Append(rpmmd.PackageSet{
-		Include: []string{
-			"rh-amazon-rhui-client",
-		},
 		Exclude: []string{
 			"alsa-lib",
 		},
@@ -269,13 +256,12 @@ func rhelEc2PackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 
 // rhel-ha-ec2 image package set
 func rhelEc2HaPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
-	ec2HaPackageSet := rhelEc2CommonPackageSet(t)
+	ec2HaPackageSet := ec2CommonPackageSet(t)
 	ec2HaPackageSet = ec2HaPackageSet.Append(rpmmd.PackageSet{
 		Include: []string{
 			"fence-agents-all",
 			"pacemaker",
 			"pcs",
-			"rh-amazon-rhui-client-ha",
 		},
 		Exclude: []string{
 			"alsa-lib",
@@ -290,14 +276,13 @@ func rhelEc2HaPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 func rhelEc2SapPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return rpmmd.PackageSet{
 		Include: []string{
-			"rh-amazon-rhui-client-sap-bundle-e4s",
 			"libcanberra-gtk2",
 		},
 		Exclude: []string{
 			// COMPOSER-1829
 			"firewalld",
 		},
-	}.Append(rhelEc2CommonPackageSet(t)).Append(SapPackageSet(t))
+	}.Append(ec2CommonPackageSet(t)).Append(SapPackageSet(t))
 }
 
 func mkEc2ImgTypeX86_64(osVersion string, rhsm bool) *rhel.ImageType {
