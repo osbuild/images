@@ -66,7 +66,7 @@ func mkAzureRhuiImgType() *rhel.ImageType {
 		"disk.vhd.xz",
 		"application/xz",
 		map[string]rhel.PackageSetFunc{
-			rhel.OSPkgsKey: azureRhuiPackageSet,
+			rhel.OSPkgsKey: azurePackageSet,
 		},
 		rhel.DiskImage,
 		[]string{"build"},
@@ -195,24 +195,10 @@ func azurePackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return azureCommonPackageSet(t)
 }
 
-// Azure RHUI image package set
-func azureRhuiPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
-	return rpmmd.PackageSet{
-		Include: []string{
-			"rhui-azure-rhel9",
-		},
-	}.Append(azureCommonPackageSet(t))
-}
-
 // Azure SAP image package set
-// Includes the common azure package set, the common SAP packages, and
-// the azure rhui sap package.
+// Includes the common azure package set, the common SAP packages
 func azureSapPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
-	return rpmmd.PackageSet{
-		Include: []string{
-			"rhui-azure-rhel9-sap-ha",
-		},
-	}.Append(azureCommonPackageSet(t)).Append(SapPackageSet(t))
+	return azureCommonPackageSet(t).Append(SapPackageSet(t))
 }
 
 // PARTITION TABLES
