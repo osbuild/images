@@ -364,9 +364,6 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 			},
 			mkEC2ImgTypeAarch64(rd.OsVersion(), rd.IsRHEL()),
 		)
-
-		// add GCE RHUI image to RHEL only
-		x86_64.AddImageTypes(gceX86Platform, mkGCERHUIImageType())
 	}
 
 	rd.AddArches(x86_64, aarch64, ppc64le, s390x)
