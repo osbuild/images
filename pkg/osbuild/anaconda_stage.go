@@ -15,18 +15,42 @@ func NewAnacondaStage(options *AnacondaStageOptions) *Stage {
 	}
 }
 
-func NewAnacondaStageOptions(additionalModules []string) *AnacondaStageOptions {
-	modules := []string{
-		"org.fedoraproject.Anaconda.Modules.Network",
-		"org.fedoraproject.Anaconda.Modules.Payloads",
-		"org.fedoraproject.Anaconda.Modules.Storage",
+func defaultModuleStates() map[string]bool {
+	return map[string]bool{
+		"org.fedoraproject.Anaconda.Modules.Localization": false,
+		"org.fedoraproject.Anaconda.Modules.Network":      true,
+		"org.fedoraproject.Anaconda.Modules.Payloads":     true,
+		"org.fedoraproject.Anaconda.Modules.Runtime":      false,
+		"org.fedoraproject.Anaconda.Modules.Security":     false,
+		"org.fedoraproject.Anaconda.Modules.Services":     false,
+		"org.fedoraproject.Anaconda.Modules.Storage":      true,
+		"org.fedoraproject.Anaconda.Modules.Subscription": false,
+		"org.fedoraproject.Anaconda.Modules.Timezone":     false,
+		"org.fedoraproject.Anaconda.Modules.Users":        false,
 	}
+}
 
-	if len(additionalModules) > 0 {
-		modules = append(modules, additionalModules...)
+func enableModules(states map[string]bool, additional []string) {
+	for _, modname := range additional {
+		states[modname] = true
 	}
+}
+
+func filterEnabledModules(moduleStates map[string]bool) []string {
+	enabled := make([]string, 0, len(moduleStates))
+	for modname, state := range moduleStates {
+		if state {
+			enabled = append(enabled, modname)
+		}
+	}
+	return enabled
+}
+
+func NewAnacondaStageOptions(additionalModules []string) *AnacondaStageOptions {
+	states := defaultModuleStates()
+	enableModules(states, additionalModules)
 
 	return &AnacondaStageOptions{
-		KickstartModules: modules,
+		KickstartModules: filterEnabledModules(states),
 	}
 }
