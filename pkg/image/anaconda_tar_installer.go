@@ -68,6 +68,7 @@ type AnacondaTarInstaller struct {
 
 	AdditionalKernelOpts      []string
 	AdditionalAnacondaModules []string
+	DisabledAnacondaModules   []string
 	AdditionalDracutModules   []string
 	AdditionalDrivers         []string
 }
@@ -132,6 +133,7 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 			"org.fedoraproject.Anaconda.Modules.Security",
 		)
 	}
+	anacondaPipeline.DisabledAnacondaModules = img.DisabledAnacondaModules
 	anacondaPipeline.AdditionalDracutModules = img.AdditionalDracutModules
 	anacondaPipeline.AdditionalDrivers = img.AdditionalDrivers
 

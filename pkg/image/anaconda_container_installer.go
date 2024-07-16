@@ -37,6 +37,7 @@ type AnacondaContainerInstaller struct {
 
 	AdditionalDracutModules   []string
 	AdditionalAnacondaModules []string
+	DisabledAnacondaModules   []string
 	AdditionalDrivers         []string
 	FIPS                      bool
 
@@ -81,6 +82,7 @@ func (img *AnacondaContainerInstaller) InstantiateManifest(m *manifest.Manifest,
 	anacondaPipeline.Checkpoint()
 	anacondaPipeline.AdditionalDracutModules = img.AdditionalDracutModules
 	anacondaPipeline.AdditionalAnacondaModules = img.AdditionalAnacondaModules
+	anacondaPipeline.DisabledAnacondaModules = img.DisabledAnacondaModules
 	if img.FIPS {
 		anacondaPipeline.AdditionalAnacondaModules = append(
 			anacondaPipeline.AdditionalAnacondaModules,
