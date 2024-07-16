@@ -114,14 +114,20 @@ type ServicesCustomization struct {
 }
 
 type OpenSCAPCustomization struct {
-	DataStream string                           `json:"datastream,omitempty" toml:"datastream,omitempty"`
-	ProfileID  string                           `json:"profile_id,omitempty" toml:"profile_id,omitempty"`
-	Tailoring  *OpenSCAPTailoringCustomizations `json:"tailoring,omitempty" toml:"tailoring,omitempty"`
+	DataStream    string                               `json:"datastream,omitempty" toml:"datastream,omitempty"`
+	ProfileID     string                               `json:"profile_id,omitempty" toml:"profile_id,omitempty"`
+	Tailoring     *OpenSCAPTailoringCustomizations     `json:"tailoring,omitempty" toml:"tailoring,omitempty"`
+	JSONTailoring *OpenSCAPJSONTailoringCustomizations `json:"json_tailoring,omitempty" toml:"json_tailoring,omitempty"`
 }
 
 type OpenSCAPTailoringCustomizations struct {
 	Selected   []string `json:"selected,omitempty" toml:"selected,omitempty"`
 	Unselected []string `json:"unselected,omitempty" toml:"unselected,omitempty"`
+}
+
+type OpenSCAPJSONTailoringCustomizations struct {
+	ProfileID string `json:"profile_id,omitempty" toml:"profile_id,omitempty"`
+	Filepath  string `json:"filepath,omitempty" toml:"filepath,omitempty"`
 }
 
 // Configure the container storage separately from containers, since we most likely would
