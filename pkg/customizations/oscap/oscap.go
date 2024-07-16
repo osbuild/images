@@ -57,8 +57,56 @@ type RemediationConfig struct {
 type TailoringConfig struct {
 	RemediationConfig
 	TailoredProfileID string
+	JSONFilepath      string
 	Selected          []string
 	Unselected        []string
+}
+
+func newTailoringConfigs(profileID string, tc blueprint.OpenSCAPTailoringCustomizations, remediationConfig RemediationConfig) (*RemediationConfig, *TailoringConfig, error) {
+	// the tailoring config needs to know about the original base profile id,
+	// but the remediation config needs to know the updated profile id.
+	remediationConfig.ProfileID = fmt.Sprintf("%s_osbuild_tailoring", remediationConfig.ProfileID)
+	remediationConfig.TailoringPath = filepath.Join(DataDir, "tailoring.xml")
+
+	tailoringConfig := &TailoringConfig{
+		RemediationConfig: RemediationConfig{
+			ProfileID:     profileID,
+			Datastream:    remediationConfig.Datastream,
+			TailoringPath: remediationConfig.TailoringPath,
+		},
+		Selected:          tc.Selected,
+		Unselected:        tc.Unselected,
+		TailoredProfileID: remediationConfig.ProfileID,
+	}
+
+	return &remediationConfig, tailoringConfig, nil
+}
+
+func newJsonConfigs(profileID string, json blueprint.OpenSCAPJSONTailoringCustomizations, remediationConfig RemediationConfig) (*RemediationConfig, *TailoringConfig, error) {
+	if json.Filepath == "" {
+		return nil, nil, fmt.Errorf("Filepath to an JSON tailoring file is required")
+	}
+
+	if json.ProfileID == "" {
+		return nil, nil, fmt.Errorf("Tailoring profile ID is required for an JSON tailoring file")
+	}
+
+	// the tailoring config needs to know about the original base profile id,
+	// but the remediation config needs to know the updated profile id.
+	remediationConfig.ProfileID = json.ProfileID
+	remediationConfig.TailoringPath = filepath.Join(DataDir, "tailoring.xml")
+
+	tailoringConfig := &TailoringConfig{
+		RemediationConfig: RemediationConfig{
+			ProfileID:     profileID,
+			Datastream:    remediationConfig.Datastream,
+			TailoringPath: remediationConfig.TailoringPath,
+		},
+		JSONFilepath:      json.Filepath,
+		TailoredProfileID: json.ProfileID,
+	}
+
+	return &remediationConfig, tailoringConfig, nil
 }
 
 func NewConfigs(oscapConfig blueprint.OpenSCAPCustomization, defaultDatastream *string) (*RemediationConfig, *TailoringConfig, error) {
@@ -70,35 +118,25 @@ func NewConfigs(oscapConfig blueprint.OpenSCAPCustomization, defaultDatastream *
 		datastream = *defaultDatastream
 	}
 
-	remediationConfig := &RemediationConfig{
+	tc := oscapConfig.Tailoring
+	json := oscapConfig.JSONTailoring
+
+	remediationConfig := RemediationConfig{
 		Datastream:         datastream,
 		ProfileID:          oscapConfig.ProfileID,
 		CompressionEnabled: true,
 	}
 
-	tc := oscapConfig.Tailoring
-	if tc == nil {
-		return remediationConfig, nil, nil
+	switch {
+	case tc != nil && json != nil:
+		return nil, nil, fmt.Errorf("Multiple tailoring types set, only one type can be chosen (JSON/Override rules)")
+	case tc != nil:
+		return newTailoringConfigs(oscapConfig.ProfileID, *tc, remediationConfig)
+	case json != nil:
+		return newJsonConfigs(oscapConfig.ProfileID, *json, remediationConfig)
+	default:
+		return &remediationConfig, nil, nil
 	}
-
-	// tailoring config gets the base id and creates a new profile id
-	// which is then needed for the remediation stage. So we overwrite
-	// the base profile_id with the updated tailoring profile_id
-	remediationConfig.TailoringPath = filepath.Join(DataDir, "tailoring.xml")
-	remediationConfig.ProfileID = fmt.Sprintf("%s_osbuild_tailoring", remediationConfig.ProfileID)
-
-	tailoringConfig := &TailoringConfig{
-		RemediationConfig: RemediationConfig{
-			ProfileID:     oscapConfig.ProfileID,
-			TailoringPath: remediationConfig.TailoringPath,
-			Datastream:    datastream,
-		},
-		TailoredProfileID: remediationConfig.ProfileID,
-		Selected:          tc.Selected,
-		Unselected:        tc.Unselected,
-	}
-
-	return remediationConfig, tailoringConfig, nil
 }
 
 func DefaultFedoraDatastream() string {
