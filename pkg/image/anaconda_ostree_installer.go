@@ -38,6 +38,7 @@ type AnacondaOSTreeInstaller struct {
 
 	AdditionalDracutModules   []string
 	AdditionalAnacondaModules []string
+	DisabledAnacondaModules   []string
 	AdditionalDrivers         []string
 	FIPS                      bool
 }
@@ -86,6 +87,7 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 			"org.fedoraproject.Anaconda.Modules.Security",
 		)
 	}
+	anacondaPipeline.DisabledAnacondaModules = img.DisabledAnacondaModules
 	anacondaPipeline.AdditionalDrivers = img.AdditionalDrivers
 
 	rootfsImagePipeline := manifest.NewISORootfsImg(buildPipeline, anacondaPipeline)
