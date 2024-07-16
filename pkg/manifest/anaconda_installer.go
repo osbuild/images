@@ -269,7 +269,7 @@ func (p *AnacondaInstaller) payloadStages() []*osbuild.Stage {
 		LoraxPath = "99-generic/runtime-postinstall.tmpl"
 	}
 
-	stages = append(stages, osbuild.NewAnacondaStage(osbuild.NewAnacondaStageOptions(p.AdditionalAnacondaModules)))
+	stages = append(stages, osbuild.NewAnacondaStage(osbuild.NewAnacondaStageOptions(p.AdditionalAnacondaModules, nil)))
 	stages = append(stages, osbuild.NewLoraxScriptStage(&osbuild.LoraxScriptStageOptions{
 		Path:     LoraxPath,
 		BaseArch: p.platform.GetArch().String(),
