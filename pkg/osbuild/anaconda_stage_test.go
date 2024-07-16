@@ -23,16 +23,13 @@ func TestAnacondaStageOptions(t *testing.T) {
 				"org.fedoraproject.Anaconda.Modules.Storage",
 			},
 		},
-		"duplicate": {
+		"no-op": {
 			additional: []string{
 				"org.fedoraproject.Anaconda.Modules.Payloads",
 				"org.fedoraproject.Anaconda.Modules.Network",
 				"org.fedoraproject.Anaconda.Modules.Storage",
 			},
 			expected: []string{
-				"org.fedoraproject.Anaconda.Modules.Payloads",
-				"org.fedoraproject.Anaconda.Modules.Network",
-				"org.fedoraproject.Anaconda.Modules.Storage",
 				"org.fedoraproject.Anaconda.Modules.Payloads",
 				"org.fedoraproject.Anaconda.Modules.Network",
 				"org.fedoraproject.Anaconda.Modules.Storage",
