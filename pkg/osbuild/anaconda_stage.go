@@ -30,9 +30,12 @@ func defaultModuleStates() map[string]bool {
 	}
 }
 
-func enableModules(states map[string]bool, additional []string) {
-	for _, modname := range additional {
+func setModuleStates(states map[string]bool, enable, disable []string) {
+	for _, modname := range enable {
 		states[modname] = true
+	}
+	for _, modname := range disable {
+		states[modname] = false
 	}
 }
 
@@ -46,9 +49,9 @@ func filterEnabledModules(moduleStates map[string]bool) []string {
 	return enabled
 }
 
-func NewAnacondaStageOptions(additionalModules []string) *AnacondaStageOptions {
+func NewAnacondaStageOptions(enableModules, disableModules []string) *AnacondaStageOptions {
 	states := defaultModuleStates()
-	enableModules(states, additionalModules)
+	setModuleStates(states, enableModules, disableModules)
 
 	return &AnacondaStageOptions{
 		KickstartModules: filterEnabledModules(states),
