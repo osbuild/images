@@ -9,12 +9,12 @@ import (
 func TestNewOscapAutotailorStage(t *testing.T) {
 	stageOptions := &OscapAutotailorStageOptions{
 		Filepath: "tailoring.xml",
-		Config: OscapAutotailorConfig{
-			Datastream:        "test_stream",
-			ProfileID:         "test_profile",
-			TailoredProfileID: "test_profile_osbuild_profile",
-			Selected:          []string{"fast_rule"},
-			Unselected:        []string{"slow_rule"},
+		Config: AutotailorKeyValueConfig{
+			Datastream: "test_stream",
+			ProfileID:  "test_profile",
+			NewProfile: "test_profile_osbuild_profile",
+			Selected:   []string{"fast_rule"},
+			Unselected: []string{"slow_rule"},
 		},
 	}
 
@@ -33,14 +33,16 @@ func TestOscapAutotailorStageOptionsValidate(t *testing.T) {
 		err     bool
 	}{
 		{
-			name:    "empty-options",
-			options: OscapAutotailorStageOptions{},
-			err:     true,
+			name: "empty-options",
+			options: OscapAutotailorStageOptions{
+				Config: AutotailorKeyValueConfig{},
+			},
+			err: true,
 		},
 		{
 			name: "empty-datastream",
 			options: OscapAutotailorStageOptions{
-				Config: OscapAutotailorConfig{
+				Config: AutotailorKeyValueConfig{
 					ProfileID: "test-profile",
 				},
 			},
@@ -49,7 +51,7 @@ func TestOscapAutotailorStageOptionsValidate(t *testing.T) {
 		{
 			name: "empty-profile-id",
 			options: OscapAutotailorStageOptions{
-				Config: OscapAutotailorConfig{
+				Config: AutotailorKeyValueConfig{
 					Datastream: "test-datastream",
 				},
 			},
@@ -58,7 +60,7 @@ func TestOscapAutotailorStageOptionsValidate(t *testing.T) {
 		{
 			name: "empty-new-profile-name",
 			options: OscapAutotailorStageOptions{
-				Config: OscapAutotailorConfig{
+				Config: AutotailorKeyValueConfig{
 					ProfileID:  "test-profile",
 					Datastream: "test-datastream",
 				},
@@ -66,12 +68,42 @@ func TestOscapAutotailorStageOptionsValidate(t *testing.T) {
 			err: true,
 		},
 		{
+			name: "empty-tailored-profile-id",
+			options: OscapAutotailorStageOptions{
+				Config: AutotailorKeyValueConfig{
+					Datastream: "test-datastream",
+				},
+			},
+			err: true,
+		},
+		{
+			name: "empty-json-filepath",
+			options: OscapAutotailorStageOptions{
+				Config: AutotailorJSONConfig{
+					Datastream:        "test-datastream",
+					TailoredProfileID: "test-tailored-id",
+				},
+			},
+			err: true,
+		},
+		{
 			name: "valid-data",
 			options: OscapAutotailorStageOptions{
-				Config: OscapAutotailorConfig{
-					ProfileID:         "test-profile",
+				Config: AutotailorKeyValueConfig{
+					ProfileID:  "test-profile",
+					Datastream: "test-datastream",
+					NewProfile: "test-profile-osbuild-profile",
+				},
+			},
+			err: false,
+		},
+		{
+			name: "valid-data-json-config",
+			options: OscapAutotailorStageOptions{
+				Config: AutotailorJSONConfig{
 					Datastream:        "test-datastream",
-					TailoredProfileID: "test-profile-osbuild-profile",
+					TailoredProfileID: "test-profile",
+					TailoringFile:     "/test/filepath.json",
 				},
 			},
 			err: false,
