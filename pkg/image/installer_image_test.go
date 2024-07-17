@@ -290,3 +290,146 @@ func TestTarInstallerPanics(t *testing.T) {
 	assert.PanicsWithError("org.osbuild.grub2.iso: isolabel option is required",
 		func() { instantiateAndSerialize(t, img, mockPackageSets(), nil, nil) })
 }
+
+func findAnacondaStageModules(t *testing.T, mf manifest.OSBuildManifest) []interface{} {
+	pipeline := findPipelineFromOsbuildManifest(t, mf, "anaconda-tree")
+	assert.NotNil(t, pipeline)
+	stage := findStageFromOsbuildPipeline(t, pipeline, "org.osbuild.anaconda")
+	assert.NotNil(t, stage)
+	anacondaStageOptions := stage["options"].(map[string]interface{})
+	assert.NotNil(t, anacondaStageOptions)
+	modules := anacondaStageOptions["kickstart-modules"].([]interface{})
+	assert.NotNil(t, modules)
+	return modules
+}
+
+type testCase struct {
+	enable   []string
+	disable  []string
+	expected []string
+}
+
+var moduleTestCases = map[string]testCase{
+	"empty-args": {
+		expected: []string{
+			"org.fedoraproject.Anaconda.Modules.Payloads",
+			"org.fedoraproject.Anaconda.Modules.Network",
+			"org.fedoraproject.Anaconda.Modules.Storage",
+		},
+	},
+	"no-op": {
+		enable: []string{
+			"org.fedoraproject.Anaconda.Modules.Payloads",
+			"org.fedoraproject.Anaconda.Modules.Network",
+			"org.fedoraproject.Anaconda.Modules.Storage",
+		},
+		expected: []string{
+			"org.fedoraproject.Anaconda.Modules.Payloads",
+			"org.fedoraproject.Anaconda.Modules.Network",
+			"org.fedoraproject.Anaconda.Modules.Storage",
+		},
+	},
+	"enable-users": {
+		enable: []string{
+			"org.fedoraproject.Anaconda.Modules.Users",
+		},
+		expected: []string{
+			"org.fedoraproject.Anaconda.Modules.Payloads",
+			"org.fedoraproject.Anaconda.Modules.Network",
+			"org.fedoraproject.Anaconda.Modules.Storage",
+			"org.fedoraproject.Anaconda.Modules.Users",
+		},
+	},
+	"disable-storage": {
+		disable: []string{
+			"org.fedoraproject.Anaconda.Modules.Storage",
+		},
+		expected: []string{
+			"org.fedoraproject.Anaconda.Modules.Payloads",
+			"org.fedoraproject.Anaconda.Modules.Network",
+		},
+	},
+	"enable-users-disable-storage": {
+		enable: []string{
+			"org.fedoraproject.Anaconda.Modules.Users",
+		},
+		disable: []string{
+			"org.fedoraproject.Anaconda.Modules.Storage",
+		},
+		expected: []string{
+			"org.fedoraproject.Anaconda.Modules.Payloads",
+			"org.fedoraproject.Anaconda.Modules.Network",
+			"org.fedoraproject.Anaconda.Modules.Users",
+		},
+	},
+}
+
+func TestContainerInstallerModules(t *testing.T) {
+	for name := range moduleTestCases {
+		tc := moduleTestCases[name]
+		t.Run(name, func(t *testing.T) {
+			img := image.NewAnacondaContainerInstaller(container.SourceSpec{}, "")
+			img.Product = product
+			img.OSVersion = osversion
+			img.ISOLabel = isolabel
+
+			img.AdditionalAnacondaModules = tc.enable
+			img.DisabledAnacondaModules = tc.disable
+
+			assert.NotNil(t, img)
+			img.Platform = testPlatform
+			mfs := instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil)
+			modules := findAnacondaStageModules(t, manifest.OSBuildManifest(mfs))
+			assert.NotNil(t, modules)
+			assert.ElementsMatch(t, modules, tc.expected)
+		})
+	}
+}
+
+func TestOSTreeInstallerModules(t *testing.T) {
+	for name := range moduleTestCases {
+		tc := moduleTestCases[name]
+		t.Run(name, func(t *testing.T) {
+			img := image.NewAnacondaOSTreeInstaller(ostree.SourceSpec{})
+			img.Product = product
+			img.OSVersion = osversion
+			img.ISOLabel = isolabel
+			img.Kickstart = &kickstart.Options{
+				// the ostree options must be non-nil
+				OSTree: &kickstart.OSTree{},
+			}
+
+			img.AdditionalAnacondaModules = tc.enable
+			img.DisabledAnacondaModules = tc.disable
+
+			assert.NotNil(t, img)
+			img.Platform = testPlatform
+			mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, mockOSTreeCommitSpecs())
+			modules := findAnacondaStageModules(t, manifest.OSBuildManifest(mfs))
+			assert.NotNil(t, modules)
+			assert.ElementsMatch(t, modules, tc.expected)
+		})
+	}
+}
+
+func TestTarInstallerModules(t *testing.T) {
+	for name := range moduleTestCases {
+		tc := moduleTestCases[name]
+		t.Run(name, func(t *testing.T) {
+			img := image.NewAnacondaTarInstaller()
+			img.Product = product
+			img.OSVersion = osversion
+			img.ISOLabel = isolabel
+
+			img.AdditionalAnacondaModules = tc.enable
+			img.DisabledAnacondaModules = tc.disable
+
+			assert.NotNil(t, img)
+			img.Platform = testPlatform
+			mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
+			modules := findAnacondaStageModules(t, manifest.OSBuildManifest(mfs))
+			assert.NotNil(t, modules)
+			assert.ElementsMatch(t, modules, tc.expected)
+		})
+	}
+}
