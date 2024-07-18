@@ -407,10 +407,10 @@ func (c *Customizations) GetInstaller() (*InstallerCustomization, error) {
 	// when the user adds their own kickstart content
 	if c.Installer.Kickstart != nil && len(c.Installer.Kickstart.Contents) > 0 {
 		if c.Installer.Unattended {
-			return nil, fmt.Errorf("installer.unattended is not allowed when adding custom kickstart contents")
+			return nil, fmt.Errorf("installer.unattended is not supported when adding custom kickstart contents")
 		}
 		if len(c.Installer.SudoNopasswd) > 0 {
-			return nil, fmt.Errorf("installer.sudo-nopasswd is not allowed when adding custom kickstart contents")
+			return nil, fmt.Errorf("installer.sudo-nopasswd is not supported when adding custom kickstart contents")
 		}
 	}
 
