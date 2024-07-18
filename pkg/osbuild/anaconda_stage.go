@@ -1,6 +1,9 @@
 package osbuild
 
-import "github.com/osbuild/images/pkg/customizations/anaconda"
+import (
+	"github.com/osbuild/images/pkg/customizations/anaconda"
+	"golang.org/x/exp/slices"
+)
 
 type AnacondaStageOptions struct {
 	// Kickstart modules to enable
@@ -48,6 +51,8 @@ func filterEnabledModules(moduleStates map[string]bool) []string {
 			enabled = append(enabled, modname)
 		}
 	}
+	// sort the list to guarantee stable manifests
+	slices.Sort(enabled)
 	return enabled
 }
 
