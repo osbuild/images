@@ -8,6 +8,7 @@ import (
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/artifact"
 	"github.com/osbuild/images/pkg/container"
+	"github.com/osbuild/images/pkg/customizations/anaconda"
 	"github.com/osbuild/images/pkg/customizations/kickstart"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
@@ -86,7 +87,7 @@ func (img *AnacondaContainerInstaller) InstantiateManifest(m *manifest.Manifest,
 	if img.FIPS {
 		anacondaPipeline.AdditionalAnacondaModules = append(
 			anacondaPipeline.AdditionalAnacondaModules,
-			"org.fedoraproject.Anaconda.Modules.Security",
+			anaconda.ModuleSecurity,
 		)
 	}
 	anacondaPipeline.AdditionalDrivers = img.AdditionalDrivers

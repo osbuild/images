@@ -8,6 +8,7 @@ import (
 	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
+	"github.com/osbuild/images/pkg/customizations/anaconda"
 	"github.com/osbuild/images/pkg/customizations/bootc"
 	"github.com/osbuild/images/pkg/customizations/fdo"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
@@ -629,9 +630,9 @@ func iotInstallerImage(workload workload.Workload,
 	img.Kickstart.Timezone, _ = customizations.GetTimezoneSettings()
 
 	img.AdditionalAnacondaModules = []string{
-		"org.fedoraproject.Anaconda.Modules.Timezone",
-		"org.fedoraproject.Anaconda.Modules.Localization",
-		"org.fedoraproject.Anaconda.Modules.Users",
+		anaconda.ModuleTimezone,
+		anaconda.ModuleLocalization,
+		anaconda.ModuleUsers,
 	}
 
 	img.SquashfsCompression = "lz4"

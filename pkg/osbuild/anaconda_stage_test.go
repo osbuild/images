@@ -3,6 +3,7 @@ package osbuild_test
 import (
 	"testing"
 
+	"github.com/osbuild/images/pkg/customizations/anaconda"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/stretchr/testify/require"
 )
@@ -18,47 +19,47 @@ func TestAnacondaStageOptions(t *testing.T) {
 	testCases := map[string]testCase{
 		"empty-args": {
 			expected: []string{
-				"org.fedoraproject.Anaconda.Modules.Payloads",
-				"org.fedoraproject.Anaconda.Modules.Network",
-				"org.fedoraproject.Anaconda.Modules.Storage",
+				anaconda.ModulePayloads,
+				anaconda.ModuleNetwork,
+				anaconda.ModuleStorage,
 			},
 		},
 		"no-op": {
 			enable: []string{
-				"org.fedoraproject.Anaconda.Modules.Payloads",
-				"org.fedoraproject.Anaconda.Modules.Network",
-				"org.fedoraproject.Anaconda.Modules.Storage",
+				anaconda.ModulePayloads,
+				anaconda.ModuleNetwork,
+				anaconda.ModuleStorage,
 			},
 			expected: []string{
-				"org.fedoraproject.Anaconda.Modules.Payloads",
-				"org.fedoraproject.Anaconda.Modules.Network",
-				"org.fedoraproject.Anaconda.Modules.Storage",
+				anaconda.ModulePayloads,
+				anaconda.ModuleNetwork,
+				anaconda.ModuleStorage,
 			},
 		},
 		"add-users": {
 			enable: []string{
-				"org.fedoraproject.Anaconda.Modules.Users",
+				anaconda.ModuleUsers,
 			},
 			expected: []string{
-				"org.fedoraproject.Anaconda.Modules.Payloads",
-				"org.fedoraproject.Anaconda.Modules.Network",
-				"org.fedoraproject.Anaconda.Modules.Storage",
-				"org.fedoraproject.Anaconda.Modules.Users",
+				anaconda.ModulePayloads,
+				anaconda.ModuleNetwork,
+				anaconda.ModuleStorage,
+				anaconda.ModuleUsers,
 			},
 		},
 		"add-multi": {
 			enable: []string{
-				"org.fedoraproject.Anaconda.Modules.Subscription",
-				"org.fedoraproject.Anaconda.Modules.Timezone",
-				"org.fedoraproject.Anaconda.Modules.Users",
+				anaconda.ModuleSubscription,
+				anaconda.ModuleTimezone,
+				anaconda.ModuleUsers,
 			},
 			expected: []string{
-				"org.fedoraproject.Anaconda.Modules.Payloads",
-				"org.fedoraproject.Anaconda.Modules.Network",
-				"org.fedoraproject.Anaconda.Modules.Storage",
-				"org.fedoraproject.Anaconda.Modules.Subscription",
-				"org.fedoraproject.Anaconda.Modules.Timezone",
-				"org.fedoraproject.Anaconda.Modules.Users",
+				anaconda.ModulePayloads,
+				anaconda.ModuleNetwork,
+				anaconda.ModuleStorage,
+				anaconda.ModuleSubscription,
+				anaconda.ModuleTimezone,
+				anaconda.ModuleUsers,
 			},
 		},
 		"add-nonsense": {
@@ -66,50 +67,50 @@ func TestAnacondaStageOptions(t *testing.T) {
 				"org.osbuild.not.anaconda.module",
 			},
 			expected: []string{
-				"org.fedoraproject.Anaconda.Modules.Payloads",
-				"org.fedoraproject.Anaconda.Modules.Network",
-				"org.fedoraproject.Anaconda.Modules.Storage",
+				anaconda.ModulePayloads,
+				anaconda.ModuleNetwork,
+				anaconda.ModuleStorage,
 				"org.osbuild.not.anaconda.module",
 			},
 		},
 		"no-op-disable": {
 			disable: []string{
-				"org.fedoraproject.Anaconda.Modules.Users",
+				anaconda.ModuleUsers,
 			},
 			expected: []string{
-				"org.fedoraproject.Anaconda.Modules.Payloads",
-				"org.fedoraproject.Anaconda.Modules.Network",
-				"org.fedoraproject.Anaconda.Modules.Storage",
+				anaconda.ModulePayloads,
+				anaconda.ModuleNetwork,
+				anaconda.ModuleStorage,
 			},
 		},
 		"disable-all": {
 			disable: []string{
-				"org.fedoraproject.Anaconda.Modules.Payloads",
-				"org.fedoraproject.Anaconda.Modules.Network",
-				"org.fedoraproject.Anaconda.Modules.Storage",
+				anaconda.ModulePayloads,
+				anaconda.ModuleNetwork,
+				anaconda.ModuleStorage,
 			},
 			expected: nil,
 		},
 		"disable-one": {
 			disable: []string{
-				"org.fedoraproject.Anaconda.Modules.Storage",
+				anaconda.ModuleStorage,
 			},
 			expected: []string{
-				"org.fedoraproject.Anaconda.Modules.Payloads",
-				"org.fedoraproject.Anaconda.Modules.Network",
+				anaconda.ModulePayloads,
+				anaconda.ModuleNetwork,
 			},
 		},
 		"enable-then-disable": {
 			enable: []string{
-				"org.fedoraproject.Anaconda.Modules.Services",
+				anaconda.ModuleServices,
 			},
 			disable: []string{
-				"org.fedoraproject.Anaconda.Modules.Services",
+				anaconda.ModuleServices,
 			},
 			expected: []string{
-				"org.fedoraproject.Anaconda.Modules.Storage",
-				"org.fedoraproject.Anaconda.Modules.Payloads",
-				"org.fedoraproject.Anaconda.Modules.Network",
+				anaconda.ModuleStorage,
+				anaconda.ModulePayloads,
+				anaconda.ModuleNetwork,
 			},
 		},
 		"enable-then-disable-nonsense": {
@@ -120,26 +121,26 @@ func TestAnacondaStageOptions(t *testing.T) {
 				"org.osbuild.not.anaconda.module.2",
 			},
 			expected: []string{
-				"org.fedoraproject.Anaconda.Modules.Storage",
-				"org.fedoraproject.Anaconda.Modules.Payloads",
-				"org.fedoraproject.Anaconda.Modules.Network",
+				anaconda.ModuleStorage,
+				anaconda.ModulePayloads,
+				anaconda.ModuleNetwork,
 			},
 		},
 		"enable-then-disable-multi": {
 			enable: []string{
-				"org.fedoraproject.Anaconda.Modules.Subscription",
-				"org.fedoraproject.Anaconda.Modules.Timezone",
-				"org.fedoraproject.Anaconda.Modules.Users",
+				anaconda.ModuleSubscription,
+				anaconda.ModuleTimezone,
+				anaconda.ModuleUsers,
 			},
 			disable: []string{
-				"org.fedoraproject.Anaconda.Modules.Subscription",
-				"org.fedoraproject.Anaconda.Modules.Timezone",
-				"org.fedoraproject.Anaconda.Modules.Users",
+				anaconda.ModuleSubscription,
+				anaconda.ModuleTimezone,
+				anaconda.ModuleUsers,
 			},
 			expected: []string{
-				"org.fedoraproject.Anaconda.Modules.Storage",
-				"org.fedoraproject.Anaconda.Modules.Payloads",
-				"org.fedoraproject.Anaconda.Modules.Network",
+				anaconda.ModuleStorage,
+				anaconda.ModulePayloads,
+				anaconda.ModuleNetwork,
 			},
 		},
 	}

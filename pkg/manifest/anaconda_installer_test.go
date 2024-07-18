@@ -3,6 +3,7 @@ package manifest
 import (
 	"testing"
 
+	"github.com/osbuild/images/pkg/customizations/anaconda"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -42,54 +43,54 @@ func TestAnacondaInstallerModules(t *testing.T) {
 	testCases := map[string]testCase{
 		"empty-args": {
 			expected: []string{
-				"org.fedoraproject.Anaconda.Modules.Payloads",
-				"org.fedoraproject.Anaconda.Modules.Network",
-				"org.fedoraproject.Anaconda.Modules.Storage",
+				anaconda.ModulePayloads,
+				anaconda.ModuleNetwork,
+				anaconda.ModuleStorage,
 			},
 		},
 		"no-op": {
 			enable: []string{
-				"org.fedoraproject.Anaconda.Modules.Payloads",
-				"org.fedoraproject.Anaconda.Modules.Network",
-				"org.fedoraproject.Anaconda.Modules.Storage",
+				anaconda.ModulePayloads,
+				anaconda.ModuleNetwork,
+				anaconda.ModuleStorage,
 			},
 			expected: []string{
-				"org.fedoraproject.Anaconda.Modules.Payloads",
-				"org.fedoraproject.Anaconda.Modules.Network",
-				"org.fedoraproject.Anaconda.Modules.Storage",
+				anaconda.ModulePayloads,
+				anaconda.ModuleNetwork,
+				anaconda.ModuleStorage,
 			},
 		},
 		"enable-users": {
 			enable: []string{
-				"org.fedoraproject.Anaconda.Modules.Users",
+				anaconda.ModuleUsers,
 			},
 			expected: []string{
-				"org.fedoraproject.Anaconda.Modules.Payloads",
-				"org.fedoraproject.Anaconda.Modules.Network",
-				"org.fedoraproject.Anaconda.Modules.Storage",
-				"org.fedoraproject.Anaconda.Modules.Users",
+				anaconda.ModulePayloads,
+				anaconda.ModuleNetwork,
+				anaconda.ModuleStorage,
+				anaconda.ModuleUsers,
 			},
 		},
 		"disable-storage": {
 			disable: []string{
-				"org.fedoraproject.Anaconda.Modules.Storage",
+				anaconda.ModuleStorage,
 			},
 			expected: []string{
-				"org.fedoraproject.Anaconda.Modules.Payloads",
-				"org.fedoraproject.Anaconda.Modules.Network",
+				anaconda.ModulePayloads,
+				anaconda.ModuleNetwork,
 			},
 		},
 		"enable-users-disable-storage": {
 			enable: []string{
-				"org.fedoraproject.Anaconda.Modules.Users",
+				anaconda.ModuleUsers,
 			},
 			disable: []string{
-				"org.fedoraproject.Anaconda.Modules.Storage",
+				anaconda.ModuleStorage,
 			},
 			expected: []string{
-				"org.fedoraproject.Anaconda.Modules.Payloads",
-				"org.fedoraproject.Anaconda.Modules.Network",
-				"org.fedoraproject.Anaconda.Modules.Users",
+				anaconda.ModulePayloads,
+				anaconda.ModuleNetwork,
+				anaconda.ModuleUsers,
 			},
 		},
 	}

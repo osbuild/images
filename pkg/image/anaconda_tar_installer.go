@@ -10,6 +10,7 @@ import (
 	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/artifact"
+	"github.com/osbuild/images/pkg/customizations/anaconda"
 	"github.com/osbuild/images/pkg/customizations/kickstart"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/manifest"
@@ -130,7 +131,7 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	if img.OSCustomizations.FIPS {
 		anacondaPipeline.AdditionalAnacondaModules = append(
 			anacondaPipeline.AdditionalAnacondaModules,
-			"org.fedoraproject.Anaconda.Modules.Security",
+			anaconda.ModuleSecurity,
 		)
 	}
 	anacondaPipeline.DisabledAnacondaModules = img.DisabledAnacondaModules
