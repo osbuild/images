@@ -430,6 +430,15 @@ func imageInstallerImage(workload workload.Workload,
 		img.AdditionalKernelOpts = []string{"inst.text", "inst.noninteractive"}
 	}
 
+	instCust, err := customizations.GetInstaller()
+	if err != nil {
+		return nil, err
+	}
+	if instCust != nil && instCust.Modules != nil {
+		img.AdditionalAnacondaModules = append(img.AdditionalAnacondaModules, instCust.Modules.Enable...)
+		img.DisabledAnacondaModules = append(img.DisabledAnacondaModules, instCust.Modules.Disable...)
+	}
+
 	img.Platform = t.platform
 	img.Workload = workload
 
@@ -629,11 +638,20 @@ func iotInstallerImage(workload workload.Workload,
 	// kickstart though kickstart does support setting them
 	img.Kickstart.Timezone, _ = customizations.GetTimezoneSettings()
 
-	img.AdditionalAnacondaModules = []string{
+	instCust, err := customizations.GetInstaller()
+	if err != nil {
+		return nil, err
+	}
+	if instCust != nil && instCust.Modules != nil {
+		img.AdditionalAnacondaModules = append(img.AdditionalAnacondaModules, instCust.Modules.Enable...)
+		img.DisabledAnacondaModules = append(img.DisabledAnacondaModules, instCust.Modules.Disable...)
+	}
+
+	img.AdditionalAnacondaModules = append(img.AdditionalAnacondaModules, []string{
 		anaconda.ModuleTimezone,
 		anaconda.ModuleLocalization,
 		anaconda.ModuleUsers,
-	}
+	}...)
 
 	img.SquashfsCompression = "lz4"
 

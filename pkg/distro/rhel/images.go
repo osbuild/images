@@ -481,9 +481,18 @@ func EdgeInstallerImage(workload workload.Workload,
 		img.AdditionalDrivers = installerConfig.AdditionalDrivers
 	}
 
+	instCust, err := customizations.GetInstaller()
+	if err != nil {
+		return nil, err
+	}
+	if instCust != nil && instCust.Modules != nil {
+		img.AdditionalAnacondaModules = append(img.AdditionalAnacondaModules, instCust.Modules.Enable...)
+		img.DisabledAnacondaModules = append(img.DisabledAnacondaModules, instCust.Modules.Disable...)
+	}
+
 	if len(img.Kickstart.Users)+len(img.Kickstart.Groups) > 0 {
 		// only enable the users module if needed
-		img.AdditionalAnacondaModules = []string{anaconda.ModuleUsers}
+		img.AdditionalAnacondaModules = append(img.AdditionalAnacondaModules, anaconda.ModuleUsers)
 	}
 
 	img.ISOLabel, err = t.ISOLabel()
@@ -663,7 +672,15 @@ func ImageInstallerImage(workload workload.Workload,
 		img.AdditionalDrivers = installerConfig.AdditionalDrivers
 	}
 
-	img.AdditionalAnacondaModules = []string{anaconda.ModuleUsers}
+	instCust, err := customizations.GetInstaller()
+	if err != nil {
+		return nil, err
+	}
+	if instCust != nil && instCust.Modules != nil {
+		img.AdditionalAnacondaModules = append(img.AdditionalAnacondaModules, instCust.Modules.Enable...)
+		img.DisabledAnacondaModules = append(img.DisabledAnacondaModules, instCust.Modules.Disable...)
+	}
+	img.AdditionalAnacondaModules = append(img.AdditionalAnacondaModules, anaconda.ModuleUsers)
 
 	img.SquashfsCompression = "xz"
 
