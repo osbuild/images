@@ -3,6 +3,7 @@ package blueprint
 import (
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 )
 
@@ -409,6 +410,14 @@ func (c *Customizations) GetInstaller() (*InstallerCustomization, error) {
 		if len(c.Installer.SudoNopasswd) > 0 {
 			return nil, fmt.Errorf("installer.sudo-nopasswd is not allowed when adding custom kickstart contents")
 		}
+	}
+
+	// Disabling the user module isn't supported when users or groups are
+	// defined
+	if c.Installer.Modules != nil &&
+		slices.Contains(c.Installer.Modules.Disable, "org.fedoraproject.Anaconda.Modules.Users") &&
+		len(c.User)+len(c.Group) > 0 {
+		return nil, fmt.Errorf("blueprint contains user or group customizations but disables the required Users Anaconda module")
 	}
 
 	return c.Installer, nil
