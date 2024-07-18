@@ -1,5 +1,7 @@
 package osbuild
 
+import "github.com/osbuild/images/pkg/customizations/anaconda"
+
 type AnacondaStageOptions struct {
 	// Kickstart modules to enable
 	KickstartModules []string `json:"kickstart-modules"`
@@ -17,16 +19,16 @@ func NewAnacondaStage(options *AnacondaStageOptions) *Stage {
 
 func defaultModuleStates() map[string]bool {
 	return map[string]bool{
-		"org.fedoraproject.Anaconda.Modules.Localization": false,
-		"org.fedoraproject.Anaconda.Modules.Network":      true,
-		"org.fedoraproject.Anaconda.Modules.Payloads":     true,
-		"org.fedoraproject.Anaconda.Modules.Runtime":      false,
-		"org.fedoraproject.Anaconda.Modules.Security":     false,
-		"org.fedoraproject.Anaconda.Modules.Services":     false,
-		"org.fedoraproject.Anaconda.Modules.Storage":      true,
-		"org.fedoraproject.Anaconda.Modules.Subscription": false,
-		"org.fedoraproject.Anaconda.Modules.Timezone":     false,
-		"org.fedoraproject.Anaconda.Modules.Users":        false,
+		anaconda.ModuleLocalization: false,
+		anaconda.ModuleNetwork:      true,
+		anaconda.ModulePayloads:     true,
+		anaconda.ModuleRuntime:      false,
+		anaconda.ModuleSecurity:     false,
+		anaconda.ModuleServices:     false,
+		anaconda.ModuleStorage:      true,
+		anaconda.ModuleSubscription: false,
+		anaconda.ModuleTimezone:     false,
+		anaconda.ModuleUsers:        false,
 	}
 }
 

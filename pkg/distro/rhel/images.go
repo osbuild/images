@@ -7,6 +7,7 @@ import (
 	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
+	"github.com/osbuild/images/pkg/customizations/anaconda"
 	"github.com/osbuild/images/pkg/customizations/fdo"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/ignition"
@@ -482,7 +483,7 @@ func EdgeInstallerImage(workload workload.Workload,
 
 	if len(img.Kickstart.Users)+len(img.Kickstart.Groups) > 0 {
 		// only enable the users module if needed
-		img.AdditionalAnacondaModules = []string{"org.fedoraproject.Anaconda.Modules.Users"}
+		img.AdditionalAnacondaModules = []string{anaconda.ModuleUsers}
 	}
 
 	img.ISOLabel, err = t.ISOLabel()
@@ -662,7 +663,7 @@ func ImageInstallerImage(workload workload.Workload,
 		img.AdditionalDrivers = installerConfig.AdditionalDrivers
 	}
 
-	img.AdditionalAnacondaModules = []string{"org.fedoraproject.Anaconda.Modules.Users"}
+	img.AdditionalAnacondaModules = []string{anaconda.ModuleUsers}
 
 	img.SquashfsCompression = "xz"
 

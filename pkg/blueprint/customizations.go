@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"slices"
 	"strings"
+
+	"github.com/osbuild/images/pkg/customizations/anaconda"
 )
 
 type Customizations struct {
@@ -415,7 +417,7 @@ func (c *Customizations) GetInstaller() (*InstallerCustomization, error) {
 	// Disabling the user module isn't supported when users or groups are
 	// defined
 	if c.Installer.Modules != nil &&
-		slices.Contains(c.Installer.Modules.Disable, "org.fedoraproject.Anaconda.Modules.Users") &&
+		slices.Contains(c.Installer.Modules.Disable, anaconda.ModuleUsers) &&
 		len(c.User)+len(c.Group) > 0 {
 		return nil, fmt.Errorf("blueprint contains user or group customizations but disables the required Users Anaconda module")
 	}
