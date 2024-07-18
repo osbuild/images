@@ -429,7 +429,7 @@ func TestGetInstallerErrors(t *testing.T) {
 					},
 				},
 			},
-			expected: "installer.unattended is not allowed when adding custom kickstart contents",
+			expected: "installer.unattended is not supported when adding custom kickstart contents",
 		},
 		"sudo+custom": {
 			customizations: Customizations{
@@ -445,7 +445,7 @@ func TestGetInstallerErrors(t *testing.T) {
 					},
 				},
 			},
-			expected: "installer.sudo-nopasswd is not allowed when adding custom kickstart contents",
+			expected: "installer.sudo-nopasswd is not supported when adding custom kickstart contents",
 		},
 		"users-disabled": {
 			customizations: Customizations{
