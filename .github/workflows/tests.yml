@@ -77,11 +77,18 @@ jobs:
       - name: Run unit tests
         run: sudo go test -v ./pkg/container/... --force-local-resolver
 
-  unit-tests-c9s:
-    name: "🛃 Unit tests (CentOS Stream 9)"
+  unit-tests-cs:
+    strategy:
+      matrix:
+        centos_stream:
+          - version: 9
+            image_tag: stream9
+          - version: 10
+            image_tag: stream10-development
+    name: "🛃 Unit tests (CentOS Stream ${{ matrix.centos_stream.version }})"
     runs-on: ubuntu-latest
     container:
-      image: quay.io/centos/centos:stream9
+      image: quay.io/centos/centos:${{ matrix.centos_stream.image_tag }}
     env:
       GOFLAGS: "-tags=exclude_graphdriver_btrfs"
 
