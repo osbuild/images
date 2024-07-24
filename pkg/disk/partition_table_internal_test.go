@@ -1,6 +1,7 @@
 package disk
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -69,4 +70,175 @@ func validateEntitySize(ent Entity, size uint64) error {
 	}
 	// non-containers need no checking
 	return nil
+}
+
+func TestValidateFunctions(t *testing.T) {
+	type testCase struct {
+		pt  *PartitionTable
+		err error
+	}
+
+	testCases := map[string]testCase{
+		"happy-simple": {
+			pt: &PartitionTable{
+				Size: 100,
+				Partitions: []Partition{
+					{
+						Size: 10,
+					},
+					{
+						Size: 20,
+					},
+				},
+			},
+			err: nil,
+		},
+		"happy-nested": {
+			pt: &PartitionTable{
+				Size: 100,
+				Partitions: []Partition{
+					{
+						Size: 10,
+					},
+					{
+						Size: 20,
+						Payload: &LVMVolumeGroup{
+							LogicalVolumes: []LVMLogicalVolume{
+								{
+									Size: 5,
+								},
+								{
+									Size: 8,
+								},
+							},
+						},
+					},
+				},
+			},
+			err: nil,
+		},
+		"happy-btrfs": {
+			pt: &PartitionTable{
+				Size: 100,
+				Partitions: []Partition{
+					{
+						Size: 10,
+					},
+					{
+						Size: 20,
+						Payload: &Btrfs{
+							Subvolumes: []BtrfsSubvolume{
+								{
+									Size: 4,
+								},
+								{
+									Size: 2,
+								},
+							},
+						},
+					},
+				},
+			},
+			err: nil,
+		},
+		"unhappy-simple": {
+			pt: &PartitionTable{
+				Size: 10,
+				Partitions: []Partition{
+					{
+						Size: 10,
+					},
+					{
+						Size: 20,
+					},
+				},
+			},
+			err: fmt.Errorf("PartitionTable size 10 is smaller than the sum of its partitions 30"),
+		},
+		"unhappy-nested": {
+			pt: &PartitionTable{
+				Size: 100,
+				Partitions: []Partition{
+					{
+						Size: 10,
+					},
+					{
+						Size: 20,
+						Payload: &LVMVolumeGroup{
+							LogicalVolumes: []LVMLogicalVolume{
+								{
+									Size: 15,
+								},
+								{
+									Size: 8,
+								},
+							},
+						},
+					},
+				},
+			},
+			err: fmt.Errorf("Entity size 20 is smaller than the sum of its children 23"),
+		},
+		"unhappy-nested-luks": {
+			pt: &PartitionTable{
+				Size: 100,
+				Partitions: []Partition{
+					{
+						Size: 10,
+					},
+					{
+						Size: 20,
+						Payload: &LUKSContainer{
+							Payload: &LVMVolumeGroup{
+								LogicalVolumes: []LVMLogicalVolume{
+									{
+										Size: 15,
+									},
+									{
+										Size: 8,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			err: fmt.Errorf("Entity size 20 is smaller than the sum of its children 23"),
+		},
+		"unhappy-btrfs": {
+			pt: &PartitionTable{
+				Size: 100,
+				Partitions: []Partition{
+					{
+						Size: 10,
+					},
+					{
+						Size: 20,
+						Payload: &Btrfs{
+							Subvolumes: []BtrfsSubvolume{
+								{
+									Size: 10,
+								},
+								{
+									Size: 10,
+								},
+								{
+									Size: 1,
+								},
+							},
+						},
+					},
+				},
+			},
+			err: fmt.Errorf("Entity size 20 is smaller than the sum of its children 21"),
+		},
+	}
+
+	for name := range testCases {
+		tc := testCases[name]
+		t.Run(name, func(t *testing.T) {
+			err := validatePTSize(tc.pt)
+			assert.Equal(t, tc.err, err)
+		})
+	}
 }
