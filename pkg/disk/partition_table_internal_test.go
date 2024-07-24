@@ -459,6 +459,62 @@ func TestRelayout(t *testing.T) {
 				},
 			},
 		},
+		"lvm-gpt-multilv": {
+			pt: &PartitionTable{
+				Type: "gpt",
+				Size: 100 * MiB,
+				Partitions: []Partition{
+					{
+						Size: 20 * MiB,
+					},
+					{
+						Size: 30 * MiB,
+						Payload: &LVMVolumeGroup{
+							LogicalVolumes: []LVMLogicalVolume{
+								{
+									Size: 20 * MiB,
+								},
+								{
+									Payload: &Filesystem{
+										Mountpoint: "/",
+									},
+									// TODO: fix bug where the VG partition is not resized to fit the sum of LVs
+									Size: 10 * MiB,
+								},
+							},
+						},
+					},
+				},
+			},
+			size: 100 * MiB,
+			expected: &PartitionTable{
+				Type: "gpt",
+				Size: 100 * MiB,
+				Partitions: []Partition{
+					{
+						Start: 1 * MiB, // 1 sector header aligned up to the default grain (1 MiB)
+						Size:  20 * MiB,
+					},
+					{
+						Start: 21 * MiB,
+						Size:  79*MiB - (DefaultSectorSize + (128 * 128)), // Grows to fill the space, but gpt adds a footer the same size as the header (unaligned)
+						Payload: &LVMVolumeGroup{
+							LogicalVolumes: []LVMLogicalVolume{
+								{
+									Size: 20 * MiB,
+								},
+								{
+									Payload: &Filesystem{
+										Mountpoint: "/",
+									},
+									Size: 10 * MiB, // We don't automatically grow the root LV
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for name := range testCases {
