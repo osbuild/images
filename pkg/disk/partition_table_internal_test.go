@@ -286,6 +286,41 @@ func TestRelayout(t *testing.T) {
 				},
 			},
 		},
+		"simple-gpt": {
+			pt: &PartitionTable{
+				Type: "gpt",
+				Size: 100 * MiB,
+				Partitions: []Partition{
+					{
+						Size: 10 * MiB,
+					},
+					{
+						Payload: &Filesystem{
+							Mountpoint: "/",
+						},
+						Size: 20 * MiB,
+					},
+				},
+			},
+			size: 100 * MiB,
+			expected: &PartitionTable{
+				Type: "gpt",
+				Size: 100 * MiB,
+				Partitions: []Partition{
+					{
+						Start: 1 * MiB, // header (1 sector + 128 B * 128 partitions) aligned up to the default grain (1 MiB)
+						Size:  10 * MiB,
+					},
+					{
+						Payload: &Filesystem{
+							Mountpoint: "/",
+						},
+						Start: 11 * MiB,
+						Size:  89*MiB - (DefaultSectorSize + (128 * 128)), // Grows to fill the space, but gpt adds a footer the same size as the header (unaligned)
+					},
+				},
+			},
+		},
 	}
 
 	for name := range testCases {
