@@ -478,7 +478,6 @@ func TestRelayout(t *testing.T) {
 									Payload: &Filesystem{
 										Mountpoint: "/",
 									},
-									// TODO: fix bug where the VG partition is not resized to fit the sum of LVs
 									Size: 10 * MiB,
 								},
 							},
@@ -684,6 +683,116 @@ func TestRelayout(t *testing.T) {
 										Mountpoint: "/",
 									},
 									Size: 10 * MiB, // We don't automatically grow the root LV
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"lvm-dos-grow-rootvg": {
+			pt: &PartitionTable{
+				Type: "dos",
+				Size: 10 * MiB, // PT is smaller than the sum of Partitions
+				Partitions: []Partition{
+					{
+						Size: 200 * MiB,
+					},
+					{
+						Size: 10 * MiB, // VG partition is smaller than sum of LVs
+						Payload: &LVMVolumeGroup{
+							LogicalVolumes: []LVMLogicalVolume{
+								{
+									Size: 20 * MiB,
+								},
+								{
+									Payload: &Filesystem{
+										Mountpoint: "/",
+									},
+									Size: 100 * MiB,
+								},
+							},
+						},
+					},
+				},
+			},
+			size: 99 * MiB,
+			expected: &PartitionTable{
+				Type: "dos",
+				Size: 325 * MiB,
+				Partitions: []Partition{
+					{
+						Start: 1 * MiB, // 1 sector header aligned up to the default grain (1 MiB)
+						Size:  200 * MiB,
+					},
+					{
+						Start: 201 * MiB,
+						Size:  124 * MiB, // grows to fit logical volumes + 1 MiB metadata, rounded up to default extent size (4 MiB)
+						Payload: &LVMVolumeGroup{
+							LogicalVolumes: []LVMLogicalVolume{
+								{
+									Size: 20 * MiB,
+								},
+								{
+									Payload: &Filesystem{
+										Mountpoint: "/",
+									},
+									Size: 100 * MiB,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"lvm-gpt-grow-rootvg": {
+			pt: &PartitionTable{
+				Type: "gpt",
+				Size: 10 * MiB,
+				Partitions: []Partition{
+					{
+						Size: 200 * MiB,
+					},
+					{
+						Size: 10 * MiB,
+						Payload: &LVMVolumeGroup{
+							LogicalVolumes: []LVMLogicalVolume{
+								{
+									Size: 20 * MiB,
+								},
+								{
+									Payload: &Filesystem{
+										Mountpoint: "/",
+									},
+									Size: 100 * MiB,
+								},
+							},
+						},
+					},
+				},
+			},
+			size: 99 * MiB,
+			expected: &PartitionTable{
+				Type: "gpt",
+				Size: 326 * MiB,
+				Partitions: []Partition{
+					{
+						Start: 1 * MiB, // 1 sector header aligned up to the default grain (1 MiB)
+						Size:  200 * MiB,
+					},
+					{
+						Start: 201 * MiB,
+						Size:  125*MiB - (DefaultSectorSize + (128 * 128)), // grows to fit logical volumes and metadata, rounded up to default extent size + (1 MiB - footer) so that the no partitions shrink below the desired sizes
+						Payload: &LVMVolumeGroup{
+							LogicalVolumes: []LVMLogicalVolume{
+								{
+									Size: 20 * MiB,
+								},
+								{
+									Payload: &Filesystem{
+										Mountpoint: "/",
+									},
+									Size: 100 * MiB,
 								},
 							},
 						},
