@@ -92,6 +92,10 @@ func (b *Btrfs) GenUUID(rng *rand.Rand) {
 	}
 }
 
+func (b *Btrfs) MetadataSize() uint64 {
+	return 0
+}
+
 type BtrfsSubvolume struct {
 	Name       string
 	Size       uint64
