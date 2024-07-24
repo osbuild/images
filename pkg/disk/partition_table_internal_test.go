@@ -242,3 +242,60 @@ func TestValidateFunctions(t *testing.T) {
 		})
 	}
 }
+
+func TestRelayout(t *testing.T) {
+	type testCase struct {
+		pt       *PartitionTable
+		size     uint64
+		expected *PartitionTable
+	}
+
+	testCases := map[string]testCase{
+		"simple-dos": {
+			pt: &PartitionTable{
+				Type: "dos",
+				Size: 100 * MiB,
+				Partitions: []Partition{
+					{
+						Size: 10 * MiB,
+					},
+					{
+						Payload: &Filesystem{
+							Mountpoint: "/",
+						},
+						Size: 20 * MiB,
+					},
+				},
+			},
+			size: 100 * MiB,
+			expected: &PartitionTable{
+				Type: "dos",
+				Size: 100 * MiB,
+				Partitions: []Partition{
+					{
+						Start: 1 * MiB, // 1 sector header aligned up to the default grain (1 MiB)
+						Size:  10 * MiB,
+					},
+					{
+						Payload: &Filesystem{
+							Mountpoint: "/",
+						},
+						Start: 11 * MiB,
+						Size:  89 * MiB, // Grows to fill the space
+					},
+				},
+			},
+		},
+	}
+
+	for name := range testCases {
+		tc := testCases[name]
+		t.Run(name, func(t *testing.T) {
+			pt := tc.pt
+			pt.relayout(tc.size)
+			err := validatePTSize(pt)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expected, pt)
+		})
+	}
+}
