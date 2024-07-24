@@ -96,6 +96,20 @@ func (b *Btrfs) MetadataSize() uint64 {
 	return 0
 }
 
+func (b *Btrfs) minSize(size uint64) uint64 {
+	var subvolsum uint64
+	for _, sv := range b.Subvolumes {
+		subvolsum += sv.Size
+	}
+	minSize := subvolsum + b.MetadataSize()
+
+	if minSize > size {
+		size = minSize
+	}
+
+	return b.AlignUp(size)
+}
+
 type BtrfsSubvolume struct {
 	Name       string
 	Size       uint64
