@@ -515,6 +515,57 @@ func TestRelayout(t *testing.T) {
 				},
 			},
 		},
+		"btrfs": {
+			pt: &PartitionTable{
+				Type: "gpt",
+				Size: 100 * MiB,
+				Partitions: []Partition{
+					{
+						Size: 20 * MiB,
+					},
+					{
+						Size: 30 * MiB,
+						Payload: &Btrfs{
+							Subvolumes: []BtrfsSubvolume{
+								{
+									Size: 20 * MiB,
+								},
+								{
+									Mountpoint: "/",
+									Size:       10 * MiB,
+								},
+							},
+						},
+					},
+				},
+			},
+			size: 100 * MiB,
+			expected: &PartitionTable{
+				Type: "gpt",
+				Size: 100 * MiB,
+				Partitions: []Partition{
+					{
+						Start: 1 * MiB, // 1 sector header aligned up to the default grain (1 MiB)
+						Size:  20 * MiB,
+					},
+					{
+						Start: 21 * MiB,
+						Size:  79*MiB - (DefaultSectorSize + (128 * 128)), // Grows to fill the space, but gpt adds a footer the same size as the header (unaligned)
+						Payload: &Btrfs{
+							Subvolumes: []BtrfsSubvolume{
+								{
+									Size: 20 * MiB,
+								},
+								{
+									Mountpoint: "/",
+									Size:       10 * MiB, // We don't automatically grow the root subvolume
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for name := range testCases {
