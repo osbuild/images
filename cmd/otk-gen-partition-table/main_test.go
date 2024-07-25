@@ -384,7 +384,7 @@ func TestGenPartitionTableCustomizationExtraMp(t *testing.T) {
 			Filename: "disk.img",
 			Internal: otkdisk.Internal{
 				PartitionTable: &disk.PartitionTable{
-					Size: 15890120704,
+					Size: 15893266432,
 					UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
 					Type: "dos",
 					Partitions: []disk.Partition{
@@ -399,7 +399,7 @@ func TestGenPartitionTableCustomizationExtraMp(t *testing.T) {
 						},
 						{
 							Start: 2148532224,
-							Size:  13741588480,
+							Size:  13744734208,
 							Type:  "8e",
 							Payload: &disk.LVMVolumeGroup{
 								Name:        "rootvg",
