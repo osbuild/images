@@ -76,53 +76,27 @@ func NewConfigs(oscapConfig blueprint.OpenSCAPCustomization, defaultDatastream *
 		CompressionEnabled: true,
 	}
 
-	if oscapConfig.XMLTailoring != nil && oscapConfig.Tailoring != nil {
-		return nil, nil, fmt.Errorf("Either XML tailoring file and profile ID must be set or custom rules (selected/unselected), not both")
-	}
-
-	if xmlConfigs := oscapConfig.XMLTailoring; xmlConfigs != nil {
-		if xmlConfigs.Filepath == "" {
-			return nil, nil, fmt.Errorf("Filepath to an XML tailoring file is required")
-		}
-
-		if xmlConfigs.ProfileID == "" {
-			return nil, nil, fmt.Errorf("Tailoring profile ID is required for an XML tailoring file")
-		}
-
-		remediationConfig.ProfileID = xmlConfigs.ProfileID
-		remediationConfig.TailoringPath = xmlConfigs.Filepath
-
-		// since the XML tailoring file has already been provided
-		// we don't need the autotailor stage and the config can
-		// be left empty and we can just return the `remediationConfig`
-		return remediationConfig, nil, nil
-	}
-
 	tc := oscapConfig.Tailoring
 	if tc == nil {
 		return remediationConfig, nil, nil
 	}
 
-	tailoringPath := filepath.Join(DataDir, "tailoring.xml")
-	tailoredProfileID := fmt.Sprintf("%s_osbuild_tailoring", remediationConfig.ProfileID)
+	// tailoring config gets the base id and creates a new profile id
+	// which is then needed for the remediation stage. So we overwrite
+	// the base profile_id with the updated tailoring profile_id
+	remediationConfig.TailoringPath = filepath.Join(DataDir, "tailoring.xml")
+	remediationConfig.ProfileID = fmt.Sprintf("%s_osbuild_tailoring", remediationConfig.ProfileID)
 
 	tailoringConfig := &TailoringConfig{
 		RemediationConfig: RemediationConfig{
-			ProfileID:     remediationConfig.ProfileID,
-			TailoringPath: tailoringPath,
+			ProfileID:     oscapConfig.ProfileID,
+			TailoringPath: remediationConfig.TailoringPath,
 			Datastream:    datastream,
 		},
-		TailoredProfileID: tailoredProfileID,
+		TailoredProfileID: remediationConfig.ProfileID,
 		Selected:          tc.Selected,
 		Unselected:        tc.Unselected,
 	}
-
-	// the reason for changing the remediation config profile
-	// after we create the tailoring configs is that the tailoring
-	// config needs to know about the original base profile id, but
-	// the remediation config needs to know the updated profile id.
-	remediationConfig.ProfileID = tailoredProfileID
-	remediationConfig.TailoringPath = tailoringPath
 
 	return remediationConfig, tailoringConfig, nil
 }
