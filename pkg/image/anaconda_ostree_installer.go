@@ -49,7 +49,7 @@ func NewAnacondaOSTreeInstaller(commit ostree.SourceSpec) *AnacondaOSTreeInstall
 	}
 }
 
-func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
+func (img *AnacondaOSTreeInstaller) InstantiateManifest(m manifest.Manifest,
 	repos []rpmmd.RepoConfig,
 	runner runner.Runner,
 	rng *rand.Rand) (*artifact.Artifact, error) {

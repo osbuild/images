@@ -78,7 +78,7 @@ func NewAnacondaTarInstaller() *AnacondaTarInstaller {
 	}
 }
 
-func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
+func (img *AnacondaTarInstaller) InstantiateManifest(m manifest.Manifest,
 	repos []rpmmd.RepoConfig,
 	runner runner.Runner,
 	rng *rand.Rand) (*artifact.Artifact, error) {
