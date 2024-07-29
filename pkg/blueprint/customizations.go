@@ -27,6 +27,7 @@ type Customizations struct {
 	FIPS               *bool                          `json:"fips,omitempty" toml:"fips,omitempty"`
 	ContainersStorage  *ContainerStorageCustomization `json:"containers-storage,omitempty" toml:"containers-storage,omitempty"`
 	Installer          *InstallerCustomization        `json:"installer,omitempty" toml:"installer,omitempty"`
+	RPM                *RPMCustomization              `json:"rpm,omitempty" toml:"rpm,omitempty"`
 }
 
 type IgnitionCustomization struct {
@@ -411,4 +412,11 @@ func (c *Customizations) GetInstaller() (*InstallerCustomization, error) {
 	}
 
 	return c.Installer, nil
+}
+
+func (c *Customizations) GetRPM() *RPMCustomization {
+	if c == nil {
+		return nil
+	}
+	return c.RPM
 }

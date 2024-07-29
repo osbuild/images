@@ -376,3 +376,20 @@ func TestGetOpenSCAPConfig(t *testing.T) {
 
 	assert.EqualValues(t, expectedOscap, *retOpenSCAPCustomiztions)
 }
+
+func TestGetImportRPMGPGKey(t *testing.T) {
+	expectedRPM := RPMCustomization{
+		ImportKeys: &RPMImportKeys{
+			[]string{
+				"/etc/pki/rpm-gpg/RPM-GPG-KEY",
+			},
+		},
+	}
+
+	TestCustomizations := Customizations{
+		RPM: &expectedRPM,
+	}
+
+	retRPM := TestCustomizations.GetRPM()
+	assert.EqualValues(t, expectedRPM, *retRPM)
+}
