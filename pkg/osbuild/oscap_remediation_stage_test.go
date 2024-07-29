@@ -3,6 +3,7 @@ package osbuild
 import (
 	"testing"
 
+	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -82,6 +83,67 @@ func TestOscapRemediationStageOptionsValidate(t *testing.T) {
 				assert.NoErrorf(t, tt.options.Config.validate(), "%q returned an error [idx: %d]", tt.name, idx)
 				assert.NotPanics(t, func() { NewOscapRemediationStage(&tt.options) })
 			}
+		})
+	}
+}
+
+func TestInternalConfigToStageOptions(t *testing.T) {
+	tests := []struct {
+		name     string
+		options  *oscap.RemediationConfig
+		expected OscapConfig
+	}{
+		{
+			name: "no-tailoring",
+			options: &oscap.RemediationConfig{
+				ProfileID:  "some-profile",
+				Datastream: "some-datastream",
+			},
+			expected: OscapConfig{
+				ProfileID:  "some-profile",
+				Datastream: "some-datastream",
+			},
+		},
+		{
+			name: "tailoring",
+			options: &oscap.RemediationConfig{
+				ProfileID:  "some-profile",
+				Datastream: "some-datastream",
+				TailoringConfig: &oscap.TailoringConfig{
+					TailoredProfileID: "some-tailored-profile",
+					TailoringPath:     "/some/tailoring/path.xml",
+					Selected:          []string{"one", "two", "three"},
+				},
+			},
+			expected: OscapConfig{
+				ProfileID:  "some-tailored-profile",
+				Datastream: "some-datastream",
+				Tailoring:  "/some/tailoring/path.xml",
+			},
+		},
+		{
+			name: "json-tailoring",
+			options: &oscap.RemediationConfig{
+				ProfileID:  "some-profile",
+				Datastream: "some-datastream",
+				TailoringConfig: &oscap.TailoringConfig{
+					TailoredProfileID: "some-tailored-profile",
+					TailoringPath:     "/some/tailoring/path.xml",
+					JSONFilepath:      "/some/tailoring/path.json",
+				},
+			},
+			expected: OscapConfig{
+				ProfileID:  "some-tailored-profile",
+				Datastream: "some-datastream",
+				Tailoring:  "/some/tailoring/path.xml",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stageOptions := NewOscapRemediationStageOptions("data-dir", tt.options)
+			assert.Equal(t, tt.expected, stageOptions.Config)
 		})
 	}
 }
