@@ -1,0 +1,14 @@
+{
+  "name": "import-rpm-gpg-keys-from-tree-rhel",
+  "blueprint": {
+    "customizations": {
+      "rpm": {
+        "import_keys": {
+          "files": [
+            "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-beta"
+          ]
+        }
+      }
+    }
+  }
+}
