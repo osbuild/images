@@ -73,36 +73,41 @@ func NewOscapAutotailorStage(options *OscapAutotailorStageOptions) *Stage {
 	}
 }
 
-func NewOscapAutotailorStageOptions(options *oscap.TailoringConfig) *OscapAutotailorStageOptions {
+func NewOscapAutotailorStageOptions(options *oscap.RemediationConfig) *OscapAutotailorStageOptions {
 	if options == nil {
+		return nil
+	}
+
+	tailoringConfig := options.TailoringConfig
+	if tailoringConfig == nil {
 		return nil
 	}
 
 	// TODO: don't panic! unfortunately this would involve quite
 	// a big refactor and we still need to be a bit defensive here
-	if options.RemediationConfig.TailoringPath == "" {
+	if tailoringConfig.TailoringPath == "" {
 		panic(fmt.Errorf("The tailoring path for the OpenSCAP remediation config cannot be empty, this is a programming error"))
 	}
 
-	if options.JSONFilepath != "" {
+	if tailoringConfig.JSONFilepath != "" {
 		return &OscapAutotailorStageOptions{
-			Filepath: options.RemediationConfig.TailoringPath,
+			Filepath: tailoringConfig.TailoringPath,
 			Config: AutotailorJSONConfig{
-				TailoredProfileID: options.TailoredProfileID,
-				Datastream:        options.RemediationConfig.Datastream,
-				TailoringFile:     options.JSONFilepath,
+				Datastream:        options.Datastream,
+				TailoredProfileID: tailoringConfig.TailoredProfileID,
+				TailoringFile:     tailoringConfig.JSONFilepath,
 			},
 		}
 	}
 
 	return &OscapAutotailorStageOptions{
-		Filepath: options.RemediationConfig.TailoringPath,
+		Filepath: tailoringConfig.TailoringPath,
 		Config: AutotailorKeyValueConfig{
-			NewProfile: options.TailoredProfileID,
-			Datastream: options.RemediationConfig.Datastream,
-			ProfileID:  options.RemediationConfig.ProfileID,
-			Selected:   options.Selected,
-			Unselected: options.Unselected,
+			Datastream: options.Datastream,
+			ProfileID:  options.ProfileID,
+			NewProfile: tailoringConfig.TailoredProfileID,
+			Selected:   tailoringConfig.Selected,
+			Unselected: tailoringConfig.Unselected,
 		},
 	}
 }

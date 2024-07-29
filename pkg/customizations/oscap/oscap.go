@@ -50,70 +50,52 @@ const (
 type RemediationConfig struct {
 	Datastream         string
 	ProfileID          string
-	TailoringPath      string
 	CompressionEnabled bool
+	TailoringConfig    *TailoringConfig
 }
 
 type TailoringConfig struct {
-	RemediationConfig
 	TailoredProfileID string
 	JSONFilepath      string
+	TailoringPath     string
 	Selected          []string
 	Unselected        []string
 }
 
-func newTailoringConfigs(profileID string, tc blueprint.OpenSCAPTailoringCustomizations, remediationConfig RemediationConfig) (*RemediationConfig, *TailoringConfig, error) {
-	// the tailoring config needs to know about the original base profile id,
-	// but the remediation config needs to know the updated profile id.
-	remediationConfig.ProfileID = fmt.Sprintf("%s_osbuild_tailoring", remediationConfig.ProfileID)
-	remediationConfig.TailoringPath = filepath.Join(DataDir, "tailoring.xml")
-
-	tailoringConfig := &TailoringConfig{
-		RemediationConfig: RemediationConfig{
-			ProfileID:     profileID,
-			Datastream:    remediationConfig.Datastream,
-			TailoringPath: remediationConfig.TailoringPath,
-		},
+func (rc *RemediationConfig) addTailoringConfigs(tc blueprint.OpenSCAPTailoringCustomizations) (*RemediationConfig, error) {
+	rc.TailoringConfig = &TailoringConfig{
+		TailoredProfileID: fmt.Sprintf("%s_osbuild_tailoring", rc.ProfileID),
 		Selected:          tc.Selected,
 		Unselected:        tc.Unselected,
-		TailoredProfileID: remediationConfig.ProfileID,
+		TailoringPath:     filepath.Join(DataDir, "tailoring.xml"),
 	}
 
-	return &remediationConfig, tailoringConfig, nil
+	return rc, nil
 }
 
-func newJsonConfigs(profileID string, json blueprint.OpenSCAPJSONTailoringCustomizations, remediationConfig RemediationConfig) (*RemediationConfig, *TailoringConfig, error) {
+func (rc *RemediationConfig) addJsonConfigs(json blueprint.OpenSCAPJSONTailoringCustomizations) (*RemediationConfig, error) {
 	if json.Filepath == "" {
-		return nil, nil, fmt.Errorf("Filepath to an JSON tailoring file is required")
+		return nil, fmt.Errorf("Filepath to an JSON tailoring file is required")
 	}
 
 	if json.ProfileID == "" {
-		return nil, nil, fmt.Errorf("Tailoring profile ID is required for an JSON tailoring file")
+		return nil, fmt.Errorf("Tailoring profile ID is required for an JSON tailoring file")
 	}
 
-	// the tailoring config needs to know about the original base profile id,
-	// but the remediation config needs to know the updated profile id.
-	remediationConfig.ProfileID = json.ProfileID
-	remediationConfig.TailoringPath = filepath.Join(DataDir, "tailoring.xml")
-
-	tailoringConfig := &TailoringConfig{
-		RemediationConfig: RemediationConfig{
-			ProfileID:     profileID,
-			Datastream:    remediationConfig.Datastream,
-			TailoringPath: remediationConfig.TailoringPath,
-		},
+	rc.TailoringConfig = &TailoringConfig{
 		JSONFilepath:      json.Filepath,
 		TailoredProfileID: json.ProfileID,
+		TailoringPath:     filepath.Join(DataDir, "tailoring.xml"),
 	}
 
-	return &remediationConfig, tailoringConfig, nil
+	return rc, nil
 }
 
-func NewConfigs(oscapConfig blueprint.OpenSCAPCustomization, defaultDatastream *string) (*RemediationConfig, *TailoringConfig, error) {
+func NewConfigs(oscapConfig blueprint.OpenSCAPCustomization, defaultDatastream *string) (*RemediationConfig, error) {
 	var datastream = oscapConfig.DataStream
 	if datastream == "" {
 		if defaultDatastream == nil {
-			return nil, nil, fmt.Errorf("No OSCAP datastream specified and the distro does not have any default set")
+			return nil, fmt.Errorf("No OSCAP datastream specified and the distro does not have any default set")
 		}
 		datastream = *defaultDatastream
 	}
@@ -129,13 +111,13 @@ func NewConfigs(oscapConfig blueprint.OpenSCAPCustomization, defaultDatastream *
 
 	switch {
 	case tc != nil && json != nil:
-		return nil, nil, fmt.Errorf("Multiple tailoring types set, only one type can be chosen (JSON/Override rules)")
+		return nil, fmt.Errorf("Multiple tailoring types set, only one type can be chosen (JSON/Override rules)")
 	case tc != nil:
-		return newTailoringConfigs(oscapConfig.ProfileID, *tc, remediationConfig)
+		return remediationConfig.addTailoringConfigs(*tc)
 	case json != nil:
-		return newJsonConfigs(oscapConfig.ProfileID, *json, remediationConfig)
+		return remediationConfig.addJsonConfigs(*json)
 	default:
-		return &remediationConfig, nil, nil
+		return &remediationConfig, nil
 	}
 }
 
