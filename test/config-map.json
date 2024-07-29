@@ -278,5 +278,22 @@
       "rhel-9.3",
       "rhel-9.4"
     ]
+  },
+  "./configs/import-rpm-gpg-keys-from-tree-rhel.json": {
+    "image-types": [
+      "qcow2"
+    ],
+    "distros": [
+      "rhel-8.10",
+      "rhel-9.5"
+    ]
+  },
+  "./configs/import-rpm-gpg-keys-from-tree-fedora.json": {
+    "image-types": [
+      "qcow2"
+    ],
+    "distros": [
+      "fedora*"
+    ]
   }
 }
