@@ -81,3 +81,27 @@ func TestPartitionTable_GenerateUUIDs(t *testing.T) {
 	assert.Equal(t, "fb180daf-48a7-4ee0-b10d-394651850fd4", pt.Partitions[2].Payload.(*disk.Btrfs).UUID)
 	assert.Equal(t, "fb180daf-48a7-4ee0-b10d-394651850fd4", pt.Partitions[2].Payload.(*disk.Btrfs).Subvolumes[0].UUID)
 }
+
+func TestPartitionTable_GenerateUUIDs_VFAT(t *testing.T) {
+	pt := disk.PartitionTable{
+		Type: "dos",
+		Partitions: []disk.Partition{
+			{
+				Size: 2 * common.GibiByte,
+				Type: disk.FilesystemDataGUID,
+				Payload: &disk.Filesystem{
+					Type:       "vfat",
+					Mountpoint: "/boot/efi",
+				},
+			},
+		},
+	}
+
+	// Static seed for testing
+	/* #nosec G404 */
+	rnd := rand.New(rand.NewSource(0))
+
+	pt.GenerateUUIDs(rnd)
+
+	assert.Equal(t, "6e4ff95f", pt.Partitions[0].Payload.(*disk.Filesystem).UUID)
+}
