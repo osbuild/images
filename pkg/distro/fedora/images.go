@@ -189,12 +189,11 @@ func osCustomizations(
 		}
 		osc.Directories = append(osc.Directories, oscapDataNode)
 
-		remediationConfig, tailoringConfig, err := oscap.NewConfigs(*oscapConfig, imageConfig.DefaultOSCAPDatastream)
+		remediationConfig, err := oscap.NewConfigs(*oscapConfig, imageConfig.DefaultOSCAPDatastream)
 		if err != nil {
 			panic(fmt.Errorf("error creating OpenSCAP configs: %w", err))
 		}
 
-		osc.OpenSCAPTailorConfig = tailoringConfig
 		osc.OpenSCAPRemediationConfig = remediationConfig
 	}
 

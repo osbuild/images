@@ -11,11 +11,10 @@ import (
 
 func TestOscapConfigGeneration(t *testing.T) {
 	tests := []struct {
-		name                string
-		options             blueprint.OpenSCAPCustomization
-		expectedRemediation *RemediationConfig
-		expectedTailoring   *TailoringConfig
-		err                 error
+		name     string
+		options  blueprint.OpenSCAPCustomization
+		expected *RemediationConfig
+		err      error
 	}{
 		{
 			name:    "no-datastream",
@@ -59,20 +58,15 @@ func TestOscapConfigGeneration(t *testing.T) {
 					ProfileID: "some-tailored-id",
 				},
 			},
-			expectedRemediation: &RemediationConfig{
+			expected: &RemediationConfig{
 				Datastream:         "datastream",
-				ProfileID:          "some-tailored-id",
-				TailoringPath:      filepath.Join(DataDir, "tailoring.xml"),
+				ProfileID:          "some-profile-id",
 				CompressionEnabled: true,
-			},
-			expectedTailoring: &TailoringConfig{
-				RemediationConfig: RemediationConfig{
-					Datastream:    "datastream",
-					ProfileID:     "some-profile-id",
-					TailoringPath: filepath.Join(DataDir, "tailoring.xml"),
+				TailoringConfig: &TailoringConfig{
+					TailoringPath:     filepath.Join(DataDir, "tailoring.xml"),
+					JSONFilepath:      "/some/filepath.json",
+					TailoredProfileID: "some-tailored-id",
 				},
-				JSONFilepath:      "/some/filepath.json",
-				TailoredProfileID: "some-tailored-id",
 			},
 			err: nil,
 		},
@@ -86,37 +80,30 @@ func TestOscapConfigGeneration(t *testing.T) {
 					Unselected: []string{"two", "four"},
 				},
 			},
-			expectedRemediation: &RemediationConfig{
+			expected: &RemediationConfig{
 				Datastream:         "datastream",
-				ProfileID:          "some-profile-id_osbuild_tailoring",
-				TailoringPath:      filepath.Join(DataDir, "tailoring.xml"),
+				ProfileID:          "some-profile-id",
 				CompressionEnabled: true,
-			},
-			expectedTailoring: &TailoringConfig{
-				RemediationConfig: RemediationConfig{
-					Datastream:    "datastream",
-					ProfileID:     "some-profile-id",
-					TailoringPath: filepath.Join(DataDir, "tailoring.xml"),
+				TailoringConfig: &TailoringConfig{
+					TailoringPath:     filepath.Join(DataDir, "tailoring.xml"),
+					TailoredProfileID: "some-profile-id_osbuild_tailoring",
+					Selected:          []string{"one", "three"},
+					Unselected:        []string{"two", "four"},
 				},
-				TailoredProfileID: "some-profile-id_osbuild_tailoring",
-				Selected:          []string{"one", "three"},
-				Unselected:        []string{"two", "four"},
 			},
 			err: nil,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			remediationConfig, tailoringConfig, err := NewConfigs(tt.options, nil)
+			remediationConfig, err := NewConfigs(tt.options, nil)
 			if tt.err != nil {
 				assert.NotNil(t, err)
 				assert.EqualValues(t, tt.err, err)
 				assert.Nil(t, remediationConfig)
-				assert.Nil(t, tailoringConfig)
 			} else {
 				assert.NoError(t, err)
-				assert.EqualValues(t, tt.expectedRemediation, remediationConfig)
-				assert.EqualValues(t, tt.expectedTailoring, tailoringConfig)
+				assert.EqualValues(t, tt.expected, remediationConfig)
 			}
 		})
 	}
