@@ -57,6 +57,10 @@ func osCustomizations(
 	osc.Containers = containers
 
 	osc.GPGKeyFiles = imageConfig.GPGKeyFiles
+	if rpm := c.GetRPM(); rpm != nil && rpm.ImportKeys != nil {
+		osc.GPGKeyFiles = append(osc.GPGKeyFiles, rpm.ImportKeys.Files...)
+	}
+
 	if imageConfig.ExcludeDocs != nil {
 		osc.ExcludeDocs = *imageConfig.ExcludeDocs
 	}
