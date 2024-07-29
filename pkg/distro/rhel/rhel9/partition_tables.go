@@ -24,7 +24,6 @@ func defaultBasePartitionTables(t *rhel.ImageType) (disk.PartitionTable, bool) {
 	switch t.Arch().Name() {
 	case arch.ARCH_X86_64.String():
 		return disk.PartitionTable{
-			UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
 			Type: "gpt",
 			Partitions: []disk.Partition{
 				{
@@ -77,7 +76,6 @@ func defaultBasePartitionTables(t *rhel.ImageType) (disk.PartitionTable, bool) {
 		}, true
 	case arch.ARCH_AARCH64.String():
 		return disk.PartitionTable{
-			UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
 			Type: "gpt",
 			Partitions: []disk.Partition{
 				{
@@ -124,7 +122,6 @@ func defaultBasePartitionTables(t *rhel.ImageType) (disk.PartitionTable, bool) {
 		}, true
 	case arch.ARCH_PPC64LE.String():
 		return disk.PartitionTable{
-			UUID: "0x14fc63d2",
 			Type: "dos",
 			Partitions: []disk.Partition{
 				{
@@ -158,7 +155,6 @@ func defaultBasePartitionTables(t *rhel.ImageType) (disk.PartitionTable, bool) {
 
 	case arch.ARCH_S390X.String():
 		return disk.PartitionTable{
-			UUID: "0x14fc63d2",
 			Type: "dos",
 			Partitions: []disk.Partition{
 				{

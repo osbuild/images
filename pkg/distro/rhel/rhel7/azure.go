@@ -284,7 +284,6 @@ func azureRhuiBasePartitionTables(t *rhel.ImageType) (disk.PartitionTable, bool)
 	switch t.Arch().Name() {
 	case arch.ARCH_X86_64.String():
 		return disk.PartitionTable{
-			UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
 			Type: "gpt",
 			Size: 64 * common.GibiByte,
 			Partitions: []disk.Partition{
