@@ -1,19 +1,20 @@
-// Disk package contains abstract data-types to define disk-related entities.
+// Package disk contains data types and functions to define and modify
+// disk-related and partition-table-related entities.
 //
 // The disk package is a collection of interfaces and structs that can be used
-// to represent an disk image with its layout. Various concrete types, such as
+// to represent a disk image with its layout. Various concrete types, such as
 // PartitionTable, Partition and Filesystem types are defined to model a given
 // disk layout. These implement a collection of interfaces that can be used to
 // navigate and operate on the various possible combinations of entities in a
 // generic way. The entity data model is very generic so that it can represent
 // all possible layouts, which can be arbitrarily complex, since technologies
-// like logical volume management, LUKS2 container and file systems, that can
-// have sub-volumes, allow for complex layouts.
+// like logical volume management, LUKS2 containers and file systems, that can
+// have sub-volumes, allow for complex and nested layouts.
+//
 // Entity and Container are the two main interfaces that are used to model the
 // tree structure of a disk image layout. The other entity interfaces, such as
 // Sizeable and Mountable, then describe various properties and capabilities
 // of a given entity.
-
 package disk
 
 import (
