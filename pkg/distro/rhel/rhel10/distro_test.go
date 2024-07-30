@@ -11,6 +11,7 @@ import (
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/distro_test_common"
+	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/osbuild/images/pkg/distro/rhel/rhel10"
 )
 
@@ -395,6 +396,21 @@ func TestRhel10_ModulePlatformID(t *testing.T) {
 
 func TestRhel10_KernelOption(t *testing.T) {
 	distro_test_common.TestDistro_KernelOption(t, rhelFamilyDistros[0].distro)
+}
+
+func TestRhel10_KernelOption_NoIfnames(t *testing.T) {
+	for _, distroName := range []string{"rhel-10.0", "centos-10"} {
+		distro := rhel10.DistroFactory(distroName)
+		for _, archName := range distro.ListArches() {
+			arch, err := distro.GetArch(archName)
+			assert.NoError(t, err)
+			for _, imgTypeName := range arch.ListImageTypes() {
+				imgType, err := arch.GetImageType(imgTypeName)
+				assert.NoError(t, err)
+				assert.NotContains(t, imgType.(*rhel.ImageType).KernelOptions, "net.ifnames=0", "type %s contains unwanted net.ifnames=0", imgType.Name())
+			}
+		}
+	}
 }
 
 func TestDistro_CustomFileSystemManifestError(t *testing.T) {
