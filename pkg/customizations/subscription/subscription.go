@@ -18,3 +18,34 @@ const (
 	RHSMConfigWithSubscription RHSMStatus = "with-subscription"
 	RHSMConfigNoSubscription   RHSMStatus = "no-subscription"
 )
+
+// Subscription Manager [rhsm] configuration
+type SubManRHSMConfig struct {
+	ManageRepos *bool
+}
+
+// Subscription Manager [rhsmcertd] configuration
+type SubManRHSMCertdConfig struct {
+	AutoRegistration *bool
+}
+
+// Subscription Manager 'rhsm.conf' configuration
+type SubManConfig struct {
+	Rhsm      SubManRHSMConfig
+	Rhsmcertd SubManRHSMCertdConfig
+}
+
+type DNFPluginConfig struct {
+	Enabled *bool
+}
+
+type SubManDNFPluginsConfig struct {
+	ProductID           DNFPluginConfig
+	SubscriptionManager DNFPluginConfig
+}
+
+type RHSMConfig struct {
+	DnfPlugins SubManDNFPluginsConfig
+	YumPlugins SubManDNFPluginsConfig
+	SubMan     SubManConfig
+}
