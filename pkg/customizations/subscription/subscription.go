@@ -55,6 +55,77 @@ type RHSMConfig struct {
 	SubMan     SubManConfig
 }
 
+// Clone returns a new instance of RHSMConfig with the same values.
+// The returned instance is a deep copy of the original.
+func (c *RHSMConfig) Clone() *RHSMConfig {
+	if c == nil {
+		return nil
+	}
+
+	clone := &RHSMConfig{}
+
+	if c.DnfPlugins.ProductID.Enabled != nil {
+		clone.DnfPlugins.ProductID.Enabled = common.ToPtr(*c.DnfPlugins.ProductID.Enabled)
+	}
+	if c.DnfPlugins.SubscriptionManager.Enabled != nil {
+		clone.DnfPlugins.SubscriptionManager.Enabled = common.ToPtr(*c.DnfPlugins.SubscriptionManager.Enabled)
+	}
+
+	if c.YumPlugins.ProductID.Enabled != nil {
+		clone.YumPlugins.ProductID.Enabled = common.ToPtr(*c.YumPlugins.ProductID.Enabled)
+	}
+	if c.YumPlugins.SubscriptionManager.Enabled != nil {
+		clone.YumPlugins.SubscriptionManager.Enabled = common.ToPtr(*c.YumPlugins.SubscriptionManager.Enabled)
+	}
+
+	if c.SubMan.Rhsm.ManageRepos != nil {
+		clone.SubMan.Rhsm.ManageRepos = common.ToPtr(*c.SubMan.Rhsm.ManageRepos)
+	}
+	if c.SubMan.Rhsmcertd.AutoRegistration != nil {
+		clone.SubMan.Rhsmcertd.AutoRegistration = common.ToPtr(*c.SubMan.Rhsmcertd.AutoRegistration)
+	}
+
+	return clone
+}
+
+// Update returns a new instance of RHSMConfig with updated values
+// from the new RHSMConfig. The original RHSMConfig is not modified and
+// the new instance does not share any memory with the original.
+func (c *RHSMConfig) Update(new *RHSMConfig) *RHSMConfig {
+	c = c.Clone()
+
+	if new == nil {
+		return c
+	}
+
+	if c == nil {
+		c = &RHSMConfig{}
+	}
+
+	if new.DnfPlugins.ProductID.Enabled != nil {
+		c.DnfPlugins.ProductID.Enabled = common.ToPtr(*new.DnfPlugins.ProductID.Enabled)
+	}
+	if new.DnfPlugins.SubscriptionManager.Enabled != nil {
+		c.DnfPlugins.SubscriptionManager.Enabled = common.ToPtr(*new.DnfPlugins.SubscriptionManager.Enabled)
+	}
+
+	if new.YumPlugins.ProductID.Enabled != nil {
+		c.YumPlugins.ProductID.Enabled = common.ToPtr(*new.YumPlugins.ProductID.Enabled)
+	}
+	if new.YumPlugins.SubscriptionManager.Enabled != nil {
+		c.YumPlugins.SubscriptionManager.Enabled = common.ToPtr(*new.YumPlugins.SubscriptionManager.Enabled)
+	}
+
+	if new.SubMan.Rhsm.ManageRepos != nil {
+		c.SubMan.Rhsm.ManageRepos = common.ToPtr(*new.SubMan.Rhsm.ManageRepos)
+	}
+	if new.SubMan.Rhsmcertd.AutoRegistration != nil {
+		c.SubMan.Rhsmcertd.AutoRegistration = common.ToPtr(*new.SubMan.Rhsmcertd.AutoRegistration)
+	}
+
+	return c
+}
+
 // RHSMConfigFromBP creates a RHSMConfig from a blueprint RHSMCustomization
 func RHSMConfigFromBP(bpRHSM *blueprint.RHSMCustomization) *RHSMConfig {
 	if bpRHSM == nil || bpRHSM.Config == nil {
