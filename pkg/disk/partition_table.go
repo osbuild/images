@@ -197,8 +197,8 @@ func (pt *PartitionTable) Clone() Entity {
 	return clone
 }
 
-// AlignUp will align the given bytes to next aligned grain if not already
-// aligned
+// AlignUp will round up the given size value to the default grain if not
+// already aligned.
 func (pt *PartitionTable) AlignUp(size uint64) uint64 {
 	grain := DefaultGrainBytes
 	if size%grain == 0 {
@@ -422,10 +422,10 @@ func (pt *PartitionTable) HeaderSize() uint64 {
 	return header
 }
 
-// Apply filesystem filesystem customization to the partiton table. If create is false
-// will only apply customizations to existing partitions and return unhandled, i.e new
-// ones. An error can only occur if create is set. Conversely, it will only return non
-// empty list of new mountpoints if create is false.
+// Apply filesystem customization to the partition table. If create is false,
+// the function will only apply customizations to existing partitions and
+// return a list of left-over mountpoints (i.e. mountpoints in the input that
+// were not created). An error can only occur if create is set.
 // Does not relayout the table, i.e. a call to relayout might be needed.
 func (pt *PartitionTable) applyCustomization(mountpoints []blueprint.FilesystemCustomization, create bool) ([]blueprint.FilesystemCustomization, error) {
 
@@ -449,10 +449,9 @@ func (pt *PartitionTable) applyCustomization(mountpoints []blueprint.FilesystemC
 }
 
 // Dynamically calculate and update the start point for each of the existing
-// partitions. Adjusts the overall size of image to either the supplied
-// value in `size` or to the sum of all partitions if that is larger.
-// Will grow the root partition if there is any empty space.
-// Returns the updated start point.
+// partitions. Adjusts the overall size of image to either the supplied value
+// in `size` or to the sum of all partitions if that is larger. Will grow the
+// root partition if there is any empty space. Returns the updated start point.
 func (pt *PartitionTable) relayout(size uint64) uint64 {
 	// always reserve one extra sector for the GPT header
 	header := pt.HeaderSize()
