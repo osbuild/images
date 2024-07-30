@@ -398,7 +398,7 @@ func TestRhel10_KernelOption(t *testing.T) {
 }
 
 func TestDistro_CustomFileSystemManifestError(t *testing.T) {
-	r9distro := rhelFamilyDistros[0].distro
+	r10distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -409,8 +409,8 @@ func TestDistro_CustomFileSystemManifestError(t *testing.T) {
 			},
 		},
 	}
-	for _, archName := range r9distro.ListArches() {
-		arch, _ := r9distro.GetArch(archName)
+	for _, archName := range r10distro.ListArches() {
+		arch, _ := r10distro.GetArch(archName)
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
@@ -420,7 +420,7 @@ func TestDistro_CustomFileSystemManifestError(t *testing.T) {
 }
 
 func TestDistro_TestRootMountPoint(t *testing.T) {
-	r9distro := rhelFamilyDistros[0].distro
+	r10distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -431,8 +431,8 @@ func TestDistro_TestRootMountPoint(t *testing.T) {
 			},
 		},
 	}
-	for _, archName := range r9distro.ListArches() {
-		arch, _ := r9distro.GetArch(archName)
+	for _, archName := range r10distro.ListArches() {
+		arch, _ := r10distro.GetArch(archName)
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
@@ -442,7 +442,7 @@ func TestDistro_TestRootMountPoint(t *testing.T) {
 }
 
 func TestDistro_CustomFileSystemSubDirectories(t *testing.T) {
-	r9distro := rhelFamilyDistros[0].distro
+	r10distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -457,8 +457,8 @@ func TestDistro_CustomFileSystemSubDirectories(t *testing.T) {
 			},
 		},
 	}
-	for _, archName := range r9distro.ListArches() {
-		arch, _ := r9distro.GetArch(archName)
+	for _, archName := range r10distro.ListArches() {
+		arch, _ := r10distro.GetArch(archName)
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
@@ -472,7 +472,7 @@ func TestDistro_CustomFileSystemSubDirectories(t *testing.T) {
 }
 
 func TestDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
-	r9distro := rhelFamilyDistros[0].distro
+	r10distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -495,8 +495,8 @@ func TestDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
 			},
 		},
 	}
-	for _, archName := range r9distro.ListArches() {
-		arch, _ := r9distro.GetArch(archName)
+	for _, archName := range r10distro.ListArches() {
+		arch, _ := r10distro.GetArch(archName)
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
@@ -510,7 +510,7 @@ func TestDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
 }
 
 func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
-	r9distro := rhelFamilyDistros[0].distro
+	r10distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -529,8 +529,8 @@ func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
 			},
 		},
 	}
-	for _, archName := range r9distro.ListArches() {
-		arch, _ := r9distro.GetArch(archName)
+	for _, archName := range r10distro.ListArches() {
+		arch, _ := r10distro.GetArch(archName)
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
@@ -540,7 +540,7 @@ func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
 }
 
 func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
-	r9distro := rhelFamilyDistros[0].distro
+	r10distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -551,8 +551,8 @@ func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 			},
 		},
 	}
-	for _, archName := range r9distro.ListArches() {
-		arch, _ := r9distro.GetArch(archName)
+	for _, archName := range r10distro.ListArches() {
+		arch, _ := r10distro.GetArch(archName)
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
