@@ -32,6 +32,9 @@ const (
 	// Default sector size in bytes
 	DefaultSectorSize = 512
 
+	// Default grain size in bytes. The grain controls how sizes of certain
+	// entities are rounded. For example, by default, partition sizes are
+	// rounded to the next MiB.
 	DefaultGrainBytes = uint64(1048576) // 1 MiB
 
 	// UUIDs
@@ -64,6 +67,7 @@ type Entity interface {
 	Clone() Entity
 }
 
+// PayloadEntity is an entity that can be used as a Payload for a Container.
 type PayloadEntity interface {
 	Entity
 
@@ -166,7 +170,7 @@ type FSTabOptions struct {
 	PassNo uint64
 }
 
-// ReadOnly returns true is the filesystem is mounted read-only
+// ReadOnly returns true if the filesystem is mounted read-only.
 func (o FSTabOptions) ReadOnly() bool {
 	opts := strings.Split(o.MntOps, ",")
 
@@ -191,8 +195,8 @@ func newRandomUUIDFromReader(r io.Reader) (uuid.UUID, error) {
 	return id, nil
 }
 
-// NewVolIDFromRand creates a random 32 bit hex string to use as a
-// volume ID for FAT filesystems
+// NewVolIDFromRand creates a random 32 bit hex string to use as a volume ID
+// for FAT filesystems.
 func NewVolIDFromRand(r *rand.Rand) string {
 	volid := make([]byte, 4)
 	len, _ := r.Read(volid)
