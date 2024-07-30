@@ -3,6 +3,7 @@ package blueprint
 import (
 	"testing"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/customizations/anaconda"
 	"github.com/stretchr/testify/assert"
 )
@@ -393,6 +394,36 @@ func TestGetRPM(t *testing.T) {
 
 	retRPM := TestCustomizations.GetRPM()
 	assert.EqualValues(t, expectedRPM, *retRPM)
+
+}
+func TestGetRHSM(t *testing.T) {
+	expectedRHSM := RHSMCustomization{
+		Config: &RHSMConfig{
+			DNFPlugins: &SubManDNFPluginsConfig{
+				ProductID: &DNFPluginConfig{
+					Enabled: common.ToPtr(false),
+				},
+				SubscriptionManager: &DNFPluginConfig{
+					Enabled: common.ToPtr(false),
+				},
+			},
+			SubscriptionManager: &SubManConfig{
+				RHSMConfig: &SubManRHSMConfig{
+					ManageRepos: common.ToPtr(false),
+				},
+				RHSMCertdConfig: &SubManRHSMCertdConfig{
+					AutoRegistration: common.ToPtr(true),
+				},
+			},
+		},
+	}
+
+	TestCustomizations := Customizations{
+		RHSM: &expectedRHSM,
+	}
+
+	retRHSMCustomizations := TestCustomizations.GetRHSM()
+	assert.EqualValues(t, expectedRHSM, *retRHSMCustomizations)
 }
 
 func TestGetInstallerErrors(t *testing.T) {
