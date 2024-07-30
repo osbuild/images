@@ -1,12 +1,9 @@
 package rhel10
 
 import (
-	"fmt"
 	"math/rand"
-	"strings"
 	"testing"
 
-	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/stretchr/testify/assert"
@@ -18,51 +15,6 @@ import (
 // math/rand is good enough in this case
 /* #nosec G404 */
 var rng = rand.New(rand.NewSource(0))
-
-func TestEC2Partitioning(t *testing.T) {
-	testCases := []struct {
-		distro      string
-		bootSizeMiB uint64
-	}{
-		// x86_64
-		{
-			distro:      "rhel-10.0",
-			bootSizeMiB: 1024,
-		},
-		{
-			distro:      "centos-10",
-			bootSizeMiB: 1024,
-		},
-	}
-
-	for _, tt := range testCases {
-		for _, arch := range []string{"x86_64", "aarch64"} {
-			for _, it := range []string{"ami"} {
-				// skip non-existing combos
-				if strings.HasPrefix(it, "ec2") && strings.HasPrefix(tt.distro, "centos") {
-					continue
-				}
-				t.Run(fmt.Sprintf("%s/%s/%s", tt.distro, arch, it), func(t *testing.T) {
-					a, err := DistroFactory(tt.distro).GetArch(arch)
-					require.NoError(t, err)
-					require.NotNil(t, a)
-					i, err := a.GetImageType(it)
-					require.NoError(t, err)
-
-					it := i.(*rhel.ImageType)
-					pt, err := it.GetPartitionTable([]blueprint.FilesystemCustomization{}, distro.ImageOptions{}, rng)
-					require.NoError(t, err)
-
-					bootSize, err := pt.GetMountpointSize("/boot")
-					require.NoError(t, err)
-					require.Equal(t, tt.bootSizeMiB*common.MiB, bootSize)
-				})
-
-			}
-		}
-
-	}
-}
 
 func TestDistroFactory(t *testing.T) {
 	type testCase struct {
@@ -208,5 +160,27 @@ func TestDistroFactory(t *testing.T) {
 				assert.Equal(t, tc.expected.Name(), d.Name())
 			}
 		})
+	}
+}
+
+func TestRhel10_NoBootPartition(t *testing.T) {
+	for _, distroName := range []string{"rhel-10.0", "centos-10"} {
+		dist := DistroFactory(distroName)
+		for _, archName := range dist.ListArches() {
+			arch, err := dist.GetArch(archName)
+			assert.NoError(t, err)
+			for _, imgTypeName := range arch.ListImageTypes() {
+				imgType, err := arch.GetImageType(imgTypeName)
+				assert.NoError(t, err)
+				it := imgType.(*rhel.ImageType)
+				if it.BasePartitionTables == nil {
+					continue
+				}
+				pt, err := it.GetPartitionTable([]blueprint.FilesystemCustomization{}, distro.ImageOptions{}, rng)
+				assert.NoError(t, err)
+				_, err = pt.GetMountpointSize("/boot")
+				require.EqualError(t, err, "cannot find mountpoint /boot")
+			}
+		}
 	}
 }
