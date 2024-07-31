@@ -132,7 +132,7 @@ type OSCustomizations struct {
 	OpenSCAPRemediationConfig *oscap.RemediationConfig
 
 	Subscription *subscription.ImageOptions
-	RHSMConfig   map[subscription.RHSMStatus]*osbuild.RHSMStageOptions
+	RHSMConfig   map[subscription.RHSMStatus]*subscription.RHSMConfig
 
 	// Custom directories and files to create in the image
 	Directories []*fsnode.Directory
@@ -649,11 +649,11 @@ func (p *OS) serialize() osbuild.Pipeline {
 		p.EnabledServices = append(p.EnabledServices, subscribeServiceFile)
 
 		if rhsmConfig, exists := p.RHSMConfig[subscription.RHSMConfigWithSubscription]; exists {
-			pipeline.AddStage(osbuild.NewRHSMStage(rhsmConfig))
+			pipeline.AddStage(osbuild.NewRHSMStage(osbuild.NewRHSMStageOptions(rhsmConfig)))
 		}
 	} else {
 		if rhsmConfig, exists := p.RHSMConfig[subscription.RHSMConfigNoSubscription]; exists {
-			pipeline.AddStage(osbuild.NewRHSMStage(rhsmConfig))
+			pipeline.AddStage(osbuild.NewRHSMStage(osbuild.NewRHSMStageOptions(rhsmConfig)))
 		}
 	}
 
