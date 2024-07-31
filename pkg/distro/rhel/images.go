@@ -13,6 +13,7 @@ import (
 	"github.com/osbuild/images/pkg/customizations/ignition"
 	"github.com/osbuild/images/pkg/customizations/kickstart"
 	"github.com/osbuild/images/pkg/customizations/oscap"
+	"github.com/osbuild/images/pkg/customizations/subscription"
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/image"
@@ -223,8 +224,17 @@ func osCustomizations(
 		osc.OpenSCAPRemediationConfig = remediationConfig
 	}
 
-	osc.ShellInit = imageConfig.ShellInit
+	if options.Subscription != nil {
+		if rhsmConfig, exists := imageConfig.RHSMConfig[subscription.RHSMConfigWithSubscription]; exists {
+			osc.RHSMConfig = rhsmConfig
+		}
+	} else {
+		if rhsmConfig, exists := imageConfig.RHSMConfig[subscription.RHSMConfigNoSubscription]; exists {
+			osc.RHSMConfig = rhsmConfig
+		}
+	}
 
+	osc.ShellInit = imageConfig.ShellInit
 	osc.Grub2Config = imageConfig.Grub2Config
 	osc.Sysconfig = imageConfig.Sysconfig
 	osc.SystemdLogind = imageConfig.SystemdLogind
@@ -244,7 +254,6 @@ func osCustomizations(
 	osc.SshdConfig = imageConfig.SshdConfig
 	osc.AuthConfig = imageConfig.Authconfig
 	osc.PwQuality = imageConfig.PwQuality
-	osc.RHSMConfig = imageConfig.RHSMConfig
 	osc.Subscription = options.Subscription
 	osc.WAAgentConfig = imageConfig.WAAgentConfig
 	osc.UdevRules = imageConfig.UdevRules

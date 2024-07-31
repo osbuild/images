@@ -132,7 +132,8 @@ type OSCustomizations struct {
 	OpenSCAPRemediationConfig *oscap.RemediationConfig
 
 	Subscription *subscription.ImageOptions
-	RHSMConfig   map[subscription.RHSMStatus]*subscription.RHSMConfig
+	// The final RHSM config to be applied to the image
+	RHSMConfig *subscription.RHSMConfig
 
 	// Custom directories and files to create in the image
 	Directories []*fsnode.Directory
@@ -306,7 +307,7 @@ func (p *OS) getBuildPackages(distro Distro) []string {
 			packages = append(packages, "python3-pyyaml")
 		}
 	}
-	if len(p.DNFConfig) > 0 || len(p.RHSMConfig) > 0 || p.WSLConfig != nil {
+	if len(p.DNFConfig) > 0 || p.RHSMConfig != nil || p.WSLConfig != nil {
 		packages = append(packages, "python3-iniparse")
 	}
 
@@ -647,14 +648,10 @@ func (p *OS) serialize() osbuild.Pipeline {
 		}
 		pipeline.AddStage(osbuild.NewSystemdUnitCreateStage(regServiceStageOptions))
 		p.EnabledServices = append(p.EnabledServices, subscribeServiceFile)
+	}
 
-		if rhsmConfig, exists := p.RHSMConfig[subscription.RHSMConfigWithSubscription]; exists {
-			pipeline.AddStage(osbuild.NewRHSMStage(osbuild.NewRHSMStageOptions(rhsmConfig)))
-		}
-	} else {
-		if rhsmConfig, exists := p.RHSMConfig[subscription.RHSMConfigNoSubscription]; exists {
-			pipeline.AddStage(osbuild.NewRHSMStage(osbuild.NewRHSMStageOptions(rhsmConfig)))
-		}
+	if rhsmConfig := p.RHSMConfig; rhsmConfig != nil {
+		pipeline.AddStage(osbuild.NewRHSMStage(osbuild.NewRHSMStageOptions(rhsmConfig)))
 	}
 
 	if waConfig := p.WAAgentConfig; waConfig != nil {
