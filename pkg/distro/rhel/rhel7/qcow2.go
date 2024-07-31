@@ -63,14 +63,14 @@ var qcow2DefaultImgConfig = &distro.ImageConfig{
 			},
 		},
 	},
-	RHSMConfig: map[subscription.RHSMStatus]*osbuild.RHSMStageOptions{
+	RHSMConfig: map[subscription.RHSMStatus]*subscription.RHSMConfig{
 		subscription.RHSMConfigNoSubscription: {
-			YumPlugins: &osbuild.RHSMStageOptionsDnfPlugins{
-				ProductID: &osbuild.RHSMStageOptionsDnfPlugin{
-					Enabled: false,
+			YumPlugins: subscription.SubManDNFPluginsConfig{
+				ProductID: subscription.DNFPluginConfig{
+					Enabled: common.ToPtr(false),
 				},
-				SubscriptionManager: &osbuild.RHSMStageOptionsDnfPlugin{
-					Enabled: false,
+				SubscriptionManager: subscription.DNFPluginConfig{
+					Enabled: common.ToPtr(false),
 				},
 			},
 		},

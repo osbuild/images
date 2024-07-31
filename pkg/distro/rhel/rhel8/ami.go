@@ -293,7 +293,7 @@ func defaultEc2ImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
 		ic = appendRHSM(ic)
 		// Disable RHSM redhat.repo management
 		rhsmConf := ic.RHSMConfig[subscription.RHSMConfigNoSubscription]
-		rhsmConf.SubMan.Rhsm = &osbuild.SubManConfigRHSMSection{ManageRepos: common.ToPtr(false)}
+		rhsmConf.SubMan.Rhsm = subscription.SubManRHSMConfig{ManageRepos: common.ToPtr(false)}
 		ic.RHSMConfig[subscription.RHSMConfigNoSubscription] = rhsmConf
 	}
 
@@ -433,11 +433,11 @@ func rhelEc2SapPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 // Used for RHEL distros.
 func appendRHSM(ic *distro.ImageConfig) *distro.ImageConfig {
 	rhsm := &distro.ImageConfig{
-		RHSMConfig: map[subscription.RHSMStatus]*osbuild.RHSMStageOptions{
+		RHSMConfig: map[subscription.RHSMStatus]*subscription.RHSMConfig{
 			subscription.RHSMConfigNoSubscription: {
 				// RHBZ#1932802
-				SubMan: &osbuild.RHSMStageOptionsSubMan{
-					Rhsmcertd: &osbuild.SubManConfigRHSMCERTDSection{
+				SubMan: subscription.SubManConfig{
+					Rhsmcertd: subscription.SubManRHSMCertdConfig{
 						AutoRegistration: common.ToPtr(true),
 					},
 					// Don't disable RHSM redhat.repo management on the AMI
@@ -451,8 +451,8 @@ func appendRHSM(ic *distro.ImageConfig) *distro.ImageConfig {
 			},
 			subscription.RHSMConfigWithSubscription: {
 				// RHBZ#1932802
-				SubMan: &osbuild.RHSMStageOptionsSubMan{
-					Rhsmcertd: &osbuild.SubManConfigRHSMCERTDSection{
+				SubMan: subscription.SubManConfig{
+					Rhsmcertd: subscription.SubManRHSMCertdConfig{
 						AutoRegistration: common.ToPtr(true),
 					},
 					// do not disable the redhat.repo management if the user
