@@ -1,0 +1,27 @@
+{
+  "name": "rhsm",
+  "blueprint": {
+    "customizations": {
+      "rhsm": {
+        "config": {
+          "dnf_plugins": {
+            "product_id": {
+              "enabled": true
+            },
+            "subscription_manager": {
+              "enabled": true
+            }
+          },
+          "subscription_manager": {
+            "rhsm": {
+              "manage_repos": true
+            },
+            "rhsmcertd": {
+              "auto_registration": true
+            }
+          }
+        }
+      }
+    }
+  }
+}
