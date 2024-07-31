@@ -295,5 +295,15 @@
     "distros": [
       "fedora*"
     ]
+  },
+  "./configs/rhsm.json": {
+    "image-types": [
+      "qcow2"
+    ],
+    "distros": [
+      "rhel-8.10",
+      "rhel-9.5",
+      "rhel-10.0"
+    ]
   }
 }
