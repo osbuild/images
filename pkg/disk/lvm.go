@@ -12,6 +12,8 @@ import (
 // created inside the VG will be aligned to this.
 const LVMDefaultExtentSize = 4 * common.MebiByte
 
+var _ = Container(&LVMVolumeGroup{})
+
 type LVMVolumeGroup struct {
 	Name        string
 	Description string
@@ -163,6 +165,8 @@ func (vg *LVMVolumeGroup) minSize(size uint64) uint64 {
 
 	return vg.AlignUp(size)
 }
+
+var _ = Sizeable(&LVMLogicalVolume{})
 
 type LVMLogicalVolume struct {
 	Name    string

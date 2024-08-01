@@ -32,6 +32,8 @@ type ClevisBind struct {
 	RemovePassphrase bool
 }
 
+var _ = Container(&LUKSContainer{})
+
 // LUKSContainer represents a LUKS encrypted volume.
 type LUKSContainer struct {
 	Passphrase string

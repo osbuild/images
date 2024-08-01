@@ -10,6 +10,10 @@ import (
 
 const DefaultBtrfsCompression = "zstd:1"
 
+// btrfs implements the interface
+var _ = Container(&Btrfs{})
+var _ = UniqueEntity(&Btrfs{})
+
 type Btrfs struct {
 	UUID       string
 	Label      string
@@ -109,6 +113,10 @@ func (b *Btrfs) minSize(size uint64) uint64 {
 
 	return b.AlignUp(size)
 }
+
+// subvolume implements interface
+var _ = Mountable(&BtrfsSubvolume{})
+var _ = Sizeable(&BtrfsSubvolume{})
 
 type BtrfsSubvolume struct {
 	Name       string

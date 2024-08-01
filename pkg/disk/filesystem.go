@@ -7,6 +7,10 @@ import (
 	"github.com/google/uuid"
 )
 
+// filesystem implements expected interface
+var _ = Mountable(&Filesystem{})
+var _ = UniqueEntity(&Filesystem{})
+
 // Filesystem related functions
 type Filesystem struct {
 	Type string

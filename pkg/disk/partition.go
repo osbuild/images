@@ -7,6 +7,9 @@ import (
 	"reflect"
 )
 
+var _ = Container(&Partition{})
+var _ = Sizeable(&Partition{})
+
 type Partition struct {
 	Start    uint64 // Start of the partition in bytes
 	Size     uint64 // Size of the partition in bytes
