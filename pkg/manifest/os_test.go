@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/osbuild/images/pkg/customizations/subscription"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/runner"
-	"github.com/osbuild/images/pkg/subscription"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

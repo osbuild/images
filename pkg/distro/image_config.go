@@ -6,8 +6,8 @@ import (
 
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/shell"
+	"github.com/osbuild/images/pkg/customizations/subscription"
 	"github.com/osbuild/images/pkg/osbuild"
-	"github.com/osbuild/images/pkg/subscription"
 )
 
 // ImageConfig represents a (default) configuration applied to the image payload.
