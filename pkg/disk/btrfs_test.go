@@ -29,3 +29,10 @@ func TestBtrfsSubvolume_GetFSTabOptionsPanics(t *testing.T) {
 	})
 
 }
+
+func TestImplementsInterfacesCompileTimeCheckBtrfs(t *testing.T) {
+	var _ = Container(&Btrfs{})
+	var _ = UniqueEntity(&Btrfs{})
+	var _ = Mountable(&BtrfsSubvolume{})
+	var _ = Sizeable(&BtrfsSubvolume{})
+}

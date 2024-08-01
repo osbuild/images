@@ -38,3 +38,8 @@ func TestLVMVCreateMountpoint(t *testing.T) {
 	_, err = vg.CreateMountpoint("/home/test", 0)
 	assert.Error(err)
 }
+
+func TestImplementsInterfacesCompileTimeCheckLVM(t *testing.T) {
+	var _ = Container(&LVMVolumeGroup{})
+	var _ = Sizeable(&LVMLogicalVolume{})
+}
