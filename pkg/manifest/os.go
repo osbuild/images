@@ -14,6 +14,7 @@ import (
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/customizations/shell"
+	"github.com/osbuild/images/pkg/customizations/subscription"
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/osbuild"
@@ -21,7 +22,6 @@ import (
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rhsm/facts"
 	"github.com/osbuild/images/pkg/rpmmd"
-	"github.com/osbuild/images/pkg/subscription"
 )
 
 // OSCustomizations encapsulates all configuration applied to the base
