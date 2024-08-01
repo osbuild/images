@@ -650,16 +650,16 @@ func (p *OS) serialize() osbuild.Pipeline {
 		p.EnabledServices = append(p.EnabledServices, subscribeServiceFile)
 	}
 
-	if rhsmConfig := p.RHSMConfig; rhsmConfig != nil {
-		pipeline.AddStage(osbuild.NewRHSMStage(osbuild.NewRHSMStageOptions(rhsmConfig)))
+	if p.RHSMConfig != nil {
+		pipeline.AddStage(osbuild.NewRHSMStage(osbuild.NewRHSMStageOptions(p.RHSMConfig)))
 	}
 
-	if waConfig := p.WAAgentConfig; waConfig != nil {
-		pipeline.AddStage(osbuild.NewWAAgentConfStage(waConfig))
+	if p.WAAgentConfig != nil {
+		pipeline.AddStage(osbuild.NewWAAgentConfStage(p.WAAgentConfig))
 	}
 
-	if udevRules := p.UdevRules; udevRules != nil {
-		pipeline.AddStage(osbuild.NewUdevRulesStage(udevRules))
+	if p.UdevRules != nil {
+		pipeline.AddStage(osbuild.NewUdevRulesStage(p.UdevRules))
 	}
 
 	if pt := p.PartitionTable; pt != nil {
@@ -792,8 +792,8 @@ func (p *OS) serialize() osbuild.Pipeline {
 		pipeline.AddStage(osbuild.GenShellInitStage(p.ShellInit))
 	}
 
-	if wslConf := p.WSLConfig; wslConf != nil {
-		pipeline.AddStage(osbuild.NewWSLConfStage(wslConf))
+	if p.WSLConfig != nil {
+		pipeline.AddStage(osbuild.NewWSLConfStage(p.WSLConfig))
 	}
 
 	if p.FIPS {
