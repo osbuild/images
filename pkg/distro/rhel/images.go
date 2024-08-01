@@ -224,14 +224,14 @@ func osCustomizations(
 		osc.OpenSCAPRemediationConfig = remediationConfig
 	}
 
+	var subscriptionStatus subscription.RHSMStatus
 	if options.Subscription != nil {
-		if rhsmConfig, exists := imageConfig.RHSMConfig[subscription.RHSMConfigWithSubscription]; exists {
-			osc.RHSMConfig = rhsmConfig
-		}
+		subscriptionStatus = subscription.RHSMConfigWithSubscription
 	} else {
-		if rhsmConfig, exists := imageConfig.RHSMConfig[subscription.RHSMConfigNoSubscription]; exists {
-			osc.RHSMConfig = rhsmConfig
-		}
+		subscriptionStatus = subscription.RHSMConfigNoSubscription
+	}
+	if rhsmConfig, exists := imageConfig.RHSMConfig[subscriptionStatus]; exists {
+		osc.RHSMConfig = rhsmConfig
 	}
 
 	if bpRhsmConfig := subscription.RHSMConfigFromBP(c.GetRHSM()); bpRhsmConfig != nil {
