@@ -10,7 +10,9 @@ import (
 	"github.com/osbuild/images/pkg/osbuild"
 )
 
-type Input = otkdisk.Data
+type Input struct {
+	Tree otkdisk.Data `json:"tree"`
+}
 
 type Output struct {
 	RootMountName string                    `json:"root_mount_name"`
@@ -24,15 +26,17 @@ func run(r io.Reader, w io.Writer) error {
 		return err
 	}
 
-	rootMntName, mounts, devices, err := osbuild.GenMountsDevicesFromPT(inp.Const.Filename, inp.Const.Internal.PartitionTable)
+	rootMntName, mounts, devices, err := osbuild.GenMountsDevicesFromPT(inp.Tree.Const.Filename, inp.Tree.Const.Internal.PartitionTable)
 	if err != nil {
 		return err
 	}
 
-	out := Output{
-		RootMountName: rootMntName,
-		Mounts:        mounts,
-		Devices:       devices,
+	out := map[string]interface{}{
+		"tree": Output{
+			RootMountName: rootMntName,
+			Mounts:        mounts,
+			Devices:       devices,
+		},
 	}
 	outputJson, err := json.MarshalIndent(out, "", "  ")
 	if err != nil {

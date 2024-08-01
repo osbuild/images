@@ -11,7 +11,9 @@ import (
 	"github.com/osbuild/images/internal/otkdisk"
 )
 
-type Input = otkdisk.Data
+type Input struct {
+	Tree otkdisk.Data `json:"tree"`
+}
 
 func makeImagePrepareStages(inp Input, filename string) (stages []*osbuild.Stage, err error) {
 	defer func() {
@@ -23,7 +25,7 @@ func makeImagePrepareStages(inp Input, filename string) (stages []*osbuild.Stage
 	// rhel7 uses PTSgdisk, if we ever need to support this, make this
 	// configurable
 	partTool := osbuild.PTSfdisk
-	stages = osbuild.GenImagePrepareStages(inp.Const.Internal.PartitionTable, inp.Const.Filename, partTool)
+	stages = osbuild.GenImagePrepareStages(inp.Tree.Const.Internal.PartitionTable, inp.Tree.Const.Filename, partTool)
 	return stages, nil
 }
 
@@ -33,12 +35,15 @@ func run(r io.Reader, w io.Writer) error {
 		return err
 	}
 
-	stages, err := makeImagePrepareStages(inp, inp.Const.Filename)
+	stages, err := makeImagePrepareStages(inp, inp.Tree.Const.Filename)
 	if err != nil {
 		return fmt.Errorf("cannot make partition stages: %w", err)
 	}
 
-	outputJson, err := json.MarshalIndent(stages, "", "  ")
+	stagesInTree := map[string]interface{}{
+		"tree": stages,
+	}
+	outputJson, err := json.MarshalIndent(stagesInTree, "", "  ")
 	if err != nil {
 		return fmt.Errorf("cannot marshal response: %w", err)
 	}

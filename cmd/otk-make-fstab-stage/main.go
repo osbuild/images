@@ -11,7 +11,9 @@ import (
 	"github.com/osbuild/images/internal/otkdisk"
 )
 
-type Input = otkdisk.Data
+type Input struct {
+	Tree otkdisk.Data `json:"tree"`
+}
 
 func makeFstabStages(inp Input) (stages *osbuild.Stage, err error) {
 	defer func() {
@@ -20,7 +22,7 @@ func makeFstabStages(inp Input) (stages *osbuild.Stage, err error) {
 		}
 	}()
 
-	pt := inp.Const.Internal.PartitionTable
+	pt := inp.Tree.Const.Internal.PartitionTable
 	fstabStage := osbuild.NewFSTabStage(osbuild.NewFSTabStageOptions(pt))
 	return fstabStage, nil
 }
@@ -36,7 +38,10 @@ func run(r io.Reader, w io.Writer) error {
 		return fmt.Errorf("cannot make partition stages: %w", err)
 	}
 
-	outputJson, err := json.MarshalIndent(stage, "", "  ")
+	out := map[string]interface{}{
+		"tree": stage,
+	}
+	outputJson, err := json.MarshalIndent(out, "", "  ")
 	if err != nil {
 		return fmt.Errorf("cannot marshal response: %w", err)
 	}
