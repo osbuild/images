@@ -23,7 +23,11 @@ func makeFstabStages(inp Input) (stages *osbuild.Stage, err error) {
 	}()
 
 	pt := inp.Tree.Const.Internal.PartitionTable
-	fstabStage := osbuild.NewFSTabStage(osbuild.NewFSTabStageOptions(pt))
+	opts, err := osbuild.NewFSTabStageOptions(pt)
+	if err != nil {
+		return nil, err
+	}
+	fstabStage := osbuild.NewFSTabStage(opts)
 	return fstabStage, nil
 }
 

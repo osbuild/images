@@ -16,18 +16,17 @@ func TestBtrfsSubvolume_GetFSTabOptions(t *testing.T) {
 		{BtrfsSubvolume{Name: "root", Compress: "zstd:1", ReadOnly: true},
 			"subvol=root,compress=zstd:1,ro"},
 	} {
-		actual := tc.subvol.GetFSTabOptions()
+		actual, err := tc.subvol.GetFSTabOptions()
+		assert.NoError(t, err)
 
 		assert.Equal(t, FSTabOptions{MntOps: tc.expectedMntOpts}, actual)
 	}
 }
 
 func TestBtrfsSubvolume_GetFSTabOptionsPanics(t *testing.T) {
-	assert.PanicsWithError(t, `internal error: BtrfsSubvolume.GetFSTabOptions() for &{Name: Size:0 Mountpoint: GroupID:0 Compress: ReadOnly:false UUID:} called without a name`, func() {
-		subvol := &BtrfsSubvolume{}
-		subvol.GetFSTabOptions()
-	})
-
+	subvol := &BtrfsSubvolume{}
+	_, err := subvol.GetFSTabOptions()
+	assert.EqualError(t, err, `internal error: BtrfsSubvolume.GetFSTabOptions() for &{Name: Size:0 Mountpoint: GroupID:0 Compress: ReadOnly:false UUID:} called without a name`)
 }
 
 func TestImplementsInterfacesCompileTimeCheckBtrfs(t *testing.T) {
