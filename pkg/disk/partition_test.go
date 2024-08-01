@@ -100,3 +100,8 @@ func TestAllPayloadEntityExported(t *testing.T) {
 	// payloadEntityMap so that the json marshaling will work
 	assert.Equal(t, len(entityNameImpl), len(disk.PayloadEntityMap), fmt.Sprintf("the EntityName() function is implemented by %q but only %v are registered in %v, was a new PayloadEntity added but not registered?", entityNameImpl, len(disk.PayloadEntityMap), disk.PayloadEntityMap))
 }
+
+func TestImplementsInterfacesCompileTimeCheckPartition(t *testing.T) {
+	var _ = disk.Container(&disk.Partition{})
+	var _ = disk.Sizeable(&disk.Partition{})
+}
