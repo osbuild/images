@@ -12,47 +12,49 @@ import (
 )
 
 const expectedOutput = `{
-  "root_mount_name": "-",
-  "mounts": [
-    {
-      "name": "-",
-      "type": "org.osbuild.ext4",
-      "source": "-",
-      "target": "/"
-    },
-    {
-      "name": "boot",
-      "type": "org.osbuild.ext4",
-      "source": "boot",
-      "target": "/boot"
-    },
-    {
-      "name": "boot-efi",
-      "type": "org.osbuild.fat",
-      "source": "boot-efi",
-      "target": "/boot/efi"
-    }
-  ],
-  "devices": {
-    "-": {
-      "type": "org.osbuild.loopback",
-      "options": {
-        "filename": "test.disk",
-        "size": 1615872
+  "tree": {
+    "root_mount_name": "-",
+    "mounts": [
+      {
+        "name": "-",
+        "type": "org.osbuild.ext4",
+        "source": "-",
+        "target": "/"
+      },
+      {
+        "name": "boot",
+        "type": "org.osbuild.ext4",
+        "source": "boot",
+        "target": "/boot"
+      },
+      {
+        "name": "boot-efi",
+        "type": "org.osbuild.fat",
+        "source": "boot-efi",
+        "target": "/boot/efi"
       }
-    },
-    "boot": {
-      "type": "org.osbuild.loopback",
-      "options": {
-        "filename": "test.disk",
-        "size": 1615872
-      }
-    },
-    "boot-efi": {
-      "type": "org.osbuild.loopback",
-      "options": {
-        "filename": "test.disk",
-        "size": 1615872
+    ],
+    "devices": {
+      "-": {
+        "type": "org.osbuild.loopback",
+        "options": {
+          "filename": "test.disk",
+          "size": 1615872
+        }
+      },
+      "boot": {
+        "type": "org.osbuild.loopback",
+        "options": {
+          "filename": "test.disk",
+          "size": 1615872
+        }
+      },
+      "boot-efi": {
+        "type": "org.osbuild.loopback",
+        "options": {
+          "filename": "test.disk",
+          "size": 1615872
+        }
       }
     }
   }
@@ -62,10 +64,12 @@ const expectedOutput = `{
 func TestIntegration(t *testing.T) {
 	pt := testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi")
 	input := mkdevmnt.Input{
-		Const: otkdisk.Const{
-			Filename: "test.disk",
-			Internal: otkdisk.Internal{
-				PartitionTable: pt,
+		Tree: otkdisk.Data{
+			Const: otkdisk.Const{
+				Filename: "test.disk",
+				Internal: otkdisk.Internal{
+					PartitionTable: pt,
+				},
 			},
 		},
 	}

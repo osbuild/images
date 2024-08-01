@@ -17,35 +17,39 @@ import (
 // disk.PartitionTable so encoding it in json here will not add
 // a benefit for the test
 var minimalInputBase = makefstab.Input{
-	Const: otkdisk.Const{
-		Internal: otkdisk.Internal{
-			PartitionTable: testdisk.MakeFakePartitionTable("/", "/var"),
+	Tree: otkdisk.Data{
+		Const: otkdisk.Const{
+			Internal: otkdisk.Internal{
+				PartitionTable: testdisk.MakeFakePartitionTable("/", "/var"),
+			},
 		},
 	},
 }
 
 var minimalExpectedStages = `{
-  "type": "org.osbuild.fstab",
-  "options": {
-    "filesystems": [
-      {
-        "uuid": "6264D520-3FB9-423F-8AB8-7A0A8E3D3562",
-        "vfs_type": "ext4",
-        "path": "/"
-      },
-      {
-        "uuid": "CB07C243-BC44-4717-853E-28852021225B",
-        "vfs_type": "ext4",
-        "path": "/var"
-      }
-    ]
+  "tree": {
+    "type": "org.osbuild.fstab",
+    "options": {
+      "filesystems": [
+        {
+          "uuid": "6264D520-3FB9-423F-8AB8-7A0A8E3D3562",
+          "vfs_type": "ext4",
+          "path": "/"
+        },
+        {
+          "uuid": "CB07C243-BC44-4717-853E-28852021225B",
+          "vfs_type": "ext4",
+          "path": "/var"
+        }
+      ]
+    }
   }
 }
 `
 
 func TestIntegration(t *testing.T) {
 	minimalInput := minimalInputBase
-	minimalInput.Const.Filename = "disk.img"
+	minimalInput.Tree.Const.Filename = "disk.img"
 	expectedStages := minimalExpectedStages
 
 	inpJSON, err := json.Marshal(&minimalInput)
