@@ -13,32 +13,17 @@ import (
 
 type Input = otkdisk.Data
 
-func makeFstabStages(inp Input) (stages *osbuild.Stage, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("cannot generate image prepare stages: %v", r)
-		}
-	}()
-
-	pt := inp.Const.Internal.PartitionTable
-	opts, err := osbuild.NewFSTabStageOptions(pt)
-	if err != nil {
-		return nil, err
-	}
-	fstabStage := osbuild.NewFSTabStage(opts)
-	return fstabStage, nil
-}
-
 func run(r io.Reader, w io.Writer) error {
 	var inp Input
 	if err := json.NewDecoder(r).Decode(&inp); err != nil {
 		return err
 	}
 
-	stage, err := makeFstabStages(inp)
+	opts, err := osbuild.NewFSTabStageOptions(inp.Const.Internal.PartitionTable)
 	if err != nil {
 		return fmt.Errorf("cannot make partition stages: %w", err)
 	}
+	stage := osbuild.NewFSTabStage(opts)
 
 	outputJson, err := json.MarshalIndent(stage, "", "  ")
 	if err != nil {
