@@ -3,6 +3,8 @@ package osbuild
 import (
 	"fmt"
 	"regexp"
+
+	"github.com/osbuild/images/internal/types"
 )
 
 const SourceNameSkopeo = "org.osbuild.skopeo"
@@ -19,9 +21,9 @@ type SkopeoSource struct {
 func (SkopeoSource) isSource() {}
 
 type SkopeopSourceImage struct {
-	Name      string `json:"name,omitempty"`
-	Digest    string `json:"digest,omitempty"`
-	TLSVerify *bool  `json:"tls-verify,omitempty"`
+	Name      string             `json:"name,omitempty"`
+	Digest    string             `json:"digest,omitempty"`
+	TLSVerify types.Option[bool] `json:"tls-verify,omitempty"`
 }
 
 type SkopeoSourceItem struct {
@@ -29,7 +31,7 @@ type SkopeoSourceItem struct {
 }
 
 // NewSkopeoSourceItem creates a new source item for name and digest
-func NewSkopeoSourceItem(name, digest string, tlsVerify *bool) SkopeoSourceItem {
+func NewSkopeoSourceItem(name, digest string, tlsVerify types.Option[bool]) SkopeoSourceItem {
 	item := SkopeoSourceItem{
 		Image: SkopeopSourceImage{
 			Name:      name,
@@ -64,7 +66,7 @@ func NewSkopeoSource() *SkopeoSource {
 
 // AddItem adds a source item to the source; will panic
 // if any of the supplied options are invalid or missing
-func (source *SkopeoSource) AddItem(name, digest, image string, tlsVerify *bool) {
+func (source *SkopeoSource) AddItem(name, digest, image string, tlsVerify types.Option[bool]) {
 	item := NewSkopeoSourceItem(name, digest, tlsVerify)
 	if !skopeoDigestPattern.MatchString(image) {
 		panic(fmt.Errorf("item %#v has invalid image id", image))

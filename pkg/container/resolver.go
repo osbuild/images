@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/osbuild/images/internal/types"
 )
 
 type resolveResult struct {
@@ -33,7 +35,7 @@ type SourceSpec struct {
 	Source    string
 	Name      string
 	Digest    *string
-	TLSVerify *bool
+	TLSVerify types.Option[bool]
 	Local     bool
 }
 
