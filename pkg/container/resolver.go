@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/moznion/go-optional"
 )
 
 type resolveResult struct {
@@ -28,7 +30,7 @@ type SourceSpec struct {
 	Source    string
 	Name      string
 	Digest    *string
-	TLSVerify *bool
+	TLSVerify optional.Option[bool]
 	Local     bool
 }
 

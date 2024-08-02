@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/osbuild/images/internal/common"
@@ -49,7 +50,7 @@ func TestResolver(t *testing.T) {
 			Source:    r,
 			Name:      "",
 			Digest:    common.ToPtr(""),
-			TLSVerify: common.ToPtr(false),
+			TLSVerify: optional.Some(false),
 			Local:     false,
 		})
 	}
@@ -77,7 +78,7 @@ func TestResolverFail(t *testing.T) {
 		Source:    "invalid-reference@${IMAGE_DIGEST}",
 		Name:      "",
 		Digest:    common.ToPtr(""),
-		TLSVerify: common.ToPtr(false),
+		TLSVerify: optional.Some(false),
 		Local:     false,
 	})
 	specs, err := resolver.Finish()
@@ -91,7 +92,7 @@ func TestResolverFail(t *testing.T) {
 		Source:    registry.GetRef("repo"),
 		Name:      "",
 		Digest:    common.ToPtr(""),
-		TLSVerify: common.ToPtr(false),
+		TLSVerify: optional.Some(false),
 		Local:     false,
 	})
 	specs, err = resolver.Finish()
@@ -102,7 +103,7 @@ func TestResolverFail(t *testing.T) {
 		Source:    registry.GetRef("repo"),
 		Name:      "",
 		Digest:    common.ToPtr(""),
-		TLSVerify: common.ToPtr(false),
+		TLSVerify: optional.Some(false),
 		Local:     false,
 	})
 	specs, err = resolver.Finish()
@@ -113,7 +114,7 @@ func TestResolverFail(t *testing.T) {
 		Source:    registry.GetRef("repo"),
 		Name:      "",
 		Digest:    common.ToPtr(""),
-		TLSVerify: common.ToPtr(false),
+		TLSVerify: optional.Some(false),
 		Local:     false,
 	})
 	specs, err = resolver.Finish()
@@ -178,7 +179,7 @@ func TestResolverLocalManifest(t *testing.T) {
 		Source:    "localhost/multi-arch",
 		Name:      "",
 		Digest:    common.ToPtr(""),
-		TLSVerify: common.ToPtr(false),
+		TLSVerify: optional.Some(false),
 		Local:     true,
 	})
 	specs, err := resolver.Finish()
@@ -196,7 +197,7 @@ func TestResolverLocalManifest(t *testing.T) {
 		Source:    "localhost/multi-arch",
 		Name:      "",
 		Digest:    common.ToPtr(""),
-		TLSVerify: common.ToPtr(false),
+		TLSVerify: optional.Some(false),
 		Local:     true,
 	})
 	specs, err = resolver.Finish()

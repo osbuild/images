@@ -2,6 +2,7 @@ package container
 
 import (
 	"github.com/containers/image/v5/docker/reference"
+	"github.com/moznion/go-optional"
 	"github.com/opencontainers/go-digest"
 
 	"github.com/osbuild/images/pkg/arch"
@@ -13,12 +14,12 @@ import (
 // at the Source via Digest and ImageID. The latter one
 // should remain the same in the target image as well.
 type Spec struct {
-	Source       string // does not include the manifest digest
-	Digest       string // digest of the manifest at the Source
-	TLSVerify    *bool  // controls TLS verification
-	ImageID      string // container image identifier
-	LocalName    string // name to use inside the image
-	ListDigest   string // digest of the list manifest at the Source (optional)
+	Source       string                // does not include the manifest digest
+	Digest       string                // digest of the manifest at the Source
+	TLSVerify    optional.Option[bool] // controls TLS verification
+	ImageID      string                // container image identifier
+	LocalName    string                // name to use inside the image
+	ListDigest   string                // digest of the list manifest at the Source (optional)
 	LocalStorage bool
 
 	Arch arch.Arch // the architecture of the image
@@ -27,7 +28,7 @@ type Spec struct {
 // NewSpec creates a new Spec from the essential information.
 // It also converts is the transition point from container
 // specific types (digest.Digest) to generic types (string).
-func NewSpec(source reference.Named, digest, imageID digest.Digest, tlsVerify *bool, listDigest string, localName string, localStorage bool) Spec {
+func NewSpec(source reference.Named, digest, imageID digest.Digest, tlsVerify optional.Option[bool], listDigest string, localName string, localStorage bool) Spec {
 	if localName == "" {
 		localName = source.String()
 	}
