@@ -7,6 +7,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/moznion/go-optional"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slices"
+
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
@@ -15,9 +20,6 @@ import (
 	"github.com/osbuild/images/pkg/distrofactory"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rpmmd"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"golang.org/x/exp/slices"
 )
 
 // Ensure that all package sets defined in the package set chains are defined for the image type
@@ -596,7 +598,7 @@ func TestDistro_ManifestFIPSWarning(t *testing.T) {
 			for _, imgTypeName := range arch.ListImageTypes() {
 				bp := blueprint.Blueprint{
 					Customizations: &blueprint.Customizations{
-						FIPS: &fips_enabled,
+						FIPS: optional.Some(fips_enabled),
 					},
 				}
 				imgType, _ := arch.GetImageType(imgTypeName)

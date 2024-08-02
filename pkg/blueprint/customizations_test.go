@@ -3,8 +3,10 @@ package blueprint
 import (
 	"testing"
 
-	"github.com/osbuild/images/pkg/customizations/anaconda"
+	"github.com/moznion/go-optional"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/osbuild/images/pkg/customizations/anaconda"
 )
 
 func TestCheckAllowed(t *testing.T) {
@@ -33,9 +35,9 @@ func TestCheckAllowed(t *testing.T) {
 		},
 	}
 
-	expectedHostname := "Hostname"
+	expectedHostname := optional.Some("Hostname")
 
-	x := Customizations{Hostname: &expectedHostname, User: expectedUsers}
+	x := Customizations{Hostname: expectedHostname, User: expectedUsers}
 
 	err := x.CheckAllowed("Hostname", "User")
 	assert.NoError(t, err)
@@ -50,14 +52,14 @@ func TestCheckAllowed(t *testing.T) {
 }
 
 func TestGetHostname(t *testing.T) {
-	expectedHostname := "Hostname"
+	expectedHostname := optional.Some("Hostname")
 
 	TestCustomizations := Customizations{
-		Hostname: &expectedHostname,
+		Hostname: expectedHostname,
 	}
 
 	retHostname := TestCustomizations.GetHostname()
-	assert.Equal(t, &expectedHostname, retHostname)
+	assert.Equal(t, expectedHostname, retHostname)
 }
 
 func TestGetKernel(t *testing.T) {
