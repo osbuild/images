@@ -23,6 +23,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/hashicorp/go-version v1.7.0
 	github.com/kolo/xmlrpc v0.0.0-20201022064351-38db28db192b
+	github.com/moznion/go-optional v0.12.0
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.1.0
 	github.com/oracle/oci-go-sdk/v54 v54.0.0
