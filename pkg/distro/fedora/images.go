@@ -108,11 +108,7 @@ func osCustomizations(
 		osc.Keyboard = &imageConfig.Keyboard.Keymap
 	}
 
-	if hostname := c.GetHostname(); hostname != nil {
-		osc.Hostname = *hostname
-	} else if imageConfig.Hostname != nil {
-		osc.Hostname = *imageConfig.Hostname
-	}
+	osc.Hostname = c.GetHostname().TakeOr("localhost.localdomain")
 
 	if imageConfig.InstallWeakDeps != nil {
 		osc.InstallWeakDeps = *imageConfig.InstallWeakDeps
