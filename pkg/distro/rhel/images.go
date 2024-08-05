@@ -455,6 +455,11 @@ func EdgeInstallerImage(workload workload.Workload,
 	img.Platform = t.platform
 	img.ExtraBasePackages = packageSets[InstallerPkgsKey]
 
+	if t.Arch().Distro().Releasever() == "8" {
+		// NOTE: RHEL 8 only supports the older Anaconda configs
+		img.UseLegacyAnacondaConfig = true
+	}
+
 	img.Kickstart, err = kickstart.New(customizations)
 	if err != nil {
 		return nil, err
@@ -652,6 +657,11 @@ func ImageInstallerImage(workload workload.Workload,
 	}
 
 	img.ExtraBasePackages = packageSets[InstallerPkgsKey]
+
+	if t.Arch().Distro().Releasever() == "8" {
+		// NOTE: RHEL 8 only supports the older Anaconda configs
+		img.UseLegacyAnacondaConfig = true
+	}
 
 	img.Kickstart, err = kickstart.New(customizations)
 	if err != nil {
