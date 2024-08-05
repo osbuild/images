@@ -149,7 +149,7 @@ func TestAnacondaStageOptions(t *testing.T) {
 		tc := testCases[name]
 		t.Run(name, func(t *testing.T) {
 			require := require.New(t)
-			options := osbuild.NewAnacondaStageOptions(tc.enable, tc.disable)
+			options := osbuild.NewAnacondaStageOptionsLegacy(tc.enable, tc.disable)
 
 			require.NotNil(options)
 			require.ElementsMatch(options.KickstartModules, tc.expected)

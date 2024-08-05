@@ -74,7 +74,7 @@ func filterEnabledModules(moduleStates map[string]bool) []string {
 	return enabled
 }
 
-func NewAnacondaStageOptions(enableModules, disableModules []string) *AnacondaStageOptions {
+func NewAnacondaStageOptionsLegacy(enableModules, disableModules []string) *AnacondaStageOptions {
 	states := defaultModuleStates()
 	setModuleStates(states, enableModules, disableModules)
 
