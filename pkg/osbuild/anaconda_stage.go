@@ -14,7 +14,18 @@ type AnacondaStageOptions struct {
 	//  Fedora:  Removed
 	//
 	// https://bugzilla.redhat.com/show_bug.cgi?id=2023855#c10
-	KickstartModules []string `json:"kickstart-modules"`
+	KickstartModules []string `json:"kickstart-modules,omitempty"`
+
+	// Kickstart modules to activate
+	//
+	// Replaced kickstart-modules in newer versions.
+	ActivatableModules []string `json:"activatable-modules,omitempty"`
+
+	// Kickstart modules to forbid
+	ForbiddenModules []string `json:"forbidden-modules,omitempty"`
+
+	// Kickstart modules to activate but are allowed to fail
+	OptionalModules []string `json:"optional-modules,omitempty"`
 }
 
 func (AnacondaStageOptions) isStageOptions() {}
