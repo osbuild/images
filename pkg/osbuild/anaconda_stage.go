@@ -7,6 +7,13 @@ import (
 
 type AnacondaStageOptions struct {
 	// Kickstart modules to enable
+	//
+	// Deprecated:
+	//  RHEL 9:  Available but marked deprecated
+	//  RHEL 10: Removed
+	//  Fedora:  Removed
+	//
+	// https://bugzilla.redhat.com/show_bug.cgi?id=2023855#c10
 	KickstartModules []string `json:"kickstart-modules"`
 }
 
