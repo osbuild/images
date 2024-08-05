@@ -82,3 +82,12 @@ func NewAnacondaStageOptionsLegacy(enableModules, disableModules []string) *Anac
 		KickstartModules: filterEnabledModules(states),
 	}
 }
+
+func NewAnacondaStageOptions(enableModules, disableModules []string) *AnacondaStageOptions {
+	states := defaultModuleStates()
+	setModuleStates(states, enableModules, disableModules)
+
+	return &AnacondaStageOptions{
+		ActivatableModules: filterEnabledModules(states),
+	}
+}
