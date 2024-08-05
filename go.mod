@@ -33,8 +33,8 @@ require (
 	github.com/ubccr/kerby v0.0.0-20170626144437-201a958fc453
 	github.com/vmware/govmomi v0.39.0
 	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8
-	golang.org/x/oauth2 v0.21.0
-	golang.org/x/sys v0.22.0
+	golang.org/x/oauth2 v0.22.0
+	golang.org/x/sys v0.23.0
 	golang.org/x/tools v0.23.0
 	google.golang.org/api v0.190.0
 	gopkg.in/ini.v1 v1.67.0
