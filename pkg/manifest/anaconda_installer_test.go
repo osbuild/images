@@ -97,26 +97,37 @@ func TestAnacondaInstallerModules(t *testing.T) {
 
 	for name := range testCases {
 		tc := testCases[name]
+		// Run each test case twice: once with activatable-modules and once with kickstart-modules.
+		// Remove this when we drop support for RHEL 8.
 		t.Run(name, func(t *testing.T) {
-			installerPipeline := newAnacondaInstaller()
-			installerPipeline.AdditionalAnacondaModules = tc.enable
-			installerPipeline.DisabledAnacondaModules = tc.disable
-			installerPipeline.serializeStart(pkgs, nil, nil, nil)
-			pipeline := installerPipeline.serialize()
+			for _, legacy := range []bool{true, false} {
+				installerPipeline := newAnacondaInstaller()
+				installerPipeline.UseLegacyAnacondaConfig = legacy
+				installerPipeline.AdditionalAnacondaModules = tc.enable
+				installerPipeline.DisabledAnacondaModules = tc.disable
+				installerPipeline.serializeStart(pkgs, nil, nil, nil)
+				pipeline := installerPipeline.serialize()
 
-			require := require.New(t)
-			require.NotNil(pipeline)
-			require.NotNil(pipeline.Stages)
+				require := require.New(t)
+				require.NotNil(pipeline)
+				require.NotNil(pipeline.Stages)
 
-			var anacondaStageOptions *osbuild.AnacondaStageOptions
-			for _, stage := range pipeline.Stages {
-				if stage.Type == "org.osbuild.anaconda" {
-					anacondaStageOptions = stage.Options.(*osbuild.AnacondaStageOptions)
+				var anacondaStageOptions *osbuild.AnacondaStageOptions
+				for _, stage := range pipeline.Stages {
+					if stage.Type == "org.osbuild.anaconda" {
+						anacondaStageOptions = stage.Options.(*osbuild.AnacondaStageOptions)
+					}
+				}
+
+				require.NotNil(anacondaStageOptions, "serialized anaconda pipeline does not contain an org.osbuild.anaconda stage")
+				if legacy {
+					require.ElementsMatch(anacondaStageOptions.KickstartModules, tc.expected)
+					require.Empty(anacondaStageOptions.ActivatableModules)
+				} else {
+					require.ElementsMatch(anacondaStageOptions.ActivatableModules, tc.expected)
+					require.Empty(anacondaStageOptions.KickstartModules)
 				}
 			}
-
-			require.NotNil(anacondaStageOptions, "serialized anaconda pipeline does not contain an org.osbuild.anaconda stage")
-			require.ElementsMatch(anacondaStageOptions.KickstartModules, tc.expected)
 		})
 	}
 }
