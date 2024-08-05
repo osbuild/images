@@ -292,14 +292,21 @@ func TestTarInstallerPanics(t *testing.T) {
 		func() { instantiateAndSerialize(t, img, mockPackageSets(), nil, nil) })
 }
 
-func findAnacondaStageModules(t *testing.T, mf manifest.OSBuildManifest) []interface{} {
+func findAnacondaStageModules(t *testing.T, mf manifest.OSBuildManifest, legacyOptions bool) []interface{} {
 	pipeline := findPipelineFromOsbuildManifest(t, mf, "anaconda-tree")
 	assert.NotNil(t, pipeline)
 	stage := findStageFromOsbuildPipeline(t, pipeline, "org.osbuild.anaconda")
 	assert.NotNil(t, stage)
 	anacondaStageOptions := stage["options"].(map[string]interface{})
 	assert.NotNil(t, anacondaStageOptions)
-	modules := anacondaStageOptions["kickstart-modules"].([]interface{})
+
+	// NOTE: remove this condition and the legacyOptions function argument when
+	// we remove support for RHEL 8.
+	modulesKey := "activatable-modules"
+	if legacyOptions {
+		modulesKey = "kickstart-modules"
+	}
+	modules := anacondaStageOptions[modulesKey].([]interface{})
 	assert.NotNil(t, modules)
 	return modules
 }
@@ -368,69 +375,84 @@ var moduleTestCases = map[string]testCase{
 func TestContainerInstallerModules(t *testing.T) {
 	for name := range moduleTestCases {
 		tc := moduleTestCases[name]
-		t.Run(name, func(t *testing.T) {
-			img := image.NewAnacondaContainerInstaller(container.SourceSpec{}, "")
-			img.Product = product
-			img.OSVersion = osversion
-			img.ISOLabel = isolabel
+		// Run each test case twice: once with activatable-modules and once with kickstart-modules.
+		// Remove this when we drop support for RHEL 8.
+		for _, legacy := range []bool{true, false} {
+			t.Run(name, func(t *testing.T) {
+				img := image.NewAnacondaContainerInstaller(container.SourceSpec{}, "")
+				img.Product = product
+				img.OSVersion = osversion
+				img.ISOLabel = isolabel
 
-			img.AdditionalAnacondaModules = tc.enable
-			img.DisabledAnacondaModules = tc.disable
+				img.UseLegacyAnacondaConfig = legacy
+				img.AdditionalAnacondaModules = tc.enable
+				img.DisabledAnacondaModules = tc.disable
 
-			assert.NotNil(t, img)
-			img.Platform = testPlatform
-			mfs := instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil)
-			modules := findAnacondaStageModules(t, manifest.OSBuildManifest(mfs))
-			assert.NotNil(t, modules)
-			assert.ElementsMatch(t, modules, tc.expected)
-		})
+				assert.NotNil(t, img)
+				img.Platform = testPlatform
+				mfs := instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil)
+				modules := findAnacondaStageModules(t, manifest.OSBuildManifest(mfs), legacy)
+				assert.NotNil(t, modules)
+				assert.ElementsMatch(t, modules, tc.expected)
+			})
+		}
 	}
 }
 
 func TestOSTreeInstallerModules(t *testing.T) {
 	for name := range moduleTestCases {
 		tc := moduleTestCases[name]
-		t.Run(name, func(t *testing.T) {
-			img := image.NewAnacondaOSTreeInstaller(ostree.SourceSpec{})
-			img.Product = product
-			img.OSVersion = osversion
-			img.ISOLabel = isolabel
-			img.Kickstart = &kickstart.Options{
-				// the ostree options must be non-nil
-				OSTree: &kickstart.OSTree{},
-			}
+		// Run each test case twice: once with activatable-modules and once with kickstart-modules.
+		// Remove this when we drop support for RHEL 8.
+		for _, legacy := range []bool{true, false} {
+			t.Run(name, func(t *testing.T) {
+				img := image.NewAnacondaOSTreeInstaller(ostree.SourceSpec{})
+				img.Product = product
+				img.OSVersion = osversion
+				img.ISOLabel = isolabel
+				img.Kickstart = &kickstart.Options{
+					// the ostree options must be non-nil
+					OSTree: &kickstart.OSTree{},
+				}
 
-			img.AdditionalAnacondaModules = tc.enable
-			img.DisabledAnacondaModules = tc.disable
+				img.UseLegacyAnacondaConfig = legacy
+				img.AdditionalAnacondaModules = tc.enable
+				img.DisabledAnacondaModules = tc.disable
 
-			assert.NotNil(t, img)
-			img.Platform = testPlatform
-			mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, mockOSTreeCommitSpecs())
-			modules := findAnacondaStageModules(t, manifest.OSBuildManifest(mfs))
-			assert.NotNil(t, modules)
-			assert.ElementsMatch(t, modules, tc.expected)
-		})
+				assert.NotNil(t, img)
+				img.Platform = testPlatform
+				mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, mockOSTreeCommitSpecs())
+				modules := findAnacondaStageModules(t, manifest.OSBuildManifest(mfs), legacy)
+				assert.NotNil(t, modules)
+				assert.ElementsMatch(t, modules, tc.expected)
+			})
+		}
 	}
 }
 
 func TestTarInstallerModules(t *testing.T) {
 	for name := range moduleTestCases {
 		tc := moduleTestCases[name]
-		t.Run(name, func(t *testing.T) {
-			img := image.NewAnacondaTarInstaller()
-			img.Product = product
-			img.OSVersion = osversion
-			img.ISOLabel = isolabel
+		// Run each test case twice: once with activatable-modules and once with kickstart-modules.
+		// Remove this when we drop support for RHEL 8.
+		for _, legacy := range []bool{true, false} {
+			t.Run(name, func(t *testing.T) {
+				img := image.NewAnacondaTarInstaller()
+				img.Product = product
+				img.OSVersion = osversion
+				img.ISOLabel = isolabel
 
-			img.AdditionalAnacondaModules = tc.enable
-			img.DisabledAnacondaModules = tc.disable
+				img.UseLegacyAnacondaConfig = legacy
+				img.AdditionalAnacondaModules = tc.enable
+				img.DisabledAnacondaModules = tc.disable
 
-			assert.NotNil(t, img)
-			img.Platform = testPlatform
-			mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
-			modules := findAnacondaStageModules(t, manifest.OSBuildManifest(mfs))
-			assert.NotNil(t, modules)
-			assert.ElementsMatch(t, modules, tc.expected)
-		})
+				assert.NotNil(t, img)
+				img.Platform = testPlatform
+				mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
+				modules := findAnacondaStageModules(t, manifest.OSBuildManifest(mfs), legacy)
+				assert.NotNil(t, modules)
+				assert.ElementsMatch(t, modules, tc.expected)
+			})
+		}
 	}
 }
