@@ -254,7 +254,7 @@ func (p *OS) getPackageSetChain(Distro) []rpmmd.PackageSet {
 		// should already have the required packages, but some minimal image
 		// types, like 'tar' don't, so let's add them for the stage to run and
 		// to enable user management in the image.
-		packages = append(packages, "shadow-utils", "pam")
+		packages = append(packages, "shadow-utils", "pam", "passwd")
 
 	}
 
