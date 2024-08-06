@@ -7,8 +7,8 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/osbuild/images/internal/common"
-	"github.com/osbuild/images/internal/pathpolicy"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
+	"github.com/osbuild/images/pkg/pathpolicy"
 	"github.com/stretchr/testify/assert"
 )
 
