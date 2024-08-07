@@ -58,14 +58,6 @@ func TestFilenameFromType(t *testing.T) {
 			},
 		},
 		{
-			name: "openstack",
-			args: args{"openstack"},
-			want: wantResult{
-				filename: "disk.qcow2",
-				mimeType: "application/x-qemu-disk",
-			},
-		},
-		{
 			name: "vhd",
 			args: args{"vhd"},
 			want: wantResult{
@@ -192,7 +184,6 @@ func TestImageType_Name(t *testing.T) {
 			arch: "x86_64",
 			imgNames: []string{
 				"qcow2",
-				"openstack",
 				"vhd",
 				"vmdk",
 				"ova",
@@ -204,7 +195,6 @@ func TestImageType_Name(t *testing.T) {
 			arch: "aarch64",
 			imgNames: []string{
 				"qcow2",
-				"openstack",
 				"ami",
 				"tar",
 				"vhd",
@@ -283,7 +273,6 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 			arch: "x86_64",
 			imgNames: []string{
 				"qcow2",
-				"openstack",
 				"oci",
 				"vhd",
 				"vmdk",
@@ -297,7 +286,6 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 			arch: "aarch64",
 			imgNames: []string{
 				"qcow2",
-				"openstack",
 				"ami",
 				"tar",
 				"vhd",
