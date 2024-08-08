@@ -518,12 +518,12 @@ func TestCreatePartitionTableBtrfsify(t *testing.T) {
 			pt := testPartitionTables[ptName]
 
 			if ptName == "auto-lvm" || ptName == "luks" || ptName == "luks+lvm" {
-				_, err := NewPartitionTable(&pt, tbp, uint64(13*MiB), BtfrsPartitioningMode, nil, rng)
+				_, err := NewPartitionTable(&pt, tbp, uint64(13*MiB), BtrfsPartitioningMode, nil, rng)
 				assert.Error(err, "PT %q BP %q: should return an error with BtrfsPartitioningMode", ptName, bpName)
 				continue
 			}
 
-			mpt, err := NewPartitionTable(&pt, tbp, uint64(13*MiB), BtfrsPartitioningMode, nil, rng)
+			mpt, err := NewPartitionTable(&pt, tbp, uint64(13*MiB), BtrfsPartitioningMode, nil, rng)
 			assert.NoError(err, "PT %q BP %q: Partition table generation failed: (%s)", ptName, bpName, err)
 
 			rootPath := entityPath(mpt, "/")
