@@ -156,7 +156,8 @@ func ec2BuildPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 		})
 }
 
-func ec2CommonPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
+// common ec2 image package set, which is the minimal super set of all ec2 image types
+func ec2BasePackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	ps := rpmmd.PackageSet{
 		Include: []string{
 			"@core",
@@ -215,9 +216,9 @@ func ec2CommonPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return ps
 }
 
-// rhel-ec2 image package set
-func rhelEc2PackageSet(t *rhel.ImageType) rpmmd.PackageSet {
-	ec2PackageSet := ec2CommonPackageSet(t)
+// plain ec2 image package set
+func ec2PackageSet(t *rhel.ImageType) rpmmd.PackageSet {
+	ec2PackageSet := ec2BasePackageSet(t)
 	ec2PackageSet = ec2PackageSet.Append(rpmmd.PackageSet{
 		Exclude: []string{
 			"alsa-lib",
@@ -228,15 +229,12 @@ func rhelEc2PackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 
 // rhel-ha-ec2 image package set
 func rhelEc2HaPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
-	ec2HaPackageSet := ec2CommonPackageSet(t)
+	ec2HaPackageSet := ec2PackageSet(t)
 	ec2HaPackageSet = ec2HaPackageSet.Append(rpmmd.PackageSet{
 		Include: []string{
 			"fence-agents-all",
 			"pacemaker",
 			"pcs",
-		},
-		Exclude: []string{
-			"alsa-lib",
 		},
 	})
 	return ec2HaPackageSet
@@ -254,7 +252,7 @@ func rhelEc2SapPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 			// COMPOSER-1829
 			"firewalld",
 		},
-	}.Append(ec2CommonPackageSet(t)).Append(SapPackageSet(t))
+	}.Append(ec2BasePackageSet(t)).Append(SapPackageSet(t))
 }
 
 func mkEc2ImgTypeX86_64() *rhel.ImageType {
@@ -263,7 +261,7 @@ func mkEc2ImgTypeX86_64() *rhel.ImageType {
 		"image.raw.xz",
 		"application/xz",
 		map[string]rhel.PackageSetFunc{
-			rhel.OSPkgsKey: rhelEc2PackageSet,
+			rhel.OSPkgsKey: ec2PackageSet,
 		},
 		rhel.DiskImage,
 		[]string{"build"},
@@ -287,7 +285,7 @@ func mkAMIImgTypeX86_64() *rhel.ImageType {
 		"image.raw",
 		"application/octet-stream",
 		map[string]rhel.PackageSetFunc{
-			rhel.OSPkgsKey: ec2CommonPackageSet,
+			rhel.OSPkgsKey: ec2PackageSet,
 		},
 		rhel.DiskImage,
 		[]string{"build"},
@@ -361,7 +359,7 @@ func mkAMIImgTypeAarch64() *rhel.ImageType {
 		"application/octet-stream",
 		map[string]rhel.PackageSetFunc{
 			rhel.BuildPkgsKey: ec2BuildPackageSet,
-			rhel.OSPkgsKey:    ec2CommonPackageSet,
+			rhel.OSPkgsKey:    ec2PackageSet,
 		},
 		rhel.DiskImage,
 		[]string{"build"},
@@ -385,7 +383,7 @@ func mkEC2ImgTypeAarch64() *rhel.ImageType {
 		"application/xz",
 		map[string]rhel.PackageSetFunc{
 			rhel.BuildPkgsKey: ec2BuildPackageSet,
-			rhel.OSPkgsKey:    rhelEc2PackageSet,
+			rhel.OSPkgsKey:    ec2PackageSet,
 		},
 		rhel.DiskImage,
 		[]string{"build"},
