@@ -141,6 +141,20 @@ func defaultEc2ImageConfig() *distro.ImageConfig {
 	}
 }
 
+func appendEC2DracutX86_64(ic *distro.ImageConfig) *distro.ImageConfig {
+	ic.DracutConf = append(ic.DracutConf,
+		&osbuild.DracutConfStageOptions{
+			Filename: "ec2.conf",
+			Config: osbuild.DracutConfigFile{
+				AddDrivers: []string{
+					"nvme",
+					"xen-blkfront",
+				},
+			},
+		})
+	return ic
+}
+
 func defaultEc2ImageConfigX86_64() *distro.ImageConfig {
 	ic := defaultEc2ImageConfig()
 	return appendEC2DracutX86_64(ic)
@@ -399,18 +413,4 @@ func mkEC2ImgTypeAarch64() *rhel.ImageType {
 	it.BasePartitionTables = defaultBasePartitionTables
 
 	return it
-}
-
-func appendEC2DracutX86_64(ic *distro.ImageConfig) *distro.ImageConfig {
-	ic.DracutConf = append(ic.DracutConf,
-		&osbuild.DracutConfStageOptions{
-			Filename: "ec2.conf",
-			Config: osbuild.DracutConfigFile{
-				AddDrivers: []string{
-					"nvme",
-					"xen-blkfront",
-				},
-			},
-		})
-	return ic
 }
