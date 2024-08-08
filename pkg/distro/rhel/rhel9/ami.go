@@ -160,16 +160,6 @@ func defaultEc2ImageConfigX86_64() *distro.ImageConfig {
 	return appendEC2DracutX86_64(ic)
 }
 
-// common ec2 image build package set
-func ec2BuildPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
-	return distroBuildPackageSet(t).Append(
-		rpmmd.PackageSet{
-			Include: []string{
-				"python3-pyyaml",
-			},
-		})
-}
-
 // common ec2 image package set, which is the minimal super set of all ec2 image types
 func ec2BasePackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	ps := rpmmd.PackageSet{
@@ -322,8 +312,7 @@ func mkEC2SapImgTypeX86_64(osVersion string) *rhel.ImageType {
 		"image.raw.xz",
 		"application/xz",
 		map[string]rhel.PackageSetFunc{
-			rhel.BuildPkgsKey: ec2BuildPackageSet,
-			rhel.OSPkgsKey:    rhelEc2SapPackageSet,
+			rhel.OSPkgsKey: rhelEc2SapPackageSet,
 		},
 		rhel.DiskImage,
 		[]string{"build"},
@@ -347,8 +336,7 @@ func mkEc2HaImgTypeX86_64() *rhel.ImageType {
 		"image.raw.xz",
 		"application/xz",
 		map[string]rhel.PackageSetFunc{
-			rhel.BuildPkgsKey: ec2BuildPackageSet,
-			rhel.OSPkgsKey:    rhelEc2HaPackageSet,
+			rhel.OSPkgsKey: rhelEc2HaPackageSet,
 		},
 		rhel.DiskImage,
 		[]string{"build"},
@@ -372,8 +360,7 @@ func mkAMIImgTypeAarch64() *rhel.ImageType {
 		"image.raw",
 		"application/octet-stream",
 		map[string]rhel.PackageSetFunc{
-			rhel.BuildPkgsKey: ec2BuildPackageSet,
-			rhel.OSPkgsKey:    ec2PackageSet,
+			rhel.OSPkgsKey: ec2PackageSet,
 		},
 		rhel.DiskImage,
 		[]string{"build"},
@@ -396,8 +383,7 @@ func mkEC2ImgTypeAarch64() *rhel.ImageType {
 		"image.raw.xz",
 		"application/xz",
 		map[string]rhel.PackageSetFunc{
-			rhel.BuildPkgsKey: ec2BuildPackageSet,
-			rhel.OSPkgsKey:    ec2PackageSet,
+			rhel.OSPkgsKey: ec2PackageSet,
 		},
 		rhel.DiskImage,
 		[]string{"build"},
