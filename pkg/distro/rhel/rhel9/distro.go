@@ -353,7 +353,7 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 		}
 
 		// add ec2 image types to RHEL distro only
-		x86_64.AddImageTypes(ec2X86Platform, mkEc2ImgTypeX86_64(rd.OsVersion(), rd.IsRHEL()), mkEc2HaImgTypeX86_64(rd.OsVersion(), rd.IsRHEL()), mkEC2SapImgTypeX86_64(rd.OsVersion(), rd.IsRHEL()))
+		x86_64.AddImageTypes(ec2X86Platform, mkEc2ImgTypeX86_64(), mkEc2HaImgTypeX86_64(), mkEC2SapImgTypeX86_64(rd.OsVersion()))
 
 		aarch64.AddImageTypes(
 			&platform.Aarch64{
@@ -362,7 +362,7 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 					ImageFormat: platform.FORMAT_RAW,
 				},
 			},
-			mkEC2ImgTypeAarch64(rd.OsVersion(), rd.IsRHEL()),
+			mkEC2ImgTypeAarch64(),
 		)
 	}
 
