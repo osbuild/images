@@ -34,8 +34,8 @@ func mkAzureImgType(rd *rhel.Distribution) *rhel.ImageType {
 	return it
 }
 
-// Azure RHUI image type
-func mkAzureRhuiImgType(rd *rhel.Distribution) *rhel.ImageType {
+// Azure RHEL-internal image type
+func mkAzureInternalImgType(rd *rhel.Distribution) *rhel.ImageType {
 	it := rhel.NewImageType(
 		"azure-rhui",
 		"disk.vhd.xz",
@@ -54,12 +54,12 @@ func mkAzureRhuiImgType(rd *rhel.Distribution) *rhel.ImageType {
 	it.Bootable = true
 	it.DefaultSize = 64 * common.GibiByte
 	it.DefaultImageConfig = defaultAzureImageConfig(rd)
-	it.BasePartitionTables = azureRhuiBasePartitionTables
+	it.BasePartitionTables = azureInternalBasePartitionTables
 
 	return it
 }
 
-func mkAzureSapRhuiImgType(rd *rhel.Distribution) *rhel.ImageType {
+func mkAzureSapInternalImgType(rd *rhel.Distribution) *rhel.ImageType {
 	it := rhel.NewImageType(
 		"azure-sap-rhui",
 		"disk.vhd.xz",
@@ -78,7 +78,7 @@ func mkAzureSapRhuiImgType(rd *rhel.Distribution) *rhel.ImageType {
 	it.Bootable = true
 	it.DefaultSize = 64 * common.GibiByte
 	it.DefaultImageConfig = sapAzureImageConfig(rd)
-	it.BasePartitionTables = azureRhuiBasePartitionTables
+	it.BasePartitionTables = azureInternalBasePartitionTables
 
 	return it
 }
@@ -177,7 +177,7 @@ func azureSapPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 }
 
 // PARTITION TABLES
-func azureRhuiBasePartitionTables(t *rhel.ImageType) (disk.PartitionTable, bool) {
+func azureInternalBasePartitionTables(t *rhel.ImageType) (disk.PartitionTable, bool) {
 	var bootSize uint64
 	switch {
 	case common.VersionLessThan(t.Arch().Distro().OsVersion(), "9.3") && t.IsRHEL():

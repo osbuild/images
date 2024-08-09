@@ -332,10 +332,10 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 	)
 
 	if rd.IsRHEL() { // RHEL-only (non-CentOS) image types
-		x86_64.AddImageTypes(azureX64Platform, mkAzureRhuiImgType(rd))
-		aarch64.AddImageTypes(azureAarch64Platform, mkAzureRhuiImgType(rd))
+		x86_64.AddImageTypes(azureX64Platform, mkAzureInternalImgType(rd))
+		aarch64.AddImageTypes(azureAarch64Platform, mkAzureInternalImgType(rd))
 
-		x86_64.AddImageTypes(azureX64Platform, mkAzureSapRhuiImgType(rd))
+		x86_64.AddImageTypes(azureX64Platform, mkAzureSapInternalImgType(rd))
 
 		// keep the RHEL EC2 x86_64 images before 9.3 BIOS-only for backward compatibility
 		if common.VersionLessThan(rd.OsVersion(), "9.3") {
