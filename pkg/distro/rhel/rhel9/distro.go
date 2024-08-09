@@ -236,8 +236,8 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 		x86_64.AddImageTypes(azureX64Platform, mkAzureByosImgType(rd))
 		aarch64.AddImageTypes(azureAarch64Platform, mkAzureByosImgType(rd))
 	} else {
-		x86_64.AddImageTypes(azureX64Platform, mkAzureImgType())
-		aarch64.AddImageTypes(azureAarch64Platform, mkAzureImgType())
+		x86_64.AddImageTypes(azureX64Platform, mkAzureImgType(rd))
+		aarch64.AddImageTypes(azureAarch64Platform, mkAzureImgType(rd))
 	}
 
 	gceX86Platform := &platform.X86{
@@ -337,8 +337,8 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 	)
 
 	if rd.IsRHEL() { // RHEL-only (non-CentOS) image types
-		x86_64.AddImageTypes(azureX64Platform, mkAzureRhuiImgType(), mkAzureByosImgType(rd))
-		aarch64.AddImageTypes(azureAarch64Platform, mkAzureRhuiImgType(), mkAzureByosImgType(rd))
+		x86_64.AddImageTypes(azureX64Platform, mkAzureRhuiImgType(rd), mkAzureByosImgType(rd))
+		aarch64.AddImageTypes(azureAarch64Platform, mkAzureRhuiImgType(rd), mkAzureByosImgType(rd))
 
 		x86_64.AddImageTypes(azureX64Platform, mkAzureSapRhuiImgType(rd))
 

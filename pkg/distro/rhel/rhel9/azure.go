@@ -12,7 +12,7 @@ import (
 )
 
 // Azure non-RHEL image type
-func mkAzureImgType() *rhel.ImageType {
+func mkAzureImgType(rd *rhel.Distribution) *rhel.ImageType {
 	it := rhel.NewImageType(
 		"vhd",
 		"disk.vhd",
@@ -29,14 +29,14 @@ func mkAzureImgType() *rhel.ImageType {
 	it.KernelOptions = defaultAzureKernelOptions
 	it.Bootable = true
 	it.DefaultSize = 4 * common.GibiByte
-	it.DefaultImageConfig = defaultAzureImageConfig()
+	it.DefaultImageConfig = defaultAzureImageConfig(rd)
 	it.BasePartitionTables = defaultBasePartitionTables
 
 	return it
 }
 
 // Azure BYOS image type
-func mkAzureByosImgType(rd distro.Distro) *rhel.ImageType {
+func mkAzureByosImgType(rd *rhel.Distribution) *rhel.ImageType {
 	it := rhel.NewImageType(
 		"vhd",
 		"disk.vhd",
@@ -53,14 +53,14 @@ func mkAzureByosImgType(rd distro.Distro) *rhel.ImageType {
 	it.KernelOptions = defaultAzureKernelOptions
 	it.Bootable = true
 	it.DefaultSize = 4 * common.GibiByte
-	it.DefaultImageConfig = defaultAzureByosImageConfig.InheritFrom(defaultAzureImageConfig())
+	it.DefaultImageConfig = defaultAzureImageConfig(rd)
 	it.BasePartitionTables = defaultBasePartitionTables
 
 	return it
 }
 
 // Azure RHUI image type
-func mkAzureRhuiImgType() *rhel.ImageType {
+func mkAzureRhuiImgType(rd *rhel.Distribution) *rhel.ImageType {
 	it := rhel.NewImageType(
 		"azure-rhui",
 		"disk.vhd.xz",
@@ -78,13 +78,13 @@ func mkAzureRhuiImgType() *rhel.ImageType {
 	it.KernelOptions = defaultAzureKernelOptions
 	it.Bootable = true
 	it.DefaultSize = 64 * common.GibiByte
-	it.DefaultImageConfig = defaultAzureRhuiImageConfig.InheritFrom(defaultAzureImageConfig())
+	it.DefaultImageConfig = defaultAzureRhuiImageConfig.InheritFrom(defaultAzureImageConfig(rd))
 	it.BasePartitionTables = azureRhuiBasePartitionTables
 
 	return it
 }
 
-func mkAzureSapRhuiImgType(rd distro.Distro) *rhel.ImageType {
+func mkAzureSapRhuiImgType(rd *rhel.Distribution) *rhel.ImageType {
 	it := rhel.NewImageType(
 		"azure-sap-rhui",
 		"disk.vhd.xz",
@@ -440,7 +440,7 @@ func azureRhuiBasePartitionTables(t *rhel.ImageType) (disk.PartitionTable, bool)
 const defaultAzureKernelOptions = "ro loglevel=3 console=tty1 console=ttyS0 earlyprintk=ttyS0 rootdelay=300"
 
 // based on https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/deploying_rhel_9_on_microsoft_azure/assembly_deploying-a-rhel-image-as-a-virtual-machine-on-microsoft-azure_cloud-content-azure#making-configuration-changes_configure-the-image-azure
-func defaultAzureImageConfig() *distro.ImageConfig {
+func defaultAzureImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
 	ic := &distro.ImageConfig{
 		Timezone: common.ToPtr("Etc/UTC"),
 		Locale:   common.ToPtr("en_US.UTF-8"),
@@ -594,16 +594,11 @@ func defaultAzureImageConfig() *distro.ImageConfig {
 		DefaultTarget: common.ToPtr("multi-user.target"),
 	}
 
-	return ic
-}
+	if rd.IsRHEL() {
+		ic.GPGKeyFiles = append(ic.GPGKeyFiles, "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release")
+	}
 
-// Diff of the default Image Config compare to the `defaultAzureImageConfig`
-// The configuration for non-RHUI images does not touch the RHSM configuration at all.
-// https://issues.redhat.com/browse/COMPOSER-2157
-var defaultAzureByosImageConfig = &distro.ImageConfig{
-	GPGKeyFiles: []string{
-		"/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release",
-	},
+	return ic
 }
 
 // Diff of the default Image Config compare to the `defaultAzureImageConfig`
@@ -640,6 +635,6 @@ var defaultAzureRhuiImageConfig = &distro.ImageConfig{
 	},
 }
 
-func sapAzureImageConfig(rd distro.Distro) *distro.ImageConfig {
-	return sapImageConfig(rd.OsVersion()).InheritFrom(defaultAzureRhuiImageConfig.InheritFrom(defaultAzureImageConfig()))
+func sapAzureImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
+	return sapImageConfig(rd.OsVersion()).InheritFrom(defaultAzureRhuiImageConfig.InheritFrom(defaultAzureImageConfig(rd)))
 }
