@@ -9,22 +9,18 @@ import (
 
 var defaultBasePartitionTables = distro.BasePartitionTableMap{
 	arch.ARCH_X86_64.String(): disk.PartitionTable{
-		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
 		Type: "gpt",
 		Partitions: []disk.Partition{
 			{
 				Size:     1 * common.MebiByte,
 				Bootable: true,
 				Type:     disk.BIOSBootPartitionGUID,
-				UUID:     disk.BIOSBootPartitionUUID,
 			},
 			{
 				Size: 200 * common.MebiByte,
 				Type: disk.EFISystemPartitionGUID,
-				UUID: disk.EFISystemPartitionUUID,
 				Payload: &disk.Filesystem{
 					Type:         "vfat",
-					UUID:         disk.EFIFilesystemUUID,
 					Mountpoint:   "/boot/efi",
 					Label:        "EFI-SYSTEM",
 					FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
@@ -35,7 +31,6 @@ var defaultBasePartitionTables = distro.BasePartitionTableMap{
 			{
 				Size: 500 * common.MebiByte,
 				Type: disk.FilesystemDataGUID,
-				UUID: disk.FilesystemDataUUID,
 				Payload: &disk.Filesystem{
 					Type:         "ext4",
 					Mountpoint:   "/boot",
@@ -48,7 +43,6 @@ var defaultBasePartitionTables = distro.BasePartitionTableMap{
 			{
 				Size: 2 * common.GibiByte,
 				Type: disk.FilesystemDataGUID,
-				UUID: disk.RootPartitionUUID,
 				Payload: &disk.Filesystem{
 					Type:         "ext4",
 					Label:        "root",
@@ -61,16 +55,13 @@ var defaultBasePartitionTables = distro.BasePartitionTableMap{
 		},
 	},
 	arch.ARCH_AARCH64.String(): disk.PartitionTable{
-		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
 		Type: "gpt",
 		Partitions: []disk.Partition{
 			{
 				Size: 200 * common.MebiByte,
 				Type: disk.EFISystemPartitionGUID,
-				UUID: disk.EFISystemPartitionUUID,
 				Payload: &disk.Filesystem{
 					Type:         "vfat",
-					UUID:         disk.EFIFilesystemUUID,
 					Mountpoint:   "/boot/efi",
 					Label:        "EFI-SYSTEM",
 					FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
@@ -81,7 +72,6 @@ var defaultBasePartitionTables = distro.BasePartitionTableMap{
 			{
 				Size: 500 * common.MebiByte,
 				Type: disk.FilesystemDataGUID,
-				UUID: disk.FilesystemDataUUID,
 				Payload: &disk.Filesystem{
 					Type:         "ext4",
 					Mountpoint:   "/boot",
@@ -94,7 +84,6 @@ var defaultBasePartitionTables = distro.BasePartitionTableMap{
 			{
 				Size: 2 * common.GibiByte,
 				Type: disk.FilesystemDataGUID,
-				UUID: disk.RootPartitionUUID,
 				Payload: &disk.Filesystem{
 					Type:         "ext4",
 					Label:        "root",
@@ -107,7 +96,6 @@ var defaultBasePartitionTables = distro.BasePartitionTableMap{
 		},
 	},
 	arch.ARCH_PPC64LE.String(): disk.PartitionTable{
-		UUID: "0x14fc63d2",
 		Type: "dos",
 		Partitions: []disk.Partition{
 			{
@@ -140,7 +128,6 @@ var defaultBasePartitionTables = distro.BasePartitionTableMap{
 	},
 
 	arch.ARCH_S390X.String(): disk.PartitionTable{
-		UUID: "0x14fc63d2",
 		Type: "dos",
 		Partitions: []disk.Partition{
 			{
@@ -171,17 +158,14 @@ var defaultBasePartitionTables = distro.BasePartitionTableMap{
 
 var minimalrawPartitionTables = distro.BasePartitionTableMap{
 	arch.ARCH_X86_64.String(): disk.PartitionTable{
-		UUID:        "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
 		Type:        "gpt",
 		StartOffset: 8 * common.MebiByte,
 		Partitions: []disk.Partition{
 			{
 				Size: 200 * common.MebiByte,
 				Type: disk.EFISystemPartitionGUID,
-				UUID: disk.EFISystemPartitionUUID,
 				Payload: &disk.Filesystem{
 					Type:         "vfat",
-					UUID:         disk.EFIFilesystemUUID,
 					Mountpoint:   "/boot/efi",
 					Label:        "EFI-SYSTEM",
 					FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
@@ -192,7 +176,6 @@ var minimalrawPartitionTables = distro.BasePartitionTableMap{
 			{
 				Size: 1 * common.GibiByte,
 				Type: disk.XBootLDRPartitionGUID,
-				UUID: disk.FilesystemDataUUID,
 				Payload: &disk.Filesystem{
 					Type:         "ext4",
 					Mountpoint:   "/boot",
@@ -205,7 +188,6 @@ var minimalrawPartitionTables = distro.BasePartitionTableMap{
 			{
 				Size: 2 * common.GibiByte,
 				Type: disk.FilesystemDataGUID,
-				UUID: disk.RootPartitionUUID,
 				Payload: &disk.Filesystem{
 					Type:         "ext4",
 					Label:        "root",
@@ -218,7 +200,6 @@ var minimalrawPartitionTables = distro.BasePartitionTableMap{
 		},
 	},
 	arch.ARCH_AARCH64.String(): disk.PartitionTable{
-		UUID:        "0xc1748067",
 		Type:        "dos",
 		StartOffset: 8 * common.MebiByte,
 		Partitions: []disk.Partition{
@@ -228,7 +209,6 @@ var minimalrawPartitionTables = distro.BasePartitionTableMap{
 				Bootable: true,
 				Payload: &disk.Filesystem{
 					Type:         "vfat",
-					UUID:         disk.EFIFilesystemUUID,
 					Mountpoint:   "/boot/efi",
 					Label:        "EFI-SYSTEM",
 					FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
@@ -266,17 +246,14 @@ var minimalrawPartitionTables = distro.BasePartitionTableMap{
 
 var iotBasePartitionTables = distro.BasePartitionTableMap{
 	arch.ARCH_X86_64.String(): disk.PartitionTable{
-		UUID:        "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
 		Type:        "gpt",
 		StartOffset: 8 * common.MebiByte,
 		Partitions: []disk.Partition{
 			{
 				Size: 501 * common.MebiByte,
 				Type: disk.EFISystemPartitionGUID,
-				UUID: disk.EFISystemPartitionUUID,
 				Payload: &disk.Filesystem{
 					Type:         "vfat",
-					UUID:         disk.EFIFilesystemUUID,
 					Mountpoint:   "/boot/efi",
 					Label:        "EFI-SYSTEM",
 					FSTabOptions: "umask=0077,shortname=winnt",
@@ -287,7 +264,6 @@ var iotBasePartitionTables = distro.BasePartitionTableMap{
 			{
 				Size: 1 * common.GibiByte,
 				Type: disk.FilesystemDataGUID,
-				UUID: disk.FilesystemDataUUID,
 				Payload: &disk.Filesystem{
 					Type:         "ext4",
 					Mountpoint:   "/boot",
@@ -300,7 +276,6 @@ var iotBasePartitionTables = distro.BasePartitionTableMap{
 			{
 				Size: 2569 * common.MebiByte,
 				Type: disk.FilesystemDataGUID,
-				UUID: disk.RootPartitionUUID,
 				Payload: &disk.Filesystem{
 					Type:         "ext4",
 					Label:        "root",
@@ -313,7 +288,6 @@ var iotBasePartitionTables = distro.BasePartitionTableMap{
 		},
 	},
 	arch.ARCH_AARCH64.String(): disk.PartitionTable{
-		UUID:        "0xc1748067",
 		Type:        "dos",
 		StartOffset: 8 * common.MebiByte,
 		Partitions: []disk.Partition{
@@ -323,7 +297,6 @@ var iotBasePartitionTables = distro.BasePartitionTableMap{
 				Bootable: true,
 				Payload: &disk.Filesystem{
 					Type:         "vfat",
-					UUID:         disk.EFIFilesystemUUID,
 					Mountpoint:   "/boot/efi",
 					Label:        "EFI-SYSTEM",
 					FSTabOptions: "umask=0077,shortname=winnt",
@@ -361,16 +334,13 @@ var iotBasePartitionTables = distro.BasePartitionTableMap{
 
 var iotSimplifiedInstallerPartitionTables = distro.BasePartitionTableMap{
 	arch.ARCH_X86_64.String(): disk.PartitionTable{
-		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
 		Type: "gpt",
 		Partitions: []disk.Partition{
 			{
 				Size: 501 * common.MebiByte,
 				Type: disk.EFISystemPartitionGUID,
-				UUID: disk.EFISystemPartitionUUID,
 				Payload: &disk.Filesystem{
 					Type:         "vfat",
-					UUID:         disk.EFIFilesystemUUID,
 					Mountpoint:   "/boot/efi",
 					Label:        "EFI-SYSTEM",
 					FSTabOptions: "umask=0077,shortname=winnt",
@@ -381,7 +351,6 @@ var iotSimplifiedInstallerPartitionTables = distro.BasePartitionTableMap{
 			{
 				Size: 1 * common.GibiByte,
 				Type: disk.XBootLDRPartitionGUID,
-				UUID: disk.FilesystemDataUUID,
 				Payload: &disk.Filesystem{
 					Type:         "ext4",
 					Mountpoint:   "/boot",
@@ -393,7 +362,6 @@ var iotSimplifiedInstallerPartitionTables = distro.BasePartitionTableMap{
 			},
 			{
 				Type: disk.FilesystemDataGUID,
-				UUID: disk.RootPartitionUUID,
 				Payload: &disk.LUKSContainer{
 					Label:      "crypt_root",
 					Cipher:     "cipher_null",
@@ -431,16 +399,13 @@ var iotSimplifiedInstallerPartitionTables = distro.BasePartitionTableMap{
 		},
 	},
 	arch.ARCH_AARCH64.String(): disk.PartitionTable{
-		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
 		Type: "gpt",
 		Partitions: []disk.Partition{
 			{
 				Size: 501 * common.MebiByte,
 				Type: disk.EFISystemPartitionGUID,
-				UUID: disk.EFISystemPartitionUUID,
 				Payload: &disk.Filesystem{
 					Type:         "vfat",
-					UUID:         disk.EFIFilesystemUUID,
 					Mountpoint:   "/boot/efi",
 					Label:        "EFI-SYSTEM",
 					FSTabOptions: "umask=0077,shortname=winnt",
@@ -451,7 +416,6 @@ var iotSimplifiedInstallerPartitionTables = distro.BasePartitionTableMap{
 			{
 				Size: 1 * common.GibiByte,
 				Type: disk.XBootLDRPartitionGUID,
-				UUID: disk.FilesystemDataUUID,
 				Payload: &disk.Filesystem{
 					Type:         "ext4",
 					Mountpoint:   "/boot",
@@ -463,7 +427,6 @@ var iotSimplifiedInstallerPartitionTables = distro.BasePartitionTableMap{
 			},
 			{
 				Type: disk.FilesystemDataGUID,
-				UUID: disk.RootPartitionUUID,
 				Payload: &disk.LUKSContainer{
 					Label:      "crypt_root",
 					Cipher:     "cipher_null",
