@@ -11,32 +11,8 @@ import (
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
-// Azure non-RHEL image type
+// Azure image type
 func mkAzureImgType(rd *rhel.Distribution) *rhel.ImageType {
-	it := rhel.NewImageType(
-		"vhd",
-		"disk.vhd",
-		"application/x-vhd",
-		map[string]rhel.PackageSetFunc{
-			rhel.OSPkgsKey: azurePackageSet,
-		},
-		rhel.DiskImage,
-		[]string{"build"},
-		[]string{"os", "image", "vpc"},
-		[]string{"vpc"},
-	)
-
-	it.KernelOptions = defaultAzureKernelOptions
-	it.Bootable = true
-	it.DefaultSize = 4 * common.GibiByte
-	it.DefaultImageConfig = defaultAzureImageConfig(rd)
-	it.BasePartitionTables = defaultBasePartitionTables
-
-	return it
-}
-
-// Azure BYOS image type
-func mkAzureByosImgType(rd *rhel.Distribution) *rhel.ImageType {
 	it := rhel.NewImageType(
 		"vhd",
 		"disk.vhd",
