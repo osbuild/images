@@ -5,7 +5,7 @@ go 1.21.0
 toolchain go1.22.5
 
 require (
-	cloud.google.com/go/compute v1.27.4
+	cloud.google.com/go/compute v1.27.5
 	cloud.google.com/go/storage v1.43.0
 	github.com/Azure/azure-sdk-for-go v68.0.0+incompatible
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.4.0
@@ -34,7 +34,7 @@ require (
 	github.com/vmware/govmomi v0.39.0
 	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8
 	golang.org/x/oauth2 v0.22.0
-	golang.org/x/sys v0.23.0
+	golang.org/x/sys v0.24.0
 	golang.org/x/tools v0.24.0
 	google.golang.org/api v0.191.0
 	gopkg.in/ini.v1 v1.67.0
@@ -42,7 +42,7 @@ require (
 
 require (
 	cloud.google.com/go v0.115.0 // indirect
-	cloud.google.com/go/auth v0.7.3 // indirect
+	cloud.google.com/go/auth v0.8.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.3 // indirect
 	cloud.google.com/go/compute/metadata v0.5.0 // indirect
 	cloud.google.com/go/iam v1.1.12 // indirect
