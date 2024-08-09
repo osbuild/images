@@ -1,12 +1,12 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.115.0 h1:CnFSK6Xo3lDYRoBKEcAtia6VSC837/ZkJuRduSFnr14=
 cloud.google.com/go v0.115.0/go.mod h1:8jIM5vVgoAEoiVxQ/O4BFTfHqulPZgs/ufEzMcFMdWU=
-cloud.google.com/go/auth v0.7.3 h1:98Vr+5jMaCZ5NZk6e/uBgf60phTk/XN84r8QEWB9yjY=
-cloud.google.com/go/auth v0.7.3/go.mod h1:HJtWUx1P5eqjy/f6Iq5KeytNpbAcGolPhOgyop2LlzA=
+cloud.google.com/go/auth v0.8.0 h1:y8jUJLl/Fg+qNBWxP/Hox2ezJvjkrPb952PC1p0G6A4=
+cloud.google.com/go/auth v0.8.0/go.mod h1:qGVp/Y3kDRSDZ5gFD/XPUfYQ9xW1iI7q8RIRoCyBbJc=
 cloud.google.com/go/auth/oauth2adapt v0.2.3 h1:MlxF+Pd3OmSudg/b1yZ5lJwoXCEaeedAguodky1PcKI=
 cloud.google.com/go/auth/oauth2adapt v0.2.3/go.mod h1:tMQXOfZzFuNuUxOypHlQEXgdfX5cuhwU+ffUuXRJE8I=
-cloud.google.com/go/compute v1.27.4 h1:XM8ulx6crjdl09XBfji7viFgZOEQuIxBwKmjRH9Rtmc=
-cloud.google.com/go/compute v1.27.4/go.mod h1:7JZS+h21ERAGHOy5qb7+EPyXlQwzshzrx1x6L9JhTqU=
+cloud.google.com/go/compute v1.27.5 h1:iii9Z+FhEeZ5cUkGOEqU+GM7MJSyxMgbE7H7j+JndYY=
+cloud.google.com/go/compute v1.27.5/go.mod h1:DfwDGujFTdSeiE8b8ZqadF/uxHFBz+ekGsk8Zfi9dTA=
 cloud.google.com/go/compute/metadata v0.5.0 h1:Zr0eK8JbFv6+Wi4ilXAR8FJ3wyNdpxHKJNPos6LTZOY=
 cloud.google.com/go/compute/metadata v0.5.0/go.mod h1:aHnloV2TPI38yx4s9+wAZhHykWvVCfu7hQbF+9CWoiY=
 cloud.google.com/go/iam v1.1.12 h1:JixGLimRrNGcxvJEQ8+clfLxPlbeZA6MuRJ+qJNQ5Xw=
@@ -484,8 +484,8 @@ golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f/go.mod h1:oPkhp1MJrh7nUepCBc
 golang.org/x/sys v0.5.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.8.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.15.0/go.mod h1:/VUhepiaJMQUp4+oa/7Zr1D23ma6VTLIYjOOTFZPUcA=
-golang.org/x/sys v0.23.0 h1:YfKFowiIMvtgl1UERQoTPPToxltDeZfbj4H7dVUCwmM=
-golang.org/x/sys v0.23.0/go.mod h1:/VUhepiaJMQUp4+oa/7Zr1D23ma6VTLIYjOOTFZPUcA=
+golang.org/x/sys v0.24.0 h1:Twjiwq9dn6R1fQcyiK+wQyHWfaz/BJB+YIpzU/Cv3Xg=
+golang.org/x/sys v0.24.0/go.mod h1:/VUhepiaJMQUp4+oa/7Zr1D23ma6VTLIYjOOTFZPUcA=
 golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1/go.mod h1:bj7SfCRtBDWHUb9snDiAeCFNEtKQo2Wmx5Cou7ajbmo=
 golang.org/x/term v0.0.0-20210927222741-03fcf44c2211/go.mod h1:jbD1KX2456YbFQfuXm/mYQcufACuNUgVhRMnK/tPxf8=
 golang.org/x/term v0.5.0/go.mod h1:jMB1sMXY+tzblOD4FWmEbocvup2/aLOaQEp7JmGp78k=
