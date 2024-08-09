@@ -3,7 +3,6 @@ package rhel9
 import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
-	"github.com/osbuild/images/pkg/customizations/subscription"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/rhel"
@@ -54,7 +53,7 @@ func mkAzureRhuiImgType(rd *rhel.Distribution) *rhel.ImageType {
 	it.KernelOptions = defaultAzureKernelOptions
 	it.Bootable = true
 	it.DefaultSize = 64 * common.GibiByte
-	it.DefaultImageConfig = defaultAzureRhuiImageConfig.InheritFrom(defaultAzureImageConfig(rd))
+	it.DefaultImageConfig = defaultAzureImageConfig(rd)
 	it.BasePartitionTables = azureRhuiBasePartitionTables
 
 	return it
@@ -78,7 +77,7 @@ func mkAzureSapRhuiImgType(rd *rhel.Distribution) *rhel.ImageType {
 	it.KernelOptions = defaultAzureKernelOptions
 	it.Bootable = true
 	it.DefaultSize = 64 * common.GibiByte
-	it.DefaultImageConfig = defaultAzureRhuiImageConfig.InheritFrom(sapAzureImageConfig(rd))
+	it.DefaultImageConfig = sapAzureImageConfig(rd)
 	it.BasePartitionTables = azureRhuiBasePartitionTables
 
 	return it
@@ -577,40 +576,6 @@ func defaultAzureImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
 	return ic
 }
 
-// Diff of the default Image Config compare to the `defaultAzureImageConfig`
-var defaultAzureRhuiImageConfig = &distro.ImageConfig{
-	GPGKeyFiles: []string{
-		"/etc/pki/rpm-gpg/RPM-GPG-KEY-microsoft-azure-release",
-		"/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release",
-	},
-	RHSMConfig: map[subscription.RHSMStatus]*subscription.RHSMConfig{
-		subscription.RHSMConfigNoSubscription: {
-			DnfPlugins: subscription.SubManDNFPluginsConfig{
-				SubscriptionManager: subscription.DNFPluginConfig{
-					Enabled: common.ToPtr(false),
-				},
-			},
-			SubMan: subscription.SubManConfig{
-				Rhsmcertd: subscription.SubManRHSMCertdConfig{
-					AutoRegistration: common.ToPtr(true),
-				},
-				Rhsm: subscription.SubManRHSMConfig{
-					ManageRepos: common.ToPtr(false),
-				},
-			},
-		},
-		subscription.RHSMConfigWithSubscription: {
-			SubMan: subscription.SubManConfig{
-				Rhsmcertd: subscription.SubManRHSMCertdConfig{
-					AutoRegistration: common.ToPtr(true),
-				},
-				// do not disable the redhat.repo management if the user
-				// explicitly request the system to be subscribed
-			},
-		},
-	},
-}
-
 func sapAzureImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
-	return sapImageConfig(rd.OsVersion()).InheritFrom(defaultAzureRhuiImageConfig.InheritFrom(defaultAzureImageConfig(rd)))
+	return sapImageConfig(rd.OsVersion()).InheritFrom(defaultAzureImageConfig(rd))
 }
