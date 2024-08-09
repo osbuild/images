@@ -9,6 +9,8 @@ import (
 	"os"
 	"time"
 
+	"slices"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -17,7 +19,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/slices"
 )
 
 type AWS struct {

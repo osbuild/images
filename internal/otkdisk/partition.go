@@ -3,7 +3,7 @@ package otkdisk
 import (
 	"fmt"
 
-	"golang.org/x/exp/slices"
+	"slices"
 
 	"github.com/osbuild/images/pkg/disk"
 )

@@ -32,7 +32,6 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/ubccr/kerby v0.0.0-20170626144437-201a958fc453
 	github.com/vmware/govmomi v0.39.0
-	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8
 	golang.org/x/oauth2 v0.22.0
 	golang.org/x/sys v0.24.0
 	golang.org/x/tools v0.24.0
@@ -154,6 +153,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.24.0 // indirect
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	golang.org/x/crypto v0.26.0 // indirect
+	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8 // indirect
 	golang.org/x/mod v0.20.0 // indirect
 	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect

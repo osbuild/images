@@ -3,8 +3,9 @@ package osbuild
 import (
 	"fmt"
 
+	"slices"
+
 	"github.com/osbuild/images/pkg/platform"
-	"golang.org/x/exp/slices"
 )
 
 type BootcInstallToFilesystemOptions struct {
