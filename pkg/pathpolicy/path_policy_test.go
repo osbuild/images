@@ -47,3 +47,13 @@ func TestPathPolicyCheck(t *testing.T) {
 		}
 	}
 }
+
+func TestPathPolicyErrors(t *testing.T) {
+	policy := NewPathPolicies(map[string]PathPolicy{
+		"/": {Exact: true},
+	})
+
+	assert.EqualError(t, policy.Check("/foo"), `path "/foo" is not allowed`)
+	assert.EqualError(t, policy.Check("./"), `path "./" must be absolute`)
+	assert.EqualError(t, policy.Check("/boot/"), `path "/boot/" must be canonical`)
+}
