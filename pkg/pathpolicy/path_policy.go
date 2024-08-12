@@ -11,13 +11,13 @@ type PathPolicy struct {
 }
 
 type PathPolicies struct {
-	pathTrie *PathTrie[PathPolicy]
+	pathTrie *pathTrie[PathPolicy]
 }
 
 // Create a new PathPolicies trie from a map of path to PathPolicy
 func NewPathPolicies(entries map[string]PathPolicy) *PathPolicies {
 	return &PathPolicies{
-		pathTrie: NewPathTrieFromMap[PathPolicy](entries),
+		pathTrie: newPathTrieFromMap[PathPolicy](entries),
 	}
 }
 

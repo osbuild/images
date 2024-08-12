@@ -16,14 +16,14 @@ func pathTrieSplitPath(path string) []string {
 	return strings.Split(path, "/")
 }
 
-type PathTrie[T any] struct {
+type pathTrie[T any] struct {
 	Name    []string
-	Paths   []*PathTrie[T]
+	Paths   []*pathTrie[T]
 	Payload T
 }
 
 // match checks if the given trie is a prefix of path
-func (trie *PathTrie[T]) match(path []string) bool {
+func (trie *pathTrie[T]) match(path []string) bool {
 	if len(trie.Name) > len(path) {
 		return false
 	}
@@ -37,12 +37,12 @@ func (trie *PathTrie[T]) match(path []string) bool {
 	return true
 }
 
-func (trie *PathTrie[T]) get(path []string) (*PathTrie[T], []string) {
+func (trie *pathTrie[T]) get(path []string) (*pathTrie[T], []string) {
 	if len(path) < 1 {
 		panic("programming error: expected root node")
 	}
 
-	var node *PathTrie[T]
+	var node *pathTrie[T]
 	for i := range trie.Paths {
 		if trie.Paths[i].match(path) {
 			node = trie.Paths[i]
@@ -67,11 +67,11 @@ func (trie *PathTrie[T]) get(path []string) (*PathTrie[T], []string) {
 	return node.get(path[prefix:])
 }
 
-func (trie *PathTrie[T]) add(path []string) *PathTrie[T] {
-	node := &PathTrie[T]{Name: path}
+func (trie *pathTrie[T]) add(path []string) *pathTrie[T] {
+	node := &pathTrie[T]{Name: path}
 
 	if trie.Paths == nil {
-		trie.Paths = make([]*PathTrie[T], 0, 1)
+		trie.Paths = make([]*pathTrie[T], 0, 1)
 	}
 
 	trie.Paths = append(trie.Paths, node)
@@ -81,8 +81,8 @@ func (trie *PathTrie[T]) add(path []string) *PathTrie[T] {
 
 // Construct a new trie from a map of paths to their payloads.
 // Returns the root node of the trie.
-func NewPathTrieFromMap[T any](entries map[string]T) *PathTrie[T] {
-	root := &PathTrie[T]{Name: []string{}}
+func newPathTrieFromMap[T any](entries map[string]T) *pathTrie[T] {
+	root := &pathTrie[T]{Name: []string{}}
 
 	keys := make([]string, 0, len(entries))
 	for k := range entries {
@@ -107,7 +107,7 @@ func NewPathTrieFromMap[T any](entries map[string]T) *PathTrie[T] {
 // Lookup returns the node that is the prefix of path and
 // the unmatched path segment. Must be called on the root
 // trie node.
-func (root *PathTrie[T]) Lookup(path string) (*PathTrie[T], []string) {
+func (root *pathTrie[T]) Lookup(path string) (*pathTrie[T], []string) {
 
 	if len(root.Name) != 0 {
 		panic("programming error: lookup on non-root trie node")
