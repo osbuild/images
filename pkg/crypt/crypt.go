@@ -2,6 +2,9 @@ package crypt
 
 import (
 	"crypto/rand"
+	"crypto/sha512"
+	"encoding/base64"
+	"fmt"
 	"math/big"
 	"strings"
 )
@@ -18,8 +21,14 @@ func CryptSHA512(phrase string) (string, error) {
 		return "", nil
 	}
 
-	hashSettings := "$6$" + salt
-	return crypt(phrase, hashSettings)
+	hash := sha512.New()
+	_, err = hash.Write([]byte(salt + phrase))
+	if err != nil {
+		return "", fmt.Errorf("failed to write hash: %w", err)
+	}
+
+	hashedPhrase := base64.StdEncoding.EncodeToString(hash.Sum(nil))
+	return fmt.Sprintf("$6$%s$%s", salt, hashedPhrase), nil
 }
 
 func genSalt(length int) (string, error) {
