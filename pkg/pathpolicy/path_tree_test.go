@@ -8,18 +8,18 @@ import (
 	"github.com/osbuild/images/internal/common"
 )
 
-func TestNewPathTrieFromMap(t *testing.T) {
+func TestNewpathTrieFromMap(t *testing.T) {
 	assert := assert.New(t)
 
 	type testCase struct {
 		entries map[string]*int
-		trie    *PathTrie[*int]
+		trie    *pathTrie[*int]
 	}
 
 	tests := []testCase{
 		{
 			entries: map[string]*int{},
-			trie: &PathTrie[*int]{
+			trie: &pathTrie[*int]{
 				Name: []string{},
 			},
 		},
@@ -27,7 +27,7 @@ func TestNewPathTrieFromMap(t *testing.T) {
 			entries: map[string]*int{
 				"/": common.ToPtr(1),
 			},
-			trie: &PathTrie[*int]{
+			trie: &pathTrie[*int]{
 				Name:    []string{},
 				Payload: common.ToPtr(1),
 			},
@@ -43,14 +43,14 @@ func TestNewPathTrieFromMap(t *testing.T) {
 				"/boot":                        common.ToPtr(7),
 				"/boot/efi":                    common.ToPtr(8),
 			},
-			trie: &PathTrie[*int]{
+			trie: &pathTrie[*int]{
 				Name:    []string{},
 				Payload: common.ToPtr(1),
-				Paths: []*PathTrie[*int]{
+				Paths: []*pathTrie[*int]{
 					{
 						Name:    []string{"boot"},
 						Payload: common.ToPtr(7),
-						Paths: []*PathTrie[*int]{
+						Paths: []*pathTrie[*int]{
 							{
 								Name:    []string{"efi"},
 								Payload: common.ToPtr(8),
@@ -60,11 +60,11 @@ func TestNewPathTrieFromMap(t *testing.T) {
 					{
 						Name:    []string{"var"},
 						Payload: common.ToPtr(2),
-						Paths: []*PathTrie[*int]{
+						Paths: []*pathTrie[*int]{
 							{
 								Name:    []string{"lib", "chrony"},
 								Payload: common.ToPtr(3),
-								Paths: []*PathTrie[*int]{
+								Paths: []*pathTrie[*int]{
 									{
 										Name:    []string{"logs"},
 										Payload: common.ToPtr(4),
@@ -74,7 +74,7 @@ func TestNewPathTrieFromMap(t *testing.T) {
 							{
 								Name:    []string{"lib", "osbuild"},
 								Payload: common.ToPtr(5),
-								Paths: []*PathTrie[*int]{
+								Paths: []*pathTrie[*int]{
 									{
 										Name:    []string{"store", "cache"},
 										Payload: common.ToPtr(6),
@@ -89,7 +89,7 @@ func TestNewPathTrieFromMap(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		have := NewPathTrieFromMap(tc.entries)
+		have := newPathTrieFromMap(tc.entries)
 		assert.NotNil(have)
 		assert.Equal(tc.trie, have)
 	}
@@ -109,7 +109,7 @@ func TestPathTrieLookup(t *testing.T) {
 		"/var/lib/chrony/logs":         "/var/lib/chrony/logs",
 	}
 
-	trie := NewPathTrieFromMap(entries)
+	trie := newPathTrieFromMap(entries)
 
 	testCases := map[string]string{
 		"/":                         "/",
