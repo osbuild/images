@@ -46,6 +46,30 @@ func TestBootcInstallToFilesystemStageNewHappy(t *testing.T) {
 	assert.Equal(t, stage, expectedStage)
 }
 
+func TestBootcInstallToFilesystemStageNewEssentialMountsOnly(t *testing.T) {
+	devices := makeOsbuildDevices("dev-for-/", "dev-for-/boot/efi", "dev-for-/var/log")
+	mounts := makeOsbuildMounts("/", "/boot/efi", "/var/log")
+	inputs := makeFakeContainerInputs()
+	pf := &platform.X86{
+		BasePlatform: platform.BasePlatform{},
+		UEFIVendor:   "test",
+	}
+
+	expectedStage := &osbuild.Stage{
+		Type:    "org.osbuild.bootc.install-to-filesystem",
+		Options: (*osbuild.BootcInstallToFilesystemOptions)(nil),
+		Inputs:  inputs,
+		Devices: devices,
+		Mounts: []osbuild.Mount{
+			{Name: "mnt-for-/", Type: "org.osbuild.ext4", Source: "dev-for-/", Target: "/"},
+			{Name: "mnt-for-/boot/efi", Type: "org.osbuild.vfat", Source: "dev-for-/boot/efi", Target: "/boot/efi"},
+		},
+	}
+	stage, err := osbuild.NewBootcInstallToFilesystemStage(nil, inputs, devices, mounts, pf)
+	require.Nil(t, err)
+	assert.Equal(t, expectedStage, stage)
+}
+
 func TestBootcInstallToFilesystemStageNewNoContainers(t *testing.T) {
 	devices := makeOsbuildDevices("dev-for-/", "dev-for-/boot", "dev-for-/boot/efi")
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
@@ -155,7 +179,7 @@ func TestBootcInstallToFilesystemStageJsonHappy(t *testing.T) {
     },
     {
       "name": "mnt-for-/boot/efi",
-      "type": "org.osbuild.ext4",
+      "type": "org.osbuild.vfat",
       "source": "dev-for-/boot/efi",
       "target": "/boot/efi"
     }

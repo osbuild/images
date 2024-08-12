@@ -2,6 +2,8 @@ package osbuild_test
 
 import (
 	"encoding/json"
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -17,8 +19,12 @@ import (
 func makeOsbuildMounts(targets ...string) []osbuild.Mount {
 	var mnts []osbuild.Mount
 	for _, target := range targets {
+		fstype := "ext4"
+		if strings.HasSuffix(target, "/boot/efi") {
+			fstype = "vfat"
+		}
 		mnts = append(mnts, osbuild.Mount{
-			Type:   "org.osbuild.ext4",
+			Type:   fmt.Sprintf("org.osbuild.%s", fstype),
 			Name:   "mnt-for-" + target,
 			Source: "dev-for-" + target,
 			Target: target,
@@ -156,7 +162,7 @@ func TestBootupdStageJsonHappy(t *testing.T) {
     },
     {
       "name": "mnt-for-/boot/efi",
-      "type": "org.osbuild.ext4",
+      "type": "org.osbuild.vfat",
       "source": "dev-for-/boot/efi",
       "target": "/boot/efi"
     }
