@@ -246,7 +246,7 @@ github.com/containerd/stargz-snapshotter/estargz/errorutil
 # github.com/containers/common v0.60.0
 ## explicit; go 1.21.0
 github.com/containers/common/pkg/retry
-# github.com/containers/image/v5 v5.32.0
+# github.com/containers/image/v5 v5.32.1
 ## explicit; go 1.21.0
 github.com/containers/image/v5/copy
 github.com/containers/image/v5/directory
@@ -623,7 +623,7 @@ github.com/letsencrypt/boulder/strictyaml
 github.com/mailru/easyjson/buffer
 github.com/mailru/easyjson/jlexer
 github.com/mailru/easyjson/jwriter
-# github.com/mattn/go-runewidth v0.0.15
+# github.com/mattn/go-runewidth v0.0.16
 ## explicit; go 1.9
 github.com/mattn/go-runewidth
 # github.com/mattn/go-sqlite3 v1.14.22
@@ -760,7 +760,7 @@ github.com/ulikunitz/xz/lzma
 github.com/vbatts/tar-split/archive/tar
 github.com/vbatts/tar-split/tar/asm
 github.com/vbatts/tar-split/tar/storage
-# github.com/vbauerster/mpb/v8 v8.7.4
+# github.com/vbauerster/mpb/v8 v8.7.5
 ## explicit; go 1.17
 github.com/vbauerster/mpb/v8
 github.com/vbauerster/mpb/v8/cwriter
