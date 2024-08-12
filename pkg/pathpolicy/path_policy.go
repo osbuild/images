@@ -10,18 +10,15 @@ type PathPolicy struct {
 	Exact bool // require and exact match, no subdirs
 }
 
-type PathPolicies = PathTrie
+type PathPolicies struct {
+	pathTrie *PathTrie[PathPolicy]
+}
 
 // Create a new PathPolicies trie from a map of path to PathPolicy
 func NewPathPolicies(entries map[string]PathPolicy) *PathPolicies {
-
-	noType := make(map[string]interface{}, len(entries))
-
-	for k, v := range entries {
-		noType[k] = v
+	return &PathPolicies{
+		pathTrie: NewPathTrieFromMap[PathPolicy](entries),
 	}
-
-	return NewPathTrieFromMap(noType)
 }
 
 // Check a given path against the PathPolicies
@@ -37,11 +34,8 @@ func (pol *PathPolicies) Check(fsPath string) error {
 		return fmt.Errorf("path must be canonical")
 	}
 
-	node, left := pol.Lookup(fsPath)
-	policy, ok := node.Payload.(PathPolicy)
-	if !ok {
-		panic("programming error: invalid path trie payload")
-	}
+	node, left := pol.pathTrie.Lookup(fsPath)
+	policy := node.Payload
 
 	// 1) path is explicitly not allowed or
 	// 2) a subpath was match but an explicit match is required

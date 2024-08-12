@@ -12,28 +12,28 @@ func TestNewPathTrieFromMap(t *testing.T) {
 	assert := assert.New(t)
 
 	type testCase struct {
-		entries map[string]interface{}
-		trie    *PathTrie
+		entries map[string]*int
+		trie    *PathTrie[*int]
 	}
 
 	tests := []testCase{
 		{
-			entries: map[string]interface{}{},
-			trie: &PathTrie{
+			entries: map[string]*int{},
+			trie: &PathTrie[*int]{
 				Name: []string{},
 			},
 		},
 		{
-			entries: map[string]interface{}{
+			entries: map[string]*int{
 				"/": common.ToPtr(1),
 			},
-			trie: &PathTrie{
+			trie: &PathTrie[*int]{
 				Name:    []string{},
 				Payload: common.ToPtr(1),
 			},
 		},
 		{
-			entries: map[string]interface{}{
+			entries: map[string]*int{
 				"/":                            common.ToPtr(1),
 				"/var":                         common.ToPtr(2),
 				"/var/lib/chrony":              common.ToPtr(3),
@@ -43,14 +43,14 @@ func TestNewPathTrieFromMap(t *testing.T) {
 				"/boot":                        common.ToPtr(7),
 				"/boot/efi":                    common.ToPtr(8),
 			},
-			trie: &PathTrie{
+			trie: &PathTrie[*int]{
 				Name:    []string{},
 				Payload: common.ToPtr(1),
-				Paths: []*PathTrie{
+				Paths: []*PathTrie[*int]{
 					{
 						Name:    []string{"boot"},
 						Payload: common.ToPtr(7),
-						Paths: []*PathTrie{
+						Paths: []*PathTrie[*int]{
 							{
 								Name:    []string{"efi"},
 								Payload: common.ToPtr(8),
@@ -60,11 +60,11 @@ func TestNewPathTrieFromMap(t *testing.T) {
 					{
 						Name:    []string{"var"},
 						Payload: common.ToPtr(2),
-						Paths: []*PathTrie{
+						Paths: []*PathTrie[*int]{
 							{
 								Name:    []string{"lib", "chrony"},
 								Payload: common.ToPtr(3),
-								Paths: []*PathTrie{
+								Paths: []*PathTrie[*int]{
 									{
 										Name:    []string{"logs"},
 										Payload: common.ToPtr(4),
@@ -74,7 +74,7 @@ func TestNewPathTrieFromMap(t *testing.T) {
 							{
 								Name:    []string{"lib", "osbuild"},
 								Payload: common.ToPtr(5),
-								Paths: []*PathTrie{
+								Paths: []*PathTrie[*int]{
 									{
 										Name:    []string{"store", "cache"},
 										Payload: common.ToPtr(6),
@@ -98,7 +98,7 @@ func TestNewPathTrieFromMap(t *testing.T) {
 func TestPathTrieLookup(t *testing.T) {
 	assert := assert.New(t)
 
-	entries := map[string]interface{}{
+	entries := map[string]string{
 		"/":                            "/",
 		"/boot":                        "/boot",
 		"/boot/efi":                    "/boot/efi",
