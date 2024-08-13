@@ -281,6 +281,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"tar",
 				"wsl",
 				"gce",
+				"image-installer",
 			},
 		},
 		{
@@ -291,6 +292,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"tar",
 				"vhd",
 				"wsl",
+				"image-installer",
 			},
 		},
 		{
