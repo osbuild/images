@@ -243,7 +243,7 @@ github.com/containerd/errdefs
 ## explicit; go 1.19
 github.com/containerd/stargz-snapshotter/estargz
 github.com/containerd/stargz-snapshotter/estargz/errorutil
-# github.com/containers/common v0.60.0
+# github.com/containers/common v0.60.1
 ## explicit; go 1.21.0
 github.com/containers/common/pkg/retry
 # github.com/containers/image/v5 v5.32.1
@@ -766,7 +766,7 @@ github.com/vbauerster/mpb/v8
 github.com/vbauerster/mpb/v8/cwriter
 github.com/vbauerster/mpb/v8/decor
 github.com/vbauerster/mpb/v8/internal
-# github.com/vmware/govmomi v0.39.0
+# github.com/vmware/govmomi v0.40.0
 ## explicit; go 1.21
 github.com/vmware/govmomi
 github.com/vmware/govmomi/cns
@@ -893,7 +893,7 @@ golang.org/x/crypto/pkcs12/internal/rc2
 golang.org/x/crypto/salsa20/salsa
 golang.org/x/crypto/scrypt
 golang.org/x/crypto/sha3
-# golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8
+# golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 ## explicit; go 1.20
 golang.org/x/exp/maps
 # golang.org/x/mod v0.20.0
