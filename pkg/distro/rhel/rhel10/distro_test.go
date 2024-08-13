@@ -280,6 +280,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"ami",
 				"tar",
 				"wsl",
+				"gce",
 			},
 		},
 		{

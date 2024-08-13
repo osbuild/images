@@ -202,6 +202,17 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 		aarch64.AddImageTypes(azureAarch64Platform, mkAzureImgType())
 	}
 
+	gceX86Platform := &platform.X86{
+		UEFIVendor: rd.Vendor(),
+		BasePlatform: platform.BasePlatform{
+			ImageFormat: platform.FORMAT_GCE,
+		},
+	}
+	x86_64.AddImageTypes(
+		gceX86Platform,
+		mkGCEImageType(),
+	)
+
 	rd.AddArches(x86_64, aarch64, ppc64le, s390x)
 	return rd
 }
