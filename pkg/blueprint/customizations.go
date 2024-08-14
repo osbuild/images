@@ -90,8 +90,8 @@ type GroupCustomization struct {
 }
 
 type TimezoneCustomization struct {
-	Timezone   *string  `json:"timezone,omitempty" toml:"timezone,omitempty"`
-	NTPServers []string `json:"ntpservers,omitempty" toml:"ntpservers,omitempty"`
+	Timezone   types.Option[string] `json:"timezone,omitempty" toml:"timezone,omitempty"`
+	NTPServers []string             `json:"ntpservers,omitempty" toml:"ntpservers,omitempty"`
 }
 
 type LocaleCustomization struct {
@@ -224,7 +224,7 @@ func (c *Customizations) GetPrimaryLocale() (*string, *string) {
 	return &c.Locale.Languages[0], c.Locale.Keyboard
 }
 
-func (c *Customizations) GetTimezoneSettings() (*string, []string) {
+func (c *Customizations) GetTimezoneSettings() (types.Option[string], []string) {
 	if c == nil {
 		return nil, nil
 	}

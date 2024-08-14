@@ -9,6 +9,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/environment"
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/container"
@@ -78,7 +79,7 @@ type OSCustomizations struct {
 	Keyboard         *string
 	X11KeymapLayouts []string
 	Hostname         string
-	Timezone         string
+	Timezone         types.Option[string]
 	EnabledServices  []string
 	DisabledServices []string
 	MaskedServices   []string
@@ -533,8 +534,8 @@ func (p *OS) serialize() osbuild.Pipeline {
 		pipeline.AddStage(osbuild.NewHostnameStage(&osbuild.HostnameStageOptions{Hostname: p.OSCustomizations.Hostname}))
 	}
 
-	if p.OSCustomizations.Timezone != "" {
-		pipeline.AddStage(osbuild.NewTimezoneStage(&osbuild.TimezoneStageOptions{Zone: p.OSCustomizations.Timezone}))
+	if p.OSCustomizations.Timezone.IsSome() {
+		pipeline.AddStage(osbuild.NewTimezoneStage(&osbuild.TimezoneStageOptions{Zone: p.OSCustomizations.Timezone.Unwrap()}))
 	}
 
 	if p.OSCustomizations.ChronyConfig != nil {

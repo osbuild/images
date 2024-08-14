@@ -714,10 +714,7 @@ func (p *AnacondaInstallerISOTree) makeKickstartStages(stageOptions *osbuild.Kic
 			stageOptions.Keyboard = *kickstartOptions.Keyboard
 		}
 
-		stageOptions.Timezone = "UTC"
-		if kickstartOptions.Timezone != nil {
-			stageOptions.Timezone = *kickstartOptions.Timezone
-		}
+		stageOptions.Timezone = kickstartOptions.Timezone.TakeOr("UTC")
 
 		stageOptions.Reboot = &osbuild.RebootOptions{Eject: true}
 		stageOptions.RootPassword = &osbuild.RootPasswordOptions{Lock: true}

@@ -115,10 +115,10 @@ func osCustomizations(
 	}
 
 	timezone, ntpServers := c.GetTimezoneSettings()
-	if timezone != nil {
-		osc.Timezone = *timezone
-	} else if imageConfig.Timezone != nil {
-		osc.Timezone = *imageConfig.Timezone
+	if timezone.IsSome() {
+		osc.Timezone = timezone
+	} else {
+		osc.Timezone = imageConfig.Timezone
 	}
 
 	if len(ntpServers) > 0 {
@@ -497,7 +497,7 @@ func imageInstallerImage(workload workload.Workload,
 	}
 	img.Kickstart.Language = &img.OSCustomizations.Language
 	img.Kickstart.Keyboard = img.OSCustomizations.Keyboard
-	img.Kickstart.Timezone = &img.OSCustomizations.Timezone
+	img.Kickstart.Timezone = img.OSCustomizations.Timezone
 
 	if img.Kickstart.Unattended {
 		// NOTE: this is not supported right now because the

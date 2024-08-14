@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+
+	"github.com/osbuild/images/internal/common"
 )
 
 // Option is a more constrained subset of the code in
@@ -114,4 +116,8 @@ func (o *Option[T]) UnmarshalTOML(data any) error {
 	}
 	*o = Some(b)
 	return nil
+}
+
+func (o *Option[T]) UnmarshalYAML(unmarshal func(any) error) error {
+	return common.UnmarshalYAMLviaJSON(o, unmarshal)
 }

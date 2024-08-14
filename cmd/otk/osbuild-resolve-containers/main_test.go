@@ -10,6 +10,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/testregistry"
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/stretchr/testify/assert"
@@ -54,7 +55,7 @@ func TestResolver(t *testing.T) {
 		inpContainers[idx] = blueprint.Container{
 			Source:       ref,
 			Name:         fmt.Sprintf("test/localhost/%s", ref), // add a prefix for the local name to override the source
-			TLSVerify:    common.ToPtr(false),
+			TLSVerify:    types.Some(false),
 			LocalStorage: false,
 		}
 	}
@@ -171,7 +172,7 @@ func TestResolverUnhappy(t *testing.T) {
 				"containers": []blueprint.Container{
 					{
 						Source:    tc.source,
-						TLSVerify: &tc.tlsverify,
+						TLSVerify: types.Some(tc.tlsverify),
 					},
 				},
 			}
@@ -197,7 +198,7 @@ func TestResolverRawJSON(t *testing.T) {
 		inpContainers[idx] = blueprint.Container{
 			Source:       ref,
 			Name:         fmt.Sprintf("test/localhost/%s", ref), // add a prefix for the local name to override the source
-			TLSVerify:    common.ToPtr(false),
+			TLSVerify:    types.Some(false),
 			LocalStorage: false,
 		}
 	}
@@ -244,7 +245,7 @@ func TestResolverRawJSON(t *testing.T) {
     }
   }
 }
-`, spec.Source, spec.Digest, spec.ImageID, fmt.Sprintf("test/localhost/%s", refs[0]), spec.ListDigest, spec.Arch, *spec.TLSVerify)
+`, spec.Source, spec.Digest, spec.ImageID, fmt.Sprintf("test/localhost/%s", refs[0]), spec.ListDigest, spec.Arch, spec.TLSVerify.Unwrap())
 			require.Equal(expected, outBuf.String())
 		})
 	}

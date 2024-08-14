@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/datasizes"
@@ -476,7 +477,7 @@ image_config:
 	assert.NoError(t, err)
 	assert.Equal(t, &distro.ImageConfig{
 		Locale:   common.ToPtr("C.UTF-8"),
-		Timezone: common.ToPtr("OverrideTZ"),
+		Timezone: types.Some("OverrideTZ"),
 		Users:    []users.User{users.User{Name: "testuser"}},
 	}, imgConfig)
 }
@@ -552,7 +553,7 @@ image_types:
 	assert.Equal(t, &distro.ImageConfig{
 		Hostname: common.ToPtr("test-arch-hn"),
 		Locale:   common.ToPtr("en_US.UTF-8"),
-		Timezone: common.ToPtr("OverrideTZ"),
+		Timezone: types.Some("OverrideTZ"),
 	}, imgConfig)
 
 }

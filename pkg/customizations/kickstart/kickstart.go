@@ -3,6 +3,7 @@ package kickstart
 import (
 	"fmt"
 
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/customizations/users"
 )
@@ -36,7 +37,7 @@ type Options struct {
 
 	Language *string
 	Keyboard *string
-	Timezone *string
+	Timezone types.Option[string]
 
 	// Users to create during installation
 	Users []users.User
