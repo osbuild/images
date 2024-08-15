@@ -978,7 +978,7 @@ func usersFirstBootOptions(users []users.User) *osbuild.FirstBootStageOptions {
 			sshdir := filepath.Join(home, ".ssh")
 
 			cmds = append(cmds, fmt.Sprintf("mkdir -p %s", sshdir))
-			cmds = append(cmds, fmt.Sprintf("sh -c 'echo %q >> %q'", *user.Key, filepath.Join(sshdir, "authorized_keys")))
+			cmds = append(cmds, fmt.Sprintf("sh -c 'echo %q >> %q'", user.Key.Unwrap(), filepath.Join(sshdir, "authorized_keys")))
 			cmds = append(cmds, fmt.Sprintf("chown %s:%s -Rc %s", user.Name, user.Name, sshdir))
 		}
 	}

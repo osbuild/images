@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/customizations/users"
 )
 
@@ -28,15 +28,15 @@ func TestNewUsersStageOptionsPassword(t *testing.T) {
 	users := []users.User{
 		{
 			Name:     "bart",
-			Password: &Pass,
+			Password: types.Some(Pass),
 		},
 		{
 			Name:     "lisa",
-			Password: &CryptPass,
+			Password: types.Some(CryptPass),
 		},
 		{
 			Name:     "maggie",
-			Password: &EmptyPass,
+			Password: types.Some(EmptyPass),
 		},
 		{
 			Name: "homer",
@@ -48,10 +48,10 @@ func TestNewUsersStageOptionsPassword(t *testing.T) {
 	require.NotNil(t, options)
 
 	// bart's password should now be a hash
-	assert.True(t, strings.HasPrefix(*options.Users["bart"].Password, "$6$"))
+	assert.True(t, strings.HasPrefix(options.Users["bart"].Password.Unwrap(), "$6$"))
 
 	// lisa's password should be left alone (already hashed)
-	assert.Equal(t, CryptPass, *options.Users["lisa"].Password)
+	assert.Equal(t, CryptPass, options.Users["lisa"].Password.Unwrap())
 
 	// maggie's password should now be nil (locked account)
 	assert.Nil(t, options.Users["maggie"].Password)
@@ -63,24 +63,24 @@ func TestNewUsersStageOptionsPassword(t *testing.T) {
 func TestGenUsersStageSameAsNewUsersStageOptions(t *testing.T) {
 	users := []users.User{
 		{
-			Name: "user1", UID: common.ToPtr(1000), GID: common.ToPtr(1000),
+			Name: "user1", UID: types.Some(1000), GID: types.Some(1000),
 			Groups:      []string{"grp1"},
-			Description: common.ToPtr("some-descr"),
-			Home:        common.ToPtr("/home/user1"),
-			Shell:       common.ToPtr("/bin/zsh"),
-			Key:         common.ToPtr("some-key"),
+			Description: types.Some("some-descr"),
+			Home:        types.Some("/home/user1"),
+			Shell:       types.Some("/bin/zsh"),
+			Key:         types.Some("some-key"),
 		},
 	}
 	expected := &UsersStageOptions{
 		Users: map[string]UsersStageOptionsUser{
 			"user1": {
-				UID:         common.ToPtr(1000),
-				GID:         common.ToPtr(1000),
+				UID:         types.Some(1000),
+				GID:         types.Some(1000),
 				Groups:      []string{"grp1"},
-				Description: common.ToPtr("some-descr"),
-				Home:        common.ToPtr("/home/user1"),
-				Shell:       common.ToPtr("/bin/zsh"),
-				Key:         common.ToPtr("some-key")},
+				Description: types.Some("some-descr"),
+				Home:        types.Some("/home/user1"),
+				Shell:       types.Some("/bin/zsh"),
+				Key:         types.Some("some-key")},
 		},
 	}
 

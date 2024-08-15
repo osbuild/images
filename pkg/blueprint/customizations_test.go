@@ -26,14 +26,14 @@ func TestCheckAllowed(t *testing.T) {
 	expectedUsers := []UserCustomization{
 		{
 			Name:        "John",
-			Description: &Desc,
-			Password:    &Pass,
-			Key:         &Key,
-			Home:        &Home,
-			Shell:       &Shell,
+			Description: types.Some(Desc),
+			Password:    types.Some(Pass),
+			Key:         types.Some(Key),
+			Home:        types.Some(Home),
+			Shell:       types.Some(Shell),
 			Groups:      Groups,
-			UID:         &UID,
-			GID:         &GID,
+			UID:         types.Some(UID),
+			GID:         types.Some(GID),
 		},
 	}
 
@@ -96,16 +96,16 @@ func TestGetUsers(t *testing.T) {
 	expectedUsers := []UserCustomization{
 		{
 			Name:               "John",
-			Description:        &Desc,
-			Password:           &Pass,
-			Key:                &Key,
-			Home:               &Home,
-			Shell:              &Shell,
+			Description:        types.Some(Desc),
+			Password:           types.Some(Pass),
+			Key:                types.Some(Key),
+			Home:               types.Some(Home),
+			Shell:              types.Some(Shell),
 			Groups:             Groups,
-			UID:                &UID,
-			GID:                &GID,
-			ExpireDate:         &ExpireDate,
-			ForcePasswordReset: &ForcePasswordReset,
+			UID:                types.Some(UID),
+			GID:                types.Some(GID),
+			ExpireDate:         types.Some(ExpireDate),
+			ForcePasswordReset: types.Some(ForcePasswordReset),
 		},
 	}
 
