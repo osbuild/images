@@ -319,6 +319,7 @@ func (p *OS) getBuildPackages(distro Distro) []string {
 			case DISTRO_EL8:
 				packages = append(packages, "python3-pytoml")
 			case DISTRO_EL10:
+				// no extra package needed, stdlib has "tomli"
 			default:
 				packages = append(packages, "python3-toml")
 			}
@@ -335,6 +336,7 @@ func (p *OS) getBuildPackages(distro Distro) []string {
 		case DISTRO_EL8:
 			packages = append(packages, "python3-pytoml")
 		case DISTRO_EL10:
+			// no extra package needed, stdlib has "tomli"
 		default:
 			packages = append(packages, "python3-toml")
 		}
