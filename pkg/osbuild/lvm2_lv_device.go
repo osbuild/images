@@ -5,6 +5,8 @@ package osbuild
 type LVM2LVDeviceOptions struct {
 	// Logical volume to activate
 	Volume string `json:"volume"`
+	// Detect the pv for the given parent automatically
+	Detectpv *bool `json:"detectpv,omitempty"`
 }
 
 func (LVM2LVDeviceOptions) isDeviceOptions() {}

@@ -186,7 +186,7 @@ func TestGenBootupdDevicesMountsUnexpectedEntity(t *testing.T) {
 	pt := &disk.PartitionTable{
 		Partitions: []disk.Partition{
 			{
-				Payload: &disk.LVMVolumeGroup{},
+				Payload: &disk.LUKSContainer{},
 			},
 		},
 	}
@@ -195,7 +195,7 @@ func TestGenBootupdDevicesMountsUnexpectedEntity(t *testing.T) {
 		UEFIVendor:   "test",
 	}
 	_, _, err := osbuild.GenBootupdDevicesMounts(filename, pt, pf)
-	assert.EqualError(t, err, "type *disk.LVMVolumeGroup not supported by bootupd handling yet")
+	assert.EqualError(t, err, "type *disk.LUKSContainer not supported by bootupd handling yet")
 }
 
 var fakePt = &disk.PartitionTable{
@@ -342,6 +342,71 @@ func TestGenBootupdDevicesMountsHappyBtrfs(t *testing.T) {
 			Target:    "/home",
 			Options:   osbuild.BtrfsMountOptions{Subvol: "/home", Compress: "zstd:1"},
 			Partition: common.ToPtr(3),
+		},
+	}, mounts)
+}
+
+func TestGenBootupdDevicesMountsHappyLVM(t *testing.T) {
+	filename := "fake-disk.img"
+	pf := &platform.X86{
+		BasePlatform: platform.BasePlatform{},
+		UEFIVendor:   "test",
+	}
+
+	fakePt := testdisk.MakeFakeLVMPartitionTable("/", "/home", "/boot/efi", "/boot")
+	devices, mounts, err := osbuild.GenBootupdDevicesMounts(filename, fakePt, pf)
+	require.Nil(t, err)
+	assert.Equal(t, devices, map[string]osbuild.Device{
+		"disk": {
+			Type: "org.osbuild.loopback",
+			Options: &osbuild.LoopbackDeviceOptions{
+				Filename: "fake-disk.img",
+				Partscan: true,
+			},
+		},
+		"lv-for-/": {
+			Type:   "org.osbuild.lvm2.lv",
+			Parent: "disk",
+			Options: &osbuild.LVM2LVDeviceOptions{
+				Volume:   "lv-for-/",
+				Detectpv: common.ToPtr(true),
+			},
+		},
+		"lv-for-/home": {
+			Type:   "org.osbuild.lvm2.lv",
+			Parent: "disk",
+			Options: &osbuild.LVM2LVDeviceOptions{
+				Volume:   "lv-for-/home",
+				Detectpv: common.ToPtr(true),
+			},
+		},
+	})
+	assert.Equal(t, []osbuild.Mount{
+		{
+			Name:   "-",
+			Type:   "org.osbuild.xfs",
+			Source: "lv-for-/",
+			Target: "/",
+		},
+		{
+			Name:      "boot",
+			Type:      "org.osbuild.ext4",
+			Source:    "disk",
+			Target:    "/boot",
+			Partition: common.ToPtr(2),
+		},
+		{
+			Name:      "boot-efi",
+			Type:      "org.osbuild.fat",
+			Source:    "disk",
+			Target:    "/boot/efi",
+			Partition: common.ToPtr(1),
+		},
+		{
+			Name:   "home",
+			Type:   "org.osbuild.xfs",
+			Source: "lv-for-/home",
+			Target: "/home",
 		},
 	}, mounts)
 }

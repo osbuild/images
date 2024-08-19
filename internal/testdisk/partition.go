@@ -101,3 +101,68 @@ func MakeFakeBtrfsPartitionTable(mntPoints ...string) *disk.PartitionTable {
 
 	return pt
 }
+
+// MakeFakeLVMPartitionTable is similar to MakeFakePartitionTable but
+// creates a lvm-based partition table.
+func MakeFakeLVMPartitionTable(mntPoints ...string) *disk.PartitionTable {
+	var lvs []disk.LVMLogicalVolume
+	pt := &disk.PartitionTable{
+		Type:       "gpt",
+		Size:       10 * common.GiB,
+		Partitions: []disk.Partition{},
+	}
+	size := uint64(0)
+	for _, mntPoint := range mntPoints {
+		switch mntPoint {
+		case "/boot":
+			pt.Partitions = append(pt.Partitions, disk.Partition{
+				Start: size,
+				Size:  1 * common.GiB,
+				Payload: &disk.Filesystem{
+					Type:       "ext4",
+					Mountpoint: mntPoint,
+				},
+			})
+			size += 1 * common.GiB
+		case "/boot/efi":
+			pt.Partitions = append(pt.Partitions, disk.Partition{
+				Start: size,
+				Size:  100 * common.MiB,
+				Payload: &disk.Filesystem{
+					Type:       "vfat",
+					Mountpoint: mntPoint,
+					UUID:       disk.EFIFilesystemUUID,
+				},
+			})
+			size += 100 * common.MiB
+		default:
+			name := "lv-for-" + mntPoint
+			if name == "/" {
+				name = "lvroot"
+			}
+			lvs = append(
+				lvs,
+				disk.LVMLogicalVolume{
+					Name: name,
+					Payload: &disk.Filesystem{
+						Type:       "xfs",
+						Mountpoint: mntPoint,
+					},
+				},
+			)
+		}
+	}
+
+	pt.Partitions = append(pt.Partitions, disk.Partition{
+		Start: size,
+		Size:  9 * common.GiB,
+		Payload: &disk.LVMVolumeGroup{
+			LogicalVolumes: lvs,
+		},
+	})
+
+	size += 9 * common.GiB
+	pt.Size = size
+
+	return pt
+}
