@@ -32,6 +32,10 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
+      - name: Install python3
+        # The Fedora 41 container doesn't have python3 installed by default
+        run: dnf -y install python3
+
       - name: Set up repository for pinned osbuild commit
         run: ./test/scripts/setup-osbuild-repo
 
