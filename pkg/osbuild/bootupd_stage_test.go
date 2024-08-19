@@ -186,7 +186,7 @@ func TestGenBootupdDevicesMountsUnexpectedEntity(t *testing.T) {
 	pt := &disk.PartitionTable{
 		Partitions: []disk.Partition{
 			{
-				Payload: &disk.LVMVolumeGroup{},
+				Payload: &disk.LUKSContainer{},
 			},
 		},
 	}
@@ -195,7 +195,7 @@ func TestGenBootupdDevicesMountsUnexpectedEntity(t *testing.T) {
 		UEFIVendor:   "test",
 	}
 	_, _, err := osbuild.GenBootupdDevicesMounts(filename, pt, pf)
-	assert.EqualError(t, err, "type *disk.LVMVolumeGroup not supported by bootupd handling yet")
+	assert.EqualError(t, err, "type *disk.LUKSContainer not supported by bootupd handling yet")
 }
 
 var fakePt = &disk.PartitionTable{
@@ -344,4 +344,84 @@ func TestGenBootupdDevicesMountsHappyBtrfs(t *testing.T) {
 			Partition: common.ToPtr(3),
 		},
 	}, mounts)
+}
+
+func TestGenBootupdDevicesMountsHappyLVM(t *testing.T) {
+	filename := "fake-disk.img"
+	pf := &platform.X86{
+		BasePlatform: platform.BasePlatform{},
+		UEFIVendor:   "test",
+	}
+
+	fakePt := testdisk.MakeFakeLVMPartitionTable("/", "/home", "/boot/efi", "/boot")
+	devices, mounts, err := osbuild.GenBootupdDevicesMounts(filename, fakePt, pf)
+	require.Nil(t, err)
+	assert.Equal(t, devices, map[string]osbuild.Device{
+		"disk": {
+			Type: "org.osbuild.loopback",
+			Options: &osbuild.LoopbackDeviceOptions{
+				Filename: "fake-disk.img",
+				Partscan: true,
+			},
+		},
+		"lv-for-/": {
+			Type:   "org.osbuild.lvm2.lv",
+			Parent: "disk",
+			Options: &osbuild.LVM2LVDeviceOptions{
+				Volume:    "lv-for-/",
+				VGPartnum: common.ToPtr(3),
+			},
+		},
+		"lv-for-/home": {
+			Type:   "org.osbuild.lvm2.lv",
+			Parent: "disk",
+			Options: &osbuild.LVM2LVDeviceOptions{
+				Volume:    "lv-for-/home",
+				VGPartnum: common.ToPtr(3),
+			},
+		},
+	})
+	assert.Equal(t, []osbuild.Mount{
+		{
+			Name:   "-",
+			Type:   "org.osbuild.xfs",
+			Source: "lv-for-/",
+			Target: "/",
+		},
+		{
+			Name:      "boot",
+			Type:      "org.osbuild.ext4",
+			Source:    "disk",
+			Target:    "/boot",
+			Partition: common.ToPtr(2),
+		},
+		{
+			Name:      "boot-efi",
+			Type:      "org.osbuild.fat",
+			Source:    "disk",
+			Target:    "/boot/efi",
+			Partition: common.ToPtr(1),
+		},
+		{
+			Name:   "home",
+			Type:   "org.osbuild.xfs",
+			Source: "lv-for-/home",
+			Target: "/home",
+		},
+	}, mounts)
+}
+
+func TestGenBootupdDevicesMountsLVM_NotMountableLV(t *testing.T) {
+	filename := "fake-disk.img"
+	pf := &platform.X86{
+		BasePlatform: platform.BasePlatform{},
+		UEFIVendor:   "test",
+	}
+
+	fakePt := testdisk.MakeFakeLVMPartitionTable("/", "/home", "/boot/efi", "/boot")
+	fakePt.Partitions[2].Payload.(*disk.LVMVolumeGroup).LogicalVolumes[0].Payload = &disk.LUKSContainer{}
+
+	_, _, err := osbuild.GenBootupdDevicesMounts(filename, fakePt, pf)
+	require.Error(t, err)
+	require.Regexp(t, `expected LV payload .* to be mountable, got \*disk.LUKSContainer`, err.Error())
 }
