@@ -945,9 +945,8 @@ func (p *OS) subscriptionService() *osbuild.Stage {
 	return osbuild.NewSystemdUnitCreateStage(regServiceStageOptions)
 }
 
-// For ostree-based systems, creates a drop-in file for the insights-client
-// service to run on boot and enables the service. This is only meant for
-// ostree-based systems.
+// Creates a drop-in file for the insights-client service to run on boot and
+// enables the service. This is only meant for ostree-based systems.
 func (p *OS) runInsightsClientOnBoot() {
 	// Insights-client collection must occur at boot time  so
 	// that the current ostree commit hash can be reflected
