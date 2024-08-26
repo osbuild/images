@@ -467,6 +467,7 @@ func EdgeInstallerImage(workload workload.Workload,
 
 	img.Platform = t.platform
 	img.ExtraBasePackages = packageSets[InstallerPkgsKey]
+	img.Subscription = options.Subscription
 
 	if t.Arch().Distro().Releasever() == "8" {
 		// NOTE: RHEL 8 only supports the older Anaconda configs
