@@ -606,7 +606,6 @@ func (p *OS) serialize() osbuild.Pipeline {
 
 		var commands []string
 		if p.Subscription.Rhc {
-			// TODO: replace org ID and activation key with env vars
 			// Use rhc for registration instead of subscription manager
 			commands = []string{fmt.Sprintf("/usr/bin/rhc connect --organization=${ORG_ID} --activation-key=${ACTIVATION_KEY} --server %s", p.Subscription.ServerUrl)}
 			// insights-client creates the .gnupg directory during boot process, and is labeled incorrectly
