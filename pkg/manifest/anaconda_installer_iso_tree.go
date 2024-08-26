@@ -3,6 +3,7 @@ package manifest
 import (
 	"fmt"
 	"path"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -58,6 +59,10 @@ type AnacondaInstallerISOTree struct {
 	Kickstart *kickstart.Options
 
 	Files []*fsnode.File
+
+	// Pipeline object where subscription-related files are created for copying
+	// onto the ISO.
+	SubscriptionPipeline *Subscription
 }
 
 func NewAnacondaInstallerISOTree(buildPipeline Build, anacondaPipeline *AnacondaInstaller, rootfsPipeline *ISORootfsImg, bootTreePipeline *EFIBootTree) *AnacondaInstallerISOTree {
@@ -610,7 +615,31 @@ func (p *AnacondaInstallerISOTree) makeKickstartStages(stageOptions *osbuild.Kic
 
 	stages = append(stages, osbuild.NewKickstartStage(stageOptions))
 
-	hardcodedKickstartBits := makeKickstartSudoersPost(kickstartOptions.SudoNopasswd)
+	hardcodedKickstartBits := ""
+	hardcodedKickstartBits += makeKickstartSudoersPost(kickstartOptions.SudoNopasswd)
+
+	if p.SubscriptionPipeline != nil {
+		subscriptionPath := "/subscription"
+		stages = append(stages, osbuild.NewMkdirStage(&osbuild.MkdirStageOptions{Paths: []osbuild.MkdirStagePath{{Path: subscriptionPath, Parents: true, ExistOk: true}}}))
+		inputName := "subscription-tree"
+		copyInputs := osbuild.NewPipelineTreeInputs(inputName, p.SubscriptionPipeline.Name())
+		copyOptions := &osbuild.CopyStageOptions{}
+		copyOptions.Paths = append(copyOptions.Paths,
+			osbuild.CopyStagePath{
+				From: fmt.Sprintf("input://%s/", inputName),
+				To:   fmt.Sprintf("tree://%s/", subscriptionPath),
+			},
+		)
+		stages = append(stages, osbuild.NewCopyStageSimple(copyOptions, copyInputs))
+		systemPath := "/mnt/sysimage"
+		if p.ostreeCommitSpec != nil || p.containerSpec != nil {
+			// ostree based system: use /mnt/sysroot instead
+			systemPath = "/mnt/sysroot"
+
+		}
+		hardcodedKickstartBits += makeKickstartSubscriptionPost(subscriptionPath, systemPath)
+	}
+
 	if hardcodedKickstartBits != "" {
 		// Because osbuild core only supports a subset of options,
 		// we append to the base here with hardcoded wheel group with NOPASSWD option
@@ -623,6 +652,7 @@ func (p *AnacondaInstallerISOTree) makeKickstartStages(stageOptions *osbuild.Kic
 
 		stages = append(stages, osbuild.GenFileNodesStages(p.Files)...)
 	}
+
 	return stages
 }
 
@@ -659,4 +689,18 @@ restorecon -rvF /etc/sudoers.d
 `
 	return fmt.Sprintf(kickstartSudoersPost, strings.Join(entries, "\n"))
 
+}
+
+func makeKickstartSubscriptionPost(source, dest string) string {
+	// we need to use --nochroot so the command can access files on the ISO
+	fullSourcePath := filepath.Join("/run/install/repo", source, "/*")
+	kickstartSubscriptionPost := `
+%%post --nochroot
+cp -r %s %s
+%%end
+%%post
+systemctl enable osbuild-subscription-register.service
+%%end
+`
+	return fmt.Sprintf(kickstartSubscriptionPost, fullSourcePath, dest)
 }
