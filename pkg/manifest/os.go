@@ -590,7 +590,14 @@ func (p *OS) serialize() osbuild.Pipeline {
 	}
 
 	if p.Subscription != nil {
-		pipeline.AddStage(p.subscriptionService())
+		subStage, subDirs, subFiles, subServices, err := subscriptionService(*p.Subscription, &subscriptionServiceOptions{InsightsOnBoot: p.OSTreeRef != ""})
+		if err != nil {
+			panic(err)
+		}
+		pipeline.AddStage(subStage)
+		p.Directories = append(p.Directories, subDirs...)
+		p.Files = append(p.Files, subFiles...)
+		p.EnabledServices = append(p.EnabledServices, subServices...)
 	}
 
 	if p.RHSMConfig != nil {
@@ -873,6 +880,16 @@ func (p *OS) getInline() []string {
 	return inlineData
 }
 
+type subscriptionServiceOptions struct {
+	// InsightsOnBoot controls whether the insights client service will be
+	// modified (with a drop-in) to run on boot as well as on a timer.
+	InsightsOnBoot bool
+
+	// UnitPath controls the path where the systemd unit will be created,
+	// /usr/lib/systemd or /etc/systemd.
+	UnitPath osbuild.SystemdUnitPath
+}
+
 // subscriptionService creates the necessary stage and modifications to the
 // pipeline for activating a system on first boot.
 //
@@ -880,38 +897,61 @@ func (p *OS) getInline() []string {
 // - Register the system with rhc and enable Insights
 // - Register with subscription-manager, no Insights or rhc
 // - Register with subscription-manager and enable Insights, no rhc
-func (p *OS) subscriptionService() *osbuild.Stage {
+func subscriptionService(subscriptionOptions subscription.ImageOptions, serviceOptions *subscriptionServiceOptions) (*osbuild.Stage, []*fsnode.Directory, []*fsnode.File, []string, error) {
+	dirs := make([]*fsnode.Directory, 0)
+	files := make([]*fsnode.File, 0)
+	services := make([]string, 0)
+
+	insightsOnBoot := false
+	unitPath := osbuild.UsrUnitPath
+	if serviceOptions != nil {
+		insightsOnBoot = serviceOptions.InsightsOnBoot
+		if serviceOptions.UnitPath != "" {
+			unitPath = serviceOptions.UnitPath
+		}
+	}
+
 	// Write a key file that will contain the org ID and activation key to be sourced in the systemd service.
 	// The file will also act as the ConditionFirstBoot file.
 	subkeyFilepath := "/etc/osbuild-subscription-register.env"
-	subkeyContent := fmt.Sprintf("ORG_ID=%s\nACTIVATION_KEY=%s", p.Subscription.Organization, p.Subscription.ActivationKey)
+	subkeyContent := fmt.Sprintf("ORG_ID=%s\nACTIVATION_KEY=%s", subscriptionOptions.Organization, subscriptionOptions.ActivationKey)
 	if subkeyFile, err := fsnode.NewFile(subkeyFilepath, nil, "root", "root", []byte(subkeyContent)); err == nil {
-		p.Files = append(p.Files, subkeyFile)
+		files = append(files, subkeyFile)
 	} else {
-		panic(err)
+		return nil, nil, nil, nil, err
 	}
 
 	var commands []string
-	if p.Subscription.Rhc {
+	if subscriptionOptions.Rhc {
 		// Use rhc for registration instead of subscription manager
-		commands = []string{fmt.Sprintf("/usr/bin/rhc connect --organization=${ORG_ID} --activation-key=${ACTIVATION_KEY} --server %s", p.Subscription.ServerUrl)}
+		commands = []string{fmt.Sprintf("/usr/bin/rhc connect --organization=${ORG_ID} --activation-key=${ACTIVATION_KEY} --server %s", subscriptionOptions.ServerUrl)}
 		// insights-client creates the .gnupg directory during boot process, and is labeled incorrectly
 		commands = append(commands, "restorecon -R /root/.gnupg")
 		// execute the rhc post install script as the selinuxenabled check doesn't work in the buildroot container
 		commands = append(commands, "/usr/sbin/semanage permissive --add rhcd_t")
-		if p.OSTreeRef != "" {
-			p.runInsightsClientOnBoot()
+		if insightsOnBoot {
+			icDir, icFile, err := runInsightsClientOnBoot()
+			if err != nil {
+				return nil, nil, nil, nil, err
+			}
+			dirs = append(dirs, icDir)
+			files = append(files, icFile)
 		}
 	} else {
-		commands = []string{fmt.Sprintf("/usr/sbin/subscription-manager register --org=${ORG_ID} --activationkey=${ACTIVATION_KEY} --serverurl %s --baseurl %s", p.Subscription.ServerUrl, p.Subscription.BaseUrl)}
+		commands = []string{fmt.Sprintf("/usr/sbin/subscription-manager register --org=${ORG_ID} --activationkey=${ACTIVATION_KEY} --serverurl %s --baseurl %s", subscriptionOptions.ServerUrl, subscriptionOptions.BaseUrl)}
 
 		// Insights is optional when using subscription-manager
-		if p.Subscription.Insights {
+		if subscriptionOptions.Insights {
 			commands = append(commands, "/usr/bin/insights-client --register")
 			// insights-client creates the .gnupg directory during boot process, and is labeled incorrectly
 			commands = append(commands, "restorecon -R /root/.gnupg")
-			if p.OSTreeRef != "" {
-				p.runInsightsClientOnBoot()
+			if insightsOnBoot {
+				icDir, icFile, err := runInsightsClientOnBoot()
+				if err != nil {
+					return nil, nil, nil, nil, err
+				}
+				dirs = append(dirs, icDir)
+				files = append(files, icFile)
 			}
 		}
 	}
@@ -922,7 +962,7 @@ func (p *OS) subscriptionService() *osbuild.Stage {
 	regServiceStageOptions := &osbuild.SystemdUnitCreateStageOptions{
 		Filename: subscribeServiceFile,
 		UnitType: "system",
-		UnitPath: osbuild.UsrUnitPath,
+		UnitPath: unitPath,
 		Config: osbuild.SystemdServiceUnit{
 			Unit: &osbuild.Unit{
 				Description:         "First-boot service for registering with Red Hat subscription manager and/or insights",
@@ -941,13 +981,14 @@ func (p *OS) subscriptionService() *osbuild.Stage {
 			},
 		},
 	}
-	p.EnabledServices = append(p.EnabledServices, subscribeServiceFile)
-	return osbuild.NewSystemdUnitCreateStage(regServiceStageOptions)
+	services = append(services, subscribeServiceFile)
+	unitStage := osbuild.NewSystemdUnitCreateStage(regServiceStageOptions)
+	return unitStage, dirs, files, services, nil
 }
 
 // Creates a drop-in file for the insights-client service to run on boot and
 // enables the service. This is only meant for ostree-based systems.
-func (p *OS) runInsightsClientOnBoot() {
+func runInsightsClientOnBoot() (*fsnode.Directory, *fsnode.File, error) {
 	// Insights-client collection must occur at boot time  so
 	// that the current ostree commit hash can be reflected
 	// after upgrade. Otherwise, the upgrade shows as failed in
@@ -961,16 +1002,15 @@ func (p *OS) runInsightsClientOnBoot() {
 	// all the options we need. This is a temporary workaround
 	// until we get the stage updated to support everything we need.
 	icDropinFilepath, icDropinContents := insightsClientDropin()
-	if icDropinDirectory, err := fsnode.NewDirectory(filepath.Dir(icDropinFilepath), nil, "root", "root", true); err == nil {
-		p.Directories = append(p.Directories, icDropinDirectory)
+	icDropinDirectory, err := fsnode.NewDirectory(filepath.Dir(icDropinFilepath), nil, "root", "root", true)
+	if err != nil {
+		return nil, nil, err
 	}
-	if icDropinFile, err := fsnode.NewFile(icDropinFilepath, nil, "root", "root", []byte(icDropinContents)); err == nil {
-		p.Files = append(p.Files, icDropinFile)
-	} else {
-		panic(err)
+	icDropinFile, err := fsnode.NewFile(icDropinFilepath, nil, "root", "root", []byte(icDropinContents))
+	if err != nil {
+		return nil, nil, err
 	}
-	// Enable the service now that it's "enable-able"
-	p.EnabledServices = append(p.EnabledServices, "insights-client.service")
+	return icDropinDirectory, icDropinFile, nil
 }
 
 // Filename and contents for the insights-client service drop-in.
