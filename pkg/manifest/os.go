@@ -915,7 +915,12 @@ func subscriptionService(subscriptionOptions subscription.ImageOptions, serviceO
 	// The file will also act as the ConditionFirstBoot file.
 	subkeyFilepath := "/etc/osbuild-subscription-register.env"
 	subkeyContent := fmt.Sprintf("ORG_ID=%s\nACTIVATION_KEY=%s", subscriptionOptions.Organization, subscriptionOptions.ActivationKey)
-	if subkeyFile, err := fsnode.NewFile(subkeyFilepath, nil, "root", "root", []byte(subkeyContent)); err == nil {
+
+	// NOTE: Ownership is left as nil:nil, which implicitly creates files as
+	// root:root. Adding an explicit owner requires chroot to run the
+	// org.osbuild.chown stage, which we can't run in the subscription pipeline
+	// since it has no packages.
+	if subkeyFile, err := fsnode.NewFile(subkeyFilepath, nil, nil, nil, []byte(subkeyContent)); err == nil {
 		files = append(files, subkeyFile)
 	} else {
 		return nil, nil, nil, nil, err
