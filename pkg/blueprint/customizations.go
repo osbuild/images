@@ -19,6 +19,7 @@ type Customizations struct {
 	Firewall           *FirewallCustomization         `json:"firewall,omitempty" toml:"firewall,omitempty"`
 	Services           *ServicesCustomization         `json:"services,omitempty" toml:"services,omitempty"`
 	Filesystem         []FilesystemCustomization      `json:"filesystem,omitempty" toml:"filesystem,omitempty"`
+	Partitioning       *PartitioningCustomization     `json:"partitioning,omitempty" toml:"partitioning,omitempty"`
 	InstallationDevice string                         `json:"installation_device,omitempty" toml:"installation_device,omitempty"`
 	FDO                *FDOCustomization              `json:"fdo,omitempty" toml:"fdo,omitempty"`
 	OpenSCAP           *OpenSCAPCustomization         `json:"openscap,omitempty" toml:"openscap,omitempty"`

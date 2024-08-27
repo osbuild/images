@@ -10,8 +10,10 @@ import (
 )
 
 type FilesystemCustomization struct {
-	Mountpoint string `json:"mountpoint,omitempty" toml:"mountpoint,omitempty"`
+	Mountpoint string `json:"mountpoint" toml:"mountpoint"`
 	MinSize    uint64 `json:"minsize,omitempty" toml:"minsize,omitempty"`
+	Label      string `json:"label,omitempty" toml:"label,omitempty"`
+	Type       string `json:"type,omitempty" toml:"type,omitempty"`
 }
 
 func (fsc *FilesystemCustomization) UnmarshalTOML(data interface{}) error {
@@ -22,6 +24,24 @@ func (fsc *FilesystemCustomization) UnmarshalTOML(data interface{}) error {
 		fsc.Mountpoint = d["mountpoint"].(string)
 	default:
 		return fmt.Errorf("TOML unmarshal: mountpoint must be string, got %v of type %T", d["mountpoint"], d["mountpoint"])
+	}
+
+	switch d["type"].(type) {
+	case nil:
+		// empty allowed
+	case string:
+		fsc.Type = d["type"].(string)
+	default:
+		return fmt.Errorf("TOML unmarshal: type must be string, got %v of type %T", d["type"], d["type"])
+	}
+
+	switch d["label"].(type) {
+	case nil:
+		// empty allowed
+	case string:
+		fsc.Label = d["label"].(string)
+	default:
+		return fmt.Errorf("TOML unmarshal: label must be string, got %v of type %T", d["label"], d["label"])
 	}
 
 	switch d["minsize"].(type) {
@@ -56,6 +76,24 @@ func (fsc *FilesystemCustomization) UnmarshalJSON(data []byte) error {
 		fsc.Mountpoint = d["mountpoint"].(string)
 	default:
 		return fmt.Errorf("JSON unmarshal: mountpoint must be string, got %v of type %T", d["mountpoint"], d["mountpoint"])
+	}
+
+	switch d["type"].(type) {
+	case nil:
+		// empty allowed
+	case string:
+		fsc.Type = d["type"].(string)
+	default:
+		return fmt.Errorf("JSON unmarshal: type must be string, got %v of type %T", d["type"], d["type"])
+	}
+
+	switch d["label"].(type) {
+	case nil:
+		// empty allowed
+	case string:
+		fsc.Label = d["label"].(string)
+	default:
+		return fmt.Errorf("JSON unmarshal: label must be string, got %v of type %T", d["label"], d["label"])
 	}
 
 	// The JSON specification only mentions float64 and Go defaults to it: https://go.dev/blog/json

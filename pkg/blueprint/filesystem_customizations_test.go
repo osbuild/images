@@ -15,6 +15,8 @@ import (
 var allFieldsFsc = blueprint.FilesystemCustomization{
 	Mountpoint: "/data",
 	MinSize:    1234567890,
+	Label:      "data",
+	Type:       "xfs",
 }
 
 func TestFilesystemCustomizationMarshalUnmarshalTOML(t *testing.T) {
@@ -61,6 +63,16 @@ func TestFilesystemCustomizationUnmarshalTOMLUnhappy(t *testing.T) {
 			minsize = "20 KG"`,
 			err: "toml: line 0: TOML unmarshal: minsize is not valid filesystem size (unknown data size units in string: 20 KG)",
 		},
+		{
+			name:  "label not string",
+			input: "label=13\nmountpoint=\"/\"",
+			err:   "toml: line 0: TOML unmarshal: label must be string, got 13 of type int64",
+		},
+		{
+			name:  "fstype not string",
+			input: "type=true\nmountpoint=\"/\"",
+			err:   "toml: line 0: TOML unmarshal: type must be string, got true of type bool",
+		},
 	}
 
 	for _, c := range cases {
@@ -92,6 +104,16 @@ func TestFilesystemCustomizationUnmarshalJSONUnhappy(t *testing.T) {
 			name:  "misize not parseable",
 			input: `{ "mountpoint": "/", "minsize": "20 KG"}`,
 			err:   "JSON unmarshal: minsize is not valid filesystem size (unknown data size units in string: 20 KG)",
+		},
+		{
+			name:  "label not string",
+			input: `{ "mountpoint": "/", "label": 13}`,
+			err:   "JSON unmarshal: label must be string, got 13 of type float64",
+		},
+		{
+			name:  "type not string",
+			input: `{ "mountpoint": "/", "type": true}`,
+			err:   "JSON unmarshal: type must be string, got true of type bool",
 		},
 	}
 
