@@ -509,7 +509,7 @@ func main() {
 	var arches, distros, imgTypes multiValue
 	flag.Var(&arches, "arches", "comma-separated list of architectures (globs supported)")
 	flag.Var(&distros, "distros", "comma-separated list of distributions (globs supported)")
-	flag.Var(&imgTypes, "images", "comma-separated list of image types (globs supported)")
+	flag.Var(&imgTypes, "types", "comma-separated list of image types (globs supported)")
 
 	flag.Parse()
 
