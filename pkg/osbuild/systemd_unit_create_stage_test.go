@@ -18,7 +18,7 @@ func createSystemdUnit() SystemdServiceUnit {
 		Wants:                    []string{"local-fs.target"},
 	}
 	var service = Service{
-		Type:            Oneshot,
+		Type:            OneshotServiceType,
 		RemainAfterExit: true,
 		ExecStartPre:    []string{"echo creating_files"},
 		ExecStopPost:    []string{"echo done_creating_files"},
@@ -59,7 +59,7 @@ func TestNewSystemdUnitCreateStageInEtc(t *testing.T) {
 	var options = SystemdUnitCreateStageOptions{
 		Filename: "create-dir-files",
 		Config:   systemdServiceConfig,
-		UnitPath: Etc,
+		UnitPath: EtcUnitPath,
 		UnitType: Global,
 	}
 	expectedStage := &Stage{

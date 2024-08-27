@@ -922,7 +922,7 @@ func (p *OS) subscriptionService() *osbuild.Stage {
 	regServiceStageOptions := &osbuild.SystemdUnitCreateStageOptions{
 		Filename: subscribeServiceFile,
 		UnitType: "system",
-		UnitPath: osbuild.Usr,
+		UnitPath: osbuild.UsrUnitPath,
 		Config: osbuild.SystemdServiceUnit{
 			Unit: &osbuild.Unit{
 				Description:         "First-boot service for registering with Red Hat subscription manager and/or insights",
@@ -931,7 +931,7 @@ func (p *OS) subscriptionService() *osbuild.Stage {
 				After:               []string{"network-online.target"},
 			},
 			Service: &osbuild.Service{
-				Type:            osbuild.Oneshot,
+				Type:            osbuild.OneshotServiceType,
 				RemainAfterExit: false,
 				ExecStart:       commands,
 				EnvironmentFile: []string{subkeyFilepath},
