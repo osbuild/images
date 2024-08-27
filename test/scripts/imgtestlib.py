@@ -103,7 +103,7 @@ def list_images(distros=None, arches=None, images=None):
     if images:
         images_arg = ",".join(images)
     out, _ = runcmd(["go", "run", "./cmd/list-images", "--json",
-                     "--distros", distros_arg, "--arches", arches_arg, "--images", images_arg])
+                     "--distros", distros_arg, "--arches", arches_arg, "--types", images_arg])
     return json.loads(out)
 
 
@@ -212,7 +212,7 @@ def gen_manifests(outputdir, config_map=None, distros=None, arches=None, images=
     if arches:
         cmd.extend(["--arches", ",".join(arches)])
     if images:
-        cmd.extend(["--images", ",".join(images)])
+        cmd.extend(["--types", ",".join(images)])
     if commits:
         cmd.append("--commits")
     if skip_no_config:
