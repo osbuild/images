@@ -191,7 +191,7 @@ func run() error {
 	// image selection args
 	var distroName, imgTypeName, configFile string
 	flag.StringVar(&distroName, "distro", "", "distribution (required)")
-	flag.StringVar(&imgTypeName, "image", "", "image type name (required)")
+	flag.StringVar(&imgTypeName, "type", "", "image type name (required)")
 	flag.StringVar(&configFile, "config", "", "build config file (required)")
 
 	flag.Parse()

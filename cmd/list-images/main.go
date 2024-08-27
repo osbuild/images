@@ -71,7 +71,7 @@ func main() {
 	var json bool
 	flag.Var(&arches, "arches", "comma-separated list of architectures (globs supported)")
 	flag.Var(&distros, "distros", "comma-separated list of distributions (globs supported)")
-	flag.Var(&imgTypes, "images", "comma-separated list of image types (globs supported)")
+	flag.Var(&imgTypes, "types", "comma-separated list of image types (globs supported)")
 	flag.BoolVar(&json, "json", false, "print configs as json")
 	flag.Parse()
 
