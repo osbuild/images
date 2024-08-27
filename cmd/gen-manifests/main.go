@@ -31,18 +31,6 @@ import (
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
-type multiValue []string
-
-func (mv *multiValue) String() string {
-	return strings.Join(*mv, ", ")
-}
-
-func (mv *multiValue) Set(v string) error {
-	split := strings.Split(v, ",")
-	*mv = split
-	return nil
-}
-
 type buildRequest struct {
 	Distro       string                   `json:"distro,omitempty"`
 	Arch         string                   `json:"arch,omitempty"`
@@ -456,31 +444,6 @@ func filterRepos(repos []rpmmd.RepoConfig, typeName string) []rpmmd.RepoConfig {
 	return filtered
 }
 
-// resolveArgValues returns a list of valid values from the list of values on the
-// command line. Invalid values are returned separately. Globs are expanded.
-// If the args are empty, the valueList is returned as is.
-func resolveArgValues(args multiValue, valueList []string) ([]string, []string) {
-	if len(args) == 0 {
-		return valueList, nil
-	}
-	selection := make([]string, 0, len(args))
-	invalid := make([]string, 0, len(args))
-	for _, arg := range args {
-		g := glob.MustCompile(arg)
-		match := false
-		for _, v := range valueList {
-			if g.Match(v) {
-				selection = append(selection, v)
-				match = true
-			}
-		}
-		if !match {
-			invalid = append(invalid, arg)
-		}
-	}
-	return selection, invalid
-}
-
 func u(s string) string {
 	return strings.Replace(s, "-", "_", -1)
 }
@@ -506,7 +469,7 @@ func main() {
 	flag.BoolVar(&commits, "commits", false, "resolve ostree commit IDs")
 
 	// manifest selection args
-	var arches, distros, imgTypes multiValue
+	var arches, distros, imgTypes cmdutil.MultiValue
 	flag.Var(&arches, "arches", "comma-separated list of architectures (globs supported)")
 	flag.Var(&distros, "distros", "comma-separated list of distributions (globs supported)")
 	flag.Var(&imgTypes, "types", "comma-separated list of image types (globs supported)")
@@ -541,7 +504,7 @@ func main() {
 
 	fmt.Println("Collecting jobs")
 
-	distros, invalidDistros := resolveArgValues(distros, testedRepoRegistry.ListDistros())
+	distros, invalidDistros := distros.ResolveArgValues(testedRepoRegistry.ListDistros())
 	if len(invalidDistros) > 0 {
 		fmt.Fprintf(os.Stderr, "WARNING: invalid distro names: [%s]\n", strings.Join(invalidDistros, ","))
 	}
@@ -552,7 +515,7 @@ func main() {
 			continue
 		}
 
-		distroArches, invalidArches := resolveArgValues(arches, distribution.ListArches())
+		distroArches, invalidArches := arches.ResolveArgValues(distribution.ListArches())
 		if len(invalidArches) > 0 {
 			fmt.Fprintf(os.Stderr, "WARNING: invalid arch names [%s] for distro %q\n", strings.Join(invalidArches, ","), distroName)
 		}
@@ -563,7 +526,7 @@ func main() {
 				panic(fmt.Sprintf("invalid arch name %q for distro %q: %s\n", archName, distroName, err.Error()))
 			}
 
-			daImgTypes, invalidImageTypes := resolveArgValues(imgTypes, arch.ListImageTypes())
+			daImgTypes, invalidImageTypes := imgTypes.ResolveArgValues(arch.ListImageTypes())
 			if len(invalidImageTypes) > 0 {
 				fmt.Fprintf(os.Stderr, "WARNING: invalid image type names [%s] for distro %q and arch %q\n", strings.Join(invalidImageTypes, ","), distroName, archName)
 			}
