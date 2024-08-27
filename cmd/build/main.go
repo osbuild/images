@@ -188,6 +188,10 @@ func run() error {
 	flag.StringVar(&osbuildStore, "store", ".osbuild", "osbuild store for intermediate pipeline trees")
 	flag.StringVar(&rpmCacheRoot, "rpmmd", "/tmp/rpmmd", "rpm metadata cache directory")
 
+	// osbuild checkpoint arg
+	var checkpoints cmdutil.MultiValue
+	flag.Var(&checkpoints, "checkpoints", "comma-separated list of pipeline names to checkpoint (passed to osbuild --checkpoint)")
+
 	// image selection args
 	var distroName, imgTypeName, configFile string
 	flag.StringVar(&distroName, "distro", "", "distribution (required)")
@@ -263,7 +267,7 @@ func run() error {
 	fmt.Printf("Building manifest: %s\n", manifestPath)
 
 	jobOutput := filepath.Join(outputDir, buildName)
-	_, err = osbuild.RunOSBuild(mf, osbuildStore, jobOutput, imgType.Exports(), nil, nil, false, os.Stderr)
+	_, err = osbuild.RunOSBuild(mf, osbuildStore, jobOutput, imgType.Exports(), checkpoints, nil, false, os.Stderr)
 	if err != nil {
 		return err
 	}
