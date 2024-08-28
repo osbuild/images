@@ -46,9 +46,8 @@ func validatePTSize(pt *PartitionTable) error {
 // validateEntitySize checks that every sizeable under a given Entity can be
 // contained in the given size.
 func validateEntitySize(ent Entity, size uint64) error {
-	if ent.IsContainer() {
+	if cont, ok := ent.(Container); ok {
 		containerTotal := uint64(0)
-		cont := ent.(Container)
 		for idx := uint(0); idx < cont.GetItemCount(); idx++ {
 			child := cont.GetChild(idx)
 			var childSize uint64
