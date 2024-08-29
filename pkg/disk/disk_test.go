@@ -420,6 +420,26 @@ func TestDisk_ForEachEntity(t *testing.T) {
 	assert.Equal(t, 8, count)
 }
 
+// blueprintApplied checks if the blueprint was applied correctly
+// returns nil if the blueprint was applied correctly, an error otherwise
+func blueprintApplied(pt *PartitionTable, bp []blueprint.FilesystemCustomization) error {
+	for _, mnt := range bp {
+		path := entityPath(pt, mnt.Mountpoint)
+		if path == nil {
+			return fmt.Errorf("mountpoint %s not found", mnt.Mountpoint)
+		}
+		for idx, ent := range path {
+			if sz, ok := ent.(Sizeable); ok {
+				if sz.GetSize() < mnt.MinSize {
+					return fmt.Errorf("entity %d in the path from %s is smaller (%d) than the requested minsize %d", idx, mnt.Mountpoint, sz.GetSize(), mnt.MinSize)
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
 func TestCreatePartitionTable(t *testing.T) {
 	assert := assert.New(t)
 
@@ -467,6 +487,7 @@ func TestCreatePartitionTable(t *testing.T) {
 			assert.NotNil(mnt, "PT %q BP %q: failed to find root mountable", ptName, bpName)
 
 			assert.NoError(mpt.ForEachMountable(sizeCheckCB))
+			assert.NoError(blueprintApplied(mpt, bp), "PT %q BP %q: blueprint check failed", ptName, bpName)
 		}
 	}
 }
@@ -504,6 +525,7 @@ func TestCreatePartitionTableLVMify(t *testing.T) {
 				_, ok := parent.(*LVMLogicalVolume)
 				assert.True(ok, "PT %q BP %q: root's parent (%q) is not an LVM logical volume", ptName, bpName, parent)
 			}
+			assert.NoError(blueprintApplied(mpt, tbp), "PT %q BP %q: blueprint check failed", ptName, bpName)
 		}
 	}
 }
@@ -541,6 +563,7 @@ func TestCreatePartitionTableBtrfsify(t *testing.T) {
 				_, ok := parent.(*Btrfs)
 				assert.True(ok, "PT %q BP %q: root's parent (%+v) is not an btrfs volume but %T", ptName, bpName, parent, parent)
 			}
+			assert.NoError(blueprintApplied(mpt, tbp), "PT %q BP %q: blueprint check failed", ptName, bpName)
 		}
 	}
 }
@@ -620,6 +643,8 @@ func TestCreatePartitionTableLVMOnly(t *testing.T) {
 
 			assert.True(ok, "PT %q BP %q: root VG top level entity (%+v) is not a partition", ptName, bpName, rootTop)
 			assert.GreaterOrEqualf(vgPart.Size, lvsum, "PT %q BP %q: VG partition's size (%d) is smaller than the sum of logical volumes (%d)", ptName, bpName, vgPart.Size, lvsum)
+
+			assert.NoError(blueprintApplied(mpt, tbp), "PT %q BP %q: blueprint check failed", ptName, bpName)
 		}
 	}
 }
