@@ -575,9 +575,7 @@ func (p *AnacondaInstallerISOTree) makeKickstartStages(stageOptions *osbuild.Kic
 				panic(err)
 			}
 
-			p.Files = []*fsnode.File{kickstartFile}
-
-			stages = append(stages, osbuild.GenFileNodesStages(p.Files)...)
+			p.Files = append(p.Files, kickstartFile)
 		}
 	}
 
@@ -638,6 +636,19 @@ func (p *AnacondaInstallerISOTree) makeKickstartStages(stageOptions *osbuild.Kic
 
 		}
 		hardcodedKickstartBits += makeKickstartSubscriptionPost(subscriptionPath, systemPath)
+
+		// include a readme file on the ISO in the subscription path to explain what it's for
+		subscriptionReadme, err := fsnode.NewFile(
+			filepath.Join(subscriptionPath, "README"),
+			nil, nil, nil,
+			[]byte(`Subscription services and credentials
+
+This directory contains files necessary for registering the system on first boot after installation. These files are copied to the installed system and services are enabled to activate the subscription on boot.`),
+		)
+		if err != nil {
+			panic(err)
+		}
+		p.Files = append(p.Files, subscriptionReadme)
 	}
 
 	if hardcodedKickstartBits != "" {
@@ -648,10 +659,9 @@ func (p *AnacondaInstallerISOTree) makeKickstartStages(stageOptions *osbuild.Kic
 			panic(err)
 		}
 
-		p.Files = []*fsnode.File{kickstartFile}
-
-		stages = append(stages, osbuild.GenFileNodesStages(p.Files)...)
+		p.Files = append(p.Files, kickstartFile)
 	}
+	stages = append(stages, osbuild.GenFileNodesStages(p.Files)...)
 
 	return stages
 }
@@ -693,7 +703,7 @@ restorecon -rvF /etc/sudoers.d
 
 func makeKickstartSubscriptionPost(source, dest string) string {
 	// we need to use --nochroot so the command can access files on the ISO
-	fullSourcePath := filepath.Join("/run/install/repo", source, "/*")
+	fullSourcePath := filepath.Join("/run/install/repo", source, "etc/*")
 	kickstartSubscriptionPost := `
 %%post --nochroot
 cp -r %s %s
