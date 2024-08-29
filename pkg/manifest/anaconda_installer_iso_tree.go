@@ -451,7 +451,7 @@ func (p *AnacondaInstallerISOTree) bootcInstallerKickstartStages() []*osbuild.St
 		if err != nil {
 			panic(err)
 		}
-		p.Files = []*fsnode.File{kickstartFile}
+		p.Files = append(p.Files, kickstartFile)
 		return append(stages, osbuild.GenFileNodesStages(p.Files)...)
 	}
 
@@ -521,8 +521,7 @@ bootc switch --mutate-in-place --transport %s %s
 		panic(err)
 	}
 
-	p.Files = []*fsnode.File{kickstartFile}
-
+	p.Files = append(p.Files, kickstartFile)
 	return append(stages, osbuild.GenFileNodesStages(p.Files)...)
 }
 
