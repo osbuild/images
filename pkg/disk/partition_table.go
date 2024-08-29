@@ -781,6 +781,7 @@ func (pt *PartitionTable) ensureBtrfs() error {
 					Mountpoint: "/",
 					Compress:   DefaultBtrfsCompression,
 					ReadOnly:   opts.ReadOnly(),
+					Size:       part.Size,
 				},
 			},
 		}
