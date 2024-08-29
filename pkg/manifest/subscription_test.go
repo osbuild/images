@@ -221,6 +221,161 @@ func TestSubscriptionService(t *testing.T) {
 			expectedDirs:     make([]*fsnode.Directory, 0),
 			expectedServices: []string{serviceFilename},
 		},
+		"insights-on-boot": {
+			subOpts: subscription.ImageOptions{
+				Organization:  "theorg-iob",
+				ActivationKey: "thekey-iob",
+				ServerUrl:     "theserverurl-iob",
+				BaseUrl:       "thebaseurl-iob",
+				Insights:      true,
+				Rhc:           false,
+			},
+			srvcOpts: &subscriptionServiceOptions{
+				InsightsOnBoot: true,
+			},
+			expectedStage: &osbuild.Stage{
+				Type: stageType,
+				Options: &osbuild.SystemdUnitCreateStageOptions{
+					Filename: serviceFilename,
+					UnitType: unitType,
+					UnitPath: osbuild.UsrUnitPath,
+					Config: osbuild.SystemdServiceUnit{
+						Unit: &osbuild.Unit{
+							Description: serviceDescription,
+							ConditionPathExists: []string{
+								subkeyFilepath,
+							},
+							Wants: serviceWants,
+							After: serviceAfter,
+						},
+						Service: &osbuild.Service{
+							Type: osbuild.OneshotServiceType,
+							ExecStart: []string{
+								"/usr/sbin/subscription-manager register --org=${ORG_ID} --activationkey=${ACTIVATION_KEY} --serverurl theserverurl-iob --baseurl thebaseurl-iob",
+								"/usr/bin/insights-client --register", // added when insights is enabled
+								"restorecon -R /root/.gnupg",          // added when insights is enabled
+								"/usr/bin/rm " + subkeyFilepath,
+							},
+							EnvironmentFile: []string{
+								subkeyFilepath,
+							},
+						},
+						Install: &osbuild.Install{
+							WantedBy: serviceWantedBy,
+						},
+					},
+				},
+			},
+			expectedFiles: []*fsnode.File{
+				mkKeyfile("theorg-iob", "thekey-iob"),
+				mkInsightsDropinFile(),
+			},
+			expectedDirs:     []*fsnode.Directory{mkInsightsDropinDir()},
+			expectedServices: []string{serviceFilename},
+		},
+		"etc-unit-path": {
+			subOpts: subscription.ImageOptions{
+				Organization:  "theorg-etc",
+				ActivationKey: "thekey-etc",
+				ServerUrl:     "theserverurl-etc",
+				BaseUrl:       "thebaseurl-etc",
+				Insights:      false,
+				Rhc:           false,
+			},
+			srvcOpts: &subscriptionServiceOptions{
+				InsightsOnBoot: true,
+				UnitPath:       osbuild.EtcUnitPath,
+			},
+			expectedStage: &osbuild.Stage{
+				Type: stageType,
+				Options: &osbuild.SystemdUnitCreateStageOptions{
+					Filename: serviceFilename,
+					UnitType: unitType,
+					UnitPath: osbuild.EtcUnitPath,
+					Config: osbuild.SystemdServiceUnit{
+						Unit: &osbuild.Unit{
+							Description: serviceDescription,
+							ConditionPathExists: []string{
+								subkeyFilepath,
+							},
+							Wants: serviceWants,
+							After: serviceAfter,
+						},
+						Service: &osbuild.Service{
+							Type: osbuild.OneshotServiceType,
+							ExecStart: []string{
+								"/usr/sbin/subscription-manager register --org=${ORG_ID} --activationkey=${ACTIVATION_KEY} --serverurl theserverurl-etc --baseurl thebaseurl-etc",
+								"/usr/bin/rm " + subkeyFilepath,
+							},
+							EnvironmentFile: []string{
+								subkeyFilepath,
+							},
+						},
+						Install: &osbuild.Install{
+							WantedBy: serviceWantedBy,
+						},
+					},
+				},
+			},
+			expectedFiles: []*fsnode.File{
+				mkKeyfile("theorg-etc", "thekey-etc"),
+			},
+			expectedDirs:     make([]*fsnode.Directory, 0),
+			expectedServices: []string{serviceFilename},
+		},
+		"insights-on-boot+etc-unit-path": {
+			subOpts: subscription.ImageOptions{
+				Organization:  "theorg-iob-etc",
+				ActivationKey: "thekey-iob-etc",
+				ServerUrl:     "theserverurl-iob-etc",
+				BaseUrl:       "thebaseurl-iob-etc",
+				Insights:      true,
+				Rhc:           false,
+			},
+			srvcOpts: &subscriptionServiceOptions{
+				InsightsOnBoot: true,
+				UnitPath:       osbuild.EtcUnitPath,
+			},
+			expectedStage: &osbuild.Stage{
+				Type: stageType,
+				Options: &osbuild.SystemdUnitCreateStageOptions{
+					Filename: serviceFilename,
+					UnitType: unitType,
+					UnitPath: osbuild.EtcUnitPath,
+					Config: osbuild.SystemdServiceUnit{
+						Unit: &osbuild.Unit{
+							Description: serviceDescription,
+							ConditionPathExists: []string{
+								subkeyFilepath,
+							},
+							Wants: serviceWants,
+							After: serviceAfter,
+						},
+						Service: &osbuild.Service{
+							Type: osbuild.OneshotServiceType,
+							ExecStart: []string{
+								"/usr/sbin/subscription-manager register --org=${ORG_ID} --activationkey=${ACTIVATION_KEY} --serverurl theserverurl-iob-etc --baseurl thebaseurl-iob-etc",
+								"/usr/bin/insights-client --register", // added when insights is enabled
+								"restorecon -R /root/.gnupg",          // added when insights is enabled
+								"/usr/bin/rm " + subkeyFilepath,
+							},
+							EnvironmentFile: []string{
+								subkeyFilepath,
+							},
+						},
+						Install: &osbuild.Install{
+							WantedBy: serviceWantedBy,
+						},
+					},
+				},
+			},
+			expectedFiles: []*fsnode.File{
+				mkKeyfile("theorg-iob-etc", "thekey-iob-etc"),
+				mkInsightsDropinFile(),
+			},
+			expectedDirs:     []*fsnode.Directory{mkInsightsDropinDir()},
+			expectedServices: []string{serviceFilename},
+		},
 	}
 
 	for name := range testCases {
@@ -244,4 +399,26 @@ func mkKeyfile(org, key string) *fsnode.File {
 	}
 
 	return file
+}
+
+func mkInsightsDropinFile() *fsnode.File {
+	dropinContents := `[Unit]
+Requisite=greenboot-healthcheck.service
+After=network-online.target greenboot-healthcheck.service osbuild-first-boot.service
+[Install]
+WantedBy=multi-user.target`
+	icDropinFile, err := fsnode.NewFile("/etc/systemd/system/insights-client.service.d/override.conf", nil, "root", "root", []byte(dropinContents))
+	if err != nil {
+		panic(err)
+	}
+	return icDropinFile
+}
+
+func mkInsightsDropinDir() *fsnode.Directory {
+
+	icDropinDirectory, err := fsnode.NewDirectory("/etc/systemd/system/insights-client.service.d", nil, "root", "root", true)
+	if err != nil {
+		panic(err)
+	}
+	return icDropinDirectory
 }
