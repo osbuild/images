@@ -515,28 +515,23 @@ func (pt *PartitionTable) createFilesystem(mountpoint string, size uint64) error
 		panic("no root mountpoint for PartitionTable")
 	}
 
-	var vc MountpointCreator
-	var entity Entity
-	var idx int
-	for idx, entity = range rootPath {
-		var ok bool
-		if vc, ok = entity.(MountpointCreator); ok {
-			break
+	for idx, entity := range rootPath {
+		vc, ok := entity.(MountpointCreator)
+		if !ok {
+			continue
 		}
+
+		newVol, err := vc.CreateMountpoint(mountpoint, 0)
+		if err != nil {
+			return fmt.Errorf("failed creating volume: " + err.Error())
+		}
+		vcPath := append([]Entity{newVol}, rootPath[idx:]...)
+		size = alignEntityBranch(vcPath, size)
+		resizeEntityBranch(vcPath, size)
+		return nil
 	}
 
-	if vc == nil {
-		panic("could not find root volume container")
-	}
-
-	newVol, err := vc.CreateMountpoint(mountpoint, 0)
-	if err != nil {
-		return fmt.Errorf("failed creating volume: " + err.Error())
-	}
-	vcPath := append([]Entity{newVol}, rootPath[idx:]...)
-	size = alignEntityBranch(vcPath, size)
-	resizeEntityBranch(vcPath, size)
-	return nil
+	return fmt.Errorf("could not find a suitable container for mountpoint %s", mountpoint)
 }
 
 // entityPath starts at ent (usually a partition table) and traverses it until
