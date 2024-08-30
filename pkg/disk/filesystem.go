@@ -98,3 +98,13 @@ func (fs *Filesystem) GenUUID(rng *rand.Rand) {
 		fs.UUID = uuid.Must(newRandomUUIDFromReader(rng)).String()
 	}
 }
+
+func createFilesystem(mountpoint string) *Filesystem {
+	return &Filesystem{
+		Type:         "xfs",
+		Mountpoint:   mountpoint,
+		FSTabOptions: "defaults",
+		FSTabFreq:    0,
+		FSTabPassNo:  0,
+	}
+}

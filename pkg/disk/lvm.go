@@ -72,16 +72,7 @@ func (vg *LVMVolumeGroup) GetChild(n uint) Entity {
 }
 
 func (vg *LVMVolumeGroup) CreateMountpoint(mountpoint string, size uint64) (Entity, error) {
-
-	filesystem := Filesystem{
-		Type:         "xfs",
-		Mountpoint:   mountpoint,
-		FSTabOptions: "defaults",
-		FSTabFreq:    0,
-		FSTabPassNo:  0,
-	}
-
-	return vg.CreateLogicalVolume(mountpoint, size, &filesystem)
+	return vg.CreateLogicalVolume(mountpoint, size, createFilesystem(mountpoint))
 }
 
 func (vg *LVMVolumeGroup) CreateLogicalVolume(lvName string, size uint64, payload Entity) (Entity, error) {

@@ -324,17 +324,9 @@ func (pt *PartitionTable) EnsureDirectorySizes(dirSizeMap map[string]uint64) {
 }
 
 func (pt *PartitionTable) CreateMountpoint(mountpoint string, size uint64) (Entity, error) {
-	filesystem := Filesystem{
-		Type:         "xfs",
-		Mountpoint:   mountpoint,
-		FSTabOptions: "defaults",
-		FSTabFreq:    0,
-		FSTabPassNo:  0,
-	}
-
 	partition := Partition{
 		Size:    size,
-		Payload: &filesystem,
+		Payload: createFilesystem(mountpoint),
 	}
 
 	n := len(pt.Partitions)
