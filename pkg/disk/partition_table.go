@@ -225,7 +225,7 @@ func (pt *PartitionTable) SectorsToBytes(size uint64) uint64 {
 // Returns if the partition table contains a filesystem with the given
 // mount point.
 func (pt *PartitionTable) ContainsMountpoint(mountpoint string) bool {
-	return len(entityPath(pt, mountpoint)) > 0
+	return len(entityPathForMountpoint(pt, mountpoint)) > 0
 }
 
 // Generate all needed UUIDs for all the partiton and filesystems
@@ -275,7 +275,7 @@ func (pt *PartitionTable) EnsureSize(s uint64) bool {
 }
 
 func (pt *PartitionTable) findDirectoryEntityPath(dir string) []Entity {
-	if path := entityPath(pt, dir); path != nil {
+	if path := entityPathForMountpoint(pt, dir); path != nil {
 		return path
 	}
 
@@ -429,7 +429,7 @@ func (pt *PartitionTable) applyCustomization(mountpoints []blueprint.FilesystemC
 
 	for _, mnt := range mountpoints {
 		size := clampFSSize(mnt.Mountpoint, mnt.MinSize)
-		if path := entityPath(pt, mnt.Mountpoint); len(path) != 0 {
+		if path := entityPathForMountpoint(pt, mnt.Mountpoint); len(path) != 0 {
 			size = alignEntityBranch(path, size)
 			resizeEntityBranch(path, size)
 		} else {
@@ -465,7 +465,7 @@ func (pt *PartitionTable) relayout(size uint64) uint64 {
 	var rootIdx = -1
 	for idx := range pt.Partitions {
 		partition := &pt.Partitions[idx]
-		if len(entityPath(partition, "/")) != 0 {
+		if len(entityPathForMountpoint(partition, "/")) != 0 {
 			// keep the root partition index to handle after all the other
 			// partitions have been moved and resized
 			rootIdx = idx
@@ -510,7 +510,7 @@ func (pt *PartitionTable) relayout(size uint64) uint64 {
 }
 
 func (pt *PartitionTable) createFilesystem(mountpoint string, size uint64) error {
-	rootPath := entityPath(pt, "/")
+	rootPath := entityPathForMountpoint(pt, "/")
 	if rootPath == nil {
 		panic("no root mountpoint for PartitionTable")
 	}
@@ -539,13 +539,13 @@ func (pt *PartitionTable) createFilesystem(mountpoint string, size uint64) error
 	return nil
 }
 
-// entityPath stats at ent and searches for an Entity with a Mountpoint equal
+// entityPathForMountpoint stats at ent and searches for an Entity with a Mountpoint equal
 // to the target. Returns a slice of all the Entities leading to the Mountable
 // in reverse order. If no Entity has the target as a Mountpoint, returns nil.
 // If a slice is returned, the last element is always the starting Entity ent
 // and the first element is always a Mountable with a Mountpoint equal to the
 // target.
-func entityPath(ent Entity, target string) []Entity {
+func entityPathForMountpoint(ent Entity, target string) []Entity {
 	switch e := ent.(type) {
 	case Mountable:
 		if target == e.GetMountpoint() {
@@ -554,7 +554,7 @@ func entityPath(ent Entity, target string) []Entity {
 	case Container:
 		for idx := uint(0); idx < e.GetItemCount(); idx++ {
 			child := e.GetChild(idx)
-			path := entityPath(child, target)
+			path := entityPathForMountpoint(child, target)
 			if path != nil {
 				path = append(path, e)
 				return path
@@ -593,7 +593,7 @@ func (pt *PartitionTable) ForEachMountable(cb MountableCallback) error {
 // FindMountable returns the Mountable entity with the given mountpoint in the
 // PartitionTable. Returns nil if no Entity has the target as a Mountpoint.
 func (pt *PartitionTable) FindMountable(mountpoint string) Mountable {
-	path := entityPath(pt, mountpoint)
+	path := entityPathForMountpoint(pt, mountpoint)
 
 	if len(path) == 0 {
 		return nil
@@ -684,13 +684,13 @@ func (pt *PartitionTable) GenUUID(rng *rand.Rand) {
 // it currently is not, it will wrap it in one
 func (pt *PartitionTable) ensureLVM() error {
 
-	rootPath := entityPath(pt, "/")
+	rootPath := entityPathForMountpoint(pt, "/")
 	if rootPath == nil {
 		panic("no root mountpoint for PartitionTable")
 	}
 
 	// we need a /boot partition to boot LVM, ensure one exists
-	bootPath := entityPath(pt, "/boot")
+	bootPath := entityPathForMountpoint(pt, "/boot")
 	if bootPath == nil {
 		_, err := pt.CreateMountpoint("/boot", 512*common.MiB)
 
@@ -698,7 +698,7 @@ func (pt *PartitionTable) ensureLVM() error {
 			return err
 		}
 
-		rootPath = entityPath(pt, "/")
+		rootPath = entityPathForMountpoint(pt, "/")
 	}
 
 	parent := rootPath[1] // NB: entityPath has reversed order
@@ -743,20 +743,20 @@ func (pt *PartitionTable) ensureLVM() error {
 // it currently is not, it will wrap it in one
 func (pt *PartitionTable) ensureBtrfs() error {
 
-	rootPath := entityPath(pt, "/")
+	rootPath := entityPathForMountpoint(pt, "/")
 	if rootPath == nil {
 		return fmt.Errorf("no root mountpoint for a partition table: %#v", pt)
 	}
 
 	// we need a /boot partition to boot btrfs, ensure one exists
-	bootPath := entityPath(pt, "/boot")
+	bootPath := entityPathForMountpoint(pt, "/boot")
 	if bootPath == nil {
 		_, err := pt.CreateMountpoint("/boot", 512*common.MiB)
 		if err != nil {
 			return fmt.Errorf("failed to create /boot partition when ensuring btrfs: %w", err)
 		}
 
-		rootPath = entityPath(pt, "/")
+		rootPath = entityPathForMountpoint(pt, "/")
 	}
 
 	parent := rootPath[1] // NB: entityPath has reversed order
@@ -881,7 +881,7 @@ func (pt *PartitionTable) GetBuildPackages() []string {
 // GetMountpointSize takes a mountpoint and returns the size of the entity this
 // mountpoint belongs to.
 func (pt *PartitionTable) GetMountpointSize(mountpoint string) (uint64, error) {
-	path := entityPath(pt, mountpoint)
+	path := entityPathForMountpoint(pt, mountpoint)
 	if path == nil {
 		return 0, fmt.Errorf("cannot find mountpoint %s", mountpoint)
 	}

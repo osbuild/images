@@ -424,7 +424,7 @@ func TestDisk_ForEachEntity(t *testing.T) {
 // returns nil if the blueprint was applied correctly, an error otherwise
 func blueprintApplied(pt *PartitionTable, bp []blueprint.FilesystemCustomization) error {
 	for _, mnt := range bp {
-		path := entityPath(pt, mnt.Mountpoint)
+		path := entityPathForMountpoint(pt, mnt.Mountpoint)
 		if path == nil {
 			return fmt.Errorf("mountpoint %s not found", mnt.Mountpoint)
 		}
@@ -510,12 +510,12 @@ func TestCreatePartitionTableLVMify(t *testing.T) {
 			mpt, err := NewPartitionTable(&pt, tbp, uint64(13*MiB), AutoLVMPartitioningMode, nil, rng)
 			assert.NoError(err, "PT %q BP %q: Partition table generation failed: (%s)", ptName, bpName, err)
 
-			rootPath := entityPath(mpt, "/")
+			rootPath := entityPathForMountpoint(mpt, "/")
 			if rootPath == nil {
 				panic(fmt.Sprintf("PT %q BP %q: no root mountpoint", ptName, bpName))
 			}
 
-			bootPath := entityPath(mpt, "/boot")
+			bootPath := entityPathForMountpoint(mpt, "/boot")
 			if tbp != nil && bootPath == nil {
 				panic(fmt.Sprintf("PT %q BP %q: no boot mountpoint", ptName, bpName))
 			}
@@ -548,12 +548,12 @@ func TestCreatePartitionTableBtrfsify(t *testing.T) {
 			mpt, err := NewPartitionTable(&pt, tbp, uint64(13*MiB), BtrfsPartitioningMode, nil, rng)
 			assert.NoError(err, "PT %q BP %q: Partition table generation failed: (%s)", ptName, bpName, err)
 
-			rootPath := entityPath(mpt, "/")
+			rootPath := entityPathForMountpoint(mpt, "/")
 			if rootPath == nil {
 				panic(fmt.Sprintf("PT %q BP %q: no root mountpoint", ptName, bpName))
 			}
 
-			bootPath := entityPath(mpt, "/boot")
+			bootPath := entityPathForMountpoint(mpt, "/boot")
 			if tbp != nil && bootPath == nil {
 				panic(fmt.Sprintf("PT %q BP %q: no boot mountpoint", ptName, bpName))
 			}
@@ -586,12 +586,12 @@ func TestCreatePartitionTableLVMOnly(t *testing.T) {
 			mpt, err := NewPartitionTable(&pt, tbp, uint64(13*MiB), LVMPartitioningMode, nil, rng)
 			require.NoError(t, err, "PT %q BP %q: Partition table generation failed: (%s)", ptName, bpName, err)
 
-			rootPath := entityPath(mpt, "/")
+			rootPath := entityPathForMountpoint(mpt, "/")
 			if rootPath == nil {
 				panic(fmt.Sprintf("PT %q BP %q: no root mountpoint", ptName, bpName))
 			}
 
-			bootPath := entityPath(mpt, "/boot")
+			bootPath := entityPathForMountpoint(mpt, "/boot")
 			if tbp != nil && bootPath == nil {
 				panic(fmt.Sprintf("PT %q BP %q: no boot mountpoint", ptName, bpName))
 			}
@@ -610,7 +610,7 @@ func TestCreatePartitionTableLVMOnly(t *testing.T) {
 					// not on LVM; skipping
 					continue
 				}
-				mntPath := entityPath(mpt, mnt.Mountpoint)
+				mntPath := entityPathForMountpoint(mpt, mnt.Mountpoint)
 				mntParent := mntPath[1]
 				mntLV, ok := mntParent.(*LVMLogicalVolume) // the partition's parent should be the logical volume
 				assert.True(ok, "PT %q BP %q: %s's parent (%+v) is not an LVM logical volume", ptName, bpName, mnt.Mountpoint, mntParent)
@@ -738,7 +738,7 @@ func TestMinimumSizes(t *testing.T) {
 			mpt, err := NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), RawPartitioningMode, nil, rng)
 			assert.NoError(err)
 			for mnt, minSize := range tc.ExpectedMinSizes {
-				path := entityPath(mpt, mnt)
+				path := entityPathForMountpoint(mpt, mnt)
 				assert.NotNil(path, "[%d] mountpoint %q not found", idx, mnt)
 				parent := path[1]
 				part, ok := parent.(*Partition)
@@ -752,7 +752,7 @@ func TestMinimumSizes(t *testing.T) {
 			mpt, err := NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), AutoLVMPartitioningMode, nil, rng)
 			assert.NoError(err)
 			for mnt, minSize := range tc.ExpectedMinSizes {
-				path := entityPath(mpt, mnt)
+				path := entityPathForMountpoint(mpt, mnt)
 				assert.NotNil(path, "[%d] mountpoint %q not found", idx, mnt)
 				parent := path[1]
 				part, ok := parent.(*LVMLogicalVolume)
@@ -839,7 +839,7 @@ func TestLVMExtentAlignment(t *testing.T) {
 		mpt, err := NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), AutoLVMPartitioningMode, nil, rng)
 		assert.NoError(err)
 		for mnt, expSize := range tc.ExpectedSizes {
-			path := entityPath(mpt, mnt)
+			path := entityPathForMountpoint(mpt, mnt)
 			assert.NotNil(path, "[%d] mountpoint %q not found", idx, mnt)
 			parent := path[1]
 			part, ok := parent.(*LVMLogicalVolume)
@@ -870,7 +870,7 @@ func TestNewBootWithSizeLVMify(t *testing.T) {
 
 	for idx, c := range custom {
 		mnt, minSize := c.Mountpoint, c.MinSize
-		path := entityPath(mpt, mnt)
+		path := entityPathForMountpoint(mpt, mnt)
 		assert.NotNil(path, "[%d] mountpoint %q not found", idx, mnt)
 		parent := path[1]
 		part, ok := parent.(*Partition)
@@ -1208,7 +1208,7 @@ func TestMinimumSizesWithRequiredSizes(t *testing.T) {
 			mpt, err := NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), RawPartitioningMode, map[string]uint64{"/": 1 * GiB, "/usr": 3 * GiB}, rng)
 			assert.NoError(err)
 			for mnt, minSize := range tc.ExpectedMinSizes {
-				path := entityPath(mpt, mnt)
+				path := entityPathForMountpoint(mpt, mnt)
 				assert.NotNil(path, "[%d] mountpoint %q not found", idx, mnt)
 				parent := path[1]
 				part, ok := parent.(*Partition)
@@ -1222,7 +1222,7 @@ func TestMinimumSizesWithRequiredSizes(t *testing.T) {
 			mpt, err := NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), AutoLVMPartitioningMode, map[string]uint64{"/": 1 * GiB, "/usr": 3 * GiB}, rng)
 			assert.NoError(err)
 			for mnt, minSize := range tc.ExpectedMinSizes {
-				path := entityPath(mpt, mnt)
+				path := entityPathForMountpoint(mpt, mnt)
 				assert.NotNil(path, "[%d] mountpoint %q not found", idx, mnt)
 				parent := path[1]
 				part, ok := parent.(*LVMLogicalVolume)
