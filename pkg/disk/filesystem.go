@@ -52,6 +52,11 @@ func (fs *Filesystem) GetMountpoint() string {
 	if fs == nil {
 		return ""
 	}
+
+	if fs.Type == "swap" {
+		return "none"
+	}
+
 	return fs.Mountpoint
 }
 

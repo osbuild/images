@@ -55,7 +55,7 @@ func TestAddFilesystem(t *testing.T) {
 }
 
 func TestNewFSTabStageOptions(t *testing.T) {
-	pt := testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi", "/home")
+	pt := testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi", "/home", "swap")
 
 	opts, err := NewFSTabStageOptions(pt)
 	require.NoError(t, err)
@@ -81,6 +81,10 @@ func TestNewFSTabStageOptions(t *testing.T) {
 				UUID:    disk.FilesystemDataUUID,
 				VFSType: "ext4",
 				Path:    "/home",
+			},
+			{
+				VFSType: "swap",
+				Path:    "none",
 			},
 		},
 	}, opts)
