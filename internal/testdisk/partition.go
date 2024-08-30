@@ -22,6 +22,8 @@ func MakeFakePartitionTable(mntPoints ...string) *disk.PartitionTable {
 		case "/boot/efi":
 			payload.UUID = disk.EFIFilesystemUUID
 			payload.Type = "vfat"
+		case "swap":
+			payload.Type = "swap"
 		default:
 			payload.UUID = disk.FilesystemDataUUID
 		}
@@ -70,6 +72,15 @@ func MakeFakeBtrfsPartitionTable(mntPoints ...string) *disk.PartitionTable {
 				},
 			})
 			size += 100 * common.MiB
+		case "swap":
+			pt.Partitions = append(pt.Partitions, disk.Partition{
+				Start: size,
+				Size:  1 * common.GiB,
+				Payload: &disk.Filesystem{
+					Type: "swap",
+				},
+			})
+			size += 1 * common.GiB
 		default:
 			name := mntPoint
 			if name == "/" {
@@ -104,6 +115,7 @@ func MakeFakeBtrfsPartitionTable(mntPoints ...string) *disk.PartitionTable {
 
 // MakeFakeLVMPartitionTable is similar to MakeFakePartitionTable but
 // creates a lvm-based partition table.
+// Note that mntPoint "swap" is created as a LV-based swap filesystem.
 func MakeFakeLVMPartitionTable(mntPoints ...string) *disk.PartitionTable {
 	var lvs []disk.LVMLogicalVolume
 	pt := &disk.PartitionTable{
@@ -140,12 +152,17 @@ func MakeFakeLVMPartitionTable(mntPoints ...string) *disk.PartitionTable {
 			if name == "/" {
 				name = "lvroot"
 			}
+			fsType := "xfs"
+			if mntPoint == "swap" {
+				fsType = "swap"
+			}
+
 			lvs = append(
 				lvs,
 				disk.LVMLogicalVolume{
 					Name: name,
 					Payload: &disk.Filesystem{
-						Type:       "xfs",
+						Type:       fsType,
 						Mountpoint: mntPoint,
 					},
 				},
