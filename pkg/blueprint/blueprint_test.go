@@ -23,16 +23,16 @@ version = "2.4.*"
 
 [[customizations.filesystem]]
 mountpoint = "/var"
-size = 2147483648
+minsize = 2147483648
 
 [[customizations.filesystem]]
 mountpoint = "/opt"
-size = "20 GB"
+minsize = "20 GB"
 `
 
 	var bp Blueprint
 	err := toml.Unmarshal([]byte(blueprint), &bp)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, bp.Name, "test")
 	assert.Equal(t, "/var", bp.Customizations.Filesystem[0].Mountpoint)
 	assert.Equal(t, uint64(2147483648), bp.Customizations.Filesystem[0].MinSize)
@@ -49,7 +49,7 @@ size = "20 GB"
 		}
 	  }`
 	err = json.Unmarshal([]byte(blueprint), &bp)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, bp.Name, "test")
 	assert.Equal(t, "/opt", bp.Customizations.Filesystem[0].Mountpoint)
 	assert.Equal(t, uint64(20*common.GiB), bp.Customizations.Filesystem[0].MinSize)
