@@ -65,6 +65,12 @@ func GenMkfsStages(pt *disk.PartitionTable, filename string) []*Stage {
 				Label: fsSpec.Label,
 			}
 			stage = NewMkfsExt4Stage(options, stageDevices)
+		case "swap":
+			options := &MkswapStageOptions{
+				UUID:  fsSpec.UUID,
+				Label: fsSpec.Label,
+			}
+			stage = NewMkswapStage(options, stageDevices)
 		default:
 			panic("unknown fs type " + t)
 		}

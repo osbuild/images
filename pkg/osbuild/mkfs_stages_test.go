@@ -76,7 +76,7 @@ func TestNewMkfsStage(t *testing.T) {
 }
 
 func TestGenMkfsStages(t *testing.T) {
-	pt := testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi")
+	pt := testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi", "swap")
 	stages := GenMkfsStages(pt, "file.img")
 	assert.Equal(t, []*Stage{
 		{
@@ -116,6 +116,21 @@ func TestGenMkfsStages(t *testing.T) {
 			Options: &MkfsFATStageOptions{
 				VolID: strings.ReplaceAll(disk.EFIFilesystemUUID, "-", ""),
 			},
+			Devices: map[string]Device{
+				"device": {
+					Type: "org.osbuild.loopback",
+					Options: &LoopbackDeviceOptions{
+						Filename: "file.img",
+						Size:     testdisk.FakePartitionSize / disk.DefaultSectorSize,
+						Lock:     true,
+					},
+				},
+			},
+		},
+
+		{
+			Type:    "org.osbuild.mkswap",
+			Options: &MkswapStageOptions{},
 			Devices: map[string]Device{
 				"device": {
 					Type: "org.osbuild.loopback",
@@ -186,7 +201,7 @@ func TestGenMkfsStagesBtrfs(t *testing.T) {
 	}, stages)
 }
 func TestGenMkfsStagesLVM(t *testing.T) {
-	pt := testdisk.MakeFakeLVMPartitionTable("/", "/boot", "/boot/efi", "/home")
+	pt := testdisk.MakeFakeLVMPartitionTable("/", "/boot", "/boot/efi", "/home", "swap")
 	stages := GenMkfsStages(pt, "file.img")
 	assert.Equal(t, []*Stage{
 		{
@@ -260,6 +275,29 @@ func TestGenMkfsStagesLVM(t *testing.T) {
 					Parent: "rootvg",
 					Options: &LVM2LVDeviceOptions{
 						Volume: "lv-for-/home",
+					},
+				},
+			},
+		},
+
+		{
+			Type:    "org.osbuild.mkswap",
+			Options: &MkswapStageOptions{},
+			Devices: map[string]Device{
+				"rootvg": {
+					Type: "org.osbuild.loopback",
+					Options: &LoopbackDeviceOptions{
+						Filename: "file.img",
+						Start:    (common.GiB + 100*common.MiB) / disk.DefaultSectorSize,
+						Size:     9 * common.GiB / disk.DefaultSectorSize,
+						Lock:     true,
+					},
+				},
+				"device": {
+					Type:   "org.osbuild.lvm2.lv",
+					Parent: "rootvg",
+					Options: &LVM2LVDeviceOptions{
+						Volume: "lv-for-swap",
 					},
 				},
 			},
