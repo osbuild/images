@@ -3,7 +3,10 @@ package osbuild
 import (
 	"testing"
 
+	"github.com/osbuild/images/internal/testdisk"
+	"github.com/osbuild/images/pkg/disk"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewFSTabStage(t *testing.T) {
@@ -49,4 +52,36 @@ func TestAddFilesystem(t *testing.T) {
 		assert.Equal(t, options.FileSystems[i], fs)
 	}
 	assert.Equal(t, len(filesystems), len(options.FileSystems))
+}
+
+func TestNewFSTabStageOptions(t *testing.T) {
+	pt := testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi", "/home")
+
+	opts, err := NewFSTabStageOptions(pt)
+	require.NoError(t, err)
+
+	assert.Equal(t, &FSTabStageOptions{
+		FileSystems: []*FSTabEntry{
+			{
+				UUID:    disk.RootPartitionUUID,
+				VFSType: "ext4",
+				Path:    "/",
+			},
+			{
+				UUID:    disk.FilesystemDataUUID,
+				VFSType: "ext4",
+				Path:    "/boot",
+			},
+			{
+				UUID:    disk.EFIFilesystemUUID,
+				VFSType: "vfat",
+				Path:    "/boot/efi",
+			},
+			{
+				UUID:    disk.FilesystemDataUUID,
+				VFSType: "ext4",
+				Path:    "/home",
+			},
+		},
+	}, opts)
 }
