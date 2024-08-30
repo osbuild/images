@@ -29,6 +29,7 @@ import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/rhsm"
 	"github.com/osbuild/images/pkg/rpmmd"
+	"github.com/osbuild/images/pkg/sbom"
 )
 
 // BaseSolver defines the basic solver configuration without platform
@@ -193,10 +194,10 @@ func (s *Solver) SetProxy(proxy string) error {
 // their associated repositories.  Each package set is depsolved as a separate
 // transactions in a chain.  It returns a list of all packages (with solved
 // dependencies) that will be installed into the system.
-func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet) ([]rpmmd.PackageSpec, []rpmmd.RepoConfig, error) {
-	req, rhsmMap, err := s.makeDepsolveRequest(pkgSets)
+func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet, sbomType sbom.StandardType) ([]rpmmd.PackageSpec, []rpmmd.RepoConfig, *sbom.Document, error) {
+	req, rhsmMap, err := s.makeDepsolveRequest(pkgSets, sbomType)
 	if err != nil {
-		return nil, nil, fmt.Errorf("makeDepsolveRequest failed: %w", err)
+		return nil, nil, nil, fmt.Errorf("makeDepsolveRequest failed: %w", err)
 	}
 
 	// get non-exclusive read lock
@@ -205,7 +206,7 @@ func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet) ([]rpmmd.PackageSpec, []rp
 
 	output, err := run(s.dnfJsonCmd, req)
 	if err != nil {
-		return nil, nil, fmt.Errorf("running osbuild-depsolve-dnf failed:\n%w", err)
+		return nil, nil, nil, fmt.Errorf("running osbuild-depsolve-dnf failed:\n%w", err)
 	}
 	// touch repos to now
 	now := time.Now().Local()
@@ -219,11 +220,20 @@ func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet) ([]rpmmd.PackageSpec, []rp
 	dec := json.NewDecoder(bytes.NewReader(output))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&result); err != nil {
-		return nil, nil, fmt.Errorf("decoding depsolve result failed: %w", err)
+		return nil, nil, nil, fmt.Errorf("decoding depsolve result failed: %w", err)
 	}
 
 	packages, repos := result.toRPMMD(rhsmMap)
-	return packages, repos, nil
+
+	var sbomDoc *sbom.Document
+	if sbomType != sbom.StandardTypeNone {
+		sbomDoc, err = sbom.NewDocument(sbomType, result.SBOM)
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("creating SBOM document failed: %w", err)
+		}
+	}
+
+	return packages, repos, sbomDoc, nil
 }
 
 // FetchMetadata returns the list of all the available packages in repos and
@@ -411,7 +421,7 @@ func (r *repoConfig) Hash() string {
 // NOTE: Due to implementation limitations of DNF and dnf-json, each package set
 // in the chain must use all of the repositories used by its predecessor.
 // An error is returned if this requirement is not met.
-func (s *Solver) makeDepsolveRequest(pkgSets []rpmmd.PackageSet) (*Request, map[string]bool, error) {
+func (s *Solver) makeDepsolveRequest(pkgSets []rpmmd.PackageSet, sbomType sbom.StandardType) (*Request, map[string]bool, error) {
 	// dedupe repository configurations but maintain order
 	// the order in which repositories are added to the request affects the
 	// order of the dependencies in the result
@@ -476,6 +486,10 @@ func (s *Solver) makeDepsolveRequest(pkgSets []rpmmd.PackageSet) (*Request, map[
 		CacheDir:         s.GetCacheDir(),
 		Proxy:            s.proxy,
 		Arguments:        args,
+	}
+
+	if sbomType != sbom.StandardTypeNone {
+		req.Arguments.Sbom = &sbomRequest{Type: sbomType.String()}
 	}
 
 	return &req, rhsmMap, nil
@@ -642,6 +656,10 @@ func (r *Request) Hash() string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
+type sbomRequest struct {
+	Type string `json:"type"`
+}
+
 // arguments for a dnf-json request
 type arguments struct {
 	// Repositories to use for depsolving
@@ -659,6 +677,9 @@ type arguments struct {
 
 	// Optional metadata to download for the repositories
 	OptionalMetadata []string `json:"optional-metadata,omitempty"`
+
+	// Optionally request an SBOM from depsolving
+	Sbom *sbomRequest `json:"sbom,omitempty"`
 }
 
 type searchArgs struct {
@@ -693,6 +714,9 @@ type depsolveResult struct {
 
 	// (optional) contains the solver used, e.g. "dnf5"
 	Solver string `json:"solver"`
+
+	// (optional) contains the SBOM for the depsolved transaction
+	SBOM json.RawMessage `json:"sbom"`
 }
 
 // Package specification

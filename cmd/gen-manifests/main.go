@@ -29,6 +29,7 @@ import (
 	"github.com/osbuild/images/pkg/reporegistry"
 	"github.com/osbuild/images/pkg/rhsm/facts"
 	"github.com/osbuild/images/pkg/rpmmd"
+	"github.com/osbuild/images/pkg/sbom"
 )
 
 type buildRequest struct {
@@ -357,7 +358,7 @@ func depsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d dist
 	depsolvedSets := make(map[string][]rpmmd.PackageSpec)
 	repoSets := make(map[string][]rpmmd.RepoConfig)
 	for name, pkgSet := range packageSets {
-		packages, repos, err := solver.Depsolve(pkgSet)
+		packages, repos, _, err := solver.Depsolve(pkgSet, sbom.StandardTypeNone)
 		if err != nil {
 			return nil, nil, err
 		}
