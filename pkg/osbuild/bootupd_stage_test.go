@@ -248,6 +248,19 @@ var fakePt = &disk.PartitionTable{
 				FSTabPassNo:  1,
 			},
 		},
+
+		{
+			Size: 2 * common.GibiByte,
+			Type: disk.SwapPartitionGUID,
+			Payload: &disk.Filesystem{
+				Type:         "swap",
+				Label:        "swap",
+				Mountpoint:   "/",
+				FSTabOptions: "defaults",
+				FSTabFreq:    1,
+				FSTabPassNo:  1,
+			},
+		},
 	},
 }
 
@@ -301,7 +314,7 @@ func TestGenBootupdDevicesMountsHappyBtrfs(t *testing.T) {
 		UEFIVendor:   "test",
 	}
 
-	devices, mounts, err := osbuild.GenBootupdDevicesMounts(filename, testdisk.MakeFakeBtrfsPartitionTable("/", "/home", "/boot/efi", "/boot"), pf)
+	devices, mounts, err := osbuild.GenBootupdDevicesMounts(filename, testdisk.MakeFakeBtrfsPartitionTable("/", "/home", "/boot/efi", "/boot", "swap"), pf)
 	require.Nil(t, err)
 	assert.Equal(t, devices, map[string]osbuild.Device{
 		"disk": {
@@ -319,7 +332,7 @@ func TestGenBootupdDevicesMountsHappyBtrfs(t *testing.T) {
 			Source:    "disk",
 			Target:    "/",
 			Options:   osbuild.BtrfsMountOptions{Subvol: "root", Compress: "zstd:1"},
-			Partition: common.ToPtr(3),
+			Partition: common.ToPtr(4),
 		},
 		{
 			Name:      "boot",
@@ -341,7 +354,7 @@ func TestGenBootupdDevicesMountsHappyBtrfs(t *testing.T) {
 			Source:    "disk",
 			Target:    "/home",
 			Options:   osbuild.BtrfsMountOptions{Subvol: "/home", Compress: "zstd:1"},
-			Partition: common.ToPtr(3),
+			Partition: common.ToPtr(4),
 		},
 	}, mounts)
 }
@@ -353,7 +366,7 @@ func TestGenBootupdDevicesMountsHappyLVM(t *testing.T) {
 		UEFIVendor:   "test",
 	}
 
-	fakePt := testdisk.MakeFakeLVMPartitionTable("/", "/home", "/boot/efi", "/boot")
+	fakePt := testdisk.MakeFakeLVMPartitionTable("/", "/home", "/boot/efi", "/boot", "swap")
 	devices, mounts, err := osbuild.GenBootupdDevicesMounts(filename, fakePt, pf)
 	require.Nil(t, err)
 	assert.Equal(t, devices, map[string]osbuild.Device{
@@ -377,6 +390,14 @@ func TestGenBootupdDevicesMountsHappyLVM(t *testing.T) {
 			Parent: "disk",
 			Options: &osbuild.LVM2LVDeviceOptions{
 				Volume:    "lv-for-/home",
+				VGPartnum: common.ToPtr(3),
+			},
+		},
+		"lv-for-swap": {
+			Type:   "org.osbuild.lvm2.lv",
+			Parent: "disk",
+			Options: &osbuild.LVM2LVDeviceOptions{
+				Volume:    "lv-for-swap",
 				VGPartnum: common.ToPtr(3),
 			},
 		},

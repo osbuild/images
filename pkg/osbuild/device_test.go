@@ -189,7 +189,7 @@ func TestMountsDeviceFromPtNoRootErrors(t *testing.T) {
 
 func TestMountsDeviceFromPtHappy(t *testing.T) {
 	filename := "fake-disk.img"
-	fakePt := testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi")
+	fakePt := testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi", "swap")
 	fsRootMntName, mounts, devices, err := GenMountsDevicesFromPT(filename, fakePt)
 	require.Nil(t, err)
 	assert.Equal(t, fsRootMntName, "-")
@@ -225,7 +225,7 @@ func TestMountsDeviceFromPtHappy(t *testing.T) {
 
 func TestMountsDeviceFromBrfs(t *testing.T) {
 	filename := "fake-disk.img"
-	fakePt := testdisk.MakeFakeBtrfsPartitionTable("/", "/boot")
+	fakePt := testdisk.MakeFakeBtrfsPartitionTable("/", "/boot", "swap")
 	fsRootMntName, mounts, devices, err := GenMountsDevicesFromPT(filename, fakePt)
 	require.Nil(t, err)
 	assert.Equal(t, "-", fsRootMntName)
@@ -245,7 +245,7 @@ func TestMountsDeviceFromBrfs(t *testing.T) {
 			Type: "org.osbuild.loopback",
 			Options: &LoopbackDeviceOptions{
 				Filename: "fake-disk.img",
-				Start:    1 * common.GiB / 512,
+				Start:    2 * common.GiB / 512,
 				Size:     9 * common.GiB / 512,
 			},
 		},

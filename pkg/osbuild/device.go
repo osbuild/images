@@ -244,6 +244,8 @@ func pathEscape(path string) string {
 // - source is the name of the device that the mount should be created from.
 // The name of the mount is derived from the mountpoint of the mountable, escaped with pathEscape. This shouldn't
 // create any conflicts, as the mountpoint is unique within the partition table.
+// This function returns nil if the Mountable is swap, as it doesn't make sense to do anything with it
+// during build.
 func genOsbuildMount(source string, mnt disk.Mountable) (*Mount, error) {
 	mountpoint := mnt.GetMountpoint()
 	name := pathEscape(mountpoint)
@@ -261,6 +263,8 @@ func genOsbuildMount(source string, mnt disk.Mountable) (*Mount, error) {
 		} else {
 			return nil, fmt.Errorf("mounting bare btrfs partition is unsupported: %s", mountpoint)
 		}
+	case "swap":
+		return nil, nil
 	default:
 		return nil, fmt.Errorf("unknown fs type " + t)
 	}
@@ -283,6 +287,9 @@ func GenMountsDevicesFromPT(filename string, pt *disk.PartitionTable) (string, [
 		mount, err := genOsbuildMount(leafDeviceName, mnt)
 		if err != nil {
 			return err
+		}
+		if mount == nil {
+			return nil
 		}
 
 		mountpoint := mnt.GetMountpoint()

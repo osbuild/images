@@ -96,6 +96,10 @@ func genMountsForBootupd(source string, pt *disk.PartitionTable) ([]Mount, error
 			if err != nil {
 				return nil, err
 			}
+			if mount == nil {
+				continue
+
+			}
 			mount.Partition = common.ToPtr(idx + 1)
 			mounts = append(mounts, *mount)
 		case *disk.Btrfs:
@@ -103,6 +107,9 @@ func genMountsForBootupd(source string, pt *disk.PartitionTable) ([]Mount, error
 				mount, err := genOsbuildMount(source, &payload.Subvolumes[i])
 				if err != nil {
 					return nil, err
+				}
+				if mount == nil {
+					continue
 				}
 				mount.Partition = common.ToPtr(idx + 1)
 				mounts = append(mounts, *mount)
@@ -117,6 +124,9 @@ func genMountsForBootupd(source string, pt *disk.PartitionTable) ([]Mount, error
 				mount, err := genOsbuildMount(lv.Name, mountable)
 				if err != nil {
 					return nil, err
+				}
+				if mount == nil {
+					continue
 				}
 				mount.Source = lv.Name
 				mounts = append(mounts, *mount)
@@ -147,6 +157,7 @@ func genDevicesForBootupd(filename, devName string, pt *disk.PartitionTable) (ma
 		switch payload := part.Payload.(type) {
 		case *disk.LVMVolumeGroup:
 			for _, lv := range payload.LogicalVolumes {
+				// TODO: ignore swap LVs. It's harmless to create a device for them, but it's also pointless.
 				// partitions start with "1", so add "1"
 				partNum := idx + 1
 				devices[lv.Name] = *NewLVM2LVDevice(devName, &LVM2LVDeviceOptions{Volume: lv.Name, VGPartnum: common.ToPtr(partNum)})
