@@ -12,6 +12,7 @@ import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/mocks/rpmrepo"
 	"github.com/osbuild/images/pkg/rpmmd"
+	"github.com/osbuild/images/pkg/sbom"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -33,6 +34,7 @@ func TestDepsolver(t *testing.T) {
 		packages [][]string
 		repos    []rpmmd.RepoConfig
 		rootDir  string
+		sbomType sbom.StandardType
 		err      bool
 		expMsg   string
 	}
@@ -103,6 +105,13 @@ func TestDepsolver(t *testing.T) {
 			err:      true,
 			expMsg:   "this-package-does-not-exist",
 		},
+		"chain-with-sbom": {
+			// chain depsolve of the same packages in order should produce the same result (at least in this case)
+			packages: [][]string{{"kernel"}, {"vim-minimal", "tmux", "zsh"}},
+			repos:    []rpmmd.RepoConfig{s.RepoConfig},
+			sbomType: sbom.StandardTypeSpdx,
+			err:      false,
+		},
 	}
 
 	for tcName := range testCases {
@@ -115,17 +124,22 @@ func TestDepsolver(t *testing.T) {
 			}
 
 			solver.SetRootDir(tc.rootDir)
-			deps, _, err := solver.Depsolve(pkgsets)
+			deps, _, sbomDoc, err := solver.Depsolve(pkgsets, tc.sbomType)
 			if tc.err {
 				assert.Error(err)
 				assert.Contains(err.Error(), tc.expMsg)
+				return
 			} else {
 				assert.Nil(err)
 			}
 
-			if err == nil {
-				exp := expectedResult(s.RepoConfig)
-				assert.Equal(exp, deps)
+			assert.Equal(expectedResult(s.RepoConfig), deps)
+
+			if tc.sbomType != sbom.StandardTypeNone {
+				assert.NotNil(sbomDoc)
+				assert.Equal(sbom.StandardTypeSpdx, sbomDoc.DocType)
+			} else {
+				assert.Nil(sbomDoc)
 			}
 		})
 	}
@@ -165,6 +179,7 @@ func TestMakeDepsolveRequest(t *testing.T) {
 		packageSets []rpmmd.PackageSet
 		args        []transactionArgs
 		wantRepos   []repoConfig
+		withSbom    bool
 		err         bool
 	}{
 		// single transaction
@@ -522,11 +537,57 @@ func TestMakeDepsolveRequest(t *testing.T) {
 				},
 			},
 		},
+		// 2 transactions + wantSbom flag
+		{
+			packageSets: []rpmmd.PackageSet{
+				{
+					Include:         []string{"pkg1"},
+					Exclude:         []string{"pkg2"},
+					Repositories:    []rpmmd.RepoConfig{baseOS, appstream},
+					InstallWeakDeps: true,
+				},
+				{
+					Include:      []string{"pkg3"},
+					Repositories: []rpmmd.RepoConfig{baseOS, appstream},
+				},
+			},
+			args: []transactionArgs{
+				{
+					PackageSpecs:    []string{"pkg1"},
+					ExcludeSpecs:    []string{"pkg2"},
+					RepoIDs:         []string{baseOS.Hash(), appstream.Hash()},
+					InstallWeakDeps: true,
+				},
+				{
+					PackageSpecs: []string{"pkg3"},
+					RepoIDs:      []string{baseOS.Hash(), appstream.Hash()},
+				},
+			},
+			wantRepos: []repoConfig{
+				{
+					ID:       baseOS.Hash(),
+					Name:     "baseos",
+					BaseURLs: []string{"https://example.org/baseos"},
+					repoHash: "f177f580cf201f52d1c62968d5b85cddae3e06cb9d5058987c07de1dbd769d4b",
+				},
+				{
+					ID:       appstream.Hash(),
+					Name:     "appstream",
+					BaseURLs: []string{"https://example.org/appstream"},
+					repoHash: "5c4a57bbb1b6a1886291819f2ceb25eb7c92e80065bc986a75c5837cf3d55a1f",
+				},
+			},
+			withSbom: true,
+		},
 	}
 	solver := NewSolver("", "", "", "", "")
 	for idx, tt := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			req, _, err := solver.makeDepsolveRequest(tt.packageSets)
+			var sbomType sbom.StandardType
+			if tt.withSbom {
+				sbomType = sbom.StandardTypeSpdx
+			}
+			req, _, err := solver.makeDepsolveRequest(tt.packageSets, sbomType)
 			if tt.err {
 				assert.NotNilf(t, err, "expected an error, but got 'nil' instead")
 				assert.Nilf(t, req, "got non-nill request, but expected an error")
@@ -536,6 +597,12 @@ func TestMakeDepsolveRequest(t *testing.T) {
 
 				assert.Equal(t, tt.args, req.Arguments.Transactions)
 				assert.Equal(t, tt.wantRepos, req.Arguments.Repos)
+				if tt.withSbom {
+					assert.NotNil(t, req.Arguments.Sbom)
+					assert.Equal(t, req.Arguments.Sbom.Type, sbom.StandardTypeSpdx.String())
+				} else {
+					assert.Nil(t, req.Arguments.Sbom)
+				}
 			}
 		})
 	}
@@ -712,13 +779,13 @@ func TestErrorRepoInfo(t *testing.T) {
 	solver := NewSolver("platform:f38", "38", "x86_64", "fedora-38", "/tmp/cache")
 	for idx, tc := range testCases {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			_, _, err := solver.Depsolve([]rpmmd.PackageSet{
+			_, _, _, err := solver.Depsolve([]rpmmd.PackageSet{
 				{
 					Include:      []string{"osbuild"},
 					Exclude:      nil,
 					Repositories: []rpmmd.RepoConfig{tc.repo},
 				},
-			})
+			}, sbom.StandardTypeNone)
 			assert.Error(err)
 			assert.Contains(err.Error(), tc.expMsg)
 		})
@@ -801,7 +868,7 @@ echo '{"solver": "zypper"}'
 
 	solver := NewSolver("platform:f38", "38", "x86_64", "fedora-38", "/tmp/cache")
 	solver.dnfJsonCmd = []string{fakeSolverPath}
-	pkgSpec, repoCfg, err := solver.Depsolve(nil)
+	pkgSpec, repoCfg, _, err := solver.Depsolve(nil, sbom.StandardTypeNone)
 	assert.NoError(t, err)
 
 	// prerequisite check, i.e. ensure our fake was called in the right way
