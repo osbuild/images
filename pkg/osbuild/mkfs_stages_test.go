@@ -185,6 +185,87 @@ func TestGenMkfsStagesBtrfs(t *testing.T) {
 		},
 	}, stages)
 }
+func TestGenMkfsStagesLVM(t *testing.T) {
+	pt := testdisk.MakeFakeLVMPartitionTable("/", "/boot", "/boot/efi", "/home")
+	stages := GenMkfsStages(pt, "file.img")
+	assert.Equal(t, []*Stage{
+		{
+			Type:    "org.osbuild.mkfs.ext4",
+			Options: &MkfsExt4StageOptions{},
+			Devices: map[string]Device{
+				"device": {
+					Type: "org.osbuild.loopback",
+					Options: &LoopbackDeviceOptions{
+						Filename: "file.img",
+						Size:     common.GiB / disk.DefaultSectorSize,
+						Lock:     true,
+					},
+				},
+			},
+		},
+		{
+			Type: "org.osbuild.mkfs.fat",
+			Options: &MkfsFATStageOptions{
+				VolID: strings.ReplaceAll(disk.EFIFilesystemUUID, "-", ""),
+			},
+			Devices: map[string]Device{
+				"device": {
+					Type: "org.osbuild.loopback",
+					Options: &LoopbackDeviceOptions{
+						Filename: "file.img",
+						Start:    common.GiB / disk.DefaultSectorSize,
+						Size:     100 * common.MiB / disk.DefaultSectorSize,
+						Lock:     true,
+					},
+				},
+			},
+		},
+		{
+			Type:    "org.osbuild.mkfs.xfs",
+			Options: &MkfsXfsStageOptions{},
+			Devices: map[string]Device{
+				"rootvg": {
+					Type: "org.osbuild.loopback",
+					Options: &LoopbackDeviceOptions{
+						Filename: "file.img",
+						Start:    (common.GiB + 100*common.MiB) / disk.DefaultSectorSize,
+						Size:     9 * common.GiB / disk.DefaultSectorSize,
+						Lock:     true,
+					},
+				},
+				"device": {
+					Type:   "org.osbuild.lvm2.lv",
+					Parent: "rootvg",
+					Options: &LVM2LVDeviceOptions{
+						Volume: "lv-for-/",
+					},
+				},
+			},
+		},
+		{
+			Type:    "org.osbuild.mkfs.xfs",
+			Options: &MkfsXfsStageOptions{},
+			Devices: map[string]Device{
+				"rootvg": {
+					Type: "org.osbuild.loopback",
+					Options: &LoopbackDeviceOptions{
+						Filename: "file.img",
+						Start:    (common.GiB + 100*common.MiB) / disk.DefaultSectorSize,
+						Size:     9 * common.GiB / disk.DefaultSectorSize,
+						Lock:     true,
+					},
+				},
+				"device": {
+					Type:   "org.osbuild.lvm2.lv",
+					Parent: "rootvg",
+					Options: &LVM2LVDeviceOptions{
+						Volume: "lv-for-/home",
+					},
+				},
+			},
+		},
+	}, stages)
+}
 
 func TestGenMkfsStagesUnhappy(t *testing.T) {
 	pt := &disk.PartitionTable{
