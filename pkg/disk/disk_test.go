@@ -387,6 +387,10 @@ var testBlueprints = map[string][]blueprint.FilesystemCustomization{
 			Mountpoint: "/opt",
 			MinSize:    7 * GiB,
 		},
+		{
+			Type:    blueprint.FilesystemTypeSwap,
+			MinSize: 7 * GiB,
+		},
 	},
 	"small": {
 		{
@@ -423,10 +427,26 @@ func TestDisk_ForEachEntity(t *testing.T) {
 // blueprintApplied checks if the blueprint was applied correctly
 // returns nil if the blueprint was applied correctly, an error otherwise
 func blueprintApplied(pt *PartitionTable, bp []blueprint.FilesystemCustomization) error {
+
+	// finds an entity in the partition table representing the desired custom mountpoint
+	// and returns an entity path to it
+	customMountpointPath := func(mnt blueprint.FilesystemCustomization) []Entity {
+		if mnt.Type == blueprint.FilesystemTypeSwap {
+			isSwap := func(e Entity) bool {
+				if fs, ok := e.(*Filesystem); ok {
+					return fs.Type == "swap"
+				}
+				return false
+			}
+			return entityPath(pt, isSwap)
+		}
+		return entityPathForMountpoint(pt, mnt.Mountpoint)
+	}
+
 	for _, mnt := range bp {
-		path := entityPathForMountpoint(pt, mnt.Mountpoint)
+		path := customMountpointPath(mnt)
 		if path == nil {
-			return fmt.Errorf("mountpoint %s not found", mnt.Mountpoint)
+			return fmt.Errorf("mountpoint %s (type %s) not found", mnt.Mountpoint, mnt.Type)
 		}
 		for idx, ent := range path {
 			if sz, ok := ent.(Sizeable); ok {
@@ -606,8 +626,8 @@ func TestCreatePartitionTableLVMOnly(t *testing.T) {
 			// check logical volume sizes against blueprint
 			var lvsum uint64
 			for _, mnt := range tbp {
-				if mnt.Mountpoint == "/boot" {
-					// not on LVM; skipping
+				if mnt.Mountpoint == "/boot" || mnt.Type == blueprint.FilesystemTypeSwap {
+					// not on LVM or swap; skipping
 					continue
 				}
 				mntPath := entityPathForMountpoint(mpt, mnt.Mountpoint)

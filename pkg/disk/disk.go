@@ -27,6 +27,7 @@ import (
 	"slices"
 
 	"github.com/google/uuid"
+	"github.com/osbuild/images/pkg/blueprint"
 )
 
 const (
@@ -56,6 +57,8 @@ const (
 
 	// Extended Boot Loader Partition
 	XBootLDRPartitionGUID = "BC13C2FF-59E6-4262-A352-B275FD6F7172"
+
+	SwapPartitionGUID = "0657FD6D-A4AB-43C4-84E5-0933C84B4F4F"
 )
 
 // Entity is the base interface for all disk-related entities.
@@ -114,11 +117,10 @@ type Mountable interface {
 }
 
 // A MountpointCreator is a container that is able to create new volumes.
-//
-// CreateMountpoint creates a new mountpoint with the given size and
-// returns the entity that represents the new mountpoint.
 type MountpointCreator interface {
-	CreateMountpoint(mountpoint string, size uint64) (Entity, error)
+	// CreateMountpoint creates a new mountpoint with the given size and type
+	// and returns the entity that represents the new mountpoint.
+	CreateMountpoint(mountpoint string, size uint64, fsType blueprint.FilesystemType) (Entity, error)
 
 	// AlignUp will align the given bytes according to the
 	// requirements of the container type.

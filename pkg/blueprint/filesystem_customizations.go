@@ -9,9 +9,17 @@ import (
 	"github.com/osbuild/images/pkg/pathpolicy"
 )
 
+type FilesystemType string
+
+const (
+	FilesystemTypeUnset FilesystemType = ""
+	FilesystemTypeSwap  FilesystemType = "swap"
+)
+
 type FilesystemCustomization struct {
-	Mountpoint string `json:"mountpoint,omitempty" toml:"mountpoint,omitempty"`
-	MinSize    uint64 `json:"minsize,omitempty" toml:"minsize,omitempty"`
+	Mountpoint string         `json:"mountpoint,omitempty" toml:"mountpoint,omitempty"`
+	MinSize    uint64         `json:"minsize,omitempty" toml:"minsize,omitempty"`
+	Type       FilesystemType `json:"type,omitempty" toml:"type,omitempty"`
 }
 
 func (fsc *FilesystemCustomization) UnmarshalTOML(data interface{}) error {
@@ -35,6 +43,13 @@ func (fsc *FilesystemCustomization) UnmarshalTOML(data interface{}) error {
 		fsc.MinSize = minSize
 	default:
 		return fmt.Errorf("TOML unmarshal: minsize must be integer or string, got %v of type %T", d["minsize"], d["minsize"])
+	}
+
+	switch d["type"].(type) {
+	case string:
+		fsc.Type = FilesystemType(d["type"].(string))
+	default:
+		return fmt.Errorf("TOML unmarshal: type must be string, got %v of type %T", d["type"], d["type"])
 	}
 
 	return nil

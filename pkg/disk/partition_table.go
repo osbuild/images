@@ -323,10 +323,10 @@ func (pt *PartitionTable) EnsureDirectorySizes(dirSizeMap map[string]uint64) {
 	}
 }
 
-func (pt *PartitionTable) CreateMountpoint(mountpoint string, size uint64) (Entity, error) {
+func (pt *PartitionTable) CreateMountpoint(mountpoint string, size uint64, fstype blueprint.FilesystemType) (Entity, error) {
 	partition := Partition{
 		Size:    size,
-		Payload: createFilesystem(mountpoint),
+		Payload: createFilesystem(mountpoint, fstype),
 	}
 
 	n := len(pt.Partitions)
@@ -339,6 +339,11 @@ func (pt *PartitionTable) CreateMountpoint(mountpoint string, size uint64) (Enti
 		default:
 			partition.Type = FilesystemDataGUID
 		}
+
+		if fstype == blueprint.FilesystemTypeSwap {
+			partition.Type = SwapPartitionGUID
+		}
+
 		maxNo = 128
 	} else {
 		maxNo = 4
@@ -428,7 +433,7 @@ func (pt *PartitionTable) applyCustomization(mountpoints []blueprint.FilesystemC
 		} else {
 			if !create {
 				newMountpoints = append(newMountpoints, mnt)
-			} else if err := pt.createFilesystem(mnt.Mountpoint, size); err != nil {
+			} else if err := pt.createFilesystem(mnt.Mountpoint, size, mnt.Type); err != nil {
 				return nil, err
 			}
 		}
@@ -502,7 +507,7 @@ func (pt *PartitionTable) relayout(size uint64) uint64 {
 	return start
 }
 
-func (pt *PartitionTable) createFilesystem(mountpoint string, size uint64) error {
+func (pt *PartitionTable) createFilesystem(mountpoint string, size uint64, fsType blueprint.FilesystemType) error {
 	rootPath := entityPathForMountpoint(pt, "/")
 	if rootPath == nil {
 		panic("no root mountpoint for PartitionTable")
@@ -515,7 +520,7 @@ func (pt *PartitionTable) createFilesystem(mountpoint string, size uint64) error
 			continue
 		}
 
-		newVol, err := vc.CreateMountpoint(mountpoint, 0)
+		newVol, err := vc.CreateMountpoint(mountpoint, 0, fsType)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed creating volume: %w", err))
 			continue
@@ -697,7 +702,7 @@ func (pt *PartitionTable) ensureLVM() error {
 	// we need a /boot partition to boot LVM, ensure one exists
 	bootPath := entityPathForMountpoint(pt, "/boot")
 	if bootPath == nil {
-		_, err := pt.CreateMountpoint("/boot", 512*common.MiB)
+		_, err := pt.CreateMountpoint("/boot", 512*common.MiB, blueprint.FilesystemTypeUnset)
 
 		if err != nil {
 			return err
@@ -756,7 +761,7 @@ func (pt *PartitionTable) ensureBtrfs() error {
 	// we need a /boot partition to boot btrfs, ensure one exists
 	bootPath := entityPathForMountpoint(pt, "/boot")
 	if bootPath == nil {
-		_, err := pt.CreateMountpoint("/boot", 512*common.MiB)
+		_, err := pt.CreateMountpoint("/boot", 512*common.MiB, blueprint.FilesystemTypeUnset)
 		if err != nil {
 			return fmt.Errorf("failed to create /boot partition when ensuring btrfs: %w", err)
 		}

@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	"github.com/google/uuid"
+	"github.com/osbuild/images/pkg/blueprint"
 )
 
 const DefaultBtrfsCompression = "zstd:1"
@@ -56,7 +57,10 @@ func (b *Btrfs) GetItemCount() uint {
 func (b *Btrfs) GetChild(n uint) Entity {
 	return &b.Subvolumes[n]
 }
-func (b *Btrfs) CreateMountpoint(mountpoint string, size uint64) (Entity, error) {
+func (b *Btrfs) CreateMountpoint(mountpoint string, size uint64, fstype blueprint.FilesystemType) (Entity, error) {
+	if fstype == blueprint.FilesystemTypeSwap {
+		return nil, fmt.Errorf("btrfs subvolumes cannot be swap")
+	}
 	name := mountpoint
 	if name == "/" {
 		name = "root"

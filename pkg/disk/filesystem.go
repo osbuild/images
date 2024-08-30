@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/google/uuid"
+	"github.com/osbuild/images/pkg/blueprint"
 )
 
 // Filesystem related functions
@@ -99,9 +100,17 @@ func (fs *Filesystem) GenUUID(rng *rand.Rand) {
 	}
 }
 
-func createFilesystem(mountpoint string) *Filesystem {
+func createFilesystem(mountpoint string, fstype blueprint.FilesystemType) *Filesystem {
+	var typ string
+	switch fstype {
+	case blueprint.FilesystemTypeSwap:
+		typ = "swap"
+	default:
+		typ = "xfs"
+	}
+
 	return &Filesystem{
-		Type:         "xfs",
+		Type:         typ,
 		Mountpoint:   mountpoint,
 		FSTabOptions: "defaults",
 		FSTabFreq:    0,

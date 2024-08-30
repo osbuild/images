@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/blueprint"
 )
 
 // Default physical extent size in bytes: logical volumes
@@ -71,8 +72,8 @@ func (vg *LVMVolumeGroup) GetChild(n uint) Entity {
 	return &vg.LogicalVolumes[n]
 }
 
-func (vg *LVMVolumeGroup) CreateMountpoint(mountpoint string, size uint64) (Entity, error) {
-	return vg.CreateLogicalVolume(mountpoint, size, createFilesystem(mountpoint))
+func (vg *LVMVolumeGroup) CreateMountpoint(mountpoint string, size uint64, fstype blueprint.FilesystemType) (Entity, error) {
+	return vg.CreateLogicalVolume(mountpoint, size, createFilesystem(mountpoint, fstype))
 }
 
 func (vg *LVMVolumeGroup) CreateLogicalVolume(lvName string, size uint64, payload Entity) (Entity, error) {
