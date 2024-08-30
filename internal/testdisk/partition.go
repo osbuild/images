@@ -570,6 +570,7 @@ func MakeFakeLVMPartitionTable(mntPoints ...string) *disk.PartitionTable {
 		Start: size,
 		Size:  9 * GiB,
 		Payload: &disk.LVMVolumeGroup{
+			Name:           "rootvg",
 			LogicalVolumes: lvs,
 		},
 	})
