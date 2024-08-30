@@ -539,6 +539,30 @@ func (pt *PartitionTable) createFilesystem(mountpoint string, size uint64) error
 	return nil
 }
 
+// entityPath starts at ent (usually a partition table) and traverses it until
+// it finds an Entity for which isLeaf returns true. Returns a slice
+// containing all entities from ent to the found leaf. The first element
+// is the leaf, the last element is ent. If no leaf is found, returns nil.
+func entityPath(ent Entity, isLeaf func(ent Entity) bool) []Entity {
+	if isLeaf(ent) {
+		return []Entity{ent}
+	}
+
+	c, ok := ent.(Container)
+	if !ok {
+		return nil
+	}
+
+	for idx := uint(0); idx < c.GetItemCount(); idx++ {
+		child := c.GetChild(idx)
+		if path := entityPath(child, isLeaf); path != nil {
+			return append(path, ent)
+		}
+	}
+
+	return nil
+}
+
 // entityPathForMountpoint stats at ent and searches for an Entity with a Mountpoint equal
 // to the target. Returns a slice of all the Entities leading to the Mountable
 // in reverse order. If no Entity has the target as a Mountpoint, returns nil.
@@ -546,22 +570,13 @@ func (pt *PartitionTable) createFilesystem(mountpoint string, size uint64) error
 // and the first element is always a Mountable with a Mountpoint equal to the
 // target.
 func entityPathForMountpoint(ent Entity, target string) []Entity {
-	switch e := ent.(type) {
-	case Mountable:
-		if target == e.GetMountpoint() {
-			return []Entity{ent}
+	isTarget := func(ent Entity) bool {
+		if mnt, ok := ent.(Mountable); ok {
+			return mnt.GetMountpoint() == target
 		}
-	case Container:
-		for idx := uint(0); idx < e.GetItemCount(); idx++ {
-			child := e.GetChild(idx)
-			path := entityPathForMountpoint(child, target)
-			if path != nil {
-				path = append(path, e)
-				return path
-			}
-		}
+		return false
 	}
-	return nil
+	return entityPath(ent, isTarget)
 }
 
 type MountableCallback func(mnt Mountable, path []Entity) error
