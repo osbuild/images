@@ -34,7 +34,8 @@ var partInputsComplete = `
       "mountpoint": "/",
       "label": "root",
       "size": "7 GiB",
-      "type": "ext4"
+      "type": "ext4",
+      "part_uuid": "0FC63DAF-8483-4772-8E79-3D69D8477DE4"
     },
     {
       "name": "home",
@@ -70,6 +71,7 @@ var expectedInput = &genpart.Input{
 			Label:      "root",
 			Size:       "7 GiB",
 			Type:       "ext4",
+			PartUUID:   "0FC63DAF-8483-4772-8E79-3D69D8477DE4",
 		}, {
 			Name:       "home",
 			Mountpoint: "/home",
@@ -113,6 +115,7 @@ func TestUnmarshalOutput(t *testing.T) {
 					Partitions: []disk.Partition{
 						{
 							UUID: "911911",
+							Type: "119119",
 							Payload: &disk.Filesystem{
 								Type: "ext4",
 							},
@@ -143,7 +146,7 @@ func TestUnmarshalOutput(t *testing.T) {
           {
             "Start": 0,
             "Size": 0,
-            "Type": "",
+            "Type": "119119",
             "Bootable": false,
             "UUID": "911911",
             "Payload": {
