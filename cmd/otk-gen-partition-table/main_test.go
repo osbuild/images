@@ -173,116 +173,120 @@ func TestUnmarshalOutput(t *testing.T) {
 
 var partInputsSimple = `
 {
-  "properties": {
-    "create": {
-      "bios_boot_partition": true,
-      "esp_partition": true,
-      "esp_partition_size": "2 GiB"
+  "tree": {
+    "properties": {
+      "create": {
+	"bios_boot_partition": true,
+	"esp_partition": true,
+	"esp_partition_size": "2 GiB"
+      },
+      "type": "gpt",
+      "default_size": "10 GiB"
     },
-    "type": "gpt",
-    "default_size": "10 GiB"
-  },
-  "partitions": [
-    {
-      "name": "root",
-      "mountpoint": "/",
-      "label": "root",
-      "size": "7 GiB",
-      "type": "ext4"
-    },
-    {
-      "name": "home",
-      "mountpoint": "/home",
-      "label": "home",
-      "size": "2 GiB",
-      "type": "ext4"
-    }
-  ]
+    "partitions": [
+      {
+	"name": "root",
+	"mountpoint": "/",
+	"label": "root",
+	"size": "7 GiB",
+	"type": "ext4"
+      },
+      {
+	"name": "home",
+	"mountpoint": "/home",
+	"label": "home",
+	"size": "2 GiB",
+	"type": "ext4"
+      }
+    ]
+  }
 }`
 
 // XXX: anything under "internal" we don't actually need to test
 // as we do not make any gurantees to the outside
 var expectedSimplePartOutput = `{
-  "const": {
-    "kernel_opts_list": [],
-    "partition_map": {
-      "root": {
-        "uuid": "9851898e-0b30-437d-8fad-51ec16c3697f"
-      }
-    },
-    "internal": {
-      "partition-table": {
-        "Size": 11814305792,
-        "UUID": "dbd21911-1c4e-4107-8a9f-14fe6e751358",
-        "Type": "gpt",
-        "Partitions": [
-          {
-            "Start": 1048576,
-            "Size": 1048576,
-            "Type": "21686148-6449-6E6F-744E-656564454649",
-            "Bootable": true,
-            "UUID": "FAC7F1FB-3E8D-4137-A512-961DE09A5549",
-            "Payload": null,
-            "PayloadType": "no-payload"
-          },
-          {
-            "Start": 2097152,
-            "Size": 2147483648,
-            "Type": "C12A7328-F81F-11D2-BA4B-00A0C93EC93B",
-            "Bootable": false,
-            "UUID": "68B2905B-DF3E-4FB3-80FA-49D1E773AA33",
-            "Payload": {
-              "Type": "vfat",
-              "UUID": "7B77-95E7",
-              "Label": "EFI-SYSTEM",
-              "Mountpoint": "/boot/efi",
-              "FSTabOptions": "defaults,uid=0,gid=0,umask=077,shortname=winnt",
-              "FSTabFreq": 0,
-              "FSTabPassNo": 2
+  "tree": {
+    "const": {
+      "kernel_opts_list": [],
+      "partition_map": {
+        "root": {
+          "uuid": "9851898e-0b30-437d-8fad-51ec16c3697f"
+        }
+      },
+      "internal": {
+        "partition-table": {
+          "Size": 11814305792,
+          "UUID": "dbd21911-1c4e-4107-8a9f-14fe6e751358",
+          "Type": "gpt",
+          "Partitions": [
+            {
+              "Start": 1048576,
+              "Size": 1048576,
+              "Type": "21686148-6449-6E6F-744E-656564454649",
+              "Bootable": true,
+              "UUID": "FAC7F1FB-3E8D-4137-A512-961DE09A5549",
+              "Payload": null,
+              "PayloadType": "no-payload"
             },
-            "PayloadType": "filesystem"
-          },
-          {
-            "Start": 4297064448,
-            "Size": 7517224448,
-            "Type": "",
-            "Bootable": false,
-            "UUID": "ed130be6-c822-49af-83bb-4ea648bb2264",
-            "Payload": {
-              "Type": "ext4",
-              "UUID": "9851898e-0b30-437d-8fad-51ec16c3697f",
-              "Label": "root",
-              "Mountpoint": "/",
-              "FSTabOptions": "",
-              "FSTabFreq": 0,
-              "FSTabPassNo": 0
+            {
+              "Start": 2097152,
+              "Size": 2147483648,
+              "Type": "C12A7328-F81F-11D2-BA4B-00A0C93EC93B",
+              "Bootable": false,
+              "UUID": "68B2905B-DF3E-4FB3-80FA-49D1E773AA33",
+              "Payload": {
+                "Type": "vfat",
+                "UUID": "7B77-95E7",
+                "Label": "EFI-SYSTEM",
+                "Mountpoint": "/boot/efi",
+                "FSTabOptions": "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+                "FSTabFreq": 0,
+                "FSTabPassNo": 2
+              },
+              "PayloadType": "filesystem"
             },
-            "PayloadType": "filesystem"
-          },
-          {
-            "Start": 2149580800,
-            "Size": 2147483648,
-            "Type": "",
-            "Bootable": false,
-            "UUID": "9f6173fd-edc9-4dbe-9313-632af556c607",
-            "Payload": {
-              "Type": "ext4",
-              "UUID": "d8bb61b8-81cf-4c85-937b-69439a23dc5e",
-              "Label": "home",
-              "Mountpoint": "/home",
-              "FSTabOptions": "",
-              "FSTabFreq": 0,
-              "FSTabPassNo": 0
+            {
+              "Start": 4297064448,
+              "Size": 7517224448,
+              "Type": "",
+              "Bootable": false,
+              "UUID": "ed130be6-c822-49af-83bb-4ea648bb2264",
+              "Payload": {
+                "Type": "ext4",
+                "UUID": "9851898e-0b30-437d-8fad-51ec16c3697f",
+                "Label": "root",
+                "Mountpoint": "/",
+                "FSTabOptions": "",
+                "FSTabFreq": 0,
+                "FSTabPassNo": 0
+              },
+              "PayloadType": "filesystem"
             },
-            "PayloadType": "filesystem"
-          }
-        ],
-        "SectorSize": 0,
-        "ExtraPadding": 0,
-        "StartOffset": 0
-      }
-    },
-    "filename": "disk.img"
+            {
+              "Start": 2149580800,
+              "Size": 2147483648,
+              "Type": "",
+              "Bootable": false,
+              "UUID": "9f6173fd-edc9-4dbe-9313-632af556c607",
+              "Payload": {
+                "Type": "ext4",
+                "UUID": "d8bb61b8-81cf-4c85-937b-69439a23dc5e",
+                "Label": "home",
+                "Mountpoint": "/home",
+                "FSTabOptions": "",
+                "FSTabFreq": 0,
+                "FSTabPassNo": 0
+              },
+              "PayloadType": "filesystem"
+            }
+          ],
+          "SectorSize": 0,
+          "ExtraPadding": 0,
+          "StartOffset": 0
+        }
+      },
+      "filename": "disk.img"
+    }
   }
 }
 `
