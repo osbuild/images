@@ -12,9 +12,9 @@ import (
 )
 
 func TestBlueprintParse(t *testing.T) {
-	blueprint := `
+	blueprintToml := `
 name = "test"
-description = "Test"
+description = "Test description"
 version = "0.0.0"
 
 [[packages]]
@@ -27,32 +27,47 @@ minsize = 2147483648
 
 [[customizations.filesystem]]
 mountpoint = "/opt"
-minsize = "20 GB"
+minsize = "20 GiB"
 `
+	blueprintJSON := `{
+		"name": "test",
+                "description": "Test description",
+                "version": "0.0.0",
+                "packages": [
+                  {
+                    "name": "httpd",
+                    "version": "2.4.*"
+                  }
+                ],
+		"customizations": {
+		  "filesystem": [
+                    {
+			"mountpoint": "/var",
+			"minsize": 2147483648
+		    },
+                    {
+			"mountpoint": "/opt",
+			"minsize": "20 GiB"
+                    }
+                  ]
+		}
+	  }`
 
-	var bp Blueprint
-	err := toml.Unmarshal([]byte(blueprint), &bp)
+	var bp, bp2 Blueprint
+	err := toml.Unmarshal([]byte(blueprintToml), &bp)
 	require.NoError(t, err)
+	err = json.Unmarshal([]byte(blueprintJSON), &bp2)
+	require.NoError(t, err)
+	require.Equal(t, bp, bp2)
+
 	assert.Equal(t, bp.Name, "test")
+	assert.Equal(t, bp.Description, "Test description")
+	assert.Equal(t, bp.Version, "0.0.0")
+	assert.Equal(t, bp.Packages, []Package{{Name: "httpd", Version: "2.4.*"}})
 	assert.Equal(t, "/var", bp.Customizations.Filesystem[0].Mountpoint)
 	assert.Equal(t, uint64(2147483648), bp.Customizations.Filesystem[0].MinSize)
 	assert.Equal(t, "/opt", bp.Customizations.Filesystem[1].Mountpoint)
-	assert.Equal(t, uint64(20*common.GB), bp.Customizations.Filesystem[1].MinSize)
-
-	blueprint = `{
-		"name": "test",
-		"customizations": {
-		  "filesystem": [{
-			"mountpoint": "/opt",
-			"minsize": "20 GiB"
-		  }]
-		}
-	  }`
-	err = json.Unmarshal([]byte(blueprint), &bp)
-	require.NoError(t, err)
-	assert.Equal(t, bp.Name, "test")
-	assert.Equal(t, "/opt", bp.Customizations.Filesystem[0].Mountpoint)
-	assert.Equal(t, uint64(20*common.GiB), bp.Customizations.Filesystem[0].MinSize)
+	assert.Equal(t, uint64(20*common.GiB), bp.Customizations.Filesystem[1].MinSize)
 }
 
 func TestGetPackages(t *testing.T) {
