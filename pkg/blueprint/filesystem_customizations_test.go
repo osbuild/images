@@ -10,7 +10,32 @@ import (
 	"github.com/osbuild/images/pkg/pathpolicy"
 )
 
-// Happy tests for unmarshallers are in blueprint_test.go
+// ensure all fields that are supported are filled here
+var allFieldsFsc = FilesystemCustomization{
+	Mountpoint: "/data",
+	MinSize:    1234567890,
+}
+
+func TestFilesystemCustomizationMarshalUnmarshalTOML(t *testing.T) {
+	b, err := toml.Marshal(allFieldsFsc)
+	assert.NoError(t, err)
+
+	var fsc FilesystemCustomization
+	err = toml.Unmarshal(b, &fsc)
+	assert.NoError(t, err)
+	assert.Equal(t, fsc, allFieldsFsc)
+}
+
+func TestFilesystemCustomizationMarshalUnmarshalJSON(t *testing.T) {
+	b, err := json.Marshal(allFieldsFsc)
+	assert.NoError(t, err)
+
+	var fsc FilesystemCustomization
+	err = json.Unmarshal(b, &fsc)
+	assert.NoError(t, err)
+	assert.Equal(t, fsc, allFieldsFsc)
+}
+
 func TestFilesystemCustomizationUnmarshalTOMLUnhappy(t *testing.T) {
 	cases := []struct {
 		name  string
