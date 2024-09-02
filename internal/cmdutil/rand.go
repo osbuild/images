@@ -22,7 +22,7 @@ func newRNGSeed() (int64, error) {
 		if err != nil {
 			return 0, fmt.Errorf("failed to parse %s: %s", RNG_SEED_ENV_KEY, err)
 		}
-		fmt.Printf("TEST MODE: using rng seed %d\n", envSeedInt)
+		fmt.Fprintf(os.Stderr, "TEST MODE: using rng seed %d\n", envSeedInt)
 		return envSeedInt, nil
 	}
 	randSeed, err := rand.Int(rand.Reader, big.NewInt(math.MaxInt64))
