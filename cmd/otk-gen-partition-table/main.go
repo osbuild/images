@@ -16,6 +16,11 @@ import (
 	"github.com/osbuild/images/pkg/osbuild"
 )
 
+// Tree is the wrapper aroudn the "real" input
+type Tree struct {
+	Tree Input `json:"tree"`
+}
+
 // Input represents the user provided inputs that will be used
 // to generate the partition table
 type Input struct {
@@ -239,19 +244,22 @@ func run(r io.Reader, w io.Writer) error {
 	/* #nosec G404 */
 	rng := rand.New(rand.NewSource(rngSeed))
 
-	var genPartInput Input
-	if err := json.NewDecoder(r).Decode(&genPartInput); err != nil {
+	var genPartInputTree Tree
+	if err := json.NewDecoder(r).Decode(&genPartInputTree); err != nil {
 		return err
 	}
 	// XXX: validate inputs, right now an empty "type" is not an error
 	// but it should either be an error or we should set a default
 
-	output, err := genPartitionTable(&genPartInput, rng)
+	generated, err := genPartitionTable(&genPartInputTree.Tree, rng)
 	if err != nil {
 		return fmt.Errorf("cannot generate partition table: %w", err)
 	}
 	// there is no need to output "nice" json, but it does make testing
 	// simpler
+	output := map[string]interface{}{
+		"tree": generated,
+	}
 	outputJson, err := json.MarshalIndent(output, "", "  ")
 	if err != nil {
 		return fmt.Errorf("cannot marshal response: %w", err)
