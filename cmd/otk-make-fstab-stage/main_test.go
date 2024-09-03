@@ -62,3 +62,10 @@ func TestIntegration(t *testing.T) {
 
 	assert.Equal(t, expectedStages, fakeStdout.String())
 }
+
+func TestIntegrationNoPartitionTable(t *testing.T) {
+	fakeStdin := bytes.NewBufferString(`{}`)
+	fakeStdout := bytes.NewBuffer(nil)
+	err := makefstab.Run(fakeStdin, fakeStdout)
+	assert.EqualError(t, err, "cannot validate input data: no partition table")
+}

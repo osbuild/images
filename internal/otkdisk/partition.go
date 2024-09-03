@@ -15,6 +15,11 @@ type Data struct {
 	Const Const `json:"const"`
 }
 
+// Validate does basic validation of the data
+func (d Data) Validate() error {
+	return d.Const.Internal.Validate()
+}
+
 // Const contains partition table data that is considered "constant",
 // i.e.  that should not be modified by the consumer as there may be
 // inter-dependencies between the values
@@ -50,6 +55,14 @@ type Partition struct {
 // "otk-{gen,make}-*" tools for their data exchange.
 type Internal struct {
 	PartitionTable *disk.PartitionTable `json:"partition-table"`
+}
+
+// Validate does basic validation of the internal data
+func (i Internal) Validate() error {
+	if i.PartitionTable == nil {
+		return fmt.Errorf("no partition table")
+	}
+	return nil
 }
 
 // PartType represents a partition type
