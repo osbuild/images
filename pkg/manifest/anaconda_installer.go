@@ -370,7 +370,9 @@ func (p *AnacondaInstaller) liveStages() []*osbuild.Stage {
 	dracutOptions.AddDrivers = p.AdditionalDrivers
 	stages = append(stages, osbuild.NewDracutStage(dracutOptions))
 
-	stages = append(stages, osbuild.NewSELinuxConfigStage(&osbuild.SELinuxConfigStageOptions{State: osbuild.SELinuxStatePermissive}))
+	stages = append(stages, osbuild.NewSELinuxStage(&osbuild.SELinuxStageOptions{
+		FileContexts: "etc/selinux/targeted/contexts/files/file_contexts",
+	}))
 
 	return stages
 }
