@@ -392,6 +392,7 @@ func (p *OS) serialize() osbuild.Pipeline {
 	if p.OSTreeRef != "" {
 		rpmOptions.OSTreeBooted = common.ToPtr(true)
 		rpmOptions.DBPath = "/usr/share/rpm"
+		rpmOptions.DisableDracut = true
 	}
 	pipeline.AddStage(osbuild.NewRPMStage(rpmOptions, osbuild.NewRpmStageSourceFilesInputs(p.packageSpecs)))
 
