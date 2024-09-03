@@ -1,0 +1,10 @@
+{
+  "name": "minimal-environment",
+  "blueprint": {
+    "groups": [
+      {
+        "name": "minimal-environment"
+      }
+    ]
+  }
+}
