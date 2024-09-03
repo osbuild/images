@@ -91,6 +91,22 @@
       "edge-ami"
     ]
   },
+  "./configs/minimal-environment.json": {
+    "image-types": [
+      "edge-container"
+    ],
+    "distros": [
+      "rhel-9*"
+    ]
+  },
+  "./configs/edge-ostree-pull-user-minimalenv.json": {
+    "image-types": [
+      "edge-ami"
+    ],
+    "distros": [
+      "rhel-9*"
+    ]
+  },
   "./configs/embed-containers-2.json": {
     "image-types": [
       "edge-container"
