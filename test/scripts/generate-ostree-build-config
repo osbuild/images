@@ -280,7 +280,7 @@ def setup_dependencies(manifests, config_map, distro, arch):
     finally:
         if container_ids:
             print("📦 Stopping containers")
-            out, _ = testlib.runcmd(["sudo", "podman", "stop", " ".join(container_ids)])
+            out, _ = testlib.runcmd(["sudo", "podman", "stop", *container_ids])
             print(out.decode())
 
 
