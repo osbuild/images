@@ -26,7 +26,8 @@ var partInputsComplete = `
     },
     "bios": true,
     "type": "gpt",
-    "default_size": "10 GiB"
+    "default_size": "10 GiB",
+    "start_offset": "8 MB"
   },
   "partitions": [
     {
@@ -62,6 +63,7 @@ var expectedInput = &genpart.Input{
 		},
 		Type:        "gpt",
 		DefaultSize: "10 GiB",
+		StartOffset: "8 MB",
 	},
 	Partitions: []*genpart.InputPartition{
 		{
@@ -181,7 +183,8 @@ var partInputsSimple = `
 	"esp_partition_size": "2 GiB"
       },
       "type": "gpt",
-      "default_size": "10 GiB"
+      "default_size": "10 GiB",
+      "start_offset": "8 MB"
     },
     "partitions": [
       {
@@ -215,12 +218,12 @@ var expectedSimplePartOutput = `{
       },
       "internal": {
         "partition-table": {
-          "Size": 11814305792,
+          "Size": 11821645824,
           "UUID": "dbd21911-1c4e-4107-8a9f-14fe6e751358",
           "Type": "gpt",
           "Partitions": [
             {
-              "Start": 1048576,
+              "Start": 9048576,
               "Size": 1048576,
               "Type": "21686148-6449-6E6F-744E-656564454649",
               "Bootable": true,
@@ -229,7 +232,7 @@ var expectedSimplePartOutput = `{
               "PayloadType": "no-payload"
             },
             {
-              "Start": 2097152,
+              "Start": 10097152,
               "Size": 2147483648,
               "Type": "C12A7328-F81F-11D2-BA4B-00A0C93EC93B",
               "Bootable": false,
@@ -246,8 +249,8 @@ var expectedSimplePartOutput = `{
               "PayloadType": "filesystem"
             },
             {
-              "Start": 4297064448,
-              "Size": 7517224448,
+              "Start": 4305064448,
+              "Size": 7516564480,
               "Type": "",
               "Bootable": false,
               "UUID": "ed130be6-c822-49af-83bb-4ea648bb2264",
@@ -263,7 +266,7 @@ var expectedSimplePartOutput = `{
               "PayloadType": "filesystem"
             },
             {
-              "Start": 2149580800,
+              "Start": 2157580800,
               "Size": 2147483648,
               "Type": "",
               "Bootable": false,
@@ -282,7 +285,7 @@ var expectedSimplePartOutput = `{
           ],
           "SectorSize": 0,
           "ExtraPadding": 0,
-          "StartOffset": 0
+          "StartOffset": 8000000
         }
       },
       "filename": "disk.img"

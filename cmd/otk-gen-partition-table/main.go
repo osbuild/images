@@ -35,6 +35,7 @@ type InputProperties struct {
 	Type        otkdisk.PartType `json:"type"`
 	DefaultSize string           `json:"default_size"`
 	UUID        string           `json:"uuid"`
+	StartOffset string           `json:"start_offset"`
 	Create      InputCreate      `json:"create"`
 
 	SectorSize uint64 `json:"sector_size"`
@@ -109,14 +110,25 @@ func validateInput(input *Input) error {
 }
 
 func makePartitionTableFromOtkInput(input *Input) (*disk.PartitionTable, error) {
+	var err error
+
 	if err := validateInput(input); err != nil {
 		return nil, fmt.Errorf("cannot validate inputs: %w", err)
 	}
 
+	var startOffset uint64
+	if input.Properties.StartOffset != "" {
+		startOffset, err = common.DataSizeToUint64(input.Properties.StartOffset)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	pt := &disk.PartitionTable{
-		UUID:       input.Properties.UUID,
-		Type:       string(input.Properties.Type),
-		SectorSize: input.Properties.SectorSize,
+		UUID:        input.Properties.UUID,
+		Type:        string(input.Properties.Type),
+		SectorSize:  input.Properties.SectorSize,
+		StartOffset: startOffset,
 	}
 	if input.Properties.Create.BIOSBootPartition {
 		if len(pt.Partitions) > 0 {
