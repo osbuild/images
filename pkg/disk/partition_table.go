@@ -160,6 +160,122 @@ func NewPartitionTable(basePT *PartitionTable, mountpoints []blueprint.Filesyste
 	return newPT, nil
 }
 
+// NewCustomPartitionTable creates a partition table based almost entirely on the partitioning customizations from a blueprint.
+func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization, minSize uint64, requiredSizes map[string]uint64, rng *rand.Rand) (*PartitionTable, error) {
+	pt := &PartitionTable{}
+	if customizations == nil {
+		// TODO: return required partitions
+		return pt, nil
+	}
+
+	// TODO: add bios boot part (1 MiB empty)
+
+	// TODO: add efi partition
+
+	// TODO: handle dos pt type
+
+	if customizations.Plain != nil {
+		for _, partition := range customizations.Plain.Filesystems {
+			newpart := Partition{
+				Type:     FilesystemDataGUID, // all user-defined partitions are data partitions
+				Bootable: false,
+				Size:     partition.MinSize,
+				Payload: &Filesystem{
+					Type:         partition.Type,
+					Label:        partition.Label,
+					Mountpoint:   partition.Mountpoint,
+					FSTabOptions: "defaults", // TODO: add customization
+				},
+			}
+			pt.Partitions = append(pt.Partitions, newpart)
+		}
+	}
+
+	if customizations.LVM != nil {
+		// we need a /boot partition to boot LVM, create boot partition if it
+		// does not already exist
+		bootPath := entityPath(pt, "/boot")
+		if bootPath == nil {
+			_, err := pt.CreateMountpoint("/boot", 512*datasizes.MiB)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		for _, vg := range customizations.LVM.VolumeGroups {
+			newlvs := make([]LVMLogicalVolume, len(vg.LogicalVolumes))
+			for idx, lv := range vg.LogicalVolumes {
+				newlv := LVMLogicalVolume{
+					Name: lv.Name,
+					Size: lv.MinSize,
+					Payload: &Filesystem{
+						Type:         lv.Type,
+						Label:        lv.Label,
+						Mountpoint:   lv.Mountpoint,
+						FSTabOptions: "defaults", // TODO: add customization
+					},
+				}
+				newlvs[idx] = newlv
+			}
+
+			newvg := &LVMVolumeGroup{
+				Name:           vg.Name, // TODO: auto-create if empty
+				Description:    "created via lvm2 and osbuild",
+				LogicalVolumes: newlvs,
+			}
+
+			// create partition for volume group
+			newpart := Partition{
+				Type:     LVMPartitionGUID,
+				Size:     vg.MinSize,
+				Bootable: false,
+				Payload:  newvg,
+			}
+
+			pt.Partitions = append(pt.Partitions, newpart)
+		}
+	}
+
+	if customizations.Btrfs != nil {
+		// we need a /boot partition to boot btrfs, create boot partition if it
+		// does not already exist
+		bootPath := entityPath(pt, "/boot")
+		if bootPath == nil {
+			_, err := pt.CreateMountpoint("/boot", 512*datasizes.MiB)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		for _, btrfsvol := range customizations.Btrfs.Volumes {
+			subvols := make([]BtrfsSubvolume, len(btrfsvol.Subvolumes))
+			for idx, subvol := range btrfsvol.Subvolumes {
+				newsubvol := BtrfsSubvolume{
+					Name:       subvol.Name,
+					Mountpoint: subvol.Mountpoint,
+				}
+				subvols[idx] = newsubvol
+			}
+
+			newvol := &Btrfs{
+				Subvolumes: subvols,
+			}
+
+			// create partition for btrfs volume
+			newpart := Partition{
+				Type:     FilesystemDataGUID,
+				Bootable: false,
+				Payload:  newvol,
+				Size:     btrfsvol.MinSize,
+			}
+
+			pt.Partitions = append(pt.Partitions, newpart)
+		}
+	}
+
+	return pt, nil
+}
+
 func (pt *PartitionTable) Clone() Entity {
 	if pt == nil {
 		return nil
