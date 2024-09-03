@@ -25,6 +25,9 @@ func run(r io.Reader, w io.Writer) error {
 	if err := json.NewDecoder(r).Decode(&inp); err != nil {
 		return err
 	}
+	if err := inp.Tree.Validate(); err != nil {
+		return fmt.Errorf("cannot validate input data: %w", err)
+	}
 
 	rootMntName, mounts, devices, err := osbuild.GenMountsDevicesFromPT(inp.Tree.Const.Filename, inp.Tree.Const.Internal.PartitionTable)
 	if err != nil {
