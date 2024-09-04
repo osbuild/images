@@ -407,7 +407,7 @@ Requisite=greenboot-healthcheck.service
 After=network-online.target greenboot-healthcheck.service osbuild-first-boot.service
 [Install]
 WantedBy=multi-user.target`
-	icDropinFile, err := fsnode.NewFile("/etc/systemd/system/insights-client.service.d/override.conf", nil, "root", "root", []byte(dropinContents))
+	icDropinFile, err := fsnode.NewFile("/etc/systemd/system/insights-client.service.d/override.conf", nil, nil, nil, []byte(dropinContents))
 	if err != nil {
 		panic(err)
 	}
@@ -416,7 +416,7 @@ WantedBy=multi-user.target`
 
 func mkInsightsDropinDir() *fsnode.Directory {
 
-	icDropinDirectory, err := fsnode.NewDirectory("/etc/systemd/system/insights-client.service.d", nil, "root", "root", true)
+	icDropinDirectory, err := fsnode.NewDirectory("/etc/systemd/system/insights-client.service.d", nil, nil, nil, true)
 	if err != nil {
 		panic(err)
 	}
