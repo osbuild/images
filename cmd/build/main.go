@@ -144,6 +144,9 @@ func depsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d dist
 }
 
 func save(ms manifest.OSBuildManifest, fpath string) error {
+	if err := os.MkdirAll(filepath.Dir(fpath), 0777); err != nil {
+		return fmt.Errorf("cannot save manifest: %w", err)
+	}
 	b, err := json.MarshalIndent(ms, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal data for %q: %s\n", fpath, err.Error())
@@ -183,12 +186,13 @@ func filterRepos(repos []rpmmd.RepoConfig, typeName string) []rpmmd.RepoConfig {
 
 func run() error {
 	// common args
-	var outputDir, osbuildStore, rpmCacheRoot string
+	var outputDir, osbuildStore, rpmCacheRoot, manifestPath string
 	var manifestOnly bool
 	flag.StringVar(&outputDir, "output", ".", "artifact output directory")
 	flag.StringVar(&osbuildStore, "store", ".osbuild", "osbuild store for intermediate pipeline trees")
 	flag.StringVar(&rpmCacheRoot, "rpmmd", "/tmp/rpmmd", "rpm metadata cache directory")
 	flag.BoolVar(&manifestOnly, "manifest-only", false, "only build the manifest, do not run osbuild")
+	flag.StringVar(&manifestPath, "manifest-path", "", "write manifest to the give path")
 
 	// osbuild checkpoint arg
 	var checkpoints cmdutil.MultiValue
@@ -223,10 +227,6 @@ func run() error {
 		config = &buildconfig.BuildConfig{}
 	}
 
-	if err := os.MkdirAll(outputDir, 0777); err != nil {
-		return fmt.Errorf("failed to create target directory: %s", err.Error())
-	}
-
 	distribution := distroFac.GetDistro(distroName)
 	if distribution == nil {
 		return fmt.Errorf("invalid or unsupported distribution: %q", distroName)
@@ -236,12 +236,6 @@ func run() error {
 	arch, err := distribution.GetArch(archName)
 	if err != nil {
 		return fmt.Errorf("invalid arch name %q for distro %q: %s\n", archName, distroName, err.Error())
-	}
-
-	buildName := fmt.Sprintf("%s-%s-%s-%s", u(distroName), u(archName), u(imgTypeName), u(config.Name))
-	buildDir := filepath.Join(outputDir, buildName)
-	if err := os.MkdirAll(buildDir, 0777); err != nil {
-		return fmt.Errorf("failed to create target directory: %s", err.Error())
 	}
 
 	imgType, err := arch.GetImageType(imgTypeName)
@@ -266,7 +260,11 @@ func run() error {
 	}
 	fmt.Print("DONE\n")
 
-	manifestPath := filepath.Join(buildDir, "manifest.json")
+	buildName := fmt.Sprintf("%s-%s-%s-%s", u(distroName), u(archName), u(imgTypeName), u(config.Name))
+	if manifestPath == "" {
+		buildDir := filepath.Join(outputDir, buildName)
+		manifestPath = filepath.Join(buildDir, "manifest.json")
+	}
 	if err := save(mf, manifestPath); err != nil {
 		return err
 	}
@@ -277,6 +275,14 @@ func run() error {
 	fmt.Printf("Building manifest: %s\n", manifestPath)
 
 	jobOutput := filepath.Join(outputDir, buildName)
+	if err := os.MkdirAll(jobOutput, 0777); err != nil {
+		return fmt.Errorf("failed to create output directory: %w", err)
+	}
+	buildDir := filepath.Join(outputDir, buildName)
+	if err := os.MkdirAll(buildDir, 0777); err != nil {
+		return fmt.Errorf("failed to create target directory: %w", err)
+	}
+
 	_, err = osbuild.RunOSBuild(mf, osbuildStore, jobOutput, imgType.Exports(), checkpoints, nil, false, os.Stderr)
 	if err != nil {
 		return err
