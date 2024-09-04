@@ -145,7 +145,7 @@ func osCustomizations(
 	}
 
 	if t.IsRHEL() && options.Facts != nil {
-		osc.FactAPIType = &options.Facts.APIType
+		osc.RHSMFacts = options.Facts
 	}
 
 	var err error

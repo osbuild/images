@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/google/uuid"
+
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/environment"
 	"github.com/osbuild/images/internal/workload"
@@ -124,7 +126,6 @@ type OSCustomizations struct {
 	UdevRules           *osbuild.UdevRulesStageOptions
 	WSLConfig           *osbuild.WSLConfStageOptions
 	LeapSecTZ           *string
-	FactAPIType         *facts.APIType
 	Presets             []osbuild.Preset
 	ContainersStorage   *string
 
@@ -134,6 +135,7 @@ type OSCustomizations struct {
 	Subscription *subscription.ImageOptions
 	// The final RHSM config to be applied to the image
 	RHSMConfig *subscription.RHSMConfig
+	RHSMFacts  *facts.ImageOptions
 
 	// Custom directories and files to create in the image
 	Directories []*fsnode.Directory
@@ -747,11 +749,21 @@ func (p *OS) serialize() osbuild.Pipeline {
 		pipeline.AddStage(bootloader)
 	}
 
-	if p.FactAPIType != nil {
+	if p.RHSMFacts != nil {
+		rhsmFacts := osbuild.RHSMFacts{
+			ApiType: p.RHSMFacts.APIType.String(),
+		}
+
+		if p.RHSMFacts.OpenSCAPProfileID != "" {
+			rhsmFacts.OpenSCAPProfileID = p.RHSMFacts.OpenSCAPProfileID
+		}
+
+		if p.RHSMFacts.CompliancePolicyID != uuid.Nil {
+			rhsmFacts.CompliancePolicyID = p.RHSMFacts.CompliancePolicyID.String()
+		}
+
 		pipeline.AddStage(osbuild.NewRHSMFactsStage(&osbuild.RHSMFactsStageOptions{
-			Facts: osbuild.RHSMFacts{
-				ApiType: p.FactAPIType.String(),
-			},
+			Facts: rhsmFacts,
 		}))
 	}
 
