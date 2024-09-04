@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"sort"
 	"strings"
@@ -225,17 +226,11 @@ func GetVerStrFromPackageSpecListPanic(pkgs []PackageSpec, packageName string) s
 	return pkgVerStr
 }
 
-func LoadRepositoriesFromFile(filename string) (map[string][]RepoConfig, error) {
-	f, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
+func LoadRepositoriesFromReader(r io.Reader) (map[string][]RepoConfig, error) {
 	var reposMap map[string][]repository
 	repoConfigs := make(map[string][]RepoConfig)
 
-	err = json.NewDecoder(f).Decode(&reposMap)
+	err := json.NewDecoder(r).Decode(&reposMap)
 	if err != nil {
 		return nil, err
 	}
@@ -273,6 +268,16 @@ func LoadRepositoriesFromFile(filename string) (map[string][]RepoConfig, error) 
 	}
 
 	return repoConfigs, nil
+}
+
+func LoadRepositoriesFromFile(filename string) (map[string][]RepoConfig, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	return LoadRepositoriesFromReader(f)
 }
 
 func (packages PackageList) Search(globPatterns ...string) (PackageList, error) {

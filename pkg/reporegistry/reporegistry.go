@@ -2,10 +2,17 @@ package reporegistry
 
 import (
 	"fmt"
+	"io/fs"
 
 	"github.com/osbuild/images/pkg/distroidparser"
 	"github.com/osbuild/images/pkg/rpmmd"
+	"github.com/osbuild/images/test"
 )
+
+type TestRepoFS interface {
+	fs.ReadFileFS
+	fs.ReadDirFS
+}
 
 // RepoRegistry represents a database of distro and architecture
 // specific RPM repositories. Image types are considered only
@@ -16,7 +23,7 @@ type RepoRegistry struct {
 
 // New returns a new RepoRegistry instance with the data
 // loaded from the given repoConfigPaths
-func New(repoConfigPaths []string) (*RepoRegistry, error) {
+func New(fsys TestRepoFS, repoConfigPaths []string) (*RepoRegistry, error) {
 	repositories, err := LoadAllRepositories(repoConfigPaths)
 	if err != nil {
 		return nil, err
@@ -28,8 +35,8 @@ func New(repoConfigPaths []string) (*RepoRegistry, error) {
 // NewTestedDefault returns a new RepoRegistry instance with the data
 // loaded from the default test repositories
 func NewTestedDefault() (*RepoRegistry, error) {
-	testReposPath := []string{"./test/data"}
-	return New(testReposPath)
+	testReposPath := []string{"./data"}
+	return New(testdata.Content, testReposPath)
 }
 
 func NewFromDistrosRepoConfigs(distrosRepoConfigs rpmmd.DistrosRepoConfigs) *RepoRegistry {
