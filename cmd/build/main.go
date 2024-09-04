@@ -53,7 +53,7 @@ func makeManifest(
 
 	manifest, warnings, err := imgType.Manifest(&bp, options, repos, seedArg)
 	if err != nil {
-		return nil, fmt.Errorf("[ERROR] manifest generation failed: %s", err.Error())
+		return nil, fmt.Errorf("[ERROR] manifest generation failed: %w", err)
 	}
 	if len(warnings) > 0 {
 		fmt.Fprintf(os.Stderr, "[WARNING]\n%s", strings.Join(warnings, "\n"))
@@ -61,7 +61,7 @@ func makeManifest(
 
 	packageSpecs, repoConfigs, err := depsolve(cacheDir, manifest.GetPackageSetChains(), distribution, archName)
 	if err != nil {
-		return nil, fmt.Errorf("[ERROR] depsolve failed: %s", err.Error())
+		return nil, fmt.Errorf("[ERROR] depsolve failed: %w", err)
 	}
 	if packageSpecs == nil {
 		return nil, fmt.Errorf("[ERROR] depsolve did not return any packages")
@@ -74,17 +74,17 @@ func makeManifest(
 
 	containerSpecs, err := resolvePipelineContainers(manifest.GetContainerSourceSpecs(), archName)
 	if err != nil {
-		return nil, fmt.Errorf("[ERROR] container resolution failed: %s", err.Error())
+		return nil, fmt.Errorf("[ERROR] container resolution failed: %w", err)
 	}
 
 	commitSpecs, err := resolvePipelineCommits(manifest.GetOSTreeSourceSpecs())
 	if err != nil {
-		return nil, fmt.Errorf("[ERROR] ostree commit resolution failed: %s\n", err.Error())
+		return nil, fmt.Errorf("[ERROR] ostree commit resolution failed: %w", err)
 	}
 
 	mf, err := manifest.Serialize(packageSpecs, containerSpecs, commitSpecs, nil)
 	if err != nil {
-		return nil, fmt.Errorf("[ERROR] manifest serialization failed: %s", err.Error())
+		return nil, fmt.Errorf("[ERROR] manifest serialization failed: %w", err)
 	}
 
 	return mf, nil
@@ -146,16 +146,16 @@ func depsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d dist
 func save(ms manifest.OSBuildManifest, fpath string) error {
 	b, err := json.MarshalIndent(ms, "", "  ")
 	if err != nil {
-		return fmt.Errorf("failed to marshal data for %q: %s\n", fpath, err.Error())
+		return fmt.Errorf("failed to marshal data for %q: %w", fpath, err)
 	}
 	b = append(b, '\n') // add new line at end of file
 	fp, err := os.Create(fpath)
 	if err != nil {
-		return fmt.Errorf("failed to create output file %q: %s\n", fpath, err.Error())
+		return fmt.Errorf("failed to create output file %q: %w", fpath, err)
 	}
 	defer fp.Close()
 	if _, err := fp.Write(b); err != nil {
-		return fmt.Errorf("failed to write output file %q: %s\n", fpath, err.Error())
+		return fmt.Errorf("failed to write output file %q: %w", fpath, err)
 	}
 	return nil
 }
@@ -217,7 +217,7 @@ func run() error {
 	}
 
 	if err := os.MkdirAll(outputDir, 0777); err != nil {
-		return fmt.Errorf("failed to create target directory: %s", err.Error())
+		return fmt.Errorf("failed to create target directory: %w", err)
 	}
 
 	distribution := distroFac.GetDistro(distroName)
@@ -228,28 +228,28 @@ func run() error {
 	archName := arch.Current().String()
 	arch, err := distribution.GetArch(archName)
 	if err != nil {
-		return fmt.Errorf("invalid arch name %q for distro %q: %s\n", archName, distroName, err.Error())
+		return fmt.Errorf("invalid arch name %q for distro %q: %w", archName, distroName, err)
 	}
 
 	buildName := fmt.Sprintf("%s-%s-%s-%s", u(distroName), u(archName), u(imgTypeName), u(config.Name))
 	buildDir := filepath.Join(outputDir, buildName)
 	if err := os.MkdirAll(buildDir, 0777); err != nil {
-		return fmt.Errorf("failed to create target directory: %s", err.Error())
+		return fmt.Errorf("failed to create target directory: %w", err)
 	}
 
 	imgType, err := arch.GetImageType(imgTypeName)
 	if err != nil {
-		return fmt.Errorf("invalid image type %q for distro %q and arch %q: %s\n", imgTypeName, distroName, archName, err.Error())
+		return fmt.Errorf("invalid image type %q for distro %q and arch %q: %w", imgTypeName, distroName, archName, err)
 	}
 
 	// get repositories
 	repos, err := testedRepoRegistry.ReposByArchName(distroName, archName, true)
 	if err != nil {
-		return fmt.Errorf("failed to get repositories for %s/%s: %v", distroName, archName, err)
+		return fmt.Errorf("failed to get repositories for %s/%s: %w", distroName, archName, err)
 	}
 	repos = filterRepos(repos, imgTypeName)
 	if len(repos) == 0 {
-		return fmt.Errorf("no repositories defined for %s/%s\n", distroName, archName)
+		return fmt.Errorf("no repositories defined for %s/%s", distroName, archName)
 	}
 
 	fmt.Printf("Generating manifest for %s: ", config.Name)
