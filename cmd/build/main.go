@@ -199,10 +199,11 @@ func run() error {
 	flag.Var(&checkpoints, "checkpoints", "comma-separated list of pipeline names to checkpoint (passed to osbuild --checkpoint)")
 
 	// image selection args
-	var distroName, imgTypeName, configFile string
+	var distroName, imgTypeName, configFile, targetArch string
 	flag.StringVar(&distroName, "distro", "", "distribution (required)")
 	flag.StringVar(&imgTypeName, "type", "", "image type name (required)")
 	flag.StringVar(&configFile, "config", "", "build config file")
+	flag.StringVar(&targetArch, "target-arch", "", "target architecture to use, mostly for -manifest-only")
 
 	flag.Parse()
 
@@ -232,7 +233,12 @@ func run() error {
 		return fmt.Errorf("invalid or unsupported distribution: %q", distroName)
 	}
 
-	archName := arch.Current().String()
+	var archName string
+	if targetArch != "" {
+		archName = targetArch
+	} else {
+		archName = arch.Current().String()
+	}
 	arch, err := distribution.GetArch(archName)
 	if err != nil {
 		return fmt.Errorf("invalid arch name %q for distro %q: %s\n", archName, distroName, err.Error())
