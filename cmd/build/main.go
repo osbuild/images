@@ -184,9 +184,11 @@ func filterRepos(repos []rpmmd.RepoConfig, typeName string) []rpmmd.RepoConfig {
 func run() error {
 	// common args
 	var outputDir, osbuildStore, rpmCacheRoot string
+	var manifestOnly bool
 	flag.StringVar(&outputDir, "output", ".", "artifact output directory")
 	flag.StringVar(&osbuildStore, "store", ".osbuild", "osbuild store for intermediate pipeline trees")
 	flag.StringVar(&rpmCacheRoot, "rpmmd", "/tmp/rpmmd", "rpm metadata cache directory")
+	flag.BoolVar(&manifestOnly, "manifest-only", false, "only build the manifest, do not run osbuild")
 
 	// osbuild checkpoint arg
 	var checkpoints cmdutil.MultiValue
@@ -252,7 +254,7 @@ func run() error {
 		return fmt.Errorf("no repositories defined for %s/%s\n", distroName, archName)
 	}
 
-	fmt.Printf("Generating manifest for %s: ", config.Name)
+	fmt.Printf("Generating manifest for %s\n", config.Name)
 	mf, err := makeManifest(config, imgType, distribution, repos, archName, rpmCacheRoot)
 	if err != nil {
 		return err
@@ -262,6 +264,9 @@ func run() error {
 	manifestPath := filepath.Join(buildDir, "manifest.json")
 	if err := save(mf, manifestPath); err != nil {
 		return err
+	}
+	if manifestOnly {
+		return nil
 	}
 
 	fmt.Printf("Building manifest: %s\n", manifestPath)
