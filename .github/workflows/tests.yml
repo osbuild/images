@@ -85,6 +85,7 @@ jobs:
             image_tag: stream9
           - version: 10
             image_tag: stream10-development
+      fail-fast: false  # if one fails, keep the other(s) running
     name: "🛃 Unit tests (CentOS Stream ${{ matrix.centos_stream.version }})"
     runs-on: ubuntu-latest
     container:
