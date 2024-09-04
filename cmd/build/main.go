@@ -198,11 +198,11 @@ func run() error {
 	var distroName, imgTypeName, configFile string
 	flag.StringVar(&distroName, "distro", "", "distribution (required)")
 	flag.StringVar(&imgTypeName, "type", "", "image type name (required)")
-	flag.StringVar(&configFile, "config", "", "build config file (required)")
+	flag.StringVar(&configFile, "config", "", "build config file")
 
 	flag.Parse()
 
-	if distroName == "" || imgTypeName == "" || configFile == "" {
+	if distroName == "" || imgTypeName == "" {
 		flag.Usage()
 		os.Exit(1)
 	}
@@ -213,9 +213,14 @@ func run() error {
 	}
 	distroFac := distrofactory.NewDefault()
 
-	config, err := buildconfig.New(configFile)
-	if err != nil {
-		return err
+	var config *buildconfig.BuildConfig
+	if configFile != "" {
+		config, err = buildconfig.New(configFile)
+		if err != nil {
+			return err
+		}
+	} else {
+		config = &buildconfig.BuildConfig{}
 	}
 
 	if err := os.MkdirAll(outputDir, 0777); err != nil {
@@ -254,7 +259,7 @@ func run() error {
 		return fmt.Errorf("no repositories defined for %s/%s\n", distroName, archName)
 	}
 
-	fmt.Printf("Generating manifest for %s\n", config.Name)
+	fmt.Printf("Generating manifest for %s", config.Name)
 	mf, err := makeManifest(config, imgType, distribution, repos, archName, rpmCacheRoot)
 	if err != nil {
 		return err
