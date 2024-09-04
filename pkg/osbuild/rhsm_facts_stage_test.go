@@ -32,6 +32,25 @@ func TestRHSMFactsStageJson(t *testing.T) {
 			},
 			JsonString: fmt.Sprintf(`{"facts":{"image-builder.osbuild-composer.api-type":"%s"}}`, "test-api"),
 		},
+		{
+			Options: RHSMFactsStageOptions{
+				Facts: RHSMFacts{
+					ApiType:           "test-api",
+					OpenSCAPProfileID: "test-profile-id",
+				},
+			},
+			JsonString: fmt.Sprintf(`{"facts":{"image-builder.osbuild-composer.api-type":"%s","image-builder.insights.openscap-profile-id":"%s"}}`, "test-api", "test-profile-id"),
+		},
+		{
+			Options: RHSMFactsStageOptions{
+				Facts: RHSMFacts{
+					ApiType:            "test-api",
+					OpenSCAPProfileID:  "test-profile-id",
+					CompliancePolicyID: "test-compliance-policy-id",
+				},
+			},
+			JsonString: fmt.Sprintf(`{"facts":{"image-builder.osbuild-composer.api-type":"%s","image-builder.insights.openscap-profile-id":"%s","image-builder.insights.compliance-policy-id":"%s"}}`, "test-api", "test-profile-id", "test-compliance-policy-id"),
+		},
 	}
 	for _, test := range tests {
 		marshaledJson, err := json.Marshal(test.Options)
