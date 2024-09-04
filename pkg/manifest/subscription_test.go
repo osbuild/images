@@ -388,6 +388,17 @@ func TestSubscriptionService(t *testing.T) {
 			assert.Equal(dirs, tc.expectedDirs)
 			assert.Equal(files, tc.expectedFiles)
 			assert.Equal(services, tc.expectedServices)
+
+			// ensure no directories or files have non-nil ownership
+			for _, file := range files {
+				assert.Nil(file.User())
+				assert.Nil(file.Group())
+			}
+
+			for _, dir := range dirs {
+				assert.Nil(dir.User())
+				assert.Nil(dir.Group())
+			}
 		})
 	}
 }
