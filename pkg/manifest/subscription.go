@@ -195,11 +195,16 @@ func runInsightsClientOnBoot() (*fsnode.Directory, *fsnode.File, error) {
 	// all the options we need. This is a temporary workaround
 	// until we get the stage updated to support everything we need.
 	icDropinFilepath, icDropinContents := insightsClientDropin()
-	icDropinDirectory, err := fsnode.NewDirectory(filepath.Dir(icDropinFilepath), nil, "root", "root", true)
+
+	// NOTE: Ownership is left as nil:nil, which implicitly creates files as
+	// root:root. Adding an explicit owner requires chroot to run the
+	// org.osbuild.chown stage, which we can't run in the subscription pipeline
+	// since it has no packages.
+	icDropinDirectory, err := fsnode.NewDirectory(filepath.Dir(icDropinFilepath), nil, nil, nil, true)
 	if err != nil {
 		return nil, nil, err
 	}
-	icDropinFile, err := fsnode.NewFile(icDropinFilepath, nil, "root", "root", []byte(icDropinContents))
+	icDropinFile, err := fsnode.NewFile(icDropinFilepath, nil, nil, nil, []byte(icDropinContents))
 	if err != nil {
 		return nil, nil, err
 	}
