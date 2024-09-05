@@ -226,6 +226,13 @@ func osCustomizations(
 	osc.Files = append(osc.Files, imageConfig.Files...)
 	osc.Directories = append(osc.Directories, imageConfig.Directories...)
 
+	if err := c.CheckCACerts(); err != nil {
+		panic(fmt.Sprintf("unexpected error checking CA certs: %v", err))
+	}
+	if ca := c.GetCACerts(); ca != nil {
+		osc.CACerts = ca.PEMCerts
+	}
+
 	return osc, nil
 }
 
