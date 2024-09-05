@@ -1,6 +1,8 @@
 package manifest
 
 import (
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -22,6 +24,7 @@ import (
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rhsm/facts"
 	"github.com/osbuild/images/pkg/rpmmd"
+	"github.com/sirupsen/logrus"
 )
 
 // OSCustomizations encapsulates all configuration applied to the base
@@ -138,6 +141,8 @@ type OSCustomizations struct {
 	// Custom directories and files to create in the image
 	Directories []*fsnode.Directory
 	Files       []*fsnode.File
+
+	CACerts []string
 
 	FIPS bool
 
@@ -863,7 +868,49 @@ func (p *OS) serialize() osbuild.Pipeline {
 		}
 	}
 
+	if len(p.CACerts) > 0 {
+		for _, cc := range p.CACerts {
+			for _, c := range parseCerts(cc) {
+				path := filepath.Join("/etc/pki/ca-trust/source/anchors", filepath.Base(c.SerialNumber.Text(16))+".pem")
+				f, err := fsnode.NewFile(path, nil, "root", "root", pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: c.Raw}))
+				if err != nil {
+					panic(err)
+				}
+				pipeline.AddStages(osbuild.GenFileNodesStages([]*fsnode.File{f})...)
+			}
+		}
+		pipeline.AddStage(osbuild.NewCAStageStage())
+	}
+
 	return pipeline
+}
+
+func parseCerts(cert string) []*x509.Certificate {
+	result := make([]*x509.Certificate, 0, 1)
+	block := []byte(cert)
+	var blocks [][]byte
+	for {
+		var certDERBlock *pem.Block
+		certDERBlock, block = pem.Decode(block)
+		if certDERBlock == nil {
+			break
+		}
+
+		if certDERBlock.Type == "CERTIFICATE" {
+			blocks = append(blocks, certDERBlock.Bytes)
+		}
+	}
+
+	for _, block := range blocks {
+		cert, err := x509.ParseCertificate(block)
+		if err != nil {
+			logrus.Warnf("failed to parse certificate, skipping: %s", err)
+			continue
+		}
+		result = append(result, cert)
+	}
+
+	return result
 }
 
 func prependKernelCmdlineStage(pipeline osbuild.Pipeline, kernelOptions string, pt *disk.PartitionTable) osbuild.Pipeline {
