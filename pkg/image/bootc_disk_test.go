@@ -130,6 +130,15 @@ func TestBootcDiskImageInstantiateNoBuildpipelineForQcow2(t *testing.T) {
 	assert.Equal(t, qcowPipeline["build"], nil)
 }
 
+func TestBootcDiskImageInstantiateNoBuildpipelineForVpc(t *testing.T) {
+	osbuildManifest := makeBootcDiskImageOsbuildManifest(t, nil)
+
+	vpcPipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "vpc")
+	require.NotNil(t, vpcPipeline)
+	// no build pipeline for vpc
+	assert.Equal(t, vpcPipeline["build"], nil)
+}
+
 func TestBootcDiskImageInstantiateVmdk(t *testing.T) {
 	opts := &bootcDiskImageTestOpts{ImageFormat: platform.FORMAT_VMDK}
 	osbuildManifest := makeBootcDiskImageOsbuildManifest(t, opts)
@@ -184,6 +193,10 @@ func TestBootcDiskImageExportPipelines(t *testing.T) {
 	// vmdk pipeline for the vmdk
 	vmdkPipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "vmdk")
 	require.NotNil(vmdkPipeline)
+
+	// vpc pipeline for the vhd
+	vpcPipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "vpc")
+	require.NotNil(vpcPipeline)
 
 	// tar pipeline for ova
 	tarPipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "archive")
