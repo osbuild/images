@@ -1,6 +1,7 @@
 {
   "./configs/all-customizations.json": {
     "distros": [
+      "rhel-10*",
       "rhel-9*",
       "rhel-8*",
       "centos*",
