@@ -10,6 +10,7 @@ import (
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
+	"github.com/osbuild/images/pkg/platform"
 )
 
 func TestPartitionTable_GetMountpointSize(t *testing.T) {
@@ -120,7 +121,30 @@ func TestNewCustomPartitionTable(t *testing.T) {
 	testCases := map[string]testCase{
 		"null": {
 			customizations: nil,
-			expected:       &disk.PartitionTable{},
+			expected: &disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Size:     1 * datasizes.MiB,
+						Bootable: true,
+						Type:     disk.BIOSBootPartitionGUID,
+						UUID:     disk.BIOSBootPartitionUUID,
+					},
+					{
+						Size: 200 * datasizes.MiB,
+						Type: disk.EFISystemPartitionGUID,
+						UUID: disk.EFISystemPartitionUUID,
+						Payload: &disk.Filesystem{
+							Type:         "vfat",
+							UUID:         disk.EFIFilesystemUUID,
+							Mountpoint:   "/boot/efi",
+							Label:        "EFI-SYSTEM",
+							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+							FSTabFreq:    0,
+							FSTabPassNo:  2,
+						},
+					},
+				},
+			},
 		},
 		"plain": {
 			customizations: &blueprint.PartitioningCustomization{
@@ -137,6 +161,26 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			},
 			expected: &disk.PartitionTable{
 				Partitions: []disk.Partition{
+					{
+						Size:     1 * datasizes.MiB,
+						Bootable: true,
+						Type:     disk.BIOSBootPartitionGUID,
+						UUID:     disk.BIOSBootPartitionUUID,
+					},
+					{
+						Size: 200 * datasizes.MiB,
+						Type: disk.EFISystemPartitionGUID,
+						UUID: disk.EFISystemPartitionUUID,
+						Payload: &disk.Filesystem{
+							Type:         "vfat",
+							UUID:         disk.EFIFilesystemUUID,
+							Mountpoint:   "/boot/efi",
+							Label:        "EFI-SYSTEM",
+							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+							FSTabFreq:    0,
+							FSTabPassNo:  2,
+						},
+					},
 					{
 						Start:    0,
 						Size:     20,
@@ -175,6 +219,26 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			},
 			expected: &disk.PartitionTable{
 				Partitions: []disk.Partition{
+					{
+						Size:     1 * datasizes.MiB,
+						Bootable: true,
+						Type:     disk.BIOSBootPartitionGUID,
+						UUID:     disk.BIOSBootPartitionUUID,
+					},
+					{
+						Size: 200 * datasizes.MiB,
+						Type: disk.EFISystemPartitionGUID,
+						UUID: disk.EFISystemPartitionUUID,
+						Payload: &disk.Filesystem{
+							Type:         "vfat",
+							UUID:         disk.EFIFilesystemUUID,
+							Mountpoint:   "/boot/efi",
+							Label:        "EFI-SYSTEM",
+							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+							FSTabFreq:    0,
+							FSTabPassNo:  2,
+						},
+					},
 					{
 						Start:    0,
 						Size:     50,
@@ -239,6 +303,26 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			},
 			expected: &disk.PartitionTable{
 				Partitions: []disk.Partition{
+					{
+						Size:     1 * datasizes.MiB,
+						Bootable: true,
+						Type:     disk.BIOSBootPartitionGUID,
+						UUID:     disk.BIOSBootPartitionUUID,
+					},
+					{
+						Size: 200 * datasizes.MiB,
+						Type: disk.EFISystemPartitionGUID,
+						UUID: disk.EFISystemPartitionUUID,
+						Payload: &disk.Filesystem{
+							Type:         "vfat",
+							UUID:         disk.EFIFilesystemUUID,
+							Mountpoint:   "/boot/efi",
+							Label:        "EFI-SYSTEM",
+							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+							FSTabFreq:    0,
+							FSTabPassNo:  2,
+						},
+					},
 					{
 						Start:    0,
 						Size:     512 * datasizes.MiB,
@@ -315,6 +399,26 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			expected: &disk.PartitionTable{
 				Partitions: []disk.Partition{
 					{
+						Size:     1 * datasizes.MiB,
+						Bootable: true,
+						Type:     disk.BIOSBootPartitionGUID,
+						UUID:     disk.BIOSBootPartitionUUID,
+					},
+					{
+						Size: 200 * datasizes.MiB,
+						Type: disk.EFISystemPartitionGUID,
+						UUID: disk.EFISystemPartitionUUID,
+						Payload: &disk.Filesystem{
+							Type:         "vfat",
+							UUID:         disk.EFIFilesystemUUID,
+							Mountpoint:   "/boot/efi",
+							Label:        "EFI-SYSTEM",
+							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+							FSTabFreq:    0,
+							FSTabPassNo:  2,
+						},
+					},
+					{
 						Start:    0,
 						Size:     512 * datasizes.MiB,
 						Type:     disk.XBootLDRPartitionGUID,
@@ -360,7 +464,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			assert := assert.New(t)
 
-			pt, err := disk.NewCustomPartitionTable(tc.customizations, 0, nil, rnd)
+			pt, err := disk.NewCustomPartitionTable(tc.customizations, platform.BOOT_HYBRID, 0, nil, rnd)
 
 			assert.NoError(err)
 			assert.Equal(tc.expected, pt)
