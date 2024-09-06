@@ -312,6 +312,55 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 		}
 	}
 
+	// Add root partition if it wasn't created already.
+	// When adding the root partition, add it to:
+	// - The first LVM Volume Group if one exists, otherwise
+	// - The first Btrfs volume if one exists, otherwise
+	// - At the end of the plain partitions.
+	if entityPath(pt, "/") == nil {
+	PartitionLoop:
+		for _, part := range pt.Partitions {
+			switch payload := part.Payload.(type) {
+			case *LVMVolumeGroup:
+				rootlv := LVMLogicalVolume{
+					Name: "rootlv",
+					Size: 0, // TODO: grow to fill space
+					Payload: &Filesystem{
+						Type:         "ext4", // TODO: add a "default fs type" argument to function
+						Label:        "root",
+						Mountpoint:   "/",
+						FSTabOptions: "defaults",
+					},
+				}
+				payload.LogicalVolumes = append(payload.LogicalVolumes, rootlv)
+				break PartitionLoop
+			case *Btrfs:
+				rootsubvol := BtrfsSubvolume{
+					Name:       "root",
+					Mountpoint: "/",
+				}
+				payload.Subvolumes = append(payload.Subvolumes, rootsubvol)
+				break PartitionLoop
+			}
+		}
+		// check again and create a plain partition if root wasn't created in lvm or btrfs
+		if entityPath(pt, "/") == nil {
+			// add a plan root partition at the end of the partition table
+			rootpart := Partition{
+				Type:     FilesystemDataGUID,
+				Bootable: false,
+				Size:     0, // TODO: grow to fill space
+				Payload: &Filesystem{
+					Type:         "ext4", // TODO: add a "default fs type" argument to function,
+					Label:        "root",
+					Mountpoint:   "/",
+					FSTabOptions: "defaults",
+				},
+			}
+			pt.Partitions = append(pt.Partitions, rootpart)
+		}
+	}
+
 	return pt, nil
 }
 
