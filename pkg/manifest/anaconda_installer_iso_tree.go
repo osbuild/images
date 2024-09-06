@@ -515,6 +515,7 @@ halt --eject
 bootc switch --mutate-in-place --transport %s %s
 
 # used during automatic image testing as finished marker
+sync
 if [ -c /dev/ttyS0 ]; then
     echo "Install finished" > /dev/ttyS0
 fi
