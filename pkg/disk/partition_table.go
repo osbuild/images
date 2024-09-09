@@ -188,7 +188,7 @@ func mkESP(size uint64) Partition {
 }
 
 // NewCustomPartitionTable creates a partition table based almost entirely on the partitioning customizations from a blueprint.
-func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization, bootmode platform.BootMode, requiredSizes map[string]uint64, rng *rand.Rand) (*PartitionTable, error) {
+func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization, bootmode platform.BootMode, defaultType string, rng *rand.Rand) (*PartitionTable, error) {
 	// TODO: handle dos pt type
 
 	pt := &PartitionTable{}
@@ -208,6 +208,19 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 		return nil, fmt.Errorf("invalid boot mode specified when generating partition table: %s", bootmode)
 	}
 
+	// TODO: fstype enum for all our supported filesystem types
+
+	// The boot type will be the default only if it's a supported filesystem
+	// type for /boot (ext4 or xfs). Otherwise, we default to xfs.
+	// The empty string also falls back to xfs.
+	bootFsType := ""
+	switch defaultType {
+	case "ext4", "xfs":
+		bootFsType = defaultType
+	default:
+		bootFsType = "xfs"
+	}
+
 	if customizations == nil {
 		customizations = &blueprint.PartitioningCustomization{}
 	}
@@ -222,7 +235,7 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 				Bootable: false,
 				Size:     512 * datasizes.MiB,
 				Payload: &Filesystem{
-					Type:         "xfs",
+					Type:         bootFsType,
 					Label:        "boot",
 					Mountpoint:   "/boot",
 					FSTabOptions: "defaults",
@@ -325,7 +338,7 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 					Name: "rootlv",
 					Size: 0, // TODO: grow to fill space
 					Payload: &Filesystem{
-						Type:         "ext4", // TODO: add a "default fs type" argument to function
+						Type:         defaultType,
 						Label:        "root",
 						Mountpoint:   "/",
 						FSTabOptions: "defaults",
@@ -350,7 +363,7 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 				Bootable: false,
 				Size:     0, // TODO: grow to fill space
 				Payload: &Filesystem{
-					Type:         "ext4", // TODO: add a "default fs type" argument to function,
+					Type:         defaultType,
 					Label:        "root",
 					Mountpoint:   "/",
 					FSTabOptions: "defaults",
@@ -359,6 +372,8 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 			pt.Partitions = append(pt.Partitions, rootpart)
 		}
 	}
+
+	// TODO: set the defaultType on any mountable with an empty Type
 
 	return pt, nil
 }
