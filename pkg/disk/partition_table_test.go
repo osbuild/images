@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/osbuild/images/internal/testdisk"
+	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 )
@@ -104,4 +105,67 @@ func TestPartitionTable_GenerateUUIDs_VFAT(t *testing.T) {
 	pt.GenerateUUIDs(rnd)
 
 	assert.Equal(t, "6e4ff95f", pt.Partitions[0].Payload.(*disk.Filesystem).UUID)
+}
+
+func TestNewCustomPartitionTable(t *testing.T) {
+	// Static seed for testing
+	/* #nosec G404 */
+	rnd := rand.New(rand.NewSource(0))
+
+	type testCase struct {
+		customizations *blueprint.PartitioningCustomization
+		expected       *disk.PartitionTable
+	}
+
+	testCases := map[string]testCase{
+		"null": {
+			customizations: nil,
+			expected:       &disk.PartitionTable{},
+		},
+		"plain": {
+			customizations: &blueprint.PartitioningCustomization{
+				Plain: &blueprint.PlainFilesystemCustomization{
+					Filesystems: []blueprint.FilesystemCustomization{
+						{
+							Mountpoint: "/data",
+							MinSize:    20,
+							Label:      "data",
+							Type:       "ext4",
+						},
+					},
+				},
+			},
+			expected: &disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Start:    0,
+						Size:     20,
+						Type:     disk.FilesystemDataGUID,
+						Bootable: false,
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "data",
+							Mountpoint:   "/data",
+							FSTabOptions: "defaults",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for name := range testCases {
+		tc := testCases[name]
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+
+			pt, err := disk.NewCustomPartitionTable(tc.customizations, 0, nil, rnd)
+
+			assert.NoError(err)
+			assert.Equal(tc.expected, pt)
+		})
+	}
+
 }
