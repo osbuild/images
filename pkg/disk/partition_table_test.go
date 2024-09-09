@@ -115,14 +115,14 @@ func TestNewCustomPartitionTable(t *testing.T) {
 
 	type testCase struct {
 		customizations *blueprint.PartitioningCustomization
-		defaultType    string
+		defaultType    disk.FSType
 		expected       *disk.PartitionTable
 	}
 
 	testCases := map[string]testCase{
 		"null": {
 			customizations: nil,
-			defaultType:    "xfs",
+			defaultType:    disk.FS_XFS,
 			expected: &disk.PartitionTable{
 				Partitions: []disk.Partition{
 					{
@@ -172,7 +172,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					},
 				},
 			},
-			defaultType: "xfs",
+			defaultType: disk.FS_XFS,
 			expected: &disk.PartitionTable{
 				Partitions: []disk.Partition{
 					{
@@ -245,7 +245,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					},
 				},
 			},
-			defaultType: "ext4",
+			defaultType: disk.FS_EXT4,
 			expected: &disk.PartitionTable{
 				Partitions: []disk.Partition{
 					{
@@ -338,7 +338,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					},
 				},
 			},
-			defaultType: "ext4",
+			defaultType: disk.FS_EXT4,
 			expected: &disk.PartitionTable{
 				Partitions: []disk.Partition{
 					{
@@ -444,7 +444,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					},
 				},
 			},
-			defaultType: "ext4",
+			defaultType: disk.FS_EXT4,
 			expected: &disk.PartitionTable{
 				Partitions: []disk.Partition{
 					{
