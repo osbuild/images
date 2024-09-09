@@ -209,8 +209,7 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 	}
 
 	if customizations == nil {
-		// TODO: return required partitions
-		return pt, nil
+		customizations = &blueprint.PartitioningCustomization{}
 	}
 
 	if customizations.LVM != nil || customizations.Btrfs != nil {

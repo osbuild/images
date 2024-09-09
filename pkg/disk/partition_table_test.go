@@ -143,6 +143,17 @@ func TestNewCustomPartitionTable(t *testing.T) {
 							FSTabPassNo:  2,
 						},
 					},
+					{
+						Size:     0,
+						Type:     disk.FilesystemDataGUID,
+						Bootable: false,
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "root",
+							Mountpoint:   "/",
+							FSTabOptions: "defaults",
+						},
+					},
 				},
 			},
 		},
