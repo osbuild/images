@@ -6,9 +6,10 @@ package blueprint
 // - Only one swap partition or file
 
 type PartitioningCustomization struct {
-	Plain *PlainFilesystemCustomization `json:"plain,omitempty" toml:"plain,omitempty"`
-	LVM   *LVMCustomization             `json:"lvm,omitempty" toml:"lvm,omitempty"`
-	Btrfs *BtrfsCustomization           `json:"btrfs,omitempty" toml:"btrfs,omitempty"`
+	MinSize uint64                        `json:"minsize,omitempty" toml:"minsize,omitempty"`
+	Plain   *PlainFilesystemCustomization `json:"plain,omitempty" toml:"plain,omitempty"`
+	LVM     *LVMCustomization             `json:"lvm,omitempty" toml:"lvm,omitempty"`
+	Btrfs   *BtrfsCustomization           `json:"btrfs,omitempty" toml:"btrfs,omitempty"`
 }
 
 type PlainFilesystemCustomization struct {

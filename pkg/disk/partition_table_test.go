@@ -489,7 +489,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			assert := assert.New(t)
 
-			pt, err := disk.NewCustomPartitionTable(tc.customizations, platform.BOOT_HYBRID, 0, nil, rnd)
+			pt, err := disk.NewCustomPartitionTable(tc.customizations, platform.BOOT_HYBRID, nil, rnd)
 
 			assert.NoError(err)
 			assert.Equal(tc.expected, pt)

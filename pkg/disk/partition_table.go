@@ -188,7 +188,7 @@ func mkESP(size uint64) Partition {
 }
 
 // NewCustomPartitionTable creates a partition table based almost entirely on the partitioning customizations from a blueprint.
-func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization, bootmode platform.BootMode, minSize uint64, requiredSizes map[string]uint64, rng *rand.Rand) (*PartitionTable, error) {
+func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization, bootmode platform.BootMode, requiredSizes map[string]uint64, rng *rand.Rand) (*PartitionTable, error) {
 	// TODO: handle dos pt type
 
 	pt := &PartitionTable{}
