@@ -221,6 +221,15 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 		bootFsType = "xfs"
 	}
 
+	// fsType returns the defaultType if the argument is empty, otherwise
+	// returns the arg value as is.
+	fsType := func(t string) string {
+		if t == "" {
+			return defaultType
+		}
+		return t
+	}
+
 	if customizations == nil {
 		customizations = &blueprint.PartitioningCustomization{}
 	}
@@ -252,7 +261,7 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 				Bootable: false,
 				Size:     partition.MinSize,
 				Payload: &Filesystem{
-					Type:         partition.Type,
+					Type:         fsType(partition.Type),
 					Label:        partition.Label,
 					Mountpoint:   partition.Mountpoint,
 					FSTabOptions: "defaults", // TODO: add customization
@@ -270,7 +279,7 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 					Name: lv.Name,
 					Size: lv.MinSize,
 					Payload: &Filesystem{
-						Type:         lv.Type,
+						Type:         fsType(lv.Type),
 						Label:        lv.Label,
 						Mountpoint:   lv.Mountpoint,
 						FSTabOptions: "defaults", // TODO: add customization
@@ -372,8 +381,6 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 			pt.Partitions = append(pt.Partitions, rootpart)
 		}
 	}
-
-	// TODO: set the defaultType on any mountable with an empty Type
 
 	return pt, nil
 }
