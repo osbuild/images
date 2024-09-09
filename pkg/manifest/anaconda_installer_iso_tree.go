@@ -507,7 +507,7 @@ reqpart --add-boot
 part swap --fstype=swap --size=1024
 part / --fstype=ext4 --grow
 
-halt --eject
+reboot --eject
 `
 
 	// Workaround for lack of --target-imgref in Anaconda, xref https://github.com/osbuild/images/issues/380
