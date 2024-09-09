@@ -39,7 +39,7 @@ func TestRHSMFactsStageJson(t *testing.T) {
 					OpenSCAPProfileID: "test-profile-id",
 				},
 			},
-			JsonString: fmt.Sprintf(`{"facts":{"image-builder.osbuild-composer.api-type":"%s","image-builder.insights.openscap-profile-id":"%s"}}`, "test-api", "test-profile-id"),
+			JsonString: fmt.Sprintf(`{"facts":{"image-builder.osbuild-composer.api-type":"%s","image-builder.insights.compliance-profile-id":"%s"}}`, "test-api", "test-profile-id"),
 		},
 		{
 			Options: RHSMFactsStageOptions{
@@ -49,7 +49,7 @@ func TestRHSMFactsStageJson(t *testing.T) {
 					CompliancePolicyID: "test-compliance-policy-id",
 				},
 			},
-			JsonString: fmt.Sprintf(`{"facts":{"image-builder.osbuild-composer.api-type":"%s","image-builder.insights.openscap-profile-id":"%s","image-builder.insights.compliance-policy-id":"%s"}}`, "test-api", "test-profile-id", "test-compliance-policy-id"),
+			JsonString: fmt.Sprintf(`{"facts":{"image-builder.osbuild-composer.api-type":"%s","image-builder.insights.compliance-profile-id":"%s","image-builder.insights.compliance-policy-id":"%s"}}`, "test-api", "test-profile-id", "test-compliance-policy-id"),
 		},
 	}
 	for _, test := range tests {
