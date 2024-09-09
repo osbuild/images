@@ -242,9 +242,11 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					{
 						Start:    0,
 						Size:     512 * datasizes.MiB,
+						Type:     disk.XBootLDRPartitionGUID,
 						Bootable: false,
 						Payload: &disk.Filesystem{
 							Type:         "xfs",
+							Label:        "boot",
 							Mountpoint:   "/boot",
 							FSTabOptions: "defaults",
 							FSTabFreq:    0,
@@ -315,9 +317,11 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					{
 						Start:    0,
 						Size:     512 * datasizes.MiB,
+						Type:     disk.XBootLDRPartitionGUID,
 						Bootable: false,
 						Payload: &disk.Filesystem{
 							Type:         "xfs",
+							Label:        "boot",
 							Mountpoint:   "/boot",
 							FSTabOptions: "defaults",
 							FSTabFreq:    0,

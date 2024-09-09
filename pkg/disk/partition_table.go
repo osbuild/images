@@ -174,6 +174,26 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 
 	// TODO: handle dos pt type
 
+	if customizations.LVM != nil || customizations.Btrfs != nil {
+		// we need a /boot partition to boot LVM or Btrfs, create boot
+		// partition if it does not already exist
+		bootPath := entityPath(pt, "/boot")
+		if bootPath == nil {
+			bootPart := Partition{
+				Type:     XBootLDRPartitionGUID,
+				Bootable: false,
+				Size:     512 * datasizes.MiB,
+				Payload: &Filesystem{
+					Type:         "xfs",
+					Label:        "boot",
+					Mountpoint:   "/boot",
+					FSTabOptions: "defaults",
+				},
+			}
+			pt.Partitions = append(pt.Partitions, bootPart)
+		}
+	}
+
 	if customizations.Plain != nil {
 		for _, partition := range customizations.Plain.Filesystems {
 			newpart := Partition{
@@ -192,16 +212,6 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 	}
 
 	if customizations.LVM != nil {
-		// we need a /boot partition to boot LVM, create boot partition if it
-		// does not already exist
-		bootPath := entityPath(pt, "/boot")
-		if bootPath == nil {
-			_, err := pt.CreateMountpoint("/boot", 512*datasizes.MiB)
-			if err != nil {
-				return nil, err
-			}
-		}
-
 		for _, vg := range customizations.LVM.VolumeGroups {
 			newlvs := make([]LVMLogicalVolume, len(vg.LogicalVolumes))
 			for idx, lv := range vg.LogicalVolumes {
@@ -237,16 +247,6 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 	}
 
 	if customizations.Btrfs != nil {
-		// we need a /boot partition to boot btrfs, create boot partition if it
-		// does not already exist
-		bootPath := entityPath(pt, "/boot")
-		if bootPath == nil {
-			_, err := pt.CreateMountpoint("/boot", 512*datasizes.MiB)
-			if err != nil {
-				return nil, err
-			}
-		}
-
 		for _, btrfsvol := range customizations.Btrfs.Volumes {
 			subvols := make([]BtrfsSubvolume, len(btrfsvol.Subvolumes))
 			for idx, subvol := range btrfsvol.Subvolumes {
