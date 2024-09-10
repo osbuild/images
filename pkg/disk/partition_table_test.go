@@ -265,11 +265,11 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			options: &disk.CustomPartitionTableOptions{
 				DefaultFSType:      disk.FS_EXT4,
 				BootMode:           platform.BOOT_HYBRID,
-				PartitionTableType: disk.PT_DOS,
+				PartitionTableType: disk.PT_GPT,
 			},
 			expected: &disk.PartitionTable{
-				Type: "dos",
-				Size: 272 * datasizes.MiB,
+				Type: "gpt",
+				Size: 273 * datasizes.MiB,
 				Partitions: []disk.Partition{
 					{
 						Start:    1 * datasizes.MiB, // header
@@ -296,7 +296,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					// root is aligned to the end but not reindexed
 					{
 						Start:    222 * datasizes.MiB,
-						Size:     50 * datasizes.MiB,
+						Size:     51*datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
 						Type:     disk.FilesystemDataGUID,
 						Bootable: false,
 						Payload: &disk.Filesystem{
@@ -365,13 +365,12 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				},
 			},
 			options: &disk.CustomPartitionTableOptions{
-				DefaultFSType:      disk.FS_EXT4,
-				BootMode:           platform.BOOT_HYBRID,
-				PartitionTableType: disk.PT_DOS,
+				DefaultFSType: disk.FS_EXT4,
+				BootMode:      platform.BOOT_HYBRID,
 			},
 			expected: &disk.PartitionTable{
-				Type: "dos",
-				Size: 878 * datasizes.MiB,
+				Type: "gpt", // default when unspecified
+				Size: 879 * datasizes.MiB,
 				Partitions: []disk.Partition{
 					{
 						Start:    1 * datasizes.MiB, // header
@@ -411,7 +410,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					},
 					{
 						Start:    714 * datasizes.MiB,
-						Size:     164 * datasizes.MiB, // 4 MiB LVM header, rounded to next extent
+						Size:     165*datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // includes 4 MiB LVM header (after rounding to the next extent) - gpt footer the same size as the header (unaligned)
 						Type:     disk.LVMPartitionGUID,
 						Bootable: false,
 						Payload: &disk.LVMVolumeGroup{
@@ -481,11 +480,11 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			options: &disk.CustomPartitionTableOptions{
 				DefaultFSType:      disk.FS_EXT4,
 				BootMode:           platform.BOOT_HYBRID,
-				PartitionTableType: disk.PT_DOS,
+				PartitionTableType: disk.PT_GPT,
 			},
 			expected: &disk.PartitionTable{
-				Type: "dos",
-				Size: 944 * datasizes.MiB,
+				Type: "gpt",
+				Size: 945 * datasizes.MiB,
 				Partitions: []disk.Partition{
 					{
 						Start:    1 * datasizes.MiB, // header
@@ -525,7 +524,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					},
 					{
 						Start:    714 * datasizes.MiB,
-						Size:     230 * datasizes.MiB,
+						Size:     231*datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
 						Type:     disk.FilesystemDataGUID,
 						Bootable: false,
 						Payload: &disk.Btrfs{
