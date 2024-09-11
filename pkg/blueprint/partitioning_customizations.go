@@ -1,5 +1,12 @@
 package blueprint
 
+import (
+	"errors"
+	"fmt"
+
+	"github.com/osbuild/images/pkg/pathpolicy"
+)
+
 // TODO: validate input:
 // - Duplicate mountpoints
 // - No mixing of btrfs and LVM
@@ -47,4 +54,46 @@ type BtrfsVolumeCustomization struct {
 type BtrfsSubvolumeCustomization struct {
 	Name       string `json:"name" toml:"name"`
 	Mountpoint string `json:"mountpoint" toml:"mountpoint"`
+}
+
+// CheckMountpointsPolicy checks if the mountpoints are allowed by the policy
+func CheckPartitioningPolicy(partitioning *PartitioningCustomization, mountpointAllowList *pathpolicy.PathPolicies) error {
+	if partitioning == nil {
+		return nil
+	}
+
+	// collect all mountpoints
+	var mountpoints []string
+	if partitioning.Plain != nil {
+		for _, part := range partitioning.Plain.Filesystems {
+			mountpoints = append(mountpoints, part.Mountpoint)
+		}
+	}
+	if partitioning.LVM != nil {
+		for _, vg := range partitioning.LVM.VolumeGroups {
+			for _, lv := range vg.LogicalVolumes {
+				mountpoints = append(mountpoints, lv.Mountpoint)
+			}
+		}
+	}
+	if partitioning.Btrfs != nil {
+		for _, vol := range partitioning.Btrfs.Volumes {
+			for _, subvol := range vol.Subvolumes {
+				mountpoints = append(mountpoints, subvol.Mountpoint)
+			}
+		}
+	}
+
+	var errs []error
+	for _, mp := range mountpoints {
+		if err := mountpointAllowList.Check(mp); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	if len(errs) > 0 {
+		return fmt.Errorf("The following errors occurred while setting up custom mountpoints:\n%w", errors.Join(errs...))
+	}
+
+	return nil
 }
