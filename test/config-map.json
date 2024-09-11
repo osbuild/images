@@ -331,5 +331,29 @@
       "rhel-9.5",
       "rhel-10.0"
     ]
+  },
+  "./configs/partitioning-plain.json": {
+    "image-types": [
+      "ami"
+    ],
+    "distros": [
+      "fedora*"
+    ]
+  },
+  "./configs/partitioning-btrfs.json": {
+    "image-types": [
+      "ami"
+    ],
+    "distros": [
+      "fedora*"
+    ]
+  },
+  "./configs/partitioning-lvm.json": {
+    "image-types": [
+      "ami"
+    ],
+    "distros": [
+      "fedora*"
+    ]
   }
 }

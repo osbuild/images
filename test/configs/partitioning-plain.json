@@ -1,0 +1,57 @@
+{
+  "name": "partitioning-plain",
+  "blueprint": {
+    "customizations": {
+      "disk": {
+        "partitions": [
+          {
+            "mountpoint": "/data",
+            "fs_type": "ext4",
+            "minsize": 1073741824
+          },
+          {
+            "mountpoint": "/home",
+            "label": "home",
+            "fs_type": "ext4",
+            "minsize": 2147483648
+          },
+          {
+            "mountpoint": "/home/shadowman",
+            "fs_type": "ext4",
+            "minsize": 524288000
+          },
+          {
+            "mountpoint": "/foo",
+            "fs_type": "ext4",
+            "minsize": 1073741824
+          },
+          {
+            "mountpoint": "/var",
+            "fs_type": "xfs",
+            "minsize": 4294967296
+          },
+          {
+            "mountpoint": "/opt",
+            "fs_type": "ext4",
+            "minsize": 1073741824
+          },
+          {
+            "mountpoint": "/media",
+            "fs_type": "ext4",
+            "minsize": 1073741824
+          },
+          {
+            "mountpoint": "/root",
+            "fs_type": "ext4",
+            "minsize": 1073741824
+          },
+          {
+            "mountpoint": "/srv",
+            "fs_type": "xfs",
+            "minsize": 1073741824
+          }
+        ]
+      }
+    }
+  }
+}
