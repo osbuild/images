@@ -148,6 +148,29 @@ func (t *imageType) getPartitionTable(
 	}
 
 	imageSize := t.Size(options.Size)
+	partitioning := customizations.GetPartitioning()
+	if partitioning != nil {
+		// Use the new custom partition table to create a PT fully based on the user's customizations.
+		// This overrides FilesystemCustomizations, but we should never have both defined.
+		if options.Size > 0 {
+			// user specified a size on the command line, so let's override the
+			// customization with the calculated/rounded imageSize
+			partitioning.MinSize = imageSize
+		}
+
+		ptType, err := disk.NewPartitionTableType(basePartitionTable.Type)
+		if err != nil {
+			return nil, err
+		}
+
+		partOptions := &disk.CustomPartitionTableOptions{
+			PartitionTableType: ptType, // PT type is not customizable, it is determined by the base PT for an image type or architecture
+			BootMode:           t.BootMode(),
+			DefaultFSType:      disk.FS_EXT4, // default fs type for Fedora
+			RequiredMinSizes:   t.requiredPartitionSizes,
+		}
+		return disk.NewCustomPartitionTable(partitioning, partOptions, rng)
+	}
 
 	partitioningMode := options.PartitioningMode
 	if t.rpmOstree {
