@@ -1,0 +1,55 @@
+{
+  "name": "partitioning-btrfs",
+  "blueprint": {
+    "customizations": {
+      "disk": {
+        "partitions": [
+          {
+            "type": "plain",
+            "mountpoint": "/data",
+            "minsize": 1073741824,
+            "fs_type": "xfs"
+          },
+          {
+            "type": "btrfs",
+            "minsize": "10 GiB",
+            "subvolumes": [
+              {
+                "name": "subvol-home",
+                "mountpoint": "/home"
+              },
+              {
+                "name": "subvol-shadowman",
+                "mountpoint": "/home/shadowman"
+              },
+              {
+                "name": "subvol-foo",
+                "mountpoint": "/foo"
+              },
+              {
+                "name": "subvol-usr",
+                "mountpoint": "/usr"
+              },
+              {
+                "name": "subvol-opt",
+                "mountpoint": "/opt"
+              },
+              {
+                "name": "subvol-media",
+                "mountpoint": "/media"
+              },
+              {
+                "name": "subvol-root",
+                "mountpoint": "/root"
+              },
+              {
+                "name": "subvol-srv",
+                "mountpoint": "/srv"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
