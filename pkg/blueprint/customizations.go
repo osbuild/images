@@ -296,22 +296,6 @@ func (c *Customizations) GetFilesystems() []FilesystemCustomization {
 	return c.Filesystem
 }
 
-func (c *Customizations) GetFilesystemsMinSize() uint64 {
-	if c == nil {
-		return 0
-	}
-	var agg uint64
-	for _, m := range c.Filesystem {
-		agg += m.MinSize
-	}
-	// This ensures that file system customization `size` is a multiple of
-	// sector size (512)
-	if agg%512 != 0 {
-		agg = (agg/512 + 1) * 512
-	}
-	return agg
-}
-
 func (c *Customizations) GetInstallationDevice() string {
 	if c == nil || c.InstallationDevice == "" {
 		return ""

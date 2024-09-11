@@ -300,48 +300,6 @@ func TestGetFilesystems(t *testing.T) {
 	assert.ElementsMatch(t, expectedFilesystems, retFilesystems)
 }
 
-func TestGetFilesystemsMinSize(t *testing.T) {
-	expectedFilesystems := []FilesystemCustomization{
-		{
-			MinSize:    1024,
-			Mountpoint: "/",
-		},
-		{
-			MinSize:    4096,
-			Mountpoint: "/var",
-		},
-	}
-
-	TestCustomizations := Customizations{
-		Filesystem: expectedFilesystems,
-	}
-
-	retFilesystemsSize := TestCustomizations.GetFilesystemsMinSize()
-
-	assert.EqualValues(t, uint64(5120), retFilesystemsSize)
-}
-
-func TestGetFilesystemsMinSizeNonSectorSize(t *testing.T) {
-	expectedFilesystems := []FilesystemCustomization{
-		{
-			MinSize:    1025,
-			Mountpoint: "/",
-		},
-		{
-			MinSize:    4097,
-			Mountpoint: "/var",
-		},
-	}
-
-	TestCustomizations := Customizations{
-		Filesystem: expectedFilesystems,
-	}
-
-	retFilesystemsSize := TestCustomizations.GetFilesystemsMinSize()
-
-	assert.EqualValues(t, uint64(5632), retFilesystemsSize)
-}
-
 func TestGetOpenSCAPConfig(t *testing.T) {
 	expectedOscap := OpenSCAPCustomization{
 		DataStream: "test-data-stream.xml",
