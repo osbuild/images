@@ -387,6 +387,10 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 		return nil, fmt.Errorf("partitioning customizations cannot be used with custom filesystems (mountpoints)")
 	}
 
+	if err := partitioning.Validate(); err != nil {
+		return nil, err
+	}
+
 	if err := blueprint.CheckMountpointsPolicy(mountpoints, policies.MountpointPolicies); err != nil {
 		return nil, err
 	}
