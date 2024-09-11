@@ -296,6 +296,13 @@ func (c *Customizations) GetFilesystems() []FilesystemCustomization {
 	return c.Filesystem
 }
 
+func (c *Customizations) GetPartitioning() *PartitioningCustomization {
+	if c == nil {
+		return nil
+	}
+	return c.Partitioning
+}
+
 func (c *Customizations) GetInstallationDevice() string {
 	if c == nil || c.InstallationDevice == "" {
 		return ""
