@@ -315,25 +315,20 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 
 	if customizations.LVM != nil {
 		for _, vg := range customizations.LVM.VolumeGroups {
-			newlvs := make([]LVMLogicalVolume, len(vg.LogicalVolumes))
-			for idx, lv := range vg.LogicalVolumes {
-				newlv := LVMLogicalVolume{
-					Name: lv.Name,
-					Size: lv.MinSize,
-					Payload: &Filesystem{
-						Type:         fsType(lv.Type),
-						Label:        lv.Label,
-						Mountpoint:   lv.Mountpoint,
-						FSTabOptions: "defaults", // TODO: add customization
-					},
-				}
-				newlvs[idx] = newlv
-			}
-
 			newvg := &LVMVolumeGroup{
-				Name:           vg.Name, // TODO: auto-create if empty
-				Description:    "created via lvm2 and osbuild",
-				LogicalVolumes: newlvs,
+				Name:        vg.Name, // TODO: auto-create if empty
+				Description: "created via lvm2 and osbuild",
+			}
+			for _, lv := range vg.LogicalVolumes {
+				newfs := &Filesystem{
+					Type:         fsType(lv.Type),
+					Label:        lv.Label,
+					Mountpoint:   lv.Mountpoint,
+					FSTabOptions: "defaults", // TODO: add customization
+				}
+				if _, err := newvg.CreateLogicalVolume(lv.Name, lv.MinSize, newfs); err != nil {
+					return nil, fmt.Errorf("error creating logical volume %q (%s): %w", lv.Name, lv.Mountpoint, err)
+				}
 			}
 
 			// create partition for volume group
@@ -385,17 +380,19 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 		for _, part := range pt.Partitions {
 			switch payload := part.Payload.(type) {
 			case *LVMVolumeGroup:
-				rootlv := LVMLogicalVolume{
-					Name: "rootlv",
-					Size: 0, // Set the size to 0 and it will be adjusted by EnsureDirectorySizes() and relayout()
-					Payload: &Filesystem{
-						Type:         options.DefaultFSType.String(),
-						Label:        "root",
-						Mountpoint:   "/",
-						FSTabOptions: "defaults",
-					},
+				rootfs := &Filesystem{
+					Type:         options.DefaultFSType.String(),
+					Label:        "root",
+					Mountpoint:   "/",
+					FSTabOptions: "defaults",
 				}
-				payload.LogicalVolumes = append(payload.LogicalVolumes, rootlv)
+				// Let the function autogenerate the name to avoid conflicts
+				// with LV names from customizations.
+				// Set the size to 0 and it will be adjusted by
+				// EnsureDirectorySizes() and relayout().
+				if _, err := payload.CreateLogicalVolume("", 0, rootfs); err != nil {
+					return nil, fmt.Errorf("error creating root logical volume: %w", err)
+				}
 				break PartitionLoop
 			case *Btrfs:
 				rootsubvol := BtrfsSubvolume{
