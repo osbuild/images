@@ -379,13 +379,18 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 	}
 
 	mountpoints := customizations.GetFilesystems()
-
-	if mountpoints != nil && t.rpmOstree {
-		return nil, fmt.Errorf("Custom mountpoints are not supported for ostree types")
+	partitioning := customizations.GetPartitioning()
+	if (len(mountpoints) > 0 || partitioning != nil) && t.rpmOstree {
+		return nil, fmt.Errorf("Custom mountpoints and partitioning are not supported for ostree types")
+	}
+	if len(mountpoints) > 0 && partitioning != nil {
+		return nil, fmt.Errorf("partitioning customizations cannot be used with custom filesystems (mountpoints)")
 	}
 
-	err := blueprint.CheckMountpointsPolicy(mountpoints, policies.MountpointPolicies)
-	if err != nil {
+	if err := blueprint.CheckMountpointsPolicy(mountpoints, policies.MountpointPolicies); err != nil {
+		return nil, err
+	}
+	if err := blueprint.CheckPartitioningPolicy(partitioning, policies.MountpointPolicies); err != nil {
 		return nil, err
 	}
 
@@ -406,7 +411,7 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 	dc := customizations.GetDirectories()
 	fc := customizations.GetFiles()
 
-	err = blueprint.ValidateDirFileCustomizations(dc, fc)
+	err := blueprint.ValidateDirFileCustomizations(dc, fc)
 	if err != nil {
 		return nil, err
 	}
