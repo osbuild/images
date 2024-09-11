@@ -138,7 +138,7 @@ func (t *imageType) BootMode() platform.BootMode {
 }
 
 func (t *imageType) getPartitionTable(
-	mountpoints []blueprint.FilesystemCustomization,
+	customizations *blueprint.Customizations,
 	options distro.ImageOptions,
 	rng *rand.Rand,
 ) (*disk.PartitionTable, error) {
@@ -160,6 +160,7 @@ func (t *imageType) getPartitionTable(
 		partitioningMode = disk.AutoLVMPartitioningMode
 	}
 
+	mountpoints := customizations.GetFilesystems()
 	return disk.NewPartitionTable(&basePartitionTable, mountpoints, imageSize, partitioningMode, t.requiredPartitionSizes, rng)
 }
 
