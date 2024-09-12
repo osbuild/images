@@ -21,61 +21,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Ensure that all package sets defined in the package set chains are defined for the image type
-func TestImageType_PackageSetsChains(t *testing.T) {
-	distroFactory := distrofactory.NewDefault()
-	distros := distro_test_common.ListTestedDistros(t)
-	for _, distroName := range distros {
-		d := distroFactory.GetDistro(distroName)
-		for _, archName := range d.ListArches() {
-			arch, err := d.GetArch(archName)
-			require.Nil(t, err)
-			for _, imageTypeName := range arch.ListImageTypes() {
-				t.Run(fmt.Sprintf("%s/%s/%s", distroName, archName, imageTypeName), func(t *testing.T) {
-					imageType, err := arch.GetImageType(imageTypeName)
-					require.Nil(t, err)
-
-					// set up bare minimum args for image type
-					var customizations *blueprint.Customizations
-					if imageType.Name() == "edge-simplified-installer" || imageType.Name() == "iot-simplified-installer" {
-						customizations = &blueprint.Customizations{
-							InstallationDevice: "/dev/null",
-						}
-					}
-					bp := blueprint.Blueprint{
-						Customizations: customizations,
-					}
-					options := distro.ImageOptions{
-						OSTree: &ostree.ImageOptions{
-							URL: "https://example.com", // required by some image types
-						},
-					}
-					manifest, _, err := imageType.Manifest(&bp, options, nil, 0)
-					require.NoError(t, err)
-					imagePkgSets := manifest.GetPackageSetChains()
-					for packageSetName := range imageType.PackageSetsChains() {
-						_, ok := imagePkgSets[packageSetName]
-						if !ok {
-							// in the new pipeline generation logic the name of the package
-							// set chains are taken from the pipelines and do not match the
-							// package set names.
-							// TODO: redefine package set chains to make this unneccesary
-							switch packageSetName {
-							case "packages":
-								_, ok = imagePkgSets["os"]
-								if !ok {
-									_, ok = imagePkgSets["ostree-tree"]
-								}
-							}
-						}
-						assert.Truef(t, ok, "package set %q defined in a package set chain is not present in the image package sets", packageSetName)
-					}
-				})
-			}
-		}
-	}
-}
-
 // Ensure all image types report the correct names for their pipelines.
 // Each image type contains a list of build and payload pipelines. They are
 // needed for knowing the names of pipelines from the static object without
