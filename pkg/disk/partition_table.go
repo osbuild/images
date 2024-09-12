@@ -204,6 +204,15 @@ type CustomPartitionTableOptions struct {
 	// filesystem if it is a supported type for that fileystem. If it is not,
 	// xfs is used as a fallback.
 	DefaultFSType FSType
+
+	// RequiredMinSizes defines a map of minimum sizes for specific
+	// directories. These indirectly control the minimum sizes of partitions. A
+	// directory with a required size will set the minimum size of the
+	// partition with the mountpoint that contains the directory. Additional
+	// directory requirements are additive, meaning the minimum size for a
+	// mountpoint's partition is the sum of all the required directory sizes it
+	// will contain.
+	RequiredMinSizes map[string]uint64
 }
 
 // NewCustomPartitionTable creates a partition table based almost entirely on the partitioning customizations from a blueprint.
@@ -378,7 +387,7 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 			case *LVMVolumeGroup:
 				rootlv := LVMLogicalVolume{
 					Name: "rootlv",
-					Size: 0, // Set the size to 0 and it will be adjusted by relayout()
+					Size: 0, // Set the size to 0 and it will be adjusted by EnsureDirectorySizes() and relayout()
 					Payload: &Filesystem{
 						Type:         options.DefaultFSType.String(),
 						Label:        "root",
@@ -403,7 +412,7 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 			rootpart := Partition{
 				Type:     FilesystemDataGUID,
 				Bootable: false,
-				Size:     0, // Set the size to 0 and it will be adjusted by relayout()
+				Size:     0, // Set the size to 0 and it will be adjusted by EnsureDirectorySizes() and relayout()
 				Payload: &Filesystem{
 					Type:         options.DefaultFSType.String(),
 					Label:        "root",
@@ -413,6 +422,10 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 			}
 			pt.Partitions = append(pt.Partitions, rootpart)
 		}
+	}
+
+	if len(options.RequiredMinSizes) != 0 {
+		pt.EnsureDirectorySizes(options.RequiredMinSizes)
 	}
 
 	pt.relayout(customizations.MinSize)
