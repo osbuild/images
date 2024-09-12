@@ -229,6 +229,14 @@
       "ami"
     ]
   },
+  "./configs/oscap-rhel10.json": {
+    "distros": [
+      "rhel-10.0"
+    ],
+    "image-types": [
+      "ami"
+    ]
+  },
   "./configs/ostree.json": {
     "image-types": [
       "edge-commit",
