@@ -583,7 +583,7 @@ func TestDistro_ManifestFIPSWarning(t *testing.T) {
 	distros := distro_test_common.ListTestedDistros(t)
 	for _, distroName := range distros {
 		// FIPS blueprint customization is not supported for RHEL 7 images
-		if distroName == "rhel-7" {
+		if strings.HasPrefix(distroName, "rhel-7") {
 			continue
 		}
 		d := distroFactory.GetDistro(distroName)
