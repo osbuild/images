@@ -550,6 +550,151 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				},
 			},
 		},
+		"lvm-multivg": {
+			// two volume groups, both unnamed, and no root lv defined
+			// NOTE: this is currently not supported by customizations but the
+			// PR creation function can handle it
+			customizations: &blueprint.PartitioningCustomization{
+				LVM: &blueprint.LVMCustomization{
+					VolumeGroups: []blueprint.VGCustomization{
+						{
+							MinSize: 100 * datasizes.MiB,
+							LogicalVolumes: []blueprint.LVCustomization{
+								{
+									Name: "varloglv",
+									FilesystemCustomization: blueprint.FilesystemCustomization{
+										Mountpoint: "/var/log",
+										MinSize:    10 * datasizes.MiB,
+										Label:      "var-log",
+										Type:       "xfs",
+									},
+								},
+							},
+						},
+						{
+							LogicalVolumes: []blueprint.LVCustomization{
+								{ // unnamed + untyped logical volume
+									FilesystemCustomization: blueprint.FilesystemCustomization{
+										Mountpoint: "/data",
+										MinSize:    100 * datasizes.MiB,
+										Label:      "data",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			options: &disk.CustomPartitionTableOptions{
+				DefaultFSType:    disk.FS_EXT4,
+				BootMode:         platform.BOOT_HYBRID,
+				RequiredMinSizes: map[string]uint64{"/": 3 * datasizes.GiB},
+			},
+			expected: &disk.PartitionTable{
+				Type: "gpt", // default when unspecified
+				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+				Size: 818*datasizes.MiB + 16*datasizes.MiB + 3*datasizes.GiB + datasizes.MiB, // start + size of last partition (VG) + footer
+				Partitions: []disk.Partition{
+					{
+						Start:    1 * datasizes.MiB, // header
+						Size:     1 * datasizes.MiB,
+						Bootable: true,
+						Type:     disk.BIOSBootPartitionGUID,
+						UUID:     disk.BIOSBootPartitionUUID,
+					},
+					{
+						Start: 2 * datasizes.MiB,
+						Size:  200 * datasizes.MiB,
+						Type:  disk.EFISystemPartitionGUID,
+						UUID:  disk.EFISystemPartitionUUID,
+						Payload: &disk.Filesystem{
+							Type:         "vfat",
+							UUID:         disk.EFIFilesystemUUID,
+							Mountpoint:   "/boot/efi",
+							Label:        "EFI-SYSTEM",
+							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+							FSTabFreq:    0,
+							FSTabPassNo:  2,
+						},
+					},
+					{
+						Start:    202 * datasizes.MiB,
+						Size:     512 * datasizes.MiB,
+						Type:     disk.XBootLDRPartitionGUID,
+						UUID:     "f83b8e88-3bbf-457a-ab99-c5b252c7429c",
+						Bootable: false,
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "boot",
+							Mountpoint:   "/boot",
+							FSTabOptions: "defaults",
+							UUID:         "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
+						},
+					},
+					{
+						Start:    818 * datasizes.MiB,                                                                         // the root vg is moved to the end of the partition table by relayout()
+						Size:     3*datasizes.GiB + 16*datasizes.MiB + datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // the sum of the LVs (rounded to the next 4 MiB extent) grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
+						Type:     disk.LVMPartitionGUID,
+						UUID:     "32f3a8ae-b79e-4856-b659-c18f0dcecc77",
+						Bootable: false,
+						Payload: &disk.LVMVolumeGroup{
+							Name:        "vg00",
+							Description: "created via lvm2 and osbuild",
+							LogicalVolumes: []disk.LVMLogicalVolume{
+								{
+									Name: "varloglv",
+									Size: 12 * datasizes.MiB, // rounded up to next extent (4 MiB)
+									Payload: &disk.Filesystem{
+										Label:        "var-log",
+										Type:         "xfs",
+										Mountpoint:   "/var/log",
+										FSTabOptions: "defaults",
+										UUID:         "fb180daf-48a7-4ee0-b10d-394651850fd4",
+									},
+								},
+								{
+									Name: "rootlv",
+									Size: 3 * datasizes.GiB,
+									Payload: &disk.Filesystem{
+										Label:        "root",
+										Type:         "ext4", // the defaultType
+										Mountpoint:   "/",
+										FSTabOptions: "defaults",
+										UUID:         "a178892e-e285-4ce1-9114-55780875d64e",
+									},
+								},
+							},
+						},
+					},
+					{
+						Start:    714 * datasizes.MiB,
+						Size:     104 * datasizes.MiB, // the sum of the LVs (rounded to the next 4 MiB extent) grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
+						Type:     disk.LVMPartitionGUID,
+						UUID:     "c75e7a81-bfde-475f-a7cf-e242cf3cc354",
+						Bootable: false,
+						Payload: &disk.LVMVolumeGroup{
+							Name:        "vg01",
+							Description: "created via lvm2 and osbuild",
+							LogicalVolumes: []disk.LVMLogicalVolume{
+								{
+									Name: "datalv",
+									Size: 100 * datasizes.MiB,
+									Payload: &disk.Filesystem{
+										Label:        "data",
+										Type:         "ext4", // the defaultType
+										Mountpoint:   "/data",
+										FSTabOptions: "defaults",
+										UUID:         "e2d3d0d0-de6b-48f9-b44c-e85ff044c6b1",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 		"btrfs": {
 			customizations: &blueprint.PartitioningCustomization{
 				Btrfs: &blueprint.BtrfsCustomization{

@@ -314,9 +314,14 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 	}
 
 	if customizations.LVM != nil {
-		for _, vg := range customizations.LVM.VolumeGroups {
+		for idx, vg := range customizations.LVM.VolumeGroups {
+			vgname := vg.Name
+			if vgname == "" {
+				// automatically name volume groups based on their index
+				vgname = fmt.Sprintf("vg%02d", idx)
+			}
 			newvg := &LVMVolumeGroup{
-				Name:        vg.Name, // TODO: auto-create if empty
+				Name:        vgname,
 				Description: "created via lvm2 and osbuild",
 			}
 			for _, lv := range vg.LogicalVolumes {
