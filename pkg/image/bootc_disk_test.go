@@ -201,6 +201,10 @@ func TestBootcDiskImageExportPipelines(t *testing.T) {
 	// tar pipeline for ova
 	tarPipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "archive")
 	require.NotNil(tarPipeline)
+
+	// gce pipeline
+	gcePipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "gce")
+	require.NotNil(gcePipeline)
 }
 
 func TestBootcDiskImageInstantiateUsers(t *testing.T) {
