@@ -465,5 +465,8 @@ func TestDistro_OSTreeOptions(t *testing.T, d distro.Distro) {
 func ListTestedDistros(t *testing.T) []string {
 	testRepoRegistry, err := reporegistry.NewTestedDefault()
 	require.Nil(t, err)
-	return testRepoRegistry.ListDistros()
+	require.NotEmpty(t, testRepoRegistry)
+	distros := testRepoRegistry.ListDistros()
+	require.NotEmpty(t, distros)
+	return distros
 }

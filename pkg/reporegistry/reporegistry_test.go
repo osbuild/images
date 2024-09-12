@@ -370,3 +370,10 @@ func TestInvalidReposByArchName(t *testing.T) {
 		})
 	}
 }
+
+func Test_NewTestedDefault(t *testing.T) {
+	rr, err := NewTestedDefault()
+	assert.Nil(t, err)
+	assert.NotNil(t, rr)
+	assert.NotEmpty(t, rr.ListDistros())
+}
