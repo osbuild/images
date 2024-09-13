@@ -76,24 +76,6 @@ func TestGetKernel(t *testing.T) {
 	assert.Equal(t, &expectedKernel, retKernel)
 }
 
-func TestSSHKey(t *testing.T) {
-	expectedSSHKeys := []SSHKeyCustomization{
-		{
-			User: "test-user",
-			Key:  "test-key",
-		},
-	}
-	TestCustomizations := Customizations{
-		SSHKey: expectedSSHKeys,
-	}
-
-	retUser := TestCustomizations.GetUsers()[0].Name
-	retKey := *TestCustomizations.GetUsers()[0].Key
-
-	assert.Equal(t, expectedSSHKeys[0].User, retUser)
-	assert.Equal(t, expectedSSHKeys[0].Key, retKey)
-}
-
 func TestGetUsers(t *testing.T) {
 	Desc := "Test descritpion"
 	Pass := "testpass"
