@@ -1,5 +1,14 @@
 package main
 
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"os"
+
+	"github.com/osbuild/images/pkg/ostree"
+)
+
 // All otk external inputs are nested under a top-level "tree"
 type Tree struct {
 	Tree Input `json:"tree"`
@@ -39,6 +48,39 @@ type OutputConst struct {
 	Checksum string `json:"checksum"`
 }
 
-func main() {
+func run(r io.Reader, w io.Writer) error {
+	var inputTree Tree
+	if err := json.NewDecoder(r).Decode(&inputTree); err != nil {
+		return err
+	}
 
+	sourceSpec := ostree.SourceSpec(inputTree.Tree)
+	commitSpec, err := ostree.Resolve(sourceSpec)
+	if err != nil {
+		return fmt.Errorf("failed to resolve ostree commit: %w", err)
+	}
+
+	output := map[string]Output{
+		"tree": {
+			Const: OutputConst{
+				Ref:      commitSpec.Ref,
+				URL:      commitSpec.URL,
+				Secrets:  commitSpec.Secrets,
+				Checksum: commitSpec.Checksum,
+			},
+		},
+	}
+	outputJson, err := json.MarshalIndent(output, "", "  ")
+	if err != nil {
+		return fmt.Errorf("cannot marshal response: %w", err)
+	}
+	fmt.Fprintf(w, "%s\n", outputJson)
+	return nil
+}
+
+func main() {
+	if err := run(os.Stdin, os.Stdout); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err.Error())
+		os.Exit(1)
+	}
 }
