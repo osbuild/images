@@ -13,6 +13,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/gobwas/glob"
@@ -376,11 +377,15 @@ func mockDepsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoC
 		for _, pkgSet := range pkgSetChain {
 			for _, pkgName := range pkgSet.Include {
 				checksum := fmt.Sprintf("%x", sha256.Sum256([]byte(pkgName)))
+				// generate predictable but non-empty
+				// release/version numbers
+				ver := strconv.Itoa(int(pkgName[0]) % 9)
+				rel := strconv.Itoa(int(pkgName[1]) % 9)
 				spec := rpmmd.PackageSpec{
 					Name:           pkgName,
 					Epoch:          0,
-					Version:        "0",
-					Release:        "0",
+					Version:        ver,
+					Release:        rel + ".fk1",
 					Arch:           "noarch",
 					RemoteLocation: fmt.Sprintf("https://example.com/repo/packages/%s", pkgName),
 					Checksum:       "sha256:" + checksum,
