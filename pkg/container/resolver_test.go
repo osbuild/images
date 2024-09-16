@@ -12,9 +12,16 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/testregistry"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/container"
 )
+
+const rootLayer = `H4sIAAAJbogA/+SWUYqDMBCG53lP4V5g9x8dzRX2Bvtc0VIhEIhKe/wSKxgU6ktjC/O9hMzAQDL8
+/8yltdb9DLeB0gEGKhHCg/UJsBAL54zKFBAC54ZzyrCUSMfYDydPgHfu6R/s5VePilOfzF/of/bv
+vG2+lqhyFNGPddP53yjyegCBKcuNROZ77AmBoP+CmbIyqpEM5fqf+3/ubJtsCuz7P1b+L1Du/4f5
+v+vrsVPu/Vq9P3ANk//d+x/MZv8TKNf/Qfqf9v9v5fLXK3/lKEc5ypm4AwAA//8DAE6E6nIAEgAA
+`
 
 var forceLocal = flag.Bool(
 	"force-local-resolver",
@@ -24,7 +31,7 @@ var forceLocal = flag.Bool(
 
 func TestResolver(t *testing.T) {
 
-	registry := NewTestRegistry()
+	registry := testregistry.New()
 	defer registry.Close()
 	repo := registry.AddRepo("library/osbuild")
 	ref := registry.GetRef("library/osbuild")
@@ -32,7 +39,7 @@ func TestResolver(t *testing.T) {
 	refs := make([]string, 10)
 	for i := 0; i < len(refs); i++ {
 		checksum := repo.AddImage(
-			[]Blob{NewDataBlobFromBase64(rootLayer)},
+			[]testregistry.Blob{testregistry.NewDataBlobFromBase64(rootLayer)},
 			[]string{"amd64", "ppc64le"},
 			fmt.Sprintf("image %d", i),
 			time.Time{})
@@ -84,7 +91,7 @@ func TestResolverFail(t *testing.T) {
 	assert.Error(t, err)
 	assert.Len(t, specs, 0)
 
-	registry := NewTestRegistry()
+	registry := testregistry.New()
 	defer registry.Close()
 
 	resolver.Add(container.SourceSpec{
