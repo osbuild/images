@@ -1,4 +1,4 @@
-package container_test
+package testregistry
 
 import (
 	"bytes"
@@ -21,12 +21,6 @@ import (
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/container"
 )
-
-const rootLayer = `H4sIAAAJbogA/+SWUYqDMBCG53lP4V5g9x8dzRX2Bvtc0VIhEIhKe/wSKxgU6ktjC/O9hMzAQDL8
-/8yltdb9DLeB0gEGKhHCg/UJsBAL54zKFBAC54ZzyrCUSMfYDydPgHfu6R/s5VePilOfzF/of/bv
-vG2+lqhyFNGPddP53yjyegCBKcuNROZ77AmBoP+CmbIyqpEM5fqf+3/ubJtsCuz7P1b+L1Du/4f5
-v+vrsVPu/Vq9P3ANk//d+x/MZv8TKNf/Qfqf9v9v5fLXK3/lKEc5ypm4AwAA//8DAE6E6nIAEgAA
-`
 
 // The following code implements a toy container registry to test with
 
@@ -289,7 +283,7 @@ func (reg *Registry) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func NewTestRegistry() *Registry {
+func New() *Registry {
 
 	reg := &Registry{
 		repos: make(map[string]*Repo),

@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/osbuild/images/internal/testregistry"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/container"
 )
@@ -16,12 +17,12 @@ import (
 
 func TestClientResolve(t *testing.T) {
 
-	registry := NewTestRegistry()
+	registry := testregistry.New()
 	defer registry.Close()
 
 	repo := registry.AddRepo("library/osbuild")
 	listDigest := repo.AddImage(
-		[]Blob{NewDataBlobFromBase64(rootLayer)},
+		[]testregistry.Blob{testregistry.NewDataBlobFromBase64(rootLayer)},
 		[]string{"amd64", "ppc64le"},
 		"cool container",
 		time.Time{})
