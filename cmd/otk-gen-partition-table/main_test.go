@@ -674,3 +674,68 @@ func TestGenPartitionTableValidates(t *testing.T) {
 	_, err := genpart.GenPartitionTable(inp, rand.New(rand.NewSource(0))) /* #nosec G404 */
 	assert.EqualError(t, err, `cannot validate inputs: unsupported partition type "invalid-type"`)
 }
+
+func TestGenPartitionCreateESPDos(t *testing.T) {
+	inp := &genpart.Input{
+		Properties: genpart.InputProperties{
+			Type: "dos",
+			Create: genpart.InputCreate{
+				EspPartition:     true,
+				EspPartitionSize: "2 GiB",
+			},
+		},
+		Partitions: []*genpart.InputPartition{
+			{
+				Mountpoint: "/",
+				Size:       "10 GiB",
+				Type:       "ext4",
+			},
+		},
+	}
+	expectedOutput := &otkdisk.Data{
+		Const: otkdisk.Const{
+			KernelOptsList: []string{},
+			PartitionMap: map[string]otkdisk.Partition{
+				"root": {
+					UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+				},
+			},
+			Filename: "disk.img",
+			Internal: otkdisk.Internal{
+				PartitionTable: &disk.PartitionTable{
+					Size: 12885950464,
+					Type: "dos",
+					UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+					Partitions: []disk.Partition{
+						{
+							Start:    1048576,
+							Size:     2147483648,
+							Bootable: true,
+							Type:     "06",
+							Payload: &disk.Filesystem{
+								Type:         "vfat",
+								UUID:         "7B77-95E7",
+								Label:        "EFI-SYSTEM",
+								Mountpoint:   "/boot/efi",
+								FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+								FSTabPassNo:  2,
+							},
+						},
+						{
+							Start: 2148532224,
+							Size:  10737418240,
+							Payload: &disk.Filesystem{
+								Type:       "ext4",
+								UUID:       "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+								Mountpoint: "/",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	output, err := genpart.GenPartitionTable(inp, rand.New(rand.NewSource(0))) /* #nosec G404 */
+	assert.NoError(t, err)
+	assert.Equal(t, expectedOutput, output)
+}
