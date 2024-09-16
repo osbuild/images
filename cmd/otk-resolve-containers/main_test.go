@@ -49,9 +49,6 @@ func TestResolver(t *testing.T) {
 	registry, refs := createTestRegistry()
 	defer registry.Close()
 
-	require := require.New(t)
-	assert := assert.New(t)
-
 	inpContainers := make([]blueprint.Container, len(refs))
 	for idx, ref := range refs {
 		inpContainers[idx] = blueprint.Container{
@@ -62,47 +59,55 @@ func TestResolver(t *testing.T) {
 		}
 	}
 
-	amd64input := map[string]interface{}{
-		"arch":       "amd64",
-		"containers": inpContainers,
+	for _, containerArch := range []string{"amd64", "ppc64le"} {
+		t.Run(containerArch, func(t *testing.T) {
+
+			require := require.New(t)
+			assert := assert.New(t)
+
+			input := map[string]interface{}{
+				"arch":       containerArch,
+				"containers": inpContainers,
+			}
+			inputReq, err := json.Marshal(map[string]map[string]interface{}{
+				"tree": input,
+			})
+			require.NoError(err)
+
+			inpBuf := bytes.NewBuffer(inputReq)
+			outBuf := &bytes.Buffer{}
+
+			assert.NoError(resolver.Run(inpBuf, outBuf))
+
+			var output map[string]resolver.Output
+			require.NoError(json.Unmarshal(outBuf.Bytes(), &output))
+
+			outputContainers := output["tree"].Const.Containers
+
+			assert.Len(outputContainers, len(refs))
+
+			expectedOutput := make([]resolver.ContainerInfo, len(refs))
+			for idx, ref := range refs {
+				// resolve directly with the registry and convert to ContainerInfo to
+				// compare with output.
+				spec, err := registry.Resolve(ref, arch.FromString(containerArch))
+				assert.NoError(err)
+				expectedOutput[idx] = resolver.ContainerInfo{
+					Source:  spec.Source,
+					Digest:  spec.Digest,
+					ImageID: spec.ImageID,
+					// registry.Resolve() copies the ref to the local name but the
+					// resolver will add the user-defined local name instead
+					LocalName:  fmt.Sprintf("test/localhost/%s", ref),
+					ListDigest: spec.ListDigest,
+					Arch:       spec.Arch.String(),
+					TLSVerify:  spec.TLSVerify,
+				}
+			}
+
+			// NOTE: the order of containers in the resolver's output is stable but is
+			// not the same as the order of the inputs.
+			assert.ElementsMatch(outputContainers, expectedOutput)
+		})
 	}
-	inputReq, err := json.Marshal(map[string]map[string]interface{}{
-		"tree": amd64input,
-	})
-	require.NoError(err)
-
-	inpBuf := bytes.NewBuffer(inputReq)
-	outBuf := &bytes.Buffer{}
-
-	assert.NoError(resolver.Run(inpBuf, outBuf))
-
-	var output map[string]resolver.Output
-	require.NoError(json.Unmarshal(outBuf.Bytes(), &output))
-
-	outputContainers := output["tree"].Const.Containers
-
-	assert.Len(outputContainers, len(refs))
-
-	expectedOutput := make([]resolver.ContainerInfo, len(refs))
-	for idx, ref := range refs {
-		// resolve directly with the registry and convert to ContainerInfo to
-		// compare with output.
-		spec, err := registry.Resolve(ref, arch.ARCH_X86_64)
-		assert.NoError(err)
-		expectedOutput[idx] = resolver.ContainerInfo{
-			Source:  spec.Source,
-			Digest:  spec.Digest,
-			ImageID: spec.ImageID,
-			// registry.Resolve() copies the ref to the local name but the
-			// resolver will add the user-defined local name instead
-			LocalName:  fmt.Sprintf("test/localhost/%s", ref),
-			ListDigest: spec.ListDigest,
-			Arch:       spec.Arch.String(),
-			TLSVerify:  spec.TLSVerify,
-		}
-	}
-
-	// NOTE: the order of containers in the resolver's output is stable but is
-	// not the same as the order of the inputs.
-	assert.ElementsMatch(outputContainers, expectedOutput)
 }
