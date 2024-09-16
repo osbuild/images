@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/osbuild"
 )
 
@@ -19,7 +20,7 @@ func TestImageConfigInheritFrom(t *testing.T) {
 		{
 			name: "inheritance with overridden values",
 			distroConfig: &ImageConfig{
-				Timezone: common.ToPtr("America/New_York"),
+				Timezone: types.Some("America/New_York"),
 				TimeSynchronization: &osbuild.ChronyStageOptions{
 					Servers: []osbuild.ChronyConfigServer{{Hostname: "127.0.0.1"}},
 				},
@@ -57,7 +58,7 @@ func TestImageConfigInheritFrom(t *testing.T) {
 				},
 			},
 			imageConfig: &ImageConfig{
-				Timezone: common.ToPtr("UTC"),
+				Timezone: types.Some("UTC"),
 				TimeSynchronization: &osbuild.ChronyStageOptions{
 					Servers: []osbuild.ChronyConfigServer{
 						{
@@ -72,7 +73,7 @@ func TestImageConfigInheritFrom(t *testing.T) {
 				},
 			},
 			expectedConfig: &ImageConfig{
-				Timezone: common.ToPtr("UTC"),
+				Timezone: types.Some("UTC"),
 				TimeSynchronization: &osbuild.ChronyStageOptions{
 					Servers: []osbuild.ChronyConfigServer{
 						{
@@ -122,7 +123,7 @@ func TestImageConfigInheritFrom(t *testing.T) {
 		{
 			name: "empty image type configuration",
 			distroConfig: &ImageConfig{
-				Timezone: common.ToPtr("America/New_York"),
+				Timezone: types.Some("America/New_York"),
 				TimeSynchronization: &osbuild.ChronyStageOptions{
 					Servers: []osbuild.ChronyConfigServer{{Hostname: "127.0.0.1"}},
 				},
@@ -136,7 +137,7 @@ func TestImageConfigInheritFrom(t *testing.T) {
 			},
 			imageConfig: &ImageConfig{},
 			expectedConfig: &ImageConfig{
-				Timezone: common.ToPtr("America/New_York"),
+				Timezone: types.Some("America/New_York"),
 				TimeSynchronization: &osbuild.ChronyStageOptions{
 					Servers: []osbuild.ChronyConfigServer{{Hostname: "127.0.0.1"}},
 				},
@@ -153,7 +154,7 @@ func TestImageConfigInheritFrom(t *testing.T) {
 			name:         "empty distro configuration",
 			distroConfig: &ImageConfig{},
 			imageConfig: &ImageConfig{
-				Timezone: common.ToPtr("America/New_York"),
+				Timezone: types.Some("America/New_York"),
 				TimeSynchronization: &osbuild.ChronyStageOptions{
 					Servers: []osbuild.ChronyConfigServer{{Hostname: "127.0.0.1"}},
 				},
@@ -166,7 +167,7 @@ func TestImageConfigInheritFrom(t *testing.T) {
 				DefaultTarget:    common.ToPtr("multi-user.target"),
 			},
 			expectedConfig: &ImageConfig{
-				Timezone: common.ToPtr("America/New_York"),
+				Timezone: types.Some("America/New_York"),
 				TimeSynchronization: &osbuild.ChronyStageOptions{
 					Servers: []osbuild.ChronyConfigServer{{Hostname: "127.0.0.1"}},
 				},
@@ -183,7 +184,7 @@ func TestImageConfigInheritFrom(t *testing.T) {
 			name:         "empty distro configuration",
 			distroConfig: nil,
 			imageConfig: &ImageConfig{
-				Timezone: common.ToPtr("America/New_York"),
+				Timezone: types.Some("America/New_York"),
 				TimeSynchronization: &osbuild.ChronyStageOptions{
 					Servers: []osbuild.ChronyConfigServer{{Hostname: "127.0.0.1"}},
 				},
@@ -196,7 +197,7 @@ func TestImageConfigInheritFrom(t *testing.T) {
 				DefaultTarget:    common.ToPtr("multi-user.target"),
 			},
 			expectedConfig: &ImageConfig{
-				Timezone: common.ToPtr("America/New_York"),
+				Timezone: types.Some("America/New_York"),
 				TimeSynchronization: &osbuild.ChronyStageOptions{
 					Servers: []osbuild.ChronyConfigServer{{Hostname: "127.0.0.1"}},
 				},

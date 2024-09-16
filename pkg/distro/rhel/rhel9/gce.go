@@ -2,6 +2,7 @@ package rhel9
 
 import (
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/customizations/subscription"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/rhel"
@@ -63,7 +64,7 @@ func mkGCERHUIImageType() *rhel.ImageType {
 
 func baseGCEImageConfig() *distro.ImageConfig {
 	ic := &distro.ImageConfig{
-		Timezone: common.ToPtr("UTC"),
+		Timezone: types.Some("UTC"),
 		TimeSynchronization: &osbuild.ChronyStageOptions{
 			Servers: []osbuild.ChronyConfigServer{{Hostname: "metadata.google.internal"}},
 		},

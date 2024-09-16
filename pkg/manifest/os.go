@@ -9,6 +9,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/environment"
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/container"
@@ -78,7 +79,7 @@ type OSCustomizations struct {
 	Keyboard         *string
 	X11KeymapLayouts []string
 	Hostname         string
-	Timezone         string
+	Timezone         types.Option[string]
 	EnabledServices  []string
 	DisabledServices []string
 	MaskedServices   []string
@@ -469,7 +470,7 @@ func (p *OS) serialize() osbuild.Pipeline {
 	if p.Hostname != "" {
 		pipeline.AddStage(osbuild.NewHostnameStage(&osbuild.HostnameStageOptions{Hostname: p.Hostname}))
 	}
-	pipeline.AddStage(osbuild.NewTimezoneStage(&osbuild.TimezoneStageOptions{Zone: p.Timezone}))
+	pipeline.AddStage(osbuild.NewTimezoneStage(&osbuild.TimezoneStageOptions{Zone: p.Timezone.Unwrap()}))
 
 	if len(p.NTPServers) > 0 {
 		chronyOptions := &osbuild.ChronyStageOptions{Servers: p.NTPServers}
@@ -850,7 +851,7 @@ func usersFirstBootOptions(users []users.User) *osbuild.FirstBootStageOptions {
 			sshdir := filepath.Join(home, ".ssh")
 
 			cmds = append(cmds, fmt.Sprintf("mkdir -p %s", sshdir))
-			cmds = append(cmds, fmt.Sprintf("sh -c 'echo %q >> %q'", *user.Key, filepath.Join(sshdir, "authorized_keys")))
+			cmds = append(cmds, fmt.Sprintf("sh -c 'echo %q >> %q'", user.Key.Unwrap(), filepath.Join(sshdir, "authorized_keys")))
 			cmds = append(cmds, fmt.Sprintf("chown %s:%s -Rc %s", user.Name, user.Name, sshdir))
 		}
 	}

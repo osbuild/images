@@ -1,19 +1,22 @@
 package users
 
-import "github.com/osbuild/images/pkg/blueprint"
+import (
+	"github.com/osbuild/images/internal/types"
+	"github.com/osbuild/images/pkg/blueprint"
+)
 
 type User struct {
 	Name               string
-	Description        *string
-	Password           *string
-	Key                *string
-	Home               *string
-	Shell              *string
+	Description        types.Option[string]
+	Password           types.Option[string]
+	Key                types.Option[string]
+	Home               types.Option[string]
+	Shell              types.Option[string]
 	Groups             []string
-	UID                *int
-	GID                *int
-	ExpireDate         *int
-	ForcePasswordReset *bool
+	UID                types.Option[int]
+	GID                types.Option[int]
+	ExpireDate         types.Option[int]
+	ForcePasswordReset types.Option[bool]
 }
 
 type Group struct {

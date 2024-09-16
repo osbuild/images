@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/distro"
@@ -38,7 +39,7 @@ var (
 // RHEL-based OS image configuration defaults
 func defaultDistroImageConfig(d *rhel.Distribution) *distro.ImageConfig {
 	return &distro.ImageConfig{
-		Timezone: common.ToPtr("America/New_York"),
+		Timezone: types.Some("America/New_York"),
 		Locale:   common.ToPtr("en_US.UTF-8"),
 		Sysconfig: []*osbuild.SysconfigStageOptions{
 			{

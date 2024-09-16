@@ -4,12 +4,15 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 
-	"slices"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
@@ -17,8 +20,6 @@ import (
 	"github.com/osbuild/images/pkg/distrofactory"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rpmmd"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // Ensure that all package sets defined in the package set chains are defined for the image type
@@ -597,7 +598,7 @@ func TestDistro_ManifestFIPSWarning(t *testing.T) {
 			for _, imgTypeName := range arch.ListImageTypes() {
 				bp := blueprint.Blueprint{
 					Customizations: &blueprint.Customizations{
-						FIPS: &fips_enabled,
+						FIPS: types.Some(fips_enabled),
 					},
 				}
 				imgType, _ := arch.GetImageType(imgTypeName)

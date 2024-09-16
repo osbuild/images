@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/shell"
 	"github.com/osbuild/images/pkg/customizations/subscription"
@@ -12,7 +13,7 @@ import (
 
 // ImageConfig represents a (default) configuration applied to the image payload.
 type ImageConfig struct {
-	Timezone            *string
+	Timezone            types.Option[string]
 	TimeSynchronization *osbuild.ChronyStageOptions
 	Locale              *string
 	Keyboard            *osbuild.KeymapStageOptions

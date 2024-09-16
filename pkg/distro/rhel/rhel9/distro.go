@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/distro"
@@ -54,7 +55,7 @@ func distroISOLabelFunc(t *rhel.ImageType) string {
 
 func defaultDistroImageConfig(d *rhel.Distribution) *distro.ImageConfig {
 	return &distro.ImageConfig{
-		Timezone: common.ToPtr("America/New_York"),
+		Timezone: types.Some("America/New_York"),
 		Locale:   common.ToPtr("C.UTF-8"),
 		Sysconfig: []*osbuild.SysconfigStageOptions{
 			{

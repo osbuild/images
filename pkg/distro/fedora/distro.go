@@ -8,6 +8,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/environment"
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/oscap"
@@ -357,7 +358,7 @@ var (
 			NoSElinux:   common.ToPtr(true),
 			ExcludeDocs: common.ToPtr(true),
 			Locale:      common.ToPtr("C.UTF-8"),
-			Timezone:    common.ToPtr("Etc/UTC"),
+			Timezone:    types.Some("Etc/UTC"),
 		},
 		image:            containerImage,
 		bootable:         false,
@@ -377,7 +378,7 @@ var (
 			NoSElinux:   common.ToPtr(true),
 			ExcludeDocs: common.ToPtr(true),
 			Locale:      common.ToPtr("C.UTF-8"),
-			Timezone:    common.ToPtr("Etc/UTC"),
+			Timezone:    types.Some("Etc/UTC"),
 			WSLConfig: &osbuild.WSLConfStageOptions{
 				Boot: osbuild.WSLConfBootOptions{
 					Systemd: true,
@@ -435,7 +436,7 @@ type distribution struct {
 
 // Fedora based OS image configuration defaults
 var defaultDistroImageConfig = &distro.ImageConfig{
-	Timezone:               common.ToPtr("UTC"),
+	Timezone:               types.Some("UTC"),
 	Locale:                 common.ToPtr("en_US"),
 	DefaultOSCAPDatastream: common.ToPtr(oscap.DefaultFedoraDatastream()),
 }

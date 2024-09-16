@@ -2,6 +2,7 @@ package rhel10
 
 import (
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/osbuild/images/pkg/osbuild"
@@ -15,7 +16,7 @@ const amiKernelOptions = "console=tty0 console=ttyS0,115200n8 nvme_core.io_timeo
 func baseEc2ImageConfig() *distro.ImageConfig {
 	return &distro.ImageConfig{
 		Locale:   common.ToPtr("en_US.UTF-8"),
-		Timezone: common.ToPtr("UTC"),
+		Timezone: types.Some("UTC"),
 		TimeSynchronization: &osbuild.ChronyStageOptions{
 			Servers: []osbuild.ChronyConfigServer{
 				{

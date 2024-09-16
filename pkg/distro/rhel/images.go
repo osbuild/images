@@ -118,15 +118,13 @@ func osCustomizations(
 		}
 	}
 
-	if hostname := c.GetHostname(); hostname != nil {
-		osc.Hostname = *hostname
-	}
+	osc.Hostname = c.GetHostname().Unwrap()
 
 	timezone, ntpServers := c.GetTimezoneSettings()
-	if timezone != nil {
-		osc.Timezone = *timezone
-	} else if imageConfig.Timezone != nil {
-		osc.Timezone = *imageConfig.Timezone
+	if timezone.IsSome() {
+		osc.Timezone = timezone
+	} else {
+		osc.Timezone = imageConfig.Timezone
 	}
 
 	if len(ntpServers) > 0 {
@@ -683,7 +681,7 @@ func ImageInstallerImage(workload workload.Workload,
 	}
 	img.Kickstart.Language = &img.OSCustomizations.Language
 	img.Kickstart.Keyboard = img.OSCustomizations.Keyboard
-	img.Kickstart.Timezone = &img.OSCustomizations.Timezone
+	img.Kickstart.Timezone = img.OSCustomizations.Timezone
 
 	installerConfig, err := t.getDefaultInstallerConfig()
 	if err != nil {
