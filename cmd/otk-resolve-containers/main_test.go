@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -23,10 +24,15 @@ vG2+lqhyFNGPddP53yjyegCBKcuNROZ77AmBoP+CmbIyqpEM5fqf+3/ubJtsCuz7P1b+L1Du/4f5
 v+vrsVPu/Vq9P3ANk//d+x/MZv8TKNf/Qfqf9v9v5fLXK3/lKEc5ypm4AwAA//8DAE6E6nIAEgAA
 `
 
+const (
+	owner    = "osbuild"
+	reponame = "testcontainer"
+)
+
 func createTestRegistry() (*testregistry.Registry, []string) {
 	registry := testregistry.New()
-	repo := registry.AddRepo("library/osbuild")
-	ref := registry.GetRef("library/osbuild")
+	repo := registry.AddRepo(fmt.Sprintf("%s/%s", owner, reponame))
+	ref := registry.GetRef(fmt.Sprintf("%s/%s", owner, reponame))
 
 	// add 10 images, all in the same repository with the same content
 	// (rootLayer), but each with a different tag and comment
@@ -108,6 +114,80 @@ func TestResolver(t *testing.T) {
 			// NOTE: the order of containers in the resolver's output is stable but is
 			// not the same as the order of the inputs.
 			assert.ElementsMatch(outputContainers, expectedOutput)
+		})
+	}
+}
+
+func TestResolverUnhappy(t *testing.T) {
+	registry, refs := createTestRegistry()
+	defer registry.Close()
+
+	type testCase struct {
+		source    string
+		arch      string
+		tlsverify bool
+		errSubstr string
+	}
+
+	testCases := map[string]testCase{
+		"bad-registry": {
+			source:    "127.0.0.2:1990/org/repo:tag",
+			arch:      "amd64",
+			errSubstr: "127.0.0.2:1990: connect: connection refused",
+		},
+		"bad-repo": {
+			// modify the container path of an existing ref
+			source:    strings.Replace(refs[0], owner, "notosbuild", 1),
+			arch:      "amd64",
+			errSubstr: fmt.Sprintf("notosbuild/%s: StatusCode: 404", reponame),
+		},
+		"bad-repo-containername": {
+			// modify the container path of an existing ref
+			source:    strings.Replace(refs[0], reponame, "container-does-not-exist", 1),
+			arch:      "amd64",
+			errSubstr: fmt.Sprintf("%s/container-does-not-exist: StatusCode: 404", owner),
+		},
+		"bad-tag": {
+			// modify the tag of an existing ref
+			source:    strings.Replace(refs[0], "tag", "not-a-tag", 1),
+			arch:      "amd64",
+			errSubstr: "error getting manifest: reading manifest not-a-tag-0",
+		},
+		"bad-arch": {
+			source:    refs[0],
+			arch:      "s390x",
+			errSubstr: "no image found in manifest list for architecture \"s390x\"",
+		},
+		"tls-fail": {
+			source:    refs[0],
+			arch:      "amd64",
+			tlsverify: true,
+			errSubstr: "failed to verify certificate: x509: certificate signed by unknown authority",
+		},
+	}
+
+	for name := range testCases {
+		tc := testCases[name]
+		t.Run(name, func(t *testing.T) {
+			require := require.New(t)
+			assert := assert.New(t)
+
+			input := map[string]interface{}{
+				"arch": tc.arch,
+				"containers": []blueprint.Container{
+					{
+						Source:    tc.source,
+						TLSVerify: &tc.tlsverify,
+					},
+				},
+			}
+			inputReq, err := json.Marshal(map[string]map[string]interface{}{
+				"tree": input,
+			})
+			require.NoError(err)
+			inpBuf := bytes.NewBuffer(inputReq)
+			outBuf := &bytes.Buffer{}
+			assert.ErrorContains(resolver.Run(inpBuf, outBuf), tc.errSubstr)
 		})
 	}
 }
