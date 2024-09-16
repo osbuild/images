@@ -152,10 +152,8 @@ func makePartitionTableFromOtkInput(input *Input) (*disk.PartitionTable, error) 
 			return nil, err
 		}
 		if uintSize > 0 {
-			pt.Partitions = append(pt.Partitions, disk.Partition{
+			part := disk.Partition{
 				Size: uintSize,
-				Type: disk.EFISystemPartitionGUID,
-				UUID: disk.EFISystemPartitionUUID,
 				Payload: &disk.Filesystem{
 					Type:         "vfat",
 					UUID:         disk.EFIFilesystemUUID,
@@ -165,7 +163,18 @@ func makePartitionTableFromOtkInput(input *Input) (*disk.PartitionTable, error) 
 					FSTabFreq:    0,
 					FSTabPassNo:  2,
 				},
-			})
+			}
+			switch input.Properties.Type {
+			case otkdisk.PartTypeGPT:
+				part.Type = disk.EFISystemPartitionGUID
+				part.UUID = disk.EFISystemPartitionUUID
+			case otkdisk.PartTypeDOS:
+				part.Bootable = true
+				part.Type = disk.DosFat16B
+			default:
+				return nil, fmt.Errorf("unsupported partition type: %v", input)
+			}
+			pt.Partitions = append(pt.Partitions, part)
 		}
 	}
 
