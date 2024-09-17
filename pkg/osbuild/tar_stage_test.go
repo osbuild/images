@@ -1,6 +1,7 @@
 package osbuild
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -76,4 +77,17 @@ func TestTarStageOptionsValidate(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestTarStageOptionsJSON(t *testing.T) {
+	stageOptions := &TarStageOptions{
+		Filename:  "archive.tar.xz",
+		Transform: "s/foo/bar/",
+	}
+	b, err := json.MarshalIndent(stageOptions, "", "  ")
+	assert.NoError(t, err)
+	assert.Equal(t, string(b), `{
+  "filename": "archive.tar.xz",
+  "transform": "s/foo/bar/"
+}`)
 }
