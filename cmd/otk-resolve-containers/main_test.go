@@ -185,3 +185,67 @@ func TestResolverUnhappy(t *testing.T) {
 		})
 	}
 }
+
+func TestResolverRawJSON(t *testing.T) {
+	require := require.New(t)
+
+	registry, refs := createTestRegistry()
+	defer registry.Close()
+
+	inpContainers := make([]blueprint.Container, len(refs))
+	for idx, ref := range refs {
+		inpContainers[idx] = blueprint.Container{
+			Source:       ref,
+			Name:         fmt.Sprintf("test/localhost/%s", ref), // add a prefix for the local name to override the source
+			TLSVerify:    common.ToPtr(false),
+			LocalStorage: false,
+		}
+	}
+
+	for _, containerArch := range []string{"amd64", "ppc64le"} {
+		t.Run(containerArch, func(t *testing.T) {
+			cntName := fmt.Sprintf("test/localhost/%s", refs[0])
+			inpBuf := bytes.NewBufferString(fmt.Sprintf(`{
+"tree":{
+  "arch":"%s",
+  "containers":[
+    {
+      "source":"%s",
+      "name":"%s",
+      "tls-verify":false
+    }
+  ]
+ }
+}`, containerArch, refs[0], cntName))
+			outBuf := &bytes.Buffer{}
+
+			err := resolver.Run(inpBuf, outBuf)
+			require.NoError(err)
+
+			// resolve directly with the registry and convert to a raw JSON
+			// string to compare with output
+			spec, err := registry.Resolve(refs[0], arch.FromString(containerArch))
+			require.NoError(err)
+
+			expected := fmt.Sprintf(`{
+  "tree": {
+    "const": {
+      "containers": [
+        {
+          "source": "%s",
+          "digest": "%s",
+          "imageid": "%s",
+          "local-name": "%s",
+          "list-digest": "%s",
+          "arch": "%s",
+          "tls-verify": %v
+        }
+      ]
+    }
+  }
+}
+`, spec.Source, spec.Digest, spec.ImageID, fmt.Sprintf("test/localhost/%s", refs[0]), spec.ListDigest, spec.Arch, *spec.TLSVerify)
+			require.Equal(expected, outBuf.String())
+		})
+	}
+}
