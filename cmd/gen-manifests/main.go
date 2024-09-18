@@ -392,6 +392,20 @@ func mockDepsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoC
 				}
 				specSet = append(specSet, spec)
 			}
+			for _, excludeName := range pkgSet.Exclude {
+				pkgName := fmt.Sprintf("exclude:%s", excludeName)
+				checksum := fmt.Sprintf("%x", sha256.Sum256([]byte(pkgName)))
+				spec := rpmmd.PackageSpec{
+					Name:           pkgName,
+					Epoch:          0,
+					Version:        "0",
+					Release:        "0",
+					Arch:           "noarch",
+					RemoteLocation: fmt.Sprintf("https://example.com/repo/packages/%s", pkgName),
+					Checksum:       "sha256:" + checksum,
+				}
+				specSet = append(specSet, spec)
+			}
 		}
 		depsolvedSets[name] = specSet
 		repoSets[name] = repos
