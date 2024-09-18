@@ -22,6 +22,22 @@ import (
 	"github.com/osbuild/images/pkg/container"
 )
 
+/*
+A base64 encoded gzipped tarball with the following contents:
+
+	-rw-r--r-- root/root        12 2021-09-17 12:32 hello.txt         (Contents: "Hello World")
+	drwxr-xr-x root/root         0 1970-01-01 01:00 subdir/
+	-rw-r--r-- root/root         8 2021-09-17 12:32 subdir/file.txt   (Contents: "osbuild")
+	-rw-r--r-- root/root         7 2021-09-17 12:32 world.txt         (Contents: "hello!")
+
+Can be used with [NewDataBlobFromBase64] to create a data blob for [Repo.AddImage].
+*/
+const RootLayer = `H4sIAAAJbogA/+SWUYqDMBCG53lP4V5g9x8dzRX2Bvtc0VIhEIhKe/wSKxgU6ktjC/O9hMzAQDL8
+/8yltdb9DLeB0gEGKhHCg/UJsBAL54zKFBAC54ZzyrCUSMfYDydPgHfu6R/s5VePilOfzF/of/bv
+vG2+lqhyFNGPddP53yjyegCBKcuNROZ77AmBoP+CmbIyqpEM5fqf+3/ubJtsCuz7P1b+L1Du/4f5
+v+vrsVPu/Vq9P3ANk//d+x/MZv8TKNf/Qfqf9v9v5fLXK3/lKEc5ypm4AwAA//8DAE6E6nIAEgAA
+`
+
 // The following code implements a toy container registry to test with
 
 // Blob interface
