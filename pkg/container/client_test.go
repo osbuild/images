@@ -22,7 +22,7 @@ func TestClientResolve(t *testing.T) {
 
 	repo := registry.AddRepo("library/osbuild")
 	listDigest := repo.AddImage(
-		[]testregistry.Blob{testregistry.NewDataBlobFromBase64(rootLayer)},
+		[]testregistry.Blob{testregistry.NewDataBlobFromBase64(testregistry.RootLayer)},
 		[]string{"amd64", "ppc64le"},
 		"cool container",
 		time.Time{})
