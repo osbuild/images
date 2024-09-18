@@ -124,22 +124,23 @@ func TestDepsolver(t *testing.T) {
 			}
 
 			solver.SetRootDir(tc.rootDir)
-			deps, _, sbomDoc, err := solver.Depsolve(pkgsets, tc.sbomType)
+			res, err := solver.Depsolve(pkgsets, tc.sbomType)
 			if tc.err {
 				assert.Error(err)
 				assert.Contains(err.Error(), tc.expMsg)
 				return
 			} else {
 				assert.Nil(err)
+				assert.NotNil(res)
 			}
 
-			assert.Equal(expectedResult(s.RepoConfig), deps)
+			assert.Equal(expectedResult(s.RepoConfig), res.Packages)
 
 			if tc.sbomType != sbom.StandardTypeNone {
-				assert.NotNil(sbomDoc)
-				assert.Equal(sbom.StandardTypeSpdx, sbomDoc.DocType)
+				assert.NotNil(res.SBOM)
+				assert.Equal(sbom.StandardTypeSpdx, res.SBOM.DocType)
 			} else {
-				assert.Nil(sbomDoc)
+				assert.Nil(res.SBOM)
 			}
 		})
 	}
@@ -779,7 +780,7 @@ func TestErrorRepoInfo(t *testing.T) {
 	solver := NewSolver("platform:f38", "38", "x86_64", "fedora-38", "/tmp/cache")
 	for idx, tc := range testCases {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			_, _, _, err := solver.Depsolve([]rpmmd.PackageSet{
+			_, err := solver.Depsolve([]rpmmd.PackageSet{
 				{
 					Include:      []string{"osbuild"},
 					Exclude:      nil,
@@ -868,8 +869,9 @@ echo '{"solver": "zypper"}'
 
 	solver := NewSolver("platform:f38", "38", "x86_64", "fedora-38", "/tmp/cache")
 	solver.dnfJsonCmd = []string{fakeSolverPath}
-	pkgSpec, repoCfg, _, err := solver.Depsolve(nil, sbom.StandardTypeNone)
+	res, err := solver.Depsolve(nil, sbom.StandardTypeNone)
 	assert.NoError(t, err)
+	assert.NotNil(t, res)
 
 	// prerequisite check, i.e. ensure our fake was called in the right way
 	stdin, err := os.ReadFile(fakeSolverPath + ".stdin")
@@ -878,6 +880,6 @@ echo '{"solver": "zypper"}'
 
 	// adding the "solver" did not cause any issues
 	assert.NoError(t, err)
-	assert.Equal(t, 0, len(pkgSpec))
-	assert.Equal(t, 0, len(repoCfg))
+	assert.Equal(t, 0, len(res.Packages))
+	assert.Equal(t, 0, len(res.Repos))
 }

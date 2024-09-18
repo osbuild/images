@@ -156,6 +156,13 @@ type Solver struct {
 	subscriptions *rhsm.Subscriptions
 }
 
+// DepsolveResult contains the results of a depsolve operation.
+type DepsolveResult struct {
+	Packages []rpmmd.PackageSpec
+	Repos    []rpmmd.RepoConfig
+	SBOM     *sbom.Document
+}
+
 // Create a new Solver with the given configuration. Initialising a Solver also loads system subscription information.
 func NewSolver(modulePlatformID, releaseVer, arch, distro, cacheDir string) *Solver {
 	s := NewBaseSolver(cacheDir)
@@ -194,10 +201,10 @@ func (s *Solver) SetProxy(proxy string) error {
 // their associated repositories.  Each package set is depsolved as a separate
 // transactions in a chain.  It returns a list of all packages (with solved
 // dependencies) that will be installed into the system.
-func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet, sbomType sbom.StandardType) ([]rpmmd.PackageSpec, []rpmmd.RepoConfig, *sbom.Document, error) {
+func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet, sbomType sbom.StandardType) (*DepsolveResult, error) {
 	req, rhsmMap, err := s.makeDepsolveRequest(pkgSets, sbomType)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("makeDepsolveRequest failed: %w", err)
+		return nil, fmt.Errorf("makeDepsolveRequest failed: %w", err)
 	}
 
 	// get non-exclusive read lock
@@ -206,7 +213,7 @@ func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet, sbomType sbom.StandardType
 
 	output, err := run(s.dnfJsonCmd, req)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("running osbuild-depsolve-dnf failed:\n%w", err)
+		return nil, fmt.Errorf("running osbuild-depsolve-dnf failed:\n%w", err)
 	}
 	// touch repos to now
 	now := time.Now().Local()
@@ -220,7 +227,7 @@ func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet, sbomType sbom.StandardType
 	dec := json.NewDecoder(bytes.NewReader(output))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&result); err != nil {
-		return nil, nil, nil, fmt.Errorf("decoding depsolve result failed: %w", err)
+		return nil, fmt.Errorf("decoding depsolve result failed: %w", err)
 	}
 
 	packages, repos := result.toRPMMD(rhsmMap)
@@ -229,11 +236,15 @@ func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet, sbomType sbom.StandardType
 	if sbomType != sbom.StandardTypeNone {
 		sbomDoc, err = sbom.NewDocument(sbomType, result.SBOM)
 		if err != nil {
-			return nil, nil, nil, fmt.Errorf("creating SBOM document failed: %w", err)
+			return nil, fmt.Errorf("creating SBOM document failed: %w", err)
 		}
 	}
 
-	return packages, repos, sbomDoc, nil
+	return &DepsolveResult{
+		Packages: packages,
+		Repos:    repos,
+		SBOM:     sbomDoc,
+	}, nil
 }
 
 // FetchMetadata returns the list of all the available packages in repos and
