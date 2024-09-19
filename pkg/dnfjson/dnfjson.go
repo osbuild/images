@@ -724,10 +724,10 @@ type depsolveResult struct {
 	Repos    map[string]repoConfig `json:"repos"`
 
 	// (optional) contains the solver used, e.g. "dnf5"
-	Solver string `json:"solver"`
+	Solver string `json:"solver,omitempty"`
 
 	// (optional) contains the SBOM for the depsolved transaction
-	SBOM json.RawMessage `json:"sbom"`
+	SBOM json.RawMessage `json:"sbom,omitempty"`
 }
 
 // Package specification
