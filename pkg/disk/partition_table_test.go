@@ -1065,6 +1065,12 @@ func TestNewCustomPartitionTableErrors(t *testing.T) {
 			options: nil,
 			errmsg:  `error generating partition table: error creating logical volume "rootlv" (/): no filesystem type defined and no default set`,
 		},
+		"bad-pt-type": {
+			options: &disk.CustomPartitionTableOptions{
+				PartitionTableType: 100,
+			},
+			errmsg: `error generating partition table: invalid partition table type enum value: 100`,
+		},
 	}
 
 	// we don't care about the rng for error tests

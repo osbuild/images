@@ -251,7 +251,7 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 		// default to "gpt"
 		pt.Type = PT_GPT.String()
 	default:
-		return nil, fmt.Errorf("invalid partition table type specified when generating partition table: %s", options.PartitionTableType)
+		return nil, fmt.Errorf("error generating partition table: invalid partition table type enum value: %d", options.PartitionTableType)
 	}
 
 	if err := addPartitionsForBootMode(pt, options.BootMode); err != nil {
