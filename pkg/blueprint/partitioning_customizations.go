@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/osbuild/images/pkg/pathpolicy"
@@ -69,6 +70,28 @@ func validateMountpoint(path string) error {
 	return nil
 }
 
+func validateFilesystemType(path, fstype string) error {
+	// Check that the fs type is valid for the mountpoint.
+	// Empty strings are allowed for fstype to set the type automatically based
+	// on the distro defaults.
+	badfsMsg := "unsupported filesystem type for %q: %s"
+	switch path {
+	case "/boot":
+		switch fstype {
+		case "xfs", "ext4", "":
+		default:
+			return fmt.Errorf(badfsMsg, path, fstype)
+		}
+	case "/boot/efi":
+		switch fstype {
+		case "vfat", "":
+		default:
+			return fmt.Errorf(badfsMsg, path, fstype)
+		}
+	}
+	return nil
+}
+
 // Validate checks for customization combinations that are generally not
 // supported or can create conflicts, regardless of specific distro or image
 // type policies.
@@ -95,17 +118,32 @@ func (p *PartitioningCustomization) Validate() error {
 	// - duplicate volume group and logical volume names (lvm)
 	// - duplicate subvolume names (btrfs)
 	// - empty subvolume names (btrfs)
+	// - invalid filesystem for mountpoint (e.g. /boot)
+	// - special mountpoints on lvm or btrfs
+	// - btrfs as filesystem on plain
+
+	plainOnlyMountpoints := []string{
+		"/boot",
+		"/boot/efi", // not allowed by our global policies, but that might change
+	}
 
 	mountpoints := make(map[string]bool)
 	if p.Plain != nil {
-		for _, mp := range p.Plain.Filesystems {
-			if err := validateMountpoint(mp.Mountpoint); err != nil {
+		for _, fs := range p.Plain.Filesystems {
+			if err := validateMountpoint(fs.Mountpoint); err != nil {
 				return fmt.Errorf("invalid plain filesystem customization: %w", err)
 			}
-			if mountpoints[mp.Mountpoint] {
-				return fmt.Errorf("duplicate mountpoint %q in partitioning customizations", mp.Mountpoint)
+			if mountpoints[fs.Mountpoint] {
+				return fmt.Errorf("duplicate mountpoint %q in partitioning customizations", fs.Mountpoint)
 			}
-			mountpoints[mp.Mountpoint] = true
+			if err := validateFilesystemType(fs.Mountpoint, fs.Type); err != nil {
+				return fmt.Errorf("invalid plain filesystem customization: %w", err)
+			}
+			if fs.Type == "btrfs" {
+				return fmt.Errorf("btrfs filesystem defined under plain partitioning customization: please use the \"btrfs\" customization to define btrfs volumes and subvolumes")
+			}
+
+			mountpoints[fs.Mountpoint] = true
 		}
 	}
 
@@ -130,7 +168,12 @@ func (p *PartitioningCustomization) Validate() error {
 					return fmt.Errorf("duplicate mountpoint %q in partitioning customizations", lv.Mountpoint)
 				}
 				mountpoints[lv.Mountpoint] = true
+
+				if slices.Contains(plainOnlyMountpoints, lv.Mountpoint) {
+					return fmt.Errorf("invalid mountpoint %q for logical volume", lv.Mountpoint)
+				}
 			}
+
 		}
 	}
 
@@ -151,6 +194,9 @@ func (p *PartitioningCustomization) Validate() error {
 				}
 				if mountpoints[subvol.Mountpoint] {
 					return fmt.Errorf("duplicate mountpoint %q in partitioning customizations", subvol.Mountpoint)
+				}
+				if slices.Contains(plainOnlyMountpoints, subvol.Mountpoint) {
+					return fmt.Errorf("invalid mountpoint %q for btrfs subvolume", subvol.Mountpoint)
 				}
 				mountpoints[subvol.Mountpoint] = true
 			}

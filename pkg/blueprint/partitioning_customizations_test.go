@@ -77,6 +77,30 @@ func TestPartitioningValidation(t *testing.T) {
 			},
 			expectedMsg: "",
 		},
+		"happy-plain-with-boot-and-efi-nofs": {
+			partitioning: &blueprint.PartitioningCustomization{
+				Plain: &blueprint.PlainFilesystemCustomization{
+					Filesystems: []blueprint.FilesystemCustomization{
+						{
+							Mountpoint: "/data",
+						},
+						{
+							Mountpoint: "/",
+						},
+						{
+							Mountpoint: "/home",
+						},
+						{
+							Mountpoint: "/boot",
+						},
+						{
+							Mountpoint: "/boot/efi",
+						},
+					},
+				},
+			},
+			expectedMsg: "",
+		},
 		"unhappy-btrfs+lvm": {
 			partitioning: &blueprint.PartitioningCustomization{
 				Plain: &blueprint.PlainFilesystemCustomization{
@@ -131,6 +155,66 @@ func TestPartitioningValidation(t *testing.T) {
 				},
 			},
 			expectedMsg: `duplicate mountpoint "/data" in partitioning customizations`,
+		},
+		"unhappy-plain-badfstype": {
+			partitioning: &blueprint.PartitioningCustomization{
+				Plain: &blueprint.PlainFilesystemCustomization{
+					Filesystems: []blueprint.FilesystemCustomization{
+						{
+							Mountpoint: "/",
+						},
+						{
+							Mountpoint: "/home",
+						},
+						{
+							Mountpoint: "/boot",
+							Type:       "zfs",
+						},
+						{
+							Mountpoint: "/data",
+						},
+					},
+				},
+			},
+			expectedMsg: `invalid plain filesystem customization: unsupported filesystem type for "/boot": zfs`,
+		},
+		"unhappy-plain-badfstype-efi": {
+			partitioning: &blueprint.PartitioningCustomization{
+				Plain: &blueprint.PlainFilesystemCustomization{
+					Filesystems: []blueprint.FilesystemCustomization{
+						{
+							Mountpoint: "/",
+						},
+						{
+							Mountpoint: "/home",
+						},
+						{
+							Mountpoint: "/boot/efi",
+							Type:       "ext4",
+						},
+						{
+							Mountpoint: "/data",
+						},
+					},
+				},
+			},
+			expectedMsg: `invalid plain filesystem customization: unsupported filesystem type for "/boot/efi": ext4`,
+		},
+		"unhappy-plain-btrfstype": {
+			partitioning: &blueprint.PartitioningCustomization{
+				Plain: &blueprint.PlainFilesystemCustomization{
+					Filesystems: []blueprint.FilesystemCustomization{
+						{
+							Mountpoint: "/",
+							Type:       "btrfs",
+						},
+						{
+							Mountpoint: "/home",
+						},
+					},
+				},
+			},
+			expectedMsg: `btrfs filesystem defined under plain partitioning customization: please use the "btrfs" customization to define btrfs volumes and subvolumes`,
 		},
 		"unhappy-plain+btrfs-dupes": {
 			partitioning: &blueprint.PartitioningCustomization{
@@ -484,6 +568,92 @@ func TestPartitioningValidation(t *testing.T) {
 				},
 			},
 			expectedMsg: `btrfs subvolume with empty name in partitioning customizations`,
+		},
+		"boot-on-lvm": {
+			partitioning: &blueprint.PartitioningCustomization{
+				LVM: &blueprint.LVMCustomization{
+					VolumeGroups: []blueprint.VGCustomization{
+						{
+							LogicalVolumes: []blueprint.LVCustomization{
+								{
+									Name: "bewt",
+									FilesystemCustomization: blueprint.FilesystemCustomization{
+										Mountpoint: "/boot",
+									},
+								},
+								{
+									Name: "testlv",
+									FilesystemCustomization: blueprint.FilesystemCustomization{
+										Mountpoint: "/stuff2",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedMsg: `invalid mountpoint "/boot" for logical volume`,
+		},
+		"bootefi-on-lvm": {
+			partitioning: &blueprint.PartitioningCustomization{
+				LVM: &blueprint.LVMCustomization{
+					VolumeGroups: []blueprint.VGCustomization{
+						{
+							LogicalVolumes: []blueprint.LVCustomization{
+								{
+									Name: "bewtefi",
+									FilesystemCustomization: blueprint.FilesystemCustomization{
+										Mountpoint: "/boot/efi",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedMsg: `invalid mountpoint "/boot/efi" for logical volume`,
+		},
+		"boot-on-btrfs": {
+			partitioning: &blueprint.PartitioningCustomization{
+				Btrfs: &blueprint.BtrfsCustomization{
+					Volumes: []blueprint.BtrfsVolumeCustomization{
+						{
+							Subvolumes: []blueprint.BtrfsSubvolumeCustomization{
+								{
+									Name:       "test",
+									Mountpoint: "/test",
+								},
+								{
+									Name:       "bootbootboot",
+									Mountpoint: "/boot",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedMsg: `invalid mountpoint "/boot" for btrfs subvolume`,
+		},
+		"bootefi-on-btrfs": {
+			partitioning: &blueprint.PartitioningCustomization{
+				Btrfs: &blueprint.BtrfsCustomization{
+					Volumes: []blueprint.BtrfsVolumeCustomization{
+						{
+							Subvolumes: []blueprint.BtrfsSubvolumeCustomization{
+								{
+									Name:       "test",
+									Mountpoint: "/test",
+								},
+								{
+									Name:       "esp",
+									Mountpoint: "/boot/efi",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedMsg: `invalid mountpoint "/boot/efi" for btrfs subvolume`,
 		},
 	}
 
