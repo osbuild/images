@@ -215,6 +215,20 @@ type CustomPartitionTableOptions struct {
 	RequiredMinSizes map[string]uint64
 }
 
+// Returns the default filesystem type if the fstype is empty. If both are
+// empty/none, returns an error.
+func (options *CustomPartitionTableOptions) getfstype(fstype string) (string, error) {
+	if fstype != "" {
+		return fstype, nil
+	}
+
+	if options.DefaultFSType == FS_NONE {
+		return "", fmt.Errorf("no filesystem type defined and no default set")
+	}
+
+	return options.DefaultFSType.String(), nil
+}
+
 // NewCustomPartitionTable creates a partition table based almost entirely on the partitioning customizations from a blueprint.
 func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization, options *CustomPartitionTableOptions, rng *rand.Rand) (*PartitionTable, error) {
 	if options == nil {
