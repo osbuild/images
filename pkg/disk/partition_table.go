@@ -238,6 +238,10 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 		}
 	}
 
+	if customizations == nil {
+		customizations = &blueprint.PartitioningCustomization{}
+	}
+
 	pt := &PartitionTable{}
 
 	switch options.PartitionTableType {
@@ -250,194 +254,36 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 		return nil, fmt.Errorf("invalid partition table type specified when generating partition table: %s", options.PartitionTableType)
 	}
 
-	switch options.BootMode {
-	case platform.BOOT_LEGACY:
-		// add BIOS boot partition
-		pt.Partitions = append(pt.Partitions, mkBIOSBoot())
-	case platform.BOOT_UEFI:
-		// add ESP
-		pt.Partitions = append(pt.Partitions, mkESP(200*datasizes.MiB))
-	case platform.BOOT_HYBRID:
-		// add both
-		pt.Partitions = append(pt.Partitions, mkBIOSBoot())
-		pt.Partitions = append(pt.Partitions, mkESP(200*datasizes.MiB))
-	case platform.BOOT_NONE:
-	default:
-		return nil, fmt.Errorf("invalid boot mode specified when generating partition table: %s", options.BootMode)
+	if err := addPartitionsForBootMode(pt, options.BootMode); err != nil {
+		return nil, fmt.Errorf("error generating partition table: %w", err)
 	}
-
-	// The boot type will be the default only if it's a supported filesystem
-	// type for /boot (ext4 or xfs). Otherwise, we default to xfs.
-	// FS_NONE also falls back to xfs.
-	var bootFsType FSType
-	switch options.DefaultFSType {
-	case FS_EXT4, FS_XFS:
-		bootFsType = options.DefaultFSType
-	default:
-		bootFsType = FS_XFS
-	}
-
-	// fsType returns the defaultType if the argument is empty, otherwise
-	// returns the arg value as is.
-	fsType := func(t string) string {
-		if t == "" {
-			return options.DefaultFSType.String()
-		}
-		return t
-	}
-
-	if customizations == nil {
-		customizations = &blueprint.PartitioningCustomization{}
-	}
-
 	if customizations.LVM != nil || customizations.Btrfs != nil {
+		// The boot type will be the default only if it's a supported filesystem
+		// type for /boot (ext4 or xfs). Otherwise, we default to xfs.
+		// FS_NONE also falls back to xfs.
+		var bootFsType FSType
+		switch options.DefaultFSType {
+		case FS_EXT4, FS_XFS:
+			bootFsType = options.DefaultFSType
+		default:
+			bootFsType = FS_XFS
+		}
+
 		// we need a /boot partition to boot LVM or Btrfs, create boot
 		// partition if it does not already exist
-		bootPath := entityPath(pt, "/boot")
-		if bootPath == nil {
-			bootPart := Partition{
-				Type:     XBootLDRPartitionGUID,
-				Bootable: false,
-				Size:     512 * datasizes.MiB,
-				Payload: &Filesystem{
-					Type:         bootFsType.String(),
-					Label:        "boot",
-					Mountpoint:   "/boot",
-					FSTabOptions: "defaults",
-				},
-			}
-			pt.Partitions = append(pt.Partitions, bootPart)
-		}
+		ensureBootPartition(pt, bootFsType)
 	}
 
-	if customizations.Plain != nil {
-		for _, partition := range customizations.Plain.Filesystems {
-			newpart := Partition{
-				Type:     FilesystemDataGUID, // all user-defined partitions are data partitions
-				Bootable: false,
-				Size:     partition.MinSize,
-				Payload: &Filesystem{
-					Type:         fsType(partition.Type),
-					Label:        partition.Label,
-					Mountpoint:   partition.Mountpoint,
-					FSTabOptions: "defaults", // TODO: add customization
-				},
-			}
-			pt.Partitions = append(pt.Partitions, newpart)
-		}
+	if err := addPartitionsForPlain(pt, customizations.Plain, options); err != nil {
+		return nil, fmt.Errorf("error generating partition table: %w", err)
 	}
-
-	if customizations.LVM != nil {
-		for idx, vg := range customizations.LVM.VolumeGroups {
-			vgname := vg.Name
-			if vgname == "" {
-				// automatically name volume groups based on their index
-				vgname = fmt.Sprintf("vg%02d", idx)
-			}
-			newvg := &LVMVolumeGroup{
-				Name:        vgname,
-				Description: "created via lvm2 and osbuild",
-			}
-			for _, lv := range vg.LogicalVolumes {
-				newfs := &Filesystem{
-					Type:         fsType(lv.Type),
-					Label:        lv.Label,
-					Mountpoint:   lv.Mountpoint,
-					FSTabOptions: "defaults", // TODO: add customization
-				}
-				if _, err := newvg.CreateLogicalVolume(lv.Name, lv.MinSize, newfs); err != nil {
-					return nil, fmt.Errorf("error creating logical volume %q (%s): %w", lv.Name, lv.Mountpoint, err)
-				}
-			}
-
-			// create partition for volume group
-			newpart := Partition{
-				Type:     LVMPartitionGUID,
-				Size:     vg.MinSize,
-				Bootable: false,
-				Payload:  newvg,
-			}
-
-			pt.Partitions = append(pt.Partitions, newpart)
-		}
+	if err := addPartitionsForLVM(pt, customizations.LVM, options); err != nil {
+		return nil, fmt.Errorf("error generating partition table: %w", err)
 	}
+	addPartitionsForBtrfs(pt, customizations.Btrfs)
 
-	if customizations.Btrfs != nil {
-		for _, btrfsvol := range customizations.Btrfs.Volumes {
-			subvols := make([]BtrfsSubvolume, len(btrfsvol.Subvolumes))
-			for idx, subvol := range btrfsvol.Subvolumes {
-				newsubvol := BtrfsSubvolume{
-					Name:       subvol.Name,
-					Mountpoint: subvol.Mountpoint,
-				}
-				subvols[idx] = newsubvol
-			}
-
-			newvol := &Btrfs{
-				Subvolumes: subvols,
-			}
-
-			// create partition for btrfs volume
-			newpart := Partition{
-				Type:     FilesystemDataGUID,
-				Bootable: false,
-				Payload:  newvol,
-				Size:     btrfsvol.MinSize,
-			}
-
-			pt.Partitions = append(pt.Partitions, newpart)
-		}
-	}
-
-	// Add root partition if it wasn't created already.
-	// When adding the root partition, add it to:
-	// - The first LVM Volume Group if one exists, otherwise
-	// - The first Btrfs volume if one exists, otherwise
-	// - At the end of the plain partitions.
-	if entityPath(pt, "/") == nil {
-	PartitionLoop:
-		for _, part := range pt.Partitions {
-			switch payload := part.Payload.(type) {
-			case *LVMVolumeGroup:
-				rootfs := &Filesystem{
-					Type:         options.DefaultFSType.String(),
-					Label:        "root",
-					Mountpoint:   "/",
-					FSTabOptions: "defaults",
-				}
-				// Let the function autogenerate the name to avoid conflicts
-				// with LV names from customizations.
-				// Set the size to 0 and it will be adjusted by
-				// EnsureDirectorySizes() and relayout().
-				if _, err := payload.CreateLogicalVolume("", 0, rootfs); err != nil {
-					return nil, fmt.Errorf("error creating root logical volume: %w", err)
-				}
-				break PartitionLoop
-			case *Btrfs:
-				rootsubvol := BtrfsSubvolume{
-					Name:       "root",
-					Mountpoint: "/",
-				}
-				payload.Subvolumes = append(payload.Subvolumes, rootsubvol)
-				break PartitionLoop
-			}
-		}
-		// check again and create a plain partition if root wasn't created in lvm or btrfs
-		if entityPath(pt, "/") == nil {
-			// add a plan root partition at the end of the partition table
-			rootpart := Partition{
-				Type:     FilesystemDataGUID,
-				Bootable: false,
-				Size:     0, // Set the size to 0 and it will be adjusted by EnsureDirectorySizes() and relayout()
-				Payload: &Filesystem{
-					Type:         options.DefaultFSType.String(),
-					Label:        "root",
-					Mountpoint:   "/",
-					FSTabOptions: "defaults",
-				},
-			}
-			pt.Partitions = append(pt.Partitions, rootpart)
-		}
+	if err := ensureRootFilesystem(pt, options); err != nil {
+		return nil, err
 	}
 
 	if len(options.RequiredMinSizes) != 0 {
@@ -1183,4 +1029,213 @@ func (pt *PartitionTable) GetMountpointSize(mountpoint string) (uint64, error) {
 	}
 
 	panic(fmt.Sprintf("no sizeable of the entity path for mountpoint %s, this is a programming error", mountpoint))
+}
+
+func addPartitionsForBootMode(pt *PartitionTable, bootMode platform.BootMode) error {
+	switch bootMode {
+	case platform.BOOT_LEGACY:
+		// add BIOS boot partition
+		pt.Partitions = append(pt.Partitions, mkBIOSBoot())
+		return nil
+	case platform.BOOT_UEFI:
+		// add ESP
+		pt.Partitions = append(pt.Partitions, mkESP(200*datasizes.MiB))
+		return nil
+	case platform.BOOT_HYBRID:
+		// add both
+		pt.Partitions = append(pt.Partitions, mkBIOSBoot())
+		pt.Partitions = append(pt.Partitions, mkESP(200*datasizes.MiB))
+		return nil
+	case platform.BOOT_NONE:
+		return nil
+	default:
+		return fmt.Errorf("invalid boot mode specified: %s", bootMode)
+	}
+}
+
+func addPartitionsForPlain(pt *PartitionTable, plain *blueprint.PlainFilesystemCustomization, options *CustomPartitionTableOptions) error {
+	if plain == nil {
+		return nil
+	}
+
+	for _, partition := range plain.Filesystems {
+		fstype, err := options.getfstype(partition.Type)
+		if err != nil {
+			return fmt.Errorf("error creating partition with mountpoint %q: %w", partition.Mountpoint, err)
+		}
+		newpart := Partition{
+			Type:     FilesystemDataGUID, // all user-defined partitions are data partitions
+			Bootable: false,
+			Size:     partition.MinSize,
+			Payload: &Filesystem{
+				Type:         fstype,
+				Label:        partition.Label,
+				Mountpoint:   partition.Mountpoint,
+				FSTabOptions: "defaults", // TODO: add customization
+			},
+		}
+		pt.Partitions = append(pt.Partitions, newpart)
+
+	}
+	return nil
+}
+
+func addPartitionsForLVM(pt *PartitionTable, lvm *blueprint.LVMCustomization, options *CustomPartitionTableOptions) error {
+	if lvm == nil {
+		return nil
+	}
+
+	for idx, vg := range lvm.VolumeGroups {
+		vgname := vg.Name
+		if vgname == "" {
+			// automatically name volume groups based on their index
+			vgname = fmt.Sprintf("vg%02d", idx)
+		}
+		newvg := &LVMVolumeGroup{
+			Name:        vgname,
+			Description: "created via lvm2 and osbuild",
+		}
+		for _, lv := range vg.LogicalVolumes {
+			fstype, err := options.getfstype(lv.Type)
+			if err != nil {
+				return fmt.Errorf("error creating logical volume %q (%s): %w", lv.Name, lv.Mountpoint, err)
+			}
+			newfs := &Filesystem{
+				Type:         fstype,
+				Label:        lv.Label,
+				Mountpoint:   lv.Mountpoint,
+				FSTabOptions: "defaults", // TODO: add customization
+			}
+			if _, err := newvg.CreateLogicalVolume(lv.Name, lv.MinSize, newfs); err != nil {
+				return fmt.Errorf("error creating logical volume %q (%s): %w", lv.Name, lv.Mountpoint, err)
+			}
+		}
+
+		// create partition for volume group
+		newpart := Partition{
+			Type:     LVMPartitionGUID,
+			Size:     vg.MinSize,
+			Bootable: false,
+			Payload:  newvg,
+		}
+		pt.Partitions = append(pt.Partitions, newpart)
+	}
+	return nil
+}
+
+func addPartitionsForBtrfs(pt *PartitionTable, btrfs *blueprint.BtrfsCustomization) {
+	if btrfs == nil {
+		return
+	}
+
+	for _, btrfsvol := range btrfs.Volumes {
+		subvols := make([]BtrfsSubvolume, len(btrfsvol.Subvolumes))
+		for idx, subvol := range btrfsvol.Subvolumes {
+			newsubvol := BtrfsSubvolume{
+				Name:       subvol.Name,
+				Mountpoint: subvol.Mountpoint,
+			}
+			subvols[idx] = newsubvol
+		}
+
+		newvol := &Btrfs{
+			Subvolumes: subvols,
+		}
+
+		// create partition for btrfs volume
+		newpart := Partition{
+			Type:     FilesystemDataGUID,
+			Bootable: false,
+			Payload:  newvol,
+			Size:     btrfsvol.MinSize,
+		}
+
+		pt.Partitions = append(pt.Partitions, newpart)
+	}
+}
+
+// Add a root filesystem if the partition table doesn't already have one.
+// When adding the root filesystem, add it to:
+// - The first LVM Volume Group if one exists, otherwise
+// - The first Btrfs volume if one exists, otherwise
+// - At the end of the plain partitions.
+func ensureRootFilesystem(pt *PartitionTable, options *CustomPartitionTableOptions) error {
+	if entityPath(pt, "/") != nil {
+		// nothing to do
+		return nil
+	}
+
+	for _, part := range pt.Partitions {
+		switch payload := part.Payload.(type) {
+		case *LVMVolumeGroup:
+			if options.DefaultFSType == FS_NONE {
+				return fmt.Errorf("error creating root logical volume: no default filesystem type")
+			}
+			rootfs := &Filesystem{
+				Type:         options.DefaultFSType.String(),
+				Label:        "root",
+				Mountpoint:   "/",
+				FSTabOptions: "defaults",
+			}
+			// Let the function autogenerate the name to avoid conflicts
+			// with LV names from customizations.
+			// Set the size to 0 and it will be adjusted by
+			// EnsureDirectorySizes() and relayout().
+			if _, err := payload.CreateLogicalVolume("", 0, rootfs); err != nil {
+				return fmt.Errorf("error creating root logical volume: %w", err)
+			}
+			return nil
+		case *Btrfs:
+			rootsubvol := BtrfsSubvolume{
+				Name:       "root",
+				Mountpoint: "/",
+			}
+			payload.Subvolumes = append(payload.Subvolumes, rootsubvol)
+			return nil
+		}
+	}
+
+	// We're going to create a root partition, so we have to ensure the default type is set.
+	if options.DefaultFSType == FS_NONE {
+		return fmt.Errorf("error creating root partition: no default filesystem type")
+	}
+
+	// add a plan root partition at the end of the partition table
+	rootpart := Partition{
+		Type:     FilesystemDataGUID,
+		Bootable: false,
+		Size:     0, // Set the size to 0 and it will be adjusted by EnsureDirectorySizes() and relayout()
+		Payload: &Filesystem{
+			Type:         options.DefaultFSType.String(),
+			Label:        "root",
+			Mountpoint:   "/",
+			FSTabOptions: "defaults",
+		},
+	}
+	pt.Partitions = append(pt.Partitions, rootpart)
+	return nil
+}
+
+// Create a boot partition if one does not already exist. The function will
+// append the boot partition to the end of the existing partition table
+// therefore it is best to call this function early to put boot near the front
+// (as is conventional).
+func ensureBootPartition(pt *PartitionTable, bootFsType FSType) {
+	bootPath := entityPath(pt, "/boot")
+	if bootPath != nil {
+		return
+	}
+
+	bootPart := Partition{
+		Type:     XBootLDRPartitionGUID,
+		Bootable: false,
+		Size:     512 * datasizes.MiB,
+		Payload: &Filesystem{
+			Type:         bootFsType.String(),
+			Label:        "boot",
+			Mountpoint:   "/boot",
+			FSTabOptions: "defaults",
+		},
+	}
+	pt.Partitions = append(pt.Partitions, bootPart)
 }
