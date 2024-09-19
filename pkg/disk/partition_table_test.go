@@ -1004,3 +1004,81 @@ func TestNewCustomPartitionTable(t *testing.T) {
 	}
 
 }
+
+func TestNewCustomPartitionTableErrors(t *testing.T) {
+	type testCase struct {
+		customizations *blueprint.PartitioningCustomization
+		options        *disk.CustomPartitionTableOptions
+		errmsg         string
+	}
+
+	testCases := map[string]testCase{
+		"autoroot-notype": {
+			customizations: nil,
+			options:        nil,
+			errmsg:         "error creating root partition: no default filesystem type",
+		},
+		"autorootlv-notype": {
+			customizations: &blueprint.PartitioningCustomization{
+				LVM: &blueprint.LVMCustomization{
+					VolumeGroups: []blueprint.VGCustomization{
+						{
+							Name: "vg-without-root",
+						},
+					},
+				},
+			},
+			options: nil,
+			errmsg:  "error creating root logical volume: no default filesystem type",
+		},
+		"notype-nodefault": {
+			customizations: &blueprint.PartitioningCustomization{
+				Plain: &blueprint.PlainFilesystemCustomization{
+					Filesystems: []blueprint.FilesystemCustomization{
+						{
+							Mountpoint: "/",
+						},
+					},
+				},
+			},
+			options: nil,
+			errmsg:  `error generating partition table: error creating partition with mountpoint "/": no filesystem type defined and no default set`,
+		},
+		"lvm-notype-nodefault": {
+			customizations: &blueprint.PartitioningCustomization{
+				LVM: &blueprint.LVMCustomization{
+					VolumeGroups: []blueprint.VGCustomization{
+						{
+							Name: "rootvg",
+							LogicalVolumes: []blueprint.LVCustomization{
+								{
+									Name: "rootlv",
+									FilesystemCustomization: blueprint.FilesystemCustomization{
+										Mountpoint: "/",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			options: nil,
+			errmsg:  `error generating partition table: error creating logical volume "rootlv" (/): no filesystem type defined and no default set`,
+		},
+	}
+
+	// we don't care about the rng for error tests
+	/* #nosec G404 */
+	rnd := rand.New(rand.NewSource(0))
+
+	for name := range testCases {
+		tc := testCases[name]
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+
+			_, err := disk.NewCustomPartitionTable(tc.customizations, tc.options, rnd)
+			assert.EqualError(err, tc.errmsg)
+		})
+	}
+
+}
