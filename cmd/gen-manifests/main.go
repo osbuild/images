@@ -338,16 +338,7 @@ func mockResolveCommits(commitSources map[string][]ostree.SourceSpec) map[string
 	for name, commitSources := range commitSources {
 		commitSpecs := make([]ostree.CommitSpec, len(commitSources))
 		for idx, commitSource := range commitSources {
-			checksum := fmt.Sprintf("%x", sha256.Sum256([]byte(commitSource.URL+commitSource.Ref)))
-			spec := ostree.CommitSpec{
-				Ref:      commitSource.Ref,
-				URL:      commitSource.URL,
-				Checksum: checksum,
-			}
-			if commitSource.RHSM {
-				spec.Secrets = "org.osbuild.rhsm.consumer"
-			}
-			commitSpecs[idx] = spec
+			commitSpecs[idx] = cmdutil.MockOSTreeResolve(commitSource)
 		}
 		commits[name] = commitSpecs
 	}
