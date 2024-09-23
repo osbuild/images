@@ -226,7 +226,7 @@ func makeManifestJob(
 				return
 			}
 		} else {
-			packageSpecs, repoConfigs = mockDepsolve(manifest.GetPackageSetChains(), repos)
+			packageSpecs, repoConfigs = mockDepsolve(manifest.GetPackageSetChains(), repos, archName)
 		}
 		_ = repoConfigs
 
@@ -369,7 +369,7 @@ func depsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d dist
 	return depsolvedSets, repoSets, nil
 }
 
-func mockDepsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfig) (map[string][]rpmmd.PackageSpec, map[string][]rpmmd.RepoConfig) {
+func mockDepsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfig, archName string) (map[string][]rpmmd.PackageSpec, map[string][]rpmmd.RepoConfig) {
 	depsolvedSets := make(map[string][]rpmmd.PackageSpec)
 	repoSets := make(map[string][]rpmmd.RepoConfig)
 	for name, pkgSetChain := range packageSets {
@@ -386,7 +386,7 @@ func mockDepsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoC
 					Epoch:          0,
 					Version:        ver,
 					Release:        rel + ".fk1",
-					Arch:           "noarch",
+					Arch:           archName,
 					RemoteLocation: fmt.Sprintf("https://example.com/repo/packages/%s", pkgName),
 					Checksum:       "sha256:" + checksum,
 				}
