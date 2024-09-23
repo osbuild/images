@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/osbuild/images/internal/cmdutil"
 	"github.com/osbuild/images/pkg/ostree"
 )
 
@@ -48,6 +49,14 @@ type OutputConst struct {
 	Checksum string `json:"checksum"`
 }
 
+// for mocking in testing
+var osLookupEnv = os.LookupEnv
+
+func underTest() bool {
+	testVar, found := osLookupEnv("OTK_UNDER_TEST")
+	return found && testVar == "1"
+}
+
 func run(r io.Reader, w io.Writer) error {
 	var inputTree Tree
 	if err := json.NewDecoder(r).Decode(&inputTree); err != nil {
@@ -55,9 +64,16 @@ func run(r io.Reader, w io.Writer) error {
 	}
 
 	sourceSpec := ostree.SourceSpec(inputTree.Tree)
-	commitSpec, err := ostree.Resolve(sourceSpec)
-	if err != nil {
-		return fmt.Errorf("failed to resolve ostree commit: %w", err)
+
+	var commitSpec ostree.CommitSpec
+	if !underTest() {
+		var err error
+		commitSpec, err = ostree.Resolve(sourceSpec)
+		if err != nil {
+			return fmt.Errorf("failed to resolve ostree commit: %w", err)
+		}
+	} else {
+		commitSpec = cmdutil.MockOSTreeResolve(sourceSpec)
 	}
 
 	output := map[string]Output{
