@@ -11,6 +11,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -363,6 +364,7 @@ func depsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d dist
 func mockDepsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfig, archName string) (map[string][]rpmmd.PackageSpec, map[string][]rpmmd.RepoConfig) {
 	depsolvedSets := make(map[string][]rpmmd.PackageSpec)
 	repoSets := make(map[string][]rpmmd.RepoConfig)
+
 	for name, pkgSetChain := range packageSets {
 		specSet := make([]rpmmd.PackageSpec, 0)
 		for _, pkgSet := range pkgSetChain {
@@ -398,6 +400,30 @@ func mockDepsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoC
 				specSet = append(specSet, spec)
 			}
 		}
+
+		// generate pseudo packages for the repos
+		for _, repo := range repos {
+			// the test repos have the form:
+			//   https://rpmrepo..../el9/cs9-x86_64-rt-20240915
+			// drop the date as it's not needed for this level of
+			// mocks
+			baseURL := repo.BaseURLs[0]
+			if idx := strings.LastIndex(baseURL, "-"); idx > 0 {
+				baseURL = baseURL[:idx]
+			}
+			url, err := url.Parse(baseURL)
+			if err != nil {
+				panic(err)
+			}
+			url.Host = "example.com"
+			url.Path = "pseudo-repo-pkg:" + url.Path
+			specSet = append(specSet, rpmmd.PackageSpec{
+				Name:           url.String(),
+				RemoteLocation: url.String(),
+				Checksum:       "sha256:" + fmt.Sprintf("%x", sha256.Sum256([]byte(url.String()))),
+			})
+		}
+
 		depsolvedSets[name] = specSet
 		repoSets[name] = repos
 	}
