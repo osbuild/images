@@ -191,3 +191,35 @@ func TestResolverErrors(t *testing.T) {
 		})
 	}
 }
+
+func TestMockResolve(t *testing.T) {
+	restore := resolver.MockEnvLookup()
+	defer restore()
+
+	assert := assert.New(t)
+
+	inputReq := `
+{
+  "tree": {
+    "ref": "otk/ostree/test",
+    "url": "https://ostree.example.org/repo"
+  }
+}
+`
+	expOutput := `{
+  "tree": {
+    "const": {
+      "ref": "otk/ostree/test",
+      "url": "https://ostree.example.org/repo",
+      "checksum": "5c1c0655481926623eca85109dd4017c8dba320ea1473c42b43005db6d900a60"
+    }
+  }
+}
+`
+	input := bytes.NewBuffer([]byte(inputReq))
+	output := &bytes.Buffer{}
+
+	assert.NoError(resolver.Run(input, output))
+
+	assert.Equal(expOutput, output.String())
+}
