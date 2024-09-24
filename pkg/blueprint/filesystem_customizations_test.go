@@ -120,3 +120,19 @@ path "/boot/" must be canonical`
 	err := blueprint.CheckMountpointsPolicy(mps, policy)
 	assert.EqualError(t, err, expectedErr)
 }
+
+func TestReadConfigNoUndecoded(t *testing.T) {
+	testTOML := `
+mountpoint = "/foo"
+minsize = 1000
+`
+
+	var fsc blueprint.FilesystemCustomization
+	meta, err := toml.Decode(testTOML, &fsc)
+	assert.NoError(t, err)
+	assert.Equal(t, blueprint.FilesystemCustomization{
+		Mountpoint: "/foo",
+		MinSize:    1000,
+	}, fsc)
+	assert.Equal(t, 0, len(meta.Undecoded()))
+}

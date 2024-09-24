@@ -10,31 +10,36 @@ import (
 )
 
 type FilesystemCustomization struct {
-	Mountpoint string `json:"mountpoint,omitempty" toml:"mountpoint,omitempty"`
-	MinSize    uint64 `json:"minsize,omitempty" toml:"minsize,omitempty"`
+	Mountpoint Mountpoint `json:"mountpoint,omitempty" toml:"mountpoint,omitempty"`
+	MinSize    MinSize    `json:"minsize,omitempty" toml:"minsize,omitempty"`
 }
 
-func (fsc *FilesystemCustomization) UnmarshalTOML(data interface{}) error {
-	d, _ := data.(map[string]interface{})
+type Mountpoint string
 
-	switch d["mountpoint"].(type) {
+func (mt *Mountpoint) UnmarshalTOML(d interface{}) error {
+	switch d.(type) {
 	case string:
-		fsc.Mountpoint = d["mountpoint"].(string)
+		*mt = Mountpoint(d.(string))
 	default:
-		return fmt.Errorf("TOML unmarshal: mountpoint must be string, got %v of type %T", d["mountpoint"], d["mountpoint"])
+		return fmt.Errorf("TOML unmarshal: mountpoint must be string, got %v of type %T", d, d)
 	}
+	return nil
+}
 
-	switch d["minsize"].(type) {
+type MinSize uint64
+
+func (ms *MinSize) UnmarshalTOML(d interface{}) error {
+	switch d.(type) {
 	case int64:
-		fsc.MinSize = uint64(d["minsize"].(int64))
+		*ms = MinSize(d.(int64))
 	case string:
-		minSize, err := common.DataSizeToUint64(d["minsize"].(string))
+		minSize, err := common.DataSizeToUint64(d.(string))
 		if err != nil {
 			return fmt.Errorf("TOML unmarshal: minsize is not valid filesystem size (%w)", err)
 		}
-		fsc.MinSize = minSize
+		*ms = MinSize(minSize)
 	default:
-		return fmt.Errorf("TOML unmarshal: minsize must be integer or string, got %v of type %T", d["minsize"], d["minsize"])
+		return fmt.Errorf("TOML unmarshal: minsize must be integer or string, got %v of type %T", d, d)
 	}
 
 	return nil
@@ -49,7 +54,7 @@ func (fsc *FilesystemCustomization) UnmarshalJSON(data []byte) error {
 
 	switch d["mountpoint"].(type) {
 	case string:
-		fsc.Mountpoint = d["mountpoint"].(string)
+		fsc.Mountpoint = Mountpoint(d["mountpoint"].(string))
 	default:
 		return fmt.Errorf("JSON unmarshal: mountpoint must be string, got %v of type %T", d["mountpoint"], d["mountpoint"])
 	}
@@ -57,13 +62,13 @@ func (fsc *FilesystemCustomization) UnmarshalJSON(data []byte) error {
 	// The JSON specification only mentions float64 and Go defaults to it: https://go.dev/blog/json
 	switch d["minsize"].(type) {
 	case float64:
-		fsc.MinSize = uint64(d["minsize"].(float64))
+		fsc.MinSize = MinSize(d["minsize"].(float64))
 	case string:
 		minSize, err := common.DataSizeToUint64(d["minsize"].(string))
 		if err != nil {
 			return fmt.Errorf("JSON unmarshal: minsize is not valid filesystem size (%w)", err)
 		}
-		fsc.MinSize = minSize
+		fsc.MinSize = MinSize(minSize)
 	default:
 		return fmt.Errorf("JSON unmarshal: minsize must be float64 number or string, got %v of type %T", d["minsize"], d["minsize"])
 	}
@@ -75,7 +80,7 @@ func (fsc *FilesystemCustomization) UnmarshalJSON(data []byte) error {
 func CheckMountpointsPolicy(mountpoints []FilesystemCustomization, mountpointAllowList *pathpolicy.PathPolicies) error {
 	var errs []error
 	for _, m := range mountpoints {
-		if err := mountpointAllowList.Check(m.Mountpoint); err != nil {
+		if err := mountpointAllowList.Check(string(m.Mountpoint)); err != nil {
 			errs = append(errs, err)
 		}
 	}
