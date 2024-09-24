@@ -848,6 +848,7 @@ func TestRepoConfigMarshalAlsmostEmpty(t *testing.T) {
 func TestRunErrorEmptyOutput(t *testing.T) {
 	fakeDnfJsonPath := filepath.Join(t.TempDir(), "dnfjson")
 	fakeDnfJsonNoOutput := `#!/bin/sh -e
+cat - > "$0".stdin
 exit 1
 `
 	err := os.WriteFile(fakeDnfJsonPath, []byte(fakeDnfJsonNoOutput), 0o755)
