@@ -43,9 +43,12 @@ type InputProperties struct {
 
 // InputCreate contains details what partitions to auto-generate
 type InputCreate struct {
-	BIOSBootPartition bool   `json:"bios_boot_partition"`
-	EspPartition      bool   `json:"esp_partition"`
-	EspPartitionSize  string `json:"esp_partition_size"`
+	BIOSBootPartition            bool   `json:"bios_boot_partition"`
+	BIOSBootPartitionSize        string `json:"bios_boot_partition_size"`
+	BIOSBootPartitionTypePPCPReP bool   `json:"bios_boot_partition_type_ppc_prep"`
+	BIOSBootPartitionSkipUUID    bool   `json:"bios_boot_partition_skip_uuid"`
+	EspPartition                 bool   `json:"esp_partition"`
+	EspPartitionSize             string `json:"esp_partition_size"`
 }
 
 // InputPartition represents a single user provided partition input
@@ -135,11 +138,26 @@ func makePartitionTableFromOtkInput(input *Input) (*disk.PartitionTable, error) 
 		if len(pt.Partitions) > 0 {
 			return nil, fmt.Errorf("internal error: bios partition *must* go first")
 		}
+		partType := disk.BIOSBootPartitionGUID
+		partUUID := disk.BIOSBootPartitionUUID
+		size := uint64(1 * common.MebiByte)
+		if input.Properties.Create.BIOSBootPartitionTypePPCPReP {
+			partType = disk.BIOSBootPartitionTYPEPPCPReP
+		}
+		if input.Properties.Create.BIOSBootPartitionSkipUUID {
+			partUUID = ""
+		}
+		if input.Properties.Create.BIOSBootPartitionSize != "" {
+			size, err = common.DataSizeToUint64(input.Properties.Create.BIOSBootPartitionSize)
+			if err != nil {
+				return nil, err
+			}
+		}
 		pt.Partitions = append(pt.Partitions, disk.Partition{
-			Size:     1 * common.MebiByte,
+			Size:     size,
 			Bootable: true,
-			Type:     disk.BIOSBootPartitionGUID,
-			UUID:     disk.BIOSBootPartitionUUID,
+			Type:     partType,
+			UUID:     partUUID,
 		})
 	}
 	if input.Properties.Create.EspPartition {
