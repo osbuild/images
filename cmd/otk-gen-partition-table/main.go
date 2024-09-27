@@ -218,11 +218,7 @@ func getDiskSizeFrom(input *Input) (diskSize uint64, err error) {
 			return 0, err
 		}
 	}
-	// TODO: use max() once we move to go1.21
-	if defaultSize > modMinSize {
-		return defaultSize, nil
-	}
-	return modMinSize, nil
+	return max(defaultSize, modMinSize), nil
 }
 
 func genPartitionTable(genPartInput *Input, rng *rand.Rand) (*Output, error) {
