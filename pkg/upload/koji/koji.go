@@ -3,6 +3,8 @@ package koji
 import (
 	"bytes"
 	"context"
+	"math"
+
 	// koji uses MD5 hashes
 	/* #nosec G501 */
 	"crypto/md5"
@@ -402,7 +404,9 @@ func (k *Koji) Upload(file io.Reader, filepath, filename string) (string, uint64
 			return "", 0, err
 		}
 
-		offset += uint64(n)
+		if n > 0 {
+			offset += uint64(n)
+		}
 
 		m, err := hash.Write(chunk[:n])
 		if err != nil {
@@ -477,6 +481,9 @@ func CreateKojiTransport(relaxTimeout uint) http.RoundTripper {
 
 	// Relax timeouts a bit
 	if relaxTimeout > 0 {
+		if relaxTimeout > math.MaxInt64 {
+			panic("relaxTimeout would overflow int64 in call to time.Duration()")
+		}
 		transport.TLSHandshakeTimeout *= time.Duration(relaxTimeout)
 		transport.DialContext = (&net.Dialer{
 			Timeout:   30 * time.Second * time.Duration(relaxTimeout),
