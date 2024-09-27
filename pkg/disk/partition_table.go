@@ -403,7 +403,7 @@ func (pt *PartitionTable) HeaderSize() uint64 {
 	}
 
 	// calculate the space we need for
-	parts := len(pt.Partitions)
+	parts := uint64(len(pt.Partitions))
 
 	// reserve a minimum of 128 partition entires
 	if parts < 128 {
@@ -413,7 +413,7 @@ func (pt *PartitionTable) HeaderSize() uint64 {
 	// Assume that each partition entry is 128 bytes
 	// which might not be the case if the partition
 	// name exceeds 72 bytes
-	header += uint64(parts * 128)
+	header += parts * 128
 
 	return header
 }

@@ -607,6 +607,8 @@ func main() {
 
 	nJobs := len(jobs)
 	fmt.Printf("Collected %d jobs\n", nJobs)
+
+	// nolint:gosec
 	wq := newWorkerQueue(uint32(nWorkers), uint32(nJobs))
 	wq.start()
 	fmt.Printf("Initialised %d workers\n", nWorkers)
