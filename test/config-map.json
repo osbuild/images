@@ -89,7 +89,8 @@
   },
   "./configs/edge-ostree-pull-user.json": {
     "image-types": [
-      "edge-ami"
+      "edge-ami",
+      "edge-commit"
     ]
   },
   "./configs/minimal-environment.json": {
