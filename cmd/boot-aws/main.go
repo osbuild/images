@@ -71,7 +71,7 @@ func run(c string, args ...string) ([]byte, []byte, error) {
 
 	stderr := cmderr.Bytes()
 	if len(stderr) > 0 {
-		fmt.Fprintf(os.Stderr, string(stderr)+"\n")
+		fmt.Fprintf(os.Stderr, "%s\n", string(stderr))
 	}
 	return stdout, stderr, err
 }

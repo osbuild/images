@@ -531,7 +531,7 @@ func (pt *PartitionTable) createFilesystem(mountpoint string, size uint64) error
 
 	newVol, err := vc.CreateMountpoint(mountpoint, 0)
 	if err != nil {
-		return fmt.Errorf("failed creating volume: " + err.Error())
+		return fmt.Errorf("failed creating volume: %w", err)
 	}
 	vcPath := append([]Entity{newVol}, rootPath[idx:]...)
 	size = alignEntityBranch(vcPath, size)
