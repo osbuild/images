@@ -131,13 +131,13 @@ func TestDepsolver(t *testing.T) {
 				return
 			} else {
 				assert.Nil(err)
-				assert.NotNil(res)
+				require.NotNil(t, res)
 			}
 
 			assert.Equal(expectedResult(s.RepoConfig), res.Packages)
 
 			if tc.sbomType != sbom.StandardTypeNone {
-				assert.NotNil(res.SBOM)
+				require.NotNil(t, res.SBOM)
 				assert.Equal(sbom.StandardTypeSpdx, res.SBOM.DocType)
 			} else {
 				assert.Nil(res.SBOM)
