@@ -78,7 +78,7 @@ jobs:
       - name: Allow replacing the osbuild/images module in .golangci.yml
         working-directory: osbuild-composer
         run: |
-          awk '/replace-local: false/ {print "    replace-local: true"; print "    replace-allow-list:\n      - github.com/osbuild/images"; next} 1' .golangci.yml > .golangci.yml.new
+          awk '/replace-local: false/ {print "    replace-local: true"; next} 1' .golangci.yml > .golangci.yml.new
           mv .golangci.yml.new .golangci.yml
 
       - name: Apt update
