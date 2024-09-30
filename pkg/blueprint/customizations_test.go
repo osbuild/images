@@ -3,9 +3,11 @@ package blueprint
 import (
 	"testing"
 
+	"github.com/BurntSushi/toml"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/customizations/anaconda"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestCheckAllowed(t *testing.T) {
@@ -492,4 +494,27 @@ func TestGetInstallerErrors(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestUnmarshalTOMLNoUndecoded(t *testing.T) {
+	testTOML := `
+[[customizations.filesystem]]
+mountpoint = "/foo"
+minsize = 1000
+`
+
+	var bp Blueprint
+	meta, err := toml.Decode(testTOML, &bp)
+	assert.NoError(t, err)
+	assert.Equal(t, Blueprint{
+		Customizations: &Customizations{
+			Filesystem: []FilesystemCustomization{
+				{
+					Mountpoint: "/foo",
+					MinSize:    1000,
+				},
+			},
+		},
+	}, bp)
+	assert.Equal(t, 0, len(meta.Undecoded()))
 }
