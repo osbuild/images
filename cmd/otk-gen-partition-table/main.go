@@ -184,13 +184,15 @@ func makePartitionTableFromOtkInput(input *Input) (*disk.PartitionTable, error) 
 		if err != nil {
 			return nil, err
 		}
-		pt.Partitions = append(pt.Partitions, disk.Partition{
+		// XXX: support lvm,luks here
+		newPart := disk.Partition{
 			Size:     uintSize,
 			UUID:     part.PartUUID,
 			Type:     part.PartType,
 			Bootable: part.Bootable,
-			// XXX: support lvm,luks here
-			Payload: &disk.Filesystem{
+		}
+		if part.Type != "" {
+			newPart.Payload = &disk.Filesystem{
 				Label:        part.Label,
 				Type:         part.Type,
 				Mountpoint:   part.Mountpoint,
@@ -198,8 +200,9 @@ func makePartitionTableFromOtkInput(input *Input) (*disk.PartitionTable, error) 
 				FSTabOptions: part.FSMntOps,
 				FSTabFreq:    part.FSFreq,
 				FSTabPassNo:  part.FSPassNo,
-			},
-		})
+			}
+		}
+		pt.Partitions = append(pt.Partitions, newPart)
 	}
 
 	return pt, nil
