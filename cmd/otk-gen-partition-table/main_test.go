@@ -739,3 +739,54 @@ func TestGenPartitionCreateESPDos(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, expectedOutput, output)
 }
+
+func TestGenPartitionTablePropertyBootable(t *testing.T) {
+	inp := &genpart.Input{
+		Properties: genpart.InputProperties{
+			Type:        "dos",
+			DefaultSize: "15 GiB",
+		},
+		Partitions: []*genpart.InputPartition{
+			{
+				Mountpoint: "/",
+				Size:       "10 GiB",
+				Type:       "ext4",
+				Bootable:   true,
+			},
+		},
+	}
+	expectedOutput := &otkdisk.Data{
+		Const: otkdisk.Const{
+			KernelOptsList: []string{},
+			PartitionMap: map[string]otkdisk.Partition{
+				"root": {
+					UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+					Type: "ext4",
+				},
+			},
+			Filename: "disk.img",
+			Internal: otkdisk.Internal{
+				PartitionTable: &disk.PartitionTable{
+					Size: 16106127360,
+					UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+					Type: "dos",
+					Partitions: []disk.Partition{
+						{
+							Start:    1048576,
+							Size:     16105078784,
+							Bootable: true,
+							Payload: &disk.Filesystem{
+								Type:       "ext4",
+								UUID:       "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+								Mountpoint: "/",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	output, err := genpart.GenPartitionTable(inp, rand.New(rand.NewSource(0))) /* #nosec G404 */
+	assert.NoError(t, err)
+	assert.Equal(t, expectedOutput, output)
+}

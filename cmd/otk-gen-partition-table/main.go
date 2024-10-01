@@ -61,7 +61,7 @@ type InputPartition struct {
 	FSMntOps   string `json:"fs_mntops"`
 	FSFreq     uint64 `json:"fs_freq"`
 	FSPassNo   uint64 `json:"fs_passno"`
-
+	Bootable   bool   `json:"bootable"`
 	// TODO: add sectorlvm,luks, see https://github.com/achilleas-k/images/pull/2#issuecomment-2136025471
 }
 
@@ -183,10 +183,12 @@ func makePartitionTableFromOtkInput(input *Input) (*disk.PartitionTable, error) 
 		if err != nil {
 			return nil, err
 		}
+
 		pt.Partitions = append(pt.Partitions, disk.Partition{
-			Size: uintSize,
-			UUID: part.PartUUID,
-			Type: part.PartType,
+			Size:     uintSize,
+			UUID:     part.PartUUID,
+			Type:     part.PartType,
+			Bootable: part.Bootable,
 			// XXX: support lvm,luks here
 			Payload: &disk.Filesystem{
 				Label:        part.Label,
