@@ -86,15 +86,15 @@ func makePartMap(pt *disk.PartitionTable) map[string]otkdisk.Partition {
 	for _, part := range pt.Partitions {
 		switch pl := part.Payload.(type) {
 		case *disk.Filesystem:
+			partMapDetails := otkdisk.Partition{
+				UUID: pl.UUID,
+				Type: pl.Type,
+			}
 			switch pl.Mountpoint {
 			case "/":
-				pm["root"] = otkdisk.Partition{
-					UUID: pl.UUID,
-				}
+				pm["root"] = partMapDetails
 			case "/boot":
-				pm["boot"] = otkdisk.Partition{
-					UUID: pl.UUID,
-				}
+				pm["boot"] = partMapDetails
 			}
 		}
 	}

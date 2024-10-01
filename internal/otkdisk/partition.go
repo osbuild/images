@@ -47,6 +47,7 @@ type Const struct {
 type Partition struct {
 	// NOTE: Not a UUID type because fat UUIDs are not compliant
 	UUID string `json:"uuid"`
+	Type string `json:"type"`
 }
 
 // Interal contains partition table data that is stricly internal and

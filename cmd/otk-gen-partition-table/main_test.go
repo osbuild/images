@@ -108,6 +108,7 @@ func TestUnmarshalOutput(t *testing.T) {
 			PartitionMap: map[string]otkdisk.Partition{
 				"root": {
 					UUID: "12345",
+					Type: "119119",
 				},
 			},
 			Filename: "disk.img",
@@ -136,7 +137,8 @@ func TestUnmarshalOutput(t *testing.T) {
     ],
     "partition_map": {
       "root": {
-        "uuid": "12345"
+        "uuid": "12345",
+        "type": "119119"
       }
     },
     "internal": {
@@ -216,7 +218,8 @@ var expectedSimplePartOutput = `{
       "kernel_opts_list": [],
       "partition_map": {
         "root": {
-          "uuid": "9851898e-0b30-437d-8fad-51ec16c3697f"
+          "uuid": "9851898e-0b30-437d-8fad-51ec16c3697f",
+          "type": "ext4"
         }
       },
       "internal": {
@@ -329,6 +332,7 @@ func TestGenPartitionTableMinimal(t *testing.T) {
 			PartitionMap: map[string]otkdisk.Partition{
 				"root": {
 					UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+					Type: "ext4",
 				},
 			},
 			Filename: "disk.img",
@@ -389,6 +393,7 @@ func TestGenPartitionTableCustomizationExtraMp(t *testing.T) {
 			PartitionMap: map[string]otkdisk.Partition{
 				"boot": {
 					UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+					Type: "ext4",
 				},
 			},
 			Filename: "disk.img",
@@ -478,6 +483,7 @@ func TestGenPartitionTableCustomizationExtraMpPlusModificationPartitionMode(t *t
 			PartitionMap: map[string]otkdisk.Partition{
 				"root": {
 					UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+					Type: "ext4",
 				},
 			},
 			Filename: "disk.img",
@@ -536,6 +542,7 @@ func TestGenPartitionTablePropertiesDefaultSize(t *testing.T) {
 			PartitionMap: map[string]otkdisk.Partition{
 				"root": {
 					UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+					Type: "ext4",
 				},
 			},
 			Filename: "disk.img",
@@ -587,6 +594,7 @@ func TestGenPartitionTableModificationMinDiskSize(t *testing.T) {
 			PartitionMap: map[string]otkdisk.Partition{
 				"root": {
 					UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+					Type: "ext4",
 				},
 			},
 			Filename: "disk.img",
@@ -637,6 +645,7 @@ func TestGenPartitionTableModificationFilename(t *testing.T) {
 			PartitionMap: map[string]otkdisk.Partition{
 				"root": {
 					UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+					Type: "ext4",
 				},
 			},
 			Filename: "custom-disk.img",
@@ -698,6 +707,7 @@ func TestGenPartitionCreateESPDos(t *testing.T) {
 			PartitionMap: map[string]otkdisk.Partition{
 				"root": {
 					UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+					Type: "ext4",
 				},
 			},
 			Filename: "disk.img",
