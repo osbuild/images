@@ -331,6 +331,69 @@ func TestGenPartitionTableBootable(t *testing.T) {
 	assert.Equal(t, true, output.Const.Internal.PartitionTable.Partitions[0].Bootable)
 }
 
+func TestGenPartitionTableIntegrationPPC(t *testing.T) {
+	inp := &genpart.Input{
+		Properties: genpart.InputProperties{
+			Type:        "dos",
+			DefaultSize: "10 GiB",
+			UUID:        "0x14fc63d2",
+		},
+		Partitions: []*genpart.InputPartition{
+			{
+				Name:     "ppc-boot",
+				Bootable: true,
+				Size:     "4 MiB",
+				PartType: "41",
+				PartUUID: "",
+			},
+			{
+				Name:       "root",
+				Size:       "10 GiB",
+				Type:       "xfs",
+				Mountpoint: "/",
+			},
+		},
+	}
+	expectedOutput := &otkdisk.Data{
+		Const: otkdisk.Const{
+			KernelOptsList: []string{},
+			PartitionMap: map[string]otkdisk.Partition{
+				"root": {
+					UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+				},
+			},
+			Filename: "disk.img",
+			Internal: otkdisk.Internal{
+				PartitionTable: &disk.PartitionTable{
+					Size: 10742661120,
+					UUID: "0x14fc63d2",
+					Type: "dos",
+					Partitions: []disk.Partition{
+						{
+							Bootable: true,
+							Start:    1048576,
+							Size:     4194304,
+							Type:     "41",
+						},
+						{
+							Start: 5242880,
+							Size:  10737418240,
+							Payload: &disk.Filesystem{
+								Type:       "xfs",
+								UUID:       "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+								Mountpoint: "/",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	output, err := genpart.GenPartitionTable(inp, rand.New(rand.NewSource(0))) /* #nosec G404 */
+	assert.NoError(t, err)
+	assert.Equal(t, expectedOutput, output)
+}
+
 func TestGenPartitionTableMinimal(t *testing.T) {
 	// XXX: think about what the smalltest inputs can be and validate
 	// that it's complete and/or provide defaults (e.g. for "type" for
