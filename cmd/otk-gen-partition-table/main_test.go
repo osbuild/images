@@ -16,6 +16,8 @@ import (
 )
 
 // see https://github.com/achilleas-k/images/pull/2#issuecomment-2136025471
+// Note that this partition table contains all json keys for testing, some may
+// contradict each other
 var partInputsComplete = `
 {
   "properties": {
@@ -32,6 +34,7 @@ var partInputsComplete = `
   "partitions": [
     {
       "name": "root",
+      "bootable": true,
       "mountpoint": "/",
       "label": "root",
       "size": "7 GiB",
@@ -69,6 +72,7 @@ var expectedInput = &genpart.Input{
 	Partitions: []*genpart.InputPartition{
 		{
 			Name:       "root",
+			Bootable:   true,
 			Mountpoint: "/",
 			Label:      "root",
 			Size:       "7 GiB",
@@ -305,6 +309,26 @@ func TestIntegrationRealistic(t *testing.T) {
 	err := genpart.Run(inp, outp)
 	assert.NoError(t, err)
 	assert.Equal(t, expectedSimplePartOutput, outp.String())
+}
+
+func TestGenPartitionTableBootable(t *testing.T) {
+	inp := &genpart.Input{
+		Properties: genpart.InputProperties{
+			Type: "dos",
+		},
+		Partitions: []*genpart.InputPartition{
+			{
+				Bootable:   true,
+				Mountpoint: "/",
+				Size:       "10 GiB",
+				Type:       "ext4",
+			},
+		},
+	}
+
+	output, err := genpart.GenPartitionTable(inp, rand.New(rand.NewSource(0))) /* #nosec G404 */
+	assert.NoError(t, err)
+	assert.Equal(t, true, output.Const.Internal.PartitionTable.Partitions[0].Bootable)
 }
 
 func TestGenPartitionTableMinimal(t *testing.T) {

@@ -51,6 +51,7 @@ type InputCreate struct {
 // InputPartition represents a single user provided partition input
 type InputPartition struct {
 	Name       string `json:"name"`
+	Bootable   bool   `json:"bootable"`
 	Mountpoint string `json:"mountpoint"`
 	Label      string `json:"label"`
 	Size       string `json:"size"`
@@ -184,9 +185,10 @@ func makePartitionTableFromOtkInput(input *Input) (*disk.PartitionTable, error) 
 			return nil, err
 		}
 		pt.Partitions = append(pt.Partitions, disk.Partition{
-			Size: uintSize,
-			UUID: part.PartUUID,
-			Type: part.PartType,
+			Size:     uintSize,
+			UUID:     part.PartUUID,
+			Type:     part.PartType,
+			Bootable: part.Bootable,
 			// XXX: support lvm,luks here
 			Payload: &disk.Filesystem{
 				Label:        part.Label,
