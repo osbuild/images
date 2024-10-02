@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	makefstab "github.com/osbuild/images/cmd/otk-make-fstab-stage"
+	makefstab "github.com/osbuild/images/cmd/otk/osbuild-make-fstab-stage"
 	"github.com/osbuild/images/internal/otkdisk"
 	"github.com/osbuild/images/internal/testdisk"
 )

@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	makeGrub2Inst "github.com/osbuild/images/cmd/otk-make-grub2-inst-stage"
+	makeGrub2Inst "github.com/osbuild/images/cmd/otk/osbuild-make-grub2-inst-stage"
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/otkdisk"
 	"github.com/osbuild/images/pkg/disk"

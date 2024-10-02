@@ -76,7 +76,7 @@ type InputModifications struct {
 }
 
 // Output contains a full description of a disk, this can be consumed
-// by other tools like otk-make-*
+// by other tools like osbuild-make-*
 type Output = otkdisk.Data
 
 func makePartMap(pt *disk.PartitionTable) map[string]otkdisk.Partition {

@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	resolver "github.com/osbuild/images/cmd/otk-resolve-containers"
+	resolver "github.com/osbuild/images/cmd/otk/osbuild-resolve-containers"
 )
 
 const (

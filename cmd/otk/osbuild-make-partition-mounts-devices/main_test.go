@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	mkdevmnt "github.com/osbuild/images/cmd/otk-make-partition-mounts-devices"
+	mkdevmnt "github.com/osbuild/images/cmd/otk/osbuild-make-partition-mounts-devices"
 	"github.com/osbuild/images/internal/otkdisk"
 	"github.com/osbuild/images/internal/testdisk"
 	"github.com/stretchr/testify/assert"
