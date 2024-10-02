@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	makestages "github.com/osbuild/images/cmd/otk-make-partition-stages"
+	makestages "github.com/osbuild/images/cmd/otk/osbuild-make-partition-stages"
 	"github.com/osbuild/images/internal/otkdisk"
 	"github.com/osbuild/images/pkg/disk"
 )

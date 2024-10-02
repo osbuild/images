@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	genpart "github.com/osbuild/images/cmd/otk-gen-partition-table"
+	genpart "github.com/osbuild/images/cmd/otk/osbuild-gen-partition-table"
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/otkdisk"
 	"github.com/osbuild/images/pkg/blueprint"

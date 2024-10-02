@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	resolver "github.com/osbuild/images/cmd/otk-resolve-ostree-commit"
+	resolver "github.com/osbuild/images/cmd/otk/osbuild-resolve-ostree-commit"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
