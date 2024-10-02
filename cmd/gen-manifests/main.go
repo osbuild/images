@@ -416,7 +416,7 @@ func mockDepsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoC
 				panic(err)
 			}
 			url.Host = "example.com"
-			url.Path = "pseudo-repo-pkg:" + url.Path
+			url.Path = fmt.Sprintf("passed-arch:%s/passed-repo:%s", archName, url.Path)
 			specSet = append(specSet, rpmmd.PackageSpec{
 				Name:           url.String(),
 				RemoteLocation: url.String(),
