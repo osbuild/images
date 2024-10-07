@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/osbuild/images/internal/cmdutil"
+	"github.com/osbuild/images/internal/otkostree"
 	"github.com/osbuild/images/pkg/ostree"
 )
 
@@ -31,22 +32,7 @@ type Input struct {
 // Output contains everything needed to write a manifest that requires pulling
 // an ostree commit.
 type Output struct {
-	Const OutputConst `json:"const"`
-}
-
-type OutputConst struct {
-	// Ref of the commit (can be empty).
-	Ref string `json:"ref,omitempty"`
-
-	// URL of the repo where the commit can be fetched.
-	URL string `json:"url"`
-
-	// Secrets type to use when pulling the ostree commit content
-	// (e.g. org.osbuild.rhsm.consumer).
-	Secrets string `json:"secrets,omitempty"`
-
-	// Checksum of the commit.
-	Checksum string `json:"checksum"`
+	Const otkostree.ResolvedConst `json:"const"`
 }
 
 // for mocking in testing
@@ -78,7 +64,7 @@ func run(r io.Reader, w io.Writer) error {
 
 	output := map[string]Output{
 		"tree": {
-			Const: OutputConst{
+			Const: otkostree.ResolvedConst{
 				Ref:      commitSpec.Ref,
 				URL:      commitSpec.URL,
 				Secrets:  commitSpec.Secrets,
