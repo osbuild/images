@@ -6,33 +6,17 @@ import (
 	"io"
 	"os"
 
+	"github.com/osbuild/images/internal/otkostree"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/ostree"
 )
-
-// TODO: move structs to common package with resolver external
 
 type Input struct {
 	Tree InputTree `json:"tree"`
 }
 
 type InputTree struct {
-	Const InputConst `json:"const"`
-}
-
-type InputConst struct {
-	// Ref of the commit (can be empty).
-	Ref string `json:"ref,omitempty"`
-
-	// URL of the repo where the commit can be fetched.
-	URL string `json:"url"`
-
-	// Secrets type to use when pulling the ostree commit content
-	// (e.g. org.osbuild.rhsm.consumer).
-	Secrets string `json:"secrets,omitempty"`
-
-	// Checksum of the commit.
-	Checksum string `json:"checksum"`
+	Const otkostree.ResolvedConst `json:"const"`
 }
 
 type Output struct {
