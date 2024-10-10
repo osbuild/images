@@ -10,5 +10,7 @@ __pycache__
 /test/data/manifests
 /tools/appsre-ansible/inventory
 dictionary.dic
+/cmd/ostree-resolve/*.crt
+/cmd/ostree-resolve/*.key
 
 *~
