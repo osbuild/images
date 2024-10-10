@@ -79,3 +79,9 @@ cmds
 depsolving
 subcommand
 teardown
+Koji
+bootc
+btrfs
+devicemapper
+graphdriver
+subpackages
