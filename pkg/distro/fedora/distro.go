@@ -50,6 +50,12 @@ var (
 		oscap.Standard,
 	}
 
+	// Default directory size minimums for all image types.
+	requiredDirectorySizes = map[string]uint64{
+		"/":    1 * common.GiB,
+		"/usr": 2 * common.GiB,
+	}
+
 	// Services
 	iotServices = []string{
 		"NetworkManager.service",
@@ -91,10 +97,11 @@ var (
 		rpmOstree: false,
 		image:     imageInstallerImage,
 		// We don't know the variant of the OS pipeline being installed
-		isoLabel:         getISOLabelFunc("Unknown"),
-		buildPipelines:   []string{"build"},
-		payloadPipelines: []string{"anaconda-tree", "rootfs-image", "efiboot-tree", "os", "bootiso-tree", "bootiso"},
-		exports:          []string{"bootiso"},
+		isoLabel:               getISOLabelFunc("Unknown"),
+		buildPipelines:         []string{"build"},
+		payloadPipelines:       []string{"anaconda-tree", "rootfs-image", "efiboot-tree", "os", "bootiso-tree", "bootiso"},
+		exports:                []string{"bootiso"},
+		requiredPartitionSizes: requiredDirectorySizes,
 	}
 
 	liveInstallerImgType = imageType{
@@ -105,14 +112,15 @@ var (
 		packageSets: map[string]packageSetFunc{
 			installerPkgsKey: liveInstallerPackageSet,
 		},
-		bootable:         true,
-		bootISO:          true,
-		rpmOstree:        false,
-		image:            liveInstallerImage,
-		isoLabel:         getISOLabelFunc("Workstation"),
-		buildPipelines:   []string{"build"},
-		payloadPipelines: []string{"anaconda-tree", "rootfs-image", "efiboot-tree", "bootiso-tree", "bootiso"},
-		exports:          []string{"bootiso"},
+		bootable:               true,
+		bootISO:                true,
+		rpmOstree:              false,
+		image:                  liveInstallerImage,
+		isoLabel:               getISOLabelFunc("Workstation"),
+		buildPipelines:         []string{"build"},
+		payloadPipelines:       []string{"anaconda-tree", "rootfs-image", "efiboot-tree", "bootiso-tree", "bootiso"},
+		exports:                []string{"bootiso"},
+		requiredPartitionSizes: requiredDirectorySizes,
 	}
 
 	iotCommitImgType = imageType{
@@ -127,11 +135,12 @@ var (
 			EnabledServices: iotServices,
 			DracutConf:      []*osbuild.DracutConfStageOptions{osbuild.FIPSDracutConfStageOptions},
 		},
-		rpmOstree:        true,
-		image:            iotCommitImage,
-		buildPipelines:   []string{"build"},
-		payloadPipelines: []string{"os", "ostree-commit", "commit-archive"},
-		exports:          []string{"commit-archive"},
+		rpmOstree:              true,
+		image:                  iotCommitImage,
+		buildPipelines:         []string{"build"},
+		payloadPipelines:       []string{"os", "ostree-commit", "commit-archive"},
+		exports:                []string{"commit-archive"},
+		requiredPartitionSizes: requiredDirectorySizes,
 	}
 
 	iotBootableContainer = imageType{
@@ -141,11 +150,12 @@ var (
 		packageSets: map[string]packageSetFunc{
 			osPkgsKey: bootableContainerPackageSet,
 		},
-		rpmOstree:        true,
-		image:            bootableContainerImage,
-		buildPipelines:   []string{"build"},
-		payloadPipelines: []string{"os", "ostree-commit", "ostree-encapsulate"},
-		exports:          []string{"ostree-encapsulate"},
+		rpmOstree:              true,
+		image:                  bootableContainerImage,
+		buildPipelines:         []string{"build"},
+		payloadPipelines:       []string{"os", "ostree-commit", "ostree-encapsulate"},
+		exports:                []string{"ostree-encapsulate"},
+		requiredPartitionSizes: requiredDirectorySizes,
 	}
 
 	iotOCIImgType = imageType{
@@ -163,12 +173,13 @@ var (
 			EnabledServices: iotServices,
 			DracutConf:      []*osbuild.DracutConfStageOptions{osbuild.FIPSDracutConfStageOptions},
 		},
-		rpmOstree:        true,
-		bootISO:          false,
-		image:            iotContainerImage,
-		buildPipelines:   []string{"build"},
-		payloadPipelines: []string{"os", "ostree-commit", "container-tree", "container"},
-		exports:          []string{"container"},
+		rpmOstree:              true,
+		bootISO:                false,
+		image:                  iotContainerImage,
+		buildPipelines:         []string{"build"},
+		payloadPipelines:       []string{"os", "ostree-commit", "container-tree", "container"},
+		exports:                []string{"container"},
+		requiredPartitionSizes: requiredDirectorySizes,
 	}
 
 	iotInstallerImgType = imageType{
@@ -183,13 +194,14 @@ var (
 			Locale:          common.ToPtr("en_US.UTF-8"),
 			EnabledServices: iotServices,
 		},
-		rpmOstree:        true,
-		bootISO:          true,
-		image:            iotInstallerImage,
-		isoLabel:         getISOLabelFunc("IoT"),
-		buildPipelines:   []string{"build"},
-		payloadPipelines: []string{"anaconda-tree", "rootfs-image", "efiboot-tree", "bootiso-tree", "bootiso"},
-		exports:          []string{"bootiso"},
+		rpmOstree:              true,
+		bootISO:                true,
+		image:                  iotInstallerImage,
+		isoLabel:               getISOLabelFunc("IoT"),
+		buildPipelines:         []string{"build"},
+		payloadPipelines:       []string{"anaconda-tree", "rootfs-image", "efiboot-tree", "bootiso-tree", "bootiso"},
+		exports:                []string{"bootiso"},
+		requiredPartitionSizes: requiredDirectorySizes,
 	}
 
 	iotSimplifiedInstallerImgType = imageType{
@@ -209,17 +221,18 @@ var (
 			LockRootUser:              common.ToPtr(true),
 			IgnitionPlatform:          common.ToPtr("metal"),
 		},
-		defaultSize:         10 * common.GibiByte,
-		rpmOstree:           true,
-		bootable:            true,
-		bootISO:             true,
-		image:               iotSimplifiedInstallerImage,
-		isoLabel:            getISOLabelFunc("IoT"),
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"ostree-deployment", "image", "xz", "coi-tree", "efiboot-tree", "bootiso-tree", "bootiso"},
-		exports:             []string{"bootiso"},
-		basePartitionTables: iotSimplifiedInstallerPartitionTables,
-		kernelOptions:       ostreeDeploymentKernelOptions,
+		defaultSize:            10 * common.GibiByte,
+		rpmOstree:              true,
+		bootable:               true,
+		bootISO:                true,
+		image:                  iotSimplifiedInstallerImage,
+		isoLabel:               getISOLabelFunc("IoT"),
+		buildPipelines:         []string{"build"},
+		payloadPipelines:       []string{"ostree-deployment", "image", "xz", "coi-tree", "efiboot-tree", "bootiso-tree", "bootiso"},
+		exports:                []string{"bootiso"},
+		basePartitionTables:    iotSimplifiedInstallerPartitionTables,
+		kernelOptions:          ostreeDeploymentKernelOptions,
+		requiredPartitionSizes: requiredDirectorySizes,
 	}
 
 	iotRawImgType = imageType{
@@ -268,15 +281,16 @@ var (
 			LockRootUser:              common.ToPtr(true),
 			IgnitionPlatform:          common.ToPtr("qemu"),
 		},
-		defaultSize:         10 * common.GibiByte,
-		rpmOstree:           true,
-		bootable:            true,
-		image:               iotImage,
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"ostree-deployment", "image", "qcow2"},
-		exports:             []string{"qcow2"},
-		basePartitionTables: iotBasePartitionTables,
-		kernelOptions:       ostreeDeploymentKernelOptions,
+		defaultSize:            10 * common.GibiByte,
+		rpmOstree:              true,
+		bootable:               true,
+		image:                  iotImage,
+		buildPipelines:         []string{"build"},
+		payloadPipelines:       []string{"ostree-deployment", "image", "qcow2"},
+		exports:                []string{"qcow2"},
+		basePartitionTables:    iotBasePartitionTables,
+		kernelOptions:          ostreeDeploymentKernelOptions,
+		requiredPartitionSizes: requiredDirectorySizes,
 	}
 
 	qcow2ImgType = imageType{
@@ -290,14 +304,15 @@ var (
 		defaultImageConfig: &distro.ImageConfig{
 			DefaultTarget: common.ToPtr("multi-user.target"),
 		},
-		kernelOptions:       cloudKernelOptions,
-		bootable:            true,
-		defaultSize:         5 * common.GibiByte,
-		image:               diskImage,
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"os", "image", "qcow2"},
-		exports:             []string{"qcow2"},
-		basePartitionTables: defaultBasePartitionTables,
+		kernelOptions:          cloudKernelOptions,
+		bootable:               true,
+		defaultSize:            5 * common.GibiByte,
+		image:                  diskImage,
+		buildPipelines:         []string{"build"},
+		payloadPipelines:       []string{"os", "image", "qcow2"},
+		exports:                []string{"qcow2"},
+		basePartitionTables:    defaultBasePartitionTables,
+		requiredPartitionSizes: requiredDirectorySizes,
 	}
 
 	vmdkDefaultImageConfig = &distro.ImageConfig{
@@ -317,15 +332,16 @@ var (
 		packageSets: map[string]packageSetFunc{
 			osPkgsKey: vmdkCommonPackageSet,
 		},
-		defaultImageConfig:  vmdkDefaultImageConfig,
-		kernelOptions:       cloudKernelOptions,
-		bootable:            true,
-		defaultSize:         2 * common.GibiByte,
-		image:               diskImage,
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"os", "image", "vmdk"},
-		exports:             []string{"vmdk"},
-		basePartitionTables: defaultBasePartitionTables,
+		defaultImageConfig:     vmdkDefaultImageConfig,
+		kernelOptions:          cloudKernelOptions,
+		bootable:               true,
+		defaultSize:            2 * common.GibiByte,
+		image:                  diskImage,
+		buildPipelines:         []string{"build"},
+		payloadPipelines:       []string{"os", "image", "vmdk"},
+		exports:                []string{"vmdk"},
+		basePartitionTables:    defaultBasePartitionTables,
+		requiredPartitionSizes: requiredDirectorySizes,
 	}
 
 	ovaImgType = imageType{
@@ -335,15 +351,16 @@ var (
 		packageSets: map[string]packageSetFunc{
 			osPkgsKey: vmdkCommonPackageSet,
 		},
-		defaultImageConfig:  vmdkDefaultImageConfig,
-		kernelOptions:       cloudKernelOptions,
-		bootable:            true,
-		defaultSize:         2 * common.GibiByte,
-		image:               diskImage,
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"os", "image", "vmdk", "ovf", "archive"},
-		exports:             []string{"archive"},
-		basePartitionTables: defaultBasePartitionTables,
+		defaultImageConfig:     vmdkDefaultImageConfig,
+		kernelOptions:          cloudKernelOptions,
+		bootable:               true,
+		defaultSize:            2 * common.GibiByte,
+		image:                  diskImage,
+		buildPipelines:         []string{"build"},
+		payloadPipelines:       []string{"os", "image", "vmdk", "ovf", "archive"},
+		exports:                []string{"archive"},
+		basePartitionTables:    defaultBasePartitionTables,
+		requiredPartitionSizes: requiredDirectorySizes,
 	}
 
 	containerImgType = imageType{
@@ -359,11 +376,12 @@ var (
 			Locale:      common.ToPtr("C.UTF-8"),
 			Timezone:    common.ToPtr("Etc/UTC"),
 		},
-		image:            containerImage,
-		bootable:         false,
-		buildPipelines:   []string{"build"},
-		payloadPipelines: []string{"os", "container"},
-		exports:          []string{"container"},
+		image:                  containerImage,
+		bootable:               false,
+		buildPipelines:         []string{"build"},
+		payloadPipelines:       []string{"os", "container"},
+		exports:                []string{"container"},
+		requiredPartitionSizes: requiredDirectorySizes,
 	}
 
 	wslImgType = imageType{
@@ -384,11 +402,12 @@ var (
 				},
 			},
 		},
-		image:            containerImage,
-		bootable:         false,
-		buildPipelines:   []string{"build"},
-		payloadPipelines: []string{"os", "container"},
-		exports:          []string{"container"},
+		image:                  containerImage,
+		bootable:               false,
+		buildPipelines:         []string{"build"},
+		payloadPipelines:       []string{"os", "container"},
+		exports:                []string{"container"},
+		requiredPartitionSizes: requiredDirectorySizes,
 	}
 
 	minimalrawImgType = imageType{
@@ -409,15 +428,16 @@ var (
 				Timeout: 5,
 			},
 		},
-		rpmOstree:           false,
-		kernelOptions:       defaultKernelOptions,
-		bootable:            true,
-		defaultSize:         2 * common.GibiByte,
-		image:               diskImage,
-		buildPipelines:      []string{"build"},
-		payloadPipelines:    []string{"os", "image", "xz"},
-		exports:             []string{"xz"},
-		basePartitionTables: minimalrawPartitionTables,
+		rpmOstree:              false,
+		kernelOptions:          defaultKernelOptions,
+		bootable:               true,
+		defaultSize:            2 * common.GibiByte,
+		image:                  diskImage,
+		buildPipelines:         []string{"build"},
+		payloadPipelines:       []string{"os", "image", "xz"},
+		exports:                []string{"xz"},
+		basePartitionTables:    minimalrawPartitionTables,
+		requiredPartitionSizes: requiredDirectorySizes,
 	}
 )
 

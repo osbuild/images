@@ -1,0 +1,70 @@
+{
+  "name": "partitioning-lvm",
+  "blueprint": {
+    "customizations": {
+      "partitioning": {
+        "plain": {
+          "filesystems": [
+            {
+              "mountpoint": "/data",
+              "minsize": 1073741824,
+              "label": "data",
+              "type": "ext4"
+            }
+          ]
+        },
+        "lvm": {
+          "volume_groups": [
+            {
+              "name": "testvg",
+              "minsize": 10737418240,
+              "logical_volumes": [
+                {
+                  "name": "homelv",
+                  "mountpoint": "/home",
+                  "label": "home",
+                  "minsize": 2147483648
+                },
+                {
+                  "name": "shadowmanlv",
+                  "mountpoint": "/home/shadowman",
+                  "minsize": 524288000
+                },
+                {
+                  "name": "foolv",
+                  "mountpoint": "/foo",
+                  "minsize": 1073741824
+                },
+                {
+                  "name": "usrlv",
+                  "mountpoint": "/usr",
+                  "minsize": 4294967296
+                },
+                {
+                  "name": "optlv",
+                  "mountpoint": "/opt",
+                  "minsize": 1073741824
+                },
+                {
+                  "name": "medialv",
+                  "mountpoint": "/media",
+                  "minsize": 1073741824
+                },
+                {
+                  "name": "roothomelv",
+                  "mountpoint": "/root",
+                  "minsize": 1073741824
+                },
+                {
+                  "name": "srvlv",
+                  "mountpoint": "/srv",
+                  "minsize": 1073741824
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}
