@@ -13,8 +13,6 @@ import (
 	"regexp"
 	"strings"
 	"time"
-
-	"github.com/osbuild/images/pkg/rhsm"
 )
 
 var (
@@ -25,9 +23,8 @@ var (
 // SourceSpec serves as input for ResolveParams, and contains all necessary
 // variables to resolve a ref, which can then be turned into a CommitSpec.
 type SourceSpec struct {
-	URL  string
-	Ref  string
-	RHSM bool
+	URL string
+	Ref string
 }
 
 // CommitSpec specifies an ostree commit using any combination of Ref (branch), URL (source), and Checksum (commit ID).
@@ -68,10 +65,6 @@ type ImageOptions struct {
 
 	// If specified, the URL will be used only for metadata.
 	ContentURL string `json:"contenturl"`
-
-	// Indicate if the 'org.osbuild.rhsm.consumer' secret should be added when pulling from the
-	// remote.
-	RHSM bool `json:"rhsm"`
 }
 
 // Validate the image options. This doesn't verify the existence of any remote
@@ -141,7 +134,7 @@ func verifyChecksum(commit string) bool {
 // ResolveRef resolves the URL path specified by the location and ref
 // (location+"refs/heads/"+ref) and returns the commit ID for the named ref. If
 // there is an error, it will be of type ResolveRefError.
-func ResolveRef(location, ref string, consumerCerts bool, subs *rhsm.Subscriptions, ca *string) (string, error) {
+func ResolveRef(location, ref string) (string, error) {
 	u, err := url.Parse(location)
 	if err != nil {
 		return "", NewResolveRefError("error parsing ostree repository location: %v", err)
@@ -149,39 +142,31 @@ func ResolveRef(location, ref string, consumerCerts bool, subs *rhsm.Subscriptio
 	u.Path = path.Join(u.Path, "refs/heads/", ref)
 
 	var client *http.Client
-	if consumerCerts {
-		if subs == nil {
-			subs, err = rhsm.LoadSystemSubscriptions()
+	if u.Scheme == "https" {
+		tlsConf := &tls.Config{}
+
+		// If CA is set, load the CA certificate and add it to the TLS configuration. Otherwise, use the system CA.
+		if caFilename := os.Getenv("OSBUILD_COMPOSER_OSTREE_CA"); caFilename != "" {
+			caCertPEM, err := os.ReadFile(caFilename)
 			if err != nil {
-				return "", NewResolveRefError("error adding rhsm certificates when resolving ref: %s", err)
+				return "", NewResolveRefError("error adding ca certificate when resolving ref: %s", err)
 			}
-			if subs.Consumer == nil {
-				return "", NewResolveRefError("error adding rhsm certificates when resolving ref")
+			tlsConf.RootCAs = x509.NewCertPool()
+			if ok := tlsConf.RootCAs.AppendCertsFromPEM(caCertPEM); !ok {
+				return "", NewResolveRefError("error adding ca certificate when resolving ref")
 			}
 		}
 
-		tlsConf := &tls.Config{
-			MinVersion: tls.VersionTLS12,
-		}
+		certFilename := os.Getenv("OSBUILD_COMPOSER_OSTREE_CLIENT_CERT")
+		keyFilename := os.Getenv("OSBUILD_COMPOSER_OSTREE_CLIENT_KEY")
 
-		if ca != nil {
-			caCertPEM, err := os.ReadFile(*ca)
+		if certFilename != "" && keyFilename != "" {
+			cert, err := tls.LoadX509KeyPair(certFilename, keyFilename)
 			if err != nil {
-				return "", NewResolveRefError("error adding rhsm certificates when resolving ref: %s", err)
+				return "", NewResolveRefError("error adding client certificate when resolving ref: %s", err)
 			}
-			roots := x509.NewCertPool()
-			ok := roots.AppendCertsFromPEM(caCertPEM)
-			if !ok {
-				return "", NewResolveRefError("error adding rhsm certificates when resolving ref")
-			}
-			tlsConf.RootCAs = roots
+			tlsConf.Certificates = []tls.Certificate{cert}
 		}
-
-		cert, err := tls.LoadX509KeyPair(subs.Consumer.ConsumerCert, subs.Consumer.ConsumerKey)
-		if err != nil {
-			return "", NewResolveRefError("error adding rhsm certificates when resolving ref: %s", err)
-		}
-		tlsConf.Certificates = []tls.Certificate{cert}
 
 		client = &http.Client{
 			Transport: &http.Transport{
@@ -234,10 +219,6 @@ func Resolve(source SourceSpec) (CommitSpec, error) {
 		URL: source.URL,
 	}
 
-	if source.RHSM {
-		commit.Secrets = "org.osbuild.rhsm.consumer"
-	}
-
 	if verifyChecksum(source.Ref) {
 		// the ref is a commit: return as is
 		commit.Checksum = source.Ref
@@ -252,7 +233,7 @@ func Resolve(source SourceSpec) (CommitSpec, error) {
 	// URL set: Resolve checksum
 	if source.URL != "" {
 		// If a URL is specified, we need to fetch the commit at the URL.
-		checksum, err := ResolveRef(source.URL, source.Ref, source.RHSM, nil, nil)
+		checksum, err := ResolveRef(source.URL, source.Ref)
 		if err != nil {
 			return CommitSpec{}, err // ResolveRefError
 		}

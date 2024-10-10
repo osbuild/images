@@ -812,9 +812,8 @@ func makeOSTreeParentCommit(options *ostree.ImageOptions, defaultRef string) (*o
 
 	}
 	parentCommit = &ostree.SourceSpec{
-		URL:  options.URL,
-		Ref:  parentRef,
-		RHSM: options.RHSM,
+		URL: options.URL,
+		Ref: parentRef,
 	}
 	return parentCommit, commitRef
 }
@@ -834,9 +833,8 @@ func makeOSTreePayloadCommit(options *ostree.ImageOptions, defaultRef string) (o
 	}
 
 	return ostree.SourceSpec{
-		URL:  options.URL,
-		Ref:  commitRef,
-		RHSM: options.RHSM,
+		URL: options.URL,
+		Ref: commitRef,
 	}, nil
 }
 
