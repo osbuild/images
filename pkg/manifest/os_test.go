@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/container"
+	"github.com/osbuild/images/pkg/customizations/bootc"
 	"github.com/osbuild/images/pkg/customizations/subscription"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
@@ -180,4 +183,44 @@ func TestBootupdStage(t *testing.T) {
 	pipeline := os.serialize()
 	st := findStage("org.osbuild.bootupd.gen-metadata", pipeline.Stages)
 	require.NotNil(t, st)
+}
+
+func TestTomlLibUsedNoneByDefault(t *testing.T) {
+	os := NewTestOS()
+	buildPkgs := os.getBuildPackages(DISTRO_FEDORA)
+	for _, pkg := range []string{"python3-pytoml", "python3-toml", "python3-tomli-w"} {
+		assert.NotContains(t, buildPkgs, pkg)
+	}
+}
+
+func TestTomlLibUsedForContainer(t *testing.T) {
+	os := NewTestOS()
+	os.OSCustomizations.Containers = []container.SourceSpec{
+		{Source: "some-source"},
+	}
+	os.OSCustomizations.ContainersStorage = common.ToPtr("foo")
+
+	testTomlPkgsFor(t, os)
+}
+
+func TestTomlLibUsedForBootcConfig(t *testing.T) {
+	os := NewTestOS()
+	os.BootcConfig = &bootc.Config{Filename: "something"}
+
+	testTomlPkgsFor(t, os)
+}
+
+func testTomlPkgsFor(t *testing.T, os *OS) {
+	for _, tc := range []struct {
+		distro          Distro
+		expectedTomlPkg string
+	}{
+		{DISTRO_EL8, "python3-pytoml"},
+		{DISTRO_EL9, "python3-toml"},
+		{DISTRO_EL10, "python3-tomli-w"},
+		{DISTRO_FEDORA, "python3-tomli-w"},
+	} {
+		buildPkgs := os.getBuildPackages(tc.distro)
+		assert.Contains(t, buildPkgs, tc.expectedTomlPkg)
+	}
 }
