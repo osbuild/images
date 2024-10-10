@@ -91,10 +91,10 @@ func (s *BaseSolver) SetDNFJSONPath(cmd string, args ...string) {
 	s.dnfJsonCmd = append([]string{cmd}, args...)
 }
 
-// NewWithConfig initialises a Solver with the platform information and the
+// NewWithConfig_ initialises a Solver with the platform information and the
 // BaseSolver's subscription info, cache directory, and dnf-json path.
 // Also loads system subscription information.
-func (bs *BaseSolver) NewWithConfig(modulePlatformID, releaseVer, arch, distro string) *Solver {
+func (bs *BaseSolver) NewWithConfig_(modulePlatformID, releaseVer, arch, distro string) *Solver {
 	s := new(Solver)
 	s.BaseSolver = *bs
 	s.modulePlatformID = modulePlatformID
@@ -166,7 +166,7 @@ type DepsolveResult struct {
 // Create a new Solver with the given configuration. Initialising a Solver also loads system subscription information.
 func NewSolver(modulePlatformID, releaseVer, arch, distro, cacheDir string) *Solver {
 	s := NewBaseSolver(cacheDir)
-	return s.NewWithConfig(modulePlatformID, releaseVer, arch, distro)
+	return s.NewWithConfig_(modulePlatformID, releaseVer, arch, distro)
 }
 
 // SetRootDir sets a path from which repository configurations, gpg keys, and
