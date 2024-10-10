@@ -271,6 +271,10 @@ func osCustomizations(
 		osc.NoBLS = *imageConfig.NoBLS
 	}
 
+	if ca := c.GetCACerts(); ca != nil {
+		osc.CACerts = ca.PEMCerts
+	}
+
 	return osc, nil
 }
 

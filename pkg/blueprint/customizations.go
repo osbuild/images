@@ -31,6 +31,7 @@ type Customizations struct {
 	Installer          *InstallerCustomization        `json:"installer,omitempty" toml:"installer,omitempty"`
 	RPM                *RPMCustomization              `json:"rpm,omitempty" toml:"rpm,omitempty"`
 	RHSM               *RHSMCustomization             `json:"rhsm,omitempty" toml:"rhsm,omitempty"`
+	CACerts            *CACustomization               `json:"cacerts,omitempty" toml:"ca,omitempty"`
 }
 
 type IgnitionCustomization struct {
@@ -424,4 +425,11 @@ func (c *Customizations) GetRHSM() *RHSMCustomization {
 		return nil
 	}
 	return c.RHSM
+}
+
+func (c *Customizations) GetCACerts() *CACustomization {
+	if c == nil {
+		return nil
+	}
+	return c.CACerts
 }
