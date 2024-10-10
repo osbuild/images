@@ -1,0 +1,29 @@
+---
+name: "Schutzbot comments"
+# This workflow runs when the [integration] workflow reports a failure through
+# an artifact. The [integration] workflow itself doesn't fail if the testing or
+# linting fails, instead it reports a failure through a shared artifact that
+# this workflow reads and reports on. The failure is communicated to the author
+# and reviewers of a PR without causing a failed action to appear.
+#
+# This workflow is run on a workflow_run trigger to have access to secrets.
+#
+# TODO: Actually do what the comment says.
+
+on:
+  workflow_run:
+    workflows: ["[integration]"]
+    types: [completed]
+
+jobs:
+  on-failure:
+    runs-on: ubuntu-latest
+
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    steps:
+      - name: Add comment
+        uses: mshick/add-pr-comment@v2
+        with:
+          repo-token: ${{ secrets.SCHUTZBOT_GITHUB_ACCESS_TOKEN }}
+          message: |
+            The [integration] workflow failed
