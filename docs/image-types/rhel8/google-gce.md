@@ -135,6 +135,12 @@ RHEL Guest Images are imported with the following Guest OS features set:
 * UEFI_COMPATIBLE
 * VIRTIO_SCSI_MULTIQUEUE
 * SEV_CAPABLE
+* SEV_SNP_CAPABLE
+* SEV_LIVE_MIGRATABLE
+* SEV_LIVE_MIGRATABLE_V2
+* GVNIC
+* IDPF
+
 
 [daisy-tool]: https://github.com/GoogleCloudPlatform/compute-image-tools/tree/master/daisy
 [daisy-wf-image_build-el]: https://github.com/GoogleCloudPlatform/compute-image-tools/tree/master/daisy_workflows/image_build/enterprise_linux
