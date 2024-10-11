@@ -22,7 +22,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/hashicorp/go-version v1.7.0
-	github.com/kolo/xmlrpc v0.0.0-20201022064351-38db28db192b
+	github.com/kolo/xmlrpc v0.0.0-20220921171641-a4b6fa1dd06b
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.1.0
 	github.com/oracle/oci-go-sdk/v54 v54.0.0
@@ -30,11 +30,11 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.9.0
-	github.com/ubccr/kerby v0.0.0-20170626144437-201a958fc453
-	github.com/vmware/govmomi v0.44.1
+	github.com/ubccr/kerby v0.0.0-20230802201021-412be7bfaee5
+	github.com/vmware/govmomi v0.42.0
 	golang.org/x/oauth2 v0.23.0
 	golang.org/x/sys v0.26.0
-	golang.org/x/tools v0.26.0
+	golang.org/x/tools v0.24.0
 	google.golang.org/api v0.201.0
 	gopkg.in/ini.v1 v1.67.0
 )
@@ -168,7 +168,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.29.0 // indirect
 	golang.org/x/crypto v0.28.0 // indirect
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
-	golang.org/x/mod v0.21.0 // indirect
+	golang.org/x/mod v0.20.0 // indirect
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/term v0.25.0 // indirect
