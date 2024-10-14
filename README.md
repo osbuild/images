@@ -5,6 +5,7 @@ Images
 
  * **Website**: <https://www.osbuild.org>
  * **Bug Tracker**: <https://github.com/osbuild/images/issues>
+* **Discussions**: https://github.com/orgs/osbuild/discussions
  * **Matrix (chat)**: [Image Builder channel on Fedora Chat](https://matrix.to/#/#image-builder:fedoraproject.org?web-instance[element.io]=chat.fedoraproject.org)
  * **Changelog**: <https://github.com/osbuild/images/releases>
 
