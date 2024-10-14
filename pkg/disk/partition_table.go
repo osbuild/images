@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/blueprint"
+	"github.com/osbuild/images/pkg/datasizes"
 )
 
 type PartitionTable struct {
@@ -692,7 +692,7 @@ func (pt *PartitionTable) ensureLVM() error {
 	// we need a /boot partition to boot LVM, ensure one exists
 	bootPath := entityPath(pt, "/boot")
 	if bootPath == nil {
-		_, err := pt.CreateMountpoint("/boot", 512*common.MiB)
+		_, err := pt.CreateMountpoint("/boot", 512*datasizes.MiB)
 
 		if err != nil {
 			return err
@@ -751,7 +751,7 @@ func (pt *PartitionTable) ensureBtrfs() error {
 	// we need a /boot partition to boot btrfs, ensure one exists
 	bootPath := entityPath(pt, "/boot")
 	if bootPath == nil {
-		_, err := pt.CreateMountpoint("/boot", 512*common.MiB)
+		_, err := pt.CreateMountpoint("/boot", 512*datasizes.MiB)
 		if err != nil {
 			return fmt.Errorf("failed to create /boot partition when ensuring btrfs: %w", err)
 		}

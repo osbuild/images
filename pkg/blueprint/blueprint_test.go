@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/datasizes"
 )
 
 func TestBlueprintParse(t *testing.T) {
@@ -67,7 +67,7 @@ minsize = "20 GiB"
 	assert.Equal(t, "/var", bp.Customizations.Filesystem[0].Mountpoint)
 	assert.Equal(t, uint64(2147483648), bp.Customizations.Filesystem[0].MinSize)
 	assert.Equal(t, "/opt", bp.Customizations.Filesystem[1].Mountpoint)
-	assert.Equal(t, uint64(20*common.GiB), bp.Customizations.Filesystem[1].MinSize)
+	assert.Equal(t, uint64(20*datasizes.GiB), bp.Customizations.Filesystem[1].MinSize)
 }
 
 func TestGetPackages(t *testing.T) {

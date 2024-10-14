@@ -6,7 +6,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/image"
@@ -22,7 +22,7 @@ func RunPlayground(img image.ImageKind, d distro.Distro, arch distro.Arch, repos
 	solver := dnfjson.NewSolver(d.ModulePlatformID(), d.Releasever(), arch.Name(), d.Name(), path.Join(state_dir, "rpmmd"))
 
 	// Set cache size to 1 GiB
-	solver.SetMaxCacheSize(1 * common.GiB)
+	solver.SetMaxCacheSize(1 * datasizes.GiB)
 
 	manifest := manifest.New()
 

@@ -9,6 +9,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/testdisk"
+	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 )
 
@@ -143,7 +144,7 @@ func TestGenMkfsStagesBtrfs(t *testing.T) {
 					Type: "org.osbuild.loopback",
 					Options: &LoopbackDeviceOptions{
 						Filename: "file.img",
-						Size:     common.GiB / disk.DefaultSectorSize,
+						Size:     datasizes.GiB / disk.DefaultSectorSize,
 						Lock:     true,
 					},
 				},
@@ -159,8 +160,8 @@ func TestGenMkfsStagesBtrfs(t *testing.T) {
 					Type: "org.osbuild.loopback",
 					Options: &LoopbackDeviceOptions{
 						Filename: "file.img",
-						Start:    common.GiB / disk.DefaultSectorSize,
-						Size:     100 * common.MiB / disk.DefaultSectorSize,
+						Start:    datasizes.GiB / disk.DefaultSectorSize,
+						Size:     100 * datasizes.MiB / disk.DefaultSectorSize,
 						Lock:     true,
 					},
 				},
@@ -176,8 +177,8 @@ func TestGenMkfsStagesBtrfs(t *testing.T) {
 					Type: "org.osbuild.loopback",
 					Options: &LoopbackDeviceOptions{
 						Filename: "file.img",
-						Start:    (common.GiB + 100*common.MiB) / disk.DefaultSectorSize,
-						Size:     9 * common.GiB / disk.DefaultSectorSize,
+						Start:    (datasizes.GiB + 100*datasizes.MiB) / disk.DefaultSectorSize,
+						Size:     9 * datasizes.GiB / disk.DefaultSectorSize,
 						Lock:     true,
 					},
 				},

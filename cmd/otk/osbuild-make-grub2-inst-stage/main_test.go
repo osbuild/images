@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	makeGrub2Inst "github.com/osbuild/images/cmd/otk/osbuild-make-grub2-inst-stage"
-	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/otkdisk"
+	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 )
 
@@ -17,14 +17,14 @@ var fakePt = &disk.PartitionTable{
 	Type: "gpt",
 	Partitions: []disk.Partition{
 		{
-			Size:     1 * common.MiB,
-			Start:    1 * common.MiB,
+			Size:     1 * datasizes.MiB,
+			Start:    1 * datasizes.MiB,
 			Bootable: true,
 			Type:     disk.BIOSBootPartitionGUID,
 			UUID:     disk.BIOSBootPartitionUUID,
 		},
 		{
-			Size: 1 * common.GiB,
+			Size: 1 * datasizes.GiB,
 			Payload: &disk.Filesystem{
 				Type:       "ext4",
 				Mountpoint: "/",
