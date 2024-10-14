@@ -27,7 +27,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/ubccr/kerby/khttp"
 
-	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
@@ -386,7 +386,7 @@ func (k *Koji) uploadChunk(chunk []byte, filepath, filename string, offset uint6
 // Upload uploads file to the temporary filepath on the kojiserver under the name filename
 // The md5sum and size of the file is returned on success.
 func (k *Koji) Upload(file io.Reader, filepath, filename string) (string, uint64, error) {
-	chunk := make([]byte, common.MiB) // upload a mebiByte at a time
+	chunk := make([]byte, datasizes.MiB) // upload a mebiByte at a time
 	offset := uint64(0)
 	// Koji uses MD5 hashes
 	/* #nosec G401 */

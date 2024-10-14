@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	genpart "github.com/osbuild/images/cmd/otk/osbuild-gen-partition-table"
-	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/otkdisk"
 	"github.com/osbuild/images/pkg/blueprint"
+	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 )
 
@@ -465,7 +465,7 @@ func TestGenPartitionTableCustomizationExtraMp(t *testing.T) {
 			Filesystems: []blueprint.FilesystemCustomization{
 				{
 					Mountpoint: "/var/log",
-					MinSize:    3 * common.GigaByte,
+					MinSize:    3 * datasizes.GigaByte,
 				},
 			},
 		},
@@ -554,7 +554,7 @@ func TestGenPartitionTableCustomizationExtraMpPlusModificationPartitionMode(t *t
 			Filesystems: []blueprint.FilesystemCustomization{
 				{
 					Mountpoint: "/var/log",
-					MinSize:    3 * common.GigaByte,
+					MinSize:    3 * datasizes.GigaByte,
 				},
 			},
 		},

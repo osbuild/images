@@ -5,10 +5,9 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/testdisk"
-
 	"github.com/osbuild/images/pkg/blueprint"
+	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/stretchr/testify/assert"
 )
@@ -65,7 +64,7 @@ func TestGenImagePrepareStages(t *testing.T) {
 			Type: "org.osbuild.truncate",
 			Options: &TruncateStageOptions{
 				Filename: filename,
-				Size:     fmt.Sprintf("%d", 10*common.GiB),
+				Size:     fmt.Sprintf("%d", 10*datasizes.GiB),
 			},
 		},
 		{
@@ -74,11 +73,11 @@ func TestGenImagePrepareStages(t *testing.T) {
 				Label: "gpt",
 				Partitions: []SfdiskPartition{
 					{
-						Size: 1 * common.GiB / 512,
+						Size: 1 * datasizes.GiB / 512,
 					},
 					{
-						Start: 1 * common.GiB / 512,
-						Size:  9 * common.GiB / 512,
+						Start: 1 * datasizes.GiB / 512,
+						Size:  9 * datasizes.GiB / 512,
 					},
 				},
 			},
@@ -100,7 +99,7 @@ func TestGenImagePrepareStages(t *testing.T) {
 					Options: &LoopbackDeviceOptions{
 						Filename: filename,
 						Start:    0,
-						Size:     1 * common.GiB / 512,
+						Size:     1 * datasizes.GiB / 512,
 						Lock:     true,
 					},
 				},
@@ -114,8 +113,8 @@ func TestGenImagePrepareStages(t *testing.T) {
 					Type: "org.osbuild.loopback",
 					Options: &LoopbackDeviceOptions{
 						Filename: filename,
-						Start:    1 * common.GiB / 512,
-						Size:     9 * common.GiB / 512,
+						Start:    1 * datasizes.GiB / 512,
+						Size:     9 * datasizes.GiB / 512,
 						Lock:     true,
 					},
 				},
@@ -131,8 +130,8 @@ func TestGenImagePrepareStages(t *testing.T) {
 					Type: "org.osbuild.loopback",
 					Options: &LoopbackDeviceOptions{
 						Filename: filename,
-						Start:    1 * common.GiB / 512,
-						Size:     9 * common.GiB / 512,
+						Start:    1 * datasizes.GiB / 512,
+						Size:     9 * datasizes.GiB / 512,
 						Lock:     false,
 					},
 				},

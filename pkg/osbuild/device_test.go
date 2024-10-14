@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/testdisk"
 	"github.com/osbuild/images/pkg/blueprint"
+	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 )
 
@@ -238,15 +238,15 @@ func TestMountsDeviceFromBrfs(t *testing.T) {
 			Type: "org.osbuild.loopback",
 			Options: &LoopbackDeviceOptions{
 				Filename: "fake-disk.img",
-				Size:     1 * common.GiB / 512,
+				Size:     1 * datasizes.GiB / 512,
 			},
 		},
 		"btrfs-6264": {
 			Type: "org.osbuild.loopback",
 			Options: &LoopbackDeviceOptions{
 				Filename: "fake-disk.img",
-				Start:    1 * common.GiB / 512,
-				Size:     9 * common.GiB / 512,
+				Start:    1 * datasizes.GiB / 512,
+				Size:     9 * datasizes.GiB / 512,
 			},
 		},
 	}, devices)

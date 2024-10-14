@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/pathpolicy"
 )
 
@@ -32,7 +32,7 @@ func (fsc *FilesystemCustomization) UnmarshalTOML(data interface{}) error {
 		}
 		fsc.MinSize = uint64(minSize)
 	case string:
-		minSize, err := common.DataSizeToUint64(d["minsize"].(string))
+		minSize, err := datasizes.Parse(d["minsize"].(string))
 		if err != nil {
 			return fmt.Errorf("TOML unmarshal: minsize is not valid filesystem size (%w)", err)
 		}
@@ -63,7 +63,7 @@ func (fsc *FilesystemCustomization) UnmarshalJSON(data []byte) error {
 	case float64:
 		fsc.MinSize = uint64(d["minsize"].(float64))
 	case string:
-		minSize, err := common.DataSizeToUint64(d["minsize"].(string))
+		minSize, err := datasizes.Parse(d["minsize"].(string))
 		if err != nil {
 			return fmt.Errorf("JSON unmarshal: minsize is not valid filesystem size (%w)", err)
 		}

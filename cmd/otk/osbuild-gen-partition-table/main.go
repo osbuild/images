@@ -9,9 +9,9 @@ import (
 
 	"github.com/osbuild/images/internal/buildconfig"
 	"github.com/osbuild/images/internal/cmdutil"
-	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/otkdisk"
 	"github.com/osbuild/images/pkg/blueprint"
+	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/osbuild"
 )
@@ -120,7 +120,7 @@ func makePartitionTableFromOtkInput(input *Input) (*disk.PartitionTable, error) 
 
 	var startOffset uint64
 	if input.Properties.StartOffset != "" {
-		startOffset, err = common.DataSizeToUint64(input.Properties.StartOffset)
+		startOffset, err = datasizes.Parse(input.Properties.StartOffset)
 		if err != nil {
 			return nil, err
 		}
@@ -137,7 +137,7 @@ func makePartitionTableFromOtkInput(input *Input) (*disk.PartitionTable, error) 
 			return nil, fmt.Errorf("internal error: bios partition *must* go first")
 		}
 		pt.Partitions = append(pt.Partitions, disk.Partition{
-			Size:     1 * common.MebiByte,
+			Size:     1 * datasizes.MebiByte,
 			Bootable: true,
 			Type:     disk.BIOSBootPartitionGUID,
 			UUID:     disk.BIOSBootPartitionUUID,
@@ -148,7 +148,7 @@ func makePartitionTableFromOtkInput(input *Input) (*disk.PartitionTable, error) 
 		if size == "" {
 			size = "1 GiB"
 		}
-		uintSize, err := common.DataSizeToUint64(size)
+		uintSize, err := datasizes.Parse(size)
 		if err != nil {
 			return nil, err
 		}
@@ -180,7 +180,7 @@ func makePartitionTableFromOtkInput(input *Input) (*disk.PartitionTable, error) 
 	}
 
 	for _, part := range input.Partitions {
-		uintSize, err := common.DataSizeToUint64(part.Size)
+		uintSize, err := datasizes.Parse(part.Size)
 		if err != nil {
 			return nil, err
 		}
@@ -212,13 +212,13 @@ func getDiskSizeFrom(input *Input) (diskSize uint64, err error) {
 	var defaultSize, modMinSize uint64
 
 	if input.Properties.DefaultSize != "" {
-		defaultSize, err = common.DataSizeToUint64(input.Properties.DefaultSize)
+		defaultSize, err = datasizes.Parse(input.Properties.DefaultSize)
 		if err != nil {
 			return 0, err
 		}
 	}
 	if input.Modifications.MinDiskSize != "" {
-		modMinSize, err = common.DataSizeToUint64(input.Modifications.MinDiskSize)
+		modMinSize, err = datasizes.Parse(input.Modifications.MinDiskSize)
 		if err != nil {
 			return 0, err
 		}

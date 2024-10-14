@@ -4,11 +4,11 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/osbuild/images/internal/common"
-	"github.com/osbuild/images/internal/testdisk"
-	"github.com/osbuild/images/pkg/disk"
-
 	"github.com/stretchr/testify/assert"
+
+	"github.com/osbuild/images/internal/testdisk"
+	"github.com/osbuild/images/pkg/datasizes"
+	"github.com/osbuild/images/pkg/disk"
 )
 
 func TestPartitionTable_GetMountpointSize(t *testing.T) {
@@ -33,13 +33,13 @@ func TestPartitionTable_GenerateUUIDs(t *testing.T) {
 		Type: "gpt",
 		Partitions: []disk.Partition{
 			{
-				Size:     1 * common.MebiByte,
+				Size:     1 * datasizes.MebiByte,
 				Bootable: true,
 				Type:     disk.BIOSBootPartitionGUID,
 				UUID:     disk.BIOSBootPartitionUUID,
 			},
 			{
-				Size: 2 * common.GibiByte,
+				Size: 2 * datasizes.GibiByte,
 				Type: disk.FilesystemDataGUID,
 				Payload: &disk.Filesystem{
 					// create mixed xfs root filesystem and a btrfs /var partition
@@ -52,7 +52,7 @@ func TestPartitionTable_GenerateUUIDs(t *testing.T) {
 				},
 			},
 			{
-				Size: 10 * common.GibiByte,
+				Size: 10 * datasizes.GibiByte,
 				Payload: &disk.Btrfs{
 					Subvolumes: []disk.BtrfsSubvolume{
 						{
@@ -87,7 +87,7 @@ func TestPartitionTable_GenerateUUIDs_VFAT(t *testing.T) {
 		Type: "dos",
 		Partitions: []disk.Partition{
 			{
-				Size: 2 * common.GibiByte,
+				Size: 2 * datasizes.GibiByte,
 				Type: disk.FilesystemDataGUID,
 				Payload: &disk.Filesystem{
 					Type:       "vfat",

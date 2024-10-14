@@ -9,6 +9,7 @@ import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/kickstart"
+	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/ostree"
@@ -50,7 +51,7 @@ func newTestAnacondaISOTree() *AnacondaInstallerISOTree {
 
 	pipeline := NewAnacondaInstallerISOTree(build, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
 	// copy of the default in pkg/image - will be moved to the pipeline
-	var efibootImageSize uint64 = 20 * common.MebiByte
+	var efibootImageSize uint64 = 20 * datasizes.MebiByte
 	pipeline.PartitionTable = &disk.PartitionTable{
 		Size: efibootImageSize,
 		Partitions: []disk.Partition{

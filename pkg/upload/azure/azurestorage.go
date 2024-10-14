@@ -24,6 +24,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/datasizes"
 )
 
 // StorageClient is a client for the Azure Storage API,
@@ -60,7 +61,7 @@ const DefaultUploadThreads = 16
 
 // PageBlobMaxUploadPagesBytes defines how much bytes can we upload in a single UploadPages call.
 // See https://learn.microsoft.com/en-us/rest/api/storageservices/put-page
-const PageBlobMaxUploadPagesBytes = 4 * common.MiB
+const PageBlobMaxUploadPagesBytes = 4 * datasizes.MiB
 
 // allZerosSlice returns true if all values in the slice are equal to 0
 func allZerosSlice(slice []byte) bool {

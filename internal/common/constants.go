@@ -1,6 +1,8 @@
 package common
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // These constants are set during buildtime using additional
 // compiler flags. Not all of them are necessarily defined

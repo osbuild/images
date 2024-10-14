@@ -11,6 +11,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/testdisk"
+	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
@@ -203,13 +204,13 @@ var fakePt = &disk.PartitionTable{
 	Type: "gpt",
 	Partitions: []disk.Partition{
 		{
-			Size:     1 * common.MebiByte,
+			Size:     1 * datasizes.MebiByte,
 			Bootable: true,
 			Type:     disk.BIOSBootPartitionGUID,
 			UUID:     disk.BIOSBootPartitionUUID,
 		},
 		{
-			Size: 501 * common.MebiByte,
+			Size: 501 * datasizes.MebiByte,
 			Type: disk.EFISystemPartitionGUID,
 			UUID: disk.EFISystemPartitionUUID,
 			Payload: &disk.Filesystem{
@@ -223,7 +224,7 @@ var fakePt = &disk.PartitionTable{
 			},
 		},
 		{
-			Size: 1 * common.GibiByte,
+			Size: 1 * datasizes.GibiByte,
 			Type: disk.FilesystemDataGUID,
 			UUID: disk.FilesystemDataUUID,
 			Payload: &disk.Filesystem{
@@ -236,7 +237,7 @@ var fakePt = &disk.PartitionTable{
 			},
 		},
 		{
-			Size: 2 * common.GibiByte,
+			Size: 2 * datasizes.GibiByte,
 			Type: disk.FilesystemDataGUID,
 			UUID: disk.RootPartitionUUID,
 			Payload: &disk.Filesystem{

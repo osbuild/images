@@ -6,13 +6,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/osbuild/images/internal/common"
-	"github.com/osbuild/images/pkg/blueprint"
-	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osbuild/images/pkg/blueprint"
+	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distro/rhel"
 )
 
 // math/rand is good enough in this case
@@ -65,7 +65,7 @@ func TestEC2Partitioning(t *testing.T) {
 
 					bootSize, err := pt.GetMountpointSize("/boot")
 					require.NoError(t, err)
-					require.Equal(t, tt.bootSizeMiB*common.MiB, bootSize)
+					require.Equal(t, tt.bootSizeMiB*datasizes.MiB, bootSize)
 				})
 
 			}
