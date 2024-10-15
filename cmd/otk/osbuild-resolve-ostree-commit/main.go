@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 
 	"github.com/osbuild/images/internal/cmdutil"
@@ -49,7 +50,24 @@ func run(r io.Reader, w io.Writer) error {
 		return err
 	}
 
-	sourceSpec := ostree.SourceSpec(inputTree.Tree)
+	sourceSpec := ostree.SourceSpec{}
+	sourceSpec.URL = inputTree.Tree.URL
+	sourceSpec.Ref = inputTree.Tree.Ref
+	sourceSpec.RHSM = inputTree.Tree.RHSM
+	var proxy *url.URL
+	if proxyStr, ok := os.LookupEnv("OSBUILD_SOURCES_OSTREE_PROXY"); ok {
+		var err error
+		proxy, err = url.Parse(proxyStr)
+		if err != nil {
+			return fmt.Errorf("failed to parse proxy URL: %w", err)
+		}
+	}
+	sourceSpec.Connection = ostree.Connection{
+		CA:             os.Getenv("OSBUILD_SOURCES_OSTREE_SSL_CA_CERT"),
+		MTLSClientKey:  os.Getenv("OSBUILD_SOURCES_OSTREE_SSL_CLIENT_KEY"),
+		MTLSClientCert: os.Getenv("OSBUILD_SOURCES_OSTREE_SSL_CLIENT_CERT"),
+		Proxy:          proxy,
+	}
 
 	var commitSpec ostree.CommitSpec
 	if !underTest() {
