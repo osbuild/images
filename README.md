@@ -1,6 +1,11 @@
 Images
 ======
 
+This repository is, primarily, a Go library for generating osbuild manifests
+([more details here](./docs/developer/code-manifest-generation.md)).
+It also has some libraries for uploading artifacts to cloud platforms and Koji.
+The binaries implemented in `cmd/` are for development and testing purposes and not part of the library.
+
 ## Project
 
  * **Website**: <https://www.osbuild.org>
@@ -21,17 +26,25 @@ Please refer to the [developer guide](https://www.osbuild.org/docs/developer-gui
 
 See also the [local developer documentation](./docs/developer) for useful information about working with this specific project.
 
-The build-requirements for Fedora and rpm-based distributions are:
-- `btrfs-progs-devel`
-- `device-mapper-devel`
-- `gcc`
-- `git-core`
+The build-requirements of the Go library for Fedora and rpm-based distributions are:
+
 - `go`
 - `gpgme-devel`
-- `krb5-devel`
-- `osbuild-depsolve-dnf`
 
 (see also [`Containerfile`](Containerfile) )
+
+Other dependencies only needed in some cases are:
+
+- `btrfs-progs-devel`, `device-mapper-devel`  
+  build dependencies for the unit tests and projects that import `pkg/container`, which even in that case can be skipped using exclude_graphdriver_btrfs and exclude_graphdriver_devicemapper (see bootc-image-builder).
+- `krb5-devel`  
+  build dependency for the unit tests and projects that import `pkg/upload/koji`
+- `osbuild-depsolve-dnf`  
+  runtime dependency for the unit tests and projects that import `pkg/dnfjson`.
+  or to run `cmd/gen-manifests` and `cmd/build`
+- `osbuild` (and subpackages)  
+  runtime dependencies for `cmd/build`.
+
 
 ### Repository:
 
