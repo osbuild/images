@@ -21,7 +21,7 @@ import (
 type Build interface {
 	Name() string
 	Checkpoint()
-	Manifest() *Manifest
+	Manifest() Manifest
 
 	addDependent(dep Pipeline)
 }
@@ -45,7 +45,7 @@ type BuildOptions struct {
 
 // NewBuild creates a new build pipeline from the repositories in repos
 // and the specified packages.
-func NewBuild(m *Manifest, runner runner.Runner, repos []rpmmd.RepoConfig, opts *BuildOptions) Build {
+func NewBuild(m Manifest, runner runner.Runner, repos []rpmmd.RepoConfig, opts *BuildOptions) Build {
 	if opts == nil {
 		opts = &BuildOptions{}
 	}
@@ -164,7 +164,7 @@ type BuildrootFromContainer struct {
 
 // NewBuildFromContainer creates a new build pipeline from the given
 // containers specs
-func NewBuildFromContainer(m *Manifest, runner runner.Runner, containerSources []container.SourceSpec, opts *BuildOptions) Build {
+func NewBuildFromContainer(m Manifest, runner runner.Runner, containerSources []container.SourceSpec, opts *BuildOptions) Build {
 	if opts == nil {
 		opts = &BuildOptions{}
 	}
