@@ -101,7 +101,7 @@ func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifes
 	gcePipeline.SELinux = common.ToPtr(false)
 	gcePipeline.Xattrs = common.ToPtr(false)
 	gcePipeline.Transform = fmt.Sprintf(`s/%s/disk.raw/`, regexp.QuoteMeta(rawImage.Filename()))
-	gcePipeline.SetFilename("image.tgz")
+	gcePipeline.SetFilename("image.tar.gz")
 
 	return nil
 }
