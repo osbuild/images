@@ -740,7 +740,7 @@ func TestDistro_CustomFileSystemManifestError(t *testing.T) {
 				imgType, _ := arch.GetImageType(imgTypeName)
 				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
 				if imgTypeName == "iot-commit" || imgTypeName == "iot-container" || imgTypeName == "iot-bootable-container" {
-					assert.EqualError(t, err, "Custom mountpoints are not supported for ostree types")
+					assert.EqualError(t, err, "Custom mountpoints and partitioning are not supported for ostree types")
 				} else if imgTypeName == "iot-raw-image" || imgTypeName == "iot-qcow2-image" {
 					assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, Directories, Files, Services, FIPS"))
 				} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "image-installer" {
@@ -774,7 +774,7 @@ func TestDistro_TestRootMountPoint(t *testing.T) {
 				imgType, _ := arch.GetImageType(imgTypeName)
 				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
 				if imgTypeName == "iot-commit" || imgTypeName == "iot-container" || imgTypeName == "iot-bootable-container" {
-					assert.EqualError(t, err, "Custom mountpoints are not supported for ostree types")
+					assert.EqualError(t, err, "Custom mountpoints and partitioning are not supported for ostree types")
 				} else if imgTypeName == "iot-raw-image" || imgTypeName == "iot-qcow2-image" {
 					assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, Directories, Files, Services, FIPS"))
 				} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "image-installer" {
@@ -922,7 +922,7 @@ func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 				imgType, _ := arch.GetImageType(imgTypeName)
 				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
 				if imgTypeName == "iot-commit" || imgTypeName == "iot-container" || imgTypeName == "iot-bootable-container" {
-					assert.EqualError(t, err, "Custom mountpoints are not supported for ostree types")
+					assert.EqualError(t, err, "Custom mountpoints and partitioning are not supported for ostree types")
 				} else if imgTypeName == "iot-raw-image" || imgTypeName == "iot-qcow2-image" {
 					assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, Directories, Files, Services, FIPS"))
 				} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "image-installer" {
@@ -935,6 +935,51 @@ func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestDistro_PartitioningConflict(t *testing.T) {
+	bp := blueprint.Blueprint{
+		Customizations: &blueprint.Customizations{
+			Filesystem: []blueprint.FilesystemCustomization{
+				{
+					MinSize:    1024,
+					Mountpoint: "/",
+				},
+			},
+			Partitioning: &blueprint.PartitioningCustomization{
+				Plain: &blueprint.PlainFilesystemCustomization{
+					Filesystems: []blueprint.FilesystemCustomization{
+						{
+							MinSize:    19,
+							Mountpoint: "/home",
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, dist := range fedoraFamilyDistros {
+		fedoraDistro := dist.distro
+		for _, archName := range fedoraDistro.ListArches() {
+			arch, _ := fedoraDistro.GetArch(archName)
+			for _, imgTypeName := range arch.ListImageTypes() {
+				imgType, _ := arch.GetImageType(imgTypeName)
+				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
+				if imgTypeName == "iot-commit" || imgTypeName == "iot-container" || imgTypeName == "iot-bootable-container" {
+					assert.EqualError(t, err, "Custom mountpoints and partitioning are not supported for ostree types")
+				} else if imgTypeName == "iot-raw-image" || imgTypeName == "iot-qcow2-image" {
+					assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, Directories, Files, Services, FIPS"))
+				} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "image-installer" {
+					continue
+				} else if imgTypeName == "live-installer" {
+					assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
+				} else {
+					assert.EqualError(t, err, "partitioning customizations cannot be used with custom filesystems (mountpoints)")
+				}
+			}
+		}
+	}
+
 }
 
 func TestDistroFactory(t *testing.T) {
