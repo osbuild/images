@@ -236,7 +236,7 @@ func (p *BuildrootFromContainer) serialize() osbuild.Pipeline {
 	pipeline.Runner = p.runner.String()
 
 	image := osbuild.NewContainersInputForSingleSource(p.containerSpecs[0])
-	stage, err := osbuild.NewContainerDeployStage(image, &osbuild.ContainerDeployOptions{})
+	stage, err := osbuild.NewContainerDeployStage(image, &osbuild.ContainerDeployOptions{RemoveSignatures: true})
 	if err != nil {
 		panic(err)
 	}
