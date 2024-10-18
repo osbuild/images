@@ -36,7 +36,7 @@ check-build-coverage:
   stage: verify
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-40-x86_64
+    RUNNER: aws/rhel-9.4-ga-x86_64
     INTERNAL_NETWORK: "true"
     PYTHONUNBUFFERED: 1
   script:
@@ -70,7 +70,7 @@ generate-build-config-{distro}-{arch}:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-40-{arch}
+    RUNNER: aws/rhel-9.4-ga-{arch}
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -102,7 +102,7 @@ generate-ostree-build-config-{distro}-{arch}:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-40-{arch}
+    RUNNER: aws/rhel-9.4-ga-{arch}
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -138,7 +138,7 @@ generate-manifests-{distro}-{arch}:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-40-x86_64
+    RUNNER: aws/rhel-9.4-ga-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
