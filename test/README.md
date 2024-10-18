@@ -5,7 +5,7 @@
 - [./cmd/build](../cmd/build) takes a config file as argument to build an image.  For example:
 ```
 go build -o bin/build ./cmd/build
-sudo ./bin/build --output ./buildtest --rpmmd /tmp/rpmmd --distro fedora-39 --image qcow2 --config test/configs/embed-containers.json
+sudo ./bin/build --output ./buildtest --rpmmd /tmp/rpmmd --distro fedora-39 --type qcow2 --config test/configs/embed-containers.json
 ```
 will build a Fedora 38 qcow2 image using the configuration specified in the file `embed-containers.json`
 
@@ -16,7 +16,7 @@ The config map is also used in CI to dynamically generate test builds using the 
 - [./test/data/repositories/](./data/repositories/) contains repository configurations for manifest generation ([./cmd/gen-manifests](../cmd/gen-manifests)) and image building ([./cmd/build](../cmd/build)).
 
 - `Schutzfile` defines content sources and test variables:
-    - `rngseed` is the random number generator seed that is used by all the test scripts and commands. It ensures manifests are always generated with the same random values (e.g. for partition UUIDs) so tests can be skipped when an image hasn't changed (see [Workflow details](#workflow-details)) below. This value can be changed (incremented) when a rebuild of all test images is required. For example, if a test script changes in a way that will not affect the manifests, this value can be used to make sure all test images are built.
+    - `common.rngseed` is the random number generator seed that is used by all the test scripts and commands. It ensures manifests are always generated with the same random values (e.g. for partition UUIDs) so tests can be skipped when an image hasn't changed (see [Workflow details](#workflow-details)) below. This value can be changed (incremented) when a rebuild of all test images is required. For example, if a test script changes in a way that will not affect the manifests, this value can be used to make sure all test images are built.
     - The following are defined in an object keyed by a distro name (e.g. `fedora-39`). The distribution name and version must match the version of the CI runners.
     - `dependencies.osbuild.commit`: the version of osbuild to use, as a commit ID. This must be a commit that was successfully built in osbuild's CI, so that RPMs will be available. It is used by [./test/scripts/setup-osbuild-repo](./scripts/setup-osbuild-repo).
     - `repos`: the repository configurations to use on the runners to install packages such as build dependencies and test tools.
@@ -30,21 +30,21 @@ Images are built in GitLab CI when a change in an image definition is detected. 
 Each generator script is run separately for every distribution and architecture combination that the project supports. These are also generated dynamically using `./cmd/list-images`. The dynamic test generation workflow looks like this:
 
 ```
-configure-generators
-    |
-    | (Dynamic: For each distro/arch)
-    |-- generate-build-configs-<distro>-<arch>
-    |         |
-    |         | (Dynamic: For each modified image type and config)
-    |         |-- Build <distro>-<arch>-<image>-<config>
-    |
-    | (Dynamic: For each distro/arch)
-    |-- generate-ostree-build-configs-<distro>-<arch>
-              |
-              | (Dynamic: For each modified image type and config)
-              |-- Build <distro>-<arch>-<image>-<config>
+gitlab-ci.yml
+|   For each distro/arch
+|-- generate-build-configs-<distro>-<arch>
+|         |
+|         | (Dynamic: For each modified image type and config)
+|         |-- Build <distro>-<arch>-<image>-<config>
+|
+|   For each distro/arch
+|-- generate-ostree-build-configs-<distro>-<arch>
+          |
+          | (Dynamic: For each modified image type and config)
+          |-- Build <distro>-<arch>-<image>-<config>
 ```
 
+The top-level `.gitlab-ci.yml` is generated using `./tools/prepare-source.sh` (which calls `./test/scripts/generate-gitlab-ci`) and must be updated when a change is made to the image configurations (distros, architectures, image types).  A PR will fail if the generated version does not match the one checked into the repository.
 
 ### Dynamic pipelines
 
@@ -75,7 +75,7 @@ The config generator:
 
 Each build job runs in parallel. For each image that is successfully built, a file is added to the test build cache under the following path:
 ```
-<distro>/<arch>/<manifest ID>/info.json
+<distro>/<arch>/<osbuild NEVRA>/<manifest ID>/info.json
 ```
 
 Each file in the cache stores information relevant to the build,
@@ -88,7 +88,9 @@ in the form
   "config": "<config name>",
   "manifest-checksum": "<manifest ID>",
   "osbuild-version": "<osbuild version>",
+  "osbuild-commit": "<osbuild commit ID>",
   "commit": "<commit ID>",
+  "boot-success": true,
   "pr": "<PR number>"
 }
 ```
@@ -104,7 +106,9 @@ for example:
   "config": "all-customizations",
   "manifest-checksum": "8c0ce3987d78fe6f3307494cd57ceed861de61c3b04786d6a7f570faacbdb5df",
   "osbuild-version": "osbuild 89",
+  "osbuild-commit": "74392a0238dec6bfa3f030e46c840148df2814e0",
   "commit": "52ecfdf1eb345e09c6a6edf4a8d3dd5c8079c51c",
+  "boot-success": true,
   "pr": 42
 }
 ```
@@ -145,3 +149,4 @@ Each build job runs in parallel. For each image that is successfully built, a fi
 - `<config name>`: name of a build configuration like the ones found in `./test/configs/` (e.g. `all-customizations`).
 - `<build name>`: a concatenation of all the elements that define a unique build configuration. It is created as `<distro>-<arch>-<image type>-<config name>` with dashes `-` in each component replaced by underscores `_` (e.g. `fedora_38-x86_64-qcow2-all_customizations`).
 - `<manifest ID>`: the ID of the last stage of the manifest. The manifest ID is unaffected by content sources (RPM or commit URLs for example) but not by content hashes.
+- `<osbuild commit ID>`: the commit ID specified in the `Schutzfile` under `<distro>.dependencies.osbuild.commit`. If not specified, it defaults to `RELEASE` and means that osbuild version was installed from the distribution repositories and the `<osbuild version>` is the released version for the given distribution.

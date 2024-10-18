@@ -71,7 +71,7 @@ func run(c string, args ...string) ([]byte, []byte, error) {
 
 	stderr := cmderr.Bytes()
 	if len(stderr) > 0 {
-		fmt.Fprintf(os.Stderr, string(stderr)+"\n")
+		fmt.Fprintf(os.Stderr, "%s\n", string(stderr))
 	}
 	return stdout, stderr, err
 }
@@ -358,7 +358,7 @@ func teardown(cmd *cobra.Command, args []string) {
 	fnerr = doTeardown(a, res)
 }
 
-func doRunExec(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resources) error {
+func doRunExec(a *awscloud.AWS, command []string, flags *pflag.FlagSet, res *resources) error {
 	privKey, err := flags.GetString("ssh-privkey")
 	if err != nil {
 		return err
@@ -389,16 +389,42 @@ func doRunExec(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *reso
 		return err
 	}
 
-	// copy the executable without its path to the remote host
-	destination := filepath.Base(filename)
+	isFile := func(path string) bool {
+		fileInfo, err := os.Stat(path)
+		if err != nil {
+			// ignore error and assume it's not a path
+			return false
+		}
 
-	// copy the executable
-	if err := scpFile(ip, username, privKey, hostsfile, filename, destination); err != nil {
-		return err
+		// Check if it's a regular file
+		return fileInfo.Mode().IsRegular()
 	}
 
+	// copy every argument that is a file to the remote host (basename only)
+	// and construct remote command
+	// NOTE: this wont work with directories or with multiple args in different
+	// paths that share the same basename - it's very limited
+	remoteCommand := make([]string, len(command))
+	for idx := range command {
+		arg := command[idx]
+		if isFile(arg) {
+			// scp the file and add it to the remote command by its base name
+			remotePath := filepath.Base(arg)
+			remoteCommand[idx] = remotePath
+			if err := scpFile(ip, username, privKey, hostsfile, arg, remotePath); err != nil {
+				return err
+			}
+		} else {
+			// not a file: add the arg as is
+			remoteCommand[idx] = arg
+		}
+	}
+
+	// add ./ to first element for the executable
+	remoteCommand[0] = fmt.Sprintf("./%s", remoteCommand[0])
+
 	// run the executable
-	return sshRun(ip, username, privKey, hostsfile, fmt.Sprintf("./%s", destination))
+	return sshRun(ip, username, privKey, hostsfile, remoteCommand...)
 }
 
 func runExec(cmd *cobra.Command, args []string) {
@@ -406,7 +432,7 @@ func runExec(cmd *cobra.Command, args []string) {
 	defer func() { exitCheck(fnerr) }()
 	image := args[0]
 
-	executable := args[1]
+	command := args[1:]
 	flags := cmd.Flags()
 
 	a, fnerr := newClientFromArgs(flags)
@@ -428,7 +454,7 @@ func runExec(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	fnerr = doRunExec(a, executable, flags, res)
+	fnerr = doRunExec(a, command, flags, res)
 }
 
 func setupCLI() *cobra.Command {
@@ -493,9 +519,10 @@ func setupCLI() *cobra.Command {
 	rootCmd.AddCommand(teardownCmd)
 
 	runCmd := &cobra.Command{
-		Use:   "run <image> <executable>",
+		Use:   "run <image> <executable>...",
 		Short: "upload and boot an image, then upload the specified executable and run it on the remote host",
-		Args:  cobra.ExactArgs(2),
+		Long:  "upload and boot an image on AWS EC2, then upload the executable file specified by the second positional argument and execute it via SSH with the args on the command line",
+		Args:  cobra.MinimumNArgs(2),
 		Run:   runExec,
 	}
 	rootCmd.AddCommand(runCmd)
