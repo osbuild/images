@@ -1,0 +1,204 @@
+#!/usr/bin/env python3
+#
+# Create a job for each distro+arch to run test generators and triggers.
+import sys
+
+import imgtestlib as testlib
+
+ARCHITECTURES = ["x86_64", "aarch64"]
+MANIFEST_ONLY_ARCHES = ["ppc64le", "s390x"]
+
+
+BASE_CONFIG = """---
+stages:
+  - init
+  - gen
+  - build
+  - ostree-gen
+  - ostree-build
+  - verify
+  - finish
+
+variables:
+  # Set the parent pipeline ID as a global variable so that the child pipeline
+  # jobs can use it to retrieve artifacts.
+  PARENT_PIPELINE_ID: $CI_PIPELINE_ID
+
+init:
+  stage: init
+  interruptible: true
+  tags:
+    - shell
+  script:
+    - schutzbot/update_github_status.sh start
+
+check-build-coverage:
+  stage: verify
+  extends: .terraform
+  variables:
+    RUNNER: aws/fedora-40-x86_64
+    INTERNAL_NETWORK: "true"
+    PYTHONUNBUFFERED: 1
+  script:
+    - sudo ./test/scripts/install-dependencies
+    - ./test/scripts/check-build-coverage ./s3configs/
+  cache:
+    key: testcache
+    paths:
+      - .cache/osbuild-images
+
+finish:
+  stage: finish
+  dependencies: []
+  tags:
+    - shell
+  script:
+    - schutzbot/update_github_status.sh finish
+
+fail:
+  stage: finish
+  tags:
+    - shell
+  script:
+    - schutzbot/update_github_status.sh fail
+    - exit 1  # make the pipeline fail so it doesn't look like success
+  when: on_failure
+"""
+
+GEN_TEMPLATE = """
+generate-build-config-{distro}-{arch}:
+  stage: gen
+  extends: .terraform
+  variables:
+    RUNNER: aws/fedora-40-{arch}
+    INTERNAL_NETWORK: "true"
+  script:
+    - sudo ./test/scripts/setup-osbuild-repo
+    - sudo ./test/scripts/install-dependencies
+    - ./test/scripts/generate-build-config --distro {distro} --arch {arch} build-config.yml
+  artifacts:
+    paths:
+      - build-config.yml
+  cache:
+    key: testcache
+    paths:
+      - {cache}
+"""
+
+TRIGGER_TEMPLATE = """
+image-build-trigger-{distro}-{arch}:
+  stage: build
+  trigger:
+    include:
+      - artifact: build-config.yml
+        job: generate-build-config-{distro}-{arch}
+    strategy: depend
+  needs:
+    - generate-build-config-{distro}-{arch}
+"""
+
+OSTREE_GEN_TEMPLATE = """
+generate-ostree-build-config-{distro}-{arch}:
+  stage: ostree-gen
+  extends: .terraform
+  variables:
+    RUNNER: aws/fedora-40-{arch}
+    INTERNAL_NETWORK: "true"
+  script:
+    - sudo ./test/scripts/setup-osbuild-repo
+    - sudo ./test/scripts/install-dependencies
+    - ./test/scripts/generate-ostree-build-config --distro {distro} --arch {arch} build-config.yml build-configs
+  artifacts:
+    paths:
+      - build-config.yml
+      - build-configs
+  needs:
+    - image-build-trigger-{distro}-{arch}
+  cache:
+    key: testcache
+    paths:
+      - {cache}
+"""
+
+OSTREE_TRIGGER_TEMPLATE = """
+image-build-ostree-trigger-{distro}-{arch}:
+  stage: ostree-build
+  trigger:
+    include:
+      - artifact: build-config.yml
+        job: generate-ostree-build-config-{distro}-{arch}
+    strategy: depend
+  needs:
+    - generate-ostree-build-config-{distro}-{arch}
+"""
+
+
+MANIFEST_GEN_TEMPLATE = """
+generate-manifests-{distro}-{arch}:
+  stage: gen
+  extends: .terraform
+  variables:
+    RUNNER: aws/fedora-40-x86_64
+    INTERNAL_NETWORK: "true"
+  script:
+    - sudo ./test/scripts/setup-osbuild-repo
+    - sudo ./test/scripts/install-dependencies
+    - go run ./cmd/gen-manifests --arches {arch} --distros {distro} --workers 10 --metadata=false --output ./manifests
+    - for manifest in ./manifests/*; do
+        if osbuild --inspect $manifest > output; then
+          echo "$manifest OK";
+        else
+          cat output;
+        fi;
+      done
+"""
+
+
+def sort_configs(configs):
+    return sorted(configs, key=lambda img: img["distro"]+img["arch"]+img["image-type"])
+
+
+def main():
+    config_path = sys.argv[1]
+    images = testlib.list_images(arches=ARCHITECTURES)
+    combos = set()
+
+    cache = testlib.TEST_CACHE_ROOT
+
+    gen_stage = []
+    trigger_stage = []
+    ostree_gen_stage = []
+    ostree_trigger_stage = []
+    for img in sort_configs(images):
+        combo = (img["distro"], img["arch"])
+        if combo in combos:
+            continue
+
+        combos.add(combo)
+        gen_stage.append(GEN_TEMPLATE.format(distro=img["distro"], arch=img["arch"], cache=cache))
+        trigger_stage.append(TRIGGER_TEMPLATE.format(distro=img["distro"], arch=img["arch"], cache=cache))
+        ostree_gen_stage.append(OSTREE_GEN_TEMPLATE.format(distro=img["distro"], arch=img["arch"], cache=cache))
+        ostree_trigger_stage.append(OSTREE_TRIGGER_TEMPLATE.format(distro=img["distro"], arch=img["arch"], cache=cache))
+
+    man_only_images = testlib.list_images(arches=MANIFEST_ONLY_ARCHES)
+    man_gen_stage = []
+    for img in sort_configs(man_only_images):
+        combo = (img["distro"], img["arch"])
+        if combo in combos:
+            continue
+
+        combos.add(combo)
+        man_gen_stage.append(MANIFEST_GEN_TEMPLATE.format(distro=img["distro"], arch=img["arch"]))
+
+    with open(config_path, "w", encoding="utf-8") as config_file:
+        config_file.write(BASE_CONFIG)
+        config_file.write(testlib.BASE_CONFIG)
+        config_file.write("\n".join(gen_stage))
+        config_file.write("\n".join(trigger_stage))
+        config_file.write("\n".join(ostree_gen_stage))
+        config_file.write("\n".join(ostree_trigger_stage))
+        config_file.write("\n".join(man_gen_stage))
+
+
+if __name__ == "__main__":
+    main()

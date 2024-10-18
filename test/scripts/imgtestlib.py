@@ -4,6 +4,7 @@ import os
 import pathlib
 import subprocess as sp
 import sys
+from glob import glob
 
 TEST_CACHE_ROOT = ".cache/osbuild-images"
 CONFIGS_PATH = "./test/configs"
@@ -16,14 +17,6 @@ REGISTRY = "registry.gitlab.com/redhat/services/products/image-builder/ci/images
 
 SCHUTZFILE = "Schutzfile"
 OS_RELEASE_FILE = "/etc/os-release"
-
-BIB_REF = "quay.io/centos-bootc/bootc-image-builder:latest"
-
-# ostree containers are pushed to the CI registry to be reused by dependants
-OSTREE_CONTAINERS = [
-    "iot-container",
-    "edge-container"
-]
 
 # image types that can be boot tested
 CAN_BOOT_TEST = [
@@ -64,6 +57,8 @@ NULL_CONFIG = """
 NullBuild:
   stage: test
   script: "true"
+  tags:
+    - "shell"
 """
 
 
@@ -129,6 +124,7 @@ def dl_build_info(destination, distro=None, arch=None):
                   "--no-progress",  # wont show progress but will print file list
                   "--exclude=*",
                   "--include=*/info.json",
+                  "--include=*/bib-*",
                   s3url, destination],
                  capture_output=True,
                  check=False)
@@ -245,7 +241,8 @@ def read_manifests(path):
     return manifests
 
 
-def check_for_build(manifest_fname, build_info_path, errors):
+def check_for_build(manifest_fname, build_info_dir, errors):
+    build_info_path = os.path.join(build_info_dir, "info.json")
     # rebuild if matching build info is not found
     if not os.path.exists(build_info_path):
         print(f"Build info not found: {build_info_path}")
@@ -257,9 +254,9 @@ def check_for_build(manifest_fname, build_info_path, errors):
             dl_config = json.load(build_info_fp)
     except json.JSONDecodeError as jd:
         errors.append((
-                f"failed to parse {build_info_path}\n"
-                f"{jd.msg}\n"
-                "  Adding config to build pipeline.\n"
+            f"failed to parse {build_info_path}\n"
+            f"{jd.msg}\n"
+            "  Adding config to build pipeline.\n"
         ))
 
     commit = dl_config["commit"]
@@ -284,10 +281,20 @@ def check_for_build(manifest_fname, build_info_path, errors):
 
         # check if it's a BIB type and compare image IDs
         if image_type in BIB_TYPES:
-            booted_id = dl_config.get("bib-id", None)
-            current_id = skopeo_inspect_id(f"docker://{BIB_REF}", host_container_arch())
-            if booted_id != current_id:
-                print(f"Container disk image was built with bootc-image-builder {booted_id}")
+            # Successful boot tests with BIB add a file to the directory as bib-<image ID>. Collect them and compare.
+            bib_ids = glob("bib-*", root_dir=build_info_dir)
+            # add the _old_ bib ID that we used to keep in the info.json
+            config_bib_id = dl_config.get("bib-id")
+            if config_bib_id:
+                bib_ids.append(f"bib-{config_bib_id}")
+            bib_ref = get_bib_ref()
+            current_id = skopeo_inspect_id(f"docker://{bib_ref}", host_container_arch())
+            if f"bib-{current_id}" not in bib_ids:
+                if bib_ids:
+                    print("  Container disk image was built with the following bootc-image-builder images:")
+                    print("    - " + "\n    -".join(bib_ids))
+                else:
+                    print("  No bib IDs found.")
                 print(f"  Testing {current_id}")
                 print("  Adding config to build pipeline.")
                 return True
@@ -337,9 +344,9 @@ def filter_builds(manifests, distro=None, arch=None, skip_ostree_pull=True):
         build_request["manifest-checksum"] = manifest_id
 
         # check if the hash_fname exists in the synced directory
-        build_info_path = gen_build_info_path(dl_path, osbuild_ver, manifest_id)
+        build_info_dir = gen_build_info_dir_path(dl_path, osbuild_ver, manifest_id)
 
-        if check_for_build(manifest_fname, build_info_path, errors):
+        if check_for_build(manifest_fname, build_info_dir, errors):
             build_requests.append(build_request)
 
     print("✅ Config filtering done!\n")
@@ -396,6 +403,17 @@ def get_osbuild_commit(distro_version):
     return data.get(distro_version, {}).get("dependencies", {}).get("osbuild", {}).get("commit", None)
 
 
+def get_bib_ref():
+    """
+    Get the bootc-image-builder ref defined in the Schutzfile for the host distro.
+    If not set, returns None.
+    """
+    with open(SCHUTZFILE, encoding="utf-8") as schutzfile:
+        data = json.load(schutzfile)
+
+    return data.get("common", {}).get("bootc-image-builder", {}).get("ref", None)
+
+
 def get_osbuild_nevra():
     """
     Returned the installed osbuild version. Exits with an error if osbuild is not installed.
@@ -413,21 +431,19 @@ def rng_seed_env():
     with open(SCHUTZFILE, encoding="utf-8") as schutzfile:
         data = json.load(schutzfile)
 
-    seed = data.get("rngseed")
+    seed = data.get("common", {}).get("rngseed")
     if seed is None:
-        raise RuntimeError("'rngseed' not found in Schutzfile")
+        raise RuntimeError("'common.rngseed' not found in Schutzfile")
 
     return {"OSBUILD_TESTING_RNG_SEED": str(seed)}
 
 
 def host_container_arch():
     host_arch = os.uname().machine
-    match host_arch:
-        case "x86_64":
-            return "amd64"
-        case "aarch64":
-            return "arm64"
-    return host_arch
+    return {
+        "x86_64": "amd64",
+        "aarch64": "arm64"
+    }.get(host_arch, host_arch)
 
 
 def is_manifest_list(data):
@@ -469,7 +485,10 @@ def skopeo_inspect_id(image_name: str, arch: str) -> str:
         if arch != img_arch or img_ostype != "linux":
             continue
 
-        image_no_tag = ":".join(image_name.split(":")[:-1])
+        if "@" in image_name:
+            image_no_tag = image_name.split("@")[0]
+        else:
+            image_no_tag = ":".join(image_name.split(":")[:-1])
         manifest_digest = manifest["digest"]
         arch_image_name = f"{image_no_tag}@{manifest_digest}"
         # inspect the arch-specific manifest to get the image ID (config digest)

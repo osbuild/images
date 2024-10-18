@@ -1,80 +1,25 @@
 {
   "./configs/all-customizations.json": {
-    "distros": [
-      "rhel-9*",
-      "rhel-8*",
-      "centos*",
-      "fedora*"
-    ],
     "image-types": [
       "qcow2"
     ]
   },
   "./configs/all-with-fips.json": {
-    "distros": [
-      "rhel-9.3",
-      "rhel-9.4",
-      "rhel-8.9",
-      "rhel-8.10",
-      "centos*",
-      "fedora*"
-    ],
     "image-types": [
       "qcow2"
     ]
   },
   "./configs/all-with-oscap.json": {
-    "distros": [
-      "rhel-9.1",
-      "rhel-9.2",
-      "rhel-8.7",
-      "rhel-8.8",
-      "rhel-8.9",
-      "centos*",
-      "fedora*"
-    ],
     "image-types": [
       "qcow2"
     ]
   },
-  "./configs/disable-lm_sensors.json": {
-    "distros": [
-      "rhel-8.4"
-    ],
-    "image-types": [
-      "ec2-sap"
-    ]
-  },
   "./configs/ec2-sap-empty.json": {
-    "distros": [
-      "centos-8",
-      "centos-9",
-      "fedora-37",
-      "fedora-38",
-      "fedora-39",
-      "fedora-40",
-      "rhel-7.9",
-      "rhel-8.10",
-      "rhel-8.5",
-      "rhel-8.6",
-      "rhel-8.7",
-      "rhel-8.8",
-      "rhel-8.9",
-      "rhel-9.0",
-      "rhel-9.1",
-      "rhel-9.2",
-      "rhel-9.3",
-      "rhel-9.4"
-    ],
     "image-types": [
       "ec2-sap"
     ]
   },
   "./configs/edge-ostree-pull-device-fips.json": {
-    "distros": [
-      "rhel-9.3",
-      "rhel-9.4"
-    ],
     "image-types": [
       "edge-simplified-installer"
     ]
@@ -92,10 +37,6 @@
     ]
   },
   "./configs/edge-ostree-pull-fips.json": {
-    "distros": [
-      "rhel-9.3",
-      "rhel-9.4"
-    ],
     "image-types": [
       "edge-installer",
       "edge-raw-image",
@@ -103,10 +44,6 @@
     ]
   },
   "./configs/edge-ostree-pull-user-fips.json": {
-    "distros": [
-      "rhel-9.3",
-      "rhel-9.4"
-    ],
     "image-types": [
       "edge-ami"
     ]
@@ -128,7 +65,6 @@
   },
   "./configs/empty.json": {
     "arches": [],
-    "distros": [],
     "image-types": [
       "ami",
       "azure-eap7-rhui",
@@ -182,22 +118,6 @@
       "iot-commit"
     ]
   },
-  "./configs/minimal-pkgs.json": {
-    "distros": [
-      "fedora*"
-    ],
-    "image-types": [
-      "qcow2"
-    ]
-  },
-  "./configs/minimal.json": {
-    "distros": [
-      "fedora*"
-    ],
-    "image-types": [
-      "qcow2"
-    ]
-  },
   "./configs/ostree.json": {
     "image-types": [
       "edge-commit",
@@ -216,10 +136,6 @@
     ]
   },
   "./configs/unattended-iso.json": {
-    "distros": [
-      "rhel-*",
-      "centos-*"
-    ],
     "image-types": [
       "image-installer"
     ]

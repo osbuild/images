@@ -1,7 +1,8 @@
+---
 # Taken from https://docs.github.com/en/code-security/dependabot/working-with-dependabot/automating-dependabot-with-github-actions#common-dependabot-automations
 
 name: Dependabot auto-approve and auto-merge
-on: pull_request_target
+on: pull_request_target  # yamllint disable-line rule:truthy
 
 permissions: write-all
 

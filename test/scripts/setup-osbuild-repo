@@ -3,27 +3,50 @@
 # Add a repository configuration to install the osbuild rpm at a specific
 # commit if specified.
 import os
+import sys
+import urllib.error
+import urllib.request
 
 import imgtestlib as testlib
 
 REPO_TEMPLATE = """
 [osbuild]
 name=osbuild {commit}
-baseurl=http://osbuild-composer-repos.s3-website.us-east-2.amazonaws.com/{repo_path}
+baseurl={baseurl}
 enabled=1
 gpgcheck=0
 priority=10
 """
 
 REPO_FILE = "/etc/yum.repos.d/osbuild.repo"
+URL_TEMPLATE = "http://osbuild-composer-repos.s3-website.us-east-2.amazonaws.com/{repo_path}"
+
+
+def baseurl(repo_path):
+    return URL_TEMPLATE.format(repo_path=repo_path)
+
+
+def check_baseurl(url):
+    print(f"Checking URL {url}")
+    try:
+        with urllib.request.urlopen(url, timeout=30) as resp:
+            print(f"{resp.status} ({resp.msg})")
+    except urllib.error.HTTPError as http_error:
+        print(http_error)
+        sys.exit(1)
 
 
 def write_repo(commit, distro_version):
     arch = os.uname().machine
     repo_path = f"osbuild/{distro_version}/{arch}/{commit}"
+    repo_baseurl = baseurl(repo_path)
+
+    repomd_url = repo_baseurl + "/repodata/repomd.xml"
+    check_baseurl(repomd_url)
+
     print(f"Setting up dnf repository for {commit} ({repo_path})")
     with open("/etc/yum.repos.d/osbuild.repo", "w", encoding="utf-8") as repofile:
-        repofile.write(REPO_TEMPLATE.format(commit=commit, repo_path=repo_path))
+        repofile.write(REPO_TEMPLATE.format(commit=commit, baseurl=repo_baseurl))
 
 
 def main():
