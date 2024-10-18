@@ -271,6 +271,13 @@ func osCustomizations(
 		osc.NoBLS = *imageConfig.NoBLS
 	}
 
+	if err := c.CheckCACerts(); err != nil {
+		panic(fmt.Sprintf("unexpected error checking CA certs: %v", err))
+	}
+	if ca := c.GetCACerts(); ca != nil {
+		osc.CACerts = ca.PEMCerts
+	}
+
 	return osc, nil
 }
 
