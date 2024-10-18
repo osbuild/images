@@ -70,6 +70,18 @@ func TestContainersDeployStageOptionsJson(t *testing.T) {
 	assert.Equal(t, string(json), expectedJson)
 }
 
+func TestContainersDeployStageOptionsJsonRemoveSignatures(t *testing.T) {
+	expectedJson := `{
+        "remove-signatures": true
+}`
+	cdi := osbuild.ContainerDeployOptions{
+		RemoveSignatures: true,
+	}
+	json, err := json.MarshalIndent(cdi, "", "        ")
+	require.Nil(t, err)
+	assert.Equal(t, string(json), expectedJson)
+}
+
 func TestContainersDeployStageEmptyOptionsJson(t *testing.T) {
 	expectedJson := `{}`
 	cdi := osbuild.ContainerDeployOptions{}
