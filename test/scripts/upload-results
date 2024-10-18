@@ -37,14 +37,14 @@ def main():
         with open(info_path, "r", encoding="utf-8") as info_fp:
             build_info = json.load(info_fp)
         # strip the PR prefix
-        build_info["pr"] = pr_number.lstrip("PR-")
+        build_info["pr"] = pr_number.removeprefix("PR-")
         with open(info_path, "w", encoding="utf-8") as info_fp:
             json.dump(build_info, info_fp, indent=2)
 
     s3url = testlib.gen_build_info_s3(distro, arch, manifest_id)
 
     print(f"⬆️ Uploading {build_dir} to {s3url}")
-    testlib.runcmd(["aws", "s3", "cp", "--acl=private", "--recursive", build_dir+"/", s3url])
+    testlib.runcmd_nc(["aws", "s3", "cp", "--no-progress", "--acl=private", "--recursive", build_dir+"/", s3url])
     print("✅ DONE!!")
 
 

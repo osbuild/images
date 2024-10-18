@@ -1,6 +1,7 @@
+---
 name: Mark and close stale issues and PRs
 
-on:
+on:  # yamllint disable-line rule:truthy
   schedule:
     - cron: '0 4 * * *'
 

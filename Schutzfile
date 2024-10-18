@@ -1,6 +1,25 @@
 {
-  "rngseed": 1,
-  "fedora-39": {
+  "common": {
+    "rngseed": 1,
+    "bootc-image-builder": {
+      "ref": "quay.io/centos-bootc/bootc-image-builder@sha256:9893e7209e5f449b86ababfd2ee02a58cca2e5990f77b06c3539227531fc8120"
+    }
+  },
+  "centos-8": {
+    "dependencies": {
+      "osbuild": {
+        "commit": "b42e1afddc37dae3199e039f2a3d3cb10f01485c"
+      }
+    }
+  },
+  "centos-9": {
+    "dependencies": {
+      "osbuild": {
+        "commit": "b42e1afddc37dae3199e039f2a3d3cb10f01485c"
+      }
+    }
+  },
+  "rhel-9.4": {
     "dependencies": {
       "osbuild": {
         "commit": "b42e1afddc37dae3199e039f2a3d3cb10f01485c"
@@ -8,36 +27,39 @@
     },
     "repos": [
       {
-        "file": "/etc/yum.repos.d/fedora.repo",
+        "file": "/etc/yum.repos.d/rhel9internal.repo",
         "x86_64": [
           {
-            "title": "fedora",
-            "name": "fedora",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f39/f39-x86_64-fedora-20231109"
+            "title": "RHEL-9-RPMREPO-NIGHTLY-BaseOS",
+            "name": "baseos",
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el9/el9-x86_64-baseos-n9.4-20240822"
+          },
+          {
+            "title": "RHEL-9-RPMREPO-NIGHTLY-AppStream",
+            "name": "appstream",
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el9/el9-x86_64-appstream-n9.4-20240822"
+          },
+          {
+            "title": "RHEL-9-RPMREPO-NIGHTLY-CRB",
+            "name": "crb",
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el9/el9-x86_64-crb-n9.4-20240822"
           }
         ],
         "aarch64": [
           {
-            "title": "fedora",
-            "name": "fedora",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f39/f39-aarch64-fedora-20231109"
-          }
-        ]
-      },
-      {
-        "file": "/etc/yum.repos.d/fedora-updates.repo",
-        "x86_64": [
+            "title": "RHEL-9-RPMREPO-NIGHTLY-BaseOS",
+            "name": "baseos",
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el9/el9-aarch64-baseos-n9.4-20240822"
+          },
           {
-            "title": "updates",
-            "name": "updates",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f39/f39-x86_64-updates-released-20240101"
-          }
-        ],
-        "aarch64": [
+            "title": "RHEL-9-RPMREPO-NIGHTLY-AppStream",
+            "name": "appstream",
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el9/el9-aarch64-appstream-n9.4-20240822"
+          },
           {
-            "title": "updates",
-            "name": "updates",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f39/f39-aarch64-updates-released-20240101"
+            "title": "RHEL-9-RPMREPO-NIGHTLY-CRB",
+            "name": "crb",
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el9/el9-aarch64-crb-n9.4-20240822"
           }
         ]
       }

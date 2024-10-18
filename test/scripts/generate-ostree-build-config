@@ -13,13 +13,14 @@ build/{distro}/{arch}/{image_type}/{config_name}:
   script:
     - sudo ./test/scripts/setup-osbuild-repo
     - sudo ./test/scripts/install-dependencies
+    - {dl_container}
     - {start_container}
     - ./test/scripts/build-image "{distro}" "{image_type}" "{config}"
     - ./test/scripts/boot-image "{distro}" "{arch}" "{image_type}" "{image_path}"
     - ./test/scripts/upload-results "{distro}" "{image_type}" "{config}"
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-39-{arch}
+    RUNNER: aws/fedora-40-{arch}
     INTERNAL_NETWORK: "{internal}"
   needs:
     - pipeline: "$PARENT_PIPELINE_ID"
@@ -165,18 +166,22 @@ def gen_image_manifests(config_map, configs, distro, arch, outputdir):
 def default_ref(distro, arch):
     name, version = distro.split("-")
     if name == "rhel":
-        version = version[0]  # this will break on RHEL 10
+        # we use dots in our RHEL versions now
+        version, *_ = version.split(".")
         product = "edge"
     elif name == "fedora":
         product = "iot"
     elif name == "centos":
         product = "edge"
+    else:
+        raise ValueError(f"unknown distro name {name}")
 
-    return f"{name}/{version}/{arch}/{product}"
+    return f"{name}/{version}/{arch}/{product}"     # pylint: disable=possibly-used-before-assignment
 
 
 @contextmanager
 def setup_dependencies(manifests, config_map, distro, arch):
+    # pylint: disable=too-many-statements
     """
     For each config in the config map, list all image configurations (distro, arch, image type) that it applies to and
     use the manifests to find the corresponding manifest IDs. Pull and run the corresponding dependency container from
@@ -218,32 +223,36 @@ def setup_dependencies(manifests, config_map, distro, arch):
             ic_image_type = image_config["image-type"]
             dep_build_name = testlib.gen_build_name(ic_distro, ic_arch, dep_image_type, dep_config_name)
             manifest_id = manifests[dep_build_name + ".json"]["id"]
-            container = f"{testlib.REGISTRY}/{dep_build_name}:build-{manifest_id}"
+            container_s3_prefix = testlib.gen_build_info_s3(distro, arch, manifest_id)
+            container_s3_path = f"{container_s3_prefix}container/container.tar"
 
             # start each container once on an incremental port
-            port = container_ports.get(container)
+            port = container_ports.get(container_s3_path)
             if not port:
                 # Pulling and launching the container will fail if the specific container config was never built.  This
                 # can happen if a dependency is specified that does not exist in the config-map.
                 port = 42000 + len(container_ports)
-                container_ports[container] = port
+                container_ports[container_s3_path] = port
 
             # modify image config with container address and ref
             config_name = config_data["name"]
             config_name = f"{config_name}-{port}"
+            # get the ref from the current config, or compute the default if unset
+            ref = config_data.get("options", {}).get("ostree", {}).get("ref", default_ref(ic_distro, ic_arch))
             new_config = {
                 "name": config_name,
-                "ostree": {
-                    "url": f"http://localhost:{port}/repo",
-                    # get the ref from the current config, or compute the default if unset
-                    "ref": config_data.get("ostree", {}).get("ref", default_ref(ic_distro, ic_arch)),
+                "options": {
+                    "ostree": {
+                        "url": f"http://localhost:{port}/repo",
+                        "ref": ref,
+                    }
                 },
                 "blueprint": config_data.get("blueprint"),
             }
             new_configs[config_name] = new_config
 
             container_configs[config_name] = {
-                "name": container,
+                "s3path": container_s3_path,
                 "port": port,
             }
 
@@ -255,16 +264,23 @@ def setup_dependencies(manifests, config_map, distro, arch):
             new_config_map[config_fname] = new_filters
 
     try:
-        for container, port in container_ports.items():
-            print(f"📦 Starting container {container} {port}")
-            cont_id, _ = testlib.runcmd(["podman", "run", "-d", "--rm", f"-p{port}:8080", container])
-            container_ids.append(cont_id.strip().decode())
+        for container_s3_path, port in container_ports.items():
+            with TemporaryDirectory() as container_dir:
+                print(f"⬇️ Downloading container archive from {container_s3_path}")
+                container_archive = os.path.join(container_dir, "container.tar")
+                testlib.runcmd_nc(["aws", "s3", "cp", "--no-progress", container_s3_path, container_archive])
+                print(f"📦 Starting container oci-archive:{container_archive} {port}")
+                # Running podman as root is not necessary, but currently it's failing with permission errors.
+                # Run it with sudo for now until we figure out the issue.
+                cont_id, _ = testlib.runcmd(["sudo", "podman", "run", "-d", "--rm", f"-p{port}:8080",
+                                             f"oci-archive:{container_archive}"])
+                container_ids.append(cont_id.strip().decode())
 
         yield new_config_map, new_configs, container_configs
     finally:
         if container_ids:
             print("📦 Stopping containers")
-            out, _ = testlib.runcmd(["podman", "stop", " ".join(container_ids)])
+            out, _ = testlib.runcmd(["sudo", "podman", "stop", *container_ids])
             print(out.decode())
 
 
@@ -289,13 +305,16 @@ def generate_configs(build_requests, container_configs, pipeline_file, configs_d
         with open(build_config_path, "w", encoding="utf-8") as build_config_file:
             json.dump(config, build_config_file)
 
-        container_name = container["name"]
+        container_s3_path = container["s3path"]
         container_port = container["port"]
-        container_cmd = f"podman run -d --rm -p{container_port}:8080 {container_name}"
+
+        dl_container_cmd = f"aws s3 cp --no-progress {container_s3_path} container.tar"
+        run_container_cmd = f"sudo podman run -d --rm -p{container_port}:8080 oci-archive:container.tar"
 
         pipeline_file.write(JOB_TEMPLATE.format(distro=distro, arch=arch, image_type=image_type,
                                                 config_name=config_name, config=build_config_path,
-                                                start_container=container_cmd,
+                                                dl_container=dl_container_cmd,
+                                                start_container=run_container_cmd,
                                                 internal="true" if "rhel" in distro else "false",
                                                 image_path=image_path))
     print("✅ DONE!")

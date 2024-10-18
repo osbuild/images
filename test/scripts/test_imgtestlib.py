@@ -50,6 +50,8 @@ def test_path_generators():
 
 test_container = "registry.gitlab.com/redhat/services/products/image-builder/ci/osbuild-composer/manifest-list-test"
 
+manifest_list_digest = "sha256:58150862447d05feeb263ddb7257bf11d2ce2a697362ac117de2184d10f028fc"
+
 # manifest IDs for
 #  registry.gitlab.com/redhat/services/products/image-builder/ci/osbuild-composer/manifest-list-test:latest
 manifest_ids = {
@@ -70,6 +72,7 @@ def test_skopeo_inspect_id_manifest_list(arch):
     transport = "docker://"
     image_id = image_ids[arch]
     assert testlib.skopeo_inspect_id(f"{transport}{test_container}:latest", arch) == image_id
+    assert testlib.skopeo_inspect_id(f"{transport}{test_container}@{manifest_list_digest}", arch) == image_id
 
 
 @pytest.mark.parametrize("arch", TEST_ARCHES)
