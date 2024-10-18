@@ -8,6 +8,8 @@ from tempfile import TemporaryDirectory
 
 import imgtestlib as testlib
 
+BASE_TEST_SCRIPT = "test/scripts/base-host-check.sh"
+
 
 def get_aws_config():
     return {
@@ -61,7 +63,8 @@ def ensure_uncompressed(filepath):
         yield filepath
 
 
-def cmd_boot_aws(arch, image_name, privkey, pubkey, image_path):
+def cmd_boot_aws(arch, image_name, privkey, pubkey, image_path, script_cmd):
+    # pylint: disable=too-many-arguments
     aws_config = get_aws_config()
     cmd = ["go", "run", "./cmd/boot-aws", "run",
            "--access-key-id", aws_config["key_id"],
@@ -74,15 +77,16 @@ def cmd_boot_aws(arch, image_name, privkey, pubkey, image_path):
            "--username", "osbuild",
            "--ssh-privkey", privkey,
            "--ssh-pubkey", pubkey,
-           image_path, "test/scripts/base-host-check.sh"]
+           image_path, *script_cmd]
     testlib.runcmd_nc(cmd)
 
 
-def boot_ami(distro, arch, image_type, image_path):
+def boot_ami(distro, arch, image_type, image_path, config):
+    cmd = [BASE_TEST_SCRIPT, config]
     with ensure_uncompressed(image_path) as raw_image_path:
         with create_ssh_key() as (privkey, pubkey):
             image_name = f"image-boot-test-{distro}-{arch}-{image_type}-" + str(uuid.uuid4())
-            cmd_boot_aws(arch, image_name, privkey, pubkey, raw_image_path)
+            cmd_boot_aws(arch, image_name, privkey, pubkey, raw_image_path, cmd)
 
 
 def boot_container(distro, arch, image_type, image_path, manifest_id):
@@ -129,7 +133,7 @@ def boot_container(distro, arch, image_type, image_path, manifest_id):
                    "--security-opt", "label=type:unconfined_t",
                    "-v", f"{tmpdir}:/output",
                    "-v", f"{config_file}:/config.json",
-                   testlib.BIB_REF,
+                   testlib.get_bib_ref(),
                    "--type=ami",
                    "--config=/config.json",
                    container_ref]
@@ -141,7 +145,7 @@ def boot_container(distro, arch, image_type, image_path, manifest_id):
             # Build artifacts are owned by root. Make them world accessible.
             testlib.runcmd(["sudo", "chmod", "a+rwX", "-R", tmpdir])
             raw_image_path = f"{tmpdir}/image/disk.raw"
-            cmd_boot_aws(arch, image_name, privkey_file, pubkey_file, raw_image_path)
+            cmd_boot_aws(arch, image_name, privkey_file, pubkey_file, raw_image_path, [BASE_TEST_SCRIPT])
 
 
 def find_image_file(build_path: str) -> str:
@@ -167,6 +171,12 @@ def find_image_file(build_path: str) -> str:
     return os.path.join(build_path, last_pipeline, files[0])
 
 
+def read_build_info(path):
+    info_file_path = os.path.join(path, "info.json")
+    with open(info_file_path, encoding="utf-8") as info_fp:
+        return json.load(info_fp)
+
+
 def main():
     desc = "Boot an image in the cloud environment it is built for and validate the configuration"
     parser = argparse.ArgumentParser(description=desc)
@@ -182,22 +192,20 @@ def main():
     search_path = args.image_search_path
 
     image_path = find_image_file(search_path)
+    build_info = read_build_info(search_path)
+    build_config_name = build_info["config"]
+    build_config_path = f"test/configs/{build_config_name}.json"
 
     print(f"Testing image at {image_path}")
     bib_image_id = ""
     match image_type:
         case "ami" | "ec2" | "ec2-ha" | "ec2-sap" | "edge-ami":
-            boot_ami(distro, arch, image_type, image_path)
+            boot_ami(distro, arch, image_type, image_path, build_config_path)
         case "iot-bootable-container":
-            info_file_path = os.path.join(search_path, "info.json")
-            with open(info_file_path, encoding="utf-8") as info_fp:
-                build_info = json.load(info_fp)
             manifest_id = build_info["manifest-checksum"]
             boot_container(distro, arch, image_type, image_path, manifest_id)
-            # get the image ID from the local store so we know it's the one we used in the test
-            # (in case the container in the registry was updated while we were testing)
-            bib_image_id = testlib.skopeo_inspect_id(f"containers-storage:{testlib.BIB_REF}",
-                                                     testlib.host_container_arch())
+            bib_ref = testlib.get_bib_ref()
+            bib_image_id = testlib.skopeo_inspect_id(f"docker://{bib_ref}", testlib.host_container_arch())
         case _:
             # skip
             print(f"{image_type} boot tests are not supported yet")
@@ -206,14 +214,16 @@ def main():
     print("✅ Marking boot successful")
     # amend build info with boot success
     # search_path is the root of the build path (build/build_name)
-    info_file_path = os.path.join(search_path, "info.json")
-    with open(info_file_path, encoding="utf-8") as info_fp:
-        build_info = json.load(info_fp)
     build_info["boot-success"] = True
-    if bib_image_id:
-        build_info["bib-id"] = bib_image_id
+    info_file_path = os.path.join(search_path, "info.json")
     with open(info_file_path, "w", encoding="utf-8") as info_fp:
         json.dump(build_info, info_fp, indent=2)
+    if bib_image_id:
+        # write a separate file with the bib image ID as filename to mark the boot success with that image
+        bib_id_file = os.path.join(search_path, f"bib-{bib_image_id}")
+        print(f"Writing bib image ID file: {bib_id_file}")
+        with open(bib_id_file, "w", encoding="utf-8") as fp:
+            fp.write("")
 
 
 if __name__ == "__main__":

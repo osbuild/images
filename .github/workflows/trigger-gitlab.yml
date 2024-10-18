@@ -1,14 +1,16 @@
-# inspired by rhinstaller/anaconda
-
+# This workflow runs on success of the GitLab workflow.
+# If we run it on PR or merge_group, then we can't use secrets.
+---
 name: Start GitLab CI
 
-on:
+on:  # yamllint disable-line rule:truthy
   workflow_run:
     workflows: ["GitLab"]
     types: [completed]
 
 jobs:
   trigger-gitlab:
+    # this should never fail, but check it anyway in case we ever change it
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     env:
@@ -30,7 +32,10 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
 
-      - uses: octokit/request-action@v2.x
+      - name: Get open PRs
+        # Since this workflow doesn't run on a PR trigger, we need to find the
+        # PR number by querying the GH API and selecting on the commit ID
+        uses: octokit/request-action@v2.x
         id: fetch_pulls
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -49,37 +54,14 @@ jobs:
 
           PR=$(jq -rc '.[] | select(.head.sha | contains("${{ github.event.workflow_run.head_sha }}")) | select(.state | contains("open"))' "$PR_DATA" | jq -r .number)
           if [ ! -z "$PR" ]; then
+            # Create branch named PR-<number> to push to GitLab
             echo "pr_branch=PR-$PR" >> "$GITHUB_OUTPUT"
             git checkout -b PR-$PR
           else
             git checkout ${{ github.event.workflow_run.head_branch }}
           fi
 
-      - name: Download artifacts
-        uses: actions/github-script@v7
-        with:
-          script: |
-            let allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
-               owner: context.repo.owner,
-               repo: context.repo.repo,
-               run_id: context.payload.workflow_run.id,
-            });
-            let matchArtifact = allArtifacts.data.artifacts.filter((artifact) => {
-              return artifact.name == "PR_STATUS"
-            })[0];
-            let download = await github.rest.actions.downloadArtifact({
-               owner: context.repo.owner,
-               repo: context.repo.repo,
-               artifact_id: matchArtifact.id,
-               archive_format: 'zip',
-            });
-            let fs = require('fs');
-            fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/PR_STATUS.zip`, Buffer.from(download.data));
-
-      - name: Unzip artifact
-        run: unzip PR_STATUS.zip
-
-      - name: Push to gitlab
+      - name: Push to GitLab
         run: |
           mkdir -p ~/.ssh
           echo "${IMAGEBUILDER_BOT_GITLAB_SSH_KEY}" > ~/.ssh/id_rsa
@@ -87,9 +69,4 @@ jobs:
           touch ~/.ssh/known_hosts
           ssh-keyscan -t rsa gitlab.com >> ~/.ssh/known_hosts
           git remote add ci git@gitlab.com:redhat/services/products/image-builder/ci/images.git
-          SKIP_CI=$(cat SKIP_CI.txt)
-          if [[ "${SKIP_CI}" == true ]];then
-            git push -f -o ci.variable="SKIP_CI=true" ci
-          else
-            git push -f ci 
-          fi
+          git push -f ci
