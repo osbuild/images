@@ -14,9 +14,6 @@ stages:
   - init
   - gen
   - build
-  - ostree-gen
-  - ostree-build
-  - verify
   - finish
 
 variables:
@@ -31,21 +28,6 @@ init:
     - shell
   script:
     - schutzbot/update_github_status.sh start
-
-check-build-coverage:
-  stage: verify
-  extends: .terraform
-  variables:
-    RUNNER: aws/rhel-9.4-ga-x86_64
-    INTERNAL_NETWORK: "true"
-    PYTHONUNBUFFERED: 1
-  script:
-    - sudo ./test/scripts/install-dependencies
-    - ./test/scripts/check-build-coverage ./s3configs/
-  cache:
-    key: testcache
-    paths:
-      - .cache/osbuild-images
 
 finish:
   stage: finish
@@ -97,42 +79,6 @@ image-build-trigger-{distro}-{arch}:
     - generate-build-config-{distro}-{arch}
 """
 
-OSTREE_GEN_TEMPLATE = """
-generate-ostree-build-config-{distro}-{arch}:
-  stage: ostree-gen
-  extends: .terraform
-  variables:
-    RUNNER: aws/rhel-9.4-ga-{arch}
-    INTERNAL_NETWORK: "true"
-  script:
-    - sudo ./test/scripts/setup-osbuild-repo
-    - sudo ./test/scripts/install-dependencies
-    - ./test/scripts/generate-ostree-build-config --distro {distro} --arch {arch} build-config.yml build-configs
-  artifacts:
-    paths:
-      - build-config.yml
-      - build-configs
-  needs:
-    - image-build-trigger-{distro}-{arch}
-  cache:
-    key: testcache
-    paths:
-      - {cache}
-"""
-
-OSTREE_TRIGGER_TEMPLATE = """
-image-build-ostree-trigger-{distro}-{arch}:
-  stage: ostree-build
-  trigger:
-    include:
-      - artifact: build-config.yml
-        job: generate-ostree-build-config-{distro}-{arch}
-    strategy: depend
-  needs:
-    - generate-ostree-build-config-{distro}-{arch}
-"""
-
-
 MANIFEST_GEN_TEMPLATE = """
 generate-manifests-{distro}-{arch}:
   stage: gen
@@ -143,7 +89,7 @@ generate-manifests-{distro}-{arch}:
   script:
     - sudo ./test/scripts/setup-osbuild-repo
     - sudo ./test/scripts/install-dependencies
-    - go run ./cmd/gen-manifests --arches {arch} --distros {distro} --workers 10 --metadata=false --output ./manifests
+    - go run -tags=exclude_graphdriver_btrfs ./cmd/gen-manifests --arches {arch} --distros {distro} --workers 10 --metadata=false --output ./manifests
     - for manifest in ./manifests/*; do
         if osbuild --inspect $manifest > output; then
           echo "$manifest OK";
@@ -167,8 +113,6 @@ def main():
 
     gen_stage = []
     trigger_stage = []
-    ostree_gen_stage = []
-    ostree_trigger_stage = []
     for img in sort_configs(images):
         combo = (img["distro"], img["arch"])
         if combo in combos:
@@ -177,8 +121,6 @@ def main():
         combos.add(combo)
         gen_stage.append(GEN_TEMPLATE.format(distro=img["distro"], arch=img["arch"], cache=cache))
         trigger_stage.append(TRIGGER_TEMPLATE.format(distro=img["distro"], arch=img["arch"], cache=cache))
-        ostree_gen_stage.append(OSTREE_GEN_TEMPLATE.format(distro=img["distro"], arch=img["arch"], cache=cache))
-        ostree_trigger_stage.append(OSTREE_TRIGGER_TEMPLATE.format(distro=img["distro"], arch=img["arch"], cache=cache))
 
     man_only_images = testlib.list_images(arches=MANIFEST_ONLY_ARCHES)
     man_gen_stage = []
@@ -195,8 +137,6 @@ def main():
         config_file.write(testlib.BASE_CONFIG)
         config_file.write("\n".join(gen_stage))
         config_file.write("\n".join(trigger_stage))
-        config_file.write("\n".join(ostree_gen_stage))
-        config_file.write("\n".join(ostree_trigger_stage))
         config_file.write("\n".join(man_gen_stage))
 
 

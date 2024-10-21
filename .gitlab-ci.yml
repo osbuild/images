@@ -3,9 +3,6 @@ stages:
   - init
   - gen
   - build
-  - ostree-gen
-  - ostree-build
-  - verify
   - finish
 
 variables:
@@ -20,21 +17,6 @@ init:
     - shell
   script:
     - schutzbot/update_github_status.sh start
-
-check-build-coverage:
-  stage: verify
-  extends: .terraform
-  variables:
-    RUNNER: aws/rhel-9.4-ga-x86_64
-    INTERNAL_NETWORK: "true"
-    PYTHONUNBUFFERED: 1
-  script:
-    - sudo ./test/scripts/install-dependencies
-    - ./test/scripts/check-build-coverage ./s3configs/
-  cache:
-    key: testcache
-    paths:
-      - .cache/osbuild-images
 
 finish:
   stage: finish
@@ -127,70 +109,6 @@ image-build-trigger-rhel-9.4-x86_64:
   needs:
     - generate-build-config-rhel-9.4-x86_64
 
-generate-ostree-build-config-rhel-9.4-aarch64:
-  stage: ostree-gen
-  extends: .terraform
-  variables:
-    RUNNER: aws/rhel-9.4-ga-aarch64
-    INTERNAL_NETWORK: "true"
-  script:
-    - sudo ./test/scripts/setup-osbuild-repo
-    - sudo ./test/scripts/install-dependencies
-    - ./test/scripts/generate-ostree-build-config --distro rhel-9.4 --arch aarch64 build-config.yml build-configs
-  artifacts:
-    paths:
-      - build-config.yml
-      - build-configs
-  needs:
-    - image-build-trigger-rhel-9.4-aarch64
-  cache:
-    key: testcache
-    paths:
-      - .cache/osbuild-images
-
-
-generate-ostree-build-config-rhel-9.4-x86_64:
-  stage: ostree-gen
-  extends: .terraform
-  variables:
-    RUNNER: aws/rhel-9.4-ga-x86_64
-    INTERNAL_NETWORK: "true"
-  script:
-    - sudo ./test/scripts/setup-osbuild-repo
-    - sudo ./test/scripts/install-dependencies
-    - ./test/scripts/generate-ostree-build-config --distro rhel-9.4 --arch x86_64 build-config.yml build-configs
-  artifacts:
-    paths:
-      - build-config.yml
-      - build-configs
-  needs:
-    - image-build-trigger-rhel-9.4-x86_64
-  cache:
-    key: testcache
-    paths:
-      - .cache/osbuild-images
-
-image-build-ostree-trigger-rhel-9.4-aarch64:
-  stage: ostree-build
-  trigger:
-    include:
-      - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-9.4-aarch64
-    strategy: depend
-  needs:
-    - generate-ostree-build-config-rhel-9.4-aarch64
-
-
-image-build-ostree-trigger-rhel-9.4-x86_64:
-  stage: ostree-build
-  trigger:
-    include:
-      - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-9.4-x86_64
-    strategy: depend
-  needs:
-    - generate-ostree-build-config-rhel-9.4-x86_64
-
 generate-manifests-rhel-9.4-ppc64le:
   stage: gen
   extends: .terraform
@@ -200,7 +118,7 @@ generate-manifests-rhel-9.4-ppc64le:
   script:
     - sudo ./test/scripts/setup-osbuild-repo
     - sudo ./test/scripts/install-dependencies
-    - go run ./cmd/gen-manifests --arches ppc64le --distros rhel-9.4 --workers 10 --metadata=false --output ./manifests
+    - go run -tags=exclude_graphdriver_btrfs ./cmd/gen-manifests --arches ppc64le --distros rhel-9.4 --workers 10 --metadata=false --output ./manifests
     - for manifest in ./manifests/*; do
         if osbuild --inspect $manifest > output; then
           echo "$manifest OK";
@@ -219,7 +137,7 @@ generate-manifests-rhel-9.4-s390x:
   script:
     - sudo ./test/scripts/setup-osbuild-repo
     - sudo ./test/scripts/install-dependencies
-    - go run ./cmd/gen-manifests --arches s390x --distros rhel-9.4 --workers 10 --metadata=false --output ./manifests
+    - go run -tags=exclude_graphdriver_btrfs ./cmd/gen-manifests --arches s390x --distros rhel-9.4 --workers 10 --metadata=false --output ./manifests
     - for manifest in ./manifests/*; do
         if osbuild --inspect $manifest > output; then
           echo "$manifest OK";

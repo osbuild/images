@@ -17,7 +17,6 @@ build/{distro}/{arch}/{image_type}/{config_name}:
     - {start_container}
     - ./test/scripts/build-image "{distro}" "{image_type}" "{config}"
     - ./test/scripts/boot-image "{distro}" "{arch}" "{image_type}" "{image_path}"
-    - ./test/scripts/upload-results "{distro}" "{image_type}" "{config}"
   extends: .terraform
   variables:
     RUNNER: aws/rhel-9.4-ga-{arch}

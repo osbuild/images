@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
 dnf -y install \
-    awscli2 \
-    btrfs-progs-devel \
     device-mapper-devel \
     gcc \
     go \

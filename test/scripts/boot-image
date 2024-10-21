@@ -198,18 +198,12 @@ def main():
 
     print(f"Testing image at {image_path}")
     bib_image_id = ""
-    match image_type:
-        case "ami" | "ec2" | "ec2-ha" | "ec2-sap" | "edge-ami":
-            boot_ami(distro, arch, image_type, image_path, build_config_path)
-        case "iot-bootable-container":
-            manifest_id = build_info["manifest-checksum"]
-            boot_container(distro, arch, image_type, image_path, manifest_id)
-            bib_ref = testlib.get_bib_ref()
-            bib_image_id = testlib.skopeo_inspect_id(f"docker://{bib_ref}", testlib.host_container_arch())
-        case _:
-            # skip
-            print(f"{image_type} boot tests are not supported yet")
-            return
+    if image_type in ("ami", "ec2", "ec2-ha", "ec2-sap", "edge-ami"):
+        boot_ami(distro, arch, image_type, image_path, build_config_path)
+    else:
+        # skip
+        print(f"{image_type} boot tests are not supported yet")
+        return
 
     print("✅ Marking boot successful")
     # amend build info with boot success

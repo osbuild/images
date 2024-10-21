@@ -102,7 +102,7 @@ def list_images(distros=None, arches=None, images=None):
     images_arg = "*"
     if images:
         images_arg = ",".join(images)
-    out, _ = runcmd(["go", "run", "./cmd/list-images", "--json",
+    out, _ = runcmd(["go", "run", "-tags=exclude_graphdriver_btrfs", "./cmd/list-images", "--json",
                      "--distros", distros_arg, "--arches", arches_arg, "--images", images_arg])
     return json.loads(out)
 
@@ -201,7 +201,9 @@ def check_config_names():
 def gen_manifests(outputdir, config_map=None, distros=None, arches=None, images=None,
                   commits=False, skip_no_config=False):
     # pylint: disable=too-many-arguments
-    cmd = ["go", "run", "./cmd/gen-manifests",
+    cmd = ["go", "run",
+           "-tags=exclude_graphdriver_btrfs",
+           "./cmd/gen-manifests",
            "--cache", os.path.join(TEST_CACHE_ROOT, "rpmmd"),
            "--output", outputdir,
            "--workers", "100"]
@@ -316,12 +318,8 @@ def filter_builds(manifests, distro=None, arch=None, skip_ostree_pull=True):
     os.makedirs(dl_path, exist_ok=True)
     build_requests = []
 
-    out, dl_ok = dl_build_info(dl_path, distro=distro, arch=arch)
-    # continue even if the dl failed; will build all configs
-    if dl_ok:
-        # print output which includes list of downloaded files for CI job log
-        print(out)
-
+    # NOTE: disabled cache download for RHEL because there no aws-cli, the build matrix is smaller, and we wont be
+    # making many PRs to the branch.
     osbuild_ver = get_osbuild_nevra()
 
     errors: list[str] = []
