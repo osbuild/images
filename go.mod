@@ -1,12 +1,11 @@
 module github.com/osbuild/images
 
 go 1.21.0
-
 toolchain go1.22.5
 
 require (
 	cloud.google.com/go/compute v1.28.1
-	cloud.google.com/go/storage v1.44.0
+	cloud.google.com/go/storage v1.45.0
 	github.com/Azure/azure-sdk-for-go v68.0.0+incompatible
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.4.1
 	github.com/Azure/go-autorest/autorest v0.11.29
@@ -15,7 +14,7 @@ require (
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/containers/common v0.60.4
 	github.com/containers/image/v5 v5.32.2
-	github.com/containers/storage v1.55.0
+	github.com/containers/storage v1.55.1
 	github.com/gobwas/glob v0.2.3
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/go-cmp v0.6.0
@@ -31,10 +30,10 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.9.0
 	github.com/ubccr/kerby v0.0.0-20230802201021-412be7bfaee5
-	github.com/vmware/govmomi v0.42.0
+	github.com/vmware/govmomi v0.44.1
 	golang.org/x/oauth2 v0.23.0
 	golang.org/x/sys v0.26.0
-	golang.org/x/tools v0.24.0
+	golang.org/x/tools v0.26.0
 	google.golang.org/api v0.201.0
 	gopkg.in/ini.v1 v1.67.0
 )
@@ -168,7 +167,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.29.0 // indirect
 	golang.org/x/crypto v0.28.0 // indirect
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
-	golang.org/x/mod v0.20.0 // indirect
+	golang.org/x/mod v0.21.0 // indirect
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/term v0.25.0 // indirect
