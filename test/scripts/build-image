@@ -26,7 +26,7 @@ def main():
         print(json.dumps(config, indent=2))
         config_name = config["name"]
 
-    testlib.runcmd(["go", "build", "-o", "./bin/build", "./cmd/build"])
+    testlib.runcmd(["go", "build", "-tags=exclude_graphdriver_btrfs", "-o", "./bin/build", "./cmd/build"])
 
     cmd = ["sudo", "-E", "./bin/build", "--output", "./build",
            "--distro", distro, "--image", image_type, "--config", config_path]
