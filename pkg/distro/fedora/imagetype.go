@@ -185,7 +185,7 @@ func (t *imageType) PartitionType() string {
 func (t *imageType) Manifest(bp *blueprint.Blueprint,
 	options distro.ImageOptions,
 	repos []rpmmd.RepoConfig,
-	seed int64) (*manifest.Manifest, []string, error) {
+	seed int64) (manifest.Manifest, []string, error) {
 
 	warnings, err := t.checkOptions(bp, options)
 	if err != nil {
@@ -253,14 +253,13 @@ func (t *imageType) Manifest(bp *blueprint.Blueprint,
 	if err != nil {
 		return nil, nil, err
 	}
-	mf := manifest.New()
-	mf.Distro = manifest.DISTRO_FEDORA
-	_, err = img.InstantiateManifest(&mf, repos, t.arch.distro.runner, rng)
+	mf := manifest.New(manifest.DISTRO_FEDORA)
+	_, err = img.InstantiateManifest(mf, repos, t.arch.distro.runner, rng)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return &mf, warnings, err
+	return mf, warnings, err
 }
 
 // checkOptions checks the validity and compatibility of options and customizations for the image type.

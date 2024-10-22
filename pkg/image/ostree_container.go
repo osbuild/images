@@ -40,7 +40,7 @@ func NewOSTreeContainer(ref string) *OSTreeContainer {
 	}
 }
 
-func (img *OSTreeContainer) InstantiateManifest(m *manifest.Manifest,
+func (img *OSTreeContainer) InstantiateManifest(m manifest.Manifest,
 	repos []rpmmd.RepoConfig,
 	runner runner.Runner,
 	rng *rand.Rand) (*artifact.Artifact, error) {

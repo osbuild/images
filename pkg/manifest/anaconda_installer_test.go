@@ -12,7 +12,7 @@ import (
 )
 
 func newAnacondaInstaller() *AnacondaInstaller {
-	m := &Manifest{}
+	m := &IntManifest{}
 	runner := &runner.Linux{}
 	build := NewBuild(m, runner, nil, nil)
 
