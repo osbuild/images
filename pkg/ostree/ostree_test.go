@@ -13,7 +13,7 @@ import (
 	"github.com/osbuild/images/pkg/rhsm"
 )
 
-func TestOstreeResolveRef(t *testing.T) {
+func TestOstreeresolveRef(t *testing.T) {
 	goodRef := "5330bb1b8820944567f519de66ad6354c729b6b490dea1c5a7ba320c9f147c58"
 	badRef := "<html>not a ref</html>"
 
@@ -78,7 +78,7 @@ func TestOstreeResolveRef(t *testing.T) {
 			{srvConf.Srv.URL, "valid/ostree/ref"}: goodRef,
 		}
 		for in, expOut := range validCases {
-			out, err := ResolveRef(in.location, in.ref, srvConf.RHSM, srvConf.Subs, &mTLSSrv.CAPath)
+			out, err := resolveRef(in.location, in.ref, srvConf.RHSM, srvConf.Subs, &mTLSSrv.CAPath)
 			assert.NoError(t, err)
 			assert.Equal(t, expOut, out)
 		}
@@ -91,7 +91,7 @@ func TestOstreeResolveRef(t *testing.T) {
 			{srvConf.Srv.URL, "get_bad_ref"}:        fmt.Sprintf("ostree repository \"%s/refs/heads/get_bad_ref\" returned invalid reference", srvConf.Srv.URL),
 		}
 		for in, expMsg := range errCases {
-			_, err := ResolveRef(in.location, in.ref, srvConf.RHSM, srvConf.Subs, &mTLSSrv.CAPath)
+			_, err := resolveRef(in.location, in.ref, srvConf.RHSM, srvConf.Subs, &mTLSSrv.CAPath)
 			assert.EqualError(t, err, expMsg)
 		}
 	}
