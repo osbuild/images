@@ -141,7 +141,7 @@ func verifyChecksum(commit string) bool {
 // ResolveRef resolves the URL path specified by the location and ref
 // (location+"refs/heads/"+ref) and returns the commit ID for the named ref. If
 // there is an error, it will be of type ResolveRefError.
-func ResolveRef(location, ref string, consumerCerts bool, subs *rhsm.Subscriptions, ca *string) (string, error) {
+func resolveRef(location, ref string, consumerCerts bool, subs *rhsm.Subscriptions, ca *string) (string, error) {
 	u, err := url.Parse(location)
 	if err != nil {
 		return "", NewResolveRefError("error parsing ostree repository location: %v", err)
@@ -252,7 +252,7 @@ func Resolve(source SourceSpec) (CommitSpec, error) {
 	// URL set: Resolve checksum
 	if source.URL != "" {
 		// If a URL is specified, we need to fetch the commit at the URL.
-		checksum, err := ResolveRef(source.URL, source.Ref, source.RHSM, nil, nil)
+		checksum, err := resolveRef(source.URL, source.Ref, source.RHSM, nil, nil)
 		if err != nil {
 			return CommitSpec{}, err // ResolveRefError
 		}
