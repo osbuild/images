@@ -49,7 +49,11 @@ func run(r io.Reader, w io.Writer) error {
 		return err
 	}
 
-	sourceSpec := ostree.SourceSpec(inputTree.Tree)
+	sourceSpec := ostree.SourceSpec{
+		URL:  inputTree.Tree.URL,
+		Ref:  inputTree.Tree.Ref,
+		RHSM: inputTree.Tree.RHSM,
+	}
 
 	var commitSpec ostree.CommitSpec
 	if !underTest() {
