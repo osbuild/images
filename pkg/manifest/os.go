@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"encoding/pem"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"github.com/osbuild/images/internal/environment"
 	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/arch"
+	"github.com/osbuild/images/pkg/cert"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/bootc"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
@@ -140,6 +142,8 @@ type OSCustomizations struct {
 	// Custom directories and files to create in the image
 	Directories []*fsnode.Directory
 	Files       []*fsnode.File
+
+	CACerts []string
 
 	FIPS bool
 
@@ -820,6 +824,25 @@ func (p *OS) serialize() osbuild.Pipeline {
 		if p.BootcConfig != nil {
 			panic("bootc config is only compatible with ostree-based images, this is a programming error")
 		}
+	}
+
+	if len(p.CACerts) > 0 {
+		for _, cc := range p.CACerts {
+			certs, err := cert.ParseCerts(cc)
+			if err != nil {
+				panic(fmt.Errorf("failed to parse CA certificates: %v", err))
+			}
+
+			for _, c := range certs {
+				path := filepath.Join("/etc/pki/ca-trust/source/anchors", filepath.Base(c.SerialNumber.Text(16))+".pem")
+				f, err := fsnode.NewFile(path, nil, "root", "root", pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: c.Raw}))
+				if err != nil {
+					panic(err)
+				}
+				pipeline.AddStages(osbuild.GenFileNodesStages([]*fsnode.File{f})...)
+			}
+		}
+		pipeline.AddStage(osbuild.NewCAStageStage())
 	}
 
 	return pipeline
