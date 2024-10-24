@@ -119,6 +119,12 @@ func resolvePipelineCommits(commitSources map[string][]ostree.SourceSpec) (map[s
 		commitSpecs := make([]ostree.CommitSpec, len(commitSources))
 		for idx, commitSource := range commitSources {
 			var err error
+			commitSource.MTLS = &ostree.MTLS{
+				CA:         os.Getenv("OSBUILD_SOURCES_OSTREE_SSL_CA_CERT"),
+				ClientCert: os.Getenv("OSBUILD_SOURCES_OSTREE_SSL_CLIENT_CERT"),
+				ClientKey:  os.Getenv("OSBUILD_SOURCES_OSTREE_SSL_CLIENT_KEY"),
+			}
+			commitSource.Proxy = os.Getenv("OSBUILD_SOURCES_OSTREE_PROXY")
 			commitSpecs[idx], err = ostree.Resolve(commitSource)
 			if err != nil {
 				return nil, err

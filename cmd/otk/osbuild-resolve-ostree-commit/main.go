@@ -49,7 +49,16 @@ func run(r io.Reader, w io.Writer) error {
 		return err
 	}
 
-	sourceSpec := ostree.SourceSpec(inputTree.Tree)
+	var sourceSpec ostree.SourceSpec
+	sourceSpec.URL = inputTree.Tree.URL
+	sourceSpec.Ref = inputTree.Tree.Ref
+	sourceSpec.RHSM = inputTree.Tree.RHSM
+	sourceSpec.MTLS = &ostree.MTLS{
+		CA:         os.Getenv("OSBUILD_SOURCES_OSTREE_SSL_CA_CERT"),
+		ClientCert: os.Getenv("OSBUILD_SOURCES_OSTREE_SSL_CLIENT_CERT"),
+		ClientKey:  os.Getenv("OSBUILD_SOURCES_OSTREE_SSL_CLIENT_KEY"),
+	}
+	sourceSpec.Proxy = os.Getenv("OSBUILD_SOURCES_OSTREE_PROXY")
 
 	var commitSpec ostree.CommitSpec
 	if !underTest() {

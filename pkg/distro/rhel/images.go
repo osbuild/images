@@ -3,6 +3,7 @@ package rhel
 import (
 	"fmt"
 	"math/rand"
+	"os"
 
 	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/blueprint"
@@ -782,6 +783,12 @@ func makeOSTreeParentCommit(options *ostree.ImageOptions, defaultRef string) (*o
 		URL:  options.URL,
 		Ref:  parentRef,
 		RHSM: options.RHSM,
+		MTLS: &ostree.MTLS{
+			CA:         os.Getenv("OSBUILD_SOURCES_OSTREE_SSL_CA_CERT"),
+			ClientCert: os.Getenv("OSBUILD_SOURCES_OSTREE_SSL_CLIENT_CERT"),
+			ClientKey:  os.Getenv("OSBUILD_SOURCES_OSTREE_SSL_CLIENT_KEY"),
+		},
+		Proxy: os.Getenv("OSBUILD_SOURCES_OSTREE_PROXY"),
 	}
 	return parentCommit, commitRef
 }
