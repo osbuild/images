@@ -8,6 +8,7 @@ import (
 
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distrofactory"
+	"github.com/osbuild/images/pkg/distrosort"
 )
 
 // XXX: move this file into distro factory?
@@ -21,7 +22,7 @@ type FilterResult struct {
 func FilterDistros(fac *distrofactory.Factory, distroNames []string, filters Filters) ([]FilterResult, error) {
 	var res []FilterResult
 
-	if err := distro.SortNames(distroNames); err != nil {
+	if err := distrosort.Names(distroNames); err != nil {
 		return nil, err
 	}
 	for _, distroName := range distroNames {
