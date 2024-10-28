@@ -101,40 +101,6 @@ func TestPartitioningValidation(t *testing.T) {
 			},
 			expectedMsg: "",
 		},
-		"unhappy-btrfs+lvm": {
-			partitioning: &blueprint.PartitioningCustomization{
-				Plain: &blueprint.PlainFilesystemCustomization{
-					Filesystems: []blueprint.FilesystemCustomization{
-						{
-							Mountpoint: "/data",
-						},
-					},
-				},
-				Btrfs: &blueprint.BtrfsCustomization{
-					Volumes: []blueprint.BtrfsVolumeCustomization{
-						{
-							Subvolumes: []blueprint.BtrfsSubvolumeCustomization{
-								{
-									Mountpoint: "/backup",
-								},
-							},
-						},
-					},
-				},
-				LVM: &blueprint.LVMCustomization{
-					VolumeGroups: []blueprint.VGCustomization{
-						{
-							LogicalVolumes: []blueprint.LVCustomization{
-								{
-									FilesystemCustomization: blueprint.FilesystemCustomization{Mountpoint: "/"},
-								},
-							},
-						},
-					},
-				},
-			},
-			expectedMsg: `btrfs and lvm partitioning cannot be combined`,
-		},
 		"unhappy-plain-dupes": {
 			partitioning: &blueprint.PartitioningCustomization{
 				Plain: &blueprint.PlainFilesystemCustomization{
@@ -279,68 +245,6 @@ func TestPartitioningValidation(t *testing.T) {
 				},
 			},
 			expectedMsg: `duplicate mountpoint "/dupydupe" in partitioning customizations`,
-		},
-		"unhappy-multibtrfs": {
-			partitioning: &blueprint.PartitioningCustomization{
-				Plain: &blueprint.PlainFilesystemCustomization{
-					Filesystems: []blueprint.FilesystemCustomization{
-						{
-							Mountpoint: "/data",
-						},
-					},
-				},
-				Btrfs: &blueprint.BtrfsCustomization{
-					Volumes: []blueprint.BtrfsVolumeCustomization{
-						{
-							Subvolumes: []blueprint.BtrfsSubvolumeCustomization{
-								{
-									Name:       "root",
-									Mountpoint: "/",
-								},
-							},
-						},
-						{
-							Subvolumes: []blueprint.BtrfsSubvolumeCustomization{
-								{
-									Name:       "home",
-									Mountpoint: "/home",
-								},
-							},
-						},
-					},
-				},
-			},
-			expectedMsg: `multiple btrfs volumes are not yet supported`,
-		},
-		"unhappy-multivg": {
-			partitioning: &blueprint.PartitioningCustomization{
-				Plain: &blueprint.PlainFilesystemCustomization{
-					Filesystems: []blueprint.FilesystemCustomization{
-						{
-							Mountpoint: "/data",
-						},
-					},
-				},
-				LVM: &blueprint.LVMCustomization{
-					VolumeGroups: []blueprint.VGCustomization{
-						{
-							LogicalVolumes: []blueprint.LVCustomization{
-								{
-									FilesystemCustomization: blueprint.FilesystemCustomization{Mountpoint: "/"},
-								},
-							},
-						},
-						{
-							LogicalVolumes: []blueprint.LVCustomization{
-								{
-									FilesystemCustomization: blueprint.FilesystemCustomization{Mountpoint: "/var/log"},
-								},
-							},
-						},
-					},
-				},
-			},
-			expectedMsg: `multiple LVM volume groups are not yet supported`,
 		},
 		"unhappy-emptymp": {
 			partitioning: &blueprint.PartitioningCustomization{
@@ -661,6 +565,124 @@ func TestPartitioningValidation(t *testing.T) {
 		tc := testCases[name]
 		t.Run(name, func(t *testing.T) {
 			err := tc.partitioning.Validate()
+			if tc.expectedMsg != "" {
+				assert.EqualError(t, err, tc.expectedMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestPartitioningLayoutConstraints(t *testing.T) {
+	type testCase struct {
+		partitioning *blueprint.PartitioningCustomization
+		expectedMsg  string
+	}
+
+	testCases := map[string]testCase{
+		"unhappy-btrfs+lvm": {
+			partitioning: &blueprint.PartitioningCustomization{
+				Plain: &blueprint.PlainFilesystemCustomization{
+					Filesystems: []blueprint.FilesystemCustomization{
+						{
+							Mountpoint: "/data",
+						},
+					},
+				},
+				Btrfs: &blueprint.BtrfsCustomization{
+					Volumes: []blueprint.BtrfsVolumeCustomization{
+						{
+							Subvolumes: []blueprint.BtrfsSubvolumeCustomization{
+								{
+									Mountpoint: "/backup",
+								},
+							},
+						},
+					},
+				},
+				LVM: &blueprint.LVMCustomization{
+					VolumeGroups: []blueprint.VGCustomization{
+						{
+							LogicalVolumes: []blueprint.LVCustomization{
+								{
+									FilesystemCustomization: blueprint.FilesystemCustomization{Mountpoint: "/"},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedMsg: `btrfs and lvm partitioning cannot be combined`,
+		},
+		"unhappy-multibtrfs": {
+			partitioning: &blueprint.PartitioningCustomization{
+				Plain: &blueprint.PlainFilesystemCustomization{
+					Filesystems: []blueprint.FilesystemCustomization{
+						{
+							Mountpoint: "/data",
+						},
+					},
+				},
+				Btrfs: &blueprint.BtrfsCustomization{
+					Volumes: []blueprint.BtrfsVolumeCustomization{
+						{
+							Subvolumes: []blueprint.BtrfsSubvolumeCustomization{
+								{
+									Name:       "root",
+									Mountpoint: "/",
+								},
+							},
+						},
+						{
+							Subvolumes: []blueprint.BtrfsSubvolumeCustomization{
+								{
+									Name:       "home",
+									Mountpoint: "/home",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedMsg: `multiple btrfs volumes are not yet supported`,
+		},
+		"unhappy-multivg": {
+			partitioning: &blueprint.PartitioningCustomization{
+				Plain: &blueprint.PlainFilesystemCustomization{
+					Filesystems: []blueprint.FilesystemCustomization{
+						{
+							Mountpoint: "/data",
+						},
+					},
+				},
+				LVM: &blueprint.LVMCustomization{
+					VolumeGroups: []blueprint.VGCustomization{
+						{
+							LogicalVolumes: []blueprint.LVCustomization{
+								{
+									FilesystemCustomization: blueprint.FilesystemCustomization{Mountpoint: "/"},
+								},
+							},
+						},
+						{
+							LogicalVolumes: []blueprint.LVCustomization{
+								{
+									FilesystemCustomization: blueprint.FilesystemCustomization{Mountpoint: "/var/log"},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedMsg: `multiple LVM volume groups are not yet supported`,
+		},
+	}
+
+	for name := range testCases {
+		tc := testCases[name]
+		t.Run(name, func(t *testing.T) {
+			err := tc.partitioning.ValidateLayoutConstraints()
 			if tc.expectedMsg != "" {
 				assert.EqualError(t, err, tc.expectedMsg)
 			} else {

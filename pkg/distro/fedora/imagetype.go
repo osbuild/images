@@ -391,6 +391,10 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 		return nil, err
 	}
 
+	if err := partitioning.ValidateLayoutConstraints(); err != nil {
+		return nil, err
+	}
+
 	if err := blueprint.CheckMountpointsPolicy(mountpoints, policies.MountpointPolicies); err != nil {
 		return nil, err
 	}

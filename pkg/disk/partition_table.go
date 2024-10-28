@@ -242,6 +242,11 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 		customizations = &blueprint.PartitioningCustomization{}
 	}
 
+	// validate the partitioning customizations before using them
+	if err := customizations.Validate(); err != nil {
+		return nil, fmt.Errorf("error generating partition table: %w", err)
+	}
+
 	pt := &PartitionTable{}
 
 	switch options.PartitionTableType {
