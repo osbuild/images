@@ -242,9 +242,11 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 		customizations = &blueprint.PartitioningCustomization{}
 	}
 
+	errPrefix := "error generating partition table:"
+
 	// validate the partitioning customizations before using them
 	if err := customizations.Validate(); err != nil {
-		return nil, fmt.Errorf("error generating partition table: %w", err)
+		return nil, fmt.Errorf(" %w", err)
 	}
 
 	pt := &PartitionTable{}
@@ -256,11 +258,11 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 		// default to "gpt"
 		pt.Type = PT_GPT.String()
 	default:
-		return nil, fmt.Errorf("error generating partition table: invalid partition table type enum value: %d", options.PartitionTableType)
+		return nil, fmt.Errorf("%s invalid partition table type enum value: %d", errPrefix, options.PartitionTableType)
 	}
 
 	if err := addPartitionsForBootMode(pt, options.BootMode); err != nil {
-		return nil, fmt.Errorf("error generating partition table: %w", err)
+		return nil, fmt.Errorf("%s %w", errPrefix, err)
 	}
 	if customizations.LVM != nil || customizations.Btrfs != nil {
 		// The boot type will be the default only if it's a supported filesystem
@@ -280,10 +282,10 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 	}
 
 	if err := addPartitionsForPlain(pt, customizations.Plain, options); err != nil {
-		return nil, fmt.Errorf("error generating partition table: %w", err)
+		return nil, fmt.Errorf("%s %w", errPrefix, err)
 	}
 	if err := addPartitionsForLVM(pt, customizations.LVM, options); err != nil {
-		return nil, fmt.Errorf("error generating partition table: %w", err)
+		return nil, fmt.Errorf("%s %w", errPrefix, err)
 	}
 	addPartitionsForBtrfs(pt, customizations.Btrfs)
 
