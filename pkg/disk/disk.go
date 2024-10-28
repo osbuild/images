@@ -110,6 +110,41 @@ func NewFSType(s string) (FSType, error) {
 	}
 }
 
+// PartitionTableType is the partition table type enum.
+type PartitionTableType uint64
+
+const (
+	PT_NONE PartitionTableType = iota
+	PT_DOS
+	PT_GPT
+)
+
+func (t PartitionTableType) String() string {
+	switch t {
+	case PT_NONE:
+		return ""
+	case PT_DOS:
+		return "dos"
+	case PT_GPT:
+		return "gpt"
+	default:
+		panic(fmt.Sprintf("unknown or unsupported partition table type with enum value %d", t))
+	}
+}
+
+func NewPartitionTableType(s string) (PartitionTableType, error) {
+	switch s {
+	case "":
+		return PT_NONE, nil
+	case "dos":
+		return PT_DOS, nil
+	case "gpt":
+		return PT_GPT, nil
+	default:
+		return PT_NONE, fmt.Errorf("unknown or unsupported partition table type name: %s", s)
+	}
+}
+
 // Entity is the base interface for all disk-related entities.
 type Entity interface {
 	// Clone returns a deep copy of the entity.
