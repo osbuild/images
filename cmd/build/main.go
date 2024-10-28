@@ -20,7 +20,6 @@ import (
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/ostree"
-	"github.com/osbuild/images/pkg/reporegistry"
 	"github.com/osbuild/images/pkg/rhsm/facts"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/sbom"
@@ -165,6 +164,28 @@ func u(s string) string {
 	return strings.Replace(s, "-", "_", -1)
 }
 
+// loadRepos loads the repositories defined at the path and returns just the
+// ones for the specified architecture. If the path is a directory, the distro
+// name is appended to the path as a filename (with .json extension).
+func loadRepos(path, distro, arch string) ([]rpmmd.RepoConfig, error) {
+	pstat, err := os.Stat(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to stat %q: %w", path, err)
+	}
+
+	if pstat.IsDir() {
+		path = filepath.Join(path, fmt.Sprintf("%s.json", distro))
+	}
+
+	repos, err := rpmmd.LoadRepositoriesFromFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load repositories from %q: %w", path, err)
+	}
+
+	// NOTE: this can be empty
+	return repos[arch], nil
+}
+
 func filterRepos(repos []rpmmd.RepoConfig, typeName string) []rpmmd.RepoConfig {
 	filtered := make([]rpmmd.RepoConfig, 0)
 	for _, repo := range repos {
@@ -184,10 +205,11 @@ func filterRepos(repos []rpmmd.RepoConfig, typeName string) []rpmmd.RepoConfig {
 
 func run() error {
 	// common args
-	var outputDir, osbuildStore, rpmCacheRoot string
+	var outputDir, osbuildStore, rpmCacheRoot, repositories string
 	flag.StringVar(&outputDir, "output", ".", "artifact output directory")
 	flag.StringVar(&osbuildStore, "store", ".osbuild", "osbuild store for intermediate pipeline trees")
 	flag.StringVar(&rpmCacheRoot, "rpmmd", "/tmp/rpmmd", "rpm metadata cache directory")
+	flag.StringVar(&repositories, "repositories", "test/data/repositories", "path to repository file or directory")
 
 	// osbuild checkpoint arg
 	var checkpoints cmdutil.MultiValue
@@ -206,10 +228,6 @@ func run() error {
 		os.Exit(1)
 	}
 
-	testedRepoRegistry, err := reporegistry.NewTestedDefault()
-	if err != nil {
-		return fmt.Errorf("failed to create repo registry with tested distros: %v", err)
-	}
 	distroFac := distrofactory.NewDefault()
 
 	config, err := buildconfig.New(configFile)
@@ -244,7 +262,7 @@ func run() error {
 	}
 
 	// get repositories
-	repos, err := testedRepoRegistry.ReposByArchName(distroName, archName, true)
+	repos, err := loadRepos(repositories, distroName, archName)
 	if err != nil {
 		return fmt.Errorf("failed to get repositories for %s/%s: %w", distroName, archName, err)
 	}
