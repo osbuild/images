@@ -16,22 +16,20 @@ type ID struct {
 	MinorVersion int
 }
 
-func (id ID) String() string {
+func (id ID) versionString() string {
 	if id.MinorVersion == -1 {
-		return fmt.Sprintf("%s-%d", id.Name, id.MajorVersion)
+		return fmt.Sprintf("%d", id.MajorVersion)
+	} else {
+		return fmt.Sprintf("%d.%d", id.MajorVersion, id.MinorVersion)
 	}
+}
 
-	return fmt.Sprintf("%s-%d.%d", id.Name, id.MajorVersion, id.MinorVersion)
+func (id ID) String() string {
+	return fmt.Sprintf("%s-%s", id.Name, id.versionString())
 }
 
 func (id ID) Version() (*version.Version, error) {
-	var verStr string
-	if id.MinorVersion == -1 {
-		verStr = fmt.Sprintf("%d", id.MajorVersion)
-	} else {
-		verStr = fmt.Sprintf("%d.%d", id.MajorVersion, id.MinorVersion)
-	}
-	return version.NewVersion(verStr)
+	return version.NewVersion(id.versionString())
 }
 
 type ParseError struct {
