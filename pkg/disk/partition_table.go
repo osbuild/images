@@ -1175,7 +1175,7 @@ func ensureRootFilesystem(pt *PartitionTable, options *CustomPartitionTableOptio
 	for _, part := range pt.Partitions {
 		switch payload := part.Payload.(type) {
 		case *LVMVolumeGroup:
-			if options.DefaultFSType == FS_NONE {
+			if options == nil || options.DefaultFSType == FS_NONE {
 				return fmt.Errorf("error creating root logical volume: no default filesystem type")
 			}
 			rootfs := &Filesystem{
@@ -1203,7 +1203,7 @@ func ensureRootFilesystem(pt *PartitionTable, options *CustomPartitionTableOptio
 	}
 
 	// We're going to create a root partition, so we have to ensure the default type is set.
-	if options.DefaultFSType == FS_NONE {
+	if options == nil || options.DefaultFSType == FS_NONE {
 		return fmt.Errorf("error creating root partition: no default filesystem type")
 	}
 
