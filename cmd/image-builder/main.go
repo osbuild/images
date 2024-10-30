@@ -39,6 +39,13 @@ func cmdManifest(cmd *cobra.Command, args []string) error {
 	return outputManifest(osStdout, distroName, imgType, archStr)
 }
 
+func cmdBuild(cmd *cobra.Command, args []string) error {
+	distroName := args[0]
+	imgType := args[1]
+
+	return buildImage(osStdout, distroName, imgType)
+}
+
 func run() error {
 	// images logs a bunch of stuff to Debug/Info that we we do not
 	// want to show
@@ -75,6 +82,16 @@ operating sytsems like centos and RHEL with easy customizations support.`,
 		Hidden:       true,
 	}
 	rootCmd.AddCommand(manifestCmd)
+
+	buildCmd := &cobra.Command{
+		Use:          "build <distro> <image-type>",
+		Short:        "Build the given distro/image-type, e.g. centos-9 qcow2",
+		RunE:         cmdBuild,
+		SilenceUsage: true,
+		Args:         cobra.ExactArgs(2),
+	}
+	rootCmd.AddCommand(buildCmd)
+	// XXX: add --output=text,json and streaming
 
 	return rootCmd.Execute()
 }

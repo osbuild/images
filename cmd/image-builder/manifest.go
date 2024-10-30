@@ -30,29 +30,15 @@ func depsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d dist
 }
 
 func outputManifest(out io.Writer, distroName, imgTypeStr, archStr string) error {
-	filterExprs := []string{
-		fmt.Sprintf("name:%s", distroName),
-		fmt.Sprintf("arch:%s", archStr),
-		fmt.Sprintf("type:%s", imgTypeStr),
-	}
-	filteredResults, err := getFilteredImages(filterExprs)
+	// XXX: what/how much do we expose here?
+	var options distro.ImageOptions
+
+	filterResult, err := getOneImage(distroName, imgTypeStr, archStr)
 	if err != nil {
 		return err
 	}
-	switch len(filteredResults) {
-	case 0:
-		return fmt.Errorf("cannot find image for %s %s %s", distroName, imgTypeStr, archStr)
-	case 1:
-		// nothing
-	default:
-		return fmt.Errorf("internal error: found %v results for %s %s %s", len(filteredResults), distroName, imgTypeStr, archStr)
-	}
-
-	var bp blueprint.Blueprint
-	// XXX: what/how much do we expose here?
-	options := distro.ImageOptions{}
-	distro := filteredResults[0].Distro
-	imgType := filteredResults[0].ImgType
+	distro := filterResult.Distro
+	imgType := filterResult.ImgType
 
 	reporeg, err := newRepoRegistry()
 	if err != nil {
@@ -62,6 +48,8 @@ func outputManifest(out io.Writer, distroName, imgTypeStr, archStr string) error
 	if err != nil {
 		return err
 	}
+
+	var bp blueprint.Blueprint
 	preManifest, warnings, err := imgType.Manifest(&bp, options, repos, 0)
 	if err != nil {
 		return err

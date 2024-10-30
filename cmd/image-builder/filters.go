@@ -19,6 +19,27 @@ type FilterResult struct {
 	ImgType distro.ImageType
 }
 
+func getOneImage(distroName, imgTypeStr, archStr string) (*FilterResult, error) {
+	filterExprs := []string{
+		fmt.Sprintf("name:%s", distroName),
+		fmt.Sprintf("arch:%s", archStr),
+		fmt.Sprintf("type:%s", imgTypeStr),
+	}
+	filteredResults, err := getFilteredImages(filterExprs)
+	if err != nil {
+		return nil, err
+	}
+	switch len(filteredResults) {
+	case 0:
+		return nil, fmt.Errorf("cannot find image for %s %s %s", distroName, imgTypeStr, archStr)
+	case 1:
+		return &filteredResults[0], nil
+	default:
+		return nil, fmt.Errorf("internal error: found %v results for %s %s %s", len(filteredResults), distroName, imgTypeStr, archStr)
+	}
+}
+
+// XXX: rename FilterDistros to FilterImages(?)
 func FilterDistros(fac *distrofactory.Factory, distroNames []string, filters Filters) ([]FilterResult, error) {
 	var res []FilterResult
 
