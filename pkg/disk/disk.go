@@ -211,6 +211,8 @@ func NewVolIDFromRand(r *rand.Rand) string {
 // the existing set. If the base itself does not exist, it is returned as is,
 // otherwise a two digit number is added and incremented until a unique string
 // is found.
+// This function is mimicking what blivet does for avoiding name collisions.
+// See blivet/blivet.py#L1060 commit 2eb4bd4
 func genUniqueString(base string, existing map[string]bool) (string, error) {
 	if !existing[base] {
 		return base, nil
