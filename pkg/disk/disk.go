@@ -19,6 +19,7 @@ package disk
 
 import (
 	"encoding/hex"
+	"fmt"
 	"io"
 	"math/rand"
 	"reflect"
@@ -204,4 +205,23 @@ func NewVolIDFromRand(r *rand.Rand) string {
 		panic("expected four random bytes")
 	}
 	return hex.EncodeToString(volid)
+}
+
+// genUniqueString returns a string based on base that does does not exist in
+// the existing set. If the base itself does not exist, it is returned as is,
+// otherwise a two digit number is added and incremented until a unique string
+// is found.
+func genUniqueString(base string, existing map[string]bool) (string, error) {
+	if !existing[base] {
+		return base, nil
+	}
+
+	for i := 0; i < 100; i++ {
+		uniq := fmt.Sprintf("%s%02d", base, i)
+		if !existing[uniq] {
+			return uniq, nil
+		}
+	}
+
+	return "", fmt.Errorf("name collision: could not generate unique version of %q", base)
 }
