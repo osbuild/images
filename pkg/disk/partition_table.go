@@ -278,7 +278,9 @@ func NewCustomPartitionTable(customizations *blueprint.PartitioningCustomization
 
 		// we need a /boot partition to boot LVM or Btrfs, create boot
 		// partition if it does not already exist
-		ensureBootPartition(pt, bootFsType)
+		if err := ensureBootPartition(pt, bootFsType); err != nil {
+			return nil, fmt.Errorf("%s %w", errPrefix, err)
+		}
 	}
 
 	if err := addPartitionsForPlain(pt, customizations.Plain, options); err != nil {
@@ -1257,22 +1259,39 @@ func ensureRootFilesystem(pt *PartitionTable, options *CustomPartitionTableOptio
 // append the boot partition to the end of the existing partition table
 // therefore it is best to call this function early to put boot near the front
 // (as is conventional).
-func ensureBootPartition(pt *PartitionTable, bootFsType FSType) {
-	bootPath := entityPath(pt, "/boot")
-	if bootPath != nil {
-		return
+func ensureBootPartition(pt *PartitionTable, bootFsType FSType) error {
+	// collect all labels and subvolume names to avoid conflicts
+	labels := make(map[string]bool)
+	var foundBoot bool
+	_ = pt.ForEachMountable(func(mnt Mountable, path []Entity) error {
+		if mnt.GetMountpoint() == "/boot" {
+			foundBoot = true
+			return nil
+		}
+
+		labels[mnt.GetFSSpec().Label] = true
+		return nil
+	})
+	if foundBoot {
+		// nothing to do
+		return nil
 	}
 
+	bootLabel, err := genUniqueString("boot", labels)
+	if err != nil {
+		return fmt.Errorf("error creating boot partition: %w", err)
+	}
 	bootPart := Partition{
 		Type:     XBootLDRPartitionGUID,
 		Bootable: false,
 		Size:     512 * datasizes.MiB,
 		Payload: &Filesystem{
 			Type:         bootFsType.String(),
-			Label:        "boot",
+			Label:        bootLabel,
 			Mountpoint:   "/boot",
 			FSTabOptions: "defaults",
 		},
 	}
 	pt.Partitions = append(pt.Partitions, bootPart)
+	return nil
 }
