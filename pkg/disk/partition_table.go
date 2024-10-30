@@ -978,9 +978,8 @@ func EnsureRootFilesystem(pt *PartitionTable, defaultFsType FSType) error {
 		return fmt.Errorf("error creating root partition: %w", err)
 	}
 	rootpart := Partition{
-		Type:     FilesystemDataGUID,
-		Bootable: false,
-		Size:     0, // Set the size to 0 and it will be adjusted by EnsureDirectorySizes() and relayout()
+		Type: FilesystemDataGUID,
+		Size: 0, // Set the size to 0 and it will be adjusted by EnsureDirectorySizes() and relayout()
 		Payload: &Filesystem{
 			Type:         defaultFsType.String(),
 			Label:        rootLabel,
