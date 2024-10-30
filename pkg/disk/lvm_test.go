@@ -30,7 +30,7 @@ func TestLVMVCreateMountpoint(t *testing.T) {
 	assert.Equal("home_testlv00", dedup.Name)
 
 	// Lets collide it
-	for i := 0; i < 98; i++ {
+	for i := 0; i < 99; i++ {
 		_, err = vg.CreateMountpoint("/home/test", 0)
 		assert.NoError(err)
 	}
