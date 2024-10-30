@@ -1167,7 +1167,24 @@ func addPartitionsForBtrfs(pt *PartitionTable, btrfs *blueprint.BtrfsCustomizati
 // - The first Btrfs volume if one exists, otherwise
 // - At the end of the plain partitions.
 func ensureRootFilesystem(pt *PartitionTable, options *CustomPartitionTableOptions) error {
-	if entityPath(pt, "/") != nil {
+	// collect all labels and subvolume names to avoid conflicts
+	subvolNames := make(map[string]bool)
+	labels := make(map[string]bool)
+	var foundRoot bool
+	_ = pt.ForEachMountable(func(mnt Mountable, path []Entity) error {
+		if mnt.GetMountpoint() == "/" {
+			foundRoot = true
+			return nil
+		}
+
+		labels[mnt.GetFSSpec().Label] = true
+		switch mountable := mnt.(type) {
+		case *BtrfsSubvolume:
+			subvolNames[mountable.Name] = true
+		}
+		return nil
+	})
+	if foundRoot {
 		// nothing to do
 		return nil
 	}
@@ -1178,9 +1195,14 @@ func ensureRootFilesystem(pt *PartitionTable, options *CustomPartitionTableOptio
 			if options == nil || options.DefaultFSType == FS_NONE {
 				return fmt.Errorf("error creating root logical volume: no default filesystem type")
 			}
+
+			rootLabel, err := genUniqueString("root", labels)
+			if err != nil {
+				return fmt.Errorf("error creating root logical volume: %w", err)
+			}
 			rootfs := &Filesystem{
 				Type:         options.DefaultFSType.String(),
-				Label:        "root",
+				Label:        rootLabel,
 				Mountpoint:   "/",
 				FSTabOptions: "defaults",
 			}
@@ -1193,8 +1215,12 @@ func ensureRootFilesystem(pt *PartitionTable, options *CustomPartitionTableOptio
 			}
 			return nil
 		case *Btrfs:
+			rootName, err := genUniqueString("root", subvolNames)
+			if err != nil {
+				return fmt.Errorf("error creating root subvolume: %w", err)
+			}
 			rootsubvol := BtrfsSubvolume{
-				Name:       "root",
+				Name:       rootName,
 				Mountpoint: "/",
 			}
 			payload.Subvolumes = append(payload.Subvolumes, rootsubvol)
@@ -1207,14 +1233,18 @@ func ensureRootFilesystem(pt *PartitionTable, options *CustomPartitionTableOptio
 		return fmt.Errorf("error creating root partition: no default filesystem type")
 	}
 
-	// add a plan root partition at the end of the partition table
+	// add a plain root partition at the end of the partition table
+	rootLabel, err := genUniqueString("root", labels)
+	if err != nil {
+		return fmt.Errorf("error creating root partition: %w", err)
+	}
 	rootpart := Partition{
 		Type:     FilesystemDataGUID,
 		Bootable: false,
 		Size:     0, // Set the size to 0 and it will be adjusted by EnsureDirectorySizes() and relayout()
 		Payload: &Filesystem{
 			Type:         options.DefaultFSType.String(),
-			Label:        "root",
+			Label:        rootLabel,
 			Mountpoint:   "/",
 			FSTabOptions: "defaults",
 		},
