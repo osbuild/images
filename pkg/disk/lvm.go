@@ -95,25 +95,10 @@ func (vg *LVMVolumeGroup) genLVName(base string) (string, error) {
 
 	base = lvname(base) // if the mountpoint is used (i.e. if the base contains /), sanitize it and append 'lv'
 
-	var exists bool
-	name := base
-
 	// Make sure that we don't collide with an existing volume, e.g. 'home/test'
 	// and /home/test_test would collide. We try 100 times and then give up. This
 	// is mimicking what blivet does. See blivet/blivet.py#L1060 commit 2eb4bd4
-	for i := 0; i < 100; i++ {
-		exists = names[name]
-		if !exists {
-			break
-		}
-
-		name = fmt.Sprintf("%s%02d", base, i)
-	}
-
-	if exists {
-		return "", fmt.Errorf("could not create logical volume: name collision")
-	}
-	return name, nil
+	return genUniqueString(base, names)
 }
 
 // CreateLogicalVolume creates a new logical volume on the volume group. If a
