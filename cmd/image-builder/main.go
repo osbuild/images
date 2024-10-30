@@ -6,8 +6,9 @@ import (
 	"os"
 
 	"github.com/sirupsen/logrus"
-
 	"github.com/spf13/cobra"
+
+	"github.com/osbuild/images/pkg/arch"
 )
 
 var osStdout io.Writer = os.Stdout
@@ -23,6 +24,19 @@ func cmdListImages(cmd *cobra.Command, args []string) error {
 	}
 
 	return listImages(osStdout, format, filter)
+}
+
+func cmdManifest(cmd *cobra.Command, args []string) error {
+	distroName := args[0]
+	imgType := args[1]
+	var archStr string
+	if len(args) > 2 {
+		archStr = args[2]
+	} else {
+		archStr = arch.Current().String()
+	}
+
+	return outputManifest(osStdout, distroName, imgType, archStr)
 }
 
 func run() error {
@@ -44,12 +58,23 @@ operating sytsems like centos and RHEL with easy customizations support.`,
 	// distro names?
 	listImagesCmd := &cobra.Command{
 		Use:          "list-images",
+		Short:        "List buildable images, use --filter to limit further",
 		RunE:         cmdListImages,
 		SilenceUsage: true,
 	}
 	listImagesCmd.Flags().StringArray("filter", nil, "Filter distributions by a specific criteria")
 	listImagesCmd.Flags().String("format", "", "Output in a specific format (text,json)")
 	rootCmd.AddCommand(listImagesCmd)
+
+	manifestCmd := &cobra.Command{
+		Use:          "manifest <distro> <image-type> [<arch>]",
+		Short:        "Build manifest for the given distro/image-type, e.g. centos-9 qcow2",
+		RunE:         cmdManifest,
+		SilenceUsage: true,
+		Args:         cobra.MinimumNArgs(2),
+		Hidden:       true,
+	}
+	rootCmd.AddCommand(manifestCmd)
 
 	return rootCmd.Execute()
 }

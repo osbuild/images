@@ -17,23 +17,32 @@ var repositoryConfigs = []string{
 	"/usr/share/osbuild-composer",
 }
 
-func listImages(out io.Writer, format string, filterExprs []string) error {
+// XXX: move to pkg/reporegistry
+func newRepoRegistry() (*reporegistry.RepoRegistry, error) {
 	// useful for development/debugging, e.g. run:
 	// go build && IMAGE_BUILDER_EXTRA_REPOS_PATH=../../test/data ./image-builder
 	if extraReposPath := os.Getenv("IMAGE_BUILDER_EXTRA_REPOS_PATH"); extraReposPath != "" {
 		repositoryConfigs = append(repositoryConfigs, strings.Split(extraReposPath, ":")...)
 	}
 
-	repos, err := reporegistry.New(repositoryConfigs)
+	return reporegistry.New(repositoryConfigs)
+}
+
+func getFilteredImages(filterExprs []string) ([]FilterResult, error) {
+	repos, err := newRepoRegistry()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	filters, err := NewFilters(filterExprs)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	fac := distrofactory.NewDefault()
-	filteredResult, err := FilterDistros(fac, repos.ListDistros(), filters)
+	return FilterDistros(fac, repos.ListDistros(), filters)
+}
+
+func listImages(out io.Writer, format string, filterExprs []string) error {
+	filteredResult, err := getFilteredImages(filterExprs)
 	if err != nil {
 		return err
 	}
