@@ -105,3 +105,542 @@ func TestPartitionTable_GenerateUUIDs_VFAT(t *testing.T) {
 
 	assert.Equal(t, "6e4ff95f", pt.Partitions[0].Payload.(*disk.Filesystem).UUID)
 }
+
+func TestEnsureRootFilesystem(t *testing.T) {
+	type testCase struct {
+		pt            disk.PartitionTable
+		expected      disk.PartitionTable
+		defaultFsType disk.FSType
+	}
+
+	testCases := map[string]testCase{
+		"empty-plain": {
+			pt:            disk.PartitionTable{},
+			defaultFsType: disk.FS_EXT4,
+			expected: disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Start:    0,
+						Size:     0,
+						Type:     disk.FilesystemDataGUID,
+						Bootable: false,
+						UUID:     "",
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "root",
+							Mountpoint:   "/",
+							FSTabOptions: "defaults",
+						},
+					},
+				},
+			},
+		},
+		"simple-plain": {
+			pt: disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "home",
+							Mountpoint:   "/home",
+							FSTabOptions: "defaults",
+						},
+					},
+				},
+			},
+			defaultFsType: disk.FS_EXT4,
+			expected: disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "home",
+							Mountpoint:   "/home",
+							FSTabOptions: "defaults",
+						},
+					},
+					{
+						Start:    0,
+						Size:     0,
+						Type:     disk.FilesystemDataGUID,
+						Bootable: false,
+						UUID:     "",
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "root",
+							Mountpoint:   "/",
+							FSTabOptions: "defaults",
+						},
+					},
+				},
+			},
+		},
+		"simple-lvm": {
+			pt: disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Payload: &disk.LVMVolumeGroup{
+							Name: "testvg",
+							LogicalVolumes: []disk.LVMLogicalVolume{
+								{
+									Name: "varloglv",
+									Payload: &disk.Filesystem{
+										Label:      "var-log",
+										Type:       "xfs",
+										Mountpoint: "/var/log",
+									},
+								},
+								{
+									Name: "datalv",
+									Payload: &disk.Filesystem{
+										Label:        "data",
+										Mountpoint:   "/data",
+										FSTabOptions: "defaults",
+										Type:         "ext4",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			defaultFsType: disk.FS_EXT4,
+			expected: disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Payload: &disk.LVMVolumeGroup{
+							Name: "testvg",
+							LogicalVolumes: []disk.LVMLogicalVolume{
+								{
+									Name: "varloglv",
+									Payload: &disk.Filesystem{
+										Label:      "var-log",
+										Type:       "xfs",
+										Mountpoint: "/var/log",
+									},
+								},
+								{
+									Name: "datalv",
+									Payload: &disk.Filesystem{
+										Label:        "data",
+										Type:         "ext4",
+										Mountpoint:   "/data",
+										FSTabOptions: "defaults",
+									},
+								},
+								{
+									Name: "rootlv",
+									Payload: &disk.Filesystem{
+										Label:        "root",
+										Type:         "ext4",
+										Mountpoint:   "/",
+										FSTabOptions: "defaults",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"simple-btrfs": {
+			pt: disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Payload: &disk.Btrfs{
+							Subvolumes: []disk.BtrfsSubvolume{
+								{
+									Name:       "subvol/home",
+									Mountpoint: "/home",
+								},
+							},
+						},
+					},
+				},
+			},
+			// no default fs required
+			expected: disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Payload: &disk.Btrfs{
+							Subvolumes: []disk.BtrfsSubvolume{
+								{
+									Name:       "subvol/home",
+									Mountpoint: "/home",
+								},
+								{
+									Name:       "root",
+									Mountpoint: "/",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"noop-lvm": {
+			pt: disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Payload: &disk.LVMVolumeGroup{
+							Name: "testvg",
+							LogicalVolumes: []disk.LVMLogicalVolume{
+								{
+									Name: "varloglv",
+									Payload: &disk.Filesystem{
+										Label:      "var-log",
+										Type:       "xfs",
+										Mountpoint: "/var/log",
+									},
+								},
+								{
+									Name: "datalv",
+									Payload: &disk.Filesystem{
+										Label:        "data",
+										Type:         "ext4",
+										Mountpoint:   "/data",
+										FSTabOptions: "defaults",
+									},
+								},
+								{
+									Name: "rootlv",
+									Payload: &disk.Filesystem{
+										Label:        "root",
+										Type:         "ext4",
+										Mountpoint:   "/",
+										FSTabOptions: "defaults",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expected: disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Payload: &disk.LVMVolumeGroup{
+							Name: "testvg",
+							LogicalVolumes: []disk.LVMLogicalVolume{
+								{
+									Name: "varloglv",
+									Payload: &disk.Filesystem{
+										Label:      "var-log",
+										Type:       "xfs",
+										Mountpoint: "/var/log",
+									},
+								},
+								{
+									Name: "datalv",
+									Payload: &disk.Filesystem{
+										Label:        "data",
+										Type:         "ext4",
+										Mountpoint:   "/data",
+										FSTabOptions: "defaults",
+									},
+								},
+								{
+									Name: "rootlv",
+									Payload: &disk.Filesystem{
+										Label:        "root",
+										Type:         "ext4",
+										Mountpoint:   "/",
+										FSTabOptions: "defaults",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"noop-btrfs": {
+			pt: disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Payload: &disk.Btrfs{
+							Subvolumes: []disk.BtrfsSubvolume{
+								{
+									Name:       "subvol/home",
+									Mountpoint: "/home",
+								},
+								{
+									Name:       "root",
+									Mountpoint: "/",
+								},
+							},
+						},
+					},
+				},
+			},
+			expected: disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Payload: &disk.Btrfs{
+							Subvolumes: []disk.BtrfsSubvolume{
+								{
+									Name:       "subvol/home",
+									Mountpoint: "/home",
+								},
+								{
+									Name:       "root",
+									Mountpoint: "/",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"plain-collision": {
+			pt: disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "root",
+							Mountpoint:   "/root",
+							FSTabOptions: "defaults",
+						},
+					},
+				},
+			},
+			defaultFsType: disk.FS_EXT4,
+			expected: disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "root",
+							Mountpoint:   "/root",
+							FSTabOptions: "defaults",
+						},
+					},
+					{
+						Start:    0,
+						Size:     0,
+						Type:     disk.FilesystemDataGUID,
+						Bootable: false,
+						UUID:     "",
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "root00",
+							Mountpoint:   "/",
+							FSTabOptions: "defaults",
+						},
+					},
+				},
+			},
+		},
+		"lvm-collision": {
+			pt: disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Payload: &disk.LVMVolumeGroup{
+							Name: "testvg",
+							LogicalVolumes: []disk.LVMLogicalVolume{
+								{
+									Name: "varloglv",
+									Payload: &disk.Filesystem{
+										Label:      "var-log",
+										Type:       "xfs",
+										Mountpoint: "/var/log",
+									},
+								},
+								{
+									Name: "datalv",
+									Payload: &disk.Filesystem{
+										Label:        "data",
+										Type:         "ext4",
+										Mountpoint:   "/data",
+										FSTabOptions: "defaults",
+									},
+								},
+								{
+									Name: "rootlv",
+									Payload: &disk.Filesystem{
+										Label:        "root",
+										Type:         "ext4",
+										Mountpoint:   "/root",
+										FSTabOptions: "defaults",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			defaultFsType: disk.FS_XFS,
+			expected: disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Payload: &disk.LVMVolumeGroup{
+							Name: "testvg",
+							LogicalVolumes: []disk.LVMLogicalVolume{
+								{
+									Name: "varloglv",
+									Payload: &disk.Filesystem{
+										Label:      "var-log",
+										Type:       "xfs",
+										Mountpoint: "/var/log",
+									},
+								},
+								{
+									Name: "datalv",
+									Payload: &disk.Filesystem{
+										Label:        "data",
+										Type:         "ext4",
+										Mountpoint:   "/data",
+										FSTabOptions: "defaults",
+									},
+								},
+								{
+									Name: "rootlv",
+									Payload: &disk.Filesystem{
+										Label:        "root",
+										Type:         "ext4",
+										Mountpoint:   "/root",
+										FSTabOptions: "defaults",
+									},
+								},
+								{
+									Name: "rootlv00",
+									Payload: &disk.Filesystem{
+										Label:        "root00",
+										Type:         "xfs",
+										Mountpoint:   "/",
+										FSTabOptions: "defaults",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"btrfs-collision": {
+			pt: disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Payload: &disk.Btrfs{
+							Subvolumes: []disk.BtrfsSubvolume{
+								{
+									Name:       "subvol/home",
+									Mountpoint: "/home",
+								},
+								{
+									Name:       "root",
+									Mountpoint: "/root",
+								},
+							},
+						},
+					},
+				},
+			},
+			expected: disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Payload: &disk.Btrfs{
+							Subvolumes: []disk.BtrfsSubvolume{
+								{
+									Name:       "subvol/home",
+									Mountpoint: "/home",
+								},
+								{
+									Name:       "root",
+									Mountpoint: "/root",
+								},
+								{
+									Name:       "root00",
+									Mountpoint: "/",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for name := range testCases {
+		tc := testCases[name]
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			pt := tc.pt
+			err := disk.EnsureRootFilesystem(&pt, tc.defaultFsType)
+			assert.NoError(err)
+			assert.Equal(tc.expected, pt)
+		})
+	}
+}
+
+func TestEnsureRootFilesystemErrors(t *testing.T) {
+	type testCase struct {
+		pt            disk.PartitionTable
+		defaultFsType disk.FSType
+		errmsg        string
+	}
+
+	testCases := map[string]testCase{
+		"err-empty": {
+			pt:     disk.PartitionTable{},
+			errmsg: "error creating root partition: no default filesystem type",
+		},
+		"err-plain": {
+			pt: disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "home",
+							Mountpoint:   "/home",
+							FSTabOptions: "defaults",
+						},
+					},
+				},
+			},
+			errmsg: "error creating root partition: no default filesystem type",
+		},
+		"err-lvm": {
+			pt: disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Payload: &disk.LVMVolumeGroup{
+							Name: "testvg",
+							LogicalVolumes: []disk.LVMLogicalVolume{
+								{
+									Name: "varloglv",
+									Payload: &disk.Filesystem{
+										Label:      "var-log",
+										Type:       "xfs",
+										Mountpoint: "/var/log",
+									},
+								},
+								{
+									Name: "datalv",
+									Payload: &disk.Filesystem{
+										Label:        "data",
+										Mountpoint:   "/data",
+										FSTabOptions: "defaults",
+										Type:         "ext4",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			errmsg: "error creating root logical volume: no default filesystem type",
+		},
+	}
+
+	for name := range testCases {
+		tc := testCases[name]
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			pt := tc.pt
+			err := disk.EnsureRootFilesystem(&pt, tc.defaultFsType)
+			assert.EqualError(err, tc.errmsg)
+		})
+	}
+}
