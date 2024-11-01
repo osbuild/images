@@ -64,7 +64,7 @@ def ensure_uncompressed(filepath):
 
 
 def cmd_boot_aws(arch, image_name, privkey, pubkey, image_path, script_cmd):
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
     aws_config = get_aws_config()
     cmd = ["go", "run", "./cmd/boot-aws", "run",
            "--access-key-id", aws_config["key_id"],
