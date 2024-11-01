@@ -990,3 +990,47 @@ func EnsureRootFilesystem(pt *PartitionTable, defaultFsType FSType) error {
 	pt.Partitions = append(pt.Partitions, rootpart)
 	return nil
 }
+
+// EnsureBootPartition creates a boot partition if one does not already exist.
+// The function will append the boot partition to the end of the existing
+// partition table therefore it is best to call this function early to put boot
+// near the front (as is conventional).
+func EnsureBootPartition(pt *PartitionTable, bootFsType FSType) error {
+	// collect all labels to avoid conflicts
+	labels := make(map[string]bool)
+	var foundBoot bool
+	_ = pt.ForEachMountable(func(mnt Mountable, path []Entity) error {
+		if mnt.GetMountpoint() == "/boot" {
+			foundBoot = true
+			return nil
+		}
+
+		labels[mnt.GetFSSpec().Label] = true
+		return nil
+	})
+	if foundBoot {
+		// nothing to do
+		return nil
+	}
+
+	if bootFsType == FS_NONE {
+		return fmt.Errorf("error creating boot partition: no filesystem type")
+	}
+
+	bootLabel, err := genUniqueString("boot", labels)
+	if err != nil {
+		return fmt.Errorf("error creating boot partition: %w", err)
+	}
+	bootPart := Partition{
+		Type: XBootLDRPartitionGUID,
+		Size: 512 * datasizes.MiB,
+		Payload: &Filesystem{
+			Type:         bootFsType.String(),
+			Label:        bootLabel,
+			Mountpoint:   "/boot",
+			FSTabOptions: "defaults",
+		},
+	}
+	pt.Partitions = append(pt.Partitions, bootPart)
+	return nil
+}
