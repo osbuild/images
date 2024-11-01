@@ -644,3 +644,237 @@ func TestEnsureRootFilesystemErrors(t *testing.T) {
 		})
 	}
 }
+
+func TestEnsureBootPartition(t *testing.T) {
+	type testCase struct {
+		pt       disk.PartitionTable
+		expected disk.PartitionTable
+		fsType   disk.FSType
+		errmsg   string
+	}
+
+	testCases := map[string]testCase{
+		"empty-plain": {
+			pt:     disk.PartitionTable{},
+			fsType: disk.FS_EXT4,
+			expected: disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Start:    0,
+						Size:     512 * datasizes.MiB,
+						Type:     disk.XBootLDRPartitionGUID,
+						Bootable: false,
+						UUID:     "",
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "boot",
+							Mountpoint:   "/boot",
+							FSTabOptions: "defaults",
+						},
+					},
+				},
+			},
+		},
+		"simple-plain": {
+			pt: disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "home",
+							Mountpoint:   "/home",
+							FSTabOptions: "defaults",
+						},
+					},
+				},
+			},
+			fsType: disk.FS_EXT4,
+			expected: disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "home",
+							Mountpoint:   "/home",
+							FSTabOptions: "defaults",
+						},
+					},
+					{
+						Start:    0,
+						Size:     512 * datasizes.MiB,
+						Type:     disk.XBootLDRPartitionGUID,
+						Bootable: false,
+						UUID:     "",
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "boot",
+							Mountpoint:   "/boot",
+							FSTabOptions: "defaults",
+						},
+					},
+				},
+			},
+		},
+		"noop": {
+			pt: disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Start:    0,
+						Size:     0,
+						Type:     disk.XBootLDRPartitionGUID,
+						Bootable: false,
+						UUID:     "",
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "boot",
+							Mountpoint:   "/boot",
+							FSTabOptions: "defaults",
+						},
+					},
+					{
+						Payload: &disk.LVMVolumeGroup{
+							Name: "testvg",
+							LogicalVolumes: []disk.LVMLogicalVolume{
+								{
+									Name: "varloglv",
+									Payload: &disk.Filesystem{
+										Label:      "var-log",
+										Type:       "xfs",
+										Mountpoint: "/var/log",
+									},
+								},
+								{
+									Name: "datalv",
+									Payload: &disk.Filesystem{
+										Label:        "data",
+										Type:         "ext4",
+										Mountpoint:   "/data",
+										FSTabOptions: "defaults",
+									},
+								},
+								{
+									Name: "rootlv",
+									Payload: &disk.Filesystem{
+										Label:        "root",
+										Type:         "ext4",
+										Mountpoint:   "/",
+										FSTabOptions: "defaults",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expected: disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Start:    0,
+						Size:     0,
+						Type:     disk.XBootLDRPartitionGUID,
+						Bootable: false,
+						UUID:     "",
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "boot",
+							Mountpoint:   "/boot",
+							FSTabOptions: "defaults",
+						},
+					},
+					{
+						Payload: &disk.LVMVolumeGroup{
+							Name: "testvg",
+							LogicalVolumes: []disk.LVMLogicalVolume{
+								{
+									Name: "varloglv",
+									Payload: &disk.Filesystem{
+										Label:      "var-log",
+										Type:       "xfs",
+										Mountpoint: "/var/log",
+									},
+								},
+								{
+									Name: "datalv",
+									Payload: &disk.Filesystem{
+										Label:        "data",
+										Type:         "ext4",
+										Mountpoint:   "/data",
+										FSTabOptions: "defaults",
+									},
+								},
+								{
+									Name: "rootlv",
+									Payload: &disk.Filesystem{
+										Label:        "root",
+										Type:         "ext4",
+										Mountpoint:   "/",
+										FSTabOptions: "defaults",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"label-collision": {
+			pt: disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "boot",
+							Mountpoint:   "/collections/footwear/boot",
+							FSTabOptions: "defaults",
+						},
+					},
+				},
+			},
+			fsType: disk.FS_EXT4,
+			expected: disk.PartitionTable{
+				Partitions: []disk.Partition{
+					{
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "boot",
+							Mountpoint:   "/collections/footwear/boot",
+							FSTabOptions: "defaults",
+						},
+					},
+					{
+						Start:    0,
+						Size:     512 * datasizes.MiB,
+						Type:     disk.XBootLDRPartitionGUID,
+						Bootable: false,
+						UUID:     "",
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "boot00",
+							Mountpoint:   "/boot",
+							FSTabOptions: "defaults",
+						},
+					},
+				},
+			},
+		},
+		"err-nofs": {
+			pt:     disk.PartitionTable{},
+			errmsg: "error creating boot partition: no filesystem type",
+		},
+	}
+
+	for name := range testCases {
+		tc := testCases[name]
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			pt := tc.pt
+			err := disk.EnsureBootPartition(&pt, tc.fsType)
+			if tc.errmsg == "" {
+				assert.NoError(err)
+				assert.Equal(tc.expected, pt)
+			} else {
+				assert.EqualError(err, tc.errmsg)
+			}
+		})
+	}
+}
