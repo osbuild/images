@@ -894,3 +894,100 @@ func (pt *PartitionTable) GetMountpointSize(mountpoint string) (uint64, error) {
 
 	panic(fmt.Sprintf("no sizeable of the entity path for mountpoint %s, this is a programming error", mountpoint))
 }
+
+// EnsureRootFilesystem adds a root filesystem if the partition table doesn't
+// already have one.
+//
+// When adding the root filesystem, add it to:
+//
+//   - The first LVM Volume Group if one exists, otherwise
+//   - The first Btrfs volume if one exists, otherwise
+//   - At the end of the plain partitions.
+//
+// For LVM and Plain, the fsType argument must be a valid filesystem type.
+func EnsureRootFilesystem(pt *PartitionTable, defaultFsType FSType) error {
+	// collect all labels and subvolume names to avoid conflicts
+	subvolNames := make(map[string]bool)
+	labels := make(map[string]bool)
+	var foundRoot bool
+	_ = pt.ForEachMountable(func(mnt Mountable, path []Entity) error {
+		if mnt.GetMountpoint() == "/" {
+			foundRoot = true
+			return nil
+		}
+
+		labels[mnt.GetFSSpec().Label] = true
+		switch mountable := mnt.(type) {
+		case *BtrfsSubvolume:
+			subvolNames[mountable.Name] = true
+		}
+		return nil
+	})
+	if foundRoot {
+		// nothing to do
+		return nil
+	}
+
+	for _, part := range pt.Partitions {
+		switch payload := part.Payload.(type) {
+		case *LVMVolumeGroup:
+			if defaultFsType == FS_NONE {
+				return fmt.Errorf("error creating root logical volume: no default filesystem type")
+			}
+
+			rootLabel, err := genUniqueString("root", labels)
+			if err != nil {
+				return fmt.Errorf("error creating root logical volume: %w", err)
+			}
+			rootfs := &Filesystem{
+				Type:         defaultFsType.String(),
+				Label:        rootLabel,
+				Mountpoint:   "/",
+				FSTabOptions: "defaults",
+			}
+			// Let the function autogenerate the name to avoid conflicts
+			// with LV names from customizations.
+			// Set the size to 0 and it will be adjusted by
+			// EnsureDirectorySizes() and relayout().
+			if _, err := payload.CreateLogicalVolume("", 0, rootfs); err != nil {
+				return fmt.Errorf("error creating root logical volume: %w", err)
+			}
+			return nil
+		case *Btrfs:
+			rootName, err := genUniqueString("root", subvolNames)
+			if err != nil {
+				return fmt.Errorf("error creating root subvolume: %w", err)
+			}
+			rootsubvol := BtrfsSubvolume{
+				Name:       rootName,
+				Mountpoint: "/",
+			}
+			payload.Subvolumes = append(payload.Subvolumes, rootsubvol)
+			return nil
+		}
+	}
+
+	// We're going to create a root partition, so we have to ensure the default type is set.
+	if defaultFsType == FS_NONE {
+		return fmt.Errorf("error creating root partition: no default filesystem type")
+	}
+
+	// add a plain root partition at the end of the partition table
+	rootLabel, err := genUniqueString("root", labels)
+	if err != nil {
+		return fmt.Errorf("error creating root partition: %w", err)
+	}
+	rootpart := Partition{
+		Type:     FilesystemDataGUID,
+		Bootable: false,
+		Size:     0, // Set the size to 0 and it will be adjusted by EnsureDirectorySizes() and relayout()
+		Payload: &Filesystem{
+			Type:         defaultFsType.String(),
+			Label:        rootLabel,
+			Mountpoint:   "/",
+			FSTabOptions: "defaults",
+		},
+	}
+	pt.Partitions = append(pt.Partitions, rootpart)
+	return nil
+}
