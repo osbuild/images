@@ -240,8 +240,10 @@ func WaitUntilImportSnapshotTaskCompletedWithContext(c *ec2.EC2, ctx aws.Context
 // The caller can optionally specify the boot mode of the AMI. If the boot
 // mode is not specified, then the instances launched from this AMI use the
 // default boot mode value of the instance type.
+// The caller can also specify the name of the role used to do the import.
+// If nil is given, the default one from the SDK is used (vmimport).
 // Returns the image ID and the snapshot ID.
-func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch string, bootMode *string) (*string, *string, error) {
+func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch string, bootMode, importRole *string) (*string, *string, error) {
 	rpmArchToEC2Arch := map[string]string{
 		"x86_64":  "x86_64",
 		"aarch64": "arm64",
@@ -269,6 +271,7 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch str
 					S3Key:    aws.String(key),
 				},
 			},
+			RoleName: importRole,
 		},
 	)
 	if err != nil {
