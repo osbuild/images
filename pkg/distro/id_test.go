@@ -101,6 +101,13 @@ func TestDistroIDParser(t *testing.T) {
 			assert.NoError(t, err)
 			assert.NotNil(t, id)
 			assert.Equal(t, tc.expected, id)
+
+			ver, err := id.Version()
+			assert.NoError(t, err)
+			assert.Equal(t, ver.Segments()[0], tc.expected.MajorVersion)
+			if tc.expected.MinorVersion > -1 {
+				assert.Equal(t, ver.Segments()[1], tc.expected.MinorVersion)
+			}
 		})
 	}
 

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/hashicorp/go-version"
 )
 
 // ID represents a distro name and version
@@ -20,6 +22,16 @@ func (id ID) String() string {
 	}
 
 	return fmt.Sprintf("%s-%d.%d", id.Name, id.MajorVersion, id.MinorVersion)
+}
+
+func (id ID) Version() (*version.Version, error) {
+	var verStr string
+	if id.MinorVersion == -1 {
+		verStr = fmt.Sprintf("%d", id.MajorVersion)
+	} else {
+		verStr = fmt.Sprintf("%d.%d", id.MajorVersion, id.MinorVersion)
+	}
+	return version.NewVersion(verStr)
 }
 
 type ParseError struct {
