@@ -1,4 +1,4 @@
-package disk
+package disk_test
 
 import (
 	"fmt"
@@ -11,6 +11,7 @@ import (
 
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/datasizes"
+	"github.com/osbuild/images/pkg/disk"
 )
 
 const (
@@ -19,10 +20,10 @@ const (
 	GiB = datasizes.GiB
 )
 
-func TestDisk_AlignUp(t *testing.T) {
+func TestAlignUp(t *testing.T) {
 
-	pt := PartitionTable{}
-	firstAligned := DefaultGrainBytes
+	pt := disk.PartitionTable{}
+	firstAligned := disk.DefaultGrainBytes
 
 	tests := []struct {
 		size uint64
@@ -42,27 +43,27 @@ func TestDisk_AlignUp(t *testing.T) {
 	}
 }
 
-func TestDisk_DynamicallyResizePartitionTable(t *testing.T) {
+func TestDynamicallyResizePartitionTable(t *testing.T) {
 	mountpoints := []blueprint.FilesystemCustomization{
 		{
 			MinSize:    2 * GiB,
 			Mountpoint: "/usr",
 		},
 	}
-	pt := PartitionTable{
+	pt := disk.PartitionTable{
 		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
 		Type: "gpt",
-		Partitions: []Partition{
+		Partitions: []disk.Partition{
 			{
 				Size:     2048,
 				Bootable: true,
-				Type:     BIOSBootPartitionGUID,
-				UUID:     BIOSBootPartitionUUID,
+				Type:     disk.BIOSBootPartitionGUID,
+				UUID:     disk.BIOSBootPartitionUUID,
 			},
 			{
-				Type: FilesystemDataGUID,
-				UUID: RootPartitionUUID,
-				Payload: &Filesystem{
+				Type: disk.FilesystemDataGUID,
+				UUID: disk.RootPartitionUUID,
+				Payload: &disk.Filesystem{
 					Type:         "xfs",
 					Label:        "root",
 					Mountpoint:   "/",
@@ -77,294 +78,9 @@ func TestDisk_DynamicallyResizePartitionTable(t *testing.T) {
 	// math/rand is good enough in this case
 	/* #nosec G404 */
 	rng := rand.New(rand.NewSource(0))
-	newpt, err := NewPartitionTable(&pt, mountpoints, 1024, RawPartitioningMode, nil, rng)
+	newpt, err := disk.NewPartitionTable(&pt, mountpoints, 1024, disk.RawPartitioningMode, nil, rng)
 	assert.NoError(t, err)
 	assert.GreaterOrEqual(t, newpt.Size, expectedSize)
-}
-
-var testPartitionTables = map[string]PartitionTable{
-	"plain": {
-		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
-		Type: "gpt",
-		Partitions: []Partition{
-			{
-				Size:     1 * MiB,
-				Bootable: true,
-				Type:     BIOSBootPartitionGUID,
-				UUID:     BIOSBootPartitionUUID,
-			},
-			{
-				Size: 200 * MiB,
-				Type: EFISystemPartitionGUID,
-				UUID: EFISystemPartitionUUID,
-				Payload: &Filesystem{
-					Type:         "vfat",
-					UUID:         EFIFilesystemUUID,
-					Mountpoint:   "/boot/efi",
-					Label:        "EFI-SYSTEM",
-					FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
-					FSTabFreq:    0,
-					FSTabPassNo:  2,
-				},
-			},
-			{
-				Size: 500 * MiB,
-				Type: FilesystemDataGUID,
-				UUID: FilesystemDataUUID,
-				Payload: &Filesystem{
-					Type:         "xfs",
-					Mountpoint:   "/boot",
-					Label:        "boot",
-					FSTabOptions: "defaults",
-					FSTabFreq:    0,
-					FSTabPassNo:  0,
-				},
-			},
-			{
-				Type: FilesystemDataGUID,
-				UUID: RootPartitionUUID,
-				Payload: &Filesystem{
-					Type:         "xfs",
-					Label:        "root",
-					Mountpoint:   "/",
-					FSTabOptions: "defaults",
-					FSTabFreq:    0,
-					FSTabPassNo:  0,
-				},
-			},
-		},
-	},
-
-	"plain-noboot": {
-		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
-		Type: "gpt",
-		Partitions: []Partition{
-			{
-				Size:     1 * MiB,
-				Bootable: true,
-				Type:     BIOSBootPartitionGUID,
-				UUID:     BIOSBootPartitionUUID,
-			},
-			{
-				Size: 200 * MiB,
-				Type: EFISystemPartitionGUID,
-				UUID: EFISystemPartitionUUID,
-				Payload: &Filesystem{
-					Type:         "vfat",
-					UUID:         EFIFilesystemUUID,
-					Mountpoint:   "/boot/efi",
-					Label:        "EFI-SYSTEM",
-					FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
-					FSTabFreq:    0,
-					FSTabPassNo:  2,
-				},
-			},
-			{
-				Type: FilesystemDataGUID,
-				UUID: RootPartitionUUID,
-				Payload: &Filesystem{
-					Type:         "xfs",
-					Label:        "root",
-					Mountpoint:   "/",
-					FSTabOptions: "defaults",
-					FSTabFreq:    0,
-					FSTabPassNo:  0,
-				},
-			},
-		},
-	},
-
-	"luks": {
-		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
-		Type: "gpt",
-		Partitions: []Partition{
-			{
-				Size:     1 * MiB,
-				Bootable: true,
-				Type:     BIOSBootPartitionGUID,
-				UUID:     BIOSBootPartitionUUID,
-			},
-			{
-				Size: 200 * MiB,
-				Type: EFISystemPartitionGUID,
-				UUID: EFISystemPartitionUUID,
-				Payload: &Filesystem{
-					Type:         "vfat",
-					UUID:         EFIFilesystemUUID,
-					Mountpoint:   "/boot/efi",
-					Label:        "EFI-SYSTEM",
-					FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
-					FSTabFreq:    0,
-					FSTabPassNo:  2,
-				},
-			},
-			{
-				Size: 500 * MiB,
-				Type: FilesystemDataGUID,
-				UUID: FilesystemDataUUID,
-				Payload: &Filesystem{
-					Type:         "xfs",
-					Mountpoint:   "/boot",
-					Label:        "boot",
-					FSTabOptions: "defaults",
-					FSTabFreq:    0,
-					FSTabPassNo:  0,
-				},
-			},
-			{
-				Type: FilesystemDataGUID,
-				UUID: RootPartitionUUID,
-				Payload: &LUKSContainer{
-					UUID:  "",
-					Label: "crypt_root",
-					Payload: &Filesystem{
-						Type:         "xfs",
-						Label:        "root",
-						Mountpoint:   "/",
-						FSTabOptions: "defaults",
-						FSTabFreq:    0,
-						FSTabPassNo:  0,
-					},
-				},
-			},
-		},
-	},
-	"luks+lvm": {
-		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
-		Type: "gpt",
-		Partitions: []Partition{
-			{
-				Size:     1 * MiB,
-				Bootable: true,
-				Type:     BIOSBootPartitionGUID,
-				UUID:     BIOSBootPartitionUUID,
-			},
-			{
-				Size: 200 * MiB,
-				Type: EFISystemPartitionGUID,
-				UUID: EFISystemPartitionUUID,
-				Payload: &Filesystem{
-					Type:         "vfat",
-					UUID:         EFIFilesystemUUID,
-					Mountpoint:   "/boot/efi",
-					Label:        "EFI-SYSTEM",
-					FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
-					FSTabFreq:    0,
-					FSTabPassNo:  2,
-				},
-			},
-			{
-				Size: 500 * MiB,
-				Type: FilesystemDataGUID,
-				UUID: FilesystemDataUUID,
-				Payload: &Filesystem{
-					Type:         "xfs",
-					Mountpoint:   "/boot",
-					Label:        "boot",
-					FSTabOptions: "defaults",
-					FSTabFreq:    0,
-					FSTabPassNo:  0,
-				},
-			},
-			{
-				Type: FilesystemDataGUID,
-				UUID: RootPartitionUUID,
-				Size: 5 * GiB,
-				Payload: &LUKSContainer{
-					UUID: "",
-					Payload: &LVMVolumeGroup{
-						Name:        "",
-						Description: "",
-						LogicalVolumes: []LVMLogicalVolume{
-							{
-								Size: 2 * GiB,
-								Payload: &Filesystem{
-									Type:         "xfs",
-									Label:        "root",
-									Mountpoint:   "/",
-									FSTabOptions: "defaults",
-									FSTabFreq:    0,
-									FSTabPassNo:  0,
-								},
-							},
-							{
-								Size: 2 * GiB,
-								Payload: &Filesystem{
-									Type:         "xfs",
-									Label:        "root",
-									Mountpoint:   "/home",
-									FSTabOptions: "defaults",
-									FSTabFreq:    0,
-									FSTabPassNo:  0,
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	},
-	"btrfs": {
-		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
-		Type: "gpt",
-		Partitions: []Partition{
-			{
-				Size:     1 * MiB,
-				Bootable: true,
-				Type:     BIOSBootPartitionGUID,
-				UUID:     BIOSBootPartitionUUID,
-			},
-			{
-				Size: 200 * MiB,
-				Type: EFISystemPartitionGUID,
-				UUID: EFISystemPartitionUUID,
-				Payload: &Filesystem{
-					Type:         "vfat",
-					UUID:         EFIFilesystemUUID,
-					Mountpoint:   "/boot/efi",
-					Label:        "EFI-SYSTEM",
-					FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
-					FSTabFreq:    0,
-					FSTabPassNo:  2,
-				},
-			},
-			{
-				Size: 500 * MiB,
-				Type: FilesystemDataGUID,
-				UUID: FilesystemDataUUID,
-				Payload: &Filesystem{
-					Type:         "xfs",
-					Mountpoint:   "/boot",
-					Label:        "boot",
-					FSTabOptions: "defaults",
-					FSTabFreq:    0,
-					FSTabPassNo:  0,
-				},
-			},
-			{
-				Type: FilesystemDataGUID,
-				UUID: RootPartitionUUID,
-				Size: 10 * GiB,
-				Payload: &Btrfs{
-					UUID:       "",
-					Label:      "",
-					Mountpoint: "",
-					Subvolumes: []BtrfsSubvolume{
-						{
-							Size:       0,
-							Mountpoint: "/",
-							GroupID:    0,
-						},
-						{
-							Size:       5 * GiB,
-							Mountpoint: "/var",
-							GroupID:    0,
-						},
-					},
-				},
-			},
-		},
-	},
 }
 
 var testBlueprints = map[string][]blueprint.FilesystemCustomization{
@@ -401,12 +117,12 @@ var testBlueprints = map[string][]blueprint.FilesystemCustomization{
 	"empty": nil,
 }
 
-func TestDisk_ForEachEntity(t *testing.T) {
+func TestForEachEntity(t *testing.T) {
 
 	count := 0
 
-	plain := testPartitionTables["plain"]
-	err := plain.ForEachEntity(func(e Entity, path []Entity) error {
+	plain := disk.TestPartitionTables["plain"]
+	err := plain.ForEachEntity(func(e disk.Entity, path []disk.Entity) error {
 		assert.NotNil(t, e)
 		assert.NotNil(t, path)
 
@@ -416,20 +132,20 @@ func TestDisk_ForEachEntity(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	// PartitionTable, 4 partitions, 3 filesystems -> 8 entities
+	// disk.PartitionTable, 4 partitions, 3 filesystems -> 8 entities
 	assert.Equal(t, 8, count)
 }
 
 // blueprintApplied checks if the blueprint was applied correctly
 // returns nil if the blueprint was applied correctly, an error otherwise
-func blueprintApplied(pt *PartitionTable, bp []blueprint.FilesystemCustomization) error {
+func blueprintApplied(pt *disk.PartitionTable, bp []blueprint.FilesystemCustomization) error {
 	for _, mnt := range bp {
-		path := entityPath(pt, mnt.Mountpoint)
+		path := disk.EntityPath(pt, mnt.Mountpoint)
 		if path == nil {
 			return fmt.Errorf("mountpoint %s not found", mnt.Mountpoint)
 		}
 		for idx, ent := range path {
-			if sz, ok := ent.(Sizeable); ok {
+			if sz, ok := ent.(disk.Sizeable); ok {
 				if sz.GetSize() < mnt.MinSize {
 					return fmt.Errorf("entity %d in the path from %s is smaller (%d) than the requested minsize %d", idx, mnt.Mountpoint, sz.GetSize(), mnt.MinSize)
 				}
@@ -443,14 +159,14 @@ func blueprintApplied(pt *PartitionTable, bp []blueprint.FilesystemCustomization
 func TestCreatePartitionTable(t *testing.T) {
 	assert := assert.New(t)
 
-	sizeCheckCB := func(mnt Mountable, path []Entity) error {
+	sizeCheckCB := func(mnt disk.Mountable, path []disk.Entity) error {
 		if strings.HasPrefix(mnt.GetMountpoint(), "/boot") {
 			// /boot and subdirectories is exempt from this rule
 			return nil
 		}
 		// go up the path and check every sizeable
 		for idx, ent := range path {
-			if sz, ok := ent.(Sizeable); ok {
+			if sz, ok := ent.(disk.Sizeable); ok {
 				size := sz.GetSize()
 				if size < 1*GiB {
 					return fmt.Errorf("entity %d in the path from %s is smaller than the minimum 1 GiB (%d)", idx, mnt.GetMountpoint(), size)
@@ -469,14 +185,14 @@ func TestCreatePartitionTable(t *testing.T) {
 	// math/rand is good enough in this case
 	/* #nosec G404 */
 	rng := rand.New(rand.NewSource(13))
-	for ptName := range testPartitionTables {
-		pt := testPartitionTables[ptName]
+	for ptName := range disk.TestPartitionTables {
+		pt := disk.TestPartitionTables[ptName]
 		for bpName, bp := range testBlueprints {
-			ptMode := RawPartitioningMode
+			ptMode := disk.RawPartitioningMode
 			if ptName == "luks+lvm" {
-				ptMode = AutoLVMPartitioningMode
+				ptMode = disk.AutoLVMPartitioningMode
 			}
-			mpt, err := NewPartitionTable(&pt, bp, uint64(13*MiB), ptMode, nil, rng)
+			mpt, err := disk.NewPartitionTable(&pt, bp, uint64(13*MiB), ptMode, nil, rng)
 			require.NoError(t, err, "Partition table generation failed: PT %q BP %q (%s)", ptName, bpName, err)
 			assert.NotNil(mpt, "Partition table generation failed: PT %q BP %q (nil partition table)", ptName, bpName)
 			assert.Greater(mpt.GetSize(), sumSizes(bp))
@@ -498,31 +214,31 @@ func TestCreatePartitionTableLVMify(t *testing.T) {
 	/* #nosec G404 */
 	rng := rand.New(rand.NewSource(13))
 	for bpName, tbp := range testBlueprints {
-		for ptName := range testPartitionTables {
-			pt := testPartitionTables[ptName]
+		for ptName := range disk.TestPartitionTables {
+			pt := disk.TestPartitionTables[ptName]
 
 			if tbp != nil && (ptName == "btrfs" || ptName == "luks") {
-				_, err := NewPartitionTable(&pt, tbp, uint64(13*MiB), AutoLVMPartitioningMode, nil, rng)
+				_, err := disk.NewPartitionTable(&pt, tbp, uint64(13*MiB), disk.AutoLVMPartitioningMode, nil, rng)
 				assert.Error(err, "PT %q BP %q: should return an error with LVMPartitioningMode", ptName, bpName)
 				continue
 			}
 
-			mpt, err := NewPartitionTable(&pt, tbp, uint64(13*MiB), AutoLVMPartitioningMode, nil, rng)
+			mpt, err := disk.NewPartitionTable(&pt, tbp, uint64(13*MiB), disk.AutoLVMPartitioningMode, nil, rng)
 			assert.NoError(err, "PT %q BP %q: Partition table generation failed: (%s)", ptName, bpName, err)
 
-			rootPath := entityPath(mpt, "/")
+			rootPath := disk.EntityPath(mpt, "/")
 			if rootPath == nil {
 				panic(fmt.Sprintf("PT %q BP %q: no root mountpoint", ptName, bpName))
 			}
 
-			bootPath := entityPath(mpt, "/boot")
+			bootPath := disk.EntityPath(mpt, "/boot")
 			if tbp != nil && bootPath == nil {
 				panic(fmt.Sprintf("PT %q BP %q: no boot mountpoint", ptName, bpName))
 			}
 
 			if tbp != nil {
 				parent := rootPath[1]
-				_, ok := parent.(*LVMLogicalVolume)
+				_, ok := parent.(*disk.LVMLogicalVolume)
 				assert.True(ok, "PT %q BP %q: root's parent (%q) is not an LVM logical volume", ptName, bpName, parent)
 			}
 			assert.NoError(blueprintApplied(mpt, tbp), "PT %q BP %q: blueprint check failed", ptName, bpName)
@@ -536,31 +252,31 @@ func TestCreatePartitionTableBtrfsify(t *testing.T) {
 	/* #nosec G404 */
 	rng := rand.New(rand.NewSource(13))
 	for bpName, tbp := range testBlueprints {
-		for ptName := range testPartitionTables {
-			pt := testPartitionTables[ptName]
+		for ptName := range disk.TestPartitionTables {
+			pt := disk.TestPartitionTables[ptName]
 
 			if ptName == "auto-lvm" || ptName == "luks" || ptName == "luks+lvm" {
-				_, err := NewPartitionTable(&pt, tbp, uint64(13*MiB), BtrfsPartitioningMode, nil, rng)
+				_, err := disk.NewPartitionTable(&pt, tbp, uint64(13*MiB), disk.BtrfsPartitioningMode, nil, rng)
 				assert.Error(err, "PT %q BP %q: should return an error with BtrfsPartitioningMode", ptName, bpName)
 				continue
 			}
 
-			mpt, err := NewPartitionTable(&pt, tbp, uint64(13*MiB), BtrfsPartitioningMode, nil, rng)
+			mpt, err := disk.NewPartitionTable(&pt, tbp, uint64(13*MiB), disk.BtrfsPartitioningMode, nil, rng)
 			assert.NoError(err, "PT %q BP %q: Partition table generation failed: (%s)", ptName, bpName, err)
 
-			rootPath := entityPath(mpt, "/")
+			rootPath := disk.EntityPath(mpt, "/")
 			if rootPath == nil {
 				panic(fmt.Sprintf("PT %q BP %q: no root mountpoint", ptName, bpName))
 			}
 
-			bootPath := entityPath(mpt, "/boot")
+			bootPath := disk.EntityPath(mpt, "/boot")
 			if tbp != nil && bootPath == nil {
 				panic(fmt.Sprintf("PT %q BP %q: no boot mountpoint", ptName, bpName))
 			}
 
 			if tbp != nil {
 				parent := rootPath[1]
-				_, ok := parent.(*Btrfs)
+				_, ok := parent.(*disk.Btrfs)
 				assert.True(ok, "PT %q BP %q: root's parent (%+v) is not an btrfs volume but %T", ptName, bpName, parent, parent)
 			}
 			assert.NoError(blueprintApplied(mpt, tbp), "PT %q BP %q: blueprint check failed", ptName, bpName)
@@ -574,24 +290,24 @@ func TestCreatePartitionTableLVMOnly(t *testing.T) {
 	/* #nosec G404 */
 	rng := rand.New(rand.NewSource(13))
 	for bpName, tbp := range testBlueprints {
-		for ptName := range testPartitionTables {
-			pt := testPartitionTables[ptName]
+		for ptName := range disk.TestPartitionTables {
+			pt := disk.TestPartitionTables[ptName]
 
 			if ptName == "btrfs" || ptName == "luks" {
-				_, err := NewPartitionTable(&pt, tbp, uint64(13*MiB), LVMPartitioningMode, nil, rng)
+				_, err := disk.NewPartitionTable(&pt, tbp, uint64(13*MiB), disk.LVMPartitioningMode, nil, rng)
 				assert.Error(err, "PT %q BP %q: should return an error with LVMPartitioningMode", ptName, bpName)
 				continue
 			}
 
-			mpt, err := NewPartitionTable(&pt, tbp, uint64(13*MiB), LVMPartitioningMode, nil, rng)
+			mpt, err := disk.NewPartitionTable(&pt, tbp, uint64(13*MiB), disk.LVMPartitioningMode, nil, rng)
 			require.NoError(t, err, "PT %q BP %q: Partition table generation failed: (%s)", ptName, bpName, err)
 
-			rootPath := entityPath(mpt, "/")
+			rootPath := disk.EntityPath(mpt, "/")
 			if rootPath == nil {
 				panic(fmt.Sprintf("PT %q BP %q: no root mountpoint", ptName, bpName))
 			}
 
-			bootPath := entityPath(mpt, "/boot")
+			bootPath := disk.EntityPath(mpt, "/boot")
 			if tbp != nil && bootPath == nil {
 				panic(fmt.Sprintf("PT %q BP %q: no boot mountpoint", ptName, bpName))
 			}
@@ -599,7 +315,7 @@ func TestCreatePartitionTableLVMOnly(t *testing.T) {
 			// root should always be on a LVM
 			rootParent := rootPath[1]
 			{
-				_, ok := rootParent.(*LVMLogicalVolume)
+				_, ok := rootParent.(*disk.LVMLogicalVolume)
 				assert.True(ok, "PT %q BP %q: root's parent (%+v) is not an LVM logical volume", ptName, bpName, rootParent)
 			}
 
@@ -610,9 +326,9 @@ func TestCreatePartitionTableLVMOnly(t *testing.T) {
 					// not on LVM; skipping
 					continue
 				}
-				mntPath := entityPath(mpt, mnt.Mountpoint)
+				mntPath := disk.EntityPath(mpt, mnt.Mountpoint)
 				mntParent := mntPath[1]
-				mntLV, ok := mntParent.(*LVMLogicalVolume) // the partition's parent should be the logical volume
+				mntLV, ok := mntParent.(*disk.LVMLogicalVolume) // the partition's parent should be the logical volume
 				assert.True(ok, "PT %q BP %q: %s's parent (%+v) is not an LVM logical volume", ptName, bpName, mnt.Mountpoint, mntParent)
 				assert.GreaterOrEqualf(mntLV.Size, mnt.MinSize, "PT %q BP %q: %s's size (%d) is smaller than the requested minsize (%d)", ptName, bpName, mnt.Mountpoint, mntLV.Size, mnt.MinSize)
 				lvsum += mntLV.Size
@@ -621,18 +337,18 @@ func TestCreatePartitionTableLVMOnly(t *testing.T) {
 			// root LV's parent should be the VG
 			lvParent := rootPath[2]
 			{
-				_, ok := lvParent.(*LVMVolumeGroup)
+				_, ok := lvParent.(*disk.LVMVolumeGroup)
 				assert.True(ok, "PT %q BP %q: root LV's parent (%+v) is not an LVM volume group", ptName, bpName, lvParent)
 			}
 
 			// the root partition is the second to last entity in the path (the last is the partition table itself)
 			rootTop := rootPath[len(rootPath)-2]
-			vgPart, ok := rootTop.(*Partition)
+			vgPart, ok := rootTop.(*disk.Partition)
 
 			// if the VG is in a LUKS container, check that there's enough space for the header too
 			{
 				vgParent := rootPath[3]
-				luksContainer, ok := vgParent.(*LUKSContainer)
+				luksContainer, ok := vgParent.(*disk.LUKSContainer)
 				if ok {
 					// this isn't the lvsum anymore, but the lvsum + the luks
 					// header, which should regardless be equal to or smaller
@@ -655,7 +371,7 @@ func TestMinimumSizes(t *testing.T) {
 	// math/rand is good enough in this case
 	/* #nosec G404 */
 	rng := rand.New(rand.NewSource(13))
-	pt := testPartitionTables["plain"]
+	pt := disk.TestPartitionTables["plain"]
 
 	type testCase struct {
 		Blueprint        []blueprint.FilesystemCustomization
@@ -735,13 +451,13 @@ func TestMinimumSizes(t *testing.T) {
 
 	for idx, tc := range testCases {
 		{ // without LVM
-			mpt, err := NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), RawPartitioningMode, nil, rng)
+			mpt, err := disk.NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), disk.RawPartitioningMode, nil, rng)
 			assert.NoError(err)
 			for mnt, minSize := range tc.ExpectedMinSizes {
-				path := entityPath(mpt, mnt)
+				path := disk.EntityPath(mpt, mnt)
 				assert.NotNil(path, "[%d] mountpoint %q not found", idx, mnt)
 				parent := path[1]
-				part, ok := parent.(*Partition)
+				part, ok := parent.(*disk.Partition)
 				assert.True(ok, "%q parent (%v) is not a partition", mnt, parent)
 				assert.GreaterOrEqual(part.GetSize(), minSize,
 					"[%d] %q size %d should be greater or equal to %d", idx, mnt, part.GetSize(), minSize)
@@ -749,13 +465,13 @@ func TestMinimumSizes(t *testing.T) {
 		}
 
 		{ // with LVM
-			mpt, err := NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), AutoLVMPartitioningMode, nil, rng)
+			mpt, err := disk.NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), disk.AutoLVMPartitioningMode, nil, rng)
 			assert.NoError(err)
 			for mnt, minSize := range tc.ExpectedMinSizes {
-				path := entityPath(mpt, mnt)
+				path := disk.EntityPath(mpt, mnt)
 				assert.NotNil(path, "[%d] mountpoint %q not found", idx, mnt)
 				parent := path[1]
-				part, ok := parent.(*LVMLogicalVolume)
+				part, ok := parent.(*disk.LVMLogicalVolume)
 				assert.True(ok, "[%d] %q parent (%v) is not an LVM logical volume", idx, mnt, parent)
 				assert.GreaterOrEqual(part.GetSize(), minSize,
 					"[%d] %q size %d should be greater or equal to %d", idx, mnt, part.GetSize(), minSize)
@@ -770,7 +486,7 @@ func TestLVMExtentAlignment(t *testing.T) {
 	// math/rand is good enough in this case
 	/* #nosec G404 */
 	rng := rand.New(rand.NewSource(13))
-	pt := testPartitionTables["plain"]
+	pt := disk.TestPartitionTables["plain"]
 
 	type testCase struct {
 		Blueprint     []blueprint.FilesystemCustomization
@@ -786,7 +502,7 @@ func TestLVMExtentAlignment(t *testing.T) {
 				},
 			},
 			ExpectedSizes: map[string]uint64{
-				"/var": 1*GiB + LVMDefaultExtentSize,
+				"/var": 1*GiB + disk.LVMDefaultExtentSize,
 			},
 		},
 		{
@@ -836,13 +552,13 @@ func TestLVMExtentAlignment(t *testing.T) {
 	}
 
 	for idx, tc := range testCases {
-		mpt, err := NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), AutoLVMPartitioningMode, nil, rng)
+		mpt, err := disk.NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), disk.AutoLVMPartitioningMode, nil, rng)
 		assert.NoError(err)
 		for mnt, expSize := range tc.ExpectedSizes {
-			path := entityPath(mpt, mnt)
+			path := disk.EntityPath(mpt, mnt)
 			assert.NotNil(path, "[%d] mountpoint %q not found", idx, mnt)
 			parent := path[1]
-			part, ok := parent.(*LVMLogicalVolume)
+			part, ok := parent.(*disk.LVMLogicalVolume)
 			assert.True(ok, "[%d] %q parent (%v) is not an LVM logical volume", idx, mnt, parent)
 			assert.Equal(part.GetSize(), expSize,
 				"[%d] %q size %d should be equal to %d", idx, mnt, part.GetSize(), expSize)
@@ -851,7 +567,7 @@ func TestLVMExtentAlignment(t *testing.T) {
 }
 
 func TestNewBootWithSizeLVMify(t *testing.T) {
-	pt := testPartitionTables["plain-noboot"]
+	pt := disk.TestPartitionTables["plain-noboot"]
 	assert := assert.New(t)
 
 	// math/rand is good enough in this case
@@ -865,24 +581,24 @@ func TestNewBootWithSizeLVMify(t *testing.T) {
 		},
 	}
 
-	mpt, err := NewPartitionTable(&pt, custom, uint64(3*GiB), AutoLVMPartitioningMode, nil, rng)
+	mpt, err := disk.NewPartitionTable(&pt, custom, uint64(3*GiB), disk.AutoLVMPartitioningMode, nil, rng)
 	assert.NoError(err)
 
 	for idx, c := range custom {
 		mnt, minSize := c.Mountpoint, c.MinSize
-		path := entityPath(mpt, mnt)
+		path := disk.EntityPath(mpt, mnt)
 		assert.NotNil(path, "[%d] mountpoint %q not found", idx, mnt)
 		parent := path[1]
-		part, ok := parent.(*Partition)
+		part, ok := parent.(*disk.Partition)
 		assert.True(ok, "%q parent (%v) is not a partition", mnt, parent)
 		assert.GreaterOrEqual(part.GetSize(), minSize,
 			"[%d] %q size %d should be greater or equal to %d", idx, mnt, part.GetSize(), minSize)
 	}
 }
 
-func collectEntities(pt *PartitionTable) []Entity {
-	entities := make([]Entity, 0)
-	collector := func(ent Entity, path []Entity) error {
+func collectEntities(pt *disk.PartitionTable) []disk.Entity {
+	entities := make([]disk.Entity, 0)
+	collector := func(ent disk.Entity, path []disk.Entity) error {
 		entities = append(entities, ent)
 		return nil
 	}
@@ -891,11 +607,11 @@ func collectEntities(pt *PartitionTable) []Entity {
 }
 
 func TestClone(t *testing.T) {
-	for name := range testPartitionTables {
-		basePT := testPartitionTables[name]
+	for name := range disk.TestPartitionTables {
+		basePT := disk.TestPartitionTables[name]
 		baseEntities := collectEntities(&basePT)
 
-		clonePT := basePT.Clone().(*PartitionTable)
+		clonePT := basePT.Clone().(*disk.PartitionTable)
 		cloneEntities := collectEntities(clonePT)
 
 		for idx := range baseEntities {
@@ -910,10 +626,10 @@ func TestClone(t *testing.T) {
 
 func TestFindDirectoryPartition(t *testing.T) {
 	assert := assert.New(t)
-	usr := Partition{
-		Type: FilesystemDataGUID,
-		UUID: RootPartitionUUID,
-		Payload: &Filesystem{
+	usr := disk.Partition{
+		Type: disk.FilesystemDataGUID,
+		UUID: disk.RootPartitionUUID,
+		Payload: &disk.Filesystem{
 			Type:         "xfs",
 			Label:        "root",
 			Mountpoint:   "/usr",
@@ -924,89 +640,89 @@ func TestFindDirectoryPartition(t *testing.T) {
 	}
 
 	{
-		pt := testPartitionTables["plain"]
-		assert.Equal("/", pt.findDirectoryEntityPath("/opt")[0].(Mountable).GetMountpoint())
-		assert.Equal("/boot/efi", pt.findDirectoryEntityPath("/boot/efi/Linux")[0].(Mountable).GetMountpoint())
-		assert.Equal("/boot", pt.findDirectoryEntityPath("/boot/loader")[0].(Mountable).GetMountpoint())
-		assert.Equal("/boot", pt.findDirectoryEntityPath("/boot")[0].(Mountable).GetMountpoint())
+		pt := disk.TestPartitionTables["plain"]
+		assert.Equal("/", disk.FindDirectoryEntityPath(&pt, "/opt")[0].(disk.Mountable).GetMountpoint())
+		assert.Equal("/boot/efi", disk.FindDirectoryEntityPath(&pt, "/boot/efi/Linux")[0].(disk.Mountable).GetMountpoint())
+		assert.Equal("/boot", disk.FindDirectoryEntityPath(&pt, "/boot/loader")[0].(disk.Mountable).GetMountpoint())
+		assert.Equal("/boot", disk.FindDirectoryEntityPath(&pt, "/boot")[0].(disk.Mountable).GetMountpoint())
 
-		ptMod := pt.Clone().(*PartitionTable)
+		ptMod := pt.Clone().(*disk.PartitionTable)
 		ptMod.Partitions = append(ptMod.Partitions, usr)
-		assert.Equal("/", ptMod.findDirectoryEntityPath("/opt")[0].(Mountable).GetMountpoint())
-		assert.Equal("/usr", ptMod.findDirectoryEntityPath("/usr")[0].(Mountable).GetMountpoint())
-		assert.Equal("/usr", ptMod.findDirectoryEntityPath("/usr/bin")[0].(Mountable).GetMountpoint())
+		assert.Equal("/", disk.FindDirectoryEntityPath(ptMod, "/opt")[0].(disk.Mountable).GetMountpoint())
+		assert.Equal("/usr", disk.FindDirectoryEntityPath(ptMod, "/usr")[0].(disk.Mountable).GetMountpoint())
+		assert.Equal("/usr", disk.FindDirectoryEntityPath(ptMod, "/usr/bin")[0].(disk.Mountable).GetMountpoint())
 
 		// invalid dir should return nil
-		assert.Nil(pt.findDirectoryEntityPath("invalid"))
+		assert.Nil(disk.FindDirectoryEntityPath(&pt, "invalid"))
 	}
 
 	{
-		pt := testPartitionTables["plain-noboot"]
-		assert.Equal("/", pt.findDirectoryEntityPath("/opt")[0].(Mountable).GetMountpoint())
-		assert.Equal("/", pt.findDirectoryEntityPath("/boot")[0].(Mountable).GetMountpoint())
-		assert.Equal("/", pt.findDirectoryEntityPath("/boot/loader")[0].(Mountable).GetMountpoint())
+		pt := disk.TestPartitionTables["plain-noboot"]
+		assert.Equal("/", disk.FindDirectoryEntityPath(&pt, "/opt")[0].(disk.Mountable).GetMountpoint())
+		assert.Equal("/", disk.FindDirectoryEntityPath(&pt, "/boot")[0].(disk.Mountable).GetMountpoint())
+		assert.Equal("/", disk.FindDirectoryEntityPath(&pt, "/boot/loader")[0].(disk.Mountable).GetMountpoint())
 
-		ptMod := pt.Clone().(*PartitionTable)
+		ptMod := pt.Clone().(*disk.PartitionTable)
 		ptMod.Partitions = append(ptMod.Partitions, usr)
-		assert.Equal("/", ptMod.findDirectoryEntityPath("/opt")[0].(Mountable).GetMountpoint())
-		assert.Equal("/usr", ptMod.findDirectoryEntityPath("/usr")[0].(Mountable).GetMountpoint())
-		assert.Equal("/usr", ptMod.findDirectoryEntityPath("/usr/bin")[0].(Mountable).GetMountpoint())
+		assert.Equal("/", disk.FindDirectoryEntityPath(ptMod, "/opt")[0].(disk.Mountable).GetMountpoint())
+		assert.Equal("/usr", disk.FindDirectoryEntityPath(ptMod, "/usr")[0].(disk.Mountable).GetMountpoint())
+		assert.Equal("/usr", disk.FindDirectoryEntityPath(ptMod, "/usr/bin")[0].(disk.Mountable).GetMountpoint())
 
 		// invalid dir should return nil
-		assert.Nil(pt.findDirectoryEntityPath("invalid"))
+		assert.Nil(disk.FindDirectoryEntityPath(&pt, "invalid"))
 	}
 
 	{
-		pt := testPartitionTables["luks"]
-		assert.Equal("/", pt.findDirectoryEntityPath("/opt")[0].(Mountable).GetMountpoint())
-		assert.Equal("/boot", pt.findDirectoryEntityPath("/boot")[0].(Mountable).GetMountpoint())
-		assert.Equal("/boot", pt.findDirectoryEntityPath("/boot/loader")[0].(Mountable).GetMountpoint())
+		pt := disk.TestPartitionTables["luks"]
+		assert.Equal("/", disk.FindDirectoryEntityPath(&pt, "/opt")[0].(disk.Mountable).GetMountpoint())
+		assert.Equal("/boot", disk.FindDirectoryEntityPath(&pt, "/boot")[0].(disk.Mountable).GetMountpoint())
+		assert.Equal("/boot", disk.FindDirectoryEntityPath(&pt, "/boot/loader")[0].(disk.Mountable).GetMountpoint())
 
-		ptMod := pt.Clone().(*PartitionTable)
+		ptMod := pt.Clone().(*disk.PartitionTable)
 		ptMod.Partitions = append(ptMod.Partitions, usr)
-		assert.Equal("/", ptMod.findDirectoryEntityPath("/opt")[0].(Mountable).GetMountpoint())
-		assert.Equal("/usr", ptMod.findDirectoryEntityPath("/usr")[0].(Mountable).GetMountpoint())
-		assert.Equal("/usr", ptMod.findDirectoryEntityPath("/usr/bin")[0].(Mountable).GetMountpoint())
+		assert.Equal("/", disk.FindDirectoryEntityPath(ptMod, "/opt")[0].(disk.Mountable).GetMountpoint())
+		assert.Equal("/usr", disk.FindDirectoryEntityPath(ptMod, "/usr")[0].(disk.Mountable).GetMountpoint())
+		assert.Equal("/usr", disk.FindDirectoryEntityPath(ptMod, "/usr/bin")[0].(disk.Mountable).GetMountpoint())
 
 		// invalid dir should return nil
-		assert.Nil(pt.findDirectoryEntityPath("invalid"))
+		assert.Nil(disk.FindDirectoryEntityPath(&pt, "invalid"))
 	}
 
 	{
-		pt := testPartitionTables["luks+lvm"]
-		assert.Equal("/", pt.findDirectoryEntityPath("/opt")[0].(Mountable).GetMountpoint())
-		assert.Equal("/boot", pt.findDirectoryEntityPath("/boot")[0].(Mountable).GetMountpoint())
-		assert.Equal("/boot", pt.findDirectoryEntityPath("/boot/loader")[0].(Mountable).GetMountpoint())
+		pt := disk.TestPartitionTables["luks+lvm"]
+		assert.Equal("/", disk.FindDirectoryEntityPath(&pt, "/opt")[0].(disk.Mountable).GetMountpoint())
+		assert.Equal("/boot", disk.FindDirectoryEntityPath(&pt, "/boot")[0].(disk.Mountable).GetMountpoint())
+		assert.Equal("/boot", disk.FindDirectoryEntityPath(&pt, "/boot/loader")[0].(disk.Mountable).GetMountpoint())
 
-		ptMod := pt.Clone().(*PartitionTable)
+		ptMod := pt.Clone().(*disk.PartitionTable)
 		ptMod.Partitions = append(ptMod.Partitions, usr)
-		assert.Equal("/", ptMod.findDirectoryEntityPath("/opt")[0].(Mountable).GetMountpoint())
-		assert.Equal("/usr", ptMod.findDirectoryEntityPath("/usr")[0].(Mountable).GetMountpoint())
-		assert.Equal("/usr", ptMod.findDirectoryEntityPath("/usr/bin")[0].(Mountable).GetMountpoint())
+		assert.Equal("/", disk.FindDirectoryEntityPath(ptMod, "/opt")[0].(disk.Mountable).GetMountpoint())
+		assert.Equal("/usr", disk.FindDirectoryEntityPath(ptMod, "/usr")[0].(disk.Mountable).GetMountpoint())
+		assert.Equal("/usr", disk.FindDirectoryEntityPath(ptMod, "/usr/bin")[0].(disk.Mountable).GetMountpoint())
 
 		// invalid dir should return nil
-		assert.Nil(pt.findDirectoryEntityPath("invalid"))
+		assert.Nil(disk.FindDirectoryEntityPath(&pt, "invalid"))
 	}
 
 	{
-		pt := testPartitionTables["btrfs"]
-		assert.Equal("/", pt.findDirectoryEntityPath("/opt")[0].(Mountable).GetMountpoint())
-		assert.Equal("/boot", pt.findDirectoryEntityPath("/boot")[0].(Mountable).GetMountpoint())
-		assert.Equal("/boot", pt.findDirectoryEntityPath("/boot/loader")[0].(Mountable).GetMountpoint())
+		pt := disk.TestPartitionTables["btrfs"]
+		assert.Equal("/", disk.FindDirectoryEntityPath(&pt, "/opt")[0].(disk.Mountable).GetMountpoint())
+		assert.Equal("/boot", disk.FindDirectoryEntityPath(&pt, "/boot")[0].(disk.Mountable).GetMountpoint())
+		assert.Equal("/boot", disk.FindDirectoryEntityPath(&pt, "/boot/loader")[0].(disk.Mountable).GetMountpoint())
 
-		ptMod := pt.Clone().(*PartitionTable)
+		ptMod := pt.Clone().(*disk.PartitionTable)
 		ptMod.Partitions = append(ptMod.Partitions, usr)
-		assert.Equal("/", ptMod.findDirectoryEntityPath("/opt")[0].(Mountable).GetMountpoint())
-		assert.Equal("/usr", ptMod.findDirectoryEntityPath("/usr")[0].(Mountable).GetMountpoint())
-		assert.Equal("/usr", ptMod.findDirectoryEntityPath("/usr/bin")[0].(Mountable).GetMountpoint())
+		assert.Equal("/", disk.FindDirectoryEntityPath(ptMod, "/opt")[0].(disk.Mountable).GetMountpoint())
+		assert.Equal("/usr", disk.FindDirectoryEntityPath(ptMod, "/usr")[0].(disk.Mountable).GetMountpoint())
+		assert.Equal("/usr", disk.FindDirectoryEntityPath(ptMod, "/usr/bin")[0].(disk.Mountable).GetMountpoint())
 
 		// invalid dir should return nil
-		assert.Nil(pt.findDirectoryEntityPath("invalid"))
+		assert.Nil(disk.FindDirectoryEntityPath(&pt, "invalid"))
 	}
 
 	{
-		pt := PartitionTable{} // pt with no root should return nil
-		assert.Nil(pt.findDirectoryEntityPath("/var"))
+		pt := disk.PartitionTable{} // pt with no root should return nil
+		assert.Nil(disk.FindDirectoryEntityPath(&pt, "/var"))
 	}
 }
 
@@ -1027,14 +743,14 @@ func TestEnsureDirectorySizes(t *testing.T) {
 	}
 
 	{
-		pt := testPartitionTables["plain"]
-		pt = *pt.Clone().(*PartitionTable) // don't modify the original test data
+		pt := disk.TestPartitionTables["plain"]
+		pt = *pt.Clone().(*disk.PartitionTable) // don't modify the original test data
 
 		{
 			// make sure we have the correct volume
 			// guard against changes in the test pt
 			rootPart := pt.Partitions[3]
-			rootPayload := rootPart.Payload.(*Filesystem)
+			rootPayload := rootPart.Payload.(*disk.Filesystem)
 
 			assert.Equal("/", rootPayload.Mountpoint)
 			assert.Equal(uint64(0), rootPart.Size)
@@ -1052,19 +768,19 @@ func TestEnsureDirectorySizes(t *testing.T) {
 	}
 
 	{
-		pt := testPartitionTables["luks+lvm"]
-		pt = *pt.Clone().(*PartitionTable) // don't modify the original test data
+		pt := disk.TestPartitionTables["luks+lvm"]
+		pt = *pt.Clone().(*disk.PartitionTable) // don't modify the original test data
 
 		{
 			// make sure we have the correct volume
 			// guard against changes in the test pt
 			rootPart := pt.Partitions[3]
-			rootLUKS := rootPart.Payload.(*LUKSContainer)
-			rootVG := rootLUKS.Payload.(*LVMVolumeGroup)
+			rootLUKS := rootPart.Payload.(*disk.LUKSContainer)
+			rootVG := rootLUKS.Payload.(*disk.LVMVolumeGroup)
 			rootLV := rootVG.LogicalVolumes[0]
-			rootFS := rootLV.Payload.(*Filesystem)
+			rootFS := rootLV.Payload.(*disk.Filesystem)
 			homeLV := rootVG.LogicalVolumes[1]
-			homeFS := homeLV.Payload.(*Filesystem)
+			homeFS := homeLV.Payload.(*disk.Filesystem)
 
 			assert.Equal(uint64(5*GiB), rootPart.Size)
 			assert.Equal("/", rootFS.Mountpoint)
@@ -1077,8 +793,8 @@ func TestEnsureDirectorySizes(t *testing.T) {
 			// add requirements for /var subdirs that are > 5 GiB
 			pt.EnsureDirectorySizes(varAndHomeSizes)
 			rootPart := pt.Partitions[3]
-			rootLUKS := rootPart.Payload.(*LUKSContainer)
-			rootVG := rootLUKS.Payload.(*LVMVolumeGroup)
+			rootLUKS := rootPart.Payload.(*disk.LUKSContainer)
+			rootVG := rootLUKS.Payload.(*disk.LVMVolumeGroup)
 			rootLV := rootVG.LogicalVolumes[0]
 			homeLV := rootVG.LogicalVolumes[1]
 			assert.Equal(uint64(17*GiB)+rootVG.MetadataSize()+rootLUKS.MetadataSize(), rootPart.Size)
@@ -1091,14 +807,14 @@ func TestEnsureDirectorySizes(t *testing.T) {
 	}
 
 	{
-		pt := testPartitionTables["btrfs"]
-		pt = *pt.Clone().(*PartitionTable) // don't modify the original test data
+		pt := disk.TestPartitionTables["btrfs"]
+		pt = *pt.Clone().(*disk.PartitionTable) // don't modify the original test data
 
 		{
 			// make sure we have the correct volume
 			// guard against changes in the test pt
 			rootPart := pt.Partitions[3]
-			rootPayload := rootPart.Payload.(*Btrfs)
+			rootPayload := rootPart.Payload.(*disk.Btrfs)
 			assert.Equal("/", rootPayload.Subvolumes[0].Mountpoint)
 			assert.Equal(uint64(0), rootPayload.Subvolumes[0].Size)
 			assert.Equal("/var", rootPayload.Subvolumes[1].Mountpoint)
@@ -1109,7 +825,7 @@ func TestEnsureDirectorySizes(t *testing.T) {
 			// add requirements for /var subdirs that are > 5 GiB
 			pt.EnsureDirectorySizes(varSizes)
 			rootPart := pt.Partitions[3]
-			rootPayload := rootPart.Payload.(*Btrfs)
+			rootPayload := rootPart.Payload.(*disk.Btrfs)
 			assert.Equal(uint64(7*GiB), rootPayload.Subvolumes[1].Size)
 
 			// invalid
@@ -1125,7 +841,7 @@ func TestMinimumSizesWithRequiredSizes(t *testing.T) {
 	// math/rand is good enough in this case
 	/* #nosec G404 */
 	rng := rand.New(rand.NewSource(13))
-	pt := testPartitionTables["plain"]
+	pt := disk.TestPartitionTables["plain"]
 
 	type testCase struct {
 		Blueprint        []blueprint.FilesystemCustomization
@@ -1205,13 +921,13 @@ func TestMinimumSizesWithRequiredSizes(t *testing.T) {
 
 	for idx, tc := range testCases {
 		{ // without LVM
-			mpt, err := NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), RawPartitioningMode, map[string]uint64{"/": 1 * GiB, "/usr": 3 * GiB}, rng)
+			mpt, err := disk.NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), disk.RawPartitioningMode, map[string]uint64{"/": 1 * GiB, "/usr": 3 * GiB}, rng)
 			assert.NoError(err)
 			for mnt, minSize := range tc.ExpectedMinSizes {
-				path := entityPath(mpt, mnt)
+				path := disk.EntityPath(mpt, mnt)
 				assert.NotNil(path, "[%d] mountpoint %q not found", idx, mnt)
 				parent := path[1]
-				part, ok := parent.(*Partition)
+				part, ok := parent.(*disk.Partition)
 				assert.True(ok, "%q parent (%v) is not a partition", mnt, parent)
 				assert.GreaterOrEqual(part.GetSize(), minSize,
 					"[%d] %q size %d should be greater or equal to %d", idx, mnt, part.GetSize(), minSize)
@@ -1219,13 +935,13 @@ func TestMinimumSizesWithRequiredSizes(t *testing.T) {
 		}
 
 		{ // with LVM
-			mpt, err := NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), AutoLVMPartitioningMode, map[string]uint64{"/": 1 * GiB, "/usr": 3 * GiB}, rng)
+			mpt, err := disk.NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), disk.AutoLVMPartitioningMode, map[string]uint64{"/": 1 * GiB, "/usr": 3 * GiB}, rng)
 			assert.NoError(err)
 			for mnt, minSize := range tc.ExpectedMinSizes {
-				path := entityPath(mpt, mnt)
+				path := disk.EntityPath(mpt, mnt)
 				assert.NotNil(path, "[%d] mountpoint %q not found", idx, mnt)
 				parent := path[1]
-				part, ok := parent.(*LVMLogicalVolume)
+				part, ok := parent.(*disk.LVMLogicalVolume)
 				assert.True(ok, "[%d] %q parent (%v) is not an LVM logical volume", idx, mnt, parent)
 				assert.GreaterOrEqual(part.GetSize(), minSize,
 					"[%d] %q size %d should be greater or equal to %d", idx, mnt, part.GetSize(), minSize)
@@ -1250,108 +966,8 @@ func TestFSTabOptionsReadOnly(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.options, func(t *testing.T) {
-			options := FSTabOptions{MntOps: c.options}
+			options := disk.FSTabOptions{MntOps: c.options}
 			assert.Equal(t, c.expectedRO, options.ReadOnly())
-		})
-	}
-}
-
-func TestGenUniqueString(t *testing.T) {
-	type testCase struct {
-		base     string
-		existing map[string]bool
-		exp      string
-	}
-
-	testCases := map[string]testCase{
-		"simple": {
-			base: "root",
-			existing: map[string]bool{
-				"one": true,
-				"two": true,
-			},
-			exp: "root",
-		},
-		"collision": {
-			base: "root",
-			existing: map[string]bool{
-				"one":  true,
-				"two":  true,
-				"root": true,
-			},
-			exp: "root00",
-		},
-		"collision-2": {
-			base: "word",
-			existing: map[string]bool{
-				"word":   true,
-				"word00": true,
-				"word01": true,
-				"other":  true,
-			},
-			exp: "word02",
-		},
-	}
-
-	for name := range testCases {
-		tc := testCases[name]
-		t.Run(name, func(t *testing.T) {
-			assert := assert.New(t)
-			out, err := genUniqueString(tc.base, tc.existing)
-			assert.NoError(err)
-			assert.Equal(tc.exp, out)
-		})
-	}
-}
-
-func TestGenUniqueStringManyCollisions(t *testing.T) {
-	type testCase struct {
-		base        string
-		ncollisions int
-		exp         string
-		errmsg      string
-	}
-
-	testCases := map[string]testCase{
-		"baseword33": {
-			base:        "baseword",
-			ncollisions: 33,
-			exp:         "baseword33",
-		},
-		"somany99": {
-			base:        "somany",
-			ncollisions: 99,
-			exp:         "somany99",
-		},
-		"tk42102": {
-			base:        "tk421",
-			ncollisions: 2,
-			exp:         "tk42102",
-		},
-		"so-many-collisions": {
-			base:        "all-the-collisions",
-			ncollisions: 100,
-			errmsg:      `name collision: could not generate unique version of "all-the-collisions"`,
-		},
-	}
-
-	for name := range testCases {
-		tc := testCases[name]
-		t.Run(name, func(t *testing.T) {
-			assert := assert.New(t)
-			existing := map[string]bool{
-				tc.base: true,
-			}
-			for n := 0; n < tc.ncollisions; n++ {
-				existing[fmt.Sprintf("%s%02d", tc.base, n)] = true
-			}
-			out, err := genUniqueString(tc.base, existing)
-			if tc.errmsg == "" {
-				assert.NoError(err)
-				assert.Equal(tc.exp, out)
-			} else {
-				assert.EqualError(err, tc.errmsg)
-			}
 		})
 	}
 }
