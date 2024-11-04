@@ -154,6 +154,19 @@ func newClientFromArgs(flags *pflag.FlagSet) (*awscloud.AWS, error) {
 	return awscloud.New(region, keyID, secretKey, sessionToken)
 }
 
+// getOptionalStringFlag returns the value of a string flag if it's set, or nil
+// if it's not set.
+func getOptionalStringFlag(flags *pflag.FlagSet, name string) (*string, error) {
+	value, err := flags.GetString(name)
+	if err != nil {
+		return nil, err
+	}
+	if value == "" {
+		return nil, nil
+	}
+	return &value, nil
+}
+
 func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resources) error {
 	username, err := flags.GetString("username")
 	if err != nil {
@@ -192,6 +205,11 @@ func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resour
 		return err
 	}
 
+	importRole, err := getOptionalStringFlag(flags, "import-role")
+	if err != nil {
+		return err
+	}
+
 	imageName, err := flags.GetString("ami-name")
 	if err != nil {
 		return err
@@ -202,7 +220,7 @@ func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resour
 		return err
 	}
 
-	ami, snapshot, err := a.Register(imageName, bucketName, keyName, nil, arch, bootModePtr)
+	ami, snapshot, err := a.Register(imageName, bucketName, keyName, nil, arch, bootModePtr, importRole)
 	if err != nil {
 		return fmt.Errorf("Register(): %s", err.Error())
 	}
@@ -474,6 +492,7 @@ func setupCLI() *cobra.Command {
 	rootFlags.String("ami-name", "", "AMI name")
 	rootFlags.String("arch", "", "arch (x86_64 or aarch64)")
 	rootFlags.String("boot-mode", "", "boot mode (legacy-bios, uefi, uefi-preferred)")
+	rootFlags.String("import-role", "", "name of the import role to be used (default is determined by the AWS API, it's usually 'vmimport')")
 	rootFlags.String("username", "", "name of the user to create on the system")
 	rootFlags.String("ssh-pubkey", "", "path to user's public ssh key")
 	rootFlags.String("ssh-privkey", "", "path to user's private ssh key")
