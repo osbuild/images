@@ -238,7 +238,7 @@ var minimalrawPartitionTables = distro.BasePartitionTableMap{
 			},
 			{
 				Size: 1 * datasizes.GibiByte,
-				Type: "83",
+				Type: disk.DosLinuxTypeID,
 				Payload: &disk.Filesystem{
 					Type:         "ext4",
 					Mountpoint:   "/boot",
@@ -250,7 +250,7 @@ var minimalrawPartitionTables = distro.BasePartitionTableMap{
 			},
 			{
 				Size: 2 * datasizes.GibiByte,
-				Type: "83",
+				Type: disk.DosLinuxTypeID,
 				Payload: &disk.Filesystem{
 					Type:         "ext4",
 					Label:        "root",
@@ -333,7 +333,7 @@ var iotBasePartitionTables = distro.BasePartitionTableMap{
 			},
 			{
 				Size: 1 * datasizes.GibiByte,
-				Type: "83",
+				Type: disk.DosLinuxTypeID,
 				Payload: &disk.Filesystem{
 					Type:         "ext4",
 					Mountpoint:   "/boot",
@@ -345,7 +345,7 @@ var iotBasePartitionTables = distro.BasePartitionTableMap{
 			},
 			{
 				Size: 2569 * datasizes.MebiByte,
-				Type: "83",
+				Type: disk.DosLinuxTypeID,
 				Payload: &disk.Filesystem{
 					Type:         "ext4",
 					Label:        "root",
