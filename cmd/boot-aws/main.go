@@ -198,10 +198,8 @@ func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resour
 
 	fmt.Printf("file uploaded to %s\n", aws.StringValue(&uploadOutput.Location))
 
-	var bootModePtr *string
-	if bootMode, err := flags.GetString("boot-mode"); bootMode != "" {
-		bootModePtr = &bootMode
-	} else if err != nil {
+	bootMode, err := getOptionalStringFlag(flags, "boot-mode")
+	if err != nil {
 		return err
 	}
 
@@ -220,7 +218,7 @@ func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resour
 		return err
 	}
 
-	ami, snapshot, err := a.Register(imageName, bucketName, keyName, nil, arch, bootModePtr, importRole)
+	ami, snapshot, err := a.Register(imageName, bucketName, keyName, nil, arch, bootMode, importRole)
 	if err != nil {
 		return fmt.Errorf("Register(): %s", err.Error())
 	}
