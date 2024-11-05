@@ -60,6 +60,9 @@ const (
 
 	// DosFat16B used for the ESP-System partition
 	DosFat16B = "06"
+
+	// Partition type ID for any native Linux filesystem on dos
+	DosLinuxTypeID = "83"
 )
 
 // FSType is the filesystem type enum.
