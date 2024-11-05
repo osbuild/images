@@ -1,17 +1,64 @@
 ---
-name: "[integration]"
+name: "osbuild-composer integration"
+
+# PLEASE UPDATE THIS COMMENT IF ANY RELEVANT CHANGES ARE MADE TO THE WORKFLOW
+#
+# This workflow tests if an open PR breaks osbuild-composer's compatibility
+# with images. If it does, it posts a message on the PR itself notifying the
+# author and reviewers of this change. The workflow works as follows:
+#
+# 1. Checks out osbuild/osbuild-composer
+# 2. Replaces the osbuild/images dependency with the *merge base* of the open
+#    PR with main and runs osbuild-composer's unit tests.
+# 3. If the unit tests on the merge base (step 2) succeed, replaces the
+#    osbuild/images dependency with the *HEAD* of the open PR and runs
+#    osbuild-composer's unit tests. If the tests on the merge base failed, no
+#    further action is taken.
+# 4. At most one of two messages is posted:
+# 4.1 Posts a message on the open PR only if the unit tests with the merge base
+#     (step 2) succeed and the unit tests with the PR HEAD (step 3) fail. This
+#     combination of outcomes indicates that the PR is the one responsible for
+#     the breakage.
+# 4.2 Updates the existing message on the open PR only if the unit tests with
+#     the merge base (step2) succeed, the unit tests with the PR HEAD (step 3)
+#     succeed, and there is already a message posted by this workflow. This is
+#     meant for cases where a PR initially breaks compatibility and then it gets
+#     fixed. No message should be posted on a PR that doesn't affect the
+#     integration tests.
+#
+# Limitations:
+# 1. This workflow runs on pull_request_target, which means it runs on the main
+#    branch. Changes to this workflow in a PR will not affect the run for that
+#    PR. Running on pull_request_target is needed to have access to repository
+#    secrets (Schutzbot's GitHub token).
+# 2. If the unit tests in this repository fail, the integration will fail and
+#    the message will be posted (if the integration is not failing on the merge
+#    base). This will happen even if there's no actual integration issue, so
+#    the message can be misleading. However, subsequent runs that fix the issue
+#    will update the message accordingly.
+
 
 on:  # yamllint disable-line rule:truthy
-  pull_request:
+  pull_request_target:
     branches:
-      - "*"
+      # skip test for backport branches since it doesn't make sense to test
+      # those against osbuild-composer main
+      - main
 
 jobs:
+
   unit-tests:
-    name: "🛃 osbuild-composer unit tests"
-    runs-on: ubuntu-20.04
+    name: "🛃 Unit tests"
+    runs-on: ubuntu-latest
     container:
       image: registry.fedoraproject.org/fedora:latest
+    outputs:
+      # Define job outputs
+      # (see https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/passing-information-between-jobs#example-defining-outputs-for-a-job)
+      # One output for the test with the merge base and one for the test against
+      # the PR
+      base_test: ${{ steps.tests-base.outputs.base_test }}
+      pr_test: ${{ steps.tests-pr.outputs.pr_test }}
 
     steps:
       # krb5-devel is needed to test internal/upload/koji package
@@ -27,74 +74,88 @@ jobs:
           repository: osbuild/osbuild-composer
           ref: main
 
-      - name: Check out the osbuild/images code
+      - name: Check out osbuild/images for the PR
         uses: actions/checkout@v4
         with:
           path: images
           ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Update the osbuild/images reference
-        run: |
-          cd osbuild-composer
-          go mod edit -replace github.com/osbuild/images=../images
-          ./tools/prepare-source.sh
 
       - name: Mark the working directory as safe for git
         run: git config --global --add safe.directory "$(pwd)"
 
-      - name: Run unit tests
-        working-directory: osbuild-composer
-        run: go test -v -race ./...
-
-  lint:
-    name: "⌨ osbuild-composer Golang Lint"
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up Go 1.21
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.21"
-        id: go
-
-      - name: Check out osbuild-composer main branch
-        uses: actions/checkout@v4
-        with:
-          path: osbuild-composer
-          repository: osbuild/osbuild-composer
-          ref: main
-
-      - name: Check out the osbuild/images code
-        uses: actions/checkout@v4
-        with:
-          path: images
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Update the osbuild/images reference
-        working-directory: osbuild-composer
+      - name: Update the osbuild/images reference to the merge base with main
+        env:
+          merge_base_sha: ${{ github.event.pull_request.base.sha }}
         run: |
+          cd osbuild-composer
+          go mod edit -replace github.com/osbuild/images=github.com/osbuild/images@$merge_base_sha
+          ./tools/prepare-source.sh
+
+      - name: Run unit tests (merge base)
+        working-directory: osbuild-composer
+        id: tests-base
+        # This step will not fail if the test fails, but it will write the
+        # failure to GITHUB_OUTPUT
+        run: |
+          if go test -v -race ./...; then
+            echo "base_test=1" >> $GITHUB_OUTPUT
+          else
+            echo "base_test=0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update the osbuild/images reference to the PR HEAD
+        env:
+          pr_head: ${{ github.event.pull_request.hase.sha }}
+        # if the base tests failed, there's no need to run the PR HEAD tests
+        if: steps.tests-base.outputs.base_test == 1
+        # Restore and clean the checkout and replace the dependency again using
+        # images from the checkout above
+        run: |
+          cd osbuild-composer
+          git restore .
+          git clean -xfd .
           go mod edit -replace github.com/osbuild/images=../images
           ./tools/prepare-source.sh
 
-      - name: Allow replacing the osbuild/images module in .golangci.yml
+      - name: Run unit tests (PR HEAD)
+        id: tests-pr
         working-directory: osbuild-composer
+        # if the base tests failed, there's no need to run the PR HEAD tests
+        if: steps.tests-base.outputs.base_test == 1
+        # This step will not fail if the test fails, but it will write the
+        # failure to GITHUB_OUTPUT
         run: |
-          awk '/replace-local: false/ {print "    replace-local: true"; next} 1' .golangci.yml > .golangci.yml.new
-          mv .golangci.yml.new .golangci.yml
+          if go test -v -race ./...; then
+            echo "pr_test=1" >> $GITHUB_OUTPUT
+          else
+            echo "pr_test=0" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Apt update
-        run: sudo apt update
-
-      # This is needed to lint internal/upload/koji package
-      - name: Install kerberos devel package
-        run: sudo apt install -y libkrb5-dev
-
-      # This is needed for the container upload dependencies
-      - name: Install libgpgme devel package
-        run: sudo apt install -y libgpgme-dev libbtrfs-dev libdevmapper-dev
-
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v6
+  post-results:
+    name: "Post notice"
+    permissions:
+      pull-requests: write
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    steps:
+      - name: Add comment (breakage)
+        uses: mshick/add-pr-comment@v2
+        repo-token: ${{ secrets.SCHUTZBOT_GITHUB_ACCESS_TOKEN }}
+        if: needs.unit-tests.outputs.base_test == 1  &&  needs.unit-tests.outputs.pr_test == 0
         with:
-          version: v1.54.2
-          working-directory: osbuild-composer
-          args: --verbose --timeout 5m0s
+          issue: ${{ github.event.pull_request.number }}
+          message: |
+            This PR changes the images API or behaviour causing integration failures with osbuild-composer. The next update of the images dependency in osbuild-composer will need work to adapt to these changes.
+
+            This is simply a notice. It will not block this PR from being merged.
+
+      - name: Update comment (fixed)
+        uses: mshick/add-pr-comment@v2
+        repo-token: ${{ secrets.SCHUTZBOT_GITHUB_ACCESS_TOKEN }}
+        if: needs.unit-tests.outputs.pr_test == 1
+        with:
+          update-only: true  # don't write a message if there isn't one already
+          issue: ${{ github.event.pull_request.number }}
+          message: |
+            A previous version of this PR changed the images API or behaviour causing integration issues with osbuild-composer.
+            This is now fixed.
