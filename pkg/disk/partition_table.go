@@ -795,7 +795,7 @@ func (pt *PartitionTable) ensureBtrfs() error {
 		if pt.Type == "gpt" {
 			part.Type = FilesystemDataGUID
 		} else {
-			part.Type = "83"
+			part.Type = DosLinuxTypeID
 		}
 
 	} else {
@@ -977,8 +977,18 @@ func EnsureRootFilesystem(pt *PartitionTable, defaultFsType FSType) error {
 	if err != nil {
 		return fmt.Errorf("error creating root partition: %w", err)
 	}
+
+	var partType string
+	switch pt.Type {
+	case "dos":
+		partType = DosLinuxTypeID
+	case "gpt":
+		partType = FilesystemDataGUID
+	default:
+		return fmt.Errorf("error creating root partition: unknown or unsupported partition table type: %s", pt.Type)
+	}
 	rootpart := Partition{
-		Type: FilesystemDataGUID,
+		Type: partType,
 		Size: 0, // Set the size to 0 and it will be adjusted by EnsureDirectorySizes() and relayout()
 		Payload: &Filesystem{
 			Type:         defaultFsType.String(),
@@ -1021,8 +1031,18 @@ func EnsureBootPartition(pt *PartitionTable, bootFsType FSType) error {
 	if err != nil {
 		return fmt.Errorf("error creating boot partition: %w", err)
 	}
+
+	var partType string
+	switch pt.Type {
+	case "dos":
+		partType = DosLinuxTypeID
+	case "gpt":
+		partType = XBootLDRPartitionGUID
+	default:
+		return fmt.Errorf("error creating boot partition: unknown or unsupported partition table type: %s", pt.Type)
+	}
 	bootPart := Partition{
-		Type: XBootLDRPartitionGUID,
+		Type: partType,
 		Size: 512 * datasizes.MiB,
 		Payload: &Filesystem{
 			Type:         bootFsType.String(),

@@ -114,10 +114,11 @@ func TestEnsureRootFilesystem(t *testing.T) {
 	}
 
 	testCases := map[string]testCase{
-		"empty-plain": {
-			pt:            disk.PartitionTable{},
+		"empty-plain-gpt": {
+			pt:            disk.PartitionTable{Type: "gpt"},
 			defaultFsType: disk.FS_EXT4,
 			expected: disk.PartitionTable{
+				Type: "gpt",
 				Partitions: []disk.Partition{
 					{
 						Start:    0,
@@ -135,8 +136,31 @@ func TestEnsureRootFilesystem(t *testing.T) {
 				},
 			},
 		},
-		"simple-plain": {
+		"empty-plain-dos": {
+			pt:            disk.PartitionTable{Type: "dos"},
+			defaultFsType: disk.FS_EXT4,
+			expected: disk.PartitionTable{
+				Type: "dos",
+				Partitions: []disk.Partition{
+					{
+						Start:    0,
+						Size:     0,
+						Type:     disk.DosLinuxTypeID,
+						Bootable: false,
+						UUID:     "",
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "root",
+							Mountpoint:   "/",
+							FSTabOptions: "defaults",
+						},
+					},
+				},
+			},
+		},
+		"simple-plain-gpt": {
 			pt: disk.PartitionTable{
+				Type: "gpt",
 				Partitions: []disk.Partition{
 					{
 						Payload: &disk.Filesystem{
@@ -150,6 +174,7 @@ func TestEnsureRootFilesystem(t *testing.T) {
 			},
 			defaultFsType: disk.FS_EXT4,
 			expected: disk.PartitionTable{
+				Type: "gpt",
 				Partitions: []disk.Partition{
 					{
 						Payload: &disk.Filesystem{
@@ -163,6 +188,48 @@ func TestEnsureRootFilesystem(t *testing.T) {
 						Start:    0,
 						Size:     0,
 						Type:     disk.FilesystemDataGUID,
+						Bootable: false,
+						UUID:     "",
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "root",
+							Mountpoint:   "/",
+							FSTabOptions: "defaults",
+						},
+					},
+				},
+			},
+		},
+		"simple-plain-dos": {
+			pt: disk.PartitionTable{
+				Type: "dos",
+				Partitions: []disk.Partition{
+					{
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "home",
+							Mountpoint:   "/home",
+							FSTabOptions: "defaults",
+						},
+					},
+				},
+			},
+			defaultFsType: disk.FS_EXT4,
+			expected: disk.PartitionTable{
+				Type: "dos",
+				Partitions: []disk.Partition{
+					{
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "home",
+							Mountpoint:   "/home",
+							FSTabOptions: "defaults",
+						},
+					},
+					{
+						Start:    0,
+						Size:     0,
+						Type:     disk.DosLinuxTypeID,
 						Bootable: false,
 						UUID:     "",
 						Payload: &disk.Filesystem{
@@ -394,6 +461,7 @@ func TestEnsureRootFilesystem(t *testing.T) {
 		},
 		"plain-collision": {
 			pt: disk.PartitionTable{
+				Type: "gpt",
 				Partitions: []disk.Partition{
 					{
 						Payload: &disk.Filesystem{
@@ -407,6 +475,7 @@ func TestEnsureRootFilesystem(t *testing.T) {
 			},
 			defaultFsType: disk.FS_EXT4,
 			expected: disk.PartitionTable{
+				Type: "gpt",
 				Partitions: []disk.Partition{
 					{
 						Payload: &disk.Filesystem{
@@ -434,6 +503,7 @@ func TestEnsureRootFilesystem(t *testing.T) {
 		},
 		"lvm-collision": {
 			pt: disk.PartitionTable{
+				Type: "gpt",
 				Partitions: []disk.Partition{
 					{
 						Payload: &disk.LVMVolumeGroup{
@@ -472,6 +542,7 @@ func TestEnsureRootFilesystem(t *testing.T) {
 			},
 			defaultFsType: disk.FS_XFS,
 			expected: disk.PartitionTable{
+				Type: "gpt",
 				Partitions: []disk.Partition{
 					{
 						Payload: &disk.LVMVolumeGroup{
@@ -586,6 +657,11 @@ func TestEnsureRootFilesystemErrors(t *testing.T) {
 			pt:     disk.PartitionTable{},
 			errmsg: "error creating root partition: no default filesystem type",
 		},
+		"err-no-pt-type": {
+			pt:            disk.PartitionTable{},
+			defaultFsType: disk.FS_EXT4,
+			errmsg:        "error creating root partition: unknown or unsupported partition table type: ",
+		},
 		"err-plain": {
 			pt: disk.PartitionTable{
 				Partitions: []disk.Partition{
@@ -654,10 +730,11 @@ func TestEnsureBootPartition(t *testing.T) {
 	}
 
 	testCases := map[string]testCase{
-		"empty-plain": {
-			pt:     disk.PartitionTable{},
+		"empty-plain-gpt": {
+			pt:     disk.PartitionTable{Type: "gpt"},
 			fsType: disk.FS_EXT4,
 			expected: disk.PartitionTable{
+				Type: "gpt",
 				Partitions: []disk.Partition{
 					{
 						Start:    0,
@@ -675,8 +752,31 @@ func TestEnsureBootPartition(t *testing.T) {
 				},
 			},
 		},
-		"simple-plain": {
+		"empty-plain-dos": {
+			pt:     disk.PartitionTable{Type: "dos"},
+			fsType: disk.FS_EXT4,
+			expected: disk.PartitionTable{
+				Type: "dos",
+				Partitions: []disk.Partition{
+					{
+						Start:    0,
+						Size:     512 * datasizes.MiB,
+						Type:     disk.DosLinuxTypeID,
+						Bootable: false,
+						UUID:     "",
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "boot",
+							Mountpoint:   "/boot",
+							FSTabOptions: "defaults",
+						},
+					},
+				},
+			},
+		},
+		"simple-plain-gpt": {
 			pt: disk.PartitionTable{
+				Type: "gpt",
 				Partitions: []disk.Partition{
 					{
 						Payload: &disk.Filesystem{
@@ -690,6 +790,7 @@ func TestEnsureBootPartition(t *testing.T) {
 			},
 			fsType: disk.FS_EXT4,
 			expected: disk.PartitionTable{
+				Type: "gpt",
 				Partitions: []disk.Partition{
 					{
 						Payload: &disk.Filesystem{
@@ -703,6 +804,48 @@ func TestEnsureBootPartition(t *testing.T) {
 						Start:    0,
 						Size:     512 * datasizes.MiB,
 						Type:     disk.XBootLDRPartitionGUID,
+						Bootable: false,
+						UUID:     "",
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "boot",
+							Mountpoint:   "/boot",
+							FSTabOptions: "defaults",
+						},
+					},
+				},
+			},
+		},
+		"simple-plain-dos": {
+			pt: disk.PartitionTable{
+				Type: "dos",
+				Partitions: []disk.Partition{
+					{
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "home",
+							Mountpoint:   "/home",
+							FSTabOptions: "defaults",
+						},
+					},
+				},
+			},
+			fsType: disk.FS_EXT4,
+			expected: disk.PartitionTable{
+				Type: "dos",
+				Partitions: []disk.Partition{
+					{
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "home",
+							Mountpoint:   "/home",
+							FSTabOptions: "defaults",
+						},
+					},
+					{
+						Start:    0,
+						Size:     512 * datasizes.MiB,
+						Type:     disk.DosLinuxTypeID,
 						Bootable: false,
 						UUID:     "",
 						Payload: &disk.Filesystem{
@@ -819,6 +962,7 @@ func TestEnsureBootPartition(t *testing.T) {
 		},
 		"label-collision": {
 			pt: disk.PartitionTable{
+				Type: "gpt",
 				Partitions: []disk.Partition{
 					{
 						Payload: &disk.Filesystem{
@@ -832,6 +976,7 @@ func TestEnsureBootPartition(t *testing.T) {
 			},
 			fsType: disk.FS_EXT4,
 			expected: disk.PartitionTable{
+				Type: "gpt",
 				Partitions: []disk.Partition{
 					{
 						Payload: &disk.Filesystem{
