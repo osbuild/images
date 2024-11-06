@@ -23,7 +23,7 @@ func getOneImage(distroName, imgTypeStr, archStr string) (*imagefilter.Result, e
 	}
 
 	filterExprs := []string{
-		fmt.Sprintf("name:%s", distroName),
+		fmt.Sprintf("distro:%s", distroName),
 		fmt.Sprintf("arch:%s", archStr),
 		fmt.Sprintf("type:%s", imgTypeStr),
 	}

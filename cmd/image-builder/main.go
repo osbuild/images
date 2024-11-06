@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -27,11 +28,12 @@ func cmdListImages(cmd *cobra.Command, args []string) error {
 }
 
 func cmdManifest(cmd *cobra.Command, args []string) error {
-	distroName := args[0]
-	imgType := args[1]
+	// support prefixes to make it easy to copy/paste from list-images
+	distroName := strings.TrimPrefix(args[0], "distro:")
+	imgType := strings.TrimPrefix(args[1], "type:")
 	var archStr string
 	if len(args) > 2 {
-		archStr = args[2]
+		archStr = strings.TrimPrefix(args[2], "arch:")
 	} else {
 		archStr = arch.Current().String()
 	}
@@ -40,8 +42,9 @@ func cmdManifest(cmd *cobra.Command, args []string) error {
 }
 
 func cmdBuild(cmd *cobra.Command, args []string) error {
-	distroName := args[0]
-	imgType := args[1]
+	// support prefixes to make it easy to copy/paste from list-images
+	distroName := strings.TrimPrefix(args[0], "distro:")
+	imgType := strings.TrimPrefix(args[1], "type:")
 
 	return buildImage(osStdout, distroName, imgType)
 }
@@ -78,8 +81,9 @@ operating sytsems like centos and RHEL with easy customizations support.`,
 		Short:        "Build manifest for the given distro/image-type, e.g. centos-9 qcow2",
 		RunE:         cmdManifest,
 		SilenceUsage: true,
-		Args:         cobra.MinimumNArgs(2),
-		Hidden:       true,
+		// XXX: show error with available types if only one arg given
+		Args:   cobra.MinimumNArgs(2),
+		Hidden: true,
 	}
 	rootCmd.AddCommand(manifestCmd)
 
@@ -88,7 +92,8 @@ operating sytsems like centos and RHEL with easy customizations support.`,
 		Short:        "Build the given distro/image-type, e.g. centos-9 qcow2",
 		RunE:         cmdBuild,
 		SilenceUsage: true,
-		Args:         cobra.ExactArgs(2),
+		// XXX: show error with available types if only one arg given
+		Args: cobra.ExactArgs(2),
 	}
 	rootCmd.AddCommand(buildCmd)
 	// XXX: add --output=text,json and streaming
