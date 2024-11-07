@@ -9,6 +9,7 @@ import (
 	"github.com/osbuild/images/internal/testdisk"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
+	"github.com/osbuild/images/pkg/platform"
 )
 
 func TestPartitionTable_GetMountpointSize(t *testing.T) {
@@ -1014,6 +1015,198 @@ func TestEnsureBootPartition(t *testing.T) {
 			assert := assert.New(t)
 			pt := tc.pt
 			err := disk.EnsureBootPartition(&pt, tc.fsType)
+			if tc.errmsg == "" {
+				assert.NoError(err)
+				assert.Equal(tc.expected, pt)
+			} else {
+				assert.EqualError(err, tc.errmsg)
+			}
+		})
+	}
+}
+
+func TestAddPartitionsForBootMode(t *testing.T) {
+	type testCase struct {
+		pt       disk.PartitionTable
+		bootMode platform.BootMode
+		expected disk.PartitionTable
+		errmsg   string
+	}
+
+	testCases := map[string]testCase{
+		// the partition table type shouldn't matter when the boot mode is
+		// none, but let's test with both anyway
+		"none-gpt": {
+			pt:       disk.PartitionTable{Type: "gpt"},
+			bootMode: platform.BOOT_NONE,
+			expected: disk.PartitionTable{Type: "gpt"},
+		},
+		"none-dos": {
+			pt:       disk.PartitionTable{Type: "dos"},
+			bootMode: platform.BOOT_NONE,
+			expected: disk.PartitionTable{Type: "dos"},
+		},
+		"bios-gpt": {
+			pt:       disk.PartitionTable{Type: "gpt"},
+			bootMode: platform.BOOT_LEGACY,
+			expected: disk.PartitionTable{
+				Type: "gpt",
+				Partitions: []disk.Partition{
+					{
+						Bootable: true,
+						Start:    0,
+						Size:     1 * datasizes.MiB,
+						Type:     disk.BIOSBootPartitionGUID,
+						UUID:     disk.BIOSBootPartitionUUID,
+					},
+				},
+			},
+		},
+		"bios-dos": {
+			pt:       disk.PartitionTable{Type: "dos"},
+			bootMode: platform.BOOT_LEGACY,
+			expected: disk.PartitionTable{
+				Type: "dos",
+				Partitions: []disk.Partition{
+					{
+						Bootable: true,
+						Start:    0,
+						Size:     1 * datasizes.MiB,
+						Type:     disk.DosBIOSBootID,
+						UUID:     disk.BIOSBootPartitionUUID,
+					},
+				},
+			},
+		},
+		"uefi-gpt": {
+			pt:       disk.PartitionTable{Type: "gpt"},
+			bootMode: platform.BOOT_UEFI,
+			expected: disk.PartitionTable{
+				Type: "gpt",
+				Partitions: []disk.Partition{
+					{
+						Start: 0 * datasizes.MiB,
+						Size:  200 * datasizes.MiB,
+						Type:  disk.EFISystemPartitionGUID,
+						UUID:  disk.EFISystemPartitionUUID,
+						Payload: &disk.Filesystem{
+							Type:         "vfat",
+							UUID:         disk.EFIFilesystemUUID,
+							Mountpoint:   "/boot/efi",
+							Label:        "EFI-SYSTEM",
+							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+							FSTabFreq:    0,
+							FSTabPassNo:  2,
+						},
+					},
+				},
+			},
+		},
+		"uefi-dos": {
+			pt:       disk.PartitionTable{Type: "dos"},
+			bootMode: platform.BOOT_UEFI,
+			expected: disk.PartitionTable{
+				Type: "dos",
+				Partitions: []disk.Partition{
+					{
+						Start: 0 * datasizes.MiB,
+						Size:  200 * datasizes.MiB,
+						Type:  disk.DosESPID,
+						UUID:  disk.EFISystemPartitionUUID,
+						Payload: &disk.Filesystem{
+							Type:         "vfat",
+							UUID:         disk.EFIFilesystemUUID,
+							Mountpoint:   "/boot/efi",
+							Label:        "EFI-SYSTEM",
+							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+							FSTabFreq:    0,
+							FSTabPassNo:  2,
+						},
+					},
+				},
+			},
+		},
+		"hybrid-gpt": {
+			pt:       disk.PartitionTable{Type: "gpt"},
+			bootMode: platform.BOOT_HYBRID,
+			expected: disk.PartitionTable{
+				Type: "gpt",
+				Partitions: []disk.Partition{
+					{
+						Size:     1 * datasizes.MiB,
+						Bootable: true,
+						Type:     disk.BIOSBootPartitionGUID,
+						UUID:     disk.BIOSBootPartitionUUID,
+					},
+					{
+						Size: 200 * datasizes.MiB,
+						Type: disk.EFISystemPartitionGUID,
+						UUID: disk.EFISystemPartitionUUID,
+						Payload: &disk.Filesystem{
+							Type:         "vfat",
+							UUID:         disk.EFIFilesystemUUID,
+							Mountpoint:   "/boot/efi",
+							Label:        "EFI-SYSTEM",
+							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+							FSTabFreq:    0,
+							FSTabPassNo:  2,
+						},
+					},
+				},
+			},
+		},
+		"hybrid-dos": {
+			pt:       disk.PartitionTable{Type: "dos"},
+			bootMode: platform.BOOT_HYBRID,
+			expected: disk.PartitionTable{
+				Type: "dos",
+				Partitions: []disk.Partition{
+					{
+						Size:     1 * datasizes.MiB,
+						Bootable: true,
+						Type:     disk.DosBIOSBootID,
+						UUID:     disk.BIOSBootPartitionUUID,
+					},
+					{
+						Size: 200 * datasizes.MiB,
+						Type: disk.DosESPID,
+						UUID: disk.EFISystemPartitionUUID,
+						Payload: &disk.Filesystem{
+							Type:         "vfat",
+							UUID:         disk.EFIFilesystemUUID,
+							Mountpoint:   "/boot/efi",
+							Label:        "EFI-SYSTEM",
+							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+							FSTabFreq:    0,
+							FSTabPassNo:  2,
+						},
+					},
+				},
+			},
+		},
+		"bad-pttype-bios": {
+			pt:       disk.PartitionTable{Type: "super-gpt"},
+			bootMode: platform.BOOT_LEGACY,
+			errmsg:   "error creating BIOS boot partition: unknown or unsupported partition table type: super-gpt",
+		},
+		"bad-pttype-uefi": {
+			pt:       disk.PartitionTable{Type: "super-gpt"},
+			bootMode: platform.BOOT_UEFI,
+			errmsg:   "error creating EFI system partition: unknown or unsupported partition table type: super-gpt",
+		},
+		"bad-pttype-hybrid": {
+			pt:       disk.PartitionTable{Type: "super-gpt"},
+			bootMode: platform.BOOT_HYBRID,
+			errmsg:   "error creating BIOS boot partition: unknown or unsupported partition table type: super-gpt",
+		},
+	}
+
+	for name := range testCases {
+		tc := testCases[name]
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			pt := tc.pt
+			err := disk.AddPartitionsForBootMode(&pt, tc.bootMode)
 			if tc.errmsg == "" {
 				assert.NoError(err)
 				assert.Equal(tc.expected, pt)
