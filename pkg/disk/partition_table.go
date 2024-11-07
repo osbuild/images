@@ -1068,16 +1068,31 @@ func AddPartitionsForBootMode(pt *PartitionTable, bootMode platform.BootMode) er
 	switch bootMode {
 	case platform.BOOT_LEGACY:
 		// add BIOS boot partition
-		pt.Partitions = append(pt.Partitions, mkBIOSBoot())
+		part, err := mkBIOSBoot(pt.Type)
+		if err != nil {
+			return err
+		}
+		pt.Partitions = append(pt.Partitions, part)
 		return nil
 	case platform.BOOT_UEFI:
 		// add ESP
-		pt.Partitions = append(pt.Partitions, mkESP(200*datasizes.MiB))
+		part, err := mkESP(200*datasizes.MiB, pt.Type)
+		if err != nil {
+			return err
+		}
+		pt.Partitions = append(pt.Partitions, part)
 		return nil
 	case platform.BOOT_HYBRID:
 		// add both
-		pt.Partitions = append(pt.Partitions, mkBIOSBoot())
-		pt.Partitions = append(pt.Partitions, mkESP(200*datasizes.MiB))
+		bios, err := mkBIOSBoot(pt.Type)
+		if err != nil {
+			return err
+		}
+		esp, err := mkESP(200*datasizes.MiB, pt.Type)
+		if err != nil {
+			return err
+		}
+		pt.Partitions = append(pt.Partitions, bios, esp)
 		return nil
 	case platform.BOOT_NONE:
 		return nil
@@ -1086,19 +1101,37 @@ func AddPartitionsForBootMode(pt *PartitionTable, bootMode platform.BootMode) er
 	}
 }
 
-func mkBIOSBoot() Partition {
+func mkBIOSBoot(ptType string) (Partition, error) {
+	var partType string
+	switch ptType {
+	case "dos":
+		partType = DosBIOSBootID
+	case "gpt":
+		partType = BIOSBootPartitionGUID
+	default:
+		return Partition{}, fmt.Errorf("error creating BIOS boot partition: unknown or unsupported partition table type: %s", ptType)
+	}
 	return Partition{
 		Size:     1 * datasizes.MiB,
 		Bootable: true,
-		Type:     BIOSBootPartitionGUID,
+		Type:     partType,
 		UUID:     BIOSBootPartitionUUID,
-	}
+	}, nil
 }
 
-func mkESP(size uint64) Partition {
+func mkESP(size uint64, ptType string) (Partition, error) {
+	var partType string
+	switch ptType {
+	case "dos":
+		partType = DosESPID
+	case "gpt":
+		partType = EFISystemPartitionGUID
+	default:
+		return Partition{}, fmt.Errorf("error creating EFI system partition: unknown or unsupported partition table type: %s", ptType)
+	}
 	return Partition{
 		Size: size,
-		Type: EFISystemPartitionGUID,
+		Type: partType,
 		UUID: EFISystemPartitionUUID,
 		Payload: &Filesystem{
 			Type:         "vfat",
@@ -1109,5 +1142,5 @@ func mkESP(size uint64) Partition {
 			FSTabFreq:    0,
 			FSTabPassNo:  2,
 		},
-	}
+	}, nil
 }
