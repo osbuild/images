@@ -113,19 +113,19 @@
     },
     "repos": [
       {
-        "file": "/etc/yum.repos.d/rawhide.repo",
+        "file": "/etc/yum.repos.d/branched.repo",
         "x86_64": [
           {
             "title": "fedora",
             "name": "fedora",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f41/f41-x86_64-rawhide-20240901"
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f41/f41-x86_64-branched-20241101"
           }
         ],
         "aarch64": [
           {
             "title": "fedora",
             "name": "fedora",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f41/f41-x86_64-rawhide-20240901"
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f41/f41-x86_64-branched-20241101"
           }
         ]
       }
