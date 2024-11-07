@@ -19,24 +19,6 @@ import (
 
 var forceDNF = flag.Bool("force-dnf", false, "force dnf testing, making them fail instead of skip if dnf isn't installed")
 
-// sniffSolverVersion performs a quick depsolve with the given solver to get
-// the value of the underlying library name and version from the 'solver' field
-// in the result.
-func sniffSolverVersion(solver *Solver, repo rpmmd.RepoConfig) string {
-	pkgsets := []rpmmd.PackageSet{
-		{
-			Include:      []string{"filesystem"},
-			Repositories: []rpmmd.RepoConfig{repo},
-		},
-	}
-	res, err := solver.Depsolve(pkgsets, sbom.StandardTypeNone)
-	if err != nil {
-		panic(fmt.Sprintf("sniffSolverVersion: the sniffer failed: %s", err))
-	}
-
-	return res.Solver
-}
-
 func TestDepsolver(t *testing.T) {
 	if !*forceDNF {
 		// dnf tests aren't forced: skip them if the dnf sniff check fails
@@ -132,14 +114,10 @@ func TestDepsolver(t *testing.T) {
 		},
 	}
 
-	solverIsDnf5 := sniffSolverVersion(solver, s.RepoConfig) == "dnf5"
 	for tcName := range testCases {
 		t.Run(tcName, func(t *testing.T) {
 			assert := assert.New(t)
 			tc := testCases[tcName]
-			if tc.sbomType != sbom.StandardTypeNone && solverIsDnf5 {
-				t.Skip("Skipping sbom test with dnf5: unsupported")
-			}
 			pkgsets := make([]rpmmd.PackageSet, len(tc.packages))
 			for idx := range tc.packages {
 				pkgsets[idx] = rpmmd.PackageSet{Include: tc.packages[idx], Repositories: tc.repos, InstallWeakDeps: true}
