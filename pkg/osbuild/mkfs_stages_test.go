@@ -189,7 +189,7 @@ func TestGenMkfsStagesBtrfs(t *testing.T) {
 
 func TestGenMkfsStagesUnhappy(t *testing.T) {
 	pt := &disk.PartitionTable{
-		Type: "gpt",
+		Type: disk.PT_GPT,
 		Partitions: []disk.Partition{
 			{
 				Payload: &disk.Filesystem{

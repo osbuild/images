@@ -3,15 +3,17 @@ package rhel
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/customizations/subscription"
+	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestOsCustomizationsRHSM(t *testing.T) {
@@ -441,5 +443,5 @@ func TestOsCustomizationsRHSM(t *testing.T) {
 
 func TestPartitionTypeNotCrashing(t *testing.T) {
 	it := &ImageType{}
-	assert.Equal(t, it.PartitionType(), "")
+	assert.Equal(t, it.PartitionType(), disk.PT_NONE)
 }

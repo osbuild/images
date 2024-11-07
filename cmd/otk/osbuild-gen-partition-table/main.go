@@ -126,9 +126,13 @@ func makePartitionTableFromOtkInput(input *Input) (*disk.PartitionTable, error) 
 		}
 	}
 
+	partType, err := disk.NewPartitionTableType(string(input.Properties.Type))
+	if err != nil {
+		return nil, err
+	}
 	pt := &disk.PartitionTable{
 		UUID:        input.Properties.UUID,
-		Type:        string(input.Properties.Type),
+		Type:        partType,
 		SectorSize:  input.Properties.SectorSize,
 		StartOffset: startOffset,
 	}

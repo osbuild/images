@@ -4,7 +4,7 @@ import "github.com/osbuild/images/pkg/disk"
 
 var basePT = disk.PartitionTable{
 	UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
-	Type: "gpt",
+	Type: disk.PT_GPT,
 	Partitions: []disk.Partition{
 		{
 			Size:     1048576, // 1MB

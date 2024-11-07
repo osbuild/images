@@ -13,9 +13,9 @@ import (
 )
 
 type PartitionTable struct {
-	Size       uint64 // Size of the disk (in bytes).
-	UUID       string // Unique identifier of the partition table (GPT only).
-	Type       string // Partition table type, e.g. dos, gpt.
+	Size       uint64             // Size of the disk (in bytes).
+	UUID       string             // Unique identifier of the partition table (GPT only).
+	Type       PartitionTableType // Partition table type, e.g. dos, gpt.
 	Partitions []Partition
 
 	SectorSize   uint64 // Sector size in bytes
@@ -244,7 +244,7 @@ func (pt *PartitionTable) GenerateUUIDs(rng *rand.Rand) {
 
 	// if this is a MBR partition table, there is no need to generate
 	// uuids for the partitions themselves
-	if pt.Type != "gpt" {
+	if pt.Type != PT_GPT {
 		return
 	}
 
@@ -340,7 +340,7 @@ func (pt *PartitionTable) CreateMountpoint(mountpoint string, size uint64) (Enti
 	n := len(pt.Partitions)
 	var maxNo int
 
-	if pt.Type == "gpt" {
+	if pt.Type == PT_GPT {
 		switch mountpoint {
 		case "/boot":
 			partition.Type = XBootLDRPartitionGUID
@@ -399,7 +399,7 @@ func (pt *PartitionTable) HeaderSize() uint64 {
 	// this also ensure we have enough space for the MBR
 	header := pt.SectorsToBytes(1)
 
-	if pt.Type == "dos" {
+	if pt.Type == PT_DOS {
 		return header
 	}
 
@@ -455,7 +455,7 @@ func (pt *PartitionTable) relayout(size uint64) uint64 {
 	footer := uint64(0)
 
 	// The GPT header is also at the end of the partition table
-	if pt.Type == "gpt" {
+	if pt.Type == PT_GPT {
 		footer = header
 	}
 
@@ -727,7 +727,7 @@ func (pt *PartitionTable) ensureLVM() error {
 		// reset the vg partition size - it will be grown later
 		part.Size = 0
 
-		if pt.Type == "gpt" {
+		if pt.Type == PT_GPT {
 			part.Type = LVMPartitionGUID
 		} else {
 			part.Type = "8e"
@@ -793,7 +793,7 @@ func (pt *PartitionTable) ensureBtrfs() error {
 		// reset the btrfs partition size - it will be grown later
 		part.Size = 0
 
-		if pt.Type == "gpt" {
+		if pt.Type == PT_GPT {
 			part.Type = FilesystemDataGUID
 		} else {
 			part.Type = DosLinuxTypeID
@@ -981,9 +981,9 @@ func EnsureRootFilesystem(pt *PartitionTable, defaultFsType FSType) error {
 
 	var partType string
 	switch pt.Type {
-	case "dos":
+	case PT_DOS:
 		partType = DosLinuxTypeID
-	case "gpt":
+	case PT_GPT:
 		partType = FilesystemDataGUID
 	default:
 		return fmt.Errorf("error creating root partition: unknown or unsupported partition table type: %s", pt.Type)
@@ -1035,9 +1035,9 @@ func EnsureBootPartition(pt *PartitionTable, bootFsType FSType) error {
 
 	var partType string
 	switch pt.Type {
-	case "dos":
+	case PT_DOS:
 		partType = DosLinuxTypeID
-	case "gpt":
+	case PT_GPT:
 		partType = XBootLDRPartitionGUID
 	default:
 		return fmt.Errorf("error creating boot partition: unknown or unsupported partition table type: %s", pt.Type)
@@ -1101,15 +1101,15 @@ func AddPartitionsForBootMode(pt *PartitionTable, bootMode platform.BootMode) er
 	}
 }
 
-func mkBIOSBoot(ptType string) (Partition, error) {
+func mkBIOSBoot(ptType PartitionTableType) (Partition, error) {
 	var partType string
 	switch ptType {
-	case "dos":
+	case PT_DOS:
 		partType = DosBIOSBootID
-	case "gpt":
+	case PT_GPT:
 		partType = BIOSBootPartitionGUID
 	default:
-		return Partition{}, fmt.Errorf("error creating BIOS boot partition: unknown or unsupported partition table type: %s", ptType)
+		return Partition{}, fmt.Errorf("error creating BIOS boot partition: unknown or unsupported partition table enum: %d", ptType)
 	}
 	return Partition{
 		Size:     1 * datasizes.MiB,
@@ -1119,15 +1119,15 @@ func mkBIOSBoot(ptType string) (Partition, error) {
 	}, nil
 }
 
-func mkESP(size uint64, ptType string) (Partition, error) {
+func mkESP(size uint64, ptType PartitionTableType) (Partition, error) {
 	var partType string
 	switch ptType {
-	case "dos":
+	case PT_DOS:
 		partType = DosESPID
-	case "gpt":
+	case PT_GPT:
 		partType = EFISystemPartitionGUID
 	default:
-		return Partition{}, fmt.Errorf("error creating EFI system partition: unknown or unsupported partition table type: %s", ptType)
+		return Partition{}, fmt.Errorf("error creating EFI system partition: unknown or unsupported partition table enum: %d", ptType)
 	}
 	return Partition{
 		Size: size,

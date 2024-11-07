@@ -17,7 +17,7 @@ const (
 var TestPartitionTables = map[string]PartitionTable{
 	"plain": {
 		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
-		Type: "gpt",
+		Type: PT_GPT,
 		Partitions: []Partition{
 			{
 				Size:     1 * MiB,
@@ -69,7 +69,7 @@ var TestPartitionTables = map[string]PartitionTable{
 
 	"plain-noboot": {
 		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
-		Type: "gpt",
+		Type: PT_GPT,
 		Partitions: []Partition{
 			{
 				Size:     1 * MiB,
@@ -108,7 +108,7 @@ var TestPartitionTables = map[string]PartitionTable{
 
 	"luks": {
 		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
-		Type: "gpt",
+		Type: PT_GPT,
 		Partitions: []Partition{
 			{
 				Size:     1 * MiB,
@@ -163,7 +163,7 @@ var TestPartitionTables = map[string]PartitionTable{
 	},
 	"luks+lvm": {
 		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
-		Type: "gpt",
+		Type: PT_GPT,
 		Partitions: []Partition{
 			{
 				Size:     1 * MiB,
@@ -238,7 +238,7 @@ var TestPartitionTables = map[string]PartitionTable{
 	},
 	"btrfs": {
 		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
-		Type: "gpt",
+		Type: PT_GPT,
 		Partitions: []Partition{
 			{
 				Size:     1 * MiB,
@@ -544,7 +544,7 @@ func TestRelayout(t *testing.T) {
 	testCases := map[string]testCase{
 		"simple-dos": {
 			pt: &PartitionTable{
-				Type: "dos",
+				Type: PT_DOS,
 				Size: 100 * MiB,
 				Partitions: []Partition{
 					{
@@ -560,7 +560,7 @@ func TestRelayout(t *testing.T) {
 			},
 			size: 100 * MiB,
 			expected: &PartitionTable{
-				Type: "dos",
+				Type: PT_DOS,
 				Size: 100 * MiB,
 				Partitions: []Partition{
 					{
@@ -579,7 +579,7 @@ func TestRelayout(t *testing.T) {
 		},
 		"simple-gpt": {
 			pt: &PartitionTable{
-				Type: "gpt",
+				Type: PT_GPT,
 				Size: 100 * MiB,
 				Partitions: []Partition{
 					{
@@ -595,7 +595,7 @@ func TestRelayout(t *testing.T) {
 			},
 			size: 100 * MiB,
 			expected: &PartitionTable{
-				Type: "gpt",
+				Type: PT_GPT,
 				Size: 100 * MiB,
 				Partitions: []Partition{
 					{
@@ -614,7 +614,7 @@ func TestRelayout(t *testing.T) {
 		},
 		"simple-gpt-root-first": {
 			pt: &PartitionTable{
-				Type: "gpt",
+				Type: PT_GPT,
 				Size: 100 * MiB,
 				Partitions: []Partition{
 					{
@@ -633,7 +633,7 @@ func TestRelayout(t *testing.T) {
 			},
 			size: 100 * MiB,
 			expected: &PartitionTable{
-				Type: "gpt",
+				Type: PT_GPT,
 				Size: 100 * MiB,
 				Partitions: []Partition{
 					{
@@ -656,7 +656,7 @@ func TestRelayout(t *testing.T) {
 		},
 		"lvm-dos": {
 			pt: &PartitionTable{
-				Type: "dos",
+				Type: PT_DOS,
 				Size: 100 * MiB,
 				Partitions: []Partition{
 					{
@@ -678,7 +678,7 @@ func TestRelayout(t *testing.T) {
 			},
 			size: 100 * MiB,
 			expected: &PartitionTable{
-				Type: "dos",
+				Type: PT_DOS,
 				Size: 100 * MiB,
 				Partitions: []Partition{
 					{
@@ -703,7 +703,7 @@ func TestRelayout(t *testing.T) {
 		},
 		"lvm-gpt": {
 			pt: &PartitionTable{
-				Type: "gpt",
+				Type: PT_GPT,
 				Size: 100 * MiB,
 				Partitions: []Partition{
 					{
@@ -726,7 +726,7 @@ func TestRelayout(t *testing.T) {
 			},
 			size: 100 * MiB,
 			expected: &PartitionTable{
-				Type: "gpt",
+				Type: PT_GPT,
 				Size: 100 * MiB,
 				Partitions: []Partition{
 					{
@@ -752,7 +752,7 @@ func TestRelayout(t *testing.T) {
 		},
 		"lvm-gpt-multilv": {
 			pt: &PartitionTable{
-				Type: "gpt",
+				Type: PT_GPT,
 				Size: 100 * MiB,
 				Partitions: []Partition{
 					{
@@ -778,7 +778,7 @@ func TestRelayout(t *testing.T) {
 			},
 			size: 100 * MiB,
 			expected: &PartitionTable{
-				Type: "gpt",
+				Type: PT_GPT,
 				Size: 100 * MiB,
 				Partitions: []Partition{
 					{
@@ -807,7 +807,7 @@ func TestRelayout(t *testing.T) {
 		},
 		"btrfs": {
 			pt: &PartitionTable{
-				Type: "gpt",
+				Type: PT_GPT,
 				Size: 100 * MiB,
 				Partitions: []Partition{
 					{
@@ -831,7 +831,7 @@ func TestRelayout(t *testing.T) {
 			},
 			size: 100 * MiB,
 			expected: &PartitionTable{
-				Type: "gpt",
+				Type: PT_GPT,
 				Size: 100 * MiB,
 				Partitions: []Partition{
 					{
@@ -858,7 +858,7 @@ func TestRelayout(t *testing.T) {
 		},
 		"simple-dos-grow-pt": {
 			pt: &PartitionTable{
-				Type: "dos",
+				Type: PT_DOS,
 				Size: 100 * MiB,
 				Partitions: []Partition{
 					{
@@ -874,7 +874,7 @@ func TestRelayout(t *testing.T) {
 			},
 			size: 100 * MiB,
 			expected: &PartitionTable{
-				Type: "dos",
+				Type: PT_DOS,
 				Size: 211 * MiB, // grows to fit partitions and header
 				Partitions: []Partition{
 					{
@@ -893,7 +893,7 @@ func TestRelayout(t *testing.T) {
 		},
 		"simple-gpt-growpt": {
 			pt: &PartitionTable{
-				Type: "gpt",
+				Type: PT_GPT,
 				Size: 100 * MiB,
 				Partitions: []Partition{
 					{
@@ -909,7 +909,7 @@ func TestRelayout(t *testing.T) {
 			},
 			size: 42 * MiB,
 			expected: &PartitionTable{
-				Type: "gpt",
+				Type: PT_GPT,
 				Size: 512 * MiB, // grows to fit partitions, header, and footer
 				Partitions: []Partition{
 					{
@@ -928,7 +928,7 @@ func TestRelayout(t *testing.T) {
 		},
 		"lvm-gpt-grow": {
 			pt: &PartitionTable{
-				Type: "gpt",
+				Type: PT_GPT,
 				Size: 10 * MiB,
 				Partitions: []Partition{
 					{
@@ -954,7 +954,7 @@ func TestRelayout(t *testing.T) {
 			},
 			size: 100 * MiB,
 			expected: &PartitionTable{
-				Type: "gpt",
+				Type: PT_GPT,
 				Size: 702 * MiB,
 				Partitions: []Partition{
 					{
@@ -983,7 +983,7 @@ func TestRelayout(t *testing.T) {
 		},
 		"lvm-dos-grow-rootvg": {
 			pt: &PartitionTable{
-				Type: "dos",
+				Type: PT_DOS,
 				Size: 10 * MiB, // PT is smaller than the sum of Partitions
 				Partitions: []Partition{
 					{
@@ -1009,7 +1009,7 @@ func TestRelayout(t *testing.T) {
 			},
 			size: 99 * MiB,
 			expected: &PartitionTable{
-				Type: "dos",
+				Type: PT_DOS,
 				Size: 325 * MiB,
 				Partitions: []Partition{
 					{
@@ -1038,7 +1038,7 @@ func TestRelayout(t *testing.T) {
 		},
 		"lvm-gpt-grow-rootvg": {
 			pt: &PartitionTable{
-				Type: "gpt",
+				Type: PT_GPT,
 				Size: 10 * MiB,
 				Partitions: []Partition{
 					{
@@ -1064,7 +1064,7 @@ func TestRelayout(t *testing.T) {
 			},
 			size: 99 * MiB,
 			expected: &PartitionTable{
-				Type: "gpt",
+				Type: PT_GPT,
 				Size: 326 * MiB,
 				Partitions: []Partition{
 					{

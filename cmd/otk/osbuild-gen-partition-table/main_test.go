@@ -367,7 +367,7 @@ func TestGenPartitionTableIntegrationPPC(t *testing.T) {
 				PartitionTable: &disk.PartitionTable{
 					Size: 10742661120,
 					UUID: "0x14fc63d2",
-					Type: "dos",
+					Type: disk.PT_DOS,
 					Partitions: []disk.Partition{
 						{
 							Bootable: true,
@@ -423,7 +423,7 @@ func TestGenPartitionTableMinimal(t *testing.T) {
 				PartitionTable: &disk.PartitionTable{
 					Size: 10738466816,
 					UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
-					Type: "dos",
+					Type: disk.PT_DOS,
 					Partitions: []disk.Partition{
 						{
 							Start: 1048576,
@@ -483,7 +483,7 @@ func TestGenPartitionTableCustomizationExtraMp(t *testing.T) {
 				PartitionTable: &disk.PartitionTable{
 					Size: 15893266432,
 					UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
-					Type: "dos",
+					Type: disk.PT_DOS,
 					Partitions: []disk.Partition{
 						{
 							Start: 1048576,
@@ -572,7 +572,7 @@ func TestGenPartitionTableCustomizationExtraMpPlusModificationPartitionMode(t *t
 				PartitionTable: &disk.PartitionTable{
 					Size: 13739491328,
 					UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
-					Type: "dos",
+					Type: disk.PT_DOS,
 					Partitions: []disk.Partition{
 						{
 							Start: 3002073088,
@@ -630,7 +630,7 @@ func TestGenPartitionTablePropertiesDefaultSize(t *testing.T) {
 				PartitionTable: &disk.PartitionTable{
 					Size: 16106127360,
 					UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
-					Type: "dos",
+					Type: disk.PT_DOS,
 					Partitions: []disk.Partition{
 						{
 							Start: 1048576,
@@ -681,7 +681,7 @@ func TestGenPartitionTableModificationMinDiskSize(t *testing.T) {
 				PartitionTable: &disk.PartitionTable{
 					Size: 21474836480,
 					UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
-					Type: "dos",
+					Type: disk.PT_DOS,
 					Partitions: []disk.Partition{
 						{
 							Start: 1048576,
@@ -731,7 +731,7 @@ func TestGenPartitionTableModificationFilename(t *testing.T) {
 				PartitionTable: &disk.PartitionTable{
 					Size: 10738466816,
 					UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
-					Type: "dos",
+					Type: disk.PT_DOS,
 					Partitions: []disk.Partition{
 						{
 							Start: 1048576,
@@ -791,7 +791,7 @@ func TestGenPartitionCreateESPDos(t *testing.T) {
 			Internal: otkdisk.Internal{
 				PartitionTable: &disk.PartitionTable{
 					Size: 12885950464,
-					Type: "dos",
+					Type: disk.PT_DOS,
 					UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
 					Partitions: []disk.Partition{
 						{

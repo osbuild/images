@@ -201,7 +201,7 @@ func TestGenBootupdDevicesMountsUnexpectedEntity(t *testing.T) {
 
 var fakePt = &disk.PartitionTable{
 	UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
-	Type: "gpt",
+	Type: disk.PT_GPT,
 	Partitions: []disk.Partition{
 		{
 			Size:     1 * datasizes.MebiByte,

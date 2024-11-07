@@ -8,7 +8,7 @@ var testPartitionTables = map[string]disk.PartitionTable{
 
 	"plain": {
 		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
-		Type: "gpt",
+		Type: disk.PT_GPT,
 		Partitions: []disk.Partition{
 			{
 				Size:     1048576, // 1MB
@@ -60,7 +60,7 @@ var testPartitionTables = map[string]disk.PartitionTable{
 
 	"luks": {
 		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
-		Type: "gpt",
+		Type: disk.PT_GPT,
 		Partitions: []disk.Partition{
 			{
 				Size:     1048576, // 1MB
@@ -121,7 +121,7 @@ var testPartitionTables = map[string]disk.PartitionTable{
 
 	"luks+lvm": {
 		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
-		Type: "gpt",
+		Type: disk.PT_GPT,
 		Partitions: []disk.Partition{
 			{
 				Size:     1048576, // 1MB
@@ -205,7 +205,7 @@ var testPartitionTables = map[string]disk.PartitionTable{
 
 	"luks+lvm+clevisBind": {
 		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
-		Type: "gpt",
+		Type: disk.PT_GPT,
 		Partitions: []disk.Partition{
 			{
 				Size:     1048576, // 1MB
@@ -282,7 +282,7 @@ var testPartitionTables = map[string]disk.PartitionTable{
 
 	"btrfs": {
 		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
-		Type: "gpt",
+		Type: disk.PT_GPT,
 		Partitions: []disk.Partition{
 			{
 				Size:     1048576, // 1MB

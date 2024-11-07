@@ -24,7 +24,7 @@ var minimalInputBase = makestages.Input{
 				PartitionTable: &disk.PartitionTable{
 					Size: 10738466816,
 					UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
-					Type: "dos",
+					Type: disk.PT_DOS,
 					Partitions: []disk.Partition{
 						{
 							Start: 1048576,

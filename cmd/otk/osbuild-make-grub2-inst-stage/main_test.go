@@ -14,7 +14,7 @@ import (
 )
 
 var fakePt = &disk.PartitionTable{
-	Type: "gpt",
+	Type: disk.PT_GPT,
 	Partitions: []disk.Partition{
 		{
 			Size:     1 * datasizes.MiB,

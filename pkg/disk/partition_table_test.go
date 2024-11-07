@@ -31,7 +31,7 @@ func TestPartitionTable_GetMountpointSize(t *testing.T) {
 
 func TestPartitionTable_GenerateUUIDs(t *testing.T) {
 	pt := disk.PartitionTable{
-		Type: "gpt",
+		Type: disk.PT_GPT,
 		Partitions: []disk.Partition{
 			{
 				Size:     1 * datasizes.MebiByte,
@@ -85,7 +85,7 @@ func TestPartitionTable_GenerateUUIDs(t *testing.T) {
 
 func TestPartitionTable_GenerateUUIDs_VFAT(t *testing.T) {
 	pt := disk.PartitionTable{
-		Type: "dos",
+		Type: disk.PT_DOS,
 		Partitions: []disk.Partition{
 			{
 				Size: 2 * datasizes.GibiByte,
@@ -116,10 +116,10 @@ func TestEnsureRootFilesystem(t *testing.T) {
 
 	testCases := map[string]testCase{
 		"empty-plain-gpt": {
-			pt:            disk.PartitionTable{Type: "gpt"},
+			pt:            disk.PartitionTable{Type: disk.PT_GPT},
 			defaultFsType: disk.FS_EXT4,
 			expected: disk.PartitionTable{
-				Type: "gpt",
+				Type: disk.PT_GPT,
 				Partitions: []disk.Partition{
 					{
 						Start:    0,
@@ -138,10 +138,10 @@ func TestEnsureRootFilesystem(t *testing.T) {
 			},
 		},
 		"empty-plain-dos": {
-			pt:            disk.PartitionTable{Type: "dos"},
+			pt:            disk.PartitionTable{Type: disk.PT_DOS},
 			defaultFsType: disk.FS_EXT4,
 			expected: disk.PartitionTable{
-				Type: "dos",
+				Type: disk.PT_DOS,
 				Partitions: []disk.Partition{
 					{
 						Start:    0,
@@ -161,7 +161,7 @@ func TestEnsureRootFilesystem(t *testing.T) {
 		},
 		"simple-plain-gpt": {
 			pt: disk.PartitionTable{
-				Type: "gpt",
+				Type: disk.PT_GPT,
 				Partitions: []disk.Partition{
 					{
 						Payload: &disk.Filesystem{
@@ -175,7 +175,7 @@ func TestEnsureRootFilesystem(t *testing.T) {
 			},
 			defaultFsType: disk.FS_EXT4,
 			expected: disk.PartitionTable{
-				Type: "gpt",
+				Type: disk.PT_GPT,
 				Partitions: []disk.Partition{
 					{
 						Payload: &disk.Filesystem{
@@ -203,7 +203,7 @@ func TestEnsureRootFilesystem(t *testing.T) {
 		},
 		"simple-plain-dos": {
 			pt: disk.PartitionTable{
-				Type: "dos",
+				Type: disk.PT_DOS,
 				Partitions: []disk.Partition{
 					{
 						Payload: &disk.Filesystem{
@@ -217,7 +217,7 @@ func TestEnsureRootFilesystem(t *testing.T) {
 			},
 			defaultFsType: disk.FS_EXT4,
 			expected: disk.PartitionTable{
-				Type: "dos",
+				Type: disk.PT_DOS,
 				Partitions: []disk.Partition{
 					{
 						Payload: &disk.Filesystem{
@@ -462,7 +462,7 @@ func TestEnsureRootFilesystem(t *testing.T) {
 		},
 		"plain-collision": {
 			pt: disk.PartitionTable{
-				Type: "gpt",
+				Type: disk.PT_GPT,
 				Partitions: []disk.Partition{
 					{
 						Payload: &disk.Filesystem{
@@ -476,7 +476,7 @@ func TestEnsureRootFilesystem(t *testing.T) {
 			},
 			defaultFsType: disk.FS_EXT4,
 			expected: disk.PartitionTable{
-				Type: "gpt",
+				Type: disk.PT_GPT,
 				Partitions: []disk.Partition{
 					{
 						Payload: &disk.Filesystem{
@@ -504,7 +504,7 @@ func TestEnsureRootFilesystem(t *testing.T) {
 		},
 		"lvm-collision": {
 			pt: disk.PartitionTable{
-				Type: "gpt",
+				Type: disk.PT_GPT,
 				Partitions: []disk.Partition{
 					{
 						Payload: &disk.LVMVolumeGroup{
@@ -543,7 +543,7 @@ func TestEnsureRootFilesystem(t *testing.T) {
 			},
 			defaultFsType: disk.FS_XFS,
 			expected: disk.PartitionTable{
-				Type: "gpt",
+				Type: disk.PT_GPT,
 				Partitions: []disk.Partition{
 					{
 						Payload: &disk.LVMVolumeGroup{
@@ -732,10 +732,10 @@ func TestEnsureBootPartition(t *testing.T) {
 
 	testCases := map[string]testCase{
 		"empty-plain-gpt": {
-			pt:     disk.PartitionTable{Type: "gpt"},
+			pt:     disk.PartitionTable{Type: disk.PT_GPT},
 			fsType: disk.FS_EXT4,
 			expected: disk.PartitionTable{
-				Type: "gpt",
+				Type: disk.PT_GPT,
 				Partitions: []disk.Partition{
 					{
 						Start:    0,
@@ -754,10 +754,10 @@ func TestEnsureBootPartition(t *testing.T) {
 			},
 		},
 		"empty-plain-dos": {
-			pt:     disk.PartitionTable{Type: "dos"},
+			pt:     disk.PartitionTable{Type: disk.PT_DOS},
 			fsType: disk.FS_EXT4,
 			expected: disk.PartitionTable{
-				Type: "dos",
+				Type: disk.PT_DOS,
 				Partitions: []disk.Partition{
 					{
 						Start:    0,
@@ -777,7 +777,7 @@ func TestEnsureBootPartition(t *testing.T) {
 		},
 		"simple-plain-gpt": {
 			pt: disk.PartitionTable{
-				Type: "gpt",
+				Type: disk.PT_GPT,
 				Partitions: []disk.Partition{
 					{
 						Payload: &disk.Filesystem{
@@ -791,7 +791,7 @@ func TestEnsureBootPartition(t *testing.T) {
 			},
 			fsType: disk.FS_EXT4,
 			expected: disk.PartitionTable{
-				Type: "gpt",
+				Type: disk.PT_GPT,
 				Partitions: []disk.Partition{
 					{
 						Payload: &disk.Filesystem{
@@ -819,7 +819,7 @@ func TestEnsureBootPartition(t *testing.T) {
 		},
 		"simple-plain-dos": {
 			pt: disk.PartitionTable{
-				Type: "dos",
+				Type: disk.PT_DOS,
 				Partitions: []disk.Partition{
 					{
 						Payload: &disk.Filesystem{
@@ -833,7 +833,7 @@ func TestEnsureBootPartition(t *testing.T) {
 			},
 			fsType: disk.FS_EXT4,
 			expected: disk.PartitionTable{
-				Type: "dos",
+				Type: disk.PT_DOS,
 				Partitions: []disk.Partition{
 					{
 						Payload: &disk.Filesystem{
@@ -963,7 +963,7 @@ func TestEnsureBootPartition(t *testing.T) {
 		},
 		"label-collision": {
 			pt: disk.PartitionTable{
-				Type: "gpt",
+				Type: disk.PT_GPT,
 				Partitions: []disk.Partition{
 					{
 						Payload: &disk.Filesystem{
@@ -977,7 +977,7 @@ func TestEnsureBootPartition(t *testing.T) {
 			},
 			fsType: disk.FS_EXT4,
 			expected: disk.PartitionTable{
-				Type: "gpt",
+				Type: disk.PT_GPT,
 				Partitions: []disk.Partition{
 					{
 						Payload: &disk.Filesystem{
@@ -1037,20 +1037,20 @@ func TestAddPartitionsForBootMode(t *testing.T) {
 		// the partition table type shouldn't matter when the boot mode is
 		// none, but let's test with both anyway
 		"none-gpt": {
-			pt:       disk.PartitionTable{Type: "gpt"},
+			pt:       disk.PartitionTable{Type: disk.PT_GPT},
 			bootMode: platform.BOOT_NONE,
-			expected: disk.PartitionTable{Type: "gpt"},
+			expected: disk.PartitionTable{Type: disk.PT_GPT},
 		},
 		"none-dos": {
-			pt:       disk.PartitionTable{Type: "dos"},
+			pt:       disk.PartitionTable{Type: disk.PT_DOS},
 			bootMode: platform.BOOT_NONE,
-			expected: disk.PartitionTable{Type: "dos"},
+			expected: disk.PartitionTable{Type: disk.PT_DOS},
 		},
 		"bios-gpt": {
-			pt:       disk.PartitionTable{Type: "gpt"},
+			pt:       disk.PartitionTable{Type: disk.PT_GPT},
 			bootMode: platform.BOOT_LEGACY,
 			expected: disk.PartitionTable{
-				Type: "gpt",
+				Type: disk.PT_GPT,
 				Partitions: []disk.Partition{
 					{
 						Bootable: true,
@@ -1063,10 +1063,10 @@ func TestAddPartitionsForBootMode(t *testing.T) {
 			},
 		},
 		"bios-dos": {
-			pt:       disk.PartitionTable{Type: "dos"},
+			pt:       disk.PartitionTable{Type: disk.PT_DOS},
 			bootMode: platform.BOOT_LEGACY,
 			expected: disk.PartitionTable{
-				Type: "dos",
+				Type: disk.PT_DOS,
 				Partitions: []disk.Partition{
 					{
 						Bootable: true,
@@ -1079,10 +1079,10 @@ func TestAddPartitionsForBootMode(t *testing.T) {
 			},
 		},
 		"uefi-gpt": {
-			pt:       disk.PartitionTable{Type: "gpt"},
+			pt:       disk.PartitionTable{Type: disk.PT_GPT},
 			bootMode: platform.BOOT_UEFI,
 			expected: disk.PartitionTable{
-				Type: "gpt",
+				Type: disk.PT_GPT,
 				Partitions: []disk.Partition{
 					{
 						Start: 0 * datasizes.MiB,
@@ -1103,10 +1103,10 @@ func TestAddPartitionsForBootMode(t *testing.T) {
 			},
 		},
 		"uefi-dos": {
-			pt:       disk.PartitionTable{Type: "dos"},
+			pt:       disk.PartitionTable{Type: disk.PT_DOS},
 			bootMode: platform.BOOT_UEFI,
 			expected: disk.PartitionTable{
-				Type: "dos",
+				Type: disk.PT_DOS,
 				Partitions: []disk.Partition{
 					{
 						Start: 0 * datasizes.MiB,
@@ -1127,10 +1127,10 @@ func TestAddPartitionsForBootMode(t *testing.T) {
 			},
 		},
 		"hybrid-gpt": {
-			pt:       disk.PartitionTable{Type: "gpt"},
+			pt:       disk.PartitionTable{Type: disk.PT_GPT},
 			bootMode: platform.BOOT_HYBRID,
 			expected: disk.PartitionTable{
-				Type: "gpt",
+				Type: disk.PT_GPT,
 				Partitions: []disk.Partition{
 					{
 						Size:     1 * datasizes.MiB,
@@ -1156,10 +1156,10 @@ func TestAddPartitionsForBootMode(t *testing.T) {
 			},
 		},
 		"hybrid-dos": {
-			pt:       disk.PartitionTable{Type: "dos"},
+			pt:       disk.PartitionTable{Type: disk.PT_DOS},
 			bootMode: platform.BOOT_HYBRID,
 			expected: disk.PartitionTable{
-				Type: "dos",
+				Type: disk.PT_DOS,
 				Partitions: []disk.Partition{
 					{
 						Size:     1 * datasizes.MiB,
@@ -1185,22 +1185,22 @@ func TestAddPartitionsForBootMode(t *testing.T) {
 			},
 		},
 		"bad-pttype-bios": {
-			pt:       disk.PartitionTable{Type: "super-gpt"},
+			pt:       disk.PartitionTable{Type: disk.PartitionTableType(911)},
 			bootMode: platform.BOOT_LEGACY,
-			errmsg:   "error creating BIOS boot partition: unknown or unsupported partition table type: super-gpt",
+			errmsg:   "error creating BIOS boot partition: unknown or unsupported partition table enum: 911",
 		},
 		"bad-pttype-uefi": {
-			pt:       disk.PartitionTable{Type: "super-gpt"},
+			pt:       disk.PartitionTable{Type: disk.PartitionTableType(911)},
 			bootMode: platform.BOOT_UEFI,
-			errmsg:   "error creating EFI system partition: unknown or unsupported partition table type: super-gpt",
+			errmsg:   "error creating EFI system partition: unknown or unsupported partition table enum: 911",
 		},
 		"bad-pttype-hybrid": {
-			pt:       disk.PartitionTable{Type: "super-gpt"},
+			pt:       disk.PartitionTable{Type: disk.PartitionTableType(911)},
 			bootMode: platform.BOOT_HYBRID,
-			errmsg:   "error creating BIOS boot partition: unknown or unsupported partition table type: super-gpt",
+			errmsg:   "error creating BIOS boot partition: unknown or unsupported partition table enum: 911",
 		},
 		"bad-bootmode": {
-			pt:       disk.PartitionTable{Type: "gpt"},
+			pt:       disk.PartitionTable{Type: disk.PT_GPT},
 			bootMode: 4,
 			errmsg:   "unknown or unsupported boot mode type with enum value 4",
 		},
