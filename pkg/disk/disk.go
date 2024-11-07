@@ -19,6 +19,7 @@ package disk
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"math/rand"
@@ -139,6 +140,24 @@ func (t PartitionTableType) String() string {
 	default:
 		panic(fmt.Sprintf("unknown or unsupported partition table type with enum value %d", t))
 	}
+}
+
+func (t PartitionTableType) MarshalJSON() ([]byte, error) {
+	return json.Marshal(t.String())
+}
+
+func (t *PartitionTableType) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+
+	new, err := NewPartitionTableType(s)
+	if err != nil {
+		return err
+	}
+	*t = new
+	return nil
 }
 
 func NewPartitionTableType(s string) (PartitionTableType, error) {

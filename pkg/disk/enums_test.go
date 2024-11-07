@@ -1,21 +1,24 @@
 package disk_test
 
 import (
+	"encoding/json"
+	"fmt"
 	"testing"
 
-	"github.com/osbuild/images/pkg/disk"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/osbuild/images/pkg/disk"
 )
 
-func TestEnumPartitionTableType(t *testing.T) {
-	enumMap := map[string]disk.PartitionTableType{
-		"":    disk.PT_NONE,
-		"dos": disk.PT_DOS,
-		"gpt": disk.PT_GPT,
-	}
+var partitionTypeEnumMap = map[string]disk.PartitionTableType{
+	"":    disk.PT_NONE,
+	"dos": disk.PT_DOS,
+	"gpt": disk.PT_GPT,
+}
 
+func TestEnumPartitionTableType(t *testing.T) {
 	assert := assert.New(t)
-	for name, num := range enumMap {
+	for name, num := range partitionTypeEnumMap {
 		ptt, err := disk.NewPartitionTableType(name)
 		expected := disk.PartitionTableType(num)
 
@@ -32,6 +35,24 @@ func TestEnumPartitionTableType(t *testing.T) {
 	// error test: bad name
 	_, err := disk.NewPartitionTableType("not-a-type")
 	assert.EqualError(err, "unknown or unsupported partition table type name: not-a-type")
+}
+
+func TestEnumPartitionTableTypeJSON(t *testing.T) {
+	for name, num := range partitionTypeEnumMap {
+		jsData, err := json.Marshal(num)
+		assert.NoError(t, err)
+		assert.Equal(t, fmt.Sprintf(`"%s"`, name), string(jsData))
+
+		var unmarshaledNum disk.PartitionTableType
+		err = json.Unmarshal(jsData, &unmarshaledNum)
+		assert.NoError(t, err)
+		assert.Equal(t, unmarshaledNum, num)
+	}
+
+	// bad unmarshal
+	var unmarshaledNum disk.PartitionTableType
+	err := json.Unmarshal([]byte(`"bad"`), &unmarshaledNum)
+	assert.EqualError(t, err, `unknown or unsupported partition table type name: bad`)
 }
 
 func TestEnumFSType(t *testing.T) {
