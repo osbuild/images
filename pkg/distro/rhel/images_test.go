@@ -438,3 +438,8 @@ func TestOsCustomizationsRHSM(t *testing.T) {
 		})
 	}
 }
+
+func TestPartitionTypeNotCrashing(t *testing.T) {
+	it := &ImageType{}
+	assert.Equal(t, it.PartitionType(), "")
+}

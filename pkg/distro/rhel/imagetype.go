@@ -216,6 +216,10 @@ func (t *ImageType) getDefaultInstallerConfig() (*distro.InstallerConfig, error)
 }
 
 func (t *ImageType) PartitionType() string {
+	if t.BasePartitionTables == nil {
+		return ""
+	}
+
 	basePartitionTable, exists := t.BasePartitionTables(t)
 	if !exists {
 		return ""
