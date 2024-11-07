@@ -104,5 +104,31 @@
         ]
       }
     ]
+  },
+  "fedora-41": {
+    "dependencies": {
+      "osbuild": {
+        "commit": "dd16c2b769ee8fb666dbb3d4a5bbb579c455c024"
+      }
+    },
+    "repos": [
+      {
+        "file": "/etc/yum.repos.d/rawhide.repo",
+        "x86_64": [
+          {
+            "title": "fedora",
+            "name": "fedora",
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f41/f41-x86_64-rawhide-20240901"
+          }
+        ],
+        "aarch64": [
+          {
+            "title": "fedora",
+            "name": "fedora",
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f41/f41-x86_64-rawhide-20240901"
+          }
+        ]
+      }
+    ]
   }
 }
