@@ -31,6 +31,9 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
+      - name: Set up repository for pinned osbuild commit
+        run: ./test/scripts/setup-osbuild-repo
+
       - name: Run unit tests
         run: make BASE_CONTAINER_IMAGE_TAG=${{matrix.fedora_version}} gh-action-test
 
