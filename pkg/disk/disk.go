@@ -63,6 +63,12 @@ const (
 
 	// Partition type ID for any native Linux filesystem on dos
 	DosLinuxTypeID = "83"
+
+	// Partition type ID for BIOS boot partition on dos
+	DosBIOSBootID = "ef02"
+
+	// Partition type ID for ESP on dos
+	DosESPID = "ef00"
 )
 
 // FSType is the filesystem type enum.
