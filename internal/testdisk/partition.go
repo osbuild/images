@@ -32,7 +32,7 @@ func MakeFakePartitionTable(mntPoints ...string) *disk.PartitionTable {
 
 	}
 	return &disk.PartitionTable{
-		Type:       "gpt",
+		Type:       disk.PT_GPT,
 		Partitions: partitions,
 	}
 }
@@ -42,7 +42,7 @@ func MakeFakePartitionTable(mntPoints ...string) *disk.PartitionTable {
 func MakeFakeBtrfsPartitionTable(mntPoints ...string) *disk.PartitionTable {
 	var subvolumes []disk.BtrfsSubvolume
 	pt := &disk.PartitionTable{
-		Type:       "gpt",
+		Type:       disk.PT_GPT,
 		Size:       10 * datasizes.GiB,
 		Partitions: []disk.Partition{},
 	}
@@ -107,7 +107,7 @@ func MakeFakeBtrfsPartitionTable(mntPoints ...string) *disk.PartitionTable {
 func MakeFakeLVMPartitionTable(mntPoints ...string) *disk.PartitionTable {
 	var lvs []disk.LVMLogicalVolume
 	pt := &disk.PartitionTable{
-		Type:       "gpt",
+		Type:       disk.PT_GPT,
 		Size:       10 * datasizes.GiB,
 		Partitions: []disk.Partition{},
 	}
