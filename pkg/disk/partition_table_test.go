@@ -1199,6 +1199,11 @@ func TestAddPartitionsForBootMode(t *testing.T) {
 			bootMode: platform.BOOT_HYBRID,
 			errmsg:   "error creating BIOS boot partition: unknown or unsupported partition table type: super-gpt",
 		},
+		"bad-bootmode": {
+			pt:       disk.PartitionTable{Type: "gpt"},
+			bootMode: 4,
+			errmsg:   "unknown or unsupported boot mode type with enum value 4",
+		},
 	}
 
 	for name := range testCases {

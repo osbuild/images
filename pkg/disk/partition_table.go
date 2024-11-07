@@ -1097,7 +1097,7 @@ func AddPartitionsForBootMode(pt *PartitionTable, bootMode platform.BootMode) er
 	case platform.BOOT_NONE:
 		return nil
 	default:
-		return fmt.Errorf("invalid boot mode specified: %s", bootMode)
+		return fmt.Errorf("unknown or unsupported boot mode type with enum value %d", bootMode)
 	}
 }
 
