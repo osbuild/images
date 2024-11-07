@@ -9,6 +9,7 @@ import (
 
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/datasizes"
+	"github.com/osbuild/images/pkg/platform"
 )
 
 type PartitionTable struct {
@@ -1053,4 +1054,60 @@ func EnsureBootPartition(pt *PartitionTable, bootFsType FSType) error {
 	}
 	pt.Partitions = append(pt.Partitions, bootPart)
 	return nil
+}
+
+// AddPartitionsForBootMode creates partitions to satisfy the boot mode requirements:
+//   - BIOS/legacy: adds a 1 MiB BIOS boot partition.
+//   - UEFI: adds a 200 MiB EFI system partition.
+//   - Hybrid: adds both.
+//
+// The function will append the new partitions to the end of the existing
+// partition table therefore it is best to call this function early to put them
+// near the front (as is conventional).
+func AddPartitionsForBootMode(pt *PartitionTable, bootMode platform.BootMode) error {
+	switch bootMode {
+	case platform.BOOT_LEGACY:
+		// add BIOS boot partition
+		pt.Partitions = append(pt.Partitions, mkBIOSBoot())
+		return nil
+	case platform.BOOT_UEFI:
+		// add ESP
+		pt.Partitions = append(pt.Partitions, mkESP(200*datasizes.MiB))
+		return nil
+	case platform.BOOT_HYBRID:
+		// add both
+		pt.Partitions = append(pt.Partitions, mkBIOSBoot())
+		pt.Partitions = append(pt.Partitions, mkESP(200*datasizes.MiB))
+		return nil
+	case platform.BOOT_NONE:
+		return nil
+	default:
+		return fmt.Errorf("invalid boot mode specified: %s", bootMode)
+	}
+}
+
+func mkBIOSBoot() Partition {
+	return Partition{
+		Size:     1 * datasizes.MiB,
+		Bootable: true,
+		Type:     BIOSBootPartitionGUID,
+		UUID:     BIOSBootPartitionUUID,
+	}
+}
+
+func mkESP(size uint64) Partition {
+	return Partition{
+		Size: size,
+		Type: EFISystemPartitionGUID,
+		UUID: EFISystemPartitionUUID,
+		Payload: &Filesystem{
+			Type:         "vfat",
+			UUID:         EFIFilesystemUUID,
+			Mountpoint:   "/boot/efi",
+			Label:        "EFI-SYSTEM",
+			FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+			FSTabFreq:    0,
+			FSTabPassNo:  2,
+		},
+	}
 }
