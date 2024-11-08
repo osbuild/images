@@ -140,9 +140,9 @@ jobs:
     steps:
       - name: Add comment (breakage)
         uses: mshick/add-pr-comment@v2
-        repo-token: ${{ secrets.SCHUTZBOT_GITHUB_ACCESS_TOKEN }}
         if: needs.unit-tests.outputs.base_test == 1  &&  needs.unit-tests.outputs.pr_test == 0
         with:
+          repo-token: ${{ secrets.SCHUTZBOT_GITHUB_ACCESS_TOKEN }}
           issue: ${{ github.event.pull_request.number }}
           message: |
             This PR changes the images API or behaviour causing integration failures with osbuild-composer. The next update of the images dependency in osbuild-composer will need work to adapt to these changes.
@@ -151,9 +151,9 @@ jobs:
 
       - name: Update comment (fixed)
         uses: mshick/add-pr-comment@v2
-        repo-token: ${{ secrets.SCHUTZBOT_GITHUB_ACCESS_TOKEN }}
         if: needs.unit-tests.outputs.pr_test == 1
         with:
+          repo-token: ${{ secrets.SCHUTZBOT_GITHUB_ACCESS_TOKEN }}
           update-only: true  # don't write a message if there isn't one already
           issue: ${{ github.event.pull_request.number }}
           message: |
