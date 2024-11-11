@@ -104,6 +104,30 @@ func TestFilesystemCustomizationUnmarshalJSONUnhappy(t *testing.T) {
 	}
 }
 
+func TestFilesystemCustomizationUnmarshalTOMLNotAnObject(t *testing.T) {
+	cases := []struct {
+		name  string
+		input string
+		err   string
+	}{
+		{
+			name: "filesystem is not an object",
+			input: `
+[customizations]
+filesystem = ["hello"]`,
+			err: "toml: line 3 (last key \"customizations.filesystem\"): customizations.filesystem is not an object",
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			var bp blueprint.Blueprint
+			err := toml.Unmarshal([]byte(c.input), &bp)
+			assert.EqualError(t, err, c.err)
+		})
+	}
+}
+
 func TestCheckMountpointsPolicy(t *testing.T) {
 	policy := pathpolicy.NewPathPolicies(map[string]pathpolicy.PathPolicy{
 		"/": {Exact: true},
