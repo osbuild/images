@@ -22,6 +22,12 @@ func checkOptions(t *rhel.ImageType, bp *blueprint.Blueprint, options distro.Ima
 	// holds warnings (e.g. deprecation notices)
 	var warnings []string
 
+	if options.OSTree != nil {
+		if err := options.OSTree.Validate(); err != nil {
+			return nil, err
+		}
+	}
+
 	if slices.Contains(t.UnsupportedPartitioningModes, options.PartitioningMode) {
 		return warnings, fmt.Errorf("partitioning mode %q is not supported for %q", options.PartitioningMode, t.Name())
 	}
