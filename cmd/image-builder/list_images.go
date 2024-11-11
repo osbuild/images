@@ -2,6 +2,8 @@ package main
 
 import (
 	"io"
+
+	"github.com/osbuild/images/pkg/imagefilter"
 )
 
 func listImages(out io.Writer, format string, filterExprs []string) error {
@@ -15,7 +17,7 @@ func listImages(out io.Writer, format string, filterExprs []string) error {
 		return err
 	}
 
-	fmter, err := NewFilteredResultFormatter(format)
+	fmter, err := imagefilter.NewResultsFormatter(imagefilter.OutputFormat(format))
 	if err != nil {
 		return err
 	}
