@@ -661,7 +661,7 @@ func TestEnsureRootFilesystemErrors(t *testing.T) {
 		"err-no-pt-type": {
 			pt:            disk.PartitionTable{},
 			defaultFsType: disk.FS_EXT4,
-			errmsg:        "error creating root partition: unknown or unsupported partition table type: ",
+			errmsg:        "error creating root partition: unknown or unsupported partition table enum: 0",
 		},
 		"err-plain": {
 			pt: disk.PartitionTable{
