@@ -27,9 +27,22 @@ func New(repoConfigPaths []string) (*RepoRegistry, error) {
 	return &RepoRegistry{repositories}, nil
 }
 
+// TODO: add a `NewDefault(extraConfigPaths []string)` constructor
+// here similar that will
+//   repos, err := loadAllRepositories([]fs.FS{
+//       os.DirFS(extraConfigPaths...),
+//       testRepos.FS,
+//   })
+//   return &RepoRegistry{repos}, err
+// to avoid having to ship the default repos in every user of the library
+
 // NewTestedDefault returns a new RepoRegistry instance with the data
 // loaded from the default test repositories
 func NewTestedDefault() (*RepoRegistry, error) {
+	// we could use embedding here:
+	//   repos, err := loadAllRepositories([]fs.FS{testRepos.FS})
+	//   return &RepoRegistry{repos}, err
+	// but the downside would be that it increases the library size by 1mb
 	_, callerSrc, _, ok := runtime.Caller(0)
 	var testReposPath []string
 	if !ok {
