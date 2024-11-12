@@ -78,27 +78,13 @@ func LoadAllRepositories(confPaths []string) (rpmmd.DistrosRepoConfigs, error) {
 // encounter is preferred. For this reason, the order of paths in the passed list should
 // reflect the desired preference.
 func LoadRepositories(confPaths []string, distro string) (map[string][]rpmmd.RepoConfig, error) {
-	var repoConfigs map[string][]rpmmd.RepoConfig
-	path := "/repositories/" + distro + ".json"
-
-	for _, confPath := range confPaths {
-		var err error
-		repoConfigs, err = rpmmd.LoadRepositoriesFromFile(confPath + path)
-		if os.IsNotExist(err) {
-			continue
-		} else if err != nil {
-			return nil, err
-		}
-
-		// Found the distro repository configs in the current path
-		if repoConfigs != nil {
-			break
-		}
+	reposConfig, err := LoadAllRepositories(confPaths)
+	if err != nil {
+		return nil, err
 	}
-
-	if repoConfigs == nil {
+	if reposConfig[distro] == nil {
 		return nil, &NoReposLoadedError{confPaths}
 	}
 
-	return repoConfigs, nil
+	return reposConfig[distro], nil
 }

@@ -85,7 +85,7 @@ func TestLoadRepositoriesNonExisting(t *testing.T) {
 	confPaths := getConfPaths(t)
 	repos, err := LoadRepositories(confPaths, "my-imaginary-distro")
 	assert.Nil(t, repos)
-	assert.NotNil(t, err)
+	assert.Equal(t, &NoReposLoadedError{confPaths}, err)
 }
 
 func Test_LoadAllRepositories(t *testing.T) {
