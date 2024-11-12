@@ -11,7 +11,7 @@ import (
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/ostree"
-	"github.com/osbuild/images/pkg/reporegistry"
+	testrepos "github.com/osbuild/images/test/data/repositories"
 )
 
 const RandomTestSeed = 0
@@ -463,7 +463,7 @@ func TestDistro_OSTreeOptions(t *testing.T, d distro.Distro) {
 
 // ListTestedDistros returns a list of distro names that are explicitly tested
 func ListTestedDistros(t *testing.T) []string {
-	testRepoRegistry, err := reporegistry.NewTestedDefault()
+	testRepoRegistry, err := testrepos.New()
 	require.Nil(t, err)
 	require.NotEmpty(t, testRepoRegistry)
 	distros := testRepoRegistry.ListDistros()

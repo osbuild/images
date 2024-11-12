@@ -10,14 +10,14 @@ import (
 
 	"github.com/osbuild/images/pkg/distrofactory"
 	"github.com/osbuild/images/pkg/imagefilter"
-	"github.com/osbuild/images/pkg/reporegistry"
+	testrepos "github.com/osbuild/images/test/data/repositories"
 )
 
 func TestImageFilterSmoke(t *testing.T) {
 	logrus.SetLevel(logrus.WarnLevel)
 
 	fac := distrofactory.NewDefault()
-	repos, err := reporegistry.NewTestedDefault()
+	repos, err := testrepos.New()
 	require.NoError(t, err)
 
 	imgFilter, err := imagefilter.New(fac, repos)
@@ -29,7 +29,7 @@ func TestImageFilterSmoke(t *testing.T) {
 
 func TestImageFilterFilter(t *testing.T) {
 	fac := distrofactory.NewDefault()
-	repos, err := reporegistry.NewTestedDefault()
+	repos, err := testrepos.New()
 	require.NoError(t, err)
 
 	imgFilter, err := imagefilter.New(fac, repos)
