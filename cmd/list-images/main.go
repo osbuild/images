@@ -11,7 +11,7 @@ import (
 
 	"github.com/gobwas/glob"
 	"github.com/osbuild/images/pkg/distrofactory"
-	"github.com/osbuild/images/pkg/reporegistry"
+	testrepos "github.com/osbuild/images/test/data/repositories"
 )
 
 type multiValue []string
@@ -75,7 +75,7 @@ func main() {
 	flag.BoolVar(&json, "json", false, "print configs as json")
 	flag.Parse()
 
-	testedRepoRegistry, err := reporegistry.NewTestedDefault()
+	testedRepoRegistry, err := testrepos.New()
 	if err != nil {
 		panic(fmt.Sprintf("failed to create repo registry with tested distros: %v", err))
 	}

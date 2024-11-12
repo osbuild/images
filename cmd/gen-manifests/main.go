@@ -28,10 +28,10 @@ import (
 	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/ostree"
-	"github.com/osbuild/images/pkg/reporegistry"
 	"github.com/osbuild/images/pkg/rhsm/facts"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/sbom"
+	testrepos "github.com/osbuild/images/test/data/repositories"
 )
 
 type buildRequest struct {
@@ -513,7 +513,7 @@ func main() {
 
 	flag.Parse()
 
-	testedRepoRegistry, err := reporegistry.NewTestedDefault()
+	testedRepoRegistry, err := testrepos.New()
 	if err != nil {
 		panic(fmt.Sprintf("failed to create repo registry with tested distros: %v", err))
 	}

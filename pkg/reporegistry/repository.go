@@ -1,6 +1,7 @@
 package reporegistry
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,12 +15,24 @@ import (
 // LoadAllRepositories loads all repositories for given distros from the given list of paths.
 // Behavior is the same as with the LoadRepositories() method.
 func LoadAllRepositories(confPaths []string) (rpmmd.DistrosRepoConfigs, error) {
+	var confFSes []fs.FS
+
+	for _, confPath := range confPaths {
+		confFSes = append(confFSes, os.DirFS(filepath.Join(confPath, "repositories")))
+	}
+
+	distrosRepoConfigs, err := LoadAllRepositoriesFromFS(confFSes)
+	if len(distrosRepoConfigs) == 0 {
+		return nil, &NoReposLoadedError{confPaths}
+	}
+	return distrosRepoConfigs, err
+}
+
+func LoadAllRepositoriesFromFS(confPaths []fs.FS) (rpmmd.DistrosRepoConfigs, error) {
 	distrosRepoConfigs := rpmmd.DistrosRepoConfigs{}
 
 	for _, confPath := range confPaths {
-		reposPath := filepath.Join(confPath, "repositories")
-
-		fileEntries, err := os.ReadDir(reposPath)
+		fileEntries, err := fs.ReadDir(confPath, ".")
 		if os.IsNotExist(err) {
 			continue
 		} else if err != nil {
@@ -53,8 +66,11 @@ func LoadAllRepositories(confPaths []string) (rpmmd.DistrosRepoConfigs, error) {
 					continue
 				}
 
-				configFile := filepath.Join(reposPath, fileEntry.Name())
-				distroRepos, err := rpmmd.LoadRepositoriesFromFile(configFile)
+				configFile, err := confPath.Open(fileEntry.Name())
+				if err != nil {
+					return nil, err
+				}
+				distroRepos, err := rpmmd.LoadRepositoriesFromReader(configFile)
 				if err != nil {
 					return nil, err
 				}
@@ -64,10 +80,6 @@ func LoadAllRepositories(confPaths []string) (rpmmd.DistrosRepoConfigs, error) {
 				distrosRepoConfigs[distro] = distroRepos
 			}
 		}
-	}
-
-	if len(distrosRepoConfigs) == 0 {
-		return nil, &NoReposLoadedError{confPaths}
 	}
 
 	return distrosRepoConfigs, nil

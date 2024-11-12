@@ -4,10 +4,11 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/test_distro"
 	"github.com/osbuild/images/pkg/rpmmd"
-	"github.com/stretchr/testify/assert"
 )
 
 func getTestingRepoRegistry() *RepoRegistry {
@@ -369,11 +370,4 @@ func TestInvalidReposByArchName(t *testing.T) {
 			assert.True(t, tt.want(got, err))
 		})
 	}
-}
-
-func Test_NewTestedDefault(t *testing.T) {
-	rr, err := NewTestedDefault()
-	assert.Nil(t, err)
-	assert.NotNil(t, rr)
-	assert.NotEmpty(t, rr.ListDistros())
 }
