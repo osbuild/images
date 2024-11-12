@@ -40,6 +40,9 @@ func TestImageFilterFilter(t *testing.T) {
 		// bootmode: prefix
 		{[]string{"bootmode:uefi"}, "test-distro-1", "test_arch3", "qcow2", false},
 		{[]string{"bootmode:hybrid"}, "test-distro-1", "test_arch3", "qcow2", true},
+		// pkg: prefix
+		{[]string{"pkg:rando-no"}, "test-distro-1", "test_arch3", "qcow2", false},
+		{[]string{"pkg:dep-package1"}, "test-distro-1", "test_arch3", "qcow2", true},
 		// multiple filters are AND
 		{[]string{"distro:test-distro-1", "type:ami"}, "test-distro-1", "test_arch3", "qcow2", false},
 		{[]string{"distro:test-distro-1", "type:qcow2"}, "test-distro-1", "test_arch3", "qcow2", true},
