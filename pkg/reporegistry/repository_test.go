@@ -5,11 +5,17 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/distro/test_distro"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/stretchr/testify/assert"
 )
+
+func init() {
+	logrus.SetLevel(logrus.WarnLevel)
+}
 
 func getConfPaths(t *testing.T) []string {
 	confPaths := []string{
@@ -90,6 +96,36 @@ func TestLoadRepositoriesNonExisting(t *testing.T) {
 
 func Test_LoadAllRepositories(t *testing.T) {
 	expectedReposMap := rpmmd.DistrosRepoConfigs{
+		"alias-for-fedora-33": {
+			test_distro.TestArchName: {
+				{
+					Name:     "fedora-33-p1",
+					BaseURLs: []string{"https://example.com/fedora-33-p1/test_arch"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+				{
+					Name:     "updates-33-p1",
+					BaseURLs: []string{"https://example.com/updates-33-p1/test_arch"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+			},
+			test_distro.TestArch2Name: {
+				{
+					Name:     "fedora-33-p1",
+					BaseURLs: []string{"https://example.com/fedora-33-p1/test_arch2"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+				{
+					Name:     "updates-33-p1",
+					BaseURLs: []string{"https://example.com/updates-33-p1/test_arch2"},
+					GPGKeys:  []string{"FAKE-GPG-KEY"},
+					CheckGPG: common.ToPtr(true),
+				},
+			},
+		},
 		"fedora-33": {
 			test_distro.TestArchName: {
 				{
@@ -294,4 +330,20 @@ func Test_LoadAllRepositories(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestLoadAllRepositoriesLoadsAlias(t *testing.T) {
+	confPaths := getConfPaths(t)
+
+	allRepos, err := LoadAllRepositories(confPaths)
+	assert.Nil(t, err)
+	assert.True(t, len(allRepos["alias-for-fedora-33"]) > 0)
+}
+
+func TestLoadRepositoriesLoadsAlias(t *testing.T) {
+	confPaths := getConfPaths(t)
+
+	repos, err := LoadRepositories(confPaths, "alias-for-fedora-33")
+	assert.Nil(t, err)
+	assert.True(t, len(repos) > 0)
 }

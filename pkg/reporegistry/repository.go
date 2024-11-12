@@ -1,6 +1,7 @@
 package reporegistry
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -63,6 +64,28 @@ func LoadAllRepositories(confPaths []string) (rpmmd.DistrosRepoConfigs, error) {
 
 				distrosRepoConfigs[distro] = distroRepos
 			}
+		}
+
+		// resolve aliases after buildng distroRepoConfigs
+		aliasesPath := filepath.Join(reposPath, "distro.aliases")
+		f, err := os.Open(aliasesPath)
+		if os.IsNotExist(err) {
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+		defer f.Close()
+		var aliases []struct {
+			Name  string `json:"name"`
+			Alias string `json:"alias"`
+		}
+		err = json.NewDecoder(f).Decode(&aliases)
+		if err != nil {
+			return nil, err
+		}
+		for _, alias := range aliases {
+			distrosRepoConfigs[alias.Alias] = distrosRepoConfigs[alias.Name]
 		}
 	}
 
