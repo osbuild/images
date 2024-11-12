@@ -793,10 +793,9 @@ func (pt *PartitionTable) ensureBtrfs() error {
 		// reset the btrfs partition size - it will be grown later
 		part.Size = 0
 
-		if pt.Type == PT_GPT {
-			part.Type = FilesystemDataGUID
-		} else {
-			part.Type = DosLinuxTypeID
+		part.Type, err = getPartitionTypeIDfor(pt.Type, "data")
+		if err != nil {
+			return fmt.Errorf("error converting partition table to btrfs: %w", err)
 		}
 
 	} else {
@@ -979,14 +978,9 @@ func EnsureRootFilesystem(pt *PartitionTable, defaultFsType FSType) error {
 		return fmt.Errorf("error creating root partition: %w", err)
 	}
 
-	var partType string
-	switch pt.Type {
-	case PT_DOS:
-		partType = DosLinuxTypeID
-	case PT_GPT:
-		partType = FilesystemDataGUID
-	default:
-		return fmt.Errorf("error creating root partition: unknown or unsupported partition table type: %s", pt.Type)
+	partType, err := getPartitionTypeIDfor(pt.Type, "data")
+	if err != nil {
+		return fmt.Errorf("error creating root partition: %w", err)
 	}
 	rootpart := Partition{
 		Type: partType,
@@ -1033,14 +1027,9 @@ func EnsureBootPartition(pt *PartitionTable, bootFsType FSType) error {
 		return fmt.Errorf("error creating boot partition: %w", err)
 	}
 
-	var partType string
-	switch pt.Type {
-	case PT_DOS:
-		partType = DosLinuxTypeID
-	case PT_GPT:
-		partType = XBootLDRPartitionGUID
-	default:
-		return fmt.Errorf("error creating boot partition: unknown or unsupported partition table type: %s", pt.Type)
+	partType, err := getPartitionTypeIDfor(pt.Type, "boot")
+	if err != nil {
+		return fmt.Errorf("error creating boot partition: %w", err)
 	}
 	bootPart := Partition{
 		Type: partType,
@@ -1102,14 +1091,9 @@ func AddPartitionsForBootMode(pt *PartitionTable, bootMode platform.BootMode) er
 }
 
 func mkBIOSBoot(ptType PartitionTableType) (Partition, error) {
-	var partType string
-	switch ptType {
-	case PT_DOS:
-		partType = DosBIOSBootID
-	case PT_GPT:
-		partType = BIOSBootPartitionGUID
-	default:
-		return Partition{}, fmt.Errorf("error creating BIOS boot partition: unknown or unsupported partition table enum: %d", ptType)
+	partType, err := getPartitionTypeIDfor(ptType, "bios")
+	if err != nil {
+		return Partition{}, fmt.Errorf("error creating BIOS boot partition: %w", err)
 	}
 	return Partition{
 		Size:     1 * datasizes.MiB,
@@ -1120,14 +1104,9 @@ func mkBIOSBoot(ptType PartitionTableType) (Partition, error) {
 }
 
 func mkESP(size uint64, ptType PartitionTableType) (Partition, error) {
-	var partType string
-	switch ptType {
-	case PT_DOS:
-		partType = DosESPID
-	case PT_GPT:
-		partType = EFISystemPartitionGUID
-	default:
-		return Partition{}, fmt.Errorf("error creating EFI system partition: unknown or unsupported partition table enum: %d", ptType)
+	partType, err := getPartitionTypeIDfor(ptType, "esp")
+	if err != nil {
+		return Partition{}, fmt.Errorf("error creating EFI system partition: %w", err)
 	}
 	return Partition{
 		Size: size,
