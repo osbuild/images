@@ -25,6 +25,7 @@ type BootcDiskImage struct {
 
 	// Customizations
 	KernelOptionsAppend []string
+	FIPS                bool
 
 	// The users to put into the image, note that /etc/paswd (and friends)
 	// will become unmanaged state by bootc when used
@@ -61,6 +62,9 @@ func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifes
 	rawImage.Groups = img.Groups
 	rawImage.KernelOptionsAppend = img.KernelOptionsAppend
 	rawImage.SELinux = img.SELinux
+	if img.FIPS {
+		rawImage.KernelOptionsAppend = append(rawImage.KernelOptionsAppend, "fips=1")
+	}
 
 	// In BIB, we export multiple images from the same pipeline so we use the
 	// filename as the basename for each export and set the extensions based on

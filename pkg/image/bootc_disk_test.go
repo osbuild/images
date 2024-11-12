@@ -42,6 +42,7 @@ type bootcDiskImageTestOpts struct {
 	SELinux     string
 	Users       []users.User
 	Groups      []users.Group
+	FIPS        bool
 
 	KernelOptionsAppend []string
 }
@@ -77,6 +78,7 @@ func makeBootcDiskImageOsbuildManifest(t *testing.T, opts *bootcDiskImageTestOpt
 	img.Users = opts.Users
 	img.Groups = opts.Groups
 	img.SELinux = opts.SELinux
+	img.FIPS = opts.FIPS
 
 	m := &manifest.Manifest{}
 	runi := &runner.Fedora{}
@@ -260,6 +262,22 @@ func TestBootcDiskImageInstantiateGroups(t *testing.T) {
 			require.NotNil(t, groupsStage)
 		} else {
 			require.Nil(t, groupsStage)
+		}
+	}
+}
+
+func TestBootcDiskImageEnablesFIPS(t *testing.T) {
+	for _, withFIPS := range []bool{true, false} {
+		opts := &bootcDiskImageTestOpts{FIPS: withFIPS}
+		osbuildManifest := makeBootcDiskImageOsbuildManifest(t, opts)
+		imagePipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "image")
+		require.NotNil(t, imagePipeline)
+		bootcStage := findStageFromOsbuildPipeline(t, imagePipeline, "org.osbuild.bootc.install-to-filesystem")
+		kernelArgs := bootcStage["options"].(map[string]interface{})["kernel-args"]
+		if withFIPS {
+			assert.Contains(t, kernelArgs, "fips=1")
+		} else {
+			assert.Nil(t, kernelArgs)
 		}
 	}
 }
