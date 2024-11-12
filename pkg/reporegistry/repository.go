@@ -2,6 +2,7 @@ package reporegistry
 
 import (
 	"encoding/json"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,12 +16,24 @@ import (
 // LoadAllRepositories loads all repositories for given distros from the given list of paths.
 // Behavior is the same as with the LoadRepositories() method.
 func LoadAllRepositories(confPaths []string) (rpmmd.DistrosRepoConfigs, error) {
+	var confFSes []fs.FS
+
+	for _, confPath := range confPaths {
+		confFSes = append(confFSes, os.DirFS(filepath.Join(confPath, "repositories")))
+	}
+
+	distrosRepoConfigs, err := loadAllRepositories(confFSes)
+	if len(distrosRepoConfigs) == 0 {
+		return nil, &NoReposLoadedError{confPaths}
+	}
+	return distrosRepoConfigs, err
+}
+
+func loadAllRepositories(confPaths []fs.FS) (rpmmd.DistrosRepoConfigs, error) {
 	distrosRepoConfigs := rpmmd.DistrosRepoConfigs{}
 
 	for _, confPath := range confPaths {
-		reposPath := filepath.Join(confPath, "repositories")
-
-		fileEntries, err := os.ReadDir(reposPath)
+		fileEntries, err := fs.ReadDir(confPath, ".")
 		if os.IsNotExist(err) {
 			continue
 		} else if err != nil {
@@ -54,8 +67,11 @@ func LoadAllRepositories(confPaths []string) (rpmmd.DistrosRepoConfigs, error) {
 					continue
 				}
 
-				configFile := filepath.Join(reposPath, fileEntry.Name())
-				distroRepos, err := rpmmd.LoadRepositoriesFromFile(configFile)
+				configFile, err := confPath.Open(fileEntry.Name())
+				if err != nil {
+					return nil, err
+				}
+				distroRepos, err := rpmmd.LoadRepositoriesFromReader(configFile)
 				if err != nil {
 					return nil, err
 				}
@@ -67,8 +83,7 @@ func LoadAllRepositories(confPaths []string) (rpmmd.DistrosRepoConfigs, error) {
 		}
 
 		// resolve aliases after buildng distroRepoConfigs
-		aliasesPath := filepath.Join(reposPath, "distro.aliases")
-		f, err := os.Open(aliasesPath)
+		f, err := confPath.Open("distro.aliases")
 		if os.IsNotExist(err) {
 			continue
 		}
@@ -76,6 +91,7 @@ func LoadAllRepositories(confPaths []string) (rpmmd.DistrosRepoConfigs, error) {
 			return nil, err
 		}
 		defer f.Close()
+
 		var aliases []struct {
 			Name  string `json:"name"`
 			Alias string `json:"alias"`
@@ -87,10 +103,6 @@ func LoadAllRepositories(confPaths []string) (rpmmd.DistrosRepoConfigs, error) {
 		for _, alias := range aliases {
 			distrosRepoConfigs[alias.Alias] = distrosRepoConfigs[alias.Name]
 		}
-	}
-
-	if len(distrosRepoConfigs) == 0 {
-		return nil, &NoReposLoadedError{confPaths}
 	}
 
 	return distrosRepoConfigs, nil
