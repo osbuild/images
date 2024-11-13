@@ -334,8 +334,7 @@ func diskImage(workload workload.Workload,
 		return nil, err
 	}
 	img.PartitionTable = pt
-
-	img.Filename = t.Filename()
+	img.Filename = options.Filename(t)
 
 	return img, nil
 }
@@ -359,8 +358,7 @@ func containerImage(workload workload.Workload,
 
 	img.Environment = t.environment
 	img.Workload = workload
-
-	img.Filename = t.Filename()
+	img.Filename = options.Filename(t)
 
 	return img, nil
 }
@@ -392,8 +390,7 @@ func liveInstallerImage(workload workload.Workload,
 	if err != nil {
 		return nil, err
 	}
-
-	img.Filename = t.Filename()
+	img.Filename = options.Filename(t)
 
 	return img, nil
 }
@@ -466,8 +463,7 @@ func imageInstallerImage(workload workload.Workload,
 	if err != nil {
 		return nil, err
 	}
-
-	img.Filename = t.Filename()
+	img.Filename = options.Filename(t)
 
 	return img, nil
 }
@@ -513,7 +509,8 @@ func iotCommitImage(workload workload.Workload,
 	img.Workload = workload
 	img.OSTreeParent = parentCommit
 	img.OSVersion = d.osVersion
-	img.Filename = t.Filename()
+	img.Filename = options.Filename(t)
+
 	img.InstallWeakDeps = false
 
 	return img, nil
@@ -544,7 +541,8 @@ func bootableContainerImage(workload workload.Workload,
 	img.Workload = workload
 	img.OSTreeParent = parentCommit
 	img.OSVersion = d.osVersion
-	img.Filename = t.Filename()
+	img.Filename = options.Filename(t)
+
 	img.InstallWeakDeps = false
 	img.BootContainer = true
 	img.BootcConfig = &bootc.Config{
@@ -596,7 +594,7 @@ func iotContainerImage(workload workload.Workload,
 	img.OSTreeParent = parentCommit
 	img.OSVersion = d.osVersion
 	img.ExtraContainerPackages = packageSets[containerPkgsKey]
-	img.Filename = t.Filename()
+	img.Filename = options.Filename(t)
 
 	return img, nil
 }
@@ -664,8 +662,7 @@ func iotInstallerImage(workload workload.Workload,
 	if err != nil {
 		return nil, err
 	}
-
-	img.Filename = t.Filename()
+	img.Filename = options.Filename(t)
 
 	return img, nil
 }
@@ -705,8 +702,8 @@ func iotImage(workload workload.Workload,
 		return nil, err
 	}
 	img.PartitionTable = pt
+	img.Filename = options.Filename(t)
 
-	img.Filename = t.Filename()
 	img.Compression = t.compression
 
 	return img, nil
@@ -747,13 +744,15 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 	}
 	rawImg.PartitionTable = pt
 
-	rawImg.Filename = t.Filename()
+	filename := options.Filename(t)
+	rawImg.Filename = filename
 
 	img := image.NewOSTreeSimplifiedInstaller(rawImg, customizations.InstallationDevice)
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
 	// img.Workload = workload
 	img.Platform = t.platform
-	img.Filename = t.Filename()
+	img.Filename = filename
+
 	if bpFDO := customizations.GetFDO(); bpFDO != nil {
 		img.FDO = fdo.FromBP(*bpFDO)
 	}

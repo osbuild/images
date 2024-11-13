@@ -14,6 +14,7 @@ import (
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/distro_test_common"
+	"github.com/osbuild/images/pkg/distro/test_distro"
 	"github.com/osbuild/images/pkg/distrofactory"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -565,5 +566,22 @@ func TestDistro_ManifestFIPSWarning(t *testing.T) {
 				}
 			}
 		}
+	}
+}
+
+func TestDistro_ImageOptionsFilename(t *testing.T) {
+	imgType := &test_distro.TestImageType{}
+
+	for _, tc := range []struct {
+		outputFilename   string
+		expectedFilename string
+	}{
+		{"", "test.img"},
+		{"foo.img", "foo.img"},
+	} {
+		imgOpts := &distro.ImageOptions{
+			OutputFilename: tc.outputFilename,
+		}
+		assert.Equal(t, tc.expectedFilename, imgOpts.Filename(imgType))
 	}
 }
