@@ -47,19 +47,19 @@ func TestFilesystemCustomizationUnmarshalTOMLUnhappy(t *testing.T) {
 			name: "mountpoint not string",
 			input: `mountpoint = 42
 			minsize = 42`,
-			err: "toml: line 0: TOML unmarshal: mountpoint must be string, got 42 of type int64",
+			err: `toml: line 0: TOML unmarshal: mountpoint must be string, got "42" of type int64`,
 		},
 		{
 			name: "misize nor string nor int",
 			input: `mountpoint="/"
 			minsize = true`,
-			err: "toml: line 0: TOML unmarshal: minsize must be integer or string, got true of type bool",
+			err: `toml: line 0: TOML unmarshal: error decoding minsize value for mountpoint "/": failed to convert value "true" to number`,
 		},
 		{
 			name: "misize not parseable",
 			input: `mountpoint="/"
 			minsize = "20 KG"`,
-			err: "toml: line 0: TOML unmarshal: minsize is not valid filesystem size (unknown data size units in string: 20 KG)",
+			err: `toml: line 0: TOML unmarshal: error decoding minsize value for mountpoint "/": unknown data size units in string: 20 KG`,
 		},
 	}
 
@@ -81,17 +81,17 @@ func TestFilesystemCustomizationUnmarshalJSONUnhappy(t *testing.T) {
 		{
 			name:  "mountpoint not string",
 			input: `{"mountpoint": 42, "minsize": 42}`,
-			err:   "JSON unmarshal: mountpoint must be string, got 42 of type float64",
+			err:   `JSON unmarshal: mountpoint must be string, got "42" of type float64`,
 		},
 		{
 			name:  "misize nor string nor int",
 			input: `{"mountpoint":"/", "minsize": true}`,
-			err:   "JSON unmarshal: minsize must be float64 number or string, got true of type bool",
+			err:   `JSON unmarshal: error decoding minsize value for mountpoint "/": failed to convert value "true" to number`,
 		},
 		{
 			name:  "misize not parseable",
 			input: `{ "mountpoint": "/", "minsize": "20 KG"}`,
-			err:   "JSON unmarshal: minsize is not valid filesystem size (unknown data size units in string: 20 KG)",
+			err:   `JSON unmarshal: error decoding minsize value for mountpoint "/": unknown data size units in string: 20 KG`,
 		},
 	}
 
