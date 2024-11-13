@@ -227,3 +227,59 @@ func decodeLVM(v *PartitionCustomization, data []byte) error {
 	v.VGCustomization = vg.VGCustomization
 	return nil
 }
+
+// Custom TOML unmarshaller that first reads the value of the "type" field and
+// then deserialises the whole object into a struct that only contains the
+// fields valid for that partition type. This ensures that no fields are set
+// for the substructure of a different type than the one defined in the "type"
+// fields.
+func (v *PartitionCustomization) UnmarshalTOML(data any) error {
+	errPrefix := "TOML unmarshal:"
+	d, ok := data.(map[string]any)
+	if !ok {
+		return fmt.Errorf("%s customizations.partition is not an object", errPrefix)
+	}
+
+	partType := "plain"
+	if typeField, ok := d["type"]; ok {
+		typeStr, ok := typeField.(string)
+		if !ok {
+			return fmt.Errorf("%s type must be a string, got \"%v\" of type %T", errPrefix, typeField, typeField)
+		}
+		partType = typeStr
+	}
+
+	// serialise the data to JSON and reuse the subobject decoders
+	dataJSON, err := json.Marshal(data)
+	if err != nil {
+		return fmt.Errorf("%s error while decoding partition customization: %w", errPrefix, err)
+	}
+	switch partType {
+	case "plain":
+		if err := decodePlain(v, dataJSON); err != nil {
+			return fmt.Errorf("%s %w", errPrefix, err)
+		}
+	case "btrfs":
+		if err := decodeBtrfs(v, dataJSON); err != nil {
+			return fmt.Errorf("%s %w", errPrefix, err)
+		}
+	case "lvm":
+		if err := decodeLVM(v, dataJSON); err != nil {
+			return fmt.Errorf("%s %w", errPrefix, err)
+		}
+	default:
+		return fmt.Errorf("%s unknown partition type: %s", errPrefix, partType)
+	}
+
+	v.Type = partType
+
+	if minsizeField, ok := d["minsize"]; ok {
+		minsize, err := decodeSize(minsizeField)
+		if err != nil {
+			return fmt.Errorf("%s error decoding minsize for partition: %w", errPrefix, err)
+		}
+		v.MinSize = minsize
+	}
+
+	return nil
+}
