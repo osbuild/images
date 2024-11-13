@@ -11,7 +11,7 @@ import (
 	"github.com/osbuild/images/pkg/osbuild"
 )
 
-func buildImage(out io.Writer, distroName, imgTypeStr string) error {
+func buildImage(out io.Writer, distroName, imgTypeStr, outputFilename string) error {
 	// cross arch building is not possible, we would have to download
 	// a pre-populated buildroot (tar,container) with rpm for that
 	archStr := arch.Current().String()
@@ -22,7 +22,10 @@ func buildImage(out io.Writer, distroName, imgTypeStr string) error {
 	imgType := filterResult.ImgType
 
 	var mf bytes.Buffer
-	if err := outputManifest(&mf, distroName, imgTypeStr, archStr); err != nil {
+	opts := &genManifestOptions{
+		OutputFilename: outputFilename,
+	}
+	if err := outputManifest(&mf, distroName, imgTypeStr, archStr, opts); err != nil {
 		return err
 	}
 

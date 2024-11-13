@@ -38,15 +38,19 @@ func cmdManifest(cmd *cobra.Command, args []string) error {
 		archStr = arch.Current().String()
 	}
 
-	return outputManifest(osStdout, distroName, imgType, archStr)
+	return outputManifest(osStdout, distroName, imgType, archStr, nil)
 }
 
 func cmdBuild(cmd *cobra.Command, args []string) error {
 	// support prefixes to make it easy to copy/paste from list-images
 	distroName := strings.TrimPrefix(args[0], "distro:")
 	imgType := strings.TrimPrefix(args[1], "type:")
+	outputFilename, err := cmd.Flags().GetString("filename")
+	if err != nil {
+		return err
+	}
 
-	return buildImage(osStdout, distroName, imgType)
+	return buildImage(osStdout, distroName, imgType, outputFilename)
 }
 
 func run() error {
@@ -95,8 +99,10 @@ operating sytsems like centos and RHEL with easy customizations support.`,
 		// XXX: show error with available types if only one arg given
 		Args: cobra.ExactArgs(2),
 	}
-	rootCmd.AddCommand(buildCmd)
+	// XXX: add this for "manifest" too in a nice way
+	buildCmd.Flags().String("filename", "", "Output as a specific filename")
 	// XXX: add --output=text,json and streaming
+	rootCmd.AddCommand(buildCmd)
 
 	return rootCmd.Execute()
 }

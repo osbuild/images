@@ -29,15 +29,20 @@ func depsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d dist
 	return depsolvedSets, repoSets, nil
 }
 
-func outputManifest(out io.Writer, distroName, imgTypeStr, archStr string) error {
-	// XXX: what/how much do we expose here?
-	var options distro.ImageOptions
+type genManifestOptions struct {
+	OutputFilename string
+}
+
+func outputManifest(out io.Writer, distroName, imgTypeStr, archStr string, opts *genManifestOptions) error {
+	if opts == nil {
+		opts = &genManifestOptions{}
+	}
 
 	filterResult, err := getOneImage(distroName, imgTypeStr, archStr)
 	if err != nil {
 		return err
 	}
-	distro := filterResult.Distro
+	dist := filterResult.Distro
 	imgType := filterResult.ImgType
 
 	reporeg, err := newRepoRegistry()
@@ -50,7 +55,10 @@ func outputManifest(out io.Writer, distroName, imgTypeStr, archStr string) error
 	}
 
 	var bp blueprint.Blueprint
-	preManifest, warnings, err := imgType.Manifest(&bp, options, repos, 0)
+	imgOpts := distro.ImageOptions{
+		OutputFilename: opts.OutputFilename,
+	}
+	preManifest, warnings, err := imgType.Manifest(&bp, imgOpts, repos, 0)
 	if err != nil {
 		return err
 	}
@@ -64,7 +72,7 @@ func outputManifest(out io.Writer, distroName, imgTypeStr, archStr string) error
 	if err != nil {
 		return err
 	}
-	packageSpecs, _, err := depsolve(cacheDir, preManifest.GetPackageSetChains(), distro, archStr)
+	packageSpecs, _, err := depsolve(cacheDir, preManifest.GetPackageSetChains(), dist, archStr)
 	if err != nil {
 		return err
 	}
