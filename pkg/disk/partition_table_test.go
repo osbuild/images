@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/osbuild/images/internal/testdisk"
+	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/platform"
@@ -1116,6 +1117,1016 @@ func TestAddPartitionsForBootMode(t *testing.T) {
 			} else {
 				assert.EqualError(err, tc.errmsg)
 			}
+		})
+	}
+}
+
+func TestNewCustomPartitionTable(t *testing.T) {
+	type testCase struct {
+		customizations *blueprint.DiskCustomization
+		options        *disk.CustomPartitionTableOptions
+		expected       *disk.PartitionTable
+	}
+
+	testCases := map[string]testCase{
+		"dos-hybrid": {
+			customizations: nil,
+			options: &disk.CustomPartitionTableOptions{
+				DefaultFSType:      disk.FS_XFS,
+				BootMode:           platform.BOOT_HYBRID,
+				PartitionTableType: disk.PT_DOS,
+			},
+			expected: &disk.PartitionTable{
+				Type: disk.PT_DOS,
+				Size: 202 * datasizes.MiB,
+				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+				Partitions: []disk.Partition{
+					{
+						Start:    1 * datasizes.MiB, // header
+						Bootable: true,
+						Size:     1 * datasizes.MiB,
+						Type:     disk.DosBIOSBootID,
+						UUID:     disk.BIOSBootPartitionUUID,
+					},
+					{
+						Start: 2 * datasizes.MiB,
+						Size:  200 * datasizes.MiB,
+						Type:  disk.DosESPID,
+						UUID:  disk.EFISystemPartitionUUID,
+						Payload: &disk.Filesystem{
+							Type:         "vfat",
+							UUID:         disk.EFIFilesystemUUID,
+							Mountpoint:   "/boot/efi",
+							Label:        "EFI-SYSTEM",
+							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+							FSTabFreq:    0,
+							FSTabPassNo:  2,
+						},
+					},
+					{
+						Start:    202 * datasizes.MiB,
+						Size:     0,
+						Type:     disk.DosLinuxTypeID,
+						Bootable: false,
+						Payload: &disk.Filesystem{
+							Type:         "xfs",
+							Label:        "root",
+							Mountpoint:   "/",
+							FSTabOptions: "defaults",
+							UUID:         "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+						},
+					},
+				},
+			},
+		},
+		"plain": {
+			customizations: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						MinSize: 20 * datasizes.MiB,
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Mountpoint: "/data",
+							Label:      "data",
+							FSType:     "ext4",
+						},
+					},
+				},
+			},
+			options: &disk.CustomPartitionTableOptions{
+				DefaultFSType:      disk.FS_XFS,
+				BootMode:           platform.BOOT_HYBRID,
+				PartitionTableType: disk.PT_DOS,
+			},
+			expected: &disk.PartitionTable{
+				Type: disk.PT_DOS,
+				Size: 222 * datasizes.MiB,
+				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+				Partitions: []disk.Partition{
+					{
+						Start:    1 * datasizes.MiB, // header
+						Size:     1 * datasizes.MiB,
+						Bootable: true,
+						Type:     disk.DosBIOSBootID,
+						UUID:     disk.BIOSBootPartitionUUID,
+					},
+					{
+						Start: 2 * datasizes.MiB,
+						Size:  200 * datasizes.MiB,
+						Type:  disk.DosESPID,
+						UUID:  disk.EFISystemPartitionUUID,
+						Payload: &disk.Filesystem{
+							Type:         "vfat",
+							UUID:         disk.EFIFilesystemUUID,
+							Mountpoint:   "/boot/efi",
+							Label:        "EFI-SYSTEM",
+							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+							FSTabFreq:    0,
+							FSTabPassNo:  2,
+						},
+					},
+					{
+						Start:    202 * datasizes.MiB,
+						Size:     20 * datasizes.MiB,
+						Type:     disk.DosLinuxTypeID,
+						Bootable: false,
+						UUID:     "", // partitions on dos PTs don't have UUIDs
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "data",
+							Mountpoint:   "/data",
+							UUID:         "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+							FSTabOptions: "defaults",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
+						},
+					},
+					{
+						Start:    222 * datasizes.MiB,
+						Size:     0,
+						Type:     disk.DosLinuxTypeID,
+						UUID:     "", // partitions on dos PTs don't have UUIDs
+						Bootable: false,
+						Payload: &disk.Filesystem{
+							Type:         "xfs",
+							Label:        "root",
+							Mountpoint:   "/",
+							UUID:         "fb180daf-48a7-4ee0-b10d-394651850fd4",
+							FSTabOptions: "defaults",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
+						},
+					},
+				},
+			},
+		},
+		"plain-legacy": {
+			customizations: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						MinSize: 20 * datasizes.MiB,
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Mountpoint: "/data",
+							Label:      "data",
+							FSType:     "ext4",
+						},
+					},
+				},
+			},
+			options: &disk.CustomPartitionTableOptions{
+				DefaultFSType:      disk.FS_XFS,
+				BootMode:           platform.BOOT_LEGACY,
+				PartitionTableType: disk.PT_DOS,
+			},
+			expected: &disk.PartitionTable{
+				Type: disk.PT_DOS,
+				Size: 22 * datasizes.MiB,
+				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+				Partitions: []disk.Partition{
+					{
+						Start:    1 * datasizes.MiB, // header
+						Size:     1 * datasizes.MiB,
+						Bootable: true,
+						Type:     disk.DosBIOSBootID,
+						UUID:     disk.BIOSBootPartitionUUID,
+					},
+					{
+						Start:    2 * datasizes.MiB,
+						Size:     20 * datasizes.MiB,
+						Type:     disk.DosLinuxTypeID,
+						Bootable: false,
+						UUID:     "", // partitions on dos PTs don't have UUIDs
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "data",
+							Mountpoint:   "/data",
+							UUID:         "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+							FSTabOptions: "defaults",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
+						},
+					},
+					{
+						Start:    22 * datasizes.MiB,
+						Size:     0,
+						Type:     disk.DosLinuxTypeID,
+						UUID:     "", // partitions on dos PTs don't have UUIDs
+						Bootable: false,
+						Payload: &disk.Filesystem{
+							Type:         "xfs",
+							Label:        "root",
+							Mountpoint:   "/",
+							UUID:         "fb180daf-48a7-4ee0-b10d-394651850fd4",
+							FSTabOptions: "defaults",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
+						},
+					},
+				},
+			},
+		},
+		"plain-uefi": {
+			customizations: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						MinSize: 20 * datasizes.MiB,
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Mountpoint: "/data",
+							Label:      "data",
+							FSType:     "ext4",
+						},
+					},
+				},
+			},
+			options: &disk.CustomPartitionTableOptions{
+				DefaultFSType:      disk.FS_XFS,
+				BootMode:           platform.BOOT_UEFI,
+				PartitionTableType: disk.PT_DOS,
+			},
+			expected: &disk.PartitionTable{
+				Type: disk.PT_DOS,
+				Size: 221 * datasizes.MiB,
+				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+				Partitions: []disk.Partition{
+					{
+						Start: 1 * datasizes.MiB,
+						Size:  200 * datasizes.MiB,
+						Type:  disk.DosESPID,
+						UUID:  disk.EFISystemPartitionUUID,
+						Payload: &disk.Filesystem{
+							Type:         "vfat",
+							UUID:         disk.EFIFilesystemUUID,
+							Mountpoint:   "/boot/efi",
+							Label:        "EFI-SYSTEM",
+							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+							FSTabFreq:    0,
+							FSTabPassNo:  2,
+						},
+					},
+					{
+						Start:    201 * datasizes.MiB,
+						Size:     20 * datasizes.MiB,
+						Type:     disk.DosLinuxTypeID,
+						Bootable: false,
+						UUID:     "", // partitions on dos PTs don't have UUIDs
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "data",
+							Mountpoint:   "/data",
+							UUID:         "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+							FSTabOptions: "defaults",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
+						},
+					},
+					{
+						Start:    221 * datasizes.MiB,
+						Size:     0,
+						Type:     disk.DosLinuxTypeID,
+						UUID:     "", // partitions on dos PTs don't have UUIDs
+						Bootable: false,
+						Payload: &disk.Filesystem{
+							Type:         "xfs",
+							Label:        "root",
+							Mountpoint:   "/",
+							UUID:         "fb180daf-48a7-4ee0-b10d-394651850fd4",
+							FSTabOptions: "defaults",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
+						},
+					},
+				},
+			},
+		},
+		"plain-reqsizes": {
+			customizations: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						MinSize: 20 * datasizes.MiB,
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Mountpoint: "/data",
+							Label:      "data",
+							FSType:     "ext4",
+						},
+					},
+				},
+			},
+			options: &disk.CustomPartitionTableOptions{
+				DefaultFSType:      disk.FS_XFS,
+				BootMode:           platform.BOOT_HYBRID,
+				RequiredMinSizes:   map[string]uint64{"/": 1 * datasizes.GiB, "/usr": 2 * datasizes.GiB}, // the default for our distro definitions
+				PartitionTableType: disk.PT_DOS,
+			},
+			expected: &disk.PartitionTable{
+				Type: disk.PT_DOS,
+				Size: 222*datasizes.MiB + 3*datasizes.GiB,
+				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+				Partitions: []disk.Partition{
+					{
+						Start:    1 * datasizes.MiB, // header
+						Size:     1 * datasizes.MiB,
+						Bootable: true,
+						Type:     disk.DosBIOSBootID,
+						UUID:     disk.BIOSBootPartitionUUID,
+					},
+					{
+						Start: 2 * datasizes.MiB,
+						Size:  200 * datasizes.MiB,
+						Type:  disk.DosESPID,
+						UUID:  disk.EFISystemPartitionUUID,
+						Payload: &disk.Filesystem{
+							Type:         "vfat",
+							UUID:         disk.EFIFilesystemUUID,
+							Mountpoint:   "/boot/efi",
+							Label:        "EFI-SYSTEM",
+							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+							FSTabFreq:    0,
+							FSTabPassNo:  2,
+						},
+					},
+					{
+						Start:    202 * datasizes.MiB,
+						Size:     20 * datasizes.MiB,
+						Type:     disk.DosLinuxTypeID,
+						Bootable: false,
+						UUID:     "", // partitions on dos PTs don't have UUIDs
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "data",
+							Mountpoint:   "/data",
+							UUID:         "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+							FSTabOptions: "defaults",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
+						},
+					},
+					{
+						Start:    222 * datasizes.MiB,
+						Size:     3 * datasizes.GiB,
+						Type:     disk.DosLinuxTypeID,
+						UUID:     "", // partitions on dos PTs don't have UUIDs
+						Bootable: false,
+						Payload: &disk.Filesystem{
+							Type:         "xfs",
+							Label:        "root",
+							Mountpoint:   "/",
+							UUID:         "fb180daf-48a7-4ee0-b10d-394651850fd4",
+							FSTabOptions: "defaults",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
+						},
+					},
+				},
+			},
+		},
+		"plain+": {
+			customizations: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						MinSize: 50 * datasizes.MiB,
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Mountpoint: "/",
+							Label:      "root",
+							FSType:     "xfs",
+						},
+					},
+					{
+						MinSize: 20 * datasizes.MiB,
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Mountpoint: "/home",
+							Label:      "home",
+							FSType:     "ext4",
+						},
+					},
+				},
+			},
+			options: &disk.CustomPartitionTableOptions{
+				DefaultFSType:      disk.FS_EXT4,
+				BootMode:           platform.BOOT_HYBRID,
+				PartitionTableType: disk.PT_GPT,
+				RequiredMinSizes:   map[string]uint64{"/": 3 * datasizes.GiB},
+			},
+			expected: &disk.PartitionTable{
+				Type: disk.PT_GPT,
+				Size: 222*datasizes.MiB + 3*datasizes.GiB + datasizes.MiB, // start + size of last partition + footer
+
+				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+				Partitions: []disk.Partition{
+					{
+						Start:    1 * datasizes.MiB, // header
+						Size:     1 * datasizes.MiB,
+						Bootable: true,
+						Type:     disk.BIOSBootPartitionGUID,
+						UUID:     disk.BIOSBootPartitionUUID,
+					},
+					{
+						Start: 2 * datasizes.MiB,
+						Size:  200 * datasizes.MiB,
+						Type:  disk.EFISystemPartitionGUID,
+						UUID:  disk.EFISystemPartitionUUID,
+						Payload: &disk.Filesystem{
+							Type:         "vfat",
+							UUID:         disk.EFIFilesystemUUID,
+							Mountpoint:   "/boot/efi",
+							Label:        "EFI-SYSTEM",
+							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+							FSTabFreq:    0,
+							FSTabPassNo:  2,
+						},
+					},
+					// root is aligned to the end but not reindexed
+					{
+						Start:    222 * datasizes.MiB,
+						Size:     3*datasizes.GiB + datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
+						Type:     disk.FilesystemDataGUID,
+						UUID:     "a178892e-e285-4ce1-9114-55780875d64e",
+						Bootable: false,
+						Payload: &disk.Filesystem{
+							Type:         "xfs",
+							Label:        "root",
+							Mountpoint:   "/",
+							FSTabOptions: "defaults",
+							UUID:         "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
+						},
+					},
+					{
+						Start:    202 * datasizes.MiB,
+						Size:     20 * datasizes.MiB,
+						Type:     disk.FilesystemDataGUID,
+						UUID:     "e2d3d0d0-de6b-48f9-b44c-e85ff044c6b1",
+						Bootable: false,
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "home",
+							Mountpoint:   "/home",
+							FSTabOptions: "defaults",
+							UUID:         "fb180daf-48a7-4ee0-b10d-394651850fd4",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
+						},
+					},
+				},
+			},
+		},
+		"lvm": {
+			customizations: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						Type:    "lvm",
+						MinSize: 100 * datasizes.MiB,
+						VGCustomization: blueprint.VGCustomization{
+							Name: "testvg",
+							LogicalVolumes: []blueprint.LVCustomization{
+								{
+									Name:    "varloglv",
+									MinSize: 10 * datasizes.MiB,
+									FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+										Mountpoint: "/var/log",
+										Label:      "var-log",
+										FSType:     "xfs",
+									},
+								},
+								{
+									Name:    "rootlv",
+									MinSize: 50 * datasizes.MiB,
+									FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+										Mountpoint: "/",
+										Label:      "root",
+										FSType:     "xfs",
+									},
+								},
+								{ // unnamed + untyped logical volume
+									MinSize: 100 * datasizes.MiB,
+									FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+										Mountpoint: "/data",
+										Label:      "data",
+										FSType:     "ext4", // TODO: remove when we reintroduce the default fs
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			options: &disk.CustomPartitionTableOptions{
+				DefaultFSType: disk.FS_EXT4,
+				BootMode:      platform.BOOT_HYBRID,
+			},
+			expected: &disk.PartitionTable{
+				Type: disk.PT_GPT, // default when unspecified
+				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+				Size: 714*datasizes.MiB + 168*datasizes.MiB + datasizes.MiB, // start + size of last partition (VG) + footer
+				Partitions: []disk.Partition{
+					{
+						Start:    1 * datasizes.MiB, // header
+						Size:     1 * datasizes.MiB,
+						Bootable: true,
+						Type:     disk.BIOSBootPartitionGUID,
+						UUID:     disk.BIOSBootPartitionUUID,
+					},
+					{
+						Start: 2 * datasizes.MiB,
+						Size:  200 * datasizes.MiB,
+						Type:  disk.EFISystemPartitionGUID,
+						UUID:  disk.EFISystemPartitionUUID,
+						Payload: &disk.Filesystem{
+							Type:         "vfat",
+							UUID:         disk.EFIFilesystemUUID,
+							Mountpoint:   "/boot/efi",
+							Label:        "EFI-SYSTEM",
+							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+							FSTabFreq:    0,
+							FSTabPassNo:  2,
+						},
+					},
+					{
+						Start:    202 * datasizes.MiB,
+						Size:     512 * datasizes.MiB,
+						Type:     disk.XBootLDRPartitionGUID,
+						UUID:     "f83b8e88-3bbf-457a-ab99-c5b252c7429c",
+						Bootable: false,
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "boot",
+							Mountpoint:   "/boot",
+							FSTabOptions: "defaults",
+							UUID:         "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
+						},
+					},
+					{
+						Start:    714 * datasizes.MiB,
+						Size:     168*datasizes.MiB + datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // the sum of the LVs (rounded to the next 4 MiB extent) grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
+						Type:     disk.LVMPartitionGUID,
+						UUID:     "32f3a8ae-b79e-4856-b659-c18f0dcecc77",
+						Bootable: false,
+						Payload: &disk.LVMVolumeGroup{
+							Name:        "testvg",
+							Description: "created via lvm2 and osbuild",
+							LogicalVolumes: []disk.LVMLogicalVolume{
+								{
+									Name: "varloglv",
+									Size: 12 * datasizes.MiB, // rounded up to next extent (4 MiB)
+									Payload: &disk.Filesystem{
+										Label:        "var-log",
+										Type:         "xfs",
+										Mountpoint:   "/var/log",
+										FSTabOptions: "defaults",
+										UUID:         "fb180daf-48a7-4ee0-b10d-394651850fd4",
+									},
+								},
+								{
+									Name: "rootlv",
+									Size: 52 * datasizes.MiB, // rounded up to the next extent (4 MiB)
+									Payload: &disk.Filesystem{
+										Label:        "root",
+										Type:         "xfs",
+										Mountpoint:   "/",
+										FSTabOptions: "defaults",
+										UUID:         "a178892e-e285-4ce1-9114-55780875d64e",
+									},
+								},
+								{
+									Name: "datalv",
+									Size: 100 * datasizes.MiB,
+									Payload: &disk.Filesystem{
+										Label:        "data",
+										Type:         "ext4", // the defaultType
+										Mountpoint:   "/data",
+										FSTabOptions: "defaults",
+										UUID:         "e2d3d0d0-de6b-48f9-b44c-e85ff044c6b1",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"lvm-multivg": {
+			// two volume groups, both unnamed, and no root lv defined
+			// NOTE: this is currently not supported by customizations but the
+			// PT creation function can handle it
+			customizations: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						Type:    "lvm",
+						MinSize: 100 * datasizes.MiB,
+						VGCustomization: blueprint.VGCustomization{
+							LogicalVolumes: []blueprint.LVCustomization{
+								{
+									Name:    "varloglv",
+									MinSize: 10 * datasizes.MiB,
+									FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+										Mountpoint: "/var/log",
+										Label:      "var-log",
+										FSType:     "xfs",
+									},
+								},
+							},
+						},
+					},
+					{
+						Type: "lvm",
+						VGCustomization: blueprint.VGCustomization{
+							LogicalVolumes: []blueprint.LVCustomization{
+								{ // unnamed + untyped logical volume
+									MinSize: 100 * datasizes.MiB,
+									FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+										Mountpoint: "/data",
+										Label:      "data",
+										FSType:     "ext4", // TODO: remove when we reintroduce the default fs
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			options: &disk.CustomPartitionTableOptions{
+				DefaultFSType:    disk.FS_EXT4,
+				BootMode:         platform.BOOT_HYBRID,
+				RequiredMinSizes: map[string]uint64{"/": 3 * datasizes.GiB},
+			},
+			expected: &disk.PartitionTable{
+				Type: disk.PT_GPT, // default when unspecified
+				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+				Size: 818*datasizes.MiB + 16*datasizes.MiB + 3*datasizes.GiB + datasizes.MiB, // start + size of last partition (VG) + footer
+				Partitions: []disk.Partition{
+					{
+						Start:    1 * datasizes.MiB, // header
+						Size:     1 * datasizes.MiB,
+						Bootable: true,
+						Type:     disk.BIOSBootPartitionGUID,
+						UUID:     disk.BIOSBootPartitionUUID,
+					},
+					{
+						Start: 2 * datasizes.MiB,
+						Size:  200 * datasizes.MiB,
+						Type:  disk.EFISystemPartitionGUID,
+						UUID:  disk.EFISystemPartitionUUID,
+						Payload: &disk.Filesystem{
+							Type:         "vfat",
+							UUID:         disk.EFIFilesystemUUID,
+							Mountpoint:   "/boot/efi",
+							Label:        "EFI-SYSTEM",
+							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+							FSTabFreq:    0,
+							FSTabPassNo:  2,
+						},
+					},
+					{
+						Start:    202 * datasizes.MiB,
+						Size:     512 * datasizes.MiB,
+						Type:     disk.XBootLDRPartitionGUID,
+						UUID:     "f83b8e88-3bbf-457a-ab99-c5b252c7429c",
+						Bootable: false,
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "boot",
+							Mountpoint:   "/boot",
+							FSTabOptions: "defaults",
+							UUID:         "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
+						},
+					},
+					{
+						Start:    818 * datasizes.MiB,                                                                         // the root vg is moved to the end of the partition table by relayout()
+						Size:     3*datasizes.GiB + 16*datasizes.MiB + datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // the sum of the LVs (rounded to the next 4 MiB extent) grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
+						Type:     disk.LVMPartitionGUID,
+						UUID:     "32f3a8ae-b79e-4856-b659-c18f0dcecc77",
+						Bootable: false,
+						Payload: &disk.LVMVolumeGroup{
+							Name:        "vg00",
+							Description: "created via lvm2 and osbuild",
+							LogicalVolumes: []disk.LVMLogicalVolume{
+								{
+									Name: "varloglv",
+									Size: 12 * datasizes.MiB, // rounded up to next extent (4 MiB)
+									Payload: &disk.Filesystem{
+										Label:        "var-log",
+										Type:         "xfs",
+										Mountpoint:   "/var/log",
+										FSTabOptions: "defaults",
+										UUID:         "fb180daf-48a7-4ee0-b10d-394651850fd4",
+									},
+								},
+								{
+									Name: "rootlv",
+									Size: 3 * datasizes.GiB,
+									Payload: &disk.Filesystem{
+										Label:        "root",
+										Type:         "ext4", // the defaultType
+										Mountpoint:   "/",
+										FSTabOptions: "defaults",
+										UUID:         "a178892e-e285-4ce1-9114-55780875d64e",
+									},
+								},
+							},
+						},
+					},
+					{
+						Start:    714 * datasizes.MiB,
+						Size:     104 * datasizes.MiB, // the sum of the LVs (rounded to the next 4 MiB extent) grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
+						Type:     disk.LVMPartitionGUID,
+						UUID:     "c75e7a81-bfde-475f-a7cf-e242cf3cc354",
+						Bootable: false,
+						Payload: &disk.LVMVolumeGroup{
+							Name:        "vg01",
+							Description: "created via lvm2 and osbuild",
+							LogicalVolumes: []disk.LVMLogicalVolume{
+								{
+									Name: "datalv",
+									Size: 100 * datasizes.MiB,
+									Payload: &disk.Filesystem{
+										Label:        "data",
+										Type:         "ext4", // the defaultType
+										Mountpoint:   "/data",
+										FSTabOptions: "defaults",
+										UUID:         "e2d3d0d0-de6b-48f9-b44c-e85ff044c6b1",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"btrfs": {
+			customizations: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						Type:    "btrfs",
+						MinSize: 230 * datasizes.MiB,
+						BtrfsVolumeCustomization: blueprint.BtrfsVolumeCustomization{
+							Subvolumes: []blueprint.BtrfsSubvolumeCustomization{
+								{
+									Name:       "subvol/root",
+									Mountpoint: "/",
+								},
+								{
+									Name:       "subvol/home",
+									Mountpoint: "/home",
+								},
+								{
+									Name:       "subvol/varlog",
+									Mountpoint: "/var/log",
+								},
+							},
+						},
+					},
+				},
+			},
+			options: &disk.CustomPartitionTableOptions{
+				DefaultFSType:      disk.FS_EXT4,
+				BootMode:           platform.BOOT_HYBRID,
+				PartitionTableType: disk.PT_GPT,
+			},
+			expected: &disk.PartitionTable{
+				Type: disk.PT_GPT,
+				Size: 714*datasizes.MiB + 230*datasizes.MiB + datasizes.MiB, // start + size of last partition + footer
+				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+				Partitions: []disk.Partition{
+					{
+						Start:    1 * datasizes.MiB, // header
+						Size:     1 * datasizes.MiB,
+						Bootable: true,
+						Type:     disk.BIOSBootPartitionGUID,
+						UUID:     disk.BIOSBootPartitionUUID,
+					},
+					{
+						Start: 2 * datasizes.MiB, // header
+						Size:  200 * datasizes.MiB,
+						Type:  disk.EFISystemPartitionGUID,
+						UUID:  disk.EFISystemPartitionUUID,
+						Payload: &disk.Filesystem{
+							Type:         "vfat",
+							UUID:         disk.EFIFilesystemUUID,
+							Mountpoint:   "/boot/efi",
+							Label:        "EFI-SYSTEM",
+							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+							FSTabFreq:    0,
+							FSTabPassNo:  2,
+						},
+					},
+					{
+						Start:    202 * datasizes.MiB,
+						Size:     512 * datasizes.MiB,
+						Type:     disk.XBootLDRPartitionGUID,
+						UUID:     "a178892e-e285-4ce1-9114-55780875d64e",
+						Bootable: false,
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "boot",
+							Mountpoint:   "/boot",
+							UUID:         "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+							FSTabOptions: "defaults",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
+						},
+					},
+					{
+						Start:    714 * datasizes.MiB,
+						Size:     231*datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
+						Type:     disk.FilesystemDataGUID,
+						UUID:     "e2d3d0d0-de6b-48f9-b44c-e85ff044c6b1",
+						Bootable: false,
+						Payload: &disk.Btrfs{
+							UUID: "fb180daf-48a7-4ee0-b10d-394651850fd4",
+							Subvolumes: []disk.BtrfsSubvolume{
+								{
+									Name:       "subvol/root",
+									Mountpoint: "/",
+									UUID:       "fb180daf-48a7-4ee0-b10d-394651850fd4", // same as volume UUID
+								},
+								{
+									Name:       "subvol/home",
+									Mountpoint: "/home",
+									UUID:       "fb180daf-48a7-4ee0-b10d-394651850fd4", // same as volume UUID
+								},
+								{
+									Name:       "subvol/varlog",
+									Mountpoint: "/var/log",
+									UUID:       "fb180daf-48a7-4ee0-b10d-394651850fd4", // same as volume UUID
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"autorootbtrfs": {
+			customizations: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						Type: "btrfs",
+						BtrfsVolumeCustomization: blueprint.BtrfsVolumeCustomization{
+							Subvolumes: []blueprint.BtrfsSubvolumeCustomization{
+								{
+									Name:       "data",
+									Mountpoint: "/data",
+								},
+							},
+						},
+					},
+				},
+			},
+			options: nil,
+			expected: &disk.PartitionTable{
+				Type: disk.PT_GPT,
+				Size: 514 * datasizes.MiB,
+				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+				Partitions: []disk.Partition{
+					{
+						Start:    1 * datasizes.MiB,
+						Size:     512 * datasizes.MiB,
+						Type:     disk.XBootLDRPartitionGUID,
+						UUID:     "a178892e-e285-4ce1-9114-55780875d64e",
+						Bootable: false,
+						Payload: &disk.Filesystem{
+							Type:         "xfs",
+							Label:        "boot",
+							Mountpoint:   "/boot",
+							UUID:         "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+							FSTabOptions: "defaults",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
+						},
+					},
+					{
+						Start: 513 * datasizes.MiB,
+						Size:  1*datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)),
+
+						Type:     disk.FilesystemDataGUID,
+						UUID:     "e2d3d0d0-de6b-48f9-b44c-e85ff044c6b1",
+						Bootable: false,
+						Payload: &disk.Btrfs{
+							UUID: "fb180daf-48a7-4ee0-b10d-394651850fd4",
+							Subvolumes: []disk.BtrfsSubvolume{
+								{
+									Name:       "data",
+									Mountpoint: "/data",
+									UUID:       "fb180daf-48a7-4ee0-b10d-394651850fd4",
+								},
+								{
+									Name:       "root",
+									Mountpoint: "/",
+									UUID:       "fb180daf-48a7-4ee0-b10d-394651850fd4",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for name := range testCases {
+		tc := testCases[name]
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+
+			// Initialise rng for each test separately, otherwise test run
+			// order will affect results
+			/* #nosec G404 */
+			rnd := rand.New(rand.NewSource(0))
+			pt, err := disk.NewCustomPartitionTable(tc.customizations, tc.options, rnd)
+
+			assert.NoError(err)
+			assert.Equal(tc.expected, pt)
+		})
+	}
+
+}
+
+func TestNewCustomPartitionTableErrors(t *testing.T) {
+	type testCase struct {
+		customizations *blueprint.DiskCustomization
+		options        *disk.CustomPartitionTableOptions
+		errmsg         string
+	}
+
+	testCases := map[string]testCase{
+		"autoroot-notype": {
+			customizations: nil,
+			options:        nil,
+			errmsg:         "error generating partition table: error creating root partition: no default filesystem type",
+		},
+		"autorootlv-notype": {
+			customizations: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						Type: "lvm",
+						VGCustomization: blueprint.VGCustomization{
+							Name: "vg-without-root",
+						},
+					},
+				},
+			},
+			options: nil,
+			errmsg:  "error generating partition table: error creating root logical volume: no default filesystem type",
+		},
+		"notype-nodefault": {
+			customizations: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Mountpoint: "/",
+						},
+					},
+				},
+			},
+			options: nil,
+			// NOTE: this error message will change when we allow empty fs_type
+			// in customizations but with a requirement to define a default
+			errmsg: "error generating partition table: invalid partitioning customizations:\nunknown or invalid filesystem type for mountpoint \"/\": ",
+		},
+		"lvm-notype-nodefault": {
+			customizations: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						Type: "lvm",
+						VGCustomization: blueprint.VGCustomization{
+							Name: "rootvg",
+							LogicalVolumes: []blueprint.LVCustomization{
+								{
+									Name: "rootlv",
+									FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+										Mountpoint: "/",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			options: nil,
+			// NOTE: this error message will change when we allow empty fs_type
+			// in customizations but with a requirement to define a default
+			errmsg: "error generating partition table: invalid partitioning customizations:\nunknown or invalid filesystem type for logical volume with mountpoint \"/\": ",
+		},
+		"bad-pt-type": {
+			options: &disk.CustomPartitionTableOptions{
+				PartitionTableType: 100,
+			},
+			errmsg: `error generating partition table: invalid partition table type enum value: 100`,
+		},
+	}
+
+	// we don't care about the rng for error tests
+	/* #nosec G404 */
+	rnd := rand.New(rand.NewSource(0))
+
+	for name := range testCases {
+		tc := testCases[name]
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+
+			_, err := disk.NewCustomPartitionTable(tc.customizations, tc.options, rnd)
+			assert.EqualError(err, tc.errmsg)
 		})
 	}
 }
