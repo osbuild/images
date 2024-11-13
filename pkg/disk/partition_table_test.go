@@ -722,7 +722,7 @@ func TestEnsureRootFilesystemErrors(t *testing.T) {
 	}
 }
 
-func TestEnsureBootPartition(t *testing.T) {
+func TestAddBootPartition(t *testing.T) {
 	type testCase struct {
 		pt       disk.PartitionTable
 		expected disk.PartitionTable
@@ -859,108 +859,6 @@ func TestEnsureBootPartition(t *testing.T) {
 				},
 			},
 		},
-		"noop": {
-			pt: disk.PartitionTable{
-				Partitions: []disk.Partition{
-					{
-						Start:    0,
-						Size:     0,
-						Type:     disk.XBootLDRPartitionGUID,
-						Bootable: false,
-						UUID:     "",
-						Payload: &disk.Filesystem{
-							Type:         "ext4",
-							Label:        "boot",
-							Mountpoint:   "/boot",
-							FSTabOptions: "defaults",
-						},
-					},
-					{
-						Payload: &disk.LVMVolumeGroup{
-							Name: "testvg",
-							LogicalVolumes: []disk.LVMLogicalVolume{
-								{
-									Name: "varloglv",
-									Payload: &disk.Filesystem{
-										Label:      "var-log",
-										Type:       "xfs",
-										Mountpoint: "/var/log",
-									},
-								},
-								{
-									Name: "datalv",
-									Payload: &disk.Filesystem{
-										Label:        "data",
-										Type:         "ext4",
-										Mountpoint:   "/data",
-										FSTabOptions: "defaults",
-									},
-								},
-								{
-									Name: "rootlv",
-									Payload: &disk.Filesystem{
-										Label:        "root",
-										Type:         "ext4",
-										Mountpoint:   "/",
-										FSTabOptions: "defaults",
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			expected: disk.PartitionTable{
-				Partitions: []disk.Partition{
-					{
-						Start:    0,
-						Size:     0,
-						Type:     disk.XBootLDRPartitionGUID,
-						Bootable: false,
-						UUID:     "",
-						Payload: &disk.Filesystem{
-							Type:         "ext4",
-							Label:        "boot",
-							Mountpoint:   "/boot",
-							FSTabOptions: "defaults",
-						},
-					},
-					{
-						Payload: &disk.LVMVolumeGroup{
-							Name: "testvg",
-							LogicalVolumes: []disk.LVMLogicalVolume{
-								{
-									Name: "varloglv",
-									Payload: &disk.Filesystem{
-										Label:      "var-log",
-										Type:       "xfs",
-										Mountpoint: "/var/log",
-									},
-								},
-								{
-									Name: "datalv",
-									Payload: &disk.Filesystem{
-										Label:        "data",
-										Type:         "ext4",
-										Mountpoint:   "/data",
-										FSTabOptions: "defaults",
-									},
-								},
-								{
-									Name: "rootlv",
-									Payload: &disk.Filesystem{
-										Label:        "root",
-										Type:         "ext4",
-										Mountpoint:   "/",
-										FSTabOptions: "defaults",
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
 		"label-collision": {
 			pt: disk.PartitionTable{
 				Type: disk.PT_GPT,
@@ -1014,7 +912,7 @@ func TestEnsureBootPartition(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			assert := assert.New(t)
 			pt := tc.pt
-			err := disk.EnsureBootPartition(&pt, tc.fsType)
+			err := disk.AddBootPartition(&pt, tc.fsType)
 			if tc.errmsg == "" {
 				assert.NoError(err)
 				assert.Equal(tc.expected, pt)
