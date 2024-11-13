@@ -59,18 +59,17 @@ const (
 //
 // Partitioning modes: The mode controls how the partition table is modified.
 //
-// - Raw will not convert any partition to LVM or Btrfs.
+//   - Raw will not convert any partition to LVM or Btrfs.
+//   - LVM will convert the partition that contains the root mountpoint '/' to an
 //
-// - LVM will convert the partition that contains the root mountpoint '/' to an
 // LVM Volume Group and create a root Logical Volume. Any extra mountpoints,
 // except /boot, will be added to the Volume Group as new Logical Volumes.
 //
-// - Btrfs will convert the partition that contains the root mountpoint '/' to
-// a Btrfs volume and create a root subvolume. Any extra mountpoints, except
-// /boot, will be added to the Btrfs volume as new Btrfs subvolumes.
-//
-// - AutoLVM is the default mode and will convert a raw partition table to an
-// LVM-based one if and only if new mountpoints are added.
+//   - Btrfs will convert the partition that contains the root mountpoint '/' to
+//     a Btrfs volume and create a root subvolume. Any extra mountpoints, except
+//     /boot, will be added to the Btrfs volume as new Btrfs subvolumes.
+//   - AutoLVM is the default mode and will convert a raw partition table to an
+//     LVM-based one if and only if new mountpoints are added.
 //
 // Directory sizes: The requiredSizes argument defines a map of minimum sizes
 // for specific directories. These indirectly control the minimum sizes of
@@ -83,7 +82,7 @@ const (
 // most cases, this translates to a requirement of 3 GiB for the root
 // partition, Logical Volume, or Btrfs subvolume.
 //
-// General principles:
+// # General principles:
 //
 // Desired sizes for partitions, partition tables, volumes, directories, etc,
 // are always treated as minimum sizes. This means that very often the full
@@ -774,6 +773,7 @@ func (pt *PartitionTable) ensureBtrfs() error {
 		if err != nil {
 			return err
 		}
+
 		btrfs := &Btrfs{
 			Label: "root",
 			Subvolumes: []BtrfsSubvolume{
