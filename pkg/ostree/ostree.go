@@ -161,10 +161,6 @@ func resolveRef(ss SourceSpec) (string, error) {
 	u.Path = path.Join(u.Path, "refs/heads/", ss.Ref)
 
 	transport := http.DefaultTransport.(*http.Transport).Clone()
-	client := &http.Client{
-		Transport: transport,
-		Timeout:   300 * time.Second,
-	}
 	if u.Scheme == "https" {
 		tlsConf := &tls.Config{
 			MinVersion: tls.VersionTLS12,
@@ -194,9 +190,19 @@ func resolveRef(ss SourceSpec) (string, error) {
 	}
 
 	if ss.Proxy != "" {
-		transport.Proxy = func(request *http.Request) (*url.URL, error) {
-			return url.Parse(ss.Proxy)
+		proxyURL, err := url.Parse(ss.URL)
+		if err != nil {
+			return "", NewResolveRefError("error parsing MTLS proxy URL '%s': %v", ss.URL, err)
 		}
+
+		transport.Proxy = func(request *http.Request) (*url.URL, error) {
+			return proxyURL, nil
+		}
+	}
+
+	client := &http.Client{
+		Transport: transport,
+		Timeout:   300 * time.Second,
 	}
 
 	req, err := http.NewRequest(http.MethodGet, u.String(), nil)
