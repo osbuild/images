@@ -171,7 +171,7 @@ func resolveRef(ss SourceSpec) (string, error) {
 		}
 
 		// If CA is set, load the CA certificate and add it to the TLS configuration. Otherwise, use the system CA.
-		if ss.MTLS.CA != "" {
+		if ss.MTLS != nil && ss.MTLS.CA != "" {
 			caCertPEM, err := os.ReadFile(ss.MTLS.CA)
 			if err != nil {
 				return "", NewResolveRefError("error adding ca certificate when resolving ref: %s", err)
@@ -182,7 +182,7 @@ func resolveRef(ss SourceSpec) (string, error) {
 			}
 		}
 
-		if ss.MTLS.ClientCert != "" && ss.MTLS.ClientKey != "" {
+		if ss.MTLS != nil && ss.MTLS.ClientCert != "" && ss.MTLS.ClientKey != "" {
 			cert, err := tls.LoadX509KeyPair(ss.MTLS.ClientCert, ss.MTLS.ClientKey)
 			if err != nil {
 				return "", NewResolveRefError("error adding client certificate when resolving ref: %s", err)
