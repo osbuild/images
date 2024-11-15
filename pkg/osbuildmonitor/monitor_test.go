@@ -21,6 +21,7 @@ func TestScannerSimple(t *testing.T) {
 	st, err := scanner.Status()
 	assert.NoError(t, err)
 	assert.Equal(t, &osbuildmonitor.Status{
+		Trace: "source/org.osbuild.curl (org.osbuild.curl): Downloaded https://rpmrepo.osbuild.org/v2/mirror/public/f39/f39-x86_64-fedora-20231109/Packages/k/kpartx-0.9.5-2.fc39.x86_64.rpm",
 		Progress: &osbuildmonitor.Progress{
 			Done:  0,
 			Total: 4,
@@ -30,6 +31,7 @@ func TestScannerSimple(t *testing.T) {
 	st, err = scanner.Status()
 	assert.NoError(t, err)
 	assert.Equal(t, &osbuildmonitor.Status{
+		Trace: "source/org.osbuild.curl (org.osbuild.curl): Downloaded https://rpmrepo.osbuild.org/v2/mirror/public/f39/f39-x86_64-fedora-20231109/Packages/l/langpacks-fonts-en-4.0-9.fc39.noarch.rpm",
 		Progress: &osbuildmonitor.Progress{
 			Done:  0,
 			Total: 4,
@@ -50,6 +52,7 @@ func TestScannerSubprogress(t *testing.T) {
 	st, err := scanner.Status()
 	assert.NoError(t, err)
 	assert.Equal(t, &osbuildmonitor.Status{
+		Trace: "Starting module org.osbuild.rpm",
 		Progress: &osbuildmonitor.Progress{
 			Done:  1,
 			Total: 4,

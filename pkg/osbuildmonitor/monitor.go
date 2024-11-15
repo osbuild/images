@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 )
 
 // Status is a high level aggregation of the low-level osbuild monitor
@@ -17,9 +18,12 @@ import (
 // the osubild progress
 
 type Status struct {
-	// TODO: this will need to include a "log" or "stage-output"
-	// or something so that the full buildlog can be reconstructed
-	// from the status streaming
+	// Trace contains a single log line, usually very low-level or
+	// stage output bug useful for e.g. bug reporting. Should in
+	// general not be displayed to the user but the concatenation
+	// of all "trace" lines should give the same information as
+	// running osbuild on a terminal
+	Trace string
 
 	// Progress contains the current progress.
 	Progress *Progress
@@ -85,11 +89,13 @@ func (sr *StatusScanner) Status() (*Status, error) {
 	}
 
 	st := &Status{
+		Trace: strings.TrimSpace(status.Message),
 		Progress: &Progress{
 			Done:  status.Progress.Done,
 			Total: status.Progress.Total,
 		},
 	}
+
 	// add subprogress
 	prog := st.Progress
 	for subProg := status.Progress.SubProgress; subProg != nil; subProg = subProg.SubProgress {
