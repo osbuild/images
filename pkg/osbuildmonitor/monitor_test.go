@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -15,6 +16,9 @@ const osbuildMonitorLines_curl = `{"message": "source/org.osbuild.curl (org.osb
 {"message": "source/org.osbuild.curl (org.osbuild.curl): Downloaded https://rpmrepo.osbuild.org/v2/mirror/public/f39/f39-x86_64-fedora-20231109/Packages/l/langpacks-fonts-en-4.0-9.fc39.noarch.rpm\n", "context": {"id": "7355d3857aa5c7b3a0c476c13d4b242a625fe190f2e7796df2335f3a34429db3"}, "progress": {"name": "pipelines/sources", "total": 4, "done": 0}, "timestamp": 1731589338.8256931}`
 
 func TestScannerSimple(t *testing.T) {
+	ts1 := 1731589338.8252223 * 1000
+	ts2 := 1731589338.8256931 * 1000
+
 	r := bytes.NewBufferString(osbuildMonitorLines_curl)
 	scanner := osbuildmonitor.NewStatusScanner(r)
 	// first line
@@ -26,6 +30,7 @@ func TestScannerSimple(t *testing.T) {
 			Done:  0,
 			Total: 4,
 		},
+		Timestamp: time.UnixMilli(int64(ts1)),
 	}, st)
 	// second line
 	st, err = scanner.Status()
@@ -36,6 +41,7 @@ func TestScannerSimple(t *testing.T) {
 			Done:  0,
 			Total: 4,
 		},
+		Timestamp: time.UnixMilli(int64(ts2)),
 	}, st)
 	// end
 	st, err = scanner.Status()
@@ -47,6 +53,8 @@ const osbuildMontiorLines_subprogress = `{"message": "Starting module org.osbui
 `
 
 func TestScannerSubprogress(t *testing.T) {
+	ts1 := 1731600115.14839 * 1000
+
 	r := bytes.NewBufferString(osbuildMontiorLines_subprogress)
 	scanner := osbuildmonitor.NewStatusScanner(r)
 	st, err := scanner.Status()
@@ -65,6 +73,7 @@ func TestScannerSubprogress(t *testing.T) {
 				},
 			},
 		},
+		Timestamp: time.UnixMilli(int64(ts1)),
 	}, st)
 }
 
@@ -80,5 +89,6 @@ func TestScannerSmoke(t *testing.T) {
 		if st == nil {
 			break
 		}
+		assert.NotEqual(t, time.Time{}, st.Timestamp)
 	}
 }

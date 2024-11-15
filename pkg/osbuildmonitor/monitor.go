@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 )
 
 // Status is a high level aggregation of the low-level osbuild monitor
@@ -27,6 +28,9 @@ type Status struct {
 
 	// Progress contains the current progress.
 	Progress *Progress
+
+	// Timestamp contains the timestamp the message was recieved in
+	Timestamp time.Time
 }
 
 // Progress provides progress information from an osbuild build.
@@ -87,6 +91,7 @@ func (sr *StatusScanner) Status() (*Status, error) {
 	if pipelineContext == nil {
 		sr.pipelineContextMap[id] = &status.Context
 	}
+	ts := time.UnixMilli(int64(status.Timestamp * 1000))
 
 	st := &Status{
 		Trace: strings.TrimSpace(status.Message),
@@ -94,6 +99,7 @@ func (sr *StatusScanner) Status() (*Status, error) {
 			Done:  status.Progress.Done,
 			Total: status.Progress.Total,
 		},
+		Timestamp: ts,
 	}
 
 	// add subprogress
@@ -116,7 +122,8 @@ type statusJSON struct {
 	// Add "Result" here once
 	// https://github.com/osbuild/osbuild/pull/1831 is merged
 
-	Message string `json:"message"`
+	Message   string  `json:"message"`
+	Timestamp float64 `json:"timestamp"`
 }
 
 // contextJSON is the context for which a status is given. Once a context
