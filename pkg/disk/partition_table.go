@@ -428,7 +428,7 @@ func (pt *PartitionTable) applyCustomization(mountpoints []blueprint.FilesystemC
 	newMountpoints := []blueprint.FilesystemCustomization{}
 
 	for _, mnt := range mountpoints {
-		size := clampFSSize(mnt.Mountpoint, mnt.MinSize)
+		size := clampFSSize(mnt.Mountpoint, mnt.MinSize.Uint64())
 		if path := entityPath(pt, mnt.Mountpoint); len(path) != 0 {
 			size = alignEntityBranch(path, size)
 			resizeEntityBranch(path, size)
@@ -1237,7 +1237,7 @@ func NewCustomPartitionTable(customizations *blueprint.DiskCustomization, option
 		pt.EnsureDirectorySizes(options.RequiredMinSizes)
 	}
 
-	pt.relayout(customizations.MinSize)
+	pt.relayout(customizations.MinSize.Uint64())
 	pt.GenerateUUIDs(rng)
 
 	return pt, nil
@@ -1260,7 +1260,7 @@ func addPlainPartition(pt *PartitionTable, partition blueprint.PartitionCustomiz
 	newpart := Partition{
 		Type:     partType,
 		Bootable: false,
-		Size:     partition.MinSize,
+		Size:     partition.MinSize.Uint64(),
 		Payload: &Filesystem{
 			Type:         fstype,
 			Label:        partition.Label,
@@ -1310,7 +1310,7 @@ func addLVMPartition(pt *PartitionTable, partition blueprint.PartitionCustomizat
 			Mountpoint:   lv.Mountpoint,
 			FSTabOptions: "defaults", // TODO: add customization
 		}
-		if _, err := newvg.CreateLogicalVolume(lv.Name, lv.MinSize, newfs); err != nil {
+		if _, err := newvg.CreateLogicalVolume(lv.Name, lv.MinSize.Uint64(), newfs); err != nil {
 			return fmt.Errorf("error creating logical volume %q (%s): %w", lv.Name, lv.Mountpoint, err)
 		}
 	}
@@ -1318,7 +1318,7 @@ func addLVMPartition(pt *PartitionTable, partition blueprint.PartitionCustomizat
 	// create partition for volume group
 	newpart := Partition{
 		Type:     LVMPartitionGUID,
-		Size:     partition.MinSize,
+		Size:     partition.MinSize.Uint64(),
 		Bootable: false,
 		Payload:  newvg,
 	}
@@ -1345,7 +1345,7 @@ func addBtrfsPartition(pt *PartitionTable, partition blueprint.PartitionCustomiz
 		Type:     FilesystemDataGUID,
 		Bootable: false,
 		Payload:  newvol,
-		Size:     partition.MinSize,
+		Size:     partition.MinSize.Uint64(),
 	}
 
 	pt.Partitions = append(pt.Partitions, newpart)

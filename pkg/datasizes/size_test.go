@@ -2,7 +2,6 @@ package datasizes_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/BurntSushi/toml"

@@ -158,7 +158,7 @@ func (t *imageType) getPartitionTable(
 		if options.Size > 0 {
 			// user specified a size on the command line, so let's override the
 			// customization with the calculated/rounded imageSize
-			partitioning.MinSize = imageSize
+			partitioning.MinSize = datasizes.Size(imageSize)
 		}
 
 		partOptions := &disk.CustomPartitionTableOptions{

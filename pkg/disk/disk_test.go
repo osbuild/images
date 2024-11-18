@@ -146,7 +146,7 @@ func blueprintApplied(pt *disk.PartitionTable, bp []blueprint.FilesystemCustomiz
 		}
 		for idx, ent := range path {
 			if sz, ok := ent.(disk.Sizeable); ok {
-				if sz.GetSize() < mnt.MinSize {
+				if sz.GetSize() < mnt.MinSize.Uint64() {
 					return fmt.Errorf("entity %d in the path from %s is smaller (%d) than the requested minsize %d", idx, mnt.Mountpoint, sz.GetSize(), mnt.MinSize)
 				}
 			}
@@ -178,7 +178,7 @@ func TestCreatePartitionTable(t *testing.T) {
 
 	sumSizes := func(bp []blueprint.FilesystemCustomization) (sum uint64) {
 		for _, mnt := range bp {
-			sum += mnt.MinSize
+			sum += mnt.MinSize.Uint64()
 		}
 		return sum
 	}
