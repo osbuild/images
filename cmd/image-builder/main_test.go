@@ -4,10 +4,16 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/osbuild/images/cmd/image-builder"
 )
+
+func init() {
+	// silence logrus by default, it is quite verbose
+	logrus.SetLevel(logrus.WarnLevel)
+}
 
 func TestListImagesSmoke(t *testing.T) {
 	t.Setenv("IMAGE_BUILDER_EXTRA_REPOS_PATH", "../../test/data")

@@ -22,6 +22,9 @@ func getOneImage(distroName, imgTypeStr, archStr string) (*imagefilter.Result, e
 		return nil, err
 	}
 
+	// XXX: validate using "glob.QuoteMeta(distroName) == distroName",...
+	// here
+
 	filterExprs := []string{
 		fmt.Sprintf("distro:%s", distroName),
 		fmt.Sprintf("arch:%s", archStr),
@@ -33,10 +36,12 @@ func getOneImage(distroName, imgTypeStr, archStr string) (*imagefilter.Result, e
 	}
 	switch len(filteredResults) {
 	case 0:
-		return nil, fmt.Errorf("cannot find image for %s %s %s", distroName, imgTypeStr, archStr)
+		return nil, fmt.Errorf("cannot find image for: distro:%q type:%q arch:%q", distroName, imgTypeStr, archStr)
 	case 1:
 		return &filteredResults[0], nil
 	default:
+		// XXX: imagefilter.Result should have a String() method so
+		// that this output can actually show the results
 		return nil, fmt.Errorf("internal error: found %v results for %s %s %s", len(filteredResults), distroName, imgTypeStr, archStr)
 	}
 }

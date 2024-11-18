@@ -22,5 +22,6 @@ func MockOsStdout(new io.Writer) (restore func()) {
 }
 
 var (
-	Run = run
+	GetOneImage = getOneImage
+	Run         = run
 )
