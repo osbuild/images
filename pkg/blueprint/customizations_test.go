@@ -3,9 +3,10 @@ package blueprint
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/customizations/anaconda"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestCheckAllowed(t *testing.T) {

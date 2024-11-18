@@ -11,6 +11,12 @@ import (
 // all supported
 type Size uint64
 
+// Uint64 returns the size as uint64. This is a convenience functions,
+// it is strictly equivalent to uint64(Size(1))
+func (si Size) Uint64() uint64 {
+	return uint64(si)
+}
+
 func (si *Size) UnmarshalTOML(data interface{}) error {
 	i, err := decodeSize(data)
 	if err != nil {

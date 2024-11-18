@@ -304,7 +304,7 @@ func (c *Customizations) GetFilesystemsMinSize() uint64 {
 	}
 	var agg uint64
 	for _, m := range c.Filesystem {
-		agg += m.MinSize
+		agg += m.MinSize.Uint64()
 	}
 	// This ensures that file system customization `size` is a multiple of
 	// sector size (512)

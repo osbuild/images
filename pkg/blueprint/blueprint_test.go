@@ -65,9 +65,9 @@ minsize = "20 GiB"
 	assert.Equal(t, bp.Version, "0.0.0")
 	assert.Equal(t, bp.Packages, []Package{{Name: "httpd", Version: "2.4.*"}})
 	assert.Equal(t, "/var", bp.Customizations.Filesystem[0].Mountpoint)
-	assert.Equal(t, uint64(2147483648), bp.Customizations.Filesystem[0].MinSize)
+	assert.Equal(t, uint64(2147483648), bp.Customizations.Filesystem[0].MinSize.Uint64())
 	assert.Equal(t, "/opt", bp.Customizations.Filesystem[1].Mountpoint)
-	assert.Equal(t, uint64(20*datasizes.GiB), bp.Customizations.Filesystem[1].MinSize)
+	assert.Equal(t, uint64(20*datasizes.GiB), bp.Customizations.Filesystem[1].MinSize.Uint64())
 }
 
 func TestGetPackages(t *testing.T) {
