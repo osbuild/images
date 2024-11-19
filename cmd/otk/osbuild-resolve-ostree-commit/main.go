@@ -27,6 +27,16 @@ type Input struct {
 
 	// Whether to use RHSM secrets when resolving and fetching the commit.
 	RHSM bool `json:"rhsm,omitempty"`
+
+	// MTLS information. Will be ignored if RHSM is set.
+	MTLS *struct {
+		CA         string `json:"ca"`
+		ClientCert string `json:"client_cert"`
+		ClientKey  string `json:"client_key"`
+	} `json:"mtls,omitempty"`
+
+	// HTTP proxy to use when fetching the ref.
+	Proxy string `json:"proxy,omitempty"`
 }
 
 // Output contains everything needed to write a manifest that requires pulling
@@ -50,9 +60,17 @@ func run(r io.Reader, w io.Writer) error {
 	}
 
 	sourceSpec := ostree.SourceSpec{
-		URL:  inputTree.Tree.URL,
-		Ref:  inputTree.Tree.Ref,
-		RHSM: inputTree.Tree.RHSM,
+		URL:   inputTree.Tree.URL,
+		Ref:   inputTree.Tree.Ref,
+		RHSM:  inputTree.Tree.RHSM,
+		Proxy: inputTree.Tree.Proxy,
+	}
+
+	if inputTree.Tree.MTLS != nil {
+		sourceSpec.MTLS = &ostree.MTLS{}
+		sourceSpec.MTLS.CA = inputTree.Tree.MTLS.CA
+		sourceSpec.MTLS.ClientCert = inputTree.Tree.MTLS.ClientCert
+		sourceSpec.MTLS.ClientKey = inputTree.Tree.MTLS.ClientKey
 	}
 
 	var commitSpec ostree.CommitSpec

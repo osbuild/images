@@ -24,6 +24,10 @@ func NewMTLSServer(handler http.Handler) (*MTLSServer, error) {
 		return nil, err
 	}
 
+	return NewMTLSServerInPath(handler, certsPath)
+}
+
+func NewMTLSServerInPath(handler http.Handler, certsPath string) (*MTLSServer, error) {
 	caPath := filepath.Join(certsPath, "ca.crt")
 	serverKeyPath := filepath.Join(certsPath, "server.key")
 	serverCrtPath := filepath.Join(certsPath, "server.crt")
