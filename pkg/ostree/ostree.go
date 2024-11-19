@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -158,7 +159,7 @@ func resolveRef(ss SourceSpec) (string, error) {
 	if err != nil {
 		return "", NewResolveRefError("error parsing ostree repository location: %v", err)
 	}
-	u.Path = path.Join(u.Path, "refs/heads/", ss.Ref)
+	u.Path = path.Join(u.Path, "refs", "heads", ss.Ref)
 
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	if u.Scheme == "https" {
@@ -190,7 +191,12 @@ func resolveRef(ss SourceSpec) (string, error) {
 	}
 
 	if ss.Proxy != "" {
-		proxyURL, err := url.Parse(ss.URL)
+		host, port, err := net.SplitHostPort(ss.Proxy)
+		if err != nil {
+			return "", NewResolveRefError("error parsing MTLS proxy URL '%s': %v", ss.URL, err)
+		}
+
+		proxyURL, err := url.Parse("http://" + host + ":" + port)
 		if err != nil {
 			return "", NewResolveRefError("error parsing MTLS proxy URL '%s': %v", ss.URL, err)
 		}
