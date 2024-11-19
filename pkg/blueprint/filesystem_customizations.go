@@ -1,6 +1,7 @@
 package blueprint
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -26,5 +27,22 @@ func CheckMountpointsPolicy(mountpoints []FilesystemCustomization, mountpointAll
 		return fmt.Errorf("The following errors occurred while setting up custom mountpoints:\n%w", errors.Join(errs...))
 	}
 
+	return nil
+}
+
+func (fsc *FilesystemCustomization) UnmarshalJSON(data []byte) error {
+	// this is only needed to generate nicer errors with a hint
+	// if the custom unmarshal for minsize failed (as encoding/json
+	// provides sadly no context), c.f.
+	// https://github.com/golang/go/issues/58655
+	type filesystemCustomization FilesystemCustomization
+	var fc filesystemCustomization
+	if err := json.Unmarshal(data, &fc); err != nil {
+		if fc.Mountpoint != "" {
+			return fmt.Errorf("JSON unmarshal: error decoding minsize value for mountpoint %q: %w", fc.Mountpoint, err)
+		}
+		return err
+	}
+	*fsc = FilesystemCustomization(fc)
 	return nil
 }

@@ -9,12 +9,13 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/pathpolicy"
 )
 
 type DiskCustomization struct {
 	// TODO: Add partition table type: gpt or dos
-	MinSize    uint64                   `json:"minsize,omitempty" toml:"minsize,omitempty"`
+	MinSize    datasizes.Size           `json:"minsize,omitempty" toml:"minsize,omitempty"`
 	Partitions []PartitionCustomization `json:"partitions,omitempty" toml:"partitions,omitempty"`
 }
 
@@ -37,7 +38,7 @@ type PartitionCustomization struct {
 	// addition, certain mountpoints have required minimum sizes. See
 	// https://osbuild.org/docs/user-guide/partitioning for more details.
 	// (optional, defaults depend on payload and mountpoints).
-	MinSize uint64 `json:"minsize" toml:"minsize"`
+	MinSize datasizes.Size `json:"minsize" toml:"minsize"`
 
 	BtrfsVolumeCustomization
 
@@ -71,34 +72,9 @@ type LVCustomization struct {
 	Name string `json:"name,omitempty" toml:"name,omitempty"`
 
 	// Minimum size of the logical volume
-	MinSize uint64 `json:"minsize,omitempty" toml:"minsize,omitempty"`
+	MinSize datasizes.Size `json:"minsize,omitempty" toml:"minsize,omitempty"`
 
 	FilesystemTypedCustomization
-}
-
-// Custom JSON unmarshaller for LVCustomization for handling the conversion of
-// data sizes (minsize) expressed as strings to uint64.
-func (lv *LVCustomization) UnmarshalJSON(data []byte) error {
-	var lvAnySize struct {
-		Name    string `json:"name,omitempty" toml:"name,omitempty"`
-		MinSize any    `json:"minsize,omitempty" toml:"minsize,omitempty"`
-		FilesystemTypedCustomization
-	}
-	if err := json.Unmarshal(data, &lvAnySize); err != nil {
-		return err
-	}
-
-	lv.Name = lvAnySize.Name
-	lv.FilesystemTypedCustomization = lvAnySize.FilesystemTypedCustomization
-
-	if lvAnySize.MinSize != nil {
-		size, err := decodeSize(lvAnySize.MinSize)
-		if err != nil {
-			return err
-		}
-		lv.MinSize = size
-	}
-	return nil
 }
 
 // A btrfs volume consisting of one or more subvolumes.
@@ -124,8 +100,7 @@ type BtrfsSubvolumeCustomization struct {
 func (v *PartitionCustomization) UnmarshalJSON(data []byte) error {
 	errPrefix := "JSON unmarshal:"
 	var typeSniffer struct {
-		Type    string `json:"type"`
-		MinSize any    `json:"minsize"`
+		Type string `json:"type"`
 	}
 	if err := json.Unmarshal(data, &typeSniffer); err != nil {
 		return fmt.Errorf("%s %w", errPrefix, err)
@@ -155,14 +130,6 @@ func (v *PartitionCustomization) UnmarshalJSON(data []byte) error {
 
 	v.Type = partType
 
-	if typeSniffer.MinSize != nil {
-		minsize, err := decodeSize(typeSniffer.MinSize)
-		if err != nil {
-			return fmt.Errorf("%s error decoding minsize for partition: %w", errPrefix, err)
-		}
-		v.MinSize = minsize
-	}
-
 	return nil
 }
 
@@ -171,10 +138,10 @@ func (v *PartitionCustomization) UnmarshalJSON(data []byte) error {
 // the type is "plain", none of the fields for btrfs or lvm are used.
 func decodePlain(v *PartitionCustomization, data []byte) error {
 	var plain struct {
-		// Type and minsize are handled by the caller. These are added here to
+		// Type is handled by the caller. These are added here to
 		// satisfy "DisallowUnknownFields" when decoding.
-		Type    string `json:"type"`
-		MinSize any    `json:"minsize"`
+		Type    string         `json:"type"`
+		MinSize datasizes.Size `json:"minsize"`
 		FilesystemTypedCustomization
 	}
 
@@ -186,6 +153,7 @@ func decodePlain(v *PartitionCustomization, data []byte) error {
 	}
 
 	v.FilesystemTypedCustomization = plain.FilesystemTypedCustomization
+	v.MinSize = plain.MinSize
 	return nil
 }
 
@@ -194,10 +162,10 @@ func decodePlain(v *PartitionCustomization, data []byte) error {
 // the type is btrfs, none of the fields for plain or lvm are used.
 func decodeBtrfs(v *PartitionCustomization, data []byte) error {
 	var btrfs struct {
-		// Type and minsize are handled by the caller. These are added here to
+		// Type is handled by the caller. These are added here to
 		// satisfy "DisallowUnknownFields" when decoding.
-		Type    string `json:"type"`
-		MinSize any    `json:"minsize"`
+		Type    string         `json:"type"`
+		MinSize datasizes.Size `json:"minsize"`
 		BtrfsVolumeCustomization
 	}
 
@@ -209,6 +177,7 @@ func decodeBtrfs(v *PartitionCustomization, data []byte) error {
 	}
 
 	v.BtrfsVolumeCustomization = btrfs.BtrfsVolumeCustomization
+	v.MinSize = btrfs.MinSize
 	return nil
 }
 
@@ -217,10 +186,10 @@ func decodeBtrfs(v *PartitionCustomization, data []byte) error {
 // is lvm, none of the fields for plain or btrfs are used.
 func decodeLVM(v *PartitionCustomization, data []byte) error {
 	var vg struct {
-		// Type and minsize are handled by the caller. These are added here to
+		// Type handled by the caller. These are added here to
 		// satisfy "DisallowUnknownFields" when decoding.
-		Type    string `json:"type"`
-		MinSize any    `json:"minsize"`
+		Type    string         `json:"type"`
+		MinSize datasizes.Size `json:"minsize"`
 		VGCustomization
 	}
 
@@ -231,6 +200,7 @@ func decodeLVM(v *PartitionCustomization, data []byte) error {
 	}
 
 	v.VGCustomization = vg.VGCustomization
+	v.MinSize = vg.MinSize
 	return nil
 }
 
@@ -278,14 +248,6 @@ func (v *PartitionCustomization) UnmarshalTOML(data any) error {
 	}
 
 	v.Type = partType
-
-	if minsizeField, ok := d["minsize"]; ok {
-		minsize, err := decodeSize(minsizeField)
-		if err != nil {
-			return fmt.Errorf("%s error decoding minsize for partition: %w", errPrefix, err)
-		}
-		v.MinSize = minsize
-	}
 
 	return nil
 }

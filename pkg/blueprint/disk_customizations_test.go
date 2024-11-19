@@ -1264,7 +1264,7 @@ func TestPartitionCustomizationUnmarshalJSON(t *testing.T) {
 				"mountpoint": "/",
 				"fs_type": "xfs"
 			}`,
-			errorMsg: "JSON unmarshal: error decoding minsize for partition: cannot be negative",
+			errorMsg: "JSON unmarshal: error decoding partition with type \"plain\": error decoding JSON size: cannot be negative",
 		},
 		"wrong-type/btrfs-with-lvm": {
 			input: `{
@@ -1559,12 +1559,12 @@ func TestPartitionCustomizationUnmarshalTOML(t *testing.T) {
 			input:    `type = 5`,
 			errorMsg: `toml: line 0: TOML unmarshal: type must be a string, got "5" of type int64`,
 		},
-		"negative-size": {
+		"negative-size-2": {
 			input: `minsize = -10
 					mountpoint = "/"
 					fs_type = "xfs"
 					`,
-			errorMsg: "toml: line 0: TOML unmarshal: error decoding minsize for partition: cannot be negative",
+			errorMsg: "toml: line 0: TOML unmarshal: error decoding partition with type \"plain\": error decoding JSON size: cannot be negative",
 		},
 		"wrong-type/btrfs-with-lvm": {
 			input: `type = "btrfs"
