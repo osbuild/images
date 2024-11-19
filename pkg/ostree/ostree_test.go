@@ -1,6 +1,7 @@
 package ostree
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -85,7 +86,7 @@ func TestOstreeResolveRef(t *testing.T) {
 				&MTLS{mTLSSrv.CAPath, mTLSSrv.ClientCrtPath, mTLSSrv.ClientKeyPath},
 				"",
 			})
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, expOut, out)
 		}
 
@@ -225,4 +226,57 @@ func TestValidate(t *testing.T) {
 		})
 	}
 
+}
+
+func TestClientForRefProxy(t *testing.T) {
+	ss := SourceSpec{
+		Proxy: "foo:1234",
+	}
+	client, err := httpClientForRef("https", ss)
+	assert.NoError(t, err)
+
+	proxy, err := client.Transport.(*http.Transport).Proxy(&http.Request{})
+	assert.NoError(t, err)
+	assert.Equal(t, "foo", proxy.Hostname())
+	assert.Equal(t, "1234", proxy.Port())
+}
+
+func TestClientForRefClientCertKey(t *testing.T) {
+	ss := SourceSpec{
+		MTLS: &MTLS{
+			ClientCert: "test_mtls_server/client.crt",
+			ClientKey:  "test_mtls_server/client.key",
+		},
+	}
+	client, err := httpClientForRef("https", ss)
+	assert.NoError(t, err)
+
+	tlsConf := client.Transport.(*http.Transport).TLSClientConfig
+	assert.NoError(t, err)
+	expectedCert, err := tls.LoadX509KeyPair("test_mtls_server/client.crt", "test_mtls_server/client.key")
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(tlsConf.Certificates))
+	assert.Equal(t, expectedCert, tlsConf.Certificates[0])
+	// no RootCAs got added
+	assert.Nil(t, tlsConf.RootCAs)
+}
+
+func TestClientForRefCA(t *testing.T) {
+	ss := SourceSpec{
+		MTLS: &MTLS{
+			CA: "test_mtls_server/ca.crt",
+		},
+	}
+	client, err := httpClientForRef("https", ss)
+	assert.NoError(t, err)
+
+	tlsConf := client.Transport.(*http.Transport).TLSClientConfig
+	assert.NoError(t, err)
+	// the RootCAs is a x590.CertPool which provides almost no
+	// introspection (only Subjects() which is deprecated). So
+	// we do just chech that *something* got added and hope for the
+	// best here.
+	assert.NotNil(t, tlsConf.RootCAs)
+	// no certificates got added
+	assert.Equal(t, 0, len(tlsConf.Certificates))
 }
