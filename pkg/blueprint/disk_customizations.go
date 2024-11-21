@@ -189,7 +189,7 @@ func decodePlain(v *PartitionCustomization, data []byte) error {
 	return nil
 }
 
-// descodeBtrfs decodes the data into a struct that only embeds the
+// decodeBtrfs decodes the data into a struct that only embeds the
 // BtrfsVolumeCustomization with DisallowUnknownFields. This ensures that when
 // the type is btrfs, none of the fields for plain or lvm are used.
 func decodeBtrfs(v *PartitionCustomization, data []byte) error {
