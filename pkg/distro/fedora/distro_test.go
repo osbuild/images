@@ -951,6 +951,7 @@ func TestDistro_PartitioningConflict(t *testing.T) {
 					{
 						MinSize: 19,
 						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType:     "ext4",
 							Mountpoint: "/home",
 						},
 					},

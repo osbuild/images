@@ -148,7 +148,10 @@ func (t *imageType) getPartitionTable(
 	}
 
 	imageSize := t.Size(options.Size)
-	partitioning := customizations.GetPartitioning()
+	partitioning, err := customizations.GetPartitioning()
+	if err != nil {
+		return nil, err
+	}
 	if partitioning != nil {
 		// Use the new custom partition table to create a PT fully based on the user's customizations.
 		// This overrides FilesystemCustomizations, but we should never have both defined.
@@ -374,7 +377,10 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 	}
 
 	mountpoints := customizations.GetFilesystems()
-	partitioning := customizations.GetPartitioning()
+	partitioning, err := customizations.GetPartitioning()
+	if err != nil {
+		return nil, err
+	}
 	if (len(mountpoints) > 0 || partitioning != nil) && t.rpmOstree {
 		return nil, fmt.Errorf("Custom mountpoints and partitioning are not supported for ostree types")
 	}
@@ -406,7 +412,7 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 	dc := customizations.GetDirectories()
 	fc := customizations.GetFiles()
 
-	err := blueprint.ValidateDirFileCustomizations(dc, fc)
+	err = blueprint.ValidateDirFileCustomizations(dc, fc)
 	if err != nil {
 		return nil, err
 	}

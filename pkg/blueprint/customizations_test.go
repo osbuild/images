@@ -378,6 +378,7 @@ func TestGetRPM(t *testing.T) {
 	assert.EqualValues(t, expectedRPM, *retRPM)
 
 }
+
 func TestGetRHSM(t *testing.T) {
 	expectedRHSM := RHSMCustomization{
 		Config: &RHSMConfig{
@@ -492,4 +493,45 @@ func TestGetInstallerErrors(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetPartitioningTrivial(t *testing.T) {
+	expected := DiskCustomization{
+		Partitions: []PartitionCustomization{
+			{
+				MinSize: 19,
+				FilesystemTypedCustomization: FilesystemTypedCustomization{
+					FSType:     "ext4",
+					Mountpoint: "/home",
+				},
+			},
+		},
+	}
+
+	TestCustomizations := Customizations{
+		Disk: &expected,
+	}
+
+	ret, err := TestCustomizations.GetPartitioning()
+	assert.NoError(t, err)
+	assert.EqualValues(t, expected, *ret)
+}
+
+func TestGetPartitioningUnhappy(t *testing.T) {
+	expected := DiskCustomization{
+		Partitions: []PartitionCustomization{
+			{
+				FilesystemTypedCustomization: FilesystemTypedCustomization{
+					FSType: "ext4",
+				},
+			},
+		},
+	}
+
+	TestCustomizations := Customizations{
+		Disk: &expected,
+	}
+
+	_, err := TestCustomizations.GetPartitioning()
+	assert.ErrorContains(t, err, "mountpoint is empty")
 }
