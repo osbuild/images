@@ -314,11 +314,15 @@ func (c *Customizations) GetFilesystemsMinSize() uint64 {
 	return agg
 }
 
-func (c *Customizations) GetPartitioning() *DiskCustomization {
+func (c *Customizations) GetPartitioning() (*DiskCustomization, error) {
 	if c == nil {
-		return nil
+		return nil, nil
 	}
-	return c.Disk
+	if err := c.Disk.Validate(); err != nil {
+		return nil, err
+	}
+
+	return c.Disk, nil
 }
 
 func (c *Customizations) GetInstallationDevice() string {
