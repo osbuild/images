@@ -1000,16 +1000,16 @@ func EnsureRootFilesystem(pt *PartitionTable, defaultFsType FSType) error {
 // partition to the end of the existing partition table therefore it is best to
 // call this function early to put boot near the front (as is conventional).
 func AddBootPartition(pt *PartitionTable, bootFsType FSType) error {
+	if bootFsType == FS_NONE {
+		return fmt.Errorf("error creating boot partition: no filesystem type")
+	}
+
 	// collect all labels to avoid conflicts
 	labels := make(map[string]bool)
 	_ = pt.ForEachMountable(func(mnt Mountable, path []Entity) error {
 		labels[mnt.GetFSSpec().Label] = true
 		return nil
 	})
-
-	if bootFsType == FS_NONE {
-		return fmt.Errorf("error creating boot partition: no filesystem type")
-	}
 
 	bootLabel, err := genUniqueString("boot", labels)
 	if err != nil {
@@ -1158,12 +1158,8 @@ func (options *CustomPartitionTableOptions) getfstype(fstype string) (string, er
 // NewCustomPartitionTable creates a partition table based almost entirely on the disk customizations from a blueprint.
 func NewCustomPartitionTable(customizations *blueprint.DiskCustomization, options *CustomPartitionTableOptions, rng *rand.Rand) (*PartitionTable, error) {
 	if options == nil {
-		// init options with defaults
-		options = &CustomPartitionTableOptions{
-			PartitionTableType: PT_GPT,
-		}
+		options = &CustomPartitionTableOptions{}
 	}
-
 	if customizations == nil {
 		customizations = &blueprint.DiskCustomization{}
 	}
@@ -1255,7 +1251,7 @@ func addPlainPartition(pt *PartitionTable, partition blueprint.PartitionCustomiz
 	}
 	partType, err := getPartitionTypeIDfor(pt.Type, typeName)
 	if err != nil {
-		return fmt.Errorf("error creating root partition: %w", err)
+		return fmt.Errorf("error getting partition type ID for %q: %w", partition.Mountpoint, err)
 	}
 	newpart := Partition{
 		Type:     partType,
@@ -1275,7 +1271,7 @@ func addPlainPartition(pt *PartitionTable, partition blueprint.PartitionCustomiz
 func addLVMPartition(pt *PartitionTable, partition blueprint.PartitionCustomization, options *CustomPartitionTableOptions) error {
 	vgname := partition.Name
 	if vgname == "" {
-		// count existing volume groups and generate unique name
+		// get existing volume groups and generate unique name
 		existing := make(map[string]bool)
 		for _, part := range pt.Partitions {
 			vg, ok := part.Payload.(*LVMVolumeGroup)
