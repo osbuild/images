@@ -19,23 +19,6 @@ type filesystemCustomizationMarshaling struct {
 	MinSize    datasizes.Size `json:"minsize,omitempty" toml:"minsize,omitempty"`
 }
 
-func (fsc *FilesystemCustomization) UnmarshalTOML(data any) error {
-	// This is the most efficient way to reuse code when unmarshaling
-	// structs in toml, it leaks json errors which is a bit sad but
-	// because the toml unmarshaler gives us not "[]byte" but an
-	// already pre-processed "any" we cannot just unmarshal into our
-	// "fooMarshaling" struct and reuse the result so we resort to
-	// this workaround (but toml will go away long term anyway).
-	dataJSON, err := json.Marshal(data)
-	if err != nil {
-		return fmt.Errorf("error unmarshaling TOML data %v: %w", data, err)
-	}
-	if err := fsc.UnmarshalJSON(dataJSON); err != nil {
-		return fmt.Errorf("error decoding TOML %v: %w", data, err)
-	}
-	return nil
-}
-
 func (fsc *FilesystemCustomization) UnmarshalJSON(data []byte) error {
 	var fc filesystemCustomizationMarshaling
 	if err := json.Unmarshal(data, &fc); err != nil {
@@ -48,6 +31,10 @@ func (fsc *FilesystemCustomization) UnmarshalJSON(data []byte) error {
 	fsc.MinSize = fc.MinSize.Uint64()
 
 	return nil
+}
+
+func (fsc *FilesystemCustomization) UnmarshalTOML(data any) error {
+	return unmarshalTOMLviaJSON(fsc, data)
 }
 
 // CheckMountpointsPolicy checks if the mountpoints are allowed by the policy
