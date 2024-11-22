@@ -497,3 +497,19 @@ def skopeo_inspect_id(image_name: str, arch: str) -> str:
 
     # don't error out, just return an empty string and let the caller handle it
     return ""
+
+
+def get_common_ci_runner():
+    """
+    CI runner for common tasks.
+
+    Currently this is used for all gitlab CI jobs. In the future, we might switch to running build jobs on the same host
+    distro as the target image, but this CI runner will still be used for generic tasks like check-build-coverage.
+    """
+    with open(SCHUTZFILE, encoding="utf-8") as schutzfile:
+        data = json.load(schutzfile)
+
+    if (runner := data.get("common", {}).get("gitlab-ci-runner")) is None:
+        raise KeyError(f"gitlab-ci-runner not defined in {SCHUTZFILE}")
+
+    return runner
