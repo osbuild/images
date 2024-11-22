@@ -5,10 +5,12 @@ import (
 	"testing"
 
 	"github.com/BurntSushi/toml"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/pathpolicy"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestPartitioningValidation(t *testing.T) {
@@ -1644,6 +1646,54 @@ func TestPartitionCustomizationUnmarshalTOML(t *testing.T) {
 				assert.Equal(tc.expected, &pc)
 			} else {
 				assert.EqualError(err, tc.errorMsg)
+			}
+		})
+	}
+}
+
+func TestDiskCustomizationUnmarshalJSON(t *testing.T) {
+	type testCase struct {
+		input    string
+		expected *blueprint.DiskCustomization
+		errorMsg string
+	}
+
+	testCases := map[string]testCase{
+		"nothing": {
+			input: "{}",
+			expected: &blueprint.DiskCustomization{
+				MinSize: 0,
+			},
+		},
+		"minsize/str": {
+			input: `{
+				"minsize": "1234"
+			}`,
+			expected: &blueprint.DiskCustomization{
+				MinSize: 1234,
+			},
+		},
+		"minsize/str-with-unit": {
+			input: `{
+				"minsize": "1 GiB"
+			}`,
+			expected: &blueprint.DiskCustomization{
+				MinSize: 1 * datasizes.GiB,
+			},
+		},
+	}
+
+	for name := range testCases {
+		tc := testCases[name]
+		t.Run(name, func(t *testing.T) {
+			var dc blueprint.DiskCustomization
+
+			err := json.Unmarshal([]byte(tc.input), &dc)
+			if tc.errorMsg == "" {
+				require.NoError(t, err)
+				assert.Equal(t, tc.expected, &dc)
+			} else {
+				assert.EqualError(t, err, tc.errorMsg)
 			}
 		})
 	}
