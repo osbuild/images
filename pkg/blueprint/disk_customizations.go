@@ -18,6 +18,27 @@ type DiskCustomization struct {
 	Partitions []PartitionCustomization `json:"partitions,omitempty" toml:"partitions,omitempty"`
 }
 
+func (dc *DiskCustomization) UnmarshalJSON(data []byte) error {
+	var dcAnySize struct {
+		MinSize    any                      `json:"minsize,omitempty" toml:"minsize,omitempty"`
+		Partitions []PartitionCustomization `json:"partitions,omitempty" toml:"partitions,omitempty"`
+	}
+	if err := json.Unmarshal(data, &dcAnySize); err != nil {
+		return err
+	}
+
+	dc.Partitions = dcAnySize.Partitions
+
+	if dcAnySize.MinSize != nil {
+		size, err := decodeSize(dcAnySize.MinSize)
+		if err != nil {
+			return err
+		}
+		dc.MinSize = size
+	}
+	return nil
+}
+
 // PartitionCustomization defines a single partition on a disk. The Type
 // defines the kind of "payload" for the partition: plain, lvm, or btrfs.
 //   - plain: the payload will be a filesystem on a partition (e.g. xfs, ext4).
