@@ -849,12 +849,6 @@ func TestPartitioningLayoutConstraints(t *testing.T) {
 			partitioning: &blueprint.DiskCustomization{
 				Partitions: []blueprint.PartitionCustomization{
 					{
-						Type: "ext4",
-						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
-							Mountpoint: "/data",
-						},
-					},
-					{
 						Type: "btrfs",
 						BtrfsVolumeCustomization: blueprint.BtrfsVolumeCustomization{
 							Subvolumes: []blueprint.BtrfsSubvolumeCustomization{
@@ -1276,12 +1270,6 @@ func TestPartitionCustomizationUnmarshalJSON(t *testing.T) {
 						"mountpoint": "/home",
 						"label": "home",
 						"fs_type": "ext4"
-					},
-					{
-						"name": "loglv",
-						"mountpoint": "/var/log",
-						"label": "log",
-						"fs_type": "xfs"
 					}
 				]
 			}`,

@@ -314,12 +314,12 @@ func (p *DiskCustomization) Validate() error {
 	var errs []error
 	for _, part := range p.Partitions {
 		switch part.Type {
+		case "plain", "":
+			errs = append(errs, part.validatePlain(mountpoints))
 		case "lvm":
 			errs = append(errs, part.validateLVM(mountpoints, vgnames))
 		case "btrfs":
 			errs = append(errs, part.validateBtrfs(mountpoints))
-		case "plain", "":
-			errs = append(errs, part.validatePlain(mountpoints))
 		default:
 			errs = append(errs, fmt.Errorf("unknown partition type: %s", part.Type))
 		}
@@ -382,19 +382,19 @@ func (p *DiskCustomization) ValidateLayoutConstraints() error {
 
 // Check that the fs type is valid for the mountpoint.
 func validateFilesystemType(path, fstype string) error {
-	badfsMsg := "unsupported filesystem type for %q: %s"
+	badfsMsgFmt := "unsupported filesystem type for %q: %s"
 	switch path {
 	case "/boot":
 		switch fstype {
 		case "xfs", "ext4":
 		default:
-			return fmt.Errorf(badfsMsg, path, fstype)
+			return fmt.Errorf(badfsMsgFmt, path, fstype)
 		}
 	case "/boot/efi":
 		switch fstype {
 		case "vfat":
 		default:
-			return fmt.Errorf(badfsMsg, path, fstype)
+			return fmt.Errorf(badfsMsgFmt, path, fstype)
 		}
 	}
 	return nil
