@@ -9,13 +9,35 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/pathpolicy"
 )
 
 type DiskCustomization struct {
 	// TODO: Add partition table type: gpt or dos
-	MinSize    uint64                   `json:"minsize,omitempty" toml:"minsize,omitempty"`
+	MinSize    uint64
+	Partitions []PartitionCustomization
+}
+
+type diskCustomizationMarshaler struct {
+	// TODO: Add partition table type: gpt or dos
+	MinSize    datasizes.Size           `json:"minsize,omitempty" toml:"minsize,omitempty"`
 	Partitions []PartitionCustomization `json:"partitions,omitempty" toml:"partitions,omitempty"`
+}
+
+func (dc *DiskCustomization) UnmarshalJSON(data []byte) error {
+	var dcm diskCustomizationMarshaler
+	if err := json.Unmarshal(data, &dcm); err != nil {
+		return err
+	}
+	dc.MinSize = dcm.MinSize.Uint64()
+	dc.Partitions = dcm.Partitions
+
+	return nil
+}
+
+func (dc *DiskCustomization) UnmarshalTOML(data any) error {
+	return unmarshalTOMLviaJSON(dc, data)
 }
 
 // PartitionCustomization defines a single partition on a disk. The Type
