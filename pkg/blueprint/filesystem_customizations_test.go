@@ -47,19 +47,19 @@ func TestFilesystemCustomizationUnmarshalTOMLUnhappy(t *testing.T) {
 			name: "mountpoint not string",
 			input: `mountpoint = 42
 			minsize = 42`,
-			err: `toml: line 0: TOML unmarshal: mountpoint must be string, got "42" of type int64`,
+			err: `toml: line 0: error decoding TOML map[minsize:42 mountpoint:42]: json: cannot unmarshal number into Go struct field filesystemCustomizationMarshaling.mountpoint of type string`,
 		},
 		{
 			name: "minsize nor string nor int",
 			input: `mountpoint="/"
 			minsize = true`,
-			err: `toml: line 0: TOML unmarshal: error decoding minsize value for mountpoint "/": failed to convert value "true" to number`,
+			err: `toml: line 0: error decoding TOML map[minsize:true mountpoint:/]: error decoding size: failed to convert value "true" to number`,
 		},
 		{
 			name: "minsize not parseable",
 			input: `mountpoint="/"
 			minsize = "20 KG"`,
-			err: `toml: line 0: TOML unmarshal: error decoding minsize value for mountpoint "/": unknown data size units in string: 20 KG`,
+			err: `toml: line 0: error decoding TOML map[minsize:20 KG mountpoint:/]: error decoding size: unknown data size units in string: 20 KG`,
 		},
 	}
 
@@ -81,17 +81,17 @@ func TestFilesystemCustomizationUnmarshalJSONUnhappy(t *testing.T) {
 		{
 			name:  "mountpoint not string",
 			input: `{"mountpoint": 42, "minsize": 42}`,
-			err:   `JSON unmarshal: mountpoint must be string, got "42" of type float64`,
+			err:   `json: cannot unmarshal number into Go struct field filesystemCustomizationMarshaling.mountpoint of type string`,
 		},
 		{
 			name:  "minsize nor string nor int",
 			input: `{"mountpoint":"/", "minsize": true}`,
-			err:   `JSON unmarshal: error decoding minsize value for mountpoint "/": failed to convert value "true" to number`,
+			err:   `error decoding minsize value for mountpoint "/": error decoding size: failed to convert value "true" to number`,
 		},
 		{
 			name:  "minsize not parseable",
 			input: `{ "mountpoint": "/", "minsize": "20 KG"}`,
-			err:   `JSON unmarshal: error decoding minsize value for mountpoint "/": unknown data size units in string: 20 KG`,
+			err:   `error decoding minsize value for mountpoint "/": error decoding size: unknown data size units in string: 20 KG`,
 		},
 	}
 
@@ -115,7 +115,7 @@ func TestFilesystemCustomizationUnmarshalTOMLNotAnObject(t *testing.T) {
 			input: `
 [customizations]
 filesystem = ["hello"]`,
-			err: "toml: line 3 (last key \"customizations.filesystem\"): customizations.filesystem is not an object",
+			err: `toml: line 3 (last key "customizations.filesystem"): error decoding TOML hello: json: cannot unmarshal string into Go value of type blueprint.filesystemCustomizationMarshaling`,
 		},
 	}
 

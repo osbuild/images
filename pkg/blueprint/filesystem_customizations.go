@@ -10,49 +10,43 @@ import (
 )
 
 type FilesystemCustomization struct {
-	Mountpoint string `json:"mountpoint,omitempty" toml:"mountpoint,omitempty"`
-	MinSize    uint64 `json:"minsize,omitempty" toml:"minsize,omitempty"`
+	Mountpoint string
+	MinSize    uint64
 }
 
-func (fsc *FilesystemCustomization) UnmarshalTOML(data interface{}) error {
-	d, ok := data.(map[string]interface{})
-	if !ok {
-		return fmt.Errorf("customizations.filesystem is not an object")
-	}
+type filesystemCustomizationMarshaling struct {
+	Mountpoint string         `json:"mountpoint,omitempty" toml:"mountpoint,omitempty"`
+	MinSize    datasizes.Size `json:"minsize,omitempty" toml:"minsize,omitempty"`
+}
 
-	switch d["mountpoint"].(type) {
-	case string:
-		fsc.Mountpoint = d["mountpoint"].(string)
-	default:
-		return fmt.Errorf("TOML unmarshal: mountpoint must be string, got \"%v\" of type %T", d["mountpoint"], d["mountpoint"])
-	}
-	minSize, err := decodeSize(d["minsize"])
+func (fsc *FilesystemCustomization) UnmarshalTOML(data any) error {
+	// This is the most efficient way to reuse code when unmarshaling
+	// structs in toml, it leaks json errors which is a bit sad but
+	// because the toml unmarshaler gives us not "[]byte" but an
+	// already pre-processed "any" we cannot just unmarshal into our
+	// "fooMarshaling" struct and reuse the result so we resort to
+	// this workaround (but toml will go away long term anyway).
+	dataJSON, err := json.Marshal(data)
 	if err != nil {
-		return fmt.Errorf("TOML unmarshal: error decoding minsize value for mountpoint %q: %w", fsc.Mountpoint, err)
+		return fmt.Errorf("error unmarshaling TOML data %v: %w", data, err)
 	}
-	fsc.MinSize = minSize
+	if err := fsc.UnmarshalJSON(dataJSON); err != nil {
+		return fmt.Errorf("error decoding TOML %v: %w", data, err)
+	}
 	return nil
 }
 
 func (fsc *FilesystemCustomization) UnmarshalJSON(data []byte) error {
-	var v interface{}
-	if err := json.Unmarshal(data, &v); err != nil {
+	var fc filesystemCustomizationMarshaling
+	if err := json.Unmarshal(data, &fc); err != nil {
+		if fc.Mountpoint != "" {
+			return fmt.Errorf("error decoding minsize value for mountpoint %q: %w", fc.Mountpoint, err)
+		}
 		return err
 	}
-	d, _ := v.(map[string]interface{})
+	fsc.Mountpoint = fc.Mountpoint
+	fsc.MinSize = fc.MinSize.Uint64()
 
-	switch d["mountpoint"].(type) {
-	case string:
-		fsc.Mountpoint = d["mountpoint"].(string)
-	default:
-		return fmt.Errorf("JSON unmarshal: mountpoint must be string, got \"%v\" of type %T", d["mountpoint"], d["mountpoint"])
-	}
-
-	minSize, err := decodeSize(d["minsize"])
-	if err != nil {
-		return fmt.Errorf("JSON unmarshal: error decoding minsize value for mountpoint %q: %w", fsc.Mountpoint, err)
-	}
-	fsc.MinSize = minSize
 	return nil
 }
 
