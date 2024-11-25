@@ -283,6 +283,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"gce",
 				"image-installer",
 				"azure-rhui",
+				"azure-sap-rhui",
 			},
 		},
 		{
