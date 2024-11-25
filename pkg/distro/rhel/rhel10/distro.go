@@ -183,13 +183,14 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 		mkAMIImgTypeX86_64(),
 	)
 
-	aarch64.AddImageTypes(
-		&platform.Aarch64{
-			UEFIVendor: rd.Vendor(),
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_RAW,
-			},
+	ec2Aarch64Platform := &platform.Aarch64{
+		UEFIVendor: rd.Vendor(),
+		BasePlatform: platform.BasePlatform{
+			ImageFormat: platform.FORMAT_RAW,
 		},
+	}
+	aarch64.AddImageTypes(
+		ec2Aarch64Platform,
 		mkAMIImgTypeAarch64(),
 	)
 
