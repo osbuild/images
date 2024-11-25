@@ -284,6 +284,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"image-installer",
 				"azure-rhui",
 				"azure-sap-rhui",
+				"ec2",
 			},
 		},
 		{
@@ -296,6 +297,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"wsl",
 				"image-installer",
 				"azure-rhui",
+				"ec2",
 			},
 		},
 		{
