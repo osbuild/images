@@ -468,5 +468,13 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 		}
 	}
 
+	diskc, err := customizations.GetPartitioning()
+	if err != nil {
+		return nil, err
+	}
+	if err := diskc.ValidateLayoutConstraints(); err != nil {
+		return nil, fmt.Errorf("cannot use disk customization: %w", err)
+	}
+
 	return nil, nil
 }
