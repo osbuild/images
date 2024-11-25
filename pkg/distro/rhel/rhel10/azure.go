@@ -278,5 +278,10 @@ func defaultAzureImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
 		},
 		DefaultTarget: common.ToPtr("multi-user.target"),
 	}
+
+	if rd.IsRHEL() {
+		ic.GPGKeyFiles = append(ic.GPGKeyFiles, "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release")
+	}
+
 	return ic
 }
