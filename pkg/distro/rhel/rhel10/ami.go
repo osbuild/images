@@ -135,16 +135,6 @@ func defaultAMIImageConfigX86_64() *distro.ImageConfig {
 	return appendEC2DracutX86_64(ic)
 }
 
-// common ec2 image build package set
-func ec2BuildPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
-	return distroBuildPackageSet(t).Append(
-		rpmmd.PackageSet{
-			Include: []string{
-				"python3-pyyaml",
-			},
-		})
-}
-
 func ec2CommonPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	ps := rpmmd.PackageSet{
 		Include: []string{
@@ -231,8 +221,7 @@ func mkAMIImgTypeAarch64() *rhel.ImageType {
 		"image.raw",
 		"application/octet-stream",
 		map[string]rhel.PackageSetFunc{
-			rhel.BuildPkgsKey: ec2BuildPackageSet,
-			rhel.OSPkgsKey:    ec2CommonPackageSet,
+			rhel.OSPkgsKey: ec2CommonPackageSet,
 		},
 		rhel.DiskImage,
 		[]string{"build"},
