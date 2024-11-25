@@ -105,6 +105,31 @@ func mkEC2ImgTypeAarch64() *rhel.ImageType {
 	return it
 }
 
+// RHEL internal-only x86_64 EC2 HA image type
+func mkEc2HaImgTypeX86_64() *rhel.ImageType {
+	it := rhel.NewImageType(
+		"ec2-ha",
+		"image.raw.xz",
+		"application/xz",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: rhelEc2HaPackageSet,
+		},
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "xz"},
+		[]string{"xz"},
+	)
+
+	it.Compression = "xz"
+	it.KernelOptions = amiKernelOptions
+	it.Bootable = true
+	it.DefaultSize = 10 * datasizes.GibiByte
+	it.DefaultImageConfig = defaultEc2ImageConfigX86_64()
+	it.BasePartitionTables = defaultBasePartitionTables
+
+	return it
+}
+
 // IMAGE CONFIG
 
 // TODO: move these to the EC2 environment
@@ -297,4 +322,17 @@ func ec2PackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	}.Append(distroSpecificPackageSet(t))
 
 	return ps
+}
+
+// rhel-ha-ec2 image package set
+func rhelEc2HaPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
+	ec2HaPackageSet := ec2PackageSet(t)
+	ec2HaPackageSet = ec2HaPackageSet.Append(rpmmd.PackageSet{
+		Include: []string{
+			"fence-agents-all",
+			"pacemaker",
+			"pcs",
+		},
+	})
+	return ec2HaPackageSet
 }
