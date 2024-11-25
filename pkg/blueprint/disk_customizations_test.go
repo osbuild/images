@@ -1035,16 +1035,8 @@ func TestPartitionCustomizationUnmarshalJSON(t *testing.T) {
 
 	testCases := map[string]testCase{
 		"nothing": {
-			input: "{}",
-			expected: &blueprint.PartitionCustomization{
-				Type:    "plain",
-				MinSize: 0,
-				FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
-					Mountpoint: "",
-					Label:      "",
-					FSType:     "",
-				},
-			},
+			input:    "{}",
+			errorMsg: "minsize is required",
 		},
 		"plain": {
 			input: `{
@@ -1346,16 +1338,8 @@ func TestPartitionCustomizationUnmarshalTOML(t *testing.T) {
 
 	testCases := map[string]testCase{
 		"nothing": {
-			input: "",
-			expected: &blueprint.PartitionCustomization{
-				Type:    "plain",
-				MinSize: 0,
-				FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
-					Mountpoint: "",
-					Label:      "",
-					FSType:     "",
-				},
-			},
+			input:    "",
+			errorMsg: "toml: line 0: minsize is required",
 		},
 		"plain": {
 			input: `type = "plain"
@@ -1647,13 +1631,6 @@ func TestDiskCustomizationUnmarshalJSON(t *testing.T) {
 	}
 
 	testCases := map[string]testCase{
-		"nothing": {
-			inputJSON: "{}",
-			inputTOML: "",
-			expected: &blueprint.DiskCustomization{
-				MinSize: 0,
-			},
-		},
 		"minsize/int": {
 			inputJSON: `{
 				"minsize": 1234
