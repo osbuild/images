@@ -1032,3 +1032,40 @@ func TestDistroFactory(t *testing.T) {
 		})
 	}
 }
+
+func TestDistro_DiskCustomizationRunsValidateLayoutConstraints(t *testing.T) {
+	bp := blueprint.Blueprint{
+		Customizations: &blueprint.Customizations{
+			Disk: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						Type:            "lvm",
+						VGCustomization: blueprint.VGCustomization{},
+					},
+					{
+						Type:            "lvm",
+						VGCustomization: blueprint.VGCustomization{},
+					},
+				},
+			},
+		},
+	}
+
+	for _, dist := range fedoraFamilyDistros {
+		fedoraDistro := dist.distro
+		for _, archName := range fedoraDistro.ListArches() {
+			arch, err := fedoraDistro.GetArch(archName)
+			assert.NoError(t, err)
+			imgType, err := arch.GetImageType("qcow2")
+			assert.NoError(t, err, archName)
+			t.Run(fmt.Sprintf("%s/%s", archName, imgType.Name()), func(t *testing.T) {
+				imgType, _ := arch.GetImageType(imgType.Name())
+				imgOpts := distro.ImageOptions{
+					Size: imgType.Size(0),
+				}
+				_, _, err := imgType.Manifest(&bp, imgOpts, nil, 0)
+				assert.EqualError(t, err, "cannot use disk customization: multiple LVM volume groups are not yet supported")
+			})
+		}
+	}
+}
