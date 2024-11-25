@@ -1155,6 +1155,28 @@ func (options *CustomPartitionTableOptions) getfstype(fstype string) (string, er
 	return options.DefaultFSType.String(), nil
 }
 
+func maybeAddBootPartition(pt *PartitionTable, disk *blueprint.DiskCustomization, defaultFSType FSType) error {
+	// The boot type will be the default only if it's a supported filesystem
+	// type for /boot (ext4 or xfs). Otherwise, we default to xfs.
+	// FS_NONE also falls back to xfs.
+	var bootFsType FSType
+	switch defaultFSType {
+	case FS_EXT4, FS_XFS:
+		bootFsType = defaultFSType
+	default:
+		bootFsType = FS_XFS
+	}
+
+	if needsBoot(disk) {
+		// we need a /boot partition to boot LVM or Btrfs, create boot
+		// partition if it does not already exist
+		if err := addBootPartition(pt, bootFsType); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // NewCustomPartitionTable creates a partition table based almost entirely on the disk customizations from a blueprint.
 func NewCustomPartitionTable(customizations *blueprint.DiskCustomization, options *CustomPartitionTableOptions, rng *rand.Rand) (*PartitionTable, error) {
 	if options == nil {
@@ -1184,30 +1206,18 @@ func NewCustomPartitionTable(customizations *blueprint.DiskCustomization, option
 		return nil, fmt.Errorf("%s invalid partition table type enum value: %d", errPrefix, options.PartitionTableType)
 	}
 
+	// add any partition(s) that are needed for booting (like /boot/efi)
+	// if needed
+	//
 	// TODO: switch to ensure ESP in case customizations already include it
 	if err := addPartitionsForBootMode(pt, options.BootMode); err != nil {
 		return nil, fmt.Errorf("%s %w", errPrefix, err)
 	}
-
-	// The boot type will be the default only if it's a supported filesystem
-	// type for /boot (ext4 or xfs). Otherwise, we default to xfs.
-	// FS_NONE also falls back to xfs.
-	var bootFsType FSType
-	switch options.DefaultFSType {
-	case FS_EXT4, FS_XFS:
-		bootFsType = options.DefaultFSType
-	default:
-		bootFsType = FS_XFS
+	// add the /boot partition (if it is needed)
+	if err := maybeAddBootPartition(pt, customizations, options.DefaultFSType); err != nil {
+		return nil, fmt.Errorf("%s %w", errPrefix, err)
 	}
-
-	if needsBoot(customizations) {
-		// we need a /boot partition to boot LVM or Btrfs, create boot
-		// partition if it does not already exist
-		if err := addBootPartition(pt, bootFsType); err != nil {
-			return nil, fmt.Errorf("%s %w", errPrefix, err)
-		}
-	}
-
+	// add user customized partitions
 	for _, part := range customizations.Partitions {
 		switch part.Type {
 		case "plain", "":
