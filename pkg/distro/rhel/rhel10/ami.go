@@ -15,7 +15,7 @@ func mkAMIImgTypeX86_64() *rhel.ImageType {
 		"image.raw",
 		"application/octet-stream",
 		map[string]rhel.PackageSetFunc{
-			rhel.OSPkgsKey: ec2CommonPackageSet,
+			rhel.OSPkgsKey: ec2PackageSet,
 		},
 		rhel.DiskImage,
 		[]string{"build"},
@@ -26,7 +26,7 @@ func mkAMIImgTypeX86_64() *rhel.ImageType {
 	it.KernelOptions = amiKernelOptions
 	it.Bootable = true
 	it.DefaultSize = 10 * datasizes.GibiByte
-	it.DefaultImageConfig = defaultAMIImageConfigX86_64()
+	it.DefaultImageConfig = defaultEc2ImageConfigX86_64()
 	it.BasePartitionTables = defaultBasePartitionTables
 
 	return it
@@ -38,7 +38,7 @@ func mkAMIImgTypeAarch64() *rhel.ImageType {
 		"image.raw",
 		"application/octet-stream",
 		map[string]rhel.PackageSetFunc{
-			rhel.OSPkgsKey: ec2CommonPackageSet,
+			rhel.OSPkgsKey: ec2PackageSet,
 		},
 		rhel.DiskImage,
 		[]string{"build"},
@@ -49,7 +49,7 @@ func mkAMIImgTypeAarch64() *rhel.ImageType {
 	it.KernelOptions = amiAarch64KernelOptions
 	it.Bootable = true
 	it.DefaultSize = 10 * datasizes.GibiByte
-	it.DefaultImageConfig = defaultAMIImageConfig()
+	it.DefaultImageConfig = defaultEc2ImageConfig()
 	it.BasePartitionTables = defaultBasePartitionTables
 
 	return it
@@ -64,7 +64,7 @@ const (
 )
 
 // default EC2 images config (common for all architectures)
-func baseEc2ImageConfig() *distro.ImageConfig {
+func defaultEc2ImageConfig() *distro.ImageConfig {
 	return &distro.ImageConfig{
 		Locale:   common.ToPtr("en_US.UTF-8"),
 		Timezone: common.ToPtr("UTC"),
@@ -171,13 +171,6 @@ func baseEc2ImageConfig() *distro.ImageConfig {
 	}
 }
 
-// Default AMI (custom image built by users) images config.
-// The configuration does not touch the RHSM configuration at all.
-// https://issues.redhat.com/browse/COMPOSER-2157
-func defaultAMIImageConfig() *distro.ImageConfig {
-	return baseEc2ImageConfig()
-}
-
 func appendEC2DracutX86_64(ic *distro.ImageConfig) *distro.ImageConfig {
 	ic.DracutConf = append(ic.DracutConf,
 		&osbuild.DracutConfStageOptions{
@@ -192,17 +185,14 @@ func appendEC2DracutX86_64(ic *distro.ImageConfig) *distro.ImageConfig {
 	return ic
 }
 
-// Default AMI x86_64 (custom image built by users) images config.
-// The configuration does not touch the RHSM configuration at all.
-// https://issues.redhat.com/browse/COMPOSER-2157
-func defaultAMIImageConfigX86_64() *distro.ImageConfig {
-	ic := defaultAMIImageConfig()
+func defaultEc2ImageConfigX86_64() *distro.ImageConfig {
+	ic := defaultEc2ImageConfig()
 	return appendEC2DracutX86_64(ic)
 }
 
 // PACKAGE SETS
 
-func ec2CommonPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
+func ec2PackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	ps := rpmmd.PackageSet{
 		Include: []string{
 			"@core",
