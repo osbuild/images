@@ -60,6 +60,30 @@ func mkAzureInternalImgType(rd *rhel.Distribution) *rhel.ImageType {
 	return it
 }
 
+func mkAzureSapInternalImgType(rd *rhel.Distribution) *rhel.ImageType {
+	it := rhel.NewImageType(
+		"azure-sap-rhui",
+		"disk.vhd.xz",
+		"application/xz",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: azureSapPackageSet,
+		},
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "vpc", "xz"},
+		[]string{"xz"},
+	)
+
+	it.Compression = "xz"
+	it.KernelOptions = defaultAzureKernelOptions
+	it.Bootable = true
+	it.DefaultSize = 64 * datasizes.GibiByte
+	it.DefaultImageConfig = sapAzureImageConfig(rd)
+	it.BasePartitionTables = azureInternalBasePartitionTables
+
+	return it
+}
+
 // PACKAGE SETS
 
 // Common Azure image package set
@@ -144,6 +168,12 @@ func azureCommonPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 // Azure BYOS image package set
 func azurePackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	return azureCommonPackageSet(t)
+}
+
+// Azure SAP image package set
+// Includes the common azure package set, the common SAP packages
+func azureSapPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
+	return azureCommonPackageSet(t).Append(SapPackageSet(t))
 }
 
 // PARTITION TABLES
@@ -533,4 +563,8 @@ func defaultAzureImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
 	}
 
 	return ic
+}
+
+func sapAzureImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
+	return sapImageConfig(rd.OsVersion()).InheritFrom(defaultAzureImageConfig(rd))
 }
