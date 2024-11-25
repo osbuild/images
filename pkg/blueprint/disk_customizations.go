@@ -326,6 +326,10 @@ func (v *PartitionCustomization) UnmarshalTOML(data any) error {
 //   - Plain filesystem types are valid for the partition type
 //   - All non-empty properties are valid for the partition type (e.g.
 //     LogicalVolumes is empty when the type is "plain" or "btrfs")
+//
+// Note that in *addition* consumers should also call
+// ValidateLayoutConstraints() to validate that the policy for disk
+// customizations is met.
 func (p *DiskCustomization) Validate() error {
 	if p == nil {
 		return nil
@@ -373,6 +377,11 @@ func validateMountpoint(path string) error {
 // ValidateLayoutConstraints checks that at most one LVM Volume Group or btrfs
 // volume is defined. Returns an error if both LVM and btrfs are set and if
 // either has more than one element.
+//
+// Note that this is a *policy* validation, in theory the "disk" code
+// does support the constraints but we choose not to allow them for
+// now.  Each consumer of "DiskCustomization" should call this
+// *unless* it's very low-level and not end-user-facing.
 func (p *DiskCustomization) ValidateLayoutConstraints() error {
 	if p == nil {
 		return nil
