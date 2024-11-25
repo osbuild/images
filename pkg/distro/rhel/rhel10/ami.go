@@ -46,7 +46,7 @@ func mkAMIImgTypeAarch64() *rhel.ImageType {
 		[]string{"image"},
 	)
 
-	it.KernelOptions = "console=ttyS0,115200n8 console=tty0 nvme_core.io_timeout=4294967295 iommu.strict=0"
+	it.KernelOptions = amiAarch64KernelOptions
 	it.Bootable = true
 	it.DefaultSize = 10 * datasizes.GibiByte
 	it.DefaultImageConfig = defaultAMIImageConfig()
@@ -58,7 +58,10 @@ func mkAMIImgTypeAarch64() *rhel.ImageType {
 // IMAGE CONFIG
 
 // TODO: move these to the EC2 environment
-const amiKernelOptions = "console=tty0 console=ttyS0,115200n8 nvme_core.io_timeout=4294967295"
+const (
+	amiKernelOptions        = "console=tty0 console=ttyS0,115200n8 nvme_core.io_timeout=4294967295"
+	amiAarch64KernelOptions = amiKernelOptions + " iommu.strict=0"
+)
 
 // default EC2 images config (common for all architectures)
 func baseEc2ImageConfig() *distro.ImageConfig {
