@@ -286,6 +286,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"azure-sap-rhui",
 				"ec2",
 				"ec2-ha",
+				"ec2-sap",
 			},
 		},
 		{

@@ -40,7 +40,8 @@
       "rhel-8.7",
       "rhel-8.8",
       "rhel-8.9",
-      "rhel-9.*"
+      "rhel-9.*",
+      "rhel-10.*"
     ],
     "image-types": [
       "ec2-sap"
