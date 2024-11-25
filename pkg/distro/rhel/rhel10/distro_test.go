@@ -282,6 +282,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"wsl",
 				"gce",
 				"image-installer",
+				"azure-rhui",
 			},
 		},
 		{
@@ -293,6 +294,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"vhd",
 				"wsl",
 				"image-installer",
+				"azure-rhui",
 			},
 		},
 		{
