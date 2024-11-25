@@ -1,8 +1,10 @@
 package disk
 
 var (
-	PayloadEntityMap = payloadEntityMap
-	EntityPath       = entityPath
+	PayloadEntityMap         = payloadEntityMap
+	EntityPath               = entityPath
+	AddBootPartition         = addBootPartition
+	AddPartitionsForBootMode = addPartitionsForBootMode
 )
 
 func FindDirectoryEntityPath(pt *PartitionTable, path string) []Entity {
