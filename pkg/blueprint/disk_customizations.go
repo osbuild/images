@@ -113,13 +113,15 @@ func (lv *LVCustomization) UnmarshalJSON(data []byte) error {
 	lv.Name = lvAnySize.Name
 	lv.FilesystemTypedCustomization = lvAnySize.FilesystemTypedCustomization
 
-	if lvAnySize.MinSize != nil {
-		size, err := decodeSize(lvAnySize.MinSize)
-		if err != nil {
-			return err
-		}
-		lv.MinSize = size
+	if lvAnySize.MinSize == nil {
+		return fmt.Errorf("minsize is required")
 	}
+	size, err := decodeSize(lvAnySize.MinSize)
+	if err != nil {
+		return err
+	}
+	lv.MinSize = size
+
 	return nil
 }
 
@@ -177,13 +179,15 @@ func (v *PartitionCustomization) UnmarshalJSON(data []byte) error {
 
 	v.Type = partType
 
-	if typeSniffer.MinSize != nil {
-		minsize, err := decodeSize(typeSniffer.MinSize)
-		if err != nil {
-			return fmt.Errorf("%s error decoding minsize for partition: %w", errPrefix, err)
-		}
-		v.MinSize = minsize
+	if typeSniffer.MinSize == nil {
+		return fmt.Errorf("minsize is required")
 	}
+
+	minsize, err := decodeSize(typeSniffer.MinSize)
+	if err != nil {
+		return fmt.Errorf("%s error decoding minsize for partition: %w", errPrefix, err)
+	}
+	v.MinSize = minsize
 
 	return nil
 }
@@ -301,13 +305,15 @@ func (v *PartitionCustomization) UnmarshalTOML(data any) error {
 
 	v.Type = partType
 
-	if minsizeField, ok := d["minsize"]; ok {
-		minsize, err := decodeSize(minsizeField)
-		if err != nil {
-			return fmt.Errorf("%s error decoding minsize for partition: %w", errPrefix, err)
-		}
-		v.MinSize = minsize
+	minsizeField, ok := d["minsize"]
+	if !ok {
+		return fmt.Errorf("minsize is required")
 	}
+	minsize, err := decodeSize(minsizeField)
+	if err != nil {
+		return fmt.Errorf("%s error decoding minsize for partition: %w", errPrefix, err)
+	}
+	v.MinSize = minsize
 
 	return nil
 }
