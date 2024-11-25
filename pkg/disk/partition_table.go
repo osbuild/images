@@ -996,10 +996,10 @@ func EnsureRootFilesystem(pt *PartitionTable, defaultFsType FSType) error {
 	return nil
 }
 
-// AddBootPartition creates a boot partition. The function will append the boot
+// addBootPartition creates a boot partition. The function will append the boot
 // partition to the end of the existing partition table therefore it is best to
 // call this function early to put boot near the front (as is conventional).
-func AddBootPartition(pt *PartitionTable, bootFsType FSType) error {
+func addBootPartition(pt *PartitionTable, bootFsType FSType) error {
 	if bootFsType == FS_NONE {
 		return fmt.Errorf("error creating boot partition: no filesystem type")
 	}
@@ -1034,7 +1034,7 @@ func AddBootPartition(pt *PartitionTable, bootFsType FSType) error {
 	return nil
 }
 
-// AddPartitionsForBootMode creates partitions to satisfy the boot mode requirements:
+// addPartitionsForBootMode creates partitions to satisfy the boot mode requirements:
 //   - BIOS/legacy: adds a 1 MiB BIOS boot partition.
 //   - UEFI: adds a 200 MiB EFI system partition.
 //   - Hybrid: adds both.
@@ -1042,7 +1042,7 @@ func AddBootPartition(pt *PartitionTable, bootFsType FSType) error {
 // The function will append the new partitions to the end of the existing
 // partition table therefore it is best to call this function early to put them
 // near the front (as is conventional).
-func AddPartitionsForBootMode(pt *PartitionTable, bootMode platform.BootMode) error {
+func addPartitionsForBootMode(pt *PartitionTable, bootMode platform.BootMode) error {
 	switch bootMode {
 	case platform.BOOT_LEGACY:
 		// add BIOS boot partition
@@ -1185,7 +1185,7 @@ func NewCustomPartitionTable(customizations *blueprint.DiskCustomization, option
 	}
 
 	// TODO: switch to ensure ESP in case customizations already include it
-	if err := AddPartitionsForBootMode(pt, options.BootMode); err != nil {
+	if err := addPartitionsForBootMode(pt, options.BootMode); err != nil {
 		return nil, fmt.Errorf("%s %w", errPrefix, err)
 	}
 
@@ -1203,7 +1203,7 @@ func NewCustomPartitionTable(customizations *blueprint.DiskCustomization, option
 	if needsBoot(customizations) {
 		// we need a /boot partition to boot LVM or Btrfs, create boot
 		// partition if it does not already exist
-		if err := AddBootPartition(pt, bootFsType); err != nil {
+		if err := addBootPartition(pt, bootFsType); err != nil {
 			return nil, fmt.Errorf("%s %w", errPrefix, err)
 		}
 	}
