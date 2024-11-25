@@ -130,12 +130,37 @@ func mkEc2HaImgTypeX86_64() *rhel.ImageType {
 	return it
 }
 
+func mkEC2SapImgTypeX86_64(osVersion string) *rhel.ImageType {
+	it := rhel.NewImageType(
+		"ec2-sap",
+		"image.raw.xz",
+		"application/xz",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: rhelEc2SapPackageSet,
+		},
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "xz"},
+		[]string{"xz"},
+	)
+
+	it.Compression = "xz"
+	it.KernelOptions = amiSapKernelOptions
+	it.Bootable = true
+	it.DefaultSize = 10 * datasizes.GibiByte
+	it.DefaultImageConfig = sapImageConfig(osVersion).InheritFrom(defaultEc2ImageConfigX86_64())
+	it.BasePartitionTables = defaultBasePartitionTables
+
+	return it
+}
+
 // IMAGE CONFIG
 
 // TODO: move these to the EC2 environment
 const (
 	amiKernelOptions        = "console=tty0 console=ttyS0,115200n8 nvme_core.io_timeout=4294967295"
 	amiAarch64KernelOptions = amiKernelOptions + " iommu.strict=0"
+	amiSapKernelOptions     = amiKernelOptions + " processor.max_cstate=1 intel_idle.max_cstate=1"
 )
 
 // default EC2 images config (common for all architectures)
@@ -335,4 +360,13 @@ func rhelEc2HaPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 		},
 	})
 	return ec2HaPackageSet
+}
+
+// rhel-sap-ec2 image package set
+func rhelEc2SapPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
+	return rpmmd.PackageSet{
+		Include: []string{
+			//"libcanberra-gtk2", // libcanberra-gtk2 is not available in RHEL-10
+		},
+	}.Append(ec2PackageSet(t)).Append(SapPackageSet(t))
 }
