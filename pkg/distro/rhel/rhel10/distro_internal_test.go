@@ -176,6 +176,11 @@ func TestRhel10_NoBootPartition(t *testing.T) {
 				if it.BasePartitionTables == nil {
 					continue
 				}
+				if it.Name() == "azure-rhui" {
+					// Azure RHEL internal image type PT is by default LVM-based
+					// and we do not support /boot on LVM, so it must be on a separate partition.
+					continue
+				}
 				pt, err := it.GetPartitionTable([]blueprint.FilesystemCustomization{}, distro.ImageOptions{}, rng)
 				assert.NoError(t, err)
 				_, err = pt.GetMountpointSize("/boot")

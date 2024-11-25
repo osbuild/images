@@ -253,6 +253,11 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 		mkImageInstallerImgType(),
 	)
 
+	if rd.IsRHEL() { // RHEL-only (non-CentOS) image types
+		x86_64.AddImageTypes(azureX64Platform, mkAzureInternalImgType(rd))
+		aarch64.AddImageTypes(azureAarch64Platform, mkAzureInternalImgType(rd))
+	}
+
 	rd.AddArches(x86_64, aarch64, ppc64le, s390x)
 	return rd
 }
