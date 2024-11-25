@@ -9,6 +9,54 @@ import (
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
+func mkAMIImgTypeX86_64() *rhel.ImageType {
+	it := rhel.NewImageType(
+		"ami",
+		"image.raw",
+		"application/octet-stream",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: ec2CommonPackageSet,
+		},
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image"},
+		[]string{"image"},
+	)
+
+	it.KernelOptions = amiKernelOptions
+	it.Bootable = true
+	it.DefaultSize = 10 * datasizes.GibiByte
+	it.DefaultImageConfig = defaultAMIImageConfigX86_64()
+	it.BasePartitionTables = defaultBasePartitionTables
+
+	return it
+}
+
+func mkAMIImgTypeAarch64() *rhel.ImageType {
+	it := rhel.NewImageType(
+		"ami",
+		"image.raw",
+		"application/octet-stream",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: ec2CommonPackageSet,
+		},
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image"},
+		[]string{"image"},
+	)
+
+	it.KernelOptions = "console=ttyS0,115200n8 console=tty0 nvme_core.io_timeout=4294967295 iommu.strict=0"
+	it.Bootable = true
+	it.DefaultSize = 10 * datasizes.GibiByte
+	it.DefaultImageConfig = defaultAMIImageConfig()
+	it.BasePartitionTables = defaultBasePartitionTables
+
+	return it
+}
+
+// IMAGE CONFIG
+
 // TODO: move these to the EC2 environment
 const amiKernelOptions = "console=tty0 console=ttyS0,115200n8 nvme_core.io_timeout=4294967295"
 
@@ -127,6 +175,20 @@ func defaultAMIImageConfig() *distro.ImageConfig {
 	return baseEc2ImageConfig()
 }
 
+func appendEC2DracutX86_64(ic *distro.ImageConfig) *distro.ImageConfig {
+	ic.DracutConf = append(ic.DracutConf,
+		&osbuild.DracutConfStageOptions{
+			Filename: "ec2.conf",
+			Config: osbuild.DracutConfigFile{
+				AddDrivers: []string{
+					"nvme",
+					"xen-blkfront",
+				},
+			},
+		})
+	return ic
+}
+
 // Default AMI x86_64 (custom image built by users) images config.
 // The configuration does not touch the RHSM configuration at all.
 // https://issues.redhat.com/browse/COMPOSER-2157
@@ -134,6 +196,8 @@ func defaultAMIImageConfigX86_64() *distro.ImageConfig {
 	ic := defaultAMIImageConfig()
 	return appendEC2DracutX86_64(ic)
 }
+
+// PACKAGE SETS
 
 func ec2CommonPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	ps := rpmmd.PackageSet{
@@ -190,64 +254,4 @@ func ec2CommonPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	}.Append(distroSpecificPackageSet(t))
 
 	return ps
-}
-
-func mkAMIImgTypeX86_64() *rhel.ImageType {
-	it := rhel.NewImageType(
-		"ami",
-		"image.raw",
-		"application/octet-stream",
-		map[string]rhel.PackageSetFunc{
-			rhel.OSPkgsKey: ec2CommonPackageSet,
-		},
-		rhel.DiskImage,
-		[]string{"build"},
-		[]string{"os", "image"},
-		[]string{"image"},
-	)
-
-	it.KernelOptions = amiKernelOptions
-	it.Bootable = true
-	it.DefaultSize = 10 * datasizes.GibiByte
-	it.DefaultImageConfig = defaultAMIImageConfigX86_64()
-	it.BasePartitionTables = defaultBasePartitionTables
-
-	return it
-}
-
-func mkAMIImgTypeAarch64() *rhel.ImageType {
-	it := rhel.NewImageType(
-		"ami",
-		"image.raw",
-		"application/octet-stream",
-		map[string]rhel.PackageSetFunc{
-			rhel.OSPkgsKey: ec2CommonPackageSet,
-		},
-		rhel.DiskImage,
-		[]string{"build"},
-		[]string{"os", "image"},
-		[]string{"image"},
-	)
-
-	it.KernelOptions = "console=ttyS0,115200n8 console=tty0 nvme_core.io_timeout=4294967295 iommu.strict=0"
-	it.Bootable = true
-	it.DefaultSize = 10 * datasizes.GibiByte
-	it.DefaultImageConfig = defaultAMIImageConfig()
-	it.BasePartitionTables = defaultBasePartitionTables
-
-	return it
-}
-
-func appendEC2DracutX86_64(ic *distro.ImageConfig) *distro.ImageConfig {
-	ic.DracutConf = append(ic.DracutConf,
-		&osbuild.DracutConfStageOptions{
-			Filename: "ec2.conf",
-			Config: osbuild.DracutConfigFile{
-				AddDrivers: []string{
-					"nvme",
-					"xen-blkfront",
-				},
-			},
-		})
-	return ic
 }
