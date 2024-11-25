@@ -259,6 +259,9 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 		aarch64.AddImageTypes(azureAarch64Platform, mkAzureInternalImgType(rd))
 
 		x86_64.AddImageTypes(azureX64Platform, mkAzureSapInternalImgType(rd))
+
+		x86_64.AddImageTypes(ec2X86Platform, mkEc2ImgTypeX86_64())
+		aarch64.AddImageTypes(ec2Aarch64Platform, mkEC2ImgTypeAarch64())
 	}
 
 	rd.AddArches(x86_64, aarch64, ppc64le, s390x)

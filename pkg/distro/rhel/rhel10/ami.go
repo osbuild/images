@@ -55,6 +55,56 @@ func mkAMIImgTypeAarch64() *rhel.ImageType {
 	return it
 }
 
+// RHEL internal-only x86_64 EC2 image type
+func mkEc2ImgTypeX86_64() *rhel.ImageType {
+	it := rhel.NewImageType(
+		"ec2",
+		"image.raw.xz",
+		"application/xz",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: ec2PackageSet,
+		},
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "xz"},
+		[]string{"xz"},
+	)
+
+	it.Compression = "xz"
+	it.KernelOptions = amiKernelOptions
+	it.Bootable = true
+	it.DefaultSize = 10 * datasizes.GibiByte
+	it.DefaultImageConfig = defaultEc2ImageConfigX86_64()
+	it.BasePartitionTables = defaultBasePartitionTables
+
+	return it
+}
+
+// RHEL internal-only aarch64 EC2 image type
+func mkEC2ImgTypeAarch64() *rhel.ImageType {
+	it := rhel.NewImageType(
+		"ec2",
+		"image.raw.xz",
+		"application/xz",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: ec2PackageSet,
+		},
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "xz"},
+		[]string{"xz"},
+	)
+
+	it.Compression = "xz"
+	it.KernelOptions = amiAarch64KernelOptions
+	it.Bootable = true
+	it.DefaultSize = 10 * datasizes.GibiByte
+	it.DefaultImageConfig = defaultEc2ImageConfig()
+	it.BasePartitionTables = defaultBasePartitionTables
+
+	return it
+}
+
 // IMAGE CONFIG
 
 // TODO: move these to the EC2 environment
