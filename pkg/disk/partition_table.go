@@ -1283,25 +1283,43 @@ func addPlainPartition(pt *PartitionTable, partition blueprint.PartitionCustomiz
 	if err != nil {
 		return fmt.Errorf("error creating partition with mountpoint %q: %w", partition.Mountpoint, err)
 	}
-	// all user-defined partitions are data partitions except boot
-	typeName := "data"
-	if partition.Mountpoint == "/boot" {
+
+	// all user-defined partitions are data partitions except boot and swap
+	var typeName string
+	switch {
+	case partition.Mountpoint == "/boot":
 		typeName = "boot"
+	case fstype == "swap":
+		typeName = "swap"
+	default:
+		typeName = "data"
 	}
+
 	partType, err := getPartitionTypeIDfor(pt.Type, typeName)
 	if err != nil {
 		return fmt.Errorf("error getting partition type ID for %q: %w", partition.Mountpoint, err)
 	}
-	newpart := Partition{
-		Type:     partType,
-		Bootable: false,
-		Size:     partition.MinSize,
-		Payload: &Filesystem{
+
+	var payload PayloadEntity
+	switch typeName {
+	case "swap":
+		payload = &Swap{
+			Label:        partition.Label,
+			FSTabOptions: "defaults", // TODO: add customization
+		}
+	default:
+		payload = &Filesystem{
 			Type:         fstype,
 			Label:        partition.Label,
 			Mountpoint:   partition.Mountpoint,
 			FSTabOptions: "defaults", // TODO: add customization
-		},
+		}
+	}
+
+	newpart := Partition{
+		Type:    partType,
+		Size:    partition.MinSize,
+		Payload: payload,
 	}
 	pt.Partitions = append(pt.Partitions, newpart)
 	return nil
@@ -1339,11 +1357,21 @@ func addLVMPartition(pt *PartitionTable, partition blueprint.PartitionCustomizat
 		if err != nil {
 			return fmt.Errorf("error creating logical volume %q (%s): %w", lv.Name, lv.Mountpoint, err)
 		}
-		newfs := &Filesystem{
-			Type:         fstype,
-			Label:        lv.Label,
-			Mountpoint:   lv.Mountpoint,
-			FSTabOptions: "defaults", // TODO: add customization
+
+		var newfs PayloadEntity
+		switch fstype {
+		case "swap":
+			newfs = &Swap{
+				Label:        lv.Label,
+				FSTabOptions: "defaults", // TODO: add customization
+			}
+		default:
+			newfs = &Filesystem{
+				Type:         fstype,
+				Label:        lv.Label,
+				Mountpoint:   lv.Mountpoint,
+				FSTabOptions: "defaults", // TODO: add customization
+			}
 		}
 		if _, err := newvg.CreateLogicalVolume(lv.Name, lv.MinSize, newfs); err != nil {
 			return fmt.Errorf("error creating logical volume %q (%s): %w", lv.Name, lv.Mountpoint, err)
