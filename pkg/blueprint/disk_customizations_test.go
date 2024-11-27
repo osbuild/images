@@ -37,13 +37,18 @@ func TestPartitioningValidation(t *testing.T) {
 			},
 			expectedMsg: "",
 		},
-		"happy-plain+btrfs": {
+		"happy-plain+btrfs+swap": {
 			partitioning: &blueprint.DiskCustomization{
 				Partitions: []blueprint.PartitionCustomization{
 					{
 						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
 							FSType:     "xfs",
 							Mountpoint: "/data",
+						},
+					},
+					{
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType: "swap",
 						},
 					},
 					{
@@ -80,6 +85,39 @@ func TestPartitioningValidation(t *testing.T) {
 									FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
 										FSType:     "ext4",
 										Mountpoint: "/",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedMsg: "",
+		},
+		"happy-plain+lvm-with-swap": {
+			partitioning: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						Type: "plain",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType:     "xfs",
+							Mountpoint: "/data",
+						},
+					},
+					{
+						Type: "lvm",
+						VGCustomization: blueprint.VGCustomization{
+							Name: "root",
+							LogicalVolumes: []blueprint.LVCustomization{
+								{
+									FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+										FSType:     "ext4",
+										Mountpoint: "/",
+									},
+								},
+								{
+									FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+										FSType: "swap",
 									},
 								},
 							},
@@ -824,6 +862,47 @@ func TestPartitioningValidation(t *testing.T) {
 				},
 			},
 			expectedMsg: "invalid partitioning customizations:\nunknown partition type: what",
+		},
+		"unhappy-swap-with-mountpoint": {
+			partitioning: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType:     "ext4",
+							Mountpoint: "/home",
+						},
+					},
+					{
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType:     "swap",
+							Mountpoint: "/swap",
+						},
+					},
+				},
+			},
+			expectedMsg: "invalid partitioning customizations:\nmountpoint for swap partition must be empty (got \"/swap\")",
+		},
+		"unhappy-swaplv-with-mountpoint": {
+			partitioning: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						Type: "lvm",
+						VGCustomization: blueprint.VGCustomization{
+							Name: "badvg",
+							LogicalVolumes: []blueprint.LVCustomization{
+								{
+									Name: "swappylv",
+									FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+										FSType:     "swap",
+										Mountpoint: "/var/swap",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedMsg: "invalid partitioning customizations:\nmountpoint for swap logical volume with name \"swappylv\" in volume group \"badvg\" must be empty",
 		},
 	}
 
