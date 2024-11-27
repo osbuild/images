@@ -2130,3 +2130,23 @@ func TestNewCustomPartitionTableErrors(t *testing.T) {
 		})
 	}
 }
+
+func TestPartitionTableFeatures(t *testing.T) {
+	type testCase struct {
+		partitionType    string
+		expectedFeatures disk.PartitionTableFeatures
+	}
+	testCases := []testCase{
+		{"plain", disk.PartitionTableFeatures{XFS: true, FAT: true}},
+		{"plain-swap", disk.PartitionTableFeatures{XFS: true, FAT: true, Swap: true}},
+		{"luks", disk.PartitionTableFeatures{XFS: true, FAT: true, LUKS: true}},
+		{"luks+lvm", disk.PartitionTableFeatures{XFS: true, FAT: true, LUKS: true, LVM: true}},
+		{"btrfs", disk.PartitionTableFeatures{XFS: true, FAT: true, Btrfs: true}},
+	}
+
+	for _, tc := range testCases {
+		pt := testdisk.TestPartitionTables[tc.partitionType]
+		assert.Equal(t, tc.expectedFeatures, disk.GetPartitionTableFeatures(pt))
+
+	}
+}
