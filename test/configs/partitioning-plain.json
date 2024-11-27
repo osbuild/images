@@ -49,6 +49,10 @@
             "mountpoint": "/srv",
             "fs_type": "xfs",
             "minsize": 1073741824
+          },
+          {
+            "fs_type": "swap",
+            "minsize": "1 GiB"
           }
         ]
       }

@@ -63,6 +63,11 @@
                 "mountpoint": "/srv",
                 "fs_type": "ext4",
                 "minsize": 1073741824
+              },
+              {
+                "name": "swap-lv",
+                "fs_type": "swap",
+                "minsize": "1 GiB"
               }
             ]
           }
