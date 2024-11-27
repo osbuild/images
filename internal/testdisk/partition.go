@@ -1,6 +1,8 @@
 package testdisk
 
 import (
+	"math/rand"
+
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 )
@@ -366,21 +368,40 @@ var TestPartitionTables = map[string]disk.PartitionTable{
 
 // MakeFakePartitionTable is a helper to create partition table structs
 // for tests. It uses sensible defaults for common scenarios.
+// Including a "swap" entry creates a swap partition.
 func MakeFakePartitionTable(mntPoints ...string) *disk.PartitionTable {
+	// math/rand is good enough in this case
+	/* #nosec G404 */
+	rng := rand.New(rand.NewSource(0))
+
 	var partitions []disk.Partition
 	for _, mntPoint := range mntPoints {
-		payload := &disk.Filesystem{
-			Type:       "ext4",
-			Mountpoint: mntPoint,
-		}
+		var payload disk.PayloadEntity
 		switch mntPoint {
 		case "/":
-			payload.UUID = disk.RootPartitionUUID
+			payload = &disk.Filesystem{
+				Type:       "ext4",
+				Mountpoint: mntPoint,
+				UUID:       disk.RootPartitionUUID,
+			}
 		case "/boot/efi":
-			payload.UUID = disk.EFIFilesystemUUID
-			payload.Type = "vfat"
+			payload = &disk.Filesystem{
+				Type:       "vfat",
+				Mountpoint: mntPoint,
+				UUID:       disk.EFIFilesystemUUID,
+			}
+		case "swap":
+			swap := &disk.Swap{
+				Label: "swap",
+			}
+			swap.GenUUID(rng)
+			payload = swap
 		default:
-			payload.UUID = disk.FilesystemDataUUID
+			payload = &disk.Filesystem{
+				Type:       "ext4",
+				Mountpoint: mntPoint,
+				UUID:       disk.FilesystemDataUUID,
+			}
 		}
 		partitions = append(partitions, disk.Partition{
 			Size:    FakePartitionSize,
@@ -396,7 +417,12 @@ func MakeFakePartitionTable(mntPoints ...string) *disk.PartitionTable {
 
 // MakeFakeBtrfsPartitionTable is similar to MakeFakePartitionTable but
 // creates a btrfs-based partition table.
+// Including a "swap" entry creates a swap partition.
 func MakeFakeBtrfsPartitionTable(mntPoints ...string) *disk.PartitionTable {
+	// math/rand is good enough in this case
+	/* #nosec G404 */
+	rng := rand.New(rand.NewSource(0))
+
 	var subvolumes []disk.BtrfsSubvolume
 	pt := &disk.PartitionTable{
 		Type:       disk.PT_GPT,
@@ -427,17 +453,30 @@ func MakeFakeBtrfsPartitionTable(mntPoints ...string) *disk.PartitionTable {
 				},
 			})
 			size += 100 * MiB
+		case "swap":
+			swap := &disk.Swap{
+				Label: "swap",
+			}
+			swap.GenUUID(rng)
+			pt.Partitions = append(pt.Partitions, disk.Partition{
+				Start:   size,
+				Size:    512 * MiB,
+				Payload: swap,
+			})
+			size += 512 * MiB
 		default:
 			name := mntPoint
+			uuid := ""
 			if name == "/" {
 				name = "root"
+				uuid = disk.RootPartitionUUID
 			}
 			subvolumes = append(
 				subvolumes,
 				disk.BtrfsSubvolume{
 					Mountpoint: mntPoint,
 					Name:       name,
-					UUID:       disk.RootPartitionUUID,
+					UUID:       uuid,
 					Compress:   disk.DefaultBtrfsCompression,
 				},
 			)
@@ -461,7 +500,12 @@ func MakeFakeBtrfsPartitionTable(mntPoints ...string) *disk.PartitionTable {
 
 // MakeFakeLVMPartitionTable is similar to MakeFakePartitionTable but
 // creates a lvm-based partition table.
+// Including a "swap" entry creates a swap logical volume.
 func MakeFakeLVMPartitionTable(mntPoints ...string) *disk.PartitionTable {
+	// math/rand is good enough in this case
+	/* #nosec G404 */
+	rng := rand.New(rand.NewSource(0))
+
 	var lvs []disk.LVMLogicalVolume
 	pt := &disk.PartitionTable{
 		Type:       disk.PT_GPT,
@@ -492,6 +536,18 @@ func MakeFakeLVMPartitionTable(mntPoints ...string) *disk.PartitionTable {
 				},
 			})
 			size += 100 * MiB
+		case "swap":
+			swap := &disk.Swap{
+				Label: "swap",
+			}
+			swap.GenUUID(rng)
+			lvs = append(
+				lvs,
+				disk.LVMLogicalVolume{
+					Name:    "lv-for-swap",
+					Payload: swap,
+				},
+			)
 		default:
 			name := "lv-for-" + mntPoint
 			if name == "/" {
