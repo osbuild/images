@@ -571,3 +571,63 @@ func TestDistro_ManifestFIPSWarning(t *testing.T) {
 		}
 	}
 }
+
+// Test that passing options.OSTree for non-OSTree image types results in an error
+func TestOSTreeOptionsErrorForNonOSTreeImgTypes(t *testing.T) {
+	assert := assert.New(t)
+	distroFactory := distrofactory.NewDefault()
+	assert.NotNil(distroFactory)
+
+	distros := distro_test_common.ListTestedDistros(t)
+	assert.NotEmpty(distros)
+
+	for _, distroName := range distros {
+		d := distroFactory.GetDistro(distroName)
+		assert.NotNil(d)
+
+		arches := d.ListArches()
+		assert.NotEmpty(arches)
+
+		for _, archName := range arches {
+			arch, err := d.GetArch(archName)
+			assert.Nil(err)
+
+			imgTypes := arch.ListImageTypes()
+			assert.NotEmpty(imgTypes)
+
+			for _, imageTypeName := range imgTypes {
+				t.Run(fmt.Sprintf("%s/%s/%s", distroName, archName, imageTypeName), func(t *testing.T) {
+					imageType, err := arch.GetImageType(imageTypeName)
+					assert.Nil(err)
+
+					// set up bare minimum args for image type
+					var customizations *blueprint.Customizations
+					if imageType.Name() == "edge-simplified-installer" || imageType.Name() == "iot-simplified-installer" {
+						customizations = &blueprint.Customizations{
+							InstallationDevice: "/dev/null",
+						}
+					}
+					bp := blueprint.Blueprint{
+						Customizations: customizations,
+					}
+					options := distro.ImageOptions{
+						OSTree: &ostree.ImageOptions{
+							URL: "https://example.com",
+						},
+					}
+
+					_, _, err = imageType.Manifest(&bp, options, nil, 0)
+					if imageType.OSTreeRef() == "" {
+						assert.Errorf(err,
+							"OSTree options should not be allowed for non-OSTree image type %s/%s/%s",
+							imageTypeName, archName, distroName)
+					} else {
+						assert.NoErrorf(err,
+							"OSTree options should be allowed for OSTree image type %s/%s/%s",
+							imageTypeName, archName, distroName)
+					}
+				})
+			}
+		}
+	}
+}
