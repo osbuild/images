@@ -1,4 +1,7 @@
 ---
+exclude-dirs:
+  - vendor
+
 linters-settings:
   govet:
     disable:
