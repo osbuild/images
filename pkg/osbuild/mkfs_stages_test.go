@@ -77,7 +77,7 @@ func TestNewMkfsStage(t *testing.T) {
 }
 
 func TestGenFsStages(t *testing.T) {
-	pt := testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi")
+	pt := testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi", "swap")
 	stages := GenFsStages(pt, "file.img")
 	assert.Equal(t, []*Stage{
 		{
@@ -128,12 +128,29 @@ func TestGenFsStages(t *testing.T) {
 				},
 			},
 		},
+		{
+			Type: "org.osbuild.mkswap",
+			Options: &MkswapStageOptions{
+				UUID:  "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+				Label: "swap",
+			},
+			Devices: map[string]Device{
+				"device": {
+					Type: "org.osbuild.loopback",
+					Options: &LoopbackDeviceOptions{
+						Filename: "file.img",
+						Size:     testdisk.FakePartitionSize / disk.DefaultSectorSize,
+						Lock:     true,
+					},
+				},
+			},
+		},
 	}, stages)
 }
 
 func TestGenFsStagesBtrfs(t *testing.T) {
 	// Let's put there /extra to make sure that / and /extra creates only one btrfs partition
-	pt := testdisk.MakeFakeBtrfsPartitionTable("/", "/boot", "/boot/efi", "/extra")
+	pt := testdisk.MakeFakeBtrfsPartitionTable("/", "/boot", "/boot/efi", "/extra", "swap")
 	stages := GenFsStages(pt, "file.img")
 	assert.Equal(t, []*Stage{
 		{
@@ -168,6 +185,24 @@ func TestGenFsStagesBtrfs(t *testing.T) {
 			},
 		},
 		{
+			Type: "org.osbuild.mkswap",
+			Options: &MkswapStageOptions{
+				UUID:  "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+				Label: "swap",
+			},
+			Devices: map[string]Device{
+				"device": {
+					Type: "org.osbuild.loopback",
+					Options: &LoopbackDeviceOptions{
+						Filename: "file.img",
+						Start:    (datasizes.GiB + 100*datasizes.MiB) / disk.DefaultSectorSize,
+						Size:     512 * datasizes.MiB / disk.DefaultSectorSize,
+						Lock:     true,
+					},
+				},
+			},
+		},
+		{
 			Type: "org.osbuild.mkfs.btrfs",
 			Options: &MkfsBtrfsStageOptions{
 				UUID: disk.RootPartitionUUID,
@@ -177,7 +212,7 @@ func TestGenFsStagesBtrfs(t *testing.T) {
 					Type: "org.osbuild.loopback",
 					Options: &LoopbackDeviceOptions{
 						Filename: "file.img",
-						Start:    (datasizes.GiB + 100*datasizes.MiB) / disk.DefaultSectorSize,
+						Start:    (512*datasizes.MiB + datasizes.GiB + 100*datasizes.MiB) / disk.DefaultSectorSize,
 						Size:     9 * datasizes.GiB / disk.DefaultSectorSize,
 						Lock:     true,
 					},
@@ -201,7 +236,7 @@ func TestGenFsStagesBtrfs(t *testing.T) {
 					Type: "org.osbuild.loopback",
 					Options: &LoopbackDeviceOptions{
 						Filename: "file.img",
-						Start:    (datasizes.GiB + 100*datasizes.MiB) / disk.DefaultSectorSize,
+						Start:    (512*datasizes.MiB + datasizes.GiB + 100*datasizes.MiB) / disk.DefaultSectorSize,
 						Size:     9 * datasizes.GiB / disk.DefaultSectorSize,
 						Lock:     true,
 					},
@@ -221,7 +256,7 @@ func TestGenFsStagesBtrfs(t *testing.T) {
 }
 
 func TestGenFsStagesLVM(t *testing.T) {
-	pt := testdisk.MakeFakeLVMPartitionTable("/", "/boot", "/boot/efi", "/home")
+	pt := testdisk.MakeFakeLVMPartitionTable("/", "/boot", "/boot/efi", "/home", "swap")
 	stages := GenFsStages(pt, "file.img")
 	assert.Equal(t, []*Stage{
 		{
@@ -295,6 +330,31 @@ func TestGenFsStagesLVM(t *testing.T) {
 					Parent: "rootvg",
 					Options: &LVM2LVDeviceOptions{
 						Volume: "lv-for-/home",
+					},
+				},
+			},
+		},
+		{
+			Type: "org.osbuild.mkswap",
+			Options: &MkswapStageOptions{
+				UUID:  "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+				Label: "swap",
+			},
+			Devices: map[string]Device{
+				"rootvg": {
+					Type: "org.osbuild.loopback",
+					Options: &LoopbackDeviceOptions{
+						Filename: "file.img",
+						Start:    (datasizes.GiB + 100*datasizes.MiB) / disk.DefaultSectorSize,
+						Size:     9 * datasizes.GiB / disk.DefaultSectorSize,
+						Lock:     true,
+					},
+				},
+				"device": {
+					Type:   "org.osbuild.lvm2.lv",
+					Parent: "rootvg",
+					Options: &LVM2LVDeviceOptions{
+						Volume: "lv-for-swap",
 					},
 				},
 			},
