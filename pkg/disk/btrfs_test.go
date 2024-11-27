@@ -34,4 +34,5 @@ func TestImplementsInterfacesCompileTimeCheckBtrfs(t *testing.T) {
 	var _ = UniqueEntity(&Btrfs{})
 	var _ = Mountable(&BtrfsSubvolume{})
 	var _ = Sizeable(&BtrfsSubvolume{})
+	var _ = FSTabEntity(&BtrfsSubvolume{})
 }

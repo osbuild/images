@@ -248,13 +248,21 @@ type Mountable interface {
 	// GetMountPoint returns the path of the mount point.
 	GetMountpoint() string
 
-	// GetFSType returns the file system type, e.g. 'xfs'.
-	GetFSType() string
+	FSTabEntity
+}
 
-	// GetFSSpec returns the file system spec information.
+// FSTabEntity describes any entity that can appear in the fstab file.
+type FSTabEntity interface {
+	// FSSpec for the entity (UUID and Label); the first field of fstab(5).
 	GetFSSpec() FSSpec
 
-	// GetFSTabOptions returns options for mounting the entity.
+	// The mount point (target) for a filesystem or "none" for swap areas; the second field of fstab(5).
+	GetFSFile() string
+
+	// The type of the filesystem or swap for swap areas; the third field of fstab(5).
+	GetFSType() string
+
+	// The mount options, freq, and passno for the entity; the fourth fifth, and sixth fields of fstab(5) respectively.
 	GetFSTabOptions() (FSTabOptions, error)
 }
 
