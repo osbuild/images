@@ -382,8 +382,7 @@ func DiskImage(workload workload.Workload,
 		return nil, err
 	}
 	img.PartitionTable = pt
-
-	img.Filename = t.Filename()
+	img.Filename = options.Filename(t)
 
 	img.VPCForceSize = t.DiskImageVPCForceSize
 
@@ -423,7 +422,7 @@ func EdgeCommitImage(workload workload.Workload,
 	img.Workload = workload
 	img.OSTreeParent = parentCommit
 	img.OSVersion = t.Arch().Distro().OsVersion()
-	img.Filename = t.Filename()
+	img.Filename = options.Filename(t)
 
 	return img, nil
 }
@@ -453,7 +452,7 @@ func EdgeContainerImage(workload workload.Workload,
 	img.OSTreeParent = parentCommit
 	img.OSVersion = t.Arch().Distro().OsVersion()
 	img.ExtraContainerPackages = packageSets[ContainerPkgsKey]
-	img.Filename = t.Filename()
+	img.Filename = options.Filename(t)
 
 	return img, nil
 }
@@ -531,8 +530,7 @@ func EdgeInstallerImage(workload workload.Workload,
 	img.OSVersion = t.Arch().Distro().OsVersion()
 	img.Release = fmt.Sprintf("%s %s", t.Arch().Distro().Product(), t.Arch().Distro().OsVersion())
 	img.FIPS = customizations.GetFIPS()
-
-	img.Filename = t.Filename()
+	img.Filename = options.Filename(t)
 
 	return img, nil
 }
@@ -572,8 +570,8 @@ func EdgeRawImage(workload workload.Workload,
 		return nil, err
 	}
 	img.PartitionTable = pt
+	img.Filename = options.Filename(t)
 
-	img.Filename = t.Filename()
 	img.Compression = t.Compression
 
 	return img, nil
@@ -615,13 +613,14 @@ func EdgeSimplifiedInstallerImage(workload workload.Workload,
 	}
 	rawImg.PartitionTable = pt
 
-	rawImg.Filename = t.Filename()
+	filename := options.Filename(t)
+	rawImg.Filename = filename
 
 	img := image.NewOSTreeSimplifiedInstaller(rawImg, customizations.InstallationDevice)
 	img.ExtraBasePackages = packageSets[InstallerPkgsKey]
 	// img.Workload = workload
 	img.Platform = t.platform
-	img.Filename = t.Filename()
+	img.Filename = filename
 	if bpFDO := customizations.GetFDO(); bpFDO != nil {
 		img.FDO = fdo.FromBP(*bpFDO)
 	}
@@ -727,8 +726,7 @@ func ImageInstallerImage(workload workload.Workload,
 	img.Product = d.product
 	img.OSVersion = d.osVersion
 	img.Release = fmt.Sprintf("%s %s", d.product, d.osVersion)
-
-	img.Filename = t.Filename()
+	img.Filename = options.Filename(t)
 
 	return img, nil
 }
@@ -752,8 +750,7 @@ func TarImage(workload workload.Workload,
 
 	img.Environment = t.Environment
 	img.Workload = workload
-
-	img.Filename = t.Filename()
+	img.Filename = options.Filename(t)
 
 	return img, nil
 
