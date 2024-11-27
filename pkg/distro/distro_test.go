@@ -81,8 +81,10 @@ func TestImageTypePipelineNames(t *testing.T) {
 					seed := int64(0)
 
 					// Add ostree options for image types that require them
-					options.OSTree = &ostree.ImageOptions{
-						URL: "https://example.com",
+					if imageType.OSTreeRef() != "" {
+						options.OSTree = &ostree.ImageOptions{
+							URL: "https://example.com",
+						}
 					}
 
 					// Pipelines that require package sets will fail if none
@@ -397,8 +399,10 @@ func TestPipelineRepositories(t *testing.T) {
 							options := distro.ImageOptions{}
 
 							// Add ostree options for image types that require them
-							options.OSTree = &ostree.ImageOptions{
-								URL: "https://example.com",
+							if imageType.OSTreeRef() != "" {
+								options.OSTree = &ostree.ImageOptions{
+									URL: "https://example.com",
+								}
 							}
 
 							repos := tCase.repos

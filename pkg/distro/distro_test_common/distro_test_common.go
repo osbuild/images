@@ -28,9 +28,14 @@ var knownKernels = []string{"kernel", "kernel-debug", "kernel-rt"}
 
 // Returns the number of known kernels in the package list
 func kernelCount(imgType distro.ImageType, bp blueprint.Blueprint) int {
-	ostreeOptions := &ostree.ImageOptions{
-		URL: "https://example.com", // required by some image types
+	var ostreeOptions *ostree.ImageOptions
+	// OSTree image types require OSTree options
+	if imgType.OSTreeRef() != "" {
+		ostreeOptions = &ostree.ImageOptions{
+			URL: "https://example.com",
+		}
 	}
+
 	manifest, _, err := imgType.Manifest(&bp, distro.ImageOptions{OSTree: ostreeOptions}, nil, 0)
 	if err != nil {
 		panic(err)
@@ -202,6 +207,11 @@ func TestDistro_OSTreeOptions(t *testing.T, d distro.Distro) {
 				imgType, err := arch.GetImageType(typeName)
 				assert.NoError(err)
 
+				if imgType.OSTreeRef() == "" {
+					// image type doesn't support OSTree options
+					t.Skipf("OSTree options not supported for image type %s/%s/%s", typeName, archName, d.Name())
+				}
+
 				ostreeOptions := ostree.ImageOptions{}
 				if typesWithPayload[typeName] {
 					// payload types require URL
@@ -249,6 +259,11 @@ func TestDistro_OSTreeOptions(t *testing.T, d distro.Distro) {
 
 				imgType, err := arch.GetImageType(typeName)
 				assert.NoError(err)
+
+				if imgType.OSTreeRef() == "" {
+					// image type doesn't support OSTree options
+					t.Skipf("OSTree options not supported for image type %s/%s/%s", typeName, archName, d.Name())
+				}
 
 				ostreeOptions := ostree.ImageOptions{
 					ImageRef: "test/x86_64/01",
