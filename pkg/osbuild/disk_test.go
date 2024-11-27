@@ -126,21 +126,21 @@ func TestGenImagePrepareStages(t *testing.T) {
 		{
 			Type: "org.osbuild.btrfs.subvol",
 			Devices: map[string]Device{
-				"btrfs-6264": {
+				"device": {
 					Type: "org.osbuild.loopback",
 					Options: &LoopbackDeviceOptions{
 						Filename: filename,
 						Start:    1 * datasizes.GiB / 512,
 						Size:     9 * datasizes.GiB / 512,
-						Lock:     false,
+						Lock:     true,
 					},
 				},
 			},
 			Mounts: []Mount{
 				{
-					Name:    "btrfs-6264",
+					Name:    "volume",
 					Type:    "org.osbuild.btrfs",
-					Source:  "btrfs-6264",
+					Source:  "device",
 					Target:  "/",
 					Options: BtrfsMountOptions{},
 				},

@@ -76,9 +76,9 @@ func TestNewMkfsStage(t *testing.T) {
 	assert.Equal(t, mkxfsExpected, mkxfs)
 }
 
-func TestGenMkfsStages(t *testing.T) {
+func TestGenFsStages(t *testing.T) {
 	pt := testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi")
-	stages := GenMkfsStages(pt, "file.img")
+	stages := GenFsStages(pt, "file.img")
 	assert.Equal(t, []*Stage{
 		{
 			Type: "org.osbuild.mkfs.ext4",
@@ -131,10 +131,10 @@ func TestGenMkfsStages(t *testing.T) {
 	}, stages)
 }
 
-func TestGenMkfsStagesBtrfs(t *testing.T) {
+func TestGenFsStagesBtrfs(t *testing.T) {
 	// Let's put there /extra to make sure that / and /extra creates only one btrfs partition
 	pt := testdisk.MakeFakeBtrfsPartitionTable("/", "/boot", "/boot/efi", "/extra")
-	stages := GenMkfsStages(pt, "file.img")
+	stages := GenFsStages(pt, "file.img")
 	assert.Equal(t, []*Stage{
 		{
 			Type:    "org.osbuild.mkfs.ext4",
@@ -184,10 +184,43 @@ func TestGenMkfsStagesBtrfs(t *testing.T) {
 				},
 			},
 		},
+		{
+			Type: "org.osbuild.btrfs.subvol",
+			Options: &BtrfsSubVolOptions{
+				Subvolumes: []BtrfsSubVol{
+					{
+						Name: "/root",
+					},
+					{
+						Name: "/extra",
+					},
+				},
+			},
+			Devices: map[string]Device{
+				"device": {
+					Type: "org.osbuild.loopback",
+					Options: &LoopbackDeviceOptions{
+						Filename: "file.img",
+						Start:    (datasizes.GiB + 100*datasizes.MiB) / disk.DefaultSectorSize,
+						Size:     9 * datasizes.GiB / disk.DefaultSectorSize,
+						Lock:     true,
+					},
+				},
+			},
+			Mounts: []Mount{
+				{
+					Name:    "volume",
+					Type:    "org.osbuild.btrfs",
+					Source:  "device",
+					Target:  "/",
+					Options: BtrfsMountOptions{},
+				},
+			},
+		},
 	}, stages)
 }
 
-func TestGenMkfsStagesUnhappy(t *testing.T) {
+func TestGenFsStagesUnhappy(t *testing.T) {
 	pt := &disk.PartitionTable{
 		Type: disk.PT_GPT,
 		Partitions: []disk.Partition{
@@ -199,7 +232,7 @@ func TestGenMkfsStagesUnhappy(t *testing.T) {
 		},
 	}
 
-	assert.PanicsWithValue(t, "unknown fs type ext2", func() {
-		GenMkfsStages(pt, "file.img")
+	assert.PanicsWithValue(t, "unknown fs type: ext2", func() {
+		GenFsStages(pt, "file.img")
 	})
 }
