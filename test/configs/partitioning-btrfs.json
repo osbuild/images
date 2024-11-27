@@ -47,6 +47,12 @@
                 "mountpoint": "/srv"
               }
             ]
+          },
+          {
+            "type": "plain",
+            "fs_type": "swap",
+            "label": "swap-part",
+            "minsize": "1 GiB"
           }
         ]
       }
