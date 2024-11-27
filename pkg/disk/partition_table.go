@@ -590,6 +590,32 @@ func (pt *PartitionTable) ForEachMountable(cb MountableCallback) error {
 	return forEachMountable(pt, []Entity{pt}, cb)
 }
 
+type FSTabEntityCallback func(mnt FSTabEntity, path []Entity) error
+
+func forEachFSTabEntity(c Container, path []Entity, cb FSTabEntityCallback) error {
+	for idx := uint(0); idx < c.GetItemCount(); idx++ {
+		child := c.GetChild(idx)
+		childPath := append(path, child)
+		var err error
+		switch ent := child.(type) {
+		case FSTabEntity:
+			err = cb(ent, childPath)
+		case Container:
+			err = forEachFSTabEntity(ent, childPath, cb)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// ForEachFSTabEntity runs the provided callback function on each FSTabEntity
+// in the PartitionTable.
+func (pt *PartitionTable) ForEachFSTabEntity(cb FSTabEntityCallback) error {
+	return forEachFSTabEntity(pt, []Entity{pt}, cb)
+}
+
 // FindMountable returns the Mountable entity with the given mountpoint in the
 // PartitionTable. Returns nil if no Entity has the target as a Mountpoint.
 func (pt *PartitionTable) FindMountable(mountpoint string) Mountable {
