@@ -1259,6 +1259,105 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				},
 			},
 		},
+		"plain+swap": {
+			customizations: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						MinSize: 20 * datasizes.MiB,
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Mountpoint: "/data",
+							Label:      "data",
+							FSType:     "ext4",
+						},
+					},
+					{
+						MinSize: 5 * datasizes.MiB,
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Label:  "swap",
+							FSType: "swap",
+						},
+					},
+				},
+			},
+			options: &disk.CustomPartitionTableOptions{
+				DefaultFSType:      disk.FS_XFS,
+				BootMode:           platform.BOOT_HYBRID,
+				PartitionTableType: disk.PT_DOS,
+			},
+			expected: &disk.PartitionTable{
+				Type: disk.PT_DOS,
+				Size: 227 * datasizes.MiB,
+				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+				Partitions: []disk.Partition{
+					{
+						Start:    1 * datasizes.MiB, // header
+						Size:     1 * datasizes.MiB,
+						Bootable: true,
+						Type:     disk.DosBIOSBootID,
+						UUID:     disk.BIOSBootPartitionUUID,
+					},
+					{
+						Start: 2 * datasizes.MiB,
+						Size:  200 * datasizes.MiB,
+						Type:  disk.DosESPID,
+						UUID:  disk.EFISystemPartitionUUID,
+						Payload: &disk.Filesystem{
+							Type:         "vfat",
+							UUID:         disk.EFIFilesystemUUID,
+							Mountpoint:   "/boot/efi",
+							Label:        "EFI-SYSTEM",
+							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+							FSTabFreq:    0,
+							FSTabPassNo:  2,
+						},
+					},
+					{
+						Start:    202 * datasizes.MiB,
+						Size:     20 * datasizes.MiB,
+						Type:     disk.DosLinuxTypeID,
+						Bootable: false,
+						UUID:     "", // partitions on dos PTs don't have UUIDs
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "data",
+							Mountpoint:   "/data",
+							UUID:         "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+							FSTabOptions: "defaults",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
+						},
+					},
+					{
+						Start:    222 * datasizes.MiB,
+						Size:     5 * datasizes.MiB,
+						Type:     disk.DosSwapID,
+						UUID:     "", // partitions on dos PTs don't have UUIDs
+						Bootable: false,
+						Payload: &disk.Swap{
+							Label:        "swap",
+							UUID:         "fb180daf-48a7-4ee0-b10d-394651850fd4",
+							FSTabOptions: "defaults",
+						},
+					},
+					{
+						Start:    227 * datasizes.MiB,
+						Size:     0,
+						Type:     disk.DosLinuxTypeID,
+						UUID:     "", // partitions on dos PTs don't have UUIDs
+						Bootable: false,
+						Payload: &disk.Filesystem{
+							Type:         "xfs",
+							Label:        "root",
+							Mountpoint:   "/",
+							UUID:         "a178892e-e285-4ce1-9114-55780875d64e",
+							FSTabOptions: "defaults",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
+						},
+					},
+				},
+			},
+		},
 		"plain-legacy": {
 			customizations: &blueprint.DiskCustomization{
 				Partitions: []blueprint.PartitionCustomization{
@@ -1497,6 +1596,13 @@ func TestNewCustomPartitionTable(t *testing.T) {
 							FSType:     "ext4",
 						},
 					},
+					{
+						MinSize: 12 * datasizes.MiB,
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Label:  "swappyswaps",
+							FSType: "swap",
+						},
+					},
 				},
 			},
 			options: &disk.CustomPartitionTableOptions{
@@ -1507,7 +1613,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			},
 			expected: &disk.PartitionTable{
 				Type: disk.PT_GPT,
-				Size: 222*datasizes.MiB + 3*datasizes.GiB + datasizes.MiB, // start + size of last partition + footer
+				Size: 234*datasizes.MiB + 3*datasizes.GiB + datasizes.MiB, // start + size of last partition + footer
 
 				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
 				Partitions: []disk.Partition{
@@ -1535,10 +1641,10 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					},
 					// root is aligned to the end but not reindexed
 					{
-						Start:    222 * datasizes.MiB,
+						Start:    234 * datasizes.MiB,
 						Size:     3*datasizes.GiB + datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
 						Type:     disk.FilesystemDataGUID,
-						UUID:     "a178892e-e285-4ce1-9114-55780875d64e",
+						UUID:     "e2d3d0d0-de6b-48f9-b44c-e85ff044c6b1",
 						Bootable: false,
 						Payload: &disk.Filesystem{
 							Type:         "xfs",
@@ -1554,7 +1660,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						Start:    202 * datasizes.MiB,
 						Size:     20 * datasizes.MiB,
 						Type:     disk.FilesystemDataGUID,
-						UUID:     "e2d3d0d0-de6b-48f9-b44c-e85ff044c6b1",
+						UUID:     "f83b8e88-3bbf-457a-ab99-c5b252c7429c",
 						Bootable: false,
 						Payload: &disk.Filesystem{
 							Type:         "ext4",
@@ -1564,6 +1670,17 @@ func TestNewCustomPartitionTable(t *testing.T) {
 							UUID:         "fb180daf-48a7-4ee0-b10d-394651850fd4",
 							FSTabFreq:    0,
 							FSTabPassNo:  0,
+						},
+					},
+					{
+						Start: 222 * datasizes.MiB,
+						Size:  12 * datasizes.MiB,
+						Type:  disk.SwapPartitionGUID,
+						UUID:  "32f3a8ae-b79e-4856-b659-c18f0dcecc77",
+						Payload: &disk.Swap{
+							Label:        "swappyswaps",
+							UUID:         "a178892e-e285-4ce1-9114-55780875d64e",
+							FSTabOptions: "defaults",
 						},
 					},
 				},
@@ -1604,6 +1721,14 @@ func TestNewCustomPartitionTable(t *testing.T) {
 										FSType:     "ext4", // TODO: remove when we reintroduce the default fs
 									},
 								},
+								{ // swap on LV
+									Name:    "swaplv",
+									MinSize: 30 * datasizes.MiB,
+									FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+										Label:  "swap-on-lv",
+										FSType: "swap",
+									},
+								},
 							},
 						},
 					},
@@ -1616,7 +1741,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			expected: &disk.PartitionTable{
 				Type: disk.PT_GPT, // default when unspecified
 				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
-				Size: 714*datasizes.MiB + 168*datasizes.MiB + datasizes.MiB, // start + size of last partition (VG) + footer
+				Size: 714*datasizes.MiB + 200*datasizes.MiB + datasizes.MiB, // start + size of last partition (VG) + footer
 				Partitions: []disk.Partition{
 					{
 						Start:    1 * datasizes.MiB, // header
@@ -1644,7 +1769,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						Start:    202 * datasizes.MiB,
 						Size:     512 * datasizes.MiB,
 						Type:     disk.XBootLDRPartitionGUID,
-						UUID:     "f83b8e88-3bbf-457a-ab99-c5b252c7429c",
+						UUID:     "32f3a8ae-b79e-4856-b659-c18f0dcecc77",
 						Bootable: false,
 						Payload: &disk.Filesystem{
 							Type:         "ext4",
@@ -1658,9 +1783,9 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					},
 					{
 						Start:    714 * datasizes.MiB,
-						Size:     168*datasizes.MiB + datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // the sum of the LVs (rounded to the next 4 MiB extent) grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
+						Size:     200*datasizes.MiB + datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // the sum of the LVs (rounded to the next 4 MiB extent) grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
 						Type:     disk.LVMPartitionGUID,
-						UUID:     "32f3a8ae-b79e-4856-b659-c18f0dcecc77",
+						UUID:     "c75e7a81-bfde-475f-a7cf-e242cf3cc354",
 						Bootable: false,
 						Payload: &disk.LVMVolumeGroup{
 							Name:        "testvg",
@@ -1697,6 +1822,15 @@ func TestNewCustomPartitionTable(t *testing.T) {
 										Mountpoint:   "/data",
 										FSTabOptions: "defaults",
 										UUID:         "e2d3d0d0-de6b-48f9-b44c-e85ff044c6b1",
+									},
+								},
+								{
+									Name: "swaplv",
+									Size: 32 * datasizes.MiB, // rounded up to the next extent (4 MiB)
+									Payload: &disk.Swap{
+										Label:        "swap-on-lv",
+										UUID:         "f83b8e88-3bbf-457a-ab99-c5b252c7429c",
+										FSTabOptions: "defaults",
 									},
 								},
 							},
@@ -1878,6 +2012,13 @@ func TestNewCustomPartitionTable(t *testing.T) {
 							},
 						},
 					},
+					{
+						MinSize: 120 * datasizes.MiB,
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Label:  "butterswap",
+							FSType: "swap",
+						},
+					},
 				},
 			},
 			options: &disk.CustomPartitionTableOptions{
@@ -1887,7 +2028,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			},
 			expected: &disk.PartitionTable{
 				Type: disk.PT_GPT,
-				Size: 714*datasizes.MiB + 230*datasizes.MiB + datasizes.MiB, // start + size of last partition + footer
+				Size: 834*datasizes.MiB + 230*datasizes.MiB + datasizes.MiB, // start + size of last partition + footer
 				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
 				Partitions: []disk.Partition{
 					{
@@ -1916,7 +2057,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						Start:    202 * datasizes.MiB,
 						Size:     512 * datasizes.MiB,
 						Type:     disk.XBootLDRPartitionGUID,
-						UUID:     "a178892e-e285-4ce1-9114-55780875d64e",
+						UUID:     "e2d3d0d0-de6b-48f9-b44c-e85ff044c6b1",
 						Bootable: false,
 						Payload: &disk.Filesystem{
 							Type:         "ext4",
@@ -1929,10 +2070,10 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						},
 					},
 					{
-						Start:    714 * datasizes.MiB,
+						Start:    834 * datasizes.MiB,
 						Size:     231*datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
 						Type:     disk.FilesystemDataGUID,
-						UUID:     "e2d3d0d0-de6b-48f9-b44c-e85ff044c6b1",
+						UUID:     "f83b8e88-3bbf-457a-ab99-c5b252c7429c",
 						Bootable: false,
 						Payload: &disk.Btrfs{
 							UUID: "fb180daf-48a7-4ee0-b10d-394651850fd4",
@@ -1953,6 +2094,17 @@ func TestNewCustomPartitionTable(t *testing.T) {
 									UUID:       "fb180daf-48a7-4ee0-b10d-394651850fd4", // same as volume UUID
 								},
 							},
+						},
+					},
+					{
+						Start: 714 * datasizes.MiB,
+						Size:  120 * datasizes.MiB,
+						Type:  disk.SwapPartitionGUID,
+						UUID:  "32f3a8ae-b79e-4856-b659-c18f0dcecc77",
+						Payload: &disk.Swap{
+							Label:        "butterswap",
+							UUID:         "a178892e-e285-4ce1-9114-55780875d64e",
+							FSTabOptions: "defaults",
 						},
 					},
 				},
