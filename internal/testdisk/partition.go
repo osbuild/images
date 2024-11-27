@@ -346,11 +346,13 @@ var TestPartitionTables = map[string]disk.PartitionTable{
 					Mountpoint: "",
 					Subvolumes: []disk.BtrfsSubvolume{
 						{
+							Name:       "root",
 							Size:       0,
 							Mountpoint: "/",
 							GroupID:    0,
 						},
 						{
+							Name:       "var",
 							Size:       5 * GiB,
 							Mountpoint: "/var",
 							GroupID:    0,

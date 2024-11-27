@@ -1,9 +1,12 @@
 package osbuild
 
 import (
+	"math/rand"
 	"testing"
 
+	"github.com/osbuild/images/internal/testdisk"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewFSTabStage(t *testing.T) {
@@ -49,4 +52,78 @@ func TestAddFilesystem(t *testing.T) {
 		assert.Equal(t, options.FileSystems[i], fs)
 	}
 	assert.Equal(t, len(filesystems), len(options.FileSystems))
+}
+
+func TestNewFSTabStageOptions(t *testing.T) {
+	expectedOptions := map[string]FSTabStageOptions{
+		// The names must match the ones in testdisk.TestPartitionTables
+		"plain": {
+			FileSystems: []*FSTabEntry{
+				{UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75", VFSType: "xfs", Path: "/", Options: "defaults", Freq: 0, PassNo: 0},
+				{UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8", VFSType: "xfs", Path: "/boot", Options: "defaults", Freq: 0, PassNo: 0},
+				{UUID: "7B77-95E7", VFSType: "vfat", Path: "/boot/efi", Options: "defaults,uid=0,gid=0,umask=077,shortname=winnt", Freq: 0, PassNo: 2},
+			},
+		},
+		"plain-swap": {
+			FileSystems: []*FSTabEntry{
+				{UUID: "fb180daf-48a7-4ee0-b10d-394651850fd4", VFSType: "xfs", Path: "/", Options: "defaults", Freq: 0, PassNo: 0},
+				{UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8", VFSType: "xfs", Path: "/boot", Options: "defaults", Freq: 0, PassNo: 0},
+				{UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75", VFSType: "swap", Path: "none", Options: "defaults", Freq: 0, PassNo: 0},
+				{UUID: "7B77-95E7", VFSType: "vfat", Path: "/boot/efi", Options: "defaults,uid=0,gid=0,umask=077,shortname=winnt", Freq: 0, PassNo: 2},
+			},
+		},
+		"plain-noboot": {
+			FileSystems: []*FSTabEntry{
+				{UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8", VFSType: "xfs", Path: "/", Options: "defaults", Freq: 0, PassNo: 0},
+				{UUID: "7B77-95E7", VFSType: "vfat", Path: "/boot/efi", Options: "defaults,uid=0,gid=0,umask=077,shortname=winnt", Freq: 0, PassNo: 2},
+			},
+		},
+		"luks": {
+			FileSystems: []*FSTabEntry{
+				{UUID: "fb180daf-48a7-4ee0-b10d-394651850fd4", VFSType: "xfs", Path: "/", Options: "defaults", Freq: 0, PassNo: 0},
+				{UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8", VFSType: "xfs", Path: "/boot", Options: "defaults", Freq: 0, PassNo: 0},
+				{UUID: "7B77-95E7", VFSType: "vfat", Path: "/boot/efi", Options: "defaults,uid=0,gid=0,umask=077,shortname=winnt", Freq: 0, PassNo: 2},
+			},
+		},
+		"luks+lvm": {
+			FileSystems: []*FSTabEntry{
+				{UUID: "fb180daf-48a7-4ee0-b10d-394651850fd4", VFSType: "xfs", Path: "/", Options: "defaults", Freq: 0, PassNo: 0},
+				{UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8", VFSType: "xfs", Path: "/boot", Options: "defaults", Freq: 0, PassNo: 0},
+				{UUID: "a178892e-e285-4ce1-9114-55780875d64e", VFSType: "xfs", Path: "/home", Options: "defaults", Freq: 0, PassNo: 0},
+				{UUID: "7B77-95E7", VFSType: "vfat", Path: "/boot/efi", Options: "defaults,uid=0,gid=0,umask=077,shortname=winnt", Freq: 0, PassNo: 2},
+			},
+		},
+		"btrfs": {
+			FileSystems: []*FSTabEntry{
+				{UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75", VFSType: "btrfs", Path: "/", Options: "subvol=root", Freq: 0, PassNo: 0},
+				{UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8", VFSType: "xfs", Path: "/boot", Options: "defaults", Freq: 0, PassNo: 0},
+				{UUID: "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75", VFSType: "btrfs", Path: "/var", Options: "subvol=var", Freq: 0, PassNo: 0},
+				{UUID: "7B77-95E7", VFSType: "vfat", Path: "/boot/efi", Options: "defaults,uid=0,gid=0,umask=077,shortname=winnt", Freq: 0, PassNo: 2},
+			},
+		},
+	}
+	// Use the test partition tables from the disk package.
+	for name := range testdisk.TestPartitionTables {
+		t.Run(name, func(t *testing.T) {
+			require := require.New(t)
+			pt := testdisk.TestPartitionTables[name]
+
+			// math/rand is good enough in this case
+			/* #nosec G404 */
+			rng := rand.New(rand.NewSource(0))
+			// populate UUIDs
+			pt.GenerateUUIDs(rng)
+
+			// print an informative failure message if a new test partition
+			// table is added and this test is not updated (instead of failing
+			// at the final Equal() check)
+			exp, ok := expectedOptions[name]
+			require.True(ok, "expected options not defined for test partition table %q: please update the TestNewFSTabStageOptions test", name)
+
+			options, err := NewFSTabStageOptions(&pt)
+			require.NoError(err)
+			require.NotNil(options)
+			require.Equal(exp, *options)
+		})
+	}
 }
