@@ -67,6 +67,66 @@ var TestPartitionTables = map[string]PartitionTable{
 		},
 	},
 
+	"plain-swap": {
+		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
+		Type: PT_GPT,
+		Partitions: []Partition{
+			{
+				Size:     1 * MiB,
+				Bootable: true,
+				Type:     BIOSBootPartitionGUID,
+				UUID:     BIOSBootPartitionUUID,
+			},
+			{
+				Size: 200 * MiB,
+				Type: EFISystemPartitionGUID,
+				UUID: EFISystemPartitionUUID,
+				Payload: &Filesystem{
+					Type:         "vfat",
+					UUID:         EFIFilesystemUUID,
+					Mountpoint:   "/boot/efi",
+					Label:        "EFI-SYSTEM",
+					FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+					FSTabFreq:    0,
+					FSTabPassNo:  2,
+				},
+			},
+			{
+				Size: 500 * MiB,
+				Type: FilesystemDataGUID,
+				UUID: FilesystemDataUUID,
+				Payload: &Filesystem{
+					Type:         "xfs",
+					Mountpoint:   "/boot",
+					Label:        "boot",
+					FSTabOptions: "defaults",
+					FSTabFreq:    0,
+					FSTabPassNo:  0,
+				},
+			},
+			{
+				Size: 512 * MiB,
+				Type: SwapPartitionGUID,
+				Payload: &Swap{
+					Label:        "swap",
+					FSTabOptions: "defaults",
+				},
+			},
+			{
+				Type: FilesystemDataGUID,
+				UUID: RootPartitionUUID,
+				Payload: &Filesystem{
+					Type:         "xfs",
+					Label:        "root",
+					Mountpoint:   "/",
+					FSTabOptions: "defaults",
+					FSTabFreq:    0,
+					FSTabPassNo:  0,
+				},
+			},
+		},
+	},
+
 	"plain-noboot": {
 		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
 		Type: PT_GPT,
@@ -306,6 +366,7 @@ func TestPartitionTableFeatures(t *testing.T) {
 	}
 	testCases := []testCase{
 		{"plain", partitionTableFeatures{XFS: true, FAT: true}},
+		{"plain-swap", partitionTableFeatures{XFS: true, FAT: true, Swap: true}},
 		{"luks", partitionTableFeatures{XFS: true, FAT: true, LUKS: true}},
 		{"luks+lvm", partitionTableFeatures{XFS: true, FAT: true, LUKS: true, LVM: true}},
 		{"btrfs", partitionTableFeatures{XFS: true, FAT: true, Btrfs: true}},
