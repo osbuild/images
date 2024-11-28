@@ -731,35 +731,35 @@ func (pt *PartitionTable) ensureLVM() error {
 
 	if _, ok := parent.(*LVMLogicalVolume); ok {
 		return nil
-	} else if part, ok := parent.(*Partition); ok {
-		filesystem := part.Payload
-
-		vg := &LVMVolumeGroup{
-			Name:        "rootvg",
-			Description: "created via lvm2 and osbuild",
-		}
-
-		// create root logical volume on the new volume group with the same
-		// size and filesystem as the previous root partition
-		_, err := vg.CreateLogicalVolume("rootlv", part.Size, filesystem)
-		if err != nil {
-			panic(fmt.Sprintf("Could not create LV: %v", err))
-		}
-
-		// replace the top-level partition payload with the new volume group
-		part.Payload = vg
-
-		// reset the vg partition size - it will be grown later
-		part.Size = 0
-
-		if pt.Type == PT_GPT {
-			part.Type = LVMPartitionGUID
-		} else {
-			part.Type = LVMPartitionDOSID
-		}
-
-	} else {
+	}
+	part, ok := parent.(*Partition)
+	if !ok {
 		return fmt.Errorf("Unsupported parent for LVM")
+	}
+	filesystem := part.Payload
+
+	vg := &LVMVolumeGroup{
+		Name:        "rootvg",
+		Description: "created via lvm2 and osbuild",
+	}
+
+	// create root logical volume on the new volume group with the same
+	// size and filesystem as the previous root partition
+	_, err := vg.CreateLogicalVolume("rootlv", part.Size, filesystem)
+	if err != nil {
+		panic(fmt.Sprintf("Could not create LV: %v", err))
+	}
+
+	// replace the top-level partition payload with the new volume group
+	part.Payload = vg
+
+	// reset the vg partition size - it will be grown later
+	part.Size = 0
+
+	if pt.Type == PT_GPT {
+		part.Type = LVMPartitionGUID
+	} else {
+		part.Type = LVMPartitionDOSID
 	}
 
 	return nil
@@ -789,43 +789,43 @@ func (pt *PartitionTable) ensureBtrfs() error {
 
 	if _, ok := parent.(*Btrfs); ok {
 		return nil
-	} else if part, ok := parent.(*Partition); ok {
-		rootMountable, ok := rootPath[0].(Mountable)
-		if !ok {
-			return fmt.Errorf("root entity is not mountable: %T, this is a violation of entityPath() contract", rootPath[0])
-		}
-
-		opts, err := rootMountable.GetFSTabOptions()
-		if err != nil {
-			return err
-		}
-
-		btrfs := &Btrfs{
-			Label: "root",
-			Subvolumes: []BtrfsSubvolume{
-				{
-					Name:       "root",
-					Mountpoint: "/",
-					Compress:   DefaultBtrfsCompression,
-					ReadOnly:   opts.ReadOnly(),
-					Size:       part.Size,
-				},
-			},
-		}
-
-		// replace the top-level partition payload with a new btrfs filesystem
-		part.Payload = btrfs
-
-		// reset the btrfs partition size - it will be grown later
-		part.Size = 0
-
-		part.Type, err = getPartitionTypeIDfor(pt.Type, "data")
-		if err != nil {
-			return fmt.Errorf("error converting partition table to btrfs: %w", err)
-		}
-
-	} else {
+	}
+	part, ok := parent.(*Partition)
+	if !ok {
 		return fmt.Errorf("unsupported parent for btrfs: %T", parent)
+	}
+	rootMountable, ok := rootPath[0].(Mountable)
+	if !ok {
+		return fmt.Errorf("root entity is not mountable: %T, this is a violation of entityPath() contract", rootPath[0])
+	}
+
+	opts, err := rootMountable.GetFSTabOptions()
+	if err != nil {
+		return err
+	}
+
+	btrfs := &Btrfs{
+		Label: "root",
+		Subvolumes: []BtrfsSubvolume{
+			{
+				Name:       "root",
+				Mountpoint: "/",
+				Compress:   DefaultBtrfsCompression,
+				ReadOnly:   opts.ReadOnly(),
+				Size:       part.Size,
+			},
+		},
+	}
+
+	// replace the top-level partition payload with a new btrfs filesystem
+	part.Payload = btrfs
+
+	// reset the btrfs partition size - it will be grown later
+	part.Size = 0
+
+	part.Type, err = getPartitionTypeIDfor(pt.Type, "data")
+	if err != nil {
+		return fmt.Errorf("error converting partition table to btrfs: %w", err)
 	}
 
 	return nil
