@@ -972,3 +972,47 @@ func TestFSTabOptionsReadOnly(t *testing.T) {
 		})
 	}
 }
+
+func TestForEachFSTabEntity(t *testing.T) {
+	// Use the test partition tables and check that fstab entities are all
+	// visited by collecting their target fields.
+	// The names must match the ones in testdisk.TestPartitionTables.
+	expectedEntityPaths := map[string][]string{
+		"plain":        {"/", "/boot", "/boot/efi"},
+		"plain-swap":   {"/", "/boot", "none", "/boot/efi"},
+		"plain-noboot": {"/", "/boot/efi"},
+		"luks":         {"/", "/boot", "/boot/efi"},
+		"luks+lvm":     {"/", "/boot", "/home", "/boot/efi"},
+		"btrfs":        {"/", "/boot", "/var", "/boot/efi"},
+	}
+
+	for name := range testdisk.TestPartitionTables {
+		t.Run(name, func(t *testing.T) {
+
+			var targets []string
+			targetCollectorCB := func(ent disk.FSTabEntity, _ []disk.Entity) error {
+				targets = append(targets, ent.GetFSFile())
+				return nil
+			}
+
+			require := require.New(t)
+			pt := testdisk.TestPartitionTables[name]
+
+			// print an informative failure message if a new test partition
+			// table is added and this test is not updated (instead of failing
+			// at the final Equal() check)
+			exp, ok := expectedEntityPaths[name]
+			require.True(ok, "expected options not defined for test partition table %q: please update the TestNewFSTabStageOptions test", name)
+
+			err := pt.ForEachFSTabEntity(targetCollectorCB)
+			// the callback never returns an error, but let's check it anyway
+			// in case the foreach function ever changes to return other errors
+			require.NoError(err)
+
+			require.NotEmpty(targets)
+
+			// we don't care about the order
+			require.ElementsMatch(exp, targets)
+		})
+	}
+}
