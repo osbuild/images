@@ -841,16 +841,20 @@ type partitionTableFeatures struct {
 	Swap  bool
 }
 
-// features examines all of the PartitionTable entities
-// and returns a struct with flags set for each feature used
+// features examines all of the PartitionTable entities and returns a struct
+// with flags set for each feature used. The meaning of "feature" here is quite
+// broad. Most disk Entity types are represented by a feature and the existence
+// of at least one type in the partition table means the feature is
+// represented. For Filesystem entities, there is a separate feature for each
+// filesystem type
 func (pt *PartitionTable) features() partitionTableFeatures {
 	var ptFeatures partitionTableFeatures
 
 	introspectPT := func(e Entity, path []Entity) error {
 		switch ent := e.(type) {
-		case *LVMLogicalVolume:
+		case *LVMVolumeGroup, *LVMLogicalVolume:
 			ptFeatures.LVM = true
-		case *Btrfs:
+		case *Btrfs, *BtrfsSubvolume:
 			ptFeatures.Btrfs = true
 		case *Filesystem:
 			switch ent.GetFSType() {
@@ -867,6 +871,10 @@ func (pt *PartitionTable) features() partitionTableFeatures {
 			ptFeatures.Swap = true
 		case *LUKSContainer:
 			ptFeatures.LUKS = true
+		case *PartitionTable, *Partition:
+			// nothing to do
+		default:
+			panic(fmt.Errorf("unknown entity type %T", e))
 		}
 		return nil
 	}
