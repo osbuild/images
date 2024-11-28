@@ -1016,3 +1016,46 @@ func TestForEachFSTabEntity(t *testing.T) {
 		})
 	}
 }
+
+func TestForEachMountable(t *testing.T) {
+	// Use the test partition tables and check that Mountables are all
+	// visited by collecting their mountpoints.
+	// The names must match the ones in testdisk.TestPartitionTables.
+	expectedMountpoints := map[string][]string{
+		"plain":        {"/", "/boot", "/boot/efi"},
+		"plain-swap":   {"/", "/boot", "/boot/efi"},
+		"plain-noboot": {"/", "/boot/efi"},
+		"luks":         {"/", "/boot", "/boot/efi"},
+		"luks+lvm":     {"/", "/boot", "/home", "/boot/efi"},
+		"btrfs":        {"/", "/boot", "/var", "/boot/efi"},
+	}
+
+	for name := range testdisk.TestPartitionTables {
+		t.Run(name, func(t *testing.T) {
+			var mountpoints []string
+			mountpointCollectorCB := func(ent disk.Mountable, _ []disk.Entity) error {
+				mountpoints = append(mountpoints, ent.GetMountpoint())
+				return nil
+			}
+
+			require := require.New(t)
+			pt := testdisk.TestPartitionTables[name]
+
+			// print an informative failure message if a new test partition
+			// table is added and this test is not updated (instead of failing
+			// at the final Equal() check)
+			exp, ok := expectedMountpoints[name]
+			require.True(ok, "expected options not defined for test partition table %q: please update the TestNewFSTabStageOptions test", name)
+
+			err := pt.ForEachMountable(mountpointCollectorCB)
+			// the callback never returns an error, but let's check it anyway
+			// in case the foreach function ever changes to return other errors
+			require.NoError(err)
+
+			require.NotEmpty(mountpoints)
+
+			// we don't care about the order
+			require.ElementsMatch(exp, mountpoints)
+		})
+	}
+}
