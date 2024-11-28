@@ -838,6 +838,7 @@ type partitionTableFeatures struct {
 	FAT   bool
 	EXT4  bool
 	LUKS  bool
+	Swap  bool
 }
 
 // features examines all of the PartitionTable entities
@@ -862,6 +863,8 @@ func (pt *PartitionTable) features() partitionTableFeatures {
 			case "ext4":
 				ptFeatures.EXT4 = true
 			}
+		case *Swap:
+			ptFeatures.Swap = true
 		case *LUKSContainer:
 			ptFeatures.LUKS = true
 		}
