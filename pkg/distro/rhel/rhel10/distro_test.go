@@ -574,3 +574,101 @@ func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 		}
 	}
 }
+
+func TestDiskAndFilesystemCustomizationsError(t *testing.T) {
+	// simple test that checks that disk customizations are allowed
+	r8distro := rhelFamilyDistros[0].distro
+	bp := blueprint.Blueprint{
+		Customizations: &blueprint.Customizations{
+			Filesystem: []blueprint.FilesystemCustomization{
+				{
+					MinSize:    1024,
+					Mountpoint: "/home",
+				},
+			},
+			Disk: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						Type: "plain",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Mountpoint: "/",
+							Label:      "root",
+							FSType:     "ext4",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// these produce error message and are tested elsewhere
+	skipTest := map[string]bool{
+		"edge-commit":               true,
+		"edge-container":            true,
+		"edge-installer":            true,
+		"edge-simplified-installer": true,
+		"azure-eap7-rhui":           true,
+		"edge-vsphere":              true,
+		"edge-raw-image":            true,
+		"edge-ami":                  true,
+	}
+
+	for _, archName := range r8distro.ListArches() {
+		arch, _ := r8distro.GetArch(archName)
+		for _, imgTypeName := range arch.ListImageTypes() {
+			imgType, _ := arch.GetImageType(imgTypeName)
+			options := distro.ImageOptions{}
+			_, _, err := imgType.Manifest(&bp, options, nil, 0)
+			if skipTest[imgTypeName] {
+				continue
+			}
+			assert.EqualError(t, err, "partitioning customizations cannot be used with custom filesystems (mountpoints)")
+		}
+	}
+}
+
+func TestNoDiskCustomizationsNoError(t *testing.T) {
+	// simple test that checks that disk customizations are allowed
+	r8distro := rhelFamilyDistros[0].distro
+	bp := blueprint.Blueprint{
+		Customizations: &blueprint.Customizations{
+			Disk: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						Type: "plain",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Mountpoint: "/",
+							Label:      "root",
+							FSType:     "ext4",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// these produce error message and are tested elsewhere
+	skipTest := map[string]bool{
+		"edge-commit":               true,
+		"edge-container":            true,
+		"edge-installer":            true,
+		"edge-simplified-installer": true,
+		"azure-eap7-rhui":           true,
+		"edge-vsphere":              true,
+		"edge-raw-image":            true,
+		"edge-ami":                  true,
+	}
+
+	for _, archName := range r8distro.ListArches() {
+		arch, _ := r8distro.GetArch(archName)
+		for _, imgTypeName := range arch.ListImageTypes() {
+			imgType, _ := arch.GetImageType(imgTypeName)
+			options := distro.ImageOptions{}
+			_, _, err := imgType.Manifest(&bp, options, nil, 0)
+			if skipTest[imgTypeName] {
+				continue
+			}
+			assert.NoError(t, err)
+		}
+	}
+}

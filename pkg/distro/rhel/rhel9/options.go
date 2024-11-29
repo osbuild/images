@@ -124,10 +124,13 @@ func checkOptions(t *rhel.ImageType, bp *blueprint.Blueprint, options distro.Ima
 	}
 
 	mountpoints := customizations.GetFilesystems()
-
-	if mountpoints != nil && t.RPMOSTree && (t.Name() == "edge-container" || t.Name() == "edge-commit") {
-		return warnings, fmt.Errorf("Custom mountpoints are not supported for ostree types")
-	} else if mountpoints != nil && t.RPMOSTree && !(t.Name() == "edge-container" || t.Name() == "edge-commit") {
+	partitioning, err := customizations.GetPartitioning()
+	if err != nil {
+		return nil, err
+	}
+	if (mountpoints != nil || partitioning != nil) && t.RPMOSTree && (t.Name() == "edge-container" || t.Name() == "edge-commit") {
+		return warnings, fmt.Errorf("custom mountpoints and partitioning are not supported for ostree types")
+	} else if (mountpoints != nil || partitioning != nil) && t.RPMOSTree && !(t.Name() == "edge-container" || t.Name() == "edge-commit") {
 		//customization allowed for edge-raw-image,edge-ami,edge-vsphere,edge-simplified-installer
 		err := blueprint.CheckMountpointsPolicy(mountpoints, policies.OstreeMountpointPolicies)
 		if err != nil {
@@ -135,8 +138,19 @@ func checkOptions(t *rhel.ImageType, bp *blueprint.Blueprint, options distro.Ima
 		}
 	}
 
-	err := blueprint.CheckMountpointsPolicy(mountpoints, policies.MountpointPolicies)
-	if err != nil {
+	if len(mountpoints) > 0 && partitioning != nil {
+		return nil, fmt.Errorf("partitioning customizations cannot be used with custom filesystems (mountpoints)")
+	}
+
+	if err := blueprint.CheckMountpointsPolicy(mountpoints, policies.MountpointPolicies); err != nil {
+		return warnings, err
+	}
+
+	if err := blueprint.CheckDiskMountpointsPolicy(partitioning, policies.MountpointPolicies); err != nil {
+		return warnings, err
+	}
+
+	if err := partitioning.ValidateLayoutConstraints(); err != nil {
 		return warnings, err
 	}
 
