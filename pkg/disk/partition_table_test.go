@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/internal/testdisk"
 	"github.com/osbuild/images/pkg/blueprint"
@@ -2284,21 +2285,24 @@ func TestNewCustomPartitionTableErrors(t *testing.T) {
 }
 
 func TestPartitionTableFeatures(t *testing.T) {
-	type testCase struct {
-		partitionType    string
-		expectedFeatures disk.PartitionTableFeatures
-	}
-	testCases := []testCase{
-		{"plain", disk.PartitionTableFeatures{XFS: true, FAT: true}},
-		{"plain-swap", disk.PartitionTableFeatures{XFS: true, FAT: true, Swap: true}},
-		{"luks", disk.PartitionTableFeatures{XFS: true, FAT: true, LUKS: true}},
-		{"luks+lvm", disk.PartitionTableFeatures{XFS: true, FAT: true, LUKS: true, LVM: true}},
-		{"btrfs", disk.PartitionTableFeatures{XFS: true, FAT: true, Btrfs: true}},
+	require := require.New(t)
+
+	testCases := map[string]disk.PartitionTableFeatures{
+		"plain":        {XFS: true, FAT: true},
+		"plain-noboot": {XFS: true, FAT: true},
+		"plain-swap":   {XFS: true, FAT: true, Swap: true},
+		"luks":         {XFS: true, FAT: true, LUKS: true},
+		"luks+lvm":     {XFS: true, FAT: true, LUKS: true, LVM: true},
+		"btrfs":        {XFS: true, FAT: true, Btrfs: true},
 	}
 
-	for _, tc := range testCases {
-		pt := testdisk.TestPartitionTables[tc.partitionType]
-		assert.Equal(t, tc.expectedFeatures, disk.GetPartitionTableFeatures(pt))
-
+	for name := range testdisk.TestPartitionTables {
+		// print an informative failure message if a new test partition
+		// table is added and this test is not updated (instead of failing
+		// at the final Equal() check)
+		exp, ok := testCases[name]
+		require.True(ok, "expected test result not defined for test partition table %q: please update the %s test", name, t.Name())
+		pt := testdisk.TestPartitionTables[name]
+		require.Equal(exp, disk.GetPartitionTableFeatures(pt))
 	}
 }
