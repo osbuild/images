@@ -1064,7 +1064,7 @@ func TestDistro_DiskCustomizationRunsValidateLayoutConstraints(t *testing.T) {
 					Size: imgType.Size(0),
 				}
 				_, _, err := imgType.Manifest(&bp, imgOpts, nil, 0)
-				assert.EqualError(t, err, "cannot use disk customization: multiple LVM volume groups are not yet supported")
+				assert.EqualError(t, err, "multiple LVM volume groups are not yet supported")
 			})
 		}
 	}
