@@ -397,6 +397,9 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 	if err := blueprint.CheckDiskMountpointsPolicy(partitioning, policies.MountpointPolicies); err != nil {
 		return nil, err
 	}
+	if err := partitioning.ValidateLayoutConstraints(); err != nil {
+		return nil, err
+	}
 
 	if osc := customizations.GetOpenSCAP(); osc != nil {
 		supported := oscap.IsProfileAllowed(osc.ProfileID, oscapProfileAllowList)
@@ -469,14 +472,6 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 			(customizations.GetUsers() != nil || customizations.GetGroups() != nil) {
 			return nil, fmt.Errorf("iot-installer installer.kickstart.contents are not supported in combination with users or groups")
 		}
-	}
-
-	diskc, err := customizations.GetPartitioning()
-	if err != nil {
-		return nil, err
-	}
-	if err := diskc.ValidateLayoutConstraints(); err != nil {
-		return nil, fmt.Errorf("cannot use disk customization: %w", err)
 	}
 
 	return nil, nil
