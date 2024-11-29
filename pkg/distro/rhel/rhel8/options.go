@@ -111,13 +111,27 @@ func checkOptions(t *rhel.ImageType, bp *blueprint.Blueprint, options distro.Ima
 	}
 
 	mountpoints := customizations.GetFilesystems()
-
-	if mountpoints != nil && t.RPMOSTree {
-		return warnings, fmt.Errorf("Custom mountpoints are not supported for ostree types")
+	partitioning, err := customizations.GetPartitioning()
+	if err != nil {
+		return nil, err
+	}
+	if partitioning != nil {
+		return nil, fmt.Errorf("partitioning customizations are not supported on %s", t.Arch().Distro().Name())
 	}
 
-	err := blueprint.CheckMountpointsPolicy(mountpoints, policies.MountpointPolicies)
-	if err != nil {
+	if mountpoints != nil && t.RPMOSTree {
+		return warnings, fmt.Errorf("custom mountpoints are not supported for ostree types")
+	}
+
+	if err := blueprint.CheckMountpointsPolicy(mountpoints, policies.MountpointPolicies); err != nil {
+		return warnings, err
+	}
+
+	if err := partitioning.ValidateLayoutConstraints(); err != nil {
+		return warnings, err
+	}
+
+	if err := blueprint.CheckDiskMountpointsPolicy(partitioning, policies.MountpointPolicies); err != nil {
 		return warnings, err
 	}
 

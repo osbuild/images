@@ -678,7 +678,7 @@ func TestDistro_CustomFileSystemManifestError(t *testing.T) {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
 			if imgTypeName == "edge-commit" || imgTypeName == "edge-container" {
-				assert.EqualError(t, err, "Custom mountpoints are not supported for ostree types")
+				assert.EqualError(t, err, "custom mountpoints are not supported for ostree types")
 			} else if unsupported[imgTypeName] {
 				assert.Error(t, err)
 			} else {
@@ -712,7 +712,7 @@ func TestDistro_TestRootMountPoint(t *testing.T) {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
 			if imgTypeName == "edge-commit" || imgTypeName == "edge-container" {
-				assert.EqualError(t, err, "Custom mountpoints are not supported for ostree types")
+				assert.EqualError(t, err, "custom mountpoints are not supported for ostree types")
 			} else if unsupported[imgTypeName] {
 				assert.Error(t, err)
 			} else {
@@ -872,12 +872,52 @@ func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
 			if imgTypeName == "edge-commit" || imgTypeName == "edge-container" {
-				assert.EqualError(t, err, "Custom mountpoints are not supported for ostree types")
+				assert.EqualError(t, err, "custom mountpoints are not supported for ostree types")
 			} else if unsupported[imgTypeName] {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
 			}
+		}
+	}
+}
+
+func TestNoDiskCustomizationsSupported(t *testing.T) {
+	r8distro := rhelFamilyDistros[0].distro
+	bp := blueprint.Blueprint{
+		Customizations: &blueprint.Customizations{
+			Disk: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						Type: "plain",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Mountpoint: "/",
+							Label:      "root",
+							FSType:     "ext4",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// these produce a different error message and are tested elsewhere
+	skipTest := map[string]bool{
+		"edge-installer":            true,
+		"edge-simplified-installer": true,
+		"edge-raw-image":            true,
+		"azure-eap7-rhui":           true,
+	}
+
+	for _, archName := range r8distro.ListArches() {
+		arch, _ := r8distro.GetArch(archName)
+		for _, imgTypeName := range arch.ListImageTypes() {
+			imgType, _ := arch.GetImageType(imgTypeName)
+			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
+			if skipTest[imgTypeName] {
+				continue
+			}
+			assert.EqualError(t, err, fmt.Sprintf("partitioning customizations are not supported on %s", r8distro.Name()))
 		}
 	}
 }
