@@ -104,8 +104,10 @@ func TestNewFSTabStageOptions(t *testing.T) {
 	}
 	// Use the test partition tables from the disk package.
 	for name := range testdisk.TestPartitionTables {
-		t.Run(name, func(t *testing.T) {
-			require := require.New(t)
+		// use a different name for the internal testing argument so we can
+		// refer to the global test by t.Name() in the error message
+		t.Run(name, func(ts *testing.T) {
+			require := require.New(ts)
 			pt := testdisk.TestPartitionTables[name]
 
 			// math/rand is good enough in this case
@@ -118,7 +120,7 @@ func TestNewFSTabStageOptions(t *testing.T) {
 			// table is added and this test is not updated (instead of failing
 			// at the final Equal() check)
 			exp, ok := expectedOptions[name]
-			require.True(ok, "expected options not defined for test partition table %q: please update the TestNewFSTabStageOptions test", name)
+			require.True(ok, "expected test result not defined for test partition table %q: please update the %s test", name, t.Name())
 
 			options, err := NewFSTabStageOptions(&pt)
 			require.NoError(err)
