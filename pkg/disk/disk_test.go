@@ -987,22 +987,23 @@ func TestForEachFSTabEntity(t *testing.T) {
 	}
 
 	for name := range testdisk.TestPartitionTables {
-		t.Run(name, func(t *testing.T) {
-
+		// use a different name for the internal testing argument so we can
+		// refer to the global test by t.Name() in the error message
+		t.Run(name, func(ts *testing.T) {
 			var targets []string
 			targetCollectorCB := func(ent disk.FSTabEntity, _ []disk.Entity) error {
 				targets = append(targets, ent.GetFSFile())
 				return nil
 			}
 
-			require := require.New(t)
+			require := require.New(ts)
 			pt := testdisk.TestPartitionTables[name]
 
 			// print an informative failure message if a new test partition
 			// table is added and this test is not updated (instead of failing
 			// at the final Equal() check)
 			exp, ok := expectedEntityPaths[name]
-			require.True(ok, "expected options not defined for test partition table %q: please update the TestNewFSTabStageOptions test", name)
+			require.True(ok, "expected test result not defined for test partition table %q: please update the %s test", name, t.Name())
 
 			err := pt.ForEachFSTabEntity(targetCollectorCB)
 			// the callback never returns an error, but let's check it anyway
