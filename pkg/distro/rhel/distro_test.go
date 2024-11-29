@@ -29,7 +29,7 @@ func TestESP(t *testing.T) {
 
 	distro_test_common.TestESP(t, distros, func(i distro.ImageType) (*disk.PartitionTable, error) {
 		it := i.(*rhel.ImageType)
-		return it.GetPartitionTable([]blueprint.FilesystemCustomization{}, distro.ImageOptions{}, rng)
+		return it.GetPartitionTable(&blueprint.Customizations{}, distro.ImageOptions{}, rng)
 	})
 }
 

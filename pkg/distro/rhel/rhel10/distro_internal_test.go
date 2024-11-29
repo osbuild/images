@@ -181,7 +181,7 @@ func TestRhel10_NoBootPartition(t *testing.T) {
 					// and we do not support /boot on LVM, so it must be on a separate partition.
 					continue
 				}
-				pt, err := it.GetPartitionTable([]blueprint.FilesystemCustomization{}, distro.ImageOptions{}, rng)
+				pt, err := it.GetPartitionTable(&blueprint.Customizations{}, distro.ImageOptions{}, rng)
 				assert.NoError(t, err)
 				_, err = pt.GetMountpointSize("/boot")
 				require.EqualError(t, err, "cannot find mountpoint /boot")

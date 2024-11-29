@@ -180,7 +180,7 @@ func (t *ImageType) BootMode() platform.BootMode {
 }
 
 func (t *ImageType) GetPartitionTable(
-	mountpoints []blueprint.FilesystemCustomization,
+	customizations *blueprint.Customizations,
 	options distro.ImageOptions,
 	rng *rand.Rand,
 ) (*disk.PartitionTable, error) {
@@ -194,7 +194,7 @@ func (t *ImageType) GetPartitionTable(
 
 	imageSize := t.Size(options.Size)
 
-	return disk.NewPartitionTable(&basePartitionTable, mountpoints, imageSize, options.PartitioningMode, nil, rng)
+	return disk.NewPartitionTable(&basePartitionTable, customizations.GetFilesystems(), imageSize, options.PartitioningMode, nil, rng)
 }
 
 func (t *ImageType) getDefaultImageConfig() *distro.ImageConfig {

@@ -59,7 +59,7 @@ func TestEC2Partitioning(t *testing.T) {
 					require.NoError(t, err)
 
 					it := i.(*rhel.ImageType)
-					pt, err := it.GetPartitionTable([]blueprint.FilesystemCustomization{}, distro.ImageOptions{}, rng)
+					pt, err := it.GetPartitionTable(&blueprint.Customizations{}, distro.ImageOptions{}, rng)
 					require.NoError(t, err)
 
 					// x86_64 is /boot-less, check that
