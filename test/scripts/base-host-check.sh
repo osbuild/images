@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# vim: sw=4:et
 set -euo pipefail
 
 running_wait() {
@@ -78,6 +79,22 @@ get_oscap_score() {
     fi
 }
 
+check_ca_cert() {
+    serial=$(jq -r '.blueprint.customizations.cacerts.pem_certs[0]' "${config}" | openssl x509 -noout -serial | cut -d= -f 2-)
+
+    echo "📗 Checking CA cert anchor file"
+    if ! [ -e "/etc/pki/ca-trust/source/anchors/${serial}.pem" ]; then
+        echo "Anchor CA file does not exist"
+        exit 1
+    fi
+
+    echo "📗 Checking extracted CA cert file"
+    if ! [ -e "/etc/pki/ca-trust/source/extracted/pem/directory-hash/Test_CA_for_osbuild.pem.pem" ]; then
+        echo "Extracted CA file does not exist"
+        exit 1
+    fi
+}
+
 echo "❓ Checking system status"
 if ! running_wait; then
 
@@ -113,5 +130,9 @@ if (( $# > 0 )); then
     config="$1"
     if jq -e .blueprint.customizations.openscap "${config}"; then
         get_oscap_score "${config}"
+    fi
+
+    if jq -e '.blueprint.customizations.cacerts.pem_certs[0]' "${config}"; then
+        check_ca_cert "${config}"
     fi
 fi
