@@ -202,7 +202,13 @@ func TestMockResolve(t *testing.T) {
 {
   "tree": {
     "ref": "otk/ostree/test",
-    "url": "https://ostree.example.org/repo"
+    "url": "https://ostree.example.org/repo",
+    "mtls": {
+        "ca": "ca.crt",
+        "client_cert": "client.crt",
+        "client_key": "client.key"
+    },
+    "proxy": "proxy.example.com:8080"
   }
 }
 `
