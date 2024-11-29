@@ -338,7 +338,11 @@
       "ami"
     ],
     "distros": [
-      "fedora*"
+      "centos-10",
+      "centos-9",
+      "fedora*",
+      "rhel-10*",
+      "rhel-9*"
     ]
   },
   "./configs/partitioning-btrfs.json": {
@@ -354,7 +358,11 @@
       "ami"
     ],
     "distros": [
-      "fedora*"
+      "centos-10",
+      "centos-9",
+      "fedora*",
+      "rhel-10*",
+      "rhel-9*"
     ]
   }
 }
