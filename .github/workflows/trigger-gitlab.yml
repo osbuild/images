@@ -45,6 +45,8 @@ jobs:
 
       - name: Checkout branch
         id: pr_data
+        env:
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
         run: |
           PR_DATA=$(mktemp)
           # use uuid as a file terminator to avoid conflicts with data content
@@ -58,7 +60,7 @@ jobs:
             echo "pr_branch=PR-$PR" >> "$GITHUB_OUTPUT"
             git checkout -b PR-$PR
           else
-            git checkout ${{ github.event.workflow_run.head_branch }}
+            git checkout "${BRANCH}"
           fi
 
       - name: Push to GitLab
