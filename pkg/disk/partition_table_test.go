@@ -1131,11 +1131,13 @@ func TestNewCustomPartitionTable(t *testing.T) {
 
 	testCases := map[string]testCase{
 		"dos-hybrid": {
-			customizations: nil,
+			customizations: &blueprint.DiskCustomization{
+				Type: "dos", // overrides the default option
+			},
 			options: &disk.CustomPartitionTableOptions{
 				DefaultFSType:      disk.FS_XFS,
 				BootMode:           platform.BOOT_HYBRID,
-				PartitionTableType: disk.PT_DOS,
+				PartitionTableType: disk.PT_GPT,
 			},
 			expected: &disk.PartitionTable{
 				Type: disk.PT_DOS,
@@ -1580,6 +1582,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 		},
 		"plain+": {
 			customizations: &blueprint.DiskCustomization{
+				Type: "gpt", // overrides the default option
 				Partitions: []blueprint.PartitionCustomization{
 					{
 						MinSize: 50 * datasizes.MiB,
@@ -1609,7 +1612,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			options: &disk.CustomPartitionTableOptions{
 				DefaultFSType:      disk.FS_EXT4,
 				BootMode:           platform.BOOT_HYBRID,
-				PartitionTableType: disk.PT_GPT,
+				PartitionTableType: disk.PT_DOS,
 				RequiredMinSizes:   map[string]uint64{"/": 3 * datasizes.GiB},
 			},
 			expected: &disk.PartitionTable{
@@ -2266,6 +2269,12 @@ func TestNewCustomPartitionTableErrors(t *testing.T) {
 				PartitionTableType: 100,
 			},
 			errmsg: `error generating partition table: invalid partition table type enum value: 100`,
+		},
+		"bad-pt-type-in-customizations": {
+			customizations: &blueprint.DiskCustomization{
+				Type: "toucan",
+			},
+			errmsg: `error generating partition table: unknown partition table type: toucan (valid: gpt, dos)`,
 		},
 	}
 

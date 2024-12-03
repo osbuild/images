@@ -3,6 +3,7 @@
   "blueprint": {
     "customizations": {
       "disk": {
+        "type": "dos",
         "partitions": [
           {
             "mountpoint": "/data",
