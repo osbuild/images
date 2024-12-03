@@ -6,12 +6,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/ostree"
-	testrepos "github.com/osbuild/images/test/data/repositories"
 )
 
 const RandomTestSeed = 0
@@ -474,14 +472,4 @@ func TestDistro_OSTreeOptions(t *testing.T, d distro.Distro) {
 			}
 		}
 	}
-}
-
-// ListTestedDistros returns a list of distro names that are explicitly tested
-func ListTestedDistros(t *testing.T) []string {
-	testRepoRegistry, err := testrepos.New()
-	require.Nil(t, err)
-	require.NotEmpty(t, testRepoRegistry)
-	distros := testRepoRegistry.ListDistros()
-	require.NotEmpty(t, distros)
-	return distros
 }

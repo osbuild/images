@@ -13,13 +13,23 @@ import (
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/distro/distro_test_common"
 	"github.com/osbuild/images/pkg/distrofactory"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rpmmd"
+	testrepos "github.com/osbuild/images/test/data/repositories"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// listTestedDistros returns a list of distro names that are explicitly tested
+func listTestedDistros(t *testing.T) []string {
+	testRepoRegistry, err := testrepos.New()
+	require.Nil(t, err)
+	require.NotEmpty(t, testRepoRegistry)
+	distros := testRepoRegistry.ListDistros()
+	require.NotEmpty(t, distros)
+	return distros
+}
 
 // Ensure all image types report the correct names for their pipelines.
 // Each image type contains a list of build and payload pipelines. They are
@@ -45,7 +55,7 @@ func TestImageTypePipelineNames(t *testing.T) {
 
 	assert := assert.New(t)
 	distroFactory := distrofactory.NewDefault()
-	distros := distro_test_common.ListTestedDistros(t)
+	distros := listTestedDistros(t)
 	for _, distroName := range distros {
 		d := distroFactory.GetDistro(distroName)
 		for _, archName := range d.ListArches() {
@@ -361,7 +371,7 @@ func TestPipelineRepositories(t *testing.T) {
 	}
 
 	distroFactory := distrofactory.NewDefault()
-	distros := distro_test_common.ListTestedDistros(t)
+	distros := listTestedDistros(t)
 	for tName, tCase := range testCases {
 		t.Run(tName, func(t *testing.T) {
 			for _, distroName := range distros {
@@ -529,7 +539,7 @@ func TestDistro_ManifestFIPSWarning(t *testing.T) {
 	}
 
 	distroFactory := distrofactory.NewDefault()
-	distros := distro_test_common.ListTestedDistros(t)
+	distros := listTestedDistros(t)
 	for _, distroName := range distros {
 		// FIPS blueprint customization is not supported for RHEL 7 images
 		if strings.HasPrefix(distroName, "rhel-7") {
@@ -578,7 +588,7 @@ func TestOSTreeOptionsErrorForNonOSTreeImgTypes(t *testing.T) {
 	distroFactory := distrofactory.NewDefault()
 	assert.NotNil(distroFactory)
 
-	distros := distro_test_common.ListTestedDistros(t)
+	distros := listTestedDistros(t)
 	assert.NotEmpty(distros)
 
 	for _, distroName := range distros {
