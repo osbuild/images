@@ -6,10 +6,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/pkg/blueprint"
+	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/ostree"
+	"github.com/osbuild/images/pkg/platform"
 )
 
 const RandomTestSeed = 0
@@ -471,5 +474,46 @@ func TestDistro_OSTreeOptions(t *testing.T, d distro.Distro) {
 				assert.Error(err)
 			}
 		}
+	}
+}
+
+// TestESP checks whether all UEFI and hybrid images with a partition table have an ESP partition.
+// It also checks the opposite, i.e. that legacy images don't have an ESP. This test is only
+// performed on image types with a partition table, thus it doesn't run on e.g. installers and
+// ostree commits.
+// distros is a list of distros to test
+// ptFunc is a function that returns an uncustomized partition table for a given image type. This
+// proxy method is needed because the distro.ImageType interface doesn't provide a way to get a
+// partition table.
+func TestESP(t *testing.T, distros []distro.Distro, ptFunc func(i distro.ImageType) (*disk.PartitionTable, error)) {
+	for _, d := range distros {
+		for _, archName := range d.ListArches() {
+			a, err := d.GetArch(archName)
+			require.NoError(t, err)
+
+			for _, itName := range a.ListImageTypes() {
+				i, err := a.GetImageType(itName)
+				require.NoError(t, err)
+
+				// Skip image types that don't have a partition table.
+				if i.PartitionType() == disk.PT_NONE {
+					continue
+				}
+
+				t.Run(fmt.Sprintf("%s/%s/%s", d.Name(), archName, itName), func(t *testing.T) {
+					pt, err := ptFunc(i)
+					require.NoError(t, err)
+
+					switch i.BootMode() {
+					case platform.BOOT_HYBRID, platform.BOOT_UEFI:
+						require.NotNil(t, pt.FindMountable("/boot/efi"))
+					default:
+						require.Nil(t, pt.FindMountable("/boot/efi"))
+					}
+
+				})
+			}
+		}
+
 	}
 }
