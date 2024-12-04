@@ -2,7 +2,6 @@ package rhel8
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"slices"
@@ -91,14 +90,10 @@ func checkOptions(t *rhel.ImageType, bp *blueprint.Blueprint, options distro.Ima
 	// TODO(edge): directly error if these options are provided when rhel-9.5's time arrives
 	if t.Name() == "edge-commit" || t.Name() == "edge-container" {
 		if customizations.GetUsers() != nil {
-			w := fmt.Sprintf("Please note that user customizations on %q image type are deprecated and will be removed in the near future\n", t.Name())
-			log.Print(w)
-			warnings = append(warnings, w)
+			warnings = append(warnings, fmt.Sprintf("Please note that user customizations on %q image type are deprecated and will be removed in the near future\n", t.Name()))
 		}
 		if customizations.GetGroups() != nil {
-			w := fmt.Sprintf("Please note that group customizations on %q image type are deprecated and will be removed in the near future\n", t.Name())
-			log.Print(w)
-			warnings = append(warnings, w)
+			warnings = append(warnings, fmt.Sprintf("Please note that group customizations on %q image type are deprecated and will be removed in the near future\n", t.Name()))
 		}
 	}
 
@@ -185,7 +180,6 @@ func checkOptions(t *rhel.ImageType, bp *blueprint.Blueprint, options distro.Ima
 
 	if customizations.GetFIPS() && !common.IsBuildHostFIPSEnabled() {
 		w := fmt.Sprintln(common.FIPSEnabledImageWarning)
-		log.Print(w)
 		warnings = append(warnings, w)
 	}
 
