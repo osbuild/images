@@ -2,7 +2,6 @@ package rhel10
 
 import (
 	"fmt"
-	"log"
 
 	"slices"
 
@@ -91,9 +90,7 @@ func checkOptions(t *rhel.ImageType, bp *blueprint.Blueprint, options distro.Ima
 	}
 
 	if customizations.GetFIPS() && !common.IsBuildHostFIPSEnabled() {
-		w := fmt.Sprintln(common.FIPSEnabledImageWarning)
-		log.Print(w)
-		warnings = append(warnings, w)
+		warnings = append(warnings, fmt.Sprintln(common.FIPSEnabledImageWarning))
 	}
 
 	instCust, err := customizations.GetInstaller()
