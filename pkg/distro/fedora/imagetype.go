@@ -290,6 +290,8 @@ func (t *imageType) Manifest(bp *blueprint.Blueprint,
 func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOptions) ([]string, error) {
 	customizations := bp.Customizations
 
+	var warnings []string
+
 	if !t.rpmOstree && options.OSTree != nil {
 		return nil, fmt.Errorf("OSTree is not supported for %q", t.Name())
 	}
@@ -448,8 +450,7 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 	}
 
 	if customizations.GetFIPS() && !common.IsBuildHostFIPSEnabled() {
-		w := fmt.Sprintln(common.FIPSEnabledImageWarning)
-		return []string{w}, nil
+		warnings = append(warnings, fmt.Sprintln(common.FIPSEnabledImageWarning))
 	}
 
 	instCust, err := customizations.GetInstaller()
@@ -474,5 +475,5 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 		}
 	}
 
-	return nil, nil
+	return warnings, nil
 }
