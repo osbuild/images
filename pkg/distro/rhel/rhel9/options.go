@@ -31,14 +31,14 @@ func checkOptions(t *rhel.ImageType, bp *blueprint.Blueprint, options distro.Ima
 
 	if options.OSTree != nil {
 		if err := options.OSTree.Validate(); err != nil {
-			return nil, err
+			return warnings, err
 		}
 	}
 
 	if t.BootISO && t.RPMOSTree {
 		// ostree-based ISOs require a URL from which to pull a payload commit
 		if options.OSTree == nil || options.OSTree.URL == "" {
-			return nil, fmt.Errorf("boot ISO image type %q requires specifying a URL from which to retrieve the OSTree commit", t.Name())
+			return warnings, fmt.Errorf("boot ISO image type %q requires specifying a URL from which to retrieve the OSTree commit", t.Name())
 		}
 
 		if t.Name() == "edge-simplified-installer" {
