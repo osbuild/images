@@ -95,7 +95,7 @@ func (p *Partition) IsPReP() bool {
 		return false
 	}
 
-	return p.Type == "41" || p.Type == PRePartitionGUID
+	return p.Type == DosPRePID || p.Type == PRePartitionGUID
 }
 
 func (p *Partition) MarshalJSON() ([]byte, error) {
