@@ -39,6 +39,29 @@ func TestLVMVCreateMountpoint(t *testing.T) {
 	assert.Error(err)
 }
 
+func TestLVMVCreateLogicalVolumeSwap(t *testing.T) {
+	vg := &LVMVolumeGroup{
+		Name:        "root",
+		Description: "root volume group",
+	}
+	swap := &Swap{}
+	lv, err := vg.CreateLogicalVolume("", 12345, swap)
+	assert.NoError(t, err)
+	assert.Equal(t, "swaplv", lv.Name)
+	// one more
+	lv2, err := vg.CreateLogicalVolume("", 12345, swap)
+	assert.NoError(t, err)
+	assert.Equal(t, "swaplv00", lv2.Name)
+}
+
+func TestLVMVCreateLogicalVolumeWrongType(t *testing.T) {
+	vg := &LVMVolumeGroup{
+		Name: "root",
+	}
+	_, err := vg.CreateLogicalVolume("", 12345, &LUKSContainer{})
+	assert.EqualError(t, err, `could not create logical volume: no name provided and payload *disk.LUKSContainer is not mountable or swap`)
+}
+
 func TestImplementsInterfacesCompileTimeCheckLVM(t *testing.T) {
 	var _ = Container(&LVMVolumeGroup{})
 	var _ = Sizeable(&LVMLogicalVolume{})
