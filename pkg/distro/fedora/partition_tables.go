@@ -112,7 +112,7 @@ var defaultBasePartitionTables = distro.BasePartitionTableMap{
 		Partitions: []disk.Partition{
 			{
 				Size:     4 * datasizes.MebiByte,
-				Type:     "41",
+				Type:     disk.DosPRePID,
 				Bootable: true,
 			},
 			{
