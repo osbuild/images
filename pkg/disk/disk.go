@@ -75,6 +75,9 @@ const (
 
 	// Partition type ID for swap
 	DosSwapID = "82"
+
+	// Partition type ID for PRep on dos
+	DosPRePID = "41"
 )
 
 // pt type -> type -> ID mapping for convenience
