@@ -249,6 +249,13 @@ var fakePt = &disk.PartitionTable{
 				FSTabPassNo:  1,
 			},
 		},
+		{
+			Size: 2 * datasizes.GibiByte,
+			Type: disk.SwapPartitionGUID,
+			Payload: &disk.Swap{
+				Label: "swap",
+			},
+		},
 	},
 }
 
@@ -354,7 +361,8 @@ func TestGenBootupdDevicesMountsHappyLVM(t *testing.T) {
 		UEFIVendor:   "test",
 	}
 
-	fakePt := testdisk.MakeFakeLVMPartitionTable("/", "/home", "/boot/efi", "/boot")
+	fakePt := testdisk.MakeFakeLVMPartitionTable("/", "/home", "/boot/efi", "/boot", "swap")
+
 	devices, mounts, err := osbuild.GenBootupdDevicesMounts(filename, fakePt, pf)
 	require.Nil(t, err)
 	assert.Equal(t, devices, map[string]osbuild.Device{
@@ -378,6 +386,14 @@ func TestGenBootupdDevicesMountsHappyLVM(t *testing.T) {
 			Parent: "disk",
 			Options: &osbuild.LVM2LVDeviceOptions{
 				Volume:    "lv-for-/home",
+				VGPartnum: common.ToPtr(3),
+			},
+		},
+		"lv-for-swap": {
+			Type:   "org.osbuild.lvm2.lv",
+			Parent: "disk",
+			Options: &osbuild.LVM2LVDeviceOptions{
+				Volume:    "lv-for-swap",
 				VGPartnum: common.ToPtr(3),
 			},
 		},
@@ -424,5 +440,5 @@ func TestGenBootupdDevicesMountsLVM_NotMountableLV(t *testing.T) {
 
 	_, _, err := osbuild.GenBootupdDevicesMounts(filename, fakePt, pf)
 	require.Error(t, err)
-	require.Regexp(t, `expected LV payload .* to be mountable, got \*disk.LUKSContainer`, err.Error())
+	require.Regexp(t, `expected LV payload .* to be mountable or swap, got \*disk.LUKSContainer`, err.Error())
 }
