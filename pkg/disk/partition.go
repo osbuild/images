@@ -87,7 +87,7 @@ func (p *Partition) IsBIOSBoot() bool {
 		return false
 	}
 
-	return p.Type == BIOSBootPartitionGUID
+	return p.Type == BIOSBootPartitionGUID || p.Type == DosBIOSBootID
 }
 
 func (p *Partition) IsPReP() bool {
