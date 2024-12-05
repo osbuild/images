@@ -105,3 +105,44 @@ func TestImplementsInterfacesCompileTimeCheckPartition(t *testing.T) {
 	var _ = disk.Container(&disk.Partition{})
 	var _ = disk.Sizeable(&disk.Partition{})
 }
+func TestIsBIOSBoot(t *testing.T) {
+	tests := []struct {
+		name      string
+		partition *disk.Partition
+		expected  bool
+	}{
+		{
+			name:      "nil",
+			partition: nil,
+			expected:  false,
+		},
+		{
+			name: "gpt-bios-boot",
+			partition: &disk.Partition{
+				Type: disk.BIOSBootPartitionGUID,
+			},
+			expected: true,
+		},
+		{
+			name: "dos-bios-boot",
+			partition: &disk.Partition{
+				Type: disk.DosBIOSBootID,
+			},
+			expected: true,
+		},
+		{
+			name: "non-bios-boot",
+			partition: &disk.Partition{
+				Type: disk.EFISystemPartitionGUID,
+			},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.partition.IsBIOSBoot()
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
