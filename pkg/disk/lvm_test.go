@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/osbuild/images/pkg/datasizes"
 )
 
 func TestLVMVCreateMountpoint(t *testing.T) {
@@ -65,4 +67,13 @@ func TestLVMVCreateLogicalVolumeWrongType(t *testing.T) {
 func TestImplementsInterfacesCompileTimeCheckLVM(t *testing.T) {
 	var _ = Container(&LVMVolumeGroup{})
 	var _ = Sizeable(&LVMLogicalVolume{})
+}
+
+func TestLVMLogicalVolumeEnsureSize(t *testing.T) {
+	lv := &LVMLogicalVolume{
+		Size: 1024 * 1024,
+	}
+	resized := lv.EnsureSize(1024*1024 + 17)
+	assert.True(t, resized)
+	assert.Equal(t, uint64(4*datasizes.MiB), lv.Size)
 }
