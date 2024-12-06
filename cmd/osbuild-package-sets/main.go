@@ -48,10 +48,11 @@ func main() {
 
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")
-	options := distro.ImageOptions{
-		OSTree: &ostree.ImageOptions{
+	var options distro.ImageOptions
+	if image.OSTreeRef() != "" {
+		options.OSTree = &ostree.ImageOptions{
 			URL: "https://example.com", // required by some image types
-		},
+		}
 	}
 	manifest, _, err := image.Manifest(&blueprint.Blueprint{}, options, nil, 0)
 	if err != nil {
