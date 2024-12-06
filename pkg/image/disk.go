@@ -48,7 +48,7 @@ func NewDiskImage() *DiskImage {
 	}
 }
 
-func (img *DiskImage) InstantiateManifest(m *manifest.Manifest,
+func (img *DiskImage) InstantiateManifest(m manifest.Manifest,
 	repos []rpmmd.RepoConfig,
 	runner runner.Runner,
 	rng *rand.Rand) (*artifact.Artifact, error) {
