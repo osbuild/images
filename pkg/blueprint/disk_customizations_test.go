@@ -904,6 +904,22 @@ func TestPartitioningValidation(t *testing.T) {
 			},
 			expectedMsg: "invalid partitioning customizations:\nmountpoint for swap logical volume with name \"swappylv\" in volume group \"badvg\" must be empty",
 		},
+		"gpt": {
+			partitioning: &blueprint.DiskCustomization{
+				Type: "gpt",
+			},
+		},
+		"dos": {
+			partitioning: &blueprint.DiskCustomization{
+				Type: "dos",
+			},
+		},
+		"unhappy-badtype": {
+			partitioning: &blueprint.DiskCustomization{
+				Type: "toucan",
+			},
+			expectedMsg: "unknown partition table type: toucan (valid: gpt, dos)",
+		},
 	}
 
 	for name := range testCases {
@@ -1735,6 +1751,15 @@ func TestDiskCustomizationUnmarshalJSON(t *testing.T) {
 			inputTOML: `minsize = "1 GiB"`,
 			expected: &blueprint.DiskCustomization{
 				MinSize: 1 * datasizes.GiB,
+			},
+		},
+		"type": {
+			inputJSON: `{
+				"type": "gpt"
+			}`,
+			inputTOML: `type = "gpt"`,
+			expected: &blueprint.DiskCustomization{
+				Type: "gpt",
 			},
 		},
 	}

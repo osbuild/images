@@ -1232,15 +1232,24 @@ func NewCustomPartitionTable(customizations *blueprint.DiskCustomization, option
 
 	pt := &PartitionTable{}
 
-	// TODO: Handle partition table type in customizations
-	switch options.PartitionTableType {
-	case PT_GPT, PT_DOS:
-		pt.Type = options.PartitionTableType
-	case PT_NONE:
-		// default to "gpt"
+	switch customizations.Type {
+	case "dos":
+		pt.Type = PT_DOS
+	case "gpt":
 		pt.Type = PT_GPT
+	case "":
+		// partition table type not specified, determine the default
+		switch options.PartitionTableType {
+		case PT_GPT, PT_DOS:
+			pt.Type = options.PartitionTableType
+		case PT_NONE:
+			// default to "gpt"
+			pt.Type = PT_GPT
+		default:
+			return nil, fmt.Errorf("%s invalid partition table type enum value: %d", errPrefix, options.PartitionTableType)
+		}
 	default:
-		return nil, fmt.Errorf("%s invalid partition table type enum value: %d", errPrefix, options.PartitionTableType)
+		return nil, fmt.Errorf("%s invalid partition table type: %s", errPrefix, customizations.Type)
 	}
 
 	// add any partition(s) that are needed for booting (like /boot/efi)

@@ -87,7 +87,7 @@ func (p *Partition) IsBIOSBoot() bool {
 		return false
 	}
 
-	return p.Type == BIOSBootPartitionGUID
+	return p.Type == BIOSBootPartitionGUID || p.Type == DosBIOSBootID
 }
 
 func (p *Partition) IsPReP() bool {
@@ -95,7 +95,7 @@ func (p *Partition) IsPReP() bool {
 		return false
 	}
 
-	return p.Type == "41" || p.Type == PRePartitionGUID
+	return p.Type == DosPRePID || p.Type == PRePartitionGUID
 }
 
 func (p *Partition) MarshalJSON() ([]byte, error) {
