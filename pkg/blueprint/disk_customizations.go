@@ -349,7 +349,16 @@ func (p *DiskCustomization) Validate() error {
 	}
 
 	switch p.Type {
-	case "gpt", "dos", "":
+	case "gpt", "":
+	case "dos":
+		// dos/mbr only supports 4 partitions
+		// Unfortunately, at this stage it's unknown whether we will need extra
+		// partitions (bios boot, root, esp), so this check is just to catch
+		// obvious invalid customizations early. The final partition table is
+		// checked after it's created.
+		if len(p.Partitions) > 4 {
+			return fmt.Errorf("invalid partitioning customizations: \"dos\" partition table type only supports up to 4 partitions: got %d", len(p.Partitions))
+		}
 	default:
 		return fmt.Errorf("unknown partition table type: %s (valid: gpt, dos)", p.Type)
 	}
