@@ -57,6 +57,19 @@ type RepoConfig struct {
 	SSLClientCert string `json:"sslclientcert,omitempty"`
 }
 
+// A module config contains the configuration file for the module to put
+// in `/etc/dnf/modules.d/{Name}` and the failsafe file to put in
+// `/var/lib/dnf/modulefailsafe`.
+type ModuleConfig struct {
+	Name string
+
+	ModuleFilePath string
+	ModuleFileData string
+
+	FailsafeFilePath string
+	FailsafeFileData string
+}
+
 // Hash calculates an ID string that uniquely represents a repository
 // configuration.  The Name and ImageTypeTags fields are not considered in the
 // calculation.
@@ -137,12 +150,15 @@ func (pkg Package) ToPackageInfo() PackageInfo {
 
 // The inputs to depsolve, a set of packages to include and a set of packages
 // to exclude. The Repositories are used when depsolving this package set in
-// addition to the base repositories.
+// addition to the base repositories. When modules are passed they are enabled
+// before the rest of the depsolve as well. Note that we only expose enabled
+// modules and not installation modules.
 type PackageSet struct {
 	Include         []string
 	Exclude         []string
 	Repositories    []RepoConfig
 	InstallWeakDeps bool
+	EnabledModules  []string
 }
 
 // Append the Include and Exclude package list from another PackageSet and
