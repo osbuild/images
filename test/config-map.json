@@ -364,5 +364,14 @@
       "rhel-10*",
       "rhel-9*"
     ]
+  },
+  "./configs/partitioning-dos-lvm.json": {
+    "image-types": [
+      "ami"
+    ],
+    "distros": [
+      "centos-10",
+      "centos-9"
+    ]
   }
 }
