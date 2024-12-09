@@ -16,5 +16,5 @@ func (rbc *RawBootcImage) Serialize() osbuild.Pipeline {
 }
 
 func (rbc *RawBootcImage) SerializeStart(a []rpmmd.PackageSpec, b []container.Spec, c []ostree.CommitSpec, r []rpmmd.RepoConfig) {
-	rbc.serializeStart(a, b, c, r)
+	rbc.serializeStart(a, b, c, r, nil)
 }
