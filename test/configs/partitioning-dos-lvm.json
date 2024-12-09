@@ -1,16 +1,10 @@
 {
-  "name": "partitioning-lvm",
+  "name": "partitioning-dos-lvm",
   "blueprint": {
     "customizations": {
       "disk": {
-        "type": "gpt",
+        "type": "dos",
         "partitions": [
-          {
-            "mountpoint": "/data",
-            "minsize": "1 GiB",
-            "label": "data",
-            "fs_type": "ext4"
-          },
           {
             "type": "lvm",
             "name": "testvg",
