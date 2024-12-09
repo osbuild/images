@@ -14,13 +14,15 @@ import (
 )
 
 type DiskCustomization struct {
-	// TODO: Add partition table type: gpt or dos
+	// Type of the partition table: gpt or dos.
+	// Optional, the default depends on the distro and image type.
+	Type       string
 	MinSize    uint64
 	Partitions []PartitionCustomization
 }
 
 type diskCustomizationMarshaler struct {
-	// TODO: Add partition table type: gpt or dos
+	Type       string                   `json:"type,omitempty" toml:"type,omitempty"`
 	MinSize    datasizes.Size           `json:"minsize,omitempty" toml:"minsize,omitempty"`
 	Partitions []PartitionCustomization `json:"partitions,omitempty" toml:"partitions,omitempty"`
 }
@@ -30,6 +32,7 @@ func (dc *DiskCustomization) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &dcm); err != nil {
 		return err
 	}
+	dc.Type = dcm.Type
 	dc.MinSize = dcm.MinSize.Uint64()
 	dc.Partitions = dcm.Partitions
 
@@ -343,6 +346,21 @@ func (v *PartitionCustomization) UnmarshalTOML(data any) error {
 func (p *DiskCustomization) Validate() error {
 	if p == nil {
 		return nil
+	}
+
+	switch p.Type {
+	case "gpt", "":
+	case "dos":
+		// dos/mbr only supports 4 partitions
+		// Unfortunately, at this stage it's unknown whether we will need extra
+		// partitions (bios boot, root, esp), so this check is just to catch
+		// obvious invalid customizations early. The final partition table is
+		// checked after it's created.
+		if len(p.Partitions) > 4 {
+			return fmt.Errorf("invalid partitioning customizations: \"dos\" partition table type only supports up to 4 partitions: got %d", len(p.Partitions))
+		}
+	default:
+		return fmt.Errorf("unknown partition table type: %s (valid: gpt, dos)", p.Type)
 	}
 
 	mountpoints := make(map[string]bool)

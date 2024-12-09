@@ -1131,11 +1131,13 @@ func TestNewCustomPartitionTable(t *testing.T) {
 
 	testCases := map[string]testCase{
 		"dos-hybrid": {
-			customizations: nil,
+			customizations: &blueprint.DiskCustomization{
+				Type: "dos", // overrides the default option
+			},
 			options: &disk.CustomPartitionTableOptions{
 				DefaultFSType:      disk.FS_XFS,
 				BootMode:           platform.BOOT_HYBRID,
-				PartitionTableType: disk.PT_DOS,
+				PartitionTableType: disk.PT_GPT,
 			},
 			expected: &disk.PartitionTable{
 				Type: disk.PT_DOS,
@@ -1283,24 +1285,24 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			options: &disk.CustomPartitionTableOptions{
 				DefaultFSType:      disk.FS_XFS,
 				BootMode:           platform.BOOT_HYBRID,
-				PartitionTableType: disk.PT_DOS,
+				PartitionTableType: disk.PT_GPT,
 			},
 			expected: &disk.PartitionTable{
-				Type: disk.PT_DOS,
-				Size: 227 * datasizes.MiB,
+				Type: disk.PT_GPT,
+				Size: 227*datasizes.MiB + datasizes.MiB, // last part + footer
 				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
 				Partitions: []disk.Partition{
 					{
 						Start:    1 * datasizes.MiB, // header
 						Size:     1 * datasizes.MiB,
 						Bootable: true,
-						Type:     disk.DosBIOSBootID,
+						Type:     disk.BIOSBootPartitionGUID,
 						UUID:     disk.BIOSBootPartitionUUID,
 					},
 					{
 						Start: 2 * datasizes.MiB,
 						Size:  200 * datasizes.MiB,
-						Type:  disk.DosESPID,
+						Type:  disk.EFISystemPartitionGUID,
 						UUID:  disk.EFISystemPartitionUUID,
 						Payload: &disk.Filesystem{
 							Type:         "vfat",
@@ -1315,9 +1317,9 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					{
 						Start:    202 * datasizes.MiB,
 						Size:     20 * datasizes.MiB,
-						Type:     disk.DosLinuxTypeID,
+						Type:     disk.FilesystemDataGUID,
 						Bootable: false,
-						UUID:     "", // partitions on dos PTs don't have UUIDs
+						UUID:     "e2d3d0d0-de6b-48f9-b44c-e85ff044c6b1",
 						Payload: &disk.Filesystem{
 							Type:         "ext4",
 							Label:        "data",
@@ -1331,8 +1333,8 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					{
 						Start:    222 * datasizes.MiB,
 						Size:     5 * datasizes.MiB,
-						Type:     disk.DosSwapID,
-						UUID:     "", // partitions on dos PTs don't have UUIDs
+						Type:     disk.SwapPartitionGUID,
+						UUID:     "f83b8e88-3bbf-457a-ab99-c5b252c7429c",
 						Bootable: false,
 						Payload: &disk.Swap{
 							Label:        "swap",
@@ -1342,9 +1344,9 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					},
 					{
 						Start:    227 * datasizes.MiB,
-						Size:     0,
-						Type:     disk.DosLinuxTypeID,
-						UUID:     "", // partitions on dos PTs don't have UUIDs
+						Size:     1*datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
+						Type:     disk.FilesystemDataGUID,
+						UUID:     "32f3a8ae-b79e-4856-b659-c18f0dcecc77",
 						Bootable: false,
 						Payload: &disk.Filesystem{
 							Type:         "xfs",
@@ -1580,6 +1582,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 		},
 		"plain+": {
 			customizations: &blueprint.DiskCustomization{
+				Type: "gpt", // overrides the default option
 				Partitions: []blueprint.PartitionCustomization{
 					{
 						MinSize: 50 * datasizes.MiB,
@@ -1609,7 +1612,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			options: &disk.CustomPartitionTableOptions{
 				DefaultFSType:      disk.FS_EXT4,
 				BootMode:           platform.BOOT_HYBRID,
-				PartitionTableType: disk.PT_GPT,
+				PartitionTableType: disk.PT_DOS,
 				RequiredMinSizes:   map[string]uint64{"/": 3 * datasizes.GiB},
 			},
 			expected: &disk.PartitionTable{
@@ -2266,6 +2269,39 @@ func TestNewCustomPartitionTableErrors(t *testing.T) {
 				PartitionTableType: 100,
 			},
 			errmsg: `error generating partition table: invalid partition table type enum value: 100`,
+		},
+		"bad-pt-type-in-customizations": {
+			customizations: &blueprint.DiskCustomization{
+				Type: "toucan",
+			},
+			errmsg: `error generating partition table: unknown partition table type: toucan (valid: gpt, dos)`,
+		},
+		"dos-too-many-parts": {
+			customizations: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						MinSize: 20 * datasizes.MiB,
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Mountpoint: "/data",
+							Label:      "data",
+							FSType:     "ext4",
+						},
+					},
+					{
+						MinSize: 5 * datasizes.MiB,
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Label:  "swap",
+							FSType: "swap",
+						},
+					},
+				},
+			},
+			options: &disk.CustomPartitionTableOptions{
+				DefaultFSType:      disk.FS_XFS,
+				BootMode:           platform.BOOT_HYBRID,
+				PartitionTableType: disk.PT_DOS,
+			},
+			errmsg: `error generating partition table: invalid partition table: "dos" partition table type only supports up to 4 partitions: got 5 after creating the partition table with all necessary partitions`,
 		},
 	}
 

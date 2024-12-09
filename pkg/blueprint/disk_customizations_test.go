@@ -904,6 +904,72 @@ func TestPartitioningValidation(t *testing.T) {
 			},
 			expectedMsg: "invalid partitioning customizations:\nmountpoint for swap logical volume with name \"swappylv\" in volume group \"badvg\" must be empty",
 		},
+		"gpt": {
+			partitioning: &blueprint.DiskCustomization{
+				Type: "gpt",
+			},
+		},
+		"dos": {
+			partitioning: &blueprint.DiskCustomization{
+				Type: "dos",
+			},
+		},
+		"unhappy-badtype": {
+			partitioning: &blueprint.DiskCustomization{
+				Type: "toucan",
+			},
+			expectedMsg: "unknown partition table type: toucan (valid: gpt, dos)",
+		},
+		"unhappy-too-many-parts": {
+			partitioning: &blueprint.DiskCustomization{
+				Type: "dos",
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						Type: "plain",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType:     "xfs",
+							Mountpoint: "/1",
+						},
+					},
+					{
+						Type: "plain",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType:     "xfs",
+							Mountpoint: "/2",
+						},
+					},
+					{
+						Type: "plain",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType:     "xfs",
+							Mountpoint: "/3",
+						},
+					},
+					{
+						Type: "plain",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType:     "ext4",
+							Mountpoint: "/4",
+						},
+					},
+					{
+						Type: "plain",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType:     "ext4",
+							Mountpoint: "/5",
+						},
+					},
+					{
+						Type: "plain",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType:     "ext4",
+							Mountpoint: "/6",
+						},
+					},
+				},
+			},
+			expectedMsg: `invalid partitioning customizations: "dos" partition table type only supports up to 4 partitions: got 6`,
+		},
 	}
 
 	for name := range testCases {
@@ -1735,6 +1801,15 @@ func TestDiskCustomizationUnmarshalJSON(t *testing.T) {
 			inputTOML: `minsize = "1 GiB"`,
 			expected: &blueprint.DiskCustomization{
 				MinSize: 1 * datasizes.GiB,
+			},
+		},
+		"type": {
+			inputJSON: `{
+				"type": "gpt"
+			}`,
+			inputTOML: `type = "gpt"`,
+			expected: &blueprint.DiskCustomization{
+				Type: "gpt",
 			},
 		},
 	}

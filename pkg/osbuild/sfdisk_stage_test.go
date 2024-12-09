@@ -18,7 +18,6 @@ func TestNewSfdiskStage(t *testing.T) {
 	}
 
 	options := SfdiskStageOptions{
-		Label:      "gpt",
 		UUID:       "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
 		Partitions: []SfdiskPartition{partition},
 	}
@@ -32,6 +31,32 @@ func TestNewSfdiskStage(t *testing.T) {
 		Devices: devices,
 	}
 
-	actualStage := NewSfdiskStage(&options, device)
-	assert.Equal(t, expectedStage, actualStage)
+	// test with gpt
+	options.Label = "gpt"
+	actualStageGPT := NewSfdiskStage(&options, device)
+	assert.Equal(t, expectedStage, actualStageGPT)
+
+	// test again with dos
+	options.Label = "dos"
+	actualStageDOS := NewSfdiskStage(&options, device)
+	assert.Equal(t, expectedStage, actualStageDOS)
+}
+
+func TestNewSfdiskStageInvalid(t *testing.T) {
+
+	partition := SfdiskPartition{
+		// doesn't really matter
+	}
+
+	options := SfdiskStageOptions{
+		Label:      "dos",
+		UUID:       "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
+		Partitions: []SfdiskPartition{partition, partition, partition, partition, partition}, // 5 partitions
+	}
+
+	device := NewLoopbackDevice(&LoopbackDeviceOptions{Filename: "disk.raw"})
+
+	assert.Panics(t, func() {
+		NewSfdiskStage(&options, device)
+	})
 }

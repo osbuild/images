@@ -343,7 +343,7 @@ func TestGenPartitionTableIntegrationPPC(t *testing.T) {
 				Name:     "ppc-boot",
 				Bootable: true,
 				Size:     "4 MiB",
-				PartType: "41",
+				PartType: disk.DosPRePID,
 				PartUUID: "",
 			},
 			{
@@ -373,7 +373,7 @@ func TestGenPartitionTableIntegrationPPC(t *testing.T) {
 							Bootable: true,
 							Start:    1048576,
 							Size:     4194304,
-							Type:     "41",
+							Type:     disk.DosPRePID,
 						},
 						{
 							Start: 5242880,
