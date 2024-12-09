@@ -136,7 +136,7 @@ func (p *CoreOSInstaller) getPackageSpecs() []rpmmd.PackageSpec {
 	return p.packageSpecs
 }
 
-func (p *CoreOSInstaller) serializeStart(packages []rpmmd.PackageSpec, _ []container.Spec, _ []ostree.CommitSpec, rpmRepos []rpmmd.RepoConfig) {
+func (p *CoreOSInstaller) serializeStart(packages []rpmmd.PackageSpec, _ []container.Spec, _ []ostree.CommitSpec, rpmRepos []rpmmd.RepoConfig, _ []rpmmd.ModuleConfig) {
 	if len(p.packageSpecs) > 0 {
 		panic("double call to serializeStart()")
 	}

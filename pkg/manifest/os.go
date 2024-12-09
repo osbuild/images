@@ -178,6 +178,7 @@ type OS struct {
 
 	// content-related fields
 	repos            []rpmmd.RepoConfig
+	modules          []rpmmd.ModuleConfig
 	packageSpecs     []rpmmd.PackageSpec
 	containerSpecs   []container.Spec
 	ostreeParentSpec *ostree.CommitSpec
@@ -376,13 +377,15 @@ func (p *OS) getContainerSpecs() []container.Spec {
 	return p.containerSpecs
 }
 
-func (p *OS) serializeStart(packages []rpmmd.PackageSpec, containers []container.Spec, commits []ostree.CommitSpec, rpmRepos []rpmmd.RepoConfig) {
+func (p *OS) serializeStart(packages []rpmmd.PackageSpec, containers []container.Spec, commits []ostree.CommitSpec, rpmRepos []rpmmd.RepoConfig, modules []rpmmd.ModuleConfig) {
 	if len(p.packageSpecs) > 0 {
 		panic("double call to serializeStart()")
 	}
 
 	p.packageSpecs = packages
 	p.containerSpecs = containers
+	p.modules = modules
+
 	if len(commits) > 0 {
 		if len(commits) > 1 {
 			panic("pipeline supports at most one ostree commit")
@@ -404,6 +407,7 @@ func (p *OS) serializeEnd() {
 	p.kernelVer = ""
 	p.packageSpecs = nil
 	p.containerSpecs = nil
+	p.modules = nil
 	p.ostreeParentSpec = nil
 }
 

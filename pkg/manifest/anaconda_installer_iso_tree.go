@@ -154,7 +154,7 @@ func (p *AnacondaInstallerISOTree) getBuildPackages(_ Distro) []string {
 	return packages
 }
 
-func (p *AnacondaInstallerISOTree) serializeStart(_ []rpmmd.PackageSpec, containers []container.Spec, commits []ostree.CommitSpec, _ []rpmmd.RepoConfig) {
+func (p *AnacondaInstallerISOTree) serializeStart(_ []rpmmd.PackageSpec, containers []container.Spec, commits []ostree.CommitSpec, _ []rpmmd.RepoConfig, _ []rpmmd.ModuleConfig) {
 	if p.ostreeCommitSpec != nil || p.containerSpec != nil {
 		panic("double call to serializeStart()")
 	}
