@@ -18,7 +18,6 @@ func TestNewSfdiskStage(t *testing.T) {
 	}
 
 	options := SfdiskStageOptions{
-		Label:      "gpt",
 		UUID:       "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
 		Partitions: []SfdiskPartition{partition},
 	}
@@ -32,6 +31,13 @@ func TestNewSfdiskStage(t *testing.T) {
 		Devices: devices,
 	}
 
-	actualStage := NewSfdiskStage(&options, device)
-	assert.Equal(t, expectedStage, actualStage)
+	// test with gpt
+	options.Label = "gpt"
+	actualStageGPT := NewSfdiskStage(&options, device)
+	assert.Equal(t, expectedStage, actualStageGPT)
+
+	// test again with dos
+	options.Label = "dos"
+	actualStageDOS := NewSfdiskStage(&options, device)
+	assert.Equal(t, expectedStage, actualStageDOS)
 }
