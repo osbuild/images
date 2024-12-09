@@ -1292,6 +1292,16 @@ func NewCustomPartitionTable(customizations *blueprint.DiskCustomization, option
 	pt.relayout(customizations.MinSize)
 	pt.GenerateUUIDs(rng)
 
+	// One thing not caught by the customization validation is if a final "dos"
+	// partition table has more than 4 partitions. This is not possible to
+	// predict with customizations alone because it depends on the boot type
+	// (which comes from the image type) which controls automatic partition
+	// creation. We should therefore always check the final partition table for
+	// this rule.
+	if pt.Type == PT_DOS && len(pt.Partitions) > 4 {
+		return nil, fmt.Errorf("%s invalid partition table: \"dos\" partition table type only supports up to 4 partitions: got %d after creating the partition table with all necessary partitions", errPrefix, len(pt.Partitions))
+	}
+
 	return pt, nil
 }
 
