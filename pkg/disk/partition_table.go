@@ -755,7 +755,7 @@ func (pt *PartitionTable) ensureLVM() error {
 		if pt.Type == PT_GPT {
 			part.Type = LVMPartitionGUID
 		} else {
-			part.Type = "8e"
+			part.Type = DosLVMTypeID
 		}
 
 	} else {
