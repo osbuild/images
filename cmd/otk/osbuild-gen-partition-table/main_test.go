@@ -497,7 +497,7 @@ func TestGenPartitionTableCustomizationExtraMp(t *testing.T) {
 						{
 							Start: 2148532224,
 							Size:  13744734208,
-							Type:  "8e",
+							Type:  disk.DosLVMTypeID,
 							Payload: &disk.LVMVolumeGroup{
 								Name:        "rootvg",
 								Description: "created via lvm2 and osbuild",
