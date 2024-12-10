@@ -175,7 +175,7 @@ func makePartitionTableFromOtkInput(input *Input) (*disk.PartitionTable, error) 
 				part.UUID = disk.EFISystemPartitionUUID
 			case otkdisk.PartTypeDOS:
 				part.Bootable = true
-				part.Type = disk.DosFat16B
+				part.Type = disk.FAT16BDOSID
 			default:
 				return nil, fmt.Errorf("unsupported partition type: %v", input)
 			}

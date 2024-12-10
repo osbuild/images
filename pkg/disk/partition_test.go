@@ -126,7 +126,7 @@ func TestIsBIOSBoot(t *testing.T) {
 		{
 			name: "dos-bios-boot",
 			partition: &disk.Partition{
-				Type: disk.DosBIOSBootID,
+				Type: disk.BIOSBootPartitionDOSID,
 			},
 			expected: true,
 		},

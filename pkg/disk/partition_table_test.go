@@ -148,7 +148,7 @@ func TestEnsureRootFilesystem(t *testing.T) {
 					{
 						Start:    0,
 						Size:     0,
-						Type:     disk.DosLinuxTypeID,
+						Type:     disk.FilesystemLinuxDOSID,
 						Bootable: false,
 						UUID:     "",
 						Payload: &disk.Filesystem{
@@ -232,7 +232,7 @@ func TestEnsureRootFilesystem(t *testing.T) {
 					{
 						Start:    0,
 						Size:     0,
-						Type:     disk.DosLinuxTypeID,
+						Type:     disk.FilesystemLinuxDOSID,
 						Bootable: false,
 						UUID:     "",
 						Payload: &disk.Filesystem{
@@ -764,7 +764,7 @@ func TestAddBootPartition(t *testing.T) {
 					{
 						Start:    0,
 						Size:     512 * datasizes.MiB,
-						Type:     disk.DosLinuxTypeID,
+						Type:     disk.FilesystemLinuxDOSID,
 						Bootable: false,
 						UUID:     "",
 						Payload: &disk.Filesystem{
@@ -848,7 +848,7 @@ func TestAddBootPartition(t *testing.T) {
 					{
 						Start:    0,
 						Size:     512 * datasizes.MiB,
-						Type:     disk.DosLinuxTypeID,
+						Type:     disk.FilesystemLinuxDOSID,
 						Bootable: false,
 						UUID:     "",
 						Payload: &disk.Filesystem{
@@ -972,7 +972,7 @@ func TestAddPartitionsForBootMode(t *testing.T) {
 						Bootable: true,
 						Start:    0,
 						Size:     1 * datasizes.MiB,
-						Type:     disk.DosBIOSBootID,
+						Type:     disk.BIOSBootPartitionDOSID,
 						UUID:     disk.BIOSBootPartitionUUID,
 					},
 				},
@@ -1011,7 +1011,7 @@ func TestAddPartitionsForBootMode(t *testing.T) {
 					{
 						Start: 0 * datasizes.MiB,
 						Size:  200 * datasizes.MiB,
-						Type:  disk.DosESPID,
+						Type:  disk.EFISystemPartitionDOSID,
 						UUID:  disk.EFISystemPartitionUUID,
 						Payload: &disk.Filesystem{
 							Type:         "vfat",
@@ -1064,12 +1064,12 @@ func TestAddPartitionsForBootMode(t *testing.T) {
 					{
 						Size:     1 * datasizes.MiB,
 						Bootable: true,
-						Type:     disk.DosBIOSBootID,
+						Type:     disk.BIOSBootPartitionDOSID,
 						UUID:     disk.BIOSBootPartitionUUID,
 					},
 					{
 						Size: 200 * datasizes.MiB,
-						Type: disk.DosESPID,
+						Type: disk.EFISystemPartitionDOSID,
 						UUID: disk.EFISystemPartitionUUID,
 						Payload: &disk.Filesystem{
 							Type:         "vfat",
@@ -1148,13 +1148,13 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						Start:    1 * datasizes.MiB, // header
 						Bootable: true,
 						Size:     1 * datasizes.MiB,
-						Type:     disk.DosBIOSBootID,
+						Type:     disk.BIOSBootPartitionDOSID,
 						UUID:     disk.BIOSBootPartitionUUID,
 					},
 					{
 						Start: 2 * datasizes.MiB,
 						Size:  200 * datasizes.MiB,
-						Type:  disk.DosESPID,
+						Type:  disk.EFISystemPartitionDOSID,
 						UUID:  disk.EFISystemPartitionUUID,
 						Payload: &disk.Filesystem{
 							Type:         "vfat",
@@ -1169,7 +1169,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					{
 						Start:    202 * datasizes.MiB,
 						Size:     0,
-						Type:     disk.DosLinuxTypeID,
+						Type:     disk.FilesystemLinuxDOSID,
 						Bootable: false,
 						Payload: &disk.Filesystem{
 							Type:         "xfs",
@@ -1209,13 +1209,13 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						Start:    1 * datasizes.MiB, // header
 						Size:     1 * datasizes.MiB,
 						Bootable: true,
-						Type:     disk.DosBIOSBootID,
+						Type:     disk.BIOSBootPartitionDOSID,
 						UUID:     disk.BIOSBootPartitionUUID,
 					},
 					{
 						Start: 2 * datasizes.MiB,
 						Size:  200 * datasizes.MiB,
-						Type:  disk.DosESPID,
+						Type:  disk.EFISystemPartitionDOSID,
 						UUID:  disk.EFISystemPartitionUUID,
 						Payload: &disk.Filesystem{
 							Type:         "vfat",
@@ -1230,7 +1230,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					{
 						Start:    202 * datasizes.MiB,
 						Size:     20 * datasizes.MiB,
-						Type:     disk.DosLinuxTypeID,
+						Type:     disk.FilesystemLinuxDOSID,
 						Bootable: false,
 						UUID:     "", // partitions on dos PTs don't have UUIDs
 						Payload: &disk.Filesystem{
@@ -1246,7 +1246,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					{
 						Start:    222 * datasizes.MiB,
 						Size:     0,
-						Type:     disk.DosLinuxTypeID,
+						Type:     disk.FilesystemLinuxDOSID,
 						UUID:     "", // partitions on dos PTs don't have UUIDs
 						Bootable: false,
 						Payload: &disk.Filesystem{
@@ -1468,13 +1468,13 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						Start:    1 * datasizes.MiB, // header
 						Size:     1 * datasizes.MiB,
 						Bootable: true,
-						Type:     disk.DosBIOSBootID,
+						Type:     disk.BIOSBootPartitionDOSID,
 						UUID:     disk.BIOSBootPartitionUUID,
 					},
 					{
 						Start:    2 * datasizes.MiB,
 						Size:     20 * datasizes.MiB,
-						Type:     disk.DosLinuxTypeID,
+						Type:     disk.FilesystemLinuxDOSID,
 						Bootable: false,
 						UUID:     "", // partitions on dos PTs don't have UUIDs
 						Payload: &disk.Filesystem{
@@ -1490,7 +1490,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					{
 						Start:    22 * datasizes.MiB,
 						Size:     0,
-						Type:     disk.DosLinuxTypeID,
+						Type:     disk.FilesystemLinuxDOSID,
 						UUID:     "", // partitions on dos PTs don't have UUIDs
 						Bootable: false,
 						Payload: &disk.Filesystem{
@@ -1532,7 +1532,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					{
 						Start: 1 * datasizes.MiB,
 						Size:  200 * datasizes.MiB,
-						Type:  disk.DosESPID,
+						Type:  disk.EFISystemPartitionDOSID,
 						UUID:  disk.EFISystemPartitionUUID,
 						Payload: &disk.Filesystem{
 							Type:         "vfat",
@@ -1547,7 +1547,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					{
 						Start:    201 * datasizes.MiB,
 						Size:     20 * datasizes.MiB,
-						Type:     disk.DosLinuxTypeID,
+						Type:     disk.FilesystemLinuxDOSID,
 						Bootable: false,
 						UUID:     "", // partitions on dos PTs don't have UUIDs
 						Payload: &disk.Filesystem{
@@ -1563,7 +1563,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					{
 						Start:    221 * datasizes.MiB,
 						Size:     0,
-						Type:     disk.DosLinuxTypeID,
+						Type:     disk.FilesystemLinuxDOSID,
 						UUID:     "", // partitions on dos PTs don't have UUIDs
 						Bootable: false,
 						Payload: &disk.Filesystem{
@@ -1607,13 +1607,13 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						Start:    1 * datasizes.MiB, // header
 						Size:     1 * datasizes.MiB,
 						Bootable: true,
-						Type:     disk.DosBIOSBootID,
+						Type:     disk.BIOSBootPartitionDOSID,
 						UUID:     disk.BIOSBootPartitionUUID,
 					},
 					{
 						Start: 2 * datasizes.MiB,
 						Size:  200 * datasizes.MiB,
-						Type:  disk.DosESPID,
+						Type:  disk.EFISystemPartitionDOSID,
 						UUID:  disk.EFISystemPartitionUUID,
 						Payload: &disk.Filesystem{
 							Type:         "vfat",
@@ -1628,7 +1628,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					{
 						Start:    202 * datasizes.MiB,
 						Size:     20 * datasizes.MiB,
-						Type:     disk.DosLinuxTypeID,
+						Type:     disk.FilesystemLinuxDOSID,
 						Bootable: false,
 						UUID:     "", // partitions on dos PTs don't have UUIDs
 						Payload: &disk.Filesystem{
@@ -1644,7 +1644,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					{
 						Start:    222 * datasizes.MiB,
 						Size:     3 * datasizes.GiB,
-						Type:     disk.DosLinuxTypeID,
+						Type:     disk.FilesystemLinuxDOSID,
 						UUID:     "", // partitions on dos PTs don't have UUIDs
 						Bootable: false,
 						Payload: &disk.Filesystem{
@@ -1832,13 +1832,13 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						Start:    1 * datasizes.MiB, // header
 						Size:     1 * datasizes.MiB,
 						Bootable: true,
-						Type:     disk.DosBIOSBootID,
+						Type:     disk.BIOSBootPartitionDOSID,
 						UUID:     disk.BIOSBootPartitionUUID,
 					},
 					{
 						Start: 2 * datasizes.MiB,
 						Size:  200 * datasizes.MiB,
-						Type:  disk.DosESPID,
+						Type:  disk.EFISystemPartitionDOSID,
 						UUID:  disk.EFISystemPartitionUUID,
 						Payload: &disk.Filesystem{
 							Type:         "vfat",
@@ -1853,7 +1853,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					{
 						Start:    202 * datasizes.MiB,
 						Size:     512 * datasizes.MiB,
-						Type:     disk.DosLinuxTypeID,
+						Type:     disk.FilesystemLinuxDOSID,
 						UUID:     "",
 						Bootable: false,
 						Payload: &disk.Filesystem{
@@ -1869,7 +1869,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					{
 						Start:    714 * datasizes.MiB,
 						Size:     200 * datasizes.MiB, // the sum of the LVs (rounded to the next 4 MiB extent)
-						Type:     disk.DosLVMTypeID,
+						Type:     disk.LVMPartitionDOSID,
 						UUID:     "",
 						Bootable: false,
 						Payload: &disk.LVMVolumeGroup{
@@ -2267,13 +2267,13 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						Start:    1 * datasizes.MiB, // header
 						Size:     1 * datasizes.MiB,
 						Bootable: true,
-						Type:     disk.DosBIOSBootID,
+						Type:     disk.BIOSBootPartitionDOSID,
 						UUID:     disk.BIOSBootPartitionUUID,
 					},
 					{
 						Start: 2 * datasizes.MiB, // header
 						Size:  200 * datasizes.MiB,
-						Type:  disk.DosESPID,
+						Type:  disk.EFISystemPartitionDOSID,
 						UUID:  disk.EFISystemPartitionUUID,
 						Payload: &disk.Filesystem{
 							Type:         "vfat",
@@ -2288,7 +2288,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					{
 						Start:    202 * datasizes.MiB,
 						Size:     512 * datasizes.MiB,
-						Type:     disk.DosLinuxTypeID,
+						Type:     disk.FilesystemLinuxDOSID,
 						UUID:     "",
 						Bootable: false,
 						Payload: &disk.Filesystem{
@@ -2304,7 +2304,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					{
 						Start: 714 * datasizes.MiB,
 						Size:  230 * datasizes.MiB,
-						Type:  disk.DosLinuxTypeID,
+						Type:  disk.FilesystemLinuxDOSID,
 						UUID:  "",
 						Payload: &disk.Btrfs{
 							UUID: "fb180daf-48a7-4ee0-b10d-394651850fd4",

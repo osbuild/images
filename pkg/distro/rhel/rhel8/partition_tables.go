@@ -91,7 +91,7 @@ func defaultBasePartitionTables(t *rhel.ImageType) (disk.PartitionTable, bool) {
 			Partitions: []disk.Partition{
 				{
 					Size:     4 * datasizes.MebiByte,
-					Type:     disk.DosPRePID,
+					Type:     disk.PRepPartitionDOSID,
 					Bootable: true,
 				},
 				{
