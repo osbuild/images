@@ -1275,7 +1275,9 @@ func NewCustomPartitionTable(customizations *blueprint.DiskCustomization, option
 				return nil, fmt.Errorf("%s %w", errPrefix, err)
 			}
 		case "btrfs":
-			addBtrfsPartition(pt, part)
+			if err := addBtrfsPartition(pt, part); err != nil {
+				return nil, fmt.Errorf("%s %w", errPrefix, err)
+			}
 		default:
 			return nil, fmt.Errorf("%s invalid partition type: %s", errPrefix, part.Type)
 		}
@@ -1406,8 +1408,12 @@ func addLVMPartition(pt *PartitionTable, partition blueprint.PartitionCustomizat
 	}
 
 	// create partition for volume group
+	partType, err := getPartitionTypeIDfor(pt.Type, "lvm")
+	if err != nil {
+		return fmt.Errorf("error creating lvm partition %q: %w", vgname, err)
+	}
 	newpart := Partition{
-		Type:     LVMPartitionGUID,
+		Type:     partType,
 		Size:     partition.MinSize,
 		Bootable: false,
 		Payload:  newvg,
@@ -1416,7 +1422,7 @@ func addLVMPartition(pt *PartitionTable, partition blueprint.PartitionCustomizat
 	return nil
 }
 
-func addBtrfsPartition(pt *PartitionTable, partition blueprint.PartitionCustomization) {
+func addBtrfsPartition(pt *PartitionTable, partition blueprint.PartitionCustomization) error {
 	subvols := make([]BtrfsSubvolume, len(partition.Subvolumes))
 	for idx, subvol := range partition.Subvolumes {
 		newsubvol := BtrfsSubvolume{
@@ -1431,14 +1437,19 @@ func addBtrfsPartition(pt *PartitionTable, partition blueprint.PartitionCustomiz
 	}
 
 	// create partition for btrfs volume
+	partType, err := getPartitionTypeIDfor(pt.Type, "data")
+	if err != nil {
+		return fmt.Errorf("error creating btrfs partition: %w", err)
+	}
 	newpart := Partition{
-		Type:     FilesystemDataGUID,
+		Type:     partType,
 		Bootable: false,
 		Payload:  newvol,
 		Size:     partition.MinSize,
 	}
 
 	pt.Partitions = append(pt.Partitions, newpart)
+	return nil
 }
 
 // Determine if a boot partition is needed based on the customizations. A boot

@@ -67,11 +67,17 @@ const (
 	// Partition type ID for any native Linux filesystem on dos
 	DosLinuxTypeID = "83"
 
-	// Partition type ID for BIOS boot partition on dos
-	DosBIOSBootID = "ef02"
+	// Partition type ID for LVM on dos
+	DosLVMTypeID = "8e"
+
+	// Partition type ID for BIOS boot partition on dos.
+	// Type ID is for 'empty'.
+	// TODO: drop this completely when we convert the bios BOOT space to a
+	// partitionless gap/offset.
+	DosBIOSBootID = "00"
 
 	// Partition type ID for ESP on dos
-	DosESPID = "ef00"
+	DosESPID = "ef"
 
 	// Partition type ID for swap
 	DosSwapID = "82"
@@ -87,7 +93,7 @@ var idMap = map[PartitionTableType]map[string]string{
 		"boot": DosLinuxTypeID,
 		"data": DosLinuxTypeID,
 		"esp":  DosESPID,
-		"lvm":  DosLinuxTypeID,
+		"lvm":  DosLVMTypeID,
 		"swap": DosSwapID,
 	},
 	PT_GPT: {
