@@ -30,7 +30,7 @@ type AnacondaInstallerISOTree struct {
 	PartitionTable *disk.PartitionTable
 
 	anacondaPipeline *AnacondaInstaller
-	rootfsPipeline   *ISORootfsImg
+	rootfsPipeline   *ISORootfsImg // May be nil for plain squashfs rootfs
 	bootTreePipeline *EFIBootTree
 
 	// The path where the payload (tarball, ostree repo, or container) will be stored.
@@ -68,7 +68,7 @@ type AnacondaInstallerISOTree struct {
 func NewAnacondaInstallerISOTree(buildPipeline Build, anacondaPipeline *AnacondaInstaller, rootfsPipeline *ISORootfsImg, bootTreePipeline *EFIBootTree) *AnacondaInstallerISOTree {
 
 	// the three pipelines should all belong to the same manifest
-	if anacondaPipeline.Manifest() != rootfsPipeline.Manifest() ||
+	if (rootfsPipeline != nil && anacondaPipeline.Manifest() != rootfsPipeline.Manifest()) ||
 		anacondaPipeline.Manifest() != bootTreePipeline.Manifest() {
 		panic("pipelines from different manifests")
 	}
@@ -278,7 +278,14 @@ func (p *AnacondaInstallerISOTree) serialize() osbuild.Pipeline {
 		}
 	}
 
-	squashfsStage := osbuild.NewSquashfsStage(&squashfsOptions, p.rootfsPipeline.Name())
+	// The iso's rootfs can either be an ext4 filesystem compressed with squashfs, or
+	// a squashfs of the plain directory tree
+	var squashfsStage *osbuild.Stage
+	if p.rootfsPipeline != nil {
+		squashfsStage = osbuild.NewSquashfsStage(&squashfsOptions, p.rootfsPipeline.Name())
+	} else {
+		squashfsStage = osbuild.NewSquashfsStage(&squashfsOptions, p.anacondaPipeline.Name())
+	}
 	pipeline.AddStage(squashfsStage)
 
 	if p.ISOLinux {
