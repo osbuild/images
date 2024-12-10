@@ -343,7 +343,7 @@ func TestGenPartitionTableIntegrationPPC(t *testing.T) {
 				Name:     "ppc-boot",
 				Bootable: true,
 				Size:     "4 MiB",
-				PartType: disk.DosPRePID,
+				PartType: disk.PRepPartitionDOSID,
 				PartUUID: "",
 			},
 			{
@@ -373,7 +373,7 @@ func TestGenPartitionTableIntegrationPPC(t *testing.T) {
 							Bootable: true,
 							Start:    1048576,
 							Size:     4194304,
-							Type:     disk.DosPRePID,
+							Type:     disk.PRepPartitionDOSID,
 						},
 						{
 							Start: 5242880,
@@ -497,7 +497,7 @@ func TestGenPartitionTableCustomizationExtraMp(t *testing.T) {
 						{
 							Start: 2148532224,
 							Size:  13744734208,
-							Type:  disk.DosLVMTypeID,
+							Type:  disk.LVMPartitionDOSID,
 							Payload: &disk.LVMVolumeGroup{
 								Name:        "rootvg",
 								Description: "created via lvm2 and osbuild",
