@@ -470,7 +470,7 @@ func (p *PartitionCustomization) validatePlain(mountpoints map[string]bool) erro
 	}
 	// TODO: allow empty fstype with default from distro
 	if !slices.Contains(validPlainFSTypes, p.FSType) {
-		return fmt.Errorf("unknown or invalid filesystem type for mountpoint %q: %s", p.Mountpoint, p.FSType)
+		return fmt.Errorf("unknown or invalid filesystem type (fs_type) for mountpoint %q: %s", p.Mountpoint, p.FSType)
 	}
 	if err := validateFilesystemType(p.Mountpoint, p.FSType); err != nil {
 		return err
@@ -523,7 +523,7 @@ func (p *PartitionCustomization) validateLVM(mountpoints, vgnames map[string]boo
 
 		// TODO: allow empty fstype with default from distro
 		if !slices.Contains(validPlainFSTypes, lv.FSType) {
-			return fmt.Errorf("unknown or invalid filesystem type for logical volume with mountpoint %q: %s", lv.Mountpoint, lv.FSType)
+			return fmt.Errorf("unknown or invalid filesystem type (fs_type) for logical volume with mountpoint %q: %s", lv.Mountpoint, lv.FSType)
 		}
 	}
 	return nil

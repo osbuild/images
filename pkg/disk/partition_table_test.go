@@ -2235,7 +2235,7 @@ func TestNewCustomPartitionTableErrors(t *testing.T) {
 			options: nil,
 			// NOTE: this error message will change when we allow empty fs_type
 			// in customizations but with a requirement to define a default
-			errmsg: "error generating partition table: invalid partitioning customizations:\nunknown or invalid filesystem type for mountpoint \"/\": ",
+			errmsg: "error generating partition table: invalid partitioning customizations:\nunknown or invalid filesystem type (fs_type) for mountpoint \"/\": ",
 		},
 		"lvm-notype-nodefault": {
 			customizations: &blueprint.DiskCustomization{
@@ -2259,7 +2259,7 @@ func TestNewCustomPartitionTableErrors(t *testing.T) {
 			options: nil,
 			// NOTE: this error message will change when we allow empty fs_type
 			// in customizations but with a requirement to define a default
-			errmsg: "error generating partition table: invalid partitioning customizations:\nunknown or invalid filesystem type for logical volume with mountpoint \"/\": ",
+			errmsg: "error generating partition table: invalid partitioning customizations:\nunknown or invalid filesystem type (fs_type) for logical volume with mountpoint \"/\": ",
 		},
 		"bad-pt-type": {
 			options: &disk.CustomPartitionTableOptions{
