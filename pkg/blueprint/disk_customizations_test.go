@@ -212,7 +212,7 @@ func TestPartitioningValidation(t *testing.T) {
 					},
 				},
 			},
-			expectedMsg: "invalid partitioning customizations:\nunknown or invalid filesystem type for mountpoint \"/home\": ntfs",
+			expectedMsg: "invalid partitioning customizations:\nunknown or invalid filesystem type (fs_type) for mountpoint \"/home\": ntfs",
 		},
 		"unhappy-plain-badfstype-boot": {
 			partitioning: &blueprint.DiskCustomization{
@@ -243,7 +243,7 @@ func TestPartitioningValidation(t *testing.T) {
 					},
 				},
 			},
-			expectedMsg: "invalid partitioning customizations:\nunknown or invalid filesystem type for mountpoint \"/boot\": zfs",
+			expectedMsg: "invalid partitioning customizations:\nunknown or invalid filesystem type (fs_type) for mountpoint \"/boot\": zfs",
 		},
 		"unhappy-plain-badfstype-efi": {
 			partitioning: &blueprint.DiskCustomization{
@@ -823,7 +823,7 @@ func TestPartitioningValidation(t *testing.T) {
 					},
 				},
 			},
-			expectedMsg: "invalid partitioning customizations:\nunknown or invalid filesystem type for logical volume with mountpoint \"/var/log\": btrfs",
+			expectedMsg: "invalid partitioning customizations:\nunknown or invalid filesystem type (fs_type) for logical volume with mountpoint \"/var/log\": btrfs",
 		},
 		"unhappy-lv-notype": {
 			partitioning: &blueprint.DiskCustomization{
@@ -842,7 +842,7 @@ func TestPartitioningValidation(t *testing.T) {
 					},
 				},
 			},
-			expectedMsg: "invalid partitioning customizations:\nunknown or invalid filesystem type for logical volume with mountpoint \"/var/log\": ",
+			expectedMsg: "invalid partitioning customizations:\nunknown or invalid filesystem type (fs_type) for logical volume with mountpoint \"/var/log\": ",
 		},
 		"unhappy-bad-part-type": {
 			partitioning: &blueprint.DiskCustomization{
