@@ -11,7 +11,7 @@ import (
 
 type ImageKind interface {
 	Name() string
-	InstantiateManifest(m *manifest.Manifest, repos []rpmmd.RepoConfig, runner runner.Runner, rng *rand.Rand) (*artifact.Artifact, error)
+	InstantiateManifest(m manifest.Manifest, repos []rpmmd.RepoConfig, runner runner.Runner, rng *rand.Rand) (*artifact.Artifact, error)
 }
 
 type Base struct {
