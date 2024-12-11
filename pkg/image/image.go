@@ -27,3 +27,10 @@ func NewBase(name string) Base {
 		name: name,
 	}
 }
+
+type RootfsType uint64
+
+const ( // Rootfs type enum
+	SquashfsExt4Rootfs RootfsType = iota
+	SquashfsRootfs
+)
