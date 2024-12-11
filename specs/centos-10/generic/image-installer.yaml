@@ -1,0 +1,56 @@
+spec:
+  packages:
+    - "@core"
+    - chrony
+    - cockpit-system
+    - cockpit-ws
+    - dnf-utils
+    - dosfstools
+    - firewalld
+    - iwl1000-firmware
+    - iwl100-firmware
+    - iwl105-firmware
+    - iwl135-firmware
+    - iwl2000-firmware
+    - iwl2030-firmware
+    - iwl3160-firmware
+    - iwl5000-firmware
+    - iwl5150-firmware
+    - iwl6000g2a-firmware
+    - iwl6000g2b-firmware
+    - iwl6050-firmware
+    - iwl7260-firmware
+    - lvm2
+    - net-tools
+    - nfs-utils
+    - oddjob
+    - oddjob-mkhomedir
+    - policycoreutils
+    - psmisc
+    - python3-jsonschema
+    - qemu-guest-agent
+    - redhat-release
+    - redhat-release-eula
+    - rsync
+    - tar
+    - tcpdump
+    - tuned
+
+    # This was pulled from distroBuildPackageSet for some reason
+    - dnf
+    - dosfstools
+    - e2fsprogs
+    - glibc
+    - lorax-templates-generic
+    - lorax-templates-rhel
+    - lvm2
+    - policycoreutils
+    - python3-iniparse
+    - qemu-img
+    - selinux-policy-targeted
+    - systemd
+    - tar
+    - xfsprogs
+    - xz
+  exclude_packages:
+    - dracut-config-rescue
