@@ -3,7 +3,8 @@
     "rngseed": 1,
     "bootc-image-builder": {
       "ref": "quay.io/centos-bootc/bootc-image-builder@sha256:9893e7209e5f449b86ababfd2ee02a58cca2e5990f77b06c3539227531fc8120"
-    }
+    },
+    "gitlab-ci-runner": "aws/fedora-41"
   },
   "centos-8": {
     "dependencies": {
@@ -113,19 +114,36 @@
     },
     "repos": [
       {
-        "file": "/etc/yum.repos.d/branched.repo",
+        "file": "/etc/yum.repos.d/fedora.repo",
         "x86_64": [
           {
             "title": "fedora",
             "name": "fedora",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f41/f41-x86_64-branched-20241101"
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f41/f41-x86_64-fedora-20241107"
           }
         ],
         "aarch64": [
           {
             "title": "fedora",
             "name": "fedora",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f41/f41-x86_64-branched-20241101"
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f41/f41-aarch64-fedora-20241107"
+          }
+        ]
+      },
+      {
+        "file": "/etc/yum.repos.d/fedora-updates.repo",
+        "x86_64": [
+          {
+            "title": "updates",
+            "name": "updates",
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f41/f41-x86_64-updates-released-20241101"
+          }
+        ],
+        "aarch64": [
+          {
+            "title": "updates",
+            "name": "updates",
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f41/f41-aarch64-updates-released-20241115"
           }
         ]
       }
