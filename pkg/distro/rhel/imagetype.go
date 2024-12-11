@@ -18,6 +18,9 @@ import (
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
+	"github.com/osbuild/images/pkg/spec"
+	"github.com/osbuild/images/specs"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -282,6 +285,29 @@ func (t *ImageType) Manifest(bp *blueprint.Blueprint,
 
 	for name, getter := range t.packageSets {
 		staticPackageSets[name] = getter(t)
+	}
+
+	var itSpec struct {
+		Spec struct {
+			Packages        []string `yaml:"packages"`
+			ExcludePackages []string `yaml:"exclude_packages"`
+		} `yaml:"spec"`
+	}
+
+	rawSpec, err := spec.MergeConfigDistro(specs.Data, t.arch.Distro().Name(), t.Arch().Name(), t.Name())
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to merge image type spec: %w", err)
+	}
+
+	if err := yaml.Unmarshal(rawSpec, &itSpec); err != nil {
+		return nil, nil, fmt.Errorf("failed to unmarshal image type spec: %w", err)
+	}
+
+	if len(itSpec.Spec.Packages) > 0 {
+		staticPackageSets[OSPkgsKey] = rpmmd.PackageSet{
+			Include: itSpec.Spec.Packages,
+			Exclude: itSpec.Spec.ExcludePackages,
+		}
 	}
 
 	// amend with repository information and collect payload repos

@@ -1,0 +1,6 @@
+includes:
+  - ami.yaml
+  - ../sap.yaml
+spec:
+  # packages:
+  # - libcanberra-gtk2 ; libcanberra-gtk2 is not available in RHEL-10
