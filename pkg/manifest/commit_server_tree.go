@@ -80,7 +80,7 @@ func (p *OSTreeCommitServer) getPackageSpecs() []rpmmd.PackageSpec {
 	return p.packageSpecs
 }
 
-func (p *OSTreeCommitServer) serializeStart(packages []rpmmd.PackageSpec, _ []container.Spec, _ []ostree.CommitSpec, rpmRepos []rpmmd.RepoConfig) {
+func (p *OSTreeCommitServer) serializeStart(packages []rpmmd.PackageSpec, _ []container.Spec, _ []ostree.CommitSpec, rpmRepos []rpmmd.RepoConfig, _ []rpmmd.ModuleConfig) {
 	if len(p.packageSpecs) > 0 {
 		panic("double call to serializeStart()")
 	}

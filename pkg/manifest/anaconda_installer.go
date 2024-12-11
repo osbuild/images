@@ -196,7 +196,7 @@ func (p *AnacondaInstaller) getPackageSpecs() []rpmmd.PackageSpec {
 	return p.packageSpecs
 }
 
-func (p *AnacondaInstaller) serializeStart(packages []rpmmd.PackageSpec, _ []container.Spec, _ []ostree.CommitSpec, rpmRepos []rpmmd.RepoConfig) {
+func (p *AnacondaInstaller) serializeStart(packages []rpmmd.PackageSpec, _ []container.Spec, _ []ostree.CommitSpec, rpmRepos []rpmmd.RepoConfig, _ []rpmmd.ModuleConfig) {
 	if len(p.packageSpecs) > 0 {
 		panic("double call to serializeStart()")
 	}
