@@ -1,8 +1,11 @@
 package rhel
 
 import (
+	"bytes"
 	"fmt"
+	"io/fs"
 	"math/rand"
+	"os"
 
 	"slices"
 
@@ -18,6 +21,9 @@ import (
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
+	"github.com/osbuild/images/pkg/spec"
+	"github.com/osbuild/images/specs"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -282,6 +288,47 @@ func (t *ImageType) Manifest(bp *blueprint.Blueprint,
 
 	for name, getter := range t.packageSets {
 		staticPackageSets[name] = getter(t)
+	}
+
+	var itSpec struct {
+		Spec struct {
+			Packages        []string `yaml:"packages"`
+			ExcludePackages []string `yaml:"exclude_packages"`
+		} `yaml:"spec"`
+	}
+
+	// Allow overriding the embedded image type specs with an external directory
+	// This is of course absolutely misplaces, and should not be passed in as an
+	// environment variable, but it's good enough for a showcase.
+	// TODO: Make this more sane
+	var configDir fs.ReadDirFS
+	configDir = specs.Data
+	if overrideConfigDir, found := os.LookupEnv("OSBUILD_IMAGES_IMAGE_SPECS_DIR"); found {
+		configDir = os.DirFS(overrideConfigDir).(fs.ReadDirFS)
+	}
+
+	configFile, err := spec.FindBestConfig(configDir, t.arch.Distro().Name(), t.Arch().Name(), t.Name())
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to find image type spec: %w", err)
+	}
+
+	rawSpec, err := spec.MergeConfig(configDir, configFile)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to merge image type spec: %w", err)
+	}
+
+	decoder := yaml.NewDecoder(bytes.NewReader(rawSpec))
+	decoder.KnownFields(true)
+
+	if err := decoder.Decode(&itSpec); err != nil {
+		return nil, nil, fmt.Errorf("failed to unmarshal image type spec: %w", err)
+	}
+
+	if len(itSpec.Spec.Packages) > 0 {
+		staticPackageSets[OSPkgsKey] = rpmmd.PackageSet{
+			Include: itSpec.Spec.Packages,
+			Exclude: itSpec.Spec.ExcludePackages,
+		}
 	}
 
 	// amend with repository information and collect payload repos
