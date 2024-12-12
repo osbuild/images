@@ -36,6 +36,8 @@ func listTestedDistros(t *testing.T) []string {
 // needed for knowing the names of pipelines from the static object without
 // having access to a manifest, which we need when parsing metadata from build
 // results.
+// NOTE: The static list of pipelines really only needs to include those that
+// have rpm or ostree metadata in them.
 func TestImageTypePipelineNames(t *testing.T) {
 	// types for parsing the opaque manifest with just the fields we care about
 	type rpmStageOptions struct {
@@ -138,11 +140,10 @@ func TestImageTypePipelineNames(t *testing.T) {
 					err = json.Unmarshal(mf, pm)
 					assert.NoError(err)
 
-					assert.Equal(len(allPipelines), len(pm.Pipelines))
+					var pmNames []string
 					for idx := range pm.Pipelines {
-						// manifest pipeline names should be identical to the ones
-						// defined in the image type and in the same order
-						assert.Equal(allPipelines[idx], pm.Pipelines[idx].Name)
+						// Gather the names of the manifest piplines for later
+						pmNames = append(pmNames, pm.Pipelines[idx].Name)
 
 						if pm.Pipelines[idx].Name == "os" {
 							rpmStagePresent := false
@@ -171,6 +172,15 @@ func TestImageTypePipelineNames(t *testing.T) {
 					// sure they match.
 					assert.Equal(imageType.Exports()[0], pm.Pipelines[len(pm.Pipelines)-1].Name)
 
+					// The pipelines named in allPipelines must exist in the manifest, and in the
+					// order specified (eg. 'build' first) but it does not need to be an exact
+					// match. Only the pipelines with rpm or ostree metadata are required.
+					var order int
+					for _, name := range allPipelines {
+						idx := slices.Index(pmNames, name)
+						assert.True(idx >= order, "%s not in order %v", name, pmNames)
+						order = idx
+					}
 				})
 			}
 		}
