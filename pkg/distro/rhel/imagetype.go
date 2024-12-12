@@ -3,7 +3,9 @@ package rhel
 import (
 	"bytes"
 	"fmt"
+	"io/fs"
 	"math/rand"
+	"os"
 
 	"slices"
 
@@ -295,12 +297,22 @@ func (t *ImageType) Manifest(bp *blueprint.Blueprint,
 		} `yaml:"spec"`
 	}
 
-	configFile, err := spec.FindBestConfig(specs.Data, t.arch.Distro().Name(), t.Arch().Name(), t.Name())
+	// Allow overriding the embedded image type specs with an external directory
+	// This is of course absolutely misplaces, and should not be passed in as an
+	// environment variable, but it's good enough for a showcase.
+	// TODO: Make this more sane
+	var configDir fs.ReadDirFS
+	configDir = specs.Data
+	if overrideConfigDir, found := os.LookupEnv("OSBUILD_IMAGES_IMAGE_SPECS_DIR"); found {
+		configDir = os.DirFS(overrideConfigDir).(fs.ReadDirFS)
+	}
+
+	configFile, err := spec.FindBestConfig(configDir, t.arch.Distro().Name(), t.Arch().Name(), t.Name())
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to find image type spec: %w", err)
 	}
 
-	rawSpec, err := spec.MergeConfig(specs.Data, configFile)
+	rawSpec, err := spec.MergeConfig(configDir, configFile)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to merge image type spec: %w", err)
 	}
