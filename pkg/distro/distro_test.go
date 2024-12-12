@@ -55,16 +55,16 @@ func TestImageTypePipelineNames(t *testing.T) {
 		Pipelines []pipeline `json:"pipelines"`
 	}
 
-	assert := assert.New(t)
 	distroFactory := distrofactory.NewDefault()
 	distros := listTestedDistros(t)
 	for _, distroName := range distros {
 		d := distroFactory.GetDistro(distroName)
 		for _, archName := range d.ListArches() {
 			arch, err := d.GetArch(archName)
-			assert.Nil(err)
+			assert.Nil(t, err)
 			for _, imageTypeName := range arch.ListImageTypes() {
 				t.Run(fmt.Sprintf("%s/%s/%s", distroName, archName, imageTypeName), func(t *testing.T) {
+					assert := assert.New(t)
 					imageType, err := arch.GetImageType(imageTypeName)
 					assert.Nil(err)
 
