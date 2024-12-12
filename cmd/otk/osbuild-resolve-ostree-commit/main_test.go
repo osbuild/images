@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	resolver "github.com/osbuild/images/cmd/otk/osbuild-resolve-ostree-commit"
+	"github.com/osbuild/images/pkg/ostree/test_mtls_server"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -22,9 +23,30 @@ var commitMap = map[string]string{
 	"test/ref/one":         "7433e1b49fb136d61dcca49ebe34e713fdbb8e29bf328fe90819628f71b86105",
 }
 
+const TestCertDir = "../../../pkg/ostree/test_mtls_server"
+
 // Create a test server that responds with the commit ID that corresponds to
 // the ref.
 func createTestServer(refIDs map[string]string) *httptest.Server {
+	handler := createTestHandler(refIDs)
+
+	return httptest.NewServer(handler)
+}
+
+// Create a test server that responds with the commit ID that corresponds to
+// the ref. MTLS variant.
+func createMTLSTestServer(refIDs map[string]string) *httptest.Server {
+	handler := createTestHandler(refIDs)
+
+	mtlss, err := test_mtls_server.NewMTLSServerInPath(handler, TestCertDir)
+	if err != nil {
+		panic(err)
+	}
+
+	return mtlss.Server
+}
+
+func createTestHandler(refIDs map[string]string) *http.ServeMux {
 	handler := http.NewServeMux()
 	handler.HandleFunc("/refs/heads/", func(w http.ResponseWriter, r *http.Request) {
 		reqRef := strings.TrimPrefix(r.URL.Path, "/refs/heads/")
@@ -36,7 +58,7 @@ func createTestServer(refIDs map[string]string) *httptest.Server {
 		fmt.Fprint(w, id)
 	})
 
-	return httptest.NewServer(handler)
+	return handler
 }
 
 func TestResolver(t *testing.T) {
@@ -70,6 +92,50 @@ func TestResolver(t *testing.T) {
 					"url":      url,
 					"ref":      ref,
 					"checksum": id,
+				},
+			},
+		}
+		assert.Equal(expOutput, output)
+	}
+}
+
+func TestResolverMTLS(t *testing.T) {
+	require := require.New(t)
+	assert := assert.New(t)
+
+	repoServer := createMTLSTestServer(commitMap)
+	defer repoServer.Close()
+
+	url := repoServer.URL
+	for ref, id := range commitMap {
+		inputReq, err := json.Marshal(map[string]interface{}{
+			"tree": map[string]interface{}{
+				"url": url,
+				"ref": ref,
+				"mtls": map[string]string{
+					"ca":          fmt.Sprintf("%s/ca.crt", TestCertDir),
+					"client_cert": fmt.Sprintf("%s/client.crt", TestCertDir),
+					"client_key":  fmt.Sprintf("%s/client.key", TestCertDir),
+				},
+			},
+		})
+		require.NoError(err)
+
+		inpBuf := bytes.NewBuffer(inputReq)
+		outBuf := &bytes.Buffer{}
+
+		assert.NoError(resolver.Run(inpBuf, outBuf))
+
+		var output map[string]map[string]map[string]string
+		require.NoError(json.Unmarshal(outBuf.Bytes(), &output))
+
+		expOutput := map[string]map[string]map[string]string{
+			"tree": {
+				"const": {
+					"url":      url,
+					"ref":      ref,
+					"checksum": id,
+					"secrets":  "org.osbuild.mtls",
 				},
 			},
 		}
