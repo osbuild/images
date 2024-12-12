@@ -80,17 +80,20 @@ get_oscap_score() {
 }
 
 check_ca_cert() {
-    serial=$(jq -r '.blueprint.customizations.cacerts.pem_certs[0]' "${config}" | openssl x509 -noout -serial | cut -d= -f 2-)
+    serial=$(jq -r '.blueprint.customizations.cacerts.pem_certs[0]' "${config}" | openssl x509 -noout -serial | cut -d= -f 2- | tr '[:upper:]' '[:lower:]')
+    cn=$(jq -r '.blueprint.customizations.cacerts.pem_certs[0]' "${config}" | openssl x509 -noout -subject | sed -E 's/.*CN ?= ?//')
 
-    echo "📗 Checking CA cert anchor file"
+    echo "📗 Checking CA cert anchor file serial '${serial}'"
     if ! [ -e "/etc/pki/ca-trust/source/anchors/${serial}.pem" ]; then
-        echo "Anchor CA file does not exist"
+        echo "Anchor CA file does not exist, directory contents:"
+        find /etc/pki/ca-trust/source/anchors
         exit 1
     fi
 
-    echo "📗 Checking extracted CA cert file"
-    if ! [ -e "/etc/pki/ca-trust/source/extracted/pem/directory-hash/Test_CA_for_osbuild.pem.pem" ]; then
-        echo "Extracted CA file does not exist"
+    echo "📗 Checking extracted CA cert file named '${cn}'"
+    if ! grep -q "${cn}" /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem; then
+        echo "Extracted CA cert not found in the bundle, tls-ca-bundle.pem contents:"
+        grep '^#' /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
         exit 1
     fi
 }
