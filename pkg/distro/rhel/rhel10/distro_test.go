@@ -163,7 +163,7 @@ func TestImageType_BuildPackages(t *testing.T) {
 					if assert.NoErrorf(t, err, "d.GetArch(%v) returned err = %v; expected nil", archLabel, err) {
 						continue
 					}
-					manifest, _, err := itStruct.Manifest(&blueprint.Blueprint{}, distro.ImageOptions{}, nil, 0)
+					manifest, _, err := itStruct.Manifest(&blueprint.Blueprint{}, distro.ImageOptions{}, nil, nil)
 					assert.NoError(t, err)
 					buildPkgs := manifest.GetPackageSetChains()["build"]
 					assert.NotNil(t, buildPkgs)
@@ -257,7 +257,7 @@ func TestDistro_ManifestError(t *testing.T) {
 			imgOpts := distro.ImageOptions{
 				Size: imgType.Size(0),
 			}
-			_, _, err := imgType.Manifest(&bp, imgOpts, nil, 0)
+			_, _, err := imgType.Manifest(&bp, imgOpts, nil, nil)
 			assert.NoError(t, err)
 		}
 	}
@@ -427,7 +427,7 @@ func TestDistro_CustomFileSystemManifestError(t *testing.T) {
 		arch, _ := r10distro.GetArch(archName)
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
-			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
+			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
 			assert.EqualError(t, err, "The following errors occurred while setting up custom mountpoints:\npath \"/etc\" is not allowed")
 		}
 	}
@@ -449,7 +449,7 @@ func TestDistro_TestRootMountPoint(t *testing.T) {
 		arch, _ := r10distro.GetArch(archName)
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
-			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
+			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
 			assert.NoError(t, err)
 		}
 	}
@@ -475,7 +475,7 @@ func TestDistro_CustomFileSystemSubDirectories(t *testing.T) {
 		arch, _ := r10distro.GetArch(archName)
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
-			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
+			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
 			if strings.HasPrefix(imgTypeName, "edge-") {
 				continue
 			} else {
@@ -513,7 +513,7 @@ func TestDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
 		arch, _ := r10distro.GetArch(archName)
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
-			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
+			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
 			if strings.HasPrefix(imgTypeName, "edge-") {
 				continue
 			} else {
@@ -547,7 +547,7 @@ func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
 		arch, _ := r10distro.GetArch(archName)
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
-			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
+			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
 			assert.EqualError(t, err, "The following errors occurred while setting up custom mountpoints:\npath \"//\" must be canonical\npath \"/var//\" must be canonical\npath \"/var//log/audit/\" must be canonical")
 		}
 	}
@@ -569,7 +569,7 @@ func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 		arch, _ := r10distro.GetArch(archName)
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
-			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, 0)
+			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
 			assert.NoError(t, err)
 		}
 	}
@@ -618,7 +618,7 @@ func TestDiskAndFilesystemCustomizationsError(t *testing.T) {
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			options := distro.ImageOptions{}
-			_, _, err := imgType.Manifest(&bp, options, nil, 0)
+			_, _, err := imgType.Manifest(&bp, options, nil, nil)
 			if skipTest[imgTypeName] {
 				continue
 			}
@@ -664,7 +664,7 @@ func TestNoDiskCustomizationsNoError(t *testing.T) {
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			options := distro.ImageOptions{}
-			_, _, err := imgType.Manifest(&bp, options, nil, 0)
+			_, _, err := imgType.Manifest(&bp, options, nil, nil)
 			if skipTest[imgTypeName] {
 				continue
 			}
