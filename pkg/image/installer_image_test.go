@@ -122,6 +122,37 @@ func TestContainerInstallerSetKSPath(t *testing.T) {
 	assert.NotContains(t, mfs, "osbuild.ks") // no mention of the default value anywhere
 }
 
+func TestContainerInstallerExt4Rootfs(t *testing.T) {
+	img := image.NewAnacondaContainerInstaller(container.SourceSpec{}, "")
+	img.Product = product
+	img.OSVersion = osversion
+	img.ISOLabel = isolabel
+
+	assert.NotNil(t, img)
+	img.Platform = testPlatform
+	mfs := instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil)
+
+	// Confirm that it includes the rootfs-image pipeline that makes the ext4 rootfs
+	assert.Contains(t, mfs, `"name":"rootfs-image"`)
+	assert.Contains(t, mfs, `"name:rootfs-image"`)
+}
+
+func TestContainerInstallerSquashfsRootfs(t *testing.T) {
+	img := image.NewAnacondaContainerInstaller(container.SourceSpec{}, "")
+	img.Product = product
+	img.OSVersion = osversion
+	img.ISOLabel = isolabel
+	img.RootfsType = manifest.SquashfsRootfs
+
+	assert.NotNil(t, img)
+	img.Platform = testPlatform
+	mfs := instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil)
+
+	// Confirm that it does not include rootfs-image pipeline
+	assert.NotContains(t, mfs, `"name":"rootfs-image"`)
+	assert.NotContains(t, mfs, `"name:rootfs-image"`)
+}
+
 func TestOSTreeInstallerUnsetKSPath(t *testing.T) {
 	img := image.NewAnacondaOSTreeInstaller(ostree.SourceSpec{})
 	img.Product = product
@@ -156,6 +187,47 @@ func TestOSTreeInstallerSetKSPath(t *testing.T) {
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, mockOSTreeCommitSpecs())
 	assert.Contains(t, mfs, fmt.Sprintf(`"inst.ks=hd:LABEL=%s:/test.ks"`, isolabel))
 	assert.NotContains(t, mfs, "osbuild.ks") // no mention of the default value anywhere
+}
+
+func TestOSTreeInstallerExt4Rootfs(t *testing.T) {
+	img := image.NewAnacondaOSTreeInstaller(ostree.SourceSpec{})
+	img.Product = product
+	img.OSVersion = osversion
+	img.ISOLabel = isolabel
+
+	assert.NotNil(t, img)
+	img.Platform = testPlatform
+	img.Kickstart = &kickstart.Options{
+		// the ostree options must be non-nil
+		OSTree: &kickstart.OSTree{},
+	}
+
+	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, mockOSTreeCommitSpecs())
+
+	// Confirm that it includes the rootfs-image pipeline that makes the ext4 rootfs
+	assert.Contains(t, mfs, `"name":"rootfs-image"`)
+	assert.Contains(t, mfs, `"name:rootfs-image"`)
+}
+
+func TestOSTreeInstallerSquashfsRootfs(t *testing.T) {
+	img := image.NewAnacondaOSTreeInstaller(ostree.SourceSpec{})
+	img.Product = product
+	img.OSVersion = osversion
+	img.ISOLabel = isolabel
+	img.RootfsType = manifest.SquashfsRootfs
+
+	assert.NotNil(t, img)
+	img.Platform = testPlatform
+	img.Kickstart = &kickstart.Options{
+		// the ostree options must be non-nil
+		OSTree: &kickstart.OSTree{},
+	}
+
+	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, mockOSTreeCommitSpecs())
+
+	// Confirm that it does not include rootfs-image pipeline
+	assert.NotContains(t, mfs, `"name":"rootfs-image"`)
+	assert.NotContains(t, mfs, `"name:rootfs-image"`)
 }
 
 func TestTarInstallerUnsetKSOptions(t *testing.T) {
@@ -218,6 +290,68 @@ func TestTarInstallerSetKSPath(t *testing.T) {
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
 	assert.Contains(t, mfs, fmt.Sprintf(`"inst.ks=hd:LABEL=%s:/test.ks"`, isolabel))
 	assert.NotContains(t, mfs, "osbuild.ks") // no mention of the default value anywhere
+}
+
+func TestTarInstallerExt4Rootfs(t *testing.T) {
+	img := image.NewAnacondaTarInstaller()
+	img.Product = product
+	img.OSVersion = osversion
+	img.ISOLabel = isolabel
+
+	assert.NotNil(t, img)
+	img.Platform = testPlatform
+
+	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
+	// Confirm that it includes the rootfs-image pipeline that makes the ext4 rootfs
+	assert.Contains(t, mfs, `"name":"rootfs-image"`)
+	assert.Contains(t, mfs, `"name:rootfs-image"`)
+}
+
+func TestTarInstallerSquashfsRootfs(t *testing.T) {
+	img := image.NewAnacondaTarInstaller()
+	img.Product = product
+	img.OSVersion = osversion
+	img.ISOLabel = isolabel
+	img.RootfsType = manifest.SquashfsRootfs
+
+	assert.NotNil(t, img)
+	img.Platform = testPlatform
+
+	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
+	// Confirm that it does not include rootfs-image pipeline
+	assert.NotContains(t, mfs, `"name":"rootfs-image"`)
+	assert.NotContains(t, mfs, `"name:rootfs-image"`)
+}
+
+func TestLiveInstallerExt4Rootfs(t *testing.T) {
+	img := image.NewAnacondaLiveInstaller()
+	img.Product = product
+	img.OSVersion = osversion
+	img.ISOLabel = isolabel
+
+	assert.NotNil(t, img)
+	img.Platform = testPlatform
+
+	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
+	// Confirm that it includes the rootfs-image pipeline that makes the ext4 rootfs
+	assert.Contains(t, mfs, `"name":"rootfs-image"`)
+	assert.Contains(t, mfs, `"name:rootfs-image"`)
+}
+
+func TestLiveInstallerSquashfsRootfs(t *testing.T) {
+	img := image.NewAnacondaLiveInstaller()
+	img.Product = product
+	img.OSVersion = osversion
+	img.ISOLabel = isolabel
+	img.RootfsType = manifest.SquashfsRootfs
+
+	assert.NotNil(t, img)
+	img.Platform = testPlatform
+
+	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
+	// Confirm that it does not include rootfs-image pipeline
+	assert.NotContains(t, mfs, `"name":"rootfs-image"`)
+	assert.NotContains(t, mfs, `"name:rootfs-image"`)
 }
 
 func instantiateAndSerialize(t *testing.T, img image.ImageKind, packages map[string][]rpmmd.PackageSpec, containers map[string][]container.Spec, commits map[string][]ostree.CommitSpec) string {
