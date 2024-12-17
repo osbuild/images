@@ -37,7 +37,7 @@ func kernelCount(imgType distro.ImageType, bp blueprint.Blueprint) int {
 		}
 	}
 
-	manifest, _, err := imgType.Manifest(&bp, distro.ImageOptions{OSTree: ostreeOptions}, nil, 0)
+	manifest, _, err := imgType.Manifest(&bp, distro.ImageOptions{OSTree: ostreeOptions}, nil, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -220,7 +220,7 @@ func TestDistro_OSTreeOptions(t *testing.T, d distro.Distro) {
 				}
 				options := distro.ImageOptions{OSTree: &ostreeOptions}
 
-				m, _, err := imgType.Manifest(bp, options, nil, 0)
+				m, _, err := imgType.Manifest(bp, options, nil, nil)
 				assert.NoError(err)
 
 				nrefs := 0
@@ -274,7 +274,7 @@ func TestDistro_OSTreeOptions(t *testing.T, d distro.Distro) {
 					ostreeOptions.URL = "https://example.com/repo"
 				}
 				options := distro.ImageOptions{OSTree: &ostreeOptions}
-				m, _, err := imgType.Manifest(bp, options, nil, 0)
+				m, _, err := imgType.Manifest(bp, options, nil, nil)
 				assert.NoError(err)
 
 				nrefs := 0
@@ -320,7 +320,7 @@ func TestDistro_OSTreeOptions(t *testing.T, d distro.Distro) {
 					URL:      "https://example.com/repo",
 				}
 				options := distro.ImageOptions{OSTree: &ostreeOptions}
-				m, _, err := imgType.Manifest(bp, options, nil, 0)
+				m, _, err := imgType.Manifest(bp, options, nil, nil)
 				assert.NoError(err)
 
 				nrefs := 0
@@ -364,7 +364,7 @@ func TestDistro_OSTreeOptions(t *testing.T, d distro.Distro) {
 					URL:       "https://example.com/repo",
 				}
 				options := distro.ImageOptions{OSTree: &ostreeOptions}
-				m, _, err := imgType.Manifest(bp, options, nil, 0)
+				m, _, err := imgType.Manifest(bp, options, nil, nil)
 				assert.NoError(err)
 
 				nrefs := 0
@@ -418,7 +418,7 @@ func TestDistro_OSTreeOptions(t *testing.T, d distro.Distro) {
 					URL:       "https://example.com/repo",
 				}
 				options := distro.ImageOptions{OSTree: &ostreeOptions}
-				m, _, err := imgType.Manifest(bp, options, nil, 0)
+				m, _, err := imgType.Manifest(bp, options, nil, nil)
 				assert.NoError(err)
 
 				nrefs := 0
@@ -470,7 +470,7 @@ func TestDistro_OSTreeOptions(t *testing.T, d distro.Distro) {
 					ParentRef: "test/x86_64/02",
 				}
 				options := distro.ImageOptions{OSTree: &ostreeOptions}
-				_, _, err = imgType.Manifest(bp, options, nil, 0)
+				_, _, err = imgType.Manifest(bp, options, nil, nil)
 				assert.Error(err)
 			}
 		}

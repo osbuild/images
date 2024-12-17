@@ -116,7 +116,7 @@ func TestImageTypePipelineNames(t *testing.T) {
 						repoSets[plName] = repos
 					}
 
-					m, _, err := imageType.Manifest(&bp, options, repos, seed)
+					m, _, err := imageType.Manifest(&bp, options, repos, &seed)
 					assert.NoError(err)
 
 					containers := make(map[string][]container.Spec, 0)
@@ -426,7 +426,7 @@ func TestPipelineRepositories(t *testing.T) {
 							}
 
 							repos := tCase.repos
-							manifest, _, err := imageType.Manifest(&bp, options, repos, 0)
+							manifest, _, err := imageType.Manifest(&bp, options, repos, nil)
 							require.NoError(err)
 							packageSets := manifest.GetPackageSetChains()
 
@@ -579,7 +579,7 @@ func TestDistro_ManifestFIPSWarning(t *testing.T) {
 				if strings.HasSuffix(imgTypeName, "simplified-installer") {
 					bp.Customizations.InstallationDevice = "/dev/dummy"
 				}
-				_, warn, err := imgType.Manifest(&bp, imgOpts, nil, 0)
+				_, warn, err := imgType.Manifest(&bp, imgOpts, nil, nil)
 				if err != nil {
 					assert.True(t, slices.Contains(noCustomizableImages, imgTypeName))
 					assert.Equal(t, err, fmt.Errorf(distro.NoCustomizationsAllowedError, imgTypeName))
@@ -636,7 +636,7 @@ func TestOSTreeOptionsErrorForNonOSTreeImgTypes(t *testing.T) {
 						},
 					}
 
-					_, _, err = imageType.Manifest(&bp, options, nil, 0)
+					_, _, err = imageType.Manifest(&bp, options, nil, nil)
 					if imageType.OSTreeRef() == "" {
 						assert.Errorf(err,
 							"OSTree options should not be allowed for non-OSTree image type %s/%s/%s",

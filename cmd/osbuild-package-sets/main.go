@@ -54,7 +54,7 @@ func main() {
 			URL: "https://example.com", // required by some image types
 		}
 	}
-	manifest, _, err := image.Manifest(&blueprint.Blueprint{}, options, nil, 0)
+	manifest, _, err := image.Manifest(&blueprint.Blueprint{}, options, nil, nil)
 	if err != nil {
 		panic(err)
 	}

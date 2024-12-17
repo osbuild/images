@@ -51,7 +51,7 @@ func makeManifest(
 		return nil, err
 	}
 
-	manifest, warnings, err := imgType.Manifest(&bp, options, repos, seedArg)
+	manifest, warnings, err := imgType.Manifest(&bp, options, repos, &seedArg)
 	if err != nil {
 		return nil, fmt.Errorf("[ERROR] manifest generation failed: %w", err)
 	}
