@@ -161,7 +161,7 @@ func (p *OSTreeDeployment) getContainerSources() []container.SourceSpec {
 	}
 }
 
-func (p *OSTreeDeployment) serializeStart(_ []rpmmd.PackageSpec, containers []container.Spec, commits []ostree.CommitSpec, _ []rpmmd.RepoConfig) {
+func (p *OSTreeDeployment) serializeStart(_ []rpmmd.PackageSpec, containers []container.Spec, commits []ostree.CommitSpec, _ []rpmmd.RepoConfig, _ []rpmmd.ModuleConfig) {
 	if p.ostreeSpec != nil || p.containerSpec != nil {
 		panic("double call to serializeStart()")
 	}
