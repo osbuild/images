@@ -21,6 +21,15 @@ import (
 // into a common helper in "images" or images should do this on its
 // own
 func defaultDepsolver(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]dnfjson.DepsolveResult, error) {
+	if cacheDir == "" {
+		var err error
+		cacheDir, err = os.MkdirTemp("", "manifestgen")
+		if err != nil {
+			return nil, fmt.Errorf("cannot create temporary directory: %w", err)
+		}
+		defer os.RemoveAll(cacheDir)
+	}
+
 	solver := dnfjson.NewSolver(d.ModulePlatformID(), d.Releasever(), arch, d.Name(), cacheDir)
 	depsolvedSets := make(map[string]dnfjson.DepsolveResult)
 	for name, pkgSet := range packageSets {
