@@ -21,12 +21,12 @@ type fedoraFamilyDistro struct {
 
 var fedoraFamilyDistros = []fedoraFamilyDistro{
 	{
-		name:   "fedora-39",
-		distro: fedora.DistroFactory("fedora-39"),
-	},
-	{
 		name:   "fedora-40",
 		distro: fedora.DistroFactory("fedora-40"),
+	},
+	{
+		name:   "fedora-41",
+		distro: fedora.DistroFactory("fedora-41"),
 	},
 }
 
@@ -196,17 +196,7 @@ func TestFilenameFromType(t *testing.T) {
 		},
 	}
 	verTypes := map[string][]testCfg{
-		"38": {
-			{
-				name: "iot-simplified-installer",
-				args: args{"iot-simplified-installer"},
-				want: wantResult{
-					filename: "simplified-installer.iso",
-					mimeType: "application/x-iso9660-image",
-				},
-			},
-		},
-		"39": {
+		"40": {
 			{
 				name: "iot-bootable-container",
 				args: args{"iot-bootable-container"},
@@ -224,7 +214,7 @@ func TestFilenameFromType(t *testing.T) {
 				},
 			},
 		},
-		"40": {
+		"41": {
 			{
 				name: "iot-bootable-container",
 				args: args{"iot-bootable-container"},
@@ -351,12 +341,11 @@ func TestImageType_Name(t *testing.T) {
 				"wsl",
 			},
 			verTypes: map[string][]string{
-				"38": {"iot-simplified-installer"},
-				"39": {
+				"40": {
 					"iot-bootable-container",
 					"iot-simplified-installer",
 				},
-				"40": {
+				"41": {
 					"iot-bootable-container",
 					"iot-simplified-installer",
 				},
@@ -378,12 +367,11 @@ func TestImageType_Name(t *testing.T) {
 				"qcow2",
 			},
 			verTypes: map[string][]string{
-				"38": {"iot-simplified-installer"},
-				"39": {
+				"40": {
 					"iot-bootable-container",
 					"iot-simplified-installer",
 				},
-				"40": {
+				"41": {
 					"iot-bootable-container",
 					"iot-simplified-installer",
 				},
@@ -555,12 +543,11 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"wsl",
 			},
 			verTypes: map[string][]string{
-				"38": {"iot-simplified-installer"},
-				"39": {
+				"40": {
 					"iot-bootable-container",
 					"iot-simplified-installer",
 				},
-				"40": {
+				"41": {
 					"iot-bootable-container",
 					"iot-simplified-installer",
 				},
@@ -584,12 +571,11 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"qcow2",
 			},
 			verTypes: map[string][]string{
-				"38": {"iot-simplified-installer"},
-				"39": {
+				"40": {
 					"iot-bootable-container",
 					"iot-simplified-installer",
 				},
-				"40": {
+				"41": {
 					"iot-bootable-container",
 					"iot-simplified-installer",
 				},
@@ -602,10 +588,10 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"qcow2",
 			},
 			verTypes: map[string][]string{
-				"39": {
+				"40": {
 					"iot-bootable-container",
 				},
-				"40": {
+				"41": {
 					"iot-bootable-container",
 				},
 			},
@@ -617,10 +603,10 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"qcow2",
 			},
 			verTypes: map[string][]string{
-				"39": {
+				"40": {
 					"iot-bootable-container",
 				},
-				"40": {
+				"41": {
 					"iot-bootable-container",
 				},
 			},
