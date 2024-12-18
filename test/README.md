@@ -5,7 +5,7 @@
 - [./cmd/build](../cmd/build) takes a config file as argument to build an image.  For example:
 ```
 go build -o bin/build ./cmd/build
-sudo ./bin/build --output ./buildtest --rpmmd /tmp/rpmmd --distro fedora-39 --type qcow2 --config test/configs/embed-containers.json
+sudo ./bin/build --output ./buildtest --rpmmd /tmp/rpmmd --distro fedora-41 --type qcow2 --config test/configs/embed-containers.json
 ```
 will build a Fedora 38 qcow2 image using the configuration specified in the file `embed-containers.json`
 
@@ -17,7 +17,7 @@ The config map is also used in CI to dynamically generate test builds using the 
 
 - `Schutzfile` defines content sources and test variables:
     - `common.rngseed` is the random number generator seed that is used by all the test scripts and commands. It ensures manifests are always generated with the same random values (e.g. for partition UUIDs) so tests can be skipped when an image hasn't changed (see [Workflow details](#workflow-details)) below. This value can be changed (incremented) when a rebuild of all test images is required. For example, if a test script changes in a way that will not affect the manifests, this value can be used to make sure all test images are built.
-    - The following are defined in an object keyed by a distro name (e.g. `fedora-39`). The distribution name and version must match the version of the CI runners.
+    - The following are defined in an object keyed by a distro name (e.g. `fedora-41`). The distribution name and version must match the version of the CI runners.
     - `dependencies.osbuild.commit`: the version of osbuild to use, as a commit ID. This must be a commit that was successfully built in osbuild's CI, so that RPMs will be available. It is used by [./test/scripts/setup-osbuild-repo](./scripts/setup-osbuild-repo).
     - `repos`: the repository configurations to use on the runners to install packages such as build dependencies and test tools.
 
@@ -100,7 +100,7 @@ in the form
 for example:
 ```json
 {
-  "distro": "fedora-39",
+  "distro": "fedora-40",
   "arch": "x86_64",
   "image-type": "qcow2",
   "config": "all-customizations",
@@ -143,7 +143,7 @@ Each build job runs in parallel. For each image that is successfully built, a fi
 
 ## Definitions
 
-- `<distro>`: distribution name and version (e.g. `fedora-39`).
+- `<distro>`: distribution name and version (e.g. `fedora-41`).
 - `<arch>`: architecture (one of `x86_64`, `aarch64`, `ppc64le`, `s390x`).
 - `<image type>`: name of the image type (e.g. `qcow2`).
 - `<config name>`: name of a build configuration like the ones found in `./test/configs/` (e.g. `all-customizations`).

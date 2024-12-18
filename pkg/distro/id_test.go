@@ -15,18 +15,18 @@ func TestDistroIDParser(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			stringID: "fedora-39",
+			stringID: "fedora-41",
 			expected: &ID{
 				Name:         "fedora",
-				MajorVersion: 39,
+				MajorVersion: 41,
 				MinorVersion: -1,
 			},
 		},
 		{
-			stringID: "fedora-39.0",
+			stringID: "fedora-41.0",
 			expected: &ID{
 				Name:         "fedora",
-				MajorVersion: 39,
+				MajorVersion: 41,
 				MinorVersion: 0,
 			},
 		},

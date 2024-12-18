@@ -18,15 +18,15 @@ func TestDefaltParser(t *testing.T) {
 	testCases := []testCase{
 		// Fedora
 		{
-			idStr:    "fedora-39",
-			expected: &distro.ID{Name: "fedora", MajorVersion: 39, MinorVersion: -1},
+			idStr:    "fedora-41",
+			expected: &distro.ID{Name: "fedora", MajorVersion: 41, MinorVersion: -1},
 		},
 		{
-			idStr:    "fedora-39.1",
-			expected: &distro.ID{Name: "fedora", MajorVersion: 39, MinorVersion: 1},
+			idStr:    "fedora-41.1",
+			expected: &distro.ID{Name: "fedora", MajorVersion: 41, MinorVersion: 1},
 		},
 		{
-			idStr: "fedora-39.1.1",
+			idStr: "fedora-41.1.1",
 			err:   true,
 		},
 		// RHEL-7

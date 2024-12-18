@@ -38,14 +38,14 @@ def test_read_seed():
 
 
 def test_path_generators():
-    testlib.get_osbuild_nevra = lambda: "osbuild-104-1.fc39.noarch"
+    testlib.get_osbuild_nevra = lambda: "osbuild-104-1.fc41.noarch"
 
     assert testlib.gen_build_info_dir_path("inforoot", testlib.get_osbuild_nevra(), "abc123") == \
-        "inforoot/osbuild-104-1.fc39.noarch/abc123/"
+        "inforoot/osbuild-104-1.fc41.noarch/abc123/"
     assert testlib.gen_build_info_path("inforoot", testlib.get_osbuild_nevra(), "abc123") == \
-        "inforoot/osbuild-104-1.fc39.noarch/abc123/info.json"
-    assert testlib.gen_build_info_s3("fedora-39", "aarch64", "abc123") == \
-        testlib.S3_BUCKET + "/images/builds/fedora-39/aarch64/osbuild-104-1.fc39.noarch/abc123/"
+        "inforoot/osbuild-104-1.fc41.noarch/abc123/info.json"
+    assert testlib.gen_build_info_s3("fedora-41", "aarch64", "abc123") == \
+        testlib.S3_BUCKET + "/images/builds/fedora-41/aarch64/osbuild-104-1.fc41.noarch/abc123/"
 
 
 test_container = "registry.gitlab.com/redhat/services/products/image-builder/ci/osbuild-composer/manifest-list-test"
