@@ -155,6 +155,42 @@ func (p *AnacondaInstallerISOTree) getBuildPackages(_ Distro) []string {
 	return packages
 }
 
+// NewSquashfsStage returns an osbuild stage configured to build
+// the squashfs root filesystem for the ISO.
+func (p *AnacondaInstallerISOTree) NewSquashfsStage() *osbuild.Stage {
+	var squashfsOptions osbuild.SquashfsStageOptions
+
+	if p.anacondaPipeline.Type == AnacondaInstallerTypePayload {
+		squashfsOptions = osbuild.SquashfsStageOptions{
+			Filename: "images/install.img",
+		}
+	} else if p.anacondaPipeline.Type == AnacondaInstallerTypeLive {
+		squashfsOptions = osbuild.SquashfsStageOptions{
+			Filename: "LiveOS/squashfs.img",
+		}
+	}
+
+	if p.RootfsCompression != "" {
+		squashfsOptions.Compression.Method = p.RootfsCompression
+	} else {
+		// default to xz if not specified
+		squashfsOptions.Compression.Method = "xz"
+	}
+
+	if squashfsOptions.Compression.Method == "xz" {
+		squashfsOptions.Compression.Options = &osbuild.FSCompressionOptions{
+			BCJ: osbuild.BCJOption(p.anacondaPipeline.platform.GetArch().String()),
+		}
+	}
+
+	// The iso's rootfs can either be an ext4 filesystem compressed with squashfs, or
+	// a squashfs of the plain directory tree
+	if p.RootfsType == SquashfsExt4Rootfs && p.rootfsPipeline != nil {
+		return osbuild.NewSquashfsStage(&squashfsOptions, p.rootfsPipeline.Name())
+	}
+	return osbuild.NewSquashfsStage(&squashfsOptions, p.anacondaPipeline.Name())
+}
+
 func (p *AnacondaInstallerISOTree) serializeStart(_ []rpmmd.PackageSpec, containers []container.Spec, commits []ostree.CommitSpec, _ []rpmmd.RepoConfig) {
 	if p.ostreeCommitSpec != nil || p.containerSpec != nil {
 		panic("double call to serializeStart()")
@@ -261,41 +297,7 @@ func (p *AnacondaInstallerISOTree) serialize() osbuild.Pipeline {
 	copyStageInputs := osbuild.NewPipelineTreeInputs(inputName, p.anacondaPipeline.Name())
 	copyStage := osbuild.NewCopyStageSimple(copyStageOptions, copyStageInputs)
 	pipeline.AddStage(copyStage)
-
-	var squashfsOptions osbuild.SquashfsStageOptions
-
-	if p.anacondaPipeline.Type == AnacondaInstallerTypePayload {
-		squashfsOptions = osbuild.SquashfsStageOptions{
-			Filename: "images/install.img",
-		}
-	} else if p.anacondaPipeline.Type == AnacondaInstallerTypeLive {
-		squashfsOptions = osbuild.SquashfsStageOptions{
-			Filename: "LiveOS/squashfs.img",
-		}
-	}
-
-	if p.RootfsCompression != "" {
-		squashfsOptions.Compression.Method = p.RootfsCompression
-	} else {
-		// default to xz if not specified
-		squashfsOptions.Compression.Method = "xz"
-	}
-
-	if squashfsOptions.Compression.Method == "xz" {
-		squashfsOptions.Compression.Options = &osbuild.FSCompressionOptions{
-			BCJ: osbuild.BCJOption(p.anacondaPipeline.platform.GetArch().String()),
-		}
-	}
-
-	// The iso's rootfs can either be an ext4 filesystem compressed with squashfs, or
-	// a squashfs of the plain directory tree
-	var squashfsStage *osbuild.Stage
-	if p.RootfsType == SquashfsExt4Rootfs {
-		squashfsStage = osbuild.NewSquashfsStage(&squashfsOptions, p.rootfsPipeline.Name())
-	} else {
-		squashfsStage = osbuild.NewSquashfsStage(&squashfsOptions, p.anacondaPipeline.Name())
-	}
-	pipeline.AddStage(squashfsStage)
+	pipeline.AddStage(p.NewSquashfsStage())
 
 	if p.ISOLinux {
 		isoLinuxOptions := &osbuild.ISOLinuxStageOptions{
