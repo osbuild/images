@@ -28,8 +28,8 @@ type AnacondaOSTreeInstaller struct {
 	// Subscription options to include
 	Subscription *subscription.ImageOptions
 
-	SquashfsCompression string
-	RootfsType          manifest.RootfsType
+	RootfsCompression string
+	RootfsType        manifest.RootfsType
 
 	ISOLabel  string
 	Product   string
@@ -139,7 +139,7 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoTreePipeline.PartitionTable = efiBootPartitionTable(rng)
 	isoTreePipeline.Release = img.Release
 	isoTreePipeline.Kickstart = img.Kickstart
-	isoTreePipeline.SquashfsCompression = img.SquashfsCompression
+	isoTreePipeline.RootfsCompression = img.RootfsCompression
 
 	isoTreePipeline.PayloadPath = "/ostree/repo"
 

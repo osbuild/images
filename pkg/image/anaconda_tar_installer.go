@@ -56,8 +56,8 @@ type AnacondaTarInstaller struct {
 	ISORootKickstart bool
 	Kickstart        *kickstart.Options
 
-	SquashfsCompression string
-	RootfsType          manifest.RootfsType
+	RootfsCompression string
+	RootfsType        manifest.RootfsType
 
 	ISOLabel  string
 	Product   string
@@ -195,7 +195,7 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 		isoTreePipeline.Kickstart.Path = img.Kickstart.Path
 	}
 
-	isoTreePipeline.SquashfsCompression = img.SquashfsCompression
+	isoTreePipeline.RootfsCompression = img.RootfsCompression
 
 	isoTreePipeline.OSPipeline = osPipeline
 	isoTreePipeline.KernelOpts = img.AdditionalKernelOpts

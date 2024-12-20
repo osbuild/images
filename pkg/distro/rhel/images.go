@@ -495,7 +495,7 @@ func EdgeInstallerImage(workload workload.Workload,
 	// kickstart though kickstart does support setting them
 	img.Kickstart.Timezone, _ = customizations.GetTimezoneSettings()
 
-	img.SquashfsCompression = "xz"
+	img.RootfsCompression = "xz"
 	if t.Arch().Distro().Releasever() == "10" {
 		img.RootfsType = manifest.SquashfsRootfs
 	}
@@ -716,7 +716,7 @@ func ImageInstallerImage(workload workload.Workload,
 	}
 	img.AdditionalAnacondaModules = append(img.AdditionalAnacondaModules, anaconda.ModuleUsers)
 
-	img.SquashfsCompression = "xz"
+	img.RootfsCompression = "xz"
 	if t.Arch().Distro().Releasever() == "10" {
 		img.RootfsType = manifest.SquashfsRootfs
 	}
