@@ -1138,13 +1138,9 @@ func addPartitionsForBootMode(pt *PartitionTable, disk *blueprint.DiskCustomizat
 		pt.Partitions = append(pt.Partitions, part)
 		return nil
 	case platform.BOOT_UEFI:
-		// add ESP if needed
-		if !hasESP(disk) {
-			part, err := mkESP(200*datasizes.MiB, pt.Type)
-			if err != nil {
-				return err
-			}
-			pt.Partitions = append(pt.Partitions, part)
+		// maybe add ESP
+		if err := maybeAddESP(pt, disk); err != nil {
+			return err
 		}
 		return nil
 	case platform.BOOT_HYBRID:
@@ -1154,12 +1150,8 @@ func addPartitionsForBootMode(pt *PartitionTable, disk *blueprint.DiskCustomizat
 			return err
 		}
 		pt.Partitions = append(pt.Partitions, bios)
-		if !hasESP(disk) {
-			esp, err := mkESP(200*datasizes.MiB, pt.Type)
-			if err != nil {
-				return err
-			}
-			pt.Partitions = append(pt.Partitions, esp)
+		if err := maybeAddESP(pt, disk); err != nil {
+			return err
 		}
 		return nil
 	case platform.BOOT_NONE:
@@ -1269,6 +1261,18 @@ func maybeAddBootPartition(pt *PartitionTable, disk *blueprint.DiskCustomization
 		if err := addBootPartition(pt, bootFsType); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func maybeAddESP(pt *PartitionTable, disk *blueprint.DiskCustomization) error {
+	if needsESP(disk) {
+		// we need an ESP to boot UEFI, create ESP if it does not already exist
+		part, err := mkESP(200*datasizes.MiB, pt.Type)
+		if err != nil {
+			return err
+		}
+		pt.Partitions = append(pt.Partitions, part)
 	}
 	return nil
 }
@@ -1591,4 +1595,19 @@ func needsBoot(disk *blueprint.DiskCustomization) bool {
 		}
 	}
 	return foundBtrfsOrLVM
+}
+
+// determine whether an ESP is needed based on the customizations. An ESP is
+// needed if there is no /boot/efi partition defined in the customization.
+func needsESP(disk *blueprint.DiskCustomization) bool {
+	if disk == nil {
+		return true
+	}
+
+	for _, part := range disk.Partitions {
+		if part.Mountpoint == "/boot/efi" {
+			return false
+		}
+	}
+	return true
 }

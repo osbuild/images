@@ -936,10 +936,11 @@ func TestAddBootPartition(t *testing.T) {
 
 func TestAddPartitionsForBootMode(t *testing.T) {
 	type testCase struct {
-		pt       disk.PartitionTable
-		bootMode platform.BootMode
-		expected disk.PartitionTable
-		errmsg   string
+		pt                disk.PartitionTable
+		bootMode          platform.BootMode
+		expected          disk.PartitionTable
+		diskCustomization *blueprint.DiskCustomization
+		errmsg            string
 	}
 
 	testCases := map[string]testCase{
@@ -1093,6 +1094,44 @@ func TestAddPartitionsForBootMode(t *testing.T) {
 				},
 			},
 		},
+		"esp-present-uefi": {
+			pt:       disk.PartitionTable{Type: disk.PT_GPT},
+			bootMode: platform.BOOT_UEFI,
+			diskCustomization: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Mountpoint: "/boot/efi",
+						},
+					},
+				},
+			},
+			expected: disk.PartitionTable{Type: disk.PT_GPT},
+		},
+		"esp-present-hybrid": {
+			pt:       disk.PartitionTable{Type: disk.PT_GPT},
+			bootMode: platform.BOOT_HYBRID,
+			diskCustomization: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Mountpoint: "/boot/efi",
+						},
+					},
+				},
+			},
+			expected: disk.PartitionTable{
+				Type: disk.PT_GPT,
+				Partitions: []disk.Partition{
+					{
+						Size:     1 * datasizes.MiB,
+						Bootable: true,
+						Type:     disk.BIOSBootPartitionGUID,
+						UUID:     disk.BIOSBootPartitionUUID,
+					},
+				},
+			},
+		},
 		"bad-pttype-bios": {
 			pt:       disk.PartitionTable{Type: disk.PartitionTableType(911)},
 			bootMode: platform.BOOT_LEGACY,
@@ -1120,7 +1159,7 @@ func TestAddPartitionsForBootMode(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			assert := assert.New(t)
 			pt := tc.pt
-			err := disk.AddPartitionsForBootMode(&pt, nil, tc.bootMode)
+			err := disk.AddPartitionsForBootMode(&pt, tc.diskCustomization, tc.bootMode)
 			if tc.errmsg == "" {
 				assert.NoError(err)
 				assert.Equal(tc.expected, pt)
@@ -2526,6 +2565,69 @@ func TestNewCustomPartitionTable(t *testing.T) {
 									UUID:       "fb180daf-48a7-4ee0-b10d-394651850fd4",
 								},
 							},
+						},
+					},
+				},
+			},
+		},
+		"custom-esp": {
+			customizations: &blueprint.DiskCustomization{
+				Type: "dos",
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						MinSize:  1 * datasizes.GiB,
+						PartType: "06",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Mountpoint: "/boot/efi",
+							FSType:     "vfat",
+						},
+					},
+				},
+			},
+			options: &disk.CustomPartitionTableOptions{
+				DefaultFSType:      disk.FS_EXT4,
+				BootMode:           platform.BOOT_HYBRID,
+				PartitionTableType: disk.PT_GPT,
+			},
+			expected: &disk.PartitionTable{
+				Type: disk.PT_DOS,
+				Size: 1*datasizes.GiB + 2*datasizes.MiB,
+				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+				Partitions: []disk.Partition{
+					{
+						Start:    1 * datasizes.MiB, // header
+						Size:     1 * datasizes.MiB,
+						Bootable: true,
+						Type:     disk.BIOSBootPartitionDOSID,
+						UUID:     disk.BIOSBootPartitionUUID,
+					},
+					{
+						Start: 2 * datasizes.MiB,
+						Size:  1 * datasizes.GiB,
+						Type:  "06",
+						Payload: &disk.Filesystem{
+							Type:         "vfat",
+							UUID:         "6e4ff95f",
+							Mountpoint:   "/boot/efi",
+							FSTabOptions: "defaults",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
+						},
+					},
+					{
+						Start:    1*datasizes.GiB + 2*datasizes.MiB,
+						Size:     0,
+						Type:     disk.FilesystemLinuxDOSID,
+						UUID:     "", // partitions on dos PTs don't have UUIDs
+						Bootable: false,
+						Payload: &disk.Filesystem{
+							Type:         "ext4",
+							Label:        "root",
+							Mountpoint:   "/",
+							UUID:         "f662a5ee-e82a-4df4-8a2d-0b75fb180daf",
+							FSTabOptions: "defaults",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
 						},
 					},
 				},
