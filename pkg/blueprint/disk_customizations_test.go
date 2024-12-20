@@ -970,6 +970,91 @@ func TestPartitioningValidation(t *testing.T) {
 			},
 			expectedMsg: `invalid partitioning customizations: "dos" partition table type only supports up to 4 partitions: got 6`,
 		},
+		"happy-partition-part_type-gpt": {
+			partitioning: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						PartType: "12345678-1234-1234-1234-1234567890ab",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType:     "ext4",
+							Mountpoint: "/",
+						},
+					},
+				},
+			},
+		},
+		"happy-partition-part_type-dos": {
+			partitioning: &blueprint.DiskCustomization{
+				Type: "dos",
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						PartType: "ef",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType:     "ext4",
+							Mountpoint: "/",
+						},
+					},
+				},
+			},
+		},
+		"happy-partition-part_type": {
+			partitioning: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						PartType: "12345678-1234-1234-1234-1234567890ab",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType:     "ext4",
+							Mountpoint: "/gpt",
+						},
+					},
+				},
+			},
+		},
+		"unhappy-partition-part_type-gpt": {
+			partitioning: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+
+					{
+						PartType: "12345678-uuid-1234-1234-1234567890ab",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType:     "ext4",
+							Mountpoint: "/gpt",
+						},
+					},
+					{
+						PartType: "0x52",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType:     "ext4",
+							Mountpoint: "/dos",
+						},
+					},
+				},
+			},
+			expectedMsg: "invalid partitioning customizations:\ninvalid part_type \"12345678-uuid-1234-1234-1234567890ab\": must be a valid UUID for GPT partition tables or a 2-digit hex number for DOS partition tables\ninvalid part_type \"0x52\": must be a valid UUID for GPT partition tables or a 2-digit hex number for DOS partition tables",
+		},
+		"unhappy-partition-part_type-dos": {
+			partitioning: &blueprint.DiskCustomization{
+				Type: "dos",
+				Partitions: []blueprint.PartitionCustomization{
+
+					{
+						PartType: "93a9549d-cae1-4024-b95c-e09d77b34c60",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType:     "ext4",
+							Mountpoint: "/",
+						},
+					},
+					{
+						PartType: "52",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType:     "ext4",
+							Mountpoint: "/home",
+						},
+					},
+				},
+			},
+			expectedMsg: "invalid partitioning customizations:\ninvalid partition part_type \"93a9549d-cae1-4024-b95c-e09d77b34c60\" for partition table type \"dos\" (must be a 2-digit hex number)",
+		},
 	}
 
 	for name := range testCases {
@@ -1187,13 +1272,15 @@ func TestPartitionCustomizationUnmarshalJSON(t *testing.T) {
 			input: `{
 				"type": "plain",
 				"minsize": "1 GiB",
+				"part_type": "12345678-1234-1234-1234-1234567890ab",
 				"mountpoint": "/",
 				"label": "root",
 				"fs_type": "xfs"
 			}`,
 			expected: &blueprint.PartitionCustomization{
-				Type:    "plain",
-				MinSize: 1 * datasizes.GiB,
+				Type:     "plain",
+				MinSize:  1 * datasizes.GiB,
+				PartType: "12345678-1234-1234-1234-1234567890ab",
 				FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
 					Mountpoint: "/",
 					Label:      "root",
@@ -1223,6 +1310,7 @@ func TestPartitionCustomizationUnmarshalJSON(t *testing.T) {
 			input: `{
 				"type": "btrfs",
 				"minsize": "10 GiB",
+				"part_type": "12345678-1234-1234-1234-1234567890ab",
 				"subvolumes": [
 					{
 						"name": "subvols/root",
@@ -1235,8 +1323,9 @@ func TestPartitionCustomizationUnmarshalJSON(t *testing.T) {
 				]
 			}`,
 			expected: &blueprint.PartitionCustomization{
-				Type:    "btrfs",
-				MinSize: 10 * datasizes.GiB,
+				Type:     "btrfs",
+				MinSize:  10 * datasizes.GiB,
+				PartType: "12345678-1234-1234-1234-1234567890ab",
 				BtrfsVolumeCustomization: blueprint.BtrfsVolumeCustomization{
 					Subvolumes: []blueprint.BtrfsSubvolumeCustomization{
 						{
@@ -1288,6 +1377,7 @@ func TestPartitionCustomizationUnmarshalJSON(t *testing.T) {
 				"type": "lvm",
 				"name": "myvg",
 				"minsize": "99 GiB",
+				"part_type": "12345678-1234-1234-1234-1234567890ab",
 				"logical_volumes": [
 					{
 						"name": "homelv",
@@ -1306,8 +1396,9 @@ func TestPartitionCustomizationUnmarshalJSON(t *testing.T) {
 				]
 			}`,
 			expected: &blueprint.PartitionCustomization{
-				Type:    "lvm",
-				MinSize: 99 * datasizes.GiB,
+				Type:     "lvm",
+				MinSize:  99 * datasizes.GiB,
+				PartType: "12345678-1234-1234-1234-1234567890ab",
 				VGCustomization: blueprint.VGCustomization{
 					Name: "myvg",
 					LogicalVolumes: []blueprint.LVCustomization{
@@ -1398,6 +1489,14 @@ func TestPartitionCustomizationUnmarshalJSON(t *testing.T) {
 				"fs_type": "xfs"
 			}`,
 			errorMsg: "JSON unmarshal: error decoding minsize for partition: cannot be negative",
+		},
+		"part_type-not-string": {
+			input: `{
+				"minsize": "10 GiB",
+				"mountpoint": "/",
+				"part_type": 12345678
+			}`,
+			errorMsg: "JSON unmarshal: json: cannot unmarshal number into Go struct field .part_type of type string",
 		},
 		"wrong-type/btrfs-with-lvm": {
 			input: `{
