@@ -145,7 +145,7 @@ func (m Manifest) Serialize(packageSets map[string][]rpmmd.PackageSpec, containe
 	inline := make([]string, 0)
 	containers := make([]container.Spec, 0)
 	for _, pipeline := range m.pipelines {
-		pipeline.serializeStart(packageSets[pipeline.Name()], containerSpecs[pipeline.Name()], ostreeCommits[pipeline.Name()], rpmRepos[pipeline.Name()])
+		pipeline.serializeStart(packageSets[pipeline.Name()], containerSpecs[pipeline.Name()], ostreeCommits[pipeline.Name()], rpmRepos[pipeline.Name()], nil)
 	}
 	for _, pipeline := range m.pipelines {
 		commits = append(commits, pipeline.getOSTreeCommits()...)
