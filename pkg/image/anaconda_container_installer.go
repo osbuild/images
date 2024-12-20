@@ -133,6 +133,7 @@ func (img *AnacondaContainerInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoTreePipeline.Kickstart = img.Kickstart
 
 	isoTreePipeline.RootfsCompression = img.RootfsCompression
+	isoTreePipeline.RootfsType = img.RootfsType
 
 	// For ostree installers, always put the kickstart file in the root of the ISO
 	isoTreePipeline.PayloadPath = "/container"

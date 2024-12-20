@@ -108,6 +108,7 @@ func (img *AnacondaLiveInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoTreePipeline.ISOLinux = isoLinuxEnabled
 
 	isoTreePipeline.RootfsCompression = img.RootfsCompression
+	isoTreePipeline.RootfsType = img.RootfsType
 
 	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.ISOLabel)
 	isoPipeline.SetFilename(img.Filename)

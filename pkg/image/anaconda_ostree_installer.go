@@ -140,6 +140,7 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoTreePipeline.Release = img.Release
 	isoTreePipeline.Kickstart = img.Kickstart
 	isoTreePipeline.RootfsCompression = img.RootfsCompression
+	isoTreePipeline.RootfsType = img.RootfsType
 
 	isoTreePipeline.PayloadPath = "/ostree/repo"
 
