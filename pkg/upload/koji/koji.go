@@ -1,3 +1,8 @@
+//go:build cgo
+
+// koji requires the khttp kerberos module which requires cgo so when
+// build without cgo kerberos uploads are currently not supported
+
 package koji
 
 import (
