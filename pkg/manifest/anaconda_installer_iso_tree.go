@@ -49,7 +49,7 @@ type AnacondaInstallerISOTree struct {
 
 	isoLabel string
 
-	SquashfsCompression string
+	RootfsCompression string
 
 	OSPipeline         *OS
 	OSTreeCommitSource *ostree.SourceSpec
@@ -273,8 +273,8 @@ func (p *AnacondaInstallerISOTree) serialize() osbuild.Pipeline {
 		}
 	}
 
-	if p.SquashfsCompression != "" {
-		squashfsOptions.Compression.Method = p.SquashfsCompression
+	if p.RootfsCompression != "" {
+		squashfsOptions.Compression.Method = p.RootfsCompression
 	} else {
 		// default to xz if not specified
 		squashfsOptions.Compression.Method = "xz"
