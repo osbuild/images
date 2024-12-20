@@ -24,6 +24,7 @@ import (
 	"io"
 	"math/rand"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"slices"
@@ -118,6 +119,26 @@ func getPartitionTypeIDfor(ptType PartitionTableType, partTypeName string) (stri
 		return "", fmt.Errorf("unknown or unsupported partition type name: %s", partTypeName)
 	}
 	return id, nil
+}
+
+// exactly 2 hex digits
+var validDosPartitionType = regexp.MustCompile(`^[0-9a-fA-F]{2}$`)
+
+func validatePartitionTypeID(ptType PartitionTableType, partTypeName string) error {
+	switch ptType {
+	case PT_DOS:
+		if !validDosPartitionType.MatchString(partTypeName) {
+			return fmt.Errorf("invalid dos partition type ID: %s", partTypeName)
+		}
+	case PT_GPT:
+		if _, err := uuid.Parse(partTypeName); err != nil {
+			return fmt.Errorf("invalid gpt partition type GUID: %s", partTypeName)
+		}
+	default:
+		return fmt.Errorf("unknown or unsupported partition table enum: %d", ptType)
+	}
+
+	return nil
 }
 
 // FSType is the filesystem type enum.
