@@ -1079,7 +1079,7 @@ func addBootPartition(pt *PartitionTable, bootFsType FSType) error {
 // The function will append the new partitions to the end of the existing
 // partition table therefore it is best to call this function early to put them
 // near the front (as is conventional).
-func addPartitionsForBootMode(pt *PartitionTable, bootMode platform.BootMode) error {
+func addPartitionsForBootMode(pt *PartitionTable, disk *blueprint.DiskCustomization, bootMode platform.BootMode) error {
 	switch bootMode {
 	case platform.BOOT_LEGACY:
 		// add BIOS boot partition
@@ -1090,12 +1090,10 @@ func addPartitionsForBootMode(pt *PartitionTable, bootMode platform.BootMode) er
 		pt.Partitions = append(pt.Partitions, part)
 		return nil
 	case platform.BOOT_UEFI:
-		// add ESP
-		part, err := mkESP(200*datasizes.MiB, pt.Type)
-		if err != nil {
+		// maybe add ESP
+		if err := maybeAddESP(pt, disk); err != nil {
 			return err
 		}
-		pt.Partitions = append(pt.Partitions, part)
 		return nil
 	case platform.BOOT_HYBRID:
 		// add both
@@ -1103,11 +1101,10 @@ func addPartitionsForBootMode(pt *PartitionTable, bootMode platform.BootMode) er
 		if err != nil {
 			return err
 		}
-		esp, err := mkESP(200*datasizes.MiB, pt.Type)
-		if err != nil {
+		pt.Partitions = append(pt.Partitions, bios)
+		if err := maybeAddESP(pt, disk); err != nil {
 			return err
 		}
-		pt.Partitions = append(pt.Partitions, bios, esp)
 		return nil
 	case platform.BOOT_NONE:
 		return nil
@@ -1214,6 +1211,18 @@ func maybeAddBootPartition(pt *PartitionTable, disk *blueprint.DiskCustomization
 	return nil
 }
 
+func maybeAddESP(pt *PartitionTable, disk *blueprint.DiskCustomization) error {
+	if needsESP(disk) {
+		// we need an ESP to boot UEFI, create ESP if it does not already exist
+		part, err := mkESP(200*datasizes.MiB, pt.Type)
+		if err != nil {
+			return err
+		}
+		pt.Partitions = append(pt.Partitions, part)
+	}
+	return nil
+}
+
 // NewCustomPartitionTable creates a partition table based almost entirely on the disk customizations from a blueprint.
 func NewCustomPartitionTable(customizations *blueprint.DiskCustomization, options *CustomPartitionTableOptions, rng *rand.Rand) (*PartitionTable, error) {
 	if options == nil {
@@ -1256,7 +1265,7 @@ func NewCustomPartitionTable(customizations *blueprint.DiskCustomization, option
 	// if needed
 	//
 	// TODO: switch to ensure ESP in case customizations already include it
-	if err := addPartitionsForBootMode(pt, options.BootMode); err != nil {
+	if err := addPartitionsForBootMode(pt, customizations, options.BootMode); err != nil {
 		return nil, fmt.Errorf("%s %w", errPrefix, err)
 	}
 	// add the /boot partition (if it is needed)
@@ -1313,24 +1322,35 @@ func addPlainPartition(pt *PartitionTable, partition blueprint.PartitionCustomiz
 		return fmt.Errorf("error creating partition with mountpoint %q: %w", partition.Mountpoint, err)
 	}
 
-	// all user-defined partitions are data partitions except boot and swap
-	var typeName string
-	switch {
-	case partition.Mountpoint == "/boot":
-		typeName = "boot"
-	case fstype == "swap":
-		typeName = "swap"
-	default:
-		typeName = "data"
-	}
+	partType := partition.GUID
 
-	partType, err := getPartitionTypeIDfor(pt.Type, typeName)
-	if err != nil {
-		return fmt.Errorf("error getting partition type ID for %q: %w", partition.Mountpoint, err)
+	if partType != "" {
+		if err := validatePartitionTypeID(pt.Type, partType); err != nil {
+			return fmt.Errorf("error validating partition type ID for %q: %w", partition.Mountpoint, err)
+		}
+	} else {
+		// if the partition type is not specified, determine it based on the
+		// mountpoint and the partition type
+
+		// all user-defined partitions are data partitions except boot and swap
+		var typeName string
+		switch {
+		case partition.Mountpoint == "/boot":
+			typeName = "boot"
+		case fstype == "swap":
+			typeName = "swap"
+		default:
+			typeName = "data"
+		}
+
+		partType, err = getPartitionTypeIDfor(pt.Type, typeName)
+		if err != nil {
+			return fmt.Errorf("error getting partition type ID for %q: %w", partition.Mountpoint, err)
+		}
 	}
 
 	var payload PayloadEntity
-	switch typeName {
+	switch fstype {
 	case "swap":
 		payload = &Swap{
 			Label:        partition.Label,
@@ -1408,10 +1428,19 @@ func addLVMPartition(pt *PartitionTable, partition blueprint.PartitionCustomizat
 	}
 
 	// create partition for volume group
-	partType, err := getPartitionTypeIDfor(pt.Type, "lvm")
-	if err != nil {
-		return fmt.Errorf("error creating lvm partition %q: %w", vgname, err)
+	partType := partition.GUID
+	if partType != "" {
+		if err := validatePartitionTypeID(pt.Type, partType); err != nil {
+			return fmt.Errorf("error validating partition type ID for %q: %w", vgname, err)
+		}
+	} else {
+		var err error
+		partType, err = getPartitionTypeIDfor(pt.Type, "lvm")
+		if err != nil {
+			return fmt.Errorf("error creating lvm partition %q: %w", vgname, err)
+		}
 	}
+
 	newpart := Partition{
 		Type:     partType,
 		Size:     partition.MinSize,
@@ -1437,9 +1466,17 @@ func addBtrfsPartition(pt *PartitionTable, partition blueprint.PartitionCustomiz
 	}
 
 	// create partition for btrfs volume
-	partType, err := getPartitionTypeIDfor(pt.Type, "data")
-	if err != nil {
-		return fmt.Errorf("error creating btrfs partition: %w", err)
+	partType := partition.GUID
+	if partType != "" {
+		if err := validatePartitionTypeID(pt.Type, partType); err != nil {
+			return fmt.Errorf("error validating partition type ID for btrfs: %w", err)
+		}
+	} else {
+		var err error
+		partType, err = getPartitionTypeIDfor(pt.Type, "data")
+		if err != nil {
+			return fmt.Errorf("error creating btrfs partition: %w", err)
+		}
 	}
 	newpart := Partition{
 		Type:     partType,
@@ -1495,4 +1532,19 @@ func needsBoot(disk *blueprint.DiskCustomization) bool {
 		}
 	}
 	return foundBtrfsOrLVM
+}
+
+// determine whether an ESP is needed based on the customizations. An ESP is
+// needed if there is no /boot/efi partition defined in the customization.
+func needsESP(disk *blueprint.DiskCustomization) bool {
+	if disk == nil {
+		return true
+	}
+
+	for _, part := range disk.Partitions {
+		if part.Mountpoint == "/boot/efi" {
+			return false
+		}
+	}
+	return true
 }
