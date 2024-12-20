@@ -50,6 +50,7 @@ type AnacondaInstallerISOTree struct {
 	isoLabel string
 
 	RootfsCompression string
+	RootfsType        RootfsType
 
 	OSPipeline         *OS
 	OSTreeCommitSource *ostree.SourceSpec
@@ -289,7 +290,7 @@ func (p *AnacondaInstallerISOTree) serialize() osbuild.Pipeline {
 	// The iso's rootfs can either be an ext4 filesystem compressed with squashfs, or
 	// a squashfs of the plain directory tree
 	var squashfsStage *osbuild.Stage
-	if p.rootfsPipeline != nil {
+	if p.RootfsType == SquashfsExt4Rootfs {
 		squashfsStage = osbuild.NewSquashfsStage(&squashfsOptions, p.rootfsPipeline.Name())
 	} else {
 		squashfsStage = osbuild.NewSquashfsStage(&squashfsOptions, p.anacondaPipeline.Name())
