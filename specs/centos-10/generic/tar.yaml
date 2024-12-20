@@ -1,0 +1,6 @@
+spec:
+  packages:
+    - policycoreutils
+    - selinux-policy-targeted
+  exclude_packages:
+    - rng-tools

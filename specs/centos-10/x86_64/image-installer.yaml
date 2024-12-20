@@ -1,0 +1,5 @@
+includes:
+  - ../generic/image-installer.yaml
+spec:
+  packages:
+    - grub2-pc
