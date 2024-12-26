@@ -297,14 +297,14 @@ func load(distroNameVer string) (*toplevelYAML, error) {
 	case "rhel":
 		// rhel yaml files are under ./rhel-$majorVer
 		baseDir = distroNameMajorVer
-	case "centos":
-		// centos yaml is just rhel but we have (sadly) no symlinks
-		// in "go:embed" so we have to have this slightly ugly
-		// workaround
-		baseDir = fmt.Sprintf("rhel-%s", distroVersion)
 	case "almalinux":
 		// almalinux yaml is just rhel, we take only its major version
 		baseDir = fmt.Sprintf("rhel-%s", distroMajorVer)
+	case "centos", "almalinux_kitten":
+		// centos and kitten yaml is just rhel but we have (sadly) no
+		// symlinks in "go:embed" so we have to have this slightly ugly
+		// workaround
+		baseDir = fmt.Sprintf("rhel-%s", distroVersion)
 	case "fedora", "test-distro":
 		// our other distros just have a single yaml dir per distro
 		// and use condition.version_gt etc
