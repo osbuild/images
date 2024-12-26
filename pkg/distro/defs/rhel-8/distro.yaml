@@ -313,7 +313,6 @@
        - "libibverbs"
        - "libreport-plugin-bugzilla"
        - "libreport-plugin-reportuploader"
-       - "libreport-rhel-anaconda-bugzilla"
        - "librsvg2"
        - "linux-firmware"
        - "lklug-fonts"
@@ -381,6 +380,13 @@
         aarch64:
           include:
             - "dmidecode"
+      distro_name:
+        rhel:
+          include:
+            - "libreport-rhel-anaconda-bugzilla"
+        centos:
+          include:
+            - "libreport-rhel-anaconda-bugzilla"
 
   gce_common_pkgset: &gce_common_pkgset
     include:
