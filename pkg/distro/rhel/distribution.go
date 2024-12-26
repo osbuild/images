@@ -97,6 +97,10 @@ func (d *Distribution) IsRHEL() bool {
 	return strings.HasPrefix(d.name, "rhel")
 }
 
+func (d *Distribution) IsAlmaLinux() bool {
+	return strings.HasPrefix(d.name, "almalinux")
+}
+
 func (d *Distribution) GetDefaultImageConfig() *distro.ImageConfig {
 	if d.DefaultImageConfig == nil {
 		return nil
@@ -141,6 +145,25 @@ func NewDistribution(name string, major, minor int) (*Distribution, error) {
 			vendor:           "centos",
 			ostreeRefTmpl:    fmt.Sprintf("centos/%d/%%s/edge", major),
 			runner:           &runner.CentOS{Version: uint64(major)},
+		}
+	case "almalinux":
+		if major < 0 {
+			return nil, errors.New("Invalid AlmaLinux major version (must be positive)")
+		}
+
+		if minor < 0 {
+			return nil, errors.New("AlmaLinux requires a minor version")
+		}
+
+		rd = &Distribution{
+			name:             fmt.Sprintf("almalinux-%d.%d", major, minor),
+			product:          "AlmaLinux",
+			osVersion:        fmt.Sprintf("%d.%d", major, minor),
+			releaseVersion:   fmt.Sprintf("%d", major),
+			modulePlatformID: fmt.Sprintf("platform:el%d", major),
+			vendor:           "almalinux",
+			ostreeRefTmpl:    fmt.Sprintf("almalinux/%d/%%s/edge", major),
+			runner:           &runner.RHEL{Major: uint64(major), Minor: uint64(minor)},
 		}
 	default:
 		return nil, fmt.Errorf("unknown distro name: %s", name)
