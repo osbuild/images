@@ -279,6 +279,7 @@ func load(distroNameVer string) (*toplevelYAML, error) {
 	// XXX: we cannot use distroidparser here because of import cycles
 	distroName, distroVersion := splitDistroNameVer(distroNameVer)
 	distroNameMajorVer := strings.SplitN(distroNameVer, ".", 2)[0]
+	distroMajorVer := strings.SplitN(distroVersion, ".", 2)[0]
 
 	// XXX: this is a short term measure, pass a set of
 	// searchPaths down the stack instead
@@ -301,6 +302,9 @@ func load(distroNameVer string) (*toplevelYAML, error) {
 		// in "go:embed" so we have to have this slightly ugly
 		// workaround
 		baseDir = fmt.Sprintf("rhel-%s", distroVersion)
+	case "almalinux":
+		// almalinux yaml is just rhel, we take only its major version
+		baseDir = fmt.Sprintf("rhel-%s", distroMajorVer)
 	case "fedora", "test-distro":
 		// our other distros just have a single yaml dir per distro
 		// and use condition.version_gt etc
