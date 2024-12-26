@@ -101,6 +101,10 @@ func (d *Distribution) IsAlmaLinux() bool {
 	return strings.HasPrefix(d.name, "almalinux")
 }
 
+func (d *Distribution) IsKitten() bool {
+	return strings.HasPrefix(d.name, "kitten")
+}
+
 func (d *Distribution) GetDefaultImageConfig() *distro.ImageConfig {
 	if d.DefaultImageConfig == nil {
 		return nil
@@ -164,6 +168,21 @@ func NewDistribution(name string, major, minor int) (*Distribution, error) {
 			vendor:           "almalinux",
 			ostreeRefTmpl:    fmt.Sprintf("almalinux/%d/%%s/edge", major),
 			runner:           &runner.RHEL{Major: uint64(major), Minor: uint64(minor)},
+		}
+	case "kitten":
+		if minor != -1 {
+			return nil, fmt.Errorf("AlmaLinux Kitten does not have minor versions, but got %d", minor)
+		}
+
+		rd = &Distribution{
+			name:             fmt.Sprintf("kitten-%d", major),
+			product:          "AlmaLinux Kitten",
+			osVersion:        fmt.Sprintf("%d-kitten", major),
+			releaseVersion:   fmt.Sprintf("%d", major),
+			modulePlatformID: fmt.Sprintf("platform:el%d", major),
+			vendor:           "almalinux",
+			ostreeRefTmpl:    fmt.Sprintf("almalinux/%d/%%s/edge", major),
+			runner:           &runner.CentOS{Version: uint64(major)},
 		}
 	default:
 		return nil, fmt.Errorf("unknown distro name: %s", name)
