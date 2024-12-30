@@ -536,3 +536,9 @@ def find_image_file(build_path: str) -> str:
         raise RuntimeError("No found in build path while searching for image file")
 
     return os.path.join(build_path, last_pipeline, files[0])
+
+
+def read_build_info(path):
+    info_file_path = os.path.join(path, "info.json")
+    with open(info_file_path, encoding="utf-8") as info_fp:
+        return json.load(info_fp)
