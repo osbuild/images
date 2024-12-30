@@ -148,12 +148,6 @@ def boot_container(distro, arch, image_type, image_path, manifest_id):
             cmd_boot_aws(arch, image_name, privkey_file, pubkey_file, raw_image_path, [BASE_TEST_SCRIPT])
 
 
-def read_build_info(path):
-    info_file_path = os.path.join(path, "info.json")
-    with open(info_file_path, encoding="utf-8") as info_fp:
-        return json.load(info_fp)
-
-
 def main():
     desc = "Boot an image in the cloud environment it is built for and validate the configuration"
     parser = argparse.ArgumentParser(description=desc)
@@ -169,7 +163,7 @@ def main():
     search_path = args.image_search_path
 
     image_path = testlib.find_image_file(search_path)
-    build_info = read_build_info(search_path)
+    build_info = testlib.read_build_info(search_path)
     build_config_name = build_info["config"]
     build_config_path = f"test/configs/{build_config_name}.json"
 
