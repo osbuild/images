@@ -148,29 +148,6 @@ def boot_container(distro, arch, image_type, image_path, manifest_id):
             cmd_boot_aws(arch, image_name, privkey_file, pubkey_file, raw_image_path, [BASE_TEST_SCRIPT])
 
 
-def find_image_file(build_path: str) -> str:
-    """
-    Find the path to the image by reading the manifest to get the name of the last pipeline and searching for the file
-    under the directory named after the pipeline. Raises RuntimeError if no or multiple files are found in the expected
-    path.
-    """
-    manifest_file = os.path.join(build_path, "manifest.json")
-    with open(manifest_file, encoding="utf-8") as manifest:
-        data = json.load(manifest)
-
-    last_pipeline = data["pipelines"][-1]["name"]
-    files = os.listdir(os.path.join(build_path, last_pipeline))
-    if len(files) > 1:
-        error = "Multiple files found in build path while searching for image file"
-        error += "\n".join(files)
-        raise RuntimeError(error)
-
-    if len(files) == 0:
-        raise RuntimeError("No found in build path while searching for image file")
-
-    return os.path.join(build_path, last_pipeline, files[0])
-
-
 def read_build_info(path):
     info_file_path = os.path.join(path, "info.json")
     with open(info_file_path, encoding="utf-8") as info_fp:
@@ -191,7 +168,7 @@ def main():
     image_type = args.image_type
     search_path = args.image_search_path
 
-    image_path = find_image_file(search_path)
+    image_path = testlib.find_image_file(search_path)
     build_info = read_build_info(search_path)
     build_config_name = build_info["config"]
     build_config_path = f"test/configs/{build_config_name}.json"
