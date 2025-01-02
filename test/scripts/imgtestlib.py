@@ -546,3 +546,12 @@ def read_build_info(build_path: str) -> Dict:
     info_file_path = os.path.join(build_path, "info.json")
     with open(info_file_path, encoding="utf-8") as info_fp:
         return json.load(info_fp)
+
+
+def write_build_info(build_path: str, data: Dict):
+    """
+    Write the data to the info.json file in the build directory.
+    """
+    info_file_path = os.path.join(build_path, "info.json")
+    with open(info_file_path, "w", encoding="utf-8") as info_fp:
+        json.dump(data, info_fp, indent=2)

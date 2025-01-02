@@ -33,13 +33,10 @@ def main():
 
     # add the PR number (gitlab branch name) to the info.json if available
     if pr_number := os.environ.get("CI_COMMIT_BRANCH"):
-        info_path = os.path.join(build_dir, "info.json")
-        with open(info_path, "r", encoding="utf-8") as info_fp:
-            build_info = json.load(info_fp)
+        build_info = testlib.read_build_info(build_dir)
         # strip the PR prefix
         build_info["pr"] = pr_number.removeprefix("PR-")
-        with open(info_path, "w", encoding="utf-8") as info_fp:
-            json.dump(build_info, info_fp, indent=2)
+        testlib.write_build_info(build_dir, build_info)
 
     s3url = testlib.gen_build_info_s3(distro, arch, manifest_id)
 
