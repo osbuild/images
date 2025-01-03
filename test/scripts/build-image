@@ -46,9 +46,7 @@ def main():
 
     osbuild_ver, _ = testlib.runcmd(["osbuild", "--version"])
 
-    osrelease = testlib.read_osrelease()
-    distro_version = osrelease["ID"] + "-" + osrelease["VERSION_ID"]
-    osbuild_commit = testlib.get_osbuild_commit(distro_version)
+    osbuild_commit = testlib.get_osbuild_commit()
     if osbuild_commit is None:
         osbuild_commit = "RELEASE"
 

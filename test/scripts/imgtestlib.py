@@ -393,15 +393,20 @@ def read_osrelease():
     return osrelease
 
 
-def get_osbuild_commit(distro_version):
+def get_osbuild_commit():
     """
-    Get the osbuild commit defined in the Schutzfile for the host distro.
-    If not set, returns None.
+    Get the osbuild commit defined in the Schutzfile for the 'gitlab-ci-runner'
+    distro.
+    If not set, raises a KeyError.
     """
     with open(SCHUTZFILE, encoding="utf-8") as schutzfile:
         data = json.load(schutzfile)
 
-    return data.get(distro_version, {}).get("dependencies", {}).get("osbuild", {}).get("commit", None)
+    gitlab_ci_runner_distro = get_common_ci_runner().split("/")[1]
+
+    if (commit := data.get(gitlab_ci_runner_distro, {}).get("dependencies", {}).get("osbuild", {}).get("commit", None)) is None:
+        raise KeyError(f"osbuild dependency commit not defined for {gitlab_ci_runner_distro} in {SCHUTZFILE}")
+    return commit
 
 
 def get_bib_ref():
