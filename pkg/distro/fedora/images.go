@@ -479,7 +479,7 @@ func imageInstallerImage(workload workload.Workload,
 
 	img.Filename = t.Filename()
 
-	img.SquashfsCompression = "lz4"
+	img.RootfsCompression = "lz4"
 	if common.VersionGreaterThanOrEqual(img.OSVersion, VERSION_ROOTFS_SQUASHFS) {
 		img.RootfsType = manifest.SquashfsRootfs
 	}
@@ -680,7 +680,7 @@ func iotInstallerImage(workload workload.Workload,
 
 	img.Filename = t.Filename()
 
-	img.SquashfsCompression = "lz4"
+	img.RootfsCompression = "lz4"
 	if common.VersionGreaterThanOrEqual(img.OSVersion, VERSION_ROOTFS_SQUASHFS) {
 		img.RootfsType = manifest.SquashfsRootfs
 	}
