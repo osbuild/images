@@ -71,7 +71,7 @@ func (p *RawBootcImage) getContainerSpecs() []container.Spec {
 	return p.containerSpecs
 }
 
-func (p *RawBootcImage) serializeStart(_ []rpmmd.PackageSpec, containerSpecs []container.Spec, _ []ostree.CommitSpec, _ []rpmmd.RepoConfig) {
+func (p *RawBootcImage) serializeStart(_ []rpmmd.PackageSpec, containerSpecs []container.Spec, _ []ostree.CommitSpec, _ []rpmmd.RepoConfig, _ []rpmmd.ModuleConfig) {
 	if len(p.containerSpecs) > 0 {
 		panic("double call to serializeStart()")
 	}
