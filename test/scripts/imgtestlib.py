@@ -5,6 +5,7 @@ import pathlib
 import subprocess as sp
 import sys
 from glob import glob
+from typing import Dict
 
 TEST_CACHE_ROOT = ".cache/osbuild-images"
 CONFIGS_PATH = "./test/configs"
@@ -513,3 +514,44 @@ def get_common_ci_runner():
         raise KeyError(f"gitlab-ci-runner not defined in {SCHUTZFILE}")
 
     return runner
+
+
+def find_image_file(build_path: str) -> str:
+    """
+    Find the path to the image by reading the manifest to get the name of the last pipeline and searching for the file
+    under the directory named after the pipeline. Raises RuntimeError if no or multiple files are found in the expected
+    path.
+    """
+    manifest_file = os.path.join(build_path, "manifest.json")
+    with open(manifest_file, encoding="utf-8") as manifest:
+        data = json.load(manifest)
+
+    last_pipeline = data["pipelines"][-1]["name"]
+    files = os.listdir(os.path.join(build_path, last_pipeline))
+    if len(files) > 1:
+        error = "Multiple files found in build path while searching for image file"
+        error += "\n".join(files)
+        raise RuntimeError(error)
+
+    if len(files) == 0:
+        raise RuntimeError("No found in build path while searching for image file")
+
+    return os.path.join(build_path, last_pipeline, files[0])
+
+
+def read_build_info(build_path: str) -> Dict:
+    """
+    Read the info.json file from the build directory and return the data as a dictionary.
+    """
+    info_file_path = os.path.join(build_path, "info.json")
+    with open(info_file_path, encoding="utf-8") as info_fp:
+        return json.load(info_fp)
+
+
+def write_build_info(build_path: str, data: Dict):
+    """
+    Write the data to the info.json file in the build directory.
+    """
+    info_file_path = os.path.join(build_path, "info.json")
+    with open(info_file_path, "w", encoding="utf-8") as info_fp:
+        json.dump(data, info_fp, indent=2)

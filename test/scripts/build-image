@@ -62,9 +62,7 @@ def main():
         "osbuild-commit": osbuild_commit,
         "commit": os.environ.get("CI_COMMIT_SHA", "N/A")
     }
-    info_file_path = os.path.join(build_dir, "info.json")
-    with open(info_file_path, "w", encoding="utf-8") as info_fp:
-        json.dump(build_info, info_fp, indent=2)
+    testlib.write_build_info(build_dir, build_info)
 
 
 if __name__ == "__main__":
