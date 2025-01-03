@@ -1,0 +1,6 @@
+includes:
+  - base.yaml
+spec:
+  key: new
+  array:
+    - b

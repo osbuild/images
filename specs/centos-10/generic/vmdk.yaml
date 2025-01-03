@@ -1,0 +1,12 @@
+spec:
+  packages:
+    - "@core"
+    - chrony
+    - cloud-init
+    - firewalld
+    - langpacks-en
+    - open-vm-tools
+    - tuned
+  exclude_packages:
+    - dracut-config-rescue
+    - rng-tools
