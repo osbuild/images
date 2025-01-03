@@ -1187,6 +1187,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				Partitions: []blueprint.PartitionCustomization{
 					{
 						MinSize: 20 * datasizes.MiB,
+						GUID:    "42", // overrides the inferred type
 						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
 							Mountpoint: "/data",
 							Label:      "data",
@@ -1230,7 +1231,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					{
 						Start:    202 * datasizes.MiB,
 						Size:     20 * datasizes.MiB,
-						Type:     disk.FilesystemLinuxDOSID,
+						Type:     "42",
 						Bootable: false,
 						UUID:     "", // partitions on dos PTs don't have UUIDs
 						Payload: &disk.Filesystem{
@@ -1267,6 +1268,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				Partitions: []blueprint.PartitionCustomization{
 					{
 						MinSize: 20 * datasizes.MiB,
+						GUID:    "01234567-89ab-cdef-0123-456789abcdef", // overrides the inferred type
 						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
 							Mountpoint: "/data",
 							Label:      "data",
@@ -1310,7 +1312,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					{
 						Start:    202 * datasizes.MiB,
 						Size:     20 * datasizes.MiB,
-						Type:     disk.FilesystemDataGUID,
+						Type:     "01234567-89ab-cdef-0123-456789abcdef",
 						Bootable: false,
 						UUID:     "a178892e-e285-4ce1-9114-55780875d64e",
 						Payload: &disk.Filesystem{
@@ -2639,6 +2641,48 @@ func TestNewCustomPartitionTableErrors(t *testing.T) {
 				PartitionTableType: disk.PT_DOS,
 			},
 			errmsg: `error generating partition table: invalid partition table: "dos" partition table type only supports up to 4 partitions: got 5 after creating the partition table with all necessary partitions`,
+		},
+		"bad-guid-dos": {
+			customizations: &blueprint.DiskCustomization{
+				Type: "dos",
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						MinSize: 20 * datasizes.MiB,
+						GUID:    "01234567-89ab-cdef-0123-456789abcdef", // dos cannot use UUIDs
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Mountpoint: "/data",
+							Label:      "data",
+							FSType:     "ext4",
+						},
+					},
+				},
+			},
+			options: &disk.CustomPartitionTableOptions{
+				DefaultFSType: disk.FS_XFS,
+				BootMode:      platform.BOOT_HYBRID,
+			},
+			errmsg: `error generating partition table: error validating partition type ID for "/data": invalid dos partition type ID: 01234567-89ab-cdef-0123-456789abcdef`,
+		},
+		"bad-guid-gpt": {
+			customizations: &blueprint.DiskCustomization{
+				Type: "gpt",
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						MinSize: 20 * datasizes.MiB,
+						GUID:    "EF", // gpt requires a 36-character GUID
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Mountpoint: "/data",
+							Label:      "data",
+							FSType:     "ext4",
+						},
+					},
+				},
+			},
+			options: &disk.CustomPartitionTableOptions{
+				DefaultFSType: disk.FS_XFS,
+				BootMode:      platform.BOOT_HYBRID,
+			},
+			errmsg: `error generating partition table: error validating partition type ID for "/data": invalid gpt partition type GUID: EF`,
 		},
 	}
 
