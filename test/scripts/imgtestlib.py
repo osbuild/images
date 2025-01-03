@@ -371,28 +371,6 @@ def clargs():
     return parser
 
 
-def read_osrelease():
-    """Read Operating System Information from `os-release`
-
-    This creates a dictionary with information describing the running operating system. It reads the information from
-    the path array provided as `paths`.  The first available file takes precedence. It must be formatted according to
-    the rules in `os-release(5)`.
-    """
-    osrelease = {}
-
-    with open(OS_RELEASE_FILE, encoding="utf8") as orf:
-        for line in orf:
-            line = line.strip()
-            if not line:
-                continue
-            if line[0] == "#":
-                continue
-            key, value = line.split("=", 1)
-            osrelease[key] = value.strip('"')
-
-    return osrelease
-
-
 def get_osbuild_commit():
     """
     Get the osbuild commit defined in the Schutzfile for the 'gitlab-ci-runner'
