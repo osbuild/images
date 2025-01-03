@@ -62,3 +62,27 @@ func TestGenSalt(t *testing.T) {
 	retSaltSecond, _ := genSalt(length)
 	assert.NotEqual(t, retSaltFirst, retSaltSecond)
 }
+
+func TestCryptItself(t *testing.T) {
+	for _, tc := range []struct {
+		pass, salt string
+		expected   string
+	}{
+		// test vectors from upstream glibc, e.g.
+		// https://github.com/lattera/glibc/blob/master/crypt/sha512c-test.c#L12
+		{
+			"Hello world!",
+			"$6$saltstring",
+			"$6$saltstring$svn8UoSVapNtMuq1ukKS4tPQd8iKwSMHWjl/O817G3uBnIFNjnQJuesI68u4OTLiBFdcbYEdFCoEOfaS35inz1", // notsecret
+		},
+		{
+			"Hello world!",
+			"$6$rounds=10000$saltstringsaltstring",
+			"$6$rounds=10000$saltstringsaltst$OW1/O6BYHV6BcXZu8QVeXbDWra3Oeqh0sbHbbMCVNSnCM/UrjmM0Dp8vOuZeHBy/YTBmSK6H9qs/y3RnOaw5v.", // notsecret
+		},
+	} {
+		cryptedPass, err := crypt(tc.pass, tc.salt)
+		assert.NoError(t, err)
+		assert.Equal(t, tc.expected, cryptedPass)
+	}
+}
