@@ -30,8 +30,10 @@ def update_osbuild_commit_ids(new):
         data = json.load(schutzfile)
 
     for distro in data.keys():
-        if data[distro].get("dependencies", {}).get("osbuild", {}).get("commit", {}):
-            data[distro]["dependencies"]["osbuild"]["commit"] = new
+        if distro == "common":
+            continue
+
+        data[distro].setdefault("dependencies", {}).setdefault("osbuild", {})["commit"] = new
 
     with open(testlib.SCHUTZFILE, encoding="utf-8", mode="w") as schutzfile:
         json.dump(data, schutzfile, indent="  ")
