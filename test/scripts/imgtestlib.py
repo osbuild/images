@@ -364,8 +364,8 @@ def clargs():
     default_arch = os.uname().machine
     parser = argparse.ArgumentParser()
     parser.add_argument("config", type=str, help="path to write config")
-    parser.add_argument("--distro", type=str, default=None,
-                        help="distro to generate configs for (omit to generate for all distros)")
+    parser.add_argument("--distro", type=str, required=True,
+                        help="distro to generate configs for")
     parser.add_argument("--arch", type=str, default=default_arch,
                         help="architecture to generate configs for (defaults to host architecture)")
 
