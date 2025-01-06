@@ -55,8 +55,8 @@ def main():
     distro_version = osrelease["ID"] + "-" + osrelease["VERSION_ID"]
     commit_id = testlib.get_osbuild_commit(distro_version)
     if not commit_id:
-        print("No commit ID defined for osbuild")
-        return
+        print(f"Error: {distro_version} does not have the osbuild commit ID defined in the Schutzfile")
+        sys.exit(1)
 
     write_repo(commit_id, distro_version)
 
