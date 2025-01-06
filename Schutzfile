@@ -6,14 +6,14 @@
     },
     "gitlab-ci-runner": "aws/fedora-41"
   },
-  "centos-8": {
+  "centos-9": {
     "dependencies": {
       "osbuild": {
         "commit": "fcb93bde01d4a027c67b5747c8f976ceb4fc8d80"
       }
     }
   },
-  "centos-9": {
+  "centos-10": {
     "dependencies": {
       "osbuild": {
         "commit": "fcb93bde01d4a027c67b5747c8f976ceb4fc8d80"
