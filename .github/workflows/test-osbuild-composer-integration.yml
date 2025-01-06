@@ -104,8 +104,6 @@ jobs:
           fi
 
       - name: Update the osbuild/images reference to the PR HEAD
-        env:
-          pr_head: ${{ github.event.pull_request.hase.sha }}
         # if the base tests failed, there's no need to run the PR HEAD tests
         if: steps.tests-base.outputs.base_test == 1
         # Restore and clean the checkout and replace the dependency again using
