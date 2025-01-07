@@ -134,7 +134,8 @@ func TestDepsolver(t *testing.T) {
 				require.NotNil(t, res)
 			}
 
-			assert.Equal(expectedResult(s.RepoConfig), res.Packages)
+			assert.Equal(len(res.Repos), 1)
+			assert.Equal(expectedResult(res.Repos[0]), res.Packages)
 
 			if tc.sbomType != sbom.StandardTypeNone {
 				require.NotNil(t, res.SBOM)
@@ -725,6 +726,8 @@ func expectedResult(repo rpmmd.RepoConfig) []rpmmd.PackageSpec {
 	for idx := range exp {
 		urlTemplate := exp[idx].RemoteLocation
 		exp[idx].RemoteLocation = fmt.Sprintf(urlTemplate, strings.Join(repo.BaseURLs, ","))
+		exp[idx].Path = strings.TrimPrefix(urlTemplate, "%s/")
+		exp[idx].RepoID = repo.Id
 	}
 	return exp
 }
