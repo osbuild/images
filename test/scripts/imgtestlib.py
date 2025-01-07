@@ -108,14 +108,15 @@ def list_images(distros=None, arches=None, images=None):
     return json.loads(out)
 
 
-def dl_build_info(destination, distro=None, arch=None):
+def dl_build_info(destination, osbuild_version, distro=None, arch=None):
     """
     Downloads all the configs from the s3 bucket.
     """
     s3url = f"{S3_BUCKET}/{S3_PREFIX}"
+    s3url += f"/{osbuild_version}"
     if distro and arch:
         # only take them into account if both are defined
-        s3url = f"{s3url}/{distro}/{arch}"
+        s3url += f"/{distro}/{arch}"
 
     s3url += "/"
 
@@ -153,31 +154,32 @@ def gen_build_name(distro, arch, image_type, config_name):
     return f"{_u(distro)}-{_u(arch)}-{_u(image_type)}-{_u(config_name)}"
 
 
-def gen_build_info_dir_path(root, osbuild_ver, manifest_id):
+def gen_build_info_dir_path(root, manifest_id):
     """
     Generates the path to the directory that contains the build info.
     This is a simple os.path.join() of the components, but ensures that paths are consistent.
     """
-    return os.path.join(root, osbuild_ver, manifest_id, "")
+    # NB: the last component is an empty string to ensure that the path ends with a separator to ensure convention
+    # with S3 paths.
+    return os.path.join(root, manifest_id, "")
 
 
-def gen_build_info_path(root, osbuild_ver, manifest_id):
+def gen_build_info_path(root, manifest_id):
     """
     Generates the path to the info.json.
     This is a simple os.path.join() of the components, but ensures that paths are consistent.
     """
-    return os.path.join(gen_build_info_dir_path(root, osbuild_ver, manifest_id), "info.json")
+    return os.path.join(gen_build_info_dir_path(root, manifest_id), "info.json")
 
 
-def gen_build_info_s3(distro, arch, manifest_id):
+def gen_build_info_s3(osbuild_ver, distro, arch, manifest_id):
     """
     Generates the s3 URL for the location where build info and artifacts will be stored for a specific build
     configuration.
     This is a simple concatenation of the components, but ensures that paths are consistent.
     """
-    osbuild_ver = get_osbuild_nevra()
-    build_info_prefix = f"{S3_BUCKET}/images/builds/{distro}/{arch}"
-    return gen_build_info_dir_path(build_info_prefix, osbuild_ver, manifest_id)
+    build_info_prefix = os.path.join(S3_BUCKET, S3_PREFIX, osbuild_ver, distro, arch)
+    return gen_build_info_dir_path(build_info_prefix, manifest_id)
 
 
 def check_config_names():
@@ -313,17 +315,16 @@ def filter_builds(manifests, distro=None, arch=None, skip_ostree_pull=True):
     Returns a list of build requests for the manifests that have no matching config in the test build cache.
     """
     print(f"⚙️ Filtering {len(manifests)} build configurations")
-    dl_path = os.path.join(TEST_CACHE_ROOT, "s3configs", f"builds/{distro}/{arch}/")
+    osbuild_ver = get_osbuild_nevra()
+    dl_path = os.path.join(TEST_CACHE_ROOT, "s3configs", "builds", osbuild_ver, distro, arch)
     os.makedirs(dl_path, exist_ok=True)
     build_requests = []
 
-    out, dl_ok = dl_build_info(dl_path, distro=distro, arch=arch)
+    out, dl_ok = dl_build_info(dl_path, osbuild_ver, distro=distro, arch=arch)
     # continue even if the dl failed; will build all configs
     if dl_ok:
         # print output which includes list of downloaded files for CI job log
         print(out)
-
-    osbuild_ver = get_osbuild_nevra()
 
     errors: list[str] = []
     for manifest_fname, data in manifests.items():
@@ -346,7 +347,7 @@ def filter_builds(manifests, distro=None, arch=None, skip_ostree_pull=True):
         build_request["manifest-checksum"] = manifest_id
 
         # check if the hash_fname exists in the synced directory
-        build_info_dir = gen_build_info_dir_path(dl_path, osbuild_ver, manifest_id)
+        build_info_dir = gen_build_info_dir_path(dl_path, manifest_id)
 
         if check_for_build(manifest_fname, build_info_dir, errors):
             build_requests.append(build_request)

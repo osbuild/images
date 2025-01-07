@@ -223,8 +223,9 @@ def setup_dependencies(manifests, config_map, distro, arch):
             ic_image_type = image_config["image-type"]
             dep_build_name = testlib.gen_build_name(ic_distro, ic_arch, dep_image_type, dep_config_name)
             manifest_id = manifests[dep_build_name + ".json"]["id"]
-            container_s3_prefix = testlib.gen_build_info_s3(distro, arch, manifest_id)
-            container_s3_path = f"{container_s3_prefix}container/container.tar"
+            osbuild_ver = testlib.get_osbuild_nevra()
+            container_s3_prefix = testlib.gen_build_info_s3(osbuild_ver, distro, arch, manifest_id)
+            container_s3_path = os.path.join(container_s3_prefix, "container", "container.tar")
 
             # start each container once on an incremental port
             port = container_ports.get(container_s3_path)
