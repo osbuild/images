@@ -39,7 +39,8 @@ def main():
         testlib.write_build_info(build_dir, build_info)
 
     osbuild_ver = testlib.get_osbuild_nevra()
-    s3url = testlib.gen_build_info_s3_dir_path(osbuild_ver, distro, arch, manifest_id)
+    runner_distro = testlib.get_host_distro()
+    s3url = testlib.gen_build_info_s3_dir_path(osbuild_ver, runner_distro, distro, arch, manifest_id)
 
     print(f"⬆️ Uploading {build_dir} to {s3url}")
     testlib.runcmd_nc(["aws", "s3", "cp", "--no-progress", "--acl=private", "--recursive", build_dir+"/", s3url])
