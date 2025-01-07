@@ -134,7 +134,7 @@ func TestImageTypePipelineNames(t *testing.T) {
 						}
 						commits[name] = commitSpecs
 					}
-					mf, err := m.Serialize(packageSets, containers, commits, repoSets)
+					mf, err := m.Serialize(packageSets, containers, commits, repoSets, 0)
 					assert.NoError(err)
 					pm := new(manifest)
 					err = json.Unmarshal(mf, pm)
