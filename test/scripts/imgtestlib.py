@@ -395,6 +395,15 @@ def read_osrelease():
     return osrelease
 
 
+def get_host_distro():
+    """
+    Get the host distro version based on data in the os-release file.
+    The format is <distro>-<version> (e.g. fedora-41).
+    """
+    osrelease = read_osrelease()
+    return f"{osrelease['ID']}-{osrelease['VERSION_ID']}"
+
+
 def get_osbuild_commit(distro_version):
     """
     Get the osbuild commit defined in the Schutzfile for the host distro.
