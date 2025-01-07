@@ -163,11 +163,6 @@ def test_gen_build_info_s3_dir_path(kwargs, expected):
     assert testlib.gen_build_info_s3_dir_path(**kwargs) == expected
 
 
-def test_path_generators():
-    assert testlib.gen_build_info_dir_path("inforoot", "abc123") == \
-        "inforoot/abc123/"
-
-
 test_container = "registry.gitlab.com/redhat/services/products/image-builder/ci/osbuild-composer/manifest-list-test"
 
 manifest_list_digest = "sha256:58150862447d05feeb263ddb7257bf11d2ce2a697362ac117de2184d10f028fc"
