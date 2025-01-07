@@ -1,6 +1,7 @@
 import os
 import subprocess as sp
 import tempfile
+from unittest.mock import patch
 
 import pytest
 
@@ -92,9 +93,30 @@ def test_read_seed():
         },
         "osbuild-ref-abc123/runner-fedora-41/fedora-41/"
     ),
+    # default osbuild_ref
+    (
+        {
+            "runner_distro": "fedora-41",
+        },
+        "osbuild-ref-abcdef123456/runner-fedora-41/"
+    ),
+    # default runner_distro
+    (
+        {
+            "osbuild_ref": "abc123",
+        },
+        "osbuild-ref-abc123/runner-fedora-999/"
+    ),
+    # default osbuild_ref and runner_distro
+    (
+        {},
+        "osbuild-ref-abcdef123456/runner-fedora-999/"
+    ),
 ))
 def test_gen_build_info_dir_path_prefix(kwargs, expected):
-    assert testlib.gen_build_info_dir_path_prefix(**kwargs) == expected
+    with patch("imgtestlib.get_host_distro", return_value="fedora-999"), \
+         patch("imgtestlib.get_osbuild_commit", return_value="abcdef123456"):
+        assert testlib.gen_build_info_dir_path_prefix(**kwargs) == expected
 
 
 @pytest.mark.parametrize("kwargs,expected", (
@@ -158,9 +180,30 @@ def test_gen_build_info_dir_path_prefix(kwargs, expected):
         testlib.S3_BUCKET + "/" + testlib.S3_PREFIX + \
             "/osbuild-ref-abcdef123456/runner-fedora-41/fedora-41/",
     ),
+    # default osbuild_ref
+    (
+        {
+            "runner_distro": "fedora-41",
+        },
+        testlib.S3_BUCKET + "/" + testlib.S3_PREFIX + "/osbuild-ref-abcdef123456/runner-fedora-41/"
+    ),
+    # default runner_distro
+    (
+        {
+            "osbuild_ref": "abc123",
+        },
+        testlib.S3_BUCKET + "/" + testlib.S3_PREFIX + "/osbuild-ref-abc123/runner-fedora-999/"
+    ),
+    # default osbuild_ref and runner_distro
+    (
+        {},
+        testlib.S3_BUCKET + "/" + testlib.S3_PREFIX + "/osbuild-ref-abcdef123456/runner-fedora-999/"
+    ),
 ))
 def test_gen_build_info_s3_dir_path(kwargs, expected):
-    assert testlib.gen_build_info_s3_dir_path(**kwargs) == expected
+    with patch("imgtestlib.get_host_distro", return_value="fedora-999"), \
+         patch("imgtestlib.get_osbuild_commit", return_value="abcdef123456"):
+        assert testlib.gen_build_info_s3_dir_path(**kwargs) == expected
 
 
 test_container = "registry.gitlab.com/redhat/services/products/image-builder/ci/osbuild-composer/manifest-list-test"

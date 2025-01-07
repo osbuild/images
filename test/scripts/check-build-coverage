@@ -60,9 +60,7 @@ def main():
     parser.add_argument("cachedir", type=str, help="path to download the build test cache")
     args = parser.parse_args()
     cachedir = args.cachedir
-    runner_distro = testlib.get_host_distro()
-    osbuild_ref = testlib.get_osbuild_commit(runner_distro)
-    _, ok = testlib.dl_build_info(cachedir, osbuild_ref, runner_distro)
+    _, ok = testlib.dl_build_info(cachedir)
     # fail the job if the sync failed
     if not ok:
         sys.exit(1)
