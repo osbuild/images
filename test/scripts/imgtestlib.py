@@ -112,15 +112,7 @@ def dl_build_info(destination, osbuild_ref, runner_distro, distro=None, arch=Non
     """
     Downloads all the configs from the s3 bucket.
     """
-    s3url = f"{S3_BUCKET}/{S3_PREFIX}"
-    s3url += f"/osbuild-ref-{osbuild_ref}"
-    s3url += f"/runner-{runner_distro}"
-    if distro and arch:
-        # only take them into account if both are defined
-        s3url += f"/{distro}/{arch}"
-
-    s3url += "/"
-
+    s3url = gen_build_info_s3_dir_path(osbuild_ref, runner_distro, distro, arch)
     print(f"⬇️ Downloading configs from {s3url}")
     # only download info.json (exclude everything, then include) files, otherwise we get manifests and whole images
     job = sp.run(["aws", "s3", "sync",
