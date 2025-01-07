@@ -82,7 +82,7 @@ func makeManifest(
 		return nil, fmt.Errorf("[ERROR] ostree commit resolution failed: %w", err)
 	}
 
-	mf, err := manifest.Serialize(packageSpecs, containerSpecs, commitSpecs, nil)
+	mf, err := manifest.Serialize(packageSpecs, containerSpecs, commitSpecs, repoConfigs, 0)
 	if err != nil {
 		return nil, fmt.Errorf("[ERROR] manifest serialization failed: %w", err)
 	}

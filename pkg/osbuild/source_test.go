@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/osbuild/images/pkg/container"
+	"github.com/osbuild/images/pkg/rpmmd"
 )
 
 func TestSource_UnmarshalJSON(t *testing.T) {
@@ -91,6 +92,28 @@ func TestSource_UnmarshalJSON(t *testing.T) {
 				data: []byte(`{"org.osbuild.curl":{"items":{"checksum1":"url1","checksum2":"url2"}}}`),
 			},
 		},
+		{
+			name: "librepo",
+			fields: fields{
+				Type: "org.osbuild.librepo",
+				Source: &LibrepoSource{
+					Items: map[string]*LibrepoSourceItem{
+						"checksum1": &LibrepoSourceItem{Path: "path1", MirrorID: "mirror1"},
+					},
+					Options: &LibrepoSourceOptions{
+						Mirrors: map[string]*LibrepoSourceMirror{
+							"mirror1": &LibrepoSourceMirror{
+								URL:  "http://example.com/metalink",
+								Type: "metalink",
+							},
+						},
+					},
+				},
+			},
+			args: args{
+				data: []byte(`{"org.osbuild.librepo":{"items":{"checksum1":{"path":"path1","mirror":"mirror1"}},"options":{"mirrors":{"mirror1":{"url":"http://example.com/metalink","type":"metalink"}}}}}`),
+			},
+		},
 	}
 	for idx, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -119,7 +142,7 @@ func TestSource_UnmarshalJSON(t *testing.T) {
 }
 
 func TestGenSourcesTrivial(t *testing.T) {
-	sources, err := GenSources(nil, nil, nil, nil)
+	sources, err := GenSources(SourceInputs{}, 0)
 	assert.NoError(t, err)
 
 	jsonOutput, err := json.MarshalIndent(sources, "", "  ")
@@ -135,7 +158,7 @@ func TestGenSourcesContainerStorage(t *testing.T) {
 			LocalStorage: true,
 		},
 	}
-	sources, err := GenSources(nil, nil, nil, containers)
+	sources, err := GenSources(SourceInputs{Containers: containers}, 0)
 	assert.NoError(t, err)
 
 	jsonOutput, err := json.MarshalIndent(sources, "", "  ")
@@ -159,7 +182,7 @@ func TestGenSourcesSkopeo(t *testing.T) {
 			ImageID: imageID,
 		},
 	}
-	sources, err := GenSources(nil, nil, nil, containers)
+	sources, err := GenSources(SourceInputs{Containers: containers}, 0)
 	assert.NoError(t, err)
 
 	jsonOutput, err := json.MarshalIndent(sources, "", "  ")
@@ -190,7 +213,7 @@ func TestGenSourcesWithSkopeoIndex(t *testing.T) {
 			ImageID:    imageID,
 		},
 	}
-	sources, err := GenSources(nil, nil, nil, containers)
+	sources, err := GenSources(SourceInputs{Containers: containers}, 0)
 	assert.NoError(t, err)
 
 	jsonOutput, err := json.MarshalIndent(sources, "", "  ")
@@ -216,4 +239,93 @@ func TestGenSourcesWithSkopeoIndex(t *testing.T) {
     }
   }
 }`)
+}
+
+// TODO: move into a common "rpmtest" package
+var opensslPkg = rpmmd.PackageSpec{
+	Name:           "openssl-libs",
+	RemoteLocation: "https://example.com/repo/Packages/openssl-libs-3.0.1-5.el9.x86_64.rpm",
+	Checksum:       "sha256:fcf2515ec9115551c99d552da721803ecbca23b7ae5a974309975000e8bef666",
+	Path:           "Packages/openssl-libs-3.0.1-5.el9.x86_64.rpm",
+	RepoID:         "repo_id_metalink",
+}
+
+var fakeRepos = []rpmmd.RepoConfig{
+	{
+		Id:       "repo_id_metalink",
+		Metalink: "http://example.com/metalink",
+	},
+}
+
+func TestGenSourcesRpmDefaultRpmDownloaderIsCurl(t *testing.T) {
+	inputs := SourceInputs{
+		Packages: []rpmmd.PackageSpec{opensslPkg},
+		RpmRepos: fakeRepos,
+	}
+	var defaultRpmDownloader RpmDownloader
+	sources, err := GenSources(inputs, defaultRpmDownloader)
+	assert.NoError(t, err)
+
+	assert.NotNil(t, sources["org.osbuild.curl"])
+	assert.Nil(t, sources["org.osbuild.librepo"])
+}
+
+func TestGenSourcesRpmWithLibcurl(t *testing.T) {
+	inputs := SourceInputs{
+		Packages: []rpmmd.PackageSpec{opensslPkg},
+		RpmRepos: fakeRepos,
+	}
+	sources, err := GenSources(inputs, RpmDownloaderCurl)
+	assert.NoError(t, err)
+
+	jsonOutput, err := json.MarshalIndent(sources, "", "  ")
+	assert.NoError(t, err)
+	assert.Equal(t, string(jsonOutput), `{
+  "org.osbuild.curl": {
+    "items": {
+      "sha256:fcf2515ec9115551c99d552da721803ecbca23b7ae5a974309975000e8bef666": {
+        "url": "https://example.com/repo/Packages/openssl-libs-3.0.1-5.el9.x86_64.rpm"
+      }
+    }
+  }
+}`)
+}
+
+func TestGenSourcesRpmWithLibrepo(t *testing.T) {
+	inputs := SourceInputs{
+		Packages: []rpmmd.PackageSpec{opensslPkg},
+		RpmRepos: fakeRepos,
+	}
+	sources, err := GenSources(inputs, RpmDownloaderLibrepo)
+	assert.NoError(t, err)
+
+	jsonOutput, err := json.MarshalIndent(sources, "", "  ")
+	assert.NoError(t, err)
+	assert.Equal(t, string(jsonOutput), `{
+  "org.osbuild.librepo": {
+    "items": {
+      "sha256:fcf2515ec9115551c99d552da721803ecbca23b7ae5a974309975000e8bef666": {
+        "path": "Packages/openssl-libs-3.0.1-5.el9.x86_64.rpm",
+        "mirror": "repo_id_metalink"
+      }
+    },
+    "options": {
+      "mirrors": {
+        "repo_id_metalink": {
+          "url": "http://example.com/metalink",
+          "type": "metalink"
+        }
+      }
+    }
+  }
+}`)
+}
+
+func TestGenSourcesRpmBad(t *testing.T) {
+	inputs := SourceInputs{
+		Packages: []rpmmd.PackageSpec{opensslPkg},
+		RpmRepos: fakeRepos,
+	}
+	_, err := GenSources(inputs, 99)
+	assert.EqualError(t, err, "unknown rpm downloader 99")
 }

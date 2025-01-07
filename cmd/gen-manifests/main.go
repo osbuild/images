@@ -251,7 +251,7 @@ func makeManifestJob(
 			commitSpecs = mockResolveCommits(manifest.GetOSTreeSourceSpecs())
 		}
 
-		mf, err := manifest.Serialize(packageSpecs, containerSpecs, commitSpecs, repoConfigs)
+		mf, err := manifest.Serialize(packageSpecs, containerSpecs, commitSpecs, repoConfigs, 0)
 		if err != nil {
 			return fmt.Errorf("[%s] manifest serialization failed: %s", filename, err.Error())
 		}
