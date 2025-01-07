@@ -155,6 +155,27 @@ def gen_build_name(distro, arch, image_type, config_name):
     return f"{_u(distro)}-{_u(arch)}-{_u(image_type)}-{_u(config_name)}"
 
 
+def gen_build_info_dir_path_prefix(osbuild_ref, runner_distro, distro=None, arch=None, manifest_id=None):
+    """
+    Generates the relative path prefix for the location where build info and artifacts will be stored for a specific
+    build. This is a simple concatenation of the components, but ensures that paths are consistent. The caller is
+    responsible for prepending the location root to the generated path.
+
+    A fully specified path is returned if all parameters are specified, otherwise a partial path is returned. Partial
+    path may be useful for working with a superset of build infos. For a more specific path to be generated when
+    specifying any of the optional parameters, the caller must specify all of the previous parameters. For example,
+    if 'arch' is specified, 'distro' must also be specified for 'arch' to be included in the path.
+
+    The returned path always has a trailing separator at the end to signal that it is a directory.
+    """
+    path = os.path.join(f"osbuild-ref-{osbuild_ref}", f"runner-{runner_distro}")
+    for p in (distro, arch, manifest_id):
+        if p is None:
+            return path + "/"
+        path = os.path.join(path, p)
+    return path + "/"
+
+
 def gen_build_info_dir_path(root, manifest_id):
     """
     Generates the path to the directory that contains the build info.
