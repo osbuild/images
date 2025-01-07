@@ -38,7 +38,8 @@ def main():
         build_info["pr"] = pr_number.removeprefix("PR-")
         testlib.write_build_info(build_dir, build_info)
 
-    s3url = testlib.gen_build_info_s3(distro, arch, manifest_id)
+    osbuild_ver = testlib.get_osbuild_nevra()
+    s3url = testlib.gen_build_info_s3(osbuild_ver, distro, arch, manifest_id)
 
     print(f"⬆️ Uploading {build_dir} to {s3url}")
     testlib.runcmd_nc(["aws", "s3", "cp", "--no-progress", "--acl=private", "--recursive", build_dir+"/", s3url])
