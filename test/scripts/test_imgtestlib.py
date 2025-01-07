@@ -166,8 +166,6 @@ def test_gen_build_info_s3_dir_path(kwargs, expected):
 def test_path_generators():
     assert testlib.gen_build_info_dir_path("inforoot", "abc123") == \
         "inforoot/abc123/"
-    assert testlib.gen_build_info_path("inforoot", "abc123") == \
-        "inforoot/abc123/info.json"
 
 
 test_container = "registry.gitlab.com/redhat/services/products/image-builder/ci/osbuild-composer/manifest-list-test"

@@ -178,14 +178,6 @@ def gen_build_info_dir_path(root, manifest_id):
     return os.path.join(root, manifest_id, "")
 
 
-def gen_build_info_path(root, manifest_id):
-    """
-    Generates the path to the info.json.
-    This is a simple os.path.join() of the components, but ensures that paths are consistent.
-    """
-    return os.path.join(gen_build_info_dir_path(root, manifest_id), "info.json")
-
-
 def gen_build_info_s3_dir_path(osbuild_ref, runner_distro, distro=None, arch=None, manifest_id=None):
     """
     Generates the s3 URL for the location where build info and artifacts will be stored for a specific
