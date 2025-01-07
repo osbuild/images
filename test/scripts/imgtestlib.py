@@ -108,11 +108,11 @@ def list_images(distros=None, arches=None, images=None):
     return json.loads(out)
 
 
-def dl_build_info(destination, osbuild_ref, runner_distro, distro=None, arch=None):
+def dl_build_info(destination, distro=None, arch=None, osbuild_ref=None, runner_distro=None):
     """
     Downloads all the configs from the s3 bucket.
     """
-    s3url = gen_build_info_s3_dir_path(osbuild_ref, runner_distro, distro, arch)
+    s3url = gen_build_info_s3_dir_path(distro, arch, osbuild_ref=osbuild_ref, runner_distro=runner_distro)
     print(f"⬇️ Downloading configs from {s3url}")
     # only download info.json (exclude everything, then include) files, otherwise we get manifests and whole images
     job = sp.run(["aws", "s3", "sync",
@@ -147,19 +147,28 @@ def gen_build_name(distro, arch, image_type, config_name):
     return f"{_u(distro)}-{_u(arch)}-{_u(image_type)}-{_u(config_name)}"
 
 
-def gen_build_info_dir_path_prefix(osbuild_ref, runner_distro, distro=None, arch=None, manifest_id=None):
+def gen_build_info_dir_path_prefix(distro=None, arch=None, manifest_id=None, osbuild_ref=None, runner_distro=None):
     """
     Generates the relative path prefix for the location where build info and artifacts will be stored for a specific
     build. This is a simple concatenation of the components, but ensures that paths are consistent. The caller is
     responsible for prepending the location root to the generated path.
 
-    A fully specified path is returned if all parameters are specified, otherwise a partial path is returned. Partial
-    path may be useful for working with a superset of build infos. For a more specific path to be generated when
-    specifying any of the optional parameters, the caller must specify all of the previous parameters. For example,
-    if 'arch' is specified, 'distro' must also be specified for 'arch' to be included in the path.
+    If no 'osbuild_ref' is specified, the value returned by get_osbuild_commit() for the 'runner_distro' will be used.
+    if no 'runner_distro' is specified, the value returned by get_host_distro() will be used.
+
+    A fully specified path is returned if all of the 'distro', 'arch' and 'manifest_id' parameters are specified,
+    otherwise a partial path is returned. Partial path may be useful for working with a superset of build infos.
+    For a more specific path to be generated when specifying any of the optional parameters, the caller must specify
+    all of the previous parameters. For example, if 'arch' is specified, 'distro' must also be specified for 'arch' to
+    be included in the path.
 
     The returned path always has a trailing separator at the end to signal that it is a directory.
     """
+    if runner_distro is None:
+        runner_distro = get_host_distro()
+    if osbuild_ref is None:
+        osbuild_ref = get_osbuild_commit(runner_distro)
+
     path = os.path.join(f"osbuild-ref-{osbuild_ref}", f"runner-{runner_distro}")
     for p in (distro, arch, f"manifest-id-{manifest_id}" if manifest_id else None):
         if p is None:
@@ -168,7 +177,7 @@ def gen_build_info_dir_path_prefix(osbuild_ref, runner_distro, distro=None, arch
     return path + "/"
 
 
-def gen_build_info_s3_dir_path(osbuild_ref, runner_distro, distro=None, arch=None, manifest_id=None):
+def gen_build_info_s3_dir_path(distro=None, arch=None, manifest_id=None, osbuild_ref=None, runner_distro=None):
     """
     Generates the s3 URL for the location where build info and artifacts will be stored for a specific
     one or more builds, depending on the parameters specified.
@@ -180,7 +189,7 @@ def gen_build_info_s3_dir_path(osbuild_ref, runner_distro, distro=None, arch=Non
     return os.path.join(
         S3_BUCKET,
         S3_PREFIX,
-        gen_build_info_dir_path_prefix(osbuild_ref, runner_distro, distro, arch, manifest_id),
+        gen_build_info_dir_path_prefix(distro, arch, manifest_id, osbuild_ref, runner_distro),
     )
 
 
@@ -317,14 +326,12 @@ def filter_builds(manifests, distro=None, arch=None, skip_ostree_pull=True):
     Returns a list of build requests for the manifests that have no matching config in the test build cache.
     """
     print(f"⚙️ Filtering {len(manifests)} build configurations")
-    runner_distro = get_host_distro()
-    osbuild_ref = get_osbuild_commit(runner_distro)
     dl_root_path = os.path.join(TEST_CACHE_ROOT, "s3configs", "builds")
-    dl_path = os.path.join(dl_root_path, gen_build_info_dir_path_prefix(osbuild_ref, runner_distro, distro, arch))
+    dl_path = os.path.join(dl_root_path, gen_build_info_dir_path_prefix(distro, arch))
     os.makedirs(dl_path, exist_ok=True)
     build_requests = []
 
-    out, dl_ok = dl_build_info(dl_path, osbuild_ref, runner_distro, distro=distro, arch=arch)
+    out, dl_ok = dl_build_info(dl_path, distro, arch)
     # continue even if the dl failed; will build all configs
     if dl_ok:
         # print output which includes list of downloaded files for CI job log
@@ -353,7 +360,7 @@ def filter_builds(manifests, distro=None, arch=None, skip_ostree_pull=True):
         # check if the hash_fname exists in the synced directory
         build_info_dir = os.path.join(
             dl_root_path,
-            gen_build_info_dir_path_prefix(osbuild_ref, runner_distro, distro, arch, manifest_id)
+            gen_build_info_dir_path_prefix(distro, arch, manifest_id)
         )
 
         if check_for_build(manifest_fname, build_info_dir, errors):
