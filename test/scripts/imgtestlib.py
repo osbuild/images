@@ -337,8 +337,8 @@ def filter_builds(manifests, distro=None, arch=None, skip_ostree_pull=True):
     print(f"⚙️ Filtering {len(manifests)} build configurations")
     runner_distro = get_host_distro()
     osbuild_ref = get_osbuild_commit(runner_distro)
-    dl_path = os.path.join(
-        TEST_CACHE_ROOT, "s3configs", "builds", f"osbuild-ref-{osbuild_ref}", f"runner-{runner_distro}", distro, arch)
+    dl_root_path = os.path.join(TEST_CACHE_ROOT, "s3configs", "builds")
+    dl_path = os.path.join(dl_root_path, gen_build_info_dir_path_prefix(osbuild_ref, runner_distro, distro, arch))
     os.makedirs(dl_path, exist_ok=True)
     build_requests = []
 
@@ -369,7 +369,10 @@ def filter_builds(manifests, distro=None, arch=None, skip_ostree_pull=True):
         build_request["manifest-checksum"] = manifest_id
 
         # check if the hash_fname exists in the synced directory
-        build_info_dir = gen_build_info_dir_path(dl_path, manifest_id)
+        build_info_dir = os.path.join(
+            dl_root_path,
+            gen_build_info_dir_path_prefix(osbuild_ref, runner_distro, distro, arch, manifest_id)
+        )
 
         if check_for_build(manifest_fname, build_info_dir, errors):
             build_requests.append(build_request)
