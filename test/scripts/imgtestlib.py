@@ -161,7 +161,7 @@ def gen_build_info_dir_path_prefix(osbuild_ref, runner_distro, distro=None, arch
     The returned path always has a trailing separator at the end to signal that it is a directory.
     """
     path = os.path.join(f"osbuild-ref-{osbuild_ref}", f"runner-{runner_distro}")
-    for p in (distro, arch, manifest_id):
+    for p in (distro, arch, f"manifest-id-{manifest_id}" if manifest_id else None):
         if p is None:
             return path + "/"
         path = os.path.join(path, p)

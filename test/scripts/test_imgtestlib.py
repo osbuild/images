@@ -70,7 +70,7 @@ def test_read_seed():
             "arch": "x86_64",
             "manifest_id": "abc123123",
         },
-        "osbuild-ref-abc123/runner-fedora-41/fedora-41/x86_64/abc123123/"
+        "osbuild-ref-abc123/runner-fedora-41/fedora-41/x86_64/manifest-id-abc123123/"
     ),
     # Optional arg 'distro' not specified, thus following optional args 'arch' and 'manifest_id' are ignored
     (
@@ -107,7 +107,7 @@ def test_gen_build_info_dir_path_prefix(kwargs, expected):
             "manifest_id": "abc123"
         },
         testlib.S3_BUCKET + "/" + testlib.S3_PREFIX + \
-            "/osbuild-ref-abcdef123456/runner-fedora-41/fedora-41/aarch64/abc123/",
+            "/osbuild-ref-abcdef123456/runner-fedora-41/fedora-41/aarch64/manifest-id-abc123/",
     ),
     (
         {
