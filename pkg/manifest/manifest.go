@@ -158,7 +158,7 @@ func (m Manifest) Serialize(packageSets map[string][]rpmmd.PackageSpec, containe
 		pipeline.serializeEnd()
 	}
 
-	sources, err := osbuild.GenSources(packages, commits, inline, containers)
+	sources, err := osbuild.GenSources(packages, commits, inline, containers, rpmRepos)
 	if err != nil {
 		return nil, err
 	}

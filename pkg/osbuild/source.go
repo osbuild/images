@@ -3,6 +3,7 @@ package osbuild
 import (
 	"encoding/json"
 	"errors"
+	"os"
 
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/ostree"
@@ -54,19 +55,46 @@ func (sources *Sources) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func GenSources(packages []rpmmd.PackageSpec, ostreeCommits []ostree.CommitSpec, inlineData []string, containers []container.Spec) (Sources, error) {
+func addPackagesCurl(sources Sources, packages []rpmmd.PackageSpec) error {
+	curl := NewCurlSource()
+	for _, pkg := range packages {
+		err := curl.AddPackage(pkg)
+		if err != nil {
+			return err
+		}
+	}
+	sources["org.osbuild.curl"] = curl
+	return nil
+}
+
+func addPackagesLibrepo(sources Sources, packages []rpmmd.PackageSpec, rpmRepos map[string][]rpmmd.RepoConfig) error {
+	librepo := NewLibrepoSource()
+	for _, pkg := range packages {
+		err := librepo.AddPackage(pkg, rpmRepos)
+		if err != nil {
+			return err
+		}
+	}
+	sources["org.osbuild.librepo"] = librepo
+	return nil
+}
+
+func GenSources(packages []rpmmd.PackageSpec, ostreeCommits []ostree.CommitSpec, inlineData []string, containers []container.Spec, rpmRepos map[string][]rpmmd.RepoConfig) (Sources, error) {
 	sources := Sources{}
 
 	// collect rpm package sources
 	if len(packages) > 0 {
-		curl := NewCurlSource()
-		for _, pkg := range packages {
-			err := curl.AddPackage(pkg)
-			if err != nil {
-				return nil, err
-			}
+		// XXX: hack, we have no good way to pass options to GenSource
+		// right now
+		var err error
+		if s := os.Getenv("OSBUILD_USE_LIBREPO"); s == "1" {
+			err = addPackagesLibrepo(sources, packages, rpmRepos)
+		} else {
+			err = addPackagesCurl(sources, packages)
 		}
-		sources["org.osbuild.curl"] = curl
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// collect ostree commit sources
