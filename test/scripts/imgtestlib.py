@@ -168,16 +168,6 @@ def gen_build_info_dir_path_prefix(osbuild_ref, runner_distro, distro=None, arch
     return path + "/"
 
 
-def gen_build_info_dir_path(root, manifest_id):
-    """
-    Generates the path to the directory that contains the build info.
-    This is a simple os.path.join() of the components, but ensures that paths are consistent.
-    """
-    # NB: the last component is an empty string to ensure that the path ends with a separator to ensure convention
-    # with S3 paths.
-    return os.path.join(root, manifest_id, "")
-
-
 def gen_build_info_s3_dir_path(osbuild_ref, runner_distro, distro=None, arch=None, manifest_id=None):
     """
     Generates the s3 URL for the location where build info and artifacts will be stored for a specific
