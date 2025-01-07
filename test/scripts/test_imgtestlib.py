@@ -37,6 +37,66 @@ def test_read_seed():
     assert "OSBUILD_TESTING_RNG_SEED" in seed_env
 
 
+@pytest.mark.parametrize("kwargs,expected", (
+    (
+        {
+            "osbuild_ref": "abc123",
+            "runner_distro": "fedora-41",
+        },
+        "osbuild-ref-abc123/runner-fedora-41/"
+    ),
+    (
+        {
+            "osbuild_ref": "abc123",
+            "runner_distro": "fedora-41",
+            "distro": "fedora-41",
+        },
+        "osbuild-ref-abc123/runner-fedora-41/fedora-41/"
+    ),
+    (
+        {
+            "osbuild_ref": "abc123",
+            "runner_distro": "fedora-41",
+            "distro": "fedora-41",
+            "arch": "x86_64",
+        },
+        "osbuild-ref-abc123/runner-fedora-41/fedora-41/x86_64/"
+    ),
+    (
+        {
+            "osbuild_ref": "abc123",
+            "runner_distro": "fedora-41",
+            "distro": "fedora-41",
+            "arch": "x86_64",
+            "manifest_id": "abc123123",
+        },
+        "osbuild-ref-abc123/runner-fedora-41/fedora-41/x86_64/abc123123/"
+    ),
+    # Optional arg 'distro' not specified, thus following optional args 'arch' and 'manifest_id' are ignored
+    (
+        {
+            "osbuild_ref": "abc123",
+            "runner_distro": "fedora-41",
+            "arch": "x86_64",
+            "manifest_id": "abc123123"
+        },
+        "osbuild-ref-abc123/runner-fedora-41/"
+    ),
+    # Optional arg 'arch' not specified, thus following optional arg 'manifest_id' is ignored
+    (
+        {
+            "osbuild_ref": "abc123",
+            "runner_distro": "fedora-41",
+            "distro": "fedora-41",
+            "manifest_id": "abc123123"
+        },
+        "osbuild-ref-abc123/runner-fedora-41/fedora-41/"
+    ),
+))
+def test_gen_build_info_dir_path_prefix(kwargs, expected):
+    assert testlib.gen_build_info_dir_path_prefix(**kwargs) == expected
+
+
 def test_path_generators():
     assert testlib.gen_build_info_dir_path("inforoot", "abc123") == \
         "inforoot/abc123/"
