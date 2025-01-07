@@ -145,7 +145,10 @@ func (m Manifest) GetOSTreeSourceSpecs() map[string][]ostree.SourceSpec {
 	return ostreeSpecs
 }
 
-// TODO: change signature to map[string]Inputs
+// TODO: change signature to map[string]Inputs and/or ensure that
+// only depsolved PackageSpecs/RepoConfigs are passed so that we
+// have a valid mapping of pkg.RepoID<->repo.Id which will be important
+// for librepo
 func (m Manifest) Serialize(packageSets map[string][]rpmmd.PackageSpec, containerSpecs map[string][]container.Spec, ostreeCommits map[string][]ostree.CommitSpec, rpmRepos map[string][]rpmmd.RepoConfig) (OSBuildManifest, error) {
 	pipelines := make([]osbuild.Pipeline, 0)
 	packages := make([]rpmmd.PackageSpec, 0)
