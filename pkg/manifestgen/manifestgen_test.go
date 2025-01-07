@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
@@ -16,6 +18,7 @@ import (
 	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/imagefilter"
 	"github.com/osbuild/images/pkg/manifestgen"
+	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/osbuild/manifesttest"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -45,30 +48,43 @@ func TestManifestGeneratorDepsolve(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(res))
 
-	var osbuildManifest bytes.Buffer
-	opts := &manifestgen.Options{
-		Output:            &osbuildManifest,
-		Depsolver:         fakeDepsolve,
-		CommitResolver:    panicCommitResolver,
-		ContainerResolver: panicContainerResolver,
+	for _, useLibrepo := range []bool{false, true} {
+		t.Run(fmt.Sprintf("useLibrepo: %v", useLibrepo), func(t *testing.T) {
+			var rpmDownloader osbuild.RpmDownloader
+			if useLibrepo {
+				rpmDownloader = osbuild.RpmDownloaderLibrepo
+			}
+
+			var osbuildManifest bytes.Buffer
+			opts := &manifestgen.Options{
+				Output:            &osbuildManifest,
+				Depsolver:         fakeDepsolve,
+				CommitResolver:    panicCommitResolver,
+				ContainerResolver: panicContainerResolver,
+
+				RpmDownloader: rpmDownloader,
+			}
+			mg, err := manifestgen.New(repos, opts)
+			assert.NoError(t, err)
+			assert.NotNil(t, mg)
+			var bp blueprint.Blueprint
+			err = mg.Generate(&bp, res[0].Distro, res[0].ImgType, res[0].Arch, nil)
+			require.NoError(t, err)
+
+			pipelineNames, err := manifesttest.PipelineNamesFrom(osbuildManifest.Bytes())
+			assert.NoError(t, err)
+			assert.Equal(t, []string{"build", "os", "image", "qcow2"}, pipelineNames)
+
+			// we expect at least a "kernel" package in the manifest,
+			// sadly the test distro does not really generate much here so we
+			// need to use this as a canary that resolving happend
+			// XXX: add testhelper to manifesttest for this
+			expectedSha256 := sha256For("kernel")
+			assert.Contains(t, osbuildManifest.String(), expectedSha256)
+
+			assert.Equal(t, strings.Contains(osbuildManifest.String(), "org.osbuild.librepo"), useLibrepo)
+		})
 	}
-	mg, err := manifestgen.New(repos, opts)
-	assert.NoError(t, err)
-	assert.NotNil(t, mg)
-	var bp blueprint.Blueprint
-	err = mg.Generate(&bp, res[0].Distro, res[0].ImgType, res[0].Arch, nil)
-	assert.NoError(t, err)
-
-	pipelineNames, err := manifesttest.PipelineNamesFrom(osbuildManifest.Bytes())
-	assert.NoError(t, err)
-	assert.Equal(t, []string{"build", "os", "image", "qcow2"}, pipelineNames)
-
-	// we expect at least a "kernel" package in the manifest,
-	// sadly the test distro does not really generate much here so we
-	// need to use this as a canary that resolving happend
-	// XXX: add testhelper to manifesttest for this
-	expectedSha256 := sha256For("kernel")
-	assert.Contains(t, osbuildManifest.String(), expectedSha256)
 }
 
 func TestManifestGeneratorWithOstreeCommit(t *testing.T) {
@@ -120,19 +136,24 @@ func TestManifestGeneratorWithOstreeCommit(t *testing.T) {
 func fakeDepsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]dnfjson.DepsolveResult, error) {
 	depsolvedSets := make(map[string]dnfjson.DepsolveResult)
 	for name, pkgSets := range packageSets {
+		repoId := fmt.Sprintf("repo_id_%s", name)
 		var resolvedSet dnfjson.DepsolveResult
 		for _, pkgSet := range pkgSets {
 			for _, pkgName := range pkgSet.Include {
 				resolvedSet.Packages = append(resolvedSet.Packages, rpmmd.PackageSpec{
 					Name:     pkgName,
 					Checksum: sha256For(pkgName),
+					Path:     fmt.Sprintf("path/%s.rpm", pkgName),
+					RepoID:   repoId,
 				})
 				resolvedSet.Repos = append(resolvedSet.Repos, rpmmd.RepoConfig{
+					Id:       repoId,
 					Metalink: "https://example.com/metalink",
 				})
 			}
 		}
 		depsolvedSets[name] = resolvedSet
+
 	}
 	return depsolvedSets, nil
 }
