@@ -97,14 +97,77 @@ def test_gen_build_info_dir_path_prefix(kwargs, expected):
     assert testlib.gen_build_info_dir_path_prefix(**kwargs) == expected
 
 
+@pytest.mark.parametrize("kwargs,expected", (
+    (
+        {
+            "osbuild_ref": "abcdef123456",
+            "runner_distro": "fedora-41",
+            "distro": "fedora-41",
+            "arch": "aarch64",
+            "manifest_id": "abc123"
+        },
+        testlib.S3_BUCKET + "/" + testlib.S3_PREFIX + \
+            "/osbuild-ref-abcdef123456/runner-fedora-41/fedora-41/aarch64/abc123/",
+    ),
+    (
+        {
+            "osbuild_ref": "abcdef123456",
+            "runner_distro": "fedora-41",
+            "distro": "fedora-41",
+            "arch": "aarch64",
+        },
+        testlib.S3_BUCKET + "/" + testlib.S3_PREFIX + \
+            "/osbuild-ref-abcdef123456/runner-fedora-41/fedora-41/aarch64/",
+    ),
+    (
+        {
+            "osbuild_ref": "abcdef123456",
+            "runner_distro": "fedora-41",
+            "distro": "fedora-41",
+        },
+        testlib.S3_BUCKET + "/" + testlib.S3_PREFIX + \
+            "/osbuild-ref-abcdef123456/runner-fedora-41/fedora-41/",
+    ),
+    (
+        {
+            "osbuild_ref": "abcdef123456",
+            "runner_distro": "fedora-41",
+        },
+        testlib.S3_BUCKET + "/" + testlib.S3_PREFIX + \
+            "/osbuild-ref-abcdef123456/runner-fedora-41/",
+    ),
+    # Optional arg 'distro' not specified, thus following optional args 'arch' and 'manifest_id' are ignored
+    (
+        {
+            "osbuild_ref": "abcdef123456",
+            "runner_distro": "fedora-41",
+            "arch": "aarch64",
+            "manifest_id": "abc123"
+        },
+        testlib.S3_BUCKET + "/" + testlib.S3_PREFIX + \
+            "/osbuild-ref-abcdef123456/runner-fedora-41/",
+    ),
+    # Optional arg 'arch' not specified, thus following optional arg 'manifest_id' is ignored
+    (
+        {
+            "osbuild_ref": "abcdef123456",
+            "runner_distro": "fedora-41",
+            "distro": "fedora-41",
+            "manifest_id": "abc123"
+        },
+        testlib.S3_BUCKET + "/" + testlib.S3_PREFIX + \
+            "/osbuild-ref-abcdef123456/runner-fedora-41/fedora-41/",
+    ),
+))
+def test_gen_build_info_s3_dir_path(kwargs, expected):
+    assert testlib.gen_build_info_s3_dir_path(**kwargs) == expected
+
+
 def test_path_generators():
     assert testlib.gen_build_info_dir_path("inforoot", "abc123") == \
         "inforoot/abc123/"
     assert testlib.gen_build_info_path("inforoot", "abc123") == \
         "inforoot/abc123/info.json"
-    assert testlib.gen_build_info_s3_dir_path("abcdef123456", "fedora-41", "fedora-41", "aarch64", "abc123") == \
-        testlib.S3_BUCKET + "/" + testlib.S3_PREFIX + \
-        "/osbuild-ref-abcdef123456/runner-fedora-41/fedora-41/aarch64/abc123/"
 
 
 test_container = "registry.gitlab.com/redhat/services/products/image-builder/ci/osbuild-composer/manifest-list-test"
