@@ -44,7 +44,7 @@ def test_path_generators():
         "inforoot/abc123/"
     assert testlib.gen_build_info_path("inforoot", "abc123") == \
         "inforoot/abc123/info.json"
-    assert testlib.gen_build_info_s3(testlib.get_osbuild_nevra(), "fedora-41", "aarch64", "abc123") == \
+    assert testlib.gen_build_info_s3_dir_path(testlib.get_osbuild_nevra(), "fedora-41", "aarch64", "abc123") == \
         testlib.S3_BUCKET + "/" + testlib.S3_PREFIX + \
         "/osbuild-104-1.fc41.noarch/fedora-41/aarch64/abc123/"
 

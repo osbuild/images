@@ -172,7 +172,7 @@ def gen_build_info_path(root, manifest_id):
     return os.path.join(gen_build_info_dir_path(root, manifest_id), "info.json")
 
 
-def gen_build_info_s3(osbuild_ver, distro, arch, manifest_id):
+def gen_build_info_s3_dir_path(osbuild_ver, distro, arch, manifest_id):
     """
     Generates the s3 URL for the location where build info and artifacts will be stored for a specific build
     configuration.
