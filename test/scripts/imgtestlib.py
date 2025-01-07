@@ -108,12 +108,12 @@ def list_images(distros=None, arches=None, images=None):
     return json.loads(out)
 
 
-def dl_build_info(destination, osbuild_version, runner_distro, distro=None, arch=None):
+def dl_build_info(destination, osbuild_ref, runner_distro, distro=None, arch=None):
     """
     Downloads all the configs from the s3 bucket.
     """
     s3url = f"{S3_BUCKET}/{S3_PREFIX}"
-    s3url += f"/{osbuild_version}"
+    s3url += f"/osbuild-ref-{osbuild_ref}"
     s3url += f"/runner-{runner_distro}"
     if distro and arch:
         # only take them into account if both are defined
@@ -173,13 +173,14 @@ def gen_build_info_path(root, manifest_id):
     return os.path.join(gen_build_info_dir_path(root, manifest_id), "info.json")
 
 
-def gen_build_info_s3_dir_path(osbuild_ver, runner_distro, distro, arch, manifest_id):
+def gen_build_info_s3_dir_path(osbuild_ref, runner_distro, distro, arch, manifest_id):
     """
     Generates the s3 URL for the location where build info and artifacts will be stored for a specific build
     configuration.
     This is a simple concatenation of the components, but ensures that paths are consistent.
     """
-    build_info_prefix = os.path.join(S3_BUCKET, S3_PREFIX, osbuild_ver, f"runner-{runner_distro}", distro, arch)
+    build_info_prefix = os.path.join(
+        S3_BUCKET, S3_PREFIX, f"osbuild-ref-{osbuild_ref}", f"runner-{runner_distro}", distro, arch)
     return gen_build_info_dir_path(build_info_prefix, manifest_id)
 
 
@@ -316,13 +317,14 @@ def filter_builds(manifests, distro=None, arch=None, skip_ostree_pull=True):
     Returns a list of build requests for the manifests that have no matching config in the test build cache.
     """
     print(f"⚙️ Filtering {len(manifests)} build configurations")
-    osbuild_ver = get_osbuild_nevra()
     runner_distro = get_host_distro()
-    dl_path = os.path.join(TEST_CACHE_ROOT, "s3configs", "builds", osbuild_ver, f"runner-{runner_distro}", distro, arch)
+    osbuild_ref = get_osbuild_commit(runner_distro)
+    dl_path = os.path.join(
+        TEST_CACHE_ROOT, "s3configs", "builds", f"osbuild-ref-{osbuild_ref}", f"runner-{runner_distro}", distro, arch)
     os.makedirs(dl_path, exist_ok=True)
     build_requests = []
 
-    out, dl_ok = dl_build_info(dl_path, osbuild_ver, runner_distro, distro=distro, arch=arch)
+    out, dl_ok = dl_build_info(dl_path, osbuild_ref, runner_distro, distro=distro, arch=arch)
     # continue even if the dl failed; will build all configs
     if dl_ok:
         # print output which includes list of downloaded files for CI job log
