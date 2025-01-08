@@ -3,7 +3,7 @@ package osbuild
 import (
 	"encoding/json"
 	"errors"
-	"os"
+	"fmt"
 
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/ostree"
@@ -79,18 +79,32 @@ func addPackagesLibrepo(sources Sources, packages []rpmmd.PackageSpec, rpmRepos 
 	return nil
 }
 
-func GenSources(packages []rpmmd.PackageSpec, ostreeCommits []ostree.CommitSpec, inlineData []string, containers []container.Spec, rpmRepos map[string][]rpmmd.RepoConfig) (Sources, error) {
+// RpmDownloader specifies what backend to use for rpm downloads
+// Note that the librepo backend requires a newer osbuild.
+type RpmDownloader uint64
+
+const (
+	RpmDownloaderCurl    = iota
+	RpmDownloaderLibrepo = iota
+)
+
+func GenSources(packages []rpmmd.PackageSpec, ostreeCommits []ostree.CommitSpec, inlineData []string, containers []container.Spec, rpmRepos map[string][]rpmmd.RepoConfig, rpmDownloader RpmDownloader) (Sources, error) {
+	// The signature of this functionis already relatively long,
+	// if we need to add more options, refactor into "struct
+	// Inputs" (rpm,ostree,etc) and "struct Options"
+	// (rpmDownloader)
 	sources := Sources{}
 
 	// collect rpm package sources
 	if len(packages) > 0 {
-		// XXX: hack, we have no good way to pass options to GenSource
-		// right now
 		var err error
-		if s := os.Getenv("OSBUILD_USE_LIBREPO"); s == "1" {
-			err = addPackagesLibrepo(sources, packages, rpmRepos)
-		} else {
+		switch rpmDownloader {
+		case RpmDownloaderCurl:
 			err = addPackagesCurl(sources, packages)
+		case RpmDownloaderLibrepo:
+			err = addPackagesLibrepo(sources, packages, rpmRepos)
+		default:
+			err = fmt.Errorf("unknown rpm downloader %v", rpmDownloader)
 		}
 		if err != nil {
 			return nil, err

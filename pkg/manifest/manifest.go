@@ -41,26 +41,12 @@ const (
 	DISTRO_FEDORA
 )
 
-// RpmDownloader specifies what backend to use for rpm downloads
-// Note that the librepo backend requires a newer osbuild.
-type RpmDownloader uint64
-
-const (
-	RpmDownloaderCurl    = iota
-	RpmDownloaderLibrepo = iota
-)
-
 // Inputs specifies the inputs for manifest instantiating
 type Inputs struct {
 	PackageSets    map[string][]rpmmd.PackageSpec
 	ContainerSpecs map[string][]container.Spec
 	OstreeCommits  map[string][]ostree.CommitSpec
 	RpmRepos       map[string][]rpmmd.RepoConfig
-}
-
-// Options contains the (optional) configs for the manifest instantiating
-type Options struct {
-	RpmDownloader RpmDownloader
 }
 
 // An OSBuildManifest is an opaque JSON object, which is a valid input to osbuild
@@ -171,6 +157,11 @@ func (m Manifest) Serialize(packageSets map[string][]rpmmd.PackageSpec, containe
 	return m.SerializeFull(inputs, nil)
 }
 
+// Options contains the (optional) configs for the manifest instantiating
+type Options struct {
+	RpmDownloader osbuild.RpmDownloader
+}
+
 // TODO: rename to Serialize() onces callers are fixed
 func (m Manifest) SerializeFull(inputs *Inputs, opts *Options) (OSBuildManifest, error) {
 	if opts == nil {
@@ -195,7 +186,7 @@ func (m Manifest) SerializeFull(inputs *Inputs, opts *Options) (OSBuildManifest,
 		pipeline.serializeEnd()
 	}
 
-	sources, err := osbuild.GenSources(packages, commits, inline, containers, inputs.RpmRepos)
+	sources, err := osbuild.GenSources(packages, commits, inline, containers, inputs.RpmRepos, opts.RpmDownloader)
 	if err != nil {
 		return nil, err
 	}

@@ -119,7 +119,7 @@ func TestSource_UnmarshalJSON(t *testing.T) {
 }
 
 func TestGenSourcesTrivial(t *testing.T) {
-	sources, err := GenSources(nil, nil, nil, nil, nil)
+	sources, err := GenSources(nil, nil, nil, nil, nil, 0)
 	assert.NoError(t, err)
 
 	jsonOutput, err := json.MarshalIndent(sources, "", "  ")
@@ -135,7 +135,7 @@ func TestGenSourcesContainerStorage(t *testing.T) {
 			LocalStorage: true,
 		},
 	}
-	sources, err := GenSources(nil, nil, nil, containers, nil)
+	sources, err := GenSources(nil, nil, nil, containers, nil, 0)
 	assert.NoError(t, err)
 
 	jsonOutput, err := json.MarshalIndent(sources, "", "  ")
@@ -159,7 +159,7 @@ func TestGenSourcesSkopeo(t *testing.T) {
 			ImageID: imageID,
 		},
 	}
-	sources, err := GenSources(nil, nil, nil, containers, nil)
+	sources, err := GenSources(nil, nil, nil, containers, nil, 0)
 	assert.NoError(t, err)
 
 	jsonOutput, err := json.MarshalIndent(sources, "", "  ")
@@ -190,7 +190,7 @@ func TestGenSourcesWithSkopeoIndex(t *testing.T) {
 			ImageID:    imageID,
 		},
 	}
-	sources, err := GenSources(nil, nil, nil, containers, nil)
+	sources, err := GenSources(nil, nil, nil, containers, nil, 0)
 	assert.NoError(t, err)
 
 	jsonOutput, err := json.MarshalIndent(sources, "", "  ")
