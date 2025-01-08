@@ -41,6 +41,28 @@ const (
 	DISTRO_FEDORA
 )
 
+// RpmDownloader specifies what backend to use for rpm downloads
+// Note that the librepo backend requires a newer osbuild.
+type RpmDownloader uint64
+
+const (
+	RpmDownloaderCurl    = iota
+	RpmDownloaderLibrepo = iota
+)
+
+// Inputs specifies the inputs for manifest instantiating
+type Inputs struct {
+	PackageSets    map[string][]rpmmd.PackageSpec
+	ContainerSpecs map[string][]container.Spec
+	OstreeCommits  map[string][]ostree.CommitSpec
+	RpmRepos       map[string][]rpmmd.RepoConfig
+}
+
+// Options contains the (optional) configs for the manifest instantiating
+type Options struct {
+	RpmDownloader RpmDownloader
+}
+
 // An OSBuildManifest is an opaque JSON object, which is a valid input to osbuild
 type OSBuildManifest []byte
 
@@ -138,19 +160,34 @@ func (m Manifest) GetOSTreeSourceSpecs() map[string][]ostree.SourceSpec {
 	return ostreeSpecs
 }
 
+// TODO: remove once all callers are fixed
 func (m Manifest) Serialize(packageSets map[string][]rpmmd.PackageSpec, containerSpecs map[string][]container.Spec, ostreeCommits map[string][]ostree.CommitSpec, rpmRepos map[string][]rpmmd.RepoConfig) (OSBuildManifest, error) {
+	inputs := &Inputs{
+		PackageSets:    packageSets,
+		ContainerSpecs: containerSpecs,
+		OstreeCommits:  ostreeCommits,
+		RpmRepos:       rpmRepos,
+	}
+	return m.SerializeFull(inputs, nil)
+}
+
+// TODO: rename to Serialize() onces callers are fixed
+func (m Manifest) SerializeFull(inputs *Inputs, opts *Options) (OSBuildManifest, error) {
+	if opts == nil {
+		opts = &Options{}
+	}
 	pipelines := make([]osbuild.Pipeline, 0)
 	packages := make([]rpmmd.PackageSpec, 0)
 	commits := make([]ostree.CommitSpec, 0)
 	inline := make([]string, 0)
 	containers := make([]container.Spec, 0)
 	for _, pipeline := range m.pipelines {
-		pipeline.serializeStart(packageSets[pipeline.Name()], containerSpecs[pipeline.Name()], ostreeCommits[pipeline.Name()], rpmRepos[pipeline.Name()])
+		pipeline.serializeStart(inputs.PackageSets[pipeline.Name()], inputs.ContainerSpecs[pipeline.Name()], inputs.OstreeCommits[pipeline.Name()], inputs.RpmRepos[pipeline.Name()])
 	}
 	for _, pipeline := range m.pipelines {
 		commits = append(commits, pipeline.getOSTreeCommits()...)
 		pipelines = append(pipelines, pipeline.serialize())
-		packages = append(packages, packageSets[pipeline.Name()]...)
+		packages = append(packages, inputs.PackageSets[pipeline.Name()]...)
 		inline = append(inline, pipeline.getInline()...)
 		containers = append(containers, pipeline.getContainerSpecs()...)
 	}
@@ -158,7 +195,7 @@ func (m Manifest) Serialize(packageSets map[string][]rpmmd.PackageSpec, containe
 		pipeline.serializeEnd()
 	}
 
-	sources, err := osbuild.GenSources(packages, commits, inline, containers, rpmRepos)
+	sources, err := osbuild.GenSources(packages, commits, inline, containers, inputs.RpmRepos)
 	if err != nil {
 		return nil, err
 	}
