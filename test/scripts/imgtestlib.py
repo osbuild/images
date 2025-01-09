@@ -532,6 +532,16 @@ def get_common_ci_runner():
     return runner
 
 
+def get_common_ci_runner_distro():
+    """
+    CI runner distro for common tasks.
+
+    Returns the distro part from the value of the common.gitlab-ci-runner key in the Schutzfile.
+    For example, if the value is "aws/fedora-999", this function will return "fedora-999".
+    """
+    return get_common_ci_runner().split("/")[1]
+
+
 def find_image_file(build_path: str) -> str:
     """
     Find the path to the image by reading the manifest to get the name of the last pipeline and searching for the file
