@@ -4,6 +4,8 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"math/rand"
+	"slices"
+	"strings"
 	"testing"
 
 	"github.com/osbuild/images/internal/common"
@@ -71,6 +73,16 @@ func newTestAnacondaISOTree() *AnacondaInstallerISOTree {
 	return pipeline
 }
 
+// Helper to return a comma separated string of the stage names
+// used to help debug failures
+func dumpStages(stages []*osbuild.Stage) string {
+	var stageNames []string
+	for _, stage := range stages {
+		stageNames = append(stageNames, stage.Type)
+	}
+	return strings.Join(stageNames, ", ")
+}
+
 func checkISOTreeStages(stages []*osbuild.Stage, expected, exclude []string) error {
 	commonStages := []string{
 		"org.osbuild.mkdir",
@@ -81,6 +93,13 @@ func checkISOTreeStages(stages []*osbuild.Stage, expected, exclude []string) err
 		"org.osbuild.copy",
 		"org.osbuild.copy",
 		"org.osbuild.discinfo",
+	}
+
+	// Remove excluded stages from common
+	for _, exlStage := range exclude {
+		if idx := slices.Index(commonStages, exlStage); idx > -1 {
+			commonStages = slices.Delete(commonStages, idx, idx+1)
+		}
 	}
 
 	for _, expStage := range append(commonStages, expected...) {
@@ -404,6 +423,31 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		pipeline.serializeStart(nil, nil, nil, nil)
 		assert.Panics(t, func() { pipeline.serialize() })
 	})
+
+	t.Run("plain+squashfs-rootfs", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.OSPipeline = osPayload
+		pipeline.RootfsType = SquashfsRootfs
+		pipeline.serializeStart(nil, nil, nil, nil)
+		sp := pipeline.serialize()
+		pipeline.serializeEnd()
+		assert.NoError(t, checkISOTreeStages(sp.Stages, payloadStages,
+			append(variantStages, []string{"org.osbuild.kickstart", "org.osbuild.isolinux"}...)),
+			dumpStages(sp.Stages))
+	})
+
+	t.Run("plain+erofs-rootfs", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.OSPipeline = osPayload
+		pipeline.RootfsType = ErofsRootfs
+		pipeline.serializeStart(nil, nil, nil, nil)
+		sp := pipeline.serialize()
+		pipeline.serializeEnd()
+		assert.NoError(t, checkISOTreeStages(sp.Stages,
+			append(payloadStages, "org.osbuild.erofs"),
+			append(variantStages, []string{"org.osbuild.kickstart", "org.osbuild.isolinux", "org.osbuild.squashfs"}...)),
+			dumpStages(sp.Stages))
+	})
 }
 
 func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
@@ -524,6 +568,31 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 		pipeline.serializeStart(nil, nil, []ostree.CommitSpec{ostreeCommit}, nil)
 		assert.Panics(t, func() { pipeline.serialize() })
 	})
+
+	t.Run("plain+squashfs-rootfs", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.RootfsType = SquashfsRootfs
+		pipeline.Kickstart = &kickstart.Options{Path: testKsPath, OSTree: &kickstart.OSTree{}}
+		pipeline.serializeStart(nil, nil, []ostree.CommitSpec{ostreeCommit}, nil)
+		sp := pipeline.serialize()
+		pipeline.serializeEnd()
+		assert.NoError(t, checkISOTreeStages(sp.Stages, payloadStages,
+			append(variantStages, "org.osbuild.isolinux")),
+			dumpStages(sp.Stages))
+	})
+
+	t.Run("plain+erofs-erofs", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.RootfsType = ErofsRootfs
+		pipeline.Kickstart = &kickstart.Options{Path: testKsPath, OSTree: &kickstart.OSTree{}}
+		pipeline.serializeStart(nil, nil, []ostree.CommitSpec{ostreeCommit}, nil)
+		sp := pipeline.serialize()
+		pipeline.serializeEnd()
+		assert.NoError(t, checkISOTreeStages(sp.Stages,
+			append(payloadStages, "org.osbuild.erofs"),
+			append(variantStages, []string{"org.osbuild.isolinux", "org.osbuild.squashfs"}...)),
+			dumpStages(sp.Stages))
+	})
 }
 
 func makeFakeContainerPayload() container.Spec {
@@ -626,6 +695,31 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 		skopeoStage := findStage("org.osbuild.skopeo", sp.Stages)
 		assert.NotNil(t, skopeoStage)
 		assert.Equal(t, skopeoStage.Options.(*osbuild.SkopeoStageOptions).RemoveSignatures, common.ToPtr(true))
+	})
+
+	t.Run("plain+squashfs-rootfs", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.RootfsType = SquashfsRootfs
+		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
+		pipeline.serializeStart(nil, []container.Spec{containerPayload}, nil, nil)
+		sp := pipeline.serialize()
+		pipeline.serializeEnd()
+		assert.NoError(t, checkISOTreeStages(sp.Stages, payloadStages,
+			append(variantStages, "org.osbuild.isolinux")),
+			dumpStages(sp.Stages))
+	})
+
+	t.Run("plain+erofs-rootfs", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.RootfsType = ErofsRootfs
+		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
+		pipeline.serializeStart(nil, []container.Spec{containerPayload}, nil, nil)
+		sp := pipeline.serialize()
+		pipeline.serializeEnd()
+		assert.NoError(t, checkISOTreeStages(sp.Stages,
+			append(payloadStages, "org.osbuild.erofs"),
+			append(variantStages, []string{"org.osbuild.isolinux", "org.osbuild.squashfs"}...)),
+			dumpStages(sp.Stages))
 	})
 }
 
