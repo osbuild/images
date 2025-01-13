@@ -2,6 +2,7 @@ package manifest
 
 import (
 	"fmt"
+	"net/url"
 	"path/filepath"
 	"strings"
 
@@ -1153,10 +1154,38 @@ func (p *OS) getInline() []string {
 // addInlineDataAndStages generates stages for creating files and adds them to
 // the pipeline. It also adds their data to the inlineData for the pipeline so
 // that the appropriate sources are created.
+//
+// Note that this also creates stages for non-inline files that crom via "fileRefs()"
 func (p *OS) addInlineDataAndStages(pipeline *osbuild.Pipeline, files []*fsnode.File) {
 	pipeline.AddStages(osbuild.GenFileNodesStages(files)...)
 
 	for _, file := range files {
 		p.inlineData = append(p.inlineData, string(file.Data()))
 	}
+}
+
+// fileRefs ensures that any files from customizations that require fetching data
+// (e.g. via the "uri" key in customizations) are added to the manifests "sources"
+//
+// Note that the actual copy/chmod/... stages are generated via addInlineDataAndStages
+func (p *OS) fileRefs() []string {
+	var fileRefs []string
+
+	for _, file := range p.OSCustomizations.Files {
+		if uriStr := file.URI(); uriStr != "" {
+			uri, err := url.Parse(uriStr)
+			if err != nil {
+				panic(fmt.Errorf("internal error: file customizations is not a valid URL: %w", err))
+			}
+
+			switch uri.Scheme {
+			case "", "file":
+				fileRefs = append(fileRefs, uri.Path)
+			default:
+				panic(fmt.Errorf("internal error: unsupported schema for OSCustomizations.Files: %v", uriStr))
+			}
+		}
+	}
+
+	return fileRefs
 }

@@ -3,6 +3,9 @@ package osbuild
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -337,4 +340,27 @@ func TestGenSourcesRpmBad(t *testing.T) {
 	}
 	_, err := GenSources(inputs, 99)
 	assert.EqualError(t, err, "unknown rpm downloader 99")
+}
+
+func TestGenSourcesFileRefs(t *testing.T) {
+	testFile := filepath.Join(t.TempDir(), "test1.txt")
+	err := os.WriteFile(testFile, nil, 0644)
+	assert.NoError(t, err)
+
+	sources, err := GenSources(SourceInputs{
+		FileRefs: []string{testFile},
+	}, 0)
+	assert.NoError(t, err)
+
+	jsonOutput, err := json.MarshalIndent(sources, "", "  ")
+	assert.NoError(t, err)
+	assert.Equal(t, string(jsonOutput), fmt.Sprintf(`{
+  "org.osbuild.curl": {
+    "items": {
+      "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855": {
+        "url": "file:%s"
+      }
+    }
+  }
+}`, testFile))
 }
