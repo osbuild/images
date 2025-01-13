@@ -531,7 +531,8 @@ bootc switch --mutate-in-place --transport %s %s
 
 # used during automatic image testing as finished marker
 if [ -c /dev/ttyS0 ]; then
-    echo "Install finished" > /dev/ttyS0
+    # continue on errors here, because we used to omit --erroronfail
+    echo "Install finished" > /dev/ttyS0 || true
 fi
 %%end
 `, targetContainerTransport, p.containerSpec.LocalName)
