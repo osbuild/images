@@ -1,7 +1,9 @@
 package fsnode
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/osbuild/images/internal/common"
@@ -71,5 +73,38 @@ func TestNewFile(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, tc.expected, file)
 		})
+	}
+}
+
+func TestNewFileForURI(t *testing.T) {
+	testFile1 := filepath.Join(t.TempDir(), "test1.txt")
+	err := os.WriteFile(testFile1, nil, 0511)
+	assert.NoError(t, err)
+
+	file, err := NewFileForURI("/target/path", nil, nil, nil, testFile1)
+	assert.NoError(t, err)
+	assert.Equal(t, testFile1, file.URI())
+	assert.Equal(t, "/target/path", file.Path())
+	assert.Equal(t, os.FileMode(0511), file.Mode().Perm())
+	// user/group are not take from the local file, just default to root
+	assert.Equal(t, nil, file.User())
+	assert.Equal(t, nil, file.Group())
+}
+
+func TestNewFileForURIBadURIs(t *testing.T) {
+	tmpdir := t.TempDir()
+
+	for _, tc := range []struct {
+		ref         string
+		expectedErr string
+	}{
+		{"/not/exists", `cannot include blueprint file: stat /not/exists: no such file or directory`},
+		{"file://%g", `parse "file://%g": invalid URL escape "%g"`},
+		{"gopher://foo.txt", "unsupported scheme for gopher://foo.txt (try file://)"},
+		{tmpdir, fmt.Sprintf("%s is not a regular file", tmpdir)},
+	} {
+
+		_, err := NewFileForURI("/target/path", nil, nil, nil, tc.ref)
+		assert.EqualError(t, err, tc.expectedErr)
 	}
 }

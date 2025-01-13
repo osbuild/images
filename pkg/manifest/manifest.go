@@ -189,12 +189,12 @@ func (m Manifest) Serialize(depsolvedSets map[string]dnfjson.DepsolveResult, con
 	var mergedInputs osbuild.SourceInputs
 	for _, pipeline := range m.pipelines {
 		pipelines = append(pipelines, pipeline.serialize())
-
 		mergedInputs.Commits = append(mergedInputs.Commits, pipeline.getOSTreeCommits()...)
 		mergedInputs.Depsolved.Packages = append(mergedInputs.Depsolved.Packages, depsolvedSets[pipeline.Name()].Packages...)
 		mergedInputs.Depsolved.Repos = append(mergedInputs.Depsolved.Repos, depsolvedSets[pipeline.Name()].Repos...)
 		mergedInputs.Containers = append(mergedInputs.Containers, pipeline.getContainerSpecs()...)
 		mergedInputs.InlineData = append(mergedInputs.InlineData, pipeline.getInline()...)
+		mergedInputs.FileRefs = append(mergedInputs.FileRefs, pipeline.fileRefs()...)
 	}
 	for _, pipeline := range m.pipelines {
 		pipeline.serializeEnd()

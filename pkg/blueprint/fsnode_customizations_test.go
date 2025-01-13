@@ -2,14 +2,18 @@ package blueprint
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/BurntSushi/toml"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/pathpolicy"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestDirectoryCustomizationToFsNodeDirectory(t *testing.T) {
@@ -725,6 +729,10 @@ func TestFileCustomizationsToFsNodeFiles(t *testing.T) {
 }
 
 func TestFileCustomizationUnmarshalTOML(t *testing.T) {
+	tmpdir := t.TempDir()
+	err := os.WriteFile(filepath.Join(tmpdir, "some-file.txt"), nil, 0644)
+	require.NoError(t, err)
+
 	testCases := []struct {
 		Name  string
 		TOML  string
@@ -744,6 +752,24 @@ path = "/etc/file"
 			Want: []FileCustomization{
 				{
 					Path: "/etc/file",
+				},
+			},
+		},
+		{
+			Name: "file-with-uri",
+			TOML: fmt.Sprintf(`
+name = "test"
+description = "Test"
+version = "0.0.0"
+
+[[customizations.files]]
+path = "/etc/file"
+uri = "file://%s/some-file.txt"
+`, tmpdir),
+			Want: []FileCustomization{
+				{
+					Path: "/etc/file",
+					URI:  fmt.Sprintf("file://%s/some-file.txt", tmpdir),
 				},
 			},
 		},
@@ -834,7 +860,7 @@ group = -1
 			if tc.Error {
 				assert.Error(t, err)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotNil(t, blueprint.Customizations)
 				assert.Len(t, blueprint.Customizations.Files, len(tc.Want))
 				assert.EqualValues(t, tc.Want, blueprint.Customizations.Files)
@@ -844,6 +870,10 @@ group = -1
 }
 
 func TestFileCustomizationUnmarshalJSON(t *testing.T) {
+	tmpdir := t.TempDir()
+	err := os.WriteFile(filepath.Join(tmpdir, "some-file.txt"), nil, 0644)
+	require.NoError(t, err)
+
 	testCases := []struct {
 		Name  string
 		JSON  string
@@ -868,6 +898,29 @@ func TestFileCustomizationUnmarshalJSON(t *testing.T) {
 			Want: []FileCustomization{
 				{
 					Path: "/etc/file",
+				},
+			},
+		},
+		{
+			Name: "file-with-uri",
+			JSON: fmt.Sprintf(`
+{
+	"name": "test",
+	"description": "Test",
+	"version": "0.0.0",
+	"customizations": {
+		"files": [
+			{
+				"path": "/etc/file",
+                                "uri": "file://%s/some-file.txt"
+			}
+		]
+	}
+}`, tmpdir),
+			Want: []FileCustomization{
+				{
+					Path: "/etc/file",
+					URI:  fmt.Sprintf("file://%s/some-file.txt", tmpdir),
 				},
 			},
 		},
@@ -968,7 +1021,7 @@ func TestFileCustomizationUnmarshalJSON(t *testing.T) {
 			if tc.Error {
 				assert.Error(t, err)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotNil(t, blueprint.Customizations)
 				assert.Len(t, blueprint.Customizations.Files, len(tc.Want))
 				assert.EqualValues(t, tc.Want, blueprint.Customizations.Files)
@@ -1251,4 +1304,28 @@ func TestCheckDirectoryCustomizationsPolicy(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestToFileNodeNoMixingOfPathAndData(t *testing.T) {
+	fc := FileCustomization{
+		URI:  "/some/ref",
+		Data: "some-data",
+	}
+	_, err := fc.ToFsNodeFile()
+	assert.EqualError(t, err, `cannot specify both data "some-data" and URI "/some/ref"`)
+}
+
+func TestToFileNodeForRef(t *testing.T) {
+	testFile := filepath.Join(t.TempDir(), "test1.txt")
+	err := os.WriteFile(testFile, nil, 0644)
+	assert.NoError(t, err)
+
+	fc := FileCustomization{
+		Path: "/some/path",
+		URI:  testFile,
+	}
+	file, err := fc.ToFsNodeFile()
+	assert.NoError(t, err)
+	assert.Equal(t, "/some/path", file.Path())
+	assert.Equal(t, testFile, file.URI())
 }
