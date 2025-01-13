@@ -526,7 +526,7 @@ reboot --eject
 `
 
 	// Workaround for lack of --target-imgref in Anaconda, xref https://github.com/osbuild/images/issues/380
-	hardcodedKickstartBits += fmt.Sprintf(`%%post
+	hardcodedKickstartBits += fmt.Sprintf(`%%post --erroronfail
 bootc switch --mutate-in-place --transport %s %s
 
 # used during automatic image testing as finished marker
