@@ -41,6 +41,13 @@ const (
 	DISTRO_FEDORA
 )
 
+type Inputs struct {
+	Packages   []rpmmd.PackageSpec
+	Containers []container.Spec
+	Commits    []ostree.CommitSpec
+	RpmRepos   []rpmmd.RepoConfig
+}
+
 // An OSBuildManifest is an opaque JSON object, which is a valid input to osbuild
 type OSBuildManifest []byte
 
@@ -138,6 +145,7 @@ func (m Manifest) GetOSTreeSourceSpecs() map[string][]ostree.SourceSpec {
 	return ostreeSpecs
 }
 
+// TODO: change signature to map[string]Inputs
 func (m Manifest) Serialize(packageSets map[string][]rpmmd.PackageSpec, containerSpecs map[string][]container.Spec, ostreeCommits map[string][]ostree.CommitSpec, rpmRepos map[string][]rpmmd.RepoConfig) (OSBuildManifest, error) {
 	pipelines := make([]osbuild.Pipeline, 0)
 	packages := make([]rpmmd.PackageSpec, 0)
@@ -145,7 +153,12 @@ func (m Manifest) Serialize(packageSets map[string][]rpmmd.PackageSpec, containe
 	inline := make([]string, 0)
 	containers := make([]container.Spec, 0)
 	for _, pipeline := range m.pipelines {
-		pipeline.serializeStart(packageSets[pipeline.Name()], containerSpecs[pipeline.Name()], ostreeCommits[pipeline.Name()], rpmRepos[pipeline.Name()])
+		pipeline.serializeStart(Inputs{
+			Packages:   packageSets[pipeline.Name()],
+			Containers: containerSpecs[pipeline.Name()],
+			Commits:    ostreeCommits[pipeline.Name()],
+			RpmRepos:   rpmRepos[pipeline.Name()],
+		})
 	}
 	for _, pipeline := range m.pipelines {
 		commits = append(commits, pipeline.getOSTreeCommits()...)

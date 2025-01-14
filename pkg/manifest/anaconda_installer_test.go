@@ -105,7 +105,7 @@ func TestAnacondaInstallerModules(t *testing.T) {
 				installerPipeline.UseLegacyAnacondaConfig = legacy
 				installerPipeline.AdditionalAnacondaModules = tc.enable
 				installerPipeline.DisabledAnacondaModules = tc.disable
-				installerPipeline.serializeStart(pkgs, nil, nil, nil)
+				installerPipeline.serializeStart(Inputs{Packages: pkgs})
 				pipeline := installerPipeline.serialize()
 
 				require := require.New(t)

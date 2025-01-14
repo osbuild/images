@@ -1,10 +1,7 @@
 package manifest
 
 import (
-	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/osbuild"
-	"github.com/osbuild/images/pkg/ostree"
-	"github.com/osbuild/images/pkg/rpmmd"
 )
 
 func (br *BuildrootFromContainer) Dependents() []Pipeline {
@@ -15,6 +12,6 @@ func (rbc *RawBootcImage) Serialize() osbuild.Pipeline {
 	return rbc.serialize()
 }
 
-func (rbc *RawBootcImage) SerializeStart(a []rpmmd.PackageSpec, b []container.Spec, c []ostree.CommitSpec, r []rpmmd.RepoConfig) {
-	rbc.serializeStart(a, b, c, r)
+func (rbc *RawBootcImage) SerializeStart(inputs Inputs) {
+	rbc.serializeStart(inputs)
 }

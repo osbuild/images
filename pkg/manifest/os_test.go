@@ -34,7 +34,7 @@ func NewTestOS() *OS {
 	packages := []rpmmd.PackageSpec{
 		{Name: "pkg1", Checksum: "sha1:c02524e2bd19490f2a7167958f792262754c5f46"},
 	}
-	os.serializeStart(packages, nil, nil, repos)
+	os.serializeStart(Inputs{Packages: packages, RpmRepos: repos})
 
 	return os
 }

@@ -14,7 +14,6 @@ import (
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/ostree"
-	"github.com/osbuild/images/pkg/rpmmd"
 )
 
 type RootfsType uint64
@@ -227,25 +226,25 @@ func (p *AnacondaInstallerISOTree) NewErofsStage() *osbuild.Stage {
 	return osbuild.NewErofsStage(&erofsOptions, p.anacondaPipeline.Name())
 }
 
-func (p *AnacondaInstallerISOTree) serializeStart(_ []rpmmd.PackageSpec, containers []container.Spec, commits []ostree.CommitSpec, _ []rpmmd.RepoConfig) {
+func (p *AnacondaInstallerISOTree) serializeStart(inputs Inputs) {
 	if p.ostreeCommitSpec != nil || p.containerSpec != nil {
 		panic("double call to serializeStart()")
 	}
 
-	if len(commits) > 1 {
+	if len(inputs.Commits) > 1 {
 		panic("pipeline supports at most one ostree commit")
 	}
 
-	if len(containers) > 1 {
+	if len(inputs.Containers) > 1 {
 		panic("pipeline supports at most one container")
 	}
 
-	if len(commits) > 0 {
-		p.ostreeCommitSpec = &commits[0]
+	if len(inputs.Commits) > 0 {
+		p.ostreeCommitSpec = &inputs.Commits[0]
 	}
 
-	if len(containers) > 0 {
-		p.containerSpec = &containers[0]
+	if len(inputs.Containers) > 0 {
+		p.containerSpec = &inputs.Containers[0]
 	}
 }
 
