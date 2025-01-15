@@ -77,6 +77,7 @@ func GuestOsFeaturesByDistro(distroName string) []*computepb.GuestOsFeature {
 // The image must be RAW image named 'disk.raw' inside a gzip-ed tarball.
 //
 // To delete the Storage object (image) used for the image import, use StorageObjectDelete().
+// Make sure to use defer in order to delete objects when error occurs.
 //
 // bucket - Google storage bucket name with the uploaded image archive
 // object - Google storage object name of the uploaded image
