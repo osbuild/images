@@ -16,6 +16,7 @@ import (
 	"encoding/json"
 
 	"github.com/osbuild/images/pkg/container"
+	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -140,17 +141,12 @@ func (m Manifest) GetOSTreeSourceSpecs() map[string][]ostree.SourceSpec {
 	return ostreeSpecs
 }
 
-// TODO: change signature to map[string]Inputs and/or ensure that
-// only depsolved PackageSpecs/RepoConfigs are passed so that we
-// have a valid mapping of pkg.RepoID<->repo.Id which will be important
-// for librepo
-func (m Manifest) Serialize(packageSets map[string][]rpmmd.PackageSpec, containerSpecs map[string][]container.Spec, ostreeCommits map[string][]ostree.CommitSpec, resolvedRpmRepos map[string][]rpmmd.RepoConfig, rpmDownloader osbuild.RpmDownloader) (OSBuildManifest, error) {
+func (m Manifest) Serialize(depsolvedSets map[string]dnfjson.DepsolveResult, containerSpecs map[string][]container.Spec, ostreeCommits map[string][]ostree.CommitSpec, rpmDownloader osbuild.RpmDownloader) (OSBuildManifest, error) {
 	for _, pipeline := range m.pipelines {
 		pipeline.serializeStart(Inputs{
-			Packages:   packageSets[pipeline.Name()],
+			Depsolved:  depsolvedSets[pipeline.Name()],
 			Containers: containerSpecs[pipeline.Name()],
 			Commits:    ostreeCommits[pipeline.Name()],
-			RpmRepos:   resolvedRpmRepos[pipeline.Name()],
 		})
 	}
 
@@ -160,8 +156,8 @@ func (m Manifest) Serialize(packageSets map[string][]rpmmd.PackageSpec, containe
 		pipelines = append(pipelines, pipeline.serialize())
 
 		mergedInputs.Commits = append(mergedInputs.Commits, pipeline.getOSTreeCommits()...)
-		mergedInputs.Packages = append(mergedInputs.Packages, packageSets[pipeline.Name()]...)
-		mergedInputs.RpmRepos = append(mergedInputs.RpmRepos, resolvedRpmRepos[pipeline.Name()]...)
+		mergedInputs.Depsolved.Packages = append(mergedInputs.Depsolved.Packages, depsolvedSets[pipeline.Name()].Packages...)
+		mergedInputs.Depsolved.Repos = append(mergedInputs.Depsolved.Repos, depsolvedSets[pipeline.Name()].Repos...)
 		mergedInputs.Containers = append(mergedInputs.Containers, pipeline.getContainerSpecs()...)
 		mergedInputs.InlineData = append(mergedInputs.InlineData, pipeline.getInline()...)
 	}

@@ -3,12 +3,14 @@ package manifest
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/osbuild/images/pkg/customizations/anaconda"
+	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/runner"
-	"github.com/stretchr/testify/require"
 )
 
 func newAnacondaInstaller() *AnacondaInstaller {
@@ -105,7 +107,7 @@ func TestAnacondaInstallerModules(t *testing.T) {
 				installerPipeline.UseLegacyAnacondaConfig = legacy
 				installerPipeline.AdditionalAnacondaModules = tc.enable
 				installerPipeline.DisabledAnacondaModules = tc.disable
-				installerPipeline.serializeStart(Inputs{Packages: pkgs})
+				installerPipeline.serializeStart(Inputs{Depsolved: dnfjson.DepsolveResult{Packages: pkgs}})
 				pipeline := installerPipeline.serialize()
 
 				require := require.New(t)

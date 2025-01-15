@@ -5,9 +5,12 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/anaconda"
 	"github.com/osbuild/images/pkg/customizations/kickstart"
+	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/image"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
@@ -15,27 +18,32 @@ import (
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/runner"
-	"github.com/stretchr/testify/assert"
 )
 
-func mockPackageSets() map[string][]rpmmd.PackageSpec {
-	return map[string][]rpmmd.PackageSpec{
+func mockPackageSets() map[string]dnfjson.DepsolveResult {
+	return map[string]dnfjson.DepsolveResult{
 		"build": {
-			{
-				Name:     "coreutils",
-				Checksum: "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+			Packages: []rpmmd.PackageSpec{
+				{
+					Name:     "coreutils",
+					Checksum: "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+				},
 			},
 		},
 		"os": {
-			{
-				Name:     "kernel",
-				Checksum: "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+			Packages: []rpmmd.PackageSpec{
+				{
+					Name:     "kernel",
+					Checksum: "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+				},
 			},
 		},
 		"anaconda-tree": {
-			{
-				Name:     "kernel",
-				Checksum: "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+			Packages: []rpmmd.PackageSpec{
+				{
+					Name:     "kernel",
+					Checksum: "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+				},
 			},
 		},
 	}
@@ -354,7 +362,7 @@ func TestLiveInstallerSquashfsRootfs(t *testing.T) {
 	assert.NotContains(t, mfs, `"name:rootfs-image"`)
 }
 
-func instantiateAndSerialize(t *testing.T, img image.ImageKind, packages map[string][]rpmmd.PackageSpec, containers map[string][]container.Spec, commits map[string][]ostree.CommitSpec) string {
+func instantiateAndSerialize(t *testing.T, img image.ImageKind, depsolved map[string]dnfjson.DepsolveResult, containers map[string][]container.Spec, commits map[string][]ostree.CommitSpec) string {
 	source := rand.NewSource(int64(0))
 	// math/rand is good enough in this case
 	/* #nosec G404 */
@@ -364,7 +372,7 @@ func instantiateAndSerialize(t *testing.T, img image.ImageKind, packages map[str
 	_, err := img.InstantiateManifest(&mf, nil, &runner.CentOS{Version: 9}, rng)
 	assert.NoError(t, err)
 
-	mfs, err := mf.Serialize(packages, containers, commits, nil, 0)
+	mfs, err := mf.Serialize(depsolved, containers, commits, 0)
 	assert.NoError(t, err)
 
 	return string(mfs)

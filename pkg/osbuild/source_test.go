@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/osbuild/images/pkg/container"
+	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
@@ -259,8 +260,10 @@ var fakeRepos = []rpmmd.RepoConfig{
 
 func TestGenSourcesRpmDefaultRpmDownloaderIsCurl(t *testing.T) {
 	inputs := SourceInputs{
-		Packages: []rpmmd.PackageSpec{opensslPkg},
-		RpmRepos: fakeRepos,
+		Depsolved: dnfjson.DepsolveResult{
+			Packages: []rpmmd.PackageSpec{opensslPkg},
+			Repos:    fakeRepos,
+		},
 	}
 	var defaultRpmDownloader RpmDownloader
 	sources, err := GenSources(inputs, defaultRpmDownloader)
@@ -272,8 +275,10 @@ func TestGenSourcesRpmDefaultRpmDownloaderIsCurl(t *testing.T) {
 
 func TestGenSourcesRpmWithLibcurl(t *testing.T) {
 	inputs := SourceInputs{
-		Packages: []rpmmd.PackageSpec{opensslPkg},
-		RpmRepos: fakeRepos,
+		Depsolved: dnfjson.DepsolveResult{
+			Packages: []rpmmd.PackageSpec{opensslPkg},
+			Repos:    fakeRepos,
+		},
 	}
 	sources, err := GenSources(inputs, RpmDownloaderCurl)
 	assert.NoError(t, err)
@@ -293,8 +298,10 @@ func TestGenSourcesRpmWithLibcurl(t *testing.T) {
 
 func TestGenSourcesRpmWithLibrepo(t *testing.T) {
 	inputs := SourceInputs{
-		Packages: []rpmmd.PackageSpec{opensslPkg},
-		RpmRepos: fakeRepos,
+		Depsolved: dnfjson.DepsolveResult{
+			Packages: []rpmmd.PackageSpec{opensslPkg},
+			Repos:    fakeRepos,
+		},
 	}
 	sources, err := GenSources(inputs, RpmDownloaderLibrepo)
 	assert.NoError(t, err)
@@ -323,8 +330,10 @@ func TestGenSourcesRpmWithLibrepo(t *testing.T) {
 
 func TestGenSourcesRpmBad(t *testing.T) {
 	inputs := SourceInputs{
-		Packages: []rpmmd.PackageSpec{opensslPkg},
-		RpmRepos: fakeRepos,
+		Depsolved: dnfjson.DepsolveResult{
+			Packages: []rpmmd.PackageSpec{opensslPkg},
+			Repos:    fakeRepos,
+		},
 	}
 	_, err := GenSources(inputs, 99)
 	assert.EqualError(t, err, "unknown rpm downloader 99")

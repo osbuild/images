@@ -381,7 +381,7 @@ func (p *OS) serializeStart(inputs Inputs) {
 		panic("double call to serializeStart()")
 	}
 
-	p.packageSpecs = inputs.Packages
+	p.packageSpecs = inputs.Depsolved.Packages
 	p.containerSpecs = inputs.Containers
 	if len(inputs.Commits) > 0 {
 		if len(inputs.Commits) > 1 {
@@ -394,7 +394,7 @@ func (p *OS) serializeStart(inputs Inputs) {
 		p.kernelVer = rpmmd.GetVerStrFromPackageSpecListPanic(p.packageSpecs, p.KernelName)
 	}
 
-	p.repos = append(p.repos, inputs.RpmRepos...)
+	p.repos = append(p.repos, inputs.Depsolved.Repos...)
 }
 
 func (p *OS) serializeEnd() {
