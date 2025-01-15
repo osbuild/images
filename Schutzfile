@@ -57,14 +57,14 @@
           {
             "title": "updates",
             "name": "updates",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f41/f41-x86_64-updates-released-20250109"
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f41/f41-x86_64-updates-released-20250115"
           }
         ],
         "aarch64": [
           {
             "title": "updates",
             "name": "updates",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f41/f41-aarch64-updates-released-20250109"
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f41/f41-aarch64-updates-released-20250115"
           }
         ]
       }
