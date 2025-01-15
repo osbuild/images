@@ -1,0 +1,9 @@
+from:
+  - ami.yaml
+def:
+  packages:
+    os:
+      include:
+        - fence-agents-all
+        - pacemaker
+        - pcs

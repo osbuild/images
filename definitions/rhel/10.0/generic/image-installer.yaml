@@ -1,0 +1,7 @@
+from:
+  - ../../../centos/10/generic/image-installer.yaml
+def:
+  packages:
+    os:
+      include:
+        - subscription-manager-cockpit

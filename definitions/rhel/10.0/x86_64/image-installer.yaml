@@ -1,0 +1,2 @@
+from:
+  - ../../../centos/10/x86_64/image-installer.yaml

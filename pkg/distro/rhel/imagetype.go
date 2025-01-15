@@ -6,11 +6,13 @@ import (
 
 	"slices"
 
+	"github.com/osbuild/images/definitions"
 	"github.com/osbuild/images/internal/environment"
 	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/datasizes"
+	"github.com/osbuild/images/pkg/definition"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/image"
@@ -283,6 +285,23 @@ func (t *ImageType) Manifest(bp *blueprint.Blueprint,
 
 	for name, getter := range t.packageSets {
 		staticPackageSets[name] = getter(t)
+	}
+	defPath, err := definition.FindBestDefinitionFile(definitions.Data, t.arch.distro.id, t.arch.Distro().OsVersion(), t.Arch().Name(), t.Name())
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to find image type spec: %w", err)
+	}
+
+	defFile, err := definition.MergeConfig(definitions.Data, defPath)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to merge image type spec: %w", err)
+	}
+
+	def := defFile.Def
+	for setName, set := range def.Packages {
+		staticPackageSets[setName] = rpmmd.PackageSet{
+			Include: set.Include,
+			Exclude: set.Exclude,
+		}
 	}
 
 	// amend with repository information and collect payload repos

@@ -1,0 +1,3 @@
+from:
+  - ../common.yaml
+  - ../../../centos/10/generic/ami.yaml

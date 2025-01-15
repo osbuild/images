@@ -1,0 +1,5 @@
+def:
+  packages:
+    os:
+      include:
+        - insights-client

@@ -1,0 +1,14 @@
+def:
+  packages:
+    os:
+      include:
+        - "@core"
+        - chrony
+        - cloud-init
+        - firewalld
+        - langpacks-en
+        - open-vm-tools
+        - tuned
+      exclude:
+        - dracut-config-rescue
+        - rng-tools

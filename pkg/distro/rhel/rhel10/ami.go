@@ -293,80 +293,15 @@ func defaultEc2ImageConfigX86_64() *distro.ImageConfig {
 // PACKAGE SETS
 
 func ec2PackageSet(t *rhel.ImageType) rpmmd.PackageSet {
-	ps := rpmmd.PackageSet{
-		Include: []string{
-			"@core",
-			"chrony",
-			"cloud-init",
-			"cloud-utils-growpart",
-			"dhcpcd",
-			"yum-utils",
-			"dracut-config-generic",
-			"grub2",
-			"langpacks-en",
-			"NetworkManager-cloud-setup",
-			"redhat-release",
-			"redhat-release-eula",
-			"rsync",
-			"tuned",
-			"tar",
-		},
-		Exclude: []string{
-			"aic94xx-firmware",
-			"alsa-firmware",
-			"alsa-tools-firmware",
-			"biosdevname",
-			"firewalld",
-			"iprutils",
-			"ivtv-firmware",
-			"iwl1000-firmware",
-			"iwl100-firmware",
-			"iwl105-firmware",
-			"iwl135-firmware",
-			"iwl2000-firmware",
-			"iwl2030-firmware",
-			"iwl3160-firmware",
-			"iwl3945-firmware",
-			"iwl4965-firmware",
-			"iwl5000-firmware",
-			"iwl5150-firmware",
-			"iwl6000-firmware",
-			"iwl6000g2a-firmware",
-			"iwl6000g2b-firmware",
-			"iwl6050-firmware",
-			"iwl7260-firmware",
-			"libertas-sd8686-firmware",
-			"libertas-sd8787-firmware",
-			"libertas-usb8388-firmware",
-			"plymouth",
-			// RHBZ#2064087
-			"dracut-config-rescue",
-			// RHBZ#2075815
-			"qemu-guest-agent",
-		},
-	}.Append(distroSpecificPackageSet(t))
-
-	return ps
+	return rpmmd.PackageSet{}
 }
 
 // rhel-ha-ec2 image package set
 func rhelEc2HaPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
-	ec2HaPackageSet := ec2PackageSet(t)
-	ec2HaPackageSet = ec2HaPackageSet.Append(rpmmd.PackageSet{
-		Include: []string{
-			"fence-agents-all",
-			"pacemaker",
-			"pcs",
-		},
-	})
-	return ec2HaPackageSet
+	return rpmmd.PackageSet{}
 }
 
 // rhel-sap-ec2 image package set
 func rhelEc2SapPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
-	return rpmmd.PackageSet{
-		Include: []string{
-			//"libcanberra-gtk2", // libcanberra-gtk2 is not available in RHEL-10
-		},
-	}.Append(ec2PackageSet(t)).Append(SapPackageSet(t))
+	return rpmmd.PackageSet{}
 }

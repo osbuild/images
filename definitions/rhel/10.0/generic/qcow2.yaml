@@ -1,0 +1,8 @@
+from:
+  - ../common.yaml
+  - ../../../centos/10/generic/qcow2.yaml
+def:
+  packages:
+    os:
+      include:
+        - subscription-manager-cockpit

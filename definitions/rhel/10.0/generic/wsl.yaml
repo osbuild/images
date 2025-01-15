@@ -1,0 +1,2 @@
+from:
+  - ../../../centos/10/generic/wsl.yaml

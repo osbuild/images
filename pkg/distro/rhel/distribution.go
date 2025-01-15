@@ -15,6 +15,7 @@ import (
 type DefaultDistroImageConfigFunc func(d *Distribution) *distro.ImageConfig
 
 type Distribution struct {
+	id                 string
 	name               string
 	DistCodename       string
 	product            string
@@ -118,6 +119,7 @@ func NewDistribution(name string, major, minor int) (*Distribution, error) {
 		}
 
 		rd = &Distribution{
+			id:               "rhel",
 			name:             fmt.Sprintf("rhel-%d.%d", major, minor),
 			product:          "Red Hat Enterprise Linux",
 			osVersion:        fmt.Sprintf("%d.%d", major, minor),
@@ -133,6 +135,7 @@ func NewDistribution(name string, major, minor int) (*Distribution, error) {
 		}
 
 		rd = &Distribution{
+			id:               "centos",
 			name:             fmt.Sprintf("centos-%d", major),
 			product:          "CentOS Stream",
 			osVersion:        fmt.Sprintf("%d-stream", major),

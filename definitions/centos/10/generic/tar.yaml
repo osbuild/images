@@ -1,0 +1,8 @@
+def:
+  packages:
+    os:
+      include:
+        - policycoreutils
+        - selinux-policy-targeted
+      exclude:
+        - rng-tools

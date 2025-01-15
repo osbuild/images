@@ -61,21 +61,5 @@ func mkOVAImgType() *rhel.ImageType {
 }
 
 func vmdkCommonPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
-	ps := rpmmd.PackageSet{
-		Include: []string{
-			"@core",
-			"chrony",
-			"cloud-init",
-			"firewalld",
-			"langpacks-en",
-			"open-vm-tools",
-			"tuned",
-		},
-		Exclude: []string{
-			"dracut-config-rescue",
-			"rng-tools",
-		},
-	}
-
-	return ps
+	return rpmmd.PackageSet{}
 }
