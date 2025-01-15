@@ -9,16 +9,18 @@ import (
 
 	"slices"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distrofactory"
+	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rpmmd"
 	testrepos "github.com/osbuild/images/test/data/repositories"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // listTestedDistros returns a list of distro names that are explicitly tested
@@ -109,11 +111,11 @@ func TestImageTypePipelineNames(t *testing.T) {
 						{Name: "filesystem", Checksum: "sha256:6b4bf18ba28ccbdd49f2716c9f33c9211155ff703fa6c195c78a07bd160da0eb"},
 					}
 
-					packageSets := make(map[string][]rpmmd.PackageSpec, len(allPipelines))
-					repoSets := make(map[string][]rpmmd.RepoConfig, len(allPipelines))
+					depsolvedSets := make(map[string]dnfjson.DepsolveResult, len(allPipelines))
 					for _, plName := range allPipelines {
-						packageSets[plName] = minimalPackageSet
-						repoSets[plName] = repos
+						dr := depsolvedSets[plName]
+						dr.Packages = minimalPackageSet
+						depsolvedSets[plName] = dr
 					}
 
 					m, _, err := imageType.Manifest(&bp, options, repos, &seed)
@@ -134,7 +136,7 @@ func TestImageTypePipelineNames(t *testing.T) {
 						}
 						commits[name] = commitSpecs
 					}
-					mf, err := m.Serialize(packageSets, containers, commits, repoSets, 0)
+					mf, err := m.Serialize(depsolvedSets, containers, commits, 0)
 					assert.NoError(err)
 					pm := new(manifest)
 					err = json.Unmarshal(mf, pm)

@@ -138,11 +138,11 @@ func (p *CoreOSInstaller) serializeStart(inputs Inputs) {
 	if len(p.packageSpecs) > 0 {
 		panic("double call to serializeStart()")
 	}
-	p.packageSpecs = inputs.Packages
+	p.packageSpecs = inputs.Depsolved.Packages
 	if p.kernelName != "" {
 		p.kernelVer = rpmmd.GetVerStrFromPackageSpecListPanic(p.packageSpecs, p.kernelName)
 	}
-	p.repos = append(p.repos, inputs.RpmRepos...)
+	p.repos = append(p.repos, inputs.Depsolved.Repos...)
 }
 
 func (p *CoreOSInstaller) getInline() []string {

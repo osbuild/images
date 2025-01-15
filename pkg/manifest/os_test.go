@@ -4,17 +4,18 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/bootc"
 	"github.com/osbuild/images/pkg/customizations/subscription"
+	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/runner"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // NewTestOS returns a minimally populated OS struct for use in testing
@@ -34,7 +35,12 @@ func NewTestOS() *OS {
 	packages := []rpmmd.PackageSpec{
 		{Name: "pkg1", Checksum: "sha1:c02524e2bd19490f2a7167958f792262754c5f46"},
 	}
-	os.serializeStart(Inputs{Packages: packages, RpmRepos: repos})
+	os.serializeStart(Inputs{
+		Depsolved: dnfjson.DepsolveResult{
+			Packages: packages,
+			Repos:    repos,
+		},
+	})
 
 	return os
 }

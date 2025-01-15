@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/osbuild/images/pkg/container"
+	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
@@ -23,10 +24,9 @@ const (
 // Note that for Packages/RpmRepos the depsolve resolved results
 // must be passed
 type SourceInputs struct {
-	Packages   []rpmmd.PackageSpec
+	Depsolved  dnfjson.DepsolveResult
 	Containers []container.Spec
 	Commits    []ostree.CommitSpec
-	RpmRepos   []rpmmd.RepoConfig
 	InlineData []string
 }
 
@@ -107,13 +107,13 @@ func GenSources(inputs SourceInputs, rpmDownloader RpmDownloader) (Sources, erro
 	sources := Sources{}
 
 	// collect rpm package sources
-	if len(inputs.Packages) > 0 {
+	if len(inputs.Depsolved.Packages) > 0 {
 		var err error
 		switch rpmDownloader {
 		case RpmDownloaderCurl:
-			err = sources.addPackagesCurl(inputs.Packages)
+			err = sources.addPackagesCurl(inputs.Depsolved.Packages)
 		case RpmDownloaderLibrepo:
-			err = sources.addPackagesLibrepo(inputs.Packages, inputs.RpmRepos)
+			err = sources.addPackagesLibrepo(inputs.Depsolved.Packages, inputs.Depsolved.Repos)
 		default:
 			err = fmt.Errorf("unknown rpm downloader %v", rpmDownloader)
 		}

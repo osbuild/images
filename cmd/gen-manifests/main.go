@@ -214,22 +214,20 @@ func makeManifestJob(
 			return
 		}
 
-		var packageSpecs map[string][]rpmmd.PackageSpec
-		var repoConfigs map[string][]rpmmd.RepoConfig
+		var depsolvedSets map[string]dnfjson.DepsolveResult
 		if content["packages"] {
-			packageSpecs, repoConfigs, err = depsolve(cacheDir, manifest.GetPackageSetChains(), distribution, archName)
+			depsolvedSets, err = depsolve(cacheDir, manifest.GetPackageSetChains(), distribution, archName)
 			if err != nil {
 				err = fmt.Errorf("[%s] depsolve failed: %s", filename, err.Error())
 				return
 			}
-			if packageSpecs == nil {
+			if depsolvedSets == nil {
 				err = fmt.Errorf("[%s] nil package specs", filename)
 				return
 			}
 		} else {
-			packageSpecs, repoConfigs = mockDepsolve(manifest.GetPackageSetChains(), repos, archName)
+			depsolvedSets = mockDepsolve(manifest.GetPackageSetChains(), repos, archName)
 		}
-		_ = repoConfigs
 
 		var containerSpecs map[string][]container.Spec
 		if content["containers"] {
@@ -251,7 +249,7 @@ func makeManifestJob(
 			commitSpecs = mockResolveCommits(manifest.GetOSTreeSourceSpecs())
 		}
 
-		mf, err := manifest.Serialize(packageSpecs, containerSpecs, commitSpecs, repoConfigs, 0)
+		mf, err := manifest.Serialize(depsolvedSets, containerSpecs, commitSpecs, 0)
 		if err != nil {
 			return fmt.Errorf("[%s] manifest serialization failed: %s", filename, err.Error())
 		}
@@ -263,7 +261,7 @@ func makeManifestJob(
 			Repositories: repos,
 			Config:       bc,
 		}
-		err = save(mf, packageSpecs, containerSpecs, commitSpecs, request, path, filename, metadata)
+		err = save(mf, depsolvedSets, containerSpecs, commitSpecs, request, path, filename, metadata)
 		return
 	}
 	return job
@@ -346,24 +344,21 @@ func mockResolveCommits(commitSources map[string][]ostree.SourceSpec) map[string
 	return commits
 }
 
-func depsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string][]rpmmd.PackageSpec, map[string][]rpmmd.RepoConfig, error) {
+func depsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]dnfjson.DepsolveResult, error) {
 	solver := dnfjson.NewSolver(d.ModulePlatformID(), d.Releasever(), arch, d.Name(), cacheDir)
-	depsolvedSets := make(map[string][]rpmmd.PackageSpec)
-	repoSets := make(map[string][]rpmmd.RepoConfig)
+	depsolvedSets := make(map[string]dnfjson.DepsolveResult)
 	for name, pkgSet := range packageSets {
 		res, err := solver.Depsolve(pkgSet, sbom.StandardTypeNone)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
-		depsolvedSets[name] = res.Packages
-		repoSets[name] = res.Repos
+		depsolvedSets[name] = *res
 	}
-	return depsolvedSets, repoSets, nil
+	return depsolvedSets, nil
 }
 
-func mockDepsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfig, archName string) (map[string][]rpmmd.PackageSpec, map[string][]rpmmd.RepoConfig) {
-	depsolvedSets := make(map[string][]rpmmd.PackageSpec)
-	repoSets := make(map[string][]rpmmd.RepoConfig)
+func mockDepsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfig, archName string) map[string]dnfjson.DepsolveResult {
+	depsolvedSets := make(map[string]dnfjson.DepsolveResult)
 
 	for name, pkgSetChain := range packageSets {
 		specSet := make([]rpmmd.PackageSpec, 0)
@@ -424,16 +419,22 @@ func mockDepsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoC
 			})
 		}
 
-		depsolvedSets[name] = specSet
-		repoSets[name] = repos
+		depsolvedSets[name] = dnfjson.DepsolveResult{
+			Packages: specSet,
+			Repos:    repos,
+		}
 	}
 
-	return depsolvedSets, repoSets
+	return depsolvedSets
 }
 
-func save(ms manifest.OSBuildManifest, pkgs map[string][]rpmmd.PackageSpec, containers map[string][]container.Spec, commits map[string][]ostree.CommitSpec, cr buildRequest, path, filename string, metadata bool) error {
+func save(ms manifest.OSBuildManifest, depsolved map[string]dnfjson.DepsolveResult, containers map[string][]container.Spec, commits map[string][]ostree.CommitSpec, cr buildRequest, path, filename string, metadata bool) error {
 	var data interface{}
 	if metadata {
+		rpmmds := make(map[string][]rpmmd.PackageSpec)
+		for plName, res := range depsolved {
+			rpmmds[plName] = res.Packages
+		}
 		data = struct {
 			BuidRequest   buildRequest                   `json:"build-request"`
 			Manifest      manifest.OSBuildManifest       `json:"manifest"`
@@ -442,7 +443,7 @@ func save(ms manifest.OSBuildManifest, pkgs map[string][]rpmmd.PackageSpec, cont
 			OSTreeCommits map[string][]ostree.CommitSpec `json:"ostree-commits,omitempty"`
 			NoImageInfo   bool                           `json:"no-image-info"`
 		}{
-			cr, ms, pkgs, containers, commits, true,
+			cr, ms, rpmmds, containers, commits, true,
 		}
 	} else {
 		data = ms

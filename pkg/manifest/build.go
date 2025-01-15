@@ -102,8 +102,8 @@ func (p *BuildrootFromPackages) serializeStart(inputs Inputs) {
 	if len(p.packageSpecs) > 0 {
 		panic("double call to serializeStart()")
 	}
-	p.packageSpecs = inputs.Packages
-	p.repos = append(p.repos, inputs.RpmRepos...)
+	p.packageSpecs = inputs.Depsolved.Packages
+	p.repos = append(p.repos, inputs.Depsolved.Repos...)
 }
 
 func (p *BuildrootFromPackages) serializeEnd() {

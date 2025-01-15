@@ -59,14 +59,13 @@ func makeManifest(
 		fmt.Fprintf(os.Stderr, "[WARNING]\n%s", strings.Join(warnings, "\n"))
 	}
 
-	packageSpecs, repoConfigs, err := depsolve(cacheDir, manifest.GetPackageSetChains(), distribution, archName)
+	depsolvedSets, err := depsolve(cacheDir, manifest.GetPackageSetChains(), distribution, archName)
 	if err != nil {
 		return nil, fmt.Errorf("[ERROR] depsolve failed: %w", err)
 	}
-	if packageSpecs == nil {
+	if depsolvedSets == nil {
 		return nil, fmt.Errorf("[ERROR] depsolve did not return any packages")
 	}
-	_ = repoConfigs
 
 	if config.Blueprint != nil {
 		bp = blueprint.Blueprint(*config.Blueprint)
@@ -82,7 +81,7 @@ func makeManifest(
 		return nil, fmt.Errorf("[ERROR] ostree commit resolution failed: %w", err)
 	}
 
-	mf, err := manifest.Serialize(packageSpecs, containerSpecs, commitSpecs, repoConfigs, 0)
+	mf, err := manifest.Serialize(depsolvedSets, containerSpecs, commitSpecs, 0)
 	if err != nil {
 		return nil, fmt.Errorf("[ERROR] manifest serialization failed: %w", err)
 	}
@@ -128,19 +127,17 @@ func resolvePipelineCommits(commitSources map[string][]ostree.SourceSpec) (map[s
 	return commits, nil
 }
 
-func depsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string][]rpmmd.PackageSpec, map[string][]rpmmd.RepoConfig, error) {
+func depsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]dnfjson.DepsolveResult, error) {
 	solver := dnfjson.NewSolver(d.ModulePlatformID(), d.Releasever(), arch, d.Name(), cacheDir)
-	depsolvedSets := make(map[string][]rpmmd.PackageSpec)
-	repoSets := make(map[string][]rpmmd.RepoConfig)
+	depsolvedSets := make(map[string]dnfjson.DepsolveResult)
 	for name, pkgSet := range packageSets {
 		res, err := solver.Depsolve(pkgSet, sbom.StandardTypeNone)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
-		depsolvedSets[name] = res.Packages
-		repoSets[name] = res.Repos
+		depsolvedSets[name] = *res
 	}
-	return depsolvedSets, repoSets, nil
+	return depsolvedSets, nil
 }
 
 func save(ms manifest.OSBuildManifest, fpath string) error {

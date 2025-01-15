@@ -35,13 +35,13 @@ func RunPlayground(img image.ImageKind, d distro.Distro, arch distro.Arch, repos
 		panic("InstantiateManifest() failed: " + err.Error())
 	}
 
-	packageSpecs := make(map[string][]rpmmd.PackageSpec)
+	depsolvedSets := make(map[string]dnfjson.DepsolveResult)
 	for name, chain := range manifest.GetPackageSetChains() {
 		res, err := solver.Depsolve(chain, sbom.StandardTypeNone)
 		if err != nil {
 			panic(fmt.Sprintf("failed to depsolve for pipeline %s: %s\n", name, err.Error()))
 		}
-		packageSpecs[name] = res.Packages
+		depsolvedSets[name] = *res
 	}
 
 	if err := solver.CleanCache(); err != nil {
@@ -49,7 +49,7 @@ func RunPlayground(img image.ImageKind, d distro.Distro, arch distro.Arch, repos
 		fmt.Fprintf(os.Stderr, "could not clean dnf cache: %s", err.Error())
 	}
 
-	bytes, err := manifest.Serialize(packageSpecs, nil, nil, nil, 0)
+	bytes, err := manifest.Serialize(depsolvedSets, nil, nil, 0)
 	if err != nil {
 		panic("failed to serialize manifest: " + err.Error())
 	}
