@@ -1,0 +1,7 @@
+def:
+  packages:
+    os:
+      include:
+        - systemd
+      exclude:
+        - bluetooth-firmwares

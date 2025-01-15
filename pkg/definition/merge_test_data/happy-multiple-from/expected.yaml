@@ -1,0 +1,11 @@
+def:
+  packages:
+    os:
+      include:
+        - "@core"
+        - systemd
+        - vim
+      exclude:
+        - wifi-firmwares
+        - bluetooth-firmwares
+        - emacs

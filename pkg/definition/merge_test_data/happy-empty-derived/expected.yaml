@@ -1,0 +1,7 @@
+def:
+  packages:
+    os:
+      include:
+        - "@core"
+      exclude:
+        - wifi-firmwares

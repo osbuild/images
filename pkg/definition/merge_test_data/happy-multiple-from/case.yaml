@@ -1,0 +1,10 @@
+from:
+  - a.yaml
+  - b.yaml
+def:
+  packages:
+    os:
+      include:
+        - vim
+      exclude:
+        - emacs

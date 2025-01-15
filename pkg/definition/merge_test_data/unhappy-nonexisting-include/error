@@ -1,0 +1,2 @@
+file included from unhappy-nonexisting-include/case.yaml:
+open unhappy-nonexisting-include/nonexisting.yaml: file does not exist

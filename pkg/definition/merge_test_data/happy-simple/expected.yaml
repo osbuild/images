@@ -1,0 +1,16 @@
+def:
+  packages:
+    os:
+      include:
+        - "@core"
+        - vim
+      exclude:
+        - wifi-firmwares
+        - emacs
+    anaconda:
+      include:
+        - anaconda
+        - anaconda-gui
+      exclude:
+        - cobra
+        - viper

@@ -1,0 +1,2 @@
+failed to decode file unhappy-invalid-yaml/case.yaml: yaml: unmarshal errors:
+  line 1: field valid_structure not found in type definition.File

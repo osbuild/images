@@ -1,0 +1,2 @@
+file included from unhappy-double-include/case.yaml:
+unhappy-double-include/a.yaml is included multiple times

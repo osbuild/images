@@ -1,0 +1,14 @@
+from:
+  - base.yaml
+def:
+  packages:
+    os:
+      include:
+        - vim
+      exclude:
+        - emacs
+    anaconda:
+      include:
+        - anaconda-gui
+      exclude:
+        - viper

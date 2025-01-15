@@ -1,0 +1,12 @@
+def:
+  packages:
+    os:
+      include:
+        - "@core"
+      exclude:
+        - wifi-firmwares
+    anaconda:
+      include:
+        - anaconda
+      exclude:
+        - cobra
