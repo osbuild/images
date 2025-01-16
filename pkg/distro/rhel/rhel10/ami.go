@@ -166,7 +166,7 @@ const (
 // default EC2 images config (common for all architectures)
 func defaultEc2ImageConfig() *distro.ImageConfig {
 	return &distro.ImageConfig{
-		Locale:   common.ToPtr("en_US.UTF-8"),
+		Locale:   common.ToPtr("C.UTF-8"),
 		Timezone: common.ToPtr("UTC"),
 		TimeSynchronization: &osbuild.ChronyStageOptions{
 			Servers: []osbuild.ChronyConfigServer{
