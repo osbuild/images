@@ -87,6 +87,10 @@ type AnacondaInstaller struct {
 	// tree with the selected profile and selects the required package
 	// for depsolving
 	SElinux string
+
+	// Locale for the installer. This should be set to the same locale as the
+	// ISO OS payload, if known.
+	Locale string
 }
 
 func NewAnacondaInstaller(installerType AnacondaInstallerType,
@@ -234,7 +238,13 @@ func (p *AnacondaInstaller) serialize() osbuild.Pipeline {
 		Version: p.version,
 		Final:   !p.preview,
 	}))
-	pipeline.AddStage(osbuild.NewLocaleStage(&osbuild.LocaleStageOptions{Language: "en_US.UTF-8"}))
+
+	locale := p.Locale
+	if locale == "" {
+		// default to C.UTF-8 if unset
+		locale = "C.UTF-8"
+	}
+	pipeline.AddStage(osbuild.NewLocaleStage(&osbuild.LocaleStageOptions{Language: locale}))
 
 	// Let's do a bunch of sanity checks that are dependent on the installer type
 	// being serialized
