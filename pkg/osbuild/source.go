@@ -56,13 +56,13 @@ func (sources *Sources) UnmarshalJSON(data []byte) error {
 	for name, rawSource := range rawSources {
 		var source Source
 		switch name {
-		case "org.osbuild.curl":
+		case SourceNameCurl:
 			source = new(CurlSource)
-		case "org.osbuild.librepo":
+		case SourceNameLibrepo:
 			source = new(LibrepoSource)
-		case "org.osbuild.inline":
+		case SourceNameInline:
 			source = new(InlineSource)
-		case "org.osbuild.ostree":
+		case SourceNameOstree:
 			source = new(OSTreeSource)
 		default:
 			return errors.New("unexpected source name: " + name)
@@ -85,7 +85,7 @@ func (sources Sources) addPackagesCurl(packages []rpmmd.PackageSpec) error {
 			return err
 		}
 	}
-	sources["org.osbuild.curl"] = curl
+	sources[SourceNameCurl] = curl
 	return nil
 }
 
@@ -97,7 +97,7 @@ func (sources Sources) addPackagesLibrepo(packages []rpmmd.PackageSpec, rpmRepos
 			return err
 		}
 	}
-	sources["org.osbuild.librepo"] = librepo
+	sources[SourceNameLibrepo] = librepo
 	return nil
 }
 
@@ -129,7 +129,7 @@ func GenSources(inputs SourceInputs, rpmDownloader RpmDownloader) (Sources, erro
 			ostree.AddItem(commit)
 		}
 		if len(ostree.Items) > 0 {
-			sources["org.osbuild.ostree"] = ostree
+			sources[SourceNameOstree] = ostree
 		}
 	}
 
@@ -140,7 +140,7 @@ func GenSources(inputs SourceInputs, rpmDownloader RpmDownloader) (Sources, erro
 			ils.AddItem(data)
 		}
 
-		sources["org.osbuild.inline"] = ils
+		sources[SourceNameInline] = ils
 	}
 
 	// collect skopeo and local container sources
