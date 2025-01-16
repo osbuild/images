@@ -133,3 +133,43 @@ func TestAnacondaInstallerModules(t *testing.T) {
 		})
 	}
 }
+
+func TestISOLocale(t *testing.T) {
+	pkgs := []rpmmd.PackageSpec{
+		{
+			Name:     "kernel",
+			Checksum: "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+		},
+	}
+
+	locales := map[string]string{
+		// input: expected
+		"C.UTF-8":     "C.UTF-8",
+		"en_US.UTF-8": "en_US.UTF-8",
+		"":            "C.UTF-8",  // default
+		"whatever":    "whatever", // arbitrary string
+	}
+
+	for input, expected := range locales {
+		t.Run(input, func(t *testing.T) {
+			installerPipeline := newAnacondaInstaller()
+			installerPipeline.Locale = input
+			installerPipeline.serializeStart(Inputs{Depsolved: dnfjson.DepsolveResult{Packages: pkgs}})
+			pipeline := installerPipeline.serialize()
+
+			require := require.New(t)
+			require.NotNil(pipeline)
+			require.NotNil(pipeline.Stages)
+
+			var stageOptions *osbuild.LocaleStageOptions
+			for _, stage := range pipeline.Stages {
+				if stage.Type == "org.osbuild.locale" {
+					stageOptions = stage.Options.(*osbuild.LocaleStageOptions)
+				}
+			}
+
+			require.NotNil(stageOptions, "serialized anaconda pipeline does not contain an org.osbuild.locale stage")
+			require.Equal(expected, stageOptions.Language)
+		})
+	}
+}
