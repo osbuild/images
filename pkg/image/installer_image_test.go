@@ -88,23 +88,24 @@ const (
 
 func TestContainerInstallerUnsetKSOptions(t *testing.T) {
 	img := image.NewAnacondaContainerInstaller(container.SourceSpec{}, "")
+	assert.NotNil(t, img)
+
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-
-	assert.NotNil(t, img)
 	img.Platform = testPlatform
+
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil)
 	assert.Contains(t, mfs, fmt.Sprintf(`"inst.ks=hd:LABEL=%s:/osbuild.ks"`, isolabel))
 }
 
 func TestContainerInstallerUnsetKSPath(t *testing.T) {
 	img := image.NewAnacondaContainerInstaller(container.SourceSpec{}, "")
+	assert.NotNil(t, img)
+
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-
-	assert.NotNil(t, img)
 	img.Platform = testPlatform
 	// set empty kickstart options (no path)
 	img.Kickstart = &kickstart.Options{}
@@ -115,11 +116,11 @@ func TestContainerInstallerUnsetKSPath(t *testing.T) {
 
 func TestContainerInstallerSetKSPath(t *testing.T) {
 	img := image.NewAnacondaContainerInstaller(container.SourceSpec{}, "")
+	assert.NotNil(t, img)
+
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-
-	assert.NotNil(t, img)
 	img.Platform = testPlatform
 	img.Kickstart = &kickstart.Options{
 		Path: "/test.ks",
@@ -132,12 +133,13 @@ func TestContainerInstallerSetKSPath(t *testing.T) {
 
 func TestContainerInstallerExt4Rootfs(t *testing.T) {
 	img := image.NewAnacondaContainerInstaller(container.SourceSpec{}, "")
+	assert.NotNil(t, img)
+
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-
-	assert.NotNil(t, img)
 	img.Platform = testPlatform
+
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil)
 
 	// Confirm that it includes the rootfs-image pipeline that makes the ext4 rootfs
@@ -147,13 +149,14 @@ func TestContainerInstallerExt4Rootfs(t *testing.T) {
 
 func TestContainerInstallerSquashfsRootfs(t *testing.T) {
 	img := image.NewAnacondaContainerInstaller(container.SourceSpec{}, "")
+	assert.NotNil(t, img)
+
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
 	img.RootfsType = manifest.SquashfsRootfs
-
-	assert.NotNil(t, img)
 	img.Platform = testPlatform
+
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil)
 
 	// Confirm that it does not include rootfs-image pipeline
@@ -163,11 +166,11 @@ func TestContainerInstallerSquashfsRootfs(t *testing.T) {
 
 func TestOSTreeInstallerUnsetKSPath(t *testing.T) {
 	img := image.NewAnacondaOSTreeInstaller(ostree.SourceSpec{})
+	assert.NotNil(t, img)
+
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-
-	assert.NotNil(t, img)
 	img.Platform = testPlatform
 	img.Kickstart = &kickstart.Options{
 		// the ostree options must be non-nil
@@ -180,11 +183,11 @@ func TestOSTreeInstallerUnsetKSPath(t *testing.T) {
 
 func TestOSTreeInstallerSetKSPath(t *testing.T) {
 	img := image.NewAnacondaOSTreeInstaller(ostree.SourceSpec{})
+	assert.NotNil(t, img)
+
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-
-	assert.NotNil(t, img)
 	img.Platform = testPlatform
 	img.Kickstart = &kickstart.Options{
 		// the ostree options must be non-nil
@@ -199,11 +202,11 @@ func TestOSTreeInstallerSetKSPath(t *testing.T) {
 
 func TestOSTreeInstallerExt4Rootfs(t *testing.T) {
 	img := image.NewAnacondaOSTreeInstaller(ostree.SourceSpec{})
+	assert.NotNil(t, img)
+
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-
-	assert.NotNil(t, img)
 	img.Platform = testPlatform
 	img.Kickstart = &kickstart.Options{
 		// the ostree options must be non-nil
@@ -219,12 +222,12 @@ func TestOSTreeInstallerExt4Rootfs(t *testing.T) {
 
 func TestOSTreeInstallerSquashfsRootfs(t *testing.T) {
 	img := image.NewAnacondaOSTreeInstaller(ostree.SourceSpec{})
+	assert.NotNil(t, img)
+
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
 	img.RootfsType = manifest.SquashfsRootfs
-
-	assert.NotNil(t, img)
 	img.Platform = testPlatform
 	img.Kickstart = &kickstart.Options{
 		// the ostree options must be non-nil
@@ -240,11 +243,11 @@ func TestOSTreeInstallerSquashfsRootfs(t *testing.T) {
 
 func TestTarInstallerUnsetKSOptions(t *testing.T) {
 	img := image.NewAnacondaTarInstaller()
+	assert.NotNil(t, img)
+
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-
-	assert.NotNil(t, img)
 	img.Platform = testPlatform
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
@@ -258,11 +261,11 @@ func TestTarInstallerUnsetKSOptions(t *testing.T) {
 
 func TestTarInstallerUnsetKSPath(t *testing.T) {
 	img := image.NewAnacondaTarInstaller()
+	assert.NotNil(t, img)
+
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-
-	assert.NotNil(t, img)
 	img.Platform = testPlatform
 	img.Kickstart = &kickstart.Options{}
 
@@ -283,11 +286,11 @@ func TestTarInstallerUnsetKSPath(t *testing.T) {
 
 func TestTarInstallerSetKSPath(t *testing.T) {
 	img := image.NewAnacondaTarInstaller()
+	assert.NotNil(t, img)
+
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-
-	assert.NotNil(t, img)
 	img.Platform = testPlatform
 	img.Kickstart = &kickstart.Options{
 		Path: "/test.ks",
@@ -302,11 +305,11 @@ func TestTarInstallerSetKSPath(t *testing.T) {
 
 func TestTarInstallerExt4Rootfs(t *testing.T) {
 	img := image.NewAnacondaTarInstaller()
+	assert.NotNil(t, img)
+
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-
-	assert.NotNil(t, img)
 	img.Platform = testPlatform
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
@@ -317,12 +320,12 @@ func TestTarInstallerExt4Rootfs(t *testing.T) {
 
 func TestTarInstallerSquashfsRootfs(t *testing.T) {
 	img := image.NewAnacondaTarInstaller()
+	assert.NotNil(t, img)
+
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
 	img.RootfsType = manifest.SquashfsRootfs
-
-	assert.NotNil(t, img)
 	img.Platform = testPlatform
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
@@ -333,11 +336,11 @@ func TestTarInstallerSquashfsRootfs(t *testing.T) {
 
 func TestLiveInstallerExt4Rootfs(t *testing.T) {
 	img := image.NewAnacondaLiveInstaller()
+	assert.NotNil(t, img)
+
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-
-	assert.NotNil(t, img)
 	img.Platform = testPlatform
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
@@ -348,12 +351,12 @@ func TestLiveInstallerExt4Rootfs(t *testing.T) {
 
 func TestLiveInstallerSquashfsRootfs(t *testing.T) {
 	img := image.NewAnacondaLiveInstaller()
+	assert.NotNil(t, img)
+
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
 	img.RootfsType = manifest.SquashfsRootfs
-
-	assert.NotNil(t, img)
 	img.Platform = testPlatform
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
