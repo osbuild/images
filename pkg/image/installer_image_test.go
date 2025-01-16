@@ -372,7 +372,7 @@ func instantiateAndSerialize(t *testing.T, img image.ImageKind, depsolved map[st
 	_, err := img.InstantiateManifest(&mf, nil, &runner.CentOS{Version: 9}, rng)
 	assert.NoError(t, err)
 
-	mfs, err := mf.Serialize(depsolved, containers, commits, 0)
+	mfs, err := mf.Serialize(depsolved, containers, commits, nil)
 	assert.NoError(t, err)
 
 	return string(mfs)

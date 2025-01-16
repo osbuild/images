@@ -141,7 +141,15 @@ func (m Manifest) GetOSTreeSourceSpecs() map[string][]ostree.SourceSpec {
 	return ostreeSpecs
 }
 
-func (m Manifest) Serialize(depsolvedSets map[string]dnfjson.DepsolveResult, containerSpecs map[string][]container.Spec, ostreeCommits map[string][]ostree.CommitSpec, rpmDownloader osbuild.RpmDownloader) (OSBuildManifest, error) {
+type SerializeOptions struct {
+	RpmDownloader osbuild.RpmDownloader
+}
+
+func (m Manifest) Serialize(depsolvedSets map[string]dnfjson.DepsolveResult, containerSpecs map[string][]container.Spec, ostreeCommits map[string][]ostree.CommitSpec, opts *SerializeOptions) (OSBuildManifest, error) {
+	if opts == nil {
+		opts = &SerializeOptions{}
+	}
+
 	for _, pipeline := range m.pipelines {
 		pipeline.serializeStart(Inputs{
 			Depsolved:  depsolvedSets[pipeline.Name()],
@@ -165,7 +173,7 @@ func (m Manifest) Serialize(depsolvedSets map[string]dnfjson.DepsolveResult, con
 		pipeline.serializeEnd()
 	}
 
-	sources, err := osbuild.GenSources(mergedInputs, rpmDownloader)
+	sources, err := osbuild.GenSources(mergedInputs, opts.RpmDownloader)
 	if err != nil {
 		return nil, err
 	}

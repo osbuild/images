@@ -49,7 +49,7 @@ func RunPlayground(img image.ImageKind, d distro.Distro, arch distro.Arch, repos
 		fmt.Fprintf(os.Stderr, "could not clean dnf cache: %s", err.Error())
 	}
 
-	bytes, err := manifest.Serialize(depsolvedSets, nil, nil, 0)
+	bytes, err := manifest.Serialize(depsolvedSets, nil, nil, nil)
 	if err != nil {
 		panic("failed to serialize manifest: " + err.Error())
 	}
