@@ -25,7 +25,7 @@ func mkVMDKImgType() *rhel.ImageType {
 	)
 
 	it.DefaultImageConfig = &distro.ImageConfig{
-		Locale: common.ToPtr("en_US.UTF-8"),
+		Locale: common.ToPtr("C.UTF-8"),
 	}
 	it.KernelOptions = vmdkKernelOptions
 	it.Bootable = true
@@ -50,7 +50,7 @@ func mkOVAImgType() *rhel.ImageType {
 	)
 
 	it.DefaultImageConfig = &distro.ImageConfig{
-		Locale: common.ToPtr("en_US.UTF-8"),
+		Locale: common.ToPtr("C.UTF-8"),
 	}
 	it.KernelOptions = vmdkKernelOptions
 	it.Bootable = true

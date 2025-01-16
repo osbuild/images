@@ -59,7 +59,7 @@ func baseGCEImageConfig() *distro.ImageConfig {
 			"reboot.target",
 		},
 		DefaultTarget: common.ToPtr("multi-user.target"),
-		Locale:        common.ToPtr("en_US.UTF-8"),
+		Locale:        common.ToPtr("C.UTF-8"),
 		Keyboard: &osbuild.KeymapStageOptions{
 			Keymap: "us",
 		},

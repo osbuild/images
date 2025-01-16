@@ -407,7 +407,7 @@ const defaultAzureKernelOptions = "ro loglevel=3 console=tty1 console=ttyS0 earl
 func defaultAzureImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
 	ic := &distro.ImageConfig{
 		Timezone: common.ToPtr("Etc/UTC"),
-		Locale:   common.ToPtr("en_US.UTF-8"),
+		Locale:   common.ToPtr("C.UTF-8"),
 		Keyboard: &osbuild.KeymapStageOptions{
 			Keymap: "us",
 			X11Keymap: &osbuild.X11KeymapOptions{
