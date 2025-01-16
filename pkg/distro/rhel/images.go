@@ -537,6 +537,10 @@ func EdgeInstallerImage(workload workload.Workload,
 
 	img.Filename = t.Filename()
 
+	if locale := t.getDefaultImageConfig().Locale; locale != nil {
+		img.Locale = *locale
+	}
+
 	return img, nil
 }
 
