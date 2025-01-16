@@ -1,9 +1,12 @@
 package manifestgen
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/osbuild/images/pkg/blueprint"
@@ -35,7 +38,9 @@ func defaultDepsolver(cacheDir string, packageSets map[string][]rpmmd.PackageSet
 	solver := dnfjson.NewSolver(d.ModulePlatformID(), d.Releasever(), arch, d.Name(), cacheDir)
 	depsolvedSets := make(map[string]dnfjson.DepsolveResult)
 	for name, pkgSet := range packageSets {
-		res, err := solver.Depsolve(pkgSet, sbom.StandardTypeNone)
+		// XXX: is there harm in always generating an sbom?
+		// (expect for slightly longer runtime?)
+		res, err := solver.Depsolve(pkgSet, sbom.StandardTypeSpdx)
 		if err != nil {
 			return nil, fmt.Errorf("error depsolving: %w", err)
 		}
@@ -88,6 +93,8 @@ type (
 	ContainerResolverFunc func(containerSources map[string][]container.SourceSpec, archName string) (map[string][]container.Spec, error)
 
 	CommitResolverFunc func(commitSources map[string][]ostree.SourceSpec) (map[string][]ostree.CommitSpec, error)
+
+	SBOMWriterFunc func(filename string, content io.Reader, docType sbom.StandardType) error
 )
 
 // Options contains the optional settings for the manifest generation.
@@ -96,12 +103,18 @@ type Options struct {
 	Cachedir string
 	// Output is the writer that the generated osbuild manifest will
 	// written to.
-	Output            io.Writer
+	Output io.Writer
+
 	Depsolver         DepsolveFunc
 	ContainerResolver ContainerResolverFunc
 	CommitResolver    CommitResolverFunc
 
 	RpmDownloader osbuild.RpmDownloader
+
+	// SBOMWriter will be called for each generated SBOM the
+	// filename contains the suggest filename string and the
+	// content can be read
+	SBOMWriter SBOMWriterFunc
 }
 
 // Generator can generate an osbuild manifest from a given repository
@@ -113,6 +126,7 @@ type Generator struct {
 	depsolver         DepsolveFunc
 	containerResolver ContainerResolverFunc
 	commitResolver    CommitResolverFunc
+	sbomWriter        SBOMWriterFunc
 
 	reporegistry *reporegistry.RepoRegistry
 
@@ -133,6 +147,7 @@ func New(reporegistry *reporegistry.RepoRegistry, opts *Options) (*Generator, er
 		containerResolver: opts.ContainerResolver,
 		commitResolver:    opts.CommitResolver,
 		rpmDownloader:     opts.RpmDownloader,
+		sbomWriter:        opts.SBOMWriter,
 	}
 	if mg.out == nil {
 		mg.out = os.Stdout
@@ -194,6 +209,33 @@ func (mg *Generator) Generate(bp *blueprint.Blueprint, dist distro.Distro, imgTy
 		return err
 	}
 	fmt.Fprintf(mg.out, "%s\n", mf)
+
+	if mg.sbomWriter != nil {
+		// XXX: this is very similar to
+		// osbuild-composer:jobimpl-osbuild.go, see if code
+		// can be shared
+		for plName, depsolvedPipeline := range depsolved {
+			pipelinePurpose := "unknown"
+			switch {
+			case slices.Contains(imgType.PayloadPipelines(), plName):
+				pipelinePurpose = "image"
+			case slices.Contains(imgType.BuildPipelines(), plName):
+				pipelinePurpose = "buildroot"
+			}
+			// XXX: sync with image-builder-cli:build.go name generation - can we have a shared helper?
+			imageName := fmt.Sprintf("%s-%s-%s", dist.Name(), imgType.Name(), a.Name())
+			sbomDocOutputFilename := fmt.Sprintf("%s.%s-%s.spdx.json", imageName, pipelinePurpose, plName)
+
+			var buf bytes.Buffer
+			enc := json.NewEncoder(&buf)
+			if err := enc.Encode(depsolvedPipeline.SBOM.Document); err != nil {
+				return err
+			}
+			if err := mg.sbomWriter(sbomDocOutputFilename, &buf, depsolvedPipeline.SBOM.DocType); err != nil {
+				return err
+			}
+		}
+	}
 
 	return nil
 }

@@ -3,7 +3,9 @@ package manifestgen_test
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
+	"io"
 	"strings"
 	"testing"
 
@@ -22,6 +24,7 @@ import (
 	"github.com/osbuild/images/pkg/osbuild/manifesttest"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rpmmd"
+	"github.com/osbuild/images/pkg/sbom"
 	testrepos "github.com/osbuild/images/test/data/repositories"
 )
 
@@ -150,6 +153,11 @@ func fakeDepsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d 
 					Id:       repoId,
 					Metalink: "https://example.com/metalink",
 				})
+				doc, err := sbom.NewDocument(sbom.StandardTypeSpdx, json.RawMessage(fmt.Sprintf(`{"sbom-for":"%s"}`, name)))
+				if err != nil {
+					return nil, err
+				}
+				resolvedSet.SBOM = doc
 			}
 		}
 		depsolvedSets[name] = resolvedSet
@@ -237,4 +245,48 @@ func TestManifestGeneratorContainers(t *testing.T) {
 
 	// container is included
 	assert.Contains(t, osbuildManifest.String(), "resolved-cnt-"+fakeContainerSource)
+}
+
+func TestManifestGeneratorDepsolveWithSbomWriter(t *testing.T) {
+	repos, err := testrepos.New()
+	assert.NoError(t, err)
+	fac := distrofactory.NewDefault()
+
+	filter, err := imagefilter.New(fac, repos)
+	assert.NoError(t, err)
+	res, err := filter.Filter("distro:centos-9", "type:qcow2", "arch:x86_64")
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(res))
+
+	var osbuildManifest bytes.Buffer
+	generatedSboms := map[string]string{}
+	opts := &manifestgen.Options{
+		Output:            &osbuildManifest,
+		Depsolver:         fakeDepsolve,
+		CommitResolver:    panicCommitResolver,
+		ContainerResolver: panicContainerResolver,
+
+		SBOMWriter: func(filename string, content io.Reader, docType sbom.StandardType) error {
+			assert.Equal(t, sbom.StandardTypeSpdx, docType)
+
+			b, err := io.ReadAll(content)
+			assert.NoError(t, err)
+			generatedSboms[filename] = strings.TrimSpace(string(b))
+			return nil
+		},
+	}
+	mg, err := manifestgen.New(repos, opts)
+	assert.NoError(t, err)
+	assert.NotNil(t, mg)
+	var bp blueprint.Blueprint
+	err = mg.Generate(&bp, res[0].Distro, res[0].ImgType, res[0].Arch, nil)
+	require.NoError(t, err)
+
+	assert.Contains(t, generatedSboms, "centos-9-qcow2-x86_64.buildroot-build.spdx.json")
+	assert.Contains(t, generatedSboms, "centos-9-qcow2-x86_64.image-os.spdx.json")
+	expected := map[string]string{
+		"centos-9-qcow2-x86_64.buildroot-build.spdx.json": `{"sbom-for":"build"}`,
+		"centos-9-qcow2-x86_64.image-os.spdx.json":        `{"sbom-for":"os"}`,
+	}
+	assert.Equal(t, expected, generatedSboms)
 }
