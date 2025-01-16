@@ -6,6 +6,8 @@ import (
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
+const SourceNameLibrepo = "org.osbuild.librepo"
+
 // LibrepoSource wraps the org.osbuild.librepo osbuild source
 type LibrepoSource struct {
 	Items   map[string]*LibrepoSourceItem `json:"items"`
