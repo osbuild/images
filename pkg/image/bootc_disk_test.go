@@ -88,7 +88,7 @@ func makeBootcDiskImageOsbuildManifest(t *testing.T, opts *bootcDiskImageTestOpt
 		"image": []container.Spec{{Source: "other-src", Digest: makeFakeDigest(t), ImageID: makeFakeDigest(t)}},
 	}
 
-	osbuildManifest, err := m.Serialize(nil, fakeSourceSpecs, nil, 0)
+	osbuildManifest, err := m.Serialize(nil, fakeSourceSpecs, nil, nil)
 	require.Nil(t, err)
 
 	return osbuildManifest
