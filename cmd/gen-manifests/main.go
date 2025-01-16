@@ -221,9 +221,11 @@ func makeManifestJob(
 				err = fmt.Errorf("[%s] depsolve failed: %s", filename, err.Error())
 				return
 			}
-			if depsolvedSets == nil {
-				err = fmt.Errorf("[%s] nil package specs", filename)
-				return
+			for plName, depsolved := range depsolvedSets {
+				if depsolved.Packages == nil {
+					err = fmt.Errorf("[%s] nil package specs in %v", filename, plName)
+					return
+				}
 			}
 		} else {
 			depsolvedSets = mockDepsolve(manifest.GetPackageSetChains(), repos, archName)
