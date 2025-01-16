@@ -51,6 +51,10 @@ type AnacondaContainerInstaller struct {
 	// Uses the old, deprecated, Anaconda config option "kickstart-modules".
 	// Only for RHEL 8.
 	UseLegacyAnacondaConfig bool
+
+	// Locale for the installer. This should be set to the same locale as the
+	// ISO OS payload, if known.
+	Locale string
 }
 
 func NewAnacondaContainerInstaller(container container.SourceSpec, ref string) *AnacondaContainerInstaller {
@@ -98,6 +102,7 @@ func (img *AnacondaContainerInstaller) InstantiateManifest(m *manifest.Manifest,
 		)
 	}
 	anacondaPipeline.AdditionalDrivers = img.AdditionalDrivers
+	anacondaPipeline.Locale = img.Locale
 
 	var rootfsImagePipeline *manifest.ISORootfsImg
 	switch img.RootfsType {

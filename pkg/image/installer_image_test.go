@@ -601,3 +601,94 @@ func TestTarInstallerModules(t *testing.T) {
 		}
 	}
 }
+
+func findAnacondaLocale(t *testing.T, mf manifest.OSBuildManifest) string {
+	pipeline := findPipelineFromOsbuildManifest(t, mf, "anaconda-tree")
+	assert.NotNil(t, pipeline)
+	stage := findStageFromOsbuildPipeline(t, pipeline, "org.osbuild.locale")
+	localeStageOptions := stage["options"].(map[string]interface{})
+	language := localeStageOptions["language"].(string)
+	return language
+}
+
+func TestInstallerLocales(t *testing.T) {
+	assert := assert.New(t)
+
+	locales := map[string]string{
+		// input: expected output
+		"C.UTF-8":     "C.UTF-8",
+		"en_US.UTF-8": "en_US.UTF-8",
+		"":            "C.UTF-8",  // default
+		"whatever":    "whatever", // arbitrary string
+	}
+
+	for input, expected := range locales {
+		{ // Container
+			img := image.NewAnacondaContainerInstaller(container.SourceSpec{}, "")
+			assert.NotNil(t, img)
+
+			img.Product = product
+			img.OSVersion = osversion
+			img.ISOLabel = isolabel
+			img.Platform = testPlatform
+			img.Locale = input
+
+			mfs := instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil)
+			actual := findAnacondaLocale(t, manifest.OSBuildManifest(mfs))
+
+			assert.Equal(expected, actual)
+		}
+
+		{ // OSTree
+			img := image.NewAnacondaOSTreeInstaller(ostree.SourceSpec{})
+			assert.NotNil(t, img)
+
+			img.Product = product
+			img.OSVersion = osversion
+			img.ISOLabel = isolabel
+			img.Platform = testPlatform
+			img.Kickstart = &kickstart.Options{
+				// the ostree options must be non-nil
+				OSTree: &kickstart.OSTree{},
+			}
+			img.Locale = input
+
+			mfs := instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil)
+			actual := findAnacondaLocale(t, manifest.OSBuildManifest(mfs))
+
+			assert.Equal(expected, actual)
+		}
+
+		{ // Tar
+			img := image.NewAnacondaTarInstaller()
+			assert.NotNil(t, img)
+
+			img.Product = product
+			img.OSVersion = osversion
+			img.ISOLabel = isolabel
+			img.Platform = testPlatform
+			img.OSCustomizations.Language = input
+
+			mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
+			actual := findAnacondaLocale(t, manifest.OSBuildManifest(mfs))
+
+			assert.Equal(expected, actual)
+		}
+
+		{ // Live
+			img := image.NewAnacondaLiveInstaller()
+			assert.NotNil(t, img)
+
+			img.Product = product
+			img.OSVersion = osversion
+			img.ISOLabel = isolabel
+			img.Platform = testPlatform
+			img.Locale = input
+
+			mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
+			actual := findAnacondaLocale(t, manifest.OSBuildManifest(mfs))
+
+			assert.Equal(expected, actual)
+		}
+	}
+}

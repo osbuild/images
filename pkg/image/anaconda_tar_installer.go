@@ -144,6 +144,7 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	anacondaPipeline.DisabledAnacondaModules = img.DisabledAnacondaModules
 	anacondaPipeline.AdditionalDracutModules = img.AdditionalDracutModules
 	anacondaPipeline.AdditionalDrivers = img.AdditionalDrivers
+	anacondaPipeline.Locale = img.OSCustomizations.Language
 
 	tarPath := "/liveimg.tar.gz"
 
