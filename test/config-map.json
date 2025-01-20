@@ -168,7 +168,7 @@
   },
   "./configs/iot-ostree-pull-user.json": {
     "image-types": [
-      "iot-ami"
+      "iot-qcow2-image"
     ]
   },
   "./configs/kernel-debug.json": {
