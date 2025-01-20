@@ -40,7 +40,7 @@ def validate_config_file_paths(config_map, config_map_dir):
     return not_found
 
 
-def validate_build_config(config_map, root):
+def validate_build_config(config_map):
     """
     Validate that all build configurations (distros, arches, image types) match at least one valid, known configuration.
 
@@ -52,7 +52,7 @@ def validate_build_config(config_map, root):
         arches = build_config.get("arches", ["*"])
         image_types = build_config.get("image-types", ["*"])
 
-        matches = testlib.list_images(distros=distros, arches=arches, images=image_types, cmd_root=root)
+        matches = testlib.list_images(distros=distros, arches=arches, images=image_types)
         if not matches:
             no_matches.append((config, build_config))
 
@@ -78,7 +78,7 @@ def main():
     print("OK: All config files found")
 
     print("Validating build configurations (distros, arches, image types)")
-    no_matches = validate_build_config(config_map, root)
+    no_matches = validate_build_config(config_map)
     if no_matches:
         print("failed: the following configs do not match any known build configurations", file=sys.stderr)
         for idx, (config, build_config) in enumerate(no_matches, start=1):
