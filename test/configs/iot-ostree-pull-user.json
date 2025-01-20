@@ -8,7 +8,15 @@
             "wheel"
           ],
           "key": "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBNebAh6SjpAn8wB53K4695cGnHGuCtl4RdaX3futZgJUultHyzeYHnzMO7d4++qnRL+Rworew62LKP560uvtncc= github.com/osbuild/images",
-          "name": "osbuild"
+          "name": "osbuild",
+          "uid": 1001,
+          "gid": 1002
+        }
+      ],
+      "group": [
+        {
+          "name": "osbuild",
+          "gid": 1002
         }
       ]
     }
