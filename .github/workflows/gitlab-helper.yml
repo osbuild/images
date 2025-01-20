@@ -14,7 +14,7 @@ on:  # yamllint disable-line rule:truthy
 
 jobs:
   prepare:
-    name: "🔍 Check source preparation"
+    name: "🔍 Check source preparation and test configs"
     runs-on: ubuntu-latest
     steps:
 
@@ -45,6 +45,11 @@ jobs:
           else
             exit "0"
           fi
+
+      - name: Check that the config-map is valid
+        run: |
+          ./test/scripts/validate-config-map
+
 
   gitlab-ci-helper:
     name: "Gitlab CI trigger helper"
