@@ -59,7 +59,8 @@ def main():
         "manifest-checksum": manifest_id,
         "osbuild-version": osbuild_ver.decode().strip(),
         "osbuild-commit": osbuild_commit,
-        "commit": os.environ.get("CI_COMMIT_SHA", "N/A")
+        "commit": os.environ.get("CI_COMMIT_SHA", "N/A"),
+        "runner-distro": distro_version,
     }
     testlib.write_build_info(build_dir, build_info)
 
