@@ -7,6 +7,7 @@ dnf -y install \
     gcc \
     go \
     gpgme-devel \
+    krb5-devel \
     osbuild \
     osbuild-depsolve-dnf \
     osbuild-luks2 \
