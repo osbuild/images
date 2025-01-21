@@ -290,3 +290,43 @@ func TestManifestGeneratorDepsolveWithSbomWriter(t *testing.T) {
 	}
 	assert.Equal(t, expected, generatedSboms)
 }
+
+func TestManifestGeneratorSeed(t *testing.T) {
+	repos, err := testrepos.New()
+	assert.NoError(t, err)
+	fac := distrofactory.NewDefault()
+
+	filter, err := imagefilter.New(fac, repos)
+	assert.NoError(t, err)
+	res, err := filter.Filter("distro:centos-9", "type:qcow2", "arch:x86_64")
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(res))
+
+	for _, withCustomSeed := range []bool{false, true} {
+		var osbuildManifest bytes.Buffer
+		opts := &manifestgen.Options{
+			Output:    &osbuildManifest,
+			Depsolver: fakeDepsolve,
+		}
+		if withCustomSeed {
+			customSeed := int64(123)
+			opts.CustomSeed = &customSeed
+		}
+
+		mg, err := manifestgen.New(repos, opts)
+		assert.NoError(t, err)
+
+		var bp blueprint.Blueprint
+		err = mg.Generate(&bp, res[0].Distro, res[0].ImgType, res[0].Arch, nil)
+		assert.NoError(t, err)
+
+		// with the customSeed we always get a predicatable uuid for
+		// the xfs boot partition
+		needle := `f1405ced-8b99-48ba-b910-9259515bf702`
+		if withCustomSeed {
+			assert.Contains(t, osbuildManifest.String(), needle)
+		} else {
+			assert.NotContains(t, osbuildManifest.String(), needle)
+		}
+	}
+}
