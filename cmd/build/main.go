@@ -13,16 +13,13 @@ import (
 	"github.com/osbuild/images/internal/cmdutil"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
-	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distrofactory"
-	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/manifest"
+	"github.com/osbuild/images/pkg/manifestgen"
 	"github.com/osbuild/images/pkg/osbuild"
-	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rhsm/facts"
 	"github.com/osbuild/images/pkg/rpmmd"
-	"github.com/osbuild/images/pkg/sbom"
 )
 
 func makeManifest(
@@ -59,7 +56,7 @@ func makeManifest(
 		fmt.Fprintf(os.Stderr, "[WARNING]\n%s", strings.Join(warnings, "\n"))
 	}
 
-	depsolvedSets, err := depsolve(cacheDir, manifest.GetPackageSetChains(), distribution, archName)
+	depsolvedSets, err := manifestgen.DefaultDepsolver(cacheDir, manifest.GetPackageSetChains(), distribution, archName)
 	if err != nil {
 		return nil, fmt.Errorf("[ERROR] depsolve failed: %w", err)
 	}
@@ -71,12 +68,12 @@ func makeManifest(
 		bp = blueprint.Blueprint(*config.Blueprint)
 	}
 
-	containerSpecs, err := resolvePipelineContainers(manifest.GetContainerSourceSpecs(), archName)
+	containerSpecs, err := manifestgen.DefaultContainerResolver(manifest.GetContainerSourceSpecs(), archName)
 	if err != nil {
 		return nil, fmt.Errorf("[ERROR] container resolution failed: %w", err)
 	}
 
-	commitSpecs, err := resolvePipelineCommits(manifest.GetOSTreeSourceSpecs())
+	commitSpecs, err := manifestgen.DefaultCommitResolver(manifest.GetOSTreeSourceSpecs())
 	if err != nil {
 		return nil, fmt.Errorf("[ERROR] ostree commit resolution failed: %w", err)
 	}
@@ -87,57 +84,6 @@ func makeManifest(
 	}
 
 	return mf, nil
-}
-
-func resolveContainers(containers []container.SourceSpec, archName string) ([]container.Spec, error) {
-	resolver := container.NewResolver(archName)
-
-	for _, c := range containers {
-		resolver.Add(c)
-	}
-
-	return resolver.Finish()
-}
-
-func resolvePipelineContainers(containerSources map[string][]container.SourceSpec, archName string) (map[string][]container.Spec, error) {
-	containerSpecs := make(map[string][]container.Spec, len(containerSources))
-	for plName, sourceSpecs := range containerSources {
-		specs, err := resolveContainers(sourceSpecs, archName)
-		if err != nil {
-			return nil, err
-		}
-		containerSpecs[plName] = specs
-	}
-	return containerSpecs, nil
-}
-
-func resolvePipelineCommits(commitSources map[string][]ostree.SourceSpec) (map[string][]ostree.CommitSpec, error) {
-	commits := make(map[string][]ostree.CommitSpec, len(commitSources))
-	for name, commitSources := range commitSources {
-		commitSpecs := make([]ostree.CommitSpec, len(commitSources))
-		for idx, commitSource := range commitSources {
-			var err error
-			commitSpecs[idx], err = ostree.Resolve(commitSource)
-			if err != nil {
-				return nil, err
-			}
-		}
-		commits[name] = commitSpecs
-	}
-	return commits, nil
-}
-
-func depsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]dnfjson.DepsolveResult, error) {
-	solver := dnfjson.NewSolver(d.ModulePlatformID(), d.Releasever(), arch, d.Name(), cacheDir)
-	depsolvedSets := make(map[string]dnfjson.DepsolveResult)
-	for name, pkgSet := range packageSets {
-		res, err := solver.Depsolve(pkgSet, sbom.StandardTypeNone)
-		if err != nil {
-			return nil, err
-		}
-		depsolvedSets[name] = *res
-	}
-	return depsolvedSets, nil
 }
 
 func save(ms manifest.OSBuildManifest, fpath string) error {
