@@ -2,7 +2,7 @@
 package main
 
 import (
-	"encoding/json"
+	"bytes"
 	"flag"
 	"fmt"
 	"os"
@@ -13,137 +13,16 @@ import (
 	"github.com/osbuild/images/internal/cmdutil"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
-	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distrofactory"
-	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/manifestgen"
 	"github.com/osbuild/images/pkg/osbuild"
+	"github.com/osbuild/images/pkg/reporegistry"
 	"github.com/osbuild/images/pkg/rhsm/facts"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
-func makeManifest(
-	config *buildconfig.BuildConfig,
-	imgType distro.ImageType,
-	distribution distro.Distro,
-	repos []rpmmd.RepoConfig,
-	archName string,
-	cacheRoot string,
-) (manifest.OSBuildManifest, error) {
-	cacheDir := filepath.Join(cacheRoot, archName+distribution.Name())
-
-	options := config.Options
-
-	// add RHSM fact to detect changes
-	options.Facts = &facts.ImageOptions{
-		APIType: facts.TEST_APITYPE,
-	}
-
-	var bp blueprint.Blueprint
-	if config.Blueprint != nil {
-		bp = blueprint.Blueprint(*config.Blueprint)
-	}
-	seedArg, err := cmdutil.SeedArgFor(config, imgType.Name(), distribution.Name(), archName)
-	if err != nil {
-		return nil, err
-	}
-
-	manifest, warnings, err := imgType.Manifest(&bp, options, repos, &seedArg)
-	if err != nil {
-		return nil, fmt.Errorf("[ERROR] manifest generation failed: %w", err)
-	}
-	if len(warnings) > 0 {
-		fmt.Fprintf(os.Stderr, "[WARNING]\n%s", strings.Join(warnings, "\n"))
-	}
-
-	depsolvedSets, err := manifestgen.DefaultDepsolver(cacheDir, manifest.GetPackageSetChains(), distribution, archName)
-	if err != nil {
-		return nil, fmt.Errorf("[ERROR] depsolve failed: %w", err)
-	}
-	if depsolvedSets == nil {
-		return nil, fmt.Errorf("[ERROR] depsolve did not return any packages")
-	}
-
-	if config.Blueprint != nil {
-		bp = blueprint.Blueprint(*config.Blueprint)
-	}
-
-	containerSpecs, err := manifestgen.DefaultContainerResolver(manifest.GetContainerSourceSpecs(), archName)
-	if err != nil {
-		return nil, fmt.Errorf("[ERROR] container resolution failed: %w", err)
-	}
-
-	commitSpecs, err := manifestgen.DefaultCommitResolver(manifest.GetOSTreeSourceSpecs())
-	if err != nil {
-		return nil, fmt.Errorf("[ERROR] ostree commit resolution failed: %w", err)
-	}
-
-	mf, err := manifest.Serialize(depsolvedSets, containerSpecs, commitSpecs, nil)
-	if err != nil {
-		return nil, fmt.Errorf("[ERROR] manifest serialization failed: %w", err)
-	}
-
-	return mf, nil
-}
-
-func save(ms manifest.OSBuildManifest, fpath string) error {
-	b, err := json.MarshalIndent(ms, "", "  ")
-	if err != nil {
-		return fmt.Errorf("failed to marshal data for %q: %w", fpath, err)
-	}
-	b = append(b, '\n') // add new line at end of file
-	fp, err := os.Create(fpath)
-	if err != nil {
-		return fmt.Errorf("failed to create output file %q: %w", fpath, err)
-	}
-	defer fp.Close()
-	if _, err := fp.Write(b); err != nil {
-		return fmt.Errorf("failed to write output file %q: %w", fpath, err)
-	}
-	return nil
-}
-
 func u(s string) string {
 	return strings.Replace(s, "-", "_", -1)
-}
-
-// loadRepos loads the repositories defined at the path and returns just the
-// ones for the specified architecture. If the path is a directory, the distro
-// name is appended to the path as a filename (with .json extension).
-func loadRepos(path, distro, arch string) ([]rpmmd.RepoConfig, error) {
-	pstat, err := os.Stat(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to stat %q: %w", path, err)
-	}
-
-	if pstat.IsDir() {
-		path = filepath.Join(path, fmt.Sprintf("%s.json", distro))
-	}
-
-	repos, err := rpmmd.LoadRepositoriesFromFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load repositories from %q: %w", path, err)
-	}
-
-	// NOTE: this can be empty
-	return repos[arch], nil
-}
-
-func filterRepos(repos []rpmmd.RepoConfig, typeName string) []rpmmd.RepoConfig {
-	filtered := make([]rpmmd.RepoConfig, 0)
-	for _, repo := range repos {
-		if len(repo.ImageTypeTags) == 0 {
-			filtered = append(filtered, repo)
-		} else {
-			for _, tt := range repo.ImageTypeTags {
-				if tt == typeName {
-					filtered = append(filtered, repo)
-					break
-				}
-			}
-		}
-	}
-	return filtered
 }
 
 func run() error {
@@ -172,7 +51,6 @@ func run() error {
 	}
 
 	distroFac := distrofactory.NewDefault()
-
 	config, err := buildconfig.New(configFile)
 	if err != nil {
 		return err
@@ -204,32 +82,68 @@ func run() error {
 		return fmt.Errorf("invalid image type %q for distro %q and arch %q: %w", imgTypeName, distroName, archName, err)
 	}
 
-	// get repositories
-	repos, err := loadRepos(repositories, distroName, archName)
-	if err != nil {
-		return fmt.Errorf("failed to get repositories for %s/%s: %w", distroName, archName, err)
+	var reporeg *reporegistry.RepoRegistry
+	var overrideRepos []rpmmd.RepoConfig
+	if st, err := os.Stat(repositories); err == nil && !st.IsDir() {
+		// anything that is not a dir is tried to be loaded as a file
+		// to allow "-repositories <arbitrarily-named-file>.json"
+		repoConfig, err := rpmmd.LoadRepositoriesFromFile(repositories)
+		if err != nil {
+			return fmt.Errorf("failed to load repositories from %q: %w", repositories, err)
+		}
+		overrideRepos = repoConfig[archName]
+	} else {
+		// HACK: reporegistry hardcodes adding the "repositories"
+		// dir to the "repoConfigPaths" but the interface of
+		// "images" does not expect this.
+		// XXX: should we fix this in reporegistry?
+		repositories = filepath.Join(repositories, "..")
+		reporeg, err = reporegistry.New([]string{repositories})
+		if err != nil {
+			return fmt.Errorf("failed to load repositories from %q: %w", repositories, err)
+		}
 	}
-	repos = filterRepos(repos, imgTypeName)
-	if len(repos) == 0 {
-		return fmt.Errorf("no repositories defined for %s/%s", distroName, archName)
+	seedArg, err := cmdutil.SeedArgFor(config, imgType.Name(), distribution.Name(), archName)
+	if err != nil {
+		return err
 	}
 
 	fmt.Printf("Generating manifest for %s: ", config.Name)
-	mf, err := makeManifest(config, imgType, distribution, repos, archName, rpmCacheRoot)
+	var mf bytes.Buffer
+	manifestOpts := manifestgen.Options{
+		Output:         &mf,
+		Cachedir:       filepath.Join(rpmCacheRoot, archName+distribution.Name()),
+		WarningsOutput: os.Stderr,
+		OverrideRepos:  overrideRepos,
+		CustomSeed:     &seedArg,
+	}
+	// add RHSM fact to detect changes
+	config.Options.Facts = &facts.ImageOptions{
+		APIType: facts.TEST_APITYPE,
+	}
+	if config.Blueprint == nil {
+		config.Blueprint = &blueprint.Blueprint{}
+	}
+
+	mg, err := manifestgen.New(reporeg, &manifestOpts)
 	if err != nil {
-		return err
+		return fmt.Errorf("[ERROR] manifest generator creation failed: %w", err)
+	}
+	if err := mg.Generate(config.Blueprint, distribution, imgType, arch, &config.Options); err != nil {
+		return fmt.Errorf("[ERROR] manifest generation failed: %w", err)
 	}
 	fmt.Print("DONE\n")
 
 	manifestPath := filepath.Join(buildDir, "manifest.json")
-	if err := save(mf, manifestPath); err != nil {
-		return err
+	// nolint:gosec
+	if err := os.WriteFile(manifestPath, mf.Bytes(), 0644); err != nil {
+		return fmt.Errorf("failed to write output file %q: %w", manifestPath, err)
 	}
 
 	fmt.Printf("Building manifest: %s\n", manifestPath)
 
 	jobOutput := filepath.Join(outputDir, buildName)
-	_, err = osbuild.RunOSBuild(mf, osbuildStore, jobOutput, imgType.Exports(), checkpoints, nil, false, os.Stderr)
+	_, err = osbuild.RunOSBuild(mf.Bytes(), osbuildStore, jobOutput, imgType.Exports(), checkpoints, nil, false, os.Stderr)
 	if err != nil {
 		return err
 	}
