@@ -16,6 +16,10 @@ jobs:
   prepare:
     name: "🔍 Check source preparation and test configs"
     runs-on: ubuntu-latest
+    env:
+      # workaround for expired cert at source of indirect dependency
+      # (go.opencensus.io/trace)
+      GOPROXY: "https://proxy.golang.org|direct"
     steps:
 
       - name: Set up Go 1.21
