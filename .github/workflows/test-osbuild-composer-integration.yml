@@ -53,6 +53,10 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: registry.fedoraproject.org/fedora:latest
+    env:
+      # workaround for expired cert at source of indirect dependency
+      # (go.opencensus.io/trace)
+      GOPROXY: "https://proxy.golang.org|direct"
     outputs:
       # Define job outputs
       # (see https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/passing-information-between-jobs#example-defining-outputs-for-a-job)
