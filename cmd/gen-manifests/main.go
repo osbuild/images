@@ -27,10 +27,10 @@ import (
 	"github.com/osbuild/images/pkg/distrofactory"
 	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/manifest"
+	"github.com/osbuild/images/pkg/manifestgen"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rhsm/facts"
 	"github.com/osbuild/images/pkg/rpmmd"
-	"github.com/osbuild/images/pkg/sbom"
 	testrepos "github.com/osbuild/images/test/data/repositories"
 )
 
@@ -216,7 +216,7 @@ func makeManifestJob(
 
 		var depsolvedSets map[string]dnfjson.DepsolveResult
 		if content["packages"] {
-			depsolvedSets, err = depsolve(cacheDir, manifest.GetPackageSetChains(), distribution, archName)
+			depsolvedSets, err = manifestgen.DefaultDepsolver(cacheDir, manifest.GetPackageSetChains(), distribution, archName)
 			if err != nil {
 				err = fmt.Errorf("[%s] depsolve failed: %s", filename, err.Error())
 				return
@@ -233,7 +233,7 @@ func makeManifestJob(
 
 		var containerSpecs map[string][]container.Spec
 		if content["containers"] {
-			containerSpecs, err = resolvePipelineContainers(manifest.GetContainerSourceSpecs(), archName)
+			containerSpecs, err = manifestgen.DefaultContainerResolver(manifest.GetContainerSourceSpecs(), archName)
 			if err != nil {
 				return fmt.Errorf("[%s] container resolution failed: %s", filename, err.Error())
 			}
@@ -243,7 +243,7 @@ func makeManifestJob(
 
 		var commitSpecs map[string][]ostree.CommitSpec
 		if content["commits"] {
-			commitSpecs, err = resolvePipelineCommits(manifest.GetOSTreeSourceSpecs())
+			commitSpecs, err = manifestgen.DefaultCommitResolver(manifest.GetOSTreeSourceSpecs())
 			if err != nil {
 				return fmt.Errorf("[%s] ostree commit resolution failed: %s", filename, err.Error())
 			}
@@ -267,28 +267,6 @@ func makeManifestJob(
 		return
 	}
 	return job
-}
-
-func resolveContainers(containers []container.SourceSpec, archName string) ([]container.Spec, error) {
-	resolver := container.NewResolver(archName)
-
-	for _, c := range containers {
-		resolver.Add(c)
-	}
-
-	return resolver.Finish()
-}
-
-func resolvePipelineContainers(containerSources map[string][]container.SourceSpec, archName string) (map[string][]container.Spec, error) {
-	containerSpecs := make(map[string][]container.Spec, len(containerSources))
-	for plName, sourceSpecs := range containerSources {
-		specs, err := resolveContainers(sourceSpecs, archName)
-		if err != nil {
-			return nil, err
-		}
-		containerSpecs[plName] = specs
-	}
-	return containerSpecs, nil
 }
 
 func mockResolveContainers(containerSources map[string][]container.SourceSpec) map[string][]container.Spec {
@@ -318,22 +296,6 @@ func mockResolveContainers(containerSources map[string][]container.SourceSpec) m
 	return containerSpecs
 }
 
-func resolvePipelineCommits(commitSources map[string][]ostree.SourceSpec) (map[string][]ostree.CommitSpec, error) {
-	commits := make(map[string][]ostree.CommitSpec, len(commitSources))
-	for name, commitSources := range commitSources {
-		commitSpecs := make([]ostree.CommitSpec, len(commitSources))
-		for idx, commitSource := range commitSources {
-			var err error
-			commitSpecs[idx], err = ostree.Resolve(commitSource)
-			if err != nil {
-				return nil, err
-			}
-		}
-		commits[name] = commitSpecs
-	}
-	return commits, nil
-}
-
 func mockResolveCommits(commitSources map[string][]ostree.SourceSpec) map[string][]ostree.CommitSpec {
 	commits := make(map[string][]ostree.CommitSpec, len(commitSources))
 	for name, commitSources := range commitSources {
@@ -344,19 +306,6 @@ func mockResolveCommits(commitSources map[string][]ostree.SourceSpec) map[string
 		commits[name] = commitSpecs
 	}
 	return commits
-}
-
-func depsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]dnfjson.DepsolveResult, error) {
-	solver := dnfjson.NewSolver(d.ModulePlatformID(), d.Releasever(), arch, d.Name(), cacheDir)
-	depsolvedSets := make(map[string]dnfjson.DepsolveResult)
-	for name, pkgSet := range packageSets {
-		res, err := solver.Depsolve(pkgSet, sbom.StandardTypeNone)
-		if err != nil {
-			return nil, err
-		}
-		depsolvedSets[name] = *res
-	}
-	return depsolvedSets, nil
 }
 
 func mockDepsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfig, archName string) map[string]dnfjson.DepsolveResult {
