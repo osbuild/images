@@ -21,80 +21,9 @@ import (
 	"github.com/osbuild/images/pkg/sbom"
 )
 
-// XXX: all of the helpers below are duplicated from
-// cmd/build/main.go:depsolve (and probably more places) should go
-// into a common helper in "images" or images should do this on its
-// own
-func defaultDepsolver(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]dnfjson.DepsolveResult, error) {
-	if cacheDir == "" {
-		var err error
-		cacheDir, err = os.MkdirTemp("", "manifestgen")
-		if err != nil {
-			return nil, fmt.Errorf("cannot create temporary directory: %w", err)
-		}
-		defer os.RemoveAll(cacheDir)
-	}
-
-	solver := dnfjson.NewSolver(d.ModulePlatformID(), d.Releasever(), arch, d.Name(), cacheDir)
-	depsolvedSets := make(map[string]dnfjson.DepsolveResult)
-	for name, pkgSet := range packageSets {
-		// XXX: is there harm in always generating an sbom?
-		// (expect for slightly longer runtime?)
-		res, err := solver.Depsolve(pkgSet, sbom.StandardTypeSpdx)
-		if err != nil {
-			return nil, fmt.Errorf("error depsolving: %w", err)
-		}
-		depsolvedSets[name] = *res
-	}
-	return depsolvedSets, nil
-}
-
-func resolveContainers(containers []container.SourceSpec, archName string) ([]container.Spec, error) {
-	resolver := container.NewResolver(archName)
-
-	for _, c := range containers {
-		resolver.Add(c)
-	}
-
-	return resolver.Finish()
-}
-
-func defaultContainerResolver(containerSources map[string][]container.SourceSpec, archName string) (map[string][]container.Spec, error) {
-	containerSpecs := make(map[string][]container.Spec, len(containerSources))
-	for plName, sourceSpecs := range containerSources {
-		specs, err := resolveContainers(sourceSpecs, archName)
-		if err != nil {
-			return nil, fmt.Errorf("error container resolving: %w", err)
-		}
-		containerSpecs[plName] = specs
-	}
-	return containerSpecs, nil
-}
-
-func defaultCommitResolver(commitSources map[string][]ostree.SourceSpec) (map[string][]ostree.CommitSpec, error) {
-	commits := make(map[string][]ostree.CommitSpec, len(commitSources))
-	for name, commitSources := range commitSources {
-		commitSpecs := make([]ostree.CommitSpec, len(commitSources))
-		for idx, commitSource := range commitSources {
-			var err error
-			commitSpecs[idx], err = ostree.Resolve(commitSource)
-			if err != nil {
-				return nil, fmt.Errorf("error ostree commit resolving: %w", err)
-			}
-		}
-		commits[name] = commitSpecs
-	}
-	return commits, nil
-}
-
-type (
-	DepsolveFunc func(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]dnfjson.DepsolveResult, error)
-
-	ContainerResolverFunc func(containerSources map[string][]container.SourceSpec, archName string) (map[string][]container.Spec, error)
-
-	CommitResolverFunc func(commitSources map[string][]ostree.SourceSpec) (map[string][]ostree.CommitSpec, error)
-
-	SBOMWriterFunc func(filename string, content io.Reader, docType sbom.StandardType) error
+const (
+	defaultDepsolverSBOMType = sbom.StandardTypeSpdx
+	defaultSBOMExt           = "spdx.json"
 )
 
 // Options contains the optional settings for the manifest generation.
@@ -104,10 +33,6 @@ type Options struct {
 	// Output is the writer that the generated osbuild manifest will
 	// written to.
 	Output io.Writer
-
-	Depsolver         DepsolveFunc
-	ContainerResolver ContainerResolverFunc
-	CommitResolver    CommitResolverFunc
 
 	RpmDownloader osbuild.RpmDownloader
 
@@ -119,6 +44,12 @@ type Options struct {
 	// CustomSeed overrides the default rng seed, this is mostly
 	// useful for testing
 	CustomSeed *int64
+
+	// Custom "solver" functions, if unset the defaults will be
+	// used. Only needed for specialized use-cases.
+	Depsolver         DepsolveFunc
+	ContainerResolver ContainerResolverFunc
+	CommitResolver    CommitResolverFunc
 }
 
 // Generator can generate an osbuild manifest from a given repository
@@ -160,13 +91,13 @@ func New(reporegistry *reporegistry.RepoRegistry, opts *Options) (*Generator, er
 		mg.out = os.Stdout
 	}
 	if mg.depsolver == nil {
-		mg.depsolver = defaultDepsolver
+		mg.depsolver = DefaultDepsolver
 	}
 	if mg.containerResolver == nil {
-		mg.containerResolver = defaultContainerResolver
+		mg.containerResolver = DefaultContainerResolver
 	}
 	if mg.commitResolver == nil {
-		mg.commitResolver = defaultCommitResolver
+		mg.commitResolver = DefaultCommitResolver
 	}
 
 	return mg, nil
@@ -231,7 +162,7 @@ func (mg *Generator) Generate(bp *blueprint.Blueprint, dist distro.Distro, imgTy
 			}
 			// XXX: sync with image-builder-cli:build.go name generation - can we have a shared helper?
 			imageName := fmt.Sprintf("%s-%s-%s", dist.Name(), imgType.Name(), a.Name())
-			sbomDocOutputFilename := fmt.Sprintf("%s.%s-%s.spdx.json", imageName, pipelinePurpose, plName)
+			sbomDocOutputFilename := fmt.Sprintf("%s.%s-%s.%s", imageName, pipelinePurpose, plName, defaultSBOMExt)
 
 			var buf bytes.Buffer
 			enc := json.NewEncoder(&buf)
@@ -246,3 +177,89 @@ func (mg *Generator) Generate(bp *blueprint.Blueprint, dist distro.Distro, imgTy
 
 	return nil
 }
+
+// DefaultDepsolver provides a default implementation for depsolving.
+// It should rarely be necessary to use it directly and will be used
+// by default by manifestgen (unless overriden)
+func DefaultDepsolver(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]dnfjson.DepsolveResult, error) {
+	if cacheDir == "" {
+		var err error
+		cacheDir, err = os.MkdirTemp("", "manifestgen")
+		if err != nil {
+			return nil, fmt.Errorf("cannot create temporary directory: %w", err)
+		}
+		defer os.RemoveAll(cacheDir)
+	}
+
+	solver := dnfjson.NewSolver(d.ModulePlatformID(), d.Releasever(), arch, d.Name(), cacheDir)
+	depsolvedSets := make(map[string]dnfjson.DepsolveResult)
+	for name, pkgSet := range packageSets {
+		// Always generate Spdx SBOMs for now, this makes the
+		// default depsolve slightly slower but it means we
+		// need no extra argument here to select the SBOM
+		// type. Once we have more types than Spdx of course
+		// we need to add a option to select the type.
+		res, err := solver.Depsolve(pkgSet, sbom.StandardTypeSpdx)
+		if err != nil {
+			return nil, fmt.Errorf("error depsolving: %w", err)
+		}
+		depsolvedSets[name] = *res
+	}
+	return depsolvedSets, nil
+}
+
+func resolveContainers(containers []container.SourceSpec, archName string) ([]container.Spec, error) {
+	resolver := container.NewResolver(archName)
+
+	for _, c := range containers {
+		resolver.Add(c)
+	}
+
+	return resolver.Finish()
+}
+
+// DefaultContainersResolve provides a default implementation for
+// container resolving.
+// It should rarely be necessary to use it directly and will be used
+// by default by manifestgen (unless overriden)
+func DefaultContainerResolver(containerSources map[string][]container.SourceSpec, archName string) (map[string][]container.Spec, error) {
+	containerSpecs := make(map[string][]container.Spec, len(containerSources))
+	for plName, sourceSpecs := range containerSources {
+		specs, err := resolveContainers(sourceSpecs, archName)
+		if err != nil {
+			return nil, fmt.Errorf("error container resolving: %w", err)
+		}
+		containerSpecs[plName] = specs
+	}
+	return containerSpecs, nil
+}
+
+// DefaultCommitResolver provides a default implementation for
+// ostree commit resolving.
+// It should rarely be necessary to use it directly and will be used
+// by default by manifestgen (unless overriden)
+func DefaultCommitResolver(commitSources map[string][]ostree.SourceSpec) (map[string][]ostree.CommitSpec, error) {
+	commits := make(map[string][]ostree.CommitSpec, len(commitSources))
+	for name, commitSources := range commitSources {
+		commitSpecs := make([]ostree.CommitSpec, len(commitSources))
+		for idx, commitSource := range commitSources {
+			var err error
+			commitSpecs[idx], err = ostree.Resolve(commitSource)
+			if err != nil {
+				return nil, fmt.Errorf("error ostree commit resolving: %w", err)
+			}
+		}
+		commits[name] = commitSpecs
+	}
+	return commits, nil
+}
+
+type (
+	DepsolveFunc func(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]dnfjson.DepsolveResult, error)
+
+	ContainerResolverFunc func(containerSources map[string][]container.SourceSpec, archName string) (map[string][]container.Spec, error)
+
+	CommitResolverFunc func(commitSources map[string][]ostree.SourceSpec) (map[string][]ostree.CommitSpec, error)
+
+	SBOMWriterFunc func(filename string, content io.Reader, docType sbom.StandardType) error
+)
