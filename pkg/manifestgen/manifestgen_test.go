@@ -144,10 +144,11 @@ func fakeDepsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d 
 		for _, pkgSet := range pkgSets {
 			for _, pkgName := range pkgSet.Include {
 				resolvedSet.Packages = append(resolvedSet.Packages, rpmmd.PackageSpec{
-					Name:     pkgName,
-					Checksum: sha256For(pkgName),
-					Path:     fmt.Sprintf("path/%s.rpm", pkgName),
-					RepoID:   repoId,
+					Name:           pkgName,
+					Checksum:       sha256For(pkgName),
+					Path:           fmt.Sprintf("path/%s.rpm", pkgName),
+					RepoID:         repoId,
+					RemoteLocation: fmt.Sprintf("%s/%s.rpm", pkgSet.Repositories[0].BaseURLs[0], pkgName),
 				})
 				resolvedSet.Repos = append(resolvedSet.Repos, rpmmd.RepoConfig{
 					Id:       repoId,
@@ -328,5 +329,47 @@ func TestManifestGeneratorSeed(t *testing.T) {
 		} else {
 			assert.NotContains(t, osbuildManifest.String(), needle)
 		}
+	}
+}
+
+func TestManifestGeneratorOverrideRepos(t *testing.T) {
+	repos, err := testrepos.New()
+	assert.NoError(t, err)
+	fac := distrofactory.NewDefault()
+
+	filter, err := imagefilter.New(fac, repos)
+	assert.NoError(t, err)
+	res, err := filter.Filter("distro:centos-9", "type:qcow2", "arch:x86_64")
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(res))
+
+	for _, withOverrideRepos := range []bool{false, true} {
+		t.Run(fmt.Sprintf("withOverrideRepos: %v", withOverrideRepos), func(t *testing.T) {
+			var osbuildManifest bytes.Buffer
+			opts := &manifestgen.Options{
+				Output:    &osbuildManifest,
+				Depsolver: fakeDepsolve,
+			}
+			if withOverrideRepos {
+				opts.OverrideRepos = []rpmmd.RepoConfig{
+					{
+						Name:     "overriden_repo",
+						BaseURLs: []string{"http://example.com/overriden-repo"},
+					},
+				}
+			}
+
+			mg, err := manifestgen.New(repos, opts)
+			assert.NoError(t, err)
+
+			var bp blueprint.Blueprint
+			err = mg.Generate(&bp, res[0].Distro, res[0].ImgType, res[0].Arch, nil)
+			assert.NoError(t, err)
+			if withOverrideRepos {
+				assert.Contains(t, osbuildManifest.String(), "http://example.com/overriden-repo/kernel.rpm")
+			} else {
+				assert.NotContains(t, osbuildManifest.String(), "http://example.com/overriden-repo/kernel.rpm")
+			}
+		})
 	}
 }
