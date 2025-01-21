@@ -115,6 +115,10 @@ type Options struct {
 	// filename contains the suggest filename string and the
 	// content can be read
 	SBOMWriter SBOMWriterFunc
+
+	// CustomSeed overrides the default rng seed, this is mostly
+	// useful for testing
+	CustomSeed *int64
 }
 
 // Generator can generate an osbuild manifest from a given repository
@@ -131,6 +135,8 @@ type Generator struct {
 	reporegistry *reporegistry.RepoRegistry
 
 	rpmDownloader osbuild.RpmDownloader
+
+	customSeed *int64
 }
 
 // New will create a new manifest generator
@@ -148,6 +154,7 @@ func New(reporegistry *reporegistry.RepoRegistry, opts *Options) (*Generator, er
 		commitResolver:    opts.CommitResolver,
 		rpmDownloader:     opts.RpmDownloader,
 		sbomWriter:        opts.SBOMWriter,
+		customSeed:        opts.CustomSeed,
 	}
 	if mg.out == nil {
 		mg.out = os.Stdout
@@ -180,7 +187,7 @@ func (mg *Generator) Generate(bp *blueprint.Blueprint, dist distro.Distro, imgTy
 	// will have to be added to the repos with
 	// <repo_item>.PackageSets set to the "payload" pipeline names
 	// for the given image type, see e.g. distro/rhel/imagetype.go:Manifest()
-	preManifest, warnings, err := imgType.Manifest(bp, *imgOpts, repos, nil)
+	preManifest, warnings, err := imgType.Manifest(bp, *imgOpts, repos, mg.customSeed)
 	if err != nil {
 		return err
 	}
