@@ -545,7 +545,8 @@ def get_common_ci_runner():
     with open(SCHUTZFILE, encoding="utf-8") as schutzfile:
         data = json.load(schutzfile)
 
-    if (runner := data.get("common", {}).get("gitlab-ci-runner")) is None:
+    runner = data.get("common", {}).get("gitlab-ci-runner")
+    if runner is None:
         raise KeyError(f"gitlab-ci-runner not defined in {SCHUTZFILE}")
 
     return runner
