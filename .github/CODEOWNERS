@@ -2,5 +2,8 @@
 # the repo. Unless a later match takes precedence.
 *               @osbuild/osbuild-reviewers
 
+# Package-specific reviewers
+/pkg/disk/      @achilleas-k
+
 # Test scripts
 /test/scripts   @achilleas-k @thozza
