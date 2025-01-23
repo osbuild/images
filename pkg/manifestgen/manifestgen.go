@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 
@@ -24,6 +25,8 @@ import (
 const (
 	defaultDepsolverSBOMType = sbom.StandardTypeSpdx
 	defaultSBOMExt           = "spdx.json"
+
+	defaultDepsolveCacheDir = "osbuild-depsolve-dnf"
 )
 
 // Options contains the optional settings for the manifest generation.
@@ -178,17 +181,28 @@ func (mg *Generator) Generate(bp *blueprint.Blueprint, dist distro.Distro, imgTy
 	return nil
 }
 
+func xdgCacheHome() (string, error) {
+	xdgCacheHome := os.Getenv("XDG_CACHE_HOME")
+	if xdgCacheHome != "" {
+		return xdgCacheHome, nil
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, ".cache"), nil
+}
+
 // DefaultDepsolver provides a default implementation for depsolving.
 // It should rarely be necessary to use it directly and will be used
 // by default by manifestgen (unless overriden)
 func DefaultDepsolver(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]dnfjson.DepsolveResult, error) {
 	if cacheDir == "" {
-		var err error
-		cacheDir, err = os.MkdirTemp("", "manifestgen")
+		xdgCacheHomeDir, err := xdgCacheHome()
 		if err != nil {
-			return nil, fmt.Errorf("cannot create temporary directory: %w", err)
+			return nil, err
 		}
-		defer os.RemoveAll(cacheDir)
+		cacheDir = filepath.Join(xdgCacheHomeDir, defaultDepsolveCacheDir)
 	}
 
 	solver := dnfjson.NewSolver(d.ModulePlatformID(), d.Releasever(), arch, d.Name(), cacheDir)
