@@ -160,6 +160,7 @@ type PackageSpec struct {
 	Version        string `json:"version,omitempty"`
 	Release        string `json:"release,omitempty"`
 	Arch           string `json:"arch,omitempty"`
+	NEVRA          string `json:"nevra,omitempty"`
 	RemoteLocation string `json:"remote_location,omitempty"`
 	Checksum       string `json:"checksum,omitempty"`
 	Secrets        string `json:"secrets,omitempty"`
