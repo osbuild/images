@@ -1,6 +1,7 @@
 package dnfjson
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -886,4 +887,18 @@ echo '{"solver": "zypper"}'
 	assert.NoError(t, err)
 	assert.Equal(t, 0, len(res.Packages))
 	assert.Equal(t, 0, len(res.Repos))
+}
+
+func TestDepsolveResultWithModulesKey(t *testing.T) {
+	// quick test that verifies that `depsolveResult` understands JSON that contains
+	// a `modules` key
+	data := []byte(`{"modules": {}}`)
+
+	var result depsolveResult
+	dec := json.NewDecoder(bytes.NewReader(data))
+	dec.DisallowUnknownFields()
+
+	err := dec.Decode(&result)
+
+	assert.NoError(t, err)
 }
