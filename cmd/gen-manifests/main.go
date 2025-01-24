@@ -328,7 +328,7 @@ func makeManifestJob(
 
 		var commitSpecs map[string][]ostree.CommitSpec
 		if content["commits"] {
-			commitSpecs, err = manifestgen.DefaultCommitResolver(manifest.GetOSTreeSourceSpecs())
+			commitSpecs, err = ostree.ResolveAll(manifest.GetOSTreeSourceSpecs())
 			if err != nil {
 				return fmt.Errorf("[%s] ostree commit resolution failed: %s", filename, err.Error())
 			}
