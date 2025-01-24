@@ -159,6 +159,213 @@ func TestSolverDepsolve(t *testing.T) {
 	}
 }
 
+func TestSolverDepsolveAll(t *testing.T) {
+	if !*forceDNF {
+		// dnf tests aren't forced: skip them if the dnf sniff check fails
+		if findDepsolveDnf() == "" {
+			t.Skip("Test needs an installed osbuild-depsolve-dnf")
+		}
+	}
+
+	s := rpmrepo.NewTestServer()
+	defer s.Close()
+
+	type testCase struct {
+		packageSets map[string][]rpmmd.PackageSet
+		sbomType    sbom.StandardType
+		// slice of message fragments which are all expected to be in the error
+		expErrs []string
+	}
+
+	tmpdir := t.TempDir()
+	solver := NewSolver("platform:el9", "9", "x86_64", "rhel9.0", tmpdir)
+
+	testCases := map[string]testCase{
+		"flat": {
+			packageSets: map[string][]rpmmd.PackageSet{
+				"first": {
+					{
+						Include:         []string{"kernel", "vim-minimal", "tmux", "zsh"},
+						Repositories:    []rpmmd.RepoConfig{s.RepoConfig},
+						InstallWeakDeps: true,
+					},
+				},
+			},
+		},
+		"chain": {
+			// chain depsolve of the same packages in order should produce the same result (at least in this case)
+			packageSets: map[string][]rpmmd.PackageSet{
+				"first": {
+					{
+						Include:         []string{"kernel"},
+						Repositories:    []rpmmd.RepoConfig{s.RepoConfig},
+						InstallWeakDeps: true,
+					},
+					{
+						Include:         []string{"vim-minimal", "tmux", "zsh"},
+						Repositories:    []rpmmd.RepoConfig{s.RepoConfig},
+						InstallWeakDeps: true,
+					},
+				},
+			},
+		},
+		"multi-chain": {
+			// two chain depsolves for different pipelines
+			packageSets: map[string][]rpmmd.PackageSet{
+				"first": {
+					{
+						Include:         []string{"kernel", "tmux"},
+						Repositories:    []rpmmd.RepoConfig{s.RepoConfig},
+						InstallWeakDeps: true,
+					},
+					{
+						Include:         []string{"vim-minimal", "zsh"},
+						Repositories:    []rpmmd.RepoConfig{s.RepoConfig},
+						InstallWeakDeps: true,
+					},
+				},
+				"second": {
+					{
+						Include:         []string{"kernel"},
+						Repositories:    []rpmmd.RepoConfig{s.RepoConfig},
+						InstallWeakDeps: true,
+					},
+					{
+						Include:         []string{"vim-minimal", "tmux", "zsh"},
+						Repositories:    []rpmmd.RepoConfig{s.RepoConfig},
+						InstallWeakDeps: true,
+					},
+				},
+			},
+		},
+		"multi-chain-error-first": {
+			// two chain depsolves for different pipelines, first one fails
+			packageSets: map[string][]rpmmd.PackageSet{
+				"first": {
+					{
+						Include:         []string{"does-not-exist"},
+						Repositories:    []rpmmd.RepoConfig{s.RepoConfig},
+						InstallWeakDeps: true,
+					},
+					{
+						Include:         []string{"vim-minimal", "zsh"},
+						Repositories:    []rpmmd.RepoConfig{s.RepoConfig},
+						InstallWeakDeps: true,
+					},
+				},
+				"second": {
+					{
+						Include:         []string{"kernel", "tmux"},
+						Repositories:    []rpmmd.RepoConfig{s.RepoConfig},
+						InstallWeakDeps: true,
+					},
+					{
+						Include:         []string{"vim-minimal", "tmux", "zsh"},
+						Repositories:    []rpmmd.RepoConfig{s.RepoConfig},
+						InstallWeakDeps: true,
+					},
+				},
+			},
+			expErrs: []string{"error depsolving package sets for \"first\"", "missing packages: does-not-exist"},
+		},
+		"multi-chain-error-second": {
+			// two chain depsolves for different pipelines, second one fails
+			packageSets: map[string][]rpmmd.PackageSet{
+				"first": {
+					{
+						Include:         []string{"kernel", "tmux"},
+						Repositories:    []rpmmd.RepoConfig{s.RepoConfig},
+						InstallWeakDeps: true,
+					},
+					{
+						Include:         []string{"vim-minimal", "zsh"},
+						Repositories:    []rpmmd.RepoConfig{s.RepoConfig},
+						InstallWeakDeps: true,
+					},
+				},
+				"second": {
+					{
+						Include:         []string{"does-not-exist"},
+						Repositories:    []rpmmd.RepoConfig{s.RepoConfig},
+						InstallWeakDeps: true,
+					},
+					{
+						Include:         []string{"vim-minimal", "tmux", "zsh"},
+						Repositories:    []rpmmd.RepoConfig{s.RepoConfig},
+						InstallWeakDeps: true,
+					},
+				},
+			},
+			expErrs: []string{"error depsolving package sets for \"second\"", "missing packages: does-not-exist"},
+		},
+		"multi-chain-with-sbom": {
+			// two chain depsolves for different pipelines with sbom
+			packageSets: map[string][]rpmmd.PackageSet{
+				"first": {
+					{
+						Include:         []string{"kernel", "tmux"},
+						Repositories:    []rpmmd.RepoConfig{s.RepoConfig},
+						InstallWeakDeps: true,
+					},
+					{
+						Include:         []string{"vim-minimal", "zsh"},
+						Repositories:    []rpmmd.RepoConfig{s.RepoConfig},
+						InstallWeakDeps: true,
+					},
+				},
+				"second": {
+					{
+						Include:         []string{"kernel"},
+						Repositories:    []rpmmd.RepoConfig{s.RepoConfig},
+						InstallWeakDeps: true,
+					},
+					{
+						Include:         []string{"vim-minimal", "tmux", "zsh"},
+						Repositories:    []rpmmd.RepoConfig{s.RepoConfig},
+						InstallWeakDeps: true,
+					},
+				},
+			},
+			sbomType: sbom.StandardTypeSpdx,
+		},
+	}
+
+	for tcName := range testCases {
+		t.Run(tcName, func(t *testing.T) {
+			assert := assert.New(t)
+			tc := testCases[tcName]
+
+			res, err := solver.DepsolveAll(tc.packageSets, tc.sbomType)
+			if len(tc.expErrs) != 0 {
+				assert.Error(err)
+				for _, expErr := range tc.expErrs {
+					assert.Contains(err.Error(), expErr)
+				}
+				return
+			} else {
+				assert.Nil(err)
+				require.NotNil(t, res)
+			}
+
+			assert.Equal(len(res), len(tc.packageSets))
+
+			for pipelineName := range tc.packageSets {
+				pipelineResult := res[pipelineName]
+				assert.NotNil(pipelineResult)
+				assert.Equal(len(pipelineResult.Repos), 1)
+				assert.Equal(expectedDepsolveResult(pipelineResult.Repos[0]), pipelineResult.Packages)
+
+				if tc.sbomType != sbom.StandardTypeNone {
+					require.NotNil(t, pipelineResult.SBOM)
+					assert.Equal(sbom.StandardTypeSpdx, pipelineResult.SBOM.DocType)
+				} else {
+					assert.Nil(pipelineResult.SBOM)
+				}
+			}
+		})
+	}
+}
+
 func TestSolverFetchMetadata(t *testing.T) {
 	requireDNF(t)
 	repoServer := rpmrepo.NewTestServer()

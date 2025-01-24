@@ -317,6 +317,20 @@ func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet, sbomType sbom.StandardType
 	}, nil
 }
 
+// DepsolveAll calls [Solver.Depsolve] with each package set slice in the map and
+// returns a map of results with the corresponding keys as the input argument.
+func (s *Solver) DepsolveAll(pkgSetsMap map[string][]rpmmd.PackageSet, sbomType sbom.StandardType) (map[string]DepsolveResult, error) {
+	results := make(map[string]DepsolveResult, len(pkgSetsMap))
+	for name, pkgSet := range pkgSetsMap {
+		res, err := s.Depsolve(pkgSet, sbomType)
+		if err != nil {
+			return nil, fmt.Errorf("error depsolving package sets for %q: %w", name, err)
+		}
+		results[name] = *res
+	}
+	return results, nil
+}
+
 // FetchMetadata returns the list of all the available packages in repos and
 // their info.
 func (s *Solver) FetchMetadata(repos []rpmmd.RepoConfig) (rpmmd.PackageList, error) {

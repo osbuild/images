@@ -280,20 +280,12 @@ func DefaultDepsolve(solver *depsolvednf.Solver, cacheDir string, depsolveWarnin
 		solver.Stderr = depsolveWarningsOutput
 	}
 
-	depsolvedSets := make(map[string]depsolvednf.DepsolveResult)
-	for name, pkgSet := range packageSets {
-		// Always generate Spdx SBOMs for now, this makes the
-		// default depsolve slightly slower but it means we
-		// need no extra argument here to select the SBOM
-		// type. Once we have more types than Spdx of course
-		// we need to add a option to select the type.
-		res, err := solver.Depsolve(pkgSet, sbom.StandardTypeSpdx)
-		if err != nil {
-			return nil, fmt.Errorf("error depsolving: %w", err)
-		}
-		depsolvedSets[name] = *res
-	}
-	return depsolvedSets, nil
+	// Always generate Spdx SBOMs for now, this makes the
+	// default depsolve slightly slower but it means we
+	// need no extra argument here to select the SBOM
+	// type. Once we have more types than Spdx of course
+	// we need to add a option to select the type.
+	return solver.DepsolveAll(packageSets, sbom.StandardTypeSpdx)
 }
 
 func resolveContainers(containers []container.SourceSpec, archName string) ([]container.Spec, error) {
