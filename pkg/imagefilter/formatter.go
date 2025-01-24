@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sort"
+	"strings"
 )
 
 // OutputFormat contains the valid output formats for formatting results
@@ -15,6 +17,7 @@ const (
 	OutputFormatText      OutputFormat = "text"
 	OutputFormatJSON      OutputFormat = "json"
 	OutputFormatTextShell OutputFormat = "shell"
+	OutputFormatTextShort OutputFormat = "short"
 )
 
 // ResultFormatter will format the given result list to the given io.Writer
@@ -31,6 +34,8 @@ func NewResultsFormatter(format OutputFormat) (ResultsFormatter, error) {
 		return &jsonResultsFormatter{}, nil
 	case OutputFormatTextShell:
 		return &shellResultsFormatter{}, nil
+	case OutputFormatTextShort:
+		return &textShortResultsFormatter{}, nil
 	default:
 		return nil, fmt.Errorf("unsupported formatter %q", format)
 	}
@@ -67,6 +72,51 @@ func (*shellResultsFormatter) Output(w io.Writer, all []Result) error {
 			res.ImgType.Name(),
 			res.Distro.Name(),
 			res.Arch.Name()); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+
+	return nil
+}
+
+type textShortResultsFormatter struct{}
+
+func (*textShortResultsFormatter) Output(w io.Writer, all []Result) error {
+	var errs []error
+
+	outputMap := make(map[string]map[string][]string)
+	for _, res := range all {
+		if _, ok := outputMap[res.Distro.Name()]; !ok {
+			outputMap[res.Distro.Name()] = make(map[string][]string)
+		}
+		outputMap[res.Distro.Name()][res.ImgType.Name()] = append(outputMap[res.Distro.Name()][res.ImgType.Name()], res.Arch.Name())
+	}
+
+	// Sort and prepare output
+	var distros []string
+	for distro := range outputMap {
+		distros = append(distros, distro)
+	}
+	sort.Strings(distros)
+
+	for _, distro := range distros {
+		var types []string
+		for t := range outputMap[distro] {
+			types = append(types, t)
+		}
+		sort.Strings(types)
+
+		var typeArchPairs []string
+		for _, t := range types {
+			arches := outputMap[distro][t]
+			sort.Strings(arches)
+			typeArchPairs = append(typeArchPairs, fmt.Sprintf("%s: [ %s ]", t, strings.Join(arches, ", ")))
+		}
+
+		if _, err := fmt.Fprintf(w, "%s:\n  %s\n", distro, strings.Join(typeArchPairs, "\n  ")); err != nil {
 			errs = append(errs, err)
 		}
 	}
