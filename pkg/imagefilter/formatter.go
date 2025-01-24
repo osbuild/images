@@ -11,9 +11,10 @@ import (
 type OutputFormat string
 
 const (
-	OutputFormatDefault OutputFormat = ""
-	OutputFormatText    OutputFormat = "text"
-	OutputFormatJSON    OutputFormat = "json"
+	OutputFormatDefault   OutputFormat = ""
+	OutputFormatText      OutputFormat = "text"
+	OutputFormatJSON      OutputFormat = "json"
+	OutputFormatTextShell OutputFormat = "shell"
 )
 
 // ResultFormatter will format the given result list to the given io.Writer
@@ -28,6 +29,8 @@ func NewResultsFormatter(format OutputFormat) (ResultsFormatter, error) {
 		return &textResultsFormatter{}, nil
 	case OutputFormatJSON:
 		return &jsonResultsFormatter{}, nil
+	case OutputFormatTextShell:
+		return &shellResultsFormatter{}, nil
 	default:
 		return nil, fmt.Errorf("unsupported formatter %q", format)
 	}
@@ -44,6 +47,26 @@ func (*textResultsFormatter) Output(w io.Writer, all []Result) error {
 		//   image-builder manifest centos-9 type:qcow2 arch:s390
 		//   image-builder build centos-9 type:qcow2 arch:x86_64
 		if _, err := fmt.Fprintf(w, "%s type:%s arch:%s\n", res.Distro.Name(), res.ImgType.Name(), res.Arch.Name()); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+
+	return nil
+}
+
+type shellResultsFormatter struct{}
+
+func (*shellResultsFormatter) Output(w io.Writer, all []Result) error {
+	var errs []error
+
+	for _, res := range all {
+		if _, err := fmt.Fprintf(w, "%s --distro %s --arch %s\n",
+			res.ImgType.Name(),
+			res.Distro.Name(),
+			res.Arch.Name()); err != nil {
 			errs = append(errs, err)
 		}
 	}
