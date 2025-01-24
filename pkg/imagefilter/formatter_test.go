@@ -65,6 +65,11 @@ func TestResultsFormatter(t *testing.T) {
 			},
 			`[{"distro":{"name":"test-distro-1"},"arch":{"name":"test_arch3"},"image_type":{"name":"qcow2"}},{"distro":{"name":"test-distro-1"},"arch":{"name":"test_arch"},"image_type":{"name":"test_type"}}]` + "\n",
 		},
+		{
+			"shell",
+			[]string{"test-distro-1:qcow2:test_arch3"},
+			"qcow2 --distro test-distro-1 --arch test_arch3\n",
+		},
 	} {
 		res := make([]imagefilter.Result, len(tc.fakeResults))
 		for i, resultSpec := range tc.fakeResults {
