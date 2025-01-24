@@ -126,7 +126,7 @@ func New(reporegistry *reporegistry.RepoRegistry, opts *Options) (*Generator, er
 		mg.containerResolver = DefaultContainerResolver
 	}
 	if mg.commitResolver == nil {
-		mg.commitResolver = DefaultCommitResolver
+		mg.commitResolver = ostree.ResolveAll
 	}
 	if mg.cacheDir == "" {
 		xdgCacheHomeDir, err := xdgCacheHome()
@@ -313,26 +313,6 @@ func DefaultContainerResolver(containerSources map[string][]container.SourceSpec
 		containerSpecs[plName] = specs
 	}
 	return containerSpecs, nil
-}
-
-// DefaultCommitResolver provides a default implementation for
-// ostree commit resolving.
-// It should rarely be necessary to use it directly and will be used
-// by default by manifestgen (unless overriden)
-func DefaultCommitResolver(commitSources map[string][]ostree.SourceSpec) (map[string][]ostree.CommitSpec, error) {
-	commits := make(map[string][]ostree.CommitSpec, len(commitSources))
-	for name, commitSources := range commitSources {
-		commitSpecs := make([]ostree.CommitSpec, len(commitSources))
-		for idx, commitSource := range commitSources {
-			var err error
-			commitSpecs[idx], err = ostree.Resolve(commitSource)
-			if err != nil {
-				return nil, fmt.Errorf("error ostree commit resolving: %w", err)
-			}
-		}
-		commits[name] = commitSpecs
-	}
-	return commits, nil
 }
 
 type (
