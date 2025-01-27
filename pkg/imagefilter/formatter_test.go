@@ -116,3 +116,9 @@ func TestSupportedOutputFormats(t *testing.T) {
 	assert.Contains(t, formatters, "short")
 	assert.True(t, sort.StringsAreSorted(formatters))
 }
+
+func TestResultsFormatterError(t *testing.T) {
+	fmter, err := imagefilter.NewResultsFormatter(imagefilter.OutputFormat("unsupported"))
+	assert.Error(t, err)
+	assert.Nil(t, fmter)
+}
