@@ -132,14 +132,14 @@ The high-level description of the workflow used to build RHEL Guest Images is as
 4. Delete all created resources.
 
 RHEL Guest Images are imported with the following Guest OS features set:
-* UEFI_COMPATIBLE
-* VIRTIO_SCSI_MULTIQUEUE
-* SEV_CAPABLE
-* SEV_SNP_CAPABLE
-* SEV_LIVE_MIGRATABLE
-* SEV_LIVE_MIGRATABLE_V2
-* GVNIC
-* IDPF
+* `UEFI_COMPATIBLE`
+* `VIRTIO_SCSI_MULTIQUEUE`
+* `SEV_CAPABLE`
+* `SEV_SNP_CAPABLE`
+* `SEV_LIVE_MIGRATABLE`
+* `SEV_LIVE_MIGRATABLE_V2`
+* `GVNIC`
+* `IDPF`
 
 
 [daisy-tool]: https://github.com/GoogleCloudPlatform/compute-image-tools/tree/master/daisy
