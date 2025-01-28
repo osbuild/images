@@ -7,6 +7,8 @@ import (
 	"io"
 	"sort"
 	"strings"
+
+	"github.com/osbuild/images/pkg/distrosort"
 )
 
 // OutputFormat contains the valid output formats for formatting results
@@ -106,7 +108,9 @@ func (*textShortResultsFormatter) Output(w io.Writer, all []Result) error {
 	for distro := range outputMap {
 		distros = append(distros, distro)
 	}
-	sort.Strings(distros)
+	if err := distrosort.Names(distros); err != nil {
+		return fmt.Errorf("cannot sort distro names %q: %w", distros, err)
+	}
 
 	for _, distro := range distros {
 		var types []string
