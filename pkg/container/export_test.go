@@ -11,3 +11,9 @@ func NewClientWithTestStorage(target, storage string) (*Client, error) {
 	client.store = storage
 	return client, err
 }
+
+func NewBlockingResolverWithTestClient(arch string, f func(string) (*Client, error)) Resolver {
+	resolver := NewBlockingResolver(arch)
+	resolver.(*blockingResolver).newClient = f
+	return resolver
+}

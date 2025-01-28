@@ -99,3 +99,64 @@ func (r *asyncResolver) Finish() ([]Spec, error) {
 
 	return specs, nil
 }
+
+type blockingResolver struct {
+	Arch         string
+	AuthFilePath string
+
+	newClient func(string) (*Client, error)
+
+	results []resolveResult
+}
+
+// NewBlockingResolver returns a [asyncResolver] that resolves container refs
+// synchronously (blocking).
+// TODO: Make this the only resolver after all clients have migrated to this.
+func NewBlockingResolver(arch string) Resolver {
+	return &blockingResolver{
+		Arch:      arch,
+		newClient: NewClient,
+	}
+}
+
+func (r *blockingResolver) Add(src SourceSpec) {
+	client, err := r.newClient(src.Source)
+	if err != nil {
+		r.results = append(r.results, resolveResult{err: err})
+		return
+	}
+
+	client.SetTLSVerify(src.TLSVerify)
+	client.SetArchitectureChoice(r.Arch)
+	if r.AuthFilePath != "" {
+		client.SetAuthFilePath(r.AuthFilePath)
+	}
+
+	spec, err := client.Resolve(context.TODO(), src.Name, src.Local)
+	if err != nil {
+		err = fmt.Errorf("'%s': %w", src.Source, err)
+	}
+	r.results = append(r.results, resolveResult{spec: spec, err: err})
+}
+
+func (r *blockingResolver) Finish() ([]Spec, error) {
+	specs := make([]Spec, 0, len(r.results))
+	errs := make([]string, 0, len(r.results))
+	for _, result := range r.results {
+		if result.err == nil {
+			specs = append(specs, result.spec)
+		} else {
+			errs = append(errs, result.err.Error())
+		}
+	}
+
+	if len(errs) > 0 {
+		detail := strings.Join(errs, "; ")
+		return specs, fmt.Errorf("failed to resolve container: %s", detail)
+	}
+
+	// Return a stable result, sorted by Digest
+	sort.Slice(specs, func(i, j int) bool { return specs[i].Digest < specs[j].Digest })
+
+	return specs, nil
+}
