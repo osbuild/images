@@ -25,6 +25,7 @@ jobs:
         working-directory: ./images
         env:
           GITHUB_TOKEN: ${{ secrets.SCHUTZBOT_GITHUB_ACCESS_TOKEN }}
+        # this also creates github_pr_body.txt
         run: |
           ./test/scripts/update-schutzfile-osbuild
 
@@ -42,10 +43,9 @@ jobs:
           git add Schutzfile
           git commit -m "schutzfile: Update osbuild dependency commit ID"
           git push -f https://"$GITHUB_TOKEN"@github.com/schutzbot/images.git
-          echo "Updating osbuild dependency commit IDs to current `main`" > body
           gh pr create \
             -t "Update osbuild dependency commit ID to latest" \
-            -F "body" \
+            -F "github_pr_body.txt" \
             --repo "osbuild/images" \
             --base "main" \
             --head "schutzbot:${branch}"
