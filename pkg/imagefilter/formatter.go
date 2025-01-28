@@ -87,6 +87,12 @@ type textShortResultsFormatter struct{}
 func (*textShortResultsFormatter) Output(w io.Writer, all []Result) error {
 	var errs []error
 
+	// deliberately break the yaml until the feature is stable, there
+	// are open questions, e.g. how this relates to:
+	// https://github.com/osbuild/osbuild-composer/pull/4336
+	// which adds a similar but slightly different API
+	fmt.Fprint(w, "@WARNING - the output format is not stable yet and may change\n")
+
 	outputMap := make(map[string]map[string][]string)
 	for _, res := range all {
 		if _, ok := outputMap[res.Distro.Name()]; !ok {
