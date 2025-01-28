@@ -223,7 +223,7 @@ func DefaultDepsolver(cacheDir string, packageSets map[string][]rpmmd.PackageSet
 }
 
 func resolveContainers(containers []container.SourceSpec, archName string) ([]container.Spec, error) {
-	resolver := container.NewResolver(archName)
+	resolver := container.NewBlockingResolver(archName)
 
 	for _, c := range containers {
 		resolver.Add(c)
