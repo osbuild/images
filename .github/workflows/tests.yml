@@ -48,9 +48,10 @@ jobs:
         run: git config --global --add safe.directory "$(pwd)"
 
       - name: Run unit tests
-        # skip the TestResolverLocalManifest test. It is tested separately
+        # skip the TestResolverLocalManifest and
+        # TestBlockingResolverLocalManifest tests. They are tested separately
         # (see below: requires root)
-        run: go test -race ./... -test.skip TestResolverLocalManifest
+        run: go test -race ./... -test.skip 'TestBlockingResolverLocalManifest|TestResolverLocalManifest'
 
       - name: Run depsolver tests with force-dnf to make sure it's not skipped
         run: go test -race ./pkg/dnfjson/... -force-dnf
