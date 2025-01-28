@@ -35,7 +35,6 @@ import (
 	"github.com/osbuild/images/pkg/distrofactory"
 	"github.com/osbuild/images/pkg/experimentalflags"
 	"github.com/osbuild/images/pkg/manifest"
-	"github.com/osbuild/images/pkg/manifestgen"
 	"github.com/osbuild/images/pkg/manifestgen/manifestmock"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rhsm/facts"
@@ -318,7 +317,7 @@ func makeManifestJob(
 
 		var containerSpecs map[string][]container.Spec
 		if content["containers"] {
-			containerSpecs, err = manifestgen.DefaultContainerResolver(manifest.GetContainerSourceSpecs(), archName)
+			containerSpecs, err = container.NewResolver(archName).ResolveAll(manifest.GetContainerSourceSpecs())
 			if err != nil {
 				return fmt.Errorf("[%s] container resolution failed: %s", filename, err.Error())
 			}
