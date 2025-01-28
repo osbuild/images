@@ -12,7 +12,12 @@ type resolveResult struct {
 	err  error
 }
 
-type Resolver struct {
+type Resolver interface {
+	Add(spec SourceSpec)
+	Finish() ([]Spec, error)
+}
+
+type asyncResolver struct {
 	jobs  int
 	queue chan resolveResult
 
@@ -33,8 +38,10 @@ type SourceSpec struct {
 }
 
 // XXX: use arch.Arch here?
-func NewResolver(arch string) *Resolver {
-	return &Resolver{
+func NewResolver(arch string) *asyncResolver {
+	// NOTE: this should return the Resolver interface, but osbuild-composer
+	// sets the AuthFilePath and for now we don't want to break the API.
+	return &asyncResolver{
 		ctx:   context.Background(),
 		queue: make(chan resolveResult, 2),
 		Arch:  arch,
@@ -43,7 +50,7 @@ func NewResolver(arch string) *Resolver {
 	}
 }
 
-func (r *Resolver) Add(spec SourceSpec) {
+func (r *asyncResolver) Add(spec SourceSpec) {
 	client, err := r.newClient(spec.Source)
 	r.jobs += 1
 
@@ -67,7 +74,7 @@ func (r *Resolver) Add(spec SourceSpec) {
 	}()
 }
 
-func (r *Resolver) Finish() ([]Spec, error) {
+func (r *asyncResolver) Finish() ([]Spec, error) {
 
 	specs := make([]Spec, 0, r.jobs)
 	errs := make([]string, 0, r.jobs)
