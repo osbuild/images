@@ -78,10 +78,10 @@ func TestResultsFormatter(t *testing.T) {
 		{
 			"short",
 			[]string{
-				"test-distro-1:qcow2:test_arch3",
-				"test-distro-2:qcow2:test_arch3",
+				"test-distro-9:qcow2:test_arch3",
+				"test-distro-10:qcow2:test_arch3",
 			},
-			"@WARNING - the output format is not stable yet and may change\ntest-distro-1:\n  qcow2: [ test_arch3 ]\ntest-distro-2:\n  qcow2: [ test_arch3 ]\n",
+			"@WARNING - the output format is not stable yet and may change\ntest-distro-9:\n  qcow2: [ test_arch3 ]\ntest-distro-10:\n  qcow2: [ test_arch3 ]\n",
 		},
 		{
 			"short",
