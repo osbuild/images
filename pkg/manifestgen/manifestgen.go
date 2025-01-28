@@ -123,7 +123,9 @@ func New(reporegistry *reporegistry.RepoRegistry, opts *Options) (*Generator, er
 		mg.depsolve = DefaultDepsolve
 	}
 	if mg.containerResolver == nil {
-		mg.containerResolver = DefaultContainerResolver
+		mg.containerResolver = func(containerSources map[string][]container.SourceSpec, archName string) (map[string][]container.Spec, error) {
+			return container.NewBlockingResolver(archName).ResolveAll(containerSources)
+		}
 	}
 	if mg.commitResolver == nil {
 		mg.commitResolver = ostree.ResolveAll
@@ -287,32 +289,6 @@ func DefaultDepsolve(solver *depsolvednf.Solver, cacheDir string, depsolveWarnin
 	// we need to add a option to select the type.
 	solver.SetSBOMType(sbom.StandardTypeSpdx)
 	return solver.DepsolveAll(packageSets)
-}
-
-func resolveContainers(containers []container.SourceSpec, archName string) ([]container.Spec, error) {
-	resolver := container.NewBlockingResolver(archName)
-
-	for _, c := range containers {
-		resolver.Add(c)
-	}
-
-	return resolver.Finish()
-}
-
-// DefaultContainersResolve provides a default implementation for
-// container resolving.
-// It should rarely be necessary to use it directly and will be used
-// by default by manifestgen (unless overriden)
-func DefaultContainerResolver(containerSources map[string][]container.SourceSpec, archName string) (map[string][]container.Spec, error) {
-	containerSpecs := make(map[string][]container.Spec, len(containerSources))
-	for plName, sourceSpecs := range containerSources {
-		specs, err := resolveContainers(sourceSpecs, archName)
-		if err != nil {
-			return nil, fmt.Errorf("error container resolving: %w", err)
-		}
-		containerSpecs[plName] = specs
-	}
-	return containerSpecs, nil
 }
 
 type (
