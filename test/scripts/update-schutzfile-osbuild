@@ -29,14 +29,25 @@ def update_osbuild_commit_ids(new):
     with open(testlib.SCHUTZFILE, encoding="utf-8") as schutzfile:
         data = json.load(schutzfile)
 
+    unique_changes = []
+
     for distro in data.keys():
         if distro == "common":
             continue
 
+        old = data[distro].get("dependencies", {}).get("osbuild", {}).get("commit", "main")
+        change = f"Changes: https://github.com/osbuild/osbuild/compare/{old}...{new}"
+        if change not in unique_changes:
+            unique_changes.append(change)
         data[distro].setdefault("dependencies", {}).setdefault("osbuild", {})["commit"] = new
 
     with open(testlib.SCHUTZFILE, encoding="utf-8", mode="w") as schutzfile:
         json.dump(data, schutzfile, indent="  ")
+
+    with open("github_pr_body.txt", encoding="utf-8", mode="w") as pr_body:
+        pr_body.write("Updating osbuild dependency commit IDs to current `main`\n\n")
+        pr_body.write("\n".join(unique_changes))
+        pr_body.write("\n")
 
 
 def main():
