@@ -19,8 +19,8 @@ import (
 
 func getConfPaths(t *testing.T) []string {
 	confPaths := []string{
-		"./test/confpaths/priority1",
-		"./test/confpaths/priority2",
+		"./test/confpaths/priority1/repositories",
+		"./test/confpaths/priority2/repositories",
 	}
 	var absConfPaths []string
 

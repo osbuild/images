@@ -17,7 +17,10 @@ type RepoRegistry struct {
 
 // New returns a new RepoRegistry instance with the data loaded from
 // the given repoConfigPaths and repoConfigFS instance. The order is
-// important here, first the paths are tried, then the FSes
+// important here, first the paths are tried, then the FSes.
+//
+// Note that the confPaths must point directly to the directory with
+// the json repo files.
 func New(repoConfigPaths []string, repoConfigFS []fs.FS) (*RepoRegistry, error) {
 	repositories, err := loadAllRepositories(repoConfigPaths, repoConfigFS)
 	if err != nil {

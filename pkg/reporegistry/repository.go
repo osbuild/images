@@ -18,7 +18,7 @@ func loadAllRepositories(confPaths []string, confFSes []fs.FS) (rpmmd.DistrosRep
 	var mergedFSes []fs.FS
 
 	for _, confPath := range confPaths {
-		mergedFSes = append(mergedFSes, os.DirFS(filepath.Join(confPath, "repositories")))
+		mergedFSes = append(mergedFSes, os.DirFS(confPath))
 	}
 	mergedFSes = append(mergedFSes, confFSes...)
 
@@ -90,9 +90,12 @@ func loadAllRepositoriesFromFS(confPaths []fs.FS) (rpmmd.DistrosRepoConfigs, err
 // If there are duplicate distro repositories definitions found in multiple paths, the first
 // encounter is preferred. For this reason, the order of paths in the passed list should
 // reflect the desired preference.
+//
+// Note that the confPaths must point directly to the directory with
+// the json repo files.
 func LoadRepositories(confPaths []string, distro string) (map[string][]rpmmd.RepoConfig, error) {
 	var repoConfigs map[string][]rpmmd.RepoConfig
-	path := "/repositories/" + distro + ".json"
+	path := distro + ".json"
 
 	for _, confPath := range confPaths {
 		var err error
