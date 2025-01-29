@@ -93,12 +93,7 @@ func run() error {
 		}
 		overrideRepos = repoConfig[archName]
 	} else {
-		// HACK: reporegistry hardcodes adding the "repositories"
-		// dir to the "repoConfigPaths" but the interface of
-		// "images" does not expect this.
-		// XXX: should we fix this in reporegistry?
-		repositories = filepath.Join(repositories, "..")
-		reporeg, err = reporegistry.New([]string{repositories})
+		reporeg, err = reporegistry.New([]string{repositories}, nil)
 		if err != nil {
 			return fmt.Errorf("failed to load repositories from %q: %w", repositories, err)
 		}

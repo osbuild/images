@@ -11,9 +11,5 @@ import (
 var FS embed.FS
 
 func New() (*reporegistry.RepoRegistry, error) {
-	repositories, err := reporegistry.LoadAllRepositoriesFromFS([]fs.FS{FS})
-	if err != nil {
-		return nil, err
-	}
-	return reporegistry.NewFromDistrosRepoConfigs(repositories), nil
+	return reporegistry.New(nil, []fs.FS{FS})
 }

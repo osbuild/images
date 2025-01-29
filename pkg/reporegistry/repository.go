@@ -12,23 +12,24 @@ import (
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
-// LoadAllRepositories loads all repositories for given distros from the given list of paths.
+// loadAllRepositories loads all repositories for given distros from the given list of paths.
 // Behavior is the same as with the LoadRepositories() method.
-func LoadAllRepositories(confPaths []string) (rpmmd.DistrosRepoConfigs, error) {
-	var confFSes []fs.FS
+func loadAllRepositories(confPaths []string, confFSes []fs.FS) (rpmmd.DistrosRepoConfigs, error) {
+	var mergedFSes []fs.FS
 
 	for _, confPath := range confPaths {
-		confFSes = append(confFSes, os.DirFS(filepath.Join(confPath, "repositories")))
+		mergedFSes = append(mergedFSes, os.DirFS(filepath.Join(confPath, "repositories")))
 	}
+	mergedFSes = append(mergedFSes, confFSes...)
 
-	distrosRepoConfigs, err := LoadAllRepositoriesFromFS(confFSes)
+	distrosRepoConfigs, err := loadAllRepositoriesFromFS(mergedFSes)
 	if len(distrosRepoConfigs) == 0 {
-		return nil, &NoReposLoadedError{confPaths}
+		return nil, &NoReposLoadedError{confPaths, confFSes}
 	}
 	return distrosRepoConfigs, err
 }
 
-func LoadAllRepositoriesFromFS(confPaths []fs.FS) (rpmmd.DistrosRepoConfigs, error) {
+func loadAllRepositoriesFromFS(confPaths []fs.FS) (rpmmd.DistrosRepoConfigs, error) {
 	distrosRepoConfigs := rpmmd.DistrosRepoConfigs{}
 
 	for _, confPath := range confPaths {
@@ -95,7 +96,7 @@ func LoadRepositories(confPaths []string, distro string) (map[string][]rpmmd.Rep
 
 	for _, confPath := range confPaths {
 		var err error
-		repoConfigs, err = rpmmd.LoadRepositoriesFromFile(confPath + path)
+		repoConfigs, err = rpmmd.LoadRepositoriesFromFile(filepath.Join(confPath, path))
 		if os.IsNotExist(err) {
 			continue
 		} else if err != nil {
@@ -109,7 +110,7 @@ func LoadRepositories(confPaths []string, distro string) (map[string][]rpmmd.Rep
 	}
 
 	if repoConfigs == nil {
-		return nil, &NoReposLoadedError{confPaths}
+		return nil, &NoReposLoadedError{confPaths, nil}
 	}
 
 	return repoConfigs, nil

@@ -2,6 +2,7 @@ package reporegistry
 
 import (
 	"fmt"
+	"io/fs"
 
 	"github.com/osbuild/images/pkg/distroidparser"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -14,10 +15,11 @@ type RepoRegistry struct {
 	repos rpmmd.DistrosRepoConfigs
 }
 
-// New returns a new RepoRegistry instance with the data
-// loaded from the given repoConfigPaths
-func New(repoConfigPaths []string) (*RepoRegistry, error) {
-	repositories, err := LoadAllRepositories(repoConfigPaths)
+// New returns a new RepoRegistry instance with the data loaded from
+// the given repoConfigPaths and repoConfigFS instance. The order is
+// important here, first the paths are tried, then the FSes
+func New(repoConfigPaths []string, repoConfigFS []fs.FS) (*RepoRegistry, error) {
+	repositories, err := loadAllRepositories(repoConfigPaths, repoConfigFS)
 	if err != nil {
 		return nil, err
 	}
