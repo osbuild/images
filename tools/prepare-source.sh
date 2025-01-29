@@ -4,7 +4,7 @@ set -eux
 
 # Go version must be consistent with image-builder which uses UBI
 # container that is typically few months behind
-GO_VERSION=1.21.13
+GO_VERSION=1.22.9
 GO_BINARY=$(go env GOPATH)/bin/go$GO_VERSION
 
 # this is the official way to get a different version of golang
