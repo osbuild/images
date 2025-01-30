@@ -779,7 +779,7 @@ type ModuleConfigData struct {
 
 type ModuleFailsafeFile struct {
 	Path string `json:"path"`
-	Data string `json:"string"`
+	Data string `json:"data"`
 }
 
 // dnf-json error structure
