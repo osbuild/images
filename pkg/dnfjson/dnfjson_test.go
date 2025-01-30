@@ -858,7 +858,7 @@ exit 1
 	err := os.WriteFile(fakeDnfJsonPath, []byte(fakeDnfJsonNoOutput), 0o755)
 	assert.NoError(t, err)
 
-	_, err = run([]string{fakeDnfJsonPath}, &Request{})
+	_, err = run([]string{fakeDnfJsonPath}, &Request{}, nil)
 	assert.EqualError(t, err, `DNF error occurred: InternalError: dnf-json output was empty`)
 }
 
@@ -867,16 +867,20 @@ func TestSolverRunWithSolverNoError(t *testing.T) {
 	fakeSolver := `#!/bin/sh -e
 cat - > "$0".stdin
 echo '{"solver": "zypper"}'
+>&2 echo "output-on-stderr" 
 `
 	fakeSolverPath := filepath.Join(tmpdir, "fake-solver")
 	err := os.WriteFile(fakeSolverPath, []byte(fakeSolver), 0755) //nolint:gosec
 	assert.NoError(t, err)
 
+	var capturedStderr bytes.Buffer
 	solver := NewSolver("platform:f38", "38", "x86_64", "fedora-38", "/tmp/cache")
+	solver.Stderr = &capturedStderr
 	solver.dnfJsonCmd = []string{fakeSolverPath}
 	res, err := solver.Depsolve(nil, sbom.StandardTypeNone)
 	assert.NoError(t, err)
 	assert.NotNil(t, res)
+	assert.Equal(t, "output-on-stderr\n", capturedStderr.String())
 
 	// prerequisite check, i.e. ensure our fake was called in the right way
 	stdin, err := os.ReadFile(fakeSolverPath + ".stdin")
