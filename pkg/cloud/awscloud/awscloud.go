@@ -243,6 +243,8 @@ func WaitUntilImportSnapshotTaskCompletedWithContext(c *ec2.EC2, ctx aws.Context
 // The caller can also specify the name of the role used to do the import.
 // If nil is given, the default one from the SDK is used (vmimport).
 // Returns the image ID and the snapshot ID.
+//
+// XXX: make this return (string, string, error) instead of pointers
 func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch string, bootMode, importRole *string) (*string, *string, error) {
 	rpmArchToEC2Arch := map[string]string{
 		"x86_64":  "x86_64",
@@ -294,11 +296,7 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch str
 
 	// we no longer need the object in s3, let's just delete it
 	logrus.Infof("[AWS] 🧹 Deleting image from S3: %s/%s", bucket, key)
-	_, err = a.s3.DeleteObject(&s3.DeleteObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-	})
-	if err != nil {
+	if err = a.DeleteObject(bucket, key); err != nil {
 		return nil, nil, err
 	}
 
@@ -386,6 +384,14 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch str
 	}
 
 	return registerOutput.ImageId, snapshotID, nil
+}
+
+func (a *AWS) DeleteObject(bucket, key string) error {
+	_, err := a.s3.DeleteObject(&s3.DeleteObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	})
+	return err
 }
 
 // target region is determined by the region configured in the aws session
