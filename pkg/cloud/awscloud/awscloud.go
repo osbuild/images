@@ -294,10 +294,7 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch str
 
 	// we no longer need the object in s3, let's just delete it
 	logrus.Infof("[AWS] 🧹 Deleting image from S3: %s/%s", bucket, key)
-	_, err = a.s3.DeleteObject(&s3.DeleteObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-	})
+	err = a.Cleanup(name, bucket, key)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -386,6 +383,18 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch str
 	}
 
 	return registerOutput.ImageId, snapshotID, nil
+}
+
+// Cleanup removes any temporary resources created during the image registration process.
+// Make sure to call this function via defer to ensure cleanup is always performed.
+// It will return an error if resources no longer exist or if there was an error deleting them.
+func (a *AWS) Cleanup(name, bucket, key string) error {
+	_, err := a.s3.DeleteObject(&s3.DeleteObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	})
+
+	return err
 }
 
 // target region is determined by the region configured in the aws session
