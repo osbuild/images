@@ -28,13 +28,13 @@ require (
 	github.com/oracle/oci-go-sdk/v54 v54.0.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
-	github.com/spf13/pflag v1.0.5
+	github.com/spf13/pflag v1.0.6
 	github.com/stretchr/testify v1.10.0
 	github.com/ubccr/kerby v0.0.0-20230802201021-412be7bfaee5
 	github.com/vmware/govmomi v0.48.0
 	golang.org/x/oauth2 v0.25.0
 	golang.org/x/sys v0.29.0
-	golang.org/x/tools v0.26.0
+	golang.org/x/tools v0.29.0
 	google.golang.org/api v0.219.0
 	gopkg.in/ini.v1 v1.67.0
 )
@@ -169,7 +169,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.32.0 // indirect
 	golang.org/x/crypto v0.32.0 // indirect
 	golang.org/x/exp v0.0.0-20241009180824-f66d83c29e7c // indirect
-	golang.org/x/mod v0.21.0 // indirect
+	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/term v0.28.0 // indirect
