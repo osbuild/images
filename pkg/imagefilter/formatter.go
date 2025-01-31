@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	"github.com/osbuild/images/pkg/distrosort"
+	// we cannot use "maps" yet, as it needs go1.23
+	"golang.org/x/exp/maps"
 )
 
 // OutputFormat contains the valid output formats for formatting results
@@ -27,20 +29,28 @@ type ResultsFormatter interface {
 	Output(io.Writer, []Result) error
 }
 
-// NewResultFormatter will create a formatter based on the given format.
+var supportedFormatters = map[string]ResultsFormatter{
+	string(OutputFormatDefault):   &textResultsFormatter{},
+	string(OutputFormatText):      &textResultsFormatter{},
+	string(OutputFormatJSON):      &jsonResultsFormatter{},
+	string(OutputFormatTextShell): &shellResultsFormatter{},
+	string(OutputFormatTextShort): &textShortResultsFormatter{},
+}
+
+// SupportedOutputFormats returns a list of supported output formats
+func SupportedOutputFormats() []string {
+	keys := maps.Keys(supportedFormatters)
+	sort.Strings(keys)
+	return keys
+}
+
+// NewResultsFormatter will create a formatter based on the given format.
 func NewResultsFormatter(format OutputFormat) (ResultsFormatter, error) {
-	switch format {
-	case OutputFormatDefault, OutputFormatText:
-		return &textResultsFormatter{}, nil
-	case OutputFormatJSON:
-		return &jsonResultsFormatter{}, nil
-	case OutputFormatTextShell:
-		return &shellResultsFormatter{}, nil
-	case OutputFormatTextShort:
-		return &textShortResultsFormatter{}, nil
-	default:
+	rs, ok := supportedFormatters[string(format)]
+	if !ok {
 		return nil, fmt.Errorf("unsupported formatter %q", format)
 	}
+	return rs, nil
 }
 
 type textResultsFormatter struct{}
