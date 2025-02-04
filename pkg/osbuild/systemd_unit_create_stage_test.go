@@ -9,7 +9,7 @@ import (
 
 func createSystemdUnit() SystemdServiceUnit {
 
-	var unit = Unit{
+	var unit = UnitSection{
 		Description:              "Create directory and files",
 		DefaultDependencies:      common.ToPtr(true),
 		ConditionPathExists:      []string{"!/etc/myfile"},
@@ -17,7 +17,7 @@ func createSystemdUnit() SystemdServiceUnit {
 		Requires:                 []string{"dbus.service", "libvirtd.service"},
 		Wants:                    []string{"local-fs.target"},
 	}
-	var service = Service{
+	var service = ServiceSection{
 		Type:            OneshotServiceType,
 		RemainAfterExit: true,
 		ExecStartPre:    []string{"echo creating_files"},
@@ -25,7 +25,7 @@ func createSystemdUnit() SystemdServiceUnit {
 		ExecStart:       []string{"mkdir -p /etc/mydir", "touch /etc/myfiles"},
 	}
 
-	var install = Install{
+	var install = InstallSection{
 		RequiredBy: []string{"multi-user.target", "boot-complete.target"},
 		WantedBy:   []string{"sshd.service"},
 	}

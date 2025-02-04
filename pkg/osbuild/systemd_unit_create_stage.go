@@ -22,7 +22,7 @@ const (
 	UsrUnitPath SystemdUnitPath = "usr"
 )
 
-type Unit struct {
+type UnitSection struct {
 	Description              string   `json:"Description,omitempty"`
 	DefaultDependencies      *bool    `json:"DefaultDependencies,omitempty"`
 	ConditionPathExists      []string `json:"ConditionPathExists,omitempty"`
@@ -33,7 +33,7 @@ type Unit struct {
 	Before                   []string `json:"Before,omitempty"`
 }
 
-type Service struct {
+type ServiceSection struct {
 	Type            SystemdServiceType    `json:"Type,omitempty"`
 	RemainAfterExit bool                  `json:"RemainAfterExit,omitempty"`
 	ExecStartPre    []string              `json:"ExecStartPre,omitempty"`
@@ -50,16 +50,16 @@ type MountSection struct {
 	Options string `json:"Options,omitempty"`
 }
 
-type Install struct {
+type InstallSection struct {
 	RequiredBy []string `json:"RequiredBy,omitempty"`
 	WantedBy   []string `json:"WantedBy,omitempty"`
 }
 
 type SystemdServiceUnit struct {
-	Unit    *Unit         `json:"Unit"`
-	Service *Service      `json:"Service"`
-	Mount   *MountSection `json:"Mount,omitempty"`
-	Install *Install      `json:"Install"`
+	Unit    *UnitSection    `json:"Unit"`
+	Service *ServiceSection `json:"Service"`
+	Mount   *MountSection   `json:"Mount,omitempty"`
+	Install *InstallSection `json:"Install"`
 }
 
 type SystemdUnitCreateStageOptions struct {

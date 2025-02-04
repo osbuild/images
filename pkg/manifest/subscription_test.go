@@ -52,7 +52,7 @@ func TestSubscriptionService(t *testing.T) {
 					UnitType: unitType,
 					UnitPath: osbuild.UsrUnitPath,
 					Config: osbuild.SystemdServiceUnit{
-						Unit: &osbuild.Unit{
+						Unit: &osbuild.UnitSection{
 							Description: serviceDescription,
 							ConditionPathExists: []string{
 								subkeyFilepath,
@@ -60,7 +60,7 @@ func TestSubscriptionService(t *testing.T) {
 							Wants: serviceWants,
 							After: serviceAfter,
 						},
-						Service: &osbuild.Service{
+						Service: &osbuild.ServiceSection{
 							Type: osbuild.OneshotServiceType,
 							ExecStart: []string{
 								"/usr/sbin/subscription-manager register --org=${ORG_ID} --activationkey=${ACTIVATION_KEY} --serverurl theserverurl --baseurl thebaseurl",
@@ -70,7 +70,7 @@ func TestSubscriptionService(t *testing.T) {
 								subkeyFilepath,
 							},
 						},
-						Install: &osbuild.Install{
+						Install: &osbuild.InstallSection{
 							WantedBy: serviceWantedBy,
 						},
 					},
@@ -97,7 +97,7 @@ func TestSubscriptionService(t *testing.T) {
 					UnitType: unitType,
 					UnitPath: osbuild.UsrUnitPath,
 					Config: osbuild.SystemdServiceUnit{
-						Unit: &osbuild.Unit{
+						Unit: &osbuild.UnitSection{
 							Description: serviceDescription,
 							ConditionPathExists: []string{
 								subkeyFilepath,
@@ -105,7 +105,7 @@ func TestSubscriptionService(t *testing.T) {
 							Wants: serviceWants,
 							After: serviceAfter,
 						},
-						Service: &osbuild.Service{
+						Service: &osbuild.ServiceSection{
 							Type: osbuild.OneshotServiceType,
 							ExecStart: []string{
 								"/usr/sbin/subscription-manager register --org=${ORG_ID} --activationkey=${ACTIVATION_KEY} --serverurl theserverurl-wi --baseurl thebaseurl-wi",
@@ -117,7 +117,7 @@ func TestSubscriptionService(t *testing.T) {
 								subkeyFilepath,
 							},
 						},
-						Install: &osbuild.Install{
+						Install: &osbuild.InstallSection{
 							WantedBy: serviceWantedBy,
 						},
 					},
@@ -144,7 +144,7 @@ func TestSubscriptionService(t *testing.T) {
 					UnitType: unitType,
 					UnitPath: osbuild.UsrUnitPath,
 					Config: osbuild.SystemdServiceUnit{
-						Unit: &osbuild.Unit{
+						Unit: &osbuild.UnitSection{
 							Description: serviceDescription,
 							ConditionPathExists: []string{
 								subkeyFilepath,
@@ -152,7 +152,7 @@ func TestSubscriptionService(t *testing.T) {
 							Wants: serviceWants,
 							After: serviceAfter,
 						},
-						Service: &osbuild.Service{
+						Service: &osbuild.ServiceSection{
 							Type: osbuild.OneshotServiceType,
 							ExecStart: []string{
 								"/usr/bin/rhc connect --organization=${ORG_ID} --activation-key=${ACTIVATION_KEY} --server theserverurl-wr",
@@ -164,7 +164,7 @@ func TestSubscriptionService(t *testing.T) {
 								subkeyFilepath,
 							},
 						},
-						Install: &osbuild.Install{
+						Install: &osbuild.InstallSection{
 							WantedBy: serviceWantedBy,
 						},
 					},
@@ -191,7 +191,7 @@ func TestSubscriptionService(t *testing.T) {
 					UnitType: unitType,
 					UnitPath: osbuild.UsrUnitPath,
 					Config: osbuild.SystemdServiceUnit{
-						Unit: &osbuild.Unit{
+						Unit: &osbuild.UnitSection{
 							Description: serviceDescription,
 							ConditionPathExists: []string{
 								subkeyFilepath,
@@ -199,7 +199,7 @@ func TestSubscriptionService(t *testing.T) {
 							Wants: serviceWants,
 							After: serviceAfter,
 						},
-						Service: &osbuild.Service{
+						Service: &osbuild.ServiceSection{
 							Type: osbuild.OneshotServiceType,
 							ExecStart: []string{
 								"/usr/bin/rhc connect --organization=${ORG_ID} --activation-key=${ACTIVATION_KEY} --server theserverurl-wir",
@@ -211,7 +211,7 @@ func TestSubscriptionService(t *testing.T) {
 								subkeyFilepath,
 							},
 						},
-						Install: &osbuild.Install{
+						Install: &osbuild.InstallSection{
 							WantedBy: serviceWantedBy,
 						},
 					},
@@ -240,7 +240,7 @@ func TestSubscriptionService(t *testing.T) {
 					UnitType: unitType,
 					UnitPath: osbuild.UsrUnitPath,
 					Config: osbuild.SystemdServiceUnit{
-						Unit: &osbuild.Unit{
+						Unit: &osbuild.UnitSection{
 							Description: serviceDescription,
 							ConditionPathExists: []string{
 								subkeyFilepath,
@@ -248,7 +248,7 @@ func TestSubscriptionService(t *testing.T) {
 							Wants: serviceWants,
 							After: serviceAfter,
 						},
-						Service: &osbuild.Service{
+						Service: &osbuild.ServiceSection{
 							Type: osbuild.OneshotServiceType,
 							ExecStart: []string{
 								"/usr/sbin/subscription-manager register --org=${ORG_ID} --activationkey=${ACTIVATION_KEY} --serverurl theserverurl-iob --baseurl thebaseurl-iob",
@@ -260,7 +260,7 @@ func TestSubscriptionService(t *testing.T) {
 								subkeyFilepath,
 							},
 						},
-						Install: &osbuild.Install{
+						Install: &osbuild.InstallSection{
 							WantedBy: serviceWantedBy,
 						},
 					},
@@ -293,7 +293,7 @@ func TestSubscriptionService(t *testing.T) {
 					UnitType: unitType,
 					UnitPath: osbuild.EtcUnitPath,
 					Config: osbuild.SystemdServiceUnit{
-						Unit: &osbuild.Unit{
+						Unit: &osbuild.UnitSection{
 							Description: serviceDescription,
 							ConditionPathExists: []string{
 								subkeyFilepath,
@@ -301,7 +301,7 @@ func TestSubscriptionService(t *testing.T) {
 							Wants: serviceWants,
 							After: serviceAfter,
 						},
-						Service: &osbuild.Service{
+						Service: &osbuild.ServiceSection{
 							Type: osbuild.OneshotServiceType,
 							ExecStart: []string{
 								"/usr/sbin/subscription-manager register --org=${ORG_ID} --activationkey=${ACTIVATION_KEY} --serverurl theserverurl-etc --baseurl thebaseurl-etc",
@@ -311,7 +311,7 @@ func TestSubscriptionService(t *testing.T) {
 								subkeyFilepath,
 							},
 						},
-						Install: &osbuild.Install{
+						Install: &osbuild.InstallSection{
 							WantedBy: serviceWantedBy,
 						},
 					},
@@ -343,7 +343,7 @@ func TestSubscriptionService(t *testing.T) {
 					UnitType: unitType,
 					UnitPath: osbuild.EtcUnitPath,
 					Config: osbuild.SystemdServiceUnit{
-						Unit: &osbuild.Unit{
+						Unit: &osbuild.UnitSection{
 							Description: serviceDescription,
 							ConditionPathExists: []string{
 								subkeyFilepath,
@@ -351,7 +351,7 @@ func TestSubscriptionService(t *testing.T) {
 							Wants: serviceWants,
 							After: serviceAfter,
 						},
-						Service: &osbuild.Service{
+						Service: &osbuild.ServiceSection{
 							Type: osbuild.OneshotServiceType,
 							ExecStart: []string{
 								"/usr/sbin/subscription-manager register --org=${ORG_ID} --activationkey=${ACTIVATION_KEY} --serverurl theserverurl-iob-etc --baseurl thebaseurl-iob-etc",
@@ -363,7 +363,7 @@ func TestSubscriptionService(t *testing.T) {
 								subkeyFilepath,
 							},
 						},
-						Install: &osbuild.Install{
+						Install: &osbuild.InstallSection{
 							WantedBy: serviceWantedBy,
 						},
 					},
