@@ -43,15 +43,23 @@ type Service struct {
 	EnvironmentFile []string              `json:"EnvironmentFile,omitempty"`
 }
 
+type MountSection struct {
+	What    string `json:"What"`
+	Where   string `json:"Where"`
+	Type    string `json:"Type,omitempty"`
+	Options string `json:"Options,omitempty"`
+}
+
 type Install struct {
 	RequiredBy []string `json:"RequiredBy,omitempty"`
 	WantedBy   []string `json:"WantedBy,omitempty"`
 }
 
 type SystemdServiceUnit struct {
-	Unit    *Unit    `json:"Unit"`
-	Service *Service `json:"Service"`
-	Install *Install `json:"Install"`
+	Unit    *Unit         `json:"Unit"`
+	Service *Service      `json:"Service"`
+	Mount   *MountSection `json:"Mount,omitempty"`
+	Install *Install      `json:"Install"`
 }
 
 type SystemdUnitCreateStageOptions struct {
@@ -81,6 +89,16 @@ func (o *SystemdUnitCreateStageOptions) validate() error {
 			}
 		}
 	}
+
+	if o.Config.Mount != nil {
+		if o.Config.Mount.What == "" {
+			return fmt.Errorf("What option for Mount section of systemd unit is required")
+		}
+		if o.Config.Mount.Where == "" {
+			return fmt.Errorf("Where option for Mount section of systemd unit is required")
+		}
+	}
+
 	return nil
 }
 
