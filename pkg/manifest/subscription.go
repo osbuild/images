@@ -156,7 +156,7 @@ func subscriptionService(subscriptionOptions subscription.ImageOptions, serviceO
 		Filename: subscribeServiceFile,
 		UnitType: "system",
 		UnitPath: unitPath,
-		Config: osbuild.SystemdServiceUnit{
+		Config: osbuild.SystemdUnit{
 			Unit: &osbuild.UnitSection{
 				Description:         "First-boot service for registering with Red Hat subscription manager and/or insights",
 				ConditionPathExists: []string{subkeyFilepath},

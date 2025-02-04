@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func createSystemdUnit() SystemdServiceUnit {
+func createSystemdUnit() SystemdUnit {
 
 	var unit = UnitSection{
 		Description:              "Create directory and files",
@@ -30,7 +30,7 @@ func createSystemdUnit() SystemdServiceUnit {
 		WantedBy:   []string{"sshd.service"},
 	}
 
-	var systemdUnit = SystemdServiceUnit{
+	var systemdUnit = SystemdUnit{
 		Unit:    &unit,
 		Service: &service,
 		Install: &install,
@@ -42,7 +42,7 @@ func createSystemdUnit() SystemdServiceUnit {
 func TestNewSystemdUnitCreateStage(t *testing.T) {
 	systemdServiceConfig := createSystemdUnit()
 	var options = SystemdUnitCreateStageOptions{
-		Filename: "create-dir-files",
+		Filename: "create-dir-files.service",
 		Config:   systemdServiceConfig,
 	}
 	expectedStage := &Stage{
@@ -57,7 +57,7 @@ func TestNewSystemdUnitCreateStage(t *testing.T) {
 func TestNewSystemdUnitCreateStageInEtc(t *testing.T) {
 	systemdServiceConfig := createSystemdUnit()
 	var options = SystemdUnitCreateStageOptions{
-		Filename: "create-dir-files",
+		Filename: "create-dir-files.service",
 		Config:   systemdServiceConfig,
 		UnitPath: EtcUnitPath,
 		UnitType: Global,

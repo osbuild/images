@@ -51,7 +51,7 @@ func TestSubscriptionService(t *testing.T) {
 					Filename: serviceFilename,
 					UnitType: unitType,
 					UnitPath: osbuild.UsrUnitPath,
-					Config: osbuild.SystemdServiceUnit{
+					Config: osbuild.SystemdUnit{
 						Unit: &osbuild.UnitSection{
 							Description: serviceDescription,
 							ConditionPathExists: []string{
@@ -96,7 +96,7 @@ func TestSubscriptionService(t *testing.T) {
 					Filename: serviceFilename,
 					UnitType: unitType,
 					UnitPath: osbuild.UsrUnitPath,
-					Config: osbuild.SystemdServiceUnit{
+					Config: osbuild.SystemdUnit{
 						Unit: &osbuild.UnitSection{
 							Description: serviceDescription,
 							ConditionPathExists: []string{
@@ -143,7 +143,7 @@ func TestSubscriptionService(t *testing.T) {
 					Filename: serviceFilename,
 					UnitType: unitType,
 					UnitPath: osbuild.UsrUnitPath,
-					Config: osbuild.SystemdServiceUnit{
+					Config: osbuild.SystemdUnit{
 						Unit: &osbuild.UnitSection{
 							Description: serviceDescription,
 							ConditionPathExists: []string{
@@ -190,7 +190,7 @@ func TestSubscriptionService(t *testing.T) {
 					Filename: serviceFilename,
 					UnitType: unitType,
 					UnitPath: osbuild.UsrUnitPath,
-					Config: osbuild.SystemdServiceUnit{
+					Config: osbuild.SystemdUnit{
 						Unit: &osbuild.UnitSection{
 							Description: serviceDescription,
 							ConditionPathExists: []string{
@@ -239,7 +239,7 @@ func TestSubscriptionService(t *testing.T) {
 					Filename: serviceFilename,
 					UnitType: unitType,
 					UnitPath: osbuild.UsrUnitPath,
-					Config: osbuild.SystemdServiceUnit{
+					Config: osbuild.SystemdUnit{
 						Unit: &osbuild.UnitSection{
 							Description: serviceDescription,
 							ConditionPathExists: []string{
@@ -292,7 +292,7 @@ func TestSubscriptionService(t *testing.T) {
 					Filename: serviceFilename,
 					UnitType: unitType,
 					UnitPath: osbuild.EtcUnitPath,
-					Config: osbuild.SystemdServiceUnit{
+					Config: osbuild.SystemdUnit{
 						Unit: &osbuild.UnitSection{
 							Description: serviceDescription,
 							ConditionPathExists: []string{
@@ -342,7 +342,7 @@ func TestSubscriptionService(t *testing.T) {
 					Filename: serviceFilename,
 					UnitType: unitType,
 					UnitPath: osbuild.EtcUnitPath,
-					Config: osbuild.SystemdServiceUnit{
+					Config: osbuild.SystemdUnit{
 						Unit: &osbuild.UnitSection{
 							Description: serviceDescription,
 							ConditionPathExists: []string{

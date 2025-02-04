@@ -548,7 +548,7 @@ func createMountpointService(serviceName string, mountpoints []string) *osbuild.
 		Filename: serviceName,
 		UnitPath: osbuild.EtcUnitPath,
 		UnitType: osbuild.System,
-		Config: osbuild.SystemdServiceUnit{
+		Config: osbuild.SystemdUnit{
 			Unit:    &unit,
 			Service: &service,
 			Install: &install,

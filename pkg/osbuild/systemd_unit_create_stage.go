@@ -71,7 +71,7 @@ type InstallSection struct {
 	WantedBy   []string `json:"WantedBy,omitempty"`
 }
 
-type SystemdServiceUnit struct {
+type SystemdUnit struct {
 	Unit    *UnitSection    `json:"Unit"`
 	Service *ServiceSection `json:"Service"`
 	Mount   *MountSection   `json:"Mount,omitempty"`
@@ -80,10 +80,10 @@ type SystemdServiceUnit struct {
 }
 
 type SystemdUnitCreateStageOptions struct {
-	Filename string             `json:"filename"`
-	UnitType unitType           `json:"unit-type,omitempty"` // unitType defined in ./systemd_unit_stage.go
-	UnitPath SystemdUnitPath    `json:"unit-path,omitempty"`
-	Config   SystemdServiceUnit `json:"config"`
+	Filename string          `json:"filename"`
+	UnitType unitType        `json:"unit-type,omitempty"` // unitType defined in ./systemd_unit_stage.go
+	UnitPath SystemdUnitPath `json:"unit-path,omitempty"`
+	Config   SystemdUnit     `json:"config"`
 }
 
 func (SystemdUnitCreateStageOptions) isStageOptions() {}
@@ -94,6 +94,13 @@ func (o *SystemdUnitCreateStageOptions) validateService() error {
 	}
 	if o.Config.Install == nil {
 		return fmt.Errorf("systemd service unit %q requires an Install section", o.Filename)
+	}
+
+	if o.Config.Mount != nil {
+		return fmt.Errorf("systemd service unit %q contains invalid section Mount", o.Filename)
+	}
+	if o.Config.Socket != nil {
+		return fmt.Errorf("systemd service unit %q contains invalid section Socket", o.Filename)
 	}
 
 	vre := regexp.MustCompile(envVarRegex)
@@ -112,6 +119,12 @@ func (o *SystemdUnitCreateStageOptions) validateMount() error {
 	if o.Config.Mount == nil {
 		return fmt.Errorf("systemd mount unit %q requires a Mount section", o.Filename)
 	}
+	if o.Config.Service != nil {
+		return fmt.Errorf("systemd mount unit %q contains invalid section Service", o.Filename)
+	}
+	if o.Config.Socket != nil {
+		return fmt.Errorf("systemd mount unit %q contains invalid section Socket", o.Filename)
+	}
 
 	if o.Config.Mount.What == "" {
 		return fmt.Errorf("What option for Mount section of systemd unit %q is required", o.Filename)
@@ -126,6 +139,12 @@ func (o *SystemdUnitCreateStageOptions) validateMount() error {
 func (o *SystemdUnitCreateStageOptions) validateSocket() error {
 	if o.Config.Socket == nil {
 		return fmt.Errorf("systemd socket unit %q requires a Socket section", o.Filename)
+	}
+	if o.Config.Mount != nil {
+		return fmt.Errorf("systemd socket unit %q contains invalid section Mount", o.Filename)
+	}
+	if o.Config.Service != nil {
+		return fmt.Errorf("systemd socket unit %q contains invalid section Service", o.Filename)
 	}
 
 	return nil
