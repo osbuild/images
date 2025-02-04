@@ -50,6 +50,21 @@ type MountSection struct {
 	Options string `json:"Options,omitempty"`
 }
 
+type SocketSection struct {
+	Service                string `json:"Service,omitempty"`
+	ListenStream           string `json:"ListenStream,omitempty"`
+	ListenDatagram         string `json:"ListenDatagram,omitempty"`
+	ListenSequentialPacket string `json:"ListenSequentialPacket,omitempty"`
+	ListenFifo             string `json:"ListenFifo,omitempty"`
+	SocketUser             string `json:"SocketUser,omitempty"`
+	SocketGroup            string `json:"SocketGroup,omitempty"`
+	SocketMode             string `json:"SocketMode,omitempty"`
+	DirectoryMode          string `json:"DirectoryMode,omitempty"`
+	Accept                 string `json:"Accept,omitempty"`
+	RuntimeDirectory       string `json:"RuntimeDirectory,omitempty"`
+	RemoveOnStop           string `json:"RemoveOnStop,omitempty"`
+}
+
 type InstallSection struct {
 	RequiredBy []string `json:"RequiredBy,omitempty"`
 	WantedBy   []string `json:"WantedBy,omitempty"`
@@ -59,6 +74,7 @@ type SystemdServiceUnit struct {
 	Unit    *UnitSection    `json:"Unit"`
 	Service *ServiceSection `json:"Service"`
 	Mount   *MountSection   `json:"Mount,omitempty"`
+	Socket  *SocketSection  `json:"Socket,omitempty"`
 	Install *InstallSection `json:"Install"`
 }
 
