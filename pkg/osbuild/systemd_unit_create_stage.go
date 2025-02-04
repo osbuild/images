@@ -2,6 +2,7 @@ package osbuild
 
 import (
 	"fmt"
+	"path/filepath"
 	"regexp"
 )
 
@@ -87,14 +88,12 @@ type SystemdUnitCreateStageOptions struct {
 
 func (SystemdUnitCreateStageOptions) isStageOptions() {}
 
-func (o *SystemdUnitCreateStageOptions) validate() error {
-	fre := regexp.MustCompile(filenameRegex)
-	if !fre.MatchString(o.Filename) {
-		return fmt.Errorf("filename %q doesn't conform to schema (%s)", o.Filename, filenameRegex)
+func (o *SystemdUnitCreateStageOptions) validateService() error {
+	if o.Config.Service == nil {
+		return fmt.Errorf("systemd service unit %q requires a Service section", o.Filename)
 	}
-
 	if o.Config.Install == nil {
-		return fmt.Errorf("Install section of systemd unit is required")
+		return fmt.Errorf("systemd service unit %q requires an Install section", o.Filename)
 	}
 
 	vre := regexp.MustCompile(envVarRegex)
@@ -106,16 +105,48 @@ func (o *SystemdUnitCreateStageOptions) validate() error {
 		}
 	}
 
-	if o.Config.Mount != nil {
-		if o.Config.Mount.What == "" {
-			return fmt.Errorf("What option for Mount section of systemd unit is required")
-		}
-		if o.Config.Mount.Where == "" {
-			return fmt.Errorf("Where option for Mount section of systemd unit is required")
-		}
+	return nil
+}
+
+func (o *SystemdUnitCreateStageOptions) validateMount() error {
+	if o.Config.Mount == nil {
+		return fmt.Errorf("systemd mount unit %q requires a Mount section", o.Filename)
+	}
+
+	if o.Config.Mount.What == "" {
+		return fmt.Errorf("What option for Mount section of systemd unit %q is required", o.Filename)
+	}
+
+	if o.Config.Mount.Where == "" {
+		return fmt.Errorf("Where option for Mount section of systemd unit %q is required", o.Filename)
 	}
 
 	return nil
+}
+func (o *SystemdUnitCreateStageOptions) validateSocket() error {
+	if o.Config.Socket == nil {
+		return fmt.Errorf("systemd socket unit %q requires a Socket section", o.Filename)
+	}
+
+	return nil
+}
+
+func (o *SystemdUnitCreateStageOptions) validate() error {
+	fre := regexp.MustCompile(filenameRegex)
+	if !fre.MatchString(o.Filename) {
+		return fmt.Errorf("invalid filename %q for systemd unit: does not conform to schema (%s)", o.Filename, filenameRegex)
+	}
+
+	switch filepath.Ext(o.Filename) {
+	case ".service":
+		return o.validateService()
+	case ".mount":
+		return o.validateMount()
+	case ".socket":
+		return o.validateSocket()
+	default:
+		return fmt.Errorf("invalid filename %q for systemd unit: extension must be one of .service, .mount, or .socket", o.Filename)
+	}
 }
 
 func NewSystemdUnitCreateStage(options *SystemdUnitCreateStageOptions) *Stage {
