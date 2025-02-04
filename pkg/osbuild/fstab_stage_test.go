@@ -103,12 +103,11 @@ func TestNewFSTabStageOptions(t *testing.T) {
 		},
 	}
 	// Use the test partition tables from the disk package.
-	for name := range testdisk.TestPartitionTables {
+	for name, pt := range testdisk.TestPartitionTables() {
 		// use a different name for the internal testing argument so we can
 		// refer to the global test by t.Name() in the error message
 		t.Run(name, func(ts *testing.T) {
 			require := require.New(ts)
-			pt := testdisk.TestPartitionTables[name]
 
 			// math/rand is good enough in this case
 			/* #nosec G404 */
