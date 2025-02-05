@@ -2,6 +2,9 @@
 // OSBuild (schema v2) types.
 package osbuild
 
+// The minimum OSBuild version that this package supports
+const MinimumOSBuildVersion = "139"
+
 // A Manifest represents an OSBuild source and pipeline manifest
 type Manifest struct {
 	Version   string     `json:"version"`
