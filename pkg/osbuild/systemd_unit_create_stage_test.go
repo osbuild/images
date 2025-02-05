@@ -292,7 +292,7 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 					Install: installSection,
 				},
 			},
-			expected: fmt.Errorf("invalid filename \"//not-a-good-path//\" for systemd unit: does not conform to schema (%s)", filenameRegex),
+			expected: fmt.Errorf("invalid filename \"//not-a-good-path//\" for systemd unit: does not conform to schema (%s)", unitFilenameRegex),
 		},
 
 		// bad extension
@@ -302,7 +302,7 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 				UnitType: Global,
 				UnitPath: EtcUnitPath,
 			},
-			expected: fmt.Errorf(`invalid filename "test.whatever" for systemd unit: extension must be one of .service, .mount, or .socket`),
+			expected: fmt.Errorf("invalid filename \"test.whatever\" for systemd unit: does not conform to schema (%s)", unitFilenameRegex),
 		},
 
 		// missing required options

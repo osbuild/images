@@ -6,6 +6,8 @@ import (
 	"regexp"
 )
 
+const unitFilenameRegex = "^[\\w:.\\\\-]+[@]{0,1}[\\w:.\\\\-]*\\.(service|mount|socket|swap)$"
+
 type SystemdServiceType string
 type SystemdUnitPath string
 
@@ -51,6 +53,13 @@ type MountSection struct {
 	Options string `json:"Options,omitempty"`
 }
 
+type SwapSection struct {
+	What       string `json:"What"`
+	Priority   *int   `json:"Priority,omitempty"`
+	Options    string `json:"Options,omitempty"`
+	TimeoutSec string `json:"TimeoutSec,omitempty"`
+}
+
 type SocketSection struct {
 	Service                string `json:"Service,omitempty"`
 	ListenStream           string `json:"ListenStream,omitempty"`
@@ -73,10 +82,11 @@ type InstallSection struct {
 
 type SystemdUnit struct {
 	Unit    *UnitSection    `json:"Unit"`
-	Service *ServiceSection `json:"Service"`
+	Service *ServiceSection `json:"Service,omitempty"`
 	Mount   *MountSection   `json:"Mount,omitempty"`
 	Socket  *SocketSection  `json:"Socket,omitempty"`
-	Install *InstallSection `json:"Install"`
+	Swap    *SwapSection    `json:"Swap,omitempty"`
+	Install *InstallSection `json:"Install,omitempty"`
 }
 
 type SystemdUnitCreateStageOptions struct {
@@ -102,6 +112,9 @@ func (o *SystemdUnitCreateStageOptions) validateService() error {
 	if o.Config.Socket != nil {
 		return fmt.Errorf("systemd service unit %q contains invalid section Socket", o.Filename)
 	}
+	if o.Config.Swap != nil {
+		return fmt.Errorf("systemd service unit %q contains invalid section Swap", o.Filename)
+	}
 
 	vre := regexp.MustCompile(envVarRegex)
 	if service := o.Config.Service; service != nil {
@@ -119,11 +132,18 @@ func (o *SystemdUnitCreateStageOptions) validateMount() error {
 	if o.Config.Mount == nil {
 		return fmt.Errorf("systemd mount unit %q requires a Mount section", o.Filename)
 	}
+
+	if o.Config.Swap != nil {
+		return fmt.Errorf("systemd mount unit %q contains invalid section Swap", o.Filename)
+	}
 	if o.Config.Service != nil {
 		return fmt.Errorf("systemd mount unit %q contains invalid section Service", o.Filename)
 	}
 	if o.Config.Socket != nil {
 		return fmt.Errorf("systemd mount unit %q contains invalid section Socket", o.Filename)
+	}
+	if o.Config.Swap != nil {
+		return fmt.Errorf("systemd mount unit %q contains invalid section Swap", o.Filename)
 	}
 
 	if o.Config.Mount.What == "" {
@@ -136,24 +156,47 @@ func (o *SystemdUnitCreateStageOptions) validateMount() error {
 
 	return nil
 }
+
+func (o *SystemdUnitCreateStageOptions) validateSwap() error {
+	if o.Config.Swap == nil {
+		return fmt.Errorf("systemd swap unit %q requires a Swap section", o.Filename)
+	}
+
+	if o.Config.Mount != nil {
+		return fmt.Errorf("systemd swap unit %q contains invalid section Mount", o.Filename)
+	}
+	if o.Config.Service != nil {
+		return fmt.Errorf("systemd swap unit %q contains invalid section Service", o.Filename)
+	}
+	if o.Config.Socket != nil {
+		return fmt.Errorf("systemd swap unit %q contains invalid section Socket", o.Filename)
+	}
+
+	return nil
+}
+
 func (o *SystemdUnitCreateStageOptions) validateSocket() error {
 	if o.Config.Socket == nil {
 		return fmt.Errorf("systemd socket unit %q requires a Socket section", o.Filename)
 	}
+
 	if o.Config.Mount != nil {
 		return fmt.Errorf("systemd socket unit %q contains invalid section Mount", o.Filename)
 	}
 	if o.Config.Service != nil {
 		return fmt.Errorf("systemd socket unit %q contains invalid section Service", o.Filename)
 	}
+	if o.Config.Swap != nil {
+		return fmt.Errorf("systemd socket unit %q contains invalid section Swap", o.Filename)
+	}
 
 	return nil
 }
 
 func (o *SystemdUnitCreateStageOptions) validate() error {
-	fre := regexp.MustCompile(filenameRegex)
+	fre := regexp.MustCompile(unitFilenameRegex)
 	if !fre.MatchString(o.Filename) {
-		return fmt.Errorf("invalid filename %q for systemd unit: does not conform to schema (%s)", o.Filename, filenameRegex)
+		return fmt.Errorf("invalid filename %q for systemd unit: does not conform to schema (%s)", o.Filename, unitFilenameRegex)
 	}
 
 	switch filepath.Ext(o.Filename) {
@@ -161,10 +204,13 @@ func (o *SystemdUnitCreateStageOptions) validate() error {
 		return o.validateService()
 	case ".mount":
 		return o.validateMount()
+	case ".swap":
+		return o.validateSwap()
 	case ".socket":
 		return o.validateSocket()
 	default:
-		return fmt.Errorf("invalid filename %q for systemd unit: extension must be one of .service, .mount, or .socket", o.Filename)
+		// this should be caught by the regex
+		return fmt.Errorf("invalid filename %q for systemd unit: extension must be one of .service, .mount, .swap, or .socket", o.Filename)
 	}
 }
 
