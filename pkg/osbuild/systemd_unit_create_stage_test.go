@@ -2,9 +2,12 @@ package osbuild
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/testdisk"
+	"github.com/osbuild/images/pkg/disk"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -372,6 +375,280 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			err := tc.options.validate()
 			assert.Equal(t, tc.expected, err)
+		})
+	}
+}
+
+func TestGenSystemdMountStages(t *testing.T) {
+	type testCase struct {
+		ptname         string // name of partition table from internal/testdisk/partition.go
+		expectedStages []*Stage
+	}
+
+	// common install section
+	installSection := &InstallSection{
+		WantedBy: []string{"multi-user.target"},
+	}
+
+	testCases := []testCase{
+		{
+			ptname: "plain",
+			expectedStages: []*Stage{
+				{
+					Type: "org.osbuild.systemd.unit.create",
+					Options: &SystemdUnitCreateStageOptions{
+						Filename: "-.mount",
+						Config: SystemdUnit{
+							Unit: &UnitSection{
+								DefaultDependencies: common.ToPtr(true),
+							},
+							Mount: &MountSection{
+								What:    "/dev/disk/by-uuid/3112efb3-3b6f-4fad-bdeb-445e54d8cac4",
+								Where:   "/",
+								Type:    "xfs",
+								Options: "defaults",
+							},
+							Install: installSection,
+						},
+					},
+				},
+				{
+					Type: "org.osbuild.systemd.unit.create",
+					Options: &SystemdUnitCreateStageOptions{
+						Filename: "boot-efi.mount",
+						Config: SystemdUnit{
+							Unit: &UnitSection{
+								DefaultDependencies: common.ToPtr(true),
+							},
+							Mount: &MountSection{
+								What:    fmt.Sprintf("/dev/disk/by-uuid/%s", disk.EFIFilesystemUUID),
+								Where:   "/boot/efi",
+								Type:    "vfat",
+								Options: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+							},
+							Install: installSection,
+						},
+					},
+				},
+				{
+					Type: "org.osbuild.systemd.unit.create",
+					Options: &SystemdUnitCreateStageOptions{
+						Filename: "boot.mount",
+						Config: SystemdUnit{
+							Unit: &UnitSection{
+								DefaultDependencies: common.ToPtr(true),
+							},
+							Mount: &MountSection{
+								What:    "/dev/disk/by-uuid/1407bf28-e80a-4bf0-8cf7-57812428b076",
+								Where:   "/boot",
+								Type:    "xfs",
+								Options: "defaults",
+							},
+							Install: installSection,
+						},
+					},
+				},
+				{
+					Type: "org.osbuild.systemd",
+					Options: &SystemdStageOptions{
+						EnabledServices: []string{
+							"-.mount",
+							"boot-efi.mount",
+							"boot.mount",
+						},
+					},
+				},
+			},
+		},
+		{
+			ptname: "plain-swap",
+			expectedStages: []*Stage{
+				{
+					Type: "org.osbuild.systemd.unit.create",
+					Options: &SystemdUnitCreateStageOptions{
+						Filename: "-.mount",
+						Config: SystemdUnit{
+							Unit: &UnitSection{
+								DefaultDependencies: common.ToPtr(true),
+							},
+							Mount: &MountSection{
+								What:    "/dev/disk/by-uuid/061761a9-7a43-441f-a538-5d9754040908",
+								Where:   "/",
+								Type:    "xfs",
+								Options: "defaults",
+							},
+							Install: installSection,
+						},
+					},
+				},
+				{
+					Type: "org.osbuild.systemd.unit.create",
+					Options: &SystemdUnitCreateStageOptions{
+						Filename: "boot-efi.mount",
+						Config: SystemdUnit{
+							Unit: &UnitSection{
+								DefaultDependencies: common.ToPtr(true),
+							},
+							Mount: &MountSection{
+								What:    fmt.Sprintf("/dev/disk/by-uuid/%s", disk.EFIFilesystemUUID),
+								Where:   "/boot/efi",
+								Type:    "vfat",
+								Options: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+							},
+							Install: installSection,
+						},
+					},
+				},
+				{
+					Type: "org.osbuild.systemd.unit.create",
+					Options: &SystemdUnitCreateStageOptions{
+						Filename: "boot.mount",
+						Config: SystemdUnit{
+							Unit: &UnitSection{
+								DefaultDependencies: common.ToPtr(true),
+							},
+							Mount: &MountSection{
+								What:    "/dev/disk/by-uuid/1407bf28-e80a-4bf0-8cf7-57812428b076",
+								Where:   "/boot",
+								Type:    "xfs",
+								Options: "defaults",
+							},
+							Install: installSection,
+						},
+					},
+				},
+				{
+					Type: "org.osbuild.systemd.unit.create",
+					Options: &SystemdUnitCreateStageOptions{
+						Filename: `dev-disk-by\x2duuid-3112efb3\x2d3b6f\x2d4fad\x2dbdeb\x2d445e54d8cac4.swap`,
+						Config: SystemdUnit{
+							Unit: &UnitSection{
+								DefaultDependencies: common.ToPtr(true),
+							},
+							Swap: &SwapSection{
+								What:    "/dev/disk/by-uuid/3112efb3-3b6f-4fad-bdeb-445e54d8cac4",
+								Options: "defaults",
+							},
+							Install: installSection,
+						},
+					},
+				},
+				{
+					Type: "org.osbuild.systemd",
+					Options: &SystemdStageOptions{
+						EnabledServices: []string{
+							"-.mount",
+							"boot-efi.mount",
+							"boot.mount",
+							`dev-disk-by\x2duuid-3112efb3\x2d3b6f\x2d4fad\x2dbdeb\x2d445e54d8cac4.swap`,
+						},
+					},
+				},
+			},
+		},
+		{
+			ptname: "btrfs",
+			expectedStages: []*Stage{
+				{
+					Type: "org.osbuild.systemd.unit.create",
+					Options: &SystemdUnitCreateStageOptions{
+						Filename: "-.mount",
+						Config: SystemdUnit{
+							Unit: &UnitSection{
+								DefaultDependencies: common.ToPtr(true),
+							},
+							Mount: &MountSection{
+								What:    "/dev/disk/by-uuid/3112efb3-3b6f-4fad-bdeb-445e54d8cac4",
+								Where:   "/",
+								Type:    "btrfs",
+								Options: "subvol=root",
+							},
+							Install: installSection,
+						},
+					},
+				},
+				{
+					Type: "org.osbuild.systemd.unit.create",
+					Options: &SystemdUnitCreateStageOptions{
+						Filename: "boot-efi.mount",
+						Config: SystemdUnit{
+							Unit: &UnitSection{
+								DefaultDependencies: common.ToPtr(true),
+							},
+							Mount: &MountSection{
+								What:    fmt.Sprintf("/dev/disk/by-uuid/%s", disk.EFIFilesystemUUID),
+								Where:   "/boot/efi",
+								Type:    "vfat",
+								Options: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+							},
+							Install: installSection,
+						},
+					},
+				},
+				{
+					Type: "org.osbuild.systemd.unit.create",
+					Options: &SystemdUnitCreateStageOptions{
+						Filename: "boot.mount",
+						Config: SystemdUnit{
+							Unit: &UnitSection{
+								DefaultDependencies: common.ToPtr(true),
+							},
+							Mount: &MountSection{
+								What:    "/dev/disk/by-uuid/1407bf28-e80a-4bf0-8cf7-57812428b076",
+								Where:   "/boot",
+								Type:    "xfs",
+								Options: "defaults",
+							},
+							Install: installSection,
+						},
+					},
+				},
+				{
+					Type: "org.osbuild.systemd.unit.create",
+					Options: &SystemdUnitCreateStageOptions{
+						Filename: "var.mount",
+						Config: SystemdUnit{
+							Unit: &UnitSection{
+								DefaultDependencies: common.ToPtr(true),
+							},
+							Mount: &MountSection{
+								What:    "/dev/disk/by-uuid/3112efb3-3b6f-4fad-bdeb-445e54d8cac4",
+								Where:   "/var",
+								Type:    "btrfs",
+								Options: "subvol=var",
+							},
+							Install: installSection,
+						},
+					},
+				},
+				{
+					Type: "org.osbuild.systemd",
+					Options: &SystemdStageOptions{
+						EnabledServices: []string{
+							"-.mount",
+							"boot-efi.mount",
+							"boot.mount",
+							"var.mount",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	partitionTables := testdisk.TestPartitionTables()
+	for _, tc := range testCases {
+		t.Run(tc.ptname, func(t *testing.T) {
+			pt := partitionTables[tc.ptname]
+			pt.GenerateUUIDs(rand.New(rand.NewSource(13))) // #nosec G404
+
+			assert := assert.New(t)
+			assert.NotNil(pt)
+
+			stages, err := GenSystemdMountStages(&pt)
+			assert.NoError(err)
+
+			assert.Equal(tc.expectedStages, stages)
 		})
 	}
 }
