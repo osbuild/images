@@ -157,6 +157,10 @@ type OSCustomizations struct {
 	// Determines if the machine id should be set to "uninitialized" which allows
 	// "ConditionFirstBoot" to work in systemd
 	MachineIdUninitialized bool
+
+	// MountUnits creates systemd .mount units to describe the filesystem
+	// instead of writing to /etc/fstab
+	MountUnits bool
 }
 
 // OS represents the filesystem tree of the target image. This roughly
@@ -648,11 +652,11 @@ func (p *OS) serialize() osbuild.Pipeline {
 			pipeline = prependKernelCmdlineStage(pipeline, strings.Join(kernelOptions, " "), pt)
 		}
 
-		opts, err := osbuild.NewFSTabStageOptions(pt)
+		fsCfgStages, err := filesystemConfigStages(pt, p.MountUnits)
 		if err != nil {
 			panic(err)
 		}
-		pipeline.AddStage(osbuild.NewFSTabStage(opts))
+		pipeline.AddStages(fsCfgStages...)
 
 		var bootloader *osbuild.Stage
 		switch p.platform.GetArch() {
