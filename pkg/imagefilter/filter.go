@@ -37,7 +37,7 @@ func newFilter(sl ...string) (*filter, error) {
 	for i, s := range sl {
 		prefix, searchTerm := splitPrefixSearchTerm(s)
 		if !slices.Contains(supportedFilters, prefix) {
-			return nil, fmt.Errorf("unsupported filter prefix: %q", prefix)
+			return nil, fmt.Errorf("unsupported filter prefix: %q (supported: %v)", prefix, strings.Join(supportedFilters[1:], ","))
 		}
 		gl, err := glob.Compile(searchTerm)
 		if err != nil {
