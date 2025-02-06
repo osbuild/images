@@ -66,3 +66,7 @@ func TestImageFilterError(t *testing.T) {
 	_, err := newFilter("random:filter")
 	require.EqualError(t, err, `unsupported filter prefix: "random" (supported: distro,arch,type,bootmode)`)
 }
+
+func TestSupportedFilters(t *testing.T) {
+	assert.Contains(t, SupportedFilters(), "distro")
+}
