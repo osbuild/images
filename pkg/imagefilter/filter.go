@@ -10,6 +10,11 @@ import (
 	"github.com/osbuild/images/pkg/distro"
 )
 
+// SupportedFilters returns what filter prefixes are supported
+func SupportedFilters() []string {
+	return supportedFilters
+}
+
 func splitPrefixSearchTerm(s string) (string, string) {
 	l := strings.SplitN(s, ":", 2)
 	if len(l) == 1 {
@@ -36,8 +41,8 @@ func newFilter(sl ...string) (*filter, error) {
 	}
 	for i, s := range sl {
 		prefix, searchTerm := splitPrefixSearchTerm(s)
-		if !slices.Contains(supportedFilters, prefix) {
-			return nil, fmt.Errorf("unsupported filter prefix: %q (supported: %v)", prefix, strings.Join(supportedFilters[1:], ","))
+		if prefix != "" && !slices.Contains(supportedFilters, prefix) {
+			return nil, fmt.Errorf("unsupported filter prefix: %q (supported: %v)", prefix, strings.Join(supportedFilters, ","))
 		}
 		gl, err := glob.Compile(searchTerm)
 		if err != nil {
@@ -50,7 +55,7 @@ func newFilter(sl ...string) (*filter, error) {
 }
 
 var supportedFilters = []string{
-	"", "distro", "arch", "type", "bootmode",
+	"distro", "arch", "type", "bootmode",
 }
 
 type term struct {
