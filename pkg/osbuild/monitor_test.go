@@ -2,7 +2,9 @@ package osbuild_test
 
 import (
 	"bytes"
+	"fmt"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -115,4 +117,17 @@ func TestScannerSmoke(t *testing.T) {
 		}
 		assert.NotEqual(t, time.Time{}, st.Timestamp)
 	}
+}
+
+func TestScannerVeryLongLines(t *testing.T) {
+	buf := bytes.NewBuffer(nil)
+	fmt.Fprint(buf, `{"message": "`)
+	fmt.Fprint(buf, strings.Repeat("1", 128_000))
+	fmt.Fprint(buf, `"}`)
+
+	scanner := osbuild.NewStatusScanner(buf)
+	st, err := scanner.Status()
+	assert.NoError(t, err)
+	require.NotNil(t, st)
+	assert.Equal(t, 128_000, len(st.Trace))
 }
