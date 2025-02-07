@@ -374,5 +374,21 @@
       "centos-10",
       "centos-9"
     ]
+  },
+  "./configs/modularity-in-packages.json": {
+    "image-types": [
+      "ami"
+    ],
+    "distros": [
+      "centos-9"
+    ]
+  },
+  "./configs/modularity-enabled-modules.json": {
+    "image-types": [
+      "ami"
+    ],
+    "distros": [
+      "centos-9"
+    ]
   }
 }
