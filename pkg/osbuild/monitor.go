@@ -18,11 +18,12 @@ import (
 // and based on what we learn here we may consider tweaking
 // the osbuild progress
 type Status struct {
-	// Trace contains a single log line, usually very low-level or
-	// stage output but useful for e.g. bug reporting. Should in
-	// general not be displayed to the user but the concatenation
-	// of all "trace" lines should give the same information as
-	// running osbuild on a terminal
+	// Trace contains log lines, usually very low-level or stage
+	// output but useful for e.g. bug reporting. Should in general
+	// not be displayed to the user but the concatenation of all
+	// "trace" lines should give the same information as running
+	// osbuild on a terminal. It may contain multiple lines and
+	// may not end with a \n
 	Trace string
 
 	// Message contains a high level user-visible message about
@@ -106,7 +107,9 @@ func (sr *StatusScanner) Status() (*Status, error) {
 	if context.Origin == "osbuild.monitor" {
 		msg = strings.TrimSpace(status.Message)
 	} else {
-		trace = strings.TrimSpace(status.Message)
+		// arbitrary osbuild messages can be very long and
+		// may not end with a \n so do not assume this
+		trace = status.Message
 	}
 
 	st := &Status{
