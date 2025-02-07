@@ -80,7 +80,6 @@ func iotCommitPackageSet(t *imageType) rpmmd.PackageSet {
 			"atheros-firmware",
 			"attr",
 			"authselect",
-			"basesystem",
 			"bash",
 			"bash-completion",
 			"brcmfmac-firmware",
@@ -193,6 +192,22 @@ func iotCommitPackageSet(t *imageType) rpmmd.PackageSet {
 		ps = ps.Append(rpmmd.PackageSet{
 			Include: []string{
 				"bootupd", // Added in F41+
+			},
+		})
+	}
+	// See https://pagure.io/fedora-iot/ostree/pull-request/72
+	// See https://src.fedoraproject.org/rpms/filesystem/c/3f741bf2a89c9e1bb685943c41fd298e6683dd50?branch=rawhide
+	if common.VersionLessThan(t.arch.distro.osVersion, "43") {
+		ps = ps.Append(rpmmd.PackageSet{
+			Include: []string{
+				"basesystem",
+			},
+		})
+	}
+	if common.VersionGreaterThanOrEqual(t.arch.distro.osVersion, "43") {
+		ps = ps.Append(rpmmd.PackageSet{
+			Include: []string{
+				"filesystem",
 			},
 		})
 	}
