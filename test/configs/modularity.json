@@ -1,0 +1,10 @@
+{
+  "name": "modularity",
+  "blueprint": {
+    "packages": [
+      {
+        "name": "@nodejs:18"
+      }
+    ]
+  }
+}
