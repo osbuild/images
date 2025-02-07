@@ -98,6 +98,33 @@ check_ca_cert() {
     fi
 }
 
+check_modularity() {
+    echo "📗 Checking enabled modules"
+
+    # Verify modules that are enabled on a system, if any. Modules can either be enabled separately
+    # or they can be installed through packages directly. We test both cases here.
+    #
+    # Caveat is that when a module is enabled yet _no_ packages are installed from it this breaks.
+    # Let's not do that in the test?
+
+    modules_expected_0=$(jq -rc '.blueprint.enabled_modules[]? | .name + ":" + .stream' "${config}")
+    modules_expected_1=$(jq -rc '.blueprint.packages[]? | select(.name | startswith("@") and contains(":")) | .name' "${config}" | cut -c2-)
+
+    modules_expected="${modules_expected_0}\n${modules_expected_1}"
+    modules_enabled=$(dnf module list --enabled 2>&1 | tail -n+4 | head -n -2 | tr -s ' ' | cut -d' ' -f1,2 | tr ' ' ':')
+
+    # Go over the expected modules and check if each of them is installed
+    echo "$modules_expected" | while read -r module_expected; do
+        echo "📗 Module expected: ${module_expected}"
+        if [[ $module_expected != *$modules_enabled* ]]; then
+            echo "❌ Module was not enabled: ${module_expected}"
+            exit 1
+        else
+            echo "Module was enabled"
+        fi
+    done
+}
+
 echo "❓ Checking system status"
 if ! running_wait; then
 
@@ -137,5 +164,9 @@ if (( $# > 0 )); then
 
     if jq -e '.blueprint.customizations.cacerts.pem_certs[0]' "${config}"; then
         check_ca_cert "${config}"
+    fi
+
+    if jq -e '.blueprint.enabled_modules' "${config}" || jq -e '.blueprint.packages[] | select(.name | startswith("@") and contains(":")) | .name' "${config}"; then
+        check_modularity "${config}"
     fi
 fi
