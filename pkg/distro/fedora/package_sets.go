@@ -10,7 +10,7 @@ import (
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
-func cloudBaseSet(t *imageType) rpmmd.PackageSet {
+func cloudBaseSet(_ *imageType) rpmmd.PackageSet {
 	return rpmmd.PackageSet{
 		Include: []string{
 			"@Fedora Cloud Server",
@@ -173,14 +173,6 @@ func iotCommitPackageSet(t *imageType) rpmmd.PackageSet {
 		},
 	}
 
-	if common.VersionLessThan(t.arch.distro.osVersion, "40") {
-		ps = ps.Append(rpmmd.PackageSet{
-			Include: []string{
-				"passwd",         // provided by shadow-utils in F40+
-				"podman-plugins", // deprecated in podman 5
-			},
-		})
-	}
 	if common.VersionLessThan(t.arch.distro.osVersion, "41") {
 		ps = ps.Append(rpmmd.PackageSet{
 			Include: []string{
@@ -285,14 +277,6 @@ func bootableContainerPackageSet(t *imageType) rpmmd.PackageSet {
 		},
 	}
 
-	if common.VersionLessThan(t.arch.distro.osVersion, "40") {
-		ps = ps.Append(rpmmd.PackageSet{
-			Include: []string{
-				"passwd", // provided by shadow-utils in F40+
-			},
-		})
-	}
-
 	switch t.Arch().Name() {
 	case arch.ARCH_AARCH64.String():
 		ps.Append(rpmmd.PackageSet{
@@ -331,7 +315,7 @@ func bootableContainerPackageSet(t *imageType) rpmmd.PackageSet {
 
 // INSTALLER PACKAGE SET
 
-func installerPackageSet(t *imageType) rpmmd.PackageSet {
+func installerPackageSet(_ *imageType) rpmmd.PackageSet {
 	return rpmmd.PackageSet{
 		Include: []string{
 			"anaconda-dracut",
@@ -524,13 +508,11 @@ func iotInstallerPackageSet(t *imageType) rpmmd.PackageSet {
 	// include anaconda packages
 	ps := anacondaPackageSet(t)
 
-	if common.VersionGreaterThanOrEqual(t.arch.distro.osVersion, "39") {
-		ps = ps.Append(rpmmd.PackageSet{
-			Include: []string{
-				"fedora-release-iot",
-			},
-		})
-	}
+	ps = ps.Append(rpmmd.PackageSet{
+		Include: []string{
+			"fedora-release-iot",
+		},
+	})
 
 	return ps
 }
@@ -697,26 +679,13 @@ func iotSimplifiedInstallerPackageSet(t *imageType) rpmmd.PackageSet {
 			"procps-ng",
 			"rootfiles",
 			"setools-console",
+			"shadow-utils", // includes passwd
 			"sudo",
 			"traceroute",
 			"util-linux",
 		},
 	})
 
-	if common.VersionGreaterThanOrEqual(t.arch.distro.osVersion, "40") {
-		ps = ps.Append(rpmmd.PackageSet{
-			Include: []string{
-				"shadow-utils", // includes passwd
-			},
-		})
-	} else {
-		// F39 only
-		ps = ps.Append(rpmmd.PackageSet{
-			Include: []string{
-				"passwd",
-			},
-		})
-	}
 	if common.VersionLessThan(t.arch.distro.osVersion, "41") {
 		ps = ps.Append(rpmmd.PackageSet{
 			Include: []string{
