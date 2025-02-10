@@ -74,7 +74,7 @@ func TestResultsFormatter(t *testing.T) {
 		{
 			"short",
 			[]string{"test-distro-1:qcow2:test_arch3"},
-			"@WARNING - the output format is not stable yet and may change\ntest-distro-1:\n  qcow2: [ test_arch3 ]\n",
+			"test-distro-1\n  qcow2: test_arch3\n",
 		},
 		{
 			"short",
@@ -82,7 +82,7 @@ func TestResultsFormatter(t *testing.T) {
 				"test-distro-9:qcow2:test_arch3",
 				"test-distro-10:qcow2:test_arch3",
 			},
-			"@WARNING - the output format is not stable yet and may change\ntest-distro-9:\n  qcow2: [ test_arch3 ]\ntest-distro-10:\n  qcow2: [ test_arch3 ]\n",
+			"test-distro-9\n  qcow2: test_arch3\ntest-distro-10\n  qcow2: test_arch3\n",
 		},
 		{
 			"short",
@@ -90,7 +90,7 @@ func TestResultsFormatter(t *testing.T) {
 				"test-distro-1:test_type:test_arch",
 				"test-distro-1:test_type:test_arch2",
 			},
-			"@WARNING - the output format is not stable yet and may change\ntest-distro-1:\n  test_type: [ test_arch, test_arch2 ]\n",
+			"test-distro-1\n  test_type: test_arch, test_arch2\n",
 		},
 	} {
 		res := make([]imagefilter.Result, len(tc.fakeResults))
