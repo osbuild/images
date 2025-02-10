@@ -99,12 +99,6 @@ type textShortResultsFormatter struct{}
 func (*textShortResultsFormatter) Output(w io.Writer, all []Result) error {
 	var errs []error
 
-	// deliberately break the yaml until the feature is stable, there
-	// are open questions, e.g. how this relates to:
-	// https://github.com/osbuild/osbuild-composer/pull/4336
-	// which adds a similar but slightly different API
-	fmt.Fprint(w, "@WARNING - the output format is not stable yet and may change\n")
-
 	outputMap := make(map[string]map[string][]string)
 	for _, res := range all {
 		if _, ok := outputMap[res.Distro.Name()]; !ok {
@@ -133,10 +127,10 @@ func (*textShortResultsFormatter) Output(w io.Writer, all []Result) error {
 		for _, t := range types {
 			arches := outputMap[distro][t]
 			sort.Strings(arches)
-			typeArchPairs = append(typeArchPairs, fmt.Sprintf("%s: [ %s ]", t, strings.Join(arches, ", ")))
+			typeArchPairs = append(typeArchPairs, fmt.Sprintf("%s: %s", t, strings.Join(arches, ", ")))
 		}
 
-		if _, err := fmt.Fprintf(w, "%s:\n  %s\n", distro, strings.Join(typeArchPairs, "\n  ")); err != nil {
+		if _, err := fmt.Fprintf(w, "%s\n  %s\n", distro, strings.Join(typeArchPairs, "\n  ")); err != nil {
 			errs = append(errs, err)
 		}
 	}
