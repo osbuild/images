@@ -279,7 +279,7 @@ func bootableContainerPackageSet(t *imageType) rpmmd.PackageSet {
 
 	switch t.Arch().Name() {
 	case arch.ARCH_AARCH64.String():
-		ps.Append(rpmmd.PackageSet{
+		ps = ps.Append(rpmmd.PackageSet{
 			Include: []string{
 				"irqbalance",
 				"ostree-grub2",
@@ -290,7 +290,7 @@ func bootableContainerPackageSet(t *imageType) rpmmd.PackageSet {
 			},
 		})
 	case arch.ARCH_PPC64LE.String():
-		ps.Append(rpmmd.PackageSet{
+		ps = ps.Append(rpmmd.PackageSet{
 			Include: []string{
 				"irqbalance",
 				"librtas",
@@ -299,7 +299,7 @@ func bootableContainerPackageSet(t *imageType) rpmmd.PackageSet {
 			},
 		})
 	case arch.ARCH_X86_64.String():
-		ps.Append(rpmmd.PackageSet{
+		ps = ps.Append(rpmmd.PackageSet{
 			Include: []string{
 				"irqbalance",
 			},
