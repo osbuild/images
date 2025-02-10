@@ -10,9 +10,21 @@ import (
 	"github.com/osbuild/images/pkg/distro"
 )
 
+const (
+	// supported filter prefixes
+	prefixDistro   = "distro"
+	prefixArch     = "arch"
+	prefixType     = "type"
+	prefixBootmode = "bootmode"
+)
+
 // SupportedFilters returns what filter prefixes are supported
 func SupportedFilters() []string {
-	return supportedFilters
+	return []string{
+		// this should be ordered by "importance", i.e. the
+		// most common prefixes/filters first
+		prefixDistro, prefixArch, prefixType, prefixBootmode,
+	}
 }
 
 func splitPrefixSearchTerm(s string) (string, string) {
@@ -41,8 +53,8 @@ func newFilter(sl ...string) (*filter, error) {
 	}
 	for i, s := range sl {
 		prefix, searchTerm := splitPrefixSearchTerm(s)
-		if prefix != "" && !slices.Contains(supportedFilters, prefix) {
-			return nil, fmt.Errorf("unsupported filter prefix: %q (supported: %v)", prefix, strings.Join(supportedFilters, ","))
+		if prefix != "" && !slices.Contains(SupportedFilters(), prefix) {
+			return nil, fmt.Errorf("unsupported filter prefix: %q (supported: %v)", prefix, strings.Join(SupportedFilters(), ","))
 		}
 		gl, err := glob.Compile(searchTerm)
 		if err != nil {
@@ -52,10 +64,6 @@ func newFilter(sl ...string) (*filter, error) {
 		filter.terms[i].pattern = gl
 	}
 	return filter, nil
-}
-
-var supportedFilters = []string{
-	"distro", "arch", "type", "bootmode",
 }
 
 type term struct {
@@ -82,14 +90,14 @@ func (fl filter) Matches(distro distro.Distro, arch distro.Arch, imgType distro.
 			m2 := term.pattern.Match(arch.Name())
 			m3 := term.pattern.Match(imgType.Name())
 			m = m && (m1 || m2 || m3)
-		case "distro":
+		case prefixDistro:
 			m = m && term.pattern.Match(distro.Name())
-		case "arch":
+		case prefixArch:
 			m = m && term.pattern.Match(arch.Name())
-		case "type":
+		case prefixType:
 			m = m && term.pattern.Match(imgType.Name())
 			// mostly here to show how flexible this is
-		case "bootmode":
+		case prefixBootmode:
 			m = m && term.pattern.Match(imgType.BootMode().String())
 		}
 	}
