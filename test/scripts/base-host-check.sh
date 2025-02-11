@@ -98,6 +98,18 @@ check_ca_cert() {
     fi
 }
 
+check_modularity() {
+    # Verify modules that are enabled on a system, if any.
+    modules_expected=$(jq -rc '.expect_modularity.modules[]' "${config}")
+    modules_enabled=$(dnf module list --enabled 2>&1 | tail -n+4 | head -n -2)
+
+    # Go over the expected modules and check if each of them is installed
+    echo "$modules_expected" | while read module_expected; do
+        name=""
+        version=""
+    done
+}
+
 echo "❓ Checking system status"
 if ! running_wait; then
 
@@ -137,5 +149,9 @@ if (( $# > 0 )); then
 
     if jq -e '.blueprint.customizations.cacerts.pem_certs[0]' "${config}"; then
         check_ca_cert "${config}"
+    fi
+
+    if jq -e '.expect_modularity' "${config}"; then
+        check_modularity "${config}"
     fi
 fi
