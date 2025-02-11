@@ -280,7 +280,7 @@ func Test_LoadAllRepositories(t *testing.T) {
 
 	confPaths := getConfPaths(t)
 
-	distroReposMap, err := loadAllRepositories(confPaths, nil)
+	distroReposMap, err := LoadAllRepositories(confPaths, nil)
 	assert.NotNil(t, distroReposMap)
 	assert.Nil(t, err)
 	assert.Equal(t, len(distroReposMap), len(expectedReposMap))
@@ -307,7 +307,7 @@ func TestLoadRepositoriesLogging(t *testing.T) {
 	logrus.AddHook(logHook)
 
 	confPaths := getConfPaths(t)
-	_, err := loadAllRepositories(confPaths, nil)
+	_, err := LoadAllRepositories(confPaths, nil)
 	require.NoError(t, err)
 	needle := "Loaded repository configuration file: rhel-8.10.json"
 	assert.True(t, slices.ContainsFunc(logHook.AllEntries(), func(entry *logrus.Entry) bool {
