@@ -76,6 +76,8 @@ vmdk: &vmdk
 ova:
   <<: *vmdk
 
+# NOTE: keep in sync with official fedora-iot definitions:
+# https://pagure.io/fedora-iot/ostree/blob/main/f/fedora-iot-base.yaml
 iot_commit: &iot_commit
   include:
     - "NetworkManager"
