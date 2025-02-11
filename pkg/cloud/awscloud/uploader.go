@@ -11,8 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/google/uuid"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/cloud"
+	"github.com/osbuild/images/pkg/platform"
 )
 
 type awsUploader struct {
@@ -22,10 +24,30 @@ type awsUploader struct {
 	bucketName string
 	imageName  string
 	targetArch string
+	bootMode   *string
 }
 
 type UploaderOptions struct {
 	TargetArch string
+	// BootMode to set for the AMI. If nil, no explicit boot mode will be set.
+	BootMode *platform.BootMode
+}
+
+func (ou *UploaderOptions) ec2BootMode() (*string, error) {
+	if ou == nil || ou.BootMode == nil {
+		return nil, nil
+	}
+
+	switch *ou.BootMode {
+	case platform.BOOT_LEGACY:
+		return common.ToPtr(ec2.BootModeValuesLegacyBios), nil
+	case platform.BOOT_UEFI:
+		return common.ToPtr(ec2.BootModeValuesUefi), nil
+	case platform.BOOT_HYBRID:
+		return common.ToPtr(ec2.BootModeValuesUefiPreferred), nil
+	default:
+		return nil, fmt.Errorf("invalid boot mode: %s", ou.BootMode)
+	}
 }
 
 // testing support
@@ -46,6 +68,10 @@ func NewUploader(region, bucketName, imageName string, opts *UploaderOptions) (c
 	if opts == nil {
 		opts = &UploaderOptions{}
 	}
+	bootMode, err := opts.ec2BootMode()
+	if err != nil {
+		return nil, err
+	}
 	client, err := newAwsClient(region)
 	if err != nil {
 		return nil, err
@@ -57,6 +83,7 @@ func NewUploader(region, bucketName, imageName string, opts *UploaderOptions) (c
 		bucketName: bucketName,
 		imageName:  imageName,
 		targetArch: opts.TargetArch,
+		bootMode:   bootMode,
 	}, nil
 }
 
@@ -113,10 +140,9 @@ func (au *awsUploader) UploadAndRegister(r io.Reader, status io.Writer) (err err
 	if au.targetArch == "" {
 		au.targetArch = arch.Current().String()
 	}
-	bootMode := ec2.BootModeValuesUefiPreferred
 
 	fmt.Fprintf(status, "Registering AMI %s\n", au.imageName)
-	ami, snapshot, err := au.client.Register(au.imageName, au.bucketName, keyName, nil, au.targetArch, &bootMode, nil)
+	ami, snapshot, err := au.client.Register(au.imageName, au.bucketName, keyName, nil, au.targetArch, au.bootMode, nil)
 	if err != nil {
 		return err
 	}
