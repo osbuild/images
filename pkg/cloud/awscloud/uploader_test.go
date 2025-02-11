@@ -6,11 +6,14 @@ import (
 	"io"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/cloud/awscloud"
+	"github.com/osbuild/images/pkg/platform"
 )
 
 // XXX: put into a new "cloudtest" package?
@@ -34,6 +37,7 @@ type fakeAWSClient struct {
 	registerErr        error
 	registerImageId    string
 	registerSnapshotId string
+	registerBootMode   *string
 	registerCalls      int
 
 	deleteObjectErr   error
@@ -62,6 +66,7 @@ func (fa *fakeAWSClient) UploadFromReader(io.Reader, string, string) (*s3manager
 
 func (fa *fakeAWSClient) Register(name, bucket, key string, shareWith []string, rpmArch string, bootMode, importRole *string) (*string, *string, error) {
 	fa.registerCalls++
+	fa.registerBootMode = bootMode
 	return &fa.registerImageId, &fa.registerSnapshotId, fa.registerErr
 }
 
@@ -107,37 +112,65 @@ func (r *repeatReader) Read(p []byte) (int, error) {
 }
 
 func TestUploaderUploadHappy(t *testing.T) {
-	uuid.SetRand(&repeatReader{})
-
-	fa := &fakeAWSClient{
-		uploadFromReader: &s3manager.UploadOutput{
-			Location: "some-location",
+	testCases := []struct {
+		name     string
+		opts     *awscloud.UploaderOptions
+		check_fn func(*testing.T, *fakeAWSClient)
+	}{
+		{
+			name: "default",
+			opts: nil,
+			check_fn: func(t *testing.T, fa *fakeAWSClient) {
+				assert.Nil(t, fa.registerBootMode)
+			},
 		},
-		registerImageId:    "image-id",
-		registerSnapshotId: "snapshot-id",
+		{
+			name: "ec2-boot-mode-uefi",
+			opts: &awscloud.UploaderOptions{
+				BootMode: common.ToPtr(platform.BOOT_UEFI),
+			},
+			check_fn: func(t *testing.T, fa *fakeAWSClient) {
+				assert.NotNil(t, fa.registerBootMode)
+				assert.Equal(t, ec2.BootModeValuesUefi, *fa.registerBootMode)
+			},
+		},
 	}
-	restore := awscloud.MockNewAwsClient(func(string) (awscloud.AwsClient, error) {
-		return fa, nil
-	})
-	defer restore()
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			uuid.SetRand(&repeatReader{})
 
-	fakeImage := bytes.NewBufferString("fake-aws-image")
-	uploader, err := awscloud.NewUploader("region", "bucket", "ami", nil)
-	assert.NoError(t, err)
-	var uploadLog bytes.Buffer
-	err = uploader.UploadAndRegister(fakeImage, &uploadLog)
-	assert.NoError(t, err)
-	assert.Equal(t, 1, fa.uploadFromReaderCalls)
-	assert.Equal(t, 1, fa.registerCalls)
-	assert.Equal(t, 1, fa.deleteObjectCalls)
-	expectedUploadLog := `Uploading ami to bucket:01010101-0101-4101-8101-010101010101-ami
+			fa := &fakeAWSClient{
+				uploadFromReader: &s3manager.UploadOutput{
+					Location: "some-location",
+				},
+				registerImageId:    "image-id",
+				registerSnapshotId: "snapshot-id",
+			}
+			restore := awscloud.MockNewAwsClient(func(string) (awscloud.AwsClient, error) {
+				return fa, nil
+			})
+			defer restore()
+
+			fakeImage := bytes.NewBufferString("fake-aws-image")
+			uploader, err := awscloud.NewUploader("region", "bucket", "ami", tc.opts)
+			assert.NoError(t, err)
+			var uploadLog bytes.Buffer
+			err = uploader.UploadAndRegister(fakeImage, &uploadLog)
+			assert.NoError(t, err)
+			assert.Equal(t, 1, fa.uploadFromReaderCalls)
+			assert.Equal(t, 1, fa.registerCalls)
+			assert.Equal(t, 1, fa.deleteObjectCalls)
+			expectedUploadLog := `Uploading ami to bucket:01010101-0101-4101-8101-010101010101-ami
 File uploaded to some-location
 Registering AMI ami
 Deleted S3 object bucket:01010101-0101-4101-8101-010101010101-ami
 AMI registered: image-id
 Snapshot ID: snapshot-id
 `
-	assert.Equal(t, expectedUploadLog, uploadLog.String())
+			assert.Equal(t, expectedUploadLog, uploadLog.String())
+			tc.check_fn(t, fa)
+		})
+	}
 }
 
 func TestUploaderUploadButRegisterError(t *testing.T) {
