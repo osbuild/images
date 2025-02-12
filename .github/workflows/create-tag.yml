@@ -9,7 +9,7 @@ on:  # yamllint disable-line rule:truthy
 
 jobs:
   tag-and-push:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Upstream tag

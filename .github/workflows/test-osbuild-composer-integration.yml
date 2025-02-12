@@ -50,7 +50,7 @@ jobs:
 
   unit-tests:
     name: "🛃 Unit tests"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     container:
       image: registry.fedoraproject.org/fedora:latest
     env:
@@ -137,7 +137,7 @@ jobs:
     name: "Post notice"
     permissions:
       pull-requests: write
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: unit-tests
     steps:
       - name: Add comment (breakage)

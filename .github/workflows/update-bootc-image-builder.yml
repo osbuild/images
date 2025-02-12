@@ -11,7 +11,7 @@ on:  # yamllint disable-line rule:truthy
 
 jobs:
   update-and-push:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Apt update
         run: sudo apt update

@@ -8,7 +8,7 @@ permissions: write-all
 
 jobs:
   dependabot:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
       - name: Approve a PR
