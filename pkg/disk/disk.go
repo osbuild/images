@@ -88,36 +88,45 @@ const (
 	PRepPartitionDOSID = "41"
 )
 
-// pt type -> type -> ID mapping for convenience
-var idMap = map[PartitionTableType]map[string]string{
-	PT_DOS: {
-		"bios": BIOSBootPartitionDOSID,
-		"boot": FilesystemLinuxDOSID,
-		"data": FilesystemLinuxDOSID,
-		"esp":  EFISystemPartitionDOSID,
-		"lvm":  LVMPartitionDOSID,
-		"swap": SwapPartitionDOSID,
-	},
-	PT_GPT: {
-		"bios": BIOSBootPartitionGUID,
-		"boot": XBootLDRPartitionGUID,
-		"data": FilesystemDataGUID,
-		"esp":  EFISystemPartitionGUID,
-		"lvm":  LVMPartitionGUID,
-		"swap": SwapPartitionGUID,
-	},
-}
-
 func getPartitionTypeIDfor(ptType PartitionTableType, partTypeName string) (string, error) {
-	ptMap, ok := idMap[ptType]
-	if !ok {
+	switch ptType {
+	case PT_DOS:
+		switch partTypeName {
+		case "bios":
+			return BIOSBootPartitionDOSID, nil
+		case "boot":
+			return FilesystemLinuxDOSID, nil
+		case "data":
+			return FilesystemLinuxDOSID, nil
+		case "esp":
+			return EFISystemPartitionDOSID, nil
+		case "lvm":
+			return LVMPartitionDOSID, nil
+		case "swap":
+			return SwapPartitionDOSID, nil
+		default:
+			return "", fmt.Errorf("unknown or unsupported partition type name: %s", partTypeName)
+		}
+	case PT_GPT:
+		switch partTypeName {
+		case "bios":
+			return BIOSBootPartitionGUID, nil
+		case "boot":
+			return XBootLDRPartitionGUID, nil
+		case "data":
+			return FilesystemDataGUID, nil
+		case "esp":
+			return EFISystemPartitionGUID, nil
+		case "lvm":
+			return LVMPartitionGUID, nil
+		case "swap":
+			return SwapPartitionGUID, nil
+		default:
+			return "", fmt.Errorf("unknown or unsupported partition type name: %s", partTypeName)
+		}
+	default:
 		return "", fmt.Errorf("unknown or unsupported partition table enum: %d", ptType)
 	}
-	id, ok := ptMap[partTypeName]
-	if !ok {
-		return "", fmt.Errorf("unknown or unsupported partition type name: %s", partTypeName)
-	}
-	return id, nil
 }
 
 // FSType is the filesystem type enum.
