@@ -1182,3 +1182,32 @@ image_types:
                 *edge_commit_x86_64_pkgset
               aarch64:
                 *edge_commit_aarch64_pkgset
+
+  "azure-cvm":
+    package_sets:
+      os:
+        - include:
+            - "@minimal-environment"
+            - "cloud-init"
+            - "cloud-utils-growpart"
+            - "cryptsetup"
+            - "NetworkManager-cloud-setup"
+            - "openssh-server"
+            - "redhat-cloud-client-configuration"
+            - "redhat-release"
+            - "tpm2-tools"
+            - "WALinuxAgent"
+        - exclude:
+            - "dracut-config-rescue"
+            - "iwl*"
+            - "kernel"
+            - "kernel-core"
+            - "kernel-modules"
+            - "linux-firmware*"
+
+            - "grub2-common"
+            - "grub2-efi-x64"
+            - "grub2-tools"
+            - "grub2-tools-minimal"
+            - "grubby"
+            - "os-prober"
