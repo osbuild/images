@@ -1151,7 +1151,7 @@ func mkESP(size uint64, ptType PartitionTableType) (Partition, error) {
 }
 
 type CustomPartitionTableOptions struct {
-	// PartitionTableType must be either "dos" or "gpt". Defaults to "gpt".
+	// PartitionTableType must be either PT_DOS or PT_GPT. Defaults to PT_GPT.
 	PartitionTableType PartitionTableType
 
 	// BootMode determines the types of boot-related partitions that are
