@@ -191,7 +191,8 @@ var partInputsSimple = `
       },
       "type": "gpt",
       "default_size": "10 GiB",
-      "start_offset": "8 MB"
+      "start_offset": "8 MB",
+	  "architecture": "x86_64"
     },
     "partitions": [
       {

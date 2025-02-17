@@ -221,7 +221,7 @@ func (t *ImageType) GetPartitionTable(
 		return disk.NewCustomPartitionTable(partitioning, partOptions, rng)
 	}
 
-	return disk.NewPartitionTable(&basePartitionTable, customizations.GetFilesystems(), imageSize, options.PartitioningMode, nil, rng)
+	return disk.NewPartitionTable(&basePartitionTable, customizations.GetFilesystems(), imageSize, options.PartitioningMode, t.platform.GetArch(), nil, rng)
 }
 
 func (t *ImageType) getDefaultImageConfig() *distro.ImageConfig {

@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/internal/testdisk"
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
@@ -79,7 +80,7 @@ func TestDynamicallyResizePartitionTable(t *testing.T) {
 	// math/rand is good enough in this case
 	/* #nosec G404 */
 	rng := rand.New(rand.NewSource(0))
-	newpt, err := disk.NewPartitionTable(&pt, mountpoints, 1024, disk.RawPartitioningMode, nil, rng)
+	newpt, err := disk.NewPartitionTable(&pt, mountpoints, 1024, disk.RawPartitioningMode, arch.ARCH_AARCH64, nil, rng)
 	assert.NoError(t, err)
 	assert.GreaterOrEqual(t, newpt.Size, expectedSize)
 }
@@ -193,7 +194,7 @@ func TestCreatePartitionTable(t *testing.T) {
 			if ptName == "luks+lvm" {
 				ptMode = disk.AutoLVMPartitioningMode
 			}
-			mpt, err := disk.NewPartitionTable(&pt, bp, uint64(13*MiB), ptMode, nil, rng)
+			mpt, err := disk.NewPartitionTable(&pt, bp, uint64(13*MiB), ptMode, arch.ARCH_PPC64LE, nil, rng)
 			require.NoError(t, err, "Partition table generation failed: PT %q BP %q (%s)", ptName, bpName, err)
 			assert.NotNil(mpt, "Partition table generation failed: PT %q BP %q (nil partition table)", ptName, bpName)
 			assert.Greater(mpt.GetSize(), sumSizes(bp))
@@ -219,12 +220,12 @@ func TestCreatePartitionTableLVMify(t *testing.T) {
 			pt := testdisk.TestPartitionTables[ptName]
 
 			if tbp != nil && (ptName == "btrfs" || ptName == "luks") {
-				_, err := disk.NewPartitionTable(&pt, tbp, uint64(13*MiB), disk.AutoLVMPartitioningMode, nil, rng)
+				_, err := disk.NewPartitionTable(&pt, tbp, uint64(13*MiB), disk.AutoLVMPartitioningMode, arch.ARCH_X86_64, nil, rng)
 				assert.Error(err, "PT %q BP %q: should return an error with LVMPartitioningMode", ptName, bpName)
 				continue
 			}
 
-			mpt, err := disk.NewPartitionTable(&pt, tbp, uint64(13*MiB), disk.AutoLVMPartitioningMode, nil, rng)
+			mpt, err := disk.NewPartitionTable(&pt, tbp, uint64(13*MiB), disk.AutoLVMPartitioningMode, arch.ARCH_X86_64, nil, rng)
 			assert.NoError(err, "PT %q BP %q: Partition table generation failed: (%s)", ptName, bpName, err)
 
 			rootPath := disk.EntityPath(mpt, "/")
@@ -257,12 +258,12 @@ func TestCreatePartitionTableBtrfsify(t *testing.T) {
 			pt := testdisk.TestPartitionTables[ptName]
 
 			if ptName == "auto-lvm" || ptName == "luks" || ptName == "luks+lvm" {
-				_, err := disk.NewPartitionTable(&pt, tbp, uint64(13*MiB), disk.BtrfsPartitioningMode, nil, rng)
+				_, err := disk.NewPartitionTable(&pt, tbp, uint64(13*MiB), disk.BtrfsPartitioningMode, arch.ARCH_X86_64, nil, rng)
 				assert.Error(err, "PT %q BP %q: should return an error with BtrfsPartitioningMode", ptName, bpName)
 				continue
 			}
 
-			mpt, err := disk.NewPartitionTable(&pt, tbp, uint64(13*MiB), disk.BtrfsPartitioningMode, nil, rng)
+			mpt, err := disk.NewPartitionTable(&pt, tbp, uint64(13*MiB), disk.BtrfsPartitioningMode, arch.ARCH_X86_64, nil, rng)
 			assert.NoError(err, "PT %q BP %q: Partition table generation failed: (%s)", ptName, bpName, err)
 
 			rootPath := disk.EntityPath(mpt, "/")
@@ -295,12 +296,12 @@ func TestCreatePartitionTableLVMOnly(t *testing.T) {
 			pt := testdisk.TestPartitionTables[ptName]
 
 			if ptName == "btrfs" || ptName == "luks" {
-				_, err := disk.NewPartitionTable(&pt, tbp, uint64(13*MiB), disk.LVMPartitioningMode, nil, rng)
+				_, err := disk.NewPartitionTable(&pt, tbp, uint64(13*MiB), disk.LVMPartitioningMode, arch.ARCH_S390X, nil, rng)
 				assert.Error(err, "PT %q BP %q: should return an error with LVMPartitioningMode", ptName, bpName)
 				continue
 			}
 
-			mpt, err := disk.NewPartitionTable(&pt, tbp, uint64(13*MiB), disk.LVMPartitioningMode, nil, rng)
+			mpt, err := disk.NewPartitionTable(&pt, tbp, uint64(13*MiB), disk.LVMPartitioningMode, arch.ARCH_S390X, nil, rng)
 			require.NoError(t, err, "PT %q BP %q: Partition table generation failed: (%s)", ptName, bpName, err)
 
 			rootPath := disk.EntityPath(mpt, "/")
@@ -452,7 +453,7 @@ func TestMinimumSizes(t *testing.T) {
 
 	for idx, tc := range testCases {
 		{ // without LVM
-			mpt, err := disk.NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), disk.RawPartitioningMode, nil, rng)
+			mpt, err := disk.NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), disk.RawPartitioningMode, arch.ARCH_X86_64, nil, rng)
 			assert.NoError(err)
 			for mnt, minSize := range tc.ExpectedMinSizes {
 				path := disk.EntityPath(mpt, mnt)
@@ -466,7 +467,7 @@ func TestMinimumSizes(t *testing.T) {
 		}
 
 		{ // with LVM
-			mpt, err := disk.NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), disk.AutoLVMPartitioningMode, nil, rng)
+			mpt, err := disk.NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), disk.AutoLVMPartitioningMode, arch.ARCH_X86_64, nil, rng)
 			assert.NoError(err)
 			for mnt, minSize := range tc.ExpectedMinSizes {
 				path := disk.EntityPath(mpt, mnt)
@@ -553,7 +554,7 @@ func TestLVMExtentAlignment(t *testing.T) {
 	}
 
 	for idx, tc := range testCases {
-		mpt, err := disk.NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), disk.AutoLVMPartitioningMode, nil, rng)
+		mpt, err := disk.NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), disk.AutoLVMPartitioningMode, arch.ARCH_X86_64, nil, rng)
 		assert.NoError(err)
 		for mnt, expSize := range tc.ExpectedSizes {
 			path := disk.EntityPath(mpt, mnt)
@@ -582,7 +583,7 @@ func TestNewBootWithSizeLVMify(t *testing.T) {
 		},
 	}
 
-	mpt, err := disk.NewPartitionTable(&pt, custom, uint64(3*GiB), disk.AutoLVMPartitioningMode, nil, rng)
+	mpt, err := disk.NewPartitionTable(&pt, custom, uint64(3*GiB), disk.AutoLVMPartitioningMode, arch.ARCH_AARCH64, nil, rng)
 	assert.NoError(err)
 
 	for idx, c := range custom {
@@ -922,7 +923,7 @@ func TestMinimumSizesWithRequiredSizes(t *testing.T) {
 
 	for idx, tc := range testCases {
 		{ // without LVM
-			mpt, err := disk.NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), disk.RawPartitioningMode, map[string]uint64{"/": 1 * GiB, "/usr": 3 * GiB}, rng)
+			mpt, err := disk.NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), disk.RawPartitioningMode, arch.ARCH_AARCH64, map[string]uint64{"/": 1 * GiB, "/usr": 3 * GiB}, rng)
 			assert.NoError(err)
 			for mnt, minSize := range tc.ExpectedMinSizes {
 				path := disk.EntityPath(mpt, mnt)
@@ -936,7 +937,7 @@ func TestMinimumSizesWithRequiredSizes(t *testing.T) {
 		}
 
 		{ // with LVM
-			mpt, err := disk.NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), disk.AutoLVMPartitioningMode, map[string]uint64{"/": 1 * GiB, "/usr": 3 * GiB}, rng)
+			mpt, err := disk.NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), disk.AutoLVMPartitioningMode, arch.ARCH_AARCH64, map[string]uint64{"/": 1 * GiB, "/usr": 3 * GiB}, rng)
 			assert.NoError(err)
 			for mnt, minSize := range tc.ExpectedMinSizes {
 				path := disk.EntityPath(mpt, mnt)

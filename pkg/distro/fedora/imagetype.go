@@ -182,7 +182,7 @@ func (t *imageType) getPartitionTable(
 	}
 
 	mountpoints := customizations.GetFilesystems()
-	return disk.NewPartitionTable(&basePartitionTable, mountpoints, imageSize, partitioningMode, t.requiredPartitionSizes, rng)
+	return disk.NewPartitionTable(&basePartitionTable, mountpoints, imageSize, partitioningMode, t.platform.GetArch(), t.requiredPartitionSizes, rng)
 }
 
 func (t *imageType) getDefaultImageConfig() *distro.ImageConfig {
