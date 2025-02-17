@@ -8,7 +8,8 @@
       "fedora*"
     ],
     "image-types": [
-      "ami"
+      "ami",
+      "server-ami"
     ]
   },
   "./configs/all-with-fips.json": {
@@ -21,7 +22,8 @@
       "fedora*"
     ],
     "image-types": [
-      "qcow2"
+      "qcow2",
+      "server-qcow2"
     ]
   },
   "./configs/disable-lm_sensors.json": {
@@ -120,9 +122,12 @@
       "edge-commit"
     ]
   },
-  "./configs/empty.json": {
+  "./configs/empty-rhel.json": {
     "arches": [],
-    "distros": [],
+    "distros": [
+        "rhel-*",
+        "centos-*"
+    ],
     "image-types": [
       "ami",
       "azure-eap7-rhui",
@@ -135,8 +140,6 @@
       "gce",
       "gce-rhui",
       "image-installer",
-      "iot-bootable-container",
-      "iot-container",
       "live-installer",
       "minimal-raw",
       "minimal-raw-zst",
@@ -148,6 +151,29 @@
       "vhd",
       "vmdk",
       "wsl"
+    ]
+  },
+  "./configs/empty-fedora.json": {
+    "arches": [],
+    "distros": [
+        "fedora-*"
+    ],
+    "image-types": [
+      "container",
+      "server-ami",
+      "minimal-installer",
+      "workstation-live-installer",
+      "minimal-raw-xz",
+      "minimal-raw-zst",
+      "server-oci",
+      "server-openstack",
+      "server-ova",
+      "server-qcow2",
+      "server-vhd",
+      "server-vmdk",
+      "server-wsl",
+      "iot-bootable-container",
+      "iot-container"
     ]
   },
   "./configs/iot-customizations-full.json": {
@@ -163,13 +189,13 @@
   "./configs/iot-ostree-pull-empty.json": {
     "image-types": [
       "iot-installer",
-      "iot-qcow2-image",
-      "iot-raw-image"
+      "iot-qcow2",
+      "iot-raw-xz"
     ]
   },
   "./configs/iot-ostree-pull-user.json": {
     "image-types": [
-      "iot-qcow2-image"
+      "iot-qcow2"
     ]
   },
   "./configs/kernel-debug.json": {
@@ -182,7 +208,7 @@
       "fedora*"
     ],
     "image-types": [
-      "qcow2"
+      "server-qcow2"
     ]
   },
   "./configs/minimal.json": {
@@ -190,7 +216,7 @@
       "fedora*"
     ],
     "image-types": [
-      "qcow2"
+      "server-qcow2"
     ]
   },
   "./configs/oscap-generic.json": {
@@ -205,7 +231,8 @@
       "fedora*"
     ],
     "image-types": [
-      "qcow2"
+      "qcow2",
+      "server-qcow2"
     ]
   },
   "./configs/oscap-rhel8.json": {
@@ -318,7 +345,7 @@
   },
   "./configs/import-rpm-gpg-keys-from-tree-fedora.json": {
     "image-types": [
-      "qcow2"
+      "server-qcow2"
     ],
     "distros": [
       "fedora*"
@@ -336,7 +363,8 @@
   },
   "./configs/partitioning-plain.json": {
     "image-types": [
-      "ami"
+      "ami",
+      "server-ami"
     ],
     "distros": [
       "centos-10",
@@ -359,7 +387,7 @@
   },
   "./configs/partitioning-btrfs.json": {
     "image-types": [
-      "ami"
+      "server-ami"
     ],
     "distros": [
       "fedora*"
@@ -378,7 +406,8 @@
   },
   "./configs/partitioning-lvm.json": {
     "image-types": [
-      "ami"
+      "ami",
+      "server-ami"
     ],
     "distros": [
       "centos-10",
