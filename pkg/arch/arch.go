@@ -12,6 +12,7 @@ const ( // architecture enum
 	ARCH_PPC64LE
 	ARCH_S390X
 	ARCH_X86_64
+	ARCH_RISCV64
 )
 
 func (a Arch) String() string {
@@ -26,6 +27,8 @@ func (a Arch) String() string {
 		return "s390x"
 	case ARCH_X86_64:
 		return "x86_64"
+	case ARCH_RISCV64:
+		return "riscv64"
 	default:
 		panic("invalid architecture")
 	}
@@ -45,6 +48,8 @@ func FromString(a string) Arch {
 		return ARCH_S390X
 	case "ppc64le":
 		return ARCH_PPC64LE
+	case "riscv64":
+		return ARCH_RISCV64
 	default:
 		panic("unsupported architecture")
 	}
@@ -62,6 +67,8 @@ func Current() Arch {
 		return ARCH_PPC64LE
 	case "s390x":
 		return ARCH_S390X
+	case "riscv64":
+		return ARCH_RISCV64
 	default:
 		panic("unsupported architecture")
 	}
@@ -81,4 +88,8 @@ func IsPPC() bool {
 
 func IsS390x() bool {
 	return Current() == ARCH_S390X
+}
+
+func IsRISCV64() bool {
+	return Current() == ARCH_RISCV64
 }
