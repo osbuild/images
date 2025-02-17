@@ -27,7 +27,7 @@ require (
 	github.com/opencontainers/image-spec v1.1.0
 	github.com/oracle/oci-go-sdk/v54 v54.0.0
 	github.com/sirupsen/logrus v1.9.3
-	github.com/spf13/cobra v1.8.1
+	github.com/spf13/cobra v1.9.1
 	github.com/spf13/pflag v1.0.6
 	github.com/stretchr/testify v1.10.0
 	github.com/ubccr/kerby v0.0.0-20230802201021-412be7bfaee5
