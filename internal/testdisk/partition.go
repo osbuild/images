@@ -47,7 +47,7 @@ var TestPartitionTables = map[string]disk.PartitionTable{
 			{
 				Size: 500 * MiB,
 				Type: disk.FilesystemDataGUID,
-				UUID: disk.FilesystemDataUUID,
+				UUID: disk.DataPartitionUUID,
 				Payload: &disk.Filesystem{
 					Type:         "xfs",
 					Mountpoint:   "/boot",
@@ -99,7 +99,7 @@ var TestPartitionTables = map[string]disk.PartitionTable{
 			{
 				Size: 500 * MiB,
 				Type: disk.FilesystemDataGUID,
-				UUID: disk.FilesystemDataUUID,
+				UUID: disk.DataPartitionUUID,
 				Payload: &disk.Filesystem{
 					Type:         "xfs",
 					Mountpoint:   "/boot",
@@ -198,7 +198,7 @@ var TestPartitionTables = map[string]disk.PartitionTable{
 			{
 				Size: 500 * MiB,
 				Type: disk.FilesystemDataGUID,
-				UUID: disk.FilesystemDataUUID,
+				UUID: disk.DataPartitionUUID,
 				Payload: &disk.Filesystem{
 					Type:         "xfs",
 					Mountpoint:   "/boot",
@@ -253,7 +253,7 @@ var TestPartitionTables = map[string]disk.PartitionTable{
 			{
 				Size: 500 * MiB,
 				Type: disk.FilesystemDataGUID,
-				UUID: disk.FilesystemDataUUID,
+				UUID: disk.DataPartitionUUID,
 				Payload: &disk.Filesystem{
 					Type:         "xfs",
 					Mountpoint:   "/boot",
@@ -328,7 +328,7 @@ var TestPartitionTables = map[string]disk.PartitionTable{
 			{
 				Size: 500 * MiB,
 				Type: disk.FilesystemDataGUID,
-				UUID: disk.FilesystemDataUUID,
+				UUID: disk.DataPartitionUUID,
 				Payload: &disk.Filesystem{
 					Type:         "xfs",
 					Mountpoint:   "/boot",
@@ -400,7 +400,7 @@ func MakeFakePartitionTable(mntPoints ...string) *disk.PartitionTable {
 			payload = &disk.Filesystem{
 				Type:       "ext4",
 				Mountpoint: mntPoint,
-				UUID:       disk.FilesystemDataUUID,
+				UUID:       disk.DataPartitionUUID,
 			}
 		}
 		partitions = append(partitions, disk.Partition{

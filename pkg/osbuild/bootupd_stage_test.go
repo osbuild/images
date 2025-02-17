@@ -226,7 +226,7 @@ var fakePt = &disk.PartitionTable{
 		{
 			Size: 1 * datasizes.GibiByte,
 			Type: disk.FilesystemDataGUID,
-			UUID: disk.FilesystemDataUUID,
+			UUID: disk.DataPartitionUUID,
 			Payload: &disk.Filesystem{
 				Type:         "ext4",
 				Mountpoint:   "/boot",

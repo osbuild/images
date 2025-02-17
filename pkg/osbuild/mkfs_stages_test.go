@@ -99,7 +99,7 @@ func TestGenFsStages(t *testing.T) {
 		{
 			Type: "org.osbuild.mkfs.ext4",
 			Options: &MkfsExt4StageOptions{
-				UUID: disk.FilesystemDataUUID,
+				UUID: disk.DataPartitionUUID,
 			},
 			Devices: map[string]Device{
 				"device": {

@@ -33,7 +33,7 @@ var testPartitionTables = map[string]disk.PartitionTable{
 			{
 				Size: 1024000, // 500 MB
 				Type: disk.FilesystemDataGUID,
-				UUID: disk.FilesystemDataUUID,
+				UUID: disk.DataPartitionUUID,
 				Payload: &disk.Filesystem{
 					Type:         "xfs",
 					Mountpoint:   "/boot",
@@ -85,7 +85,7 @@ var testPartitionTables = map[string]disk.PartitionTable{
 			{
 				Size: 1024000, // 500 MB
 				Type: disk.FilesystemDataGUID,
-				UUID: disk.FilesystemDataUUID,
+				UUID: disk.DataPartitionUUID,
 				Payload: &disk.Filesystem{
 					Type:         "xfs",
 					Mountpoint:   "/boot",
@@ -146,7 +146,7 @@ var testPartitionTables = map[string]disk.PartitionTable{
 			{
 				Size: 1024000, // 500 MB
 				Type: disk.FilesystemDataGUID,
-				UUID: disk.FilesystemDataUUID,
+				UUID: disk.DataPartitionUUID,
 				Payload: &disk.Filesystem{
 					Type:         "xfs",
 					Mountpoint:   "/boot",
@@ -230,7 +230,7 @@ var testPartitionTables = map[string]disk.PartitionTable{
 			{
 				Size: 1024000, // 500 MB
 				Type: disk.FilesystemDataGUID,
-				UUID: disk.FilesystemDataUUID,
+				UUID: disk.DataPartitionUUID,
 				Payload: &disk.Filesystem{
 					Type:         "xfs",
 					Mountpoint:   "/boot",
@@ -307,7 +307,7 @@ var testPartitionTables = map[string]disk.PartitionTable{
 			{
 				Size: 1024000, // 500 MB
 				Type: disk.FilesystemDataGUID,
-				UUID: disk.FilesystemDataUUID,
+				UUID: disk.DataPartitionUUID,
 				Payload: &disk.Filesystem{
 					Type:         "xfs",
 					Mountpoint:   "/boot",
