@@ -46,48 +46,48 @@ func TestFilenameFromType(t *testing.T) {
 	}
 	tests := []testCfg{
 		{
-			name: "ami",
-			args: args{"ami"},
+			name: "server-ami",
+			args: args{"server-ami"},
 			want: wantResult{
 				filename: "image.raw",
 				mimeType: "application/octet-stream",
 			},
 		},
 		{
-			name: "qcow2",
-			args: args{"qcow2"},
+			name: "server-qcow2",
+			args: args{"server-qcow2"},
 			want: wantResult{
 				filename: "disk.qcow2",
 				mimeType: "application/x-qemu-disk",
 			},
 		},
 		{
-			name: "openstack",
-			args: args{"openstack"},
+			name: "server-openstack",
+			args: args{"server-openstack"},
 			want: wantResult{
 				filename: "disk.qcow2",
 				mimeType: "application/x-qemu-disk",
 			},
 		},
 		{
-			name: "vhd",
-			args: args{"vhd"},
+			name: "server-vhd",
+			args: args{"server-vhd"},
 			want: wantResult{
 				filename: "disk.vhd",
 				mimeType: "application/x-vhd",
 			},
 		},
 		{
-			name: "vmdk",
-			args: args{"vmdk"},
+			name: "server-vmdk",
+			args: args{"server-vmdk"},
 			want: wantResult{
 				filename: "disk.vmdk",
 				mimeType: "application/x-vmdk",
 			},
 		},
 		{
-			name: "ova",
-			args: args{"ova"},
+			name: "server-ova",
+			args: args{"server-ova"},
 			want: wantResult{
 				filename: "image.ova",
 				mimeType: "application/ovf",
@@ -102,8 +102,8 @@ func TestFilenameFromType(t *testing.T) {
 			},
 		},
 		{
-			name: "wsl",
-			args: args{"wsl"},
+			name: "server-wsl",
+			args: args{"server-wsl"},
 			want: wantResult{
 				filename: "wsl.tar",
 				mimeType: "application/x-tar",
@@ -187,8 +187,8 @@ func TestFilenameFromType(t *testing.T) {
 			want: wantResult{wantErr: true},
 		},
 		{
-			name: "minimal-raw",
-			args: args{"minimal-raw"},
+			name: "minimal-raw-xz",
+			args: args{"minimal-raw-xz"},
 			want: wantResult{
 				filename: "disk.raw.xz",
 				mimeType: "application/xz",
@@ -323,22 +323,22 @@ func TestImageType_Name(t *testing.T) {
 		{
 			arch: "x86_64",
 			imgNames: []string{
-				"ami",
-				"image-installer",
+				"server-ami",
+				"minimal-installer",
 				"iot-commit",
 				"iot-container",
 				"iot-installer",
-				"iot-qcow2-image",
-				"iot-raw-image",
-				"live-installer",
-				"minimal-raw",
-				"oci",
-				"openstack",
-				"ova",
-				"qcow2",
-				"vhd",
-				"vmdk",
-				"wsl",
+				"iot-qcow2",
+				"iot-raw-xz",
+				"workstation-live-installer",
+				"minimal-raw-xz",
+				"server-oci",
+				"server-openstack",
+				"server-ova",
+				"server-qcow2",
+				"server-vhd",
+				"server-vmdk",
+				"server-wsl",
 			},
 			verTypes: map[string][]string{
 				"40": {
@@ -354,17 +354,17 @@ func TestImageType_Name(t *testing.T) {
 		{
 			arch: "aarch64",
 			imgNames: []string{
-				"ami",
-				"image-installer",
+				"server-ami",
+				"minimal-installer",
 				"iot-commit",
 				"iot-container",
 				"iot-installer",
-				"iot-qcow2-image",
-				"iot-raw-image",
-				"minimal-raw",
-				"oci",
-				"openstack",
-				"qcow2",
+				"iot-qcow2",
+				"iot-raw-xz",
+				"minimal-raw-xz",
+				"server-oci",
+				"server-openstack",
+				"server-qcow2",
 			},
 			verTypes: map[string][]string{
 				"40": {
@@ -500,11 +500,11 @@ func TestDistro_ManifestError(t *testing.T) {
 						assert.EqualError(t, err, "kernel boot parameter customizations are not supported for ostree types")
 					} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" {
 						assert.EqualError(t, err, fmt.Sprintf("boot ISO image type \"%s\" requires specifying a URL from which to retrieve the OSTree commit", imgTypeName))
-					} else if imgTypeName == "image-installer" {
+					} else if imgTypeName == "minimal-installer" {
 						assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, FIPS, Installer, Timezone, Locale"))
-					} else if imgTypeName == "live-installer" {
+					} else if imgTypeName == "workstation-live-installer" {
 						assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
-					} else if imgTypeName == "iot-raw-image" || imgTypeName == "iot-qcow2-image" {
+					} else if imgTypeName == "iot-raw-xz" || imgTypeName == "iot-qcow2" {
 						assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, Directories, Files, Services, FIPS"))
 					} else {
 						assert.NoError(t, err)
@@ -524,23 +524,23 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 		{
 			arch: "x86_64",
 			imgNames: []string{
-				"ami",
+				"server-ami",
 				"container",
-				"image-installer",
+				"minimal-installer",
 				"iot-commit",
 				"iot-container",
 				"iot-installer",
-				"iot-qcow2-image",
-				"iot-raw-image",
-				"live-installer",
-				"minimal-raw",
-				"oci",
-				"openstack",
-				"ova",
-				"qcow2",
-				"vhd",
-				"vmdk",
-				"wsl",
+				"iot-qcow2",
+				"iot-raw-xz",
+				"workstation-live-installer",
+				"minimal-raw-xz",
+				"server-oci",
+				"server-openstack",
+				"server-ova",
+				"server-qcow2",
+				"server-vhd",
+				"server-vmdk",
+				"server-wsl",
 			},
 			verTypes: map[string][]string{
 				"40": {
@@ -556,19 +556,19 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 		{
 			arch: "aarch64",
 			imgNames: []string{
-				"ami",
+				"server-ami",
 				"container",
-				"image-installer",
+				"minimal-installer",
 				"iot-commit",
 				"iot-container",
 				"iot-installer",
-				"iot-qcow2-image",
-				"iot-raw-image",
-				"live-installer",
-				"minimal-raw",
-				"oci",
-				"openstack",
-				"qcow2",
+				"iot-qcow2",
+				"iot-raw-xz",
+				"workstation-live-installer",
+				"minimal-raw-xz",
+				"server-oci",
+				"server-openstack",
+				"server-qcow2",
 			},
 			verTypes: map[string][]string{
 				"40": {
@@ -585,7 +585,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 			arch: "ppc64le",
 			imgNames: []string{
 				"container",
-				"qcow2",
+				"server-qcow2",
 			},
 			verTypes: map[string][]string{
 				"40": {
@@ -600,7 +600,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 			arch: "s390x",
 			imgNames: []string{
 				"container",
-				"qcow2",
+				"server-qcow2",
 			},
 			verTypes: map[string][]string{
 				"40": {
@@ -615,7 +615,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 			arch: "riscv64",
 			imgNames: []string{
 				"container",
-				"minimal-raw",
+				"minimal-raw-xz",
 			},
 		},
 	}
@@ -734,11 +734,11 @@ func TestDistro_CustomFileSystemManifestError(t *testing.T) {
 				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
 				if imgTypeName == "iot-commit" || imgTypeName == "iot-container" || imgTypeName == "iot-bootable-container" {
 					assert.EqualError(t, err, "Custom mountpoints and partitioning are not supported for ostree types")
-				} else if imgTypeName == "iot-raw-image" || imgTypeName == "iot-qcow2-image" {
+				} else if imgTypeName == "iot-raw-xz" || imgTypeName == "iot-qcow2" {
 					assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, Directories, Files, Services, FIPS"))
-				} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "image-installer" {
+				} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "minimal-installer" {
 					continue
-				} else if imgTypeName == "live-installer" {
+				} else if imgTypeName == "workstation-live-installer" {
 					assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
 				} else {
 					assert.EqualError(t, err, "The following errors occurred while setting up custom mountpoints:\npath \"/etc\" is not allowed")
@@ -768,11 +768,11 @@ func TestDistro_TestRootMountPoint(t *testing.T) {
 				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
 				if imgTypeName == "iot-commit" || imgTypeName == "iot-container" || imgTypeName == "iot-bootable-container" {
 					assert.EqualError(t, err, "Custom mountpoints and partitioning are not supported for ostree types")
-				} else if imgTypeName == "iot-raw-image" || imgTypeName == "iot-qcow2-image" {
+				} else if imgTypeName == "iot-raw-xz" || imgTypeName == "iot-qcow2" {
 					assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, Directories, Files, Services, FIPS"))
-				} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "image-installer" {
+				} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "minimal-installer" {
 					continue
-				} else if imgTypeName == "live-installer" {
+				} else if imgTypeName == "workstation-live-installer" {
 					assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
 				} else {
 					assert.NoError(t, err)
@@ -804,9 +804,9 @@ func TestDistro_CustomFileSystemSubDirectories(t *testing.T) {
 			for _, imgTypeName := range arch.ListImageTypes() {
 				imgType, _ := arch.GetImageType(imgTypeName)
 				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
-				if strings.HasPrefix(imgTypeName, "iot-") || strings.HasPrefix(imgTypeName, "image-") {
+				if strings.HasPrefix(imgTypeName, "iot-") || imgTypeName == "minimal-installer" {
 					continue
-				} else if imgTypeName == "live-installer" {
+				} else if imgTypeName == "workstation-live-installer" {
 					assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
 				} else {
 					assert.NoError(t, err)
@@ -846,9 +846,9 @@ func TestDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
 			for _, imgTypeName := range arch.ListImageTypes() {
 				imgType, _ := arch.GetImageType(imgTypeName)
 				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
-				if strings.HasPrefix(imgTypeName, "iot-") || strings.HasPrefix(imgTypeName, "image-") {
+				if strings.HasPrefix(imgTypeName, "iot-") || imgTypeName == "minimal-installer" {
 					continue
-				} else if imgTypeName == "live-installer" {
+				} else if imgTypeName == "workstation-live-installer" {
 					assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
 				} else {
 					assert.NoError(t, err)
@@ -884,9 +884,9 @@ func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
 			for _, imgTypeName := range arch.ListImageTypes() {
 				imgType, _ := arch.GetImageType(imgTypeName)
 				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
-				if strings.HasPrefix(imgTypeName, "iot-") || strings.HasPrefix(imgTypeName, "image-") {
+				if strings.HasPrefix(imgTypeName, "iot-") || imgTypeName == "minimal-installer" {
 					continue
-				} else if imgTypeName == "live-installer" {
+				} else if imgTypeName == "workstation-live-installer" {
 					assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
 				} else {
 					assert.EqualError(t, err, "The following errors occurred while setting up custom mountpoints:\npath \"//\" must be canonical\npath \"/var//\" must be canonical\npath \"/var//log/audit/\" must be canonical")
@@ -916,11 +916,11 @@ func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
 				if imgTypeName == "iot-commit" || imgTypeName == "iot-container" || imgTypeName == "iot-bootable-container" {
 					assert.EqualError(t, err, "Custom mountpoints and partitioning are not supported for ostree types")
-				} else if imgTypeName == "iot-raw-image" || imgTypeName == "iot-qcow2-image" {
+				} else if imgTypeName == "iot-raw-xz" || imgTypeName == "iot-qcow2" {
 					assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, Directories, Files, Services, FIPS"))
-				} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "image-installer" {
+				} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "minimal-installer" {
 					continue
-				} else if imgTypeName == "live-installer" {
+				} else if imgTypeName == "workstation-live-installer" {
 					assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
 				} else {
 					assert.NoError(t, err)
@@ -961,11 +961,11 @@ func TestDistro_PartitioningConflict(t *testing.T) {
 				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
 				if imgTypeName == "iot-commit" || imgTypeName == "iot-container" || imgTypeName == "iot-bootable-container" {
 					assert.EqualError(t, err, "Custom mountpoints and partitioning are not supported for ostree types")
-				} else if imgTypeName == "iot-raw-image" || imgTypeName == "iot-qcow2-image" {
+				} else if imgTypeName == "iot-raw-xz" || imgTypeName == "iot-qcow2" {
 					assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, Directories, Files, Services, FIPS"))
-				} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "image-installer" {
+				} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "minimal-installer" {
 					continue
-				} else if imgTypeName == "live-installer" {
+				} else if imgTypeName == "workstation-live-installer" {
 					assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
 				} else {
 					assert.EqualError(t, err, "partitioning customizations cannot be used with custom filesystems (mountpoints)")
@@ -1049,11 +1049,13 @@ func TestDistro_DiskCustomizationRunsValidateLayoutConstraints(t *testing.T) {
 		for _, archName := range fedoraDistro.ListArches() {
 			arch, err := fedoraDistro.GetArch(archName)
 			assert.NoError(t, err)
+
 			// XXX: enable once we support qcow2 on riscv64
 			if arch.Name() == "riscv64" {
 				continue
 			}
-			imgType, err := arch.GetImageType("qcow2")
+
+			imgType, err := arch.GetImageType("server-qcow2")
 			assert.NoError(t, err, archName)
 			t.Run(fmt.Sprintf("%s/%s", archName, imgType.Name()), func(t *testing.T) {
 				imgType, _ := arch.GetImageType(imgType.Name())
