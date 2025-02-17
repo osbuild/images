@@ -29,7 +29,7 @@ var basePT = disk.PartitionTable{
 		{
 			Size: 524288000, // 500 MB
 			Type: disk.FilesystemDataGUID,
-			UUID: disk.FilesystemDataUUID,
+			UUID: disk.DataPartitionUUID,
 			Payload: &disk.Filesystem{
 				Type:         "ext4",
 				Mountpoint:   "/boot",

@@ -393,7 +393,7 @@ func minimalrawPartitionTables(t *rhel.ImageType) (disk.PartitionTable, bool) {
 				{
 					Size: bootSize,
 					Type: disk.XBootLDRPartitionGUID,
-					UUID: disk.FilesystemDataUUID,
+					UUID: disk.DataPartitionUUID,
 					Payload: &disk.Filesystem{
 						Type:         "xfs",
 						Mountpoint:   "/boot",
@@ -441,7 +441,7 @@ func minimalrawPartitionTables(t *rhel.ImageType) (disk.PartitionTable, bool) {
 				{
 					Size: bootSize,
 					Type: disk.XBootLDRPartitionGUID,
-					UUID: disk.FilesystemDataUUID,
+					UUID: disk.DataPartitionUUID,
 					Payload: &disk.Filesystem{
 						Type:         "xfs",
 						Mountpoint:   "/boot",
@@ -501,7 +501,7 @@ func edgeBasePartitionTables(t *rhel.ImageType) (disk.PartitionTable, bool) {
 				{
 					Size: 384 * datasizes.MebiByte,
 					Type: disk.XBootLDRPartitionGUID,
-					UUID: disk.FilesystemDataUUID,
+					UUID: disk.DataPartitionUUID,
 					Payload: &disk.Filesystem{
 						Type:         "xfs",
 						Mountpoint:   "/boot",
@@ -572,7 +572,7 @@ func edgeBasePartitionTables(t *rhel.ImageType) (disk.PartitionTable, bool) {
 				{
 					Size: 384 * datasizes.MebiByte,
 					Type: disk.XBootLDRPartitionGUID,
-					UUID: disk.FilesystemDataUUID,
+					UUID: disk.DataPartitionUUID,
 					Payload: &disk.Filesystem{
 						Type:         "xfs",
 						Mountpoint:   "/boot",
