@@ -42,6 +42,9 @@ type OSTreeDeploymentCustomizations struct {
 	// Lock the root account in the deployment unless the user defined root
 	// user options in the build configuration.
 	LockRoot bool
+
+	EnabledServices  []string
+	DisabledServices []string
 }
 
 // OSTreeDeployment represents the filesystem tree of a target image based
@@ -77,9 +80,6 @@ type OSTreeDeployment struct {
 	platform platform.Platform
 
 	PartitionTable *disk.PartitionTable
-
-	EnabledServices  []string
-	DisabledServices []string
 
 	// Use bootupd instead of grub2 as the bootloader
 	UseBootupd bool
@@ -375,7 +375,7 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 			stageOption := osbuild.NewSystemdUnitCreateStage(createMountpointService(serviceName, p.CustomFileSystems))
 			stageOption.MountOSTree(p.osName, ref, 0)
 			pipeline.AddStage(stageOption)
-			p.EnabledServices = append(p.EnabledServices, serviceName)
+			p.OSTreeDeploymentCustomizations.EnabledServices = append(p.OSTreeDeploymentCustomizations.EnabledServices, serviceName)
 		}
 
 		// We enable / disable services below using the systemd stage, but its effect
@@ -384,8 +384,8 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 		// only when Ignition is used. To prevent this and to not have a special cases
 		// in the code based on distro version, we enable / disable services also by
 		// creating a preset file.
-		if len(p.EnabledServices) != 0 || len(p.DisabledServices) != 0 {
-			presetsStage := osbuild.GenServicesPresetStage(p.EnabledServices, p.DisabledServices)
+		if len(p.OSTreeDeploymentCustomizations.EnabledServices) != 0 || len(p.OSTreeDeploymentCustomizations.DisabledServices) != 0 {
+			presetsStage := osbuild.GenServicesPresetStage(p.OSTreeDeploymentCustomizations.EnabledServices, p.OSTreeDeploymentCustomizations.DisabledServices)
 			presetsStage.MountOSTree(p.osName, ref, 0)
 			pipeline.AddStage(presetsStage)
 		}
@@ -475,10 +475,10 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 		pipeline.AddStages(fileStages...)
 	}
 
-	if len(p.EnabledServices) != 0 || len(p.DisabledServices) != 0 {
+	if len(p.OSTreeDeploymentCustomizations.EnabledServices) != 0 || len(p.OSTreeDeploymentCustomizations.DisabledServices) != 0 {
 		systemdStage := osbuild.NewSystemdStage(&osbuild.SystemdStageOptions{
-			EnabledServices:  p.EnabledServices,
-			DisabledServices: p.DisabledServices,
+			EnabledServices:  p.OSTreeDeploymentCustomizations.EnabledServices,
+			DisabledServices: p.OSTreeDeploymentCustomizations.DisabledServices,
 		})
 		systemdStage.MountOSTree(p.osName, ref, 0)
 		pipeline.AddStage(systemdStage)

@@ -81,8 +81,8 @@ func baseRawOstreeImage(img *OSTreeDiskImage, buildPipeline manifest.Build, opts
 
 	// other image types (e.g. live) pass the workload to the pipeline.
 	if img.Workload != nil {
-		osPipeline.EnabledServices = img.Workload.GetServices()
-		osPipeline.DisabledServices = img.Workload.GetDisabledServices()
+		osPipeline.OSTreeDeploymentCustomizations.EnabledServices = append(osPipeline.OSTreeDeploymentCustomizations.EnabledServices, img.Workload.GetServices()...)
+		osPipeline.OSTreeDeploymentCustomizations.DisabledServices = append(osPipeline.OSTreeDeploymentCustomizations.DisabledServices, img.Workload.GetDisabledServices()...)
 	}
 	return manifest.NewRawOStreeImage(buildPipeline, osPipeline, img.Platform)
 }
