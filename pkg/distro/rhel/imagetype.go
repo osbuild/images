@@ -217,6 +217,7 @@ func (t *ImageType) GetPartitionTable(
 			BootMode:           t.BootMode(),
 			DefaultFSType:      disk.FS_XFS, // default fs type for RHEL
 			RequiredMinSizes:   requiredDirectorySizes,
+			Architecture:       t.platform.GetArch(),
 		}
 		return disk.NewCustomPartitionTable(partitioning, partOptions, rng)
 	}

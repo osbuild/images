@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/internal/testdisk"
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
@@ -116,6 +117,9 @@ func TestEnsureRootFilesystem(t *testing.T) {
 		defaultFsType disk.FSType
 	}
 
+	// use AARCH64 for all test cases
+	architecture := arch.ARCH_AARCH64
+
 	testCases := map[string]testCase{
 		"empty-plain-gpt": {
 			pt:            disk.PartitionTable{Type: disk.PT_GPT},
@@ -126,7 +130,7 @@ func TestEnsureRootFilesystem(t *testing.T) {
 					{
 						Start:    0,
 						Size:     0,
-						Type:     disk.FilesystemDataGUID,
+						Type:     disk.RootPartitionAarch64GUID,
 						Bootable: false,
 						UUID:     "",
 						Payload: &disk.Filesystem{
@@ -190,7 +194,7 @@ func TestEnsureRootFilesystem(t *testing.T) {
 					{
 						Start:    0,
 						Size:     0,
-						Type:     disk.FilesystemDataGUID,
+						Type:     disk.RootPartitionAarch64GUID,
 						Bootable: false,
 						UUID:     "",
 						Payload: &disk.Filesystem{
@@ -491,7 +495,7 @@ func TestEnsureRootFilesystem(t *testing.T) {
 					{
 						Start:    0,
 						Size:     0,
-						Type:     disk.FilesystemDataGUID,
+						Type:     disk.RootPartitionAarch64GUID,
 						Bootable: false,
 						UUID:     "",
 						Payload: &disk.Filesystem{
@@ -641,7 +645,7 @@ func TestEnsureRootFilesystem(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			assert := assert.New(t)
 			pt := tc.pt
-			err := disk.EnsureRootFilesystem(&pt, tc.defaultFsType)
+			err := disk.EnsureRootFilesystem(&pt, tc.defaultFsType, architecture)
 			assert.NoError(err)
 			assert.Equal(tc.expected, pt)
 		})
@@ -654,6 +658,9 @@ func TestEnsureRootFilesystemErrors(t *testing.T) {
 		defaultFsType disk.FSType
 		errmsg        string
 	}
+
+	// use X86_64 for all test cases
+	architecture := arch.ARCH_X86_64
 
 	testCases := map[string]testCase{
 		"err-empty": {
@@ -718,7 +725,7 @@ func TestEnsureRootFilesystemErrors(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			assert := assert.New(t)
 			pt := tc.pt
-			err := disk.EnsureRootFilesystem(&pt, tc.defaultFsType)
+			err := disk.EnsureRootFilesystem(&pt, tc.defaultFsType, architecture)
 			assert.EqualError(err, tc.errmsg)
 		})
 	}
@@ -1138,6 +1145,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				DefaultFSType:      disk.FS_XFS,
 				BootMode:           platform.BOOT_HYBRID,
 				PartitionTableType: disk.PT_GPT,
+				Architecture:       arch.ARCH_AARCH64, // doesn't matter for dos
 			},
 			expected: &disk.PartitionTable{
 				Type: disk.PT_DOS,
@@ -1279,6 +1287,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				DefaultFSType:      disk.FS_XFS,
 				BootMode:           platform.BOOT_HYBRID,
 				PartitionTableType: disk.PT_GPT,
+				Architecture:       arch.ARCH_X86_64,
 			},
 			expected: &disk.PartitionTable{
 				Type: disk.PT_GPT,
@@ -1326,7 +1335,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					{
 						Start:    222 * datasizes.MiB,
 						Size:     1*datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)),
-						Type:     disk.FilesystemDataGUID,
+						Type:     disk.RootPartitionX86_64GUID,
 						UUID:     "e2d3d0d0-de6b-48f9-b44c-e85ff044c6b1",
 						Bootable: false,
 						Payload: &disk.Filesystem{
@@ -1366,6 +1375,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				DefaultFSType:      disk.FS_XFS,
 				BootMode:           platform.BOOT_HYBRID,
 				PartitionTableType: disk.PT_GPT,
+				Architecture:       arch.ARCH_AARCH64,
 			},
 			expected: &disk.PartitionTable{
 				Type: disk.PT_GPT,
@@ -1425,7 +1435,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					{
 						Start:    227 * datasizes.MiB,
 						Size:     1*datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
-						Type:     disk.FilesystemDataGUID,
+						Type:     disk.RootPartitionAarch64GUID,
 						UUID:     "32f3a8ae-b79e-4856-b659-c18f0dcecc77",
 						Bootable: false,
 						Payload: &disk.Filesystem{
@@ -1694,6 +1704,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				BootMode:           platform.BOOT_HYBRID,
 				PartitionTableType: disk.PT_DOS,
 				RequiredMinSizes:   map[string]uint64{"/": 3 * datasizes.GiB},
+				Architecture:       arch.ARCH_S390X,
 			},
 			expected: &disk.PartitionTable{
 				Type: disk.PT_GPT,
@@ -1727,7 +1738,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					{
 						Start:    234 * datasizes.MiB,
 						Size:     3*datasizes.GiB + datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
-						Type:     disk.FilesystemDataGUID,
+						Type:     disk.RootPartitionS390xGUID,
 						UUID:     "e2d3d0d0-de6b-48f9-b44c-e85ff044c6b1",
 						Bootable: false,
 						Payload: &disk.Filesystem{
