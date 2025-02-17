@@ -11,6 +11,7 @@ import (
 
 	"github.com/osbuild/images/internal/testdisk"
 	"github.com/osbuild/images/pkg/container"
+	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/image"
 	"github.com/osbuild/images/pkg/manifest"
@@ -42,6 +43,8 @@ type bootcDiskImageTestOpts struct {
 	SELinux     string
 	Users       []users.User
 	Groups      []users.Group
+	Directories []*fsnode.Directory
+	Files       []*fsnode.File
 
 	KernelOptionsAppend []string
 }
@@ -77,6 +80,8 @@ func makeBootcDiskImageOsbuildManifest(t *testing.T, opts *bootcDiskImageTestOpt
 	img.Users = opts.Users
 	img.Groups = opts.Groups
 	img.SELinux = opts.SELinux
+	img.Files = opts.Files
+	img.Directories = opts.Directories
 
 	m := &manifest.Manifest{}
 	runi := &runner.Fedora{}
@@ -260,6 +265,46 @@ func TestBootcDiskImageInstantiateGroups(t *testing.T) {
 			require.NotNil(t, groupsStage)
 		} else {
 			require.Nil(t, groupsStage)
+		}
+	}
+}
+
+func TestBootcDiskImageInstantiateFiles(t *testing.T) {
+	for _, withFiles := range []bool{true, false} {
+		opts := &bootcDiskImageTestOpts{}
+		if withFiles {
+			file1, err := fsnode.NewFile("/some/file", nil, nil, nil, []byte("data"))
+			require.NoError(t, err)
+			opts.Files = []*fsnode.File{file1}
+		}
+		osbuildManifest := makeBootcDiskImageOsbuildManifest(t, opts)
+		imagePipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "image")
+		require.NotNil(t, imagePipeline)
+		copyStage := findStageFromOsbuildPipeline(t, imagePipeline, "org.osbuild.copy")
+		if withFiles {
+			require.NotNil(t, copyStage)
+		} else {
+			require.Nil(t, copyStage)
+		}
+	}
+}
+
+func TestBootcDiskImageInstantiateDirs(t *testing.T) {
+	for _, withDirs := range []bool{true, false} {
+		opts := &bootcDiskImageTestOpts{}
+		if withDirs {
+			dir1, err := fsnode.NewDirectory("/some/dir", nil, nil, nil, true)
+			require.NoError(t, err)
+			opts.Directories = []*fsnode.Directory{dir1}
+		}
+		osbuildManifest := makeBootcDiskImageOsbuildManifest(t, opts)
+		imagePipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "image")
+		require.NotNil(t, imagePipeline)
+		mkdirStage := findStageFromOsbuildPipeline(t, imagePipeline, "org.osbuild.mkdir")
+		if withDirs {
+			require.NotNil(t, mkdirStage)
+		} else {
+			require.Nil(t, mkdirStage)
 		}
 	}
 }
