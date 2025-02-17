@@ -10,6 +10,7 @@ import (
 	"github.com/osbuild/images/internal/buildconfig"
 	"github.com/osbuild/images/internal/cmdutil"
 	"github.com/osbuild/images/internal/otkdisk"
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
@@ -32,11 +33,12 @@ type Input struct {
 
 // InputProperties contains global properties of the partition table
 type InputProperties struct {
-	Type        otkdisk.PartType `json:"type"`
-	DefaultSize string           `json:"default_size"`
-	UUID        string           `json:"uuid"`
-	StartOffset string           `json:"start_offset"`
-	Create      InputCreate      `json:"create"`
+	Type         otkdisk.PartType `json:"type"`
+	Architecture string           `json:"architecture"`
+	DefaultSize  string           `json:"default_size"`
+	UUID         string           `json:"uuid"`
+	StartOffset  string           `json:"start_offset"`
+	Create       InputCreate      `json:"create"`
 
 	SectorSize uint64 `json:"sector_size"`
 }
@@ -239,7 +241,13 @@ func genPartitionTable(genPartInput *Input, rng *rand.Rand) (*Output, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot get the disk size: %w", err)
 	}
-	pt, err := disk.NewPartitionTable(basePt, genPartInput.Modifications.Filesystems, diskSize, genPartInput.Modifications.PartitionMode, nil, rng)
+
+	architecture := arch.ARCH_UNSET
+	if genPartInput.Properties.Type == otkdisk.PartTypeGPT {
+		// GPT partition table generation requires an architecture
+		architecture = arch.FromString(genPartInput.Properties.Architecture) // NOTE: this panics on invalid input - arch parsing should return error
+	}
+	pt, err := disk.NewPartitionTable(basePt, genPartInput.Modifications.Filesystems, diskSize, genPartInput.Modifications.PartitionMode, architecture, nil, rng)
 	if err != nil {
 		return nil, err
 	}
