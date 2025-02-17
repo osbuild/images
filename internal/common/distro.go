@@ -14,7 +14,18 @@ import (
 // digits or periods, and then split on periods.
 // Assumes any missing components are 0, so 8 < 8.1.
 // Evaluates to false if a and b are equal.
+//
+// Also assumes that rawhide is *always* greater than anything else to deal
+// with Fedora specific versioning
 func VersionLessThan(a, b string) bool {
+	if a == "rawhide" {
+		return false
+	}
+
+	if b == "rawhide" {
+		return true
+	}
+
 	aV, err := version.NewVersion(a)
 	if err != nil {
 		panic(err)

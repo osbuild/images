@@ -85,6 +85,24 @@ func TestVersionLessThan(t *testing.T) {
 			VersionB: "9.1",
 			Expected: true,
 		},
+		{
+			Name:     "rawhide < rawhide",
+			VersionA: "rawhide",
+			VersionB: "rawhide",
+			Expected: false,
+		},
+		{
+			Name:     "rawhide < 99.99",
+			VersionA: "rawhide",
+			VersionB: "99.99",
+			Expected: false,
+		},
+		{
+			Name:     "99.99 < rawhide",
+			VersionA: "99.99",
+			VersionB: "rawhide",
+			Expected: true,
+		},
 	}
 
 	for _, c := range cases {
