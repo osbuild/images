@@ -40,26 +40,19 @@ const (
 	// rounded to the next MiB.
 	DefaultGrainBytes = uint64(1048576) // 1 MiB
 
-	// UUIDs for GPT disks
-	BIOSBootPartitionGUID = "21686148-6449-6E6F-744E-656564454649"
-	BIOSBootPartitionUUID = "FAC7F1FB-3E8D-4137-A512-961DE09A5549"
-
-	FilesystemDataGUID = "0FC63DAF-8483-4772-8E79-3D69D8477DE4"
-	FilesystemDataUUID = "CB07C243-BC44-4717-853E-28852021225B"
-
-	EFISystemPartitionGUID = "C12A7328-F81F-11D2-BA4B-00A0C93EC93B"
-	EFISystemPartitionUUID = "68B2905B-DF3E-4FB3-80FA-49D1E773AA33"
-	EFIFilesystemUUID      = "7B77-95E7"
-
-	LVMPartitionGUID = "E6D6D379-F507-44C2-A23C-238F2A3DF928"
-	PRePartitionGUID = "9E1A2D38-C612-4316-AA26-8B49521E5A8B"
-
-	RootPartitionUUID = "6264D520-3FB9-423F-8AB8-7A0A8E3D3562"
-
-	SwapPartitionGUID = "0657FD6D-A4AB-43C4-84E5-0933C84B4F4F"
-
-	// Extended Boot Loader Partition
-	XBootLDRPartitionGUID = "BC13C2FF-59E6-4262-A352-B275FD6F7172"
+	// GUIDs (partition types) for partitions on GPT disks
+	// The SD_GPT name next to each constant is the partition type shown in
+	// systemd-gpt-auto-generator(8) (if present)
+	// See also
+	// - https://www.freedesktop.org/wiki/Specifications/DiscoverablePartitionsSpec/
+	// - https://uapi-group.org/specifications/specs/discoverable_partitions_specification/
+	BIOSBootPartitionGUID  = "21686148-6449-6E6F-744E-656564454649"
+	FilesystemDataGUID     = "0FC63DAF-8483-4772-8E79-3D69D8477DE4" // SD_GPT_LINUX_GENERIC
+	EFISystemPartitionGUID = "C12A7328-F81F-11D2-BA4B-00A0C93EC93B" // SD_GPT_ESP
+	LVMPartitionGUID       = "E6D6D379-F507-44C2-A23C-238F2A3DF928"
+	PRePartitionGUID       = "9E1A2D38-C612-4316-AA26-8B49521E5A8B"
+	SwapPartitionGUID      = "0657FD6D-A4AB-43C4-84E5-0933C84B4F4F" // SD_GPT_SWAP
+	XBootLDRPartitionGUID  = "BC13C2FF-59E6-4262-A352-B275FD6F7172" // SD_GPT_XBOOTLDR
 
 	// Partition type IDs for DOS disks
 
@@ -86,6 +79,19 @@ const (
 
 	// Partition type ID for PRep on dos
 	PRepPartitionDOSID = "41"
+
+	// static UUIDs for partitions and filesystems
+	// NOTE(akoutsou): These are unnecessary and have stuck around since the
+	// beginning where (I believe) the goal was to have predictable,
+	// reproducible partition tables. They might be removed soon in favour of
+	// proper, random UUIDs, with reproducibility being controlled by fixing
+	// rng seeds.
+	BIOSBootPartitionUUID  = "FAC7F1FB-3E8D-4137-A512-961DE09A5549"
+	RootPartitionUUID      = "6264D520-3FB9-423F-8AB8-7A0A8E3D3562"
+	FilesystemDataUUID     = "CB07C243-BC44-4717-853E-28852021225B"
+	EFISystemPartitionUUID = "68B2905B-DF3E-4FB3-80FA-49D1E773AA33"
+
+	EFIFilesystemUUID = "7B77-95E7"
 )
 
 func getPartitionTypeIDfor(ptType PartitionTableType, partTypeName string) (string, error) {
