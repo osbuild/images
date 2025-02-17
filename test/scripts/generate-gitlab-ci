@@ -67,7 +67,7 @@ fail:
 """
 
 GEN_TEMPLATE = """
-generate-build-config-{distro}-{arch}:
+"generate-build-config: [{distro}, {arch}]":
   stage: gen
   extends: .terraform
   variables:
@@ -87,19 +87,19 @@ generate-build-config-{distro}-{arch}:
 """
 
 TRIGGER_TEMPLATE = """
-image-build-trigger-{distro}-{arch}:
+"image-build-trigger: [{distro}, {arch}]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-{distro}-{arch}
+        job: "generate-build-config: [{distro}, {arch}]"
     strategy: depend
   needs:
-    - generate-build-config-{distro}-{arch}
+    - "generate-build-config: [{distro}, {arch}]"
 """
 
 OSTREE_GEN_TEMPLATE = """
-generate-ostree-build-config-{distro}-{arch}:
+"generate-ostree-build-config: [{distro}, {arch}]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -114,7 +114,7 @@ generate-ostree-build-config-{distro}-{arch}:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-{distro}-{arch}
+    - "image-build-trigger: [{distro}, {arch}]"
   cache:
     key: testcache
     paths:
@@ -122,20 +122,20 @@ generate-ostree-build-config-{distro}-{arch}:
 """
 
 OSTREE_TRIGGER_TEMPLATE = """
-image-build-ostree-trigger-{distro}-{arch}:
+"image-build-ostree-trigger: [{distro}, {arch}]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-{distro}-{arch}
+        job: "generate-ostree-build-config: [{distro}, {arch}]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-{distro}-{arch}
+    - "generate-ostree-build-config: [{distro}, {arch}]"
 """
 
 
 MANIFEST_GEN_TEMPLATE = """
-generate-manifests-{distro}-{arch}:
+"generate-manifests: [{distro}, {arch}]":
   stage: gen
   extends: .terraform
   variables:

@@ -69,7 +69,7 @@ fail:
   tags:
     - terraform
 
-generate-build-config-centos-10-aarch64:
+"generate-build-config: [centos-10, aarch64]":
   stage: gen
   extends: .terraform
   variables:
@@ -88,7 +88,7 @@ generate-build-config-centos-10-aarch64:
       - .cache/osbuild-images
 
 
-generate-build-config-centos-10-x86_64:
+"generate-build-config: [centos-10, x86_64]":
   stage: gen
   extends: .terraform
   variables:
@@ -107,7 +107,7 @@ generate-build-config-centos-10-x86_64:
       - .cache/osbuild-images
 
 
-generate-build-config-centos-9-aarch64:
+"generate-build-config: [centos-9, aarch64]":
   stage: gen
   extends: .terraform
   variables:
@@ -126,7 +126,7 @@ generate-build-config-centos-9-aarch64:
       - .cache/osbuild-images
 
 
-generate-build-config-centos-9-x86_64:
+"generate-build-config: [centos-9, x86_64]":
   stage: gen
   extends: .terraform
   variables:
@@ -145,7 +145,7 @@ generate-build-config-centos-9-x86_64:
       - .cache/osbuild-images
 
 
-generate-build-config-fedora-40-aarch64:
+"generate-build-config: [fedora-40, aarch64]":
   stage: gen
   extends: .terraform
   variables:
@@ -164,7 +164,7 @@ generate-build-config-fedora-40-aarch64:
       - .cache/osbuild-images
 
 
-generate-build-config-fedora-40-x86_64:
+"generate-build-config: [fedora-40, x86_64]":
   stage: gen
   extends: .terraform
   variables:
@@ -183,7 +183,7 @@ generate-build-config-fedora-40-x86_64:
       - .cache/osbuild-images
 
 
-generate-build-config-fedora-41-aarch64:
+"generate-build-config: [fedora-41, aarch64]":
   stage: gen
   extends: .terraform
   variables:
@@ -202,7 +202,7 @@ generate-build-config-fedora-41-aarch64:
       - .cache/osbuild-images
 
 
-generate-build-config-fedora-41-x86_64:
+"generate-build-config: [fedora-41, x86_64]":
   stage: gen
   extends: .terraform
   variables:
@@ -221,7 +221,7 @@ generate-build-config-fedora-41-x86_64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-10.0-aarch64:
+"generate-build-config: [rhel-10.0, aarch64]":
   stage: gen
   extends: .terraform
   variables:
@@ -240,7 +240,7 @@ generate-build-config-rhel-10.0-aarch64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-10.0-x86_64:
+"generate-build-config: [rhel-10.0, x86_64]":
   stage: gen
   extends: .terraform
   variables:
@@ -259,7 +259,7 @@ generate-build-config-rhel-10.0-x86_64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-7.9-x86_64:
+"generate-build-config: [rhel-7.9, x86_64]":
   stage: gen
   extends: .terraform
   variables:
@@ -278,7 +278,7 @@ generate-build-config-rhel-7.9-x86_64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-8.10-aarch64:
+"generate-build-config: [rhel-8.10, aarch64]":
   stage: gen
   extends: .terraform
   variables:
@@ -297,7 +297,7 @@ generate-build-config-rhel-8.10-aarch64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-8.10-x86_64:
+"generate-build-config: [rhel-8.10, x86_64]":
   stage: gen
   extends: .terraform
   variables:
@@ -316,7 +316,7 @@ generate-build-config-rhel-8.10-x86_64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-8.4-aarch64:
+"generate-build-config: [rhel-8.4, aarch64]":
   stage: gen
   extends: .terraform
   variables:
@@ -335,7 +335,7 @@ generate-build-config-rhel-8.4-aarch64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-8.4-x86_64:
+"generate-build-config: [rhel-8.4, x86_64]":
   stage: gen
   extends: .terraform
   variables:
@@ -354,7 +354,7 @@ generate-build-config-rhel-8.4-x86_64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-8.5-aarch64:
+"generate-build-config: [rhel-8.5, aarch64]":
   stage: gen
   extends: .terraform
   variables:
@@ -373,7 +373,7 @@ generate-build-config-rhel-8.5-aarch64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-8.5-x86_64:
+"generate-build-config: [rhel-8.5, x86_64]":
   stage: gen
   extends: .terraform
   variables:
@@ -392,7 +392,7 @@ generate-build-config-rhel-8.5-x86_64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-8.6-aarch64:
+"generate-build-config: [rhel-8.6, aarch64]":
   stage: gen
   extends: .terraform
   variables:
@@ -411,7 +411,7 @@ generate-build-config-rhel-8.6-aarch64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-8.6-x86_64:
+"generate-build-config: [rhel-8.6, x86_64]":
   stage: gen
   extends: .terraform
   variables:
@@ -430,7 +430,7 @@ generate-build-config-rhel-8.6-x86_64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-8.7-aarch64:
+"generate-build-config: [rhel-8.7, aarch64]":
   stage: gen
   extends: .terraform
   variables:
@@ -449,7 +449,7 @@ generate-build-config-rhel-8.7-aarch64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-8.7-x86_64:
+"generate-build-config: [rhel-8.7, x86_64]":
   stage: gen
   extends: .terraform
   variables:
@@ -468,7 +468,7 @@ generate-build-config-rhel-8.7-x86_64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-8.8-aarch64:
+"generate-build-config: [rhel-8.8, aarch64]":
   stage: gen
   extends: .terraform
   variables:
@@ -487,7 +487,7 @@ generate-build-config-rhel-8.8-aarch64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-8.8-x86_64:
+"generate-build-config: [rhel-8.8, x86_64]":
   stage: gen
   extends: .terraform
   variables:
@@ -506,7 +506,7 @@ generate-build-config-rhel-8.8-x86_64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-8.9-aarch64:
+"generate-build-config: [rhel-8.9, aarch64]":
   stage: gen
   extends: .terraform
   variables:
@@ -525,7 +525,7 @@ generate-build-config-rhel-8.9-aarch64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-8.9-x86_64:
+"generate-build-config: [rhel-8.9, x86_64]":
   stage: gen
   extends: .terraform
   variables:
@@ -544,7 +544,7 @@ generate-build-config-rhel-8.9-x86_64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-9.0-aarch64:
+"generate-build-config: [rhel-9.0, aarch64]":
   stage: gen
   extends: .terraform
   variables:
@@ -563,7 +563,7 @@ generate-build-config-rhel-9.0-aarch64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-9.0-x86_64:
+"generate-build-config: [rhel-9.0, x86_64]":
   stage: gen
   extends: .terraform
   variables:
@@ -582,7 +582,7 @@ generate-build-config-rhel-9.0-x86_64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-9.1-aarch64:
+"generate-build-config: [rhel-9.1, aarch64]":
   stage: gen
   extends: .terraform
   variables:
@@ -601,7 +601,7 @@ generate-build-config-rhel-9.1-aarch64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-9.1-x86_64:
+"generate-build-config: [rhel-9.1, x86_64]":
   stage: gen
   extends: .terraform
   variables:
@@ -620,7 +620,7 @@ generate-build-config-rhel-9.1-x86_64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-9.2-aarch64:
+"generate-build-config: [rhel-9.2, aarch64]":
   stage: gen
   extends: .terraform
   variables:
@@ -639,7 +639,7 @@ generate-build-config-rhel-9.2-aarch64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-9.2-x86_64:
+"generate-build-config: [rhel-9.2, x86_64]":
   stage: gen
   extends: .terraform
   variables:
@@ -658,7 +658,7 @@ generate-build-config-rhel-9.2-x86_64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-9.3-aarch64:
+"generate-build-config: [rhel-9.3, aarch64]":
   stage: gen
   extends: .terraform
   variables:
@@ -677,7 +677,7 @@ generate-build-config-rhel-9.3-aarch64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-9.3-x86_64:
+"generate-build-config: [rhel-9.3, x86_64]":
   stage: gen
   extends: .terraform
   variables:
@@ -696,7 +696,7 @@ generate-build-config-rhel-9.3-x86_64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-9.4-aarch64:
+"generate-build-config: [rhel-9.4, aarch64]":
   stage: gen
   extends: .terraform
   variables:
@@ -715,7 +715,7 @@ generate-build-config-rhel-9.4-aarch64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-9.4-x86_64:
+"generate-build-config: [rhel-9.4, x86_64]":
   stage: gen
   extends: .terraform
   variables:
@@ -734,7 +734,7 @@ generate-build-config-rhel-9.4-x86_64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-9.5-aarch64:
+"generate-build-config: [rhel-9.5, aarch64]":
   stage: gen
   extends: .terraform
   variables:
@@ -753,7 +753,7 @@ generate-build-config-rhel-9.5-aarch64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-9.5-x86_64:
+"generate-build-config: [rhel-9.5, x86_64]":
   stage: gen
   extends: .terraform
   variables:
@@ -772,7 +772,7 @@ generate-build-config-rhel-9.5-x86_64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-9.6-aarch64:
+"generate-build-config: [rhel-9.6, aarch64]":
   stage: gen
   extends: .terraform
   variables:
@@ -791,7 +791,7 @@ generate-build-config-rhel-9.6-aarch64:
       - .cache/osbuild-images
 
 
-generate-build-config-rhel-9.6-x86_64:
+"generate-build-config: [rhel-9.6, x86_64]":
   stage: gen
   extends: .terraform
   variables:
@@ -809,435 +809,435 @@ generate-build-config-rhel-9.6-x86_64:
     paths:
       - .cache/osbuild-images
 
-image-build-trigger-centos-10-aarch64:
+"image-build-trigger: [centos-10, aarch64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-centos-10-aarch64
+        job: "generate-build-config: [centos-10, aarch64]"
     strategy: depend
   needs:
-    - generate-build-config-centos-10-aarch64
+    - "generate-build-config: [centos-10, aarch64]"
 
 
-image-build-trigger-centos-10-x86_64:
+"image-build-trigger: [centos-10, x86_64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-centos-10-x86_64
+        job: "generate-build-config: [centos-10, x86_64]"
     strategy: depend
   needs:
-    - generate-build-config-centos-10-x86_64
+    - "generate-build-config: [centos-10, x86_64]"
 
 
-image-build-trigger-centos-9-aarch64:
+"image-build-trigger: [centos-9, aarch64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-centos-9-aarch64
+        job: "generate-build-config: [centos-9, aarch64]"
     strategy: depend
   needs:
-    - generate-build-config-centos-9-aarch64
+    - "generate-build-config: [centos-9, aarch64]"
 
 
-image-build-trigger-centos-9-x86_64:
+"image-build-trigger: [centos-9, x86_64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-centos-9-x86_64
+        job: "generate-build-config: [centos-9, x86_64]"
     strategy: depend
   needs:
-    - generate-build-config-centos-9-x86_64
+    - "generate-build-config: [centos-9, x86_64]"
 
 
-image-build-trigger-fedora-40-aarch64:
+"image-build-trigger: [fedora-40, aarch64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-fedora-40-aarch64
+        job: "generate-build-config: [fedora-40, aarch64]"
     strategy: depend
   needs:
-    - generate-build-config-fedora-40-aarch64
+    - "generate-build-config: [fedora-40, aarch64]"
 
 
-image-build-trigger-fedora-40-x86_64:
+"image-build-trigger: [fedora-40, x86_64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-fedora-40-x86_64
+        job: "generate-build-config: [fedora-40, x86_64]"
     strategy: depend
   needs:
-    - generate-build-config-fedora-40-x86_64
+    - "generate-build-config: [fedora-40, x86_64]"
 
 
-image-build-trigger-fedora-41-aarch64:
+"image-build-trigger: [fedora-41, aarch64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-fedora-41-aarch64
+        job: "generate-build-config: [fedora-41, aarch64]"
     strategy: depend
   needs:
-    - generate-build-config-fedora-41-aarch64
+    - "generate-build-config: [fedora-41, aarch64]"
 
 
-image-build-trigger-fedora-41-x86_64:
+"image-build-trigger: [fedora-41, x86_64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-fedora-41-x86_64
+        job: "generate-build-config: [fedora-41, x86_64]"
     strategy: depend
   needs:
-    - generate-build-config-fedora-41-x86_64
+    - "generate-build-config: [fedora-41, x86_64]"
 
 
-image-build-trigger-rhel-10.0-aarch64:
+"image-build-trigger: [rhel-10.0, aarch64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-10.0-aarch64
+        job: "generate-build-config: [rhel-10.0, aarch64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-10.0-aarch64
+    - "generate-build-config: [rhel-10.0, aarch64]"
 
 
-image-build-trigger-rhel-10.0-x86_64:
+"image-build-trigger: [rhel-10.0, x86_64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-10.0-x86_64
+        job: "generate-build-config: [rhel-10.0, x86_64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-10.0-x86_64
+    - "generate-build-config: [rhel-10.0, x86_64]"
 
 
-image-build-trigger-rhel-7.9-x86_64:
+"image-build-trigger: [rhel-7.9, x86_64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-7.9-x86_64
+        job: "generate-build-config: [rhel-7.9, x86_64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-7.9-x86_64
+    - "generate-build-config: [rhel-7.9, x86_64]"
 
 
-image-build-trigger-rhel-8.10-aarch64:
+"image-build-trigger: [rhel-8.10, aarch64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-8.10-aarch64
+        job: "generate-build-config: [rhel-8.10, aarch64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-8.10-aarch64
+    - "generate-build-config: [rhel-8.10, aarch64]"
 
 
-image-build-trigger-rhel-8.10-x86_64:
+"image-build-trigger: [rhel-8.10, x86_64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-8.10-x86_64
+        job: "generate-build-config: [rhel-8.10, x86_64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-8.10-x86_64
+    - "generate-build-config: [rhel-8.10, x86_64]"
 
 
-image-build-trigger-rhel-8.4-aarch64:
+"image-build-trigger: [rhel-8.4, aarch64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-8.4-aarch64
+        job: "generate-build-config: [rhel-8.4, aarch64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-8.4-aarch64
+    - "generate-build-config: [rhel-8.4, aarch64]"
 
 
-image-build-trigger-rhel-8.4-x86_64:
+"image-build-trigger: [rhel-8.4, x86_64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-8.4-x86_64
+        job: "generate-build-config: [rhel-8.4, x86_64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-8.4-x86_64
+    - "generate-build-config: [rhel-8.4, x86_64]"
 
 
-image-build-trigger-rhel-8.5-aarch64:
+"image-build-trigger: [rhel-8.5, aarch64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-8.5-aarch64
+        job: "generate-build-config: [rhel-8.5, aarch64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-8.5-aarch64
+    - "generate-build-config: [rhel-8.5, aarch64]"
 
 
-image-build-trigger-rhel-8.5-x86_64:
+"image-build-trigger: [rhel-8.5, x86_64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-8.5-x86_64
+        job: "generate-build-config: [rhel-8.5, x86_64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-8.5-x86_64
+    - "generate-build-config: [rhel-8.5, x86_64]"
 
 
-image-build-trigger-rhel-8.6-aarch64:
+"image-build-trigger: [rhel-8.6, aarch64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-8.6-aarch64
+        job: "generate-build-config: [rhel-8.6, aarch64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-8.6-aarch64
+    - "generate-build-config: [rhel-8.6, aarch64]"
 
 
-image-build-trigger-rhel-8.6-x86_64:
+"image-build-trigger: [rhel-8.6, x86_64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-8.6-x86_64
+        job: "generate-build-config: [rhel-8.6, x86_64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-8.6-x86_64
+    - "generate-build-config: [rhel-8.6, x86_64]"
 
 
-image-build-trigger-rhel-8.7-aarch64:
+"image-build-trigger: [rhel-8.7, aarch64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-8.7-aarch64
+        job: "generate-build-config: [rhel-8.7, aarch64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-8.7-aarch64
+    - "generate-build-config: [rhel-8.7, aarch64]"
 
 
-image-build-trigger-rhel-8.7-x86_64:
+"image-build-trigger: [rhel-8.7, x86_64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-8.7-x86_64
+        job: "generate-build-config: [rhel-8.7, x86_64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-8.7-x86_64
+    - "generate-build-config: [rhel-8.7, x86_64]"
 
 
-image-build-trigger-rhel-8.8-aarch64:
+"image-build-trigger: [rhel-8.8, aarch64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-8.8-aarch64
+        job: "generate-build-config: [rhel-8.8, aarch64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-8.8-aarch64
+    - "generate-build-config: [rhel-8.8, aarch64]"
 
 
-image-build-trigger-rhel-8.8-x86_64:
+"image-build-trigger: [rhel-8.8, x86_64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-8.8-x86_64
+        job: "generate-build-config: [rhel-8.8, x86_64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-8.8-x86_64
+    - "generate-build-config: [rhel-8.8, x86_64]"
 
 
-image-build-trigger-rhel-8.9-aarch64:
+"image-build-trigger: [rhel-8.9, aarch64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-8.9-aarch64
+        job: "generate-build-config: [rhel-8.9, aarch64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-8.9-aarch64
+    - "generate-build-config: [rhel-8.9, aarch64]"
 
 
-image-build-trigger-rhel-8.9-x86_64:
+"image-build-trigger: [rhel-8.9, x86_64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-8.9-x86_64
+        job: "generate-build-config: [rhel-8.9, x86_64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-8.9-x86_64
+    - "generate-build-config: [rhel-8.9, x86_64]"
 
 
-image-build-trigger-rhel-9.0-aarch64:
+"image-build-trigger: [rhel-9.0, aarch64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-9.0-aarch64
+        job: "generate-build-config: [rhel-9.0, aarch64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-9.0-aarch64
+    - "generate-build-config: [rhel-9.0, aarch64]"
 
 
-image-build-trigger-rhel-9.0-x86_64:
+"image-build-trigger: [rhel-9.0, x86_64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-9.0-x86_64
+        job: "generate-build-config: [rhel-9.0, x86_64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-9.0-x86_64
+    - "generate-build-config: [rhel-9.0, x86_64]"
 
 
-image-build-trigger-rhel-9.1-aarch64:
+"image-build-trigger: [rhel-9.1, aarch64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-9.1-aarch64
+        job: "generate-build-config: [rhel-9.1, aarch64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-9.1-aarch64
+    - "generate-build-config: [rhel-9.1, aarch64]"
 
 
-image-build-trigger-rhel-9.1-x86_64:
+"image-build-trigger: [rhel-9.1, x86_64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-9.1-x86_64
+        job: "generate-build-config: [rhel-9.1, x86_64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-9.1-x86_64
+    - "generate-build-config: [rhel-9.1, x86_64]"
 
 
-image-build-trigger-rhel-9.2-aarch64:
+"image-build-trigger: [rhel-9.2, aarch64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-9.2-aarch64
+        job: "generate-build-config: [rhel-9.2, aarch64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-9.2-aarch64
+    - "generate-build-config: [rhel-9.2, aarch64]"
 
 
-image-build-trigger-rhel-9.2-x86_64:
+"image-build-trigger: [rhel-9.2, x86_64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-9.2-x86_64
+        job: "generate-build-config: [rhel-9.2, x86_64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-9.2-x86_64
+    - "generate-build-config: [rhel-9.2, x86_64]"
 
 
-image-build-trigger-rhel-9.3-aarch64:
+"image-build-trigger: [rhel-9.3, aarch64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-9.3-aarch64
+        job: "generate-build-config: [rhel-9.3, aarch64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-9.3-aarch64
+    - "generate-build-config: [rhel-9.3, aarch64]"
 
 
-image-build-trigger-rhel-9.3-x86_64:
+"image-build-trigger: [rhel-9.3, x86_64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-9.3-x86_64
+        job: "generate-build-config: [rhel-9.3, x86_64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-9.3-x86_64
+    - "generate-build-config: [rhel-9.3, x86_64]"
 
 
-image-build-trigger-rhel-9.4-aarch64:
+"image-build-trigger: [rhel-9.4, aarch64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-9.4-aarch64
+        job: "generate-build-config: [rhel-9.4, aarch64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-9.4-aarch64
+    - "generate-build-config: [rhel-9.4, aarch64]"
 
 
-image-build-trigger-rhel-9.4-x86_64:
+"image-build-trigger: [rhel-9.4, x86_64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-9.4-x86_64
+        job: "generate-build-config: [rhel-9.4, x86_64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-9.4-x86_64
+    - "generate-build-config: [rhel-9.4, x86_64]"
 
 
-image-build-trigger-rhel-9.5-aarch64:
+"image-build-trigger: [rhel-9.5, aarch64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-9.5-aarch64
+        job: "generate-build-config: [rhel-9.5, aarch64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-9.5-aarch64
+    - "generate-build-config: [rhel-9.5, aarch64]"
 
 
-image-build-trigger-rhel-9.5-x86_64:
+"image-build-trigger: [rhel-9.5, x86_64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-9.5-x86_64
+        job: "generate-build-config: [rhel-9.5, x86_64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-9.5-x86_64
+    - "generate-build-config: [rhel-9.5, x86_64]"
 
 
-image-build-trigger-rhel-9.6-aarch64:
+"image-build-trigger: [rhel-9.6, aarch64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-9.6-aarch64
+        job: "generate-build-config: [rhel-9.6, aarch64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-9.6-aarch64
+    - "generate-build-config: [rhel-9.6, aarch64]"
 
 
-image-build-trigger-rhel-9.6-x86_64:
+"image-build-trigger: [rhel-9.6, x86_64]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-rhel-9.6-x86_64
+        job: "generate-build-config: [rhel-9.6, x86_64]"
     strategy: depend
   needs:
-    - generate-build-config-rhel-9.6-x86_64
+    - "generate-build-config: [rhel-9.6, x86_64]"
 
-generate-ostree-build-config-centos-10-aarch64:
+"generate-ostree-build-config: [centos-10, aarch64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1252,14 +1252,14 @@ generate-ostree-build-config-centos-10-aarch64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-centos-10-aarch64
+    - "image-build-trigger: [centos-10, aarch64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-centos-10-x86_64:
+"generate-ostree-build-config: [centos-10, x86_64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1274,14 +1274,14 @@ generate-ostree-build-config-centos-10-x86_64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-centos-10-x86_64
+    - "image-build-trigger: [centos-10, x86_64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-centos-9-aarch64:
+"generate-ostree-build-config: [centos-9, aarch64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1296,14 +1296,14 @@ generate-ostree-build-config-centos-9-aarch64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-centos-9-aarch64
+    - "image-build-trigger: [centos-9, aarch64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-centos-9-x86_64:
+"generate-ostree-build-config: [centos-9, x86_64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1318,14 +1318,14 @@ generate-ostree-build-config-centos-9-x86_64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-centos-9-x86_64
+    - "image-build-trigger: [centos-9, x86_64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-fedora-40-aarch64:
+"generate-ostree-build-config: [fedora-40, aarch64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1340,14 +1340,14 @@ generate-ostree-build-config-fedora-40-aarch64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-fedora-40-aarch64
+    - "image-build-trigger: [fedora-40, aarch64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-fedora-40-x86_64:
+"generate-ostree-build-config: [fedora-40, x86_64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1362,14 +1362,14 @@ generate-ostree-build-config-fedora-40-x86_64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-fedora-40-x86_64
+    - "image-build-trigger: [fedora-40, x86_64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-fedora-41-aarch64:
+"generate-ostree-build-config: [fedora-41, aarch64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1384,14 +1384,14 @@ generate-ostree-build-config-fedora-41-aarch64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-fedora-41-aarch64
+    - "image-build-trigger: [fedora-41, aarch64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-fedora-41-x86_64:
+"generate-ostree-build-config: [fedora-41, x86_64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1406,14 +1406,14 @@ generate-ostree-build-config-fedora-41-x86_64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-fedora-41-x86_64
+    - "image-build-trigger: [fedora-41, x86_64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-10.0-aarch64:
+"generate-ostree-build-config: [rhel-10.0, aarch64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1428,14 +1428,14 @@ generate-ostree-build-config-rhel-10.0-aarch64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-10.0-aarch64
+    - "image-build-trigger: [rhel-10.0, aarch64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-10.0-x86_64:
+"generate-ostree-build-config: [rhel-10.0, x86_64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1450,14 +1450,14 @@ generate-ostree-build-config-rhel-10.0-x86_64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-10.0-x86_64
+    - "image-build-trigger: [rhel-10.0, x86_64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-7.9-x86_64:
+"generate-ostree-build-config: [rhel-7.9, x86_64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1472,14 +1472,14 @@ generate-ostree-build-config-rhel-7.9-x86_64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-7.9-x86_64
+    - "image-build-trigger: [rhel-7.9, x86_64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-8.10-aarch64:
+"generate-ostree-build-config: [rhel-8.10, aarch64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1494,14 +1494,14 @@ generate-ostree-build-config-rhel-8.10-aarch64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-8.10-aarch64
+    - "image-build-trigger: [rhel-8.10, aarch64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-8.10-x86_64:
+"generate-ostree-build-config: [rhel-8.10, x86_64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1516,14 +1516,14 @@ generate-ostree-build-config-rhel-8.10-x86_64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-8.10-x86_64
+    - "image-build-trigger: [rhel-8.10, x86_64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-8.4-aarch64:
+"generate-ostree-build-config: [rhel-8.4, aarch64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1538,14 +1538,14 @@ generate-ostree-build-config-rhel-8.4-aarch64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-8.4-aarch64
+    - "image-build-trigger: [rhel-8.4, aarch64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-8.4-x86_64:
+"generate-ostree-build-config: [rhel-8.4, x86_64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1560,14 +1560,14 @@ generate-ostree-build-config-rhel-8.4-x86_64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-8.4-x86_64
+    - "image-build-trigger: [rhel-8.4, x86_64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-8.5-aarch64:
+"generate-ostree-build-config: [rhel-8.5, aarch64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1582,14 +1582,14 @@ generate-ostree-build-config-rhel-8.5-aarch64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-8.5-aarch64
+    - "image-build-trigger: [rhel-8.5, aarch64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-8.5-x86_64:
+"generate-ostree-build-config: [rhel-8.5, x86_64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1604,14 +1604,14 @@ generate-ostree-build-config-rhel-8.5-x86_64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-8.5-x86_64
+    - "image-build-trigger: [rhel-8.5, x86_64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-8.6-aarch64:
+"generate-ostree-build-config: [rhel-8.6, aarch64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1626,14 +1626,14 @@ generate-ostree-build-config-rhel-8.6-aarch64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-8.6-aarch64
+    - "image-build-trigger: [rhel-8.6, aarch64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-8.6-x86_64:
+"generate-ostree-build-config: [rhel-8.6, x86_64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1648,14 +1648,14 @@ generate-ostree-build-config-rhel-8.6-x86_64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-8.6-x86_64
+    - "image-build-trigger: [rhel-8.6, x86_64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-8.7-aarch64:
+"generate-ostree-build-config: [rhel-8.7, aarch64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1670,14 +1670,14 @@ generate-ostree-build-config-rhel-8.7-aarch64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-8.7-aarch64
+    - "image-build-trigger: [rhel-8.7, aarch64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-8.7-x86_64:
+"generate-ostree-build-config: [rhel-8.7, x86_64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1692,14 +1692,14 @@ generate-ostree-build-config-rhel-8.7-x86_64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-8.7-x86_64
+    - "image-build-trigger: [rhel-8.7, x86_64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-8.8-aarch64:
+"generate-ostree-build-config: [rhel-8.8, aarch64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1714,14 +1714,14 @@ generate-ostree-build-config-rhel-8.8-aarch64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-8.8-aarch64
+    - "image-build-trigger: [rhel-8.8, aarch64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-8.8-x86_64:
+"generate-ostree-build-config: [rhel-8.8, x86_64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1736,14 +1736,14 @@ generate-ostree-build-config-rhel-8.8-x86_64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-8.8-x86_64
+    - "image-build-trigger: [rhel-8.8, x86_64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-8.9-aarch64:
+"generate-ostree-build-config: [rhel-8.9, aarch64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1758,14 +1758,14 @@ generate-ostree-build-config-rhel-8.9-aarch64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-8.9-aarch64
+    - "image-build-trigger: [rhel-8.9, aarch64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-8.9-x86_64:
+"generate-ostree-build-config: [rhel-8.9, x86_64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1780,14 +1780,14 @@ generate-ostree-build-config-rhel-8.9-x86_64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-8.9-x86_64
+    - "image-build-trigger: [rhel-8.9, x86_64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-9.0-aarch64:
+"generate-ostree-build-config: [rhel-9.0, aarch64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1802,14 +1802,14 @@ generate-ostree-build-config-rhel-9.0-aarch64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-9.0-aarch64
+    - "image-build-trigger: [rhel-9.0, aarch64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-9.0-x86_64:
+"generate-ostree-build-config: [rhel-9.0, x86_64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1824,14 +1824,14 @@ generate-ostree-build-config-rhel-9.0-x86_64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-9.0-x86_64
+    - "image-build-trigger: [rhel-9.0, x86_64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-9.1-aarch64:
+"generate-ostree-build-config: [rhel-9.1, aarch64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1846,14 +1846,14 @@ generate-ostree-build-config-rhel-9.1-aarch64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-9.1-aarch64
+    - "image-build-trigger: [rhel-9.1, aarch64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-9.1-x86_64:
+"generate-ostree-build-config: [rhel-9.1, x86_64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1868,14 +1868,14 @@ generate-ostree-build-config-rhel-9.1-x86_64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-9.1-x86_64
+    - "image-build-trigger: [rhel-9.1, x86_64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-9.2-aarch64:
+"generate-ostree-build-config: [rhel-9.2, aarch64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1890,14 +1890,14 @@ generate-ostree-build-config-rhel-9.2-aarch64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-9.2-aarch64
+    - "image-build-trigger: [rhel-9.2, aarch64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-9.2-x86_64:
+"generate-ostree-build-config: [rhel-9.2, x86_64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1912,14 +1912,14 @@ generate-ostree-build-config-rhel-9.2-x86_64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-9.2-x86_64
+    - "image-build-trigger: [rhel-9.2, x86_64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-9.3-aarch64:
+"generate-ostree-build-config: [rhel-9.3, aarch64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1934,14 +1934,14 @@ generate-ostree-build-config-rhel-9.3-aarch64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-9.3-aarch64
+    - "image-build-trigger: [rhel-9.3, aarch64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-9.3-x86_64:
+"generate-ostree-build-config: [rhel-9.3, x86_64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1956,14 +1956,14 @@ generate-ostree-build-config-rhel-9.3-x86_64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-9.3-x86_64
+    - "image-build-trigger: [rhel-9.3, x86_64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-9.4-aarch64:
+"generate-ostree-build-config: [rhel-9.4, aarch64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -1978,14 +1978,14 @@ generate-ostree-build-config-rhel-9.4-aarch64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-9.4-aarch64
+    - "image-build-trigger: [rhel-9.4, aarch64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-9.4-x86_64:
+"generate-ostree-build-config: [rhel-9.4, x86_64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -2000,14 +2000,14 @@ generate-ostree-build-config-rhel-9.4-x86_64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-9.4-x86_64
+    - "image-build-trigger: [rhel-9.4, x86_64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-9.5-aarch64:
+"generate-ostree-build-config: [rhel-9.5, aarch64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -2022,14 +2022,14 @@ generate-ostree-build-config-rhel-9.5-aarch64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-9.5-aarch64
+    - "image-build-trigger: [rhel-9.5, aarch64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-9.5-x86_64:
+"generate-ostree-build-config: [rhel-9.5, x86_64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -2044,14 +2044,14 @@ generate-ostree-build-config-rhel-9.5-x86_64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-9.5-x86_64
+    - "image-build-trigger: [rhel-9.5, x86_64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-9.6-aarch64:
+"generate-ostree-build-config: [rhel-9.6, aarch64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -2066,14 +2066,14 @@ generate-ostree-build-config-rhel-9.6-aarch64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-9.6-aarch64
+    - "image-build-trigger: [rhel-9.6, aarch64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
 
-generate-ostree-build-config-rhel-9.6-x86_64:
+"generate-ostree-build-config: [rhel-9.6, x86_64]":
   stage: ostree-gen
   extends: .terraform
   variables:
@@ -2088,441 +2088,441 @@ generate-ostree-build-config-rhel-9.6-x86_64:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-rhel-9.6-x86_64
+    - "image-build-trigger: [rhel-9.6, x86_64]"
   cache:
     key: testcache
     paths:
       - .cache/osbuild-images
 
-image-build-ostree-trigger-centos-10-aarch64:
+"image-build-ostree-trigger: [centos-10, aarch64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-centos-10-aarch64
+        job: "generate-ostree-build-config: [centos-10, aarch64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-centos-10-aarch64
+    - "generate-ostree-build-config: [centos-10, aarch64]"
 
 
-image-build-ostree-trigger-centos-10-x86_64:
+"image-build-ostree-trigger: [centos-10, x86_64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-centos-10-x86_64
+        job: "generate-ostree-build-config: [centos-10, x86_64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-centos-10-x86_64
+    - "generate-ostree-build-config: [centos-10, x86_64]"
 
 
-image-build-ostree-trigger-centos-9-aarch64:
+"image-build-ostree-trigger: [centos-9, aarch64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-centos-9-aarch64
+        job: "generate-ostree-build-config: [centos-9, aarch64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-centos-9-aarch64
+    - "generate-ostree-build-config: [centos-9, aarch64]"
 
 
-image-build-ostree-trigger-centos-9-x86_64:
+"image-build-ostree-trigger: [centos-9, x86_64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-centos-9-x86_64
+        job: "generate-ostree-build-config: [centos-9, x86_64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-centos-9-x86_64
+    - "generate-ostree-build-config: [centos-9, x86_64]"
 
 
-image-build-ostree-trigger-fedora-40-aarch64:
+"image-build-ostree-trigger: [fedora-40, aarch64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-fedora-40-aarch64
+        job: "generate-ostree-build-config: [fedora-40, aarch64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-fedora-40-aarch64
+    - "generate-ostree-build-config: [fedora-40, aarch64]"
 
 
-image-build-ostree-trigger-fedora-40-x86_64:
+"image-build-ostree-trigger: [fedora-40, x86_64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-fedora-40-x86_64
+        job: "generate-ostree-build-config: [fedora-40, x86_64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-fedora-40-x86_64
+    - "generate-ostree-build-config: [fedora-40, x86_64]"
 
 
-image-build-ostree-trigger-fedora-41-aarch64:
+"image-build-ostree-trigger: [fedora-41, aarch64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-fedora-41-aarch64
+        job: "generate-ostree-build-config: [fedora-41, aarch64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-fedora-41-aarch64
+    - "generate-ostree-build-config: [fedora-41, aarch64]"
 
 
-image-build-ostree-trigger-fedora-41-x86_64:
+"image-build-ostree-trigger: [fedora-41, x86_64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-fedora-41-x86_64
+        job: "generate-ostree-build-config: [fedora-41, x86_64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-fedora-41-x86_64
+    - "generate-ostree-build-config: [fedora-41, x86_64]"
 
 
-image-build-ostree-trigger-rhel-10.0-aarch64:
+"image-build-ostree-trigger: [rhel-10.0, aarch64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-10.0-aarch64
+        job: "generate-ostree-build-config: [rhel-10.0, aarch64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-10.0-aarch64
+    - "generate-ostree-build-config: [rhel-10.0, aarch64]"
 
 
-image-build-ostree-trigger-rhel-10.0-x86_64:
+"image-build-ostree-trigger: [rhel-10.0, x86_64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-10.0-x86_64
+        job: "generate-ostree-build-config: [rhel-10.0, x86_64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-10.0-x86_64
+    - "generate-ostree-build-config: [rhel-10.0, x86_64]"
 
 
-image-build-ostree-trigger-rhel-7.9-x86_64:
+"image-build-ostree-trigger: [rhel-7.9, x86_64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-7.9-x86_64
+        job: "generate-ostree-build-config: [rhel-7.9, x86_64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-7.9-x86_64
+    - "generate-ostree-build-config: [rhel-7.9, x86_64]"
 
 
-image-build-ostree-trigger-rhel-8.10-aarch64:
+"image-build-ostree-trigger: [rhel-8.10, aarch64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-8.10-aarch64
+        job: "generate-ostree-build-config: [rhel-8.10, aarch64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-8.10-aarch64
+    - "generate-ostree-build-config: [rhel-8.10, aarch64]"
 
 
-image-build-ostree-trigger-rhel-8.10-x86_64:
+"image-build-ostree-trigger: [rhel-8.10, x86_64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-8.10-x86_64
+        job: "generate-ostree-build-config: [rhel-8.10, x86_64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-8.10-x86_64
+    - "generate-ostree-build-config: [rhel-8.10, x86_64]"
 
 
-image-build-ostree-trigger-rhel-8.4-aarch64:
+"image-build-ostree-trigger: [rhel-8.4, aarch64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-8.4-aarch64
+        job: "generate-ostree-build-config: [rhel-8.4, aarch64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-8.4-aarch64
+    - "generate-ostree-build-config: [rhel-8.4, aarch64]"
 
 
-image-build-ostree-trigger-rhel-8.4-x86_64:
+"image-build-ostree-trigger: [rhel-8.4, x86_64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-8.4-x86_64
+        job: "generate-ostree-build-config: [rhel-8.4, x86_64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-8.4-x86_64
+    - "generate-ostree-build-config: [rhel-8.4, x86_64]"
 
 
-image-build-ostree-trigger-rhel-8.5-aarch64:
+"image-build-ostree-trigger: [rhel-8.5, aarch64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-8.5-aarch64
+        job: "generate-ostree-build-config: [rhel-8.5, aarch64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-8.5-aarch64
+    - "generate-ostree-build-config: [rhel-8.5, aarch64]"
 
 
-image-build-ostree-trigger-rhel-8.5-x86_64:
+"image-build-ostree-trigger: [rhel-8.5, x86_64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-8.5-x86_64
+        job: "generate-ostree-build-config: [rhel-8.5, x86_64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-8.5-x86_64
+    - "generate-ostree-build-config: [rhel-8.5, x86_64]"
 
 
-image-build-ostree-trigger-rhel-8.6-aarch64:
+"image-build-ostree-trigger: [rhel-8.6, aarch64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-8.6-aarch64
+        job: "generate-ostree-build-config: [rhel-8.6, aarch64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-8.6-aarch64
+    - "generate-ostree-build-config: [rhel-8.6, aarch64]"
 
 
-image-build-ostree-trigger-rhel-8.6-x86_64:
+"image-build-ostree-trigger: [rhel-8.6, x86_64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-8.6-x86_64
+        job: "generate-ostree-build-config: [rhel-8.6, x86_64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-8.6-x86_64
+    - "generate-ostree-build-config: [rhel-8.6, x86_64]"
 
 
-image-build-ostree-trigger-rhel-8.7-aarch64:
+"image-build-ostree-trigger: [rhel-8.7, aarch64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-8.7-aarch64
+        job: "generate-ostree-build-config: [rhel-8.7, aarch64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-8.7-aarch64
+    - "generate-ostree-build-config: [rhel-8.7, aarch64]"
 
 
-image-build-ostree-trigger-rhel-8.7-x86_64:
+"image-build-ostree-trigger: [rhel-8.7, x86_64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-8.7-x86_64
+        job: "generate-ostree-build-config: [rhel-8.7, x86_64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-8.7-x86_64
+    - "generate-ostree-build-config: [rhel-8.7, x86_64]"
 
 
-image-build-ostree-trigger-rhel-8.8-aarch64:
+"image-build-ostree-trigger: [rhel-8.8, aarch64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-8.8-aarch64
+        job: "generate-ostree-build-config: [rhel-8.8, aarch64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-8.8-aarch64
+    - "generate-ostree-build-config: [rhel-8.8, aarch64]"
 
 
-image-build-ostree-trigger-rhel-8.8-x86_64:
+"image-build-ostree-trigger: [rhel-8.8, x86_64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-8.8-x86_64
+        job: "generate-ostree-build-config: [rhel-8.8, x86_64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-8.8-x86_64
+    - "generate-ostree-build-config: [rhel-8.8, x86_64]"
 
 
-image-build-ostree-trigger-rhel-8.9-aarch64:
+"image-build-ostree-trigger: [rhel-8.9, aarch64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-8.9-aarch64
+        job: "generate-ostree-build-config: [rhel-8.9, aarch64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-8.9-aarch64
+    - "generate-ostree-build-config: [rhel-8.9, aarch64]"
 
 
-image-build-ostree-trigger-rhel-8.9-x86_64:
+"image-build-ostree-trigger: [rhel-8.9, x86_64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-8.9-x86_64
+        job: "generate-ostree-build-config: [rhel-8.9, x86_64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-8.9-x86_64
+    - "generate-ostree-build-config: [rhel-8.9, x86_64]"
 
 
-image-build-ostree-trigger-rhel-9.0-aarch64:
+"image-build-ostree-trigger: [rhel-9.0, aarch64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-9.0-aarch64
+        job: "generate-ostree-build-config: [rhel-9.0, aarch64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-9.0-aarch64
+    - "generate-ostree-build-config: [rhel-9.0, aarch64]"
 
 
-image-build-ostree-trigger-rhel-9.0-x86_64:
+"image-build-ostree-trigger: [rhel-9.0, x86_64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-9.0-x86_64
+        job: "generate-ostree-build-config: [rhel-9.0, x86_64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-9.0-x86_64
+    - "generate-ostree-build-config: [rhel-9.0, x86_64]"
 
 
-image-build-ostree-trigger-rhel-9.1-aarch64:
+"image-build-ostree-trigger: [rhel-9.1, aarch64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-9.1-aarch64
+        job: "generate-ostree-build-config: [rhel-9.1, aarch64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-9.1-aarch64
+    - "generate-ostree-build-config: [rhel-9.1, aarch64]"
 
 
-image-build-ostree-trigger-rhel-9.1-x86_64:
+"image-build-ostree-trigger: [rhel-9.1, x86_64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-9.1-x86_64
+        job: "generate-ostree-build-config: [rhel-9.1, x86_64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-9.1-x86_64
+    - "generate-ostree-build-config: [rhel-9.1, x86_64]"
 
 
-image-build-ostree-trigger-rhel-9.2-aarch64:
+"image-build-ostree-trigger: [rhel-9.2, aarch64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-9.2-aarch64
+        job: "generate-ostree-build-config: [rhel-9.2, aarch64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-9.2-aarch64
+    - "generate-ostree-build-config: [rhel-9.2, aarch64]"
 
 
-image-build-ostree-trigger-rhel-9.2-x86_64:
+"image-build-ostree-trigger: [rhel-9.2, x86_64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-9.2-x86_64
+        job: "generate-ostree-build-config: [rhel-9.2, x86_64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-9.2-x86_64
+    - "generate-ostree-build-config: [rhel-9.2, x86_64]"
 
 
-image-build-ostree-trigger-rhel-9.3-aarch64:
+"image-build-ostree-trigger: [rhel-9.3, aarch64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-9.3-aarch64
+        job: "generate-ostree-build-config: [rhel-9.3, aarch64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-9.3-aarch64
+    - "generate-ostree-build-config: [rhel-9.3, aarch64]"
 
 
-image-build-ostree-trigger-rhel-9.3-x86_64:
+"image-build-ostree-trigger: [rhel-9.3, x86_64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-9.3-x86_64
+        job: "generate-ostree-build-config: [rhel-9.3, x86_64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-9.3-x86_64
+    - "generate-ostree-build-config: [rhel-9.3, x86_64]"
 
 
-image-build-ostree-trigger-rhel-9.4-aarch64:
+"image-build-ostree-trigger: [rhel-9.4, aarch64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-9.4-aarch64
+        job: "generate-ostree-build-config: [rhel-9.4, aarch64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-9.4-aarch64
+    - "generate-ostree-build-config: [rhel-9.4, aarch64]"
 
 
-image-build-ostree-trigger-rhel-9.4-x86_64:
+"image-build-ostree-trigger: [rhel-9.4, x86_64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-9.4-x86_64
+        job: "generate-ostree-build-config: [rhel-9.4, x86_64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-9.4-x86_64
+    - "generate-ostree-build-config: [rhel-9.4, x86_64]"
 
 
-image-build-ostree-trigger-rhel-9.5-aarch64:
+"image-build-ostree-trigger: [rhel-9.5, aarch64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-9.5-aarch64
+        job: "generate-ostree-build-config: [rhel-9.5, aarch64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-9.5-aarch64
+    - "generate-ostree-build-config: [rhel-9.5, aarch64]"
 
 
-image-build-ostree-trigger-rhel-9.5-x86_64:
+"image-build-ostree-trigger: [rhel-9.5, x86_64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-9.5-x86_64
+        job: "generate-ostree-build-config: [rhel-9.5, x86_64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-9.5-x86_64
+    - "generate-ostree-build-config: [rhel-9.5, x86_64]"
 
 
-image-build-ostree-trigger-rhel-9.6-aarch64:
+"image-build-ostree-trigger: [rhel-9.6, aarch64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-9.6-aarch64
+        job: "generate-ostree-build-config: [rhel-9.6, aarch64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-9.6-aarch64
+    - "generate-ostree-build-config: [rhel-9.6, aarch64]"
 
 
-image-build-ostree-trigger-rhel-9.6-x86_64:
+"image-build-ostree-trigger: [rhel-9.6, x86_64]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-rhel-9.6-x86_64
+        job: "generate-ostree-build-config: [rhel-9.6, x86_64]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-rhel-9.6-x86_64
+    - "generate-ostree-build-config: [rhel-9.6, x86_64]"
 
-generate-manifests-centos-10-ppc64le:
+"generate-manifests: [centos-10, ppc64le]":
   stage: gen
   extends: .terraform
   variables:
@@ -2541,7 +2541,7 @@ generate-manifests-centos-10-ppc64le:
       done
 
 
-generate-manifests-centos-10-s390x:
+"generate-manifests: [centos-10, s390x]":
   stage: gen
   extends: .terraform
   variables:
@@ -2560,7 +2560,7 @@ generate-manifests-centos-10-s390x:
       done
 
 
-generate-manifests-centos-9-ppc64le:
+"generate-manifests: [centos-9, ppc64le]":
   stage: gen
   extends: .terraform
   variables:
@@ -2579,7 +2579,7 @@ generate-manifests-centos-9-ppc64le:
       done
 
 
-generate-manifests-centos-9-s390x:
+"generate-manifests: [centos-9, s390x]":
   stage: gen
   extends: .terraform
   variables:
@@ -2598,7 +2598,7 @@ generate-manifests-centos-9-s390x:
       done
 
 
-generate-manifests-fedora-40-ppc64le:
+"generate-manifests: [fedora-40, ppc64le]":
   stage: gen
   extends: .terraform
   variables:
@@ -2617,7 +2617,7 @@ generate-manifests-fedora-40-ppc64le:
       done
 
 
-generate-manifests-fedora-40-s390x:
+"generate-manifests: [fedora-40, s390x]":
   stage: gen
   extends: .terraform
   variables:
@@ -2636,7 +2636,7 @@ generate-manifests-fedora-40-s390x:
       done
 
 
-generate-manifests-fedora-41-ppc64le:
+"generate-manifests: [fedora-41, ppc64le]":
   stage: gen
   extends: .terraform
   variables:
@@ -2655,7 +2655,7 @@ generate-manifests-fedora-41-ppc64le:
       done
 
 
-generate-manifests-fedora-41-s390x:
+"generate-manifests: [fedora-41, s390x]":
   stage: gen
   extends: .terraform
   variables:
@@ -2674,7 +2674,7 @@ generate-manifests-fedora-41-s390x:
       done
 
 
-generate-manifests-rhel-10.0-ppc64le:
+"generate-manifests: [rhel-10.0, ppc64le]":
   stage: gen
   extends: .terraform
   variables:
@@ -2693,7 +2693,7 @@ generate-manifests-rhel-10.0-ppc64le:
       done
 
 
-generate-manifests-rhel-10.0-s390x:
+"generate-manifests: [rhel-10.0, s390x]":
   stage: gen
   extends: .terraform
   variables:
@@ -2712,7 +2712,7 @@ generate-manifests-rhel-10.0-s390x:
       done
 
 
-generate-manifests-rhel-8.10-ppc64le:
+"generate-manifests: [rhel-8.10, ppc64le]":
   stage: gen
   extends: .terraform
   variables:
@@ -2731,7 +2731,7 @@ generate-manifests-rhel-8.10-ppc64le:
       done
 
 
-generate-manifests-rhel-8.10-s390x:
+"generate-manifests: [rhel-8.10, s390x]":
   stage: gen
   extends: .terraform
   variables:
@@ -2750,7 +2750,7 @@ generate-manifests-rhel-8.10-s390x:
       done
 
 
-generate-manifests-rhel-8.4-ppc64le:
+"generate-manifests: [rhel-8.4, ppc64le]":
   stage: gen
   extends: .terraform
   variables:
@@ -2769,7 +2769,7 @@ generate-manifests-rhel-8.4-ppc64le:
       done
 
 
-generate-manifests-rhel-8.4-s390x:
+"generate-manifests: [rhel-8.4, s390x]":
   stage: gen
   extends: .terraform
   variables:
@@ -2788,7 +2788,7 @@ generate-manifests-rhel-8.4-s390x:
       done
 
 
-generate-manifests-rhel-8.5-ppc64le:
+"generate-manifests: [rhel-8.5, ppc64le]":
   stage: gen
   extends: .terraform
   variables:
@@ -2807,7 +2807,7 @@ generate-manifests-rhel-8.5-ppc64le:
       done
 
 
-generate-manifests-rhel-8.5-s390x:
+"generate-manifests: [rhel-8.5, s390x]":
   stage: gen
   extends: .terraform
   variables:
@@ -2826,7 +2826,7 @@ generate-manifests-rhel-8.5-s390x:
       done
 
 
-generate-manifests-rhel-8.6-ppc64le:
+"generate-manifests: [rhel-8.6, ppc64le]":
   stage: gen
   extends: .terraform
   variables:
@@ -2845,7 +2845,7 @@ generate-manifests-rhel-8.6-ppc64le:
       done
 
 
-generate-manifests-rhel-8.6-s390x:
+"generate-manifests: [rhel-8.6, s390x]":
   stage: gen
   extends: .terraform
   variables:
@@ -2864,7 +2864,7 @@ generate-manifests-rhel-8.6-s390x:
       done
 
 
-generate-manifests-rhel-8.7-ppc64le:
+"generate-manifests: [rhel-8.7, ppc64le]":
   stage: gen
   extends: .terraform
   variables:
@@ -2883,7 +2883,7 @@ generate-manifests-rhel-8.7-ppc64le:
       done
 
 
-generate-manifests-rhel-8.7-s390x:
+"generate-manifests: [rhel-8.7, s390x]":
   stage: gen
   extends: .terraform
   variables:
@@ -2902,7 +2902,7 @@ generate-manifests-rhel-8.7-s390x:
       done
 
 
-generate-manifests-rhel-8.8-ppc64le:
+"generate-manifests: [rhel-8.8, ppc64le]":
   stage: gen
   extends: .terraform
   variables:
@@ -2921,7 +2921,7 @@ generate-manifests-rhel-8.8-ppc64le:
       done
 
 
-generate-manifests-rhel-8.8-s390x:
+"generate-manifests: [rhel-8.8, s390x]":
   stage: gen
   extends: .terraform
   variables:
@@ -2940,7 +2940,7 @@ generate-manifests-rhel-8.8-s390x:
       done
 
 
-generate-manifests-rhel-8.9-ppc64le:
+"generate-manifests: [rhel-8.9, ppc64le]":
   stage: gen
   extends: .terraform
   variables:
@@ -2959,7 +2959,7 @@ generate-manifests-rhel-8.9-ppc64le:
       done
 
 
-generate-manifests-rhel-8.9-s390x:
+"generate-manifests: [rhel-8.9, s390x]":
   stage: gen
   extends: .terraform
   variables:
@@ -2978,7 +2978,7 @@ generate-manifests-rhel-8.9-s390x:
       done
 
 
-generate-manifests-rhel-9.0-ppc64le:
+"generate-manifests: [rhel-9.0, ppc64le]":
   stage: gen
   extends: .terraform
   variables:
@@ -2997,7 +2997,7 @@ generate-manifests-rhel-9.0-ppc64le:
       done
 
 
-generate-manifests-rhel-9.0-s390x:
+"generate-manifests: [rhel-9.0, s390x]":
   stage: gen
   extends: .terraform
   variables:
@@ -3016,7 +3016,7 @@ generate-manifests-rhel-9.0-s390x:
       done
 
 
-generate-manifests-rhel-9.1-ppc64le:
+"generate-manifests: [rhel-9.1, ppc64le]":
   stage: gen
   extends: .terraform
   variables:
@@ -3035,7 +3035,7 @@ generate-manifests-rhel-9.1-ppc64le:
       done
 
 
-generate-manifests-rhel-9.1-s390x:
+"generate-manifests: [rhel-9.1, s390x]":
   stage: gen
   extends: .terraform
   variables:
@@ -3054,7 +3054,7 @@ generate-manifests-rhel-9.1-s390x:
       done
 
 
-generate-manifests-rhel-9.2-ppc64le:
+"generate-manifests: [rhel-9.2, ppc64le]":
   stage: gen
   extends: .terraform
   variables:
@@ -3073,7 +3073,7 @@ generate-manifests-rhel-9.2-ppc64le:
       done
 
 
-generate-manifests-rhel-9.2-s390x:
+"generate-manifests: [rhel-9.2, s390x]":
   stage: gen
   extends: .terraform
   variables:
@@ -3092,7 +3092,7 @@ generate-manifests-rhel-9.2-s390x:
       done
 
 
-generate-manifests-rhel-9.3-ppc64le:
+"generate-manifests: [rhel-9.3, ppc64le]":
   stage: gen
   extends: .terraform
   variables:
@@ -3111,7 +3111,7 @@ generate-manifests-rhel-9.3-ppc64le:
       done
 
 
-generate-manifests-rhel-9.3-s390x:
+"generate-manifests: [rhel-9.3, s390x]":
   stage: gen
   extends: .terraform
   variables:
@@ -3130,7 +3130,7 @@ generate-manifests-rhel-9.3-s390x:
       done
 
 
-generate-manifests-rhel-9.4-ppc64le:
+"generate-manifests: [rhel-9.4, ppc64le]":
   stage: gen
   extends: .terraform
   variables:
@@ -3149,7 +3149,7 @@ generate-manifests-rhel-9.4-ppc64le:
       done
 
 
-generate-manifests-rhel-9.4-s390x:
+"generate-manifests: [rhel-9.4, s390x]":
   stage: gen
   extends: .terraform
   variables:
@@ -3168,7 +3168,7 @@ generate-manifests-rhel-9.4-s390x:
       done
 
 
-generate-manifests-rhel-9.5-ppc64le:
+"generate-manifests: [rhel-9.5, ppc64le]":
   stage: gen
   extends: .terraform
   variables:
@@ -3187,7 +3187,7 @@ generate-manifests-rhel-9.5-ppc64le:
       done
 
 
-generate-manifests-rhel-9.5-s390x:
+"generate-manifests: [rhel-9.5, s390x]":
   stage: gen
   extends: .terraform
   variables:
@@ -3206,7 +3206,7 @@ generate-manifests-rhel-9.5-s390x:
       done
 
 
-generate-manifests-rhel-9.6-ppc64le:
+"generate-manifests: [rhel-9.6, ppc64le]":
   stage: gen
   extends: .terraform
   variables:
@@ -3225,7 +3225,7 @@ generate-manifests-rhel-9.6-ppc64le:
       done
 
 
-generate-manifests-rhel-9.6-s390x:
+"generate-manifests: [rhel-9.6, s390x]":
   stage: gen
   extends: .terraform
   variables:
