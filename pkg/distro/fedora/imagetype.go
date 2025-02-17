@@ -166,6 +166,7 @@ func (t *imageType) getPartitionTable(
 			BootMode:           t.BootMode(),
 			DefaultFSType:      disk.FS_EXT4, // default fs type for Fedora
 			RequiredMinSizes:   t.requiredPartitionSizes,
+			Architecture:       t.platform.GetArch(),
 		}
 		return disk.NewCustomPartitionTable(partitioning, partOptions, rng)
 	}

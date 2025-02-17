@@ -29,6 +29,7 @@ import (
 	"slices"
 
 	"github.com/google/uuid"
+	"github.com/osbuild/images/pkg/arch"
 )
 
 const (
@@ -53,6 +54,16 @@ const (
 	PRePartitionGUID       = "9E1A2D38-C612-4316-AA26-8B49521E5A8B"
 	SwapPartitionGUID      = "0657FD6D-A4AB-43C4-84E5-0933C84B4F4F" // SD_GPT_SWAP
 	XBootLDRPartitionGUID  = "BC13C2FF-59E6-4262-A352-B275FD6F7172" // SD_GPT_XBOOTLDR
+
+	RootPartitionX86_64GUID  = "4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709" // SD_GPT_ROOT_X86_64
+	RootPartitionAarch64GUID = "B921B045-1DF0-41C3-AF44-4C6F280D3FAE" // SD_GPT_ROOT_ARM64
+	RootPartitionPpc64leGUID = "C31C45E6-3F39-412E-80FB-4809C4980599" // SD_GPT_ROOT_PPC64_LE
+	RootPartitionS390xGUID   = "5EEAD9A9-FE09-4A1E-A1D7-520D00531306" // SD_GPT_ROOT_S390X
+
+	UsrPartitionX86_64GUID  = "8484680C-9521-48C6-9C11-B0720656F69E" // SD_GPT_USR_X86_64
+	UsrPartitionAarch64GUID = "B0E01050-EE5F-4390-949A-9101B17104E9" // SD_GPT_USR_ARM64
+	UsrPartitionPpc64leGUID = "15BB03AF-77E7-4D4A-B12B-C0D084F7491C" // SD_GPT_USR_PPC64_LE
+	UsrPartitionS390xGUID   = "8A4F5770-50AA-4ED3-874A-99B710DB6FEA" // SD_GPT_USR_S390X
 
 	// Partition type IDs for DOS disks
 
@@ -94,15 +105,13 @@ const (
 	EFIFilesystemUUID = "7B77-95E7"
 )
 
-func getPartitionTypeIDfor(ptType PartitionTableType, partTypeName string) (string, error) {
+func getPartitionTypeIDfor(ptType PartitionTableType, partTypeName string, architecture arch.Arch) (string, error) {
 	switch ptType {
 	case PT_DOS:
 		switch partTypeName {
 		case "bios":
 			return BIOSBootPartitionDOSID, nil
-		case "boot":
-			return FilesystemLinuxDOSID, nil
-		case "data":
+		case "data", "boot", "root", "usr":
 			return FilesystemLinuxDOSID, nil
 		case "esp":
 			return EFISystemPartitionDOSID, nil
@@ -127,6 +136,36 @@ func getPartitionTypeIDfor(ptType PartitionTableType, partTypeName string) (stri
 			return LVMPartitionGUID, nil
 		case "swap":
 			return SwapPartitionGUID, nil
+		case "root":
+			switch architecture {
+			case arch.ARCH_X86_64:
+				return RootPartitionX86_64GUID, nil
+			case arch.ARCH_AARCH64:
+				return RootPartitionAarch64GUID, nil
+			case arch.ARCH_PPC64LE:
+				return RootPartitionPpc64leGUID, nil
+			case arch.ARCH_S390X:
+				return RootPartitionS390xGUID, nil
+			case arch.ARCH_UNSET:
+				return "", fmt.Errorf("architecture must be specified for selecting GUID for %q partition", partTypeName)
+			default:
+				return "", fmt.Errorf("unknown or unsupported architecture enum value: %d", architecture)
+			}
+		case "usr":
+			switch architecture {
+			case arch.ARCH_X86_64:
+				return UsrPartitionX86_64GUID, nil
+			case arch.ARCH_AARCH64:
+				return UsrPartitionAarch64GUID, nil
+			case arch.ARCH_PPC64LE:
+				return UsrPartitionPpc64leGUID, nil
+			case arch.ARCH_S390X:
+				return UsrPartitionS390xGUID, nil
+			case arch.ARCH_UNSET:
+				return "", fmt.Errorf("architecture must be specified for selecting GUID for %q partition", partTypeName)
+			default:
+				return "", fmt.Errorf("unknown or unsupported architecture enum value: %d", architecture)
+			}
 		default:
 			return "", fmt.Errorf("unknown or unsupported partition type name: %s", partTypeName)
 		}

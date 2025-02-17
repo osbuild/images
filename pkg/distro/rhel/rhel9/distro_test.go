@@ -932,7 +932,7 @@ func TestNoDiskCustomizationsNoError(t *testing.T) {
 			if skipTest[imgTypeName] {
 				continue
 			}
-			assert.NoError(t, err)
+			assert.NoError(t, err, "architecture was %s", imgType.Arch().Name())
 		}
 	}
 }
