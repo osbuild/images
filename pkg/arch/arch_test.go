@@ -38,6 +38,14 @@ func TestCurrentArchS390X(t *testing.T) {
 	assert.True(t, IsS390x())
 }
 
+func TestCurrentArchRiscv64(t *testing.T) {
+	origRuntimeGOARCH := runtimeGOARCH
+	defer func() { runtimeGOARCH = origRuntimeGOARCH }()
+	runtimeGOARCH = "riscv64"
+	assert.Equal(t, "riscv64", Current().String())
+	assert.True(t, IsRISCV64())
+}
+
 func TestCurrentArchUnsupported(t *testing.T) {
 	origRuntimeGOARCH := runtimeGOARCH
 	defer func() { runtimeGOARCH = origRuntimeGOARCH }()
@@ -56,4 +64,5 @@ func TestFromString(t *testing.T) {
 	assert.Equal(t, ARCH_X86_64, FromString("x86_64"))
 	assert.Equal(t, ARCH_S390X, FromString("s390x"))
 	assert.Equal(t, ARCH_PPC64LE, FromString("ppc64le"))
+	assert.Equal(t, ARCH_RISCV64, FromString("riscv64"))
 }
