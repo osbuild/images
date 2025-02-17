@@ -86,6 +86,15 @@ func TestDistroIDParser(t *testing.T) {
 			stringID: "centos-stream",
 			err:      true,
 		},
+		{
+			stringID: "fedora-rawhide",
+			expected: &ID{
+				Name:         "fedora",
+				MajorVersion: 0,
+				MinorVersion: -1,
+				VersionName:  "rawhide",
+			},
+		},
 	}
 
 	for _, tc := range testCases {

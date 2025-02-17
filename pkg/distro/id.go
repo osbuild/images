@@ -14,6 +14,10 @@ type ID struct {
 	MajorVersion int
 	// MinorVersion is -1 if not specified
 	MinorVersion int
+
+	// The VersionName field is set if a version should be named, for example
+	// Fedora's rawhide
+	VersionName string
 }
 
 func (id ID) versionString() string {
@@ -25,6 +29,10 @@ func (id ID) versionString() string {
 }
 
 func (id ID) String() string {
+	if len(id.VersionName) > 0 {
+		return fmt.Sprintf("%s-%s", id.Name, id.VersionName)
+	}
+
 	return fmt.Sprintf("%s-%s", id.Name, id.versionString())
 }
 
@@ -62,6 +70,7 @@ func ParseID(idStr string) (*ID, error) {
 
 	name := strings.Join(idParts[:len(idParts)-1], "-")
 	version := idParts[len(idParts)-1]
+	versionName := ""
 
 	versionParts := strings.Split(version, ".")
 
@@ -71,7 +80,13 @@ func ParseID(idStr string) (*ID, error) {
 
 	majorVersion, err := strconv.Atoi(versionParts[0])
 	if err != nil {
-		return nil, ParseError{ToParse: idStr, Msg: "parsing major version failed", Inner: err}
+		// Handle the rawhide special case which *is* allowed
+		if versionParts[0] == "rawhide" {
+			majorVersion = 0
+			versionName = "rawhide"
+		} else {
+			return nil, ParseError{ToParse: idStr, Msg: "parsing major version failed", Inner: err}
+		}
 	}
 
 	minorVersion := -1
@@ -88,5 +103,6 @@ func ParseID(idStr string) (*ID, error) {
 		Name:         name,
 		MajorVersion: majorVersion,
 		MinorVersion: minorVersion,
+		VersionName:  versionName,
 	}, nil
 }
