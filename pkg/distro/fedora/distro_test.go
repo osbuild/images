@@ -611,6 +611,12 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				},
 			},
 		},
+		{
+			arch: "riscv64",
+			imgNames: []string{
+				"container",
+			},
+		},
 	}
 
 	for _, dist := range fedoraFamilyDistros {
@@ -635,7 +641,7 @@ func TestFedora_ListArches(t *testing.T) {
 		fedoraDistro := dist.distro
 		t.Run(dist.name, func(t *testing.T) {
 			arches := fedoraDistro.ListArches()
-			assert.Equal(t, []string{"aarch64", "ppc64le", "s390x", "x86_64"}, arches)
+			assert.Equal(t, []string{"aarch64", "ppc64le", "riscv64", "s390x", "x86_64"}, arches)
 		})
 	}
 }
@@ -1042,6 +1048,10 @@ func TestDistro_DiskCustomizationRunsValidateLayoutConstraints(t *testing.T) {
 		for _, archName := range fedoraDistro.ListArches() {
 			arch, err := fedoraDistro.GetArch(archName)
 			assert.NoError(t, err)
+			// XXX: enable once we support qcow2 on riscv64
+			if arch.Name() == "riscv64" {
+				continue
+			}
 			imgType, err := arch.GetImageType("qcow2")
 			assert.NoError(t, err, archName)
 			t.Run(fmt.Sprintf("%s/%s", archName, imgType.Name()), func(t *testing.T) {

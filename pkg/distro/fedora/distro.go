@@ -646,6 +646,11 @@ func newDistro(version int) distro.Distro {
 		name:   arch.ARCH_S390X.String(),
 	}
 
+	riscv64 := architecture{
+		name:   arch.ARCH_RISCV64.String(),
+		distro: &rd,
+	}
+
 	ociImgType := qcow2ImgType
 	ociImgType.name = "oci"
 
@@ -1039,7 +1044,12 @@ func newDistro(version int) distro.Distro {
 		containerImgType,
 	)
 
-	rd.addArches(x86_64, aarch64, ppc64le, s390x)
+	riscv64.addImageTypes(
+		&platform.RISCV64{},
+		containerImgType,
+	)
+
+	rd.addArches(x86_64, aarch64, ppc64le, s390x, riscv64)
 	return &rd
 }
 
