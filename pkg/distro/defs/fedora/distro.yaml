@@ -13,22 +13,22 @@
       - "plymouth"
 
 image_types:
-  qcow2: &qcow2
+  server_qcow2: &server_qcow2
     package_sets:
      - *cloud_base_pkgset
      - include:
          - "qemu-guest-agent"
-  ami: *qcow2
-  oci: *qcow2
-  openstack: *qcow2
+  server_ami: *server_qcow2
+  server_oci: *server_qcow2
+  server_openstack: *server_qcow2
 
-  vhd:
+  server_vhd:
     package_sets:
       - *cloud_base_pkgset
       - include:
           - "WALinuxAgent"
 
-  vmdk: &vmdk
+  server_vmdk: &server_vmdk
     package_sets:
       - include:
           - "@Fedora Cloud Server"
@@ -48,7 +48,7 @@ image_types:
           - "grubby-deprecated"
           - "extlinux-bootloader"
 
-  ova: *vmdk
+  server_ova: *server_vmdk
 
   # NOTE: keep in sync with official fedora-iot definitions:
   # https://pagure.io/fedora-iot/ostree/blob/main/f/fedora-iot-base.yaml
@@ -269,7 +269,7 @@ image_types:
                 - "perl"
                 - "perl-interpreter"
 
-  installer:
+  minimal_installer:
     package_sets:
       - &installer_pkgset
         include:
@@ -443,7 +443,7 @@ image_types:
       - include:
           - "fedora-release-iot"
 
-  live_installer:
+  workstation_live_installer:
     package_sets:
       - include:
           - "@workstation-product-environment"
@@ -524,7 +524,7 @@ image_types:
           - "whois-nls"
           - "xkeyboard-config"
 
-  wsl:
+  server_wsl:
     package_sets:
       - include:
           - "bash"
@@ -597,6 +597,7 @@ image_types:
               exclude:
                 - "firewalld"
   minimal_raw_zst: *minimal_raw
+  minimal_raw_xz: &minimal_raw
 
   iot_simplified_installer:
     package_sets:

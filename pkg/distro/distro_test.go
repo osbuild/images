@@ -543,12 +543,12 @@ func TestDistro_ManifestFIPSWarning(t *testing.T) {
 		"edge-simplified-installer",
 		"edge-qcow2-image",
 		"iot-installer",
-		"iot-raw-image",
+		"iot-raw-xz",
 		"iot-simplified-installer",
-		"iot-qcow2-image",
+		"iot-qcow2",
 	}
 	noCustomizableImages := []string{
-		"live-installer",
+		"workstation-live-installer",
 		"azure-eap7-rhui",
 	}
 
