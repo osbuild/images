@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/platform"
@@ -1176,6 +1177,12 @@ type CustomPartitionTableOptions struct {
 	// mountpoint's partition is the sum of all the required directory sizes it
 	// will contain.
 	RequiredMinSizes map[string]uint64
+
+	// Architecture of the hardware that will use the partition table. This is
+	// used to select appropriate partition types for GPT formatted disks to
+	// enable automatic discovery. It has no effect and is not required when
+	// the PartitionTableType is PT_DOS.
+	Architecture arch.Arch
 }
 
 // Returns the default filesystem type if the fstype is empty. If both are
