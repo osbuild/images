@@ -1,6 +1,7 @@
 package manifest_test
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/testdisk"
 	"github.com/osbuild/images/pkg/container"
+	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
@@ -280,4 +282,64 @@ func RawBootcImageSerializeFstabPipelineHasBootcMounts(t *testing.T) {
 	stage := manifest.FindStage("org.osbuild.fstab", pipeline.Stages)
 	assert.NotNil(t, stage)
 	assertBootcDeploymentAndBindMount(t, stage)
+}
+
+func TestRawBootcImageSerializeCreateFilesDirs(t *testing.T) {
+	rawBootcPipeline := makeFakeRawBootcPipeline()
+
+	dir1, err := fsnode.NewDirectory("/path/to/dir", nil, nil, nil, false)
+	require.NoError(t, err)
+	file1, err := fsnode.NewFile("/path/to/file", nil, nil, nil, []byte("file-content"))
+	require.NoError(t, err)
+	for _, tc := range []struct {
+		dirs  []*fsnode.Directory
+		files []*fsnode.File
+	}{
+		{nil, nil},
+		{[]*fsnode.Directory{dir1}, nil},
+		{nil, []*fsnode.File{file1}},
+		{[]*fsnode.Directory{dir1}, []*fsnode.File{file1}},
+	} {
+		tcName := fmt.Sprintf("files:%v,dirs:%v", len(tc.files), len(tc.dirs))
+		t.Run(tcName, func(t *testing.T) {
+			rawBootcPipeline.SELinux = "/path/to/selinux"
+			rawBootcPipeline.Directories = tc.dirs
+			rawBootcPipeline.Files = tc.files
+
+			pipeline := rawBootcPipeline.Serialize()
+
+			// check dirs
+			mkdirStage := manifest.FindStage("org.osbuild.mkdir", pipeline.Stages)
+			if len(tc.dirs) > 0 {
+				// ensure options got passed
+				require.NotNil(t, mkdirStage)
+				mkdirOptions := mkdirStage.Options.(*osbuild.MkdirStageOptions)
+				assert.Equal(t, "/path/to/dir", mkdirOptions.Paths[0].Path)
+			} else {
+				assert.Nil(t, mkdirStage)
+			}
+
+			// check files
+			copyStage := manifest.FindStage("org.osbuild.copy", pipeline.Stages)
+			if len(tc.files) > 0 {
+				// ensure options got passed
+				require.NotNil(t, copyStage)
+				copyOptions := copyStage.Options.(*osbuild.CopyStageOptions)
+				assert.Equal(t, "tree:///path/to/file", copyOptions.Paths[0].To)
+			} else {
+				assert.Nil(t, copyStage)
+			}
+
+			selinuxStage := manifest.FindStage("org.osbuild.selinux", pipeline.Stages)
+			if len(tc.dirs) > 0 || len(tc.files) > 0 {
+				assert.NotNil(t, selinuxStage)
+			} else {
+				assert.Nil(t, selinuxStage)
+			}
+
+			// XXX: we should really check that the inline
+			// source for files got generated but that is
+			// currently very hard to test :(
+		})
+	}
 }

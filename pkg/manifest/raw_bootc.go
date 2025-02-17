@@ -7,6 +7,7 @@ import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/artifact"
 	"github.com/osbuild/images/pkg/container"
+	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/osbuild"
@@ -35,6 +36,10 @@ type RawBootcImage struct {
 	// will become unmanaged state by bootc when used
 	Users  []users.User
 	Groups []users.Group
+
+	// Custom directories and files to create in the image
+	Directories []*fsnode.Directory
+	Files       []*fsnode.File
 
 	// SELinux policy, when set it enables the labeling of the tree with the
 	// selected profile
@@ -199,7 +204,18 @@ func (p *RawBootcImage) serialize() osbuild.Pipeline {
 		usersStage.Mounts = mounts
 		usersStage.Devices = devices
 		pipeline.AddStage(usersStage)
+	}
 
+	// First create custom directories, because some of the custom files may depend on them
+	if len(p.Directories) > 0 {
+		pipeline.AddStages(osbuild.GenDirectoryNodesStages(p.Directories)...)
+	}
+
+	if len(p.Files) > 0 {
+		pipeline.AddStages(osbuild.GenFileNodesStages(p.Files)...)
+	}
+
+	if len(p.Users) > 0 || len(p.Files) > 0 || len(p.Directories) > 0 {
 		// add selinux
 		if p.SELinux != "" {
 			opts := &osbuild.SELinuxStageOptions{
@@ -214,6 +230,18 @@ func (p *RawBootcImage) serialize() osbuild.Pipeline {
 	}
 
 	return pipeline
+}
+
+// XXX: duplicated from os.go
+func (p *RawBootcImage) getInline() []string {
+	inlineData := []string{}
+
+	// inline data for custom files
+	for _, file := range p.Files {
+		inlineData = append(inlineData, string(file.Data()))
+	}
+
+	return inlineData
 }
 
 // XXX: copied from raw.go
