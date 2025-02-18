@@ -66,6 +66,7 @@
           - "efibootmgr"
           - "grub2-efi-x64"
           - "shim-x64"
+      bootloader: "grub2"
     x86_64_bios_platform: &x86_64_bios_platform
       <<: *x86_64_uefi_platform
       bios_platform: "i386-pc"
@@ -77,6 +78,7 @@
       build_packages:
         bios:
           - "grub2-pc"
+      bootloader: "grub2"
     # XXX: the name is not 100% accurate, this platform is also used for iot-container, iot-commit
     x86_64_installer_platform: &x86_64_installer_platform
       <<: *x86_64_bios_platform
@@ -88,6 +90,7 @@
           - "iwlwifi-dvm-firmware"
           - "iwlwifi-mvm-firmware"
           - "microcode_ctl"
+      bootloader: "grub2"
     aarch64_platform: &aarch64_platform
       arch: "aarch64"
       uefi_vendor: "fedora"
@@ -100,6 +103,7 @@
           - "grub2-efi-aa64"
           - "grub2-tools"
           - "shim-aa64"
+      bootloader: "grub2"
     aarch64_installer_platform: &aarch64_installer_platform
       arch: "aarch64"
       uefi_vendor: "fedora"
@@ -112,6 +116,7 @@
           - "iwlwifi-mvm-firmware"
           - "realtek-firmware"
           - "uboot-images-armv8"
+      bootloader: "grub2"
     ppc64le_bios_platform: &ppc64le_bios_platform
       arch: "ppc64le"
       bios_platform: "powerpc-ieee1275"
@@ -127,6 +132,7 @@
         bios:
           - "grub2-ppc64le"
           - "grub2-ppc64le-modules"
+      bootloader: "grub2"
     s390x_zipl_platform: &s390x_zipl_platform
       arch: "s390x"
       zipl_support: true
@@ -140,6 +146,7 @@
       build_packages:
         zipl:
           - "s390utils-base"
+      bootloader: "zipl"
     riscv64_uefi_platform: &riscv64_uefi_platform
       arch: "riscv64"
       uefi_vendor: "uefi"
@@ -153,6 +160,7 @@
           - "grub2-efi-riscv64"
           - "grub2-efi-riscv64-modules"
           - "shim-unsigned-riscv64"
+      bootloader: "grub2"
 
   installer_config: &default_installer_config
     additional_dracut_modules:
@@ -1070,6 +1078,7 @@ image_types:
             - "uboot-images-armv8"
         boot_files:
           - ["/usr/share/uboot/rpi_arm64/u-boot.bin", "/boot/efi/rpi-u-boot.bin"]
+        bootloader: "grub2"
       - *riscv64_uefi_platform
     image_config:
       # NOTE: temporary workaround for a bug in initial-setup that
