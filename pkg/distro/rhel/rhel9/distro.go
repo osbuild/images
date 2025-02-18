@@ -342,10 +342,13 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 	)
 
 	if rd.IsRHEL() { // RHEL-only (non-CentOS) image types
-		x86_64.AddImageTypes(azureX64Platform, mkAzureInternalImgType(rd))
-		aarch64.AddImageTypes(azureAarch64Platform, mkAzureInternalImgType(rd))
+		x86_64.AddImageTypes(
+			azureX64Platform,
+			mkAzureInternalImgType(rd),
+			mkAzureSapInternalImgType(rd),
+		)
 
-		x86_64.AddImageTypes(azureX64Platform, mkAzureSapInternalImgType(rd))
+		aarch64.AddImageTypes(azureAarch64Platform, mkAzureInternalImgType(rd))
 
 		// add ec2 image types to RHEL distro only
 		x86_64.AddImageTypes(ec2X86Platform, mkEc2ImgTypeX86_64(), mkEc2HaImgTypeX86_64(), mkEC2SapImgTypeX86_64(rd.OsVersion()))
@@ -359,6 +362,22 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 			},
 			mkEC2ImgTypeAarch64(),
 		)
+
+		// CVM is only available starting from 9.6
+		if common.VersionGreaterThanOrEqual(rd.OsVersion(), "9.6") {
+			azureX64CVMPlatform := &platform.X86{
+				UEFIVendor: rd.Vendor(),
+				BasePlatform: platform.BasePlatform{
+					ImageFormat: platform.FORMAT_VHD,
+				},
+				Bootloader: platform.BOOTLOADER_UKI,
+			}
+			x86_64.AddImageTypes(
+				azureX64CVMPlatform,
+				mkAzureCVMImgType(rd),
+			)
+
+		}
 	}
 
 	rd.AddArches(x86_64, aarch64, ppc64le, s390x)
