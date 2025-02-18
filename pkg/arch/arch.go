@@ -36,13 +36,9 @@ func (a Arch) String() string {
 
 func FromString(a string) Arch {
 	switch a {
-	case "amd64":
-		fallthrough
-	case "x86_64":
+	case "amd64", "x86_64":
 		return ARCH_X86_64
-	case "arm64":
-		fallthrough
-	case "aarch64":
+	case "arm64", "aarch64":
 		return ARCH_AARCH64
 	case "s390x":
 		return ARCH_S390X
@@ -58,20 +54,7 @@ func FromString(a string) Arch {
 var runtimeGOARCH = runtime.GOARCH
 
 func Current() Arch {
-	switch runtimeGOARCH {
-	case "amd64":
-		return ARCH_X86_64
-	case "arm64":
-		return ARCH_AARCH64
-	case "ppc64le":
-		return ARCH_PPC64LE
-	case "s390x":
-		return ARCH_S390X
-	case "riscv64":
-		return ARCH_RISCV64
-	default:
-		panic("unsupported architecture")
-	}
+	return FromString(runtimeGOARCH)
 }
 
 func IsX86_64() bool {
