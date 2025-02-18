@@ -149,6 +149,7 @@
       "qcow2",
       "tar",
       "vhd",
+      "vhd-cvm",
       "vmdk",
       "wsl"
     ]

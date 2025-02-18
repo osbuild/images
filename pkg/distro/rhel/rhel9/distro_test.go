@@ -500,9 +500,9 @@ func TestDistro_ManifestError(t *testing.T) {
 
 func TestArchitecture_ListImageTypes(t *testing.T) {
 	imgMap := []struct {
-		arch                     string
-		imgNames                 []string
-		rhelAdditionalImageTypes []string
+		arch     string
+		imgNames []string
+		verTypes map[string][]string
 	}{
 		{
 			arch: "x86_64",
@@ -531,6 +531,11 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"oci",
 				"wsl",
 				"minimal-raw",
+			},
+			verTypes: map[string][]string{
+				"9.6": {
+					"vhd-cvm",
+				},
 			},
 		},
 		{
@@ -581,7 +586,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				var expectedImageTypes []string
 				expectedImageTypes = append(expectedImageTypes, mapping.imgNames...)
 				if dist.name == "rhel" {
-					expectedImageTypes = append(expectedImageTypes, mapping.rhelAdditionalImageTypes...)
+					expectedImageTypes = append(expectedImageTypes, mapping.verTypes[dist.distro.Releasever()]...)
 				}
 
 				require.ElementsMatch(t, expectedImageTypes, imageTypes)
