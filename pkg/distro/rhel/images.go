@@ -37,7 +37,16 @@ func osCustomizations(
 	osc := manifest.OSCustomizations{}
 
 	if t.Bootable || t.RPMOSTree {
+		// TODO: for now the only image types that define a default kernel are
+		// ones that use UKIs and don't allow overriding, so this works.
+		// However, if we ever need to specify default kernels for image types
+		// that allow overriding, we will need to change c.GetKernel() to take
+		// an argument as fallback or make it not return the standard "kernel"
+		// when it's unset.
 		osc.KernelName = c.GetKernel().Name
+		if imageConfig.DefaultKernelName != nil {
+			osc.KernelName = *imageConfig.DefaultKernelName
+		}
 
 		var kernelOptions []string
 		// XXX: keep in sync with the identical copy in fedora/images.go
