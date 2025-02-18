@@ -19,6 +19,15 @@ const ( // image format enum
 	FORMAT_OVA
 )
 
+type Bootloader int
+
+const ( // bootloader enum
+	BOOTLOADER_NONE Bootloader = iota
+	BOOTLOADER_GRUB2
+	BOOTLOADER_ZIPL
+	BOOTLOADER_UKI
+)
+
 func (f ImageFormat) String() string {
 	switch f {
 	case FORMAT_UNSET:
@@ -52,6 +61,7 @@ type Platform interface {
 	GetPackages() []string
 	GetBuildPackages() []string
 	GetBootFiles() [][2]string
+	GetBootloader() Bootloader
 }
 
 type BasePlatform struct {
@@ -90,4 +100,8 @@ func (p BasePlatform) GetBuildPackages() []string {
 
 func (p BasePlatform) GetBootFiles() [][2]string {
 	return [][2]string{}
+}
+
+func (p BasePlatform) GetBootloader() Bootloader {
+	return BOOTLOADER_NONE
 }
