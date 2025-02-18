@@ -491,6 +491,8 @@ func TestDistro_ManifestError(t *testing.T) {
 				assert.EqualError(t, err, fmt.Sprintf("\"%s\" images require specifying a URL from which to retrieve the OSTree commit", imgTypeName))
 			} else if imgTypeName == "edge-installer" || imgTypeName == "edge-simplified-installer" {
 				assert.EqualError(t, err, fmt.Sprintf("boot ISO image type \"%s\" requires specifying a URL from which to retrieve the OSTree commit", imgTypeName))
+			} else if imgTypeName == "vhd-cvm" {
+				assert.EqualError(t, err, fmt.Sprintf("kernel customizations are not supported for %q", imgTypeName))
 			} else {
 				assert.NoError(t, err)
 			}
