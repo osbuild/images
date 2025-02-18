@@ -29,29 +29,31 @@ minsize = 2147483648
 mountpoint = "/opt"
 minsize = "20 GiB"
 `
-	blueprintJSON := `{
-		"name": "test",
-                "description": "Test description",
-                "version": "0.0.0",
-                "packages": [
-                  {
-                    "name": "httpd",
-                    "version": "2.4.*"
-                  }
-                ],
-		"customizations": {
-		  "filesystem": [
-                    {
-			"mountpoint": "/var",
-			"minsize": 2147483648
-		    },
-                    {
-			"mountpoint": "/opt",
-			"minsize": "20 GiB"
-                    }
-                  ]
-		}
-	  }`
+	blueprintJSON := `
+{
+  "name": "test",
+  "description": "Test description",
+  "version": "0.0.0",
+  "packages": [
+    {
+      "name": "httpd",
+      "version": "2.4.*"
+    }
+  ],
+  "customizations": {
+    "filesystem": [
+      {
+        "mountpoint": "/var",
+        "minsize": 2147483648
+      },
+      {
+        "mountpoint": "/opt",
+        "minsize": "20 GiB"
+      }
+    ]
+  }
+}
+`
 
 	var bp, bp2 Blueprint
 	err := toml.Unmarshal([]byte(blueprintToml), &bp)

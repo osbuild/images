@@ -11,14 +11,13 @@ import (
 func TestSourceMakerBasic(t *testing.T) {
 	require := require.New(t)
 
-	input := `
-{
+	input := `{
   "tree": {
-	"const": {
-	  "ref": "does/not/matter",
-	  "checksum": "d04105393ca0617856b34f897842833d785522e41617e17dca2063bf97e294ef",
-	  "url": "https://ostree.example.org/repo"
-	}
+    "const": {
+      "ref": "does/not/matter",
+      "checksum": "d04105393ca0617856b34f897842833d785522e41617e17dca2063bf97e294ef",
+      "url": "https://ostree.example.org/repo"
+    }
   }
 }`
 

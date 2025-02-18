@@ -180,38 +180,38 @@ func TestUnmarshalOutput(t *testing.T) {
 	assert.Equal(t, expectedOutput, string(output))
 }
 
-var partInputsSimple = `
-{
+var partInputsSimple = `{
   "tree": {
     "properties": {
       "create": {
-	"bios_boot_partition": true,
-	"esp_partition": true,
-	"esp_partition_size": "2 GiB"
+        "bios_boot_partition": true,
+        "esp_partition": true,
+        "esp_partition_size": "2 GiB"
       },
       "type": "gpt",
       "default_size": "10 GiB",
       "start_offset": "8 MB",
-	  "architecture": "x86_64"
+      "architecture": "x86_64"
     },
     "partitions": [
       {
-	"name": "root",
-	"mountpoint": "/",
-	"label": "root",
-	"size": "7 GiB",
-	"type": "ext4"
+        "name": "root",
+        "mountpoint": "/",
+        "label": "root",
+        "size": "7 GiB",
+        "type": "ext4"
       },
       {
-	"name": "home",
-	"mountpoint": "/home",
-	"label": "home",
-	"size": "2 GiB",
-	"type": "ext4"
+        "name": "home",
+        "mountpoint": "/home",
+        "label": "home",
+        "size": "2 GiB",
+        "type": "ext4"
       }
     ]
   }
-}`
+}
+`
 
 // XXX: anything under "internal" we don't actually need to test
 // as we do not make any gurantees to the outside
