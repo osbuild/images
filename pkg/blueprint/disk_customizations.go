@@ -6,9 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/pathpolicy"
 )
@@ -63,6 +65,15 @@ type PartitionCustomization struct {
 	// https://osbuild.org/docs/user-guide/partitioning for more details.
 	// (optional, defaults depend on payload and mountpoints).
 	MinSize uint64 `json:"minsize" toml:"minsize"`
+
+	// The partition type GUID for GPT partitions. For DOS partitions, this
+	// field can be used to set the partition type (e.g. "swap").
+	// If not set, the code will make the best guess based on the mountpoint or
+	// the payload type.
+	// Examples:
+	// 3B8F8425-20E0-4F3B-907F-1A25A76F98E8 (/srv on GPT)
+	// 06 (FAT16 on DOS)
+	GUID string `json:"guid,omitempty" toml:"guid,omitempty"`
 
 	BtrfsVolumeCustomization
 
@@ -156,6 +167,7 @@ func (v *PartitionCustomization) UnmarshalJSON(data []byte) error {
 	var typeSniffer struct {
 		Type    string `json:"type"`
 		MinSize any    `json:"minsize"`
+		GUID    string `json:"guid"`
 	}
 	if err := json.Unmarshal(data, &typeSniffer); err != nil {
 		return fmt.Errorf("%s %w", errPrefix, err)
@@ -184,6 +196,7 @@ func (v *PartitionCustomization) UnmarshalJSON(data []byte) error {
 	}
 
 	v.Type = partType
+	v.GUID = typeSniffer.GUID
 
 	if typeSniffer.MinSize == nil {
 		return fmt.Errorf("minsize is required")
@@ -203,10 +216,11 @@ func (v *PartitionCustomization) UnmarshalJSON(data []byte) error {
 // the type is "plain", none of the fields for btrfs or lvm are used.
 func decodePlain(v *PartitionCustomization, data []byte) error {
 	var plain struct {
-		// Type and minsize are handled by the caller. These are added here to
+		// Type, minsize and guid are handled by the caller. These are added here to
 		// satisfy "DisallowUnknownFields" when decoding.
 		Type    string `json:"type"`
 		MinSize any    `json:"minsize"`
+		GUID    string `json:"guid"`
 		FilesystemTypedCustomization
 	}
 
@@ -226,10 +240,11 @@ func decodePlain(v *PartitionCustomization, data []byte) error {
 // the type is btrfs, none of the fields for plain or lvm are used.
 func decodeBtrfs(v *PartitionCustomization, data []byte) error {
 	var btrfs struct {
-		// Type and minsize are handled by the caller. These are added here to
+		// Type, minsize and guid are handled by the caller. These are added here to
 		// satisfy "DisallowUnknownFields" when decoding.
 		Type    string `json:"type"`
 		MinSize any    `json:"minsize"`
+		GUID    string `json:"guid"`
 		BtrfsVolumeCustomization
 	}
 
@@ -249,10 +264,11 @@ func decodeBtrfs(v *PartitionCustomization, data []byte) error {
 // is lvm, none of the fields for plain or btrfs are used.
 func decodeLVM(v *PartitionCustomization, data []byte) error {
 	var vg struct {
-		// Type and minsize are handled by the caller. These are added here to
+		// Type, minsize and guid are handled by the caller. These are added here to
 		// satisfy "DisallowUnknownFields" when decoding.
 		Type    string `json:"type"`
 		MinSize any    `json:"minsize"`
+		GUID    string `json:"guid"`
 		VGCustomization
 	}
 
@@ -367,6 +383,9 @@ func (p *DiskCustomization) Validate() error {
 	vgnames := make(map[string]bool)
 	var errs []error
 	for _, part := range p.Partitions {
+		if err := part.validateGeneric(); err != nil {
+			errs = append(errs, err)
+		}
 		switch part.Type {
 		case "plain", "":
 			errs = append(errs, part.validatePlain(mountpoints))
@@ -469,6 +488,32 @@ var validPlainFSTypes = []string{
 	"ext4",
 	"vfat",
 	"xfs",
+}
+
+// exactly 2 hex digits
+var validDosPartitionType = regexp.MustCompile(`^[0-9a-fA-F]{2}$`)
+
+// validateGeneric checks the partition validity regardless of its type.
+// Currently, it only checks the GUID field.
+func (p *PartitionCustomization) validateGeneric() error {
+	// Empty GUID is fine, the code will auto-generate it later.
+	if p.GUID == "" {
+		return nil
+	}
+
+	// We don't know the partition table type yet, so check:
+
+	// 1) the partition GUID is either a valid UUID (for GPT)
+	if _, err := uuid.Parse(p.GUID); err == nil {
+		return nil
+	}
+
+	// 2) or a valid DOS partition type (for MBR)
+	if validDosPartitionType.MatchString(p.GUID) {
+		return nil
+	}
+
+	return fmt.Errorf("invalid partition GUID: %q (use UUIDs for GPT partition tables, or 2-digit hex numbers for DOS partition tables)", p.GUID)
 }
 
 func (p *PartitionCustomization) validatePlain(mountpoints map[string]bool) error {
