@@ -24,7 +24,7 @@ build/{distro}/{arch}/{image_type}/{config_name}:
     INTERNAL_NETWORK: "{internal}"
   needs:
     - pipeline: "$PARENT_PIPELINE_ID"
-      job: generate-ostree-build-config-{distro}-{arch}
+      job: "generate-ostree-build-config: [{distro}, {arch}]"
 """
 
 
