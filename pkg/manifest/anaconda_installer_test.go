@@ -173,3 +173,33 @@ func TestISOLocale(t *testing.T) {
 		})
 	}
 }
+
+func TestAnacondaInstallerDracutModulesAndDrivers(t *testing.T) {
+	pkgs := []rpmmd.PackageSpec{
+		{
+			Name:     "kernel",
+			Checksum: "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+		},
+	}
+
+	installerPipeline := newAnacondaInstaller()
+	installerPipeline.AdditionalDracutModules = []string{"test-module"}
+	installerPipeline.AdditionalDrivers = []string{"test-driver"}
+	installerPipeline.serializeStart(Inputs{Depsolved: dnfjson.DepsolveResult{Packages: pkgs}})
+	pipeline := installerPipeline.serialize()
+
+	require := require.New(t)
+	require.NotNil(pipeline)
+	require.NotNil(pipeline.Stages)
+
+	var stageOptions *osbuild.DracutStageOptions
+	for _, stage := range pipeline.Stages {
+		if stage.Type == "org.osbuild.dracut" {
+			stageOptions = stage.Options.(*osbuild.DracutStageOptions)
+		}
+	}
+
+	require.NotNil(stageOptions, "serialized anaconda pipeline does not contain an org.osbuild.anaconda stage")
+	require.Contains(stageOptions.Modules, "test-module")
+	require.Contains(stageOptions.AddDrivers, "test-driver")
+}
