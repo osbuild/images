@@ -375,6 +375,7 @@ func instantiateAndSerialize(t *testing.T, img image.ImageKind, depsolved map[st
 	_, err := img.InstantiateManifest(&mf, nil, &runner.CentOS{Version: 9}, rng)
 	assert.NoError(t, err)
 
+	fmt.Printf("Serializing with commits: %+v\n", commits)
 	mfs, err := mf.Serialize(depsolved, containers, commits, nil)
 	assert.NoError(t, err)
 
@@ -691,4 +692,100 @@ func TestInstallerLocales(t *testing.T) {
 			assert.Equal(expected, actual)
 		}
 	}
+}
+
+func findDracutStageOptions(t *testing.T, mf manifest.OSBuildManifest, pipelineName string) ([]string, []string) {
+	pipeline := findPipelineFromOsbuildManifest(t, mf, pipelineName)
+	assert.NotNil(t, pipeline)
+	stage := findStageFromOsbuildPipeline(t, pipeline, "org.osbuild.dracut")
+	assert.NotNil(t, stage)
+	stageOptions := stage["options"].(map[string]any)
+	assert.NotNil(t, stageOptions)
+
+	modulesIf := stageOptions["modules"].([]any)
+	modules := make([]string, len(modulesIf))
+	for idx, modIf := range stageOptions["modules"].([]any) {
+		modules[idx] = modIf.(string)
+	}
+
+	driversIf := stageOptions["add_drivers"].([]any)
+	drivers := make([]string, len(driversIf))
+	for idx, driIf := range driversIf {
+		drivers[idx] = driIf.(string)
+	}
+
+	return modules, drivers
+}
+
+func TestContainerInstallerDracut(t *testing.T) {
+	img := image.NewAnacondaContainerInstaller(container.SourceSpec{}, "")
+	img.Product = product
+	img.OSVersion = osversion
+	img.ISOLabel = isolabel
+
+	testModules := []string{"test-module"}
+	testDrivers := []string{"test-driver"}
+
+	img.AdditionalDracutModules = testModules
+	img.AdditionalDrivers = testDrivers
+
+	assert.NotNil(t, img)
+	img.Platform = testPlatform
+	mfs := instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil)
+	modules, drivers := findDracutStageOptions(t, manifest.OSBuildManifest(mfs), "anaconda-tree")
+	assert.NotNil(t, modules)
+	assert.NotNil(t, drivers)
+
+	assert.Subset(t, modules, testModules)
+	assert.Subset(t, drivers, testDrivers)
+}
+
+func TestOSTreeInstallerDracut(t *testing.T) {
+	img := image.NewAnacondaOSTreeInstaller(ostree.SourceSpec{})
+	img.Product = product
+	img.OSVersion = osversion
+	img.ISOLabel = isolabel
+	img.Kickstart = &kickstart.Options{
+		// the ostree options must be non-nil
+		OSTree: &kickstart.OSTree{},
+	}
+
+	testModules := []string{"test-module"}
+	testDrivers := []string{"test-driver"}
+
+	img.AdditionalDracutModules = testModules
+	img.AdditionalDrivers = testDrivers
+
+	assert.NotNil(t, img)
+	img.Platform = testPlatform
+	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, mockOSTreeCommitSpecs())
+	modules, drivers := findDracutStageOptions(t, manifest.OSBuildManifest(mfs), "anaconda-tree")
+	assert.NotNil(t, modules)
+	assert.NotNil(t, drivers)
+
+	assert.Subset(t, modules, testModules)
+	assert.Subset(t, drivers, testDrivers)
+}
+
+func TestTarInstallerDracut(t *testing.T) {
+	img := image.NewAnacondaTarInstaller()
+	img.Product = product
+	img.OSVersion = osversion
+	img.ISOLabel = isolabel
+
+	testModules := []string{"test-module"}
+	testDrivers := []string{"test-driver"}
+
+	img.AdditionalDracutModules = testModules
+	img.AdditionalDrivers = testDrivers
+
+	assert.NotNil(t, img)
+	img.Platform = testPlatform
+	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
+	modules, drivers := findDracutStageOptions(t, manifest.OSBuildManifest(mfs), "anaconda-tree")
+	assert.NotNil(t, modules)
+	assert.NotNil(t, drivers)
+
+	assert.Subset(t, modules, testModules)
+	assert.Subset(t, drivers, testDrivers)
 }
