@@ -475,6 +475,18 @@ var defaultDistroImageConfig = &distro.ImageConfig{
 	DefaultOSCAPDatastream: common.ToPtr(oscap.DefaultFedoraDatastream()),
 }
 
+func defaultDistroInstallerConfig(d *distribution) *distro.InstallerConfig {
+	config := distro.InstallerConfig{}
+	// In Fedora 42 the ifcfg module was replaced by net-lib.
+	if common.VersionLessThan(d.osVersion, "42") {
+		config.AdditionalDracutModules = append(config.AdditionalDracutModules, "ifcfg")
+	} else {
+		config.AdditionalDracutModules = append(config.AdditionalDracutModules, "net-lib")
+	}
+
+	return &config
+}
+
 func getISOLabelFunc(variant string) isoLabelFunc {
 	const ISO_LABEL = "%s-%s-%s-%s"
 
@@ -746,6 +758,12 @@ func newDistro(version int) distro.Distro {
 		containerImgType,
 		wslImgType,
 	)
+
+	// add distro installer configuration to all installer types
+	distroInstallerConfig := defaultDistroInstallerConfig(&rd)
+	liveInstallerImgType.defaultInstallerConfig = distroInstallerConfig
+	imageInstallerImgType.defaultInstallerConfig = distroInstallerConfig
+	iotInstallerImgType.defaultInstallerConfig = distroInstallerConfig
 	x86_64.addImageTypes(
 		&platform.X86{
 			BasePlatform: platform.BasePlatform{
@@ -907,6 +925,7 @@ func newDistro(version int) distro.Distro {
 		minimalrawImgType,
 	)
 
+	iotSimplifiedInstallerImgType.defaultInstallerConfig = distroInstallerConfig
 	x86_64.addImageTypes(
 		&platform.X86{
 			BasePlatform: platform.BasePlatform{
