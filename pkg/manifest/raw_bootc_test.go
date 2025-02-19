@@ -331,11 +331,8 @@ func TestRawBootcImageSerializeCreateFilesDirs(t *testing.T) {
 			}
 
 			selinuxStage := manifest.FindStage("org.osbuild.selinux", pipeline.Stages)
-			if len(tc.dirs) > 0 || len(tc.files) > 0 {
-				assert.NotNil(t, selinuxStage)
-			} else {
-				assert.Nil(t, selinuxStage)
-			}
+
+			assert.NotNil(t, selinuxStage)
 
 			// XXX: we should really check that the inline
 			// source for files got generated but that is

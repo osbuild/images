@@ -169,6 +169,8 @@ func (p *RawBootcImage) serialize() osbuild.Pipeline {
 	mounts = append(mounts, *osbuild.NewBindMount("bind-ostree-deployment-to-tree", "mount://", "tree://"))
 
 	// we always include the fstab stage
+	// XXX: see issue#756 - if we stop doing this, conditionally
+	// apply selinux again
 	fstabOpts, err := osbuild.NewFSTabStageOptions(pt)
 	if err != nil {
 		panic(err)
@@ -215,18 +217,18 @@ func (p *RawBootcImage) serialize() osbuild.Pipeline {
 		pipeline.AddStages(osbuild.GenFileNodesStages(p.Files)...)
 	}
 
-	if len(p.Users) > 0 || len(p.Files) > 0 || len(p.Directories) > 0 {
-		// add selinux
-		if p.SELinux != "" {
-			opts := &osbuild.SELinuxStageOptions{
-				FileContexts: fmt.Sprintf("etc/selinux/%s/contexts/files/file_contexts", p.SELinux),
-				ExcludePaths: []string{"/sysroot"},
-			}
-			selinuxStage := osbuild.NewSELinuxStage(opts)
-			selinuxStage.Mounts = mounts
-			selinuxStage.Devices = devices
-			pipeline.AddStage(selinuxStage)
+	// XXX: maybe go back to adding this conditionally when we stop
+	// writing an /etc/fstab by default (see issue #756)
+	// add selinux
+	if p.SELinux != "" {
+		opts := &osbuild.SELinuxStageOptions{
+			FileContexts: fmt.Sprintf("etc/selinux/%s/contexts/files/file_contexts", p.SELinux),
+			ExcludePaths: []string{"/sysroot"},
 		}
+		selinuxStage := osbuild.NewSELinuxStage(opts)
+		selinuxStage.Mounts = mounts
+		selinuxStage.Devices = devices
+		pipeline.AddStage(selinuxStage)
 	}
 
 	return pipeline
