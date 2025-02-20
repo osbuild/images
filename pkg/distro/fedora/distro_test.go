@@ -615,6 +615,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 			arch: "riscv64",
 			imgNames: []string{
 				"container",
+				"minimal-raw",
 			},
 		},
 	}
