@@ -3,7 +3,9 @@ package manifest
 import (
 	"fmt"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/container"
+	"github.com/osbuild/images/pkg/experimentalflags"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/runner"
@@ -47,6 +49,13 @@ type BuildOptions struct {
 func NewBuild(m *Manifest, runner runner.Runner, repos []rpmmd.RepoConfig, opts *BuildOptions) Build {
 	if opts == nil {
 		opts = &BuildOptions{}
+	}
+
+	// This allows to override the buildroot with a custom container
+	// for e.g. cross-arch-build experiments, remove once we have
+	// a standard way of doing this
+	if fb := experimentalForcedContainerBuildroot(m, runner, opts); fb != nil {
+		return fb
 	}
 
 	name := "build"
@@ -147,6 +156,25 @@ func (p *BuildrootFromPackages) getSELinuxLabels() map[string]string {
 		}
 	}
 	return labels
+}
+
+// experimentalForcedContainerBuildroot will return a container buildroot
+// if if the "IMAGE_BUILDER_EXPERIMENTAL=buildroot=<container-ref>" is
+// defined. This allows us to do cross-arch build experimentation.
+func experimentalForcedContainerBuildroot(m *Manifest, runner runner.Runner, opts *BuildOptions) Build {
+	forcedBuildroot := experimentalflags.String("buildroot")
+	if forcedBuildroot == "" {
+		return nil
+	}
+
+	cntSrcs := []container.SourceSpec{
+		{
+			Source:    forcedBuildroot,
+			Name:      forcedBuildroot,
+			TLSVerify: common.ToPtr(false),
+		},
+	}
+	return NewBuildFromContainer(m, runner, cntSrcs, opts)
 }
 
 type BuildrootFromContainer struct {

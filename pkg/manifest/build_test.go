@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -145,4 +146,32 @@ func TestBuildFromContainerSpecsGetSelinuxLabelsWithContainerBuildable(t *testin
 		"/usr/bin/mount":  "system_u:object_r:install_exec_t:s0",
 		"/usr/bin/umount": "system_u:object_r:install_exec_t:s0",
 	})
+}
+
+func TestNewBuildWithExperimentalOverride(t *testing.T) {
+	for _, withForcedBuildroot := range []bool{false, true} {
+		if withForcedBuildroot {
+			t.Setenv("IMAGE_BUILDER_EXPERIMENTAL", "buildroot=ghcr.io/ondrejbudai/cool:stuff")
+		} else {
+			t.Setenv("IMAGE_BUILDER_EXPERIMENTAL", "")
+		}
+		mf := New()
+		runner := &runner.Fedora{Version: 42}
+		buildIf := NewBuild(&mf, runner, nil, nil)
+		require.NotNil(t, buildIf)
+		if withForcedBuildroot {
+			br, ok := buildIf.(*BuildrootFromContainer)
+			assert.True(t, ok)
+			assert.Equal(t, []container.SourceSpec{
+				{
+					Source:    "ghcr.io/ondrejbudai/cool:stuff",
+					Name:      "ghcr.io/ondrejbudai/cool:stuff",
+					TLSVerify: common.ToPtr(false),
+				},
+			}, br.containers)
+		} else {
+			_, ok := buildIf.(*BuildrootFromPackages)
+			assert.True(t, ok)
+		}
+	}
 }
