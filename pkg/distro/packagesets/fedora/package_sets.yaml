@@ -833,6 +833,13 @@ minimal_raw:
       "43":
         exclude:
           - "dracut-config-rescue"
+    architecture:
+      riscv64:
+        include:
+          # missing from @core in riscv64
+          - "dnf5"
+          - "policycoreutils"
+          - "selinux-policy-targeted"
 
 iot_simplified_installer:
   include:
