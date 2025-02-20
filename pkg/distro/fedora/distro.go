@@ -1063,9 +1063,20 @@ func newDistro(version int) distro.Distro {
 		containerImgType,
 	)
 
+	// XXX: there is no "qcow2" for riscv64 yet because there is
+	// no "@Fedora Cloud Server" group
 	riscv64.addImageTypes(
 		&platform.RISCV64{},
 		containerImgType,
+	)
+	riscv64.addImageTypes(
+		&platform.RISCV64{
+			UEFIVendor: "fedora",
+			BasePlatform: platform.BasePlatform{
+				ImageFormat: platform.FORMAT_RAW,
+			},
+		},
+		minimalrawImgType,
 	)
 
 	rd.addArches(x86_64, aarch64, ppc64le, s390x, riscv64)
