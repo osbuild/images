@@ -828,7 +828,11 @@ minimal_raw:
     - "brcmfmac-firmware"
     - "realtek-firmware"
     - "iwlwifi-mvm-firmware"
-
+  condition:
+    version_greater_or_equal:
+      "43":
+        exclude:
+          - "dracut-config-rescue"
 
 iot_simplified_installer:
   include:
