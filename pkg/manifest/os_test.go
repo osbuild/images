@@ -230,3 +230,21 @@ func testTomlPkgsFor(t *testing.T, os *OS) {
 		assert.Contains(t, buildPkgs, tc.expectedTomlPkg)
 	}
 }
+
+func TestFirstBootIncludesMachineIdStage(t *testing.T) {
+	os := NewTestOS()
+
+	os.FirstBoot = true
+
+	pipeline := os.serialize()
+	st := findStage("org.osbuild.machine-id", pipeline.Stages)
+	require.NotNil(t, st)
+}
+
+func TestFirstBootDoesNotIncludeMachineIdStage(t *testing.T) {
+	os := NewTestOS()
+
+	pipeline := os.serialize()
+	st := findStage("org.osbuild.machine-id", pipeline.Stages)
+	require.Nil(t, st)
+}
