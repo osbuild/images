@@ -454,36 +454,6 @@ var (
 		basePartitionTables:    minimalrawPartitionTables,
 		requiredPartitionSizes: requiredDirectorySizes,
 	}
-
-	minimalrawZstdImgType = imageType{
-		name:        "minimal-raw-zst",
-		filename:    "disk.raw.zst",
-		compression: "zstd",
-		mimeType:    "application/zstd",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: packageSetLoader,
-		},
-		defaultImageConfig: &distro.ImageConfig{
-			EnabledServices: minimalRawServices,
-			// NOTE: temporary workaround for a bug in initial-setup that
-			// requires a kickstart file in the root directory.
-			Files: []*fsnode.File{initialSetupKickstart()},
-			Grub2Config: &osbuild.GRUB2Config{
-				// Overwrite the default Grub2 timeout value.
-				Timeout: 5,
-			},
-		},
-		rpmOstree:              false,
-		kernelOptions:          defaultKernelOptions,
-		bootable:               true,
-		defaultSize:            2 * datasizes.GibiByte,
-		image:                  diskImage,
-		buildPipelines:         []string{"build"},
-		payloadPipelines:       []string{"os", "image", "zstd"},
-		exports:                []string{"zstd"},
-		basePartitionTables:    minimalrawPartitionTables,
-		requiredPartitionSizes: requiredDirectorySizes,
-	}
 )
 
 type distribution struct {
@@ -725,6 +695,14 @@ func newDistro(version int) distro.Distro {
 		},
 	}
 	vhdImgType.defaultImageConfig = vhdConfig.InheritFrom(qcow2ImgType.defaultImageConfig)
+
+	minimalrawZstdImgType := minimalrawImgType
+	minimalrawZstdImgType.name = "minimal-raw-zst"
+	minimalrawZstdImgType.filename = "disk.raw.zst"
+	minimalrawZstdImgType.mimeType = "application/zstd"
+	minimalrawZstdImgType.compression = "zstd"
+	minimalrawZstdImgType.payloadPipelines = []string{"os", "image", "zstd"}
+	minimalrawZstdImgType.exports = []string{"zstd"}
 
 	x86_64.addImageTypes(
 		&platform.X86{
