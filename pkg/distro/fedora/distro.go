@@ -455,6 +455,7 @@ func mkMinimalRawImgType(d distribution) imageType {
 				// Overwrite the default Grub2 timeout value.
 				Timeout: 5,
 			},
+			InstallWeakDeps: common.ToPtr(common.VersionLessThan(d.osVersion, VERSION_MINIMAL_WEAKDEPS)),
 		},
 		rpmOstree:              false,
 		kernelOptions:          defaultKernelOptions,
@@ -486,6 +487,7 @@ var defaultDistroImageConfig = &distro.ImageConfig{
 	Timezone:               common.ToPtr("UTC"),
 	Locale:                 common.ToPtr("C.UTF-8"),
 	DefaultOSCAPDatastream: common.ToPtr(oscap.DefaultFedoraDatastream()),
+	InstallWeakDeps:        common.ToPtr(true),
 }
 
 func defaultDistroInstallerConfig(d *distribution) *distro.InstallerConfig {
