@@ -426,10 +426,11 @@ var (
 	}
 
 	minimalrawImgType = imageType{
-		name:        "minimal-raw",
-		filename:    "disk.raw.xz",
-		compression: "xz",
-		mimeType:    "application/xz",
+		name:            "minimal-raw",
+		filename:        "disk.raw.xz",
+		compression:     "xz",
+		mimeType:        "application/xz",
+		disableWeakDeps: true,
 		packageSets: map[string]packageSetFunc{
 			osPkgsKey: packageSetLoader,
 		},

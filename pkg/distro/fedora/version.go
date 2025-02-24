@@ -11,6 +11,9 @@ const VERSION_ROOTFS_SQUASHFS = "41"
 // other Fedora variants.
 const VERSION_FIRSTBOOT = "43"
 
+// Version at which we allow image types to toggle weak dependency installation.
+const VERSION_WEAKDEPS = "43"
+
 func VersionReplacements() map[string]string {
 	return map[string]string{
 		"VERSION_BRANCHED":        VERSION_BRANCHED,
