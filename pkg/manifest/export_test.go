@@ -9,3 +9,7 @@ var FindStage = findStage
 func (p *Tar) Serialize() osbuild.Pipeline {
 	return p.serialize()
 }
+
+func (p *Zstd) Serialize() osbuild.Pipeline {
+	return p.serialize()
+}
