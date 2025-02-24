@@ -139,6 +139,7 @@
       "iot-container",
       "live-installer",
       "minimal-raw",
+      "minimal-raw-zst",
       "oci",
       "openstack",
       "ova",
