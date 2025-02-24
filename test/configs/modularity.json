@@ -1,0 +1,13 @@
+{
+  "name": "modularity",
+  "expect_modularity": {
+    "modules": ["nodejs:18"]
+  },
+  "blueprint": {
+    "packages": [
+      {
+        "name": "@nodejs:18"
+      }
+    ]
+  }
+}

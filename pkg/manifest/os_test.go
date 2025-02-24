@@ -2,6 +2,7 @@ package manifest
 
 import (
 	"fmt"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -229,4 +230,33 @@ func testTomlPkgsFor(t *testing.T, os *OS) {
 		buildPkgs := os.getBuildPackages(tc.distro)
 		assert.Contains(t, buildPkgs, tc.expectedTomlPkg)
 	}
+}
+
+func TestModularityIncludesConfigStage(t *testing.T) {
+	os := NewTestOS()
+
+	testModuleConfigPath := filepath.Join(t.TempDir(), "module-config")
+	testFailsafeConfigPath := filepath.Join(t.TempDir(), "failsafe-config")
+
+	os.moduleSpecs = []rpmmd.ModuleSpec{
+		{
+			ModuleConfigFile: rpmmd.ModuleConfigFile{
+				Path: testModuleConfigPath,
+			},
+			FailsafeFile: rpmmd.ModuleFailsafeFile{
+				Path: testFailsafeConfigPath,
+			},
+		},
+	}
+	pipeline := os.serialize()
+	st := findStage("org.osbuild.dnf.module-config", pipeline.Stages)
+	require.NotNil(t, st)
+}
+
+func TestModularityDoesNotIncludeConfigStage(t *testing.T) {
+	os := NewTestOS()
+
+	pipeline := os.serialize()
+	st := findStage("org.osbuild.dnf.module-config", pipeline.Stages)
+	require.Nil(t, st)
 }

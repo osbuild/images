@@ -373,5 +373,13 @@
       "centos-10",
       "centos-9"
     ]
+  },
+  "./configs/modularity.json": {
+    "image-types": [
+      "qcow2"
+    ],
+    "distros": [
+      "centos-9"
+    ]
   }
 }
