@@ -333,3 +333,21 @@ func TestLanguageDoesNotIncludeLocaleStage(t *testing.T) {
 	st := manifest.FindStage("org.osbuild.locale", pipeline.Stages)
 	require.Nil(t, st)
 }
+
+func TestTimezoneIncludesTimezoneStage(t *testing.T) {
+	os := manifest.NewTestOS()
+
+	os.Timezone = "Etc/UTC"
+
+	pipeline := os.Serialize()
+	st := manifest.FindStage("org.osbuild.timezone", pipeline.Stages)
+	require.NotNil(t, st)
+}
+
+func TestTimezoneDoesNotIncludeTimezoneStage(t *testing.T) {
+	os := manifest.NewTestOS()
+
+	pipeline := os.Serialize()
+	st := manifest.FindStage("org.osbuild.timezone", pipeline.Stages)
+	require.Nil(t, st)
+}

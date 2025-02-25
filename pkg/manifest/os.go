@@ -495,7 +495,10 @@ func (p *OS) serialize() osbuild.Pipeline {
 	if p.Hostname != "" {
 		pipeline.AddStage(osbuild.NewHostnameStage(&osbuild.HostnameStageOptions{Hostname: p.Hostname}))
 	}
-	pipeline.AddStage(osbuild.NewTimezoneStage(&osbuild.TimezoneStageOptions{Zone: p.Timezone}))
+
+	if p.Timezone != "" {
+		pipeline.AddStage(osbuild.NewTimezoneStage(&osbuild.TimezoneStageOptions{Zone: p.Timezone}))
+	}
 
 	if len(p.NTPServers) > 0 {
 		chronyOptions := &osbuild.ChronyStageOptions{Servers: p.NTPServers}
