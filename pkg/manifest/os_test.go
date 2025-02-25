@@ -351,3 +351,21 @@ func TestTimezoneDoesNotIncludeTimezoneStage(t *testing.T) {
 	st := manifest.FindStage("org.osbuild.timezone", pipeline.Stages)
 	require.Nil(t, st)
 }
+
+func TestHostnameIncludesHostnameStage(t *testing.T) {
+	os := manifest.NewTestOS()
+
+	os.Hostname = "funky.name"
+
+	pipeline := os.Serialize()
+	st := manifest.FindStage("org.osbuild.hostname", pipeline.Stages)
+	require.NotNil(t, st)
+}
+
+func TestHostnameDoesNotIncludeHostnameStage(t *testing.T) {
+	os := manifest.NewTestOS()
+
+	pipeline := os.Serialize()
+	st := manifest.FindStage("org.osbuild.hostname", pipeline.Stages)
+	require.Nil(t, st)
+}
