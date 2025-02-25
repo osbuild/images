@@ -815,7 +815,7 @@ func (p *OS) serialize() osbuild.Pipeline {
 
 	if p.FirstBoot {
 		pipeline.AddStage(osbuild.NewMachineIdStage(&osbuild.MachineIdStageOptions{
-			FirstBoot: "yes",
+			FirstBoot: osbuild.MachineIdFirstBootYes,
 		}))
 	}
 
