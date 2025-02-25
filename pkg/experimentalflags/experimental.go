@@ -1,3 +1,9 @@
+// Package experimentalflags provides functionality for reading
+// options defined in an environment variable named
+// IMAGE_BUILDER_EXPERIMENTAL.
+//
+// These functions should be used to determine, in a common way, if
+// experimental features should be enabled when using the libarary.
 package experimentalflags
 
 import (
@@ -30,7 +36,13 @@ func experimentalOptions() map[string]string {
 }
 
 // Bool returns true if there is a boolean option with the given
-// option name
+// option name.
+//
+// Example usage by the user:
+//
+//	IMAGE_BUILDER_EXPERIMENTAL=skip-foo,skip-bar=1,skip-baz=true
+//
+// would result in experimetnalflags.Bool("skip-foo") -> true
 func Bool(option string) bool {
 	expMap := experimentalOptions()
 	b, err := strconv.ParseBool(expMap[option])
@@ -41,6 +53,16 @@ func Bool(option string) bool {
 	return b
 }
 
+// String returns the user set string for the given experimental feature.
+//
+// Note that currently no quoting or escaping is supported, so a string
+// can (currently) not contain a "," or a "=".
+//
+// Example usage by the user:
+//
+//	IMAGE_BUILDER_EXPERIMENTAL=key=value
+//
+// would result in experimetnalflags.String("key") -> "value"
 func String(option string) string {
 	expMap := experimentalOptions()
 	return expMap[option]
