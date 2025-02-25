@@ -12,6 +12,7 @@ import (
 
 // ImageConfig represents a (default) configuration applied to the image payload.
 type ImageConfig struct {
+	Hostname            *string
 	Timezone            *string
 	TimeSynchronization *osbuild.ChronyStageOptions
 	Locale              *string

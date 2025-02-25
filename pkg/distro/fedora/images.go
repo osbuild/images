@@ -106,8 +106,8 @@ func osCustomizations(
 
 	if hostname := c.GetHostname(); hostname != nil {
 		osc.Hostname = *hostname
-	} else {
-		osc.Hostname = "localhost.localdomain"
+	} else if imageConfig.Hostname != nil {
+		osc.Hostname = *imageConfig.Hostname
 	}
 
 	if imageConfig.InstallWeakDeps != nil {
