@@ -444,6 +444,8 @@ var (
 			},
 			// Unset hostname so it isn't written (necessary for systemd-firstboot).
 			Hostname: common.ToPtr(""),
+			// Unset locale so it isn't written (necessary for systemd-firstboot).
+			Locale: common.ToPtr(""),
 		},
 		rpmOstree:              false,
 		kernelOptions:          defaultKernelOptions,
