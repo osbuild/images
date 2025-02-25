@@ -620,6 +620,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 			imgNames: []string{
 				"container",
 				"minimal-raw",
+				"minimal-raw-zst",
 			},
 		},
 	}

@@ -1087,6 +1087,7 @@ func newDistro(version int) distro.Distro {
 			},
 		},
 		minimalrawImgType,
+		minimalrawZstdImgType,
 	)
 
 	rd.addArches(x86_64, aarch64, ppc64le, s390x, riscv64)
