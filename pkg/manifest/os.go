@@ -469,7 +469,9 @@ func (p *OS) serialize() osbuild.Pipeline {
 		}
 	}
 
-	pipeline.AddStage(osbuild.NewLocaleStage(&osbuild.LocaleStageOptions{Language: p.Language}))
+	if p.Language != "" {
+		pipeline.AddStage(osbuild.NewLocaleStage(&osbuild.LocaleStageOptions{Language: p.Language}))
+	}
 
 	if p.Keyboard != nil {
 		keymapOptions := &osbuild.KeymapStageOptions{Keymap: *p.Keyboard}
