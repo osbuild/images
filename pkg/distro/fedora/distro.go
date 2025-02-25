@@ -63,8 +63,6 @@ var (
 		"NetworkManager.service",
 		"firewalld.service",
 		"sshd.service",
-		"zezere_ignition.timer",
-		"zezere_ignition_banner.service",
 		"greenboot-grub2-set-counter",
 		"greenboot-grub2-set-success",
 		"greenboot-healthcheck",
