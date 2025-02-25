@@ -175,7 +175,6 @@ iot_commit: &iot_commit
     - "wpa_supplicant"
     - "xfsprogs"
     - "xz"
-    - "zezere-ignition"
     - "zram-generator"
   condition:
     version_less_than:
