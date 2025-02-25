@@ -442,6 +442,8 @@ var (
 				// Overwrite the default Grub2 timeout value.
 				Timeout: 5,
 			},
+			// Unset hostname so it isn't written (necessary for systemd-firstboot).
+			Hostname: common.ToPtr(""),
 		},
 		rpmOstree:              false,
 		kernelOptions:          defaultKernelOptions,
