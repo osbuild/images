@@ -11,7 +11,7 @@ cloud_base:  # not used directly; added for reference
     - "geolite2-country"
     - "plymouth"
 
-qcow2: &qcow2
+server_qcow2: &server_qcow2
   include:
     # cloud_base
     - "@Fedora Cloud Server"
@@ -28,16 +28,16 @@ qcow2: &qcow2
     - "geolite2-country"
     - "plymouth"
 
-ami:
-  <<: *qcow2
+server_ami:
+  <<: *server_qcow2
 
-oci:
-  <<: *qcow2
+server_oci:
+  <<: *server_qcow2
 
-openstack:
-  <<: *qcow2
+server_openstack:
+  <<: *server_qcow2
 
-vhd:
+server_vhd:
   include:
     # cloud_base
     - "@Fedora Cloud Server"
@@ -54,7 +54,7 @@ vhd:
     - "geolite2-country"
     - "plymouth"
 
-vmdk: &vmdk
+server_vmdk: &server_vmdk
   include:
     - "@Fedora Cloud Server"
     - "chrony"
@@ -73,8 +73,8 @@ vmdk: &vmdk
     - "grubby-deprecated"
     - "extlinux-bootloader"
 
-ova:
-  <<: *vmdk
+server_ova:
+  <<: *server_vmdk
 
 # NOTE: keep in sync with official fedora-iot definitions:
 # https://pagure.io/fedora-iot/ostree/blob/main/f/fedora-iot-base.yaml
@@ -600,7 +600,7 @@ iot_installer:
           - "dmidecode"
 
 
-live_installer:
+workstation_live_installer:
   include:
     - "@workstation-product-environment"
     - "@anaconda-tools"
@@ -632,7 +632,7 @@ live_installer:
           - "anaconda-webui"
 
 
-image_installer:
+minimal_installer:
   # anaconda
   include:
     - "aajohan-comfortaa-fonts"
@@ -816,10 +816,10 @@ container: &container
     - "whois-nls"
     - "xkeyboard-config"
 
-wsl:
+server_wsl:
   <<: *container
 
-minimal_raw:
+minimal: &minimal
   include:
     - "@core"
     - "initial-setup"
@@ -840,6 +840,9 @@ minimal_raw:
           - "dnf5"
           - "policycoreutils"
           - "selinux-policy-targeted"
+
+minimal_raw_xz:
+  <<: *minimal
 
 iot_simplified_installer:
   include:
