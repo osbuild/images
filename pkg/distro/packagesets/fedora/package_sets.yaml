@@ -828,11 +828,9 @@ minimal_raw: &minimal
     - "brcmfmac-firmware"
     - "realtek-firmware"
     - "iwlwifi-mvm-firmware"
+  exclude:
+    - "dracut-config-rescue"
   condition:
-    version_greater_or_equal:
-      "43":
-        exclude:
-          - "dracut-config-rescue"
     architecture:
       riscv64:
         include:
