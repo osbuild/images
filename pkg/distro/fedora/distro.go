@@ -71,8 +71,6 @@ var (
 		"greenboot-task-runner",
 		"redboot-auto-reboot",
 		"redboot-task-runner",
-		"parsec",
-		"dbus-parsec",
 	}
 
 	minimalRawServices = []string{
