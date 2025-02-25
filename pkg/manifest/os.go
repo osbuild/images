@@ -149,15 +149,14 @@ type OSCustomizations struct {
 	// instead of BLS. Required for legacy systems like RHEL 7.
 	NoBLS bool
 
-	// FirstBoot sets if the machine-id should be written with the
-	// magic value that determines if the machine is being booted for the
-	// first time.
-	FirstBoot bool
-
 	// InstallWeakDeps enables installation of weak dependencies for packages
 	// that are statically defined for the pipeline.
 	// Defaults to True.
 	InstallWeakDeps bool
+
+	// Determines if the machine id should be set to "uninitialized" which allows
+	// "ConditionFirstBoot" to work in systemd
+	MachineIdUninitialized bool
 }
 
 // OS represents the filesystem tree of the target image. This roughly
@@ -812,7 +811,7 @@ func (p *OS) serialize() osbuild.Pipeline {
 		pipeline.AddStage(osbuild.NewCAStageStage())
 	}
 
-	if p.FirstBoot {
+	if p.MachineIdUninitialized {
 		pipeline.AddStage(osbuild.NewMachineIdStage(&osbuild.MachineIdStageOptions{
 			FirstBoot: osbuild.MachineIdFirstBootYes,
 		}))

@@ -481,6 +481,7 @@ var defaultDistroImageConfig = &distro.ImageConfig{
 	Locale:                 common.ToPtr("C.UTF-8"),
 	DefaultOSCAPDatastream: common.ToPtr(oscap.DefaultFedoraDatastream()),
 	InstallWeakDeps:        common.ToPtr(true),
+	MachineIdUninitialized: common.ToPtr(true),
 }
 
 func defaultDistroInstallerConfig(d *distribution) *distro.InstallerConfig {

@@ -238,6 +238,10 @@ func osCustomizations(
 		osc.CACerts = ca.PEMCerts
 	}
 
+	if imageConfig.MachineIdUninitialized != nil {
+		osc.MachineIdUninitialized = *imageConfig.MachineIdUninitialized
+	}
+
 	return osc, nil
 }
 
@@ -348,9 +352,6 @@ func diskImage(workload workload.Workload,
 	img.PartitionTable = pt
 
 	img.Filename = t.Filename()
-
-	d := t.arch.distro
-	img.FirstBoot = common.VersionGreaterThanOrEqual(d.osVersion, VERSION_FIRSTBOOT)
 
 	return img, nil
 }
