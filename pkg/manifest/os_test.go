@@ -266,3 +266,21 @@ func TestLanguageDoesNotIncludeLocaleStage(t *testing.T) {
 	st := findStage("org.osbuild.locale", pipeline.Stages)
 	require.Nil(t, st)
 }
+
+func TestTimezoneIncludesTimezoneStage(t *testing.T) {
+	os := NewTestOS()
+
+	os.Timezone = "Etc/UTC"
+
+	pipeline := os.serialize()
+	st := findStage("org.osbuild.timezone", pipeline.Stages)
+	require.NotNil(t, st)
+}
+
+func TestTimezoneDoesNotIncludeTimezoneStage(t *testing.T) {
+	os := NewTestOS()
+
+	pipeline := os.serialize()
+	st := findStage("org.osbuild.timezone", pipeline.Stages)
+	require.Nil(t, st)
+}
