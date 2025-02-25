@@ -7,7 +7,7 @@ import (
 )
 
 func TestNewMachineIdStageOptions(t *testing.T) {
-	firstboot := "yes"
+	firstboot := MachineIdFirstBootYes
 
 	expectedOptions := &MachineIdStageOptions{
 		FirstBoot: firstboot,
@@ -18,7 +18,7 @@ func TestNewMachineIdStageOptions(t *testing.T) {
 }
 
 func TestNewMachineIdStage(t *testing.T) {
-	firstboot := "yes"
+	firstboot := MachineIdFirstBootYes
 
 	expectedStage := &Stage{
 		Type:    "org.osbuild.machine-id",
