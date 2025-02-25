@@ -471,7 +471,7 @@ type distribution struct {
 // Fedora based OS image configuration defaults
 var defaultDistroImageConfig = &distro.ImageConfig{
 	Timezone:               common.ToPtr("UTC"),
-	Locale:                 common.ToPtr("en_US"),
+	Locale:                 common.ToPtr("C.UTF-8"),
 	DefaultOSCAPDatastream: common.ToPtr(oscap.DefaultFedoraDatastream()),
 }
 
