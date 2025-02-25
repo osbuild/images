@@ -144,7 +144,6 @@ iot_commit: &iot_commit
     - "pinentry"
     - "podman"
     - "policycoreutils"
-    - "policycoreutils-python-utils"
     - "polkit"
     - "procps-ng"
     - "realtek-firmware"
