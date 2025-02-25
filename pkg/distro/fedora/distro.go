@@ -446,6 +446,8 @@ var (
 			Hostname: common.ToPtr(""),
 			// Unset locale so it isn't written (necessary for systemd-firstboot).
 			Locale: common.ToPtr(""),
+			// Unset timezone so it isn't written (necessary for systemd-firstboot).
+			Timezone: common.ToPtr(""),
 		},
 		rpmOstree:              false,
 		kernelOptions:          defaultKernelOptions,
