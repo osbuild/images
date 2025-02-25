@@ -9,7 +9,6 @@ import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/environment"
 	"github.com/osbuild/images/pkg/arch"
-	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/distro"
@@ -464,9 +463,6 @@ func mkMinimalRawImgType(d distribution) imageType {
 		},
 		defaultImageConfig: &distro.ImageConfig{
 			EnabledServices: minimalServicesForVersion(&d),
-			// NOTE: temporary workaround for a bug in initial-setup that
-			// requires a kickstart file in the root directory.
-			Files: []*fsnode.File{initialSetupKickstart()},
 			Grub2Config: &osbuild.GRUB2Config{
 				// Overwrite the default Grub2 timeout value.
 				Timeout: 5,
