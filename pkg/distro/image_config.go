@@ -98,6 +98,11 @@ type ImageConfig struct {
 	// InstallWeakDeps enables installation of weak dependencies for packages
 	// that are statically defined for the pipeline.
 	InstallWeakDeps *bool
+
+	// How to handle the /etc/machine-id file, when set to true it causes the
+	// machine id to be set to 'uninitialized' which causes ConditionFirstboot
+	// to be triggered in systemd
+	MachineIdUninitialized *bool
 }
 
 // InheritFrom inherits unset values from the provided parent configuration and
