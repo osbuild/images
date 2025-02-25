@@ -284,3 +284,21 @@ func TestTimezoneDoesNotIncludeTimezoneStage(t *testing.T) {
 	st := findStage("org.osbuild.timezone", pipeline.Stages)
 	require.Nil(t, st)
 }
+
+func TestHostnameIncludesHostnameStage(t *testing.T) {
+	os := NewTestOS()
+
+	os.Hostname = "funky.name"
+
+	pipeline := os.serialize()
+	st := findStage("org.osbuild.hostname", pipeline.Stages)
+	require.NotNil(t, st)
+}
+
+func TestHostnameDoesNotIncludeHostnameStage(t *testing.T) {
+	os := NewTestOS()
+
+	pipeline := os.serialize()
+	st := findStage("org.osbuild.hostname", pipeline.Stages)
+	require.Nil(t, st)
+}
