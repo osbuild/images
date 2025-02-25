@@ -472,6 +472,8 @@ func mkMinimalRawImgType(d distribution) imageType {
 				Timeout: 5,
 			},
 			InstallWeakDeps: common.ToPtr(common.VersionLessThan(d.osVersion, VERSION_MINIMAL_WEAKDEPS)),
+			// Unset hostname so it isn't written (necessary for systemd-firstboot).
+			Hostname: common.ToPtr(""),
 		},
 		rpmOstree:              false,
 		kernelOptions:          defaultKernelOptions(),
