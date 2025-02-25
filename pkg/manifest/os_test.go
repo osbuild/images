@@ -258,6 +258,7 @@ func TestModularityDoesNotIncludeConfigStage(t *testing.T) {
 	st := manifest.FindStage("org.osbuild.dnf.module-config", pipeline.Stages)
 	require.Nil(t, st)
 }
+
 func checkStagesForFSTab(t *testing.T, stages []*osbuild.Stage) {
 	fstab := manifest.FindStage("org.osbuild.fstab", stages)
 	require.NotNil(t, fstab)
@@ -313,4 +314,22 @@ func TestOSPipelineMountUnitStages(t *testing.T) {
 	os.MountUnits = true
 
 	checkStagesForMountUnits(t, os.Serialize().Stages, expectedUnits)
+}
+
+func TestLanguageIncludesLocaleStage(t *testing.T) {
+	os := manifest.NewTestOS()
+
+	os.Language = "en_US.UTF-8"
+
+	pipeline := os.Serialize()
+	st := manifest.FindStage("org.osbuild.locale", pipeline.Stages)
+	require.NotNil(t, st)
+}
+
+func TestLanguageDoesNotIncludeLocaleStage(t *testing.T) {
+	os := manifest.NewTestOS()
+
+	pipeline := os.Serialize()
+	st := manifest.FindStage("org.osbuild.locale", pipeline.Stages)
+	require.Nil(t, st)
 }
