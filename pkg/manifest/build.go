@@ -180,10 +180,11 @@ func maybeAddExperimentalContainerBootstrap(m *Manifest, runner runner.Runner, o
 	}
 	name := "bootstrap-buildroot"
 	bootstrapPipeline := &BuildrootFromContainer{
-		Base:       NewBase(name, nil),
-		runner:     runner,
-		dependents: make([]Pipeline, 0),
-		containers: cntSrcs,
+		Base:           NewBase(name, nil),
+		runner:         runner,
+		dependents:     make([]Pipeline, 0),
+		containers:     cntSrcs,
+		disableSelinux: true,
 	}
 	m.addPipeline(bootstrapPipeline)
 	build.build = bootstrapPipeline
@@ -199,6 +200,7 @@ type BuildrootFromContainer struct {
 	containerSpecs []container.Spec
 
 	containerBuildable bool
+	disableSelinux     bool
 }
 
 // NewBuildFromContainer creates a new build pipeline from the given
@@ -253,6 +255,10 @@ func (p *BuildrootFromContainer) serializeEnd() {
 }
 
 func (p *BuildrootFromContainer) getSELinuxLabels() map[string]string {
+	if p.disableSelinux {
+		return nil
+	}
+
 	labels := map[string]string{
 		"/usr/bin/ostree": "system_u:object_r:install_exec_t:s0",
 	}
@@ -282,13 +288,15 @@ func (p *BuildrootFromContainer) serialize() osbuild.Pipeline {
 		panic(err)
 	}
 	pipeline.AddStage(stage)
-	pipeline.AddStage(osbuild.NewSELinuxStage(
-		&osbuild.SELinuxStageOptions{
-			FileContexts: "etc/selinux/targeted/contexts/files/file_contexts",
-			ExcludePaths: []string{"/sysroot"},
-			Labels:       p.getSELinuxLabels(),
-		},
-	))
+	if !p.disableSelinux {
+		pipeline.AddStage(osbuild.NewSELinuxStage(
+			&osbuild.SELinuxStageOptions{
+				FileContexts: "etc/selinux/targeted/contexts/files/file_contexts",
+				ExcludePaths: []string{"/sysroot"},
+				Labels:       p.getSELinuxLabels(),
+			},
+		))
+	}
 
 	return pipeline
 }
