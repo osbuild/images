@@ -34,15 +34,6 @@ const (
 
 	// blueprint package set name
 	blueprintPkgsKey = "blueprint"
-
-	//Default kernel command line
-	defaultKernelOptions = "ro"
-
-	// Added kernel command line options for ami, qcow2, openstack, vhd and vmdk types
-	cloudKernelOptions = "ro no_timer_check console=ttyS0,115200n8 biosdevname=0 net.ifnames=0"
-
-	// Added kernel command line options for iot-raw-image and iot-qcow2-image types
-	ostreeDeploymentKernelOptions = "modprobe.blacklist=vc4 rw coreos.no_persist_ip"
 )
 
 var (
@@ -58,6 +49,23 @@ var (
 		"/usr": 2 * datasizes.GiB,
 	}
 )
+
+// kernel command line arguments
+// NOTE: we define them as functions to make sure they globals are never
+// modified
+
+// Default kernel command line
+func defaultKernelOptions() []string { return []string{"ro"} }
+
+// Added kernel command line options for ami, qcow2, openstack, vhd and vmdk types
+func cloudKernelOptions() []string {
+	return []string{"ro", "no_timer_check", "console=ttyS0,115200n8", "biosdevname=0", "net.ifnames=0"}
+}
+
+// Added kernel command line options for iot-raw-image and iot-qcow2-image types
+func ostreeDeploymentKernelOptions() []string {
+	return []string{"modprobe.blacklist=vc4", "rw", "coreos.no_persist_ip"}
+}
 
 // Image Definitions
 func mkImageInstallerImgType(d distribution) imageType {
@@ -235,7 +243,7 @@ func mkIotSimplifiedInstallerImgType(d distribution) imageType {
 		payloadPipelines:       []string{"ostree-deployment", "image", "xz", "coi-tree", "efiboot-tree", "bootiso-tree", "bootiso"},
 		exports:                []string{"bootiso"},
 		basePartitionTables:    iotSimplifiedInstallerPartitionTables,
-		kernelOptions:          ostreeDeploymentKernelOptions,
+		kernelOptions:          ostreeDeploymentKernelOptions(),
 		requiredPartitionSizes: requiredDirectorySizes,
 	}
 }
@@ -265,7 +273,7 @@ func mkIotRawImgType(d distribution) imageType {
 		payloadPipelines:    []string{"ostree-deployment", "image", "xz"},
 		exports:             []string{"xz"},
 		basePartitionTables: iotBasePartitionTables,
-		kernelOptions:       ostreeDeploymentKernelOptions,
+		kernelOptions:       ostreeDeploymentKernelOptions(),
 
 		// Passing an empty map into the required partition sizes disables the
 		// default partition sizes normally set so our `basePartitionTables` can
@@ -297,7 +305,7 @@ func mkIotQcow2ImgType(d distribution) imageType {
 		payloadPipelines:       []string{"ostree-deployment", "image", "qcow2"},
 		exports:                []string{"qcow2"},
 		basePartitionTables:    iotBasePartitionTables,
-		kernelOptions:          ostreeDeploymentKernelOptions,
+		kernelOptions:          ostreeDeploymentKernelOptions(),
 		requiredPartitionSizes: requiredDirectorySizes,
 	}
 }
@@ -314,7 +322,7 @@ func mkQcow2ImgType(d distribution) imageType {
 		defaultImageConfig: &distro.ImageConfig{
 			DefaultTarget: common.ToPtr("multi-user.target"),
 		},
-		kernelOptions:          cloudKernelOptions,
+		kernelOptions:          cloudKernelOptions(),
 		bootable:               true,
 		defaultSize:            5 * datasizes.GibiByte,
 		image:                  diskImage,
@@ -347,7 +355,7 @@ func mkVmdkImgType(d distribution) imageType {
 			osPkgsKey: packageSetLoader,
 		},
 		defaultImageConfig:     vmdkDefaultImageConfig,
-		kernelOptions:          cloudKernelOptions,
+		kernelOptions:          cloudKernelOptions(),
 		bootable:               true,
 		defaultSize:            2 * datasizes.GibiByte,
 		image:                  diskImage,
@@ -368,7 +376,7 @@ func mkOvaImgType(d distribution) imageType {
 			osPkgsKey: packageSetLoader,
 		},
 		defaultImageConfig:     vmdkDefaultImageConfig,
-		kernelOptions:          cloudKernelOptions,
+		kernelOptions:          cloudKernelOptions(),
 		bootable:               true,
 		defaultSize:            2 * datasizes.GibiByte,
 		image:                  diskImage,
@@ -452,7 +460,7 @@ func mkMinimalRawImgType(d distribution) imageType {
 			InstallWeakDeps: common.ToPtr(common.VersionLessThan(d.osVersion, VERSION_MINIMAL_WEAKDEPS)),
 		},
 		rpmOstree:              false,
-		kernelOptions:          defaultKernelOptions,
+		kernelOptions:          defaultKernelOptions(),
 		bootable:               true,
 		defaultSize:            2 * datasizes.GibiByte,
 		image:                  diskImage,

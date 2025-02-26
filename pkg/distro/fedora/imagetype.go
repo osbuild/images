@@ -42,7 +42,7 @@ type imageType struct {
 	packageSets            map[string]packageSetFunc
 	defaultImageConfig     *distro.ImageConfig
 	defaultInstallerConfig *distro.InstallerConfig
-	kernelOptions          string
+	kernelOptions          []string
 	defaultSize            uint64
 	buildPipelines         []string
 	payloadPipelines       []string
