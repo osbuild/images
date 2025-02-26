@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	"github.com/osbuild/images/pkg/distrosort"
+	"gopkg.in/yaml.v3"
+
 	// we cannot use "maps" yet, as it needs go1.23
 	"golang.org/x/exp/maps"
 )
@@ -22,6 +24,7 @@ const (
 	OutputFormatJSON      OutputFormat = "json"
 	OutputFormatTextShell OutputFormat = "shell"
 	OutputFormatTextShort OutputFormat = "short"
+	OutputFormatYAML      OutputFormat = "yaml"
 )
 
 // ResultFormatter will format the given result list to the given io.Writer
@@ -35,6 +38,7 @@ var supportedFormatters = map[string]ResultsFormatter{
 	string(OutputFormatJSON):      &jsonResultsFormatter{},
 	string(OutputFormatTextShell): &shellResultsFormatter{},
 	string(OutputFormatTextShort): &textShortResultsFormatter{},
+	string(OutputFormatYAML):      &yamlResultsFormatter{},
 }
 
 // SupportedOutputFormats returns a list of supported output formats
@@ -186,4 +190,20 @@ func (*jsonResultsFormatter) Output(w io.Writer, all []Result) error {
 
 	enc := json.NewEncoder(w)
 	return enc.Encode(out)
+}
+
+type yamlResultsFormatter struct{}
+
+func (*yamlResultsFormatter) Output(w io.Writer, all []Result) error {
+	outputMap := make(map[string]map[string][]string)
+	for _, res := range all {
+		if _, ok := outputMap[res.Distro.Name()]; !ok {
+			outputMap[res.Distro.Name()] = make(map[string][]string)
+		}
+		outputMap[res.Distro.Name()][res.Arch.Name()] = append(outputMap[res.Distro.Name()][res.Arch.Name()], res.ImgType.Name())
+	}
+
+	enc := yaml.NewEncoder(w)
+	defer enc.Close()
+	return enc.Encode(outputMap)
 }
