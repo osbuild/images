@@ -838,6 +838,10 @@ minimal_raw: &minimal
           - "dnf5"
           - "policycoreutils"
           - "selinux-policy-targeted"
+    version_greater_or_equal:
+      "43":
+        exclude:
+          - "firewalld"
 
 minimal_raw_zst:
   <<: *minimal
