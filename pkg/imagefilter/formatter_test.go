@@ -92,6 +92,27 @@ func TestResultsFormatter(t *testing.T) {
 			},
 			"@WARNING - the output format is not stable yet and may change\ntest-distro-1:\n  test_type: [ test_arch, test_arch2 ]\n",
 		},
+		{
+			"yaml",
+			[]string{"test-distro-1:qcow2:test_arch3"},
+			"test-distro-1:\n    test_arch3:\n        - qcow2\n",
+		},
+		{
+			"yaml",
+			[]string{
+				"test-distro-9:qcow2:test_arch3",
+				"test-distro-10:qcow2:test_arch3",
+			},
+			"test-distro-9:\n    test_arch3:\n        - qcow2\ntest-distro-10:\n    test_arch3:\n        - qcow2\n",
+		},
+		{
+			"yaml",
+			[]string{
+				"test-distro-1:test_type:test_arch",
+				"test-distro-1:test_type:test_arch2",
+			},
+			"test-distro-1:\n    test_arch:\n        - test_type\n    test_arch2:\n        - test_type\n",
+		},
 	} {
 		res := make([]imagefilter.Result, len(tc.fakeResults))
 		for i, resultSpec := range tc.fakeResults {
