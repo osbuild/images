@@ -440,7 +440,7 @@ func mkWslImgType(d distribution) imageType {
 }
 
 func mkMinimalRawImgType(d distribution) imageType {
-	return imageType{
+	it := imageType{
 		name:        "minimal-raw",
 		filename:    "disk.raw.xz",
 		compression: "xz",
@@ -470,6 +470,12 @@ func mkMinimalRawImgType(d distribution) imageType {
 		basePartitionTables:    minimalrawPartitionTables,
 		requiredPartitionSizes: requiredDirectorySizes,
 	}
+	if common.VersionGreaterThanOrEqual(d.osVersion, "43") {
+		// from Fedora 43 onward, we stop writing /etc/fstab and start using
+		// mount units only
+		it.defaultImageConfig.MountUnits = common.ToPtr(true)
+	}
+	return it
 }
 
 type distribution struct {
