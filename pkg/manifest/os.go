@@ -707,11 +707,9 @@ func (p *OS) serialize() osbuild.Pipeline {
 		}
 		pipeline.AddStages(fsCfgStages...)
 
-		var bootloader *osbuild.Stage
-		switch p.platform.GetArch() {
-		case arch.ARCH_S390X:
-			bootloader = osbuild.NewZiplStage(new(osbuild.ZiplStageOptions))
-		default:
+		switch p.platform.GetBootloader() {
+		case platform.BOOTLOADER_GRUB2:
+			var bootloader *osbuild.Stage
 			if p.OSCustomizations.NoBLS {
 				// BLS entries not supported: use grub2.legacy
 				id := "76a22bf4-f153-4541-b6c7-0332c0dfaeac"
@@ -764,9 +762,10 @@ func (p *OS) serialize() osbuild.Pipeline {
 				}
 				bootloader = osbuild.NewGRUB2Stage(options)
 			}
+			pipeline.AddStage(bootloader)
+		case platform.BOOTLOADER_ZIPL:
+			pipeline.AddStage(osbuild.NewZiplStage(new(osbuild.ZiplStageOptions)))
 		}
-
-		pipeline.AddStage(bootloader)
 
 		if !p.OSCustomizations.KernelOptionsBootloader || p.platform.GetArch() == arch.ARCH_S390X {
 			pipeline = prependKernelCmdlineStage(pipeline, rootUUID, kernelOptions)
