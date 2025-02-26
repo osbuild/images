@@ -94,6 +94,9 @@ type ImageConfig struct {
 	LockRootUser *bool
 
 	IgnitionPlatform *string
+
+	// How to handle the /etc/machine-id file
+	FirstBootStrategy *osbuild.MachineIdFirstBoot
 }
 
 // InheritFrom inherits unset values from the provided parent configuration and

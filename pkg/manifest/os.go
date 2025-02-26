@@ -152,7 +152,7 @@ type OSCustomizations struct {
 	// FirstBoot sets if the machine-id should be written with the
 	// magic value that determines if the machine is being booted for the
 	// first time.
-	FirstBoot bool
+	FirstBootStrategy *osbuild.MachineIdFirstBoot
 }
 
 // OS represents the filesystem tree of the target image. This roughly
@@ -813,9 +813,9 @@ func (p *OS) serialize() osbuild.Pipeline {
 		pipeline.AddStage(osbuild.NewCAStageStage())
 	}
 
-	if p.FirstBoot {
+	if p.FirstBootStrategy != nil {
 		pipeline.AddStage(osbuild.NewMachineIdStage(&osbuild.MachineIdStageOptions{
-			FirstBoot: osbuild.MachineIdFirstBootYes,
+			FirstBoot: *p.FirstBootStrategy,
 		}))
 	}
 

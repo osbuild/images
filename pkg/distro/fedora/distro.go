@@ -473,6 +473,7 @@ var defaultDistroImageConfig = &distro.ImageConfig{
 	Timezone:               common.ToPtr("UTC"),
 	Locale:                 common.ToPtr("C.UTF-8"),
 	DefaultOSCAPDatastream: common.ToPtr(oscap.DefaultFedoraDatastream()),
+	FirstBootStrategy:      common.ToPtr(osbuild.MachineIdFirstBootYes),
 }
 
 func defaultDistroInstallerConfig(d *distribution) *distro.InstallerConfig {

@@ -234,6 +234,8 @@ func osCustomizations(
 		osc.CACerts = ca.PEMCerts
 	}
 
+	osc.FirstBootStrategy = imageConfig.FirstBootStrategy
+
 	return osc, nil
 }
 
@@ -344,9 +346,6 @@ func diskImage(workload workload.Workload,
 	img.PartitionTable = pt
 
 	img.Filename = t.Filename()
-
-	d := t.arch.distro
-	img.FirstBoot = common.VersionGreaterThanOrEqual(d.osVersion, VERSION_FIRSTBOOT)
 
 	return img, nil
 }

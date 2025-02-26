@@ -234,7 +234,7 @@ func testTomlPkgsFor(t *testing.T, os *OS) {
 func TestFirstBootIncludesMachineIdStage(t *testing.T) {
 	os := NewTestOS()
 
-	os.FirstBoot = true
+	os.FirstBootStrategy = common.ToPtr(osbuild.MachineIdFirstBootYes)
 
 	pipeline := os.serialize()
 	st := findStage("org.osbuild.machine-id", pipeline.Stages)

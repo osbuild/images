@@ -39,8 +39,6 @@ type DiskImage struct {
 	// InstallWeakDeps enables installation of weak dependencies for packages
 	// that are statically defined for the payload pipeline of the image.
 	InstallWeakDeps *bool
-
-	FirstBoot bool
 }
 
 func NewDiskImage() *DiskImage {
@@ -68,7 +66,6 @@ func (img *DiskImage) InstantiateManifest(m *manifest.Manifest,
 	if img.InstallWeakDeps != nil {
 		osPipeline.InstallWeakDeps = *img.InstallWeakDeps
 	}
-	osPipeline.FirstBoot = img.FirstBoot
 
 	rawImagePipeline := manifest.NewRawImage(buildPipeline, osPipeline)
 	rawImagePipeline.PartTool = img.PartTool
