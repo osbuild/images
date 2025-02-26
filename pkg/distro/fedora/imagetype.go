@@ -59,6 +59,9 @@ type imageType struct {
 	// List of valid arches for the image type
 	basePartitionTables    distro.BasePartitionTableMap
 	requiredPartitionSizes map[string]uint64
+
+	// Disable weak dependency installation
+	disableWeakDeps bool
 }
 
 func (t *imageType) Name() string {

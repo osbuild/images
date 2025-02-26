@@ -329,12 +329,21 @@ func diskImage(workload workload.Workload,
 		return nil, err
 	}
 
+	d := t.arch.distro
+
 	img.Environment = t.environment
 	img.Workload = workload
 	img.Compression = t.compression
+
 	if bp.Minimal {
 		// Disable weak dependencies if the 'minimal' option is enabled
 		img.InstallWeakDeps = common.ToPtr(false)
+	} else {
+		// We only support disabling weak dependencies starting at Fedora 43, this is to
+		// ensure that we don't break older images when/if this toggle is added to an image.
+		if common.VersionGreaterThanOrEqual(d.osVersion, VERSION_WEAKDEPS) && t.disableWeakDeps {
+			img.InstallWeakDeps = common.ToPtr(false)
+		}
 	}
 	// TODO: move generation into LiveImage
 	pt, err := t.getPartitionTable(bp.Customizations, options, rng)
@@ -345,7 +354,6 @@ func diskImage(workload workload.Workload,
 
 	img.Filename = t.Filename()
 
-	d := t.arch.distro
 	img.FirstBoot = common.VersionGreaterThanOrEqual(d.osVersion, VERSION_FIRSTBOOT)
 
 	return img, nil
