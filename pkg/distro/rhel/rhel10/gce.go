@@ -9,7 +9,9 @@ import (
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
-const gceKernelOptions = "biosdevname=0 scsi_mod.use_blk_mq=Y console=ttyS0,38400n8d"
+func gceKernelOptions() []string {
+	return []string{"biosdevname=0", "scsi_mod.use_blk_mq=Y", "console=ttyS0,38400n8d"}
+}
 
 func mkGCEImageType() *rhel.ImageType {
 	it := rhel.NewImageType(
@@ -26,7 +28,7 @@ func mkGCEImageType() *rhel.ImageType {
 	)
 
 	it.DefaultImageConfig = baseGCEImageConfig()
-	it.KernelOptions = gceKernelOptions
+	it.KernelOptions = gceKernelOptions()
 	it.DefaultSize = 20 * datasizes.GibiByte
 	it.Bootable = true
 	// TODO: the base partition table still contains the BIOS boot partition, but the image is UEFI-only
