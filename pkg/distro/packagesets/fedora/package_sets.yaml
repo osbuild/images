@@ -178,6 +178,12 @@ iot_commit: &iot_commit
       "41":
         include:
           - "dnsmasq"
+      "42":
+        include:
+          - "dbus-parsec"
+          - "parsec"
+          - "policycoreutils-python-utils"
+          - "zezere-ignition"
       "43":
         include:
           - "basesystem"
