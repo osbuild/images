@@ -157,10 +157,10 @@ func mkEC2SapImgTypeX86_64(osVersion string) *rhel.ImageType {
 // IMAGE CONFIG
 
 // TODO: move these to the EC2 environment
-const (
-	amiKernelOptions        = "console=tty0 console=ttyS0,115200n8 nvme_core.io_timeout=4294967295"
-	amiAarch64KernelOptions = amiKernelOptions + " iommu.strict=0"
-	amiSapKernelOptions     = amiKernelOptions + " processor.max_cstate=1 intel_idle.max_cstate=1"
+var (
+	amiKernelOptions        = []string{"console=tty0", "console=ttyS0,115200n8", "nvme_core.io_timeout=4294967295"}
+	amiAarch64KernelOptions = append(amiKernelOptions, "iommu.strict=0")
+	amiSapKernelOptions     = append(amiKernelOptions, []string{"processor.max_cstate=1", "intel_idle.max_cstate=1"}...)
 )
 
 // default EC2 images config (common for all architectures)

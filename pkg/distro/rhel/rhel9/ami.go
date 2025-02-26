@@ -10,7 +10,7 @@ import (
 )
 
 // TODO: move these to the EC2 environment
-const amiKernelOptions = "console=tty0 console=ttyS0,115200n8 net.ifnames=0 nvme_core.io_timeout=4294967295"
+var amiKernelOptions = []string{"console=tty0", "console=ttyS0,115200n8", "net.ifnames=0", "nvme_core.io_timeout=4294967295"}
 
 // default EC2 images config (common for all architectures)
 func defaultEc2ImageConfig() *distro.ImageConfig {
@@ -322,7 +322,7 @@ func mkEC2SapImgTypeX86_64(osVersion string) *rhel.ImageType {
 	)
 
 	it.Compression = "xz"
-	it.KernelOptions = "console=ttyS0,115200n8 console=tty0 net.ifnames=0 nvme_core.io_timeout=4294967295 processor.max_cstate=1 intel_idle.max_cstate=1"
+	it.KernelOptions = []string{"console=ttyS0,115200n8", "console=tty0", "net.ifnames=0", "nvme_core.io_timeout=4294967295", "processor.max_cstate=1", "intel_idle.max_cstate=1"}
 	it.Bootable = true
 	it.DefaultSize = 10 * datasizes.GibiByte
 	it.DefaultImageConfig = sapImageConfig(osVersion).InheritFrom(defaultEc2ImageConfigX86_64())
@@ -369,7 +369,7 @@ func mkAMIImgTypeAarch64() *rhel.ImageType {
 		[]string{"image"},
 	)
 
-	it.KernelOptions = "console=ttyS0,115200n8 console=tty0 net.ifnames=0 nvme_core.io_timeout=4294967295 iommu.strict=0"
+	it.KernelOptions = []string{"console=ttyS0,115200n8", "console=tty0", "net.ifnames=0", "nvme_core.io_timeout=4294967295", "iommu.strict=0"}
 	it.Bootable = true
 	it.DefaultSize = 10 * datasizes.GibiByte
 	it.DefaultImageConfig = defaultEc2ImageConfig()
@@ -393,7 +393,7 @@ func mkEC2ImgTypeAarch64() *rhel.ImageType {
 	)
 
 	it.Compression = "xz"
-	it.KernelOptions = "console=ttyS0,115200n8 console=tty0 net.ifnames=0 nvme_core.io_timeout=4294967295 iommu.strict=0"
+	it.KernelOptions = []string{"console=ttyS0,115200n8", "console=tty0", "net.ifnames=0", "nvme_core.io_timeout=4294967295", "iommu.strict=0"}
 	it.Bootable = true
 	it.DefaultSize = 10 * datasizes.GibiByte
 	it.DefaultImageConfig = defaultEc2ImageConfig()

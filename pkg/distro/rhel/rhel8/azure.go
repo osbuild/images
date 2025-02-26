@@ -14,7 +14,7 @@ import (
 )
 
 // use loglevel=3 as described in the RHEL documentation and used in existing RHEL images built by MSFT
-const defaultAzureKernelOptions = "ro loglevel=3 crashkernel=auto console=tty1 console=ttyS0 earlyprintk=ttyS0 rootdelay=300"
+var defaultAzureKernelOptions = []string{"ro", "loglevel=3", "crashkernel=auto", "console=tty1", "console=ttyS0", "earlyprintk=ttyS0", "rootdelay=300"}
 
 func mkAzureRhuiImgType() *rhel.ImageType {
 	it := rhel.NewImageType(

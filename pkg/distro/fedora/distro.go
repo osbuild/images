@@ -34,18 +34,18 @@ const (
 
 	// blueprint package set name
 	blueprintPkgsKey = "blueprint"
-
-	//Default kernel command line
-	defaultKernelOptions = "ro"
-
-	// Added kernel command line options for ami, qcow2, openstack, vhd and vmdk types
-	cloudKernelOptions = "ro no_timer_check console=ttyS0,115200n8 biosdevname=0 net.ifnames=0"
-
-	// Added kernel command line options for iot-raw-image and iot-qcow2-image types
-	ostreeDeploymentKernelOptions = "modprobe.blacklist=vc4 rw coreos.no_persist_ip"
 )
 
 var (
+	//Default kernel command line
+	defaultKernelOptions = []string{"ro"}
+
+	// Added kernel command line options for ami, qcow2, openstack, vhd and vmdk types
+	cloudKernelOptions = []string{"ro", "no_timer_check", "console=ttyS0,115200n8", "biosdevname=0", "net.ifnames=0"}
+
+	// Added kernel command line options for iot-raw-image and iot-qcow2-image types
+	ostreeDeploymentKernelOptions = []string{"modprobe.blacklist=vc4", "rw", "coreos.no_persist_ip"}
+
 	oscapProfileAllowList = []oscap.Profile{
 		oscap.Ospp,
 		oscap.PciDss,
