@@ -315,6 +315,7 @@ func TestRawBootcImageSerializeCreateFilesDirs(t *testing.T) {
 				require.NotNil(t, mkdirStage)
 				mkdirOptions := mkdirStage.Options.(*osbuild.MkdirStageOptions)
 				assert.Equal(t, "/path/to/dir", mkdirOptions.Paths[0].Path)
+				assertBootcDeploymentAndBindMount(t, mkdirStage)
 			} else {
 				assert.Nil(t, mkdirStage)
 			}
@@ -326,6 +327,7 @@ func TestRawBootcImageSerializeCreateFilesDirs(t *testing.T) {
 				require.NotNil(t, copyStage)
 				copyOptions := copyStage.Options.(*osbuild.CopyStageOptions)
 				assert.Equal(t, "tree:///path/to/file", copyOptions.Paths[0].To)
+				assertBootcDeploymentAndBindMount(t, copyStage)
 			} else {
 				assert.Nil(t, copyStage)
 			}
