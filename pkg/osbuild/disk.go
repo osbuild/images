@@ -120,6 +120,24 @@ func GenImageKernelOptions(pt *disk.PartitionTable, mountUnits bool) (string, []
 	}
 	rootFsUUID := rootFs.GetFSSpec().UUID
 
+	// if /usr is on a separate filesystem, it needs to be defined in the
+	// kernel cmdline options for autodiscovery (when there's no /etc/fstab)
+	// see:
+	//  - https://github.com/systemd/systemd/issues/24027
+	//  - https://github.com/systemd/systemd/pull/33397
+	if usrFs := pt.FindMountable("/usr"); usrFs != nil && mountUnits {
+		fsOptions, err := usrFs.GetFSTabOptions()
+		if err != nil {
+			panic(fmt.Sprintf("error getting filesystem options for /usr mountpoint: %s", err))
+		}
+		cmdline = append(
+			cmdline,
+			fmt.Sprintf("mount.usr=UUID=%s", usrFs.GetFSSpec().UUID),
+			fmt.Sprintf("mount.usrfstype=%s", usrFs.GetFSType()),
+			fmt.Sprintf("mount.usrflags=%s", fsOptions.MntOps),
+		)
+	}
+
 	genOptions := func(e disk.Entity, path []disk.Entity) error {
 		switch ent := e.(type) {
 		case *disk.LUKSContainer:
