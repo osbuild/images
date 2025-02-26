@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -314,7 +315,9 @@ func mockDepsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoC
 	for name, pkgSetChain := range packageSets {
 		specSet := make([]rpmmd.PackageSpec, 0)
 		for _, pkgSet := range pkgSetChain {
-			for _, pkgName := range pkgSet.Include {
+			include := pkgSet.Include
+			slices.Sort(include)
+			for _, pkgName := range include {
 				checksum := fmt.Sprintf("%x", sha256.Sum256([]byte(pkgName)))
 				// generate predictable but non-empty
 				// release/version numbers
@@ -331,7 +334,10 @@ func mockDepsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoC
 				}
 				specSet = append(specSet, spec)
 			}
-			for _, excludeName := range pkgSet.Exclude {
+
+			exclude := pkgSet.Exclude
+			slices.Sort(exclude)
+			for _, excludeName := range exclude {
 				pkgName := fmt.Sprintf("exclude:%s", excludeName)
 				checksum := fmt.Sprintf("%x", sha256.Sum256([]byte(pkgName)))
 				spec := rpmmd.PackageSpec{
