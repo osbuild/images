@@ -190,6 +190,19 @@ type FileCustomization struct {
 	Mode string `json:"mode,omitempty" toml:"mode,omitempty"`
 	// Data is the file content in plain text
 	Data string `json:"data,omitempty" toml:"data,omitempty"`
+
+	// Ref references the given files from the host, this makes
+	// the manifest alone no-longer portable (but future offline
+	// manifest bundles will fix that). It will still be
+	// reproducible as the manifest will include all the hashes of
+	// the content so any change will make the build fail.
+	//
+	// Initially only single files are supported, but this will
+	// eventually be expanded to dirs (which will just be added
+	// recursively) and http{,s}.
+	//
+	// XXX: should this be called URL instead?
+	Ref string `json:"ref" toml:"ref,omitempty"`
 }
 
 // Custom TOML unmarshalling for FileCustomization with validation
@@ -291,6 +304,10 @@ func (f *FileCustomization) UnmarshalJSON(data []byte) error {
 
 // ToFsNodeFile converts the FileCustomization to an fsnode.File
 func (f FileCustomization) ToFsNodeFile() (*fsnode.File, error) {
+	if f.Data != "" && f.Ref != "" {
+		return nil, fmt.Errorf("cannot specify both data %q and ref %q", f.Data, f.Ref)
+	}
+
 	var data []byte
 	if f.Data != "" {
 		data = []byte(f.Data)
@@ -309,6 +326,9 @@ func (f FileCustomization) ToFsNodeFile() (*fsnode.File, error) {
 		mode = common.ToPtr(os.FileMode(modeNum))
 	}
 
+	if f.Ref != "" {
+		return fsnode.NewFileForRef(f.Path, mode, f.User, f.Group, f.Ref)
+	}
 	return fsnode.NewFile(f.Path, mode, f.User, f.Group, data)
 }
 
