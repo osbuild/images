@@ -9,7 +9,6 @@ import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/environment"
 	"github.com/osbuild/images/pkg/arch"
-	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/distro"
@@ -80,7 +79,7 @@ var (
 	minimalRawServices = []string{
 		"NetworkManager.service",
 		"firewalld.service",
-		"initial-setup.service",
+		"systemd-firstboot.service",
 		"sshd.service",
 	}
 
@@ -435,13 +434,16 @@ var (
 		},
 		defaultImageConfig: &distro.ImageConfig{
 			EnabledServices: minimalRawServices,
-			// NOTE: temporary workaround for a bug in initial-setup that
-			// requires a kickstart file in the root directory.
-			Files: []*fsnode.File{initialSetupKickstart()},
 			Grub2Config: &osbuild.GRUB2Config{
 				// Overwrite the default Grub2 timeout value.
 				Timeout: 5,
 			},
+			// Unset hostname so it isn't written (necessary for systemd-firstboot).
+			Hostname: common.ToPtr(""),
+			// Unset locale so it isn't written (necessary for systemd-firstboot).
+			Locale: common.ToPtr(""),
+			// Unset timezone so it isn't written (necessary for systemd-firstboot).
+			Timezone: common.ToPtr(""),
 		},
 		rpmOstree:              false,
 		kernelOptions:          defaultKernelOptions,
@@ -470,6 +472,7 @@ type distribution struct {
 
 // Fedora based OS image configuration defaults
 var defaultDistroImageConfig = &distro.ImageConfig{
+	Hostname:               common.ToPtr("localhost.localdomain"),
 	Timezone:               common.ToPtr("UTC"),
 	Locale:                 common.ToPtr("C.UTF-8"),
 	DefaultOSCAPDatastream: common.ToPtr(oscap.DefaultFedoraDatastream()),
