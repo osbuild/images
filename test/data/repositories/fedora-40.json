@@ -9,7 +9,7 @@
       ]
     },
     {
-      "name": "fedora",
+      "name": "updates",
       "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f40/f40-x86_64-updates-released-20241115",
       "check_gpg": true,
       "gpgkeys": [
@@ -27,7 +27,7 @@
       ]
     },
     {
-      "name": "fedora",
+      "name": "updates",
       "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f40/f40-aarch64-updates-released-20241115",
       "check_gpg": true,
       "gpgkeys": [
@@ -45,7 +45,7 @@
       ]
     },
     {
-      "name": "fedora",
+      "name": "updates",
       "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f40/f40-ppc64le-updates-released-20241115",
       "check_gpg": true,
       "gpgkeys": [
@@ -63,7 +63,7 @@
       ]
     },
     {
-      "name": "fedora",
+      "name": "updates",
       "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f40/f40-s390x-updates-released-20241115",
       "check_gpg": true,
       "gpgkeys": [
