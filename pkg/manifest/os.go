@@ -695,63 +695,65 @@ func (p *OS) serialize() osbuild.Pipeline {
 		}
 		pipeline.AddStages(fsCfgStages...)
 
-		var bootloader *osbuild.Stage
-		switch p.platform.GetArch() {
-		case arch.ARCH_S390X:
-			bootloader = osbuild.NewZiplStage(new(osbuild.ZiplStageOptions))
-		default:
-			if p.NoBLS {
-				// BLS entries not supported: use grub2.legacy
-				id := "76a22bf4-f153-4541-b6c7-0332c0dfaeac"
-				product := osbuild.GRUB2Product{
-					Name:    p.OSProduct,
-					Version: p.OSVersion,
-					Nick:    p.OSNick,
-				}
+		if p.platform.GetBootloader() == platform.BOOTLOADER_GRUB2 {
+			var bootloader *osbuild.Stage
+			switch p.platform.GetArch() {
+			case arch.ARCH_S390X:
+				bootloader = osbuild.NewZiplStage(new(osbuild.ZiplStageOptions))
+			default:
+				if p.NoBLS {
+					// BLS entries not supported: use grub2.legacy
+					id := "76a22bf4-f153-4541-b6c7-0332c0dfaeac"
+					product := osbuild.GRUB2Product{
+						Name:    p.OSProduct,
+						Version: p.OSVersion,
+						Nick:    p.OSNick,
+					}
 
-				_, err := rpmmd.GetVerStrFromPackageSpecList(p.packageSpecs, "dracut-config-rescue")
-				hasRescue := err == nil
-				bootloader = osbuild.NewGrub2LegacyStage(
-					osbuild.NewGrub2LegacyStageOptions(
-						p.Grub2Config,
-						p.PartitionTable,
-						kernelOptions,
+					_, err := rpmmd.GetVerStrFromPackageSpecList(p.packageSpecs, "dracut-config-rescue")
+					hasRescue := err == nil
+					bootloader = osbuild.NewGrub2LegacyStage(
+						osbuild.NewGrub2LegacyStageOptions(
+							p.Grub2Config,
+							p.PartitionTable,
+							kernelOptions,
+							p.platform.GetBIOSPlatform(),
+							p.platform.GetUEFIVendor(),
+							osbuild.MakeGrub2MenuEntries(id, p.kernelVer, product, hasRescue),
+						),
+					)
+				} else {
+					options := osbuild.NewGrub2StageOptions(pt,
+						strings.Join(kernelOptions, " "),
+						p.kernelVer,
+						p.platform.GetUEFIVendor() != "",
 						p.platform.GetBIOSPlatform(),
-						p.platform.GetUEFIVendor(),
-						osbuild.MakeGrub2MenuEntries(id, p.kernelVer, product, hasRescue),
-					),
-				)
-			} else {
-				options := osbuild.NewGrub2StageOptions(pt,
-					strings.Join(kernelOptions, " "),
-					p.kernelVer,
-					p.platform.GetUEFIVendor() != "",
-					p.platform.GetBIOSPlatform(),
-					p.platform.GetUEFIVendor(), false)
-				if cfg := p.Grub2Config; cfg != nil {
-					// TODO: don't store Grub2Config in OSPipeline, making the overrides unnecessary
-					// grub2.Config.Default is owned and set by `NewGrub2StageOptionsUnified`
-					// and thus we need to preserve it
-					if options.Config != nil {
-						cfg.Default = options.Config.Default
-					}
+						p.platform.GetUEFIVendor(), false)
+					if cfg := p.Grub2Config; cfg != nil {
+						// TODO: don't store Grub2Config in OSPipeline, making the overrides unnecessary
+						// grub2.Config.Default is owned and set by `NewGrub2StageOptionsUnified`
+						// and thus we need to preserve it
+						if options.Config != nil {
+							cfg.Default = options.Config.Default
+						}
 
-					options.Config = cfg
-				}
-				if p.KernelOptionsBootloader {
-					options.WriteCmdLine = nil
-					if options.UEFI != nil {
-						options.UEFI.Unified = false
+						options.Config = cfg
 					}
+					if p.KernelOptionsBootloader {
+						options.WriteCmdLine = nil
+						if options.UEFI != nil {
+							options.UEFI.Unified = false
+						}
+					}
+					bootloader = osbuild.NewGRUB2Stage(options)
 				}
-				bootloader = osbuild.NewGRUB2Stage(options)
 			}
-		}
 
-		pipeline.AddStage(bootloader)
+			pipeline.AddStage(bootloader)
 
-		if !p.KernelOptionsBootloader || p.platform.GetArch() == arch.ARCH_S390X {
-			pipeline = prependKernelCmdlineStage(pipeline, rootUUID, kernelOptions)
+			if !p.KernelOptionsBootloader || p.platform.GetArch() == arch.ARCH_S390X {
+				pipeline = prependKernelCmdlineStage(pipeline, rootUUID, kernelOptions)
+			}
 		}
 	}
 
