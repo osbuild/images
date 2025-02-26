@@ -103,6 +103,10 @@ type ImageConfig struct {
 	// machine id to be set to 'uninitialized' which causes ConditionFirstboot
 	// to be triggered in systemd
 	MachineIdUninitialized *bool
+
+	// MountUnits creates systemd .mount units to describe the filesystem
+	// instead of writing to /etc/fstab
+	MountUnits *bool
 }
 
 // InheritFrom inherits unset values from the provided parent configuration and

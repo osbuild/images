@@ -242,6 +242,10 @@ func osCustomizations(
 		osc.MachineIdUninitialized = *imageConfig.MachineIdUninitialized
 	}
 
+	if imageConfig.MountUnits != nil {
+		osc.MountUnits = *imageConfig.MountUnits
+	}
+
 	return osc, nil
 }
 
