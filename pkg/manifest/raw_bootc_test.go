@@ -342,3 +342,22 @@ func TestRawBootcImageSerializeCreateFilesDirs(t *testing.T) {
 		})
 	}
 }
+
+func TestRawBootcPipelineFSTabStage(t *testing.T) {
+	pipeline := makeFakeRawBootcPipeline()
+
+	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/boot/efi") // PT requires /boot/efi
+	pipeline.MountUnits = false                                                 // set it explicitly just to be sure
+
+	checkStagesForFSTab(t, pipeline.Serialize().Stages)
+}
+
+func TestRawBootcPipelineMountUnitStages(t *testing.T) {
+	pipeline := makeFakeRawBootcPipeline()
+
+	expectedUnits := []string{"-.mount", "home.mount", "boot-efi.mount"}
+	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/home", "/boot/efi")
+	pipeline.MountUnits = true
+
+	checkStagesForMountUnits(t, pipeline.Serialize().Stages, expectedUnits)
+}

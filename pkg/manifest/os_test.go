@@ -1,4 +1,4 @@
-package manifest
+package manifest_test
 
 import (
 	"fmt"
@@ -9,56 +9,30 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/testdisk"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/bootc"
 	"github.com/osbuild/images/pkg/customizations/subscription"
 	"github.com/osbuild/images/pkg/dnfjson"
+	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
-	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
-	"github.com/osbuild/images/pkg/runner"
 )
 
-// NewTestOS returns a minimally populated OS struct for use in testing
-func NewTestOS() *OS {
-	repos := []rpmmd.RepoConfig{}
-	manifest := New()
-	runner := &runner.Fedora{Version: 38}
-	build := NewBuild(&manifest, runner, repos, nil)
-	build.Checkpoint()
-
-	// create an x86_64 platform with bios boot
-	platform := &platform.X86{
-		BIOS: true,
-	}
-
-	os := NewOS(build, platform, repos)
-	packages := []rpmmd.PackageSpec{
-		{Name: "pkg1", Checksum: "sha1:c02524e2bd19490f2a7167958f792262754c5f46"},
-	}
-	os.serializeStart(Inputs{
-		Depsolved: dnfjson.DepsolveResult{
-			Packages: packages,
-			Repos:    repos,
-		},
-	})
-
-	return os
-}
-
-func findStage(name string, stages []*osbuild.Stage) *osbuild.Stage {
+func findStages(name string, stages []*osbuild.Stage) []*osbuild.Stage {
+	var foundStages []*osbuild.Stage
 	for _, s := range stages {
 		if s.Type == name {
-			return s
+			foundStages = append(foundStages, s)
 		}
 	}
-	return nil
+	return foundStages
 }
 
 // CheckSystemdStageOptions checks the Command strings
 func CheckSystemdStageOptions(t *testing.T, stages []*osbuild.Stage, commands []string) {
 	// Find the systemd.unit.create stage
-	s := findStage("org.osbuild.systemd.unit.create", stages)
+	s := manifest.FindStage("org.osbuild.systemd.unit.create", stages)
 	require.NotNil(t, s)
 
 	require.NotNil(t, s.Options)
@@ -98,21 +72,21 @@ func CheckPkgSetInclude(t *testing.T, pkgSetChain []rpmmd.PackageSet, pkgs []str
 }
 
 func TestSubscriptionManagerCommands(t *testing.T) {
-	os := NewTestOS()
+	os := manifest.NewTestOS()
 	os.Subscription = &subscription.ImageOptions{
 		Organization:  "2040324",
 		ActivationKey: "my-secret-key",
 		ServerUrl:     "subscription.rhsm.redhat.com",
 		BaseUrl:       "http://cdn.redhat.com/",
 	}
-	pipeline := os.serialize()
+	pipeline := os.Serialize()
 	CheckSystemdStageOptions(t, pipeline.Stages, []string{
 		"/usr/sbin/subscription-manager register --org=${ORG_ID} --activationkey=${ACTIVATION_KEY} --serverurl subscription.rhsm.redhat.com --baseurl http://cdn.redhat.com/",
 	})
 }
 
 func TestSubscriptionManagerInsightsCommands(t *testing.T) {
-	os := NewTestOS()
+	os := manifest.NewTestOS()
 	os.Subscription = &subscription.ImageOptions{
 		Organization:  "2040324",
 		ActivationKey: "my-secret-key",
@@ -120,7 +94,7 @@ func TestSubscriptionManagerInsightsCommands(t *testing.T) {
 		BaseUrl:       "http://cdn.redhat.com/",
 		Insights:      true,
 	}
-	pipeline := os.serialize()
+	pipeline := os.Serialize()
 	CheckSystemdStageOptions(t, pipeline.Stages, []string{
 		"/usr/sbin/subscription-manager register --org=${ORG_ID} --activationkey=${ACTIVATION_KEY} --serverurl subscription.rhsm.redhat.com --baseurl http://cdn.redhat.com/",
 		"/usr/bin/insights-client --register",
@@ -129,7 +103,7 @@ func TestSubscriptionManagerInsightsCommands(t *testing.T) {
 }
 
 func TestRhcInsightsCommands(t *testing.T) {
-	os := NewTestOS()
+	os := manifest.NewTestOS()
 	os.Subscription = &subscription.ImageOptions{
 		Organization:  "2040324",
 		ActivationKey: "my-secret-key",
@@ -138,7 +112,7 @@ func TestRhcInsightsCommands(t *testing.T) {
 		Insights:      false,
 		Rhc:           true,
 	}
-	pipeline := os.serialize()
+	pipeline := os.Serialize()
 	CheckSystemdStageOptions(t, pipeline.Stages, []string{
 		"/usr/bin/rhc connect --organization=${ORG_ID} --activation-key=${ACTIVATION_KEY} --server subscription.rhsm.redhat.com",
 		"restorecon -R /root/.gnupg",
@@ -147,7 +121,7 @@ func TestRhcInsightsCommands(t *testing.T) {
 }
 
 func TestSubscriptionManagerPackages(t *testing.T) {
-	os := NewTestOS()
+	os := manifest.NewTestOS()
 	os.Subscription = &subscription.ImageOptions{
 		Organization:  "2040324",
 		ActivationKey: "my-secret-key",
@@ -155,11 +129,11 @@ func TestSubscriptionManagerPackages(t *testing.T) {
 		BaseUrl:       "http://cdn.redhat.com/",
 	}
 
-	CheckPkgSetInclude(t, os.getPackageSetChain(DISTRO_NULL), []string{"subscription-manager"})
+	CheckPkgSetInclude(t, os.GetPackageSetChain(manifest.DISTRO_NULL), []string{"subscription-manager"})
 }
 
 func TestSubscriptionManagerInsightsPackages(t *testing.T) {
-	os := NewTestOS()
+	os := manifest.NewTestOS()
 	os.Subscription = &subscription.ImageOptions{
 		Organization:  "2040324",
 		ActivationKey: "my-secret-key",
@@ -167,11 +141,11 @@ func TestSubscriptionManagerInsightsPackages(t *testing.T) {
 		BaseUrl:       "http://cdn.redhat.com/",
 		Insights:      true,
 	}
-	CheckPkgSetInclude(t, os.getPackageSetChain(DISTRO_NULL), []string{"subscription-manager", "insights-client"})
+	CheckPkgSetInclude(t, os.GetPackageSetChain(manifest.DISTRO_NULL), []string{"subscription-manager", "insights-client"})
 }
 
 func TestRhcInsightsPackages(t *testing.T) {
-	os := NewTestOS()
+	os := manifest.NewTestOS()
 	os.Subscription = &subscription.ImageOptions{
 		Organization:  "2040324",
 		ActivationKey: "my-secret-key",
@@ -180,28 +154,28 @@ func TestRhcInsightsPackages(t *testing.T) {
 		Insights:      false,
 		Rhc:           true,
 	}
-	CheckPkgSetInclude(t, os.getPackageSetChain(DISTRO_NULL), []string{"rhc", "subscription-manager", "insights-client"})
+	CheckPkgSetInclude(t, os.GetPackageSetChain(manifest.DISTRO_NULL), []string{"rhc", "subscription-manager", "insights-client"})
 }
 
 func TestBootupdStage(t *testing.T) {
-	os := NewTestOS()
+	os := manifest.NewTestOS()
 	os.OSTreeRef = "some/ref"
 	os.Bootupd = true
-	pipeline := os.serialize()
-	st := findStage("org.osbuild.bootupd.gen-metadata", pipeline.Stages)
+	pipeline := os.Serialize()
+	st := manifest.FindStage("org.osbuild.bootupd.gen-metadata", pipeline.Stages)
 	require.NotNil(t, st)
 }
 
 func TestTomlLibUsedNoneByDefault(t *testing.T) {
-	os := NewTestOS()
-	buildPkgs := os.getBuildPackages(DISTRO_FEDORA)
+	os := manifest.NewTestOS()
+	buildPkgs := os.GetBuildPackages(manifest.DISTRO_FEDORA)
 	for _, pkg := range []string{"python3-pytoml", "python3-toml", "python3-tomli-w"} {
 		assert.NotContains(t, buildPkgs, pkg)
 	}
 }
 
 func TestTomlLibUsedForContainer(t *testing.T) {
-	os := NewTestOS()
+	os := manifest.NewTestOS()
 	os.OSCustomizations.Containers = []container.SourceSpec{
 		{Source: "some-source"},
 	}
@@ -211,70 +185,132 @@ func TestTomlLibUsedForContainer(t *testing.T) {
 }
 
 func TestTomlLibUsedForBootcConfig(t *testing.T) {
-	os := NewTestOS()
+	os := manifest.NewTestOS()
 	os.BootcConfig = &bootc.Config{Filename: "something"}
 
 	testTomlPkgsFor(t, os)
 }
 
-func testTomlPkgsFor(t *testing.T, os *OS) {
+func testTomlPkgsFor(t *testing.T, os *manifest.OS) {
 	for _, tc := range []struct {
-		distro          Distro
+		distro          manifest.Distro
 		expectedTomlPkg string
 	}{
-		{DISTRO_EL8, "python3-pytoml"},
-		{DISTRO_EL9, "python3-toml"},
-		{DISTRO_EL10, "python3-tomli-w"},
-		{DISTRO_FEDORA, "python3-tomli-w"},
+		{manifest.DISTRO_EL8, "python3-pytoml"},
+		{manifest.DISTRO_EL9, "python3-toml"},
+		{manifest.DISTRO_EL10, "python3-tomli-w"},
+		{manifest.DISTRO_FEDORA, "python3-tomli-w"},
 	} {
-		buildPkgs := os.getBuildPackages(tc.distro)
+		buildPkgs := os.GetBuildPackages(tc.distro)
 		assert.Contains(t, buildPkgs, tc.expectedTomlPkg)
 	}
 }
 
 func TestMachineIdUninitializedIncludesMachineIdStage(t *testing.T) {
-	os := NewTestOS()
+	os := manifest.NewTestOS()
 
 	os.MachineIdUninitialized = true
 
-	pipeline := os.serialize()
-	st := findStage("org.osbuild.machine-id", pipeline.Stages)
+	pipeline := os.Serialize()
+	st := manifest.FindStage("org.osbuild.machine-id", pipeline.Stages)
 	require.NotNil(t, st)
 }
 
 func TestMachineIdUninitializedDoesNotIncludeMachineIdStage(t *testing.T) {
-	os := NewTestOS()
+	os := manifest.NewTestOS()
 
-	pipeline := os.serialize()
-	st := findStage("org.osbuild.machine-id", pipeline.Stages)
+	pipeline := os.Serialize()
+	st := manifest.FindStage("org.osbuild.machine-id", pipeline.Stages)
 	require.Nil(t, st)
 }
 
 func TestModularityIncludesConfigStage(t *testing.T) {
-	os := NewTestOS()
+	os := manifest.NewTestOS()
 
 	testModuleConfigPath := filepath.Join(t.TempDir(), "module-config")
 	testFailsafeConfigPath := filepath.Join(t.TempDir(), "failsafe-config")
 
-	os.moduleSpecs = []rpmmd.ModuleSpec{
-		{
-			ModuleConfigFile: rpmmd.ModuleConfigFile{
-				Path: testModuleConfigPath,
+	inputs := manifest.Inputs{
+		Depsolved: dnfjson.DepsolveResult{
+			Packages: []rpmmd.PackageSpec{
+				{Name: "pkg1", Checksum: "sha1:c02524e2bd19490f2a7167958f792262754c5f46"},
 			},
-			FailsafeFile: rpmmd.ModuleFailsafeFile{
-				Path: testFailsafeConfigPath,
-			},
-		},
+			Modules: []rpmmd.ModuleSpec{
+				{
+					ModuleConfigFile: rpmmd.ModuleConfigFile{
+						Path: testModuleConfigPath,
+					},
+					FailsafeFile: rpmmd.ModuleFailsafeFile{
+						Path: testFailsafeConfigPath,
+					},
+				},
+			}},
 	}
-	pipeline := os.serialize()
-	st := findStage("org.osbuild.dnf.module-config", pipeline.Stages)
+	pipeline := os.SerializeWith(inputs)
+	st := manifest.FindStage("org.osbuild.dnf.module-config", pipeline.Stages)
 	require.NotNil(t, st)
 }
 
 func TestModularityDoesNotIncludeConfigStage(t *testing.T) {
-	os := NewTestOS()
+	os := manifest.NewTestOS()
 
-	pipeline := os.serialize()
-	st := findStage("org.osbuild.dnf.module-config", pipeline.Stages)
+	pipeline := os.Serialize()
+	st := manifest.FindStage("org.osbuild.dnf.module-config", pipeline.Stages)
 	require.Nil(t, st)
+}
+func checkStagesForFSTab(t *testing.T, stages []*osbuild.Stage) {
+	fstab := manifest.FindStage("org.osbuild.fstab", stages)
+	require.NotNil(t, fstab)
+
+	// The plain OS pipeline doesn't have any systemd.unit.create stages by
+	// default. This test will break and will need to be adjusted if this ever
+	// changes (if a systemd.unit.create stage is added to the pipeline by
+	// default).
+	systemdStages := findStages("org.osbuild.systemd.unit.create", stages)
+	require.Nil(t, systemdStages)
+}
+
+func checkStagesForMountUnits(t *testing.T, stages []*osbuild.Stage, expectedUnits []string) {
+	fstab := manifest.FindStage("org.osbuild.fstab", stages)
+	require.Nil(t, fstab)
+
+	// The plain OS pipeline doesn't have any systemd.unit.create stages by
+	// default. This test will break and will need to be adjusted if this ever
+	// changes (if a systemd.unit.create stage is added to the pipeline by
+	// default).
+	systemdStages := findStages("org.osbuild.systemd.unit.create", stages)
+	require.Len(t, systemdStages, len(expectedUnits))
+
+	var mountUnitFilenames []string
+	for _, stage := range systemdStages {
+		options := stage.Options.(*osbuild.SystemdUnitCreateStageOptions)
+		mountUnitFilenames = append(mountUnitFilenames, options.Filename)
+	}
+	require.ElementsMatch(t, mountUnitFilenames, expectedUnits)
+
+	// creating mount units also adds a systemd stage to enable them
+	enable := manifest.FindStage("org.osbuild.systemd", stages)
+	require.NotNil(t, enable)
+	enableOptions := enable.Options.(*osbuild.SystemdStageOptions)
+	require.ElementsMatch(t, enableOptions.EnabledServices, expectedUnits)
+
+}
+
+func TestOSPipelineFStabStage(t *testing.T) {
+	os := manifest.NewTestOS()
+
+	os.PartitionTable = testdisk.MakeFakePartitionTable("/") // PT specifics don't matter
+	os.MountUnits = false                                    // set it explicitly just to be sure
+
+	checkStagesForFSTab(t, os.Serialize().Stages)
+}
+
+func TestOSPipelineMountUnitStages(t *testing.T) {
+	os := manifest.NewTestOS()
+
+	expectedUnits := []string{"-.mount", "home.mount"}
+	os.PartitionTable = testdisk.MakeFakePartitionTable("/", "/home")
+	os.MountUnits = true
+
+	checkStagesForMountUnits(t, os.Serialize().Stages, expectedUnits)
 }
