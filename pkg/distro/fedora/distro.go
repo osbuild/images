@@ -58,25 +58,6 @@ var (
 		"/usr": 2 * datasizes.GiB,
 	}
 
-	// Services
-	iotServices = []string{
-		"NetworkManager.service",
-		"firewalld.service",
-		"sshd.service",
-		"zezere_ignition.timer",
-		"zezere_ignition_banner.service",
-		"greenboot-grub2-set-counter",
-		"greenboot-grub2-set-success",
-		"greenboot-healthcheck",
-		"greenboot-rpm-ostree-grub2-check-fallback",
-		"greenboot-status",
-		"greenboot-task-runner",
-		"redboot-auto-reboot",
-		"redboot-task-runner",
-		"parsec",
-		"dbus-parsec",
-	}
-
 	minimalRawServices = []string{
 		"NetworkManager.service",
 		"firewalld.service",
@@ -147,8 +128,7 @@ var (
 			osPkgsKey: packageSetLoader,
 		},
 		defaultImageConfig: &distro.ImageConfig{
-			EnabledServices: iotServices,
-			DracutConf:      []*osbuild.DracutConfStageOptions{osbuild.FIPSDracutConfStageOptions},
+			DracutConf: []*osbuild.DracutConfStageOptions{osbuild.FIPSDracutConfStageOptions},
 		},
 		rpmOstree:              true,
 		image:                  iotCommitImage,
@@ -185,8 +165,7 @@ var (
 			},
 		},
 		defaultImageConfig: &distro.ImageConfig{
-			EnabledServices: iotServices,
-			DracutConf:      []*osbuild.DracutConfStageOptions{osbuild.FIPSDracutConfStageOptions},
+			DracutConf: []*osbuild.DracutConfStageOptions{osbuild.FIPSDracutConfStageOptions},
 		},
 		rpmOstree:              true,
 		bootISO:                false,
@@ -206,8 +185,7 @@ var (
 			installerPkgsKey: packageSetLoader,
 		},
 		defaultImageConfig: &distro.ImageConfig{
-			Locale:          common.ToPtr("en_US.UTF-8"),
-			EnabledServices: iotServices,
+			Locale: common.ToPtr("en_US.UTF-8"),
 		},
 		rpmOstree:              true,
 		bootISO:                true,
@@ -227,7 +205,6 @@ var (
 			installerPkgsKey: packageSetLoader,
 		},
 		defaultImageConfig: &distro.ImageConfig{
-			EnabledServices: iotServices,
 			Keyboard: &osbuild.KeymapStageOptions{
 				Keymap: "us",
 			},
@@ -704,6 +681,12 @@ func newDistro(version int) distro.Distro {
 	minimalrawZstdImgType.payloadPipelines = []string{"os", "image", "zstd"}
 	minimalrawZstdImgType.exports = []string{"zstd"}
 
+	// set iot services (these are version-dependent)
+	iotCommitImgType.defaultImageConfig.EnabledServices = iotServicesForVersion(&rd)
+	iotOCIImgType.defaultImageConfig.EnabledServices = iotServicesForVersion(&rd)
+	iotInstallerImgType.defaultImageConfig.EnabledServices = iotServicesForVersion(&rd)
+	iotSimplifiedInstallerImgType.defaultImageConfig.EnabledServices = iotServicesForVersion(&rd)
+
 	x86_64.addImageTypes(
 		&platform.X86{
 			BIOS:       true,
@@ -777,6 +760,7 @@ func newDistro(version int) distro.Distro {
 	liveInstallerImgType.defaultInstallerConfig = distroInstallerConfig
 	imageInstallerImgType.defaultInstallerConfig = distroInstallerConfig
 	iotInstallerImgType.defaultInstallerConfig = distroInstallerConfig
+
 	x86_64.addImageTypes(
 		&platform.X86{
 			BasePlatform: platform.BasePlatform{
@@ -1118,4 +1102,31 @@ func DistroFactory(idStr string) distro.Distro {
 	}
 
 	return newDistro(id.MajorVersion)
+}
+
+func iotServicesForVersion(d *distribution) []string {
+	services := []string{
+		"NetworkManager.service",
+		"firewalld.service",
+		"sshd.service",
+		"greenboot-grub2-set-counter",
+		"greenboot-grub2-set-success",
+		"greenboot-healthcheck",
+		"greenboot-rpm-ostree-grub2-check-fallback",
+		"greenboot-status",
+		"greenboot-task-runner",
+		"redboot-auto-reboot",
+		"redboot-task-runner",
+	}
+
+	if common.VersionLessThan(d.osVersion, "42") {
+		services = append(services, []string{
+			"zezere_ignition.timer",
+			"zezere_ignition_banner.service",
+			"parsec",
+			"dbus-parsec",
+		}...)
+	}
+
+	return services
 }
