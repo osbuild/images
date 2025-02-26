@@ -58,21 +58,6 @@ var (
 		"/usr": 2 * datasizes.GiB,
 	}
 
-	// Services
-	iotServices = []string{
-		"NetworkManager.service",
-		"firewalld.service",
-		"sshd.service",
-		"greenboot-grub2-set-counter",
-		"greenboot-grub2-set-success",
-		"greenboot-healthcheck",
-		"greenboot-rpm-ostree-grub2-check-fallback",
-		"greenboot-status",
-		"greenboot-task-runner",
-		"redboot-auto-reboot",
-		"redboot-task-runner",
-	}
-
 	minimalRawServices = []string{
 		"NetworkManager.service",
 		"firewalld.service",
@@ -149,7 +134,7 @@ func mkIotCommitImgType(d distribution) imageType {
 			osPkgsKey: packageSetLoader,
 		},
 		defaultImageConfig: &distro.ImageConfig{
-			EnabledServices: iotServices,
+			EnabledServices: iotServicesForVersion(&d),
 			DracutConf:      []*osbuild.DracutConfStageOptions{osbuild.FIPSDracutConfStageOptions},
 		},
 		rpmOstree:              true,
@@ -191,7 +176,7 @@ func mkIotOCIImgType(d distribution) imageType {
 			},
 		},
 		defaultImageConfig: &distro.ImageConfig{
-			EnabledServices: iotServices,
+			EnabledServices: iotServicesForVersion(&d),
 			DracutConf:      []*osbuild.DracutConfStageOptions{osbuild.FIPSDracutConfStageOptions},
 		},
 		rpmOstree:              true,
@@ -214,8 +199,8 @@ func mkIotInstallerImgType(d distribution) imageType {
 			installerPkgsKey: packageSetLoader,
 		},
 		defaultImageConfig: &distro.ImageConfig{
+			EnabledServices: iotServicesForVersion(&d),
 			Locale:          common.ToPtr("en_US.UTF-8"),
-			EnabledServices: iotServices,
 		},
 		rpmOstree:              true,
 		bootISO:                true,
@@ -237,7 +222,7 @@ func mkIotSimplifiedInstallerImgType(d distribution) imageType {
 			installerPkgsKey: packageSetLoader,
 		},
 		defaultImageConfig: &distro.ImageConfig{
-			EnabledServices: iotServices,
+			EnabledServices: iotServicesForVersion(&d),
 			Keyboard: &osbuild.KeymapStageOptions{
 				Keymap: "us",
 			},
@@ -1157,4 +1142,31 @@ func DistroFactory(idStr string) distro.Distro {
 	}
 
 	return newDistro(id.MajorVersion)
+}
+
+func iotServicesForVersion(d *distribution) []string {
+	services := []string{
+		"NetworkManager.service",
+		"firewalld.service",
+		"sshd.service",
+		"greenboot-grub2-set-counter",
+		"greenboot-grub2-set-success",
+		"greenboot-healthcheck",
+		"greenboot-rpm-ostree-grub2-check-fallback",
+		"greenboot-status",
+		"greenboot-task-runner",
+		"redboot-auto-reboot",
+		"redboot-task-runner",
+	}
+
+	if common.VersionLessThan(d.osVersion, "42") {
+		services = append(services, []string{
+			"zezere_ignition.timer",
+			"zezere_ignition_banner.service",
+			"parsec",
+			"dbus-parsec",
+		}...)
+	}
+
+	return services
 }
