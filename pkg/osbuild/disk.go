@@ -144,12 +144,44 @@ func GenImageKernelOptions(pt *disk.PartitionTable, mountUnits bool) (string, []
 			karg := "luks.uuid=" + ent.UUID
 			cmdline = append(cmdline, karg)
 		case *disk.BtrfsSubvolume:
-			if ent.Mountpoint == "/" {
+			if ent.Mountpoint == "/" && !mountUnits {
+				// if we're using mount units, the rootflags will be added
+				// separately (below)
 				karg := "rootflags=subvol=" + ent.Name
 				cmdline = append(cmdline, karg)
 			}
 		}
 		return nil
+	}
+
+	if mountUnits {
+		// The systemd-remount-fs service reads /etc/fstab to discover mount
+		// options for / and /usr. Without an /etc/fstab, / and /usr do not get
+		// remounted, which means if they are mounted read-only in the initrd,
+		// they will remain read-only. Flip the option if we're using only
+		// mount units, otherwise the filesystems will stay mounted 'ro'.
+		//
+		// See https://www.freedesktop.org/software/systemd/man/latest/systemd-remount-fs.service.html
+		for idx := range cmdline {
+			// TODO: consider removing 'ro' from static image configurations
+			// and adding either 'ro' or 'rw' here based on the value of
+			// mountUnits.
+			if cmdline[idx] == "ro" {
+				cmdline[idx] = "rw"
+				break
+			}
+		}
+
+		// set the rootflags for the same reason as above
+		fsOptions, err := rootFs.GetFSTabOptions()
+		if err != nil {
+			panic(fmt.Sprintf("error getting filesystem options for / mountpoint: %s", err))
+		}
+
+		// if the options are just 'defaults', there's no need to add rootflags
+		if fsOptions.MntOps != "defaults" {
+			cmdline = append(cmdline, fmt.Sprintf("rootflags=%s", fsOptions.MntOps))
+		}
 	}
 
 	_ = pt.ForEachEntity(genOptions)

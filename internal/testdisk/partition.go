@@ -468,10 +468,9 @@ func MakeFakeBtrfsPartitionTable(mntPoints ...string) *disk.PartitionTable {
 			size += 512 * MiB
 		default:
 			name := mntPoint
-			uuid := ""
+			uuid := disk.RootPartitionUUID
 			if name == "/" {
 				name = "root"
-				uuid = disk.RootPartitionUUID
 			}
 			subvolumes = append(
 				subvolumes,

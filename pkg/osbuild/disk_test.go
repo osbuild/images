@@ -24,6 +24,8 @@ func collectUUIDs(pt *disk.PartitionTable) map[string]string {
 			uuids["luks"] = ent.UUID
 		case *disk.Filesystem:
 			uuids[ent.Mountpoint] = ent.UUID
+		case *disk.BtrfsSubvolume:
+			uuids[ent.Mountpoint] = ent.GetFSSpec().UUID
 		}
 
 		return nil
@@ -169,4 +171,154 @@ func TestGenImagePrepareStages(t *testing.T) {
 		},
 	}, actualStages)
 
+}
+
+// addMountOptions appends mount options to filesystems based on their
+// mountpoint.
+func addMountOptions(pt *disk.PartitionTable, fsopts map[string]string) {
+
+	addOptions := func(mnt disk.Mountable, path []disk.Entity) error {
+		mntpt := mnt.GetMountpoint()
+		if opts, ok := fsopts[mntpt]; ok {
+			switch ent := mnt.(type) {
+			case *disk.Filesystem:
+				if ent.FSTabOptions != "" {
+					opts = "," + opts
+				}
+				ent.FSTabOptions += opts
+			case *disk.BtrfsSubvolume:
+				// NOTE: we don't support mountopts on btrfs (sub)volumes???
+			default:
+				panic("please update the addMountOptions() test utility function to support all mountables")
+			}
+		}
+		return nil
+	}
+	_ = pt.ForEachMountable(addOptions)
+}
+
+func TestGenImageKernelOptionsMountUnitsPlain(t *testing.T) {
+	assert := assert.New(t)
+
+	pt := testdisk.MakeFakePartitionTable("/", "/home")
+	mntOpts := map[string]string{
+		"/": "noatime,discard",
+	}
+	addMountOptions(pt, mntOpts)
+
+	uuids := collectUUIDs(pt)
+	assert.Len(uuids, 2)
+
+	rootUUID, cmdline, err := GenImageKernelOptions(pt, true)
+	assert.NoError(err)
+
+	assert.Equal(rootUUID, uuids["/"])
+	assert.Contains(cmdline, "rootflags=noatime,discard")
+}
+
+func TestGenImageKernelOptionsMountUnitsPlainWithUsr(t *testing.T) {
+	assert := assert.New(t)
+
+	pt := testdisk.MakeFakePartitionTable("/", "/home", "/usr")
+	mntOpts := map[string]string{
+		"/":    "noatime,discard",
+		"/usr": "discard,noatime",
+	}
+	addMountOptions(pt, mntOpts)
+
+	uuids := collectUUIDs(pt)
+	assert.Len(uuids, 3)
+
+	rootUUID, cmdline, err := GenImageKernelOptions(pt, true)
+	assert.NoError(err)
+
+	assert.Equal(rootUUID, uuids["/"])
+	assert.Contains(cmdline, "rootflags=noatime,discard")
+	assert.Contains(cmdline, "mount.usrflags=discard,noatime")
+	assert.Contains(cmdline, "mount.usr=UUID="+uuids["/usr"])
+	assert.Contains(cmdline, "mount.usrfstype=ext4")
+}
+
+func TestGenImageKernelOptionsMountUnitsBtrfs(t *testing.T) {
+	assert := assert.New(t)
+
+	pt := testdisk.MakeFakeBtrfsPartitionTable("/", "/home")
+
+	uuids := collectUUIDs(pt)
+	assert.Len(uuids, 2)
+
+	rootUUID, cmdline, err := GenImageKernelOptions(pt, true)
+	assert.NoError(err)
+
+	assert.Equal(rootUUID, uuids["/"])
+	// NOTE: these are statically defined for btrfs subvolumes - this will
+	// change
+	assert.Contains(cmdline, "rootflags=subvol=root,compress=zstd:1")
+}
+
+func TestGenImageKernelOptionsMountUnitsBtrfsWithUsr(t *testing.T) {
+	assert := assert.New(t)
+
+	pt := testdisk.MakeFakeBtrfsPartitionTable("/", "/home", "/usr")
+	mntOpts := map[string]string{
+		"/":    "noatime,discard",
+		"/usr": "discard,noatime",
+	}
+	addMountOptions(pt, mntOpts)
+
+	uuids := collectUUIDs(pt)
+	assert.Len(uuids, 3)
+
+	rootUUID, cmdline, err := GenImageKernelOptions(pt, true)
+	assert.NoError(err)
+
+	assert.Equal(rootUUID, uuids["/"])
+	// NOTE: these are statically defined for btrfs subvolumes - this will
+	// change
+	assert.Contains(cmdline, "rootflags=subvol=root,compress=zstd:1")
+	assert.Contains(cmdline, "mount.usrflags=subvol=/usr,compress=zstd:1")
+
+	assert.Contains(cmdline, "mount.usr=UUID="+uuids["/usr"])
+}
+
+func TestGenImageKernelOptionsMountUnitsLVM(t *testing.T) {
+	assert := assert.New(t)
+
+	pt := testdisk.MakeFakeLVMPartitionTable("/", "/home")
+	mntOpts := map[string]string{
+		"/": "noatime,discard",
+	}
+	addMountOptions(pt, mntOpts)
+
+	uuids := collectUUIDs(pt)
+	assert.Len(uuids, 2)
+
+	rootUUID, cmdline, err := GenImageKernelOptions(pt, true)
+	assert.NoError(err)
+
+	assert.Equal(rootUUID, uuids["/"])
+	assert.Contains(cmdline, "rootflags=noatime,discard")
+}
+
+func TestGenImageKernelOptionsMountUnitsLVMWithUsr(t *testing.T) {
+	assert := assert.New(t)
+
+	pt := testdisk.MakeFakeLVMPartitionTable("/", "/home", "/usr")
+	mntOpts := map[string]string{
+		"/":    "noatime,discard",
+		"/usr": "discard,noatime",
+	}
+	addMountOptions(pt, mntOpts)
+
+	uuids := collectUUIDs(pt)
+	assert.Len(uuids, 3)
+
+	rootUUID, cmdline, err := GenImageKernelOptions(pt, true)
+	assert.NoError(err)
+
+	assert.Equal(rootUUID, uuids["/"])
+	assert.Contains(cmdline, "rootflags=noatime,discard")
+	assert.Contains(cmdline, "mount.usrflags=discard,noatime")
+	assert.Contains(cmdline, "mount.usr=UUID="+uuids["/usr"])
+	assert.Contains(cmdline, "mount.usrfstype=xfs")
 }
