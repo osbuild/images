@@ -17,7 +17,7 @@ import (
 	"github.com/osbuild/images/pkg/platform"
 )
 
-type awsUploader struct {
+type AwsUploader struct {
 	client awsClient
 
 	region     string
@@ -25,6 +25,8 @@ type awsUploader struct {
 	imageName  string
 	targetArch string
 	bootMode   *string
+
+	resultAmi string
 }
 
 type UploaderOptions struct {
@@ -64,7 +66,7 @@ var newAwsClient = func(region string) (awsClient, error) {
 	return NewDefault(region)
 }
 
-func NewUploader(region, bucketName, imageName string, opts *UploaderOptions) (cloud.Uploader, error) {
+func NewUploader(region, bucketName, imageName string, opts *UploaderOptions) (*AwsUploader, error) {
 	if opts == nil {
 		opts = &UploaderOptions{}
 	}
@@ -77,7 +79,7 @@ func NewUploader(region, bucketName, imageName string, opts *UploaderOptions) (c
 		return nil, err
 	}
 
-	return &awsUploader{
+	return &AwsUploader{
 		client:     client,
 		region:     region,
 		bucketName: bucketName,
@@ -87,9 +89,9 @@ func NewUploader(region, bucketName, imageName string, opts *UploaderOptions) (c
 	}, nil
 }
 
-var _ cloud.Uploader = &awsUploader{}
+var _ cloud.Uploader = &AwsUploader{}
 
-func (au *awsUploader) Check(status io.Writer) error {
+func (au *AwsUploader) Check(status io.Writer) error {
 	fmt.Fprintf(status, "Checking AWS region access...\n")
 	regions, err := au.client.Regions()
 	if err != nil {
@@ -121,7 +123,7 @@ func (au *awsUploader) Check(status io.Writer) error {
 	return nil
 }
 
-func (au *awsUploader) UploadAndRegister(r io.Reader, status io.Writer) (err error) {
+func (au *AwsUploader) UploadAndRegister(r io.Reader, status io.Writer) (err error) {
 	keyName := fmt.Sprintf("%s-%s", uuid.New().String(), au.imageName)
 	fmt.Fprintf(status, "Uploading %s to %s:%s\n", au.imageName, au.bucketName, keyName)
 
@@ -156,5 +158,17 @@ func (au *awsUploader) UploadAndRegister(r io.Reader, status io.Writer) (err err
 		return err
 	}
 
+	if ami == nil {
+		return fmt.Errorf("internal error: ami registered but nil ami string")
+	}
+	au.resultAmi = *ami
+
 	return nil
+}
+
+func (au *AwsUploader) Result() (ami, region string, err error) {
+	if au.resultAmi == "" {
+		return "", "", fmt.Errorf("no successful upload found")
+	}
+	return au.resultAmi, au.region, nil
 }
