@@ -283,6 +283,10 @@ func osCustomizations(
 		osc.InstallWeakDeps = *imageConfig.InstallWeakDeps
 	}
 
+	if imageConfig.MountUnits != nil {
+		osc.MountUnits = *imageConfig.MountUnits
+	}
+
 	return osc, nil
 }
 
@@ -355,6 +359,10 @@ func ostreeDeploymentCustomizations(
 
 	for _, fs := range c.GetFilesystems() {
 		deploymentConf.CustomFileSystems = append(deploymentConf.CustomFileSystems, fs.Mountpoint)
+	}
+
+	if imageConfig.MountUnits != nil {
+		deploymentConf.MountUnits = *imageConfig.MountUnits
 	}
 
 	return deploymentConf, nil
