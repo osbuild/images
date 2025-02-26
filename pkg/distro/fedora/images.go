@@ -234,6 +234,10 @@ func osCustomizations(
 		osc.CACerts = ca.PEMCerts
 	}
 
+	if imageConfig.MountUnits != nil {
+		osc.MountUnits = *imageConfig.MountUnits
+	}
+
 	return osc, nil
 }
 
