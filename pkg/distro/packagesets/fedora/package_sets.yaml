@@ -130,7 +130,6 @@ iot_commit: &iot_commit
     - "iputils"
     - "iwd"
     - "iwlwifi-mvm-firmware"
-    - "kernel-tools"
     - "keyutils"
     - "less"
     - "libsss_sudo"
@@ -181,6 +180,7 @@ iot_commit: &iot_commit
       "42":
         include:
           - "dbus-parsec"
+          - "kernel-tools"
           - "parsec"
           - "policycoreutils-python-utils"
           - "zezere-ignition"
