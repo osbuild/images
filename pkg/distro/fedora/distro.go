@@ -83,9 +83,11 @@ var (
 		"initial-setup.service",
 		"sshd.service",
 	}
+)
 
-	// Image Definitions
-	imageInstallerImgType = imageType{
+// Image Definitions
+func mkImageInstallerImgType(d distribution) imageType {
+	return imageType{
 		name:        "image-installer",
 		nameAliases: []string{"fedora-image-installer"},
 		filename:    "installer.iso",
@@ -115,8 +117,10 @@ var (
 		exports:                []string{"bootiso"},
 		requiredPartitionSizes: requiredDirectorySizes,
 	}
+}
 
-	liveInstallerImgType = imageType{
+func mkLiveInstallerImgType(d distribution) imageType {
+	return imageType{
 		name:        "live-installer",
 		nameAliases: []string{},
 		filename:    "live-installer.iso",
@@ -137,8 +141,10 @@ var (
 		exports:                []string{"bootiso"},
 		requiredPartitionSizes: requiredDirectorySizes,
 	}
+}
 
-	iotCommitImgType = imageType{
+func mkIotCommitImgType(d distribution) imageType {
+	return imageType{
 		name:        "iot-commit",
 		nameAliases: []string{"fedora-iot-commit"},
 		filename:    "commit.tar",
@@ -157,8 +163,10 @@ var (
 		exports:                []string{"commit-archive"},
 		requiredPartitionSizes: requiredDirectorySizes,
 	}
+}
 
-	iotBootableContainer = imageType{
+func mkIotBootableContainer(d distribution) imageType {
+	return imageType{
 		name:     "iot-bootable-container",
 		filename: "iot-bootable-container.tar",
 		mimeType: "application/x-tar",
@@ -172,8 +180,10 @@ var (
 		exports:                []string{"ostree-encapsulate"},
 		requiredPartitionSizes: requiredDirectorySizes,
 	}
+}
 
-	iotOCIImgType = imageType{
+func mkIotOCIImgType(d distribution) imageType {
+	return imageType{
 		name:        "iot-container",
 		nameAliases: []string{"fedora-iot-container"},
 		filename:    "container.tar",
@@ -196,8 +206,10 @@ var (
 		exports:                []string{"container"},
 		requiredPartitionSizes: requiredDirectorySizes,
 	}
+}
 
-	iotInstallerImgType = imageType{
+func mkIotInstallerImgType(d distribution) imageType {
+	return imageType{
 		name:        "iot-installer",
 		nameAliases: []string{"fedora-iot-installer"},
 		filename:    "installer.iso",
@@ -218,8 +230,10 @@ var (
 		exports:                []string{"bootiso"},
 		requiredPartitionSizes: requiredDirectorySizes,
 	}
+}
 
-	iotSimplifiedInstallerImgType = imageType{
+func mkIotSimplifiedInstallerImgType(d distribution) imageType {
+	return imageType{
 		name:     "iot-simplified-installer",
 		filename: "simplified-installer.iso",
 		mimeType: "application/x-iso9660-image",
@@ -249,8 +263,10 @@ var (
 		kernelOptions:          ostreeDeploymentKernelOptions,
 		requiredPartitionSizes: requiredDirectorySizes,
 	}
+}
 
-	iotRawImgType = imageType{
+func mkIotRawImgType(d distribution) imageType {
+	return imageType{
 		name:        "iot-raw-image",
 		nameAliases: []string{"fedora-iot-raw-image"},
 		filename:    "image.raw.xz",
@@ -281,8 +297,10 @@ var (
 		// override them (and make them smaller, in this case).
 		requiredPartitionSizes: map[string]uint64{},
 	}
+}
 
-	iotQcow2ImgType = imageType{
+func mkIotQcow2ImgType(d distribution) imageType {
+	return imageType{
 		name:        "iot-qcow2-image",
 		filename:    "image.qcow2",
 		mimeType:    "application/x-qemu-disk",
@@ -307,8 +325,10 @@ var (
 		kernelOptions:          ostreeDeploymentKernelOptions,
 		requiredPartitionSizes: requiredDirectorySizes,
 	}
+}
 
-	qcow2ImgType = imageType{
+func mkQcow2ImgType(d distribution) imageType {
+	return imageType{
 		name:        "qcow2",
 		filename:    "disk.qcow2",
 		mimeType:    "application/x-qemu-disk",
@@ -329,7 +349,9 @@ var (
 		basePartitionTables:    defaultBasePartitionTables,
 		requiredPartitionSizes: requiredDirectorySizes,
 	}
+}
 
+var (
 	vmdkDefaultImageConfig = &distro.ImageConfig{
 		Locale: common.ToPtr("en_US.UTF-8"),
 		EnabledServices: []string{
@@ -339,8 +361,10 @@ var (
 			"cloud-init-local.service",
 		},
 	}
+)
 
-	vmdkImgType = imageType{
+func mkVmdkImgType(d distribution) imageType {
+	return imageType{
 		name:     "vmdk",
 		filename: "disk.vmdk",
 		mimeType: "application/x-vmdk",
@@ -358,8 +382,10 @@ var (
 		basePartitionTables:    defaultBasePartitionTables,
 		requiredPartitionSizes: requiredDirectorySizes,
 	}
+}
 
-	ovaImgType = imageType{
+func mkOvaImgType(d distribution) imageType {
+	return imageType{
 		name:     "ova",
 		filename: "image.ova",
 		mimeType: "application/ovf",
@@ -377,8 +403,10 @@ var (
 		basePartitionTables:    defaultBasePartitionTables,
 		requiredPartitionSizes: requiredDirectorySizes,
 	}
+}
 
-	containerImgType = imageType{
+func mkContainerImgType(d distribution) imageType {
+	return imageType{
 		name:     "container",
 		filename: "container.tar",
 		mimeType: "application/x-tar",
@@ -398,8 +426,10 @@ var (
 		exports:                []string{"container"},
 		requiredPartitionSizes: requiredDirectorySizes,
 	}
+}
 
-	wslImgType = imageType{
+func mkWslImgType(d distribution) imageType {
+	return imageType{
 		name:     "wsl",
 		filename: "wsl.tar",
 		mimeType: "application/x-tar",
@@ -424,8 +454,10 @@ var (
 		exports:                []string{"container"},
 		requiredPartitionSizes: requiredDirectorySizes,
 	}
+}
 
-	minimalrawImgType = imageType{
+func mkMinimalRawImgType(d distribution) imageType {
+	return imageType{
 		name:        "minimal-raw",
 		filename:    "disk.raw.xz",
 		compression: "xz",
@@ -454,7 +486,7 @@ var (
 		basePartitionTables:    minimalrawPartitionTables,
 		requiredPartitionSizes: requiredDirectorySizes,
 	}
-)
+}
 
 type distribution struct {
 	name               string
@@ -663,6 +695,8 @@ func newDistro(version int) distro.Distro {
 		distro: &rd,
 	}
 
+	qcow2ImgType := mkQcow2ImgType(rd)
+
 	ociImgType := qcow2ImgType
 	ociImgType.name = "oci"
 
@@ -696,7 +730,7 @@ func newDistro(version int) distro.Distro {
 	}
 	vhdImgType.defaultImageConfig = vhdConfig.InheritFrom(qcow2ImgType.defaultImageConfig)
 
-	minimalrawZstdImgType := minimalrawImgType
+	minimalrawZstdImgType := mkMinimalRawImgType(rd)
 	minimalrawZstdImgType.name = "minimal-raw-zst"
 	minimalrawZstdImgType.filename = "disk.raw.zst"
 	minimalrawZstdImgType.mimeType = "application/zstd"
@@ -744,7 +778,7 @@ func newDistro(version int) distro.Distro {
 				ImageFormat: platform.FORMAT_VMDK,
 			},
 		},
-		vmdkImgType,
+		mkVmdkImgType(rd),
 	)
 	x86_64.addImageTypes(
 		&platform.X86{
@@ -754,7 +788,7 @@ func newDistro(version int) distro.Distro {
 				ImageFormat: platform.FORMAT_OVA,
 			},
 		},
-		ovaImgType,
+		mkOvaImgType(rd),
 	)
 	x86_64.addImageTypes(
 		&platform.X86{
@@ -768,15 +802,22 @@ func newDistro(version int) distro.Distro {
 	)
 	x86_64.addImageTypes(
 		&platform.X86{},
-		containerImgType,
-		wslImgType,
+		mkContainerImgType(rd),
+		mkWslImgType(rd),
 	)
 
 	// add distro installer configuration to all installer types
 	distroInstallerConfig := defaultDistroInstallerConfig(&rd)
+
+	liveInstallerImgType := mkLiveInstallerImgType(rd)
 	liveInstallerImgType.defaultInstallerConfig = distroInstallerConfig
+
+	imageInstallerImgType := mkImageInstallerImgType(rd)
 	imageInstallerImgType.defaultInstallerConfig = distroInstallerConfig
+
+	iotInstallerImgType := mkIotInstallerImgType(rd)
 	iotInstallerImgType.defaultInstallerConfig = distroInstallerConfig
+
 	x86_64.addImageTypes(
 		&platform.X86{
 			BasePlatform: platform.BasePlatform{
@@ -790,8 +831,8 @@ func newDistro(version int) distro.Distro {
 			BIOS:       true,
 			UEFIVendor: "fedora",
 		},
-		iotOCIImgType,
-		iotCommitImgType,
+		mkIotOCIImgType(rd),
+		mkIotCommitImgType(rd),
 		iotInstallerImgType,
 		imageInstallerImgType,
 		liveInstallerImgType,
@@ -804,7 +845,7 @@ func newDistro(version int) distro.Distro {
 			BIOS:       false,
 			UEFIVendor: "fedora",
 		},
-		iotRawImgType,
+		mkIotRawImgType(rd),
 	)
 	x86_64.addImageTypes(
 		&platform.X86{
@@ -814,7 +855,7 @@ func newDistro(version int) distro.Distro {
 			BIOS:       false,
 			UEFIVendor: "fedora",
 		},
-		iotQcow2ImgType,
+		mkIotQcow2ImgType(rd),
 	)
 	aarch64.addImageTypes(
 		&platform.Aarch64{
@@ -833,7 +874,7 @@ func newDistro(version int) distro.Distro {
 				QCOW2Compat: "1.1",
 			},
 		},
-		iotQcow2ImgType,
+		mkIotQcow2ImgType(rd),
 		ociImgType,
 		qcow2ImgType,
 	)
@@ -848,7 +889,7 @@ func newDistro(version int) distro.Distro {
 	)
 	aarch64.addImageTypes(
 		&platform.Aarch64{},
-		containerImgType,
+		mkContainerImgType(rd),
 	)
 	aarch64.addImageTypes(
 		&platform.Aarch64{
@@ -865,9 +906,9 @@ func newDistro(version int) distro.Distro {
 			UEFIVendor: "fedora",
 		},
 		imageInstallerImgType,
-		iotCommitImgType,
+		mkIotCommitImgType(rd),
 		iotInstallerImgType,
-		iotOCIImgType,
+		mkIotOCIImgType(rd),
 		liveInstallerImgType,
 	)
 	aarch64.addImageTypes(
@@ -909,7 +950,7 @@ func newDistro(version int) distro.Distro {
 				{"/usr/lib/ostree-boot/efi/start_x.elf", "/boot/efi/"},
 			},
 		},
-		iotRawImgType,
+		mkIotRawImgType(rd),
 	)
 	x86_64.addImageTypes(
 		&platform.X86{
@@ -918,7 +959,7 @@ func newDistro(version int) distro.Distro {
 				ImageFormat: platform.FORMAT_RAW,
 			},
 		},
-		minimalrawImgType,
+		mkMinimalRawImgType(rd),
 		minimalrawZstdImgType,
 	)
 	aarch64.addImageTypes(
@@ -936,11 +977,13 @@ func newDistro(version int) distro.Distro {
 				{"/usr/share/uboot/rpi_arm64/u-boot.bin", "/boot/efi/rpi-u-boot.bin"},
 			},
 		},
-		minimalrawImgType,
+		mkMinimalRawImgType(rd),
 		minimalrawZstdImgType,
 	)
 
+	iotSimplifiedInstallerImgType := mkIotSimplifiedInstallerImgType(rd)
 	iotSimplifiedInstallerImgType.defaultInstallerConfig = distroInstallerConfig
+
 	x86_64.addImageTypes(
 		&platform.X86{
 			BasePlatform: platform.BasePlatform{
@@ -1002,7 +1045,7 @@ func newDistro(version int) distro.Distro {
 			BIOS:       true,
 			UEFIVendor: "fedora",
 		},
-		iotBootableContainer,
+		mkIotBootableContainer(rd),
 	)
 	aarch64.addImageTypes(
 		&platform.Aarch64{
@@ -1018,7 +1061,7 @@ func newDistro(version int) distro.Distro {
 			},
 			UEFIVendor: "fedora",
 		},
-		iotBootableContainer,
+		mkIotBootableContainer(rd),
 	)
 
 	ppc64le.addImageTypes(
@@ -1029,7 +1072,7 @@ func newDistro(version int) distro.Distro {
 				QCOW2Compat: "1.1",
 			},
 		},
-		iotBootableContainer,
+		mkIotBootableContainer(rd),
 	)
 
 	s390x.addImageTypes(
@@ -1040,7 +1083,7 @@ func newDistro(version int) distro.Distro {
 				QCOW2Compat: "1.1",
 			},
 		},
-		iotBootableContainer,
+		mkIotBootableContainer(rd),
 	)
 
 	ppc64le.addImageTypes(
@@ -1055,7 +1098,7 @@ func newDistro(version int) distro.Distro {
 	)
 	ppc64le.addImageTypes(
 		&platform.PPC64LE{},
-		containerImgType,
+		mkContainerImgType(rd),
 	)
 
 	s390x.addImageTypes(
@@ -1070,14 +1113,14 @@ func newDistro(version int) distro.Distro {
 	)
 	s390x.addImageTypes(
 		&platform.S390X{},
-		containerImgType,
+		mkContainerImgType(rd),
 	)
 
 	// XXX: there is no "qcow2" for riscv64 yet because there is
 	// no "@Fedora Cloud Server" group
 	riscv64.addImageTypes(
 		&platform.RISCV64{},
-		containerImgType,
+		mkContainerImgType(rd),
 	)
 	riscv64.addImageTypes(
 		&platform.RISCV64{
@@ -1086,7 +1129,7 @@ func newDistro(version int) distro.Distro {
 				ImageFormat: platform.FORMAT_RAW,
 			},
 		},
-		minimalrawImgType,
+		mkMinimalRawImgType(rd),
 		minimalrawZstdImgType,
 	)
 
