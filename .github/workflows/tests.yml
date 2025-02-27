@@ -24,10 +24,6 @@ jobs:
     name: "🛃 Unit tests (Fedora ${{ matrix.fedora_version }})"
     runs-on: ubuntu-24.04
     container: registry.fedoraproject.org/fedora:${{ matrix.fedora_version }}
-    env:
-      # workaround for expired cert at source of indirect dependency
-      # (go.opencensus.io/trace)
-      GOPROXY: "https://proxy.golang.org|direct"
     steps:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v4
@@ -59,10 +55,6 @@ jobs:
   container-resolver-tests:
     name: "🛃 Container resolver tests"
     runs-on: ubuntu-24.04
-    env:
-      # workaround for expired cert at source of indirect dependency
-      # (go.opencensus.io/trace)
-      GOPROXY: "https://proxy.golang.org|direct"
 
     steps:
       - name: Set up Go 1.22
@@ -103,9 +95,6 @@ jobs:
       image: quay.io/centos/centos:${{ matrix.centos_stream.image_tag }}
     env:
       GOFLAGS: "-tags=exclude_graphdriver_btrfs"
-      # workaround for expired cert at source of indirect dependency
-      # (go.opencensus.io/trace)
-      GOPROXY: "https://proxy.golang.org|direct"
 
     steps:
       - name: Install dnf plugins
@@ -144,10 +133,6 @@ jobs:
   lint:
     name: "⌨ Lint"
     runs-on: ubuntu-24.04
-    env:
-      # workaround for expired cert at source of indirect dependency
-      # (go.opencensus.io/trace)
-      GOPROXY: "https://proxy.golang.org|direct"
     steps:
       - name: Set up Go 1.22
         uses: actions/setup-go@v5
@@ -180,10 +165,6 @@ jobs:
   shellcheck:
     name: "🐚 Shellcheck"
     runs-on: ubuntu-24.04
-    env:
-      # workaround for expired cert at source of indirect dependency
-      # (go.opencensus.io/trace)
-      GOPROXY: "https://proxy.golang.org|direct"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -200,10 +181,6 @@ jobs:
   python-test:
     name: "🐍 pytest (imgtestlib and test scripts)"
     runs-on: ubuntu-24.04
-    env:
-      # workaround for expired cert at source of indirect dependency
-      # (go.opencensus.io/trace)
-      GOPROXY: "https://proxy.golang.org|direct"
     container:
       image: registry.fedoraproject.org/fedora:latest
     steps:
@@ -223,10 +200,6 @@ jobs:
   python-lint:
     name: "🐍 Lint (test scripts)"
     runs-on: ubuntu-24.04
-    env:
-      # workaround for expired cert at source of indirect dependency
-      # (go.opencensus.io/trace)
-      GOPROXY: "https://proxy.golang.org|direct"
     container:
       image: registry.fedoraproject.org/fedora:latest
     steps:
