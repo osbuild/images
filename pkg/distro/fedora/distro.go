@@ -127,8 +127,9 @@ func mkIotCommitImgType(d distribution) imageType {
 			osPkgsKey: packageSetLoader,
 		},
 		defaultImageConfig: &distro.ImageConfig{
-			EnabledServices: iotServicesForVersion(&d),
-			DracutConf:      []*osbuild.DracutConfStageOptions{osbuild.FIPSDracutConfStageOptions},
+			EnabledServices:        iotServicesForVersion(&d),
+			DracutConf:             []*osbuild.DracutConfStageOptions{osbuild.FIPSDracutConfStageOptions},
+			MachineIdUninitialized: common.ToPtr(false),
 		},
 		rpmOstree:              true,
 		image:                  iotCommitImage,
@@ -146,6 +147,9 @@ func mkIotBootableContainer(d distribution) imageType {
 		mimeType: "application/x-tar",
 		packageSets: map[string]packageSetFunc{
 			osPkgsKey: packageSetLoader,
+		},
+		defaultImageConfig: &distro.ImageConfig{
+			MachineIdUninitialized: common.ToPtr(false),
 		},
 		rpmOstree:              true,
 		image:                  bootableContainerImage,
@@ -169,8 +173,9 @@ func mkIotOCIImgType(d distribution) imageType {
 			},
 		},
 		defaultImageConfig: &distro.ImageConfig{
-			EnabledServices: iotServicesForVersion(&d),
-			DracutConf:      []*osbuild.DracutConfStageOptions{osbuild.FIPSDracutConfStageOptions},
+			EnabledServices:        iotServicesForVersion(&d),
+			DracutConf:             []*osbuild.DracutConfStageOptions{osbuild.FIPSDracutConfStageOptions},
+			MachineIdUninitialized: common.ToPtr(false),
 		},
 		rpmOstree:              true,
 		bootISO:                false,
