@@ -307,6 +307,9 @@ func ostreeDeploymentCustomizations(
 		deploymentConf.CustomFileSystems = append(deploymentConf.CustomFileSystems, fs.Mountpoint)
 	}
 
+	deploymentConf.EnabledServices = imageConfig.EnabledServices
+	deploymentConf.DisabledServices = imageConfig.DisabledServices
+
 	return deploymentConf, nil
 }
 

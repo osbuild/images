@@ -262,6 +262,7 @@ func mkIotRawImgType(d distribution) imageType {
 			OSTreeConfSysrootReadOnly: common.ToPtr(true),
 			LockRootUser:              common.ToPtr(true),
 			IgnitionPlatform:          common.ToPtr("metal"),
+			EnabledServices:           []string{"ignition-firstboot-complete.service"},
 		},
 		defaultSize:         4 * datasizes.GibiByte,
 		rpmOstree:           true,
