@@ -57,13 +57,6 @@ var (
 		"/":    1 * datasizes.GiB,
 		"/usr": 2 * datasizes.GiB,
 	}
-
-	minimalRawServices = []string{
-		"NetworkManager.service",
-		"firewalld.service",
-		"initial-setup.service",
-		"sshd.service",
-	}
 )
 
 // Image Definitions
@@ -447,7 +440,7 @@ func mkMinimalRawImgType(d distribution) imageType {
 			osPkgsKey: packageSetLoader,
 		},
 		defaultImageConfig: &distro.ImageConfig{
-			EnabledServices: minimalRawServices,
+			EnabledServices: minimalServicesForVersion(&d),
 			// NOTE: temporary workaround for a bug in initial-setup that
 			// requires a kickstart file in the root directory.
 			Files: []*fsnode.File{initialSetupKickstart()},
@@ -1168,6 +1161,20 @@ func iotServicesForVersion(d *distribution) []string {
 			"parsec",
 			"dbus-parsec",
 		}...)
+	}
+
+	return services
+}
+
+func minimalServicesForVersion(d *distribution) []string {
+	services := []string{
+		"NetworkManager.service",
+		"initial-setup.service",
+		"sshd.service",
+	}
+
+	if common.VersionLessThan(d.osVersion, "43") {
+		services = append(services, []string{"firewalld.service"}...)
 	}
 
 	return services
