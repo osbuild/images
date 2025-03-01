@@ -2,6 +2,7 @@ package manifest
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -518,6 +519,48 @@ func (p *OS) serialize() osbuild.Pipeline {
 				panic("password encryption failed")
 			}
 			pipeline.AddStage(usersStage)
+		}
+	}
+
+	// Keep after the user generation as SSHKeys go into user directories, note
+	// that since file customization runs later these can be overwritten.
+	if len(p.SSHKeys) > 0 {
+		if p.OSTreeRef != "" {
+			// We do nothing when this is ostree because I'm not entirely sure if this would actually work
+			// on ostree based systems.
+		} else {
+			var sshKeyDirectories []*fsnode.Directory
+			var sshKeyFiles []*fsnode.File
+
+			for _, sshKey := range p.SSHKeys {
+				dpath := filepath.Join("/home", sshKey.User, ".ssh")
+				fpath := filepath.Join(dpath, "authorized_keys")
+
+				// Explicitly turns off ensureParents so that a build failure happens when the user's home
+				// directory does not exist.
+				sshKeyDirectoryMode := os.FileMode(int(0700))
+				sshKeyDirectory, err := fsnode.NewDirectory(dpath, &sshKeyDirectoryMode, sshKey.User, sshKey.User, false)
+
+				if err != nil {
+					panic("failed to create ssh key directory")
+				}
+
+				sshKeyDirectories = append(sshKeyDirectories, sshKeyDirectory)
+
+				sshKeyFileMode := os.FileMode(int(0600))
+				sshKeyFile, err := fsnode.NewFile(fpath, &sshKeyFileMode, sshKey.User, sshKey.User, []byte(sshKey.Key))
+
+				if err != nil {
+					panic("failed to create ssh key file")
+				}
+
+				sshKeyFiles = append(sshKeyFiles, sshKeyFile)
+			}
+
+			pipeline.AddStages(osbuild.GenDirectoryNodesStages(sshKeyDirectories)...)
+			pipeline.AddStages(osbuild.GenFileNodesStages(sshKeyFiles)...)
+
+			p.Files = append(p.Files, sshKeyFiles...)
 		}
 	}
 
