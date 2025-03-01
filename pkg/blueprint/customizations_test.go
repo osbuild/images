@@ -573,3 +573,23 @@ func TestGetRepositoriesInstallFrom(t *testing.T) {
 	filtered := RepoCustomizationsInstallFromOnly(repos)
 	assert.Equal(t, expected, filtered)
 }
+
+func TestGetSSHKeys(t *testing.T) {
+	User := "testuser"
+	Key := "testkey"
+
+	expectedSSHKeys := []SSHKeyCustomization{
+		{
+			User: User,
+			Key:  Key,
+		},
+	}
+
+	TestCustomizations := Customizations{
+		SSHKey: expectedSSHKeys,
+	}
+
+	retSSHKeys := TestCustomizations.GetSSHKeys()
+
+	assert.ElementsMatch(t, expectedSSHKeys, retSSHKeys)
+}

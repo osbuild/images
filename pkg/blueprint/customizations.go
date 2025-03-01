@@ -34,6 +34,7 @@ type Customizations struct {
 	RPM                *RPMCustomization              `json:"rpm,omitempty" toml:"rpm,omitempty"`
 	RHSM               *RHSMCustomization             `json:"rhsm,omitempty" toml:"rhsm,omitempty"`
 	CACerts            *CACustomization               `json:"cacerts,omitempty" toml:"cacerts,omitempty"`
+	SSHKey             []SSHKeyCustomization          `json:"sshkey,omitempty" toml:"sshkey,omitempty"`
 }
 
 type IgnitionCustomization struct {
@@ -231,6 +232,16 @@ func (c *Customizations) GetTimezoneSettings() (*string, []string) {
 		return nil, nil
 	}
 	return c.Timezone.Timezone, c.Timezone.NTPServers
+}
+
+func (c *Customizations) GetSSHKeys() []SSHKeyCustomization {
+	if c == nil || c.SSHKey == nil {
+		return nil
+	}
+
+	sshkeys := c.SSHKey
+
+	return sshkeys
 }
 
 func (c *Customizations) GetUsers() []UserCustomization {
