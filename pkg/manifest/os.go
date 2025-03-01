@@ -16,6 +16,7 @@ import (
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/customizations/shell"
+	"github.com/osbuild/images/pkg/customizations/sshkeys"
 	"github.com/osbuild/images/pkg/customizations/subscription"
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/disk"
@@ -95,6 +96,8 @@ type OSCustomizations struct {
 
 	Groups []users.Group
 	Users  []users.User
+
+	SSHKeys []sshkeys.SSHKey
 
 	ShellInit []shell.InitFile
 
