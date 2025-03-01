@@ -13,6 +13,7 @@ import (
 	"github.com/osbuild/images/pkg/customizations/ignition"
 	"github.com/osbuild/images/pkg/customizations/kickstart"
 	"github.com/osbuild/images/pkg/customizations/oscap"
+	"github.com/osbuild/images/pkg/customizations/sshkeys"
 	"github.com/osbuild/images/pkg/customizations/subscription"
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/distro"
@@ -69,10 +70,12 @@ func osCustomizations(
 	}
 
 	if !t.BootISO {
-		// don't put users and groups in the payload of an installer
+		// don't put users, groups, or sshkeys, in the payload of an installer
 		// add them via kickstart instead
 		osc.Groups = users.GroupsFromBP(c.GetGroups())
 		osc.Users = users.UsersFromBP(c.GetUsers())
+
+		osc.SSHKeys = sshkeys.SSHKeysFromBP(c.GetSSHKeys())
 	}
 
 	osc.EnabledServices = imageConfig.EnabledServices
