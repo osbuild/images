@@ -11,6 +11,9 @@ const VERSION_ROOTFS_SQUASHFS = "41"
 // other Fedora variants.
 const VERSION_FIRSTBOOT = "43"
 
+// Fedora version 43 and later use an erofs with lzma
+const VERSION_ROOTFS_EROFS = "43"
+
 func VersionReplacements() map[string]string {
 	return map[string]string{
 		"VERSION_BRANCHED":        VERSION_BRANCHED,
