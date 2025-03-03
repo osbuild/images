@@ -13,6 +13,25 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// collectUUIDs returns the filesystem UUID for each mountpoint in the
+// partition table. It also returns the UUID for the LUKS container keyed by
+// 'luks'.
+func collectUUIDs(pt *disk.PartitionTable) map[string]string {
+	uuids := make(map[string]string)
+	findUUIDs := func(e disk.Entity, path []disk.Entity) error {
+		switch ent := e.(type) {
+		case *disk.LUKSContainer:
+			uuids["luks"] = ent.UUID
+		case *disk.Filesystem:
+			uuids[ent.Mountpoint] = ent.UUID
+		}
+
+		return nil
+	}
+	_ = pt.ForEachEntity(findUUIDs)
+	return uuids
+}
+
 func TestGenImageKernelOptions(t *testing.T) {
 	assert := assert.New(t)
 
@@ -25,29 +44,14 @@ func TestGenImageKernelOptions(t *testing.T) {
 	pt, err := disk.NewPartitionTable(&luks_lvm, []blueprint.FilesystemCustomization{}, 0, disk.AutoLVMPartitioningMode, arch.ARCH_X86_64, make(map[string]uint64), rng)
 	assert.NoError(err)
 
-	var expRootUUID, expLuksUUID string
-
-	findUUIDs := func(e disk.Entity, path []disk.Entity) error {
-		switch ent := e.(type) {
-		case *disk.LUKSContainer:
-			expLuksUUID = ent.UUID
-		case *disk.Filesystem:
-			if ent.Mountpoint == "/" {
-				expRootUUID = ent.UUID
-			}
-		}
-
-		return nil
-	}
-	_ = pt.ForEachEntity(findUUIDs)
-
-	assert.NotEmpty(expRootUUID, "Could not find root filesystem")
-	assert.NotEmpty(expLuksUUID, "Could not find LUKS container")
+	uuids := collectUUIDs(pt)
+	assert.NotEmpty(uuids["/"], "Could not find root filesystem")
+	assert.NotEmpty(uuids["luks"], "Could not find LUKS container")
 	rootUUID, cmdline, err := GenImageKernelOptions(pt, false)
 	assert.NoError(err)
 
-	assert.Equal(rootUUID, expRootUUID)
-	assert.Subset(cmdline, []string{"luks.uuid=" + expLuksUUID})
+	assert.Equal(rootUUID, uuids["/"])
+	assert.Subset(cmdline, []string{"luks.uuid=" + uuids["luks"]})
 }
 
 func TestGenImageKernelOptionsBtrfs(t *testing.T) {
