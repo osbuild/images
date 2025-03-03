@@ -287,6 +287,13 @@ func (p *OS) getPackageSetChain(Distro) []rpmmd.PackageSet {
 				Repositories: append(osRepos, p.Workload.GetRepos()...),
 			})
 		}
+
+		workloadModules := p.Workload.GetModules()
+		if len(workloadModules) > 0 {
+			chain = append(chain, rpmmd.PackageSet{
+				Modules: workloadModules,
+			})
+		}
 	}
 
 	return chain
