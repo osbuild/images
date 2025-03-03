@@ -141,6 +141,7 @@ func (pkg Package) ToPackageInfo() PackageInfo {
 type PackageSet struct {
 	Include         []string
 	Exclude         []string
+	EnabledModules  []string
 	Repositories    []RepoConfig
 	InstallWeakDeps bool
 }
@@ -150,6 +151,7 @@ type PackageSet struct {
 func (ps PackageSet) Append(other PackageSet) PackageSet {
 	ps.Include = append(ps.Include, other.Include...)
 	ps.Exclude = append(ps.Exclude, other.Exclude...)
+	ps.EnabledModules = append(ps.EnabledModules, other.EnabledModules...)
 	return ps
 }
 
