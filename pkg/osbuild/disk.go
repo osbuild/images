@@ -111,8 +111,14 @@ func GenImageFinishStages(pt *disk.PartitionTable, filename string) []*Stage {
 	return GenDeviceFinishStages(pt, filename)
 }
 
-func GenImageKernelOptions(pt *disk.PartitionTable) []string {
+func GenImageKernelOptions(pt *disk.PartitionTable, mountUnits bool) (string, []string, error) {
 	cmdline := make([]string, 0)
+
+	rootFs := pt.FindMountable("/")
+	if rootFs == nil {
+		return "", nil, fmt.Errorf("root filesystem must be defined for kernel-cmdline stage, this is a programming error")
+	}
+	rootFsUUID := rootFs.GetFSSpec().UUID
 
 	genOptions := func(e disk.Entity, path []disk.Entity) error {
 		switch ent := e.(type) {
@@ -129,5 +135,5 @@ func GenImageKernelOptions(pt *disk.PartitionTable) []string {
 	}
 
 	_ = pt.ForEachEntity(genOptions)
-	return cmdline
+	return rootFsUUID, cmdline, nil
 }
