@@ -318,7 +318,8 @@ func (t *ImageType) Manifest(bp *blueprint.Blueprint,
 			BaseWorkload: workload.BaseWorkload{
 				Repos: workloadRepos,
 			},
-			Packages: bp.GetPackagesEx(false),
+			Packages:       bp.GetPackagesEx(false),
+			EnabledModules: bp.GetEnabledModules(),
 		}
 		if services := bp.Customizations.GetServices(); services != nil {
 			cw.Services = services.Enabled
