@@ -25,33 +25,42 @@ func TestGenImageKernelOptions(t *testing.T) {
 	pt, err := disk.NewPartitionTable(&luks_lvm, []blueprint.FilesystemCustomization{}, 0, disk.AutoLVMPartitioningMode, arch.ARCH_X86_64, make(map[string]uint64), rng)
 	assert.NoError(err)
 
-	var uuid string
+	var expRootUUID, expLuksUUID string
 
-	findLuksUUID := func(e disk.Entity, path []disk.Entity) error {
+	findUUIDs := func(e disk.Entity, path []disk.Entity) error {
 		switch ent := e.(type) {
 		case *disk.LUKSContainer:
-			uuid = ent.UUID
+			expLuksUUID = ent.UUID
+		case *disk.Filesystem:
+			if ent.Mountpoint == "/" {
+				expRootUUID = ent.UUID
+			}
 		}
 
 		return nil
 	}
-	_ = pt.ForEachEntity(findLuksUUID)
+	_ = pt.ForEachEntity(findUUIDs)
 
-	assert.NotEmpty(uuid, "Could not find LUKS container")
-	cmdline := GenImageKernelOptions(pt)
+	assert.NotEmpty(expRootUUID, "Could not find root filesystem")
+	assert.NotEmpty(expLuksUUID, "Could not find LUKS container")
+	rootUUID, cmdline, err := GenImageKernelOptions(pt, false)
+	assert.NoError(err)
 
-	assert.Subset(cmdline, []string{"luks.uuid=" + uuid})
+	assert.Equal(rootUUID, expRootUUID)
+	assert.Subset(cmdline, []string{"luks.uuid=" + expLuksUUID})
 }
 
 func TestGenImageKernelOptionsBtrfs(t *testing.T) {
 	pt := testdisk.MakeFakeBtrfsPartitionTable("/")
-	actual := GenImageKernelOptions(pt)
+	_, actual, err := GenImageKernelOptions(pt, false)
+	assert.NoError(t, err)
 	assert.Equal(t, []string{"rootflags=subvol=root"}, actual)
 }
 
 func TestGenImageKernelOptionsBtrfsNotRootCmdlineGenerated(t *testing.T) {
 	pt := testdisk.MakeFakeBtrfsPartitionTable("/var")
-	kopts := GenImageKernelOptions(pt)
+	_, kopts, err := GenImageKernelOptions(pt, false)
+	assert.EqualError(t, err, "root filesystem must be defined for kernel-cmdline stage, this is a programming error")
 	assert.Equal(t, len(kopts), 0)
 }
 
