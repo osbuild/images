@@ -465,9 +465,10 @@ func (s *Solver) makeDepsolveRequest(pkgSets []rpmmd.PackageSet, sbomType sbom.S
 	transactions := make([]transactionArgs, len(pkgSets))
 	for dsIdx, pkgSet := range pkgSets {
 		transactions[dsIdx] = transactionArgs{
-			PackageSpecs:    pkgSet.Include,
-			ExcludeSpecs:    pkgSet.Exclude,
-			InstallWeakDeps: pkgSet.InstallWeakDeps,
+			PackageSpecs:      pkgSet.Include,
+			ExcludeSpecs:      pkgSet.Exclude,
+			ModuleEnableSpecs: pkgSet.EnabledModules,
+			InstallWeakDeps:   pkgSet.InstallWeakDeps,
 		}
 
 		for _, jobRepo := range pkgSet.Repositories {
@@ -740,6 +741,9 @@ type transactionArgs struct {
 
 	// Packages to exclude from results
 	ExcludeSpecs []string `json:"exclude-specs"`
+
+	// Modules to enable during depsolve
+	ModuleEnableSpecs []string `json:"module-enable-specs,omitempty"`
 
 	// IDs of repositories to use for this depsolve
 	RepoIDs []string `json:"repo-ids"`
