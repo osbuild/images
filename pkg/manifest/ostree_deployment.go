@@ -293,7 +293,10 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 			},
 		},
 	}))
-	kernelOpts := osbuild.GenImageKernelOptions(p.PartitionTable)
+	_, kernelOpts, err := osbuild.GenImageKernelOptions(p.PartitionTable, p.MountUnits)
+	if err != nil {
+		panic(err)
+	}
 	kernelOpts = append(kernelOpts, p.KernelOptionsAppend...)
 
 	if p.IgnitionPlatform != "" {
