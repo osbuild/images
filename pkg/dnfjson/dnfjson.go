@@ -467,6 +467,7 @@ func (s *Solver) makeDepsolveRequest(pkgSets []rpmmd.PackageSet, sbomType sbom.S
 		transactions[dsIdx] = transactionArgs{
 			PackageSpecs:    pkgSet.Include,
 			ExcludeSpecs:    pkgSet.Exclude,
+			ModuleSpecs:     pkgSet.Modules,
 			InstallWeakDeps: pkgSet.InstallWeakDeps,
 		}
 
@@ -740,6 +741,9 @@ type transactionArgs struct {
 
 	// Packages to exclude from results
 	ExcludeSpecs []string `json:"exclude-specs"`
+
+	// Modules to enable during depsolve
+	ModuleSpecs []string `json:"module-specs"`
 
 	// IDs of repositories to use for this depsolve
 	RepoIDs []string `json:"repo-ids"`
