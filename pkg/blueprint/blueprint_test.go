@@ -21,6 +21,10 @@ version = "0.0.0"
 name = "httpd"
 version = "2.4.*"
 
+[[enabled_modules]]
+name = "nodejs"
+stream = "18"
+
 [[customizations.filesystem]]
 mountpoint = "/var"
 minsize = 2147483648
@@ -38,6 +42,12 @@ minsize = "20 GiB"
     {
       "name": "httpd",
       "version": "2.4.*"
+    }
+  ],
+  "enabled_modules": [
+    {
+      "name": "nodejs",
+      "stream": "18"
     }
   ],
   "customizations": {
@@ -66,6 +76,7 @@ minsize = "20 GiB"
 	assert.Equal(t, bp.Description, "Test description")
 	assert.Equal(t, bp.Version, "0.0.0")
 	assert.Equal(t, bp.Packages, []Package{{Name: "httpd", Version: "2.4.*"}})
+	assert.Equal(t, bp.EnabledModules, []EnabledModule{{Name: "nodejs", Stream: "18"}})
 	assert.Equal(t, "/var", bp.Customizations.Filesystem[0].Mountpoint)
 	assert.Equal(t, uint64(2147483648), bp.Customizations.Filesystem[0].MinSize)
 	assert.Equal(t, "/opt", bp.Customizations.Filesystem[1].Mountpoint)
@@ -87,6 +98,19 @@ func TestGetPackages(t *testing.T) {
 	}
 	Received_packages := bp.GetPackages()
 	assert.ElementsMatch(t, []string{"tmux-1.2", "openssh-server", "@anaconda-tools", "kernel"}, Received_packages)
+}
+
+func TestGetEnbledModules(t *testing.T) {
+	bp := Blueprint{
+		Name:        "enabled-modules-test",
+		Description: "Testing GetEnabledModules function",
+		Version:     "0.0.1",
+		EnabledModules: []EnabledModule{
+			{Name: "nodejs", Stream: "18"},
+			{Name: "nginx", Stream: "2"}},
+	}
+	Received_enabled_modules := bp.GetEnabledModules()
+	assert.ElementsMatch(t, []string{"nodejs:18", "nginx:2"}, Received_enabled_modules)
 }
 
 func TestKernelNameCustomization(t *testing.T) {
