@@ -2680,13 +2680,12 @@ func TestPartitionTableFeatures(t *testing.T) {
 		"btrfs":        {XFS: true, FAT: true, Btrfs: true},
 	}
 
-	for name := range testdisk.TestPartitionTables {
+	for name, pt := range testdisk.TestPartitionTables() {
 		// print an informative failure message if a new test partition
 		// table is added and this test is not updated (instead of failing
 		// at the final Equal() check)
 		exp, ok := testCases[name]
 		require.True(ok, "expected test result not defined for test partition table %q: please update the %s test", name, t.Name())
-		pt := testdisk.TestPartitionTables[name]
 		require.Equal(exp, disk.GetPartitionTableFeatures(pt))
 	}
 }

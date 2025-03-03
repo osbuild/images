@@ -413,7 +413,7 @@ func azureInternalBasePartitionTables(t *rhel.ImageType) (disk.PartitionTable, b
 // IMAGE CONFIG
 
 // use loglevel=3 as described in the RHEL documentation and used in existing RHEL images built by MSFT
-const defaultAzureKernelOptions = "ro loglevel=3 console=tty1 console=ttyS0 earlyprintk=ttyS0 rootdelay=300"
+var defaultAzureKernelOptions = []string{"ro", "loglevel=3", "console=tty1", "console=ttyS0", "earlyprintk=ttyS0", "rootdelay=300"}
 
 // based on https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/deploying_rhel_9_on_microsoft_azure/assembly_deploying-a-rhel-image-as-a-virtual-machine-on-microsoft-azure_cloud-content-azure#making-configuration-changes_configure-the-image-azure
 func defaultAzureImageConfig(rd *rhel.Distribution) *distro.ImageConfig {

@@ -94,6 +94,10 @@ type ImageConfig struct {
 	LockRootUser *bool
 
 	IgnitionPlatform *string
+
+	// MountUnits creates systemd .mount units to describe the filesystem
+	// instead of writing to /etc/fstab
+	MountUnits *bool
 }
 
 // InheritFrom inherits unset values from the provided parent configuration and

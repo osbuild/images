@@ -40,8 +40,8 @@ func osCustomizations(
 		osc.KernelName = c.GetKernel().Name
 
 		var kernelOptions []string
-		if t.kernelOptions != "" {
-			kernelOptions = append(kernelOptions, t.kernelOptions)
+		if len(t.kernelOptions) > 0 {
+			kernelOptions = append(kernelOptions, t.kernelOptions...)
 		}
 		if bpKernel := c.GetKernel(); bpKernel.Append != "" {
 			kernelOptions = append(kernelOptions, bpKernel.Append)
@@ -234,6 +234,10 @@ func osCustomizations(
 		osc.CACerts = ca.PEMCerts
 	}
 
+	if imageConfig.MountUnits != nil {
+		osc.MountUnits = *imageConfig.MountUnits
+	}
+
 	return osc, nil
 }
 
@@ -249,8 +253,8 @@ func ostreeDeploymentCustomizations(
 	deploymentConf := manifest.OSTreeDeploymentCustomizations{}
 
 	var kernelOptions []string
-	if t.kernelOptions != "" {
-		kernelOptions = append(kernelOptions, t.kernelOptions)
+	if len(t.kernelOptions) > 0 {
+		kernelOptions = append(kernelOptions, t.kernelOptions...)
 	}
 	if bpKernel := c.GetKernel(); bpKernel != nil && bpKernel.Append != "" {
 		kernelOptions = append(kernelOptions, bpKernel.Append)

@@ -4,7 +4,15 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
+	"slices"
+	"strings"
+
+	"github.com/google/uuid"
+	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/disk"
 )
+
+const unitFilenameRegex = "^[\\w:.\\\\-]+[@]{0,1}[\\w:.\\\\-]*\\.(service|mount|socket|swap)$"
 
 type SystemdServiceType string
 type SystemdUnitPath string
@@ -51,6 +59,13 @@ type MountSection struct {
 	Options string `json:"Options,omitempty"`
 }
 
+type SwapSection struct {
+	What       string `json:"What"`
+	Priority   *int   `json:"Priority,omitempty"`
+	Options    string `json:"Options,omitempty"`
+	TimeoutSec string `json:"TimeoutSec,omitempty"`
+}
+
 type SocketSection struct {
 	Service                string `json:"Service,omitempty"`
 	ListenStream           string `json:"ListenStream,omitempty"`
@@ -73,10 +88,11 @@ type InstallSection struct {
 
 type SystemdUnit struct {
 	Unit    *UnitSection    `json:"Unit"`
-	Service *ServiceSection `json:"Service"`
+	Service *ServiceSection `json:"Service,omitempty"`
 	Mount   *MountSection   `json:"Mount,omitempty"`
 	Socket  *SocketSection  `json:"Socket,omitempty"`
-	Install *InstallSection `json:"Install"`
+	Swap    *SwapSection    `json:"Swap,omitempty"`
+	Install *InstallSection `json:"Install,omitempty"`
 }
 
 type SystemdUnitCreateStageOptions struct {
@@ -102,6 +118,9 @@ func (o *SystemdUnitCreateStageOptions) validateService() error {
 	if o.Config.Socket != nil {
 		return fmt.Errorf("systemd service unit %q contains invalid section Socket", o.Filename)
 	}
+	if o.Config.Swap != nil {
+		return fmt.Errorf("systemd service unit %q contains invalid section Swap", o.Filename)
+	}
 
 	vre := regexp.MustCompile(envVarRegex)
 	if service := o.Config.Service; service != nil {
@@ -119,11 +138,18 @@ func (o *SystemdUnitCreateStageOptions) validateMount() error {
 	if o.Config.Mount == nil {
 		return fmt.Errorf("systemd mount unit %q requires a Mount section", o.Filename)
 	}
+
+	if o.Config.Swap != nil {
+		return fmt.Errorf("systemd mount unit %q contains invalid section Swap", o.Filename)
+	}
 	if o.Config.Service != nil {
 		return fmt.Errorf("systemd mount unit %q contains invalid section Service", o.Filename)
 	}
 	if o.Config.Socket != nil {
 		return fmt.Errorf("systemd mount unit %q contains invalid section Socket", o.Filename)
+	}
+	if o.Config.Swap != nil {
+		return fmt.Errorf("systemd mount unit %q contains invalid section Swap", o.Filename)
 	}
 
 	if o.Config.Mount.What == "" {
@@ -136,24 +162,47 @@ func (o *SystemdUnitCreateStageOptions) validateMount() error {
 
 	return nil
 }
+
+func (o *SystemdUnitCreateStageOptions) validateSwap() error {
+	if o.Config.Swap == nil {
+		return fmt.Errorf("systemd swap unit %q requires a Swap section", o.Filename)
+	}
+
+	if o.Config.Mount != nil {
+		return fmt.Errorf("systemd swap unit %q contains invalid section Mount", o.Filename)
+	}
+	if o.Config.Service != nil {
+		return fmt.Errorf("systemd swap unit %q contains invalid section Service", o.Filename)
+	}
+	if o.Config.Socket != nil {
+		return fmt.Errorf("systemd swap unit %q contains invalid section Socket", o.Filename)
+	}
+
+	return nil
+}
+
 func (o *SystemdUnitCreateStageOptions) validateSocket() error {
 	if o.Config.Socket == nil {
 		return fmt.Errorf("systemd socket unit %q requires a Socket section", o.Filename)
 	}
+
 	if o.Config.Mount != nil {
 		return fmt.Errorf("systemd socket unit %q contains invalid section Mount", o.Filename)
 	}
 	if o.Config.Service != nil {
 		return fmt.Errorf("systemd socket unit %q contains invalid section Service", o.Filename)
 	}
+	if o.Config.Swap != nil {
+		return fmt.Errorf("systemd socket unit %q contains invalid section Swap", o.Filename)
+	}
 
 	return nil
 }
 
 func (o *SystemdUnitCreateStageOptions) validate() error {
-	fre := regexp.MustCompile(filenameRegex)
+	fre := regexp.MustCompile(unitFilenameRegex)
 	if !fre.MatchString(o.Filename) {
-		return fmt.Errorf("invalid filename %q for systemd unit: does not conform to schema (%s)", o.Filename, filenameRegex)
+		return fmt.Errorf("invalid filename %q for systemd unit: does not conform to schema (%s)", o.Filename, unitFilenameRegex)
 	}
 
 	switch filepath.Ext(o.Filename) {
@@ -161,10 +210,13 @@ func (o *SystemdUnitCreateStageOptions) validate() error {
 		return o.validateService()
 	case ".mount":
 		return o.validateMount()
+	case ".swap":
+		return o.validateSwap()
 	case ".socket":
 		return o.validateSocket()
 	default:
-		return fmt.Errorf("invalid filename %q for systemd unit: extension must be one of .service, .mount, or .socket", o.Filename)
+		// this should be caught by the regex
+		return fmt.Errorf("invalid filename %q for systemd unit: extension must be one of .service, .mount, .swap, or .socket", o.Filename)
 	}
 }
 
@@ -176,4 +228,113 @@ func NewSystemdUnitCreateStage(options *SystemdUnitCreateStageOptions) *Stage {
 		Type:    "org.osbuild.systemd.unit.create",
 		Options: options,
 	}
+}
+
+// GenSystemdMountStages generates a collection of
+// org.osbuild.systemd.unit.create stages with options to create systemd mount
+// units, one for each mountpoint in the partition table.
+func GenSystemdMountStages(pt *disk.PartitionTable) ([]*Stage, error) {
+	mountStages := make([]*Stage, 0)
+	unitNames := make([]string, 0)
+
+	genOption := func(ent disk.FSTabEntity, path []disk.Entity) error {
+		fsSpec := ent.GetFSSpec()
+		fsOptions, err := ent.GetFSTabOptions()
+		if err != nil {
+			return err
+		}
+
+		var filename string
+		var options *SystemdUnitCreateStageOptions
+		device := fmt.Sprintf("/dev/disk/by-uuid/%s", strings.ToLower(fsSpec.UUID))
+		if err := uuid.Validate(fsSpec.UUID); err != nil {
+			// vfat IDs and other non-UUID identifiers aren't lowercased
+			device = fmt.Sprintf("/dev/disk/by-uuid/%s", fsSpec.UUID)
+		}
+		switch ent.GetFSType() {
+		case "swap":
+			filename = fmt.Sprintf("%s.swap", pathEscape(device))
+			options = &SystemdUnitCreateStageOptions{
+				Filename: filename,
+				Config: SystemdUnit{
+					Unit: &UnitSection{
+						// Adds the following dependencies:
+						//  - Before=umount.target
+						//  - Conflicts=umount.target
+						// See systemd.swap(5).
+						DefaultDependencies: common.ToPtr(true),
+					},
+					Swap: &SwapSection{
+						What:    device,
+						Options: fsOptions.MntOps,
+					},
+					Install: &InstallSection{
+						WantedBy: []string{"multi-user.target"},
+					},
+				},
+			}
+		default:
+			filename = fmt.Sprintf("%s.mount", pathEscape(ent.GetFSFile()))
+			options = &SystemdUnitCreateStageOptions{
+				Filename: filename,
+				Config: SystemdUnit{
+					Unit: &UnitSection{
+						// Adds the following dependencies:
+						//  - Before=umount.target
+						//  - Conflicts=umount.target
+						//  - After=local-fs-pre.target
+						//  - Before=local-fs.target
+						// See systemd.mount(5).
+						DefaultDependencies: common.ToPtr(true),
+					},
+					Mount: &MountSection{
+						What:    device,
+						Where:   ent.GetFSFile(),
+						Type:    ent.GetFSType(),
+						Options: fsOptions.MntOps,
+					},
+					Install: &InstallSection{
+						WantedBy: []string{"multi-user.target"},
+					},
+				},
+			}
+		}
+
+		mountStages = append(mountStages, NewSystemdUnitCreateStage(options))
+		unitNames = append(unitNames, filename)
+		return nil
+	}
+
+	err := pt.ForEachFSTabEntity(genOption)
+	if err != nil {
+		return nil, err
+	}
+
+	// sort the entries by filename for stable ordering
+	slices.SortFunc(mountStages, func(a, b *Stage) int {
+		optsa := a.Options.(*SystemdUnitCreateStageOptions)
+		optsb := b.Options.(*SystemdUnitCreateStageOptions)
+
+		// this sorter is not guaranteed to be stable, but the unit Filenames
+		// are unique
+		switch {
+		case optsa.Filename < optsb.Filename:
+			return -1
+		case optsa.Filename > optsb.Filename:
+			return 1
+		}
+		panic(fmt.Sprintf("error sorting systemd unit mount stages: possible duplicate mount unit filenames: %q %q", optsa.Filename, optsb.Filename))
+	})
+
+	// sort the unit names for the systemd (enable) stage for stable ordering
+	slices.Sort(unitNames)
+
+	if len(unitNames) > 0 {
+		enableStage := NewSystemdStage(&SystemdStageOptions{
+			EnabledServices: unitNames,
+		})
+		mountStages = append(mountStages, enableStage)
+	}
+
+	return mountStages, nil
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
-const gceKernelOptions = "biosdevname=0 scsi_mod.use_blk_mq=Y console=ttyS0,38400n8d"
+var gceKernelOptions = []string{"biosdevname=0", "scsi_mod.use_blk_mq=Y", "console=ttyS0,38400n8d"}
 
 func mkGCEImageType() *rhel.ImageType {
 	it := rhel.NewImageType(

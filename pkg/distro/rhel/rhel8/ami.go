@@ -10,10 +10,10 @@ import (
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
-const (
-	amiX86KernelOptions     = "console=tty0 console=ttyS0,115200n8 net.ifnames=0 rd.blacklist=nouveau nvme_core.io_timeout=4294967295 crashkernel=auto"
-	amiAarch64KernelOptions = "console=tty0 console=ttyS0,115200n8 net.ifnames=0 rd.blacklist=nouveau nvme_core.io_timeout=4294967295 iommu.strict=0 crashkernel=auto"
-	amiSapKernelOptions     = "console=tty0 console=ttyS0,115200n8 net.ifnames=0 rd.blacklist=nouveau nvme_core.io_timeout=4294967295 crashkernel=auto processor.max_cstate=1 intel_idle.max_cstate=1"
+var (
+	amiX86KernelOptions     = []string{"console=tty0", "console=ttyS0,115200n8", "net.ifnames=0", "rd.blacklist=nouveau", "nvme_core.io_timeout=4294967295", "crashkernel=auto"}
+	amiAarch64KernelOptions = []string{"console=tty0", "console=ttyS0,115200n8", "net.ifnames=0", "rd.blacklist=nouveau", "nvme_core.io_timeout=4294967295", "iommu.strict=0", "crashkernel=auto"}
+	amiSapKernelOptions     = []string{"console=tty0", "console=ttyS0,115200n8", "net.ifnames=0", "rd.blacklist=nouveau", "nvme_core.io_timeout=4294967295", "crashkernel=auto", "processor.max_cstate=1", "intel_idle.max_cstate=1"}
 )
 
 func mkAmiImgTypeX86_64() *rhel.ImageType {
