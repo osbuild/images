@@ -5,6 +5,7 @@ import (
 	"math/rand"
 
 	"github.com/osbuild/images/internal/workload"
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/anaconda"
@@ -510,6 +511,17 @@ func EdgeInstallerImage(workload workload.Workload,
 	img.RootfsCompression = "xz"
 	if t.Arch().Distro().Releasever() == "10" {
 		img.RootfsType = manifest.SquashfsRootfs
+	}
+
+	// Enable BIOS iso on x86_64 only
+	// Use grub2 on RHEL10, otherwise use syslinux
+	// NOTE: Will need to be updated for RHEL11 and later
+	if img.Platform.GetArch() == arch.ARCH_X86_64 {
+		if t.Arch().Distro().Releasever() == "10" {
+			img.ISOBoot = manifest.Grub2ISOBoot
+		} else {
+			img.ISOBoot = manifest.SyslinuxISOBoot
+		}
 	}
 
 	installerConfig, err := t.getDefaultInstallerConfig()
