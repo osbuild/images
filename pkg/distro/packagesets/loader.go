@@ -4,6 +4,7 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -61,15 +62,31 @@ func Load(it distro.ImageType, overrideTypeName string, replacements map[string]
 	// distro names, sadly go has no rsplit() so we do it manually
 	// XXX: we cannot use distroidparser here because of import cycles
 	distroName := distroNameVer[:strings.LastIndex(distroNameVer, "-")]
-	distroVersion := distribution.OsVersion()
+	distroVersion := strings.SplitN(distroNameVer, "-", 2)[1]
+	distroNameMajorVer := strings.SplitN(distroNameVer, ".", 2)[0]
 
-	distroSets, err := DataFS.Open(filepath.Join(distroName, "package_sets.yaml"))
-	if err != nil {
-		panic(err)
+	searchPath := []string{
+		filepath.Join(distroNameMajorVer, "package_sets.yaml"),
+		filepath.Join(distroName, "package_sets.yaml"),
 	}
+	var decoder *yaml.Decoder
+	for _, p := range searchPath {
+		f, err := DataFS.Open(p)
+		if os.IsNotExist(err) {
+			continue
+		}
+		if err != nil {
+			panic(err)
+		}
+		defer f.Close()
 
-	decoder := yaml.NewDecoder(distroSets)
-	decoder.KnownFields(true)
+		decoder = yaml.NewDecoder(f)
+		decoder.KnownFields(true)
+		break
+	}
+	if decoder == nil {
+		panic(fmt.Errorf("cannot find package_set in %v", searchPath))
+	}
 
 	// each imagetype can have multiple package sets, so that we can
 	// use yaml aliases/anchors to de-duplicate them
