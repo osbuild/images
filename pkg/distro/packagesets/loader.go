@@ -20,6 +20,10 @@ type packageSet struct {
 	Include   []string    `yaml:"include"`
 	Exclude   []string    `yaml:"exclude"`
 	Condition *conditions `yaml:"condition,omitempty"`
+
+	// XXX: terrible name, needs to convey that this is does not merge
+	// conditions
+	AddIncExc []packageSet `yaml:"add_includes_excludes,omitempty"`
 }
 
 type conditions struct {
@@ -75,6 +79,13 @@ func Load(it distro.ImageType, replacements map[string]string) rpmmd.PackageSet 
 	rpmmdPkgSet := rpmmd.PackageSet{
 		Include: pkgSet.Include,
 		Exclude: pkgSet.Exclude,
+	}
+
+	for _, addSet := range pkgSet.AddIncExc {
+		rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
+			Include: addSet.Include,
+			Exclude: addSet.Exclude,
+		})
 	}
 
 	if pkgSet.Condition != nil {
