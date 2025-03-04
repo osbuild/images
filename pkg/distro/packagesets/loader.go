@@ -25,6 +25,7 @@ type conditions struct {
 	Architecture          map[string]packageSet `yaml:"architecture,omitempty"`
 	VersionLessThan       map[string]packageSet `yaml:"version_less_than,omitempty"`
 	VersionGreaterOrEqual map[string]packageSet `yaml:"version_greater_or_equal,omitempty"`
+	DistroName            map[string]packageSet `yaml:"distro_name,omitempty"`
 }
 
 func Load(it distro.ImageType, replacements map[string]string) rpmmd.PackageSet {
@@ -65,6 +66,12 @@ func Load(it distro.ImageType, replacements map[string]string) rpmmd.PackageSet 
 			rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
 				Include: archSet.Include,
 				Exclude: archSet.Exclude,
+			})
+		}
+		if distroNameSet, ok := pkgSet.Condition.DistroName[distroName]; ok {
+			rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
+				Include: distroNameSet.Include,
+				Exclude: distroNameSet.Exclude,
 			})
 		}
 
