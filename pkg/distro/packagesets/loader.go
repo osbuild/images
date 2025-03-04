@@ -34,15 +34,19 @@ type conditions struct {
 }
 
 func Load(it distro.ImageType, replacements map[string]string) rpmmd.PackageSet {
-	typeName := strings.ReplaceAll(it.Name(), "-", "_")
-
 	arch := it.Arch()
-	archName := arch.Name()
-	distribution := arch.Distro()
-	distroNameVer := distribution.Name()
+	distro := arch.Distro()
+	return LoadByNames(distro.Name(), arch.Name(), it.Name(), replacements)
+}
+
+// XXX: fugly, we need this to workaround the fact that image installers
+// has two package sets and we load by image type not by package set
+func LoadByNames(distroNameVer, archName, imgType string, replacements map[string]string) rpmmd.PackageSet {
+	typeName := strings.ReplaceAll(imgType, "-", "_")
+
 	distroName := strings.SplitN(distroNameVer, "-", 2)[0]
 	distroNameMajorVer := strings.SplitN(distroNameVer, ".", 2)[0]
-	distroVersion := distribution.OsVersion()
+	distroVersion := strings.SplitN(distroNameVer, "-", 2)[1]
 
 	searchPath := []string{
 		filepath.Join(distroNameMajorVer, "package_sets.yaml"),
