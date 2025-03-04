@@ -750,6 +750,17 @@ func ImageInstallerImage(workload workload.Workload,
 		img.RootfsType = manifest.SquashfsRootfs
 	}
 
+	// Enable BIOS iso on x86_64 only
+	// Use grub2 on RHEL10, otherwise use syslinux
+	// NOTE: Will need to be updated for RHEL11 and later
+	if img.Platform.GetArch() == arch.ARCH_X86_64 {
+		if t.Arch().Distro().Releasever() == "10" {
+			img.ISOBoot = manifest.Grub2ISOBoot
+		} else {
+			img.ISOBoot = manifest.SyslinuxISOBoot
+		}
+	}
+
 	// put the kickstart file in the root of the iso
 	img.ISORootKickstart = true
 
