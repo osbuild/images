@@ -69,6 +69,16 @@ func Load(it distro.ImageType, overrideTypeName string, replacements map[string]
 		filepath.Join(distroNameMajorVer, "package_sets.yaml"),
 		filepath.Join(distroName, "package_sets.yaml"),
 	}
+	// XXX: fugly, symlinks would be nice but not supported via
+	// go:embed, we need a way so that the distro can declare what
+	// its an alias for
+	if distroName == "centos" {
+		searchPath = []string{
+			filepath.Join(fmt.Sprintf("rhel-%s", distroVersion), "package_sets.yaml"),
+			filepath.Join("rhel", "package_sets.yaml"),
+		}
+	}
+
 	var decoder *yaml.Decoder
 	for _, p := range searchPath {
 		f, err := DataFS.Open(p)
