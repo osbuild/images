@@ -737,6 +737,11 @@ func iotInstallerImage(workload workload.Workload,
 		img.RootfsType = manifest.SquashfsRootfs
 	}
 
+	// Enable grub2 BIOS iso on x86_64 only
+	if img.Platform.GetArch() == arch.ARCH_X86_64 {
+		img.ISOBoot = manifest.Grub2ISOBoot
+	}
+
 	if locale := t.getDefaultImageConfig().Locale; locale != nil {
 		img.Locale = *locale
 	}
