@@ -3,6 +3,7 @@ package packagesets
 import (
 	"embed"
 	"fmt"
+	"io/fs"
 	"path/filepath"
 	"strings"
 
@@ -13,7 +14,9 @@ import (
 )
 
 //go:embed */*.yaml
-var Data embed.FS
+var data embed.FS
+
+var DataFS fs.FS = data
 
 type packageSet struct {
 	Include   []string    `yaml:"include"`
@@ -25,6 +28,7 @@ type conditions struct {
 	Architecture          map[string]packageSet `yaml:"architecture,omitempty"`
 	VersionLessThan       map[string]packageSet `yaml:"version_less_than,omitempty"`
 	VersionGreaterOrEqual map[string]packageSet `yaml:"version_greater_or_equal,omitempty"`
+	DistroName            map[string]packageSet `yaml:"distro_name,omitempty"`
 }
 
 func Load(it distro.ImageType, replacements map[string]string) rpmmd.PackageSet {
@@ -34,10 +38,12 @@ func Load(it distro.ImageType, replacements map[string]string) rpmmd.PackageSet 
 	archName := arch.Name()
 	distribution := arch.Distro()
 	distroNameVer := distribution.Name()
-	distroName := strings.SplitN(distroNameVer, "-", 2)[0]
+	// we need to split from the right for "centos-stream-10" like
+	// distro names, sadly go has no rsplit() so we do it manually
+	distroName := distroNameVer[:strings.LastIndex(distroNameVer, "-")]
 	distroVersion := distribution.OsVersion()
 
-	distroSets, err := Data.Open(filepath.Join(distroName, "package_sets.yaml"))
+	distroSets, err := DataFS.Open(filepath.Join(distroName, "package_sets.yaml"))
 	if err != nil {
 		panic(err)
 	}
@@ -65,6 +71,12 @@ func Load(it distro.ImageType, replacements map[string]string) rpmmd.PackageSet 
 			rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
 				Include: archSet.Include,
 				Exclude: archSet.Exclude,
+			})
+		}
+		if distroNameSet, ok := pkgSet.Condition.DistroName[distroName]; ok {
+			rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
+				Include: distroNameSet.Include,
+				Exclude: distroNameSet.Exclude,
 			})
 		}
 
