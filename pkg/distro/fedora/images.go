@@ -6,6 +6,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/workload"
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/anaconda"
@@ -417,6 +418,11 @@ func liveInstallerImage(workload workload.Workload,
 
 	if common.VersionGreaterThanOrEqual(img.OSVersion, VERSION_ROOTFS_SQUASHFS) {
 		img.RootfsType = manifest.SquashfsRootfs
+	}
+
+	// Enable grub2 BIOS iso on x86_64 only
+	if img.Platform.GetArch() == arch.ARCH_X86_64 {
+		img.ISOBoot = manifest.Grub2ISOBoot
 	}
 
 	if locale := t.getDefaultImageConfig().Locale; locale != nil {
