@@ -3,6 +3,7 @@ package packagesets
 import (
 	"embed"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -36,15 +37,31 @@ func Load(it distro.ImageType, replacements map[string]string) rpmmd.PackageSet 
 	distribution := arch.Distro()
 	distroNameVer := distribution.Name()
 	distroName := strings.SplitN(distroNameVer, "-", 2)[0]
+	distroNameMajorVer := strings.SplitN(distroNameVer, ".", 2)[0]
 	distroVersion := distribution.OsVersion()
 
-	distroSets, err := Data.Open(filepath.Join(distroName, "package_sets.yaml"))
-	if err != nil {
-		panic(err)
+	searchPath := []string{
+		filepath.Join(distroNameMajorVer, "package_sets.yaml"),
+		filepath.Join(distroName, "package_sets.yaml"),
 	}
+	var decoder *yaml.Decoder
+	for _, p := range searchPath {
+		f, err := Data.Open(p)
+		if os.IsNotExist(err) {
+			continue
+		}
+		if err != nil {
+			panic(err)
+		}
+		defer f.Close()
 
-	decoder := yaml.NewDecoder(distroSets)
-	decoder.KnownFields(true)
+		decoder = yaml.NewDecoder(f)
+		decoder.KnownFields(true)
+		break
+	}
+	if decoder == nil {
+		panic(fmt.Errorf("cannot find package_set in %v", searchPath))
+	}
 
 	var pkgSets map[string]packageSet
 	if err := decoder.Decode(&pkgSets); err != nil {
