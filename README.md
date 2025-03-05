@@ -27,6 +27,27 @@ Please refer to the [developer guide](https://www.osbuild.org/docs/developer-gui
 
 See also the [local developer documentation](./docs/developer) for useful information about working with this specific project.
 
+#### YAML based image definitions
+
+More and more parts of the library are converted to use yaml to define core
+parts of an image. See this [example](./pkg/distro/packagesets/fedora/)
+directory. For local development that just changes the YAML based
+definitions the library can be forced to use alternative yaml dirs.
+
+E.g. if there is a `./my-yaml/fedora/package-sets.yaml` then that can be
+used via:
+```console
+$ IMAGE_BUILDER_EXPERIMENTAL=yamldir=./my-yaml image-builder build minimal-raw --distro fedora-42
+```
+WARNING: this is an experimental feature and unsupported feature that should
+never be used in production and may change anytime.
+
+We do plan to eventually stabilize this so that it can be a switch for
+the `image-builder` tool but for now this environment option is
+required.
+
+#### Build requirements
+
 The build-requirements of the Go library for Fedora and rpm-based distributions are:
 
 - `go`
