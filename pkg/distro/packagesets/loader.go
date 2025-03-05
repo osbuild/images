@@ -3,17 +3,21 @@ package packagesets
 import (
 	"embed"
 	"fmt"
+	"io/fs"
+	"os"
 	"path/filepath"
 	"strings"
 
+	"gopkg.in/yaml.v3"
+
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/experimentalflags"
 	"github.com/osbuild/images/pkg/rpmmd"
-	"gopkg.in/yaml.v3"
 )
 
 //go:embed */*.yaml
-var Data embed.FS
+var DataFS embed.FS
 
 type packageSet struct {
 	Include   []string    `yaml:"include"`
@@ -34,15 +38,23 @@ func Load(it distro.ImageType, replacements map[string]string) rpmmd.PackageSet 
 	archName := arch.Name()
 	distribution := arch.Distro()
 	distroNameVer := distribution.Name()
-	distroName := strings.SplitN(distroNameVer, "-", 2)[0]
+	// use rsplit() here, for "centos-stream-10" like distro names
+	distroName := distroNameVer[:strings.LastIndex(distroNameVer, "-")]
 	distroVersion := distribution.OsVersion()
 
-	distroSets, err := Data.Open(filepath.Join(distroName, "package_sets.yaml"))
+	// XXX: this is a short term measure, pass a set of
+	// searchPaths down the stack instead
+	var dataFS fs.FS = DataFS
+	if overrideDir := experimentalflags.String("yamldir"); overrideDir != "" {
+		dataFS = os.DirFS(overrideDir)
+	}
+	f, err := dataFS.Open(filepath.Join(distroName, "package_sets.yaml"))
 	if err != nil {
 		panic(err)
 	}
+	defer f.Close()
 
-	decoder := yaml.NewDecoder(distroSets)
+	decoder := yaml.NewDecoder(f)
 	decoder.KnownFields(true)
 
 	var pkgSets map[string]packageSet
