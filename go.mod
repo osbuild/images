@@ -1,11 +1,10 @@
 module github.com/osbuild/images
 
 go 1.22.8
-
-toolchain go1.22.11
+toolchain go1.23.7
 
 require (
-	cloud.google.com/go/compute v1.33.0
+	cloud.google.com/go/compute v1.34.0
 	cloud.google.com/go/storage v1.50.0
 	github.com/Azure/azure-sdk-for-go v68.0.0+incompatible
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.6.0
@@ -13,12 +12,12 @@ require (
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.13
 	github.com/BurntSushi/toml v1.4.0
 	github.com/aws/aws-sdk-go v1.55.6
-	github.com/containers/common v0.62.0
-	github.com/containers/image/v5 v5.34.0
+	github.com/containers/common v0.62.1
+	github.com/containers/image/v5 v5.34.1
 	github.com/containers/storage v1.57.1
 	github.com/gobwas/glob v0.2.3
 	github.com/golang-jwt/jwt/v4 v4.5.1
-	github.com/google/go-cmp v0.6.0
+	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/hashicorp/go-version v1.7.0
@@ -33,17 +32,17 @@ require (
 	github.com/ubccr/kerby v0.0.0-20230802201021-412be7bfaee5
 	github.com/vmware/govmomi v0.48.1
 	golang.org/x/exp v0.0.0-20250103183323-7d7fa50e5329
-	golang.org/x/oauth2 v0.26.0
+	golang.org/x/oauth2 v0.27.0
 	golang.org/x/sys v0.30.0
 	golang.org/x/tools v0.30.0
-	google.golang.org/api v0.221.0
+	google.golang.org/api v0.222.0
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
 	cel.dev/expr v0.19.0 // indirect
-	cloud.google.com/go v0.118.1 // indirect
+	cloud.google.com/go v0.118.2 // indirect
 	cloud.google.com/go/auth v0.14.1 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.7 // indirect
 	cloud.google.com/go/compute/metadata v0.6.0 // indirect
@@ -178,8 +177,8 @@ require (
 	golang.org/x/text v0.22.0 // indirect
 	golang.org/x/time v0.10.0 // indirect
 	google.golang.org/genproto v0.0.0-20250122153221-138b5a5a4fd4 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250124145028-65684f501c47 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250207221924-e9438ea467c6 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20250219182151-9fdb1cabc7b2 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250212204824-5a70512c5d8b // indirect
 	google.golang.org/grpc v1.70.0 // indirect
 	google.golang.org/protobuf v1.36.5 // indirect
 )
