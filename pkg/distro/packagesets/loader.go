@@ -4,6 +4,8 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"os"
+
 	"path/filepath"
 	"strings"
 
@@ -11,6 +13,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/experimentalflags"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
@@ -53,12 +56,19 @@ func Load(it distro.ImageType, overrideTypeName string, replacements map[string]
 	distroName := distroNameVer[:strings.LastIndex(distroNameVer, "-")]
 	distroVersion := distribution.OsVersion()
 
-	distroSets, err := DataFS.Open(filepath.Join(distroName, "package_sets.yaml"))
+	// XXX: this is a short term measure, pass a set of
+	// searchPaths down the stack instead
+	var dataFS fs.FS = DataFS
+	if overrideDir := experimentalflags.String("yamldir"); overrideDir != "" {
+		dataFS = os.DirFS(overrideDir)
+	}
+	f, err := dataFS.Open(filepath.Join(distroName, "package_sets.yaml"))
 	if err != nil {
 		return rpmmd.PackageSet{}, err
 	}
+	defer f.Close()
 
-	decoder := yaml.NewDecoder(distroSets)
+	decoder := yaml.NewDecoder(f)
 	decoder.KnownFields(true)
 
 	var pkgSets map[string]packageSet
