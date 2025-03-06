@@ -35,6 +35,15 @@ type BuildrootFromPackages struct {
 	packageSpecs []rpmmd.PackageSpec
 
 	containerBuildable bool
+
+	// XXX: disableSelinux controlls if selinux should be disabled
+	// for the given buildroot.  This is currently needed for
+	// bootstraped buildroot containers because most of the
+	// boostrap containers do not include setfiles(8). A
+	// reasonable fix is to teach osbuild to chroot into the
+	// buildroot itself when running setfiles. Once osbuild has
+	// this then this option would become "useChrootSetfiles"
+	disableSelinux bool
 }
 
 type BuildOptions struct {
@@ -62,7 +71,8 @@ func NewBuild(m *Manifest, runner runner.Runner, repos []rpmmd.RepoConfig, opts 
 	// This will add a bootstrap container When requested via the
 	// manifest options or an experimentalflag for
 	// e.g. cross-arch-build or cross-distro building.
-	maybeAddContainerBootstrap(m, runner, opts, pipeline)
+	// XXX: fix osbuld to support chroot(setfiles)
+	pipeline.disableSelinux = maybeAddContainerBootstrap(m, runner, opts, pipeline)
 
 	m.addPipeline(pipeline)
 	return pipeline
@@ -128,11 +138,13 @@ func (p *BuildrootFromPackages) serialize() osbuild.Pipeline {
 	pipeline.Runner = p.runner.String()
 
 	pipeline.AddStage(osbuild.NewRPMStage(osbuild.NewRPMStageOptions(p.repos), osbuild.NewRpmStageSourceFilesInputs(p.packageSpecs)))
-	pipeline.AddStage(osbuild.NewSELinuxStage(&osbuild.SELinuxStageOptions{
-		FileContexts: "etc/selinux/targeted/contexts/files/file_contexts",
-		Labels:       p.getSELinuxLabels(),
-	},
-	))
+	if !p.disableSelinux {
+		pipeline.AddStage(osbuild.NewSELinuxStage(&osbuild.SELinuxStageOptions{
+			FileContexts: "etc/selinux/targeted/contexts/files/file_contexts",
+			Labels:       p.getSELinuxLabels(),
+		},
+		))
+	}
 
 	return pipeline
 }
@@ -165,15 +177,14 @@ func (p *BuildrootFromPackages) getSELinuxLabels() map[string]string {
 // A "bootstrap" container has only these requirements:
 // - python3 for the runners
 // - rpm so that the real buildroot rpms can get installed
-// - setfiles so that the selinux stage for the real buildroot can run
 // (and does not even need a working dnf or repo setup).
-func maybeAddContainerBootstrap(m *Manifest, runner runner.Runner, opts *BuildOptions, build *BuildrootFromPackages) {
+func maybeAddContainerBootstrap(m *Manifest, runner runner.Runner, opts *BuildOptions, build *BuildrootFromPackages) bool {
 	bootstrapBuildrootRef := experimentalflags.String("bootstrap")
 	if bootstrapBuildrootRef == "" {
 		bootstrapBuildrootRef = m.DistroBootstrapRef
 	}
 	if bootstrapBuildrootRef == "" {
-		return
+		return false
 	}
 
 	cntSrcs := []container.SourceSpec{
@@ -192,6 +203,7 @@ func maybeAddContainerBootstrap(m *Manifest, runner runner.Runner, opts *BuildOp
 	}
 	m.addPipeline(bootstrapPipeline)
 	build.build = bootstrapPipeline
+	return true
 }
 
 type BuildrootFromContainer struct {
