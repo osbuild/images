@@ -69,11 +69,7 @@ func mkImageInstallerImgType(d distribution) imageType {
 		packageSets: map[string]packageSetFunc{
 			osPkgsKey: func(t *imageType) rpmmd.PackageSet {
 				// use the minimal raw image type for the OS package set
-				ft := &imageType{
-					name: "minimal-raw",
-					arch: t.arch,
-				}
-				return packagesets.Load(ft, VersionReplacements())
+				return packagesets.Load(t, "minimal-raw", VersionReplacements())
 			},
 			installerPkgsKey: packageSetLoader,
 		},

@@ -7,10 +7,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	"gopkg.in/yaml.v3"
+
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/rpmmd"
-	"gopkg.in/yaml.v3"
 )
 
 //go:embed */*.yaml
@@ -31,8 +32,16 @@ type conditions struct {
 	DistroName            map[string]packageSet `yaml:"distro_name,omitempty"`
 }
 
-func Load(it distro.ImageType, replacements map[string]string) rpmmd.PackageSet {
-	typeName := strings.ReplaceAll(it.Name(), "-", "_")
+// Load loads the PackageSet from the yaml source file discovered via the
+// imagetype. By default the imagetype name is used to load the packageset
+// but with "overrideTypeName" this can be overriden (useful for e.g.
+// installer image types).
+func Load(it distro.ImageType, overrideTypeName string, replacements map[string]string) rpmmd.PackageSet {
+	typeName := it.Name()
+	if overrideTypeName != "" {
+		typeName = overrideTypeName
+	}
+	typeName = strings.ReplaceAll(typeName, "-", "_")
 
 	arch := it.Arch()
 	archName := arch.Name()
@@ -40,6 +49,7 @@ func Load(it distro.ImageType, replacements map[string]string) rpmmd.PackageSet 
 	distroNameVer := distribution.Name()
 	// we need to split from the right for "centos-stream-10" like
 	// distro names, sadly go has no rsplit() so we do it manually
+	// XXX: we cannot use distroidparser here because of import cycles
 	distroName := distroNameVer[:strings.LastIndex(distroNameVer, "-")]
 	distroVersion := distribution.OsVersion()
 
