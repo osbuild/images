@@ -38,17 +38,19 @@ func makeFakePkgsSet(t *testing.T, distroName, content string) string {
 func TestLoadConditionDistro(t *testing.T) {
 	it := makeTestImageType(t)
 	fakePkgsSetYaml := `
-test_type:
-  include: [inc1]
-  exclude: [exc1]
-  condition:
-    distro_name:
-      test-distro:
-        include: [from-condition-inc2]
-        exclude: [from-condition-exc2]
-      other-distro:
-        include: [inc3]
-        exclude: [exc3]
+image_types:
+  test_type:
+    package_sets:
+      - include: [inc1]
+        exclude: [exc1]
+        condition:
+          distro_name:
+            test-distro:
+              include: [from-condition-inc2]
+              exclude: [from-condition-exc2]
+            other-distro:
+              include: [inc3]
+              exclude: [exc3]
 `
 	// XXX: we cannot use distro.Name() as it will give us a name+ver
 	baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, fakePkgsSetYaml)
@@ -58,7 +60,7 @@ test_type:
 	pkgSet, err := packagesets.Load(it, "", nil)
 	assert.NoError(t, err)
 	assert.Equal(t, rpmmd.PackageSet{
-		Include: []string{"inc1", "from-condition-inc2"},
+		Include: []string{"from-condition-inc2", "inc1"},
 		Exclude: []string{"exc1", "from-condition-exc2"},
 	}, pkgSet)
 }
@@ -66,12 +68,16 @@ test_type:
 func TestLoadOverrideTypeName(t *testing.T) {
 	it := makeTestImageType(t)
 	fakePkgsSetYaml := `
-override_name:
-  include: [from-override-inc1]
-  exclude: [from-override-exc1]
-test_type:
-  include: [default-inc2]
-  exclude: [default-exc2]
+image_types:
+  test_type:
+    package_sets:
+      - include: [default-inc2]
+        exclude: [default-exc2]
+  override_name:
+    package_sets:
+      - include: [from-override-inc1]
+        exclude: [from-override-exc1]
+
 `
 	// XXX: we cannot use distro.Name() as it will give us a name+ver
 	baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, fakePkgsSetYaml)
@@ -99,17 +105,20 @@ func TestLoadExperimentalYamldirIsHonored(t *testing.T) {
 	t.Setenv("IMAGE_BUILDER_EXPERIMENTAL", fmt.Sprintf("yamldir=%s", tmpdir))
 
 	fakePkgsSetYaml := []byte(`
-test_type:
-  include:
-    - inc1
-  exclude:
-    - exc1
+image_types:
+  test_type:
+    package_sets:
+      - include:
+          - inc1
+        exclude:
+          - exc1
 
-unrelated:
-  include:
-    - inc2
-  exclude:
-    - exc2
+  unrelated:
+    package_sets:
+      - include:
+          - inc2
+        exclude:
+          - exc2
 `)
 	// XXX: we cannot use distro.Name() as it will give us a name+ver
 	fakePkgsSetPath := filepath.Join(tmpdir, test_distro.TestDistroNameBase, "package_sets.yaml")
@@ -123,5 +132,48 @@ unrelated:
 	assert.Equal(t, rpmmd.PackageSet{
 		Include: []string{"inc1"},
 		Exclude: []string{"exc1"},
+	}, pkgSet)
+}
+
+func TestLoadYamlMergingWorks(t *testing.T) {
+	it := makeTestImageType(t)
+	fakePkgsSetYaml := `
+.common:
+  base: &base_pkgset
+    include: [from-base-inc]
+    exclude: [from-base-exc]
+    condition:
+      distro_name:
+        test-distro:
+          include: [from-base-condition-inc]
+          exclude: [from-base-condition-exc]
+image_types:
+  other_type:
+    package_sets:
+      - &other_type_pkgset
+        include: [from-other-type-inc]
+        exclude: [from-other-type-exc]
+  test_type:
+    package_sets:
+      - *base_pkgset
+      - *other_type_pkgset
+      - include: [from-type-inc]
+        exclude: [from-type-exc]
+        condition:
+          distro_name:
+            test-distro:
+              include: [from-condition-inc]
+              exclude: [from-condition-exc]
+`
+	// XXX: we cannot use distro.Name() as it will give us a name+ver
+	baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, fakePkgsSetYaml)
+	restore := packagesets.MockDataFS(baseDir)
+	defer restore()
+
+	pkgSet, err := packagesets.Load(it, "", nil)
+	assert.NoError(t, err)
+	assert.Equal(t, rpmmd.PackageSet{
+		Include: []string{"from-base-condition-inc", "from-base-inc", "from-condition-inc", "from-other-type-inc", "from-type-inc"},
+		Exclude: []string{"from-base-condition-exc", "from-base-exc", "from-condition-exc", "from-other-type-exc", "from-type-exc"},
 	}, pkgSet)
 }
