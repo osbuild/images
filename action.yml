@@ -1,0 +1,55 @@
+name: "check-spec-deps-action"
+description: "Check osbuild/images dependencies in SPEC file. The action is meant to be run in a Fedora environment."
+
+inputs:
+  specfile:
+    description: "The specfile to check. If not provided, the action will look for a single spec file in the repository"
+    required: false
+  images_path:
+    description: "The path to the vendored osbuild/images module. Default is './vendor/github.com/osbuild/images'."
+    default: "./vendor/github.com/osbuild/images"
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install action dependencies
+      shell: bash
+      run: sudo dnf install -y python3 python3-packaging /usr/bin/rpmspec
+
+    - name: Determine the SPEC file to check
+      shell: bash
+      env:
+        SPECFILE: ${{ inputs.specfile }}
+      run: |
+        if [[ -n "$SPECFILE" ]]; then
+          if [[ ! -f "$SPECFILE" ]]; then
+            echo "::error file=$SPECFILE,title=⛔ error hint::file not found"
+            exit 1
+          fi
+          echo "SPECFILE=$SPECFILE" >> $GITHUB_ENV
+        else
+          specfiles=$(find . -name '*.spec')
+          if [[ -z "$specfiles" ]]; then
+            echo "::error title=⛔ error hint::no SPEC file found in the repository"
+            exit 1
+          fi
+          if [[ $(echo "$specfiles" | wc -l) -ne 1 ]]; then
+            echo "::error title=⛔ error hint::multiple SPEC files found, please specify the 'specfile' input"
+            exit 1
+          fi
+          echo "SPECFILE=$specfiles" >> $GITHUB_ENV
+        fi
+
+    - name: Install SPEC build dependencies (for RPM macros)
+      shell: bash
+      env:
+        SPECFILE: ${{ env.SPECFILE }}
+      run: sudo dnf builddep -y $SPECFILE
+
+    - name: Check SPEC file against dependencies specified by osbuild/images
+      shell: bash
+      env:
+        SPECFILE: ${{ env.SPECFILE }}
+        IMAGES_PATH: ${{ inputs.images_path }}
+      run: $GITHUB_ACTION_PATH/check-spec-deps.py $SPECFILE $IMAGES_PATH

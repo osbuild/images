@@ -1,0 +1,34 @@
+---
+name: Tests
+
+on:
+  pull_request:
+    branches:
+      - "*"
+  push:
+    branches:
+      - check-spec-deps-action
+
+jobs:
+  python-lint:
+    name: "🐍 Lint"
+    runs-on: ubuntu-24.04
+    container: registry.fedoraproject.org/fedora:latest
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Install job dependencies
+        run: dnf -y install pylint ruff python3-packaging
+
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Run pylint
+        run: |
+            pylint --version
+            pylint *.py
+
+      - name: Run ruff
+        run: |
+          ruff --version
+          ruff check *.py
