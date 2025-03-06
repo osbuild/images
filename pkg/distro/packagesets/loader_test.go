@@ -37,17 +37,23 @@ func makeFakePkgsSet(t *testing.T, distroName, content string) string {
 func TestLoadConditionDistro(t *testing.T) {
 	it := makeTestImageType(t)
 	fakePkgsSetYaml := `
-test_type:
-  include: [inc1]
-  exclude: [exc1]
-  condition:
-    distro_name:
-      test-distro:
-        include: [from-condition-inc2]
-        exclude: [from-condition-exc2]
-      other-distro:
-        include: [inc3]
-        exclude: [exc3]
+image_types:
+  test_type:
+    package_sets:
+      - test_type_pkgset
+
+package_sets: 
+  test_type_pkgset:
+    include: [inc1]
+    exclude: [exc1]
+    condition:
+      distro_name:
+        test-distro:
+          include: [from-condition-inc2]
+          exclude: [from-condition-exc2]
+        other-distro:
+          include: [inc3]
+          exclude: [exc3]
 `
 	// XXX: we cannot use distro.Name() as it will give us a name+ver
 	baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, fakePkgsSetYaml)
@@ -57,7 +63,47 @@ test_type:
 	pkgSet := packagesets.Load(it, nil)
 	assert.NotNil(t, pkgSet)
 	assert.Equal(t, rpmmd.PackageSet{
-		Include: []string{"inc1", "from-condition-inc2"},
+		Include: []string{"from-condition-inc2", "inc1"},
 		Exclude: []string{"exc1", "from-condition-exc2"},
+	}, pkgSet)
+}
+
+func TestLoadYamlMergingWorks(t *testing.T) {
+	it := makeTestImageType(t)
+	fakePkgsSetYaml := `
+image_types:
+  test_type:
+    package_sets:
+      - base_pkgset
+      - test_type_pkgset
+
+package_sets:
+  base_pkgset:
+    include: [from-base-inc]
+    exclude: [from-base-exc]
+    condition:
+      distro_name:
+        test-distro:
+          include: [from-base-condition-inc]
+          exclude: [from-base-condition-exc]
+  test_type_pkgset:
+    include: [from-type-inc]
+    exclude: [from-type-exc]
+    condition:
+      distro_name:
+        test-distro:
+          include: [from-condition-inc]
+          exclude: [from-condition-exc]
+`
+	// XXX: we cannot use distro.Name() as it will give us a name+ver
+	baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, fakePkgsSetYaml)
+	restore := packagesets.MockDataFS(baseDir)
+	defer restore()
+
+	pkgSet := packagesets.Load(it, nil)
+	assert.NotNil(t, pkgSet)
+	assert.Equal(t, rpmmd.PackageSet{
+		Include: []string{"from-base-condition-inc", "from-base-inc", "from-condition-inc", "from-type-inc"},
+		Exclude: []string{"from-base-condition-exc", "from-base-exc", "from-condition-exc", "from-type-exc"},
 	}, pkgSet)
 }

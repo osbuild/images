@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/osbuild/images/internal/common"
@@ -17,6 +18,15 @@ import (
 var data embed.FS
 
 var DataFS fs.FS = data
+
+type toplevelYAML struct {
+	ImageTypes  map[string]imageType  `yaml:"image_types"`
+	PackageSets map[string]packageSet `yaml:"package_sets"`
+}
+
+type imageType struct {
+	PackageSets []string `yaml:"package_sets"`
+}
 
 type packageSet struct {
 	Include   []string    `yaml:"include"`
@@ -51,59 +61,73 @@ func Load(it distro.ImageType, replacements map[string]string) rpmmd.PackageSet 
 	decoder := yaml.NewDecoder(distroSets)
 	decoder.KnownFields(true)
 
-	var pkgSets map[string]packageSet
-	if err := decoder.Decode(&pkgSets); err != nil {
+	// each imagetype can have multiple package sets, so that we can
+	// use yaml aliases/anchors to de-duplicate them
+	var toplevel toplevelYAML
+	if err := decoder.Decode(&toplevel); err != nil {
 		panic(err)
 	}
 
-	pkgSet, ok := pkgSets[typeName]
+	imgType, ok := toplevel.ImageTypes[typeName]
 	if !ok {
-		panic(fmt.Sprintf("unknown package set name %q", typeName))
-	}
-	rpmmdPkgSet := rpmmd.PackageSet{
-		Include: pkgSet.Include,
-		Exclude: pkgSet.Exclude,
+		panic(fmt.Errorf("unknown image type name %q", typeName))
 	}
 
-	if pkgSet.Condition != nil {
-		// process conditions
-		if archSet, ok := pkgSet.Condition.Architecture[archName]; ok {
-			rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
-				Include: archSet.Include,
-				Exclude: archSet.Exclude,
-			})
-		}
-		if distroNameSet, ok := pkgSet.Condition.DistroName[distroName]; ok {
-			rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
-				Include: distroNameSet.Include,
-				Exclude: distroNameSet.Exclude,
-			})
+	var rpmmdPkgSet rpmmd.PackageSet
+	for _, pkgSetName := range imgType.PackageSets {
+		pkgSet, ok := toplevel.PackageSets[pkgSetName]
+		if !ok {
+			panic(fmt.Errorf("unknown package set name: %q", pkgSetName))
 		}
 
-		for ltVer, ltSet := range pkgSet.Condition.VersionLessThan {
-			if r, ok := replacements[ltVer]; ok {
-				ltVer = r
-			}
-			if common.VersionLessThan(distroVersion, ltVer) {
+		rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
+			Include: pkgSet.Include,
+			Exclude: pkgSet.Exclude,
+		})
+
+		if pkgSet.Condition != nil {
+			// process conditions
+			if archSet, ok := pkgSet.Condition.Architecture[archName]; ok {
 				rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
-					Include: ltSet.Include,
-					Exclude: ltSet.Exclude,
+					Include: archSet.Include,
+					Exclude: archSet.Exclude,
 				})
 			}
-		}
-
-		for gteqVer, gteqSet := range pkgSet.Condition.VersionGreaterOrEqual {
-			if r, ok := replacements[gteqVer]; ok {
-				gteqVer = r
-			}
-			if common.VersionGreaterThanOrEqual(distroVersion, gteqVer) {
+			if distroNameSet, ok := pkgSet.Condition.DistroName[distroName]; ok {
 				rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
-					Include: gteqSet.Include,
-					Exclude: gteqSet.Exclude,
+					Include: distroNameSet.Include,
+					Exclude: distroNameSet.Exclude,
 				})
+			}
+
+			for ltVer, ltSet := range pkgSet.Condition.VersionLessThan {
+				if r, ok := replacements[ltVer]; ok {
+					ltVer = r
+				}
+				if common.VersionLessThan(distroVersion, ltVer) {
+					rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
+						Include: ltSet.Include,
+						Exclude: ltSet.Exclude,
+					})
+				}
+			}
+
+			for gteqVer, gteqSet := range pkgSet.Condition.VersionGreaterOrEqual {
+				if r, ok := replacements[gteqVer]; ok {
+					gteqVer = r
+				}
+				if common.VersionGreaterThanOrEqual(distroVersion, gteqVer) {
+					rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
+						Include: gteqSet.Include,
+						Exclude: gteqSet.Exclude,
+					})
+				}
 			}
 		}
 	}
+	// mostly for tests
+	sort.Strings(rpmmdPkgSet.Include)
+	sort.Strings(rpmmdPkgSet.Exclude)
 
 	return rpmmdPkgSet
 }
