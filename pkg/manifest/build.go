@@ -3,7 +3,6 @@ package manifest
 import (
 	"fmt"
 
-	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/experimentalflags"
 	"github.com/osbuild/images/pkg/osbuild"
@@ -60,9 +59,10 @@ func NewBuild(m *Manifest, runner runner.Runner, repos []rpmmd.RepoConfig, opts 
 		containerBuildable: opts.ContainerBuildable,
 	}
 
-	// This allows to bootstrap the buildroot with a custom container
-	// for e.g. cross-arch-build experiments,
-	maybeAddExperimentalContainerBootstrap(m, runner, opts, pipeline)
+	// This will add a bootstrap container When requested via the
+	// manifest options or an experimentalflag for
+	// e.g. cross-arch-build or cross-distro building.
+	maybeAddContainerBootstrap(m, runner, opts, pipeline)
 
 	m.addPipeline(pipeline)
 	return pipeline
@@ -156,26 +156,30 @@ func (p *BuildrootFromPackages) getSELinuxLabels() map[string]string {
 	return labels
 }
 
-// maybeAddExperimentalContainerBootstrap will return a container buildroot
+// maybeAddContainerBootstrap will add a container bootstrap stage
 // if the "IMAGE_BUILDER_EXPERIMENTAL=bootstrap=<container-ref>" is
-// defined. This allows us to do cross-arch build experimentation.
+// defined or if the manifest contains DistroBootstrapRef.
+//
+// This allows us to do cross-arch/cross-distro builds.
 //
 // A "bootstrap" container has only these requirements:
 // - python3 for the runners
 // - rpm so that the real buildroot rpms can get installed
 // - setfiles so that the selinux stage for the real buildroot can run
 // (and does not even need a working dnf or repo setup).
-func maybeAddExperimentalContainerBootstrap(m *Manifest, runner runner.Runner, opts *BuildOptions, build *BuildrootFromPackages) {
+func maybeAddContainerBootstrap(m *Manifest, runner runner.Runner, opts *BuildOptions, build *BuildrootFromPackages) {
 	bootstrapBuildrootRef := experimentalflags.String("bootstrap")
+	if bootstrapBuildrootRef == "" {
+		bootstrapBuildrootRef = m.DistroBootstrapRef
+	}
 	if bootstrapBuildrootRef == "" {
 		return
 	}
 
 	cntSrcs := []container.SourceSpec{
 		{
-			Source:    bootstrapBuildrootRef,
-			Name:      bootstrapBuildrootRef,
-			TLSVerify: common.ToPtr(false),
+			Source: bootstrapBuildrootRef,
+			Name:   bootstrapBuildrootRef,
 		},
 	}
 	name := "bootstrap-buildroot"

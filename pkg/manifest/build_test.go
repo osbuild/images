@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -165,9 +164,8 @@ func TestNewBuildWithExperimentalOverride(t *testing.T) {
 			assert.True(t, ok)
 			assert.Equal(t, []container.SourceSpec{
 				{
-					Source:    "ghcr.io/ondrejbudai/cool:stuff",
-					Name:      "ghcr.io/ondrejbudai/cool:stuff",
-					TLSVerify: common.ToPtr(false),
+					Source: "ghcr.io/ondrejbudai/cool:stuff",
+					Name:   "ghcr.io/ondrejbudai/cool:stuff",
 				},
 			}, br.containers)
 
