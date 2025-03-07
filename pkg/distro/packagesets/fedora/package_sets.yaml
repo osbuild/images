@@ -772,7 +772,7 @@ image_installer:
         include:
           - "dmidecode"
 
-container: &container
+container:
   include:
     - "bash"
     - "coreutils"
@@ -786,7 +786,7 @@ container: &container
     - "tar"
     - "util-linux-core"
     - "vim-minimal"
-  exclude:
+  exclude: &container_exclude
     - "crypto-policies-scripts"
     - "dbus-broker"
     - "deltarpm"
@@ -818,8 +818,24 @@ container: &container
     - "whois-nls"
     - "xkeyboard-config"
 
+
 wsl:
-  <<: *container
+  include:
+    - "bash"
+    - "coreutils"
+    - "cloud-init"
+    - "yum"
+    - "dnf"
+    - "fedora-release-container"
+    - "glibc-minimal-langpack"
+    - "rootfiles"
+    - "rpm"
+    - "sudo"
+    - "tar"
+    - "util-linux-core"
+    - "vim-minimal"
+  exclude: *container_exclude
+
 
 minimal_raw: &minimal
   include:
