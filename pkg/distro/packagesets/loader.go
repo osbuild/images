@@ -4,7 +4,9 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -18,6 +20,15 @@ import (
 var data embed.FS
 
 var DataFS fs.FS = data
+
+type toplevelYAML struct {
+	ImageTypes map[string]imageType `yaml:"image_types"`
+	Common     map[string]any       `yaml:".common,omitempty"`
+}
+
+type imageType struct {
+	PackageSets []packageSet `yaml:"package_sets"`
+}
 
 type packageSet struct {
 	Include   []string    `yaml:"include"`
@@ -51,69 +62,104 @@ func Load(it distro.ImageType, overrideTypeName string, replacements map[string]
 	// distro names, sadly go has no rsplit() so we do it manually
 	// XXX: we cannot use distroidparser here because of import cycles
 	distroName := distroNameVer[:strings.LastIndex(distroNameVer, "-")]
-	distroVersion := distribution.OsVersion()
+	distroVersion := strings.SplitN(distroNameVer, "-", 2)[1]
+	distroNameMajorVer := strings.SplitN(distroNameVer, ".", 2)[0]
 
-	distroSets, err := DataFS.Open(filepath.Join(distroName, "package_sets.yaml"))
-	if err != nil {
+	searchPath := []string{
+		filepath.Join(distroNameMajorVer, "package_sets.yaml"),
+		filepath.Join(distroName, "package_sets.yaml"),
+	}
+	// XXX: fugly, symlinks would be nice but not supported via
+	// go:embed, we need a way so that the distro can declare what
+	// its an alias for
+	if distroName == "centos" {
+		searchPath = []string{
+			filepath.Join(fmt.Sprintf("rhel-%s", distroVersion), "package_sets.yaml"),
+			filepath.Join("rhel", "package_sets.yaml"),
+		}
+	}
+
+	var decoder *yaml.Decoder
+	for _, p := range searchPath {
+		f, err := DataFS.Open(p)
+		if os.IsNotExist(err) {
+			continue
+		}
+		if err != nil {
+			panic(err)
+		}
+		defer f.Close()
+
+		decoder = yaml.NewDecoder(f)
+		decoder.KnownFields(true)
+		break
+	}
+	if decoder == nil {
+		panic(fmt.Errorf("cannot find package_set in %v", searchPath))
+	}
+
+	// each imagetype can have multiple package sets, so that we can
+	// use yaml aliases/anchors to de-duplicate them
+	var toplevel toplevelYAML
+	if err := decoder.Decode(&toplevel); err != nil {
 		panic(err)
 	}
 
-	decoder := yaml.NewDecoder(distroSets)
-	decoder.KnownFields(true)
-
-	var pkgSets map[string]packageSet
-	if err := decoder.Decode(&pkgSets); err != nil {
-		panic(err)
-	}
-
-	pkgSet, ok := pkgSets[typeName]
+	imgType, ok := toplevel.ImageTypes[typeName]
 	if !ok {
-		panic(fmt.Sprintf("unknown package set name %q", typeName))
-	}
-	rpmmdPkgSet := rpmmd.PackageSet{
-		Include: pkgSet.Include,
-		Exclude: pkgSet.Exclude,
+		panic(fmt.Errorf("unknown image type name %q", typeName))
 	}
 
-	if pkgSet.Condition != nil {
-		// process conditions
-		if archSet, ok := pkgSet.Condition.Architecture[archName]; ok {
-			rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
-				Include: archSet.Include,
-				Exclude: archSet.Exclude,
-			})
-		}
-		if distroNameSet, ok := pkgSet.Condition.DistroName[distroName]; ok {
-			rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
-				Include: distroNameSet.Include,
-				Exclude: distroNameSet.Exclude,
-			})
-		}
+	var rpmmdPkgSet rpmmd.PackageSet
+	for _, pkgSet := range imgType.PackageSets {
+		rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
+			Include: pkgSet.Include,
+			Exclude: pkgSet.Exclude,
+		})
 
-		for ltVer, ltSet := range pkgSet.Condition.VersionLessThan {
-			if r, ok := replacements[ltVer]; ok {
-				ltVer = r
-			}
-			if common.VersionLessThan(distroVersion, ltVer) {
+		if pkgSet.Condition != nil {
+			// process conditions
+			if archSet, ok := pkgSet.Condition.Architecture[archName]; ok {
 				rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
-					Include: ltSet.Include,
-					Exclude: ltSet.Exclude,
+					Include: archSet.Include,
+					Exclude: archSet.Exclude,
 				})
 			}
-		}
-
-		for gteqVer, gteqSet := range pkgSet.Condition.VersionGreaterOrEqual {
-			if r, ok := replacements[gteqVer]; ok {
-				gteqVer = r
-			}
-			if common.VersionGreaterThanOrEqual(distroVersion, gteqVer) {
+			if distroNameSet, ok := pkgSet.Condition.DistroName[distroName]; ok {
 				rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
-					Include: gteqSet.Include,
-					Exclude: gteqSet.Exclude,
+					Include: distroNameSet.Include,
+					Exclude: distroNameSet.Exclude,
 				})
+			}
+
+			for ltVer, ltSet := range pkgSet.Condition.VersionLessThan {
+				if r, ok := replacements[ltVer]; ok {
+					ltVer = r
+				}
+				if common.VersionLessThan(distroVersion, ltVer) {
+					rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
+						Include: ltSet.Include,
+						Exclude: ltSet.Exclude,
+					})
+				}
+			}
+
+			for gteqVer, gteqSet := range pkgSet.Condition.VersionGreaterOrEqual {
+				if r, ok := replacements[gteqVer]; ok {
+					gteqVer = r
+				}
+				if common.VersionGreaterThanOrEqual(distroVersion, gteqVer) {
+					rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
+						Include: gteqSet.Include,
+						Exclude: gteqSet.Exclude,
+					})
+				}
 			}
 		}
 	}
+	// mostly for tests
+	sort.Strings(rpmmdPkgSet.Include)
+	sort.Strings(rpmmdPkgSet.Exclude)
 
 	return rpmmdPkgSet
 }
