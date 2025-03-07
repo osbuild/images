@@ -256,7 +256,10 @@ func genPartitionTable(genPartInput *Input, rng *rand.Rand) (*Output, error) {
 		fname = genPartInput.Modifications.Filename
 	}
 
-	kernelOptions := osbuild.GenImageKernelOptions(pt)
+	_, kernelOptions, err := osbuild.GenImageKernelOptions(pt, false) // NOTE: this generator doesn't support using mount units
+	if err != nil {
+		return nil, err
+	}
 	otkPart := &Output{
 		Const: otkdisk.Const{
 			Internal: otkdisk.Internal{

@@ -16,6 +16,7 @@ import (
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/experimentalflags"
 	"github.com/osbuild/images/pkg/image"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/platform"
@@ -42,7 +43,7 @@ type imageType struct {
 	packageSets            map[string]packageSetFunc
 	defaultImageConfig     *distro.ImageConfig
 	defaultInstallerConfig *distro.InstallerConfig
-	kernelOptions          string
+	kernelOptions          []string
 	defaultSize            uint64
 	buildPipelines         []string
 	payloadPipelines       []string
@@ -276,6 +277,16 @@ func (t *imageType) Manifest(bp *blueprint.Blueprint,
 			cw.DisabledServices = services.Disabled
 		}
 		w = cw
+	}
+
+	if experimentalflags.Bool("no-fstab") {
+		if t.defaultImageConfig == nil {
+			t.defaultImageConfig = &distro.ImageConfig{
+				MountUnits: common.ToPtr(true),
+			}
+		} else {
+			t.defaultImageConfig.MountUnits = common.ToPtr(true)
+		}
 	}
 
 	containerSources := make([]container.SourceSpec, len(bp.Containers))
