@@ -824,7 +824,6 @@ wsl:
 minimal_raw: &minimal
   include:
     - "@core"
-    - "initial-setup"
     - "libxkbcommon"
     - "NetworkManager-wifi"
     - "brcmfmac-firmware"
