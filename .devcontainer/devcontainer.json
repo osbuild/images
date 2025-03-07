@@ -1,5 +1,5 @@
 {
-  "name": "images",
+  "name": "Fedora",
   "build": {
     "dockerfile": "Dockerfile",
     "context": ".."
