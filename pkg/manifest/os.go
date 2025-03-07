@@ -906,8 +906,22 @@ func (p *OS) getInline() []string {
 
 	// inline data for custom files
 	for _, file := range p.Files {
-		inlineData = append(inlineData, string(file.Data()))
+		if file.Ref() == "" {
+			inlineData = append(inlineData, string(file.Data()))
+		}
 	}
 
 	return inlineData
+}
+
+func (p *OS) fileRefs() []string {
+	var fileRefs []string
+
+	for _, file := range p.Files {
+		if file.Ref() != "" {
+			fileRefs = append(fileRefs, file.Ref())
+		}
+	}
+
+	return fileRefs
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/osbuild/images/pkg/customizations/fsnode"
+	"github.com/osbuild/images/pkg/hashutil"
 )
 
 // GenFileNodesStages generates the stages for a list of file nodes.
@@ -22,7 +23,16 @@ func GenFileNodesStages(files []*fsnode.File) []*Stage {
 	chownPaths := make(map[string]ChownStagePathOptions)
 
 	for _, file := range files {
-		fileDataChecksum := fmt.Sprintf("%x", sha256.Sum256(file.Data()))
+		var fileDataChecksum string
+		if file.Ref() == "" {
+			fileDataChecksum = fmt.Sprintf("%x", sha256.Sum256(file.Data()))
+		} else {
+			var err error
+			fileDataChecksum, err = hashutil.Sha256sum(file.Ref())
+			if err != nil {
+				panic(err)
+			}
+		}
 		copyStageInputKey := fmt.Sprintf("file-%s", fileDataChecksum)
 		copyStagePaths = append(copyStagePaths, CopyStagePath{
 			From: fmt.Sprintf("input://%s/sha256:%s", copyStageInputKey, fileDataChecksum),
