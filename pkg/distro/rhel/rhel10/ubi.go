@@ -14,7 +14,7 @@ func mkWSLImgType() *rhel.ImageType {
 		"disk.tar.gz",
 		"application/x-tar",
 		map[string]rhel.PackageSetFunc{
-			rhel.OSPkgsKey: ubiCommonPackageSet,
+			rhel.OSPkgsKey: wslPackageSet,
 		},
 		rhel.TarImage,
 		[]string{"build"},
@@ -23,6 +23,20 @@ func mkWSLImgType() *rhel.ImageType {
 	)
 
 	it.DefaultImageConfig = &distro.ImageConfig{
+		CloudInit: []*osbuild.CloudInitStageOptions{
+			{
+				Filename: "99_wsl.cfg",
+				Config: osbuild.CloudInitConfigFile{
+					DatasourceList: []string{
+						"WSL",
+						"None",
+					},
+					Network: &osbuild.CloudInitConfigNetwork{
+						Config: "disabled",
+					},
+				},
+			},
+		},
 		NoSElinux: common.ToPtr(true),
 		WSLConfig: &osbuild.WSLConfStageOptions{
 			Boot: osbuild.WSLConfBootOptions{
@@ -92,4 +106,14 @@ func ubiCommonPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
 	}
 
 	return ps
+}
+
+func wslPackageSet(t *rhel.ImageType) rpmmd.PackageSet {
+	pkgset := ubiCommonPackageSet(t)
+	pkgset = pkgset.Append(rpmmd.PackageSet{
+		Include: []string{
+			"cloud-init",
+		},
+	})
+	return pkgset
 }

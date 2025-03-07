@@ -772,7 +772,7 @@ image_installer:
         include:
           - "dmidecode"
 
-container: &container
+container:
   include:
     - "bash"
     - "coreutils"
@@ -818,8 +818,49 @@ container: &container
     - "whois-nls"
     - "xkeyboard-config"
 
+
 wsl:
-  <<: *container
+  include:
+    - "bash"
+    - "coreutils"
+    - "cloud-init"
+    - "yum"
+    - "dnf"
+    - "fedora-release-container"
+    - "glibc-minimal-langpack"
+    - "rootfiles"
+    - "rpm"
+    - "sudo"
+    - "tar"
+    - "util-linux-core"
+    - "vim-minimal"
+  exclude:
+    - "crypto-policies-scripts"
+    - "deltarpm"
+    - "dosfstools"
+    - "elfutils-debuginfod-client"
+    - "gawk-all-langpacks"
+    - "glibc-gconv-extra"
+    - "glibc-langpack-en"
+    - "gnupg2-smime"
+    - "grubby"
+    - "kernel-core"
+    - "kernel-debug-core"
+    - "kernel"
+    - "langpacks-en_GB"
+    - "langpacks-en"
+    - "libxcrypt-compat"
+    - "nano"
+    - "openssl-pkcs11"
+    - "pinentry"
+    - "python3-unbound"
+    - "shared-mime-info"
+    - "sssd-client"
+    - "sudo-python-plugin"
+    - "trousers"
+    - "whois-nls"
+    - "xkeyboard-config"
+
 
 minimal_raw: &minimal
   include:
