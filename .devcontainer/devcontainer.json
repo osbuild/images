@@ -13,5 +13,6 @@
   "extensions": [
     "golang.Go",
     "GitHub.vscode-pull-request-github"
-  ]
+  ],
+  "postStartCommand": "go mod tidy"
 }
