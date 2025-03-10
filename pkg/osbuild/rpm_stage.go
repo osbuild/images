@@ -126,15 +126,23 @@ func NewRpmStageSourceFilesInputs(specs []rpmmd.PackageSpec) *RPMStageInputs {
 }
 
 func pkgRefs(specs []rpmmd.PackageSpec) FilesInputRef {
-	refs := make([]FilesInputSourceArrayRefEntry, len(specs))
-	for idx, pkg := range specs {
+	refs := make([]FilesInputSourceArrayRefEntry, 0, len(specs))
+
+	// skip duplicated pkgs
+	seenChksums := make(map[string]bool, len(specs))
+	for _, pkg := range specs {
+		if seenChksums[pkg.Checksum] {
+			continue
+		}
+		seenChksums[pkg.Checksum] = true
+
 		var pkgMetadata FilesInputRefMetadata
 		if pkg.CheckGPG {
 			pkgMetadata = &RPMStageReferenceMetadata{
 				CheckGPG: pkg.CheckGPG,
 			}
 		}
-		refs[idx] = NewFilesInputSourceArrayRefEntry(pkg.Checksum, pkgMetadata)
+		refs = append(refs, NewFilesInputSourceArrayRefEntry(pkg.Checksum, pkgMetadata))
 	}
 	return NewFilesInputSourceArrayRef(refs)
 }
