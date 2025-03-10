@@ -13,7 +13,7 @@ func TestNewGrub2InstStage(t *testing.T) {
 	options := Grub2InstStageOptions{
 		Filename: "img.raw",
 		Platform: "i386-pc",
-		Location: 2048,
+		Location: common.ToPtr(uint64(2048)),
 		Core: CoreMkImage{
 			Type:       "mkimage",
 			PartLabel:  "gpt",
@@ -22,7 +22,7 @@ func TestNewGrub2InstStage(t *testing.T) {
 		Prefix: PrefixPartition{
 			Type:      "partition",
 			PartLabel: "gpt",
-			Number:    1,
+			Number:    common.ToPtr(uint(1)),
 			Path:      "/boot/grub2",
 		},
 		SectorSize: common.ToPtr(uint64(512)),
@@ -42,7 +42,7 @@ func TestMarshalGrub2InstStage(t *testing.T) {
 		return Grub2InstStageOptions{
 			Filename: "img.raw",
 			Platform: "i386-pc",
-			Location: 2048,
+			Location: common.ToPtr(uint64(2048)),
 			Core: CoreMkImage{
 				Type:       "mkimage",
 				PartLabel:  "gpt",
@@ -51,7 +51,7 @@ func TestMarshalGrub2InstStage(t *testing.T) {
 			Prefix: PrefixPartition{
 				Type:      "partition",
 				PartLabel: "gpt",
-				Number:    1,
+				Number:    common.ToPtr(uint(1)),
 				Path:      "/boot/grub2",
 			},
 			SectorSize: common.ToPtr(uint64(512)),
@@ -110,4 +110,11 @@ func TestMarshalGrub2InstStage(t *testing.T) {
 		_, err := json.Marshal(stage)
 		assert.Error(t, err)
 	}
+}
+
+func TestMarshalGrub2InstStageISO9660(t *testing.T) {
+	options := NewGrub2InstISO9660StageOption("image/eltorito.img", "/boot/grub2")
+	stage := NewGrub2InstStage(options)
+	_, err := json.Marshal(stage)
+	assert.NoError(t, err)
 }

@@ -33,8 +33,8 @@ func newTestAnacondaISOTree() *AnacondaInstallerISOTree {
 
 	x86plat := &platform.X86{}
 
-	product := ""
-	osversion := ""
+	product := "test-iso"
+	osversion := "1"
 
 	preview := false
 
@@ -50,6 +50,7 @@ func newTestAnacondaISOTree() *AnacondaInstallerISOTree {
 	)
 	rootfsImagePipeline := NewISORootfsImg(build, anacondaPipeline)
 	bootTreePipeline := NewEFIBootTree(build, product, osversion)
+	bootTreePipeline.ISOLabel = "test-iso-1"
 
 	pipeline := NewAnacondaInstallerISOTree(build, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
 	// copy of the default in pkg/image - will be moved to the pipeline
@@ -329,12 +330,12 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 			append(variantStages, "org.osbuild.isolinux")))
 	})
 
-	// enable ISOLinux and check for stage
-	t.Run("kspath+isolinux", func(t *testing.T) {
+	// enable syslinux iso and check for stage
+	t.Run("kspath+syslinux", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.OSPipeline = osPayload
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
-		pipeline.ISOLinux = true
+		pipeline.ISOBoot = SyslinuxISOBoot
 		pipeline.serializeStart(Inputs{})
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
@@ -342,11 +343,30 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 			variantStages))
 	})
 
+	// enable grub2 iso and check for stage
+	t.Run("kspath+grub2iso", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.OSPipeline = osPayload
+		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
+		pipeline.ISOBoot = Grub2ISOBoot
+		pipeline.serializeStart(Inputs{})
+		sp := pipeline.serialize()
+		pipeline.serializeEnd()
+
+		// No isolinux stage
+		assert.Error(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux",
+			"org.osbuild.kickstart"), variantStages))
+
+		// Grub2 BIOS iso uses org.osbuild.grub2.iso.legacy
+		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.grub2.iso.legacy",
+			"org.osbuild.kickstart"), variantStages))
+	})
+
 	t.Run("unattended", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.OSPipeline = osPayload
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath, Unattended: true}
-		pipeline.ISOLinux = true
+		pipeline.ISOBoot = SyslinuxISOBoot
 		pipeline.serializeStart(Inputs{})
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
@@ -363,7 +383,7 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 			Unattended:   true,
 			SudoNopasswd: []string{`%wheel`, `%sudo`},
 		}
-		pipeline.ISOLinux = true
+		pipeline.ISOBoot = SyslinuxISOBoot
 		pipeline.serializeStart(Inputs{})
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
@@ -383,7 +403,7 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 				Contents: userks,
 			},
 		}
-		pipeline.ISOLinux = true
+		pipeline.ISOBoot = SyslinuxISOBoot
 		pipeline.serializeStart(Inputs{})
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
@@ -403,7 +423,7 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 				Contents: userks,
 			},
 		}
-		pipeline.ISOLinux = true
+		pipeline.ISOBoot = SyslinuxISOBoot
 		pipeline.serializeStart(Inputs{})
 		assert.Panics(t, func() { pipeline.serialize() })
 	})
@@ -419,7 +439,7 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 				Contents: userks,
 			},
 		}
-		pipeline.ISOLinux = true
+		pipeline.ISOBoot = SyslinuxISOBoot
 		pipeline.serializeStart(Inputs{})
 		assert.Panics(t, func() { pipeline.serialize() })
 	})
@@ -479,11 +499,11 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 			append(variantStages, "org.osbuild.isolinux")))
 	})
 
-	// enable ISOLinux and check for stage
+	// enable syslinux iso and check for stage
 	t.Run("isolinux", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath, OSTree: &kickstart.OSTree{}}
-		pipeline.ISOLinux = true
+		pipeline.ISOBoot = SyslinuxISOBoot
 		pipeline.serializeStart(Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
@@ -493,7 +513,7 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 	t.Run("unattended", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath, Unattended: true, OSTree: &kickstart.OSTree{}}
-		pipeline.ISOLinux = true
+		pipeline.ISOBoot = SyslinuxISOBoot
 		pipeline.serializeStart(Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
@@ -509,7 +529,7 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 			SudoNopasswd: []string{`%wheel`, `%sudo`},
 			OSTree:       &kickstart.OSTree{},
 		}
-		pipeline.ISOLinux = true
+		pipeline.ISOBoot = SyslinuxISOBoot
 		pipeline.serializeStart(Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
@@ -528,7 +548,7 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 			},
 			OSTree: &kickstart.OSTree{},
 		}
-		pipeline.ISOLinux = true
+		pipeline.ISOBoot = SyslinuxISOBoot
 		pipeline.serializeStart(Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
@@ -547,7 +567,7 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 			},
 			OSTree: &kickstart.OSTree{},
 		}
-		pipeline.ISOLinux = true
+		pipeline.ISOBoot = SyslinuxISOBoot
 		pipeline.serializeStart(Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
 		assert.Panics(t, func() { pipeline.serialize() })
 	})
@@ -564,7 +584,7 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 			SudoNopasswd: []string{`%wheel`, `%sudo`},
 			OSTree:       &kickstart.OSTree{},
 		}
-		pipeline.ISOLinux = true
+		pipeline.ISOBoot = SyslinuxISOBoot
 		pipeline.serializeStart(Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
 		assert.Panics(t, func() { pipeline.serialize() })
 	})
@@ -628,11 +648,11 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 			append(variantStages, "org.osbuild.isolinux")))
 	})
 
-	// enable ISOLinux and check again
+	// enable syslinux iso and check again
 	t.Run("isolinux", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
-		pipeline.ISOLinux = true
+		pipeline.ISOBoot = SyslinuxISOBoot
 		pipeline.serializeStart(Inputs{Containers: []container.Spec{containerPayload}})
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
@@ -677,7 +697,7 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 				Contents: userks,
 			},
 		}
-		pipeline.ISOLinux = true
+		pipeline.ISOBoot = SyslinuxISOBoot
 		pipeline.serializeStart(Inputs{Containers: []container.Spec{containerPayload}})
 		sp := pipeline.serialize()
 		pipeline.serializeEnd()
