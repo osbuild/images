@@ -34,9 +34,6 @@
                   "id": "sha256:bf35d0b80342ad44ca298ed07fcc9d3f8d43a2700964586a4a5e2c0a49766528"
                 },
                 {
-                  "id": "sha256:bf35d0b80342ad44ca298ed07fcc9d3f8d43a2700964586a4a5e2c0a49766528"
-                },
-                {
                   "id": "sha256:e0031c189e34e10d9c202fa8d75f72d3296a239164fe6b07e7dc206c7b723d98"
                 },
                 {
@@ -84,9 +81,6 @@
               "references": [
                 {
                   "id": "sha256:93cd8e20fc07f08337cb9d9fa9996274658f6395574e874379c4c4157e922700"
-                },
-                {
-                  "id": "sha256:bf35d0b80342ad44ca298ed07fcc9d3f8d43a2700964586a4a5e2c0a49766528"
                 },
                 {
                   "id": "sha256:bf35d0b80342ad44ca298ed07fcc9d3f8d43a2700964586a4a5e2c0a49766528"
