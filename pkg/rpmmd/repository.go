@@ -139,11 +139,15 @@ func (pkg Package) ToPackageInfo() PackageInfo {
 // to exclude. The Repositories are used when depsolving this package set in
 // addition to the base repositories.
 type PackageSet struct {
-	Include         []string
-	Exclude         []string
-	EnabledModules  []string
-	Repositories    []RepoConfig
-	InstallWeakDeps bool
+	// The json tags aren't lowercase because they were omitted when
+	// this struct was created. In the meantime it is used directly
+	// in osbuild-composer's depsolve job arguments, meaning any
+	// change in the serialized struct could break the depsolve job.
+	Include         []string     `json:"Include"`
+	Exclude         []string     `json:"Exclude"`
+	EnabledModules  []string     `json:"EnabledModules"`
+	Repositories    []RepoConfig `json:"Repositories"`
+	InstallWeakDeps bool         `json:"InstallWeakDeps"`
 }
 
 // Append the Include and Exclude package list from another PackageSet and
