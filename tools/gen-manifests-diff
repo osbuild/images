@@ -1,0 +1,72 @@
+#!/usr/bin/python3
+#
+# gen-manifests-diff is a helper to diff the generated manifests
+# against what the current "main" of the images library would do.
+#
+# Alternatively a revision can be given as the first argument
+# and with that the diff is calculated against that. All images
+# types and architectures are used by default. It is still
+# very fast (typically 3s).
+
+import os
+import pathlib
+import subprocess
+import sys
+import tempfile
+
+# TODO: omit once we have a "riscv64" mirror and sources entry
+arches = ["x86_64", "aarch64", "ppc64el", "s390x"]
+
+
+def top_srcdir() -> pathlib.Path:
+    d = pathlib.Path(__file__).parent
+    while not (d / "cmd" / "gen-manifests").exists():
+        d = d.parent
+        if d == "/":
+            raise RuntimeError("cannot find gen-manifests dir")
+    return d
+
+
+def run_gen_manifests(cmd, output_dir):
+    env = os.environ.copy()
+    env["OSBUILD_TESTING_RNG_SEED"] = "0"
+    subprocess.run(cmd + [
+        "-packages=false",
+        "-metadata=false",
+        "-containers=false",
+        "-arches", ",".join(arches),
+        "-output", output_dir,
+    ], env=env, text=True, capture_output=True, check=True)
+
+
+def manifests_diff(tmp_path, rev):
+    manifests_old = tmp_path / "ref"
+    manifests_new = tmp_path / "new"
+
+    print(f"calculating diff against {rev}")
+    cmd_new = ["go", "run", f"github.com/osbuild/images/cmd/gen-manifests@{rev}"]
+    run_gen_manifests(cmd_new, manifests_old)
+
+    cmd_new = ["go", "run", os.fspath(top_srcdir() / "cmd/gen-manifests")]
+    run_gen_manifests(cmd_new, manifests_new)
+
+    ret = subprocess.run([
+        "diff", "-uNr", manifests_old, manifests_new,
+    ], capture_output=True, text=True, check=False)
+    if ret.returncode == 0:
+        print(f"no diff found to '{rev}'")
+    else:
+        print(f"found difference between {manifests_new} and reference manifests:")
+        print(ret.stdout)
+
+
+def main():
+    rev = "main"
+    if len(sys.argv) > 1:
+        rev = sys.argv[1]
+    with tempfile.TemporaryDirectory() as tmpdir:
+        manifests_diff(pathlib.Path(tmpdir), rev)
+
+
+if __name__ == "__main__":
+    main()
