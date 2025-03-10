@@ -1,5 +1,5 @@
 {
-  "name": "images",
+  "name": "Fedora",
   "build": {
     "dockerfile": "Dockerfile",
     "context": ".."
@@ -13,5 +13,6 @@
   "extensions": [
     "golang.Go",
     "GitHub.vscode-pull-request-github"
-  ]
+  ],
+  "postStartCommand": "go mod tidy"
 }
