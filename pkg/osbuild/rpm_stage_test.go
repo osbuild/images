@@ -154,6 +154,20 @@ func TestNewRpmStageSourceFilesInputs(t *testing.T) {
 			CheckGPG:       true,
 			IgnoreSSL:      true,
 		},
+		// duplicated on purpose to ensure we only add the same
+		// ID only once to make the manifests more stable.
+		{
+			Name:           "package-with-md5-checksum",
+			Epoch:          1,
+			Version:        "3.4.2.",
+			Release:        "5.el9",
+			Arch:           "x86_64",
+			RemoteLocation: "https://example.com/repo/Packages/package-with-md5-checksum-4.3.2-5.el9.x86_64.rpm",
+			Checksum:       "md5:8133f479f38118c5f9facfe2a2d9a071",
+			Secrets:        "",
+			CheckGPG:       true,
+			IgnoreSSL:      true,
+		},
 	}
 	inputs := NewRpmStageSourceFilesInputs(pkgSpecs)
 
@@ -179,4 +193,6 @@ func TestNewRpmStageSourceFilesInputs(t *testing.T) {
 			assert.Equal(md.CheckGPG, pkg.CheckGPG)
 		}
 	}
+	// the duplicated entry is not part of the resulting refs array
+	assert.Equal(len(pkgSpecs)-1, len(refsArray))
 }
