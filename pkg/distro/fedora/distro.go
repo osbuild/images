@@ -420,6 +420,20 @@ func mkWslImgType(d distribution) imageType {
 			osPkgsKey: packageSetLoader,
 		},
 		defaultImageConfig: &distro.ImageConfig{
+			CloudInit: []*osbuild.CloudInitStageOptions{
+				{
+					Filename: "99_wsl.cfg",
+					Config: osbuild.CloudInitConfigFile{
+						DatasourceList: []string{
+							"WSL",
+							"None",
+						},
+						Network: &osbuild.CloudInitConfigNetwork{
+							Config: "disabled",
+						},
+					},
+				},
+			},
 			NoSElinux:   common.ToPtr(true),
 			ExcludeDocs: common.ToPtr(true),
 			Locale:      common.ToPtr("C.UTF-8"),
