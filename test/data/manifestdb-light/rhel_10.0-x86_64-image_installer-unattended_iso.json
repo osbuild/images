@@ -1,0 +1,1875 @@
+{
+  "version": "2",
+  "pipelines": [
+    {
+      "name": "build",
+      "runner": "org.osbuild.rhel100",
+      "stages": [
+        {
+          "type": "org.osbuild.rpm",
+          "inputs": {
+            "packages": {
+              "type": "org.osbuild.files",
+              "origin": "org.osbuild.source",
+              "references": [
+                {
+                  "id": "sha256:3993c379c029014a9c4b2adf5d23397b3c7421467a0cb3575ff925bb6f6329b0"
+                },
+                {
+                  "id": "sha256:e2f24de304a49d3d3c1261466376ab341c3834eb683d806cb534587f4fd48f8d"
+                },
+                {
+                  "id": "sha256:1b11757d33424678ba2d9d6fbd9eb6293a7bfa196dca15a29af179af778c235d"
+                },
+                {
+                  "id": "sha256:dbf9956aa9c5ccd4c6d92f0550e959f58bb815fb570c305e9d93645eee2082d4"
+                },
+                {
+                  "id": "sha256:021b0fc809e1245cc6021a779e094bba7191085b7a31ce4c05490b9cc79eacc7"
+                },
+                {
+                  "id": "sha256:a07b0a6df6f248078ebaf93e5bea115093f8a79e0a830e383b6c0b9f7f1605f5"
+                },
+                {
+                  "id": "sha256:a07b0a6df6f248078ebaf93e5bea115093f8a79e0a830e383b6c0b9f7f1605f5"
+                },
+                {
+                  "id": "sha256:c5c5b49ed7ea2ff99b6eb892df08b33bafc927a7712b7aaa942627531e0378d2"
+                },
+                {
+                  "id": "sha256:eaa83a86c658bfd0c01894a695993f394ee51794f31dc607f4a47e31cb50fc6d"
+                },
+                {
+                  "id": "sha256:79e849ef6eca219446118ca179bf7aa8bc5469a1c92b4696d67f6bee2dc26764"
+                },
+                {
+                  "id": "sha256:72aec6b0d35ecb35b97ca9f0804c8a6ab055855a00ae7e8356276acca976a393"
+                },
+                {
+                  "id": "sha256:f7b582e05483b8a5ecc5804365d363ae91a5cbb5dd4f38f3f10e79634ebcf70c"
+                },
+                {
+                  "id": "sha256:dad715e4ad49fa30f5a61dec5fcf18cfad20e349b90818913f99f163615266cd"
+                },
+                {
+                  "id": "sha256:8a1bf05d306aa663e856f3c450c8b2ddc6800116b818c7d3b65503cd89f7682a"
+                },
+                {
+                  "id": "sha256:93cd8e20fc07f08337cb9d9fa9996274658f6395574e874379c4c4157e922700"
+                },
+                {
+                  "id": "sha256:c1cc69e61c0f1c7ade8df0f2994e582e7c1f2c57d1ec192a0baf9f96b7739d9d"
+                },
+                {
+                  "id": "sha256:9e7ab438597fee20e16e8e441bed0ce966bd59e0fb993fa7c94be31fb1384d88"
+                },
+                {
+                  "id": "sha256:9e7ab438597fee20e16e8e441bed0ce966bd59e0fb993fa7c94be31fb1384d88"
+                },
+                {
+                  "id": "sha256:bf35d0b80342ad44ca298ed07fcc9d3f8d43a2700964586a4a5e2c0a49766528"
+                },
+                {
+                  "id": "sha256:bf35d0b80342ad44ca298ed07fcc9d3f8d43a2700964586a4a5e2c0a49766528"
+                },
+                {
+                  "id": "sha256:9370ee4e95b7172989b9fd3f81860093529113ba42b69be340467d87a94bb253"
+                },
+                {
+                  "id": "sha256:a788847c8c115aa9ae27ca92230418e77b3b36a6424f1d4f3436633864c93db9"
+                },
+                {
+                  "id": "sha256:ff288c563531a45d3e848ddc70320f148964ae93b088ebcafa67cd2a2f0b4d9a"
+                },
+                {
+                  "id": "sha256:746ce7b983a2448f60202b7e25bc5814b8d8962d6ce867eebda2ba65c0daade8"
+                },
+                {
+                  "id": "sha256:e0031c189e34e10d9c202fa8d75f72d3296a239164fe6b07e7dc206c7b723d98"
+                },
+                {
+                  "id": "sha256:90aebae315675cbf04612de4f7d5874850f48e0b8dd82becbeaa47ca93f5ebfb"
+                },
+                {
+                  "id": "sha256:53938ccf86d0954286625faacd6f86ff09bd5d8c3bfaabc284848c80d014e781"
+                },
+                {
+                  "id": "sha256:8ec5e9e6f70bf1a0b5692ef948d1194bdb074342ed14045f9e84820367a98c6a"
+                },
+                {
+                  "id": "sha256:b779e8f841cdb45f58a152168ea90a81102474bf0d4dc8b9224a433307dc7e51"
+                },
+                {
+                  "id": "sha256:c292fa22d3c8f05c74185be8a25495701be31db25ca27f03a6851bea3aec9d0d"
+                }
+              ]
+            }
+          },
+          "options": {
+            "gpgkeys": [
+              "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nmQINBGIpIp4BEAC/o5e1WzLIsS6/JOQCs4XYATYTcf6B6ALzcP05G0W3uRpUQSrL\nFRKNrU8ZCelm/B+XSh2ljJNeklp2WLxYENDOsftDXGoyLr2hEkI5OyK267IHhFNJ\ng+BN+T5Cjh4ZiiWij6o9F7x2ZpxISE9M4iI80rwSv1KOnGSw5j2zD2EwoMjTVyVE\n/t3s5XJxnDclB7ZqL+cgjv0mWUY/4+b/OoRTkhq7b8QILuZp75Y64pkrndgakm1T\n8mAGXV02mEzpNj9DyAJdUqa11PIhMJMxxHOGHJ8CcHZ2NJL2e7yJf4orTj+cMhP5\nLzJcVlaXnQYu8Zkqa0V6J1Qdj8ZXL72QsmyicRYXAtK9Jm5pvBHuYU2m6Ja7dBEB\nVkhe7lTKhAjkZC5ErPmANNS9kPdtXCOpwN1lOnmD2m04hks3kpH9OTX7RkTFUSws\neARAfRID6RLfi59B9lmAbekecnsMIFMx7qR7ZKyQb3GOuZwNYOaYFevuxusSwCHv\n4FtLDIhk+Fge+EbPdEva+VLJeMOb02gC4V/cX/oFoPkxM1A5LHjkuAM+aFLAiIRd\nNp/tAPWk1k6yc+FqkcDqOttbP4ciiXb9JPtmzTCbJD8lgH0rGp8ufyMXC9x7/dqX\nTjsiGzyvlMnrkKB4GL4DqRFl8LAR02A3846DD8CAcaxoXggL2bJCU2rgUQARAQAB\ntDVSZWQgSGF0LCBJbmMuIChhdXhpbGlhcnkga2V5IDMpIDxzZWN1cml0eUByZWRo\nYXQuY29tPokCUgQTAQgAPBYhBH5GJCWMQGU11W1vE1BU5KRaY0CzBQJiKSKeAhsD\nBQsJCAcCAyICAQYVCgkICwIEFgIDAQIeBwIXgAAKCRBQVOSkWmNAsyBfEACuTN/X\nYR+QyzeRw0pXcTvMqzNE4DKKr97hSQEwZH1/v1PEPs5O3psuVUm2iam7bqYwG+ry\nEskAgMHi8AJmY0lioQD5/LTSLTrM8UyQnU3g17DHau1NHIFTGyaW4a7xviU4C2+k\nc6X0u1CPHI1U4Q8prpNcfLsldaNYlsVZtUtYSHKPAUcswXWliW7QYjZ5tMSbu8jR\nOMOc3mZuf0fcVFNu8+XSpN7qLhRNcPv+FCNmk/wkaQfH4Pv+jVsOgHqkV3aLqJeN\nkNUnpyEKYkNqo7mNfNVWOcl+Z1KKKwSkIi3vg8maC7rODsy6IX+Y96M93sqYDQom\naaWue2gvw6thEoH4SaCrCL78mj2YFpeg1Oew4QwVcBnt68KOPfL9YyoOicNs4Vuu\nfb/vjU2ONPZAeepIKA8QxCETiryCcP43daqThvIgdbUIiWne3gae6eSj0EuUPoYe\nH5g2Lw0qdwbHIOxqp2kvN96Ii7s1DK3VyhMt/GSPCxRnDRJ8oQKJ2W/I1IT5VtiU\nzMjjq5JcYzRPzHDxfVzT9CLeU/0XQ+2OOUAiZKZ0dzSyyVn8xbpviT7iadvjlQX3\nCINaPB+d2Kxa6uFWh+ZYOLLAgZ9B8NKutUHpXN66YSfe79xFBSFWKkJ8cSIMk13/\nIfs7ApKlKCCRDpwoDqx/sjIaj1cpOfLHYjnefg==\n=UZd/\n-----END PGP PUBLIC KEY BLOCK-----",
+              "-----BEGIN PGP PUBLIC KEY BLOCK-----\nVersion: GnuPG v2.0.22 (GNU/Linux)\n\nmQINBErgSTsBEACh2A4b0O9t+vzC9VrVtL1AKvUWi9OPCjkvR7Xd8DtJxeeMZ5eF\n0HtzIG58qDRybwUe89FZprB1ffuUKzdE+HcL3FbNWSSOXVjZIersdXyH3NvnLLLF\n0DNRB2ix3bXG9Rh/RXpFsNxDp2CEMdUvbYCzE79K1EnUTVh1L0Of023FtPSZXX0c\nu7Pb5DI5lX5YeoXO6RoodrIGYJsVBQWnrWw4xNTconUfNPk0EGZtEnzvH2zyPoJh\nXGF+Ncu9XwbalnYde10OCvSWAZ5zTCpoLMTvQjWpbCdWXJzCm6G+/hx9upke546H\n5IjtYm4dTIVTnc3wvDiODgBKRzOl9rEOCIgOuGtDxRxcQkjrC+xvg5Vkqn7vBUyW\n9pHedOU+PoF3DGOM+dqv+eNKBvh9YF9ugFAQBkcG7viZgvGEMGGUpzNgN7XnS1gj\n/DPo9mZESOYnKceve2tIC87p2hqjrxOHuI7fkZYeNIcAoa83rBltFXaBDYhWAKS1\nPcXS1/7JzP0ky7d0L6Xbu/If5kqWQpKwUInXtySRkuraVfuK3Bpa+X1XecWi24JY\nHVtlNX025xx1ewVzGNCTlWn1skQN2OOoQTV4C8/qFpTW6DTWYurd4+fE0OJFJZQF\nbuhfXYwmRlVOgN5i77NTIJZJQfYFj38c/Iv5vZBPokO6mffrOTv3MHWVgQARAQAB\ntDNSZWQgSGF0LCBJbmMuIChyZWxlYXNlIGtleSAyKSA8c2VjdXJpdHlAcmVkaGF0\nLmNvbT6JAjYEEwEIACACGwMGCwkIBwMCBBUCCAMEFgIDAQIeAQIXgAUCSuBJPAAK\nCRAZni+R/UMdUfIkD/9m3HWv07uJG26R3KBexTo2FFu3rmZs+m2nfW8R3dBX+k0o\nAOFpgJCsNgKwU81LOPrkMN19G0+Yn/ZTCDD7cIQ7dhYuDyEX97xh4une/EhnnRuh\nASzR+1xYbj/HcYZIL9kbslgpebMn+AhxbUTQF/mziug3hLidR9Bzvygq0Q09E11c\nOZL4BU6J2HqxL+9m2F+tnLdfhL7MsAq9nbmWAOpkbGefc5SXBSq0sWfwoes3X3yD\nQ8B5Xqr9AxABU7oUB+wRqvY69ZCxi/BhuuJCUxY89ZmwXfkVxeHl1tYfROUwOnJO\nGYSbI/o41KBK4DkIiDcT7QqvqvCyudnxZdBjL2QU6OrIJvWmKs319qSF9m3mXRSt\nZzWtB89Pj5LZ6cdtuHvW9GO4qSoBLmAfB313pGkbgi1DE6tqCLHlA0yQ8zv99OWV\ncMDGmS7tVTZqfX1xQJ0N3bNORQNtikJC3G+zBCJzIeZleeDlMDQcww00yWU1oE7/\nTo2UmykMGc7o9iggFWR2g0PIcKsA/SXdRKWPqCHG2uKHBvdRTQGupdXQ1sbV+AHw\nycyA/9H/mp/NUSNM2cqnBDcZ6GhlHt59zWtEveiuU5fpTbp4GVcFXbW8jStj8j8z\n1HI3cywZO8+YNPzqyx0JWsidXGkfzkPHyS4jTG84lfu2JG8m/nqLnRSeKpl20Q==\n=79bX\n-----END PGP PUBLIC KEY BLOCK-----"
+            ]
+          }
+        },
+        {
+          "type": "org.osbuild.selinux",
+          "options": {
+            "file_contexts": "etc/selinux/targeted/contexts/files/file_contexts",
+            "labels": {
+              "/usr/bin/cp": "system_u:object_r:install_exec_t:s0",
+              "/usr/bin/tar": "system_u:object_r:install_exec_t:s0"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "anaconda-tree",
+      "build": "name:build",
+      "stages": [
+        {
+          "type": "org.osbuild.rpm",
+          "inputs": {
+            "packages": {
+              "type": "org.osbuild.files",
+              "origin": "org.osbuild.source",
+              "references": [
+                {
+                  "id": "sha256:629e355a0345015e53cacd90ce641c7e2ef38405cd55e135f331a6303c51f509"
+                },
+                {
+                  "id": "sha256:1f2ce4e8c1aea4a2440b7e794e0440385f8e9c3f48b0fd65118f3dcdbca783bf"
+                },
+                {
+                  "id": "sha256:2ee1c183198b2cae042aa65aa5acc2f66ccc56e63036fca331fe79f7cf4b151f"
+                },
+                {
+                  "id": "sha256:cd2c0f63ad37d585e77b3f1c584539e26bf7928710ac8fb19fd377f61b7326e6"
+                },
+                {
+                  "id": "sha256:15a57c569d41dc1cbb4b45354e7f3b53d7df2a829080e6f0c5c31cc95b2deeaa"
+                },
+                {
+                  "id": "sha256:15a57c569d41dc1cbb4b45354e7f3b53d7df2a829080e6f0c5c31cc95b2deeaa"
+                },
+                {
+                  "id": "sha256:51385627d29f139f756b94ca84358d251c1455e6de1d625d1aa4758fe842d0e2"
+                },
+                {
+                  "id": "sha256:903be5b3913df555a8586e571d9016e1ac24eef2631a5d75b8c3f94c66f10955"
+                },
+                {
+                  "id": "sha256:b81f37a043a6f767e7c94d105f4bd31282f3ecc20680bb9d09bd93461cf4c863"
+                },
+                {
+                  "id": "sha256:10f98865f92b870436264dfd6dea761c85e4f9edd1688f7dacb90e7bfd725de9"
+                },
+                {
+                  "id": "sha256:f3a65c49b47eaa55e2413f4728317ab8b3a5019dc70f1f6ca66e838a77f4c078"
+                },
+                {
+                  "id": "sha256:f3a65c49b47eaa55e2413f4728317ab8b3a5019dc70f1f6ca66e838a77f4c078"
+                },
+                {
+                  "id": "sha256:f3a65c49b47eaa55e2413f4728317ab8b3a5019dc70f1f6ca66e838a77f4c078"
+                },
+                {
+                  "id": "sha256:09e61bc3a2412f610b1784706d9ed9e8b4d9eb29e8d0e415e888b4172beae8d3"
+                },
+                {
+                  "id": "sha256:cf51db7aa57c11cf84bbe5f58f73eb415d037cd000bcce129696331d9bddfc3c"
+                },
+                {
+                  "id": "sha256:427e4b79b1f0fc90306cbe064b1297b21dc6835bfa656d3bf46bc156e3f24bb0"
+                },
+                {
+                  "id": "sha256:427e4b79b1f0fc90306cbe064b1297b21dc6835bfa656d3bf46bc156e3f24bb0"
+                },
+                {
+                  "id": "sha256:095af8602a457074cf156c608826099e6c2b6d58a4febe0b04bb670cea4d5112"
+                },
+                {
+                  "id": "sha256:5b8b6480d96480b779d6937e2d8694e03cdae14eb0664033ef24af50e1557726"
+                },
+                {
+                  "id": "sha256:75c008414c1be65c0e6954f74e1afdf3f706369f26899ea792b4ac0f31f287bc"
+                },
+                {
+                  "id": "sha256:2a9ba8d4e80cd1edce93e9dca00fb372fbd431ad69d0d5df71fda93f010c4efa"
+                },
+                {
+                  "id": "sha256:5e5d7e05a668f4ec5939a246b38d17cbb6ee83c0408ecbf584f6561a9d64a383"
+                },
+                {
+                  "id": "sha256:826c7f30d36dcc8cb4628bee44fc0e257a360eb06cfc31c49148a44b153e78ce"
+                },
+                {
+                  "id": "sha256:2c3aeb7c716dc15da1e2b05b2e42ff75eace021594deeed9344216511e27e8bc"
+                },
+                {
+                  "id": "sha256:2c3aeb7c716dc15da1e2b05b2e42ff75eace021594deeed9344216511e27e8bc"
+                },
+                {
+                  "id": "sha256:40db3e70e48fe4664f019f39fc6a95a211595c7359b3a325ee62b239152b35b1"
+                },
+                {
+                  "id": "sha256:5660f11783e742698cec671d45910e74342fe3e48ddf054f38c0828776b08d00"
+                },
+                {
+                  "id": "sha256:5660f11783e742698cec671d45910e74342fe3e48ddf054f38c0828776b08d00"
+                },
+                {
+                  "id": "sha256:fbc15b96c51eaf5c099caa6a6658257c6f9a0a4c148ed907c564ad993079ac23"
+                },
+                {
+                  "id": "sha256:fbc15b96c51eaf5c099caa6a6658257c6f9a0a4c148ed907c564ad993079ac23"
+                },
+                {
+                  "id": "sha256:e2f24de304a49d3d3c1261466376ab341c3834eb683d806cb534587f4fd48f8d"
+                },
+                {
+                  "id": "sha256:e2f24de304a49d3d3c1261466376ab341c3834eb683d806cb534587f4fd48f8d"
+                },
+                {
+                  "id": "sha256:e2f24de304a49d3d3c1261466376ab341c3834eb683d806cb534587f4fd48f8d"
+                },
+                {
+                  "id": "sha256:c6bfc8d71984ae000030ad824d40cb24a5a2ea0011f17c0e1997d623973ff33c"
+                },
+                {
+                  "id": "sha256:581265de790cf918fc770318449fe4cd07a18771c975d42867760b2e2f1bd18d"
+                },
+                {
+                  "id": "sha256:1f35e175b07fc080eb57fc9db22a3ce477d87bc5447466815f55864d3b6e6586"
+                },
+                {
+                  "id": "sha256:cbdfe23c9cb9c48e031abaceb7fd4f15ac4a88e4e8a3334132838b4627e07b31"
+                },
+                {
+                  "id": "sha256:9ac51bbcd5be0f507237b2d43367ad073eaf99398a65d26fa2a8fee5275f889b"
+                },
+                {
+                  "id": "sha256:f5f43514d2de810e4ea6d047203505e2e3c0c25f43941ec226968d17bb3aa1b5"
+                },
+                {
+                  "id": "sha256:24173b7985c9c52efc25b39e51f0fd41ac7b35e7031ed17da97788f293a3ce4e"
+                },
+                {
+                  "id": "sha256:dbf9956aa9c5ccd4c6d92f0550e959f58bb815fb570c305e9d93645eee2082d4"
+                },
+                {
+                  "id": "sha256:dbf9956aa9c5ccd4c6d92f0550e959f58bb815fb570c305e9d93645eee2082d4"
+                },
+                {
+                  "id": "sha256:021b0fc809e1245cc6021a779e094bba7191085b7a31ce4c05490b9cc79eacc7"
+                },
+                {
+                  "id": "sha256:021b0fc809e1245cc6021a779e094bba7191085b7a31ce4c05490b9cc79eacc7"
+                },
+                {
+                  "id": "sha256:a07b0a6df6f248078ebaf93e5bea115093f8a79e0a830e383b6c0b9f7f1605f5"
+                },
+                {
+                  "id": "sha256:a07b0a6df6f248078ebaf93e5bea115093f8a79e0a830e383b6c0b9f7f1605f5"
+                },
+                {
+                  "id": "sha256:c5c5b49ed7ea2ff99b6eb892df08b33bafc927a7712b7aaa942627531e0378d2"
+                },
+                {
+                  "id": "sha256:c5c5b49ed7ea2ff99b6eb892df08b33bafc927a7712b7aaa942627531e0378d2"
+                },
+                {
+                  "id": "sha256:eaa83a86c658bfd0c01894a695993f394ee51794f31dc607f4a47e31cb50fc6d"
+                },
+                {
+                  "id": "sha256:eaa83a86c658bfd0c01894a695993f394ee51794f31dc607f4a47e31cb50fc6d"
+                },
+                {
+                  "id": "sha256:eaa83a86c658bfd0c01894a695993f394ee51794f31dc607f4a47e31cb50fc6d"
+                },
+                {
+                  "id": "sha256:0d3ffa508f3c7375c05551af609738a9d474b3eab32cb2d2194b41870b37f1a9"
+                },
+                {
+                  "id": "sha256:79e849ef6eca219446118ca179bf7aa8bc5469a1c92b4696d67f6bee2dc26764"
+                },
+                {
+                  "id": "sha256:79e849ef6eca219446118ca179bf7aa8bc5469a1c92b4696d67f6bee2dc26764"
+                },
+                {
+                  "id": "sha256:79e849ef6eca219446118ca179bf7aa8bc5469a1c92b4696d67f6bee2dc26764"
+                },
+                {
+                  "id": "sha256:72aec6b0d35ecb35b97ca9f0804c8a6ab055855a00ae7e8356276acca976a393"
+                },
+                {
+                  "id": "sha256:72aec6b0d35ecb35b97ca9f0804c8a6ab055855a00ae7e8356276acca976a393"
+                },
+                {
+                  "id": "sha256:72aec6b0d35ecb35b97ca9f0804c8a6ab055855a00ae7e8356276acca976a393"
+                },
+                {
+                  "id": "sha256:9531c8584bbf61635c5c9b15733d9494cb6dd232a6eec85a946076c6c633e99f"
+                },
+                {
+                  "id": "sha256:5e4e6002bd0ef9491967c1f5f573b0c184ef5a41d165cff38c8c6c73606702cb"
+                },
+                {
+                  "id": "sha256:263acae321870b428781a1f4cb5e88740a897a4f9b614233a1798d295f805c54"
+                },
+                {
+                  "id": "sha256:7813fd2934106e4936074bd7bf8e05d2ce9afb310b52269868dc06fbee88e980"
+                },
+                {
+                  "id": "sha256:7063dece7cccf374d9fa1ee30ff23300fa42477e064e69be7bb6d01c0cfff682"
+                },
+                {
+                  "id": "sha256:7063dece7cccf374d9fa1ee30ff23300fa42477e064e69be7bb6d01c0cfff682"
+                },
+                {
+                  "id": "sha256:0b7d4f77c2cb51052db74404b259f556184bb91f64aea8e9ace8f452efb03ed1"
+                },
+                {
+                  "id": "sha256:8e901f9b6ca3996fe198c84d5f0a305b635bbaae54757fa84932ac52479c1efa"
+                },
+                {
+                  "id": "sha256:4791c5734c81dcc16b25ab5a006d8dd8250b9555a539e557cac9bea5a60fecce"
+                },
+                {
+                  "id": "sha256:4791c5734c81dcc16b25ab5a006d8dd8250b9555a539e557cac9bea5a60fecce"
+                },
+                {
+                  "id": "sha256:c9694c21375651122e49ce8afc80f69910c81f7843714dca0f1af12d3cdcd6b0"
+                },
+                {
+                  "id": "sha256:c9694c21375651122e49ce8afc80f69910c81f7843714dca0f1af12d3cdcd6b0"
+                },
+                {
+                  "id": "sha256:10d813242917dfde64a292f0744a6c332d29f907a8ebb31188af6ea8de1d1efa"
+                },
+                {
+                  "id": "sha256:10d813242917dfde64a292f0744a6c332d29f907a8ebb31188af6ea8de1d1efa"
+                },
+                {
+                  "id": "sha256:87fdf23aeb0c0b27488ecbabd19e8fa175df1b298369845787beb99ddc849714"
+                },
+                {
+                  "id": "sha256:87fdf23aeb0c0b27488ecbabd19e8fa175df1b298369845787beb99ddc849714"
+                },
+                {
+                  "id": "sha256:bf079a7045b8c53dd15c009532e5f1c789260a8a2debb1eddd67ecf47712dde8"
+                },
+                {
+                  "id": "sha256:bf079a7045b8c53dd15c009532e5f1c789260a8a2debb1eddd67ecf47712dde8"
+                },
+                {
+                  "id": "sha256:47b7e192a116767577c34ddb8487411519a1461df1d80b482f4622dc6c1f8674"
+                },
+                {
+                  "id": "sha256:47b7e192a116767577c34ddb8487411519a1461df1d80b482f4622dc6c1f8674"
+                },
+                {
+                  "id": "sha256:a9c2cd1e4311be8781e7421119b8cdeb9c0f36f7d8c63144a3fb2fd6c0ad1018"
+                },
+                {
+                  "id": "sha256:a9c2cd1e4311be8781e7421119b8cdeb9c0f36f7d8c63144a3fb2fd6c0ad1018"
+                },
+                {
+                  "id": "sha256:c38a19b3443f7bc00411db2850001c2fa25d751544c364e1802148be05021cc0"
+                },
+                {
+                  "id": "sha256:c38a19b3443f7bc00411db2850001c2fa25d751544c364e1802148be05021cc0"
+                },
+                {
+                  "id": "sha256:874acaf989b725037ce173f517404baeb8d2643275bf972edbae7c947e7c1071"
+                },
+                {
+                  "id": "sha256:874acaf989b725037ce173f517404baeb8d2643275bf972edbae7c947e7c1071"
+                },
+                {
+                  "id": "sha256:8c9f207e90d45483dc9143a590f1185acd99f8cc7d9a1af4ec6eba595ecac111"
+                },
+                {
+                  "id": "sha256:d84be37f898e57d7de91b2062b2d5d8c53846fefb238d48b2bebaa3fdfeb4de9"
+                },
+                {
+                  "id": "sha256:7f72cc3ac75a624f94ec606d8ddb4dbf6385595499e5449fd0d369d83fdb6467"
+                },
+                {
+                  "id": "sha256:7f72cc3ac75a624f94ec606d8ddb4dbf6385595499e5449fd0d369d83fdb6467"
+                },
+                {
+                  "id": "sha256:fc8aa064642e279d6d03beb27074f88fe4e3182c2dfe3a4117f135b9662ae2b7"
+                },
+                {
+                  "id": "sha256:fc8aa064642e279d6d03beb27074f88fe4e3182c2dfe3a4117f135b9662ae2b7"
+                },
+                {
+                  "id": "sha256:4ad76aeffa1e790eaf720b659f9860c50b6e0ba4787fa0a2d0e43dfa46193035"
+                },
+                {
+                  "id": "sha256:12a5913a6155c548dc77da461c37f570a6a5548fa57c798ca26ef4ce581bdcfe"
+                },
+                {
+                  "id": "sha256:eeb3d09845f5cde069eeade2c4339532be58b6607120be00656123cc73ea727c"
+                },
+                {
+                  "id": "sha256:ce5b1962783aa6a9374a0a1b34941a112a799baac827c733bd28c78dbb4bcf36"
+                },
+                {
+                  "id": "sha256:6923dd1bc0460082c5d55a831908c24a282860b7f1cd6c2b79cf1bc8857c639c"
+                },
+                {
+                  "id": "sha256:6923dd1bc0460082c5d55a831908c24a282860b7f1cd6c2b79cf1bc8857c639c"
+                },
+                {
+                  "id": "sha256:4fdd3b6201a22c7814d6e67dbb7a17790224ea0fd32ef0a0ccb0a5485eae4c9d"
+                },
+                {
+                  "id": "sha256:4fdd3b6201a22c7814d6e67dbb7a17790224ea0fd32ef0a0ccb0a5485eae4c9d"
+                },
+                {
+                  "id": "sha256:b498cfb546ddbfbd5953e28137e5b39a65ba6c7220bf4fe4c3cc9bcafc73c41b"
+                },
+                {
+                  "id": "sha256:f6453ebfd8ab070567bfcd4cda99cc41c2c849237745f24228c5f040cac5d562"
+                },
+                {
+                  "id": "sha256:f7f7a2e0133dfc81f9505bac28dfb7ee3398f3dc3b32c7682c86a9be5403bfee"
+                },
+                {
+                  "id": "sha256:cf732696c9aebd80fad833157535754f246445ad0fec66e918963443bd3cfb71"
+                },
+                {
+                  "id": "sha256:fe36b1d498f9c6057ed774ba5fb0a84c8592886c3a4c7c077ce7f41326373099"
+                },
+                {
+                  "id": "sha256:cb298bd94fae6f2f713a1108a16e0632f3a1e21820a288d7ea86c8b00a4d4fef"
+                },
+                {
+                  "id": "sha256:52999df2efd2afc3fcda19e416efb2d0f9b09562aa53331eaac2cde3c88ea207"
+                },
+                {
+                  "id": "sha256:b7110cc6e76089686855ae923d8e0212a0f067b8a48f3c96e8510d50c56061a7"
+                },
+                {
+                  "id": "sha256:eddfc611c4f74bed09b2ac20b714b54f2e47d9befc7cc8af98b4c679807ba573"
+                },
+                {
+                  "id": "sha256:2442f8197039e6fb34538a4651f00be2bcbaa8d2be3a15b734fa6ddf1bd8abba"
+                },
+                {
+                  "id": "sha256:a39d3ae3da34f2b4c01193e62202d5de0db79f800a039624b0f950734782b863"
+                },
+                {
+                  "id": "sha256:0272f4e79b65885cc8b0bc82cae8a4a63901e2d54ab2bbcb5227711ee432e21a"
+                },
+                {
+                  "id": "sha256:dfff1585cd84bf13177a09e93d70be3a39c3bec554f1215a5a4fe5c92bbae8bf"
+                },
+                {
+                  "id": "sha256:dfff1585cd84bf13177a09e93d70be3a39c3bec554f1215a5a4fe5c92bbae8bf"
+                },
+                {
+                  "id": "sha256:2a759970ca60f649dac5cf69eb25ab6b768eddd3f6f89639140e537a688cb686"
+                },
+                {
+                  "id": "sha256:316d18e697dfa41e92a9fe91d8d175629db5e330348a8adc1a5b43744d01d217"
+                },
+                {
+                  "id": "sha256:68d6e3ed85174ed856b83d5d1e16c23d5279cb5dc77915ae8570a768a5a65505"
+                },
+                {
+                  "id": "sha256:4381157a0ab3568cb31f727709b2edfca21522a8645e95c411f5798b8018393d"
+                },
+                {
+                  "id": "sha256:db755438d5157104180d27e8f8e21478dc2700470e611d4fe646be7972cdcad9"
+                },
+                {
+                  "id": "sha256:db755438d5157104180d27e8f8e21478dc2700470e611d4fe646be7972cdcad9"
+                },
+                {
+                  "id": "sha256:7d02017322fc296d1d3b7a7f79f6f7053a51b062179ef618086509af08a12f5a"
+                },
+                {
+                  "id": "sha256:8373873d8c1183cc0007d0b8310c706537248401793832bd3c71b271497997c0"
+                },
+                {
+                  "id": "sha256:8373873d8c1183cc0007d0b8310c706537248401793832bd3c71b271497997c0"
+                },
+                {
+                  "id": "sha256:500d641b95d95deab52480573126901d76d81dfe9fe0a5caf43445df38caad7b"
+                },
+                {
+                  "id": "sha256:5bc35fd09bee19e0dc22c7f7a731d1d8f4f68b81a3fd866e32273523eda30f9e"
+                },
+                {
+                  "id": "sha256:883642e660d2ef545d3d9f0cbd12790a99aea6358fb67c46664ff22fefa8b7df"
+                },
+                {
+                  "id": "sha256:a744d93f2c6e8830a70b434113ecdebdaf568ba8c0557c63bd0914528760ae53"
+                },
+                {
+                  "id": "sha256:a744d93f2c6e8830a70b434113ecdebdaf568ba8c0557c63bd0914528760ae53"
+                },
+                {
+                  "id": "sha256:9b31022b061856459fd20f63b7b37a0974bb812d47c4cac842a009b759ef19bd"
+                },
+                {
+                  "id": "sha256:9b31022b061856459fd20f63b7b37a0974bb812d47c4cac842a009b759ef19bd"
+                },
+                {
+                  "id": "sha256:990fde98d70a0a1a75bf55978f90138e8878a7f5cc1de475e03ee25b6744ee8a"
+                },
+                {
+                  "id": "sha256:95671115820a1fb4e74d1abed36bf069ce64a8233a3a37a8909cc62dffc57293"
+                },
+                {
+                  "id": "sha256:7a5bd1ed08002bc08013ea55c7fffc61047042b3d0979471b6e34d5e5089d334"
+                },
+                {
+                  "id": "sha256:3422a5ddd21f999cb3eb595f87aaf7c500d784270e26af097fe409616b2156d9"
+                },
+                {
+                  "id": "sha256:3422a5ddd21f999cb3eb595f87aaf7c500d784270e26af097fe409616b2156d9"
+                },
+                {
+                  "id": "sha256:b7f2141eed144d4380620b7f10620b310f168ebe9a5357d1e5cd98b79c9648be"
+                },
+                {
+                  "id": "sha256:b7f2141eed144d4380620b7f10620b310f168ebe9a5357d1e5cd98b79c9648be"
+                },
+                {
+                  "id": "sha256:ec924965104fcfdffc6c47b1097bcf63a78989606075c98870d56937969b531d"
+                },
+                {
+                  "id": "sha256:8ff8d40e4a4c726df40795e3134432ac66f7d055d54639c1026e341b6d2bd6e7"
+                },
+                {
+                  "id": "sha256:afed7d2fb0ea7b7e9d8dbcf1c1bb62ff53840c72d380cf165294a1eccb7fdeb1"
+                },
+                {
+                  "id": "sha256:bf35d0b80342ad44ca298ed07fcc9d3f8d43a2700964586a4a5e2c0a49766528"
+                },
+                {
+                  "id": "sha256:bf35d0b80342ad44ca298ed07fcc9d3f8d43a2700964586a4a5e2c0a49766528"
+                },
+                {
+                  "id": "sha256:af17b5250a81ce5f2cc90c29b7d11bdc913f9abf7d61ecdc6995fe38650bfb14"
+                },
+                {
+                  "id": "sha256:9370ee4e95b7172989b9fd3f81860093529113ba42b69be340467d87a94bb253"
+                },
+                {
+                  "id": "sha256:9370ee4e95b7172989b9fd3f81860093529113ba42b69be340467d87a94bb253"
+                },
+                {
+                  "id": "sha256:cb6b44243b93acef33a5ee905d92203a2a55abdc6a3b7c446c8435a41a6ad137"
+                },
+                {
+                  "id": "sha256:61bfeb2957d080cbab70b332f16b482e1991b08e77ea7a8546b68b3cde90990c"
+                },
+                {
+                  "id": "sha256:28bdff3b22fe1fe1b18313472b2060d2706b9052cbabd91aaa7bed0c88c065de"
+                },
+                {
+                  "id": "sha256:761f8a60b54fcf3965300ced84ed9a0db0eb70c89482e61f9e79a1a1ca251f18"
+                },
+                {
+                  "id": "sha256:ff288c563531a45d3e848ddc70320f148964ae93b088ebcafa67cd2a2f0b4d9a"
+                },
+                {
+                  "id": "sha256:ff288c563531a45d3e848ddc70320f148964ae93b088ebcafa67cd2a2f0b4d9a"
+                },
+                {
+                  "id": "sha256:746ce7b983a2448f60202b7e25bc5814b8d8962d6ce867eebda2ba65c0daade8"
+                },
+                {
+                  "id": "sha256:746ce7b983a2448f60202b7e25bc5814b8d8962d6ce867eebda2ba65c0daade8"
+                },
+                {
+                  "id": "sha256:e0031c189e34e10d9c202fa8d75f72d3296a239164fe6b07e7dc206c7b723d98"
+                },
+                {
+                  "id": "sha256:e0031c189e34e10d9c202fa8d75f72d3296a239164fe6b07e7dc206c7b723d98"
+                },
+                {
+                  "id": "sha256:90aebae315675cbf04612de4f7d5874850f48e0b8dd82becbeaa47ca93f5ebfb"
+                },
+                {
+                  "id": "sha256:90aebae315675cbf04612de4f7d5874850f48e0b8dd82becbeaa47ca93f5ebfb"
+                },
+                {
+                  "id": "sha256:ab70ba971afad989c2b54e7030af4cba9b0cbfe11de95bdc76552c87f529942a"
+                },
+                {
+                  "id": "sha256:85830c0611a0acd7053f7b3a29f52a0511acc3695f9c5ef39a29fcfb8b80e25b"
+                },
+                {
+                  "id": "sha256:ab41c5997e31cbfd7ea7c4251f936b7c2eae16613144b9b345711a6aa0014e3d"
+                },
+                {
+                  "id": "sha256:ba6559ec248d211b5cfcc313380c7a871da23f845937f429f6304cc841c500cf"
+                },
+                {
+                  "id": "sha256:0a26024d87ac934c3aeca0ec8b27e579dfb6b268ac43f3a6f945579a54c46e6e"
+                },
+                {
+                  "id": "sha256:570e342d0e4708dab94b2025f6b928845b659b405872d824b45473c4635d7b1d"
+                },
+                {
+                  "id": "sha256:ce2b8ecf9afac9f546bdbbb0902afb6088fdcb8524269ad5b4adb9b9d4959b07"
+                },
+                {
+                  "id": "sha256:21fb8eaa1cfa55dbc0ed009dc98fbbbc9de4ecaef53d51dc41ab1b0ae867ed49"
+                },
+                {
+                  "id": "sha256:21fb8eaa1cfa55dbc0ed009dc98fbbbc9de4ecaef53d51dc41ab1b0ae867ed49"
+                },
+                {
+                  "id": "sha256:8ec5e9e6f70bf1a0b5692ef948d1194bdb074342ed14045f9e84820367a98c6a"
+                },
+                {
+                  "id": "sha256:8ec5e9e6f70bf1a0b5692ef948d1194bdb074342ed14045f9e84820367a98c6a"
+                },
+                {
+                  "id": "sha256:b779e8f841cdb45f58a152168ea90a81102474bf0d4dc8b9224a433307dc7e51"
+                },
+                {
+                  "id": "sha256:c292fa22d3c8f05c74185be8a25495701be31db25ca27f03a6851bea3aec9d0d"
+                }
+              ]
+            }
+          },
+          "options": {
+            "gpgkeys": [
+              "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nmQINBGIpIp4BEAC/o5e1WzLIsS6/JOQCs4XYATYTcf6B6ALzcP05G0W3uRpUQSrL\nFRKNrU8ZCelm/B+XSh2ljJNeklp2WLxYENDOsftDXGoyLr2hEkI5OyK267IHhFNJ\ng+BN+T5Cjh4ZiiWij6o9F7x2ZpxISE9M4iI80rwSv1KOnGSw5j2zD2EwoMjTVyVE\n/t3s5XJxnDclB7ZqL+cgjv0mWUY/4+b/OoRTkhq7b8QILuZp75Y64pkrndgakm1T\n8mAGXV02mEzpNj9DyAJdUqa11PIhMJMxxHOGHJ8CcHZ2NJL2e7yJf4orTj+cMhP5\nLzJcVlaXnQYu8Zkqa0V6J1Qdj8ZXL72QsmyicRYXAtK9Jm5pvBHuYU2m6Ja7dBEB\nVkhe7lTKhAjkZC5ErPmANNS9kPdtXCOpwN1lOnmD2m04hks3kpH9OTX7RkTFUSws\neARAfRID6RLfi59B9lmAbekecnsMIFMx7qR7ZKyQb3GOuZwNYOaYFevuxusSwCHv\n4FtLDIhk+Fge+EbPdEva+VLJeMOb02gC4V/cX/oFoPkxM1A5LHjkuAM+aFLAiIRd\nNp/tAPWk1k6yc+FqkcDqOttbP4ciiXb9JPtmzTCbJD8lgH0rGp8ufyMXC9x7/dqX\nTjsiGzyvlMnrkKB4GL4DqRFl8LAR02A3846DD8CAcaxoXggL2bJCU2rgUQARAQAB\ntDVSZWQgSGF0LCBJbmMuIChhdXhpbGlhcnkga2V5IDMpIDxzZWN1cml0eUByZWRo\nYXQuY29tPokCUgQTAQgAPBYhBH5GJCWMQGU11W1vE1BU5KRaY0CzBQJiKSKeAhsD\nBQsJCAcCAyICAQYVCgkICwIEFgIDAQIeBwIXgAAKCRBQVOSkWmNAsyBfEACuTN/X\nYR+QyzeRw0pXcTvMqzNE4DKKr97hSQEwZH1/v1PEPs5O3psuVUm2iam7bqYwG+ry\nEskAgMHi8AJmY0lioQD5/LTSLTrM8UyQnU3g17DHau1NHIFTGyaW4a7xviU4C2+k\nc6X0u1CPHI1U4Q8prpNcfLsldaNYlsVZtUtYSHKPAUcswXWliW7QYjZ5tMSbu8jR\nOMOc3mZuf0fcVFNu8+XSpN7qLhRNcPv+FCNmk/wkaQfH4Pv+jVsOgHqkV3aLqJeN\nkNUnpyEKYkNqo7mNfNVWOcl+Z1KKKwSkIi3vg8maC7rODsy6IX+Y96M93sqYDQom\naaWue2gvw6thEoH4SaCrCL78mj2YFpeg1Oew4QwVcBnt68KOPfL9YyoOicNs4Vuu\nfb/vjU2ONPZAeepIKA8QxCETiryCcP43daqThvIgdbUIiWne3gae6eSj0EuUPoYe\nH5g2Lw0qdwbHIOxqp2kvN96Ii7s1DK3VyhMt/GSPCxRnDRJ8oQKJ2W/I1IT5VtiU\nzMjjq5JcYzRPzHDxfVzT9CLeU/0XQ+2OOUAiZKZ0dzSyyVn8xbpviT7iadvjlQX3\nCINaPB+d2Kxa6uFWh+ZYOLLAgZ9B8NKutUHpXN66YSfe79xFBSFWKkJ8cSIMk13/\nIfs7ApKlKCCRDpwoDqx/sjIaj1cpOfLHYjnefg==\n=UZd/\n-----END PGP PUBLIC KEY BLOCK-----",
+              "-----BEGIN PGP PUBLIC KEY BLOCK-----\nVersion: GnuPG v2.0.22 (GNU/Linux)\n\nmQINBErgSTsBEACh2A4b0O9t+vzC9VrVtL1AKvUWi9OPCjkvR7Xd8DtJxeeMZ5eF\n0HtzIG58qDRybwUe89FZprB1ffuUKzdE+HcL3FbNWSSOXVjZIersdXyH3NvnLLLF\n0DNRB2ix3bXG9Rh/RXpFsNxDp2CEMdUvbYCzE79K1EnUTVh1L0Of023FtPSZXX0c\nu7Pb5DI5lX5YeoXO6RoodrIGYJsVBQWnrWw4xNTconUfNPk0EGZtEnzvH2zyPoJh\nXGF+Ncu9XwbalnYde10OCvSWAZ5zTCpoLMTvQjWpbCdWXJzCm6G+/hx9upke546H\n5IjtYm4dTIVTnc3wvDiODgBKRzOl9rEOCIgOuGtDxRxcQkjrC+xvg5Vkqn7vBUyW\n9pHedOU+PoF3DGOM+dqv+eNKBvh9YF9ugFAQBkcG7viZgvGEMGGUpzNgN7XnS1gj\n/DPo9mZESOYnKceve2tIC87p2hqjrxOHuI7fkZYeNIcAoa83rBltFXaBDYhWAKS1\nPcXS1/7JzP0ky7d0L6Xbu/If5kqWQpKwUInXtySRkuraVfuK3Bpa+X1XecWi24JY\nHVtlNX025xx1ewVzGNCTlWn1skQN2OOoQTV4C8/qFpTW6DTWYurd4+fE0OJFJZQF\nbuhfXYwmRlVOgN5i77NTIJZJQfYFj38c/Iv5vZBPokO6mffrOTv3MHWVgQARAQAB\ntDNSZWQgSGF0LCBJbmMuIChyZWxlYXNlIGtleSAyKSA8c2VjdXJpdHlAcmVkaGF0\nLmNvbT6JAjYEEwEIACACGwMGCwkIBwMCBBUCCAMEFgIDAQIeAQIXgAUCSuBJPAAK\nCRAZni+R/UMdUfIkD/9m3HWv07uJG26R3KBexTo2FFu3rmZs+m2nfW8R3dBX+k0o\nAOFpgJCsNgKwU81LOPrkMN19G0+Yn/ZTCDD7cIQ7dhYuDyEX97xh4une/EhnnRuh\nASzR+1xYbj/HcYZIL9kbslgpebMn+AhxbUTQF/mziug3hLidR9Bzvygq0Q09E11c\nOZL4BU6J2HqxL+9m2F+tnLdfhL7MsAq9nbmWAOpkbGefc5SXBSq0sWfwoes3X3yD\nQ8B5Xqr9AxABU7oUB+wRqvY69ZCxi/BhuuJCUxY89ZmwXfkVxeHl1tYfROUwOnJO\nGYSbI/o41KBK4DkIiDcT7QqvqvCyudnxZdBjL2QU6OrIJvWmKs319qSF9m3mXRSt\nZzWtB89Pj5LZ6cdtuHvW9GO4qSoBLmAfB313pGkbgi1DE6tqCLHlA0yQ8zv99OWV\ncMDGmS7tVTZqfX1xQJ0N3bNORQNtikJC3G+zBCJzIeZleeDlMDQcww00yWU1oE7/\nTo2UmykMGc7o9iggFWR2g0PIcKsA/SXdRKWPqCHG2uKHBvdRTQGupdXQ1sbV+AHw\nycyA/9H/mp/NUSNM2cqnBDcZ6GhlHt59zWtEveiuU5fpTbp4GVcFXbW8jStj8j8z\n1HI3cywZO8+YNPzqyx0JWsidXGkfzkPHyS4jTG84lfu2JG8m/nqLnRSeKpl20Q==\n=79bX\n-----END PGP PUBLIC KEY BLOCK-----"
+            ]
+          }
+        },
+        {
+          "type": "org.osbuild.buildstamp",
+          "options": {
+            "arch": "x86_64",
+            "product": "Red Hat Enterprise Linux",
+            "version": "10.0",
+            "final": true,
+            "variant": "",
+            "bugurl": ""
+          }
+        },
+        {
+          "type": "org.osbuild.locale",
+          "options": {
+            "language": "en_GB.UTF-8"
+          }
+        },
+        {
+          "type": "org.osbuild.users",
+          "options": {
+            "users": {
+              "install": {
+                "uid": 0,
+                "gid": 0,
+                "home": "/root",
+                "shell": "/usr/libexec/anaconda/run-anaconda",
+                "password": ""
+              },
+              "root": {
+                "password": ""
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.anaconda",
+          "options": {
+            "activatable-modules": [
+              "org.fedoraproject.Anaconda.Modules.Localization",
+              "org.fedoraproject.Anaconda.Modules.Network",
+              "org.fedoraproject.Anaconda.Modules.Payloads",
+              "org.fedoraproject.Anaconda.Modules.Services",
+              "org.fedoraproject.Anaconda.Modules.Storage",
+              "org.fedoraproject.Anaconda.Modules.Users"
+            ]
+          }
+        },
+        {
+          "type": "org.osbuild.lorax-script",
+          "options": {
+            "path": "99-generic/runtime-postinstall.tmpl",
+            "basearch": "x86_64",
+            "product": {
+              "name": "",
+              "version": ""
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.dracut",
+          "options": {
+            "kernel": [
+              "8-2.fk1.x86_64"
+            ],
+            "modules": [
+              "bash",
+              "systemd",
+              "fips",
+              "systemd-initrd",
+              "modsign",
+              "nss-softokn",
+              "i18n",
+              "convertfs",
+              "network-manager",
+              "network",
+              "url-lib",
+              "drm",
+              "plymouth",
+              "crypt",
+              "dm",
+              "dmsquash-live",
+              "kernel-modules",
+              "kernel-modules-extra",
+              "kernel-network-modules",
+              "livenet",
+              "lvm",
+              "mdraid",
+              "qemu",
+              "qemu-net",
+              "resume",
+              "rootfs-block",
+              "terminfo",
+              "udev-rules",
+              "dracut-systemd",
+              "pollcdrom",
+              "usrmount",
+              "base",
+              "fs-lib",
+              "img-lib",
+              "shutdown",
+              "uefi-lib",
+              "biosdevname",
+              "nvdimm",
+              "prefixdevname",
+              "prefixdevname-tools",
+              "net-lib",
+              "anaconda",
+              "rdma",
+              "rngd",
+              "multipath",
+              "fcoe",
+              "fcoe-uefi",
+              "iscsi",
+              "lunmask",
+              "nfs"
+            ],
+            "add_drivers": [
+              "ipmi_devintf",
+              "ipmi_msghandler"
+            ],
+            "install": [
+              "/.buildstamp"
+            ]
+          }
+        },
+        {
+          "type": "org.osbuild.selinux.config",
+          "options": {
+            "state": "permissive"
+          }
+        }
+      ]
+    },
+    {
+      "name": "efiboot-tree",
+      "build": "name:build",
+      "stages": [
+        {
+          "type": "org.osbuild.grub2.iso",
+          "options": {
+            "product": {
+              "name": "Red Hat Enterprise Linux",
+              "version": "10.0"
+            },
+            "kernel": {
+              "dir": "/images/pxeboot",
+              "opts": [
+                "inst.stage2=hd:LABEL=RHEL-10-0-0-BaseOS-x86_64",
+                "inst.ks=hd:LABEL=RHEL-10-0-0-BaseOS-x86_64:/osbuild.ks"
+              ]
+            },
+            "isolabel": "RHEL-10-0-0-BaseOS-x86_64",
+            "architectures": [
+              "X64"
+            ],
+            "vendor": "redhat"
+          }
+        }
+      ]
+    },
+    {
+      "name": "os",
+      "build": "name:build",
+      "stages": [
+        {
+          "type": "org.osbuild.rpm",
+          "inputs": {
+            "packages": {
+              "type": "org.osbuild.files",
+              "origin": "org.osbuild.source",
+              "references": [
+                {
+                  "id": "sha256:443ad85c108c8acb279fc373255ff3444e54cc07c0af87a62962f0adcedd152a"
+                },
+                {
+                  "id": "sha256:5fdc7e383dc7e1b390e40c3012a2aa03978901c45f3597c1c239c51134d03dbe"
+                },
+                {
+                  "id": "sha256:d7d0ecd0d4332981facb2d959fcd8c2e710f237cf34554b4884de1c3159160cc"
+                },
+                {
+                  "id": "sha256:c62adbb8e41e30631962b2ea5b1ce9d9a8270d3fc7909f4d8ec2fed1348c7828"
+                },
+                {
+                  "id": "sha256:40db3e70e48fe4664f019f39fc6a95a211595c7359b3a325ee62b239152b35b1"
+                },
+                {
+                  "id": "sha256:cf23a0e72ee5bed7a2cce02a3b6115e97c593554600931c5f348a1f304f93bb6"
+                },
+                {
+                  "id": "sha256:02b2f585447caaaef59cc58cda1cbf6db27530690fdb13f747f3fdeb762c4b15"
+                },
+                {
+                  "id": "sha256:02b2f585447caaaef59cc58cda1cbf6db27530690fdb13f747f3fdeb762c4b15"
+                },
+                {
+                  "id": "sha256:5660f11783e742698cec671d45910e74342fe3e48ddf054f38c0828776b08d00"
+                },
+                {
+                  "id": "sha256:5660f11783e742698cec671d45910e74342fe3e48ddf054f38c0828776b08d00"
+                },
+                {
+                  "id": "sha256:3745e8dd111be6023e8fc59dfb541e0de5a9432489285b0c85e1ddf394624c9f"
+                },
+                {
+                  "id": "sha256:e2f24de304a49d3d3c1261466376ab341c3834eb683d806cb534587f4fd48f8d"
+                },
+                {
+                  "id": "sha256:7b50bdd407a8c815d221c01203fc9a241648c79805faa36a0dc70e9d3a46c7e5"
+                },
+                {
+                  "id": "sha256:1b11757d33424678ba2d9d6fbd9eb6293a7bfa196dca15a29af179af778c235d"
+                },
+                {
+                  "id": "sha256:dbf9956aa9c5ccd4c6d92f0550e959f58bb815fb570c305e9d93645eee2082d4"
+                },
+                {
+                  "id": "sha256:a07b0a6df6f248078ebaf93e5bea115093f8a79e0a830e383b6c0b9f7f1605f5"
+                },
+                {
+                  "id": "sha256:a07b0a6df6f248078ebaf93e5bea115093f8a79e0a830e383b6c0b9f7f1605f5"
+                },
+                {
+                  "id": "sha256:4791c5734c81dcc16b25ab5a006d8dd8250b9555a539e557cac9bea5a60fecce"
+                },
+                {
+                  "id": "sha256:4791c5734c81dcc16b25ab5a006d8dd8250b9555a539e557cac9bea5a60fecce"
+                },
+                {
+                  "id": "sha256:c9694c21375651122e49ce8afc80f69910c81f7843714dca0f1af12d3cdcd6b0"
+                },
+                {
+                  "id": "sha256:c9694c21375651122e49ce8afc80f69910c81f7843714dca0f1af12d3cdcd6b0"
+                },
+                {
+                  "id": "sha256:10d813242917dfde64a292f0744a6c332d29f907a8ebb31188af6ea8de1d1efa"
+                },
+                {
+                  "id": "sha256:10d813242917dfde64a292f0744a6c332d29f907a8ebb31188af6ea8de1d1efa"
+                },
+                {
+                  "id": "sha256:87fdf23aeb0c0b27488ecbabd19e8fa175df1b298369845787beb99ddc849714"
+                },
+                {
+                  "id": "sha256:87fdf23aeb0c0b27488ecbabd19e8fa175df1b298369845787beb99ddc849714"
+                },
+                {
+                  "id": "sha256:bf079a7045b8c53dd15c009532e5f1c789260a8a2debb1eddd67ecf47712dde8"
+                },
+                {
+                  "id": "sha256:bf079a7045b8c53dd15c009532e5f1c789260a8a2debb1eddd67ecf47712dde8"
+                },
+                {
+                  "id": "sha256:47b7e192a116767577c34ddb8487411519a1461df1d80b482f4622dc6c1f8674"
+                },
+                {
+                  "id": "sha256:47b7e192a116767577c34ddb8487411519a1461df1d80b482f4622dc6c1f8674"
+                },
+                {
+                  "id": "sha256:a9c2cd1e4311be8781e7421119b8cdeb9c0f36f7d8c63144a3fb2fd6c0ad1018"
+                },
+                {
+                  "id": "sha256:a9c2cd1e4311be8781e7421119b8cdeb9c0f36f7d8c63144a3fb2fd6c0ad1018"
+                },
+                {
+                  "id": "sha256:c38a19b3443f7bc00411db2850001c2fa25d751544c364e1802148be05021cc0"
+                },
+                {
+                  "id": "sha256:c38a19b3443f7bc00411db2850001c2fa25d751544c364e1802148be05021cc0"
+                },
+                {
+                  "id": "sha256:874acaf989b725037ce173f517404baeb8d2643275bf972edbae7c947e7c1071"
+                },
+                {
+                  "id": "sha256:874acaf989b725037ce173f517404baeb8d2643275bf972edbae7c947e7c1071"
+                },
+                {
+                  "id": "sha256:8c9f207e90d45483dc9143a590f1185acd99f8cc7d9a1af4ec6eba595ecac111"
+                },
+                {
+                  "id": "sha256:d84be37f898e57d7de91b2062b2d5d8c53846fefb238d48b2bebaa3fdfeb4de9"
+                },
+                {
+                  "id": "sha256:7f72cc3ac75a624f94ec606d8ddb4dbf6385595499e5449fd0d369d83fdb6467"
+                },
+                {
+                  "id": "sha256:7f72cc3ac75a624f94ec606d8ddb4dbf6385595499e5449fd0d369d83fdb6467"
+                },
+                {
+                  "id": "sha256:fc8aa064642e279d6d03beb27074f88fe4e3182c2dfe3a4117f135b9662ae2b7"
+                },
+                {
+                  "id": "sha256:6923dd1bc0460082c5d55a831908c24a282860b7f1cd6c2b79cf1bc8857c639c"
+                },
+                {
+                  "id": "sha256:dad715e4ad49fa30f5a61dec5fcf18cfad20e349b90818913f99f163615266cd"
+                },
+                {
+                  "id": "sha256:d87d9e526f265be973fce2ba320c5ed3ae24f6c5560d816d0b9307d0ba4d357f"
+                },
+                {
+                  "id": "sha256:f4dc4ad92c4e57553b004ecd08561dd6b15d5dc7d99869c499544a890f18eddc"
+                },
+                {
+                  "id": "sha256:f4dc4ad92c4e57553b004ecd08561dd6b15d5dc7d99869c499544a890f18eddc"
+                },
+                {
+                  "id": "sha256:674177213da94e10f7c2eb25574d59f64ab942abe4746b1eedf24bfd4dc17a76"
+                },
+                {
+                  "id": "sha256:0272f4e79b65885cc8b0bc82cae8a4a63901e2d54ab2bbcb5227711ee432e21a"
+                },
+                {
+                  "id": "sha256:dfff1585cd84bf13177a09e93d70be3a39c3bec554f1215a5a4fe5c92bbae8bf"
+                },
+                {
+                  "id": "sha256:43436865ed2d17b812735341ae5102c5ea86ce1eb70a0a43045a552a755da79d"
+                },
+                {
+                  "id": "sha256:352db6b0cf337d13b4a9c05b2e4f13bafe02a311cb3dbf756ef2d44d52dca901"
+                },
+                {
+                  "id": "sha256:93cd8e20fc07f08337cb9d9fa9996274658f6395574e874379c4c4157e922700"
+                },
+                {
+                  "id": "sha256:93cd8e20fc07f08337cb9d9fa9996274658f6395574e874379c4c4157e922700"
+                },
+                {
+                  "id": "sha256:bceee99a4a82cf20ebeb8d0085d57327f62bf0bcf1a4d3c24f430a9366f353c2"
+                },
+                {
+                  "id": "sha256:55b591a15e8cd772eeaae5d187bcb8c44c12048aca78478e53db0c50ad09c999"
+                },
+                {
+                  "id": "sha256:292cc2595512fa5eb4a7235bc57d6ef0ea9f976272cbc70c7580331dda04ffee"
+                },
+                {
+                  "id": "sha256:7b4efa9ae15ac908a0e4f0f79b90b322a98f10ab4e0b414e15d7424a270597d5"
+                },
+                {
+                  "id": "sha256:360688270679b1c512513cfab6d931c8c715318582a9974caa3c0f88a0ee053c"
+                },
+                {
+                  "id": "sha256:1a0970a720caab2869fc7eb436e6b7656fc7efbb24cfa72ae5b49e2f6acbd7ca"
+                },
+                {
+                  "id": "sha256:7a5bd1ed08002bc08013ea55c7fffc61047042b3d0979471b6e34d5e5089d334"
+                },
+                {
+                  "id": "sha256:8ff8d40e4a4c726df40795e3134432ac66f7d055d54639c1026e341b6d2bd6e7"
+                },
+                {
+                  "id": "sha256:bf35d0b80342ad44ca298ed07fcc9d3f8d43a2700964586a4a5e2c0a49766528"
+                },
+                {
+                  "id": "sha256:bf35d0b80342ad44ca298ed07fcc9d3f8d43a2700964586a4a5e2c0a49766528"
+                },
+                {
+                  "id": "sha256:9370ee4e95b7172989b9fd3f81860093529113ba42b69be340467d87a94bb253"
+                },
+                {
+                  "id": "sha256:fad55872f0e26075082344da2db3418e620e1d82f740220c7f121e085d8fd654"
+                },
+                {
+                  "id": "sha256:e0031c189e34e10d9c202fa8d75f72d3296a239164fe6b07e7dc206c7b723d98"
+                },
+                {
+                  "id": "sha256:90aebae315675cbf04612de4f7d5874850f48e0b8dd82becbeaa47ca93f5ebfb"
+                },
+                {
+                  "id": "sha256:90aebae315675cbf04612de4f7d5874850f48e0b8dd82becbeaa47ca93f5ebfb"
+                },
+                {
+                  "id": "sha256:3096fd17ccf8ee00173d4d753aa67e476526b800ae6eff06b055d71fc4ce6dff"
+                },
+                {
+                  "id": "sha256:aba407b81ed016841ea552feadaf0663c7804a64554ba55d3109b3dc8198cdcb"
+                },
+                {
+                  "id": "sha256:21fb8eaa1cfa55dbc0ed009dc98fbbbc9de4ecaef53d51dc41ab1b0ae867ed49"
+                },
+                {
+                  "id": "sha256:8ec5e9e6f70bf1a0b5692ef948d1194bdb074342ed14045f9e84820367a98c6a"
+                },
+                {
+                  "id": "sha256:49e9285da13f2be02b3654b01e74cab5840b8c679f7ad4b528a9cf794d3d3e34"
+                },
+                {
+                  "id": "sha256:b779e8f841cdb45f58a152168ea90a81102474bf0d4dc8b9224a433307dc7e51"
+                },
+                {
+                  "id": "sha256:c292fa22d3c8f05c74185be8a25495701be31db25ca27f03a6851bea3aec9d0d"
+                }
+              ]
+            }
+          },
+          "options": {
+            "gpgkeys": [
+              "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nmQINBGIpIp4BEAC/o5e1WzLIsS6/JOQCs4XYATYTcf6B6ALzcP05G0W3uRpUQSrL\nFRKNrU8ZCelm/B+XSh2ljJNeklp2WLxYENDOsftDXGoyLr2hEkI5OyK267IHhFNJ\ng+BN+T5Cjh4ZiiWij6o9F7x2ZpxISE9M4iI80rwSv1KOnGSw5j2zD2EwoMjTVyVE\n/t3s5XJxnDclB7ZqL+cgjv0mWUY/4+b/OoRTkhq7b8QILuZp75Y64pkrndgakm1T\n8mAGXV02mEzpNj9DyAJdUqa11PIhMJMxxHOGHJ8CcHZ2NJL2e7yJf4orTj+cMhP5\nLzJcVlaXnQYu8Zkqa0V6J1Qdj8ZXL72QsmyicRYXAtK9Jm5pvBHuYU2m6Ja7dBEB\nVkhe7lTKhAjkZC5ErPmANNS9kPdtXCOpwN1lOnmD2m04hks3kpH9OTX7RkTFUSws\neARAfRID6RLfi59B9lmAbekecnsMIFMx7qR7ZKyQb3GOuZwNYOaYFevuxusSwCHv\n4FtLDIhk+Fge+EbPdEva+VLJeMOb02gC4V/cX/oFoPkxM1A5LHjkuAM+aFLAiIRd\nNp/tAPWk1k6yc+FqkcDqOttbP4ciiXb9JPtmzTCbJD8lgH0rGp8ufyMXC9x7/dqX\nTjsiGzyvlMnrkKB4GL4DqRFl8LAR02A3846DD8CAcaxoXggL2bJCU2rgUQARAQAB\ntDVSZWQgSGF0LCBJbmMuIChhdXhpbGlhcnkga2V5IDMpIDxzZWN1cml0eUByZWRo\nYXQuY29tPokCUgQTAQgAPBYhBH5GJCWMQGU11W1vE1BU5KRaY0CzBQJiKSKeAhsD\nBQsJCAcCAyICAQYVCgkICwIEFgIDAQIeBwIXgAAKCRBQVOSkWmNAsyBfEACuTN/X\nYR+QyzeRw0pXcTvMqzNE4DKKr97hSQEwZH1/v1PEPs5O3psuVUm2iam7bqYwG+ry\nEskAgMHi8AJmY0lioQD5/LTSLTrM8UyQnU3g17DHau1NHIFTGyaW4a7xviU4C2+k\nc6X0u1CPHI1U4Q8prpNcfLsldaNYlsVZtUtYSHKPAUcswXWliW7QYjZ5tMSbu8jR\nOMOc3mZuf0fcVFNu8+XSpN7qLhRNcPv+FCNmk/wkaQfH4Pv+jVsOgHqkV3aLqJeN\nkNUnpyEKYkNqo7mNfNVWOcl+Z1KKKwSkIi3vg8maC7rODsy6IX+Y96M93sqYDQom\naaWue2gvw6thEoH4SaCrCL78mj2YFpeg1Oew4QwVcBnt68KOPfL9YyoOicNs4Vuu\nfb/vjU2ONPZAeepIKA8QxCETiryCcP43daqThvIgdbUIiWne3gae6eSj0EuUPoYe\nH5g2Lw0qdwbHIOxqp2kvN96Ii7s1DK3VyhMt/GSPCxRnDRJ8oQKJ2W/I1IT5VtiU\nzMjjq5JcYzRPzHDxfVzT9CLeU/0XQ+2OOUAiZKZ0dzSyyVn8xbpviT7iadvjlQX3\nCINaPB+d2Kxa6uFWh+ZYOLLAgZ9B8NKutUHpXN66YSfe79xFBSFWKkJ8cSIMk13/\nIfs7ApKlKCCRDpwoDqx/sjIaj1cpOfLHYjnefg==\n=UZd/\n-----END PGP PUBLIC KEY BLOCK-----",
+              "-----BEGIN PGP PUBLIC KEY BLOCK-----\nVersion: GnuPG v2.0.22 (GNU/Linux)\n\nmQINBErgSTsBEACh2A4b0O9t+vzC9VrVtL1AKvUWi9OPCjkvR7Xd8DtJxeeMZ5eF\n0HtzIG58qDRybwUe89FZprB1ffuUKzdE+HcL3FbNWSSOXVjZIersdXyH3NvnLLLF\n0DNRB2ix3bXG9Rh/RXpFsNxDp2CEMdUvbYCzE79K1EnUTVh1L0Of023FtPSZXX0c\nu7Pb5DI5lX5YeoXO6RoodrIGYJsVBQWnrWw4xNTconUfNPk0EGZtEnzvH2zyPoJh\nXGF+Ncu9XwbalnYde10OCvSWAZ5zTCpoLMTvQjWpbCdWXJzCm6G+/hx9upke546H\n5IjtYm4dTIVTnc3wvDiODgBKRzOl9rEOCIgOuGtDxRxcQkjrC+xvg5Vkqn7vBUyW\n9pHedOU+PoF3DGOM+dqv+eNKBvh9YF9ugFAQBkcG7viZgvGEMGGUpzNgN7XnS1gj\n/DPo9mZESOYnKceve2tIC87p2hqjrxOHuI7fkZYeNIcAoa83rBltFXaBDYhWAKS1\nPcXS1/7JzP0ky7d0L6Xbu/If5kqWQpKwUInXtySRkuraVfuK3Bpa+X1XecWi24JY\nHVtlNX025xx1ewVzGNCTlWn1skQN2OOoQTV4C8/qFpTW6DTWYurd4+fE0OJFJZQF\nbuhfXYwmRlVOgN5i77NTIJZJQfYFj38c/Iv5vZBPokO6mffrOTv3MHWVgQARAQAB\ntDNSZWQgSGF0LCBJbmMuIChyZWxlYXNlIGtleSAyKSA8c2VjdXJpdHlAcmVkaGF0\nLmNvbT6JAjYEEwEIACACGwMGCwkIBwMCBBUCCAMEFgIDAQIeAQIXgAUCSuBJPAAK\nCRAZni+R/UMdUfIkD/9m3HWv07uJG26R3KBexTo2FFu3rmZs+m2nfW8R3dBX+k0o\nAOFpgJCsNgKwU81LOPrkMN19G0+Yn/ZTCDD7cIQ7dhYuDyEX97xh4une/EhnnRuh\nASzR+1xYbj/HcYZIL9kbslgpebMn+AhxbUTQF/mziug3hLidR9Bzvygq0Q09E11c\nOZL4BU6J2HqxL+9m2F+tnLdfhL7MsAq9nbmWAOpkbGefc5SXBSq0sWfwoes3X3yD\nQ8B5Xqr9AxABU7oUB+wRqvY69ZCxi/BhuuJCUxY89ZmwXfkVxeHl1tYfROUwOnJO\nGYSbI/o41KBK4DkIiDcT7QqvqvCyudnxZdBjL2QU6OrIJvWmKs319qSF9m3mXRSt\nZzWtB89Pj5LZ6cdtuHvW9GO4qSoBLmAfB313pGkbgi1DE6tqCLHlA0yQ8zv99OWV\ncMDGmS7tVTZqfX1xQJ0N3bNORQNtikJC3G+zBCJzIeZleeDlMDQcww00yWU1oE7/\nTo2UmykMGc7o9iggFWR2g0PIcKsA/SXdRKWPqCHG2uKHBvdRTQGupdXQ1sbV+AHw\nycyA/9H/mp/NUSNM2cqnBDcZ6GhlHt59zWtEveiuU5fpTbp4GVcFXbW8jStj8j8z\n1HI3cywZO8+YNPzqyx0JWsidXGkfzkPHyS4jTG84lfu2JG8m/nqLnRSeKpl20Q==\n=79bX\n-----END PGP PUBLIC KEY BLOCK-----"
+            ]
+          }
+        },
+        {
+          "type": "org.osbuild.fix-bls",
+          "options": {}
+        },
+        {
+          "type": "org.osbuild.locale",
+          "options": {
+            "language": "en_GB.UTF-8"
+          }
+        },
+        {
+          "type": "org.osbuild.keymap",
+          "options": {
+            "keymap": "uk"
+          }
+        },
+        {
+          "type": "org.osbuild.timezone",
+          "options": {
+            "zone": "Europe/Berlin"
+          }
+        },
+        {
+          "type": "org.osbuild.sysconfig",
+          "options": {
+            "kernel": {
+              "update_default": true,
+              "default_kernel": "kernel"
+            },
+            "network": {
+              "networking": true,
+              "no_zero_conf": true
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.rhsm.facts",
+          "options": {
+            "facts": {
+              "image-builder.osbuild-composer.api-type": "test-manifest"
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.selinux",
+          "options": {
+            "file_contexts": "etc/selinux/targeted/contexts/files/file_contexts"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bootiso-tree",
+      "build": "name:build",
+      "stages": [
+        {
+          "type": "org.osbuild.mkdir",
+          "options": {
+            "paths": [
+              {
+                "path": "/images"
+              },
+              {
+                "path": "/images/pxeboot"
+              }
+            ]
+          }
+        },
+        {
+          "type": "org.osbuild.copy",
+          "inputs": {
+            "tree": {
+              "type": "org.osbuild.tree",
+              "origin": "org.osbuild.pipeline",
+              "references": [
+                "name:anaconda-tree"
+              ]
+            }
+          },
+          "options": {
+            "paths": [
+              {
+                "from": "input://tree/boot/vmlinuz-8-2.fk1.x86_64",
+                "to": "tree:///images/pxeboot/vmlinuz"
+              },
+              {
+                "from": "input://tree/boot/initramfs-8-2.fk1.x86_64.img",
+                "to": "tree:///images/pxeboot/initrd.img"
+              }
+            ]
+          }
+        },
+        {
+          "type": "org.osbuild.squashfs",
+          "inputs": {
+            "tree": {
+              "type": "org.osbuild.tree",
+              "origin": "org.osbuild.pipeline",
+              "references": [
+                "name:anaconda-tree"
+              ]
+            }
+          },
+          "options": {
+            "filename": "images/install.img",
+            "compression": {
+              "method": "xz",
+              "options": {
+                "bcj": "x86"
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.isolinux",
+          "inputs": {
+            "data": {
+              "type": "org.osbuild.tree",
+              "origin": "org.osbuild.pipeline",
+              "references": [
+                "name:anaconda-tree"
+              ]
+            }
+          },
+          "options": {
+            "product": {
+              "name": "Red Hat Enterprise Linux",
+              "version": "10.0"
+            },
+            "kernel": {
+              "dir": "/images/pxeboot",
+              "opts": [
+                "inst.stage2=hd:LABEL=RHEL-10-0-0-BaseOS-x86_64",
+                "inst.ks=hd:LABEL=RHEL-10-0-0-BaseOS-x86_64:/osbuild.ks"
+              ]
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.truncate",
+          "options": {
+            "filename": "images/efiboot.img",
+            "size": "20971520"
+          }
+        },
+        {
+          "type": "org.osbuild.mkfs.fat",
+          "options": {
+            "volid": "f018ca54"
+          },
+          "devices": {
+            "device": {
+              "type": "org.osbuild.loopback",
+              "options": {
+                "filename": "images/efiboot.img",
+                "size": 40960,
+                "lock": true
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.copy",
+          "inputs": {
+            "root-tree": {
+              "type": "org.osbuild.tree",
+              "origin": "org.osbuild.pipeline",
+              "references": [
+                "name:efiboot-tree"
+              ]
+            }
+          },
+          "options": {
+            "paths": [
+              {
+                "from": "input://root-tree/",
+                "to": "mount://-/"
+              }
+            ]
+          },
+          "devices": {
+            "-": {
+              "type": "org.osbuild.loopback",
+              "options": {
+                "filename": "images/efiboot.img",
+                "size": 40960
+              }
+            }
+          },
+          "mounts": [
+            {
+              "name": "-",
+              "type": "org.osbuild.fat",
+              "source": "-",
+              "target": "/"
+            }
+          ]
+        },
+        {
+          "type": "org.osbuild.copy",
+          "inputs": {
+            "root-tree": {
+              "type": "org.osbuild.tree",
+              "origin": "org.osbuild.pipeline",
+              "references": [
+                "name:efiboot-tree"
+              ]
+            }
+          },
+          "options": {
+            "paths": [
+              {
+                "from": "input://root-tree/EFI",
+                "to": "tree:///"
+              }
+            ]
+          }
+        },
+        {
+          "type": "org.osbuild.tar",
+          "inputs": {
+            "tree": {
+              "type": "org.osbuild.tree",
+              "origin": "org.osbuild.pipeline",
+              "references": [
+                "name:os"
+              ]
+            }
+          },
+          "options": {
+            "filename": "/liveimg.tar.gz"
+          }
+        },
+        {
+          "type": "org.osbuild.kickstart",
+          "options": {
+            "path": "/osbuild-base.ks",
+            "liveimg": {
+              "url": "file:///run/install/repo/liveimg.tar.gz"
+            },
+            "users": {
+              "osbuild": {
+                "groups": [
+                  "wheel"
+                ],
+                "key": "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBNebAh6SjpAn8wB53K4695cGnHGuCtl4RdaX3futZgJUultHyzeYHnzMO7d4++qnRL+Rworew62LKP560uvtncc= github.com/osbuild/images"
+              }
+            },
+            "lang": "en_GB.UTF-8",
+            "keyboard": "uk",
+            "timezone": "Europe/Berlin",
+            "display_mode": "text",
+            "reboot": {
+              "eject": true
+            },
+            "rootpw": {
+              "lock": true
+            },
+            "zerombr": true,
+            "clearpart": {
+              "all": true,
+              "initlabel": true
+            },
+            "autopart": {
+              "type": "plain",
+              "fstype": "xfs",
+              "nohome": true
+            },
+            "network": [
+              {
+                "activate": true,
+                "bootproto": "dhcp",
+                "device": "link",
+                "onboot": "on"
+              }
+            ]
+          }
+        },
+        {
+          "type": "org.osbuild.copy",
+          "inputs": {
+            "file-ca22d604790e8539428507743f646e9470b1fc9cd9b24723efcada93b4639434": {
+              "type": "org.osbuild.files",
+              "origin": "org.osbuild.source",
+              "references": [
+                {
+                  "id": "sha256:ca22d604790e8539428507743f646e9470b1fc9cd9b24723efcada93b4639434"
+                }
+              ]
+            }
+          },
+          "options": {
+            "paths": [
+              {
+                "from": "input://file-ca22d604790e8539428507743f646e9470b1fc9cd9b24723efcada93b4639434/sha256:ca22d604790e8539428507743f646e9470b1fc9cd9b24723efcada93b4639434",
+                "to": "tree:///osbuild.ks",
+                "remove_destination": true
+              }
+            ]
+          }
+        },
+        {
+          "type": "org.osbuild.discinfo",
+          "options": {
+            "basearch": "x86_64",
+            "release": "Red Hat Enterprise Linux 10.0"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bootiso",
+      "build": "name:build",
+      "stages": [
+        {
+          "type": "org.osbuild.xorrisofs",
+          "inputs": {
+            "tree": {
+              "type": "org.osbuild.tree",
+              "origin": "org.osbuild.pipeline",
+              "references": [
+                "name:bootiso-tree"
+              ]
+            }
+          },
+          "options": {
+            "filename": "installer.iso",
+            "volid": "RHEL-10-0-0-BaseOS-x86_64",
+            "sysid": "LINUX",
+            "boot": {
+              "image": "isolinux/isolinux.bin",
+              "catalog": "isolinux/boot.cat"
+            },
+            "efi": "images/efiboot.img",
+            "isohybridmbr": "/usr/share/syslinux/isohdpfx.bin",
+            "isolevel": 3
+          }
+        },
+        {
+          "type": "org.osbuild.implantisomd5",
+          "options": {
+            "filename": "installer.iso"
+          }
+        }
+      ]
+    }
+  ],
+  "sources": {
+    "org.osbuild.curl": {
+      "items": {
+        "sha256:021b0fc809e1245cc6021a779e094bba7191085b7a31ce4c05490b9cc79eacc7": {
+          "url": "https://example.com/repo/packages/grub2-efi-x64-cdboot"
+        },
+        "sha256:0272f4e79b65885cc8b0bc82cae8a4a63901e2d54ab2bbcb5227711ee432e21a": {
+          "url": "https://example.com/repo/packages/net-tools"
+        },
+        "sha256:02b2f585447caaaef59cc58cda1cbf6db27530690fdb13f747f3fdeb762c4b15": {
+          "url": "https://example.com/repo/packages/dosfstools"
+        },
+        "sha256:095af8602a457074cf156c608826099e6c2b6d58a4febe0b04bb670cea4d5112": {
+          "url": "https://example.com/repo/packages/dbus-x11"
+        },
+        "sha256:09e61bc3a2412f610b1784706d9ed9e8b4d9eb29e8d0e415e888b4172beae8d3": {
+          "url": "https://example.com/repo/packages/bzip2"
+        },
+        "sha256:0a26024d87ac934c3aeca0ec8b27e579dfb6b268ac43f3a6f945579a54c46e6e": {
+          "url": "https://example.com/repo/packages/volume_key"
+        },
+        "sha256:0b7d4f77c2cb51052db74404b259f556184bb91f64aea8e9ace8f452efb03ed1": {
+          "url": "https://example.com/repo/packages/initscripts"
+        },
+        "sha256:0d3ffa508f3c7375c05551af609738a9d474b3eab32cb2d2194b41870b37f1a9": {
+          "url": "https://example.com/repo/packages/grub2-tools-efi"
+        },
+        "sha256:10d813242917dfde64a292f0744a6c332d29f907a8ebb31188af6ea8de1d1efa": {
+          "url": "https://example.com/repo/packages/iwl105-firmware"
+        },
+        "sha256:10f98865f92b870436264dfd6dea761c85e4f9edd1688f7dacb90e7bfd725de9": {
+          "url": "https://example.com/repo/packages/bind-utils"
+        },
+        "sha256:12a5913a6155c548dc77da461c37f570a6a5548fa57c798ca26ef4ce581bdcfe": {
+          "url": "https://example.com/repo/packages/kbd"
+        },
+        "sha256:15a57c569d41dc1cbb4b45354e7f3b53d7df2a829080e6f0c5c31cc95b2deeaa": {
+          "url": "https://example.com/repo/packages/anaconda-dracut"
+        },
+        "sha256:1a0970a720caab2869fc7eb436e6b7656fc7efbb24cfa72ae5b49e2f6acbd7ca": {
+          "url": "https://example.com/repo/packages/redhat-release"
+        },
+        "sha256:1b11757d33424678ba2d9d6fbd9eb6293a7bfa196dca15a29af179af778c235d": {
+          "url": "https://example.com/repo/packages/glibc"
+        },
+        "sha256:1f2ce4e8c1aea4a2440b7e794e0440385f8e9c3f48b0fd65118f3dcdbca783bf": {
+          "url": "https://example.com/repo/packages/alsa-firmware"
+        },
+        "sha256:1f35e175b07fc080eb57fc9db22a3ce477d87bc5447466815f55864d3b6e6586": {
+          "url": "https://example.com/repo/packages/ftp"
+        },
+        "sha256:21fb8eaa1cfa55dbc0ed009dc98fbbbc9de4ecaef53d51dc41ab1b0ae867ed49": {
+          "url": "https://example.com/repo/packages/xfsprogs"
+        },
+        "sha256:24173b7985c9c52efc25b39e51f0fd41ac7b35e7031ed17da97788f293a3ce4e": {
+          "url": "https://example.com/repo/packages/google-noto-sans-cjk-ttc-fonts"
+        },
+        "sha256:2442f8197039e6fb34538a4651f00be2bcbaa8d2be3a15b734fa6ddf1bd8abba": {
+          "url": "https://example.com/repo/packages/mt-st"
+        },
+        "sha256:263acae321870b428781a1f4cb5e88740a897a4f9b614233a1798d295f805c54": {
+          "url": "https://example.com/repo/packages/hdparm"
+        },
+        "sha256:28bdff3b22fe1fe1b18313472b2060d2706b9052cbabd91aaa7bed0c88c065de": {
+          "url": "https://example.com/repo/packages/spice-vdagent"
+        },
+        "sha256:292cc2595512fa5eb4a7235bc57d6ef0ea9f976272cbc70c7580331dda04ffee": {
+          "url": "https://example.com/repo/packages/python3-jsonschema"
+        },
+        "sha256:2a759970ca60f649dac5cf69eb25ab6b768eddd3f6f89639140e537a688cb686": {
+          "url": "https://example.com/repo/packages/nm-connection-editor"
+        },
+        "sha256:2a9ba8d4e80cd1edce93e9dca00fb372fbd431ad69d0d5df71fda93f010c4efa": {
+          "url": "https://example.com/repo/packages/dejavu-sans-fonts"
+        },
+        "sha256:2c3aeb7c716dc15da1e2b05b2e42ff75eace021594deeed9344216511e27e8bc": {
+          "url": "https://example.com/repo/packages/dmidecode"
+        },
+        "sha256:2ee1c183198b2cae042aa65aa5acc2f66ccc56e63036fca331fe79f7cf4b151f": {
+          "url": "https://example.com/repo/packages/alsa-tools-firmware"
+        },
+        "sha256:3096fd17ccf8ee00173d4d753aa67e476526b800ae6eff06b055d71fc4ce6dff": {
+          "url": "https://example.com/repo/packages/tcpdump"
+        },
+        "sha256:316d18e697dfa41e92a9fe91d8d175629db5e330348a8adc1a5b43744d01d217": {
+          "url": "https://example.com/repo/packages/nmap-ncat"
+        },
+        "sha256:3422a5ddd21f999cb3eb595f87aaf7c500d784270e26af097fe409616b2156d9": {
+          "url": "https://example.com/repo/packages/rng-tools"
+        },
+        "sha256:352db6b0cf337d13b4a9c05b2e4f13bafe02a311cb3dbf756ef2d44d52dca901": {
+          "url": "https://example.com/repo/packages/oddjob-mkhomedir"
+        },
+        "sha256:360688270679b1c512513cfab6d931c8c715318582a9974caa3c0f88a0ee053c": {
+          "url": "https://example.com/repo/packages/qemu-img"
+        },
+        "sha256:3745e8dd111be6023e8fc59dfb541e0de5a9432489285b0c85e1ddf394624c9f": {
+          "url": "https://example.com/repo/packages/e2fsprogs"
+        },
+        "sha256:3993c379c029014a9c4b2adf5d23397b3c7421467a0cb3575ff925bb6f6329b0": {
+          "url": "https://example.com/repo/packages/coreutils"
+        },
+        "sha256:40db3e70e48fe4664f019f39fc6a95a211595c7359b3a325ee62b239152b35b1": {
+          "url": "https://example.com/repo/packages/dnf"
+        },
+        "sha256:427e4b79b1f0fc90306cbe064b1297b21dc6835bfa656d3bf46bc156e3f24bb0": {
+          "url": "https://example.com/repo/packages/curl"
+        },
+        "sha256:43436865ed2d17b812735341ae5102c5ea86ce1eb70a0a43045a552a755da79d": {
+          "url": "https://example.com/repo/packages/oddjob"
+        },
+        "sha256:4381157a0ab3568cb31f727709b2edfca21522a8645e95c411f5798b8018393d": {
+          "url": "https://example.com/repo/packages/nss-tools"
+        },
+        "sha256:443ad85c108c8acb279fc373255ff3444e54cc07c0af87a62962f0adcedd152a": {
+          "url": "https://example.com/repo/packages/@core"
+        },
+        "sha256:4791c5734c81dcc16b25ab5a006d8dd8250b9555a539e557cac9bea5a60fecce": {
+          "url": "https://example.com/repo/packages/iwl100-firmware"
+        },
+        "sha256:47b7e192a116767577c34ddb8487411519a1461df1d80b482f4622dc6c1f8674": {
+          "url": "https://example.com/repo/packages/iwl2030-firmware"
+        },
+        "sha256:49e9285da13f2be02b3654b01e74cab5840b8c679f7ad4b528a9cf794d3d3e34": {
+          "url": "https://example.com/repo/packages/exclude:dracut-config-rescue"
+        },
+        "sha256:4ad76aeffa1e790eaf720b659f9860c50b6e0ba4787fa0a2d0e43dfa46193035": {
+          "url": "https://example.com/repo/packages/jomolhari-fonts"
+        },
+        "sha256:4fdd3b6201a22c7814d6e67dbb7a17790224ea0fd32ef0a0ccb0a5485eae4c9d": {
+          "url": "https://example.com/repo/packages/less"
+        },
+        "sha256:500d641b95d95deab52480573126901d76d81dfe9fe0a5caf43445df38caad7b": {
+          "url": "https://example.com/repo/packages/pciutils"
+        },
+        "sha256:51385627d29f139f756b94ca84358d251c1455e6de1d625d1aa4758fe842d0e2": {
+          "url": "https://example.com/repo/packages/anaconda-install-img-deps"
+        },
+        "sha256:52999df2efd2afc3fcda19e416efb2d0f9b09562aa53331eaac2cde3c88ea207": {
+          "url": "https://example.com/repo/packages/madan-fonts"
+        },
+        "sha256:53938ccf86d0954286625faacd6f86ff09bd5d8c3bfaabc284848c80d014e781": {
+          "url": "https://example.com/repo/packages/xorriso"
+        },
+        "sha256:55b591a15e8cd772eeaae5d187bcb8c44c12048aca78478e53db0c50ad09c999": {
+          "url": "https://example.com/repo/packages/python3-iniparse"
+        },
+        "sha256:5660f11783e742698cec671d45910e74342fe3e48ddf054f38c0828776b08d00": {
+          "url": "https://example.com/repo/packages/dracut-config-generic"
+        },
+        "sha256:570e342d0e4708dab94b2025f6b928845b659b405872d824b45473c4635d7b1d": {
+          "url": "https://example.com/repo/packages/wget"
+        },
+        "sha256:581265de790cf918fc770318449fe4cd07a18771c975d42867760b2e2f1bd18d": {
+          "url": "https://example.com/repo/packages/fcoe-utils"
+        },
+        "sha256:5b8b6480d96480b779d6937e2d8694e03cdae14eb0664033ef24af50e1557726": {
+          "url": "https://example.com/repo/packages/default-fonts-core-sans"
+        },
+        "sha256:5bc35fd09bee19e0dc22c7f7a731d1d8f4f68b81a3fd866e32273523eda30f9e": {
+          "url": "https://example.com/repo/packages/perl-interpreter"
+        },
+        "sha256:5e4e6002bd0ef9491967c1f5f573b0c184ef5a41d165cff38c8c6c73606702cb": {
+          "url": "https://example.com/repo/packages/gsettings-desktop-schemas"
+        },
+        "sha256:5e5d7e05a668f4ec5939a246b38d17cbb6ee83c0408ecbf584f6561a9d64a383": {
+          "url": "https://example.com/repo/packages/dejavu-sans-mono-fonts"
+        },
+        "sha256:5fdc7e383dc7e1b390e40c3012a2aa03978901c45f3597c1c239c51134d03dbe": {
+          "url": "https://example.com/repo/packages/chrony"
+        },
+        "sha256:61bfeb2957d080cbab70b332f16b482e1991b08e77ea7a8546b68b3cde90990c": {
+          "url": "https://example.com/repo/packages/smartmontools"
+        },
+        "sha256:629e355a0345015e53cacd90ce641c7e2ef38405cd55e135f331a6303c51f509": {
+          "url": "https://example.com/repo/packages/@hardware-support"
+        },
+        "sha256:674177213da94e10f7c2eb25574d59f64ab942abe4746b1eedf24bfd4dc17a76": {
+          "url": "https://example.com/repo/packages/microcode_ctl"
+        },
+        "sha256:68d6e3ed85174ed856b83d5d1e16c23d5279cb5dc77915ae8570a768a5a65505": {
+          "url": "https://example.com/repo/packages/nss-softokn"
+        },
+        "sha256:6923dd1bc0460082c5d55a831908c24a282860b7f1cd6c2b79cf1bc8857c639c": {
+          "url": "https://example.com/repo/packages/kernel"
+        },
+        "sha256:7063dece7cccf374d9fa1ee30ff23300fa42477e064e69be7bb6d01c0cfff682": {
+          "url": "https://example.com/repo/packages/hostname"
+        },
+        "sha256:72aec6b0d35ecb35b97ca9f0804c8a6ab055855a00ae7e8356276acca976a393": {
+          "url": "https://example.com/repo/packages/grub2-tools-minimal"
+        },
+        "sha256:746ce7b983a2448f60202b7e25bc5814b8d8962d6ce867eebda2ba65c0daade8": {
+          "url": "https://example.com/repo/packages/syslinux-nonlinux"
+        },
+        "sha256:75c008414c1be65c0e6954f74e1afdf3f706369f26899ea792b4ac0f31f287bc": {
+          "url": "https://example.com/repo/packages/default-fonts-other-sans"
+        },
+        "sha256:761f8a60b54fcf3965300ced84ed9a0db0eb70c89482e61f9e79a1a1ca251f18": {
+          "url": "https://example.com/repo/packages/strace"
+        },
+        "sha256:7813fd2934106e4936074bd7bf8e05d2ce9afb310b52269868dc06fbee88e980": {
+          "url": "https://example.com/repo/packages/hexedit"
+        },
+        "sha256:79e849ef6eca219446118ca179bf7aa8bc5469a1c92b4696d67f6bee2dc26764": {
+          "url": "https://example.com/repo/packages/grub2-tools-extra"
+        },
+        "sha256:7a5bd1ed08002bc08013ea55c7fffc61047042b3d0979471b6e34d5e5089d334": {
+          "url": "https://example.com/repo/packages/redhat-release-eula"
+        },
+        "sha256:7b4efa9ae15ac908a0e4f0f79b90b322a98f10ab4e0b414e15d7424a270597d5": {
+          "url": "https://example.com/repo/packages/qemu-guest-agent"
+        },
+        "sha256:7b50bdd407a8c815d221c01203fc9a241648c79805faa36a0dc70e9d3a46c7e5": {
+          "url": "https://example.com/repo/packages/firewalld"
+        },
+        "sha256:7d02017322fc296d1d3b7a7f79f6f7053a51b062179ef618086509af08a12f5a": {
+          "url": "https://example.com/repo/packages/openssh-server"
+        },
+        "sha256:7f72cc3ac75a624f94ec606d8ddb4dbf6385595499e5449fd0d369d83fdb6467": {
+          "url": "https://example.com/repo/packages/iwl6050-firmware"
+        },
+        "sha256:826c7f30d36dcc8cb4628bee44fc0e257a360eb06cfc31c49148a44b153e78ce": {
+          "url": "https://example.com/repo/packages/device-mapper-persistent-data"
+        },
+        "sha256:8373873d8c1183cc0007d0b8310c706537248401793832bd3c71b271497997c0": {
+          "url": "https://example.com/repo/packages/ostree"
+        },
+        "sha256:85830c0611a0acd7053f7b3a29f52a0511acc3695f9c5ef39a29fcfb8b80e25b": {
+          "url": "https://example.com/repo/packages/udisks2-iscsi"
+        },
+        "sha256:874acaf989b725037ce173f517404baeb8d2643275bf972edbae7c947e7c1071": {
+          "url": "https://example.com/repo/packages/iwl5150-firmware"
+        },
+        "sha256:87fdf23aeb0c0b27488ecbabd19e8fa175df1b298369845787beb99ddc849714": {
+          "url": "https://example.com/repo/packages/iwl135-firmware"
+        },
+        "sha256:883642e660d2ef545d3d9f0cbd12790a99aea6358fb67c46664ff22fefa8b7df": {
+          "url": "https://example.com/repo/packages/pigz"
+        },
+        "sha256:8a1bf05d306aa663e856f3c450c8b2ddc6800116b818c7d3b65503cd89f7682a": {
+          "url": "https://example.com/repo/packages/platform-python"
+        },
+        "sha256:8c9f207e90d45483dc9143a590f1185acd99f8cc7d9a1af4ec6eba595ecac111": {
+          "url": "https://example.com/repo/packages/iwl6000g2a-firmware"
+        },
+        "sha256:8e901f9b6ca3996fe198c84d5f0a305b635bbaae54757fa84932ac52479c1efa": {
+          "url": "https://example.com/repo/packages/ipmitool"
+        },
+        "sha256:8ec5e9e6f70bf1a0b5692ef948d1194bdb074342ed14045f9e84820367a98c6a": {
+          "url": "https://example.com/repo/packages/xz"
+        },
+        "sha256:8ff8d40e4a4c726df40795e3134432ac66f7d055d54639c1026e341b6d2bd6e7": {
+          "url": "https://example.com/repo/packages/rsync"
+        },
+        "sha256:903be5b3913df555a8586e571d9016e1ac24eef2631a5d75b8c3f94c66f10955": {
+          "url": "https://example.com/repo/packages/anaconda-widgets"
+        },
+        "sha256:90aebae315675cbf04612de4f7d5874850f48e0b8dd82becbeaa47ca93f5ebfb": {
+          "url": "https://example.com/repo/packages/tar"
+        },
+        "sha256:9370ee4e95b7172989b9fd3f81860093529113ba42b69be340467d87a94bb253": {
+          "url": "https://example.com/repo/packages/shim-x64"
+        },
+        "sha256:93cd8e20fc07f08337cb9d9fa9996274658f6395574e874379c4c4157e922700": {
+          "url": "https://example.com/repo/packages/policycoreutils"
+        },
+        "sha256:9531c8584bbf61635c5c9b15733d9494cb6dd232a6eec85a946076c6c633e99f": {
+          "url": "https://example.com/repo/packages/grubby"
+        },
+        "sha256:95671115820a1fb4e74d1abed36bf069ce64a8233a3a37a8909cc62dffc57293": {
+          "url": "https://example.com/repo/packages/rdma-core"
+        },
+        "sha256:990fde98d70a0a1a75bf55978f90138e8878a7f5cc1de475e03ee25b6744ee8a": {
+          "url": "https://example.com/repo/packages/python3-pyatspi"
+        },
+        "sha256:9ac51bbcd5be0f507237b2d43367ad073eaf99398a65d26fa2a8fee5275f889b": {
+          "url": "https://example.com/repo/packages/glibc-all-langpacks"
+        },
+        "sha256:9b31022b061856459fd20f63b7b37a0974bb812d47c4cac842a009b759ef19bd": {
+          "url": "https://example.com/repo/packages/prefixdevname"
+        },
+        "sha256:9e7ab438597fee20e16e8e441bed0ce966bd59e0fb993fa7c94be31fb1384d88": {
+          "url": "https://example.com/repo/packages/rpm"
+        },
+        "sha256:a07b0a6df6f248078ebaf93e5bea115093f8a79e0a830e383b6c0b9f7f1605f5": {
+          "url": "https://example.com/repo/packages/grub2-pc"
+        },
+        "sha256:a39d3ae3da34f2b4c01193e62202d5de0db79f800a039624b0f950734782b863": {
+          "url": "https://example.com/repo/packages/mtr"
+        },
+        "sha256:a744d93f2c6e8830a70b434113ecdebdaf568ba8c0557c63bd0914528760ae53": {
+          "url": "https://example.com/repo/packages/plymouth"
+        },
+        "sha256:a788847c8c115aa9ae27ca92230418e77b3b36a6424f1d4f3436633864c93db9": {
+          "url": "https://example.com/repo/packages/squashfs-tools"
+        },
+        "sha256:a9c2cd1e4311be8781e7421119b8cdeb9c0f36f7d8c63144a3fb2fd6c0ad1018": {
+          "url": "https://example.com/repo/packages/iwl3160-firmware"
+        },
+        "sha256:ab41c5997e31cbfd7ea7c4251f936b7c2eae16613144b9b345711a6aa0014e3d": {
+          "url": "https://example.com/repo/packages/usbutils"
+        },
+        "sha256:ab70ba971afad989c2b54e7030af4cba9b0cbfe11de95bdc76552c87f529942a": {
+          "url": "https://example.com/repo/packages/udisks2"
+        },
+        "sha256:aba407b81ed016841ea552feadaf0663c7804a64554ba55d3109b3dc8198cdcb": {
+          "url": "https://example.com/repo/packages/tuned"
+        },
+        "sha256:af17b5250a81ce5f2cc90c29b7d11bdc913f9abf7d61ecdc6995fe38650bfb14": {
+          "url": "https://example.com/repo/packages/sg3_utils"
+        },
+        "sha256:afed7d2fb0ea7b7e9d8dbcf1c1bb62ff53840c72d380cf165294a1eccb7fdeb1": {
+          "url": "https://example.com/repo/packages/rsyslog"
+        },
+        "sha256:b498cfb546ddbfbd5953e28137e5b39a65ba6c7220bf4fe4c3cc9bcafc73c41b": {
+          "url": "https://example.com/repo/packages/libblockdev-lvm-dbus"
+        },
+        "sha256:b7110cc6e76089686855ae923d8e0212a0f067b8a48f3c96e8510d50c56061a7": {
+          "url": "https://example.com/repo/packages/mdadm"
+        },
+        "sha256:b779e8f841cdb45f58a152168ea90a81102474bf0d4dc8b9224a433307dc7e51": {
+          "url": "https://example.com/passed-arch:x86_64/passed-repo:/v2/mirror/rhvpn/el10/el10-x86_64-baseos-n10.0"
+        },
+        "sha256:b7f2141eed144d4380620b7f10620b310f168ebe9a5357d1e5cd98b79c9648be": {
+          "url": "https://example.com/repo/packages/rpcbind"
+        },
+        "sha256:b81f37a043a6f767e7c94d105f4bd31282f3ecc20680bb9d09bd93461cf4c863": {
+          "url": "https://example.com/repo/packages/audit"
+        },
+        "sha256:ba6559ec248d211b5cfcc313380c7a871da23f845937f429f6304cc841c500cf": {
+          "url": "https://example.com/repo/packages/vim-minimal"
+        },
+        "sha256:bceee99a4a82cf20ebeb8d0085d57327f62bf0bcf1a4d3c24f430a9366f353c2": {
+          "url": "https://example.com/repo/packages/psmisc"
+        },
+        "sha256:bf079a7045b8c53dd15c009532e5f1c789260a8a2debb1eddd67ecf47712dde8": {
+          "url": "https://example.com/repo/packages/iwl2000-firmware"
+        },
+        "sha256:bf35d0b80342ad44ca298ed07fcc9d3f8d43a2700964586a4a5e2c0a49766528": {
+          "url": "https://example.com/repo/packages/selinux-policy-targeted"
+        },
+        "sha256:c1cc69e61c0f1c7ade8df0f2994e582e7c1f2c57d1ec192a0baf9f96b7739d9d": {
+          "url": "https://example.com/repo/packages/python3"
+        },
+        "sha256:c292fa22d3c8f05c74185be8a25495701be31db25ca27f03a6851bea3aec9d0d": {
+          "url": "https://example.com/passed-arch:x86_64/passed-repo:/v2/mirror/rhvpn/el10/el10-x86_64-appstream-n10.0"
+        },
+        "sha256:c38a19b3443f7bc00411db2850001c2fa25d751544c364e1802148be05021cc0": {
+          "url": "https://example.com/repo/packages/iwl5000-firmware"
+        },
+        "sha256:c5c5b49ed7ea2ff99b6eb892df08b33bafc927a7712b7aaa942627531e0378d2": {
+          "url": "https://example.com/repo/packages/grub2-pc-modules"
+        },
+        "sha256:c62adbb8e41e30631962b2ea5b1ce9d9a8270d3fc7909f4d8ec2fed1348c7828": {
+          "url": "https://example.com/repo/packages/cockpit-ws"
+        },
+        "sha256:c6bfc8d71984ae000030ad824d40cb24a5a2ea0011f17c0e1997d623973ff33c": {
+          "url": "https://example.com/repo/packages/ethtool"
+        },
+        "sha256:c9694c21375651122e49ce8afc80f69910c81f7843714dca0f1af12d3cdcd6b0": {
+          "url": "https://example.com/repo/packages/iwl1000-firmware"
+        },
+        "sha256:cb298bd94fae6f2f713a1108a16e0632f3a1e21820a288d7ea86c8b00a4d4fef": {
+          "url": "https://example.com/repo/packages/lsof"
+        },
+        "sha256:cb6b44243b93acef33a5ee905d92203a2a55abdc6a3b7c446c8435a41a6ad137": {
+          "url": "https://example.com/repo/packages/sil-padauk-fonts"
+        },
+        "sha256:cbdfe23c9cb9c48e031abaceb7fd4f15ac4a88e4e8a3334132838b4627e07b31": {
+          "url": "https://example.com/repo/packages/gdb-gdbserver"
+        },
+        "sha256:cd2c0f63ad37d585e77b3f1c584539e26bf7928710ac8fb19fd377f61b7326e6": {
+          "url": "https://example.com/repo/packages/anaconda"
+        },
+        "sha256:ce2b8ecf9afac9f546bdbbb0902afb6088fdcb8524269ad5b4adb9b9d4959b07": {
+          "url": "https://example.com/repo/packages/xfsdump"
+        },
+        "sha256:ce5b1962783aa6a9374a0a1b34941a112a799baac827c733bd28c78dbb4bcf36": {
+          "url": "https://example.com/repo/packages/kdump-anaconda-addon"
+        },
+        "sha256:cf23a0e72ee5bed7a2cce02a3b6115e97c593554600931c5f348a1f304f93bb6": {
+          "url": "https://example.com/repo/packages/dnf-utils"
+        },
+        "sha256:cf51db7aa57c11cf84bbe5f58f73eb415d037cd000bcce129696331d9bddfc3c": {
+          "url": "https://example.com/repo/packages/cryptsetup"
+        },
+        "sha256:cf732696c9aebd80fad833157535754f246445ad0fec66e918963443bd3cfb71": {
+          "url": "https://example.com/repo/packages/linux-firmware"
+        },
+        "sha256:d7d0ecd0d4332981facb2d959fcd8c2e710f237cf34554b4884de1c3159160cc": {
+          "url": "https://example.com/repo/packages/cockpit-system"
+        },
+        "sha256:d84be37f898e57d7de91b2062b2d5d8c53846fefb238d48b2bebaa3fdfeb4de9": {
+          "url": "https://example.com/repo/packages/iwl6000g2b-firmware"
+        },
+        "sha256:d87d9e526f265be973fce2ba320c5ed3ae24f6c5560d816d0b9307d0ba4d357f": {
+          "url": "https://example.com/repo/packages/lorax-templates-rhel"
+        },
+        "sha256:dad715e4ad49fa30f5a61dec5fcf18cfad20e349b90818913f99f163615266cd": {
+          "url": "https://example.com/repo/packages/lorax-templates-generic"
+        },
+        "sha256:db755438d5157104180d27e8f8e21478dc2700470e611d4fe646be7972cdcad9": {
+          "url": "https://example.com/repo/packages/openssh-clients"
+        },
+        "sha256:dbf9956aa9c5ccd4c6d92f0550e959f58bb815fb570c305e9d93645eee2082d4": {
+          "url": "https://example.com/repo/packages/grub2-efi-x64"
+        },
+        "sha256:dfff1585cd84bf13177a09e93d70be3a39c3bec554f1215a5a4fe5c92bbae8bf": {
+          "url": "https://example.com/repo/packages/nfs-utils"
+        },
+        "sha256:e0031c189e34e10d9c202fa8d75f72d3296a239164fe6b07e7dc206c7b723d98": {
+          "url": "https://example.com/repo/packages/systemd"
+        },
+        "sha256:e2f24de304a49d3d3c1261466376ab341c3834eb683d806cb534587f4fd48f8d": {
+          "url": "https://example.com/repo/packages/efibootmgr"
+        },
+        "sha256:eaa83a86c658bfd0c01894a695993f394ee51794f31dc607f4a47e31cb50fc6d": {
+          "url": "https://example.com/repo/packages/grub2-tools"
+        },
+        "sha256:ec924965104fcfdffc6c47b1097bcf63a78989606075c98870d56937969b531d": {
+          "url": "https://example.com/repo/packages/rpm-ostree"
+        },
+        "sha256:eddfc611c4f74bed09b2ac20b714b54f2e47d9befc7cc8af98b4c679807ba573": {
+          "url": "https://example.com/repo/packages/memtest86+"
+        },
+        "sha256:eeb3d09845f5cde069eeade2c4339532be58b6607120be00656123cc73ea727c": {
+          "url": "https://example.com/repo/packages/kbd-misc"
+        },
+        "sha256:f3a65c49b47eaa55e2413f4728317ab8b3a5019dc70f1f6ca66e838a77f4c078": {
+          "url": "https://example.com/repo/packages/biosdevname"
+        },
+        "sha256:f4dc4ad92c4e57553b004ecd08561dd6b15d5dc7d99869c499544a890f18eddc": {
+          "url": "https://example.com/repo/packages/lvm2"
+        },
+        "sha256:f5f43514d2de810e4ea6d047203505e2e3c0c25f43941ec226968d17bb3aa1b5": {
+          "url": "https://example.com/repo/packages/gnome-kiosk"
+        },
+        "sha256:f6453ebfd8ab070567bfcd4cda99cc41c2c849237745f24228c5f040cac5d562": {
+          "url": "https://example.com/repo/packages/libibverbs"
+        },
+        "sha256:f7b582e05483b8a5ecc5804365d363ae91a5cbb5dd4f38f3f10e79634ebcf70c": {
+          "url": "https://example.com/repo/packages/isomd5sum"
+        },
+        "sha256:f7f7a2e0133dfc81f9505bac28dfb7ee3398f3dc3b32c7682c86a9be5403bfee": {
+          "url": "https://example.com/repo/packages/librsvg2"
+        },
+        "sha256:fad55872f0e26075082344da2db3418e620e1d82f740220c7f121e085d8fd654": {
+          "url": "https://example.com/repo/packages/subscription-manager-cockpit"
+        },
+        "sha256:fbc15b96c51eaf5c099caa6a6658257c6f9a0a4c148ed907c564ad993079ac23": {
+          "url": "https://example.com/repo/packages/dracut-network"
+        },
+        "sha256:fc8aa064642e279d6d03beb27074f88fe4e3182c2dfe3a4117f135b9662ae2b7": {
+          "url": "https://example.com/repo/packages/iwl7260-firmware"
+        },
+        "sha256:fe36b1d498f9c6057ed774ba5fb0a84c8592886c3a4c7c077ce7f41326373099": {
+          "url": "https://example.com/repo/packages/lldpad"
+        },
+        "sha256:ff288c563531a45d3e848ddc70320f148964ae93b088ebcafa67cd2a2f0b4d9a": {
+          "url": "https://example.com/repo/packages/syslinux"
+        }
+      }
+    },
+    "org.osbuild.inline": {
+      "items": {
+        "sha256:ca22d604790e8539428507743f646e9470b1fc9cd9b24723efcada93b4639434": {
+          "encoding": "base64",
+          "data": "JWluY2x1ZGUgL3J1bi9pbnN0YWxsL3JlcG8vb3NidWlsZC1iYXNlLmtzCgolcG9zdAplY2hvIC1lICIlc3Vkb1x0QUxMPShBTEwpXHROT1BBU1NXRDogQUxMIiA+ICIvZXRjL3N1ZG9lcnMuZC8lc3VkbyIKY2htb2QgMDQ0MCAvZXRjL3N1ZG9lcnMuZC8lc3VkbwplY2hvIC1lICIld2hlZWxcdEFMTD0oQUxMKVx0Tk9QQVNTV0Q6IEFMTCIgPiAiL2V0Yy9zdWRvZXJzLmQvJXdoZWVsIgpjaG1vZCAwNDQwIC9ldGMvc3Vkb2Vycy5kLyV3aGVlbApyZXN0b3JlY29uIC1ydkYgL2V0Yy9zdWRvZXJzLmQKJWVuZAo="
+        }
+      }
+    }
+  }
+}

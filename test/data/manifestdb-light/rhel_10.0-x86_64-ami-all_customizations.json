@@ -1,0 +1,1714 @@
+{
+  "version": "2",
+  "pipelines": [
+    {
+      "name": "build",
+      "runner": "org.osbuild.rhel100",
+      "stages": [
+        {
+          "type": "org.osbuild.rpm",
+          "inputs": {
+            "packages": {
+              "type": "org.osbuild.files",
+              "origin": "org.osbuild.source",
+              "references": [
+                {
+                  "id": "sha256:3993c379c029014a9c4b2adf5d23397b3c7421467a0cb3575ff925bb6f6329b0"
+                },
+                {
+                  "id": "sha256:02b2f585447caaaef59cc58cda1cbf6db27530690fdb13f747f3fdeb762c4b15"
+                },
+                {
+                  "id": "sha256:02b2f585447caaaef59cc58cda1cbf6db27530690fdb13f747f3fdeb762c4b15"
+                },
+                {
+                  "id": "sha256:1b11757d33424678ba2d9d6fbd9eb6293a7bfa196dca15a29af179af778c235d"
+                },
+                {
+                  "id": "sha256:a07b0a6df6f248078ebaf93e5bea115093f8a79e0a830e383b6c0b9f7f1605f5"
+                },
+                {
+                  "id": "sha256:a07b0a6df6f248078ebaf93e5bea115093f8a79e0a830e383b6c0b9f7f1605f5"
+                },
+                {
+                  "id": "sha256:f4dc4ad92c4e57553b004ecd08561dd6b15d5dc7d99869c499544a890f18eddc"
+                },
+                {
+                  "id": "sha256:f4dc4ad92c4e57553b004ecd08561dd6b15d5dc7d99869c499544a890f18eddc"
+                },
+                {
+                  "id": "sha256:8a1bf05d306aa663e856f3c450c8b2ddc6800116b818c7d3b65503cd89f7682a"
+                },
+                {
+                  "id": "sha256:93cd8e20fc07f08337cb9d9fa9996274658f6395574e874379c4c4157e922700"
+                },
+                {
+                  "id": "sha256:93cd8e20fc07f08337cb9d9fa9996274658f6395574e874379c4c4157e922700"
+                },
+                {
+                  "id": "sha256:c1cc69e61c0f1c7ade8df0f2994e582e7c1f2c57d1ec192a0baf9f96b7739d9d"
+                },
+                {
+                  "id": "sha256:48af68b2888775d102da39bebbe05cf07bca2f2ab9f1103dd19359d64083c70b"
+                },
+                {
+                  "id": "sha256:48af68b2888775d102da39bebbe05cf07bca2f2ab9f1103dd19359d64083c70b"
+                },
+                {
+                  "id": "sha256:9e7ab438597fee20e16e8e441bed0ce966bd59e0fb993fa7c94be31fb1384d88"
+                },
+                {
+                  "id": "sha256:9e7ab438597fee20e16e8e441bed0ce966bd59e0fb993fa7c94be31fb1384d88"
+                },
+                {
+                  "id": "sha256:bf35d0b80342ad44ca298ed07fcc9d3f8d43a2700964586a4a5e2c0a49766528"
+                },
+                {
+                  "id": "sha256:bf35d0b80342ad44ca298ed07fcc9d3f8d43a2700964586a4a5e2c0a49766528"
+                },
+                {
+                  "id": "sha256:bf35d0b80342ad44ca298ed07fcc9d3f8d43a2700964586a4a5e2c0a49766528"
+                },
+                {
+                  "id": "sha256:e0031c189e34e10d9c202fa8d75f72d3296a239164fe6b07e7dc206c7b723d98"
+                },
+                {
+                  "id": "sha256:21fb8eaa1cfa55dbc0ed009dc98fbbbc9de4ecaef53d51dc41ab1b0ae867ed49"
+                },
+                {
+                  "id": "sha256:21fb8eaa1cfa55dbc0ed009dc98fbbbc9de4ecaef53d51dc41ab1b0ae867ed49"
+                },
+                {
+                  "id": "sha256:8ec5e9e6f70bf1a0b5692ef948d1194bdb074342ed14045f9e84820367a98c6a"
+                },
+                {
+                  "id": "sha256:b779e8f841cdb45f58a152168ea90a81102474bf0d4dc8b9224a433307dc7e51"
+                },
+                {
+                  "id": "sha256:c292fa22d3c8f05c74185be8a25495701be31db25ca27f03a6851bea3aec9d0d"
+                }
+              ]
+            }
+          },
+          "options": {
+            "gpgkeys": [
+              "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nmQINBGIpIp4BEAC/o5e1WzLIsS6/JOQCs4XYATYTcf6B6ALzcP05G0W3uRpUQSrL\nFRKNrU8ZCelm/B+XSh2ljJNeklp2WLxYENDOsftDXGoyLr2hEkI5OyK267IHhFNJ\ng+BN+T5Cjh4ZiiWij6o9F7x2ZpxISE9M4iI80rwSv1KOnGSw5j2zD2EwoMjTVyVE\n/t3s5XJxnDclB7ZqL+cgjv0mWUY/4+b/OoRTkhq7b8QILuZp75Y64pkrndgakm1T\n8mAGXV02mEzpNj9DyAJdUqa11PIhMJMxxHOGHJ8CcHZ2NJL2e7yJf4orTj+cMhP5\nLzJcVlaXnQYu8Zkqa0V6J1Qdj8ZXL72QsmyicRYXAtK9Jm5pvBHuYU2m6Ja7dBEB\nVkhe7lTKhAjkZC5ErPmANNS9kPdtXCOpwN1lOnmD2m04hks3kpH9OTX7RkTFUSws\neARAfRID6RLfi59B9lmAbekecnsMIFMx7qR7ZKyQb3GOuZwNYOaYFevuxusSwCHv\n4FtLDIhk+Fge+EbPdEva+VLJeMOb02gC4V/cX/oFoPkxM1A5LHjkuAM+aFLAiIRd\nNp/tAPWk1k6yc+FqkcDqOttbP4ciiXb9JPtmzTCbJD8lgH0rGp8ufyMXC9x7/dqX\nTjsiGzyvlMnrkKB4GL4DqRFl8LAR02A3846DD8CAcaxoXggL2bJCU2rgUQARAQAB\ntDVSZWQgSGF0LCBJbmMuIChhdXhpbGlhcnkga2V5IDMpIDxzZWN1cml0eUByZWRo\nYXQuY29tPokCUgQTAQgAPBYhBH5GJCWMQGU11W1vE1BU5KRaY0CzBQJiKSKeAhsD\nBQsJCAcCAyICAQYVCgkICwIEFgIDAQIeBwIXgAAKCRBQVOSkWmNAsyBfEACuTN/X\nYR+QyzeRw0pXcTvMqzNE4DKKr97hSQEwZH1/v1PEPs5O3psuVUm2iam7bqYwG+ry\nEskAgMHi8AJmY0lioQD5/LTSLTrM8UyQnU3g17DHau1NHIFTGyaW4a7xviU4C2+k\nc6X0u1CPHI1U4Q8prpNcfLsldaNYlsVZtUtYSHKPAUcswXWliW7QYjZ5tMSbu8jR\nOMOc3mZuf0fcVFNu8+XSpN7qLhRNcPv+FCNmk/wkaQfH4Pv+jVsOgHqkV3aLqJeN\nkNUnpyEKYkNqo7mNfNVWOcl+Z1KKKwSkIi3vg8maC7rODsy6IX+Y96M93sqYDQom\naaWue2gvw6thEoH4SaCrCL78mj2YFpeg1Oew4QwVcBnt68KOPfL9YyoOicNs4Vuu\nfb/vjU2ONPZAeepIKA8QxCETiryCcP43daqThvIgdbUIiWne3gae6eSj0EuUPoYe\nH5g2Lw0qdwbHIOxqp2kvN96Ii7s1DK3VyhMt/GSPCxRnDRJ8oQKJ2W/I1IT5VtiU\nzMjjq5JcYzRPzHDxfVzT9CLeU/0XQ+2OOUAiZKZ0dzSyyVn8xbpviT7iadvjlQX3\nCINaPB+d2Kxa6uFWh+ZYOLLAgZ9B8NKutUHpXN66YSfe79xFBSFWKkJ8cSIMk13/\nIfs7ApKlKCCRDpwoDqx/sjIaj1cpOfLHYjnefg==\n=UZd/\n-----END PGP PUBLIC KEY BLOCK-----",
+              "-----BEGIN PGP PUBLIC KEY BLOCK-----\nVersion: GnuPG v2.0.22 (GNU/Linux)\n\nmQINBErgSTsBEACh2A4b0O9t+vzC9VrVtL1AKvUWi9OPCjkvR7Xd8DtJxeeMZ5eF\n0HtzIG58qDRybwUe89FZprB1ffuUKzdE+HcL3FbNWSSOXVjZIersdXyH3NvnLLLF\n0DNRB2ix3bXG9Rh/RXpFsNxDp2CEMdUvbYCzE79K1EnUTVh1L0Of023FtPSZXX0c\nu7Pb5DI5lX5YeoXO6RoodrIGYJsVBQWnrWw4xNTconUfNPk0EGZtEnzvH2zyPoJh\nXGF+Ncu9XwbalnYde10OCvSWAZ5zTCpoLMTvQjWpbCdWXJzCm6G+/hx9upke546H\n5IjtYm4dTIVTnc3wvDiODgBKRzOl9rEOCIgOuGtDxRxcQkjrC+xvg5Vkqn7vBUyW\n9pHedOU+PoF3DGOM+dqv+eNKBvh9YF9ugFAQBkcG7viZgvGEMGGUpzNgN7XnS1gj\n/DPo9mZESOYnKceve2tIC87p2hqjrxOHuI7fkZYeNIcAoa83rBltFXaBDYhWAKS1\nPcXS1/7JzP0ky7d0L6Xbu/If5kqWQpKwUInXtySRkuraVfuK3Bpa+X1XecWi24JY\nHVtlNX025xx1ewVzGNCTlWn1skQN2OOoQTV4C8/qFpTW6DTWYurd4+fE0OJFJZQF\nbuhfXYwmRlVOgN5i77NTIJZJQfYFj38c/Iv5vZBPokO6mffrOTv3MHWVgQARAQAB\ntDNSZWQgSGF0LCBJbmMuIChyZWxlYXNlIGtleSAyKSA8c2VjdXJpdHlAcmVkaGF0\nLmNvbT6JAjYEEwEIACACGwMGCwkIBwMCBBUCCAMEFgIDAQIeAQIXgAUCSuBJPAAK\nCRAZni+R/UMdUfIkD/9m3HWv07uJG26R3KBexTo2FFu3rmZs+m2nfW8R3dBX+k0o\nAOFpgJCsNgKwU81LOPrkMN19G0+Yn/ZTCDD7cIQ7dhYuDyEX97xh4une/EhnnRuh\nASzR+1xYbj/HcYZIL9kbslgpebMn+AhxbUTQF/mziug3hLidR9Bzvygq0Q09E11c\nOZL4BU6J2HqxL+9m2F+tnLdfhL7MsAq9nbmWAOpkbGefc5SXBSq0sWfwoes3X3yD\nQ8B5Xqr9AxABU7oUB+wRqvY69ZCxi/BhuuJCUxY89ZmwXfkVxeHl1tYfROUwOnJO\nGYSbI/o41KBK4DkIiDcT7QqvqvCyudnxZdBjL2QU6OrIJvWmKs319qSF9m3mXRSt\nZzWtB89Pj5LZ6cdtuHvW9GO4qSoBLmAfB313pGkbgi1DE6tqCLHlA0yQ8zv99OWV\ncMDGmS7tVTZqfX1xQJ0N3bNORQNtikJC3G+zBCJzIeZleeDlMDQcww00yWU1oE7/\nTo2UmykMGc7o9iggFWR2g0PIcKsA/SXdRKWPqCHG2uKHBvdRTQGupdXQ1sbV+AHw\nycyA/9H/mp/NUSNM2cqnBDcZ6GhlHt59zWtEveiuU5fpTbp4GVcFXbW8jStj8j8z\n1HI3cywZO8+YNPzqyx0JWsidXGkfzkPHyS4jTG84lfu2JG8m/nqLnRSeKpl20Q==\n=79bX\n-----END PGP PUBLIC KEY BLOCK-----"
+            ]
+          }
+        },
+        {
+          "type": "org.osbuild.selinux",
+          "options": {
+            "file_contexts": "etc/selinux/targeted/contexts/files/file_contexts",
+            "labels": {
+              "/usr/bin/cp": "system_u:object_r:install_exec_t:s0"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "os",
+      "build": "name:build",
+      "stages": [
+        {
+          "type": "org.osbuild.kernel-cmdline",
+          "options": {
+            "root_fs_uuid": "a275bc3e-57e2-4eaa-a726-f6e8a38bccdd",
+            "kernel_opts": "console=tty0 console=ttyS0,115200n8 nvme_core.io_timeout=4294967295 debug"
+          }
+        },
+        {
+          "type": "org.osbuild.rpm",
+          "inputs": {
+            "packages": {
+              "type": "org.osbuild.files",
+              "origin": "org.osbuild.source",
+              "references": [
+                {
+                  "id": "sha256:443ad85c108c8acb279fc373255ff3444e54cc07c0af87a62962f0adcedd152a"
+                },
+                {
+                  "id": "sha256:fcb160b10ea6f210b8da239c09ea1b28cbcefefe1502486111fcd5ac6d8d99a6"
+                },
+                {
+                  "id": "sha256:5fdc7e383dc7e1b390e40c3012a2aa03978901c45f3597c1c239c51134d03dbe"
+                },
+                {
+                  "id": "sha256:5fdc7e383dc7e1b390e40c3012a2aa03978901c45f3597c1c239c51134d03dbe"
+                },
+                {
+                  "id": "sha256:3fc8516922a52d754083308fc413432652da40490b0a336294a5d765757be942"
+                },
+                {
+                  "id": "sha256:a77e9cdc1f34c916ec906e61eb889974e144e2e0a8dd613d191f5d877cf2774f"
+                },
+                {
+                  "id": "sha256:e6af7cd461c636ed1330dfd460b246e169abd6ce75d5afc1ca94948f9c853df9"
+                },
+                {
+                  "id": "sha256:02b2f585447caaaef59cc58cda1cbf6db27530690fdb13f747f3fdeb762c4b15"
+                },
+                {
+                  "id": "sha256:5660f11783e742698cec671d45910e74342fe3e48ddf054f38c0828776b08d00"
+                },
+                {
+                  "id": "sha256:5660f11783e742698cec671d45910e74342fe3e48ddf054f38c0828776b08d00"
+                },
+                {
+                  "id": "sha256:5660f11783e742698cec671d45910e74342fe3e48ddf054f38c0828776b08d00"
+                },
+                {
+                  "id": "sha256:e2f24de304a49d3d3c1261466376ab341c3834eb683d806cb534587f4fd48f8d"
+                },
+                {
+                  "id": "sha256:d90b7202318ad799fdf7fc011a6a3d09cb586853981e5c53f381c771e0dc549a"
+                },
+                {
+                  "id": "sha256:dbf9956aa9c5ccd4c6d92f0550e959f58bb815fb570c305e9d93645eee2082d4"
+                },
+                {
+                  "id": "sha256:a07b0a6df6f248078ebaf93e5bea115093f8a79e0a830e383b6c0b9f7f1605f5"
+                },
+                {
+                  "id": "sha256:69a9176ea7cf541c2ae178ff9980fffbb29857c902d27c791233d4a48545c245"
+                },
+                {
+                  "id": "sha256:6923dd1bc0460082c5d55a831908c24a282860b7f1cd6c2b79cf1bc8857c639c"
+                },
+                {
+                  "id": "sha256:2c19d6424bd57628cc917ad414752d0135eb9c333b6671568cca9f6c95b8a053"
+                },
+                {
+                  "id": "sha256:f4dc4ad92c4e57553b004ecd08561dd6b15d5dc7d99869c499544a890f18eddc"
+                },
+                {
+                  "id": "sha256:ee96e48ac867ab59efb688ad1eaef6ef54d06bc565785570164bd9bbb03d67e3"
+                },
+                {
+                  "id": "sha256:0d6be69b264717f2dd33652e212b173104b4a647b7c11ae72e9885f11cd312fb"
+                },
+                {
+                  "id": "sha256:1a0970a720caab2869fc7eb436e6b7656fc7efbb24cfa72ae5b49e2f6acbd7ca"
+                },
+                {
+                  "id": "sha256:7a5bd1ed08002bc08013ea55c7fffc61047042b3d0979471b6e34d5e5089d334"
+                },
+                {
+                  "id": "sha256:8ff8d40e4a4c726df40795e3134432ac66f7d055d54639c1026e341b6d2bd6e7"
+                },
+                {
+                  "id": "sha256:bf35d0b80342ad44ca298ed07fcc9d3f8d43a2700964586a4a5e2c0a49766528"
+                },
+                {
+                  "id": "sha256:6449d2f7bae9905add75f6d3e9b03de90743a1cef971f41aedeeb4139a1780d1"
+                },
+                {
+                  "id": "sha256:9370ee4e95b7172989b9fd3f81860093529113ba42b69be340467d87a94bb253"
+                },
+                {
+                  "id": "sha256:90aebae315675cbf04612de4f7d5874850f48e0b8dd82becbeaa47ca93f5ebfb"
+                },
+                {
+                  "id": "sha256:aba407b81ed016841ea552feadaf0663c7804a64554ba55d3109b3dc8198cdcb"
+                },
+                {
+                  "id": "sha256:21fb8eaa1cfa55dbc0ed009dc98fbbbc9de4ecaef53d51dc41ab1b0ae867ed49"
+                },
+                {
+                  "id": "sha256:fe841d961c3a0038f8a5d15250baff1c2e8efee10e72292ceb5bab8f2633f694"
+                },
+                {
+                  "id": "sha256:a2f5883db78735971fd620c3e83fb7767bda931555991194501eea3533e879e8"
+                },
+                {
+                  "id": "sha256:5b1e08d9dde2b42e638ce3f27ebfeaf4ab4c6ccded49d48ea60382d290cd90f6"
+                },
+                {
+                  "id": "sha256:fc710b8c27f067288ccb7779e98f7b04e7e0c84256260c93a69f68ad94b78fd8"
+                },
+                {
+                  "id": "sha256:99fec328617e9bc972503d5ed4c4c93218a8c44649cdc875876fdfbba0be383a"
+                },
+                {
+                  "id": "sha256:49e9285da13f2be02b3654b01e74cab5840b8c679f7ad4b528a9cf794d3d3e34"
+                },
+                {
+                  "id": "sha256:f6a50120d4a785cc75becb370680d24d452f1437c5064db8d22f510c75604a6d"
+                },
+                {
+                  "id": "sha256:eda2b1be19a5062fa55b669761df806f9aa4675223ed3cc9cce6eceaf0677939"
+                },
+                {
+                  "id": "sha256:0bdf1ef00f53398361ebaf915f0325ccdc0534447134ba8506a03c71f2c5c9e2"
+                },
+                {
+                  "id": "sha256:9a701ca1bcd3b07afca9ae5f17588a2048341e0bcdab2b5a81e10614d5ca2974"
+                },
+                {
+                  "id": "sha256:dc326a13b89447ad3251f78a5bd784808b85c64bc4fd380d2e9533ffa00428e2"
+                },
+                {
+                  "id": "sha256:476f3ccb0b9ae8b029e7105db14adf652095700dc1c8b87b8caaed29993aab27"
+                },
+                {
+                  "id": "sha256:19ba1894b231183f6dcfffd0adf9b657eb00ea33f1e002cfb04d1f1fc8e79b71"
+                },
+                {
+                  "id": "sha256:874ecbebddb9872c2fc949de3be7888f72ad3ae0e7847ee5ce0503c691503ad0"
+                },
+                {
+                  "id": "sha256:a918a8d5a29ea7c5834c6d46725660eb441653074ab4d9d8876029abce79bfb7"
+                },
+                {
+                  "id": "sha256:04cb12e072878beef30b2e3560c39bf1cb0e5a8896a545e7f4bfb0ec777196b3"
+                },
+                {
+                  "id": "sha256:4eeb0ed8c3fbd5ac0b9a9800a8cc1347f80f14bb505b0df58aefd000f978b269"
+                },
+                {
+                  "id": "sha256:782c4bb3c7a9beb41e451bceb3f4db6de6a331eb31ca76e6a64296251ba2fdb1"
+                },
+                {
+                  "id": "sha256:ce5857e0b504bd3e06f80b27dc88064f0bf214127dd5a2ee1ff849ed78e32c9e"
+                },
+                {
+                  "id": "sha256:bd0add6fdee6e6ac62a4ff6bc722f2324a918d8ccc4eda21e043252a10481f0c"
+                },
+                {
+                  "id": "sha256:5ac0b916a6d093edc6b702b25864007a7746a1b737c882d5a8a6d1644d731e79"
+                },
+                {
+                  "id": "sha256:0dc67f06d4a10e86af05f9a118375a3509880de5c947f9eab6476900b50d0a39"
+                },
+                {
+                  "id": "sha256:a2e58f805ca848eb1fb0fb207656d11b77a96ab198244c8e7a3fa49ddc5aade6"
+                },
+                {
+                  "id": "sha256:4e81068e88aa80ce2e9bea996a7f9e02244d06eef15c97e72ebb75b22c3ebfc5"
+                },
+                {
+                  "id": "sha256:35a69aa1faeaa821a35f576490244bd7755c226a55e1a93abd0e2b4c7e0401e8"
+                },
+                {
+                  "id": "sha256:4d0e0adebe4eb01e6db63dcdade819e617dc3c9dc412f2b08fed35ae421f8682"
+                },
+                {
+                  "id": "sha256:d8654f2a37c8dd45ed104e5b7c26ec3ee0d74dca488cdd0a400d58a6c4f7875b"
+                },
+                {
+                  "id": "sha256:28fc95b01c3d432a448ded25eb5aada86e12319fcb912666f67dd5eb97893933"
+                },
+                {
+                  "id": "sha256:2de43b323b1e26fd256368050a89e6f1ab3ca1c7d469b67e134db4d5ffc7929d"
+                },
+                {
+                  "id": "sha256:e0d9946d02c44f153131552ca5afa5cd0902d0446b0295a329964e78a345327c"
+                },
+                {
+                  "id": "sha256:443ad85c108c8acb279fc373255ff3444e54cc07c0af87a62962f0adcedd152a"
+                },
+                {
+                  "id": "sha256:37d2b12d5d9abc2a364ef9448767ee03938e383c0284193477dc7618f4b7c6c2"
+                },
+                {
+                  "id": "sha256:52856879d4bfa1d564480850a56b0885e1c52a805af96fffe84122afc9b1c52b"
+                },
+                {
+                  "id": "sha256:b779e8f841cdb45f58a152168ea90a81102474bf0d4dc8b9224a433307dc7e51"
+                },
+                {
+                  "id": "sha256:c292fa22d3c8f05c74185be8a25495701be31db25ca27f03a6851bea3aec9d0d"
+                }
+              ]
+            }
+          },
+          "options": {
+            "gpgkeys": [
+              "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nmQINBGIpIp4BEAC/o5e1WzLIsS6/JOQCs4XYATYTcf6B6ALzcP05G0W3uRpUQSrL\nFRKNrU8ZCelm/B+XSh2ljJNeklp2WLxYENDOsftDXGoyLr2hEkI5OyK267IHhFNJ\ng+BN+T5Cjh4ZiiWij6o9F7x2ZpxISE9M4iI80rwSv1KOnGSw5j2zD2EwoMjTVyVE\n/t3s5XJxnDclB7ZqL+cgjv0mWUY/4+b/OoRTkhq7b8QILuZp75Y64pkrndgakm1T\n8mAGXV02mEzpNj9DyAJdUqa11PIhMJMxxHOGHJ8CcHZ2NJL2e7yJf4orTj+cMhP5\nLzJcVlaXnQYu8Zkqa0V6J1Qdj8ZXL72QsmyicRYXAtK9Jm5pvBHuYU2m6Ja7dBEB\nVkhe7lTKhAjkZC5ErPmANNS9kPdtXCOpwN1lOnmD2m04hks3kpH9OTX7RkTFUSws\neARAfRID6RLfi59B9lmAbekecnsMIFMx7qR7ZKyQb3GOuZwNYOaYFevuxusSwCHv\n4FtLDIhk+Fge+EbPdEva+VLJeMOb02gC4V/cX/oFoPkxM1A5LHjkuAM+aFLAiIRd\nNp/tAPWk1k6yc+FqkcDqOttbP4ciiXb9JPtmzTCbJD8lgH0rGp8ufyMXC9x7/dqX\nTjsiGzyvlMnrkKB4GL4DqRFl8LAR02A3846DD8CAcaxoXggL2bJCU2rgUQARAQAB\ntDVSZWQgSGF0LCBJbmMuIChhdXhpbGlhcnkga2V5IDMpIDxzZWN1cml0eUByZWRo\nYXQuY29tPokCUgQTAQgAPBYhBH5GJCWMQGU11W1vE1BU5KRaY0CzBQJiKSKeAhsD\nBQsJCAcCAyICAQYVCgkICwIEFgIDAQIeBwIXgAAKCRBQVOSkWmNAsyBfEACuTN/X\nYR+QyzeRw0pXcTvMqzNE4DKKr97hSQEwZH1/v1PEPs5O3psuVUm2iam7bqYwG+ry\nEskAgMHi8AJmY0lioQD5/LTSLTrM8UyQnU3g17DHau1NHIFTGyaW4a7xviU4C2+k\nc6X0u1CPHI1U4Q8prpNcfLsldaNYlsVZtUtYSHKPAUcswXWliW7QYjZ5tMSbu8jR\nOMOc3mZuf0fcVFNu8+XSpN7qLhRNcPv+FCNmk/wkaQfH4Pv+jVsOgHqkV3aLqJeN\nkNUnpyEKYkNqo7mNfNVWOcl+Z1KKKwSkIi3vg8maC7rODsy6IX+Y96M93sqYDQom\naaWue2gvw6thEoH4SaCrCL78mj2YFpeg1Oew4QwVcBnt68KOPfL9YyoOicNs4Vuu\nfb/vjU2ONPZAeepIKA8QxCETiryCcP43daqThvIgdbUIiWne3gae6eSj0EuUPoYe\nH5g2Lw0qdwbHIOxqp2kvN96Ii7s1DK3VyhMt/GSPCxRnDRJ8oQKJ2W/I1IT5VtiU\nzMjjq5JcYzRPzHDxfVzT9CLeU/0XQ+2OOUAiZKZ0dzSyyVn8xbpviT7iadvjlQX3\nCINaPB+d2Kxa6uFWh+ZYOLLAgZ9B8NKutUHpXN66YSfe79xFBSFWKkJ8cSIMk13/\nIfs7ApKlKCCRDpwoDqx/sjIaj1cpOfLHYjnefg==\n=UZd/\n-----END PGP PUBLIC KEY BLOCK-----",
+              "-----BEGIN PGP PUBLIC KEY BLOCK-----\nVersion: GnuPG v2.0.22 (GNU/Linux)\n\nmQINBErgSTsBEACh2A4b0O9t+vzC9VrVtL1AKvUWi9OPCjkvR7Xd8DtJxeeMZ5eF\n0HtzIG58qDRybwUe89FZprB1ffuUKzdE+HcL3FbNWSSOXVjZIersdXyH3NvnLLLF\n0DNRB2ix3bXG9Rh/RXpFsNxDp2CEMdUvbYCzE79K1EnUTVh1L0Of023FtPSZXX0c\nu7Pb5DI5lX5YeoXO6RoodrIGYJsVBQWnrWw4xNTconUfNPk0EGZtEnzvH2zyPoJh\nXGF+Ncu9XwbalnYde10OCvSWAZ5zTCpoLMTvQjWpbCdWXJzCm6G+/hx9upke546H\n5IjtYm4dTIVTnc3wvDiODgBKRzOl9rEOCIgOuGtDxRxcQkjrC+xvg5Vkqn7vBUyW\n9pHedOU+PoF3DGOM+dqv+eNKBvh9YF9ugFAQBkcG7viZgvGEMGGUpzNgN7XnS1gj\n/DPo9mZESOYnKceve2tIC87p2hqjrxOHuI7fkZYeNIcAoa83rBltFXaBDYhWAKS1\nPcXS1/7JzP0ky7d0L6Xbu/If5kqWQpKwUInXtySRkuraVfuK3Bpa+X1XecWi24JY\nHVtlNX025xx1ewVzGNCTlWn1skQN2OOoQTV4C8/qFpTW6DTWYurd4+fE0OJFJZQF\nbuhfXYwmRlVOgN5i77NTIJZJQfYFj38c/Iv5vZBPokO6mffrOTv3MHWVgQARAQAB\ntDNSZWQgSGF0LCBJbmMuIChyZWxlYXNlIGtleSAyKSA8c2VjdXJpdHlAcmVkaGF0\nLmNvbT6JAjYEEwEIACACGwMGCwkIBwMCBBUCCAMEFgIDAQIeAQIXgAUCSuBJPAAK\nCRAZni+R/UMdUfIkD/9m3HWv07uJG26R3KBexTo2FFu3rmZs+m2nfW8R3dBX+k0o\nAOFpgJCsNgKwU81LOPrkMN19G0+Yn/ZTCDD7cIQ7dhYuDyEX97xh4une/EhnnRuh\nASzR+1xYbj/HcYZIL9kbslgpebMn+AhxbUTQF/mziug3hLidR9Bzvygq0Q09E11c\nOZL4BU6J2HqxL+9m2F+tnLdfhL7MsAq9nbmWAOpkbGefc5SXBSq0sWfwoes3X3yD\nQ8B5Xqr9AxABU7oUB+wRqvY69ZCxi/BhuuJCUxY89ZmwXfkVxeHl1tYfROUwOnJO\nGYSbI/o41KBK4DkIiDcT7QqvqvCyudnxZdBjL2QU6OrIJvWmKs319qSF9m3mXRSt\nZzWtB89Pj5LZ6cdtuHvW9GO4qSoBLmAfB313pGkbgi1DE6tqCLHlA0yQ8zv99OWV\ncMDGmS7tVTZqfX1xQJ0N3bNORQNtikJC3G+zBCJzIeZleeDlMDQcww00yWU1oE7/\nTo2UmykMGc7o9iggFWR2g0PIcKsA/SXdRKWPqCHG2uKHBvdRTQGupdXQ1sbV+AHw\nycyA/9H/mp/NUSNM2cqnBDcZ6GhlHt59zWtEveiuU5fpTbp4GVcFXbW8jStj8j8z\n1HI3cywZO8+YNPzqyx0JWsidXGkfzkPHyS4jTG84lfu2JG8m/nqLnRSeKpl20Q==\n=79bX\n-----END PGP PUBLIC KEY BLOCK-----"
+            ]
+          }
+        },
+        {
+          "type": "org.osbuild.fix-bls",
+          "options": {
+            "prefix": ""
+          }
+        },
+        {
+          "type": "org.osbuild.locale",
+          "options": {
+            "language": "el_CY.UTF-8"
+          }
+        },
+        {
+          "type": "org.osbuild.keymap",
+          "options": {
+            "keymap": "dvorak"
+          }
+        },
+        {
+          "type": "org.osbuild.hostname",
+          "options": {
+            "hostname": "my-host"
+          }
+        },
+        {
+          "type": "org.osbuild.timezone",
+          "options": {
+            "zone": "Europe/London"
+          }
+        },
+        {
+          "type": "org.osbuild.chrony",
+          "options": {
+            "servers": [
+              {
+                "hostname": "time.example.com"
+              }
+            ]
+          }
+        },
+        {
+          "type": "org.osbuild.groups",
+          "options": {
+            "groups": {
+              "group1": {
+                "gid": 1030
+              },
+              "group2": {
+                "gid": 1050
+              },
+              "user3": {
+                "gid": 1060
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.users",
+          "options": {
+            "users": {
+              "user1": {
+                "key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC61wMCjOSHwbVb4VfVyl5sn497qW4PsdQ7Ty7aD6wDNZ/QjjULkDV/yW5WjDlDQ7UqFH0Sr7vywjqDizUAqK7zM5FsUKsUXWHWwg/ehKg8j9xKcMv11AkFoUoujtfAujnKODkk58XSA9whPr7qcw3vPrmog680pnMSzf9LC7J6kXfs6lkoKfBh9VnlxusCrw2yg0qI1fHAZBLPx7mW6+me71QZsS6sVz8v8KXyrXsKTdnF50FjzHcK9HXDBtSJS5wA3fkcRYymJe0o6WMWNdgSRVpoSiWaHHmFgdMUJaYoCfhXzyl7LtNb3Q+Sveg+tJK7JaRXBLMUllOlJ6ll5Hod root@localhost"
+              },
+              "user2": {
+                "uid": 1020,
+                "gid": 1050,
+                "groups": [
+                  "group1"
+                ],
+                "description": "description 2",
+                "home": "/home/home2",
+                "shell": "/bin/sh",
+                "password": "$6$BhyxFBgrEFh0VrPJ$MllG8auiU26x2pmzL4.1maHzPHrA.4gTdCvlATFp8HJU9UPee4zCS9BVl2HOzKaUYD/zEm8r/OF05F2icWB0K/",
+                "key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC61wMCjOSHwbVb4VfVyl5sn497qW4PsdQ7Ty7aD6wDNZ/QjjULkDV/yW5WjDlDQ7UqFH0Sr7vywjqDizUAqK7zM5FsUKsUXWHWwg/ehKg8j9xKcMv11AkFoUoujtfAujnKODkk58XSA9whPr7qcw3vPrmog680pnMSzf9LC7J6kXfs6lkoKfBh9VnlxusCrw2yg0qI1fHAZBLPx7mW6+me71QZsS6sVz8v8KXyrXsKTdnF50FjzHcK9HXDBtSJS5wA3fkcRYymJe0o6WMWNdgSRVpoSiWaHHmFgdMUJaYoCfhXzyl7LtNb3Q+Sveg+tJK7JaRXBLMUllOlJ6ll5Hod root@localhost"
+              },
+              "user3": {
+                "uid": 1060,
+                "gid": 1060
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.sysconfig",
+          "options": {
+            "kernel": {
+              "update_default": true,
+              "default_kernel": "kernel"
+            },
+            "network": {
+              "networking": true,
+              "no_zero_conf": true
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.systemd-logind",
+          "options": {
+            "filename": "00-getty-fixes.conf",
+            "config": {
+              "Login": {
+                "NAutoVTs": 0
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.cloud-init",
+          "options": {
+            "filename": "00-rhel-default-user.cfg",
+            "config": {
+              "system_info": {
+                "default_user": {
+                  "name": "ec2-user"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.modprobe",
+          "options": {
+            "filename": "blacklist-nouveau.conf",
+            "commands": [
+              {
+                "command": "blacklist",
+                "modulename": "nouveau"
+              }
+            ]
+          }
+        },
+        {
+          "type": "org.osbuild.modprobe",
+          "options": {
+            "filename": "blacklist-amdgpu.conf",
+            "commands": [
+              {
+                "command": "blacklist",
+                "modulename": "amdgpu"
+              }
+            ]
+          }
+        },
+        {
+          "type": "org.osbuild.dracut.conf",
+          "options": {
+            "filename": "ec2.conf",
+            "config": {
+              "add_drivers": [
+                "nvme",
+                "xen-blkfront"
+              ]
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.systemd.unit",
+          "options": {
+            "unit": "nm-cloud-setup.service",
+            "dropin": "10-rh-enable-for-ec2.conf",
+            "config": {
+              "Service": {
+                "Environment": [
+                  {
+                    "key": "NM_CLOUD_SETUP_EC2",
+                    "value": "yes"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.authselect",
+          "options": {
+            "profile": "sssd"
+          }
+        },
+        {
+          "type": "org.osbuild.yum.repos",
+          "options": {
+            "filename": "example.repo",
+            "repos": [
+              {
+                "id": "example",
+                "baseurl": [
+                  "https://example.com/download/yum"
+                ],
+                "enabled": true,
+                "gpgkey": [
+                  "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-example-0"
+                ],
+                "name": "Example repo",
+                "gpgcheck": true,
+                "repo_gpgcheck": false
+              }
+            ]
+          }
+        },
+        {
+          "type": "org.osbuild.sshd.config",
+          "options": {
+            "config": {
+              "PasswordAuthentication": false
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.fstab",
+          "options": {
+            "filesystems": [
+              {
+                "uuid": "a275bc3e-57e2-4eaa-a726-f6e8a38bccdd",
+                "vfs_type": "xfs",
+                "path": "/",
+                "options": "defaults"
+              },
+              {
+                "uuid": "92f2d535-f4f3-4c5e-99a3-1dc62db47ba5",
+                "vfs_type": "xfs",
+                "path": "/boot",
+                "options": "defaults"
+              },
+              {
+                "uuid": "5149d962-e14f-4eb1-b07e-b9a4dc1a7360",
+                "vfs_type": "xfs",
+                "path": "/foo",
+                "options": "defaults"
+              },
+              {
+                "uuid": "86493d66-39a7-4f5c-a06c-2bfc9b5f2cd0",
+                "vfs_type": "xfs",
+                "path": "/home",
+                "options": "defaults"
+              },
+              {
+                "uuid": "7c989e76-a365-4a5e-9a3b-37b7f4b84c37",
+                "vfs_type": "xfs",
+                "path": "/home/shadowman",
+                "options": "defaults"
+              },
+              {
+                "uuid": "c85f3d00-e8bd-4890-9596-65661565df46",
+                "vfs_type": "xfs",
+                "path": "/media",
+                "options": "defaults"
+              },
+              {
+                "uuid": "b2626ffb-731b-484a-bb27-0efdd70b5649",
+                "vfs_type": "xfs",
+                "path": "/mnt",
+                "options": "defaults"
+              },
+              {
+                "uuid": "3727d716-fb4d-46da-bd7a-d0fd6d77e46e",
+                "vfs_type": "xfs",
+                "path": "/opt",
+                "options": "defaults"
+              },
+              {
+                "uuid": "e91577f5-012b-4903-bf1a-efee54792d6d",
+                "vfs_type": "xfs",
+                "path": "/root",
+                "options": "defaults"
+              },
+              {
+                "uuid": "d36c0788-abf4-4567-a5ef-ea9da8781d42",
+                "vfs_type": "xfs",
+                "path": "/srv",
+                "options": "defaults"
+              },
+              {
+                "uuid": "b30835b8-60cf-4e5f-bd61-6198ddc5eeea",
+                "vfs_type": "xfs",
+                "path": "/usr",
+                "options": "defaults"
+              },
+              {
+                "uuid": "7B77-95E7",
+                "vfs_type": "vfat",
+                "path": "/boot/efi",
+                "options": "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+                "passno": 2
+              }
+            ]
+          }
+        },
+        {
+          "type": "org.osbuild.grub2",
+          "options": {
+            "root_fs_uuid": "a275bc3e-57e2-4eaa-a726-f6e8a38bccdd",
+            "boot_fs_uuid": "92f2d535-f4f3-4c5e-99a3-1dc62db47ba5",
+            "kernel_opts": "console=tty0 console=ttyS0,115200n8 nvme_core.io_timeout=4294967295 debug",
+            "legacy": "i386-pc",
+            "uefi": {
+              "vendor": "redhat",
+              "unified": true
+            },
+            "saved_entry": "ffffffffffffffffffffffffffffffff-8-2.fk1.x86_64",
+            "write_cmdline": false,
+            "config": {
+              "default": "saved"
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.rhsm.facts",
+          "options": {
+            "facts": {
+              "image-builder.osbuild-composer.api-type": "test-manifest"
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.mkdir",
+          "options": {
+            "paths": [
+              {
+                "path": "/etc/systemd/system/custom.service.d",
+                "exist_ok": true
+              },
+              {
+                "path": "/etc/custom_dir"
+              }
+            ]
+          }
+        },
+        {
+          "type": "org.osbuild.chmod",
+          "options": {
+            "items": {
+              "/etc/custom_dir": {
+                "mode": "0770"
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.chown",
+          "options": {
+            "items": {
+              "/etc/custom_dir": {
+                "user": 1020,
+                "group": 1050
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.copy",
+          "inputs": {
+            "file-246c90eeaabd45d57f9c52ba19ec83577e1ece72cfb262b674dcd444f8f33a8e": {
+              "type": "org.osbuild.files",
+              "origin": "org.osbuild.source",
+              "references": [
+                {
+                  "id": "sha256:246c90eeaabd45d57f9c52ba19ec83577e1ece72cfb262b674dcd444f8f33a8e"
+                }
+              ]
+            },
+            "file-3858d66c9da0509af1f75847bf49134bf8df01bd712b59ce251826744d3bafe2": {
+              "type": "org.osbuild.files",
+              "origin": "org.osbuild.source",
+              "references": [
+                {
+                  "id": "sha256:3858d66c9da0509af1f75847bf49134bf8df01bd712b59ce251826744d3bafe2"
+                }
+              ]
+            },
+            "file-a08a06016ca077755a7948a9631271011f1a1c3ecaa0e701e10ec0bec1923258": {
+              "type": "org.osbuild.files",
+              "origin": "org.osbuild.source",
+              "references": [
+                {
+                  "id": "sha256:a08a06016ca077755a7948a9631271011f1a1c3ecaa0e701e10ec0bec1923258"
+                }
+              ]
+            },
+            "file-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855": {
+              "type": "org.osbuild.files",
+              "origin": "org.osbuild.source",
+              "references": [
+                {
+                  "id": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                }
+              ]
+            },
+            "file-e6e7e40c00b4d4aceb64629e41b6f31904359447a47f9c2eb603eb530804c5b1": {
+              "type": "org.osbuild.files",
+              "origin": "org.osbuild.source",
+              "references": [
+                {
+                  "id": "sha256:e6e7e40c00b4d4aceb64629e41b6f31904359447a47f9c2eb603eb530804c5b1"
+                }
+              ]
+            }
+          },
+          "options": {
+            "paths": [
+              {
+                "from": "input://file-246c90eeaabd45d57f9c52ba19ec83577e1ece72cfb262b674dcd444f8f33a8e/sha256:246c90eeaabd45d57f9c52ba19ec83577e1ece72cfb262b674dcd444f8f33a8e",
+                "to": "tree:///etc/systemd/system/custom.service",
+                "remove_destination": true
+              },
+              {
+                "from": "input://file-3858d66c9da0509af1f75847bf49134bf8df01bd712b59ce251826744d3bafe2/sha256:3858d66c9da0509af1f75847bf49134bf8df01bd712b59ce251826744d3bafe2",
+                "to": "tree:///etc/systemd/system/custom.service.d/override.conf",
+                "remove_destination": true
+              },
+              {
+                "from": "input://file-a08a06016ca077755a7948a9631271011f1a1c3ecaa0e701e10ec0bec1923258/sha256:a08a06016ca077755a7948a9631271011f1a1c3ecaa0e701e10ec0bec1923258",
+                "to": "tree:///etc/custom_file.txt",
+                "remove_destination": true
+              },
+              {
+                "from": "input://file-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855/sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "to": "tree:///etc/empty_file.txt",
+                "remove_destination": true
+              },
+              {
+                "from": "input://file-e6e7e40c00b4d4aceb64629e41b6f31904359447a47f9c2eb603eb530804c5b1/sha256:e6e7e40c00b4d4aceb64629e41b6f31904359447a47f9c2eb603eb530804c5b1",
+                "to": "tree:///etc/pki/rpm-gpg/RPM-GPG-KEY-example-0",
+                "remove_destination": true
+              }
+            ]
+          }
+        },
+        {
+          "type": "org.osbuild.chmod",
+          "options": {
+            "items": {
+              "/etc/custom_file.txt": {
+                "mode": "0644"
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.chown",
+          "options": {
+            "items": {
+              "/etc/custom_file.txt": {
+                "user": "root",
+                "group": "root"
+              },
+              "/etc/empty_file.txt": {
+                "user": 0,
+                "group": 0
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.systemd",
+          "options": {
+            "enabled_services": [
+              "sshd",
+              "NetworkManager",
+              "nm-cloud-setup.service",
+              "nm-cloud-setup.timer",
+              "cloud-init",
+              "cloud-init-local",
+              "cloud-config",
+              "cloud-final",
+              "reboot.target",
+              "tuned",
+              "sshd.service",
+              "custom.service"
+            ],
+            "disabled_services": [
+              "bluetooth.service"
+            ],
+            "default_target": "multi-user.target"
+          }
+        },
+        {
+          "type": "org.osbuild.copy",
+          "inputs": {
+            "file-4c4e8c734e4ee3a117ca8f9363ba7b706d02bfc8f297c00b02ce02babddef51c": {
+              "type": "org.osbuild.files",
+              "origin": "org.osbuild.source",
+              "references": [
+                {
+                  "id": "sha256:4c4e8c734e4ee3a117ca8f9363ba7b706d02bfc8f297c00b02ce02babddef51c"
+                }
+              ]
+            }
+          },
+          "options": {
+            "paths": [
+              {
+                "from": "input://file-4c4e8c734e4ee3a117ca8f9363ba7b706d02bfc8f297c00b02ce02babddef51c/sha256:4c4e8c734e4ee3a117ca8f9363ba7b706d02bfc8f297c00b02ce02babddef51c",
+                "to": "tree:///etc/pki/ca-trust/source/anchors/27894af897dd2423607045716438a725f28a6d0b.pem",
+                "remove_destination": true
+              }
+            ]
+          }
+        },
+        {
+          "type": "org.osbuild.chown",
+          "options": {
+            "items": {
+              "/etc/pki/ca-trust/source/anchors/27894af897dd2423607045716438a725f28a6d0b.pem": {
+                "user": "root",
+                "group": "root"
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.pki.update-ca-trust"
+        },
+        {
+          "type": "org.osbuild.selinux",
+          "options": {
+            "file_contexts": "etc/selinux/targeted/contexts/files/file_contexts"
+          }
+        }
+      ]
+    },
+    {
+      "name": "image",
+      "build": "name:build",
+      "stages": [
+        {
+          "type": "org.osbuild.truncate",
+          "options": {
+            "filename": "image.raw",
+            "size": "16860053504"
+          }
+        },
+        {
+          "type": "org.osbuild.sfdisk",
+          "options": {
+            "label": "gpt",
+            "uuid": "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
+            "partitions": [
+              {
+                "bootable": true,
+                "size": 2048,
+                "start": 2048,
+                "type": "21686148-6449-6E6F-744E-656564454649",
+                "uuid": "FAC7F1FB-3E8D-4137-A512-961DE09A5549"
+              },
+              {
+                "size": 409600,
+                "start": 4096,
+                "type": "C12A7328-F81F-11D2-BA4B-00A0C93EC93B",
+                "uuid": "68B2905B-DF3E-4FB3-80FA-49D1E773AA33"
+              },
+              {
+                "size": 31467487,
+                "start": 1462272,
+                "type": "E6D6D379-F507-44C2-A23C-238F2A3DF928",
+                "uuid": "6264D520-3FB9-423F-8AB8-7A0A8E3D3562"
+              },
+              {
+                "size": 1048576,
+                "start": 413696,
+                "type": "BC13C2FF-59E6-4262-A352-B275FD6F7172",
+                "uuid": "a0c73b62-be5f-4f62-8dae-07cd17a06901"
+              }
+            ]
+          },
+          "devices": {
+            "device": {
+              "type": "org.osbuild.loopback",
+              "options": {
+                "filename": "image.raw",
+                "lock": true
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.lvm2.create",
+          "options": {
+            "volumes": [
+              {
+                "name": "rootlv",
+                "size": "2147483648B"
+              },
+              {
+                "name": "homelv",
+                "size": "2147483648B"
+              },
+              {
+                "name": "home_shadowmanlv",
+                "size": "1073741824B"
+              },
+              {
+                "name": "foolv",
+                "size": "1073741824B"
+              },
+              {
+                "name": "usrlv",
+                "size": "4294967296B"
+              },
+              {
+                "name": "optlv",
+                "size": "1073741824B"
+              },
+              {
+                "name": "medialv",
+                "size": "1073741824B"
+              },
+              {
+                "name": "rootlv00",
+                "size": "1073741824B"
+              },
+              {
+                "name": "srvlv",
+                "size": "1073741824B"
+              },
+              {
+                "name": "mntlv",
+                "size": "1073741824B"
+              }
+            ]
+          },
+          "devices": {
+            "device": {
+              "type": "org.osbuild.loopback",
+              "options": {
+                "filename": "image.raw",
+                "start": 1462272,
+                "size": 31467487,
+                "lock": true
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.mkfs.fat",
+          "options": {
+            "volid": "7B7795E7"
+          },
+          "devices": {
+            "device": {
+              "type": "org.osbuild.loopback",
+              "options": {
+                "filename": "image.raw",
+                "start": 4096,
+                "size": 409600,
+                "lock": true
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.mkfs.xfs",
+          "options": {
+            "uuid": "a275bc3e-57e2-4eaa-a726-f6e8a38bccdd",
+            "label": "root"
+          },
+          "devices": {
+            "device": {
+              "type": "org.osbuild.lvm2.lv",
+              "parent": "rootvg",
+              "options": {
+                "volume": "rootlv"
+              }
+            },
+            "rootvg": {
+              "type": "org.osbuild.loopback",
+              "options": {
+                "filename": "image.raw",
+                "start": 1462272,
+                "size": 31467487,
+                "lock": true
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.mkfs.xfs",
+          "options": {
+            "uuid": "86493d66-39a7-4f5c-a06c-2bfc9b5f2cd0"
+          },
+          "devices": {
+            "device": {
+              "type": "org.osbuild.lvm2.lv",
+              "parent": "rootvg",
+              "options": {
+                "volume": "homelv"
+              }
+            },
+            "rootvg": {
+              "type": "org.osbuild.loopback",
+              "options": {
+                "filename": "image.raw",
+                "start": 1462272,
+                "size": 31467487,
+                "lock": true
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.mkfs.xfs",
+          "options": {
+            "uuid": "7c989e76-a365-4a5e-9a3b-37b7f4b84c37"
+          },
+          "devices": {
+            "device": {
+              "type": "org.osbuild.lvm2.lv",
+              "parent": "rootvg",
+              "options": {
+                "volume": "home_shadowmanlv"
+              }
+            },
+            "rootvg": {
+              "type": "org.osbuild.loopback",
+              "options": {
+                "filename": "image.raw",
+                "start": 1462272,
+                "size": 31467487,
+                "lock": true
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.mkfs.xfs",
+          "options": {
+            "uuid": "5149d962-e14f-4eb1-b07e-b9a4dc1a7360"
+          },
+          "devices": {
+            "device": {
+              "type": "org.osbuild.lvm2.lv",
+              "parent": "rootvg",
+              "options": {
+                "volume": "foolv"
+              }
+            },
+            "rootvg": {
+              "type": "org.osbuild.loopback",
+              "options": {
+                "filename": "image.raw",
+                "start": 1462272,
+                "size": 31467487,
+                "lock": true
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.mkfs.xfs",
+          "options": {
+            "uuid": "b30835b8-60cf-4e5f-bd61-6198ddc5eeea"
+          },
+          "devices": {
+            "device": {
+              "type": "org.osbuild.lvm2.lv",
+              "parent": "rootvg",
+              "options": {
+                "volume": "usrlv"
+              }
+            },
+            "rootvg": {
+              "type": "org.osbuild.loopback",
+              "options": {
+                "filename": "image.raw",
+                "start": 1462272,
+                "size": 31467487,
+                "lock": true
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.mkfs.xfs",
+          "options": {
+            "uuid": "3727d716-fb4d-46da-bd7a-d0fd6d77e46e"
+          },
+          "devices": {
+            "device": {
+              "type": "org.osbuild.lvm2.lv",
+              "parent": "rootvg",
+              "options": {
+                "volume": "optlv"
+              }
+            },
+            "rootvg": {
+              "type": "org.osbuild.loopback",
+              "options": {
+                "filename": "image.raw",
+                "start": 1462272,
+                "size": 31467487,
+                "lock": true
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.mkfs.xfs",
+          "options": {
+            "uuid": "c85f3d00-e8bd-4890-9596-65661565df46"
+          },
+          "devices": {
+            "device": {
+              "type": "org.osbuild.lvm2.lv",
+              "parent": "rootvg",
+              "options": {
+                "volume": "medialv"
+              }
+            },
+            "rootvg": {
+              "type": "org.osbuild.loopback",
+              "options": {
+                "filename": "image.raw",
+                "start": 1462272,
+                "size": 31467487,
+                "lock": true
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.mkfs.xfs",
+          "options": {
+            "uuid": "e91577f5-012b-4903-bf1a-efee54792d6d"
+          },
+          "devices": {
+            "device": {
+              "type": "org.osbuild.lvm2.lv",
+              "parent": "rootvg",
+              "options": {
+                "volume": "rootlv00"
+              }
+            },
+            "rootvg": {
+              "type": "org.osbuild.loopback",
+              "options": {
+                "filename": "image.raw",
+                "start": 1462272,
+                "size": 31467487,
+                "lock": true
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.mkfs.xfs",
+          "options": {
+            "uuid": "d36c0788-abf4-4567-a5ef-ea9da8781d42"
+          },
+          "devices": {
+            "device": {
+              "type": "org.osbuild.lvm2.lv",
+              "parent": "rootvg",
+              "options": {
+                "volume": "srvlv"
+              }
+            },
+            "rootvg": {
+              "type": "org.osbuild.loopback",
+              "options": {
+                "filename": "image.raw",
+                "start": 1462272,
+                "size": 31467487,
+                "lock": true
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.mkfs.xfs",
+          "options": {
+            "uuid": "b2626ffb-731b-484a-bb27-0efdd70b5649"
+          },
+          "devices": {
+            "device": {
+              "type": "org.osbuild.lvm2.lv",
+              "parent": "rootvg",
+              "options": {
+                "volume": "mntlv"
+              }
+            },
+            "rootvg": {
+              "type": "org.osbuild.loopback",
+              "options": {
+                "filename": "image.raw",
+                "start": 1462272,
+                "size": 31467487,
+                "lock": true
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.mkfs.xfs",
+          "options": {
+            "uuid": "92f2d535-f4f3-4c5e-99a3-1dc62db47ba5"
+          },
+          "devices": {
+            "device": {
+              "type": "org.osbuild.loopback",
+              "options": {
+                "filename": "image.raw",
+                "start": 413696,
+                "size": 1048576,
+                "lock": true
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.copy",
+          "inputs": {
+            "root-tree": {
+              "type": "org.osbuild.tree",
+              "origin": "org.osbuild.pipeline",
+              "references": [
+                "name:os"
+              ]
+            }
+          },
+          "options": {
+            "paths": [
+              {
+                "from": "input://root-tree/",
+                "to": "mount://-/"
+              }
+            ]
+          },
+          "devices": {
+            "-": {
+              "type": "org.osbuild.lvm2.lv",
+              "parent": "rootvg",
+              "options": {
+                "volume": "rootlv"
+              }
+            },
+            "boot": {
+              "type": "org.osbuild.loopback",
+              "options": {
+                "filename": "image.raw",
+                "start": 413696,
+                "size": 1048576
+              }
+            },
+            "boot-efi": {
+              "type": "org.osbuild.loopback",
+              "options": {
+                "filename": "image.raw",
+                "start": 4096,
+                "size": 409600
+              }
+            },
+            "foo": {
+              "type": "org.osbuild.lvm2.lv",
+              "parent": "rootvg",
+              "options": {
+                "volume": "foolv"
+              }
+            },
+            "home": {
+              "type": "org.osbuild.lvm2.lv",
+              "parent": "rootvg",
+              "options": {
+                "volume": "homelv"
+              }
+            },
+            "home-shadowman": {
+              "type": "org.osbuild.lvm2.lv",
+              "parent": "rootvg",
+              "options": {
+                "volume": "home_shadowmanlv"
+              }
+            },
+            "media": {
+              "type": "org.osbuild.lvm2.lv",
+              "parent": "rootvg",
+              "options": {
+                "volume": "medialv"
+              }
+            },
+            "mnt": {
+              "type": "org.osbuild.lvm2.lv",
+              "parent": "rootvg",
+              "options": {
+                "volume": "mntlv"
+              }
+            },
+            "opt": {
+              "type": "org.osbuild.lvm2.lv",
+              "parent": "rootvg",
+              "options": {
+                "volume": "optlv"
+              }
+            },
+            "root": {
+              "type": "org.osbuild.lvm2.lv",
+              "parent": "rootvg",
+              "options": {
+                "volume": "rootlv00"
+              }
+            },
+            "rootvg": {
+              "type": "org.osbuild.loopback",
+              "options": {
+                "filename": "image.raw",
+                "start": 1462272,
+                "size": 31467487
+              }
+            },
+            "srv": {
+              "type": "org.osbuild.lvm2.lv",
+              "parent": "rootvg",
+              "options": {
+                "volume": "srvlv"
+              }
+            },
+            "usr": {
+              "type": "org.osbuild.lvm2.lv",
+              "parent": "rootvg",
+              "options": {
+                "volume": "usrlv"
+              }
+            }
+          },
+          "mounts": [
+            {
+              "name": "-",
+              "type": "org.osbuild.xfs",
+              "source": "-",
+              "target": "/"
+            },
+            {
+              "name": "boot",
+              "type": "org.osbuild.xfs",
+              "source": "boot",
+              "target": "/boot"
+            },
+            {
+              "name": "boot-efi",
+              "type": "org.osbuild.fat",
+              "source": "boot-efi",
+              "target": "/boot/efi"
+            },
+            {
+              "name": "foo",
+              "type": "org.osbuild.xfs",
+              "source": "foo",
+              "target": "/foo"
+            },
+            {
+              "name": "home",
+              "type": "org.osbuild.xfs",
+              "source": "home",
+              "target": "/home"
+            },
+            {
+              "name": "home-shadowman",
+              "type": "org.osbuild.xfs",
+              "source": "home-shadowman",
+              "target": "/home/shadowman"
+            },
+            {
+              "name": "media",
+              "type": "org.osbuild.xfs",
+              "source": "media",
+              "target": "/media"
+            },
+            {
+              "name": "mnt",
+              "type": "org.osbuild.xfs",
+              "source": "mnt",
+              "target": "/mnt"
+            },
+            {
+              "name": "opt",
+              "type": "org.osbuild.xfs",
+              "source": "opt",
+              "target": "/opt"
+            },
+            {
+              "name": "root",
+              "type": "org.osbuild.xfs",
+              "source": "root",
+              "target": "/root"
+            },
+            {
+              "name": "srv",
+              "type": "org.osbuild.xfs",
+              "source": "srv",
+              "target": "/srv"
+            },
+            {
+              "name": "usr",
+              "type": "org.osbuild.xfs",
+              "source": "usr",
+              "target": "/usr"
+            }
+          ]
+        },
+        {
+          "type": "org.osbuild.lvm2.metadata",
+          "options": {
+            "vg_name": "rootvg"
+          },
+          "devices": {
+            "device": {
+              "type": "org.osbuild.loopback",
+              "options": {
+                "filename": "image.raw",
+                "start": 1462272,
+                "size": 31467487,
+                "lock": true
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.grub2.inst",
+          "options": {
+            "filename": "image.raw",
+            "platform": "i386-pc",
+            "location": 2048,
+            "core": {
+              "type": "mkimage",
+              "partlabel": "gpt",
+              "filesystem": "xfs"
+            },
+            "prefix": {
+              "type": "partition",
+              "partlabel": "gpt",
+              "number": 3,
+              "path": "/grub2"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "sources": {
+    "org.osbuild.curl": {
+      "items": {
+        "sha256:02b2f585447caaaef59cc58cda1cbf6db27530690fdb13f747f3fdeb762c4b15": {
+          "url": "https://example.com/repo/packages/dosfstools"
+        },
+        "sha256:04cb12e072878beef30b2e3560c39bf1cb0e5a8896a545e7f4bfb0ec777196b3": {
+          "url": "https://example.com/repo/packages/exclude:iwl3160-firmware"
+        },
+        "sha256:0bdf1ef00f53398361ebaf915f0325ccdc0534447134ba8506a03c71f2c5c9e2": {
+          "url": "https://example.com/repo/packages/exclude:ivtv-firmware"
+        },
+        "sha256:0d6be69b264717f2dd33652e212b173104b4a647b7c11ae72e9885f11cd312fb": {
+          "url": "https://example.com/repo/packages/passwd"
+        },
+        "sha256:0dc67f06d4a10e86af05f9a118375a3509880de5c947f9eab6476900b50d0a39": {
+          "url": "https://example.com/repo/packages/exclude:iwl6000g2a-firmware"
+        },
+        "sha256:19ba1894b231183f6dcfffd0adf9b657eb00ea33f1e002cfb04d1f1fc8e79b71": {
+          "url": "https://example.com/repo/packages/exclude:iwl135-firmware"
+        },
+        "sha256:1a0970a720caab2869fc7eb436e6b7656fc7efbb24cfa72ae5b49e2f6acbd7ca": {
+          "url": "https://example.com/repo/packages/redhat-release"
+        },
+        "sha256:1b11757d33424678ba2d9d6fbd9eb6293a7bfa196dca15a29af179af778c235d": {
+          "url": "https://example.com/repo/packages/glibc"
+        },
+        "sha256:21fb8eaa1cfa55dbc0ed009dc98fbbbc9de4ecaef53d51dc41ab1b0ae867ed49": {
+          "url": "https://example.com/repo/packages/xfsprogs"
+        },
+        "sha256:28fc95b01c3d432a448ded25eb5aada86e12319fcb912666f67dd5eb97893933": {
+          "url": "https://example.com/repo/packages/exclude:libertas-usb8388-firmware"
+        },
+        "sha256:2c19d6424bd57628cc917ad414752d0135eb9c333b6671568cca9f6c95b8a053": {
+          "url": "https://example.com/repo/packages/langpacks-en"
+        },
+        "sha256:2de43b323b1e26fd256368050a89e6f1ab3ca1c7d469b67e134db4d5ffc7929d": {
+          "url": "https://example.com/repo/packages/exclude:plymouth"
+        },
+        "sha256:35a69aa1faeaa821a35f576490244bd7755c226a55e1a93abd0e2b4c7e0401e8": {
+          "url": "https://example.com/repo/packages/exclude:iwl7260-firmware"
+        },
+        "sha256:37d2b12d5d9abc2a364ef9448767ee03938e383c0284193477dc7618f4b7c6c2": {
+          "url": "https://example.com/repo/packages/bash"
+        },
+        "sha256:3993c379c029014a9c4b2adf5d23397b3c7421467a0cb3575ff925bb6f6329b0": {
+          "url": "https://example.com/repo/packages/coreutils"
+        },
+        "sha256:3fc8516922a52d754083308fc413432652da40490b0a336294a5d765757be942": {
+          "url": "https://example.com/repo/packages/cloud-init"
+        },
+        "sha256:443ad85c108c8acb279fc373255ff3444e54cc07c0af87a62962f0adcedd152a": {
+          "url": "https://example.com/repo/packages/@core"
+        },
+        "sha256:476f3ccb0b9ae8b029e7105db14adf652095700dc1c8b87b8caaed29993aab27": {
+          "url": "https://example.com/repo/packages/exclude:iwl105-firmware"
+        },
+        "sha256:48af68b2888775d102da39bebbe05cf07bca2f2ab9f1103dd19359d64083c70b": {
+          "url": "https://example.com/repo/packages/python3-pyyaml"
+        },
+        "sha256:49e9285da13f2be02b3654b01e74cab5840b8c679f7ad4b528a9cf794d3d3e34": {
+          "url": "https://example.com/repo/packages/exclude:dracut-config-rescue"
+        },
+        "sha256:4d0e0adebe4eb01e6db63dcdade819e617dc3c9dc412f2b08fed35ae421f8682": {
+          "url": "https://example.com/repo/packages/exclude:libertas-sd8686-firmware"
+        },
+        "sha256:4e81068e88aa80ce2e9bea996a7f9e02244d06eef15c97e72ebb75b22c3ebfc5": {
+          "url": "https://example.com/repo/packages/exclude:iwl6050-firmware"
+        },
+        "sha256:4eeb0ed8c3fbd5ac0b9a9800a8cc1347f80f14bb505b0df58aefd000f978b269": {
+          "url": "https://example.com/repo/packages/exclude:iwl3945-firmware"
+        },
+        "sha256:52856879d4bfa1d564480850a56b0885e1c52a805af96fffe84122afc9b1c52b": {
+          "url": "https://example.com/repo/packages/bluez"
+        },
+        "sha256:5660f11783e742698cec671d45910e74342fe3e48ddf054f38c0828776b08d00": {
+          "url": "https://example.com/repo/packages/dracut-config-generic"
+        },
+        "sha256:5ac0b916a6d093edc6b702b25864007a7746a1b737c882d5a8a6d1644d731e79": {
+          "url": "https://example.com/repo/packages/exclude:iwl6000-firmware"
+        },
+        "sha256:5b1e08d9dde2b42e638ce3f27ebfeaf4ab4c6ccded49d48ea60382d290cd90f6": {
+          "url": "https://example.com/repo/packages/exclude:alsa-firmware"
+        },
+        "sha256:5fdc7e383dc7e1b390e40c3012a2aa03978901c45f3597c1c239c51134d03dbe": {
+          "url": "https://example.com/repo/packages/chrony"
+        },
+        "sha256:6449d2f7bae9905add75f6d3e9b03de90743a1cef971f41aedeeb4139a1780d1": {
+          "url": "https://example.com/repo/packages/shadow-utils"
+        },
+        "sha256:6923dd1bc0460082c5d55a831908c24a282860b7f1cd6c2b79cf1bc8857c639c": {
+          "url": "https://example.com/repo/packages/kernel"
+        },
+        "sha256:69a9176ea7cf541c2ae178ff9980fffbb29857c902d27c791233d4a48545c245": {
+          "url": "https://example.com/repo/packages/insights-client"
+        },
+        "sha256:782c4bb3c7a9beb41e451bceb3f4db6de6a331eb31ca76e6a64296251ba2fdb1": {
+          "url": "https://example.com/repo/packages/exclude:iwl4965-firmware"
+        },
+        "sha256:7a5bd1ed08002bc08013ea55c7fffc61047042b3d0979471b6e34d5e5089d334": {
+          "url": "https://example.com/repo/packages/redhat-release-eula"
+        },
+        "sha256:874ecbebddb9872c2fc949de3be7888f72ad3ae0e7847ee5ce0503c691503ad0": {
+          "url": "https://example.com/repo/packages/exclude:iwl2000-firmware"
+        },
+        "sha256:8a1bf05d306aa663e856f3c450c8b2ddc6800116b818c7d3b65503cd89f7682a": {
+          "url": "https://example.com/repo/packages/platform-python"
+        },
+        "sha256:8ec5e9e6f70bf1a0b5692ef948d1194bdb074342ed14045f9e84820367a98c6a": {
+          "url": "https://example.com/repo/packages/xz"
+        },
+        "sha256:8ff8d40e4a4c726df40795e3134432ac66f7d055d54639c1026e341b6d2bd6e7": {
+          "url": "https://example.com/repo/packages/rsync"
+        },
+        "sha256:90aebae315675cbf04612de4f7d5874850f48e0b8dd82becbeaa47ca93f5ebfb": {
+          "url": "https://example.com/repo/packages/tar"
+        },
+        "sha256:9370ee4e95b7172989b9fd3f81860093529113ba42b69be340467d87a94bb253": {
+          "url": "https://example.com/repo/packages/shim-x64"
+        },
+        "sha256:93cd8e20fc07f08337cb9d9fa9996274658f6395574e874379c4c4157e922700": {
+          "url": "https://example.com/repo/packages/policycoreutils"
+        },
+        "sha256:99fec328617e9bc972503d5ed4c4c93218a8c44649cdc875876fdfbba0be383a": {
+          "url": "https://example.com/repo/packages/exclude:biosdevname"
+        },
+        "sha256:9a701ca1bcd3b07afca9ae5f17588a2048341e0bcdab2b5a81e10614d5ca2974": {
+          "url": "https://example.com/repo/packages/exclude:iwl100-firmware"
+        },
+        "sha256:9e7ab438597fee20e16e8e441bed0ce966bd59e0fb993fa7c94be31fb1384d88": {
+          "url": "https://example.com/repo/packages/rpm"
+        },
+        "sha256:a07b0a6df6f248078ebaf93e5bea115093f8a79e0a830e383b6c0b9f7f1605f5": {
+          "url": "https://example.com/repo/packages/grub2-pc"
+        },
+        "sha256:a2e58f805ca848eb1fb0fb207656d11b77a96ab198244c8e7a3fa49ddc5aade6": {
+          "url": "https://example.com/repo/packages/exclude:iwl6000g2b-firmware"
+        },
+        "sha256:a2f5883db78735971fd620c3e83fb7767bda931555991194501eea3533e879e8": {
+          "url": "https://example.com/repo/packages/exclude:aic94xx-firmware"
+        },
+        "sha256:a77e9cdc1f34c916ec906e61eb889974e144e2e0a8dd613d191f5d877cf2774f": {
+          "url": "https://example.com/repo/packages/cloud-utils-growpart"
+        },
+        "sha256:a918a8d5a29ea7c5834c6d46725660eb441653074ab4d9d8876029abce79bfb7": {
+          "url": "https://example.com/repo/packages/exclude:iwl2030-firmware"
+        },
+        "sha256:aba407b81ed016841ea552feadaf0663c7804a64554ba55d3109b3dc8198cdcb": {
+          "url": "https://example.com/repo/packages/tuned"
+        },
+        "sha256:b779e8f841cdb45f58a152168ea90a81102474bf0d4dc8b9224a433307dc7e51": {
+          "url": "https://example.com/passed-arch:x86_64/passed-repo:/v2/mirror/rhvpn/el10/el10-x86_64-baseos-n10.0"
+        },
+        "sha256:bd0add6fdee6e6ac62a4ff6bc722f2324a918d8ccc4eda21e043252a10481f0c": {
+          "url": "https://example.com/repo/packages/exclude:iwl5150-firmware"
+        },
+        "sha256:bf35d0b80342ad44ca298ed07fcc9d3f8d43a2700964586a4a5e2c0a49766528": {
+          "url": "https://example.com/repo/packages/selinux-policy-targeted"
+        },
+        "sha256:c1cc69e61c0f1c7ade8df0f2994e582e7c1f2c57d1ec192a0baf9f96b7739d9d": {
+          "url": "https://example.com/repo/packages/python3"
+        },
+        "sha256:c292fa22d3c8f05c74185be8a25495701be31db25ca27f03a6851bea3aec9d0d": {
+          "url": "https://example.com/passed-arch:x86_64/passed-repo:/v2/mirror/rhvpn/el10/el10-x86_64-appstream-n10.0"
+        },
+        "sha256:ce5857e0b504bd3e06f80b27dc88064f0bf214127dd5a2ee1ff849ed78e32c9e": {
+          "url": "https://example.com/repo/packages/exclude:iwl5000-firmware"
+        },
+        "sha256:d8654f2a37c8dd45ed104e5b7c26ec3ee0d74dca488cdd0a400d58a6c4f7875b": {
+          "url": "https://example.com/repo/packages/exclude:libertas-sd8787-firmware"
+        },
+        "sha256:d90b7202318ad799fdf7fc011a6a3d09cb586853981e5c53f381c771e0dc549a": {
+          "url": "https://example.com/repo/packages/grub2"
+        },
+        "sha256:dbf9956aa9c5ccd4c6d92f0550e959f58bb815fb570c305e9d93645eee2082d4": {
+          "url": "https://example.com/repo/packages/grub2-efi-x64"
+        },
+        "sha256:dc326a13b89447ad3251f78a5bd784808b85c64bc4fd380d2e9533ffa00428e2": {
+          "url": "https://example.com/repo/packages/exclude:iwl1000-firmware"
+        },
+        "sha256:e0031c189e34e10d9c202fa8d75f72d3296a239164fe6b07e7dc206c7b723d98": {
+          "url": "https://example.com/repo/packages/systemd"
+        },
+        "sha256:e0d9946d02c44f153131552ca5afa5cd0902d0446b0295a329964e78a345327c": {
+          "url": "https://example.com/repo/packages/exclude:qemu-guest-agent"
+        },
+        "sha256:e2f24de304a49d3d3c1261466376ab341c3834eb683d806cb534587f4fd48f8d": {
+          "url": "https://example.com/repo/packages/efibootmgr"
+        },
+        "sha256:e6af7cd461c636ed1330dfd460b246e169abd6ce75d5afc1ca94948f9c853df9": {
+          "url": "https://example.com/repo/packages/dhcpcd"
+        },
+        "sha256:eda2b1be19a5062fa55b669761df806f9aa4675223ed3cc9cce6eceaf0677939": {
+          "url": "https://example.com/repo/packages/exclude:iprutils"
+        },
+        "sha256:ee96e48ac867ab59efb688ad1eaef6ef54d06bc565785570164bd9bbb03d67e3": {
+          "url": "https://example.com/repo/packages/pam"
+        },
+        "sha256:f4dc4ad92c4e57553b004ecd08561dd6b15d5dc7d99869c499544a890f18eddc": {
+          "url": "https://example.com/repo/packages/lvm2"
+        },
+        "sha256:f6a50120d4a785cc75becb370680d24d452f1437c5064db8d22f510c75604a6d": {
+          "url": "https://example.com/repo/packages/exclude:firewalld"
+        },
+        "sha256:fc710b8c27f067288ccb7779e98f7b04e7e0c84256260c93a69f68ad94b78fd8": {
+          "url": "https://example.com/repo/packages/exclude:alsa-tools-firmware"
+        },
+        "sha256:fcb160b10ea6f210b8da239c09ea1b28cbcefefe1502486111fcd5ac6d8d99a6": {
+          "url": "https://example.com/repo/packages/NetworkManager-cloud-setup"
+        },
+        "sha256:fe841d961c3a0038f8a5d15250baff1c2e8efee10e72292ceb5bab8f2633f694": {
+          "url": "https://example.com/repo/packages/yum-utils"
+        }
+      }
+    },
+    "org.osbuild.inline": {
+      "items": {
+        "sha256:246c90eeaabd45d57f9c52ba19ec83577e1ece72cfb262b674dcd444f8f33a8e": {
+          "encoding": "base64",
+          "data": "W1VuaXRdCkRlc2NyaXB0aW9uPUN1c3RvbSBzZXJ2aWNlCgpbU2VydmljZV0KRXhlY1N0YXJ0PS91c3IvYmluL2ZhbHNlCgpbSW5zdGFsbF0KV2FudGVkQnk9bXVsdGktdXNlci50YXJnZXQK"
+        },
+        "sha256:3858d66c9da0509af1f75847bf49134bf8df01bd712b59ce251826744d3bafe2": {
+          "encoding": "base64",
+          "data": "W1NlcnZpY2VdCkV4ZWNTdGFydD0KRXhlY1N0YXJ0PS91c3IvYmluL2NhdCAvZXRjL2N1c3RvbV9maWxlLnR4dAo="
+        },
+        "sha256:4c4e8c734e4ee3a117ca8f9363ba7b706d02bfc8f297c00b02ce02babddef51c": {
+          "encoding": "base64",
+          "data": "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURzekNDQXB1Z0F3SUJBZ0lVSjRsSytKZmRKQ05nY0VWeFpEaW5KZktLYlFzd0RRWUpLb1pJaHZjTkFRRUwKQlFBd2FERUxNQWtHQTFVRUJoTUNWVk14RnpBVkJnTlZCQWdNRGs1dmNuUm9JRU5oY205c2FXNWhNUkF3RGdZRApWUVFIREFkU1lXeGxhV2RvTVJBd0RnWURWUVFLREFkU1pXUWdTR0YwTVJ3d0dnWURWUVFEREJOVVpYTjBJRU5CCklHWnZjaUJ2YzJKMWFXeGtNQ0FYRFRJME1Ea3dNekV6TWpreU1Gb1lEekl5T1Rnd05qRTRNVE15T1RJd1dqQm8KTVFzd0NRWURWUVFHRXdKVlV6RVhNQlVHQTFVRUNBd09UbTl5ZEdnZ1EyRnliMnhwYm1FeEVEQU9CZ05WQkFjTQpCMUpoYkdWcFoyZ3hFREFPQmdOVkJBb01CMUpsWkNCSVlYUXhIREFhQmdOVkJBTU1FMVJsYzNRZ1EwRWdabTl5CklHOXpZblZwYkdRd2dnRWlNQTBHQ1NxR1NJYjNEUUVCQVFVQUE0SUJEd0F3Z2dFS0FvSUJBUURlQTdPY1dUclYKZ3N0b0JzVWFlSkttOG5lbGc3TGMwV05YSDZ5T1RMc3I0dGQ0eUhzMFlPdkZHd2dTZitmZlYzUkFHMW1ncW5NRwpNZ2tEMit6KzdRaEhiSEhzM3kwZDB6ZmhBMmJnMEtWdmZDV2s3Zk5SUEhZMFVPZVBwWGsyNDVCZnczRDBWVHBsCkY3bmVQazFJN1pZMDlzblBXVWViMnJqS1h6WWpLanpNMGgyNyt5a1Y4STgrRmJkeVBrL3BSOHdoeURxdEhMVWEKWGZGeTJURmxvRFNZTWtIS1ZkMzhCbkwwYmo5MXg1RitLc1prTjRIemZiWXd4TGJDUWZPU2d5N3E2VFdjZTlrcQpMbzZ0eWE5dnV2cFdGbTFkeWU3TCtCb2RBUUFxL2RJL0pNZUNmeVRiMGVGYit0eXpmcjVhVklvcXFETitwOWZ0CmN3NE9lZnBIYmh0TkFnTUJBQUdqVXpCUk1CMEdBMVVkRGdRV0JCUlYyQTlZbXVzZWtQenU1WWYwOGNWMG9QTDEKd2pBZkJnTlZIU01FR0RBV2dCUlYyQTlZbXVzZWtQenU1WWYwOGNWMG9QTDF3akFQQmdOVkhSTUJBZjhFQlRBRApBUUgvTUEwR0NTcUdTSWIzRFFFQkN3VUFBNElCQVFDZ1FaMlhmaitOeGFLQlpnbjJLTnhTME1UYmh6SFJ6NlJuCnFKcytoOE9VejJDcm1hZjZOK1JIbG1EUlpYVXJEalNIcHhWVDJMeEZ5N29mUnJMWUllekZEVVlmYjkyMFZra1YKU1ZjeGgxWURGUk9KYWxmTW9FNndkeVIvTG5LNE1KWlM5ZlVwZUNKSmMvQTBKKzlGSzlDd2N5VXJIZ0o4WGJKaApNS1l5UStjZjZPN3d6dXR1QnBNeVJxU0tTK2hWTTdCUVRtU0Z2djFlQUpsbzZrbEdBbW1LaVltQUV2Y1FhZEgxCmRqcnVqc0EzQ241dlgyTCsweXVpTEI1L3pveHF4NWNFeTk3VHVLVVlCOE9xTU11akFYTnpGNEwzSEpEVU5iYTIKQWhFa0Zvek1Yd1lYNzNUR2JHWjBtYXdQUzVEM3YzdFlURW1KRmY2U25WQ21VVzFmczU3ZwotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg=="
+        },
+        "sha256:a08a06016ca077755a7948a9631271011f1a1c3ecaa0e701e10ec0bec1923258": {
+          "encoding": "base64",
+          "data": "aW1hZ2UgYnVpbGRlciBpcyB0aGUgYmVzdA=="
+        },
+        "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855": {
+          "encoding": "base64",
+          "data": ""
+        },
+        "sha256:e6e7e40c00b4d4aceb64629e41b6f31904359447a47f9c2eb603eb530804c5b1": {
+          "encoding": "base64",
+          "data": "LS0tLS1CRUdJTiBQR1AgUFVCTElDIEtFWSBCTE9DSy0tLS0tCgptUUdpQkdSQlNKVVJCQUN6Q29lOVVOZnhPVWlGTHE5YjYwd2VTQkZkcjM5bUxWaXNjZWNEV0FUTnZYdGdSb0svCnhsLzRxcGF5ekFMUkNRMkVrL3BNcmJLUEYvM25nRUN1QnY3UytySTRuL3JJaWE0Rk5jcXpZZVpBejRERTROUC8KZVVHdno0OXRXaG1IMTdoWC9ybUY5a3o1a0xxMmJEWkk0R0RnWlcvb01EZHQyaXZqMDkyTGptOWpSd0NneVF5MwpXRUs2Ukp2SWNTRWg5dmJkd1ZkTVBPY0QvaUhxTmVqVE1Gd0d5WmZDV0IwZUlPb3hVT1VuL1pacEVMVEwyVXBXCkdkdUNmM3R4YjVTa0s3TStXRGJiMFM1SXZOWG9pMHRjMTNTVGlENk94ZzJPOVBrU3Z2WWIrOHp4bGhOb1NUd3kKNTRqN1JmNUZsblEzVEFGZmp0UTVMQ3g1NkxLSzczajRSanZLVy8va3RtNW41NGV4c2dvOVJ5L2UxMlQ0NmRSZwo3dElsQS85MXJ6TG01N1F5YzczQTd6amdJemVmOU82VjVaem93QytwcC9qZmI1cFM5aFhnUk9la0xrTWdYMHZnCmlBNXJNNU9wcUs0YkFyVlAxbFJXbkx5dmdod08rVFc3NjNSVnVYbFMwc2Nmek15NGcwTmdyRzZqN1RJT0tFcXoKNHhReE91d2t1ZHFpUXIva09xS3VMeFFCWGErNU1Ka3loZlBtcVl3NXdwcXlDd0ZhLzdRNGIzTmlkV2xzWkNCMApaWE4wSUNodmMySjFhV3hrSUhSbGMzUWdaM0JuYTJWNUtTQThiM05pZFdsc1pFQmxlR0Z0Y0d4bExtTnZiVDZJCmV3UVRFUUlBT3hZaEJHQjh3b2lFUFJLQk84Q3IzMWx1bHBRZ01lanpCUUprUVVpVkFoc2pCUXNKQ0FjQ0FpSUMKQmhVS0NRZ0xBZ1FXQWdNQkFoNEhBaGVBQUFvSkVGbHVscFFnTWVqemFwTUFvTG1VZzFtTkRUUlVhQ3JOL2Z6bQpIWUxITDZqa0FKOXBFS2tKUWlIQjZTZkQwZmtpRDJHa0VMWUx1YmtCRFFSa1FVaVZFQVFBbEFBWHJRNTcydnV3CnhJM1c4R1NabU9RaUFZT1FtT0tSbG9MRXk2VlozTlNPYjl5MlRYajMzUVRrSkJQT00xN0F6QjdFK1lqWnJwVXQKZ2w2TGxYbWZqTWNKQWNYaEZhVUJDaWxBY013TWxMbDdEdG5Ta0xuTElYWW1IaU4wdjgzQkgvSDBFUHV0T2M1bAowUUl5dWd1dGlmcDlTSnoyK0VXcEM0YmpBN0dGa1E4QUF3VUQvMXRMRUdxQ0ozN084Z2Z6WXQyUFdrcUJFb09ZCjBaM3p3VlM2UFdXL0lJa2FrOWRBSjBpWDVOTWVGV3B6Rk5mdmlEUEhxaEVkVVI1NXpzeHlVWklabENYNWp3bUEKdDdxbTNjYkg0SE5VMU9ncTNROWh5a2JUUFdQWlZrcHZObS9UTzhUQTJicmhrejNudVM4SGJtaCtyalhGT1NaagpEUUJVeEl0dXVqMmhocFFFaUdBRUdCRUNBQ0FXSVFSZ2ZNS0loRDBTZ1R2QXE5OVpicGFVSURIbzh3VUNaRUZJCmxRSWJEQUFLQ1JCWmJwYVVJREhvODNmUUFLREhnRklhZ2dhTnN2RFFrajd2TVgwZmVjSFJoQUNmUzlCdnhuMlcKV1NiNlQrZ0NobVlCc2Vad2svaz0KPURRM2kKLS0tLS1FTkQgUEdQIFBVQkxJQyBLRVkgQkxPQ0stLS0tLQo="
+        }
+      }
+    }
+  }
+}
