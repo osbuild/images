@@ -709,60 +709,7 @@ func (p *OS) serialize() osbuild.Pipeline {
 
 		switch p.platform.GetBootloader() {
 		case platform.BOOTLOADER_GRUB2:
-			var bootloader *osbuild.Stage
-			if p.OSCustomizations.NoBLS {
-				// BLS entries not supported: use grub2.legacy
-				id := "76a22bf4-f153-4541-b6c7-0332c0dfaeac"
-				product := osbuild.GRUB2Product{
-					Name:    p.OSProduct,
-					Version: p.OSVersion,
-					Nick:    p.OSNick,
-				}
-
-				_, err := rpmmd.GetVerStrFromPackageSpecList(p.packageSpecs, "dracut-config-rescue")
-				hasRescue := err == nil
-				bootloader = osbuild.NewGrub2LegacyStage(
-					osbuild.NewGrub2LegacyStageOptions(
-						p.OSCustomizations.Grub2Config,
-						p.PartitionTable,
-						kernelOptions,
-						p.platform.GetBIOSPlatform(),
-						p.platform.GetUEFIVendor(),
-						osbuild.MakeGrub2MenuEntries(id, p.kernelVer, product, hasRescue),
-					),
-				)
-			} else {
-				options := osbuild.NewGrub2StageOptions(pt,
-					strings.Join(kernelOptions, " "),
-					p.kernelVer,
-					p.platform.GetUEFIVendor() != "",
-					p.platform.GetBIOSPlatform(),
-					p.platform.GetUEFIVendor(), false)
-
-				// Avoid a race condition because Grub2Config may be shared when set (yay pointers!)
-				if p.OSCustomizations.Grub2Config != nil {
-					// Make a COPY of it
-					cfg := *p.OSCustomizations.Grub2Config
-
-					// TODO: don't store Grub2Config in OSPipeline, making the overrides unnecessary
-					// grub2.Config.Default is owned and set by `NewGrub2StageOptionsUnified`
-					// and thus we need to preserve it
-					if options.Config != nil {
-						cfg.Default = options.Config.Default
-					}
-
-					// Point to the COPY with the possibly new Default value
-					options.Config = &cfg
-				}
-				if p.OSCustomizations.KernelOptionsBootloader {
-					options.WriteCmdLine = nil
-					if options.UEFI != nil {
-						options.UEFI.Unified = false
-					}
-				}
-				bootloader = osbuild.NewGRUB2Stage(options)
-			}
-			pipeline.AddStage(bootloader)
+			pipeline.AddStage(grubStage(p, pt, kernelOptions))
 		case platform.BOOTLOADER_ZIPL:
 			pipeline.AddStage(osbuild.NewZiplStage(new(osbuild.ZiplStageOptions)))
 		}
@@ -989,6 +936,61 @@ func usersFirstBootOptions(users []users.User) *osbuild.FirstBootStageOptions {
 	}
 
 	return options
+}
+
+func grubStage(p *OS, pt *disk.PartitionTable, kernelOptions []string) *osbuild.Stage {
+	if p.OSCustomizations.NoBLS {
+		// BLS entries not supported: use grub2.legacy
+		id := "76a22bf4-f153-4541-b6c7-0332c0dfaeac"
+		product := osbuild.GRUB2Product{
+			Name:    p.OSProduct,
+			Version: p.OSVersion,
+			Nick:    p.OSNick,
+		}
+
+		_, err := rpmmd.GetVerStrFromPackageSpecList(p.packageSpecs, "dracut-config-rescue")
+		hasRescue := err == nil
+		return osbuild.NewGrub2LegacyStage(
+			osbuild.NewGrub2LegacyStageOptions(
+				p.OSCustomizations.Grub2Config,
+				p.PartitionTable,
+				kernelOptions,
+				p.platform.GetBIOSPlatform(),
+				p.platform.GetUEFIVendor(),
+				osbuild.MakeGrub2MenuEntries(id, p.kernelVer, product, hasRescue),
+			),
+		)
+	} else {
+		options := osbuild.NewGrub2StageOptions(pt,
+			strings.Join(kernelOptions, " "),
+			p.kernelVer,
+			p.platform.GetUEFIVendor() != "",
+			p.platform.GetBIOSPlatform(),
+			p.platform.GetUEFIVendor(), false)
+
+		// Avoid a race condition because Grub2Config may be shared when set (yay pointers!)
+		if p.OSCustomizations.Grub2Config != nil {
+			// Make a COPY of it
+			cfg := *p.OSCustomizations.Grub2Config
+
+			// TODO: don't store Grub2Config in OSPipeline, making the overrides unnecessary
+			// grub2.Config.Default is owned and set by `NewGrub2StageOptionsUnified`
+			// and thus we need to preserve it
+			if options.Config != nil {
+				cfg.Default = options.Config.Default
+			}
+
+			// Point to the COPY with the possibly new Default value
+			options.Config = &cfg
+		}
+		if p.OSCustomizations.KernelOptionsBootloader {
+			options.WriteCmdLine = nil
+			if options.UEFI != nil {
+				options.UEFI.Unified = false
+			}
+		}
+		return osbuild.NewGRUB2Stage(options)
+	}
 }
 
 func (p *OS) Platform() platform.Platform {
