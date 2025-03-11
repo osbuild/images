@@ -91,7 +91,6 @@ func Test_OSBuildMetadataToRPMs(t *testing.T) {
 func TestNewRpmStageSourceFilesInputs(t *testing.T) {
 
 	assert := assert.New(t)
-	require := require.New(t)
 
 	pkgSpecs := []rpmmd.PackageSpec{
 		{
@@ -171,28 +170,45 @@ func TestNewRpmStageSourceFilesInputs(t *testing.T) {
 	}
 	inputs := NewRpmStageSourceFilesInputs(pkgSpecs)
 
-	refsArrayPtr, convOk := inputs.Packages.References.(*FilesInputSourceArrayRef)
-	require.True(convOk)
-	require.NotNil(refsArrayPtr)
-
-	refsArray := *refsArrayPtr
-
-	for idx := range refsArray {
-		refItem := refsArray[idx]
-		pkg := pkgSpecs[idx]
-		assert.Equal(pkg.Checksum, refItem.ID)
-
-		if pkg.CheckGPG {
-			// GPG check enabled: metadata expected
-			require.NotNil(refItem.Options)
-			require.NotNil(refItem.Options.Metadata)
-
-			md, convOk := refItem.Options.Metadata.(*RPMStageReferenceMetadata)
-			require.True(convOk)
-			require.NotNil(md)
-			assert.Equal(md.CheckGPG, pkg.CheckGPG)
-		}
+	expected := &RPMStageInputs{
+		Packages: &FilesInput{
+			inputCommon: inputCommon{
+				Type:   "org.osbuild.files",
+				Origin: "org.osbuild.source",
+			},
+			References: &FilesInputSourceArrayRef{
+				{
+					ID:      "sha256:fcf2515ec9115551c99d552da721803ecbca23b7ae5a974309975000e8bef666",
+					Options: (*FilesInputSourceOptions)(nil),
+				},
+				{
+					ID:      "sha256:4be41142a5fb2b4cd6d812e126838cffa57b7c84e5a79d65f66bb9cf1d2830a3",
+					Options: (*FilesInputSourceOptions)(nil),
+				},
+				{
+					ID:      "sha256:da167e41efd19cf25fd1c708b6f123d0203824324b14dd32401d49f2aa0ef0a6",
+					Options: (*FilesInputSourceOptions)(nil),
+				},
+				{
+					ID: "sha1:6e01b8076a2ab729d564048bf2e3a97c7ac83c13",
+					Options: &FilesInputSourceOptions{
+						Metadata: &RPMStageReferenceMetadata{
+							CheckGPG: true,
+						},
+					},
+				},
+				{
+					// note that the duplicated package above is added
+					// only once
+					ID: "md5:8133f479f38118c5f9facfe2a2d9a071",
+					Options: &FilesInputSourceOptions{
+						Metadata: &RPMStageReferenceMetadata{
+							CheckGPG: true,
+						},
+					},
+				},
+			},
+		},
 	}
-	// the duplicated entry is not part of the resulting refs array
-	assert.Equal(len(pkgSpecs)-1, len(refsArray))
+	assert.Equal(expected, inputs)
 }
