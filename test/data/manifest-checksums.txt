@@ -114,6 +114,7 @@
 11f6fcd8dce8e9967b3e231f4cbbe7ac025a25e1  fedora_42-x86_64-iot_raw_image-iot_ostree_pull_empty.json
 12172d77fc6568b4160d44e9df0facc5f28a11d9  rhel_8.5-aarch64-tar-empty.json
 124769db0ce26a3c16e95bdc58b6591d07058b45  rhel_9.2-aarch64-image_installer-empty.json
+1252619eba9c33a85644c14559d041c3a7b99b5f  rhel_9.6-x86_64-vhd_cvm-empty.json
 1283973c13f76fa98e8f995bfb77ddc5ad36df73  fedora_42-x86_64-qcow2-all_with_fips.json
 128cfbccce83e574996d3fb0669c769af7c5106f  centos_9-aarch64-vhd-empty.json
 1293beb8f18d4b8fb27cc342e982b84999b490cd  fedora_42-x86_64-minimal_raw-firewall.json
@@ -210,6 +211,7 @@
 20756744cc3a36009ae6f4c9a95d14bd739b2615  rhel_9.0-x86_64-ec2_sap-ec2_sap_empty.json
 207c91ba19318091ac29b15c624bfc89804f9880  rhel_9.0-aarch64-edge_commit-embed_containers.json
 20c457c0540547fa4f52ed1cde2867b482d47a61  rhel_8.6-x86_64-edge_commit-edge_ostree_pull_user.json
+20f531c536d1ccf231f25eaa6b1ae4f50b42395a  rhel_9.7-x86_64-vhd_cvm-empty.json
 2104b62c79d42d971af171766870d38a220e9aee  rhel_8.7-aarch64-image_installer-unattended_iso.json
 2106e09efd0eb2f818983f4e8ea0a9894a357a34  rhel_9.5-ppc64le-qcow2-rhsm.json
 2166514f2d32c959280fdd7af0b160a689fac924  fedora_42-x86_64-vmdk-empty.json
@@ -775,7 +777,6 @@
 7b90d5615adfeddc3c9e7719cb144ef0966ea22e  rhel_9.4-s390x-qcow2-all_with_fips.json
 7b961b7e96ad722318514b1f898332329db3c324  rhel_9.5-aarch64-edge_ami-edge_ostree_pull_user.json
 7c254e2418283ff9234bcbf98dd7365dc1b77e96  rhel_9.4-x86_64-edge_container-minimal_environment.json
-7c2f0b27a4a53eeba812c3efbd64d8254f10710a  rhel_9.7-x86_64-vhd_cvm-empty.json
 7c339f71d1d4bd2b1cb53d721168b9c67b626b11  rhel_9.2-aarch64-azure_rhui-empty.json
 7c4ee066a571304fa74ed26e9e76d5e0d242e1ab  fedora_41-ppc64le-qcow2-empty.json
 7c6f0bc669df5ea638b1d323f57bb3f5959ff13d  rhel_9.1-aarch64-edge_vsphere-edge_ostree_pull_empty.json
@@ -1162,7 +1163,6 @@ b5cb3fbb6c27b9a9cc770cbc07df05a4a241bc1f  rhel_8.8-aarch64-edge_raw_image-edge_o
 b5d4e584860859f1e63bcac4ba58e76804ba81b6  fedora_43-x86_64-ami-all_customizations.json
 b5f3d7806494cf11ae448457137246c62692d198  fedora_40-x86_64-vhd-empty.json
 b5f941dca12ec149754de55a0890010784f80f3e  fedora_43-x86_64-iot_raw_image-iot_ostree_pull_empty.json
-b653c7a5e49cff85c7abd6d36d1a73d8b1ea41bb  rhel_9.6-x86_64-vhd_cvm-empty.json
 b666068351f3cbe7e3b87da5f89d25806afb3be4  rhel_10.0-s390x-tar-empty.json
 b6826beb41e2505f819d5bd4d75b746622383714  fedora_40-aarch64-minimal_raw-empty.json
 b68fd568bd4eb753f62d3d07f3c061686af77fb9  rhel_9.0-ppc64le-qcow2-empty.json
