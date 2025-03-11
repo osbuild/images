@@ -712,6 +712,12 @@ func (p *OS) serialize() osbuild.Pipeline {
 			pipeline.AddStage(grubStage(p, pt, kernelOptions))
 		case platform.BOOTLOADER_ZIPL:
 			pipeline.AddStage(osbuild.NewZiplStage(new(osbuild.ZiplStageOptions)))
+		case platform.BOOTLOADER_UKI:
+			csvfile, err := ukiBootCSVfile(pt, p.platform.GetArch(), p.kernelVer, p.platform.GetUEFIVendor())
+			if err != nil {
+				panic(err)
+			}
+			p.addInlineDataAndStages(&pipeline, []*fsnode.File{csvfile})
 		}
 
 		if !p.OSCustomizations.KernelOptionsBootloader || p.platform.GetArch() == arch.ARCH_S390X {
@@ -991,6 +997,53 @@ func grubStage(p *OS, pt *disk.PartitionTable, kernelOptions []string) *osbuild.
 		}
 		return osbuild.NewGRUB2Stage(options)
 	}
+}
+
+// ukiBootCSVfile creates a file node for the csv file in the ESP which
+// controls the fallback boot to the UKI.
+// NOTE: This is a temporary workaround. We expect that the kernel-bootcfg
+// command from the python3-virt-firmware package will gain the ability to
+// write these files offline during the RHEL 9.7 / 10.1 development cycle.
+func ukiBootCSVfile(pt *disk.PartitionTable, architecture arch.Arch, kernelVer, vendor string) (*fsnode.File, error) {
+
+	shortArch := ""
+	switch architecture {
+	case arch.ARCH_AARCH64:
+		shortArch = "aa64"
+	case arch.ARCH_X86_64:
+		shortArch = "x64"
+	default:
+		return nil, fmt.Errorf("ukiBootCSVfile: UKIs are only supported for x86_64 and aarch64")
+	}
+
+	kernelFilename := fmt.Sprintf("ffffffffffffffffffffffffffffffff-%s.efi", kernelVer)
+	data := fmt.Sprintf("shim%s.efi,%s,\\EFI\\Linux\\%s ,UKI bootentry\n", shortArch, vendor, kernelFilename)
+
+	// the ESP in our images is always at /boot/efi, but let's make this more
+	// flexible and future proof by finding the ESP mountpoint from the
+	// partition table
+	espMountpoint := ""
+	pt.ForEachMountable(func(mnt disk.Mountable, path []disk.Entity) error {
+		parent := path[1]
+		if partition, ok := parent.(*disk.Partition); ok {
+			// ESP filesystem parent must be a plain partition
+			if partition.Type != disk.EFISystemPartitionGUID {
+				return nil
+			}
+
+			// found ESP filesystem
+			espMountpoint = mnt.GetMountpoint()
+		}
+		return nil
+	})
+
+	if espMountpoint == "" {
+		return nil, fmt.Errorf("failed to find mountpoint for ESP when generating boot CSV file")
+	}
+
+	csvPath := filepath.Join(espMountpoint, "EFI", vendor, fmt.Sprintf("BOOT%s.CSV", strings.ToUpper(shortArch)))
+
+	return fsnode.NewFile(csvPath, nil, nil, nil, common.EncodeUTF16le(data))
 }
 
 func (p *OS) Platform() platform.Platform {
