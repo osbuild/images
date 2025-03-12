@@ -710,18 +710,18 @@ func (p *OS) serialize() osbuild.Pipeline {
 		switch p.platform.GetBootloader() {
 		case platform.BOOTLOADER_GRUB2:
 			pipeline.AddStage(grubStage(p, pt, kernelOptions))
+			if !p.OSCustomizations.KernelOptionsBootloader {
+				pipeline = prependKernelCmdlineStage(pipeline, rootUUID, kernelOptions)
+			}
 		case platform.BOOTLOADER_ZIPL:
 			pipeline.AddStage(osbuild.NewZiplStage(new(osbuild.ZiplStageOptions)))
+			pipeline = prependKernelCmdlineStage(pipeline, rootUUID, kernelOptions)
 		case platform.BOOTLOADER_UKI:
 			csvfile, err := ukiBootCSVfile(pt, p.platform.GetArch(), p.kernelVer, p.platform.GetUEFIVendor())
 			if err != nil {
 				panic(err)
 			}
 			p.addInlineDataAndStages(&pipeline, []*fsnode.File{csvfile})
-		}
-
-		if !p.OSCustomizations.KernelOptionsBootloader || p.platform.GetArch() == arch.ARCH_S390X {
-			pipeline = prependKernelCmdlineStage(pipeline, rootUUID, kernelOptions)
 		}
 	}
 
