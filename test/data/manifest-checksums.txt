@@ -131,6 +131,7 @@
 1497638f59d26c5d43fae4ee9d8db21825eddcf8  rhel_9.6-aarch64-azure_rhui-empty.json
 14b781086f5cb00850d79329fcc67adef61bea63  rhel_10.0-aarch64-ami-oscap_rhel10.json
 14d219884781a9d5be053307a497efbe72083487  rhel_9.5-aarch64-edge_container-empty.json
+14fab0e590b2c578860f40b934b9f436203cae37  rhel_9.6-x86_64-vhd_cvm-empty.json
 152ec24087459ee620628bc3628a0cee0681c14d  rhel_8.9-ppc64le-qcow2-all_with_fips.json
 1556c33b7de1155c994a10e96d3260f1c45f83d0  rhel_9.1-x86_64-ec2_ha-empty.json
 1582f71b7cc0dc743e6bdf1398bb42e7b29bdb79  rhel_9.2-x86_64-edge_raw_image-edge_ostree_pull_empty.json
@@ -448,6 +449,7 @@
 496ee94cc121fae5a877b5dd0bc2421531f3a689  rhel_9.2-aarch64-edge_raw_image-ostree_filesystem_customizations.json
 4975b19a3afddeec84ae6986fe69c806cc4ae49e  rhel_8.9-x86_64-ami-partitioning_lvm_r8.json
 49a42f55f2e6f49b7ede75b4adf24b54dfbaf01d  fedora_43-x86_64-iot_installer-iot_ostree_pull_empty.json
+49b10484742e386d5bad1d0379d8169f55c596e8  rhel_9.7-x86_64-vhd_cvm-empty.json
 49c2452c2cd36f5c07d197f440c43032044621a8  rhel_9.0-x86_64-vhd-empty.json
 49c48e65d34982e75e8e326577baec2d983e1601  rhel_8.6-x86_64-minimal_raw-empty.json
 49f4aa8fe9ba60e6e6e373a4153e2abc8567ee4c  rhel_9.0-aarch64-edge_raw_image-edge_ostree_pull_empty.json
@@ -1025,7 +1027,6 @@ a3167d7518b00654a50b0847c616d91f6e3f4c3c  rhel_9.7-x86_64-edge_raw_image-edge_os
 a35ae354f60d6215da06cfa760a55149809363a7  rhel_9.0-aarch64-image_installer-unattended_iso.json
 a3811547089ba8271f1f8719d006c479646b938e  rhel_9.4-x86_64-edge_raw_image-ostree_filesystem_customizations.json
 a3f999753c642015521843a1d6030ba54e48e5f2  centos_9-s390x-qcow2-all_with_fips.json
-a4026edac89a916a836fdfde8fb6d91ad30856d6  rhel_9.7-x86_64-vhd_cvm-empty.json
 a4211ed6df3c1d72e7a12332cc6af3dac2e13167  fedora_43-s390x-qcow2-empty.json
 a42c84e080d2535dc36131f7fa18c8f72cb83da2  rhel_10.1-x86_64-ec2_sap-ec2_sap_empty.json
 a4825da8772ac9569a9a3b5039a6470f7f9cc4bb  rhel_9.5-aarch64-wsl-empty.json
@@ -1370,7 +1371,6 @@ d7a085daa462845dd58fe71c3c4879d7c77fa8f0  rhel_10.0-x86_64-vmdk-empty.json
 d7b1f6873b4df3af79059a042979cb8490f5c43e  rhel_8.7-x86_64-tar-empty.json
 d7bbabfeb01267b0d4e53d7e1cffb07f4a8761d3  rhel_8.10-aarch64-ami-partitioning_lvm_noswap.json
 d7bfa80a7079b6ff584910cf0975ed1b96f6afa0  rhel_8.6-aarch64-ami-all_customizations.json
-d7ec1d421ac8a9709c93bdccbbe8da5f35147032  rhel_9.6-x86_64-vhd_cvm-empty.json
 d80435a0e845ae6ba430251727192db130751e86  rhel_8.4-s390x-tar-empty.json
 d8414c9facb8eb60286d7a6887b171e0bfe8154c  rhel_8.8-x86_64-edge_container-ostree.json
 d850af796caf23ad278383e10cfc7e201d22859d  fedora_43-x86_64-minimal_raw-firewall.json
