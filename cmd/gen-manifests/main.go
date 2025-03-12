@@ -314,6 +314,8 @@ func mockDepsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoC
 
 	for name, pkgSetChain := range packageSets {
 		specSet := make([]rpmmd.PackageSpec, 0)
+		seenChksumsInc := make(map[string]bool)
+		seenChksumsExc := make(map[string]bool)
 		for _, pkgSet := range pkgSetChain {
 			include := pkgSet.Include
 			slices.Sort(include)
@@ -332,6 +334,11 @@ func mockDepsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoC
 					RemoteLocation: fmt.Sprintf("https://example.com/repo/packages/%s", pkgName),
 					Checksum:       "sha256:" + checksum,
 				}
+				if seenChksumsInc[spec.Checksum] {
+					continue
+				}
+				seenChksumsInc[spec.Checksum] = true
+
 				specSet = append(specSet, spec)
 			}
 
@@ -349,6 +356,11 @@ func mockDepsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoC
 					RemoteLocation: fmt.Sprintf("https://example.com/repo/packages/%s", pkgName),
 					Checksum:       "sha256:" + checksum,
 				}
+				if seenChksumsExc[spec.Checksum] {
+					continue
+				}
+				seenChksumsExc[spec.Checksum] = true
+
 				specSet = append(specSet, spec)
 			}
 		}
