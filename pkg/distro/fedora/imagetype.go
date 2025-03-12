@@ -26,7 +26,7 @@ import (
 
 type imageFunc func(workload workload.Workload, t *imageType, bp *blueprint.Blueprint, options distro.ImageOptions, packageSets map[string]rpmmd.PackageSet, containers []container.SourceSpec, rng *rand.Rand) (image.ImageKind, error)
 
-type packageSetFunc func(t *imageType) rpmmd.PackageSet
+type packageSetFunc func(t *imageType) (rpmmd.PackageSet, error)
 
 type isoLabelFunc func(t *imageType) string
 
@@ -233,7 +233,11 @@ func (t *imageType) Manifest(bp *blueprint.Blueprint,
 	// don't add any static packages if Minimal was selected
 	if !bp.Minimal {
 		for name, getter := range t.packageSets {
-			staticPackageSets[name] = getter(t)
+			pkgSet, err := getter(t)
+			if err != nil {
+				return nil, nil, err
+			}
+			staticPackageSets[name] = pkgSet
 		}
 	}
 

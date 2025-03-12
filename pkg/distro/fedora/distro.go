@@ -75,7 +75,7 @@ func mkImageInstallerImgType(d distribution) imageType {
 		filename:    "installer.iso",
 		mimeType:    "application/x-iso9660-image",
 		packageSets: map[string]packageSetFunc{
-			osPkgsKey: func(t *imageType) rpmmd.PackageSet {
+			osPkgsKey: func(t *imageType) (rpmmd.PackageSet, error) {
 				// use the minimal raw image type for the OS package set
 				return packagesets.Load(t, "minimal-raw", VersionReplacements())
 			},
@@ -172,8 +172,8 @@ func mkIotOCIImgType(d distribution) imageType {
 		mimeType:    "application/x-tar",
 		packageSets: map[string]packageSetFunc{
 			osPkgsKey: packageSetLoader,
-			containerPkgsKey: func(t *imageType) rpmmd.PackageSet {
-				return rpmmd.PackageSet{}
+			containerPkgsKey: func(t *imageType) (rpmmd.PackageSet, error) {
+				return rpmmd.PackageSet{}, nil
 			},
 		},
 		defaultImageConfig: &distro.ImageConfig{
