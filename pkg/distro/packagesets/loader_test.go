@@ -54,8 +54,8 @@ test_type:
 	restore := packagesets.MockDataFS(baseDir)
 	defer restore()
 
-	pkgSet := packagesets.Load(it, "", nil)
-	assert.NotNil(t, pkgSet)
+	pkgSet, err := packagesets.Load(it, "", nil)
+	assert.NoError(t, err)
 	assert.Equal(t, rpmmd.PackageSet{
 		Include: []string{"inc1", "from-condition-inc2"},
 		Exclude: []string{"exc1", "from-condition-exc2"},
@@ -77,8 +77,8 @@ test_type:
 	restore := packagesets.MockDataFS(baseDir)
 	defer restore()
 
-	pkgSet := packagesets.Load(it, "override-name", nil)
-	assert.NotNil(t, pkgSet)
+	pkgSet, err := packagesets.Load(it, "override-name", nil)
+	assert.NoError(t, err)
 	assert.Equal(t, rpmmd.PackageSet{
 		Include: []string{"from-override-inc1"},
 		Exclude: []string{"from-override-exc1"},
