@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
 	"github.com/osbuild/images/internal/common"
@@ -60,6 +61,7 @@ func Load(it distro.ImageType, overrideTypeName string, replacements map[string]
 	// searchPaths down the stack instead
 	var dataFS fs.FS = DataFS
 	if overrideDir := experimentalflags.String("yamldir"); overrideDir != "" {
+		logrus.Warnf("using experimental override dir %q", overrideDir)
 		dataFS = os.DirFS(overrideDir)
 	}
 	f, err := dataFS.Open(filepath.Join(distroName, "package_sets.yaml"))
