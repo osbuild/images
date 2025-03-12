@@ -2,6 +2,7 @@ package common
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -32,4 +33,23 @@ func TestSystemdMountUnit(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, tc.expectedName, name)
 	}
+}
+
+func TestMustHappy(t *testing.T) {
+	var mustTesterRet string
+	var mustTesterErr error
+	mustTester := func() (string, error) {
+		return mustTesterRet, mustTesterErr
+	}
+
+	mustTesterRet = "happy"
+	mustTesterErr = nil
+	res := Must(mustTester())
+	assert.Equal(t, res, "happy")
+
+	mustTesterRet = "unhappy"
+	mustTesterErr = fmt.Errorf("some error")
+	assert.PanicsWithError(t, "some error", func() {
+		Must(mustTester())
+	})
 }
