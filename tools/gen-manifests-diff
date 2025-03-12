@@ -43,7 +43,7 @@ def manifests_diff(tmp_path, rev):
     manifests_old = tmp_path / "ref"
     manifests_new = tmp_path / "new"
 
-    print(f"calculating diff against {rev}")
+    print(f"calculating diff against '{rev}'")
     cmd_new = ["go", "run", f"github.com/osbuild/images/cmd/gen-manifests@{rev}"]
     run_gen_manifests(cmd_new, manifests_old)
 
@@ -64,6 +64,8 @@ def main():
     rev = "main"
     if len(sys.argv) > 1:
         rev = sys.argv[1]
+    print("Note that this diff does *not* include depsolved rpms,")
+    print("so upstream dependency changes will not be caught\n")
     with tempfile.TemporaryDirectory() as tmpdir:
         manifests_diff(pathlib.Path(tmpdir), rev)
 
