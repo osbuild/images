@@ -65,7 +65,8 @@ func Load(it distro.ImageType, overrideTypeName string, replacements map[string]
 	// distro names, sadly go has no rsplit() so we do it manually
 	// XXX: we cannot use distroidparser here because of import cycles
 	distroName := distroNameVer[:strings.LastIndex(distroNameVer, "-")]
-	distroVersion := distribution.OsVersion()
+	distroVersion := strings.SplitN(distroNameVer, "-", 2)[1]
+	distroNameMajorVer := strings.SplitN(distroNameVer, ".", 2)[0]
 
 	// XXX: this is a short term measure, pass a set of
 	// searchPaths down the stack instead
@@ -74,7 +75,29 @@ func Load(it distro.ImageType, overrideTypeName string, replacements map[string]
 		logrus.Warnf("using experimental override dir %q", overrideDir)
 		dataFS = os.DirFS(overrideDir)
 	}
-	f, err := dataFS.Open(filepath.Join(distroName, "package_sets.yaml"))
+
+	// XXX: this is only needed temporary until we have a "distros.yaml"
+	// that describes some high-level properties of each distro
+	// (like their yaml dirs)
+	var baseDir string
+	switch distroName {
+	case "rhel":
+		// rhel yaml files are under ./rhel-$majorVer
+		baseDir = distroNameMajorVer
+	case "centos":
+		// centos yaml is just rhel but we have (sadly) no symlinks
+		// in "go:embed" so we have to have this slightly ugly
+		// workaround
+		baseDir = fmt.Sprintf("rhel-%s", distroVersion)
+	case "fedora", "test-distro":
+		// our other distros just have a single yaml dir per distro
+		// and use condition.version_gt etc
+		baseDir = distroName
+	default:
+		return rpmmd.PackageSet{}, fmt.Errorf("unsupported distro in loader %q (add to loader.go)", distroName)
+	}
+
+	f, err := dataFS.Open(filepath.Join(baseDir, "package_sets.yaml"))
 	if err != nil {
 		return rpmmd.PackageSet{}, err
 	}
