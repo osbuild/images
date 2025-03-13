@@ -271,6 +271,13 @@ func (p *OS) getPackageSetChain(Distro) []rpmmd.PackageSet {
 
 	}
 
+	if p.Firewall != nil {
+		// Make sure firewalld is available in the image.
+		// org.osbuild.firewall runs 'firewall-offline-cmd' in the os tree
+		// using chroot, so we don't need a build package for this.
+		customizationPackages = append(customizationPackages, "firewalld")
+	}
+
 	osRepos := append(p.repos, p.ExtraBaseRepos...)
 
 	// merge all package lists for the pipeline
