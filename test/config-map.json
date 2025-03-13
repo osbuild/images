@@ -390,5 +390,10 @@
     "distros": [
       "centos-9"
     ]
+  },
+  "./configs/firewall.json": {
+    "image-types": [
+      "minimal-raw"
+    ]
   }
 }
