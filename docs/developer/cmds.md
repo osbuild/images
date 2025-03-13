@@ -59,6 +59,18 @@ extract the actual manifest using `jq .manifest
 <manifestfile>.json`. Alternatively, you can generate manifests without
 metadata using the `-metadata=false` option._
 
+#### Diffing manifests
+
+When working on image definitions it is often useful to see the effect
+this has on existing manifests. The tool `gen-manifests-diff` will generate
+a diff against the osbuild manifests produced by the current upstream "main"
+branch of the "images" library. If a first argument is passed the diff
+is generated against the given revision or git tag of upstream.
+
+Note that no depsolving is performed so upstream packaging dependency
+changes will not be caught. This is done so that the diff is small and
+fast.
+
 #### Building images
 
 You can build an image by generating its manifest and then running
