@@ -35,9 +35,9 @@ import (
 //	can always be applied.
 type OSCustomizations struct {
 
-	// Packages to install in addition to the ones required by the
-	// pipeline.
-	ExtraBasePackages []string
+	// Packages to install in addition to the ones required by the pipeline.
+	// These are the statically defined packages for the image type.
+	BasePackages []string
 
 	// Packages to exclude from the base package set. This is useful in
 	// case of weak dependencies, comps groups, or where multiple packages
@@ -274,7 +274,7 @@ func (p *OS) getPackageSetChain(Distro) []rpmmd.PackageSet {
 
 	chain := []rpmmd.PackageSet{
 		{
-			Include:         append(packages, p.ExtraBasePackages...),
+			Include:         append(packages, p.BasePackages...),
 			Exclude:         p.ExcludeBasePackages,
 			Repositories:    osRepos,
 			InstallWeakDeps: p.InstallWeakDeps,
