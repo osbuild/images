@@ -73,6 +73,15 @@ func TestCloudInitStage_NewStage_Invalid(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "empty-network-section",
+			options: CloudInitStageOptions{
+				Filename: "00-default_user.cfg",
+				Config: CloudInitConfigFile{
+					Network: &CloudInitConfigNetwork{},
+				},
+			},
+		},
 	}
 	for idx := range tests {
 		tt := tests[idx]
