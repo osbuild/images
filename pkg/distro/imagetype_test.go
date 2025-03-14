@@ -41,7 +41,7 @@ func TestManifestRepositoryCustomization(t *testing.T) {
 				osChains := chains["os"]
 				baseChain := osChains[0]
 				assert.Contains(t, baseChain.Include, "kernel")
-				payloadChain := osChains[1]
+				payloadChain := osChains[2]
 				assert.Equal(t, []string{"hello"}, payloadChain.Include)
 				if installFrom {
 					// the bp repo got added for this payload resolv

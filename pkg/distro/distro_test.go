@@ -270,7 +270,7 @@ func TestPipelineRepositories(t *testing.T) {
 			},
 			result: map[string][]stringSet{
 				"*":  {newStringSet([]string{"global-21", "global-22"})},
-				"os": {newStringSet([]string{"os-1", "os-2"}), newStringSet([]string{"os-1", "os-2"})},
+				"os": {newStringSet([]string{"os-1", "os-2"}), newStringSet([]string{"os-1", "os-2"}), newStringSet([]string{"os-1", "os-2"})},
 			},
 		},
 		"global+os+payload": { // global repos with os-specific repos and (user-defined) payload repositories
@@ -304,9 +304,11 @@ func TestPipelineRepositories(t *testing.T) {
 			result: map[string][]stringSet{
 				"*": {newStringSet([]string{"global-21", "global-22"})},
 				"os": {
-					// chain with payload repo only in the second set for the blueprint package depsolve
+					// chain with payload repo only in the third set for the blueprint package depsolve
 					newStringSet([]string{"os-1", "os-2"}),
-					newStringSet([]string{"os-1", "os-2", "payload"})},
+					newStringSet([]string{"os-1", "os-2"}),
+					newStringSet([]string{"os-1", "os-2", "payload"}),
+				},
 			},
 		},
 		"noglobal": { // no global repositories; only pipeline restricted ones (unrealistic but technically valid)
@@ -350,7 +352,7 @@ func TestPipelineRepositories(t *testing.T) {
 			result: map[string][]stringSet{
 				"*":              nil,
 				"build":          {newStringSet([]string{"build-1", "build-2"})},
-				"os":             {newStringSet([]string{"os-1", "os-2"}), newStringSet([]string{"os-1", "os-2"})},
+				"os":             {newStringSet([]string{"os-1", "os-2"}), newStringSet([]string{"os-1", "os-2"}), newStringSet([]string{"os-1", "os-2"})},
 				"anaconda-tree":  {newStringSet([]string{"anaconda-1"})},
 				"container-tree": {newStringSet([]string{"container-1"})},
 				"coi-tree":       {newStringSet([]string{"coi-1"})},
