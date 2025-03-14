@@ -523,7 +523,54 @@ image_types:
           - "trousers"
           - "whois-nls"
           - "xkeyboard-config"
-  wsl: *container
+
+  wsl:
+    package_sets:
+      - include:
+          - "bash"
+          - "coreutils"
+          - "cloud-init"
+          - "yum"
+          - "dnf"
+          - "fedora-release-container"
+          - "glibc-minimal-langpack"
+          - "rootfiles"
+          - "rpm"
+          - "sudo"
+          - "tar"
+          - "util-linux-core"
+          - "vim-minimal"
+        exclude:
+          - "crypto-policies-scripts"
+          - "deltarpm"
+          - "dosfstools"
+          - "elfutils-debuginfod-client"
+          - "gawk-all-langpacks"
+          - "glibc-gconv-extra"
+          - "glibc-langpack-en"
+          - "gnupg2-smime"
+          - "grubby"
+          - "kernel-core"
+          - "kernel-debug-core"
+          - "kernel"
+          - "langpacks-en_GB"
+          - "langpacks-en"
+          - "libxcrypt-compat"
+          - "nano"
+          - "openssl-pkcs11"
+          - "pinentry"
+          - "python3-unbound"
+          - "shared-mime-info"
+          - "sssd-client"
+          - "sudo-python-plugin"
+          - "trousers"
+          - "whois-nls"
+          - "xkeyboard-config"
+        condition:
+          version_greater_or_equal:
+            "41":
+              exclude:
+                - "fuse-libs"
 
   minimal_raw: &minimal_raw
     package_sets:

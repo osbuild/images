@@ -450,7 +450,7 @@ image_types:
       - *ami_pkgset
       - *sap_pkgset
 
-  ubi: &ubi
+  wsl:
     package_sets:
       - include:
           - "alternatives"
@@ -458,6 +458,7 @@ image_types:
           - "basesystem"
           - "bash"
           - "ca-certificates"
+          - "cloud-init"
           - "coreutils-single"
           - "crypto-policies-scripts"
           - "curl-minimal"
@@ -503,8 +504,6 @@ image_types:
           - "python-unversioned-command"
           - "redhat-release-eula"
           - "rpm-plugin-systemd-inhibit"
-
-  wsl: *ubi
 
   image_installer:
     package_sets:
