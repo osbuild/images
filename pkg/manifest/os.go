@@ -219,44 +219,48 @@ func NewOS(buildPipeline Build, platform platform.Platform, repos []rpmmd.RepoCo
 }
 
 func (p *OS) getPackageSetChain(Distro) []rpmmd.PackageSet {
-	packages := p.platform.GetPackages()
+	platformPackages := p.platform.GetPackages()
 
-	if p.KernelName != "" {
-		packages = append(packages, p.KernelName)
+	var environmentPackages []string
+	if p.Environment != nil {
+		environmentPackages = p.Environment.GetPackages()
 	}
 
 	// If we have a logical volume we need to include the lvm2 package.
 	// OSTree-based images (commit and container) aren't bootable images and
 	// don't have partition tables.
+	var partitionTablePackages []string
 	if p.PartitionTable != nil && p.OSTreeRef == "" {
-		packages = append(packages, p.PartitionTable.GetBuildPackages()...)
+		partitionTablePackages = p.PartitionTable.GetBuildPackages()
 	}
 
-	if p.Environment != nil {
-		packages = append(packages, p.Environment.GetPackages()...)
+	if p.KernelName != "" {
+		// kernel is considered part of the platform package set
+		platformPackages = append(platformPackages, p.KernelName)
 	}
 
+	customizationPackages := make([]string, 0)
 	if len(p.NTPServers) > 0 {
-		packages = append(packages, "chrony")
+		customizationPackages = append(customizationPackages, "chrony")
 	}
 
 	if p.SElinux != "" {
-		packages = append(packages, fmt.Sprintf("selinux-policy-%s", p.SElinux))
+		customizationPackages = append(customizationPackages, fmt.Sprintf("selinux-policy-%s", p.SElinux))
 	}
 
 	if p.OpenSCAPRemediationConfig != nil {
-		packages = append(packages, "openscap-scanner", "scap-security-guide", "xz")
+		customizationPackages = append(customizationPackages, "openscap-scanner", "scap-security-guide", "xz")
 	}
 
 	// Make sure the right packages are included for subscriptions
 	// rhc always uses insights, and depends on subscription-manager
 	// non-rhc uses subscription-manager and optionally includes Insights
 	if p.Subscription != nil {
-		packages = append(packages, "subscription-manager")
+		customizationPackages = append(customizationPackages, "subscription-manager")
 		if p.Subscription.Rhc {
-			packages = append(packages, "rhc", "insights-client", "rhc-worker-playbook")
+			customizationPackages = append(customizationPackages, "rhc", "insights-client", "rhc-worker-playbook")
 		} else if p.Subscription.Insights {
-			packages = append(packages, "insights-client")
+			customizationPackages = append(customizationPackages, "insights-client")
 		}
 	}
 
@@ -266,15 +270,23 @@ func (p *OS) getPackageSetChain(Distro) []rpmmd.PackageSet {
 		// should already have the required packages, but some minimal image
 		// types, like 'tar' don't, so let's add them for the stage to run and
 		// to enable user management in the image.
-		packages = append(packages, "shadow-utils", "pam", "passwd")
+		customizationPackages = append(customizationPackages, "shadow-utils", "pam", "passwd")
 
 	}
 
 	osRepos := append(p.repos, p.ExtraBaseRepos...)
 
+	// merge all package lists for the pipeline
+	baseOSPackages := make([]string, 0)
+	baseOSPackages = append(baseOSPackages, platformPackages...)
+	baseOSPackages = append(baseOSPackages, customizationPackages...)
+	baseOSPackages = append(baseOSPackages, environmentPackages...)
+	baseOSPackages = append(baseOSPackages, partitionTablePackages...)
+	baseOSPackages = append(baseOSPackages, p.BasePackages...)
+
 	chain := []rpmmd.PackageSet{
 		{
-			Include:         append(packages, p.BasePackages...),
+			Include:         baseOSPackages,
 			Exclude:         p.ExcludeBasePackages,
 			Repositories:    osRepos,
 			InstallWeakDeps: p.InstallWeakDeps,
