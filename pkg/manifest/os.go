@@ -276,7 +276,6 @@ func (p *OS) getPackageSetChain(Distro) []rpmmd.PackageSet {
 	// merge all package lists for the pipeline
 	baseOSPackages := make([]string, 0)
 	baseOSPackages = append(baseOSPackages, platformPackages...)
-	baseOSPackages = append(baseOSPackages, customizationPackages...)
 	baseOSPackages = append(baseOSPackages, environmentPackages...)
 	baseOSPackages = append(baseOSPackages, partitionTablePackages...)
 	baseOSPackages = append(baseOSPackages, p.BasePackages...)
@@ -288,6 +287,16 @@ func (p *OS) getPackageSetChain(Distro) []rpmmd.PackageSet {
 			Repositories:    osRepos,
 			InstallWeakDeps: p.InstallWeakDeps,
 		},
+		{
+			// Depsolve customization packages separately to avoid conflicts with base
+			// package exclusion.
+			// See https://github.com/osbuild/images/issues/1323
+			Include:      customizationPackages,
+			Repositories: osRepos,
+			// Although 'false' is the default value, set it explicitly to make
+			// it visible that we are not adding weak dependencies.
+			InstallWeakDeps: false,
+		},
 	}
 
 	if p.Workload != nil {
@@ -296,13 +305,15 @@ func (p *OS) getPackageSetChain(Distro) []rpmmd.PackageSet {
 			ps := rpmmd.PackageSet{
 				Include:      workloadPackages,
 				Repositories: append(osRepos, p.Workload.GetRepos()...),
+				// Although 'false' is the default value, set it explicitly to make
+				// it visible that we are not adding weak dependencies.
+				InstallWeakDeps: false,
 			}
 
 			workloadModules := p.Workload.GetEnabledModules()
 			if len(workloadModules) > 0 {
 				ps.EnabledModules = workloadModules
 			}
-
 			chain = append(chain, ps)
 		}
 	}
