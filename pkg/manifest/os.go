@@ -226,11 +226,8 @@ func (p *OS) getPackageSetChain(Distro) []rpmmd.PackageSet {
 		environmentPackages = p.Environment.GetPackages()
 	}
 
-	// If we have a logical volume we need to include the lvm2 package.
-	// OSTree-based images (commit and container) aren't bootable images and
-	// don't have partition tables.
 	var partitionTablePackages []string
-	if p.PartitionTable != nil && p.OSTreeRef == "" {
+	if p.PartitionTable != nil {
 		partitionTablePackages = p.PartitionTable.GetBuildPackages()
 	}
 
