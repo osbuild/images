@@ -1,4 +1,5 @@
-package packagesets
+// package defs contain the distro definitions used by the "images" library
+package defs
 
 import (
 	"embed"
@@ -46,11 +47,11 @@ type conditions struct {
 	DistroName            map[string]packageSet `yaml:"distro_name,omitempty"`
 }
 
-// Load loads the PackageSet from the yaml source file discovered via the
+// PackageSet loads the PackageSet from the yaml source file discovered via the
 // imagetype. By default the imagetype name is used to load the packageset
 // but with "overrideTypeName" this can be overriden (useful for e.g.
 // installer image types).
-func Load(it distro.ImageType, overrideTypeName string, replacements map[string]string) (rpmmd.PackageSet, error) {
+func PackageSet(it distro.ImageType, overrideTypeName string, replacements map[string]string) (rpmmd.PackageSet, error) {
 	typeName := it.Name()
 	if overrideTypeName != "" {
 		typeName = overrideTypeName

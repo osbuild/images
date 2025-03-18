@@ -1,4 +1,4 @@
-package packagesets_test
+package defs_test
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/distro/packagesets"
+	"github.com/osbuild/images/pkg/distro/defs"
 	"github.com/osbuild/images/pkg/distro/test_distro"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
@@ -54,10 +54,10 @@ image_types:
 `
 	// XXX: we cannot use distro.Name() as it will give us a name+ver
 	baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, fakePkgsSetYaml)
-	restore := packagesets.MockDataFS(baseDir)
+	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	pkgSet, err := packagesets.Load(it, "", nil)
+	pkgSet, err := defs.PackageSet(it, "", nil)
 	assert.NoError(t, err)
 	assert.Equal(t, rpmmd.PackageSet{
 		Include: []string{"from-condition-inc2", "inc1"},
@@ -81,10 +81,10 @@ image_types:
 `
 	// XXX: we cannot use distro.Name() as it will give us a name+ver
 	baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, fakePkgsSetYaml)
-	restore := packagesets.MockDataFS(baseDir)
+	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	pkgSet, err := packagesets.Load(it, "override-name", nil)
+	pkgSet, err := defs.PackageSet(it, "override-name", nil)
 	assert.NoError(t, err)
 	assert.Equal(t, rpmmd.PackageSet{
 		Include: []string{"from-override-inc1"},
@@ -127,7 +127,7 @@ image_types:
 	err = os.WriteFile(fakePkgsSetPath, fakePkgsSetYaml, 0644)
 	assert.NoError(t, err)
 
-	pkgSet, err := packagesets.Load(it, "", nil)
+	pkgSet, err := defs.PackageSet(it, "", nil)
 	assert.NoError(t, err)
 	assert.Equal(t, rpmmd.PackageSet{
 		Include: []string{"inc1"},
@@ -167,10 +167,10 @@ image_types:
 `
 	// XXX: we cannot use distro.Name() as it will give us a name+ver
 	baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, fakePkgsSetYaml)
-	restore := packagesets.MockDataFS(baseDir)
+	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	pkgSet, err := packagesets.Load(it, "", nil)
+	pkgSet, err := defs.PackageSet(it, "", nil)
 	assert.NoError(t, err)
 	assert.Equal(t, rpmmd.PackageSet{
 		Include: []string{"from-base-condition-inc", "from-base-inc", "from-condition-inc", "from-other-type-inc", "from-type-inc"},

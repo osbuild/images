@@ -2,7 +2,7 @@ package rhel10
 
 import (
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/distro/packagesets"
+	"github.com/osbuild/images/pkg/distro/defs"
 	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
@@ -29,7 +29,7 @@ func mkImageInstallerImgType() *rhel.ImageType {
 		"application/x-iso9660-image",
 		map[string]rhel.PackageSetFunc{
 			rhel.OSPkgsKey: func(t *rhel.ImageType) (rpmmd.PackageSet, error) {
-				return packagesets.Load(t, "bare-metal", nil)
+				return defs.PackageSet(t, "bare-metal", nil)
 			},
 			rhel.InstallerPkgsKey: packageSetLoader,
 		},
