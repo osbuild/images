@@ -53,8 +53,8 @@ func mkEdgeOCIImgType(d *rhel.Distribution) *rhel.ImageType {
 		"application/x-tar",
 		map[string]rhel.PackageSetFunc{
 			rhel.OSPkgsKey: packageSetLoader,
-			rhel.ContainerPkgsKey: func(t *rhel.ImageType) rpmmd.PackageSet {
-				return common.Must(packagesets.Load(t, "edge_container_pipeline_pkgset", nil))
+			rhel.ContainerPkgsKey: func(t *rhel.ImageType) (rpmmd.PackageSet, error) {
+				return packagesets.Load(t, "edge_container_pipeline_pkgset", nil)
 			},
 		},
 		rhel.EdgeContainerImage,

@@ -29,8 +29,8 @@ func mkImageInstallerImgType() *rhel.ImageType {
 		"installer.iso",
 		"application/x-iso9660-image",
 		map[string]rhel.PackageSetFunc{
-			rhel.OSPkgsKey: func(t *rhel.ImageType) rpmmd.PackageSet {
-				return common.Must(packagesets.Load(t, "bare-metal", nil))
+			rhel.OSPkgsKey: func(t *rhel.ImageType) (rpmmd.PackageSet, error) {
+				return packagesets.Load(t, "bare-metal", nil)
 			},
 			rhel.InstallerPkgsKey: packageSetLoader,
 		},
