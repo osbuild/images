@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
 	"github.com/osbuild/images/pkg/distro/test_distro"
@@ -176,4 +177,25 @@ image_types:
 		Include: []string{"from-base-condition-inc", "from-base-inc", "from-condition-inc", "from-other-type-inc", "from-type-inc"},
 		Exclude: []string{"from-base-condition-exc", "from-base-exc", "from-condition-exc", "from-other-type-exc", "from-type-exc"},
 	}, pkgSet)
+}
+
+func TestDefsPartitionTable(t *testing.T) {
+	it := makeTestImageType(t)
+	fakeDistroYaml := `
+image_types:
+  test_type:
+    partition_table:
+      x86_64:
+        size: 100
+`
+	// XXX: we cannot use distro.Name() as it will give us a name+ver
+	baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, fakeDistroYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	partTable, err := defs.PartitionTable(it)
+	assert.NoError(t, err)
+	assert.Equal(t, &disk.PartitionTable{
+		Size: 100,
+	}, partTable)
 }
