@@ -49,7 +49,7 @@ var requiredDirectorySizes = map[string]uint64{
 
 type ImageFunc func(workload workload.Workload, t *ImageType, customizations *blueprint.Customizations, options distro.ImageOptions, packageSets map[string]rpmmd.PackageSet, containers []container.SourceSpec, rng *rand.Rand) (image.ImageKind, error)
 
-type PackageSetFunc func(t *ImageType) rpmmd.PackageSet
+type PackageSetFunc func(t *ImageType) (rpmmd.PackageSet, error)
 
 type BasePartitionTableFunc func(t *ImageType) (disk.PartitionTable, bool)
 
@@ -285,7 +285,11 @@ func (t *ImageType) Manifest(bp *blueprint.Blueprint,
 	staticPackageSets := make(map[string]rpmmd.PackageSet)
 
 	for name, getter := range t.packageSets {
-		staticPackageSets[name] = getter(t)
+		pkgSets, err := getter(t)
+		if err != nil {
+			return nil, nil, err
+		}
+		staticPackageSets[name] = pkgSets
 	}
 
 	// amend with repository information and collect payload repos
