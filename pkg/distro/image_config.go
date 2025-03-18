@@ -23,12 +23,12 @@ type ImageConfig struct {
 	MaskedServices      []string
 	DefaultTarget       *string
 
-	Sysconfig           *Sysconfig
-	DefaultKernel       *string
-	UpdateDefaultKernel *bool
+	Sysconfig           *Sysconfig `yaml:"sysconfig,omitempty"`
+	DefaultKernel       *string    `yaml:"default_kernel,omitempty"`
+	UpdateDefaultKernel *bool      `yaml:"update_default_kernel,omitempty"`
 
 	// List of files from which to import GPG keys into the RPM database
-	GPGKeyFiles []string
+	GPGKeyFiles []string `yaml:"gpgkey_files,omitempty"`
 
 	// Disable SELinux labelling
 	NoSElinux *bool
@@ -80,7 +80,7 @@ type ImageConfig struct {
 	//
 	// This should only be used for old distros that use grub and it is
 	// applied on all architectures, except for s390x.
-	KernelOptionsBootloader *bool
+	KernelOptionsBootloader *bool `yaml:"kernel_options_bootloader,omitempty"`
 
 	// The default OSCAP datastream to use for the image as a fallback,
 	// if no datastream value is provided by the user.
@@ -88,7 +88,7 @@ type ImageConfig struct {
 
 	// NoBLS configures the image bootloader with traditional menu entries
 	// instead of BLS. Required for legacy systems like RHEL 7.
-	NoBLS *bool
+	NoBLS *bool `yaml:"no_bls,omitempty"`
 
 	// OSTree specific configuration
 
@@ -156,10 +156,10 @@ func (c *ImageConfig) WSLConfStageOptions() *osbuild.WSLConfStageOptions {
 }
 
 type Sysconfig struct {
-	Networking bool
-	NoZeroConf bool
+	Networking bool `yaml:"networking,omitempty"`
+	NoZeroConf bool `yaml:"no_zero_conf,omitempty"`
 
-	CreateDefaultNetworkScripts bool
+	CreateDefaultNetworkScripts bool `yaml:"create_default_network_scripts,omitempty"`
 }
 
 func (c *ImageConfig) SysconfigStageOptions() []*osbuild.SysconfigStageOptions {
