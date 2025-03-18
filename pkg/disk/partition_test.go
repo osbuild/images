@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/internal/testdisk"
 	"github.com/osbuild/images/pkg/disk"
@@ -22,7 +23,7 @@ func TestMarshalUnmarshalSimple(t *testing.T) {
 
 	var ptFromJS disk.PartitionTable
 	err = json.Unmarshal(js, &ptFromJS)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, fakePt, &ptFromJS)
 }
 
@@ -47,7 +48,7 @@ func TestMarshalUnmarshalPartitionHappy(t *testing.T) {
 
 		var partFromJS disk.Partition
 		err = json.Unmarshal(js, &partFromJS)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, part, &partFromJS)
 	}
 }

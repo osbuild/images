@@ -9,18 +9,18 @@ import (
 
 // Filesystem related functions
 type Filesystem struct {
-	Type string
+	Type string `json:"type"`
 	// ID of the filesystem, vfat doesn't use traditional UUIDs, therefore this
 	// is just a string.
-	UUID       string
-	Label      string
-	Mountpoint string
+	UUID       string `json:"uuid"`
+	Label      string `json:"label"`
+	Mountpoint string `json:"mountpoint"`
 	// The fourth field of fstab(5); fs_mntops
-	FSTabOptions string
+	FSTabOptions string `json:"fstab_options"`
 	// The fifth field of fstab(5); fs_freq
-	FSTabFreq uint64
+	FSTabFreq uint64 `json:"fstab_freq"`
 	// The sixth field of fstab(5); fs_passno
-	FSTabPassNo uint64
+	FSTabPassNo uint64 `json:"fstab_passno"`
 }
 
 func init() {

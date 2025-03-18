@@ -8,7 +8,8 @@ import (
 )
 
 type Partition struct {
-	Start    uint64 // Start of the partition in bytes
+	Start uint64 // Start of the partition in bytes
+	// XXX: use datasizes.Size here
 	Size     uint64 // Size of the partition in bytes
 	Type     string // Partition type, e.g. 0x83 for MBR or a UUID for gpt
 	Bootable bool   // `Legacy BIOS bootable` (GPT) or `active` (DOS) flag
@@ -108,7 +109,7 @@ func (p *Partition) MarshalJSON() ([]byte, error) {
 
 	partWithPayloadType := struct {
 		partAlias
-		PayloadType string
+		PayloadType string `json:"payload_type"`
 	}{
 		partAlias(*p),
 		entityName,
@@ -118,32 +119,36 @@ func (p *Partition) MarshalJSON() ([]byte, error) {
 }
 
 func (p *Partition) UnmarshalJSON(data []byte) error {
-	type partAlias Partition
-	var partWithoutPayload struct {
-		partAlias
+	// XXX: duplicated accross the Partition,LUKS,LVM :(
+	type alias Partition
+	var withoutPayload struct {
+		alias
 		Payload     json.RawMessage
-		PayloadType string
+		PayloadType string `json:"payload_type"`
 	}
-
 	dec := json.NewDecoder(bytes.NewBuffer(data))
-	if err := dec.Decode(&partWithoutPayload); err != nil {
+	if err := dec.Decode(&withoutPayload); err != nil {
 		return fmt.Errorf("cannot build partition from %q: %w", data, err)
 	}
-	*p = Partition(partWithoutPayload.partAlias)
+	*p = Partition(withoutPayload.alias)
 	// no payload, e.g. bios partiton
-	if partWithoutPayload.PayloadType == "no-payload" {
+	if withoutPayload.PayloadType == "no-payload" {
 		return nil
 	}
 
-	entType := payloadEntityMap[partWithoutPayload.PayloadType]
+	entType := payloadEntityMap[withoutPayload.PayloadType]
 	if entType == nil {
 		return fmt.Errorf("cannot build partition from %q", data)
 	}
 	entValP := reflect.New(entType).Elem().Addr()
 	ent := entValP.Interface()
-	if err := json.Unmarshal(partWithoutPayload.Payload, &ent); err != nil {
+	if err := json.Unmarshal(withoutPayload.Payload, &ent); err != nil {
 		return err
 	}
 	p.Payload = ent.(PayloadEntity)
 	return nil
+}
+
+func (p *Partition) UnmarshalYAML(unmarshal func(any) error) error {
+	return unmarshalYAMLviaJSON(p, unmarshal)
 }

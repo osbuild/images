@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
@@ -185,8 +186,43 @@ func TestDefsPartitionTable(t *testing.T) {
 image_types:
   test_type:
     partition_table:
-      x86_64:
-        size: 100
+      test_arch:
+        size: 1_000_000_000
+        uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
+        type: "gpt"
+        partitions:
+          - payload_type: no-payload
+            size: 1_048_576
+            bootable: true
+          - payload_type: filesystem
+            size: 209_715_200
+            payload:
+              type: vfat
+              mountpoint: "/boot/efi"
+              label: "EFI-SYSTEM"
+              fstab_options: "defaults,uid=0,gid=0,umask=077,shortname=winnt"
+              fstab_freq: 0
+              fstab_passno: 2
+          - payload_type: "luks"
+            payload:
+              label: "crypt_root"
+              cipher: "cipher_null"
+              passphrase: "osbuild"
+              pbkdf:
+                iterations: 4
+              clevis:
+                pin: "null"
+              payload_type: "lvm"
+              payload:
+                name: "rootvg"
+                description: "bla"
+                logical_volumes:
+                  - size: 8_589_934_592  # 8 * datasizes.GibiByte,
+                    name: rootlv
+                    payload_type: "filesystem"
+                    payload:
+                      type: ext4
+                      mountpoint: "/"
 `
 	// XXX: we cannot use distro.Name() as it will give us a name+ver
 	baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, fakeDistroYaml)
@@ -194,8 +230,53 @@ image_types:
 	defer restore()
 
 	partTable, err := defs.PartitionTable(it)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, &disk.PartitionTable{
-		Size: 100,
+		Size: 1_000_000_000,
+		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
+		Type: disk.PT_GPT,
+		Partitions: []disk.Partition{
+			{
+				Size:     1048576,
+				Bootable: true,
+			},
+			{
+				Size: 209_715_200,
+				Payload: &disk.Filesystem{
+					Type:         "vfat",
+					Mountpoint:   "/boot/efi",
+					Label:        "EFI-SYSTEM",
+					FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+					FSTabFreq:    0,
+					FSTabPassNo:  2,
+				},
+			}, {
+				Payload: &disk.LUKSContainer{
+					Label:      "crypt_root",
+					Cipher:     "cipher_null",
+					Passphrase: "osbuild",
+					PBKDF: disk.Argon2id{
+						Iterations: 4,
+					},
+					Clevis: &disk.ClevisBind{
+						Pin: "null",
+					},
+					Payload: &disk.LVMVolumeGroup{
+						Name:        "rootvg",
+						Description: "bla",
+						LogicalVolumes: []disk.LVMLogicalVolume{
+							{
+								Name: "rootlv",
+								Size: 8_589_934_592,
+								Payload: &disk.Filesystem{
+									Type:       "ext4",
+									Mountpoint: "/",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}, partTable)
 }
