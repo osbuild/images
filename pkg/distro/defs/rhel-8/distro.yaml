@@ -524,6 +524,19 @@
             - "insights-client"
             - "subscription-manager-cockpit"
     
+image_config:
+  timezone: "America/New_York"
+  locale:   "en_US.UTF-8"
+  sysconfig:
+    - kernel:
+        update_default: true
+        default_kernel: "kernel"
+      network:
+        networking: true
+        no_zero_conf: true
+  kernel_options_bootloader: true
+  install_weak_deps: true
+  default_oscap_datastream: "/usr/share/xml/scap/ssg/content/ssg-rhel8-ds.xml"
 
 image_types:
   # XXX: not a real pkgset but the "os" pipeline pkgset for image-installer
