@@ -13,10 +13,10 @@ import (
 
 // ImageConfig represents a (default) configuration applied to the image payload.
 type ImageConfig struct {
-	Hostname            *string
-	Timezone            *string
+	Hostname            *string `yaml:"hostname,omitempty"`
+	Timezone            *string `yaml:"timezone,omitempty"`
 	TimeSynchronization *osbuild.ChronyStageOptions
-	Locale              *string
+	Locale              *string `yaml:"locale,omitempty"`
 	Keyboard            *osbuild.KeymapStageOptions
 	EnabledServices     []string
 	DisabledServices    []string
@@ -84,7 +84,7 @@ type ImageConfig struct {
 
 	// The default OSCAP datastream to use for the image as a fallback,
 	// if no datastream value is provided by the user.
-	DefaultOSCAPDatastream *string
+	DefaultOSCAPDatastream *string `yaml:"default_oscap_datastream,omitempty"`
 
 	// NoBLS configures the image bootloader with traditional menu entries
 	// instead of BLS. Required for legacy systems like RHEL 7.
@@ -103,12 +103,12 @@ type ImageConfig struct {
 
 	// InstallWeakDeps enables installation of weak dependencies for packages
 	// that are statically defined for the pipeline.
-	InstallWeakDeps *bool
+	InstallWeakDeps *bool `yaml:"install_weak_deps,omitempty"`
 
 	// How to handle the /etc/machine-id file, when set to true it causes the
 	// machine id to be set to 'uninitialized' which causes ConditionFirstboot
 	// to be triggered in systemd
-	MachineIdUninitialized *bool
+	MachineIdUninitialized *bool `yaml:"machine_id_uninitialized,omitempty"`
 
 	// MountUnits creates systemd .mount units to describe the filesystem
 	// instead of writing to /etc/fstab

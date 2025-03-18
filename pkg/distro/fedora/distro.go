@@ -506,16 +506,6 @@ type distribution struct {
 	defaultImageConfig *distro.ImageConfig
 }
 
-// Fedora based OS image configuration defaults
-var defaultDistroImageConfig = &distro.ImageConfig{
-	Hostname:               common.ToPtr("localhost.localdomain"),
-	Timezone:               common.ToPtr("UTC"),
-	Locale:                 common.ToPtr("C.UTF-8"),
-	DefaultOSCAPDatastream: common.ToPtr(oscap.DefaultFedoraDatastream()),
-	InstallWeakDeps:        common.ToPtr(true),
-	MachineIdUninitialized: common.ToPtr(true),
-}
-
 func defaultDistroInstallerConfig(d *distribution) *distro.InstallerConfig {
 	config := distro.InstallerConfig{}
 	// In Fedora 42 the ifcfg module was replaced by net-lib.
@@ -541,15 +531,16 @@ func getDistro(version int) distribution {
 	if version < 0 {
 		panic("Invalid Fedora version (must be positive)")
 	}
+	nameVer := fmt.Sprintf("fedora-%d", version)
 	return distribution{
-		name:               fmt.Sprintf("fedora-%d", version),
+		name:               nameVer,
 		product:            "Fedora",
 		osVersion:          strconv.Itoa(version),
 		releaseVersion:     strconv.Itoa(version),
 		modulePlatformID:   fmt.Sprintf("platform:f%d", version),
 		ostreeRefTmpl:      fmt.Sprintf("fedora/%d/%%s/iot", version),
 		runner:             &runner.Fedora{Version: uint64(version)},
-		defaultImageConfig: defaultDistroImageConfig,
+		defaultImageConfig: common.Must(defs.DistroImageConfig(nameVer)),
 	}
 }
 
