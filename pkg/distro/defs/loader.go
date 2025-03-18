@@ -27,8 +27,9 @@ var data embed.FS
 var DataFS fs.FS = data
 
 type toplevelYAML struct {
-	ImageTypes map[string]imageType `yaml:"image_types"`
-	Common     map[string]any       `yaml:".common,omitempty"`
+	ImageConfig *distro.ImageConfig  `yaml:"image_config,omitempty"`
+	ImageTypes  map[string]imageType `yaml:"image_types"`
+	Common      map[string]any       `yaml:".common,omitempty"`
 }
 
 type imageType struct {
@@ -107,6 +108,17 @@ func (op *partitionTablesOverrideOp) Apply(pt *disk.PartitionTable) error {
 	}
 
 	return nil
+}
+
+// DistroImageConfig returns the distro wide ImageConfig.
+//
+// Each ImageType gets this as their default ImageConfig.
+func DistroImageConfig(distroNameVer string) (*distro.ImageConfig, error) {
+	toplevel, err := load(distroNameVer)
+	if err != nil {
+		return nil, err
+	}
+	return toplevel.ImageConfig, nil
 }
 
 // PackageSet loads the PackageSet from the yaml source file discovered via the
