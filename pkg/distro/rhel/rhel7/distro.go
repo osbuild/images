@@ -6,28 +6,14 @@ import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distro/defs"
 	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/osbuild/images/pkg/platform"
 )
 
 // RHEL-based OS image configuration defaults
 func defaultDistroImageConfig(d *rhel.Distribution) *distro.ImageConfig {
-	return &distro.ImageConfig{
-		Timezone: common.ToPtr("America/New_York"),
-		Locale:   common.ToPtr("en_US.UTF-8"),
-		GPGKeyFiles: []string{
-			"/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release",
-		},
-		UpdateDefaultKernel: common.ToPtr(true),
-		DefaultKernel:       common.ToPtr("kernel"),
-		Sysconfig: &distro.Sysconfig{
-			Networking: true,
-			NoZeroConf: true,
-		},
-		KernelOptionsBootloader: common.ToPtr(true),
-		NoBLS:                   common.ToPtr(true), // RHEL 7 grub does not support BLS
-		InstallWeakDeps:         common.ToPtr(true),
-	}
+	return common.Must(defs.DistroImageConfig(d.Name()))
 }
 
 func newDistro(name string, minor int) *rhel.Distribution {
