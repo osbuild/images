@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
@@ -338,4 +339,23 @@ image_types:
 			},
 		},
 	}, partTable)
+}
+
+func TestDefsImageConfig(t *testing.T) {
+	fakeDistroYaml := `
+image_config:
+  locale: "C.UTF-8"
+`
+	fakeDistroName := "test-distro"
+	fakeDistroVer := "42"
+	baseDir := makeFakePkgsSet(t, fakeDistroName, fakeDistroYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	distroNameVer := fakeDistroName + "-" + fakeDistroVer
+	imgConfig, err := defs.DistroImageConfig(distroNameVer)
+	assert.NoError(t, err)
+	assert.Equal(t, &distro.ImageConfig{
+		Locale: common.ToPtr("C.UTF-8"),
+	}, imgConfig)
 }
