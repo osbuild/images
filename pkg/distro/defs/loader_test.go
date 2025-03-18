@@ -27,7 +27,7 @@ func makeTestImageType(t *testing.T) distro.ImageType {
 
 func makeFakePkgsSet(t *testing.T, distroName, content string) string {
 	tmpdir := t.TempDir()
-	fakePkgsSetPath := filepath.Join(tmpdir, distroName, "package_sets.yaml")
+	fakePkgsSetPath := filepath.Join(tmpdir, distroName, "distro.yaml")
 	err := os.MkdirAll(filepath.Dir(fakePkgsSetPath), 0755)
 	assert.NoError(t, err)
 	err = os.WriteFile(fakePkgsSetPath, []byte(content), 0644)
@@ -121,7 +121,7 @@ image_types:
           - exc2
 `)
 	// XXX: we cannot use distro.Name() as it will give us a name+ver
-	fakePkgsSetPath := filepath.Join(tmpdir, test_distro.TestDistroNameBase, "package_sets.yaml")
+	fakePkgsSetPath := filepath.Join(tmpdir, test_distro.TestDistroNameBase, "distro.yaml")
 	err = os.MkdirAll(filepath.Dir(fakePkgsSetPath), 0755)
 	assert.NoError(t, err)
 	err = os.WriteFile(fakePkgsSetPath, fakePkgsSetYaml, 0644)

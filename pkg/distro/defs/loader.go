@@ -98,7 +98,7 @@ func PackageSet(it distro.ImageType, overrideTypeName string, replacements map[s
 		return rpmmd.PackageSet{}, fmt.Errorf("unsupported distro in loader %q (add to loader.go)", distroName)
 	}
 
-	f, err := dataFS.Open(filepath.Join(baseDir, "package_sets.yaml"))
+	f, err := dataFS.Open(filepath.Join(baseDir, "distro.yaml"))
 	if err != nil {
 		return rpmmd.PackageSet{}, err
 	}
