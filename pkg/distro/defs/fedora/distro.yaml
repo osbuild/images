@@ -12,6 +12,14 @@
       - "geolite2-country"
       - "plymouth"
 
+image_config:
+  hostname: "localhost.localdomain"
+  timezone: "UTC"
+  locale: "C.UTF-8"
+  default_oscap_datastream: "/usr/share/xml/scap/ssg/content/ssg-fedora-ds.xml"
+  install_weak_deps: false
+  machine_id_uninitialized: true
+
 image_types:
   qcow2: &qcow2
     package_sets:
