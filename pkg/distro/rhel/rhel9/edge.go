@@ -8,6 +8,7 @@ import (
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distro/packagesets"
 	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -53,9 +54,7 @@ func mkEdgeOCIImgType(d *rhel.Distribution) *rhel.ImageType {
 		map[string]rhel.PackageSetFunc{
 			rhel.OSPkgsKey: packageSetLoader,
 			rhel.ContainerPkgsKey: func(t *rhel.ImageType) rpmmd.PackageSet {
-				return rpmmd.PackageSet{
-					Include: []string{"nginx"}, // FIXME: this has no effect
-				}
+				return common.Must(packagesets.Load(t, "edge_container_pipeline_pkgset", nil))
 			},
 		},
 		rhel.EdgeContainerImage,
