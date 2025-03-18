@@ -1,4 +1,4 @@
-package packagesets
+package defs
 
 import (
 	"os"
