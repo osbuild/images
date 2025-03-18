@@ -30,7 +30,7 @@ type ClevisBind struct {
 
 	// If enabled, the passphrase will be removed from the LUKS device at the
 	// end of the build (using the org.osbuild.luks2.remove-key stage).
-	RemovePassphrase bool
+	RemovePassphrase bool `json:"remove_passphrase"`
 }
 
 // LUKSContainer represents a LUKS encrypted volume.
