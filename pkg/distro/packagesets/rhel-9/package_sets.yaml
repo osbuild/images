@@ -915,6 +915,12 @@ image_types:
     package_sets:
       - *edge_commit_pkgset
 
+  # XXX: not a real pkgset but the "containerPkgsKey"
+  edge_container_pipeline_pkgset:
+    package_sets:
+      - include:
+          - "nginx"
+
   edge_installer:
     package_sets:
       - *installer_pkgset

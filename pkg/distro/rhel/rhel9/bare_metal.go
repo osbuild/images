@@ -14,12 +14,7 @@ func mkTarImgType() *rhel.ImageType {
 		"root.tar.xz",
 		"application/x-tar",
 		map[string]rhel.PackageSetFunc{
-			rhel.OSPkgsKey: func(t *rhel.ImageType) rpmmd.PackageSet {
-				return rpmmd.PackageSet{
-					Include: []string{"policycoreutils", "selinux-policy-targeted"},
-					Exclude: []string{"rng-tools"},
-				}
-			},
+			rhel.OSPkgsKey: packageSetLoader,
 		},
 		rhel.TarImage,
 		[]string{"build"},
