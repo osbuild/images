@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/hashicorp/go-version"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
@@ -31,73 +32,27 @@ type toplevelYAML struct {
 	Common     map[string]any       `yaml:".common,omitempty"`
 }
 
-func (t *toplevelYAML) ImageType(it distro.ImageType, overrideTypeName string, replacements map[string]string) (*imageType, error) {
-	typeName := it.Name()
-	if overrideTypeName != "" {
-		typeName = overrideTypeName
-	}
-	typeName = strings.ReplaceAll(typeName, "-", "_")
-	arch := it.Arch()
-	archName := arch.Name()
-	distribution := arch.Distro()
-	distroNameVer := distribution.Name()
-	distroName, distroVersion := splitDistroNameVer(distroNameVer)
-
-	imgType, ok := t.ImageTypes[typeName]
-	if !ok {
-		return nil, fmt.Errorf("unknown image type name %q", typeName)
-	}
-
-	if imgType.Condition != nil {
-		if imgType, ok := imgType.Condition.Architecture[archName]; ok {
-			return &imgType, nil
-		}
-		if imgType, ok := imgType.Condition.DistroName[distroName]; ok {
-			return &imgType, nil
-		}
-		for ltVer, imgType := range imgType.Condition.VersionLessThan {
-			if r, ok := replacements[ltVer]; ok {
-				ltVer = r
-			}
-			if common.VersionLessThan(distroVersion, ltVer) {
-				return &imgType, nil
-			}
-		}
-		for gteqVer, imgType := range imgType.Condition.VersionGreaterOrEqual {
-			if r, ok := replacements[gteqVer]; ok {
-				gteqVer = r
-			}
-			if common.VersionGreaterThanOrEqual(distroVersion, gteqVer) {
-				return &imgType, nil
-			}
-		}
-	}
-
-	return &imgType, nil
-}
-
 type imageType struct {
+	PackageSets []packageSet `yaml:"package_sets"`
 	// archStr->partitionTable
-	PartitionTables map[string]*disk.PartitionTable `yaml:"partition_table"`
-	PackageSets     []packageSet                    `yaml:"package_sets"`
-	Condition       *conditionsImageType            `yaml:"condition,omitempty"`
+	PartitionTables            map[string]*disk.PartitionTable `yaml:"partition_table"`
+	PartitionTablesConditional *partitionTableConditional      `yaml:"partition_table_conditional"`
 }
 
-type conditionsImageType struct {
-	Architecture          map[string]imageType `yaml:"architecture,omitempty"`
-	VersionLessThan       map[string]imageType `yaml:"version_less_than,omitempty"`
-	VersionGreaterOrEqual map[string]imageType `yaml:"version_greater_or_equal,omitempty"`
-	DistroName            map[string]imageType `yaml:"distro_name,omitempty"`
+type partitionTableConditional struct {
+	Architecture          map[string]map[string]*disk.PartitionTable `yaml:"architecture,omitempty"`
+	VersionLessThan       map[string]map[string]*disk.PartitionTable `yaml:"version_less_than,omitempty"`
+	VersionGreaterOrEqual map[string]map[string]*disk.PartitionTable `yaml:"version_greater_or_equal,omitempty"`
+	DistroName            map[string]map[string]*disk.PartitionTable `yaml:"distro_name,omitempty"`
 }
 
 type packageSet struct {
-	Include   []string              `yaml:"include"`
-	Exclude   []string              `yaml:"exclude"`
-	Condition *conditionsPackageSet `yaml:"condition,omitempty"`
+	Include   []string    `yaml:"include"`
+	Exclude   []string    `yaml:"exclude"`
+	Condition *conditions `yaml:"condition,omitempty"`
 }
 
-// XXX: unify this with conditionImageType?
-type conditionsPackageSet struct {
+type conditions struct {
 	Architecture          map[string]packageSet `yaml:"architecture,omitempty"`
 	VersionLessThan       map[string]packageSet `yaml:"version_less_than,omitempty"`
 	VersionGreaterOrEqual map[string]packageSet `yaml:"version_greater_or_equal,omitempty"`
@@ -109,6 +64,12 @@ type conditionsPackageSet struct {
 // but with "overrideTypeName" this can be overriden (useful for e.g.
 // installer image types).
 func PackageSet(it distro.ImageType, overrideTypeName string, replacements map[string]string) (rpmmd.PackageSet, error) {
+	typeName := it.Name()
+	if overrideTypeName != "" {
+		typeName = overrideTypeName
+	}
+	typeName = strings.ReplaceAll(typeName, "-", "_")
+
 	arch := it.Arch()
 	archName := arch.Name()
 	distribution := arch.Distro()
@@ -122,9 +83,9 @@ func PackageSet(it distro.ImageType, overrideTypeName string, replacements map[s
 		return rpmmd.PackageSet{}, err
 	}
 
-	imgType, err := toplevel.ImageType(it, overrideTypeName, replacements)
-	if err != nil {
-		return rpmmd.PackageSet{}, err
+	imgType, ok := toplevel.ImageTypes[typeName]
+	if !ok {
+		return rpmmd.PackageSet{}, fmt.Errorf("unknown image type name %q", typeName)
 	}
 
 	var rpmmdPkgSet rpmmd.PackageSet
@@ -182,27 +143,74 @@ func PackageSet(it distro.ImageType, overrideTypeName string, replacements map[s
 }
 
 // PartitionTable returns the partionTable for the given distro/imgType.
-func PartitionTable(it distro.ImageType /*, replacements map[string]string*/) (*disk.PartitionTable, error) {
-	// XXX: port to add support for replacements
+func PartitionTable(it distro.ImageType) (*disk.PartitionTable, error) {
+	// XXX: port to replacmenets
 	var replacements map[string]string
+
 	distroNameVer := it.Arch().Distro().Name()
+	typeName := strings.ReplaceAll(it.Name(), "-", "_")
+	distroName, distroVersion := splitDistroNameVer(distroNameVer)
 
 	toplevel, err := load(distroNameVer)
 	if err != nil {
 		return nil, err
 	}
 
-	imgType, err := toplevel.ImageType(it, "", replacements)
-	if err != nil {
-		return nil, err
+	imgType, ok := toplevel.ImageTypes[typeName]
+	if !ok {
+		return nil, fmt.Errorf("unknown image type name %q", typeName)
 	}
 	arch := it.Arch()
-	partTable, ok := imgType.PartitionTables[arch.Name()]
+	archName := arch.Name()
+
+	pts := imgType.PartitionTables
+	if imgType.PartitionTablesConditional != nil {
+		cond := imgType.PartitionTablesConditional
+		if pt, ok := cond.Architecture[archName]; ok {
+			pts = pt
+		}
+		if pt, ok := cond.DistroName[distroName]; ok {
+			pts = pt
+		}
+		for ltVer, pt := range cond.VersionLessThan {
+			if r, ok := replacements[ltVer]; ok {
+				ltVer = r
+			}
+			if common.VersionLessThan(distroVersion, ltVer) {
+				pts = pt
+			}
+		}
+		// XXX: use iter pkg
+		// XXX2: anything that uses conditionals needs sorting,
+		// otherwise map keys for the comparison are random
+		// XXX3: we could make the conditions a list instead
+		// which would give us control over order?
+		var vers []string
+		for ver := range cond.VersionGreaterOrEqual {
+			vers = append(vers, ver)
+		}
+		sort.Slice(vers, func(i, j int) bool {
+			ver1 := version.Must(version.NewVersion(vers[i]))
+			ver2 := version.Must(version.NewVersion(vers[j]))
+			return ver1.LessThan(ver2)
+		})
+		for _, gteqVer := range vers {
+			pt := cond.VersionGreaterOrEqual[gteqVer]
+			if r, ok := replacements[gteqVer]; ok {
+				gteqVer = r
+			}
+			if common.VersionGreaterThanOrEqual(distroVersion, gteqVer) {
+				pts = pt
+			}
+		}
+	}
+
+	pt, ok := pts[archName]
 	if !ok {
 		return nil, fmt.Errorf("no partition table for %q", arch)
 	}
 
-	return partTable, nil
+	return pt, nil
 }
 
 func splitDistroNameVer(distroNameVer string) (string, string) {
