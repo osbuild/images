@@ -172,7 +172,23 @@ func PartitionTable(it distro.ImageType) (*disk.PartitionTable, error) {
 		if pt, ok := cond.DistroName[distroName]; ok {
 			pts = pt
 		}
-		for ltVer, pt := range cond.VersionLessThan {
+		// XXX: use iter pkg
+		// XXX2: anything that uses conditionals needs sorting,
+		// otherwise map keys for the comparison are random
+		// XXX3: we could make the conditions a list instead
+		// which would give us control over order?
+		var vers []string
+		for ver := range cond.VersionLessThan {
+			vers = append(vers, ver)
+		}
+		// asc
+		sort.Slice(vers, func(i, j int) bool {
+			ver1 := version.Must(version.NewVersion(vers[i]))
+			ver2 := version.Must(version.NewVersion(vers[j]))
+			return ver2.LessThan(ver1)
+		})
+		for _, ltVer := range vers {
+			pt := cond.VersionLessThan[ltVer]
 			if r, ok := replacements[ltVer]; ok {
 				ltVer = r
 			}
@@ -180,15 +196,12 @@ func PartitionTable(it distro.ImageType) (*disk.PartitionTable, error) {
 				pts = pt
 			}
 		}
-		// XXX: use iter pkg
-		// XXX2: anything that uses conditionals needs sorting,
-		// otherwise map keys for the comparison are random
-		// XXX3: we could make the conditions a list instead
-		// which would give us control over order?
-		var vers []string
+		// now again for "ge"
+		vers = nil
 		for ver := range cond.VersionGreaterOrEqual {
 			vers = append(vers, ver)
 		}
+		// desc
 		sort.Slice(vers, func(i, j int) bool {
 			ver1 := version.Must(version.NewVersion(vers[i]))
 			ver2 := version.Must(version.NewVersion(vers[j]))
