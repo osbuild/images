@@ -38,7 +38,7 @@ var partInputsComplete = `
       "mountpoint": "/",
       "label": "root",
       "size": "7 GiB",
-      "type": "ext4",
+      "Type": "ext4",
       "part_uuid": "0FC63DAF-8483-4772-8E79-3D69D8477DE4"
     },
     {
@@ -46,7 +46,7 @@ var partInputsComplete = `
       "mountpoint": "/home",
       "label": "home",
       "size": "2 GiB",
-      "type": "ext4"
+      "Type": "ext4"
     }
   ],
   "modifications": {
@@ -156,20 +156,20 @@ func TestUnmarshalOutput(t *testing.T) {
             "Bootable": false,
             "UUID": "911911",
             "Payload": {
-              "Type": "ext4",
-              "UUID": "",
-              "Label": "",
-              "Mountpoint": "",
-              "FSTabOptions": "",
-              "FSTabFreq": 0,
-              "FSTabPassNo": 0
+              "type": "ext4",
+              "uuid": "",
+              "label": "",
+              "mountpoint": "",
+              "fstab_options": "",
+              "fstab_freq": 0,
+              "fstab_passno": 0
             },
-            "PayloadType": "filesystem"
+            "payload_type": "filesystem"
           }
         ],
         "SectorSize": 0,
         "ExtraPadding": 0,
-        "StartOffset": 0
+        "start_offset": 0
       }
     },
     "filename": "disk.img"
@@ -237,7 +237,7 @@ var expectedSimplePartOutput = `{
               "Bootable": true,
               "UUID": "FAC7F1FB-3E8D-4137-A512-961DE09A5549",
               "Payload": null,
-              "PayloadType": "no-payload"
+              "payload_type": "no-payload"
             },
             {
               "Start": 10097152,
@@ -246,15 +246,15 @@ var expectedSimplePartOutput = `{
               "Bootable": false,
               "UUID": "68B2905B-DF3E-4FB3-80FA-49D1E773AA33",
               "Payload": {
-                "Type": "vfat",
-                "UUID": "7B77-95E7",
-                "Label": "EFI-SYSTEM",
-                "Mountpoint": "/boot/efi",
-                "FSTabOptions": "defaults,uid=0,gid=0,umask=077,shortname=winnt",
-                "FSTabFreq": 0,
-                "FSTabPassNo": 2
+                "type": "vfat",
+                "uuid": "7B77-95E7",
+                "label": "EFI-SYSTEM",
+                "mountpoint": "/boot/efi",
+                "fstab_options": "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+                "fstab_freq": 0,
+                "fstab_passno": 2
               },
-              "PayloadType": "filesystem"
+              "payload_type": "filesystem"
             },
             {
               "Start": 4305064448,
@@ -263,15 +263,15 @@ var expectedSimplePartOutput = `{
               "Bootable": false,
               "UUID": "ed130be6-c822-49af-83bb-4ea648bb2264",
               "Payload": {
-                "Type": "ext4",
-                "UUID": "9851898e-0b30-437d-8fad-51ec16c3697f",
-                "Label": "root",
-                "Mountpoint": "/",
-                "FSTabOptions": "",
-                "FSTabFreq": 0,
-                "FSTabPassNo": 0
+                "type": "ext4",
+                "uuid": "9851898e-0b30-437d-8fad-51ec16c3697f",
+                "label": "root",
+                "mountpoint": "/",
+                "fstab_options": "",
+                "fstab_freq": 0,
+                "fstab_passno": 0
               },
-              "PayloadType": "filesystem"
+              "payload_type": "filesystem"
             },
             {
               "Start": 2157580800,
@@ -280,20 +280,20 @@ var expectedSimplePartOutput = `{
               "Bootable": false,
               "UUID": "9f6173fd-edc9-4dbe-9313-632af556c607",
               "Payload": {
-                "Type": "ext4",
-                "UUID": "d8bb61b8-81cf-4c85-937b-69439a23dc5e",
-                "Label": "home",
-                "Mountpoint": "/home",
-                "FSTabOptions": "",
-                "FSTabFreq": 0,
-                "FSTabPassNo": 0
+                "type": "ext4",
+                "uuid": "d8bb61b8-81cf-4c85-937b-69439a23dc5e",
+                "label": "home",
+                "mountpoint": "/home",
+                "fstab_options": "",
+                "fstab_freq": 0,
+                "fstab_passno": 0
               },
-              "PayloadType": "filesystem"
+              "payload_type": "filesystem"
             }
           ],
           "SectorSize": 0,
           "ExtraPadding": 0,
-          "StartOffset": 8000000
+          "start_offset": 8000000
         }
       },
       "filename": "disk.img"
