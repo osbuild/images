@@ -3,6 +3,7 @@ package defs
 
 import (
 	"embed"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -192,6 +193,11 @@ func PackageSet(it distro.ImageType, overrideTypeName string, replacements map[s
 	return rpmmdPkgSet, nil
 }
 
+var (
+	ErrNoPartitionTableForImgType = errors.New("no partition table for image type")
+	ErrNoPartitionTableForArch    = errors.New("no partition table for arch")
+)
+
 // PartitionTable returns the partionTable for the given distro/imgType.
 func PartitionTable(it distro.ImageType, replacements map[string]string) (*disk.PartitionTable, error) {
 	distroNameVer := it.Arch().Distro().Name()
@@ -204,14 +210,14 @@ func PartitionTable(it distro.ImageType, replacements map[string]string) (*disk.
 
 	imgType, ok := toplevel.ImageTypes[typeName]
 	if !ok {
-		return nil, fmt.Errorf("unknown image type name %q", typeName)
+		return nil, fmt.Errorf("%w: %q", ErrNoPartitionTableForImgType, typeName)
 	}
 	arch := it.Arch()
 	archName := arch.Name()
 
 	pt, ok := imgType.PartitionTables[archName]
 	if !ok {
-		return nil, fmt.Errorf("no partition table for %q", arch)
+		return nil, fmt.Errorf("%w: %q", ErrNoPartitionTableForArch, archName)
 	}
 
 	if err := imgType.PartitionTablesOverrides.Apply(it, pt, replacements); err != nil {
