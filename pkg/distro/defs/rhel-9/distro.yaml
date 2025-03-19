@@ -396,7 +396,19 @@
             type: *bios_boot_partition_guid
             uuid: *bios_boot_partition_uuid
             payload_type: "no-payload"
-          # note version < rhel-9.3 have no esp
+          - &default_partition_table_part_efi_lt_9_3
+            size: 209_715_200  # 200 MiB
+            type: *efi_system_partition_guid
+            uuid: *efi_system_partition_uuid
+            payload_type: "filesystem"
+            payload:
+              type: vfat
+              uuid: *efi_filesystem_uuid
+              mountpoint: "/boot/efi"
+              label: "EFI-SYSTEM"
+              fstab_options: "defaults,uid=0,gid=0,umask=077,shortname=winnt"
+              fstab_freq: 0
+              fstab_passno: 2
           - &default_partition_table_part_boot_lt_9_3
             size: 524_288_000  # 500 MiB
             type: *xboot_ldr_partition_guid
@@ -425,22 +437,10 @@
         uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
         type: "gpt"
         partitions:
+          - *default_partition_table_part_efi_lt_9_3
           - *default_partition_table_part_boot_lt_9_3
-          - &default_partition_table_part_efi_lt_9_3
-            size: 209_715_200  # 200 MiB
-            type: *efi_system_partition_guid
-            uuid: *efi_system_partition_uuid
-            payload_type: "filesystem"
-            payload:
-              type: vfat
-              uuid: *efi_filesystem_uuid
-              mountpoint: "/boot/efi"
-              label: "EFI-SYSTEM"
-              fstab_options: "defaults,uid=0,gid=0,umask=077,shortname=winnt"
-              fstab_freq: 0
-              fstab_passno: 2
           - *default_partition_table_part_root_lt_9_3
-      ppc64le:
+      ppc64le: &default_partition_table_ppc64le_lt_9_3
         uuid: "0x14fc63d2"
         type: "dos"
         partitions:
@@ -460,7 +460,7 @@
             payload:
               <<: *default_partition_table_part_root_payload_lt_9_3
               label: ""
-      s390x:
+      s390x: &default_partition_table_s390x_lt_9_3
         uuid: "0x14fc63d2"
         type: "dos"
         partitions:
@@ -552,7 +552,60 @@
           <<: *default_partition_tables_lt_9_3
         "9.4":
           <<: *default_partition_tables_lt_9_4
-      
+
+    ami_partition_tables_lt_9_3: &ami_partition_tables_lt_9_3
+      x86_64:
+        uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
+        type: "gpt"
+        partitions:
+          - &default_partition_table_part_bios_lt_9_3
+            size: 1_048_576  # 1 MiB
+            bootable: true
+            type: *bios_boot_partition_guid
+            uuid: *bios_boot_partition_uuid
+            payload_type: "no-payload"
+          - &default_partition_table_part_boot_lt_9_3
+            size: 524_288_000  # 500 MiB
+            type: *xboot_ldr_partition_guid
+            uuid: *data_partition_uuid
+            payload_type: "filesystem"
+            payload: &default_partition_table_part_boot_payload_lt_9_3
+              type: "xfs"
+              mountpoint: "/boot"
+              label: "boot"
+              fstab_options: "defaults"
+              fstab_freq: 0
+              fstab_passno: 0
+          - &default_partition_table_part_root_lt_9_3
+            size: 2_147_483_648  # 2 * datasizes.GibiByte,
+            type: *filesystem_data_guid
+            uuid: *root_partition_uuid
+            payload_type: "filesystem"
+            payload: &default_partition_table_part_root_payload_lt_9_3
+              type: "xfs"
+              label: "root"
+              mountpoint: "/"
+              fstab_options: "defaults"
+              fstab_freq: 0
+              fstab_passno: 0
+      aarch64: *default_partition_table_aarch64_lt_9_3
+      ppc64le: *default_partition_table_ppc64le_lt_9_3
+      s390x: *default_partition_table_s390x_lt_9_3
+          
+    ami_partition_tables_conditional: &ami_partition_tables_conditional
+      distro_name:
+        # keep in sync with latest
+        centos:
+          <<: *default_partition_tables_ge_9_4
+      version_greater_or_equal:
+        "9.4":
+          # keep in sync with centos
+          <<: *default_partition_tables_ge_9_4
+      version_less_than:
+        "9.3":
+          <<: *ami_partition_tables_lt_9_3
+        "9.4":
+          <<: *default_partition_tables_lt_9_4
 
 image_types:
   # XXX: not a real pkgset but the "os" pipeline pkgset for image-installer
@@ -793,7 +846,7 @@ image_types:
 
   ec2: &ec2
     partition_table_conditional:
-      <<: *default_partition_tables_conditional
+      <<: *ami_partition_tables_conditional
     package_sets:
       - *ec2_base_pkgset
       - exclude:

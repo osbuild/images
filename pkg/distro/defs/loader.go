@@ -171,6 +171,10 @@ func PartitionTable(it distro.ImageType) (*disk.PartitionTable, error) {
 		}
 		if pt, ok := cond.DistroName[distroName]; ok {
 			pts = pt
+			// fugly: centos has no major vers so
+			// we cannot version match on it, so we
+			// exit here
+			goto out
 		}
 		// XXX: use iter pkg
 		// XXX2: anything that uses conditionals needs sorting,
@@ -218,6 +222,7 @@ func PartitionTable(it distro.ImageType) (*disk.PartitionTable, error) {
 		}
 	}
 
+out:
 	pt, ok := pts[archName]
 	if !ok {
 		return nil, fmt.Errorf("no partition table for %q", arch)
