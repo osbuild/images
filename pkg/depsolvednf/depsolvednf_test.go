@@ -178,7 +178,6 @@ func TestSolverDepsolveAll(t *testing.T) {
 	}
 
 	tmpdir := t.TempDir()
-	solver := NewSolver("platform:el9", "9", "x86_64", "rhel9.0", tmpdir)
 
 	testCases := map[string]testCase{
 		"flat": {
@@ -335,7 +334,9 @@ func TestSolverDepsolveAll(t *testing.T) {
 			assert := assert.New(t)
 			tc := testCases[tcName]
 
-			res, err := solver.DepsolveAll(tc.packageSets, tc.sbomType)
+			solver := NewSolver("platform:el9", "9", "x86_64", "rhel9.0", tmpdir)
+			solver.SetSBOMType(tc.sbomType)
+			res, err := solver.DepsolveAll(tc.packageSets)
 			if len(tc.expErrs) != 0 {
 				assert.Error(err)
 				for _, expErr := range tc.expErrs {
