@@ -31,19 +31,73 @@ type toplevelYAML struct {
 	Common     map[string]any       `yaml:".common,omitempty"`
 }
 
+func (t *toplevelYAML) ImageType(it distro.ImageType, overrideTypeName string, replacements map[string]string) (*imageType, error) {
+	typeName := it.Name()
+	if overrideTypeName != "" {
+		typeName = overrideTypeName
+	}
+	typeName = strings.ReplaceAll(typeName, "-", "_")
+	arch := it.Arch()
+	archName := arch.Name()
+	distribution := arch.Distro()
+	distroNameVer := distribution.Name()
+	distroName, distroVersion := splitDistroNameVer(distroNameVer)
+
+	imgType, ok := t.ImageTypes[typeName]
+	if !ok {
+		return nil, fmt.Errorf("unknown image type name %q", typeName)
+	}
+
+	if imgType.Condition != nil {
+		if imgType, ok := imgType.Condition.Architecture[archName]; ok {
+			return &imgType, nil
+		}
+		if imgType, ok := imgType.Condition.DistroName[distroName]; ok {
+			return &imgType, nil
+		}
+		for ltVer, imgType := range imgType.Condition.VersionLessThan {
+			if r, ok := replacements[ltVer]; ok {
+				ltVer = r
+			}
+			if common.VersionLessThan(distroVersion, ltVer) {
+				return &imgType, nil
+			}
+		}
+		for gteqVer, imgType := range imgType.Condition.VersionGreaterOrEqual {
+			if r, ok := replacements[gteqVer]; ok {
+				gteqVer = r
+			}
+			if common.VersionGreaterThanOrEqual(distroVersion, gteqVer) {
+				return &imgType, nil
+			}
+		}
+	}
+
+	return &imgType, nil
+}
+
 type imageType struct {
 	// archStr->partitionTable
 	PartitionTables map[string]*disk.PartitionTable `yaml:"partition_table"`
 	PackageSets     []packageSet                    `yaml:"package_sets"`
+	Condition       *conditionsImageType            `yaml:"condition,omitempty"`
+}
+
+type conditionsImageType struct {
+	Architecture          map[string]imageType `yaml:"architecture,omitempty"`
+	VersionLessThan       map[string]imageType `yaml:"version_less_than,omitempty"`
+	VersionGreaterOrEqual map[string]imageType `yaml:"version_greater_or_equal,omitempty"`
+	DistroName            map[string]imageType `yaml:"distro_name,omitempty"`
 }
 
 type packageSet struct {
-	Include   []string    `yaml:"include"`
-	Exclude   []string    `yaml:"exclude"`
-	Condition *conditions `yaml:"condition,omitempty"`
+	Include   []string              `yaml:"include"`
+	Exclude   []string              `yaml:"exclude"`
+	Condition *conditionsPackageSet `yaml:"condition,omitempty"`
 }
 
-type conditions struct {
+// XXX: unify this with conditionImageType?
+type conditionsPackageSet struct {
 	Architecture          map[string]packageSet `yaml:"architecture,omitempty"`
 	VersionLessThan       map[string]packageSet `yaml:"version_less_than,omitempty"`
 	VersionGreaterOrEqual map[string]packageSet `yaml:"version_greater_or_equal,omitempty"`
@@ -55,12 +109,6 @@ type conditions struct {
 // but with "overrideTypeName" this can be overriden (useful for e.g.
 // installer image types).
 func PackageSet(it distro.ImageType, overrideTypeName string, replacements map[string]string) (rpmmd.PackageSet, error) {
-	typeName := it.Name()
-	if overrideTypeName != "" {
-		typeName = overrideTypeName
-	}
-	typeName = strings.ReplaceAll(typeName, "-", "_")
-
 	arch := it.Arch()
 	archName := arch.Name()
 	distribution := arch.Distro()
@@ -74,9 +122,9 @@ func PackageSet(it distro.ImageType, overrideTypeName string, replacements map[s
 		return rpmmd.PackageSet{}, err
 	}
 
-	imgType, ok := toplevel.ImageTypes[typeName]
-	if !ok {
-		return rpmmd.PackageSet{}, fmt.Errorf("unknown image type name %q", typeName)
+	imgType, err := toplevel.ImageType(it, overrideTypeName, replacements)
+	if err != nil {
+		return rpmmd.PackageSet{}, err
 	}
 
 	var rpmmdPkgSet rpmmd.PackageSet
@@ -134,18 +182,19 @@ func PackageSet(it distro.ImageType, overrideTypeName string, replacements map[s
 }
 
 // PartitionTable returns the partionTable for the given distro/imgType.
-func PartitionTable(it distro.ImageType) (*disk.PartitionTable, error) {
+func PartitionTable(it distro.ImageType /*, replacements map[string]string*/) (*disk.PartitionTable, error) {
+	// XXX: port to add support for replacements
+	var replacements map[string]string
 	distroNameVer := it.Arch().Distro().Name()
-	typeName := strings.ReplaceAll(it.Name(), "-", "_")
 
 	toplevel, err := load(distroNameVer)
 	if err != nil {
 		return nil, err
 	}
 
-	imgType, ok := toplevel.ImageTypes[typeName]
-	if !ok {
-		return nil, fmt.Errorf("unknown image type name %q", typeName)
+	imgType, err := toplevel.ImageType(it, "", replacements)
+	if err != nil {
+		return nil, err
 	}
 	arch := it.Arch()
 	partTable, ok := imgType.PartitionTables[arch.Name()]

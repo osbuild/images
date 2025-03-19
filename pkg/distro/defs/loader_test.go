@@ -229,7 +229,7 @@ image_types:
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	partTable, err := defs.PartitionTable(it)
+	partTable, err := defs.PartitionTable(it, nil)
 	require.NoError(t, err)
 	assert.Equal(t, &disk.PartitionTable{
 		Size: 1_000_000_000,
