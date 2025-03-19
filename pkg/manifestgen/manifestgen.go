@@ -290,7 +290,8 @@ func DefaultDepsolve(solver *depsolvednf.Solver, cacheDir string, depsolveWarnin
 	// need no extra argument here to select the SBOM
 	// type. Once we have more types than Spdx of course
 	// we need to add a option to select the type.
-	return solver.DepsolveAll(packageSets, sbom.StandardTypeSpdx)
+	solver.SetSBOMType(sbom.StandardTypeSpdx)
+	return solver.DepsolveAll(packageSets)
 }
 
 func resolveContainers(containers []container.SourceSpec, archName string) ([]container.Spec, error) {
