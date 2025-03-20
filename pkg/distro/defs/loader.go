@@ -11,10 +11,12 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/hashicorp/go-version"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/experimentalflags"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -32,6 +34,16 @@ type toplevelYAML struct {
 
 type imageType struct {
 	PackageSets []packageSet `yaml:"package_sets"`
+	// archStr->partitionTable
+	PartitionTables            map[string]*disk.PartitionTable `yaml:"partition_table"`
+	PartitionTablesConditional *partitionTableConditional      `yaml:"partition_table_conditional"`
+}
+
+type partitionTableConditional struct {
+	Architecture          map[string]map[string]*disk.PartitionTable `yaml:"architecture,omitempty"`
+	VersionLessThan       map[string]map[string]*disk.PartitionTable `yaml:"version_less_than,omitempty"`
+	VersionGreaterOrEqual map[string]map[string]*disk.PartitionTable `yaml:"version_greater_or_equal,omitempty"`
+	DistroName            map[string]map[string]*disk.PartitionTable `yaml:"distro_name,omitempty"`
 }
 
 type packageSet struct {
@@ -62,55 +74,12 @@ func PackageSet(it distro.ImageType, overrideTypeName string, replacements map[s
 	archName := arch.Name()
 	distribution := arch.Distro()
 	distroNameVer := distribution.Name()
-	// we need to split from the right for "centos-stream-10" like
-	// distro names, sadly go has no rsplit() so we do it manually
-	// XXX: we cannot use distroidparser here because of import cycles
-	distroName := distroNameVer[:strings.LastIndex(distroNameVer, "-")]
-	distroVersion := strings.SplitN(distroNameVer, "-", 2)[1]
-	distroNameMajorVer := strings.SplitN(distroNameVer, ".", 2)[0]
-
-	// XXX: this is a short term measure, pass a set of
-	// searchPaths down the stack instead
-	var dataFS fs.FS = DataFS
-	if overrideDir := experimentalflags.String("yamldir"); overrideDir != "" {
-		logrus.Warnf("using experimental override dir %q", overrideDir)
-		dataFS = os.DirFS(overrideDir)
-	}
-
-	// XXX: this is only needed temporary until we have a "distros.yaml"
-	// that describes some high-level properties of each distro
-	// (like their yaml dirs)
-	var baseDir string
-	switch distroName {
-	case "rhel":
-		// rhel yaml files are under ./rhel-$majorVer
-		baseDir = distroNameMajorVer
-	case "centos":
-		// centos yaml is just rhel but we have (sadly) no symlinks
-		// in "go:embed" so we have to have this slightly ugly
-		// workaround
-		baseDir = fmt.Sprintf("rhel-%s", distroVersion)
-	case "fedora", "test-distro":
-		// our other distros just have a single yaml dir per distro
-		// and use condition.version_gt etc
-		baseDir = distroName
-	default:
-		return rpmmd.PackageSet{}, fmt.Errorf("unsupported distro in loader %q (add to loader.go)", distroName)
-	}
-
-	f, err := dataFS.Open(filepath.Join(baseDir, "distro.yaml"))
-	if err != nil {
-		return rpmmd.PackageSet{}, err
-	}
-	defer f.Close()
-
-	decoder := yaml.NewDecoder(f)
-	decoder.KnownFields(true)
+	distroName, distroVersion := splitDistroNameVer(distroNameVer)
 
 	// each imagetype can have multiple package sets, so that we can
 	// use yaml aliases/anchors to de-duplicate them
-	var toplevel toplevelYAML
-	if err := decoder.Decode(&toplevel); err != nil {
+	toplevel, err := load(distroNameVer)
+	if err != nil {
 		return rpmmd.PackageSet{}, err
 	}
 
@@ -171,4 +140,153 @@ func PackageSet(it distro.ImageType, overrideTypeName string, replacements map[s
 	sort.Strings(rpmmdPkgSet.Exclude)
 
 	return rpmmdPkgSet, nil
+}
+
+// PartitionTable returns the partionTable for the given distro/imgType.
+func PartitionTable(it distro.ImageType) (*disk.PartitionTable, error) {
+	// XXX: port to replacmenets
+	var replacements map[string]string
+
+	distroNameVer := it.Arch().Distro().Name()
+	typeName := strings.ReplaceAll(it.Name(), "-", "_")
+	distroName, distroVersion := splitDistroNameVer(distroNameVer)
+
+	toplevel, err := load(distroNameVer)
+	if err != nil {
+		return nil, err
+	}
+
+	imgType, ok := toplevel.ImageTypes[typeName]
+	if !ok {
+		return nil, fmt.Errorf("unknown image type name %q", typeName)
+	}
+	arch := it.Arch()
+	archName := arch.Name()
+
+	pts := imgType.PartitionTables
+	if imgType.PartitionTablesConditional != nil {
+		cond := imgType.PartitionTablesConditional
+		if pt, ok := cond.Architecture[archName]; ok {
+			pts = pt
+		}
+		if pt, ok := cond.DistroName[distroName]; ok {
+			pts = pt
+			// fugly: centos has no major vers so
+			// we cannot version match on it, so we
+			// exit here
+			goto out
+		}
+		// XXX: use iter pkg
+		// XXX2: anything that uses conditionals needs sorting,
+		// otherwise map keys for the comparison are random
+		// XXX3: we could make the conditions a list instead
+		// which would give us control over order?
+		var vers []string
+		for ver := range cond.VersionLessThan {
+			vers = append(vers, ver)
+		}
+		// asc
+		sort.Slice(vers, func(i, j int) bool {
+			ver1 := version.Must(version.NewVersion(vers[i]))
+			ver2 := version.Must(version.NewVersion(vers[j]))
+			return ver2.LessThan(ver1)
+		})
+		for _, ltVer := range vers {
+			pt := cond.VersionLessThan[ltVer]
+			if r, ok := replacements[ltVer]; ok {
+				ltVer = r
+			}
+			if common.VersionLessThan(distroVersion, ltVer) {
+				pts = pt
+			}
+		}
+		// now again for "ge"
+		vers = nil
+		for ver := range cond.VersionGreaterOrEqual {
+			vers = append(vers, ver)
+		}
+		// desc
+		sort.Slice(vers, func(i, j int) bool {
+			ver1 := version.Must(version.NewVersion(vers[i]))
+			ver2 := version.Must(version.NewVersion(vers[j]))
+			return ver1.LessThan(ver2)
+		})
+		for _, gteqVer := range vers {
+			pt := cond.VersionGreaterOrEqual[gteqVer]
+			if r, ok := replacements[gteqVer]; ok {
+				gteqVer = r
+			}
+			if common.VersionGreaterThanOrEqual(distroVersion, gteqVer) {
+				pts = pt
+			}
+		}
+	}
+
+out:
+	pt, ok := pts[archName]
+	if !ok {
+		return nil, fmt.Errorf("no partition table for %q", arch)
+	}
+
+	return pt, nil
+}
+
+func splitDistroNameVer(distroNameVer string) (string, string) {
+	idx := strings.LastIndex(distroNameVer, "-")
+	return distroNameVer[:idx], distroNameVer[idx+1:]
+}
+
+func load(distroNameVer string) (*toplevelYAML, error) {
+	// we need to split from the right for "centos-stream-10" like
+	// distro names, sadly go has no rsplit() so we do it manually
+	// XXX: we cannot use distroidparser here because of import cycles
+	distroName, distroVersion := splitDistroNameVer(distroNameVer)
+	distroNameMajorVer := strings.SplitN(distroNameVer, ".", 2)[0]
+
+	// XXX: this is a short term measure, pass a set of
+	// searchPaths down the stack instead
+	var dataFS fs.FS = DataFS
+	if overrideDir := experimentalflags.String("yamldir"); overrideDir != "" {
+		logrus.Warnf("using experimental override dir %q", overrideDir)
+		dataFS = os.DirFS(overrideDir)
+	}
+
+	// XXX: this is only needed temporary until we have a "distros.yaml"
+	// that describes some high-level properties of each distro
+	// (like their yaml dirs)
+	var baseDir string
+	switch distroName {
+	case "rhel":
+		// rhel yaml files are under ./rhel-$majorVer
+		baseDir = distroNameMajorVer
+	case "centos":
+		// centos yaml is just rhel but we have (sadly) no symlinks
+		// in "go:embed" so we have to have this slightly ugly
+		// workaround
+		baseDir = fmt.Sprintf("rhel-%s", distroVersion)
+	case "fedora", "test-distro":
+		// our other distros just have a single yaml dir per distro
+		// and use condition.version_gt etc
+		baseDir = distroName
+	default:
+		return nil, fmt.Errorf("unsupported distro in loader %q (add to loader.go)", distroName)
+	}
+
+	f, err := dataFS.Open(filepath.Join(baseDir, "distro.yaml"))
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	decoder := yaml.NewDecoder(f)
+	decoder.KnownFields(true)
+
+	// each imagetype can have multiple package sets, so that we can
+	// use yaml aliases/anchors to de-duplicate them
+	var toplevel toplevelYAML
+	if err := decoder.Decode(&toplevel); err != nil {
+		return nil, err
+	}
+
+	return &toplevel, nil
 }

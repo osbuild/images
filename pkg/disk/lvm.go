@@ -1,6 +1,8 @@
 package disk
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -16,7 +18,7 @@ type LVMVolumeGroup struct {
 	Name        string
 	Description string
 
-	LogicalVolumes []LVMLogicalVolume
+	LogicalVolumes []LVMLogicalVolume `json:"logical_volumes"`
 }
 
 func init() {
@@ -231,4 +233,40 @@ func lvname(path string) string {
 
 	path = strings.TrimLeft(path, "/")
 	return strings.ReplaceAll(path, "/", "_") + "lv"
+}
+
+func (lv *LVMLogicalVolume) UnmarshalJSON(data []byte) error {
+	// XXX: duplicated accross the Partition,LUKS,LVM :(
+	type Alias LVMLogicalVolume
+	var withoutPayload struct {
+		Alias
+		Payload     json.RawMessage
+		PayloadType string `json:"payload_type"`
+	}
+
+	dec := json.NewDecoder(bytes.NewBuffer(data))
+	if err := dec.Decode(&withoutPayload); err != nil {
+		return fmt.Errorf("cannot build partition from %q: %w", data, err)
+	}
+	*lv = LVMLogicalVolume(withoutPayload.Alias)
+	// no payload, e.g. bios partiton
+	if withoutPayload.PayloadType == "no-payload" || withoutPayload.PayloadType == "" {
+		return nil
+	}
+
+	entType := payloadEntityMap[withoutPayload.PayloadType]
+	if entType == nil {
+		return fmt.Errorf("cannot build partition from %q", data)
+	}
+	entValP := reflect.New(entType).Elem().Addr()
+	ent := entValP.Interface()
+	if err := json.Unmarshal(withoutPayload.Payload, &ent); err != nil {
+		return err
+	}
+	lv.Payload = ent.(PayloadEntity)
+	return nil
+}
+
+func (lv *LVMLogicalVolume) UnmarshalYAML(unmarshal func(any) error) error {
+	return unmarshalYAMLviaJSON(lv, unmarshal)
 }

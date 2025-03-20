@@ -19,9 +19,12 @@ type PartitionTable struct {
 	Type       PartitionTableType // Partition table type, e.g. dos, gpt.
 	Partitions []Partition
 
-	SectorSize   uint64 // Sector size in bytes
-	ExtraPadding uint64 // Extra space at the end of the partition table (sectors)
-	StartOffset  uint64 // Starting offset of the first partition in the table (Mb)
+	// Sector size in bytes
+	SectorSize uint64
+	// Extra space at the end of the partition table (sectors)
+	ExtraPadding uint64
+	// Starting offset of the first partition in the table (Mb)
+	StartOffset uint64 `json:"start_offset" yaml:"start_offset"`
 }
 
 type PartitioningMode string

@@ -30,13 +30,15 @@ def top_srcdir() -> pathlib.Path:
 def run_gen_manifests(cmd, output_dir):
     env = os.environ.copy()
     env["OSBUILD_TESTING_RNG_SEED"] = "0"
-    subprocess.run(cmd + [
+    res = subprocess.run(cmd + [
         "-packages=false",
         "-metadata=false",
         "-containers=false",
         "-arches", ",".join(arches),
         "-output", output_dir,
-    ], env=env, text=True, capture_output=True, check=True)
+    ], env=env, text=True, capture_output=False, check=False)
+    if res.returncode != 0:
+        raise RuntimeError(f"{sys.argv[0]} failed with {res.returncode}:\n{res.stdout}")
 
 
 def manifests_diff(tmp_path, rev):

@@ -1,6 +1,8 @@
 package disk
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"reflect"
@@ -29,7 +31,7 @@ type ClevisBind struct {
 
 	// If enabled, the passphrase will be removed from the LUKS device at the
 	// end of the build (using the org.osbuild.luks2.remove-key stage).
-	RemovePassphrase bool
+	RemovePassphrase bool `yaml:"remove_passphrase"`
 }
 
 // LUKSContainer represents a LUKS encrypted volume.
@@ -130,4 +132,40 @@ func (lc *LUKSContainer) minSize(size uint64) uint64 {
 		minSize += payload.GetSize()
 	}
 	return minSize
+}
+
+func (lc *LUKSContainer) UnmarshalJSON(data []byte) error {
+	// XXX: duplicated accross the Partition,LUKS,LVM :(
+	type Alias LUKSContainer
+	var withoutPayload struct {
+		Alias
+		Payload     json.RawMessage
+		PayloadType string `json:"payload_type"`
+	}
+
+	dec := json.NewDecoder(bytes.NewBuffer(data))
+	if err := dec.Decode(&withoutPayload); err != nil {
+		return fmt.Errorf("cannot build partition from %q: %w", data, err)
+	}
+	*lc = LUKSContainer(withoutPayload.Alias)
+	// no payload, e.g. bios partiton
+	if withoutPayload.PayloadType == "no-payload" || withoutPayload.PayloadType == "" {
+		return nil
+	}
+
+	entType := payloadEntityMap[withoutPayload.PayloadType]
+	if entType == nil {
+		return fmt.Errorf("cannot build partition from %q", data)
+	}
+	entValP := reflect.New(entType).Elem().Addr()
+	ent := entValP.Interface()
+	if err := json.Unmarshal(withoutPayload.Payload, &ent); err != nil {
+		return err
+	}
+	lc.Payload = ent.(PayloadEntity)
+	return nil
+}
+
+func (lc *LUKSContainer) UnmarshalYAML(unmarshal func(any) error) error {
+	return unmarshalYAMLviaJSON(lc, unmarshal)
 }
