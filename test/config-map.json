@@ -346,12 +346,34 @@
       "rhel-9*"
     ]
   },
+  "./configs/partitioning-plain-r8.json": {
+    "image-types": [
+      "ami"
+    ],
+    "arches": [
+      "x86_64"
+    ],
+    "distros": [
+      "rhel-8*"
+    ]
+  },
   "./configs/partitioning-btrfs.json": {
     "image-types": [
       "ami"
     ],
     "distros": [
       "fedora*"
+    ]
+  },
+  "./configs/partitioning-lvm-r8.json": {
+    "image-types": [
+      "ami"
+    ],
+    "arches": [
+      "x86_64"
+    ],
+    "distros": [
+      "rhel-8*"
     ]
   },
   "./configs/partitioning-lvm.json": {
@@ -364,6 +386,14 @@
       "fedora*",
       "rhel-10*",
       "rhel-9*"
+    ]
+  },
+  "./configs/partitioning-lvm-noswap.json": {
+    "image-types": [
+      "ami"
+    ],
+    "distros": [
+      "rhel-8*"
     ]
   },
   "./configs/partitioning-dos-lvm.json": {
