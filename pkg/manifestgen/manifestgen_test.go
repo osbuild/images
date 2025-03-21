@@ -373,3 +373,45 @@ func TestManifestGeneratorOverrideRepos(t *testing.T) {
 		})
 	}
 }
+
+func TestManifestGeneratorUseBootstrapContainer(t *testing.T) {
+	repos, err := testrepos.New()
+	assert.NoError(t, err)
+	fac := distrofactory.NewDefault()
+
+	filter, err := imagefilter.New(fac, repos)
+	assert.NoError(t, err)
+	res, err := filter.Filter("distro:centos-9", "type:qcow2", "arch:x86_64")
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(res))
+
+	for _, useBootstrapContainer := range []bool{false, true} {
+		t.Run(fmt.Sprintf("useBootstrapContainer: %v", useBootstrapContainer), func(t *testing.T) {
+			var osbuildManifest bytes.Buffer
+			opts := &manifestgen.Options{
+				Output:                &osbuildManifest,
+				Depsolver:             fakeDepsolve,
+				ContainerResolver:     fakeContainerResolver,
+				UseBootstrapContainer: useBootstrapContainer,
+			}
+
+			mg, err := manifestgen.New(repos, opts)
+			assert.NoError(t, err)
+
+			var bp blueprint.Blueprint
+			err = mg.Generate(&bp, res[0].Distro, res[0].ImgType, res[0].Arch, nil)
+			assert.NoError(t, err)
+			pipelines, err := manifesttest.PipelineNamesFrom(osbuildManifest.Bytes())
+			assert.NoError(t, err)
+			needle := "bootstrap-buildroot"
+			if useBootstrapContainer {
+				// XXX: it would be nice to test more
+				// precisely here but we don't have
+				// great support for that yet
+				assert.Contains(t, pipelines, needle)
+			} else {
+				assert.NotContains(t, pipelines, needle)
+			}
+		})
+	}
+}
