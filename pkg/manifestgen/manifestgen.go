@@ -62,6 +62,10 @@ type Options struct {
 	Depsolver         DepsolveFunc
 	ContainerResolver ContainerResolverFunc
 	CommitResolver    CommitResolverFunc
+
+	// Use the a bootstrap container to buildroot (useful for e.g.
+	// cross-arch or cross-distro builds)
+	UseBootstrapContainer bool
 }
 
 // Generator can generate an osbuild manifest from a given repository
@@ -82,6 +86,8 @@ type Generator struct {
 
 	customSeed    *int64
 	overrideRepos []rpmmd.RepoConfig
+
+	useBootstrapContainer bool
 }
 
 // New will create a new manifest generator
@@ -92,16 +98,17 @@ func New(reporegistry *reporegistry.RepoRegistry, opts *Options) (*Generator, er
 	mg := &Generator{
 		reporegistry: reporegistry,
 
-		cacheDir:          opts.Cachedir,
-		out:               opts.Output,
-		depsolver:         opts.Depsolver,
-		containerResolver: opts.ContainerResolver,
-		commitResolver:    opts.CommitResolver,
-		rpmDownloader:     opts.RpmDownloader,
-		sbomWriter:        opts.SBOMWriter,
-		warningsOutput:    opts.WarningsOutput,
-		customSeed:        opts.CustomSeed,
-		overrideRepos:     opts.OverrideRepos,
+		cacheDir:              opts.Cachedir,
+		out:                   opts.Output,
+		depsolver:             opts.Depsolver,
+		containerResolver:     opts.ContainerResolver,
+		commitResolver:        opts.CommitResolver,
+		rpmDownloader:         opts.RpmDownloader,
+		sbomWriter:            opts.SBOMWriter,
+		warningsOutput:        opts.WarningsOutput,
+		customSeed:            opts.CustomSeed,
+		overrideRepos:         opts.OverrideRepos,
+		useBootstrapContainer: opts.UseBootstrapContainer,
 	}
 	if mg.out == nil {
 		mg.out = os.Stdout
@@ -125,6 +132,7 @@ func (mg *Generator) Generate(bp *blueprint.Blueprint, dist distro.Distro, imgTy
 	if imgOpts == nil {
 		imgOpts = &distro.ImageOptions{}
 	}
+	imgOpts.UseBootstrapContainer = mg.useBootstrapContainer
 
 	var repos []rpmmd.RepoConfig
 	if mg.overrideRepos != nil {

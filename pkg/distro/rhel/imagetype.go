@@ -377,6 +377,9 @@ func (t *ImageType) Manifest(bp *blueprint.Blueprint,
 	default:
 		return nil, nil, fmt.Errorf("unsupported distro release version: %s", t.Arch().Distro().Releasever())
 	}
+	if options.UseBootstrapContainer {
+		mf.DistroBootstrapRef = bootstrapContainerFor(t)
+	}
 
 	_, err = img.InstantiateManifest(&mf, repos, t.arch.distro.runner, rng)
 	if err != nil {
@@ -415,5 +418,19 @@ func NewImageType(
 		buildPipelines:   buildPipelines,
 		payloadPipelines: payloadPipelines,
 		exports:          exports,
+	}
+}
+
+// XXX: this will become part of the yaml distro definitions, i.e.
+// the yaml will have a "bootstrap_ref" key for each distro/arch
+func bootstrapContainerFor(t *ImageType) string {
+	distro := t.arch.distro
+
+	if distro.IsRHEL() {
+		return fmt.Sprintf("registry.access.redhat.com/ubi%s/ubi:latest", distro.Releasever())
+	} else {
+		// we need the toolbox container because stock centos has
+		// e.g. no mount util
+		return "quay.io/toolbx-images/centos-toolbox:stream" + distro.Releasever()
 	}
 }

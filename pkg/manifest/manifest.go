@@ -67,6 +67,13 @@ type Manifest struct {
 	// generate. It is used for determining package names that differ between
 	// different distributions and version.
 	Distro Distro
+
+	// DistroBootstrapRef defines if a bootstrap container should be used
+	// to generate the buildroot
+	// XXX: ideally we would have "Distro distro.Distro" here and a
+	// "BoostrapContainerRef()" method on this but we cannot because of
+	// circular imports so we use the same workaround as Distro above.
+	DistroBootstrapRef string
 }
 
 func New() Manifest {
