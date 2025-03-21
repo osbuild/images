@@ -485,6 +485,15 @@ func (p *OS) serialize() osbuild.Pipeline {
 		// https://github.com/osbuild/images/issues/624
 		rpmOptions.DisableDracut = true
 	}
+	if p.platform.GetBootloader() == platform.BOOTLOADER_UKI && p.PartitionTable != nil {
+		espMountpoint, err := findESPMountpoint(p.PartitionTable)
+		if err != nil {
+			panic(err)
+		}
+		rpmOptions.KernelInstallEnv = &osbuild.KernelInstallEnv{
+			BootRoot: espMountpoint,
+		}
+	}
 	pipeline.AddStage(osbuild.NewRPMStage(rpmOptions, osbuild.NewRpmStageSourceFilesInputs(p.packageSpecs)))
 
 	if !p.NoBLS {
@@ -689,63 +698,25 @@ func (p *OS) serialize() osbuild.Pipeline {
 		}
 		pipeline.AddStages(fsCfgStages...)
 
-		var bootloader *osbuild.Stage
-		switch p.platform.GetArch() {
-		case arch.ARCH_S390X:
-			bootloader = osbuild.NewZiplStage(new(osbuild.ZiplStageOptions))
-		default:
-			if p.NoBLS {
-				// BLS entries not supported: use grub2.legacy
-				id := "76a22bf4-f153-4541-b6c7-0332c0dfaeac"
-				product := osbuild.GRUB2Product{
-					Name:    p.OSProduct,
-					Version: p.OSVersion,
-					Nick:    p.OSNick,
-				}
-
-				_, err := rpmmd.GetVerStrFromPackageSpecList(p.packageSpecs, "dracut-config-rescue")
-				hasRescue := err == nil
-				bootloader = osbuild.NewGrub2LegacyStage(
-					osbuild.NewGrub2LegacyStageOptions(
-						p.Grub2Config,
-						p.PartitionTable,
-						kernelOptions,
-						p.platform.GetBIOSPlatform(),
-						p.platform.GetUEFIVendor(),
-						osbuild.MakeGrub2MenuEntries(id, p.kernelVer, product, hasRescue),
-					),
-				)
-			} else {
-				options := osbuild.NewGrub2StageOptions(pt,
-					strings.Join(kernelOptions, " "),
-					p.kernelVer,
-					p.platform.GetUEFIVendor() != "",
-					p.platform.GetBIOSPlatform(),
-					p.platform.GetUEFIVendor(), false)
-				if cfg := p.Grub2Config; cfg != nil {
-					// TODO: don't store Grub2Config in OSPipeline, making the overrides unnecessary
-					// grub2.Config.Default is owned and set by `NewGrub2StageOptionsUnified`
-					// and thus we need to preserve it
-					if options.Config != nil {
-						cfg.Default = options.Config.Default
-					}
-
-					options.Config = cfg
-				}
-				if p.KernelOptionsBootloader {
-					options.WriteCmdLine = nil
-					if options.UEFI != nil {
-						options.UEFI.Unified = false
-					}
-				}
-				bootloader = osbuild.NewGRUB2Stage(options)
+		switch p.platform.GetBootloader() {
+		case platform.BOOTLOADER_GRUB2:
+			pipeline.AddStage(grubStage(p, pt, kernelOptions))
+			if !p.KernelOptionsBootloader || p.platform.GetArch() == arch.ARCH_S390X {
+				pipeline = prependKernelCmdlineStage(pipeline, rootUUID, kernelOptions)
 			}
-		}
-
-		pipeline.AddStage(bootloader)
-
-		if !p.KernelOptionsBootloader || p.platform.GetArch() == arch.ARCH_S390X {
+		case platform.BOOTLOADER_ZIPL:
+			pipeline.AddStage(osbuild.NewZiplStage(new(osbuild.ZiplStageOptions)))
 			pipeline = prependKernelCmdlineStage(pipeline, rootUUID, kernelOptions)
+		case platform.BOOTLOADER_UKI:
+			espMountpoint, err := findESPMountpoint(pt)
+			if err != nil {
+				panic(err)
+			}
+			csvfile, err := ukiBootCSVfile(espMountpoint, p.platform.GetArch(), p.kernelVer, p.platform.GetUEFIVendor())
+			if err != nil {
+				panic(err)
+			}
+			p.Files = append(p.Files, csvfile)
 		}
 	}
 
@@ -968,6 +939,105 @@ func usersFirstBootOptions(users []users.User) *osbuild.FirstBootStageOptions {
 	}
 
 	return options
+}
+
+func grubStage(p *OS, pt *disk.PartitionTable, kernelOptions []string) *osbuild.Stage {
+	if p.NoBLS {
+		// BLS entries not supported: use grub2.legacy
+		id := "76a22bf4-f153-4541-b6c7-0332c0dfaeac"
+		product := osbuild.GRUB2Product{
+			Name:    p.OSProduct,
+			Version: p.OSVersion,
+			Nick:    p.OSNick,
+		}
+
+		_, err := rpmmd.GetVerStrFromPackageSpecList(p.packageSpecs, "dracut-config-rescue")
+		hasRescue := err == nil
+		return osbuild.NewGrub2LegacyStage(
+			osbuild.NewGrub2LegacyStageOptions(
+				p.Grub2Config,
+				p.PartitionTable,
+				kernelOptions,
+				p.platform.GetBIOSPlatform(),
+				p.platform.GetUEFIVendor(),
+				osbuild.MakeGrub2MenuEntries(id, p.kernelVer, product, hasRescue),
+			),
+		)
+	} else {
+		options := osbuild.NewGrub2StageOptions(pt,
+			strings.Join(kernelOptions, " "),
+			p.kernelVer,
+			p.platform.GetUEFIVendor() != "",
+			p.platform.GetBIOSPlatform(),
+			p.platform.GetUEFIVendor(), false)
+		if cfg := p.Grub2Config; cfg != nil {
+			// TODO: don't store Grub2Config in OSPipeline, making the overrides unnecessary
+			// grub2.Config.Default is owned and set by `NewGrub2StageOptionsUnified`
+			// and thus we need to preserve it
+			if options.Config != nil {
+				cfg.Default = options.Config.Default
+			}
+
+			options.Config = cfg
+		}
+		if p.KernelOptionsBootloader {
+			options.WriteCmdLine = nil
+			if options.UEFI != nil {
+				options.UEFI.Unified = false
+			}
+		}
+		return osbuild.NewGRUB2Stage(options)
+	}
+}
+
+// ukiBootCSVfile creates a file node for the csv file in the ESP which
+// controls the fallback boot to the UKI.
+// NOTE: This is a temporary workaround. We expect that the kernel-bootcfg
+// command from the python3-virt-firmware package will gain the ability to
+// write these files offline during the RHEL 9.7 / 10.1 development cycle.
+func ukiBootCSVfile(espMountpoint string, architecture arch.Arch, kernelVer, vendor string) (*fsnode.File, error) {
+	shortArch := ""
+	switch architecture {
+	case arch.ARCH_AARCH64:
+		shortArch = "aa64"
+	case arch.ARCH_X86_64:
+		shortArch = "x64"
+	default:
+		return nil, fmt.Errorf("ukiBootCSVfile: UKIs are only supported for x86_64 and aarch64")
+	}
+
+	kernelFilename := fmt.Sprintf("ffffffffffffffffffffffffffffffff-%s.efi", kernelVer)
+	data := fmt.Sprintf("shim%s.efi,%s,\\EFI\\Linux\\%s ,UKI bootentry\n", shortArch, vendor, kernelFilename)
+
+	csvPath := filepath.Join(espMountpoint, "EFI", vendor, fmt.Sprintf("BOOT%s.CSV", strings.ToUpper(shortArch)))
+
+	return fsnode.NewFile(csvPath, nil, nil, nil, common.EncodeUTF16le(data))
+}
+
+func findESPMountpoint(pt *disk.PartitionTable) (string, error) {
+	// the ESP in our images is always at /boot/efi, but let's make this more
+	// flexible and future proof by finding the ESP mountpoint from the
+	// partition table
+	espMountpoint := ""
+	_ = pt.ForEachMountable(func(mnt disk.Mountable, path []disk.Entity) error {
+		parent := path[1]
+		if partition, ok := parent.(*disk.Partition); ok {
+			// ESP filesystem parent must be a plain partition
+			if partition.Type != disk.EFISystemPartitionGUID {
+				return nil
+			}
+
+			// found ESP filesystem
+			espMountpoint = mnt.GetMountpoint()
+		}
+		return nil
+	})
+
+	if espMountpoint == "" {
+		return "", fmt.Errorf("failed to find mountpoint for ESP when generating boot CSV file")
+	}
+
+	return espMountpoint, nil
 }
 
 func (p *OS) Platform() platform.Platform {

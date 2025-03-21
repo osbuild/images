@@ -23,6 +23,13 @@ type ImageConfig struct {
 	DefaultTarget       *string
 	Sysconfig           []*osbuild.SysconfigStageOptions
 
+	// The name of the default kernel to use for the image type.
+	// NOTE: Currently this overrides the kernel named in the blueprint. The
+	// only image type that uses it is the vhd-cvm, which doesn't allow kernel
+	// selection. The option should generally be a fallback for when the
+	// blueprint doesn't specify a kernel.
+	DefaultKernelName *string
+
 	// List of files from which to import GPG keys into the RPM database
 	GPGKeyFiles []string
 
