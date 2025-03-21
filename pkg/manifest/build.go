@@ -36,12 +36,25 @@ type BuildrootFromPackages struct {
 	packageSpecs []rpmmd.PackageSpec
 
 	containerBuildable bool
+
+	// XXX: disableSelinux controlls if selinux should be disabled
+	// for the given buildroot. This is currently needed for
+	// bootstraped buildroot containers because most of the
+	// boostrap containers do not include setfiles(8). A
+	// reasonable fix is to teach osbuild to chroot into the
+	// buildroot itself when running setfiles. Once osbuild has
+	// this then this option would become "useChrootSetfiles"
+	disableSelinux bool
 }
 
 type BuildOptions struct {
 	// ContainerBuildable tweaks the buildroot to be container friendly,
 	// i.e. to not rely on an installed osbuild-selinux
 	ContainerBuildable bool
+
+	// DisableSELinux disables SELinux, this is not advised, but is
+	// currently needed when using (experimental) cross-arch building.
+	DisableSELinux bool
 }
 
 // NewBuild creates a new build pipeline from the repositories in repos
@@ -58,6 +71,7 @@ func NewBuild(m *Manifest, runner runner.Runner, repos []rpmmd.RepoConfig, opts 
 		dependents:         make([]Pipeline, 0),
 		repos:              filterRepos(repos, name),
 		containerBuildable: opts.ContainerBuildable,
+		disableSelinux:     opts.DisableSELinux,
 	}
 
 	// This allows to bootstrap the buildroot with a custom container
@@ -128,11 +142,13 @@ func (p *BuildrootFromPackages) serialize() osbuild.Pipeline {
 	pipeline.Runner = p.runner.String()
 
 	pipeline.AddStage(osbuild.NewRPMStage(osbuild.NewRPMStageOptions(p.repos), osbuild.NewRpmStageSourceFilesInputs(p.packageSpecs)))
-	pipeline.AddStage(osbuild.NewSELinuxStage(&osbuild.SELinuxStageOptions{
-		FileContexts: "etc/selinux/targeted/contexts/files/file_contexts",
-		Labels:       p.getSELinuxLabels(),
-	},
-	))
+	if !p.disableSelinux {
+		pipeline.AddStage(osbuild.NewSELinuxStage(&osbuild.SELinuxStageOptions{
+			FileContexts: "etc/selinux/targeted/contexts/files/file_contexts",
+			Labels:       p.getSELinuxLabels(),
+		},
+		))
+	}
 
 	return pipeline
 }
@@ -218,6 +234,7 @@ func NewBuildFromContainer(m *Manifest, runner runner.Runner, containerSources [
 		containers: containerSources,
 
 		containerBuildable: opts.ContainerBuildable,
+		disableSelinux:     opts.DisableSELinux,
 	}
 	m.addPipeline(pipeline)
 	return pipeline

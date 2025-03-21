@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -88,6 +89,13 @@ func TestBuildContainerBuildableNo(t *testing.T) {
 	}
 }
 
+var fakeContainerSpecs = []container.Spec{
+	{
+		ImageID: "id-0",
+		Source:  "registry.example.org/reg/img",
+	},
+}
+
 func TestNewBuildFromContainerSpecs(t *testing.T) {
 	containers := []container.SourceSpec{
 		{
@@ -102,12 +110,6 @@ func TestNewBuildFromContainerSpecs(t *testing.T) {
 	require.NotNil(t, buildIf)
 	build := buildIf.(*BuildrootFromContainer)
 
-	fakeContainerSpecs := []container.Spec{
-		{
-			ImageID: "id-0",
-			Source:  "registry.example.org/reg/img",
-		},
-	}
 	// containerSpecs is "nil" until serializeStart populates it
 	require.Nil(t, build.getContainerSpecs())
 	build.serializeStart(Inputs{Containers: fakeContainerSpecs})
@@ -179,6 +181,32 @@ func TestNewBuildWithExperimentalOverride(t *testing.T) {
 			br, ok := buildIf.(*BuildrootFromPackages)
 			assert.True(t, ok)
 			assert.Nil(t, br.build)
+		}
+	}
+}
+
+func TestNewBuildOptionDisableSELinux(t *testing.T) {
+	for _, disableSELinux := range []bool{false, true} {
+		mf := New()
+		runner := &runner.Linux{}
+		opts := &BuildOptions{
+			DisableSELinux: disableSELinux,
+		}
+		buildIf := NewBuild(&mf, runner, nil, opts)
+		require.NotNil(t, buildIf)
+		build := buildIf.(*BuildrootFromPackages)
+
+		build.packageSpecs = []rpmmd.PackageSpec{
+			{Name: "foo", Checksum: "sha256:" + strings.Repeat("x", 32)},
+		}
+		osbuildPipeline := build.serialize()
+		if disableSELinux {
+			require.Len(t, osbuildPipeline.Stages, 1)
+			assert.Equal(t, osbuildPipeline.Stages[0].Type, "org.osbuild.rpm")
+		} else {
+			require.Len(t, osbuildPipeline.Stages, 2)
+			assert.Equal(t, osbuildPipeline.Stages[0].Type, "org.osbuild.rpm")
+			assert.Equal(t, osbuildPipeline.Stages[1].Type, "org.osbuild.selinux")
 		}
 	}
 }
