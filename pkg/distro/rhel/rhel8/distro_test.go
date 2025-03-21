@@ -882,9 +882,9 @@ func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 	}
 }
 
-func TestNoDiskCustomizationsSupported(t *testing.T) {
+func TestDiskCustomizationsCheckOptions(t *testing.T) {
 	r8distro := rhelFamilyDistros[0].distro
-	bp := blueprint.Blueprint{
+	plainBP := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Disk: &blueprint.DiskCustomization{
 				Partitions: []blueprint.PartitionCustomization{
@@ -901,6 +901,57 @@ func TestNoDiskCustomizationsSupported(t *testing.T) {
 		},
 	}
 
+	bpWithSwap := blueprint.Blueprint{
+		Customizations: &blueprint.Customizations{
+			Disk: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						Type: "plain",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Mountpoint: "/",
+							Label:      "root",
+							FSType:     "ext4",
+						},
+					},
+					{
+						Type: "plain",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType: "swap",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	bpWithSwapLV := blueprint.Blueprint{
+		Customizations: &blueprint.Customizations{
+			Disk: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						Type: "lvm",
+						VGCustomization: blueprint.VGCustomization{
+							LogicalVolumes: []blueprint.LVCustomization{
+								{
+									FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+										Mountpoint: "/",
+										Label:      "root",
+										FSType:     "ext4",
+									},
+								},
+								{
+									FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+										FSType: "swap",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
 	// these produce a different error message and are tested elsewhere
 	skipTest := map[string]bool{
 		"edge-installer":            true,
@@ -910,14 +961,34 @@ func TestNoDiskCustomizationsSupported(t *testing.T) {
 	}
 
 	for _, archName := range r8distro.ListArches() {
-		arch, _ := r8distro.GetArch(archName)
-		for _, imgTypeName := range arch.ListImageTypes() {
-			imgType, _ := arch.GetImageType(imgTypeName)
-			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
+		distroArch, _ := r8distro.GetArch(archName)
+		for _, imgTypeName := range distroArch.ListImageTypes() {
+			imgType, _ := distroArch.GetImageType(imgTypeName)
 			if skipTest[imgTypeName] {
 				continue
 			}
-			assert.EqualError(t, err, fmt.Sprintf("partitioning customizations are not supported on %s", r8distro.Name()))
+
+			testname := fmt.Sprintf("%s-%s-%s", r8distro.Name(), archName, imgTypeName)
+			t.Run(testname, func(t *testing.T) {
+				assert := assert.New(t)
+
+				_, _, err := imgType.Manifest(&plainBP, distro.ImageOptions{}, nil, nil)
+				assert.NoError(err)
+
+				_, _, err = imgType.Manifest(&bpWithSwap, distro.ImageOptions{}, nil, nil)
+				if archName == arch.ARCH_AARCH64.String() {
+					assert.EqualError(err, fmt.Sprintf("swap partition creation is not supported on %s %s", r8distro.Name(), archName))
+				} else {
+					assert.NoError(err)
+				}
+
+				_, _, err = imgType.Manifest(&bpWithSwapLV, distro.ImageOptions{}, nil, nil)
+				if archName == arch.ARCH_AARCH64.String() {
+					assert.EqualError(err, fmt.Sprintf("swap partition creation is not supported on %s %s", r8distro.Name(), archName))
+				} else {
+					assert.NoError(err)
+				}
+			})
 		}
 	}
 }
