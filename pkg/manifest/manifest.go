@@ -14,6 +14,7 @@ package manifest
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/dnfjson"
@@ -78,11 +79,11 @@ func New() Manifest {
 func (m *Manifest) addPipeline(p Pipeline) {
 	for _, pipeline := range m.pipelines {
 		if pipeline.Name() == p.Name() {
-			panic("duplicate pipeline name in manifest")
+			panic(fmt.Errorf("duplicate pipeline name %v in manifest", p.Name()))
 		}
 	}
 	if p.Manifest() != nil {
-		panic("pipeline already added to a different manifest")
+		panic(fmt.Errorf("pipeline %v already added to a different manifest", p.Name()))
 	}
 	m.pipelines = append(m.pipelines, p)
 	p.setManifest(m)
