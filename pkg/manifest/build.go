@@ -55,6 +55,11 @@ type BuildOptions struct {
 	// DisableSELinux disables SELinux, this is not advised, but is
 	// currently needed when using (experimental) cross-arch building.
 	DisableSELinux bool
+
+	// BootstrapPipeline add the given bootstrap pipeline to the
+	// build pipeline. This is only needed when doing cross-arch
+	// building
+	BootstrapPipeline Build
 }
 
 // NewBuild creates a new build pipeline from the repositories in repos
@@ -66,7 +71,7 @@ func NewBuild(m *Manifest, runner runner.Runner, repos []rpmmd.RepoConfig, opts 
 
 	name := "build"
 	pipeline := &BuildrootFromPackages{
-		Base:               NewBase(name, nil),
+		Base:               NewBase(name, opts.BootstrapPipeline),
 		runner:             runner,
 		dependents:         make([]Pipeline, 0),
 		repos:              filterRepos(repos, name),
@@ -228,7 +233,7 @@ func NewBuildFromContainer(m *Manifest, runner runner.Runner, containerSources [
 
 	name := "build"
 	pipeline := &BuildrootFromContainer{
-		Base:       NewBase(name, nil),
+		Base:       NewBase(name, opts.BootstrapPipeline),
 		runner:     runner,
 		dependents: make([]Pipeline, 0),
 		containers: containerSources,
@@ -315,5 +320,29 @@ func (p *BuildrootFromContainer) serialize() osbuild.Pipeline {
 		))
 	}
 
+	return pipeline
+}
+
+// NewBootstrap creates a new bootstrap build pipeline from the given
+// containers specs
+func NewBootstrap(m *Manifest, containerSources []container.SourceSpec) Build {
+	name := "bootstrap-buildroot"
+	pipeline := &BuildrootFromContainer{
+		Base: NewBase(name, nil),
+		// use the most minimal runner as we cannot make assumption
+		// about our environment
+		runner:             &runner.Linux{},
+		dependents:         make([]Pipeline, 0),
+		containers:         containerSources,
+		containerBuildable: true,
+		// XXX: we only disable selinux currently in the buildroot
+		// because selinux requies the bootstrap container to have the
+		// "setfiles" binary. this is typcially not shiped in a
+		// container so we disable it. the easiest fix is to make
+		// osbuld support running setfiles inside the buildroot chroot
+		// (which has setfiles installed)
+		disableSelinux: true,
+	}
+	m.addPipeline(pipeline)
 	return pipeline
 }
