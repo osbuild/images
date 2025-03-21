@@ -137,7 +137,7 @@ func (p *Partition) UnmarshalJSON(data []byte) error {
 
 	entType := payloadEntityMap[partWithoutPayload.PayloadType]
 	if entType == nil {
-		return fmt.Errorf("cannot build partition from %q", data)
+		return fmt.Errorf("cannot build partition from %q: unknown payload %q", data, partWithoutPayload.PayloadType)
 	}
 	entValP := reflect.New(entType).Elem().Addr()
 	ent := entValP.Interface()
@@ -146,4 +146,7 @@ func (p *Partition) UnmarshalJSON(data []byte) error {
 	}
 	p.Payload = ent.(PayloadEntity)
 	return nil
+}
+func (t *Partition) UnmarshalYAML(unmarshal func(any) error) error {
+	return unmarshalYAMLviaJSON(t, unmarshal)
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v3"
 
 	"github.com/osbuild/images/internal/testdisk"
 	"github.com/osbuild/images/pkg/arch"
@@ -2792,4 +2793,39 @@ func TestPartitionTableFeatures(t *testing.T) {
 		require.True(ok, "expected test result not defined for test partition table %q: please update the %s test", name, t.Name())
 		require.Equal(exp, disk.GetPartitionTableFeatures(pt))
 	}
+}
+
+func TestPartitionTableUnmarshalYAML(t *testing.T) {
+	inputYAML := `dos`
+	var partType disk.PartitionTableType
+
+	err := yaml.Unmarshal([]byte(inputYAML), &partType)
+	assert.NoError(t, err)
+	assert.Equal(t, disk.PT_DOS, partType)
+}
+
+func TestPartitionUnmarshalYAML(t *testing.T) {
+	inputYAML := `
+Start: 123
+Size: 456
+Type: "0x83"
+Bootable: true
+PayloadType: "filesystem"
+Payload:
+  type: vfat
+`
+	var part disk.Partition
+
+	err := yaml.Unmarshal([]byte(inputYAML), &part)
+	assert.NoError(t, err)
+	expected := disk.Partition{
+		Start:    123,
+		Size:     456,
+		Type:     "0x83",
+		Bootable: true,
+		Payload: &disk.Filesystem{
+			Type: "vfat",
+		},
+	}
+	assert.Equal(t, expected, part)
 }
