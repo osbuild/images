@@ -210,3 +210,62 @@ func TestNewBuildOptionDisableSELinux(t *testing.T) {
 		}
 	}
 }
+
+func TestNewBuildFromContainerOptionDisableSELinux(t *testing.T) {
+	for _, disableSELinux := range []bool{false, true} {
+		mf := New()
+		runner := &runner.Linux{}
+		opts := &BuildOptions{
+			DisableSELinux: disableSELinux,
+		}
+		buildIf := NewBuildFromContainer(&mf, runner, nil, opts)
+		require.NotNil(t, buildIf)
+		build := buildIf.(*BuildrootFromContainer)
+
+		build.containerSpecs = fakeContainerSpecs
+		osbuildPipeline := build.serialize()
+		if disableSELinux {
+			require.Len(t, osbuildPipeline.Stages, 1)
+			assert.Equal(t, osbuildPipeline.Stages[0].Type, "org.osbuild.container-deploy")
+		} else {
+			require.Len(t, osbuildPipeline.Stages, 2)
+			assert.Equal(t, osbuildPipeline.Stages[0].Type, "org.osbuild.container-deploy")
+			assert.Equal(t, osbuildPipeline.Stages[1].Type, "org.osbuild.selinux")
+		}
+	}
+}
+
+func TestNewBootstrap(t *testing.T) {
+	containers := []container.SourceSpec{
+		{
+			Name:   "Bootstrap container",
+			Source: "ghcr.io/ondrejbudai/cool:stuff",
+		},
+	}
+	mf := New()
+
+	bootstrapIf := NewBootstrap(&mf, containers)
+	require.NotNil(t, bootstrapIf)
+	bootstrap := bootstrapIf.(*BuildrootFromContainer)
+	assert.Equal(t, "bootstrap-buildroot", bootstrap.Name())
+	assert.Equal(t, true, bootstrap.disableSelinux)
+	assert.Equal(t, containers, bootstrap.containers)
+	assert.Len(t, mf.pipelines, 1)
+	assert.Equal(t, bootstrapIf, mf.pipelines[0])
+}
+
+func TestBuildOptionBootstrapForNewBuild(t *testing.T) {
+	mf := New()
+	runner := &runner.Linux{}
+	bootstrapIf := NewBootstrap(&mf, nil)
+
+	opts := &BuildOptions{BootstrapPipeline: bootstrapIf}
+	buildIf := NewBuild(&mf, runner, nil, opts)
+	build := buildIf.(*BuildrootFromPackages)
+	assert.Equal(t, bootstrapIf, build.build)
+
+	mf = New()
+	bcIf := NewBuildFromContainer(&mf, runner, nil, opts)
+	bc := bcIf.(*BuildrootFromContainer)
+	assert.Equal(t, bootstrapIf, bc.build)
+}
