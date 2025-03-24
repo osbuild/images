@@ -850,10 +850,10 @@ func (p *OS) serialize() osbuild.Pipeline {
 	}
 
 	if p.FIPS {
-		p.Files = append(p.Files, osbuild.GenFIPSFiles()...)
-		for _, stage := range osbuild.GenFIPSStages() {
-			pipeline.AddStage(stage)
-		}
+		fipsFiles := osbuild.GenFIPSFiles()
+		p.Files = append(p.Files, fipsFiles...) // add the files to the Files list to generate the inline data
+		pipeline.AddStages(osbuild.GenFIPSStages()...)
+		pipeline.AddStages(osbuild.GenFileNodesStages(fipsFiles)...)
 	}
 
 	// NOTE: We need to run the OpenSCAP stages as the last stage before SELinux
