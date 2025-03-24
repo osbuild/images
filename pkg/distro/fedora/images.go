@@ -210,7 +210,7 @@ func osCustomizations(
 	osc.ShellInit = imageConfig.ShellInit
 
 	osc.Grub2Config = imageConfig.Grub2Config
-	osc.Sysconfig = imageConfig.Sysconfig
+	osc.Sysconfig = imageConfig.SysconfigStageOptions()
 	osc.SystemdLogind = imageConfig.SystemdLogind
 	osc.CloudInit = imageConfig.CloudInit
 	osc.Modprobe = imageConfig.Modprobe
