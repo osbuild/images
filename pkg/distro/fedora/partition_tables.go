@@ -396,7 +396,7 @@ var iotBasePartitionTables = distro.BasePartitionTableMap{
 					Type:         "ext4",
 					Label:        "root",
 					Mountpoint:   "/",
-					FSTabOptions: "defaults,ro",
+					FSTabOptions: "defaults",
 					FSTabFreq:    1,
 					FSTabPassNo:  1,
 				},

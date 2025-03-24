@@ -12,6 +12,7 @@ import (
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/datasizes"
+	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
 	"github.com/osbuild/images/pkg/osbuild"
@@ -249,6 +250,10 @@ func mkIotSimplifiedInstallerImgType(d distribution) imageType {
 }
 
 func mkIotRawImgType(d distribution) imageType {
+	if common.VersionGreaterThanOrEqual(d.osVersion, "42") {
+		rootPartition := &iotBasePartitionTables[arch.ARCH_X86_64.String()].Partitions[2]
+		rootPartition.Payload.(*disk.Filesystem).FSTabOptions += ",ro"
+	}
 	return imageType{
 		name:        "iot-raw-image",
 		nameAliases: []string{"fedora-iot-raw-image"},
