@@ -226,7 +226,7 @@ func osCustomizations(
 	osc.SshdConfig = imageConfig.SshdConfig
 	osc.AuthConfig = imageConfig.Authconfig
 	osc.PwQuality = imageConfig.PwQuality
-	osc.WSLConfig = imageConfig.WSLConfig
+	osc.WSLConfig = imageConfig.WSLConfStageOptions()
 
 	osc.Files = append(osc.Files, imageConfig.Files...)
 	osc.Directories = append(osc.Directories, imageConfig.Directories...)

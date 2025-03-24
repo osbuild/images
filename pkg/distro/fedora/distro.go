@@ -438,10 +438,8 @@ func mkWslImgType(d distribution) imageType {
 			ExcludeDocs: common.ToPtr(true),
 			Locale:      common.ToPtr("C.UTF-8"),
 			Timezone:    common.ToPtr("Etc/UTC"),
-			WSLConfig: &osbuild.WSLConfStageOptions{
-				Boot: osbuild.WSLConfBootOptions{
-					Systemd: true,
-				},
+			WSLConfig: &distro.WSLConfig{
+				BootSystemd: true,
 			},
 		},
 		image:                  containerImage,

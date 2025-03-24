@@ -266,7 +266,7 @@ func osCustomizations(
 	osc.WAAgentConfig = imageConfig.WAAgentConfig
 	osc.UdevRules = imageConfig.UdevRules
 	osc.GCPGuestAgentConfig = imageConfig.GCPGuestAgentConfig
-	osc.WSLConfig = imageConfig.WSLConfig
+	osc.WSLConfig = imageConfig.WSLConfStageOptions()
 
 	osc.Files = append(osc.Files, imageConfig.Files...)
 	osc.Directories = append(osc.Directories, imageConfig.Directories...)

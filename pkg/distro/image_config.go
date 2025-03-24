@@ -64,7 +64,8 @@ type ImageConfig struct {
 	Firewall            *osbuild.FirewallStageOptions
 	UdevRules           *osbuild.UdevRulesStageOptions
 	GCPGuestAgentConfig *osbuild.GcpGuestAgentConfigOptions
-	WSLConfig           *osbuild.WSLConfStageOptions
+
+	WSLConfig *WSLConfig
 
 	Files       []*fsnode.File
 	Directories []*fsnode.Directory
@@ -110,6 +111,10 @@ type ImageConfig struct {
 	MountUnits *bool
 }
 
+type WSLConfig struct {
+	BootSystemd bool
+}
+
 // InheritFrom inherits unset values from the provided parent configuration and
 // returns a new structure instance, which is a result of the inheritance.
 func (c *ImageConfig) InheritFrom(parentConfig *ImageConfig) *ImageConfig {
@@ -133,4 +138,15 @@ func (c *ImageConfig) InheritFrom(parentConfig *ImageConfig) *ImageConfig {
 		}
 	}
 	return &finalConfig
+}
+
+func (c *ImageConfig) WSLConfStageOptions() *osbuild.WSLConfStageOptions {
+	if c.WSLConfig == nil {
+		return nil
+	}
+	return &osbuild.WSLConfStageOptions{
+		Boot: osbuild.WSLConfBootOptions{
+			Systemd: c.WSLConfig.BootSystemd,
+		},
+	}
 }
