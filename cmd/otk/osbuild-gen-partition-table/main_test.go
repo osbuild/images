@@ -145,31 +145,20 @@ func TestUnmarshalOutput(t *testing.T) {
     },
     "internal": {
       "partition-table": {
-        "Size": 911,
-        "UUID": "",
-        "Type": "",
-        "Partitions": [
+        "size": 911,
+        "type": "",
+        "partitions": [
           {
-            "Start": 0,
-            "Size": 0,
-            "Type": "119119",
-            "Bootable": false,
-            "UUID": "911911",
-            "Payload": {
-              "Type": "ext4",
-              "UUID": "",
-              "Label": "",
-              "Mountpoint": "",
-              "FSTabOptions": "",
-              "FSTabFreq": 0,
-              "FSTabPassNo": 0
+            "start": 0,
+            "size": 0,
+            "type": "119119",
+            "uuid": "911911",
+            "payload": {
+              "type": "ext4"
             },
-            "PayloadType": "filesystem"
+            "payload_type": "filesystem"
           }
-        ],
-        "SectorSize": 0,
-        "ExtraPadding": 0,
-        "StartOffset": 0
+        ]
       }
     },
     "filename": "disk.img"
@@ -226,74 +215,59 @@ var expectedSimplePartOutput = `{
       },
       "internal": {
         "partition-table": {
-          "Size": 11821645824,
-          "UUID": "dbd21911-1c4e-4107-8a9f-14fe6e751358",
-          "Type": "gpt",
-          "Partitions": [
+          "size": 11821645824,
+          "uuid": "dbd21911-1c4e-4107-8a9f-14fe6e751358",
+          "type": "gpt",
+          "partitions": [
             {
-              "Start": 9048576,
-              "Size": 1048576,
-              "Type": "21686148-6449-6E6F-744E-656564454649",
-              "Bootable": true,
-              "UUID": "FAC7F1FB-3E8D-4137-A512-961DE09A5549",
-              "Payload": null,
-              "PayloadType": "no-payload"
+              "start": 9048576,
+              "size": 1048576,
+              "type": "21686148-6449-6E6F-744E-656564454649",
+              "bootable": true,
+              "uuid": "FAC7F1FB-3E8D-4137-A512-961DE09A5549",
+              "payload_type": "no-payload"
             },
             {
-              "Start": 10097152,
-              "Size": 2147483648,
-              "Type": "C12A7328-F81F-11D2-BA4B-00A0C93EC93B",
-              "Bootable": false,
-              "UUID": "68B2905B-DF3E-4FB3-80FA-49D1E773AA33",
-              "Payload": {
-                "Type": "vfat",
-                "UUID": "7B77-95E7",
-                "Label": "EFI-SYSTEM",
-                "Mountpoint": "/boot/efi",
-                "FSTabOptions": "defaults,uid=0,gid=0,umask=077,shortname=winnt",
-                "FSTabFreq": 0,
-                "FSTabPassNo": 2
+              "start": 10097152,
+              "size": 2147483648,
+              "type": "C12A7328-F81F-11D2-BA4B-00A0C93EC93B",
+              "uuid": "68B2905B-DF3E-4FB3-80FA-49D1E773AA33",
+              "payload": {
+                "type": "vfat",
+                "uuid": "7B77-95E7",
+                "label": "EFI-SYSTEM",
+                "mountpoint": "/boot/efi",
+                "fstab_options": "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+                "fstab_passno": 2
               },
-              "PayloadType": "filesystem"
+              "payload_type": "filesystem"
             },
             {
-              "Start": 4305064448,
-              "Size": 7516564480,
-              "Type": "",
-              "Bootable": false,
-              "UUID": "ed130be6-c822-49af-83bb-4ea648bb2264",
-              "Payload": {
-                "Type": "ext4",
-                "UUID": "9851898e-0b30-437d-8fad-51ec16c3697f",
-                "Label": "root",
-                "Mountpoint": "/",
-                "FSTabOptions": "",
-                "FSTabFreq": 0,
-                "FSTabPassNo": 0
+              "start": 4305064448,
+              "size": 7516564480,
+              "uuid": "ed130be6-c822-49af-83bb-4ea648bb2264",
+              "payload": {
+                "type": "ext4",
+                "uuid": "9851898e-0b30-437d-8fad-51ec16c3697f",
+                "label": "root",
+                "mountpoint": "/"
               },
-              "PayloadType": "filesystem"
+              "payload_type": "filesystem"
             },
             {
-              "Start": 2157580800,
-              "Size": 2147483648,
-              "Type": "",
-              "Bootable": false,
-              "UUID": "9f6173fd-edc9-4dbe-9313-632af556c607",
-              "Payload": {
-                "Type": "ext4",
-                "UUID": "d8bb61b8-81cf-4c85-937b-69439a23dc5e",
-                "Label": "home",
-                "Mountpoint": "/home",
-                "FSTabOptions": "",
-                "FSTabFreq": 0,
-                "FSTabPassNo": 0
+              "start": 2157580800,
+              "size": 2147483648,
+              "uuid": "9f6173fd-edc9-4dbe-9313-632af556c607",
+              "payload": {
+                "type": "ext4",
+                "uuid": "d8bb61b8-81cf-4c85-937b-69439a23dc5e",
+                "label": "home",
+                "mountpoint": "/home"
               },
-              "PayloadType": "filesystem"
+              "payload_type": "filesystem"
             }
           ],
-          "SectorSize": 0,
-          "ExtraPadding": 0,
-          "StartOffset": 8000000
+          "start_offset": 8000000
         }
       },
       "filename": "disk.img"
