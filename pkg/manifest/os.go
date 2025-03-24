@@ -893,7 +893,7 @@ func (p *OS) serialize() osbuild.Pipeline {
 				pipeline.AddStages(osbuild.GenFileNodesStages(files)...)
 			}
 		}
-		pipeline.AddStage(osbuild.NewCAStageStage())
+		pipeline.AddStage(osbuild.NewUpdateCATrustStage())
 	}
 
 	if p.OSCustomizations.MachineIdUninitialized {
