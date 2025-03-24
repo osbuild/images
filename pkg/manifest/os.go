@@ -792,15 +792,6 @@ func (p *OS) serialize() osbuild.Pipeline {
 			}))
 	}
 
-	// First create custom directories, because some of the custom files may depend on them
-	if len(p.OSCustomizations.Directories) > 0 {
-		pipeline.AddStages(osbuild.GenDirectoryNodesStages(p.OSCustomizations.Directories)...)
-	}
-
-	if len(p.OSCustomizations.Files) > 0 {
-		p.addInlineDataAndStages(&pipeline, p.OSCustomizations.Files)
-	}
-
 	// write modularity related configuration files
 	if len(p.moduleSpecs) > 0 {
 		pipeline.AddStages(osbuild.GenDNFModuleConfigStages(p.moduleSpecs)...)
@@ -826,6 +817,18 @@ func (p *OS) serialize() osbuild.Pipeline {
 
 		pipeline.AddStages(osbuild.GenDirectoryNodesStages([]*fsnode.Directory{failsafeDir})...)
 		p.addInlineDataAndStages(&pipeline, failsafeFiles)
+	}
+
+	// First create custom directories, because some of the custom files may depend on them
+	if len(p.OSCustomizations.Directories) > 0 {
+		pipeline.AddStages(osbuild.GenDirectoryNodesStages(p.OSCustomizations.Directories)...)
+	}
+
+	// Custom files (from the blueprint) are often used to create systemd
+	// units, so let's make sure they get created before the systemd stage that
+	// will probably want to enable them
+	if len(p.OSCustomizations.Files) > 0 {
+		p.addInlineDataAndStages(&pipeline, p.OSCustomizations.Files)
 	}
 
 	enabledServices := []string{}
