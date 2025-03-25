@@ -16,7 +16,9 @@ import (
 	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
+	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
+	"github.com/osbuild/images/pkg/runner"
 )
 
 func findStages(name string, stages []*osbuild.Stage) []*osbuild.Stage {
@@ -368,4 +370,79 @@ func TestHostnameDoesNotIncludeHostnameStage(t *testing.T) {
 	pipeline := os.Serialize()
 	st := manifest.FindStage("org.osbuild.hostname", pipeline.Stages)
 	require.Nil(t, st)
+}
+
+func TestKernelInstallOverride(t *testing.T) {
+	repos := []rpmmd.RepoConfig{}
+	runner := &runner.CentOS{Version: 9}
+
+	// We need the OS pipeline to run the serialization functions for the UKI,
+	// which means we need a Platform with the correct bootloader setting and a
+	// partition table with an ESP.
+	platform := &platform.X86{
+		Bootloader: platform.BOOTLOADER_UKI,
+	}
+	pt := testdisk.TestPartitionTables()["plain"]
+
+	t.Run("add-drop-in", func(t *testing.T) {
+		inputs := manifest.Inputs{
+			Depsolved: dnfjson.DepsolveResult{
+				Packages: []rpmmd.PackageSpec{
+					{
+						Name:     "uki-direct",
+						Epoch:    0,
+						Version:  "24.11",
+						Release:  "1.el9",
+						Arch:     "noarch",
+						Checksum: "sha256:c6ade8aef0282a228e1011f4f4b7efe41c035f6e635feb27082ac36cb1a1384b",
+					},
+				},
+			},
+		}
+
+		m := manifest.New()
+		build := manifest.NewBuild(&m, runner, repos, nil)
+		os := manifest.NewOS(build, platform, repos)
+		os.PartitionTable = &pt
+		pipeline := os.SerializeWith(inputs)
+
+		copyStages := findStages("org.osbuild.copy", pipeline.Stages)
+		destinationPaths := make([]string, 0)
+		for _, copyStage := range copyStages {
+			copyStageOptions := copyStage.Options.(*osbuild.CopyStageOptions)
+			for _, path := range copyStageOptions.Paths {
+				destinationPaths = append(destinationPaths, path.To)
+			}
+		}
+		assert.Contains(t, destinationPaths, "tree:///etc/kernel/install.d/99-uki-uefi-setup.install")
+	})
+
+	t.Run("no-drop-in", func(t *testing.T) {
+		inputs := manifest.Inputs{
+			Depsolved: dnfjson.DepsolveResult{
+				Packages: []rpmmd.PackageSpec{
+					{
+						Name:     "uki-direct",
+						Epoch:    0,
+						Version:  "25.11",
+						Release:  "1.el9",
+						Arch:     "noarch",
+						Checksum: "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+					},
+				},
+			},
+		}
+
+		m := manifest.New()
+		build := manifest.NewBuild(&m, runner, repos, nil)
+		os := manifest.NewOS(build, platform, repos)
+		os.PartitionTable = &pt
+		_ = os.SerializeWith(inputs)
+
+		paths := make([]string, 0)
+		for _, file := range os.Files {
+			paths = append(paths, file.Path())
+		}
+		assert.NotContains(t, paths, "/etc/kernel/install.d/99-uki-uefi-setup.install")
+	})
 }

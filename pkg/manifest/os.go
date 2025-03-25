@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/osbuild/images/data/ukidirect"
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/environment"
 	"github.com/osbuild/images/internal/workload"
@@ -723,6 +724,29 @@ func (p *OS) serialize() osbuild.Pipeline {
 				panic(err)
 			}
 			p.addFiles(&pipeline, []*fsnode.File{csvfile})
+
+			// the kernel install override must be added before the RPM stage
+			// because it needs to be picked up by the kernel installation
+			// script phase
+			kernelInstallFile, err := maybeCreateKernelInstallOverride(p.packageSpecs)
+			if err != nil {
+				panic(err)
+			}
+
+			if kernelInstallFile != nil {
+				// create the parent directory
+				dirNode, err := fsnode.NewDirectory(filepath.Dir(kernelInstallFile.Path()), nil, nil, nil, true)
+				if err != nil {
+					panic(err)
+				}
+
+				dirStages := osbuild.GenDirectoryNodesStages([]*fsnode.Directory{dirNode})
+				fileStages := osbuild.GenFileNodesStages([]*fsnode.File{kernelInstallFile})
+				kernelInstallStages := append(dirStages, fileStages...)
+				pipeline.Stages = append(kernelInstallStages, pipeline.Stages...)
+				p.inlineData = append(p.inlineData, string(kernelInstallFile.Data()))
+			}
+
 		}
 	}
 
@@ -1041,6 +1065,44 @@ func findESPMountpoint(pt *disk.PartitionTable) (string, error) {
 	}
 
 	return espMountpoint, nil
+}
+
+// The 99-uki-uefi-setup.install script, prior to v25.3 of the uki-direct
+// package, would run `bootctl -p` to discover the ESP [1]. This doesn't work
+// in osbuild because the system isn't booted or live. Since v25.3, the install
+// script respects the $BOOT_ROOT env var that we set in osbuild during the
+// org.osbuild.rpm stage.
+//
+// This function generates a file node to add the latest install script (v25.3)
+// to /etc/kernel/install.d/99-uki-uefi-setup.install when needed.
+// The updated package is expected to be released in RHEL 9.7 and 10.1.
+//
+// The function will return nil if the uki-direct package includes the fix
+// (v25.3+) or if the uki-direct package is not included in the package list.
+//
+// [1] https://gitlab.com/kraxel/virt-firmware/-/commit/ca385db4f74a4d542455b9d40c91c8448c7be90c
+func maybeCreateKernelInstallOverride(packages []rpmmd.PackageSpec) (*fsnode.File, error) {
+	ukiDirectVer, err := rpmmd.GetVerStrFromPackageSpecList(packages, "uki-direct")
+	if err != nil {
+		// the uki-direct package isn't in the list: no override necessary
+		return nil, nil
+	}
+
+	// The GetVerStrFromPackageSpecList function returns
+	// <version>-<release>.<arch>. For the real package version, this doesn't
+	// appear to cause any issues with the version parser used by
+	// VersionLessThan. If a mock depsolver is used this can cause issues
+	// (Malformed version: 0-8.fk1.x86_64). Make sure we only use the <version>
+	// component to avoid issues.
+	ukiDirectVer = strings.SplitN(ukiDirectVer, "-", 2)[0]
+
+	if common.VersionLessThan(ukiDirectVer, "25.3") {
+		// add the patched drop-in file to /etc/kernel/install.d/
+		return ukidirect.KernelInstallScript()
+	}
+
+	// package is new enough
+	return nil, nil
 }
 
 func (p *OS) Platform() platform.Platform {
