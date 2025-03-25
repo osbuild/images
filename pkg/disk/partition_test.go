@@ -28,8 +28,14 @@ func TestMarshalUnmarshalSimple(t *testing.T) {
 
 func TestMarshalUnmarshalSad(t *testing.T) {
 	var part disk.Partition
-	err := json.Unmarshal([]byte(`{"randon": "json"}`), &part)
-	assert.ErrorContains(t, err, `cannot build partition from "{`)
+	err := json.Unmarshal([]byte(`{"random": "json"}`), &part)
+	assert.ErrorContains(t, err, `json: unknown field "random"`)
+}
+
+func TestMarshalUnmarshalPayloadButNoPayloadTypeSad(t *testing.T) {
+	var part disk.Partition
+	err := json.Unmarshal([]byte(`{"payload": "some-payload-but-no-payload-type-field"}`), &part)
+	assert.ErrorContains(t, err, `cannot build payload: empty payload type but payload is`)
 }
 
 func TestMarshalUnmarshalPartitionHappy(t *testing.T) {
