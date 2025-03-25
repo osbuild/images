@@ -67,9 +67,31 @@ a diff against the osbuild manifests produced by the current upstream "main"
 branch of the "images" library. If a first argument is passed the diff
 is generated against the given revision or git tag of upstream.
 
-Note that no depsolving is performed so upstream packaging dependency
-changes will not be caught. This is done so that the diff is small and
-fast.
+Note that no content is resolved, just like in step 4 of [Manifest
+generation](#manifest-generation) described above. This is done so that the
+diff is small and fast. Because of this, the following should be noted:
+- Repository changes are not caught. As long as the repository URLs and
+  configurations are the same between runs, the same exact manifest is
+  generated.
+- Upstream packaging dependency changes will not be caught. Similar to the
+  previous note, no changes in package versions or dependencies will occur if
+  the repository URLs and configurations don't change.
+- Functionality that depends on package inclusion or package versions might not
+  behave as expected. This can have several side effects:
+    - If a stage or stage option depends on a specific package being in the
+      image and that package is only added as a dependency, the manifest will
+      always be generated as if the package is not included. The alternative
+      functionality will never be visible in a manifest, unless the package is
+      added to an image type's package list explicitly or is selected in the
+      blueprint.
+    - If a stage or stage option depends on a specific package version, the
+      manifest will always be generated with the same behaviour (depending on
+      the mock package version generated for the unresolved manifest), so a
+      change in this behaviour between manifests or between commits will never
+      be visible.
+- The same notes apply for containers and ostree commits. Remote changes in a
+  container registry or ostree repository will never be visible in manifests
+  with unresolved content unless the URLs and refs change.
 
 #### Building images
 
