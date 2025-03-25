@@ -1,0 +1,199 @@
+#!/usr/bin/sh
+#
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# (c) 2023 Vitaly Kuznetsov
+#
+# -*- mode: shell-script; indent-tabs-mode: nil; sh-basic-offset: 4; -*-
+# ex: ts=8 sw=4 sts=4 et filetype=sh
+
+set -e
+
+COMMAND="${1:?}"
+KERNEL_VERSION="${2:?}"
+KERNEL_IMAGE="$4"
+
+ENTRY_TOKEN="$KERNEL_INSTALL_ENTRY_TOKEN"
+BOOT_ROOT="$KERNEL_INSTALL_BOOT_ROOT"
+
+UKI_DIR_BOOT="$BOOT_ROOT/EFI/Linux"
+if test -d "$BOOT_ROOT/EFI/BOOT"; then
+    # looks like $BOOT_ROOT points to the ESP
+    UKI_DIR_ESP="$UKI_DIR_BOOT"
+else
+    # must find ESP mount point
+    UKI_DIR_ESP="`bootctl -p`/EFI/Linux"
+fi
+
+LOADER_INFO="$(kernel-bootcfg --print-loader)"
+case "$LOADER_INFO" in
+    systemd-boot*) SD_BOOT="yes";;
+    *)             SD_BOOT="no";;
+esac
+
+TRIES_FILE="${KERNEL_INSTALL_CONF_ROOT:-/etc/kernel}/tries"
+if [ -f "$TRIES_FILE" ]; then
+    if test "$SD_BOOT" != "yes"; then
+        echo "Error: boot counting requires sd-boot." >&2
+        exit 1
+    fi
+    # 90-uki-copy.install has already checked tries actually is a number.
+    read -r TRIES <"$TRIES_FILE"
+    TRIES="+$TRIES"
+else
+    TRIES=""
+fi
+
+UKI_FILE_BOOT="$UKI_DIR_BOOT/$ENTRY_TOKEN-$KERNEL_VERSION$TRIES.efi"
+UKI_FILE_ESP="$UKI_DIR_ESP/$ENTRY_TOKEN-$KERNEL_VERSION$TRIES.efi"
+
+if [ "$KERNEL_INSTALL_VERBOSE" -gt 0 ]; then
+    LOGLEVEL="--loglevel info"
+else
+    LOGLEVEL="--loglevel error"
+fi
+
+case "$COMMAND" in
+    remove)
+        # $ENTRY_TOKEN might have changed since "kernel-install add"
+        # fedora cloud image kickstart resets machine-id for example
+        for kernel in "$UKI_DIR_ESP/"*"-$KERNEL_VERSION.efi"; do
+            [ "$KERNEL_INSTALL_VERBOSE" -gt 0 ] && \
+                echo "Removing $kernel from UEFI boot entries"
+            kernel-bootcfg $LOGLEVEL --remove-uki "$kernel"
+            if test "$kernel" != "$UKI_FILE_ESP"; then
+                [ "$KERNEL_INSTALL_VERBOSE" -gt 0 ] && \
+                    echo "Removing $UKI_FILE_ESP from UEFI boot entries"
+                kernel-bootcfg $LOGLEVEL --remove-uki "$UKI_FILE_ESP"
+            fi
+            if [ "$UKI_FILE_BOOT" != "$UKI_FILE_ESP" ]; then
+                [ "$KERNEL_INSTALL_VERBOSE" -gt 0 ] && \
+                    echo "Removing $kernel from ESP"
+                rm -f "$kernel"
+            fi
+        done
+
+        # with sd-boot we might have boot counting kernels to clean up.
+        if test "$SD_BOOT" = "yes"; then
+            for kernel in "$UKI_DIR_ESP/"*"-$KERNEL_VERSION+"*".efi"; do
+                test -f "$kernel" || continue
+                [ "$KERNEL_INSTALL_VERBOSE" -gt 0 ] && \
+                    echo "Removing $kernel from ESP"
+                rm -f "$kernel"
+            done
+        fi
+
+        [ "$KERNEL_INSTALL_VERBOSE" -gt 0 ] && \
+            echo "Removing .hmac and extra files for $KERNEL_VERSION from ESP"
+        # Remove HMAC files if present
+        rm -f "$UKI_DIR_ESP/."*"-$KERNEL_VERSION.efi.hmac"
+        # Remove extra files if present
+        rm -rf "$UKI_DIR_ESP/"*"-$KERNEL_VERSION.efi.extra.d"
+
+        ;;
+    add)
+        [ "$KERNEL_INSTALL_LAYOUT" = "uki" ] || exit 0
+
+        # UKI is always copied to $BOOT by the standard 90-uki-copy.install
+        if [ ! -f "$UKI_FILE_BOOT" ]; then
+            echo "$UKI_FILE_BOOT does not exist!" >&2
+            exit 1
+        fi
+
+        # Move the UKI to the ESP when $BOOT and ESP differ
+        if [ "$UKI_FILE_BOOT" != "$UKI_FILE_ESP" -a ! -f "$UKI_FILE_ESP" ]; then
+            [ "$KERNEL_INSTALL_VERBOSE" -gt 0 ] && \
+                echo "Moving $UKI_FILE_BOOT to ESP"
+            mkdir -p "$UKI_DIR_ESP"
+            mv "$UKI_FILE_BOOT" "$UKI_FILE_ESP" || {
+                echo "Error: could not move '$UKI_FILE_BOOT' to '$UKI_FILE_ESP'." >&2
+                exit 1
+            }
+            sync
+        fi
+
+        # Put .hmac next to UKI on the ESP if present
+        KERNEL_DIR="${KERNEL_IMAGE%/*}"
+        ORIG_HMAC=".${KERNEL_IMAGE##*/}.hmac"
+        ESP_HMAC=".$ENTRY_TOKEN-$KERNEL_VERSION.efi.hmac"
+        if [ -f "$KERNEL_DIR/$ORIG_HMAC" ]; then
+                cp --remove-destination "$KERNEL_DIR/$ORIG_HMAC" "$UKI_DIR_ESP/$ESP_HMAC"
+                sed -i "s, ${KERNEL_IMAGE##*/}\$, ${UKI_FILE_ESP##*/}," "$UKI_DIR_ESP/$ESP_HMAC"
+        fi
+
+        # Get the list of cmdline addons for the currently running UKI and try enabling
+        # them for the newly installed UKI. Note: boot counter is always removed.
+        ESP_ADDON_PATH="$UKI_DIR_ESP/$ENTRY_TOKEN-$KERNEL_VERSION.efi.extra.d"
+        mkdir -p $ESP_ADDON_PATH
+        for addon in "$UKI_DIR_ESP/$ENTRY_TOKEN-`uname -r`.efi.extra.d/"*".addon.efi"; do
+	    test -f "$addon" || continue
+            addon=${addon##*/}
+            [ "$KERNEL_INSTALL_VERBOSE" -gt 0 ] && \
+                echo "Addon $addon is enabled for the currently running UKI"
+            if [ -f "$KERNEL_IMAGE.extra.d/$addon" ]; then
+                [ "$KERNEL_INSTALL_VERBOSE" -gt 0 ] && \
+                    echo "Enabling $addon for $KERNEL_VERSION"
+                cp --remove-destination "$KERNEL_IMAGE.extra.d/$addon" $ESP_ADDON_PATH
+            else
+                echo "Addon $addon is missing for $KERNEL_VERSION, skipping"
+            fi
+        done
+
+        if test "$SD_BOOT" = "yes"; then
+            # When using systemd-boot we are done here.
+            [ "$KERNEL_INSTALL_VERBOSE" -gt 0 ] && \
+                echo "Skipping UEFI boot variable update (sd-boot detected)"
+            exit 0
+        fi
+
+        # Adapted from systemd's 90-loadentry.install
+        if [ -n "$KERNEL_INSTALL_CONF_ROOT" ]; then
+            if [ -f "$KERNEL_INSTALL_CONF_ROOT/cmdline" ]; then
+                CMDLINE="$(tr -s "$IFS" ' ' <"$KERNEL_INSTALL_CONF_ROOT/cmdline")"
+            fi
+        elif [ -f /etc/kernel/cmdline ]; then
+            CMDLINE="$(tr -s "$IFS" ' ' </etc/kernel/cmdline)"
+        elif [ -f /usr/lib/kernel/cmdline ]; then
+            CMDLINE="$(tr -s "$IFS" ' ' </usr/lib/kernel/cmdline)"
+        else
+            CMDLINE=
+        fi
+
+        unset NAME ID PRETTY_NAME VERSION_ID
+        if [ -f /etc/os-release ]; then
+            # shellcheck source=/dev/null
+            . /etc/os-release
+        elif [ -f /usr/lib/os-release ]; then
+            # shellcheck source=/dev/null
+            . /usr/lib/os-release
+        fi
+
+        if [ -n "$PRETTY_NAME" ]; then
+            TITLE="$PRETTY_NAME $KERNEL_VERSION (UKI)"
+        elif [ -n "$NAME" ] && [ -n "$VERSION_ID" ]; then
+            TITLE="$NAME $VERSION_ID $KERNEL_VERSION (UKI)"
+        else
+            TITLE="$ENTRY_TOKEN $KERNEL_VERSION (UKI)"
+        fi
+
+        # Add PARTLABEL to the title if the ESP has a special name
+        PARTLABEL="$(df $UKI_FILE_ESP --output=source | tail -1 | xargs -r lsblk --output=PARTLABEL --noheadings)"
+        if [ -n "$PARTLABEL" ] && [ "$PARTLABEL" != "EFI System" ] && [ "$PARTLABEL" != "EFI System Partition" ]; then
+            TITLE="$TITLE on $PARTLABEL"
+        fi
+
+        if [ -n "$CMDLINE" ]; then
+            [ "$KERNEL_INSTALL_VERBOSE" -gt 0 ] && \
+                echo "Adding $UKI_FILE_ESP to UEFI boot entries with cmdline: $CMDLINE"
+            kernel-bootcfg $LOGLEVEL --add-uki "$UKI_FILE_ESP" --title "$TITLE" --cmdline "$CMDLINE" --once
+        else
+            [ "$KERNEL_INSTALL_VERBOSE" -gt 0 ] && \
+                echo "Adding $UKI_FILE_ESP to UEFI boot entries"
+            kernel-bootcfg $LOGLEVEL --add-uki "$UKI_FILE_ESP" --title "$TITLE" --once
+        fi
+        ;;
+    *)
+        exit 0
+        ;;
+esac
+
+exit 0
