@@ -39,7 +39,6 @@ partition_table:
       bootable: true
       type: *bios_boot_partition_guid
       uuid: *bios_boot_partition_uuid
-      payload_type: "no-payload"
     - &default_partition_table_part_efi
       size: 209_715_200  # 200 MiB
       type: *efi_system_partition_guid
@@ -112,6 +111,82 @@ partition_table:
 					FSTabOptions: "defaults",
 					FSTabFreq:    0,
 					FSTabPassNo:  0,
+				},
+			},
+		},
+	}
+	assert.Equal(t, expected, ptWrapper.PartitionTable)
+}
+
+func TestPartitionTableUnmarshalYAMLwithLUKS(t *testing.T) {
+	inputYAML := `
+partition_table:
+  uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
+  type: "gpt"
+  partitions:
+    - size: 1_048_576  # 1 MiB
+      bootable: true
+    - payload_type: "luks"
+      size: 987654321
+      payload:
+        label: "crypt_root"
+        cipher: "cipher_null"
+        passphrase: "osbuild"
+        pbkdf:
+          iterations: 4
+        clevis:
+          pin: "null"
+        payload_type: "lvm"
+        payload:
+          name: "rootvg"
+          description: "bla"
+          logical_volumes:
+            - size: 123456789
+              name: "rootlv"
+              payload_type: "filesystem"
+              payload:
+                type: "ext4"
+                mountpoint: "/"
+`
+	var ptWrapper struct {
+		PartitionTable disk.PartitionTable `yaml:"partition_table"`
+	}
+
+	err := yaml.Unmarshal([]byte(inputYAML), &ptWrapper)
+	require.NoError(t, err)
+	expected := disk.PartitionTable{
+		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
+		Type: 2,
+		Partitions: []disk.Partition{
+			{
+				Size:     1048576,
+				Bootable: true,
+			}, {
+				Size: 987654321,
+				Payload: &disk.LUKSContainer{
+					Label:      "crypt_root",
+					Cipher:     "cipher_null",
+					Passphrase: "osbuild",
+					PBKDF: disk.Argon2id{
+						Iterations: 4,
+					},
+					Clevis: &disk.ClevisBind{
+						Pin: "null",
+					},
+					Payload: &disk.LVMVolumeGroup{
+						Name:        "rootvg",
+						Description: "bla",
+						LogicalVolumes: []disk.LVMLogicalVolume{
+							{
+								Name: "rootlv",
+								Size: 123456789,
+								Payload: &disk.Filesystem{
+									Type:       "ext4",
+									Mountpoint: "/",
+								},
+							},
+						},
+					},
 				},
 			},
 		},

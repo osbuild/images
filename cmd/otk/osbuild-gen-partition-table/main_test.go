@@ -224,8 +224,7 @@ var expectedSimplePartOutput = `{
               "size": 1048576,
               "type": "21686148-6449-6E6F-744E-656564454649",
               "bootable": true,
-              "uuid": "FAC7F1FB-3E8D-4137-A512-961DE09A5549",
-              "payload_type": "no-payload"
+              "uuid": "FAC7F1FB-3E8D-4137-A512-961DE09A5549"
             },
             {
               "start": 10097152,
