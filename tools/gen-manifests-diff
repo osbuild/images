@@ -9,6 +9,7 @@
 # very fast (typically 3s).
 
 import os
+import re
 import pathlib
 import subprocess
 import sys
@@ -16,6 +17,18 @@ import tempfile
 
 # TODO: omit once we have a "riscv64" mirror and sources entry
 arches = ["x86_64", "aarch64", "ppc64le", "s390x"]
+
+
+def find_git_remote_upstream_name():
+    res = subprocess.run(
+        ["git", "remote", "-v"], text=True, capture_output=True, check=True)
+    for line in res.stdout.split("\n"):
+        if m := re.search(r'(\w+)\s+(git@|https:\/\/)github\.com(:|\/)osbuild\/images', line):
+            return m.group(1)
+    # if this becomes a frequent issue add the upstream remote, see
+    # https://github.com/osbuild/images/pull/1356#issuecomment-2750997780
+    # for details how to do this
+    raise RuntimeError(f"cannot find upstream github banch in {res.stdout}, please report as a bug")
 
 
 def top_srcdir() -> pathlib.Path:
@@ -62,8 +75,23 @@ def manifests_diff(tmp_path, rev):
 
 def main():
     rev = "main"
-    if len(sys.argv) > 1:
-        rev = sys.argv[1]
+    match len(sys.argv):
+        case 1:
+            print("no revision given as argument, running against merge base")
+            # merge base is calculated against upstream
+            # "github.com/osbuild/images" not against the users fork
+            upstream = find_git_remote_upstream_name()
+            rev = subprocess.run(
+                ["git", "merge-base", f"{upstream}/main", "HEAD"],
+                capture_output=True, text=True, check=True,
+            ).stdout.strip()
+            print(f"found upstream merge base '{rev}'")
+        case 2:
+            rev = sys.argv[1]
+        case _:
+            print("only a single revision argument can be passed")
+            sys.exit(1)
+    print()
     print("Note that this diff does *not* include depsolved rpms,")
     print("so upstream dependency changes will not be caught\n")
     with tempfile.TemporaryDirectory() as tmpdir:
