@@ -86,7 +86,7 @@ jobs:
       # We need to run the test as root, since we use the root
       # containers-storage for the local resolvers
       - name: Run unit tests
-        run: sudo go test -v ./pkg/container/... --force-local-resolver
+        run: sudo go test ./pkg/container/... --force-local-resolver
 
   unit-tests-cs:
     strategy:
@@ -129,7 +129,7 @@ jobs:
         run: git config --global --add safe.directory "$(pwd)"
 
       - name: Run unit tests
-        run: go test -v -race  ./...
+        run: go test -race  ./...
 
       - name: Install openssl for cgo test below
         run: dnf -y install openssl
@@ -139,7 +139,7 @@ jobs:
         run: CGO_ENABLED=0 go test -tags "containers_image_openpgp exclude_graphdriver_btrfs exclude_graphdriver_devicemapper exclude_graphdriver_overlay" ./...
 
       - name: Run depsolver tests with force-dnf to make sure it's not skipped for any reason
-        run: go test -v -race ./pkg/dnfjson/... -force-dnf
+        run: go test -race ./pkg/dnfjson/... -force-dnf
 
   lint:
     name: "⌨ Lint"
