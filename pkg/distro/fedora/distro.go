@@ -488,6 +488,10 @@ func mkMinimalRawImgType(d distribution) imageType {
 		// from Fedora 43 onward, we stop writing /etc/fstab and start using
 		// mount units only
 		it.defaultImageConfig.MountUnits = common.ToPtr(true)
+
+		// when using systemd mount units we also want them to be mounted rw
+		// while the default options are not
+		it.kernelOptions = []string{"rw"}
 	}
 	return it
 }
