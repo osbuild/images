@@ -12,6 +12,7 @@ import (
 	"github.com/osbuild/images/internal/testdisk"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/bootc"
+	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/subscription"
 	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/manifest"
@@ -379,4 +380,70 @@ func TestHostnameDoesNotIncludeHostnameStage(t *testing.T) {
 	pipeline := os.Serialize()
 	st := manifest.FindStage("org.osbuild.hostname", pipeline.Stages)
 	require.Nil(t, st)
+}
+
+func TestAddInlineOS(t *testing.T) {
+	os := manifest.NewTestOS()
+
+	require := require.New(t)
+
+	// add some files to the OSCustomizations which are included near the end
+	// of the pipeline
+	os.OSCustomizations.Files = createTestFilesForPipeline()
+
+	// enabling FIPS adds files after the Files defined above
+	os.OSCustomizations.FIPS = true
+
+	// adding subscription options adds a file before the rest
+	os.OSCustomizations.Subscription = &subscription.ImageOptions{
+		Organization:  "000",
+		ActivationKey: "111",
+	}
+
+	expectedPaths := []string{
+		"tree:///etc/osbuild-subscription-register.env", // from the subscription options
+		"tree:///etc/test/one",                          // directly from the OS customizations
+		"tree:///etc/test/two",
+		"tree:///etc/system-fips", // from FIPS = true
+	}
+
+	pipeline := os.Serialize()
+
+	destinationPaths := collectCopyDestinationPaths(pipeline.Stages)
+
+	// The order is significant. Do not use ElementsMatch() or similar.
+	require.Equal(expectedPaths, destinationPaths)
+
+	expectedContents := []string{
+		"ORG_ID=000\nACTIVATION_KEY=111",
+		"test 1",
+		"test 2",
+		"# FIPS module installation complete\n",
+	}
+
+	fileContents := os.GetInline()
+	// These are used to define the 'sources' part of the manifest, so the
+	// order doesn't matter
+	require.ElementsMatch(expectedContents, fileContents)
+}
+
+func createTestFilesForPipeline() []*fsnode.File {
+	fileOne := common.Must(fsnode.NewFile("/etc/test/one", nil, nil, nil, []byte("test 1")))
+	fileTwo := common.Must(fsnode.NewFile("/etc/test/two", nil, nil, nil, []byte("test 2")))
+	return []*fsnode.File{
+		fileOne,
+		fileTwo,
+	}
+}
+
+func collectCopyDestinationPaths(stages []*osbuild.Stage) []string {
+	destinationPaths := make([]string, 0)
+	copyStages := findStages("org.osbuild.copy", stages)
+	for _, copyStage := range copyStages {
+		copyStageOptions := copyStage.Options.(*osbuild.CopyStageOptions)
+		for _, path := range copyStageOptions.Paths {
+			destinationPaths = append(destinationPaths, path.To)
+		}
+	}
+	return destinationPaths
 }

@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/ostree"
@@ -58,6 +59,14 @@ func (p *OS) GetPackageSetChain(d Distro) []rpmmd.PackageSet {
 	return p.getPackageSetChain(d)
 }
 
+func (p *OS) AddInlineDataAndStages(pipeline *osbuild.Pipeline, files []*fsnode.File) {
+	p.addInlineDataAndStages(pipeline, files)
+}
+
+func (p *OS) GetInline() []string {
+	return p.getInline()
+}
+
 // NewTestOS is used in both internal and external package tests.
 // TODO: make all tests external and define this only in the manifest_test
 // package.
@@ -83,4 +92,12 @@ func (p *OSTreeDeployment) Serialize() osbuild.Pipeline {
 		Commits: []ostree.CommitSpec{{}},
 	})
 	return p.serialize()
+}
+
+func (p *OSTreeDeployment) AddInlineDataAndStages(pipeline *osbuild.Pipeline, files []*fsnode.File) {
+	p.addInlineDataAndStages(pipeline, files, "ostree/ref")
+}
+
+func (p *OSTreeDeployment) GetInline() []string {
+	return p.getInline()
 }

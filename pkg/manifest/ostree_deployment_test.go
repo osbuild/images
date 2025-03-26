@@ -9,6 +9,7 @@ import (
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/runner"
+	"github.com/stretchr/testify/require"
 )
 
 // NewTestOSTreeDeployment returns a minimally populated OSTreeDeployment for
@@ -46,4 +47,43 @@ func TestOSTreeDeploymentPipelineMountUnitStages(t *testing.T) {
 	pipeline.MountUnits = true
 
 	checkStagesForMountUnits(t, pipeline.Serialize().Stages, expectedUnits)
+}
+
+func TestAddInlineOSTreeDeployment(t *testing.T) {
+	deployment := NewTestOSTreeDeployment()
+
+	require := require.New(t)
+
+	// add some files to the Files list which are included near the end of the
+	// pipeline
+	deployment.Files = createTestFilesForPipeline()
+
+	// enabling FIPS adds files before the Files defined above
+	deployment.FIPS = true
+
+	expectedPaths := []string{
+		"tree:///etc/system-fips", // from FIPS = true
+		"tree:///etc/test/one",    // directly from the OS customizations
+		"tree:///etc/test/two",
+	}
+
+	// the OSTreeDeployment pipeline *requires* a partition table
+	deployment.PartitionTable = testdisk.MakeFakeBtrfsPartitionTable("/")
+	pipeline := deployment.Serialize()
+
+	destinationPaths := collectCopyDestinationPaths(pipeline.Stages)
+
+	// The order is significant. Do not use ElementsMatch() or similar.
+	require.Equal(expectedPaths, destinationPaths)
+
+	expectedContents := []string{
+		"test 1",
+		"test 2",
+		"# FIPS module installation complete\n",
+	}
+
+	fileContents := deployment.GetInline()
+	// These are used to define the 'sources' part of the manifest, so the
+	// order doesn't matter
+	require.ElementsMatch(expectedContents, fileContents)
 }
