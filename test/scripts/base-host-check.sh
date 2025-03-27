@@ -165,6 +165,30 @@ check_container_embedding() {
     fi
 }
 
+# Check that the rootless and rootfull podman would use the same network backend.
+# This is especially important in cases when we embed containers in the image,
+# because some versions of podman would default to using 'cni' network backend
+# if there are existing container images in the image. We embed the container
+# as root, so the rootfull podman would use 'cni' network backend, while the
+# rootless podman would use 'netavark' network backend in such case.
+# We do not want this inconsistency, so we check for it.
+check_podman_network_backend_consistency() {
+    echo "📗 Checking podman network backend consistency for rootfull and rootless podman"
+
+    local rootfull_network_backend
+    rootfull_network_backend=$(sudo podman info --format json | jq -r '.host.networkBackend // "undefined"')
+    echo "ℹ️ Rootfull podman network backend: ${rootfull_network_backend}"
+    local rootless_network_backend
+    rootless_network_backend=$(podman info --format json | jq -r '.host.networkBackend // "undefined"')
+    echo "ℹ️ Rootless podman network backend: ${rootless_network_backend}"
+    if [[ "${rootfull_network_backend}" != "${rootless_network_backend}" ]]; then
+        echo "❌ Podman network backends are inconsistent"
+        echo "Rootfull podman network backend: ${rootfull_network_backend}"
+        echo "Rootless podman network backend: ${rootless_network_backend}"
+        exit 1
+    fi
+}
+
 echo "❓ Checking system status"
 if ! running_wait; then
 
@@ -218,5 +242,6 @@ if (( $# > 0 )); then
 
     if jq -e '.blueprint.containers' "${config}"; then
         check_container_embedding "${config}"
+        check_podman_network_backend_consistency
     fi
 fi
