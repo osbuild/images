@@ -22,7 +22,7 @@ func isOSTree(imgType distro.ImageType) bool {
 }
 
 func isUbi(imgType distro.ImageType) bool {
-	return imgType.Name() == "wsl"
+	return imgType.Name() == "wsl" || imgType.Name() == "server-wsl"
 }
 
 var knownKernels = []string{"kernel", "kernel-debug", "kernel-rt"}
@@ -84,8 +84,8 @@ func TestDistro_KernelOption(t *testing.T, d distro.Distro) {
 		"edge-simplified-installer": true,
 		"edge-vsphere":              true,
 		"iot-installer":             true,
-		"iot-qcow2-image":           true,
-		"iot-raw-image":             true,
+		"iot-qcow2":                 true,
+		"iot-raw-xz":                true,
 		"iot-simplified-installer":  true,
 
 		// the tar image type is a minimal image type which is not expected to
@@ -98,8 +98,9 @@ func TestDistro_KernelOption(t *testing.T, d distro.Distro) {
 		// image installer on Fedora doesn't support kernel customizations
 		// on RHEL we support kernel name
 		// TODO: Remove when we unify the allowed options
-		"image-installer": true,
-		"live-installer":  true,
+		"image-installer":            true,
+		"minimal-installer":          true,
+		"workstation-live-installer": true,
 	}
 
 	{ // empty blueprint: all image types should just have the default kernel
@@ -184,8 +185,6 @@ func TestDistro_OSTreeOptions(t *testing.T, d distro.Distro) {
 		"edge-simplified-installer": true,
 		"iot-ami":                   true,
 		"iot-installer":             true,
-		"iot-qcow2-image":           true,
-		"iot-raw-image":             true,
 		"iot-simplified-installer":  true,
 	}
 
