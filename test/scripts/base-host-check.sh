@@ -158,6 +158,12 @@ uptime
 # NOTE: we should do a lot more here
 if (( $# > 0 )); then
     config="$1"
+
+    if ! type -p jq &>/dev/null; then
+        echo "❌ ERROR: jq not found, which is required for the tests"
+        exit 1
+    fi
+
     if jq -e .blueprint.customizations.openscap "${config}"; then
         get_oscap_score "${config}"
     fi
