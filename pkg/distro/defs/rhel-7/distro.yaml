@@ -44,6 +44,23 @@
           include:
             - "insights-client"
 
+image_config:
+  timezone: "America/New_York"
+  locale:   "en_US.UTF-8"
+  gpgkey_files:
+    - "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
+  sysconfig:
+    - kernel:
+        update_default: true
+        default_kernel: "kernel"
+      network:
+        networking: true
+        no_zero_conf: true
+  kernel_options_bootloader: true
+  # RHEL 7 grub does not support BLS
+  no_bls: true
+  install_weak_deps: true
+
 image_types:
   azure_rhui:
     package_sets:
