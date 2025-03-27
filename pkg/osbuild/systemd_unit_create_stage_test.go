@@ -382,6 +382,7 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 func TestGenSystemdMountStages(t *testing.T) {
 	type testCase struct {
 		ptname         string // name of partition table from internal/testdisk/partition.go
+		unitPath       SystemdUnitPath
 		expectedStages []*Stage
 	}
 
@@ -392,12 +393,14 @@ func TestGenSystemdMountStages(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			ptname: "plain",
+			ptname:   "plain",
+			unitPath: EtcUnitPath,
 			expectedStages: []*Stage{
 				{
 					Type: "org.osbuild.systemd.unit.create",
 					Options: &SystemdUnitCreateStageOptions{
 						Filename: "-.mount",
+						UnitPath: EtcUnitPath,
 						Config: SystemdUnit{
 							Unit: &UnitSection{
 								DefaultDependencies: common.ToPtr(true),
@@ -416,6 +419,7 @@ func TestGenSystemdMountStages(t *testing.T) {
 					Type: "org.osbuild.systemd.unit.create",
 					Options: &SystemdUnitCreateStageOptions{
 						Filename: "boot-efi.mount",
+						UnitPath: EtcUnitPath,
 						Config: SystemdUnit{
 							Unit: &UnitSection{
 								DefaultDependencies: common.ToPtr(true),
@@ -434,6 +438,7 @@ func TestGenSystemdMountStages(t *testing.T) {
 					Type: "org.osbuild.systemd.unit.create",
 					Options: &SystemdUnitCreateStageOptions{
 						Filename: "boot.mount",
+						UnitPath: EtcUnitPath,
 						Config: SystemdUnit{
 							Unit: &UnitSection{
 								DefaultDependencies: common.ToPtr(true),
@@ -461,12 +466,14 @@ func TestGenSystemdMountStages(t *testing.T) {
 			},
 		},
 		{
-			ptname: "plain-swap",
+			ptname:   "plain-swap",
+			unitPath: EtcUnitPath,
 			expectedStages: []*Stage{
 				{
 					Type: "org.osbuild.systemd.unit.create",
 					Options: &SystemdUnitCreateStageOptions{
 						Filename: "-.mount",
+						UnitPath: EtcUnitPath,
 						Config: SystemdUnit{
 							Unit: &UnitSection{
 								DefaultDependencies: common.ToPtr(true),
@@ -485,6 +492,7 @@ func TestGenSystemdMountStages(t *testing.T) {
 					Type: "org.osbuild.systemd.unit.create",
 					Options: &SystemdUnitCreateStageOptions{
 						Filename: "boot-efi.mount",
+						UnitPath: EtcUnitPath,
 						Config: SystemdUnit{
 							Unit: &UnitSection{
 								DefaultDependencies: common.ToPtr(true),
@@ -503,6 +511,7 @@ func TestGenSystemdMountStages(t *testing.T) {
 					Type: "org.osbuild.systemd.unit.create",
 					Options: &SystemdUnitCreateStageOptions{
 						Filename: "boot.mount",
+						UnitPath: EtcUnitPath,
 						Config: SystemdUnit{
 							Unit: &UnitSection{
 								DefaultDependencies: common.ToPtr(true),
@@ -521,6 +530,7 @@ func TestGenSystemdMountStages(t *testing.T) {
 					Type: "org.osbuild.systemd.unit.create",
 					Options: &SystemdUnitCreateStageOptions{
 						Filename: `dev-disk-by\x2duuid-3112efb3\x2d3b6f\x2d4fad\x2dbdeb\x2d445e54d8cac4.swap`,
+						UnitPath: EtcUnitPath,
 						Config: SystemdUnit{
 							Unit: &UnitSection{
 								DefaultDependencies: common.ToPtr(true),
@@ -547,12 +557,14 @@ func TestGenSystemdMountStages(t *testing.T) {
 			},
 		},
 		{
-			ptname: "btrfs",
+			ptname:   "btrfs",
+			unitPath: EtcUnitPath,
 			expectedStages: []*Stage{
 				{
 					Type: "org.osbuild.systemd.unit.create",
 					Options: &SystemdUnitCreateStageOptions{
 						Filename: "-.mount",
+						UnitPath: EtcUnitPath,
 						Config: SystemdUnit{
 							Unit: &UnitSection{
 								DefaultDependencies: common.ToPtr(true),
@@ -571,6 +583,7 @@ func TestGenSystemdMountStages(t *testing.T) {
 					Type: "org.osbuild.systemd.unit.create",
 					Options: &SystemdUnitCreateStageOptions{
 						Filename: "boot-efi.mount",
+						UnitPath: EtcUnitPath,
 						Config: SystemdUnit{
 							Unit: &UnitSection{
 								DefaultDependencies: common.ToPtr(true),
@@ -589,6 +602,7 @@ func TestGenSystemdMountStages(t *testing.T) {
 					Type: "org.osbuild.systemd.unit.create",
 					Options: &SystemdUnitCreateStageOptions{
 						Filename: "boot.mount",
+						UnitPath: EtcUnitPath,
 						Config: SystemdUnit{
 							Unit: &UnitSection{
 								DefaultDependencies: common.ToPtr(true),
@@ -607,6 +621,7 @@ func TestGenSystemdMountStages(t *testing.T) {
 					Type: "org.osbuild.systemd.unit.create",
 					Options: &SystemdUnitCreateStageOptions{
 						Filename: "var.mount",
+						UnitPath: EtcUnitPath,
 						Config: SystemdUnit{
 							Unit: &UnitSection{
 								DefaultDependencies: common.ToPtr(true),
