@@ -62,11 +62,7 @@ func PackageSet(it distro.ImageType, overrideTypeName string, replacements map[s
 	archName := arch.Name()
 	distribution := arch.Distro()
 	distroNameVer := distribution.Name()
-	// we need to split from the right for "centos-stream-10" like
-	// distro names, sadly go has no rsplit() so we do it manually
-	// XXX: we cannot use distroidparser here because of import cycles
-	distroName := distroNameVer[:strings.LastIndex(distroNameVer, "-")]
-	distroVersion := strings.SplitN(distroNameVer, "-", 2)[1]
+	distroName, distroVersion := splitDistroNameVer(distroNameVer)
 	distroNameMajorVer := strings.SplitN(distroNameVer, ".", 2)[0]
 
 	// XXX: this is a short term measure, pass a set of
@@ -171,4 +167,12 @@ func PackageSet(it distro.ImageType, overrideTypeName string, replacements map[s
 	sort.Strings(rpmmdPkgSet.Exclude)
 
 	return rpmmdPkgSet, nil
+}
+
+func splitDistroNameVer(distroNameVer string) (string, string) {
+	// we need to split from the right for "centos-stream-10" like
+	// distro names, sadly go has no rsplit() so we do it manually
+	// XXX: we cannot use distroidparser here because of import cycles
+	idx := strings.LastIndex(distroNameVer, "-")
+	return distroNameVer[:idx], distroNameVer[idx+1:]
 }
