@@ -125,6 +125,46 @@ check_modularity() {
     done
 }
 
+# Check if the containers specified in the blueprint are embedded in the image
+# by checking if the container source is present in the podman images list
+check_container_embedding() {
+    local config_file="$1"
+    if [[ -z "${config_file}" ]]; then
+        echo "❌ check_container_embedding(): no config file provided"
+        exit 1
+    fi
+
+    echo "📗 Checking embedded containers"
+
+    local error=0
+    for container in $(jq -rc '.blueprint.containers[]?' "${config_file}") ; do
+        local bp_container_source
+        bp_container_source=$(echo "${container}" | jq -r '.source')
+        if [[ "${bp_container_source}" == "null" ]]; then
+            echo "❌ Container source not found: ${container}"
+            error=1
+            continue
+        fi
+
+        local podman_containers
+        podman_containers=$(sudo podman images --format json | jq -rc "[.[] | select(any(.Names[]; startswith(\"${bp_container_source}\")))]")
+        local podman_containers_count
+        podman_containers_count=$(echo "${podman_containers}" | jq -r 'length')
+        if [[ "${podman_containers_count}" -ne 1 ]]; then
+            echo "❌ Unexpected number of containers found: ${podman_containers_count}, expected 1"
+            echo "📄 Podman containers:"
+            echo "${podman_containers}"
+            error=1
+            continue
+        fi
+    done
+
+    if (( error > 0 )); then
+        echo "❌ Container embedding check failed"
+        exit 1
+    fi
+}
+
 echo "❓ Checking system status"
 if ! running_wait; then
 
@@ -174,5 +214,9 @@ if (( $# > 0 )); then
 
     if jq -e '.blueprint.enabled_modules' "${config}" || jq -e '.blueprint.packages[] | select(.name | startswith("@") and contains(":")) | .name' "${config}"; then
         check_modularity "${config}"
+    fi
+
+    if jq -e '.blueprint.containers' "${config}"; then
+        check_container_embedding "${config}"
     fi
 fi
