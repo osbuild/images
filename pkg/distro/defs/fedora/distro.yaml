@@ -584,6 +584,7 @@ image_types:
           - "iwlwifi-mvm-firmware"
         exclude:
           - "dracut-config-rescue"
+          - "plymouth"
         condition:
           architecture:
             riscv64:
