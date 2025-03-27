@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"reflect"
 
 	"path/filepath"
 	"sort"
@@ -54,7 +55,7 @@ type pkgSetConditions struct {
 }
 
 type partitionTablesOverrides struct {
-	Conditional *partitionTablesOverwriteConditional `yaml:"condition"`
+	Conditional partitionTablesOverwriteConditional `yaml:"condition"`
 }
 
 func (po *partitionTablesOverrides) Apply(it distro.ImageType, pt *disk.PartitionTable, replacements map[string]string) error {
@@ -84,27 +85,99 @@ type partitionTablesOverwriteConditional struct {
 	VersionGreaterOrEqual map[string][]partitionTablesOverrideOp `yaml:"version_greater_or_equal,omitempty"`
 }
 
-type partitionTablesOverrideOp struct {
-	PartitionIndex int    `yaml:"partition_index"`
-	Size           uint64 `yaml:"size"`
-	FSTabOptions   string `yaml:"fstab_options"`
+type partitionTablesOverrideOp map[string]interface{}
+
+func findElementIndexByJSONTag(t reflect.Type, needle string) int {
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		tag := field.Tag
+		if jsonTag, ok := tag.Lookup("json"); ok {
+			if strings.Split(jsonTag, ",")[0] == needle {
+				return i
+			}
+		}
+	}
+	return -1
 }
 
-func (op *partitionTablesOverrideOp) Apply(pt *disk.PartitionTable) error {
-	selectPart := op.PartitionIndex
+func (op partitionTablesOverrideOp) applyTo(val reflect.Value) ([]string, error) {
+	var consumed []string
+
+	for jsonTag, override := range op {
+		fieldIdx := findElementIndexByJSONTag(val.Type(), jsonTag)
+		if fieldIdx >= 0 {
+			field := val.Field(fieldIdx)
+			newVal := reflect.ValueOf(override)
+			if !newVal.CanConvert(field.Type()) {
+				return nil, fmt.Errorf("cannot convert override %q (%T) to %s", override, override, field.Type())
+			}
+			field.Set(newVal.Convert(field.Type()))
+			consumed = append(consumed, jsonTag)
+		}
+	}
+	return consumed, nil
+}
+
+func (op partitionTablesOverrideOp) checkAllConsumed(consumed ...[]string) error {
+	// collect all consumed overrides
+	seen := map[string]bool{
+		// special token(s) that are always part of the overrides
+		"partition_index": true,
+	}
+	for _, cn := range consumed {
+		for _, jsonTag := range cn {
+			seen[jsonTag] = true
+		}
+	}
+	// check if we have some overrides left that are not applied, this means
+	// there was no json tag
+	for override := range op {
+		if !seen[override] {
+			return fmt.Errorf("cannot find %q in partition", override)
+		}
+	}
+
+	return nil
+}
+
+func (op partitionTablesOverrideOp) Apply(pt *disk.PartitionTable) error {
+	selectPartIf, ok := op["partition_index"]
+	if !ok {
+		return fmt.Errorf("no partition_index in %q", op)
+	}
+	selectPart, ok := selectPartIf.(int)
+	if !ok {
+		return fmt.Errorf("partition_index must be int, got %T", selectPartIf)
+	}
 	if selectPart > len(pt.Partitions) {
 		return fmt.Errorf("override %q part %v outside of partitionTable %+v", op, selectPart, pt)
 	}
-	if op.Size > 0 {
-		pt.Partitions[selectPart].Size = op.Size
+
+	// try to apply to partition
+	part := pt.Partitions[selectPart]
+	val := reflect.ValueOf(&part).Elem()
+	consumedPart, err := op.applyTo(val)
+	if err != nil {
+		return err
 	}
-	if op.FSTabOptions != "" {
-		part := pt.Partitions[selectPart]
-		fs, ok := part.Payload.(*disk.Filesystem)
-		if !ok {
-			return fmt.Errorf("override %q part %v for fstab_options expecting filesystem got %T", op, selectPart, part)
+	pt.Partitions[selectPart] = part
+
+	// try to apply to payload
+	var consumedPayload []string
+	switch payload := part.Payload.(type) {
+	case nil:
+		// nothing to do
+	case *disk.Filesystem:
+		val := reflect.ValueOf(&payload).Elem().Elem()
+		consumedPayload, err = op.applyTo(val)
+		if err != nil {
+			return err
 		}
-		fs.FSTabOptions = op.FSTabOptions
+	default:
+		return fmt.Errorf("unsupported override payload: %T", payload)
+	}
+	if err := op.checkAllConsumed(consumedPart, consumedPayload); err != nil {
+		return err
 	}
 
 	return nil
