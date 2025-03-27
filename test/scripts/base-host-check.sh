@@ -34,7 +34,12 @@ running_wait() {
 }
 
 get_oscap_score() {
-    config_file="$1"
+    local config_file="$1"
+    if [[ -z "${config_file}" ]]; then
+        echo "❌ get_oscap_score(): no config file provided"
+        exit 1
+    fi
+
     baseline_score=0.8
     echo "🔒 Running oscap scanner"
     # NOTE: sudo works here without password because we test this only on ami
@@ -80,8 +85,14 @@ get_oscap_score() {
 }
 
 check_ca_cert() {
-    serial=$(jq -r '.blueprint.customizations.cacerts.pem_certs[0]' "${config}" | openssl x509 -noout -serial | cut -d= -f 2- | tr '[:upper:]' '[:lower:]')
-    cn=$(jq -r '.blueprint.customizations.cacerts.pem_certs[0]' "${config}" | openssl x509 -noout -subject | sed -E 's/.*CN ?= ?//')
+    local config_file="$1"
+    if [[ -z "${config_file}" ]]; then
+        echo "❌ check_ca_cert(): no config file provided"
+        exit 1
+    fi
+
+    serial=$(jq -r '.blueprint.customizations.cacerts.pem_certs[0]' "${config_file}" | openssl x509 -noout -serial | cut -d= -f 2- | tr '[:upper:]' '[:lower:]')
+    cn=$(jq -r '.blueprint.customizations.cacerts.pem_certs[0]' "${config_file}" | openssl x509 -noout -subject | sed -E 's/.*CN ?= ?//')
 
     echo "📗 Checking CA cert anchor file serial '${serial}'"
     if ! [ -e "/etc/pki/ca-trust/source/anchors/${serial}.pem" ]; then
@@ -99,6 +110,12 @@ check_ca_cert() {
 }
 
 check_modularity() {
+    local config_file="$1"
+    if [[ -z "${config_file}" ]]; then
+        echo "❌ check_modularity(): no config file provided"
+        exit 1
+    fi
+
     echo "📗 Checking enabled modules"
 
     # Verify modules that are enabled on a system, if any. Modules can either be enabled separately
@@ -107,8 +124,8 @@ check_modularity() {
     # Caveat is that when a module is enabled yet _no_ packages are installed from it this breaks.
     # Let's not do that in the test?
 
-    modules_expected_0=$(jq -rc '.blueprint.enabled_modules[]? | .name + ":" + .stream' "${config}")
-    modules_expected_1=$(jq -rc '.blueprint.packages[]? | select(.name | startswith("@") and contains(":")) | .name' "${config}" | cut -c2-)
+    modules_expected_0=$(jq -rc '.blueprint.enabled_modules[]? | .name + ":" + .stream' "${config_file}")
+    modules_expected_1=$(jq -rc '.blueprint.packages[]? | select(.name | startswith("@") and contains(":")) | .name' "${config_file}" | cut -c2-)
 
     modules_expected="${modules_expected_0}\n${modules_expected_1}"
     modules_enabled=$(dnf module list --enabled 2>&1 | tail -n+4 | head -n -2 | tr -s ' ' | cut -d' ' -f1,2 | tr ' ' ':')
