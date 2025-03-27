@@ -242,7 +242,7 @@ func mkIotSimplifiedInstallerImgType(d distribution) imageType {
 		buildPipelines:          []string{"build"},
 		payloadPipelines:        []string{"ostree-deployment", "image", "xz", "coi-tree", "efiboot-tree", "bootiso-tree", "bootiso"},
 		exports:                 []string{"bootiso"},
-		basePartitionTablesFunc: defs.PartitionTable,
+		basePartitionTablesFunc: partitionTableLoader,
 		kernelOptions:           ostreeDeploymentKernelOptions(),
 		requiredPartitionSizes:  requiredDirectorySizes,
 	}
@@ -272,7 +272,7 @@ func mkIotRawImgType(d distribution) imageType {
 		buildPipelines:          []string{"build"},
 		payloadPipelines:        []string{"ostree-deployment", "image", "xz"},
 		exports:                 []string{"xz"},
-		basePartitionTablesFunc: defs.PartitionTable,
+		basePartitionTablesFunc: partitionTableLoader,
 		kernelOptions:           ostreeDeploymentKernelOptions(),
 
 		// Passing an empty map into the required partition sizes disables the
@@ -304,7 +304,7 @@ func mkIotQcow2ImgType(d distribution) imageType {
 		buildPipelines:          []string{"build"},
 		payloadPipelines:        []string{"ostree-deployment", "image", "qcow2"},
 		exports:                 []string{"qcow2"},
-		basePartitionTablesFunc: defs.PartitionTable,
+		basePartitionTablesFunc: partitionTableLoader,
 		kernelOptions:           ostreeDeploymentKernelOptions(),
 		requiredPartitionSizes:  requiredDirectorySizes,
 	}
@@ -329,7 +329,7 @@ func mkQcow2ImgType(d distribution) imageType {
 		buildPipelines:          []string{"build"},
 		payloadPipelines:        []string{"os", "image", "qcow2"},
 		exports:                 []string{"qcow2"},
-		basePartitionTablesFunc: defs.PartitionTable,
+		basePartitionTablesFunc: partitionTableLoader,
 		requiredPartitionSizes:  requiredDirectorySizes,
 	}
 }
@@ -362,7 +362,7 @@ func mkVmdkImgType(d distribution) imageType {
 		buildPipelines:          []string{"build"},
 		payloadPipelines:        []string{"os", "image", "vmdk"},
 		exports:                 []string{"vmdk"},
-		basePartitionTablesFunc: defs.PartitionTable,
+		basePartitionTablesFunc: partitionTableLoader,
 		requiredPartitionSizes:  requiredDirectorySizes,
 	}
 }
@@ -383,7 +383,7 @@ func mkOvaImgType(d distribution) imageType {
 		buildPipelines:          []string{"build"},
 		payloadPipelines:        []string{"os", "image", "vmdk", "ovf", "archive"},
 		exports:                 []string{"archive"},
-		basePartitionTablesFunc: defs.PartitionTable,
+		basePartitionTablesFunc: partitionTableLoader,
 		requiredPartitionSizes:  requiredDirectorySizes,
 	}
 }
@@ -481,7 +481,7 @@ func mkMinimalRawImgType(d distribution) imageType {
 		buildPipelines:          []string{"build"},
 		payloadPipelines:        []string{"os", "image", "xz"},
 		exports:                 []string{"xz"},
-		basePartitionTablesFunc: defs.PartitionTable,
+		basePartitionTablesFunc: partitionTableLoader,
 		requiredPartitionSizes:  requiredDirectorySizes,
 	}
 	if common.VersionGreaterThanOrEqual(d.osVersion, "43") {

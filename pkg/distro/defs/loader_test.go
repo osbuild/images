@@ -229,7 +229,7 @@ image_types:
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	partTable, err := defs.PartitionTable(it)
+	partTable, err := defs.PartitionTable(it, nil)
 	require.NoError(t, err)
 	assert.Equal(t, &disk.PartitionTable{
 		Size: 1_000_000_000,
@@ -276,6 +276,64 @@ image_types:
 							},
 						},
 					},
+				},
+			},
+		},
+	}, partTable)
+}
+
+func TestDefsPartitionTableOverride(t *testing.T) {
+	it := makeTestImageType(t)
+	fakeDistroYaml := `
+image_types:
+  test_type:
+    partition_table:
+      test_arch:
+        size: 1_000_000_000
+        uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
+        type: "gpt"
+        partitions:
+          - size: 1_048_576
+            bootable: true
+          - size: 2_147_483_648
+            payload_type: "filesystem"
+            payload:
+              type: "ext4"
+              label: "root"
+              mountpoint: "/"
+              fstab_options: "defaults"
+    partition_table_override:
+      condition:
+        version_greater_or_equal:
+          "1":
+            - partition_index: 0
+              size: 222_222_222
+            - partition_index: 1
+              fstab_options: "defaults,ro"
+`
+	// XXX: we cannot use distro.Name() as it will give us a name+ver
+	baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, fakeDistroYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	partTable, err := defs.PartitionTable(it, nil)
+	require.NoError(t, err)
+	assert.Equal(t, &disk.PartitionTable{
+		Size: 1_000_000_000,
+		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
+		Type: disk.PT_GPT,
+		Partitions: []disk.Partition{
+			{
+				Size:     222_222_222,
+				Bootable: true,
+			},
+			{
+				Size: 2_147_483_648,
+				Payload: &disk.Filesystem{
+					Type:         "ext4",
+					Label:        "root",
+					Mountpoint:   "/",
+					FSTabOptions: "defaults,ro",
 				},
 			},
 		},
