@@ -431,6 +431,12 @@ image_types:
   iot_raw_image:
     partition_table:
       <<: *iot_base_partition_tables
+    partition_table_override:
+      condition:
+        version_greater_or_equal:
+          "42":
+            - partition_index: 2
+              fstab_options: "defaults,ro"
 
   iot_qcow2_image:
     partition_table:
