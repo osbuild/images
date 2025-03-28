@@ -137,9 +137,13 @@ type OSCustomizations struct {
 	RHSMConfig *subscription.RHSMConfig
 	RHSMFacts  *facts.ImageOptions
 
-	// Custom directories and files to create in the image
+	// Custom directories to create in the image. The stages for the
+	// directories defined here are always added at the end of the pipeline.
 	Directories []*fsnode.Directory
-	Files       []*fsnode.File
+
+	// Custom files to create in the image. The stages for the files defined
+	// here are always added at the end of the pipeline.
+	Files []*fsnode.File
 
 	CACerts []string
 
@@ -202,6 +206,8 @@ type OS struct {
 	OSProduct string
 	OSVersion string
 	OSNick    string
+
+	inlineData []string
 }
 
 // NewOS creates a new OS pipeline. build is the build pipeline to use for
@@ -652,7 +658,7 @@ func (p *OS) serialize() osbuild.Pipeline {
 		}
 		pipeline.AddStage(subStage)
 		p.Directories = append(p.Directories, subDirs...)
-		p.Files = append(p.Files, subFiles...)
+		p.addInlineDataAndStages(&pipeline, subFiles)
 		p.EnabledServices = append(p.EnabledServices, subServices...)
 	}
 
@@ -779,15 +785,6 @@ func (p *OS) serialize() osbuild.Pipeline {
 			}))
 	}
 
-	// First create custom directories, because some of the custom files may depend on them
-	if len(p.Directories) > 0 {
-		pipeline.AddStages(osbuild.GenDirectoryNodesStages(p.Directories)...)
-	}
-
-	if len(p.Files) > 0 {
-		pipeline.AddStages(osbuild.GenFileNodesStages(p.Files)...)
-	}
-
 	// write modularity related configuration files
 	if len(p.moduleSpecs) > 0 {
 		pipeline.AddStages(osbuild.GenDNFModuleConfigStages(p.moduleSpecs)...)
@@ -807,15 +804,24 @@ func (p *OS) serialize() osbuild.Pipeline {
 		}
 
 		failsafeDir, err := fsnode.NewDirectory("/var/lib/dnf/modulefailsafe", nil, nil, nil, true)
-
 		if err != nil {
 			panic("failed to create module failsafe directory")
 		}
 
 		pipeline.AddStages(osbuild.GenDirectoryNodesStages([]*fsnode.Directory{failsafeDir})...)
-		pipeline.AddStages(osbuild.GenFileNodesStages(failsafeFiles)...)
+		p.addInlineDataAndStages(&pipeline, failsafeFiles)
+	}
 
-		p.Files = append(p.Files, failsafeFiles...)
+	// First create custom directories, because some of the custom files may depend on them
+	if len(p.Directories) > 0 {
+		pipeline.AddStages(osbuild.GenDirectoryNodesStages(p.Directories)...)
+	}
+
+	// Custom files (from the blueprint) are often used to create systemd
+	// units, so let's make sure they get created before the systemd stage that
+	// will probably want to enable them
+	if len(p.Files) > 0 {
+		p.addInlineDataAndStages(&pipeline, p.Files)
 	}
 
 	enabledServices := []string{}
@@ -850,10 +856,8 @@ func (p *OS) serialize() osbuild.Pipeline {
 	}
 
 	if p.FIPS {
-		p.Files = append(p.Files, osbuild.GenFIPSFiles()...)
-		for _, stage := range osbuild.GenFIPSStages() {
-			pipeline.AddStage(stage)
-		}
+		pipeline.AddStages(osbuild.GenFIPSStages()...)
+		p.addInlineDataAndStages(&pipeline, osbuild.GenFIPSFiles())
 	}
 
 	// NOTE: We need to run the OpenSCAP stages as the last stage before SELinux
@@ -882,11 +886,10 @@ func (p *OS) serialize() osbuild.Pipeline {
 			}
 
 			if len(files) > 0 {
-				p.Files = append(p.Files, files...)
-				pipeline.AddStages(osbuild.GenFileNodesStages(files)...)
+				p.addInlineDataAndStages(&pipeline, files)
 			}
 		}
-		pipeline.AddStage(osbuild.NewCAStageStage())
+		pipeline.AddStage(osbuild.NewUpdateCATrustStage())
 	}
 
 	if p.MachineIdUninitialized {
@@ -975,12 +978,16 @@ func (p *OS) Platform() platform.Platform {
 }
 
 func (p *OS) getInline() []string {
-	inlineData := []string{}
+	return p.inlineData
+}
 
-	// inline data for custom files
-	for _, file := range p.Files {
-		inlineData = append(inlineData, string(file.Data()))
+// addInlineDataAndStages generates stages for creating files and adds them to
+// the pipeline. It also adds their data to the inlineData for the pipeline so
+// that the appropriate sources are created.
+func (p *OS) addInlineDataAndStages(pipeline *osbuild.Pipeline, files []*fsnode.File) {
+	pipeline.AddStages(osbuild.GenFileNodesStages(files)...)
+
+	for _, file := range files {
+		p.inlineData = append(p.inlineData, string(file.Data()))
 	}
-
-	return inlineData
 }
