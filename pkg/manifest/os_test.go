@@ -166,6 +166,17 @@ func TestBootupdStage(t *testing.T) {
 	require.NotNil(t, st)
 }
 
+func TestInsightsClientConfigStage(t *testing.T) {
+	os := manifest.NewTestOS()
+	os.OSCustomizations.InsightsClientConfig = &osbuild.InsightsClientConfigStageOptions{
+		Proxy: "some-proxy",
+		Path:  "some/path",
+	}
+	pipeline := os.Serialize()
+	st := manifest.FindStage("org.osbuild.insights-client.config", pipeline.Stages)
+	require.NotNil(t, st)
+}
+
 func TestTomlLibUsedNoneByDefault(t *testing.T) {
 	os := manifest.NewTestOS()
 	buildPkgs := os.GetBuildPackages(manifest.DISTRO_FEDORA)

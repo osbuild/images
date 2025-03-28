@@ -228,6 +228,9 @@ func osCustomizations(
 	var subscriptionStatus subscription.RHSMStatus
 	if options.Subscription != nil {
 		subscriptionStatus = subscription.RHSMConfigWithSubscription
+		if options.Subscription.Proxy != "" {
+			osc.InsightsClientConfig = &osbuild.InsightsClientConfigStageOptions{Proxy: options.Subscription.Proxy}
+		}
 	} else {
 		subscriptionStatus = subscription.RHSMConfigNoSubscription
 	}
