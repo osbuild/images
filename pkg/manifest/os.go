@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/osbuild/images/data/ukidirect"
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/environment"
 	"github.com/osbuild/images/internal/workload"
@@ -137,9 +138,13 @@ type OSCustomizations struct {
 	RHSMConfig *subscription.RHSMConfig
 	RHSMFacts  *facts.ImageOptions
 
-	// Custom directories and files to create in the image
+	// Custom directories to create in the image. The stages for the
+	// directories defined here are always added at the end of the pipeline.
 	Directories []*fsnode.Directory
-	Files       []*fsnode.File
+
+	// Custom files to create in the image. The stages for the files defined
+	// here are always added at the end of the pipeline.
+	Files []*fsnode.File
 
 	CACerts []string
 
@@ -202,6 +207,8 @@ type OS struct {
 	OSProduct string
 	OSVersion string
 	OSNick    string
+
+	inlineData []string
 }
 
 // NewOS creates a new OS pipeline. build is the build pipeline to use for
@@ -485,6 +492,15 @@ func (p *OS) serialize() osbuild.Pipeline {
 		// https://github.com/osbuild/images/issues/624
 		rpmOptions.DisableDracut = true
 	}
+	if p.platform.GetBootloader() == platform.BOOTLOADER_UKI && p.PartitionTable != nil {
+		espMountpoint, err := findESPMountpoint(p.PartitionTable)
+		if err != nil {
+			panic(err)
+		}
+		rpmOptions.KernelInstallEnv = &osbuild.KernelInstallEnv{
+			BootRoot: espMountpoint,
+		}
+	}
 	pipeline.AddStage(osbuild.NewRPMStage(rpmOptions, osbuild.NewRpmStageSourceFilesInputs(p.packageSpecs)))
 
 	if !p.NoBLS {
@@ -652,7 +668,7 @@ func (p *OS) serialize() osbuild.Pipeline {
 		}
 		pipeline.AddStage(subStage)
 		p.Directories = append(p.Directories, subDirs...)
-		p.Files = append(p.Files, subFiles...)
+		p.addFiles(&pipeline, subFiles)
 		p.EnabledServices = append(p.EnabledServices, subServices...)
 	}
 
@@ -689,63 +705,48 @@ func (p *OS) serialize() osbuild.Pipeline {
 		}
 		pipeline.AddStages(fsCfgStages...)
 
-		var bootloader *osbuild.Stage
-		switch p.platform.GetArch() {
-		case arch.ARCH_S390X:
-			bootloader = osbuild.NewZiplStage(new(osbuild.ZiplStageOptions))
-		default:
-			if p.NoBLS {
-				// BLS entries not supported: use grub2.legacy
-				id := "76a22bf4-f153-4541-b6c7-0332c0dfaeac"
-				product := osbuild.GRUB2Product{
-					Name:    p.OSProduct,
-					Version: p.OSVersion,
-					Nick:    p.OSNick,
-				}
-
-				_, err := rpmmd.GetVerStrFromPackageSpecList(p.packageSpecs, "dracut-config-rescue")
-				hasRescue := err == nil
-				bootloader = osbuild.NewGrub2LegacyStage(
-					osbuild.NewGrub2LegacyStageOptions(
-						p.Grub2Config,
-						p.PartitionTable,
-						kernelOptions,
-						p.platform.GetBIOSPlatform(),
-						p.platform.GetUEFIVendor(),
-						osbuild.MakeGrub2MenuEntries(id, p.kernelVer, product, hasRescue),
-					),
-				)
-			} else {
-				options := osbuild.NewGrub2StageOptions(pt,
-					strings.Join(kernelOptions, " "),
-					p.kernelVer,
-					p.platform.GetUEFIVendor() != "",
-					p.platform.GetBIOSPlatform(),
-					p.platform.GetUEFIVendor(), false)
-				if cfg := p.Grub2Config; cfg != nil {
-					// TODO: don't store Grub2Config in OSPipeline, making the overrides unnecessary
-					// grub2.Config.Default is owned and set by `NewGrub2StageOptionsUnified`
-					// and thus we need to preserve it
-					if options.Config != nil {
-						cfg.Default = options.Config.Default
-					}
-
-					options.Config = cfg
-				}
-				if p.KernelOptionsBootloader {
-					options.WriteCmdLine = nil
-					if options.UEFI != nil {
-						options.UEFI.Unified = false
-					}
-				}
-				bootloader = osbuild.NewGRUB2Stage(options)
+		switch p.platform.GetBootloader() {
+		case platform.BOOTLOADER_GRUB2:
+			pipeline.AddStage(grubStage(p, pt, kernelOptions))
+			if !p.KernelOptionsBootloader || p.platform.GetArch() == arch.ARCH_S390X {
+				pipeline = prependKernelCmdlineStage(pipeline, rootUUID, kernelOptions)
 			}
-		}
-
-		pipeline.AddStage(bootloader)
-
-		if !p.KernelOptionsBootloader || p.platform.GetArch() == arch.ARCH_S390X {
+		case platform.BOOTLOADER_ZIPL:
+			pipeline.AddStage(osbuild.NewZiplStage(new(osbuild.ZiplStageOptions)))
 			pipeline = prependKernelCmdlineStage(pipeline, rootUUID, kernelOptions)
+		case platform.BOOTLOADER_UKI:
+			espMountpoint, err := findESPMountpoint(pt)
+			if err != nil {
+				panic(err)
+			}
+			csvfile, err := ukiBootCSVfile(espMountpoint, p.platform.GetArch(), p.kernelVer, p.platform.GetUEFIVendor())
+			if err != nil {
+				panic(err)
+			}
+			p.addFiles(&pipeline, []*fsnode.File{csvfile})
+
+			// the kernel install override must be added before the RPM stage
+			// because it needs to be picked up by the kernel installation
+			// script phase
+			kernelInstallFile, err := maybeCreateKernelInstallOverride(p.packageSpecs)
+			if err != nil {
+				panic(err)
+			}
+
+			if kernelInstallFile != nil {
+				// create the parent directory
+				dirNode, err := fsnode.NewDirectory(filepath.Dir(kernelInstallFile.Path()), nil, nil, nil, true)
+				if err != nil {
+					panic(err)
+				}
+
+				dirStages := osbuild.GenDirectoryNodesStages([]*fsnode.Directory{dirNode})
+				fileStages := osbuild.GenFileNodesStages([]*fsnode.File{kernelInstallFile})
+				kernelInstallStages := append(dirStages, fileStages...)
+				pipeline.Stages = append(kernelInstallStages, pipeline.Stages...)
+				p.inlineData = append(p.inlineData, string(kernelInstallFile.Data()))
+			}
+
 		}
 	}
 
@@ -779,15 +780,6 @@ func (p *OS) serialize() osbuild.Pipeline {
 			}))
 	}
 
-	// First create custom directories, because some of the custom files may depend on them
-	if len(p.Directories) > 0 {
-		pipeline.AddStages(osbuild.GenDirectoryNodesStages(p.Directories)...)
-	}
-
-	if len(p.Files) > 0 {
-		pipeline.AddStages(osbuild.GenFileNodesStages(p.Files)...)
-	}
-
 	// write modularity related configuration files
 	if len(p.moduleSpecs) > 0 {
 		pipeline.AddStages(osbuild.GenDNFModuleConfigStages(p.moduleSpecs)...)
@@ -807,15 +799,24 @@ func (p *OS) serialize() osbuild.Pipeline {
 		}
 
 		failsafeDir, err := fsnode.NewDirectory("/var/lib/dnf/modulefailsafe", nil, nil, nil, true)
-
 		if err != nil {
 			panic("failed to create module failsafe directory")
 		}
 
 		pipeline.AddStages(osbuild.GenDirectoryNodesStages([]*fsnode.Directory{failsafeDir})...)
-		pipeline.AddStages(osbuild.GenFileNodesStages(failsafeFiles)...)
+		p.addFiles(&pipeline, failsafeFiles)
+	}
 
-		p.Files = append(p.Files, failsafeFiles...)
+	// First create custom directories, because some of the custom files may depend on them
+	if len(p.Directories) > 0 {
+		pipeline.AddStages(osbuild.GenDirectoryNodesStages(p.Directories)...)
+	}
+
+	// Custom files (from the blueprint) are often used to create systemd
+	// units, so let's make sure they get created before the systemd stage that
+	// will probably want to enable them
+	if len(p.Files) > 0 {
+		p.addFiles(&pipeline, p.Files)
 	}
 
 	enabledServices := []string{}
@@ -850,10 +851,8 @@ func (p *OS) serialize() osbuild.Pipeline {
 	}
 
 	if p.FIPS {
-		p.Files = append(p.Files, osbuild.GenFIPSFiles()...)
-		for _, stage := range osbuild.GenFIPSStages() {
-			pipeline.AddStage(stage)
-		}
+		pipeline.AddStages(osbuild.GenFIPSStages()...)
+		p.addFiles(&pipeline, osbuild.GenFIPSFiles())
 	}
 
 	// NOTE: We need to run the OpenSCAP stages as the last stage before SELinux
@@ -882,11 +881,10 @@ func (p *OS) serialize() osbuild.Pipeline {
 			}
 
 			if len(files) > 0 {
-				p.Files = append(p.Files, files...)
-				pipeline.AddStages(osbuild.GenFileNodesStages(files)...)
+				p.addFiles(&pipeline, files)
 			}
 		}
-		pipeline.AddStage(osbuild.NewCAStageStage())
+		pipeline.AddStage(osbuild.NewUpdateCATrustStage())
 	}
 
 	if p.MachineIdUninitialized {
@@ -970,17 +968,158 @@ func usersFirstBootOptions(users []users.User) *osbuild.FirstBootStageOptions {
 	return options
 }
 
+func grubStage(p *OS, pt *disk.PartitionTable, kernelOptions []string) *osbuild.Stage {
+	if p.NoBLS {
+		// BLS entries not supported: use grub2.legacy
+		id := "76a22bf4-f153-4541-b6c7-0332c0dfaeac"
+		product := osbuild.GRUB2Product{
+			Name:    p.OSProduct,
+			Version: p.OSVersion,
+			Nick:    p.OSNick,
+		}
+
+		_, err := rpmmd.GetVerStrFromPackageSpecList(p.packageSpecs, "dracut-config-rescue")
+		hasRescue := err == nil
+		return osbuild.NewGrub2LegacyStage(
+			osbuild.NewGrub2LegacyStageOptions(
+				p.Grub2Config,
+				p.PartitionTable,
+				kernelOptions,
+				p.platform.GetBIOSPlatform(),
+				p.platform.GetUEFIVendor(),
+				osbuild.MakeGrub2MenuEntries(id, p.kernelVer, product, hasRescue),
+			),
+		)
+	} else {
+		options := osbuild.NewGrub2StageOptions(pt,
+			strings.Join(kernelOptions, " "),
+			p.kernelVer,
+			p.platform.GetUEFIVendor() != "",
+			p.platform.GetBIOSPlatform(),
+			p.platform.GetUEFIVendor(), false)
+		if cfg := p.Grub2Config; cfg != nil {
+			// TODO: don't store Grub2Config in OSPipeline, making the overrides unnecessary
+			// grub2.Config.Default is owned and set by `NewGrub2StageOptionsUnified`
+			// and thus we need to preserve it
+			if options.Config != nil {
+				cfg.Default = options.Config.Default
+			}
+
+			options.Config = cfg
+		}
+		if p.KernelOptionsBootloader {
+			options.WriteCmdLine = nil
+			if options.UEFI != nil {
+				options.UEFI.Unified = false
+			}
+		}
+		return osbuild.NewGRUB2Stage(options)
+	}
+}
+
+// ukiBootCSVfile creates a file node for the csv file in the ESP which
+// controls the fallback boot to the UKI.
+// NOTE: This is a temporary workaround. We expect that the kernel-bootcfg
+// command from the python3-virt-firmware package will gain the ability to
+// write these files offline during the RHEL 9.7 / 10.1 development cycle.
+func ukiBootCSVfile(espMountpoint string, architecture arch.Arch, kernelVer, vendor string) (*fsnode.File, error) {
+	shortArch := ""
+	switch architecture {
+	case arch.ARCH_AARCH64:
+		shortArch = "aa64"
+	case arch.ARCH_X86_64:
+		shortArch = "x64"
+	default:
+		return nil, fmt.Errorf("ukiBootCSVfile: UKIs are only supported for x86_64 and aarch64")
+	}
+
+	kernelFilename := fmt.Sprintf("ffffffffffffffffffffffffffffffff-%s.efi", kernelVer)
+	data := fmt.Sprintf("shim%s.efi,%s,\\EFI\\Linux\\%s ,UKI bootentry\n", shortArch, vendor, kernelFilename)
+
+	csvPath := filepath.Join(espMountpoint, "EFI", vendor, fmt.Sprintf("BOOT%s.CSV", strings.ToUpper(shortArch)))
+
+	return fsnode.NewFile(csvPath, nil, nil, nil, common.EncodeUTF16le(data))
+}
+
+func findESPMountpoint(pt *disk.PartitionTable) (string, error) {
+	// the ESP in our images is always at /boot/efi, but let's make this more
+	// flexible and future proof by finding the ESP mountpoint from the
+	// partition table
+	espMountpoint := ""
+	_ = pt.ForEachMountable(func(mnt disk.Mountable, path []disk.Entity) error {
+		parent := path[1]
+		if partition, ok := parent.(*disk.Partition); ok {
+			// ESP filesystem parent must be a plain partition
+			if partition.Type != disk.EFISystemPartitionGUID {
+				return nil
+			}
+
+			// found ESP filesystem
+			espMountpoint = mnt.GetMountpoint()
+		}
+		return nil
+	})
+
+	if espMountpoint == "" {
+		return "", fmt.Errorf("failed to find mountpoint for ESP when generating boot CSV file")
+	}
+
+	return espMountpoint, nil
+}
+
+// The 99-uki-uefi-setup.install script, prior to v25.3 of the uki-direct
+// package, would run `bootctl -p` to discover the ESP [1]. This doesn't work
+// in osbuild because the system isn't booted or live. Since v25.3, the install
+// script respects the $BOOT_ROOT env var that we set in osbuild during the
+// org.osbuild.rpm stage.
+//
+// This function generates a file node to add the latest install script (v25.3)
+// to /etc/kernel/install.d/99-uki-uefi-setup.install when needed.
+// The updated package is expected to be released in RHEL 9.7 and 10.1.
+//
+// The function will return nil if the uki-direct package includes the fix
+// (v25.3+) or if the uki-direct package is not included in the package list.
+//
+// [1] https://gitlab.com/kraxel/virt-firmware/-/commit/ca385db4f74a4d542455b9d40c91c8448c7be90c
+func maybeCreateKernelInstallOverride(packages []rpmmd.PackageSpec) (*fsnode.File, error) {
+	ukiDirectVer, err := rpmmd.GetVerStrFromPackageSpecList(packages, "uki-direct")
+	if err != nil {
+		// the uki-direct package isn't in the list: no override necessary
+		return nil, nil
+	}
+
+	// The GetVerStrFromPackageSpecList function returns
+	// <version>-<release>.<arch>. For the real package version, this doesn't
+	// appear to cause any issues with the version parser used by
+	// VersionLessThan. If a mock depsolver is used this can cause issues
+	// (Malformed version: 0-8.fk1.x86_64). Make sure we only use the <version>
+	// component to avoid issues.
+	ukiDirectVer = strings.SplitN(ukiDirectVer, "-", 2)[0]
+
+	if common.VersionLessThan(ukiDirectVer, "25.3") {
+		// add the patched drop-in file to /etc/kernel/install.d/
+		return ukidirect.KernelInstallScript()
+	}
+
+	// package is new enough
+	return nil, nil
+}
+
 func (p *OS) Platform() platform.Platform {
 	return p.platform
 }
 
 func (p *OS) getInline() []string {
-	inlineData := []string{}
+	return p.inlineData
+}
 
-	// inline data for custom files
-	for _, file := range p.Files {
-		inlineData = append(inlineData, string(file.Data()))
+// addFiles generates stages for creating files and adds them to the pipeline.
+// It also adds their data to the inlineData for the pipeline so that the
+// appropriate sources are created.
+func (p *OS) addFiles(pipeline *osbuild.Pipeline, files []*fsnode.File) {
+	pipeline.AddStages(osbuild.GenFileNodesStages(files)...)
+
+	for _, file := range files {
+		p.inlineData = append(p.inlineData, string(file.Data()))
 	}
-
-	return inlineData
 }
