@@ -63,8 +63,28 @@ func (po *partitionTablesOverrides) Apply(it distro.ImageType, pt *disk.Partitio
 		return nil
 	}
 	cond := po.Conditional
-	_, distroVersion := splitDistroNameVer(it.Arch().Distro().Name())
+	// XXX: should we strings.Replace("-", "_") for distroName too?
+	distroName, distroVersion := splitDistroNameVer(it.Arch().Distro().Name())
 
+	if distroNameOverrides, ok := cond.DistroName[distroName]; ok {
+		for _, overrideOp := range distroNameOverrides {
+			if err := overrideOp.Apply(pt); err != nil {
+				return err
+			}
+		}
+	}
+	for ltVer, ltOverrides := range cond.VersionLessThan {
+		if r, ok := replacements[ltVer]; ok {
+			ltVer = r
+		}
+		if common.VersionLessThan(distroVersion, ltVer) {
+			for _, overrideOp := range ltOverrides {
+				if err := overrideOp.Apply(pt); err != nil {
+					return err
+				}
+			}
+		}
+	}
 	for gteqVer, geOverrides := range cond.VersionGreaterOrEqual {
 		if r, ok := replacements[gteqVer]; ok {
 			gteqVer = r
@@ -82,7 +102,9 @@ func (po *partitionTablesOverrides) Apply(it distro.ImageType, pt *disk.Partitio
 }
 
 type partitionTablesOverwriteConditional struct {
+	VersionLessThan       map[string][]partitionTablesOverrideOp `yaml:"version_less_than,omitempty"`
 	VersionGreaterOrEqual map[string][]partitionTablesOverrideOp `yaml:"version_greater_or_equal,omitempty"`
+	DistroName            map[string][]partitionTablesOverrideOp `yaml:"distro_name,omitempty"`
 }
 
 type partitionTablesOverrideOp map[string]interface{}

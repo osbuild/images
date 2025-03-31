@@ -309,6 +309,14 @@ image_types:
               bootable: false
             - partition_index: 1
               fstab_options: "defaults,ro"
+        version_less_than:
+          "2":
+            - partition_index: 1
+              label: "root-lt-2"
+        distro_name:
+          "test-distro":
+            - partition_index: 1
+              mountpoint: "/overriden_by_distro_name"
 `
 
 func TestDefsPartitionTableOverride(t *testing.T) {
@@ -333,8 +341,8 @@ func TestDefsPartitionTableOverride(t *testing.T) {
 				Size: 2_147_483_648,
 				Payload: &disk.Filesystem{
 					Type:         "ext4",
-					Label:        "root",
-					Mountpoint:   "/",
+					Label:        "root-lt-2",
+					Mountpoint:   "/overriden_by_distro_name",
 					FSTabOptions: "defaults,ro",
 				},
 			},
