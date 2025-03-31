@@ -786,16 +786,23 @@ image_types:
     partition_table_override:
       condition:
         # XXX: rework this to something more sensible/readable
-        # maybe:
+        # maybe (cant be seq as those cannot be merged, must be map):
+        # XXX2: the implementation will be a bit annoying because it requires
+        # to find all less_than conditionas and sort them
         # partition_table_modify:
-        # - select:
+        # we would still have to version sort to ensure stuff is applied
+        # in the right order
+        # KEEP FOR NOW as is?
+        # "8.10-bumps-size"
+        #   select:
         #     mount_point: "/boot"
         #     version_less_than: "8.10"
         #     arch: aarch64
         #   action: override  # default
         #   overrides:
         #     size: 536_870_912  # 512MiB
-        # - select:
+        # "x86-has-no-boot-efi"
+        #   select:
         #     mount_point: "/boot/efi"
         #     arch: x86_64
         #     action: delete

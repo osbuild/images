@@ -469,6 +469,9 @@
       condition:
         version_less_than: &default_partition_table_override_lt
           "9.3":
+            # XXX: use map here instead of seq to ensure that we can
+            # merge? downside is that map keys become random so we
+            # can not rely on order
             - partition_mount_point: "/boot"
               size: 524_288_000  # 500 MiB
           "9.4":
