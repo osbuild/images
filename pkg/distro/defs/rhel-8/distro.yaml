@@ -675,29 +675,13 @@
           - *edge_base_partition_table_part_boot
           - *edge_base_partition_table_part_root
 
-    ec2_partition_tables_lt_8_9: &ec2_partition_tables_lt_8_9
+    ec2_partition_tables: &ec2_partition_tables
       x86_64:
         uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
         type: "gpt"
         partitions:
-          - <<: *default_partition_table_part_bios
-          - &ec2_partition_table_part_root_lt_8_9
-            size: 2_147_483_648  # 2 * datasizes.GibiByte,
-            type: *filesystem_data_guid
-            uuid: *root_partition_uuid
-            payload_type: "filesystem"
-            payload: &ec2_partition_table_part_root_payload
-              type: "xfs"
-              label: "root"
-              mountpoint: "/"
-              fstab_options: "defaults"
-              fstab_freq: 0
-              fstab_passno: 0
-      aarch64: &ec2_partition_table_aarch64
-        uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
-        type: "gpt"
-        partitions:
-          - &ec2_partition_table_part_efi_lt_8_9
+          - *default_partition_table_part_bios
+          - &ec2_partition_table_part_efi
             size: 209_715_200  # 200 MiB
             type: *efi_system_partition_guid
             uuid: *efi_system_partition_uuid
@@ -710,8 +694,8 @@
               fstab_options: "defaults,uid=0,gid=0,umask=077,shortname=winnt"
               fstab_freq: 0
               fstab_passno: 2
-          - &ec2_partition_table_part_boot_lt_8_9
-            size: 536_870_912  # 512 MiB
+          - &ec2_partition_table_part_boot
+            size: 1_073_741_824  # 1 GiB
             type: *filesystem_data_guid
             uuid: *data_partition_uuid
             payload_type: "filesystem"
@@ -721,45 +705,24 @@
               fstab_options: "defaults"
               fstab_freq: 0
               fstab_passno: 0
-          - *ec2_partition_table_part_root_lt_8_9
-
-    ec2_partition_tables: &ec2_partition_tables
-      x86_64:
-        uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
-        type: "gpt"
-        partitions:
-          - *default_partition_table_part_bios
-          - <<: *ec2_partition_table_part_efi_lt_8_9
           - &ec2_partition_table_part_root
             size: 2_147_483_648  # 2 * datasizes.GibiByte,
             type: *filesystem_data_guid
             uuid: *root_partition_uuid
             payload_type: "filesystem"
-            payload: &ec2_partition_table_part_root_payload_ge_8_9
+            payload:
               type: "xfs"
               label: "root"
               mountpoint: "/"
               fstab_options: "defaults"
               fstab_freq: 0
               fstab_passno: 0
-      aarch64: &ec2_partition_table_aarch64_ge_8_9
+      aarch64:
         uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
         type: "gpt"
         partitions:
-          - *ec2_partition_table_part_efi_lt_8_9
-          - <<: *ec2_partition_table_part_boot_lt_8_9
-          - *ec2_partition_table_part_root
-    # x86_64 - without /boot
-    # aarch  - <= 8.9 - 512MiB, 8.10 and centos: 1 GiB
-    ec2_partition_tables_ge_8_10: &ec2_partition_tables_ge_8_10
-      <<: *ec2_partition_tables
-      aarch64: &ec2_partition_table_aarch64_ge_8_10
-        uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
-        type: "gpt"
-        partitions:
-          - *ec2_partition_table_part_efi_lt_8_9
-          - <<: *ec2_partition_table_part_boot_lt_8_9
-            size: 1_073_741_824  # 1 GiB
+          - *ec2_partition_table_part_efi
+          - *ec2_partition_table_part_boot
           - *ec2_partition_table_part_root
 
 image_types:
