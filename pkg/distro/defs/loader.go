@@ -70,7 +70,7 @@ func (po *partitionTablesOverrides) Apply(it distro.ImageType, pt *disk.Partitio
 
 	if distroNameOverrides, ok := cond.DistroName[distroName]; ok {
 		for _, overrideOp := range distroNameOverrides {
-			if err := overrideOp.Apply(pt); err != nil {
+			if err := overrideOp.Apply(it, pt); err != nil {
 				return err
 			}
 		}
@@ -81,7 +81,7 @@ func (po *partitionTablesOverrides) Apply(it distro.ImageType, pt *disk.Partitio
 		}
 		if common.VersionLessThan(distroVersion, ltVer) {
 			for _, overrideOp := range ltOverrides {
-				if err := overrideOp.Apply(pt); err != nil {
+				if err := overrideOp.Apply(it, pt); err != nil {
 					return err
 				}
 			}
@@ -93,7 +93,7 @@ func (po *partitionTablesOverrides) Apply(it distro.ImageType, pt *disk.Partitio
 		}
 		if common.VersionGreaterThanOrEqual(distroVersion, gteqVer) {
 			for _, overrideOp := range geOverrides {
-				if err := overrideOp.Apply(pt); err != nil {
+				if err := overrideOp.Apply(it, pt); err != nil {
 					return err
 				}
 			}
@@ -218,7 +218,7 @@ func (op partitionTablesOverrideOp) findSelectedPart(pt *disk.PartitionTable) (i
 	return -1, fmt.Errorf("no partition selector found, please provide one of %q", slices.Sorted(maps.Keys(partitionSelectors)))
 }
 
-func (op partitionTablesOverrideOp) Apply(pt *disk.PartitionTable) error {
+func (op partitionTablesOverrideOp) Apply(it distro.ImageType, pt *disk.PartitionTable) error {
 	selectPart, err := op.findSelectedPart(pt)
 	if err != nil {
 		return err
@@ -226,6 +226,14 @@ func (op partitionTablesOverrideOp) Apply(pt *disk.PartitionTable) error {
 	// not finding the selection is not always an error
 	if selectPart < 0 {
 		return nil
+	}
+
+	if archOnlyIf, ok := op["partition_arch_only"]; ok {
+		if archOnly, ok := archOnlyIf.(string); ok {
+			if archOnly != it.Arch().Name() {
+				return nil
+			}
+		}
 	}
 
 	if actionIf, ok := op["action"]; ok {
