@@ -785,6 +785,20 @@ image_types:
       <<: *ec2_partition_tables
     partition_table_override:
       condition:
+        # XXX: rework this to something more sensible/readable
+        # maybe:
+        # partition_table_modify:
+        # - select:
+        #     mount_point: "/boot"
+        #     version_less_than: "8.10"
+        #     arch: aarch64
+        #   action: override  # default
+        #   overrides:
+        #     size: 536_870_912  # 512MiB
+        # - select:
+        #     mount_point: "/boot/efi"
+        #     arch: x86_64
+        #     action: delete
         version_less_than:
           "8.10":
             - partition_mount_point: "/boot"
