@@ -121,7 +121,14 @@ func TestImageTypePipelineNames(t *testing.T) {
 							for idx, pkginc := range set.Include {
 								packages = append(packages, rpmmd.PackageSpec{
 									Name: pkginc,
-									// the exact checksum doesn't matter as long as it's a valid 256 bit hex number
+									// for most packages, the version is not
+									// required, but for some (e.g. uki-direct
+									// in images with UKI) it needs to be a
+									// valid version string that can be parsed
+									// by the version package.
+									Version: "0.0",
+									// the exact checksum doesn't matter as
+									// long as it's a valid 256 bit hex number
 									Checksum: fmt.Sprintf("sha256:%064x", idx),
 								})
 							}

@@ -400,6 +400,13 @@ func (p *OS) getBuildPackages(distro Distro) []string {
 		packages = append(packages, tomlPkgsFor(distro)...)
 	}
 
+	if p.platform.GetBootloader() == platform.BOOTLOADER_UKI {
+		// Only required if the hmac stage is added, which depends on the
+		// version of uki-direct. Add it conditioned just on the bootloader
+		// type for now, until we find a better way to decide.
+		packages = append(packages, "libkcapi-hmaccalc")
+	}
+
 	return packages
 }
 
@@ -735,6 +742,12 @@ func (p *OS) serialize() osbuild.Pipeline {
 				panic(err)
 			}
 			p.addInlineDataAndStages(&pipeline, []*fsnode.File{csvfile})
+
+			stages, err := maybeAddHMACandDirStage(p.packageSpecs, espMountpoint, p.kernelVer)
+			if err != nil {
+				panic(err)
+			}
+			pipeline.AddStages(stages...)
 		}
 	}
 
@@ -1060,6 +1073,61 @@ func findESPMountpoint(pt *disk.PartitionTable) (string, error) {
 	}
 
 	return espMountpoint, nil
+}
+
+// The 99-uki-uefi-setup.install script, prior to v25.3 of the uki-direct
+// package, would run `bootctl -p` to discover the ESP [1]. This doesn't work
+// in osbuild because the system isn't booted or live. Since v25.3, the install
+// script respects the $BOOT_ROOT env var that we set in osbuild during the
+// org.osbuild.rpm stage.
+//
+// This function takes care of the main issue we have with the older version of
+// the script: it generates the .hmac file for the kernel in the ESP.
+// A less critical issue is that the .extra.d/ directory for kernel addons
+// isn't created, so this function will also return a mkdir stage for that
+// directory.
+// The updated package is expected to be released in RHEL 9.7 and 10.1 (and
+// will possibly be backported to RHEL 9.6 and 10.0).
+//
+// The function will return nil if the uki-direct package includes the fix
+// (v25.3+) or if the uki-direct package is not included in the package list.
+//
+// [1] https://gitlab.com/kraxel/virt-firmware/-/commit/ca385db4f74a4d542455b9d40c91c8448c7be90c
+func maybeAddHMACandDirStage(packages []rpmmd.PackageSpec, espMountpoint, kernelVer string) ([]*osbuild.Stage, error) {
+	ukiDirectVer, err := rpmmd.GetVerStrFromPackageSpecList(packages, "uki-direct")
+	if err != nil {
+		// the uki-direct package isn't in the list: no override necessary
+		return nil, nil
+	}
+
+	// The GetVerStrFromPackageSpecList function returns
+	// <version>-<release>.<arch>. For the real package version, this doesn't
+	// appear to cause any issues with the version parser used by
+	// VersionLessThan. If a mock depsolver is used this can cause issues
+	// (Malformed version: 0-8.fk1.x86_64). Make sure we only use the <version>
+	// component to avoid issues.
+	ukiDirectVer = strings.SplitN(ukiDirectVer, "-", 2)[0]
+
+	if common.VersionLessThan(ukiDirectVer, "25.3") {
+		// generate hmac file using stage
+		kernelFilename := fmt.Sprintf("ffffffffffffffffffffffffffffffff-%s.efi", kernelVer)
+		kernelPath := filepath.Join(espMountpoint, "EFI", "Linux", kernelFilename)
+		hmacStage := osbuild.NewHMACStage(&osbuild.HMACStageOptions{
+			Paths:     []string{kernelPath},
+			Algorithm: "sha512",
+		})
+		addonsPath := kernelPath + ".extra.d"
+		addonsDir, err := fsnode.NewDirectory(addonsPath, nil, nil, nil, true)
+		if err != nil {
+			return nil, err
+		}
+		dirStages := osbuild.GenDirectoryNodesStages([]*fsnode.Directory{addonsDir})
+
+		return append([]*osbuild.Stage{hmacStage}, dirStages...), nil
+	}
+
+	// package is new enough
+	return nil, nil
 }
 
 func (p *OS) Platform() platform.Platform {
