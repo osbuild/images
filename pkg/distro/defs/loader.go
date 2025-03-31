@@ -15,6 +15,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/hashicorp/go-version"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
@@ -60,6 +61,21 @@ type partitionTablesOverrides struct {
 	Conditional partitionTablesOverwriteConditional `yaml:"condition"`
 }
 
+func versionLessThanSortedKeys(m map[string][]partitionTablesOverrideOp) []string {
+	return slices.SortedFunc(maps.Keys(m), func(a, b string) int {
+		ver1 := version.Must(version.NewVersion(a))
+		ver2 := version.Must(version.NewVersion(b))
+		switch {
+		case ver1 == ver2:
+			return 0
+		case ver2.LessThan(ver1):
+			return -1
+		default:
+			return 1
+		}
+	})
+}
+
 func (po *partitionTablesOverrides) Apply(it distro.ImageType, pt *disk.PartitionTable, replacements map[string]string) error {
 	if po == nil {
 		return nil
@@ -75,7 +91,8 @@ func (po *partitionTablesOverrides) Apply(it distro.ImageType, pt *disk.Partitio
 			}
 		}
 	}
-	for ltVer, ltOverrides := range cond.VersionLessThan {
+	for _, ltVer := range versionLessThanSortedKeys(cond.VersionLessThan) {
+		ltOverrides := cond.VersionLessThan[ltVer]
 		if r, ok := replacements[ltVer]; ok {
 			ltVer = r
 		}
@@ -87,6 +104,7 @@ func (po *partitionTablesOverrides) Apply(it distro.ImageType, pt *disk.Partitio
 			}
 		}
 	}
+	// XXX: add versionLessThanSortedKeys()
 	for gteqVer, geOverrides := range cond.VersionGreaterOrEqual {
 		if r, ok := replacements[gteqVer]; ok {
 			gteqVer = r
