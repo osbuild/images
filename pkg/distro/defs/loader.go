@@ -147,7 +147,10 @@ var partitionSelectors = map[string]bool{
 	"partition_index":       true,
 	"partition_mount_point": true,
 	"partition_selection":   true,
-	"action":                true,
+	// XXX: something is broken here, this should lead to errors
+	// but it does not for some reason
+	//"action":                true,
+	//"partition_arch_only": true,
 }
 
 func (op partitionTablesOverrideOp) checkAllConsumed(consumed ...[]string) error {
