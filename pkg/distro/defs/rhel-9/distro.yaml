@@ -899,6 +899,10 @@ image_types:
                 - "ignition"
                 - "ignition-edge"
                 - "ssh-key-dir"
+                # XXX: this is probably a bug in the original images code, there
+                # it only adds dnsmasq if version < 9.6 but because centos is 9
+                # this is always true
+                - "dnsmasq"
           version_greater_or_equal:
             "9.2":
               include:

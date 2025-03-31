@@ -400,15 +400,25 @@ func splitDistroNameVer(distroNameVer string) (string, string) {
 	// distro names, sadly go has no rsplit() so we do it manually
 	// XXX: we cannot use distroidparser here because of import cycles
 	idx := strings.LastIndex(distroNameVer, "-")
-	return distroNameVer[:idx], distroNameVer[idx+1:]
+	distroName := distroNameVer[:idx]
+	distroVer := distroNameVer[idx+1:]
+
+	// XXX: HACK for centos/fedora there are no minor versions so
+	// centos-9 is always higher than anything 9.x. as "9" translates
+	// to "9.0" in semVer we need to hack around this here
+	if !strings.Contains(distroVer, ".") {
+		distroVer += ".999"
+	}
+
+	return distroName, distroVer
 }
 
 func load(distroNameVer string) (*toplevelYAML, error) {
 	// we need to split from the right for "centos-stream-10" like
 	// distro names, sadly go has no rsplit() so we do it manually
 	// XXX: we cannot use distroidparser here because of import cycles
-	distroName, distroVersion := splitDistroNameVer(distroNameVer)
-	distroNameMajorVer := strings.SplitN(distroNameVer, ".", 2)[0]
+	distroName, distroVer := splitDistroNameVer(distroNameVer)
+	distroMajorVer := strings.SplitN(distroVer, ".", 2)[0]
 
 	// XXX: this is a short term measure, pass a set of
 	// searchPaths down the stack instead
@@ -425,12 +435,12 @@ func load(distroNameVer string) (*toplevelYAML, error) {
 	switch distroName {
 	case "rhel":
 		// rhel yaml files are under ./rhel-$majorVer
-		baseDir = distroNameMajorVer
+		baseDir = fmt.Sprintf("%s-%s", distroName, distroMajorVer)
 	case "centos":
 		// centos yaml is just rhel but we have (sadly) no symlinks
 		// in "go:embed" so we have to have this slightly ugly
 		// workaround
-		baseDir = fmt.Sprintf("rhel-%s", distroVersion)
+		baseDir = fmt.Sprintf("rhel-%s", distroMajorVer)
 	case "fedora", "test-distro":
 		// our other distros just have a single yaml dir per distro
 		// and use condition.version_gt etc
