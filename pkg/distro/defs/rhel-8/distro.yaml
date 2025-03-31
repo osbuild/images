@@ -694,17 +694,6 @@
               fstab_options: "defaults,uid=0,gid=0,umask=077,shortname=winnt"
               fstab_freq: 0
               fstab_passno: 2
-          - &ec2_partition_table_part_boot
-            size: 1_073_741_824  # 1 GiB
-            type: *filesystem_data_guid
-            uuid: *data_partition_uuid
-            payload_type: "filesystem"
-            payload:
-              type: "xfs"
-              mountpoint: "/boot"
-              fstab_options: "defaults"
-              fstab_freq: 0
-              fstab_passno: 0
           - &ec2_partition_table_part_root
             size: 2_147_483_648  # 2 * datasizes.GibiByte,
             type: *filesystem_data_guid
@@ -722,7 +711,17 @@
         type: "gpt"
         partitions:
           - *ec2_partition_table_part_efi
-          - *ec2_partition_table_part_boot
+          - &ec2_partition_table_part_boot
+            size: 1_073_741_824  # 1 GiB
+            type: *filesystem_data_guid
+            uuid: *data_partition_uuid
+            payload_type: "filesystem"
+            payload:
+              type: "xfs"
+              mountpoint: "/boot"
+              fstab_options: "defaults"
+              fstab_freq: 0
+              fstab_passno: 0
           - *ec2_partition_table_part_root
 
 image_types:
@@ -784,6 +783,19 @@ image_types:
   ec2: &ec2
     partition_table:
       <<: *ec2_partition_tables
+    partition_table_override:
+      condition:
+        version_less_than:
+          "8.10":
+            - partition_mount_point: "/boot"
+              partition_selection: ignore-missing
+              size: 536_870_912  # 512MiB
+          "8.9":
+            - partition_mount_point: "/boot/efi"
+              partition_selection: ignore-missing
+              partition_arch_only: x86_64
+              action: delete
+
     package_sets:
       - *ec2_common_pkgset
       - include:
