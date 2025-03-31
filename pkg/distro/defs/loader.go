@@ -147,6 +147,7 @@ var partitionSelectors = map[string]bool{
 	"partition_index":       true,
 	"partition_mount_point": true,
 	"partition_selection":   true,
+	"action":                true,
 }
 
 func (op partitionTablesOverrideOp) checkAllConsumed(consumed ...[]string) error {
@@ -225,6 +226,15 @@ func (op partitionTablesOverrideOp) Apply(pt *disk.PartitionTable) error {
 	// not finding the selection is not always an error
 	if selectPart < 0 {
 		return nil
+	}
+
+	if actionIf, ok := op["action"]; ok {
+		if action, ok := actionIf.(string); ok {
+			if action == "delete" {
+				pt.Partitions = slices.Delete(pt.Partitions, selectPart, selectPart+1)
+				return nil
+			}
+		}
 	}
 
 	// try to apply to partition

@@ -300,6 +300,12 @@ image_types:
               label: "root"
               mountpoint: "/"
               fstab_options: "defaults"
+          - size: 999
+            payload_type: filesystem
+            payload:
+              type: "ext4"
+              label: "just-here-to-get-deleted"
+              mountpoint: "/boot/efi"
     partition_table_override:
       condition:
         version_greater_or_equal:
@@ -309,6 +315,8 @@ image_types:
               bootable: false
             - partition_index: 1
               fstab_options: "defaults,ro"
+            - partition_mount_point: "/boot/efi"
+              action: delete
         version_less_than:
           "2":
             - partition_index: 1
