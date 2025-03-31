@@ -315,8 +315,11 @@ image_types:
               label: "root-lt-2"
         distro_name:
           "test-distro":
-            - partition_index: 1
+            - partition_mount_point: "/"
               mountpoint: "/overriden_by_distro_name"
+            - partition_mount_point: "/does-not-exists"
+              partition_selection: ignore-missing
+              size: 999_999
 `
 
 func TestDefsPartitionTableOverride(t *testing.T) {

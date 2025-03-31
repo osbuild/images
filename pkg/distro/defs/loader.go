@@ -6,8 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"maps"
 	"os"
 	"reflect"
+	"slices"
 
 	"path/filepath"
 	"sort"
@@ -140,12 +142,16 @@ func (op partitionTablesOverrideOp) applyTo(val reflect.Value) ([]string, error)
 	return consumed, nil
 }
 
+var partitionSelectors = map[string]bool{
+	// special token(s) that are always part of the overrides
+	"partition_index":       true,
+	"partition_mount_point": true,
+	"partition_selection":   true,
+}
+
 func (op partitionTablesOverrideOp) checkAllConsumed(consumed ...[]string) error {
 	// collect all consumed overrides
-	seen := map[string]bool{
-		// special token(s) that are always part of the overrides
-		"partition_index": true,
-	}
+	seen := map[string]bool{}
 	for _, cn := range consumed {
 		for _, jsonTag := range cn {
 			seen[jsonTag] = true
@@ -154,7 +160,7 @@ func (op partitionTablesOverrideOp) checkAllConsumed(consumed ...[]string) error
 	// check if we have some overrides left that are not applied, this means
 	// there was no json tag
 	for override := range op {
-		if !seen[override] {
+		if !seen[override] && !partitionSelectors[override] {
 			return fmt.Errorf("cannot find %q in partition", override)
 		}
 	}
@@ -162,17 +168,63 @@ func (op partitionTablesOverrideOp) checkAllConsumed(consumed ...[]string) error
 	return nil
 }
 
-func (op partitionTablesOverrideOp) Apply(pt *disk.PartitionTable) error {
+func (op partitionTablesOverrideOp) maybeReturnNotFoundError(notFoundErr error) (int, error) {
+	selectModeIf, ok := op["partition_selection"]
+	if ok {
+		selectMode, ok := selectModeIf.(string)
+		if ok {
+			if selectMode == "ignore-missing" {
+				return -1, nil
+			}
+		}
+	}
+
+	return 0, notFoundErr
+}
+
+func (op partitionTablesOverrideOp) findSelectedPart(pt *disk.PartitionTable) (int, error) {
 	selectPartIf, ok := op["partition_index"]
-	if !ok {
-		return fmt.Errorf("no partition_index in %q", op)
+	if ok {
+		selectPart, ok := selectPartIf.(int)
+		if !ok {
+			return -1, fmt.Errorf("partition_index must be int, got %T", selectPartIf)
+		}
+		if selectPart > len(pt.Partitions) {
+			return op.maybeReturnNotFoundError(fmt.Errorf("override %q part %v outside of partitionTable %+v", op, selectPart, pt))
+		}
+		return selectPart, nil
 	}
-	selectPart, ok := selectPartIf.(int)
-	if !ok {
-		return fmt.Errorf("partition_index must be int, got %T", selectPartIf)
+	selectMpIf, ok := op["partition_mount_point"]
+	if ok {
+		selectMp, ok := selectMpIf.(string)
+		if !ok {
+			return -1, fmt.Errorf("partition_mount_point must be string, got %T", selectMpIf)
+		}
+		// XXX: we cannot use disk.FindMountable() here as it does
+		// not expose the "entityPath"
+		for idx, part := range pt.Partitions {
+			mt, ok := part.Payload.(disk.Mountable)
+			if !ok {
+				continue
+			}
+			if mt.GetMountpoint() == selectMp {
+				return idx, nil
+			}
+		}
+		return op.maybeReturnNotFoundError(fmt.Errorf("cannot find mount_point %q in %+v: note that nested mounts inside luks/lvm/btrfs are currently unsupported, please report a bug if you need this", selectMp, pt))
 	}
-	if selectPart > len(pt.Partitions) {
-		return fmt.Errorf("override %q part %v outside of partitionTable %+v", op, selectPart, pt)
+
+	return -1, fmt.Errorf("no partition selector found, please provide one of %q", slices.Sorted(maps.Keys(partitionSelectors)))
+}
+
+func (op partitionTablesOverrideOp) Apply(pt *disk.PartitionTable) error {
+	selectPart, err := op.findSelectedPart(pt)
+	if err != nil {
+		return err
+	}
+	// not finding the selection is not always an error
+	if selectPart < 0 {
+		return nil
 	}
 
 	// try to apply to partition
