@@ -14,8 +14,8 @@ import (
 const LVMDefaultExtentSize = 4 * datasizes.MebiByte
 
 type LVMVolumeGroup struct {
-	Name        string
-	Description string
+	Name        string `json:"name,omitempty" yaml:"name,omitempty"`
+	Description string `json:"description,omitempty" yaml:"description,omitempty"`
 
 	LogicalVolumes []LVMLogicalVolume `json:"logical_volumes,omitempty" yaml:"logical_volumes,omitempty"`
 }
@@ -186,9 +186,9 @@ func (vg *LVMVolumeGroup) UnmarshalJSON(data []byte) error {
 }
 
 type LVMLogicalVolume struct {
-	Name    string
-	Size    uint64
-	Payload Entity
+	Name    string `json:"name,omitempty" yaml:"name,omitempty"`
+	Size    uint64 `json:"size,omitempty" yaml:"size,omitempty"`
+	Payload Entity `json:"payload,omitempty" yaml:"payload,omitempty"`
 }
 
 func (lv *LVMLogicalVolume) Clone() Entity {
