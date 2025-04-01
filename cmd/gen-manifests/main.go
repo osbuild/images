@@ -316,7 +316,7 @@ func mockDepsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoC
 		specSet := make([]rpmmd.PackageSpec, 0)
 		seenChksumsInc := make(map[string]bool)
 		seenChksumsExc := make(map[string]bool)
-		for _, pkgSet := range pkgSetChain {
+		for idx, pkgSet := range pkgSetChain {
 			include := pkgSet.Include
 			slices.Sort(include)
 			for _, pkgName := range include {
@@ -363,6 +363,31 @@ func mockDepsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoC
 
 				specSet = append(specSet, spec)
 			}
+
+			// generate pseudo packages for the config of each transaction
+			var setRepoNames []string
+			for _, setRepo := range pkgSet.Repositories {
+				setRepoNames = append(setRepoNames, setRepo.Name)
+			}
+			configPackageName := fmt.Sprintf("%s:transaction-%d-repos:%s", name, idx, strings.Join(setRepoNames, "+"))
+			if pkgSet.InstallWeakDeps {
+				configPackageName += "-weak"
+			}
+			depsolveConfigPackage := rpmmd.PackageSpec{
+				Name:           configPackageName,
+				Epoch:          0,
+				Version:        "",
+				Release:        "",
+				Arch:           "noarch",
+				RemoteLocation: fmt.Sprintf("https://example.com/repo/packages/%s", configPackageName),
+				Checksum:       fmt.Sprintf("sha256:%x", sha256.Sum256([]byte(configPackageName))),
+				Secrets:        "",
+				CheckGPG:       false,
+				IgnoreSSL:      false,
+				Path:           "",
+				RepoID:         "",
+			}
+			specSet = append(specSet, depsolveConfigPackage)
 		}
 
 		// generate pseudo packages for the repos
