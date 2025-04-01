@@ -366,3 +366,45 @@ image_config:
 		Timezone: common.ToPtr("OverrideTZ"),
 	}, imgConfig)
 }
+
+func TestDefsPartitionTableErrorsNotForImageType(t *testing.T) {
+	it := makeTestImageType(t)
+
+	badDistroYamlUnknownImgType := `
+image_types:
+  other_image_type:
+    partition_table:
+      test_arch:
+        partitions:
+          - size: 1_048_576
+`
+	badDistroYamlMissingPartitionTable := `
+image_types:
+  test_type:
+`
+	badDistroYamlUnknownArch := `
+image_types:
+  test_type:
+    partition_table:
+      other_arch:
+        partitions:
+          - size: 1_048_576
+`
+
+	for _, tc := range []struct {
+		badYaml     string
+		expectedErr error
+	}{
+		{badDistroYamlUnknownImgType, defs.ErrImageTypeNotFound},
+		{badDistroYamlMissingPartitionTable, defs.ErrNoPartitionTableForImgType},
+		{badDistroYamlUnknownArch, defs.ErrNoPartitionTableForArch},
+	} {
+		// XXX: we cannot use distro.Name() as it will give us a name+ver
+		baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, tc.badYaml)
+		restore := defs.MockDataFS(baseDir)
+		defer restore()
+
+		_, err := defs.PartitionTable(it, nil)
+		assert.ErrorIs(t, err, tc.expectedErr)
+	}
+}
