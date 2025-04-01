@@ -1,6 +1,7 @@
 package fedora
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -16,6 +17,7 @@ import (
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distro/defs"
 	"github.com/osbuild/images/pkg/experimentalflags"
 	"github.com/osbuild/images/pkg/image"
 	"github.com/osbuild/images/pkg/manifest"
@@ -56,10 +58,8 @@ type imageType struct {
 	// rpmOstree: iot/ostree
 	rpmOstree bool
 	// bootable image
-	bootable bool
-	// List of valid arches for the image type
-	basePartitionTablesFunc func(distro.ImageType) (*disk.PartitionTable, error)
-	requiredPartitionSizes  map[string]uint64
+	bootable               bool
+	requiredPartitionSizes map[string]uint64
 }
 
 func (t *imageType) Name() string {
@@ -139,12 +139,16 @@ func (t *imageType) BootMode() platform.BootMode {
 	return platform.BOOT_NONE
 }
 
+func (t *imageType) BasePartitionTable() (*disk.PartitionTable, error) {
+	return defs.PartitionTable(t, VersionReplacements())
+}
+
 func (t *imageType) getPartitionTable(
 	customizations *blueprint.Customizations,
 	options distro.ImageOptions,
 	rng *rand.Rand,
 ) (*disk.PartitionTable, error) {
-	basePartitionTable, err := t.basePartitionTablesFunc(t)
+	basePartitionTable, err := t.BasePartitionTable()
 	if err != nil {
 		return nil, err
 	}
@@ -207,10 +211,10 @@ func (t *imageType) getDefaultInstallerConfig() (*distro.InstallerConfig, error)
 }
 
 func (t *imageType) PartitionType() disk.PartitionTableType {
-	if t.basePartitionTablesFunc == nil {
+	basePartitionTable, err := t.BasePartitionTable()
+	if errors.Is(err, defs.ErrNoPartitionTableForImgType) {
 		return disk.PT_NONE
 	}
-	basePartitionTable, err := t.basePartitionTablesFunc(t)
 	if err != nil {
 		panic(err)
 	}
