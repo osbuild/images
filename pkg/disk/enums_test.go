@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v3"
 
 	"github.com/osbuild/images/pkg/disk"
 )
@@ -53,6 +54,28 @@ func TestEnumPartitionTableTypeJSON(t *testing.T) {
 	var unmarshaledNum disk.PartitionTableType
 	err := json.Unmarshal([]byte(`"bad"`), &unmarshaledNum)
 	assert.EqualError(t, err, `unknown or unsupported partition table type name: bad`)
+}
+
+func TestEnumPartitionTableTypeYAML(t *testing.T) {
+	for name, num := range partitionTypeEnumMap {
+		yamlData, err := yaml.Marshal(num)
+		assert.NoError(t, err)
+		if name == "" {
+			assert.Equal(t, `""`+"\n", string(yamlData))
+		} else {
+			assert.Equal(t, fmt.Sprintf("%s\n", name), string(yamlData))
+		}
+
+		var unmarshaledNum disk.PartitionTableType
+		err = yaml.Unmarshal(yamlData, &unmarshaledNum)
+		assert.NoError(t, err)
+		assert.Equal(t, unmarshaledNum, num)
+	}
+
+	// bad unmarshal
+	var unmarshaledNum disk.PartitionTableType
+	err := yaml.Unmarshal([]byte(`"bad"`), &unmarshaledNum)
+	assert.EqualError(t, err, `unmarshal yaml via json for "bad" failed: unknown or unsupported partition table type name: bad`)
 }
 
 func TestEnumFSType(t *testing.T) {
