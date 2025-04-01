@@ -24,6 +24,7 @@ func TestGetHostDistroName(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "toucanOS-42", name)
 }
+
 func TestGetHostDistroNameUnhappy(t *testing.T) {
 	backup := getHostDistroNameTree
 	defer func() { getHostDistroNameTree = backup }()
@@ -48,6 +49,36 @@ func TestGetHostDistroNameUnhappy(t *testing.T) {
 	)
 	_, err = GetHostDistroName()
 	require.ErrorContains(t, err, "cannot get the host distro name: missing VERSION_ID field")
+}
+
+func TestGetHostDistroNameKitten(t *testing.T) {
+	backup := getHostDistroNameTree
+	defer func() { getHostDistroNameTree = backup }()
+	getHostDistroNameTree = t.TempDir()
+
+	require.NoError(t, os.MkdirAll(path.Join(getHostDistroNameTree, "etc"), 0755))
+
+	var cases = []struct {
+		Input string
+		ID    string
+	}{
+		{"ID=almalinux\nVERSION_ID=9.5\n", "almalinux-9.5"},
+		{"ID=almalinux\nVERSION_ID=10.0\n", "almalinux-10.0"},
+		{"ID=almalinux\nVERSION_ID=11\n", "almalinux-11"},
+		{"ID=almalinux\nVERSION_ID=10\n", "almalinux_kitten-10"}, // note the replacement!
+		{"ID=centos\nVERSION_ID=10\n", "centos-10"},
+		{"ID=fedora\nVERSION_ID=42\n", "fedora-42"},
+	}
+
+	for _, c := range cases {
+		require.NoError(t,
+			os.WriteFile(path.Join(getHostDistroNameTree, "etc/os-release"), []byte(c.Input), 0600),
+		)
+
+		name, err := GetHostDistroName()
+		require.NoError(t, err)
+		require.Equal(t, c.ID, name)
+	}
 }
 
 func TestOSRelease(t *testing.T) {
