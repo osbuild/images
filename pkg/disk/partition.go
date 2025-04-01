@@ -7,7 +7,7 @@ import (
 
 type Partition struct {
 	// Start of the partition in bytes
-	Start uint64 `json:"start" yaml:"start"`
+	Start uint64 `json:"start,omitempty" yaml:"start,omitempty"`
 	// Size of the partition in bytes
 	Size uint64 `json:"size" yaml:"size"`
 	// Partition type, e.g. 0x83 for MBR or a UUID for gpt
