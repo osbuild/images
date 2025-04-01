@@ -7,20 +7,20 @@ import (
 
 type Partition struct {
 	// Start of the partition in bytes
-	Start uint64 `json:"start"`
+	Start uint64 `json:"start" yaml:"start"`
 	// Size of the partition in bytes
-	Size uint64 `json:"size"`
+	Size uint64 `json:"size" yaml:"size"`
 	// Partition type, e.g. 0x83 for MBR or a UUID for gpt
-	Type string `json:"type,omitempty"`
+	Type string `json:"type,omitempty" yaml:"type,omitempty"`
 	// `Legacy BIOS bootable` (GPT) or `active` (DOS) flag
-	Bootable bool `json:"bootable,omitempty"`
+	Bootable bool `json:"bootable,omitempty" yaml:"bootable,omitempty"`
 
 	// ID of the partition, dos doesn't use traditional UUIDs, therefore this
 	// is just a string.
-	UUID string `json:"uuid,omitempty"`
+	UUID string `json:"uuid,omitempty" yaml:"uuid,omitempty"`
 
 	// If nil, the partition is raw; It doesn't contain a payload.
-	Payload PayloadEntity `json:"payload,omitempty"`
+	Payload PayloadEntity `json:"payload,omitempty" yaml:"payload,omitempty"`
 }
 
 func (p *Partition) Clone() Entity {
@@ -110,7 +110,7 @@ func (p *Partition) MarshalJSON() ([]byte, error) {
 
 	partWithPayloadType := struct {
 		partAlias
-		PayloadType string `json:"payload_type,omitempty"`
+		PayloadType string `json:"payload_type,omitempty" yaml:"payload_type,omitempty"`
 	}{
 		partAlias(*p),
 		entityName,
@@ -124,8 +124,8 @@ func (p *Partition) UnmarshalJSON(data []byte) (err error) {
 	type alias Partition
 	var withoutPayload struct {
 		alias
-		Payload     json.RawMessage `json:"payload"`
-		PayloadType string          `json:"payload_type"`
+		Payload     json.RawMessage `json:"payload" yaml:"payload"`
+		PayloadType string          `json:"payload_type" yaml:"payload_type"`
 	}
 	if err := jsonUnmarshalStrict(data, &withoutPayload); err != nil {
 		return fmt.Errorf("cannot unmarshal %q: %w", data, err)
