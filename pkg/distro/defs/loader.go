@@ -3,6 +3,7 @@ package defs
 
 import (
 	"embed"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -19,6 +20,12 @@ import (
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/experimentalflags"
 	"github.com/osbuild/images/pkg/rpmmd"
+)
+
+var (
+	ErrImageTypeNotFound          = errors.New("image type not found")
+	ErrNoPartitionTableForImgType = errors.New("no partition table for image type")
+	ErrNoPartitionTableForArch    = errors.New("no partition table for arch")
 )
 
 //go:embed */*.yaml
@@ -169,7 +176,7 @@ func PackageSet(it distro.ImageType, overrideTypeName string, replacements map[s
 
 	imgType, ok := toplevel.ImageTypes[typeName]
 	if !ok {
-		return rpmmd.PackageSet{}, fmt.Errorf("unknown image type name %q", typeName)
+		return rpmmd.PackageSet{}, fmt.Errorf("%w: %q", ErrImageTypeNotFound, typeName)
 	}
 
 	var rpmmdPkgSet rpmmd.PackageSet
@@ -238,14 +245,17 @@ func PartitionTable(it distro.ImageType, replacements map[string]string) (*disk.
 
 	imgType, ok := toplevel.ImageTypes[typeName]
 	if !ok {
-		return nil, fmt.Errorf("unknown image type name %q", typeName)
+		return nil, fmt.Errorf("%w: %q", ErrImageTypeNotFound, typeName)
+	}
+	if imgType.PartitionTables == nil {
+		return nil, fmt.Errorf("%w: %q", ErrNoPartitionTableForImgType, typeName)
 	}
 	arch := it.Arch()
 	archName := arch.Name()
 
 	pt, ok := imgType.PartitionTables[archName]
 	if !ok {
-		return nil, fmt.Errorf("no partition table for %q", arch)
+		return nil, fmt.Errorf("%w (%q): %q", ErrNoPartitionTableForArch, typeName, archName)
 	}
 
 	if err := imgType.PartitionTablesOverrides.Apply(it, pt, replacements); err != nil {
