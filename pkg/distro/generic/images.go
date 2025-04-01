@@ -980,6 +980,71 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 	return img, nil
 }
 
+// Make an Anaconda installer boot.iso
+func netinstImage(workload workload.Workload,
+	t *imageType,
+	bp *blueprint.Blueprint,
+	options distro.ImageOptions,
+	packageSets map[string]rpmmd.PackageSet,
+	containers []container.SourceSpec,
+	rng *rand.Rand) (image.ImageKind, error) {
+
+	customizations := bp.Customizations
+
+	img := image.NewAnacondaNetInstaller()
+
+	instCust, err := customizations.GetInstaller()
+	if err != nil {
+		return nil, err
+	}
+	if instCust != nil && instCust.Modules != nil {
+		img.EnabledAnacondaModules = append(img.EnabledAnacondaModules, instCust.Modules.Enable...)
+		img.DisabledAnacondaModules = append(img.DisabledAnacondaModules, instCust.Modules.Disable...)
+	}
+
+	img.Platform = t.platform
+	img.Workload = workload
+	img.ExtraBasePackages = packageSets[installerPkgsKey]
+
+	installerConfig, err := t.getDefaultInstallerConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	if installerConfig != nil {
+		img.AdditionalDracutModules = append(img.AdditionalDracutModules, installerConfig.AdditionalDracutModules...)
+		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
+	}
+
+	// On Fedora anaconda needs dbus-broker, but isn't added when dracut runs.
+	img.AdditionalDracutModules = append(img.AdditionalDracutModules, "dbus-broker")
+
+	d := t.arch.distro
+
+	img.Product = d.Product()
+	img.Variant = t.Variant
+	img.OSVersion = d.OsVersion()
+	img.Release = fmt.Sprintf("%s %s", d.Product(), d.OsVersion())
+	img.Preview = d.DistroYAML.Preview
+
+	img.ISOLabel, err = t.ISOLabel()
+	if err != nil {
+		return nil, err
+	}
+
+	img.Filename = t.Filename()
+
+	img.RootfsCompression = "xz" // This also triggers using the bcj filter
+	if isoroot := t.getDefaultImageConfig().ISORootfsType; isoroot != nil {
+		img.RootfsType = *isoroot
+	}
+	if isoboot := t.getDefaultImageConfig().ISOBootType; isoboot != nil {
+		img.ISOBoot = *isoboot
+	}
+
+	return img, nil
+}
+
 // Create an ostree SourceSpec to define an ostree parent commit using the user
 // options and the default ref for the image type.  Additionally returns the
 // ref to be used for the new commit to be created.
