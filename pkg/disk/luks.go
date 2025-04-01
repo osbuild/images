@@ -30,7 +30,7 @@ type ClevisBind struct {
 
 	// If enabled, the passphrase will be removed from the LUKS device at the
 	// end of the build (using the org.osbuild.luks2.remove-key stage).
-	RemovePassphrase bool `json:"remove_passphrase"`
+	RemovePassphrase bool `json:"remove_passphrase" yaml:"remove_passphrase"`
 }
 
 // LUKSContainer represents a LUKS encrypted volume.
@@ -48,7 +48,7 @@ type LUKSContainer struct {
 	// Parameters for binding the LUKS device.
 	Clevis *ClevisBind
 
-	Payload Entity `json:"payload,omitempty"`
+	Payload Entity `json:"payload,omitempty" yaml:"payload,omitempty"`
 }
 
 func init() {
@@ -138,8 +138,8 @@ func (lc *LUKSContainer) UnmarshalJSON(data []byte) (err error) {
 	type alias LUKSContainer
 	var withoutPayload struct {
 		alias
-		Payload     json.RawMessage `json:"payload"`
-		PayloadType string          `json:"payload_type"`
+		Payload     json.RawMessage `json:"payload" yaml:"payload"`
+		PayloadType string          `json:"payload_type" yaml:"payload_type"`
 	}
 	if err := jsonUnmarshalStrict(data, &withoutPayload); err != nil {
 		return fmt.Errorf("cannot unmarshal %q: %w", data, err)

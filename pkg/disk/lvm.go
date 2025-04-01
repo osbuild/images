@@ -17,7 +17,7 @@ type LVMVolumeGroup struct {
 	Name        string
 	Description string
 
-	LogicalVolumes []LVMLogicalVolume `json:"logical_volumes,omitempty"`
+	LogicalVolumes []LVMLogicalVolume `json:"logical_volumes,omitempty" yaml:"logical_volumes,omitempty"`
 }
 
 func init() {
@@ -249,8 +249,8 @@ func (lv *LVMLogicalVolume) UnmarshalJSON(data []byte) (err error) {
 	type alias LVMLogicalVolume
 	var withoutPayload struct {
 		alias
-		Payload     json.RawMessage `json:"payload"`
-		PayloadType string          `json:"payload_type"`
+		Payload     json.RawMessage `json:"payload" yaml:"payload"`
+		PayloadType string          `json:"payload_type" yaml:"payload_type"`
 	}
 	if err := jsonUnmarshalStrict(data, &withoutPayload); err != nil {
 		return fmt.Errorf("cannot unmarshal %q: %w", data, err)
