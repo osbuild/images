@@ -149,7 +149,6 @@ func TestUnmarshalOutput(t *testing.T) {
         "type": "",
         "partitions": [
           {
-            "start": 0,
             "size": 0,
             "type": "119119",
             "uuid": "911911",

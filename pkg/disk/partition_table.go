@@ -15,7 +15,7 @@ import (
 
 type PartitionTable struct {
 	// Size of the disk (in bytes).
-	Size uint64 `json:"size" yaml:"size"`
+	Size uint64 `json:"size,omitempty" yaml:"size,omitempty"`
 	// Unique identifier of the partition table (GPT only).
 	UUID string `json:"uuid,omitempty" yaml:"uuid,omitempty"`
 	// Partition table type, e.g. dos, gpt.
