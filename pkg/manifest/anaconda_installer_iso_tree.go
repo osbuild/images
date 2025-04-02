@@ -242,14 +242,18 @@ var installerBootExcludePaths = []string{
 func (p *AnacondaInstallerISOTree) NewSquashfsStage() *osbuild.Stage {
 	var squashfsOptions osbuild.SquashfsStageOptions
 
-	if p.anacondaPipeline.Type == AnacondaInstallerTypePayload {
+	switch p.anacondaPipeline.Type {
+	case AnacondaInstallerTypePayload, AnacondaInstallerTypeNetinst:
 		squashfsOptions = osbuild.SquashfsStageOptions{
 			Filename: "images/install.img",
 		}
-	} else if p.anacondaPipeline.Type == AnacondaInstallerTypeLive {
+	case AnacondaInstallerTypeLive:
 		squashfsOptions = osbuild.SquashfsStageOptions{
 			Filename: "LiveOS/squashfs.img",
 		}
+	default:
+		// Shouldn't be possible, but catch it anyway
+		panic(fmt.Errorf("unknown AnacondaInstallerType %v in NewSquashfsStage", p.anacondaPipeline.Type))
 	}
 
 	if p.RootfsCompression != "" {
@@ -281,14 +285,18 @@ func (p *AnacondaInstallerISOTree) NewSquashfsStage() *osbuild.Stage {
 func (p *AnacondaInstallerISOTree) NewErofsStage() *osbuild.Stage {
 	var erofsOptions osbuild.ErofsStageOptions
 
-	if p.anacondaPipeline.Type == AnacondaInstallerTypePayload {
+	switch p.anacondaPipeline.Type {
+	case AnacondaInstallerTypePayload, AnacondaInstallerTypeNetinst:
 		erofsOptions = osbuild.ErofsStageOptions{
 			Filename: "images/install.img",
 		}
-	} else if p.anacondaPipeline.Type == AnacondaInstallerTypeLive {
+	case AnacondaInstallerTypeLive:
 		erofsOptions = osbuild.ErofsStageOptions{
 			Filename: "LiveOS/squashfs.img",
 		}
+	default:
+		// Shouldn't be possible, but catch it anyway
+		panic(fmt.Errorf("unknown AnacondaInstallerType %v in NewErofsStage", p.anacondaPipeline.Type))
 	}
 
 	var compression osbuild.ErofsCompression
@@ -367,7 +375,8 @@ func (p *AnacondaInstallerISOTree) serialize() osbuild.Pipeline {
 
 	kernelOpts := []string{}
 
-	if p.anacondaPipeline.Type == AnacondaInstallerTypePayload {
+	if p.anacondaPipeline.Type == AnacondaInstallerTypePayload ||
+		p.anacondaPipeline.Type == AnacondaInstallerTypeNetinst {
 		kernelOpts = append(kernelOpts, fmt.Sprintf("inst.stage2=hd:LABEL=%s", p.isoLabel))
 		if p.Kickstart != nil && p.Kickstart.Path != "" {
 			kernelOpts = append(kernelOpts, fmt.Sprintf("inst.ks=hd:LABEL=%s:%s", p.isoLabel, p.Kickstart.Path))
