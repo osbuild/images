@@ -283,9 +283,7 @@ image_types:
 	}, partTable)
 }
 
-func TestDefsPartitionTableOverride(t *testing.T) {
-	it := makeTestImageType(t)
-	fakeDistroYaml := `
+var distroYamlPartitionTableOverride = `
 image_types:
   test_type:
     partition_table:
@@ -309,11 +307,15 @@ image_types:
           "1":
             - partition_index: 0
               size: 222_222_222
+              bootable: false
             - partition_index: 1
               fstab_options: "defaults,ro"
 `
+
+func TestDefsPartitionTableOverride(t *testing.T) {
+	it := makeTestImageType(t)
 	// XXX: we cannot use distro.Name() as it will give us a name+ver
-	baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, fakeDistroYaml)
+	baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, distroYamlPartitionTableOverride)
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
@@ -326,7 +328,7 @@ image_types:
 		Partitions: []disk.Partition{
 			{
 				Size:     222_222_222,
-				Bootable: true,
+				Bootable: false,
 			},
 			{
 				Size: 2_147_483_648,
@@ -365,4 +367,66 @@ image_config:
 		Locale:   common.ToPtr("C.UTF-8"),
 		Timezone: common.ToPtr("OverrideTZ"),
 	}, imgConfig)
+}
+
+// bootable must be a bool
+var badYAMLnonConvertible = `
+            - partition_index: 1
+              bootable: "totally"
+`
+
+// index out of range
+var badYAMLpartOutOfRange = `
+            - partition_index: 99
+              bootable: true
+`
+
+// index wrong type
+var badYAMLpartBadType = `
+            - partition_index: 3.14
+              bootable: true
+`
+
+// unknown tag
+var badYAMLunknownTag = `
+            - partition_index: 1
+              random_field: "it does not exist"
+`
+
+func TestDefsPartitionTableOverrideError(t *testing.T) {
+	it := makeTestImageType(t)
+
+	for _, tc := range []struct {
+		yaml        string
+		expectedErr string
+	}{
+		{
+			badYAMLnonConvertible,
+			`cannot convert override "totally" (string) to bool`,
+		},
+		{
+			badYAMLpartOutOfRange,
+			`part 99 outside of partitionTable`,
+		},
+		{
+			badYAMLpartBadType,
+			`partition_index must be int, got float64`,
+		},
+		{
+			badYAMLunknownTag,
+			`cannot find "random_field" in partition`,
+		},
+	} {
+		badYaml := distroYamlPartitionTableOverride
+
+		badYaml += tc.yaml
+
+		// XXX: we cannot use distro.Name() as it will give us a name+ver
+		baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, badYaml)
+		restore := defs.MockDataFS(baseDir)
+		defer restore()
+
+		_, err := defs.PartitionTable(it, nil)
+		assert.ErrorContains(t, err, tc.expectedErr)
+	}
 }
