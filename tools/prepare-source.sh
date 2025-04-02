@@ -2,20 +2,22 @@
 
 set -eux
 
+# Figure out the latest and greatest Go version
+GO_LATEST=$(curl -s https://endoflife.date/api/go.json | jq -r '.[0].latest')
+
 # Go version must be consistent with image-builder which uses UBI
 # container that is typically few months behind
 GO_VERSION=1.22.9
-GO_BINARY=$(go env GOPATH)/bin/go$GO_VERSION
 
-# this is the official way to get a different version of golang
-# see https://go.dev/doc/manage-install
-go install golang.org/dl/go$GO_VERSION@latest
-$GO_BINARY download
-
-# Ensure that go.mod and go.sum are up to date.
-$GO_BINARY mod tidy
+# Pin Go and toolchain versions at a reasonable versions
+go get "go@$GO_VERSION" "toolchain@$GO_LATEST"
 
 # Ensure the code is formatted correctly.
-$GO_BINARY fmt ./...
+go fmt ./...
 
+# Update go.mod and go.sum
+go mod tidy
+
+# Generate CI
 ./test/scripts/generate-gitlab-ci ./.gitlab-ci.yml
+
