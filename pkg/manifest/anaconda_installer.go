@@ -19,6 +19,7 @@ type AnacondaInstallerType int
 const (
 	AnacondaInstallerTypeLive AnacondaInstallerType = iota + 1
 	AnacondaInstallerTypePayload
+	AnacondaInstallerTypeNetinst
 )
 
 // An Anaconda represents the installer tree as found on an ISO this can be either
@@ -264,7 +265,7 @@ func (p *AnacondaInstaller) serialize() osbuild.Pipeline {
 			panic("anaconda installer type live does not support interactive defaults")
 		}
 		pipeline.AddStages(p.liveStages()...)
-	case AnacondaInstallerTypePayload:
+	case AnacondaInstallerTypePayload, AnacondaInstallerTypeNetinst:
 		pipeline.AddStages(p.payloadStages()...)
 	default:
 		panic("invalid anaconda installer type")
@@ -432,7 +433,7 @@ func (p *AnacondaInstaller) dracutStageOptions() *osbuild.DracutStageOptions {
 	}
 
 	switch p.Type {
-	case AnacondaInstallerTypePayload:
+	case AnacondaInstallerTypePayload, AnacondaInstallerTypeNetinst:
 		// Lorax calls the boot.iso dracut with:
 		// --nomdadmconf --nolvmconf --xz --install '/.buildstamp' --no-early-microcode
 		// --add 'fips anaconda pollcdrom qemu qemu-net prefixdevname-tools'
@@ -455,6 +456,8 @@ func (p *AnacondaInstaller) dracutStageOptions() *osbuild.DracutStageOptions {
 			"dmsquash-live",
 			"convertfs",
 		}...)
+	default:
+		panic("Unknown AnacondaInstallerType in dracutStageOptions")
 	}
 
 	return &options
