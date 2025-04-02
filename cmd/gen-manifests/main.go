@@ -312,7 +312,7 @@ func mockResolveCommits(commitSources map[string][]ostree.SourceSpec) map[string
 func mockDepsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfig, archName string) map[string]dnfjson.DepsolveResult {
 	depsolvedSets := make(map[string]dnfjson.DepsolveResult)
 
-	for name, pkgSetChain := range packageSets {
+	for _, pkgSetChain := range packageSets {
 		specSet := make([]rpmmd.PackageSpec, 0)
 		seenChksumsInc := make(map[string]bool)
 		seenChksumsExc := make(map[string]bool)
