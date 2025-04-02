@@ -27,9 +27,18 @@ var data embed.FS
 var DataFS fs.FS = data
 
 type toplevelYAML struct {
-	ImageConfig *distro.ImageConfig  `yaml:"image_config,omitempty"`
+	ImageConfig imageConfig          `yaml:"image_config,omitempty"`
 	ImageTypes  map[string]imageType `yaml:"image_types"`
 	Common      map[string]any       `yaml:".common,omitempty"`
+}
+
+type imageConfig struct {
+	Default   *distro.ImageConfig    `yaml:"default"`
+	Condition *imageConfigConditions `yaml:"condition,omitempty"`
+}
+
+type imageConfigConditions struct {
+	DistroName map[string]*distro.ImageConfig `yaml:"distro_name,omitempty"`
 }
 
 type imageType struct {
@@ -118,7 +127,20 @@ func DistroImageConfig(distroNameVer string) (*distro.ImageConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	return toplevel.ImageConfig, nil
+	imgConfig := toplevel.ImageConfig.Default
+
+	cond := toplevel.ImageConfig.Condition
+	if cond != nil {
+		distroName, _ := splitDistroNameVer(distroNameVer)
+		// XXX: we shoudl probably use a similar pattern like
+		// for the partition table overrides (via
+		// findElementIndexByJSONTag) but this if fine for now
+		if distroNameCnf, ok := cond.DistroName[distroName]; ok {
+			imgConfig = distroNameCnf.InheritFrom(imgConfig)
+		}
+	}
+
+	return imgConfig, nil
 }
 
 // PackageSet loads the PackageSet from the yaml source file discovered via the
