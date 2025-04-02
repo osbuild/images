@@ -61,7 +61,7 @@ type partitionTablesOverrides struct {
 	Conditional partitionTablesOverwriteConditional `yaml:"condition"`
 }
 
-func versionLessThanSortedKeys(m map[string][]partitionTablesOverrideOp) []string {
+func versionLessThanSortedKeys(m map[string]map[string]partitionTablesOverrideOp) []string {
 	return slices.SortedFunc(maps.Keys(m), func(a, b string) int {
 		ver1 := version.Must(version.NewVersion(a))
 		ver2 := version.Must(version.NewVersion(b))
@@ -122,9 +122,9 @@ func (po *partitionTablesOverrides) Apply(it distro.ImageType, pt *disk.Partitio
 }
 
 type partitionTablesOverwriteConditional struct {
-	VersionLessThan       map[string][]partitionTablesOverrideOp `yaml:"version_less_than,omitempty"`
-	VersionGreaterOrEqual map[string][]partitionTablesOverrideOp `yaml:"version_greater_or_equal,omitempty"`
-	DistroName            map[string][]partitionTablesOverrideOp `yaml:"distro_name,omitempty"`
+	VersionLessThan       map[string]map[string]partitionTablesOverrideOp `yaml:"version_less_than,omitempty"`
+	VersionGreaterOrEqual map[string]map[string]partitionTablesOverrideOp `yaml:"version_greater_or_equal,omitempty"`
+	DistroName            map[string]map[string]partitionTablesOverrideOp `yaml:"distro_name,omitempty"`
 }
 
 type partitionTablesOverrideOp map[string]interface{}

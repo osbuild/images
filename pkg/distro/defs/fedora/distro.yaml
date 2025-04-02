@@ -435,7 +435,8 @@ image_types:
       condition:
         version_greater_or_equal:
           "42":
-            - partition_index: 2
+            tweak_fstab_gt_42:
+              partition_index: 2
               fstab_options: "defaults,ro"
 
   iot_qcow2_image:

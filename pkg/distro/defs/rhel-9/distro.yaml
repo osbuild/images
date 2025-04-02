@@ -468,25 +468,22 @@
     default_partition_table_override: &default_partition_table_override
       condition:
         version_less_than: &default_partition_table_override_lt
-          "9.3":
-            # XXX: use map here instead of seq to ensure that we can
-            # merge? downside is that map keys become random so we
-            # can not rely on order
-            - partition_mount_point: "/boot"
+          "9.3": &default_partition_table_override_lt_9_3
+            boot_size_lt_9_3: 
+              partition_mount_point: "/boot"
               size: 524_288_000  # 500 MiB
           "9.4":
-            - partition_mount_point: "/boot"
+            boot_size_lt_9_4:
+              partition_mount_point: "/boot"
               size: 629_145_600  # 600 MiB
     ec2_partition_table_override: &ec2_partition_table_override
       condition:
         version_less_than:
           <<: *default_partition_table_override_lt
           "9.3":
-            # XXX: duplicated from above :( because yaml does not support
-            # merging of seq
-            - partition_mount_point: "/boot"
-              size: 524_288_000  # 500 MiB
-            - partition_mount_point: "/boot/efi"
+            <<: *default_partition_table_override_lt_9_3
+            no_boot_efi_lt_9_3:
+              partition_mount_point: "/boot/efi"
               partition_selection: ignore-missing
               partition_arch_only: x86_64
               action: delete

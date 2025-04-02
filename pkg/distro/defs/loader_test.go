@@ -310,22 +310,28 @@ image_types:
       condition:
         version_greater_or_equal:
           "1":
-            - partition_index: 0
+            tweak_bootable:
+              partition_index: 0
               size: 222_222_222
               bootable: false
-            - partition_index: 1
+            update_fstab:
+              partition_index: 1
               fstab_options: "defaults,ro"
-            - partition_mount_point: "/boot/efi"
+            delete_boot_efi:
+              partition_mount_point: "/boot/efi"
               action: delete
         version_less_than:
           "2":
-            - partition_index: 1
+            label:
+              partition_index: 1
               label: "root-lt-2"
         distro_name:
           "test-distro":
-            - partition_mount_point: "/"
+            new_mountpoint:
+              partition_mount_point: "/"
               mountpoint: "/overriden_by_distro_name"
-            - partition_mount_point: "/does-not-exists"
+            tweak_non_existing:
+              partition_mount_point: "/does-not-exists"
               partition_selection: ignore-missing
               size: 999_999
 `
@@ -363,25 +369,29 @@ func TestDefsPartitionTableOverride(t *testing.T) {
 
 // bootable must be a bool
 var badYAMLnonConvertible = `
-            - partition_index: 1
+            label:
+              partition_index: 1
               bootable: "totally"
 `
 
 // index out of range
 var badYAMLpartOutOfRange = `
-            - partition_index: 99
+            label:
+              partition_index: 99
               bootable: true
 `
 
 // index wrong type
 var badYAMLpartBadType = `
-            - partition_index: 3.14
+            label:
+              partition_index: 3.14
               bootable: true
 `
 
 // unknown tag
 var badYAMLunknownTag = `
-            - partition_index: 1
+            label:
+              partition_index: 1
               random_field: "it does not exist"
 `
 

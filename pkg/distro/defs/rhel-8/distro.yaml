@@ -808,11 +808,13 @@ image_types:
         #     action: delete
         version_less_than:
           "8.10":
-            - partition_mount_point: "/boot"
+            boot_size_lt_8_10:
+              partition_mount_point: "/boot"
               partition_selection: ignore-missing
               size: 536_870_912  # 512MiB
           "8.9":
-            - partition_mount_point: "/boot/efi"
+            no_boot_efi_lt_8_9:
+              partition_mount_point: "/boot/efi"
               partition_selection: ignore-missing
               partition_arch_only: x86_64
               action: delete
