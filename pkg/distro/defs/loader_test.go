@@ -344,7 +344,13 @@ image_types:
 func TestDefsImageConfig(t *testing.T) {
 	fakeDistroYaml := `
 image_config:
-  locale: "C.UTF-8"
+  default:
+    locale: "C.UTF-8"
+    timezone: "DefaultTZ"
+  condition:
+    distro_name:
+      "test-distro":
+        timezone: "OverrideTZ"
 `
 	fakeDistroName := "test-distro"
 	fakeDistroVer := "42"
@@ -356,6 +362,7 @@ image_config:
 	imgConfig, err := defs.DistroImageConfig(distroNameVer)
 	assert.NoError(t, err)
 	assert.Equal(t, &distro.ImageConfig{
-		Locale: common.ToPtr("C.UTF-8"),
+		Locale:   common.ToPtr("C.UTF-8"),
+		Timezone: common.ToPtr("OverrideTZ"),
 	}, imgConfig)
 }
