@@ -263,12 +263,13 @@
         <<: *iot_simplified_installer_partition_tables_x86
 
 image_config:
-  default_oscap_datastream: "/usr/share/xml/scap/ssg/content/ssg-fedora-ds.xml"
-  hostname: "localhost.localdomain"
-  install_weak_deps: true
-  locale: "C.UTF-8"
-  machine_id_uninitialized: true
-  timezone: "UTC"
+  default:
+    default_oscap_datastream: "/usr/share/xml/scap/ssg/content/ssg-fedora-ds.xml"
+    hostname: "localhost.localdomain"
+    install_weak_deps: true
+    locale: "C.UTF-8"
+    machine_id_uninitialized: true
+    timezone: "UTC"
 
 image_types:
   qcow2: &qcow2
