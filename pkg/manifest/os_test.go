@@ -73,7 +73,7 @@ func CheckPkgSetInclude(t *testing.T, pkgSetChain []rpmmd.PackageSet, pkgs []str
 
 func TestSubscriptionManagerCommands(t *testing.T) {
 	os := manifest.NewTestOS()
-	os.Subscription = &subscription.ImageOptions{
+	os.OSCustomizations.Subscription = &subscription.ImageOptions{
 		Organization:  "2040324",
 		ActivationKey: "my-secret-key",
 		ServerUrl:     "subscription.rhsm.redhat.com",
@@ -87,7 +87,7 @@ func TestSubscriptionManagerCommands(t *testing.T) {
 
 func TestSubscriptionManagerInsightsCommands(t *testing.T) {
 	os := manifest.NewTestOS()
-	os.Subscription = &subscription.ImageOptions{
+	os.OSCustomizations.Subscription = &subscription.ImageOptions{
 		Organization:  "2040324",
 		ActivationKey: "my-secret-key",
 		ServerUrl:     "subscription.rhsm.redhat.com",
@@ -104,7 +104,7 @@ func TestSubscriptionManagerInsightsCommands(t *testing.T) {
 
 func TestRhcInsightsCommands(t *testing.T) {
 	os := manifest.NewTestOS()
-	os.Subscription = &subscription.ImageOptions{
+	os.OSCustomizations.Subscription = &subscription.ImageOptions{
 		Organization:  "2040324",
 		ActivationKey: "my-secret-key",
 		ServerUrl:     "subscription.rhsm.redhat.com",
@@ -122,7 +122,7 @@ func TestRhcInsightsCommands(t *testing.T) {
 
 func TestSubscriptionManagerPackages(t *testing.T) {
 	os := manifest.NewTestOS()
-	os.Subscription = &subscription.ImageOptions{
+	os.OSCustomizations.Subscription = &subscription.ImageOptions{
 		Organization:  "2040324",
 		ActivationKey: "my-secret-key",
 		ServerUrl:     "subscription.rhsm.redhat.com",
@@ -134,7 +134,7 @@ func TestSubscriptionManagerPackages(t *testing.T) {
 
 func TestSubscriptionManagerInsightsPackages(t *testing.T) {
 	os := manifest.NewTestOS()
-	os.Subscription = &subscription.ImageOptions{
+	os.OSCustomizations.Subscription = &subscription.ImageOptions{
 		Organization:  "2040324",
 		ActivationKey: "my-secret-key",
 		ServerUrl:     "subscription.rhsm.redhat.com",
@@ -146,7 +146,7 @@ func TestSubscriptionManagerInsightsPackages(t *testing.T) {
 
 func TestRhcInsightsPackages(t *testing.T) {
 	os := manifest.NewTestOS()
-	os.Subscription = &subscription.ImageOptions{
+	os.OSCustomizations.Subscription = &subscription.ImageOptions{
 		Organization:  "2040324",
 		ActivationKey: "my-secret-key",
 		ServerUrl:     "subscription.rhsm.redhat.com",
@@ -220,7 +220,7 @@ func testTomlPkgsFor(t *testing.T, os *manifest.OS) {
 func TestMachineIdUninitializedIncludesMachineIdStage(t *testing.T) {
 	os := manifest.NewTestOS()
 
-	os.MachineIdUninitialized = true
+	os.OSCustomizations.MachineIdUninitialized = true
 
 	pipeline := os.Serialize()
 	st := manifest.FindStage("org.osbuild.machine-id", pipeline.Stages)
@@ -312,7 +312,7 @@ func TestOSPipelineFStabStage(t *testing.T) {
 	os := manifest.NewTestOS()
 
 	os.PartitionTable = testdisk.MakeFakePartitionTable("/") // PT specifics don't matter
-	os.MountUnits = false                                    // set it explicitly just to be sure
+	os.OSCustomizations.MountUnits = false                   // set it explicitly just to be sure
 
 	checkStagesForFSTab(t, os.Serialize().Stages)
 }
@@ -322,7 +322,7 @@ func TestOSPipelineMountUnitStages(t *testing.T) {
 
 	expectedUnits := []string{"-.mount", "home.mount"}
 	os.PartitionTable = testdisk.MakeFakePartitionTable("/", "/home")
-	os.MountUnits = true
+	os.OSCustomizations.MountUnits = true
 
 	checkStagesForMountUnits(t, os.Serialize().Stages, expectedUnits)
 }
@@ -330,7 +330,7 @@ func TestOSPipelineMountUnitStages(t *testing.T) {
 func TestLanguageIncludesLocaleStage(t *testing.T) {
 	os := manifest.NewTestOS()
 
-	os.Language = "en_US.UTF-8"
+	os.OSCustomizations.Language = "en_US.UTF-8"
 
 	pipeline := os.Serialize()
 	st := manifest.FindStage("org.osbuild.locale", pipeline.Stages)
@@ -348,7 +348,7 @@ func TestLanguageDoesNotIncludeLocaleStage(t *testing.T) {
 func TestTimezoneIncludesTimezoneStage(t *testing.T) {
 	os := manifest.NewTestOS()
 
-	os.Timezone = "Etc/UTC"
+	os.OSCustomizations.Timezone = "Etc/UTC"
 
 	pipeline := os.Serialize()
 	st := manifest.FindStage("org.osbuild.timezone", pipeline.Stages)
@@ -366,7 +366,7 @@ func TestTimezoneDoesNotIncludeTimezoneStage(t *testing.T) {
 func TestHostnameIncludesHostnameStage(t *testing.T) {
 	os := manifest.NewTestOS()
 
-	os.Hostname = "funky.name"
+	os.OSCustomizations.Hostname = "funky.name"
 
 	pipeline := os.Serialize()
 	st := manifest.FindStage("org.osbuild.hostname", pipeline.Stages)
