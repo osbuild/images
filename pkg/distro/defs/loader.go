@@ -53,6 +53,7 @@ type imageType struct {
 	// archStr->partitionTable
 	PartitionTables map[string]*disk.PartitionTable `yaml:"partition_table"`
 	// override specific aspects of the partition table
+	// XXX: plural
 	PartitionTablesOverrides *partitionTablesOverrides `yaml:"partition_table_override"`
 }
 
@@ -75,6 +76,7 @@ type partitionTablesOverrides struct {
 
 type partitionTablesOverwriteCondition struct {
 	VersionGreaterOrEqual map[string]map[string]*disk.PartitionTable `yaml:"version_greater_or_equal,omitempty"`
+	VersionLessThan       map[string]map[string]*disk.PartitionTable `yaml:"version_less_than,omitempty"`
 }
 
 type partitionTablesOverrideOp struct {
@@ -213,6 +215,18 @@ func PartitionTable(it distro.ImageType, replacements map[string]string) (*disk.
 
 	if imgType.PartitionTablesOverrides != nil {
 		cond := imgType.PartitionTablesOverrides.Condition
+
+		for ltVer, ltOverrides := range cond.VersionLessThan {
+			if r, ok := replacements[ltVer]; ok {
+				ltVer = r
+			}
+			if common.VersionLessThan(distroVersion, ltVer) {
+				for arch, overridePt := range ltOverrides {
+					imgType.PartitionTables[arch] = overridePt
+				}
+			}
+		}
+
 		for gteqVer, geOverrides := range cond.VersionGreaterOrEqual {
 			if r, ok := replacements[gteqVer]; ok {
 				gteqVer = r
