@@ -488,6 +488,7 @@
           - &default_partition_table_part_root_s390x
             <<: *default_partition_table_part_root_ppc64le
             bootable: true
+
     default_partition_table_override: &default_partition_table_override
       condition:
         version_less_than: &default_partition_table_override_lt
@@ -624,6 +625,10 @@ image_types:
                 - "subscription-manager-cockpit"
 
   qcow2: &qcow2
+    partition_table:
+      <<: *default_partition_tables
+    partition_table_override:
+      <<: *default_partition_table_override  
     package_sets:
       - include:
           - "@core"
@@ -693,6 +698,10 @@ image_types:
   oci: *qcow2
 
   vhd: &vhd
+    partition_table:
+      <<: *default_partition_tables
+    partition_table_override:
+      <<: *default_partition_table_override  
     package_sets:
       - &vhd_pkgset
         include:
@@ -787,6 +796,10 @@ image_types:
           - "rng-tools"
 
   vmdk: &vmdk
+    partition_table:
+      <<: *default_partition_tables
+    partition_table_override:
+      <<: *default_partition_table_override  
     package_sets:
       - include:
           - "@core"
@@ -803,6 +816,10 @@ image_types:
   ova: *vmdk
 
   ec2: &ec2
+    partition_table:
+      <<: *default_partition_tables
+    partition_table_override:
+      <<: *default_partition_table_override  
     package_sets:
       - *ec2_base_pkgset
       - exclude:
@@ -811,6 +828,7 @@ image_types:
   ami: *ec2
 
   ec2_ha:
+    <<: *ec2
     package_sets:
       - *ec2_base_pkgset
       - include:
@@ -821,6 +839,7 @@ image_types:
           - "alsa-lib"
 
   ec2_sap:
+    <<: *ec2
     package_sets:
       - *ec2_base_pkgset
       - *sap_pkgset
@@ -891,6 +910,10 @@ image_types:
       - *anaconda_pkgset
 
   gce:
+    partition_table:
+      <<: *default_partition_tables
+    partition_table_override:
+      <<: *default_partition_table_override  
     package_sets:
       - include:
           - "@core"
@@ -980,6 +1003,10 @@ image_types:
           - "iwl3160-firmware"
 
   openstack:
+    partition_table:
+      <<: *default_partition_tables
+    partition_table_override:
+      <<: *default_partition_table_override  
     package_sets:
       - include:
           - "@core"
