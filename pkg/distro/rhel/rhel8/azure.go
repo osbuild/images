@@ -33,8 +33,8 @@ func mkAzureRhuiImgType() *rhel.ImageType {
 
 	it.Compression = "xz"
 	it.DefaultImageConfig = defaultAzureRhuiImageConfig.InheritFrom(defaultVhdImageConfig())
-	it.KernelOptions = defaultAzureKernelOptions()
-	it.Bootable = true
+	it.DistroConfig.KernelOptions = defaultAzureKernelOptions()
+	it.DistroConfig.Bootable = true
 	it.DefaultSize = 64 * datasizes.GibiByte
 	it.BasePartitionTables = azureRhuiBasePartitionTables
 
@@ -57,8 +57,8 @@ func mkAzureSapRhuiImgType(rd *rhel.Distribution) *rhel.ImageType {
 
 	it.Compression = "xz"
 	it.DefaultImageConfig = defaultAzureRhuiImageConfig.InheritFrom(sapAzureImageConfig(rd))
-	it.KernelOptions = defaultAzureKernelOptions()
-	it.Bootable = true
+	it.DistroConfig.KernelOptions = defaultAzureKernelOptions()
+	it.DistroConfig.Bootable = true
 	it.DefaultSize = 64 * datasizes.GibiByte
 	it.BasePartitionTables = azureRhuiBasePartitionTables
 
@@ -80,8 +80,8 @@ func mkAzureByosImgType() *rhel.ImageType {
 	)
 
 	it.DefaultImageConfig = defaultAzureByosImageConfig.InheritFrom(defaultVhdImageConfig())
-	it.KernelOptions = defaultAzureKernelOptions()
-	it.Bootable = true
+	it.DistroConfig.KernelOptions = defaultAzureKernelOptions()
+	it.DistroConfig.Bootable = true
 	it.DefaultSize = 4 * datasizes.GibiByte
 	it.BasePartitionTables = defaultBasePartitionTables
 
@@ -104,8 +104,8 @@ func mkAzureImgType() *rhel.ImageType {
 	)
 
 	it.DefaultImageConfig = defaultVhdImageConfig()
-	it.KernelOptions = defaultAzureKernelOptions()
-	it.Bootable = true
+	it.DistroConfig.KernelOptions = defaultAzureKernelOptions()
+	it.DistroConfig.Bootable = true
 	it.DefaultSize = 4 * datasizes.GibiByte
 	it.BasePartitionTables = defaultBasePartitionTables
 
@@ -128,8 +128,8 @@ func mkAzureEap7RhuiImgType() *rhel.ImageType {
 
 	it.Compression = "xz"
 	it.DefaultImageConfig = defaultAzureEapImageConfig.InheritFrom(defaultAzureRhuiImageConfig.InheritFrom(defaultAzureImageConfig))
-	it.KernelOptions = defaultAzureKernelOptions()
-	it.Bootable = true
+	it.DistroConfig.KernelOptions = defaultAzureKernelOptions()
+	it.DistroConfig.Bootable = true
 	it.DefaultSize = 64 * datasizes.GibiByte
 	it.BasePartitionTables = azureRhuiBasePartitionTables
 	it.Workload = eapWorkload()

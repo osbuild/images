@@ -23,9 +23,9 @@ func mkQcow2ImgType(d *rhel.Distribution) *rhel.ImageType {
 	)
 
 	it.DefaultImageConfig = qcowImageConfig(d)
-	it.KernelOptions = []string{"console=tty0", "console=ttyS0,115200n8", "no_timer_check"}
+	it.DistroConfig.KernelOptions = []string{"console=tty0", "console=ttyS0,115200n8", "no_timer_check"}
 	it.DefaultSize = 10 * datasizes.GibiByte
-	it.Bootable = true
+	it.DistroConfig.Bootable = true
 	it.BasePartitionTables = defaultBasePartitionTables
 
 	return it
@@ -46,9 +46,9 @@ func mkOCIImgType(d *rhel.Distribution) *rhel.ImageType {
 	)
 
 	it.DefaultImageConfig = qcowImageConfig(d)
-	it.KernelOptions = []string{"console=tty0", "console=ttyS0,115200n8", "no_timer_check"}
+	it.DistroConfig.KernelOptions = []string{"console=tty0", "console=ttyS0,115200n8", "no_timer_check"}
 	it.DefaultSize = 10 * datasizes.GibiByte
-	it.Bootable = true
+	it.DistroConfig.Bootable = true
 	it.BasePartitionTables = defaultBasePartitionTables
 
 	return it

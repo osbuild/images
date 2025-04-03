@@ -36,8 +36,8 @@ func mkAMIImgTypeX86_64() *rhel.ImageType {
 		[]string{"image"},
 	)
 
-	it.KernelOptions = amiKernelOptions()
-	it.Bootable = true
+	it.DistroConfig.KernelOptions = amiKernelOptions()
+	it.DistroConfig.Bootable = true
 	it.DefaultSize = 10 * datasizes.GibiByte
 	it.DefaultImageConfig = defaultEc2ImageConfigX86_64()
 	it.BasePartitionTables = defaultBasePartitionTables
@@ -59,8 +59,8 @@ func mkAMIImgTypeAarch64() *rhel.ImageType {
 		[]string{"image"},
 	)
 
-	it.KernelOptions = amiAarch64KernelOptions()
-	it.Bootable = true
+	it.DistroConfig.KernelOptions = amiAarch64KernelOptions()
+	it.DistroConfig.Bootable = true
 	it.DefaultSize = 10 * datasizes.GibiByte
 	it.DefaultImageConfig = defaultEc2ImageConfig()
 	it.BasePartitionTables = defaultBasePartitionTables
@@ -84,8 +84,8 @@ func mkEc2ImgTypeX86_64() *rhel.ImageType {
 	)
 
 	it.Compression = "xz"
-	it.KernelOptions = amiKernelOptions()
-	it.Bootable = true
+	it.DistroConfig.KernelOptions = amiKernelOptions()
+	it.DistroConfig.Bootable = true
 	it.DefaultSize = 10 * datasizes.GibiByte
 	it.DefaultImageConfig = defaultEc2ImageConfigX86_64()
 	it.BasePartitionTables = defaultBasePartitionTables
@@ -109,8 +109,8 @@ func mkEC2ImgTypeAarch64() *rhel.ImageType {
 	)
 
 	it.Compression = "xz"
-	it.KernelOptions = amiAarch64KernelOptions()
-	it.Bootable = true
+	it.DistroConfig.KernelOptions = amiAarch64KernelOptions()
+	it.DistroConfig.Bootable = true
 	it.DefaultSize = 10 * datasizes.GibiByte
 	it.DefaultImageConfig = defaultEc2ImageConfig()
 	it.BasePartitionTables = defaultBasePartitionTables
@@ -134,8 +134,8 @@ func mkEc2HaImgTypeX86_64() *rhel.ImageType {
 	)
 
 	it.Compression = "xz"
-	it.KernelOptions = amiKernelOptions()
-	it.Bootable = true
+	it.DistroConfig.KernelOptions = amiKernelOptions()
+	it.DistroConfig.Bootable = true
 	it.DefaultSize = 10 * datasizes.GibiByte
 	it.DefaultImageConfig = defaultEc2ImageConfigX86_64()
 	it.BasePartitionTables = defaultBasePartitionTables
@@ -158,8 +158,8 @@ func mkEC2SapImgTypeX86_64(osVersion string) *rhel.ImageType {
 	)
 
 	it.Compression = "xz"
-	it.KernelOptions = amiSapKernelOptions()
-	it.Bootable = true
+	it.DistroConfig.KernelOptions = amiSapKernelOptions()
+	it.DistroConfig.Bootable = true
 	it.DefaultSize = 10 * datasizes.GibiByte
 	it.DefaultImageConfig = sapImageConfig(osVersion).InheritFrom(defaultEc2ImageConfigX86_64())
 	it.BasePartitionTables = defaultBasePartitionTables

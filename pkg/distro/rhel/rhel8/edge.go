@@ -31,7 +31,7 @@ func mkEdgeCommitImgType(rd *rhel.Distribution) *rhel.ImageType {
 		EnabledServices: edgeServices(rd),
 		DracutConf:      []*osbuild.DracutConfStageOptions{osbuild.FIPSDracutConfStageOptions},
 	}
-	it.RPMOSTree = true
+	it.DistroConfig.RpmOstree = true
 
 	return it
 }
@@ -58,7 +58,7 @@ func mkEdgeOCIImgType(rd *rhel.Distribution) *rhel.ImageType {
 		EnabledServices: edgeServices(rd),
 		DracutConf:      []*osbuild.DracutConfStageOptions{osbuild.FIPSDracutConfStageOptions},
 	}
-	it.RPMOSTree = true
+	it.DistroConfig.RpmOstree = true
 
 	return it
 }
@@ -77,7 +77,7 @@ func mkEdgeRawImgType() *rhel.ImageType {
 
 	it.NameAliases = []string{"rhel-edge-raw-image"}
 	it.Compression = "xz"
-	it.KernelOptions = []string{"modprobe.blacklist=vc4"}
+	it.DistroConfig.KernelOptions = []string{"modprobe.blacklist=vc4"}
 	it.DefaultImageConfig = &distro.ImageConfig{
 		Keyboard: &osbuild.KeymapStageOptions{
 			Keymap: "us",
@@ -86,8 +86,8 @@ func mkEdgeRawImgType() *rhel.ImageType {
 		LockRootUser: common.ToPtr(true),
 	}
 	it.DefaultSize = 10 * datasizes.GibiByte
-	it.RPMOSTree = true
-	it.Bootable = true
+	it.DistroConfig.RpmOstree = true
+	it.DistroConfig.Bootable = true
 	it.BasePartitionTables = edgeBasePartitionTables
 	it.UnsupportedPartitioningModes = []disk.PartitioningMode{
 		disk.AutoLVMPartitioningMode,
@@ -122,8 +122,8 @@ func mkEdgeInstallerImgType(rd *rhel.Distribution) *rhel.ImageType {
 			"ifcfg",
 		},
 	}
-	it.RPMOSTree = true
-	it.BootISO = true
+	it.DistroConfig.RpmOstree = true
+	it.DistroConfig.BootISO = true
 	it.ISOLabelFn = distroISOLabelFunc
 
 	return it
@@ -144,7 +144,7 @@ func mkEdgeSimplifiedInstallerImgType(rd *rhel.Distribution) *rhel.ImageType {
 	)
 
 	it.NameAliases = []string{"rhel-edge-simplified-installer"}
-	it.KernelOptions = []string{"modprobe.blacklist=vc4"}
+	it.DistroConfig.KernelOptions = []string{"modprobe.blacklist=vc4"}
 	it.DefaultImageConfig = &distro.ImageConfig{
 		EnabledServices: edgeServices(rd),
 		Keyboard: &osbuild.KeymapStageOptions{
@@ -160,9 +160,9 @@ func mkEdgeSimplifiedInstallerImgType(rd *rhel.Distribution) *rhel.ImageType {
 		},
 	}
 	it.DefaultSize = 10 * datasizes.GibiByte
-	it.RPMOSTree = true
-	it.Bootable = true
-	it.BootISO = true
+	it.DistroConfig.RpmOstree = true
+	it.DistroConfig.Bootable = true
+	it.DistroConfig.BootISO = true
 	it.ISOLabelFn = distroISOLabelFunc
 	it.BasePartitionTables = edgeBasePartitionTables
 	it.UnsupportedPartitioningModes = []disk.PartitioningMode{
@@ -194,8 +194,8 @@ func mkMinimalRawImgType() *rhel.ImageType {
 		// requires a kickstart file in the root directory.
 		Files: []*fsnode.File{initialSetupKickstart()},
 	}
-	it.KernelOptions = []string{"ro"}
-	it.Bootable = true
+	it.DistroConfig.KernelOptions = []string{"ro"}
+	it.DistroConfig.Bootable = true
 	it.DefaultSize = 2 * datasizes.GibiByte
 	it.BasePartitionTables = defaultBasePartitionTables
 

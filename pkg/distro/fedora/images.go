@@ -15,7 +15,6 @@ import (
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/ignition"
 	"github.com/osbuild/images/pkg/customizations/kickstart"
-	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/image"
@@ -27,234 +26,11 @@ import (
 
 // HELPERS
 
-func osCustomizations(
-	t *imageType,
-	osPackageSet rpmmd.PackageSet,
-	containers []container.SourceSpec,
-	c *blueprint.Customizations) (manifest.OSCustomizations, error) {
-
-	imageConfig := t.getDefaultImageConfig()
-
-	osc := manifest.OSCustomizations{}
-
-	if t.bootable || t.rpmOstree {
-		osc.KernelName = c.GetKernel().Name
-
-		var kernelOptions []string
-		if len(t.kernelOptions) > 0 {
-			kernelOptions = append(kernelOptions, t.kernelOptions...)
-		}
-		if bpKernel := c.GetKernel(); bpKernel.Append != "" {
-			kernelOptions = append(kernelOptions, bpKernel.Append)
-		}
-		osc.KernelOptionsAppend = kernelOptions
-	}
-
-	osc.FIPS = c.GetFIPS()
-
-	osc.BasePackages = osPackageSet.Include
-	osc.ExcludeBasePackages = osPackageSet.Exclude
-	osc.ExtraBaseRepos = osPackageSet.Repositories
-
-	osc.Containers = containers
-
-	osc.GPGKeyFiles = imageConfig.GPGKeyFiles
-	if rpm := c.GetRPM(); rpm != nil && rpm.ImportKeys != nil {
-		osc.GPGKeyFiles = append(osc.GPGKeyFiles, rpm.ImportKeys.Files...)
-	}
-
-	if imageConfig.ExcludeDocs != nil {
-		osc.ExcludeDocs = *imageConfig.ExcludeDocs
-	}
-
-	if !t.bootISO {
-		// don't put users and groups in the payload of an installer
-		// add them via kickstart instead
-		osc.Groups = users.GroupsFromBP(c.GetGroups())
-		osc.Users = users.UsersFromBP(c.GetUsers())
-	}
-
-	osc.EnabledServices = imageConfig.EnabledServices
-	osc.DisabledServices = imageConfig.DisabledServices
-	osc.MaskedServices = imageConfig.MaskedServices
-	if imageConfig.DefaultTarget != nil {
-		osc.DefaultTarget = *imageConfig.DefaultTarget
-	}
-
-	if fw := c.GetFirewall(); fw != nil {
-		options := osbuild.FirewallStageOptions{
-			Ports: fw.Ports,
-		}
-
-		if fw.Services != nil {
-			options.EnabledServices = fw.Services.Enabled
-			options.DisabledServices = fw.Services.Disabled
-		}
-		osc.Firewall = &options
-	}
-
-	language, keyboard := c.GetPrimaryLocale()
-	if language != nil {
-		osc.Language = *language
-	} else if imageConfig.Locale != nil {
-		osc.Language = *imageConfig.Locale
-	}
-	if keyboard != nil {
-		osc.Keyboard = keyboard
-	} else if imageConfig.Keyboard != nil {
-		osc.Keyboard = &imageConfig.Keyboard.Keymap
-	}
-
-	if hostname := c.GetHostname(); hostname != nil {
-		osc.Hostname = *hostname
-	} else if imageConfig.Hostname != nil {
-		osc.Hostname = *imageConfig.Hostname
-	}
-
-	if imageConfig.InstallWeakDeps != nil {
-		osc.InstallWeakDeps = *imageConfig.InstallWeakDeps
-	}
-
-	timezone, ntpServers := c.GetTimezoneSettings()
-	if timezone != nil {
-		osc.Timezone = *timezone
-	} else if imageConfig.Timezone != nil {
-		osc.Timezone = *imageConfig.Timezone
-	}
-
-	if len(ntpServers) > 0 {
-		for _, server := range ntpServers {
-			osc.NTPServers = append(osc.NTPServers, osbuild.ChronyConfigServer{Hostname: server})
-		}
-	} else if imageConfig.TimeSynchronization != nil {
-		osc.NTPServers = imageConfig.TimeSynchronization.Servers
-	}
-
-	// Relabel the tree, unless the `NoSElinux` flag is explicitly set to `true`
-	if imageConfig.NoSElinux == nil || imageConfig.NoSElinux != nil && !*imageConfig.NoSElinux {
-		osc.SElinux = "targeted"
-	}
-
-	var err error
-	osc.Directories, err = blueprint.DirectoryCustomizationsToFsNodeDirectories(c.GetDirectories())
-	if err != nil {
-		// In theory this should never happen, because the blueprint directory customizations
-		// should have been validated before this point.
-		panic(fmt.Sprintf("failed to convert directory customizations to fs node directories: %v", err))
-	}
-
-	osc.Files, err = blueprint.FileCustomizationsToFsNodeFiles(c.GetFiles())
-	if err != nil {
-		// In theory this should never happen, because the blueprint file customizations
-		// should have been validated before this point.
-		panic(fmt.Sprintf("failed to convert file customizations to fs node files: %v", err))
-	}
-
-	// OSTree commits do not include data in `/var` since that is tied to the
-	// deployment, rather than the commit. Therefore the containers need to be
-	// stored in a different location, like `/usr/share`, and the container
-	// storage engine configured accordingly.
-	if t.rpmOstree && len(containers) > 0 {
-		storagePath := "/usr/share/containers/storage"
-		osc.ContainersStorage = &storagePath
-	}
-
-	if containerStorage := c.GetContainerStorage(); containerStorage != nil {
-		osc.ContainersStorage = containerStorage.StoragePath
-	}
-
-	customRepos, err := c.GetRepositories()
-	if err != nil {
-		// This shouldn't happen and since the repos
-		// should have already been validated
-		panic(fmt.Sprintf("failed to get custom repos: %v", err))
-	}
-
-	// This function returns a map of filename and corresponding yum repos
-	// and a list of fs node files for the inline gpg keys so we can save
-	// them to disk. This step also swaps the inline gpg key with the path
-	// to the file in the os file tree
-	yumRepos, gpgKeyFiles, err := blueprint.RepoCustomizationsToRepoConfigAndGPGKeyFiles(customRepos)
-	if err != nil {
-		panic(fmt.Sprintf("failed to convert inline gpgkeys to fs node files: %v", err))
-	}
-
-	// add the gpg key files to the list of files to be added to the tree
-	if len(gpgKeyFiles) > 0 {
-		osc.Files = append(osc.Files, gpgKeyFiles...)
-	}
-
-	for filename, repos := range yumRepos {
-		osc.YUMRepos = append(osc.YUMRepos, osbuild.NewYumReposStageOptions(filename, repos))
-	}
-
-	if oscapConfig := c.GetOpenSCAP(); oscapConfig != nil {
-		if t.rpmOstree {
-			panic("unexpected oscap options for ostree image type")
-		}
-
-		oscapDataNode, err := fsnode.NewDirectory(oscap.DataDir, nil, nil, nil, true)
-		if err != nil {
-			panic(fmt.Sprintf("unexpected error creating required OpenSCAP directory: %s", oscap.DataDir))
-		}
-		osc.Directories = append(osc.Directories, oscapDataNode)
-
-		remediationConfig, err := oscap.NewConfigs(*oscapConfig, imageConfig.DefaultOSCAPDatastream)
-		if err != nil {
-			panic(fmt.Errorf("error creating OpenSCAP configs: %w", err))
-		}
-
-		osc.OpenSCAPRemediationConfig = remediationConfig
-	}
-
-	osc.ShellInit = imageConfig.ShellInit
-
-	osc.Grub2Config = imageConfig.Grub2Config
-	osc.Sysconfig = imageConfig.SysconfigStageOptions()
-	osc.SystemdLogind = imageConfig.SystemdLogind
-	osc.CloudInit = imageConfig.CloudInit
-	osc.Modprobe = imageConfig.Modprobe
-	osc.DracutConf = imageConfig.DracutConf
-	osc.SystemdUnit = imageConfig.SystemdUnit
-	osc.Authselect = imageConfig.Authselect
-	osc.SELinuxConfig = imageConfig.SELinuxConfig
-	osc.Tuned = imageConfig.Tuned
-	osc.Tmpfilesd = imageConfig.Tmpfilesd
-	osc.PamLimitsConf = imageConfig.PamLimitsConf
-	osc.Sysctld = imageConfig.Sysctld
-	osc.DNFConfig = imageConfig.DNFConfig
-	osc.SshdConfig = imageConfig.SshdConfig
-	osc.AuthConfig = imageConfig.Authconfig
-	osc.PwQuality = imageConfig.PwQuality
-	osc.WSLConfig = imageConfig.WSLConfStageOptions()
-
-	osc.Files = append(osc.Files, imageConfig.Files...)
-	osc.Directories = append(osc.Directories, imageConfig.Directories...)
-
-	ca, err := c.GetCACerts()
-	if err != nil {
-		panic(fmt.Sprintf("unexpected error checking CA certs: %v", err))
-	}
-	if ca != nil {
-		osc.CACerts = ca.PEMCerts
-	}
-
-	if imageConfig.MachineIdUninitialized != nil {
-		osc.MachineIdUninitialized = *imageConfig.MachineIdUninitialized
-	}
-
-	if imageConfig.MountUnits != nil {
-		osc.MountUnits = *imageConfig.MountUnits
-	}
-
-	return osc, nil
-}
-
 func ostreeDeploymentCustomizations(
 	t *imageType,
 	c *blueprint.Customizations) (manifest.OSTreeDeploymentCustomizations, error) {
 
-	if !t.rpmOstree || !t.bootable {
+	if !t.distroConfig.RpmOstree || !t.distroConfig.Bootable {
 		return manifest.OSTreeDeploymentCustomizations{}, fmt.Errorf("ostree deployment customizations are only supported for bootable rpm-ostree images")
 	}
 
@@ -262,8 +38,8 @@ func ostreeDeploymentCustomizations(
 	deploymentConf := manifest.OSTreeDeploymentCustomizations{}
 
 	var kernelOptions []string
-	if len(t.kernelOptions) > 0 {
-		kernelOptions = append(kernelOptions, t.kernelOptions...)
+	if len(t.distroConfig.KernelOptions) > 0 {
+		kernelOptions = append(kernelOptions, t.distroConfig.KernelOptions...)
 	}
 	if bpKernel := c.GetKernel(); bpKernel != nil && bpKernel.Append != "" {
 		kernelOptions = append(kernelOptions, bpKernel.Append)
@@ -337,7 +113,7 @@ func diskImage(workload workload.Workload,
 	img.Platform = t.platform
 
 	var err error
-	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+	img.OSCustomizations, err = distro.OsCustomizations(&t.distroConfig, packageSets[osPkgsKey], distro.ImageOptions{}, containers, bp.Customizations)
 	if err != nil {
 		return nil, err
 	}
@@ -373,7 +149,7 @@ func containerImage(workload workload.Workload,
 	img.Platform = t.platform
 
 	var err error
-	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+	img.OSCustomizations, err = distro.OsCustomizations(&t.distroConfig, packageSets[osPkgsKey], distro.ImageOptions{}, containers, bp.Customizations)
 	if err != nil {
 		return nil, err
 	}
@@ -455,7 +231,7 @@ func imageInstallerImage(workload workload.Workload,
 	img := image.NewAnacondaTarInstaller()
 
 	var err error
-	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+	img.OSCustomizations, err = distro.OsCustomizations(&t.distroConfig, packageSets[osPkgsKey], distro.ImageOptions{}, containers, bp.Customizations)
 	if err != nil {
 		return nil, err
 	}
@@ -550,7 +326,7 @@ func iotCommitImage(workload workload.Workload,
 	img.Platform = t.platform
 
 	var err error
-	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+	img.OSCustomizations, err = distro.OsCustomizations(&t.distroConfig, packageSets[osPkgsKey], distro.ImageOptions{}, containers, bp.Customizations)
 	if err != nil {
 		return nil, err
 	}
@@ -597,7 +373,7 @@ func bootableContainerImage(workload workload.Workload,
 	img.Platform = t.platform
 
 	var err error
-	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+	img.OSCustomizations, err = distro.OsCustomizations(&t.distroConfig, packageSets[osPkgsKey], distro.ImageOptions{}, containers, bp.Customizations)
 	if err != nil {
 		return nil, err
 	}
@@ -631,7 +407,7 @@ func iotContainerImage(workload workload.Workload,
 	img.Platform = t.platform
 
 	var err error
-	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+	img.OSCustomizations, err = distro.OsCustomizations(&t.distroConfig, packageSets[osPkgsKey], distro.ImageOptions{}, containers, bp.Customizations)
 	if err != nil {
 		return nil, err
 	}

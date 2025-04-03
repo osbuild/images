@@ -53,10 +53,13 @@ func (a *Architecture) AddImageTypes(platform platform.Platform, imageTypes ...*
 	if a.imageTypes == nil {
 		a.imageTypes = map[string]distro.ImageType{}
 	}
-	for idx := range imageTypes {
-		it := imageTypes[idx]
+	for _, it := range imageTypes {
 		it.arch = a
 		it.platform = platform
+		// XXX: find a better way/better place to set distro
+		// default image config (maybe sort itself via YAML)
+		it.DistroConfig.DefaultImageConfig = it.getDefaultImageConfig()
+		it.DistroConfig.IsRHEL = it.IsRHEL()
 		a.imageTypes[it.name] = it
 		for _, alias := range it.NameAliases {
 			if a.imageTypeAliases == nil {

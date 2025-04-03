@@ -68,7 +68,7 @@ func checkOptions(t *rhel.ImageType, bp *blueprint.Blueprint, options distro.Ima
 	dcp := policies.CustomDirectoriesPolicies
 	fcp := policies.CustomFilesPolicies
 
-	if t.RPMOSTree {
+	if t.DistroConfig.RpmOstree {
 		dcp = policies.OstreeCustomDirectoriesPolicies
 		fcp = policies.OstreeCustomFilesPolicies
 	}

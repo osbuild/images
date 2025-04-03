@@ -45,7 +45,6 @@ type imageType struct {
 	packageSets            map[string]packageSetFunc
 	defaultImageConfig     *distro.ImageConfig
 	defaultInstallerConfig *distro.InstallerConfig
-	kernelOptions          []string
 	defaultSize            uint64
 	buildPipelines         []string
 	payloadPipelines       []string
@@ -53,12 +52,8 @@ type imageType struct {
 	image                  imageFunc
 	isoLabel               isoLabelFunc
 
-	// bootISO: installable ISO
-	bootISO bool
-	// rpmOstree: iot/ostree
-	rpmOstree bool
-	// bootable image
-	bootable               bool
+	distroConfig distro.ImageTypeConfig
+
 	requiredPartitionSizes map[string]uint64
 }
 
@@ -80,14 +75,14 @@ func (t *imageType) MIMEType() string {
 
 func (t *imageType) OSTreeRef() string {
 	d := t.arch.distro
-	if t.rpmOstree {
+	if t.distroConfig.RpmOstree {
 		return fmt.Sprintf(d.ostreeRefTmpl, t.arch.Name())
 	}
 	return ""
 }
 
 func (t *imageType) ISOLabel() (string, error) {
-	if !t.bootISO {
+	if !t.distroConfig.BootISO {
 		return "", fmt.Errorf("image type %q is not an ISO", t.name)
 	}
 
@@ -178,7 +173,7 @@ func (t *imageType) getPartitionTable(
 	}
 
 	partitioningMode := options.PartitioningMode
-	if t.rpmOstree {
+	if t.distroConfig.RpmOstree {
 		// IoT supports only LVM, force it.
 		// Raw is not supported, return an error if it is requested
 		// TODO Need a central location for logic like this
@@ -203,7 +198,7 @@ func (t *imageType) getDefaultImageConfig() *distro.ImageConfig {
 }
 
 func (t *imageType) getDefaultInstallerConfig() (*distro.InstallerConfig, error) {
-	if !t.bootISO {
+	if !t.distroConfig.BootISO {
 		return nil, fmt.Errorf("image type %q is not an ISO", t.name)
 	}
 
@@ -339,12 +334,12 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 
 	var warnings []string
 
-	if !t.rpmOstree && options.OSTree != nil {
+	if !t.distroConfig.RpmOstree && options.OSTree != nil {
 		return warnings, fmt.Errorf("OSTree is not supported for %q", t.Name())
 	}
 
 	// we do not support embedding containers on ostree-derived images, only on commits themselves
-	if len(bp.Containers) > 0 && t.rpmOstree && (t.name != "iot-commit" && t.name != "iot-container") {
+	if len(bp.Containers) > 0 && t.distroConfig.RpmOstree && (t.name != "iot-commit" && t.name != "iot-container") {
 		return warnings, fmt.Errorf("embedding containers is not supported for %s on %s", t.name, t.arch.distro.name)
 	}
 
@@ -354,7 +349,7 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 		}
 	}
 
-	if t.bootISO && t.rpmOstree {
+	if t.distroConfig.BootISO && t.distroConfig.RpmOstree {
 		// ostree-based ISOs require a URL from which to pull a payload commit
 		if options.OSTree == nil || options.OSTree.URL == "" {
 			return warnings, fmt.Errorf("boot ISO image type %q requires specifying a URL from which to retrieve the OSTree commit", t.name)
@@ -371,7 +366,7 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 
 	// BootISOs have limited support for customizations.
 	// TODO: Support kernel name selection for image-installer
-	if t.bootISO {
+	if t.distroConfig.BootISO {
 		if t.name == "iot-simplified-installer" {
 			allowed := []string{"InstallationDevice", "FDO", "Ignition", "Kernel", "User", "Group", "FIPS"}
 			if err := customizations.CheckAllowed(allowed...); err != nil {
@@ -424,7 +419,7 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 		}
 	}
 
-	if kernelOpts := customizations.GetKernel(); kernelOpts.Append != "" && t.rpmOstree {
+	if kernelOpts := customizations.GetKernel(); kernelOpts.Append != "" && t.distroConfig.RpmOstree {
 		return warnings, fmt.Errorf("kernel boot parameter customizations are not supported for ostree types")
 	}
 
@@ -433,7 +428,7 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 	if err != nil {
 		return warnings, err
 	}
-	if (len(mountpoints) > 0 || partitioning != nil) && t.rpmOstree {
+	if (len(mountpoints) > 0 || partitioning != nil) && t.distroConfig.RpmOstree {
 		return warnings, fmt.Errorf("Custom mountpoints and partitioning are not supported for ostree types")
 	}
 	if len(mountpoints) > 0 && partitioning != nil {
@@ -455,7 +450,7 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 		if !supported {
 			return warnings, fmt.Errorf("OpenSCAP unsupported profile: %s", osc.ProfileID)
 		}
-		if t.rpmOstree {
+		if t.distroConfig.RpmOstree {
 			return warnings, fmt.Errorf("OpenSCAP customizations are not supported for ostree types")
 		}
 		if osc.ProfileID == "" {
@@ -475,7 +470,7 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 	dcp := policies.CustomDirectoriesPolicies
 	fcp := policies.CustomFilesPolicies
 
-	if t.rpmOstree {
+	if t.distroConfig.RpmOstree {
 		dcp = policies.OstreeCustomDirectoriesPolicies
 		fcp = policies.OstreeCustomFilesPolicies
 	}

@@ -24,8 +24,8 @@ func mkImageInstaller() *rhel.ImageType {
 		[]string{"bootiso"},
 	)
 
-	it.BootISO = true
-	it.Bootable = true
+	it.DistroConfig.BootISO = true
+	it.DistroConfig.Bootable = true
 	it.ISOLabelFn = distroISOLabelFunc
 
 	it.DefaultInstallerConfig = &distro.InstallerConfig{

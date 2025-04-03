@@ -29,7 +29,7 @@ func mkEdgeCommitImgType(d *rhel.Distribution) *rhel.ImageType {
 	)
 
 	it.NameAliases = []string{"rhel-edge-commit"}
-	it.RPMOSTree = true
+	it.DistroConfig.RpmOstree = true
 
 	it.DefaultImageConfig = &distro.ImageConfig{
 		EnabledServices: edgeServices,
@@ -64,7 +64,7 @@ func mkEdgeOCIImgType(d *rhel.Distribution) *rhel.ImageType {
 	)
 
 	it.NameAliases = []string{"rhel-edge-container"}
-	it.RPMOSTree = true
+	it.DistroConfig.RpmOstree = true
 
 	it.DefaultImageConfig = &distro.ImageConfig{
 		EnabledServices: edgeServices,
@@ -107,14 +107,14 @@ func mkEdgeRawImgType(d *rhel.Distribution) *rhel.ImageType {
 		it.DefaultImageConfig.IgnitionPlatform = common.ToPtr("metal")
 	}
 
-	it.KernelOptions = []string{"modprobe.blacklist=vc4"}
+	it.DistroConfig.KernelOptions = []string{"modprobe.blacklist=vc4"}
 	if common.VersionGreaterThanOrEqual(d.OsVersion(), "9.2") || !d.IsRHEL() {
-		it.KernelOptions = append(it.KernelOptions, "rw", "coreos.no_persist_ip")
+		it.DistroConfig.KernelOptions = append(it.DistroConfig.KernelOptions, "rw", "coreos.no_persist_ip")
 	}
 
 	it.DefaultSize = 10 * datasizes.GibiByte
-	it.RPMOSTree = true
-	it.Bootable = true
+	it.DistroConfig.RpmOstree = true
+	it.DistroConfig.Bootable = true
 	it.BasePartitionTables = edgeBasePartitionTables
 	it.UnsupportedPartitioningModes = []disk.PartitioningMode{disk.RawPartitioningMode}
 
@@ -153,8 +153,8 @@ func mkEdgeInstallerImgType() *rhel.ImageType {
 			"ipmi_msghandler",
 		},
 	}
-	it.RPMOSTree = true
-	it.BootISO = true
+	it.DistroConfig.RpmOstree = true
+	it.DistroConfig.BootISO = true
 	it.ISOLabelFn = distroISOLabelFunc
 
 	return it
@@ -203,16 +203,16 @@ func mkEdgeSimplifiedInstallerImgType(d *rhel.Distribution) *rhel.ImageType {
 	}
 
 	it.DefaultSize = 10 * datasizes.GibiByte
-	it.RPMOSTree = true
-	it.BootISO = true
-	it.Bootable = true
+	it.DistroConfig.RpmOstree = true
+	it.DistroConfig.BootISO = true
+	it.DistroConfig.Bootable = true
 	it.ISOLabelFn = distroISOLabelFunc
 	it.BasePartitionTables = edgeBasePartitionTables
 	it.UnsupportedPartitioningModes = []disk.PartitioningMode{disk.RawPartitioningMode}
 
-	it.KernelOptions = []string{"modprobe.blacklist=vc4"}
+	it.DistroConfig.KernelOptions = []string{"modprobe.blacklist=vc4"}
 	if common.VersionGreaterThanOrEqual(d.OsVersion(), "9.2") || !d.IsRHEL() {
-		it.KernelOptions = append(it.KernelOptions, "rw", "coreos.no_persist_ip")
+		it.DistroConfig.KernelOptions = append(it.DistroConfig.KernelOptions, "rw", "coreos.no_persist_ip")
 	}
 
 	return it
@@ -242,14 +242,14 @@ func mkEdgeAMIImgType(d *rhel.Distribution) *rhel.ImageType {
 		it.DefaultImageConfig.IgnitionPlatform = common.ToPtr("metal")
 	}
 
-	it.KernelOptions = append(amiKernelOptions(), "modprobe.blacklist=vc4")
+	it.DistroConfig.KernelOptions = append(amiKernelOptions(), "modprobe.blacklist=vc4")
 	if common.VersionGreaterThanOrEqual(d.OsVersion(), "9.2") || !d.IsRHEL() {
-		it.KernelOptions = append(it.KernelOptions, "rw", "coreos.no_persist_ip")
+		it.DistroConfig.KernelOptions = append(it.DistroConfig.KernelOptions, "rw", "coreos.no_persist_ip")
 	}
 
 	it.DefaultSize = 10 * datasizes.GibiByte
-	it.RPMOSTree = true
-	it.Bootable = true
+	it.DistroConfig.RpmOstree = true
+	it.DistroConfig.Bootable = true
 	it.BasePartitionTables = edgeBasePartitionTables
 	it.UnsupportedPartitioningModes = []disk.PartitioningMode{disk.RawPartitioningMode}
 	it.Environment = &environment.EC2{}
@@ -281,14 +281,14 @@ func mkEdgeVsphereImgType(d *rhel.Distribution) *rhel.ImageType {
 		it.DefaultImageConfig.IgnitionPlatform = common.ToPtr("metal")
 	}
 
-	it.KernelOptions = []string{"modprobe.blacklist=vc4"}
+	it.DistroConfig.KernelOptions = []string{"modprobe.blacklist=vc4"}
 	if common.VersionGreaterThanOrEqual(d.OsVersion(), "9.2") || !d.IsRHEL() {
-		it.KernelOptions = append(it.KernelOptions, "rw", "coreos.no_persist_ip")
+		it.DistroConfig.KernelOptions = append(it.DistroConfig.KernelOptions, "rw", "coreos.no_persist_ip")
 	}
 
 	it.DefaultSize = 10 * datasizes.GibiByte
-	it.RPMOSTree = true
-	it.Bootable = true
+	it.DistroConfig.RpmOstree = true
+	it.DistroConfig.Bootable = true
 	it.BasePartitionTables = edgeBasePartitionTables
 	it.UnsupportedPartitioningModes = []disk.PartitioningMode{disk.RawPartitioningMode}
 
@@ -317,9 +317,9 @@ func mkMinimalrawImgType() *rhel.ImageType {
 		// requires a kickstart file in the root directory.
 		Files: []*fsnode.File{initialSetupKickstart()},
 	}
-	it.KernelOptions = []string{"ro"}
+	it.DistroConfig.KernelOptions = []string{"ro"}
 	it.DefaultSize = 2 * datasizes.GibiByte
-	it.Bootable = true
+	it.DistroConfig.Bootable = true
 	it.BasePartitionTables = minimalrawPartitionTables
 
 	return it

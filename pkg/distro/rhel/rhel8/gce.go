@@ -28,8 +28,8 @@ func mkGceImgType(rd distro.Distro) *rhel.ImageType {
 	)
 
 	it.DefaultImageConfig = defaultGceByosImageConfig(rd)
-	it.KernelOptions = gceKernelOptions()
-	it.Bootable = true
+	it.DistroConfig.KernelOptions = gceKernelOptions()
+	it.DistroConfig.Bootable = true
 	it.DefaultSize = 20 * datasizes.GibiByte
 	// TODO: the base partition table still contains the BIOS boot partition, but the image is UEFI-only
 	it.BasePartitionTables = defaultBasePartitionTables
@@ -52,8 +52,8 @@ func mkGceRhuiImgType(rd distro.Distro) *rhel.ImageType {
 	)
 
 	it.DefaultImageConfig = defaultGceRhuiImageConfig(rd)
-	it.KernelOptions = gceKernelOptions()
-	it.Bootable = true
+	it.DistroConfig.KernelOptions = gceKernelOptions()
+	it.DistroConfig.Bootable = true
 	it.DefaultSize = 20 * datasizes.GibiByte
 	// TODO: the base partition table still contains the BIOS boot partition, but the image is UEFI-only
 	it.BasePartitionTables = defaultBasePartitionTables
