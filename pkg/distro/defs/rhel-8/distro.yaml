@@ -830,8 +830,20 @@ image_types:
       <<: *ec2_partition_tables
     partition_table_override:
       <<: *ec2_partition_table_override
+    package_sets:
+      - *ec2_common_pkgset
+      - include:
+          - "rh-amazon-rhui-client"
+        exclude:
+          - "alsa-lib"
+        condition:
+          version_greater_or_equal:
+            "8.7":
+              include:
+                - "redhat-cloud-client-configuration"
 
   ec2_ha:
+    <<: *ec2
     package_sets:
       - *ec2_common_pkgset
       - include:
@@ -848,10 +860,12 @@ image_types:
                 - "redhat-cloud-client-configuration"
 
   ami:
+    <<: *ec2
     package_sets:
       - *ec2_common_pkgset
 
   ec2_sap:
+    <<: *ec2
     package_sets:
       - *ec2_common_pkgset
       - *sap_pkgset
@@ -902,6 +916,8 @@ image_types:
           - "firewalld"
 
   vhd:
+    partition_table:
+      <<: *default_partition_tables   
     package_sets:
       - *azure_common_pkgset
       - &azure_pkgset
@@ -1060,7 +1076,13 @@ image_types:
       - *anaconda_pkgset
       - *anaconda_boot_pkgset
 
+  edge_raw_image:
+    partition_table:
+      <<: *edge_base_partition_tables
+
   edge_simplified_installer:
+    partition_table:
+      <<: *edge_base_partition_tables
     package_sets:
       # TODO: non-arch-specific package set handling for installers
       # This image type requires build packages for installers and
@@ -1124,7 +1146,9 @@ image_types:
       - include:
           - "nginx"
 
-  vmdk:
+  vmdk: &vmdk
+    partition_table:
+      <<: *default_partition_tables  
     package_sets: &vmdk_pkgsets
       - include:
           - "@core"
@@ -1138,27 +1162,32 @@ image_types:
           - "dracut-config-rescue"
           - "rng-tools"
 
-  ova:
-    package_sets: *vmdk_pkgsets
+  ova: *vmdk
 
-  gce:
+  gce: &gce
+    partition_table:
+      <<: *default_partition_tables  
     package_sets:
       - *gce_common_pkgset
 
   gce_rhui:
+    <<: *gce
     package_sets:
       - *gce_common_pkgset
       - include:
           - "google-rhui-client-rhel8"
 
-  qcow2:
+  qcow2: &qcow2
+    partition_table:
+      <<: *default_partition_tables  
     package_sets: &qcow2_pkgset
       - *qcow2_common_pkgset
 
-  oci:
-    package_sets: *qcow2_pkgset
+  oci: *qcow2
 
   openstack:
+    partition_table:
+      <<: *default_partition_tables
     package_sets:
       - include:
           - "@Core"
@@ -1277,6 +1306,8 @@ image_types:
           - "xz"
 
   minimal_raw:
+    partition_table:
+      <<: *default_partition_tables   
     package_sets:
       - include:
           - "@core"
