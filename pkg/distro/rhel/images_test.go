@@ -434,7 +434,7 @@ func TestOsCustomizationsRHSM(t *testing.T) {
 			it := &ImageType{DefaultImageConfig: tc.ic}
 			testArch.AddImageTypes(&platform.X86{}, it)
 
-			osc, err := osCustomizations(&it.DistroConfig, rpmmd.PackageSet{}, *tc.io, nil, tc.bpc)
+			osc, err := distro.OsCustomizations(&it.DistroConfig, rpmmd.PackageSet{}, *tc.io, nil, tc.bpc)
 			assert.NoError(t, err)
 			assert.EqualValues(t, tc.expectedOsc.RHSMConfig, osc.RHSMConfig)
 		})
