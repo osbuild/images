@@ -136,7 +136,7 @@ func TestManifestGeneratorWithOstreeCommit(t *testing.T) {
 	assert.Contains(t, osbuildManifest.String(), expectedSha256)
 }
 
-func fakeDepsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]dnfjson.DepsolveResult, error) {
+func fakeDepsolve(cacheDir string, depsolveWarningsOutput io.Writer, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]dnfjson.DepsolveResult, error) {
 	depsolvedSets := make(map[string]dnfjson.DepsolveResult)
 	for name, pkgSets := range packageSets {
 		repoId := fmt.Sprintf("repo_id_%s", name)
@@ -162,7 +162,6 @@ func fakeDepsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d 
 			}
 		}
 		depsolvedSets[name] = resolvedSet
-
 	}
 	return depsolvedSets, nil
 }
