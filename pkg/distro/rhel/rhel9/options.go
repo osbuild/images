@@ -24,7 +24,7 @@ func checkOptions(t *rhel.ImageType, bp *blueprint.Blueprint, options distro.Ima
 	var warnings []string
 
 	// we do not support embedding containers on ostree-derived images, only on commits themselves
-	if len(bp.Containers) > 0 && t.RPMOSTree && (t.Name() != "edge-commit" && t.Name() != "edge-container") {
+	if len(bp.Containers) > 0 && t.DistroConfig.RpmOstree && (t.Name() != "edge-commit" && t.Name() != "edge-container") {
 		return warnings, fmt.Errorf("embedding containers is not supported for %s on %s", t.Name(), t.Arch().Distro().Name())
 	}
 
@@ -34,7 +34,7 @@ func checkOptions(t *rhel.ImageType, bp *blueprint.Blueprint, options distro.Ima
 		}
 	}
 
-	if t.BootISO && t.RPMOSTree {
+	if t.DistroConfig.BootISO && t.DistroConfig.RpmOstree {
 		// ostree-based ISOs require a URL from which to pull a payload commit
 		if options.OSTree == nil || options.OSTree.URL == "" {
 			return warnings, fmt.Errorf("boot ISO image type %q requires specifying a URL from which to retrieve the OSTree commit", t.Name())
@@ -110,7 +110,7 @@ func checkOptions(t *rhel.ImageType, bp *blueprint.Blueprint, options distro.Ima
 		}
 	}
 
-	if kernelOpts := customizations.GetKernel(); kernelOpts.Append != "" && t.RPMOSTree && t.Name() != "edge-raw-image" && t.Name() != "edge-simplified-installer" {
+	if kernelOpts := customizations.GetKernel(); kernelOpts.Append != "" && t.DistroConfig.RpmOstree && t.Name() != "edge-raw-image" && t.Name() != "edge-simplified-installer" {
 		return warnings, fmt.Errorf("kernel boot parameter customizations are not supported for ostree types")
 	}
 
@@ -123,9 +123,9 @@ func checkOptions(t *rhel.ImageType, bp *blueprint.Blueprint, options distro.Ima
 	if err != nil {
 		return nil, err
 	}
-	if (mountpoints != nil || partitioning != nil) && t.RPMOSTree && (t.Name() == "edge-container" || t.Name() == "edge-commit") {
+	if (mountpoints != nil || partitioning != nil) && t.DistroConfig.RpmOstree && (t.Name() == "edge-container" || t.Name() == "edge-commit") {
 		return warnings, fmt.Errorf("custom mountpoints and partitioning are not supported for ostree types")
-	} else if (mountpoints != nil || partitioning != nil) && t.RPMOSTree && !(t.Name() == "edge-container" || t.Name() == "edge-commit") {
+	} else if (mountpoints != nil || partitioning != nil) && t.DistroConfig.RpmOstree && !(t.Name() == "edge-container" || t.Name() == "edge-commit") {
 		//customization allowed for edge-raw-image,edge-ami,edge-vsphere,edge-simplified-installer
 		err := blueprint.CheckMountpointsPolicy(mountpoints, policies.OstreeMountpointPolicies)
 		if err != nil {
@@ -156,7 +156,7 @@ func checkOptions(t *rhel.ImageType, bp *blueprint.Blueprint, options distro.Ima
 		if !oscap.IsProfileAllowed(osc.ProfileID, oscapProfileAllowList) {
 			return warnings, fmt.Errorf("OpenSCAP unsupported profile: %s", osc.ProfileID)
 		}
-		if t.RPMOSTree {
+		if t.DistroConfig.RpmOstree {
 			return warnings, fmt.Errorf("OpenSCAP customizations are not supported for ostree types")
 		}
 		if osc.ProfileID == "" {
@@ -176,7 +176,7 @@ func checkOptions(t *rhel.ImageType, bp *blueprint.Blueprint, options distro.Ima
 	dcp := policies.CustomDirectoriesPolicies
 	fcp := policies.CustomFilesPolicies
 
-	if t.RPMOSTree {
+	if t.DistroConfig.RpmOstree {
 		dcp = policies.OstreeCustomDirectoriesPolicies
 		fcp = policies.OstreeCustomFilesPolicies
 	}

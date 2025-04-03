@@ -30,9 +30,9 @@ func mkGCEImageType() *rhel.ImageType {
 	// The configuration for non-RHUI images does not touch the RHSM configuration at all.
 	// https://issues.redhat.com/browse/COMPOSER-2157
 	it.DefaultImageConfig = baseGCEImageConfig()
-	it.KernelOptions = gceKernelOptions()
+	it.DistroConfig.KernelOptions = gceKernelOptions()
 	it.DefaultSize = 20 * datasizes.GibiByte
-	it.Bootable = true
+	it.DistroConfig.Bootable = true
 	// TODO: the base partition table still contains the BIOS boot partition, but the image is UEFI-only
 	it.BasePartitionTables = defaultBasePartitionTables
 

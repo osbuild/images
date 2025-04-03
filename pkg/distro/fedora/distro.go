@@ -84,10 +84,12 @@ func mkImageInstallerImgType(d distribution) imageType {
 		defaultImageConfig: &distro.ImageConfig{
 			Locale: common.ToPtr("en_US.UTF-8"),
 		},
-		bootable:  true,
-		bootISO:   true,
-		rpmOstree: false,
-		image:     imageInstallerImage,
+		distroConfig: distro.ImageTypeConfig{
+			Bootable:  true,
+			BootISO:   true,
+			RpmOstree: false,
+		},
+		image: imageInstallerImage,
 		// We don't know the variant of the OS pipeline being installed
 		isoLabel:               getISOLabelFunc("Unknown"),
 		buildPipelines:         []string{"build"},
@@ -109,9 +111,11 @@ func mkLiveInstallerImgType(d distribution) imageType {
 		defaultImageConfig: &distro.ImageConfig{
 			Locale: common.ToPtr("en_US.UTF-8"),
 		},
-		bootable:               true,
-		bootISO:                true,
-		rpmOstree:              false,
+		distroConfig: distro.ImageTypeConfig{
+			Bootable:  true,
+			BootISO:   true,
+			RpmOstree: false,
+		},
 		image:                  liveInstallerImage,
 		isoLabel:               getISOLabelFunc("Workstation"),
 		buildPipelines:         []string{"build"},
@@ -135,7 +139,9 @@ func mkIotCommitImgType(d distribution) imageType {
 			DracutConf:             []*osbuild.DracutConfStageOptions{osbuild.FIPSDracutConfStageOptions},
 			MachineIdUninitialized: common.ToPtr(false),
 		},
-		rpmOstree:              true,
+		distroConfig: distro.ImageTypeConfig{
+			RpmOstree: true,
+		},
 		image:                  iotCommitImage,
 		buildPipelines:         []string{"build"},
 		payloadPipelines:       []string{"os", "ostree-commit", "commit-archive"},
@@ -155,7 +161,9 @@ func mkIotBootableContainer(d distribution) imageType {
 		defaultImageConfig: &distro.ImageConfig{
 			MachineIdUninitialized: common.ToPtr(false),
 		},
-		rpmOstree:              true,
+		distroConfig: distro.ImageTypeConfig{
+			RpmOstree: true,
+		},
 		image:                  bootableContainerImage,
 		buildPipelines:         []string{"build"},
 		payloadPipelines:       []string{"os", "ostree-commit", "ostree-encapsulate"},
@@ -181,8 +189,10 @@ func mkIotOCIImgType(d distribution) imageType {
 			DracutConf:             []*osbuild.DracutConfStageOptions{osbuild.FIPSDracutConfStageOptions},
 			MachineIdUninitialized: common.ToPtr(false),
 		},
-		rpmOstree:              true,
-		bootISO:                false,
+		distroConfig: distro.ImageTypeConfig{
+			RpmOstree: true,
+			BootISO:   false,
+		},
 		image:                  iotContainerImage,
 		buildPipelines:         []string{"build"},
 		payloadPipelines:       []string{"os", "ostree-commit", "container-tree", "container"},
@@ -204,8 +214,10 @@ func mkIotInstallerImgType(d distribution) imageType {
 			EnabledServices: iotServicesForVersion(&d),
 			Locale:          common.ToPtr("en_US.UTF-8"),
 		},
-		rpmOstree:              true,
-		bootISO:                true,
+		distroConfig: distro.ImageTypeConfig{
+			RpmOstree: true,
+			BootISO:   true,
+		},
 		image:                  iotInstallerImage,
 		isoLabel:               getISOLabelFunc("IoT"),
 		buildPipelines:         []string{"build"},
@@ -233,16 +245,18 @@ func mkIotSimplifiedInstallerImgType(d distribution) imageType {
 			LockRootUser:              common.ToPtr(true),
 			IgnitionPlatform:          common.ToPtr("metal"),
 		},
-		defaultSize:            10 * datasizes.GibiByte,
-		rpmOstree:              true,
-		bootable:               true,
-		bootISO:                true,
+		defaultSize: 10 * datasizes.GibiByte,
+		distroConfig: distro.ImageTypeConfig{
+			RpmOstree:     true,
+			Bootable:      true,
+			BootISO:       true,
+			KernelOptions: ostreeDeploymentKernelOptions(),
+		},
 		image:                  iotSimplifiedInstallerImage,
 		isoLabel:               getISOLabelFunc("IoT"),
 		buildPipelines:         []string{"build"},
 		payloadPipelines:       []string{"ostree-deployment", "image", "xz", "coi-tree", "efiboot-tree", "bootiso-tree", "bootiso"},
 		exports:                []string{"bootiso"},
-		kernelOptions:          ostreeDeploymentKernelOptions(),
 		requiredPartitionSizes: requiredDirectorySizes,
 	}
 }
@@ -264,14 +278,16 @@ func mkIotRawImgType(d distribution) imageType {
 			LockRootUser:              common.ToPtr(true),
 			IgnitionPlatform:          common.ToPtr("metal"),
 		},
-		defaultSize:      4 * datasizes.GibiByte,
-		rpmOstree:        true,
-		bootable:         true,
+		defaultSize: 4 * datasizes.GibiByte,
+		distroConfig: distro.ImageTypeConfig{
+			RpmOstree:     true,
+			Bootable:      true,
+			KernelOptions: ostreeDeploymentKernelOptions(),
+		},
 		image:            iotImage,
 		buildPipelines:   []string{"build"},
 		payloadPipelines: []string{"ostree-deployment", "image", "xz"},
 		exports:          []string{"xz"},
-		kernelOptions:    ostreeDeploymentKernelOptions(),
 
 		// Passing an empty map into the required partition sizes disables the
 		// default partition sizes normally set so our `basePartitionTables` can
@@ -295,14 +311,16 @@ func mkIotQcow2ImgType(d distribution) imageType {
 			LockRootUser:              common.ToPtr(true),
 			IgnitionPlatform:          common.ToPtr("qemu"),
 		},
-		defaultSize:            10 * datasizes.GibiByte,
-		rpmOstree:              true,
-		bootable:               true,
+		defaultSize: 10 * datasizes.GibiByte,
+		distroConfig: distro.ImageTypeConfig{
+			RpmOstree:     true,
+			Bootable:      true,
+			KernelOptions: ostreeDeploymentKernelOptions(),
+		},
 		image:                  iotImage,
 		buildPipelines:         []string{"build"},
 		payloadPipelines:       []string{"ostree-deployment", "image", "qcow2"},
 		exports:                []string{"qcow2"},
-		kernelOptions:          ostreeDeploymentKernelOptions(),
 		requiredPartitionSizes: requiredDirectorySizes,
 	}
 }
@@ -319,8 +337,10 @@ func mkQcow2ImgType(d distribution) imageType {
 		defaultImageConfig: &distro.ImageConfig{
 			DefaultTarget: common.ToPtr("multi-user.target"),
 		},
-		kernelOptions:          cloudKernelOptions(),
-		bootable:               true,
+		distroConfig: distro.ImageTypeConfig{
+			KernelOptions: cloudKernelOptions(),
+			Bootable:      true,
+		},
 		defaultSize:            5 * datasizes.GibiByte,
 		image:                  diskImage,
 		buildPipelines:         []string{"build"},
@@ -350,9 +370,11 @@ func mkVmdkImgType(d distribution) imageType {
 		packageSets: map[string]packageSetFunc{
 			osPkgsKey: packageSetLoader,
 		},
-		defaultImageConfig:     vmdkDefaultImageConfig,
-		kernelOptions:          cloudKernelOptions(),
-		bootable:               true,
+		defaultImageConfig: vmdkDefaultImageConfig,
+		distroConfig: distro.ImageTypeConfig{
+			KernelOptions: cloudKernelOptions(),
+			Bootable:      true,
+		},
 		defaultSize:            2 * datasizes.GibiByte,
 		image:                  diskImage,
 		buildPipelines:         []string{"build"},
@@ -370,9 +392,11 @@ func mkOvaImgType(d distribution) imageType {
 		packageSets: map[string]packageSetFunc{
 			osPkgsKey: packageSetLoader,
 		},
-		defaultImageConfig:     vmdkDefaultImageConfig,
-		kernelOptions:          cloudKernelOptions(),
-		bootable:               true,
+		defaultImageConfig: vmdkDefaultImageConfig,
+		distroConfig: distro.ImageTypeConfig{
+			KernelOptions: cloudKernelOptions(),
+			Bootable:      true,
+		},
 		defaultSize:            2 * datasizes.GibiByte,
 		image:                  diskImage,
 		buildPipelines:         []string{"build"},
@@ -396,8 +420,10 @@ func mkContainerImgType(d distribution) imageType {
 			Locale:      common.ToPtr("C.UTF-8"),
 			Timezone:    common.ToPtr("Etc/UTC"),
 		},
-		image:                  containerImage,
-		bootable:               false,
+		image: containerImage,
+		distroConfig: distro.ImageTypeConfig{
+			Bootable: false,
+		},
 		buildPipelines:         []string{"build"},
 		payloadPipelines:       []string{"os", "container"},
 		exports:                []string{"container"},
@@ -436,8 +462,10 @@ func mkWslImgType(d distribution) imageType {
 				BootSystemd: true,
 			},
 		},
-		image:                  containerImage,
-		bootable:               false,
+		image: containerImage,
+		distroConfig: distro.ImageTypeConfig{
+			Bootable: false,
+		},
 		buildPipelines:         []string{"build"},
 		payloadPipelines:       []string{"os", "container"},
 		exports:                []string{"container"},
@@ -465,9 +493,11 @@ func mkMinimalRawImgType(d distribution) imageType {
 			},
 			InstallWeakDeps: common.ToPtr(common.VersionLessThan(d.osVersion, VERSION_MINIMAL_WEAKDEPS)),
 		},
-		rpmOstree:              false,
-		kernelOptions:          defaultKernelOptions(),
-		bootable:               true,
+		distroConfig: distro.ImageTypeConfig{
+			RpmOstree:     false,
+			KernelOptions: defaultKernelOptions(),
+			Bootable:      true,
+		},
 		defaultSize:            2 * datasizes.GibiByte,
 		image:                  diskImage,
 		buildPipelines:         []string{"build"},
@@ -482,7 +512,7 @@ func mkMinimalRawImgType(d distribution) imageType {
 
 		// when using systemd mount units we also want them to be mounted rw
 		// while the default options are not
-		it.kernelOptions = []string{"rw"}
+		it.distroConfig.KernelOptions = []string{"rw"}
 	}
 	return it
 }
@@ -638,10 +668,12 @@ func (a *architecture) addImageTypes(platform platform.Platform, imageTypes ...i
 	if a.imageTypes == nil {
 		a.imageTypes = map[string]distro.ImageType{}
 	}
-	for idx := range imageTypes {
-		it := imageTypes[idx]
+	for _, it := range imageTypes {
 		it.arch = a
 		it.platform = platform
+		// XXX: find a better way/better place to set distro
+		// default image config (maybe sort itself via YAML)
+		it.distroConfig.DefaultImageConfig = it.getDefaultImageConfig()
 		a.imageTypes[it.name] = &it
 		for _, alias := range it.nameAliases {
 			if a.imageTypeAliases == nil {

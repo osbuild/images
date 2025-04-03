@@ -78,15 +78,10 @@ type ImageType struct {
 	Compression            string // TODO: remove from image definition and make it a transport option
 	DefaultImageConfig     *distro.ImageConfig
 	DefaultInstallerConfig *distro.InstallerConfig
-	KernelOptions          []string
 	DefaultSize            uint64
 
-	// bootISO: installable ISO
-	BootISO bool
-	// rpmOstree: edge/ostree
-	RPMOSTree bool
-	// bootable image
-	Bootable bool
+	DistroConfig distro.ImageTypeConfig
+
 	// List of valid arches for the image type
 	BasePartitionTables BasePartitionTableFunc
 	// Optional list of unsupported partitioning modes
@@ -117,7 +112,7 @@ func (t *ImageType) MIMEType() string {
 
 func (t *ImageType) OSTreeRef() string {
 	d := t.arch.distro
-	if t.RPMOSTree {
+	if t.DistroConfig.RpmOstree {
 		return fmt.Sprintf(d.ostreeRefTmpl, t.Arch().Name())
 	}
 	return ""
@@ -135,7 +130,7 @@ func (t *ImageType) IsRHEL() bool {
 }
 
 func (t *ImageType) ISOLabel() (string, error) {
-	if !t.BootISO {
+	if !t.DistroConfig.BootISO {
 		return "", fmt.Errorf("image type %q is not an ISO", t.name)
 	}
 
@@ -253,7 +248,7 @@ func (t *ImageType) getDefaultImageConfig() *distro.ImageConfig {
 }
 
 func (t *ImageType) getDefaultInstallerConfig() (*distro.InstallerConfig, error) {
-	if !t.BootISO {
+	if !t.DistroConfig.BootISO {
 		return nil, fmt.Errorf("image type %q is not an ISO", t.name)
 	}
 
@@ -407,7 +402,7 @@ func (t *ImageType) Manifest(bp *blueprint.Blueprint,
 // checkOptions checks the validity and compatibility of options and customizations for the image type.
 // Returns ([]string, error) where []string, if non-nil, will hold any generated warnings (e.g. deprecation notices).
 func (t *ImageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOptions) ([]string, error) {
-	if !t.RPMOSTree && options.OSTree != nil {
+	if !t.DistroConfig.RpmOstree && options.OSTree != nil {
 		return nil, fmt.Errorf("OSTree is not supported for %q", t.Name())
 	}
 

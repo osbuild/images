@@ -23,9 +23,9 @@ func mkQcow2ImgType(d *rhel.Distribution) *rhel.ImageType {
 	)
 
 	it.DefaultImageConfig = qcowImageConfig(d)
-	it.KernelOptions = []string{"console=tty0", "console=ttyS0,115200n8", "no_timer_check", "net.ifnames=0"}
+	it.DistroConfig.KernelOptions = []string{"console=tty0", "console=ttyS0,115200n8", "no_timer_check", "net.ifnames=0"}
 	it.DefaultSize = 10 * datasizes.GibiByte
-	it.Bootable = true
+	it.DistroConfig.Bootable = true
 	it.BasePartitionTables = defaultBasePartitionTables
 
 	return it
@@ -46,9 +46,9 @@ func mkOCIImgType(d *rhel.Distribution) *rhel.ImageType {
 	)
 
 	it.DefaultImageConfig = qcowImageConfig(d)
-	it.KernelOptions = []string{"console=tty0", "console=ttyS0,115200n8", "no_timer_check", "net.ifnames=0"}
+	it.DistroConfig.KernelOptions = []string{"console=tty0", "console=ttyS0,115200n8", "no_timer_check", "net.ifnames=0"}
 	it.DefaultSize = 10 * datasizes.GibiByte
-	it.Bootable = true
+	it.DistroConfig.Bootable = true
 	it.BasePartitionTables = defaultBasePartitionTables
 
 	return it
@@ -71,9 +71,9 @@ func mkOpenstackImgType() *rhel.ImageType {
 	it.DefaultImageConfig = &distro.ImageConfig{
 		Locale: common.ToPtr("en_US.UTF-8"),
 	}
-	it.KernelOptions = []string{"ro", "net.ifnames=0"}
+	it.DistroConfig.KernelOptions = []string{"ro", "net.ifnames=0"}
 	it.DefaultSize = 4 * datasizes.GibiByte
-	it.Bootable = true
+	it.DistroConfig.Bootable = true
 	it.BasePartitionTables = defaultBasePartitionTables
 
 	return it

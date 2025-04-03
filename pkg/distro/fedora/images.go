@@ -28,21 +28,24 @@ import (
 // HELPERS
 
 func osCustomizations(
-	t *imageType,
+	t *distro.ImageTypeConfig,
 	osPackageSet rpmmd.PackageSet,
 	containers []container.SourceSpec,
 	c *blueprint.Customizations) (manifest.OSCustomizations, error) {
 
-	imageConfig := t.getDefaultImageConfig()
+	imageConfig := t.DefaultImageConfig
 
 	osc := manifest.OSCustomizations{}
 
-	if t.bootable || t.rpmOstree {
+	if t.Bootable || t.RpmOstree {
+		// XXX: the default kernel name sould come from
+		// DistroConfig first, it is currently hardcoded in
+		// blueprints as a fallback
 		osc.KernelName = c.GetKernel().Name
 
 		var kernelOptions []string
-		if len(t.kernelOptions) > 0 {
-			kernelOptions = append(kernelOptions, t.kernelOptions...)
+		if len(t.KernelOptions) > 0 {
+			kernelOptions = append(kernelOptions, t.KernelOptions...)
 		}
 		if bpKernel := c.GetKernel(); bpKernel.Append != "" {
 			kernelOptions = append(kernelOptions, bpKernel.Append)
@@ -67,7 +70,7 @@ func osCustomizations(
 		osc.ExcludeDocs = *imageConfig.ExcludeDocs
 	}
 
-	if !t.bootISO {
+	if !t.BootISO {
 		// don't put users and groups in the payload of an installer
 		// add them via kickstart instead
 		osc.Groups = users.GroupsFromBP(c.GetGroups())
@@ -154,7 +157,7 @@ func osCustomizations(
 	// deployment, rather than the commit. Therefore the containers need to be
 	// stored in a different location, like `/usr/share`, and the container
 	// storage engine configured accordingly.
-	if t.rpmOstree && len(containers) > 0 {
+	if t.RpmOstree && len(containers) > 0 {
 		storagePath := "/usr/share/containers/storage"
 		osc.ContainersStorage = &storagePath
 	}
@@ -189,7 +192,7 @@ func osCustomizations(
 	}
 
 	if oscapConfig := c.GetOpenSCAP(); oscapConfig != nil {
-		if t.rpmOstree {
+		if t.RpmOstree {
 			panic("unexpected oscap options for ostree image type")
 		}
 
@@ -254,7 +257,7 @@ func ostreeDeploymentCustomizations(
 	t *imageType,
 	c *blueprint.Customizations) (manifest.OSTreeDeploymentCustomizations, error) {
 
-	if !t.rpmOstree || !t.bootable {
+	if !t.distroConfig.RpmOstree || !t.distroConfig.Bootable {
 		return manifest.OSTreeDeploymentCustomizations{}, fmt.Errorf("ostree deployment customizations are only supported for bootable rpm-ostree images")
 	}
 
@@ -262,8 +265,8 @@ func ostreeDeploymentCustomizations(
 	deploymentConf := manifest.OSTreeDeploymentCustomizations{}
 
 	var kernelOptions []string
-	if len(t.kernelOptions) > 0 {
-		kernelOptions = append(kernelOptions, t.kernelOptions...)
+	if len(t.distroConfig.KernelOptions) > 0 {
+		kernelOptions = append(kernelOptions, t.distroConfig.KernelOptions...)
 	}
 	if bpKernel := c.GetKernel(); bpKernel != nil && bpKernel.Append != "" {
 		kernelOptions = append(kernelOptions, bpKernel.Append)
@@ -337,7 +340,7 @@ func diskImage(workload workload.Workload,
 	img.Platform = t.platform
 
 	var err error
-	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+	img.OSCustomizations, err = osCustomizations(&t.distroConfig, packageSets[osPkgsKey], containers, bp.Customizations)
 	if err != nil {
 		return nil, err
 	}
@@ -373,7 +376,7 @@ func containerImage(workload workload.Workload,
 	img.Platform = t.platform
 
 	var err error
-	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+	img.OSCustomizations, err = osCustomizations(&t.distroConfig, packageSets[osPkgsKey], containers, bp.Customizations)
 	if err != nil {
 		return nil, err
 	}
@@ -455,7 +458,7 @@ func imageInstallerImage(workload workload.Workload,
 	img := image.NewAnacondaTarInstaller()
 
 	var err error
-	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+	img.OSCustomizations, err = osCustomizations(&t.distroConfig, packageSets[osPkgsKey], containers, bp.Customizations)
 	if err != nil {
 		return nil, err
 	}
@@ -550,7 +553,7 @@ func iotCommitImage(workload workload.Workload,
 	img.Platform = t.platform
 
 	var err error
-	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+	img.OSCustomizations, err = osCustomizations(&t.distroConfig, packageSets[osPkgsKey], containers, bp.Customizations)
 	if err != nil {
 		return nil, err
 	}
@@ -597,7 +600,7 @@ func bootableContainerImage(workload workload.Workload,
 	img.Platform = t.platform
 
 	var err error
-	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+	img.OSCustomizations, err = osCustomizations(&t.distroConfig, packageSets[osPkgsKey], containers, bp.Customizations)
 	if err != nil {
 		return nil, err
 	}
@@ -631,7 +634,7 @@ func iotContainerImage(workload workload.Workload,
 	img.Platform = t.platform
 
 	var err error
-	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+	img.OSCustomizations, err = osCustomizations(&t.distroConfig, packageSets[osPkgsKey], containers, bp.Customizations)
 	if err != nil {
 		return nil, err
 	}

@@ -31,9 +31,9 @@ func mkAzureRhuiImgType() *rhel.ImageType {
 	it.DiskImageVPCForceSize = common.ToPtr(false)
 
 	it.Compression = "xz"
-	it.KernelOptions = []string{"ro", "crashkernel=auto", "console=tty1", "console=ttyS0", "earlyprintk=ttyS0", "rootdelay=300", "scsi_mod.use_blk_mq=y"}
+	it.DistroConfig.KernelOptions = []string{"ro", "crashkernel=auto", "console=tty1", "console=ttyS0", "earlyprintk=ttyS0", "rootdelay=300", "scsi_mod.use_blk_mq=y"}
 	it.DefaultImageConfig = azureDefaultImgConfig
-	it.Bootable = true
+	it.DistroConfig.Bootable = true
 	it.DefaultSize = 64 * datasizes.GibiByte
 	it.BasePartitionTables = azureRhuiBasePartitionTables
 

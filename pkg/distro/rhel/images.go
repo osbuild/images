@@ -25,18 +25,21 @@ import (
 )
 
 func osCustomizations(
-	t *ImageType,
+	t *distro.ImageTypeConfig,
 	osPackageSet rpmmd.PackageSet,
 	options distro.ImageOptions,
 	containers []container.SourceSpec,
 	c *blueprint.Customizations,
 ) (manifest.OSCustomizations, error) {
 
-	imageConfig := t.getDefaultImageConfig()
+	imageConfig := t.DefaultImageConfig
 
 	osc := manifest.OSCustomizations{}
 
-	if t.Bootable || t.RPMOSTree {
+	if t.Bootable || t.RpmOstree {
+		// XXX: the default kernel name sould come from
+		// DistroConfig first, it is currently hardcoded in
+		// blueprints as a fallback
 		osc.KernelName = c.GetKernel().Name
 
 		var kernelOptions []string
@@ -145,7 +148,7 @@ func osCustomizations(
 		osc.SELinuxForceRelabel = imageConfig.SELinuxForceRelabel
 	}
 
-	if t.IsRHEL() && options.Facts != nil {
+	if t.IsRHEL && options.Facts != nil {
 		osc.RHSMFacts = options.Facts
 	}
 
@@ -168,7 +171,7 @@ func osCustomizations(
 	// deployment, rather than the commit. Therefore the containers need to be
 	// stored in a different location, like `/usr/share`, and the container
 	// storage engine configured accordingly.
-	if t.RPMOSTree && len(containers) > 0 {
+	if t.RpmOstree && len(containers) > 0 {
 		storagePath := "/usr/share/containers/storage"
 		osc.ContainersStorage = &storagePath
 	}
@@ -207,7 +210,7 @@ func osCustomizations(
 	}
 
 	if oscapConfig := c.GetOpenSCAP(); oscapConfig != nil {
-		if t.RPMOSTree {
+		if t.RpmOstree {
 			panic("unexpected oscap options for ostree image type")
 		}
 
@@ -295,14 +298,14 @@ func osCustomizations(
 }
 
 func ostreeDeploymentCustomizations(
-	t *ImageType,
+	t *distro.ImageTypeConfig,
 	c *blueprint.Customizations) (manifest.OSTreeDeploymentCustomizations, error) {
 
-	if !t.RPMOSTree || !t.Bootable {
+	if !t.RpmOstree || !t.Bootable {
 		return manifest.OSTreeDeploymentCustomizations{}, fmt.Errorf("ostree deployment customizations are only supported for bootable rpm-ostree images")
 	}
 
-	imageConfig := t.getDefaultImageConfig()
+	imageConfig := t.DefaultImageConfig
 	deploymentConf := manifest.OSTreeDeploymentCustomizations{}
 
 	var kernelOptions []string
@@ -384,7 +387,7 @@ func DiskImage(workload workload.Workload,
 	img.Platform = t.platform
 
 	var err error
-	img.OSCustomizations, err = osCustomizations(t, packageSets[OSPkgsKey], options, containers, customizations)
+	img.OSCustomizations, err = osCustomizations(&t.DistroConfig, packageSets[OSPkgsKey], options, containers, customizations)
 	if err != nil {
 		return nil, err
 	}
@@ -430,7 +433,7 @@ func EdgeCommitImage(workload workload.Workload,
 	img.Platform = t.platform
 
 	var err error
-	img.OSCustomizations, err = osCustomizations(t, packageSets[OSPkgsKey], options, containers, customizations)
+	img.OSCustomizations, err = osCustomizations(&t.DistroConfig, packageSets[OSPkgsKey], options, containers, customizations)
 	if err != nil {
 		return nil, err
 	}
@@ -458,7 +461,7 @@ func EdgeContainerImage(workload workload.Workload,
 	img.Platform = t.platform
 
 	var err error
-	img.OSCustomizations, err = osCustomizations(t, packageSets[OSPkgsKey], options, containers, customizations)
+	img.OSCustomizations, err = osCustomizations(&t.DistroConfig, packageSets[OSPkgsKey], options, containers, customizations)
 	if err != nil {
 		return nil, err
 	}
@@ -585,7 +588,7 @@ func EdgeRawImage(workload workload.Workload,
 	}
 	img := image.NewOSTreeDiskImageFromCommit(commit)
 
-	deploymentConfig, err := ostreeDeploymentCustomizations(t, customizations)
+	deploymentConfig, err := ostreeDeploymentCustomizations(&t.DistroConfig, customizations)
 	if err != nil {
 		return nil, err
 	}
@@ -627,7 +630,7 @@ func EdgeSimplifiedInstallerImage(workload workload.Workload,
 	}
 	rawImg := image.NewOSTreeDiskImageFromCommit(commit)
 
-	deploymentConfig, err := ostreeDeploymentCustomizations(t, customizations)
+	deploymentConfig, err := ostreeDeploymentCustomizations(&t.DistroConfig, customizations)
 	if err != nil {
 		return nil, err
 	}
@@ -708,7 +711,7 @@ func ImageInstallerImage(workload workload.Workload,
 	img.Workload = workload
 
 	var err error
-	img.OSCustomizations, err = osCustomizations(t, packageSets[OSPkgsKey], options, containers, customizations)
+	img.OSCustomizations, err = osCustomizations(&t.DistroConfig, packageSets[OSPkgsKey], options, containers, customizations)
 	if err != nil {
 		return nil, err
 	}
@@ -794,7 +797,7 @@ func TarImage(workload workload.Workload,
 	img.Platform = t.platform
 
 	var err error
-	img.OSCustomizations, err = osCustomizations(t, packageSets[OSPkgsKey], options, containers, customizations)
+	img.OSCustomizations, err = osCustomizations(&t.DistroConfig, packageSets[OSPkgsKey], options, containers, customizations)
 	if err != nil {
 		return nil, err
 	}

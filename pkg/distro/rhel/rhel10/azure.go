@@ -25,8 +25,8 @@ func mkAzureImgType(rd *rhel.Distribution) *rhel.ImageType {
 		[]string{"vpc"},
 	)
 
-	it.KernelOptions = defaultAzureKernelOptions()
-	it.Bootable = true
+	it.DistroConfig.KernelOptions = defaultAzureKernelOptions()
+	it.DistroConfig.Bootable = true
 	it.DefaultSize = 4 * datasizes.GibiByte
 	it.DefaultImageConfig = defaultAzureImageConfig(rd)
 	it.BasePartitionTables = defaultBasePartitionTables
@@ -50,8 +50,8 @@ func mkAzureInternalImgType(rd *rhel.Distribution) *rhel.ImageType {
 	)
 
 	it.Compression = "xz"
-	it.KernelOptions = defaultAzureKernelOptions()
-	it.Bootable = true
+	it.DistroConfig.KernelOptions = defaultAzureKernelOptions()
+	it.DistroConfig.Bootable = true
 	it.DefaultSize = 64 * datasizes.GibiByte
 	it.DefaultImageConfig = defaultAzureImageConfig(rd)
 	it.BasePartitionTables = azureInternalBasePartitionTables
@@ -74,8 +74,8 @@ func mkAzureSapInternalImgType(rd *rhel.Distribution) *rhel.ImageType {
 	)
 
 	it.Compression = "xz"
-	it.KernelOptions = defaultAzureKernelOptions()
-	it.Bootable = true
+	it.DistroConfig.KernelOptions = defaultAzureKernelOptions()
+	it.DistroConfig.Bootable = true
 	it.DefaultSize = 64 * datasizes.GibiByte
 	it.DefaultImageConfig = sapAzureImageConfig(rd)
 	it.BasePartitionTables = azureInternalBasePartitionTables

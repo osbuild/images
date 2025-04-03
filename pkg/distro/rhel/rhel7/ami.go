@@ -36,8 +36,8 @@ func mkEc2ImgTypeX86_64() *rhel.ImageType {
 
 	it.Compression = "xz"
 	it.DefaultImageConfig = ec2ImageConfig()
-	it.KernelOptions = ec2KernelOptions()
-	it.Bootable = true
+	it.DistroConfig.KernelOptions = ec2KernelOptions()
+	it.DistroConfig.Bootable = true
 	it.DefaultSize = 10 * datasizes.GibiByte
 	it.BasePartitionTables = ec2PartitionTables
 
