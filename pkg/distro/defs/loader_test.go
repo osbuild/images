@@ -289,16 +289,18 @@ func TestDefsPartitionTableOverride(t *testing.T) {
 image_types:
   test_type:
     partition_table:
-      test_arch:
+      test_arch: &test_arch_pt
         size: 1_000_000_000
         uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
         type: "gpt"
         partitions:
-          - size: 1_048_576
+          - &default_part_0
+            size: 1_048_576
             bootable: true
-          - size: 2_147_483_648
+          - &default_part_1
+            size: 2_147_483_648
             payload_type: "filesystem"
-            payload:
+            payload: &default_part_1_payload
               type: "ext4"
               label: "root"
               mountpoint: "/"
@@ -307,10 +309,15 @@ image_types:
       condition:
         version_greater_or_equal:
           "1":
-            - partition_index: 0
-              size: 222_222_222
-            - partition_index: 1
-              fstab_options: "defaults,ro"
+            test_arch:
+              <<: *test_arch_pt
+              partitions:
+                - <<: *default_part_0
+                  size: 222_222_222
+                - <<: *default_part_1
+                  payload:
+                    <<: *default_part_1_payload
+                    fstab_options: "defaults,ro"
 `
 	// XXX: we cannot use distro.Name() as it will give us a name+ver
 	baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, fakeDistroYaml)
