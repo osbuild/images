@@ -49,6 +49,11 @@ type Options struct {
 	// generate an error.
 	WarningsOutput io.Writer
 
+	// DepsolveWarningsOutput will receive any warnings that are
+	// part of the depsolving step. If it is unset output ends up
+	// on the default stdout/stderr.
+	DepsolveWarningsOutput io.Writer
+
 	// CustomSeed overrides the default rng seed, this is mostly
 	// useful for testing
 	CustomSeed *int64
@@ -74,11 +79,12 @@ type Generator struct {
 	cacheDir string
 	out      io.Writer
 
-	depsolver         DepsolveFunc
-	containerResolver ContainerResolverFunc
-	commitResolver    CommitResolverFunc
-	sbomWriter        SBOMWriterFunc
-	warningsOutput    io.Writer
+	depsolver              DepsolveFunc
+	containerResolver      ContainerResolverFunc
+	commitResolver         CommitResolverFunc
+	sbomWriter             SBOMWriterFunc
+	warningsOutput         io.Writer
+	depsolveWarningsOutput io.Writer
 
 	reporegistry *reporegistry.RepoRegistry
 
@@ -98,17 +104,18 @@ func New(reporegistry *reporegistry.RepoRegistry, opts *Options) (*Generator, er
 	mg := &Generator{
 		reporegistry: reporegistry,
 
-		cacheDir:              opts.Cachedir,
-		out:                   opts.Output,
-		depsolver:             opts.Depsolver,
-		containerResolver:     opts.ContainerResolver,
-		commitResolver:        opts.CommitResolver,
-		rpmDownloader:         opts.RpmDownloader,
-		sbomWriter:            opts.SBOMWriter,
-		warningsOutput:        opts.WarningsOutput,
-		customSeed:            opts.CustomSeed,
-		overrideRepos:         opts.OverrideRepos,
-		useBootstrapContainer: opts.UseBootstrapContainer,
+		cacheDir:               opts.Cachedir,
+		out:                    opts.Output,
+		depsolver:              opts.Depsolver,
+		containerResolver:      opts.ContainerResolver,
+		commitResolver:         opts.CommitResolver,
+		rpmDownloader:          opts.RpmDownloader,
+		sbomWriter:             opts.SBOMWriter,
+		warningsOutput:         opts.WarningsOutput,
+		depsolveWarningsOutput: opts.DepsolveWarningsOutput,
+		customSeed:             opts.CustomSeed,
+		overrideRepos:          opts.OverrideRepos,
+		useBootstrapContainer:  opts.UseBootstrapContainer,
 	}
 	if mg.out == nil {
 		mg.out = os.Stdout
@@ -159,7 +166,7 @@ func (mg *Generator) Generate(bp *blueprint.Blueprint, dist distro.Distro, imgTy
 			return fmt.Errorf("Warnings during manifest creation:\n%v", warn)
 		}
 	}
-	depsolved, err := mg.depsolver(mg.cacheDir, preManifest.GetPackageSetChains(), dist, a.Name())
+	depsolved, err := mg.depsolver(mg.cacheDir, mg.depsolveWarningsOutput, preManifest.GetPackageSetChains(), dist, a.Name())
 	if err != nil {
 		return err
 	}
@@ -225,7 +232,7 @@ func xdgCacheHome() (string, error) {
 // DefaultDepsolver provides a default implementation for depsolving.
 // It should rarely be necessary to use it directly and will be used
 // by default by manifestgen (unless overriden)
-func DefaultDepsolver(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]dnfjson.DepsolveResult, error) {
+func DefaultDepsolver(cacheDir string, depsolveWarningsOutput io.Writer, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]dnfjson.DepsolveResult, error) {
 	if cacheDir == "" {
 		xdgCacheHomeDir, err := xdgCacheHome()
 		if err != nil {
@@ -235,6 +242,11 @@ func DefaultDepsolver(cacheDir string, packageSets map[string][]rpmmd.PackageSet
 	}
 
 	solver := dnfjson.NewSolver(d.ModulePlatformID(), d.Releasever(), arch, d.Name(), cacheDir)
+
+	if depsolveWarningsOutput != nil {
+		solver.Stderr = depsolveWarningsOutput
+	}
+
 	depsolvedSets := make(map[string]dnfjson.DepsolveResult)
 	for name, pkgSet := range packageSets {
 		// Always generate Spdx SBOMs for now, this makes the
@@ -298,7 +310,7 @@ func DefaultCommitResolver(commitSources map[string][]ostree.SourceSpec) (map[st
 }
 
 type (
-	DepsolveFunc func(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]dnfjson.DepsolveResult, error)
+	DepsolveFunc func(cacheDir string, depsolveWarningsOutput io.Writer, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]dnfjson.DepsolveResult, error)
 
 	ContainerResolverFunc func(containerSources map[string][]container.SourceSpec, archName string) (map[string][]container.Spec, error)
 
