@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"maps"
 	"os"
 	"path/filepath"
 	"slices"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/hashicorp/go-version"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/exp/maps"
 	"gopkg.in/yaml.v3"
 
 	"github.com/osbuild/images/internal/common"
@@ -75,8 +75,23 @@ type partitionTablesOverrides struct {
 	Conditional *partitionTablesOverwriteConditional `yaml:"condition"`
 }
 
+// XXX: use slices.Backward() once we move to go1.23
+// hint: use "git blame" on this comment and just revert
+// the commit that adds it and you will have the 1.23 version
+func backward[Slice ~[]E, E any](s Slice) []E {
+	out := make([]E, 0, len(s))
+	for i := len(s) - 1; i >= 0; i-- {
+		out = append(out, s[i])
+	}
+	return out
+}
+
+// XXX: use slices.SortedFunc() once we move to go1.23
+// hint: use "git blame" on this comment and just revert
+// the commit that adds it and you will have the 1.23 version
 func versionLessThanSortedKeys[T any](m map[string]T) []string {
-	return slices.SortedFunc(maps.Keys(m), func(a, b string) int {
+	versions := maps.Keys(m)
+	slices.SortFunc(versions, func(a, b string) int {
 		ver1 := version.Must(version.NewVersion(a))
 		ver2 := version.Must(version.NewVersion(b))
 		switch {
@@ -88,6 +103,7 @@ func versionLessThanSortedKeys[T any](m map[string]T) []string {
 			return 1
 		}
 	})
+	return versions
 }
 
 func (po *partitionTablesOverrides) Apply(it distro.ImageType, pt *disk.PartitionTable, replacements map[string]string) error {
@@ -97,7 +113,7 @@ func (po *partitionTablesOverrides) Apply(it distro.ImageType, pt *disk.Partitio
 	cond := po.Conditional
 	_, distroVersion := splitDistroNameVer(it.Arch().Distro().Name())
 
-	for _, gteqVer := range slices.Backward(versionLessThanSortedKeys(cond.VersionGreaterOrEqual)) {
+	for _, gteqVer := range backward(versionLessThanSortedKeys(cond.VersionGreaterOrEqual)) {
 		geOverrides := cond.VersionGreaterOrEqual[gteqVer]
 		if r, ok := replacements[gteqVer]; ok {
 			gteqVer = r
