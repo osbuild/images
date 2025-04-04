@@ -83,6 +83,29 @@ func mkAzureSapInternalImgType(rd *rhel.Distribution) *rhel.ImageType {
 	return it
 }
 
+// Azure Confidential VM
+func mkAzureCVMImgType(rd *rhel.Distribution) *rhel.ImageType {
+	it := rhel.NewImageType(
+		"vhd-cvm",
+		"disk.vhd",
+		"application/x-vhd",
+		map[string]rhel.PackageSetFunc{
+			rhel.OSPkgsKey: packageSetLoader,
+		},
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "vpc"},
+		[]string{"vpc"},
+	)
+
+	it.Bootable = true
+	it.DefaultSize = 4 * datasizes.GibiByte
+	it.DefaultImageConfig = azureCVMImageConfig(rd)
+	it.BasePartitionTables = azureCVMPartitionTables
+
+	return it
+}
+
 // PARTITION TABLES
 func azureInternalBasePartitionTables(t *rhel.ImageType) (disk.PartitionTable, bool) {
 	var bootSize uint64
@@ -481,4 +504,144 @@ func defaultAzureImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
 
 func sapAzureImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
 	return sapImageConfig(rd.OsVersion()).InheritFrom(defaultAzureImageConfig(rd))
+}
+
+func azureCVMImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
+	ic := &distro.ImageConfig{
+		Timezone: common.ToPtr("Etc/UTC"),
+		Locale:   common.ToPtr("en_US.UTF-8"),
+		Keyboard: &osbuild.KeymapStageOptions{
+			Keymap: "us",
+			X11Keymap: &osbuild.X11KeymapOptions{
+				Layouts: []string{"us"},
+			},
+		},
+		EnabledServices: []string{
+			"cloud-config",
+			"cloud-final",
+			"cloud-init",
+			"cloud-init-local",
+			"NetworkManager",
+			"nftables",
+			"nm-cloud-setup.service",
+			"nm-cloud-setup.timer",
+			"sshd",
+			"waagent",
+		},
+		MaskedServices: []string{
+			"firewalld.service",
+		},
+
+		Modprobe: []*osbuild.ModprobeStageOptions{
+			{
+				Filename: "blacklist-amdgpu.conf",
+				Commands: osbuild.ModprobeConfigCmdList{
+					osbuild.NewModprobeConfigCmdBlacklist("amdgpu"),
+				},
+			},
+			{
+				Filename: "blacklist-acpi-cpufreq.conf",
+				Commands: osbuild.ModprobeConfigCmdList{
+					osbuild.NewModprobeConfigCmdBlacklist("acpi_cpufreq"),
+				},
+			},
+			{
+				Filename: "blacklist-intel.conf",
+				Commands: osbuild.ModprobeConfigCmdList{
+					osbuild.NewModprobeConfigCmdBlacklist("intel_cstate"),
+					osbuild.NewModprobeConfigCmdBlacklist("intel_uncore"),
+				},
+			},
+			{
+				Filename: "blacklist-floppy.conf",
+				Commands: osbuild.ModprobeConfigCmdList{
+					osbuild.NewModprobeConfigCmdBlacklist("floppy"),
+				},
+			},
+			{
+				Filename: "blacklist-nouveau.conf",
+				Commands: osbuild.ModprobeConfigCmdList{
+					osbuild.NewModprobeConfigCmdBlacklist("nouveau"),
+					osbuild.NewModprobeConfigCmdBlacklist("lbm-nouveau"),
+				},
+			},
+			{
+				Filename: "blacklist-skylake-edac.conf",
+				Commands: osbuild.ModprobeConfigCmdList{
+					osbuild.NewModprobeConfigCmdBlacklist("skx_edac"),
+				},
+			},
+		},
+
+		CloudInit: []*osbuild.CloudInitStageOptions{
+			{
+				Filename: "91-azure_datasource.cfg",
+				Config: osbuild.CloudInitConfigFile{
+					Datasource: &osbuild.CloudInitConfigDatasource{
+						Azure: &osbuild.CloudInitConfigDatasourceAzure{
+							ApplyNetworkConfig: false,
+						},
+					},
+					DatasourceList: []string{
+						"Azure",
+					},
+				},
+			},
+		},
+
+		DefaultTarget: common.ToPtr("multi-user.target"),
+		Sysconfig: &distro.Sysconfig{
+			Networking: true,
+		},
+
+		DefaultKernelName: common.ToPtr("kernel-uki-virt"),
+		NoBLS:             common.ToPtr(true),
+	}
+
+	if rd.IsRHEL() {
+		// NOTE: copied from the rest of the Azure image types
+		ic.GPGKeyFiles = append(ic.GPGKeyFiles, "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release")
+	}
+
+	return ic
+}
+
+func azureCVMPartitionTables(t *rhel.ImageType) (disk.PartitionTable, bool) {
+	switch t.Arch().Name() {
+	case arch.ARCH_X86_64.String():
+		return disk.PartitionTable{
+			UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
+			Type: disk.PT_GPT,
+			Partitions: []disk.Partition{
+				{
+					Size: 252 * datasizes.MebiByte,
+					Type: disk.EFISystemPartitionGUID,
+					UUID: disk.EFISystemPartitionUUID,
+					Payload: &disk.Filesystem{
+						Type:         "vfat",
+						UUID:         disk.EFIFilesystemUUID,
+						Mountpoint:   "/boot/efi",
+						Label:        "EFI-SYSTEM",
+						FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+						FSTabFreq:    0,
+						FSTabPassNo:  2,
+					},
+				},
+				{
+					Size: 5 * datasizes.GibiByte,
+					Type: disk.RootPartitionX86_64GUID,
+					Payload: &disk.Filesystem{
+						Type:         "ext4",
+						Label:        "root",
+						Mountpoint:   "/",
+						FSTabOptions: "defaults",
+						FSTabFreq:    0,
+						FSTabPassNo:  0,
+					},
+				},
+			},
+		}, true
+	default:
+		return disk.PartitionTable{}, false
+	}
 }

@@ -27,6 +27,18 @@ type ImageConfig struct {
 	DefaultKernel       *string    `yaml:"default_kernel,omitempty"`
 	UpdateDefaultKernel *bool      `yaml:"update_default_kernel,omitempty"`
 
+	// The name of the default kernel to use for the image type.
+	// NOTE: Currently this overrides the kernel named in the blueprint. The
+	// only image type that uses it is the vhd-cvm, which doesn't allow kernel
+	// selection. The option should generally be a fallback for when the
+	// blueprint doesn't specify a kernel.
+	//
+	// This option has no effect on the DefaultKernel option under Sysconfig.
+	// If both options are set, they should have the same value.
+	// These two options should be unified when we remove the osbuild stage
+	// options from ImageConfig.
+	DefaultKernelName *string
+
 	// List of files from which to import GPG keys into the RPM database
 	GPGKeyFiles []string `yaml:"gpgkey_files,omitempty"`
 
