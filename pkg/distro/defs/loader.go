@@ -6,12 +6,14 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"maps"
 	"os"
-
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 
+	"github.com/hashicorp/go-version"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
@@ -73,6 +75,21 @@ type partitionTablesOverrides struct {
 	Conditional *partitionTablesOverwriteConditional `yaml:"condition"`
 }
 
+func versionLessThanSortedKeys[T any](m map[string]T) []string {
+	return slices.SortedFunc(maps.Keys(m), func(a, b string) int {
+		ver1 := version.Must(version.NewVersion(a))
+		ver2 := version.Must(version.NewVersion(b))
+		switch {
+		case ver1 == ver2:
+			return 0
+		case ver2.LessThan(ver1):
+			return -1
+		default:
+			return 1
+		}
+	})
+}
+
 func (po *partitionTablesOverrides) Apply(it distro.ImageType, pt *disk.PartitionTable, replacements map[string]string) error {
 	if po == nil {
 		return nil
@@ -80,7 +97,8 @@ func (po *partitionTablesOverrides) Apply(it distro.ImageType, pt *disk.Partitio
 	cond := po.Conditional
 	_, distroVersion := splitDistroNameVer(it.Arch().Distro().Name())
 
-	for gteqVer, geOverrides := range cond.VersionGreaterOrEqual {
+	for _, gteqVer := range slices.Backward(versionLessThanSortedKeys(cond.VersionGreaterOrEqual)) {
+		geOverrides := cond.VersionGreaterOrEqual[gteqVer]
 		if r, ok := replacements[gteqVer]; ok {
 			gteqVer = r
 		}
@@ -200,7 +218,9 @@ func PackageSet(it distro.ImageType, overrideTypeName string, replacements map[s
 					Exclude: distroNameSet.Exclude,
 				})
 			}
-
+			// note that we don't need to order here, as
+			// packageSets are strictly additive the order
+			// is irrelevant
 			for ltVer, ltSet := range pkgSet.Condition.VersionLessThan {
 				if r, ok := replacements[ltVer]; ok {
 					ltVer = r

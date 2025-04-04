@@ -306,6 +306,10 @@ image_types:
     partition_table_override:
       condition:
         version_greater_or_equal:
+          # overrides are applied in order
+          "0":
+            - partition_index: 0
+              size: 111_111_111
           "1":
             - partition_index: 0
               size: 222_222_222
