@@ -1669,3 +1669,212 @@ image_types:
             - "iwlwifi-mvm-firmware"
             - "realtek-firmware"
             - "uboot-images-armv8"
+
+  # Break out the firmware. Lorax installs by wildcard with exclusions
+  # This list is from the pylorax.log expansion in fedora 42
+  netinst_firmware:
+    package_sets:
+      firmware:
+        - &netinst_firmware
+          condition:
+            architecture:
+              x86_64:
+                include:
+                  - amd-gpu-firmware
+                  - amd-ucode-firmware
+                  - atheros-firmware
+                  - atmel-firmware
+                  - b43-openfwwf
+                  - brcmfmac-firmware
+                  - intel-gpu-firmware
+                  - iwlegacy-firmware
+                  - iwlwifi-dvm-firmware
+                  - iwlwifi-mvm-firmware
+                  - libertas-firmware
+                  - linux-firmware
+                  - mt7xxx-firmware
+                  - nvidia-gpu-firmware
+                  - nxpwireless-firmware
+                  - qed-firmware
+                  - realtek-firmware
+                  - tiwilink-firmware
+                  - zd1211-firmware
+              aarch64:
+                include:
+                  - amd-gpu-firmware
+                  - atheros-firmware
+                  - atmel-firmware
+                  - b43-openfwwf
+                  - bcm2711-firmware
+                  - bcm2835-firmware
+                  - bcm283x-firmware
+                  - brcmfmac-firmware
+                  - intel-gpu-firmware
+                  - iwlegacy-firmware
+                  - iwlwifi-dvm-firmware
+                  - iwlwifi-mvm-firmware
+                  - libertas-firmware
+                  - linux-firmware
+                  - mt7xxx-firmware
+                  - nvidia-gpu-firmware
+                  - nxpwireless-firmware
+                  - qcom-firmware
+                  - qed-firmware
+                  - realtek-firmware
+                  - tiwilink-firmware
+                  - zd1211-firmware
+              ppc64le:
+                include:
+                  - amd-gpu-firmware
+                  - atheros-firmware
+                  - atmel-firmware
+                  - b43-openfwwf
+                  - brcmfmac-firmware
+                  - intel-gpu-firmware
+                  - iwlegacy-firmware
+                  - iwlwifi-dvm-firmware
+                  - iwlwifi-mvm-firmware
+                  - libertas-firmware
+                  - linux-firmware
+                  - mt7xxx-firmware
+                  - nvidia-gpu-firmware
+                  - nxpwireless-firmware
+                  - qed-firmware
+                  - realtek-firmware
+                  - tiwilink-firmware
+                  - zd1211-firmware
+
+  # Based on lorax runtime-install.tmpl
+  "everything-netinst":
+    name_aliases: ["netinst"]
+    filename: "boot.iso"
+    mime_type: "application/x-iso9660-image"
+    image_func: "netinst"
+    bootable: true
+    boot_iso: true
+    iso_label: "Everything"
+    build_pipelines: ["build"]
+    payload_pipelines:
+      - "anaconda-tree"
+      - "efiboot-tree"
+      - "bootiso-tree"
+      - "bootiso"
+    exports: ["bootiso"]
+    required_partition_sizes: *default_required_dir_sizes
+    installer_config: *default_installer_config
+    platforms:
+      - *x86_64_installer_platform
+      - *aarch64_installer_platform
+    package_sets:
+      installer:
+        - *netinst_firmware
+        - include:
+            - anaconda
+            - anaconda-widgets
+            - anaconda-install-img-deps
+            - ostree
+            - rpm-ostree
+            - pigz
+            - audit
+            - bind-utils
+            - kernel
+            - kernel-modules
+            - kernel-modules-extra
+            - grubby
+            - glibc-all-langpacks
+            - plymouth
+            - anaconda-dracut
+            - dracut-network
+            - dracut-config-generic
+            - initscripts
+            - cryptsetup
+            - rpcbind
+            - kbd
+            - kbd-misc
+            - tar
+            - xz
+            - curl
+            - bzip2
+            - rsyslog
+            - device-mapper-persistent-data
+            - xfsdump
+            - volume_key
+            - nss-tools
+            - selinux-policy-targeted
+            - audit
+            - ethtool
+            - openssh-server
+            - nfs-utils
+            - openssh-clients
+            - tigervnc-server-minimal
+            - tigervnc-server-module
+            - net-tools
+            - bridge-utils
+            - nmap-ncat
+            - prefixdevname
+            - pciutils
+            - usbutils
+            - ipmitool
+            - mt-st
+            - smartmontools
+            - hdparm
+            - rdma-core
+            - rng-tools
+            - nvme-cli
+            - default-fonts-core-sans
+            - default-fonts-other-sans
+            - google-noto-sans-cjk-fonts
+            - gdb-gdbserver
+            - libreport-plugin-bugzilla
+            - libreport-plugin-reportuploader
+            - fpaste
+            - python3-pyatspi
+            - nano
+            - nano-default-editor
+            - vim-minimal
+            - strace
+            - lsof
+            - dump
+            - less
+            - wget2-wget
+            - rsync
+            - bind-utils
+            - ftp
+            - mtr
+            - vconfig
+            - spice-vdagent
+            - gdisk
+            - hexedit
+            - sg3_utils
+          condition:
+            architecture:
+              x86_64:
+                include:
+                  - biosdevname
+                  - grub2-tools-efi
+                  - efibootmgr
+                  - shim-x64
+                  - shim-ia32
+                  - grub2-efi-x64-cdboot
+                  - grub2-efi-ia32-cdboot
+                  - grub2-tools
+                  - grub2-tools-extra
+                  - grub2-pc-modules
+                  - dmidecode
+              aarch64:
+                include:
+                  - efibootmgr
+                  - grub2-efi-aa64-cdboot
+                  - grub2-tools
+                  - shim-aa64
+                  - uboot-tools
+                  - dmidecode
+              ppc64le:
+                include:
+                  - powerpc-utils
+                  - lsvpd
+                  - ppc64-diag
+                  - grub2-tools
+                  - grub2-tools-minimal
+                  - grub2-tools-extra
+                  - grub2-ppc64le
