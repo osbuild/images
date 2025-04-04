@@ -399,6 +399,44 @@ func TestDefsPartitionTableOverridelessThan(t *testing.T) {
 	}, partTable)
 }
 
+func TestDefsPartitionTableOverrideDistoName(t *testing.T) {
+	it := makeTestImageType(t)
+
+	fakeDistroYaml := `
+image_types:
+  test_type:
+    partition_table:
+      test_arch: &test_arch_pt
+        partitions:
+          - &default_part_0
+            size: 1_048_576
+            bootable: true
+    partition_tables_override:
+      condition:
+        distro_name:
+          "test-distro":
+              test_arch:
+                partitions:
+                  - <<: *default_part_0
+                    size: 111_111_111
+`
+	// XXX: we cannot use distro.Name() as it will give us a name+ver
+	baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, fakeDistroYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	partTable, err := defs.PartitionTable(it, nil)
+	require.NoError(t, err)
+	assert.Equal(t, &disk.PartitionTable{
+		Partitions: []disk.Partition{
+			{
+				Size:     111_111_111,
+				Bootable: true,
+			},
+		},
+	}, partTable)
+}
+
 func TestDefsImageConfig(t *testing.T) {
 	fakeDistroYaml := `
 image_config:
