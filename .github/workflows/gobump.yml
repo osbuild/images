@@ -1,0 +1,42 @@
+---
+name: "Updates Go dependencies via gobump"
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Every Sunday at 15:00
+    - cron: "0 15 * * 0"
+
+jobs:
+  update-and-push:
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+
+      - name: Update go.mod
+        run: |
+          go install github.com/lzap/gobump@latest
+          echo -e "## gobump output:\n\n```" > gobump.log
+          gobump -exec "go build ./pkg/... ./cmd/..." -exec "go test ./pkg/... ./cmd/..." 2>&1 | tee -a gobump.log
+          echo -e "\n```" >> gobump.log
+          ./tools/prepare-source.sh
+
+      - name: Open PR
+        env:
+          GITHUB_TOKEN: ${{ secrets.SCHUTZBOT_GITHUB_ACCESS_TOKEN }}
+        run: |
+          if git diff --exit-code; then echo "No changes"; exit 0; fi
+          git config --unset-all http.https://github.com/.extraheader
+          git config user.name "schutzbot"
+          git config user.email "schutzbot@gmail.com"
+          branch="schutz-gobump-$(date -I)"
+          git checkout -b "${branch}"
+          git add -A
+          git commit -m "build(deps): Update dependencies"
+          git push -f https://"$GITHUB_TOKEN"@github.com/schutzbot/images.git
+          gh pr create \
+            -t "Update dependencies $(date -I)" \
+            -F "gobump.log" \
+            --repo "osbuild/images" \
+            --base "main" \
+            --head "schutzbot:${branch}"
