@@ -77,6 +77,7 @@ type partitionTablesOverrides struct {
 
 type partitionTablesOverwriteCondition struct {
 	VersionGreaterOrEqual map[string]map[string]*disk.PartitionTable `yaml:"version_greater_or_equal,omitempty"`
+	VersionLessThan       map[string]map[string]*disk.PartitionTable `yaml:"version_less_than,omitempty"`
 }
 
 // XXX: use slices.Backward() once we move to go1.23
@@ -242,6 +243,18 @@ func PartitionTable(it distro.ImageType, replacements map[string]string) (*disk.
 	if imgType.PartitionTablesOverrides != nil {
 		cond := imgType.PartitionTablesOverrides.Condition
 		_, distroVersion := splitDistroNameVer(it.Arch().Distro().Name())
+
+		for _, ltVer := range versionLessThanSortedKeys(cond.VersionLessThan) {
+			ltOverrides := cond.VersionLessThan[ltVer]
+			if r, ok := replacements[ltVer]; ok {
+				ltVer = r
+			}
+			if common.VersionLessThan(distroVersion, ltVer) {
+				for arch, overridePt := range ltOverrides {
+					imgType.PartitionTables[arch] = overridePt
+				}
+			}
+		}
 
 		for _, gteqVer := range backward(versionLessThanSortedKeys(cond.VersionGreaterOrEqual)) {
 			geOverrides := cond.VersionGreaterOrEqual[gteqVer]

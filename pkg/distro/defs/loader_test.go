@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -283,9 +284,7 @@ image_types:
 	}, partTable)
 }
 
-func TestDefsPartitionTableOverride(t *testing.T) {
-	it := makeTestImageType(t)
-	fakeDistroYaml := `
+var fakeDistroYaml = `
 image_types:
   test_type:
     partition_table:
@@ -325,7 +324,18 @@ image_types:
                   payload:
                     <<: *default_part_1_payload
                     fstab_options: "defaults,ro"
+          "2":
+            test_arch:
+              <<: *test_arch_pt
+              partitions:
+                - <<: *default_part_0
+                  size: 333_333_333
+                - *default_part_1
 `
+
+func TestDefsPartitionTableOverrideGreatEqual(t *testing.T) {
+	it := makeTestImageType(t)
+
 	// XXX: we cannot use distro.Name() as it will give us a name+ver
 	baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, fakeDistroYaml)
 	restore := defs.MockDataFS(baseDir)
@@ -349,6 +359,40 @@ image_types:
 					Label:        "root",
 					Mountpoint:   "/",
 					FSTabOptions: "defaults,ro",
+				},
+			},
+		},
+	}, partTable)
+}
+
+func TestDefsPartitionTableOverridelessThan(t *testing.T) {
+	it := makeTestImageType(t)
+
+	patched := strings.Replace(fakeDistroYaml, "version_greater_or_equal:", "version_less_than:", -1)
+
+	// XXX: we cannot use distro.Name() as it will give us a name+ver
+	baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, patched)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	partTable, err := defs.PartitionTable(it, nil)
+	require.NoError(t, err)
+	assert.Equal(t, &disk.PartitionTable{
+		Size: 1_000_000_000,
+		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
+		Type: disk.PT_GPT,
+		Partitions: []disk.Partition{
+			{
+				Size:     333_333_333,
+				Bootable: true,
+			},
+			{
+				Size: 2_147_483_648,
+				Payload: &disk.Filesystem{
+					Type:         "ext4",
+					Label:        "root",
+					Mountpoint:   "/",
+					FSTabOptions: "defaults",
 				},
 			},
 		},
