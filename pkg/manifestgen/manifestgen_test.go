@@ -136,8 +136,11 @@ func TestManifestGeneratorWithOstreeCommit(t *testing.T) {
 	assert.Contains(t, osbuildManifest.String(), expectedSha256)
 }
 
-func fakeDepsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]dnfjson.DepsolveResult, error) {
+func fakeDepsolve(cacheDir string, depsolveWarningsOutput io.Writer, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]dnfjson.DepsolveResult, error) {
 	depsolvedSets := make(map[string]dnfjson.DepsolveResult)
+	if depsolveWarningsOutput != nil {
+		_, _ = depsolveWarningsOutput.Write([]byte(`fake depsolve output`))
+	}
 	for name, pkgSets := range packageSets {
 		repoId := fmt.Sprintf("repo_id_%s", name)
 		var resolvedSet dnfjson.DepsolveResult
@@ -162,7 +165,6 @@ func fakeDepsolve(cacheDir string, packageSets map[string][]rpmmd.PackageSet, d 
 			}
 		}
 		depsolvedSets[name] = resolvedSet
-
 	}
 	return depsolvedSets, nil
 }
@@ -330,6 +332,35 @@ func TestManifestGeneratorSeed(t *testing.T) {
 			assert.NotContains(t, osbuildManifest.String(), needle)
 		}
 	}
+}
+
+func TestManifestGeneratorDepsolveOutput(t *testing.T) {
+	repos, err := testrepos.New()
+	assert.NoError(t, err)
+	fac := distrofactory.NewDefault()
+
+	filter, err := imagefilter.New(fac, repos)
+	assert.NoError(t, err)
+	res, err := filter.Filter("distro:centos-9", "type:qcow2", "arch:x86_64")
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(res))
+
+	var depsolveWarningsOutput bytes.Buffer
+	var osbuildManifest bytes.Buffer
+	opts := &manifestgen.Options{
+		Output:                 &osbuildManifest,
+		Depsolver:              fakeDepsolve,
+		DepsolveWarningsOutput: &depsolveWarningsOutput,
+	}
+
+	mg, err := manifestgen.New(repos, opts)
+	assert.NoError(t, err)
+
+	var bp blueprint.Blueprint
+	err = mg.Generate(&bp, res[0].Distro, res[0].ImgType, res[0].Arch, nil)
+	assert.NoError(t, err)
+
+	assert.Equal(t, []byte("fake depsolve output"), depsolveWarningsOutput.Bytes())
 }
 
 func TestManifestGeneratorOverrideRepos(t *testing.T) {

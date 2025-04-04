@@ -217,7 +217,7 @@ func makeManifestJob(
 
 		var depsolvedSets map[string]dnfjson.DepsolveResult
 		if content["packages"] {
-			depsolvedSets, err = manifestgen.DefaultDepsolver(cacheDir, manifest.GetPackageSetChains(), distribution, archName)
+			depsolvedSets, err = manifestgen.DefaultDepsolver(cacheDir, os.Stderr, manifest.GetPackageSetChains(), distribution, archName)
 			if err != nil {
 				err = fmt.Errorf("[%s] depsolve failed: %s", filename, err.Error())
 				return
