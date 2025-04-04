@@ -55,7 +55,7 @@ type imageType struct {
 	// archStr->partitionTable
 	PartitionTables map[string]*disk.PartitionTable `yaml:"partition_table"`
 	// override specific aspects of the partition table
-	PartitionTablesOverrides *partitionTablesOverrides `yaml:"partition_table_override"`
+	PartitionTablesOverrides *partitionTablesOverrides `yaml:"partition_tables_override"`
 }
 
 type packageSet struct {
@@ -72,7 +72,11 @@ type pkgSetConditions struct {
 }
 
 type partitionTablesOverrides struct {
-	Conditional *partitionTablesOverwriteConditional `yaml:"condition"`
+	Condition *partitionTablesOverwriteCondition `yaml:"condition"`
+}
+
+type partitionTablesOverwriteCondition struct {
+	VersionGreaterOrEqual map[string]map[string]*disk.PartitionTable `yaml:"version_greater_or_equal,omitempty"`
 }
 
 // XXX: use slices.Backward() once we move to go1.23
@@ -104,60 +108,6 @@ func versionLessThanSortedKeys[T any](m map[string]T) []string {
 		}
 	})
 	return versions
-}
-
-func (po *partitionTablesOverrides) Apply(it distro.ImageType, pt *disk.PartitionTable, replacements map[string]string) error {
-	if po == nil {
-		return nil
-	}
-	cond := po.Conditional
-	_, distroVersion := splitDistroNameVer(it.Arch().Distro().Name())
-
-	for _, gteqVer := range backward(versionLessThanSortedKeys(cond.VersionGreaterOrEqual)) {
-		geOverrides := cond.VersionGreaterOrEqual[gteqVer]
-		if r, ok := replacements[gteqVer]; ok {
-			gteqVer = r
-		}
-		if common.VersionGreaterThanOrEqual(distroVersion, gteqVer) {
-			for _, overrideOp := range geOverrides {
-				if err := overrideOp.Apply(pt); err != nil {
-					return err
-				}
-			}
-		}
-	}
-
-	return nil
-}
-
-type partitionTablesOverwriteConditional struct {
-	VersionGreaterOrEqual map[string][]partitionTablesOverrideOp `yaml:"version_greater_or_equal,omitempty"`
-}
-
-type partitionTablesOverrideOp struct {
-	PartitionIndex int    `yaml:"partition_index"`
-	Size           uint64 `yaml:"size"`
-	FSTabOptions   string `yaml:"fstab_options"`
-}
-
-func (op *partitionTablesOverrideOp) Apply(pt *disk.PartitionTable) error {
-	selectPart := op.PartitionIndex
-	if selectPart > len(pt.Partitions) {
-		return fmt.Errorf("override %q part %v outside of partitionTable %+v", op, selectPart, pt)
-	}
-	if op.Size > 0 {
-		pt.Partitions[selectPart].Size = op.Size
-	}
-	if op.FSTabOptions != "" {
-		part := pt.Partitions[selectPart]
-		fs, ok := part.Payload.(*disk.Filesystem)
-		if !ok {
-			return fmt.Errorf("override %q part %v for fstab_options expecting filesystem got %T", op, selectPart, part)
-		}
-		fs.FSTabOptions = op.FSTabOptions
-	}
-
-	return nil
 }
 
 // DistroImageConfig returns the distro wide ImageConfig.
@@ -289,13 +239,26 @@ func PartitionTable(it distro.ImageType, replacements map[string]string) (*disk.
 	arch := it.Arch()
 	archName := arch.Name()
 
+	if imgType.PartitionTablesOverrides != nil {
+		cond := imgType.PartitionTablesOverrides.Condition
+		_, distroVersion := splitDistroNameVer(it.Arch().Distro().Name())
+
+		for _, gteqVer := range backward(versionLessThanSortedKeys(cond.VersionGreaterOrEqual)) {
+			geOverrides := cond.VersionGreaterOrEqual[gteqVer]
+			if r, ok := replacements[gteqVer]; ok {
+				gteqVer = r
+			}
+			if common.VersionGreaterThanOrEqual(distroVersion, gteqVer) {
+				for arch, overridePt := range geOverrides {
+					imgType.PartitionTables[arch] = overridePt
+				}
+			}
+		}
+	}
+
 	pt, ok := imgType.PartitionTables[archName]
 	if !ok {
 		return nil, fmt.Errorf("%w (%q): %q", ErrNoPartitionTableForArch, typeName, archName)
-	}
-
-	if err := imgType.PartitionTablesOverrides.Apply(it, pt, replacements); err != nil {
-		return nil, err
 	}
 
 	return pt, nil
