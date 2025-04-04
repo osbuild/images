@@ -76,6 +76,7 @@ type partitionTablesOverrides struct {
 }
 
 type partitionTablesOverwriteCondition struct {
+	DistroName            map[string]map[string]*disk.PartitionTable `yaml:"distro_name,omitempty"`
 	VersionGreaterOrEqual map[string]map[string]*disk.PartitionTable `yaml:"version_greater_or_equal,omitempty"`
 	VersionLessThan       map[string]map[string]*disk.PartitionTable `yaml:"version_less_than,omitempty"`
 }
@@ -242,7 +243,7 @@ func PartitionTable(it distro.ImageType, replacements map[string]string) (*disk.
 
 	if imgType.PartitionTablesOverrides != nil {
 		cond := imgType.PartitionTablesOverrides.Condition
-		_, distroVersion := splitDistroNameVer(it.Arch().Distro().Name())
+		distroName, distroVersion := splitDistroNameVer(it.Arch().Distro().Name())
 
 		for _, ltVer := range versionLessThanSortedKeys(cond.VersionLessThan) {
 			ltOverrides := cond.VersionLessThan[ltVer]
@@ -265,6 +266,12 @@ func PartitionTable(it distro.ImageType, replacements map[string]string) (*disk.
 				for arch, overridePt := range geOverrides {
 					imgType.PartitionTables[arch] = overridePt
 				}
+			}
+		}
+
+		if distroNameOverrides, ok := cond.DistroName[distroName]; ok {
+			for arch, overridePt := range distroNameOverrides {
+				imgType.PartitionTables[arch] = overridePt
 			}
 		}
 	}
