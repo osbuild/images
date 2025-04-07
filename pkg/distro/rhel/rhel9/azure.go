@@ -474,6 +474,23 @@ func defaultAzureImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
 
 	if rd.IsRHEL() {
 		ic.GPGKeyFiles = append(ic.GPGKeyFiles, "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release")
+		if common.VersionGreaterThanOrEqual(rd.OsVersion(), "9.6") {
+			ic.Modprobe = append(
+				ic.Modprobe,
+				&osbuild.ModprobeStageOptions{
+					Filename: "blacklist-intel_uncore.conf",
+					Commands: osbuild.ModprobeConfigCmdList{
+						osbuild.NewModprobeConfigCmdBlacklist("intel_uncore"),
+					},
+				},
+				&osbuild.ModprobeStageOptions{
+					Filename: "blacklist-acpi_cpufreq.conf",
+					Commands: osbuild.ModprobeConfigCmdList{
+						osbuild.NewModprobeConfigCmdBlacklist("acpi_cpufreq"),
+					},
+				},
+			)
+		}
 	}
 
 	return ic
