@@ -101,6 +101,8 @@ func getConsumerSecrets() (*ConsumerSecrets, error) {
 func LoadSystemSubscriptions() (*Subscriptions, error) {
 	consumerSecrets, err := getConsumerSecrets()
 	if err != nil {
+		// Consumer secrets are only needed when resolving
+		// ostree content (see commit 632f272)
 		logrus.Warnf("Failed to load consumer certs: %v", err)
 	}
 
