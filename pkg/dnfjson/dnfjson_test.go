@@ -906,3 +906,31 @@ func TestDepsolveResultWithModulesKey(t *testing.T) {
 
 	assert.NoError(t, err)
 }
+
+func TestDepsolverSubscriptionsError(t *testing.T) {
+	if _, err := os.Stat("/etc/yum.repos.d/redhat.repo"); err == nil {
+		t.Skip("Test must run on unsubscribed system")
+	}
+
+	tmpdir := t.TempDir()
+	solver := NewSolver("platform:el9", "9", "x86_64", "rhel9.0", tmpdir)
+
+	rootDir := t.TempDir()
+	reposDir := filepath.Join(rootDir, "etc", "yum.repos.d")
+	require.NoError(t, os.MkdirAll(reposDir, 0777))
+
+	s := rpmrepo.NewTestServer()
+	defer s.Close()
+	s.WriteConfig(filepath.Join(reposDir, "test.repo"))
+	s.RepoConfig.RHSM = true
+
+	pkgsets := []rpmmd.PackageSet{
+		{
+			Include:      []string{"kernel"},
+			Repositories: []rpmmd.RepoConfig{s.RepoConfig},
+		},
+	}
+	solver.SetRootDir(rootDir)
+	_, err := solver.Depsolve(pkgsets, 0)
+	assert.EqualError(t, err, "makeDepsolveRequest failed: This system does not have any valid subscriptions. Subscribe it before specifying rhsm: true in sources (error details: no matching key and certificate pair)")
+}
