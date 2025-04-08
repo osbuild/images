@@ -42,10 +42,12 @@ func TestSimplifiedInstallerDracut(t *testing.T) {
 	assert.NotNil(t, img)
 	img.Platform = testPlatform
 	mfs := instantiateAndSerialize(t, img, packageSets, nil, commitSpec)
-	modules, drivers := findDracutStageOptions(t, manifest.OSBuildManifest(mfs), "coi-tree")
+	modules, addModules, drivers, addDrivers := findDracutStageOptions(t, manifest.OSBuildManifest(mfs), "coi-tree")
 	assert.NotNil(t, modules)
-	assert.NotNil(t, drivers)
+	assert.Nil(t, addModules)
+	assert.Nil(t, drivers)
+	assert.NotNil(t, addDrivers)
 
 	assert.Subset(t, modules, testModules)
-	assert.Subset(t, drivers, testDrivers)
+	assert.Subset(t, addDrivers, testDrivers)
 }

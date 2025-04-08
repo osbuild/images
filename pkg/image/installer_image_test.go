@@ -694,7 +694,25 @@ func TestInstallerLocales(t *testing.T) {
 	}
 }
 
-func findDracutStageOptions(t *testing.T, mf manifest.OSBuildManifest, pipelineName string) ([]string, []string) {
+// getStageOptions returns the list of strings from a specific option name
+func getStageOptions(stageOptions map[string]any, name string) []string {
+	var options []string
+	if _, ok := stageOptions[name]; ok {
+		for _, value := range stageOptions[name].([]any) {
+			options = append(options, value.(string))
+		}
+	}
+
+	return options
+}
+
+// findDracutStageOptions returns information about the dracut stage
+// This includes:
+// - modules
+// - add_modules
+// - drivers
+// - add_drivers
+func findDracutStageOptions(t *testing.T, mf manifest.OSBuildManifest, pipelineName string) ([]string, []string, []string, []string) {
 	pipeline := findPipelineFromOsbuildManifest(t, mf, pipelineName)
 	assert.NotNil(t, pipeline)
 	stage := findStageFromOsbuildPipeline(t, pipeline, "org.osbuild.dracut")
@@ -702,19 +720,12 @@ func findDracutStageOptions(t *testing.T, mf manifest.OSBuildManifest, pipelineN
 	stageOptions := stage["options"].(map[string]any)
 	assert.NotNil(t, stageOptions)
 
-	modulesIf := stageOptions["modules"].([]any)
-	modules := make([]string, len(modulesIf))
-	for idx, modIf := range stageOptions["modules"].([]any) {
-		modules[idx] = modIf.(string)
-	}
+	modules := getStageOptions(stageOptions, "modules")
+	addModules := getStageOptions(stageOptions, "add_modules")
+	drivers := getStageOptions(stageOptions, "drivers")
+	addDrivers := getStageOptions(stageOptions, "add_drivers")
 
-	driversIf := stageOptions["add_drivers"].([]any)
-	drivers := make([]string, len(driversIf))
-	for idx, driIf := range driversIf {
-		drivers[idx] = driIf.(string)
-	}
-
-	return modules, drivers
+	return modules, addModules, drivers, addDrivers
 }
 
 func TestContainerInstallerDracut(t *testing.T) {
@@ -732,12 +743,14 @@ func TestContainerInstallerDracut(t *testing.T) {
 	assert.NotNil(t, img)
 	img.Platform = testPlatform
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil)
-	modules, drivers := findDracutStageOptions(t, manifest.OSBuildManifest(mfs), "anaconda-tree")
-	assert.NotNil(t, modules)
-	assert.NotNil(t, drivers)
+	modules, addModules, drivers, addDrivers := findDracutStageOptions(t, manifest.OSBuildManifest(mfs), "anaconda-tree")
+	assert.Nil(t, modules)
+	assert.NotNil(t, addModules)
+	assert.Nil(t, drivers)
+	assert.NotNil(t, addDrivers)
 
-	assert.Subset(t, modules, testModules)
-	assert.Subset(t, drivers, testDrivers)
+	assert.Subset(t, addModules, testModules)
+	assert.Subset(t, addDrivers, testDrivers)
 }
 
 func TestOSTreeInstallerDracut(t *testing.T) {
@@ -759,12 +772,14 @@ func TestOSTreeInstallerDracut(t *testing.T) {
 	assert.NotNil(t, img)
 	img.Platform = testPlatform
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, mockOSTreeCommitSpecs())
-	modules, drivers := findDracutStageOptions(t, manifest.OSBuildManifest(mfs), "anaconda-tree")
-	assert.NotNil(t, modules)
-	assert.NotNil(t, drivers)
+	modules, addModules, drivers, addDrivers := findDracutStageOptions(t, manifest.OSBuildManifest(mfs), "anaconda-tree")
+	assert.Nil(t, modules)
+	assert.NotNil(t, addModules)
+	assert.Nil(t, drivers)
+	assert.NotNil(t, addDrivers)
 
-	assert.Subset(t, modules, testModules)
-	assert.Subset(t, drivers, testDrivers)
+	assert.Subset(t, addModules, testModules)
+	assert.Subset(t, addDrivers, testDrivers)
 }
 
 func TestTarInstallerDracut(t *testing.T) {
@@ -782,10 +797,12 @@ func TestTarInstallerDracut(t *testing.T) {
 	assert.NotNil(t, img)
 	img.Platform = testPlatform
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
-	modules, drivers := findDracutStageOptions(t, manifest.OSBuildManifest(mfs), "anaconda-tree")
-	assert.NotNil(t, modules)
-	assert.NotNil(t, drivers)
+	modules, addModules, drivers, addDrivers := findDracutStageOptions(t, manifest.OSBuildManifest(mfs), "anaconda-tree")
+	assert.Nil(t, modules)
+	assert.NotNil(t, addModules)
+	assert.Nil(t, drivers)
+	assert.NotNil(t, addDrivers)
 
-	assert.Subset(t, modules, testModules)
-	assert.Subset(t, drivers, testDrivers)
+	assert.Subset(t, addModules, testModules)
+	assert.Subset(t, addDrivers, testDrivers)
 }
