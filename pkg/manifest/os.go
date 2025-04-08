@@ -121,12 +121,11 @@ type OSCustomizations struct {
 	GCPGuestAgentConfig  *osbuild.GcpGuestAgentConfigOptions
 	AuthConfig           *osbuild.AuthconfigStageOptions
 	PwQuality            *osbuild.PwqualityConfStageOptions
-	NTPServers           []osbuild.ChronyConfigServer
+	ChronyConfig         *osbuild.ChronyStageOptions
 	WAAgentConfig        *osbuild.WAAgentConfStageOptions
 	UdevRules            *osbuild.UdevRulesStageOptions
 	WSLConfig            *osbuild.WSLConfStageOptions
 	InsightsClientConfig *osbuild.InsightsClientConfigStageOptions
-	LeapSecTZ            *string
 	Presets              []osbuild.Preset
 	ContainersStorage    *string
 
@@ -246,7 +245,7 @@ func (p *OS) getPackageSetChain(Distro) []rpmmd.PackageSet {
 	}
 
 	customizationPackages := make([]string, 0)
-	if len(p.OSCustomizations.NTPServers) > 0 {
+	if p.OSCustomizations.ChronyConfig != nil {
 		customizationPackages = append(customizationPackages, "chrony")
 	}
 
@@ -536,12 +535,8 @@ func (p *OS) serialize() osbuild.Pipeline {
 		pipeline.AddStage(osbuild.NewTimezoneStage(&osbuild.TimezoneStageOptions{Zone: p.OSCustomizations.Timezone}))
 	}
 
-	if len(p.OSCustomizations.NTPServers) > 0 {
-		chronyOptions := &osbuild.ChronyStageOptions{Servers: p.OSCustomizations.NTPServers}
-		if p.OSCustomizations.LeapSecTZ != nil {
-			chronyOptions.LeapsecTz = p.OSCustomizations.LeapSecTZ
-		}
-		pipeline.AddStage(osbuild.NewChronyStage(chronyOptions))
+	if p.OSCustomizations.ChronyConfig != nil {
+		pipeline.AddStage(osbuild.NewChronyStage(p.OSCustomizations.ChronyConfig))
 	}
 
 	if len(p.OSCustomizations.Groups) > 0 {
