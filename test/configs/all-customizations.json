@@ -9,12 +9,23 @@
       {
         "name": "bluez",
         "version": "*"
+      },
+      {
+        "name": "jq"
+      },
+      {
+        "name": "podman"
       }
     ],
     "modules": [],
     "groups": [
       {
         "name": "core"
+      }
+    ],
+    "containers": [
+      {
+        "source": "registry.gitlab.com/redhat/services/products/image-builder/ci/osbuild-composer/fedora-minimal"
       }
     ],
     "customizations": {

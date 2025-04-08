@@ -34,7 +34,12 @@ running_wait() {
 }
 
 get_oscap_score() {
-    config_file="$1"
+    local config_file="$1"
+    if [[ -z "${config_file}" ]]; then
+        echo "❌ get_oscap_score(): no config file provided"
+        exit 1
+    fi
+
     baseline_score=0.8
     echo "🔒 Running oscap scanner"
     # NOTE: sudo works here without password because we test this only on ami
@@ -80,8 +85,14 @@ get_oscap_score() {
 }
 
 check_ca_cert() {
-    serial=$(jq -r '.blueprint.customizations.cacerts.pem_certs[0]' "${config}" | openssl x509 -noout -serial | cut -d= -f 2- | tr '[:upper:]' '[:lower:]')
-    cn=$(jq -r '.blueprint.customizations.cacerts.pem_certs[0]' "${config}" | openssl x509 -noout -subject | sed -E 's/.*CN ?= ?//')
+    local config_file="$1"
+    if [[ -z "${config_file}" ]]; then
+        echo "❌ check_ca_cert(): no config file provided"
+        exit 1
+    fi
+
+    serial=$(jq -r '.blueprint.customizations.cacerts.pem_certs[0]' "${config_file}" | openssl x509 -noout -serial | cut -d= -f 2- | tr '[:upper:]' '[:lower:]')
+    cn=$(jq -r '.blueprint.customizations.cacerts.pem_certs[0]' "${config_file}" | openssl x509 -noout -subject | sed -E 's/.*CN ?= ?//')
 
     echo "📗 Checking CA cert anchor file serial '${serial}'"
     if ! [ -e "/etc/pki/ca-trust/source/anchors/${serial}.pem" ]; then
@@ -99,6 +110,12 @@ check_ca_cert() {
 }
 
 check_modularity() {
+    local config_file="$1"
+    if [[ -z "${config_file}" ]]; then
+        echo "❌ check_modularity(): no config file provided"
+        exit 1
+    fi
+
     echo "📗 Checking enabled modules"
 
     # Verify modules that are enabled on a system, if any. Modules can either be enabled separately
@@ -107,8 +124,8 @@ check_modularity() {
     # Caveat is that when a module is enabled yet _no_ packages are installed from it this breaks.
     # Let's not do that in the test?
 
-    modules_expected_0=$(jq -rc '.blueprint.enabled_modules[]? | .name + ":" + .stream' "${config}")
-    modules_expected_1=$(jq -rc '.blueprint.packages[]? | select(.name | startswith("@") and contains(":")) | .name' "${config}" | cut -c2-)
+    modules_expected_0=$(jq -rc '.blueprint.enabled_modules[]? | .name + ":" + .stream' "${config_file}")
+    modules_expected_1=$(jq -rc '.blueprint.packages[]? | select(.name | startswith("@") and contains(":")) | .name' "${config_file}" | cut -c2-)
 
     modules_expected="${modules_expected_0}\n${modules_expected_1}"
     modules_enabled=$(dnf module list --enabled 2>&1 | tail -n+4 | head -n -2 | tr -s ' ' | cut -d' ' -f1,2 | tr ' ' ':')
@@ -123,6 +140,70 @@ check_modularity() {
             echo "Module was enabled"
         fi
     done
+}
+
+# Check if the containers specified in the blueprint are embedded in the image
+# by checking if the container source is present in the podman images list
+check_container_embedding() {
+    local config_file="$1"
+    if [[ -z "${config_file}" ]]; then
+        echo "❌ check_container_embedding(): no config file provided"
+        exit 1
+    fi
+
+    echo "📗 Checking embedded containers"
+
+    local error=0
+    for container in $(jq -rc '.blueprint.containers[]?' "${config_file}") ; do
+        local bp_container_source
+        bp_container_source=$(echo "${container}" | jq -r '.source')
+        if [[ "${bp_container_source}" == "null" ]]; then
+            echo "❌ Container source not found: ${container}"
+            error=1
+            continue
+        fi
+
+        local podman_containers
+        podman_containers=$(sudo podman images --format json | jq -rc "[.[] | select(any(.Names[]; startswith(\"${bp_container_source}\")))]")
+        local podman_containers_count
+        podman_containers_count=$(echo "${podman_containers}" | jq -r 'length')
+        if [[ "${podman_containers_count}" -ne 1 ]]; then
+            echo "❌ Unexpected number of containers found: ${podman_containers_count}, expected 1"
+            echo "📄 Podman containers:"
+            echo "${podman_containers}"
+            error=1
+            continue
+        fi
+    done
+
+    if (( error > 0 )); then
+        echo "❌ Container embedding check failed"
+        exit 1
+    fi
+}
+
+# Check that the rootless and rootfull podman would use the same network backend.
+# This is especially important in cases when we embed containers in the image,
+# because some versions of podman would default to using 'cni' network backend
+# if there are existing container images in the image. We embed the container
+# as root, so the rootfull podman would use 'cni' network backend, while the
+# rootless podman would use 'netavark' network backend in such case.
+# We do not want this inconsistency, so we check for it.
+check_podman_network_backend_consistency() {
+    echo "📗 Checking podman network backend consistency for rootfull and rootless podman"
+
+    local rootfull_network_backend
+    rootfull_network_backend=$(sudo podman info --format json | jq -r '.host.networkBackend // "undefined"')
+    echo "ℹ️ Rootfull podman network backend: ${rootfull_network_backend}"
+    local rootless_network_backend
+    rootless_network_backend=$(podman info --format json | jq -r '.host.networkBackend // "undefined"')
+    echo "ℹ️ Rootless podman network backend: ${rootless_network_backend}"
+    if [[ "${rootfull_network_backend}" != "${rootless_network_backend}" ]]; then
+        echo "❌ Podman network backends are inconsistent"
+        echo "Rootfull podman network backend: ${rootfull_network_backend}"
+        echo "Rootless podman network backend: ${rootless_network_backend}"
+        exit 1
+    fi
 }
 
 echo "❓ Checking system status"
@@ -158,6 +239,12 @@ uptime
 # NOTE: we should do a lot more here
 if (( $# > 0 )); then
     config="$1"
+
+    if ! type -p jq &>/dev/null; then
+        echo "❌ ERROR: jq not found, which is required for the tests"
+        exit 1
+    fi
+
     if jq -e .blueprint.customizations.openscap "${config}"; then
         get_oscap_score "${config}"
     fi
@@ -168,5 +255,10 @@ if (( $# > 0 )); then
 
     if jq -e '.blueprint.enabled_modules' "${config}" || jq -e '.blueprint.packages[] | select(.name | startswith("@") and contains(":")) | .name' "${config}"; then
         check_modularity "${config}"
+    fi
+
+    if jq -e '.blueprint.containers' "${config}"; then
+        check_container_embedding "${config}"
+        check_podman_network_backend_consistency
     fi
 fi
