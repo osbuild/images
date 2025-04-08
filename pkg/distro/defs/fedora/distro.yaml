@@ -707,6 +707,7 @@ image_types:
           - "perl-interpreter"
           - "pigz"
           - "plymouth"
+          - "prefixdevname"
           - "python3-pyatspi"
           - "rdma-core"
           - "realtek-firmware"

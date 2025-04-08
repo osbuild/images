@@ -200,6 +200,6 @@ func TestAnacondaInstallerDracutModulesAndDrivers(t *testing.T) {
 	}
 
 	require.NotNil(stageOptions, "serialized anaconda pipeline does not contain an org.osbuild.anaconda stage")
-	require.Contains(stageOptions.Modules, "test-module")
+	require.Contains(stageOptions.AddModules, "test-module")
 	require.Contains(stageOptions.AddDrivers, "test-driver")
 }

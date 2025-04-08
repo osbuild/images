@@ -508,6 +508,9 @@ func imageInstallerImage(workload workload.Workload,
 		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
 	}
 
+	// On Fedora anaconda needs dbus-broker, but isn't added when dracut runs.
+	img.AdditionalDracutModules = append(img.AdditionalDracutModules, "dbus-broker")
+
 	d := t.arch.distro
 
 	img.Product = d.product
@@ -729,6 +732,9 @@ func iotInstallerImage(workload workload.Workload,
 		img.AdditionalDracutModules = append(img.AdditionalDracutModules, installerConfig.AdditionalDracutModules...)
 		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
 	}
+
+	// On Fedora anaconda needs dbus-broker, but isn't added when dracut runs.
+	img.AdditionalDracutModules = append(img.AdditionalDracutModules, "dbus-broker")
 
 	img.Product = d.product
 	img.Variant = "IoT"

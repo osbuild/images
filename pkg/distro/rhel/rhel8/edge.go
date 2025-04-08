@@ -117,8 +117,6 @@ func mkEdgeInstallerImgType(rd *rhel.Distribution) *rhel.ImageType {
 	}
 	it.DefaultInstallerConfig = &distro.InstallerConfig{
 		AdditionalDracutModules: []string{
-			"prefixdevname",
-			"prefixdevname-tools",
 			"ifcfg",
 		},
 	}
