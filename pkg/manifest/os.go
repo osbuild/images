@@ -84,6 +84,10 @@ type OSCustomizations struct {
 	MaskedServices   []string
 	DefaultTarget    string
 
+	// Configure chrony to work with the Azure reflock as described in
+	// https://learn.microsoft.com/en-us/azure/virtual-machines/linux/time-sync#tools-and-resources
+	ChronyAzureRefclock bool
+
 	// SELinux policy, when set it enables the labeling of the tree with the
 	// selected profile
 	SElinux string
@@ -536,11 +540,27 @@ func (p *OS) serialize() osbuild.Pipeline {
 		pipeline.AddStage(osbuild.NewTimezoneStage(&osbuild.TimezoneStageOptions{Zone: p.OSCustomizations.Timezone}))
 	}
 
-	if len(p.OSCustomizations.NTPServers) > 0 {
+	if len(p.OSCustomizations.NTPServers) > 0 || p.OSCustomizations.ChronyAzureRefclock {
 		chronyOptions := &osbuild.ChronyStageOptions{Servers: p.OSCustomizations.NTPServers}
+
 		if p.OSCustomizations.LeapSecTZ != nil {
 			chronyOptions.LeapsecTz = p.OSCustomizations.LeapSecTZ
 		}
+
+		if p.OSCustomizations.ChronyAzureRefclock {
+			chronyOptions.Refclocks = []osbuild.ChronyConfigRefclock{
+				{
+					Driver: osbuild.PHC{
+						Name: "PHC",
+						Path: "/dev/ptp_hyperv",
+					},
+					Poll:   common.ToPtr(3),
+					Dpoll:  common.ToPtr(-2),
+					Offset: common.ToPtr(0.0),
+				},
+			}
+		}
+
 		pipeline.AddStage(osbuild.NewChronyStage(chronyOptions))
 	}
 

@@ -42,6 +42,10 @@ type ImageConfig struct {
 
 	ShellInit []shell.InitFile
 
+	// Configure chrony to work with the Azure reflock as described in
+	// https://learn.microsoft.com/en-us/azure/virtual-machines/linux/time-sync#tools-and-resources
+	ChronyAzureRefclock *bool
+
 	// for RHSM configuration, we need to potentially distinguish the case
 	// when the user want the image to be subscribed on first boot and when not
 	RHSMConfig          map[subscription.RHSMStatus]*subscription.RHSMConfig

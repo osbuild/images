@@ -231,6 +231,10 @@ func osCustomizations(
 	osc.Files = append(osc.Files, imageConfig.Files...)
 	osc.Directories = append(osc.Directories, imageConfig.Directories...)
 
+	if imageConfig.ChronyAzureRefclock != nil {
+		osc.ChronyAzureRefclock = *imageConfig.ChronyAzureRefclock
+	}
+
 	ca, err := c.GetCACerts()
 	if err != nil {
 		panic(fmt.Sprintf("unexpected error checking CA certs: %v", err))

@@ -271,6 +271,10 @@ func osCustomizations(
 	osc.Files = append(osc.Files, imageConfig.Files...)
 	osc.Directories = append(osc.Directories, imageConfig.Directories...)
 
+	if imageConfig.ChronyAzureRefclock != nil {
+		osc.ChronyAzureRefclock = *imageConfig.ChronyAzureRefclock
+	}
+
 	if imageConfig.NoBLS != nil {
 		osc.NoBLS = *imageConfig.NoBLS
 	}
