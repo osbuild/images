@@ -49,6 +49,7 @@ fi
 # calculate the checksum of the file directly. Also it's faster.
 echo "Calculating checksums"
 checksums_file="./test/data/manifest-checksums.txt"
-(cd "${tmpdir}/manifests" && sha1sum -- *) | sort > "${checksums_file}"
+export LC_ALL=C  # make sort stable
+(cd "${tmpdir}/manifests" && sha1sum -- *) | sort --key 2 > "${checksums_file}"
 
 echo "Checksums saved to ${checksums_file}"
