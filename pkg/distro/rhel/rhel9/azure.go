@@ -490,6 +490,8 @@ func defaultAzureImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
 					},
 				},
 			)
+
+			ic.Grub2Config.TimeoutStyle = osbuild.GRUB2ConfigTimeoutStyleMenu
 		}
 	}
 
