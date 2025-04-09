@@ -425,5 +425,29 @@
     "image-types": [
       "minimal-raw"
     ]
+  },
+  "./configs/rhel-azure-rhui-cdn.json": {
+    "distros": [
+      "rhel-9.6",
+      "rhel-9.7",
+      "rhel-9.8",
+      "rhel-9.9",
+      "rhel-9.10"
+    ],
+    "image-types": [
+      "azure-rhui"
+    ]
+  },
+  "./configs/rhel-azure-rhui.json": {
+    "distros": [
+      "rhel-9.6",
+      "rhel-9.7",
+      "rhel-9.8",
+      "rhel-9.9",
+      "rhel-9.10"
+    ],
+    "image-types": [
+      "azure-rhui"
+    ]
   }
 }
