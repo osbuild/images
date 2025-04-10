@@ -29,8 +29,13 @@ func rhsmConfigNotSamePointers(t *testing.T, c1, c2 *RHSMConfig) {
 			assert.NotSame(t, c1.YumPlugins.SubscriptionManager.Enabled, c2.YumPlugins.SubscriptionManager.Enabled)
 		}
 
-		if c1.SubMan.Rhsm.ManageRepos != nil && c2.SubMan.Rhsm.ManageRepos != nil {
-			assert.NotSame(t, c1.SubMan.Rhsm.ManageRepos, c2.SubMan.Rhsm.ManageRepos)
+		if c1.SubMan.Rhsm.ManageRepos != nil {
+			if c2.SubMan.Rhsm.ManageRepos != nil {
+				assert.NotSame(t, c1.SubMan.Rhsm.ManageRepos, c2.SubMan.Rhsm.ManageRepos)
+			}
+			if c2.SubMan.Rhsm.AutoEnableYumPlugins != nil {
+				assert.NotSame(t, c1.SubMan.Rhsm.AutoEnableYumPlugins, c2.SubMan.Rhsm.AutoEnableYumPlugins)
+			}
 		}
 		if c1.SubMan.Rhsmcertd.AutoRegistration != nil && c2.SubMan.Rhsmcertd.AutoRegistration != nil {
 			assert.NotSame(t, c1.SubMan.Rhsmcertd.AutoRegistration, c2.SubMan.Rhsmcertd.AutoRegistration)
@@ -95,7 +100,8 @@ func TestRHSMConfigClone(t *testing.T) {
 				},
 				SubMan: SubManConfig{
 					Rhsm: SubManRHSMConfig{
-						ManageRepos: common.ToPtr(true),
+						ManageRepos:          common.ToPtr(true),
+						AutoEnableYumPlugins: common.ToPtr(false),
 					},
 					Rhsmcertd: SubManRHSMCertdConfig{
 						AutoRegistration: common.ToPtr(false),
@@ -298,7 +304,8 @@ func TestRHSMConfigUpdate(t *testing.T) {
 				},
 				SubMan: SubManConfig{
 					Rhsm: SubManRHSMConfig{
-						ManageRepos: common.ToPtr(false),
+						ManageRepos:          common.ToPtr(false),
+						AutoEnableYumPlugins: common.ToPtr(false),
 					},
 				},
 			},
@@ -309,6 +316,9 @@ func TestRHSMConfigUpdate(t *testing.T) {
 					},
 				},
 				SubMan: SubManConfig{
+					Rhsm: SubManRHSMConfig{
+						AutoEnableYumPlugins: common.ToPtr(true),
+					},
 					Rhsmcertd: SubManRHSMCertdConfig{
 						AutoRegistration: common.ToPtr(true),
 					},
@@ -325,7 +335,8 @@ func TestRHSMConfigUpdate(t *testing.T) {
 				},
 				SubMan: SubManConfig{
 					Rhsm: SubManRHSMConfig{
-						ManageRepos: common.ToPtr(false),
+						ManageRepos:          common.ToPtr(false),
+						AutoEnableYumPlugins: common.ToPtr(true),
 					},
 					Rhsmcertd: SubManRHSMCertdConfig{
 						AutoRegistration: common.ToPtr(true),
@@ -350,7 +361,8 @@ func TestRHSMConfigUpdate(t *testing.T) {
 				},
 				SubMan: SubManConfig{
 					Rhsm: SubManRHSMConfig{
-						ManageRepos: common.ToPtr(false),
+						ManageRepos:          common.ToPtr(false),
+						AutoEnableYumPlugins: common.ToPtr(false),
 					},
 				},
 			},
@@ -365,7 +377,8 @@ func TestRHSMConfigUpdate(t *testing.T) {
 				},
 				SubMan: SubManConfig{
 					Rhsm: SubManRHSMConfig{
-						ManageRepos: common.ToPtr(false),
+						ManageRepos:          common.ToPtr(false),
+						AutoEnableYumPlugins: common.ToPtr(false),
 					},
 				},
 			},
