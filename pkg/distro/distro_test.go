@@ -194,8 +194,6 @@ func TestImageTypePipelineNames(t *testing.T) {
 // Each package set should include all the global repositories as well as any
 // pipeline/package-set specific repositories.
 func TestPipelineRepositories(t *testing.T) {
-	require := require.New(t)
-
 	type testCase struct {
 		// Repo configs for pipeline generator
 		repos []rpmmd.RepoConfig
@@ -388,11 +386,12 @@ func TestPipelineRepositories(t *testing.T) {
 	distros := listTestedDistros(t)
 	for tName, tCase := range testCases {
 		t.Run(tName, func(t *testing.T) {
+			t.Parallel()
 			for _, distroName := range distros {
 				d := distroFactory.GetDistro(distroName)
 				for _, archName := range d.ListArches() {
 					arch, err := d.GetArch(archName)
-					require.Nil(err)
+					require.Nil(t, err)
 					for _, imageTypeName := range arch.ListImageTypes() {
 						if imageTypeName == "azure-eap7-rhui" {
 							// NOTE (akoutsou): Ideally, at some point we will
@@ -404,6 +403,8 @@ func TestPipelineRepositories(t *testing.T) {
 							continue
 						}
 						t.Run(fmt.Sprintf("%s/%s/%s", distroName, archName, imageTypeName), func(t *testing.T) {
+							t.Parallel()
+							require := require.New(t)
 							imageType, err := arch.GetImageType(imageTypeName)
 							require.Nil(err)
 
@@ -439,8 +440,8 @@ func TestPipelineRepositories(t *testing.T) {
 								globals = tCase.result["*"][0]
 							}
 							for psName, psChain := range packageSets {
-
-								expChain := tCase.result[psName]
+								// test run in parallel but expChain is mutated during the test so we need a clone
+								expChain := slices.Clone(tCase.result[psName])
 								if len(expChain) > 0 {
 									// if we specified an expected chain it should match the returned.
 									if len(expChain) != len(psChain) {
@@ -465,6 +466,7 @@ func TestPipelineRepositories(t *testing.T) {
 
 									// expected set for current package set should be merged with globals
 									expected := expChain[setIdx]
+
 									if !repoNamesSet.Equals(expected) {
 										t.Errorf("repos for package set %q [idx: %d] %s (distro %q image type %q) do not match expected %s", psName, setIdx, repoNamesSet, d.Name(), imageType.Name(), expected)
 									}
