@@ -429,7 +429,8 @@ func TestRHSMConfigFromBP(t *testing.T) {
 					},
 					SubscriptionManager: &blueprint.SubManConfig{
 						RHSMConfig: &blueprint.SubManRHSMConfig{
-							ManageRepos: common.ToPtr(true),
+							ManageRepos:          common.ToPtr(true),
+							AutoEnableYumPlugins: common.ToPtr(false),
 						},
 						RHSMCertdConfig: &blueprint.SubManRHSMCertdConfig{
 							AutoRegistration: common.ToPtr(false),
@@ -448,7 +449,8 @@ func TestRHSMConfigFromBP(t *testing.T) {
 				},
 				SubMan: SubManConfig{
 					Rhsm: SubManRHSMConfig{
-						ManageRepos: common.ToPtr(true),
+						ManageRepos:          common.ToPtr(true),
+						AutoEnableYumPlugins: common.ToPtr(false),
 					},
 					Rhsmcertd: SubManRHSMCertdConfig{
 						AutoRegistration: common.ToPtr(false),

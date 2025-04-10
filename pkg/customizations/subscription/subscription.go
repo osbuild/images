@@ -154,8 +154,13 @@ func RHSMConfigFromBP(bpRHSM *blueprint.RHSMCustomization) *RHSMConfig {
 	// NB: YUMPlugins are not exposed to end users as a customization
 
 	if subMan := bpRHSM.Config.SubscriptionManager; subMan != nil {
-		if subMan.RHSMConfig != nil && subMan.RHSMConfig.ManageRepos != nil {
-			c.SubMan.Rhsm.ManageRepos = common.ToPtr(*subMan.RHSMConfig.ManageRepos)
+		if subMan.RHSMConfig != nil {
+			if subMan.RHSMConfig.ManageRepos != nil {
+				c.SubMan.Rhsm.ManageRepos = common.ToPtr(*subMan.RHSMConfig.ManageRepos)
+			}
+			if subMan.RHSMConfig.AutoEnableYumPlugins != nil {
+				c.SubMan.Rhsm.AutoEnableYumPlugins = common.ToPtr(*subMan.RHSMConfig.AutoEnableYumPlugins)
+			}
 		}
 		if subMan.RHSMCertdConfig != nil && subMan.RHSMCertdConfig.AutoRegistration != nil {
 			c.SubMan.Rhsmcertd.AutoRegistration = common.ToPtr(*subMan.RHSMCertdConfig.AutoRegistration)
