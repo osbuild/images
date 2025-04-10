@@ -101,7 +101,8 @@ func TestNewRHSMStageOptions(t *testing.T) {
 				},
 				SubMan: subscription.SubManConfig{
 					Rhsm: subscription.SubManRHSMConfig{
-						ManageRepos: common.ToPtr(true),
+						ManageRepos:          common.ToPtr(true),
+						AutoEnableYumPlugins: common.ToPtr(false),
 					},
 					Rhsmcertd: subscription.SubManRHSMCertdConfig{
 						AutoRegistration: common.ToPtr(false),
@@ -127,7 +128,8 @@ func TestNewRHSMStageOptions(t *testing.T) {
 				},
 				SubMan: &RHSMStageOptionsSubMan{
 					Rhsm: &SubManConfigRHSMSection{
-						ManageRepos: common.ToPtr(true),
+						ManageRepos:          common.ToPtr(true),
+						AutoEnableYumPlugins: common.ToPtr(false),
 					},
 					Rhsmcertd: &SubManConfigRHSMCERTDSection{
 						AutoRegistration: common.ToPtr(false),
