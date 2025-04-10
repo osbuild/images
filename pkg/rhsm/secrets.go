@@ -42,18 +42,26 @@ type ConsumerSecrets struct {
 }
 
 func getRHSMSecrets() (*RHSMSecrets, error) {
-	keys, err := filepath.Glob("/etc/pki/entitlement/*-key.pem")
-	if err != nil {
-		return nil, err
+	// search /etc first to allow container users to override the entitlements
+	globs := []string{
+		"/etc/pki/entitlement/*-key.pem",             // for regular systems
+		"/run/secrets/etc-pki-entitlement/*-key.pem", // for podman containers
 	}
-	for _, key := range keys {
-		cert := strings.TrimSuffix(key, "-key.pem") + ".pem"
-		if _, err := os.Stat(cert); err == nil {
-			return &RHSMSecrets{
-				SSLCACert:     "/etc/rhsm/ca/redhat-uep.pem",
-				SSLClientKey:  key,
-				SSLClientCert: cert,
-			}, nil
+
+	for _, glob := range globs {
+		keys, err := filepath.Glob(glob)
+		if err != nil {
+			return nil, err
+		}
+		for _, key := range keys {
+			cert := strings.TrimSuffix(key, "-key.pem") + ".pem"
+			if _, err := os.Stat(cert); err == nil {
+				return &RHSMSecrets{
+					SSLCACert:     "/etc/rhsm/ca/redhat-uep.pem",
+					SSLClientKey:  key,
+					SSLClientCert: cert,
+				}, nil
+			}
 		}
 	}
 	return nil, fmt.Errorf("no matching key and certificate pair")
