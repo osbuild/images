@@ -33,3 +33,31 @@ func TestPipelineNamesFromSad(t *testing.T) {
 	_, err = manifesttest.PipelineNamesFrom([]byte("{}"))
 	assert.ErrorContains(t, err, "cannot find any pipelines in map[]")
 }
+
+var fakeOsbuildManifestWithStages = []byte(`{
+  "version": "2",
+  "pipelines": [
+    {
+       "name": "build",
+       "stages": [
+         {
+            "type": "org.osbuild.rpm"
+         },
+         {
+            "type": "org.osbuild.mkdir"
+         }
+       ]
+    }
+  ]
+}`)
+
+func TestStageNamesForPipelineHappy(t *testing.T) {
+	names, err := manifesttest.StagesForPipeline(fakeOsbuildManifestWithStages, "build")
+	assert.NoError(t, err)
+	assert.Equal(t, []string{"org.osbuild.rpm", "org.osbuild.mkdir"}, names)
+}
+
+func TestStageNamesForPipelineSad(t *testing.T) {
+	_, err := manifesttest.StagesForPipeline(fakeOsbuildManifestWithStages, "non-existing")
+	assert.ErrorContains(t, err, `cannot find pipeline "non-existing" in `)
+}
