@@ -16,6 +16,15 @@
             "/etc/pki/rpm-gpg/RPM-GPG-KEY-microsoft-azure-release"
           ]
         }
+      },
+      "rhsm": {
+        "config": {
+          "subscription_manager": {
+            "rhsm": {
+              "auto_enable_yum_plugins": false
+            }
+          }
+        }
       }
     }
   }
