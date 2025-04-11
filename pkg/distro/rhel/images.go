@@ -511,9 +511,12 @@ func EdgeInstallerImage(workload workload.Workload,
 	// kickstart though kickstart does support setting them
 	img.Kickstart.Timezone, _ = customizations.GetTimezoneSettings()
 
-	img.RootfsCompression = "xz"
 	if t.Arch().Distro().Releasever() == "10" {
-		img.RootfsType = manifest.SquashfsRootfs
+		// On RHEL10 use erofs and lzma compression for the iso root filesystem
+		img.RootfsCompression = "lzma"
+		img.RootfsType = manifest.ErofsRootfs
+	} else {
+		img.RootfsCompression = "xz"
 	}
 
 	// Enable BIOS iso on x86_64 only
@@ -748,9 +751,12 @@ func ImageInstallerImage(workload workload.Workload,
 	}
 	img.AdditionalAnacondaModules = append(img.AdditionalAnacondaModules, anaconda.ModuleUsers)
 
-	img.RootfsCompression = "xz"
 	if t.Arch().Distro().Releasever() == "10" {
-		img.RootfsType = manifest.SquashfsRootfs
+		// On RHEL10 use erofs and lzma compression for the iso root filesystem
+		img.RootfsCompression = "lzma"
+		img.RootfsType = manifest.ErofsRootfs
+	} else {
+		img.RootfsCompression = "xz"
 	}
 
 	// Enable BIOS iso on x86_64 only
