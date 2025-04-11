@@ -380,4 +380,24 @@ if (( $# > 0 )); then
     if jq -e '.blueprint.customizations.files' "${config}"; then
         check_files_customizations "${config}"
     fi
+
+    if jq -e '.blueprint.customizations.kernel.name' "${config}"; then
+        # Getting the "name" of the currently booted kernel (as it appears in
+        # the package list) isn't really possible. Here, we assume the kernel
+        # package is the customization string with the -core suffix. We list
+        # the files in the selected package and grep for the expected filename
+        # based on the version string returned by 'uname -r', therefore
+        # verifying that the currently running kernel is the same as the one
+        # from the package in the customization.
+        # NOTE: This might not behave as expected if multiple versions of the
+        # same kernel are installed, but that shouldn't be an issue in our
+        # tests.
+        kernel_pkg_name=$(jq -r '.blueprint.customizations.kernel.name' "${config}")-core
+        if rpm -ql "${kernel_pkg_name}" | grep "^/boot/vmlinuz-$(uname -r)$"; then
+            echo "Kernel from ${kernel_pkg_name} matches booted kernel"
+        else
+            echo "Kernel from ${kernel_pkg_name} does not match kernel version string returned by 'uname -r'"
+            exit 1
+        fi
+    fi
 fi
