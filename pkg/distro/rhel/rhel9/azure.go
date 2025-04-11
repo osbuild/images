@@ -490,6 +490,8 @@ func defaultAzureImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
 					},
 				},
 			)
+
+			ic.ChronyAzureRefclock = common.ToPtr(true)
 		}
 	}
 
