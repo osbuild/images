@@ -530,7 +530,7 @@ func imageInstallerImage(workload workload.Workload,
 
 	img.Filename = t.Filename()
 
-	img.RootfsCompression = "lz4"
+	img.RootfsCompression = "xz" // This also triggers using the bcj filter
 	if common.VersionGreaterThanOrEqual(img.OSVersion, VERSION_ROOTFS_SQUASHFS) {
 		img.RootfsType = manifest.SquashfsRootfs
 	}
@@ -749,7 +749,7 @@ func iotInstallerImage(workload workload.Workload,
 
 	img.Filename = t.Filename()
 
-	img.RootfsCompression = "lz4"
+	img.RootfsCompression = "xz" // This also triggers using the bcj filter
 	if common.VersionGreaterThanOrEqual(img.OSVersion, VERSION_ROOTFS_SQUASHFS) {
 		img.RootfsType = manifest.SquashfsRootfs
 	}
