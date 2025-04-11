@@ -7,7 +7,7 @@ import imgtestlib as testlib
 
 
 def main():
-    desc = "Boot an image in the cloud environment it is built for and validate the configuration"
+    desc = "Build image for testing with boot-image"
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument("distro", type=str, default=None, help="distro for the image to boot test")
     parser.add_argument("image_type", type=str, default=None, help="type of the image to boot test")
