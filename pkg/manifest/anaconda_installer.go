@@ -173,6 +173,8 @@ func (p *AnacondaInstaller) getBuildPackages(Distro) []string {
 	return packages
 }
 
+// getPackageSetChain returns the packages to install
+// It will also include weak deps for the Live installer type
 func (p *AnacondaInstaller) getPackageSetChain(Distro) []rpmmd.PackageSet {
 	packages := p.anacondaBootPackageSet()
 
@@ -189,7 +191,7 @@ func (p *AnacondaInstaller) getPackageSetChain(Distro) []rpmmd.PackageSet {
 			Include:         append(packages, p.ExtraPackages...),
 			Exclude:         p.ExcludePackages,
 			Repositories:    append(p.repos, p.ExtraRepos...),
-			InstallWeakDeps: true,
+			InstallWeakDeps: p.Type == AnacondaInstallerTypeLive,
 		},
 	}
 }
@@ -229,8 +231,13 @@ func (p *AnacondaInstaller) serialize() osbuild.Pipeline {
 	}
 
 	pipeline := p.Base.serialize()
+	options := osbuild.NewRPMStageOptions(p.repos)
+	// Documentation is only installed on live installer images
+	if p.Type != AnacondaInstallerTypeLive {
+		options.Exclude = &osbuild.Exclude{Docs: true}
+	}
 
-	pipeline.AddStage(osbuild.NewRPMStage(osbuild.NewRPMStageOptions(p.repos), osbuild.NewRpmStageSourceFilesInputs(p.packageSpecs)))
+	pipeline.AddStage(osbuild.NewRPMStage(options, osbuild.NewRpmStageSourceFilesInputs(p.packageSpecs)))
 	pipeline.AddStage(osbuild.NewBuildstampStage(&osbuild.BuildstampStageOptions{
 		Arch:    p.platform.GetArch().String(),
 		Product: p.product,
