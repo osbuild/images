@@ -169,4 +169,12 @@ if (( $# > 0 )); then
     if jq -e '.blueprint.enabled_modules' "${config}" || jq -e '.blueprint.packages[] | select(.name | startswith("@") and contains(":")) | .name' "${config}"; then
         check_modularity "${config}"
     fi
+
+    if jq -e '.blueprint.customizations.hostname' "${config}"; then
+        [[ "$(hostname)" == "$(jq -r '.blueprint.customizations.hostname' "${config}")" ]]
+    fi
+
+    if jq -e '.blueprint.customizations.kernel.name' "${config}"; then
+        [[ "$(uname -s)" == "$(jq -r '.blueprint.customizations.kernel.name' "${config}")" ]]
+    fi
 fi
