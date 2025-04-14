@@ -146,6 +146,38 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 			},
 			expected: nil,
 		},
+		"standard-output-ok-j+c": {
+			options: SystemdUnitCreateStageOptions{
+				Filename: "test.service",
+				UnitType: GlobalUnitType,
+				UnitPath: EtcUnitPath,
+				Config: SystemdUnit{
+					Unit: unitSection,
+					Service: &ServiceSection{
+						ExecStart:      []string{"true"},
+						StandardOutput: "journal+console",
+					},
+					Install: installSection,
+				},
+			},
+			expected: nil,
+		},
+		"standard-output-ok-append": {
+			options: SystemdUnitCreateStageOptions{
+				Filename: "test.service",
+				UnitType: GlobalUnitType,
+				UnitPath: EtcUnitPath,
+				Config: SystemdUnit{
+					Unit: unitSection,
+					Service: &ServiceSection{
+						ExecStart:      []string{"true"},
+						StandardOutput: "append:/var/log/test.log",
+					},
+					Install: installSection,
+				},
+			},
+			expected: nil,
+		},
 
 		// missing required section
 		"service-no-Service": {
@@ -368,6 +400,38 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 				},
 			},
 			expected: fmt.Errorf("variable name \":bad_var/\" doesn't conform to schema (%s)", envVarRegex),
+		},
+		"invalid-standard-output-1": {
+			options: SystemdUnitCreateStageOptions{
+				Filename: "test.service",
+				UnitType: GlobalUnitType,
+				UnitPath: EtcUnitPath,
+				Config: SystemdUnit{
+					Unit: unitSection,
+					Service: &ServiceSection{
+						ExecStart:      []string{"true"},
+						StandardOutput: "very-invalid",
+					},
+					Install: installSection,
+				},
+			},
+			expected: fmt.Errorf("StandardOutput value \"very-invalid\" does not conform to schema (%s)", systemdStandardOutputRegex),
+		},
+		"invalid-standard-output-2": {
+			options: SystemdUnitCreateStageOptions{
+				Filename: "test.service",
+				UnitType: GlobalUnitType,
+				UnitPath: EtcUnitPath,
+				Config: SystemdUnit{
+					Unit: unitSection,
+					Service: &ServiceSection{
+						ExecStart:      []string{"true"},
+						StandardOutput: "file:",
+					},
+					Install: installSection,
+				},
+			},
+			expected: fmt.Errorf("StandardOutput value \"file:\" does not conform to schema (%s)", systemdStandardOutputRegex),
 		},
 	}
 
