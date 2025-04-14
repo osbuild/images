@@ -49,7 +49,7 @@ type ImageConfig struct {
 	CloudInit           []*osbuild.CloudInitStageOptions
 	Modprobe            []*osbuild.ModprobeStageOptions
 	DracutConf          []*osbuild.DracutConfStageOptions
-	SystemdUnit         []*osbuild.SystemdUnitStageOptions
+	SystemdDropin       []*osbuild.SystemdUnitStageOptions
 	Authselect          *osbuild.AuthselectStageOptions
 	SELinuxConfig       *osbuild.SELinuxConfigStageOptions
 	Tuned               *osbuild.TunedStageOptions

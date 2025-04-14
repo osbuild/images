@@ -253,7 +253,7 @@ func defaultEc2ImageConfig() *distro.ImageConfig {
 				},
 			},
 		},
-		SystemdUnit: []*osbuild.SystemdUnitStageOptions{
+		SystemdDropin: []*osbuild.SystemdUnitStageOptions{
 			// RHBZ#1822863
 			{
 				Unit:   "nm-cloud-setup.service",
