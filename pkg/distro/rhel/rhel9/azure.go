@@ -497,6 +497,17 @@ func defaultAzureImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
 
 			ic.WAAgentConfig.Config.ProvisioningUseCloudInit = common.ToPtr(true)
 			ic.WAAgentConfig.Config.ProvisioningEnabled = common.ToPtr(false)
+
+			ic.TimeSynchronization = &osbuild.ChronyStageOptions{
+				Refclocks: []osbuild.ChronyConfigRefclock{
+					{
+						Driver: osbuild.NewChronyDriverPHC("/dev/ptp_hyperv"),
+						Poll:   common.ToPtr(3),
+						Dpoll:  common.ToPtr(-2),
+						Offset: common.ToPtr(0.0),
+					},
+				},
+			}
 		}
 	}
 
