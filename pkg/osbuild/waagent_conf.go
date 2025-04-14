@@ -1,8 +1,8 @@
 package osbuild
 
 type WAAgentConfig struct {
-	RDFormat     *bool `json:"ResourceDisk.Format"`
-	RDEnableSwap *bool `json:"ResourceDisk.EnableSwap"`
+	RDFormat     *bool `json:"ResourceDisk.Format,omitempty"`
+	RDEnableSwap *bool `json:"ResourceDisk.EnableSwap,omitempty"`
 }
 
 type WAAgentConfStageOptions struct {
