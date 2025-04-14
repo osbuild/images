@@ -560,7 +560,7 @@ func createMountpointService(serviceName string, mountpoints []string) *osbuild.
 	options := osbuild.SystemdUnitCreateStageOptions{
 		Filename: serviceName,
 		UnitPath: osbuild.EtcUnitPath,
-		UnitType: osbuild.System,
+		UnitType: osbuild.SystemUnitType,
 		Config: osbuild.SystemdUnit{
 			Unit:    &unit,
 			Service: &service,
