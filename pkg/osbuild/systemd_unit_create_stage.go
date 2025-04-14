@@ -136,7 +136,7 @@ func (o *SystemdUnitCreateStageOptions) validateService() error {
 	if service := o.Config.Service; service != nil {
 		for _, envVar := range service.Environment {
 			if !vre.MatchString(envVar.Key) {
-				return fmt.Errorf("variable name %q doesn't conform to schema (%s)", envVar.Key, envVarRegex)
+				return fmt.Errorf("variable name %q does not conform to schema (%s)", envVar.Key, envVarRegex)
 			}
 		}
 
