@@ -50,6 +50,7 @@ type ImageConfig struct {
 	Modprobe            []*osbuild.ModprobeStageOptions
 	DracutConf          []*osbuild.DracutConfStageOptions
 	SystemdDropin       []*osbuild.SystemdUnitStageOptions
+	SystemdUnit         []*osbuild.SystemdUnitCreateStageOptions
 	Authselect          *osbuild.AuthselectStageOptions
 	SELinuxConfig       *osbuild.SELinuxConfigStageOptions
 	Tuned               *osbuild.TunedStageOptions

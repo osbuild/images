@@ -220,6 +220,7 @@ func osCustomizations(
 	osc.Modprobe = imageConfig.Modprobe
 	osc.DracutConf = imageConfig.DracutConf
 	osc.SystemdDropin = imageConfig.SystemdDropin
+	osc.SystemdUnit = imageConfig.SystemdUnit
 	osc.Authselect = imageConfig.Authselect
 	osc.SELinuxConfig = imageConfig.SELinuxConfig
 	osc.Tuned = imageConfig.Tuned

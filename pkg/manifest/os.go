@@ -107,6 +107,7 @@ type OSCustomizations struct {
 	Modprobe             []*osbuild.ModprobeStageOptions
 	DracutConf           []*osbuild.DracutConfStageOptions
 	SystemdDropin        []*osbuild.SystemdUnitStageOptions
+	SystemdUnit          []*osbuild.SystemdUnitCreateStageOptions
 	Authselect           *osbuild.AuthselectStageOptions
 	SELinuxConfig        *osbuild.SELinuxConfigStageOptions
 	Tuned                *osbuild.TunedStageOptions
@@ -591,6 +592,10 @@ func (p *OS) serialize() osbuild.Pipeline {
 
 	for _, systemdUnitConfig := range p.OSCustomizations.SystemdDropin {
 		pipeline.AddStage(osbuild.NewSystemdUnitStage(systemdUnitConfig))
+	}
+
+	for _, systemdUnitCreateConfig := range p.OSCustomizations.SystemdUnit {
+		pipeline.AddStage(osbuild.NewSystemdUnitCreateStage(systemdUnitCreateConfig))
 	}
 
 	if p.OSCustomizations.Authselect != nil {
