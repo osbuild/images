@@ -106,7 +106,7 @@ type OSCustomizations struct {
 	CloudInit            []*osbuild.CloudInitStageOptions
 	Modprobe             []*osbuild.ModprobeStageOptions
 	DracutConf           []*osbuild.DracutConfStageOptions
-	SystemdUnit          []*osbuild.SystemdUnitStageOptions
+	SystemdDropin        []*osbuild.SystemdUnitStageOptions
 	Authselect           *osbuild.AuthselectStageOptions
 	SELinuxConfig        *osbuild.SELinuxConfigStageOptions
 	Tuned                *osbuild.TunedStageOptions
@@ -589,7 +589,7 @@ func (p *OS) serialize() osbuild.Pipeline {
 		pipeline.AddStage(osbuild.NewDracutConfStage(dracutConfConfig))
 	}
 
-	for _, systemdUnitConfig := range p.OSCustomizations.SystemdUnit {
+	for _, systemdUnitConfig := range p.OSCustomizations.SystemdDropin {
 		pipeline.AddStage(osbuild.NewSystemdUnitStage(systemdUnitConfig))
 	}
 

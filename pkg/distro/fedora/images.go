@@ -219,7 +219,7 @@ func osCustomizations(
 	osc.CloudInit = imageConfig.CloudInit
 	osc.Modprobe = imageConfig.Modprobe
 	osc.DracutConf = imageConfig.DracutConf
-	osc.SystemdUnit = imageConfig.SystemdUnit
+	osc.SystemdDropin = imageConfig.SystemdDropin
 	osc.Authselect = imageConfig.Authselect
 	osc.SELinuxConfig = imageConfig.SELinuxConfig
 	osc.Tuned = imageConfig.Tuned
