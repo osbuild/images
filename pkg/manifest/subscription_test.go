@@ -28,7 +28,7 @@ func TestSubscriptionService(t *testing.T) {
 	// values that are always set for the stage
 	stageType := "org.osbuild.systemd.unit.create"
 	serviceFilename := "osbuild-subscription-register.service"
-	unitType := osbuild.System
+	unitType := osbuild.SystemUnitType
 	serviceDescription := "First-boot service for registering with Red Hat subscription manager and/or insights"
 	serviceWants := []string{"network-online.target"}
 	serviceAfter := serviceWants

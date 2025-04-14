@@ -64,7 +64,7 @@ func TestNewSystemdUnitCreateStageInEtc(t *testing.T) {
 		Filename: "create-dir-files.service",
 		Config:   systemdServiceConfig,
 		UnitPath: EtcUnitPath,
-		UnitType: Global,
+		UnitType: GlobalUnitType,
 	}
 	expectedStage := &Stage{
 		Type:    "org.osbuild.systemd.unit.create",
@@ -110,7 +110,7 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 		"service-ok": {
 			options: SystemdUnitCreateStageOptions{
 				Filename: "test.service",
-				UnitType: Global,
+				UnitType: GlobalUnitType,
 				UnitPath: EtcUnitPath,
 				Config: SystemdUnit{
 					Unit:    unitSection,
@@ -123,7 +123,7 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 		"mount-ok": {
 			options: SystemdUnitCreateStageOptions{
 				Filename: "test.mount",
-				UnitType: Global,
+				UnitType: GlobalUnitType,
 				UnitPath: EtcUnitPath,
 				Config: SystemdUnit{
 					Unit:    unitSection,
@@ -136,7 +136,7 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 		"socket-ok": {
 			options: SystemdUnitCreateStageOptions{
 				Filename: "test.socket",
-				UnitType: Global,
+				UnitType: GlobalUnitType,
 				UnitPath: EtcUnitPath,
 				Config: SystemdUnit{
 					Unit:    unitSection,
@@ -151,7 +151,7 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 		"service-no-Service": {
 			options: SystemdUnitCreateStageOptions{
 				Filename: "test.service",
-				UnitType: Global,
+				UnitType: GlobalUnitType,
 				UnitPath: EtcUnitPath,
 				Config: SystemdUnit{
 					Unit:    unitSection,
@@ -163,7 +163,7 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 		"service-no-Install": {
 			options: SystemdUnitCreateStageOptions{
 				Filename: "test.service",
-				UnitType: Global,
+				UnitType: GlobalUnitType,
 				UnitPath: EtcUnitPath,
 				Config: SystemdUnit{
 					Unit:    unitSection,
@@ -175,7 +175,7 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 		"mount-no-Mount": {
 			options: SystemdUnitCreateStageOptions{
 				Filename: "test.mount",
-				UnitType: Global,
+				UnitType: GlobalUnitType,
 				UnitPath: EtcUnitPath,
 				Config: SystemdUnit{
 					Unit:    unitSection,
@@ -187,7 +187,7 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 		"socket-no-Socket": {
 			options: SystemdUnitCreateStageOptions{
 				Filename: "test.socket",
-				UnitType: Global,
+				UnitType: GlobalUnitType,
 				UnitPath: EtcUnitPath,
 				Config: SystemdUnit{
 					Unit:    unitSection,
@@ -201,7 +201,7 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 		"service-with-mount": {
 			options: SystemdUnitCreateStageOptions{
 				Filename: "test.service",
-				UnitType: Global,
+				UnitType: GlobalUnitType,
 				UnitPath: EtcUnitPath,
 				Config: SystemdUnit{
 					Unit:    unitSection,
@@ -215,7 +215,7 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 		"service-with-socket": {
 			options: SystemdUnitCreateStageOptions{
 				Filename: "test.service",
-				UnitType: Global,
+				UnitType: GlobalUnitType,
 				UnitPath: EtcUnitPath,
 				Config: SystemdUnit{
 					Unit:    unitSection,
@@ -229,7 +229,7 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 		"mount-with-service": {
 			options: SystemdUnitCreateStageOptions{
 				Filename: "test.mount",
-				UnitType: Global,
+				UnitType: GlobalUnitType,
 				UnitPath: EtcUnitPath,
 				Config: SystemdUnit{
 					Unit:    unitSection,
@@ -243,7 +243,7 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 		"mount-with-socket": {
 			options: SystemdUnitCreateStageOptions{
 				Filename: "test.mount",
-				UnitType: Global,
+				UnitType: GlobalUnitType,
 				UnitPath: EtcUnitPath,
 				Config: SystemdUnit{
 					Unit:    unitSection,
@@ -257,7 +257,7 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 		"socket-with-Service": {
 			options: SystemdUnitCreateStageOptions{
 				Filename: "test.socket",
-				UnitType: Global,
+				UnitType: GlobalUnitType,
 				UnitPath: EtcUnitPath,
 				Config: SystemdUnit{
 					Unit:    unitSection,
@@ -271,7 +271,7 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 		"socket-with-Mount": {
 			options: SystemdUnitCreateStageOptions{
 				Filename: "test.socket",
-				UnitType: Global,
+				UnitType: GlobalUnitType,
 				UnitPath: EtcUnitPath,
 				Config: SystemdUnit{
 					Unit:    unitSection,
@@ -287,7 +287,7 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 		"bad-filename": {
 			options: SystemdUnitCreateStageOptions{
 				Filename: "//not-a-good-path//",
-				UnitType: Global,
+				UnitType: GlobalUnitType,
 				UnitPath: EtcUnitPath,
 				Config: SystemdUnit{
 					Unit:    unitSection,
@@ -302,7 +302,7 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 		"bad-extension": {
 			options: SystemdUnitCreateStageOptions{
 				Filename: "test.whatever",
-				UnitType: Global,
+				UnitType: GlobalUnitType,
 				UnitPath: EtcUnitPath,
 			},
 			expected: fmt.Errorf("invalid filename \"test.whatever\" for systemd unit: does not conform to schema (%s)", unitFilenameRegex),
@@ -312,7 +312,7 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 		"mount-no-what": {
 			options: SystemdUnitCreateStageOptions{
 				Filename: "test.mount",
-				UnitType: Global,
+				UnitType: GlobalUnitType,
 				UnitPath: EtcUnitPath,
 				Config: SystemdUnit{
 					Unit: unitSection,
@@ -329,7 +329,7 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 		"mount-no-where": {
 			options: SystemdUnitCreateStageOptions{
 				Filename: "test.mount",
-				UnitType: Global,
+				UnitType: GlobalUnitType,
 				UnitPath: EtcUnitPath,
 				Config: SystemdUnit{
 					Unit: unitSection,
@@ -348,7 +348,7 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 		"service-bad-env-vars": {
 			options: SystemdUnitCreateStageOptions{
 				Filename: "test.service",
-				UnitType: Global,
+				UnitType: GlobalUnitType,
 				UnitPath: EtcUnitPath,
 				Config: SystemdUnit{
 					Unit: unitSection,

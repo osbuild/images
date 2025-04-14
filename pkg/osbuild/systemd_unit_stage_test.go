@@ -24,7 +24,7 @@ func TestNewSystemdGlobalUnitStage(t *testing.T) {
 				FileExists: "/usr/lib/test",
 			},
 		},
-		UnitType: Global,
+		UnitType: GlobalUnitType,
 	}
 
 	expectedStage := &Stage{

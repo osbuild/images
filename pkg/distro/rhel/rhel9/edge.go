@@ -339,7 +339,7 @@ var (
 		{
 			Unit:     "grub-boot-success.timer",
 			Dropin:   "10-disable-if-greenboot.conf",
-			UnitType: osbuild.Global,
+			UnitType: osbuild.GlobalUnitType,
 			Config: osbuild.SystemdServiceUnitDropin{
 				Unit: &osbuild.SystemdUnitSection{
 					FileExists: "!/usr/libexec/greenboot/greenboot",
