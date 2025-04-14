@@ -399,7 +399,7 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 					Install: installSection,
 				},
 			},
-			expected: fmt.Errorf("variable name \":bad_var/\" doesn't conform to schema (%s)", envVarRegex),
+			expected: fmt.Errorf("variable name \":bad_var/\" does not conform to schema (%s)", envVarRegex),
 		},
 		"invalid-standard-output-1": {
 			options: SystemdUnitCreateStageOptions{
