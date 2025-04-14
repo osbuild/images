@@ -490,6 +490,9 @@ func defaultAzureImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
 					},
 				},
 			)
+
+			ic.WAAgentConfig.Config.ProvisioningUseCloudInit = common.ToPtr(true)
+			ic.WAAgentConfig.Config.ProvisioningEnabled = common.ToPtr(false)
 		}
 	}
 
