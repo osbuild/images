@@ -117,7 +117,11 @@ func subscriptionService(subscriptionOptions subscription.ImageOptions, serviceO
 	var commands []string
 	if subscriptionOptions.Rhc {
 		// Use rhc for registration instead of subscription manager
-		commands = []string{fmt.Sprintf("/usr/bin/rhc connect --organization=${ORG_ID} --activation-key=${ACTIVATION_KEY} --server %s", subscriptionOptions.ServerUrl)}
+		rhcConnect := fmt.Sprintf("/usr/bin/rhc connect --organization=${ORG_ID} --activation-key=${ACTIVATION_KEY} --server %s", subscriptionOptions.ServerUrl)
+		if subscriptionOptions.TemplateName != "" {
+			rhcConnect += fmt.Sprintf(" --content-template %s", subscriptionOptions.TemplateName)
+		}
+		commands = append(commands, rhcConnect)
 		// insights-client creates the .gnupg directory during boot process, and is labeled incorrectly
 		commands = append(commands, "restorecon -R /root/.gnupg")
 		// execute the rhc post install script as the selinuxenabled check doesn't work in the buildroot container
@@ -138,6 +142,17 @@ func subscriptionService(subscriptionOptions subscription.ImageOptions, serviceO
 			commands = append(commands, "/usr/bin/insights-client --register")
 			// insights-client creates the .gnupg directory during boot process, and is labeled incorrectly
 			commands = append(commands, "restorecon -R /root/.gnupg")
+			// register to template if template is specified
+			if subscriptionOptions.TemplateUUID != "" {
+				patchURL := subscriptionOptions.PatchURL
+				if patchURL[len(patchURL)-1] == '/' {
+					patchURL = patchURL[:len(patchURL)-1]
+				}
+				addTemplateURL := fmt.Sprintf("%s/templates/%s/subscribed-systems", patchURL, subscriptionOptions.TemplateUUID)
+				curlToAssociateSystem := fmt.Sprintf("curl -v --retry --proxy %s %s --cert /etc/pki/consumer/cert.pem  --key /etc/pki/consumer/key.pem -X PATCH", subscriptionOptions.Proxy, addTemplateURL)
+				commands = append(commands, curlToAssociateSystem)
+				commands = append(commands, "/usr/sbin/subscription-manager refresh")
+			}
 			if insightsOnBoot {
 				icDir, icFile, err := runInsightsClientOnBoot()
 				if err != nil {
