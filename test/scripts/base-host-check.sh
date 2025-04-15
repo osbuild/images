@@ -140,6 +140,22 @@ check_hostname() {
     fi
 }
 
+check_users() {
+    echo "📗 Checking users"
+
+    users_expected=$(jq -rc '.blueprint.customizations.user[]' "$config")
+
+    echo "$users_expected" | while read -r user_expected; do
+        username=$(echo "$user_expected" | jq -rc .name)
+        if ! id "$username"; then
+            echo "❌ User did not exist: username=${username}"
+            exit 1
+        else
+            echo "User ${username} exists"
+        fi
+    done
+}
+
 echo "❓ Checking system status"
 if ! running_wait; then
 
@@ -187,5 +203,9 @@ if (( $# > 0 )); then
 
     if jq -e '.blueprint.enabled_modules' "${config}" || jq -e '.blueprint.packages[] | select(.name | startswith("@") and contains(":")) | .name' "${config}"; then
         check_modularity "${config}"
+    fi
+
+    if jq -e '.blueprint.customizations.user' "${config}"; then
+        check_users "${config}"
     fi
 fi
