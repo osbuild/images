@@ -125,6 +125,21 @@ check_modularity() {
     done
 }
 
+check_hostname() {
+    echo "📗 Checking hostname"
+
+    # Verify that the hostname is set by running `hostname`
+    expected_hostname=$(jq -r '.blueprint.customizations.hostname' "${config}")
+    actual_hostname=$(hostname)
+
+    if [[ $actual_hostname != "${expected_hostname}" ]]; then 
+        echo "❌ Hostname was not set: hostname=${actual_hostname} expected=${expected_hostname}"
+        exit 1
+    else
+        echo "Hostname was set"
+    fi
+}
+
 echo "❓ Checking system status"
 if ! running_wait; then
 
@@ -158,6 +173,10 @@ uptime
 # NOTE: we should do a lot more here
 if (( $# > 0 )); then
     config="$1"
+    if jq -e '.blueprint.customizations.hostname' "${config}"; then
+        check_hostname "${config}"
+    fi
+
     if jq -e .blueprint.customizations.openscap "${config}"; then
         get_oscap_score "${config}"
     fi
