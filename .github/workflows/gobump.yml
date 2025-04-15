@@ -16,6 +16,7 @@ jobs:
       - uses: actions/setup-go@v5
 
       - name: Update go.mod
+        run: |
           sudo dnf -y install gpgme-devel btrfs-progs-devel krb5-devel
           echo -e '## gobump output:\n\n```' > github_pr_body.txt
           go run github.com/lzap/gobump@latest -exec "go build ./..." -exec "go test ./..." 2>&1 | tee -a github_pr_body.txt
