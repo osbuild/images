@@ -20,13 +20,6 @@
       }
     }
   },
-  "fedora-40": {
-    "dependencies": {
-      "osbuild": {
-        "commit": "0ac83fd421ac669cb94f22f74fc32ac8167dbe70"
-      }
-    }
-  },
   "fedora-41": {
     "dependencies": {
       "osbuild": {
@@ -69,5 +62,12 @@
         ]
       }
     ]
+  },
+  "fedora-42": {
+    "dependencies": {
+      "osbuild": {
+        "commit": "f30174d9ba28454f0babd711db37972e84ddb57f"
+      }
+    }
   }
 }

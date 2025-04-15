@@ -18,8 +18,8 @@ jobs:
     strategy:
       matrix:
         fedora_version:
-          - 40
           - 41
+          - 42
       fail-fast: false  # if one fails, keep the other(s) running
     name: "🛃 Unit tests (Fedora ${{ matrix.fedora_version }})"
     runs-on: ubuntu-24.04
