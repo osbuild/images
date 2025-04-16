@@ -12,20 +12,21 @@ jobs:
     runs-on: ubuntu-latest
     container: registry.fedoraproject.org/fedora:41
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Update go.mod
+      - name: Update go.mod and open a PR
+        env:
+          GITHUB_TOKEN: ${{ secrets.SCHUTZBOT_GITHUB_ACCESS_TOKEN }}
         run: |
+          # Install deps
           sudo dnf -y install golang gpgme-devel btrfs-progs-devel krb5-devel
+          # Checkout the project
+          git clone --depth 1 https://github.com/osbuild/images
+          cd images/
+          # Install and run gobump
           echo -e '## gobump output:\n\n```' > github_pr_body.txt
           go run github.com/lzap/gobump@latest -exec "go build ./..." -exec "go test ./..." 2>&1 | tee -a github_pr_body.txt
           echo -e '\n```' >> github_pr_body.txt
           ./tools/prepare-source.sh
-
-      - name: Open PR
-        env:
-          GITHUB_TOKEN: ${{ secrets.SCHUTZBOT_GITHUB_ACCESS_TOKEN }}
-        run: |
+          # Make a PR when needed
           if git diff --exit-code; then echo "No changes"; exit 0; fi
           git config --unset-all http.https://github.com/.extraheader
           git config user.name "schutzbot"
