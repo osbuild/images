@@ -306,13 +306,16 @@ func (p *AnacondaInstaller) payloadStages() []*osbuild.Stage {
 	}
 	stages = append(stages, osbuild.NewUsersStage(usersStageOptions))
 
-	var anacondaStageOptions *osbuild.AnacondaStageOptions
-	if p.UseLegacyAnacondaConfig {
-		anacondaStageOptions = osbuild.NewAnacondaStageOptionsLegacy(p.EnabledAnacondaModules, p.DisabledAnacondaModules)
-	} else {
-		anacondaStageOptions = osbuild.NewAnacondaStageOptions(p.EnabledAnacondaModules, p.DisabledAnacondaModules)
+	// Limit the Anaconda spokes on non-netinst iso types
+	if p.Type != AnacondaInstallerTypeNetinst {
+		var anacondaStageOptions *osbuild.AnacondaStageOptions
+		if p.UseLegacyAnacondaConfig {
+			anacondaStageOptions = osbuild.NewAnacondaStageOptionsLegacy(p.EnabledAnacondaModules, p.DisabledAnacondaModules)
+		} else {
+			anacondaStageOptions = osbuild.NewAnacondaStageOptions(p.EnabledAnacondaModules, p.DisabledAnacondaModules)
+		}
+		stages = append(stages, osbuild.NewAnacondaStage(anacondaStageOptions))
 	}
-	stages = append(stages, osbuild.NewAnacondaStage(anacondaStageOptions))
 
 	LoraxPath := "99-generic/runtime-postinstall.tmpl"
 	if p.UseRHELLoraxTemplates {
