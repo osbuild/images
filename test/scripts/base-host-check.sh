@@ -172,6 +172,42 @@ check_services_disabled() {
     done
 }
 
+check_firewall_services_enabled() {
+    echo "📗 Checking enabled firewall services"
+
+    services_expected=$(jq -rc '.blueprint.customizations.firewall.services.enabled[]' "${config}")
+
+    echo "$services_expected" | while read -r service_expected; do
+        # NOTE: sudo works here without password because we test this only on ami
+        # initialised with cloud-init, which sets sudo NOPASSWD for the user
+        state=$(sudo firewall-cmd --query-service="${service_expected}")
+        if [[ "${state}" == "yes" ]]; then
+            echo "Firewall service was enabled service=${service_expected} state=${state}"
+        else
+            echo "❌ Firewall service was not enabled service=${service_expected} state=${state}"
+            exit 1
+        fi
+    done
+}
+
+check_firewall_services_disabled() {
+    echo "📗 Checking disabled firewall services"
+
+    services_expected=$(jq -rc '.blueprint.customizations.firewall.services.disabled[]' "${config}")
+
+    echo "$services_expected" | while read -r service_expected; do
+        # NOTE: sudo works here without password because we test this only on ami
+        # initialised with cloud-init, which sets sudo NOPASSWD for the user
+        state=$(sudo firewall-cmd --query-service="${service_expected}")
+        if [[ "${state}" == "no" ]]; then
+            echo "Firewall service was disabled service=${service_expected} state=${state}"
+        else
+            echo "❌ Firewall service was not disabled service=${service_expected} state=${state}"
+            exit 1
+        fi
+    done
+}
+
 check_users() {
     echo "📗 Checking users"
 
@@ -243,6 +279,14 @@ if (( $# > 0 )); then
 
     if jq -e '.blueprint.customizations.services.disabled' "${config}"; then
         check_services_disabled "${config}"
+    fi
+
+    if jq -e '.blueprint.customizations.firewall.services.enabled' "${config}"; then
+        check_firewall_services_enabled "${config}"
+    fi
+
+    if jq -e '.blueprint.customizations.firewall.services.disabled' "${config}"; then
+        check_firewall_services_disabled "${config}"
     fi
 
     if jq -e '.blueprint.customizations.hostname' "${config}"; then
