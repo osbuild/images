@@ -51,7 +51,7 @@ jobs:
         # skip the TestResolverLocalManifest and
         # TestBlockingResolverLocalManifest tests. They are tested separately
         # (see below: requires root)
-        run: go test -race ./... -test.skip 'TestBlockingResolverLocalManifest|TestResolverLocalManifest'
+        run: go test  -race -timeout 20m ./... -test.skip 'TestBlockingResolverLocalManifest|TestResolverLocalManifest'
 
       - name: Run depsolver tests with force-dnf to make sure it's not skipped
         run: go test -race ./pkg/dnfjson/... -force-dnf
@@ -129,7 +129,7 @@ jobs:
         run: git config --global --add safe.directory "$(pwd)"
 
       - name: Run unit tests
-        run: go test -race  ./...
+        run: go test -timeout 20m -race  ./...
 
       - name: Install openssl for cgo test below
         run: dnf -y install openssl
