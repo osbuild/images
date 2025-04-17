@@ -523,6 +523,7 @@ func defaultAzureImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
 			}
 			ic.Files = append(ic.Files, datalossWarningScript)
 			ic.SystemdUnit = append(ic.SystemdUnit, datalossSystemdUnit)
+			ic.EnabledServices = append(ic.EnabledServices, datalossSystemdUnit.Filename)
 		}
 	}
 
