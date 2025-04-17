@@ -998,3 +998,15 @@ func (p *OS) addInlineDataAndStages(pipeline *osbuild.Pipeline, files []*fsnode.
 		p.inlineData = append(p.inlineData, string(file.Data()))
 	}
 }
+
+func (p *OS) fileRefs() []string {
+	var fileRefs []string
+
+	for _, file := range p.OSCustomizations.Files {
+		if file.Ref() != "" {
+			fileRefs = append(fileRefs, file.Ref())
+		}
+	}
+
+	return fileRefs
+}

@@ -3,6 +3,7 @@ package blueprint
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/BurntSushi/toml"
@@ -1251,4 +1252,28 @@ func TestCheckDirectoryCustomizationsPolicy(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestToFileNodeNoMixingOfPathAndData(t *testing.T) {
+	fc := FileCustomization{
+		Ref:  "/some/ref",
+		Data: "some-data",
+	}
+	_, err := fc.ToFsNodeFile()
+	assert.EqualError(t, err, `cannot specify both data "some-data" and ref "/some/ref"`)
+}
+
+func TestToFileNodeForRef(t *testing.T) {
+	testFile := filepath.Join(t.TempDir(), "test1.txt")
+	err := os.WriteFile(testFile, nil, 0644)
+	assert.NoError(t, err)
+
+	fc := FileCustomization{
+		Path: "/some/path",
+		Ref:  testFile,
+	}
+	file, err := fc.ToFsNodeFile()
+	assert.NoError(t, err)
+	assert.Equal(t, "/some/path", file.Path())
+	assert.Equal(t, testFile, file.Ref())
 }
