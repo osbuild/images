@@ -189,10 +189,6 @@ uptime
 # NOTE: we should do a lot more here
 if (( $# > 0 )); then
     config="$1"
-    if jq -e '.blueprint.customizations.hostname' "${config}"; then
-        check_hostname "${config}"
-    fi
-
     if jq -e .blueprint.customizations.openscap "${config}"; then
         get_oscap_score "${config}"
     fi
@@ -207,5 +203,9 @@ if (( $# > 0 )); then
 
     if jq -e '.blueprint.customizations.user' "${config}"; then
         check_users "${config}"
+    fi
+
+    if jq -e '.blueprint.customizations.hostname' "${config}"; then
+        check_hostname "${config}"
     fi
 fi
