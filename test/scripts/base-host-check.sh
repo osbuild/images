@@ -125,6 +125,97 @@ check_modularity() {
     done
 }
 
+check_hostname() {
+    echo "📗 Checking hostname"
+
+    # Verify that the hostname is set by running `hostname`
+    expected_hostname=$(jq -r '.blueprint.customizations.hostname' "${config}")
+    actual_hostname=$(hostname)
+
+    if [[ $actual_hostname != "${expected_hostname}" ]]; then 
+        echo "❌ Hostname was not set: hostname=${actual_hostname} expected=${expected_hostname}"
+        exit 1
+    else
+        echo "Hostname was set"
+    fi
+}
+
+check_services_enabled() {
+    echo "📗 Checking enabled services"
+
+    services_expected=$(jq -rc '.blueprint.customizations.services.enabled[]' "${config}")
+
+    echo "$services_expected" | while read -r service_expected; do
+        state=$(systemctl is-enabled "${service_expected}")
+        if [[ "${state}" == "enabled" ]]; then
+            echo "Service was enabled service=${service_expected} state=${state}"
+        else
+            echo "❌ Service was not enabled service=${service_expected} state=${state}"
+        fi
+    done
+}
+
+check_services_disabled() {
+    echo "📗 Checking disabled services"
+
+    services_expected=$(jq -rc '.blueprint.customizations.services.disabled[]' "${config}")
+
+    echo "$services_expected" | while read -r service_expected; do
+        state=$(systemctl is-disabled "${service_expected}")
+        if [[ "${state}" == "disabled" ]]; then
+            echo "Service was disabled service=${service_expected} state=${state}"
+        else
+            echo "❌ Service was not disabled service=${service_expected} state=${state}"
+        fi
+    done
+}
+
+check_firewall_services_enabled() {
+    echo "📗 Checking enabled firewall services"
+
+    services_expected=$(jq -rc '.blueprint.customizations.firewall.services.enabled[]' "${config}")
+
+    echo "$services_expected" | while read -r service_expected; do
+        state=$(firewall-cmd --query-service="${service_expected}")
+        if [[ "${state}" == "yes" ]]; then
+            echo "Firewall service was enabled service=${service_expected} state=${state}"
+        else
+            echo "❌ Firewall service was not enabled service=${service_expected} state=${state}"
+        fi
+    done
+}
+
+check_firewall_services_disabled() {
+    echo "📗 Checking disabled firewall services"
+
+    services_expected=$(jq -rc '.blueprint.customizations.firewall.services.disabled[]' "${config}")
+
+    echo "$services_expected" | while read -r service_expected; do
+        state=$(firewall-cmd --query-service="${service_expected}")
+        if [[ "${state}" == "no" ]]; then
+            echo "Firewall service was disabled service=${service_expected} state=${state}"
+        else
+            echo "❌ Firewall service was not disabled service=${service_expected} state=${state}"
+        fi
+    done
+}
+
+check_users() {
+    echo "📗 Checking users"
+
+    users_expected=$(jq -rc '.blueprint.customizations.user[]' "$config")
+
+    echo "$users_expected" | while read -r user_expected; do
+        username=$(echo "$user_expected" | jq -rc .name)
+        if ! id "$username"; then
+            echo "❌ User did not exist: username=${username}"
+            exit 1
+        else
+            echo "User ${username} exists"
+        fi
+    done
+}
+
 echo "❓ Checking system status"
 if ! running_wait; then
 
@@ -168,5 +259,29 @@ if (( $# > 0 )); then
 
     if jq -e '.blueprint.enabled_modules' "${config}" || jq -e '.blueprint.packages[] | select(.name | startswith("@") and contains(":")) | .name' "${config}"; then
         check_modularity "${config}"
+    fi
+
+    if jq -e '.blueprint.customizations.user' "${config}"; then
+        check_users "${config}"
+    fi
+
+    if jq -e '.blueprint.customizations.services.enabled' "${config}"; then
+        check_services_enabled "${config}"
+    fi
+
+    if jq -e '.blueprint.customizations.services.disabled' "${config}"; then
+        check_services_disabled "${config}"
+    fi
+
+    if jq -e '.blueprint.customizations.firewall.services.enabled' "${config}"; then
+        check_firewall_services_enabled "${config}"
+    fi
+
+    if jq -e '.blueprint.customizations.firewall.services.disabled' "${config}"; then
+        check_firewall_services_disabled "${config}"
+    fi
+
+    if jq -e '.blueprint.customizations.hostname' "${config}"; then
+        check_hostname "${config}"
     fi
 fi
