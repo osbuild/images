@@ -156,6 +156,22 @@ check_services_enabled() {
     done
 }
 
+check_services_disabled() {
+    echo "📗 Checking disabled services"
+
+    services_expected=$(jq -rc '.blueprint.customizations.services.disabled[]' "${config}")
+
+    echo "$services_expected" | while read -r service_expected; do
+        state=$(systemctl is-enabled "${service_expected}" || true)
+        if [[ "${state}" == "disabled" ]]; then
+            echo "Service was disabled service=${service_expected} state=${state}"
+        else
+            echo "❌ Service was not disabled service=${service_expected} state=${state}"
+            exit 1
+        fi
+    done
+}
+
 check_users() {
     echo "📗 Checking users"
 
@@ -223,6 +239,10 @@ if (( $# > 0 )); then
 
     if jq -e '.blueprint.customizations.services.enabled' "${config}"; then
         check_services_enabled "${config}"
+    fi
+
+    if jq -e '.blueprint.customizations.services.disabled' "${config}"; then
+        check_services_disabled "${config}"
     fi
 
     if jq -e '.blueprint.customizations.hostname' "${config}"; then
