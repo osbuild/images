@@ -790,6 +790,79 @@ func ImageInstallerImage(workload workload.Workload,
 	return img, nil
 }
 
+// Make an Anaconda installer boot.iso
+func NetinstImage(workload workload.Workload,
+	t *ImageType,
+	customizations *blueprint.Customizations,
+	options distro.ImageOptions,
+	packageSets map[string]rpmmd.PackageSet,
+	containers []container.SourceSpec,
+	rng *rand.Rand) (image.ImageKind, error) {
+
+	img := image.NewAnacondaTarInstaller()
+
+	var err error
+	img.OSCustomizations, err = osCustomizations(t, packageSets[OSPkgsKey], options, containers, customizations)
+	if err != nil {
+		return nil, err
+	}
+
+	instCust, err := customizations.GetInstaller()
+	if err != nil {
+		return nil, err
+	}
+	if instCust != nil && instCust.Modules != nil {
+		img.AdditionalAnacondaModules = append(img.AdditionalAnacondaModules, instCust.Modules.Enable...)
+		img.DisabledAnacondaModules = append(img.DisabledAnacondaModules, instCust.Modules.Disable...)
+	}
+
+	img.Platform = t.platform
+	img.Workload = workload
+
+	img.ExtraBasePackages = packageSets[InstallerPkgsKey]
+
+	installerConfig, err := t.getDefaultInstallerConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	if installerConfig != nil {
+		img.AdditionalDracutModules = append(img.AdditionalDracutModules, installerConfig.AdditionalDracutModules...)
+		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
+	}
+
+	d := t.arch.distro
+
+	img.Product = d.product
+	img.OSVersion = d.osVersion
+	img.Release = fmt.Sprintf("%s %s", d.product, d.osVersion)
+
+	img.ISOLabel, err = t.ISOLabel()
+	if err != nil {
+		return nil, err
+	}
+
+	img.Filename = t.Filename()
+
+	img.RootfsCompression = "xz" // This also triggers using the bcj filter
+	if t.Arch().Distro().Releasever() == "10" {
+		img.RootfsType = manifest.SquashfsRootfs
+	}
+
+	// Enable BIOS iso on x86_64 only
+	// Use grub2 on RHEL10, otherwise use syslinux
+	// NOTE: Will need to be updated for RHEL11 and later
+	if img.Platform.GetArch() == arch.ARCH_X86_64 {
+		if t.Arch().Distro().Releasever() == "10" {
+			img.ISOBoot = manifest.Grub2ISOBoot
+		} else {
+			img.ISOBoot = manifest.SyslinuxISOBoot
+		}
+	}
+
+	return img, nil
+}
+
 func TarImage(workload workload.Workload,
 	t *ImageType,
 	customizations *blueprint.Customizations,
