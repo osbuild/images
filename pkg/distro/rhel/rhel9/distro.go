@@ -268,6 +268,7 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 		mkEdgeInstallerImgType(),
 		mkEdgeRawImgType(rd),
 		mkImageInstallerImgType(),
+		mkNetinstISOImgType(),
 		mkEdgeAMIImgType(rd),
 	)
 
@@ -304,6 +305,7 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 		mkEdgeInstallerImgType(),
 		mkEdgeSimplifiedInstallerImgType(rd),
 		mkImageInstallerImgType(),
+		mkNetinstISOImgType(),
 		mkEdgeAMIImgType(rd),
 	)
 
