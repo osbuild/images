@@ -535,6 +535,7 @@ bb3da50499f220ea3743b4c972ba479b9d53b254  rhel_8.10-aarch64-edge_container-ostre
 aa2ec40e4947630370ba6f914b6fc42beb9ee94c  rhel_8.10-aarch64-edge_installer-unattended_iso_edge.json
 c7a941db663d88754925f9adaf5a76e4e8e08239  rhel_8.10-aarch64-edge_raw_image-edge_ostree_pull_empty.json
 ae6905ad99e39a1a465e6f81433b459b17164cd7  rhel_8.10-aarch64-edge_simplified_installer-edge_ostree_pull_device.json
+78ad778b4a3b4c9ba09e09bf21eba998a577f382  rhel_8.10-aarch64-everything_netinst-empty_rhel.json
 6439d744afa216567a70663cf9cfda0d906ee03d  rhel_8.10-aarch64-image_installer-empty_rhel.json
 3e5abc8c37110746442a36766337c49626767be8  rhel_8.10-aarch64-image_installer-unattended_iso.json
 8322ed55eafa508cd81419d7996f8eece789222c  rhel_8.10-aarch64-minimal_raw-empty_rhel.json
@@ -579,6 +580,7 @@ f370225093dda43687661e2a67c0e4019e2f50cc  rhel_8.10-x86_64-edge_container-empty_
 adc707b75a9b67c4ca1ae90a7298619d538925c0  rhel_8.10-x86_64-edge_installer-unattended_iso_edge.json
 63e584482462601608132a084f39fea0f46b783f  rhel_8.10-x86_64-edge_raw_image-edge_ostree_pull_empty.json
 3a293698ca1a22573dee8150fe66c6d54043a74a  rhel_8.10-x86_64-edge_simplified_installer-edge_ostree_pull_device.json
+dbc4538b8280f3a3b9ad7a4f894217e3bc534bb0  rhel_8.10-x86_64-everything_netinst-empty_rhel.json
 329fab46f0ce3462b5727f9d6bb1b14264f177c0  rhel_8.10-x86_64-gce-empty_rhel.json
 5c46e79c18a667ee427de0147e014b2db5212837  rhel_8.10-x86_64-gce_rhui-empty_rhel.json
 4f3e0e2af47af8240099c6aaeca9f1afbc937718  rhel_8.10-x86_64-image_installer-empty_rhel.json
@@ -608,6 +610,7 @@ b7d004351f7127904882028cb02ca3a7c1421856  rhel_8.10-x86_64-wsl-empty_rhel.json
 3f14540dc12cbfe1d1bd4c08cd1528f250d82bad  rhel_8.4-aarch64-edge_container-ostree.json
 c2fa4f4258dc10c24ac42e252d6792f05e0d2374  rhel_8.4-aarch64-edge_installer-edge_ostree_pull_empty.json
 d468937507b99e47f4aac328fcc0be23b0b76139  rhel_8.4-aarch64-edge_installer-unattended_iso_edge.json
+dbdcac53f583d114752e0ae348171947f46872d2  rhel_8.4-aarch64-everything_netinst-empty_rhel.json
 4a36cf456664adc353893431c83db2084b75a5f2  rhel_8.4-aarch64-image_installer-empty_rhel.json
 096c5fda03978790044086d5751cd2f5717f04a3  rhel_8.4-aarch64-image_installer-unattended_iso.json
 28219839def9224a86c9088aaa8ab302bb43da85  rhel_8.4-aarch64-minimal_raw-empty_rhel.json
@@ -638,6 +641,7 @@ c8a2d5ae103d228d60579a10f263792867e8f37c  rhel_8.4-x86_64-edge_commit-ostree.jso
 9bfa1082e8aa3ed9bfb16c778188d5770921ef6a  rhel_8.4-x86_64-edge_container-ostree.json
 5be7f3fa4b24cff9f1ad6105f0c23adb23acf6d3  rhel_8.4-x86_64-edge_installer-edge_ostree_pull_empty.json
 afa4c8937735e8530cd6275b39112143e41d0a5c  rhel_8.4-x86_64-edge_installer-unattended_iso_edge.json
+9c8100f1f11b850bb5d693abb4972073c0432700  rhel_8.4-x86_64-everything_netinst-empty_rhel.json
 5f5b384e93dfb6ce20525c5a2461aef0bb0aef58  rhel_8.4-x86_64-gce-empty_rhel.json
 e6a5403b86be3d601b3cd8e0c71881ec040019cc  rhel_8.4-x86_64-gce_rhui-empty_rhel.json
 286b683244fc7680ffdebfa9d860040791dbbeb8  rhel_8.4-x86_64-image_installer-empty_rhel.json
@@ -664,6 +668,7 @@ d51e278ddf7b54abcbd1677fd44b615ea0b7c970  rhel_8.5-aarch64-edge_container-embed_
 32b050c7f746ab86c5a3ed9c678973836c10328d  rhel_8.5-aarch64-edge_container-ostree.json
 534e472f0f4ed44145c449dbb60b32666d067129  rhel_8.5-aarch64-edge_installer-edge_ostree_pull_empty.json
 af05db3c5b5a91979b3e4ee48a853d615ff5c12c  rhel_8.5-aarch64-edge_installer-unattended_iso_edge.json
+86e3f9ecc63a6d80963764c95e6b1d0159d9018f  rhel_8.5-aarch64-everything_netinst-empty_rhel.json
 cbdb6038b4349a197cd5d617eacc0a309c2a2b82  rhel_8.5-aarch64-image_installer-empty_rhel.json
 3813e8967972d3ab599eb8e0a2a56625ed90ab47  rhel_8.5-aarch64-image_installer-unattended_iso.json
 0199a3d871890bd9a9ff7dcda30808053cdb7887  rhel_8.5-aarch64-minimal_raw-empty_rhel.json
@@ -693,6 +698,7 @@ dd33ea927dcec69cfe1a4e618e45017bcf6bf629  rhel_8.5-x86_64-edge_container-empty_r
 c1cb1cee81524d943f930e6a339af5b2a697a4be  rhel_8.5-x86_64-edge_container-ostree.json
 e3a8a9279687ca9126f56d06d90e4b55b9638b84  rhel_8.5-x86_64-edge_installer-edge_ostree_pull_empty.json
 2ed743526ef26c8e0bab03163b0598541436a59f  rhel_8.5-x86_64-edge_installer-unattended_iso_edge.json
+ad812006661a9117470ef9391791134d492dbdeb  rhel_8.5-x86_64-everything_netinst-empty_rhel.json
 56a83537aed10c749517634a5a1772fa9eee754c  rhel_8.5-x86_64-gce-empty_rhel.json
 ad2519074715032cf7a33b421a9c4829605404d5  rhel_8.5-x86_64-gce_rhui-empty_rhel.json
 f4ba50962e74840fa1119f721b0dc40ce0428a6e  rhel_8.5-x86_64-image_installer-empty_rhel.json
@@ -722,6 +728,7 @@ c9f0f9e18ad32630fad75caaed74abfc6d77bc4b  rhel_8.6-aarch64-edge_container-ostree
 e0c21fdf10de1b32fd9881c130e5d6d654e84dfc  rhel_8.6-aarch64-edge_installer-unattended_iso_edge.json
 9c542129e5f3ae7cfca4f81c01c77726becd8cdf  rhel_8.6-aarch64-edge_raw_image-edge_ostree_pull_empty.json
 a2d50baabdeb833726ecccaf380ff46136739070  rhel_8.6-aarch64-edge_simplified_installer-edge_ostree_pull_device.json
+3f8ac2640bdab6ea25e0dd554564dd15105350fd  rhel_8.6-aarch64-everything_netinst-empty_rhel.json
 b80dc785555dc6cfa07f92bde10903def008cdcd  rhel_8.6-aarch64-image_installer-empty_rhel.json
 f13aed746c0a479a97d0110a4f4844b0f0a70af4  rhel_8.6-aarch64-image_installer-unattended_iso.json
 c92969b9da9137d2a01db63044301ee4745efabe  rhel_8.6-aarch64-minimal_raw-empty_rhel.json
@@ -756,6 +763,7 @@ eb3b088d75a40f541409d1b9e4da681eb24b5bb3  rhel_8.6-x86_64-edge_container-empty_r
 d8bfd25e8ae24e50ba6de8b2825a9e132649ee7c  rhel_8.6-x86_64-edge_installer-unattended_iso_edge.json
 233cab5c5c10ad39da679e3399e4e9700e8dee20  rhel_8.6-x86_64-edge_raw_image-edge_ostree_pull_empty.json
 24c1b68f0a79e968b5e2d192a8f5493ea7453410  rhel_8.6-x86_64-edge_simplified_installer-edge_ostree_pull_device.json
+5f6b00a4b9de9295900bcf55609d9f1e89cffa0b  rhel_8.6-x86_64-everything_netinst-empty_rhel.json
 5c3eb98c770260fae0f69c34b66dc08258b89471  rhel_8.6-x86_64-gce-empty_rhel.json
 41c732d6a7561ef8b6bd54e424d167c8736c7639  rhel_8.6-x86_64-gce_rhui-empty_rhel.json
 c5dfc6e52f4aa7c7b4500b4090ee64c7050d4e6b  rhel_8.6-x86_64-image_installer-empty_rhel.json
@@ -785,6 +793,7 @@ a79549ff9cb7dcaaa59c9582590fb1fc3ca5de62  rhel_8.7-aarch64-edge_installer-edge_o
 722aa38264aefeecd89b7d44f131e11c49bfdb55  rhel_8.7-aarch64-edge_installer-unattended_iso_edge.json
 43ce5eb88276062d0f80ff16e8be65ba55433aaf  rhel_8.7-aarch64-edge_raw_image-edge_ostree_pull_empty.json
 951aa5d2cfada80ca489540428d22e48e97249bc  rhel_8.7-aarch64-edge_simplified_installer-edge_ostree_pull_device.json
+cc8f9813cff00071c962b611bf9a2ca404375842  rhel_8.7-aarch64-everything_netinst-empty_rhel.json
 5b3fd5a42a1c1086b772ae1a683571d3e8579b3f  rhel_8.7-aarch64-image_installer-empty_rhel.json
 1617b5fd4826cba8ff35b7088a26cc8d012417c2  rhel_8.7-aarch64-image_installer-unattended_iso.json
 54dcc78ded414a077d4e051c96db1c5926ab105d  rhel_8.7-aarch64-minimal_raw-empty_rhel.json
@@ -822,6 +831,7 @@ db06de7655b4ab43c6085af3fef2c51b95870acc  rhel_8.7-x86_64-edge_container-ostree.
 dd4e0db3c33f1c2f5c02f32d545f2338e9e13cb4  rhel_8.7-x86_64-edge_installer-unattended_iso_edge.json
 a0dcae120cce8dd1346f59c780f8f4ed8fe91d49  rhel_8.7-x86_64-edge_raw_image-edge_ostree_pull_empty.json
 94c4deaaf478242df82f9d048e88c246905881f3  rhel_8.7-x86_64-edge_simplified_installer-edge_ostree_pull_device.json
+8fbf4a5b530291cdbc176664ddf04facd2c1d38e  rhel_8.7-x86_64-everything_netinst-empty_rhel.json
 0708138f2e6cf1bec09e908956ed01abbc5c2a7a  rhel_8.7-x86_64-gce-empty_rhel.json
 c1066a93e7e51729d74e82f83bcb0abdeae75d4e  rhel_8.7-x86_64-gce_rhui-empty_rhel.json
 642e3dc8dd295c0ee04cffffa749ba0a7e4b8cf4  rhel_8.7-x86_64-image_installer-empty_rhel.json
@@ -852,6 +862,7 @@ b9817b756393e33a164bcef491edfd7bfcecf995  rhel_8.8-aarch64-edge_installer-edge_o
 14b8b3340cedae85adfec024bf515b0f538e82f8  rhel_8.8-aarch64-edge_installer-unattended_iso_edge.json
 b5cb3fbb6c27b9a9cc770cbc07df05a4a241bc1f  rhel_8.8-aarch64-edge_raw_image-edge_ostree_pull_empty.json
 d5fd3178fd4eeaa042504de0cca6ef5caab3f518  rhel_8.8-aarch64-edge_simplified_installer-edge_ostree_pull_device.json
+d2dadbefd60fbd8e99c822fc41f051e23d11131d  rhel_8.8-aarch64-everything_netinst-empty_rhel.json
 871eefc1c289a7b2bf8b19122941b2f625ad8d06  rhel_8.8-aarch64-image_installer-empty_rhel.json
 ec08b9ff1694f1e5445017faffaa7c623ed0c419  rhel_8.8-aarch64-image_installer-unattended_iso.json
 fcdc832ed8c85efd062cbd6d7ec73fe00e2e6d7d  rhel_8.8-aarch64-minimal_raw-empty_rhel.json
@@ -889,6 +900,7 @@ d8414c9facb8eb60286d7a6887b171e0bfe8154c  rhel_8.8-x86_64-edge_container-ostree.
 c5e94af5d5eadde32780c0559abff16c7b5d5c2c  rhel_8.8-x86_64-edge_installer-unattended_iso_edge.json
 566e5a6b84ed65123e69b078a365cbe74b76981e  rhel_8.8-x86_64-edge_raw_image-edge_ostree_pull_empty.json
 5e7c5720fb1e07fc2832b829ea1cf36a476973d4  rhel_8.8-x86_64-edge_simplified_installer-edge_ostree_pull_device.json
+6b58f2f27076a0cc5600d6b935c886c870478dc6  rhel_8.8-x86_64-everything_netinst-empty_rhel.json
 30d6c10de9e6851c42774beba74815a51569004c  rhel_8.8-x86_64-gce-empty_rhel.json
 4706c9ea182f441c63be4fef3d35e6b700254e4e  rhel_8.8-x86_64-gce_rhui-empty_rhel.json
 a83fa2d3e247f9cb0aeedc66527333c7b4a889bd  rhel_8.8-x86_64-image_installer-empty_rhel.json
@@ -919,6 +931,7 @@ e54fcf639128fc005cca08c8b4c32178da43c367  rhel_8.9-aarch64-edge_installer-edge_o
 12c7f15dfaee713486ad3950b868bdc5dc76f512  rhel_8.9-aarch64-edge_installer-unattended_iso_edge.json
 5863ce2e6061135f55c1c41d393bf8579ffd8114  rhel_8.9-aarch64-edge_raw_image-edge_ostree_pull_empty.json
 b2b063a7f0120c7358657fcbb134978649f3a977  rhel_8.9-aarch64-edge_simplified_installer-edge_ostree_pull_device.json
+4e80c1e22a44c8d7873dc92d83323e97726dc7a8  rhel_8.9-aarch64-everything_netinst-empty_rhel.json
 cac603a04de74821a23a7485c21a50e01a62eeb7  rhel_8.9-aarch64-image_installer-empty_rhel.json
 70a1b6a7c7dab2561a73f8c951fac8f0785b6929  rhel_8.9-aarch64-image_installer-unattended_iso.json
 e1e55ec6ae2d817286f90d5f12f3b51beddc142c  rhel_8.9-aarch64-minimal_raw-empty_rhel.json
@@ -959,6 +972,7 @@ f4e5d9254f1325bffcbfa6321bc356a84441aca2  rhel_8.9-x86_64-edge_commit-ostree.jso
 8b27bfc021f86154d865ce0d20120ef5e5495c5c  rhel_8.9-x86_64-edge_installer-unattended_iso_edge.json
 17cb3a1df29033a7d206ff63fd589f0153d35a79  rhel_8.9-x86_64-edge_raw_image-edge_ostree_pull_empty.json
 37518a22f04f48ff3f1c51944df2a30312839230  rhel_8.9-x86_64-edge_simplified_installer-edge_ostree_pull_device.json
+3be3cb1c9023e90b4f50f2d4eaad87cb583ebb25  rhel_8.9-x86_64-everything_netinst-empty_rhel.json
 104146dad473ac8135dc519490b9946483940bcf  rhel_8.9-x86_64-gce-empty_rhel.json
 c56032fdfea3feef345e5e3080fbc55aca4f8d19  rhel_8.9-x86_64-gce_rhui-empty_rhel.json
 24b4381da6ca58e32c4ff3a7fed6f9a041a90422  rhel_8.9-x86_64-image_installer-empty_rhel.json
