@@ -3,6 +3,7 @@ b7c424ac43ce06924d600eab968c7473aaff8b6b  centos_10-aarch64-ami-all_customizatio
 5ec67b5a2fa69154b9f6005852994720a76d5d88  centos_10-aarch64-ami-partitioning_dos_lvm.json
 64b26f2c8cc9010a015bff4a51f5352fc1c03074  centos_10-aarch64-ami-partitioning_lvm.json
 51a2ea0bedd94ae0d9591c6bd5d3d7c341f3f463  centos_10-aarch64-ami-partitioning_plain.json
+8505c37da78bb0c62e565973748494f8c15fc7a1  centos_10-aarch64-everything_netinst-empty_rhel.json
 161afff477acb03dd1c72754182c72a834db86c5  centos_10-aarch64-image_installer-empty_rhel.json
 2d1606defe85110da70ef3f06314c27db56d2a25  centos_10-aarch64-image_installer-unattended_iso.json
 2db20624ff4ea98d7850000ad1c785ec92fe95e5  centos_10-aarch64-qcow2-all_with_fips.json
@@ -21,6 +22,7 @@ eb73e9ad4ab9cab835fe8368ae8a075807e7caa0  centos_10-s390x-tar-empty_rhel.json
 169620169c6ea1e210e7ef3c0a2b7f9ba85e7c23  centos_10-x86_64-ami-partitioning_dos_lvm.json
 5f9cec1dad7f5cfcd95e8fcd70931d93f6b73b86  centos_10-x86_64-ami-partitioning_lvm.json
 c82c30e69b0826d036df54b5354e5d8acca26439  centos_10-x86_64-ami-partitioning_plain.json
+a298d94748199727b26bdfd470a5ca412a082d04  centos_10-x86_64-everything_netinst-empty_rhel.json
 0d75580eefe8f11d15d62fe750729e1ccbae65da  centos_10-x86_64-gce-empty_rhel.json
 b0744a27bc3eb6d0242453786a6093c3ccfb7189  centos_10-x86_64-image_installer-empty_rhel.json
 094d6b5c2bf11745834b2d0f1811518871377368  centos_10-x86_64-image_installer-unattended_iso.json
@@ -433,6 +435,7 @@ e534de94d7aca069019d264475668355e2d51ec4  rhel_10.0-aarch64-ami-partitioning_lvm
 474eb7103c4031a62c8bd7c52df68f001e9df151  rhel_10.0-aarch64-azure_rhui-rhel10_azure_rhui.json
 efde4a375cc53cb899ed17aba40372f962fa73bd  rhel_10.0-aarch64-azure_rhui-rhel10_azure_rhui_cdn.json
 ee1086b6ebc6d52b7ae09151d9822bb8dc26d95f  rhel_10.0-aarch64-ec2-empty_rhel.json
+702b2780f2e8baea2ae83eb6f5c4c030a89157ec  rhel_10.0-aarch64-everything_netinst-empty_rhel.json
 ade27cbc8d36087e29be2ef3d3b56c346dd94e82  rhel_10.0-aarch64-image_installer-empty_rhel.json
 b9247324657034513dfbf7e36ddb4d1f998c2f2b  rhel_10.0-aarch64-image_installer-unattended_iso.json
 1f3f1d1164cd3525810575c12a92bd85075faeff  rhel_10.0-aarch64-qcow2-empty_rhel.json
@@ -458,6 +461,7 @@ d346d1dd84f459db1d01e422f2f2dfc1e276cefd  rhel_10.0-x86_64-azure_sap_rhui-empty_
 a99f19208349b1ed35436249cc0c4ab3b58fa92e  rhel_10.0-x86_64-ec2-empty_rhel.json
 112f2cb7bed720225a64ce41296fdb122e3f5bac  rhel_10.0-x86_64-ec2_ha-empty_rhel.json
 dd8e89bc21578270c627111c8f14bb8a41ef667b  rhel_10.0-x86_64-ec2_sap-ec2_sap_empty.json
+b87c88af3ae0539f6cd647c20fd66a601b6b8388  rhel_10.0-x86_64-everything_netinst-empty_rhel.json
 9b4ef4222f3d9d00c71f2c2190377b0baa3570f0  rhel_10.0-x86_64-gce-empty_rhel.json
 4c8b8f308b357b4762fc56167baa8abe035452de  rhel_10.0-x86_64-image_installer-empty_rhel.json
 80a4e104ac1ac22dade394f47d9124282a8943b1  rhel_10.0-x86_64-image_installer-unattended_iso.json
@@ -477,6 +481,7 @@ b449845e232ac81789dc094fdf3617e4631f49f4  rhel_10.1-aarch64-ami-partitioning_lvm
 a0e0d7da1d6b5f2b32c2d983473fd80bc02ab8b4  rhel_10.1-aarch64-azure_rhui-rhel10_azure_rhui.json
 1c028fd40c801c41ae7fa2f4660f55351d64a9d1  rhel_10.1-aarch64-azure_rhui-rhel10_azure_rhui_cdn.json
 01c47deb475b6ea24e4cc442980a9be7f36f319c  rhel_10.1-aarch64-ec2-empty_rhel.json
+e2fb7c450eef842a5ae050f319c920c35de2c4a2  rhel_10.1-aarch64-everything_netinst-empty_rhel.json
 e303be927c5a147a265c6f9e900604483d3a954a  rhel_10.1-aarch64-image_installer-empty_rhel.json
 49b44a4b6b4c802c28629de1804eda03e49a609d  rhel_10.1-aarch64-image_installer-unattended_iso.json
 9f8f59566f41cf4f74dce2729e65ddd3ab1c6493  rhel_10.1-aarch64-qcow2-empty_rhel.json
@@ -498,6 +503,7 @@ c9f752c0f36db322618934b48f71f2e66990aec2  rhel_10.1-x86_64-azure_rhui-rhel10_azu
 76559d32fec8ff3f2382da4c59fb58b0babdaff5  rhel_10.1-x86_64-ec2-empty_rhel.json
 0f3033927f684d9ec80ad31a3174a6ea01e07d3e  rhel_10.1-x86_64-ec2_ha-empty_rhel.json
 f40884531b8cb3a617dbb22c659fc43dc157ff31  rhel_10.1-x86_64-ec2_sap-ec2_sap_empty.json
+e8f5beae7a8a5359f19c7a3d10bbe8ad261682c6  rhel_10.1-x86_64-everything_netinst-empty_rhel.json
 0251bb5ae7e6cd935bc5964c5d27b1d34279748a  rhel_10.1-x86_64-gce-empty_rhel.json
 d81bc93dd551050a3497a668d27aab06e2a12226  rhel_10.1-x86_64-image_installer-empty_rhel.json
 6a9f4d66da1ed8d67c7bbf6b8483aa8beaa4f1cc  rhel_10.1-x86_64-image_installer-unattended_iso.json

@@ -235,6 +235,7 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 			UEFIVendor: rd.Vendor(),
 		},
 		mkImageInstallerImgType(),
+		mkNetinstISOImgType(),
 	)
 
 	aarch64.AddImageTypes(
@@ -243,6 +244,7 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 			UEFIVendor:   rd.Vendor(),
 		},
 		mkImageInstallerImgType(),
+		mkNetinstISOImgType(),
 	)
 
 	if rd.IsRHEL() { // RHEL-only (non-CentOS) image types
