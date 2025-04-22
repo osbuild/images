@@ -172,6 +172,22 @@ check_services_disabled() {
     done
 }
 
+check_services_masked() {
+    echo "📗 Checking masked services"
+
+    services_expected=$(jq -rc '.blueprint.customizations.services.masked[]' "${config}")
+
+    echo "$services_expected" | while read -r service_expected; do
+        states=$(systemctl list-unit-files --state=masked)
+        if echo "${states}" | grep -q "${service_expected}"; then
+            echo "Service was masked service=${service_expected}"
+        else
+            echo "❌ Service was not masked service=${service_expected} output=${states}"
+            exit 1
+        fi
+    done
+}
+
 check_firewall_services_enabled() {
     echo "📗 Checking enabled firewall services"
 
@@ -298,6 +314,10 @@ if (( $# > 0 )); then
 
     if jq -e '.blueprint.customizations.services.disabled' "${config}"; then
         check_services_disabled "${config}"
+    fi
+
+    if jq -e '.blueprint.customizations.services.masked' "${config}"; then
+        check_services_masked "${config}"
     fi
 
     if jq -e '.blueprint.customizations.firewall.services.enabled' "${config}"; then
