@@ -457,6 +457,9 @@ func defaultAzureImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
 			},
 		},
 		DefaultTarget: common.ToPtr("multi-user.target"),
+		Authselect: &osbuild.AuthselectStageOptions{
+			Profile: "sssd",
+		},
 	}
 
 	if rd.IsRHEL() {
