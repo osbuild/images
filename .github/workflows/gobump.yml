@@ -10,13 +10,14 @@ on:  # yamllint disable-line rule:truthy
 jobs:
   update-and-push:
     runs-on: ubuntu-latest
-    container: registry.fedoraproject.org/fedora:41
+    container: registry.fedoraproject.org/fedora:42
     steps:
       - name: Update go.mod and open a PR
         env:
           GITHUB_TOKEN: ${{ secrets.SCHUTZBOT_GITHUB_ACCESS_TOKEN }}
         run: |
           # Install deps
+          set -x
           sudo dnf -y install golang gpgme-devel btrfs-progs-devel krb5-devel
           # Checkout the project
           git clone --depth 1 https://github.com/osbuild/images
@@ -28,7 +29,6 @@ jobs:
           ./tools/prepare-source.sh
           # Make a PR when needed
           if git diff --exit-code; then echo "No changes"; exit 0; fi
-          git config --unset-all http.https://github.com/.extraheader
           git config user.name "schutzbot"
           git config user.email "schutzbot@gmail.com"
           branch="schutz-gobump-$(date -I)"
