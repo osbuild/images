@@ -190,6 +190,25 @@ check_firewall_services_enabled() {
     done
 }
 
+check_firewall_ports() {
+    echo "📗 Checking enabled firewall ports"
+
+    ports_expected=$(jq -rc '.blueprint.customizations.firewall.ports[]' "${config}")
+
+    echo "$ports_expected" | while read -r port_expected; do
+        # NOTE: sudo works here without password because we test this only on ami
+        # initialised with cloud-init, which sets sudo NOPASSWD for the user
+        state=$(sudo firewall-cmd --query-port="${port_expected}")
+        if [[ "${state}" == "yes" ]]; then
+            echo "Firewall port was enabled port=${port_expected} state=${state}"
+        else
+            echo "❌ Firewall port was not enabled port=${port_expected} state=${state}"
+            exit 1
+        fi
+    done
+}
+
+
 check_firewall_services_disabled() {
     echo "📗 Checking disabled firewall services"
 
@@ -287,6 +306,10 @@ if (( $# > 0 )); then
 
     if jq -e '.blueprint.customizations.firewall.services.disabled' "${config}"; then
         check_firewall_services_disabled "${config}"
+    fi
+
+    if jq -e '.blueprint.customizations.firewall.ports' "${config}"; then
+        check_firewall_ports "${config}"
     fi
 
     if jq -e '.blueprint.customizations.hostname' "${config}"; then

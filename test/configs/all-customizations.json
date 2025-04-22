@@ -181,7 +181,8 @@
         "services": {
           "enabled": ["ftp"],
           "disabled": ["telnet"]
-        }
+        },
+        "ports": ["1337:udp", "42-48:tcp"]
       }
     }
   }
