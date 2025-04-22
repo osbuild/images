@@ -14,11 +14,11 @@ jobs:
     steps:
       - name: Update go.mod and open a PR
         env:
-          GITHUB_TOKEN: ${{ secrets.SCHUTZBOT_GITHUB_ACCESS_TOKEN }}
+          GH_TOKEN: ${{ secrets.SCHUTZBOT_GITHUB_ACCESS_TOKEN }}
         run: |
           # Install deps
           set -x
-          sudo dnf -y install golang gpgme-devel btrfs-progs-devel krb5-devel
+          sudo dnf -y install git gh golang gpgme-devel btrfs-progs-devel krb5-devel
           # Checkout the project
           git clone --depth 1 https://github.com/osbuild/images
           cd images/
