@@ -428,7 +428,7 @@ image_types:
 	}, partTable)
 }
 
-func TestDefsImageConfig(t *testing.T) {
+func TestDefsDistroImageConfig(t *testing.T) {
 	fakeDistroYaml := `
 image_config:
   default:
@@ -494,4 +494,38 @@ image_types:
 		_, err := defs.PartitionTable(it, nil)
 		assert.ErrorIs(t, err, tc.expectedErr)
 	}
+}
+
+func TestImageTypeImageConfig(t *testing.T) {
+	fakeDistroYaml := `
+image_types:
+  test_type:
+    image_config:
+      hostname: "foo"
+      locale: "C.UTF-8"
+      timezone: "DefaultTZ"
+      condition:
+        version_less_than:
+          "2":
+            timezone: "OverrideTZ"
+        distro_name:
+          "test-distro":
+            locale: "en_US.UTF-8"
+        architecture:
+          "test_arch":
+            hostname: "test-arch-hn"
+`
+	fakeDistroName := "test-distro"
+	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	imgConfig, err := defs.ImageConfig("test-distro-1", "test_arch", "test_type", nil)
+	require.NoError(t, err)
+	assert.Equal(t, &distro.ImageConfig{
+		Hostname: common.ToPtr("test-arch-hn"),
+		Locale:   common.ToPtr("en_US.UTF-8"),
+		Timezone: common.ToPtr("OverrideTZ"),
+	}, imgConfig)
+
 }
