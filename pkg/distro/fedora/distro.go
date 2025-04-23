@@ -411,8 +411,8 @@ func mkContainerImgType(d distribution) imageType {
 
 func mkWslImgType(d distribution) imageType {
 	return imageType{
-		name:        "server-wsl",
-		nameAliases: []string{"wsl"}, // kept for backwards compatibility
+		name:        "wsl",
+		nameAliases: []string{"server-wsl"}, // this is the eventual name, and `wsl` the alias but we've been having issues with CI renaming it
 		filename:    "wsl.tar",
 		mimeType:    "application/x-tar",
 		packageSets: map[string]packageSetFunc{
