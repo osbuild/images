@@ -162,10 +162,7 @@ func DistroImageConfig(distroNameVer string) (*distro.ImageConfig, error) {
 }
 
 // ImageConfig returns the image type specific ImageConfig
-func ImageConfig(it distro.ImageType, replacements map[string]string) (*distro.ImageConfig, error) {
-	typeName := it.Name()
-	distroNameVer := it.Arch().Distro().Name()
-	_, distroVersion := splitDistroNameVer(distroNameVer)
+func ImageConfig(distroNameVer, typeName string, replacements map[string]string) (*distro.ImageConfig, error) {
 	toplevel, err := load(distroNameVer)
 	if err != nil {
 		return nil, err
@@ -178,6 +175,8 @@ func ImageConfig(it distro.ImageType, replacements map[string]string) (*distro.I
 	imgConfig := imgType.ImageConfig.ImageConfig
 	cond := imgType.ImageConfig.Condition
 	if cond != nil {
+		_, distroVersion := splitDistroNameVer(distroNameVer)
+
 		for ltVer, ltConf := range cond.VersionLessThan {
 			if r, ok := replacements[ltVer]; ok {
 				ltVer = r

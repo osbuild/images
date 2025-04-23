@@ -410,7 +410,6 @@ image_types:
 }
 
 func TestImageTypeImageConfig(t *testing.T) {
-	it := makeTestImageType(t)
 	fakeDistroYaml := `
 image_types:
   test_type:
@@ -427,7 +426,7 @@ image_types:
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	imgConfig, err := defs.ImageConfig(it, nil)
+	imgConfig, err := defs.ImageConfig("test-distro-1", "test_type", nil)
 	require.NoError(t, err)
 	assert.Equal(t, &distro.ImageConfig{
 		Locale:   common.ToPtr("C.UTF-8"),
