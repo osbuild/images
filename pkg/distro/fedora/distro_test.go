@@ -102,8 +102,8 @@ func TestFilenameFromType(t *testing.T) {
 			},
 		},
 		{
-			name: "server-wsl",
-			args: args{"server-wsl"},
+			name: "wsl",
+			args: args{"wsl"},
 			want: wantResult{
 				filename: "wsl.tar",
 				mimeType: "application/x-tar",
@@ -339,7 +339,7 @@ func TestImageType_Name(t *testing.T) {
 				"server-qcow2",
 				"server-vhd",
 				"server-vmdk",
-				"server-wsl",
+				"wsl",
 			},
 			verTypes: map[string][]string{
 				"40": {
@@ -543,7 +543,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"server-qcow2",
 				"server-vhd",
 				"server-vmdk",
-				"server-wsl",
+				"wsl",
 			},
 			verTypes: map[string][]string{
 				"40": {
