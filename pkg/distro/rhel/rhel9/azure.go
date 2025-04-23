@@ -327,7 +327,7 @@ func azureInternalBasePartitionTables(t *rhel.ImageType) (disk.PartitionTable, b
 func defaultAzureKernelOptions(rd *rhel.Distribution) []string {
 	kargs := []string{"ro", "loglevel=3", "console=tty1", "console=ttyS0", "earlyprintk=ttyS0", "rootdelay=300"}
 	if rd.IsRHEL() && common.VersionGreaterThanOrEqual(rd.OsVersion(), "9.6") {
-		kargs = append(kargs, "nvme_core.io_timeout=240")
+		kargs = append(kargs, "nvme_core.io_timeout=240", "net.ifnames=0")
 	}
 	return kargs
 }
