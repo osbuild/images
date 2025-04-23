@@ -28,7 +28,7 @@ type DracutConfigFile struct {
 	Modules []string `json:"dracutmodules,omitempty"`
 
 	// Additional dracut modules to include
-	AddModules []string `json:"add_dracutmodules,omitempty"`
+	AddModules []string `json:"add_dracutmodules,omitempty" yaml:"add_dracutmodules,omitempty"`
 
 	// Dracut modules to not include
 	OmitModules []string `json:"omit_dracutmodules,omitempty"`
