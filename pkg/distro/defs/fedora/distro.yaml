@@ -12,6 +12,48 @@
       - "geolite2-country"
       - "plymouth"
 
+  image_config:
+    iot_enabled_services: &image_config_iot_enabled_services
+      enabled_services:
+        - "NetworkManager.service"
+        - "firewalld.service"
+        - "sshd.service"
+        - "greenboot-grub2-set-counter"
+        - "greenboot-grub2-set-success"
+        - "greenboot-healthcheck"
+        - "greenboot-rpm-ostree-grub2-check-fallback"
+        - "greenboot-status"
+        - "greenboot-task-runner"
+        - "redboot-auto-reboot"
+        - "redboot-task-runner"
+      condition:
+        version_less_than:
+          "42":
+            enabled_services:
+              - "NetworkManager.service"
+              - "firewalld.service"
+              - "sshd.service"
+              - "greenboot-grub2-set-counter"
+              - "greenboot-grub2-set-success"
+              - "greenboot-healthcheck"
+              - "greenboot-rpm-ostree-grub2-check-fallback"
+              - "greenboot-status"
+              - "greenboot-task-runner"
+              - "redboot-auto-reboot"
+              - "redboot-task-runner"
+              # only in < 42
+              - "zezere_ignition.timer"
+              - "zezere_ignition_banner.service"
+              - "parsec"
+              - "dbus-parsec"
+    iot: &image_config_iot
+      <<: *image_config_iot_enabled_services
+      keyboard:
+        keymap: "us"
+      locale: "C.UTF-8"
+      ostree_conf_sysroot_readonly: true
+      lock_root_user: true
+
   partitioning:
     ids:
       - &prep_partition_dosid "41"
@@ -273,6 +315,8 @@ image_config:
 
 image_types:
   qcow2: &qcow2
+    image_config: &image_config_qcow2
+      default_target: "multi-user.target"
     partition_table:
       <<: *default_partition_tables
     package_sets:
@@ -284,6 +328,11 @@ image_types:
   openstack: *qcow2
 
   vhd:
+    image_config:
+      <<: *image_config_qcow2
+      sshd_config:
+        config:
+          client_alive_interval: 120
     partition_table:
       <<: *default_partition_tables
     package_sets:
@@ -292,6 +341,13 @@ image_types:
           - "WALinuxAgent"
 
   vmdk: &vmdk
+    image_config:
+      locale: "en_US.UTF-8"
+      enabled_services:
+        - "cloud-init.service"
+        - "cloud-config.service"
+        - "cloud-final.service"
+        - "cloud-init-local.service"
     partition_table:
       <<: *default_partition_tables
     package_sets:
@@ -318,6 +374,14 @@ image_types:
   # NOTE: keep in sync with official fedora-iot definitions:
   # https://pagure.io/fedora-iot/ostree/blob/main/f/fedora-iot-base.yaml
   iot_commit: &iot_commit
+    image_config:
+      <<: *image_config_iot_enabled_services
+      dracut_conf:
+        - filename: "40-fips.conf"
+          config:
+            add_dracutmodules:
+              - "fips"
+      machine_id_uninitialized: false
     package_sets:
       - include:
           - "NetworkManager"
@@ -438,6 +502,9 @@ image_types:
   iot_container: *iot_commit
 
   iot_raw_image:
+    image_config:
+      <<: *image_config_iot
+      ignition_platform: "metal"
     partition_table:
       <<: *iot_base_partition_tables
     partition_table_override:
@@ -448,10 +515,15 @@ image_types:
               fstab_options: "defaults,ro"
 
   iot_qcow2_image:
+    image_config:
+      <<: *image_config_iot
+      ignition_platform: "qemu"
     partition_table:
       <<: *iot_base_partition_tables
 
   iot_bootable_container:
+    image_config:
+      machine_id_uninitialized: false
     package_sets:
       - include:
           - "acl"
@@ -578,6 +650,8 @@ image_types:
           - "xz"
 
   anaconda: &anaconda
+    image_config:
+      locale: "en_US.UTF-8"
     package_sets:
       - &anaconda_pkgset
         include:
@@ -717,12 +791,17 @@ image_types:
                 - "dmidecode"
 
   iot_installer:
+    image_config:
+      <<: *image_config_iot_enabled_services
+      locale: "en_US.UTF-8"
     package_sets:
       - *anaconda_pkgset
       - include:
           - "fedora-release-iot"
 
   live_installer:
+    image_config:
+      locale: "en_US.UTF-8"
     package_sets:
       - include:
           - "@workstation-product-environment"
@@ -757,6 +836,11 @@ image_types:
   image_installer: *anaconda
 
   container: &container
+    image_config: &image_config_container
+      no_selinux: true
+      exclude_docs: true
+      locale: "C.UTF-8"
+      timezone: "Etc/UTC"
     package_sets:
       - include:
           - "bash"
@@ -804,6 +888,18 @@ image_types:
           - "xkeyboard-config"
 
   wsl:
+    image_config:
+      <<: *image_config_container
+      cloud_init:
+        - filename: "99_wsl.cfg"
+          config:
+            datasource_list:
+              - "WSL"
+              - "None"
+            network:
+              config: "disabled"
+      wsl_config:
+        boot_systemd: true
     package_sets:
       - include:
           - "bash"
@@ -852,6 +948,35 @@ image_types:
                 - "fuse-libs"
 
   minimal_raw: &minimal_raw
+    image_config:
+      # NOTE: temporary workaround for a bug in initial-setup that
+      # requires a kickstart file in the root directory.
+      files:
+        - path: "/root/anaconda-ks.cfg"
+          user: "root"
+          group: "root"
+          data: |
+            # Run initial-setup on first boot
+            # Created by osbuild
+            firstboot --reconfig
+      grub2_config:
+        timeout: 5
+      install_weak_deps: false
+      mount_units: true      
+      enabled_services:
+        - "NetworkManager.service"
+        - "initial-setup.service"
+        - "sshd.service"
+      condition:
+        version_less_than:
+          "43":
+            install_weak_deps: true
+            mount_units: false
+            enabled_services:
+              - "NetworkManager.service"
+              - "initial-setup.service"
+              - "sshd.service"
+              - "firewalld.service"
     partition_table:
       <<: *minimal_raw_partition_tables
     package_sets:
@@ -880,6 +1005,9 @@ image_types:
   minimal_raw_zst: *minimal_raw
 
   iot_simplified_installer:
+    image_config:
+      <<: *image_config_iot
+      ignition_platform: "metal"
     partition_table:
       <<: *iot_simplified_installer_partition_tables
     package_sets:

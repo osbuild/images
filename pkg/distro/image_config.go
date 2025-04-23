@@ -18,10 +18,10 @@ type ImageConfig struct {
 	TimeSynchronization *osbuild.ChronyStageOptions
 	Locale              *string `yaml:"locale,omitempty"`
 	Keyboard            *osbuild.KeymapStageOptions
-	EnabledServices     []string
+	EnabledServices     []string `yaml:"enabled_services,omitempty"`
 	DisabledServices    []string
 	MaskedServices      []string
-	DefaultTarget       *string
+	DefaultTarget       *string `yaml:"default_target,omitempty"`
 
 	Sysconfig           *Sysconfig `yaml:"sysconfig,omitempty"`
 	DefaultKernel       *string    `yaml:"default_kernel,omitempty"`
@@ -31,14 +31,14 @@ type ImageConfig struct {
 	GPGKeyFiles []string `yaml:"gpgkey_files,omitempty"`
 
 	// Disable SELinux labelling
-	NoSElinux *bool
+	NoSElinux *bool `yaml:"no_selinux,omitempty"`
 
 	// Do not use. Forces auto-relabelling on first boot.
 	// See https://github.com/osbuild/osbuild/commit/52cb27631b587c1df177cd17625c5b473e1e85d2
 	SELinuxForceRelabel *bool
 
 	// Disable documentation
-	ExcludeDocs *bool
+	ExcludeDocs *bool `yaml:"exclude_docs,omitempty"`
 
 	ShellInit []shell.InitFile
 
@@ -46,9 +46,9 @@ type ImageConfig struct {
 	// when the user want the image to be subscribed on first boot and when not
 	RHSMConfig          map[subscription.RHSMStatus]*subscription.RHSMConfig
 	SystemdLogind       []*osbuild.SystemdLogindStageOptions
-	CloudInit           []*osbuild.CloudInitStageOptions
+	CloudInit           []*osbuild.CloudInitStageOptions `yaml:"cloud_init,omitempty"`
 	Modprobe            []*osbuild.ModprobeStageOptions
-	DracutConf          []*osbuild.DracutConfStageOptions
+	DracutConf          []*osbuild.DracutConfStageOptions `yaml:"dracut_conf,omitempty"`
 	SystemdDropin       []*osbuild.SystemdUnitStageOptions
 	SystemdUnit         []*osbuild.SystemdUnitCreateStageOptions
 	Authselect          *osbuild.AuthselectStageOptions
@@ -58,11 +58,11 @@ type ImageConfig struct {
 	PamLimitsConf       []*osbuild.PamLimitsConfStageOptions
 	Sysctld             []*osbuild.SysctldStageOptions
 	DNFConfig           []*osbuild.DNFConfigStageOptions
-	SshdConfig          *osbuild.SshdConfigStageOptions
+	SshdConfig          *osbuild.SshdConfigStageOptions `yaml:"sshd_config,omitempty"`
 	Authconfig          *osbuild.AuthconfigStageOptions
 	PwQuality           *osbuild.PwqualityConfStageOptions
 	WAAgentConfig       *osbuild.WAAgentConfStageOptions
-	Grub2Config         *osbuild.GRUB2Config
+	Grub2Config         *osbuild.GRUB2Config `yaml:"grub2_config,omitempty"`
 	DNFAutomaticConfig  *osbuild.DNFAutomaticConfigStageOptions
 	YumConfig           *osbuild.YumConfigStageOptions
 	YUMRepos            []*osbuild.YumReposStageOptions
@@ -71,7 +71,7 @@ type ImageConfig struct {
 	GCPGuestAgentConfig *osbuild.GcpGuestAgentConfigOptions
 	NetworkManager      *osbuild.NMConfStageOptions
 
-	WSLConfig *WSLConfig
+	WSLConfig *WSLConfig `yaml:"wsl_config,omitempty"`
 
 	Files       []*fsnode.File
 	Directories []*fsnode.Directory
@@ -95,13 +95,13 @@ type ImageConfig struct {
 	// OSTree specific configuration
 
 	// Read only sysroot and boot
-	OSTreeConfSysrootReadOnly *bool
+	OSTreeConfSysrootReadOnly *bool `yaml:"ostree_conf_sysroot_readonly,omitempty"`
 
 	// Lock the root account in the deployment unless the user defined root
 	// user options in the build configuration.
-	LockRootUser *bool
+	LockRootUser *bool `yaml:"lock_root_user,omitempty"`
 
-	IgnitionPlatform *string
+	IgnitionPlatform *string `yaml:"ignition_platform,omitempty"`
 
 	// InstallWeakDeps enables installation of weak dependencies for packages
 	// that are statically defined for the pipeline.
@@ -114,11 +114,11 @@ type ImageConfig struct {
 
 	// MountUnits creates systemd .mount units to describe the filesystem
 	// instead of writing to /etc/fstab
-	MountUnits *bool
+	MountUnits *bool `yaml:"mount_units,omitempty"`
 }
 
 type WSLConfig struct {
-	BootSystemd bool
+	BootSystemd bool `yaml:"boot_systemd,omitempty"`
 }
 
 // InheritFrom inherits unset values from the provided parent configuration and
