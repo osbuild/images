@@ -13,13 +13,13 @@ import (
 
 // ImageConfig represents a (default) configuration applied to the image payload.
 type ImageConfig struct {
-	Hostname            *string `yaml:"hostname,omitempty"`
-	Timezone            *string `yaml:"timezone,omitempty"`
-	TimeSynchronization *osbuild.ChronyStageOptions
-	Locale              *string `yaml:"locale,omitempty"`
+	Hostname            *string                     `yaml:"hostname,omitempty"`
+	Timezone            *string                     `yaml:"timezone,omitempty"`
+	TimeSynchronization *osbuild.ChronyStageOptions `yaml:"time_synchronization,omitempty"`
+	Locale              *string                     `yaml:"locale,omitempty"`
 	Keyboard            *osbuild.KeymapStageOptions
 	EnabledServices     []string `yaml:"enabled_services,omitempty"`
-	DisabledServices    []string
+	DisabledServices    []string `yaml:"disabled_services,omitempty"`
 	MaskedServices      []string
 	DefaultTarget       *string `yaml:"default_target,omitempty"`
 
@@ -45,34 +45,34 @@ type ImageConfig struct {
 
 	// for RHSM configuration, we need to potentially distinguish the case
 	// when the user want the image to be subscribed on first boot and when not
-	RHSMConfig    map[subscription.RHSMStatus]*subscription.RHSMConfig
-	SystemdLogind []*osbuild.SystemdLogindStageOptions
-	CloudInit     []*osbuild.CloudInitStageOptions `yaml:"cloud_init"`
+	RHSMConfig    map[subscription.RHSMStatus]*subscription.RHSMConfig `yaml:"rhsm_config,omitempty"`
+	SystemdLogind []*osbuild.SystemdLogindStageOptions                 `yaml:"systemd_logind,omitempty"`
+	CloudInit     []*osbuild.CloudInitStageOptions                     `yaml:"cloud_init"`
 	Modprobe      []*osbuild.ModprobeStageOptions
-	DracutConf    []*osbuild.DracutConfStageOptions `yaml:"dracut_conf"`
-	SystemdDropin []*osbuild.SystemdUnitStageOptions
-	SystemdUnit   []*osbuild.SystemdUnitCreateStageOptions
+	DracutConf    []*osbuild.DracutConfStageOptions        `yaml:"dracut_conf"`
+	SystemdDropin []*osbuild.SystemdUnitStageOptions       `yaml:"systemd_dropin,omitempty"`
+	SystemdUnit   []*osbuild.SystemdUnitCreateStageOptions `yaml:"systemd_unit,omitempty"`
 	Authselect    *osbuild.AuthselectStageOptions
-	SELinuxConfig *osbuild.SELinuxConfigStageOptions
+	SELinuxConfig *osbuild.SELinuxConfigStageOptions `yaml:"selinux_config,omitempty"`
 	Tuned         *osbuild.TunedStageOptions
 	Tmpfilesd     []*osbuild.TmpfilesdStageOptions
-	PamLimitsConf []*osbuild.PamLimitsConfStageOptions
+	PamLimitsConf []*osbuild.PamLimitsConfStageOptions `yaml:"pam_limits_conf,omitempty"`
 	Sysctld       []*osbuild.SysctldStageOptions
 	// Do not use DNFConfig directly, call "DNFConfigOptions()"
-	DNFConfig           []*osbuild.DNFConfigStageOptions
-	DNFSetReleaseVerVar *bool
-	SshdConfig          *osbuild.SshdConfigStageOptions `yaml:"sshd_config"`
+	DNFConfig           []*osbuild.DNFConfigStageOptions `yaml:"dnf_config,omitempty"`
+	DNFSetReleaseVerVar *bool                            `yaml:"dnf_set_release_ver_var,omitempty"`
+	SshdConfig          *osbuild.SshdConfigStageOptions  `yaml:"sshd_config"`
 	Authconfig          *osbuild.AuthconfigStageOptions
 	PwQuality           *osbuild.PwqualityConfStageOptions
-	WAAgentConfig       *osbuild.WAAgentConfStageOptions
-	Grub2Config         *osbuild.GRUB2Config `yaml:"grub2_config,omitempty"`
-	DNFAutomaticConfig  *osbuild.DNFAutomaticConfigStageOptions
+	WAAgentConfig       *osbuild.WAAgentConfStageOptions        `yaml:"waagent_config,omitempty"`
+	Grub2Config         *osbuild.GRUB2Config                    `yaml:"grub2_config,omitempty"`
+	DNFAutomaticConfig  *osbuild.DNFAutomaticConfigStageOptions `yaml:"dnf_automatic_config"`
 	YumConfig           *osbuild.YumConfigStageOptions
-	YUMRepos            []*osbuild.YumReposStageOptions
+	YUMRepos            []*osbuild.YumReposStageOptions `yaml:"yum_repos,omitempty"`
 	Firewall            *osbuild.FirewallStageOptions
-	UdevRules           *osbuild.UdevRulesStageOptions
-	GCPGuestAgentConfig *osbuild.GcpGuestAgentConfigOptions
-	NetworkManager      *osbuild.NMConfStageOptions
+	UdevRules           *osbuild.UdevRulesStageOptions      `yaml:"udev_rules,omitempty"`
+	GCPGuestAgentConfig *osbuild.GcpGuestAgentConfigOptions `yaml:"gcp_guest_agent_config,omitempty"`
+	NetworkManager      *osbuild.NMConfStageOptions         `yaml:"network_manager,omitempty"`
 
 	WSLConfig *WSLConfig `yaml:"wsl_config,omitempty"`
 
