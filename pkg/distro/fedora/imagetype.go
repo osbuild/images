@@ -286,6 +286,7 @@ func (t *imageType) Manifest(bp *blueprint.Blueprint,
 		if services := bp.Customizations.GetServices(); services != nil {
 			cw.Services = services.Enabled
 			cw.DisabledServices = services.Disabled
+			cw.MaskedServices = services.Masked
 		}
 		w = cw
 	}
