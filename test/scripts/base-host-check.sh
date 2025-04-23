@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # vim: sw=4:et
-set -euo pipefail
+set -euxo pipefail
 
 running_wait() {
     # simple implementation of 'systemctl is-system-running --wait' for older
