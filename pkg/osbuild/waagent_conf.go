@@ -3,8 +3,10 @@ package osbuild
 type WAAgentConfig struct {
 	ProvisioningUseCloudInit *bool `json:"Provisioning.UseCloudInit,omitempty"`
 	ProvisioningEnabled      *bool `json:"Provisioning.Enabled,omitempty"`
-	RDFormat                 *bool `json:"ResourceDisk.Format,omitempty"`
-	RDEnableSwap             *bool `json:"ResourceDisk.EnableSwap,omitempty"`
+	// XXX: yaml/json inconsistent :(
+	RDFormat *bool `json:"ResourceDisk.Format,omitempty" yaml:"rd_format"`
+	// XXX: yaml/json inconsistent :(
+	RDEnableSwap *bool `json:"ResourceDisk.EnableSwap,omitempty" yaml:"rd_enable_swap"`
 }
 
 type WAAgentConfStageOptions struct {

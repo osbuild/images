@@ -1,10 +1,7 @@
 package rhel10
 
 import (
-	"github.com/osbuild/images/internal/common"
-	"github.com/osbuild/images/pkg/customizations/subscription"
 	"github.com/osbuild/images/pkg/datasizes"
-	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/rhel"
 )
 
@@ -22,7 +19,7 @@ func mkQcow2ImgType(d *rhel.Distribution) *rhel.ImageType {
 		[]string{"qcow2"},
 	)
 
-	it.DefaultImageConfig = qcowImageConfig(d)
+	it.DefaultImageConfig = imageConfig(d, "", "qcow2")
 	it.KernelOptions = []string{"console=tty0", "console=ttyS0,115200n8", "no_timer_check"}
 	it.DefaultSize = 10 * datasizes.GibiByte
 	it.Bootable = true
@@ -45,32 +42,11 @@ func mkOCIImgType(d *rhel.Distribution) *rhel.ImageType {
 		[]string{"qcow2"},
 	)
 
-	it.DefaultImageConfig = qcowImageConfig(d)
+	it.DefaultImageConfig = imageConfig(d, "", "oci")
 	it.KernelOptions = []string{"console=tty0", "console=ttyS0,115200n8", "no_timer_check"}
 	it.DefaultSize = 10 * datasizes.GibiByte
 	it.Bootable = true
 	it.BasePartitionTables = defaultBasePartitionTables
 
 	return it
-}
-
-func qcowImageConfig(d *rhel.Distribution) *distro.ImageConfig {
-	ic := &distro.ImageConfig{
-		DefaultTarget: common.ToPtr("multi-user.target"),
-	}
-	if d.IsRHEL() {
-		ic.RHSMConfig = map[subscription.RHSMStatus]*subscription.RHSMConfig{
-			subscription.RHSMConfigNoSubscription: {
-				DnfPlugins: subscription.SubManDNFPluginsConfig{
-					ProductID: subscription.DNFPluginConfig{
-						Enabled: common.ToPtr(false),
-					},
-					SubscriptionManager: subscription.DNFPluginConfig{
-						Enabled: common.ToPtr(false),
-					},
-				},
-			},
-		}
-	}
-	return ic
 }

@@ -103,6 +103,11 @@ func sapImageConfig(osVersion string) *distro.ImageConfig {
 			),
 		},
 		// E4S/EUS
+		//
+		// XXX: this must become a declrative option like
+		// ImageCconfig.AddDNFReleaseVerVar or something
+		// as we do not want to support variable substituion
+		// in our YAML
 		DNFConfig: []*osbuild.DNFConfigStageOptions{
 			osbuild.NewDNFConfigStageOptions(
 				[]osbuild.DNFVariable{

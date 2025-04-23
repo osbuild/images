@@ -303,6 +303,18 @@ image_types:
                 - "subscription-manager-cockpit"
 
   qcow2: &qcow2
+    image_config:
+      default_target: "multi-user.target"
+      condition:
+        distro_name:
+          rhel:
+            rhsm_config:
+              "no-subscription":
+                dnf_plugin:
+                  product_id:
+                    enabled: false
+                  subscription_manager:
+                    enabled: false
     partition_table:
       <<: *default_partition_tables
     package_sets:
@@ -372,6 +384,119 @@ image_types:
   oci: *qcow2
 
   vhd: &vhd
+    # based on https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/deploying_rhel_9_on_microsoft_azure/assembly_deploying-a-rhel-image-as-a-virtual-machine-on-microsoft-azure_cloud-content-azure#making-configuration-changes_configure-the-image-azure
+    image_config: &image_config_vhd
+      keyboard:
+        keymap: "us"
+        x11_keymap:
+          layouts: ["us"]
+      update_default_kernel: true
+      default_kernel: "kernel-core"
+      sysconfig:
+        networking: true
+        no_zero_conf: true
+      enabled_services:
+        - "firewalld"
+        - "nm-cloud-setup.service"
+        - "nm-cloud-setup.timer"
+        - "sshd"
+        - "waagent"
+      sshd_config:
+        config:
+          client_alive_interval: 180
+      modprobe:
+        - filename: "blacklist-amdgpu.conf"
+          commands: 
+            - command: blacklist
+              modulename: "amdgpu"
+        - filename: "blacklist-intel-cstate.conf"
+          commands: 
+            - command: blacklist
+              modulename: "intel_cstate"
+        - filename: "blacklist-floppy.conf"
+          commands: 
+            - command: blacklist
+              modulename: "floppy"
+        - filename: "blacklist-nouveau.conf"
+          commands:
+            - command: blacklist
+              modulename: "nouveau"
+            - command: blacklist
+              modulename: "lbm-nouveau"
+        - filename: "blacklist-skylake-edac.conf"
+          commands:
+            - command: blacklist
+              modulename: "skx_edac"
+      cloud_init:
+        - filename: "10-azure-kvp.cfg"
+          config: 
+            reporting:
+              logging:
+                type: "log"
+              telemetry:
+                type: "hyperv"
+        - filename: "91-azure_datasource.cfg"
+          config:
+            datasource:
+              azure:
+                apply_network_config: false
+            datasource_list:
+              - "Azure"
+      pwquality:
+        config:
+          minlen: 6
+          minclass: 3
+          dcredit: 0
+          ucredit: 0
+          lcredit: 0
+          ocredit: 0
+      waagent_config:
+        config:
+          rd_format: false
+          rd_enable_swap: false
+      grub2_config:
+        disable_recovery: true
+        disable_submenu: true
+        distributor: "$(sed 's, release .*$,,g' /etc/system-release)"
+        terminal: ["serial", "console"]
+        serial: "serial --speed=115200 --unit=0 --word=8 --parity=no --stop=1"
+        timeout: 10
+        timeout_style: "countdown"
+      udev_rules:
+        filename: "/etc/udev/rules.d/68-azure-sriov-nm-unmanaged.rules"
+        rules:
+          - comment:
+              - "Accelerated Networking on Azure exposes a new SRIOV interface to the VM."
+              - "This interface is transparently bonded to the synthetic interface,"
+              - "so NetworkManager should just ignore any SRIOV interfaces."
+          - rule:
+            - K: "SUBSYSTEM"
+              O: "=="
+              V: "net"
+            - K: "DRIVERS"
+              O: "=="
+              V: "hv_pci"
+            - K: "ACTION"
+              O: "=="
+              V: "add"
+            - K: "ENV"
+              A: "NM_UNMANAGED"
+              O: "="
+              V: "1"
+      systemd_dropin:
+        - unit: "nm-cloud-setup.service"
+          dropin: "10-rh-enable-for-azure.conf"
+          config:
+            service:
+              environment:
+                - key: "NM_CLOUD_SETUP_AZURE"
+                  value: "yes"
+      default_target: "multi-user.target"
+      condition:
+        distro_name:
+          rhel:
+            gpgkey_files:
+              - "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
     partition_table:
       <<: *default_partition_tables
     package_sets:
@@ -455,6 +580,9 @@ image_types:
   azure_rhui: *vhd
 
   azure_sap_rhui:
+    # XXX: this still uses sapAzureImageConfig() 
+    image_config:
+      <<: *image_config_vhd
     package_sets:
       - *vhd_pkgset
       - *sap_pkgset
@@ -486,6 +614,86 @@ image_types:
   ova: *vmdk
 
   ami: &ami
+    image_config:
+      time_synchronization:
+        servers:
+          - hostname: "169.254.169.123"
+            prefer:   true
+            iburst:   true
+            minpoll:  4
+            maxpoll:  4
+        # empty string will remove any occurrences of the option
+        # from the configuration
+        leapsectz: ""
+      keyboard:
+        keymap: "us"
+        x11_keymap:
+          layouts: ["us"]
+      enabled_services:
+        - "sshd"
+        - "NetworkManager"
+        - "nm-cloud-setup.service"
+        - "nm-cloud-setup.timer"
+        - "cloud-init"
+        - "cloud-init-local"
+        - "cloud-config"
+        - "cloud-final"
+        - "reboot.target"
+        - "tuned"
+      default_target: "multi-user.target"
+      update_default_kernel: true
+      default_kernel: "kernel"
+      sysconfig:
+        networking: true
+        no_zero_conf: true
+      systemd_logind:
+        - filename: "00-getty-fixes.conf"
+          config:
+            login:
+              nautovts: 0
+      cloud_init:
+        - filename: "00-rhel-default-user.cfg"
+          config:
+            system_info:
+              default_user:
+                name: "ec2-user"
+      modprobe:
+        - filename: "blacklist-nouveau.conf"
+          commands:
+            - command: blacklist
+              modulename: "nouveau"
+        - filename: "blacklist-amdgpu.conf"
+          commands:
+            - command: blacklist
+              modulename: "amdgpu"
+        # https://issues.redhat.com/browse/RHEL-71926
+        - filename: "blacklist-i2c_piix4.conf"
+          commands:
+            - command: blacklist
+              modulename: "i2c_piix4"
+      systemd_dropin:
+        # RHBZ#1822863
+        - unit:   "nm-cloud-setup.service"
+          dropin: "10-rh-enable-for-ec2.conf"
+          config:
+            service:
+              environment:
+                - key: "NM_CLOUD_SETUP_EC2"
+                  value: "yes"
+      authselect:
+        profile: "sssd"
+      sshd_config:
+        config:
+          password_authentication: false
+      condition:
+        architecture:
+          x86_64:
+            dracut_conf:
+              - filename: "ec2.conf"
+                config:
+                  add_drivers:
+                    - "nvme"
+                    - "xen-blkfront"
     partition_table:
       <<: *default_partition_tables
     package_sets:
@@ -563,6 +771,18 @@ image_types:
       - *sap_pkgset
 
   wsl:
+    image_config:
+      cloud_init:
+        - filename: "99_wsl.cfg"
+          config:
+            datasource_list:
+              - "WSL"
+              - "None"
+            network:
+              config: "disabled"
+      no_selinux: true
+      wsl_config:
+        boot_systemd: true
     package_sets:
       - include:
           - "alternatives"
@@ -745,6 +965,75 @@ image_types:
                 - "dmidecode"
 
   gce:
+    image_config:
+      time_synchronization: 
+        servers:
+          - hostname: "metadata.google.internal"
+      firewall:
+        default_zone: "trusted"
+      enabled_services:
+        - "sshd"
+        - "rngd"
+        - "dnf-automatic.timer"
+        # TODO: remove cloud-init services once we switch back to GCP guest tools
+        - "cloud-init"
+        - "cloud-init-local"
+        - "cloud-config"
+        - "cloud-final"
+      disabled_services:
+        - "sshd-keygen@"
+        - "reboot.target"
+      default_target: "multi-user.target"
+      keyboard:
+        keymap: "us"
+      dnf_config:
+        - config:
+            main:
+              ipresolve: "4"
+      dnf_automatic_config:
+        config:
+          commands:
+            apply_updates: true
+            upgrade_type:  "security"
+      yum_repos:
+        - filename: "google-cloud.repo"
+          repos:
+            - id:   "google-compute-engine"
+              name: "Google Compute Engine"
+              # TODO: use el10 repo once it's available
+              baseurls:
+                - "https://packages.cloud.google.com/yum/repos/google-compute-engine-el9-x86_64-stable"
+              enabled:  true
+              # TODO: enable GPG check once Google stops using SHA-1 in their keys
+              # https://issuetracker.google.com/issues/360905189
+              gpgcheck: false
+              repo_gpgcheck: false
+              gpgkeys:
+                - "https://packages.cloud.google.com/yum/doc/yum-key.gpg"
+                - "https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg"
+      sshd_config:
+        config:
+          password_authentication: false
+          client_alive_interval: 420
+          permit_root_login: false
+      update_default_kernel: true
+      default_kernel: "kernel-core"
+      # XXX: ensure the "old" behavior is preserved (that is
+      # likely a bug) where for GCE the sysconfig network
+      # options are not set because the merge of imageConfig
+      # is shallow and the previous setup was changing the
+      # kernel without also changing the network options.
+      sysconfig: {}
+      modprobe:
+        - filename: "blacklist-floppy.conf"
+          commands: 
+            - command: blacklist
+              modulename: "floppy"
+      gcp_guest_agent_config:
+        config_scope: "distro"
+        config:
+          instance_setup:
+            set_boto_config: false
     partition_table:
       <<: *default_partition_tables
     package_sets:

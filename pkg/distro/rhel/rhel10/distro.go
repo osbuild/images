@@ -112,13 +112,13 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 	x86_64.AddImageTypes(
 		&platform.X86{},
 		mkTarImgType(),
-		mkWSLImgType(),
+		mkWSLImgType(rd),
 	)
 
 	aarch64.AddImageTypes(
 		&platform.Aarch64{},
 		mkTarImgType(),
-		mkWSLImgType(),
+		mkWSLImgType(rd),
 	)
 
 	aarch64.AddImageTypes(
@@ -171,7 +171,7 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 	}
 	x86_64.AddImageTypes(
 		ec2X86Platform,
-		mkAMIImgTypeX86_64(),
+		mkAMIImgTypeX86_64(rd),
 	)
 
 	ec2Aarch64Platform := &platform.Aarch64{
@@ -182,7 +182,7 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 	}
 	aarch64.AddImageTypes(
 		ec2Aarch64Platform,
-		mkAMIImgTypeAarch64(),
+		mkAMIImgTypeAarch64(rd),
 	)
 
 	azureX64Platform := &platform.X86{
@@ -211,7 +211,7 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 	}
 	x86_64.AddImageTypes(
 		gceX86Platform,
-		mkGCEImageType(),
+		mkGCEImageType(rd),
 	)
 
 	x86_64.AddImageTypes(
@@ -251,8 +251,8 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 
 		x86_64.AddImageTypes(azureX64Platform, mkAzureSapInternalImgType(rd))
 
-		x86_64.AddImageTypes(ec2X86Platform, mkEc2ImgTypeX86_64(), mkEc2HaImgTypeX86_64(), mkEC2SapImgTypeX86_64(rd.OsVersion()))
-		aarch64.AddImageTypes(ec2Aarch64Platform, mkEC2ImgTypeAarch64())
+		x86_64.AddImageTypes(ec2X86Platform, mkEc2ImgTypeX86_64(rd), mkEc2HaImgTypeX86_64(rd), mkEC2SapImgTypeX86_64(rd))
+		aarch64.AddImageTypes(ec2Aarch64Platform, mkEC2ImgTypeAarch64(rd))
 	}
 
 	rd.AddArches(x86_64, aarch64, ppc64le, s390x)
