@@ -64,6 +64,7 @@ type imageConfig struct {
 }
 
 type conditionsImgConf struct {
+	DistroName      map[string]*distro.ImageConfig `yaml:"distro_name,omitempty"`
 	VersionLessThan map[string]*distro.ImageConfig `yaml:"version_less_than,omitempty"`
 }
 
@@ -175,8 +176,11 @@ func ImageConfig(distroNameVer, typeName string, replacements map[string]string)
 	imgConfig := imgType.ImageConfig.ImageConfig
 	cond := imgType.ImageConfig.Condition
 	if cond != nil {
-		_, distroVersion := splitDistroNameVer(distroNameVer)
+		distroName, distroVersion := splitDistroNameVer(distroNameVer)
 
+		if distroNameCnf, ok := cond.DistroName[distroName]; ok {
+			imgConfig = distroNameCnf.InheritFrom(imgConfig)
+		}
 		for ltVer, ltConf := range cond.VersionLessThan {
 			if r, ok := replacements[ltVer]; ok {
 				ltVer = r

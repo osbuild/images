@@ -420,6 +420,9 @@ image_types:
         version_less_than:
           "2":
             timezone: "OverrideTZ"
+        distro_name:
+          "test-distro":
+            locale: "en_US.UTF-8"
 `
 	fakeDistroName := "test-distro"
 	baseDir := makeFakePkgsSet(t, fakeDistroName, fakeDistroYaml)
@@ -429,7 +432,7 @@ image_types:
 	imgConfig, err := defs.ImageConfig("test-distro-1", "test_type", nil)
 	require.NoError(t, err)
 	assert.Equal(t, &distro.ImageConfig{
-		Locale:   common.ToPtr("C.UTF-8"),
+		Locale:   common.ToPtr("en_US.UTF-8"),
 		Timezone: common.ToPtr("OverrideTZ"),
 	}, imgConfig)
 
