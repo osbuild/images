@@ -34,3 +34,17 @@ func NewFile(path string, mode *os.FileMode, user interface{}, group interface{}
 		data:       data,
 	}, nil
 }
+
+func (f *File) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var m map[string]interface{}
+	err := unmarshal(&m)
+	if err != nil {
+		return err
+	}
+	f.path = m["path"].(string)
+	f.user = m["user"].(string)
+	f.group = m["group"].(string)
+	f.data = []byte(m["data"].(string))
+
+	return nil
+}
