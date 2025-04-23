@@ -36,17 +36,17 @@ var data embed.FS
 var DataFS fs.FS = data
 
 type toplevelYAML struct {
-	ImageConfig imageConfig          `yaml:"image_config,omitempty"`
+	ImageConfig distroImageConfig    `yaml:"image_config,omitempty"`
 	ImageTypes  map[string]imageType `yaml:"image_types"`
 	Common      map[string]any       `yaml:".common,omitempty"`
 }
 
-type imageConfig struct {
-	Default   *distro.ImageConfig    `yaml:"default"`
-	Condition *imageConfigConditions `yaml:"condition,omitempty"`
+type distroImageConfig struct {
+	Default   *distro.ImageConfig          `yaml:"default"`
+	Condition *distroImageConfigConditions `yaml:"condition,omitempty"`
 }
 
-type imageConfigConditions struct {
+type distroImageConfigConditions struct {
 	DistroName map[string]*distro.ImageConfig `yaml:"distro_name,omitempty"`
 }
 
@@ -56,6 +56,19 @@ type imageType struct {
 	PartitionTables map[string]*disk.PartitionTable `yaml:"partition_table"`
 	// override specific aspects of the partition table
 	PartitionTablesOverrides *partitionTablesOverrides `yaml:"partition_tables_override"`
+
+	ImageConfig imageConfig `yaml:"image_config,omitempty"`
+}
+
+type imageConfig struct {
+	*distro.ImageConfig `yaml:",inline"`
+	Condition           *conditionsImgConf `yaml:"condition,omitempty"`
+}
+
+type conditionsImgConf struct {
+	Architecture    map[string]*distro.ImageConfig `yaml:"architecture,omitempty"`
+	DistroName      map[string]*distro.ImageConfig `yaml:"distro_name,omitempty"`
+	VersionLessThan map[string]*distro.ImageConfig `yaml:"version_less_than,omitempty"`
 }
 
 type packageSet struct {
@@ -130,6 +143,41 @@ func DistroImageConfig(distroNameVer string) (*distro.ImageConfig, error) {
 		// findElementIndexByJSONTag) but this if fine for now
 		if distroNameCnf, ok := cond.DistroName[distroName]; ok {
 			imgConfig = distroNameCnf.InheritFrom(imgConfig)
+		}
+	}
+
+	return imgConfig, nil
+}
+
+// ImageConfig returns the image type specific ImageConfig
+func ImageConfig(distroNameVer, archName, typeName string, replacements map[string]string) (*distro.ImageConfig, error) {
+	toplevel, err := load(distroNameVer)
+	if err != nil {
+		return nil, err
+	}
+	typeName = strings.ReplaceAll(typeName, "-", "_")
+	imgType, ok := toplevel.ImageTypes[typeName]
+	if !ok {
+		return nil, fmt.Errorf("%w: %q", ErrImageTypeNotFound, typeName)
+	}
+	imgConfig := imgType.ImageConfig.ImageConfig
+	cond := imgType.ImageConfig.Condition
+	if cond != nil {
+		distroName, distroVersion := splitDistroNameVer(distroNameVer)
+
+		if distroNameCnf, ok := cond.DistroName[distroName]; ok {
+			imgConfig = distroNameCnf.InheritFrom(imgConfig)
+		}
+		if archCnf, ok := cond.Architecture[archName]; ok {
+			imgConfig = archCnf.InheritFrom(imgConfig)
+		}
+		for ltVer, ltConf := range cond.VersionLessThan {
+			if r, ok := replacements[ltVer]; ok {
+				ltVer = r
+			}
+			if common.VersionLessThan(distroVersion, ltVer) {
+				imgConfig = ltConf.InheritFrom(imgConfig)
+			}
 		}
 	}
 
