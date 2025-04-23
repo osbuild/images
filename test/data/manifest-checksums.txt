@@ -1,4 +1,4 @@
-a708c9bc801563229d1e6774b72a7b65495b6d01  centos_10-aarch64-ami-all_customizations.json
+a0db89752da63fc163907ffb8da695772a30ee91  centos_10-aarch64-ami-all_customizations.json
 422394d3daa50b5ec6f0e4ee9fa0f55ddc8ebbe6  centos_10-aarch64-ami-empty.json
 5ec67b5a2fa69154b9f6005852994720a76d5d88  centos_10-aarch64-ami-partitioning_dos_lvm.json
 64b26f2c8cc9010a015bff4a51f5352fc1c03074  centos_10-aarch64-ami-partitioning_lvm.json
@@ -16,7 +16,7 @@ e290a1f26411ee8a9d7e2058a868f79ed8e76815  centos_10-ppc64le-tar-empty.json
 5d60fdc3838d9700f21c04e05ee9b640c0b4a8e4  centos_10-s390x-qcow2-all_with_fips.json
 0e6002d8f96d71a9e45c98f465a5c157c038f22d  centos_10-s390x-qcow2-empty.json
 eb73e9ad4ab9cab835fe8368ae8a075807e7caa0  centos_10-s390x-tar-empty.json
-a58a571ce95bdb79bc81541776d62a1c4628fd13  centos_10-x86_64-ami-all_customizations.json
+70ef5b1793d3216e2501c50eaaef4d01978b4bfb  centos_10-x86_64-ami-all_customizations.json
 8bb91d25d558132f2932e71a2c9966093f2ac1dc  centos_10-x86_64-ami-empty.json
 169620169c6ea1e210e7ef3c0a2b7f9ba85e7c23  centos_10-x86_64-ami-partitioning_dos_lvm.json
 5f9cec1dad7f5cfcd95e8fcd70931d93f6b73b86  centos_10-x86_64-ami-partitioning_lvm.json
@@ -32,7 +32,7 @@ dedb2581a8bcec0075af61cb4faefdce08c89e40  centos_10-x86_64-tar-empty.json
 80094278f52ac1dc3662a0560a5e10fc98f81485  centos_10-x86_64-vhd-empty.json
 61d07ecfa651c4e5cdcf0cd5ee8167572e2a4bb0  centos_10-x86_64-vmdk-empty.json
 f3a32b59496828a50a38db2e19cd594b6783702a  centos_10-x86_64-wsl-empty.json
-d4699cf20e11a989c93be3db8bb0308e824dd82f  centos_9-aarch64-ami-all_customizations.json
+f65b432760b8dd9a5302e0ed395f8124a4492345  centos_9-aarch64-ami-all_customizations.json
 fec9ae4e9523b62746abf7698fc1b632346fe0a6  centos_9-aarch64-ami-empty.json
 a9db6dd815f5e2a4bcbeab69555a37d59022ce0a  centos_9-aarch64-ami-modularity_enabled_modules.json
 c1d38bae90c0160663e2d395fbbf3588469ba955  centos_9-aarch64-ami-modularity_in_packages.json
@@ -70,7 +70,7 @@ a3f999753c642015521843a1d6030ba54e48e5f2  centos_9-s390x-qcow2-all_with_fips.jso
 c24b5ce9bba4a36a1db671d0b03716334c70236a  centos_9-s390x-qcow2-empty.json
 983038bc3601ac2f62542923a97b5a59683c87a2  centos_9-s390x-qcow2-oscap_generic.json
 cc60eab0d627d7053e6876a85231360bd419c310  centos_9-s390x-tar-empty.json
-165719eec9afca641397e97eb383b610d4e24f53  centos_9-x86_64-ami-all_customizations.json
+f1ebcdf091e5784435f16a832ef44bafe224686a  centos_9-x86_64-ami-all_customizations.json
 8e5959f35539b59dcb2e2ef8952208371c415b43  centos_9-x86_64-ami-empty.json
 afdb80fb6b46135cf998ee53b19c892891421a4c  centos_9-x86_64-ami-modularity_enabled_modules.json
 8a46688f9e0df631538c3215764aec281a760cdf  centos_9-x86_64-ami-modularity_in_packages.json
@@ -104,7 +104,7 @@ b540238ebf85e90626335dd9e7744fc9f96e0353  centos_9-x86_64-qcow2-oscap_generic.js
 dfe6b00518bc41c26af6bc1fcb766572407b369d  centos_9-x86_64-vhd-empty.json
 e2fcdf38dd3ea9331a74f310a89f78f87d33acba  centos_9-x86_64-vmdk-empty.json
 ccd232313213303fb8e9e3b732b26c8a4f621f48  centos_9-x86_64-wsl-empty.json
-89fbfb3ebc3f743641e2771e6b56b87fafde6394  fedora_40-aarch64-ami-all_customizations.json
+fa3154b08dd66c63eeebdeb9d372c73e4eb38693  fedora_40-aarch64-ami-all_customizations.json
 83554b01fdda1b04edca81626f02858279298b06  fedora_40-aarch64-ami-empty.json
 c7eefee3d43231f26fd8783ae16b154540ef1df2  fedora_40-aarch64-ami-partitioning_btrfs.json
 a65daa82c339dba3a0952457ca030cb7febe7678  fedora_40-aarch64-ami-partitioning_lvm.json
@@ -150,7 +150,7 @@ c2bd9213b7206ccb7d054dec9be40663a9bb0eb7  fedora_40-s390x-qcow2-import_rpm_gpg_k
 d738251e1481fd6155a08e310926c85d109137d2  fedora_40-s390x-qcow2-minimal.json
 5dbb197f42ea0ff9fd3348e440657febe72c9294  fedora_40-s390x-qcow2-minimal_pkgs.json
 6ea4353b0cbfca4c53db7cf85b13abac809107f8  fedora_40-s390x-qcow2-oscap_generic.json
-291881aa6219033b74cbec47324a38db67c8b900  fedora_40-x86_64-ami-all_customizations.json
+ceac4682520eed1714e035ec4407adbf4aaef4d8  fedora_40-x86_64-ami-all_customizations.json
 17818c6b8023b3bb9ccdc9daa5ff6f09000525d1  fedora_40-x86_64-ami-empty.json
 e5e84362372955bd43d51595891f623fcd2e792e  fedora_40-x86_64-ami-partitioning_btrfs.json
 557c959cc3609b4cf7cccc2d206f3124e305714a  fedora_40-x86_64-ami-partitioning_lvm.json
@@ -184,7 +184,7 @@ fb92c656fcbec7acb06c855b0b6edba1663b8c6f  fedora_40-x86_64-qcow2-oscap_generic.j
 b5f3d7806494cf11ae448457137246c62692d198  fedora_40-x86_64-vhd-empty.json
 2d261e940562409353347ef00c33f38723f8e074  fedora_40-x86_64-vmdk-empty.json
 9c28e38e2bbf20b902e3853dbe063715a2acff98  fedora_40-x86_64-wsl-empty.json
-bc55ede3ef2f3ddf65918abe29a75d33f2f26169  fedora_41-aarch64-ami-all_customizations.json
+8101c246a322011c79d7cba030dc9eb6344f59af  fedora_41-aarch64-ami-all_customizations.json
 f2634af551bcc9044c866c3b43f2dfe4651ddf3b  fedora_41-aarch64-ami-empty.json
 29429bec25ca2623b69773d54715c08cbf48843d  fedora_41-aarch64-ami-partitioning_btrfs.json
 f239994a1e2f5ee2161d605f552a3b4f1f2ff841  fedora_41-aarch64-ami-partitioning_lvm.json
@@ -230,7 +230,7 @@ b6dc80afd0aec4f6ae1dc71d037adb285247ccdd  fedora_41-ppc64le-qcow2-minimal_pkgs.j
 feda098c44e8f9d24cfdbe713c2b2fc918d5cfd1  fedora_41-s390x-qcow2-minimal.json
 4e3459b75ec6c48846a0bf6da6fb9602cb332a8d  fedora_41-s390x-qcow2-minimal_pkgs.json
 39fa412f5c411f88219add78520738f0390b191a  fedora_41-s390x-qcow2-oscap_generic.json
-2ffb2c576a354acbd30b286b7caaf76803e45ea0  fedora_41-x86_64-ami-all_customizations.json
+15892d06ee2d19b3a5a472790cefd2166c9fd3c1  fedora_41-x86_64-ami-all_customizations.json
 8fde566b0594d9c595913601d25f6b6704a97966  fedora_41-x86_64-ami-empty.json
 4f926901b8cedd620627db25ae29486e684f811e  fedora_41-x86_64-ami-partitioning_btrfs.json
 3ca78a28e4acd90d1af1bb29b2c596120ec2a1c5  fedora_41-x86_64-ami-partitioning_lvm.json
@@ -264,7 +264,7 @@ e86c09d70794e7c1bb163d4527224dbfdd4d26d9  fedora_41-x86_64-qcow2-oscap_generic.j
 cd37ce25fd7063113e927f5a0feba8d985571d10  fedora_41-x86_64-vhd-empty.json
 bf7f6e96b364d166704ab0b5687c62496eab316f  fedora_41-x86_64-vmdk-empty.json
 24becaadad8f09a784780da4c47047ed22a26946  fedora_41-x86_64-wsl-empty.json
-0b4d3cfb18ec0ad4ab29dac1be4df69790f636be  fedora_42-aarch64-ami-all_customizations.json
+5526b505dbc88ca18b9a0f949b686c24c8cf7645  fedora_42-aarch64-ami-all_customizations.json
 cb3d951f77d8a641fe16805ec6e4d1aff2ac0a6e  fedora_42-aarch64-ami-empty.json
 82bd323dd740580c4d56b6eb3f1b65e8d79aa9b7  fedora_42-aarch64-ami-partitioning_btrfs.json
 643ab817961beacd09682b4b04069f38afa28d98  fedora_42-aarch64-ami-partitioning_lvm.json
@@ -310,7 +310,7 @@ dbd167256d853985c10f83f79ad82a32e071db21  fedora_42-s390x-qcow2-import_rpm_gpg_k
 ce3730b7225c6cec4126ecba9ab1ccf12abc165a  fedora_42-s390x-qcow2-minimal.json
 2b671963cf20e599d545a60d45c71bbaaf851f91  fedora_42-s390x-qcow2-minimal_pkgs.json
 56db1f868514aad53aa39112b01c8f19eb62a3f1  fedora_42-s390x-qcow2-oscap_generic.json
-974118020edad3c4488333f533d53efebadaab5e  fedora_42-x86_64-ami-all_customizations.json
+eecd6039fddbe4df2218370c19cf4f688eea781f  fedora_42-x86_64-ami-all_customizations.json
 f7afc4d5a48ba7dd1c27c48597d0818e6eb655c3  fedora_42-x86_64-ami-empty.json
 358568942f105406b0b1ba803cd04a9348e296a9  fedora_42-x86_64-ami-partitioning_btrfs.json
 af19e25d04dcaf9534d2d4137869ffca9ff1399b  fedora_42-x86_64-ami-partitioning_lvm.json
@@ -344,7 +344,7 @@ c5822f66173593a111b68d41633d2104d71d7609  fedora_42-x86_64-qcow2-import_rpm_gpg_
 2e5d9e0d76e7ca6bed1b4c15988c0acf3b5e1dd7  fedora_42-x86_64-vhd-empty.json
 2166514f2d32c959280fdd7af0b160a689fac924  fedora_42-x86_64-vmdk-empty.json
 f516f7786ea2a538666b2c10b8cbabc20842e25a  fedora_42-x86_64-wsl-empty.json
-65e2f78d88070f1808580e208c0ec55a0791e19d  fedora_43-aarch64-ami-all_customizations.json
+a20937df335b3ecc7ba959358ed591293e6c3372  fedora_43-aarch64-ami-all_customizations.json
 21e3282312d8ffde8b59952465a07f3304413e06  fedora_43-aarch64-ami-empty.json
 e1a26dd0612fe43d39b2571d9fb80485beb4af61  fedora_43-aarch64-ami-partitioning_btrfs.json
 4050bd5934eb280100620d7ca57bb65b38e2ce09  fedora_43-aarch64-ami-partitioning_lvm.json
@@ -390,7 +390,7 @@ a4211ed6df3c1d72e7a12332cc6af3dac2e13167  fedora_43-s390x-qcow2-empty.json
 6adce85d1d2c43d4638c934331e49805ee45479d  fedora_43-s390x-qcow2-minimal.json
 3bf94b1d46ae61d95e97f19ef4fae1272c3692df  fedora_43-s390x-qcow2-minimal_pkgs.json
 16943ad513031f72083fba0980b3adfe6ab61336  fedora_43-s390x-qcow2-oscap_generic.json
-b5d4e584860859f1e63bcac4ba58e76804ba81b6  fedora_43-x86_64-ami-all_customizations.json
+b3218d93df11834b30b2be138f0cee1311d4cdd7  fedora_43-x86_64-ami-all_customizations.json
 c9b1dc21470acb09c8eb747028442cccb966898f  fedora_43-x86_64-ami-empty.json
 beff240e675d9e18dade8db62d8e368cefdd0b10  fedora_43-x86_64-ami-partitioning_btrfs.json
 ee7a8c43974e2a4aafbf21bf11c53c8328be60f7  fedora_43-x86_64-ami-partitioning_lvm.json
@@ -424,7 +424,7 @@ d439b48749fd150f7f7688e311fbef18c96d8e45  fedora_43-x86_64-qcow2-minimal_pkgs.js
 13d9d938730d8fa86b05ac9e92818fce6bebb397  fedora_43-x86_64-vhd-empty.json
 5847577694df05129ae0b3012225c1396aaf50a8  fedora_43-x86_64-vmdk-empty.json
 0f655fbad0ef2a1f3e7b7b898135f9c1f326bb2c  fedora_43-x86_64-wsl-empty.json
-74ef67625d181906eecd5b90e58d41873d2952f6  rhel_10.0-aarch64-ami-all_customizations.json
+3307871006ec2ea67c3a7c2a3a6c76626bd39507  rhel_10.0-aarch64-ami-all_customizations.json
 cb5c64463acc56a95ea2435eaabc20e9cb3dc0fe  rhel_10.0-aarch64-ami-empty.json
 206f19ced076ae6ff1aa53587eb8d3d3bc9fac26  rhel_10.0-aarch64-ami-oscap_rhel10.json
 e534de94d7aca069019d264475668355e2d51ec4  rhel_10.0-aarch64-ami-partitioning_lvm.json
@@ -444,7 +444,7 @@ f00eb993e4419f6f3709ea37c64892be7428dc49  rhel_10.0-ppc64le-qcow2-empty.json
 cbcbf3122155379ec996669cfab318c9d8bdfbe3  rhel_10.0-s390x-qcow2-empty.json
 cf357b910aa74661b8bbd74c7b2f5c084ac4d0d1  rhel_10.0-s390x-qcow2-rhsm.json
 b666068351f3cbe7e3b87da5f89d25806afb3be4  rhel_10.0-s390x-tar-empty.json
-d75e5ee910320366719d7674faee50e2e1ae7900  rhel_10.0-x86_64-ami-all_customizations.json
+9629195be33070a3b873ea22e47c098c13a37aa5  rhel_10.0-x86_64-ami-all_customizations.json
 dcc2e60c412dbd969e688bc423a46e4307a3e43a  rhel_10.0-x86_64-ami-empty.json
 0a488e941ed60e8e788dae3a4bd2119ac0788b43  rhel_10.0-x86_64-ami-oscap_rhel10.json
 fca40f04b0d13dc7bd7068b8514b31841c61ab59  rhel_10.0-x86_64-ami-partitioning_lvm.json
@@ -465,7 +465,7 @@ b5a5ad3e4e331611ba674cfebb0a8e142e31dd8d  rhel_10.0-x86_64-tar-empty.json
 ab340aae21335659e5e37de7ffc46362e8c038db  rhel_10.0-x86_64-vhd-empty.json
 d7a085daa462845dd58fe71c3c4879d7c77fa8f0  rhel_10.0-x86_64-vmdk-empty.json
 65758b2c21c38bcd53b5bbc246a50197e660977d  rhel_10.0-x86_64-wsl-empty.json
-9ea58fc019b471db7fe9dabbfa0d0e5b157e2f88  rhel_10.1-aarch64-ami-all_customizations.json
+1650c2d0fb2c7a6e04bd266666a10ed5825a7851  rhel_10.1-aarch64-ami-all_customizations.json
 29306926cc3854ec7328d615c67911d8982a5977  rhel_10.1-aarch64-ami-empty.json
 b449845e232ac81789dc094fdf3617e4631f49f4  rhel_10.1-aarch64-ami-partitioning_lvm.json
 9bea674f95a013f649adda55afb47747c284f13b  rhel_10.1-aarch64-ami-partitioning_plain.json
@@ -481,7 +481,7 @@ e5b921f8a9be6b2f91b74ee248c8134d483f192a  rhel_10.1-ppc64le-qcow2-empty.json
 5f2ee4e6a94dda5bcfce2032e9b0a88b6be099aa  rhel_10.1-ppc64le-tar-empty.json
 eb180d6fd0e36a38d0983b8db8ae1e76071b1679  rhel_10.1-s390x-qcow2-empty.json
 602bbd181387f70b0ef1c65e8b6cc8dabd8068a6  rhel_10.1-s390x-tar-empty.json
-da24fcd27c3e03f7459b8e46734c3d18c96b156c  rhel_10.1-x86_64-ami-all_customizations.json
+184ee777d9ea792b2a051ad74b603ea378fcd5d3  rhel_10.1-x86_64-ami-all_customizations.json
 62f8fed150f45ccf7d053419041aa86942118825  rhel_10.1-x86_64-ami-empty.json
 0df47b1f3ef322690002891bff44fdc4613824dd  rhel_10.1-x86_64-ami-partitioning_lvm.json
 5c79bfe6225f298d24a4a6c82300fd4daed89e9c  rhel_10.1-x86_64-ami-partitioning_plain.json
@@ -503,7 +503,7 @@ a7bc8c56070efbc2ac52cf4820c2c78dc1940349  rhel_10.1-x86_64-tar-empty.json
 7cbda2fb97f0887a90b6393f3365ee5cd5e9f6af  rhel_7.9-x86_64-azure_rhui-empty.json
 8575d725f3cd68b59e64bebfcb1311f790275d9c  rhel_7.9-x86_64-ec2-empty.json
 37f55c4b863a831a1ed439ea71a2dea58c38d7f0  rhel_7.9-x86_64-qcow2-empty.json
-22f76ba45d81068534d421bf0da3b90c0e4b1314  rhel_8.10-aarch64-ami-all_customizations.json
+5e1b372d9c1a841ef2faaaf3029c16c064ae748c  rhel_8.10-aarch64-ami-all_customizations.json
 160109a22406a6618ee3b13e86adcf54e0b2ccf8  rhel_8.10-aarch64-ami-empty.json
 1acc5b7ef5be3da45d263324447c226db2ebc0ff  rhel_8.10-aarch64-ami-oscap_rhel8.json
 d7bbabfeb01267b0d4e53d7e1cffb07f4a8761d3  rhel_8.10-aarch64-ami-partitioning_lvm_noswap.json
@@ -541,7 +541,7 @@ ef30db3b3040a5209b07f2a0f6c024e155e194b2  rhel_8.10-s390x-qcow2-empty.json
 6dd834313ab01e21cacae867e4fa91079a513055  rhel_8.10-s390x-qcow2-import_rpm_gpg_keys_from_tree_rhel.json
 7dba2f88cf7c531e74240710a2b8a6d69dd07196  rhel_8.10-s390x-qcow2-rhsm.json
 8574dab2ccb471722d277e32a4fb7fffaca1bd86  rhel_8.10-s390x-tar-empty.json
-582cb3aa54a0b7b9f215c62e05cd4b3a8bc7bfe7  rhel_8.10-x86_64-ami-all_customizations.json
+8d86263e3d32be1266eb80cec0d7e22c0dc8eb41  rhel_8.10-x86_64-ami-all_customizations.json
 4d09d68a76d08aa9e5bd1534e84aa0f7386ddca7  rhel_8.10-x86_64-ami-empty.json
 8da0ce046bc2edd0bc7b0ceb4ccf3658fe105b7e  rhel_8.10-x86_64-ami-oscap_rhel8.json
 593e22bc1a83f6b9dbf129a9fde11c68a02e99f1  rhel_8.10-x86_64-ami-partitioning_lvm_noswap.json
@@ -580,7 +580,7 @@ c71274e9ab9ad548ecd87501110b056091b05c2a  rhel_8.10-x86_64-qcow2-rhsm.json
 c9b603ab322a4f7a99aea0243d521929f8c61d28  rhel_8.10-x86_64-vhd-empty.json
 f7a656964b2eaaed7fa2f8c50f6bec147e305bef  rhel_8.10-x86_64-vmdk-empty.json
 b7d004351f7127904882028cb02ca3a7c1421856  rhel_8.10-x86_64-wsl-empty.json
-22e3c3beee40476116272b1124b15cc77a1fc9da  rhel_8.4-aarch64-ami-all_customizations.json
+ad50e0a1cff678dfec301e68d00c5feed0ee44e8  rhel_8.4-aarch64-ami-all_customizations.json
 09c307f52923ffcfa4b4071910d8622367263829  rhel_8.4-aarch64-ami-empty.json
 12c543819bf2cff0d2ae268eb7deb8b8819cb012  rhel_8.4-aarch64-ami-partitioning_lvm_noswap.json
 972939de0a84982623cb5cfc23339cf6a65c22e3  rhel_8.4-aarch64-ec2-empty.json
@@ -604,7 +604,7 @@ bce59159a6cf40dfb53b8226185354a2a9444621  rhel_8.4-aarch64-wsl-empty.json
 f6ae0d300e7ad89510e45249579c626f7ef2e61e  rhel_8.4-ppc64le-tar-empty.json
 84d169a484bf2bc757becc03410c4597a45b0e7c  rhel_8.4-s390x-qcow2-empty.json
 d80435a0e845ae6ba430251727192db130751e86  rhel_8.4-s390x-tar-empty.json
-1e6dbfb260501a557866e8614c50a3f1bb659bd6  rhel_8.4-x86_64-ami-all_customizations.json
+7a840046f509854010e222f93b7e4af886f5fff1  rhel_8.4-x86_64-ami-all_customizations.json
 6e6051765bd83045a20c1b89e3c8731f5a4f4fe9  rhel_8.4-x86_64-ami-empty.json
 ae299839b6698d4faa65899c99b6291b087cff4d  rhel_8.4-x86_64-ami-partitioning_lvm_noswap.json
 4fe922fe4e7f34e0dcd615f39f89a6f1c4befff7  rhel_8.4-x86_64-ami-partitioning_lvm_r8.json
@@ -636,7 +636,7 @@ eae4a36e399fc656d9438f57f8910d2bb56f195c  rhel_8.4-x86_64-tar-empty.json
 8fd06682c94ad9b7397c48696236b0fca40c94a5  rhel_8.4-x86_64-vhd-empty.json
 81969882644609aca2231299cdb35857115b8f73  rhel_8.4-x86_64-vmdk-empty.json
 a8f1ae442fd22ecbefa3b3def336b5ed75d4175e  rhel_8.4-x86_64-wsl-empty.json
-c44ab9abec5095d9b7d98d33a268701758d732fd  rhel_8.5-aarch64-ami-all_customizations.json
+d82a3648e4aecec1b32c0a09aaff9188a3f49d42  rhel_8.5-aarch64-ami-all_customizations.json
 4d16ca8dc3cb0a5344a0cc16ca1fe40ef38eab3e  rhel_8.5-aarch64-ami-empty.json
 e8fca4d3e3d7f255a7281ad52ac241bf6aff4ca9  rhel_8.5-aarch64-ami-partitioning_lvm_noswap.json
 9c54fdd88eeb9b7c67b3da62c926e5e846ff2a9e  rhel_8.5-aarch64-ec2-empty.json
@@ -660,7 +660,7 @@ aa856484f74d9007c6bae1f6814d37d37b4569be  rhel_8.5-ppc64le-qcow2-empty.json
 420e60a859567855c107cac4825a03f870018c26  rhel_8.5-ppc64le-tar-empty.json
 5b70e414616bec1f8603576671184fbbb07fc67c  rhel_8.5-s390x-qcow2-empty.json
 4ad342f067c3b8304055f4d5b414c690297200db  rhel_8.5-s390x-tar-empty.json
-3496fab7d58d17cda666c2354ac81e017d2723d1  rhel_8.5-x86_64-ami-all_customizations.json
+c146136c5b0cc4b8b1f46cf78c82049c014307ca  rhel_8.5-x86_64-ami-all_customizations.json
 26077320d2a0d6313212d856c40c481280c226d8  rhel_8.5-x86_64-ami-empty.json
 1197ac68d36a6941f155b01bd903a57f014faf3c  rhel_8.5-x86_64-ami-partitioning_lvm_noswap.json
 1cdbff545d421ee41ee9db9725b95a4945a8fea1  rhel_8.5-x86_64-ami-partitioning_lvm_r8.json
@@ -691,7 +691,7 @@ e32696400d35309b2b216fa8b58141fba997ee79  rhel_8.5-x86_64-qcow2-empty.json
 7fa8a484dc5739ff4b7c80e57c1f87b0f7841295  rhel_8.5-x86_64-vhd-empty.json
 be83431ed0be3b7abfc512377a42991b82daf223  rhel_8.5-x86_64-vmdk-empty.json
 6f0a7ef152bf75d10d5e2c8ccf3ae2efaedd0583  rhel_8.5-x86_64-wsl-empty.json
-d7bfa80a7079b6ff584910cf0975ed1b96f6afa0  rhel_8.6-aarch64-ami-all_customizations.json
+6c16e9fbf2ee031a90a1f7f23696d4aa2b3888a2  rhel_8.6-aarch64-ami-all_customizations.json
 a1ea251ec4b7b4dbf970df3d5282495e9d6d345d  rhel_8.6-aarch64-ami-empty.json
 0fe1ced773ed559223a7d51c5c3275aa27b22c8b  rhel_8.6-aarch64-ami-partitioning_lvm_noswap.json
 b0e253b4745491e6940ae88d62dd32cc94f4c8ca  rhel_8.6-aarch64-azure_rhui-empty.json
@@ -719,7 +719,7 @@ ed602a4f77803e5d098e9d3a130ce33dedb08f34  rhel_8.6-aarch64-wsl-empty.json
 505d7d91b9dccfd9aa49af01affdc8bc1bb47979  rhel_8.6-ppc64le-tar-empty.json
 af203ea47827bc5b337febb4045413144aa87eb0  rhel_8.6-s390x-qcow2-empty.json
 87f50562d541eb5fa3fbe9f89d8fbb5e90982eb3  rhel_8.6-s390x-tar-empty.json
-d2c37f5590449204156e638e44346177034b0f27  rhel_8.6-x86_64-ami-all_customizations.json
+84aff42198cf376288a0f4b4c7daba560742d4aa  rhel_8.6-x86_64-ami-all_customizations.json
 6f291c35b8da6727867ab8c49a4b1d4b2964d9f2  rhel_8.6-x86_64-ami-empty.json
 b9e991e3b95ba4820402322750616af10b64bb58  rhel_8.6-x86_64-ami-partitioning_lvm_noswap.json
 1fa575b9f6390ecaa1a62eb7a091e5715255ac76  rhel_8.6-x86_64-ami-partitioning_lvm_r8.json
@@ -754,7 +754,7 @@ d90787ffb661c0d7f436a11dc8534554252d6e37  rhel_8.6-x86_64-tar-empty.json
 70de51a9d35a8b012a2a2216ce287368d2999285  rhel_8.6-x86_64-vhd-empty.json
 6742f7f27373dfa611370ecaa588b72cfb9d8cfc  rhel_8.6-x86_64-vmdk-empty.json
 e522735754e24fdc734cc0a68ba55fb05a83e8c7  rhel_8.6-x86_64-wsl-empty.json
-b46b6779055dc70e43fb503db8f8115d5a17398e  rhel_8.7-aarch64-ami-all_customizations.json
+91a6967a75c73af4300fe091d29d50926cba98c8  rhel_8.7-aarch64-ami-all_customizations.json
 7760632fed017fe90cfb9481397d50297c4a0d0f  rhel_8.7-aarch64-ami-empty.json
 5702d76b883dcbee876efed9404bec573b9139db  rhel_8.7-aarch64-ami-partitioning_lvm_noswap.json
 a0bdc4a226b0b0e5a5dbe5a05eb8ab57f1fdbcda  rhel_8.7-aarch64-azure_rhui-empty.json
@@ -785,7 +785,7 @@ e585a698a26c29218ed05fe6c225f60074976d86  rhel_8.7-ppc64le-qcow2-oscap_generic.j
 b0c150b6f4c67a156c54273f985d4443788c2429  rhel_8.7-s390x-qcow2-empty.json
 7b3e556e1ad1d264c0fd0930eb34eaef1e5a7ef0  rhel_8.7-s390x-qcow2-oscap_generic.json
 a868bd417104b933dc72683e92105c1a3a0ef42f  rhel_8.7-s390x-tar-empty.json
-3e4b408235cf05ee8447cb82e4aa2a8f5cf5dcfd  rhel_8.7-x86_64-ami-all_customizations.json
+d42ff44e002a6322074490dd2a9589f8fca5f53e  rhel_8.7-x86_64-ami-all_customizations.json
 b361483df8f62d857629d823f00e1ce7b50b4629  rhel_8.7-x86_64-ami-empty.json
 12efabdc9b73f0af8ee19ca39aec941abe61dca2  rhel_8.7-x86_64-ami-partitioning_lvm_noswap.json
 72231dd616a7dd952c25e4f8cf6b2f4c849bae52  rhel_8.7-x86_64-ami-partitioning_lvm_r8.json
@@ -821,7 +821,7 @@ d7b1f6873b4df3af79059a042979cb8490f5c43e  rhel_8.7-x86_64-tar-empty.json
 4ad0e4a19ee862b6a2fbf8b12e5118d75803d590  rhel_8.7-x86_64-vhd-empty.json
 92d3d73cef186d0b0d66d9871653ed2bf6be948e  rhel_8.7-x86_64-vmdk-empty.json
 2774f74bc0747bde4d5c40c148d102d3e33f28b9  rhel_8.7-x86_64-wsl-empty.json
-90011edd36b2f3726e1153e0a938e87686596870  rhel_8.8-aarch64-ami-all_customizations.json
+e3f3d3d95426a315a05f24f9d809f27cdd77cafd  rhel_8.8-aarch64-ami-all_customizations.json
 9aa74640578a1c8d76fa45574c015084478e587a  rhel_8.8-aarch64-ami-empty.json
 c06da61e2823af05125b49978c634b55b61fc6ee  rhel_8.8-aarch64-ami-partitioning_lvm_noswap.json
 8d6695700b60a65cada000203e360d58f5ce9152  rhel_8.8-aarch64-azure_rhui-empty.json
@@ -852,7 +852,7 @@ f458fc5258d2a9a8b5ebef0e7d23ec3193dc8270  rhel_8.8-ppc64le-tar-empty.json
 c7f9c8e812e7544333a40d662208724bfcb09f3c  rhel_8.8-s390x-qcow2-empty.json
 d12dc013bc937e87616818d94014c35fc6ff30f8  rhel_8.8-s390x-qcow2-oscap_generic.json
 7ddaa179b783e77b19855419db775ade1cfe8c3a  rhel_8.8-s390x-tar-empty.json
-f311759cba3510b859639219cb5363827108e8ed  rhel_8.8-x86_64-ami-all_customizations.json
+b0950eec8614266613e2da60a031480ee1f40e76  rhel_8.8-x86_64-ami-all_customizations.json
 15a745b2c94f2f67190a2a6fe1d89c75fef9fcf2  rhel_8.8-x86_64-ami-empty.json
 f66c88d96c215da90ae6886335481ac8e399b8ac  rhel_8.8-x86_64-ami-partitioning_lvm_noswap.json
 51a246c3820a3b8b773e07d89f384be093d97561  rhel_8.8-x86_64-ami-partitioning_lvm_r8.json
@@ -888,7 +888,7 @@ f67c68df72759310310041a41e6159017fc05a91  rhel_8.8-x86_64-oci-empty.json
 b2eadf1ff2c4f9c7497431cd06484ce7b2367078  rhel_8.8-x86_64-vhd-empty.json
 da136c5154aa6b4a426998138aa2a39bfa3b1418  rhel_8.8-x86_64-vmdk-empty.json
 6432c968d30a68c0eb24ea68fdb6da6c31081fa9  rhel_8.8-x86_64-wsl-empty.json
-e2a355bcf31bc69d28d1c47a3c4587487a77fc2e  rhel_8.9-aarch64-ami-all_customizations.json
+194571af9d7687f10458f1a482ac9b5785d07ff7  rhel_8.9-aarch64-ami-all_customizations.json
 45c24c3ae160a87cfb6b578a71ba7faa91f7378e  rhel_8.9-aarch64-ami-empty.json
 9313bd149cdfdadba798299f87d1514f986c8d23  rhel_8.9-aarch64-ami-partitioning_lvm_noswap.json
 21901ca3bea0729e675b71fc3652dc12a97f5923  rhel_8.9-aarch64-azure_rhui-empty.json
@@ -922,7 +922,7 @@ e4b0ac7af3c648910c090e8b224277d6f245c22f  rhel_8.9-ppc64le-tar-empty.json
 219bba8e01c2465a2b7ad72b1eb9eeaeecdfd1f8  rhel_8.9-s390x-qcow2-empty.json
 5b51bd179b1d288b47841442fa15c2db115e4b4a  rhel_8.9-s390x-qcow2-oscap_generic.json
 19e4cd74326d34b9f0e92c0f4fa32c03466df6ec  rhel_8.9-s390x-tar-empty.json
-66874e8779125498a4d3f5c133f999fd94c8bf11  rhel_8.9-x86_64-ami-all_customizations.json
+969240442154ce42afd73a5d0b84490409b674ed  rhel_8.9-x86_64-ami-all_customizations.json
 c9c41c6ed10914e69ce8b4da80315934d0b6401b  rhel_8.9-x86_64-ami-empty.json
 487e2a40ddc0ad16710dffb7a369871ea3881bc1  rhel_8.9-x86_64-ami-partitioning_lvm_noswap.json
 4975b19a3afddeec84ae6986fe69c806cc4ae49e  rhel_8.9-x86_64-ami-partitioning_lvm_r8.json
@@ -959,7 +959,7 @@ ac607eaeafdd2f5083c46052a7c41ac8534950de  rhel_8.9-x86_64-qcow2-oscap_generic.js
 807b1836250ed48229a52fef3e0e82e2b2b263fd  rhel_8.9-x86_64-vhd-empty.json
 bd6389e79061118b11f34bedb59c26ea86f88d41  rhel_8.9-x86_64-vmdk-empty.json
 fc626702baf62314ea6f9366c01f14bf487d1382  rhel_8.9-x86_64-wsl-empty.json
-1a7caefb2b387284c94c329b56a76ff1d65d321d  rhel_9.0-aarch64-ami-all_customizations.json
+da264ebbc6f438f46489ca967a3cff23e1dac65c  rhel_9.0-aarch64-ami-all_customizations.json
 7d60e358072dd567a02dd104846c57c35a92c978  rhel_9.0-aarch64-ami-empty.json
 0662e3131ab360d21f6635eef4ce8ffabcee6408  rhel_9.0-aarch64-ami-partitioning_lvm.json
 62cb290a5e3b9168e4868446402fda3f42e2fb42  rhel_9.0-aarch64-ami-partitioning_plain.json
@@ -992,7 +992,7 @@ b68fd568bd4eb753f62d3d07f3c061686af77fb9  rhel_9.0-ppc64le-qcow2-empty.json
 42cd0bc3e7afe14a2e8e9ac1cbb1fe9228108221  rhel_9.0-ppc64le-tar-empty.json
 ce24f9eab61d00fdf3da01fad291266d2b3e065f  rhel_9.0-s390x-qcow2-empty.json
 45ea5c54fb1c4d989e2f5064bf058939164b6499  rhel_9.0-s390x-tar-empty.json
-1e3970569b0e2eb66f3327da1c7d6a34e4e848e6  rhel_9.0-x86_64-ami-all_customizations.json
+f9836e0fce9b4f501401d14757c4f1414c1ba5d7  rhel_9.0-x86_64-ami-all_customizations.json
 266a5cea143be9409a72fe2818b2d4bd64ea4ad2  rhel_9.0-x86_64-ami-empty.json
 be2181dfcb77b48f7860aaf3e99eaa84c1893de6  rhel_9.0-x86_64-ami-partitioning_lvm.json
 0ec92c8aff8b780d57049cffe469c86135f2b01d  rhel_9.0-x86_64-ami-partitioning_plain.json
@@ -1028,7 +1028,7 @@ b444d54273c70fb23a9a314d7e42f6306052a78d  rhel_9.0-x86_64-tar-empty.json
 49c2452c2cd36f5c07d197f440c43032044621a8  rhel_9.0-x86_64-vhd-empty.json
 0e7a4fc13c91d237733310fffa177cde2f7b0ec5  rhel_9.0-x86_64-vmdk-empty.json
 caf7b4a58ed9c87cac35ab7e8430edcbc813f437  rhel_9.0-x86_64-wsl-empty.json
-fb76590fef52953da8c166247e6fd4bb29425491  rhel_9.1-aarch64-ami-all_customizations.json
+9623db0430280debd74c4ba74d9a74bd7be06b65  rhel_9.1-aarch64-ami-all_customizations.json
 a970b2c4ed92e8d840732e83f62c35a0822516ac  rhel_9.1-aarch64-ami-empty.json
 6d02b3e6f9e6580ea9528b36e5b99ab0909c1cbe  rhel_9.1-aarch64-ami-partitioning_lvm.json
 e4537cfa85522e6f28188cb9b5ecb085a6d8af1d  rhel_9.1-aarch64-ami-partitioning_plain.json
@@ -1064,7 +1064,7 @@ fd7bf56a55cf40543d83d40393bb0a3a92be55b1  rhel_9.1-ppc64le-tar-empty.json
 64d4bb8a0315c0ed611cbef58b728856b104f654  rhel_9.1-s390x-qcow2-empty.json
 6cc7868605bd39dc58578b15a5b4d6b132c8b034  rhel_9.1-s390x-qcow2-oscap_generic.json
 bf6ffed39753576ab112662615c4b280dcc36136  rhel_9.1-s390x-tar-empty.json
-69c407c7fc8d6ff13ea645e7c45674764f4765a2  rhel_9.1-x86_64-ami-all_customizations.json
+08e9258868f3438e72dabc9f02d36ed5728a7dfe  rhel_9.1-x86_64-ami-all_customizations.json
 e03f67b6ade85cdc10451d994503ddf8e911424c  rhel_9.1-x86_64-ami-empty.json
 e0bac228869db24d94e9c7e2f3dae6dbc2557048  rhel_9.1-x86_64-ami-partitioning_lvm.json
 a7918ed6557205d58ebe0c549715ed3eb0f01cb9  rhel_9.1-x86_64-ami-partitioning_plain.json
@@ -1101,7 +1101,7 @@ e25297b7c3b72de740d726aa9e382eaec3dd69ba  rhel_9.1-x86_64-tar-empty.json
 8fbd2d3ba31ca030e22660e565442eae6211d5dd  rhel_9.1-x86_64-vhd-empty.json
 5fb0fb8c155a2f1ca048bcc591c99ae269035056  rhel_9.1-x86_64-vmdk-empty.json
 d276cc9c140593ae90a9c323d382ff29c42658d5  rhel_9.1-x86_64-wsl-empty.json
-34adccfe388e97f8d6a022259ce50afed4fb51ab  rhel_9.2-aarch64-ami-all_customizations.json
+c486d8630c1e2b9759434224dbe9bba08d54b207  rhel_9.2-aarch64-ami-all_customizations.json
 9198fb8d8075b65c1016c1025f7e7d9535ec3c83  rhel_9.2-aarch64-ami-empty.json
 a625e566f188a3a98a007e3b3f0eaa4854e6b278  rhel_9.2-aarch64-ami-partitioning_lvm.json
 21942bc76cf25b15e36e3564a02de6d22278a717  rhel_9.2-aarch64-ami-partitioning_plain.json
@@ -1141,7 +1141,7 @@ bc15f345a27dc22def3f277dcf620e0c933de880  rhel_9.2-ppc64le-qcow2-oscap_generic.j
 2a36743973ba1415b386047db801bd503f7016f2  rhel_9.2-s390x-qcow2-empty.json
 a789d236843f93ade46f26a45273200258089192  rhel_9.2-s390x-qcow2-oscap_generic.json
 51d9555a62a51819ea5da1b833edd91d2c59ae29  rhel_9.2-s390x-tar-empty.json
-692b0b19143a6a97f4ca876c5fc5ba51f1a51064  rhel_9.2-x86_64-ami-all_customizations.json
+2c68d4d1d115b0edb0ff859601b77212ade27d94  rhel_9.2-x86_64-ami-all_customizations.json
 b380d977fca3b81e8ccd9cf4923b377acdf5b8d8  rhel_9.2-x86_64-ami-empty.json
 fbf8a15ea866bce0cca90d34cd98071868b98a0c  rhel_9.2-x86_64-ami-partitioning_lvm.json
 6c8f884a039354c4508a3001bb4259cd19dcdf22  rhel_9.2-x86_64-ami-partitioning_plain.json
@@ -1182,7 +1182,7 @@ fc3e357a3b4989935a94b03140867f2b06b242be  rhel_9.2-x86_64-tar-empty.json
 fd2ac975738d2e441cedd705da3fb9d929d4c7e9  rhel_9.2-x86_64-vhd-empty.json
 15cf88a8523fab505ef422cb8a171b9d2b4d19ba  rhel_9.2-x86_64-vmdk-empty.json
 1ef825cef1008fb45bcdb87defd51d30683eb3e4  rhel_9.2-x86_64-wsl-empty.json
-4fe218a7dbad0dcfc68bf3053f611cea3d64f07f  rhel_9.3-aarch64-ami-all_customizations.json
+bd1d0bf666ada6aed8147f6d122b95f394adc6a7  rhel_9.3-aarch64-ami-all_customizations.json
 614e4934bbcb8c4c3b75fe95d42bd7bb40f7ae23  rhel_9.3-aarch64-ami-empty.json
 5ef8325b297d20a835afdf88f7713922de377f1a  rhel_9.3-aarch64-ami-partitioning_lvm.json
 2f0faa09495a3df482c4a6bc82a339ad5818b845  rhel_9.3-aarch64-ami-partitioning_plain.json
@@ -1227,7 +1227,7 @@ ec141f7c7f5ba15e65ab88093e3f03d60b2e3749  rhel_9.3-ppc64le-qcow2-empty.json
 b387f1ec5a61e5574c3b6337a449ea494a741c4e  rhel_9.3-s390x-qcow2-all_with_fips.json
 74503dd1fd97216fa2f909853782a6f617975103  rhel_9.3-s390x-qcow2-empty.json
 ca28b0d403194fa93d7291df923b5d97b70bc7f4  rhel_9.3-s390x-tar-empty.json
-866c9dd67df219903f34376d484f6a439236cc8f  rhel_9.3-x86_64-ami-all_customizations.json
+798d3ad6570c056294e6d1e1ff62ebcbcfcc31db  rhel_9.3-x86_64-ami-all_customizations.json
 512061ae2ef0f823153bb9ee2fc7e72290ee4019  rhel_9.3-x86_64-ami-empty.json
 92888872630400c41b00c240b1b29e8a2ed62839  rhel_9.3-x86_64-ami-partitioning_lvm.json
 d47b7b8880fe1e1e59ef0757c93b51fc3154c3b4  rhel_9.3-x86_64-ami-partitioning_plain.json
@@ -1273,7 +1273,7 @@ e884ae7bd0ffd708fedbb40d3945a6e0e49a15a5  rhel_9.3-x86_64-qcow2-empty.json
 663392b103d560bffc624d1a3364467f3b7bb790  rhel_9.3-x86_64-vhd-empty.json
 b2c817dee64c14e5c650451803250dbaa811daaa  rhel_9.3-x86_64-vmdk-empty.json
 f86118e7172a68ad4adb7a888a8b2f9c841b6e1e  rhel_9.3-x86_64-wsl-empty.json
-e22626e4c444a70127406bcf24eabfb9e3a23a18  rhel_9.4-aarch64-ami-all_customizations.json
+e006a506d6757863d7551c9b1ffd2ea7bccd829c  rhel_9.4-aarch64-ami-all_customizations.json
 526ed6aa5b9850da683e3cacfe382180a491a1bb  rhel_9.4-aarch64-ami-empty.json
 60a4ab5e1be8af8b07519ed5a8d792ede3d8a98b  rhel_9.4-aarch64-ami-oscap_rhel9.json
 59cfaec5b737a7454e088e2ea69d2b814a1c8f04  rhel_9.4-aarch64-ami-oscap_rhel9_with_json_tailoring.json
@@ -1321,7 +1321,7 @@ b1ccb7020eca1981274c9dd6089f7eed6b497018  rhel_9.4-ppc64le-tar-empty.json
 7b90d5615adfeddc3c9e7719cb144ef0966ea22e  rhel_9.4-s390x-qcow2-all_with_fips.json
 9f2ea203b81aa30b986bb1c75aef3b17d0f73fef  rhel_9.4-s390x-qcow2-empty.json
 9b10b14fbcf7eb711afbeec99bf1fddce1820978  rhel_9.4-s390x-tar-empty.json
-0091b2eea392e305efc8ad9cc74bbfb3aa3c6eaa  rhel_9.4-x86_64-ami-all_customizations.json
+91f7bd75e5d9ce181cbbe958b067a52ecd6139f3  rhel_9.4-x86_64-ami-all_customizations.json
 118a38dd83ab245d51adb407d89385a68fedaf5c  rhel_9.4-x86_64-ami-empty.json
 eeefc19cc7de6df84d5c0430157434c6f5f3d590  rhel_9.4-x86_64-ami-oscap_rhel9.json
 a7421ab943f298a8be54b1e0d263beaa45b74a13  rhel_9.4-x86_64-ami-oscap_rhel9_with_json_tailoring.json
@@ -1371,7 +1371,7 @@ b7187699ee3af74e66715b98ee99fe40b3b1b0d9  rhel_9.4-x86_64-tar-empty.json
 7a1ccb2f95c9b9468a78e35cc534fa346f4525f9  rhel_9.4-x86_64-vhd-empty.json
 b12d5d44818b21606009d20de23bbff0d535b7cd  rhel_9.4-x86_64-vmdk-empty.json
 66f67b20bc67bf1262ea7cf6491682bcec797bc3  rhel_9.4-x86_64-wsl-empty.json
-bb725296981672f005436c0cd9b2e9c569591803  rhel_9.5-aarch64-ami-all_customizations.json
+36a791c5b82b182ad3d73350892d776d00e9351b  rhel_9.5-aarch64-ami-all_customizations.json
 e56ae5dd80213234edf4b6b832001ea3fc75570a  rhel_9.5-aarch64-ami-empty.json
 7838a2f63a35e4e4b9aa600a96e0684d6a1037eb  rhel_9.5-aarch64-ami-partitioning_lvm.json
 ae608bdf9324df05ac943252f299c6ae8069c24c  rhel_9.5-aarch64-ami-partitioning_plain.json
@@ -1410,7 +1410,7 @@ b42c84929693bbc53ae5fb6a7f3061f86f44f77a  rhel_9.5-ppc64le-tar-empty.json
 5a5f36f1d656c9dfa8cda84fe3c61257707e502a  rhel_9.5-s390x-qcow2-import_rpm_gpg_keys_from_tree_rhel.json
 d798681c98c219f9b15c4680074e0a1a74fba519  rhel_9.5-s390x-qcow2-rhsm.json
 19e1c6657c08583f5fc2cdcf3daf48fc0dfd7d63  rhel_9.5-s390x-tar-empty.json
-d766b87f9f8c915d430eed203ac890423bfed39d  rhel_9.5-x86_64-ami-all_customizations.json
+16ffe12662b7663e474a33cb2341e74240fbf98c  rhel_9.5-x86_64-ami-all_customizations.json
 8bd62eacecf74e94f1afbeb4b78c8c82e4cd6f8a  rhel_9.5-x86_64-ami-empty.json
 015eb86b59f8059e19c7a34b5a97d00d1a57086c  rhel_9.5-x86_64-ami-partitioning_lvm.json
 a9c044773b1202c5a22755917a51e0d6a2fd4c21  rhel_9.5-x86_64-ami-partitioning_plain.json
@@ -1448,7 +1448,7 @@ efba91cf14ee915a07d2e6d1f329acdc6ac7325d  rhel_9.5-x86_64-qcow2-import_rpm_gpg_k
 a8d859dd4cd32f514efa1c9e2b405fd9f59d2a28  rhel_9.5-x86_64-vhd-empty.json
 1aeeef7cff91cb649c9d9ffc6cdd2f1dd8b7763c  rhel_9.5-x86_64-vmdk-empty.json
 8ccde6b3fc10a3ee8d5eb76ad4adf7177b10b360  rhel_9.5-x86_64-wsl-empty.json
-b93d712ac74c6d11085f8978f655a675a36eba32  rhel_9.6-aarch64-ami-all_customizations.json
+920d650e44dfa342cacbf7aab160179217afe889  rhel_9.6-aarch64-ami-all_customizations.json
 0b17ae417503cc59763353537fa75f80d20d8bbb  rhel_9.6-aarch64-ami-empty.json
 223142020104a643114880de569471542e5bb8f1  rhel_9.6-aarch64-ami-partitioning_lvm.json
 da856e6bc192aaea49c5e7f8d08340e1e72d182b  rhel_9.6-aarch64-ami-partitioning_plain.json
@@ -1483,7 +1483,7 @@ ccfbd182eaecb197d112d2112c303ff053e825a4  rhel_9.6-aarch64-qcow2-empty.json
 107b0a0bb1fd4bdc5299e47970ad551d9c7b7fee  rhel_9.6-ppc64le-tar-empty.json
 1da16435139d58480d537eef91d86eaf73a7e7b2  rhel_9.6-s390x-qcow2-empty.json
 81b4ad9f54499d6d18e5df7e8a76979e92eca139  rhel_9.6-s390x-tar-empty.json
-fadf5b8017d27250421ce71ac56c84f8ac0f2a22  rhel_9.6-x86_64-ami-all_customizations.json
+fe8be92b9154c7cfefbbf9af4ef4f917bf91290a  rhel_9.6-x86_64-ami-all_customizations.json
 77964b39d537a017105e2c9f4d01c4cf82e6e5e8  rhel_9.6-x86_64-ami-empty.json
 4a1e439818d5133ca996dabff5d4c7478e7c4597  rhel_9.6-x86_64-ami-partitioning_lvm.json
 65b5ddc65d56338efa4a57f3dfe2570bb4918e5d  rhel_9.6-x86_64-ami-partitioning_plain.json
@@ -1521,7 +1521,7 @@ c2f74441e92428be632d8e0e49e1bc86f6175b6c  rhel_9.6-x86_64-tar-empty.json
 5b15214029d80e2f32ad4a54b0811e0b4e485d51  rhel_9.6-x86_64-vhd-empty.json
 6501b01bc7b98dfb840783d0caf0e1699b494d5c  rhel_9.6-x86_64-vmdk-empty.json
 d6a7825751368f3bdc91955f81a71865e7c00886  rhel_9.6-x86_64-wsl-empty.json
-cd0a7b14c11f7fea3b562cd10971d1144e683970  rhel_9.7-aarch64-ami-all_customizations.json
+6ba14e2f65fdfd91fe03b313a825ac5eaf92d9f6  rhel_9.7-aarch64-ami-all_customizations.json
 f47e881b206136b136676eb30d80b1a9da8ce7fc  rhel_9.7-aarch64-ami-empty.json
 70419a422df39b6aab72d0fbbeea3a94a19ca016  rhel_9.7-aarch64-ami-partitioning_lvm.json
 5d649f28b90d4b1e525c3c2213752dde4ba89b0b  rhel_9.7-aarch64-ami-partitioning_plain.json
@@ -1556,7 +1556,7 @@ e77008a7fd0806c0046ac9eefd81fd07c8ca2b33  rhel_9.7-aarch64-vhd-empty.json
 19a2a480ea2d8778eeff087f2b96e3169c7bee17  rhel_9.7-ppc64le-tar-empty.json
 e86b671f2d82b2d12ab9fb8edfdcd14c25ab6949  rhel_9.7-s390x-qcow2-empty.json
 e7e54caff9e94371a435141b750132a3b32a9250  rhel_9.7-s390x-tar-empty.json
-54938cd2d808e055d407fc20130236ffaeac606c  rhel_9.7-x86_64-ami-all_customizations.json
+4fd5da61e82f2c9e09ab392d86f996a4acf7374c  rhel_9.7-x86_64-ami-all_customizations.json
 56f150cbfa2cb37ef517243f5fa39ef23a30a064  rhel_9.7-x86_64-ami-empty.json
 941dd5f5d94bb482a9d48e52e4b9a0d3f4e22559  rhel_9.7-x86_64-ami-partitioning_lvm.json
 16cfe257e013e6613f85adcb1c8708cdafecf32f  rhel_9.7-x86_64-ami-partitioning_plain.json
