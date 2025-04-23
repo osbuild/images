@@ -35,7 +35,7 @@ jobs:
           git checkout -b "${branch}"
           git add -A
           git commit -m "build(deps): Update dependencies via gobump"
-          git push -f https://"$GITHUB_TOKEN"@github.com/schutzbot/images.git
+          git push -f "https://$GH_TOKEN@github.com/schutzbot/images.git"
           gh pr create \
             -t "Update dependencies $(date -I)" \
             -F "github_pr_body.txt" \
