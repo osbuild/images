@@ -767,6 +767,9 @@ image_types:
           # - "gce-disk-expand"
           # cloud-init is a replacement for- "google-compute-engine" remove once the package is available
           - "cloud-init"
+          # 'cloud-utils-growpart' is needed by cloud-init to be able to resize the root partition. Remove once
+          # we move to GCP guest tools
+          - cloud-utils-growpart
           # Not explicitly included in GCP kickstart, but present on the image
           # for time synchronization
           - "chrony"
