@@ -11,20 +11,20 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.6.0
 	github.com/Azure/go-autorest/autorest v0.11.30
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.13
-	github.com/BurntSushi/toml v1.4.0
-	github.com/aws/aws-sdk-go v1.55.6
+	github.com/BurntSushi/toml v1.5.0
+	github.com/aws/aws-sdk-go v1.55.7
 	github.com/containers/common v0.62.0
 	github.com/containers/image/v5 v5.34.0
 	github.com/containers/storage v1.57.1
 	github.com/gobwas/glob v0.2.3
-	github.com/golang-jwt/jwt/v4 v4.5.1
-	github.com/google/go-cmp v0.6.0
+	github.com/golang-jwt/jwt/v4 v4.5.2
+	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/hashicorp/go-version v1.7.0
 	github.com/kolo/xmlrpc v0.0.0-20220921171641-a4b6fa1dd06b
 	github.com/opencontainers/go-digest v1.0.0
-	github.com/opencontainers/image-spec v1.1.0
+	github.com/opencontainers/image-spec v1.1.1
 	github.com/oracle/oci-go-sdk/v54 v54.0.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.9.1
