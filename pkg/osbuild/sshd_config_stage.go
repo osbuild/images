@@ -6,10 +6,13 @@ import (
 )
 
 type SshdConfigConfig struct {
-	PasswordAuthentication          *bool                `json:"PasswordAuthentication,omitempty"`
-	ChallengeResponseAuthentication *bool                `json:"ChallengeResponseAuthentication,omitempty"`
-	ClientAliveInterval             *int                 `json:"ClientAliveInterval,omitempty"`
-	PermitRootLogin                 PermitRootLoginValue `json:"PermitRootLogin,omitempty"`
+	// XXX: json/yaml not consistent :(
+	PasswordAuthentication          *bool `json:"PasswordAuthentication,omitempty" yaml:"password_authentication,omitempty"`
+	ChallengeResponseAuthentication *bool `json:"ChallengeResponseAuthentication,omitempty"`
+	// XXX: json/yaml not consistent :(
+	ClientAliveInterval *int `json:"ClientAliveInterval,omitempty" yaml:"client_alive_interval,omitempty"`
+	// XXX: json/yaml not consistent :(
+	PermitRootLogin PermitRootLoginValue `json:"PermitRootLogin,omitempty" yaml:"permit_root_login,omitempty"`
 }
 
 // PermitRootLoginValue is defined to represent all valid types of the
@@ -43,10 +46,11 @@ const (
 // Unexported struct used for Unmarshalling of SshdConfigConfig due to
 // 'PermitRootLogin' being a boolean or a string.
 type rawSshdConfigConfig struct {
-	PasswordAuthentication          *bool       `json:"PasswordAuthentication,omitempty"`
-	ChallengeResponseAuthentication *bool       `json:"ChallengeResponseAuthentication,omitempty"`
-	ClientAliveInterval             *int        `json:"ClientAliveInterval,omitempty"`
-	PermitRootLogin                 interface{} `json:"PermitRootLogin,omitempty"`
+	// XXX: yaml/json inconcsistent
+	PasswordAuthentication          *bool       `json:"PasswordAuthentication,omitempty" yaml:"password_authentication,omitempty"`
+	ChallengeResponseAuthentication *bool       `json:"ChallengeResponseAuthentication,omitempty" yaml:"challenge_response_authentication,omitempty"`
+	ClientAliveInterval             *int        `json:"ClientAliveInterval,omitempty" yaml:"client_alive_interval,omitempty"`
+	PermitRootLogin                 interface{} `json:"PermitRootLogin,omitempty" yaml:"permit_root_login,omitempty"`
 }
 
 func (c *SshdConfigConfig) UnmarshalJSON(data []byte) error {
@@ -72,6 +76,33 @@ func (c *SshdConfigConfig) UnmarshalJSON(data []byte) error {
 	c.ClientAliveInterval = rawConfig.ClientAliveInterval
 	c.PermitRootLogin = permitRootLogin
 
+	return nil
+}
+
+func (c *SshdConfigConfig) UnmarshalYAML(unmarshal func(any) error) error {
+	// XX: mostly duplicating the JSON above,
+	// because keys are different we cannot use common.UnmarshalViaJSON
+	var rawConfig rawSshdConfigConfig
+	if err := unmarshal(&rawConfig); err != nil {
+		return err
+	}
+
+	var permitRootLogin PermitRootLoginValue
+	if rawConfig.PermitRootLogin != nil {
+		switch valueType := rawConfig.PermitRootLogin.(type) {
+		case bool:
+			permitRootLogin = PermitRootLoginValueBool(rawConfig.PermitRootLogin.(bool))
+		case string:
+			permitRootLogin = PermitRootLoginValueStr(rawConfig.PermitRootLogin.(string))
+		default:
+			return fmt.Errorf("the 'PermitRootLogin' item has unsupported type %q", valueType)
+		}
+	}
+
+	c.PasswordAuthentication = rawConfig.PasswordAuthentication
+	c.ChallengeResponseAuthentication = rawConfig.ChallengeResponseAuthentication
+	c.ClientAliveInterval = rawConfig.ClientAliveInterval
+	c.PermitRootLogin = permitRootLogin
 	return nil
 }
 

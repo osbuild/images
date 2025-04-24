@@ -2,10 +2,10 @@ package osbuild
 
 import (
 	"encoding/json"
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v3"
 
 	"github.com/osbuild/images/internal/common"
 )
@@ -40,7 +40,18 @@ func TestJsonSshdConfigStage(t *testing.T) {
 	var inputOptions SshdConfigStageOptions
 	err := json.Unmarshal([]byte(inputString), &inputOptions)
 	assert.NoError(t, err, "failed to parse JSON into sshd config")
-	assert.True(t, reflect.DeepEqual(expectedOptions, inputOptions))
+	assert.Equal(t, expectedOptions, inputOptions)
+
+	inputStringYAML := `
+config:
+  password_authentication: false
+  challenge_response_authentication: false
+  client_alive_interval: 180
+  permit_root_login: "prohibit-password"
+`
+	err = yaml.Unmarshal([]byte(inputStringYAML), &inputOptions)
+	assert.NoError(t, err)
+	assert.Equal(t, expectedOptions, inputOptions)
 
 	// Second try the other way around with stress on missing values
 	// for those parameters that the user didn't specify.
