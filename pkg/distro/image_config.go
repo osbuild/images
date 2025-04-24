@@ -57,7 +57,6 @@ type ImageConfig struct {
 	Tmpfilesd           []*osbuild.TmpfilesdStageOptions
 	PamLimitsConf       []*osbuild.PamLimitsConfStageOptions
 	Sysctld             []*osbuild.SysctldStageOptions
-	DNFConfig           []*osbuild.DNFConfigStageOptions
 	SshdConfig          *osbuild.SshdConfigStageOptions
 	Authconfig          *osbuild.AuthconfigStageOptions
 	PwQuality           *osbuild.PwqualityConfStageOptions
@@ -72,6 +71,7 @@ type ImageConfig struct {
 	NetworkManager      *osbuild.NMConfStageOptions
 
 	WSLConfig *WSLConfig
+	DNFConfig *DNFConfig
 
 	Files       []*fsnode.File
 	Directories []*fsnode.Directory
@@ -121,6 +121,11 @@ type WSLConfig struct {
 	BootSystemd bool
 }
 
+type DNFConfig struct {
+	SetReleaseVerVar bool
+	ForceIPv4        bool
+}
+
 // InheritFrom inherits unset values from the provided parent configuration and
 // returns a new structure instance, which is a result of the inheritance.
 func (c *ImageConfig) InheritFrom(parentConfig *ImageConfig) *ImageConfig {
@@ -144,6 +149,34 @@ func (c *ImageConfig) InheritFrom(parentConfig *ImageConfig) *ImageConfig {
 		}
 	}
 	return &finalConfig
+}
+
+func (c *ImageConfig) DNFConfigOptions(osVersion string) []*osbuild.DNFConfigStageOptions {
+	if c.DNFConfig == nil {
+		return nil
+	}
+	var res []*osbuild.DNFConfigStageOptions
+	if c.DNFConfig.SetReleaseVerVar {
+		res = append(res, osbuild.NewDNFConfigStageOptions(
+			[]osbuild.DNFVariable{
+				{
+					Name:  "releasever",
+					Value: osVersion,
+				},
+			},
+			nil,
+		))
+	}
+	if c.DNFConfig.ForceIPv4 {
+		res = append(res, &osbuild.DNFConfigStageOptions{
+			Config: &osbuild.DNFConfig{
+				Main: &osbuild.DNFConfigMain{
+					IPResolve: "4",
+				},
+			},
+		})
+	}
+	return res
 }
 
 func (c *ImageConfig) WSLConfStageOptions() *osbuild.WSLConfStageOptions {

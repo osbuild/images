@@ -103,16 +103,8 @@ func sapImageConfig(osVersion string) *distro.ImageConfig {
 			),
 		},
 		// E4S/EUS
-		DNFConfig: []*osbuild.DNFConfigStageOptions{
-			osbuild.NewDNFConfigStageOptions(
-				[]osbuild.DNFVariable{
-					{
-						Name:  "releasever",
-						Value: osVersion,
-					},
-				},
-				nil,
-			),
+		DNFConfig: &distro.DNFConfig{
+			SetReleaseVerVar: true,
 		},
 	}
 }

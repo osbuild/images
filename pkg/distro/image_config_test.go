@@ -166,3 +166,71 @@ func TestImageConfigInheritFrom(t *testing.T) {
 		})
 	}
 }
+
+func TestImageConfiDNCConfigNone(t *testing.T) {
+	var expected []*osbuild.DNFConfigStageOptions
+	cnf := &ImageConfig{}
+	assert.Equal(t, expected, cnf.DNFConfigOptions("centos-9"))
+}
+
+func TestImageConfiDNCConfigSetReleaseVer(t *testing.T) {
+	cnf := &ImageConfig{
+		DNFConfig: &DNFConfig{
+			SetReleaseVerVar: true,
+		},
+	}
+	assert.Equal(t, []*osbuild.DNFConfigStageOptions{
+		{
+			Variables: []osbuild.DNFVariable{
+				{
+					Name:  "releasever",
+					Value: "centos-9",
+				},
+			},
+		},
+	}, cnf.DNFConfigOptions("centos-9"))
+}
+
+func TestImageConfiDNCConfigForceIPv4(t *testing.T) {
+	cnf := &ImageConfig{
+		DNFConfig: &DNFConfig{
+			ForceIPv4: true,
+		},
+	}
+	assert.Equal(t, []*osbuild.DNFConfigStageOptions{
+		{
+			Config: &osbuild.DNFConfig{
+				Main: &osbuild.DNFConfigMain{
+					IPResolve: "4",
+				},
+			},
+		},
+	}, cnf.DNFConfigOptions("centos-9"))
+}
+
+func TestImageConfiDNCConfigAll(t *testing.T) {
+	cnf := &ImageConfig{
+		DNFConfig: &DNFConfig{
+			SetReleaseVerVar: true,
+			ForceIPv4:        true,
+		},
+	}
+	assert.Equal(t, []*osbuild.DNFConfigStageOptions{
+		{
+			Variables: []osbuild.DNFVariable{
+				{
+					Name:  "releasever",
+					Value: "centos-9",
+				},
+			},
+		},
+		{
+
+			Config: &osbuild.DNFConfig{
+				Main: &osbuild.DNFConfigMain{
+					IPResolve: "4",
+				},
+			},
+		},
+	}, cnf.DNFConfigOptions("centos-9"))
+}

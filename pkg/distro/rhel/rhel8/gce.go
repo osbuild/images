@@ -86,14 +86,8 @@ func defaultGceByosImageConfig(rd distro.Distro) *distro.ImageConfig {
 		Keyboard: &osbuild.KeymapStageOptions{
 			Keymap: "us",
 		},
-		DNFConfig: []*osbuild.DNFConfigStageOptions{
-			{
-				Config: &osbuild.DNFConfig{
-					Main: &osbuild.DNFConfigMain{
-						IPResolve: "4",
-					},
-				},
-			},
+		DNFConfig: &distro.DNFConfig{
+			ForceIPv4: true,
 		},
 		DNFAutomaticConfig: &osbuild.DNFAutomaticConfigStageOptions{
 			Config: &osbuild.DNFAutomaticConfig{
