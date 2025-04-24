@@ -414,6 +414,7 @@ func TestImageTypeImageConfig(t *testing.T) {
 image_types:
   test_type:
     image_config:
+      hostname: "foo"
       locale: "C.UTF-8"
       timezone: "DefaultTZ"
       condition:
@@ -423,15 +424,19 @@ image_types:
         distro_name:
           "test-distro":
             locale: "en_US.UTF-8"
+        architecture:
+          "test_arch":
+            hostname: "test-arch-hn"
 `
 	fakeDistroName := "test-distro"
 	baseDir := makeFakePkgsSet(t, fakeDistroName, fakeDistroYaml)
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	imgConfig, err := defs.ImageConfig("test-distro-1", "test_type", nil)
+	imgConfig, err := defs.ImageConfig("test-distro-1", "test_arch", "test_type", nil)
 	require.NoError(t, err)
 	assert.Equal(t, &distro.ImageConfig{
+		Hostname: common.ToPtr("test-arch-hn"),
 		Locale:   common.ToPtr("en_US.UTF-8"),
 		Timezone: common.ToPtr("OverrideTZ"),
 	}, imgConfig)
