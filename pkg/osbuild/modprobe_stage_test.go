@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v3"
 )
 
 func TestNewModprobeStage(t *testing.T) {
@@ -145,4 +146,27 @@ func TestNewModprobeConfigCmdInstall(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestModprobeConfigCmdListUnmarshal(t *testing.T) {
+	inputYAML := []byte(`
+filename: "blacklist-amdgpu.conf"
+commands:
+  - command: blacklist
+    modulename: "amdgpu"
+  - command: install
+    modulename: "install-mod"
+    cmdline: "mod-cmdline"
+`)
+	var modprobeOpts ModprobeStageOptions
+	err := yaml.Unmarshal(inputYAML, &modprobeOpts)
+	assert.NoError(t, err)
+	expected := ModprobeStageOptions{
+		Filename: "blacklist-amdgpu.conf",
+		Commands: []ModprobeConfigCmd{
+			NewModprobeConfigCmdBlacklist("amdgpu"),
+			NewModprobeConfigCmdInstall("install-mod", "mod-cmdline"),
+		},
+	}
+	assert.Equal(t, expected, modprobeOpts)
 }
