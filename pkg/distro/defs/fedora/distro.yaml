@@ -328,7 +328,7 @@ image_types:
     payload_pipelines: ["os", "image", "qcow2"]
     exports: ["qcow2"]
     # XXX: move into "common"
-    required_partition_sizes:
+    required_partition_sizes: &default_required_dir_sizes
       "/": 1_073_741_824  # 1 * datasizes.GiB
       "/usr": 2_147_483_648 # 2 * datasizes.GiB
     image_config: &image_config_qcow2
@@ -339,6 +339,14 @@ image_types:
       - *cloud_base_pkgset
       - include:
           - "qemu-guest-agent"
+    # platforms:
+    #   x86_64:
+    #     # XXX: move to "common"
+    #     bios: true
+    #     uefi_vendor: "fedora"
+    #     baseplatform:
+    #       imageformat: "qcow2"
+    #       qcow2compat: "1.1"
   ami: *qcow2
   oci: *qcow2
   openstack: *qcow2
@@ -852,6 +860,20 @@ image_types:
   image_installer: *anaconda
 
   container: &container
+    name: "container"
+    filename: "container.tar"
+    mime_type: "application/x-tar"
+    image: "container"
+    bootable: false
+    build_pipelines: ["build"]
+    payload_pipelines: ["os", "container"]
+    exports: ["container"]
+    required_partition_sizes: *default_required_dir_sizes
+    platforms:
+      x86_64:
+        baseplatform: {}
+      aarch64:
+        baseplatform: {}
     image_config: &image_config_container
       no_selinux: true
       exclude_docs: true
@@ -904,6 +926,18 @@ image_types:
           - "xkeyboard-config"
 
   wsl:
+    name: "wsl"
+    filename: "wsl.tar"
+    mime_type: "application/x-tar"
+    image: "container"
+    bootable: false
+    build_pipelines: ["build"]
+    payload_pipelines: ["os", "container"]
+    exports: ["container"]
+    required_partition_sizes: *default_required_dir_sizes
+    platforms:
+      x86_64:
+        baseplatform: {}
     image_config:
       <<: *image_config_container
       cloud_init:

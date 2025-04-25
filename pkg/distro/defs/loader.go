@@ -19,6 +19,7 @@ import (
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/experimentalflags"
+	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
@@ -70,6 +71,16 @@ type imageType struct {
 	PayloadPipelines       []string `yaml:"payload_pipelines"`
 	Exports                []string
 	RequiredPartitionSizes map[string]uint64 `yaml:"required_partition_sizes"`
+
+	Platforms map[string]ImagePlatform
+}
+
+type ImagePlatform struct {
+	Arch string
+
+	BIOS       bool
+	UEFIVendor string `yaml:"uefi_vendor"`
+	platform.BasePlatform
 }
 
 type imageConfig struct {
@@ -410,4 +421,12 @@ func ImageType(distroNameVer, typeName string) (*ImageTypeYAML, error) {
 		return nil, fmt.Errorf("%w: %q", ErrImageTypeNotFound, typeName)
 	}
 	return &imgType, nil
+}
+
+func ImageTypes(distroNameVer string) (map[string]ImageTypeYAML, error) {
+	toplevel, err := load(distroNameVer)
+	if err != nil {
+		return nil, err
+	}
+	return toplevel.ImageTypes, nil
 }

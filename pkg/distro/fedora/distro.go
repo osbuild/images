@@ -325,24 +325,6 @@ func mkContainerImgType(d distribution) imageType {
 	}
 }
 
-func mkWslImgType(d distribution) imageType {
-	return imageType{
-		name:     "wsl",
-		filename: "wsl.tar",
-		mimeType: "application/x-tar",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: packageSetLoader,
-		},
-		defaultImageConfig:     imageConfig(d, "wsl"),
-		image:                  containerImage,
-		bootable:               false,
-		buildPipelines:         []string{"build"},
-		payloadPipelines:       []string{"os", "container"},
-		exports:                []string{"container"},
-		requiredPartitionSizes: requiredDirectorySizes,
-	}
-}
-
 func mkMinimalRawImgType(d distribution) imageType {
 	it := imageType{
 		name:        "minimal-raw",
@@ -670,11 +652,38 @@ func newDistro(version int) distro.Distro {
 		},
 		amiImgType,
 	)
-	x86_64.addImageTypes(
-		&platform.X86{},
-		mkContainerImgType(rd),
-		mkWslImgType(rd),
-	)
+	// XXX: move all images to this
+	its, err := defs.ImageTypes(rd.name)
+	if err != nil {
+		panic(err)
+	}
+	for name, imgTypeYAML := range its {
+		// XXX: image not converted yet, remove once they are
+		// all done
+		if len(imgTypeYAML.Platforms) == 0 {
+			continue
+		}
+		it := newImageTypeFromYaml(rd, name)
+		for arch, platformYAML := range imgTypeYAML.Platforms {
+			switch arch {
+			case "x86_64":
+				platform := newPlatformFromYaml(arch, platformYAML)
+				x86_64.addImageTypes(
+					platform,
+					it,
+				)
+			case "aarch64":
+				platform := newPlatformFromYaml(arch, platformYAML)
+				aarch64.addImageTypes(
+					platform,
+					it,
+				)
+			default:
+				err := fmt.Errorf("unsupported arch: %v", arch)
+				panic(err)
+			}
+		}
+	}
 
 	// add distro installer configuration to all installer types
 	distroInstallerConfig := defaultDistroInstallerConfig(&rd)
@@ -756,10 +765,6 @@ func newDistro(version int) distro.Distro {
 			},
 		},
 		openstackImgType,
-	)
-	aarch64.addImageTypes(
-		&platform.Aarch64{},
-		mkContainerImgType(rd),
 	)
 	aarch64.addImageTypes(
 		&platform.Aarch64{

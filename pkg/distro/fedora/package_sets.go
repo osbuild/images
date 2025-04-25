@@ -7,6 +7,7 @@ import (
 	"github.com/osbuild/images/internal/environment"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
+	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
@@ -18,6 +19,28 @@ func imageConfig(d distribution, imageType string) *distro.ImageConfig {
 	// arch is currently not used in fedora
 	arch := ""
 	return common.Must(defs.ImageConfig(d.name, arch, imageType, VersionReplacements()))
+}
+
+// XXX: move to generic code, this is not fedora specific
+func newPlatformFromYaml(arch string, d defs.ImagePlatform) (res platform.Platform) {
+	switch arch {
+	case "x86_64":
+		res = &platform.X86{
+			BIOS:         d.BIOS,
+			UEFIVendor:   d.UEFIVendor,
+			BasePlatform: d.BasePlatform,
+		}
+	case "aarch64":
+		res = &platform.Aarch64{
+			UEFIVendor:   d.UEFIVendor,
+			BasePlatform: d.BasePlatform,
+		}
+	default:
+		err := fmt.Errorf("unsupported platform %v", arch)
+		panic(err)
+	}
+
+	return res
 }
 
 func newImageTypeFromYaml(d distribution, typeName string) imageType {
@@ -41,8 +64,10 @@ func newImageTypeFromYaml(d distribution, typeName string) imageType {
 	switch imgYAML.Image {
 	case "disk":
 		it.image = diskImage
+	case "container":
+		it.image = containerImage
 	default:
-		err := fmt.Errorf("unknown image func: %v", imgYAML.Image)
+		err := fmt.Errorf("unknown image func: %v for %v", imgYAML.Image, imgYAML.Name)
 		panic(err)
 	}
 	switch imgYAML.Environment {
