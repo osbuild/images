@@ -29,7 +29,7 @@ func makeTestImageType(t *testing.T) distro.ImageType {
 	return it
 }
 
-func makeFakePkgsSet(t *testing.T, distroName, content string) string {
+func makeFakeDefs(t *testing.T, distroName, content string) string {
 	tmpdir := t.TempDir()
 	fakePkgsSetPath := filepath.Join(tmpdir, distroName, "distro.yaml")
 	err := os.MkdirAll(filepath.Dir(fakePkgsSetPath), 0755)
@@ -57,7 +57,7 @@ image_types:
               exclude: [exc3]
 `
 	// XXX: we cannot use distro.Name() as it will give us a name+ver
-	baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, fakePkgsSetYaml)
+	baseDir := makeFakeDefs(t, test_distro.TestDistroNameBase, fakePkgsSetYaml)
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
@@ -84,7 +84,7 @@ image_types:
 
 `
 	// XXX: we cannot use distro.Name() as it will give us a name+ver
-	baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, fakePkgsSetYaml)
+	baseDir := makeFakeDefs(t, test_distro.TestDistroNameBase, fakePkgsSetYaml)
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
@@ -170,7 +170,7 @@ image_types:
               exclude: [from-condition-exc]
 `
 	// XXX: we cannot use distro.Name() as it will give us a name+ver
-	baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, fakePkgsSetYaml)
+	baseDir := makeFakeDefs(t, test_distro.TestDistroNameBase, fakePkgsSetYaml)
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
@@ -227,7 +227,7 @@ image_types:
                       mountpoint: "/"
 `
 	// XXX: we cannot use distro.Name() as it will give us a name+ver
-	baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, fakeDistroYaml)
+	baseDir := makeFakeDefs(t, test_distro.TestDistroNameBase, fakeDistroYaml)
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
@@ -337,7 +337,7 @@ func TestDefsPartitionTableOverrideGreatEqual(t *testing.T) {
 	it := makeTestImageType(t)
 
 	// XXX: we cannot use distro.Name() as it will give us a name+ver
-	baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, fakeDistroYaml)
+	baseDir := makeFakeDefs(t, test_distro.TestDistroNameBase, fakeDistroYaml)
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
@@ -371,7 +371,7 @@ func TestDefsPartitionTableOverridelessThan(t *testing.T) {
 	patched := strings.Replace(fakeDistroYaml, "version_greater_or_equal:", "version_less_than:", -1)
 
 	// XXX: we cannot use distro.Name() as it will give us a name+ver
-	baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, patched)
+	baseDir := makeFakeDefs(t, test_distro.TestDistroNameBase, patched)
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
@@ -421,7 +421,7 @@ image_types:
                     size: 111_111_111
 `
 	// XXX: we cannot use distro.Name() as it will give us a name+ver
-	baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, fakeDistroYaml)
+	baseDir := makeFakeDefs(t, test_distro.TestDistroNameBase, fakeDistroYaml)
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
@@ -450,7 +450,7 @@ image_config:
 `
 	fakeDistroName := "test-distro"
 	fakeDistroVer := "42"
-	baseDir := makeFakePkgsSet(t, fakeDistroName, fakeDistroYaml)
+	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
@@ -496,7 +496,7 @@ image_types:
 		{badDistroYamlUnknownArch, defs.ErrNoPartitionTableForArch},
 	} {
 		// XXX: we cannot use distro.Name() as it will give us a name+ver
-		baseDir := makeFakePkgsSet(t, test_distro.TestDistroNameBase, tc.badYaml)
+		baseDir := makeFakeDefs(t, test_distro.TestDistroNameBase, tc.badYaml)
 		restore := defs.MockDataFS(baseDir)
 		defer restore()
 
