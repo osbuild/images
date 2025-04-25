@@ -21,15 +21,3 @@ func partitionTables(t *rhel.ImageType) (disk.PartitionTable, bool) {
 	}
 	return *partitionTable, true
 }
-
-func defaultBasePartitionTables(t *rhel.ImageType) (disk.PartitionTable, bool) {
-	return partitionTables(t)
-}
-
-func edgeBasePartitionTables(t *rhel.ImageType) (disk.PartitionTable, bool) {
-	return partitionTables(t)
-}
-
-func ec2PartitionTables(t *rhel.ImageType) (disk.PartitionTable, bool) {
-	return partitionTables(t)
-}
