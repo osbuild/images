@@ -42,6 +42,23 @@ func (f ImageFormat) String() string {
 	}
 }
 
+func (f ImageFormat) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var s string
+	if err := unmarshal(&s); err != nil {
+		return err
+	}
+	switch s {
+	case "unset":
+		f = FORMAT_UNSET
+		// XXX add the rest
+	case "qcow2":
+		f = FORMAT_QCOW2
+	default:
+		panic(fmt.Errorf("unknown image format %q", s))
+	}
+	return nil
+}
+
 type Platform interface {
 	GetArch() arch.Arch
 	GetImageFormat() ImageFormat
