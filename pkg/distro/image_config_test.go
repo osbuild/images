@@ -166,3 +166,32 @@ func TestImageConfigInheritFrom(t *testing.T) {
 		})
 	}
 }
+
+func TestImageConfigDNFSetReleaseVerNotSet(t *testing.T) {
+	var expected []*osbuild.DNFConfigStageOptions
+	cnf := &ImageConfig{}
+	assert.Equal(t, expected, cnf.DNFConfigOptions("9-stream"))
+
+	cnf.DNFSetReleaseVerVar = common.ToPtr(false)
+	assert.Equal(t, expected, cnf.DNFConfigOptions("9-stream"))
+}
+
+func TestImageConfigDNFConfigOptionsPreExisting(t *testing.T) {
+	cnf := &ImageConfig{
+		DNFConfig: []*osbuild.DNFConfigStageOptions{
+			{
+				Config: &osbuild.DNFConfig{
+					Main: &osbuild.DNFConfigMain{
+						IPResolve: "4",
+					},
+				},
+			},
+		},
+	}
+	assert.Equal(t, cnf.DNFConfig, cnf.DNFConfigOptions("9-stream"))
+
+	cnf.DNFSetReleaseVerVar = common.ToPtr(true)
+	assert.PanicsWithError(t, "internal error: currently DNFConfig and DNFSetReleaseVerVar cannot be used together, please reporting this as a feature request", func() {
+		cnf.DNFConfigOptions("9-stream")
+	})
+}
