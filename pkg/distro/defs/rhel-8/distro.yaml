@@ -757,8 +757,8 @@
               - *ec2_partition_table_part_root
       distro_name:
         # we need this override to ensure that centos always gets
-        # the latest partition-tables, othersie "centos-8" is
-        # less then "8 <= 8.9"
+        # the latest partition-tables, otherwise "centos-8" is
+        # less than "8 <= 8.9"
         "centos":
           x86_64:
             <<: *ec2_partition_table_x86_64
@@ -768,7 +768,6 @@
 image_config:
   default:
     default_kernel: "kernel"
-    # XXX: this needs to be conditional for centos and rhel
     default_oscap_datastream: "/usr/share/xml/scap/ssg/content/ssg-rhel8-ds.xml"
     install_weak_deps: true
     kernel_options_bootloader: true
