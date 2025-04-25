@@ -264,24 +264,7 @@ func mkIotQcow2ImgType(d distribution) imageType {
 }
 
 func mkQcow2ImgType(d distribution) imageType {
-	return imageType{
-		name:        "qcow2",
-		filename:    "disk.qcow2",
-		mimeType:    "application/x-qemu-disk",
-		environment: &environment.KVM{},
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: packageSetLoader,
-		},
-		defaultImageConfig:     imageConfig(d, "qcow2"),
-		kernelOptions:          cloudKernelOptions(),
-		bootable:               true,
-		defaultSize:            5 * datasizes.GibiByte,
-		image:                  diskImage,
-		buildPipelines:         []string{"build"},
-		payloadPipelines:       []string{"os", "image", "qcow2"},
-		exports:                []string{"qcow2"},
-		requiredPartitionSizes: requiredDirectorySizes,
-	}
+	return newImageTypeFromYaml(d, "qcow2")
 }
 
 func mkVmdkImgType(d distribution) imageType {

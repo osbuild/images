@@ -56,6 +56,20 @@ type imageType struct {
 	PartitionTablesOverrides *partitionTablesOverrides `yaml:"partition_table_override"`
 
 	ImageConfig imageConfig `yaml:"image_config,omitempty"`
+
+	Name          string
+	Filename      string
+	MimeType      string `yaml:"mime_type"`
+	Environment   string
+	KernelOptions []string `yaml:"kernel_options"`
+	Bootable      bool
+	DefaultSize   uint64 `yaml:"default_size"`
+	// the image func name: disk,container,live-installer,...
+	Image                  string
+	BuildPipelines         []string `yaml:"build_pipelines"`
+	PayloadPipelines       []string `yaml:"payload_pipelines"`
+	Exports                []string
+	RequiredPartitionSizes map[string]uint64 `yaml:"required_partition_sizes"`
 }
 
 type imageConfig struct {
@@ -378,4 +392,22 @@ func load(distroNameVer string) (*toplevelYAML, error) {
 	}
 
 	return &toplevel, nil
+}
+
+// XXX: eventually there will be only a single distro.ImageType
+// implementation based on YAML. However right now we just build
+// fedora:imageType and rhel:ImageType from this yaml as a shortcut
+type ImageTypeYAML = imageType
+
+func ImageType(distroNameVer, typeName string) (*ImageTypeYAML, error) {
+	toplevel, err := load(distroNameVer)
+	if err != nil {
+		return nil, err
+	}
+	typeName = strings.ReplaceAll(typeName, "-", "_")
+	imgType, ok := toplevel.ImageTypes[typeName]
+	if !ok {
+		return nil, fmt.Errorf("%w: %q", ErrImageTypeNotFound, typeName)
+	}
+	return &imgType, nil
 }

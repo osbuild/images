@@ -315,6 +315,22 @@ image_config:
 
 image_types:
   qcow2: &qcow2
+    name: "qcow2"
+    filename: "disk.qcow2"
+    mime_type: "application/x-qemu-disk"
+    environment: "kvm"
+    # XXX: move to "common" via cloudKernelOptions anchor
+    kernel_options: ["ro", "no_timer_check", "console=ttyS0,115200n8", "biosdevname=0", "net.ifnames=0"]
+    bootable: true
+    default_size: 5_368_709_120  # 5 * datasizes.GibiByte
+    image: "disk"
+    build_pipelines: ["build"]
+    payload_pipelines: ["os", "image", "qcow2"]
+    exports: ["qcow2"]
+    # XXX: move into "common"
+    required_partition_sizes:
+      "/": 1_073_741_824  # 1 * datasizes.GiB
+      "/usr": 2_147_483_648 # 2 * datasizes.GiB
     image_config: &image_config_qcow2
       default_target: "multi-user.target"
     partition_table:
