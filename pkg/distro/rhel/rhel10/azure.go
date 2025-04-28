@@ -457,6 +457,16 @@ func defaultAzureImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
 			},
 		},
 		DefaultTarget: common.ToPtr("multi-user.target"),
+		TimeSynchronization: &osbuild.ChronyStageOptions{
+			Refclocks: []osbuild.ChronyConfigRefclock{
+				{
+					Driver: osbuild.NewChronyDriverPHC("/dev/ptp_hyperv"),
+					Poll:   common.ToPtr(3),
+					Dpoll:  common.ToPtr(-2),
+					Offset: common.ToPtr(0.0),
+				},
+			},
+		},
 	}
 
 	if rd.IsRHEL() {
