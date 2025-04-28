@@ -3,6 +3,7 @@ package rhel10
 import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
+	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
@@ -320,6 +321,10 @@ func defaultAzureKernelOptions(a arch.Arch) []string {
 
 // based on https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/deploying_rhel_9_on_microsoft_azure/assembly_deploying-a-rhel-image-as-a-virtual-machine-on-microsoft-azure_cloud-content-azure#making-configuration-changes_configure-the-image-azure
 func defaultAzureImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
+	datalossWarningScript, datalossSystemdUnit, err := rhel.CreateAzureDatalossWarningScriptAndUnit()
+	if err != nil {
+		panic(err)
+	}
 	ic := &distro.ImageConfig{
 		Keyboard: &osbuild.KeymapStageOptions{
 			Keymap: "us",
@@ -339,6 +344,7 @@ func defaultAzureImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
 			"nm-cloud-setup.timer",
 			"sshd",
 			"waagent",
+			datalossSystemdUnit.Filename,
 		},
 		SshdConfig: &osbuild.SshdConfigStageOptions{
 			Config: osbuild.SshdConfigConfig{
@@ -487,6 +493,8 @@ func defaultAzureImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
 				},
 			},
 		},
+		Files:       []*fsnode.File{datalossWarningScript},
+		SystemdUnit: []*osbuild.SystemdUnitCreateStageOptions{datalossSystemdUnit},
 	}
 
 	if rd.IsRHEL() {
