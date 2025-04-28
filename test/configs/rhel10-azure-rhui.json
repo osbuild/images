@@ -3,6 +3,9 @@
   "blueprint": {
     "packages": [
       {
+        "name": "rhui-azure-rhel10"
+      },
+      {
         "name": "redhat-cloud-client-configuration"
       }
     ],
