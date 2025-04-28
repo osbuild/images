@@ -371,6 +371,18 @@ func defaultAzureImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
 					osbuild.NewModprobeConfigCmdBlacklist("skx_edac"),
 				},
 			},
+			{
+				Filename: "blacklist-intel_uncore.conf",
+				Commands: osbuild.ModprobeConfigCmdList{
+					osbuild.NewModprobeConfigCmdBlacklist("intel_uncore"),
+				},
+			},
+			{
+				Filename: "blacklist-acpi_cpufreq.conf",
+				Commands: osbuild.ModprobeConfigCmdList{
+					osbuild.NewModprobeConfigCmdBlacklist("acpi_cpufreq"),
+				},
+			},
 		},
 		CloudInit: []*osbuild.CloudInitStageOptions{
 			{
