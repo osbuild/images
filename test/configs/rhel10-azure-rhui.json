@@ -1,0 +1,24 @@
+{
+  "name": "rhel10-azure-rhui",
+  "blueprint": {
+    "packages": [
+      {
+        "name": "rhui-azure-rhel10"
+      },
+      {
+        "name": "redhat-cloud-client-configuration"
+      }
+    ],
+    "customizations": {
+      "rhsm": {
+        "config": {
+          "subscription_manager": {
+            "rhsm": {
+              "auto_enable_yum_plugins": false
+            }
+          }
+        }
+      }
+    }
+  }
+}
