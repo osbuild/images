@@ -433,6 +433,7 @@ image_types:
           - "libertas-sd8686-firmware"
           - "libertas-sd8787-firmware"
           - "libertas-usb8388-firmware"
+          - "microcode_ctl"
           - "NetworkManager-config-server"
           - "plymouth"
           - "podman"
