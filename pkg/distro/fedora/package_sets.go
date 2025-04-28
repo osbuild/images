@@ -45,6 +45,11 @@ func newPlatformFromYaml(arch string, d defs.ImagePlatform) (res platform.Platfo
 			Zipl:         d.Zipl,
 			BasePlatform: d.BasePlatform,
 		}
+	case "riscv64":
+		res = &platform.RISCV64{
+			UEFIVendor:   d.UEFIVendor,
+			BasePlatform: d.BasePlatform,
+		}
 	default:
 		err := fmt.Errorf("unsupported platform %v", arch)
 		panic(err)

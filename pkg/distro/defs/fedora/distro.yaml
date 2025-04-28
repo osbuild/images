@@ -941,9 +941,10 @@ image_types:
     required_partition_sizes: *default_required_dir_sizes
     platforms:
       x86_64:
-        baseplatform: {}
       aarch64:
-        baseplatform: {}
+      ppc64le:
+      s390x:
+      riscv64:
     image_config: &image_config_container
       no_selinux: true
       exclude_docs: true

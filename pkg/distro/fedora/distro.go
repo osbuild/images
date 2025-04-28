@@ -302,24 +302,6 @@ func mkOvaImgType(d distribution) imageType {
 	}
 }
 
-func mkContainerImgType(d distribution) imageType {
-	return imageType{
-		name:     "container",
-		filename: "container.tar",
-		mimeType: "application/x-tar",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: packageSetLoader,
-		},
-		defaultImageConfig:     imageConfig(d, "container"),
-		image:                  containerImage,
-		bootable:               false,
-		buildPipelines:         []string{"build"},
-		payloadPipelines:       []string{"os", "container"},
-		exports:                []string{"container"},
-		requiredPartitionSizes: requiredDirectorySizes,
-	}
-}
-
 func mkMinimalRawImgType(d distribution) imageType {
 	it := imageType{
 		name:        "minimal-raw",
@@ -615,6 +597,12 @@ func newDistro(version int) distro.Distro {
 					platform,
 					it,
 				)
+			case "riscv64":
+				platform := newPlatformFromYaml(arch, platformYAML)
+				riscv64.addImageTypes(
+					platform,
+					it,
+				)
 			default:
 				err := fmt.Errorf("unsupported arch: %v", arch)
 				panic(err)
@@ -878,22 +866,8 @@ func newDistro(version int) distro.Distro {
 		mkIotBootableContainer(rd),
 	)
 
-	ppc64le.addImageTypes(
-		&platform.PPC64LE{},
-		mkContainerImgType(rd),
-	)
-
-	s390x.addImageTypes(
-		&platform.S390X{},
-		mkContainerImgType(rd),
-	)
-
 	// XXX: there is no "qcow2" for riscv64 yet because there is
 	// no "@Fedora Cloud Server" group
-	riscv64.addImageTypes(
-		&platform.RISCV64{},
-		mkContainerImgType(rd),
-	)
 	riscv64.addImageTypes(
 		&platform.RISCV64{
 			UEFIVendor: "fedora",
