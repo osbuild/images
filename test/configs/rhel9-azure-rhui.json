@@ -1,0 +1,31 @@
+{
+  "name": "rhel9-azure-rhui",
+  "blueprint": {
+    "packages": [
+      {
+        "name": "rhui-azure-rhel9"
+      },
+      {
+        "name": "redhat-cloud-client-configuration"
+      }
+    ],
+    "customizations": {
+      "rpm": {
+        "import_keys": {
+          "files": [
+            "/etc/pki/rpm-gpg/RPM-GPG-KEY-microsoft-azure-release"
+          ]
+        }
+      },
+      "rhsm": {
+        "config": {
+          "subscription_manager": {
+            "rhsm": {
+              "auto_enable_yum_plugins": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

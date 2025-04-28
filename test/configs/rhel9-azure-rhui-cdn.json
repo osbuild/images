@@ -1,5 +1,5 @@
 {
-  "name": "rhel-azure-rhui-cdn",
+  "name": "rhel9-azure-rhui-cdn",
   "blueprint": {
     "packages": [
       {
