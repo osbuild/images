@@ -108,7 +108,7 @@ func (img *DiskImage) InstantiateManifest(m *manifest.Manifest,
 		tarPipeline.SetFilename(img.Filename) // filename extension will determine compression
 		imagePipeline = tarPipeline
 	default:
-		panic(fmt.Sprintf("invalid image format %v for image kind %v", img.Platform.GetImageFormat(), img.Name()))
+		panic(fmt.Sprintf("invalid image format %v for image kind %v (%T %+v)", img.Platform.GetImageFormat(), img.Name(), img.Platform, img.Platform))
 	}
 
 	switch img.Compression {

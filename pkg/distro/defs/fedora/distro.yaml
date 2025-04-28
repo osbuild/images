@@ -12,6 +12,20 @@
       - "geolite2-country"
       - "plymouth"
 
+  platforms:
+    qcow2_common: &platforms_qcow2_common
+      x86_64: &platform_qcow2_x86_64
+        bios: true
+        uefi_vendor: "fedora"
+        baseplatform:
+          imageformat: "qcow2"
+          qcow2compat: "1.1"
+      aarch64: &platform_qcow2_aarch64
+        uefi_vendor: "fedora"
+        baseplatform:
+          imageformat: "qcow2"
+          qcow2compat: "1.1"
+
   image_config:
     iot_enabled_services: &image_config_iot_enabled_services
       enabled_services:
@@ -339,19 +353,68 @@ image_types:
       - *cloud_base_pkgset
       - include:
           - "qemu-guest-agent"
-    # platforms:
-    #   x86_64:
-    #     # XXX: move to "common"
-    #     bios: true
-    #     uefi_vendor: "fedora"
-    #     baseplatform:
-    #       imageformat: "qcow2"
-    #       qcow2compat: "1.1"
-  ami: *qcow2
-  oci: *qcow2
-  openstack: *qcow2
+    platforms:
+      <<: *platforms_qcow2_common
+      ppc64le:
+        bios: true
+        baseplatform:
+          imageformat: "qcow2"
+          qcow2compat: "1.1"
+      s390x:
+        zipl: true
+        baseplatform:
+          imageformat: "qcow2"
+          qcow2compat: "1.1"
+
+  ami:
+    <<: *qcow2
+    name: "ami"
+    filename: "image.raw"
+    mime_type: "application/octet-stream"
+    payload_pipelines: ["os", "image"]
+    exports: ["image"]
+    environment: "ec2"
+    platforms:
+      x86_64:
+        <<: *platform_qcow2_x86_64
+        baseplatform:
+          imageformat: "raw"
+      aarch64:
+        <<: *platform_qcow2_aarch64
+        baseplatform:
+          imageformat: "raw"
+
+  oci:
+    <<: *qcow2
+    name: "oci"
+    platforms:
+      <<: *platforms_qcow2_common
+
+  openstack:
+    <<: *qcow2
+    name: "openstack"
+    platforms:
+      x86_64:
+        <<: *platform_qcow2_x86_64
+        baseplatform:
+          # XXX: no "qcow2compat" here, this is probably a bug in the
+          # original image definitions in the go code
+          imageformat: "qcow2"
+      aarch64:
+        <<: *platform_qcow2_aarch64
+        baseplatform:
+          # XXX: no "qcow2compat" here, this is probably a bug in the
+          # original image definitions in the go code
+          imageformat: "qcow2"
 
   vhd:
+    <<: *qcow2
+    name: "vhd"
+    filename: "disk.vhd"
+    mime_type: "application/x-vhd"
+    payload_pipelines: ["os", "image", "vpc"]
+    exports: ["vpc"]
+    environment: "azure"
     image_config:
       <<: *image_config_qcow2
       sshd_config:
@@ -363,6 +426,11 @@ image_types:
       - *cloud_base_pkgset
       - include:
           - "WALinuxAgent"
+    platforms:
+      x86_64:
+        <<: *platform_qcow2_x86_64
+        baseplatform:
+          imageformat: "vhd"
 
   vmdk: &vmdk
     image_config:
@@ -544,6 +612,8 @@ image_types:
       ignition_platform: "qemu"
     partition_table:
       <<: *iot_base_partition_tables
+    platforms:
+      <<: *platforms_qcow2_common
 
   iot_bootable_container:
     image_config:

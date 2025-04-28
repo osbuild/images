@@ -35,6 +35,16 @@ func newPlatformFromYaml(arch string, d defs.ImagePlatform) (res platform.Platfo
 			UEFIVendor:   d.UEFIVendor,
 			BasePlatform: d.BasePlatform,
 		}
+	case "ppc64le":
+		res = &platform.PPC64LE{
+			BIOS:         d.BIOS,
+			BasePlatform: d.BasePlatform,
+		}
+	case "s390x":
+		res = &platform.S390X{
+			Zipl:         d.Zipl,
+			BasePlatform: d.BasePlatform,
+		}
 	default:
 		err := fmt.Errorf("unsupported platform %v", arch)
 		panic(err)
@@ -71,8 +81,17 @@ func newImageTypeFromYaml(d distribution, typeName string) imageType {
 		panic(err)
 	}
 	switch imgYAML.Environment {
+	case "":
+		// nothing
+	case "azure":
+		it.environment = &environment.Azure{}
+	case "ec2":
+		it.environment = &environment.EC2{}
 	case "kvm":
 		it.environment = &environment.KVM{}
+	default:
+		err := fmt.Errorf("unknown env %q", imgYAML.Environment)
+		panic(err)
 	}
 	// XXX: fix for multiple loaders like the installers
 	it.packageSets = map[string]packageSetFunc{

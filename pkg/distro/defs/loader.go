@@ -78,7 +78,9 @@ type imageType struct {
 type ImagePlatform struct {
 	Arch string
 
-	BIOS       bool
+	BIOS bool
+	Zipl bool
+
 	UEFIVendor string `yaml:"uefi_vendor"`
 	platform.BasePlatform
 }

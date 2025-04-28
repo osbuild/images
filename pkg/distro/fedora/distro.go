@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"github.com/osbuild/images/internal/common"
-	"github.com/osbuild/images/internal/environment"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/datasizes"
@@ -261,10 +260,6 @@ func mkIotQcow2ImgType(d distribution) imageType {
 		kernelOptions:          ostreeDeploymentKernelOptions(),
 		requiredPartitionSizes: requiredDirectorySizes,
 	}
-}
-
-func mkQcow2ImgType(d distribution) imageType {
-	return newImageTypeFromYaml(d, "qcow2")
 }
 
 func mkVmdkImgType(d distribution) imageType {
@@ -554,34 +549,6 @@ func newDistro(version int) distro.Distro {
 		distro: &rd,
 	}
 
-	qcow2ImgType := mkQcow2ImgType(rd)
-
-	ociImgType := qcow2ImgType
-	ociImgType.name = "oci"
-
-	amiImgType := qcow2ImgType
-	amiImgType.name = "ami"
-	amiImgType.filename = "image.raw"
-	amiImgType.mimeType = "application/octet-stream"
-	amiImgType.payloadPipelines = []string{"os", "image"}
-	amiImgType.exports = []string{"image"}
-	amiImgType.environment = &environment.EC2{}
-
-	openstackImgType := qcow2ImgType
-	openstackImgType.name = "openstack"
-
-	vhdImgType := qcow2ImgType
-	vhdImgType.name = "vhd"
-	vhdImgType.filename = "disk.vhd"
-	vhdImgType.mimeType = "application/x-vhd"
-	vhdImgType.payloadPipelines = []string{"os", "image", "vpc"}
-	vhdImgType.exports = []string{"vpc"}
-	vhdImgType.environment = &environment.Azure{}
-	vhdImgType.packageSets = map[string]packageSetFunc{
-		osPkgsKey: packageSetLoader,
-	}
-	vhdImgType.defaultImageConfig = imageConfig(rd, "vhd")
-
 	minimalrawZstdImgType := mkMinimalRawImgType(rd)
 	minimalrawZstdImgType.name = "minimal-raw-zst"
 	minimalrawZstdImgType.filename = "disk.raw.zst"
@@ -590,38 +557,6 @@ func newDistro(version int) distro.Distro {
 	minimalrawZstdImgType.payloadPipelines = []string{"os", "image", "zstd"}
 	minimalrawZstdImgType.exports = []string{"zstd"}
 
-	x86_64.addImageTypes(
-		&platform.X86{
-			BIOS:       true,
-			UEFIVendor: "fedora",
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_QCOW2,
-				QCOW2Compat: "1.1",
-			},
-		},
-		qcow2ImgType,
-		ociImgType,
-	)
-	x86_64.addImageTypes(
-		&platform.X86{
-			BIOS:       true,
-			UEFIVendor: "fedora",
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_QCOW2,
-			},
-		},
-		openstackImgType,
-	)
-	x86_64.addImageTypes(
-		&platform.X86{
-			BIOS:       true,
-			UEFIVendor: "fedora",
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_VHD,
-			},
-		},
-		vhdImgType,
-	)
 	x86_64.addImageTypes(
 		&platform.X86{
 			BIOS:       true,
@@ -642,16 +577,6 @@ func newDistro(version int) distro.Distro {
 		},
 		mkOvaImgType(rd),
 	)
-	x86_64.addImageTypes(
-		&platform.X86{
-			BIOS:       true,
-			UEFIVendor: "fedora",
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_RAW,
-			},
-		},
-		amiImgType,
-	)
 	// XXX: move all images to this
 	its, err := defs.ImageTypes(rd.name)
 	if err != nil {
@@ -660,7 +585,7 @@ func newDistro(version int) distro.Distro {
 	for name, imgTypeYAML := range its {
 		// XXX: image not converted yet, remove once they are
 		// all done
-		if len(imgTypeYAML.Platforms) == 0 {
+		if len(imgTypeYAML.Name) == 0 {
 			continue
 		}
 		it := newImageTypeFromYaml(rd, name)
@@ -675,6 +600,18 @@ func newDistro(version int) distro.Distro {
 			case "aarch64":
 				platform := newPlatformFromYaml(arch, platformYAML)
 				aarch64.addImageTypes(
+					platform,
+					it,
+				)
+			case "ppc64le":
+				platform := newPlatformFromYaml(arch, platformYAML)
+				ppc64le.addImageTypes(
+					platform,
+					it,
+				)
+			case "s390x":
+				platform := newPlatformFromYaml(arch, platformYAML)
+				s390x.addImageTypes(
 					platform,
 					it,
 				)
@@ -740,31 +677,11 @@ func newDistro(version int) distro.Distro {
 		&platform.Aarch64{
 			UEFIVendor: "fedora",
 			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_RAW,
-			},
-		},
-		amiImgType,
-	)
-	aarch64.addImageTypes(
-		&platform.Aarch64{
-			UEFIVendor: "fedora",
-			BasePlatform: platform.BasePlatform{
 				ImageFormat: platform.FORMAT_QCOW2,
 				QCOW2Compat: "1.1",
 			},
 		},
 		mkIotQcow2ImgType(rd),
-		ociImgType,
-		qcow2ImgType,
-	)
-	aarch64.addImageTypes(
-		&platform.Aarch64{
-			UEFIVendor: "fedora",
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_QCOW2,
-			},
-		},
-		openstackImgType,
 	)
 	aarch64.addImageTypes(
 		&platform.Aarch64{
@@ -962,30 +879,10 @@ func newDistro(version int) distro.Distro {
 	)
 
 	ppc64le.addImageTypes(
-		&platform.PPC64LE{
-			BIOS: true,
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_QCOW2,
-				QCOW2Compat: "1.1",
-			},
-		},
-		qcow2ImgType,
-	)
-	ppc64le.addImageTypes(
 		&platform.PPC64LE{},
 		mkContainerImgType(rd),
 	)
 
-	s390x.addImageTypes(
-		&platform.S390X{
-			Zipl: true,
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_QCOW2,
-				QCOW2Compat: "1.1",
-			},
-		},
-		qcow2ImgType,
-	)
 	s390x.addImageTypes(
 		&platform.S390X{},
 		mkContainerImgType(rd),
