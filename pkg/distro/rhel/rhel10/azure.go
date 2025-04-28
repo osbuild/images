@@ -495,6 +495,17 @@ func defaultAzureImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
 		},
 		Files:       []*fsnode.File{datalossWarningScript},
 		SystemdUnit: []*osbuild.SystemdUnitCreateStageOptions{datalossSystemdUnit},
+		NetworkManager: &osbuild.NMConfStageOptions{
+			Path: "/etc/NetworkManager/conf.d/99-azure-unmanaged-devices.conf",
+			Settings: osbuild.NMConfStageSettings{
+				Keyfile: &osbuild.NMConfSettingsKeyfile{
+					UnmanagedDevices: []string{
+						"driver:mlx4_core",
+						"driver:mlx5_core",
+					},
+				},
+			},
+		},
 	}
 
 	if rd.IsRHEL() {
