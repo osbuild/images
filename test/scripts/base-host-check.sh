@@ -234,7 +234,7 @@ check_firewall_services_disabled() {
     echo "$services_expected" | while read -r service_expected; do
         # NOTE: sudo works here without password because we test this only on ami
         # initialised with cloud-init, which sets sudo NOPASSWD for the user
-        state=$(sudo firewall-cmd --query-service="${service_expected}")
+        state=$(sudo firewall-cmd --query-service="${service_expected}" || true)
         if [[ "${state}" == "no" ]]; then
             echo "Firewall service was disabled service=${service_expected} state=${state}"
         else
