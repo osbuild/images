@@ -424,8 +424,10 @@ func defaultAzureImageConfig(rd *rhel.Distribution) *distro.ImageConfig {
 		},
 		WAAgentConfig: &osbuild.WAAgentConfStageOptions{
 			Config: osbuild.WAAgentConfig{
-				RDFormat:     common.ToPtr(false),
-				RDEnableSwap: common.ToPtr(false),
+				RDFormat:                 common.ToPtr(false),
+				RDEnableSwap:             common.ToPtr(false),
+				ProvisioningUseCloudInit: common.ToPtr(true),
+				ProvisioningEnabled:      common.ToPtr(false),
 			},
 		},
 		Grub2Config: &osbuild.GRUB2Config{
