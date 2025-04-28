@@ -42,17 +42,28 @@ func (f ImageFormat) String() string {
 	}
 }
 
-func (f ImageFormat) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (f *ImageFormat) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var s string
 	if err := unmarshal(&s); err != nil {
 		return err
 	}
 	switch s {
 	case "unset":
-		f = FORMAT_UNSET
-		// XXX add the rest
+		*f = FORMAT_UNSET
+	case "raw":
+		*f = FORMAT_RAW
+	case "iso":
+		*f = FORMAT_ISO
 	case "qcow2":
-		f = FORMAT_QCOW2
+		*f = FORMAT_QCOW2
+	case "vmdk":
+		*f = FORMAT_VMDK
+	case "vhd":
+		*f = FORMAT_VHD
+	case "gce":
+		*f = FORMAT_GCE
+	case "ova":
+		*f = FORMAT_OVA
 	default:
 		panic(fmt.Errorf("unknown image format %q", s))
 	}
