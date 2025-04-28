@@ -1,12 +1,12 @@
 {
-  "name": "rhel-azure-rhui",
+  "name": "rhel9-azure-rhui-cdn",
   "blueprint": {
     "packages": [
       {
         "name": "rhui-azure-rhel9"
       },
       {
-        "name": "redhat-cloud-client-configuration"
+        "name": "redhat-cloud-client-configuration-cdn"
       }
     ],
     "customizations": {
