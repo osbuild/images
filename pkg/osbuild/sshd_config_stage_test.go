@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v3"
 
 	"github.com/osbuild/images/internal/common"
 )
@@ -19,7 +20,7 @@ func TestNewSshdConfigStage(t *testing.T) {
 	assert.Equal(t, expectedStage, actualStage)
 }
 
-func TestJsonSshdConfigStage(t *testing.T) {
+func TestJsonYamlSshdConfigStage(t *testing.T) {
 	// First test that the JSON can be parsed into the expected structure.
 	expectedOptions := SshdConfigStageOptions{
 		Config: SshdConfigConfig{
@@ -29,7 +30,7 @@ func TestJsonSshdConfigStage(t *testing.T) {
 			PermitRootLogin:                 PermitRootLoginValueProhibitPassword,
 		},
 	}
-	inputString := `{
+	inputStringJSON := `{
 		"config": {
 		  "PasswordAuthentication": false,
 		  "ChallengeResponseAuthentication": false,
@@ -37,10 +38,21 @@ func TestJsonSshdConfigStage(t *testing.T) {
 		  "PermitRootLogin": "prohibit-password"
 		}
 	  }`
+	inputStringYAML := `
+config:
+  PasswordAuthentication: false
+  ChallengeResponseAuthentication: false
+  ClientAliveInterval: 180
+  PermitRootLogin: "prohibit-password"
+`
 	var inputOptions SshdConfigStageOptions
-	err := json.Unmarshal([]byte(inputString), &inputOptions)
+	err := json.Unmarshal([]byte(inputStringJSON), &inputOptions)
 	assert.NoError(t, err, "failed to parse JSON into sshd config")
 	assert.True(t, reflect.DeepEqual(expectedOptions, inputOptions))
+	// ensure YAML is decoded the same way
+	err = yaml.Unmarshal([]byte(inputStringYAML), &inputOptions)
+	assert.NoError(t, err)
+	assert.Equal(t, expectedOptions, inputOptions)
 
 	// Second try the other way around with stress on missing values
 	// for those parameters that the user didn't specify.
