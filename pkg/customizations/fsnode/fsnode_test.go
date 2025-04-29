@@ -5,8 +5,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/osbuild/images/internal/common"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v3"
+
+	"github.com/osbuild/images/internal/common"
 )
 
 func TestBaseFsNodeValidate(t *testing.T) {
@@ -159,5 +161,71 @@ func TestBaseFsNodeValidate(t *testing.T) {
 				assert.NoError(t, err)
 			}
 		})
+	}
+}
+
+func TestFsNodeUnmarshalDir(t *testing.T) {
+	inputYAML := `
+path: /some/path
+mode: 0644
+user: 1000
+group: group
+ensure_parent_dirs: true
+`
+	var fsn Directory
+	err := yaml.Unmarshal([]byte(inputYAML), &fsn)
+	assert.NoError(t, err)
+	expected, err := NewDirectory("/some/path", common.ToPtr(os.FileMode(0644)), int64(1000), "group", true)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, &fsn)
+}
+
+func TestFsNodeUnmarshalFile(t *testing.T) {
+	inputYAML := `
+path: /some/path
+mode: 0644
+user: 1000
+group: group
+data: some-data
+`
+	var fsn File
+	err := yaml.Unmarshal([]byte(inputYAML), &fsn)
+	assert.NoError(t, err)
+	expected, err := NewFile("/some/path", common.ToPtr(os.FileMode(0644)), int64(1000), "group", []byte("some-data"))
+	assert.NoError(t, err)
+	assert.Equal(t, expected, &fsn)
+}
+
+func TestFsNodeUnmarshalBadFile(t *testing.T) {
+	for _, tc := range []struct {
+		inputYAML   string
+		expectedErr string
+	}{
+		{`path: 123`, `unexpected type json.Number for path (want string)`},
+		{`mode: -rw-rw-r--`, `unexpected type string for mode (want number)`},
+		{`mode: -1`, `mode -1 is outside the allowed range of [0,4294967295]`},
+		{`mode: 5_000_000_000`, `mode 5000000000 is outside the allowed range of [0,4294967295]`},
+		{`user: 3.14`, `user is a number but not an int: strconv.ParseInt: parsing "3.14": invalid syntax`},
+		{`group: 2.71`, `group is a number but not an int: strconv.ParseInt: parsing "2.71": invalid syntax`},
+		{"path: /foo\nuser: -1", `user ID must be non-negative`},
+		{"path: /foo\ngroup: a!b", `group name "a!b" doesn't conform to validating regex`},
+		{"path: /foo\ndata: 1.61", `unexpected type float64 for data (want string)`},
+	} {
+		var fsn File
+		err := yaml.Unmarshal([]byte(tc.inputYAML), &fsn)
+		assert.ErrorContains(t, err, tc.expectedErr)
+	}
+}
+
+func TestFsNodeUnmarshalBadDir(t *testing.T) {
+	for _, tc := range []struct {
+		inputYAML   string
+		expectedErr string
+	}{
+		{"path: /foo\nensure_parent_dirs: maybe", `unexpected type string for ensure_parent_dirs (want bool)`},
+	} {
+		var fsn Directory
+		err := yaml.Unmarshal([]byte(tc.inputYAML), &fsn)
+		assert.ErrorContains(t, err, tc.expectedErr)
 	}
 }

@@ -1,6 +1,13 @@
 package fsnode
 
-import "os"
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"os"
+
+	"github.com/osbuild/images/internal/common"
+)
 
 type Directory struct {
 	baseFsNode
@@ -12,6 +19,29 @@ func (d *Directory) EnsureParentDirs() bool {
 		return false
 	}
 	return d.ensureParentDirs
+}
+
+func (d *Directory) UnmarshalJSON(data []byte) error {
+	if err := d.baseFsNode.UnmarshalJSON(data); err != nil {
+		return err
+	}
+
+	var m map[string]interface{}
+	dec := json.NewDecoder(bytes.NewBuffer(data))
+	if err := dec.Decode(&m); err != nil {
+		return err
+	}
+	if ensureParents, ok := m["ensure_parent_dirs"]; ok {
+		d.ensureParentDirs, ok = ensureParents.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for ensure_parent_dirs (want bool)", ensureParents)
+		}
+	}
+	return nil
+}
+
+func (d *Directory) UnmarshalYAML(unmarshal func(any) error) error {
+	return common.UnmarshalYAMLviaJSON(d, unmarshal)
 }
 
 // NewDirectory creates a new directory with the given path, mode, user and group.

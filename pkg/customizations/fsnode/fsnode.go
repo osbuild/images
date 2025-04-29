@@ -1,10 +1,15 @@
 package fsnode
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"regexp"
+
+	"github.com/osbuild/images/internal/common"
 )
 
 const usernameRegex = `^[A-Za-z0-9_.][A-Za-z0-9_.-]{0,31}$`
@@ -116,4 +121,58 @@ func (f *baseFsNode) validate() error {
 	}
 
 	return nil
+}
+func (f *baseFsNode) UnmarshalJSON(data []byte) (err error) {
+	var m map[string]interface{}
+	dec := json.NewDecoder(bytes.NewBuffer(data))
+	dec.UseNumber()
+	if err := dec.Decode(&m); err != nil {
+		return err
+	}
+	if path, ok := m["path"]; ok {
+		f.path, ok = path.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for path (want string)", path)
+		}
+	}
+	if mode, ok := m["mode"]; ok {
+		modeNum, ok := mode.(json.Number)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for mode (want number)", mode)
+		}
+		fsMode, err := modeNum.Int64()
+		if err != nil {
+			return fmt.Errorf("mode is not an int: %v", err)
+		}
+		if fsMode < 0 || fsMode > math.MaxUint32 {
+			return fmt.Errorf("mode %v is outside the allowed range of [0,%v]", fsMode, math.MaxUint32)
+		}
+		//nolint:gosec
+		f.mode = common.ToPtr(os.FileMode(uint32(fsMode)))
+	}
+	switch user := m["user"].(type) {
+	case json.Number:
+		f.user, err = user.Int64()
+		if err != nil {
+			return fmt.Errorf("user is a number but not an int: %v", err)
+		}
+	default:
+		f.user = user
+	}
+	switch group := m["group"].(type) {
+	case json.Number:
+		f.group, err = group.Int64()
+		if err != nil {
+			return fmt.Errorf("group is a number but not an int: %v", err)
+		}
+	default:
+		f.group = group
+	}
+
+	return f.validate()
+
+}
+
+func (f *baseFsNode) UnmarshalYAML(unmarshal func(any) error) error {
+	return common.UnmarshalYAMLviaJSON(f, unmarshal)
 }
