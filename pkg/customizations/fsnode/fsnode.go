@@ -3,7 +3,7 @@ package fsnode
 import (
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 	"regexp"
 )
 
@@ -73,7 +73,7 @@ func (f *baseFsNode) validate() error {
 	if f.path[len(f.path)-1] == '/' {
 		return fmt.Errorf("path must not end with a slash")
 	}
-	if f.path != path.Clean(f.path) {
+	if f.path != filepath.Clean(f.path) {
 		return fmt.Errorf("path must be canonical")
 	}
 
