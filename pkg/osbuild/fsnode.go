@@ -22,11 +22,11 @@ func GenFileNodesStages(files []*fsnode.File) []*Stage {
 	chownPaths := make(map[string]ChownStagePathOptions)
 
 	for _, file := range files {
-		fileDataChecksum := fmt.Sprintf("%x", sha256.Sum256(file.Data()))
+		fileDataChecksum := fmt.Sprintf("%x", sha256.Sum256(file.Data))
 		copyStageInputKey := fmt.Sprintf("file-%s", fileDataChecksum)
 		copyStagePaths = append(copyStagePaths, CopyStagePath{
 			From: fmt.Sprintf("input://%s/sha256:%s", copyStageInputKey, fileDataChecksum),
-			To:   fmt.Sprintf("tree://%s", file.Path()),
+			To:   fmt.Sprintf("tree://%s", file.Path),
 			// Default to removing the destination if it exists to ensure that symlinks are not followed.
 			RemoveDestination: true,
 		})
@@ -34,14 +34,14 @@ func GenFileNodesStages(files []*fsnode.File) []*Stage {
 			NewFilesInputSourceArrayRefEntry(fmt.Sprintf("sha256:%s", fileDataChecksum), nil),
 		}))
 
-		if file.Mode() != nil {
-			chmodPaths[file.Path()] = ChmodStagePathOptions{Mode: fmt.Sprintf("%#o", *file.Mode())}
+		if file.Mode != nil {
+			chmodPaths[file.Path] = ChmodStagePathOptions{Mode: fmt.Sprintf("%#o", *file.Mode)}
 		}
 
-		if file.User() != nil || file.Group() != nil {
-			chownPaths[file.Path()] = ChownStagePathOptions{
-				User:  file.User(),
-				Group: file.Group(),
+		if file.User != nil || file.Group != nil {
+			chownPaths[file.Path] = ChownStagePathOptions{
+				User:  file.User,
+				Group: file.Group,
 			}
 		}
 	}
@@ -79,23 +79,23 @@ func GenDirectoryNodesStages(dirs []*fsnode.Directory) []*Stage {
 		// This prevents the generated stages from changing the ownership and permissions of existing directories.
 		// TODO: We may want to make this configurable if we end up internally using `fsnode.Directory` for other
 		//       purposes than BP customizations.
-		dirExistOk := dir.Mode() == nil && dir.User() == nil && dir.Group() == nil
+		dirExistOk := dir.Mode == nil && dir.User == nil && dir.Group == nil
 
 		// Mode is intentionally not set, because it will be set by the chmod stage anyway.
 		mkdirPaths = append(mkdirPaths, MkdirStagePath{
-			Path:    dir.Path(),
-			Parents: dir.EnsureParentDirs(),
+			Path:    dir.Path,
+			Parents: dir.EnsureParentDirs,
 			ExistOk: dirExistOk,
 		})
 
-		if dir.Mode() != nil {
-			chmodPaths[dir.Path()] = ChmodStagePathOptions{Mode: fmt.Sprintf("%#o", *dir.Mode())}
+		if dir.Mode != nil {
+			chmodPaths[dir.Path] = ChmodStagePathOptions{Mode: fmt.Sprintf("%#o", *dir.Mode)}
 		}
 
-		if dir.User() != nil || dir.Group() != nil {
-			chownPaths[dir.Path()] = ChownStagePathOptions{
-				User:  dir.User(),
-				Group: dir.Group(),
+		if dir.User != nil || dir.Group != nil {
+			chownPaths[dir.Path] = ChownStagePathOptions{
+				User:  dir.User,
+				Group: dir.Group,
 			}
 		}
 	}

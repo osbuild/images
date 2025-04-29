@@ -1001,6 +1001,6 @@ func (p *OS) addInlineDataAndStages(pipeline *osbuild.Pipeline, files []*fsnode.
 	pipeline.AddStages(osbuild.GenFileNodesStages(files)...)
 
 	for _, file := range files {
-		p.inlineData = append(p.inlineData, string(file.Data()))
+		p.inlineData = append(p.inlineData, string(file.Data))
 	}
 }

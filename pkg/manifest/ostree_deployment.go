@@ -516,7 +516,7 @@ func (p *OSTreeDeployment) addInlineDataAndStages(pipeline *osbuild.Pipeline, fi
 	}
 
 	for _, file := range files {
-		p.inlineData = append(p.inlineData, string(file.Data()))
+		p.inlineData = append(p.inlineData, string(file.Data))
 	}
 }
 

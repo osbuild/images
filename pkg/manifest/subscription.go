@@ -63,7 +63,7 @@ func (p *Subscription) getInline() []string {
 
 	// inline data for custom files
 	for _, file := range p.Files {
-		inlineData = append(inlineData, string(file.Data()))
+		inlineData = append(inlineData, string(file.Data))
 	}
 
 	return inlineData

@@ -25,7 +25,7 @@ func TestNewDirectory(t *testing.T) {
 			user:             nil,
 			group:            nil,
 			ensureParentDirs: false,
-			expected:         &Directory{baseFsNode: baseFsNode{path: "/etc/dir", mode: nil, user: nil, group: nil}, ensureParentDirs: false},
+			expected:         &Directory{Path: "/etc/dir", Mode: nil, User: nil, Group: nil, EnsureParentDirs: false},
 		},
 		{
 			name:             "directory-with-mode",
@@ -34,7 +34,7 @@ func TestNewDirectory(t *testing.T) {
 			user:             nil,
 			group:            nil,
 			ensureParentDirs: false,
-			expected:         &Directory{baseFsNode: baseFsNode{path: "/etc/dir", mode: common.ToPtr(os.FileMode(0644)), user: nil, group: nil}, ensureParentDirs: false},
+			expected:         &Directory{Path: "/etc/dir", Mode: common.ToPtr(os.FileMode(0644)), User: nil, Group: nil, EnsureParentDirs: false},
 		},
 		{
 			name:             "directory-with-user-and-group-string",
@@ -43,7 +43,7 @@ func TestNewDirectory(t *testing.T) {
 			user:             "user",
 			group:            "group",
 			ensureParentDirs: false,
-			expected:         &Directory{baseFsNode: baseFsNode{path: "/etc/dir", mode: nil, user: "user", group: "group"}, ensureParentDirs: false},
+			expected:         &Directory{Path: "/etc/dir", Mode: nil, User: "user", Group: "group", EnsureParentDirs: false},
 		},
 		{
 			name:             "directory-with-user-and-group-int64",
@@ -52,7 +52,7 @@ func TestNewDirectory(t *testing.T) {
 			user:             int64(1000),
 			group:            int64(1000),
 			ensureParentDirs: false,
-			expected:         &Directory{baseFsNode: baseFsNode{path: "/etc/dir", mode: nil, user: int64(1000), group: int64(1000)}, ensureParentDirs: false},
+			expected:         &Directory{Path: "/etc/dir", Mode: nil, User: int64(1000), Group: int64(1000), EnsureParentDirs: false},
 		},
 		{
 			name:             "directory-with-ensure-parent-dirs",
@@ -61,7 +61,7 @@ func TestNewDirectory(t *testing.T) {
 			user:             nil,
 			group:            nil,
 			ensureParentDirs: true,
-			expected:         &Directory{baseFsNode: baseFsNode{path: "/etc/dir", mode: nil, user: nil, group: nil}, ensureParentDirs: true},
+			expected:         &Directory{Path: "/etc/dir", Mode: nil, User: nil, Group: nil, EnsureParentDirs: true},
 		},
 	}
 

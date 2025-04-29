@@ -544,13 +544,13 @@ func TestSubscriptionService(t *testing.T) {
 
 			// ensure no directories or files have non-nil ownership
 			for _, file := range files {
-				assert.Nil(file.User())
-				assert.Nil(file.Group())
+				assert.Nil(file.User)
+				assert.Nil(file.Group)
 			}
 
 			for _, dir := range dirs {
-				assert.Nil(dir.User())
-				assert.Nil(dir.Group())
+				assert.Nil(dir.User)
+				assert.Nil(dir.Group)
 			}
 		})
 	}

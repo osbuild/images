@@ -10,80 +10,28 @@ import (
 const usernameRegex = `^[A-Za-z0-9_.][A-Za-z0-9_.-]{0,31}$`
 const groupnameRegex = `^[A-Za-z0-9_][A-Za-z0-9_-]{0,31}$`
 
-type baseFsNode struct {
-	path  string
-	mode  *os.FileMode
-	user  interface{}
-	group interface{}
-}
-
-func (f *baseFsNode) Path() string {
-	if f == nil {
-		return ""
-	}
-	return f.path
-}
-
-func (f *baseFsNode) Mode() *os.FileMode {
-	if f == nil {
-		return nil
-	}
-	return f.mode
-}
-
-// User can return either a string (user name) or an int64 (UID)
-func (f *baseFsNode) User() interface{} {
-	if f == nil {
-		return nil
-	}
-	return f.user
-}
-
-// Group can return either a string (group name) or an int64 (GID)
-func (f *baseFsNode) Group() interface{} {
-	if f == nil {
-		return nil
-	}
-	return f.group
-}
-
-func newBaseFsNode(path string, mode *os.FileMode, user interface{}, group interface{}) (*baseFsNode, error) {
-	node := &baseFsNode{
-		path:  path,
-		mode:  mode,
-		user:  user,
-		group: group,
-	}
-
-	err := node.validate()
-	if err != nil {
-		return nil, err
-	}
-	return node, nil
-}
-
-func (f *baseFsNode) validate() error {
+func validate(path string, mode *os.FileMode, user any, group any) error {
 	// Check that the path is valid
-	if f.path == "" {
+	if path == "" {
 		return fmt.Errorf("path must not be empty")
 	}
-	if f.path[0] != '/' {
+	if path[0] != '/' {
 		return fmt.Errorf("path must be absolute")
 	}
-	if f.path[len(f.path)-1] == '/' {
+	if path[len(path)-1] == '/' {
 		return fmt.Errorf("path must not end with a slash")
 	}
-	if f.path != filepath.Clean(f.path) {
+	if path != filepath.Clean(path) {
 		return fmt.Errorf("path must be canonical")
 	}
 
 	// Check that the mode is valid
-	if f.mode != nil && *f.mode&os.ModeType != 0 {
+	if mode != nil && *mode&os.ModeType != 0 {
 		return fmt.Errorf("mode must not contain file type bits")
 	}
 
 	// Check that the user and group are valid
-	switch user := f.user.(type) {
+	switch user := user.(type) {
 	case string:
 		nameRegex := regexp.MustCompile(usernameRegex)
 		if !nameRegex.MatchString(user) {
@@ -99,7 +47,7 @@ func (f *baseFsNode) validate() error {
 		return fmt.Errorf("user must be either a string or an int64, got %T", user)
 	}
 
-	switch group := f.group.(type) {
+	switch group := group.(type) {
 	case string:
 		nameRegex := regexp.MustCompile(groupnameRegex)
 		if !nameRegex.MatchString(group) {

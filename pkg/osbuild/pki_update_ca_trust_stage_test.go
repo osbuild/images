@@ -66,7 +66,7 @@ func TestNewCAFileNodes(t *testing.T) {
 		"/etc/pki/ca-trust/source/anchors/4550f533dccaa359ad1b20d2ddbd27cd0d0de24.pem",
 	}
 	for i, c := range certs {
-		assert.Equal(t, expectedPaths[i], files[i].Path())
-		assert.Equal(t, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: c.Raw}), files[i].Data())
+		assert.Equal(t, expectedPaths[i], files[i].Path)
+		assert.Equal(t, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: c.Raw}), files[i].Data)
 	}
 }

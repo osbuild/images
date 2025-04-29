@@ -9,151 +9,116 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBaseFsNodeValidate(t *testing.T) {
+func TestValidate(t *testing.T) {
 	testCases := []struct {
-		Node  baseFsNode
+		path  string
+		mode  *os.FileMode
+		user  any
+		group any
 		Error bool
 	}{
 		// PATH
 		// relative path is not allowed
 		{
-			Node: baseFsNode{
-				path: "relative/path/file",
-			},
+			path:  "relative/path/file",
 			Error: true,
 		},
 		// path ending with slash is not allowed
 		{
-			Node: baseFsNode{
-				path: "/dir/with/trailing/slash/",
-			},
+			path:  "/dir/with/trailing/slash/",
 			Error: true,
 		},
 		// empty path is not allowed
 		{
-			Node: baseFsNode{
-				path: "",
-			},
+			path:  "",
 			Error: true,
 		},
 		// path must be canonical
 		{
-			Node: baseFsNode{
-				path: "/dir/../file",
-			},
+			path:  "/dir/../file",
 			Error: true,
 		},
 		{
-			Node: baseFsNode{
-				path: "/dir/./file",
-			},
+			path:  "/dir/./file",
 			Error: true,
 		},
 		// valid paths
 		{
-			Node: baseFsNode{
-				path: "/etc/file",
-			},
+			path: "/etc/file",
 		},
 		{
-			Node: baseFsNode{
-				path: "/etc/dir",
-			},
+			path: "/etc/dir",
 		},
 		// MODE
 		// invalid mode
 		{
-			Node: baseFsNode{
-				path: "/etc/file",
-				mode: common.ToPtr(os.FileMode(os.ModeDir)),
-			},
+			path:  "/etc/file",
+			mode:  common.ToPtr(os.FileMode(os.ModeDir)),
 			Error: true,
 		},
 		// valid mode
 		{
-			Node: baseFsNode{
-				path: "/etc/file",
-				mode: common.ToPtr(os.FileMode(0o644)),
-			},
+			path: "/etc/file",
+			mode: common.ToPtr(os.FileMode(0o644)),
 		},
 		// USER
 		// invalid user
 		{
-			Node: baseFsNode{
-				path: "/etc/file",
-				user: "",
-			},
+			path:  "/etc/file",
+			user:  "",
 			Error: true,
 		},
 		{
-			Node: baseFsNode{
-				path: "/etc/file",
-				user: "invalid@@@user",
-			},
+			path:  "/etc/file",
+			user:  "invalid@@@user",
 			Error: true,
 		},
 		{
-			Node: baseFsNode{
-				path: "/etc/file",
-				user: int64(-1),
-			},
+			path:  "/etc/file",
+			user:  int64(-1),
 			Error: true,
 		},
 		// valid user
 		{
-			Node: baseFsNode{
-				path: "/etc/file",
-				user: "osbuild",
-			},
+			path: "/etc/file",
+			user: "osbuild",
 		},
 		{
-			Node: baseFsNode{
-				path: "/etc/file",
-				user: int64(0),
-			},
+			path: "/etc/file",
+			user: int64(0),
 		},
 		// GROUP
 		// invalid group
 		{
-			Node: baseFsNode{
-				path:  "/etc/file",
-				group: "",
-			},
+			path:  "/etc/file",
+			group: "",
 			Error: true,
 		},
 		{
-			Node: baseFsNode{
-				path:  "/etc/file",
-				group: "invalid@@@group",
-			},
+			path:  "/etc/file",
+			group: "invalid@@@group",
 			Error: true,
 		},
 		{
-			Node: baseFsNode{
-				path:  "/etc/file",
-				group: int64(-1),
-			},
+			path:  "/etc/file",
+			group: int64(-1),
 			Error: true,
 		},
 		// valid group
 		{
-			Node: baseFsNode{
-				path:  "/etc/file",
-				group: "osbuild",
-			},
+			path:  "/etc/file",
+			group: "osbuild",
 		},
 		{
-			Node: baseFsNode{
-				path:  "/etc/file",
-				group: int64(0),
-			},
+			path:  "/etc/file",
+			group: int64(0),
 		},
 	}
 
-	for idx, testCase := range testCases {
+	for idx, tc := range testCases {
 		t.Run(fmt.Sprintf("case #%d", idx), func(t *testing.T) {
-			err := testCase.Node.validate()
-			if testCase.Error {
+			err := validate(tc.path, tc.mode, tc.user, tc.group)
+			if tc.Error {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
