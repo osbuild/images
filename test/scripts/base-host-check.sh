@@ -215,6 +215,9 @@ check_firewall_ports() {
     echo "$ports_expected" | while read -r port_expected; do
         # NOTE: sudo works here without password because we test this only on ami
         # initialised with cloud-init, which sets sudo NOPASSWD for the user
+        # firewall-cmd --query-port uses / as the port/protocol separator, but
+        # in the blueprint we use :.
+        port_expected="${port_expected//:/\/}"
         state=$(sudo firewall-cmd --query-port="${port_expected}")
         if [[ "${state}" == "yes" ]]; then
             echo "Firewall port was enabled port=${port_expected} state=${state}"
