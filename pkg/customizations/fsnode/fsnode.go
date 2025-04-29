@@ -7,6 +7,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 
 	"github.com/osbuild/images/internal/common"
@@ -175,4 +176,31 @@ func (f *baseFsNode) UnmarshalJSON(data []byte) (err error) {
 
 func (f *baseFsNode) UnmarshalYAML(unmarshal func(any) error) error {
 	return common.UnmarshalYAMLviaJSON(f, unmarshal)
+}
+
+// fieldNams returns all field names of the given struct pointer, it
+// will panic when pointing to something else
+func fieldNames(s interface{}) map[string]bool {
+	val := reflect.ValueOf(s).Elem()
+
+	fieldNames := map[string]bool{}
+	var collect func(v reflect.Value, t reflect.Type)
+	collect = func(v reflect.Value, t reflect.Type) {
+		for i := 0; i < v.NumField(); i++ {
+			field := t.Field(i)
+			fieldVal := v.Field(i)
+			if field.Anonymous {
+				collect(fieldVal, fieldVal.Type())
+			} else {
+				if field.Tag.Get("rename") != "" {
+					fieldNames[field.Tag.Get("rename")] = true
+				} else {
+					fieldNames[field.Name] = true
+				}
+			}
+		}
+	}
+	collect(val, val.Type())
+
+	return fieldNames
 }

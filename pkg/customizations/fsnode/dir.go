@@ -11,7 +11,7 @@ import (
 
 type Directory struct {
 	baseFsNode
-	ensureParentDirs bool
+	ensureParentDirs bool `rename:"ensure_parent_dirs"`
 }
 
 func (d *Directory) EnsureParentDirs() bool {
@@ -26,6 +26,8 @@ func (d *Directory) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
+	// XXX: ideally we would also check here that we do not
+	// get extra/mistyped fields
 	var m map[string]interface{}
 	dec := json.NewDecoder(bytes.NewBuffer(data))
 	if err := dec.Decode(&m); err != nil {
@@ -37,6 +39,15 @@ func (d *Directory) UnmarshalJSON(data []byte) error {
 			return fmt.Errorf("unexpected type %T for ensure_parent_dirs (want bool)", ensureParents)
 		}
 	}
+
+	// validate only known names are used
+	fieldNames := fieldNames(d)
+	for k := range m {
+		if !fieldNames[k] {
+			return fmt.Errorf("unknown key %q in dir", k)
+		}
+	}
+
 	return nil
 }
 

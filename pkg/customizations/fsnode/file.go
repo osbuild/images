@@ -38,6 +38,15 @@ func (f *File) UnmarshalJSON(data []byte) error {
 		}
 		f.data = []byte(dataStr)
 	}
+
+	// validate only known names are used
+	fieldNames := fieldNames(f)
+	for k := range m {
+		if !fieldNames[k] {
+			return fmt.Errorf("unknown key %q in file", k)
+		}
+	}
+
 	return nil
 }
 

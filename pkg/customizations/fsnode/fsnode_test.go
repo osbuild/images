@@ -210,6 +210,7 @@ func TestFsNodeUnmarshalBadFile(t *testing.T) {
 		{"path: /foo\nuser: -1", `user ID must be non-negative`},
 		{"path: /foo\ngroup: a!b", `group name "a!b" doesn't conform to validating regex`},
 		{"path: /foo\ndata: 1.61", `unexpected type float64 for data (want string)`},
+		{"path: /foo\nextra: field", `unknown key "extra" in file`},
 	} {
 		var fsn File
 		err := yaml.Unmarshal([]byte(tc.inputYAML), &fsn)
@@ -223,6 +224,7 @@ func TestFsNodeUnmarshalBadDir(t *testing.T) {
 		expectedErr string
 	}{
 		{"path: /foo\nensure_parent_dirs: maybe", `unexpected type string for ensure_parent_dirs (want bool)`},
+		{"path: /foo\nextra: field", `unknown key "extra" in dir`},
 	} {
 		var fsn Directory
 		err := yaml.Unmarshal([]byte(tc.inputYAML), &fsn)
