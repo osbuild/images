@@ -131,7 +131,7 @@ func checkOptions(t *rhel.ImageType, bp *blueprint.Blueprint, options distro.Ima
 		return warnings, fmt.Errorf("custom mountpoints are not supported for ostree types")
 	}
 
-	if err := blueprint.CheckMountpointsPolicy(mountpoints, policies.MountpointPolicies); err != nil {
+	if err := blueprint.CheckMountpointsPolicy(mountpoints, policies.MountpointPoliciesFS); err != nil {
 		return warnings, err
 	}
 
@@ -139,7 +139,7 @@ func checkOptions(t *rhel.ImageType, bp *blueprint.Blueprint, options distro.Ima
 		return warnings, err
 	}
 
-	if err := blueprint.CheckDiskMountpointsPolicy(partitioning, policies.MountpointPolicies); err != nil {
+	if err := blueprint.CheckDiskMountpointsPolicy(partitioning, policies.MountpointPoliciesDisk); err != nil {
 		return warnings, err
 	}
 

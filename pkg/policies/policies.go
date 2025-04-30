@@ -4,35 +4,48 @@ import (
 	"github.com/osbuild/images/pkg/pathpolicy"
 )
 
-// MountpointPolicies is a set of default mountpoint policies used for filesystem customizations
-var MountpointPolicies = pathpolicy.NewPathPolicies(map[string]pathpolicy.PathPolicy{
-	"/": {},
-	// /etc must be on the root filesystem
-	"/etc": {Deny: true},
-	// NB: any mountpoints under /usr are not supported by systemd fstab
-	// generator in initram before the switch-root, so we don't allow them.
-	"/usr": {Exact: true},
-	// API filesystems
-	"/sys":  {Deny: true},
-	"/proc": {Deny: true},
-	"/dev":  {Deny: true},
-	"/run":  {Deny: true},
-	// not allowed due to merged-usr
-	"/bin":   {Deny: true},
-	"/sbin":  {Deny: true},
-	"/lib":   {Deny: true},
-	"/lib64": {Deny: true},
-	// used by ext filesystems
-	"/lost+found": {Deny: true},
-	// used by EFI
-	"/boot/efi": {Deny: true},
-	// used by systemd / ostree
-	"/sysroot": {Deny: true},
-	// symlink to ../run which is on tmpfs
-	"/var/run": {Deny: true},
-	// symlink to ../run/lock which is on tmpfs
-	"/var/lock": {Deny: true},
-})
+// MountpointPoliciesFS is a set of default mountpoint policies used for filesystem customizations
+var MountpointPoliciesFS *pathpolicy.PathPolicies
+
+// MountpointPoliciesDisk is a set of default mountpoint policies used for disk customizations
+var MountpointPoliciesDisk *pathpolicy.PathPolicies
+
+func init() {
+	m := map[string]pathpolicy.PathPolicy{
+		"/": {},
+		// /etc must be on the root filesystem
+		"/etc": {Deny: true},
+		// NB: any mountpoints under /usr are not supported by systemd fstab
+		// generator in initram before the switch-root, so we don't allow them.
+		"/usr": {Exact: true},
+		// API filesystems
+		"/sys":  {Deny: true},
+		"/proc": {Deny: true},
+		"/dev":  {Deny: true},
+		"/run":  {Deny: true},
+		// not allowed due to merged-usr
+		"/bin":   {Deny: true},
+		"/sbin":  {Deny: true},
+		"/lib":   {Deny: true},
+		"/lib64": {Deny: true},
+		// used by ext filesystems
+		"/lost+found": {Deny: true},
+		// used by systemd / ostree
+		"/sysroot": {Deny: true},
+		// symlink to ../run which is on tmpfs
+		"/var/run": {Deny: true},
+		// symlink to ../run/lock which is on tmpfs
+		"/var/lock": {Deny: true},
+	}
+	MountpointPoliciesDisk = pathpolicy.NewPathPolicies(m)
+	// For filesystem policies we do not allow /boot/efi - our
+	// existing custom filesystem code will not DRTR. Once
+	// support (and tests) are added we can allow it for
+	// filesystem customizations. The disk customiations will
+	// work correctly.
+	m["/boot/efi"] = pathpolicy.PathPolicy{Deny: true}
+	MountpointPoliciesFS = pathpolicy.NewPathPolicies(m)
+}
 
 // CustomDirectoriesPolicies is a set of default policies for custom directories
 var CustomDirectoriesPolicies = pathpolicy.NewPathPolicies(map[string]pathpolicy.PathPolicy{
