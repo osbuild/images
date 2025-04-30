@@ -241,7 +241,7 @@ func (t *TestImageType) Manifest(b *blueprint.Blueprint, options distro.ImageOpt
 	if b != nil {
 		mountpoints := b.Customizations.GetFilesystems()
 
-		err := blueprint.CheckMountpointsPolicy(mountpoints, policies.MountpointPolicies)
+		err := blueprint.CheckMountpointsPolicy(mountpoints, policies.MountpointPoliciesFS)
 		if err != nil {
 			return nil, nil, err
 		}

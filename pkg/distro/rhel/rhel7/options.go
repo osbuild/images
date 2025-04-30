@@ -22,7 +22,7 @@ func checkOptions(t *rhel.ImageType, bp *blueprint.Blueprint, options distro.Ima
 
 	mountpoints := customizations.GetFilesystems()
 
-	err := blueprint.CheckMountpointsPolicy(mountpoints, policies.MountpointPolicies)
+	err := blueprint.CheckMountpointsPolicy(mountpoints, policies.MountpointPoliciesFS)
 	if err != nil {
 		return warnings, err
 	}
