@@ -29,10 +29,10 @@ import (
 
 	rh "github.com/hashicorp/go-retryablehttp"
 	"github.com/kolo/xmlrpc"
-	"github.com/sirupsen/logrus"
 	"github.com/ubccr/kerby/khttp"
 
 	"github.com/osbuild/images/pkg/datasizes"
+	"github.com/osbuild/images/pkg/olog"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
@@ -315,7 +315,7 @@ func (k *Koji) CGImport(build ImageBuild, buildRoots []BuildRoot, images []Image
 			return nil, err
 		}
 
-		logrus.Infof("CGImport succeeded after %d attempts", attempt+1)
+		olog.Printf("CGImport succeeded after %d attempts", attempt+1)
 
 		return &result, nil
 	}
@@ -514,7 +514,7 @@ func customCheckRetry(ctx context.Context, resp *http.Response, err error) (bool
 	}
 
 	if !shouldRetry && !(resp.StatusCode >= 200 && resp.StatusCode < 300) {
-		logrus.Info("Not retrying: ", resp.Status)
+		olog.Println("Not retrying: ", resp.Status)
 	}
 
 	return shouldRetry, retErr
@@ -522,7 +522,7 @@ func customCheckRetry(ctx context.Context, resp *http.Response, err error) (bool
 
 func createCustomRetryableClient() *rh.Client {
 	client := rh.NewClient()
-	client.Logger = rh.LeveledLogger(&LeveledLogrus{logrus.StandardLogger()})
+	client.Logger = olog.Default()
 	client.CheckRetry = customCheckRetry
 	return client
 }

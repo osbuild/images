@@ -9,7 +9,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -27,11 +26,6 @@ import (
 	"github.com/osbuild/images/pkg/sbom"
 	testrepos "github.com/osbuild/images/test/data/repositories"
 )
-
-func init() {
-	// silence logrus by default, it is quite verbose
-	logrus.SetLevel(logrus.WarnLevel)
-}
 
 func sha256For(s string) string {
 	h := sha256.New()

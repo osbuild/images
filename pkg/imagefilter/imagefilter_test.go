@@ -3,8 +3,6 @@ package imagefilter_test
 import (
 	"testing"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -14,8 +12,6 @@ import (
 )
 
 func TestImageFilterSmoke(t *testing.T) {
-	logrus.SetLevel(logrus.WarnLevel)
-
 	fac := distrofactory.NewDefault()
 	repos, err := testrepos.New()
 	require.NoError(t, err)

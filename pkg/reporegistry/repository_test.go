@@ -1,19 +1,19 @@
 package reporegistry
 
 import (
+	"bytes"
 	"fmt"
+	"log"
 	"path/filepath"
 	"reflect"
-	"slices"
 	"testing"
 
-	"github.com/sirupsen/logrus"
-	logrusTest "github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/distro/test_distro"
+	"github.com/osbuild/images/pkg/olog"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
@@ -303,14 +303,13 @@ func Test_LoadAllRepositories(t *testing.T) {
 }
 
 func TestLoadRepositoriesLogging(t *testing.T) {
-	_, logHook := logrusTest.NewNullLogger()
-	logrus.AddHook(logHook)
+	buf := new(bytes.Buffer)
+	olog.SetDefault(log.New(buf, "", 0))
+	defer olog.SetDefault(nil)
 
 	confPaths := getConfPaths(t)
 	_, err := LoadAllRepositories(confPaths, nil)
 	require.NoError(t, err)
-	needle := "Loaded repository configuration file: rhel-8.10.json"
-	assert.True(t, slices.ContainsFunc(logHook.AllEntries(), func(entry *logrus.Entry) bool {
-		return needle == entry.Message
-	}), fmt.Sprintf("%q not found in look entries %+v (last: %q)", needle, logHook.AllEntries(), logHook.LastEntry().Message))
+	want := "Loaded repository configuration file: rhel-8.10.json"
+	require.Contains(t, buf.String(), want, fmt.Sprintf("%q not found in look entries %+v", want, buf.String()))
 }
