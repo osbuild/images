@@ -66,6 +66,7 @@ func TestImageTypePipelineNames(t *testing.T) {
 			assert.Nil(t, err)
 			for _, imageTypeName := range arch.ListImageTypes() {
 				t.Run(fmt.Sprintf("%s/%s/%s", distroName, archName, imageTypeName), func(t *testing.T) {
+					t.Parallel()
 					assert := assert.New(t)
 					imageType, err := arch.GetImageType(imageTypeName)
 					assert.Nil(err)
@@ -623,6 +624,7 @@ func TestOSTreeOptionsErrorForNonOSTreeImgTypes(t *testing.T) {
 
 			for _, imageTypeName := range imgTypes {
 				t.Run(fmt.Sprintf("%s/%s/%s", distroName, archName, imageTypeName), func(t *testing.T) {
+					t.Parallel()
 					imageType, err := arch.GetImageType(imageTypeName)
 					assert.Nil(err)
 
