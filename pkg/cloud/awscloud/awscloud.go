@@ -18,7 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/sirupsen/logrus"
+	"github.com/osbuild/images/pkg/olog"
 )
 
 type AWS struct {
@@ -160,14 +160,14 @@ func (a *AWS) Upload(filename, bucket, key string) (*s3manager.UploadOutput, err
 	defer func() {
 		err := file.Close()
 		if err != nil {
-			logrus.Warnf("[AWS] ‼ Failed to close the file uploaded to S3️: %v", err)
+			olog.Printf("[AWS] ‼ Failed to close the file uploaded to S3️: %v", err)
 		}
 	}()
 	return a.UploadFromReader(file, bucket, key)
 }
 
 func (a *AWS) UploadFromReader(r io.Reader, bucket, key string) (*s3manager.UploadOutput, error) {
-	logrus.Infof("[AWS] 🚀 Uploading image to S3: %s/%s", bucket, key)
+	olog.Printf("[AWS] 🚀 Uploading image to S3: %s/%s", bucket, key)
 	return a.uploader.Upload(
 		&s3manager.UploadInput{
 			Bucket: aws.String(bucket),
@@ -262,7 +262,7 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch str
 		}
 	}
 
-	logrus.Infof("[AWS] 📥 Importing snapshot from image: %s/%s", bucket, key)
+	olog.Printf("[AWS] 📥 Importing snapshot from image: %s/%s", bucket, key)
 	snapshotDescription := fmt.Sprintf("Image Builder AWS Import of %s", name)
 	importTaskOutput, err := a.ec2.ImportSnapshot(
 		&ec2.ImportSnapshotInput{
@@ -277,11 +277,11 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch str
 		},
 	)
 	if err != nil {
-		logrus.Warnf("[AWS] error importing snapshot: %s", err)
+		olog.Printf("[AWS] error importing snapshot: %s", err)
 		return nil, nil, err
 	}
 
-	logrus.Infof("[AWS] 🚚 Waiting for snapshot to finish importing: %s", *importTaskOutput.ImportTaskId)
+	olog.Printf("[AWS] 🚚 Waiting for snapshot to finish importing: %s", *importTaskOutput.ImportTaskId)
 	err = WaitUntilImportSnapshotTaskCompleted(
 		a.ec2,
 		&ec2.DescribeImportSnapshotTasksInput{
@@ -295,7 +295,7 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch str
 	}
 
 	// we no longer need the object in s3, let's just delete it
-	logrus.Infof("[AWS] 🧹 Deleting image from S3: %s/%s", bucket, key)
+	olog.Printf("[AWS] 🧹 Deleting image from S3: %s/%s", bucket, key)
 	if err = a.DeleteObject(bucket, key); err != nil {
 		return nil, nil, err
 	}
@@ -330,7 +330,7 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch str
 		return nil, nil, err
 	}
 
-	logrus.Infof("[AWS] 📋 Registering AMI from imported snapshot: %s", *snapshotID)
+	olog.Printf("[AWS] 📋 Registering AMI from imported snapshot: %s", *snapshotID)
 	registerOutput, err := a.ec2.RegisterImage(
 		&ec2.RegisterImageInput{
 			Architecture:       aws.String(ec2Arch),
@@ -353,7 +353,7 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch str
 		return nil, nil, err
 	}
 
-	logrus.Infof("[AWS] 🎉 AMI registered: %s", *registerOutput.ImageId)
+	olog.Printf("[AWS] 🎉 AMI registered: %s", *registerOutput.ImageId)
 
 	// Tag the image with the image name.
 	req, _ = a.ec2.CreateTagsRequest(
@@ -516,13 +516,13 @@ func (a *AWS) ShareImage(ami string, userIds []string) error {
 }
 
 func (a *AWS) shareImage(ami *string, userIds []string) error {
-	logrus.Info("[AWS] 🎥 Sharing ec2 snapshot")
+	olog.Println("[AWS] 🎥 Sharing ec2 snapshot")
 	var uIds []*string
 	for i := range userIds {
 		uIds = append(uIds, &userIds[i])
 	}
 
-	logrus.Info("[AWS] 💿 Sharing ec2 AMI")
+	olog.Println("[AWS] 💿 Sharing ec2 AMI")
 	var launchPerms []*ec2.LaunchPermission
 	for _, id := range uIds {
 		launchPerms = append(launchPerms, &ec2.LaunchPermission{
@@ -538,15 +538,15 @@ func (a *AWS) shareImage(ami *string, userIds []string) error {
 		},
 	)
 	if err != nil {
-		logrus.Warnf("[AWS] 📨 Error sharing AMI: %v", err)
+		olog.Printf("[AWS] 📨 Error sharing AMI: %v", err)
 		return err
 	}
-	logrus.Info("[AWS] 💿 Shared AMI")
+	olog.Println("[AWS] 💿 Shared AMI")
 	return nil
 }
 
 func (a *AWS) shareSnapshot(snapshotId *string, userIds []string) error {
-	logrus.Info("[AWS] 🎥 Sharing ec2 snapshot")
+	olog.Println("[AWS] 🎥 Sharing ec2 snapshot")
 	var uIds []*string
 	for i := range userIds {
 		uIds = append(uIds, &userIds[i])
@@ -560,10 +560,10 @@ func (a *AWS) shareSnapshot(snapshotId *string, userIds []string) error {
 		},
 	)
 	if err != nil {
-		logrus.Warnf("[AWS] 📨 Error sharing ec2 snapshot: %v", err)
+		olog.Printf("[AWS] 📨 Error sharing ec2 snapshot: %v", err)
 		return err
 	}
-	logrus.Info("[AWS] 📨 Shared ec2 snapshot")
+	olog.Println("[AWS] 📨 Shared ec2 snapshot")
 	return nil
 }
 
@@ -594,7 +594,7 @@ func (a *AWS) RemoveSnapshotAndDeregisterImage(image *ec2.Image) error {
 		)
 		if err != nil {
 			// TODO return err?
-			logrus.Warn("Unable to remove snapshot", s)
+			olog.Println("Unable to remove snapshot", s)
 		}
 	}
 	return err
@@ -618,7 +618,7 @@ func (a *AWS) DescribeImagesByTag(tagKey, tagValue string) ([]*ec2.Image, error)
 }
 
 func (a *AWS) S3ObjectPresignedURL(bucket, objectKey string) (string, error) {
-	logrus.Infof("[AWS] 📋 Generating Presigned URL for S3 object %s/%s", bucket, objectKey)
+	olog.Printf("[AWS] 📋 Generating Presigned URL for S3 object %s/%s", bucket, objectKey)
 	req, _ := a.s3.GetObjectRequest(&s3.GetObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(objectKey),
@@ -627,12 +627,12 @@ func (a *AWS) S3ObjectPresignedURL(bucket, objectKey string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	logrus.Info("[AWS] 🎉 S3 Presigned URL ready")
+	olog.Println("[AWS] 🎉 S3 Presigned URL ready")
 	return url, nil
 }
 
 func (a *AWS) MarkS3ObjectAsPublic(bucket, objectKey string) error {
-	logrus.Infof("[AWS] 👐 Making S3 object public %s/%s", bucket, objectKey)
+	olog.Printf("[AWS] 👐 Making S3 object public %s/%s", bucket, objectKey)
 	_, err := a.s3.PutObjectAcl(&s3.PutObjectAclInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(objectKey),
@@ -641,7 +641,7 @@ func (a *AWS) MarkS3ObjectAsPublic(bucket, objectKey string) error {
 	if err != nil {
 		return err
 	}
-	logrus.Info("[AWS] ✔️ Making S3 object public successful")
+	olog.Println("[AWS] ✔️ Making S3 object public successful")
 
 	return nil
 }
