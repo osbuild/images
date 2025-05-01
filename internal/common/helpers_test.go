@@ -1,6 +1,7 @@
 package common
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"testing"
@@ -52,4 +53,35 @@ func TestMustHappy(t *testing.T) {
 	assert.PanicsWithError(t, "some error", func() {
 		Must(mustTester())
 	})
+}
+
+func TestEncodeUTF16le(t *testing.T) {
+	// the function was written to replicate 'iconv -f ASCII -t UTF-16LE' so these
+	// test cases were generated using that command
+	type testCase struct {
+		src   string
+		exp64 string // generate with 'echo -e -n '<src>' | iconv -f ASCII -t UTF-16LE | base64 -w0'
+	}
+
+	testCases := []testCase{
+		{
+			src:   "test",
+			exp64: "dABlAHMAdAA=",
+		},
+		{
+			src:   "this\nis\na\nmultiline\nstring\n\n",
+			exp64: "dABoAGkAcwAKAGkAcwAKAGEACgBtAHUAbAB0AGkAbABpAG4AZQAKAHMAdAByAGkAbgBnAAoACgA=",
+		},
+		{
+			src:   "shimx64.efi,redhat,\\EFI\\Linux\\ffffffffffffffffffffffffffffffff-5.14.0-528.el9.x86_64.efi ,UKI bootentry",
+			exp64: "cwBoAGkAbQB4ADYANAAuAGUAZgBpACwAcgBlAGQAaABhAHQALABcAEUARgBJAFwATABpAG4AdQB4AFwAZgBmAGYAZgBmAGYAZgBmAGYAZgBmAGYAZgBmAGYAZgBmAGYAZgBmAGYAZgBmAGYAZgBmAGYAZgBmAGYAZgBmAC0ANQAuADEANAAuADAALQA1ADIAOAAuAGUAbAA5AC4AeAA4ADYAXwA2ADQALgBlAGYAaQAgACwAVQBLAEkAIABiAG8AbwB0AGUAbgB0AHIAeQA=",
+		},
+	}
+
+	assert := assert.New(t)
+	for _, tc := range testCases {
+		exp, err := base64.StdEncoding.DecodeString(tc.exp64)
+		assert.NoError(err)
+		assert.Equal(exp, EncodeUTF16le(tc.src))
+	}
 }
