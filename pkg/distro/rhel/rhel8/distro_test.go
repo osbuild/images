@@ -333,6 +333,7 @@ func TestImageType_Name(t *testing.T) {
 				"tar",
 				"image-installer",
 				"minimal-raw",
+				"everything-netinst",
 			},
 		},
 		{
@@ -534,6 +535,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"oci",
 				"wsl",
 				"minimal-raw",
+				"everything-netinst",
 			},
 		},
 		{
@@ -554,6 +556,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"image-installer",
 				"wsl",
 				"minimal-raw",
+				"everything-netinst",
 			},
 		},
 		{

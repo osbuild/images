@@ -829,3 +829,179 @@ image_types:
             rhel:
               include:
                 - "insights-client"
+
+  # Break out the firmware. Lorax installs by wildcard with exclusions
+  # This list is from the pylorax.log expansion in RHEL 10
+  netinst_firmware:
+    package_sets:
+      - &netinst_firmware
+        condition:
+          architecture:
+            x86_64:
+              include:
+                - amd-gpu-firmware
+                - amd-ucode-firmware
+                - atheros-firmware
+                - brcmfmac-firmware
+                - intel-gpu-firmware
+                - iwlegacy-firmware
+                - iwlwifi-dvm-firmware
+                - iwlwifi-mvm-firmware
+                - libertas-firmware
+                - linux-firmware
+                - mt7xxx-firmware
+                - nvidia-gpu-firmware
+                - nxpwireless-firmware
+                - realtek-firmware
+                - tiwilink-firmware
+            aarch64:
+              include:
+                - amd-gpu-firmware
+                - amd-ucode-firmware
+                - atheros-firmware
+                - brcmfmac-firmware
+                - intel-gpu-firmware
+                - iwlegacy-firmware
+                - iwlwifi-dvm-firmware
+                - iwlwifi-mvm-firmware
+                - libertas-firmware
+                - linux-firmware
+                - linux-firmware
+                - mt7xxx-firmware
+                - nvidia-gpu-firmware
+                - nxpwireless-firmware
+                - realtek-firmware
+                - qcom-firmware
+                - tiwilink-firmware
+            ppc64le:
+              include:
+                - amd-gpu-firmware
+                - amd-ucode-firmware
+                - atheros-firmware
+                - brcmfmac-firmware
+                - intel-gpu-firmware
+                - iwlegacy-firmware
+                - iwlwifi-dvm-firmware
+                - iwlwifi-mvm-firmware
+                - libertas-firmware
+                - linux-firmware
+                - linux-firmware
+                - mt7xxx-firmware
+                - nvidia-gpu-firmware
+                - nxpwireless-firmware
+                - realtek-firmware
+                - tiwilink-firmware
+
+  # Based on lorax runtime-install.tmpl
+  everything_netinst: &everything_netinst
+    package_sets:
+      - *netinst_firmware
+      - include:
+          - redhat-release-eula
+          - anaconda
+          - anaconda-widgets
+          - anaconda-install-img-deps
+          - kdump-anaconda-addon
+          - device-mapper-multipath
+          - dnf
+          - ostree
+          - rpm-ostree
+          - pigz
+          - kernel
+          - kernel-modules
+          - kernel-modules-extra
+          - grubby
+          - glibc-all-langpacks
+          - plymouth
+          - anaconda-dracut
+          - dracut-network
+          - dracut-config-generic
+          - initscripts
+          - cryptsetup
+          - rpcbind
+          - kbd
+          - kbd-misc
+          - tar
+          - xz
+          - curl
+          - bzip2
+          - rsvg-pixbuf-loader
+          - rsyslog
+          - xfsprogs
+          - dosfstools
+          - device-mapper-persistent-data
+          - xfsdump
+          - udisks2
+          - udisks2-iscsi
+          - hostname
+          - libblockdev-lvm-dbus
+          - volume_key
+          - nss-tools
+          - selinux-policy-targeted
+          - audit
+          - ethtool
+          - openssh-server
+          - nfs-utils
+          - openssh-clients
+          - net-tools
+          - ipcalc
+          - nmap-ncat
+          - prefixdevname
+          - pciutils
+          - usbutils
+          - ipmitool
+          - mt-st
+          - smartmontools
+          - hdparm
+          - rdma-core
+          - rng-tools
+          - nvme-cli
+          - default-fonts-core-sans
+          - default-fonts-other-sans
+          - google-noto-sans-cjk-fonts
+          - gdb-gdbserver
+          - python3-pyatspi
+          - nano
+          - vim-minimal
+          - strace
+          - lsof
+          - less
+          - wget
+          - rsync
+          - bind-utils
+          - ftp
+          - mtr
+          - spice-vdagent
+          - hexedit
+          - sg3_utils
+          - perl-interpreter
+          - restore
+        condition:
+          architecture:
+            x86_64:
+              include:
+                - biosdevname
+                - grub2-tools-efi
+                - efibootmgr
+                - shim-x64
+                - grub2-efi-x64-cdboot
+                - grub2-tools
+                - grub2-tools-extra
+                - grub2-pc-modules
+                - dmidecode
+            aarch64:
+              include:
+                - efibootmgr
+                - grub2-efi-aa64-cdboot
+                - grub2-tools
+                - shim-aa64
+                - dmidecode
+            ppc64le:
+              include:
+                - powerpc-utils
+                - lsvpd
+                - ppc64-diag
+                - grub2-tools
+                - grub2-tools-minimal
+                - grub2-tools-extra
+                - grub2-ppc64le

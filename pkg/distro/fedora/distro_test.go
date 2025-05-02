@@ -544,6 +544,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"server-vhd",
 				"server-vmdk",
 				"wsl",
+				"everything-netinst",
 			},
 			verTypes: map[string][]string{
 				"40": {
@@ -573,6 +574,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"server-oci",
 				"server-openstack",
 				"server-qcow2",
+				"everything-netinst",
 			},
 			verTypes: map[string][]string{
 				"40": {

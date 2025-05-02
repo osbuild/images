@@ -287,6 +287,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"ec2",
 				"ec2-ha",
 				"ec2-sap",
+				"everything-netinst",
 			},
 		},
 		{
@@ -300,6 +301,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"image-installer",
 				"azure-rhui",
 				"ec2",
+				"everything-netinst",
 			},
 		},
 		{

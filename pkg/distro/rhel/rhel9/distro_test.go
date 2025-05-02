@@ -331,6 +331,7 @@ func TestImageType_Name(t *testing.T) {
 				"tar",
 				"image-installer",
 				"minimal-raw",
+				"everything-netinst",
 			},
 		},
 		{
@@ -347,6 +348,7 @@ func TestImageType_Name(t *testing.T) {
 				"vhd",
 				"azure-rhui",
 				"minimal-raw",
+				"everything-netinst",
 			},
 		},
 		{
@@ -531,6 +533,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"oci",
 				"wsl",
 				"minimal-raw",
+				"everything-netinst",
 			},
 		},
 		{
@@ -553,6 +556,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"azure-rhui",
 				"wsl",
 				"minimal-raw",
+				"everything-netinst",
 			},
 		},
 		{

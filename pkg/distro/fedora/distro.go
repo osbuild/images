@@ -81,9 +81,6 @@ func mkImageInstallerImgType(d distribution) imageType {
 			},
 			installerPkgsKey: packageSetLoader,
 		},
-		defaultImageConfig: &distro.ImageConfig{
-			Locale: common.ToPtr("en_US.UTF-8"),
-		},
 		bootable:  true,
 		bootISO:   true,
 		rpmOstree: false,
@@ -492,6 +489,32 @@ func mkMinimalRawImgType(d distribution) imageType {
 	return it
 }
 
+// mkNetinstISOImgType adds a netinst image type that creates an Anaconda boot.iso
+func mkNetinstISOImgType(d distribution) imageType {
+	return imageType{
+		name:        "everything-netinst",
+		nameAliases: []string{"netinst"},
+		filename:    "boot.iso",
+		mimeType:    "application/x-iso9660-image",
+		packageSets: map[string]packageSetFunc{
+			installerPkgsKey: packageSetLoader,
+		},
+		defaultImageConfig: &distro.ImageConfig{
+			Locale: common.ToPtr("en_US.UTF-8"),
+		},
+		bootable:  true,
+		bootISO:   true,
+		rpmOstree: false,
+		image:     netinstImage,
+		// We don't know the variant of the OS pipeline being installed
+		isoLabel:               getISOLabelFunc("Everything"),
+		buildPipelines:         []string{"build"},
+		payloadPipelines:       []string{"anaconda-tree", "efiboot-tree", "bootiso-tree", "bootiso"},
+		exports:                []string{"bootiso"},
+		requiredPartitionSizes: requiredDirectorySizes,
+	}
+}
+
 type distribution struct {
 	name               string
 	product            string
@@ -821,6 +844,9 @@ func newDistro(version int) distro.Distro {
 	iotInstallerImgType := mkIotInstallerImgType(rd)
 	iotInstallerImgType.defaultInstallerConfig = distroInstallerConfig
 
+	netinstISOImgType := mkNetinstISOImgType(rd)
+	netinstISOImgType.defaultInstallerConfig = distroInstallerConfig
+
 	x86_64.addImageTypes(
 		&platform.X86{
 			BasePlatform: platform.BasePlatform{
@@ -839,6 +865,7 @@ func newDistro(version int) distro.Distro {
 		iotInstallerImgType,
 		imageInstallerImgType,
 		liveInstallerImgType,
+		netinstISOImgType,
 	)
 	x86_64.addImageTypes(
 		&platform.X86{
@@ -913,6 +940,7 @@ func newDistro(version int) distro.Distro {
 		iotInstallerImgType,
 		mkIotOCIImgType(rd),
 		liveInstallerImgType,
+		netinstISOImgType,
 	)
 	aarch64.addImageTypes(
 		&platform.Aarch64_Fedora{

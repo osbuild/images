@@ -53,3 +53,27 @@ func mkTarImgType() *rhel.ImageType {
 
 	return it
 }
+
+// mkNetinstISOImgType adds a netinst image type that creates an Anaconda boot.iso
+func mkNetinstISOImgType() *rhel.ImageType {
+	it := rhel.NewImageType(
+		"everything-netinst",
+		"boot.iso",
+		"application/x-iso9660-image",
+		map[string]rhel.PackageSetFunc{
+			rhel.InstallerPkgsKey: packageSetLoader,
+		},
+		rhel.NetinstImage,
+		[]string{"build"},
+		[]string{"anaconda-tree", "efiboot-tree", "bootiso-tree", "bootiso"},
+		[]string{"bootiso"},
+	)
+	it.NameAliases = []string{"netinst"}
+
+	it.Bootable = true
+	it.BootISO = true
+	it.RPMOSTree = false
+	it.ISOLabelFn = distroISOLabelFunc
+
+	return it
+}
