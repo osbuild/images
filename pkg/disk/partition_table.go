@@ -51,6 +51,11 @@ const (
 	DefaultPartitioningMode PartitioningMode = ""
 )
 
+// DefaultBootPartitionSize is the default size of the /boot partition if it
+// needs to be auto-created. This happens if the custom partitioning don't
+// specify one, but the image requires one to boot (/ is on btrfs, or an LV).
+const DefaultBootPartitionSize = 512 * datasizes.MiB
+
 // NewPartitionTable takes an existing base partition table and some parameters
 // and returns a new version of the base table modified to satisfy the
 // parameters.
@@ -725,7 +730,7 @@ func (pt *PartitionTable) ensureLVM() error {
 	// we need a /boot partition to boot LVM, ensure one exists
 	bootPath := entityPath(pt, "/boot")
 	if bootPath == nil {
-		_, err := pt.CreateMountpoint("/boot", 512*datasizes.MiB)
+		_, err := pt.CreateMountpoint("/boot", DefaultBootPartitionSize)
 
 		if err != nil {
 			return err
@@ -784,7 +789,7 @@ func (pt *PartitionTable) ensureBtrfs(architecture arch.Arch) error {
 	// we need a /boot partition to boot btrfs, ensure one exists
 	bootPath := entityPath(pt, "/boot")
 	if bootPath == nil {
-		_, err := pt.CreateMountpoint("/boot", 512*datasizes.MiB)
+		_, err := pt.CreateMountpoint("/boot", DefaultBootPartitionSize)
 		if err != nil {
 			return fmt.Errorf("failed to create /boot partition when ensuring btrfs: %w", err)
 		}
@@ -1066,7 +1071,7 @@ func addBootPartition(pt *PartitionTable, bootFsType FSType) error {
 	}
 	bootPart := Partition{
 		Type: partType,
-		Size: 512 * datasizes.MiB,
+		Size: DefaultBootPartitionSize,
 		Payload: &Filesystem{
 			Type:         bootFsType.String(),
 			Label:        bootLabel,
