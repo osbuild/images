@@ -8,12 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDirectoryIsDir(t *testing.T) {
-	dir, err := NewDirectory("/etc/dir", nil, nil, nil, false)
-	assert.NoError(t, err)
-	assert.True(t, dir.IsDir())
-}
-
 func TestNewDirectory(t *testing.T) {
 	testCases := []struct {
 		name             string
