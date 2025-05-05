@@ -11,6 +11,15 @@ import (
 
 type Directory struct {
 	baseFsNode
+	// We cannot use a "json" tag here because "go vet" complains
+	// that it is used on an unexported field and "go vet" cannot
+	// ignore lines.
+	//
+	// Longer term it is probably worthwhile to refactor this
+	// code so that custom unmarshaling is not needed, i.e.
+	// just have an unexpored "type directoryJSON" with
+	// exported fields and a public method only type (like
+	// we have now).
 	ensureParentDirs bool `rename:"ensure_parent_dirs"`
 }
 
