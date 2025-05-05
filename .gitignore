@@ -10,6 +10,7 @@ __pycache__
 /test/data/manifests
 /tools/appsre-ansible/inventory
 dictionary.dic
+/gobump.log
 
 *~
 container_built*.info
