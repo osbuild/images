@@ -8,12 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFileIsDir(t *testing.T) {
-	file, err := NewFile("/etc/file", nil, nil, nil, nil)
-	assert.NoError(t, err)
-	assert.False(t, file.IsDir())
-}
-
 func TestNewFile(t *testing.T) {
 	testCases := []struct {
 		name     string

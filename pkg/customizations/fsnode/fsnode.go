@@ -117,7 +117,3 @@ func (f *baseFsNode) validate() error {
 
 	return nil
 }
-
-func (f *baseFsNode) IsDir() bool {
-	panic("IsDir() called on baseFsNode")
-}
