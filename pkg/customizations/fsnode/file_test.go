@@ -14,8 +14,8 @@ func TestNewFile(t *testing.T) {
 		path     string
 		data     []byte
 		mode     *os.FileMode
-		user     interface{}
-		group    interface{}
+		user     any
+		group    any
 		expected *File
 	}{
 		{

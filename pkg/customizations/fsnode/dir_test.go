@@ -13,8 +13,8 @@ func TestNewDirectory(t *testing.T) {
 		name             string
 		path             string
 		mode             *os.FileMode
-		user             interface{}
-		group            interface{}
+		user             any
+		group            any
 		ensureParentDirs bool
 		expected         *Directory
 	}{

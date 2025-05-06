@@ -37,6 +37,17 @@ func validate(path string, mode *os.FileMode, user any, group any) error {
 		if !nameRegex.MatchString(user) {
 			return fmt.Errorf("user name %q doesn't conform to validating regex (%s)", user, nameRegex.String())
 		}
+	case float64:
+		if user != float64(int64(user)) {
+			return fmt.Errorf("user ID must be int")
+		}
+		if user < 0 {
+			return fmt.Errorf("user ID must be non-negative")
+		}
+	case int:
+		if user < 0 {
+			return fmt.Errorf("user ID must be non-negative")
+		}
 	case int64:
 		if user < 0 {
 			return fmt.Errorf("user ID must be non-negative")
@@ -52,6 +63,17 @@ func validate(path string, mode *os.FileMode, user any, group any) error {
 		nameRegex := regexp.MustCompile(groupnameRegex)
 		if !nameRegex.MatchString(group) {
 			return fmt.Errorf("group name %q doesn't conform to validating regex (%s)", group, nameRegex.String())
+		}
+	case float64:
+		if group != float64(int64(group)) {
+			return fmt.Errorf("group ID must be int")
+		}
+		if group < 0 {
+			return fmt.Errorf("group ID must be non-negative")
+		}
+	case int:
+		if group < 0 {
+			return fmt.Errorf("group ID must be non-negative")
 		}
 	case int64:
 		if group < 0 {
