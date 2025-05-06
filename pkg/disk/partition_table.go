@@ -54,7 +54,7 @@ const (
 // DefaultBootPartitionSize is the default size of the /boot partition if it
 // needs to be auto-created. This happens if the custom partitioning don't
 // specify one, but the image requires one to boot (/ is on btrfs, or an LV).
-const DefaultBootPartitionSize = 512 * datasizes.MiB
+const DefaultBootPartitionSize = 1 * datasizes.GiB
 
 // NewPartitionTable takes an existing base partition table and some parameters
 // and returns a new version of the base table modified to satisfy the
