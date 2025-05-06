@@ -748,7 +748,7 @@ func TestAddBootPartition(t *testing.T) {
 				Partitions: []disk.Partition{
 					{
 						Start:    0,
-						Size:     512 * datasizes.MiB,
+						Size:     1024 * datasizes.MiB,
 						Type:     disk.XBootLDRPartitionGUID,
 						Bootable: false,
 						UUID:     "",
@@ -770,7 +770,7 @@ func TestAddBootPartition(t *testing.T) {
 				Partitions: []disk.Partition{
 					{
 						Start:    0,
-						Size:     512 * datasizes.MiB,
+						Size:     1024 * datasizes.MiB,
 						Type:     disk.FilesystemLinuxDOSID,
 						Bootable: false,
 						UUID:     "",
@@ -812,7 +812,7 @@ func TestAddBootPartition(t *testing.T) {
 					},
 					{
 						Start:    0,
-						Size:     512 * datasizes.MiB,
+						Size:     1024 * datasizes.MiB,
 						Type:     disk.XBootLDRPartitionGUID,
 						Bootable: false,
 						UUID:     "",
@@ -854,7 +854,7 @@ func TestAddBootPartition(t *testing.T) {
 					},
 					{
 						Start:    0,
-						Size:     512 * datasizes.MiB,
+						Size:     1024 * datasizes.MiB,
 						Type:     disk.FilesystemLinuxDOSID,
 						Bootable: false,
 						UUID:     "",
@@ -896,7 +896,7 @@ func TestAddBootPartition(t *testing.T) {
 					},
 					{
 						Start:    0,
-						Size:     512 * datasizes.MiB,
+						Size:     1024 * datasizes.MiB,
 						Type:     disk.XBootLDRPartitionGUID,
 						Bootable: false,
 						UUID:     "",
@@ -1839,7 +1839,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			expected: &disk.PartitionTable{
 				Type: disk.PT_DOS,
 				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
-				Size: 714*datasizes.MiB + 200*datasizes.MiB, // start + size of last partition (VG)
+				Size: 1226*datasizes.MiB + 200*datasizes.MiB, // start + size of last partition (VG)
 				Partitions: []disk.Partition{
 					{
 						Start:    1 * datasizes.MiB, // header
@@ -1865,7 +1865,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					},
 					{
 						Start:    202 * datasizes.MiB,
-						Size:     512 * datasizes.MiB,
+						Size:     1024 * datasizes.MiB,
 						Type:     disk.FilesystemLinuxDOSID,
 						UUID:     "",
 						Bootable: false,
@@ -1880,7 +1880,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						},
 					},
 					{
-						Start:    714 * datasizes.MiB,
+						Start:    1226 * datasizes.MiB,
 						Size:     200 * datasizes.MiB, // the sum of the LVs (rounded to the next 4 MiB extent)
 						Type:     disk.LVMPartitionDOSID,
 						UUID:     "",
@@ -1992,7 +1992,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			expected: &disk.PartitionTable{
 				Type: disk.PT_GPT, // default when unspecified
 				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
-				Size: 714*datasizes.MiB + 200*datasizes.MiB + datasizes.MiB, // start + size of last partition (VG) + footer
+				Size: 1226*datasizes.MiB + 200*datasizes.MiB + datasizes.MiB, // start + size of last partition (VG) + footer
 				Partitions: []disk.Partition{
 					{
 						Start:    1 * datasizes.MiB, // header
@@ -2018,7 +2018,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					},
 					{
 						Start:    202 * datasizes.MiB,
-						Size:     512 * datasizes.MiB,
+						Size:     1024 * datasizes.MiB,
 						Type:     disk.XBootLDRPartitionGUID,
 						UUID:     "32f3a8ae-b79e-4856-b659-c18f0dcecc77",
 						Bootable: false,
@@ -2033,7 +2033,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						},
 					},
 					{
-						Start:    714 * datasizes.MiB,
+						Start:    1226 * datasizes.MiB,
 						Size:     200*datasizes.MiB + datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // the sum of the LVs (rounded to the next 4 MiB extent) grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
 						Type:     disk.LVMPartitionGUID,
 						UUID:     "c75e7a81-bfde-475f-a7cf-e242cf3cc354",
@@ -2138,7 +2138,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			expected: &disk.PartitionTable{
 				Type: disk.PT_GPT, // default when unspecified
 				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
-				Size: 818*datasizes.MiB + 16*datasizes.MiB + 3*datasizes.GiB + datasizes.MiB, // start + size of last partition (VG) + footer
+				Size: 1330*datasizes.MiB + 16*datasizes.MiB + 3*datasizes.GiB + datasizes.MiB, // start + size of last partition (VG) + footer
 				Partitions: []disk.Partition{
 					{
 						Start:    1 * datasizes.MiB, // header
@@ -2164,7 +2164,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					},
 					{
 						Start:    202 * datasizes.MiB,
-						Size:     512 * datasizes.MiB,
+						Size:     1024 * datasizes.MiB,
 						Type:     disk.XBootLDRPartitionGUID,
 						UUID:     "f83b8e88-3bbf-457a-ab99-c5b252c7429c",
 						Bootable: false,
@@ -2179,7 +2179,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						},
 					},
 					{
-						Start:    818 * datasizes.MiB,                                                                         // the root vg is moved to the end of the partition table by relayout()
+						Start:    1330 * datasizes.MiB,                                                                        // the root vg is moved to the end of the partition table by relayout()
 						Size:     3*datasizes.GiB + 16*datasizes.MiB + datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // the sum of the LVs (rounded to the next 4 MiB extent) grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
 						Type:     disk.LVMPartitionGUID,
 						UUID:     "32f3a8ae-b79e-4856-b659-c18f0dcecc77",
@@ -2214,7 +2214,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						},
 					},
 					{
-						Start:    714 * datasizes.MiB,
+						Start:    1226 * datasizes.MiB,
 						Size:     104 * datasizes.MiB, // the sum of the LVs (rounded to the next 4 MiB extent) grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
 						Type:     disk.LVMPartitionGUID,
 						UUID:     "c75e7a81-bfde-475f-a7cf-e242cf3cc354",
@@ -2273,7 +2273,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			},
 			expected: &disk.PartitionTable{
 				Type: disk.PT_DOS,
-				Size: 714*datasizes.MiB + 230*datasizes.MiB, // start + size of last partition + footer
+				Size: 1226*datasizes.MiB + 230*datasizes.MiB, // start + size of last partition + footer
 				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
 				Partitions: []disk.Partition{
 					{
@@ -2300,7 +2300,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					},
 					{
 						Start:    202 * datasizes.MiB,
-						Size:     512 * datasizes.MiB,
+						Size:     1024 * datasizes.MiB,
 						Type:     disk.FilesystemLinuxDOSID,
 						Bootable: false,
 						Payload: &disk.Filesystem{
@@ -2314,7 +2314,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						},
 					},
 					{
-						Start: 714 * datasizes.MiB,
+						Start: 1226 * datasizes.MiB,
 						Size:  230 * datasizes.MiB,
 						Type:  disk.FilesystemLinuxDOSID,
 						Payload: &disk.Btrfs{
@@ -2380,7 +2380,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			},
 			expected: &disk.PartitionTable{
 				Type: disk.PT_GPT,
-				Size: 834*datasizes.MiB + 230*datasizes.MiB + datasizes.MiB, // start + size of last partition + footer
+				Size: 1346*datasizes.MiB + 230*datasizes.MiB + datasizes.MiB, // start + size of last partition + footer
 				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
 				Partitions: []disk.Partition{
 					{
@@ -2407,7 +2407,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 					},
 					{
 						Start:    202 * datasizes.MiB,
-						Size:     512 * datasizes.MiB,
+						Size:     1024 * datasizes.MiB,
 						Type:     disk.XBootLDRPartitionGUID,
 						UUID:     "e2d3d0d0-de6b-48f9-b44c-e85ff044c6b1",
 						Bootable: false,
@@ -2422,7 +2422,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						},
 					},
 					{
-						Start:    834 * datasizes.MiB,
+						Start:    1346 * datasizes.MiB,
 						Size:     231*datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
 						Type:     disk.FilesystemDataGUID,
 						UUID:     "f83b8e88-3bbf-457a-ab99-c5b252c7429c",
@@ -2449,7 +2449,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						},
 					},
 					{
-						Start: 714 * datasizes.MiB,
+						Start: 1226 * datasizes.MiB,
 						Size:  120 * datasizes.MiB,
 						Type:  disk.SwapPartitionGUID,
 						UUID:  "32f3a8ae-b79e-4856-b659-c18f0dcecc77",
@@ -2481,12 +2481,12 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			options: nil,
 			expected: &disk.PartitionTable{
 				Type: disk.PT_GPT,
-				Size: 514 * datasizes.MiB,
+				Size: 1026 * datasizes.MiB,
 				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
 				Partitions: []disk.Partition{
 					{
 						Start:    1 * datasizes.MiB,
-						Size:     512 * datasizes.MiB,
+						Size:     1024 * datasizes.MiB,
 						Type:     disk.XBootLDRPartitionGUID,
 						UUID:     "a178892e-e285-4ce1-9114-55780875d64e",
 						Bootable: false,
@@ -2501,7 +2501,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						},
 					},
 					{
-						Start: 513 * datasizes.MiB,
+						Start: 1025 * datasizes.MiB,
 						Size:  1*datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)),
 
 						Type:     disk.FilesystemDataGUID,
