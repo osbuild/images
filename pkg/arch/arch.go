@@ -50,7 +50,7 @@ func FromString(a string) (Arch, error) {
 	case "riscv64":
 		return ARCH_RISCV64, nil
 	default:
-		return ARCH_UNSET, fmt.Errorf("unsupported architecture")
+		return ARCH_UNSET, fmt.Errorf("unsupported architecture %q", a)
 	}
 }
 
