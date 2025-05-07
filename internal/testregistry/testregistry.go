@@ -365,7 +365,7 @@ func (reg *Registry) Resolve(target string, imgArch arch.Arch) (container.Spec, 
 		checksum = ""
 
 		for _, m := range lst.Manifests {
-			if arch.FromString(m.Platform.Architecture) == imgArch {
+			if common.Must(arch.FromString(m.Platform.Architecture)) == imgArch {
 				checksum = m.Digest.String()
 				break
 			}
