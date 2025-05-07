@@ -51,13 +51,13 @@ func TestCurrentArchRiscv64(t *testing.T) {
 func TestCurrentArchUnsupported(t *testing.T) {
 	origRuntimeGOARCH := runtimeGOARCH
 	defer func() { runtimeGOARCH = origRuntimeGOARCH }()
-	runtimeGOARCH = "UKNOWN"
-	assert.PanicsWithError(t, "unsupported architecture", func() { Current() })
+	runtimeGOARCH = "UNKNOWN"
+	assert.PanicsWithError(t, `unsupported architecture "UNKNOWN"`, func() { Current() })
 }
 
 func TestFromStringUnsupported(t *testing.T) {
 	_, err := FromString("UNKNOWN")
-	assert.EqualError(t, err, "unsupported architecture")
+	assert.EqualError(t, err, `unsupported architecture "UNKNOWN"`)
 }
 
 func TestFromString(t *testing.T) {
