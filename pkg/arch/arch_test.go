@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/osbuild/images/internal/common"
 )
 
 func TestCurrentArchAMD64(t *testing.T) {
@@ -50,19 +52,20 @@ func TestCurrentArchUnsupported(t *testing.T) {
 	origRuntimeGOARCH := runtimeGOARCH
 	defer func() { runtimeGOARCH = origRuntimeGOARCH }()
 	runtimeGOARCH = "UKNOWN"
-	assert.PanicsWithValue(t, "unsupported architecture", func() { Current() })
+	assert.PanicsWithError(t, "unsupported architecture", func() { Current() })
 }
 
 func TestFromStringUnsupported(t *testing.T) {
-	assert.PanicsWithValue(t, "unsupported architecture", func() { FromString("UNKNOWN") })
+	_, err := FromString("UNKNOWN")
+	assert.EqualError(t, err, "unsupported architecture")
 }
 
 func TestFromString(t *testing.T) {
-	assert.Equal(t, ARCH_AARCH64, FromString("arm64"))
-	assert.Equal(t, ARCH_AARCH64, FromString("aarch64"))
-	assert.Equal(t, ARCH_X86_64, FromString("amd64"))
-	assert.Equal(t, ARCH_X86_64, FromString("x86_64"))
-	assert.Equal(t, ARCH_S390X, FromString("s390x"))
-	assert.Equal(t, ARCH_PPC64LE, FromString("ppc64le"))
-	assert.Equal(t, ARCH_RISCV64, FromString("riscv64"))
+	assert.Equal(t, ARCH_AARCH64, common.Must(FromString("arm64")))
+	assert.Equal(t, ARCH_AARCH64, common.Must(FromString("aarch64")))
+	assert.Equal(t, ARCH_X86_64, common.Must(FromString("amd64")))
+	assert.Equal(t, ARCH_X86_64, common.Must(FromString("x86_64")))
+	assert.Equal(t, ARCH_S390X, common.Must(FromString("s390x")))
+	assert.Equal(t, ARCH_PPC64LE, common.Must(FromString("ppc64le")))
+	assert.Equal(t, ARCH_RISCV64, common.Must(FromString("riscv64")))
 }
