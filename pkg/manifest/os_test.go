@@ -170,8 +170,10 @@ func TestBootupdStage(t *testing.T) {
 func TestInsightsClientConfigStage(t *testing.T) {
 	os := manifest.NewTestOS()
 	os.OSCustomizations.InsightsClientConfig = &osbuild.InsightsClientConfigStageOptions{
-		Proxy: "some-proxy",
-		Path:  "some/path",
+		Config: osbuild.InsightsClientConfig{
+			Proxy: "some-proxy",
+			Path:  "some/path",
+		},
 	}
 	pipeline := os.Serialize()
 	st := manifest.FindStage("org.osbuild.insights-client.config", pipeline.Stages)
