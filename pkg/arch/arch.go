@@ -1,6 +1,7 @@
 package arch
 
 import (
+	"encoding/json"
 	"fmt"
 	"runtime"
 
@@ -35,6 +36,19 @@ func (a Arch) String() string {
 	default:
 		panic("invalid architecture")
 	}
+}
+
+func (a *Arch) UnmarshalJSON(data []byte) (err error) {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	*a, err = FromString(s)
+	return err
+}
+
+func (a *Arch) UnmarshalYAML(unmarshal func(any) error) error {
+	return common.UnmarshalYAMLviaJSON(a, unmarshal)
 }
 
 func FromString(a string) (Arch, error) {
