@@ -221,23 +221,6 @@ func mkIotQcow2ImgType(d distribution) imageType {
 	}
 }
 
-func mkWslImgType(d distribution) imageType {
-	return imageType{
-		name:                   "wsl",
-		nameAliases:            []string{"server-wsl"}, // this is the eventual name, and `wsl` the alias but we've been having issues with CI renaming it
-		filename:               "wsl.tar",
-		mimeType:               "application/x-tar",
-		packageSets:            packageSetLoader,
-		defaultImageConfig:     imageConfig(d, "wsl"),
-		image:                  containerImage,
-		bootable:               false,
-		buildPipelines:         []string{"build"},
-		payloadPipelines:       []string{"os", "container"},
-		exports:                []string{"container"},
-		requiredPartitionSizes: requiredDirectorySizes,
-	}
-}
-
 type distribution struct {
 	name               string
 	product            string
@@ -469,11 +452,6 @@ func newDistro(version int) distro.Distro {
 			}
 		}
 	}
-
-	x86_64.addImageTypes(
-		&platform.X86{},
-		mkWslImgType(rd),
-	)
 
 	// add distro installer configuration to all installer types
 	distroInstallerConfig := defaultDistroInstallerConfig(&rd)
