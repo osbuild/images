@@ -26,6 +26,88 @@
       - "rw"
       - "coreos.no_persist_ip"
 
+  environments:
+    kvm: &kvm_env
+      packages:
+        - "cloud-init"
+        - "qemu-guest-agent"
+      services:
+        - "cloud-init.service"
+        - "cloud-config.service"
+        - "cloud-final.service"
+        - "cloud-init-local.service"
+    ec2_env: &ec2_env
+      packages:
+        - "cloud-init"
+      services:
+        - "cloud-init.service"
+        - "cloud-config.service"
+        - "cloud-final.service"
+        - "cloud-init-local.service"
+    azure_env: &azure_env
+      packages:
+        - "cloud-init"
+        - "WALinuxAgent"
+      services:
+        - "cloud-init.service"
+        - "cloud-config.service"
+        - "cloud-final.service"
+        - "cloud-init-local.service"
+        - "waagent"
+
+  platforms:
+    x86_64_bios_platform: &x86_64_bios_platform
+      arch: "x86_64"
+      bios_platform: "i386-pc"
+      uefi_vendor: "fedora"
+      qcow2_compat: "1.1"
+      packages:
+        # bios
+        - "dracut-config-generic"
+        - "grub2-pc"
+        # uefi
+        - "dracut-config-generic"
+        - "efibootmgr"
+        - "grub2-efi-x64"
+        - "shim-x64"
+      build_packages:
+        - "grub2-pc"
+    aarch64_platform: &aarch64_platform
+      arch: "aarch64"
+      uefi_vendor: "fedora"
+      image_format: "qcow2"
+      qcow2_compat: "1.1"
+      packages:
+        - "dracut-config-generic"
+        - "efibootmgr"
+        - "grub2-efi-aa64"
+        - "grub2-tools"
+        - "shim-aa64"
+    ppc64le_bios_platform: &ppc64le_bios_platform
+      arch: "ppc64le"
+      bios_platform: "powerpc-ieee1275"
+      image_format: "qcow2"
+      qcow2_compat: "1.1"
+      packages:
+        - "dracut-config-generic"
+        - "powerpc-utils"
+        - "grub2-ppc64le"
+        - "grub2-ppc64le-modules"
+      build_packages:
+        - "grub2-ppc64le"
+        - "grub2-ppc64le-modules"
+    s390x_zipl_platform: &s390x_zipl_platform
+      arch: "s390x"
+      zipl_support: true
+      image_format: "qcow2"
+      qcow2_compat: "1.1"
+      packages:
+        - "dracut-config-generic"
+        - "s390utils-base"
+        - "s390utils-core"
+      build_packages:
+        - "s390utils-base"
+
   image_config:
     iot_enabled_services: &image_config_iot_enabled_services
       enabled_services:
@@ -365,6 +447,17 @@ image_config:
 
 image_types:
   server_qcow2: &server_qcow2
+    name_aliases: ["qcow2"]
+    filename: "disk.qcow2"
+    mime_type: "application/x-qemu-disk"
+    environment: *kvm_env
+    bootable: true
+    default_size: 5_368_709_120  # 5 * datasizes.GibiByte
+    image_func: "disk"
+    build_pipelines: ["build"]
+    payload_pipelines: ["os", "image", "qcow2"]
+    exports: ["qcow2"]
+    required_partition_sizes: *default_required_dir_sizes
     image_config: &image_config_qcow2
       default_target: "multi-user.target"
       kernel_options: *cloud_kernel_options
@@ -375,12 +468,61 @@ image_types:
        - *cloud_base_pkgset
        - include:
            - "qemu-guest-agent"
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "qcow2"
+      - <<: *aarch64_platform
+        image_format: "qcow2"
+      - <<: *ppc64le_bios_platform
+        image_format: "qcow2"
+      - <<: *s390x_zipl_platform
+        image_format: "qcow2"
 
-  server_ami: *server_qcow2
-  server_oci: *server_qcow2
-  server_openstack: *server_qcow2
+  server_ami:
+    <<: *server_qcow2
+    name_aliases: ["ami"]
+    filename: "image.raw"
+    mime_type: "application/octet-stream"
+    payload_pipelines: ["os", "image"]
+    exports: ["image"]
+    environment: *ec2_env
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "raw"
+      - <<: *aarch64_platform
+        image_format: "raw"
+
+  server_oci:
+    <<: *server_qcow2
+    name_aliases: ["oci"]
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "qcow2"
+      - <<: *aarch64_platform
+        image_format: "qcow2"
+
+  server_openstack:
+    <<: *server_qcow2
+    name_aliases: ["openstack"]
+    platforms:
+      - <<: *x86_64_bios_platform
+        qcow2_compat: ""
+        image_format: "qcow2"
+      - <<: *aarch64_platform
+        qcow2_compat: ""
+        image_format: "qcow2"
 
   server_vhd:
+    <<: *server_qcow2
+    name_aliases: ["vhd"]
+    filename: "disk.vhd"
+    mime_type: "application/x-vhd"
+    payload_pipelines: ["os", "image", "vpc"]
+    exports: ["vpc"]
+    environment: *azure_env
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "vhd"
     image_config:
       <<: *image_config_qcow2
       sshd_config:
@@ -396,6 +538,10 @@ image_types:
             - "WALinuxAgent"
 
   server_vmdk: &server_vmdk
+    name_aliases: ["vmdk"]
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "vhd"
     image_config:
       locale: "en_US.UTF-8"
       enabled_services:
