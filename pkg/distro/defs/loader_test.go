@@ -539,6 +539,7 @@ image_types:
   server_qcow2:
     name_aliases: ["qcow2"]
     filename: "disk.qcow2"
+    compression: xz
     mime_type: "application/x-qemu-disk"
     environment:
       packages: ["cloud-init"]
@@ -569,6 +570,7 @@ image_types:
 	assert.Equal(t, "server-qcow2", imgType.Name())
 	assert.Equal(t, []string{"qcow2"}, imgType.NameAliases)
 	assert.Equal(t, "disk.qcow2", imgType.Filename)
+	assert.Equal(t, "xz", imgType.Compression)
 	assert.Equal(t, "application/x-qemu-disk", imgType.MimeType)
 	assert.Equal(t, []string{"cloud-init"}, imgType.Environment.GetPackages())
 	assert.Len(t, imgType.Environment.GetRepos(), 0)
