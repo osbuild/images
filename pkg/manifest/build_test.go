@@ -175,6 +175,59 @@ func TestNewBuildOptionDisableSELinux(t *testing.T) {
 	}
 }
 
+func TestNewBuildOptionSELinuxPolicyBuildrootFromPackages(t *testing.T) {
+	for _, tc := range []struct {
+		policy              string
+		expectedBuildPkg    string
+		expectedFileContext string
+	}{
+		{"", "selinux-policy-targeted", "etc/selinux/targeted/contexts/files/file_contexts"},
+		{"custom", "selinux-policy-custom", "etc/selinux/custom/contexts/files/file_contexts"},
+	} {
+		mf := New()
+		runner := &runner.Linux{}
+		opts := &BuildOptions{
+			SELinuxPolicy: tc.policy,
+		}
+		buildIf := NewBuild(&mf, runner, nil, opts)
+		require.NotNil(t, buildIf)
+		build := buildIf.(*BuildrootFromPackages)
+		build.packageSpecs = []rpmmd.PackageSpec{
+			{Name: "foo", Checksum: "sha256:" + strings.Repeat("x", 32)},
+		}
+		osbuildPipeline := build.serialize()
+		require.Len(t, osbuildPipeline.Stages, 2)
+		assert.Equal(t, "org.osbuild.selinux", osbuildPipeline.Stages[1].Type)
+		assert.Equal(t, tc.expectedFileContext, osbuildPipeline.Stages[1].Options.(*osbuild.SELinuxStageOptions).FileContexts)
+		assert.Contains(t, build.getPackageSetChain(DISTRO_NULL)[0].Include, tc.expectedBuildPkg)
+	}
+}
+
+func TestNewBuildOptionSELinuxPolicyBuildFromCnt(t *testing.T) {
+	for _, tc := range []struct {
+		policy              string
+		expectedBuildPkg    string
+		expectedFileContext string
+	}{
+		{"", "selinux-policy-targeted", "etc/selinux/targeted/contexts/files/file_contexts"},
+		{"custom", "selinux-policy-custom", "etc/selinux/custom/contexts/files/file_contexts"},
+	} {
+		mf := New()
+		runner := &runner.Linux{}
+		opts := &BuildOptions{
+			SELinuxPolicy: tc.policy,
+		}
+		buildIf := NewBuildFromContainer(&mf, runner, nil, opts)
+		require.NotNil(t, buildIf)
+		build := buildIf.(*BuildrootFromContainer)
+		build.containerSpecs = fakeContainerSpecs
+		osbuildPipeline := build.serialize()
+		require.Len(t, osbuildPipeline.Stages, 2)
+		assert.Equal(t, "org.osbuild.selinux", osbuildPipeline.Stages[1].Type)
+		assert.Equal(t, tc.expectedFileContext, osbuildPipeline.Stages[1].Options.(*osbuild.SELinuxStageOptions).FileContexts)
+	}
+}
+
 func TestNewBuildFromContainerOptionDisableSELinux(t *testing.T) {
 	for _, disableSELinux := range []bool{false, true} {
 		mf := New()
