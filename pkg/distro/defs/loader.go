@@ -51,7 +51,7 @@ type imageConfigConditions struct {
 }
 
 type imageType struct {
-	PackageSets []packageSet `yaml:"package_sets"`
+	PackageSets map[string][]packageSet `yaml:"package_sets"`
 	// archStr->partitionTable
 	PartitionTables map[string]*disk.PartitionTable `yaml:"partition_table"`
 	// override specific aspects of the partition table
@@ -59,6 +59,7 @@ type imageType struct {
 }
 
 type packageSet struct {
+	Pipeline  string            `yaml:"pipeline"`
 	Include   []string          `yaml:"include"`
 	Exclude   []string          `yaml:"exclude"`
 	Condition *pkgSetConditions `yaml:"condition,omitempty"`
@@ -136,15 +137,10 @@ func DistroImageConfig(distroNameVer string) (*distro.ImageConfig, error) {
 	return imgConfig, nil
 }
 
-// PackageSet loads the PackageSet from the yaml source file discovered via the
-// imagetype. By default the imagetype name is used to load the packageset
-// but with "overrideTypeName" this can be overriden (useful for e.g.
-// installer image types).
-func PackageSet(it distro.ImageType, overrideTypeName string, replacements map[string]string) (rpmmd.PackageSet, error) {
+// PackageSets loads the PackageSets from the yaml source file
+// discovered via the imagetype.
+func PackageSets(it distro.ImageType, replacements map[string]string) (map[string]rpmmd.PackageSet, error) {
 	typeName := it.Name()
-	if overrideTypeName != "" {
-		typeName = overrideTypeName
-	}
 	typeName = strings.ReplaceAll(typeName, "-", "_")
 
 	arch := it.Arch()
@@ -157,68 +153,72 @@ func PackageSet(it distro.ImageType, overrideTypeName string, replacements map[s
 	// use yaml aliases/anchors to de-duplicate them
 	toplevel, err := load(distroNameVer)
 	if err != nil {
-		return rpmmd.PackageSet{}, err
+		return nil, err
 	}
 
 	imgType, ok := toplevel.ImageTypes[typeName]
 	if !ok {
-		return rpmmd.PackageSet{}, fmt.Errorf("%w: %q", ErrImageTypeNotFound, typeName)
+		return nil, fmt.Errorf("%w: %q", ErrImageTypeNotFound, typeName)
 	}
 
-	var rpmmdPkgSet rpmmd.PackageSet
-	for _, pkgSet := range imgType.PackageSets {
-		rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
-			Include: pkgSet.Include,
-			Exclude: pkgSet.Exclude,
-		})
+	res := make(map[string]rpmmd.PackageSet)
+	for key, pkgSets := range imgType.PackageSets {
+		var rpmmdPkgSet rpmmd.PackageSet
+		for _, pkgSet := range pkgSets {
+			rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
+				Include: pkgSet.Include,
+				Exclude: pkgSet.Exclude,
+			})
 
-		if pkgSet.Condition != nil {
-			// process conditions
-			if archSet, ok := pkgSet.Condition.Architecture[archName]; ok {
-				rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
-					Include: archSet.Include,
-					Exclude: archSet.Exclude,
-				})
-			}
-			if distroNameSet, ok := pkgSet.Condition.DistroName[distroName]; ok {
-				rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
-					Include: distroNameSet.Include,
-					Exclude: distroNameSet.Exclude,
-				})
-			}
-			// note that we don't need to order here, as
-			// packageSets are strictly additive the order
-			// is irrelevant
-			for ltVer, ltSet := range pkgSet.Condition.VersionLessThan {
-				if r, ok := replacements[ltVer]; ok {
-					ltVer = r
-				}
-				if common.VersionLessThan(distroVersion, ltVer) {
+			if pkgSet.Condition != nil {
+				// process conditions
+				if archSet, ok := pkgSet.Condition.Architecture[archName]; ok {
 					rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
-						Include: ltSet.Include,
-						Exclude: ltSet.Exclude,
+						Include: archSet.Include,
+						Exclude: archSet.Exclude,
 					})
 				}
-			}
-
-			for gteqVer, gteqSet := range pkgSet.Condition.VersionGreaterOrEqual {
-				if r, ok := replacements[gteqVer]; ok {
-					gteqVer = r
-				}
-				if common.VersionGreaterThanOrEqual(distroVersion, gteqVer) {
+				if distroNameSet, ok := pkgSet.Condition.DistroName[distroName]; ok {
 					rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
-						Include: gteqSet.Include,
-						Exclude: gteqSet.Exclude,
+						Include: distroNameSet.Include,
+						Exclude: distroNameSet.Exclude,
 					})
+				}
+				// note that we don't need to order here, as
+				// packageSets are strictly additive the order
+				// is irrelevant
+				for ltVer, ltSet := range pkgSet.Condition.VersionLessThan {
+					if r, ok := replacements[ltVer]; ok {
+						ltVer = r
+					}
+					if common.VersionLessThan(distroVersion, ltVer) {
+						rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
+							Include: ltSet.Include,
+							Exclude: ltSet.Exclude,
+						})
+					}
+				}
+
+				for gteqVer, gteqSet := range pkgSet.Condition.VersionGreaterOrEqual {
+					if r, ok := replacements[gteqVer]; ok {
+						gteqVer = r
+					}
+					if common.VersionGreaterThanOrEqual(distroVersion, gteqVer) {
+						rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
+							Include: gteqSet.Include,
+							Exclude: gteqSet.Exclude,
+						})
+					}
 				}
 			}
 		}
+		// mostly for tests
+		sort.Strings(rpmmdPkgSet.Include)
+		sort.Strings(rpmmdPkgSet.Exclude)
+		res[key] = rpmmdPkgSet
 	}
-	// mostly for tests
-	sort.Strings(rpmmdPkgSet.Include)
-	sort.Strings(rpmmdPkgSet.Exclude)
 
-	return rpmmdPkgSet, nil
+	return res, nil
 }
 
 // PartitionTable returns the partionTable for the given distro/imgType.
