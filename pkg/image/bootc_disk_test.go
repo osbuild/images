@@ -308,3 +308,18 @@ func TestBootcDiskImageInstantiateDirs(t *testing.T) {
 		}
 	}
 }
+
+func TestBootcDiskImageBuildpipelineHonorsSELinuxPolicy(t *testing.T) {
+	opts := &bootcDiskImageTestOpts{
+		SELinux: "custom",
+	}
+	osbuildManifest := makeBootcDiskImageOsbuildManifest(t, opts)
+	buildPipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "build")
+	require.NotNil(t, buildPipeline)
+	selinuxStage := findStageFromOsbuildPipeline(t, buildPipeline, "org.osbuild.selinux")
+	require.NotNil(t, selinuxStage)
+
+	// ensure selinux policy is set
+	selinuxOptions := selinuxStage["options"].(map[string]interface{})
+	assert.Equal(t, "etc/selinux/custom/contexts/files/file_contexts", selinuxOptions["file_contexts"])
+}
