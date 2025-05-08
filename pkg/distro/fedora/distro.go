@@ -221,42 +221,6 @@ func mkIotQcow2ImgType(d distribution) imageType {
 	}
 }
 
-func mkVmdkImgType(d distribution) imageType {
-	return imageType{
-		name:                   "server-vmdk",
-		nameAliases:            []string{"vmdk"}, // kept for backwards compatibility
-		filename:               "disk.vmdk",
-		mimeType:               "application/x-vmdk",
-		packageSets:            packageSetLoader,
-		defaultImageConfig:     imageConfig(d, "server-vmdk"),
-		bootable:               true,
-		defaultSize:            2 * datasizes.GibiByte,
-		image:                  diskImage,
-		buildPipelines:         []string{"build"},
-		payloadPipelines:       []string{"os", "image", "vmdk"},
-		exports:                []string{"vmdk"},
-		requiredPartitionSizes: requiredDirectorySizes,
-	}
-}
-
-func mkOvaImgType(d distribution) imageType {
-	return imageType{
-		name:                   "server-ova",
-		nameAliases:            []string{"ova"}, // kept for backwards compatibility
-		filename:               "image.ova",
-		mimeType:               "application/ovf",
-		packageSets:            packageSetLoader,
-		defaultImageConfig:     imageConfig(d, "server-ova"),
-		bootable:               true,
-		defaultSize:            2 * datasizes.GibiByte,
-		image:                  diskImage,
-		buildPipelines:         []string{"build"},
-		payloadPipelines:       []string{"os", "image", "vmdk", "ovf", "archive"},
-		exports:                []string{"archive"},
-		requiredPartitionSizes: requiredDirectorySizes,
-	}
-}
-
 func mkWslImgType(d distribution) imageType {
 	return imageType{
 		name:                   "wsl",
@@ -506,26 +470,6 @@ func newDistro(version int) distro.Distro {
 		}
 	}
 
-	x86_64.addImageTypes(
-		&platform.X86{
-			BIOS:       true,
-			UEFIVendor: "fedora",
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_VMDK,
-			},
-		},
-		mkVmdkImgType(rd),
-	)
-	x86_64.addImageTypes(
-		&platform.X86{
-			BIOS:       true,
-			UEFIVendor: "fedora",
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_OVA,
-			},
-		},
-		mkOvaImgType(rd),
-	)
 	x86_64.addImageTypes(
 		&platform.X86{},
 		mkWslImgType(rd),
