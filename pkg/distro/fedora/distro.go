@@ -277,22 +277,6 @@ func mkOvaImgType(d distribution) imageType {
 	}
 }
 
-func mkContainerImgType(d distribution) imageType {
-	return imageType{
-		name:                   "container",
-		filename:               "container.tar",
-		mimeType:               "application/x-tar",
-		packageSets:            packageSetLoader,
-		defaultImageConfig:     imageConfig(d, "container"),
-		image:                  containerImage,
-		bootable:               false,
-		buildPipelines:         []string{"build"},
-		payloadPipelines:       []string{"os", "container"},
-		exports:                []string{"container"},
-		requiredPartitionSizes: requiredDirectorySizes,
-	}
-}
-
 func mkWslImgType(d distribution) imageType {
 	return imageType{
 		name:                   "wsl",
@@ -511,7 +495,7 @@ func (a *architecture) Distro() distro.Distro {
 func newDistro(version int) distro.Distro {
 	rd := getDistro(version)
 
-	// Architecture definitions
+	// XXX: generate architecture automatically from the imgType yaml
 	x86_64 := architecture{
 		name:   arch.ARCH_X86_64.String(),
 		distro: &rd,
@@ -535,6 +519,37 @@ func newDistro(version int) distro.Distro {
 	riscv64 := architecture{
 		name:   arch.ARCH_RISCV64.String(),
 		distro: &rd,
+	}
+
+	// XXX: move all image types should to YAML
+	its, err := defs.ImageTypes(rd.name)
+	if err != nil {
+		panic(err)
+	}
+	for _, imgTypeYAML := range its {
+		// use as marker for images that are not converted to
+		// YAML yet
+		if imgTypeYAML.Filename == "" {
+			continue
+		}
+		it := newImageTypeFrom(rd, imgTypeYAML)
+		for _, pl := range imgTypeYAML.Platforms {
+			switch pl.Arch {
+			case arch.ARCH_X86_64:
+				x86_64.addImageTypes(&pl, it)
+			case arch.ARCH_AARCH64:
+				aarch64.addImageTypes(&pl, it)
+			case arch.ARCH_PPC64LE:
+				ppc64le.addImageTypes(&pl, it)
+			case arch.ARCH_S390X:
+				s390x.addImageTypes(&pl, it)
+			case arch.ARCH_RISCV64:
+				riscv64.addImageTypes(&pl, it)
+			default:
+				err := fmt.Errorf("unsupported arch: %v", pl.Arch)
+				panic(err)
+			}
+		}
 	}
 
 	qcow2ImgType := mkQcow2ImgType(rd)
@@ -640,7 +655,6 @@ func newDistro(version int) distro.Distro {
 	)
 	x86_64.addImageTypes(
 		&platform.X86{},
-		mkContainerImgType(rd),
 		mkWslImgType(rd),
 	)
 
@@ -724,10 +738,6 @@ func newDistro(version int) distro.Distro {
 			},
 		},
 		openstackImgType,
-	)
-	aarch64.addImageTypes(
-		&platform.Aarch64{},
-		mkContainerImgType(rd),
 	)
 	aarch64.addImageTypes(
 		&platform.Aarch64{
@@ -934,10 +944,6 @@ func newDistro(version int) distro.Distro {
 		},
 		qcow2ImgType,
 	)
-	ppc64le.addImageTypes(
-		&platform.PPC64LE{},
-		mkContainerImgType(rd),
-	)
 
 	s390x.addImageTypes(
 		&platform.S390X{
@@ -949,17 +955,9 @@ func newDistro(version int) distro.Distro {
 		},
 		qcow2ImgType,
 	)
-	s390x.addImageTypes(
-		&platform.S390X{},
-		mkContainerImgType(rd),
-	)
 
 	// XXX: there is no "qcow2" for riscv64 yet because there is
 	// no "@Fedora Cloud Server" group
-	riscv64.addImageTypes(
-		&platform.RISCV64{},
-		mkContainerImgType(rd),
-	)
 	riscv64.addImageTypes(
 		&platform.RISCV64{
 			UEFIVendor: "fedora",
