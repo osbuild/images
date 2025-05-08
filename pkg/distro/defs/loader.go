@@ -441,11 +441,17 @@ func ImageTypes(distroNameVer string) (map[string]ImageTypeYAML, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// We have a bunch of names like "server-ami" that are writen
+	// in the YAML as "server_ami" so we need to normalize
+	imgTypes := make(map[string]ImageTypeYAML, len(toplevel.ImageTypes))
 	for name := range toplevel.ImageTypes {
 		v := toplevel.ImageTypes[name]
+		// normalize the name
+		name := strings.ReplaceAll(name, "_", "-")
 		v.name = name
-		toplevel.ImageTypes[name] = v
+		imgTypes[name] = v
 	}
 
-	return toplevel.ImageTypes, nil
+	return imgTypes, nil
 }
