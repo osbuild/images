@@ -53,7 +53,11 @@ func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifes
 	runner runner.Runner,
 	rng *rand.Rand) error {
 
-	buildPipeline := manifest.NewBuildFromContainer(m, runner, containers, &manifest.BuildOptions{ContainerBuildable: true})
+	buildPipeline := manifest.NewBuildFromContainer(m, runner, containers,
+		&manifest.BuildOptions{
+			ContainerBuildable: true,
+			SELinuxPolicy:      img.SELinux,
+		})
 	buildPipeline.Checkpoint()
 
 	// In the bootc flow, we reuse the host container context for tools;
