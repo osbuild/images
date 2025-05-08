@@ -3,7 +3,10 @@ package osbuild
 import (
 	"testing"
 
+	"gopkg.in/yaml.v3"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewUdevRulesStage(t *testing.T) {
@@ -181,4 +184,65 @@ func TestUdevRuleValidation(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestUdevRuleUnmarshal(t *testing.T) {
+	inputYAML := []byte(`
+filename: "/etc/udev/rules.d/68-azure-sriov-nm-unmanaged.rules"
+rules:
+  - comment:
+      - "comment1"
+      - "comment2"
+  - rule:
+    - K: "SUBSYSTEM"
+      O: "=="
+      V: "net"
+    - K: "DRIVERS"
+      O: "=="
+      V: "hv_pci"
+    - K: "ACTION"
+      O: "=="
+      V: "add"
+    - K: "ENV"
+      A: "NM_UNMANAGED"
+      O: "="
+      V: "1"
+`)
+	var options UdevRulesStageOptions
+	err := yaml.Unmarshal(inputYAML, &options)
+	require.NoError(t, err)
+	expected := UdevRulesStageOptions{
+		Filename: "/etc/udev/rules.d/68-azure-sriov-nm-unmanaged.rules",
+		Rules: UdevRules{
+			UdevRuleComment{
+				Comment: []string{"comment1", "comment2"},
+			},
+			UdevOps{
+				UdevOpSimple{
+					Key:   "SUBSYSTEM",
+					Op:    "==",
+					Value: "net",
+				},
+				UdevOpSimple{
+					Key:   "DRIVERS",
+					Op:    "==",
+					Value: "hv_pci",
+				},
+				UdevOpSimple{
+					Key:   "ACTION",
+					Op:    "==",
+					Value: "add",
+				},
+				UdevOpArg{
+					Key: UdevRuleKeyArg{
+						Name: "ENV",
+						Arg:  "NM_UNMANAGED",
+					},
+					Op:    "=",
+					Value: "1",
+				},
+			},
+		},
+	}
+	assert.Equal(t, expected, options)
 }
