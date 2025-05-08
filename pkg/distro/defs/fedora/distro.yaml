@@ -561,9 +561,18 @@ image_types:
 
   server_vmdk: &server_vmdk
     name_aliases: ["vmdk"]
+    filename: "disk.vmdk"
+    mime_type: "application/x-vmdk"
+    bootable: true
+    default_size: 2_147_483_648  # 2 * datasizes.GibiByte
+    image_func: "disk"
+    build_pipelines: ["build"]
+    payload_pipelines: ["os", "image", "vmdk"]
+    exports: ["vmdk"]
+    required_partition_sizes: *default_required_dir_sizes
     platforms:
       - <<: *x86_64_bios_platform
-        image_format: "vhd"
+        image_format: "vmdk"
     image_config:
       locale: "en_US.UTF-8"
       enabled_services:
@@ -594,7 +603,16 @@ image_types:
             - "grubby-deprecated"
             - "extlinux-bootloader"
 
-  server_ova: *server_vmdk
+  server_ova:
+    <<: *server_vmdk
+    name_aliases: ["ova"]
+    filename: "image.ova"
+    mime_type: "application/ovf"
+    payload_pipelines: ["os", "image", "vmdk", "ovf", "archive"]
+    exports: ["archive"]
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "ova"
 
   # NOTE: keep in sync with official fedora-iot definitions:
   # https://pagure.io/fedora-iot/ostree/blob/main/f/fedora-iot-base.yaml
