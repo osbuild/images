@@ -1267,6 +1267,18 @@ image_types:
             - "xkeyboard-config"
 
   wsl:
+    # this is the eventual name, and `wsl` the alias but we've been
+    # having issues with CI renaming it
+    name_aliases: ["server-wsl"]
+    filename: "wsl.tar"
+    mime_type: "application/x-tar"
+    image_func: "container"
+    build_pipelines: ["build"]
+    payload_pipelines: ["os", "container"]
+    exports: ["container"]
+    required_partition_sizes: *default_required_dir_sizes
+    platforms:
+      - arch: "x86_64"
     image_config:
       <<: *image_config_container
       cloud_init:
