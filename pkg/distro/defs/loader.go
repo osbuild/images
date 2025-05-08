@@ -90,6 +90,8 @@ type imageType struct {
 
 	Platforms []platform.PlatformConf `yaml:"platforms"`
 
+	NameAliases []string `yaml:"name_aliases"`
+
 	// name is set by the loader
 	name string
 }
