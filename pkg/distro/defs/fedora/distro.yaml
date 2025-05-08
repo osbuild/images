@@ -56,11 +56,21 @@
         - "waagent"
 
   platforms:
-    x86_64_bios_platform: &x86_64_bios_platform
+    x86_64_uefi_platform: &x86_64_uefi_platform
       arch: "x86_64"
-      bios_platform: "i386-pc"
       uefi_vendor: "fedora"
       qcow2_compat: "1.1"
+      packages:
+        # XXX: duplicated with below "uefi", de-duplicate by making
+        # the "packages" YAML-mergable, e.g. via map use
+        # uefi
+        - "dracut-config-generic"
+        - "efibootmgr"
+        - "grub2-efi-x64"
+        - "shim-x64"
+    x86_64_bios_platform: &x86_64_bios_platform
+      <<: *x86_64_uefi_platform
+      bios_platform: "i386-pc"
       packages:
         # bios
         - "dracut-config-generic"
@@ -107,6 +117,18 @@
         - "s390utils-core"
       build_packages:
         - "s390utils-base"
+    riscv64_uefi_platform: &riscv64_uefi_platform
+      arch: "riscv64"
+      uefi_vendor: "uefi"
+      image_format: "raw"
+      packages:
+        # XXX: this is needed to get a generic bootkernel,
+        # this should probably be part of any bootable img
+        # packagelist
+        - "dracut-config-generic"
+        - "grub2-efi-riscv64"
+        - "grub2-efi-riscv64-modules"
+        - "shim-unsigned-riscv64"
 
   image_config:
     iot_enabled_services: &image_config_iot_enabled_services
@@ -835,7 +857,38 @@ image_types:
                   - "perl"
                   - "perl-interpreter"
 
-  minimal_raw: &minimal_raw
+  minimal_raw_xz: &minimal_raw_xz
+    name_aliases: ["minimal-raw"]
+    filename: "disk.raw.xz"
+    compression: "xz"
+    mime_type: "application/xz"
+    bootable: true
+    default_size: 2_147_483_648  # 2 * datasizes.GibiByte
+    image_func: "disk"
+    build_pipelines: ["build"]
+    payload_pipelines: ["os", "image", "xz"]
+    exports: ["xz"]
+    required_partition_sizes: *default_required_dir_sizes
+    platforms:
+      - <<: *x86_64_uefi_platform
+        image_format: "raw"
+      - arch: "aarch64"
+        uefi_vendor: "fedora"
+        image_format: "raw"
+        packages:
+          # XXX: duplicatd from aarch64_platform 
+          - "dracut-config-generic"
+          - "efibootmgr"
+          - "grub2-efi-aa64"
+          - "grub2-tools"
+          - "shim-aa64"
+          # firmware packages
+          - "arm-image-installer"
+          - "bcm283x-firmware"
+          - "uboot-images-armv8"
+        boot_files:
+          - ["/usr/share/uboot/rpi_arm64/u-boot.bin", "/boot/efi/rpi-u-boot.bin"]
+      - *riscv64_uefi_platform
     image_config:
       # NOTE: temporary workaround for a bug in initial-setup that
       # requires a kickstart file in the root directory.
@@ -856,7 +909,7 @@ image_types:
         - "initial-setup.service"
         - "sshd.service"
       kernel_options:
-        - "ro"
+        - "rw"
       condition:
         version_less_than:
           "43":
@@ -867,6 +920,8 @@ image_types:
               - "initial-setup.service"
               - "sshd.service"
               - "firewalld.service"
+            kernel_options:
+              - "ro"
     partition_table:
       <<: *minimal_raw_partition_tables
     package_sets:
@@ -894,8 +949,13 @@ image_types:
               "43":
                 exclude:
                   - "firewalld"
-  minimal_raw_zst: *minimal_raw
-  minimal_raw_xz: *minimal_raw
+  minimal_raw_zst:
+    <<: *minimal_raw_xz
+    name_aliases: []
+    filename: "disk.raw.zst"
+    compression: zstd
+    payload_pipelines: ["os", "image", "zstd"]
+    exports: ["zstd"]
 
   installer:
     package_sets:
