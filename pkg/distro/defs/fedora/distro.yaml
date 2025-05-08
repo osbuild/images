@@ -69,6 +69,11 @@
       ostree_conf_sysroot_readonly: true
       lock_root_user: true
 
+  disk_sizes:
+    default_required_partition_sizes: &default_required_dir_sizes
+      "/": 1_073_741_824  # 1 * datasizes.GiB
+      "/usr": 2_147_483_648 # 2 * datasizes.GiB
+
   partitioning:
     ids:
       - &prep_partition_dosid "41"
@@ -971,11 +976,25 @@ image_types:
   minimal_installer: *anaconda
 
   container: &container
+    filename: "container.tar"
+    mime_type: "application/x-tar"
+    image_func: "container"
+    bootable: false
+    build_pipelines: ["build"]
+    payload_pipelines: ["os", "container"]
+    exports: ["container"]
+    required_partition_sizes: *default_required_dir_sizes
+    platforms:
+      - arch: "x86_64"
+      - arch: "aarch64"
+      - arch: "ppc64le"
+      - arch: "s390x"
+      - arch: "riscv64"
     image_config: &image_config_container
       no_selinux: true
       exclude_docs: true
       locale: "C.UTF-8"
-      timezone: "Etc/UTC"
+      timezone: "Etc/UTC"  
     package_sets:
       os:
         - include:

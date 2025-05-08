@@ -1,6 +1,8 @@
 package fedora
 
 import (
+	"fmt"
+
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
@@ -15,4 +17,36 @@ func imageConfig(d distribution, imageType string) *distro.ImageConfig {
 	// arch is currently not used in fedora
 	arch := ""
 	return common.Must(defs.ImageConfig(d.name, arch, imageType, VersionReplacements()))
+}
+
+func newImageTypeFrom(d distribution, imgYAML defs.ImageTypeYAML) imageType {
+	it := imageType{
+		name:                   imgYAML.Name(),
+		nameAliases:            imgYAML.NameAliases,
+		filename:               imgYAML.Filename,
+		compression:            imgYAML.Compression,
+		mimeType:               imgYAML.MimeType,
+		bootable:               imgYAML.Bootable,
+		defaultSize:            imgYAML.DefaultSize,
+		buildPipelines:         imgYAML.BuildPipelines,
+		payloadPipelines:       imgYAML.PayloadPipelines,
+		exports:                imgYAML.Exports,
+		requiredPartitionSizes: imgYAML.RequiredPartitionSizes,
+		environment:            &imgYAML.Environment,
+	}
+	// XXX: make this a helper on imgYAML()
+	it.defaultImageConfig = imageConfig(d, imgYAML.Name())
+	it.packageSets = packageSetLoader
+
+	switch imgYAML.Image {
+	case "disk":
+		it.image = diskImage
+	case "container":
+		it.image = containerImage
+	default:
+		err := fmt.Errorf("unknown image func: %v for %v", imgYAML.Image, imgYAML.Name())
+		panic(err)
+	}
+
+	return it
 }
