@@ -17,10 +17,12 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/environment"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/experimentalflags"
 	"github.com/osbuild/images/pkg/olog"
+	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
@@ -50,6 +52,11 @@ type distroImageConfigConditions struct {
 	DistroName map[string]*distro.ImageConfig `yaml:"distro_name,omitempty"`
 }
 
+// XXX: this should eventually implement the "distro.ImageType"
+// interface, then we don't need to convert into a fedora/rhel
+// imagetype anymore (those will go away in subsequent refactors)
+type ImageTypeYAML = imageType
+
 type imageType struct {
 	// This maps "pkgsKey" to their package sets. The
 	// map key here is a string that can either be:
@@ -68,6 +75,27 @@ type imageType struct {
 	PartitionTablesOverrides *partitionTablesOverrides `yaml:"partition_tables_override"`
 
 	ImageConfig imageConfig `yaml:"image_config,omitempty"`
+
+	Filename    string                      `yaml:"filename"`
+	MimeType    string                      `yaml:"mime_type"`
+	Environment environment.EnvironmentConf `yaml:"environment"`
+	Bootable    bool                        `yaml:"bootable"`
+	DefaultSize uint64                      `yaml:"default_size"`
+	// the image func name: disk,container,live-installer,...
+	Image                  string            `yaml:"image_func"`
+	BuildPipelines         []string          `yaml:"build_pipelines"`
+	PayloadPipelines       []string          `yaml:"payload_pipelines"`
+	Exports                []string          `yaml:"exports"`
+	RequiredPartitionSizes map[string]uint64 `yaml:"required_partition_sizes"`
+
+	Platforms []platform.PlatformConf `yaml:"platforms"`
+
+	// name is set by the loader
+	name string
+}
+
+func (it *imageType) Name() string {
+	return it.name
 }
 
 type imageConfig struct {
@@ -406,4 +434,18 @@ func ImageConfig(distroNameVer, archName, typeName string, replacements map[stri
 	}
 
 	return imgConfig, nil
+}
+
+func ImageTypes(distroNameVer string) (map[string]ImageTypeYAML, error) {
+	toplevel, err := load(distroNameVer)
+	if err != nil {
+		return nil, err
+	}
+	for name := range toplevel.ImageTypes {
+		v := toplevel.ImageTypes[name]
+		v.name = name
+		toplevel.ImageTypes[name] = v
+	}
+
+	return toplevel.ImageTypes, nil
 }
