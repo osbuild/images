@@ -78,6 +78,7 @@ type imageType struct {
 
 	Filename    string                      `yaml:"filename"`
 	MimeType    string                      `yaml:"mime_type"`
+	Compression string                      `yaml:"compression"`
 	Environment environment.EnvironmentConf `yaml:"environment"`
 	Bootable    bool                        `yaml:"bootable"`
 	DefaultSize uint64                      `yaml:"default_size"`
