@@ -11,10 +11,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/arch"
+	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
 	"github.com/osbuild/images/pkg/distro/test_distro"
+	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
@@ -528,4 +531,59 @@ image_types:
 		Timezone: common.ToPtr("OverrideTZ"),
 	}, imgConfig)
 
+}
+
+func TestImageTypes(t *testing.T) {
+	fakeDistroYaml := `
+image_types:
+  qcow2:
+    filename: "disk.qcow2"
+    mime_type: "application/x-qemu-disk"
+    environment:
+      packages: ["cloud-init"]
+      services: ["cloud-init.service"]
+    bootable: true
+    default_size: 5_368_709_120  # 5 * datasizes.GibiByte
+    image_func: "disk"
+    build_pipelines: ["build"]
+    payload_pipelines: ["os", "image", "qcow2"]
+    exports: ["qcow2"]
+    required_partition_sizes:
+      "/": 1_073_741_824  # 1 * datasizes.GiB
+    platforms:
+      - arch: ppc64le
+        bios_platform: "powerpc-ieee1275"
+        image_format: "qcow2"
+        qcow2_compat: "1.1"
+`
+	fakeDistroName := "test-distro"
+	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	imgTypes, err := defs.ImageTypes("test-distro-1")
+	require.NoError(t, err)
+	assert.Len(t, imgTypes, 1)
+	imgType := imgTypes["qcow2"]
+	assert.Equal(t, "qcow2", imgType.Name())
+	assert.Equal(t, "disk.qcow2", imgType.Filename)
+	assert.Equal(t, "application/x-qemu-disk", imgType.MimeType)
+	assert.Equal(t, []string{"cloud-init"}, imgType.Environment.GetPackages())
+	assert.Len(t, imgType.Environment.GetRepos(), 0)
+	assert.Equal(t, []string{"cloud-init.service"}, imgType.Environment.GetServices())
+	assert.Equal(t, true, imgType.Bootable)
+	assert.Equal(t, uint64(5*datasizes.GibiByte), imgType.DefaultSize)
+	assert.Equal(t, "disk", imgType.Image)
+	assert.Equal(t, []string{"build"}, imgType.BuildPipelines)
+	assert.Equal(t, []string{"os", "image", "qcow2"}, imgType.PayloadPipelines)
+	assert.Equal(t, []string{"qcow2"}, imgType.Exports)
+	assert.Equal(t, map[string]uint64{"/": 1_073_741_824}, imgType.RequiredPartitionSizes)
+	assert.Equal(t, []platform.PlatformConf{
+		{
+			Arch:         arch.ARCH_PPC64LE,
+			BIOSPlatform: "powerpc-ieee1275",
+			ImageFormat:  platform.FORMAT_QCOW2,
+			QCOW2Compat:  "1.1",
+		},
+	}, imgType.Platforms)
 }
