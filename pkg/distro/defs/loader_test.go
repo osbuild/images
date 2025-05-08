@@ -536,7 +536,7 @@ image_types:
 func TestImageTypes(t *testing.T) {
 	fakeDistroYaml := `
 image_types:
-  qcow2:
+  server_qcow2:
     filename: "disk.qcow2"
     mime_type: "application/x-qemu-disk"
     environment:
@@ -564,8 +564,8 @@ image_types:
 	imgTypes, err := defs.ImageTypes("test-distro-1")
 	require.NoError(t, err)
 	assert.Len(t, imgTypes, 1)
-	imgType := imgTypes["qcow2"]
-	assert.Equal(t, "qcow2", imgType.Name())
+	imgType := imgTypes["server-qcow2"]
+	assert.Equal(t, "server-qcow2", imgType.Name())
 	assert.Equal(t, "disk.qcow2", imgType.Filename)
 	assert.Equal(t, "application/x-qemu-disk", imgType.MimeType)
 	assert.Equal(t, []string{"cloud-init"}, imgType.Environment.GetPackages())
