@@ -274,32 +274,6 @@ func mkWslImgType(d distribution) imageType {
 	}
 }
 
-func mkMinimalRawImgType(d distribution) imageType {
-	it := imageType{
-		name:                   "minimal-raw-xz",
-		nameAliases:            []string{"minimal-raw"}, // kept for backwards compatibility
-		filename:               "disk.raw.xz",
-		compression:            "xz",
-		mimeType:               "application/xz",
-		packageSets:            packageSetLoader,
-		defaultImageConfig:     imageConfig(d, "minimal-raw-xz"),
-		rpmOstree:              false,
-		bootable:               true,
-		defaultSize:            2 * datasizes.GibiByte,
-		image:                  diskImage,
-		buildPipelines:         []string{"build"},
-		payloadPipelines:       []string{"os", "image", "xz"},
-		exports:                []string{"xz"},
-		requiredPartitionSizes: requiredDirectorySizes,
-	}
-	if common.VersionGreaterThanOrEqual(d.osVersion, "43") {
-		// when using systemd mount units we also want them to be mounted rw
-		// while the default options are not
-		it.defaultImageConfig.KernelOptions = []string{"rw"}
-	}
-	return it
-}
-
 type distribution struct {
 	name               string
 	product            string
@@ -532,15 +506,6 @@ func newDistro(version int) distro.Distro {
 		}
 	}
 
-	minimalrawZstdImgType := mkMinimalRawImgType(rd)
-	minimalrawZstdImgType.name = "minimal-raw-zst"
-	minimalrawZstdImgType.nameAliases = []string{}
-	minimalrawZstdImgType.filename = "disk.raw.zst"
-	minimalrawZstdImgType.mimeType = "application/zstd"
-	minimalrawZstdImgType.compression = "zstd"
-	minimalrawZstdImgType.payloadPipelines = []string{"os", "image", "zstd"}
-	minimalrawZstdImgType.exports = []string{"zstd"}
-
 	x86_64.addImageTypes(
 		&platform.X86{
 			BIOS:       true,
@@ -696,34 +661,6 @@ func newDistro(version int) distro.Distro {
 		},
 		mkIotRawImgType(rd),
 	)
-	x86_64.addImageTypes(
-		&platform.X86{
-			UEFIVendor: "fedora",
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_RAW,
-			},
-		},
-		mkMinimalRawImgType(rd),
-		minimalrawZstdImgType,
-	)
-	aarch64.addImageTypes(
-		&platform.Aarch64_Fedora{
-			UEFIVendor: "fedora",
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_RAW,
-				FirmwarePackages: []string{
-					"arm-image-installer",
-					"bcm283x-firmware",
-					"uboot-images-armv8",
-				},
-			},
-			BootFiles: [][2]string{
-				{"/usr/share/uboot/rpi_arm64/u-boot.bin", "/boot/efi/rpi-u-boot.bin"},
-			},
-		},
-		mkMinimalRawImgType(rd),
-		minimalrawZstdImgType,
-	)
 
 	iotSimplifiedInstallerImgType := mkIotSimplifiedInstallerImgType(rd)
 	iotSimplifiedInstallerImgType.defaultInstallerConfig = distroInstallerConfig
@@ -828,19 +765,6 @@ func newDistro(version int) distro.Distro {
 			},
 		},
 		mkIotBootableContainer(rd),
-	)
-
-	// XXX: there is no "qcow2" for riscv64 yet because there is
-	// no "@Fedora Cloud Server" group
-	riscv64.addImageTypes(
-		&platform.RISCV64{
-			UEFIVendor: "fedora",
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_RAW,
-			},
-		},
-		mkMinimalRawImgType(rd),
-		minimalrawZstdImgType,
 	)
 
 	rd.addArches(x86_64, aarch64, ppc64le, s390x, riscv64)
