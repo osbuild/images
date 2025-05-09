@@ -74,7 +74,8 @@ type imageType struct {
 	// override specific aspects of the partition table
 	PartitionTablesOverrides *partitionTablesOverrides `yaml:"partition_tables_override"`
 
-	ImageConfig imageConfig `yaml:"image_config,omitempty"`
+	ImageConfig     imageConfig     `yaml:"image_config,omitempty"`
+	InstallerConfig installerConfig `yaml:"installer_config,omitempty"`
 
 	Filename    string                      `yaml:"filename"`
 	MimeType    string                      `yaml:"mime_type"`
@@ -110,6 +111,17 @@ type conditionsImgConf struct {
 	Architecture    map[string]*distro.ImageConfig `yaml:"architecture,omitempty"`
 	DistroName      map[string]*distro.ImageConfig `yaml:"distro_name,omitempty"`
 	VersionLessThan map[string]*distro.ImageConfig `yaml:"version_less_than,omitempty"`
+}
+
+type installerConfig struct {
+	*distro.InstallerConfig `yaml:",inline"`
+	Condition               *conditionsInstallerConf `yaml:"condition,omitempty"`
+}
+
+type conditionsInstallerConf struct {
+	Architecture    map[string]*distro.InstallerConfig `yaml:"architecture,omitempty"`
+	DistroName      map[string]*distro.InstallerConfig `yaml:"distro_name,omitempty"`
+	VersionLessThan map[string]*distro.InstallerConfig `yaml:"version_less_than,omitempty"`
 }
 
 type packageSet struct {
@@ -437,6 +449,43 @@ func ImageConfig(distroNameVer, archName, typeName string, replacements map[stri
 	}
 
 	return imgConfig, nil
+}
+
+// InstallerConfig returns the InstallerConfig for the given imgType
+// Note that on conditions the InstallerConfig is fully replaced, do
+// any merging in YAML
+func InstallerConfig(distroNameVer, archName, typeName string, replacements map[string]string) (*distro.InstallerConfig, error) {
+	toplevel, err := load(distroNameVer)
+	if err != nil {
+		return nil, err
+	}
+	typeName = strings.ReplaceAll(typeName, "-", "_")
+	imgType, ok := toplevel.ImageTypes[typeName]
+	if !ok {
+		return nil, fmt.Errorf("%w: %q", ErrImageTypeNotFound, typeName)
+	}
+	installerConfig := imgType.InstallerConfig.InstallerConfig
+	cond := imgType.InstallerConfig.Condition
+	if cond != nil {
+		distroName, distroVersion := splitDistroNameVer(distroNameVer)
+
+		if distroNameCnf, ok := cond.DistroName[distroName]; ok {
+			installerConfig = distroNameCnf
+		}
+		if archCnf, ok := cond.Architecture[archName]; ok {
+			installerConfig = archCnf
+		}
+		for ltVer, ltConf := range cond.VersionLessThan {
+			if r, ok := replacements[ltVer]; ok {
+				ltVer = r
+			}
+			if common.VersionLessThan(distroVersion, ltVer) {
+				installerConfig = ltConf
+			}
+		}
+	}
+
+	return installerConfig, nil
 }
 
 func ImageTypes(distroNameVer string) (map[string]ImageTypeYAML, error) {
