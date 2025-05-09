@@ -49,6 +49,18 @@ func newImageTypeFrom(d distribution, imgYAML defs.ImageTypeYAML) imageType {
 		it.image = diskImage
 	case "container":
 		it.image = containerImage
+	case "image_installer":
+		it.image = imageInstallerImage
+	case "live_installer":
+		it.image = liveInstallerImage
+	case "bootable_container":
+		it.image = bootableContainerImage
+	case "iot":
+		it.image = iotImage
+	case "iot_installer":
+		it.image = iotInstallerImage
+	case "iot_simplified_installer":
+		it.image = iotSimplifiedInstallerImage
 	default:
 		err := fmt.Errorf("unknown image func: %v for %v", imgYAML.Image, imgYAML.Name())
 		panic(err)
