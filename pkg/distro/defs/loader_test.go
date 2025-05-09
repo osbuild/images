@@ -618,6 +618,26 @@ func TestImageTypeInstallerConfig(t *testing.T) {
 	}, installerConfig)
 }
 
+func TestImageTypeInstallerConfigErrorMultiple(t *testing.T) {
+	fakeDistroYaml := fakeDistroYamlInstallerConf + `
+      condition:
+        version_less_than:
+          "2":
+            additional_dracut_modules:
+              - override-dracut-mod1
+        distro_name:
+          "test-distro":
+`
+
+	fakeDistroName := "test-distro"
+	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	_, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type", nil)
+	require.ErrorContains(t, err, "only a single conditional allowed in installer config for test_type")
+}
+
 func TestImageTypeInstallerConfigOverrideVerLT(t *testing.T) {
 	fakeDistroYaml := fakeDistroYamlInstallerConf + `
       condition:
