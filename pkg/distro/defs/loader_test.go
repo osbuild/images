@@ -591,3 +591,98 @@ image_types:
 		},
 	}, imgType.Platforms)
 }
+
+var fakeDistroYamlInstallerConf = `
+image_types:
+  test_type:
+    installer_config:
+      additional_dracut_modules:
+        - base-dracut-mod1
+      additional_drivers:
+        - base-drv1
+`
+
+func TestImageTypeInstallerConfig(t *testing.T) {
+	fakeDistroYaml := fakeDistroYamlInstallerConf
+
+	fakeDistroName := "test-distro"
+	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type", nil)
+	require.NoError(t, err)
+	assert.Equal(t, &distro.InstallerConfig{
+		AdditionalDracutModules: []string{"base-dracut-mod1"},
+		AdditionalDrivers:       []string{"base-drv1"},
+	}, installerConfig)
+}
+
+func TestImageTypeInstallerConfigOverrideVerLT(t *testing.T) {
+	fakeDistroYaml := fakeDistroYamlInstallerConf + `
+      condition:
+        version_less_than:
+          "2":
+            # Note that this fully override the installer config
+            additional_dracut_modules:
+              - override-dracut-mod1
+`
+	fakeDistroName := "test-distro"
+	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type", nil)
+	require.NoError(t, err)
+	assert.Equal(t, &distro.InstallerConfig{
+		AdditionalDracutModules: []string{"override-dracut-mod1"},
+		// Note that there is no "AdditionalDrivers" here as
+		// the InstallerConfig is fully replaced, do any
+		// merging in YAML
+	}, installerConfig)
+}
+
+func TestImageTypeInstallerConfigOverrideDistroName(t *testing.T) {
+	fakeDistroYaml := fakeDistroYamlInstallerConf + `
+      condition:
+        distro_name:
+          "test-distro":
+            additional_dracut_modules:
+              - override-dracut-mod1
+            additional_drivers:
+             - override-drv1
+`
+
+	fakeDistroName := "test-distro"
+	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type", nil)
+	require.NoError(t, err)
+	assert.Equal(t, &distro.InstallerConfig{
+		AdditionalDracutModules: []string{"override-dracut-mod1"},
+		AdditionalDrivers:       []string{"override-drv1"},
+	}, installerConfig)
+}
+
+func TestImageTypeInstallerConfigOverrideArch(t *testing.T) {
+	fakeDistroYaml := fakeDistroYamlInstallerConf + `
+      condition:
+        architecture:
+          "test_arch":
+            additional_drivers:
+             - override-drv1
+`
+
+	fakeDistroName := "test-distro"
+	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type", nil)
+	require.NoError(t, err)
+	assert.Equal(t, &distro.InstallerConfig{
+		AdditionalDrivers: []string{"override-drv1"},
+	}, installerConfig)
+}
