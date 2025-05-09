@@ -451,6 +451,18 @@ func ImageConfig(distroNameVer, archName, typeName string, replacements map[stri
 	return imgConfig, nil
 }
 
+// nNonEmpty returns the number of non-empty maps in the given
+// input
+func nNonEmpty[K comparable, V any](maps ...map[K]V) int {
+	var nonEmpty int
+	for _, m := range maps {
+		if len(m) > 0 {
+			nonEmpty++
+		}
+	}
+	return nonEmpty
+}
+
 // InstallerConfig returns the InstallerConfig for the given imgType
 // Note that on conditions the InstallerConfig is fully replaced, do
 // any merging in YAML
@@ -467,6 +479,10 @@ func InstallerConfig(distroNameVer, archName, typeName string, replacements map[
 	installerConfig := imgType.InstallerConfig.InstallerConfig
 	cond := imgType.InstallerConfig.Condition
 	if cond != nil {
+		if nNonEmpty(cond.DistroName, cond.Architecture, cond.VersionLessThan) > 1 {
+			return nil, fmt.Errorf("only a single conditional allowed in installer config for %v", typeName)
+		}
+
 		distroName, distroVersion := splitDistroNameVer(distroNameVer)
 
 		if distroNameCnf, ok := cond.DistroName[distroName]; ok {
