@@ -130,6 +130,15 @@
         - "grub2-efi-riscv64-modules"
         - "shim-unsigned-riscv64"
 
+  installer_config: &default_installer_config
+    additional_dracut_modules:
+      - "net-lib"
+    condition:
+      version_less_than:
+        "42":
+          additional_dracut_modules:
+            - "ifcfg"
+
   image_config:
     iot_enabled_services: &image_config_iot_enabled_services
       enabled_services:
@@ -1008,6 +1017,7 @@ image_types:
             - "xz"
 
   anaconda: &anaconda
+    installer_config: *default_installer_config
     image_config:
       locale: "en_US.UTF-8"
     package_sets:
@@ -1153,6 +1163,7 @@ image_types:
                   - "dmidecode"
 
   iot_installer:
+    installer_config: *default_installer_config
     image_config:
       <<: *image_config_iot_enabled_services
       locale: "en_US.UTF-8"
@@ -1340,6 +1351,7 @@ image_types:
                   - "fuse-libs"
 
   iot_simplified_installer:
+    installer_config: *default_installer_config
     image_config:
       <<: *image_config_iot
       ignition_platform: "metal"

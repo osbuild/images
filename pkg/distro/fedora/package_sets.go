@@ -19,6 +19,12 @@ func imageConfig(d distribution, imageType string) *distro.ImageConfig {
 	return common.Must(defs.ImageConfig(d.name, arch, imageType, VersionReplacements()))
 }
 
+func installerConfig(d distribution, imageType string) *distro.InstallerConfig {
+	// arch is currently not used in fedora
+	arch := ""
+	return common.Must(defs.InstallerConfig(d.name, arch, imageType, VersionReplacements()))
+}
+
 func newImageTypeFrom(d distribution, imgYAML defs.ImageTypeYAML) imageType {
 	it := imageType{
 		name:                   imgYAML.Name(),
