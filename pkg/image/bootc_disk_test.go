@@ -25,7 +25,7 @@ func TestBootcDiskImageNew(t *testing.T) {
 		Name:   "name",
 	}
 
-	img := image.NewBootcDiskImage(containerSource)
+	img := image.NewBootcDiskImage(containerSource, containerSource)
 	require.NotNil(t, img)
 	assert.Equal(t, img.Base.Name(), "bootc-raw-image")
 }
@@ -71,7 +71,7 @@ func makeBootcDiskImageOsbuildManifest(t *testing.T, opts *bootcDiskImageTestOpt
 	}
 	containers := []container.SourceSpec{containerSource}
 
-	img := image.NewBootcDiskImage(containerSource)
+	img := image.NewBootcDiskImage(containerSource, containerSource)
 	img.Filename = "fake-disk"
 	require.NotNil(t, img)
 	img.Platform = makeFakePlatform(opts)
@@ -85,7 +85,7 @@ func makeBootcDiskImageOsbuildManifest(t *testing.T, opts *bootcDiskImageTestOpt
 
 	m := &manifest.Manifest{}
 	runi := &runner.Fedora{}
-	err := img.InstantiateManifestFromContainers(m, containers, runi, nil)
+	err := img.InstantiateManifestFromContainers(m, containers, containers, runi, nil)
 	require.Nil(t, err)
 
 	fakeSourceSpecs := map[string][]container.Spec{

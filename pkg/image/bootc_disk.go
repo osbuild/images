@@ -22,7 +22,8 @@ type BootcDiskImage struct {
 
 	Filename string
 
-	ContainerSource *container.SourceSpec
+	ContainerSource      *container.SourceSpec
+	BuildContainerSource *container.SourceSpec
 
 	// Customizations
 	KernelOptionsAppend []string
@@ -38,22 +39,33 @@ type BootcDiskImage struct {
 
 	// SELinux policy, when set it enables the labeling of the tree with the
 	// selected profile
-	SELinux string
+	SELinux      string
+	BuildSELinux string
 }
 
-func NewBootcDiskImage(container container.SourceSpec) *BootcDiskImage {
+func NewBootcDiskImage(container container.SourceSpec, buildContainer container.SourceSpec) *BootcDiskImage {
 	return &BootcDiskImage{
-		Base:            NewBase("bootc-raw-image"),
-		ContainerSource: &container,
+		Base:                 NewBase("bootc-raw-image"),
+		ContainerSource:      &container,
+		BuildContainerSource: &buildContainer,
 	}
 }
 
 func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifest,
 	containers []container.SourceSpec,
+	buildContainers []container.SourceSpec,
 	runner runner.Runner,
 	rng *rand.Rand) error {
 
-	buildPipeline := manifest.NewBuildFromContainer(m, runner, containers, &manifest.BuildOptions{ContainerBuildable: true})
+	policy := img.SELinux
+	if img.BuildSELinux != "" {
+		policy = img.BuildSELinux
+	}
+	buildPipeline := manifest.NewBuildFromContainer(m, runner, buildContainers,
+		&manifest.BuildOptions{
+			ContainerBuildable: true,
+			SELinuxPolicy:      policy,
+		})
 	buildPipeline.Checkpoint()
 
 	// In the bootc flow, we reuse the host container context for tools;
