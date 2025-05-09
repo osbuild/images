@@ -245,7 +245,10 @@ func genPartitionTable(genPartInput *Input, rng *rand.Rand) (*Output, error) {
 	architecture := arch.ARCH_UNSET
 	if genPartInput.Properties.Type == otkdisk.PartTypeGPT {
 		// GPT partition table generation requires an architecture
-		architecture = arch.FromString(genPartInput.Properties.Architecture) // NOTE: this panics on invalid input - arch parsing should return error
+		architecture, err = arch.FromString(genPartInput.Properties.Architecture)
+		if err != nil {
+			return nil, err
+		}
 	}
 	pt, err := disk.NewPartitionTable(basePt, genPartInput.Modifications.Filesystems, diskSize, genPartInput.Modifications.PartitionMode, architecture, nil, rng)
 	if err != nil {

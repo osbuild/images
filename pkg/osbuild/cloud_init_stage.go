@@ -28,7 +28,7 @@ type CloudInitConfigFile struct {
 	SystemInfo     *CloudInitConfigSystemInfo `json:"system_info,omitempty"`
 	Reporting      *CloudInitConfigReporting  `json:"reporting,omitempty"`
 	Datasource     *CloudInitConfigDatasource `json:"datasource,omitempty"`
-	DatasourceList []string                   `json:"datasource_list,omitempty"`
+	DatasourceList []string                   `json:"datasource_list,omitempty" yaml:"datasource_list,omitempty"`
 	Output         *CloudInitConfigOutput     `json:"output,omitempty"`
 	Network        *CloudInitConfigNetwork    `json:"network,omitempty"`
 }

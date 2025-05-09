@@ -4,6 +4,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v3"
+
+	"github.com/osbuild/images/internal/common"
 )
 
 func TestCurrentArchAMD64(t *testing.T) {
@@ -49,20 +52,41 @@ func TestCurrentArchRiscv64(t *testing.T) {
 func TestCurrentArchUnsupported(t *testing.T) {
 	origRuntimeGOARCH := runtimeGOARCH
 	defer func() { runtimeGOARCH = origRuntimeGOARCH }()
-	runtimeGOARCH = "UKNOWN"
-	assert.PanicsWithValue(t, "unsupported architecture", func() { Current() })
+	runtimeGOARCH = "UNKNOWN"
+	assert.PanicsWithError(t, `unsupported architecture "UNKNOWN"`, func() { Current() })
 }
 
 func TestFromStringUnsupported(t *testing.T) {
-	assert.PanicsWithValue(t, "unsupported architecture", func() { FromString("UNKNOWN") })
+	_, err := FromString("UNKNOWN")
+	assert.EqualError(t, err, `unsupported architecture "UNKNOWN"`)
 }
 
 func TestFromString(t *testing.T) {
-	assert.Equal(t, ARCH_AARCH64, FromString("arm64"))
-	assert.Equal(t, ARCH_AARCH64, FromString("aarch64"))
-	assert.Equal(t, ARCH_X86_64, FromString("amd64"))
-	assert.Equal(t, ARCH_X86_64, FromString("x86_64"))
-	assert.Equal(t, ARCH_S390X, FromString("s390x"))
-	assert.Equal(t, ARCH_PPC64LE, FromString("ppc64le"))
-	assert.Equal(t, ARCH_RISCV64, FromString("riscv64"))
+	assert.Equal(t, ARCH_AARCH64, common.Must(FromString("arm64")))
+	assert.Equal(t, ARCH_AARCH64, common.Must(FromString("aarch64")))
+	assert.Equal(t, ARCH_X86_64, common.Must(FromString("amd64")))
+	assert.Equal(t, ARCH_X86_64, common.Must(FromString("x86_64")))
+	assert.Equal(t, ARCH_S390X, common.Must(FromString("s390x")))
+	assert.Equal(t, ARCH_PPC64LE, common.Must(FromString("ppc64le")))
+	assert.Equal(t, ARCH_RISCV64, common.Must(FromString("riscv64")))
+}
+
+func TestUnmarshal(t *testing.T) {
+	for _, tc := range []struct {
+		inp      string
+		expected Arch
+	}{
+		{"arch: arm64", ARCH_AARCH64},
+		{"arch: amd64", ARCH_X86_64},
+		{"arch: s390x", ARCH_S390X},
+		{"arch: ppc64le", ARCH_PPC64LE},
+		{"arch: riscv64", ARCH_RISCV64},
+	} {
+		var v struct {
+			Arch Arch
+		}
+		err := yaml.Unmarshal([]byte(tc.inp), &v)
+		assert.NoError(t, err)
+		assert.Equal(t, tc.expected, v.Arch)
+	}
 }

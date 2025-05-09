@@ -7,16 +7,12 @@ import (
 	"strconv"
 
 	"github.com/osbuild/images/internal/common"
-	"github.com/osbuild/images/internal/environment"
 	"github.com/osbuild/images/pkg/arch"
-	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
-	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
-	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/runner"
 )
 
@@ -50,44 +46,20 @@ var (
 	}
 )
 
-// kernel command line arguments
-// NOTE: we define them as functions to make sure they globals are never
-// modified
-
-// Default kernel command line
-func defaultKernelOptions() []string { return []string{"ro"} }
-
-// Added kernel command line options for ami, qcow2, openstack, vhd and vmdk types
-func cloudKernelOptions() []string {
-	return []string{"ro", "no_timer_check", "console=ttyS0,115200n8", "biosdevname=0", "net.ifnames=0"}
-}
-
-// Added kernel command line options for iot-raw-image and iot-qcow2-image types
-func ostreeDeploymentKernelOptions() []string {
-	return []string{"modprobe.blacklist=vc4", "rw", "coreos.no_persist_ip"}
-}
-
 // Image Definitions
 func mkImageInstallerImgType(d distribution) imageType {
 	return imageType{
-		name:        "minimal-installer",
-		nameAliases: []string{"image-installer", "fedora-image-installer"},
-		filename:    "installer.iso",
-		mimeType:    "application/x-iso9660-image",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: func(t *imageType) (rpmmd.PackageSet, error) {
-				// use the minimal raw image type for the OS package set
-				return defs.PackageSet(t, "minimal-raw-xz", VersionReplacements())
-			},
-			installerPkgsKey: packageSetLoader,
-		},
-		defaultImageConfig: &distro.ImageConfig{
-			Locale: common.ToPtr("en_US.UTF-8"),
-		},
-		bootable:  true,
-		bootISO:   true,
-		rpmOstree: false,
-		image:     imageInstallerImage,
+		name:                   "minimal-installer",
+		nameAliases:            []string{"image-installer", "fedora-image-installer"},
+		filename:               "installer.iso",
+		mimeType:               "application/x-iso9660-image",
+		packageSets:            packageSetLoader,
+		defaultImageConfig:     imageConfig(d, "minimal-installer"),
+		defaultInstallerConfig: installerConfig(d, "minimal-installer"),
+		bootable:               true,
+		bootISO:                true,
+		rpmOstree:              false,
+		image:                  imageInstallerImage,
 		// We don't know the variant of the OS pipeline being installed
 		isoLabel:               getISOLabelFunc("Unknown"),
 		buildPipelines:         []string{"build"},
@@ -99,16 +71,13 @@ func mkImageInstallerImgType(d distribution) imageType {
 
 func mkLiveInstallerImgType(d distribution) imageType {
 	return imageType{
-		name:        "workstation-live-installer",
-		nameAliases: []string{"live-installer"},
-		filename:    "live-installer.iso",
-		mimeType:    "application/x-iso9660-image",
-		packageSets: map[string]packageSetFunc{
-			installerPkgsKey: packageSetLoader,
-		},
-		defaultImageConfig: &distro.ImageConfig{
-			Locale: common.ToPtr("en_US.UTF-8"),
-		},
+		name:                   "workstation-live-installer",
+		nameAliases:            []string{"live-installer"},
+		filename:               "live-installer.iso",
+		mimeType:               "application/x-iso9660-image",
+		packageSets:            packageSetLoader,
+		defaultImageConfig:     imageConfig(d, "workstation-live-installer"),
+		defaultInstallerConfig: installerConfig(d, "workstation-live-installer"),
 		bootable:               true,
 		bootISO:                true,
 		rpmOstree:              false,
@@ -123,18 +92,12 @@ func mkLiveInstallerImgType(d distribution) imageType {
 
 func mkIotCommitImgType(d distribution) imageType {
 	return imageType{
-		name:        "iot-commit",
-		nameAliases: []string{"fedora-iot-commit"},
-		filename:    "commit.tar",
-		mimeType:    "application/x-tar",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: packageSetLoader,
-		},
-		defaultImageConfig: &distro.ImageConfig{
-			EnabledServices:        iotServicesForVersion(&d),
-			DracutConf:             []*osbuild.DracutConfStageOptions{osbuild.FIPSDracutConfStageOptions},
-			MachineIdUninitialized: common.ToPtr(false),
-		},
+		name:                   "iot-commit",
+		nameAliases:            []string{"fedora-iot-commit"},
+		filename:               "commit.tar",
+		mimeType:               "application/x-tar",
+		packageSets:            packageSetLoader,
+		defaultImageConfig:     imageConfig(d, "iot-commit"),
 		rpmOstree:              true,
 		image:                  iotCommitImage,
 		buildPipelines:         []string{"build"},
@@ -146,15 +109,11 @@ func mkIotCommitImgType(d distribution) imageType {
 
 func mkIotBootableContainer(d distribution) imageType {
 	return imageType{
-		name:     "iot-bootable-container",
-		filename: "iot-bootable-container.tar",
-		mimeType: "application/x-tar",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: packageSetLoader,
-		},
-		defaultImageConfig: &distro.ImageConfig{
-			MachineIdUninitialized: common.ToPtr(false),
-		},
+		name:                   "iot-bootable-container",
+		filename:               "iot-bootable-container.tar",
+		mimeType:               "application/x-tar",
+		packageSets:            packageSetLoader,
+		defaultImageConfig:     imageConfig(d, "iot-bootable-container"),
 		rpmOstree:              true,
 		image:                  bootableContainerImage,
 		buildPipelines:         []string{"build"},
@@ -166,21 +125,12 @@ func mkIotBootableContainer(d distribution) imageType {
 
 func mkIotOCIImgType(d distribution) imageType {
 	return imageType{
-		name:        "iot-container",
-		nameAliases: []string{"fedora-iot-container"},
-		filename:    "container.tar",
-		mimeType:    "application/x-tar",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: packageSetLoader,
-			containerPkgsKey: func(t *imageType) (rpmmd.PackageSet, error) {
-				return rpmmd.PackageSet{}, nil
-			},
-		},
-		defaultImageConfig: &distro.ImageConfig{
-			EnabledServices:        iotServicesForVersion(&d),
-			DracutConf:             []*osbuild.DracutConfStageOptions{osbuild.FIPSDracutConfStageOptions},
-			MachineIdUninitialized: common.ToPtr(false),
-		},
+		name:                   "iot-container",
+		nameAliases:            []string{"fedora-iot-container"},
+		filename:               "container.tar",
+		mimeType:               "application/x-tar",
+		packageSets:            packageSetLoader,
+		defaultImageConfig:     imageConfig(d, "iot-container"),
 		rpmOstree:              true,
 		bootISO:                false,
 		image:                  iotContainerImage,
@@ -193,17 +143,13 @@ func mkIotOCIImgType(d distribution) imageType {
 
 func mkIotInstallerImgType(d distribution) imageType {
 	return imageType{
-		name:        "iot-installer",
-		nameAliases: []string{"fedora-iot-installer"},
-		filename:    "installer.iso",
-		mimeType:    "application/x-iso9660-image",
-		packageSets: map[string]packageSetFunc{
-			installerPkgsKey: packageSetLoader,
-		},
-		defaultImageConfig: &distro.ImageConfig{
-			EnabledServices: iotServicesForVersion(&d),
-			Locale:          common.ToPtr("en_US.UTF-8"),
-		},
+		name:                   "iot-installer",
+		nameAliases:            []string{"fedora-iot-installer"},
+		filename:               "installer.iso",
+		mimeType:               "application/x-iso9660-image",
+		packageSets:            packageSetLoader,
+		defaultImageConfig:     imageConfig(d, "iot-installer"),
+		defaultInstallerConfig: installerConfig(d, "iot-installer"),
 		rpmOstree:              true,
 		bootISO:                true,
 		image:                  iotInstallerImage,
@@ -217,23 +163,12 @@ func mkIotInstallerImgType(d distribution) imageType {
 
 func mkIotSimplifiedInstallerImgType(d distribution) imageType {
 	return imageType{
-		name:     "iot-simplified-installer",
-		filename: "simplified-installer.iso",
-		mimeType: "application/x-iso9660-image",
-		packageSets: map[string]packageSetFunc{
-			installerPkgsKey: packageSetLoader,
-		},
-		defaultImageConfig: &distro.ImageConfig{
-			EnabledServices: iotServicesForVersion(&d),
-			Keyboard: &osbuild.KeymapStageOptions{
-				Keymap: "us",
-			},
-			Locale:                    common.ToPtr("C.UTF-8"),
-			OSTreeConfSysrootReadOnly: common.ToPtr(true),
-			LockRootUser:              common.ToPtr(true),
-			IgnitionPlatform:          common.ToPtr("metal"),
-			KernelOptions:             ostreeDeploymentKernelOptions(),
-		},
+		name:                   "iot-simplified-installer",
+		filename:               "simplified-installer.iso",
+		mimeType:               "application/x-iso9660-image",
+		packageSets:            packageSetLoader,
+		defaultImageConfig:     imageConfig(d, "iot-simplified-installer"),
+		defaultInstallerConfig: installerConfig(d, "iot-simplified-installer"),
 		defaultSize:            10 * datasizes.GibiByte,
 		rpmOstree:              true,
 		bootable:               true,
@@ -249,29 +184,20 @@ func mkIotSimplifiedInstallerImgType(d distribution) imageType {
 
 func mkIotRawImgType(d distribution) imageType {
 	return imageType{
-		name:        "iot-raw-xz",
-		nameAliases: []string{"iot-raw-image", "fedora-iot-raw-image"},
-		filename:    "image.raw.xz",
-		compression: "xz",
-		mimeType:    "application/xz",
-		packageSets: map[string]packageSetFunc{},
-		defaultImageConfig: &distro.ImageConfig{
-			Keyboard: &osbuild.KeymapStageOptions{
-				Keymap: "us",
-			},
-			Locale:                    common.ToPtr("C.UTF-8"),
-			OSTreeConfSysrootReadOnly: common.ToPtr(true),
-			LockRootUser:              common.ToPtr(true),
-			IgnitionPlatform:          common.ToPtr("metal"),
-			KernelOptions:             ostreeDeploymentKernelOptions(),
-		},
-		defaultSize:      4 * datasizes.GibiByte,
-		rpmOstree:        true,
-		bootable:         true,
-		image:            iotImage,
-		buildPipelines:   []string{"build"},
-		payloadPipelines: []string{"ostree-deployment", "image", "xz"},
-		exports:          []string{"xz"},
+		name:               "iot-raw-xz",
+		nameAliases:        []string{"iot-raw-image", "fedora-iot-raw-image"},
+		filename:           "image.raw.xz",
+		compression:        "xz",
+		mimeType:           "application/xz",
+		packageSets:        nil,
+		defaultSize:        4 * datasizes.GibiByte,
+		rpmOstree:          true,
+		bootable:           true,
+		image:              iotImage,
+		buildPipelines:     []string{"build"},
+		payloadPipelines:   []string{"ostree-deployment", "image", "xz"},
+		exports:            []string{"xz"},
+		defaultImageConfig: imageConfig(d, "iot-raw-xz"),
 
 		// Passing an empty map into the required partition sizes disables the
 		// default partition sizes normally set so our `basePartitionTables` can
@@ -282,21 +208,12 @@ func mkIotRawImgType(d distribution) imageType {
 
 func mkIotQcow2ImgType(d distribution) imageType {
 	return imageType{
-		name:        "iot-qcow2",
-		nameAliases: []string{"iot-qcow2-image"}, // kept for backwards compatibility
-		filename:    "image.qcow2",
-		mimeType:    "application/x-qemu-disk",
-		packageSets: map[string]packageSetFunc{},
-		defaultImageConfig: &distro.ImageConfig{
-			Keyboard: &osbuild.KeymapStageOptions{
-				Keymap: "us",
-			},
-			Locale:                    common.ToPtr("C.UTF-8"),
-			OSTreeConfSysrootReadOnly: common.ToPtr(true),
-			LockRootUser:              common.ToPtr(true),
-			IgnitionPlatform:          common.ToPtr("qemu"),
-			KernelOptions:             ostreeDeploymentKernelOptions(),
-		},
+		name:                   "iot-qcow2",
+		nameAliases:            []string{"iot-qcow2-image"}, // kept for backwards compatibility
+		filename:               "image.qcow2",
+		mimeType:               "application/x-qemu-disk",
+		packageSets:            nil,
+		defaultImageConfig:     imageConfig(d, "iot-qcow2"),
 		defaultSize:            10 * datasizes.GibiByte,
 		rpmOstree:              true,
 		bootable:               true,
@@ -306,190 +223,6 @@ func mkIotQcow2ImgType(d distribution) imageType {
 		exports:                []string{"qcow2"},
 		requiredPartitionSizes: requiredDirectorySizes,
 	}
-}
-
-func mkQcow2ImgType(d distribution) imageType {
-	return imageType{
-		name:        "server-qcow2",
-		nameAliases: []string{"qcow2"}, // kept for backwards compatibility
-		filename:    "disk.qcow2",
-		mimeType:    "application/x-qemu-disk",
-		environment: &environment.KVM{},
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: packageSetLoader,
-		},
-		defaultImageConfig: &distro.ImageConfig{
-			DefaultTarget: common.ToPtr("multi-user.target"),
-			KernelOptions: cloudKernelOptions(),
-		},
-		bootable:               true,
-		defaultSize:            5 * datasizes.GibiByte,
-		image:                  diskImage,
-		buildPipelines:         []string{"build"},
-		payloadPipelines:       []string{"os", "image", "qcow2"},
-		exports:                []string{"qcow2"},
-		requiredPartitionSizes: requiredDirectorySizes,
-	}
-}
-
-var (
-	vmdkDefaultImageConfig = &distro.ImageConfig{
-		Locale: common.ToPtr("en_US.UTF-8"),
-		EnabledServices: []string{
-			"cloud-init.service",
-			"cloud-config.service",
-			"cloud-final.service",
-			"cloud-init-local.service",
-		},
-		KernelOptions: cloudKernelOptions(),
-	}
-)
-
-func mkVmdkImgType(d distribution) imageType {
-	return imageType{
-		name:        "server-vmdk",
-		nameAliases: []string{"vmdk"}, // kept for backwards compatibility
-		filename:    "disk.vmdk",
-		mimeType:    "application/x-vmdk",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: packageSetLoader,
-		},
-		defaultImageConfig:     vmdkDefaultImageConfig,
-		bootable:               true,
-		defaultSize:            2 * datasizes.GibiByte,
-		image:                  diskImage,
-		buildPipelines:         []string{"build"},
-		payloadPipelines:       []string{"os", "image", "vmdk"},
-		exports:                []string{"vmdk"},
-		requiredPartitionSizes: requiredDirectorySizes,
-	}
-}
-
-func mkOvaImgType(d distribution) imageType {
-	return imageType{
-		name:        "server-ova",
-		nameAliases: []string{"ova"}, // kept for backwards compatibility
-		filename:    "image.ova",
-		mimeType:    "application/ovf",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: packageSetLoader,
-		},
-		defaultImageConfig:     vmdkDefaultImageConfig,
-		bootable:               true,
-		defaultSize:            2 * datasizes.GibiByte,
-		image:                  diskImage,
-		buildPipelines:         []string{"build"},
-		payloadPipelines:       []string{"os", "image", "vmdk", "ovf", "archive"},
-		exports:                []string{"archive"},
-		requiredPartitionSizes: requiredDirectorySizes,
-	}
-}
-
-func mkContainerImgType(d distribution) imageType {
-	return imageType{
-		name:     "container",
-		filename: "container.tar",
-		mimeType: "application/x-tar",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: packageSetLoader,
-		},
-		defaultImageConfig: &distro.ImageConfig{
-			NoSElinux:   common.ToPtr(true),
-			ExcludeDocs: common.ToPtr(true),
-			Locale:      common.ToPtr("C.UTF-8"),
-			Timezone:    common.ToPtr("Etc/UTC"),
-		},
-		image:                  containerImage,
-		bootable:               false,
-		buildPipelines:         []string{"build"},
-		payloadPipelines:       []string{"os", "container"},
-		exports:                []string{"container"},
-		requiredPartitionSizes: requiredDirectorySizes,
-	}
-}
-
-func mkWslImgType(d distribution) imageType {
-	return imageType{
-		name:        "wsl",
-		nameAliases: []string{"server-wsl"}, // this is the eventual name, and `wsl` the alias but we've been having issues with CI renaming it
-		filename:    "wsl.tar",
-		mimeType:    "application/x-tar",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: packageSetLoader,
-		},
-		defaultImageConfig: &distro.ImageConfig{
-			CloudInit: []*osbuild.CloudInitStageOptions{
-				{
-					Filename: "99_wsl.cfg",
-					Config: osbuild.CloudInitConfigFile{
-						DatasourceList: []string{
-							"WSL",
-							"None",
-						},
-						Network: &osbuild.CloudInitConfigNetwork{
-							Config: "disabled",
-						},
-					},
-				},
-			},
-			NoSElinux:   common.ToPtr(true),
-			ExcludeDocs: common.ToPtr(true),
-			Locale:      common.ToPtr("C.UTF-8"),
-			Timezone:    common.ToPtr("Etc/UTC"),
-			WSLConfig: &distro.WSLConfig{
-				BootSystemd: true,
-			},
-		},
-		image:                  containerImage,
-		bootable:               false,
-		buildPipelines:         []string{"build"},
-		payloadPipelines:       []string{"os", "container"},
-		exports:                []string{"container"},
-		requiredPartitionSizes: requiredDirectorySizes,
-	}
-}
-
-func mkMinimalRawImgType(d distribution) imageType {
-	it := imageType{
-		name:        "minimal-raw-xz",
-		nameAliases: []string{"minimal-raw"}, // kept for backwards compatibility
-		filename:    "disk.raw.xz",
-		compression: "xz",
-		mimeType:    "application/xz",
-		packageSets: map[string]packageSetFunc{
-			osPkgsKey: packageSetLoader,
-		},
-		defaultImageConfig: &distro.ImageConfig{
-			EnabledServices: minimalServicesForVersion(&d),
-			// NOTE: temporary workaround for a bug in initial-setup that
-			// requires a kickstart file in the root directory.
-			Files: []*fsnode.File{initialSetupKickstart()},
-			Grub2Config: &osbuild.GRUB2Config{
-				// Overwrite the default Grub2 timeout value.
-				Timeout: 5,
-			},
-			InstallWeakDeps: common.ToPtr(common.VersionLessThan(d.osVersion, VERSION_MINIMAL_WEAKDEPS)),
-			KernelOptions:   defaultKernelOptions(),
-		},
-		rpmOstree:              false,
-		bootable:               true,
-		defaultSize:            2 * datasizes.GibiByte,
-		image:                  diskImage,
-		buildPipelines:         []string{"build"},
-		payloadPipelines:       []string{"os", "image", "xz"},
-		exports:                []string{"xz"},
-		requiredPartitionSizes: requiredDirectorySizes,
-	}
-	if common.VersionGreaterThanOrEqual(d.osVersion, "43") {
-		// from Fedora 43 onward, we stop writing /etc/fstab and start using
-		// mount units only
-		it.defaultImageConfig.MountUnits = common.ToPtr(true)
-
-		// when using systemd mount units we also want them to be mounted rw
-		// while the default options are not
-		it.defaultImageConfig.KernelOptions = []string{"rw"}
-	}
-	return it
 }
 
 type distribution struct {
@@ -502,18 +235,6 @@ type distribution struct {
 	runner             runner.Runner
 	arches             map[string]distro.Arch
 	defaultImageConfig *distro.ImageConfig
-}
-
-func defaultDistroInstallerConfig(d *distribution) *distro.InstallerConfig {
-	config := distro.InstallerConfig{}
-	// In Fedora 42 the ifcfg module was replaced by net-lib.
-	if common.VersionLessThan(d.osVersion, "42") {
-		config.AdditionalDracutModules = append(config.AdditionalDracutModules, "ifcfg")
-	} else {
-		config.AdditionalDracutModules = append(config.AdditionalDracutModules, "net-lib")
-	}
-
-	return &config
 }
 
 func getISOLabelFunc(variant string) isoLabelFunc {
@@ -667,7 +388,7 @@ func (a *architecture) Distro() distro.Distro {
 func newDistro(version int) distro.Distro {
 	rd := getDistro(version)
 
-	// Architecture definitions
+	// XXX: generate architecture automatically from the imgType yaml
 	x86_64 := architecture{
 		name:   arch.ARCH_X86_64.String(),
 		distro: &rd,
@@ -693,133 +414,40 @@ func newDistro(version int) distro.Distro {
 		distro: &rd,
 	}
 
-	qcow2ImgType := mkQcow2ImgType(rd)
-
-	ociImgType := qcow2ImgType
-	ociImgType.name = "server-oci"
-	ociImgType.nameAliases = []string{"oci"} // kept for backwards compatibility
-
-	amiImgType := qcow2ImgType
-	amiImgType.name = "server-ami"
-	amiImgType.nameAliases = []string{"ami"} // kept for backwards compatibility
-	amiImgType.filename = "image.raw"
-	amiImgType.mimeType = "application/octet-stream"
-	amiImgType.payloadPipelines = []string{"os", "image"}
-	amiImgType.exports = []string{"image"}
-	amiImgType.environment = &environment.EC2{}
-
-	openstackImgType := qcow2ImgType
-	openstackImgType.name = "server-openstack"
-	openstackImgType.nameAliases = []string{"openstack"} // kept for backwards compatibility
-
-	vhdImgType := qcow2ImgType
-	vhdImgType.name = "server-vhd"
-	vhdImgType.nameAliases = []string{"vhd"} // kept for backwards compatibility
-	vhdImgType.filename = "disk.vhd"
-	vhdImgType.mimeType = "application/x-vhd"
-	vhdImgType.payloadPipelines = []string{"os", "image", "vpc"}
-	vhdImgType.exports = []string{"vpc"}
-	vhdImgType.environment = &environment.Azure{}
-	vhdImgType.packageSets = map[string]packageSetFunc{
-		osPkgsKey: packageSetLoader,
+	// XXX: move all image types should to YAML
+	its, err := defs.ImageTypes(rd.name)
+	if err != nil {
+		panic(err)
 	}
-	vhdConfig := distro.ImageConfig{
-		SshdConfig: &osbuild.SshdConfigStageOptions{
-			Config: osbuild.SshdConfigConfig{
-				ClientAliveInterval: common.ToPtr(120),
-			},
-		},
+	for _, imgTypeYAML := range its {
+		// use as marker for images that are not converted to
+		// YAML yet
+		if imgTypeYAML.Filename == "" {
+			continue
+		}
+		it := newImageTypeFrom(rd, imgTypeYAML)
+		for _, pl := range imgTypeYAML.Platforms {
+			switch pl.Arch {
+			case arch.ARCH_X86_64:
+				x86_64.addImageTypes(&pl, it)
+			case arch.ARCH_AARCH64:
+				aarch64.addImageTypes(&pl, it)
+			case arch.ARCH_PPC64LE:
+				ppc64le.addImageTypes(&pl, it)
+			case arch.ARCH_S390X:
+				s390x.addImageTypes(&pl, it)
+			case arch.ARCH_RISCV64:
+				riscv64.addImageTypes(&pl, it)
+			default:
+				err := fmt.Errorf("unsupported arch: %v", pl.Arch)
+				panic(err)
+			}
+		}
 	}
-	vhdImgType.defaultImageConfig = vhdConfig.InheritFrom(qcow2ImgType.defaultImageConfig)
-
-	minimalrawZstdImgType := mkMinimalRawImgType(rd)
-	minimalrawZstdImgType.name = "minimal-raw-zst"
-	minimalrawZstdImgType.nameAliases = []string{}
-	minimalrawZstdImgType.filename = "disk.raw.zst"
-	minimalrawZstdImgType.mimeType = "application/zstd"
-	minimalrawZstdImgType.compression = "zstd"
-	minimalrawZstdImgType.payloadPipelines = []string{"os", "image", "zstd"}
-	minimalrawZstdImgType.exports = []string{"zstd"}
-
-	x86_64.addImageTypes(
-		&platform.X86{
-			BIOS:       true,
-			UEFIVendor: "fedora",
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_QCOW2,
-				QCOW2Compat: "1.1",
-			},
-		},
-		qcow2ImgType,
-		ociImgType,
-	)
-	x86_64.addImageTypes(
-		&platform.X86{
-			BIOS:       true,
-			UEFIVendor: "fedora",
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_QCOW2,
-			},
-		},
-		openstackImgType,
-	)
-	x86_64.addImageTypes(
-		&platform.X86{
-			BIOS:       true,
-			UEFIVendor: "fedora",
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_VHD,
-			},
-		},
-		vhdImgType,
-	)
-	x86_64.addImageTypes(
-		&platform.X86{
-			BIOS:       true,
-			UEFIVendor: "fedora",
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_VMDK,
-			},
-		},
-		mkVmdkImgType(rd),
-	)
-	x86_64.addImageTypes(
-		&platform.X86{
-			BIOS:       true,
-			UEFIVendor: "fedora",
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_OVA,
-			},
-		},
-		mkOvaImgType(rd),
-	)
-	x86_64.addImageTypes(
-		&platform.X86{
-			BIOS:       true,
-			UEFIVendor: "fedora",
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_RAW,
-			},
-		},
-		amiImgType,
-	)
-	x86_64.addImageTypes(
-		&platform.X86{},
-		mkContainerImgType(rd),
-		mkWslImgType(rd),
-	)
-
-	// add distro installer configuration to all installer types
-	distroInstallerConfig := defaultDistroInstallerConfig(&rd)
 
 	liveInstallerImgType := mkLiveInstallerImgType(rd)
-	liveInstallerImgType.defaultInstallerConfig = distroInstallerConfig
-
 	imageInstallerImgType := mkImageInstallerImgType(rd)
-	imageInstallerImgType.defaultInstallerConfig = distroInstallerConfig
-
 	iotInstallerImgType := mkIotInstallerImgType(rd)
-	iotInstallerImgType.defaultInstallerConfig = distroInstallerConfig
 
 	x86_64.addImageTypes(
 		&platform.X86{
@@ -864,22 +492,11 @@ func newDistro(version int) distro.Distro {
 		&platform.Aarch64{
 			UEFIVendor: "fedora",
 			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_RAW,
-			},
-		},
-		amiImgType,
-	)
-	aarch64.addImageTypes(
-		&platform.Aarch64{
-			UEFIVendor: "fedora",
-			BasePlatform: platform.BasePlatform{
 				ImageFormat: platform.FORMAT_QCOW2,
 				QCOW2Compat: "1.1",
 			},
 		},
 		mkIotQcow2ImgType(rd),
-		ociImgType,
-		qcow2ImgType,
 	)
 	aarch64.addImageTypes(
 		&platform.Aarch64{
@@ -888,11 +505,6 @@ func newDistro(version int) distro.Distro {
 				ImageFormat: platform.FORMAT_QCOW2,
 			},
 		},
-		openstackImgType,
-	)
-	aarch64.addImageTypes(
-		&platform.Aarch64{},
-		mkContainerImgType(rd),
 	)
 	aarch64.addImageTypes(
 		&platform.Aarch64{
@@ -955,38 +567,8 @@ func newDistro(version int) distro.Distro {
 		},
 		mkIotRawImgType(rd),
 	)
-	x86_64.addImageTypes(
-		&platform.X86{
-			UEFIVendor: "fedora",
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_RAW,
-			},
-		},
-		mkMinimalRawImgType(rd),
-		minimalrawZstdImgType,
-	)
-	aarch64.addImageTypes(
-		&platform.Aarch64_Fedora{
-			UEFIVendor: "fedora",
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_RAW,
-				FirmwarePackages: []string{
-					"arm-image-installer",
-					"bcm283x-firmware",
-					"uboot-images-armv8",
-				},
-			},
-			BootFiles: [][2]string{
-				{"/usr/share/uboot/rpi_arm64/u-boot.bin", "/boot/efi/rpi-u-boot.bin"},
-			},
-		},
-		mkMinimalRawImgType(rd),
-		minimalrawZstdImgType,
-	)
 
 	iotSimplifiedInstallerImgType := mkIotSimplifiedInstallerImgType(rd)
-	iotSimplifiedInstallerImgType.defaultInstallerConfig = distroInstallerConfig
-
 	x86_64.addImageTypes(
 		&platform.X86{
 			BasePlatform: platform.BasePlatform{
@@ -1089,53 +671,6 @@ func newDistro(version int) distro.Distro {
 		mkIotBootableContainer(rd),
 	)
 
-	ppc64le.addImageTypes(
-		&platform.PPC64LE{
-			BIOS: true,
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_QCOW2,
-				QCOW2Compat: "1.1",
-			},
-		},
-		qcow2ImgType,
-	)
-	ppc64le.addImageTypes(
-		&platform.PPC64LE{},
-		mkContainerImgType(rd),
-	)
-
-	s390x.addImageTypes(
-		&platform.S390X{
-			Zipl: true,
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_QCOW2,
-				QCOW2Compat: "1.1",
-			},
-		},
-		qcow2ImgType,
-	)
-	s390x.addImageTypes(
-		&platform.S390X{},
-		mkContainerImgType(rd),
-	)
-
-	// XXX: there is no "qcow2" for riscv64 yet because there is
-	// no "@Fedora Cloud Server" group
-	riscv64.addImageTypes(
-		&platform.RISCV64{},
-		mkContainerImgType(rd),
-	)
-	riscv64.addImageTypes(
-		&platform.RISCV64{
-			UEFIVendor: "fedora",
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_RAW,
-			},
-		},
-		mkMinimalRawImgType(rd),
-		minimalrawZstdImgType,
-	)
-
 	rd.addArches(x86_64, aarch64, ppc64le, s390x, riscv64)
 	return &rd
 }
@@ -1164,45 +699,4 @@ func DistroFactory(idStr string) distro.Distro {
 	}
 
 	return newDistro(id.MajorVersion)
-}
-
-func iotServicesForVersion(d *distribution) []string {
-	services := []string{
-		"NetworkManager.service",
-		"firewalld.service",
-		"sshd.service",
-		"greenboot-grub2-set-counter",
-		"greenboot-grub2-set-success",
-		"greenboot-healthcheck",
-		"greenboot-rpm-ostree-grub2-check-fallback",
-		"greenboot-status",
-		"greenboot-task-runner",
-		"redboot-auto-reboot",
-		"redboot-task-runner",
-	}
-
-	if common.VersionLessThan(d.osVersion, "42") {
-		services = append(services, []string{
-			"zezere_ignition.timer",
-			"zezere_ignition_banner.service",
-			"parsec",
-			"dbus-parsec",
-		}...)
-	}
-
-	return services
-}
-
-func minimalServicesForVersion(d *distribution) []string {
-	services := []string{
-		"NetworkManager.service",
-		"initial-setup.service",
-		"sshd.service",
-	}
-
-	if common.VersionLessThan(d.osVersion, "43") {
-		services = append(services, []string{"firewalld.service"}...)
-	}
-
-	return services
 }

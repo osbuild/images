@@ -90,7 +90,7 @@ func TestResolver(t *testing.T) {
 			for idx, ref := range refs {
 				// resolve directly with the registry and convert to ContainerInfo to
 				// compare with output.
-				spec, err := registry.Resolve(ref, arch.FromString(containerArch))
+				spec, err := registry.Resolve(ref, common.Must(arch.FromString(containerArch)))
 				assert.NoError(err)
 				expectedOutput[idx] = resolver.ContainerInfo{
 					Source:  spec.Source,
@@ -224,7 +224,7 @@ func TestResolverRawJSON(t *testing.T) {
 
 			// resolve directly with the registry and convert to a raw JSON
 			// string to compare with output
-			spec, err := registry.Resolve(refs[0], arch.FromString(containerArch))
+			spec, err := registry.Resolve(refs[0], common.Must(arch.FromString(containerArch)))
 			require.NoError(err)
 
 			expected := fmt.Sprintf(`{

@@ -2,6 +2,7 @@ package fedora_test
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"testing"
 
@@ -636,7 +637,9 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				expectedImageTypes = append(expectedImageTypes, mapping.imgNames...)
 				expectedImageTypes = append(expectedImageTypes, mapping.verTypes[dist.distro.Releasever()]...)
 
-				require.ElementsMatch(t, expectedImageTypes, imageTypes)
+				sort.Strings(expectedImageTypes)
+				sort.Strings(imageTypes)
+				require.Equal(t, expectedImageTypes, imageTypes, "extra images for arch %v", arch.Name())
 			}
 		})
 	}

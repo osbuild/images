@@ -11,10 +11,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/arch"
+	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
 	"github.com/osbuild/images/pkg/distro/test_distro"
+	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
@@ -45,54 +48,37 @@ func TestLoadConditionDistro(t *testing.T) {
 image_types:
   test_type:
     package_sets:
-      - include: [inc1]
-        exclude: [exc1]
-        condition:
-          distro_name:
-            test-distro:
-              include: [from-condition-inc2]
-              exclude: [from-condition-exc2]
-            other-distro:
-              include: [inc3]
-              exclude: [exc3]
+      os:
+        - include: [inc1]
+          exclude: [exc1]
+          condition:
+            distro_name:
+              test-distro:
+                include: [from-condition-inc2]
+                exclude: [from-condition-exc2]
+              other-distro:
+                include: [inc3]
+                exclude: [exc3]
+      container:
+        - include: [inc-cnt1]
+          exclude: [exc-cnt1]
 `
 	// XXX: we cannot use distro.Name() as it will give us a name+ver
 	baseDir := makeFakeDefs(t, test_distro.TestDistroNameBase, fakePkgsSetYaml)
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	pkgSet, err := defs.PackageSet(it, "", nil)
+	pkgSet, err := defs.PackageSets(it, nil)
 	assert.NoError(t, err)
-	assert.Equal(t, rpmmd.PackageSet{
-		Include: []string{"from-condition-inc2", "inc1"},
-		Exclude: []string{"exc1", "from-condition-exc2"},
-	}, pkgSet)
-}
-
-func TestLoadOverrideTypeName(t *testing.T) {
-	it := makeTestImageType(t)
-	fakePkgsSetYaml := `
-image_types:
-  test_type:
-    package_sets:
-      - include: [default-inc2]
-        exclude: [default-exc2]
-  override_name:
-    package_sets:
-      - include: [from-override-inc1]
-        exclude: [from-override-exc1]
-
-`
-	// XXX: we cannot use distro.Name() as it will give us a name+ver
-	baseDir := makeFakeDefs(t, test_distro.TestDistroNameBase, fakePkgsSetYaml)
-	restore := defs.MockDataFS(baseDir)
-	defer restore()
-
-	pkgSet, err := defs.PackageSet(it, "override-name", nil)
-	assert.NoError(t, err)
-	assert.Equal(t, rpmmd.PackageSet{
-		Include: []string{"from-override-inc1"},
-		Exclude: []string{"from-override-exc1"},
+	assert.Equal(t, map[string]rpmmd.PackageSet{
+		"os": {
+			Include: []string{"from-condition-inc2", "inc1"},
+			Exclude: []string{"exc1", "from-condition-exc2"},
+		},
+		"container": {
+			Include: []string{"inc-cnt1"},
+			Exclude: []string{"exc-cnt1"},
+		},
 	}, pkgSet)
 }
 
@@ -112,6 +98,7 @@ func TestLoadExperimentalYamldirIsHonored(t *testing.T) {
 image_types:
   test_type:
     package_sets:
+     os:
       - include:
           - inc1
         exclude:
@@ -119,6 +106,7 @@ image_types:
 
   unrelated:
     package_sets:
+     os:
       - include:
           - inc2
         exclude:
@@ -131,11 +119,13 @@ image_types:
 	err = os.WriteFile(fakePkgsSetPath, fakePkgsSetYaml, 0644)
 	assert.NoError(t, err)
 
-	pkgSet, err := defs.PackageSet(it, "", nil)
+	pkgSet, err := defs.PackageSets(it, nil)
 	assert.NoError(t, err)
-	assert.Equal(t, rpmmd.PackageSet{
-		Include: []string{"inc1"},
-		Exclude: []string{"exc1"},
+	assert.Equal(t, map[string]rpmmd.PackageSet{
+		"os": {
+			Include: []string{"inc1"},
+			Exclude: []string{"exc1"},
+		},
 	}, pkgSet)
 }
 
@@ -154,11 +144,13 @@ func TestLoadYamlMergingWorks(t *testing.T) {
 image_types:
   other_type:
     package_sets:
+     os:
       - &other_type_pkgset
         include: [from-other-type-inc]
         exclude: [from-other-type-exc]
   test_type:
     package_sets:
+     os:
       - *base_pkgset
       - *other_type_pkgset
       - include: [from-type-inc]
@@ -174,11 +166,13 @@ image_types:
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	pkgSet, err := defs.PackageSet(it, "", nil)
+	pkgSet, err := defs.PackageSets(it, nil)
 	assert.NoError(t, err)
-	assert.Equal(t, rpmmd.PackageSet{
-		Include: []string{"from-base-condition-inc", "from-base-inc", "from-condition-inc", "from-other-type-inc", "from-type-inc"},
-		Exclude: []string{"from-base-condition-exc", "from-base-exc", "from-condition-exc", "from-other-type-exc", "from-type-exc"},
+	assert.Equal(t, map[string]rpmmd.PackageSet{
+		"os": {
+			Include: []string{"from-base-condition-inc", "from-base-inc", "from-condition-inc", "from-other-type-inc", "from-type-inc"},
+			Exclude: []string{"from-base-condition-exc", "from-base-exc", "from-condition-exc", "from-other-type-exc", "from-type-exc"},
+		},
 	}, pkgSet)
 }
 
@@ -437,7 +431,7 @@ image_types:
 	}, partTable)
 }
 
-func TestDefsImageConfig(t *testing.T) {
+func TestDefsDistroImageConfig(t *testing.T) {
 	fakeDistroYaml := `
 image_config:
   default:
@@ -503,4 +497,212 @@ image_types:
 		_, err := defs.PartitionTable(it, nil)
 		assert.ErrorIs(t, err, tc.expectedErr)
 	}
+}
+
+func TestImageTypeImageConfig(t *testing.T) {
+	fakeDistroYaml := `
+image_types:
+  test_type:
+    image_config:
+      hostname: "foo"
+      locale: "C.UTF-8"
+      timezone: "DefaultTZ"
+      condition:
+        version_less_than:
+          "2":
+            timezone: "OverrideTZ"
+        distro_name:
+          "test-distro":
+            locale: "en_US.UTF-8"
+        architecture:
+          "test_arch":
+            hostname: "test-arch-hn"
+`
+	fakeDistroName := "test-distro"
+	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	imgConfig, err := defs.ImageConfig("test-distro-1", "test_arch", "test_type", nil)
+	require.NoError(t, err)
+	assert.Equal(t, &distro.ImageConfig{
+		Hostname: common.ToPtr("test-arch-hn"),
+		Locale:   common.ToPtr("en_US.UTF-8"),
+		Timezone: common.ToPtr("OverrideTZ"),
+	}, imgConfig)
+
+}
+
+func TestImageTypes(t *testing.T) {
+	fakeDistroYaml := `
+image_types:
+  server_qcow2:
+    name_aliases: ["qcow2"]
+    filename: "disk.qcow2"
+    compression: xz
+    mime_type: "application/x-qemu-disk"
+    environment:
+      packages: ["cloud-init"]
+      services: ["cloud-init.service"]
+    bootable: true
+    default_size: 5_368_709_120  # 5 * datasizes.GibiByte
+    image_func: "disk"
+    build_pipelines: ["build"]
+    payload_pipelines: ["os", "image", "qcow2"]
+    exports: ["qcow2"]
+    required_partition_sizes:
+      "/": 1_073_741_824  # 1 * datasizes.GiB
+    platforms:
+      - arch: ppc64le
+        bios_platform: "powerpc-ieee1275"
+        image_format: "qcow2"
+        qcow2_compat: "1.1"
+`
+	fakeDistroName := "test-distro"
+	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	imgTypes, err := defs.ImageTypes("test-distro-1")
+	require.NoError(t, err)
+	assert.Len(t, imgTypes, 1)
+	imgType := imgTypes["server-qcow2"]
+	assert.Equal(t, "server-qcow2", imgType.Name())
+	assert.Equal(t, []string{"qcow2"}, imgType.NameAliases)
+	assert.Equal(t, "disk.qcow2", imgType.Filename)
+	assert.Equal(t, "xz", imgType.Compression)
+	assert.Equal(t, "application/x-qemu-disk", imgType.MimeType)
+	assert.Equal(t, []string{"cloud-init"}, imgType.Environment.GetPackages())
+	assert.Len(t, imgType.Environment.GetRepos(), 0)
+	assert.Equal(t, []string{"cloud-init.service"}, imgType.Environment.GetServices())
+	assert.Equal(t, true, imgType.Bootable)
+	assert.Equal(t, uint64(5*datasizes.GibiByte), imgType.DefaultSize)
+	assert.Equal(t, "disk", imgType.Image)
+	assert.Equal(t, []string{"build"}, imgType.BuildPipelines)
+	assert.Equal(t, []string{"os", "image", "qcow2"}, imgType.PayloadPipelines)
+	assert.Equal(t, []string{"qcow2"}, imgType.Exports)
+	assert.Equal(t, map[string]uint64{"/": 1_073_741_824}, imgType.RequiredPartitionSizes)
+	assert.Equal(t, []platform.PlatformConf{
+		{
+			Arch:         arch.ARCH_PPC64LE,
+			BIOSPlatform: "powerpc-ieee1275",
+			ImageFormat:  platform.FORMAT_QCOW2,
+			QCOW2Compat:  "1.1",
+		},
+	}, imgType.Platforms)
+}
+
+var fakeDistroYamlInstallerConf = `
+image_types:
+  test_type:
+    installer_config:
+      additional_dracut_modules:
+        - base-dracut-mod1
+      additional_drivers:
+        - base-drv1
+`
+
+func TestImageTypeInstallerConfig(t *testing.T) {
+	fakeDistroYaml := fakeDistroYamlInstallerConf
+
+	fakeDistroName := "test-distro"
+	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type", nil)
+	require.NoError(t, err)
+	assert.Equal(t, &distro.InstallerConfig{
+		AdditionalDracutModules: []string{"base-dracut-mod1"},
+		AdditionalDrivers:       []string{"base-drv1"},
+	}, installerConfig)
+}
+
+func TestImageTypeInstallerConfigErrorMultiple(t *testing.T) {
+	fakeDistroYaml := fakeDistroYamlInstallerConf + `
+      condition:
+        version_less_than:
+          "2":
+            additional_dracut_modules:
+              - override-dracut-mod1
+        distro_name:
+          "test-distro":
+`
+
+	fakeDistroName := "test-distro"
+	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	_, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type", nil)
+	require.ErrorContains(t, err, "only a single conditional allowed in installer config for test_type")
+}
+
+func TestImageTypeInstallerConfigOverrideVerLT(t *testing.T) {
+	fakeDistroYaml := fakeDistroYamlInstallerConf + `
+      condition:
+        version_less_than:
+          "2":
+            # Note that this fully override the installer config
+            additional_dracut_modules:
+              - override-dracut-mod1
+`
+	fakeDistroName := "test-distro"
+	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type", nil)
+	require.NoError(t, err)
+	assert.Equal(t, &distro.InstallerConfig{
+		AdditionalDracutModules: []string{"override-dracut-mod1"},
+		// Note that there is no "AdditionalDrivers" here as
+		// the InstallerConfig is fully replaced, do any
+		// merging in YAML
+	}, installerConfig)
+}
+
+func TestImageTypeInstallerConfigOverrideDistroName(t *testing.T) {
+	fakeDistroYaml := fakeDistroYamlInstallerConf + `
+      condition:
+        distro_name:
+          "test-distro":
+            additional_dracut_modules:
+              - override-dracut-mod1
+            additional_drivers:
+             - override-drv1
+`
+
+	fakeDistroName := "test-distro"
+	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type", nil)
+	require.NoError(t, err)
+	assert.Equal(t, &distro.InstallerConfig{
+		AdditionalDracutModules: []string{"override-dracut-mod1"},
+		AdditionalDrivers:       []string{"override-drv1"},
+	}, installerConfig)
+}
+
+func TestImageTypeInstallerConfigOverrideArch(t *testing.T) {
+	fakeDistroYaml := fakeDistroYamlInstallerConf + `
+      condition:
+        architecture:
+          "test_arch":
+            additional_drivers:
+             - override-drv1
+`
+
+	fakeDistroName := "test-distro"
+	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type", nil)
+	require.NoError(t, err)
+	assert.Equal(t, &distro.InstallerConfig{
+		AdditionalDrivers: []string{"override-drv1"},
+	}, installerConfig)
 }
