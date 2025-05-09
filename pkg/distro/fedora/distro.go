@@ -49,16 +49,17 @@ var (
 // Image Definitions
 func mkImageInstallerImgType(d distribution) imageType {
 	return imageType{
-		name:               "minimal-installer",
-		nameAliases:        []string{"image-installer", "fedora-image-installer"},
-		filename:           "installer.iso",
-		mimeType:           "application/x-iso9660-image",
-		packageSets:        packageSetLoader,
-		defaultImageConfig: imageConfig(d, "minimal-installer"),
-		bootable:           true,
-		bootISO:            true,
-		rpmOstree:          false,
-		image:              imageInstallerImage,
+		name:                   "minimal-installer",
+		nameAliases:            []string{"image-installer", "fedora-image-installer"},
+		filename:               "installer.iso",
+		mimeType:               "application/x-iso9660-image",
+		packageSets:            packageSetLoader,
+		defaultImageConfig:     imageConfig(d, "minimal-installer"),
+		defaultInstallerConfig: installerConfig(d, "minimal-installer"),
+		bootable:               true,
+		bootISO:                true,
+		rpmOstree:              false,
+		image:                  imageInstallerImage,
 		// We don't know the variant of the OS pipeline being installed
 		isoLabel:               getISOLabelFunc("Unknown"),
 		buildPipelines:         []string{"build"},
@@ -76,6 +77,7 @@ func mkLiveInstallerImgType(d distribution) imageType {
 		mimeType:               "application/x-iso9660-image",
 		packageSets:            packageSetLoader,
 		defaultImageConfig:     imageConfig(d, "workstation-live-installer"),
+		defaultInstallerConfig: installerConfig(d, "workstation-live-installer"),
 		bootable:               true,
 		bootISO:                true,
 		rpmOstree:              false,
@@ -147,6 +149,7 @@ func mkIotInstallerImgType(d distribution) imageType {
 		mimeType:               "application/x-iso9660-image",
 		packageSets:            packageSetLoader,
 		defaultImageConfig:     imageConfig(d, "iot-installer"),
+		defaultInstallerConfig: installerConfig(d, "iot-installer"),
 		rpmOstree:              true,
 		bootISO:                true,
 		image:                  iotInstallerImage,
@@ -165,6 +168,7 @@ func mkIotSimplifiedInstallerImgType(d distribution) imageType {
 		mimeType:               "application/x-iso9660-image",
 		packageSets:            packageSetLoader,
 		defaultImageConfig:     imageConfig(d, "iot-simplified-installer"),
+		defaultInstallerConfig: installerConfig(d, "iot-simplified-installer"),
 		defaultSize:            10 * datasizes.GibiByte,
 		rpmOstree:              true,
 		bootable:               true,
@@ -231,18 +235,6 @@ type distribution struct {
 	runner             runner.Runner
 	arches             map[string]distro.Arch
 	defaultImageConfig *distro.ImageConfig
-}
-
-func defaultDistroInstallerConfig(d *distribution) *distro.InstallerConfig {
-	config := distro.InstallerConfig{}
-	// In Fedora 42 the ifcfg module was replaced by net-lib.
-	if common.VersionLessThan(d.osVersion, "42") {
-		config.AdditionalDracutModules = append(config.AdditionalDracutModules, "ifcfg")
-	} else {
-		config.AdditionalDracutModules = append(config.AdditionalDracutModules, "net-lib")
-	}
-
-	return &config
 }
 
 func getISOLabelFunc(variant string) isoLabelFunc {
@@ -453,17 +445,9 @@ func newDistro(version int) distro.Distro {
 		}
 	}
 
-	// add distro installer configuration to all installer types
-	distroInstallerConfig := defaultDistroInstallerConfig(&rd)
-
 	liveInstallerImgType := mkLiveInstallerImgType(rd)
-	liveInstallerImgType.defaultInstallerConfig = distroInstallerConfig
-
 	imageInstallerImgType := mkImageInstallerImgType(rd)
-	imageInstallerImgType.defaultInstallerConfig = distroInstallerConfig
-
 	iotInstallerImgType := mkIotInstallerImgType(rd)
-	iotInstallerImgType.defaultInstallerConfig = distroInstallerConfig
 
 	x86_64.addImageTypes(
 		&platform.X86{
@@ -585,8 +569,6 @@ func newDistro(version int) distro.Distro {
 	)
 
 	iotSimplifiedInstallerImgType := mkIotSimplifiedInstallerImgType(rd)
-	iotSimplifiedInstallerImgType.defaultInstallerConfig = distroInstallerConfig
-
 	x86_64.addImageTypes(
 		&platform.X86{
 			BasePlatform: platform.BasePlatform{
