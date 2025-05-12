@@ -99,27 +99,6 @@ func mkIotOCIImgType(d distribution) imageType {
 	}
 }
 
-func mkIotSimplifiedInstallerImgType(d distribution) imageType {
-	return imageType{
-		name:                   "iot-simplified-installer",
-		filename:               "simplified-installer.iso",
-		mimeType:               "application/x-iso9660-image",
-		packageSets:            packageSetLoader,
-		defaultImageConfig:     imageConfig(d, "iot-simplified-installer"),
-		defaultInstallerConfig: installerConfig(d, "iot-simplified-installer"),
-		defaultSize:            10 * datasizes.GibiByte,
-		rpmOstree:              true,
-		bootable:               true,
-		bootISO:                true,
-		image:                  iotSimplifiedInstallerImage,
-		isoLabel:               getISOLabelFunc("IoT"),
-		buildPipelines:         []string{"build"},
-		payloadPipelines:       []string{"ostree-deployment", "image", "xz", "coi-tree", "efiboot-tree", "bootiso-tree", "bootiso"},
-		exports:                []string{"bootiso"},
-		requiredPartitionSizes: requiredDirectorySizes,
-	}
-}
-
 func mkIotRawImgType(d distribution) imageType {
 	return imageType{
 		name:               "iot-raw-xz",
@@ -494,55 +473,6 @@ func newDistro(version int) distro.Distro {
 			},
 		},
 		mkIotRawImgType(rd),
-	)
-
-	iotSimplifiedInstallerImgType := mkIotSimplifiedInstallerImgType(rd)
-	x86_64.addImageTypes(
-		&platform.X86{
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_RAW,
-				FirmwarePackages: []string{
-					"grub2-efi-x64",
-					"grub2-efi-x64-cdboot",
-					"grub2-tools",
-					"grub2-tools-minimal",
-					"efibootmgr",
-					"shim-x64",
-					"brcmfmac-firmware",
-					"iwlwifi-dvm-firmware",
-					"iwlwifi-mvm-firmware",
-					"realtek-firmware",
-					"microcode_ctl",
-				},
-			},
-			BIOS:       false,
-			UEFIVendor: "fedora",
-		},
-		iotSimplifiedInstallerImgType,
-	)
-
-	aarch64.addImageTypes(
-		&platform.Aarch64{
-			BasePlatform: platform.BasePlatform{
-				FirmwarePackages: []string{
-					"arm-image-installer",
-					"bcm283x-firmware",
-					"grub2-efi-aa64",
-					"grub2-efi-aa64-cdboot",
-					"grub2-tools",
-					"grub2-tools-minimal",
-					"efibootmgr",
-					"shim-aa64",
-					"brcmfmac-firmware",
-					"iwlwifi-dvm-firmware",
-					"iwlwifi-mvm-firmware",
-					"realtek-firmware",
-					"uboot-images-armv8",
-				},
-			},
-			UEFIVendor: "fedora",
-		},
-		iotSimplifiedInstallerImgType,
 	)
 
 	x86_64.addImageTypes(
