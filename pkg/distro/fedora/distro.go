@@ -69,27 +69,6 @@ func mkImageInstallerImgType(d distribution) imageType {
 	}
 }
 
-func mkLiveInstallerImgType(d distribution) imageType {
-	return imageType{
-		name:                   "workstation-live-installer",
-		nameAliases:            []string{"live-installer"},
-		filename:               "live-installer.iso",
-		mimeType:               "application/x-iso9660-image",
-		packageSets:            packageSetLoader,
-		defaultImageConfig:     imageConfig(d, "workstation-live-installer"),
-		defaultInstallerConfig: installerConfig(d, "workstation-live-installer"),
-		bootable:               true,
-		bootISO:                true,
-		rpmOstree:              false,
-		image:                  liveInstallerImage,
-		isoLabel:               getISOLabelFunc("Workstation"),
-		buildPipelines:         []string{"build"},
-		payloadPipelines:       []string{"anaconda-tree", "efiboot-tree", "bootiso-tree", "bootiso"},
-		exports:                []string{"bootiso"},
-		requiredPartitionSizes: requiredDirectorySizes,
-	}
-}
-
 func mkIotCommitImgType(d distribution) imageType {
 	return imageType{
 		name:                   "iot-commit",
@@ -445,7 +424,6 @@ func newDistro(version int) distro.Distro {
 		}
 	}
 
-	liveInstallerImgType := mkLiveInstallerImgType(rd)
 	imageInstallerImgType := mkImageInstallerImgType(rd)
 	iotInstallerImgType := mkIotInstallerImgType(rd)
 
@@ -466,7 +444,6 @@ func newDistro(version int) distro.Distro {
 		mkIotCommitImgType(rd),
 		iotInstallerImgType,
 		imageInstallerImgType,
-		liveInstallerImgType,
 	)
 	x86_64.addImageTypes(
 		&platform.X86{
@@ -524,7 +501,6 @@ func newDistro(version int) distro.Distro {
 		mkIotCommitImgType(rd),
 		iotInstallerImgType,
 		mkIotOCIImgType(rd),
-		liveInstallerImgType,
 	)
 	aarch64.addImageTypes(
 		&platform.Aarch64_Fedora{

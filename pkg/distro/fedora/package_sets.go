@@ -33,6 +33,8 @@ func newImageTypeFrom(d distribution, imgYAML defs.ImageTypeYAML) imageType {
 		compression:            imgYAML.Compression,
 		mimeType:               imgYAML.MimeType,
 		bootable:               imgYAML.Bootable,
+		bootISO:                imgYAML.BootISO,
+		isoLabel:               getISOLabelFunc(imgYAML.ISOLabel),
 		defaultSize:            imgYAML.DefaultSize,
 		buildPipelines:         imgYAML.BuildPipelines,
 		payloadPipelines:       imgYAML.PayloadPipelines,
