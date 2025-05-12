@@ -9,7 +9,6 @@ import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/customizations/oscap"
-	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
 	"github.com/osbuild/images/pkg/platform"
@@ -37,12 +36,6 @@ var (
 		oscap.Ospp,
 		oscap.PciDss,
 		oscap.Standard,
-	}
-
-	// Default directory size minimums for all image types.
-	requiredDirectorySizes = map[string]uint64{
-		"/":    1 * datasizes.GiB,
-		"/usr": 2 * datasizes.GiB,
 	}
 )
 
