@@ -99,26 +99,6 @@ func mkIotOCIImgType(d distribution) imageType {
 	}
 }
 
-func mkIotInstallerImgType(d distribution) imageType {
-	return imageType{
-		name:                   "iot-installer",
-		nameAliases:            []string{"fedora-iot-installer"},
-		filename:               "installer.iso",
-		mimeType:               "application/x-iso9660-image",
-		packageSets:            packageSetLoader,
-		defaultImageConfig:     imageConfig(d, "iot-installer"),
-		defaultInstallerConfig: installerConfig(d, "iot-installer"),
-		rpmOstree:              true,
-		bootISO:                true,
-		image:                  iotInstallerImage,
-		isoLabel:               getISOLabelFunc("IoT"),
-		buildPipelines:         []string{"build"},
-		payloadPipelines:       []string{"anaconda-tree", "efiboot-tree", "bootiso-tree", "bootiso"},
-		exports:                []string{"bootiso"},
-		requiredPartitionSizes: requiredDirectorySizes,
-	}
-}
-
 func mkIotSimplifiedInstallerImgType(d distribution) imageType {
 	return imageType{
 		name:                   "iot-simplified-installer",
@@ -403,8 +383,6 @@ func newDistro(version int) distro.Distro {
 		}
 	}
 
-	iotInstallerImgType := mkIotInstallerImgType(rd)
-
 	x86_64.addImageTypes(
 		&platform.X86{
 			BasePlatform: platform.BasePlatform{
@@ -420,7 +398,6 @@ func newDistro(version int) distro.Distro {
 		},
 		mkIotOCIImgType(rd),
 		mkIotCommitImgType(rd),
-		iotInstallerImgType,
 	)
 	x86_64.addImageTypes(
 		&platform.X86{
@@ -475,7 +452,6 @@ func newDistro(version int) distro.Distro {
 			UEFIVendor: "fedora",
 		},
 		mkIotCommitImgType(rd),
-		iotInstallerImgType,
 		mkIotOCIImgType(rd),
 	)
 	aarch64.addImageTypes(

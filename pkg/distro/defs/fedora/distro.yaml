@@ -77,6 +77,18 @@
       build_packages:
         bios:
           - "grub2-pc"
+    x86_64_installer_platform: &x86_64_installer_platform
+      arch: "x86_64"
+      image_format: "raw"
+      bios_platform: "i386-pc"
+      uefi_vendor: "fedora"
+      packages:
+        <<: *x86_64_bios_platform_packages
+        firmware:
+        - "biosdevname"
+        - "iwlwifi-dvm-firmware"
+        - "iwlwifi-mvm-firmware"
+        - "microcode_ctl"
     aarch64_platform: &aarch64_platform
       arch: "aarch64"
       uefi_vendor: "fedora"
@@ -89,6 +101,18 @@
           - "grub2-efi-aa64"
           - "grub2-tools"
           - "shim-aa64"
+    aarch64_installer_platform: &aarch64_installer_platform
+      arch: "aarch64"
+      uefi_vendor: "fedora"
+      packages:
+        <<: *aarch64_uefi_platform_packages
+        firmware:
+          - "arm-image-installer"
+          - "bcm283x-firmware"
+          - "brcmfmac-firmware"
+          - "iwlwifi-mvm-firmware"
+          - "realtek-firmware"
+          - "uboot-images-armv8"
     ppc64le_bios_platform: &ppc64le_bios_platform
       arch: "ppc64le"
       bios_platform: "powerpc-ieee1275"
@@ -1165,6 +1189,21 @@ image_types:
                   - "dmidecode"
 
   "iot-installer":
+    name_aliases: ["fedora-iot-installer"]
+    filename: "installer.iso"
+    mime_type: "application/x-iso9660-image"
+    rpm_ostree: true
+    boot_iso:  true
+    image_func: "iot_installer"
+    iso_label: "IoT"
+    build_pipelines: ["build"]
+    payload_pipelines:
+      - "anaconda-tree"
+      - "efiboot-tree"
+      - "bootiso-tree"
+      - "bootiso"
+    exports: ["bootiso"]
+    required_partition_sizes: *default_required_dir_sizes
     installer_config: *default_installer_config
     image_config:
       <<: *image_config_iot_enabled_services
@@ -1174,6 +1213,9 @@ image_types:
         - *anaconda_pkgset
         - include:
             - "fedora-release-iot"
+    platforms:
+      - *x86_64_installer_platform
+      - *aarch64_installer_platform
 
   "workstation-live-installer":
     name_aliases: ["live-installer"]
@@ -1226,30 +1268,8 @@ image_types:
                 include:
                   - "anaconda-webui"
     platforms:
-      - &x86_64_installer_platform
-        arch: "x86_64"
-        image_format: "raw"
-        bios_platform: "i386-pc"
-        uefi_vendor: "fedora"
-        packages:
-          <<: *x86_64_bios_platform_packages
-          firmware:
-          - "biosdevname"
-          - "iwlwifi-dvm-firmware"
-          - "iwlwifi-mvm-firmware"
-          - "microcode_ctl"
-      - &aarch64_installer_platform
-        arch: "aarch64"
-        uefi_vendor: "fedora"
-        packages:
-          <<: *aarch64_uefi_platform_packages
-          firmware:
-            - "arm-image-installer"
-            - "bcm283x-firmware"
-            - "brcmfmac-firmware"
-            - "iwlwifi-mvm-firmware"
-            - "realtek-firmware"
-            - "uboot-images-armv8"
+      - *x86_64_installer_platform
+      - *aarch64_installer_platform
 
   "minimal-installer":
     <<: *anaconda
