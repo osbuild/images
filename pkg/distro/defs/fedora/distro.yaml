@@ -905,8 +905,41 @@ image_types:
         qcow2_compat: "1.1"
 
   "iot-bootable-container":
+    filename: "iot-bootable-container.tar"
+    mime_type: "application/x-tar"
+    rpm_ostree: true
+    image_func: "bootable_container"
+    build_pipelines: ["build"]
+    payload_pipelines: ["os", "ostree-commit", "ostree-encapsulate"]
+    exports: ["ostree-encapsulate"]
+    required_partition_sizes: *default_required_dir_sizes
     image_config:
       machine_id_uninitialized: false
+    platforms:
+      - <<: *x86_64_bios_platform
+        packages:
+          <<: *x86_64_bios_platform_packages
+          firmware:
+            - "biosdevname"
+            - "iwlwifi-dvm-firmware"
+            - "iwlwifi-mvm-firmware"
+            - "microcode_ctl"
+      - <<: *aarch64_platform
+        packages:
+          <<: *aarch64_uefi_platform_packages
+          firmware:
+            - "arm-image-installer"
+            - "bcm283x-firmware"
+            - "brcmfmac-firmware"
+            - "iwlwifi-mvm-firmware"
+            - "realtek-firmware"
+            - "uboot-images-armv8"
+      - <<: *ppc64le_bios_platform
+        image_format: "qcow2"
+        qcow2_compat: "1.1"
+      - <<: *s390x_zipl_platform
+        image_format: "qcow2"
+        qcow2_compat: "1.1"
     package_sets:
       os:
         - include:
