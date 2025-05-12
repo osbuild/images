@@ -47,27 +47,6 @@ var (
 )
 
 // Image Definitions
-func mkImageInstallerImgType(d distribution) imageType {
-	return imageType{
-		name:                   "minimal-installer",
-		nameAliases:            []string{"image-installer", "fedora-image-installer"},
-		filename:               "installer.iso",
-		mimeType:               "application/x-iso9660-image",
-		packageSets:            packageSetLoader,
-		defaultImageConfig:     imageConfig(d, "minimal-installer"),
-		defaultInstallerConfig: installerConfig(d, "minimal-installer"),
-		bootable:               true,
-		bootISO:                true,
-		rpmOstree:              false,
-		image:                  imageInstallerImage,
-		// We don't know the variant of the OS pipeline being installed
-		isoLabel:               getISOLabelFunc("Unknown"),
-		buildPipelines:         []string{"build"},
-		payloadPipelines:       []string{"anaconda-tree", "efiboot-tree", "os", "bootiso-tree", "bootiso"},
-		exports:                []string{"bootiso"},
-		requiredPartitionSizes: requiredDirectorySizes,
-	}
-}
 
 func mkIotCommitImgType(d distribution) imageType {
 	return imageType{
@@ -424,7 +403,6 @@ func newDistro(version int) distro.Distro {
 		}
 	}
 
-	imageInstallerImgType := mkImageInstallerImgType(rd)
 	iotInstallerImgType := mkIotInstallerImgType(rd)
 
 	x86_64.addImageTypes(
@@ -443,7 +421,6 @@ func newDistro(version int) distro.Distro {
 		mkIotOCIImgType(rd),
 		mkIotCommitImgType(rd),
 		iotInstallerImgType,
-		imageInstallerImgType,
 	)
 	x86_64.addImageTypes(
 		&platform.X86{
@@ -497,7 +474,6 @@ func newDistro(version int) distro.Distro {
 			},
 			UEFIVendor: "fedora",
 		},
-		imageInstallerImgType,
 		mkIotCommitImgType(rd),
 		iotInstallerImgType,
 		mkIotOCIImgType(rd),

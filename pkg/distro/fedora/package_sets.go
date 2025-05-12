@@ -44,6 +44,7 @@ func newImageTypeFrom(d distribution, imgYAML defs.ImageTypeYAML) imageType {
 	}
 	// XXX: make this a helper on imgYAML()
 	it.defaultImageConfig = imageConfig(d, imgYAML.Name())
+	it.defaultInstallerConfig = installerConfig(d, imgYAML.Name())
 	it.packageSets = packageSetLoader
 
 	switch imgYAML.Image {
