@@ -1435,6 +1435,25 @@ image_types:
                   - "fuse-libs"
 
   "iot-simplified-installer":
+    filename: "simplified-installer.iso"
+    mime_type: "application/x-iso9660-image"
+    rpm_ostree: true
+    bootable: true
+    boot_iso: true
+    default_size: 10_737_418_240  # 10 * datasizes.GibiByte
+    image_func: "iot_simplified_installer"
+    iso_label: "IoT"
+    build_pipelines: ["build"]
+    payload_pipelines:
+      - "ostree-deployment"
+      - "image"
+      - "xz"
+      - "coi-tree"
+      - "efiboot-tree"
+      - "bootiso-tree"
+      - "bootiso"
+    exports: ["bootiso"]
+    required_partition_sizes: *default_required_dir_sizes
     installer_config: *default_installer_config
     image_config:
       <<: *image_config_iot
@@ -1443,48 +1462,81 @@ image_types:
       <<: *iot_simplified_installer_partition_tables
     package_sets:
       installer:
-        - *installer_pkgset
-        - include:
-            - "attr"
-            - "basesystem"
-            - "binutils"
-            - "bsdtar"
-            - "clevis-dracut"
-            - "clevis-luks"
-            - "cloud-utils-growpart"
-            - "coreos-installer"
-            - "coreos-installer-dracut"
-            - "coreutils"
-            - "device-mapper-multipath"
-            - "dosfstools"
-            - "dracut-live"
-            - "e2fsprogs"
-            - "fcoe-utils"
-            - "fdo-init"
-            - "fedora-logos"
-            - "gdisk"
-            - "gzip"
-            - "ima-evm-utils"
-            - "iproute"
-            - "iptables"
-            - "iputils"
-            - "iscsi-initiator-utils"
-            - "keyutils"
-            - "lldpad"
-            - "lvm2"
-            - "mdadm"
-            - "nss-softokn"
-            - "policycoreutils"
-            - "policycoreutils-python-utils"
-            - "procps-ng"
-            - "rootfiles"
-            - "setools-console"
-            - "sudo"
-            - "traceroute"
-            - "util-linux"
-            - "shadow-utils"  # includes passwd
-          condition:
-            version_less_than:
-              "41":
-                include:
-                  - "dnsmasq"  # deprecated for F41+
+      - *installer_pkgset
+      - include:
+          - "attr"
+          - "basesystem"
+          - "binutils"
+          - "bsdtar"
+          - "clevis-dracut"
+          - "clevis-luks"
+          - "cloud-utils-growpart"
+          - "coreos-installer"
+          - "coreos-installer-dracut"
+          - "coreutils"
+          - "device-mapper-multipath"
+          - "dosfstools"
+          - "dracut-live"
+          - "e2fsprogs"
+          - "fcoe-utils"
+          - "fdo-init"
+          - "fedora-logos"
+          - "gdisk"
+          - "gzip"
+          - "ima-evm-utils"
+          - "iproute"
+          - "iptables"
+          - "iputils"
+          - "iscsi-initiator-utils"
+          - "keyutils"
+          - "lldpad"
+          - "lvm2"
+          - "mdadm"
+          - "nss-softokn"
+          - "policycoreutils"
+          - "policycoreutils-python-utils"
+          - "procps-ng"
+          - "rootfiles"
+          - "setools-console"
+          - "sudo"
+          - "traceroute"
+          - "util-linux"
+          - "shadow-utils"  # includes passwd
+        condition:
+          version_less_than:
+            "41":
+              include:
+                - "dnsmasq"  # deprecated for F41+
+    platforms:
+      - <<: *x86_64_uefi_platform
+        packages:
+          <<: *x86_64_uefi_platform_packages
+          firmware:
+            - "grub2-efi-x64"
+            - "grub2-efi-x64-cdboot"
+            - "grub2-tools"
+            - "grub2-tools-minimal"
+            - "efibootmgr"
+            - "shim-x64"
+            - "brcmfmac-firmware"
+            - "iwlwifi-dvm-firmware"
+            - "iwlwifi-mvm-firmware"
+            - "realtek-firmware"
+            - "microcode_ctl"
+      - <<: *aarch64_installer_platform
+        packages:
+          <<: *aarch64_uefi_platform_packages
+          firmware:
+            - "arm-image-installer"
+            - "bcm283x-firmware"
+            - "grub2-efi-aa64"
+            - "grub2-efi-aa64-cdboot"
+            - "grub2-tools"
+            - "grub2-tools-minimal"
+            - "efibootmgr"
+            - "shim-aa64"
+            - "brcmfmac-firmware"
+            - "iwlwifi-dvm-firmware"
+            - "iwlwifi-mvm-firmware"
+            - "realtek-firmware"
+            - "uboot-images-armv8"
