@@ -155,6 +155,10 @@
           "path": "/etc/empty_file.txt",
           "user": 0,
           "group": 0
+        },
+        {
+          "path": "/etc/host-os-release",
+	  "ref": "file:///etc/os-release"
         }
       ],
       "repositories": [
