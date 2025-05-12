@@ -1180,6 +1180,22 @@ image_types:
             - "fedora-release-iot"
 
   "workstation-live-installer":
+    name_aliases: ["live-installer"]
+    filename: "live-installer.iso"
+    mime_type: "application/x-iso9660-image"
+    bootable: true
+    boot_iso: true
+    image_func: "live_installer"
+    iso_label: "Workstation"
+    build_pipelines: ["build"]
+    payload_pipelines:
+      - "anaconda-tree"
+      - "efiboot-tree"
+      - "bootiso-tree"
+      - "bootiso"
+    exports: ["bootiso"]
+    required_partition_sizes: *default_required_dir_sizes
+    installer_config: *default_installer_config
     image_config:
       locale: "en_US.UTF-8"
     package_sets:
@@ -1213,6 +1229,43 @@ image_types:
               VERSION_RAWHIDE:
                 include:
                   - "anaconda-webui"
+    platforms:
+      - arch: "x86_64"
+        image_format: "raw"
+        bios_platform: "i386-pc"
+        uefi_vendor: "fedora"
+        packages:
+          # XXX: de-duplicate :(
+          # firmware pkgs
+          - "biosdevname"
+          - "iwlwifi-dvm-firmware"
+          - "iwlwifi-mvm-firmware"
+          - "microcode_ctl"
+          # bios
+          - "dracut-config-generic"
+          - "grub2-pc"
+          # uefi
+          - "dracut-config-generic"
+          - "efibootmgr"
+          - "grub2-efi-x64"
+          - "shim-x64"
+      - arch: "aarch64"
+        uefi_vendor: "fedora"
+        packages:
+          # XXX: de-duplicate :(
+          # firmware pkgs
+          - "arm-image-installer"
+          - "bcm283x-firmware"
+          - "brcmfmac-firmware"
+          - "iwlwifi-mvm-firmware"
+          - "realtek-firmware"
+          - "uboot-images-armv8"
+          # uefi
+          - "dracut-config-generic"
+          - "efibootmgr"
+          - "grub2-efi-aa64"
+          - "grub2-tools"
+          - "shim-aa64"
 
   "minimal-installer": *anaconda
 
