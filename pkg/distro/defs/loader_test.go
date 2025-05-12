@@ -545,6 +545,8 @@ image_types:
       packages: ["cloud-init"]
       services: ["cloud-init.service"]
     bootable: true
+    boot_iso: true
+    iso_label: "Workstation"
     default_size: 5_368_709_120  # 5 * datasizes.GibiByte
     image_func: "disk"
     build_pipelines: ["build"]
@@ -576,6 +578,8 @@ image_types:
 	assert.Len(t, imgType.Environment.GetRepos(), 0)
 	assert.Equal(t, []string{"cloud-init.service"}, imgType.Environment.GetServices())
 	assert.Equal(t, true, imgType.Bootable)
+	assert.Equal(t, true, imgType.BootISO)
+	assert.Equal(t, "Workstation", imgType.ISOLabel)
 	assert.Equal(t, uint64(5*datasizes.GibiByte), imgType.DefaultSize)
 	assert.Equal(t, "disk", imgType.Image)
 	assert.Equal(t, []string{"build"}, imgType.BuildPipelines)
