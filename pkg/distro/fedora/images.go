@@ -946,13 +946,3 @@ func makeOSTreePayloadCommit(options *ostree.ImageOptions, defaultRef string) (o
 		RHSM: options.RHSM,
 	}, nil
 }
-
-// initialSetupKickstart returns the File configuration for a kickstart file
-// that's required to enable initial-setup to run on first boot.
-func initialSetupKickstart() *fsnode.File {
-	file, err := fsnode.NewFile("/root/anaconda-ks.cfg", nil, "root", "root", []byte("# Run initial-setup on first boot\n# Created by osbuild\nfirstboot --reconfig\n"))
-	if err != nil {
-		panic(err)
-	}
-	return file
-}
