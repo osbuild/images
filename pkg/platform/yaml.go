@@ -7,15 +7,19 @@ import (
 // PlatformConf is a platform configured from YAML inputs
 // that implements the "Platform" interface
 type PlatformConf struct {
-	Arch          arch.Arch   `yaml:"arch"`
-	ImageFormat   ImageFormat `yaml:"image_format"`
-	QCOW2Compat   string      `yaml:"qcow2_compat"`
-	BIOSPlatform  string      `yaml:"bios_platform"`
-	UEFIVendor    string      `yaml:"uefi_vendor"`
-	ZiplSupport   bool        `yaml:"zipl_support"`
-	Packages      []string    `yaml:"packages"`
-	BuildPackages []string    `yaml:"build_packages"`
-	BootFiles     [][2]string `yaml:"boot_files"`
+	Arch         arch.Arch   `yaml:"arch"`
+	ImageFormat  ImageFormat `yaml:"image_format"`
+	QCOW2Compat  string      `yaml:"qcow2_compat"`
+	BIOSPlatform string      `yaml:"bios_platform"`
+	UEFIVendor   string      `yaml:"uefi_vendor"`
+	ZiplSupport  bool        `yaml:"zipl_support"`
+	// packages are index by an arbitrary string key to
+	// make them YAML mergable, a good key is e.g. "bios"
+	// to indicate that these packages are needed for
+	// bios support
+	Packages      map[string][]string `yaml:"packages"`
+	BuildPackages map[string][]string `yaml:"build_packages"`
+	BootFiles     [][2]string         `yaml:"boot_files"`
 }
 
 // ensure PlatformConf implements the Platform interface
@@ -40,10 +44,18 @@ func (pc *PlatformConf) GetZiplSupport() bool {
 	return pc.ZiplSupport
 }
 func (pc *PlatformConf) GetPackages() []string {
-	return pc.Packages
+	var merged []string
+	for _, pkgList := range pc.Packages {
+		merged = append(merged, pkgList...)
+	}
+	return merged
 }
 func (pc *PlatformConf) GetBuildPackages() []string {
-	return pc.BuildPackages
+	var merged []string
+	for _, pkgList := range pc.BuildPackages {
+		merged = append(merged, pkgList...)
+	}
+	return merged
 }
 func (pc *PlatformConf) GetBootFiles() [][2]string {
 	return pc.BootFiles

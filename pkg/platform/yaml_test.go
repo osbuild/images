@@ -20,9 +20,11 @@ func TestPlatformYamlSmoke(t *testing.T) {
         image_format: "qcow2"
         qcow2_compat: "1.1"
         packages:
-          - grub2-pc
+          bios:
+            - grub2-pc
         build_packages:
-          - grub2-pc-as-bp
+          bios:
+            - grub2-pc-as-bp
         boot_files:
           - ["/usr/share/uboot/rpi_arm64/u-boot.bin", "/boot/efi/rpi-u-boot.bin"]
 `)
@@ -30,13 +32,17 @@ func TestPlatformYamlSmoke(t *testing.T) {
 	err := yaml.Unmarshal(inputYAML, &pc)
 	assert.NoError(t, err)
 	expected := platform.PlatformConf{
-		Arch:          common.Must(arch.FromString("x86_64")),
-		BIOSPlatform:  "i386-pc",
-		UEFIVendor:    "fedora",
-		ImageFormat:   platform.FORMAT_QCOW2,
-		QCOW2Compat:   "1.1",
-		Packages:      []string{"grub2-pc"},
-		BuildPackages: []string{"grub2-pc-as-bp"},
+		Arch:         common.Must(arch.FromString("x86_64")),
+		BIOSPlatform: "i386-pc",
+		UEFIVendor:   "fedora",
+		ImageFormat:  platform.FORMAT_QCOW2,
+		QCOW2Compat:  "1.1",
+		Packages: map[string][]string{
+			"bios": []string{"grub2-pc"},
+		},
+		BuildPackages: map[string][]string{
+			"bios": []string{"grub2-pc-as-bp"},
+		},
 		BootFiles: [][2]string{
 			{"/usr/share/uboot/rpi_arm64/u-boot.bin", "/boot/efi/rpi-u-boot.bin"},
 		},
