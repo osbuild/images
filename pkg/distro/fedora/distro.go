@@ -64,30 +64,6 @@ func mkIotBootableContainer(d distribution) imageType {
 	}
 }
 
-func mkIotRawImgType(d distribution) imageType {
-	return imageType{
-		name:               "iot-raw-xz",
-		nameAliases:        []string{"iot-raw-image", "fedora-iot-raw-image"},
-		filename:           "image.raw.xz",
-		compression:        "xz",
-		mimeType:           "application/xz",
-		packageSets:        nil,
-		defaultSize:        4 * datasizes.GibiByte,
-		rpmOstree:          true,
-		bootable:           true,
-		image:              iotImage,
-		buildPipelines:     []string{"build"},
-		payloadPipelines:   []string{"ostree-deployment", "image", "xz"},
-		exports:            []string{"xz"},
-		defaultImageConfig: imageConfig(d, "iot-raw-xz"),
-
-		// Passing an empty map into the required partition sizes disables the
-		// default partition sizes normally set so our `basePartitionTables` can
-		// override them (and make them smaller, in this case).
-		requiredPartitionSizes: map[string]uint64{},
-	}
-}
-
 func mkIotQcow2ImgType(d distribution) imageType {
 	return imageType{
 		name:                   "iot-qcow2",
@@ -330,16 +306,6 @@ func newDistro(version int) distro.Distro {
 	x86_64.addImageTypes(
 		&platform.X86{
 			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_RAW,
-			},
-			BIOS:       false,
-			UEFIVendor: "fedora",
-		},
-		mkIotRawImgType(rd),
-	)
-	x86_64.addImageTypes(
-		&platform.X86{
-			BasePlatform: platform.BasePlatform{
 				ImageFormat: platform.FORMAT_QCOW2,
 			},
 			BIOS:       false,
@@ -364,47 +330,6 @@ func newDistro(version int) distro.Distro {
 				ImageFormat: platform.FORMAT_QCOW2,
 			},
 		},
-	)
-	aarch64.addImageTypes(
-		&platform.Aarch64_Fedora{
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_RAW,
-			},
-			UEFIVendor: "fedora",
-			BootFiles: [][2]string{
-				{"/usr/lib/ostree-boot/efi/bcm2710-rpi-2-b.dtb", "/boot/efi/"},
-				{"/usr/lib/ostree-boot/efi/bcm2710-rpi-3-b-plus.dtb", "/boot/efi/"},
-				{"/usr/lib/ostree-boot/efi/bcm2710-rpi-3-b.dtb", "/boot/efi/"},
-				{"/usr/lib/ostree-boot/efi/bcm2710-rpi-cm3.dtb", "/boot/efi/"},
-				{"/usr/lib/ostree-boot/efi/bcm2710-rpi-zero-2-w.dtb", "/boot/efi/"},
-				{"/usr/lib/ostree-boot/efi/bcm2710-rpi-zero-2.dtb", "/boot/efi/"},
-				{"/usr/lib/ostree-boot/efi/bcm2711-rpi-4-b.dtb", "/boot/efi/"},
-				{"/usr/lib/ostree-boot/efi/bcm2711-rpi-400.dtb", "/boot/efi/"},
-				{"/usr/lib/ostree-boot/efi/bcm2711-rpi-cm4.dtb", "/boot/efi/"},
-				{"/usr/lib/ostree-boot/efi/bcm2711-rpi-cm4s.dtb", "/boot/efi/"},
-				{"/usr/lib/ostree-boot/efi/bootcode.bin", "/boot/efi/"},
-				{"/usr/lib/ostree-boot/efi/config.txt", "/boot/efi/config.txt"},
-				{"/usr/lib/ostree-boot/efi/fixup.dat", "/boot/efi/"},
-				{"/usr/lib/ostree-boot/efi/fixup4.dat", "/boot/efi/"},
-				{"/usr/lib/ostree-boot/efi/fixup4cd.dat", "/boot/efi/"},
-				{"/usr/lib/ostree-boot/efi/fixup4db.dat", "/boot/efi/"},
-				{"/usr/lib/ostree-boot/efi/fixup4x.dat", "/boot/efi/"},
-				{"/usr/lib/ostree-boot/efi/fixup_cd.dat", "/boot/efi/"},
-				{"/usr/lib/ostree-boot/efi/fixup_db.dat", "/boot/efi/"},
-				{"/usr/lib/ostree-boot/efi/fixup_x.dat", "/boot/efi/"},
-				{"/usr/lib/ostree-boot/efi/overlays", "/boot/efi/"},
-				{"/usr/share/uboot/rpi_arm64/u-boot.bin", "/boot/efi/rpi-u-boot.bin"},
-				{"/usr/lib/ostree-boot/efi/start.elf", "/boot/efi/"},
-				{"/usr/lib/ostree-boot/efi/start4.elf", "/boot/efi/"},
-				{"/usr/lib/ostree-boot/efi/start4cd.elf", "/boot/efi/"},
-				{"/usr/lib/ostree-boot/efi/start4db.elf", "/boot/efi/"},
-				{"/usr/lib/ostree-boot/efi/start4x.elf", "/boot/efi/"},
-				{"/usr/lib/ostree-boot/efi/start_cd.elf", "/boot/efi/"},
-				{"/usr/lib/ostree-boot/efi/start_db.elf", "/boot/efi/"},
-				{"/usr/lib/ostree-boot/efi/start_x.elf", "/boot/efi/"},
-			},
-		},
-		mkIotRawImgType(rd),
 	)
 
 	x86_64.addImageTypes(
