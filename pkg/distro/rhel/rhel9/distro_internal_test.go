@@ -27,11 +27,11 @@ func TestEC2Partitioning(t *testing.T) {
 		// x86_64
 		{
 			distro:      "rhel-9.2",
-			bootSizeMiB: 500,
+			bootSizeMiB: 1024,
 		},
 		{
 			distro:      "rhel-9.3",
-			bootSizeMiB: 600,
+			bootSizeMiB: 1024,
 		},
 		{
 			distro:      "rhel-9.4",
