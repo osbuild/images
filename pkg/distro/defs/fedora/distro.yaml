@@ -60,63 +60,63 @@
       arch: "x86_64"
       uefi_vendor: "fedora"
       qcow2_compat: "1.1"
-      packages:
-        # XXX: duplicated with below "uefi", de-duplicate by making
-        # the "packages" YAML-mergable, e.g. via map use
-        # uefi
-        - "dracut-config-generic"
-        - "efibootmgr"
-        - "grub2-efi-x64"
-        - "shim-x64"
+      packages: &x86_64_uefi_platform_packages
+        uefi:
+          - "dracut-config-generic"
+          - "efibootmgr"
+          - "grub2-efi-x64"
+          - "shim-x64"
     x86_64_bios_platform: &x86_64_bios_platform
       <<: *x86_64_uefi_platform
       bios_platform: "i386-pc"
-      packages:
-        # bios
-        - "dracut-config-generic"
-        - "grub2-pc"
-        # uefi
-        - "dracut-config-generic"
-        - "efibootmgr"
-        - "grub2-efi-x64"
-        - "shim-x64"
+      packages: &x86_64_bios_platform_packages
+        <<: *x86_64_uefi_platform_packages
+        bios:
+          - "dracut-config-generic"
+          - "grub2-pc"
       build_packages:
-        - "grub2-pc"
+        bios:
+          - "grub2-pc"
     aarch64_platform: &aarch64_platform
       arch: "aarch64"
       uefi_vendor: "fedora"
       image_format: "qcow2"
       qcow2_compat: "1.1"
-      packages:
-        - "dracut-config-generic"
-        - "efibootmgr"
-        - "grub2-efi-aa64"
-        - "grub2-tools"
-        - "shim-aa64"
+      packages: &aarch64_uefi_platform_packages
+        uefi:
+          - "dracut-config-generic"
+          - "efibootmgr"
+          - "grub2-efi-aa64"
+          - "grub2-tools"
+          - "shim-aa64"
     ppc64le_bios_platform: &ppc64le_bios_platform
       arch: "ppc64le"
       bios_platform: "powerpc-ieee1275"
       image_format: "qcow2"
       qcow2_compat: "1.1"
       packages:
-        - "dracut-config-generic"
-        - "powerpc-utils"
-        - "grub2-ppc64le"
-        - "grub2-ppc64le-modules"
+        bios:
+          - "dracut-config-generic"
+          - "powerpc-utils"
+          - "grub2-ppc64le"
+          - "grub2-ppc64le-modules"
       build_packages:
-        - "grub2-ppc64le"
-        - "grub2-ppc64le-modules"
+        bios:
+          - "grub2-ppc64le"
+          - "grub2-ppc64le-modules"
     s390x_zipl_platform: &s390x_zipl_platform
       arch: "s390x"
       zipl_support: true
       image_format: "qcow2"
       qcow2_compat: "1.1"
       packages:
-        - "dracut-config-generic"
-        - "s390utils-base"
-        - "s390utils-core"
+        zipl:
+          - "dracut-config-generic"
+          - "s390utils-base"
+          - "s390utils-core"
       build_packages:
-        - "s390utils-base"
+        zipl:
+          - "s390utils-base"
     riscv64_uefi_platform: &riscv64_uefi_platform
       arch: "riscv64"
       uefi_vendor: "uefi"
@@ -125,10 +125,11 @@
         # XXX: this is needed to get a generic bootkernel,
         # this should probably be part of any bootable img
         # packagelist
-        - "dracut-config-generic"
-        - "grub2-efi-riscv64"
-        - "grub2-efi-riscv64-modules"
-        - "shim-unsigned-riscv64"
+        uefi:
+          - "dracut-config-generic"
+          - "grub2-efi-riscv64"
+          - "grub2-efi-riscv64-modules"
+          - "shim-unsigned-riscv64"
 
   installer_config: &default_installer_config
     additional_dracut_modules:
@@ -909,16 +910,11 @@ image_types:
         uefi_vendor: "fedora"
         image_format: "raw"
         packages:
-          # XXX: duplicatd from aarch64_platform
-          - "dracut-config-generic"
-          - "efibootmgr"
-          - "grub2-efi-aa64"
-          - "grub2-tools"
-          - "shim-aa64"
-          # firmware packages
-          - "arm-image-installer"
-          - "bcm283x-firmware"
-          - "uboot-images-armv8"
+          <<: *aarch64_uefi_platform_packages
+          firmware:
+            - "arm-image-installer"
+            - "bcm283x-firmware"
+            - "uboot-images-armv8"
         boot_files:
           - ["/usr/share/uboot/rpi_arm64/u-boot.bin", "/boot/efi/rpi-u-boot.bin"]
       - *riscv64_uefi_platform
@@ -1235,37 +1231,23 @@ image_types:
         bios_platform: "i386-pc"
         uefi_vendor: "fedora"
         packages:
-          # XXX: de-duplicate :(
-          # firmware pkgs
+          <<: *x86_64_bios_platform_packages
+          firmware:
           - "biosdevname"
           - "iwlwifi-dvm-firmware"
           - "iwlwifi-mvm-firmware"
           - "microcode_ctl"
-          # bios
-          - "dracut-config-generic"
-          - "grub2-pc"
-          # uefi
-          - "dracut-config-generic"
-          - "efibootmgr"
-          - "grub2-efi-x64"
-          - "shim-x64"
       - arch: "aarch64"
         uefi_vendor: "fedora"
         packages:
-          # XXX: de-duplicate :(
-          # firmware pkgs
-          - "arm-image-installer"
-          - "bcm283x-firmware"
-          - "brcmfmac-firmware"
-          - "iwlwifi-mvm-firmware"
-          - "realtek-firmware"
-          - "uboot-images-armv8"
-          # uefi
-          - "dracut-config-generic"
-          - "efibootmgr"
-          - "grub2-efi-aa64"
-          - "grub2-tools"
-          - "shim-aa64"
+          <<: *aarch64_uefi_platform_packages
+          firmware:
+            - "arm-image-installer"
+            - "bcm283x-firmware"
+            - "brcmfmac-firmware"
+            - "iwlwifi-mvm-firmware"
+            - "realtek-firmware"
+            - "uboot-images-armv8"
 
   "minimal-installer": *anaconda
 
