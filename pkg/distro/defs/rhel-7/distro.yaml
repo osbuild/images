@@ -133,7 +133,7 @@ image_config:
     install_weak_deps: true
 
 image_types:
-  azure_rhui:
+  "azure-rhui":
     partition_table:
       <<: *default_partition_tables
     package_sets:

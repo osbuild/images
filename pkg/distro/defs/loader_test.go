@@ -536,7 +536,7 @@ image_types:
 func TestImageTypes(t *testing.T) {
 	fakeDistroYaml := `
 image_types:
-  server_qcow2:
+  server-qcow2:
     name_aliases: ["qcow2"]
     filename: "disk.qcow2"
     compression: xz

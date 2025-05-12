@@ -477,7 +477,7 @@ image_config:
     timezone: "UTC"
 
 image_types:
-  server_qcow2: &server_qcow2
+  "server-qcow2": &server_qcow2
     name_aliases: ["qcow2"]
     filename: "disk.qcow2"
     mime_type: "application/x-qemu-disk"
@@ -509,7 +509,7 @@ image_types:
       - <<: *s390x_zipl_platform
         image_format: "qcow2"
 
-  server_ami:
+  "server-ami":
     <<: *server_qcow2
     name_aliases: ["ami"]
     filename: "image.raw"
@@ -523,7 +523,7 @@ image_types:
       - <<: *aarch64_platform
         image_format: "raw"
 
-  server_oci:
+  "server-oci":
     <<: *server_qcow2
     name_aliases: ["oci"]
     platforms:
@@ -532,7 +532,7 @@ image_types:
       - <<: *aarch64_platform
         image_format: "qcow2"
 
-  server_openstack:
+  "server-openstack":
     <<: *server_qcow2
     name_aliases: ["openstack"]
     platforms:
@@ -543,7 +543,7 @@ image_types:
         qcow2_compat: ""
         image_format: "qcow2"
 
-  server_vhd:
+  "server-vhd":
     <<: *server_qcow2
     name_aliases: ["vhd"]
     filename: "disk.vhd"
@@ -568,7 +568,7 @@ image_types:
         - include:
             - "WALinuxAgent"
 
-  server_vmdk: &server_vmdk
+  "server-vmdk": &server_vmdk
     name_aliases: ["vmdk"]
     filename: "disk.vmdk"
     mime_type: "application/x-vmdk"
@@ -612,7 +612,7 @@ image_types:
             - "grubby-deprecated"
             - "extlinux-bootloader"
 
-  server_ova:
+  "server-ova":
     <<: *server_vmdk
     name_aliases: ["ova"]
     filename: "image.ova"
@@ -625,7 +625,7 @@ image_types:
 
   # NOTE: keep in sync with official fedora-iot definitions:
   # https://pagure.io/fedora-iot/ostree/blob/main/f/fedora-iot-base.yaml
-  iot_commit: &iot_commit
+  "iot-commit": &iot_commit
     image_config:
       <<: *image_config_iot_enabled_services
       dracut_conf:
@@ -752,9 +752,9 @@ image_types:
                 include:
                   - "filesystem"
 
-  iot_container: *iot_commit
+  "iot-container": *iot_commit
 
-  iot_raw_xz:
+  "iot-raw-xz":
     image_config:
       <<: *image_config_iot
       ignition_platform: "metal"
@@ -777,14 +777,14 @@ image_types:
                 - *iot_base_partition_table_part_boot_aarch64
                 - *iot_base_partition_table_part_root_fstab_ro_aarch64
 
-  iot_qcow2:
+  "iot-qcow2":
     image_config:
       <<: *image_config_iot
       ignition_platform: "qemu"
     partition_table:
       <<: *iot_base_partition_tables
 
-  iot_bootable_container:
+  "iot-bootable-container":
     image_config:
       machine_id_uninitialized: false
     package_sets:
@@ -884,7 +884,7 @@ image_types:
                   - "perl"
                   - "perl-interpreter"
 
-  minimal_raw_xz: &minimal_raw_xz
+  "minimal-raw-xz": &minimal_raw_xz
     name_aliases: ["minimal-raw"]
     filename: "disk.raw.xz"
     compression: "xz"
@@ -976,7 +976,7 @@ image_types:
               "43":
                 exclude:
                   - "firewalld"
-  minimal_raw_zst:
+  "minimal-raw-zst":
     <<: *minimal_raw_xz
     name_aliases: []
     filename: "disk.raw.zst"
@@ -1162,7 +1162,7 @@ image_types:
                 include:
                   - "dmidecode"
 
-  iot_installer:
+  "iot-installer":
     installer_config: *default_installer_config
     image_config:
       <<: *image_config_iot_enabled_services
@@ -1173,7 +1173,7 @@ image_types:
         - include:
             - "fedora-release-iot"
 
-  workstation_live_installer:
+  "workstation-live-installer":
     image_config:
       locale: "en_US.UTF-8"
     package_sets:
@@ -1208,7 +1208,7 @@ image_types:
                 include:
                   - "anaconda-webui"
 
-  minimal_installer: *anaconda
+  "minimal-installer": *anaconda
 
   container: &container
     filename: "container.tar"
@@ -1350,7 +1350,7 @@ image_types:
                 exclude:
                   - "fuse-libs"
 
-  iot_simplified_installer:
+  "iot-simplified-installer":
     installer_config: *default_installer_config
     image_config:
       <<: *image_config_iot

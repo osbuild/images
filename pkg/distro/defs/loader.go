@@ -206,7 +206,6 @@ func DistroImageConfig(distroNameVer string) (*distro.ImageConfig, error) {
 // discovered via the imagetype.
 func PackageSets(it distro.ImageType, replacements map[string]string) (map[string]rpmmd.PackageSet, error) {
 	typeName := it.Name()
-	typeName = strings.ReplaceAll(typeName, "-", "_")
 
 	arch := it.Arch()
 	archName := arch.Name()
@@ -289,19 +288,18 @@ func PackageSets(it distro.ImageType, replacements map[string]string) (map[strin
 // PartitionTable returns the partionTable for the given distro/imgType.
 func PartitionTable(it distro.ImageType, replacements map[string]string) (*disk.PartitionTable, error) {
 	distroNameVer := it.Arch().Distro().Name()
-	typeName := strings.ReplaceAll(it.Name(), "-", "_")
 
 	toplevel, err := load(distroNameVer)
 	if err != nil {
 		return nil, err
 	}
 
-	imgType, ok := toplevel.ImageTypes[typeName]
+	imgType, ok := toplevel.ImageTypes[it.Name()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %q", ErrImageTypeNotFound, typeName)
+		return nil, fmt.Errorf("%w: %q", ErrImageTypeNotFound, it.Name())
 	}
 	if imgType.PartitionTables == nil {
-		return nil, fmt.Errorf("%w: %q", ErrNoPartitionTableForImgType, typeName)
+		return nil, fmt.Errorf("%w: %q", ErrNoPartitionTableForImgType, it.Name())
 	}
 	arch := it.Arch()
 	archName := arch.Name()
@@ -343,7 +341,7 @@ func PartitionTable(it distro.ImageType, replacements map[string]string) (*disk.
 
 	pt, ok := imgType.PartitionTables[archName]
 	if !ok {
-		return nil, fmt.Errorf("%w (%q): %q", ErrNoPartitionTableForArch, typeName, archName)
+		return nil, fmt.Errorf("%w (%q): %q", ErrNoPartitionTableForArch, it.Name(), archName)
 	}
 
 	return pt, nil
@@ -422,7 +420,6 @@ func ImageConfig(distroNameVer, archName, typeName string, replacements map[stri
 	if err != nil {
 		return nil, err
 	}
-	typeName = strings.ReplaceAll(typeName, "-", "_")
 	imgType, ok := toplevel.ImageTypes[typeName]
 	if !ok {
 		return nil, fmt.Errorf("%w: %q", ErrImageTypeNotFound, typeName)
@@ -471,7 +468,6 @@ func InstallerConfig(distroNameVer, archName, typeName string, replacements map[
 	if err != nil {
 		return nil, err
 	}
-	typeName = strings.ReplaceAll(typeName, "-", "_")
 	imgType, ok := toplevel.ImageTypes[typeName]
 	if !ok {
 		return nil, fmt.Errorf("%w: %q", ErrImageTypeNotFound, typeName)
@@ -515,8 +511,6 @@ func ImageTypes(distroNameVer string) (map[string]ImageTypeYAML, error) {
 	imgTypes := make(map[string]ImageTypeYAML, len(toplevel.ImageTypes))
 	for name := range toplevel.ImageTypes {
 		v := toplevel.ImageTypes[name]
-		// normalize the name
-		name := strings.ReplaceAll(name, "_", "-")
 		v.name = name
 		imgTypes[name] = v
 	}
