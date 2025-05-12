@@ -81,24 +81,6 @@ func mkIotBootableContainer(d distribution) imageType {
 	}
 }
 
-func mkIotOCIImgType(d distribution) imageType {
-	return imageType{
-		name:                   "iot-container",
-		nameAliases:            []string{"fedora-iot-container"},
-		filename:               "container.tar",
-		mimeType:               "application/x-tar",
-		packageSets:            packageSetLoader,
-		defaultImageConfig:     imageConfig(d, "iot-container"),
-		rpmOstree:              true,
-		bootISO:                false,
-		image:                  iotContainerImage,
-		buildPipelines:         []string{"build"},
-		payloadPipelines:       []string{"os", "ostree-commit", "container-tree", "container"},
-		exports:                []string{"container"},
-		requiredPartitionSizes: requiredDirectorySizes,
-	}
-}
-
 func mkIotRawImgType(d distribution) imageType {
 	return imageType{
 		name:               "iot-raw-xz",
@@ -375,7 +357,6 @@ func newDistro(version int) distro.Distro {
 			BIOS:       true,
 			UEFIVendor: "fedora",
 		},
-		mkIotOCIImgType(rd),
 		mkIotCommitImgType(rd),
 	)
 	x86_64.addImageTypes(
@@ -431,7 +412,6 @@ func newDistro(version int) distro.Distro {
 			UEFIVendor: "fedora",
 		},
 		mkIotCommitImgType(rd),
-		mkIotOCIImgType(rd),
 	)
 	aarch64.addImageTypes(
 		&platform.Aarch64_Fedora{

@@ -77,11 +77,10 @@
       build_packages:
         bios:
           - "grub2-pc"
+    # XXX: the name is not 100% accurate, this platform is also used for iot-container, iot-commit
     x86_64_installer_platform: &x86_64_installer_platform
-      arch: "x86_64"
+      <<: *x86_64_bios_platform
       image_format: "raw"
-      bios_platform: "i386-pc"
-      uefi_vendor: "fedora"
       packages:
         <<: *x86_64_bios_platform_packages
         firmware:
@@ -777,7 +776,20 @@ image_types:
                 include:
                   - "filesystem"
 
-  "iot-container": *iot_commit
+  "iot-container":
+    <<: *iot_commit
+    name_aliases: ["fedora-iot-container"]
+    filename: "container.tar"
+    mime_type: "application/x-tar"
+    rpm_ostree: true
+    image_func: "iot_container"
+    build_pipelines: ["build"]
+    payload_pipelines: ["os", "ostree-commit", "container-tree", "container"]
+    exports: ["container"]
+    required_partition_sizes: *default_required_dir_sizes
+    platforms:
+      - *x86_64_installer_platform
+      - *aarch64_installer_platform
 
   "iot-raw-xz":
     image_config:
