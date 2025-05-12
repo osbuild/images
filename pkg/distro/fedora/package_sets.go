@@ -61,6 +61,8 @@ func newImageTypeFrom(d distribution, imgYAML defs.ImageTypeYAML) imageType {
 		it.image = bootableContainerImage
 	case "iot":
 		it.image = iotImage
+	case "iot_container":
+		it.image = iotContainerImage
 	case "iot_installer":
 		it.image = iotInstallerImage
 	case "iot_simplified_installer":
