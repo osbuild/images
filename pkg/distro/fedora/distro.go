@@ -48,23 +48,6 @@ var (
 
 // Image Definitions
 
-func mkIotCommitImgType(d distribution) imageType {
-	return imageType{
-		name:                   "iot-commit",
-		nameAliases:            []string{"fedora-iot-commit"},
-		filename:               "commit.tar",
-		mimeType:               "application/x-tar",
-		packageSets:            packageSetLoader,
-		defaultImageConfig:     imageConfig(d, "iot-commit"),
-		rpmOstree:              true,
-		image:                  iotCommitImage,
-		buildPipelines:         []string{"build"},
-		payloadPipelines:       []string{"os", "ostree-commit", "commit-archive"},
-		exports:                []string{"commit-archive"},
-		requiredPartitionSizes: requiredDirectorySizes,
-	}
-}
-
 func mkIotBootableContainer(d distribution) imageType {
 	return imageType{
 		name:                   "iot-bootable-container",
@@ -347,21 +330,6 @@ func newDistro(version int) distro.Distro {
 	x86_64.addImageTypes(
 		&platform.X86{
 			BasePlatform: platform.BasePlatform{
-				FirmwarePackages: []string{
-					"biosdevname",
-					"iwlwifi-dvm-firmware",
-					"iwlwifi-mvm-firmware",
-					"microcode_ctl",
-				},
-			},
-			BIOS:       true,
-			UEFIVendor: "fedora",
-		},
-		mkIotCommitImgType(rd),
-	)
-	x86_64.addImageTypes(
-		&platform.X86{
-			BasePlatform: platform.BasePlatform{
 				ImageFormat: platform.FORMAT_RAW,
 			},
 			BIOS:       false,
@@ -396,22 +364,6 @@ func newDistro(version int) distro.Distro {
 				ImageFormat: platform.FORMAT_QCOW2,
 			},
 		},
-	)
-	aarch64.addImageTypes(
-		&platform.Aarch64{
-			BasePlatform: platform.BasePlatform{
-				FirmwarePackages: []string{
-					"arm-image-installer",
-					"bcm283x-firmware",
-					"brcmfmac-firmware",
-					"iwlwifi-mvm-firmware",
-					"realtek-firmware",
-					"uboot-images-armv8",
-				},
-			},
-			UEFIVendor: "fedora",
-		},
-		mkIotCommitImgType(rd),
 	)
 	aarch64.addImageTypes(
 		&platform.Aarch64_Fedora{
