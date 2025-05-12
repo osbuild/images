@@ -82,7 +82,11 @@ type imageType struct {
 	Compression string                      `yaml:"compression"`
 	Environment environment.EnvironmentConf `yaml:"environment"`
 	Bootable    bool                        `yaml:"bootable"`
-	DefaultSize uint64                      `yaml:"default_size"`
+
+	BootISO  bool   `yaml:"boot_iso"`
+	ISOLabel string `yaml:"iso_label"`
+
+	DefaultSize uint64 `yaml:"default_size"`
 	// the image func name: disk,container,live-installer,...
 	Image                  string            `yaml:"image_func"`
 	BuildPipelines         []string          `yaml:"build_pipelines"`
