@@ -650,6 +650,15 @@ image_types:
   # NOTE: keep in sync with official fedora-iot definitions:
   # https://pagure.io/fedora-iot/ostree/blob/main/f/fedora-iot-base.yaml
   "iot-commit": &iot_commit
+    name_aliases: ["fedora-iot-commit"]
+    filename: "commit.tar"
+    mime_type: "application/x-tar"
+    rpm_ostree: true
+    image_func: "iot_commit"
+    build_pipelines: ["build"]
+    payload_pipelines: ["os", "ostree-commit", "commit-archive"]
+    exports: ["commit-archive"]
+    required_partition_sizes: *default_required_dir_sizes
     image_config:
       <<: *image_config_iot_enabled_services
       dracut_conf:
@@ -658,6 +667,9 @@ image_types:
             add_dracutmodules:
               - "fips"
       machine_id_uninitialized: false
+    platforms:
+      - *x86_64_installer_platform
+      - *aarch64_installer_platform
     package_sets:
       os:
         - include:
