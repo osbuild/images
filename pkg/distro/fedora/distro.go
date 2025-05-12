@@ -64,25 +64,6 @@ func mkIotBootableContainer(d distribution) imageType {
 	}
 }
 
-func mkIotQcow2ImgType(d distribution) imageType {
-	return imageType{
-		name:                   "iot-qcow2",
-		nameAliases:            []string{"iot-qcow2-image"}, // kept for backwards compatibility
-		filename:               "image.qcow2",
-		mimeType:               "application/x-qemu-disk",
-		packageSets:            nil,
-		defaultImageConfig:     imageConfig(d, "iot-qcow2"),
-		defaultSize:            10 * datasizes.GibiByte,
-		rpmOstree:              true,
-		bootable:               true,
-		image:                  iotImage,
-		buildPipelines:         []string{"build"},
-		payloadPipelines:       []string{"ostree-deployment", "image", "qcow2"},
-		exports:                []string{"qcow2"},
-		requiredPartitionSizes: requiredDirectorySizes,
-	}
-}
-
 type distribution struct {
 	name               string
 	product            string
@@ -302,35 +283,6 @@ func newDistro(version int) distro.Distro {
 			}
 		}
 	}
-
-	x86_64.addImageTypes(
-		&platform.X86{
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_QCOW2,
-			},
-			BIOS:       false,
-			UEFIVendor: "fedora",
-		},
-		mkIotQcow2ImgType(rd),
-	)
-	aarch64.addImageTypes(
-		&platform.Aarch64{
-			UEFIVendor: "fedora",
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_QCOW2,
-				QCOW2Compat: "1.1",
-			},
-		},
-		mkIotQcow2ImgType(rd),
-	)
-	aarch64.addImageTypes(
-		&platform.Aarch64{
-			UEFIVendor: "fedora",
-			BasePlatform: platform.BasePlatform{
-				ImageFormat: platform.FORMAT_QCOW2,
-			},
-		},
-	)
 
 	x86_64.addImageTypes(
 		&platform.X86{

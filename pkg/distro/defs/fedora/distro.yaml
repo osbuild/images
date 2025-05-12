@@ -879,11 +879,30 @@ image_types:
                 - *iot_base_partition_table_part_root_fstab_ro_aarch64
 
   "iot-qcow2":
+    name_aliases: ["iot-qcow2-image"]
+    filename: "image.qcow2"
+    mime_type: "application/x-qemu-disk"
+    default_size: 10_737_418_240  # 10 * datasizes.GibiByte
+    rpm_ostree: true
+    bootable: true
+    image_func: "iot"
+    build_pipelines: ["build"]
+    payload_pipelines: ["ostree-deployment", "image", "qcow2"]
+    exports: ["qcow2"]
+    required_partition_sizes: *default_required_dir_sizes
     image_config:
       <<: *image_config_iot
       ignition_platform: "qemu"
     partition_table:
       <<: *iot_base_partition_tables
+    platforms:
+      - <<: *x86_64_uefi_platform
+        image_format: "qcow2"
+        # XXX: the original images lib defined no qcow2Compat
+        qcow2_compat: ""
+      - <<: *aarch64_platform
+        image_format: "qcow2"
+        qcow2_compat: "1.1"
 
   "iot-bootable-container":
     image_config:
