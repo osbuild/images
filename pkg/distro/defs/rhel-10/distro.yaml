@@ -455,9 +455,9 @@ image_types:
                 include:
                   - "insights-client"
 
-  azure_rhui: *vhd
+  "azure-rhui": *vhd
 
-  azure_sap_rhui:
+  "azure-sap-rhui":
     package_sets:
       os:
         - *vhd_pkgset
@@ -554,7 +554,7 @@ image_types:
 
   ec2: *ami
 
-  ec2_ha:
+  "ec2-ha":
     <<: *ami
     package_sets:
       os:
@@ -564,7 +564,7 @@ image_types:
             - "pacemaker"
             - "pcs"
 
-  ec2_sap:
+  "ec2-sap":
     <<: *ami
     package_sets:
       os:
@@ -629,7 +629,7 @@ image_types:
             - "redhat-release-eula"
             - "rpm-plugin-systemd-inhibit"
 
-  image_installer:
+  "image-installer":
     package_sets:
       <<: *bare_metal_pkgset
       installer:

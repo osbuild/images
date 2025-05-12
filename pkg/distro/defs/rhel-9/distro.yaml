@@ -820,9 +820,9 @@ image_types:
                 exclude:
                   - "microcode_ctl"
 
-  azure_rhui: *vhd
+  "azure-rhui": *vhd
 
-  azure_sap_rhui:
+  "azure-sap-rhui":
     package_sets:
       os:
         - *vhd_pkgset
@@ -871,7 +871,7 @@ image_types:
 
   ami: *ec2
 
-  ec2_ha:
+  "ec2-ha":
     <<: *ec2
     package_sets:
       os:
@@ -883,7 +883,7 @@ image_types:
           exclude:
             - "alsa-lib"
 
-  ec2_sap:
+  "ec2-sap":
     <<: *ec2
     package_sets:
       os:
@@ -953,7 +953,7 @@ image_types:
             - "redhat-release-eula"
             - "rpm-plugin-systemd-inhibit"
 
-  image_installer:
+  "image-installer":
     package_sets:
       <<: *bare_metal_pkgset
       installer:
@@ -1044,7 +1044,7 @@ image_types:
                 include:
                   - "insights-client"
 
-  minimal_raw:
+  "minimal-raw":
     package_sets:
       os:
         - include:
@@ -1074,7 +1074,7 @@ image_types:
             - "dracut-config-rescue"
             - "rng-tools"
 
-  edge_commit:
+  "edge-commit":
     package_sets:
       os:
         - &edge_commit_pkgset
@@ -1202,25 +1202,25 @@ image_types:
                   # dnsmasq removed in 9.6+ but kept in older versions
                   - "dnsmasq"
 
-  edge_container:
+  "edge-container":
     package_sets:
       os:
         - *edge_commit_pkgset
 
   # XXX: not a real pkgset but the "containerPkgsKey"
-  edge_container_pipeline_pkgset:
+  "edge-container-pipeline-pkgset":
     package_sets:
       os:
         - include:
             - "nginx"
 
-  edge_installer:
+  "edge-installer":
     package_sets:
       installer:
         - *installer_pkgset
         - *anaconda_pkgset
 
-  edge_simplified_installer:
+  "edge-simplified-installer":
     package_sets:
       installer:
         - *installer_pkgset

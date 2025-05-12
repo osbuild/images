@@ -857,7 +857,7 @@ image_types:
                 include:
                   - "redhat-cloud-client-configuration"
 
-  ec2_ha:
+  "ec2-ha":
     <<: *ec2
     package_sets:
       os:
@@ -881,7 +881,7 @@ image_types:
       os:
         - *ec2_common_pkgset
 
-  ec2_sap:
+  "ec2-sap":
     <<: *ec2
     package_sets:
       os:
@@ -900,7 +900,7 @@ image_types:
                 include:
                   - "redhat-cloud-client-configuration"
 
-  azure_rhui:
+  "azure-rhui":
     package_sets:
       os:
         - *azure_common_pkgset
@@ -910,7 +910,7 @@ image_types:
           exclude:
             - "alsa-lib"
 
-  azure_sap_rhui:
+  "azure-sap-rhui":
     package_sets:
       os:
         - *azure_common_pkgset
@@ -927,7 +927,7 @@ image_types:
                 include:
                   - "rhui-azure-rhel8-sap-ha"
 
-  azure_eap7_rhui:
+  "azure-eap7-rhui":
     package_sets:
       os:
         - *azure_common_pkgset
@@ -948,7 +948,7 @@ image_types:
           exclude:
             - "alsa-lib"
 
-  image_installer:
+  "image-installer":
     package_sets:
       <<: *bare_metal_pkgset
       installer:
@@ -965,7 +965,7 @@ image_types:
           exclude:
             - "rng-tools"
 
-  edge_commit:
+  "edge-commit":
     package_sets:
       os:
         - &edge_commit_pkgset
@@ -1088,7 +1088,7 @@ image_types:
               centos:
                 *edge_commit_new_rhel
 
-  edge_installer:
+  "edge-installer":
     package_sets:
       installer:
         # TODO: non-arch-specific package set handling for installers
@@ -1102,11 +1102,11 @@ image_types:
         - *anaconda_pkgset
         - *anaconda_boot_pkgset
 
-  edge_raw_image:
+  "edge-raw-image":
     partition_table:
       <<: *edge_base_partition_tables
 
-  edge_simplified_installer:
+  "edge-simplified-installer":
     partition_table:
       <<: *edge_base_partition_tables
     package_sets:
@@ -1163,13 +1163,13 @@ image_types:
               aarch64:
                 *edge_commit_aarch64_pkgset
 
-  edge_container:
+  "edge-container":
     package_sets:
       os:
         - *edge_commit_pkgset
 
   # XXX: not a real pkgset but the "containerPkgsKey"
-  edge_container_pipeline_pkgset:
+  "edge-container-pipeline-pkgset":
     package_sets:
       os:
         - include:
@@ -1201,7 +1201,7 @@ image_types:
       os:
         - *gce_common_pkgset
 
-  gce_rhui:
+  "gce-rhui":
     <<: *gce
     package_sets:
       os:
@@ -1343,7 +1343,7 @@ image_types:
             - "xkeyboard-config"
             - "xz"
 
-  minimal_raw:
+  "minimal-raw":
     partition_table:
       <<: *default_partition_tables
     package_sets:
