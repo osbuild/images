@@ -4,30 +4,22 @@ import (
 	"fmt"
 
 	"github.com/osbuild/images/internal/common"
-	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
-	"github.com/osbuild/images/pkg/rpmmd"
 )
 
-func packageSetLoader(t *imageType) (map[string]rpmmd.PackageSet, error) {
-	return defs.PackageSets(t, VersionReplacements())
+func getISOLabelFunc(variant string) isoLabelFunc {
+	const ISO_LABEL = "%s-%s-%s-%s"
+
+	return func(t *imageType) string {
+		return fmt.Sprintf(ISO_LABEL, t.Arch().Distro().Product(), t.Arch().Distro().OsVersion(), variant, t.Arch().Name())
+	}
+
 }
 
-func imageConfig(d distribution, imageType string) *distro.ImageConfig {
-	// arch is currently not used in fedora
-	arch := ""
-	return common.Must(defs.ImageConfig(d.name, arch, imageType, VersionReplacements()))
-}
-
-func installerConfig(d distribution, imageType string) *distro.InstallerConfig {
-	// arch is currently not used in fedora
-	arch := ""
-	return common.Must(defs.InstallerConfig(d.name, arch, imageType, VersionReplacements()))
-}
-
-func newImageTypeFrom(d distribution, imgYAML defs.ImageTypeYAML) imageType {
+func newImageTypeFrom(d *distribution, ar *architecture, imgYAML defs.ImageTypeYAML) imageType {
+	typName := imgYAML.Name()
 	it := imageType{
-		name:                   imgYAML.Name(),
+		name:                   typName,
 		nameAliases:            imgYAML.NameAliases,
 		filename:               imgYAML.Filename,
 		compression:            imgYAML.Compression,
@@ -43,10 +35,8 @@ func newImageTypeFrom(d distribution, imgYAML defs.ImageTypeYAML) imageType {
 		requiredPartitionSizes: imgYAML.RequiredPartitionSizes,
 		environment:            &imgYAML.Environment,
 	}
-	// XXX: make this a helper on imgYAML()
-	it.defaultImageConfig = imageConfig(d, imgYAML.Name())
-	it.defaultInstallerConfig = installerConfig(d, imgYAML.Name())
-	it.packageSets = packageSetLoader
+	it.defaultImageConfig = common.Must(defs.ImageConfig(d.name, ar.name, typName, VersionReplacements()))
+	it.defaultInstallerConfig = common.Must(defs.InstallerConfig(d.name, ar.name, typName, VersionReplacements()))
 
 	switch imgYAML.Image {
 	case "disk":
