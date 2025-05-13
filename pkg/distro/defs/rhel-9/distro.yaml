@@ -420,12 +420,6 @@
           fstab_options: "defaults"
           fstab_freq: 0
           fstab_passno: 0
-      - &default_partition_table_part_boot512
-        <<: *default_partition_table_part_boot
-        size:  524_288_000  # 500 MiB
-      - &default_partition_table_part_boot600
-        <<: *default_partition_table_part_boot
-        size: 629_145_600  # 600 MiB
       - &default_partition_table_part_root
         size: 2_147_483_648  # 2 * datasizes.GibiByte,
         type: *filesystem_data_guid
@@ -492,6 +486,31 @@
           - &default_partition_table_part_root_s390x
             <<: *default_partition_table_part_root_ppc64le
             bootable: true
+
+    ec2_partition_tables_override: &ec2_partition_tables_override
+      condition:
+        version_less_than:
+          "9.3":
+            x86_64:
+              <<: *default_partition_table_x86_64
+              partitions:
+                - *default_partition_table_part_bios
+                # note no boot efi
+                - *default_partition_table_part_boot
+                - *default_partition_table_part_root
+        distro_name:
+          # we need this override to ensure that centos always gets
+          # the latest partition-tables, othersie "centos-9" is
+          # less then "9 <= 9.3"
+          "centos":
+            x86_64:
+              <<: *default_partition_table_x86_64
+            aarch64:
+              <<: *default_partition_table_aarch64
+            ppc64le:
+              <<: *default_partition_table_ppc64le
+            s390x:
+              <<: *default_partition_table_s390x
 
 image_config:
   default:
@@ -761,6 +780,8 @@ image_types:
   ec2: &ec2
     partition_table:
       <<: *default_partition_tables
+    partition_tables_override:
+      <<: *ec2_partition_tables_override
     package_sets:
       os:
         - *ec2_base_pkgset
