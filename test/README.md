@@ -100,7 +100,7 @@ in the form
 for example:
 ```json
 {
-  "distro": "fedora-40",
+  "distro": "fedora-42",
   "arch": "x86_64",
   "image-type": "qcow2",
   "config": "all-customizations",

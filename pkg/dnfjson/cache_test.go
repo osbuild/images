@@ -356,7 +356,7 @@ func TestDNFCacheCleanup(t *testing.T) {
 
 func TestCleanupOldCacheDirs(t *testing.T) {
 	// Run the cleanup without the cache present and with dummy distro names
-	CleanupOldCacheDirs("/var/tmp/test-no-cache-rpmmd/", []string{"fedora-40", "fedora-41"})
+	CleanupOldCacheDirs("/var/tmp/test-no-cache-rpmmd/", []string{"fedora-41", "fedora-42"})
 
 	testCacheRoot := t.TempDir()
 	// Make all the test caches under root, using their keys as a distro name.

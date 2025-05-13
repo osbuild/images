@@ -16,7 +16,7 @@ var rng = rand.New(rand.NewSource(0))
 
 func TestESP(t *testing.T) {
 	var distros []distro.Distro
-	for _, distroName := range []string{"fedora-40", "fedora-41", "fedora-42"} {
+	for _, distroName := range []string{"fedora-41", "fedora-42"} {
 		d := DistroFactory(distroName)
 		distros = append(distros, d)
 	}
