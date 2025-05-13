@@ -1,13 +1,11 @@
 package fedora
 
 import (
-	"errors"
 	"fmt"
 	"sort"
 	"strconv"
 
 	"github.com/osbuild/images/internal/common"
-	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
@@ -39,6 +37,9 @@ var (
 	}
 )
 
+// distribution implements the distro.Distro interface
+var _ = distro.Distro(&distribution{})
+
 type distribution struct {
 	name               string
 	product            string
@@ -47,34 +48,52 @@ type distribution struct {
 	modulePlatformID   string
 	ostreeRefTmpl      string
 	runner             runner.Runner
-	arches             map[string]distro.Arch
+	arches             map[string]*architecture
 	defaultImageConfig *distro.ImageConfig
 }
 
-func getISOLabelFunc(variant string) isoLabelFunc {
-	const ISO_LABEL = "%s-%s-%s-%s"
-
-	return func(t *imageType) string {
-		return fmt.Sprintf(ISO_LABEL, t.Arch().Distro().Product(), t.Arch().Distro().OsVersion(), variant, t.Arch().Name())
-	}
-
-}
-
-func getDistro(version int) distribution {
+func newDistro(version int) (distro.Distro, error) {
 	if version < 0 {
-		panic("Invalid Fedora version (must be positive)")
+		return nil, fmt.Errorf("Invalid Fedora version %q (must be positive)", version)
 	}
 	nameVer := fmt.Sprintf("fedora-%d", version)
-	return distribution{
-		name:               nameVer,
-		product:            "Fedora",
-		osVersion:          strconv.Itoa(version),
-		releaseVersion:     strconv.Itoa(version),
-		modulePlatformID:   fmt.Sprintf("platform:f%d", version),
-		ostreeRefTmpl:      fmt.Sprintf("fedora/%d/%%s/iot", version),
-		runner:             &runner.Fedora{Version: uint64(version)},
+	rd := &distribution{
+		name:             nameVer,
+		product:          "Fedora",
+		osVersion:        strconv.Itoa(version),
+		releaseVersion:   strconv.Itoa(version),
+		modulePlatformID: fmt.Sprintf("platform:f%d", version),
+		ostreeRefTmpl:    fmt.Sprintf("fedora/%d/%%s/iot", version),
+		runner:           &runner.Fedora{Version: uint64(version)},
+		// XXX: make part dynamic distribution building
 		defaultImageConfig: common.Must(defs.DistroImageConfig(nameVer)),
+		arches:             make(map[string]*architecture),
 	}
+
+	its, err := defs.ImageTypes(rd.name)
+	if err != nil {
+		return nil, err
+	}
+	for _, imgTypeYAML := range its {
+		// use as marker for images that are not converted to
+		// YAML yet
+		if imgTypeYAML.Filename == "" {
+			continue
+		}
+		for _, pl := range imgTypeYAML.Platforms {
+			ar, ok := rd.arches[pl.Arch.String()]
+			if !ok {
+				ar = newArchitecture(rd, pl.Arch.String())
+				rd.arches[pl.Arch.String()] = ar
+			}
+			it := newImageTypeFrom(rd, ar, imgTypeYAML)
+			if err := ar.addImageType(&pl, it); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return rd, nil
 }
 
 func (d *distribution) Name() string {
@@ -117,28 +136,28 @@ func (d *distribution) ListArches() []string {
 func (d *distribution) GetArch(name string) (distro.Arch, error) {
 	arch, exists := d.arches[name]
 	if !exists {
-		return nil, errors.New("invalid architecture: " + name)
+		return nil, fmt.Errorf("invalid architecture: %v", name)
 	}
 	return arch, nil
 }
 
-func (d *distribution) addArch(arch *architecture) {
-	if d.arches == nil {
-		d.arches = map[string]distro.Arch{}
-	}
-
-	d.arches[arch.name] = arch
-}
-
-func (d *distribution) getDefaultImageConfig() *distro.ImageConfig {
-	return d.defaultImageConfig
-}
+// architecture implements the distro.Arch interface
+var _ = distro.Arch(&architecture{})
 
 type architecture struct {
 	distro           *distribution
 	name             string
 	imageTypes       map[string]distro.ImageType
 	imageTypeAliases map[string]string
+}
+
+func newArchitecture(rd *distribution, name string) *architecture {
+	return &architecture{
+		distro:           rd,
+		name:             name,
+		imageTypes:       make(map[string]distro.ImageType),
+		imageTypeAliases: make(map[string]string),
+	}
 }
 
 func (a *architecture) Name() string {
@@ -159,7 +178,7 @@ func (a *architecture) GetImageType(name string) (distro.ImageType, error) {
 	if !exists {
 		aliasForName, exists := a.imageTypeAliases[name]
 		if !exists {
-			return nil, errors.New("invalid image type: " + name)
+			return nil, fmt.Errorf("invalid image type: %v", name)
 		}
 		t, exists = a.imageTypes[aliasForName]
 		if !exists {
@@ -169,60 +188,24 @@ func (a *architecture) GetImageType(name string) (distro.ImageType, error) {
 	return t, nil
 }
 
-func (a *architecture) addImageTypes(platform platform.Platform, imageTypes ...imageType) {
-	if a.imageTypes == nil {
-		a.imageTypes = map[string]distro.ImageType{}
-	}
-	for idx := range imageTypes {
-		it := imageTypes[idx]
-		it.arch = a
-		it.platform = platform
-		a.imageTypes[it.name] = &it
-		for _, alias := range it.nameAliases {
-			if a.imageTypeAliases == nil {
-				a.imageTypeAliases = map[string]string{}
-			}
-			if existingAliasFor, exists := a.imageTypeAliases[alias]; exists {
-				panic(fmt.Sprintf("image type alias '%s' for '%s' is already defined for another image type '%s'", alias, it.name, existingAliasFor))
-			}
-			a.imageTypeAliases[alias] = it.name
+func (a *architecture) addImageType(platform platform.Platform, it imageType) error {
+	it.arch = a
+	it.platform = platform
+	a.imageTypes[it.name] = &it
+	for _, alias := range it.nameAliases {
+		if a.imageTypeAliases == nil {
+			a.imageTypeAliases = map[string]string{}
 		}
+		if existingAliasFor, exists := a.imageTypeAliases[alias]; exists {
+			return fmt.Errorf("image type alias '%s' for '%s' is already defined for another image type '%s'", alias, it.name, existingAliasFor)
+		}
+		a.imageTypeAliases[alias] = it.name
 	}
+	return nil
 }
 
 func (a *architecture) Distro() distro.Distro {
 	return a.distro
-}
-
-func newDistro(version int) distro.Distro {
-	rd := getDistro(version)
-	arches := make(map[arch.Arch]*architecture)
-
-	its, err := defs.ImageTypes(rd.name)
-	if err != nil {
-		panic(err)
-	}
-	for _, imgTypeYAML := range its {
-		// use as marker for images that are not converted to
-		// YAML yet
-		if imgTypeYAML.Filename == "" {
-			continue
-		}
-		for _, pl := range imgTypeYAML.Platforms {
-			if _, ok := arches[pl.Arch]; !ok {
-				arches[pl.Arch] = &architecture{
-					name:   pl.Arch.String(),
-					distro: &rd,
-				}
-				rd.addArch(arches[pl.Arch])
-			}
-			ar := arches[pl.Arch]
-			ar.addImageTypes(&pl, newImageTypeFrom(rd, imgTypeYAML))
-			arches[pl.Arch] = ar
-		}
-	}
-
-	return &rd
 }
 
 func ParseID(idStr string) (*distro.ID, error) {
@@ -248,5 +231,5 @@ func DistroFactory(idStr string) distro.Distro {
 		return nil
 	}
 
-	return newDistro(id.MajorVersion)
+	return common.Must(newDistro(id.MajorVersion))
 }
