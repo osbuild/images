@@ -1,8 +1,10 @@
 package defs_test
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -40,6 +42,24 @@ func makeFakeDefs(t *testing.T, distroName, content string) string {
 	err = os.WriteFile(fakePkgsSetPath, []byte(content), 0644)
 	assert.NoError(t, err)
 	return tmpdir
+}
+
+func TestYamlLintClean(t *testing.T) {
+	_, err := exec.LookPath("yamllint")
+	if errors.Is(err, exec.ErrNotFound) {
+		t.Skip("this test needs yamllint")
+	}
+	require.NoError(t, err)
+
+	pl, err := filepath.Glob("*/*.yaml")
+	require.NoError(t, err)
+	for _, p := range pl {
+		cmd := exec.Command("yamllint", p)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
+		assert.NoError(t, err)
+	}
 }
 
 func TestLoadConditionDistro(t *testing.T) {
