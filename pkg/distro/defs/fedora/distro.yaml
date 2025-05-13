@@ -84,10 +84,10 @@
       packages:
         <<: *x86_64_bios_platform_packages
         firmware:
-        - "biosdevname"
-        - "iwlwifi-dvm-firmware"
-        - "iwlwifi-mvm-firmware"
-        - "microcode_ctl"
+          - "biosdevname"
+          - "iwlwifi-dvm-firmware"
+          - "iwlwifi-mvm-firmware"
+          - "microcode_ctl"
     aarch64_platform: &aarch64_platform
       arch: "aarch64"
       uefi_vendor: "fedora"
@@ -966,13 +966,14 @@ image_types:
             - "keyutils"          # Manipulating the kernel keyring; used by bootc
             - "libsss_sudo"       # allow communication between sudo and SSSD for caching sudo rules by SSSD
             - "linux-firmware"    # linux-firmware now a recommends so let's explicitly include it
-            - "logrotate"         # There are things that write outside of the journal still
-                                  # (such as the classic wtmp etc.). auditd also writes outside
-                                  # the journal but it has its own log rotation.  Anything
-                                  # package layered will also tend to expect files dropped in
-                                  # /etc/logrotate.d to work. Really this is a legacy thing but
-                                  # if we don't have it then people's disks will slowly fill up
-                                  # with logs.
+            # There are things that write outside of the journal still
+            # (such as the classic wtmp etc.). auditd also writes
+            # outside the journal but it has its own log rotation.
+            # Anything package layered will also tend to expect files
+            # dropped in /etc/logrotate.d to work. Really this is a
+            # legacy thing but if we don't have it then people's disks
+            # will slowly fill up with logs.
+            - "logrotate"
             - "lsof"
             - "lvm2"                       # Storage configuration/management
             - "nano"                       # default editor
@@ -1321,7 +1322,7 @@ image_types:
     filename: "installer.iso"
     mime_type: "application/x-iso9660-image"
     rpm_ostree: true
-    boot_iso:  true
+    boot_iso: true
     image_func: "iot_installer"
     iso_label: "IoT"
     build_pipelines: ["build"]
@@ -1590,51 +1591,51 @@ image_types:
       <<: *iot_simplified_installer_partition_tables
     package_sets:
       installer:
-      - *installer_pkgset
-      - include:
-          - "attr"
-          - "basesystem"
-          - "binutils"
-          - "bsdtar"
-          - "clevis-dracut"
-          - "clevis-luks"
-          - "cloud-utils-growpart"
-          - "coreos-installer"
-          - "coreos-installer-dracut"
-          - "coreutils"
-          - "device-mapper-multipath"
-          - "dosfstools"
-          - "dracut-live"
-          - "e2fsprogs"
-          - "fcoe-utils"
-          - "fdo-init"
-          - "fedora-logos"
-          - "gdisk"
-          - "gzip"
-          - "ima-evm-utils"
-          - "iproute"
-          - "iptables"
-          - "iputils"
-          - "iscsi-initiator-utils"
-          - "keyutils"
-          - "lldpad"
-          - "lvm2"
-          - "mdadm"
-          - "nss-softokn"
-          - "policycoreutils"
-          - "policycoreutils-python-utils"
-          - "procps-ng"
-          - "rootfiles"
-          - "setools-console"
-          - "sudo"
-          - "traceroute"
-          - "util-linux"
-          - "shadow-utils"  # includes passwd
-        condition:
-          version_less_than:
-            "41":
-              include:
-                - "dnsmasq"  # deprecated for F41+
+        - *installer_pkgset
+        - include:
+            - "attr"
+            - "basesystem"
+            - "binutils"
+            - "bsdtar"
+            - "clevis-dracut"
+            - "clevis-luks"
+            - "cloud-utils-growpart"
+            - "coreos-installer"
+            - "coreos-installer-dracut"
+            - "coreutils"
+            - "device-mapper-multipath"
+            - "dosfstools"
+            - "dracut-live"
+            - "e2fsprogs"
+            - "fcoe-utils"
+            - "fdo-init"
+            - "fedora-logos"
+            - "gdisk"
+            - "gzip"
+            - "ima-evm-utils"
+            - "iproute"
+            - "iptables"
+            - "iputils"
+            - "iscsi-initiator-utils"
+            - "keyutils"
+            - "lldpad"
+            - "lvm2"
+            - "mdadm"
+            - "nss-softokn"
+            - "policycoreutils"
+            - "policycoreutils-python-utils"
+            - "procps-ng"
+            - "rootfiles"
+            - "setools-console"
+            - "sudo"
+            - "traceroute"
+            - "util-linux"
+            - "shadow-utils"  # includes passwd
+          condition:
+            version_less_than:
+              "41":
+                include:
+                  - "dnsmasq"  # deprecated for F41+
     platforms:
       - <<: *x86_64_uefi_platform
         packages:
