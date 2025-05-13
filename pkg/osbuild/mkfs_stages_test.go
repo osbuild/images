@@ -39,8 +39,9 @@ func TestNewMkfsStage(t *testing.T) {
 	assert.Equal(t, mkbtrfsExpected, mkbtrfs)
 
 	ext4Options := &MkfsExt4StageOptions{
-		UUID:  uuid.New().String(),
-		Label: "test",
+		UUID:   uuid.New().String(),
+		Label:  "test",
+		Verity: common.ToPtr(true),
 	}
 	mkext4 := NewMkfsExt4Stage(ext4Options, devices)
 	mkext4Expected := &Stage{

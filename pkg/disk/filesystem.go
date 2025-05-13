@@ -22,6 +22,8 @@ type Filesystem struct {
 	FSTabFreq uint64 `json:"fstab_freq,omitempty" yaml:"fstab_freq,omitempty"`
 	// The sixth field of fstab(5); fs_passno
 	FSTabPassNo uint64 `json:"fstab_passno,omitempty" yaml:"fstab_passno,omitempty"`
+	// Custom mkfs options
+	MkfsOptions []string `json:"mkfs_options,omitempty" yaml:"mkfs_options,omitempty"`
 }
 
 func init() {
@@ -46,6 +48,7 @@ func (fs *Filesystem) Clone() Entity {
 		FSTabOptions: fs.FSTabOptions,
 		FSTabFreq:    fs.FSTabFreq,
 		FSTabPassNo:  fs.FSTabPassNo,
+		MkfsOptions:  fs.MkfsOptions,
 	}
 }
 
