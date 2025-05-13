@@ -2,8 +2,10 @@ package osbuild
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/disk"
 )
 
@@ -45,6 +47,10 @@ func GenFsStages(pt *disk.PartitionTable, filename string) []*Stage {
 					UUID:  e.UUID,
 					Label: e.Label,
 				}
+				if slices.Contains(e.MkfsOptions, "verity") {
+					options.Verity = common.ToPtr(true)
+				}
+
 				stages = append(stages, NewMkfsExt4Stage(options, stageDevices))
 			default:
 				panic(fmt.Sprintf("unknown fs type: %s", e.GetFSType()))
