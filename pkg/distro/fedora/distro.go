@@ -122,17 +122,12 @@ func (d *distribution) GetArch(name string) (distro.Arch, error) {
 	return arch, nil
 }
 
-func (d *distribution) addArches(arches ...architecture) {
+func (d *distribution) addArch(arch *architecture) {
 	if d.arches == nil {
 		d.arches = map[string]distro.Arch{}
 	}
 
-	// Do not make copies of architectures, as opposed to image types,
-	// because architecture definitions are not used by more than a single
-	// distro definition.
-	for idx := range arches {
-		d.arches[arches[idx].name] = &arches[idx]
-	}
+	d.arches[arch.name] = arch
 }
 
 func (d *distribution) getDefaultImageConfig() *distro.ImageConfig {
@@ -201,34 +196,8 @@ func (a *architecture) Distro() distro.Distro {
 
 func newDistro(version int) distro.Distro {
 	rd := getDistro(version)
+	arches := make(map[arch.Arch]*architecture)
 
-	// XXX: generate architecture automatically from the imgType yaml
-	x86_64 := architecture{
-		name:   arch.ARCH_X86_64.String(),
-		distro: &rd,
-	}
-
-	aarch64 := architecture{
-		name:   arch.ARCH_AARCH64.String(),
-		distro: &rd,
-	}
-
-	ppc64le := architecture{
-		distro: &rd,
-		name:   arch.ARCH_PPC64LE.String(),
-	}
-
-	s390x := architecture{
-		distro: &rd,
-		name:   arch.ARCH_S390X.String(),
-	}
-
-	riscv64 := architecture{
-		name:   arch.ARCH_RISCV64.String(),
-		distro: &rd,
-	}
-
-	// XXX: move all image types should to YAML
 	its, err := defs.ImageTypes(rd.name)
 	if err != nil {
 		panic(err)
@@ -239,27 +208,20 @@ func newDistro(version int) distro.Distro {
 		if imgTypeYAML.Filename == "" {
 			continue
 		}
-		it := newImageTypeFrom(rd, imgTypeYAML)
 		for _, pl := range imgTypeYAML.Platforms {
-			switch pl.Arch {
-			case arch.ARCH_X86_64:
-				x86_64.addImageTypes(&pl, it)
-			case arch.ARCH_AARCH64:
-				aarch64.addImageTypes(&pl, it)
-			case arch.ARCH_PPC64LE:
-				ppc64le.addImageTypes(&pl, it)
-			case arch.ARCH_S390X:
-				s390x.addImageTypes(&pl, it)
-			case arch.ARCH_RISCV64:
-				riscv64.addImageTypes(&pl, it)
-			default:
-				err := fmt.Errorf("unsupported arch: %v", pl.Arch)
-				panic(err)
+			if _, ok := arches[pl.Arch]; !ok {
+				arches[pl.Arch] = &architecture{
+					name:   pl.Arch.String(),
+					distro: &rd,
+				}
+				rd.addArch(arches[pl.Arch])
 			}
+			ar := arches[pl.Arch]
+			ar.addImageTypes(&pl, newImageTypeFrom(rd, imgTypeYAML))
+			arches[pl.Arch] = ar
 		}
 	}
 
-	rd.addArches(x86_64, aarch64, ppc64le, s390x, riscv64)
 	return &rd
 }
 
