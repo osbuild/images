@@ -239,20 +239,21 @@ func TestFsNodeUnmarshalBadFile(t *testing.T) {
 		inputYAML   string
 		expectedErr string
 	}{
-		{`path: 123`, `json: cannot unmarshal number into Go struct field .Path of type string`},
-		{`mode: -rw-rw-r--`, ` json: cannot unmarshal string into Go struct field .Mode of type fs.FileMode`},
-		{`mode: -1`, `cannot unmarshal number -1 into Go struct field .Mode of type fs.FileMode`},
-		{`mode: 5_000_000_000`, `json: cannot unmarshal number 5000000000 into Go struct field .Mode of type fs.FileMode`},
+		{`path: 123`, `json: cannot unmarshal number into Go struct field .*.Path of type string`},
+		{`mode: -rw-rw-r--`, ` json: cannot unmarshal string into Go struct field .*.Mode of type fs.FileMode`},
+		{`mode: -1`, `cannot unmarshal number -1 into Go struct field .*.Mode of type fs.FileMode`},
+		{`mode: 5_000_000_000`, `json: cannot unmarshal number 5000000000 into Go struct field .*.Mode of type fs.FileMode`},
 		{"path: /foo\nuser: 3.14", `user ID must be int`},
 		{"path: /foo\ngroup: 2.71", `group ID must be int`},
 		{"path: /foo\nuser: -1", `user ID must be non-negative`},
 		{"path: /foo\ngroup: a!b", `group name "a!b" doesn't conform to validating regex`},
-		{"path: /foo\ndata: 1.61", `cannot unmarshal number into Go struct field .data of type string`},
+		{"path: /foo\ndata: 1.61", `cannot unmarshal number into Go struct field .*.data of type string`},
 		{"path: /foo\nextra: field", `unknown field "extra"`},
 	} {
 		var fsn File
 		err := yaml.Unmarshal([]byte(tc.inputYAML), &fsn)
-		assert.ErrorContains(t, err, tc.expectedErr)
+		assert.Error(t, err)
+		assert.Regexp(t, tc.expectedErr, err.Error())
 	}
 }
 
