@@ -731,10 +731,10 @@ func (p *AnacondaInstallerISOTree) makeKickstartStages(stageOptions *osbuild.Kic
 		}
 	}
 
+	if sudoersPost := makeKickstartSudoersPost(kickstartOptions.SudoNopasswd); sudoersPost != nil {
+		stageOptions.Post = append(stageOptions.Post, *sudoersPost)
+	}
 	stages = append(stages, osbuild.NewKickstartStage(stageOptions))
-
-	hardcodedKickstartBits := ""
-	hardcodedKickstartBits += makeKickstartSudoersPost(kickstartOptions.SudoNopasswd)
 
 	if p.SubscriptionPipeline != nil {
 		subscriptionPath := "/subscription"
@@ -771,16 +771,6 @@ This directory contains files necessary for registering the system on first boot
 		p.Files = append(p.Files, subscriptionReadme)
 	}
 
-	if hardcodedKickstartBits != "" {
-		// Because osbuild core only supports a subset of options,
-		// we append to the base here with hardcoded wheel group with NOPASSWD option
-		kickstartFile, err := stageOptions.IncludeRaw(hardcodedKickstartBits)
-		if err != nil {
-			panic(err)
-		}
-
-		p.Files = append(p.Files, kickstartFile)
-	}
 	stages = append(stages, osbuild.GenFileNodesStages(p.Files)...)
 
 	return stages
@@ -793,32 +783,29 @@ func makeISORootPath(p string) string {
 	return fmt.Sprintf("file://%s", fullpath)
 }
 
-func makeKickstartSudoersPost(names []string) string {
+func makeKickstartSudoersPost(names []string) *osbuild.PostOptions {
 	if len(names) == 0 {
-		return ""
+		return nil
 	}
-	echoLineFmt := `echo -e "%[1]s\tALL=(ALL)\tNOPASSWD: ALL" > "/etc/sudoers.d/%[1]s"
-chmod 0440 /etc/sudoers.d/%[1]s`
+	echoLineFmt := `echo -e "%[1]s\tALL=(ALL)\tNOPASSWD: ALL" > "/etc/sudoers.d/%[1]s"`
+	chmodLineFmt := `chmod 0440 /etc/sudoers.d/%[1]s`
 
 	filenames := make(map[string]bool)
 	sort.Strings(names)
-	entries := make([]string, 0, len(names))
+	post := &osbuild.PostOptions{}
 	for _, name := range names {
 		if filenames[name] {
 			continue
 		}
-		entries = append(entries, fmt.Sprintf(echoLineFmt, name))
+		post.Commands = append(post.Commands,
+			fmt.Sprintf(echoLineFmt, name),
+			fmt.Sprintf(chmodLineFmt, name),
+		)
 		filenames[name] = true
 	}
 
-	kickstartSudoersPost := `
-%%post
-%s
-restorecon -rvF /etc/sudoers.d
-%%end
-`
-	return fmt.Sprintf(kickstartSudoersPost, strings.Join(entries, "\n"))
-
+	post.Commands = append(post.Commands, "restorecon -rvF /etc/sudoers.d")
+	return post
 }
 
 func makeKickstartSubscriptionPost(source, dest string) []osbuild.PostOptions {
