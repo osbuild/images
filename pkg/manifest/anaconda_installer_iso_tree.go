@@ -610,10 +610,20 @@ func (p *AnacondaInstallerISOTree) bootcInstallerKickstartStages() []*osbuild.St
 		}
 	}
 
-	stages = append(stages, osbuild.NewKickstartStage(kickstartOptions))
+	// Workaround for lack of --target-imgref in Anaconda, xref https://github.com/osbuild/images/issues/380
+	kickstartOptions.Post = append(kickstartOptions.Post, osbuild.PostOptions{
+		ErrorOnFail: true,
+		Commands: []string{
+			fmt.Sprintf("bootc switch --mutate-in-place --transport registry %s", p.containerSpec.LocalName),
+			"# used during automatic image testing as finished marker",
+			"if [ -c /dev/ttyS0 ]; then",
+			"  # continue on errors here, because we used to omit --erroronfail",
+			`  echo "Install finished" > /dev/ttyS0 || true`,
+			"fi",
+		},
+	})
 
-	// and what we can't do in a separate kickstart that we include
-	targetContainerTransport := "registry"
+	stages = append(stages, osbuild.NewKickstartStage(kickstartOptions))
 
 	// Because osbuild core only supports a subset of options, we append to the
 	// base here with some more hardcoded defaults
@@ -626,18 +636,6 @@ part / --fstype=ext4 --grow
 
 reboot --eject
 `
-
-	// Workaround for lack of --target-imgref in Anaconda, xref https://github.com/osbuild/images/issues/380
-	hardcodedKickstartBits += fmt.Sprintf(`%%post --erroronfail
-bootc switch --mutate-in-place --transport %s %s
-
-# used during automatic image testing as finished marker
-if [ -c /dev/ttyS0 ]; then
-    # continue on errors here, because we used to omit --erroronfail
-    echo "Install finished" > /dev/ttyS0 || true
-fi
-%%end
-`, targetContainerTransport, p.containerSpec.LocalName)
 
 	kickstartFile, err := kickstartOptions.IncludeRaw(hardcodedKickstartBits)
 	if err != nil {
