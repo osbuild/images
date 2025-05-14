@@ -755,7 +755,7 @@ func (p *AnacondaInstallerISOTree) makeKickstartStages(stageOptions *osbuild.Kic
 			systemPath = "/mnt/sysroot"
 
 		}
-		hardcodedKickstartBits += makeKickstartSubscriptionPost(subscriptionPath, systemPath)
+		stageOptions.Post = append(stageOptions.Post, makeKickstartSubscriptionPost(subscriptionPath, systemPath)...)
 
 		// include a readme file on the ISO in the subscription path to explain what it's for
 		subscriptionReadme, err := fsnode.NewFile(
@@ -821,16 +821,18 @@ restorecon -rvF /etc/sudoers.d
 
 }
 
-func makeKickstartSubscriptionPost(source, dest string) string {
-	// we need to use --nochroot so the command can access files on the ISO
+func makeKickstartSubscriptionPost(source, dest string) []osbuild.PostOptions {
 	fullSourcePath := filepath.Join("/run/install/repo", source, "etc/*")
-	kickstartSubscriptionPost := `
-%%post --nochroot
-cp -r %s %s
-%%end
-%%post
-systemctl enable osbuild-subscription-register.service
-%%end
-`
-	return fmt.Sprintf(kickstartSubscriptionPost, fullSourcePath, dest)
+	return []osbuild.PostOptions{
+		{
+			// we need to use --nochroot so the command can access files on the ISO
+			NoChroot: true,
+			Commands: []string{
+				fmt.Sprintf("cp -r %s %s", fullSourcePath, dest),
+			},
+		},
+		{
+			Commands: []string{"systemctl enable osbuild-subscription-register.service"},
+		},
+	}
 }
