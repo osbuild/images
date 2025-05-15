@@ -24,6 +24,7 @@ import (
 	"github.com/osbuild/images/pkg/olog"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
+	"github.com/osbuild/images/pkg/runner"
 )
 
 var (
@@ -62,6 +63,8 @@ type DistroYAML struct {
 	ModulePlatformID string `yaml:"module_platform_id"`
 	Product          string `yaml:"product"`
 	OSTreeRefTmpl    string `yaml:"ostree_ref_tmpl"`
+
+	Runner runner.RunnerConf `yaml:"runner"`
 
 	// directory with the actual image defintions, we separate that
 	// so that we can point the "centos-10" distro to the "./rhel-10"
