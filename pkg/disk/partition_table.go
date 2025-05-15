@@ -1173,7 +1173,7 @@ func mkESP(size uint64, ptType PartitionTableType) (Partition, error) {
 			Type:         "vfat",
 			UUID:         EFIFilesystemUUID,
 			Mountpoint:   "/boot/efi",
-			Label:        "EFI-SYSTEM",
+			Label:        "ESP",
 			FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
 			FSTabFreq:    0,
 			FSTabPassNo:  2,

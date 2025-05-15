@@ -217,7 +217,7 @@ var fakePt = &disk.PartitionTable{
 				Type:         "vfat",
 				UUID:         disk.EFIFilesystemUUID,
 				Mountpoint:   "/boot/efi",
-				Label:        "EFI-SYSTEM",
+				Label:        "ESP",
 				FSTabOptions: "umask=0077,shortname=winnt",
 				FSTabFreq:    0,
 				FSTabPassNo:  2,

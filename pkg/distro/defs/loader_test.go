@@ -214,7 +214,7 @@ image_types:
             payload:
               type: vfat
               mountpoint: "/boot/efi"
-              label: "EFI-SYSTEM"
+              label: "ESP"
               fstab_options: "defaults,uid=0,gid=0,umask=077,shortname=winnt"
               fstab_freq: 0
               fstab_passno: 2
@@ -261,7 +261,7 @@ image_types:
 				Payload: &disk.Filesystem{
 					Type:         "vfat",
 					Mountpoint:   "/boot/efi",
-					Label:        "EFI-SYSTEM",
+					Label:        "ESP",
 					FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
 					FSTabFreq:    0,
 					FSTabPassNo:  2,

@@ -48,7 +48,7 @@ partition_table:
         type: vfat
         uuid: *efi_filesystem_uuid
         mountpoint: "/boot/efi"
-        label: "EFI-SYSTEM"
+        label: "ESP"
         fstab_options: "defaults,uid=0,gid=0,umask=077,shortname=winnt"
         fstab_freq: 0
         fstab_passno: 2
@@ -91,7 +91,7 @@ partition_table:
 				Payload: &disk.Filesystem{
 					Type:         "vfat",
 					UUID:         "7B77-95E7",
-					Label:        "EFI-SYSTEM",
+					Label:        "ESP",
 					Mountpoint:   "/boot/efi",
 					FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
 					FSTabFreq:    0,
