@@ -1118,7 +1118,7 @@ func TestAddPartitionsForBootMode(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			assert := assert.New(t)
 			pt := tc.pt
-			err := disk.AddPartitionsForBootMode(&pt, tc.bootMode)
+			err := disk.AddPartitionsForBootMode(&pt, nil, tc.bootMode)
 			if tc.errmsg == "" {
 				assert.NoError(err)
 				assert.Equal(tc.expected, pt)
