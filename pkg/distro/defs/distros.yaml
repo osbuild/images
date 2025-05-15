@@ -8,6 +8,12 @@ distros:
     product: "Fedora"
     ostree_ref_tmpl: "fedora/43/%s/iot"
     defs_path: fedora
+    runner: &fedora_runner
+      name: org.osbuild.fedora43
+      build_packages:
+        - "glibc"  # ldconfig
+        - "systemd"  # systemd-tmpfiles and systemd-sysusers
+        - "python3"  # osbuild
     # XXX: add repos here too, that requires some churn, see
     # https://github.com/osbuild/images/compare/main...mvo5:yaml-distroconfig?expand=1
     # and we will also need to think about backward compat, as currently
@@ -26,13 +32,22 @@ distros:
     os_version: 42
     release_version: 42
     module_platform_id: platform:f42
+    runner:
+      <<: *fedora_runner
+      name: org.osbuild.fedora42
   - <<: *fedora_stable
     name: fedora-41
     os_version: 41
     release_version: 41
     module_platform_id: platform:f41
+    runner:
+      <<: *fedora_runner
+      name: org.osbuild.fedora42
   - <<: *fedora_stable
     name: fedora-40
     os_version: 40
     release_version: 40
     module_platform_id: platform:f40
+    runner:
+      <<: *fedora_runner
+      name: org.osbuild.fedora42
