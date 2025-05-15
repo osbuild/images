@@ -40,6 +40,7 @@ func GenFsStages(pt *disk.PartitionTable, filename string) []*Stage {
 			case "vfat":
 				options := &MkfsFATStageOptions{
 					VolID: strings.Replace(e.UUID, "-", "", -1),
+					Label: e.Label,
 				}
 				stages = append(stages, NewMkfsFATStage(options, stageDevices))
 			case "ext4":
