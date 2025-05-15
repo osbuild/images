@@ -627,6 +627,7 @@ image_types:
         - base-dracut-mod1
       additional_drivers:
         - base-drv1
+      squashfs_rootfs: true
 `
 
 func TestImageTypeInstallerConfig(t *testing.T) {
@@ -642,6 +643,7 @@ func TestImageTypeInstallerConfig(t *testing.T) {
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDracutModules: []string{"base-dracut-mod1"},
 		AdditionalDrivers:       []string{"base-drv1"},
+		SquashfsRootfs:          common.ToPtr(true),
 	}, installerConfig)
 }
 

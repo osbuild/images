@@ -13,8 +13,8 @@ func newImageTypeFrom(d *distribution, ar *architecture, imgYAML defs.ImageTypeY
 		ImageTypeYAML: imgYAML,
 		isoLabel:      d.getISOLabelFunc(imgYAML.ISOLabel),
 	}
-	it.defaultImageConfig = common.Must(defs.ImageConfig(d.Name(), ar.name, typName, VersionReplacements()))
-	it.defaultInstallerConfig = common.Must(defs.InstallerConfig(d.Name(), ar.name, typName, VersionReplacements()))
+	it.defaultImageConfig = common.Must(defs.ImageConfig(d.Name(), ar.name, typName, nil))
+	it.defaultInstallerConfig = common.Must(defs.InstallerConfig(d.Name(), ar.name, typName, nil))
 
 	switch imgYAML.Image {
 	case "disk":
