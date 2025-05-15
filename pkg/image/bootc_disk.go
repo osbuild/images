@@ -53,7 +53,6 @@ func NewBootcDiskImage(container container.SourceSpec, buildContainer container.
 
 func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifest,
 	containers []container.SourceSpec,
-	buildContainers []container.SourceSpec,
 	runner runner.Runner,
 	rng *rand.Rand) error {
 
@@ -61,6 +60,7 @@ func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifes
 	if img.BuildSELinux != "" {
 		policy = img.BuildSELinux
 	}
+	buildContainers := []container.SourceSpec{*img.BuildContainerSource}
 	buildPipeline := manifest.NewBuildFromContainer(m, runner, buildContainers,
 		&manifest.BuildOptions{
 			ContainerBuildable: true,
