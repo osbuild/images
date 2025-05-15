@@ -1,0 +1,30 @@
+distros:
+  - &fedora_rawhide
+    name: fedora-43
+    preview: true
+    os_version: 43
+    release_version: 43
+    module_platform_id: platform:f43
+    product: "Fedora"
+    ostree_ref_tmpl: "fedora/43/%s/iot"
+    defs_path: fedora
+    # XXX: add repos here too, that requires some churn, see
+    # https://github.com/osbuild/images/compare/main...mvo5:yaml-distroconfig?expand=1
+    # and we will also need to think about backward compat, as currently
+    # dropping "$distro-$ver.json" files into
+    # /etc/osbuild-composer/repositories will define what distros are
+    # available via images and we will need to provide compatibility for
+    # that.
+    #
+    # Having the repos separated means when a new fedora release is out
+    # we will need to update two places which is clearly a regression from
+    # before.
+  - &fedora_stable
+    <<: *fedora_rawhide
+    name: "fedora-{{.Major}}"
+    match: "fedora-*"
+    preview: false
+    os_version: "{{.Major}}"
+    release_version: "{{.Major}}"
+    module_platform_id: "platform:f{{.Major}}"
+    ostree_ref_tmpl: "fedora/{{.Major}}/%s/iot"

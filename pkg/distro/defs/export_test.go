@@ -5,9 +5,9 @@ import (
 )
 
 func MockDataFS(path string) (restore func()) {
-	saved := DataFS
-	DataFS = os.DirFS(path)
+	saved := defaultDataFS
+	defaultDataFS = os.DirFS(path)
 	return func() {
-		DataFS = saved
+		defaultDataFS = saved
 	}
 }
