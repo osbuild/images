@@ -233,7 +233,7 @@ var expectedSimplePartOutput = `{
               "payload": {
                 "type": "vfat",
                 "uuid": "7B77-95E7",
-                "label": "EFI-SYSTEM",
+                "label": "ESP",
                 "mountpoint": "/boot/efi",
                 "fstab_options": "defaults,uid=0,gid=0,umask=077,shortname=winnt",
                 "fstab_passno": 2
@@ -775,7 +775,7 @@ func TestGenPartitionCreateESPDos(t *testing.T) {
 							Payload: &disk.Filesystem{
 								Type:         "vfat",
 								UUID:         "7B77-95E7",
-								Label:        "EFI-SYSTEM",
+								Label:        "ESP",
 								Mountpoint:   "/boot/efi",
 								FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
 								FSTabPassNo:  2,

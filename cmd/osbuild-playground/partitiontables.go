@@ -20,7 +20,7 @@ var basePT = disk.PartitionTable{
 				Type:         "vfat",
 				UUID:         disk.EFIFilesystemUUID,
 				Mountpoint:   "/boot/efi",
-				Label:        "EFI-SYSTEM",
+				Label:        "ESP",
 				FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
 				FSTabFreq:    0,
 				FSTabPassNo:  2,
