@@ -3,7 +3,9 @@ package fedora
 import (
 	"fmt"
 	"sort"
-	"strconv"
+
+	// we cannot use "maps" yet, as it needs go1.23
+	"golang.org/x/exp/maps"
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/customizations/oscap"
@@ -41,36 +43,41 @@ var (
 var _ = distro.Distro(&distribution{})
 
 type distribution struct {
-	name               string
-	product            string
-	osVersion          string
-	releaseVersion     string
-	modulePlatformID   string
-	ostreeRefTmpl      string
-	runner             runner.Runner
-	arches             map[string]*architecture
+	defs.DistroYAML
+
+	runner runner.Runner
+	arches map[string]*architecture
+	// XXX: move into defs.DistroYAML
 	defaultImageConfig *distro.ImageConfig
 }
 
-func newDistro(version int) (distro.Distro, error) {
-	if version < 0 {
-		return nil, fmt.Errorf("Invalid Fedora version %q (must be positive)", version)
+func getISOLabelFunc(variant string) isoLabelFunc {
+	const ISO_LABEL = "%s-%s-%s-%s"
+
+	return func(t *imageType) string {
+		return fmt.Sprintf(ISO_LABEL, t.Arch().Distro().Product(), t.Arch().Distro().OsVersion(), variant, t.Arch().Name())
 	}
+
+}
+
+func newDistro(version int) (distro.Distro, error) {
+	distros := common.Must(defs.Distros())
 	nameVer := fmt.Sprintf("fedora-%d", version)
+	distroYAML, ok := distros[nameVer]
+	if !ok {
+		err := fmt.Errorf("cannot find %s in %q", nameVer, maps.Keys(distros))
+		panic(err)
+	}
+
 	rd := &distribution{
-		name:             nameVer,
-		product:          "Fedora",
-		osVersion:        strconv.Itoa(version),
-		releaseVersion:   strconv.Itoa(version),
-		modulePlatformID: fmt.Sprintf("platform:f%d", version),
-		ostreeRefTmpl:    fmt.Sprintf("fedora/%d/%%s/iot", version),
-		runner:           &runner.Fedora{Version: uint64(version)},
-		// XXX: make part dynamic distribution building
+		DistroYAML: distroYAML,
+		runner:     &runner.Fedora{Version: uint64(version)},
+		// move into distroYAML
 		defaultImageConfig: common.Must(defs.DistroImageConfig(nameVer)),
 		arches:             make(map[string]*architecture),
 	}
 
-	its, err := defs.ImageTypes(rd.name)
+	its, err := defs.ImageTypes(rd.Name())
 	if err != nil {
 		return nil, err
 	}
@@ -97,31 +104,31 @@ func newDistro(version int) (distro.Distro, error) {
 }
 
 func (d *distribution) Name() string {
-	return d.name
+	return d.DistroYAML.Name
 }
 
 func (d *distribution) Codename() string {
-	return "" // Fedora does not use distro codename
+	return d.DistroYAML.Codename
 }
 
 func (d *distribution) Releasever() string {
-	return d.releaseVersion
+	return d.DistroYAML.ReleaseVersion
 }
 
 func (d *distribution) OsVersion() string {
-	return d.releaseVersion
+	return d.DistroYAML.ReleaseVersion
 }
 
 func (d *distribution) Product() string {
-	return d.product
+	return d.DistroYAML.Product
 }
 
 func (d *distribution) ModulePlatformID() string {
-	return d.modulePlatformID
+	return d.DistroYAML.ModulePlatformID
 }
 
 func (d *distribution) OSTreeRef() string {
-	return d.ostreeRefTmpl
+	return d.DistroYAML.OSTreeRefTmpl
 }
 
 func (d *distribution) ListArches() []string {

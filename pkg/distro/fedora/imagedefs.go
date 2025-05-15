@@ -7,15 +7,6 @@ import (
 	"github.com/osbuild/images/pkg/distro/defs"
 )
 
-func getISOLabelFunc(variant string) isoLabelFunc {
-	const ISO_LABEL = "%s-%s-%s-%s"
-
-	return func(t *imageType) string {
-		return fmt.Sprintf(ISO_LABEL, t.Arch().Distro().Product(), t.Arch().Distro().OsVersion(), variant, t.Arch().Name())
-	}
-
-}
-
 func newImageTypeFrom(d *distribution, ar *architecture, imgYAML defs.ImageTypeYAML) imageType {
 	typName := imgYAML.Name()
 	it := imageType{
@@ -35,8 +26,8 @@ func newImageTypeFrom(d *distribution, ar *architecture, imgYAML defs.ImageTypeY
 		requiredPartitionSizes: imgYAML.RequiredPartitionSizes,
 		environment:            &imgYAML.Environment,
 	}
-	it.defaultImageConfig = common.Must(defs.ImageConfig(d.name, ar.name, typName, VersionReplacements()))
-	it.defaultInstallerConfig = common.Must(defs.InstallerConfig(d.name, ar.name, typName, VersionReplacements()))
+	it.defaultImageConfig = common.Must(defs.ImageConfig(d.Name(), ar.name, typName, VersionReplacements()))
+	it.defaultInstallerConfig = common.Must(defs.InstallerConfig(d.Name(), ar.name, typName, VersionReplacements()))
 
 	switch imgYAML.Image {
 	case "disk":

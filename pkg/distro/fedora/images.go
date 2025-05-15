@@ -228,7 +228,7 @@ func osCustomizations(
 	osc.Tmpfilesd = imageConfig.Tmpfilesd
 	osc.PamLimitsConf = imageConfig.PamLimitsConf
 	osc.Sysctld = imageConfig.Sysctld
-	osc.DNFConfig = imageConfig.DNFConfigOptions(t.arch.distro.osVersion)
+	osc.DNFConfig = imageConfig.DNFConfigOptions(t.arch.distro.OsVersion())
 	osc.SshdConfig = imageConfig.SshdConfig
 	osc.AuthConfig = imageConfig.Authconfig
 	osc.PwQuality = imageConfig.PwQuality
@@ -434,10 +434,10 @@ func liveInstallerImage(workload workload.Workload,
 
 	d := t.arch.distro
 
-	img.Product = d.product
+	img.Product = d.DistroYAML.Product
 	img.Variant = "Workstation"
-	img.OSVersion = d.osVersion
-	img.Release = fmt.Sprintf("%s %s", d.product, d.osVersion)
+	img.OSVersion = d.OsVersion()
+	img.Release = fmt.Sprintf("%s %s", d.DistroYAML.Product, d.OsVersion())
 	img.Preview = common.VersionGreaterThanOrEqual(img.OSVersion, VERSION_BRANCHED)
 
 	var err error
@@ -541,13 +541,13 @@ func imageInstallerImage(workload workload.Workload,
 
 	d := t.arch.distro
 
-	img.Product = d.product
+	img.Product = d.DistroYAML.Product
 
 	// We don't know the variant that goes into the OS pipeline that gets installed
 	img.Variant = "Unknown"
 
-	img.OSVersion = d.osVersion
-	img.Release = fmt.Sprintf("%s %s", d.product, d.osVersion)
+	img.OSVersion = d.OsVersion()
+	img.Release = fmt.Sprintf("%s %s", d.DistroYAML.Product, d.OsVersion())
 
 	img.Preview = common.VersionGreaterThanOrEqual(img.OSVersion, VERSION_BRANCHED)
 
@@ -612,7 +612,7 @@ func iotCommitImage(workload workload.Workload,
 	img.Environment = t.environment
 	img.Workload = workload
 	img.OSTreeParent = parentCommit
-	img.OSVersion = d.osVersion
+	img.OSVersion = d.OsVersion()
 	img.Filename = t.Filename()
 	img.InstallWeakDeps = false
 
@@ -643,7 +643,7 @@ func bootableContainerImage(workload workload.Workload,
 	img.Environment = t.environment
 	img.Workload = workload
 	img.OSTreeParent = parentCommit
-	img.OSVersion = d.osVersion
+	img.OSVersion = d.OsVersion()
 	img.Filename = t.Filename()
 	img.InstallWeakDeps = false
 	img.BootContainer = true
@@ -694,7 +694,7 @@ func iotContainerImage(workload workload.Workload,
 	img.Environment = t.environment
 	img.Workload = workload
 	img.OSTreeParent = parentCommit
-	img.OSVersion = d.osVersion
+	img.OSVersion = d.OsVersion()
 	img.ExtraContainerPackages = packageSets[containerPkgsKey]
 	img.Filename = t.Filename()
 
@@ -765,10 +765,10 @@ func iotInstallerImage(workload workload.Workload,
 	// On Fedora anaconda needs dbus-broker, but isn't added when dracut runs.
 	img.AdditionalDracutModules = append(img.AdditionalDracutModules, "dbus-broker")
 
-	img.Product = d.product
+	img.Product = d.DistroYAML.Product
 	img.Variant = "IoT"
-	img.OSVersion = d.osVersion
-	img.Release = fmt.Sprintf("%s %s", d.product, d.osVersion)
+	img.OSVersion = d.OsVersion()
+	img.Release = fmt.Sprintf("%s %s", d.DistroYAML.Product, d.OsVersion())
 	img.Preview = common.VersionGreaterThanOrEqual(img.OSVersion, VERSION_BRANCHED)
 
 	img.ISOLabel, err = t.ISOLabel()
@@ -907,10 +907,10 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 	img.AdditionalDracutModules = append(img.AdditionalDracutModules, "dbus-broker")
 
 	d := t.arch.distro
-	img.Product = d.product
+	img.Product = d.DistroYAML.Product
 	img.Variant = "IoT"
 	img.OSName = "fedora"
-	img.OSVersion = d.osVersion
+	img.OSVersion = d.OsVersion()
 
 	img.ISOLabel, err = t.ISOLabel()
 	if err != nil {
