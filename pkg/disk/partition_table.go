@@ -1083,6 +1083,20 @@ func addBootPartition(pt *PartitionTable, bootFsType FSType) error {
 	return nil
 }
 
+func hasESP(disk *blueprint.DiskCustomization) bool {
+	if disk == nil {
+		return false
+	}
+
+	for _, part := range disk.Partitions {
+		if part.Type == "plain" && part.Mountpoint == "/boot/efi" {
+			return true
+		}
+	}
+
+	return false
+}
+
 // addPartitionsForBootMode creates partitions to satisfy the boot mode requirements:
 //   - BIOS/legacy: adds a 1 MiB BIOS boot partition.
 //   - UEFI: adds a 200 MiB EFI system partition.
@@ -1091,7 +1105,7 @@ func addBootPartition(pt *PartitionTable, bootFsType FSType) error {
 // The function will append the new partitions to the end of the existing
 // partition table therefore it is best to call this function early to put them
 // near the front (as is conventional).
-func addPartitionsForBootMode(pt *PartitionTable, bootMode platform.BootMode) error {
+func addPartitionsForBootMode(pt *PartitionTable, disk *blueprint.DiskCustomization, bootMode platform.BootMode) error {
 	switch bootMode {
 	case platform.BOOT_LEGACY:
 		// add BIOS boot partition
@@ -1102,12 +1116,14 @@ func addPartitionsForBootMode(pt *PartitionTable, bootMode platform.BootMode) er
 		pt.Partitions = append(pt.Partitions, part)
 		return nil
 	case platform.BOOT_UEFI:
-		// add ESP
-		part, err := mkESP(200*datasizes.MiB, pt.Type)
-		if err != nil {
-			return err
+		// add ESP if needed
+		if !hasESP(disk) {
+			part, err := mkESP(200*datasizes.MiB, pt.Type)
+			if err != nil {
+				return err
+			}
+			pt.Partitions = append(pt.Partitions, part)
 		}
-		pt.Partitions = append(pt.Partitions, part)
 		return nil
 	case platform.BOOT_HYBRID:
 		// add both
@@ -1115,11 +1131,14 @@ func addPartitionsForBootMode(pt *PartitionTable, bootMode platform.BootMode) er
 		if err != nil {
 			return err
 		}
-		esp, err := mkESP(200*datasizes.MiB, pt.Type)
-		if err != nil {
-			return err
+		pt.Partitions = append(pt.Partitions, bios)
+		if !hasESP(disk) {
+			esp, err := mkESP(200*datasizes.MiB, pt.Type)
+			if err != nil {
+				return err
+			}
+			pt.Partitions = append(pt.Partitions, esp)
 		}
-		pt.Partitions = append(pt.Partitions, bios, esp)
 		return nil
 	case platform.BOOT_NONE:
 		return nil
@@ -1273,8 +1292,7 @@ func NewCustomPartitionTable(customizations *blueprint.DiskCustomization, option
 	// add any partition(s) that are needed for booting (like /boot/efi)
 	// if needed
 	//
-	// TODO: switch to ensure ESP in case customizations already include it
-	if err := addPartitionsForBootMode(pt, options.BootMode); err != nil {
+	if err := addPartitionsForBootMode(pt, customizations, options.BootMode); err != nil {
 		return nil, fmt.Errorf("%s %w", errPrefix, err)
 	}
 	// add the /boot partition (if it is needed)
