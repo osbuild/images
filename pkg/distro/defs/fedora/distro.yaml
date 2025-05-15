@@ -965,14 +965,13 @@ image_types:
             - "keyutils"          # Manipulating the kernel keyring; used by bootc
             - "libsss_sudo"       # allow communication between sudo and SSSD for caching sudo rules by SSSD
             - "linux-firmware"    # linux-firmware now a recommends so let's explicitly include it
-            # There are things that write outside of the journal still
-            # (such as the classic wtmp etc.). auditd also writes
-            # outside the journal but it has its own log rotation.
-            # Anything package layered will also tend to expect files
-            # dropped in /etc/logrotate.d to work. Really this is a
-            # legacy thing but if we don't have it then people's disks
-            # will slowly fill up with logs.
-            - "logrotate"
+            - "logrotate"         # There are things that write outside of the journal still
+                                  # (such as the classic wtmp etc.). auditd also writes outside
+                                  # the journal but it has its own log rotation.  Anything
+                                  # package layered will also tend to expect files dropped in
+                                  # /etc/logrotate.d to work. Really this is a legacy thing but
+                                  # if we don't have it then people's disks will slowly fill up
+                                  # with logs.
             - "lsof"
             - "lvm2"                       # Storage configuration/management
             - "nano"                       # default editor

@@ -396,7 +396,7 @@
       - "dhcp-client"
       - "dnf-automatic"
       - "net-tools"
-      #  - "openssh-server" included in core
+      # - "openssh-server" included in core
       - "python3"
       - "rng-tools"
       - "tar"
