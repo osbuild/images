@@ -82,7 +82,7 @@ func (t *imageType) MIMEType() string {
 func (t *imageType) OSTreeRef() string {
 	d := t.arch.distro
 	if t.rpmOstree {
-		return fmt.Sprintf(d.ostreeRefTmpl, t.arch.Name())
+		return fmt.Sprintf(d.OSTreeRef(), t.arch.Name())
 	}
 	return ""
 }
@@ -347,7 +347,7 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 
 	// we do not support embedding containers on ostree-derived images, only on commits themselves
 	if len(bp.Containers) > 0 && t.rpmOstree && (t.name != "iot-commit" && t.name != "iot-container") {
-		return warnings, fmt.Errorf("embedding containers is not supported for %s on %s", t.name, t.arch.distro.name)
+		return warnings, fmt.Errorf("embedding containers is not supported for %s on %s", t.name, t.arch.distro.Name())
 	}
 
 	if options.OSTree != nil {

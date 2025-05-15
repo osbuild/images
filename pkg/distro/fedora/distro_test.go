@@ -992,11 +992,11 @@ func TestDistroFactory(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			strID:    "fedora-38",
-			expected: fedora.DistroFactory("fedora-38"),
+			strID:    "fedora-40",
+			expected: fedora.DistroFactory("fedora-40"),
 		},
 		{
-			strID:    "fedora-38.1",
+			strID:    "fedora-40.1",
 			expected: nil,
 		},
 		{
