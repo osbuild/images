@@ -44,8 +44,7 @@ var _ = distro.Distro(&distribution{})
 type distribution struct {
 	defs.DistroYAML
 
-	arches map[string]*architecture
-	// XXX: move into defs.DistroYAML
+	arches             map[string]*architecture
 	defaultImageConfig *distro.ImageConfig
 }
 
@@ -69,7 +68,11 @@ func newDistro(version int) (distro.Distro, error) {
 
 	rd := &distribution{
 		DistroYAML: distroYAML,
-		// move into distroYAML
+		// XXX: move into defs.DistroYAML? the downside of doing this
+		// is that we would have to duplicate the default image config
+		// accross the centos/alma/rhel distros.yaml, otherwise we
+		// just load it from the imagetypes file/dir and it is natually
+		// "in-sync"
 		defaultImageConfig: common.Must(defs.DistroImageConfig(nameVer)),
 		arches:             make(map[string]*architecture),
 	}
