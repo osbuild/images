@@ -37,7 +37,7 @@ func osCustomizations(
 
 	osc := manifest.OSCustomizations{}
 
-	if t.bootable || t.rpmOstree {
+	if t.ImageTypeYAML.Bootable || t.ImageTypeYAML.RPMOSTree {
 		osc.KernelName = c.GetKernel().Name
 
 		var kernelOptions []string
@@ -68,7 +68,7 @@ func osCustomizations(
 		osc.ExcludeDocs = *imageConfig.ExcludeDocs
 	}
 
-	if !t.bootISO {
+	if !t.ImageTypeYAML.BootISO {
 		// don't put users and groups in the payload of an installer
 		// add them via kickstart instead
 		osc.Groups = users.GroupsFromBP(c.GetGroups())
@@ -159,7 +159,7 @@ func osCustomizations(
 	// deployment, rather than the commit. Therefore the containers need to be
 	// stored in a different location, like `/usr/share`, and the container
 	// storage engine configured accordingly.
-	if t.rpmOstree && len(containers) > 0 {
+	if t.ImageTypeYAML.RPMOSTree && len(containers) > 0 {
 		storagePath := "/usr/share/containers/storage"
 		osc.ContainersStorage = &storagePath
 	}
@@ -194,7 +194,7 @@ func osCustomizations(
 	}
 
 	if oscapConfig := c.GetOpenSCAP(); oscapConfig != nil {
-		if t.rpmOstree {
+		if t.ImageTypeYAML.RPMOSTree {
 			panic("unexpected oscap options for ostree image type")
 		}
 
@@ -261,7 +261,7 @@ func ostreeDeploymentCustomizations(
 	t *imageType,
 	c *blueprint.Customizations) (manifest.OSTreeDeploymentCustomizations, error) {
 
-	if !t.rpmOstree || !t.bootable {
+	if !t.ImageTypeYAML.RPMOSTree || !t.ImageTypeYAML.Bootable {
 		return manifest.OSTreeDeploymentCustomizations{}, fmt.Errorf("ostree deployment customizations are only supported for bootable rpm-ostree images")
 	}
 
@@ -349,9 +349,9 @@ func diskImage(workload workload.Workload,
 		return nil, err
 	}
 
-	img.Environment = t.environment
+	img.Environment = &t.ImageTypeYAML.Environment
 	img.Workload = workload
-	img.Compression = t.compression
+	img.Compression = t.ImageTypeYAML.Compression
 	if bp.Minimal {
 		// Disable weak dependencies if the 'minimal' option is enabled
 		img.OSCustomizations.InstallWeakDeps = false
@@ -410,7 +410,7 @@ func containerImage(workload workload.Workload,
 		return nil, err
 	}
 
-	img.Environment = t.environment
+	img.Environment = &t.ImageTypeYAML.Environment
 	img.Workload = workload
 
 	img.Filename = t.Filename()
@@ -609,7 +609,7 @@ func iotCommitImage(workload workload.Workload,
 		},
 	}
 
-	img.Environment = t.environment
+	img.Environment = &t.ImageTypeYAML.Environment
 	img.Workload = workload
 	img.OSTreeParent = parentCommit
 	img.OSVersion = d.OsVersion()
@@ -640,7 +640,7 @@ func bootableContainerImage(workload workload.Workload,
 		return nil, err
 	}
 
-	img.Environment = t.environment
+	img.Environment = &t.ImageTypeYAML.Environment
 	img.Workload = workload
 	img.OSTreeParent = parentCommit
 	img.OSVersion = d.OsVersion()
@@ -691,7 +691,7 @@ func iotContainerImage(workload workload.Workload,
 	}
 
 	img.ContainerLanguage = img.OSCustomizations.Language
-	img.Environment = t.environment
+	img.Environment = &t.ImageTypeYAML.Environment
 	img.Workload = workload
 	img.OSTreeParent = parentCommit
 	img.OSVersion = d.OsVersion()
@@ -833,7 +833,7 @@ func iotImage(workload workload.Workload,
 	img.PartitionTable = pt
 
 	img.Filename = t.Filename()
-	img.Compression = t.compression
+	img.Compression = t.ImageTypeYAML.Compression
 
 	return img, nil
 }
