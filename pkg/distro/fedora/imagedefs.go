@@ -10,21 +10,8 @@ import (
 func newImageTypeFrom(d *distribution, ar *architecture, imgYAML defs.ImageTypeYAML) imageType {
 	typName := imgYAML.Name()
 	it := imageType{
-		name:                   typName,
-		nameAliases:            imgYAML.NameAliases,
-		filename:               imgYAML.Filename,
-		compression:            imgYAML.Compression,
-		mimeType:               imgYAML.MimeType,
-		bootable:               imgYAML.Bootable,
-		bootISO:                imgYAML.BootISO,
-		rpmOstree:              imgYAML.RPMOSTree,
-		isoLabel:               d.getISOLabelFunc(imgYAML.ISOLabel),
-		defaultSize:            imgYAML.DefaultSize,
-		buildPipelines:         imgYAML.BuildPipelines,
-		payloadPipelines:       imgYAML.PayloadPipelines,
-		exports:                imgYAML.Exports,
-		requiredPartitionSizes: imgYAML.RequiredPartitionSizes,
-		environment:            &imgYAML.Environment,
+		ImageTypeYAML: imgYAML,
+		isoLabel:      d.getISOLabelFunc(imgYAML.ISOLabel),
 	}
 	it.defaultImageConfig = common.Must(defs.ImageConfig(d.Name(), ar.name, typName, VersionReplacements()))
 	it.defaultInstallerConfig = common.Must(defs.InstallerConfig(d.Name(), ar.name, typName, VersionReplacements()))
