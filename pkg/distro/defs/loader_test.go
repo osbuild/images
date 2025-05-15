@@ -736,3 +736,119 @@ func TestImageTypeInstallerConfigOverrideArch(t *testing.T) {
 		AdditionalDrivers: []string{"override-drv1"},
 	}, installerConfig)
 }
+
+func makeFakeDistrosYAML(t *testing.T, content string) string {
+	tmpdir := t.TempDir()
+	distrosPath := filepath.Join(tmpdir, "distros.yaml")
+	err := os.WriteFile(distrosPath, []byte(content), 0644)
+	assert.NoError(t, err)
+	return tmpdir
+}
+
+var fakeDistrosYAML = `
+distros:
+  - &fedora_rawhide
+    name: fedora-43
+    preview: true
+    os_version: 43
+    release_version: 43
+    module_platform_id: platform:f43
+    product: "Fedora"
+    ostree_ref_tmpl: "fedora/43/%s/iot"
+    defs_path: fedora
+
+  - &fedora_stable
+    <<: *fedora_rawhide
+    name: "fedora-{{.Major}}"
+    match: "fedora-*"
+    preview: false
+    os_version: "{{.Major}}"
+    release_version: "{{.Major}}"
+    module_platform_id: "platform:f{{.Major}}"
+    ostree_ref_tmpl: "fedora/{{.Major}}/%s/iot"
+
+  - name: centos-10
+    product: "CentOS Stream"
+    os_version: "10-stream"
+    release_version: 10
+    module_platform_id: "platform:el10"
+    vendor: "centos"
+    ostree_ref_tmpl: "centos/10/%s/edge"
+    default_fs_type: "xfs"
+    defs_path: rhel-10
+
+  - name: "rhel-{{.Major}}.{{.Minor}}"
+    match: "rhel-10*"
+    product: "Red Hat Enterprise Linux"
+    os_version: "{{.Major}}.{{.Minor}}"
+    release_version: "{{.Major}}"
+    module_platform_id: "platform:el{{.Major}}"
+    vendor: "redhat"
+    ostree_ref_tmpl: "rhel/{{.Major}}/%s/edge"
+    default_fs_type: "xfs"
+    defs_path: rhel-10
+`
+
+func TestDistrosLoadingExact(t *testing.T) {
+	baseDir := makeFakeDistrosYAML(t, fakeDistrosYAML)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	distro, err := defs.Distro("fedora-43")
+	require.NoError(t, err)
+	assert.Equal(t, &defs.DistroYAML{
+		Name:             "fedora-43",
+		Preview:          true,
+		OsVersion:        "43",
+		ReleaseVersion:   "43",
+		ModulePlatformID: "platform:f43",
+		Product:          "Fedora",
+		OSTreeRefTmpl:    "fedora/43/%s/iot",
+		DefsPath:         "fedora",
+	}, distro)
+
+	distro, err = defs.Distro("centos-10")
+	require.NoError(t, err)
+	assert.Equal(t, &defs.DistroYAML{
+		Name:             "centos-10",
+		Vendor:           "centos",
+		OsVersion:        "10-stream",
+		ReleaseVersion:   "10",
+		ModulePlatformID: "platform:el10",
+		Product:          "CentOS Stream",
+		OSTreeRefTmpl:    "centos/10/%s/edge",
+		DefsPath:         "rhel-10",
+		DefaultFSType:    disk.FS_XFS,
+	}, distro)
+}
+
+func TestDistrosLoadingFactoryCompat(t *testing.T) {
+	baseDir := makeFakeDistrosYAML(t, fakeDistrosYAML)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	distro, err := defs.Distro("rhel-10.1")
+	require.NoError(t, err)
+	assert.Equal(t, &defs.DistroYAML{
+		Name:             "rhel-10.1",
+		Match:            "rhel-10*",
+		Vendor:           "redhat",
+		OsVersion:        "10.1",
+		ReleaseVersion:   "10",
+		ModulePlatformID: "platform:el10",
+		Product:          "Red Hat Enterprise Linux",
+		OSTreeRefTmpl:    "rhel/10/%s/edge",
+		DefsPath:         "rhel-10",
+		DefaultFSType:    disk.FS_XFS,
+	}, distro)
+}
+
+func TestDistrosLoadingNotFound(t *testing.T) {
+	baseDir := makeFakeDistrosYAML(t, fakeDistrosYAML)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	distro, err := defs.Distro("non-exiting")
+	assert.Nil(t, err)
+	assert.Nil(t, distro)
+}

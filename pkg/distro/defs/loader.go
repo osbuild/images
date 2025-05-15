@@ -2,6 +2,7 @@
 package defs
 
 import (
+	"bytes"
 	"embed"
 	"errors"
 	"fmt"
@@ -11,7 +12,9 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"text/template"
 
+	"github.com/gobwas/glob"
 	"github.com/hashicorp/go-version"
 	"golang.org/x/exp/maps"
 	"gopkg.in/yaml.v3"
@@ -32,12 +35,140 @@ var (
 	ErrNoPartitionTableForArch    = errors.New("no partition table for arch")
 )
 
-//go:embed */*.yaml
+//go:embed *.yaml */*.yaml
 var data embed.FS
 
-var DataFS fs.FS = data
+var defaultDataFS fs.FS = data
 
-type toplevelYAML struct {
+// distrosYAML defines all supported YAML based distributions
+type distrosYAML struct {
+	Distros []DistroYAML
+}
+
+func dataFS() fs.FS {
+	// XXX: this is a short term measure, pass a set of
+	// searchPaths down the stack instead
+	var dataFS fs.FS = defaultDataFS
+	if overrideDir := experimentalflags.String("yamldir"); overrideDir != "" {
+		olog.Printf("WARNING: using experimental override dir %q", overrideDir)
+		dataFS = os.DirFS(overrideDir)
+	}
+	return dataFS
+}
+
+type DistroYAML struct {
+	// Match can be used to match multiple versions via a
+	// fnmatch/glob style expression. We could also use a
+	// regex and do something like:
+	//   rhel-(?P<major>[0-9]+)\.(?P<minor>[0-9]+)
+	// if we need to be more precise in the future, but for
+	// now every match will be split into "$distroname-$major.$minor"
+	// (with minor being optional)
+	Match string `yaml:"match"`
+
+	// The distro metadata, can contain go text template strings
+	// for {{.Major}}, {{.Minor}} which will be expanded by the
+	// upper layers.
+	Name             string `yaml:"name"`
+	Codename         string `yaml:"codename"`
+	Vendor           string `yaml:"vendor"`
+	Preview          bool   `yaml:"preview"`
+	OsVersion        string `yaml:"os_version"`
+	ReleaseVersion   string `yaml:"release_version"`
+	ModulePlatformID string `yaml:"module_platform_id"`
+	Product          string `yaml:"product"`
+	OSTreeRefTmpl    string `yaml:"ostree_ref_tmpl"`
+
+	DefaultFSType disk.FSType `yaml:"default_fs_type"`
+
+	// directory with the actual image defintions, we separate that
+	// so that we can point the "centos-10" distro to the "./rhel-10"
+	// image types file/directory.
+	DefsPath string `yaml:"defs_path"`
+}
+
+func executeTemplates(distro *DistroYAML, nameVer string) error {
+	_, distroVer := splitDistroNameVer(nameVer)
+	l := strings.SplitN(distroVer, ".", 2)
+	major := l[0]
+	minor := ""
+	if len(l) > 1 {
+		minor = l[1]
+	}
+	type inputs struct {
+		Major, Minor string
+	}
+
+	var errs []error
+	subs := func(inp string) string {
+		var buf bytes.Buffer
+		templ, err := template.New("").Parse(inp)
+		if err != nil {
+			errs = append(errs, err)
+			return inp
+		}
+		if err := templ.Execute(&buf, inputs{Major: major, Minor: minor}); err != nil {
+			errs = append(errs, err)
+			return inp
+		}
+		return buf.String()
+	}
+	distro.Name = subs(distro.Name)
+	distro.OsVersion = subs(distro.OsVersion)
+	distro.ReleaseVersion = subs(distro.ReleaseVersion)
+	distro.OSTreeRefTmpl = subs(distro.OSTreeRefTmpl)
+	distro.ModulePlatformID = subs(distro.ModulePlatformID)
+
+	return errors.Join(errs...)
+}
+
+// Distro return the given distro or nil if the distro is not
+// found. This mimics the "distrofactory.GetDistro() interface.
+//
+// Note that eventually we want something like "Distros()" instead
+// that returns all known distros but for now we keep compatibility
+// with the way distrofactory/reporegistry work which is by defining
+// distros via repository files.
+func Distro(nameVer string) (*DistroYAML, error) {
+	f, err := dataFS().Open("distros.yaml")
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	decoder := yaml.NewDecoder(f)
+	decoder.KnownFields(true)
+
+	var distros distrosYAML
+	if err := decoder.Decode(&distros); err != nil {
+		return nil, err
+	}
+
+	for _, distro := range distros.Distros {
+		if distro.Name == nameVer {
+			return &distro, nil
+		}
+
+		pat, err := glob.Compile(distro.Match)
+		if err != nil {
+			return nil, err
+		}
+		if pat.Match(nameVer) {
+			if err := executeTemplates(&distro, nameVer); err != nil {
+				return nil, err
+			}
+
+			return &distro, nil
+		}
+	}
+
+	return nil, nil
+}
+
+// imageTypesYAML describes the image types for a given distribution
+// family. Note that multiple distros may use the same image types,
+// e.g. centos/rhel
+type imageTypesYAML struct {
 	ImageConfig distroImageConfig    `yaml:"image_config,omitempty"`
 	ImageTypes  map[string]imageType `yaml:"image_types"`
 	Common      map[string]any       `yaml:".common,omitempty"`
@@ -360,21 +491,13 @@ func splitDistroNameVer(distroNameVer string) (string, string) {
 	return distroNameVer[:idx], distroNameVer[idx+1:]
 }
 
-func load(distroNameVer string) (*toplevelYAML, error) {
+func load(distroNameVer string) (*imageTypesYAML, error) {
 	// we need to split from the right for "centos-stream-10" like
 	// distro names, sadly go has no rsplit() so we do it manually
 	// XXX: we cannot use distroidparser here because of import cycles
 	distroName, distroVersion := splitDistroNameVer(distroNameVer)
 	distroNameMajorVer := strings.SplitN(distroNameVer, ".", 2)[0]
 	distroMajorVer := strings.SplitN(distroVersion, ".", 2)[0]
-
-	// XXX: this is a short term measure, pass a set of
-	// searchPaths down the stack instead
-	var dataFS fs.FS = DataFS
-	if overrideDir := experimentalflags.String("yamldir"); overrideDir != "" {
-		olog.Printf("WARNING: using experimental override dir %q", overrideDir)
-		dataFS = os.DirFS(overrideDir)
-	}
 
 	// XXX: this is only needed temporary until we have a "distros.yaml"
 	// that describes some high-level properties of each distro
@@ -400,7 +523,7 @@ func load(distroNameVer string) (*toplevelYAML, error) {
 		return nil, fmt.Errorf("unsupported distro in loader %q (add to loader.go)", distroName)
 	}
 
-	f, err := dataFS.Open(filepath.Join(baseDir, "distro.yaml"))
+	f, err := dataFS().Open(filepath.Join(baseDir, "distro.yaml"))
 	if err != nil {
 		return nil, err
 	}
@@ -411,7 +534,7 @@ func load(distroNameVer string) (*toplevelYAML, error) {
 
 	// each imagetype can have multiple package sets, so that we can
 	// use yaml aliases/anchors to de-duplicate them
-	var toplevel toplevelYAML
+	var toplevel imageTypesYAML
 	if err := decoder.Decode(&toplevel); err != nil {
 		return nil, err
 	}
