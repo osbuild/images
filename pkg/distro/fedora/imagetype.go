@@ -9,7 +9,6 @@ import (
 	"slices"
 
 	"github.com/osbuild/images/internal/common"
-	"github.com/osbuild/images/internal/environment"
 	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
@@ -36,35 +35,23 @@ type isoLabelFunc func(t *imageType) string
 var _ = distro.ImageType(&imageType{})
 
 type imageType struct {
-	arch                   *architecture
-	platform               platform.Platform
-	environment            environment.Environment
-	workload               workload.Workload
-	name                   string
-	nameAliases            []string
-	filename               string
-	compression            string
-	mimeType               string
+	defs.ImageTypeYAML
+
+	arch     *architecture
+	platform platform.Platform
+
+	// XXX: make definable via YAML
+	workload workload.Workload
+	// XXX: make member function ImageTypeYAML
 	defaultImageConfig     *distro.ImageConfig
 	defaultInstallerConfig *distro.InstallerConfig
-	defaultSize            uint64
-	buildPipelines         []string
-	payloadPipelines       []string
-	exports                []string
-	image                  imageFunc
-	isoLabel               isoLabelFunc
 
-	// bootISO: installable ISO
-	bootISO bool
-	// rpmOstree: iot/ostree
-	rpmOstree bool
-	// bootable image
-	bootable               bool
-	requiredPartitionSizes map[string]uint64
+	image    imageFunc
+	isoLabel isoLabelFunc
 }
 
 func (t *imageType) Name() string {
-	return t.name
+	return t.ImageTypeYAML.Name()
 }
 
 func (t *imageType) Arch() distro.Arch {
@@ -72,24 +59,24 @@ func (t *imageType) Arch() distro.Arch {
 }
 
 func (t *imageType) Filename() string {
-	return t.filename
+	return t.ImageTypeYAML.Filename
 }
 
 func (t *imageType) MIMEType() string {
-	return t.mimeType
+	return t.ImageTypeYAML.MimeType
 }
 
 func (t *imageType) OSTreeRef() string {
 	d := t.arch.distro
-	if t.rpmOstree {
+	if t.ImageTypeYAML.RPMOSTree {
 		return fmt.Sprintf(d.OSTreeRef(), t.arch.Name())
 	}
 	return ""
 }
 
 func (t *imageType) ISOLabel() (string, error) {
-	if !t.bootISO {
-		return "", fmt.Errorf("image type %q is not an ISO", t.name)
+	if !t.ImageTypeYAML.BootISO {
+		return "", fmt.Errorf("image type %q is not an ISO", t.Name())
 	}
 
 	if t.isoLabel != nil {
@@ -101,21 +88,21 @@ func (t *imageType) ISOLabel() (string, error) {
 
 func (t *imageType) Size(size uint64) uint64 {
 	// Microsoft Azure requires vhd images to be rounded up to the nearest MB
-	if t.name == "vhd" && size%datasizes.MebiByte != 0 {
+	if t.ImageTypeYAML.Name() == "vhd" && size%datasizes.MebiByte != 0 {
 		size = (size/datasizes.MebiByte + 1) * datasizes.MebiByte
 	}
 	if size == 0 {
-		size = t.defaultSize
+		size = t.ImageTypeYAML.DefaultSize
 	}
 	return size
 }
 
 func (t *imageType) BuildPipelines() []string {
-	return t.buildPipelines
+	return t.ImageTypeYAML.BuildPipelines
 }
 
 func (t *imageType) PayloadPipelines() []string {
-	return t.payloadPipelines
+	return t.ImageTypeYAML.PayloadPipelines
 }
 
 func (t *imageType) PayloadPackageSets() []string {
@@ -123,8 +110,8 @@ func (t *imageType) PayloadPackageSets() []string {
 }
 
 func (t *imageType) Exports() []string {
-	if len(t.exports) > 0 {
-		return t.exports
+	if len(t.ImageTypeYAML.Exports) > 0 {
+		return t.ImageTypeYAML.Exports
 	}
 	return []string{"assembler"}
 }
@@ -172,14 +159,14 @@ func (t *imageType) getPartitionTable(
 			PartitionTableType: basePartitionTable.Type, // PT type is not customizable, it is determined by the base PT for an image type or architecture
 			BootMode:           t.BootMode(),
 			DefaultFSType:      disk.FS_EXT4, // default fs type for Fedora
-			RequiredMinSizes:   t.requiredPartitionSizes,
+			RequiredMinSizes:   t.ImageTypeYAML.RequiredPartitionSizes,
 			Architecture:       t.platform.GetArch(),
 		}
 		return disk.NewCustomPartitionTable(partitioning, partOptions, rng)
 	}
 
 	partitioningMode := options.PartitioningMode
-	if t.rpmOstree {
+	if t.ImageTypeYAML.RPMOSTree {
 		// IoT supports only LVM, force it.
 		// Raw is not supported, return an error if it is requested
 		// TODO Need a central location for logic like this
@@ -190,7 +177,7 @@ func (t *imageType) getPartitionTable(
 	}
 
 	mountpoints := customizations.GetFilesystems()
-	return disk.NewPartitionTable(basePartitionTable, mountpoints, imageSize, partitioningMode, t.platform.GetArch(), t.requiredPartitionSizes, rng)
+	return disk.NewPartitionTable(basePartitionTable, mountpoints, imageSize, partitioningMode, t.platform.GetArch(), t.ImageTypeYAML.RequiredPartitionSizes, rng)
 }
 
 func (t *imageType) getDefaultImageConfig() *distro.ImageConfig {
@@ -204,8 +191,8 @@ func (t *imageType) getDefaultImageConfig() *distro.ImageConfig {
 }
 
 func (t *imageType) getDefaultInstallerConfig() (*distro.InstallerConfig, error) {
-	if !t.bootISO {
-		return nil, fmt.Errorf("image type %q is not an ISO", t.name)
+	if !t.ImageTypeYAML.BootISO {
+		return nil, fmt.Errorf("image type %q is not an ISO", t.Name())
 	}
 
 	return t.defaultInstallerConfig, nil
@@ -341,13 +328,13 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 
 	var warnings []string
 
-	if !t.rpmOstree && options.OSTree != nil {
+	if !t.ImageTypeYAML.RPMOSTree && options.OSTree != nil {
 		return warnings, fmt.Errorf("OSTree is not supported for %q", t.Name())
 	}
 
 	// we do not support embedding containers on ostree-derived images, only on commits themselves
-	if len(bp.Containers) > 0 && t.rpmOstree && (t.name != "iot-commit" && t.name != "iot-container") {
-		return warnings, fmt.Errorf("embedding containers is not supported for %s on %s", t.name, t.arch.distro.Name())
+	if len(bp.Containers) > 0 && t.ImageTypeYAML.RPMOSTree && (t.Name() != "iot-commit" && t.Name() != "iot-container") {
+		return warnings, fmt.Errorf("embedding containers is not supported for %s on %s", t.Name(), t.arch.distro.Name())
 	}
 
 	if options.OSTree != nil {
@@ -356,37 +343,37 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 		}
 	}
 
-	if t.bootISO && t.rpmOstree {
+	if t.ImageTypeYAML.BootISO && t.ImageTypeYAML.RPMOSTree {
 		// ostree-based ISOs require a URL from which to pull a payload commit
 		if options.OSTree == nil || options.OSTree.URL == "" {
-			return warnings, fmt.Errorf("boot ISO image type %q requires specifying a URL from which to retrieve the OSTree commit", t.name)
+			return warnings, fmt.Errorf("boot ISO image type %q requires specifying a URL from which to retrieve the OSTree commit", t.Name())
 		}
 	}
 
-	if t.name == "iot-raw-xz" || t.name == "iot-qcow2" {
+	if t.Name() == "iot-raw-xz" || t.Name() == "iot-qcow2" {
 		allowed := []string{"User", "Group", "Directories", "Files", "Services", "FIPS"}
 		if err := customizations.CheckAllowed(allowed...); err != nil {
-			return warnings, fmt.Errorf(distro.UnsupportedCustomizationError, t.name, strings.Join(allowed, ", "))
+			return warnings, fmt.Errorf(distro.UnsupportedCustomizationError, t.Name(), strings.Join(allowed, ", "))
 		}
 		// TODO: consider additional checks, such as those in "edge-simplified-installer" in RHEL distros
 	}
 
 	// BootISOs have limited support for customizations.
 	// TODO: Support kernel name selection for image-installer
-	if t.bootISO {
-		if t.name == "iot-simplified-installer" {
+	if t.ImageTypeYAML.BootISO {
+		if t.Name() == "iot-simplified-installer" {
 			allowed := []string{"InstallationDevice", "FDO", "Ignition", "Kernel", "User", "Group", "FIPS"}
 			if err := customizations.CheckAllowed(allowed...); err != nil {
-				return warnings, fmt.Errorf(distro.UnsupportedCustomizationError, t.name, strings.Join(allowed, ", "))
+				return warnings, fmt.Errorf(distro.UnsupportedCustomizationError, t.Name(), strings.Join(allowed, ", "))
 			}
 			if customizations.GetInstallationDevice() == "" {
-				return warnings, fmt.Errorf("boot ISO image type %q requires specifying an installation device to install to", t.name)
+				return warnings, fmt.Errorf("boot ISO image type %q requires specifying an installation device to install to", t.Name())
 			}
 
 			// FDO is optional, but when specified has some restrictions
 			if customizations.GetFDO() != nil {
 				if customizations.GetFDO().ManufacturingServerURL == "" {
-					return warnings, fmt.Errorf("boot ISO image type %q requires specifying FDO.ManufacturingServerURL configuration to install to when using FDO", t.name)
+					return warnings, fmt.Errorf("boot ISO image type %q requires specifying FDO.ManufacturingServerURL configuration to install to when using FDO", t.Name())
 				}
 				var diunSet int
 				if customizations.GetFDO().DiunPubKeyHash != "" {
@@ -399,7 +386,7 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 					diunSet++
 				}
 				if diunSet != 1 {
-					return warnings, fmt.Errorf("boot ISO image type %q requires specifying one of [FDO.DiunPubKeyHash,FDO.DiunPubKeyInsecure,FDO.DiunPubKeyRootCerts] configuration to install to when using FDO", t.name)
+					return warnings, fmt.Errorf("boot ISO image type %q requires specifying one of [FDO.DiunPubKeyHash,FDO.DiunPubKeyInsecure,FDO.DiunPubKeyRootCerts] configuration to install to when using FDO", t.Name())
 				}
 			}
 
@@ -412,21 +399,21 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 					return warnings, fmt.Errorf("ignition.firstboot requires a provisioning url")
 				}
 			}
-		} else if t.name == "iot-installer" || t.name == "minimal-installer" {
+		} else if t.Name() == "iot-installer" || t.Name() == "minimal-installer" {
 			// "Installer" is actually not allowed for image-installer right now, but this is checked at the end
 			allowed := []string{"User", "Group", "FIPS", "Installer", "Timezone", "Locale"}
 			if err := customizations.CheckAllowed(allowed...); err != nil {
-				return warnings, fmt.Errorf(distro.UnsupportedCustomizationError, t.name, strings.Join(allowed, ", "))
+				return warnings, fmt.Errorf(distro.UnsupportedCustomizationError, t.Name(), strings.Join(allowed, ", "))
 			}
-		} else if t.name == "workstation-live-installer" {
+		} else if t.Name() == "workstation-live-installer" {
 			allowed := []string{"Installer"}
 			if err := customizations.CheckAllowed(allowed...); err != nil {
-				return warnings, fmt.Errorf(distro.NoCustomizationsAllowedError, t.name)
+				return warnings, fmt.Errorf(distro.NoCustomizationsAllowedError, t.Name())
 			}
 		}
 	}
 
-	if kernelOpts := customizations.GetKernel(); kernelOpts.Append != "" && t.rpmOstree {
+	if kernelOpts := customizations.GetKernel(); kernelOpts.Append != "" && t.ImageTypeYAML.RPMOSTree {
 		return warnings, fmt.Errorf("kernel boot parameter customizations are not supported for ostree types")
 	}
 
@@ -435,7 +422,7 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 	if err != nil {
 		return warnings, err
 	}
-	if (len(mountpoints) > 0 || partitioning != nil) && t.rpmOstree {
+	if (len(mountpoints) > 0 || partitioning != nil) && t.ImageTypeYAML.RPMOSTree {
 		return warnings, fmt.Errorf("Custom mountpoints and partitioning are not supported for ostree types")
 	}
 	if len(mountpoints) > 0 && partitioning != nil {
@@ -457,7 +444,7 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 		if !supported {
 			return warnings, fmt.Errorf("OpenSCAP unsupported profile: %s", osc.ProfileID)
 		}
-		if t.rpmOstree {
+		if t.ImageTypeYAML.RPMOSTree {
 			return warnings, fmt.Errorf("OpenSCAP customizations are not supported for ostree types")
 		}
 		if osc.ProfileID == "" {
@@ -477,7 +464,7 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 	dcp := policies.CustomDirectoriesPolicies
 	fcp := policies.CustomFilesPolicies
 
-	if t.rpmOstree {
+	if t.ImageTypeYAML.RPMOSTree {
 		dcp = policies.OstreeCustomDirectoriesPolicies
 		fcp = policies.OstreeCustomFilesPolicies
 	}
@@ -508,7 +495,7 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 	}
 	if instCust != nil {
 		// only supported by the Anaconda installer
-		if slices.Index([]string{"iot-installer"}, t.name) == -1 {
+		if slices.Index([]string{"iot-installer"}, t.Name()) == -1 {
 			return warnings, fmt.Errorf("installer customizations are not supported for %q", t.Name())
 		}
 
