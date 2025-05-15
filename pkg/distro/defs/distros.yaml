@@ -31,6 +31,7 @@ distros:
     preview: false
     os_version: 42
     release_version: 42
+    ostree_ref_tmpl: "fedora/42/%s/iot"
     module_platform_id: platform:f42
     runner:
       <<: *fedora_runner
@@ -39,15 +40,17 @@ distros:
     name: fedora-41
     os_version: 41
     release_version: 41
+    ostree_ref_tmpl: "fedora/41/%s/iot"
     module_platform_id: platform:f41
     runner:
       <<: *fedora_runner
-      name: org.osbuild.fedora42
+      name: org.osbuild.fedora41
   - <<: *fedora_stable
     name: fedora-40
     os_version: 40
     release_version: 40
+    ostree_ref_tmpl: "fedora/40/%s/iot"
     module_platform_id: platform:f40
     runner:
       <<: *fedora_runner
-      name: org.osbuild.fedora42
+      name: org.osbuild.fedora40
