@@ -27,6 +27,7 @@ import (
 	"github.com/osbuild/images/pkg/olog"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
+	"github.com/osbuild/images/pkg/runner"
 )
 
 var (
@@ -69,15 +70,16 @@ type DistroYAML struct {
 	// The distro metadata, can contain go text template strings
 	// for {{.Major}}, {{.Minor}} which will be expanded by the
 	// upper layers.
-	Name             string `yaml:"name"`
-	Codename         string `yaml:"codename"`
-	Vendor           string `yaml:"vendor"`
-	Preview          bool   `yaml:"preview"`
-	OsVersion        string `yaml:"os_version"`
-	ReleaseVersion   string `yaml:"release_version"`
-	ModulePlatformID string `yaml:"module_platform_id"`
-	Product          string `yaml:"product"`
-	OSTreeRefTmpl    string `yaml:"ostree_ref_tmpl"`
+	Name             string            `yaml:"name"`
+	Codename         string            `yaml:"codename"`
+	Vendor           string            `yaml:"vendor"`
+	Preview          bool              `yaml:"preview"`
+	OsVersion        string            `yaml:"os_version"`
+	ReleaseVersion   string            `yaml:"release_version"`
+	ModulePlatformID string            `yaml:"module_platform_id"`
+	Product          string            `yaml:"product"`
+	OSTreeRefTmpl    string            `yaml:"ostree_ref_tmpl"`
+	Runner           runner.RunnerConf `yaml:"runner"`
 
 	DefaultFSType disk.FSType `yaml:"default_fs_type"`
 
@@ -118,6 +120,7 @@ func executeTemplates(distro *DistroYAML, nameVer string) error {
 	distro.ReleaseVersion = subs(distro.ReleaseVersion)
 	distro.OSTreeRefTmpl = subs(distro.OSTreeRefTmpl)
 	distro.ModulePlatformID = subs(distro.ModulePlatformID)
+	distro.Runner.Name = subs(distro.Runner.Name)
 
 	return errors.Join(errs...)
 }

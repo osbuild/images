@@ -22,6 +22,7 @@ import (
 	"github.com/osbuild/images/pkg/distro/test_distro"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
+	"github.com/osbuild/images/pkg/runner"
 )
 
 func makeTestImageType(t *testing.T) distro.ImageType {
@@ -756,6 +757,9 @@ distros:
     product: "Fedora"
     ostree_ref_tmpl: "fedora/43/%s/iot"
     defs_path: fedora
+    runner: &fedora_runner
+      name: org.osbuild.fedora43
+      build_packages: ["glibc"]
 
   - &fedora_stable
     <<: *fedora_rawhide
@@ -766,6 +770,9 @@ distros:
     release_version: "{{.Major}}"
     module_platform_id: "platform:f{{.Major}}"
     ostree_ref_tmpl: "fedora/{{.Major}}/%s/iot"
+    runner:
+      <<: *fedora_runner
+      name: org.osbuild.fedora{{.Major}}
 
   - name: centos-10
     product: "CentOS Stream"
@@ -805,6 +812,10 @@ func TestDistrosLoadingExact(t *testing.T) {
 		Product:          "Fedora",
 		OSTreeRefTmpl:    "fedora/43/%s/iot",
 		DefsPath:         "fedora",
+		Runner: runner.RunnerConf{
+			Name:          "org.osbuild.fedora43",
+			BuildPackages: []string{"glibc"},
+		},
 	}, distro)
 
 	distro, err = defs.Distro("centos-10")
@@ -840,6 +851,23 @@ func TestDistrosLoadingFactoryCompat(t *testing.T) {
 		OSTreeRefTmpl:    "rhel/10/%s/edge",
 		DefsPath:         "rhel-10",
 		DefaultFSType:    disk.FS_XFS,
+	}, distro)
+
+	distro, err = defs.Distro("fedora-40")
+	require.NoError(t, err)
+	assert.Equal(t, &defs.DistroYAML{
+		Name:             "fedora-40",
+		Match:            "fedora-*",
+		OsVersion:        "40",
+		ReleaseVersion:   "40",
+		ModulePlatformID: "platform:f40",
+		Product:          "Fedora",
+		OSTreeRefTmpl:    "fedora/40/%s/iot",
+		DefsPath:         "fedora",
+		Runner: runner.RunnerConf{
+			Name:          "org.osbuild.fedora40",
+			BuildPackages: []string{"glibc"},
+		},
 	}, distro)
 }
 
