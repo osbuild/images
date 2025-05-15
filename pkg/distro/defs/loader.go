@@ -63,6 +63,7 @@ type DistroYAML struct {
 	ModulePlatformID string `yaml:"module_platform_id"`
 	Product          string `yaml:"product"`
 	OSTreeRefTmpl    string `yaml:"ostree_ref_tmpl"`
+	ISOLabelTmpl     string `yaml:"iso_label_tmpl"`
 
 	Runner runner.RunnerConf `yaml:"runner"`
 
