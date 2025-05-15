@@ -757,6 +757,7 @@ distros:
     product: "Fedora"
     ostree_ref_tmpl: "fedora/43/%s/iot"
     defs_path: fedora
+    iso_label_tmpl: "{{.Product}}-ISO"
     runner: &fedora_runner
       name: org.osbuild.fedora43
       build_packages: ["glibc"]
@@ -812,6 +813,7 @@ func TestDistrosLoadingExact(t *testing.T) {
 		Product:          "Fedora",
 		OSTreeRefTmpl:    "fedora/43/%s/iot",
 		DefsPath:         "fedora",
+		ISOLabelTmpl:     "{{.Product}}-ISO",
 		Runner: runner.RunnerConf{
 			Name:          "org.osbuild.fedora43",
 			BuildPackages: []string{"glibc"},
@@ -864,6 +866,7 @@ func TestDistrosLoadingFactoryCompat(t *testing.T) {
 		Product:          "Fedora",
 		OSTreeRefTmpl:    "fedora/40/%s/iot",
 		DefsPath:         "fedora",
+		ISOLabelTmpl:     "{{.Product}}-ISO",
 		Runner: runner.RunnerConf{
 			Name:          "org.osbuild.fedora40",
 			BuildPackages: []string{"glibc"},

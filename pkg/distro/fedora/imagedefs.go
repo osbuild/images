@@ -18,7 +18,7 @@ func newImageTypeFrom(d *distribution, ar *architecture, imgYAML defs.ImageTypeY
 		bootable:               imgYAML.Bootable,
 		bootISO:                imgYAML.BootISO,
 		rpmOstree:              imgYAML.RPMOSTree,
-		isoLabel:               getISOLabelFunc(imgYAML.ISOLabel),
+		isoLabel:               d.getISOLabelFunc(imgYAML.ISOLabel),
 		defaultSize:            imgYAML.DefaultSize,
 		buildPipelines:         imgYAML.BuildPipelines,
 		payloadPipelines:       imgYAML.PayloadPipelines,
