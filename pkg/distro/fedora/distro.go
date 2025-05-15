@@ -214,15 +214,15 @@ func (a *architecture) GetImageType(name string) (distro.ImageType, error) {
 func (a *architecture) addImageType(platform platform.Platform, it imageType) error {
 	it.arch = a
 	it.platform = platform
-	a.imageTypes[it.name] = &it
-	for _, alias := range it.nameAliases {
+	a.imageTypes[it.Name()] = &it
+	for _, alias := range it.ImageTypeYAML.NameAliases {
 		if a.imageTypeAliases == nil {
 			a.imageTypeAliases = map[string]string{}
 		}
 		if existingAliasFor, exists := a.imageTypeAliases[alias]; exists {
-			return fmt.Errorf("image type alias '%s' for '%s' is already defined for another image type '%s'", alias, it.name, existingAliasFor)
+			return fmt.Errorf("image type alias '%s' for '%s' is already defined for another image type '%s'", alias, it.Name(), existingAliasFor)
 		}
-		a.imageTypeAliases[alias] = it.name
+		a.imageTypeAliases[alias] = it.Name()
 	}
 	return nil
 }
