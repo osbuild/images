@@ -1,8 +1,10 @@
 package fedora
 
 import (
+	"bytes"
 	"fmt"
 	"sort"
+	"text/template"
 
 	// we cannot use "maps" yet, as it needs go1.23
 	"golang.org/x/exp/maps"
@@ -48,13 +50,24 @@ type distribution struct {
 	defaultImageConfig *distro.ImageConfig
 }
 
-func getISOLabelFunc(variant string) isoLabelFunc {
-	const ISO_LABEL = "%s-%s-%s-%s"
-
+func (d *distribution) getISOLabelFunc(isoLabel string) isoLabelFunc {
 	return func(t *imageType) string {
-		return fmt.Sprintf(ISO_LABEL, t.Arch().Distro().Product(), t.Arch().Distro().OsVersion(), variant, t.Arch().Name())
+		type inputs struct {
+			Product      string
+			OsVersion    string
+			Arch         string
+			ImgTypeLabel string
+		}
+		templ := common.Must(template.New("iso-label").Parse(d.DistroYAML.ISOLabelTmpl))
+		var buf bytes.Buffer
+		templ.Execute(&buf, inputs{
+			Product:      t.Arch().Distro().Product(),
+			OsVersion:    t.Arch().Distro().OsVersion(),
+			Arch:         t.Arch().Name(),
+			ImgTypeLabel: isoLabel,
+		})
+		return buf.String()
 	}
-
 }
 
 func newDistro(version int) (distro.Distro, error) {
