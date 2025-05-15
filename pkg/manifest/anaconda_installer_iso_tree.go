@@ -552,6 +552,19 @@ func (p *AnacondaInstallerISOTree) bootcInstallerKickstartStages() []*osbuild.St
 		panic(fmt.Sprintf("failed to create kickstart stage options: %v", err))
 	}
 
+	// Workaround for lack of --target-imgref in Anaconda, xref https://github.com/osbuild/images/issues/380
+	kickstartOptions.Post = append(kickstartOptions.Post, osbuild.PostOptions{
+		ErrorOnFail: true,
+		Commands: []string{
+			fmt.Sprintf("bootc switch --mutate-in-place --transport registry %s", p.containerSpec.LocalName),
+			"# used during automatic image testing as finished marker",
+			"if [ -c /dev/ttyS0 ]; then",
+			"  # continue on errors here, because we used to omit --erroronfail",
+			`  echo "Install finished" > /dev/ttyS0 || true`,
+			"fi",
+		},
+	})
+
 	// kickstart.New() already validates the options but they may have been
 	// modified since then, so validate them before we create the stages
 	if err := p.Kickstart.Validate(); err != nil {
@@ -609,19 +622,6 @@ func (p *AnacondaInstallerISOTree) bootcInstallerKickstartStages() []*osbuild.St
 			{BootProto: "dhcp", Device: "link", Activate: common.ToPtr(true), OnBoot: "on"},
 		}
 	}
-
-	// Workaround for lack of --target-imgref in Anaconda, xref https://github.com/osbuild/images/issues/380
-	kickstartOptions.Post = append(kickstartOptions.Post, osbuild.PostOptions{
-		ErrorOnFail: true,
-		Commands: []string{
-			fmt.Sprintf("bootc switch --mutate-in-place --transport registry %s", p.containerSpec.LocalName),
-			"# used during automatic image testing as finished marker",
-			"if [ -c /dev/ttyS0 ]; then",
-			"  # continue on errors here, because we used to omit --erroronfail",
-			`  echo "Install finished" > /dev/ttyS0 || true`,
-			"fi",
-		},
-	})
 
 	stages = append(stages, osbuild.NewKickstartStage(kickstartOptions))
 
