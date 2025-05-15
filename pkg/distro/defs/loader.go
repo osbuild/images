@@ -32,12 +32,73 @@ var (
 	ErrNoPartitionTableForArch    = errors.New("no partition table for arch")
 )
 
-//go:embed */*.yaml
+//go:embed *.yaml */*.yaml
 var data embed.FS
 
-var DataFS fs.FS = data
+var defaultDataFS fs.FS = data
 
-type toplevelYAML struct {
+// distrosYAML defines all supported YAML based distributions
+type distrosYAML struct {
+	Distros []DistroYAML
+}
+
+func dataFS() fs.FS {
+	// XXX: this is a short term measure, pass a set of
+	// searchPaths down the stack instead
+	var dataFS fs.FS = defaultDataFS
+	if overrideDir := experimentalflags.String("yamldir"); overrideDir != "" {
+		olog.Printf("WARNING: using experimental override dir %q", overrideDir)
+		dataFS = os.DirFS(overrideDir)
+	}
+	return dataFS
+}
+
+type DistroYAML struct {
+	Name             string `yaml:"name"`
+	Codename         string `yaml:"codename"`
+	Preview          bool   `yaml:"preview"`
+	OsVersion        string `yaml:"os_version"`
+	ReleaseVersion   string `yaml:"release_version"`
+	ModulePlatformID string `yaml:"module_platform_id"`
+	Product          string `yaml:"product"`
+	OSTreeRefTmpl    string `yaml:"ostree_ref_tmpl"`
+
+	// directory with the actual image defintions, we separate that
+	// so that we can point the "centos-10" distro to the "./rhel-10"
+	// image types file/directory.
+	DefsPath string `yaml:"defs_path"`
+}
+
+// Distros return the YAML defined distributions
+func Distros() (map[string]DistroYAML, error) {
+	f, err := dataFS().Open("distros.yaml")
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	decoder := yaml.NewDecoder(f)
+	decoder.KnownFields(true)
+
+	var distros distrosYAML
+	if err := decoder.Decode(&distros); err != nil {
+		return nil, err
+	}
+	m := make(map[string]DistroYAML, len(distros.Distros))
+	for _, distro := range distros.Distros {
+		if _, ok := m[distro.Name]; ok {
+			return nil, fmt.Errorf("duplicated distro name found: %v", distro.Name)
+		}
+		m[distro.Name] = distro
+	}
+
+	return m, nil
+}
+
+// imageTypesYAML describes the image types for a given distribution
+// family. Note that multiple distros may use the same image types,
+// e.g. centos/rhel
+type imageTypesYAML struct {
 	ImageConfig distroImageConfig    `yaml:"image_config,omitempty"`
 	ImageTypes  map[string]imageType `yaml:"image_types"`
 	Common      map[string]any       `yaml:".common,omitempty"`
@@ -360,21 +421,13 @@ func splitDistroNameVer(distroNameVer string) (string, string) {
 	return distroNameVer[:idx], distroNameVer[idx+1:]
 }
 
-func load(distroNameVer string) (*toplevelYAML, error) {
+func load(distroNameVer string) (*imageTypesYAML, error) {
 	// we need to split from the right for "centos-stream-10" like
 	// distro names, sadly go has no rsplit() so we do it manually
 	// XXX: we cannot use distroidparser here because of import cycles
 	distroName, distroVersion := splitDistroNameVer(distroNameVer)
 	distroNameMajorVer := strings.SplitN(distroNameVer, ".", 2)[0]
 	distroMajorVer := strings.SplitN(distroVersion, ".", 2)[0]
-
-	// XXX: this is a short term measure, pass a set of
-	// searchPaths down the stack instead
-	var dataFS fs.FS = DataFS
-	if overrideDir := experimentalflags.String("yamldir"); overrideDir != "" {
-		olog.Printf("WARNING: using experimental override dir %q", overrideDir)
-		dataFS = os.DirFS(overrideDir)
-	}
 
 	// XXX: this is only needed temporary until we have a "distros.yaml"
 	// that describes some high-level properties of each distro
@@ -400,7 +453,7 @@ func load(distroNameVer string) (*toplevelYAML, error) {
 		return nil, fmt.Errorf("unsupported distro in loader %q (add to loader.go)", distroName)
 	}
 
-	f, err := dataFS.Open(filepath.Join(baseDir, "distro.yaml"))
+	f, err := dataFS().Open(filepath.Join(baseDir, "distro.yaml"))
 	if err != nil {
 		return nil, err
 	}
@@ -411,7 +464,7 @@ func load(distroNameVer string) (*toplevelYAML, error) {
 
 	// each imagetype can have multiple package sets, so that we can
 	// use yaml aliases/anchors to de-duplicate them
-	var toplevel toplevelYAML
+	var toplevel imageTypesYAML
 	if err := decoder.Decode(&toplevel); err != nil {
 		return nil, err
 	}
