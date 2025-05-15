@@ -324,7 +324,7 @@ func (t *imageType) Manifest(bp *blueprint.Blueprint,
 	if options.UseBootstrapContainer {
 		mf.DistroBootstrapRef = bootstrapContainerFor(t)
 	}
-	_, err = img.InstantiateManifest(&mf, repos, t.arch.distro.runner, rng)
+	_, err = img.InstantiateManifest(&mf, repos, &t.arch.distro.DistroYAML.Runner, rng)
 	if err != nil {
 		return nil, nil, err
 	}
