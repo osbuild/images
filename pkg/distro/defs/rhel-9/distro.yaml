@@ -409,7 +409,7 @@
           fstab_freq: 0
           fstab_passno: 2
       - &default_partition_table_part_boot
-        size:  1_073_741_824  # 1 GiB
+        size: 1_073_741_824  # 1 GiB
         type: *xboot_ldr_partition_guid
         uuid: *data_partition_uuid
         payload_type: "filesystem"
@@ -531,7 +531,7 @@ image_config:
 image_types:
   # XXX: not a real pkgset but the "os" pipeline pkgset for image-installer
   # find a nicer way to represent this
-  bare_metal: 
+  bare_metal:
     package_sets: &bare_metal_pkgset
       os:
         - *distro_build_pkgset
@@ -806,13 +806,13 @@ image_types:
     <<: *ec2
     package_sets:
       os:
-         - *ec2_base_pkgset
-         - *sap_pkgset
-         - include:
-             - "libcanberra-gtk2"
-           exclude:
-             # COMPOSER-1829
-             - "firewalld"
+        - *ec2_base_pkgset
+        - *sap_pkgset
+        - include:
+            - "libcanberra-gtk2"
+          exclude:
+            # COMPOSER-1829
+            - "firewalld"
 
   wsl: &wsl
     package_sets:

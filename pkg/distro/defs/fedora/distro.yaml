@@ -184,8 +184,8 @@
 
   disk_sizes:
     default_required_partition_sizes: &default_required_dir_sizes
-      "/": 1_073_741_824  # 1 * datasizes.GiB
-      "/usr": 2_147_483_648 # 2 * datasizes.GiB
+      "/": 1_073_741_824     # 1 * datasizes.GiB
+      "/usr": 2_147_483_648  # 2 * datasizes.GiB
 
   partitioning:
     ids:
@@ -317,7 +317,7 @@
         payload:
           <<: *iot_base_partition_table_part_root_payload
           fstab_options: "defaults,ro"
-      
+
     default_partition_tables: &default_partition_tables
       x86_64:
         uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
@@ -495,10 +495,10 @@ image_types:
     partition_table:
       <<: *default_partition_tables
     package_sets:
-     os:
-       - *cloud_base_pkgset
-       - include:
-           - "qemu-guest-agent"
+      os:
+        - *cloud_base_pkgset
+        - include:
+            - "qemu-guest-agent"
     platforms:
       - <<: *x86_64_bios_platform
         image_format: "qcow2"
@@ -813,7 +813,13 @@ image_types:
             - "keyutils"          # Manipulating the kernel keyring; used by bootc
             - "libsss_sudo"       # allow communication between sudo and SSSD for caching sudo rules by SSSD
             - "linux-firmware"    # linux-firmware now a recommends so let's explicitly include it
-            - "logrotate"         # There are things that write outside of the journal still (such as the classic wtmp etc.). auditd also writes outside the journal but it has its own log rotation.  Anything package layered will also tend to expect files dropped in /etc/logrotate.d to work. Really this is a legacy thing but if we don't have it then people's disks will slowly fill up with logs.
+            - "logrotate"         # There are things that write outside of the journal still
+                                  # (such as the classic wtmp etc.). auditd also writes outside
+                                  # the journal but it has its own log rotation.  Anything
+                                  # package layered will also tend to expect files dropped in
+                                  # /etc/logrotate.d to work. Really this is a legacy thing but
+                                  # if we don't have it then people's disks will slowly fill up
+                                  # with logs.
             - "lsof"
             - "lvm2"                       # Storage configuration/management
             - "nano"                       # default editor
@@ -903,7 +909,7 @@ image_types:
         uefi_vendor: "fedora"
         image_format: "raw"
         packages:
-          # XXX: duplicatd from aarch64_platform 
+          # XXX: duplicatd from aarch64_platform
           - "dracut-config-generic"
           - "efibootmgr"
           - "grub2-efi-aa64"
@@ -930,7 +936,7 @@ image_types:
       grub2_config:
         timeout: 5
       install_weak_deps: false
-      mount_units: true      
+      mount_units: true
       enabled_services:
         - "NetworkManager.service"
         - "initial-setup.service"
@@ -1229,7 +1235,7 @@ image_types:
       no_selinux: true
       exclude_docs: true
       locale: "C.UTF-8"
-      timezone: "Etc/UTC"  
+      timezone: "Etc/UTC"
     package_sets:
       os:
         - include:
@@ -1359,48 +1365,48 @@ image_types:
       <<: *iot_simplified_installer_partition_tables
     package_sets:
       installer:
-      - *installer_pkgset
-      - include:
-          - "attr"
-          - "basesystem"
-          - "binutils"
-          - "bsdtar"
-          - "clevis-dracut"
-          - "clevis-luks"
-          - "cloud-utils-growpart"
-          - "coreos-installer"
-          - "coreos-installer-dracut"
-          - "coreutils"
-          - "device-mapper-multipath"
-          - "dosfstools"
-          - "dracut-live"
-          - "e2fsprogs"
-          - "fcoe-utils"
-          - "fdo-init"
-          - "fedora-logos"
-          - "gdisk"
-          - "gzip"
-          - "ima-evm-utils"
-          - "iproute"
-          - "iptables"
-          - "iputils"
-          - "iscsi-initiator-utils"
-          - "keyutils"
-          - "lldpad"
-          - "lvm2"
-          - "mdadm"
-          - "nss-softokn"
-          - "policycoreutils"
-          - "policycoreutils-python-utils"
-          - "procps-ng"
-          - "rootfiles"
-          - "setools-console"
-          - "sudo"
-          - "traceroute"
-          - "util-linux"
-          - "shadow-utils"  # includes passwd
-        condition:
-          version_less_than:
-            "41":
-              include:
-                - "dnsmasq"  # deprecated for F41+
+        - *installer_pkgset
+        - include:
+            - "attr"
+            - "basesystem"
+            - "binutils"
+            - "bsdtar"
+            - "clevis-dracut"
+            - "clevis-luks"
+            - "cloud-utils-growpart"
+            - "coreos-installer"
+            - "coreos-installer-dracut"
+            - "coreutils"
+            - "device-mapper-multipath"
+            - "dosfstools"
+            - "dracut-live"
+            - "e2fsprogs"
+            - "fcoe-utils"
+            - "fdo-init"
+            - "fedora-logos"
+            - "gdisk"
+            - "gzip"
+            - "ima-evm-utils"
+            - "iproute"
+            - "iptables"
+            - "iputils"
+            - "iscsi-initiator-utils"
+            - "keyutils"
+            - "lldpad"
+            - "lvm2"
+            - "mdadm"
+            - "nss-softokn"
+            - "policycoreutils"
+            - "policycoreutils-python-utils"
+            - "procps-ng"
+            - "rootfiles"
+            - "setools-console"
+            - "sudo"
+            - "traceroute"
+            - "util-linux"
+            - "shadow-utils"  # includes passwd
+          condition:
+            version_less_than:
+              "41":
+                include:
+                  - "dnsmasq"  # deprecated for F41+
