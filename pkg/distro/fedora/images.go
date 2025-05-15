@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
@@ -438,7 +437,7 @@ func liveInstallerImage(workload workload.Workload,
 	img.Variant = "Workstation"
 	img.OSVersion = d.OsVersion()
 	img.Release = fmt.Sprintf("%s %s", d.DistroYAML.Product, d.OsVersion())
-	img.Preview = common.VersionGreaterThanOrEqual(img.OSVersion, VERSION_BRANCHED)
+	img.Preview = d.DistroYAML.Preview
 
 	var err error
 	img.ISOLabel, err = t.ISOLabel()
@@ -461,10 +460,12 @@ func liveInstallerImage(workload workload.Workload,
 	if err != nil {
 		return nil, err
 	}
-
 	if installerConfig != nil {
 		img.AdditionalDracutModules = append(img.AdditionalDracutModules, installerConfig.AdditionalDracutModules...)
 		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
+		if installerConfig.SquashfsRootfs != nil && *installerConfig.SquashfsRootfs {
+			img.RootfsType = manifest.SquashfsRootfs
+		}
 	}
 
 	imgConfig := t.getDefaultImageConfig()
@@ -534,6 +535,9 @@ func imageInstallerImage(workload workload.Workload,
 	if installerConfig != nil {
 		img.AdditionalDracutModules = append(img.AdditionalDracutModules, installerConfig.AdditionalDracutModules...)
 		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
+		if installerConfig.SquashfsRootfs != nil && *installerConfig.SquashfsRootfs {
+			img.RootfsType = manifest.SquashfsRootfs
+		}
 	}
 
 	// On Fedora anaconda needs dbus-broker, but isn't added when dracut runs.
@@ -549,7 +553,7 @@ func imageInstallerImage(workload workload.Workload,
 	img.OSVersion = d.OsVersion()
 	img.Release = fmt.Sprintf("%s %s", d.DistroYAML.Product, d.OsVersion())
 
-	img.Preview = common.VersionGreaterThanOrEqual(img.OSVersion, VERSION_BRANCHED)
+	img.Preview = d.DistroYAML.Preview
 
 	img.ISOLabel, err = t.ISOLabel()
 	if err != nil {
@@ -760,6 +764,9 @@ func iotInstallerImage(workload workload.Workload,
 	if installerConfig != nil {
 		img.AdditionalDracutModules = append(img.AdditionalDracutModules, installerConfig.AdditionalDracutModules...)
 		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
+		if installerConfig.SquashfsRootfs != nil && *installerConfig.SquashfsRootfs {
+			img.RootfsType = manifest.SquashfsRootfs
+		}
 	}
 
 	// On Fedora anaconda needs dbus-broker, but isn't added when dracut runs.
@@ -769,7 +776,7 @@ func iotInstallerImage(workload workload.Workload,
 	img.Variant = "IoT"
 	img.OSVersion = d.OsVersion()
 	img.Release = fmt.Sprintf("%s %s", d.DistroYAML.Product, d.OsVersion())
-	img.Preview = common.VersionGreaterThanOrEqual(img.OSVersion, VERSION_BRANCHED)
+	img.Preview = d.DistroYAML.Preview
 
 	img.ISOLabel, err = t.ISOLabel()
 	if err != nil {

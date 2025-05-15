@@ -128,7 +128,7 @@ func (t *imageType) BootMode() platform.BootMode {
 }
 
 func (t *imageType) BasePartitionTable() (*disk.PartitionTable, error) {
-	return defs.PartitionTable(t, VersionReplacements())
+	return defs.PartitionTable(t, nil)
 }
 
 func (t *imageType) getPartitionTable(
@@ -227,7 +227,7 @@ func (t *imageType) Manifest(bp *blueprint.Blueprint,
 
 	// don't add any static packages if Minimal was selected
 	if !bp.Minimal {
-		pkgSets, err := defs.PackageSets(t, VersionReplacements())
+		pkgSets, err := defs.PackageSets(t, nil)
 		if err != nil {
 			return nil, nil, err
 		}
