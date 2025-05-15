@@ -569,12 +569,13 @@ func ImageConfig(distroNameVer, archName, typeName string, replacements map[stri
 		if archCnf, ok := cond.Architecture[archName]; ok {
 			imgConfig = archCnf.InheritFrom(imgConfig)
 		}
-		for ltVer, ltConf := range cond.VersionLessThan {
+		for _, ltVer := range versionLessThanSortedKeys(cond.VersionLessThan) {
+			ltOverrides := cond.VersionLessThan[ltVer]
 			if r, ok := replacements[ltVer]; ok {
 				ltVer = r
 			}
 			if common.VersionLessThan(distroVersion, ltVer) {
-				imgConfig = ltConf.InheritFrom(imgConfig)
+				imgConfig = ltOverrides.InheritFrom(imgConfig)
 			}
 		}
 	}
@@ -621,12 +622,13 @@ func InstallerConfig(distroNameVer, archName, typeName string, replacements map[
 		if archCnf, ok := cond.Architecture[archName]; ok {
 			installerConfig = archCnf
 		}
-		for ltVer, ltConf := range cond.VersionLessThan {
+		for _, ltVer := range versionLessThanSortedKeys(cond.VersionLessThan) {
+			ltOverrides := cond.VersionLessThan[ltVer]
 			if r, ok := replacements[ltVer]; ok {
 				ltVer = r
 			}
 			if common.VersionLessThan(distroVersion, ltVer) {
-				installerConfig = ltConf
+				installerConfig = ltOverrides
 			}
 		}
 	}
