@@ -48,7 +48,7 @@ func GenFsStages(pt *disk.PartitionTable, filename string) []*Stage {
 					UUID:  e.UUID,
 					Label: e.Label,
 				}
-				if slices.Contains(e.MkfsOptions, "verity") {
+				if slices.Contains(e.MkfsOptions, disk.MkfsVerity) {
 					options.Verity = common.ToPtr(true)
 				}
 

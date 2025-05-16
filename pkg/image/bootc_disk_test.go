@@ -85,7 +85,7 @@ func makeBootcDiskImageOsbuildManifest(t *testing.T, opts *bootcDiskImageTestOpt
 
 	m := &manifest.Manifest{}
 	runi := &runner.Fedora{}
-	err := img.InstantiateManifestFromContainers(m, containers, containers, runi, nil)
+	err := img.InstantiateManifestFromContainers(m, containers, runi, nil)
 	require.Nil(t, err)
 
 	fakeSourceSpecs := map[string][]container.Spec{
