@@ -749,6 +749,7 @@ distros:
   - &fedora_unstable
     name: fedora-43
     codename: "not-used-in-fedora"
+    vendor: "some-vendor"
     preview: true
     os_version: 43
     release_version: 43
@@ -772,6 +773,7 @@ func TestDistrosLoadingSmoke(t *testing.T) {
 	assert.Equal(t, defs.DistroYAML{
 		Name:             "fedora-43",
 		Codename:         "not-used-in-fedora",
+		Vendor:           "some-vendor",
 		Preview:          true,
 		OsVersion:        "43",
 		ReleaseVersion:   "43",
