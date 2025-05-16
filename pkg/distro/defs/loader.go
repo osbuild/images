@@ -57,6 +57,7 @@ func dataFS() fs.FS {
 type DistroYAML struct {
 	Name             string `yaml:"name"`
 	Codename         string `yaml:"codename"`
+	Vendor           string `yaml:"vendor"`
 	Preview          bool   `yaml:"preview"`
 	OsVersion        string `yaml:"os_version"`
 	ReleaseVersion   string `yaml:"release_version"`
