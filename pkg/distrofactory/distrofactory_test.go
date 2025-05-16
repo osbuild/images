@@ -58,8 +58,8 @@ func TestGetDistroDefaultList(t *testing.T) {
 			expectedDistroName: "rhel-10.10",
 		},
 		{
-			strID:              "fedora-38",
-			expectedDistroName: "fedora-38",
+			strID:              "fedora-42",
+			expectedDistroName: "fedora-42",
 		},
 	}
 
