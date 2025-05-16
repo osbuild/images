@@ -21,6 +21,7 @@ import (
 	"github.com/osbuild/images/pkg/distro/test_distro"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
+	"github.com/osbuild/images/pkg/runner"
 )
 
 func makeTestImageType(t *testing.T) distro.ImageType {
@@ -626,6 +627,7 @@ image_types:
         - base-dracut-mod1
       additional_drivers:
         - base-drv1
+      squashfs_rootfs: true
 `
 
 func TestImageTypeInstallerConfig(t *testing.T) {
@@ -641,6 +643,7 @@ func TestImageTypeInstallerConfig(t *testing.T) {
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDracutModules: []string{"base-dracut-mod1"},
 		AdditionalDrivers:       []string{"base-drv1"},
+		SquashfsRootfs:          common.ToPtr(true),
 	}, installerConfig)
 }
 
@@ -731,4 +734,69 @@ func TestImageTypeInstallerConfigOverrideArch(t *testing.T) {
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDrivers: []string{"override-drv1"},
 	}, installerConfig)
+}
+
+func makeFakeDistrosYAML(t *testing.T, content string) string {
+	tmpdir := t.TempDir()
+	distrosPath := filepath.Join(tmpdir, "distros.yaml")
+	err := os.WriteFile(distrosPath, []byte(content), 0644)
+	assert.NoError(t, err)
+	return tmpdir
+}
+
+var fakeDistrosYAML = `
+distros:
+  - &fedora_unstable
+    name: fedora-43
+    codename: "not-used-in-fedora"
+    vendor: "some-vendor"
+    preview: true
+    os_version: 43
+    release_version: 43
+    module_platform_id: platform:f43
+    product: "Fedora"
+    ostree_ref_tmpl: "fedora/43/%s/iot"
+    defs_path: fedora
+    iso_label_tmpl: "{{.Product}}-ISO"
+    runner:
+      name: org.osbuild.fedora43
+      build_packages: ["glibc"]
+`
+
+func TestDistrosLoadingSmoke(t *testing.T) {
+	baseDir := makeFakeDistrosYAML(t, fakeDistrosYAML)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	distros, err := defs.Distros()
+	require.NoError(t, err)
+	assert.Equal(t, defs.DistroYAML{
+		Name:             "fedora-43",
+		Codename:         "not-used-in-fedora",
+		Vendor:           "some-vendor",
+		Preview:          true,
+		OsVersion:        "43",
+		ReleaseVersion:   "43",
+		ModulePlatformID: "platform:f43",
+		Product:          "Fedora",
+		OSTreeRefTmpl:    "fedora/43/%s/iot",
+		DefsPath:         "fedora",
+		ISOLabelTmpl:     "{{.Product}}-ISO",
+		Runner: runner.RunnerConf{
+			Name:          "org.osbuild.fedora43",
+			BuildPackages: []string{"glibc"},
+		},
+	}, distros["fedora-43"])
+}
+
+func TestDistrosLoadingError(t *testing.T) {
+	duplicatedDistrosYAML := fakeDistrosYAML + `
+  - name: fedora-43
+`
+	baseDir := makeFakeDistrosYAML(t, duplicatedDistrosYAML)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	_, err := defs.Distros()
+	assert.EqualError(t, err, "duplicated distro name found: fedora-43")
 }
