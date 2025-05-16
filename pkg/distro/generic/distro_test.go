@@ -1,4 +1,4 @@
-package fedora_test
+package generic_test
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/distro_test_common"
-	"github.com/osbuild/images/pkg/distro/fedora"
+	"github.com/osbuild/images/pkg/distro/generic"
 )
 
 type fedoraFamilyDistro struct {
@@ -23,11 +23,11 @@ type fedoraFamilyDistro struct {
 var fedoraFamilyDistros = []fedoraFamilyDistro{
 	{
 		name:   "fedora-40",
-		distro: fedora.DistroFactory("fedora-40"),
+		distro: generic.DistroFactory("fedora-40"),
 	},
 	{
 		name:   "fedora-41",
-		distro: fedora.DistroFactory("fedora-41"),
+		distro: generic.DistroFactory("fedora-41"),
 	},
 }
 
@@ -993,7 +993,7 @@ func TestDistroFactory(t *testing.T) {
 	testCases := []testCase{
 		{
 			strID:    "fedora-40",
-			expected: fedora.DistroFactory("fedora-40"),
+			expected: generic.DistroFactory("fedora-40"),
 		},
 		{
 			strID:    "fedora-40.1",
@@ -1023,7 +1023,7 @@ func TestDistroFactory(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.strID, func(t *testing.T) {
-			d := fedora.DistroFactory(tc.strID)
+			d := generic.DistroFactory(tc.strID)
 			if tc.expected == nil {
 				assert.Nil(t, d)
 			} else {
