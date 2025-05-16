@@ -1,7 +1,8 @@
-package fedora
+package generic
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"sort"
 	"text/template"
@@ -33,11 +34,14 @@ const (
 )
 
 var (
+	// XXX: move into defs.DistroYAML
 	oscapProfileAllowList = []oscap.Profile{
 		oscap.Ospp,
 		oscap.PciDss,
 		oscap.Standard,
 	}
+
+	ErrDistroNotFound = errors.New("distribution not found")
 )
 
 // distribution implements the distro.Distro interface
@@ -70,13 +74,14 @@ func (d *distribution) getISOLabelFunc(isoLabel string) isoLabelFunc {
 	}
 }
 
-func newDistro(version int) (distro.Distro, error) {
-	distros := common.Must(defs.Distros())
-	nameVer := fmt.Sprintf("fedora-%d", version)
+func newDistro(nameVer string) (distro.Distro, error) {
+	distros, err := defs.Distros()
+	if err != nil {
+		return nil, err
+	}
 	distroYAML, ok := distros[nameVer]
 	if !ok {
-		err := fmt.Errorf("cannot find %s in %q", nameVer, maps.Keys(distros))
-		panic(err)
+		return nil, fmt.Errorf("%w: no %s in %q", ErrDistroNotFound, nameVer, maps.Keys(distros))
 	}
 
 	rd := &distribution{
@@ -228,28 +233,13 @@ func (a *architecture) Distro() distro.Distro {
 	return a.distro
 }
 
-func ParseID(idStr string) (*distro.ID, error) {
-	id, err := distro.ParseID(idStr)
-	if err != nil {
-		return nil, err
-	}
-
-	if id.Name != "fedora" {
-		return nil, fmt.Errorf("invalid distro name: %s", id.Name)
-	}
-
-	if id.MinorVersion != -1 {
-		return nil, fmt.Errorf("fedora distro does not support minor versions")
-	}
-
-	return id, nil
-}
-
 func DistroFactory(idStr string) distro.Distro {
-	id, err := ParseID(idStr)
-	if err != nil {
+	distro, err := newDistro(idStr)
+	if errors.Is(err, ErrDistroNotFound) {
 		return nil
 	}
-
-	return common.Must(newDistro(id.MajorVersion))
+	if err != nil {
+		panic(err)
+	}
+	return distro
 }

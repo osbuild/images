@@ -449,12 +449,21 @@ func load(distroNameVer string) (*imageTypesYAML, error) {
 		// symlinks in "go:embed" so we have to have this slightly ugly
 		// workaround
 		baseDir = fmt.Sprintf("rhel-%s", distroVersion)
-	case "fedora", "test-distro":
+	case "test-distro":
 		// our other distros just have a single yaml dir per distro
 		// and use condition.version_gt etc
 		baseDir = distroName
-	default:
-		return nil, fmt.Errorf("unsupported distro in loader %q (add to loader.go)", distroName)
+	}
+
+	// take the base path from the distros.yaml
+	distros, err := Distros()
+	if err != nil && !os.IsNotExist(err) {
+		return nil, err
+	}
+	if distro, ok := distros[distroNameVer]; ok {
+		if p := distro.DefsPath; p != "" {
+			baseDir = p
+		}
 	}
 
 	f, err := dataFS().Open(filepath.Join(baseDir, "distro.yaml"))
