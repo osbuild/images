@@ -173,7 +173,8 @@
       "server-vmdk",
       "wsl",
       "iot-bootable-container",
-      "iot-container"
+      "iot-container",
+      "everything-netinst"
     ]
   },
   "./configs/iot-customizations-full.json": {
