@@ -189,7 +189,7 @@ func versionLessThanSortedKeys[T any](m map[string]T) []string {
 func DistroImageConfig(distroNameVer string) (*distro.ImageConfig, error) {
 	toplevel, err := load(distroNameVer)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w while loading %s", err, distroNameVer)
 	}
 	imgConfig := toplevel.ImageConfig.Default
 
