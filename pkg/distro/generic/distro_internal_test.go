@@ -1,4 +1,4 @@
-package fedora
+package generic
 
 import (
 	"math/rand"

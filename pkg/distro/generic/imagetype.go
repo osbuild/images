@@ -1,4 +1,4 @@
-package fedora
+package generic
 
 import (
 	"errors"
@@ -158,9 +158,10 @@ func (t *imageType) getPartitionTable(
 		partOptions := &disk.CustomPartitionTableOptions{
 			PartitionTableType: basePartitionTable.Type, // PT type is not customizable, it is determined by the base PT for an image type or architecture
 			BootMode:           t.BootMode(),
-			DefaultFSType:      disk.FS_EXT4, // default fs type for Fedora
-			RequiredMinSizes:   t.ImageTypeYAML.RequiredPartitionSizes,
-			Architecture:       t.platform.GetArch(),
+			// XXX: infere from YAML?
+			DefaultFSType:    disk.FS_EXT4, // default fs type for Fedora
+			RequiredMinSizes: t.ImageTypeYAML.RequiredPartitionSizes,
+			Architecture:     t.platform.GetArch(),
 		}
 		return disk.NewCustomPartitionTable(partitioning, partOptions, rng)
 	}

@@ -1,4 +1,4 @@
-package fedora
+package generic
 
 import (
 	"fmt"
@@ -24,14 +24,7 @@ import (
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
-// HELPERS
-
-func osCustomizations(
-	t *imageType,
-	osPackageSet rpmmd.PackageSet,
-	containers []container.SourceSpec,
-	c *blueprint.Customizations) (manifest.OSCustomizations, error) {
-
+func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, containers []container.SourceSpec, c *blueprint.Customizations) (manifest.OSCustomizations, error) {
 	imageConfig := t.getDefaultImageConfig()
 
 	osc := manifest.OSCustomizations{}
