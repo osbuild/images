@@ -1275,8 +1275,10 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			customizations: &blueprint.DiskCustomization{
 				Partitions: []blueprint.PartitionCustomization{
 					{
-						MinSize:  20 * datasizes.MiB,
-						PartType: "01234567-89ab-cdef-0123-456789abcdef", // overrides the inferred type
+						MinSize:   20 * datasizes.MiB,
+						PartType:  "01234567-89ab-cdef-0123-456789abcdef", // overrides the inferred type
+						PartLabel: "TheLabel",
+						PartUUID:  "76543210-89ab-cdef-0123-456789abcdef", // don't generate uuid
 						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
 							Mountpoint: "/data",
 							Label:      "data",
@@ -1323,7 +1325,8 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						Size:     20 * datasizes.MiB,
 						Type:     "01234567-89ab-cdef-0123-456789abcdef",
 						Bootable: false,
-						UUID:     "a178892e-e285-4ce1-9114-55780875d64e",
+						UUID:     "76543210-89ab-cdef-0123-456789abcdef",
+						Label:    "TheLabel",
 						Payload: &disk.Filesystem{
 							Type:         "ext4",
 							Label:        "data",
@@ -1338,7 +1341,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						Start:    222 * datasizes.MiB,
 						Size:     1*datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)),
 						Type:     disk.RootPartitionX86_64GUID,
-						UUID:     "e2d3d0d0-de6b-48f9-b44c-e85ff044c6b1",
+						UUID:     "a178892e-e285-4ce1-9114-55780875d64e",
 						Bootable: false,
 						Payload: &disk.Filesystem{
 							Type:         "xfs",
