@@ -1302,9 +1302,15 @@ func NewCustomPartitionTable(customizations *blueprint.DiskCustomization, option
 	// add user customized partitions
 	for _, part := range customizations.Partitions {
 		if part.PartType != "" {
-			// check the partition type now that we also know the partition table type
+			// check the partition details now that we also know the partition table type
 			if err := part.ValidatePartitionTypeID(pt.Type.String()); err != nil {
 				return nil, fmt.Errorf("%s error validating partition type ID for %q: %w", errPrefix, part.Mountpoint, err)
+			}
+			if err := part.ValidatePartitionID(pt.Type.String()); err != nil {
+				return nil, fmt.Errorf("%s error validating partition ID for %q: %w", errPrefix, part.Mountpoint, err)
+			}
+			if err := part.ValidatePartitionLabel(pt.Type.String()); err != nil {
+				return nil, fmt.Errorf("%s error validating partition label for %q: %w", errPrefix, part.Mountpoint, err)
 			}
 		}
 
@@ -1400,6 +1406,8 @@ func addPlainPartition(pt *PartitionTable, partition blueprint.PartitionCustomiz
 
 	newpart := Partition{
 		Type:    partType,
+		UUID:    partition.PartUUID,
+		Label:   partition.PartLabel,
 		Size:    partition.MinSize,
 		Payload: payload,
 	}
@@ -1472,6 +1480,8 @@ func addLVMPartition(pt *PartitionTable, partition blueprint.PartitionCustomizat
 
 	newpart := Partition{
 		Type:     partType,
+		UUID:     partition.PartUUID,
+		Label:    partition.PartLabel,
 		Size:     partition.MinSize,
 		Bootable: false,
 		Payload:  newvg,
@@ -1505,6 +1515,8 @@ func addBtrfsPartition(pt *PartitionTable, partition blueprint.PartitionCustomiz
 	}
 	newpart := Partition{
 		Type:     partType,
+		UUID:     partition.PartUUID,
+		Label:    partition.PartLabel,
 		Bootable: false,
 		Payload:  newvol,
 		Size:     partition.MinSize,
