@@ -1055,6 +1055,103 @@ func TestPartitioningValidation(t *testing.T) {
 			},
 			expectedMsg: "invalid partitioning customizations:\ninvalid partition part_type \"93a9549d-cae1-4024-b95c-e09d77b34c60\" for partition table type \"dos\" (must be a 2-digit hex number)",
 		},
+		"happy-partition-part_uuid": {
+			partitioning: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						PartUUID: "12345678-1234-1234-1234-1234567890ab",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType:     "ext4",
+							Mountpoint: "/",
+						},
+					},
+				},
+			},
+		},
+		"unhappy-partition-part_uuid-dos": {
+			partitioning: &blueprint.DiskCustomization{
+				Type: "dos",
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						PartUUID: "12345678-1234-1234-1234-1234567890ab",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType:     "ext4",
+							Mountpoint: "/",
+						},
+					},
+				},
+			},
+			expectedMsg: "invalid partitioning customizations:\npart_type is not supported for dos partition tables",
+		},
+		"unhappy-partition-part_": {
+			partitioning: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						PartUUID: "12345678-",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType:     "ext4",
+							Mountpoint: "/",
+						},
+					},
+				},
+			},
+			expectedMsg: "invalid partitioning customizations:\ninvalid partition part_uuid \"12345678-\" (must be a valid UUID): invalid UUID length: 9",
+		},
+		"happy-partition-part_label": {
+			partitioning: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						PartLabel: "TheLabel",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType:     "ext4",
+							Mountpoint: "/",
+						},
+					},
+				},
+			},
+		},
+		"unhappy-partition-part_label-dos": {
+			partitioning: &blueprint.DiskCustomization{
+				Type: "dos",
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						PartLabel: "TheLabel",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType:     "ext4",
+							Mountpoint: "/",
+						},
+					},
+				},
+			},
+			expectedMsg: "invalid partitioning customizations:\npart_label is not supported for dos partition tables",
+		},
+		"happy-partition-part_label-long": {
+			partitioning: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						PartLabel: "123456789012345678901234567890123456",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType:     "ext4",
+							Mountpoint: "/",
+						},
+					},
+				},
+			},
+		},
+		"unhappy-partition-part_label-long": {
+			partitioning: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						PartLabel: "1234567890123456789012345678901234567",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType:     "ext4",
+							Mountpoint: "/",
+						},
+					},
+				},
+			},
+			expectedMsg: "invalid partitioning customizations:\npart_label is not a valid GPT label, it is too long",
+		},
 	}
 
 	for name := range testCases {
