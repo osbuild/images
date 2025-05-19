@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/osbuild/images/internal/common"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v3"
+
+	"github.com/osbuild/images/internal/common"
 )
 
 func TestNewChronyStage(t *testing.T) {
@@ -224,4 +227,62 @@ func TestChronyStageOptionsValidation(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestChronyStageUnmarshal(t *testing.T) {
+	inputYAML := `
+time_synchronization:
+  refclocks:
+   - driver:
+       name: "PPS"
+       device: "/dev/some-device"
+     poll: 3
+     dpoll: -2
+     offset: 0.0
+   - driver:
+       name: "SHM"
+       segment: 123
+   - driver:
+       name: "SOCK"
+       path: "/some/path"
+   - driver:
+       name: "PHC"
+       path: "/dev/ptp_hyperv"
+`
+	var opts struct {
+		TS *ChronyStageOptions `json:"time_synchronization" yaml:"time_synchronization"`
+	}
+	err := yaml.Unmarshal([]byte(inputYAML), &opts)
+	require.NoError(t, err)
+	assert.Equal(t, &ChronyStageOptions{
+		Refclocks: []ChronyConfigRefclock{
+			{
+				Driver: &ChronyDriverPPS{
+					Name:   "PPS",
+					Device: "/dev/some-device",
+				},
+				Poll:   common.ToPtr(3),
+				Dpoll:  common.ToPtr(-2),
+				Offset: common.ToPtr(0.0),
+			},
+			{
+				Driver: &ChronyDriverSHM{
+					Name:    "SHM",
+					Segment: 123,
+				},
+			},
+			{
+				Driver: &ChronyDriverSOCK{
+					Name: "SOCK",
+					Path: "/some/path",
+				},
+			},
+			{
+				Driver: &ChronyDriverPHC{
+					Name: "PHC",
+					Path: "/dev/ptp_hyperv",
+				},
+			},
+		},
+	}, opts.TS)
 }
