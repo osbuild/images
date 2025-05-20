@@ -8,14 +8,14 @@ require (
 	cloud.google.com/go/compute v1.33.0
 	cloud.google.com/go/storage v1.50.0
 	github.com/Azure/azure-sdk-for-go v68.0.0+incompatible
-	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.6.0
+	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.6.1-beta.1
 	github.com/Azure/go-autorest/autorest v0.11.30
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.13
 	github.com/BurntSushi/toml v1.5.0
 	github.com/aws/aws-sdk-go v1.55.7
-	github.com/containers/common v0.62.0
+	github.com/containers/common v1.0.1
 	github.com/containers/image/v5 v5.34.0
-	github.com/containers/storage v1.57.1
+	github.com/containers/storage v1.57.2
 	github.com/gobwas/glob v0.2.3
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/google/go-cmp v0.7.0
@@ -30,7 +30,7 @@ require (
 	github.com/spf13/pflag v1.0.6
 	github.com/stretchr/testify v1.10.0
 	github.com/ubccr/kerby v0.0.0-20230802201021-412be7bfaee5
-	github.com/vmware/govmomi v0.48.1
+	github.com/vmware/govmomi v0.49.0-alpha.0
 	golang.org/x/exp v0.0.0-20250103183323-7d7fa50e5329
 	golang.org/x/oauth2 v0.26.0
 	golang.org/x/sys v0.30.0
