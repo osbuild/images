@@ -1175,6 +1175,10 @@ image_types:
     installer_config: *default_installer_config
     image_config:
       locale: "en_US.UTF-8"
+      # ideally we would centralize the iso_rootfs_type here - but
+      # some installers (like coreos_installer) do things differently
+      # than the anaconda iso so we do not want to disturb whatever
+      # special things they expect in their images.
     package_sets:
       os:
         - *minimal_raw_pkgset
@@ -1337,6 +1341,11 @@ image_types:
     image_config:
       <<: *image_config_iot_enabled_services
       locale: "en_US.UTF-8"
+      iso_rootfs_type: "squashfs"
+      condition:
+        version_less_than:
+          41:
+            iso_rootfs_type: "squashfs-ext4"
     package_sets:
       installer:
         - *anaconda_pkgset
@@ -1365,6 +1374,12 @@ image_types:
     installer_config: *default_installer_config
     image_config:
       locale: "en_US.UTF-8"
+      iso_rootfs_type: "squashfs"
+      condition:
+        version_less_than:
+          41:
+            iso_rootfs_type: "squashfs-ext4"
+
     package_sets:
       installer:
         - include:
@@ -1419,6 +1434,13 @@ image_types:
       - "bootiso"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
+    image_config:
+      locale: "en_US.UTF-8"
+      iso_rootfs_type: "squashfs"
+      condition:
+        version_less_than:
+          41:
+            iso_rootfs_type: "squashfs-ext4"
     platforms:
       - *x86_64_installer_platform
       - *aarch64_installer_platform
