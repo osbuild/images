@@ -63,6 +63,15 @@ func TestFilenameFromType(t *testing.T) {
 			},
 		},
 		{
+			name: "server-vagrant-libvirt",
+			args: args{"server-vagrant-libvirt"},
+			want: wantResult{
+				filename: "vagrant.box",
+				mimeType: "application/x-tar",
+			},
+		},
+
+		{
 			name: "server-openstack",
 			args: args{"server-openstack"},
 			want: wantResult{
@@ -340,6 +349,7 @@ func TestImageType_Name(t *testing.T) {
 				"server-qcow2",
 				"server-vhd",
 				"server-vmdk",
+				"server-vagrant-libvirt",
 				"wsl",
 			},
 			verTypes: map[string][]string{
@@ -368,6 +378,7 @@ func TestImageType_Name(t *testing.T) {
 				"server-oci",
 				"server-openstack",
 				"server-qcow2",
+				"server-vagrant-libvirt",
 			},
 			verTypes: map[string][]string{
 				"40": {
@@ -544,6 +555,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"server-qcow2",
 				"server-vhd",
 				"server-vmdk",
+				"server-vagrant-libvirt",
 				"wsl",
 			},
 			verTypes: map[string][]string{
@@ -574,6 +586,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"server-oci",
 				"server-openstack",
 				"server-qcow2",
+				"server-vagrant-libvirt",
 			},
 			verTypes: map[string][]string{
 				"40": {
