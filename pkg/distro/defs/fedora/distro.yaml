@@ -1535,8 +1535,11 @@ image_types:
               - "None"
             network:
               config: "disabled"
-      wsl_config:
-        boot_systemd: true
+      condition:
+        version_less_than:
+          "42":
+            wsl_config:
+              boot_systemd: true
     package_sets:
       os:
         - include:
