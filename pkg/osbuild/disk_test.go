@@ -10,6 +10,7 @@ import (
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
+	"github.com/osbuild/images/pkg/disk/partition"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -43,7 +44,7 @@ func TestGenImageKernelOptions(t *testing.T) {
 
 	luks_lvm := testPartitionTables["luks+lvm"]
 
-	pt, err := disk.NewPartitionTable(&luks_lvm, []blueprint.FilesystemCustomization{}, 0, disk.AutoLVMPartitioningMode, arch.ARCH_X86_64, make(map[string]uint64), rng)
+	pt, err := disk.NewPartitionTable(&luks_lvm, []blueprint.FilesystemCustomization{}, 0, partition.AutoLVMPartitioningMode, arch.ARCH_X86_64, make(map[string]uint64), rng)
 	assert.NoError(err)
 
 	uuids := collectUUIDs(pt)

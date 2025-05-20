@@ -11,6 +11,7 @@ import (
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/datasizes"
+	"github.com/osbuild/images/pkg/disk/partition"
 	"github.com/osbuild/images/pkg/platform"
 )
 
@@ -30,27 +31,6 @@ type PartitionTable struct {
 	// Starting offset of the first partition in the table (in bytes)
 	StartOffset uint64 `json:"start_offset,omitempty" yaml:"start_offset,omitempty"`
 }
-
-type PartitioningMode string
-
-const (
-	// AutoLVMPartitioningMode creates a LVM layout if the filesystem
-	// contains a mountpoint that's not defined in the base partition table
-	// of the specified image type. In the other case, a raw layout is used.
-	AutoLVMPartitioningMode PartitioningMode = "auto-lvm"
-
-	// LVMPartitioningMode always creates an LVM layout.
-	LVMPartitioningMode PartitioningMode = "lvm"
-
-	// RawPartitioningMode always creates a raw layout.
-	RawPartitioningMode PartitioningMode = "raw"
-
-	// BtrfsPartitioningMode creates a btrfs layout.
-	BtrfsPartitioningMode PartitioningMode = "btrfs"
-
-	// DefaultPartitioningMode is AutoLVMPartitioningMode and is the empty state
-	DefaultPartitioningMode PartitioningMode = ""
-)
 
 // DefaultBootPartitionSize is the default size of the /boot partition if it
 // needs to be auto-created. This happens if the custom partitioning don't
@@ -110,10 +90,10 @@ const DefaultBootPartitionSize = 1 * datasizes.GiB
 // containing the root filesystem is grown to fill any left over space on the
 // partition table. Logical Volumes are not grown to fill the space in the
 // Volume Group since they are trivial to grow on a live system.
-func NewPartitionTable(basePT *PartitionTable, mountpoints []blueprint.FilesystemCustomization, imageSize uint64, mode PartitioningMode, architecture arch.Arch, requiredSizes map[string]uint64, rng *rand.Rand) (*PartitionTable, error) {
+func NewPartitionTable(basePT *PartitionTable, mountpoints []blueprint.FilesystemCustomization, imageSize uint64, mode partition.PartitioningMode, architecture arch.Arch, requiredSizes map[string]uint64, rng *rand.Rand) (*PartitionTable, error) {
 	newPT := basePT.Clone().(*PartitionTable)
 
-	if basePT.features().LVM && (mode == RawPartitioningMode || mode == BtrfsPartitioningMode) {
+	if basePT.features().LVM && (mode == partition.RawPartitioningMode || mode == partition.BtrfsPartitioningMode) {
 		return nil, fmt.Errorf("%s partitioning mode set for a base partition table with LVM, this is unsupported", mode)
 	}
 
@@ -122,13 +102,13 @@ func NewPartitionTable(basePT *PartitionTable, mountpoints []blueprint.Filesyste
 
 	var ensureLVM, ensureBtrfs bool
 	switch mode {
-	case LVMPartitioningMode:
+	case partition.LVMPartitioningMode:
 		ensureLVM = true
-	case RawPartitioningMode:
+	case partition.RawPartitioningMode:
 		ensureLVM = false
-	case DefaultPartitioningMode, AutoLVMPartitioningMode:
+	case partition.DefaultPartitioningMode, partition.AutoLVMPartitioningMode:
 		ensureLVM = len(newMountpoints) > 0
-	case BtrfsPartitioningMode:
+	case partition.BtrfsPartitioningMode:
 		ensureBtrfs = true
 	default:
 		return nil, fmt.Errorf("unsupported partitioning mode %q", mode)
