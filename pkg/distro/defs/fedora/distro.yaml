@@ -500,6 +500,33 @@ image_config:
     timezone: "UTC"
 
 image_types:
+  "server-vagrant-libvirt": &server_vagrant_libvirt
+    filename: "vagrant.box"
+    mime_type: "application/x-tar"
+    environment: *kvm_env
+    bootable: true
+    default_size: 5_368_709_120  # 5 * datasizes.GibiByte
+    image_func: "disk"
+    build_pipelines: ["build"]
+    payload_pipelines: ["os", "image", "vagrant", "archive"]
+    exports: ["archive"]
+    required_partition_sizes: *default_required_dir_sizes
+    image_config: &image_config_vagrant
+      default_target: "multi-user.target"
+      kernel_options: *cloud_kernel_options
+    partition_table:
+      <<: *default_partition_tables
+    package_sets:
+      os:
+        - *cloud_base_pkgset
+        - include:
+            - "qemu-guest-agent"
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "vagrant_libvirt"
+      - <<: *aarch64_platform
+        image_format: "vagrant_libvirt"
+
   "server-qcow2": &server_qcow2
     name_aliases: ["qcow2"]
     filename: "disk.qcow2"

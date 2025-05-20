@@ -47,3 +47,8 @@ func (o *VagrantStageOptions) validate() error {
 
 	return nil
 }
+
+func NewVagrantStagePipelineFilesInputs(pipeline, file string) *VagrantStageInputs {
+	input := NewFilesInput(NewFilesInputPipelineObjectRef(pipeline, file, nil))
+	return &VagrantStageInputs{Image: input}
+}
