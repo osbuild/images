@@ -105,6 +105,8 @@ type AnacondaInstallerISOTree struct {
 	// Pipeline object where subscription-related files are created for copying
 	// onto the ISO.
 	SubscriptionPipeline *Subscription
+
+	InstallRootfsType disk.FSType
 }
 
 func NewAnacondaInstallerISOTree(buildPipeline Build, anacondaPipeline *AnacondaInstaller, rootfsPipeline *ISORootfsImg, bootTreePipeline *EFIBootTree) *AnacondaInstallerISOTree {
@@ -628,12 +630,26 @@ func (p *AnacondaInstallerISOTree) bootcInstallerKickstartStages() []*osbuild.St
 	// Because osbuild core only supports a subset of options, we append to the
 	// base here with some more hardcoded defaults
 	// that should very likely become configurable.
-	hardcodedKickstartBits := `
-reqpart --add-boot
+	var hardcodedKickstartBits string
 
-part swap --fstype=swap --size=1024
-part / --fstype=ext4 --grow
+	// using `autopart` because  `part / --fstype=btrfs` didn't work
+	rootFsType := p.InstallRootfsType
+	if rootFsType == disk.FS_NONE {
+		// if the rootfs type is not set, we default to ext4
+		rootFsType = disk.FS_EXT4
+	}
+	switch rootFsType {
+	case disk.FS_BTRFS:
+		hardcodedKickstartBits = `
+autopart --nohome --type=btrfs
+`
+	default:
+		hardcodedKickstartBits = fmt.Sprintf(`
+autopart --nohome --type=plain --fstype=%s
+`, rootFsType.String())
+	}
 
+	hardcodedKickstartBits += `
 reboot --eject
 `
 
