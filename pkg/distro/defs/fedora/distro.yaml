@@ -1516,7 +1516,7 @@ image_types:
     # this is the eventual name, and `wsl` the alias but we've been
     # having issues with CI renaming it
     name_aliases: ["server-wsl"]
-    filename: "wsl.tar"
+    filename: "image.wsl"
     mime_type: "application/x-tar"
     image_func: "tar"
     build_pipelines: ["build"]

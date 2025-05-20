@@ -106,7 +106,7 @@ func TestFilenameFromType(t *testing.T) {
 			name: "wsl",
 			args: args{"wsl"},
 			want: wantResult{
-				filename: "wsl.tar",
+				filename: "image.wsl",
 				mimeType: "application/x-tar",
 			},
 		},
