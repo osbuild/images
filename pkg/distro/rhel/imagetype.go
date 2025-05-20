@@ -13,6 +13,7 @@ import (
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
+	"github.com/osbuild/images/pkg/disk/partition"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/experimentalflags"
 	"github.com/osbuild/images/pkg/image"
@@ -89,7 +90,7 @@ type ImageType struct {
 	// List of valid arches for the image type
 	BasePartitionTables BasePartitionTableFunc
 	// Optional list of unsupported partitioning modes
-	UnsupportedPartitioningModes []disk.PartitioningMode
+	UnsupportedPartitioningModes []partition.PartitioningMode
 
 	ISOLabelFn ISOLabelFunc
 

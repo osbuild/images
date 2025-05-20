@@ -13,6 +13,7 @@ import (
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
+	"github.com/osbuild/images/pkg/disk/partition"
 )
 
 // see https://github.com/achilleas-k/images/pull/2#issuecomment-2136025471
@@ -88,7 +89,7 @@ var expectedInput = &genpart.Input{
 	},
 	Modifications: genpart.InputModifications{
 		MinDiskSize:   "20 GiB",
-		PartitionMode: disk.AutoLVMPartitioningMode,
+		PartitionMode: partition.AutoLVMPartitioningMode,
 		Filesystems: []blueprint.FilesystemCustomization{
 			{
 				Mountpoint: "/var/log",
@@ -523,7 +524,7 @@ func TestGenPartitionTableCustomizationExtraMpPlusModificationPartitionMode(t *t
 		},
 		Modifications: genpart.InputModifications{
 			// note that the extra partitin mode is used here
-			PartitionMode: disk.RawPartitioningMode,
+			PartitionMode: partition.RawPartitioningMode,
 			Filesystems: []blueprint.FilesystemCustomization{
 				{
 					Mountpoint: "/var/log",
