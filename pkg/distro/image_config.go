@@ -8,6 +8,7 @@ import (
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/shell"
 	"github.com/osbuild/images/pkg/customizations/subscription"
+	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
 )
 
@@ -118,6 +119,10 @@ type ImageConfig struct {
 	// MountUnits creates systemd .mount units to describe the filesystem
 	// instead of writing to /etc/fstab
 	MountUnits *bool `yaml:"mount_units,omitempty"`
+
+	// IsoRootfsType defines what rootfs (squashfs, erofs,ext4)
+	// is used
+	IsoRootfsType *manifest.RootfsType `yaml:"iso_rootfs_type,omitempty"`
 }
 
 type WSLConfig struct {

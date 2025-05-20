@@ -423,10 +423,6 @@ func liveInstallerImage(workload workload.Workload,
 
 	img.Filename = t.Filename()
 
-	if common.VersionGreaterThanOrEqual(img.OSVersion, VERSION_ROOTFS_SQUASHFS) {
-		img.RootfsType = manifest.SquashfsRootfs
-	}
-
 	// Enable grub2 BIOS iso on x86_64 only
 	if img.Platform.GetArch() == arch.ARCH_X86_64 {
 		img.ISOBoot = manifest.Grub2ISOBoot
@@ -444,6 +440,11 @@ func liveInstallerImage(workload workload.Workload,
 	if installerConfig != nil {
 		img.AdditionalDracutModules = append(img.AdditionalDracutModules, installerConfig.AdditionalDracutModules...)
 		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
+	}
+
+	imgConfig := t.getDefaultImageConfig()
+	if imgConfig != nil && imgConfig.IsoRootfsType != nil {
+		img.RootfsType = *imgConfig.IsoRootfsType
 	}
 
 	return img, nil
@@ -532,8 +533,9 @@ func imageInstallerImage(workload workload.Workload,
 	img.Filename = t.Filename()
 
 	img.RootfsCompression = "xz" // This also triggers using the bcj filter
-	if common.VersionGreaterThanOrEqual(img.OSVersion, VERSION_ROOTFS_SQUASHFS) {
-		img.RootfsType = manifest.SquashfsRootfs
+	imgConfig := t.getDefaultImageConfig()
+	if imgConfig != nil && imgConfig.IsoRootfsType != nil {
+		img.RootfsType = *imgConfig.IsoRootfsType
 	}
 
 	// Enable grub2 BIOS iso on x86_64 only
@@ -751,8 +753,9 @@ func iotInstallerImage(workload workload.Workload,
 	img.Filename = t.Filename()
 
 	img.RootfsCompression = "xz" // This also triggers using the bcj filter
-	if common.VersionGreaterThanOrEqual(img.OSVersion, VERSION_ROOTFS_SQUASHFS) {
-		img.RootfsType = manifest.SquashfsRootfs
+	imgConfig := t.getDefaultImageConfig()
+	if imgConfig != nil && imgConfig.IsoRootfsType != nil {
+		img.RootfsType = *imgConfig.IsoRootfsType
 	}
 
 	// Enable grub2 BIOS iso on x86_64 only
