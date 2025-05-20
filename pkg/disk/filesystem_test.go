@@ -2,6 +2,7 @@ package disk_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -23,6 +24,7 @@ func TestMkfsOptionUnmarshalHappy(t *testing.T) {
 		{`"verity"`, disk.MkfsVerity},
 	} {
 		var opt disk.MkfsOption
+		// unmarshaling works
 		err := json.Unmarshal([]byte(tc.inp), &opt)
 		assert.NoError(t, err)
 		assert.Equal(t, tc.expected, opt)
@@ -31,6 +33,10 @@ func TestMkfsOptionUnmarshalHappy(t *testing.T) {
 		encoded, err := json.Marshal(opt)
 		assert.NoError(t, err)
 		assert.Equal(t, tc.inp, string(encoded))
+
+		// and converting to a string gives us the mkfs option
+		// again
+		assert.Equal(t, tc.inp, fmt.Sprintf("%q", opt))
 	}
 }
 

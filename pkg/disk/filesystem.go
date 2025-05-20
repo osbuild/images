@@ -19,8 +19,8 @@ func getMkfsOptionMapping() []string {
 	return []string{"verity"}
 }
 
-// ToString converts MkfsOption into a human readable string
-func (option MkfsOption) ToString() string {
+// String converts MkfsOption into a human readable string
+func (option MkfsOption) String() string {
 	return getMkfsOptionMapping()[int(option)]
 }
 
