@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/internal/common"
-	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/stretchr/testify/assert"
 )
 
