@@ -8,6 +8,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v3"
+
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/kickstart"
@@ -17,7 +21,6 @@ import (
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/runner"
-	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -787,4 +790,32 @@ func TestPayloadRemoveSignatures(t *testing.T) {
 		assert.NotNil(t, skopeoStage)
 		assert.Equal(t, tc.expected, skopeoStage.Options.(*osbuild.SkopeoStageOptions).RemoveSignatures)
 	}
+}
+
+func TestUnmarshalHappy(t *testing.T) {
+	var rootFS struct {
+		IsoRootfsType RootfsType `yaml:"iso_rootfs_type"`
+	}
+
+	for _, tc := range []struct {
+		fstype   string
+		expected RootfsType
+	}{
+		{"squashfs-ext4", SquashfsExt4Rootfs},
+		{"squashfs", SquashfsRootfs},
+		{"erofs", ErofsRootfs},
+	} {
+		err := yaml.Unmarshal([]byte(fmt.Sprintf("iso_rootfs_type: %s", tc.fstype)), &rootFS)
+		require.NoError(t, err)
+		assert.Equal(t, tc.expected, rootFS.IsoRootfsType)
+	}
+}
+
+func TestUnmarshalError(t *testing.T) {
+	var rootFS struct {
+		IsoRootfsType RootfsType `yaml:"iso_rootfs_type"`
+	}
+
+	err := yaml.Unmarshal([]byte("iso_rootfs_type: non-exiting"), &rootFS)
+	assert.EqualError(t, err, `unmarshal yaml via json for "non-exiting" failed: unknown RootfsType: "non-exiting"`)
 }
