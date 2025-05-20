@@ -171,6 +171,7 @@
       "server-qcow2",
       "server-vhd",
       "server-vmdk",
+      "server-vagrant-libvirt",
       "wsl",
       "iot-bootable-container",
       "iot-container"
