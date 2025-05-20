@@ -1518,10 +1518,10 @@ image_types:
     name_aliases: ["server-wsl"]
     filename: "wsl.tar"
     mime_type: "application/x-tar"
-    image_func: "container"
+    image_func: "tar"
     build_pipelines: ["build"]
-    payload_pipelines: ["os", "container"]
-    exports: ["container"]
+    payload_pipelines: ["os", "archive"]
+    exports: ["archive"]
     required_partition_sizes: *default_required_dir_sizes
     platforms:
       - arch: "x86_64"

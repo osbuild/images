@@ -69,6 +69,8 @@ func newImageTypeFrom(d distribution, imgYAML defs.ImageTypeYAML) imageType {
 		it.image = iotInstallerImage
 	case "iot_simplified_installer":
 		it.image = iotSimplifiedInstallerImage
+	case "tar":
+		it.image = tarImage
 	default:
 		err := fmt.Errorf("unknown image func: %v for %v", imgYAML.Image, imgYAML.Name())
 		panic(err)
