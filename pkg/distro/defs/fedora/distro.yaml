@@ -1584,6 +1584,9 @@ image_types:
               "41":
                 exclude:
                   - "fuse-libs"
+              "42":
+                include:
+                  - "wsl-setup"
 
   "iot-simplified-installer":
     filename: "simplified-installer.iso"
