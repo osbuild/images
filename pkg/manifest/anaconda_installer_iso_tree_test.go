@@ -829,3 +829,29 @@ func TestUnmarshalError(t *testing.T) {
 	err := yaml.Unmarshal([]byte("iso_rootfs_type: non-exiting"), &rootFS)
 	assert.EqualError(t, err, `unmarshal yaml via json for "non-exiting" failed: unknown RootfsType: "non-exiting"`)
 }
+
+func TestAnacondaISOTreeSerializeInstallRootfsType(t *testing.T) {
+	for _, tc := range []struct {
+		fs       disk.FSType
+		expected string
+	}{
+		{disk.FS_BTRFS, "autopart --nohome --type=btrfs\n"},
+		{disk.FS_XFS, "autopart --nohome --type=plain --fstype=xfs\n"},
+		{disk.FS_VFAT, "autopart --nohome --type=plain --fstype=vfat\n"},
+		{disk.FS_EXT4, "autopart --nohome --type=plain --fstype=ext4\n"},
+		{disk.FS_NONE, "autopart --nohome --type=plain --fstype=ext4\n"},
+	} {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
+		pipeline.InstallRootfsType = tc.fs
+
+		pipeline.serializeStart(Inputs{Containers: []container.Spec{makeFakeContainerPayload()}})
+		_ = pipeline.serialize()
+		pipeline.serializeEnd()
+
+		inlineData := pipeline.getInline()
+		assert.Len(t, inlineData, 1)
+
+		assert.Contains(t, inlineData[0], tc.expected)
+	}
+}
