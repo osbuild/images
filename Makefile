@@ -27,7 +27,11 @@ gh-action-test: container_built_$(CONTAINER_IMAGE).info ## run all tests in a co
 
 .PHONY: test
 test: ## run all tests locally
-	go test -race  ./...
+	# Run unit tests
+	go test -timeout 20m -race  ./...
+	# Run unit tests without CGO
+        # keep tags in sync with BUILDTAGS_CROSS in https://github.com/containers/podman/blob/2981262215f563461d449b9841741339f4d9a894/Makefile#L85
+	CGO_ENABLED=0 go test -tags "containers_image_openpgp exclude_graphdriver_btrfs exclude_graphdriver_devicemapper exclude_graphdriver_overlay" ./...
 	# Run depsolver tests with force-dnf to make sure it's not skipped for any reason
 	go test -race ./pkg/dnfjson/... -force-dnf
 	# ensure our tags are consistent
