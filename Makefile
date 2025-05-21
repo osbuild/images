@@ -30,6 +30,8 @@ test: ## run all tests locally
 	go test -race  ./...
 	# Run depsolver tests with force-dnf to make sure it's not skipped for any reason
 	go test -race ./pkg/dnfjson/... -force-dnf
+	# ensure our tags are consistent
+	go run github.com/mvo5/vet-tagseq/cmd/tagseq@latest ./...
 
 clean: ## remove all build files
 	rm -f container_built*.info
