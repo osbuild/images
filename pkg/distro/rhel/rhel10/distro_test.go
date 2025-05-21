@@ -282,6 +282,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"wsl",
 				"gce",
 				"image-installer",
+				"azure-cvm",
 				"azure-rhui",
 				"azure-sap-rhui",
 				"ec2",
