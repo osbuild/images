@@ -18,7 +18,7 @@ type YumRepository struct {
 	Cost           *int     `json:"cost,omitempty"`
 	Enabled        *bool    `json:"enabled,omitempty"`
 	Priority       *int     `json:"priority,omitempty"`
-	GPGKey         []string `json:"gpgkey,omitempty" yaml:"gpgkey,omitempty" `
+	GPGKey         []string `json:"gpgkey,omitempty" yaml:"gpgkey,omitempty"`
 	Metalink       string   `json:"metalink,omitempty"`
 	Mirrorlist     string   `json:"mirrorlist,omitempty"`
 	ModuleHotfixes *bool    `json:"module_hotfixes,omitempty"`
