@@ -17,6 +17,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gobwas/glob"
 
@@ -48,12 +49,28 @@ type BuildDependency struct {
 	ImageType string `json:"image-type"`
 }
 
+type skipDistro struct {
+	Name   string    `json:"name"`
+	Reason string    `json:"reason"`
+	Date   time.Time `json:"date"`
+}
+
 // BuildConfigs is a nested map representing the configs to use for each
 // distro/arch/image-type. If any component is empty, it maps to all values.
-type BuildConfigs map[string]map[string]map[string][]*buildconfig.BuildConfig
+type BuildConfigs struct {
+	confMap  map[string]map[string]map[string][]*buildconfig.BuildConfig
+	skipList map[*buildconfig.BuildConfig][]skipDistro
+}
+
+func newBuildConfigs() *BuildConfigs {
+	return &BuildConfigs{
+		confMap:  make(map[string]map[string]map[string][]*buildconfig.BuildConfig),
+		skipList: make(map[*buildconfig.BuildConfig][]skipDistro),
+	}
+}
 
 func (bc BuildConfigs) Insert(distro, arch, imageType string, cfg *buildconfig.BuildConfig) {
-	distroCfgs := bc[distro]
+	distroCfgs := bc.confMap[distro]
 	if distroCfgs == nil {
 		distroCfgs = make(map[string]map[string][]*buildconfig.BuildConfig)
 	}
@@ -71,12 +88,27 @@ func (bc BuildConfigs) Insert(distro, arch, imageType string, cfg *buildconfig.B
 	distroArchItCfgs = append(distroArchItCfgs, cfg)
 	distroArchCfgs[imageType] = distroArchItCfgs
 	distroCfgs[arch] = distroArchCfgs
-	bc[distro] = distroCfgs
+	bc.confMap[distro] = distroCfgs
+}
+
+func (bc BuildConfigs) needsSkipping(distro string, cfg *buildconfig.BuildConfig) (bool, string) {
+	for _, s := range bc.skipList[cfg] {
+		if s.Name == distro {
+			if time.Since(s.Date) > 90*24*time.Hour {
+				err := fmt.Errorf("distro %q is temporarily skipped for more than 90 days (added %q)", s.Name, s.Date)
+				panic(err)
+			}
+			return true, s.Reason
+		}
+	}
+
+	return false, ""
 }
 
 func (bc BuildConfigs) Get(distro, arch, imageType string) []*buildconfig.BuildConfig {
+
 	configs := make([]*buildconfig.BuildConfig, 0)
-	for distroName, distroCfgs := range bc {
+	for distroName, distroCfgs := range bc.confMap {
 		distroGlob := glob.MustCompile(distroName)
 		if distroGlob.Match(distro) {
 			for archName, distroArchCfgs := range distroCfgs {
@@ -95,11 +127,12 @@ func (bc BuildConfigs) Get(distro, arch, imageType string) []*buildconfig.BuildC
 	return configs
 }
 
-func loadConfigMap(configPath string) BuildConfigs {
+func loadConfigMap(configPath string) *BuildConfigs {
 	type configFilters struct {
-		ImageTypes []string `json:"image-types"`
-		Distros    []string `json:"distros"`
-		Arches     []string `json:"arches"`
+		ImageTypes  []string     `json:"image-types"`
+		Distros     []string     `json:"distros"`
+		SkipDistros []skipDistro `json:"skip-distros"`
+		Arches      []string     `json:"arches"`
 	}
 	type configMap map[string]configFilters
 
@@ -127,7 +160,7 @@ func loadConfigMap(configPath string) BuildConfigs {
 	}
 
 	// load each config from its path
-	cm := make(BuildConfigs)
+	cm := newBuildConfigs()
 	for path, filters := range cfgMap {
 		// config paths can be relative to the location of the config map
 		if !filepath.IsAbs(path) {
@@ -139,6 +172,9 @@ func loadConfigMap(configPath string) BuildConfigs {
 			panic(err)
 		}
 		for _, d := range emptyFallback(filters.Distros) {
+			if len(filters.SkipDistros) > 0 {
+				cm.skipList[config] = append(cm.skipList[config], filters.SkipDistros...)
+			}
 			for _, a := range emptyFallback(filters.Arches) {
 				for _, it := range emptyFallback(filters.ImageTypes) {
 					cm.Insert(d, a, it, config)
@@ -153,8 +189,8 @@ func loadConfigMap(configPath string) BuildConfigs {
 // loadImgConfig loads a single image config from a file and returns a
 // a BuildConfigs map with the config mapped to all distros, arches, and
 // image types.
-func loadImgConfig(configPath string) BuildConfigs {
-	cm := make(BuildConfigs)
+func loadImgConfig(configPath string) *BuildConfigs {
+	cm := newBuildConfigs()
 	config, err := buildconfig.New(configPath)
 	if err != nil {
 		panic(err)
@@ -522,7 +558,7 @@ func main() {
 		"commits":    commits,
 	}
 
-	var configs BuildConfigs
+	var configs *BuildConfigs
 	if configPath != "" {
 		fmt.Println("'-config' was provided, thus ignoring '-config-map' option")
 		configs = loadImgConfig(configPath)
@@ -589,10 +625,15 @@ func main() {
 					if skipNoconfig {
 						continue
 					}
-					panic(fmt.Sprintf("no configs defined for image type %q", imgTypeName))
+					panic(fmt.Sprintf("no configs defined for image type %q for %s", imgTypeName, distribution.Name()))
 				}
 
 				for _, itConfig := range imgTypeConfigs {
+					if needsSkipping, reason := configs.needsSkipping(distribution.Name(), itConfig); needsSkipping {
+						fmt.Printf("Skipping %s for %s/%s (reason: %v)\n", itConfig.Name, imgTypeName, distribution.Name(), reason)
+						continue
+					}
+
 					job := makeManifestJob(itConfig, imgType, distribution, repos, archName, cacheRoot, outputDir, contentResolve, metadata)
 					jobs = append(jobs, job)
 				}
