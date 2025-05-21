@@ -1527,25 +1527,24 @@ image_types:
       - arch: "x86_64"
     image_config:
       <<: *image_config_container
-      cloud_init:
-        - filename: "99_wsl.cfg"
-          config:
-            datasource_list:
-              - "WSL"
-              - "None"
-            network:
-              config: "disabled"
       condition:
         version_less_than:
           "42":
             wsl_config:
               boot_systemd: true
+            cloud_init:
+              - filename: "99_wsl.cfg"
+                config:
+                  datasource_list:
+                    - "WSL"
+                    - "None"
+                  network:
+                    config: "disabled"
     package_sets:
       os:
         - include:
             - "bash"
             - "coreutils"
-            - "cloud-init"
             - "yum"
             - "dnf"
             - "fedora-release-container"
@@ -1590,6 +1589,10 @@ image_types:
               "42":
                 include:
                   - "wsl-setup"
+            version_less_than:
+              "42":
+                include:
+                  - "cloud-init"
 
   "iot-simplified-installer":
     filename: "simplified-installer.iso"
