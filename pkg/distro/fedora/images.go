@@ -519,6 +519,7 @@ func imageInstallerImage(workload workload.Workload,
 		img.AdditionalAnacondaModules = append(img.AdditionalAnacondaModules, instCust.Modules.Enable...)
 		img.DisabledAnacondaModules = append(img.DisabledAnacondaModules, instCust.Modules.Disable...)
 	}
+	img.AdditionalAnacondaModules = append(img.AdditionalAnacondaModules, anaconda.ModuleUsers)
 
 	img.Platform = t.platform
 	img.Workload = workload
