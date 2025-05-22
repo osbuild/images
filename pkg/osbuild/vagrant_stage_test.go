@@ -25,6 +25,27 @@ func TestNewVagrantStage(t *testing.T) {
 	assert.Equal(t, expectedStage, actualStage)
 }
 
+func TestNewVagrantStageWithVirtualBox(t *testing.T) {
+	input := NewFilesInput(NewFilesInputPipelineObjectRef("stage", "img.raw", nil))
+	inputs := VagrantStageInputs{Image: input}
+
+	options := VagrantStageOptions{
+		Provider: VagrantProviderLibvirt,
+		VirtualBox: &VagrantVirtualBoxStageOptions{
+			MacAddress: "ffffffffffff",
+		},
+	}
+
+	expectedStage := &Stage{
+		Type:    "org.osbuild.vagrant",
+		Options: &options,
+		Inputs:  &inputs,
+	}
+
+	actualStage := NewVagrantStage(&options, &inputs)
+	assert.Equal(t, expectedStage, actualStage)
+}
+
 func TestVagrantStageOptions(t *testing.T) {
 	tests := []struct {
 		Provider VagrantProvider
@@ -32,6 +53,9 @@ func TestVagrantStageOptions(t *testing.T) {
 	}{
 		{
 			Provider: VagrantProviderLibvirt,
+		},
+		{
+			Provider: VagrantProviderVirtualBox,
 		},
 		// mismatch between format and format options type
 		{
@@ -51,4 +75,26 @@ func TestVagrantStageOptions(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestVagrantStageOptionsSyncedFolders(t *testing.T) {
+	stageOptions := NewVagrantStageOptions(VagrantProviderVirtualBox)
+	stageOptions.SyncedFolders = map[string]*VagrantSyncedFolderStageOptions{
+		"/vagrant": &VagrantSyncedFolderStageOptions{
+			Type: VagrantSyncedFolderTypeRsync,
+		},
+	}
+
+	assert.NoError(t, stageOptions.validate())
+}
+
+func TestVagrantStageOptionsSyncedFoldersNoVirtualbox(t *testing.T) {
+	stageOptions := NewVagrantStageOptions(VagrantProviderLibvirt)
+	stageOptions.SyncedFolders = map[string]*VagrantSyncedFolderStageOptions{
+		"/vagrant": &VagrantSyncedFolderStageOptions{
+			Type: VagrantSyncedFolderTypeRsync,
+		},
+	}
+
+	assert.EqualError(t, stageOptions.validate(), `syncedfolders are only available for the virtualbox provider not for "libvirt"`)
 }
