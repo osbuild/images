@@ -12,6 +12,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/customizations/oscap"
+	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
 	"github.com/osbuild/images/pkg/platform"
@@ -147,6 +148,10 @@ func (d *distribution) ModulePlatformID() string {
 
 func (d *distribution) OSTreeRef() string {
 	return d.DistroYAML.OSTreeRefTmpl
+}
+
+func (d *distribution) DefaultFSType() disk.FSType {
+	return d.DistroYAML.DefaultFSType
 }
 
 func (d *distribution) ListArches() []string {

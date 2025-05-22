@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/runner"
 )
@@ -57,6 +58,10 @@ func (d *Distribution) ModulePlatformID() string {
 
 func (d *Distribution) OSTreeRef() string {
 	return d.ostreeRefTmpl
+}
+
+func (d *Distribution) DefaultFSType() disk.FSType {
+	return disk.FS_XFS
 }
 
 func (d *Distribution) Vendor() string {
