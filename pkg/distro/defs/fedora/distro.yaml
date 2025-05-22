@@ -1476,6 +1476,8 @@ image_types:
     image_func: "image_installer"
     # We don't know the variant of the OS pipeline being installed
     iso_label: "Unknown"
+    # We don't know the variant that goes into the OS pipeline that gets installed
+    variant: "Unknown"
     build_pipelines: ["build"]
     payload_pipelines:
       - "anaconda-tree"
@@ -1507,7 +1509,6 @@ image_types:
               - "ifcfg"
               - "dbus-broker"
             squashfs_rootfs: false
-
     image_config:
       locale: "en_US.UTF-8"
       iso_rootfs_type: "squashfs"
