@@ -24,7 +24,7 @@ import (
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
-func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, containers []container.SourceSpec, c *blueprint.Customizations) (manifest.OSCustomizations, error) {
+func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distro.ImageOptions, containers []container.SourceSpec, c *blueprint.Customizations) (manifest.OSCustomizations, error) {
 	imageConfig := t.getDefaultImageConfig()
 
 	osc := manifest.OSCustomizations{}
@@ -74,6 +74,7 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, containers []
 		osc.DefaultTarget = *imageConfig.DefaultTarget
 	}
 
+	osc.Firewall = imageConfig.Firewall
 	if fw := c.GetFirewall(); fw != nil {
 		options := osbuild.FirewallStageOptions{
 			Ports: fw.Ports,
@@ -82,6 +83,14 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, containers []
 		if fw.Services != nil {
 			options.EnabledServices = fw.Services.Enabled
 			options.DisabledServices = fw.Services.Disabled
+		}
+		if fw.Zones != nil {
+			for _, z := range fw.Zones {
+				options.Zones = append(options.Zones, osbuild.FirewallZone{
+					Name:    *z.Name,
+					Sources: z.Sources,
+				})
+			}
 		}
 		osc.Firewall = &options
 	}
@@ -96,6 +105,9 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, containers []
 		osc.Keyboard = keyboard
 	} else if imageConfig.Keyboard != nil {
 		osc.Keyboard = &imageConfig.Keyboard.Keymap
+		if imageConfig.Keyboard.X11Keymap != nil {
+			osc.X11KeymapLayouts = imageConfig.Keyboard.X11Keymap.Layouts
+		}
 	}
 
 	if hostname := c.GetHostname(); hostname != nil {
@@ -159,6 +171,9 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, containers []
 	if containerStorage := c.GetContainerStorage(); containerStorage != nil {
 		osc.ContainersStorage = containerStorage.StoragePath
 	}
+	// set yum repos first, so it doesn't get overridden by
+	// imageConfig.YUMRepos
+	osc.YUMRepos = imageConfig.YUMRepos
 
 	customRepos, err := c.GetRepositories()
 	if err != nil {
@@ -205,7 +220,6 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, containers []
 	}
 
 	osc.ShellInit = imageConfig.ShellInit
-
 	osc.Grub2Config = imageConfig.Grub2Config
 	osc.Sysconfig = imageConfig.SysconfigStageOptions()
 	osc.SystemdLogind = imageConfig.SystemdLogind
@@ -221,9 +235,15 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, containers []
 	osc.PamLimitsConf = imageConfig.PamLimitsConf
 	osc.Sysctld = imageConfig.Sysctld
 	osc.DNFConfig = imageConfig.DNFConfigOptions(t.arch.distro.OsVersion())
+	osc.DNFAutomaticConfig = imageConfig.DNFAutomaticConfig
+	osc.YUMConfig = imageConfig.YumConfig
 	osc.SshdConfig = imageConfig.SshdConfig
 	osc.AuthConfig = imageConfig.Authconfig
 	osc.PwQuality = imageConfig.PwQuality
+	osc.Subscription = options.Subscription
+	osc.WAAgentConfig = imageConfig.WAAgentConfig
+	osc.UdevRules = imageConfig.UdevRules
+	osc.GCPGuestAgentConfig = imageConfig.GCPGuestAgentConfig
 	osc.WSLConfig = imageConfig.WSLConfStageOptions()
 	osc.NetworkManager = imageConfig.NetworkManager
 
@@ -336,7 +356,7 @@ func diskImage(workload workload.Workload,
 	img.Platform = t.platform
 
 	var err error
-	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, bp.Customizations)
 	if err != nil {
 		return nil, err
 	}
@@ -397,7 +417,7 @@ func containerImage(workload workload.Workload,
 	img.Platform = t.platform
 
 	var err error
-	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, bp.Customizations)
 	if err != nil {
 		return nil, err
 	}
@@ -482,7 +502,7 @@ func imageInstallerImage(workload workload.Workload,
 	img := image.NewAnacondaTarInstaller()
 
 	var err error
-	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, bp.Customizations)
 	if err != nil {
 		return nil, err
 	}
@@ -585,7 +605,7 @@ func iotCommitImage(workload workload.Workload,
 	img.Platform = t.platform
 
 	var err error
-	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, bp.Customizations)
 	if err != nil {
 		return nil, err
 	}
@@ -632,7 +652,7 @@ func bootableContainerImage(workload workload.Workload,
 	img.Platform = t.platform
 
 	var err error
-	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, bp.Customizations)
 	if err != nil {
 		return nil, err
 	}
@@ -666,7 +686,7 @@ func iotContainerImage(workload workload.Workload,
 	img.Platform = t.platform
 
 	var err error
-	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, bp.Customizations)
 	if err != nil {
 		return nil, err
 	}
