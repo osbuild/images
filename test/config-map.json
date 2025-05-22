@@ -175,6 +175,7 @@
       "server-vhd",
       "server-vmdk",
       "server-vagrant-libvirt",
+      "server-vagrant-virtualbox",
       "wsl",
       "iot-bootable-container",
       "iot-container"
