@@ -15,6 +15,7 @@ import (
 	"github.com/osbuild/images/pkg/customizations/ignition"
 	"github.com/osbuild/images/pkg/customizations/kickstart"
 	"github.com/osbuild/images/pkg/customizations/oscap"
+	"github.com/osbuild/images/pkg/customizations/subscription"
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/image"
@@ -144,6 +145,11 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 		osc.SElinux = "targeted"
 	}
 
+	// XXX: move into pure YAML
+	if t.Arch().Distro().Name() == "rhel" && options.Facts != nil {
+		osc.RHSMFacts = options.Facts
+	}
+
 	var err error
 	osc.Directories, err = blueprint.DirectoryCustomizationsToFsNodeDirectories(c.GetDirectories())
 	if err != nil {
@@ -217,6 +223,22 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 		}
 
 		osc.OpenSCAPRemediationConfig = remediationConfig
+	}
+	var subscriptionStatus subscription.RHSMStatus
+	if options.Subscription != nil {
+		subscriptionStatus = subscription.RHSMConfigWithSubscription
+		if options.Subscription.Proxy != "" {
+			osc.InsightsClientConfig = &osbuild.InsightsClientConfigStageOptions{Config: osbuild.InsightsClientConfig{Proxy: options.Subscription.Proxy}}
+		}
+	} else {
+		subscriptionStatus = subscription.RHSMConfigNoSubscription
+	}
+	if rhsmConfig, exists := imageConfig.RHSMConfig[subscriptionStatus]; exists {
+		osc.RHSMConfig = rhsmConfig
+	}
+
+	if bpRhsmConfig := subscription.RHSMConfigFromBP(c.GetRHSM()); bpRhsmConfig != nil {
+		osc.RHSMConfig = osc.RHSMConfig.Update(bpRhsmConfig)
 	}
 
 	osc.ShellInit = imageConfig.ShellInit
