@@ -516,13 +516,7 @@ func imageInstallerImage(workload workload.Workload,
 	img.Kickstart.Timezone = &img.OSCustomizations.Timezone
 
 	if img.Kickstart.Unattended {
-		// NOTE: this is not supported right now because the
-		// image-installer on Fedora isn't working when unattended.
-		// These options are probably necessary but could change.
-		// Unattended/non-interactive installations are better set to text
-		// time since they might be running headless and a UI is
-		// unnecessary.
-		img.AdditionalKernelOpts = []string{"inst.text", "inst.noninteractive"}
+		img.AdditionalKernelOpts = t.KickstartUnattendedExtraKernelOpts
 	}
 
 	instCust, err := customizations.GetInstaller()
