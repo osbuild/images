@@ -540,6 +540,19 @@ image_types:
         image_format: "qcow2"
 
   vhd: &vhd
+    <<: *qcow2
+    filename: "disk.vhd"
+    mime_type: "application/x-vhd"
+    default_size: 4_294_967_296  # 4 * datasizes.GibiByte
+    payload_pipelines: ["os", "image", "vpc"]
+    exports: ["vpc"]
+    # note that unlike fedora no "environment.Azure" is used here for
+    # unknown reasons
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "vhd"
+      - <<: *aarch64_platform
+        image_format: "vhd"
     # based on https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/deploying_rhel_9_on_microsoft_azure/assembly_deploying-a-rhel-image-as-a-virtual-machine-on-microsoft-azure_cloud-content-azure#making-configuration-changes_configure-the-image-azure
     image_config: &image_config_vhd
       # from CreateAzureDatalossWarningScriptAndUnit
@@ -834,6 +847,7 @@ image_types:
 
   "azure-rhui": &azure_rhui
     <<: *vhd
+    skip_for: ["centos"]
     partition_table:
       x86_64:
         uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
@@ -928,6 +942,7 @@ image_types:
 
   "azure-sap-rhui":
     <<: *azure_rhui
+    skip_for: ["centos"]
     image_config:
       <<: [*image_config_vhd, *sap_image_config]
     package_sets:
@@ -956,6 +971,18 @@ image_types:
       - arch: "s390x"
 
   vmdk: &vmdk
+    filename: "disk.vmdk"
+    mime_type: "application/x-vmdk"
+    bootable: true
+    default_size: 4_294_967_296  # 4 * datasizes.GibiByte
+    image_func: "disk"
+    build_pipelines: ["build"]
+    payload_pipelines: ["os", "image", "vmdk"]
+    exports: ["vmdk"]
+    required_partition_sizes: *default_required_dir_sizes
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "vmdk"
     image_config:
       kernel_options:
         - "ro"
@@ -977,6 +1004,13 @@ image_types:
 
   ova:
     <<: *vmdk
+    filename: "image.ova"
+    mime_type: "application/ovf"
+    payload_pipelines: ["os", "image", "vmdk", "ovf", "archive"]
+    exports: ["archive"]
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "ova"
 
   ami: &ami
     filename: "image.raw"
