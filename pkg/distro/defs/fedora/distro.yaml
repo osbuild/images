@@ -255,7 +255,7 @@
           fstab_freq: 0
           fstab_passno: 2
       - &default_partition_table_part_boot
-        size: 524_288_000  # 500 * MiB
+        size: 1_073_741_824  # 1 * datasizes.GibiByte,
         type: *filesystem_data_guid
         uuid: *data_partition_uuid
         payload_type: "filesystem"
@@ -366,7 +366,7 @@
             bootable: true
             type: *prep_partition_dosid
           - &default_partition_table_part_boot_ppc64le
-            size: 524_288_000  # 500 * MiB
+            size: 1_073_741_824  # 1 * datasizes.GibiByte,
             payload_type: "filesystem"
             payload:
               type: "ext4"
@@ -402,7 +402,6 @@
           - *default_partition_table_part_efi
           - &minimal_raw_partition_table_part_boot
             <<: *default_partition_table_part_boot
-            size: 1_073_741_824  # 1 * datasizes.GibiByte,
             type: *xboot_ldr_partition_guid
           - &minimal_raw_partition_table_part_root
             <<: *default_partition_table_part_root
