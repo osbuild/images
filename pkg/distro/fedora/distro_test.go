@@ -66,7 +66,7 @@ func TestFilenameFromType(t *testing.T) {
 			name: "server-vagrant-libvirt",
 			args: args{"server-vagrant-libvirt"},
 			want: wantResult{
-				filename: "vagrant.box",
+				filename: "vagrant-libvirt.box",
 				mimeType: "application/x-tar",
 			},
 		},
