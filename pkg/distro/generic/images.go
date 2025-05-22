@@ -553,9 +553,6 @@ func imageInstallerImage(workload workload.Workload,
 		}
 	}
 
-	// On Fedora anaconda needs dbus-broker, but isn't added when dracut runs.
-	img.AdditionalDracutModules = append(img.AdditionalDracutModules, "dbus-broker")
-
 	d := t.arch.distro
 
 	img.Product = d.DistroYAML.Product

@@ -1443,6 +1443,29 @@ image_types:
       - "bootiso"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
+    installer_config:
+      <<: *default_installer_config
+      # XXX: this is ugly, minimal-installer needs the extra dbus-broker and because
+      # we cannot merge installer_config (currently) we need to fully replace it,
+      # this needs some thinking/simplifcation/extra support in installerConfig
+      additional_dracut_modules:
+        - "net-lib"
+        - "dbus-broker"
+      condition:
+        version_less_than:
+          "42":
+            # config is fully replaced
+            additional_dracut_modules:
+              - "ifcfg"
+              - "dbus-broker"
+            squashfs_rootfs: true
+          "41":
+            # config is fully replaced
+            additional_dracut_modules:
+              - "ifcfg"
+              - "dbus-broker"
+            squashfs_rootfs: false
+
     image_config:
       locale: "en_US.UTF-8"
       iso_rootfs_type: "squashfs"
@@ -1626,7 +1649,8 @@ image_types:
       - "bootiso"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
-    installer_config: *default_installer_config
+    installer_config:
+      <<: *default_installer_config
     image_config:
       <<: *image_config_iot
       ignition_platform: "metal"
