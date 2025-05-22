@@ -980,6 +980,20 @@ image_types:
   ova: *vmdk
 
   ami: &ami
+    filename: "image.raw"
+    mime_type: "application/octet-stream"
+    image_func: "disk"
+    build_pipelines: ["build"]
+    payload_pipelines: ["os", "image"]
+    exports: ["image"]
+    bootable: true
+    default_size: 10_737_418_240  # 10 * datasizes.GibiByte
+    required_partition_sizes: *default_required_dir_sizes
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "raw"
+      - <<: *aarch64_platform
+        image_format: "raw"
     image_config: &ami_image_config
       time_synchronization:
         servers:
@@ -1147,6 +1161,7 @@ image_types:
 
   "ec2-sap":
     <<: *ami
+    skip_for: ["centos"]
     package_sets:
       os:
         - *ami_pkgset
