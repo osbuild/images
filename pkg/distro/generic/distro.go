@@ -112,7 +112,7 @@ func newDistro(nameVer string) (distro.Distro, error) {
 				rd.arches[pl.Arch.String()] = ar
 			}
 			it := newImageTypeFrom(rd, ar, imgTypeYAML)
-			if err := ar.addImageType(&pl, it); err != nil {
+			if err := ar.addImageType(pl, it); err != nil {
 				return nil, err
 			}
 		}

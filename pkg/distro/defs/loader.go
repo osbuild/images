@@ -161,7 +161,7 @@ type imageType struct {
 	Exports                []string          `yaml:"exports"`
 	RequiredPartitionSizes map[string]uint64 `yaml:"required_partition_sizes"`
 
-	Platforms []platform.PlatformConf `yaml:"platforms"`
+	Platforms []*platform.PlatformConf `yaml:"platforms"`
 
 	NameAliases []string `yaml:"name_aliases"`
 
@@ -579,6 +579,7 @@ func ImageTypes(distroNameVer string) (map[string]ImageTypeYAML, error) {
 	if err != nil {
 		return nil, err
 	}
+	distroName, _ := splitDistroNameVer(distroNameVer)
 
 	// We have a bunch of names like "server-ami" that are writen
 	// in the YAML as "server_ami" so we need to normalize
@@ -586,6 +587,16 @@ func ImageTypes(distroNameVer string) (map[string]ImageTypeYAML, error) {
 	for name := range toplevel.ImageTypes {
 		v := toplevel.ImageTypes[name]
 		v.name = name
+		for _, pl := range v.Platforms {
+			if pl.AutodetectUEFIVendor {
+				// XXX: this is a hack, in an ideal
+				// world (that we hopefully enter
+				// soon) ImageTypes() is a method on
+				// DistroYAML so we can access the
+				// "DistroYAML.Vendor"
+				pl.UEFIVendor = distroName
+			}
+		}
 		imgTypes[name] = v
 	}
 
