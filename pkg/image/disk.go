@@ -76,10 +76,24 @@ func (img *DiskImage) InstantiateManifest(m *manifest.Manifest,
 		qcow2Pipeline := manifest.NewQCOW2(buildPipeline, rawImagePipeline)
 		qcow2Pipeline.Compat = img.Platform.GetQCOW2Compat()
 
-		vagrantPipeline := manifest.NewVagrant(buildPipeline, qcow2Pipeline)
+		vagrantPipeline := manifest.NewVagrant(buildPipeline, qcow2Pipeline, osbuild.VagrantProviderLibvirt)
 
 		tarPipeline := manifest.NewTar(buildPipeline, vagrantPipeline, "archive")
 		tarPipeline.Format = osbuild.TarArchiveFormatUstar
+
+		imagePipeline = tarPipeline
+	case platform.FORMAT_VAGRANT_VIRTUALBOX:
+		vmdkPipeline := manifest.NewVMDK(buildPipeline, rawImagePipeline)
+		vmdkPipeline.SetFilename("box.vmdk")
+
+		vagrantPipeline := manifest.NewVagrant(buildPipeline, vmdkPipeline, osbuild.VagrantProviderVirtualBox)
+
+		// Use the (potentially seeded) RNG to generate a new random mac address
+		vagrantPipeline.SetRandomMacAddress(rng)
+
+		tarPipeline := manifest.NewTar(buildPipeline, vagrantPipeline, "archive")
+		tarPipeline.Format = osbuild.TarArchiveFormatUstar
+		tarPipeline.SetFilename(img.Filename)
 
 		imagePipeline = tarPipeline
 	case platform.FORMAT_VHD:
