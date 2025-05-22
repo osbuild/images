@@ -392,12 +392,12 @@ func tarImage(workload workload.Workload,
 	img.Platform = t.platform
 
 	var err error
-	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], containers, bp.Customizations)
+	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, bp.Customizations)
 	if err != nil {
 		return nil, err
 	}
 
-	img.Environment = t.environment
+	img.Environment = &t.ImageTypeYAML.Environment
 	img.Workload = workload
 
 	img.Filename = t.Filename()
@@ -534,6 +534,11 @@ func imageInstallerImage(workload workload.Workload,
 		img.DisabledAnacondaModules = append(img.DisabledAnacondaModules, instCust.Modules.Disable...)
 	}
 	img.AdditionalAnacondaModules = append(img.AdditionalAnacondaModules, anaconda.ModuleUsers)
+
+	if len(img.Kickstart.Users)+len(img.Kickstart.Groups) > 0 {
+		// only enable the users module if needed
+		img.AdditionalAnacondaModules = append(img.AdditionalAnacondaModules, anaconda.ModuleUsers)
+	}
 
 	img.Platform = t.platform
 	img.Workload = workload
