@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"math/rand"
+	"reflect"
 	"slices"
 	"strings"
 	"testing"
@@ -147,14 +148,6 @@ func findRawKickstartFileStage(stages []*osbuild.Stage) *osbuild.CopyStageOption
 }
 
 const (
-	ksSudoContent = `%post
-echo -e "%sudo\tALL=(ALL)\tNOPASSWD: ALL" > "/etc/sudoers.d/%sudo"
-chmod 0440 /etc/sudoers.d/%sudo
-echo -e "%wheel\tALL=(ALL)\tNOPASSWD: ALL" > "/etc/sudoers.d/%wheel"
-chmod 0440 /etc/sudoers.d/%wheel
-restorecon -rvF /etc/sudoers.d
-%end
-`
 	ksContainerContent = `reqpart --add-boot
 
 part swap --fstype=swap --size=1024
@@ -167,6 +160,18 @@ bootc switch --mutate-in-place --transport registry local.example.org/registry/o
 `
 )
 
+var (
+	ksSudoPost = osbuild.PostOptions{
+		Commands: []string{
+			`echo -e "%sudo\tALL=(ALL)\tNOPASSWD: ALL" > "/etc/sudoers.d/%sudo"`,
+			`chmod 0440 /etc/sudoers.d/%sudo`,
+			`echo -e "%wheel\tALL=(ALL)\tNOPASSWD: ALL" > "/etc/sudoers.d/%wheel"`,
+			`chmod 0440 /etc/sudoers.d/%wheel`,
+			`restorecon -rvF /etc/sudoers.d`,
+		},
+	}
+)
+
 func calculateInlineFileChecksum(parts ...string) string {
 	content := "%include /run/install/repo/test-base.ks\n"
 	for _, part := range parts {
@@ -175,11 +180,8 @@ func calculateInlineFileChecksum(parts ...string) string {
 	return fmt.Sprintf("%x", sha256.Sum256([]byte(content)))
 }
 
-func checkKickstartOptions(stages []*osbuild.Stage, unattended, sudobits bool, extra string) error {
+func checkKickstartOptions(stages []*osbuild.Stage, unattended, sudopost bool, extra string) error {
 	ksParts := make([]string, 0)
-	if sudobits {
-		ksParts = append(ksParts, "\n"+ksSudoContent)
-	}
 	if extra != "" {
 		// adding extra bits replaces any other inline kickstart file
 		ksParts = []string{extra}
@@ -248,6 +250,18 @@ func checkKickstartOptions(stages []*osbuild.Stage, unattended, sudobits bool, e
 		}
 		if ksOptions.Network == nil {
 			return fmt.Errorf("unattended network kickstart option unset")
+		}
+	}
+
+	if sudopost {
+		foundSudoPost := false
+		for _, postOptions := range ksOptions.Post {
+			if reflect.DeepEqual(postOptions, ksSudoPost) {
+				foundSudoPost = true
+			}
+		}
+		if !foundSudoPost {
+			return fmt.Errorf("expected post options for sudoers dropins but was not found")
 		}
 	}
 
@@ -746,20 +760,16 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 	})
 }
 
-func TestMakeKickstartSudoersPostEmpty(t *testing.T) {
-	assert.Equal(t, "", makeKickstartSudoersPost(nil))
-}
-
 func TestMakeKickstartSudoersPost(t *testing.T) {
-	exp := `
-%post
-echo -e "%group31\tALL=(ALL)\tNOPASSWD: ALL" > "/etc/sudoers.d/%group31"
-chmod 0440 /etc/sudoers.d/%group31
-echo -e "user42\tALL=(ALL)\tNOPASSWD: ALL" > "/etc/sudoers.d/user42"
-chmod 0440 /etc/sudoers.d/user42
-restorecon -rvF /etc/sudoers.d
-%end
-`
+	exp := &osbuild.PostOptions{
+		Commands: []string{
+			`echo -e "%group31\tALL=(ALL)\tNOPASSWD: ALL" > "/etc/sudoers.d/%group31"`,
+			`chmod 0440 /etc/sudoers.d/%group31`,
+			`echo -e "user42\tALL=(ALL)\tNOPASSWD: ALL" > "/etc/sudoers.d/user42"`,
+			`chmod 0440 /etc/sudoers.d/user42`,
+			`restorecon -rvF /etc/sudoers.d`,
+		},
+	}
 	assert.Equal(t, exp, makeKickstartSudoersPost([]string{"user42", "%group31"}))
 	assert.Equal(t, exp, makeKickstartSudoersPost([]string{"%group31", "user42"}))
 	assert.Equal(t, exp, makeKickstartSudoersPost([]string{"%group31", "user42", "%group31"}))
