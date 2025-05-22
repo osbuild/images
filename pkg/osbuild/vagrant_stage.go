@@ -7,7 +7,8 @@ import (
 type VagrantProvider string
 
 const (
-	VagrantProviderLibvirt VagrantProvider = "libvirt"
+	VagrantProviderLibvirt    VagrantProvider = "libvirt"
+	VagrantProviderVirtualbox VagrantProvider = "virtualbox"
 )
 
 type VagrantStageOptions struct {
@@ -41,7 +42,7 @@ func NewVagrantStageOptions(provider VagrantProvider) *VagrantStageOptions {
 }
 
 func (o *VagrantStageOptions) validate() error {
-	if o.Provider != VagrantProviderLibvirt {
+	if o.Provider != VagrantProviderLibvirt && o.Provider != VagrantProviderVirtualbox {
 		return fmt.Errorf("unknown provider in vagrant stage options %s", o.Provider)
 	}
 
