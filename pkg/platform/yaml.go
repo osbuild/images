@@ -20,6 +20,10 @@ type PlatformConf struct {
 	Packages      map[string][]string `yaml:"packages"`
 	BuildPackages map[string][]string `yaml:"build_packages"`
 	BootFiles     [][2]string         `yaml:"boot_files"`
+
+	// XXX: is this the best way to do it? we need a way to
+	// set the UEFIVendor based on the distro vendor
+	AutodetectUEFIVendor bool `yaml:"autodetect_uefi_vendor"`
 }
 
 // ensure PlatformConf implements the Platform interface

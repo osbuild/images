@@ -609,7 +609,7 @@ image_types:
 	assert.Equal(t, []string{"os", "image", "qcow2"}, imgType.PayloadPipelines)
 	assert.Equal(t, []string{"qcow2"}, imgType.Exports)
 	assert.Equal(t, map[string]uint64{"/": 1_073_741_824}, imgType.RequiredPartitionSizes)
-	assert.Equal(t, []platform.PlatformConf{
+	assert.Equal(t, []*platform.PlatformConf{
 		{
 			Arch:         arch.ARCH_PPC64LE,
 			BIOSPlatform: "powerpc-ieee1275",
