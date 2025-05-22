@@ -7,6 +7,7 @@ distros:
     module_platform_id: platform:f43
     product: "Fedora"
     ostree_ref_tmpl: "fedora/43/%s/iot"
+    default_fs_type: "ext4"
     iso_label_tmpl: "{{.Product}}-{{.OsVersion}}-{{.ImgTypeLabel}}-{{.Arch}}"
     defs_path: fedora
     runner: &fedora_runner
@@ -63,6 +64,7 @@ distros:
     module_platform_id: "platform:el10"
     vendor: "centos"
     ostree_ref_tmpl: "rhel/10/%s/edge"
+    default_fs_type: "xfs"
     defs_path: rhel-10
     runner:
       name: org.osbuild.centos10
