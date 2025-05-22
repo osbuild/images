@@ -165,6 +165,9 @@ type imageType struct {
 
 	NameAliases []string `yaml:"name_aliases"`
 
+	// skip the image type for the give distroname
+	SkipFor []string `yaml:"skip_for"`
+
 	// name is set by the loader
 	name string
 }
@@ -586,6 +589,9 @@ func ImageTypes(distroNameVer string) (map[string]ImageTypeYAML, error) {
 	imgTypes := make(map[string]ImageTypeYAML, len(toplevel.ImageTypes))
 	for name := range toplevel.ImageTypes {
 		v := toplevel.ImageTypes[name]
+		if slices.Contains(v.SkipFor, distroName) {
+			continue
+		}
 		v.name = name
 		for _, pl := range v.Platforms {
 			if pl.AutodetectUEFIVendor {
