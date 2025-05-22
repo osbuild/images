@@ -535,6 +535,11 @@ func imageInstallerImage(workload workload.Workload,
 		img.DisabledAnacondaModules = append(img.DisabledAnacondaModules, instCust.Modules.Disable...)
 	}
 
+	if len(img.Kickstart.Users)+len(img.Kickstart.Groups) > 0 {
+		// only enable the users module if needed
+		img.AdditionalAnacondaModules = append(img.AdditionalAnacondaModules, anaconda.ModuleUsers)
+	}
+
 	img.Platform = t.platform
 	img.Workload = workload
 
