@@ -27,6 +27,74 @@
             - "grub2-ppc64le"
             - "grub2-ppc64le-modules"
 
+  disk_sizes:
+    default_required_partition_sizes: &default_required_dir_sizes
+      "/": 1_073_741_824     # 1 * datasizes.GiB
+      "/usr": 2_147_483_648  # 2 * datasizes.GiB
+
+  platforms:
+    x86_64_uefi_platform: &x86_64_uefi_platform
+      arch: "x86_64"
+      autodetect_uefi_vendor: true
+      qcow2_compat: "1.1"
+      packages: &x86_64_uefi_platform_packages
+        uefi:
+          - "dracut-config-generic"
+          - "efibootmgr"
+          - "grub2-efi-x64"
+          - "shim-x64"
+    x86_64_bios_platform: &x86_64_bios_platform
+      <<: *x86_64_uefi_platform
+      bios_platform: "i386-pc"
+      packages: &x86_64_bios_platform_packages
+        <<: *x86_64_uefi_platform_packages
+        bios:
+          - "dracut-config-generic"
+          - "grub2-pc"
+      build_packages:
+        bios:
+          - "grub2-pc"
+    aarch64_platform: &aarch64_platform
+      arch: "aarch64"
+      autodetect_uefi_vendor: true
+      image_format: "qcow2"
+      qcow2_compat: "1.1"
+      packages: &aarch64_uefi_platform_packages
+        uefi:
+          - "dracut-config-generic"
+          - "efibootmgr"
+          - "grub2-efi-aa64"
+          - "grub2-tools"
+          - "shim-aa64"
+    ppc64le_bios_platform: &ppc64le_bios_platform
+      arch: "ppc64le"
+      bios_platform: "powerpc-ieee1275"
+      image_format: "qcow2"
+      qcow2_compat: "1.1"
+      packages:
+        bios:
+          - "dracut-config-generic"
+          - "powerpc-utils"
+          - "grub2-ppc64le"
+          - "grub2-ppc64le-modules"
+      build_packages:
+        bios:
+          - "grub2-ppc64le"
+          - "grub2-ppc64le-modules"
+    s390x_zipl_platform: &s390x_zipl_platform
+      arch: "s390x"
+      zipl_support: true
+      image_format: "qcow2"
+      qcow2_compat: "1.1"
+      packages:
+        zipl:
+          - "dracut-config-generic"
+          - "s390utils-base"
+          - "s390utils-core"
+      build_packages:
+        zipl:
+          - "s390utils-base"
+
   sap_image_config: &sap_image_config
     selinux_config:
       state: "permissive"
@@ -365,6 +433,26 @@ image_types:
                   - "subscription-manager-cockpit"
 
   qcow2: &qcow2
+    filename: "disk.qcow2"
+    mime_type: "application/x-qemu-disk"
+    # note that unlike fedora rhel does not use the environment.KVM
+    # for unknown reasons
+    bootable: true
+    default_size: 10_737_418_240  # 10 * datasizes.GibiByte
+    image_func: "disk"
+    build_pipelines: ["build"]
+    payload_pipelines: ["os", "image", "qcow2"]
+    exports: ["qcow2"]
+    required_partition_sizes: *default_required_dir_sizes
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "qcow2"
+      - <<: *aarch64_platform
+        image_format: "qcow2"
+      - <<: *ppc64le_bios_platform
+        image_format: "qcow2"
+      - <<: *s390x_zipl_platform
+        image_format: "qcow2"
     image_config:
       default_target: "multi-user.target"
       kernel_options: ["console=tty0", "console=ttyS0,115200n8", "no_timer_check"]
@@ -445,7 +533,13 @@ image_types:
                   - "insights-client"
                   - "subscription-manager-cockpit"
 
-  oci: *qcow2
+  oci:
+    <<: *qcow2
+    platforms:
+      - <<: *x86_64_uefi_platform
+        image_format: "qcow2"
+      - <<: *aarch64_platform
+        image_format: "qcow2"
 
   vhd: &vhd
     # based on https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/deploying_rhel_9_on_microsoft_azure/assembly_deploying-a-rhel-image-as-a-virtual-machine-on-microsoft-azure_cloud-content-azure#making-configuration-changes_configure-the-image-azure
@@ -844,6 +938,12 @@ image_types:
         - *sap_pkgset
 
   tar:
+    filename: "root.tar.xz"
+    mime_type: "application/x-tar"
+    image_func: "tar"
+    build_pipelines: ["build"]
+    payload_pipelines: ["os", "archive"]
+    exports: ["archive"]
     package_sets:
       os:
         - include:
@@ -851,6 +951,11 @@ image_types:
             - "selinux-policy-targeted"
           exclude:
             - "rng-tools"
+    platforms:
+      - arch: "x86_64"
+      - arch: "aarch64"
+      - arch: "ppc64le"
+      - arch: "s390x"
 
   vmdk: &vmdk
     image_config:
@@ -1063,6 +1168,15 @@ image_types:
               - "intel_idle.max_cstate=1"
 
   wsl:
+    filename: "disk.tar.gz"
+    mime_type: "application/x-tar"
+    image_func: "tar"
+    build_pipelines: ["build"]
+    payload_pipelines: ["os", "archive"]
+    exports: ["archive"]
+    platforms:
+      - arch: "x86_64"
+      - arch: "aarch64"
     image_config:
       cloud_init:
         - filename: "99_wsl.cfg"

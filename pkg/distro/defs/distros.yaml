@@ -55,3 +55,19 @@ distros:
     runner:
       <<: *fedora_runner
       name: org.osbuild.fedora40
+
+  - name: centos-10
+    product: "CentOS Stream"
+    os_version: "10-stream"
+    release_version: 10
+    module_platform_id: "platform:el10"
+    vendor: "centos"
+    ostree_ref_tmpl: "rhel/10/%s/edge"
+    defs_path: rhel-10
+    runner:
+      name: org.osbuild.centos10
+      build_packages:
+        - "glibc"  # ldconfig
+        - "platform-python"  # osbuild
+        - "systemd"  # systemd-tmpfiles and systemd-sysusers
+        - "python3"  # osbuild stages
