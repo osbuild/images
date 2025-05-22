@@ -3,6 +3,7 @@ package generic
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 
 	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/arch"
@@ -146,7 +147,8 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 	}
 
 	// XXX: move into pure YAML
-	if t.Arch().Distro().Name() == "rhel" && options.Facts != nil {
+	// XXX2: add isRHEL() helper
+	if strings.HasPrefix(t.Arch().Distro().Name(), "rhel-") && options.Facts != nil {
 		osc.RHSMFacts = options.Facts
 	}
 

@@ -865,6 +865,8 @@ image_types:
   "azure-rhui": &azure_rhui
     <<: *vhd
     skip_for: ["centos"]
+    compression: "xz"
+    filename: "disk.vhd.xz"
     partition_table:
       x86_64:
         uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
@@ -960,6 +962,10 @@ image_types:
   "azure-sap-rhui":
     <<: *azure_rhui
     skip_for: ["centos"]
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "vhd"
+    
     image_config:
       <<: [*image_config_vhd, *sap_image_config]
     package_sets:
@@ -1197,13 +1203,21 @@ image_types:
                 include:
                   - "insights-client"
 
+  # RHEL internal-only x86_64 EC2 image type
   ec2:
     <<: *ami
     skip_for: ["centos"]
+    filename: "image.raw.xz"
+    compression: "xz"
 
   "ec2-ha":
     <<: *ami
     skip_for: ["centos"]
+    filename: "image.raw.xz"    
+    compression: "xz"
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "raw"
     package_sets:
       os:
         - *ami_pkgset
@@ -1215,6 +1229,11 @@ image_types:
   "ec2-sap":
     <<: *ami
     skip_for: ["centos"]
+    filename: "image.raw.xz"
+    compression: "xz"
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "raw"
     package_sets:
       os:
         - *ami_pkgset

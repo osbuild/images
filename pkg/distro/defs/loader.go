@@ -611,6 +611,10 @@ func ImageTypes(distroNameVer string) (map[string]ImageTypeYAML, error) {
 				// DistroYAML so we can access the
 				// "DistroYAML.Vendor"
 				pl.UEFIVendor = distroName
+				// HAAAAAAAAAAAAAAAAAAAAACK: really just use DistroYAML.Vendor :(
+				if distroName == "rhel" {
+					pl.UEFIVendor = "redhat"
+				}
 			}
 		}
 		imgTypes[name] = v

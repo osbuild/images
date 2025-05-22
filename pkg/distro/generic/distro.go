@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strings"
 	"text/template"
 
 	// we cannot use "maps" yet, as it needs go1.23
@@ -37,9 +38,27 @@ const (
 var (
 	// XXX: move into defs.DistroYAML
 	oscapProfileAllowList = []oscap.Profile{
+		// fedora
 		oscap.Ospp,
 		oscap.PciDss,
 		oscap.Standard,
+		// rhel
+		oscap.AnssiBp28Enhanced,
+		oscap.AnssiBp28High,
+		oscap.AnssiBp28Intermediary,
+		oscap.AnssiBp28Minimal,
+		oscap.Cis,
+		oscap.CisServerL1,
+		oscap.CisWorkstationL1,
+		oscap.CisWorkstationL2,
+		oscap.Cui,
+		oscap.E8,
+		oscap.Hippa,
+		oscap.IsmO,
+		oscap.Ospp,
+		oscap.PciDss,
+		oscap.Stig,
+		oscap.StigGui,
 	}
 
 	ErrDistroNotFound = errors.New("distribution not found")
@@ -63,15 +82,26 @@ func (d *distribution) getISOLabelFunc(isoLabel string) isoLabelFunc {
 			ReleaseVersion string
 			Arch           string
 			ImgTypeLabel   string
+			Major          string
+			Minor          string
 		}
 		templ := common.Must(template.New("iso-label").Parse(d.DistroYAML.ISOLabelTmpl))
 		var buf bytes.Buffer
+		// XXX: hack
+		l := strings.Split(d.OsVersion(), ".")
+		var minor string
+		major := l[0]
+		if len(l) > 1 {
+			minor = l[1]
+		}
 		templ.Execute(&buf, inputs{
 			Product:        t.Arch().Distro().Product(),
 			OsVersion:      t.Arch().Distro().OsVersion(),
 			ReleaseVersion: t.Arch().Distro().Releasever(),
 			Arch:           t.Arch().Name(),
 			ImgTypeLabel:   isoLabel,
+			Major:          major,
+			Minor:          minor,
 		})
 		return buf.String()
 	}
