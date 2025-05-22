@@ -156,6 +156,10 @@ type imageType struct {
 	// XXX: or iso_variant?
 	Variant string `yaml:"variant"`
 
+	// XXX: this is really here only for compatibility/because of drift in the "imageInstallerImage"
+	// between fedora/rhel
+	KickstartUnattendedExtraKernelOpts []string `yaml:"kickstart_unattended_extra_kernel_opts"`
+
 	RPMOSTree bool `yaml:"rpm_ostree"`
 
 	DefaultSize uint64 `yaml:"default_size"`
