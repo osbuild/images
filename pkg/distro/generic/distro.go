@@ -135,7 +135,7 @@ func (d *distribution) Releasever() string {
 }
 
 func (d *distribution) OsVersion() string {
-	return d.DistroYAML.ReleaseVersion
+	return d.DistroYAML.OsVersion
 }
 
 func (d *distribution) Product() string {
