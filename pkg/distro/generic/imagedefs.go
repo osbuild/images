@@ -21,6 +21,8 @@ func newImageTypeFrom(d *distribution, ar *architecture, imgYAML defs.ImageTypeY
 		it.image = diskImage
 	case "container":
 		it.image = containerImage
+	case "tar":
+		it.image = tarImage
 	case "image_installer":
 		it.image = imageInstallerImage
 	case "live_installer":

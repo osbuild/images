@@ -222,7 +222,7 @@ func (a *architecture) addImageType(platform platform.Platform, it imageType) er
 			a.imageTypeAliases = map[string]string{}
 		}
 		if existingAliasFor, exists := a.imageTypeAliases[alias]; exists {
-			return fmt.Errorf("image type alias '%s' for '%s' is already defined for another image type '%s'", alias, it.Name(), existingAliasFor)
+			return fmt.Errorf("image type alias '%s' for '%s' is already defined for another image type '%s' on %v", alias, it.Name(), existingAliasFor, a.Distro().Name())
 		}
 		a.imageTypeAliases[alias] = it.Name()
 	}
