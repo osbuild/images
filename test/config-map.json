@@ -143,6 +143,7 @@
       "qcow2",
       "tar",
       "vagrant-libvirt",
+      "vagrant-virtualbox",
       "vhd",
       "vmdk",
       "wsl"
@@ -167,6 +168,7 @@
       "server-vhd",
       "server-vmdk",
       "server-vagrant-libvirt",
+      "server-vagrant-virtualbox",
       "wsl",
       "iot-bootable-container",
       "iot-container"

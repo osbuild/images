@@ -62,7 +62,14 @@ func TestFedoraFilenameFromType(t *testing.T) {
 				mimeType: "application/x-tar",
 			},
 		},
-
+		{
+			name: "server-vagrant-virtualbox",
+			args: args{"server-vagrant-virtualbox"},
+			want: wantResult{
+				filename: "vagrant-virtualbox.box",
+				mimeType: "application/x-tar",
+			},
+		},
 		{
 			name: "server-openstack",
 			args: args{"server-openstack"},
@@ -340,6 +347,7 @@ func TestFedoraImageType_Name(t *testing.T) {
 				"server-vhd",
 				"server-vmdk",
 				"server-vagrant-libvirt",
+				"server-vagrant-virtualbox",
 				"wsl",
 			},
 			verTypes: map[string][]string{
@@ -544,6 +552,7 @@ func TestFedoraArchitecture_ListImageTypes(t *testing.T) {
 				"server-vhd",
 				"server-vmdk",
 				"server-vagrant-libvirt",
+				"server-vagrant-virtualbox",
 				"wsl",
 				"iot-bootable-container",
 				"iot-simplified-installer",
