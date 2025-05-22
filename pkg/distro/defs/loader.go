@@ -66,6 +66,8 @@ type DistroYAML struct {
 	OSTreeRefTmpl    string `yaml:"ostree_ref_tmpl"`
 	ISOLabelTmpl     string `yaml:"iso_label_tmpl"`
 
+	DefaultFSType disk.FSType `yaml:"default_fs_type"`
+
 	Runner runner.RunnerConf `yaml:"runner"`
 
 	// directory with the actual image defintions, we separate that
