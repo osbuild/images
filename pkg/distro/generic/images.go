@@ -594,6 +594,13 @@ func imageInstallerImage(workload workload.Workload,
 		}
 	}
 
+	// Put the kickstart file in the root of the iso, some image
+	// types (like rhel10/image-installer) put them there, some
+	// others (like fedora/image-installer) do not and because
+	// its not uniform we need to make it configurable.
+	// XXX: unify with rhel-11 ? or rhel-10.x?
+	img.ISORootKickstart = t.ISORootKickstart
+
 	d := t.arch.distro
 
 	img.Product = d.Product()
