@@ -296,6 +296,11 @@ func ParseID(idStr string) (*distro.ID, error) {
 }
 
 func DistroFactory(idStr string) distro.Distro {
+	// HACK: centos10 moved fully into YAML
+	if idStr == "centos-10" {
+		return nil
+	}
+
 	id, err := ParseID(idStr)
 	if err != nil {
 		return nil
