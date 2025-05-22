@@ -535,11 +535,8 @@ image_types:
 
   oci:
     <<: *qcow2
-    skip_for: ["centos"]
     platforms:
-      - <<: *x86_64_uefi_platform
-        image_format: "qcow2"
-      - <<: *aarch64_platform
+      - <<: *x86_64_bios_platform
         image_format: "qcow2"
 
   vhd: &vhd
@@ -978,7 +975,8 @@ image_types:
             - "dracut-config-rescue"
             - "rng-tools"
 
-  ova: *vmdk
+  ova:
+    <<: *vmdk
 
   ami: &ami
     filename: "image.raw"
