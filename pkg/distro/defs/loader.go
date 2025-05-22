@@ -220,9 +220,12 @@ type imageType struct {
 	Environment environment.EnvironmentConf `yaml:"environment"`
 	Bootable    bool                        `yaml:"bootable"`
 
-	BootISO   bool   `yaml:"boot_iso"`
-	ISOLabel  string `yaml:"iso_label"`
-	RPMOSTree bool   `yaml:"rpm_ostree"`
+	BootISO  bool   `yaml:"boot_iso"`
+	ISOLabel string `yaml:"iso_label"`
+	// XXX: or iso_variant?
+	Variant string `yaml:"variant"`
+
+	RPMOSTree bool `yaml:"rpm_ostree"`
 
 	DefaultSize uint64 `yaml:"default_size"`
 	// the image func name: disk,container,live-installer,...
