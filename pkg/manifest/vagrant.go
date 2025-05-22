@@ -8,6 +8,7 @@ import (
 type Vagrant struct {
 	Base
 	filename string
+	provider osbuild.VagrantProvider
 
 	imgPipeline FilePipeline
 }
@@ -20,11 +21,12 @@ func (p *Vagrant) SetFilename(filename string) {
 	p.filename = filename
 }
 
-func NewVagrant(buildPipeline Build, imgPipeline FilePipeline) *Vagrant {
+func NewVagrant(buildPipeline Build, imgPipeline FilePipeline, provider osbuild.VagrantProvider) *Vagrant {
 	p := &Vagrant{
 		Base:        NewBase("vagrant", buildPipeline),
 		imgPipeline: imgPipeline,
 		filename:    "image.box",
+		provider:    provider,
 	}
 
 	if buildPipeline != nil {
@@ -40,7 +42,7 @@ func (p *Vagrant) serialize() osbuild.Pipeline {
 	pipeline := p.Base.serialize()
 
 	pipeline.AddStage(osbuild.NewVagrantStage(
-		osbuild.NewVagrantStageOptions(osbuild.VagrantProviderLibvirt),
+		osbuild.NewVagrantStageOptions(p.provider),
 		osbuild.NewVagrantStagePipelineFilesInputs(p.imgPipeline.Name(), p.imgPipeline.Filename()),
 	))
 
