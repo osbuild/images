@@ -557,12 +557,9 @@ func imageInstallerImage(workload workload.Workload,
 
 	img.Product = d.DistroYAML.Product
 
-	// We don't know the variant that goes into the OS pipeline that gets installed
-	img.Variant = "Unknown"
-
 	img.OSVersion = d.OsVersion()
 	img.Release = fmt.Sprintf("%s %s", d.DistroYAML.Product, d.OsVersion())
-
+	img.Variant = t.Variant
 	img.Preview = d.DistroYAML.Preview
 
 	img.ISOLabel, err = t.ISOLabel()
