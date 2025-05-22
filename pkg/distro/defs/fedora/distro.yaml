@@ -501,7 +501,7 @@ image_config:
 
 image_types:
   "server-vagrant-libvirt": &server_vagrant_libvirt
-    filename: "vagrant.box"
+    filename: "vagrant-libvirt.box"
     mime_type: "application/x-tar"
     environment: *kvm_env
     bootable: true
