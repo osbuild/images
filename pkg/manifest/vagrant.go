@@ -66,7 +66,6 @@ func (p *Vagrant) serialize() osbuild.Pipeline {
 		if len(p.macAddress) == 0 {
 			panic("vagrant with virtualbox provider requires mac address")
 		}
-
 		// The ovf stage needs the vmdk at root, I really don't quite like this
 		// and don't see why it can't be through an input?
 		inputName := "vmdk-tree"
