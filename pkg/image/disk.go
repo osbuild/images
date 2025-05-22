@@ -91,6 +91,16 @@ func (img *DiskImage) InstantiateManifest(m *manifest.Manifest,
 		tarPipeline.SetFilename(img.Filename)
 
 		imagePipeline = tarPipeline
+	case platform.FORMAT_VAGRANT_VIRTUALBOX:
+		vmdkPipeline := manifest.NewVMDK(buildPipeline, rawImagePipeline)
+
+		vagrantPipeline := manifest.NewVagrant(buildPipeline, vmdkPipeline, osbuild.VagrantProviderVirtualbox)
+
+		tarPipeline := manifest.NewTar(buildPipeline, vagrantPipeline, "archive")
+		tarPipeline.Format = osbuild.TarArchiveFormatUstar
+		tarPipeline.SetFilename(img.Filename)
+
+		imagePipeline = tarPipeline
 	case platform.FORMAT_VHD:
 		vpcPipeline := manifest.NewVPC(buildPipeline, rawImagePipeline)
 		vpcPipeline.ForceSize = img.VPCForceSize
