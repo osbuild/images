@@ -1516,6 +1516,9 @@ image_types:
     # this is the eventual name, and `wsl` the alias but we've been
     # having issues with CI renaming it
     name_aliases: ["server-wsl"]
+    # note that other distributions in images differ and use a .tar suffix, however .wsl is the
+    # correct suffix, see:
+    # https://learn.microsoft.com/en-us/windows/wsl/build-custom-distro#what-are-wsl-root-filesystem-tar-files
     filename: "image.wsl"
     mime_type: "application/x-tar"
     image_func: "tar"
