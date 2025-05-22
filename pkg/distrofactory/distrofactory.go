@@ -5,8 +5,7 @@ import (
 	"sort"
 
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/distro/fedora"
-	"github.com/osbuild/images/pkg/distro/rhel/rhel10"
+	"github.com/osbuild/images/pkg/distro/generic"
 	"github.com/osbuild/images/pkg/distro/rhel/rhel7"
 	"github.com/osbuild/images/pkg/distro/rhel/rhel8"
 	"github.com/osbuild/images/pkg/distro/rhel/rhel9"
@@ -109,11 +108,10 @@ func New(factories ...FactoryFunc) *Factory {
 // distros.
 func NewDefault() *Factory {
 	return New(
-		fedora.DistroFactory,
+		generic.DistroFactory,
 		rhel7.DistroFactory,
 		rhel8.DistroFactory,
 		rhel9.DistroFactory,
-		rhel10.DistroFactory,
 	)
 }
 

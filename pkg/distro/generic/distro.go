@@ -1,0 +1,282 @@
+package generic
+
+import (
+	"bytes"
+	"errors"
+	"fmt"
+	"sort"
+	"strings"
+	"text/template"
+
+	// we cannot use "maps" yet, as it needs go1.23
+	"golang.org/x/exp/maps"
+
+	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/customizations/oscap"
+	"github.com/osbuild/images/pkg/disk"
+	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distro/defs"
+	"github.com/osbuild/images/pkg/platform"
+)
+
+const (
+	// package set names
+
+	// main/common os image package set name
+	osPkgsKey = "os"
+
+	// container package set name
+	containerPkgsKey = "container"
+
+	// installer package set name
+	installerPkgsKey = "installer"
+
+	// blueprint package set name
+	blueprintPkgsKey = "blueprint"
+)
+
+var (
+	// XXX: move into defs.DistroYAML
+	oscapProfileAllowList = []oscap.Profile{
+		// fedora
+		oscap.Ospp,
+		oscap.PciDss,
+		oscap.Standard,
+		// rhel
+		oscap.AnssiBp28Enhanced,
+		oscap.AnssiBp28High,
+		oscap.AnssiBp28Intermediary,
+		oscap.AnssiBp28Minimal,
+		oscap.Cis,
+		oscap.CisServerL1,
+		oscap.CisWorkstationL1,
+		oscap.CisWorkstationL2,
+		oscap.Cui,
+		oscap.E8,
+		oscap.Hippa,
+		oscap.IsmO,
+		oscap.Ospp,
+		oscap.PciDss,
+		oscap.Stig,
+		oscap.StigGui,
+	}
+
+	ErrDistroNotFound = errors.New("distribution not found")
+)
+
+// distribution implements the distro.Distro interface
+var _ = distro.Distro(&distribution{})
+
+type distribution struct {
+	defs.DistroYAML
+
+	arches             map[string]*architecture
+	defaultImageConfig *distro.ImageConfig
+}
+
+func (d *distribution) getISOLabelFunc(isoLabel string) isoLabelFunc {
+	return func(t *imageType) string {
+		type inputs struct {
+			Product        string
+			OsVersion      string
+			ReleaseVersion string
+			Arch           string
+			ImgTypeLabel   string
+			Major          string
+			Minor          string
+		}
+		templ := common.Must(template.New("iso-label").Parse(d.DistroYAML.ISOLabelTmpl))
+		var buf bytes.Buffer
+		// XXX: hack
+		l := strings.Split(d.OsVersion(), ".")
+		var minor string
+		major := l[0]
+		if len(l) > 1 {
+			minor = l[1]
+		}
+		templ.Execute(&buf, inputs{
+			Product:        t.Arch().Distro().Product(),
+			OsVersion:      t.Arch().Distro().OsVersion(),
+			ReleaseVersion: t.Arch().Distro().Releasever(),
+			Arch:           t.Arch().Name(),
+			ImgTypeLabel:   isoLabel,
+			Major:          major,
+			Minor:          minor,
+		})
+		return buf.String()
+	}
+}
+
+func newDistro(nameVer string) (distro.Distro, error) {
+	distros, err := defs.Distros()
+	if err != nil {
+		return nil, err
+	}
+	distroYAML, ok := distros[nameVer]
+	if !ok {
+		return nil, fmt.Errorf("%w: no %s in %q", ErrDistroNotFound, nameVer, maps.Keys(distros))
+	}
+
+	rd := &distribution{
+		DistroYAML: distroYAML,
+		// XXX: move into defs.DistroYAML? the downside of doing this
+		// is that we would have to duplicate the default image config
+		// accross the centos/alma/rhel distros.yaml, otherwise we
+		// just load it from the imagetypes file/dir and it is natually
+		// "in-sync"
+		defaultImageConfig: common.Must(defs.DistroImageConfig(nameVer)),
+		arches:             make(map[string]*architecture),
+	}
+
+	its, err := defs.ImageTypes(rd.Name())
+	if err != nil {
+		return nil, err
+	}
+	for _, imgTypeYAML := range its {
+		// use as marker for images that are not converted to
+		// YAML yet
+		if imgTypeYAML.Filename == "" {
+			continue
+		}
+		for _, pl := range imgTypeYAML.Platforms {
+			ar, ok := rd.arches[pl.Arch.String()]
+			if !ok {
+				ar = newArchitecture(rd, pl.Arch.String())
+				rd.arches[pl.Arch.String()] = ar
+			}
+			it := newImageTypeFrom(rd, ar, imgTypeYAML)
+			if err := ar.addImageType(pl, it); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return rd, nil
+}
+
+func (d *distribution) Name() string {
+	return d.DistroYAML.Name
+}
+
+func (d *distribution) Codename() string {
+	return d.DistroYAML.Codename
+}
+
+func (d *distribution) Releasever() string {
+	return d.DistroYAML.ReleaseVersion
+}
+
+func (d *distribution) OsVersion() string {
+	return d.DistroYAML.OsVersion
+}
+
+func (d *distribution) Product() string {
+	return d.DistroYAML.Product
+}
+
+func (d *distribution) ModulePlatformID() string {
+	return d.DistroYAML.ModulePlatformID
+}
+
+func (d *distribution) OSTreeRef() string {
+	return d.DistroYAML.OSTreeRefTmpl
+}
+
+func (d *distribution) DefaultFSType() disk.FSType {
+	return d.DistroYAML.DefaultFSType
+}
+
+func (d *distribution) ListArches() []string {
+	archNames := make([]string, 0, len(d.arches))
+	for name := range d.arches {
+		archNames = append(archNames, name)
+	}
+	sort.Strings(archNames)
+	return archNames
+}
+
+func (d *distribution) GetArch(name string) (distro.Arch, error) {
+	arch, exists := d.arches[name]
+	if !exists {
+		return nil, fmt.Errorf("invalid architecture: %v", name)
+	}
+	return arch, nil
+}
+
+// architecture implements the distro.Arch interface
+var _ = distro.Arch(&architecture{})
+
+type architecture struct {
+	distro           *distribution
+	name             string
+	imageTypes       map[string]distro.ImageType
+	imageTypeAliases map[string]string
+}
+
+func newArchitecture(rd *distribution, name string) *architecture {
+	return &architecture{
+		distro:           rd,
+		name:             name,
+		imageTypes:       make(map[string]distro.ImageType),
+		imageTypeAliases: make(map[string]string),
+	}
+}
+
+func (a *architecture) Name() string {
+	return a.name
+}
+
+func (a *architecture) ListImageTypes() []string {
+	itNames := make([]string, 0, len(a.imageTypes))
+	for name := range a.imageTypes {
+		itNames = append(itNames, name)
+	}
+	sort.Strings(itNames)
+	return itNames
+}
+
+func (a *architecture) GetImageType(name string) (distro.ImageType, error) {
+	t, exists := a.imageTypes[name]
+	if !exists {
+		aliasForName, exists := a.imageTypeAliases[name]
+		if !exists {
+			return nil, fmt.Errorf("invalid image type: %v", name)
+		}
+		t, exists = a.imageTypes[aliasForName]
+		if !exists {
+			panic(fmt.Sprintf("image type '%s' is an alias to a non-existing image type '%s'", name, aliasForName))
+		}
+	}
+	return t, nil
+}
+
+func (a *architecture) addImageType(platform platform.Platform, it imageType) error {
+	it.arch = a
+	it.platform = platform
+	a.imageTypes[it.Name()] = &it
+	for _, alias := range it.ImageTypeYAML.NameAliases {
+		if a.imageTypeAliases == nil {
+			a.imageTypeAliases = map[string]string{}
+		}
+		if existingAliasFor, exists := a.imageTypeAliases[alias]; exists {
+			return fmt.Errorf("image type alias '%s' for '%s' is already defined for another image type '%s' on %v", alias, it.Name(), existingAliasFor, a.Distro().Name())
+		}
+		a.imageTypeAliases[alias] = it.Name()
+	}
+	return nil
+}
+
+func (a *architecture) Distro() distro.Distro {
+	return a.distro
+}
+
+func DistroFactory(idStr string) distro.Distro {
+	distro, err := newDistro(idStr)
+	if errors.Is(err, ErrDistroNotFound) {
+		return nil
+	}
+	if err != nil {
+		panic(err)
+	}
+	return distro
+}

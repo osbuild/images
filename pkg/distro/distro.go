@@ -46,6 +46,8 @@ type Distro interface {
 	// Returns the ostree reference template
 	OSTreeRef() string
 
+	DefaultFSType() disk.FSType
+
 	// Returns a sorted list of the names of the architectures this distro
 	// supports.
 	ListArches() []string
