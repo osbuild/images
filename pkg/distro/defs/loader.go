@@ -159,6 +159,7 @@ type imageType struct {
 	// XXX: this is really here only for compatibility/because of drift in the "imageInstallerImage"
 	// between fedora/rhel
 	KickstartUnattendedExtraKernelOpts []string `yaml:"kickstart_unattended_extra_kernel_opts"`
+	ISORootKickstart                   bool     `yaml:"iso_root_kickstart"`
 
 	RPMOSTree bool `yaml:"rpm_ostree"`
 

@@ -574,6 +574,9 @@ func imageInstallerImage(workload workload.Workload,
 		}
 	}
 
+	// put the kickstart file in the root of the iso
+	img.ISORootKickstart = t.ISORootKickstart
+
 	d := t.arch.distro
 
 	img.Product = d.DistroYAML.Product
