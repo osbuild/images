@@ -66,6 +66,7 @@ distros:
     ostree_ref_tmpl: "rhel/10/%s/edge"
     default_fs_type: "xfs"
     defs_path: rhel-10
+    iso_label_tmpl: "CentOS-Stream-{{.ReleaseVersion}}-BaseOS-{{.Arch}}"
     runner:
       name: org.osbuild.centos10
       build_packages:

@@ -54,6 +54,23 @@
       build_packages:
         bios:
           - "grub2-pc"
+    x86_64_installer_platform: &x86_64_installer_platform
+      <<: *x86_64_bios_platform
+      image_format: "raw"
+      packages:
+        <<: *x86_64_bios_platform_packages
+        firmware:
+          - "microcode_ctl"  # ??
+          - "iwl1000-firmware"
+          - "iwl100-firmware"
+          - "iwl105-firmware"
+          - "iwl135-firmware"
+          - "iwl2000-firmware"
+          - "iwl2030-firmware"
+          - "iwl3160-firmware"
+          - "iwl5000-firmware"
+          - "iwl5150-firmware"
+          - "iwl6050-firmware"
     aarch64_platform: &aarch64_platform
       arch: "aarch64"
       autodetect_uefi_vendor: true
@@ -1298,6 +1315,34 @@ image_types:
             - "rpm-plugin-systemd-inhibit"
 
   "image-installer":
+    filename: "installer.iso"
+    mime_type: "application/x-iso9660-image"
+    bootable: true
+    boot_iso: true
+    image_func: "image_installer"
+    # We don't know the variant of the OS pipeline being installed
+    iso_label: "Unknown"
+    build_pipelines: ["build"]
+    payload_pipelines:
+      - "anaconda-tree"
+      - "efiboot-tree"
+      - "os"
+      - "bootiso-tree"
+      - "bootiso"
+    exports: ["bootiso"]
+    required_partition_sizes: *default_required_dir_sizes
+    image_config:
+      iso_rootfs_type: "squashfs"      
+    installer_config:
+      additional_dracut_modules: 
+        - "nvdimm"  # non-volatile DIMM firmware (provides nfit, cuse, and nd_e820)
+        - "net-lib"
+      additional_drivers:
+        - "ipmi_devintf"
+        - "ipmi_msghandler"
+    platforms:
+      - *x86_64_installer_platform
+      - *aarch64_platform
     package_sets:
       <<: *bare_metal_pkgset
       installer:
