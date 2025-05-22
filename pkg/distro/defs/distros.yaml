@@ -73,3 +73,29 @@ distros:
         - "platform-python"  # osbuild
         - "systemd"  # systemd-tmpfiles and systemd-sysusers
         - "python3"  # osbuild stages
+
+  # - &rhel_stable
+  #   name: rhel-10.1
+  #   product: "Red Hat Enterprise Linux"
+  #   os_version: "10.1"
+  #   release_version: 10
+  #   module_platform_id: "platform:el10"
+  #   vendor: "redhat"
+  #   ostree_ref_tmpl: "rhel/10/%s/edge"
+  #   default_fs_type: "xfs"
+  #   defs_path: rhel-10
+  #   # XXX: add Major/Minor to the isolabelfunc
+  #   iso_label_tmpl: "RHEL-{{.Major}-{{.Minotr}}-0-BaseOS-{{.Arch}}"
+  #   runner:
+  #     name: org.osbuild.rhel101
+  #     build_packages: &rhel_runner_build_packages
+  #       - "glibc"  # ldconfig
+  #       - "platform-python"  # osbuild
+  #       - "systemd"  # systemd-tmpfiles and systemd-sysusers
+  #       - "python3"  # osbuild stages
+  # - <<: *rhel_stable
+  #   name: rhel-10.0
+  #   os_version: "10.1"
+  #   runner:
+  #     name: org.osbuild.rhel100
+  #     build_packages: *rhel_runner_build_packages
