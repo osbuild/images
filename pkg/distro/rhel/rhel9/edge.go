@@ -7,6 +7,7 @@ import (
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
+	"github.com/osbuild/images/pkg/disk/partition"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/osbuild/images/pkg/osbuild"
@@ -107,7 +108,7 @@ func mkEdgeRawImgType(d *rhel.Distribution) *rhel.ImageType {
 	it.RPMOSTree = true
 	it.Bootable = true
 	it.BasePartitionTables = edgeBasePartitionTables
-	it.UnsupportedPartitioningModes = []disk.PartitioningMode{disk.RawPartitioningMode}
+	it.UnsupportedPartitioningModes = []partition.PartitioningMode{partition.RawPartitioningMode}
 
 	return it
 }
@@ -194,7 +195,7 @@ func mkEdgeSimplifiedInstallerImgType(d *rhel.Distribution) *rhel.ImageType {
 	it.Bootable = true
 	it.ISOLabelFn = distroISOLabelFunc
 	it.BasePartitionTables = edgeBasePartitionTables
-	it.UnsupportedPartitioningModes = []disk.PartitioningMode{disk.RawPartitioningMode}
+	it.UnsupportedPartitioningModes = []partition.PartitioningMode{partition.RawPartitioningMode}
 
 	if common.VersionGreaterThanOrEqual(d.OsVersion(), "9.2") || !d.IsRHEL() {
 		it.DefaultImageConfig.KernelOptions = append(it.DefaultImageConfig.KernelOptions, "rw", "coreos.no_persist_ip")
@@ -236,7 +237,7 @@ func mkEdgeAMIImgType(d *rhel.Distribution) *rhel.ImageType {
 	it.RPMOSTree = true
 	it.Bootable = true
 	it.BasePartitionTables = edgeBasePartitionTables
-	it.UnsupportedPartitioningModes = []disk.PartitioningMode{disk.RawPartitioningMode}
+	it.UnsupportedPartitioningModes = []partition.PartitioningMode{partition.RawPartitioningMode}
 	it.Environment = &environment.EC2{}
 
 	return it
@@ -275,7 +276,7 @@ func mkEdgeVsphereImgType(d *rhel.Distribution) *rhel.ImageType {
 	it.RPMOSTree = true
 	it.Bootable = true
 	it.BasePartitionTables = edgeBasePartitionTables
-	it.UnsupportedPartitioningModes = []disk.PartitioningMode{disk.RawPartitioningMode}
+	it.UnsupportedPartitioningModes = []partition.PartitioningMode{partition.RawPartitioningMode}
 
 	return it
 }
