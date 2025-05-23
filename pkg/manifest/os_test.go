@@ -17,7 +17,9 @@ import (
 	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
+	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
+	"github.com/osbuild/images/pkg/runner"
 )
 
 func findStages(name string, stages []*osbuild.Stage) []*osbuild.Stage {
@@ -448,4 +450,107 @@ func collectCopyDestinationPaths(stages []*osbuild.Stage) []string {
 		}
 	}
 	return destinationPaths
+}
+
+func TestHMACStageInclusion(t *testing.T) {
+	repos := []rpmmd.RepoConfig{}
+	runner := &runner.CentOS{Version: 9}
+
+	// We need the OS pipeline to run the serialization functions for the UKI,
+	// which means we need a Platform with the correct bootloader setting and a
+	// partition table with an ESP.
+	platform := &platform.X86{
+		Bootloader: platform.BOOTLOADER_UKI,
+	}
+	pt := testdisk.TestPartitionTables()["plain"]
+
+	t.Run("add-hmac-stage", func(t *testing.T) {
+		inputs := manifest.Inputs{
+			Depsolved: dnfjson.DepsolveResult{
+				Packages: []rpmmd.PackageSpec{
+					{
+						Name:     "test-kernel",
+						Epoch:    0,
+						Version:  "13.3",
+						Release:  "7.el9",
+						Arch:     "x86_64",
+						Checksum: "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+					},
+					{
+						Name:     "uki-direct",
+						Epoch:    0,
+						Version:  "24.11",
+						Release:  "1.el9",
+						Arch:     "noarch",
+						Checksum: "sha256:c6ade8aef0282a228e1011f4f4b7efe41c035f6e635feb27082ac36cb1a1384b",
+					},
+				},
+			},
+		}
+
+		m := manifest.New()
+		build := manifest.NewBuild(&m, runner, repos, nil)
+		os := manifest.NewOS(build, platform, repos)
+		os.PartitionTable = &pt
+		os.OSCustomizations.KernelName = "test-kernel"
+		pipeline := os.SerializeWith(inputs)
+
+		hmacStage := manifest.FindStage("org.osbuild.hmac", pipeline.Stages)
+		assert.NotNil(t, hmacStage)
+		hmacStageOptions := hmacStage.Options.(*osbuild.HMACStageOptions)
+		assert.Equal(t, hmacStageOptions.Paths, []string{"/boot/efi/EFI/Linux/ffffffffffffffffffffffffffffffff-13.3-7.el9.x86_64.efi"})
+
+		dirStages := findStages("org.osbuild.mkdir", pipeline.Stages)
+		assert.NotNil(t, dirStages)
+		directories := make([]string, 0)
+		for _, dirStage := range dirStages {
+			for _, stagePath := range dirStage.Options.(*osbuild.MkdirStageOptions).Paths {
+				directories = append(directories, stagePath.Path)
+			}
+		}
+		assert.Contains(t, directories, "/boot/efi/EFI/Linux/ffffffffffffffffffffffffffffffff-13.3-7.el9.x86_64.efi.extra.d")
+	})
+
+	t.Run("no-hmac-stage", func(t *testing.T) {
+		inputs := manifest.Inputs{
+			Depsolved: dnfjson.DepsolveResult{
+				Packages: []rpmmd.PackageSpec{
+					{
+						Name:     "test-kernel",
+						Epoch:    0,
+						Version:  "13.3",
+						Release:  "7.el9",
+						Arch:     "x86_64",
+						Checksum: "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+					},
+					{
+						Name:     "uki-direct",
+						Epoch:    0,
+						Version:  "25.11",
+						Release:  "1.el9",
+						Arch:     "noarch",
+						Checksum: "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+					},
+				},
+			},
+		}
+
+		m := manifest.New()
+		build := manifest.NewBuild(&m, runner, repos, nil)
+		os := manifest.NewOS(build, platform, repos)
+		os.PartitionTable = &pt
+		pipeline := os.SerializeWith(inputs)
+
+		hmacStage := manifest.FindStage("org.osbuild.hmac", pipeline.Stages)
+		assert.Nil(t, hmacStage)
+
+		dirStages := findStages("org.osbuild.mkdir", pipeline.Stages)
+		directories := make([]string, 0)
+		for _, dirStage := range dirStages {
+			for _, stagePath := range dirStage.Options.(*osbuild.MkdirStageOptions).Paths {
+				directories = append(directories, stagePath.Path)
+			}
+		}
+		assert.NotContains(t, directories, "/boot/efi/EFI/Linux/ffffffffffffffffffffffffffffffff-13.3-7.el9.x86_64.efi.extra.d")
+	})
 }
