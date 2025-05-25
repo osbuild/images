@@ -13,9 +13,9 @@ require (
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.13
 	github.com/BurntSushi/toml v1.5.0
 	github.com/aws/aws-sdk-go v1.55.7
-	github.com/containers/common v0.62.0
-	github.com/containers/image/v5 v5.34.0
-	github.com/containers/storage v1.57.1
+	github.com/containers/common v0.62.3
+	github.com/containers/image/v5 v5.34.3
+	github.com/containers/storage v1.57.2
 	github.com/gobwas/glob v0.2.3
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/google/go-cmp v0.7.0
