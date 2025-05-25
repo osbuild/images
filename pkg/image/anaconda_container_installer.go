@@ -10,6 +10,7 @@ import (
 	"github.com/osbuild/images/pkg/customizations/anaconda"
 	"github.com/osbuild/images/pkg/customizations/kickstart"
 	"github.com/osbuild/images/pkg/datasizes"
+	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
@@ -59,7 +60,9 @@ type AnacondaContainerInstaller struct {
 	// ISO OS payload, if known.
 	Locale string
 
-	InstallRootfsType string
+	// Filesystem type for the installed system as opposed to that of the ISO.
+	// The ISO filesystem type is hard coded to squashfs.
+	InstallRootfsType disk.FSType
 }
 
 func NewAnacondaContainerInstaller(container container.SourceSpec, ref string) *AnacondaContainerInstaller {
