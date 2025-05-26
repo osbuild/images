@@ -217,8 +217,17 @@ def setup_dependencies(manifests, config_map, distro, arch):
                                             arches=arches,
                                             images=filters.get("image-types"))
 
+        distros_to_skip = []
+        for skip in filters.get("skip-distros", []):
+            distros_to_skip.append(skip["name"])
         for image_config in image_configs:
             ic_distro = image_config["distro"]
+            if ic_distro in distros_to_skip:
+                distro = image_config["distro"]
+                arch = image_config["arch"]
+                image_type = image_config["image-type"]
+                print(f"Skipping {distro} {arch} {image_type}: distro found in skip list")
+                continue
             ic_arch = image_config["arch"]
             ic_image_type = image_config["image-type"]
             dep_build_name = testlib.gen_build_name(ic_distro, ic_arch, dep_image_type, dep_config_name)
