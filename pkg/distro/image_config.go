@@ -268,7 +268,7 @@ func (c *ImageConfig) SysconfigStageOptions() []*osbuild.SysconfigStageOptions {
 	return []*osbuild.SysconfigStageOptions{opts}
 }
 
-// Default Vagrant user, see:
+// Default Vagrant user and group, see:
 // https://developer.hashicorp.com/vagrant/docs/boxes/base#default-user-settings
 // for details.
 func defaultVagrantUser() users.User {
@@ -276,6 +276,12 @@ func defaultVagrantUser() users.User {
 		Name:   "vagrant",
 		Key:    common.ToPtr("ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zQPyUecp4pzC6kivAIhyfHilFR61RGL+GPXQ2MWZWFYbAGjyiYJnAmCP3NOTd0jMZEnDkbUvxhMmBYSdETk1rRgm+R4LOzFUGaHqHDLKLX+FIPKcF96hrucXzcWyLbIbEgE98OHlnVYCzRdK8jlqm8tehUc9c9WhQ== vagrant insecure public key\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN1YdxBpNlzxDqfJyw/QKow1F+wvG9hXGoqiysfJOn5Y vagrant insecure public key"),
 		Groups: []string{"vagrant"},
+	}
+}
+
+func defaultVagrantGroup() users.Group {
+	return users.Group{
+		Name: "vagrant",
 	}
 }
 
@@ -292,4 +298,19 @@ func (c *ImageConfig) UsersForImageConfig() []users.User {
 	}
 
 	return us
+}
+
+// Some image config options lead to the creation of groups. This function is
+// used in `osCustomizations` to create those groups. Might return an empty
+// slice.
+func (c *ImageConfig) GroupsForImageConfig() []users.Group {
+	gs := []users.Group{}
+
+	if c.VagrantConfig != nil {
+		if c.VagrantConfig.CreateVagrantUser == true {
+			gs = append(gs, defaultVagrantGroup())
+		}
+	}
+
+	return gs
 }
