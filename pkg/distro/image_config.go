@@ -2,6 +2,7 @@ package distro
 
 import (
 	"fmt"
+	"os"
 	"reflect"
 
 	"github.com/osbuild/images/internal/common"
@@ -285,6 +286,25 @@ func defaultVagrantGroup() users.Group {
 	}
 }
 
+func defaultVagrantSudoers() *fsnode.File {
+	f, err := fsnode.NewFile(
+		"/etc/sudoers.d/vagrant",
+		common.ToPtr(os.FileMode(0440)),
+		nil,
+		nil,
+		[]byte("vagrant ALL=(ALL) NOPASSWD: ALL\n"),
+	)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return f
+}
+
+// By default vagrant expects the vagrant user to be in the sudoers group
+// without a password. We do this with a drop-in file.
+
 // Some image config options lead to the creation of users. This function is
 // used in `osCustomizations` to create those users. Might return an empty
 // slice.
@@ -313,4 +333,19 @@ func (c *ImageConfig) GroupsForImageConfig() []users.Group {
 	}
 
 	return gs
+}
+
+// Some image config options lead to the creation of files. This function is
+// used in `osCustomizations` to create those files. Might return an empty
+// slice.
+func (c *ImageConfig) FilesForImageConfig() []*fsnode.File {
+	fs := []*fsnode.File{}
+
+	if c.VagrantConfig != nil {
+		if c.VagrantConfig.CreateVagrantUser == true {
+			fs = append(fs, defaultVagrantSudoers())
+		}
+	}
+
+	return fs
 }
