@@ -514,6 +514,8 @@ image_types:
     image_config: &image_config_vagrant
       default_target: "multi-user.target"
       kernel_options: *cloud_kernel_options
+      vagrant_config:
+        create_vagrant_user: true
     partition_table:
       <<: *default_partition_tables
     package_sets:
