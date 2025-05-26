@@ -123,10 +123,21 @@ type ImageConfig struct {
 	// IsoRootfsType defines what rootfs (squashfs, erofs,ext4)
 	// is used
 	IsoRootfsType *manifest.RootfsType `yaml:"iso_rootfs_type,omitempty"`
+
+	// Contains bits and bobs for vagrant machines such as if the initial
+	// user should be created.
+	VagrantConfig *VagrantConfig `yaml:"vagrant_config,omitempty"`
 }
 
 type WSLConfig struct {
 	BootSystemd bool `yaml:"boot_systemd,omitempty"`
+}
+
+// Control the default setup of a Vagrant box, see the
+// [Vagrant](https://developer.hashicorp.com/vagrant/docs/boxes/base#default-user-settings)
+type VagrantConfig struct {
+	// Should a `vagrant` user with the default insecure vagrant keys be created?
+	CreateVagrantUser bool `yaml:"create_vagrant_user,omitempty"`
 }
 
 // InheritFrom inherits unset values from the provided parent configuration and
