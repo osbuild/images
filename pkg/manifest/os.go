@@ -2,6 +2,7 @@ package manifest
 
 import (
 	"fmt"
+	"net/url"
 	"path/filepath"
 	"strings"
 
@@ -1009,4 +1010,26 @@ func (p *OS) addInlineDataAndStages(pipeline *osbuild.Pipeline, files []*fsnode.
 	for _, file := range files {
 		p.inlineData = append(p.inlineData, string(file.Data()))
 	}
+}
+
+func (p *OS) fileRefs() []string {
+	var fileRefs []string
+
+	for _, file := range p.OSCustomizations.Files {
+		if uriStr := file.URI(); uriStr != "" {
+			uri, err := url.Parse(uriStr)
+			if err != nil {
+				panic(fmt.Errorf("internal error: file customizations is not a valid URL: %w", err))
+			}
+
+			switch uri.Scheme {
+			case "", "file":
+				fileRefs = append(fileRefs, uri.Path)
+			default:
+				panic(fmt.Errorf("internal error: unsupported schema for OSCustomizations.Files: %v", uriStr))
+			}
+		}
+	}
+
+	return fileRefs
 }

@@ -155,6 +155,10 @@
           "path": "/etc/empty_file.txt",
           "user": 0,
           "group": 0
+        },
+        {
+          "path": "/etc/file-from-host",
+          "uri": "file:///proc/1/cpu_resctrl_groups"
         }
       ],
       "repositories": [
