@@ -75,6 +75,9 @@ func osCustomizations(
 		// add them via kickstart instead
 		osc.Groups = users.GroupsFromBP(c.GetGroups())
 		osc.Users = users.UsersFromBP(c.GetUsers())
+
+		osc.Groups = append(osc.Groups, imageConfig.GroupsForImageConfig()...)
+		osc.Users = append(osc.Users, imageConfig.UsersForImageConfig()...)
 	}
 
 	osc.EnabledServices = imageConfig.EnabledServices
@@ -275,6 +278,8 @@ func osCustomizations(
 	osc.NetworkManager = imageConfig.NetworkManager
 
 	osc.Files = append(osc.Files, imageConfig.Files...)
+	osc.Files = append(osc.Files, imageConfig.FilesForImageConfig()...)
+
 	osc.Directories = append(osc.Directories, imageConfig.Directories...)
 
 	if imageConfig.NoBLS != nil {
