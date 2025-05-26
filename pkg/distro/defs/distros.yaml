@@ -1,0 +1,102 @@
+distros:
+  - &fedora_rawhide
+    name: fedora-43
+    preview: true
+    os_version: 43
+    release_version: 43
+    module_platform_id: platform:f43
+    product: "Fedora"
+    ostree_ref_tmpl: "fedora/43/%s/iot"
+    default_fs_type: "ext4"
+    iso_label_tmpl: "{{.Product}}-{{.OsVersion}}-{{.ImgTypeLabel}}-{{.Arch}}"
+    defs_path: fedora
+    runner: &fedora_runner
+      name: org.osbuild.fedora43
+      build_packages:
+        - "glibc"  # ldconfig
+        - "systemd"  # systemd-tmpfiles and systemd-sysusers
+        - "python3"  # osbuild
+    # XXX: add repos here too, that requires some churn, see
+    # https://github.com/osbuild/images/compare/main...mvo5:yaml-distroconfig?expand=1
+    # and we will also need to think about backward compat, as currently
+    # dropping "$distro-$ver.json" files into
+    # /etc/osbuild-composer/repositories will define what distros are
+    # available via images and we will need to provide compatibility for
+    # that.
+    #
+    # Having the repos separated means when a new fedora release is out
+    # we will need to update two places which is clearly a regression from
+    # before.
+  - &fedora_stable
+    <<: *fedora_rawhide
+    name: fedora-42
+    preview: false
+    os_version: 42
+    release_version: 42
+    ostree_ref_tmpl: "fedora/42/%s/iot"
+    module_platform_id: platform:f42
+    runner:
+      <<: *fedora_runner
+      name: org.osbuild.fedora42
+  - <<: *fedora_stable
+    name: fedora-41
+    os_version: 41
+    release_version: 41
+    ostree_ref_tmpl: "fedora/41/%s/iot"
+    module_platform_id: platform:f41
+    runner:
+      <<: *fedora_runner
+      name: org.osbuild.fedora41
+  - <<: *fedora_stable
+    name: fedora-40
+    os_version: 40
+    release_version: 40
+    ostree_ref_tmpl: "fedora/40/%s/iot"
+    module_platform_id: platform:f40
+    runner:
+      <<: *fedora_runner
+      name: org.osbuild.fedora40
+
+  - name: centos-10
+    product: "CentOS Stream"
+    os_version: "10-stream"
+    release_version: 10
+    module_platform_id: "platform:el10"
+    vendor: "centos"
+    ostree_ref_tmpl: "rhel/10/%s/edge"
+    default_fs_type: "xfs"
+    defs_path: rhel-10
+    iso_label_tmpl: "CentOS-Stream-{{.ReleaseVersion}}-BaseOS-{{.Arch}}"
+    runner:
+      name: org.osbuild.centos10
+      build_packages:
+        - "glibc"  # ldconfig
+        - "platform-python"  # osbuild
+        - "systemd"  # systemd-tmpfiles and systemd-sysusers
+        - "python3"  # osbuild stages
+
+  - &rhel_stable
+    name: rhel-10.1
+    product: "Red Hat Enterprise Linux"
+    os_version: "10.1"
+    release_version: 10
+    module_platform_id: "platform:el10"
+    vendor: "redhat"
+    ostree_ref_tmpl: "rhel/10/%s/edge"
+    default_fs_type: "xfs"
+    defs_path: rhel-10
+    # XXX: add Major/Minor to the isolabelfunc
+    iso_label_tmpl: "RHEL-{{.Major}}-{{.Minor}}-0-BaseOS-{{.Arch}}"
+    runner:
+      name: org.osbuild.rhel101
+      build_packages: &rhel_runner_build_packages
+        - "glibc"  # ldconfig
+        - "platform-python"  # osbuild
+        - "systemd"  # systemd-tmpfiles and systemd-sysusers
+        - "python3"  # osbuild stages
+  - <<: *rhel_stable
+    name: rhel-10.0
+    os_version: "10.0"
+    runner:
+      name: org.osbuild.rhel100
+      build_packages: *rhel_runner_build_packages

@@ -105,6 +105,10 @@ func (d *TestDistro) OSTreeRef() string {
 	return d.ostreeRef
 }
 
+func (d *TestDistro) DefaultFSType() disk.FSType {
+	return disk.FS_EXT4
+}
+
 func (d *TestDistro) ListArches() []string {
 	archs := make([]string, 0, len(d.arches))
 	for name := range d.arches {

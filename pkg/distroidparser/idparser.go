@@ -2,8 +2,6 @@ package distroidparser
 
 import (
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/distro/fedora"
-	"github.com/osbuild/images/pkg/distro/rhel/rhel10"
 	"github.com/osbuild/images/pkg/distro/rhel/rhel7"
 	"github.com/osbuild/images/pkg/distro/rhel/rhel8"
 	"github.com/osbuild/images/pkg/distro/rhel/rhel9"
@@ -63,10 +61,8 @@ func (p *Parser) Standardize(idStr string) (string, error) {
 
 func NewDefaultParser() *Parser {
 	return New(
-		fedora.ParseID,
 		rhel7.ParseID,
 		rhel8.ParseID,
 		rhel9.ParseID,
-		rhel10.ParseID,
 	)
 }

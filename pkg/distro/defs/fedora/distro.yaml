@@ -154,14 +154,23 @@
           - "grub2-efi-riscv64-modules"
           - "shim-unsigned-riscv64"
 
+
   installer_config: &default_installer_config
     additional_dracut_modules:
       - "net-lib"
+    squashfs_rootfs: true
     condition:
       version_less_than:
         "42":
+          # config is fully replaced
           additional_dracut_modules:
             - "ifcfg"
+          squashfs_rootfs: true
+        "41":
+          # config is fully replaced
+          additional_dracut_modules:
+            - "ifcfg"
+          squashfs_rootfs: false
 
   image_config:
     iot_enabled_services: &image_config_iot_enabled_services
@@ -965,14 +974,13 @@ image_types:
             - "keyutils"          # Manipulating the kernel keyring; used by bootc
             - "libsss_sudo"       # allow communication between sudo and SSSD for caching sudo rules by SSSD
             - "linux-firmware"    # linux-firmware now a recommends so let's explicitly include it
-            # There are things that write outside of the journal still
-            # (such as the classic wtmp etc.). auditd also writes
-            # outside the journal but it has its own log rotation.
-            # Anything package layered will also tend to expect files
-            # dropped in /etc/logrotate.d to work. Really this is a
-            # legacy thing but if we don't have it then people's disks
-            # will slowly fill up with logs.
-            - "logrotate"
+            - "logrotate"         # There are things that write outside of the journal still
+                                  # (such as the classic wtmp etc.). auditd also writes outside
+                                  # the journal but it has its own log rotation.  Anything
+                                  # package layered will also tend to expect files dropped in
+                                  # /etc/logrotate.d to work. Really this is a legacy thing but
+                                  # if we don't have it then people's disks will slowly fill up
+                                  # with logs.
             - "lsof"
             - "lvm2"                       # Storage configuration/management
             - "nano"                       # default editor
@@ -1407,7 +1415,9 @@ image_types:
             - "sdubby"
           condition:
             version_greater_or_equal:
-              VERSION_RAWHIDE:
+              # XXX: this was VERSION_RAWHIDE, if we need this again lets add
+              # "alias" to defs.DistroYAML
+              43:
                 include:
                   - "anaconda-webui"
     platforms:
@@ -1424,6 +1434,15 @@ image_types:
     image_func: "image_installer"
     # We don't know the variant of the OS pipeline being installed
     iso_label: "Unknown"
+    # We don't know the variant that goes into the OS pipeline that gets installed
+    variant: "Unknown"
+    # NOTE: this is not supported right now because the
+    # image-installer on Fedora isn't working when unattended.
+    # These options are probably necessary but could change.
+    # Unattended/non-interactive installations are better set to text
+    # time since they might be running headless and a UI is
+    # unnecessary.
+    kickstart_unattended_extra_kernel_opts: ["inst.text", "inst.noninteractive"]
     build_pipelines: ["build"]
     payload_pipelines:
       - "anaconda-tree"
@@ -1433,6 +1452,28 @@ image_types:
       - "bootiso"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
+    installer_config:
+      <<: *default_installer_config
+      # XXX: this is ugly, minimal-installer needs the extra dbus-broker and because
+      # we cannot merge installer_config (currently) we need to fully replace it,
+      # this needs some thinking/simplifcation/extra support in installerConfig
+      additional_dracut_modules:
+        - "net-lib"
+        - "dbus-broker"
+      condition:
+        version_less_than:
+          "42":
+            # config is fully replaced
+            additional_dracut_modules:
+              - "ifcfg"
+              - "dbus-broker"
+            squashfs_rootfs: true
+          "41":
+            # config is fully replaced
+            additional_dracut_modules:
+              - "ifcfg"
+              - "dbus-broker"
+            squashfs_rootfs: false
     image_config:
       locale: "en_US.UTF-8"
       iso_rootfs_type: "squashfs"
@@ -1616,7 +1657,8 @@ image_types:
       - "bootiso"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
-    installer_config: *default_installer_config
+    installer_config:
+      <<: *default_installer_config
     image_config:
       <<: *image_config_iot
       ignition_platform: "metal"
