@@ -8,6 +8,7 @@ import (
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/shell"
 	"github.com/osbuild/images/pkg/customizations/subscription"
+	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
 )
@@ -265,4 +266,30 @@ func (c *ImageConfig) SysconfigStageOptions() []*osbuild.SysconfigStageOptions {
 		return nil
 	}
 	return []*osbuild.SysconfigStageOptions{opts}
+}
+
+// Default Vagrant user, see:
+// https://developer.hashicorp.com/vagrant/docs/boxes/base#default-user-settings
+// for details.
+func defaultVagrantUser() users.User {
+	return users.User{
+		Name:   "vagrant",
+		Key:    common.ToPtr("ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zQPyUecp4pzC6kivAIhyfHilFR61RGL+GPXQ2MWZWFYbAGjyiYJnAmCP3NOTd0jMZEnDkbUvxhMmBYSdETk1rRgm+R4LOzFUGaHqHDLKLX+FIPKcF96hrucXzcWyLbIbEgE98OHlnVYCzRdK8jlqm8tehUc9c9WhQ== vagrant insecure public key\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN1YdxBpNlzxDqfJyw/QKow1F+wvG9hXGoqiysfJOn5Y vagrant insecure public key"),
+		Groups: []string{"vagrant"},
+	}
+}
+
+// Some image config options lead to the creation of users. This function is
+// used in `osCustomizations` to create those users. Might return an empty
+// slice.
+func (c *ImageConfig) UsersForImageConfig() []users.User {
+	us := []users.User{}
+
+	if c.VagrantConfig != nil {
+		if c.VagrantConfig.CreateVagrantUser == true {
+			us = append(us, defaultVagrantUser())
+		}
+	}
+
+	return us
 }
