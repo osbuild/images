@@ -14,6 +14,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
+	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
@@ -457,6 +458,8 @@ image_config:
   default:
     locale: "C.UTF-8"
     timezone: "DefaultTZ"
+    users:
+      - name: testuser
   condition:
     distro_name:
       "test-distro":
@@ -474,6 +477,7 @@ image_config:
 	assert.Equal(t, &distro.ImageConfig{
 		Locale:   common.ToPtr("C.UTF-8"),
 		Timezone: common.ToPtr("OverrideTZ"),
+		Users:    []users.User{users.User{Name: "testuser"}},
 	}, imgConfig)
 }
 

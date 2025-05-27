@@ -8,6 +8,7 @@ import (
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/shell"
 	"github.com/osbuild/images/pkg/customizations/subscription"
+	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
 )
@@ -76,6 +77,8 @@ type ImageConfig struct {
 	NetworkManager      *osbuild.NMConfStageOptions         `yaml:"network_manager,omitempty"`
 
 	WSLConfig *WSLConfig `yaml:"wsl_config,omitempty"`
+
+	Users []users.User
 
 	Files       []*fsnode.File
 	Directories []*fsnode.Directory
