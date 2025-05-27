@@ -861,6 +861,9 @@ image_types:
     rpm_ostree: true
     bootable: true
     image_func: "iot"
+    ostree:
+      name: "fedora"
+      remote: "fedora-iot"
     build_pipelines: ["build"]
     payload_pipelines: ["ostree-deployment", "image", "xz"]
     exports: ["xz"]
@@ -935,6 +938,9 @@ image_types:
     rpm_ostree: true
     bootable: true
     image_func: "iot"
+    ostree:
+      name: "fedora"
+      remote: "fedora-iot"
     build_pipelines: ["build"]
     payload_pipelines: ["ostree-deployment", "image", "qcow2"]
     exports: ["qcow2"]
@@ -1378,6 +1384,9 @@ image_types:
     boot_iso: true
     image_func: "iot_installer"
     iso_label: "IoT"
+    ostree:
+      name: "fedora-iot"
+      remote: "fedora-iot"
     build_pipelines: ["build"]
     payload_pipelines:
       - "anaconda-tree"
@@ -1681,6 +1690,9 @@ image_types:
     default_size: 10_737_418_240  # 10 * datasizes.GibiByte
     image_func: "iot_simplified_installer"
     iso_label: "IoT"
+    ostree:
+      name: "fedora"
+      remote: "fedora-iot"
     build_pipelines: ["build"]
     payload_pipelines:
       - "ostree-deployment"

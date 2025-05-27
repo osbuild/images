@@ -227,6 +227,11 @@ type imageType struct {
 
 	RPMOSTree bool `yaml:"rpm_ostree"`
 
+	OSTree struct {
+		Name   string `yaml:"name"`
+		Remote string `yaml:"remote"`
+	} `yaml:"ostree"`
+
 	DefaultSize uint64 `yaml:"default_size"`
 	// the image func name: disk,container,live-installer,...
 	Image                  string            `yaml:"image_func"`
