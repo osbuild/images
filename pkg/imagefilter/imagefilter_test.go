@@ -65,8 +65,11 @@ func TestImageFilterFilter(t *testing.T) {
 		{[]string{"distro:centos-9", "arch:foo", "type:qcow2"}, false},
 	} {
 
-		matches, err := imgFilter.Filter(tc.searchExpr...)
-		assert.NoError(t, err)
-		assert.Equal(t, tc.expectsMatch, len(matches) > 0, tc)
+		t.Run(tc.searchExpr[0], func(t *testing.T) {
+			t.Parallel()
+			matches, err := imgFilter.Filter(tc.searchExpr...)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectsMatch, len(matches) > 0, tc)
+		})
 	}
 }
