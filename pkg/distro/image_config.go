@@ -8,6 +8,7 @@ import (
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/shell"
 	"github.com/osbuild/images/pkg/customizations/subscription"
+	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
 )
@@ -77,6 +78,8 @@ type ImageConfig struct {
 
 	WSLConfig *WSLConfig `yaml:"wsl_config,omitempty"`
 
+	Users []users.User
+
 	Files       []*fsnode.File
 	Directories []*fsnode.Directory
 
@@ -123,6 +126,7 @@ type ImageConfig struct {
 	// IsoRootfsType defines what rootfs (squashfs, erofs,ext4)
 	// is used
 	IsoRootfsType *manifest.RootfsType `yaml:"iso_rootfs_type,omitempty"`
+
 }
 
 type WSLConfig struct {

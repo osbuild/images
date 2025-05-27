@@ -74,7 +74,9 @@ func osCustomizations(
 		// don't put users and groups in the payload of an installer
 		// add them via kickstart instead
 		osc.Groups = users.GroupsFromBP(c.GetGroups())
+
 		osc.Users = users.UsersFromBP(c.GetUsers())
+		osc.Users = append(osc.Users, imageConfig.Users...)
 	}
 
 	osc.EnabledServices = imageConfig.EnabledServices
