@@ -1024,14 +1024,7 @@ func TestDistro_DiskCustomizationRunsValidateLayoutConstraints(t *testing.T) {
 }
 
 func TestESP(t *testing.T) {
-	// XXX: just use fedoraFamilyDistros here
-	var distros []distro.Distro
-	for _, distroName := range []string{"fedora-40", "fedora-41", "fedora-42"} {
-		d := generic.DistroFactory(distroName)
-		distros = append(distros, d)
-	}
-
-	distro_test_common.TestESP(t, distros, func(it distro.ImageType) (*disk.PartitionTable, error) {
+	distro_test_common.TestESP(t, fedoraFamilyDistros, func(it distro.ImageType) (*disk.PartitionTable, error) {
 		return generic.GetPartitionTable(it)
 	})
 }
