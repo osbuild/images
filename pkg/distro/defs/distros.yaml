@@ -16,6 +16,10 @@ distros:
         - "glibc"  # ldconfig
         - "systemd"  # systemd-tmpfiles and systemd-sysusers
         - "python3"  # osbuild
+    oscap_profiles_allowlist:
+      - "xccdf_org.ssgproject.content_profile_ospp"
+      - "xccdf_org.ssgproject.content_profile_pci-dss"
+      - "xccdf_org.ssgproject.content_profile_standard"
     bootstrap_containers:
       x86_64: "registry.fedoraproject.org/fedora-toolbox:43"
       aarch64: "registry.fedoraproject.org/fedora-toolbox:43"

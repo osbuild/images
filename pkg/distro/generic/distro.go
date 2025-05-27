@@ -8,7 +8,6 @@ import (
 	"text/template"
 
 	"github.com/osbuild/images/internal/common"
-	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
 	"github.com/osbuild/images/pkg/platform"
@@ -31,13 +30,6 @@ const (
 )
 
 var (
-	// XXX: move into defs.DistroYAML
-	oscapProfileAllowList = []oscap.Profile{
-		oscap.Ospp,
-		oscap.PciDss,
-		oscap.Standard,
-	}
-
 	ErrDistroNotFound = errors.New("distribution not found")
 )
 
