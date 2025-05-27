@@ -14,6 +14,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
+	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
@@ -765,6 +766,8 @@ distros:
       build_packages: ["glibc"]
     bootstrap_containers:
       x86_64: "registry.fedoraproject.org/fedora-toolbox:43"
+    oscap_profiles_allowlist:
+      - "xccdf_org.ssgproject.content_profile_ospp"
 
   - &fedora_stable
     <<: *fedora_rawhide
@@ -827,6 +830,9 @@ func TestDistrosLoadingExact(t *testing.T) {
 		BootstrapContainers: map[arch.Arch]string{
 			arch.ARCH_X86_64: "registry.fedoraproject.org/fedora-toolbox:43",
 		},
+		OscapProfilesAllowList: []oscap.Profile{
+			oscap.Ospp,
+		},
 	}, distro)
 
 	distro, err = defs.Distro("centos-10")
@@ -882,6 +888,9 @@ func TestDistrosLoadingFactoryCompat(t *testing.T) {
 		},
 		BootstrapContainers: map[arch.Arch]string{
 			arch.ARCH_X86_64: "registry.fedoraproject.org/fedora-toolbox:40",
+		},
+		OscapProfilesAllowList: []oscap.Profile{
+			oscap.Ospp,
 		},
 	}, distro)
 }
