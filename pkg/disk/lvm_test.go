@@ -1,6 +1,8 @@
 package disk
 
 import (
+	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -76,4 +78,51 @@ func TestLVMLogicalVolumeEnsureSize(t *testing.T) {
 	resized := lv.EnsureSize(1024*1024 + 17)
 	assert.True(t, resized)
 	assert.Equal(t, uint64(4*datasizes.MiB), lv.Size)
+}
+
+func TestUnmarshalSizeUnitString(t *testing.T) {
+	testCases := []struct {
+		name     string
+		input    string
+		expected uint64
+		err      error
+	}{
+		{
+			name:     "valid size with unit",
+			input:    `{"size": "1 GiB"}`,
+			expected: 1 * datasizes.GiB,
+			err:      nil,
+		},
+		{
+			name:     "valid size without unit",
+			input:    `{"size": 1073741824}`,
+			expected: 1 * datasizes.GiB,
+			err:      nil,
+		},
+		{
+			name:     "valid size without unit as string",
+			input:    `{"size": "123"}`,
+			expected: 123,
+			err:      nil,
+		},
+		{
+			name:     "invalid size with unit",
+			input:    `{"size": "1 GGB"}`,
+			expected: 0,
+			err:      fmt.Errorf("error parsing size in LVM LV: failed to parse size field named \"size\" to bytes: unknown data size units in string: 1 GGB"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var lv LVMLogicalVolume
+			err := json.Unmarshal([]byte(tc.input), &lv)
+			if tc.err != nil {
+				assert.ErrorContains(t, err, tc.err.Error())
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expected, lv.Size)
+		})
+	}
 }
