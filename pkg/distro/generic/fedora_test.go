@@ -1098,3 +1098,22 @@ func TestESP(t *testing.T) {
 		return generic.GetPartitionTable(it)
 	})
 }
+
+func TestDistroBootstrapRef(t *testing.T) {
+	for _, dist := range fedoraFamilyDistros {
+		fedoraDistro := dist.distro
+		for _, archName := range fedoraDistro.ListArches() {
+			arch, err := fedoraDistro.GetArch(archName)
+			require.NoError(t, err)
+			for _, imgTypeName := range arch.ListImageTypes() {
+				imgType, err := arch.GetImageType(imgTypeName)
+				require.NoError(t, err)
+				if arch.Name() == "riscv64" {
+					require.Equal(t, "ghcr.io/mvo5/fedora-buildroot:"+fedoraDistro.OsVersion(), generic.BootstrapContainerFor(imgType))
+				} else {
+					require.Equal(t, "registry.fedoraproject.org/fedora-toolbox:"+fedoraDistro.OsVersion(), generic.BootstrapContainerFor(imgType))
+				}
+			}
+		}
+	}
+}
