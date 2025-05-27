@@ -19,6 +19,7 @@ import (
 var fedoraFamilyDistros = []distro.Distro{
 	generic.DistroFactory("fedora-40"),
 	generic.DistroFactory("fedora-41"),
+	generic.DistroFactory("fedora-42"),
 }
 
 func TestFilenameFromType(t *testing.T) {
@@ -543,16 +544,8 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"server-vmdk",
 				"server-vagrant-libvirt",
 				"wsl",
-			},
-			verTypes: map[string][]string{
-				"40": {
-					"iot-bootable-container",
-					"iot-simplified-installer",
-				},
-				"41": {
-					"iot-bootable-container",
-					"iot-simplified-installer",
-				},
+				"iot-bootable-container",
+				"iot-simplified-installer",
 			},
 		},
 		{
@@ -573,16 +566,8 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"server-openstack",
 				"server-qcow2",
 				"server-vagrant-libvirt",
-			},
-			verTypes: map[string][]string{
-				"40": {
-					"iot-bootable-container",
-					"iot-simplified-installer",
-				},
-				"41": {
-					"iot-bootable-container",
-					"iot-simplified-installer",
-				},
+				"iot-bootable-container",
+				"iot-simplified-installer",
 			},
 		},
 		{
@@ -590,14 +575,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 			imgNames: []string{
 				"container",
 				"server-qcow2",
-			},
-			verTypes: map[string][]string{
-				"40": {
-					"iot-bootable-container",
-				},
-				"41": {
-					"iot-bootable-container",
-				},
+				"iot-bootable-container",
 			},
 		},
 		{
@@ -605,14 +583,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 			imgNames: []string{
 				"container",
 				"server-qcow2",
-			},
-			verTypes: map[string][]string{
-				"40": {
-					"iot-bootable-container",
-				},
-				"41": {
-					"iot-bootable-container",
-				},
+				"iot-bootable-container",
 			},
 		},
 		{
