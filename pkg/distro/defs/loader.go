@@ -93,7 +93,7 @@ type DistroYAML struct {
 }
 
 func executeTemplates(distro *DistroYAML, nameVer string) error {
-	_, distroVer := splitDistroNameVer(nameVer)
+	_, distroVer := common.SplitDistroNameVer(nameVer)
 	l := strings.SplitN(distroVer, ".", 2)
 	major := l[0]
 	minor := ""
@@ -340,7 +340,7 @@ func DistroImageConfig(distroNameVer string) (*distro.ImageConfig, error) {
 
 	cond := toplevel.ImageConfig.Condition
 	if cond != nil {
-		distroName, _ := splitDistroNameVer(distroNameVer)
+		distroName, _ := common.SplitDistroNameVer(distroNameVer)
 		// XXX: we shoudl probably use a similar pattern like
 		// for the partition table overrides (via
 		// findElementIndexByJSONTag) but this if fine for now
@@ -361,7 +361,7 @@ func PackageSets(it distro.ImageType, replacements map[string]string) (map[strin
 	archName := arch.Name()
 	distribution := arch.Distro()
 	distroNameVer := distribution.Name()
-	distroName, distroVersion := splitDistroNameVer(distroNameVer)
+	distroName, distroVersion := common.SplitDistroNameVer(distroNameVer)
 
 	// each imagetype can have multiple package sets, so that we can
 	// use yaml aliases/anchors to de-duplicate them
@@ -456,7 +456,7 @@ func PartitionTable(it distro.ImageType, replacements map[string]string) (*disk.
 
 	if imgType.PartitionTablesOverrides != nil {
 		cond := imgType.PartitionTablesOverrides.Condition
-		distroName, distroVersion := splitDistroNameVer(it.Arch().Distro().Name())
+		distroName, distroVersion := common.SplitDistroNameVer(it.Arch().Distro().Name())
 
 		for _, ltVer := range versionLessThanSortedKeys(cond.VersionLessThan) {
 			ltOverrides := cond.VersionLessThan[ltVer]
@@ -497,19 +497,11 @@ func PartitionTable(it distro.ImageType, replacements map[string]string) (*disk.
 	return pt, nil
 }
 
-func splitDistroNameVer(distroNameVer string) (string, string) {
-	// we need to split from the right for "centos-stream-10" like
-	// distro names, sadly go has no rsplit() so we do it manually
-	// XXX: we cannot use distroidparser here because of import cycles
-	idx := strings.LastIndex(distroNameVer, "-")
-	return distroNameVer[:idx], distroNameVer[idx+1:]
-}
-
 func load(distroNameVer string) (*imageTypesYAML, error) {
 	// we need to split from the right for "centos-stream-10" like
 	// distro names, sadly go has no rsplit() so we do it manually
 	// XXX: we cannot use distroidparser here because of import cycles
-	distroName, distroVersion := splitDistroNameVer(distroNameVer)
+	distroName, distroVersion := common.SplitDistroNameVer(distroNameVer)
 	distroNameMajorVer := strings.SplitN(distroNameVer, ".", 2)[0]
 	distroMajorVer := strings.SplitN(distroVersion, ".", 2)[0]
 
@@ -576,7 +568,7 @@ func ImageConfig(distroNameVer, archName, typeName string, replacements map[stri
 	imgConfig := imgType.ImageConfig.ImageConfig
 	cond := imgType.ImageConfig.Condition
 	if cond != nil {
-		distroName, distroVersion := splitDistroNameVer(distroNameVer)
+		distroName, distroVersion := common.SplitDistroNameVer(distroNameVer)
 
 		if distroNameCnf, ok := cond.DistroName[distroName]; ok {
 			imgConfig = distroNameCnf.InheritFrom(imgConfig)
@@ -629,7 +621,7 @@ func InstallerConfig(distroNameVer, archName, typeName string, replacements map[
 			return nil, fmt.Errorf("only a single conditional allowed in installer config for %v", typeName)
 		}
 
-		distroName, distroVersion := splitDistroNameVer(distroNameVer)
+		distroName, distroVersion := common.SplitDistroNameVer(distroNameVer)
 
 		if distroNameCnf, ok := cond.DistroName[distroName]; ok {
 			installerConfig = distroNameCnf
