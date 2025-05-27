@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"slices"
 	"sort"
-	"strings"
 	"text/template"
 
 	"github.com/gobwas/glob"
@@ -92,16 +91,10 @@ type DistroYAML struct {
 	DefsPath string `yaml:"defs_path"`
 }
 
-func executeTemplates(distro *DistroYAML, nameVer string) error {
-	_, distroVer := splitDistroNameVer(nameVer)
-	l := strings.SplitN(distroVer, ".", 2)
-	major := l[0]
-	minor := ""
-	if len(l) > 1 {
-		minor = l[1]
-	}
-	type inputs struct {
-		Major, Minor string
+func executeTemplates(d *DistroYAML, nameVer string) error {
+	id, err := distro.ParseID(nameVer)
+	if err != nil {
+		return err
 	}
 
 	var errs []error
@@ -112,18 +105,18 @@ func executeTemplates(distro *DistroYAML, nameVer string) error {
 			errs = append(errs, err)
 			return inp
 		}
-		if err := templ.Execute(&buf, inputs{Major: major, Minor: minor}); err != nil {
+		if err := templ.Execute(&buf, id); err != nil {
 			errs = append(errs, err)
 			return inp
 		}
 		return buf.String()
 	}
-	distro.Name = subs(distro.Name)
-	distro.OsVersion = subs(distro.OsVersion)
-	distro.ReleaseVersion = subs(distro.ReleaseVersion)
-	distro.OSTreeRefTmpl = subs(distro.OSTreeRefTmpl)
-	distro.ModulePlatformID = subs(distro.ModulePlatformID)
-	distro.Runner.Name = subs(distro.Runner.Name)
+	d.Name = subs(d.Name)
+	d.OsVersion = subs(d.OsVersion)
+	d.ReleaseVersion = subs(d.ReleaseVersion)
+	d.OSTreeRefTmpl = subs(d.OSTreeRefTmpl)
+	d.ModulePlatformID = subs(d.ModulePlatformID)
+	d.Runner.Name = subs(d.Runner.Name)
 
 	return errors.Join(errs...)
 }
@@ -340,11 +333,14 @@ func DistroImageConfig(distroNameVer string) (*distro.ImageConfig, error) {
 
 	cond := toplevel.ImageConfig.Condition
 	if cond != nil {
-		distroName, _ := splitDistroNameVer(distroNameVer)
+		id, err := distro.ParseID(distroNameVer)
+		if err != nil {
+			return nil, err
+		}
 		// XXX: we shoudl probably use a similar pattern like
 		// for the partition table overrides (via
 		// findElementIndexByJSONTag) but this if fine for now
-		if distroNameCnf, ok := cond.DistroName[distroName]; ok {
+		if distroNameCnf, ok := cond.DistroName[id.Name]; ok {
 			imgConfig = distroNameCnf.InheritFrom(imgConfig)
 		}
 	}
@@ -361,7 +357,10 @@ func PackageSets(it distro.ImageType, replacements map[string]string) (map[strin
 	archName := arch.Name()
 	distribution := arch.Distro()
 	distroNameVer := distribution.Name()
-	distroName, distroVersion := splitDistroNameVer(distroNameVer)
+	id, err := distro.ParseID(distroNameVer)
+	if err != nil {
+		return nil, err
+	}
 
 	// each imagetype can have multiple package sets, so that we can
 	// use yaml aliases/anchors to de-duplicate them
@@ -392,7 +391,7 @@ func PackageSets(it distro.ImageType, replacements map[string]string) (map[strin
 						Exclude: archSet.Exclude,
 					})
 				}
-				if distroNameSet, ok := pkgSet.Condition.DistroName[distroName]; ok {
+				if distroNameSet, ok := pkgSet.Condition.DistroName[id.Name]; ok {
 					rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
 						Include: distroNameSet.Include,
 						Exclude: distroNameSet.Exclude,
@@ -405,7 +404,7 @@ func PackageSets(it distro.ImageType, replacements map[string]string) (map[strin
 					if r, ok := replacements[ltVer]; ok {
 						ltVer = r
 					}
-					if common.VersionLessThan(distroVersion, ltVer) {
+					if common.VersionLessThan(id.VersionString(), ltVer) {
 						rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
 							Include: ltSet.Include,
 							Exclude: ltSet.Exclude,
@@ -417,7 +416,7 @@ func PackageSets(it distro.ImageType, replacements map[string]string) (map[strin
 					if r, ok := replacements[gteqVer]; ok {
 						gteqVer = r
 					}
-					if common.VersionGreaterThanOrEqual(distroVersion, gteqVer) {
+					if common.VersionGreaterThanOrEqual(id.VersionString(), gteqVer) {
 						rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
 							Include: gteqSet.Include,
 							Exclude: gteqSet.Exclude,
@@ -456,14 +455,17 @@ func PartitionTable(it distro.ImageType, replacements map[string]string) (*disk.
 
 	if imgType.PartitionTablesOverrides != nil {
 		cond := imgType.PartitionTablesOverrides.Condition
-		distroName, distroVersion := splitDistroNameVer(it.Arch().Distro().Name())
+		id, err := distro.ParseID(it.Arch().Distro().Name())
+		if err != nil {
+			return nil, err
+		}
 
 		for _, ltVer := range versionLessThanSortedKeys(cond.VersionLessThan) {
 			ltOverrides := cond.VersionLessThan[ltVer]
 			if r, ok := replacements[ltVer]; ok {
 				ltVer = r
 			}
-			if common.VersionLessThan(distroVersion, ltVer) {
+			if common.VersionLessThan(id.VersionString(), ltVer) {
 				for arch, overridePt := range ltOverrides {
 					imgType.PartitionTables[arch] = overridePt
 				}
@@ -475,14 +477,14 @@ func PartitionTable(it distro.ImageType, replacements map[string]string) (*disk.
 			if r, ok := replacements[gteqVer]; ok {
 				gteqVer = r
 			}
-			if common.VersionGreaterThanOrEqual(distroVersion, gteqVer) {
+			if common.VersionGreaterThanOrEqual(id.VersionString(), gteqVer) {
 				for arch, overridePt := range geOverrides {
 					imgType.PartitionTables[arch] = overridePt
 				}
 			}
 		}
 
-		if distroNameOverrides, ok := cond.DistroName[distroName]; ok {
+		if distroNameOverrides, ok := cond.DistroName[id.Name]; ok {
 			for arch, overridePt := range distroNameOverrides {
 				imgType.PartitionTables[arch] = overridePt
 			}
@@ -497,42 +499,28 @@ func PartitionTable(it distro.ImageType, replacements map[string]string) (*disk.
 	return pt, nil
 }
 
-func splitDistroNameVer(distroNameVer string) (string, string) {
-	// we need to split from the right for "centos-stream-10" like
-	// distro names, sadly go has no rsplit() so we do it manually
-	// XXX: we cannot use distroidparser here because of import cycles
-	idx := strings.LastIndex(distroNameVer, "-")
-	return distroNameVer[:idx], distroNameVer[idx+1:]
-}
-
 func load(distroNameVer string) (*imageTypesYAML, error) {
-	// we need to split from the right for "centos-stream-10" like
-	// distro names, sadly go has no rsplit() so we do it manually
-	// XXX: we cannot use distroidparser here because of import cycles
-	distroName, distroVersion := splitDistroNameVer(distroNameVer)
-	distroNameMajorVer := strings.SplitN(distroNameVer, ".", 2)[0]
-	distroMajorVer := strings.SplitN(distroVersion, ".", 2)[0]
+	id, err := distro.ParseID(distroNameVer)
+	if err != nil {
+		return nil, err
+	}
 
 	// XXX: this is only needed temporary until we have a "distros.yaml"
 	// that describes some high-level properties of each distro
 	// (like their yaml dirs)
 	var baseDir string
-	switch distroName {
-	case "rhel":
+	switch id.Name {
+	case "rhel", "almalinux", "centos", "almalinux_kitten":
 		// rhel yaml files are under ./rhel-$majorVer
-		baseDir = distroNameMajorVer
-	case "almalinux":
 		// almalinux yaml is just rhel, we take only its major version
-		baseDir = fmt.Sprintf("rhel-%s", distroMajorVer)
-	case "centos", "almalinux_kitten":
 		// centos and kitten yaml is just rhel but we have (sadly) no
 		// symlinks in "go:embed" so we have to have this slightly ugly
 		// workaround
-		baseDir = fmt.Sprintf("rhel-%s", distroVersion)
+		baseDir = fmt.Sprintf("rhel-%v", id.MajorVersion)
 	case "test-distro":
 		// our other distros just have a single yaml dir per distro
 		// and use condition.version_gt etc
-		baseDir = distroName
+		baseDir = id.Name
 	}
 
 	// take the base path from the distros.yaml
@@ -576,9 +564,12 @@ func ImageConfig(distroNameVer, archName, typeName string, replacements map[stri
 	imgConfig := imgType.ImageConfig.ImageConfig
 	cond := imgType.ImageConfig.Condition
 	if cond != nil {
-		distroName, distroVersion := splitDistroNameVer(distroNameVer)
+		id, err := distro.ParseID(distroNameVer)
+		if err != nil {
+			return nil, err
+		}
 
-		if distroNameCnf, ok := cond.DistroName[distroName]; ok {
+		if distroNameCnf, ok := cond.DistroName[id.Name]; ok {
 			imgConfig = distroNameCnf.InheritFrom(imgConfig)
 		}
 		if archCnf, ok := cond.Architecture[archName]; ok {
@@ -589,7 +580,7 @@ func ImageConfig(distroNameVer, archName, typeName string, replacements map[stri
 			if r, ok := replacements[ltVer]; ok {
 				ltVer = r
 			}
-			if common.VersionLessThan(distroVersion, ltVer) {
+			if common.VersionLessThan(id.VersionString(), ltVer) {
 				imgConfig = ltOverrides.InheritFrom(imgConfig)
 			}
 		}
@@ -629,9 +620,12 @@ func InstallerConfig(distroNameVer, archName, typeName string, replacements map[
 			return nil, fmt.Errorf("only a single conditional allowed in installer config for %v", typeName)
 		}
 
-		distroName, distroVersion := splitDistroNameVer(distroNameVer)
+		id, err := distro.ParseID(distroNameVer)
+		if err != nil {
+			return nil, err
+		}
 
-		if distroNameCnf, ok := cond.DistroName[distroName]; ok {
+		if distroNameCnf, ok := cond.DistroName[id.Name]; ok {
 			installerConfig = distroNameCnf
 		}
 		if archCnf, ok := cond.Architecture[archName]; ok {
@@ -642,7 +636,7 @@ func InstallerConfig(distroNameVer, archName, typeName string, replacements map[
 			if r, ok := replacements[ltVer]; ok {
 				ltVer = r
 			}
-			if common.VersionLessThan(distroVersion, ltVer) {
+			if common.VersionLessThan(id.VersionString(), ltVer) {
 				installerConfig = ltOverrides
 			}
 		}
