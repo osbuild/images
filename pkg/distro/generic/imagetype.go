@@ -129,11 +129,7 @@ func (t *imageType) BasePartitionTable() (*disk.PartitionTable, error) {
 	return defs.PartitionTable(t, nil)
 }
 
-func (t *imageType) getPartitionTable(
-	customizations *blueprint.Customizations,
-	options distro.ImageOptions,
-	rng *rand.Rand,
-) (*disk.PartitionTable, error) {
+func (t *imageType) getPartitionTable(customizations *blueprint.Customizations, options distro.ImageOptions, rng *rand.Rand) (*disk.PartitionTable, error) {
 	basePartitionTable, err := t.BasePartitionTable()
 	if err != nil {
 		return nil, err
