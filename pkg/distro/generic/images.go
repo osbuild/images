@@ -640,8 +640,12 @@ func bootableContainerImage(workload workload.Workload,
 	img.Filename = t.Filename()
 	img.InstallWeakDeps = false
 	img.BootContainer = true
+	id, err := distro.ParseID(d.Name())
+	if err != nil {
+		return nil, err
+	}
 	img.BootcConfig = &bootc.Config{
-		Filename:           "20-fedora.toml",
+		Filename:           fmt.Sprintf("20-%s.toml", id.Name),
 		RootFilesystemType: "ext4",
 	}
 
