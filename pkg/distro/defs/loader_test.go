@@ -763,6 +763,8 @@ distros:
     runner: &fedora_runner
       name: org.osbuild.fedora43
       build_packages: ["glibc"]
+    bootstrap_containers:
+      x86_64: "registry.fedoraproject.org/fedora-toolbox:43"
 
   - &fedora_stable
     <<: *fedora_rawhide
@@ -776,6 +778,8 @@ distros:
     runner:
       <<: *fedora_runner
       name: org.osbuild.fedora{{.MajorVersion}}
+    bootstrap_containers:
+      x86_64: "registry.fedoraproject.org/fedora-toolbox:{{.MajorVersion}}"
 
   - name: centos-10
     product: "CentOS Stream"
@@ -819,6 +823,9 @@ func TestDistrosLoadingExact(t *testing.T) {
 		Runner: runner.RunnerConf{
 			Name:          "org.osbuild.fedora43",
 			BuildPackages: []string{"glibc"},
+		},
+		BootstrapContainers: map[arch.Arch]string{
+			arch.ARCH_X86_64: "registry.fedoraproject.org/fedora-toolbox:43",
 		},
 	}, distro)
 
@@ -872,6 +879,9 @@ func TestDistrosLoadingFactoryCompat(t *testing.T) {
 		Runner: runner.RunnerConf{
 			Name:          "org.osbuild.fedora40",
 			BuildPackages: []string{"glibc"},
+		},
+		BootstrapContainers: map[arch.Arch]string{
+			arch.ARCH_X86_64: "registry.fedoraproject.org/fedora-toolbox:40",
 		},
 	}, distro)
 }
