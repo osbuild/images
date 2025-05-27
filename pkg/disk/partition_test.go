@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/osbuild/images/internal/testdisk"
+	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 
 	"golang.org/x/tools/go/packages"
@@ -24,6 +25,53 @@ func TestMarshalUnmarshalSimple(t *testing.T) {
 	err = json.Unmarshal(js, &ptFromJS)
 	assert.NoError(t, err)
 	assert.Equal(t, fakePt, &ptFromJS)
+}
+
+func TestUnmarshalSizeUnitStringPartition(t *testing.T) {
+	testCases := []struct {
+		name     string
+		input    string
+		expected uint64
+		err      error
+	}{
+		{
+			name:     "valid size with unit",
+			input:    `{"size": "1 GiB"}`,
+			expected: 1 * datasizes.GiB,
+			err:      nil,
+		},
+		{
+			name:     "valid size without unit",
+			input:    `{"size": 1073741824}`,
+			expected: 1 * datasizes.GiB,
+			err:      nil,
+		},
+		{
+			name:     "valid size without unit as string",
+			input:    `{"size": "123"}`,
+			expected: 123,
+			err:      nil,
+		},
+		{
+			name:     "invalid size with unit",
+			input:    `{"size": "1 GGB"}`,
+			expected: 0,
+			err:      fmt.Errorf("error parsing size in partition: failed to parse size field named \"size\" to bytes: unknown data size units in string: 1 GGB"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var part disk.Partition
+			err := json.Unmarshal([]byte(tc.input), &part)
+			if tc.err != nil {
+				assert.ErrorContains(t, err, tc.err.Error())
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expected, part.Size)
+		})
+	}
 }
 
 func TestMarshalUnmarshalSad(t *testing.T) {
