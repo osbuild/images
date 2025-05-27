@@ -3,14 +3,17 @@ package defs
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"embed"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"slices"
 	"sort"
+	"sync"
 	"text/template"
 
 	"github.com/gobwas/glob"
@@ -508,6 +511,40 @@ func PartitionTable(it distro.ImageType, replacements map[string]string) (*disk.
 	return pt, nil
 }
 
+// Cache the toplevel structure, loading/parsing YAML is quite
+// expensive. This can all be removed in the future where there
+// is a single load for each distroNameVer. Right now the various
+// helpers (like ParititonTable(), ImageConfig() are called a
+// gazillion times. However once we move into the "generic" distro
+// the distro will do a single load/parse of all image types and
+// just reuse them and this can go.
+type imageTypesCache struct {
+	cache map[string]*imageTypesYAML
+	mu    sync.Mutex
+}
+
+func newImageTypesCache() *imageTypesCache {
+	return &imageTypesCache{cache: make(map[string]*imageTypesYAML)}
+}
+
+func (i *imageTypesCache) Get(hash string) *imageTypesYAML {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+
+	return i.cache[hash]
+}
+
+func (i *imageTypesCache) Set(hash string, ity *imageTypesYAML) {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+
+	i.cache[hash] = ity
+}
+
+var (
+	itCache = newImageTypesCache()
+)
+
 func load(distroNameVer string) (*imageTypesYAML, error) {
 	id, err := distro.ParseID(distroNameVer)
 	if err != nil {
@@ -547,15 +584,31 @@ func load(distroNameVer string) (*imageTypesYAML, error) {
 	}
 	defer f.Close()
 
-	decoder := yaml.NewDecoder(f)
-	decoder.KnownFields(true)
+	// XXX: this is currently needed because rhel distros call
+	// ImageType() and ParitionTable() a gazillion times and
+	// each time the full yaml is loaded. Once things move to
+	// the "generic" distro this will no longer be the case and
+	// this cache can be removed and below we can decode directly
+	// from "f" again instead of wasting memory with "buf"
+	var buf bytes.Buffer
+	h := sha256.New()
+	if _, err := io.Copy(io.MultiWriter(&buf, h), f); err != nil {
+		return nil, fmt.Errorf("cannot read from %s: %w", baseDir, err)
+	}
+	inputHash := string(h.Sum(nil))
+	if cached := itCache.Get(inputHash); cached != nil {
+		return cached, nil
+	}
 
-	// each imagetype can have multiple package sets, so that we can
-	// use yaml aliases/anchors to de-duplicate them
 	var toplevel imageTypesYAML
+	decoder := yaml.NewDecoder(&buf)
+	decoder.KnownFields(true)
 	if err := decoder.Decode(&toplevel); err != nil {
 		return nil, err
 	}
+
+	// XXX: remove once we no longer need caching
+	itCache.Set(inputHash, &toplevel)
 
 	return &toplevel, nil
 }
