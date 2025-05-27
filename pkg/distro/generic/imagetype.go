@@ -10,6 +10,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/workload"
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/oscap"
@@ -508,18 +509,7 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 	return warnings, nil
 }
 
-// XXX: this will become part of the yaml distro definitions, i.e.
-// the yaml will have a "bootstrap_ref" key for each distro/arch
 func bootstrapContainerFor(t *imageType) string {
-	arch := t.arch.Name()
-	distro := t.arch.distro
-
-	// XXX: remove once fedora containers are part of the upstream
-	// fedora registry (and can be validated via tls)
-	if arch == "riscv64" {
-		return "ghcr.io/mvo5/fedora-buildroot:" + distro.OsVersion()
-	}
-
-	// we need fedora-toolbox to get python3
-	return "registry.fedoraproject.org/fedora-toolbox:" + distro.OsVersion()
+	a := common.Must(arch.FromString(t.arch.name))
+	return t.arch.distro.DistroYAML.BootstrapContainers[a]
 }
