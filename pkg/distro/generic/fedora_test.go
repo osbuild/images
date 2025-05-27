@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/pkg/blueprint"
+	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/distro_test_common"
 	"github.com/osbuild/images/pkg/distro/generic"
@@ -1084,4 +1085,16 @@ func TestDistro_DiskCustomizationRunsValidateLayoutConstraints(t *testing.T) {
 			})
 		}
 	}
+}
+
+func TestESP(t *testing.T) {
+	var distros []distro.Distro
+	for _, distroName := range []string{"fedora-40", "fedora-41", "fedora-42"} {
+		d := generic.DistroFactory(distroName)
+		distros = append(distros, d)
+	}
+
+	distro_test_common.TestESP(t, distros, func(it distro.ImageType) (*disk.PartitionTable, error) {
+		return generic.GetPartitionTable(it)
+	})
 }
