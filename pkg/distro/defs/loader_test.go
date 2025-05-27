@@ -57,7 +57,7 @@ func TestYamlLintClean(t *testing.T) {
 	pl, err := filepath.Glob("*/*.yaml")
 	require.NoError(t, err)
 	for _, p := range pl {
-		cmd := exec.Command("yamllint", p)
+		cmd := exec.Command("yamllint", "--format=parsable", p)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()
