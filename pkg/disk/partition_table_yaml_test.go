@@ -53,7 +53,7 @@ partition_table:
         fstab_freq: 0
         fstab_passno: 2
     - &default_partition_table_part_root
-      size: 2_147_483_648  # 2 * datasizes.GibiByte,
+      size: "2 GiB"
       type: *filesystem_data_guid
       uuid: *root_partition_uuid
       payload_type: "filesystem"
