@@ -21,6 +21,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/environment"
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/experimentalflags"
@@ -90,6 +91,8 @@ type DistroYAML struct {
 	// so that we can point the "centos-10" distro to the "./rhel-10"
 	// image types file/directory.
 	DefsPath string `yaml:"defs_path"`
+
+	BootstrapContainers map[arch.Arch]string `yaml:"bootstrap_containers"`
 }
 
 func executeTemplates(distro *DistroYAML, nameVer string) error {
@@ -124,6 +127,9 @@ func executeTemplates(distro *DistroYAML, nameVer string) error {
 	distro.OSTreeRefTmpl = subs(distro.OSTreeRefTmpl)
 	distro.ModulePlatformID = subs(distro.ModulePlatformID)
 	distro.Runner.Name = subs(distro.Runner.Name)
+	for a := range distro.BootstrapContainers {
+		distro.BootstrapContainers[a] = subs(distro.BootstrapContainers[a])
+	}
 
 	return errors.Join(errs...)
 }
