@@ -49,7 +49,7 @@ func Parse(size string) (uint64, error) {
 		}
 	}
 
-	// In case the strign didn't match any of the above regexes, return nil
+	// In case the string didn't match any of the above regexes, return nil
 	// even if a number was found. This is to prevent users from submitting
 	// unknown units.
 	return 0, fmt.Errorf("unknown data size units in string: %s", size)
