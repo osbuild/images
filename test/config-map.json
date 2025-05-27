@@ -178,13 +178,6 @@
     ]
   },
   "./configs/iot-ostree-pull-device.json": {
-    "skip-distros": [
-      {
-        "name": "fedora-42",
-        "reason": "Issue in coreos-installer dracut module: https://github.com/coreos/coreos-installer-dracut/issues/40",
-        "date": "2025-05-21T00:00:00Z"
-      }
-    ],
     "image-types": [
       "iot-simplified-installer"
     ]
