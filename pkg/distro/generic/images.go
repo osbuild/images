@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
@@ -640,8 +641,9 @@ func bootableContainerImage(workload workload.Workload,
 	img.Filename = t.Filename()
 	img.InstallWeakDeps = false
 	img.BootContainer = true
+	distroName, _ := common.SplitDistroNameVer(d.Name())
 	img.BootcConfig = &bootc.Config{
-		Filename:           "20-fedora.toml",
+		Filename:           fmt.Sprintf("20-%s.toml", distroName),
 		RootFilesystemType: "ext4",
 	}
 
