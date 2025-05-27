@@ -29,13 +29,13 @@ distros:
     # before.
   - &fedora_stable
     <<: *fedora_rawhide
-    name: "fedora-{{.Major}}"
+    name: "fedora-{{.MajorVersion}}"
     match: "fedora-*"
     preview: false
-    os_version: "{{.Major}}"
-    release_version: "{{.Major}}"
-    module_platform_id: "platform:f{{.Major}}"
-    ostree_ref_tmpl: "fedora/{{.Major}}/%s/iot"
+    os_version: "{{.MajorVersion}}"
+    release_version: "{{.MajorVersion}}"
+    module_platform_id: "platform:f{{.MajorVersion}}"
+    ostree_ref_tmpl: "fedora/{{.MajorVersion}}/%s/iot"
     runner:
       <<: *fedora_runner
-      name: org.osbuild.fedora{{.Major}}
+      name: org.osbuild.fedora{{.MajorVersion}}

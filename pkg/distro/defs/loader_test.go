@@ -766,16 +766,16 @@ distros:
 
   - &fedora_stable
     <<: *fedora_rawhide
-    name: "fedora-{{.Major}}"
+    name: "fedora-{{.MajorVersion}}"
     match: "fedora-*"
     preview: false
-    os_version: "{{.Major}}"
-    release_version: "{{.Major}}"
-    module_platform_id: "platform:f{{.Major}}"
-    ostree_ref_tmpl: "fedora/{{.Major}}/%s/iot"
+    os_version: "{{.MajorVersion}}"
+    release_version: "{{.MajorVersion}}"
+    module_platform_id: "platform:f{{.MajorVersion}}"
+    ostree_ref_tmpl: "fedora/{{.MajorVersion}}/%s/iot"
     runner:
       <<: *fedora_runner
-      name: org.osbuild.fedora{{.Major}}
+      name: org.osbuild.fedora{{.MajorVersion}}
 
   - name: centos-10
     product: "CentOS Stream"
@@ -787,14 +787,14 @@ distros:
     default_fs_type: "xfs"
     defs_path: rhel-10
 
-  - name: "rhel-{{.Major}}.{{.Minor}}"
+  - name: "rhel-{{.MajorVersion}}.{{.MinorVersion}}"
     match: "rhel-10*"
     product: "Red Hat Enterprise Linux"
-    os_version: "{{.Major}}.{{.Minor}}"
-    release_version: "{{.Major}}"
-    module_platform_id: "platform:el{{.Major}}"
+    os_version: "{{.MajorVersion}}.{{.MinorVersion}}"
+    release_version: "{{.MajorVersion}}"
+    module_platform_id: "platform:el{{.MajorVersion}}"
     vendor: "redhat"
-    ostree_ref_tmpl: "rhel/{{.Major}}/%s/edge"
+    ostree_ref_tmpl: "rhel/{{.MajorVersion}}/%s/edge"
     default_fs_type: "xfs"
     defs_path: rhel-10
 `
