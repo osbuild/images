@@ -721,8 +721,8 @@ func iotInstallerImage(workload workload.Workload,
 		return nil, err
 	}
 	img.Kickstart.OSTree = &kickstart.OSTree{
-		OSName: "fedora-iot",
-		Remote: "fedora-iot",
+		OSName: t.OSTree.Name,
+		Remote: t.OSTree.Remote,
 	}
 	img.Kickstart.Path = osbuild.KickstartPathOSBuild
 	img.Kickstart.Language, img.Kickstart.Keyboard = customizations.GetPrimaryLocale()
@@ -817,9 +817,9 @@ func iotImage(workload workload.Workload,
 	img.Workload = workload
 
 	img.Remote = ostree.Remote{
-		Name: "fedora-iot",
+		Name: t.OSTree.Remote,
 	}
-	img.OSName = "fedora-iot"
+	img.OSName = t.OSTree.Remote
 
 	// TODO: move generation into LiveImage
 	pt, err := t.getPartitionTable(customizations, options, rng)
@@ -858,9 +858,9 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 	rawImg.Platform = t.platform
 	rawImg.Workload = workload
 	rawImg.Remote = ostree.Remote{
-		Name: "fedora-iot",
+		Name: t.OSTree.Remote,
 	}
-	rawImg.OSName = "fedora"
+	rawImg.OSName = t.OSTree.Name
 
 	// TODO: move generation into LiveImage
 	pt, err := t.getPartitionTable(customizations, options, rng)
@@ -905,7 +905,7 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 	d := t.arch.distro
 	img.Product = d.DistroYAML.Product
 	img.Variant = "IoT"
-	img.OSName = "fedora"
+	img.OSName = t.OSTree.Name
 	img.OSVersion = d.OsVersion()
 
 	img.ISOLabel, err = t.ISOLabel()
