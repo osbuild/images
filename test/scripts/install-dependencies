@@ -16,4 +16,5 @@ dnf -y install \
     osbuild-selinux \
     podman \
     python3 \
+    yamllint \
     xz
