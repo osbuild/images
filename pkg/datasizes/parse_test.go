@@ -1,6 +1,7 @@
 package datasizes_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -43,5 +44,65 @@ func TestDataSizeToUint64(t *testing.T) {
 		} else {
 			assert.NotNil(t, err)
 		}
+	}
+}
+
+func TestParseSizeInJSONMapping(t *testing.T) {
+	testCases := []struct {
+		name      string
+		sizeField string
+		input     []byte
+		expected  []byte
+		err       error
+	}{
+		{
+			name:      "no size field",
+			sizeField: "size",
+			input:     []byte(`{"name": "test"}`),
+			expected:  []byte(`{"name": "test"}`),
+			err:       nil,
+		},
+		{
+			name:      "uint size field",
+			sizeField: "size",
+			input:     []byte(`{"size": 123, "name": "test"}`),
+			expected:  []byte(`{"size": 123, "name": "test"}`),
+			err:       nil,
+		},
+		{
+			name:      "string size field",
+			sizeField: "size",
+			input:     []byte(`{"size": "123 MiB", "name": "test"}`),
+			expected:  []byte(`{"size": 128974848, "name": "test"}`),
+			err:       nil,
+		},
+		{
+			name:      "string size field without unit",
+			sizeField: "size",
+			input:     []byte(`{"size": "123", "name": "test"}`),
+			expected:  []byte(`{"size": 123, "name": "test"}`),
+			err:       nil,
+		},
+		{
+			name:      "invalid size field",
+			sizeField: "size",
+			input:     []byte(`{"size": "123 GazillionBytes", "name": "test"}`),
+			expected:  nil,
+			err:       fmt.Errorf("failed to parse size field named \"size\" to bytes: unknown data size units in string: 123 GazillionBytes"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := datasizes.ParseSizeInJSONMapping(tc.sizeField, tc.input)
+			if tc.err != nil {
+				assert.Error(t, err)
+				assert.ErrorContains(t, tc.err, err.Error())
+				return
+			}
+
+			require.NoError(t, err)
+			assert.JSONEq(t, string(tc.expected), string(got))
+		})
 	}
 }
