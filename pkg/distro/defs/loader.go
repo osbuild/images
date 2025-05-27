@@ -22,6 +22,7 @@ import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/environment"
 	"github.com/osbuild/images/pkg/arch"
+	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/experimentalflags"
@@ -93,6 +94,8 @@ type DistroYAML struct {
 	DefsPath string `yaml:"defs_path"`
 
 	BootstrapContainers map[arch.Arch]string `yaml:"bootstrap_containers"`
+
+	OscapProfilesAllowList []oscap.Profile `yaml:"oscap_profiles_allowlist"`
 }
 
 func executeTemplates(distro *DistroYAML, nameVer string) error {
