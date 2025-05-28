@@ -362,7 +362,7 @@ func DistroImageConfig(distroNameVer string) (*distro.ImageConfig, error) {
 
 // PackageSets loads the PackageSets from the yaml source file
 // discovered via the imagetype.
-func PackageSets(it distro.ImageType, replacements map[string]string) (map[string]rpmmd.PackageSet, error) {
+func PackageSets(it distro.ImageType) (map[string]rpmmd.PackageSet, error) {
 	typeName := it.Name()
 
 	arch := it.Arch()
@@ -413,9 +413,6 @@ func PackageSets(it distro.ImageType, replacements map[string]string) (map[strin
 				// packageSets are strictly additive the order
 				// is irrelevant
 				for ltVer, ltSet := range pkgSet.Condition.VersionLessThan {
-					if r, ok := replacements[ltVer]; ok {
-						ltVer = r
-					}
 					if common.VersionLessThan(id.VersionString(), ltVer) {
 						rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
 							Include: ltSet.Include,
@@ -425,9 +422,6 @@ func PackageSets(it distro.ImageType, replacements map[string]string) (map[strin
 				}
 
 				for gteqVer, gteqSet := range pkgSet.Condition.VersionGreaterOrEqual {
-					if r, ok := replacements[gteqVer]; ok {
-						gteqVer = r
-					}
 					if common.VersionGreaterThanOrEqual(id.VersionString(), gteqVer) {
 						rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
 							Include: gteqSet.Include,
@@ -447,7 +441,7 @@ func PackageSets(it distro.ImageType, replacements map[string]string) (map[strin
 }
 
 // PartitionTable returns the partionTable for the given distro/imgType.
-func PartitionTable(it distro.ImageType, replacements map[string]string) (*disk.PartitionTable, error) {
+func PartitionTable(it distro.ImageType) (*disk.PartitionTable, error) {
 	distroNameVer := it.Arch().Distro().Name()
 
 	toplevel, err := load(distroNameVer)
@@ -479,9 +473,6 @@ func PartitionTable(it distro.ImageType, replacements map[string]string) (*disk.
 
 		for _, ltVer := range versionLessThanSortedKeys(cond.VersionLessThan) {
 			ltOverrides := cond.VersionLessThan[ltVer]
-			if r, ok := replacements[ltVer]; ok {
-				ltVer = r
-			}
 			if common.VersionLessThan(id.VersionString(), ltVer) {
 				if newPt, ok := ltOverrides[archName]; ok {
 					pt = newPt
@@ -491,9 +482,6 @@ func PartitionTable(it distro.ImageType, replacements map[string]string) (*disk.
 
 		for _, gteqVer := range backward(versionLessThanSortedKeys(cond.VersionGreaterOrEqual)) {
 			geOverrides := cond.VersionGreaterOrEqual[gteqVer]
-			if r, ok := replacements[gteqVer]; ok {
-				gteqVer = r
-			}
 			if common.VersionGreaterThanOrEqual(id.VersionString(), gteqVer) {
 				if newPt, ok := geOverrides[archName]; ok {
 					pt = newPt
@@ -614,7 +602,7 @@ func load(distroNameVer string) (*imageTypesYAML, error) {
 }
 
 // ImageConfig returns the image type specific ImageConfig
-func ImageConfig(distroNameVer, archName, typeName string, replacements map[string]string) (*distro.ImageConfig, error) {
+func ImageConfig(distroNameVer, archName, typeName string) (*distro.ImageConfig, error) {
 	toplevel, err := load(distroNameVer)
 	if err != nil {
 		return nil, err
@@ -639,9 +627,6 @@ func ImageConfig(distroNameVer, archName, typeName string, replacements map[stri
 		}
 		for _, ltVer := range versionLessThanSortedKeys(cond.VersionLessThan) {
 			ltOverrides := cond.VersionLessThan[ltVer]
-			if r, ok := replacements[ltVer]; ok {
-				ltVer = r
-			}
 			if common.VersionLessThan(id.VersionString(), ltVer) {
 				imgConfig = ltOverrides.InheritFrom(imgConfig)
 			}
@@ -666,7 +651,7 @@ func nNonEmpty[K comparable, V any](maps ...map[K]V) int {
 // InstallerConfig returns the InstallerConfig for the given imgType
 // Note that on conditions the InstallerConfig is fully replaced, do
 // any merging in YAML
-func InstallerConfig(distroNameVer, archName, typeName string, replacements map[string]string) (*distro.InstallerConfig, error) {
+func InstallerConfig(distroNameVer, archName, typeName string) (*distro.InstallerConfig, error) {
 	toplevel, err := load(distroNameVer)
 	if err != nil {
 		return nil, err
@@ -695,9 +680,6 @@ func InstallerConfig(distroNameVer, archName, typeName string, replacements map[
 		}
 		for _, ltVer := range versionLessThanSortedKeys(cond.VersionLessThan) {
 			ltOverrides := cond.VersionLessThan[ltVer]
-			if r, ok := replacements[ltVer]; ok {
-				ltVer = r
-			}
 			if common.VersionLessThan(id.VersionString(), ltVer) {
 				installerConfig = ltOverrides
 			}

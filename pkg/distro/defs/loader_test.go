@@ -91,7 +91,7 @@ image_types:
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	pkgSet, err := defs.PackageSets(it, nil)
+	pkgSet, err := defs.PackageSets(it)
 	assert.NoError(t, err)
 	assert.Equal(t, map[string]rpmmd.PackageSet{
 		"os": {
@@ -142,7 +142,7 @@ image_types:
 	err = os.WriteFile(fakePkgsSetPath, fakePkgsSetYaml, 0644)
 	assert.NoError(t, err)
 
-	pkgSet, err := defs.PackageSets(it, nil)
+	pkgSet, err := defs.PackageSets(it)
 	assert.NoError(t, err)
 	assert.Equal(t, map[string]rpmmd.PackageSet{
 		"os": {
@@ -189,7 +189,7 @@ image_types:
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	pkgSet, err := defs.PackageSets(it, nil)
+	pkgSet, err := defs.PackageSets(it)
 	assert.NoError(t, err)
 	assert.Equal(t, map[string]rpmmd.PackageSet{
 		"os": {
@@ -248,7 +248,7 @@ image_types:
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	partTable, err := defs.PartitionTable(it, nil)
+	partTable, err := defs.PartitionTable(it)
 	require.NoError(t, err)
 	assert.Equal(t, &disk.PartitionTable{
 		Size: 1_000_000_000,
@@ -358,7 +358,7 @@ func TestDefsPartitionTableOverrideGreatEqual(t *testing.T) {
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	partTable, err := defs.PartitionTable(it, nil)
+	partTable, err := defs.PartitionTable(it)
 	require.NoError(t, err)
 	assert.Equal(t, &disk.PartitionTable{
 		Size: 1_000_000_000,
@@ -392,7 +392,7 @@ func TestDefsPartitionTableOverridelessThan(t *testing.T) {
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	partTable, err := defs.PartitionTable(it, nil)
+	partTable, err := defs.PartitionTable(it)
 	require.NoError(t, err)
 	assert.Equal(t, &disk.PartitionTable{
 		Size: 1_000_000_000,
@@ -442,7 +442,7 @@ image_types:
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	partTable, err := defs.PartitionTable(it, nil)
+	partTable, err := defs.PartitionTable(it)
 	require.NoError(t, err)
 	assert.Equal(t, &disk.PartitionTable{
 		Partitions: []disk.Partition{
@@ -520,7 +520,7 @@ image_types:
 		restore := defs.MockDataFS(baseDir)
 		defer restore()
 
-		_, err := defs.PartitionTable(it, nil)
+		_, err := defs.PartitionTable(it)
 		assert.ErrorIs(t, err, tc.expectedErr)
 	}
 }
@@ -549,7 +549,7 @@ image_types:
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	imgConfig, err := defs.ImageConfig("test-distro-1", "test_arch", "test_type", nil)
+	imgConfig, err := defs.ImageConfig("test-distro-1", "test_arch", "test_type")
 	require.NoError(t, err)
 	assert.Equal(t, &distro.ImageConfig{
 		Hostname: common.ToPtr("test-arch-hn"),
@@ -643,7 +643,7 @@ func TestImageTypeInstallerConfig(t *testing.T) {
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type", nil)
+	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type")
 	require.NoError(t, err)
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDracutModules: []string{"base-dracut-mod1"},
@@ -668,7 +668,7 @@ func TestImageTypeInstallerConfigErrorMultiple(t *testing.T) {
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	_, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type", nil)
+	_, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type")
 	require.ErrorContains(t, err, "only a single conditional allowed in installer config for test_type")
 }
 
@@ -686,7 +686,7 @@ func TestImageTypeInstallerConfigOverrideVerLT(t *testing.T) {
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type", nil)
+	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type")
 	require.NoError(t, err)
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDracutModules: []string{"override-dracut-mod1"},
@@ -712,7 +712,7 @@ func TestImageTypeInstallerConfigOverrideDistroName(t *testing.T) {
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type", nil)
+	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type")
 	require.NoError(t, err)
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDracutModules: []string{"override-dracut-mod1"},
@@ -734,7 +734,7 @@ func TestImageTypeInstallerConfigOverrideArch(t *testing.T) {
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type", nil)
+	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type")
 	require.NoError(t, err)
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDrivers: []string{"override-drv1"},
