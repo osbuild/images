@@ -39,11 +39,6 @@ var data embed.FS
 
 var defaultDataFS fs.FS = data
 
-// distrosYAML defines all supported YAML based distributions
-type distrosYAML struct {
-	Distros []DistroYAML
-}
-
 func dataFS() fs.FS {
 	// XXX: this is a short term measure, pass a set of
 	// searchPaths down the stack instead
@@ -53,6 +48,11 @@ func dataFS() fs.FS {
 		dataFS = os.DirFS(overrideDir)
 	}
 	return dataFS
+}
+
+// distrosYAML defines all supported YAML based distributions
+type distrosYAML struct {
+	Distros []DistroYAML
 }
 
 type DistroYAML struct {
@@ -94,10 +94,19 @@ type DistroYAML struct {
 	OscapProfilesAllowList []oscap.Profile `yaml:"oscap_profiles_allowlist"`
 
 	imageTypes map[string]ImageTypeYAML
+	// distro wide default image config
+	imageConfig *distro.ImageConfig `yaml:"default"`
 }
 
 func (d *DistroYAML) ImageTypes() map[string]ImageTypeYAML {
 	return d.imageTypes
+}
+
+// ImageConfig returns the distro wide default ImageConfig.
+//
+// Each ImageType gets this as their default ImageConfig.
+func (d *DistroYAML) ImageConfig() *distro.ImageConfig {
+	return d.imageConfig
 }
 
 func (d *DistroYAML) runTemplates(nameVer string) error {
@@ -200,35 +209,12 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 			foundDistro.imageTypes[name] = v
 		}
 	}
-	return foundDistro, nil
-}
-
-// XXX: make this part of DistroYAML
-//
-// DistroImageConfig returns the distro wide ImageConfig.
-//
-// Each ImageType gets this as their default ImageConfig.
-func DistroImageConfig(distroNameVer string) (*distro.ImageConfig, error) {
-	toplevel, err := load(distroNameVer)
+	foundDistro.imageConfig, err = toplevel.ImageConfig.For(nameVer)
 	if err != nil {
 		return nil, err
 	}
-	imgConfig := toplevel.ImageConfig.Default
 
-	condMap := toplevel.ImageConfig.Conditions
-	if condMap != nil {
-		id, err := distro.ParseID(distroNameVer)
-		if err != nil {
-			return nil, err
-		}
-		for _, cond := range condMap {
-			if cond.When.Eval(id, "") {
-				imgConfig = cond.Merge.InheritFrom(imgConfig)
-			}
-		}
-	}
-
-	return imgConfig, nil
+	return foundDistro, nil
 }
 
 // imageTypesYAML describes the image types for a given distribution
@@ -274,6 +260,27 @@ func (wc *whenCondition) Eval(id *distro.ID, archStr string) bool {
 	}
 
 	return match
+}
+
+func (di *distroImageConfig) For(nameVer string) (*distro.ImageConfig, error) {
+	imgConfig := di.Default
+
+	if di.Conditions != nil {
+		id, err := distro.ParseID(nameVer)
+		if err != nil {
+			return nil, err
+		}
+		for _, cond := range di.Conditions {
+			// distro image config cannot have architecure
+			// specific conditions
+			arch := ""
+			if cond.When.Eval(id, arch) {
+				imgConfig = cond.Merge.InheritFrom(imgConfig)
+			}
+		}
+	}
+
+	return imgConfig, nil
 }
 
 type distroImageConfigConditions struct {
