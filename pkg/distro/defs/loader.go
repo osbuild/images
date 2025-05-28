@@ -100,7 +100,7 @@ func (d *DistroYAML) ImageTypes() map[string]ImageTypeYAML {
 	return d.imageTypes
 }
 
-func executeTemplates(d *DistroYAML, nameVer string) error {
+func (d *DistroYAML) runTemplates(nameVer string) error {
 	id, err := distro.ParseID(nameVer)
 	if err != nil {
 		return err
@@ -133,14 +133,14 @@ func executeTemplates(d *DistroYAML, nameVer string) error {
 	return errors.Join(errs...)
 }
 
-// Distro return the given distro or nil if the distro is not
+// NewDistroYAML return the given distro or nil if the distro is not
 // found. This mimics the "distrofactory.GetDistro() interface.
 //
 // Note that eventually we want something like "Distros()" instead
 // that returns all known distros but for now we keep compatibility
 // with the way distrofactory/reporegistry work which is by defining
 // distros via repository files.
-func Distro(nameVer string) (*DistroYAML, error) {
+func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 	f, err := dataFS().Open("distros.yaml")
 	if err != nil {
 		return nil, err
@@ -167,7 +167,7 @@ func Distro(nameVer string) (*DistroYAML, error) {
 			return nil, err
 		}
 		if pat.Match(nameVer) {
-			if err := executeTemplates(&distro, nameVer); err != nil {
+			if err := distro.runTemplates(nameVer); err != nil {
 				return nil, err
 			}
 
@@ -203,13 +203,41 @@ func Distro(nameVer string) (*DistroYAML, error) {
 	return foundDistro, nil
 }
 
+// XXX: make this part of DistroYAML
+//
+// DistroImageConfig returns the distro wide ImageConfig.
+//
+// Each ImageType gets this as their default ImageConfig.
+func DistroImageConfig(distroNameVer string) (*distro.ImageConfig, error) {
+	toplevel, err := load(distroNameVer)
+	if err != nil {
+		return nil, err
+	}
+	imgConfig := toplevel.ImageConfig.Default
+
+	condMap := toplevel.ImageConfig.Conditions
+	if condMap != nil {
+		id, err := distro.ParseID(distroNameVer)
+		if err != nil {
+			return nil, err
+		}
+		for _, cond := range condMap {
+			if cond.When.Eval(id, "") {
+				imgConfig = cond.Merge.InheritFrom(imgConfig)
+			}
+		}
+	}
+
+	return imgConfig, nil
+}
+
 // imageTypesYAML describes the image types for a given distribution
 // family. Note that multiple distros may use the same image types,
 // e.g. centos/rhel
 type imageTypesYAML struct {
-	ImageConfig distroImageConfig    `yaml:"image_config,omitempty"`
-	ImageTypes  map[string]imageType `yaml:"image_types"`
-	Common      map[string]any       `yaml:".common,omitempty"`
+	ImageConfig distroImageConfig        `yaml:"image_config,omitempty"`
+	ImageTypes  map[string]ImageTypeYAML `yaml:"image_types"`
+	Common      map[string]any           `yaml:".common,omitempty"`
 }
 
 type distroImageConfig struct {
@@ -253,12 +281,7 @@ type distroImageConfigConditions struct {
 	Merge *distro.ImageConfig `yaml:"merge,omitempty"`
 }
 
-// XXX: this should eventually implement the "distro.ImageType"
-// interface, then we don't need to convert into a fedora/rhel
-// imagetype anymore (those will go away in subsequent refactors)
-type ImageTypeYAML = imageType
-
-type imageType struct {
+type ImageTypeYAML struct {
 	// This maps "pkgsKey" to their package sets. The
 	// map key here is a string that can either be:
 	// - "os": packages for the os
@@ -312,7 +335,7 @@ type imageType struct {
 	name string
 }
 
-func (it *imageType) Name() string {
+func (it *ImageTypeYAML) Name() string {
 	return it.name
 }
 
@@ -376,35 +399,9 @@ func versionStringForVerCmp(u distro.ID) string {
 	return u.VersionString()
 }
 
-// DistroImageConfig returns the distro wide ImageConfig.
-//
-// Each ImageType gets this as their default ImageConfig.
-func DistroImageConfig(distroNameVer string) (*distro.ImageConfig, error) {
-	toplevel, err := load(distroNameVer)
-	if err != nil {
-		return nil, err
-	}
-	imgConfig := toplevel.ImageConfig.Default
-
-	condMap := toplevel.ImageConfig.Conditions
-	if condMap != nil {
-		id, err := distro.ParseID(distroNameVer)
-		if err != nil {
-			return nil, err
-		}
-		for _, cond := range condMap {
-			if cond.When.Eval(id, "") {
-				imgConfig = cond.Merge.InheritFrom(imgConfig)
-			}
-		}
-	}
-
-	return imgConfig, nil
-}
-
 // PackageSets loads the PackageSets from the yaml source file
 // discovered via the imagetype.
-func (imgType *imageType) PackageSets(distroNameVer, archName string) (map[string]rpmmd.PackageSet, error) {
+func (imgType *ImageTypeYAML) PackageSets(distroNameVer, archName string) (map[string]rpmmd.PackageSet, error) {
 	res := make(map[string]rpmmd.PackageSet)
 	for key, pkgSets := range imgType.PackageSetsYAML {
 		var rpmmdPkgSet rpmmd.PackageSet
@@ -440,7 +437,7 @@ func (imgType *imageType) PackageSets(distroNameVer, archName string) (map[strin
 }
 
 // PartitionTable returns the partionTable for the given distro/imgType.
-func (imgType *imageType) PartitionTable(distroNameVer, archName string) (*disk.PartitionTable, error) {
+func (imgType *ImageTypeYAML) PartitionTable(distroNameVer, archName string) (*disk.PartitionTable, error) {
 	if imgType.PartitionTables == nil {
 		return nil, fmt.Errorf("%w: %q", ErrNoPartitionTableForImgType, distroNameVer)
 	}
@@ -465,7 +462,7 @@ func (imgType *imageType) PartitionTable(distroNameVer, archName string) (*disk.
 }
 
 // ImageConfig returns the image type specific ImageConfig
-func (imgType *imageType) ImageConfig(distroNameVer, archName string) (*distro.ImageConfig, error) {
+func (imgType *ImageTypeYAML) ImageConfig(distroNameVer, archName string) (*distro.ImageConfig, error) {
 	imgConfig := imgType.ImageConfigYAML.ImageConfig
 	condMap := imgType.ImageConfigYAML.Conditions
 	if condMap != nil {
@@ -487,7 +484,7 @@ func (imgType *imageType) ImageConfig(distroNameVer, archName string) (*distro.I
 // InstallerConfig returns the InstallerConfig for the given imgType
 // Note that on conditions the InstallerConfig is fully replaced, do
 // any merging in YAML
-func (imgType *imageType) InstallerConfig(distroNameVer, archName string) (*distro.InstallerConfig, error) {
+func (imgType *ImageTypeYAML) InstallerConfig(distroNameVer, archName string) (*distro.InstallerConfig, error) {
 	installerConfig := imgType.InstallerConfigYAML.InstallerConfig
 	condMap := imgType.InstallerConfigYAML.Conditions
 	if condMap != nil {
