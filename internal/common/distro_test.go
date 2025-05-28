@@ -2,6 +2,8 @@ package common
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestVersionLessThan(t *testing.T) {
@@ -186,4 +188,14 @@ func TestVersionGreaterThanOrEqual(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSplitDistroNameVer(t *testing.T) {
+	name, ver := SplitDistroNameVer("centos-stream-9")
+	assert.Equal(t, "centos-stream", name)
+	assert.Equal(t, "9", ver)
+
+	name, ver = SplitDistroNameVer("fedora")
+	assert.Equal(t, "fedora", name)
+	assert.Equal(t, "", ver)
 }

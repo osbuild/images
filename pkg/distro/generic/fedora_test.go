@@ -1,4 +1,4 @@
-package fedora_test
+package generic_test
 
 import (
 	"fmt"
@@ -10,25 +10,16 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/pkg/blueprint"
+	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/distro_test_common"
-	"github.com/osbuild/images/pkg/distro/fedora"
+	"github.com/osbuild/images/pkg/distro/generic"
 )
 
-type fedoraFamilyDistro struct {
-	name   string
-	distro distro.Distro
-}
-
-var fedoraFamilyDistros = []fedoraFamilyDistro{
-	{
-		name:   "fedora-40",
-		distro: fedora.DistroFactory("fedora-40"),
-	},
-	{
-		name:   "fedora-41",
-		distro: fedora.DistroFactory("fedora-41"),
-	},
+var fedoraFamilyDistros = []distro.Distro{
+	generic.DistroFactory("fedora-40"),
+	generic.DistroFactory("fedora-41"),
+	generic.DistroFactory("fedora-42"),
 }
 
 func TestFilenameFromType(t *testing.T) {
@@ -244,11 +235,10 @@ func TestFilenameFromType(t *testing.T) {
 		},
 	}
 	for _, dist := range fedoraFamilyDistros {
-		t.Run(dist.distro.Name(), func(t *testing.T) {
-			allTests := append(tests, verTypes[dist.distro.Releasever()]...)
+		t.Run(dist.Name(), func(t *testing.T) {
+			allTests := append(tests, verTypes[dist.Releasever()]...)
 			for _, tt := range allTests {
 				t.Run(tt.name, func(t *testing.T) {
-					dist := dist.distro
 					arch, _ := dist.GetArch("x86_64")
 					imgType, err := arch.GetImageType(tt.args.outputFormat)
 					if tt.want.wantErr {
@@ -299,9 +289,8 @@ func TestImageType_BuildPackages(t *testing.T) {
 		"x86_64":  x8664BuildPackages,
 		"aarch64": aarch64BuildPackages,
 	}
-	for _, dist := range fedoraFamilyDistros {
-		t.Run(dist.distro.Name(), func(t *testing.T) {
-			d := dist.distro
+	for _, d := range fedoraFamilyDistros {
+		t.Run(d.Name(), func(t *testing.T) {
 			for _, archLabel := range d.ListArches() {
 				archStruct, err := d.GetArch(archLabel)
 				if assert.NoErrorf(t, err, "d.GetArch(%v) returned err = %v; expected nil", archLabel, err) {
@@ -394,11 +383,11 @@ func TestImageType_Name(t *testing.T) {
 	}
 
 	for _, dist := range fedoraFamilyDistros {
-		t.Run(dist.distro.Name(), func(t *testing.T) {
+		t.Run(dist.Name(), func(t *testing.T) {
 			for _, mapping := range imgMap {
-				arch, err := dist.distro.GetArch(mapping.arch)
+				arch, err := dist.GetArch(mapping.arch)
 				if assert.NoError(t, err) {
-					imgTypes := append(mapping.imgNames, mapping.verTypes[dist.distro.Releasever()]...)
+					imgTypes := append(mapping.imgNames, mapping.verTypes[dist.Releasever()]...)
 					for _, imgName := range imgTypes {
 						imgType, err := arch.GetImageType(imgName)
 						if assert.NoError(t, err) {
@@ -452,10 +441,9 @@ func TestImageTypeAliases(t *testing.T) {
 		},
 	}
 	for _, dist := range fedoraFamilyDistros {
-		t.Run(dist.name, func(t *testing.T) {
+		t.Run(dist.Name(), func(t *testing.T) {
 			for _, tt := range tests {
 				t.Run(tt.name, func(t *testing.T) {
-					dist := dist.distro
 					for _, archName := range dist.ListArches() {
 						t.Run(archName, func(t *testing.T) {
 							arch, err := dist.GetArch(archName)
@@ -499,8 +487,7 @@ func TestDistro_ManifestError(t *testing.T) {
 		},
 	}
 
-	for _, dist := range fedoraFamilyDistros {
-		fedoraDistro := dist.distro
+	for _, fedoraDistro := range fedoraFamilyDistros {
 		for _, archName := range fedoraDistro.ListArches() {
 			arch, _ := fedoraDistro.GetArch(archName)
 			for _, imgTypeName := range arch.ListImageTypes() {
@@ -557,16 +544,8 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"server-vmdk",
 				"server-vagrant-libvirt",
 				"wsl",
-			},
-			verTypes: map[string][]string{
-				"40": {
-					"iot-bootable-container",
-					"iot-simplified-installer",
-				},
-				"41": {
-					"iot-bootable-container",
-					"iot-simplified-installer",
-				},
+				"iot-bootable-container",
+				"iot-simplified-installer",
 			},
 		},
 		{
@@ -587,16 +566,8 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"server-openstack",
 				"server-qcow2",
 				"server-vagrant-libvirt",
-			},
-			verTypes: map[string][]string{
-				"40": {
-					"iot-bootable-container",
-					"iot-simplified-installer",
-				},
-				"41": {
-					"iot-bootable-container",
-					"iot-simplified-installer",
-				},
+				"iot-bootable-container",
+				"iot-simplified-installer",
 			},
 		},
 		{
@@ -604,14 +575,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 			imgNames: []string{
 				"container",
 				"server-qcow2",
-			},
-			verTypes: map[string][]string{
-				"40": {
-					"iot-bootable-container",
-				},
-				"41": {
-					"iot-bootable-container",
-				},
+				"iot-bootable-container",
 			},
 		},
 		{
@@ -619,14 +583,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 			imgNames: []string{
 				"container",
 				"server-qcow2",
-			},
-			verTypes: map[string][]string{
-				"40": {
-					"iot-bootable-container",
-				},
-				"41": {
-					"iot-bootable-container",
-				},
+				"iot-bootable-container",
 			},
 		},
 		{
@@ -640,15 +597,15 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 	}
 
 	for _, dist := range fedoraFamilyDistros {
-		t.Run(dist.distro.Name(), func(t *testing.T) {
+		t.Run(dist.Name(), func(t *testing.T) {
 			for _, mapping := range imgMap {
-				arch, err := dist.distro.GetArch(mapping.arch)
+				arch, err := dist.GetArch(mapping.arch)
 				require.NoError(t, err)
 				imageTypes := arch.ListImageTypes()
 
 				var expectedImageTypes []string
 				expectedImageTypes = append(expectedImageTypes, mapping.imgNames...)
-				expectedImageTypes = append(expectedImageTypes, mapping.verTypes[dist.distro.Releasever()]...)
+				expectedImageTypes = append(expectedImageTypes, mapping.verTypes[dist.Releasever()]...)
 
 				sort.Strings(expectedImageTypes)
 				sort.Strings(imageTypes)
@@ -659,9 +616,8 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 }
 
 func TestFedora_ListArches(t *testing.T) {
-	for _, dist := range fedoraFamilyDistros {
-		fedoraDistro := dist.distro
-		t.Run(dist.name, func(t *testing.T) {
+	for _, fedoraDistro := range fedoraFamilyDistros {
+		t.Run(fedoraDistro.Name(), func(t *testing.T) {
 			arches := fedoraDistro.ListArches()
 			assert.Equal(t, []string{"aarch64", "ppc64le", "riscv64", "s390x", "x86_64"}, arches)
 		})
@@ -693,9 +649,9 @@ func TestFedora38_GetArch(t *testing.T) {
 	}
 
 	for _, dist := range fedoraFamilyDistros {
-		t.Run(dist.distro.Name(), func(t *testing.T) {
+		t.Run(dist.Name(), func(t *testing.T) {
 			for _, a := range arches {
-				actualArch, err := dist.distro.GetArch(a.name)
+				actualArch, err := dist.GetArch(a.name)
 				if a.errorExpected {
 					assert.Nil(t, actualArch)
 					assert.Error(t, err)
@@ -708,28 +664,17 @@ func TestFedora38_GetArch(t *testing.T) {
 	}
 }
 
-func TestFedora_Name(t *testing.T) {
-	for _, dist := range fedoraFamilyDistros {
-		fedoraDistro := dist.distro
-		t.Run(dist.name, func(t *testing.T) {
-			assert.Equal(t, dist.name, fedoraDistro.Name())
-		})
-	}
-}
-
 func TestFedora_KernelOption(t *testing.T) {
-	for _, dist := range fedoraFamilyDistros {
-		fedoraDistro := dist.distro
-		t.Run(dist.name, func(t *testing.T) {
+	for _, fedoraDistro := range fedoraFamilyDistros {
+		t.Run(fedoraDistro.Name(), func(t *testing.T) {
 			distro_test_common.TestDistro_KernelOption(t, fedoraDistro)
 		})
 	}
 }
 
 func TestFedora_OSTreeOptions(t *testing.T) {
-	for _, dist := range fedoraFamilyDistros {
-		fedoraDistro := dist.distro
-		t.Run(dist.name, func(t *testing.T) {
+	for _, fedoraDistro := range fedoraFamilyDistros {
+		t.Run(fedoraDistro.Name(), func(t *testing.T) {
 			distro_test_common.TestDistro_OSTreeOptions(t, fedoraDistro)
 		})
 	}
@@ -746,8 +691,7 @@ func TestDistro_CustomFileSystemManifestError(t *testing.T) {
 			},
 		},
 	}
-	for _, dist := range fedoraFamilyDistros {
-		fedoraDistro := dist.distro
+	for _, fedoraDistro := range fedoraFamilyDistros {
 		for _, archName := range fedoraDistro.ListArches() {
 			arch, _ := fedoraDistro.GetArch(archName)
 			for _, imgTypeName := range arch.ListImageTypes() {
@@ -780,8 +724,7 @@ func TestDistro_TestRootMountPoint(t *testing.T) {
 			},
 		},
 	}
-	for _, dist := range fedoraFamilyDistros {
-		fedoraDistro := dist.distro
+	for _, fedoraDistro := range fedoraFamilyDistros {
 		for _, archName := range fedoraDistro.ListArches() {
 			arch, _ := fedoraDistro.GetArch(archName)
 			for _, imgTypeName := range arch.ListImageTypes() {
@@ -818,8 +761,7 @@ func TestDistro_CustomFileSystemSubDirectories(t *testing.T) {
 			},
 		},
 	}
-	for _, dist := range fedoraFamilyDistros {
-		fedoraDistro := dist.distro
+	for _, fedoraDistro := range fedoraFamilyDistros {
 		for _, archName := range fedoraDistro.ListArches() {
 			arch, _ := fedoraDistro.GetArch(archName)
 			for _, imgTypeName := range arch.ListImageTypes() {
@@ -860,8 +802,7 @@ func TestDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
 			},
 		},
 	}
-	for _, dist := range fedoraFamilyDistros {
-		fedoraDistro := dist.distro
+	for _, fedoraDistro := range fedoraFamilyDistros {
 		for _, archName := range fedoraDistro.ListArches() {
 			arch, _ := fedoraDistro.GetArch(archName)
 			for _, imgTypeName := range arch.ListImageTypes() {
@@ -898,8 +839,7 @@ func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
 			},
 		},
 	}
-	for _, dist := range fedoraFamilyDistros {
-		fedoraDistro := dist.distro
+	for _, fedoraDistro := range fedoraFamilyDistros {
 		for _, archName := range fedoraDistro.ListArches() {
 			arch, _ := fedoraDistro.GetArch(archName)
 			for _, imgTypeName := range arch.ListImageTypes() {
@@ -928,8 +868,7 @@ func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 			},
 		},
 	}
-	for _, dist := range fedoraFamilyDistros {
-		fedoraDistro := dist.distro
+	for _, fedoraDistro := range fedoraFamilyDistros {
 		for _, archName := range fedoraDistro.ListArches() {
 			arch, _ := fedoraDistro.GetArch(archName)
 			for _, imgTypeName := range arch.ListImageTypes() {
@@ -973,8 +912,7 @@ func TestDistro_PartitioningConflict(t *testing.T) {
 			},
 		},
 	}
-	for _, dist := range fedoraFamilyDistros {
-		fedoraDistro := dist.distro
+	for _, fedoraDistro := range fedoraFamilyDistros {
 		for _, archName := range fedoraDistro.ListArches() {
 			arch, _ := fedoraDistro.GetArch(archName)
 			for _, imgTypeName := range arch.ListImageTypes() {
@@ -1005,12 +943,8 @@ func TestDistroFactory(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			strID:    "fedora-38",
-			expected: fedora.DistroFactory("fedora-38"),
-		},
-		{
-			strID:    "fedora-38.1",
-			expected: nil,
+			strID:    "fedora-40",
+			expected: generic.DistroFactory("fedora-40"),
 		},
 		{
 			strID:    "fedora",
@@ -1036,7 +970,7 @@ func TestDistroFactory(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.strID, func(t *testing.T) {
-			d := fedora.DistroFactory(tc.strID)
+			d := generic.DistroFactory(tc.strID)
 			if tc.expected == nil {
 				assert.Nil(t, d)
 			} else {
@@ -1065,8 +999,7 @@ func TestDistro_DiskCustomizationRunsValidateLayoutConstraints(t *testing.T) {
 		},
 	}
 
-	for _, dist := range fedoraFamilyDistros {
-		fedoraDistro := dist.distro
+	for _, fedoraDistro := range fedoraFamilyDistros {
 		for _, archName := range fedoraDistro.ListArches() {
 			arch, err := fedoraDistro.GetArch(archName)
 			assert.NoError(t, err)
@@ -1086,6 +1019,30 @@ func TestDistro_DiskCustomizationRunsValidateLayoutConstraints(t *testing.T) {
 				_, _, err := imgType.Manifest(&bp, imgOpts, nil, nil)
 				assert.EqualError(t, err, "multiple LVM volume groups are not yet supported")
 			})
+		}
+	}
+}
+
+func TestESP(t *testing.T) {
+	distro_test_common.TestESP(t, fedoraFamilyDistros, func(it distro.ImageType) (*disk.PartitionTable, error) {
+		return generic.GetPartitionTable(it)
+	})
+}
+
+func TestDistroBootstrapRef(t *testing.T) {
+	for _, fedoraDistro := range fedoraFamilyDistros {
+		for _, archName := range fedoraDistro.ListArches() {
+			arch, err := fedoraDistro.GetArch(archName)
+			require.NoError(t, err)
+			for _, imgTypeName := range arch.ListImageTypes() {
+				imgType, err := arch.GetImageType(imgTypeName)
+				require.NoError(t, err)
+				if arch.Name() == "riscv64" {
+					require.Equal(t, "ghcr.io/mvo5/fedora-buildroot:"+fedoraDistro.OsVersion(), generic.BootstrapContainerFor(imgType))
+				} else {
+					require.Equal(t, "registry.fedoraproject.org/fedora-toolbox:"+fedoraDistro.OsVersion(), generic.BootstrapContainerFor(imgType))
+				}
+			}
 		}
 	}
 }
