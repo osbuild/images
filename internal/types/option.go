@@ -53,11 +53,20 @@ func (o Option[T]) IsNone() bool {
 	return o == nil
 }
 
+// IsZero returns True if the Option *doesn't* have a value
+// compat with the new go-1.24 IsZero() protocol
+func (o Option[T]) IsZero() bool {
+	return o.IsNone()
+}
+
 // IsSome returns whether the Option has a value or not.
 func (o Option[T]) IsSome() bool {
 	return o != nil
 }
 
+// XXX: this probably needs a different name to like UnwrapOrDefault()
+// or something
+//
 // Unwrap returns the value regardless of Some/None status.
 // If the Option value is Some, this method returns the actual value.
 // On the other hand, if the Option value is None, this method returns the *default* value according to the type.
