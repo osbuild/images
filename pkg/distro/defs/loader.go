@@ -239,7 +239,7 @@ type imageType struct {
 	// - "build": unused AFAICT
 	// Note that this does not directly maps to pipeline names
 	// but we should look into making it so.
-	PackageSets map[string][]packageSet `yaml:"package_sets"`
+	PackageSetsYAML map[string][]packageSet `yaml:"package_sets"`
 	// archStr->partitionTable
 	PartitionTables map[string]*disk.PartitionTable `yaml:"partition_table"`
 	// override specific aspects of the partition table
@@ -372,15 +372,11 @@ func DistroImageConfig(distroNameVer string) (*distro.ImageConfig, error) {
 	return imgConfig, nil
 }
 
-// PackageSets loads the PackageSets from the yaml source file
-// discovered via the imagetype.
+// XXX: compat only, will go away once we move to "generic" distros
+// everywhere
 func PackageSets(it distro.ImageType) (map[string]rpmmd.PackageSet, error) {
-	typeName := it.Name()
-
-	arch := it.Arch()
-	archName := arch.Name()
-	distribution := arch.Distro()
-	distroNameVer := distribution.Name()
+	archName := it.Arch().Name()
+	distroNameVer := it.Arch().Distro().Name()
 
 	// each imagetype can have multiple package sets, so that we can
 	// use yaml aliases/anchors to de-duplicate them
@@ -389,13 +385,18 @@ func PackageSets(it distro.ImageType) (map[string]rpmmd.PackageSet, error) {
 		return nil, err
 	}
 
-	imgType, ok := toplevel.ImageTypes[typeName]
+	imgType, ok := toplevel.ImageTypes[it.Name()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %q", ErrImageTypeNotFound, typeName)
+		return nil, fmt.Errorf("%w: %q", ErrImageTypeNotFound, it.Name())
 	}
+	return imgType.PackageSets(distroNameVer, archName)
+}
 
+// PackageSets loads the PackageSets from the yaml source file
+// discovered via the imagetype.
+func (imgType *imageType) PackageSets(distroNameVer, archName string) (map[string]rpmmd.PackageSet, error) {
 	res := make(map[string]rpmmd.PackageSet)
-	for key, pkgSets := range imgType.PackageSets {
+	for key, pkgSets := range imgType.PackageSetsYAML {
 		var rpmmdPkgSet rpmmd.PackageSet
 		for _, pkgSet := range pkgSets {
 			rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
@@ -428,7 +429,8 @@ func PackageSets(it distro.ImageType) (map[string]rpmmd.PackageSet, error) {
 	return res, nil
 }
 
-// PartitionTable returns the partionTable for the given distro/imgType.
+// XXX: compat only, will go away once we move to "generic" distros
+// everywhere
 func PartitionTable(it distro.ImageType) (*disk.PartitionTable, error) {
 	distroNameVer := it.Arch().Distro().Name()
 
@@ -441,19 +443,21 @@ func PartitionTable(it distro.ImageType) (*disk.PartitionTable, error) {
 	if !ok {
 		return nil, fmt.Errorf("%w: %q", ErrImageTypeNotFound, it.Name())
 	}
-	if imgType.PartitionTables == nil {
-		return nil, fmt.Errorf("%w: %q", ErrNoPartitionTableForImgType, it.Name())
-	}
-	arch := it.Arch()
-	archName := arch.Name()
+	return imgType.PartitionTable(distroNameVer, it.Arch().Name())
+}
 
+// PartitionTable returns the partionTable for the given distro/imgType.
+func (imgType *imageType) PartitionTable(distroNameVer, archName string) (*disk.PartitionTable, error) {
+	if imgType.PartitionTables == nil {
+		return nil, fmt.Errorf("%w: %q", ErrNoPartitionTableForImgType, distroNameVer)
+	}
 	pt, ok := imgType.PartitionTables[archName]
 	if !ok {
-		return nil, fmt.Errorf("%w (%q): %q", ErrNoPartitionTableForArch, it.Name(), archName)
+		return nil, fmt.Errorf("%w (%q): %q", ErrNoPartitionTableForArch, distroNameVer, archName)
 	}
 
 	if imgType.PartitionTablesOverrides != nil {
-		id, err := distro.ParseID(it.Arch().Distro().Name())
+		id, err := distro.ParseID(distroNameVer)
 		if err != nil {
 			return nil, err
 		}
@@ -586,13 +590,14 @@ func ImageConfig(distroNameVer, archName, typeName string) (*distro.ImageConfig,
 // ImageConfig returns the image type specific ImageConfig
 func (imgType *imageType) ImageConfig(distroNameVer, archName string) (*distro.ImageConfig, error) {
 	imgConfig := imgType.ImageConfigYAML.ImageConfig
-	if imgType.ImageConfigYAML.Conditions != nil {
+	condMap := imgType.ImageConfigYAML.Conditions
+	if condMap != nil {
 		id, err := distro.ParseID(distroNameVer)
 		if err != nil {
 			return nil, err
 		}
 
-		for _, cond := range imgType.ImageConfigYAML.Conditions {
+		for _, cond := range condMap {
 			if cond.When.Eval(id, archName) {
 				imgConfig = cond.Merge.InheritFrom(imgConfig)
 			}
