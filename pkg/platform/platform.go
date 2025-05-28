@@ -20,6 +20,7 @@ const ( // image format enum
 	FORMAT_GCE
 	FORMAT_OVA
 	FORMAT_VAGRANT_LIBVIRT
+	FORMAT_VAGRANT_VIRTUALBOX
 )
 
 func (f ImageFormat) String() string {
@@ -42,6 +43,8 @@ func (f ImageFormat) String() string {
 		return "ova"
 	case FORMAT_VAGRANT_LIBVIRT:
 		return "vagrant_libvirt"
+	case FORMAT_VAGRANT_VIRTUALBOX:
+		return "vagrant_virtualbox"
 	default:
 		panic(fmt.Errorf("unknown image format %d", f))
 	}
@@ -71,6 +74,8 @@ func (f *ImageFormat) UnmarshalJSON(data []byte) error {
 		*f = FORMAT_OVA
 	case "vagrant_libvirt":
 		*f = FORMAT_VAGRANT_LIBVIRT
+	case "vagrant_virtualbox":
+		*f = FORMAT_VAGRANT_VIRTUALBOX
 	default:
 		panic(fmt.Errorf("unknown image format %q", s))
 	}
