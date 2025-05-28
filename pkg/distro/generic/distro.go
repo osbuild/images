@@ -73,7 +73,7 @@ func (d *distribution) getISOLabelFunc(isoLabel string) isoLabelFunc {
 }
 
 func newDistro(nameVer string) (distro.Distro, error) {
-	distroYAML, err := defs.Distro(nameVer)
+	distroYAML, err := defs.NewDistroYAML(nameVer)
 	if err != nil {
 		return nil, err
 	}
