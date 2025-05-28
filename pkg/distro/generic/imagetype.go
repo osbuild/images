@@ -40,9 +40,9 @@ type imageType struct {
 	platform platform.Platform
 
 	// XXX: make definable via YAML
-	workload workload.Workload
+	workload           workload.Workload
+	defaultImageConfig *distro.ImageConfig
 	// XXX: make member function ImageTypeYAML
-	defaultImageConfig     *distro.ImageConfig
 	defaultInstallerConfig *distro.InstallerConfig
 
 	image    imageFunc
