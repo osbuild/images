@@ -11,9 +11,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v3"
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
+	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
@@ -22,6 +24,7 @@ import (
 	"github.com/osbuild/images/pkg/distro/test_distro"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
+	"github.com/osbuild/images/pkg/runner"
 )
 
 func makeTestImageType(t *testing.T) distro.ImageType {
@@ -55,7 +58,7 @@ func TestYamlLintClean(t *testing.T) {
 	pl, err := filepath.Glob("*/*.yaml")
 	require.NoError(t, err)
 	for _, p := range pl {
-		cmd := exec.Command("yamllint", p)
+		cmd := exec.Command("yamllint", "--format=parsable", p)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()
@@ -89,7 +92,7 @@ image_types:
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	pkgSet, err := defs.PackageSets(it, nil)
+	pkgSet, err := defs.PackageSets(it)
 	assert.NoError(t, err)
 	assert.Equal(t, map[string]rpmmd.PackageSet{
 		"os": {
@@ -140,7 +143,7 @@ image_types:
 	err = os.WriteFile(fakePkgsSetPath, fakePkgsSetYaml, 0644)
 	assert.NoError(t, err)
 
-	pkgSet, err := defs.PackageSets(it, nil)
+	pkgSet, err := defs.PackageSets(it)
 	assert.NoError(t, err)
 	assert.Equal(t, map[string]rpmmd.PackageSet{
 		"os": {
@@ -187,7 +190,7 @@ image_types:
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	pkgSet, err := defs.PackageSets(it, nil)
+	pkgSet, err := defs.PackageSets(it)
 	assert.NoError(t, err)
 	assert.Equal(t, map[string]rpmmd.PackageSet{
 		"os": {
@@ -246,7 +249,7 @@ image_types:
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	partTable, err := defs.PartitionTable(it, nil)
+	partTable, err := defs.PartitionTable(it)
 	require.NoError(t, err)
 	assert.Equal(t, &disk.PartitionTable{
 		Size: 1_000_000_000,
@@ -356,7 +359,7 @@ func TestDefsPartitionTableOverrideGreatEqual(t *testing.T) {
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	partTable, err := defs.PartitionTable(it, nil)
+	partTable, err := defs.PartitionTable(it)
 	require.NoError(t, err)
 	assert.Equal(t, &disk.PartitionTable{
 		Size: 1_000_000_000,
@@ -390,7 +393,7 @@ func TestDefsPartitionTableOverridelessThan(t *testing.T) {
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	partTable, err := defs.PartitionTable(it, nil)
+	partTable, err := defs.PartitionTable(it)
 	require.NoError(t, err)
 	assert.Equal(t, &disk.PartitionTable{
 		Size: 1_000_000_000,
@@ -440,7 +443,7 @@ image_types:
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	partTable, err := defs.PartitionTable(it, nil)
+	partTable, err := defs.PartitionTable(it)
 	require.NoError(t, err)
 	assert.Equal(t, &disk.PartitionTable{
 		Partitions: []disk.Partition{
@@ -518,7 +521,7 @@ image_types:
 		restore := defs.MockDataFS(baseDir)
 		defer restore()
 
-		_, err := defs.PartitionTable(it, nil)
+		_, err := defs.PartitionTable(it)
 		assert.ErrorIs(t, err, tc.expectedErr)
 	}
 }
@@ -547,7 +550,7 @@ image_types:
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	imgConfig, err := defs.ImageConfig("test-distro-1", "test_arch", "test_type", nil)
+	imgConfig, err := defs.ImageConfig("test-distro-1", "test_arch", "test_type")
 	require.NoError(t, err)
 	assert.Equal(t, &distro.ImageConfig{
 		Hostname: common.ToPtr("test-arch-hn"),
@@ -590,8 +593,17 @@ image_types:
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	imgTypes, err := defs.ImageTypes("test-distro-1")
+	testDistroYAML := fmt.Sprintf(`
+distros:
+ - name: test-distro-1
+   defs_path: test-distro/
+`)
+	err := os.WriteFile(filepath.Join(baseDir, "distros.yaml"), []byte(testDistroYAML), 0644)
 	require.NoError(t, err)
+
+	distro, err := defs.NewDistroYAML("test-distro-1")
+	require.NoError(t, err)
+	imgTypes := distro.ImageTypes()
 	assert.Len(t, imgTypes, 1)
 	imgType := imgTypes["server-qcow2"]
 	assert.Equal(t, "server-qcow2", imgType.Name())
@@ -630,6 +642,7 @@ image_types:
         - base-dracut-mod1
       additional_drivers:
         - base-drv1
+      squashfs_rootfs: true
 `
 
 func TestImageTypeInstallerConfig(t *testing.T) {
@@ -640,11 +653,12 @@ func TestImageTypeInstallerConfig(t *testing.T) {
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type", nil)
+	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type")
 	require.NoError(t, err)
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDracutModules: []string{"base-dracut-mod1"},
 		AdditionalDrivers:       []string{"base-drv1"},
+		SquashfsRootfs:          common.ToPtr(true),
 	}, installerConfig)
 }
 
@@ -664,7 +678,7 @@ func TestImageTypeInstallerConfigErrorMultiple(t *testing.T) {
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	_, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type", nil)
+	_, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type")
 	require.ErrorContains(t, err, "only a single conditional allowed in installer config for test_type")
 }
 
@@ -682,7 +696,7 @@ func TestImageTypeInstallerConfigOverrideVerLT(t *testing.T) {
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type", nil)
+	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type")
 	require.NoError(t, err)
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDracutModules: []string{"override-dracut-mod1"},
@@ -708,7 +722,7 @@ func TestImageTypeInstallerConfigOverrideDistroName(t *testing.T) {
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type", nil)
+	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type")
 	require.NoError(t, err)
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDracutModules: []string{"override-dracut-mod1"},
@@ -730,9 +744,189 @@ func TestImageTypeInstallerConfigOverrideArch(t *testing.T) {
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type", nil)
+	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type")
 	require.NoError(t, err)
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDrivers: []string{"override-drv1"},
 	}, installerConfig)
+}
+
+func makeFakeDistrosYAML(t *testing.T, content string) string {
+	t.Helper()
+
+	tmpdir := t.TempDir()
+	distrosPath := filepath.Join(tmpdir, "distros.yaml")
+	err := os.WriteFile(distrosPath, []byte(content), 0644)
+	assert.NoError(t, err)
+
+	var di struct {
+		Distros []defs.DistroYAML `yaml:"distros"`
+	}
+	err = yaml.Unmarshal([]byte(content), &di)
+	assert.NoError(t, err)
+	for _, d := range di.Distros {
+		p := filepath.Join(tmpdir, d.DefsPath, "distro.yaml")
+		err = os.MkdirAll(filepath.Dir(p), 0755)
+		assert.NoError(t, err)
+		err = os.WriteFile(p, []byte(`---`), 0644)
+		assert.NoError(t, err)
+	}
+
+	return tmpdir
+}
+
+var fakeDistrosYAML = `
+distros:
+  - &fedora_rawhide
+    name: fedora-43
+    preview: true
+    os_version: 43
+    release_version: 43
+    module_platform_id: platform:f43
+    product: "Fedora"
+    ostree_ref_tmpl: "fedora/43/%s/iot"
+    defs_path: fedora
+    iso_label_tmpl: "{{.Product}}-ISO"
+    runner: &fedora_runner
+      name: org.osbuild.fedora43
+      build_packages: ["glibc"]
+    bootstrap_containers:
+      x86_64: "registry.fedoraproject.org/fedora-toolbox:43"
+    oscap_profiles_allowlist:
+      - "xccdf_org.ssgproject.content_profile_ospp"
+
+  - &fedora_stable
+    <<: *fedora_rawhide
+    name: "fedora-{{.Major}}"
+    match: "fedora-*"
+    preview: false
+    os_version: "{{.Major}}"
+    release_version: "{{.Major}}"
+    module_platform_id: "platform:f{{.Major}}"
+    ostree_ref_tmpl: "fedora/{{.Major}}/%s/iot"
+    runner:
+      <<: *fedora_runner
+      name: org.osbuild.fedora{{.Major}}
+    bootstrap_containers:
+      x86_64: "registry.fedoraproject.org/fedora-toolbox:{{.Major}}"
+
+  - name: centos-10
+    product: "CentOS Stream"
+    os_version: "10-stream"
+    release_version: 10
+    module_platform_id: "platform:el10"
+    vendor: "centos"
+    ostree_ref_tmpl: "centos/10/%s/edge"
+    default_fs_type: "xfs"
+    defs_path: rhel-10
+
+  - name: "rhel-{{.Major}}.{{.Minor}}"
+    match: "rhel-10*"
+    product: "Red Hat Enterprise Linux"
+    os_version: "{{.Major}}.{{.Minor}}"
+    release_version: "{{.Major}}"
+    module_platform_id: "platform:el{{.Major}}"
+    vendor: "redhat"
+    ostree_ref_tmpl: "rhel/{{.Major}}/%s/edge"
+    default_fs_type: "xfs"
+    defs_path: rhel-10
+`
+
+func TestDistrosLoadingExact(t *testing.T) {
+	baseDir := makeFakeDistrosYAML(t, fakeDistrosYAML)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	distro, err := defs.NewDistroYAML("fedora-43")
+	require.NoError(t, err)
+	assert.Equal(t, &defs.DistroYAML{
+		Name:             "fedora-43",
+		Preview:          true,
+		OsVersion:        "43",
+		ReleaseVersion:   "43",
+		ModulePlatformID: "platform:f43",
+		Product:          "Fedora",
+		OSTreeRefTmpl:    "fedora/43/%s/iot",
+		DefsPath:         "fedora",
+		ISOLabelTmpl:     "{{.Product}}-ISO",
+		Runner: runner.RunnerConf{
+			Name:          "org.osbuild.fedora43",
+			BuildPackages: []string{"glibc"},
+		},
+		BootstrapContainers: map[arch.Arch]string{
+			arch.ARCH_X86_64: "registry.fedoraproject.org/fedora-toolbox:43",
+		},
+		OscapProfilesAllowList: []oscap.Profile{
+			oscap.Ospp,
+		},
+	}, distro)
+
+	distro, err = defs.NewDistroYAML("centos-10")
+	require.NoError(t, err)
+	assert.Equal(t, &defs.DistroYAML{
+		Name:             "centos-10",
+		Vendor:           "centos",
+		OsVersion:        "10-stream",
+		ReleaseVersion:   "10",
+		ModulePlatformID: "platform:el10",
+		Product:          "CentOS Stream",
+		OSTreeRefTmpl:    "centos/10/%s/edge",
+		DefsPath:         "rhel-10",
+		DefaultFSType:    disk.FS_XFS,
+	}, distro)
+}
+
+func TestDistrosLoadingFactoryCompat(t *testing.T) {
+	baseDir := makeFakeDistrosYAML(t, fakeDistrosYAML)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	distro, err := defs.NewDistroYAML("rhel-10.1")
+	require.NoError(t, err)
+	assert.Equal(t, &defs.DistroYAML{
+		Name:             "rhel-10.1",
+		Match:            "rhel-10*",
+		Vendor:           "redhat",
+		OsVersion:        "10.1",
+		ReleaseVersion:   "10",
+		ModulePlatformID: "platform:el10",
+		Product:          "Red Hat Enterprise Linux",
+		OSTreeRefTmpl:    "rhel/10/%s/edge",
+		DefsPath:         "rhel-10",
+		DefaultFSType:    disk.FS_XFS,
+	}, distro)
+
+	distro, err = defs.NewDistroYAML("fedora-40")
+	require.NoError(t, err)
+	assert.Equal(t, &defs.DistroYAML{
+		Name:             "fedora-40",
+		Match:            "fedora-*",
+		OsVersion:        "40",
+		ReleaseVersion:   "40",
+		ModulePlatformID: "platform:f40",
+		Product:          "Fedora",
+		OSTreeRefTmpl:    "fedora/40/%s/iot",
+		DefsPath:         "fedora",
+		ISOLabelTmpl:     "{{.Product}}-ISO",
+		Runner: runner.RunnerConf{
+			Name:          "org.osbuild.fedora40",
+			BuildPackages: []string{"glibc"},
+		},
+		BootstrapContainers: map[arch.Arch]string{
+			arch.ARCH_X86_64: "registry.fedoraproject.org/fedora-toolbox:40",
+		},
+		OscapProfilesAllowList: []oscap.Profile{
+			oscap.Ospp,
+		},
+	}, distro)
+}
+
+func TestDistrosLoadingNotFound(t *testing.T) {
+	baseDir := makeFakeDistrosYAML(t, fakeDistrosYAML)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	distro, err := defs.NewDistroYAML("non-exiting")
+	assert.Nil(t, err)
+	assert.Nil(t, distro)
 }

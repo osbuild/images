@@ -1,16 +1,16 @@
-package fedora
+package generic
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"sort"
-	"strconv"
+	"text/template"
 
 	"github.com/osbuild/images/internal/common"
-	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
 	"github.com/osbuild/images/pkg/platform"
-	"github.com/osbuild/images/pkg/runner"
 )
 
 const (
@@ -30,51 +30,65 @@ const (
 )
 
 var (
-	oscapProfileAllowList = []oscap.Profile{
-		oscap.Ospp,
-		oscap.PciDss,
-		oscap.Standard,
-	}
+	ErrDistroNotFound = errors.New("distribution not found")
 )
 
 // distribution implements the distro.Distro interface
 var _ = distro.Distro(&distribution{})
 
 type distribution struct {
-	name               string
-	product            string
-	osVersion          string
-	releaseVersion     string
-	modulePlatformID   string
-	ostreeRefTmpl      string
-	runner             runner.Runner
-	arches             map[string]*architecture
+	defs.DistroYAML
+
+	arches map[string]*architecture
+	// XXX: move into defs.DistroYAML? the downside of doing this
+	// is that we would have to duplicate the default image config
+	// accross the centos/alma/rhel distros.yaml, otherwise we
+	// just load it from the imagetypes file/dir and it is natually
+	// "in-sync"
 	defaultImageConfig *distro.ImageConfig
 }
 
-func newDistro(version int) (distro.Distro, error) {
-	if version < 0 {
-		return nil, fmt.Errorf("Invalid Fedora version %q (must be positive)", version)
+func (d *distribution) getISOLabelFunc(isoLabel string) isoLabelFunc {
+	return func(t *imageType) string {
+		type inputs struct {
+			Product      string
+			OsVersion    string
+			Arch         string
+			ImgTypeLabel string
+		}
+		templ := common.Must(template.New("iso-label").Parse(d.DistroYAML.ISOLabelTmpl))
+		var buf bytes.Buffer
+		err := templ.Execute(&buf, inputs{
+			Product:      t.Arch().Distro().Product(),
+			OsVersion:    t.Arch().Distro().OsVersion(),
+			Arch:         t.Arch().Name(),
+			ImgTypeLabel: isoLabel,
+		})
+		if err != nil {
+			// XXX: cleanup isoLabelFunc to allow error
+			panic(err)
+		}
+		return buf.String()
 	}
-	nameVer := fmt.Sprintf("fedora-%d", version)
-	rd := &distribution{
-		name:             nameVer,
-		product:          "Fedora",
-		osVersion:        strconv.Itoa(version),
-		releaseVersion:   strconv.Itoa(version),
-		modulePlatformID: fmt.Sprintf("platform:f%d", version),
-		ostreeRefTmpl:    fmt.Sprintf("fedora/%d/%%s/iot", version),
-		runner:           &runner.Fedora{Version: uint64(version)},
-		// XXX: make part dynamic distribution building
-		defaultImageConfig: common.Must(defs.DistroImageConfig(nameVer)),
-		arches:             make(map[string]*architecture),
-	}
+}
 
-	its, err := defs.ImageTypes(rd.name)
+func newDistro(nameVer string) (distro.Distro, error) {
+	distroYAML, err := defs.NewDistroYAML(nameVer)
 	if err != nil {
 		return nil, err
 	}
-	for _, imgTypeYAML := range its {
+	if distroYAML == nil {
+		return nil, nil
+	}
+
+	rd := &distribution{
+		DistroYAML: *distroYAML,
+
+		defaultImageConfig: distroYAML.DistroImageConfig(),
+		arches:             make(map[string]*architecture),
+	}
+
+	for _, imgTypeYAML := range distroYAML.ImageTypes() {
 		// use as marker for images that are not converted to
 		// YAML yet
 		if imgTypeYAML.Filename == "" {
@@ -97,31 +111,31 @@ func newDistro(version int) (distro.Distro, error) {
 }
 
 func (d *distribution) Name() string {
-	return d.name
+	return d.DistroYAML.Name
 }
 
 func (d *distribution) Codename() string {
-	return "" // Fedora does not use distro codename
+	return d.DistroYAML.Codename
 }
 
 func (d *distribution) Releasever() string {
-	return d.releaseVersion
+	return d.DistroYAML.ReleaseVersion
 }
 
 func (d *distribution) OsVersion() string {
-	return d.releaseVersion
+	return d.DistroYAML.OsVersion
 }
 
 func (d *distribution) Product() string {
-	return d.product
+	return d.DistroYAML.Product
 }
 
 func (d *distribution) ModulePlatformID() string {
-	return d.modulePlatformID
+	return d.DistroYAML.ModulePlatformID
 }
 
 func (d *distribution) OSTreeRef() string {
-	return d.ostreeRefTmpl
+	return d.DistroYAML.OSTreeRefTmpl
 }
 
 func (d *distribution) ListArches() []string {
@@ -191,15 +205,15 @@ func (a *architecture) GetImageType(name string) (distro.ImageType, error) {
 func (a *architecture) addImageType(platform platform.Platform, it imageType) error {
 	it.arch = a
 	it.platform = platform
-	a.imageTypes[it.name] = &it
-	for _, alias := range it.nameAliases {
+	a.imageTypes[it.Name()] = &it
+	for _, alias := range it.ImageTypeYAML.NameAliases {
 		if a.imageTypeAliases == nil {
 			a.imageTypeAliases = map[string]string{}
 		}
 		if existingAliasFor, exists := a.imageTypeAliases[alias]; exists {
-			return fmt.Errorf("image type alias '%s' for '%s' is already defined for another image type '%s'", alias, it.name, existingAliasFor)
+			return fmt.Errorf("image type alias '%s' for '%s' is already defined for another image type '%s'", alias, it.Name(), existingAliasFor)
 		}
-		a.imageTypeAliases[alias] = it.name
+		a.imageTypeAliases[alias] = it.Name()
 	}
 	return nil
 }
@@ -208,28 +222,13 @@ func (a *architecture) Distro() distro.Distro {
 	return a.distro
 }
 
-func ParseID(idStr string) (*distro.ID, error) {
-	id, err := distro.ParseID(idStr)
-	if err != nil {
-		return nil, err
-	}
-
-	if id.Name != "fedora" {
-		return nil, fmt.Errorf("invalid distro name: %s", id.Name)
-	}
-
-	if id.MinorVersion != -1 {
-		return nil, fmt.Errorf("fedora distro does not support minor versions")
-	}
-
-	return id, nil
-}
-
 func DistroFactory(idStr string) distro.Distro {
-	id, err := ParseID(idStr)
-	if err != nil {
+	distro, err := newDistro(idStr)
+	if errors.Is(err, ErrDistroNotFound) {
 		return nil
 	}
-
-	return common.Must(newDistro(id.MajorVersion))
+	if err != nil {
+		panic(err)
+	}
+	return distro
 }

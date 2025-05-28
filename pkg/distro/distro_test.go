@@ -571,29 +571,33 @@ func TestDistro_ManifestFIPSWarning(t *testing.T) {
 		for _, archName := range d.ListArches() {
 			arch, _ := d.GetArch(archName)
 			for _, imgTypeName := range arch.ListImageTypes() {
-				bp := blueprint.Blueprint{
-					Customizations: &blueprint.Customizations{
-						FIPS: &fips_enabled,
-					},
-				}
-				imgType, _ := arch.GetImageType(imgTypeName)
-				imgOpts := distro.ImageOptions{
-					Size: imgType.Size(0),
-				}
-				if slices.Contains(ostreeImages, imgTypeName) {
-					imgOpts.OSTree = &ostree.ImageOptions{URL: "http://localhost/repo"}
-				}
-				if strings.HasSuffix(imgTypeName, "simplified-installer") {
-					bp.Customizations.InstallationDevice = "/dev/dummy"
-				}
-				_, warn, err := imgType.Manifest(&bp, imgOpts, nil, nil)
-				if err != nil {
-					assert.True(t, slices.Contains(noCustomizableImages, imgTypeName))
-					assert.Equal(t, err, fmt.Errorf(distro.NoCustomizationsAllowedError, imgTypeName))
-				} else {
-					assert.Equal(t, slices.Contains(warn, msg), !common.IsBuildHostFIPSEnabled(),
-						"FIPS warning not shown for image: distro='%s', imgTypeName='%s', archName='%s', warn='%v'", distroName, imgTypeName, archName, warn)
-				}
+				t.Run(fmt.Sprintf("fips:%s/%s/%s", distroName, archName, imgTypeName), func(t *testing.T) {
+					t.Parallel()
+
+					bp := blueprint.Blueprint{
+						Customizations: &blueprint.Customizations{
+							FIPS: &fips_enabled,
+						},
+					}
+					imgType, _ := arch.GetImageType(imgTypeName)
+					imgOpts := distro.ImageOptions{
+						Size: imgType.Size(0),
+					}
+					if slices.Contains(ostreeImages, imgTypeName) {
+						imgOpts.OSTree = &ostree.ImageOptions{URL: "http://localhost/repo"}
+					}
+					if strings.HasSuffix(imgTypeName, "simplified-installer") {
+						bp.Customizations.InstallationDevice = "/dev/dummy"
+					}
+					_, warn, err := imgType.Manifest(&bp, imgOpts, nil, nil)
+					if err != nil {
+						assert.True(t, slices.Contains(noCustomizableImages, imgTypeName))
+						assert.Equal(t, err, fmt.Errorf(distro.NoCustomizationsAllowedError, imgTypeName))
+					} else {
+						assert.Equal(t, slices.Contains(warn, msg), !common.IsBuildHostFIPSEnabled(),
+							"FIPS warning not shown for image: distro='%s', imgTypeName='%s', archName='%s', warn='%v'", distroName, imgTypeName, archName, warn)
+					}
+				})
 			}
 		}
 	}

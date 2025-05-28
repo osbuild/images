@@ -1,4 +1,4 @@
-package fedora
+package generic
 
 import (
 	"fmt"
@@ -25,19 +25,12 @@ import (
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
-// HELPERS
-
-func osCustomizations(
-	t *imageType,
-	osPackageSet rpmmd.PackageSet,
-	containers []container.SourceSpec,
-	c *blueprint.Customizations) (manifest.OSCustomizations, error) {
-
+func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, containers []container.SourceSpec, c *blueprint.Customizations) (manifest.OSCustomizations, error) {
 	imageConfig := t.getDefaultImageConfig()
 
 	osc := manifest.OSCustomizations{}
 
-	if t.bootable || t.rpmOstree {
+	if t.ImageTypeYAML.Bootable || t.ImageTypeYAML.RPMOSTree {
 		osc.KernelName = c.GetKernel().Name
 
 		var kernelOptions []string
@@ -68,7 +61,7 @@ func osCustomizations(
 		osc.ExcludeDocs = *imageConfig.ExcludeDocs
 	}
 
-	if !t.bootISO {
+	if !t.ImageTypeYAML.BootISO {
 		// don't put users and groups in the payload of an installer
 		// add them via kickstart instead
 		osc.Groups = users.GroupsFromBP(c.GetGroups())
@@ -161,7 +154,7 @@ func osCustomizations(
 	// deployment, rather than the commit. Therefore the containers need to be
 	// stored in a different location, like `/usr/share`, and the container
 	// storage engine configured accordingly.
-	if t.rpmOstree && len(containers) > 0 {
+	if t.ImageTypeYAML.RPMOSTree && len(containers) > 0 {
 		storagePath := "/usr/share/containers/storage"
 		osc.ContainersStorage = &storagePath
 	}
@@ -196,7 +189,7 @@ func osCustomizations(
 	}
 
 	if oscapConfig := c.GetOpenSCAP(); oscapConfig != nil {
-		if t.rpmOstree {
+		if t.ImageTypeYAML.RPMOSTree {
 			panic("unexpected oscap options for ostree image type")
 		}
 
@@ -230,7 +223,7 @@ func osCustomizations(
 	osc.Tmpfilesd = imageConfig.Tmpfilesd
 	osc.PamLimitsConf = imageConfig.PamLimitsConf
 	osc.Sysctld = imageConfig.Sysctld
-	osc.DNFConfig = imageConfig.DNFConfigOptions(t.arch.distro.osVersion)
+	osc.DNFConfig = imageConfig.DNFConfigOptions(t.arch.distro.OsVersion())
 	osc.SshdConfig = imageConfig.SshdConfig
 	osc.AuthConfig = imageConfig.Authconfig
 	osc.PwQuality = imageConfig.PwQuality
@@ -263,7 +256,7 @@ func ostreeDeploymentCustomizations(
 	t *imageType,
 	c *blueprint.Customizations) (manifest.OSTreeDeploymentCustomizations, error) {
 
-	if !t.rpmOstree || !t.bootable {
+	if !t.ImageTypeYAML.RPMOSTree || !t.ImageTypeYAML.Bootable {
 		return manifest.OSTreeDeploymentCustomizations{}, fmt.Errorf("ostree deployment customizations are only supported for bootable rpm-ostree images")
 	}
 
@@ -351,9 +344,9 @@ func diskImage(workload workload.Workload,
 		return nil, err
 	}
 
-	img.Environment = t.environment
+	img.Environment = &t.ImageTypeYAML.Environment
 	img.Workload = workload
-	img.Compression = t.compression
+	img.Compression = t.ImageTypeYAML.Compression
 	if bp.Minimal {
 		// Disable weak dependencies if the 'minimal' option is enabled
 		img.OSCustomizations.InstallWeakDeps = false
@@ -387,7 +380,7 @@ func tarImage(workload workload.Workload,
 		return nil, err
 	}
 
-	img.Environment = t.environment
+	img.Environment = &t.ImageTypeYAML.Environment
 	img.Workload = workload
 
 	img.Filename = t.Filename()
@@ -412,7 +405,7 @@ func containerImage(workload workload.Workload,
 		return nil, err
 	}
 
-	img.Environment = t.environment
+	img.Environment = &t.ImageTypeYAML.Environment
 	img.Workload = workload
 
 	img.Filename = t.Filename()
@@ -436,11 +429,11 @@ func liveInstallerImage(workload workload.Workload,
 
 	d := t.arch.distro
 
-	img.Product = d.product
+	img.Product = d.DistroYAML.Product
 	img.Variant = "Workstation"
-	img.OSVersion = d.osVersion
-	img.Release = fmt.Sprintf("%s %s", d.product, d.osVersion)
-	img.Preview = common.VersionGreaterThanOrEqual(img.OSVersion, VERSION_BRANCHED)
+	img.OSVersion = d.OsVersion()
+	img.Release = fmt.Sprintf("%s %s", d.DistroYAML.Product, d.OsVersion())
+	img.Preview = d.DistroYAML.Preview
 
 	var err error
 	img.ISOLabel, err = t.ISOLabel()
@@ -463,10 +456,12 @@ func liveInstallerImage(workload workload.Workload,
 	if err != nil {
 		return nil, err
 	}
-
 	if installerConfig != nil {
 		img.AdditionalDracutModules = append(img.AdditionalDracutModules, installerConfig.AdditionalDracutModules...)
 		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
+		if installerConfig.SquashfsRootfs != nil && *installerConfig.SquashfsRootfs {
+			img.RootfsType = manifest.SquashfsRootfs
+		}
 	}
 
 	imgConfig := t.getDefaultImageConfig()
@@ -536,22 +531,19 @@ func imageInstallerImage(workload workload.Workload,
 	if installerConfig != nil {
 		img.AdditionalDracutModules = append(img.AdditionalDracutModules, installerConfig.AdditionalDracutModules...)
 		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
+		if installerConfig.SquashfsRootfs != nil && *installerConfig.SquashfsRootfs {
+			img.RootfsType = manifest.SquashfsRootfs
+		}
 	}
-
-	// On Fedora anaconda needs dbus-broker, but isn't added when dracut runs.
-	img.AdditionalDracutModules = append(img.AdditionalDracutModules, "dbus-broker")
 
 	d := t.arch.distro
 
-	img.Product = d.product
+	img.Product = d.DistroYAML.Product
 
-	// We don't know the variant that goes into the OS pipeline that gets installed
-	img.Variant = "Unknown"
-
-	img.OSVersion = d.osVersion
-	img.Release = fmt.Sprintf("%s %s", d.product, d.osVersion)
-
-	img.Preview = common.VersionGreaterThanOrEqual(img.OSVersion, VERSION_BRANCHED)
+	img.OSVersion = d.OsVersion()
+	img.Release = fmt.Sprintf("%s %s", d.DistroYAML.Product, d.OsVersion())
+	img.Variant = t.Variant
+	img.Preview = d.DistroYAML.Preview
 
 	img.ISOLabel, err = t.ISOLabel()
 	if err != nil {
@@ -611,10 +603,10 @@ func iotCommitImage(workload workload.Workload,
 		},
 	}
 
-	img.Environment = t.environment
+	img.Environment = &t.ImageTypeYAML.Environment
 	img.Workload = workload
 	img.OSTreeParent = parentCommit
-	img.OSVersion = d.osVersion
+	img.OSVersion = d.OsVersion()
 	img.Filename = t.Filename()
 	img.InstallWeakDeps = false
 
@@ -642,15 +634,16 @@ func bootableContainerImage(workload workload.Workload,
 		return nil, err
 	}
 
-	img.Environment = t.environment
+	img.Environment = &t.ImageTypeYAML.Environment
 	img.Workload = workload
 	img.OSTreeParent = parentCommit
-	img.OSVersion = d.osVersion
+	img.OSVersion = d.OsVersion()
 	img.Filename = t.Filename()
 	img.InstallWeakDeps = false
 	img.BootContainer = true
+	distroName, _ := common.SplitDistroNameVer(d.Name())
 	img.BootcConfig = &bootc.Config{
-		Filename:           "20-fedora.toml",
+		Filename:           fmt.Sprintf("20-%s.toml", distroName),
 		RootFilesystemType: "ext4",
 	}
 
@@ -693,10 +686,10 @@ func iotContainerImage(workload workload.Workload,
 	}
 
 	img.ContainerLanguage = img.OSCustomizations.Language
-	img.Environment = t.environment
+	img.Environment = &t.ImageTypeYAML.Environment
 	img.Workload = workload
 	img.OSTreeParent = parentCommit
-	img.OSVersion = d.osVersion
+	img.OSVersion = d.OsVersion()
 	img.ExtraContainerPackages = packageSets[containerPkgsKey]
 	img.Filename = t.Filename()
 
@@ -730,8 +723,8 @@ func iotInstallerImage(workload workload.Workload,
 		return nil, err
 	}
 	img.Kickstart.OSTree = &kickstart.OSTree{
-		OSName: "fedora-iot",
-		Remote: "fedora-iot",
+		OSName: t.OSTree.Name,
+		Remote: t.OSTree.Remote,
 	}
 	img.Kickstart.Path = osbuild.KickstartPathOSBuild
 	img.Kickstart.Language, img.Kickstart.Keyboard = customizations.GetPrimaryLocale()
@@ -762,16 +755,19 @@ func iotInstallerImage(workload workload.Workload,
 	if installerConfig != nil {
 		img.AdditionalDracutModules = append(img.AdditionalDracutModules, installerConfig.AdditionalDracutModules...)
 		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
+		if installerConfig.SquashfsRootfs != nil && *installerConfig.SquashfsRootfs {
+			img.RootfsType = manifest.SquashfsRootfs
+		}
 	}
 
 	// On Fedora anaconda needs dbus-broker, but isn't added when dracut runs.
 	img.AdditionalDracutModules = append(img.AdditionalDracutModules, "dbus-broker")
 
-	img.Product = d.product
+	img.Product = d.DistroYAML.Product
 	img.Variant = "IoT"
-	img.OSVersion = d.osVersion
-	img.Release = fmt.Sprintf("%s %s", d.product, d.osVersion)
-	img.Preview = common.VersionGreaterThanOrEqual(img.OSVersion, VERSION_BRANCHED)
+	img.OSVersion = d.OsVersion()
+	img.Release = fmt.Sprintf("%s %s", d.DistroYAML.Product, d.OsVersion())
+	img.Preview = d.DistroYAML.Preview
 
 	img.ISOLabel, err = t.ISOLabel()
 	if err != nil {
@@ -823,9 +819,9 @@ func iotImage(workload workload.Workload,
 	img.Workload = workload
 
 	img.Remote = ostree.Remote{
-		Name: "fedora-iot",
+		Name: t.OSTree.Remote,
 	}
-	img.OSName = "fedora-iot"
+	img.OSName = t.OSTree.Remote
 
 	// TODO: move generation into LiveImage
 	pt, err := t.getPartitionTable(customizations, options, rng)
@@ -835,7 +831,7 @@ func iotImage(workload workload.Workload,
 	img.PartitionTable = pt
 
 	img.Filename = t.Filename()
-	img.Compression = t.compression
+	img.Compression = t.ImageTypeYAML.Compression
 
 	return img, nil
 }
@@ -864,9 +860,9 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 	rawImg.Platform = t.platform
 	rawImg.Workload = workload
 	rawImg.Remote = ostree.Remote{
-		Name: "fedora-iot",
+		Name: t.OSTree.Remote,
 	}
-	rawImg.OSName = "fedora"
+	rawImg.OSName = t.OSTree.Name
 
 	// TODO: move generation into LiveImage
 	pt, err := t.getPartitionTable(customizations, options, rng)
@@ -909,10 +905,10 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 	img.AdditionalDracutModules = append(img.AdditionalDracutModules, "dbus-broker")
 
 	d := t.arch.distro
-	img.Product = d.product
+	img.Product = d.DistroYAML.Product
 	img.Variant = "IoT"
-	img.OSName = "fedora"
-	img.OSVersion = d.osVersion
+	img.OSName = t.OSTree.Name
+	img.OSVersion = d.OsVersion()
 
 	img.ISOLabel, err = t.ISOLabel()
 	if err != nil {
