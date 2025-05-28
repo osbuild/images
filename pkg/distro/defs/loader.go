@@ -223,8 +223,8 @@ type imageType struct {
 	// override specific aspects of the partition table
 	PartitionTablesOverrides *partitionTablesOverrides `yaml:"partition_tables_override"`
 
-	ImageConfig     imageConfig     `yaml:"image_config,omitempty"`
-	InstallerConfig installerConfig `yaml:"installer_config,omitempty"`
+	ImageConfigYAML     imageConfig     `yaml:"image_config,omitempty"`
+	InstallerConfigYAML installerConfig `yaml:"installer_config,omitempty"`
 
 	Filename    string                      `yaml:"filename"`
 	MimeType    string                      `yaml:"mime_type"`
@@ -605,7 +605,8 @@ func load(distroNameVer string) (*imageTypesYAML, error) {
 	return &toplevel, nil
 }
 
-// ImageConfig returns the image type specific ImageConfig
+// XXX: compat only, will go away once we move to "generic" distros
+// everywhere
 func ImageConfig(distroNameVer, archName, typeName string) (*distro.ImageConfig, error) {
 	toplevel, err := load(distroNameVer)
 	if err != nil {
@@ -615,8 +616,13 @@ func ImageConfig(distroNameVer, archName, typeName string) (*distro.ImageConfig,
 	if !ok {
 		return nil, fmt.Errorf("%w: %q", ErrImageTypeNotFound, typeName)
 	}
-	imgConfig := imgType.ImageConfig.ImageConfig
-	cond := imgType.ImageConfig.Condition
+	return imgType.ImageConfig(distroNameVer, archName), nil
+}
+
+// ImageConfig returns the image type specific ImageConfig
+func (imgType *imageType) ImageConfig(distroNameVer, archName string) *distro.ImageConfig {
+	imgConfig := imgType.ImageConfigYAML.ImageConfig
+	cond := imgType.ImageConfigYAML.Condition
 	if cond != nil {
 		distroName, distroVersion := common.SplitDistroNameVer(distroNameVer)
 
@@ -634,7 +640,7 @@ func ImageConfig(distroNameVer, archName, typeName string) (*distro.ImageConfig,
 		}
 	}
 
-	return imgConfig, nil
+	return imgConfig
 }
 
 // nNonEmpty returns the number of non-empty maps in the given
@@ -649,9 +655,8 @@ func nNonEmpty[K comparable, V any](maps ...map[K]V) int {
 	return nonEmpty
 }
 
-// InstallerConfig returns the InstallerConfig for the given imgType
-// Note that on conditions the InstallerConfig is fully replaced, do
-// any merging in YAML
+// XXX: compat only, will go away once we move to "generic" distros
+// everywhere
 func InstallerConfig(distroNameVer, archName, typeName string) (*distro.InstallerConfig, error) {
 	toplevel, err := load(distroNameVer)
 	if err != nil {
@@ -661,11 +666,20 @@ func InstallerConfig(distroNameVer, archName, typeName string) (*distro.Installe
 	if !ok {
 		return nil, fmt.Errorf("%w: %q", ErrImageTypeNotFound, typeName)
 	}
-	installerConfig := imgType.InstallerConfig.InstallerConfig
-	cond := imgType.InstallerConfig.Condition
+	imgType.name = typeName
+
+	return imgType.InstallerConfig(distroNameVer, archName)
+}
+
+// InstallerConfig returns the InstallerConfig for the given imgType
+// Note that on conditions the InstallerConfig is fully replaced, do
+// any merging in YAML
+func (imgType *imageType) InstallerConfig(distroNameVer, archName string) (*distro.InstallerConfig, error) {
+	installerConfig := imgType.InstallerConfigYAML.InstallerConfig
+	cond := imgType.InstallerConfigYAML.Condition
 	if cond != nil {
 		if nNonEmpty(cond.DistroName, cond.Architecture, cond.VersionLessThan) > 1 {
-			return nil, fmt.Errorf("only a single conditional allowed in installer config for %v", typeName)
+			return nil, fmt.Errorf("only a single conditional allowed in installer config for %v", imgType.name)
 		}
 
 		distroName, distroVersion := common.SplitDistroNameVer(distroNameVer)
