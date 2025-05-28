@@ -10,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v3"
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
@@ -660,8 +661,17 @@ image_types:
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	imgTypes, err := defs.ImageTypes("test-distro-1")
+	testDistroYAML := `
+distros:
+ - name: test-distro-1
+   defs_path: test-distro/
+`
+	err := os.WriteFile(filepath.Join(baseDir, "distros.yaml"), []byte(testDistroYAML), 0644)
 	require.NoError(t, err)
+
+	distro, err := defs.Distro("test-distro-1")
+	require.NoError(t, err)
+	imgTypes := distro.ImageTypes()
 	assert.Len(t, imgTypes, 1)
 	imgType := imgTypes["server-qcow2"]
 	assert.Equal(t, "server-qcow2", imgType.Name())
@@ -795,10 +805,26 @@ func TestImageTypeInstallerConfigOverrideArch(t *testing.T) {
 }
 
 func makeFakeDistrosYAML(t *testing.T, content string) string {
+	t.Helper()
+
 	tmpdir := t.TempDir()
 	distrosPath := filepath.Join(tmpdir, "distros.yaml")
 	err := os.WriteFile(distrosPath, []byte(content), 0644)
 	assert.NoError(t, err)
+
+	var di struct {
+		Distros []defs.DistroYAML `yaml:"distros"`
+	}
+	err = yaml.Unmarshal([]byte(content), &di)
+	assert.NoError(t, err)
+	for _, d := range di.Distros {
+		p := filepath.Join(tmpdir, d.DefsPath, "distro.yaml")
+		err = os.MkdirAll(filepath.Dir(p), 0755)
+		assert.NoError(t, err)
+		err = os.WriteFile(p, []byte(`---`), 0644)
+		assert.NoError(t, err)
+	}
+
 	return tmpdir
 }
 

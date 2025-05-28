@@ -88,11 +88,7 @@ func newDistro(nameVer string) (distro.Distro, error) {
 		arches:             make(map[string]*architecture),
 	}
 
-	its, err := defs.ImageTypes(rd.Name())
-	if err != nil {
-		return nil, err
-	}
-	for _, imgTypeYAML := range its {
+	for _, imgTypeYAML := range distroYAML.ImageTypes() {
 		// use as marker for images that are not converted to
 		// YAML yet
 		if imgTypeYAML.Filename == "" {
