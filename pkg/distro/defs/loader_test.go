@@ -601,7 +601,7 @@ distros:
 	err := os.WriteFile(filepath.Join(baseDir, "distros.yaml"), []byte(testDistroYAML), 0644)
 	require.NoError(t, err)
 
-	distro, err := defs.Distro("test-distro-1")
+	distro, err := defs.NewDistroYAML("test-distro-1")
 	require.NoError(t, err)
 	imgTypes := distro.ImageTypes()
 	assert.Len(t, imgTypes, 1)
@@ -837,7 +837,7 @@ func TestDistrosLoadingExact(t *testing.T) {
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	distro, err := defs.Distro("fedora-43")
+	distro, err := defs.NewDistroYAML("fedora-43")
 	require.NoError(t, err)
 	assert.Equal(t, &defs.DistroYAML{
 		Name:             "fedora-43",
@@ -861,7 +861,7 @@ func TestDistrosLoadingExact(t *testing.T) {
 		},
 	}, distro)
 
-	distro, err = defs.Distro("centos-10")
+	distro, err = defs.NewDistroYAML("centos-10")
 	require.NoError(t, err)
 	assert.Equal(t, &defs.DistroYAML{
 		Name:             "centos-10",
@@ -881,7 +881,7 @@ func TestDistrosLoadingFactoryCompat(t *testing.T) {
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	distro, err := defs.Distro("rhel-10.1")
+	distro, err := defs.NewDistroYAML("rhel-10.1")
 	require.NoError(t, err)
 	assert.Equal(t, &defs.DistroYAML{
 		Name:             "rhel-10.1",
@@ -896,7 +896,7 @@ func TestDistrosLoadingFactoryCompat(t *testing.T) {
 		DefaultFSType:    disk.FS_XFS,
 	}, distro)
 
-	distro, err = defs.Distro("fedora-40")
+	distro, err = defs.NewDistroYAML("fedora-40")
 	require.NoError(t, err)
 	assert.Equal(t, &defs.DistroYAML{
 		Name:             "fedora-40",
@@ -926,7 +926,7 @@ func TestDistrosLoadingNotFound(t *testing.T) {
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	distro, err := defs.Distro("non-exiting")
+	distro, err := defs.NewDistroYAML("non-exiting")
 	assert.Nil(t, err)
 	assert.Nil(t, distro)
 }
