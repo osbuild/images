@@ -97,11 +97,19 @@ type DistroYAML struct {
 
 	OscapProfilesAllowList []oscap.Profile `yaml:"oscap_profiles_allowlist"`
 
-	imageTypes map[string]ImageTypeYAML
+	imageTypes        map[string]ImageTypeYAML
+	distroImageConfig *distro.ImageConfig `yaml:"default"`
 }
 
 func (d *DistroYAML) ImageTypes() map[string]ImageTypeYAML {
 	return d.imageTypes
+}
+
+// DistroImageConfig returns the distro wide ImageConfig.
+//
+// Each ImageType gets this as their default ImageConfig.
+func (d *DistroYAML) DistroImageConfig() *distro.ImageConfig {
+	return d.distroImageConfig
 }
 
 func (d *DistroYAML) runTemplates(nameVer string) error {
@@ -210,33 +218,8 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 			foundDistro.imageTypes[name] = v
 		}
 	}
+	foundDistro.distroImageConfig = toplevel.ImageConfig.For(nameVer)
 	return foundDistro, nil
-}
-
-// XXX: make this part of DistroYAML
-//
-// DistroImageConfig returns the distro wide ImageConfig.
-//
-// Each ImageType gets this as their default ImageConfig.
-func DistroImageConfig(distroNameVer string) (*distro.ImageConfig, error) {
-	toplevel, err := load(distroNameVer)
-	if err != nil {
-		return nil, err
-	}
-	imgConfig := toplevel.ImageConfig.Default
-
-	cond := toplevel.ImageConfig.Condition
-	if cond != nil {
-		distroName, _ := common.SplitDistroNameVer(distroNameVer)
-		// XXX: we shoudl probably use a similar pattern like
-		// for the partition table overrides (via
-		// findElementIndexByJSONTag) but this if fine for now
-		if distroNameCnf, ok := cond.DistroName[distroName]; ok {
-			imgConfig = distroNameCnf.InheritFrom(imgConfig)
-		}
-	}
-
-	return imgConfig, nil
 }
 
 // imageTypesYAML describes the image types for a given distribution
@@ -251,6 +234,17 @@ type imageTypesYAML struct {
 type distroImageConfig struct {
 	Default   *distro.ImageConfig          `yaml:"default"`
 	Condition *distroImageConfigConditions `yaml:"condition,omitempty"`
+}
+
+func (di *distroImageConfig) For(nameVer string) *distro.ImageConfig {
+	cond := di.Condition
+	if cond != nil {
+		distroName, _ := common.SplitDistroNameVer(nameVer)
+		if distroNameCnf, ok := cond.DistroName[distroName]; ok {
+			return distroNameCnf.InheritFrom(di.Default)
+		}
+	}
+	return di.Default
 }
 
 type distroImageConfigConditions struct {
