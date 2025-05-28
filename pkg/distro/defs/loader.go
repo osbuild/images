@@ -95,6 +95,12 @@ type DistroYAML struct {
 	BootstrapContainers map[arch.Arch]string `yaml:"bootstrap_containers"`
 
 	OscapProfilesAllowList []oscap.Profile `yaml:"oscap_profiles_allowlist"`
+
+	imageTypes map[string]ImageTypeYAML
+}
+
+func (d *DistroYAML) ImageTypes() map[string]ImageTypeYAML {
+	return d.imageTypes
 }
 
 func executeTemplates(d *DistroYAML, nameVer string) error {
@@ -152,9 +158,11 @@ func Distro(nameVer string) (*DistroYAML, error) {
 		return nil, err
 	}
 
+	var foundDistro *DistroYAML
 	for _, distro := range distros.Distros {
 		if distro.Name == nameVer {
-			return &distro, nil
+			foundDistro = &distro
+			break
 		}
 
 		pat, err := glob.Compile(distro.Match)
@@ -166,11 +174,36 @@ func Distro(nameVer string) (*DistroYAML, error) {
 				return nil, err
 			}
 
-			return &distro, nil
+			foundDistro = &distro
+			break
 		}
 	}
+	if foundDistro == nil {
+		return nil, nil
+	}
 
-	return nil, nil
+	// load imageTypes
+	f, err = dataFS().Open(filepath.Join(foundDistro.DefsPath, "distro.yaml"))
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	var toplevel imageTypesYAML
+	decoder = yaml.NewDecoder(f)
+	decoder.KnownFields(true)
+	if err := decoder.Decode(&toplevel); err != nil {
+		return nil, err
+	}
+	if len(toplevel.ImageTypes) > 0 {
+		foundDistro.imageTypes = make(map[string]ImageTypeYAML, len(toplevel.ImageTypes))
+		for name := range toplevel.ImageTypes {
+			v := toplevel.ImageTypes[name]
+			v.name = name
+			foundDistro.imageTypes[name] = v
+		}
+	}
+	return foundDistro, nil
 }
 
 // imageTypesYAML describes the image types for a given distribution
@@ -643,22 +676,4 @@ func (imgType *imageType) InstallerConfig(distroNameVer, archName string) (*dist
 	}
 
 	return installerConfig, nil
-}
-
-func ImageTypes(distroNameVer string) (map[string]ImageTypeYAML, error) {
-	toplevel, err := load(distroNameVer)
-	if err != nil {
-		return nil, err
-	}
-
-	// We have a bunch of names like "server-ami" that are writen
-	// in the YAML as "server_ami" so we need to normalize
-	imgTypes := make(map[string]ImageTypeYAML, len(toplevel.ImageTypes))
-	for name := range toplevel.ImageTypes {
-		v := toplevel.ImageTypes[name]
-		v.name = name
-		imgTypes[name] = v
-	}
-
-	return imgTypes, nil
 }
