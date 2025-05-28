@@ -145,7 +145,7 @@ func load(distroNameVer string) (*imageTypesYAML, error) {
 	}
 
 	// take the base path from the distros.yaml
-	distro, err := Distro(distroNameVer)
+	distro, err := NewDistroYAML(distroNameVer)
 	if err != nil && !os.IsNotExist(err) {
 		return nil, err
 	}
