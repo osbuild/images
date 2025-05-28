@@ -58,6 +58,16 @@ func PartitionTable(it distro.ImageType) (*disk.PartitionTable, error) {
 
 // XXX: compat only, will go away once we move to "generic" distros
 // everywhere
+func DistroImageConfig(distroNameVer string) (*distro.ImageConfig, error) {
+	toplevel, err := load(distroNameVer)
+	if err != nil {
+		return nil, err
+	}
+	return toplevel.ImageConfig.For(distroNameVer)
+}
+
+// XXX: compat only, will go away once we move to "generic" distros
+// everywhere
 func ImageConfig(distroNameVer, archName, typeName string) (*distro.ImageConfig, error) {
 	toplevel, err := load(distroNameVer)
 	if err != nil {

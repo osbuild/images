@@ -84,7 +84,7 @@ func newDistro(nameVer string) (distro.Distro, error) {
 	rd := &distribution{
 		DistroYAML: *distroYAML,
 
-		defaultImageConfig: common.Must(defs.DistroImageConfig(nameVer)),
+		defaultImageConfig: distroYAML.ImageConfig(),
 		arches:             make(map[string]*architecture),
 	}
 
