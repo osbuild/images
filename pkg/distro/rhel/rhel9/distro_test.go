@@ -491,6 +491,8 @@ func TestDistro_ManifestError(t *testing.T) {
 				assert.EqualError(t, err, fmt.Sprintf("\"%s\" images require specifying a URL from which to retrieve the OSTree commit", imgTypeName))
 			} else if imgTypeName == "edge-installer" || imgTypeName == "edge-simplified-installer" {
 				assert.EqualError(t, err, fmt.Sprintf("boot ISO image type \"%s\" requires specifying a URL from which to retrieve the OSTree commit", imgTypeName))
+			} else if imgTypeName == "azure-cvm" {
+				assert.EqualError(t, err, fmt.Sprintf("kernel customizations are not supported for %q", imgTypeName))
 			} else {
 				assert.NoError(t, err)
 			}
@@ -500,9 +502,9 @@ func TestDistro_ManifestError(t *testing.T) {
 
 func TestArchitecture_ListImageTypes(t *testing.T) {
 	imgMap := []struct {
-		arch                     string
-		imgNames                 []string
-		rhelAdditionalImageTypes []string
+		arch     string
+		imgNames []string
+		verTypes map[string][]string
 	}{
 		{
 			arch: "x86_64",
@@ -531,6 +533,11 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"oci",
 				"wsl",
 				"minimal-raw",
+			},
+			verTypes: map[string][]string{
+				"9.6": {
+					"azure-cvm",
+				},
 			},
 		},
 		{
@@ -581,7 +588,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				var expectedImageTypes []string
 				expectedImageTypes = append(expectedImageTypes, mapping.imgNames...)
 				if dist.name == "rhel" {
-					expectedImageTypes = append(expectedImageTypes, mapping.rhelAdditionalImageTypes...)
+					expectedImageTypes = append(expectedImageTypes, mapping.verTypes[dist.distro.Releasever()]...)
 				}
 
 				require.ElementsMatch(t, expectedImageTypes, imageTypes)
