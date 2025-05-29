@@ -4,7 +4,7 @@ import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/datasizes"
-	"github.com/osbuild/images/pkg/disk"
+	"github.com/osbuild/images/pkg/disk/partition"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/osbuild/images/pkg/osbuild"
@@ -80,9 +80,9 @@ func mkEdgeRawImgType() *rhel.ImageType {
 	it.RPMOSTree = true
 	it.Bootable = true
 	it.BasePartitionTables = partitionTables
-	it.UnsupportedPartitioningModes = []disk.PartitioningMode{
-		disk.AutoLVMPartitioningMode,
-		disk.LVMPartitioningMode,
+	it.UnsupportedPartitioningModes = []partition.PartitioningMode{
+		partition.AutoLVMPartitioningMode,
+		partition.LVMPartitioningMode,
 	}
 
 	return it
@@ -150,9 +150,9 @@ func mkEdgeSimplifiedInstallerImgType(rd *rhel.Distribution) *rhel.ImageType {
 	it.BootISO = true
 	it.ISOLabelFn = distroISOLabelFunc
 	it.BasePartitionTables = partitionTables
-	it.UnsupportedPartitioningModes = []disk.PartitioningMode{
-		disk.AutoLVMPartitioningMode,
-		disk.LVMPartitioningMode,
+	it.UnsupportedPartitioningModes = []partition.PartitioningMode{
+		partition.AutoLVMPartitioningMode,
+		partition.LVMPartitioningMode,
 	}
 
 	return it
