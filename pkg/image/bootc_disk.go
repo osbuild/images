@@ -60,12 +60,42 @@ func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifes
 	if img.BuildSELinux != "" {
 		policy = img.BuildSELinux
 	}
+
+	copyFilesFrom := ""
+	copyFiles := []string{}
+
+	if *img.ContainerSource != *img.BuildContainerSource {
+		// If we're using a different build container from the target container then we copy
+		// the bootc customization file directories from the target container. This includes the
+		// bootc install customization, and /usr/lib/ostree/prepare-root.conf which configures
+		// e.g. composefs and fs-verity setup.
+		//
+		// To ensure that these copies never fail we also create the source directories if
+		// needed.
+
+		copyFilesFrom = "target"
+		copyFiles = []string{"/usr/lib/bootc/install/", "/usr/lib/ostree/"}
+
+		targetContainers := []container.SourceSpec{*img.ContainerSource}
+		targetBuildPipeline := manifest.NewBuildFromContainer(m, runner, targetContainers,
+			&manifest.BuildOptions{
+				PipelineName:       copyFilesFrom,
+				ContainerBuildable: true,
+				SELinuxPolicy:      policy,
+				EnsureDirs:         copyFiles,
+			})
+		targetBuildPipeline.Checkpoint()
+	}
+
 	buildContainers := []container.SourceSpec{*img.BuildContainerSource}
 	buildPipeline := manifest.NewBuildFromContainer(m, runner, buildContainers,
 		&manifest.BuildOptions{
 			ContainerBuildable: true,
 			SELinuxPolicy:      policy,
+			CopyFilesFrom:      copyFilesFrom,
+			CopyFiles:          copyFiles,
 		})
+
 	buildPipeline.Checkpoint()
 
 	// In the bootc flow, we reuse the host container context for tools;
