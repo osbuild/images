@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/users"
@@ -19,6 +20,7 @@ type BootcDiskImage struct {
 
 	Platform       platform.Platform
 	PartitionTable *disk.PartitionTable
+	GenerateMounts blueprint.GenerateMounts
 
 	Filename string
 
@@ -48,6 +50,7 @@ func NewBootcDiskImage(container container.SourceSpec, buildContainer container.
 		Base:                 NewBase("bootc-raw-image"),
 		ContainerSource:      &container,
 		BuildContainerSource: &buildContainer,
+		GenerateMounts:       blueprint.GenerateUnits,
 	}
 }
 
@@ -80,7 +83,14 @@ func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifes
 	rawImage.Directories = img.Directories
 	rawImage.KernelOptionsAppend = img.KernelOptionsAppend
 	rawImage.SELinux = img.SELinux
-	rawImage.MountUnits = true // always use mount units for bootc disk images
+	switch img.GenerateMounts {
+	case blueprint.GenerateUnits:
+		rawImage.MountUnits = true
+	case blueprint.GenerateFstab:
+		rawImage.MountUnits = false
+	case blueprint.GenerateNone:
+		rawImage.SkipMounts = true
+	}
 
 	// In BIB, we export multiple images from the same pipeline so we use the
 	// filename as the basename for each export and set the extensions based on
