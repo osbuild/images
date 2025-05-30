@@ -2,6 +2,7 @@ package rhel7
 
 import (
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/customizations/subscription"
 	"github.com/osbuild/images/pkg/datasizes"
@@ -38,7 +39,7 @@ func mkAzureRhuiImgType() *rhel.ImageType {
 }
 
 var azureDefaultImgConfig = &distro.ImageConfig{
-	Timezone: common.ToPtr("Etc/UTC"),
+	Timezone: types.Some("Etc/UTC"),
 	Locale:   common.ToPtr("en_US.UTF-8"),
 	GPGKeyFiles: []string{
 		"/etc/pki/rpm-gpg/RPM-GPG-KEY-microsoft-azure-release",

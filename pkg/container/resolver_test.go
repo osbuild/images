@@ -13,6 +13,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/testregistry"
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/container"
 )
@@ -50,7 +51,7 @@ func TestResolver(t *testing.T) {
 			Source:    r,
 			Name:      "",
 			Digest:    common.ToPtr(""),
-			TLSVerify: common.ToPtr(false),
+			TLSVerify: types.Some(false),
 			Local:     false,
 		})
 	}
@@ -78,7 +79,7 @@ func TestResolverFail(t *testing.T) {
 		Source:    "invalid-reference@${IMAGE_DIGEST}",
 		Name:      "",
 		Digest:    common.ToPtr(""),
-		TLSVerify: common.ToPtr(false),
+		TLSVerify: types.Some(false),
 		Local:     false,
 	})
 	specs, err := resolver.Finish()
@@ -92,7 +93,7 @@ func TestResolverFail(t *testing.T) {
 		Source:    registry.GetRef("repo"),
 		Name:      "",
 		Digest:    common.ToPtr(""),
-		TLSVerify: common.ToPtr(false),
+		TLSVerify: types.Some(false),
 		Local:     false,
 	})
 	specs, err = resolver.Finish()
@@ -103,7 +104,7 @@ func TestResolverFail(t *testing.T) {
 		Source:    registry.GetRef("repo"),
 		Name:      "",
 		Digest:    common.ToPtr(""),
-		TLSVerify: common.ToPtr(false),
+		TLSVerify: types.Some(false),
 		Local:     false,
 	})
 	specs, err = resolver.Finish()
@@ -114,7 +115,7 @@ func TestResolverFail(t *testing.T) {
 		Source:    registry.GetRef("repo"),
 		Name:      "",
 		Digest:    common.ToPtr(""),
-		TLSVerify: common.ToPtr(false),
+		TLSVerify: types.Some(false),
 		Local:     false,
 	})
 	specs, err = resolver.Finish()
@@ -179,7 +180,7 @@ func TestResolverLocalManifest(t *testing.T) {
 		Source:    "localhost/multi-arch",
 		Name:      "",
 		Digest:    common.ToPtr(""),
-		TLSVerify: common.ToPtr(false),
+		TLSVerify: types.Some(false),
 		Local:     true,
 	})
 	specs, err := resolver.Finish()
@@ -197,7 +198,7 @@ func TestResolverLocalManifest(t *testing.T) {
 		Source:    "localhost/multi-arch",
 		Name:      "",
 		Digest:    common.ToPtr(""),
-		TLSVerify: common.ToPtr(false),
+		TLSVerify: types.Some(false),
 		Local:     true,
 	})
 	specs, err = resolver.Finish()

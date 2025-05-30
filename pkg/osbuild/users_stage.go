@@ -1,6 +1,7 @@
 package osbuild
 
 import (
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/crypt"
 	"github.com/osbuild/images/pkg/customizations/users"
 )
@@ -12,16 +13,16 @@ type UsersStageOptions struct {
 func (UsersStageOptions) isStageOptions() {}
 
 type UsersStageOptionsUser struct {
-	UID                *int     `json:"uid,omitempty"`
-	GID                *int     `json:"gid,omitempty"`
-	Groups             []string `json:"groups,omitempty"`
-	Description        *string  `json:"description,omitempty"`
-	Home               *string  `json:"home,omitempty"`
-	Shell              *string  `json:"shell,omitempty"`
-	Password           *string  `json:"password,omitempty"`
-	Key                *string  `json:"key,omitempty"`
-	ExpireDate         *int     `json:"expiredate,omitempty"`
-	ForcePasswordReset *bool    `json:"force_password_reset,omitempty"`
+	UID                types.Option[int]    `json:"uid,omitempty"`
+	GID                types.Option[int]    `json:"gid,omitempty"`
+	Groups             []string             `json:"groups,omitempty"`
+	Description        types.Option[string] `json:"description,omitempty"`
+	Home               types.Option[string] `json:"home,omitempty"`
+	Shell              types.Option[string] `json:"shell,omitempty"`
+	Password           types.Option[string] `json:"password,omitempty"`
+	Key                types.Option[string] `json:"key,omitempty"`
+	ExpireDate         types.Option[int]    `json:"expiredate,omitempty"`
+	ForcePasswordReset types.Option[bool]   `json:"force_password_reset,omitempty"`
 }
 
 func NewUsersStage(options *UsersStageOptions) *Stage {
@@ -39,18 +40,18 @@ func NewUsersStageOptions(userCustomizations []users.User, omitKey bool) (*Users
 	users := make(map[string]UsersStageOptionsUser, len(userCustomizations))
 	for _, uc := range userCustomizations {
 		// Don't hash empty passwords, set to nil to lock account
-		if uc.Password != nil && len(*uc.Password) == 0 {
+		if len(uc.Password.Unwrap()) == 0 {
 			uc.Password = nil
 		}
 
 		// Hash non-empty un-hashed passwords
-		if uc.Password != nil && !crypt.PasswordIsCrypted(*uc.Password) {
-			cryptedPassword, err := crypt.CryptSHA512(*uc.Password)
+		if uc.Password != nil && !crypt.PasswordIsCrypted(uc.Password.Unwrap()) {
+			cryptedPassword, err := crypt.CryptSHA512(uc.Password.Unwrap())
 			if err != nil {
 				return nil, err
 			}
 
-			uc.Password = &cryptedPassword
+			uc.Password = types.Some(cryptedPassword)
 		}
 
 		user := UsersStageOptionsUser{

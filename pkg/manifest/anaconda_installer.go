@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/kickstart"
@@ -221,7 +221,9 @@ func (p *AnacondaInstaller) serializeEnd() {
 
 func installerRootUser() osbuild.UsersStageOptionsUser {
 	return osbuild.UsersStageOptionsUser{
-		Password: common.ToPtr(""),
+		// lock root accont by default
+		// XXX: this could just be "Password: nil"
+		Password: types.Some(""),
 	}
 }
 
@@ -289,11 +291,11 @@ func (p *AnacondaInstaller) payloadStages() []*osbuild.Stage {
 	installShell := "/usr/libexec/anaconda/run-anaconda"
 	installPassword := ""
 	installUser := osbuild.UsersStageOptionsUser{
-		UID:      &installUID,
-		GID:      &installGID,
-		Home:     &installHome,
-		Shell:    &installShell,
-		Password: &installPassword,
+		UID:      types.Some(installUID),
+		GID:      types.Some(installGID),
+		Home:     types.Some(installHome),
+		Shell:    types.Some(installShell),
+		Password: types.Some(installPassword),
 	}
 
 	usersStageOptions := &osbuild.UsersStageOptions{

@@ -1,6 +1,10 @@
 // Package blueprint contains primitives for representing weldr blueprints
 package blueprint
 
+import (
+	"github.com/osbuild/images/internal/types"
+)
+
 // A Blueprint is a high-level description of an image.
 type Blueprint struct {
 	Name        string    `json:"name" toml:"name"`
@@ -43,8 +47,8 @@ type Container struct {
 	Source string `json:"source" toml:"source"`
 	Name   string `json:"name,omitempty" toml:"name,omitempty"`
 
-	TLSVerify    *bool `json:"tls-verify,omitempty" toml:"tls-verify,omitempty"`
-	LocalStorage bool  `json:"local-storage,omitempty" toml:"local-storage,omitempty"`
+	TLSVerify    types.Option[bool] `json:"tls-verify,omitempty" toml:"tls-verify,omitempty"`
+	LocalStorage bool               `json:"local-storage,omitempty" toml:"local-storage,omitempty"`
 }
 
 // packages, modules, and groups all resolve to rpm packages right now. This

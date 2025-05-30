@@ -30,7 +30,7 @@ import (
 
 	imgspecv1 "github.com/opencontainers/image-spec/specs-go/v1"
 
-	"github.com/osbuild/images/internal/common"
+	otypes "github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/arch"
 )
 
@@ -222,31 +222,31 @@ func (cl *Client) SetDockerCertPath(path string) {
 
 // SetSkipTLSVerify controls if TLS verification happens when
 // making requests. If nil is passed it falls back to the default.
-func (cl *Client) SetTLSVerify(verify *bool) {
-	if verify == nil {
+func (cl *Client) SetTLSVerify(verify otypes.Option[bool]) {
+	if verify.IsNone() {
 		cl.sysCtx.DockerInsecureSkipTLSVerify = types.OptionalBoolUndefined
 	} else {
-		cl.sysCtx.DockerInsecureSkipTLSVerify = types.NewOptionalBool(!*verify)
+		cl.sysCtx.DockerInsecureSkipTLSVerify = types.NewOptionalBool(!verify.Unwrap())
 	}
 }
 
 // GetSkipTLSVerify returns current TLS verification state.
-func (cl *Client) GetTLSVerify() *bool {
+func (cl *Client) GetTLSVerify() otypes.Option[bool] {
 
 	skip := cl.sysCtx.DockerInsecureSkipTLSVerify
 
 	if skip == types.OptionalBoolUndefined {
-		return nil
+		return otypes.None[bool]()
 	}
 
 	// NB: we invert the state, i.e. verify == (skip == false)
-	return common.ToPtr(skip == types.OptionalBoolFalse)
+	return otypes.Some(skip == types.OptionalBoolFalse)
 }
 
 // SkipTLSVerify is a convenience helper that internally calls
 // SetTLSVerify with false
 func (cl *Client) SkipTLSVerify() {
-	cl.SetTLSVerify(common.ToPtr(false))
+	cl.SetTLSVerify(otypes.Some(false))
 }
 
 func parseImageName(name string) (types.ImageReference, error) {

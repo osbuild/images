@@ -6,12 +6,13 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/cert"
 	"github.com/osbuild/images/pkg/customizations/anaconda"
 )
 
 type Customizations struct {
-	Hostname           *string                        `json:"hostname,omitempty" toml:"hostname,omitempty"`
+	Hostname           types.Option[string]           `json:"hostname,omitempty" toml:"hostname,omitempty"`
 	Kernel             *KernelCustomization           `json:"kernel,omitempty" toml:"kernel,omitempty"`
 	User               []UserCustomization            `json:"user,omitempty" toml:"user,omitempty"`
 	Group              []GroupCustomization           `json:"group,omitempty" toml:"group,omitempty"`
@@ -28,7 +29,7 @@ type Customizations struct {
 	Directories        []DirectoryCustomization       `json:"directories,omitempty" toml:"directories,omitempty"`
 	Files              []FileCustomization            `json:"files,omitempty" toml:"files,omitempty"`
 	Repositories       []RepositoryCustomization      `json:"repositories,omitempty" toml:"repositories,omitempty"`
-	FIPS               *bool                          `json:"fips,omitempty" toml:"fips,omitempty"`
+	FIPS               types.Option[bool]             `json:"fips,omitempty" toml:"fips,omitempty"`
 	ContainersStorage  *ContainerStorageCustomization `json:"containers-storage,omitempty" toml:"containers-storage,omitempty"`
 	Installer          *InstallerCustomization        `json:"installer,omitempty" toml:"installer,omitempty"`
 	RPM                *RPMCustomization              `json:"rpm,omitempty" toml:"rpm,omitempty"`
@@ -70,17 +71,17 @@ type SSHKeyCustomization struct {
 }
 
 type UserCustomization struct {
-	Name               string   `json:"name" toml:"name"`
-	Description        *string  `json:"description,omitempty" toml:"description,omitempty"`
-	Password           *string  `json:"password,omitempty" toml:"password,omitempty"`
-	Key                *string  `json:"key,omitempty" toml:"key,omitempty"`
-	Home               *string  `json:"home,omitempty" toml:"home,omitempty"`
-	Shell              *string  `json:"shell,omitempty" toml:"shell,omitempty"`
-	Groups             []string `json:"groups,omitempty" toml:"groups,omitempty"`
-	UID                *int     `json:"uid,omitempty" toml:"uid,omitempty"`
-	GID                *int     `json:"gid,omitempty" toml:"gid,omitempty"`
-	ExpireDate         *int     `json:"expiredate,omitempty" toml:"expiredate,omitempty"`
-	ForcePasswordReset *bool    `json:"force_password_reset,omitempty" toml:"force_password_reset,omitempty"`
+	Name               string               `json:"name" toml:"name"`
+	Description        types.Option[string] `json:"description,omitempty" toml:"description,omitempty"`
+	Password           types.Option[string] `json:"password,omitempty" toml:"password,omitempty"`
+	Key                types.Option[string] `json:"key,omitempty" toml:"key,omitempty"`
+	Home               types.Option[string] `json:"home,omitempty" toml:"home,omitempty"`
+	Shell              types.Option[string] `json:"shell,omitempty" toml:"shell,omitempty"`
+	Groups             []string             `json:"groups,omitempty" toml:"groups,omitempty"`
+	UID                types.Option[int]    `json:"uid,omitempty" toml:"uid,omitempty"`
+	GID                types.Option[int]    `json:"gid,omitempty" toml:"gid,omitempty"`
+	ExpireDate         types.Option[int]    `json:"expiredate,omitempty" toml:"expiredate,omitempty"`
+	ForcePasswordReset types.Option[bool]   `json:"force_password_reset,omitempty" toml:"force_password_reset,omitempty"`
 }
 
 type GroupCustomization struct {
@@ -89,8 +90,8 @@ type GroupCustomization struct {
 }
 
 type TimezoneCustomization struct {
-	Timezone   *string  `json:"timezone,omitempty" toml:"timezone,omitempty"`
-	NTPServers []string `json:"ntpservers,omitempty" toml:"ntpservers,omitempty"`
+	Timezone   types.Option[string] `json:"timezone,omitempty" toml:"timezone,omitempty"`
+	NTPServers []string             `json:"ntpservers,omitempty" toml:"ntpservers,omitempty"`
 }
 
 type LocaleCustomization struct {
@@ -203,7 +204,7 @@ func (c *Customizations) CheckAllowed(allowed ...string) error {
 	return nil
 }
 
-func (c *Customizations) GetHostname() *string {
+func (c *Customizations) GetHostname() types.Option[string] {
 	if c == nil {
 		return nil
 	}
@@ -223,7 +224,7 @@ func (c *Customizations) GetPrimaryLocale() (*string, *string) {
 	return &c.Locale.Languages[0], c.Locale.Keyboard
 }
 
-func (c *Customizations) GetTimezoneSettings() (*string, []string) {
+func (c *Customizations) GetTimezoneSettings() (types.Option[string], []string) {
 	if c == nil {
 		return nil, nil
 	}
@@ -245,8 +246,8 @@ func (c *Customizations) GetUsers() []UserCustomization {
 	for idx := range users {
 		u := users[idx]
 		if u.Home != nil {
-			homedir := strings.TrimRight(*u.Home, "/")
-			u.Home = &homedir
+			homedir := strings.TrimRight(u.Home.Unwrap(), "/")
+			u.Home = types.Some(homedir)
 			users[idx] = u
 		}
 	}
@@ -386,10 +387,10 @@ func (c *Customizations) GetRepositories() ([]RepositoryCustomization, error) {
 }
 
 func (c *Customizations) GetFIPS() bool {
-	if c == nil || c.FIPS == nil {
+	if c == nil {
 		return false
 	}
-	return *c.FIPS
+	return c.FIPS.Unwrap()
 }
 
 func (c *Customizations) GetContainerStorage() *ContainerStorageCustomization {

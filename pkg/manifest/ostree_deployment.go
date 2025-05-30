@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/users"
@@ -414,7 +415,8 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 		userOptions := &osbuild.UsersStageOptions{
 			Users: map[string]osbuild.UsersStageOptionsUser{
 				"root": {
-					Password: common.ToPtr("!locked"), // this is treated as crypted and locks/disables the password
+					// XXX: using "" or nil here is used in other places
+					Password: types.Some("!locked"), // this is treated as crypted and locks/disables the password
 				},
 			},
 		}
