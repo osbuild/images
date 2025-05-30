@@ -63,6 +63,16 @@ type BuildOptions struct {
 	// build pipeline. This is only needed when doing cross-arch
 	// building
 	BootstrapPipeline Build
+
+	// In some cases we have multiple build pipelines
+	PipelineName string
+
+	// Copy in files from other pipeline
+	CopyFilesFrom string
+	CopyFiles     []string
+
+	// Ensure directories exist
+	EnsureDirs []string
 }
 
 // policy or default returns the selinuxPolicy or (if unset) the
@@ -82,6 +92,9 @@ func NewBuild(m *Manifest, runner runner.Runner, repos []rpmmd.RepoConfig, opts 
 	}
 
 	name := "build"
+	if opts.PipelineName != "" {
+		name = opts.PipelineName
+	}
 	pipeline := &BuildrootFromPackages{
 		Base:               NewBase(name, opts.BootstrapPipeline),
 		runner:             runner,
@@ -199,6 +212,10 @@ type BuildrootFromContainer struct {
 	containerBuildable bool
 	disableSelinux     bool
 	selinuxPolicy      string
+
+	copyFilesFrom string
+	copyFiles     []string
+	ensureDirs    []string
 }
 
 // NewBuildFromContainer creates a new build pipeline from the given
@@ -209,6 +226,9 @@ func NewBuildFromContainer(m *Manifest, runner runner.Runner, containerSources [
 	}
 
 	name := "build"
+	if opts.PipelineName != "" {
+		name = opts.PipelineName
+	}
 	pipeline := &BuildrootFromContainer{
 		Base:       NewBase(name, opts.BootstrapPipeline),
 		runner:     runner,
@@ -218,6 +238,10 @@ func NewBuildFromContainer(m *Manifest, runner runner.Runner, containerSources [
 		containerBuildable: opts.ContainerBuildable,
 		disableSelinux:     opts.DisableSELinux,
 		selinuxPolicy:      policyOrDefault(opts.SELinuxPolicy),
+
+		copyFilesFrom: opts.CopyFilesFrom,
+		copyFiles:     opts.CopyFiles,
+		ensureDirs:    opts.EnsureDirs,
 	}
 	m.addPipeline(pipeline)
 	return pipeline
@@ -288,6 +312,36 @@ func (p *BuildrootFromContainer) serialize() osbuild.Pipeline {
 		panic(err)
 	}
 	pipeline.AddStage(stage)
+
+	if len(p.ensureDirs) > 0 {
+		paths := []osbuild.MkdirStagePath{}
+		for _, dir := range p.ensureDirs {
+			paths = append(paths, osbuild.MkdirStagePath{
+				Path:    dir,
+				Parents: true,
+				ExistOk: true,
+			})
+		}
+
+		pipeline.AddStage(osbuild.NewMkdirStage(&osbuild.MkdirStageOptions{Paths: paths}))
+	}
+
+	if p.copyFilesFrom != "" {
+		inputName := "copy-tree"
+		paths := []osbuild.CopyStagePath{}
+		for _, copyPath := range p.copyFiles {
+			paths = append(paths, osbuild.CopyStagePath{
+				From: fmt.Sprintf("input://%s%s", inputName, copyPath),
+				To:   fmt.Sprintf("tree://%s", copyPath),
+			})
+		}
+
+		pipeline.AddStage(osbuild.NewCopyStageSimple(
+			&osbuild.CopyStageOptions{Paths: paths},
+			osbuild.NewPipelineTreeInputs(inputName, p.copyFilesFrom),
+		))
+	}
+
 	if !p.disableSelinux {
 		pipeline.AddStage(osbuild.NewSELinuxStage(
 			&osbuild.SELinuxStageOptions{
