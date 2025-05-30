@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -47,6 +48,8 @@ type bootcDiskImageTestOpts struct {
 	Files       []*fsnode.File
 
 	KernelOptionsAppend []string
+
+	SeparateBuildContainer bool
 }
 
 func makeFakePlatform(opts *bootcDiskImageTestOpts) platform.Platform {
@@ -71,7 +74,16 @@ func makeBootcDiskImageOsbuildManifest(t *testing.T, opts *bootcDiskImageTestOpt
 	}
 	containers := []container.SourceSpec{containerSource}
 
-	img := image.NewBootcDiskImage(containerSource, containerSource)
+	buildContainerSource := containerSource
+	if opts.SeparateBuildContainer {
+		buildContainerSource = container.SourceSpec{
+			Source: "build-src",
+			Name:   "build",
+		}
+		containers = append(containers, buildContainerSource)
+	}
+
+	img := image.NewBootcDiskImage(containerSource, buildContainerSource)
 	img.Filename = "fake-disk"
 	require.NotNil(t, img)
 	img.Platform = makeFakePlatform(opts)
@@ -89,8 +101,9 @@ func makeBootcDiskImageOsbuildManifest(t *testing.T, opts *bootcDiskImageTestOpt
 	require.Nil(t, err)
 
 	fakeSourceSpecs := map[string][]container.Spec{
-		"build": []container.Spec{{Source: "some-src", Digest: makeFakeDigest(t), ImageID: makeFakeDigest(t)}},
-		"image": []container.Spec{{Source: "other-src", Digest: makeFakeDigest(t), ImageID: makeFakeDigest(t)}},
+		"build":  []container.Spec{{Source: "build-src", Digest: makeFakeDigest(t), ImageID: makeFakeDigest(t)}},
+		"target": []container.Spec{{Source: "some-src", Digest: makeFakeDigest(t), ImageID: makeFakeDigest(t)}},
+		"image":  []container.Spec{{Source: "other-src", Digest: makeFakeDigest(t), ImageID: makeFakeDigest(t)}},
 	}
 
 	osbuildManifest, err := m.Serialize(nil, fakeSourceSpecs, nil, nil)
@@ -322,4 +335,41 @@ func TestBootcDiskImageBuildpipelineHonorsSELinuxPolicy(t *testing.T) {
 	// ensure selinux policy is set
 	selinuxOptions := selinuxStage["options"].(map[string]interface{})
 	assert.Equal(t, "etc/selinux/custom/contexts/files/file_contexts", selinuxOptions["file_contexts"])
+}
+
+func TestBootcDiskImageInstantiateSeparateBuildContainer(t *testing.T) {
+	opts := &bootcDiskImageTestOpts{
+		SeparateBuildContainer: true,
+	}
+	osbuildManifest := makeBootcDiskImageOsbuildManifest(t, opts)
+
+	// target pipeline is created to deploy the base image for config file copying
+	targetPipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "target")
+	require.NotNil(t, targetPipeline)
+
+	buildPipeline := findPipelineFromOsbuildManifest(t, osbuildManifest, "build")
+	require.NotNil(t, buildPipeline)
+
+	// build pipeline contains stage to copy config files from target pipeline
+	copyStage := findStageFromOsbuildPipeline(t, buildPipeline, "org.osbuild.copy")
+	inputs := copyStage["inputs"].(map[string]any)
+	copyTree := inputs["copy-tree"].(map[string]any)
+	assert.NotNil(t, copyTree)
+	references := copyTree["references"].([]any)
+	assert.Len(t, references, 1)
+	assert.Equal(t, "name:target", references[0])
+
+	options := copyStage["options"].(map[string]any)
+	paths := options["paths"].([]any)
+	assert.Len(t, paths, 2)
+
+	// just check that the source and destination paths match
+	for _, p := range paths {
+		path := p.(map[string]any)
+		from := path["from"].(string)
+		to := path["to"].(string)
+		assert.True(t, strings.HasPrefix(from, "input://copy-tree"))
+		assert.True(t, strings.HasPrefix(to, "tree://"))
+		assert.Equal(t, strings.TrimPrefix(from, "input://copy-tree"), strings.TrimPrefix(to, "tree://"))
+	}
 }
