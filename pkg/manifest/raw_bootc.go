@@ -172,11 +172,15 @@ func (p *RawBootcImage) serialize() osbuild.Pipeline {
 	mounts = append(mounts, *osbuild.NewOSTreeDeploymentMountDefault("ostree.deployment", osbuild.OSTreeMountSourceMount))
 	mounts = append(mounts, *osbuild.NewBindMount("bind-ostree-deployment-to-tree", "mount://", "tree://"))
 
+	doRelabel := false
 	fsCfgStages, err := filesystemConfigStages(pt, p.GenerateMounts)
 	if err != nil {
 		panic(err)
 	}
+
 	for _, stage := range fsCfgStages {
+		doRelabel = true
+
 		stage.Mounts = mounts
 		stage.Devices = devices
 		pipeline.AddStage(stage)
@@ -188,6 +192,7 @@ func (p *RawBootcImage) serialize() osbuild.Pipeline {
 		groupsStage.Mounts = mounts
 		groupsStage.Devices = devices
 		pipeline.AddStage(groupsStage)
+		doRelabel = true
 	}
 
 	if len(p.Users) > 0 {
@@ -208,6 +213,7 @@ func (p *RawBootcImage) serialize() osbuild.Pipeline {
 		usersStage.Mounts = mounts
 		usersStage.Devices = devices
 		pipeline.AddStage(usersStage)
+		doRelabel = true
 	}
 
 	// First create custom directories, because some of the custom files may depend on them
@@ -219,6 +225,7 @@ func (p *RawBootcImage) serialize() osbuild.Pipeline {
 			stage.Devices = devices
 		}
 		pipeline.AddStages(stages...)
+		doRelabel = true
 	}
 
 	if len(p.Files) > 0 {
@@ -228,12 +235,10 @@ func (p *RawBootcImage) serialize() osbuild.Pipeline {
 			stage.Devices = devices
 		}
 		pipeline.AddStages(stages...)
+		doRelabel = true
 	}
 
-	// XXX: maybe go back to adding this conditionally when we stop
-	// writing an /etc/fstab by default (see issue #756)
-	// add selinux
-	if p.SELinux != "" {
+	if p.SELinux != "" && doRelabel {
 		opts := &osbuild.SELinuxStageOptions{
 			FileContexts: fmt.Sprintf("etc/selinux/%s/contexts/files/file_contexts", p.SELinux),
 			ExcludePaths: []string{"/sysroot"},
