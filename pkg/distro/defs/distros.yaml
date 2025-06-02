@@ -42,7 +42,7 @@ distros:
   - &fedora_stable
     <<: *fedora_rawhide
     name: "fedora-{{.MajorVersion}}"
-    match: "fedora-*"
+    match: "fedora-[0-9][0-9]{,[0-9]}"
     preview: false
     os_version: "{{.MajorVersion}}"
     release_version: "{{.MajorVersion}}"

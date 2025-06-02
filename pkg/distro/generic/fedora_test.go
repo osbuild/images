@@ -947,6 +947,10 @@ func TestDistroFactory(t *testing.T) {
 			expected: generic.DistroFactory("fedora-40"),
 		},
 		{
+			strID:    "fedora-40.1",
+			expected: nil,
+		},
+		{
 			strID:    "fedora",
 			expected: nil,
 		},

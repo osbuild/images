@@ -772,7 +772,7 @@ distros:
   - &fedora_stable
     <<: *fedora_rawhide
     name: "fedora-{{.MajorVersion}}"
-    match: "fedora-*"
+    match: "fedora-[0-9]*"
     preview: false
     os_version: "{{.MajorVersion}}"
     release_version: "{{.MajorVersion}}"
@@ -795,7 +795,7 @@ distros:
     defs_path: rhel-10
 
   - name: "rhel-{{.MajorVersion}}.{{.MinorVersion}}"
-    match: "rhel-10*"
+    match: "rhel-10.*"
     product: "Red Hat Enterprise Linux"
     os_version: "{{.MajorVersion}}.{{.MinorVersion}}"
     release_version: "{{.MajorVersion}}"
@@ -859,7 +859,7 @@ func TestDistrosLoadingFactoryCompat(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, &defs.DistroYAML{
 		Name:             "rhel-10.1",
-		Match:            "rhel-10*",
+		Match:            "rhel-10.*",
 		Vendor:           "redhat",
 		OsVersion:        "10.1",
 		ReleaseVersion:   "10",
@@ -874,7 +874,7 @@ func TestDistrosLoadingFactoryCompat(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, &defs.DistroYAML{
 		Name:             "fedora-40",
-		Match:            "fedora-*",
+		Match:            "fedora-[0-9]*",
 		OsVersion:        "40",
 		ReleaseVersion:   "40",
 		ModulePlatformID: "platform:f40",
