@@ -20,6 +20,7 @@ type BootcDiskImage struct {
 
 	Platform       platform.Platform
 	PartitionTable *disk.PartitionTable
+	GenerateMounts blueprint.GenerateMounts
 
 	Filename string
 
@@ -49,6 +50,7 @@ func NewBootcDiskImage(container container.SourceSpec, buildContainer container.
 		Base:                 NewBase("bootc-raw-image"),
 		ContainerSource:      &container,
 		BuildContainerSource: &buildContainer,
+		GenerateMounts:       blueprint.GenerateUnits,
 	}
 }
 
@@ -81,7 +83,7 @@ func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifes
 	rawImage.Directories = img.Directories
 	rawImage.KernelOptionsAppend = img.KernelOptionsAppend
 	rawImage.SELinux = img.SELinux
-	rawImage.GenerateMounts = blueprint.GenerateUnits // always use mount units for bootc disk images
+	rawImage.GenerateMounts = img.GenerateMounts
 
 	// In BIB, we export multiple images from the same pipeline so we use the
 	// filename as the basename for each export and set the extensions based on
