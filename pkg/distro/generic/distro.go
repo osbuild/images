@@ -49,18 +49,20 @@ type distribution struct {
 }
 
 func (d *distribution) getISOLabelFunc(isoLabel string) isoLabelFunc {
+	id := common.Must(distro.ParseID(d.Name()))
+
 	return func(t *imageType) string {
 		type inputs struct {
+			Distro       *distro.ID
 			Product      string
-			OsVersion    string
 			Arch         string
 			ImgTypeLabel string
 		}
 		templ := common.Must(template.New("iso-label").Parse(d.DistroYAML.ISOLabelTmpl))
 		var buf bytes.Buffer
 		err := templ.Execute(&buf, inputs{
-			Product:      t.Arch().Distro().Product(),
-			OsVersion:    t.Arch().Distro().OsVersion(),
+			Distro:       id,
+			Product:      d.Product(),
 			Arch:         t.Arch().Name(),
 			ImgTypeLabel: isoLabel,
 		})
