@@ -6,6 +6,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/artifact"
+	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/users"
@@ -45,9 +46,8 @@ type RawBootcImage struct {
 	// selected profile
 	SELinux string
 
-	// MountUnits creates systemd .mount units to describe the filesystem
-	// instead of writing to /etc/fstab
-	MountUnits bool
+	// Do we want /etc/fstab, systemd mount units or nothing
+	GenerateMounts blueprint.GenerateMounts
 }
 
 func (p RawBootcImage) Filename() string {
@@ -172,7 +172,7 @@ func (p *RawBootcImage) serialize() osbuild.Pipeline {
 	mounts = append(mounts, *osbuild.NewOSTreeDeploymentMountDefault("ostree.deployment", osbuild.OSTreeMountSourceMount))
 	mounts = append(mounts, *osbuild.NewBindMount("bind-ostree-deployment-to-tree", "mount://", "tree://"))
 
-	fsCfgStages, err := filesystemConfigStages(pt, p.MountUnits)
+	fsCfgStages, err := filesystemConfigStages(pt, p.GenerateMounts)
 	if err != nil {
 		panic(err)
 	}

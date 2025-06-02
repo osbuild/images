@@ -10,6 +10,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/testdisk"
+	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/bootc"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
@@ -273,6 +274,18 @@ func TestModularityDoesNotIncludeConfigStage(t *testing.T) {
 	require.Nil(t, st)
 }
 
+func checkStagesForNoMounts(t *testing.T, stages []*osbuild.Stage) {
+	fstab := manifest.FindStage("org.osbuild.fstab", stages)
+	require.Nil(t, fstab)
+
+	// The plain OS pipeline doesn't have any systemd.unit.create stages by
+	// default. This test will break and will need to be adjusted if this ever
+	// changes (if a systemd.unit.create stage is added to the pipeline by
+	// default).
+	systemdStages := findStages("org.osbuild.systemd.unit.create", stages)
+	require.Nil(t, systemdStages)
+}
+
 func checkStagesForFSTab(t *testing.T, stages []*osbuild.Stage) {
 	fstab := manifest.FindStage("org.osbuild.fstab", stages)
 	require.NotNil(t, fstab)
@@ -314,8 +327,8 @@ func checkStagesForMountUnits(t *testing.T, stages []*osbuild.Stage, expectedUni
 func TestOSPipelineFStabStage(t *testing.T) {
 	os := manifest.NewTestOS()
 
-	os.PartitionTable = testdisk.MakeFakePartitionTable("/") // PT specifics don't matter
-	os.OSCustomizations.MountUnits = false                   // set it explicitly just to be sure
+	os.PartitionTable = testdisk.MakeFakePartitionTable("/")     // PT specifics don't matter
+	os.OSCustomizations.GenerateMounts = blueprint.GenerateFstab // set it explicitly just to be sure
 
 	checkStagesForFSTab(t, os.Serialize().Stages)
 }
@@ -325,7 +338,7 @@ func TestOSPipelineMountUnitStages(t *testing.T) {
 
 	expectedUnits := []string{"-.mount", "home.mount"}
 	os.PartitionTable = testdisk.MakeFakePartitionTable("/", "/home")
-	os.OSCustomizations.MountUnits = true
+	os.OSCustomizations.GenerateMounts = blueprint.GenerateUnits
 
 	checkStagesForMountUnits(t, os.Serialize().Stages, expectedUnits)
 }

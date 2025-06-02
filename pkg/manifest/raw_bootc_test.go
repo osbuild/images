@@ -10,6 +10,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/testdisk"
+	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/users"
@@ -347,7 +348,7 @@ func TestRawBootcPipelineFSTabStage(t *testing.T) {
 	pipeline := makeFakeRawBootcPipeline()
 
 	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/boot/efi") // PT requires /boot/efi
-	pipeline.MountUnits = false                                                 // set it explicitly just to be sure
+	pipeline.GenerateMounts = blueprint.GenerateFstab
 
 	checkStagesForFSTab(t, pipeline.Serialize().Stages)
 }
@@ -357,7 +358,16 @@ func TestRawBootcPipelineMountUnitStages(t *testing.T) {
 
 	expectedUnits := []string{"-.mount", "home.mount", "boot-efi.mount"}
 	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/home", "/boot/efi")
-	pipeline.MountUnits = true
+	pipeline.GenerateMounts = blueprint.GenerateUnits
 
 	checkStagesForMountUnits(t, pipeline.Serialize().Stages, expectedUnits)
+}
+
+func TestRawBootcPipelineNoMountStages(t *testing.T) {
+	pipeline := makeFakeRawBootcPipeline()
+
+	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/home", "/boot/efi")
+	pipeline.GenerateMounts = blueprint.GenerateNone
+
+	checkStagesForNoMounts(t, pipeline.Serialize().Stages)
 }

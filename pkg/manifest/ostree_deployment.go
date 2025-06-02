@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/users"
@@ -43,9 +44,8 @@ type OSTreeDeploymentCustomizations struct {
 	// user options in the build configuration.
 	LockRoot bool
 
-	// MountUnits creates systemd .mount units to describe the filesystem
-	// instead of writing to /etc/fstab
-	MountUnits bool
+	// Do we want /etc/fstab, systemd mount units or nothing
+	GenerateMounts blueprint.GenerateMounts
 }
 
 // OSTreeDeployment represents the filesystem tree of a target image based
@@ -295,7 +295,7 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 			},
 		},
 	}))
-	_, kernelOpts, err := osbuild.GenImageKernelOptions(p.PartitionTable, p.MountUnits)
+	_, kernelOpts, err := osbuild.GenImageKernelOptions(p.PartitionTable, p.GenerateMounts)
 	if err != nil {
 		panic(err)
 	}
@@ -338,7 +338,7 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 	configStage.MountOSTree(p.osName, ref, 0)
 	pipeline.AddStage(configStage)
 
-	fsCfgStages, err := filesystemConfigStages(p.PartitionTable, p.MountUnits)
+	fsCfgStages, err := filesystemConfigStages(p.PartitionTable, p.GenerateMounts)
 	if err != nil {
 		panic(err)
 	}

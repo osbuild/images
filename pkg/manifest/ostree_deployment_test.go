@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/osbuild/images/internal/testdisk"
+	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/platform"
@@ -34,7 +35,7 @@ func TestOSTreeDeploymentPipelineFStabStage(t *testing.T) {
 	pipeline := NewTestOSTreeDeployment()
 
 	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/") // PT specifics don't matter
-	pipeline.MountUnits = false                                    // set it explicitly just to be sure
+	pipeline.GenerateMounts = blueprint.GenerateFstab
 
 	checkStagesForFSTab(t, pipeline.Serialize().Stages)
 }
@@ -44,9 +45,18 @@ func TestOSTreeDeploymentPipelineMountUnitStages(t *testing.T) {
 
 	expectedUnits := []string{"-.mount", "home.mount"}
 	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/home")
-	pipeline.MountUnits = true
+	pipeline.GenerateMounts = blueprint.GenerateUnits
 
 	checkStagesForMountUnits(t, pipeline.Serialize().Stages, expectedUnits)
+}
+
+func TestOSTreeDeploymentPipelineNoMounts(t *testing.T) {
+	pipeline := NewTestOSTreeDeployment()
+
+	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/home")
+	pipeline.GenerateMounts = blueprint.GenerateNone
+
+	checkStagesForNoMounts(t, pipeline.Serialize().Stages)
 }
 
 func TestAddInlineOSTreeDeployment(t *testing.T) {

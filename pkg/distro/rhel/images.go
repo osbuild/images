@@ -295,8 +295,9 @@ func osCustomizations(
 		osc.InstallWeakDeps = *imageConfig.InstallWeakDeps
 	}
 
-	if imageConfig.MountUnits != nil {
-		osc.MountUnits = *imageConfig.MountUnits
+	osc.GenerateMounts = blueprint.GenerateFstab
+	if imageConfig.MountUnits != nil && *imageConfig.MountUnits {
+		osc.GenerateMounts = blueprint.GenerateUnits
 	}
 
 	return osc, nil
@@ -373,8 +374,9 @@ func ostreeDeploymentCustomizations(
 		deploymentConf.CustomFileSystems = append(deploymentConf.CustomFileSystems, fs.Mountpoint)
 	}
 
-	if imageConfig.MountUnits != nil {
-		deploymentConf.MountUnits = *imageConfig.MountUnits
+	deploymentConf.GenerateMounts = blueprint.GenerateFstab
+	if imageConfig.MountUnits != nil && *imageConfig.MountUnits {
+		deploymentConf.GenerateMounts = blueprint.GenerateUnits
 	}
 
 	return deploymentConf, nil

@@ -11,6 +11,7 @@ import (
 	"github.com/osbuild/images/internal/environment"
 	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/arch"
+	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/bootc"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
@@ -164,9 +165,8 @@ type OSCustomizations struct {
 	// "ConditionFirstBoot" to work in systemd
 	MachineIdUninitialized bool
 
-	// MountUnits creates systemd .mount units to describe the filesystem
-	// instead of writing to /etc/fstab
-	MountUnits bool
+	// Do we want /etc/fstab, systemd mount units or nothing
+	GenerateMounts blueprint.GenerateMounts
 }
 
 // OS represents the filesystem tree of the target image. This roughly
@@ -687,7 +687,7 @@ func (p *OS) serialize() osbuild.Pipeline {
 	}
 
 	if pt := p.PartitionTable; pt != nil {
-		rootUUID, kernelOptions, err := osbuild.GenImageKernelOptions(p.PartitionTable, p.OSCustomizations.MountUnits)
+		rootUUID, kernelOptions, err := osbuild.GenImageKernelOptions(p.PartitionTable, p.OSCustomizations.GenerateMounts)
 		if err != nil {
 			panic(err)
 		}
@@ -701,7 +701,7 @@ func (p *OS) serialize() osbuild.Pipeline {
 			}))
 		}
 
-		fsCfgStages, err := filesystemConfigStages(pt, p.OSCustomizations.MountUnits)
+		fsCfgStages, err := filesystemConfigStages(pt, p.OSCustomizations.GenerateMounts)
 		if err != nil {
 			panic(err)
 		}
