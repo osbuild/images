@@ -296,8 +296,18 @@ func osCustomizations(
 	}
 
 	osc.GenerateMounts = blueprint.GenerateFstab
-	if imageConfig.MountUnits != nil && *imageConfig.MountUnits {
-		osc.GenerateMounts = blueprint.GenerateUnits
+	if imageConfig.MountUnits != nil {
+		if *imageConfig.MountUnits {
+			osc.GenerateMounts = blueprint.GenerateUnits
+		}
+	} else {
+		partitioning, err := c.GetPartitioning()
+		if err != nil {
+			return osc, err
+		}
+		if partitioning != nil && partitioning.GenerateMounts != nil {
+			osc.GenerateMounts = *partitioning.GenerateMounts
+		}
 	}
 
 	return osc, nil
@@ -375,8 +385,18 @@ func ostreeDeploymentCustomizations(
 	}
 
 	deploymentConf.GenerateMounts = blueprint.GenerateFstab
-	if imageConfig.MountUnits != nil && *imageConfig.MountUnits {
-		deploymentConf.GenerateMounts = blueprint.GenerateUnits
+	if imageConfig.MountUnits != nil {
+		if *imageConfig.MountUnits {
+			deploymentConf.GenerateMounts = blueprint.GenerateUnits
+		}
+	} else {
+		partitioning, err := c.GetPartitioning()
+		if err != nil {
+			return deploymentConf, err
+		}
+		if partitioning != nil && partitioning.GenerateMounts != nil {
+			deploymentConf.GenerateMounts = *partitioning.GenerateMounts
+		}
 	}
 
 	return deploymentConf, nil
