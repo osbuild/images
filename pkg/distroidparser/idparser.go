@@ -2,7 +2,6 @@ package distroidparser
 
 import (
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/distro/rhel/rhel10"
 	"github.com/osbuild/images/pkg/distro/rhel/rhel7"
 	"github.com/osbuild/images/pkg/distro/rhel/rhel8"
 	"github.com/osbuild/images/pkg/distro/rhel/rhel9"
@@ -65,6 +64,5 @@ func NewDefaultParser() *Parser {
 		rhel7.ParseID,
 		rhel8.ParseID,
 		rhel9.ParseID,
-		rhel10.ParseID,
 	)
 }
