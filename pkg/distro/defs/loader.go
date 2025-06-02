@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"slices"
 	"sort"
+	"strings"
 	"text/template"
 
 	"github.com/gobwas/glob"
@@ -95,6 +96,9 @@ type DistroYAML struct {
 	BootstrapContainers map[arch.Arch]string `yaml:"bootstrap_containers"`
 
 	OscapProfilesAllowList []oscap.Profile `yaml:"oscap_profiles_allowlist"`
+
+	// ignore the given image types
+	IgnoreImageTypes []string `yaml:"ignore_image_types"`
 
 	imageTypes        map[string]ImageTypeYAML
 	distroImageConfig *distro.ImageConfig `yaml:"default"`
@@ -206,9 +210,16 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 	if len(toplevel.ImageTypes) > 0 {
 		foundDistro.imageTypes = make(map[string]ImageTypeYAML, len(toplevel.ImageTypes))
 		for name := range toplevel.ImageTypes {
+			if slices.Contains(foundDistro.IgnoreImageTypes, name) {
+				continue
+			}
 			v := toplevel.ImageTypes[name]
 			v.name = name
 			foundDistro.imageTypes[name] = v
+			for idx := range v.Platforms {
+				// XXX: use template engine
+				v.Platforms[idx].UEFIVendor = strings.Replace(v.Platforms[idx].UEFIVendor, "{{.Distro.Vendor}}", foundDistro.Vendor, -1)
+			}
 		}
 	}
 	foundDistro.distroImageConfig = toplevel.ImageConfig.For(nameVer)

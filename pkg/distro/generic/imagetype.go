@@ -64,6 +64,10 @@ func (t *imageType) MIMEType() string {
 	return t.ImageTypeYAML.MimeType
 }
 
+func (t *imageType) DefaultImageConfig() *distro.ImageConfig {
+	return t.defaultImageConfig
+}
+
 func (t *imageType) OSTreeRef() string {
 	d := t.arch.distro
 	if t.ImageTypeYAML.RPMOSTree {
@@ -489,7 +493,7 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 	}
 	if instCust != nil {
 		// only supported by the Anaconda installer
-		if slices.Index([]string{"iot-installer"}, t.Name()) == -1 {
+		if slices.Index([]string{"image-installer", "edge-installer", "live-installer", "iot-installer"}, t.Name()) == -1 {
 			return warnings, fmt.Errorf("installer customizations are not supported for %q", t.Name())
 		}
 
