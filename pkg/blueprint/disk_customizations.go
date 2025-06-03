@@ -16,18 +16,65 @@ import (
 	"github.com/osbuild/images/pkg/pathpolicy"
 )
 
+type GenerateMounts int
+
+const (
+	GenerateFstab GenerateMounts = iota
+	GenerateUnits
+	GenerateNone
+)
+
 type DiskCustomization struct {
 	// Type of the partition table: gpt or dos.
 	// Optional, the default depends on the distro and image type.
-	Type       string
-	MinSize    uint64
-	Partitions []PartitionCustomization
+	Type           string
+	MinSize        uint64
+	Partitions     []PartitionCustomization
+	GenerateMounts *GenerateMounts
+}
+
+func getGenerateMountsMapping() []string {
+	return []string{"fstab", "units", "none"}
+}
+
+// String converts GenerateMounts into a human readable string
+func (option GenerateMounts) String() string {
+	return getGenerateMountsMapping()[int(option)]
+}
+
+func unmarshalHelper(data []byte, mapping []string) (int, error) {
+	var stringInput string
+	err := json.Unmarshal(data, &stringInput)
+	if err != nil {
+		return 0, err
+	}
+	for n, str := range mapping {
+		if str == stringInput {
+			return n, nil
+		}
+	}
+	return 0, fmt.Errorf("invalid mkfsoption: %s", stringInput)
+}
+
+// UnmarshalJSON converts a JSON string into an GenerateMounts
+func (option *GenerateMounts) UnmarshalJSON(data []byte) error {
+	val, err := unmarshalHelper(data, getGenerateMountsMapping())
+	if err != nil {
+		return err
+	}
+	*option = GenerateMounts(val)
+	return nil
+}
+
+func (option GenerateMounts) MarshalJSON() ([]byte, error) {
+	return json.Marshal(getGenerateMountsMapping()[option])
 }
 
 type diskCustomizationMarshaler struct {
-	Type       string                   `json:"type,omitempty" toml:"type,omitempty"`
-	MinSize    datasizes.Size           `json:"minsize,omitempty" toml:"minsize,omitempty"`
-	Partitions []PartitionCustomization `json:"partitions,omitempty" toml:"partitions,omitempty"`
+	Type           string                   `json:"type,omitempty" toml:"type,omitempty"`
+	MinSize        datasizes.Size           `json:"minsize,omitempty" toml:"minsize,omitempty"`
+	Partitions     []PartitionCustomization `json:"partitions,omitempty" toml:"partitions,omitempty"`
+	GenerateMounts *GenerateMounts          `json:"generate_mounts,omitempty" toml:"generate_mounts,omitempty"`
 }
 
 func (dc *DiskCustomization) UnmarshalJSON(data []byte) error {
@@ -38,6 +85,7 @@ func (dc *DiskCustomization) UnmarshalJSON(data []byte) error {
 	dc.Type = dcm.Type
 	dc.MinSize = dcm.MinSize.Uint64()
 	dc.Partitions = dcm.Partitions
+	dc.GenerateMounts = dcm.GenerateMounts
 
 	return nil
 }

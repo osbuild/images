@@ -49,7 +49,7 @@ func TestGenImageKernelOptions(t *testing.T) {
 	uuids := collectUUIDs(pt)
 	assert.NotEmpty(uuids["/"], "Could not find root filesystem")
 	assert.NotEmpty(uuids["luks"], "Could not find LUKS container")
-	rootUUID, cmdline, err := GenImageKernelOptions(pt, false)
+	rootUUID, cmdline, err := GenImageKernelOptions(pt, blueprint.GenerateFstab)
 	assert.NoError(err)
 
 	assert.Equal(rootUUID, uuids["/"])
@@ -58,14 +58,14 @@ func TestGenImageKernelOptions(t *testing.T) {
 
 func TestGenImageKernelOptionsBtrfs(t *testing.T) {
 	pt := testdisk.MakeFakeBtrfsPartitionTable("/")
-	_, actual, err := GenImageKernelOptions(pt, false)
+	_, actual, err := GenImageKernelOptions(pt, blueprint.GenerateFstab)
 	assert.NoError(t, err)
 	assert.Equal(t, []string{"rootflags=subvol=root"}, actual)
 }
 
 func TestGenImageKernelOptionsBtrfsNotRootCmdlineGenerated(t *testing.T) {
 	pt := testdisk.MakeFakeBtrfsPartitionTable("/var")
-	_, kopts, err := GenImageKernelOptions(pt, false)
+	_, kopts, err := GenImageKernelOptions(pt, blueprint.GenerateFstab)
 	assert.EqualError(t, err, "root filesystem must be defined for kernel-cmdline stage, this is a programming error")
 	assert.Equal(t, len(kopts), 0)
 }
@@ -209,7 +209,7 @@ func TestGenImageKernelOptionsMountUnitsPlain(t *testing.T) {
 	uuids := collectUUIDs(pt)
 	assert.Len(uuids, 2)
 
-	rootUUID, cmdline, err := GenImageKernelOptions(pt, true)
+	rootUUID, cmdline, err := GenImageKernelOptions(pt, blueprint.GenerateUnits)
 	assert.NoError(err)
 
 	assert.Equal(rootUUID, uuids["/"])
@@ -229,7 +229,7 @@ func TestGenImageKernelOptionsMountUnitsPlainWithUsr(t *testing.T) {
 	uuids := collectUUIDs(pt)
 	assert.Len(uuids, 3)
 
-	rootUUID, cmdline, err := GenImageKernelOptions(pt, true)
+	rootUUID, cmdline, err := GenImageKernelOptions(pt, blueprint.GenerateUnits)
 	assert.NoError(err)
 
 	assert.Equal(rootUUID, uuids["/"])
@@ -247,7 +247,7 @@ func TestGenImageKernelOptionsMountUnitsBtrfs(t *testing.T) {
 	uuids := collectUUIDs(pt)
 	assert.Len(uuids, 2)
 
-	rootUUID, cmdline, err := GenImageKernelOptions(pt, true)
+	rootUUID, cmdline, err := GenImageKernelOptions(pt, blueprint.GenerateUnits)
 	assert.NoError(err)
 
 	assert.Equal(rootUUID, uuids["/"])
@@ -269,7 +269,7 @@ func TestGenImageKernelOptionsMountUnitsBtrfsWithUsr(t *testing.T) {
 	uuids := collectUUIDs(pt)
 	assert.Len(uuids, 3)
 
-	rootUUID, cmdline, err := GenImageKernelOptions(pt, true)
+	rootUUID, cmdline, err := GenImageKernelOptions(pt, blueprint.GenerateUnits)
 	assert.NoError(err)
 
 	assert.Equal(rootUUID, uuids["/"])
@@ -293,7 +293,7 @@ func TestGenImageKernelOptionsMountUnitsLVM(t *testing.T) {
 	uuids := collectUUIDs(pt)
 	assert.Len(uuids, 2)
 
-	rootUUID, cmdline, err := GenImageKernelOptions(pt, true)
+	rootUUID, cmdline, err := GenImageKernelOptions(pt, blueprint.GenerateUnits)
 	assert.NoError(err)
 
 	assert.Equal(rootUUID, uuids["/"])
@@ -313,7 +313,7 @@ func TestGenImageKernelOptionsMountUnitsLVMWithUsr(t *testing.T) {
 	uuids := collectUUIDs(pt)
 	assert.Len(uuids, 3)
 
-	rootUUID, cmdline, err := GenImageKernelOptions(pt, true)
+	rootUUID, cmdline, err := GenImageKernelOptions(pt, blueprint.GenerateUnits)
 	assert.NoError(err)
 
 	assert.Equal(rootUUID, uuids["/"])

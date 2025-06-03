@@ -3,6 +3,7 @@
   "blueprint": {
     "customizations": {
       "disk": {
+        "generate_mounts": "units",
         "partitions": [
           {
             "mountpoint": "/data",

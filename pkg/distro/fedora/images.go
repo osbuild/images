@@ -252,8 +252,19 @@ func osCustomizations(
 		osc.MachineIdUninitialized = *imageConfig.MachineIdUninitialized
 	}
 
+	osc.GenerateMounts = blueprint.GenerateFstab
 	if imageConfig.MountUnits != nil {
-		osc.MountUnits = *imageConfig.MountUnits
+		if *imageConfig.MountUnits {
+			osc.GenerateMounts = blueprint.GenerateUnits
+		}
+	} else {
+		partitioning, err := c.GetPartitioning()
+		if err != nil {
+			return osc, err
+		}
+		if partitioning != nil && partitioning.GenerateMounts != nil {
+			osc.GenerateMounts = *partitioning.GenerateMounts
+		}
 	}
 
 	return osc, nil
