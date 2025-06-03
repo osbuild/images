@@ -1,6 +1,8 @@
 package disk_test
 
 import (
+	"encoding/json"
+	"fmt"
 	"math/rand"
 	"testing"
 
@@ -2794,5 +2796,52 @@ func TestPartitionTableFeatures(t *testing.T) {
 		exp, ok := testCases[name]
 		require.True(ok, "expected test result not defined for test partition table %q: please update the %s test", name, t.Name())
 		require.Equal(exp, disk.GetPartitionTableFeatures(pt))
+	}
+}
+
+func TestUnmarshalSizeUnitStringPartitionTable(t *testing.T) {
+	testCases := []struct {
+		name     string
+		input    string
+		expected uint64
+		err      error
+	}{
+		{
+			name:     "valid size with unit",
+			input:    `{"start_offset": "1 GiB"}`,
+			expected: 1 * datasizes.GiB,
+			err:      nil,
+		},
+		{
+			name:     "valid size without unit",
+			input:    `{"start_offset": 1073741824}`,
+			expected: 1 * datasizes.GiB,
+			err:      nil,
+		},
+		{
+			name:     "valid size without unit as string",
+			input:    `{"start_offset": "123"}`,
+			expected: 123,
+			err:      nil,
+		},
+		{
+			name:     "invalid size with unit",
+			input:    `{"start_offset": "1 GGB"}`,
+			expected: 0,
+			err:      fmt.Errorf("error parsing start_offset in partition table: failed to parse size field named \"start_offset\" to bytes: unknown data size units in string: 1 GGB"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var pt disk.PartitionTable
+			err := json.Unmarshal([]byte(tc.input), &pt)
+			if tc.err != nil {
+				assert.ErrorContains(t, err, tc.err.Error())
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expected, pt.StartOffset)
+		})
 	}
 }

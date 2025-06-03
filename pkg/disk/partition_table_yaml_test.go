@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 
+	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 )
 
@@ -34,6 +35,7 @@ uuids:
 partition_table:
   uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
   type: "gpt"
+  start_offset: "8 MiB"
   partitions:
     - size: 1_048_576  # 1 MiB
       bootable: true
@@ -72,8 +74,9 @@ partition_table:
 	err := yaml.Unmarshal([]byte(inputYAML), &ptWrapper)
 	require.NoError(t, err)
 	expected := disk.PartitionTable{
-		UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
-		Type: disk.PT_GPT,
+		UUID:        "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
+		Type:        disk.PT_GPT,
+		StartOffset: 8 * datasizes.MiB,
 		Partitions: []disk.Partition{
 			{
 				Start:    0,
