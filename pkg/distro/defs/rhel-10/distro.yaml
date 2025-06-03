@@ -242,12 +242,12 @@
         uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
         type: "gpt"
         partitions:
-          - size: 1_048_576  # 1 MiB
+          - size: "1 MiB"
             bootable: true
             type: *bios_boot_partition_guid
             uuid: *bios_boot_partition_uuid
           - &default_partition_table_part_efi
-            size: 209_715_200  # 200 MiB
+            size: "200 MiB"
             type: *efi_system_partition_guid
             uuid: *efi_system_partition_uuid
             payload_type: "filesystem"
@@ -260,7 +260,7 @@
               fstab_freq: 0
               fstab_passno: 2
           - &default_partition_table_part_root
-            size: 2_147_483_648  # 2 * datasizes.GibiByte,
+            size: "2 GiB"
             type: *filesystem_data_guid
             uuid: *root_partition_uuid
             payload_type: "filesystem"
@@ -281,11 +281,11 @@
         uuid: "0x14fc63d2"
         type: "dos"
         partitions:
-          - size: 4_194_304  # 4 MiB
+          - size: "4 MiB"
             bootable: true
             type: *prep_partition_dosid
           - &default_partition_table_part_root_ppc64le
-            size: 2_147_483_648  # 2 * datasizes.GibiByte,
+            size: "2 GiB"
             payload_type: "filesystem"
             payload:
               <<: *default_partition_table_part_root_payload
@@ -746,10 +746,10 @@ image_types:
       x86_64:
         uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
         type: "gpt"
-        size: 68_719_476_736  # 64 * datasizes.GibiByte
+        size: "64 GiB"
         partitions:
           - &azure_rhui_part_boot_efi
-            size: 524_288_000   # 500 * datasizes.MebiByte
+            size: "500 MiB"
             type: *efi_system_partition_guid
             UUID: *efi_system_partition_uuid
             payload_type: "filesystem"
@@ -762,7 +762,7 @@ image_types:
               fstab_passno: 2
           # NB: we currently don't support /boot on LVM
           - &azure_rhui_part_boot
-            size: 1_073_741_824   # 1 * datasizes.GibiByte
+            size: "1 GiB"
             type: *filesystem_data_guid
             uuid: *data_partition_uuid
             payload_type: "filesystem"
@@ -772,7 +772,7 @@ image_types:
               fstab_options: "defaults"
               fstab_freq: 0
               fstab_passno: 0
-          - size: 2_097_152  # 2 * datasizes.MebiByte
+          - size: "2 MiB"
             bootable: true
             type: *bios_boot_partition_guid
             uuid: *bios_boot_partition_uuid
@@ -784,7 +784,7 @@ image_types:
               name: "rootvg"
               description: "built with lvm2 and osbuild"
               logical_volumes:
-                - size: 1_073_741_824  # 1 * datasizes.GibiByte
+                - size: "1 GiB"
                   name: "homelv"
                   payload_type: "filesystem"
                   payload:
@@ -792,7 +792,7 @@ image_types:
                     label: "home"
                     mountpoint: "/home"
                     fstab_options: "defaults"
-                - size: 2_147_483_648  # 2 * datasizes.GibiByte
+                - size: "2 GiB"
                   name: "rootlv"
                   payload_type: "filesystem"
                   payload:
@@ -800,7 +800,7 @@ image_types:
                     label: "root"
                     mountpoint: "/"
                     fstab_options: "defaults"
-                - size: 2_147_483_648  # 2 * datasizes.GibiByte
+                - size: "2 GiB"
                   name: "tmplv"
                   payload_type: "filesystem"
                   payload:
@@ -808,7 +808,7 @@ image_types:
                     label: "tmp"
                     mountpoint: "/tmp"
                     fstab_options: "defaults"
-                - size: 10_737_418_240  # 10 * datasizes.GibiByte
+                - size: "10 GiB"
                   name: "usrlv"
                   payload_type: "filesystem"
                   payload:
@@ -816,7 +816,7 @@ image_types:
                     label: "usr"
                     mountpoint: "/usr"
                     fstab_options: "defaults"
-                - size: 10_737_418_240  # 10 * datasizes.GibiByte
+                - size: "10 GiB"
                   name: "varlv"
                   payload_type: "filesystem"
                   payload:
@@ -827,7 +827,7 @@ image_types:
       aarch64:
         uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
         type: "gpt"
-        size: 68_719_476_736  # 64 * datasizes.GibiByte
+        size: "64 GiB"
         partitions:
           - *azure_rhui_part_boot_efi
           # NB: we currently don't support /boot on LVM
