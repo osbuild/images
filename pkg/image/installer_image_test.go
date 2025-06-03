@@ -251,11 +251,10 @@ func TestTarInstallerUnsetKSOptions(t *testing.T) {
 	img.Platform = testPlatform
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
-	// the tar installer doesn't set a custom kickstart path unless the
-	// unattended option is enabled, so the inst.ks option isn't set and
-	// interactive-defaults.ks is used
+	// Without img.Kickstart set it should not include a kickstart at all
 	assert.Contains(t, mfs, fmt.Sprintf(`"inst.stage2=hd:LABEL=%s"`, isolabel))
-	assert.Contains(t, mfs, fmt.Sprintf("%q", osbuild.KickstartPathInteractiveDefaults))
+	assert.NotContains(t, mfs, "inst.ks=")
+	assert.NotContains(t, mfs, fmt.Sprintf("%q", osbuild.KickstartPathInteractiveDefaults))
 	assert.NotContains(t, mfs, "osbuild.ks") // no mention of the default (custom) value
 }
 
@@ -587,6 +586,7 @@ func TestTarInstallerModules(t *testing.T) {
 				img.Product = product
 				img.OSVersion = osversion
 				img.ISOLabel = isolabel
+				img.Kickstart = &kickstart.Options{}
 
 				img.UseLegacyAnacondaConfig = legacy
 				img.AdditionalAnacondaModules = tc.enable
