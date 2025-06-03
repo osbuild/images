@@ -2808,19 +2808,19 @@ func TestUnmarshalSizeUnitStringPartitionTable(t *testing.T) {
 	}{
 		{
 			name:     "valid size with unit",
-			input:    `{"start_offset": "1 GiB"}`,
+			input:    `{"start_offset": "1 GiB", "size": "1 GiB"}`,
 			expected: 1 * datasizes.GiB,
 			err:      nil,
 		},
 		{
 			name:     "valid size without unit",
-			input:    `{"start_offset": 1073741824}`,
+			input:    `{"start_offset": 1073741824, "size": 1073741824}`,
 			expected: 1 * datasizes.GiB,
 			err:      nil,
 		},
 		{
 			name:     "valid size without unit as string",
-			input:    `{"start_offset": "123"}`,
+			input:    `{"start_offset": "123", "size": "123"}`,
 			expected: 123,
 			err:      nil,
 		},
@@ -2828,7 +2828,13 @@ func TestUnmarshalSizeUnitStringPartitionTable(t *testing.T) {
 			name:     "invalid size with unit",
 			input:    `{"start_offset": "1 GGB"}`,
 			expected: 0,
-			err:      fmt.Errorf("error parsing start_offset in partition table: failed to parse size field named \"start_offset\" to bytes: unknown data size units in string: 1 GGB"),
+			err:      fmt.Errorf("error parsing \"start_offset\" in partition table: failed to parse size field named \"start_offset\" to bytes: unknown data size units in string: 1 GGB"),
+		},
+		{
+			name:     "invalid size with unit",
+			input:    `{"size": "1 GGB"}`,
+			expected: 0,
+			err:      fmt.Errorf("error parsing \"size\" in partition table: failed to parse size field named \"size\" to bytes: unknown data size units in string: 1 GGB"),
 		},
 	}
 
@@ -2842,6 +2848,7 @@ func TestUnmarshalSizeUnitStringPartitionTable(t *testing.T) {
 			}
 			assert.NoError(t, err)
 			assert.Equal(t, tc.expected, pt.StartOffset)
+			assert.Equal(t, tc.expected, pt.Size)
 		})
 	}
 }
