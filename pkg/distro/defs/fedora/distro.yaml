@@ -246,12 +246,12 @@
     # the invidual partitions for easier composibility
     partitions:
       - &default_partition_table_part_bios
-        size: 1_048_576  # 1 MiB
+        size: "1 MiB"
         bootable: true
         type: *bios_boot_partition_guid
         uuid: *bios_boot_partition_uuid
       - &default_partition_table_part_efi
-        size: 209_715_200  # 200 MiB
+        size: "200 MiB"
         type: *efi_system_partition_guid
         uuid: *efi_system_partition_uuid
         payload_type: "filesystem"
@@ -264,7 +264,7 @@
           fstab_freq: 0
           fstab_passno: 2
       - &default_partition_table_part_boot
-        size: 1_073_741_824  # 1 * datasizes.GibiByte,
+        size: "1 GiB"
         type: *filesystem_data_guid
         uuid: *data_partition_uuid
         payload_type: "filesystem"
@@ -276,7 +276,7 @@
           fstab_freq: 0
           fstab_passno: 0
       - &default_partition_table_part_root
-        size: 2_147_483_648  # 2 * datasizes.GibiByte,
+        size: "2 GiB"
         type: *filesystem_data_guid
         uuid: *root_partition_uuid
         payload_type: "filesystem"
@@ -289,7 +289,7 @@
           fstab_passno: 0
       # iot partitions
       - &iot_base_partition_table_part_efi
-        size: 525_336_576  # 501 * datasizes.MebiByte
+        size: "501 MiB"
         type: *efi_system_partition_guid
         uuid: *efi_system_partition_uuid
         payload_type: "filesystem"
@@ -302,7 +302,7 @@
           fstab_freq: 0
           fstab_passno: 2
       - &iot_base_partition_table_part_boot
-        size: 1_073_741_824  # 1 * datasizes.GibiByte,
+        size: "1 GiB"
         type: *filesystem_data_guid
         uuid: *data_partition_uuid
         payload_type: "filesystem"
@@ -314,7 +314,7 @@
           fstab_freq: 1
           fstab_passno: 2
       - &iot_base_partition_table_part_root
-        size: 2_693_791_744  # 2569 * datasizes.MebiByte,
+        size: "2569 MiB"
         type: *filesystem_data_guid
         uuid: *root_partition_uuid
         payload_type: "filesystem"
@@ -371,11 +371,11 @@
         uuid: "0x14fc63d2"
         type: "dos"
         partitions:
-          - size: 4_194_304  # 4 MiB
+          - size: "4 MiB"
             bootable: true
             type: *prep_partition_dosid
           - &default_partition_table_part_boot_ppc64le
-            size: 1_073_741_824  # 1 * datasizes.GibiByte,
+            size: "1 GiB"
             payload_type: "filesystem"
             payload:
               type: "ext4"
@@ -385,7 +385,7 @@
               fstab_freq: 0
               fstab_passno: 0
           - &default_partition_table_part_root_ppc64le
-            size: 2_147_483_648  # 2 * datasizes.GibiByte,
+            size: "2 GiB"
             payload_type: "filesystem"
             payload:
               type: "ext4"
@@ -406,7 +406,7 @@
       x86_64:
         uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
         type: "gpt"
-        start_offset: 8_388_608  # 8 * datasizes.MebiByte
+        start_offset: "8 MiB"
         partitions:
           - *default_partition_table_part_efi
           - &minimal_raw_partition_table_part_boot
@@ -417,7 +417,7 @@
       aarch64: &minimal_raw_partition_table_aarch64
         uuid: "0xc1748067"
         type: "dos"
-        start_offset: 8_388_608  # 8 * datasizes.MebiByte
+        start_offset: "8 MiB"
         partitions:
           - <<: *default_partition_table_part_efi
             bootable: true
@@ -435,7 +435,7 @@
       x86_64: &iot_base_partition_table_x86_64
         uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
         type: "gpt"
-        start_offset: 8_388_608  # 8 * datasizes.MebiByte
+        start_offset: "8 MiB"
         partitions:
           - *iot_base_partition_table_part_efi
           - *iot_base_partition_table_part_boot
@@ -443,7 +443,7 @@
       aarch64: &iot_base_partition_table_aarch64
         uuid: "0xc1748067"
         type: "dos"
-        start_offset: 8_388_608  # 8 * datasizes.MebiByte
+        start_offset: "8 MiB"
         partitions:
           - *iot_base_partition_table_part_efi_aarch64
           - *iot_base_partition_table_part_boot_aarch64
@@ -455,7 +455,7 @@
         type: "gpt"
         partitions:
           - *iot_base_partition_table_part_efi
-          - size: 1_073_741_824  # 1 * datasizes.GibiByte,
+          - size: "1 GiB"
             type: *xboot_ldr_partition_guid
             uuid: *data_partition_uuid
             payload_type: "filesystem"
@@ -486,7 +486,7 @@
                 name: "rootvg"
                 description: "built with lvm2 and osbuild"
                 logical_volumes:
-                  - size: 8_589_934_592  # 8 * datasizes.GibiByte,
+                  - size: "8 GiB"
                     name: "rootlv"
                     payload_type: "filesystem"
                     payload:
