@@ -2,6 +2,8 @@ package osbuild
 
 import (
 	"fmt"
+
+	"github.com/osbuild/images/internal/types"
 )
 
 const SourceNameSkopeoIndex = "org.osbuild.skopeo-index"
@@ -13,8 +15,8 @@ type SkopeoIndexSource struct {
 func (SkopeoIndexSource) isSource() {}
 
 type SkopeoIndexSourceImage struct {
-	Name      string `json:"name"`
-	TLSVerify *bool  `json:"tls-verify,omitempty"`
+	Name      string             `json:"name"`
+	TLSVerify types.Option[bool] `json:"tls-verify,omitempty"`
 }
 
 type SkopeoIndexSourceItem struct {
@@ -39,7 +41,7 @@ func NewSkopeoIndexSource() *SkopeoIndexSource {
 
 // AddItem adds a source item to the source; will panic
 // if any of the supplied options are invalid or missing
-func (source *SkopeoIndexSource) AddItem(name, image string, tlsVerify *bool) {
+func (source *SkopeoIndexSource) AddItem(name, image string, tlsVerify types.Option[bool]) {
 	item := SkopeoIndexSourceItem{
 		Image: SkopeoIndexSourceImage{
 			Name:      name,

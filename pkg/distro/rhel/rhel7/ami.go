@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/datasizes"
@@ -67,7 +68,7 @@ func ec2ImageConfig() *distro.ImageConfig {
 	}
 
 	return &distro.ImageConfig{
-		Timezone: common.ToPtr("UTC"),
+		Timezone: types.Some("UTC"),
 		TimeSynchronization: &osbuild.ChronyStageOptions{
 			Servers: []osbuild.ChronyConfigServer{
 				{

@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/shell"
 	"github.com/osbuild/images/pkg/customizations/subscription"
@@ -15,8 +16,8 @@ import (
 
 // ImageConfig represents a (default) configuration applied to the image payload.
 type ImageConfig struct {
-	Hostname            *string                     `yaml:"hostname,omitempty"`
-	Timezone            *string                     `yaml:"timezone,omitempty"`
+	Hostname            *string `yaml:"hostname,omitempty"`
+	Timezone            types.Option[string]
 	TimeSynchronization *osbuild.ChronyStageOptions `yaml:"time_synchronization,omitempty"`
 	Locale              *string                     `yaml:"locale,omitempty"`
 	Keyboard            *osbuild.KeymapStageOptions

@@ -2,6 +2,7 @@ package rhel8
 
 import (
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/customizations/shell"
 	"github.com/osbuild/images/pkg/customizations/subscription"
@@ -352,7 +353,7 @@ func azureRhuiBasePartitionTables(t *rhel.ImageType) (disk.PartitionTable, bool)
 
 // based on https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/deploying_rhel_8_on_microsoft_azure/assembly_deploying-a-rhel-image-as-a-virtual-machine-on-microsoft-azure_cloud-content-azure#making-configuration-changes_configure-the-image-azure
 var defaultAzureImageConfig = &distro.ImageConfig{
-	Timezone: common.ToPtr("Etc/UTC"),
+	Timezone: types.Some("Etc/UTC"),
 	Locale:   common.ToPtr("en_US.UTF-8"),
 	Keyboard: &osbuild.KeymapStageOptions{
 		Keymap: "us",

@@ -10,6 +10,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/testdisk"
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/users"
@@ -60,7 +61,7 @@ func TestRawBootcImageSerialize(t *testing.T) {
 
 	rawBootcPipeline := manifest.NewRawBootcImage(build, containers, pf)
 	rawBootcPipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi")
-	rawBootcPipeline.Users = []users.User{{Name: "root", Key: common.ToPtr("some-ssh-key")}}
+	rawBootcPipeline.Users = []users.User{{Name: "root", Key: types.Some("some-ssh-key")}}
 	rawBootcPipeline.KernelOptionsAppend = []string{"karg1", "karg2"}
 
 	rawBootcPipeline.SerializeStart(manifest.Inputs{Containers: []container.Spec{{Source: "foo"}}})

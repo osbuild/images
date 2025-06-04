@@ -10,6 +10,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/testdisk"
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/bootc"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
@@ -351,7 +352,7 @@ func TestLanguageDoesNotIncludeLocaleStage(t *testing.T) {
 func TestTimezoneIncludesTimezoneStage(t *testing.T) {
 	os := manifest.NewTestOS()
 
-	os.OSCustomizations.Timezone = "Etc/UTC"
+	os.OSCustomizations.Timezone = types.Some("Etc/UTC")
 
 	pipeline := os.Serialize()
 	st := manifest.FindStage("org.osbuild.timezone", pipeline.Stages)

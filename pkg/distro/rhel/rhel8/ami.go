@@ -2,6 +2,7 @@ package rhel8
 
 import (
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/customizations/subscription"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/distro"
@@ -154,7 +155,7 @@ func mkEc2SapImgTypeX86_64(rd *rhel.Distribution) *rhel.ImageType {
 // default EC2 images config (common for all architectures)
 func baseEc2ImageConfig() *distro.ImageConfig {
 	return &distro.ImageConfig{
-		Timezone: common.ToPtr("UTC"),
+		Timezone: types.Some("UTC"),
 		TimeSynchronization: &osbuild.ChronyStageOptions{
 			Servers: []osbuild.ChronyConfigServer{
 				{

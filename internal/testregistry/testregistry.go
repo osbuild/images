@@ -18,6 +18,7 @@ import (
 	"github.com/containers/image/v5/manifest"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/container"
 )
@@ -386,7 +387,7 @@ func (reg *Registry) Resolve(target string, imgArch arch.Arch) (container.Spec, 
 		Digest:     checksum,
 		ImageID:    mf.ConfigDescriptor.Digest.String(),
 		LocalName:  target,
-		TLSVerify:  common.ToPtr(false),
+		TLSVerify:  types.Some(false),
 		ListDigest: listDigest,
 		Arch:       imgArch,
 	}, nil

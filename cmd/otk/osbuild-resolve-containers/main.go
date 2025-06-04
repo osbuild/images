@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/osbuild/images/internal/types"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 )
@@ -53,7 +54,7 @@ type ContainerInfo struct {
 	// The architecture of the image
 	Arch string `json:"arch"`
 
-	TLSVerify *bool `json:"tls-verify,omitempty"`
+	TLSVerify types.Option[bool] `json:"tls-verify,omitempty"`
 }
 
 func run(r io.Reader, w io.Writer) error {
