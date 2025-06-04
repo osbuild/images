@@ -168,6 +168,7 @@
       - "org.fedoraproject.Anaconda.Modules.Users"
     additional_dracut_modules:
       - "net-lib"
+      - "dbus-broker"
     squashfs_rootfs: true
     conditions:
       "f41 uses ifcfg in dract but already a squashfs rootfs":
@@ -177,6 +178,7 @@
           additional_anaconda_modules: *install_config_additional_anaconda_modules
           additional_dracut_modules:
             - "ifcfg"
+            - "dbus-broker"
           squashfs_rootfs: true
       "f40 and lower uses ifcfg in dracut and no squashfs rootfs":
         when:
@@ -185,6 +187,7 @@
           additional_anaconda_modules: *install_config_additional_anaconda_modules
           additional_dracut_modules:
             - "ifcfg"
+            - "dbus-broker"
           squashfs_rootfs: false
 
   image_config:
@@ -1478,6 +1481,7 @@ image_types:
     boot_iso: true
     image_func: "iot_installer"
     iso_label: "IoT"
+    variant: "IoT"
     ostree:
       name: "fedora-iot"
       remote: "fedora-iot"
@@ -1818,6 +1822,7 @@ image_types:
     default_size: 10_737_418_240  # 10 * datasizes.GibiByte
     image_func: "iot_simplified_installer"
     iso_label: "IoT"
+    variant: "IoT"
     ostree:
       name: "fedora"
       remote: "fedora-iot"
