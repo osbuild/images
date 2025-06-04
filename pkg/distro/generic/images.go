@@ -333,7 +333,7 @@ func ostreeDeploymentCustomizations(
 	deploymentConf := manifest.OSTreeDeploymentCustomizations{}
 
 	var kernelOptions []string
-	if len(t.defaultImageConfig.KernelOptions) > 0 {
+	if t.defaultImageConfig != nil && len(t.defaultImageConfig.KernelOptions) > 0 {
 		kernelOptions = append(kernelOptions, t.defaultImageConfig.KernelOptions...)
 	}
 	if bpKernel := c.GetKernel(); bpKernel != nil && bpKernel.Append != "" {
@@ -815,11 +815,8 @@ func iotInstallerImage(workload workload.Workload,
 		}
 	}
 
-	// On Fedora anaconda needs dbus-broker, but isn't added when dracut runs.
-	img.AdditionalDracutModules = append(img.AdditionalDracutModules, "dbus-broker")
-
 	img.Product = d.Product()
-	img.Variant = "IoT"
+	img.Variant = t.ImageTypeYAML.Variant
 	img.OSVersion = d.OsVersion()
 	img.Release = fmt.Sprintf("%s %s", d.Product(), d.OsVersion())
 	img.Preview = d.DistroYAML.Preview
@@ -953,11 +950,9 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
 	}
 
-	img.AdditionalDracutModules = append(img.AdditionalDracutModules, "dbus-broker")
-
 	d := t.arch.distro
 	img.Product = d.Product()
-	img.Variant = "IoT"
+	img.Variant = t.ImageTypeYAML.Variant
 	img.OSName = t.OSTree.Name
 	img.OSVersion = d.OsVersion()
 
