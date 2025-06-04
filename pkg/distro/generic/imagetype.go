@@ -303,7 +303,13 @@ func (t *imageType) Manifest(bp *blueprint.Blueprint,
 		return nil, nil, err
 	}
 	mf := manifest.New()
-	mf.Distro = manifest.DISTRO_FEDORA
+	// TODO: remove the need for this entirely, the manifest has a
+	// bunch of code that checks the distro currently, ideally all
+	// would just be encoded in the YAML
+	mf.Distro = t.arch.distro.DistroYAML.DistroLike
+	if mf.Distro == manifest.DISTRO_NULL {
+		return nil, nil, fmt.Errorf("no distro_like set in yaml for %q", t.arch.distro.Name())
+	}
 	if options.UseBootstrapContainer {
 		mf.DistroBootstrapRef = bootstrapContainerFor(t)
 	}
