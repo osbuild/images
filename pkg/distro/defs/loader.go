@@ -2,6 +2,7 @@
 package defs
 
 import (
+	"bytes"
 	"embed"
 	"errors"
 	"fmt"
@@ -11,19 +12,26 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"text/template"
 
+	"github.com/gobwas/glob"
 	"github.com/hashicorp/go-version"
 	"golang.org/x/exp/maps"
 	"gopkg.in/yaml.v3"
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/environment"
+	"github.com/osbuild/images/pkg/arch"
+	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/experimentalflags"
+	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/olog"
+	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
+	"github.com/osbuild/images/pkg/runner"
 )
 
 var (
@@ -32,15 +40,207 @@ var (
 	ErrNoPartitionTableForArch    = errors.New("no partition table for arch")
 )
 
-//go:embed */*.yaml
+//go:embed *.yaml */*.yaml
 var data embed.FS
 
-var DataFS fs.FS = data
+var defaultDataFS fs.FS = data
 
-type toplevelYAML struct {
-	ImageConfig distroImageConfig    `yaml:"image_config,omitempty"`
-	ImageTypes  map[string]imageType `yaml:"image_types"`
-	Common      map[string]any       `yaml:".common,omitempty"`
+// distrosYAML defines all supported YAML based distributions
+type distrosYAML struct {
+	Distros []DistroYAML
+}
+
+func dataFS() fs.FS {
+	// XXX: this is a short term measure, pass a set of
+	// searchPaths down the stack instead
+	var dataFS fs.FS = defaultDataFS
+	if overrideDir := experimentalflags.String("yamldir"); overrideDir != "" {
+		olog.Printf("WARNING: using experimental override dir %q", overrideDir)
+		dataFS = os.DirFS(overrideDir)
+	}
+	return dataFS
+}
+
+type DistroYAML struct {
+	// Match can be used to match multiple versions via a
+	// fnmatch/glob style expression. We could also use a
+	// regex and do something like:
+	//   rhel-(?P<major>[0-9]+)\.(?P<minor>[0-9]+)
+	// if we need to be more precise in the future, but for
+	// now every match will be split into "$distroname-$major.$minor"
+	// (with minor being optional)
+	Match string `yaml:"match"`
+
+	// The distro metadata, can contain go text template strings
+	// for {{.Major}}, {{.Minor}} which will be expanded by the
+	// upper layers.
+	Name             string            `yaml:"name"`
+	Codename         string            `yaml:"codename"`
+	Vendor           string            `yaml:"vendor"`
+	Preview          bool              `yaml:"preview"`
+	OsVersion        string            `yaml:"os_version"`
+	ReleaseVersion   string            `yaml:"release_version"`
+	ModulePlatformID string            `yaml:"module_platform_id"`
+	Product          string            `yaml:"product"`
+	OSTreeRefTmpl    string            `yaml:"ostree_ref_tmpl"`
+	Runner           runner.RunnerConf `yaml:"runner"`
+
+	// ISOLabelTmpl can contain {{.Product}},{{.OsVersion}},{{.Arch}},{{.ImgTypeLabel}}
+	ISOLabelTmpl string `yaml:"iso_label_tmpl"`
+
+	DefaultFSType disk.FSType `yaml:"default_fs_type"`
+
+	// directory with the actual image defintions, we separate that
+	// so that we can point the "centos-10" distro to the "./rhel-10"
+	// image types file/directory.
+	DefsPath string `yaml:"defs_path"`
+
+	BootstrapContainers map[arch.Arch]string `yaml:"bootstrap_containers"`
+
+	OscapProfilesAllowList []oscap.Profile `yaml:"oscap_profiles_allowlist"`
+
+	// XXX: remove this in favor of a better abstraction, this
+	// is currently needed because the manifest pkg has conditionals
+	// based on the distro, ideally it would not have this but
+	// here we are.
+	DistroLike manifest.Distro `yaml:"distro_like"`
+
+	// ignore the given image types
+	IgnoreImageTypes []string `yaml:"ignore_image_types"`
+
+	imageTypes        map[string]ImageTypeYAML
+	distroImageConfig *distro.ImageConfig `yaml:"default"`
+}
+
+func (d *DistroYAML) ImageTypes() map[string]ImageTypeYAML {
+	return d.imageTypes
+}
+
+// DistroImageConfig returns the distro wide ImageConfig.
+//
+// Each ImageType gets this as their default ImageConfig.
+func (d *DistroYAML) DistroImageConfig() *distro.ImageConfig {
+	return d.distroImageConfig
+}
+
+func (d *DistroYAML) runTemplates(nameVer string) error {
+	id, err := distro.ParseID(nameVer)
+	if err != nil {
+		return err
+	}
+
+	var errs []error
+	subs := func(inp string) string {
+		var buf bytes.Buffer
+		templ, err := template.New("").Parse(inp)
+		if err != nil {
+			errs = append(errs, err)
+			return inp
+		}
+		if err := templ.Execute(&buf, id); err != nil {
+			errs = append(errs, err)
+			return inp
+		}
+		return buf.String()
+	}
+	d.Name = subs(d.Name)
+	d.OsVersion = subs(d.OsVersion)
+	d.ReleaseVersion = subs(d.ReleaseVersion)
+	d.OSTreeRefTmpl = subs(d.OSTreeRefTmpl)
+	d.ModulePlatformID = subs(d.ModulePlatformID)
+	d.Runner.Name = subs(d.Runner.Name)
+	for a := range d.BootstrapContainers {
+		d.BootstrapContainers[a] = subs(d.BootstrapContainers[a])
+	}
+
+	return errors.Join(errs...)
+}
+
+// NewDistroYAML return the given distro or nil if the distro is not
+// found. This mimics the "distrofactory.GetDistro() interface.
+//
+// Note that eventually we want something like "Distros()" instead
+// that returns all known distros but for now we keep compatibility
+// with the way distrofactory/reporegistry work which is by defining
+// distros via repository files.
+func NewDistroYAML(nameVer string) (*DistroYAML, error) {
+	f, err := dataFS().Open("distros.yaml")
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	decoder := yaml.NewDecoder(f)
+	decoder.KnownFields(true)
+
+	var distros distrosYAML
+	if err := decoder.Decode(&distros); err != nil {
+		return nil, err
+	}
+
+	var foundDistro *DistroYAML
+	for _, distro := range distros.Distros {
+		if distro.Name == nameVer {
+			foundDistro = &distro
+			break
+		}
+
+		pat, err := glob.Compile(distro.Match)
+		if err != nil {
+			return nil, err
+		}
+		if pat.Match(nameVer) {
+			if err := distro.runTemplates(nameVer); err != nil {
+				return nil, err
+			}
+
+			foundDistro = &distro
+			break
+		}
+	}
+	if foundDistro == nil {
+		return nil, nil
+	}
+
+	// load imageTypes
+	f, err = dataFS().Open(filepath.Join(foundDistro.DefsPath, "distro.yaml"))
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	var toplevel imageTypesYAML
+	decoder = yaml.NewDecoder(f)
+	decoder.KnownFields(true)
+	if err := decoder.Decode(&toplevel); err != nil {
+		return nil, err
+	}
+	if len(toplevel.ImageTypes) > 0 {
+		foundDistro.imageTypes = make(map[string]ImageTypeYAML, len(toplevel.ImageTypes))
+		for name := range toplevel.ImageTypes {
+			if slices.Contains(foundDistro.IgnoreImageTypes, name) {
+				continue
+			}
+			v := toplevel.ImageTypes[name]
+			v.name = name
+			foundDistro.imageTypes[name] = v
+			for idx := range v.Platforms {
+				// XXX: use template engine
+				v.Platforms[idx].UEFIVendor = strings.Replace(v.Platforms[idx].UEFIVendor, "{{.Distro.Vendor}}", foundDistro.Vendor, -1)
+			}
+		}
+	}
+	foundDistro.distroImageConfig = toplevel.ImageConfig.For(nameVer)
+	return foundDistro, nil
+}
+
+// imageTypesYAML describes the image types for a given distribution
+// family. Note that multiple distros may use the same image types,
+// e.g. centos/rhel
+type imageTypesYAML struct {
+	ImageConfig distroImageConfig        `yaml:"image_config,omitempty"`
+	ImageTypes  map[string]ImageTypeYAML `yaml:"image_types"`
+	Common      map[string]any           `yaml:".common,omitempty"`
 }
 
 type distroImageConfig struct {
@@ -48,16 +248,22 @@ type distroImageConfig struct {
 	Condition *distroImageConfigConditions `yaml:"condition,omitempty"`
 }
 
+func (di *distroImageConfig) For(nameVer string) *distro.ImageConfig {
+	cond := di.Condition
+	if cond != nil {
+		id := common.Must(distro.ParseID(nameVer))
+		if distroNameCnf, ok := cond.DistroName[id.Name]; ok {
+			return distroNameCnf.InheritFrom(di.Default)
+		}
+	}
+	return di.Default
+}
+
 type distroImageConfigConditions struct {
 	DistroName map[string]*distro.ImageConfig `yaml:"distro_name,omitempty"`
 }
 
-// XXX: this should eventually implement the "distro.ImageType"
-// interface, then we don't need to convert into a fedora/rhel
-// imagetype anymore (those will go away in subsequent refactors)
-type ImageTypeYAML = imageType
-
-type imageType struct {
+type ImageTypeYAML struct {
 	// This maps "pkgsKey" to their package sets. The
 	// map key here is a string that can either be:
 	// - "os": packages for the os
@@ -68,14 +274,14 @@ type imageType struct {
 	// - "build": unused AFAICT
 	// Note that this does not directly maps to pipeline names
 	// but we should look into making it so.
-	PackageSets map[string][]packageSet `yaml:"package_sets"`
+	PackageSetsYAML map[string][]packageSet `yaml:"package_sets"`
 	// archStr->partitionTable
 	PartitionTables map[string]*disk.PartitionTable `yaml:"partition_table"`
 	// override specific aspects of the partition table
 	PartitionTablesOverrides *partitionTablesOverrides `yaml:"partition_tables_override"`
 
-	ImageConfig     imageConfig     `yaml:"image_config,omitempty"`
-	InstallerConfig installerConfig `yaml:"installer_config,omitempty"`
+	ImageConfigYAML     imageConfig     `yaml:"image_config,omitempty"`
+	InstallerConfigYAML installerConfig `yaml:"installer_config,omitempty"`
 
 	Filename    string                      `yaml:"filename"`
 	MimeType    string                      `yaml:"mime_type"`
@@ -83,9 +289,22 @@ type imageType struct {
 	Environment environment.EnvironmentConf `yaml:"environment"`
 	Bootable    bool                        `yaml:"bootable"`
 
-	BootISO   bool   `yaml:"boot_iso"`
-	ISOLabel  string `yaml:"iso_label"`
-	RPMOSTree bool   `yaml:"rpm_ostree"`
+	BootISO  bool   `yaml:"boot_iso"`
+	ISOLabel string `yaml:"iso_label"`
+	// XXX: or iso_variant?
+	Variant string `yaml:"variant"`
+
+	// XXX: this is really here only for compatibility/because of drift in the "imageInstallerImage"
+	// between fedora/rhel
+	KickstartUnattendedExtraKernelOpts []string `yaml:"kickstart_unattended_extra_kernel_opts"`
+	ISORootKickstart                   bool     `yaml:"iso_root_kickstart"`
+
+	RPMOSTree bool `yaml:"rpm_ostree"`
+
+	OSTree struct {
+		Name   string `yaml:"name"`
+		Remote string `yaml:"remote"`
+	} `yaml:"ostree"`
 
 	DefaultSize uint64 `yaml:"default_size"`
 	// the image func name: disk,container,live-installer,...
@@ -99,11 +318,16 @@ type imageType struct {
 
 	NameAliases []string `yaml:"name_aliases"`
 
+	// for RHEL7 compat
+	// TODO: determine a better place for these options, but for now they are here
+	DiskImagePartTool     *osbuild.PartTool `yaml:"disk_image_part_tool"`
+	DiskImageVPCForceSize *bool             `yaml:"disk_image_vpc_force_size"`
+
 	// name is set by the loader
 	name string
 }
 
-func (it *imageType) Name() string {
+func (it *ImageTypeYAML) Name() string {
 	return it.name
 }
 
@@ -183,55 +407,16 @@ func versionLessThanSortedKeys[T any](m map[string]T) []string {
 	return versions
 }
 
-// DistroImageConfig returns the distro wide ImageConfig.
-//
-// Each ImageType gets this as their default ImageConfig.
-func DistroImageConfig(distroNameVer string) (*distro.ImageConfig, error) {
-	toplevel, err := load(distroNameVer)
-	if err != nil {
-		return nil, err
-	}
-	imgConfig := toplevel.ImageConfig.Default
-
-	cond := toplevel.ImageConfig.Condition
-	if cond != nil {
-		distroName, _ := splitDistroNameVer(distroNameVer)
-		// XXX: we shoudl probably use a similar pattern like
-		// for the partition table overrides (via
-		// findElementIndexByJSONTag) but this if fine for now
-		if distroNameCnf, ok := cond.DistroName[distroName]; ok {
-			imgConfig = distroNameCnf.InheritFrom(imgConfig)
-		}
-	}
-
-	return imgConfig, nil
-}
-
 // PackageSets loads the PackageSets from the yaml source file
 // discovered via the imagetype.
-func PackageSets(it distro.ImageType, replacements map[string]string) (map[string]rpmmd.PackageSet, error) {
-	typeName := it.Name()
-
-	arch := it.Arch()
-	archName := arch.Name()
-	distribution := arch.Distro()
-	distroNameVer := distribution.Name()
-	distroName, distroVersion := splitDistroNameVer(distroNameVer)
-
-	// each imagetype can have multiple package sets, so that we can
-	// use yaml aliases/anchors to de-duplicate them
-	toplevel, err := load(distroNameVer)
+func (imgType *ImageTypeYAML) PackageSets(distroNameVer, archName string) (map[string]rpmmd.PackageSet, error) {
+	id, err := distro.ParseID(distroNameVer)
 	if err != nil {
 		return nil, err
-	}
-
-	imgType, ok := toplevel.ImageTypes[typeName]
-	if !ok {
-		return nil, fmt.Errorf("%w: %q", ErrImageTypeNotFound, typeName)
 	}
 
 	res := make(map[string]rpmmd.PackageSet)
-	for key, pkgSets := range imgType.PackageSets {
+	for key, pkgSets := range imgType.PackageSetsYAML {
 		var rpmmdPkgSet rpmmd.PackageSet
 		for _, pkgSet := range pkgSets {
 			rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
@@ -247,7 +432,7 @@ func PackageSets(it distro.ImageType, replacements map[string]string) (map[strin
 						Exclude: archSet.Exclude,
 					})
 				}
-				if distroNameSet, ok := pkgSet.Condition.DistroName[distroName]; ok {
+				if distroNameSet, ok := pkgSet.Condition.DistroName[id.Name]; ok {
 					rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
 						Include: distroNameSet.Include,
 						Exclude: distroNameSet.Exclude,
@@ -257,10 +442,7 @@ func PackageSets(it distro.ImageType, replacements map[string]string) (map[strin
 				// packageSets are strictly additive the order
 				// is irrelevant
 				for ltVer, ltSet := range pkgSet.Condition.VersionLessThan {
-					if r, ok := replacements[ltVer]; ok {
-						ltVer = r
-					}
-					if common.VersionLessThan(distroVersion, ltVer) {
+					if common.VersionLessThan(id.VersionString(), ltVer) {
 						rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
 							Include: ltSet.Include,
 							Exclude: ltSet.Exclude,
@@ -269,10 +451,7 @@ func PackageSets(it distro.ImageType, replacements map[string]string) (map[strin
 				}
 
 				for gteqVer, gteqSet := range pkgSet.Condition.VersionGreaterOrEqual {
-					if r, ok := replacements[gteqVer]; ok {
-						gteqVer = r
-					}
-					if common.VersionGreaterThanOrEqual(distroVersion, gteqVer) {
+					if common.VersionGreaterThanOrEqual(id.VersionString(), gteqVer) {
 						rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
 							Include: gteqSet.Include,
 							Exclude: gteqSet.Exclude,
@@ -291,166 +470,72 @@ func PackageSets(it distro.ImageType, replacements map[string]string) (map[strin
 }
 
 // PartitionTable returns the partionTable for the given distro/imgType.
-func PartitionTable(it distro.ImageType, replacements map[string]string) (*disk.PartitionTable, error) {
-	distroNameVer := it.Arch().Distro().Name()
-
-	toplevel, err := load(distroNameVer)
-	if err != nil {
-		return nil, err
-	}
-
-	imgType, ok := toplevel.ImageTypes[it.Name()]
-	if !ok {
-		return nil, fmt.Errorf("%w: %q", ErrImageTypeNotFound, it.Name())
-	}
+func (imgType *ImageTypeYAML) PartitionTable(distroNameVer, archName string) (*disk.PartitionTable, error) {
 	if imgType.PartitionTables == nil {
-		return nil, fmt.Errorf("%w: %q", ErrNoPartitionTableForImgType, it.Name())
+		return nil, fmt.Errorf("%w: %q", ErrNoPartitionTableForImgType, distroNameVer)
 	}
-	arch := it.Arch()
-	archName := arch.Name()
+	pt, ok := imgType.PartitionTables[archName]
+	if !ok {
+		return nil, fmt.Errorf("%w (%q): %q", ErrNoPartitionTableForArch, distroNameVer, archName)
+	}
 
 	if imgType.PartitionTablesOverrides != nil {
 		cond := imgType.PartitionTablesOverrides.Condition
-		distroName, distroVersion := splitDistroNameVer(it.Arch().Distro().Name())
+		id, err := distro.ParseID(distroNameVer)
+		if err != nil {
+			return nil, err
+		}
 
 		for _, ltVer := range versionLessThanSortedKeys(cond.VersionLessThan) {
 			ltOverrides := cond.VersionLessThan[ltVer]
-			if r, ok := replacements[ltVer]; ok {
-				ltVer = r
-			}
-			if common.VersionLessThan(distroVersion, ltVer) {
-				for arch, overridePt := range ltOverrides {
-					imgType.PartitionTables[arch] = overridePt
+			if common.VersionLessThan(id.VersionString(), ltVer) {
+				if newPt, ok := ltOverrides[archName]; ok {
+					pt = newPt
 				}
 			}
 		}
 
 		for _, gteqVer := range backward(versionLessThanSortedKeys(cond.VersionGreaterOrEqual)) {
 			geOverrides := cond.VersionGreaterOrEqual[gteqVer]
-			if r, ok := replacements[gteqVer]; ok {
-				gteqVer = r
-			}
-			if common.VersionGreaterThanOrEqual(distroVersion, gteqVer) {
-				for arch, overridePt := range geOverrides {
-					imgType.PartitionTables[arch] = overridePt
+			if common.VersionGreaterThanOrEqual(id.VersionString(), gteqVer) {
+				if newPt, ok := geOverrides[archName]; ok {
+					pt = newPt
 				}
 			}
 		}
 
-		if distroNameOverrides, ok := cond.DistroName[distroName]; ok {
-			for arch, overridePt := range distroNameOverrides {
-				imgType.PartitionTables[arch] = overridePt
+		if distroNameOverrides, ok := cond.DistroName[id.Name]; ok {
+			if newPt, ok := distroNameOverrides[archName]; ok {
+				pt = newPt
 			}
 		}
-	}
-
-	pt, ok := imgType.PartitionTables[archName]
-	if !ok {
-		return nil, fmt.Errorf("%w (%q): %q", ErrNoPartitionTableForArch, it.Name(), archName)
 	}
 
 	return pt, nil
 }
 
-func splitDistroNameVer(distroNameVer string) (string, string) {
-	// we need to split from the right for "centos-stream-10" like
-	// distro names, sadly go has no rsplit() so we do it manually
-	// XXX: we cannot use distroidparser here because of import cycles
-	idx := strings.LastIndex(distroNameVer, "-")
-	return distroNameVer[:idx], distroNameVer[idx+1:]
-}
-
-func load(distroNameVer string) (*toplevelYAML, error) {
-	// we need to split from the right for "centos-stream-10" like
-	// distro names, sadly go has no rsplit() so we do it manually
-	// XXX: we cannot use distroidparser here because of import cycles
-	distroName, distroVersion := splitDistroNameVer(distroNameVer)
-	distroNameMajorVer := strings.SplitN(distroNameVer, ".", 2)[0]
-	distroMajorVer := strings.SplitN(distroVersion, ".", 2)[0]
-
-	// XXX: this is a short term measure, pass a set of
-	// searchPaths down the stack instead
-	var dataFS fs.FS = DataFS
-	if overrideDir := experimentalflags.String("yamldir"); overrideDir != "" {
-		olog.Printf("WARNING: using experimental override dir %q", overrideDir)
-		dataFS = os.DirFS(overrideDir)
-	}
-
-	// XXX: this is only needed temporary until we have a "distros.yaml"
-	// that describes some high-level properties of each distro
-	// (like their yaml dirs)
-	var baseDir string
-	switch distroName {
-	case "rhel":
-		// rhel yaml files are under ./rhel-$majorVer
-		baseDir = distroNameMajorVer
-	case "almalinux":
-		// almalinux yaml is just rhel, we take only its major version
-		baseDir = fmt.Sprintf("rhel-%s", distroMajorVer)
-	case "centos", "almalinux_kitten":
-		// centos and kitten yaml is just rhel but we have (sadly) no
-		// symlinks in "go:embed" so we have to have this slightly ugly
-		// workaround
-		baseDir = fmt.Sprintf("rhel-%s", distroVersion)
-	case "fedora", "test-distro":
-		// our other distros just have a single yaml dir per distro
-		// and use condition.version_gt etc
-		baseDir = distroName
-	default:
-		return nil, fmt.Errorf("unsupported distro in loader %q (add to loader.go)", distroName)
-	}
-
-	f, err := dataFS.Open(filepath.Join(baseDir, "distro.yaml"))
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	decoder := yaml.NewDecoder(f)
-	decoder.KnownFields(true)
-
-	// each imagetype can have multiple package sets, so that we can
-	// use yaml aliases/anchors to de-duplicate them
-	var toplevel toplevelYAML
-	if err := decoder.Decode(&toplevel); err != nil {
-		return nil, err
-	}
-
-	return &toplevel, nil
-}
-
 // ImageConfig returns the image type specific ImageConfig
-func ImageConfig(distroNameVer, archName, typeName string, replacements map[string]string) (*distro.ImageConfig, error) {
-	toplevel, err := load(distroNameVer)
-	if err != nil {
-		return nil, err
-	}
-	imgType, ok := toplevel.ImageTypes[typeName]
-	if !ok {
-		return nil, fmt.Errorf("%w: %q", ErrImageTypeNotFound, typeName)
-	}
-	imgConfig := imgType.ImageConfig.ImageConfig
-	cond := imgType.ImageConfig.Condition
+func (imgType *ImageTypeYAML) ImageConfig(distroNameVer, archName string) *distro.ImageConfig {
+	imgConfig := imgType.ImageConfigYAML.ImageConfig
+	cond := imgType.ImageConfigYAML.Condition
 	if cond != nil {
-		distroName, distroVersion := splitDistroNameVer(distroNameVer)
+		id := common.Must(distro.ParseID(distroNameVer))
 
-		if distroNameCnf, ok := cond.DistroName[distroName]; ok {
+		if distroNameCnf, ok := cond.DistroName[id.Name]; ok {
 			imgConfig = distroNameCnf.InheritFrom(imgConfig)
 		}
 		if archCnf, ok := cond.Architecture[archName]; ok {
 			imgConfig = archCnf.InheritFrom(imgConfig)
 		}
-		for ltVer, ltConf := range cond.VersionLessThan {
-			if r, ok := replacements[ltVer]; ok {
-				ltVer = r
-			}
-			if common.VersionLessThan(distroVersion, ltVer) {
-				imgConfig = ltConf.InheritFrom(imgConfig)
+		for _, ltVer := range versionLessThanSortedKeys(cond.VersionLessThan) {
+			ltOverrides := cond.VersionLessThan[ltVer]
+			if common.VersionLessThan(id.VersionString(), ltVer) {
+				imgConfig = ltOverrides.InheritFrom(imgConfig)
 			}
 		}
 	}
 
-	return imgConfig, nil
+	return imgConfig
 }
 
 // nNonEmpty returns the number of non-empty maps in the given
@@ -468,57 +553,32 @@ func nNonEmpty[K comparable, V any](maps ...map[K]V) int {
 // InstallerConfig returns the InstallerConfig for the given imgType
 // Note that on conditions the InstallerConfig is fully replaced, do
 // any merging in YAML
-func InstallerConfig(distroNameVer, archName, typeName string, replacements map[string]string) (*distro.InstallerConfig, error) {
-	toplevel, err := load(distroNameVer)
-	if err != nil {
-		return nil, err
-	}
-	imgType, ok := toplevel.ImageTypes[typeName]
-	if !ok {
-		return nil, fmt.Errorf("%w: %q", ErrImageTypeNotFound, typeName)
-	}
-	installerConfig := imgType.InstallerConfig.InstallerConfig
-	cond := imgType.InstallerConfig.Condition
+func (imgType *ImageTypeYAML) InstallerConfig(distroNameVer, archName string) (*distro.InstallerConfig, error) {
+	installerConfig := imgType.InstallerConfigYAML.InstallerConfig
+	cond := imgType.InstallerConfigYAML.Condition
 	if cond != nil {
 		if nNonEmpty(cond.DistroName, cond.Architecture, cond.VersionLessThan) > 1 {
-			return nil, fmt.Errorf("only a single conditional allowed in installer config for %v", typeName)
+			return nil, fmt.Errorf("only a single conditional allowed in installer config for %v", imgType.name)
 		}
 
-		distroName, distroVersion := splitDistroNameVer(distroNameVer)
+		id, err := distro.ParseID(distroNameVer)
+		if err != nil {
+			return nil, err
+		}
 
-		if distroNameCnf, ok := cond.DistroName[distroName]; ok {
+		if distroNameCnf, ok := cond.DistroName[id.Name]; ok {
 			installerConfig = distroNameCnf
 		}
 		if archCnf, ok := cond.Architecture[archName]; ok {
 			installerConfig = archCnf
 		}
-		for ltVer, ltConf := range cond.VersionLessThan {
-			if r, ok := replacements[ltVer]; ok {
-				ltVer = r
-			}
-			if common.VersionLessThan(distroVersion, ltVer) {
-				installerConfig = ltConf
+		for _, ltVer := range versionLessThanSortedKeys(cond.VersionLessThan) {
+			ltOverrides := cond.VersionLessThan[ltVer]
+			if common.VersionLessThan(id.VersionString(), ltVer) {
+				installerConfig = ltOverrides
 			}
 		}
 	}
 
 	return installerConfig, nil
-}
-
-func ImageTypes(distroNameVer string) (map[string]ImageTypeYAML, error) {
-	toplevel, err := load(distroNameVer)
-	if err != nil {
-		return nil, err
-	}
-
-	// We have a bunch of names like "server-ami" that are writen
-	// in the YAML as "server_ami" so we need to normalize
-	imgTypes := make(map[string]ImageTypeYAML, len(toplevel.ImageTypes))
-	for name := range toplevel.ImageTypes {
-		v := toplevel.ImageTypes[name]
-		v.name = name
-		imgTypes[name] = v
-	}
-
-	return imgTypes, nil
 }

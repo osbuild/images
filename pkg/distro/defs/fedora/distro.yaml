@@ -154,14 +154,23 @@
           - "grub2-efi-riscv64-modules"
           - "shim-unsigned-riscv64"
 
+
   installer_config: &default_installer_config
     additional_dracut_modules:
       - "net-lib"
+    squashfs_rootfs: true
     condition:
       version_less_than:
         "42":
+          # config is fully replaced
           additional_dracut_modules:
             - "ifcfg"
+          squashfs_rootfs: true
+        "41":
+          # config is fully replaced
+          additional_dracut_modules:
+            - "ifcfg"
+          squashfs_rootfs: false
 
   image_config:
     iot_enabled_services: &image_config_iot_enabled_services
@@ -517,6 +526,7 @@ image_types:
       users:
         # yamllint disable rule:line-length
         - name: "vagrant"
+          # yamllint disable rule:line-length
           key: |
             ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zQPyUecp4pzC6kivAIhyfHilFR61RGL+GPXQ2MWZWFYbAGjyiYJnAmCP3NOTd0jMZEnDkbUvxhMmBYSdETk1rRgm+R4LOzFUGaHqHDLKLX+FIPKcF96hrucXzcWyLbIbEgE98OHlnVYCzRdK8jlqm8tehUc9c9WhQ== vagrant insecure public key
             ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN1YdxBpNlzxDqfJyw/QKow1F+wvG9hXGoqiysfJOn5Y vagrant insecure public key
@@ -852,6 +862,9 @@ image_types:
     rpm_ostree: true
     bootable: true
     image_func: "iot"
+    ostree:
+      name: "fedora"
+      remote: "fedora-iot"
     build_pipelines: ["build"]
     payload_pipelines: ["ostree-deployment", "image", "xz"]
     exports: ["xz"]
@@ -926,6 +939,9 @@ image_types:
     rpm_ostree: true
     bootable: true
     image_func: "iot"
+    ostree:
+      name: "fedora"
+      remote: "fedora-iot"
     build_pipelines: ["build"]
     payload_pipelines: ["ostree-deployment", "image", "qcow2"]
     exports: ["qcow2"]
@@ -1369,6 +1385,9 @@ image_types:
     boot_iso: true
     image_func: "iot_installer"
     iso_label: "IoT"
+    ostree:
+      name: "fedora-iot"
+      remote: "fedora-iot"
     build_pipelines: ["build"]
     payload_pipelines:
       - "anaconda-tree"
@@ -1448,7 +1467,9 @@ image_types:
             - "sdubby"
           condition:
             version_greater_or_equal:
-              VERSION_RAWHIDE:
+              # XXX: this was VERSION_RAWHIDE, if we need this again lets add
+              # "alias" to defs.DistroYAML
+              43:
                 include:
                   - "anaconda-webui"
     platforms:
@@ -1465,6 +1486,15 @@ image_types:
     image_func: "image_installer"
     # We don't know the variant of the OS pipeline being installed
     iso_label: "Unknown"
+    # We don't know the variant that goes into the OS pipeline that gets installed
+    variant: "Unknown"
+    # NOTE: this is not supported right now because the
+    # image-installer on Fedora isn't working when unattended.
+    # These options are probably necessary but could change.
+    # Unattended/non-interactive installations are better set to text
+    # time since they might be running headless and a UI is
+    # unnecessary.
+    kickstart_unattended_extra_kernel_opts: ["inst.text", "inst.noninteractive"]
     build_pipelines: ["build"]
     payload_pipelines:
       - "anaconda-tree"
@@ -1474,6 +1504,22 @@ image_types:
       - "bootiso"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
+    installer_config:
+      additional_dracut_modules:
+        - "net-lib"
+        - "dbus-broker"
+      squashfs_rootfs: true
+      condition:
+        # on match the config is fully replaced
+        version_less_than:
+          "41":
+            additional_dracut_modules: &additional_dracut_f41
+              - "ifcfg"
+              - "dbus-broker"
+            squashfs_rootfs: false
+          "42":
+            additional_dracut_modules: *additional_dracut_f41
+            squashfs_rootfs: true
     image_config:
       locale: "en_US.UTF-8"
       iso_rootfs_type: "squashfs"
@@ -1646,6 +1692,9 @@ image_types:
     default_size: 10_737_418_240  # 10 * datasizes.GibiByte
     image_func: "iot_simplified_installer"
     iso_label: "IoT"
+    ostree:
+      name: "fedora"
+      remote: "fedora-iot"
     build_pipelines: ["build"]
     payload_pipelines:
       - "ostree-deployment"
@@ -1657,7 +1706,8 @@ image_types:
       - "bootiso"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
-    installer_config: *default_installer_config
+    installer_config:
+      <<: *default_installer_config
     image_config:
       <<: *image_config_iot
       ignition_platform: "metal"

@@ -1,22 +1,19 @@
-package rhel10
+package generic
 
 import (
-	"math/rand"
 	"testing"
 
-	"github.com/osbuild/images/pkg/blueprint"
-	"github.com/osbuild/images/pkg/distro/rhel"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/blueprint"
+	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distro/distro_test_common"
 )
 
-// math/rand is good enough in this case
-/* #nosec G404 */
-var rng = rand.New(rand.NewSource(0))
-
-func TestDistroFactory(t *testing.T) {
+func TestRH10DistroFactory(t *testing.T) {
 	type testCase struct {
 		strID    string
 		expected distro.Distro
@@ -29,7 +26,7 @@ func TestDistroFactory(t *testing.T) {
 		},
 		{
 			strID:    "rhel-10.0",
-			expected: newDistro("rhel", 10, 0),
+			expected: common.Must(newDistro("rhel-10.0")),
 		},
 		{
 			strID:    "rhel-103",
@@ -37,7 +34,7 @@ func TestDistroFactory(t *testing.T) {
 		},
 		{
 			strID:    "rhel-10.3",
-			expected: newDistro("rhel", 10, 3),
+			expected: common.Must(newDistro("rhel-10.3")),
 		},
 		{
 			strID:    "rhel-1010",
@@ -45,11 +42,11 @@ func TestDistroFactory(t *testing.T) {
 		},
 		{
 			strID:    "rhel-10.10",
-			expected: newDistro("rhel", 10, 10),
+			expected: common.Must(newDistro("rhel-10.10")),
 		},
 		{
 			strID:    "centos-10",
-			expected: newDistro("centos", 10, -1),
+			expected: common.Must(newDistro("centos-10")),
 		},
 
 		{
@@ -128,26 +125,6 @@ func TestDistroFactory(t *testing.T) {
 			strID:    "rhel-79",
 			expected: nil,
 		},
-		{
-			strID:    "rhel-7.9",
-			expected: nil,
-		},
-		{
-			strID:    "fedora-9",
-			expected: nil,
-		},
-		{
-			strID:    "fedora-38",
-			expected: nil,
-		},
-		{
-			strID:    "fedora-38.1",
-			expected: nil,
-		},
-		{
-			strID:    "fedora",
-			expected: nil,
-		},
 	}
 
 	for _, tc := range testCases {
@@ -172,8 +149,8 @@ func TestRhel10_NoBootPartition(t *testing.T) {
 			for _, imgTypeName := range arch.ListImageTypes() {
 				imgType, err := arch.GetImageType(imgTypeName)
 				assert.NoError(t, err)
-				it := imgType.(*rhel.ImageType)
-				if it.BasePartitionTables == nil {
+				it := imgType.(*imageType)
+				if it.ImageTypeYAML.PartitionTables == nil {
 					continue
 				}
 				if it.Name() == "azure-rhui" || it.Name() == "azure-sap-rhui" {
@@ -181,11 +158,23 @@ func TestRhel10_NoBootPartition(t *testing.T) {
 					// and we do not support /boot on LVM, so it must be on a separate partition.
 					continue
 				}
-				pt, err := it.GetPartitionTable(&blueprint.Customizations{}, distro.ImageOptions{}, rng)
+				pt, err := it.getPartitionTable(&blueprint.Customizations{}, distro.ImageOptions{}, rng)
 				assert.NoError(t, err)
 				_, err = pt.GetMountpointSize("/boot")
 				require.EqualError(t, err, "cannot find mountpoint /boot")
 			}
 		}
 	}
+}
+
+func TestESP(t *testing.T) {
+	var distros []distro.Distro
+	for _, distroName := range []string{"rhel-10.0", "centos-10"} {
+		distros = append(distros, common.Must(newDistro(distroName)))
+	}
+
+	distro_test_common.TestESP(t, distros, func(i distro.ImageType) (*disk.PartitionTable, error) {
+		it := i.(*imageType)
+		return it.getPartitionTable(&blueprint.Customizations{}, distro.ImageOptions{}, rng)
+	})
 }

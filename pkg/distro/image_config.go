@@ -38,7 +38,7 @@ type ImageConfig struct {
 
 	// Do not use. Forces auto-relabelling on first boot.
 	// See https://github.com/osbuild/osbuild/commit/52cb27631b587c1df177cd17625c5b473e1e85d2
-	SELinuxForceRelabel *bool
+	SELinuxForceRelabel *bool `yaml:"selinux_force_relabel,omitempty"`
 
 	// Disable documentation
 	ExcludeDocs *bool `yaml:"exclude_docs,omitempty"`
@@ -64,13 +64,13 @@ type ImageConfig struct {
 	DNFConfig           []*osbuild.DNFConfigStageOptions `yaml:"dnf_config,omitempty"`
 	DNFSetReleaseVerVar *bool                            `yaml:"dnf_set_release_ver_var,omitempty"`
 	SshdConfig          *osbuild.SshdConfigStageOptions  `yaml:"sshd_config"`
-	Authconfig          *osbuild.AuthconfigStageOptions
+	Authconfig          *osbuild.AuthconfigStageOptions  `yaml:"authconfig"`
 	PwQuality           *osbuild.PwqualityConfStageOptions
 	WAAgentConfig       *osbuild.WAAgentConfStageOptions        `yaml:"waagent_config,omitempty"`
 	Grub2Config         *osbuild.GRUB2Config                    `yaml:"grub2_config,omitempty"`
 	DNFAutomaticConfig  *osbuild.DNFAutomaticConfigStageOptions `yaml:"dnf_automatic_config"`
-	YumConfig           *osbuild.YumConfigStageOptions
-	YUMRepos            []*osbuild.YumReposStageOptions `yaml:"yum_repos,omitempty"`
+	YumConfig           *osbuild.YumConfigStageOptions          `yaml:"yum_config,omitempty"`
+	YUMRepos            []*osbuild.YumReposStageOptions         `yaml:"yum_repos,omitempty"`
 	Firewall            *osbuild.FirewallStageOptions
 	UdevRules           *osbuild.UdevRulesStageOptions      `yaml:"udev_rules,omitempty"`
 	GCPGuestAgentConfig *osbuild.GcpGuestAgentConfigOptions `yaml:"gcp_guest_agent_config,omitempty"`
