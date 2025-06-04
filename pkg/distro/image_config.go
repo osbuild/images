@@ -64,7 +64,7 @@ type ImageConfig struct {
 	DNFConfig           []*osbuild.DNFConfigStageOptions `yaml:"dnf_config,omitempty"`
 	DNFSetReleaseVerVar *bool                            `yaml:"dnf_set_release_ver_var,omitempty"`
 	SshdConfig          *osbuild.SshdConfigStageOptions  `yaml:"sshd_config"`
-	Authconfig          *osbuild.AuthconfigStageOptions
+	Authconfig          *osbuild.AuthconfigStageOptions  `yaml:"authconfig"`
 	PwQuality           *osbuild.PwqualityConfStageOptions
 	WAAgentConfig       *osbuild.WAAgentConfStageOptions        `yaml:"waagent_config,omitempty"`
 	Grub2Config         *osbuild.GRUB2Config                    `yaml:"grub2_config,omitempty"`

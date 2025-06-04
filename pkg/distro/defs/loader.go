@@ -26,6 +26,7 @@ import (
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/experimentalflags"
+	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/olog"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -96,6 +97,12 @@ type DistroYAML struct {
 	BootstrapContainers map[arch.Arch]string `yaml:"bootstrap_containers"`
 
 	OscapProfilesAllowList []oscap.Profile `yaml:"oscap_profiles_allowlist"`
+
+	// XXX: remove this in favor of a better abstraction, this
+	// is currently needed because the manifest pkg has conditionals
+	// based on the distro, ideally it would not have this but
+	// here we are.
+	DistroLike manifest.Distro `yaml:"distro_like"`
 
 	// ignore the given image types
 	IgnoreImageTypes []string `yaml:"ignore_image_types"`
