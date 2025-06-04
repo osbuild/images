@@ -529,7 +529,11 @@ func liveInstallerImage(workload workload.Workload,
 
 	// Enable grub2 BIOS iso on x86_64 only
 	if img.Platform.GetArch() == arch.ARCH_X86_64 {
-		img.ISOBoot = manifest.Grub2ISOBoot
+		if t.ImageTypeYAML.UseSyslinux {
+			img.ISOBoot = manifest.SyslinuxISOBoot
+		} else {
+			img.ISOBoot = manifest.Grub2ISOBoot
+		}
 	}
 
 	if locale := t.getDefaultImageConfig().Locale; locale != nil {
@@ -573,6 +577,8 @@ func imageInstallerImage(workload workload.Workload,
 	if err != nil {
 		return nil, err
 	}
+
+	img.UseLegacyAnacondaConfig = t.ImageTypeYAML.UseLegacyAnacondaConfig
 
 	img.Kickstart, err = kickstart.New(customizations)
 	if err != nil {
@@ -646,7 +652,11 @@ func imageInstallerImage(workload workload.Workload,
 
 	// Enable grub2 BIOS iso on x86_64 only
 	if img.Platform.GetArch() == arch.ARCH_X86_64 {
-		img.ISOBoot = manifest.Grub2ISOBoot
+		if t.ImageTypeYAML.UseSyslinux {
+			img.ISOBoot = manifest.SyslinuxISOBoot
+		} else {
+			img.ISOBoot = manifest.Grub2ISOBoot
+		}
 	}
 
 	return img, nil
@@ -672,9 +682,13 @@ func iotCommitImage(workload workload.Workload,
 	if err != nil {
 		return nil, err
 	}
+
 	imgConfig := t.getDefaultImageConfig()
 	if imgConfig != nil {
 		img.OSCustomizations.Presets = imgConfig.Presets
+		if imgConfig.InstallWeakDeps != nil {
+			img.InstallWeakDeps = *imgConfig.InstallWeakDeps
+		}
 	}
 
 	img.Environment = &t.ImageTypeYAML.Environment
@@ -682,7 +696,6 @@ func iotCommitImage(workload workload.Workload,
 	img.OSTreeParent = parentCommit
 	img.OSVersion = d.OsVersion()
 	img.Filename = t.Filename()
-	img.InstallWeakDeps = false
 
 	return img, nil
 }
@@ -749,6 +762,9 @@ func iotContainerImage(workload workload.Workload,
 	imgConfig := t.getDefaultImageConfig()
 	if imgConfig != nil {
 		img.OSCustomizations.Presets = imgConfig.Presets
+		if imgConfig.InstallWeakDeps != nil {
+			img.OSCustomizations.InstallWeakDeps = *imgConfig.InstallWeakDeps
+		}
 	}
 
 	img.ContainerLanguage = img.OSCustomizations.Language
@@ -783,6 +799,7 @@ func iotInstallerImage(workload workload.Workload,
 	img.FIPS = customizations.GetFIPS()
 	img.Platform = t.platform
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
+	img.UseLegacyAnacondaConfig = t.ImageTypeYAML.UseLegacyAnacondaConfig
 
 	img.Kickstart, err = kickstart.New(customizations)
 	if err != nil {
@@ -790,7 +807,7 @@ func iotInstallerImage(workload workload.Workload,
 	}
 	img.Kickstart.OSTree = &kickstart.OSTree{
 		OSName: t.OSTree.Name,
-		Remote: t.OSTree.Remote,
+		Remote: t.OSTree.RemoteName,
 	}
 	img.Kickstart.Path = osbuild.KickstartPathOSBuild
 	img.Kickstart.Language, img.Kickstart.Keyboard = customizations.GetPrimaryLocale()
@@ -820,6 +837,10 @@ func iotInstallerImage(workload workload.Workload,
 			img.RootfsType = manifest.SquashfsRootfs
 		}
 	}
+	if len(img.Kickstart.Users)+len(img.Kickstart.Groups) > 0 {
+		// only enable the users module if needed
+		img.AdditionalAnacondaModules = append(img.AdditionalAnacondaModules, anaconda.ModuleUsers)
+	}
 
 	img.Product = d.Product()
 	img.Variant = t.ImageTypeYAML.Variant
@@ -842,7 +863,11 @@ func iotInstallerImage(workload workload.Workload,
 
 	// Enable grub2 BIOS iso on x86_64 only
 	if img.Platform.GetArch() == arch.ARCH_X86_64 {
-		img.ISOBoot = manifest.Grub2ISOBoot
+		if t.ImageTypeYAML.UseSyslinux {
+			img.ISOBoot = manifest.SyslinuxISOBoot
+		} else {
+			img.ISOBoot = manifest.Grub2ISOBoot
+		}
 	}
 
 	if locale := t.getDefaultImageConfig().Locale; locale != nil {
@@ -877,9 +902,15 @@ func iotImage(workload workload.Workload,
 	img.Workload = workload
 
 	img.Remote = ostree.Remote{
-		Name: t.OSTree.Remote,
+		Name: t.ImageTypeYAML.OSTree.RemoteName,
 	}
-	img.OSName = t.OSTree.Remote
+	// XXX: can we do better?
+	if t.ImageTypeYAML.UseOstreeRemotes {
+		img.Remote.URL = options.OSTree.URL
+		img.Remote.ContentURL = options.OSTree.ContentURL
+	}
+
+	img.OSName = t.ImageTypeYAML.OSTree.Name
 
 	// TODO: move generation into LiveImage
 	pt, err := t.getPartitionTable(customizations, options, rng)
@@ -918,7 +949,11 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 	rawImg.Platform = t.platform
 	rawImg.Workload = workload
 	rawImg.Remote = ostree.Remote{
-		Name: t.OSTree.Remote,
+		Name: t.OSTree.RemoteName,
+	}
+	if t.ImageTypeYAML.UseOstreeRemotes {
+		rawImg.Remote.URL = options.OSTree.URL
+		rawImg.Remote.ContentURL = options.OSTree.ContentURL
 	}
 	rawImg.OSName = t.OSTree.Name
 
