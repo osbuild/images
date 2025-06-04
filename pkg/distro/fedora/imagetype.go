@@ -16,6 +16,7 @@ import (
 	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
+	"github.com/osbuild/images/pkg/disk/partition"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
 	"github.com/osbuild/images/pkg/experimentalflags"
@@ -181,10 +182,10 @@ func (t *imageType) getPartitionTable(
 		// IoT supports only LVM, force it.
 		// Raw is not supported, return an error if it is requested
 		// TODO Need a central location for logic like this
-		if partitioningMode == disk.RawPartitioningMode {
+		if partitioningMode == partition.RawPartitioningMode {
 			return nil, fmt.Errorf("partitioning mode raw not supported for %s on %s", t.Name(), t.arch.Name())
 		}
-		partitioningMode = disk.AutoLVMPartitioningMode
+		partitioningMode = partition.AutoLVMPartitioningMode
 	}
 
 	mountpoints := customizations.GetFilesystems()

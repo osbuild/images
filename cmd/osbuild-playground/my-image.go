@@ -5,6 +5,7 @@ import (
 
 	"github.com/osbuild/images/pkg/artifact"
 	"github.com/osbuild/images/pkg/disk"
+	"github.com/osbuild/images/pkg/disk/partition"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -39,7 +40,7 @@ func (img *MyImage) InstantiateManifest(m *manifest.Manifest,
 	}
 
 	// TODO: add helper
-	pt, err := disk.NewPartitionTable(&basePT, nil, 0, disk.RawPartitioningMode, platform.GetArch(), nil, rng)
+	pt, err := disk.NewPartitionTable(&basePT, nil, 0, partition.RawPartitioningMode, platform.GetArch(), nil, rng)
 	if err != nil {
 		panic(err)
 	}
