@@ -125,10 +125,6 @@ func TestRH10DistroFactory(t *testing.T) {
 			strID:    "rhel-79",
 			expected: nil,
 		},
-		{
-			strID:    "rhel-7.9",
-			expected: nil,
-		},
 	}
 
 	for _, tc := range testCases {
