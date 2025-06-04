@@ -938,7 +938,7 @@ image_types:
     image_func: "iot"
     ostree:
       name: "fedora"
-      remote: "fedora-iot"
+      remote_name: "fedora-iot"
     build_pipelines: ["build"]
     payload_pipelines: ["ostree-deployment", "image", "xz"]
     exports: ["xz"]
@@ -1017,7 +1017,7 @@ image_types:
     image_func: "iot"
     ostree:
       name: "fedora"
-      remote: "fedora-iot"
+      remote_name: "fedora-iot"
     build_pipelines: ["build"]
     payload_pipelines: ["ostree-deployment", "image", "qcow2"]
     exports: ["qcow2"]
@@ -1484,7 +1484,7 @@ image_types:
     variant: "IoT"
     ostree:
       name: "fedora-iot"
-      remote: "fedora-iot"
+      remote_name: "fedora-iot"
     build_pipelines: ["build"]
     payload_pipelines:
       - "anaconda-tree"
@@ -1825,7 +1825,7 @@ image_types:
     variant: "IoT"
     ostree:
       name: "fedora"
-      remote: "fedora-iot"
+      remote_name: "fedora-iot"
     build_pipelines: ["build"]
     payload_pipelines:
       - "ostree-deployment"
