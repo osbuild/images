@@ -326,7 +326,7 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 	}
 
 	// we do not support embedding containers on ostree-derived images, only on commits themselves
-	if len(bp.Containers) > 0 && t.ImageTypeYAML.RPMOSTree && (t.Name() != "iot-commit" && t.Name() != "iot-container") {
+	if len(bp.Containers) > 0 && t.ImageTypeYAML.RPMOSTree && (t.Name() != "iot-commit" && t.Name() != "iot-container" && t.Name() != "edge-commit" && t.Name() != "edge-container") {
 		return warnings, fmt.Errorf("embedding containers is not supported for %s on %s", t.Name(), t.arch.distro.Name())
 	}
 
