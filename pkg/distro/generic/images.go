@@ -52,6 +52,9 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 			kernelOptions = append(kernelOptions, bpKernel.Append)
 		}
 		osc.KernelOptionsAppend = kernelOptions
+		if imageConfig.KernelOptionsBootloader != nil {
+			osc.KernelOptionsBootloader = *imageConfig.KernelOptionsBootloader
+		}
 	}
 
 	osc.FIPS = c.GetFIPS()
@@ -155,6 +158,7 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 	// Relabel the tree, unless the `NoSElinux` flag is explicitly set to `true`
 	if imageConfig.NoSElinux == nil || imageConfig.NoSElinux != nil && !*imageConfig.NoSElinux {
 		osc.SElinux = "targeted"
+		osc.SELinuxForceRelabel = imageConfig.SELinuxForceRelabel
 	}
 
 	// XXX: move into pure YAML
@@ -301,6 +305,10 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 		osc.CACerts = ca.PEMCerts
 	}
 
+	if imageConfig.InstallWeakDeps != nil {
+		osc.InstallWeakDeps = *imageConfig.InstallWeakDeps
+	}
+
 	if imageConfig.MachineIdUninitialized != nil {
 		osc.MachineIdUninitialized = *imageConfig.MachineIdUninitialized
 	}
@@ -419,6 +427,18 @@ func diskImage(workload workload.Workload,
 	img.PartitionTable = pt
 
 	img.Filename = t.Filename()
+
+	img.VPCForceSize = t.ImageTypeYAML.DiskImageVPCForceSize
+
+	if img.OSCustomizations.NoBLS {
+		img.OSProduct = t.Arch().Distro().Product()
+		img.OSVersion = t.Arch().Distro().OsVersion()
+		img.OSNick = t.Arch().Distro().Codename()
+	}
+
+	if t.ImageTypeYAML.DiskImagePartTool != nil {
+		img.PartTool = *t.ImageTypeYAML.DiskImagePartTool
+	}
 
 	return img, nil
 }
