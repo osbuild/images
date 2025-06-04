@@ -25,6 +25,7 @@ import (
 	"github.com/osbuild/images/pkg/experimentalflags"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/olog"
+	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/runner"
@@ -354,6 +355,11 @@ type ImageTypeYAML struct {
 	Platforms []platform.PlatformConf `yaml:"platforms"`
 
 	NameAliases []string `yaml:"name_aliases"`
+
+	// for RHEL7 compat
+	// TODO: determine a better place for these options, but for now they are here
+	DiskImagePartTool     *osbuild.PartTool `yaml:"disk_image_part_tool"`
+	DiskImageVPCForceSize *bool             `yaml:"disk_image_vpc_force_size"`
 
 	// name is set by the loader
 	name string
