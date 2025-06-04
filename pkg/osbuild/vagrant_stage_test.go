@@ -33,6 +33,9 @@ func TestVagrantStageOptions(t *testing.T) {
 		{
 			Provider: VagrantProviderLibvirt,
 		},
+		{
+			Provider: VagrantProviderVirtualbox,
+		},
 		// mismatch between format and format options type
 		{
 			Provider: "DoesNotExist",
