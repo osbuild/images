@@ -1,6 +1,7 @@
 distros:
   - &fedora_rawhide
     name: fedora-43
+    distro_like: fedora
     preview: true
     os_version: 43
     release_version: 43
@@ -63,6 +64,7 @@ distros:
   - &rhel10
     name: "rhel-{{.MajorVersion}}.{{.MinorVersion}}"
     match: "rhel-10.[0-9]{,[0-9]}"
+    distro_like: rhel-10
     product: "Red Hat Enterprise Linux"
     os_version: "10.{{.MinorVersion}}"
     release_version: 10
@@ -110,6 +112,7 @@ distros:
 
   - &centos10
     name: centos-10
+    distro_like: rhel-10
     product: "CentOS Stream"
     os_version: "10-stream"
     release_version: 10

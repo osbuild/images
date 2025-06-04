@@ -16,6 +16,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/osbuild"
@@ -33,6 +34,33 @@ const (
 	DISTRO_EL7
 	DISTRO_FEDORA
 )
+
+func (d *Distro) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+
+	switch s {
+	case "rhel-10":
+		*d = DISTRO_EL10
+	case "rhel-9":
+		*d = DISTRO_EL9
+	case "rhel-8":
+		*d = DISTRO_EL8
+	case "rhel-7":
+		*d = DISTRO_EL7
+	case "fedora":
+		*d = DISTRO_FEDORA
+	default:
+		return fmt.Errorf("unknown distro: %q", s)
+	}
+	return nil
+}
+
+func (d *Distro) UnmarshalYAML(unmarshal func(any) error) error {
+	return common.UnmarshalYAMLviaJSON(d, unmarshal)
+}
 
 type Inputs osbuild.SourceInputs
 
