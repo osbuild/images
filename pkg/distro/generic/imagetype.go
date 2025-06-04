@@ -319,7 +319,9 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 		return checkOptionsFedora(t, bp, options)
 	case manifest.DISTRO_EL7:
 		return checkOptionsRhel7(t, bp, options)
-	// TODO: add checkOptionsRhel{8,9} once we move them to
+	case manifest.DISTRO_EL8:
+		return checkOptionsRhel8(t, bp, options)
+	// TODO: add checkOptionsRhel9 once we move them to
 	// generic distros
 	case manifest.DISTRO_EL10:
 		return checkOptionsRhel10(t, bp, options)

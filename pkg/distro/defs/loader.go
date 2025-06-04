@@ -350,7 +350,11 @@ type ImageTypeYAML struct {
 	Environment environment.EnvironmentConf `yaml:"environment"`
 	Bootable    bool                        `yaml:"bootable"`
 
-	BootISO  bool   `yaml:"boot_iso"`
+	BootISO bool `yaml:"boot_iso"`
+	// XXX merge with BootISO above, controls if grub2 or syslinux are used for ISO boots
+	UseSyslinux             bool `yaml:"use_syslinux"`
+	UseLegacyAnacondaConfig bool `yaml:"use_legacy_anaconda_config"`
+
 	ISOLabel string `yaml:"iso_label"`
 	// XXX: or iso_variant?
 	Variant string `yaml:"variant"`
@@ -358,9 +362,11 @@ type ImageTypeYAML struct {
 	RPMOSTree bool `yaml:"rpm_ostree"`
 
 	OSTree struct {
-		Name   string `yaml:"name"`
-		Remote string `yaml:"remote"`
+		Name       string `yaml:"name"`
+		RemoteName string `yaml:"remote_name"`
 	} `yaml:"ostree"`
+	// XXX: rhel-8 uses this
+	UseOstreeRemotes bool `yaml:"use_ostree_remotes"`
 
 	DefaultSize uint64 `yaml:"default_size"`
 	// the image func name: disk,container,live-installer,...
@@ -374,6 +380,8 @@ type ImageTypeYAML struct {
 	PlatformsOverride *platformsOverride      `yaml:"platforms_override"`
 
 	NameAliases []string `yaml:"name_aliases"`
+
+	InstallWeakDeps *bool `yaml:"install_weak_deps"`
 
 	// for RHEL7 compat
 	// TODO: determine a better place for these options, but for now they are here

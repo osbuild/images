@@ -773,8 +773,9 @@ image_types:
     payload_pipelines: ["os", "ostree-commit", "commit-archive"]
     exports: ["commit-archive"]
     required_partition_sizes: *default_required_dir_sizes
-    image_config:
+    image_config: &image_config_iot_commit
       <<: *image_config_iot_enabled_services
+      install_weak_deps: false
       dracut_conf:
         - filename: "40-fips.conf"
           config:
@@ -933,6 +934,9 @@ image_types:
     payload_pipelines: ["os", "ostree-commit", "container-tree", "container"]
     exports: ["container"]
     required_partition_sizes: *default_required_dir_sizes
+    image_config:
+      <<: *image_config_iot_commit
+      install_weak_deps: true
     platforms:
       - *x86_64_installer_platform
       - *aarch64_installer_platform
@@ -948,7 +952,7 @@ image_types:
     image_func: "iot"
     ostree:
       name: "fedora-iot"
-      remote: "fedora-iot"
+      remote_name: "fedora-iot"
     build_pipelines: ["build"]
     payload_pipelines: ["ostree-deployment", "image", "xz"]
     exports: ["xz"]
@@ -1027,7 +1031,7 @@ image_types:
     image_func: "iot"
     ostree:
       name: "fedora-iot"
-      remote: "fedora-iot"
+      remote_name: "fedora-iot"
     build_pipelines: ["build"]
     payload_pipelines: ["ostree-deployment", "image", "qcow2"]
     exports: ["qcow2"]
@@ -1494,7 +1498,7 @@ image_types:
     variant: "IoT"
     ostree:
       name: "fedora-iot"
-      remote: "fedora-iot"
+      remote_name: "fedora-iot"
     build_pipelines: ["build"]
     payload_pipelines:
       - "anaconda-tree"
@@ -1850,7 +1854,7 @@ image_types:
     variant: "IoT"
     ostree:
       name: "fedora"
-      remote: "fedora-iot"
+      remote_name: "fedora-iot"
     build_pipelines: ["build"]
     payload_pipelines:
       - "ostree-deployment"
