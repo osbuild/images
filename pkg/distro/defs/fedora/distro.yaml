@@ -1607,6 +1607,7 @@ image_types:
     # correct suffix, see:
     # https://learn.microsoft.com/en-us/windows/wsl/build-custom-distro#what-are-wsl-root-filesystem-tar-files
     filename: "image.wsl"
+    compression: "xz"
     mime_type: "application/x-tar"
     image_func: "tar"
     build_pipelines: ["build"]
