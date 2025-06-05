@@ -183,7 +183,7 @@ cab0d7de46b1cffd448277ada9095f22bacdac7b  fedora_40-x86_64-server_qcow2-oscap_ge
 b2c4f07703cbc6c165ae1341b76345fab2d3c389  fedora_40-x86_64-server_vhd-empty_fedora.json
 c283c8c840dda996b1c35b63e5522d06656c6d91  fedora_40-x86_64-server_vmdk-empty_fedora.json
 e659ba056e767a08eca153dffba7acba56024bd4  fedora_40-x86_64-workstation_live_installer-empty_fedora.json
-42bfa13b31abfe56d7e5840d770d916d19dd0845  fedora_40-x86_64-wsl-empty_fedora.json
+48b84b77f750252bb59ccf168f7fd137a42e397e  fedora_40-x86_64-wsl-empty_fedora.json
 6d6ec2e972758aae24d0448dd3a6068c1e364293  fedora_41-aarch64-container-empty_fedora.json
 ae8513196c06484c39c2cd7dd8fc1966ed0c62cd  fedora_41-aarch64-iot_bootable_container-empty_fedora.json
 a138faeeade6b04a1329f22d8573e974f5a4439a  fedora_41-aarch64-iot_commit-kernel_debug.json
@@ -263,7 +263,7 @@ acc4a0cef4846515c57eb378ebea5f72fc9652ee  fedora_41-x86_64-server_qcow2-minimal_
 5c6d0524b4e8336687aec6aacef28bffceb5cf06  fedora_41-x86_64-server_vhd-empty_fedora.json
 3ab549680a278a36729c7344481c4566f5f45448  fedora_41-x86_64-server_vmdk-empty_fedora.json
 fcd7eedd5c2aa739d2e5815d7c3a726a08a52a5f  fedora_41-x86_64-workstation_live_installer-empty_fedora.json
-6885fe31683978ac08919e5a20db8b0833d8a7dd  fedora_41-x86_64-wsl-empty_fedora.json
+914878d1e30a50028b3fa13e27b71a76842ad48f  fedora_41-x86_64-wsl-empty_fedora.json
 75531e36650bc107bba819586fc67a7c6da79729  fedora_42-aarch64-container-empty_fedora.json
 208eef7409f930bb745b9085449fb81f033d89c4  fedora_42-aarch64-iot_bootable_container-empty_fedora.json
 b6bb57ea5bb9d90a8fea097b9f1e0ea2b2933161  fedora_42-aarch64-iot_commit-kernel_debug.json
@@ -341,7 +341,7 @@ c496149507658a66418b7a8f3249eb0a302b02f6  fedora_42-x86_64-server_qcow2-minimal_
 8917e1411701fabcf77acf5f9a767a139c88dacc  fedora_42-x86_64-server_vhd-empty_fedora.json
 58a373545d347556c4b5ac69ab0a24561ff0c649  fedora_42-x86_64-server_vmdk-empty_fedora.json
 852e6dd02b1b4dcee86566802e87e3e13b9b2d53  fedora_42-x86_64-workstation_live_installer-empty_fedora.json
-f4debd36f9ff7cd1da9c2d7f791da41dee3ce6ac  fedora_42-x86_64-wsl-empty_fedora.json
+a0a6f0238094d8d28355f1ac877ebe3daa82b60e  fedora_42-x86_64-wsl-empty_fedora.json
 af30ebb99bf61e93cc4dfb8dcf37990f51c2fa7d  fedora_43-aarch64-container-empty_fedora.json
 2d8af3f90d2982e203ddaea3431b2c334b8c603e  fedora_43-aarch64-iot_bootable_container-empty_fedora.json
 6413e3602c072200535533b7a7a41e1eb5051302  fedora_43-aarch64-iot_commit-kernel_debug.json
@@ -421,7 +421,7 @@ eaf1aeb37cc63c4b09cd494f1f134963af27bea5  fedora_43-x86_64-server_qcow2-minimal.
 501a940acc6b3ee8b8c8bdb816136924929e6c2c  fedora_43-x86_64-server_vhd-empty_fedora.json
 aaa6509317ef13ed09d65cb09c587124d0935fdc  fedora_43-x86_64-server_vmdk-empty_fedora.json
 e5ed780c83bda5bec514b5a0ee75e726933f8fbb  fedora_43-x86_64-workstation_live_installer-empty_fedora.json
-e590084f9b8203e19c813d95971ecc18ae75ed92  fedora_43-x86_64-wsl-empty_fedora.json
+86fb3f90a46a2ba13a65e000217e8953354e5875  fedora_43-x86_64-wsl-empty_fedora.json
 eb7ea57b8a701e607721dcf025b4a48ee50908f8  rhel_10.0-aarch64-ami-all_customizations.json
 5a408896d306f4752f4a6c1812e52fc1407fb406  rhel_10.0-aarch64-ami-empty_rhel.json
 f63172040b0783190e09e4f653ee200f053c22fe  rhel_10.0-aarch64-ami-oscap_rhel10.json
