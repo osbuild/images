@@ -20,6 +20,7 @@ func TestTarSerialize(t *testing.T) {
 	tarPipeline := manifest.NewTar(build, rawImage, "tar-pipeline")
 	tarPipeline.SetFilename("filename.tar")
 	tarPipeline.Transform = "s/foo/bar"
+	tarPipeline.Compression = osbuild.TarArchiveCompressionZstd
 
 	// run
 	osbuildPipeline := tarPipeline.Serialize()
@@ -29,7 +30,8 @@ func TestTarSerialize(t *testing.T) {
 	assert.Equal(t, 1, len(osbuildPipeline.Stages))
 	tarStage := osbuildPipeline.Stages[0]
 	assert.Equal(t, &osbuild.TarStageOptions{
-		Filename:  "filename.tar",
-		Transform: "s/foo/bar",
+		Filename:    "filename.tar",
+		Transform:   "s/foo/bar",
+		Compression: "zstd",
 	}, tarStage.Options.(*osbuild.TarStageOptions))
 }
