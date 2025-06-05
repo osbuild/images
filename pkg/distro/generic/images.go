@@ -431,7 +431,7 @@ func liveInstallerImage(workload workload.Workload,
 	img.Product = d.Product()
 	img.Variant = "Workstation"
 	img.OSVersion = d.OsVersion()
-	img.Release = fmt.Sprintf("%s %s", d.DistroYAML.Product, d.OsVersion())
+	img.Release = fmt.Sprintf("%s %s", d.Product(), d.OsVersion())
 	img.Preview = d.DistroYAML.Preview
 
 	var err error
@@ -537,10 +537,10 @@ func imageInstallerImage(workload workload.Workload,
 
 	d := t.arch.distro
 
-	img.Product = d.DistroYAML.Product
+	img.Product = d.Product()
 
 	img.OSVersion = d.OsVersion()
-	img.Release = fmt.Sprintf("%s %s", d.DistroYAML.Product, d.OsVersion())
+	img.Release = fmt.Sprintf("%s %s", d.Product(), d.OsVersion())
 	img.Variant = t.Variant
 	img.Preview = d.DistroYAML.Preview
 
@@ -765,10 +765,10 @@ func iotInstallerImage(workload workload.Workload,
 	// On Fedora anaconda needs dbus-broker, but isn't added when dracut runs.
 	img.AdditionalDracutModules = append(img.AdditionalDracutModules, "dbus-broker")
 
-	img.Product = d.DistroYAML.Product
+	img.Product = d.Product()
 	img.Variant = "IoT"
 	img.OSVersion = d.OsVersion()
-	img.Release = fmt.Sprintf("%s %s", d.DistroYAML.Product, d.OsVersion())
+	img.Release = fmt.Sprintf("%s %s", d.Product(), d.OsVersion())
 	img.Preview = d.DistroYAML.Preview
 
 	img.ISOLabel, err = t.ISOLabel()
@@ -907,7 +907,7 @@ func iotSimplifiedInstallerImage(workload workload.Workload,
 	img.AdditionalDracutModules = append(img.AdditionalDracutModules, "dbus-broker")
 
 	d := t.arch.distro
-	img.Product = d.DistroYAML.Product
+	img.Product = d.Product()
 	img.Variant = "IoT"
 	img.OSName = t.OSTree.Name
 	img.OSVersion = d.OsVersion()
