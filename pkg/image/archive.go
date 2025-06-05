@@ -1,7 +1,6 @@
 package image
 
 import (
-	"fmt"
 	"math/rand"
 
 	"github.com/osbuild/images/internal/environment"
@@ -45,21 +44,10 @@ func (img *Archive) InstantiateManifest(m *manifest.Manifest,
 	tarPipeline := manifest.NewTar(buildPipeline, osPipeline, "archive")
 	tarPipeline.SetFilename(img.Filename)
 
-	switch img.Compression {
-	case "xz":
-		tarPipeline.Compression = osbuild.TarArchiveCompressionXz
-	case "gzip":
-		tarPipeline.Compression = osbuild.TarArchiveCompressionGzip
-	case "zstd":
-		tarPipeline.Compression = osbuild.TarArchiveCompressionZstd
-	case "":
-		// this defaults to automatic compression based on filename which
-		// has already been set
-	default:
-		// panic on unknown strings
-		panic(fmt.Sprintf("unsupported compression type %q", img.Compression))
+	tarPipeline.Compression = osbuild.TarArchiveCompression(img.Compression)
+	if err := tarPipeline.Compression.Validate(); err != nil {
+		return nil, err
 	}
-
 	artifact := tarPipeline.Export()
 
 	return artifact, nil
