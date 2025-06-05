@@ -85,7 +85,7 @@ type DistroYAML struct {
 	OSTreeRefTmpl    string            `yaml:"ostree_ref_tmpl"`
 	Runner           runner.RunnerConf `yaml:"runner"`
 
-	// ISOLabelTmpl can contain {{.Product}},{{.OsVersion}},{{.Arch}},{{.ImgTypeLabel}}
+	// ISOLabelTmpl can contain {{.Product}},{{.OsVersion}},{{.Arch}},{{.ISOLabel}}
 	ISOLabelTmpl string `yaml:"iso_label_tmpl"`
 
 	DefaultFSType disk.FSType `yaml:"default_fs_type"`
