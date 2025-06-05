@@ -48,6 +48,15 @@ func TestTarStageOptionsValidate(t *testing.T) {
 			err: true,
 		},
 		{
+			name: "invalid-archive-compression",
+			options: TarStageOptions{
+				Filename:    "archive.tar.xz",
+				Format:      "made-up-format",
+				Compression: "interpretative-dance",
+			},
+			err: true,
+		},
+		{
 			name: "invalid-root-node",
 			options: TarStageOptions{
 				Filename: "archive.tar.xz",
@@ -58,9 +67,10 @@ func TestTarStageOptionsValidate(t *testing.T) {
 		{
 			name: "valid-data",
 			options: TarStageOptions{
-				Filename: "archive.tar.xz",
-				Format:   TarArchiveFormatOldgnu,
-				RootNode: TarRootNodeOmit,
+				Filename:    "archive.tar.xz",
+				Format:      TarArchiveFormatOldgnu,
+				Compression: TarArchiveCompressionZstd,
+				RootNode:    TarRootNodeOmit,
 			},
 			err: false,
 		},
