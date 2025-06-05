@@ -86,7 +86,8 @@
             value: "4194304"
           - key: "vm.max_map_count"
             value: "2147483647"
-    dnf_set_release_ver_var: true
+    dnf_config:
+      set_release_ver_var: true
 
   sap_pkgset: &sap_pkgset
     include:
@@ -1287,9 +1288,10 @@ image_types:
       keyboard:
         keymap: "us"
       dnf_config:
-        - config:
-            main:
-              ipresolve: "4"
+        options:
+          - config:
+              main:
+                ipresolve: "4"
       dnf_automatic_config:
         config:
           commands:
