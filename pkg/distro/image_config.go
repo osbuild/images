@@ -72,9 +72,8 @@ type ImageConfig struct {
 	PamLimitsConf []*osbuild.PamLimitsConfStageOptions `yaml:"pam_limits_conf,omitempty"`
 	Sysctld       []*osbuild.SysctldStageOptions
 	// Do not use DNFConfig directly, call "DNFConfigOptions()"
-	DNFConfig           []*osbuild.DNFConfigStageOptions `yaml:"dnf_config,omitempty"`
-	DNFSetReleaseVerVar *bool                            `yaml:"dnf_set_release_ver_var,omitempty"`
-	SshdConfig          *osbuild.SshdConfigStageOptions  `yaml:"sshd_config"`
+	DNFConfig           *DNFConfig                      `yaml:"dnf_config"`
+	SshdConfig          *osbuild.SshdConfigStageOptions `yaml:"sshd_config"`
 	Authconfig          *osbuild.AuthconfigStageOptions
 	PwQuality           *osbuild.PwqualityConfStageOptions
 	WAAgentConfig       *osbuild.WAAgentConfStageOptions        `yaml:"waagent_config,omitempty"`
@@ -139,6 +138,11 @@ type ImageConfig struct {
 	IsoRootfsType *manifest.RootfsType `yaml:"iso_rootfs_type,omitempty"`
 }
 
+type DNFConfig struct {
+	Options          []*osbuild.DNFConfigStageOptions
+	SetReleaseVerVar *bool `yaml:"set_release_ver_var"`
+}
+
 type WSLConfig struct {
 	BootSystemd bool `yaml:"boot_systemd,omitempty"`
 }
@@ -169,8 +173,11 @@ func (c *ImageConfig) InheritFrom(parentConfig *ImageConfig) *ImageConfig {
 }
 
 func (c *ImageConfig) DNFConfigOptions(osVersion string) []*osbuild.DNFConfigStageOptions {
-	if c.DNFSetReleaseVerVar == nil || !*c.DNFSetReleaseVerVar {
-		return c.DNFConfig
+	if c.DNFConfig == nil {
+		return nil
+	}
+	if c.DNFConfig.SetReleaseVerVar == nil || !*c.DNFConfig.SetReleaseVerVar {
+		return c.DNFConfig.Options
 	}
 
 	// We currently have no use-case where we set both a custom
@@ -180,7 +187,7 @@ func (c *ImageConfig) DNFConfigOptions(osVersion string) []*osbuild.DNFConfigSta
 	// existing once (exactly once) and we need to consider what to
 	// do about potentially conflicting (manually set) "releasever"
 	// values by the user.
-	if c.DNFConfig != nil {
+	if c.DNFConfig.SetReleaseVerVar != nil && c.DNFConfig.Options != nil {
 		err := fmt.Errorf("internal error: currently DNFConfig and DNFSetReleaseVerVar cannot be used together, please reporting this as a feature request")
 		panic(err)
 	}
