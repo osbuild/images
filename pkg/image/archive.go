@@ -7,6 +7,7 @@ import (
 	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/artifact"
 	"github.com/osbuild/images/pkg/manifest"
+	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/runner"
@@ -19,6 +20,7 @@ type Archive struct {
 	Environment      environment.Environment
 	Workload         workload.Workload
 	Filename         string
+	Compression      string
 }
 
 func NewArchive() *Archive {
@@ -41,6 +43,11 @@ func (img *Archive) InstantiateManifest(m *manifest.Manifest,
 
 	tarPipeline := manifest.NewTar(buildPipeline, osPipeline, "archive")
 	tarPipeline.SetFilename(img.Filename)
+
+	tarPipeline.Compression = osbuild.TarArchiveCompression(img.Compression)
+	if err := tarPipeline.Compression.Validate(); err != nil {
+		return nil, err
+	}
 	artifact := tarPipeline.Export()
 
 	return artifact, nil

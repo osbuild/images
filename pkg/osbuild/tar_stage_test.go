@@ -28,6 +28,16 @@ func TestNewTarStage(t *testing.T) {
 	assert.Equal(t, expectedStage, actualStage)
 }
 
+func TestTarARchiveCompression(t *testing.T) {
+	assert.NoError(t, TarArchiveCompression("").Validate())
+	assert.NoError(t, TarArchiveCompression("auto").Validate())
+	assert.NoError(t, TarArchiveCompression("xz").Validate())
+	assert.NoError(t, TarArchiveCompression("gzip").Validate())
+	assert.NoError(t, TarArchiveCompression("zstd").Validate())
+
+	assert.EqualError(t, TarArchiveCompression("invalid").Validate(), `unsupported compression value "invalid"`)
+}
+
 func TestTarStageOptionsValidate(t *testing.T) {
 	tests := []struct {
 		name    string

@@ -17,6 +17,8 @@ type TarArchiveCompression string
 
 // valid values for the 'compression' Tar stage option
 const (
+	TarArchiveCompressionUnset TarArchiveCompression = ""
+
 	// `auto` means based on filename
 	TarArchiveCompressionAuto TarArchiveCompression = "auto"
 
@@ -24,6 +26,22 @@ const (
 	TarArchiveCompressionGzip TarArchiveCompression = "gzip"
 	TarArchiveCompressionZstd TarArchiveCompression = "zstd"
 )
+
+func (tac TarArchiveCompression) Validate() error {
+	allowedArchiveCompressionValues := []TarArchiveCompression{
+		TarArchiveCompressionUnset,
+		TarArchiveCompressionAuto,
+		TarArchiveCompressionXz,
+		TarArchiveCompressionGzip,
+		TarArchiveCompressionZstd,
+	}
+	for _, value := range allowedArchiveCompressionValues {
+		if tac == value {
+			return nil
+		}
+	}
+	return fmt.Errorf("unsupported compression value %q", tac)
+}
 
 type TarRootNode string
 
@@ -85,23 +103,8 @@ func (o TarStageOptions) validate() error {
 		}
 	}
 
-	if o.Compression != "" {
-		allowedArchiveCompressionValues := []TarArchiveCompression{
-			TarArchiveCompressionAuto,
-			TarArchiveCompressionXz,
-			TarArchiveCompressionGzip,
-			TarArchiveCompressionZstd,
-		}
-		valid := false
-		for _, value := range allowedArchiveCompressionValues {
-			if o.Compression == value {
-				valid = true
-				break
-			}
-		}
-		if !valid {
-			return fmt.Errorf("'compression' option does not allow %q as a value", o.Compression)
-		}
+	if err := o.Compression.Validate(); err != nil {
+		return err
 	}
 
 	if o.RootNode != "" {
