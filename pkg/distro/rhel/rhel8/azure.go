@@ -3,7 +3,6 @@ package rhel8
 import (
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/datasizes"
-	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro/rhel"
 )
 
@@ -23,7 +22,7 @@ func mkAzureRhuiImgType(rd *rhel.Distribution, a arch.Arch) *rhel.ImageType {
 	it.DefaultImageConfig = imageConfig(rd, a.String(), "azure-rhui")
 	it.Bootable = true
 	it.DefaultSize = 64 * datasizes.GibiByte
-	it.BasePartitionTables = azureRhuiBasePartitionTables
+	it.BasePartitionTables = partitionTables
 
 	return it
 }
@@ -44,7 +43,7 @@ func mkAzureSapRhuiImgType(rd *rhel.Distribution, a arch.Arch) *rhel.ImageType {
 	it.DefaultImageConfig = imageConfig(rd, a.String(), "azure-sap-rhui")
 	it.Bootable = true
 	it.DefaultSize = 64 * datasizes.GibiByte
-	it.BasePartitionTables = azureRhuiBasePartitionTables
+	it.BasePartitionTables = partitionTables
 
 	return it
 }
@@ -106,231 +105,8 @@ func mkAzureEap7RhuiImgType(rd *rhel.Distribution, a arch.Arch) *rhel.ImageType 
 	it.DefaultImageConfig = imageConfig(rd, a.String(), "azure-eap7-rhui")
 	it.Bootable = true
 	it.DefaultSize = 64 * datasizes.GibiByte
-	it.BasePartitionTables = azureRhuiBasePartitionTables
+	it.BasePartitionTables = partitionTables
 	it.Workload = eapWorkload()
 
 	return it
-}
-
-// PARTITION TABLES
-
-func azureRhuiBasePartitionTables(t *rhel.ImageType) (disk.PartitionTable, bool) {
-	switch t.Arch().Name() {
-	case arch.ARCH_X86_64.String():
-		return disk.PartitionTable{
-			UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
-			Type: disk.PT_GPT,
-			Size: 64 * datasizes.GibiByte,
-			Partitions: []disk.Partition{
-				{
-					Size: 500 * datasizes.MebiByte,
-					Type: disk.EFISystemPartitionGUID,
-					UUID: disk.EFISystemPartitionUUID,
-					Payload: &disk.Filesystem{
-						Type:         "vfat",
-						UUID:         disk.EFIFilesystemUUID,
-						Mountpoint:   "/boot/efi",
-						FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
-						FSTabFreq:    0,
-						FSTabPassNo:  2,
-					},
-				},
-				{
-					Size: 500 * datasizes.MebiByte,
-					Type: disk.FilesystemDataGUID,
-					UUID: disk.DataPartitionUUID,
-					Payload: &disk.Filesystem{
-						Type:         "xfs",
-						Mountpoint:   "/boot",
-						FSTabOptions: "defaults",
-						FSTabFreq:    0,
-						FSTabPassNo:  0,
-					},
-				},
-				{
-					Size:     2 * datasizes.MebiByte,
-					Bootable: true,
-					Type:     disk.BIOSBootPartitionGUID,
-					UUID:     disk.BIOSBootPartitionUUID,
-				},
-				{
-					Type: disk.LVMPartitionGUID,
-					UUID: disk.RootPartitionUUID,
-					Payload: &disk.LVMVolumeGroup{
-						Name:        "rootvg",
-						Description: "built with lvm2 and osbuild",
-						LogicalVolumes: []disk.LVMLogicalVolume{
-							{
-								Size: 1 * datasizes.GibiByte,
-								Name: "homelv",
-								Payload: &disk.Filesystem{
-									Type:         "xfs",
-									Label:        "home",
-									Mountpoint:   "/home",
-									FSTabOptions: "defaults",
-									FSTabFreq:    0,
-									FSTabPassNo:  0,
-								},
-							},
-							{
-								Size: 2 * datasizes.GibiByte,
-								Name: "rootlv",
-								Payload: &disk.Filesystem{
-									Type:         "xfs",
-									Label:        "root",
-									Mountpoint:   "/",
-									FSTabOptions: "defaults",
-									FSTabFreq:    0,
-									FSTabPassNo:  0,
-								},
-							},
-							{
-								Size: 2 * datasizes.GibiByte,
-								Name: "tmplv",
-								Payload: &disk.Filesystem{
-									Type:         "xfs",
-									Label:        "tmp",
-									Mountpoint:   "/tmp",
-									FSTabOptions: "defaults",
-									FSTabFreq:    0,
-									FSTabPassNo:  0,
-								},
-							},
-							{
-								Size: 10 * datasizes.GibiByte,
-								Name: "usrlv",
-								Payload: &disk.Filesystem{
-									Type:         "xfs",
-									Label:        "usr",
-									Mountpoint:   "/usr",
-									FSTabOptions: "defaults",
-									FSTabFreq:    0,
-									FSTabPassNo:  0,
-								},
-							},
-							{
-								Size: 10 * datasizes.GibiByte,
-								Name: "varlv",
-								Payload: &disk.Filesystem{
-									Type:         "xfs",
-									Label:        "var",
-									Mountpoint:   "/var",
-									FSTabOptions: "defaults",
-									FSTabFreq:    0,
-									FSTabPassNo:  0,
-								},
-							},
-						},
-					},
-				},
-			},
-		}, true
-
-	case arch.ARCH_AARCH64.String():
-		return disk.PartitionTable{
-			UUID: "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
-			Type: disk.PT_GPT,
-			Size: 64 * datasizes.GibiByte,
-			Partitions: []disk.Partition{
-				{
-					Size: 500 * datasizes.MebiByte,
-					Type: disk.EFISystemPartitionGUID,
-					UUID: disk.EFISystemPartitionUUID,
-					Payload: &disk.Filesystem{
-						Type:         "vfat",
-						UUID:         disk.EFIFilesystemUUID,
-						Mountpoint:   "/boot/efi",
-						FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
-						FSTabFreq:    0,
-						FSTabPassNo:  2,
-					},
-				},
-				{
-					Size: 500 * datasizes.MebiByte,
-					Type: disk.FilesystemDataGUID,
-					UUID: disk.DataPartitionUUID,
-					Payload: &disk.Filesystem{
-						Type:         "xfs",
-						Mountpoint:   "/boot",
-						FSTabOptions: "defaults",
-						FSTabFreq:    0,
-						FSTabPassNo:  0,
-					},
-				},
-				{
-					Type: disk.LVMPartitionGUID,
-					UUID: disk.RootPartitionUUID,
-					Payload: &disk.LVMVolumeGroup{
-						Name:        "rootvg",
-						Description: "built with lvm2 and osbuild",
-						LogicalVolumes: []disk.LVMLogicalVolume{
-							{
-								Size: 1 * datasizes.GibiByte,
-								Name: "homelv",
-								Payload: &disk.Filesystem{
-									Type:         "xfs",
-									Label:        "home",
-									Mountpoint:   "/home",
-									FSTabOptions: "defaults",
-									FSTabFreq:    0,
-									FSTabPassNo:  0,
-								},
-							},
-							{
-								Size: 2 * datasizes.GibiByte,
-								Name: "rootlv",
-								Payload: &disk.Filesystem{
-									Type:         "xfs",
-									Label:        "root",
-									Mountpoint:   "/",
-									FSTabOptions: "defaults",
-									FSTabFreq:    0,
-									FSTabPassNo:  0,
-								},
-							},
-							{
-								Size: 2 * datasizes.GibiByte,
-								Name: "tmplv",
-								Payload: &disk.Filesystem{
-									Type:         "xfs",
-									Label:        "tmp",
-									Mountpoint:   "/tmp",
-									FSTabOptions: "defaults",
-									FSTabFreq:    0,
-									FSTabPassNo:  0,
-								},
-							},
-							{
-								Size: 10 * datasizes.GibiByte,
-								Name: "usrlv",
-								Payload: &disk.Filesystem{
-									Type:         "xfs",
-									Label:        "usr",
-									Mountpoint:   "/usr",
-									FSTabOptions: "defaults",
-									FSTabFreq:    0,
-									FSTabPassNo:  0,
-								},
-							},
-							{
-								Size: 10 * datasizes.GibiByte,
-								Name: "varlv",
-								Payload: &disk.Filesystem{
-									Type:         "xfs",
-									Label:        "var",
-									Mountpoint:   "/var",
-									FSTabOptions: "defaults",
-									FSTabFreq:    0,
-									FSTabPassNo:  0,
-								},
-							},
-						},
-					},
-				},
-			},
-		}, true
-
-	default:
-		return disk.PartitionTable{}, false
-	}
 }
