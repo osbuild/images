@@ -40,8 +40,7 @@ type imageType struct {
 	platform platform.Platform
 
 	// XXX: make definable via YAML
-	workload workload.Workload
-	// XXX: make member function ImageTypeYAML
+	workload               workload.Workload
 	defaultImageConfig     *distro.ImageConfig
 	defaultInstallerConfig *distro.InstallerConfig
 
@@ -63,6 +62,10 @@ func (t *imageType) Filename() string {
 
 func (t *imageType) MIMEType() string {
 	return t.ImageTypeYAML.MimeType
+}
+
+func (t *imageType) DefaultImageConfig() *distro.ImageConfig {
+	return t.defaultImageConfig
 }
 
 func (t *imageType) OSTreeRef() string {
@@ -127,7 +130,7 @@ func (t *imageType) BootMode() platform.BootMode {
 }
 
 func (t *imageType) BasePartitionTable() (*disk.PartitionTable, error) {
-	return defs.PartitionTable(t)
+	return t.ImageTypeYAML.PartitionTable(t.arch.distro.Name(), t.arch.name)
 }
 
 func (t *imageType) getPartitionTable(customizations *blueprint.Customizations, options distro.ImageOptions, rng *rand.Rand) (*disk.PartitionTable, error) {
@@ -222,7 +225,7 @@ func (t *imageType) Manifest(bp *blueprint.Blueprint,
 
 	// don't add any static packages if Minimal was selected
 	if !bp.Minimal {
-		pkgSets, err := defs.PackageSets(t)
+		pkgSets, err := t.ImageTypeYAML.PackageSets(t.arch.distro.Name(), t.arch.name)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -490,7 +493,7 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 	}
 	if instCust != nil {
 		// only supported by the Anaconda installer
-		if slices.Index([]string{"iot-installer"}, t.Name()) == -1 {
+		if slices.Index([]string{"image-installer", "edge-installer", "live-installer", "iot-installer"}, t.Name()) == -1 {
 			return warnings, fmt.Errorf("installer customizations are not supported for %q", t.Name())
 		}
 

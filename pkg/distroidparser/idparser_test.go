@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/distro/rhel/rhel10"
+	"github.com/osbuild/images/pkg/distro/rhel/rhel9"
 	"github.com/stretchr/testify/require"
 )
 
@@ -193,9 +193,9 @@ func TestDefaltParser(t *testing.T) {
 }
 
 func TestParserDoubleMatch(t *testing.T) {
-	Parser := New(rhel10.ParseID, rhel10.ParseID)
+	Parser := New(rhel9.ParseID, rhel9.ParseID)
 
 	require.Panics(t, func() {
-		_, _ = Parser.Parse("rhel-10.0")
-	}, "Parser should panic when rhel-10.0 is matched by multiple parsers")
+		_, _ = Parser.Parse("rhel-9.0")
+	}, "Parser should panic when rhel-9.0 is matched by multiple parsers")
 }
