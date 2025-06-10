@@ -9,7 +9,7 @@ import (
 func mkWslImgType() *rhel.ImageType {
 	it := rhel.NewImageType(
 		"wsl",
-		"disk.tar.gz",
+		"image.wsl",
 		"application/x-tar",
 		packageSetLoader,
 		rhel.TarImage,
@@ -18,6 +18,7 @@ func mkWslImgType() *rhel.ImageType {
 		[]string{"archive"},
 	)
 
+	it.Compression = "xz"
 	it.DefaultImageConfig = &distro.ImageConfig{
 		Locale:    common.ToPtr("en_US.UTF-8"),
 		NoSElinux: common.ToPtr(true),
