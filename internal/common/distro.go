@@ -30,3 +30,16 @@ func VersionLessThan(a, b string) bool {
 func VersionGreaterThanOrEqual(a, b string) bool {
 	return !VersionLessThan(a, b)
 }
+
+func VersionEqual(a, b string) bool {
+	aV, err := version.NewVersion(a)
+	if err != nil {
+		panic(err)
+	}
+	bV, err := version.NewVersion(b)
+	if err != nil {
+		panic(err)
+	}
+
+	return aV.Equal(bV)
+}
