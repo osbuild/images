@@ -10,7 +10,7 @@ import (
 func mkWSLImgType() *rhel.ImageType {
 	it := rhel.NewImageType(
 		"wsl",
-		"disk.tar.gz",
+		"image.wsl",
 		"application/x-tar",
 		packageSetLoader,
 		rhel.TarImage,
@@ -19,6 +19,7 @@ func mkWSLImgType() *rhel.ImageType {
 		[]string{"archive"},
 	)
 
+	it.Compression = "xz"
 	it.DefaultImageConfig = &distro.ImageConfig{
 		CloudInit: []*osbuild.CloudInitStageOptions{
 			{

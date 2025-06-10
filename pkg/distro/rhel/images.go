@@ -818,6 +818,7 @@ func TarImage(workload workload.Workload,
 
 	img.Environment = t.Environment
 	img.Workload = workload
+	img.Compression = t.Compression
 
 	img.Filename = t.Filename()
 
