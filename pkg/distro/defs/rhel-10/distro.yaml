@@ -1098,9 +1098,42 @@ image_types:
             network:
               config: "disabled"
       no_selinux: true
-      wsl:
+      wsl: &wsl_config
         config:
           boot_systemd: true
+        distribution_config: &wsl_distribution_config
+          shortcut:
+            enabled: true
+            icon: /usr/share/pixmaps/fedora-logo.ico
+          oobe: &wsl_distribution_oobe_config
+            default_uid: 1000
+      condition:
+        distro_name:
+          rhel:
+            wsl:
+              <<: *wsl_config
+              distribution_config:
+                <<: *wsl_distribution_config
+                oobe:
+                  <<: *wsl_distribution_oobe_config
+                  default_name: RedHatEnterpriseLinux-%s
+          centos:
+            wsl:
+              <<: *wsl_config
+              distribution_config:
+                <<: *wsl_distribution_config
+                oobe:
+                  <<: *wsl_distribution_oobe_config
+                  default_name: CentOS-%s
+          almalinux: &wsl_distribution_config_almalinux
+            wsl:
+              <<: *wsl_config
+              distribution_config:
+                <<: *wsl_distribution_config
+                oobe:
+                  <<: *wsl_distribution_oobe_config
+                  default_name: AlmaLinux-%s
+          almalinux_kitten: *wsl_distribution_config_almalinux
     package_sets:
       os:
         - include:
@@ -1134,6 +1167,7 @@ image_types:
             - "procps-ng"
             - "python3"
             - "python3-inotify"
+            - "redhat-logos"
             - "redhat-release"
             - "rootfiles"
             - "rpm"
