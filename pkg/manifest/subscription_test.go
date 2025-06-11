@@ -206,7 +206,6 @@ func TestSubscriptionService(t *testing.T) {
 							Type: osbuild.OneshotServiceType,
 							ExecStart: []string{
 								"/usr/bin/rhc connect --organization=${ORG_ID} --activation-key=${ACTIVATION_KEY} --server theserverurl-wr",
-								"/usr/sbin/semanage permissive --add rhcd_t", // added when rhc is enabled
 								"/usr/bin/rm " + subkeyFilepath,
 							},
 							EnvironmentFile: []string{
@@ -252,7 +251,6 @@ func TestSubscriptionService(t *testing.T) {
 							Type: osbuild.OneshotServiceType,
 							ExecStart: []string{
 								"/usr/bin/rhc connect --organization=${ORG_ID} --activation-key=${ACTIVATION_KEY} --server theserverurl-wir",
-								"/usr/sbin/semanage permissive --add rhcd_t", // added when rhc is enabled
 								"/usr/bin/rm " + subkeyFilepath,
 							},
 							EnvironmentFile: []string{
@@ -299,7 +297,6 @@ func TestSubscriptionService(t *testing.T) {
 							Type: osbuild.OneshotServiceType,
 							ExecStart: []string{
 								"/usr/bin/rhc connect --organization=${ORG_ID} --activation-key=${ACTIVATION_KEY} --server theserverurl-wir --content-template template-name",
-								"/usr/sbin/semanage permissive --add rhcd_t", // added when rhc is enabled
 								"/usr/bin/rm " + subkeyFilepath,
 							},
 							EnvironmentFile: []string{
@@ -349,7 +346,6 @@ func TestSubscriptionService(t *testing.T) {
 							Type: osbuild.OneshotServiceType,
 							ExecStart: []string{
 								"/usr/bin/rhc connect --organization=${ORG_ID} --activation-key=${ACTIVATION_KEY} --server theserverurl-wir",
-								"/usr/sbin/semanage permissive --add rhcd_t", // added when rhc is enabled
 								"curl -v --retry 5 --cert /etc/pki/consumer/cert.pem --key /etc/pki/consumer/key.pem -X PATCH https://cert.console.redhat.com/api/patch/v3/templates/template-uuid/subscribed-systems --proxy proxy-url",
 								"/usr/sbin/subscription-manager refresh",
 								"/usr/bin/rm " + subkeyFilepath,
