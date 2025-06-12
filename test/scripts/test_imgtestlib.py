@@ -1,6 +1,7 @@
 import os
 import subprocess as sp
 import tempfile
+from unittest.mock import patch
 
 import pytest
 
@@ -37,18 +38,177 @@ def test_read_seed():
     assert "OSBUILD_TESTING_RNG_SEED" in seed_env
 
 
-def test_path_generators():
-    testlib.get_osbuild_nevra = lambda: "osbuild-104-1.fc39.noarch"
+@pytest.mark.parametrize("kwargs,expected", (
+    (
+        {
+            "osbuild_ref": "abc123",
+            "runner_distro": "fedora-41",
+        },
+        "osbuild-ref-abc123/runner-fedora-41/"
+    ),
+    (
+        {
+            "osbuild_ref": "abc123",
+            "runner_distro": "fedora-41",
+            "distro": "fedora-41",
+        },
+        "osbuild-ref-abc123/runner-fedora-41/fedora-41/"
+    ),
+    (
+        {
+            "osbuild_ref": "abc123",
+            "runner_distro": "fedora-41",
+            "distro": "fedora-41",
+            "arch": "x86_64",
+        },
+        "osbuild-ref-abc123/runner-fedora-41/fedora-41/x86_64/"
+    ),
+    (
+        {
+            "osbuild_ref": "abc123",
+            "runner_distro": "fedora-41",
+            "distro": "fedora-41",
+            "arch": "x86_64",
+            "manifest_id": "abc123123",
+        },
+        "osbuild-ref-abc123/runner-fedora-41/fedora-41/x86_64/manifest-id-abc123123/"
+    ),
+    # Optional arg 'distro' not specified, thus following optional args 'arch' and 'manifest_id' are ignored
+    (
+        {
+            "osbuild_ref": "abc123",
+            "runner_distro": "fedora-41",
+            "arch": "x86_64",
+            "manifest_id": "abc123123"
+        },
+        "osbuild-ref-abc123/runner-fedora-41/"
+    ),
+    # Optional arg 'arch' not specified, thus following optional arg 'manifest_id' is ignored
+    (
+        {
+            "osbuild_ref": "abc123",
+            "runner_distro": "fedora-41",
+            "distro": "fedora-41",
+            "manifest_id": "abc123123"
+        },
+        "osbuild-ref-abc123/runner-fedora-41/fedora-41/"
+    ),
+    # default osbuild_ref
+    (
+        {
+            "runner_distro": "fedora-41",
+        },
+        "osbuild-ref-abcdef123456/runner-fedora-41/"
+    ),
+    # default runner_distro
+    (
+        {
+            "osbuild_ref": "abc123",
+        },
+        "osbuild-ref-abc123/runner-fedora-999/"
+    ),
+    # default osbuild_ref and runner_distro
+    (
+        {},
+        "osbuild-ref-abcdef123456/runner-fedora-999/"
+    ),
+))
+def test_gen_build_info_dir_path_prefix(kwargs, expected):
+    with patch("imgtestlib.get_host_distro", return_value="fedora-999"), \
+         patch("imgtestlib.get_osbuild_commit", return_value="abcdef123456"):
+        assert testlib.gen_build_info_dir_path_prefix(**kwargs) == expected
 
-    assert testlib.gen_build_info_dir_path("inforoot", testlib.get_osbuild_nevra(), "abc123") == \
-        "inforoot/osbuild-104-1.fc39.noarch/abc123/"
-    assert testlib.gen_build_info_path("inforoot", testlib.get_osbuild_nevra(), "abc123") == \
-        "inforoot/osbuild-104-1.fc39.noarch/abc123/info.json"
-    assert testlib.gen_build_info_s3("fedora-39", "aarch64", "abc123") == \
-        testlib.S3_BUCKET + "/images/builds/fedora-39/aarch64/osbuild-104-1.fc39.noarch/abc123/"
+
+@pytest.mark.parametrize("kwargs,expected", (
+    (
+        {
+            "osbuild_ref": "abcdef123456",
+            "runner_distro": "fedora-41",
+            "distro": "fedora-41",
+            "arch": "aarch64",
+            "manifest_id": "abc123"
+        },
+        testlib.S3_BUCKET + "/" + testlib.S3_PREFIX + \
+            "/osbuild-ref-abcdef123456/runner-fedora-41/fedora-41/aarch64/manifest-id-abc123/",
+    ),
+    (
+        {
+            "osbuild_ref": "abcdef123456",
+            "runner_distro": "fedora-41",
+            "distro": "fedora-41",
+            "arch": "aarch64",
+        },
+        testlib.S3_BUCKET + "/" + testlib.S3_PREFIX + \
+            "/osbuild-ref-abcdef123456/runner-fedora-41/fedora-41/aarch64/",
+    ),
+    (
+        {
+            "osbuild_ref": "abcdef123456",
+            "runner_distro": "fedora-41",
+            "distro": "fedora-41",
+        },
+        testlib.S3_BUCKET + "/" + testlib.S3_PREFIX + \
+            "/osbuild-ref-abcdef123456/runner-fedora-41/fedora-41/",
+    ),
+    (
+        {
+            "osbuild_ref": "abcdef123456",
+            "runner_distro": "fedora-41",
+        },
+        testlib.S3_BUCKET + "/" + testlib.S3_PREFIX + \
+            "/osbuild-ref-abcdef123456/runner-fedora-41/",
+    ),
+    # Optional arg 'distro' not specified, thus following optional args 'arch' and 'manifest_id' are ignored
+    (
+        {
+            "osbuild_ref": "abcdef123456",
+            "runner_distro": "fedora-41",
+            "arch": "aarch64",
+            "manifest_id": "abc123"
+        },
+        testlib.S3_BUCKET + "/" + testlib.S3_PREFIX + \
+            "/osbuild-ref-abcdef123456/runner-fedora-41/",
+    ),
+    # Optional arg 'arch' not specified, thus following optional arg 'manifest_id' is ignored
+    (
+        {
+            "osbuild_ref": "abcdef123456",
+            "runner_distro": "fedora-41",
+            "distro": "fedora-41",
+            "manifest_id": "abc123"
+        },
+        testlib.S3_BUCKET + "/" + testlib.S3_PREFIX + \
+            "/osbuild-ref-abcdef123456/runner-fedora-41/fedora-41/",
+    ),
+    # default osbuild_ref
+    (
+        {
+            "runner_distro": "fedora-41",
+        },
+        testlib.S3_BUCKET + "/" + testlib.S3_PREFIX + "/osbuild-ref-abcdef123456/runner-fedora-41/"
+    ),
+    # default runner_distro
+    (
+        {
+            "osbuild_ref": "abc123",
+        },
+        testlib.S3_BUCKET + "/" + testlib.S3_PREFIX + "/osbuild-ref-abc123/runner-fedora-999/"
+    ),
+    # default osbuild_ref and runner_distro
+    (
+        {},
+        testlib.S3_BUCKET + "/" + testlib.S3_PREFIX + "/osbuild-ref-abcdef123456/runner-fedora-999/"
+    ),
+))
+def test_gen_build_info_s3_dir_path(kwargs, expected):
+    with patch("imgtestlib.get_host_distro", return_value="fedora-999"), \
+         patch("imgtestlib.get_osbuild_commit", return_value="abcdef123456"):
+        assert testlib.gen_build_info_s3_dir_path(**kwargs) == expected
 
 
 test_container = "registry.gitlab.com/redhat/services/products/image-builder/ci/osbuild-composer/manifest-list-test"
+
+manifest_list_digest = "sha256:58150862447d05feeb263ddb7257bf11d2ce2a697362ac117de2184d10f028fc"
 
 # manifest IDs for
 #  registry.gitlab.com/redhat/services/products/image-builder/ci/osbuild-composer/manifest-list-test:latest
@@ -70,6 +230,7 @@ def test_skopeo_inspect_id_manifest_list(arch):
     transport = "docker://"
     image_id = image_ids[arch]
     assert testlib.skopeo_inspect_id(f"{transport}{test_container}:latest", arch) == image_id
+    assert testlib.skopeo_inspect_id(f"{transport}{test_container}@{manifest_list_digest}", arch) == image_id
 
 
 @pytest.mark.parametrize("arch", TEST_ARCHES)
