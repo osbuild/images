@@ -17,13 +17,14 @@ build/{distro}/{arch}/{image_type}/{config_name}:
     - {start_container}
     - ./test/scripts/build-image "{distro}" "{image_type}" "{config}"
     - ./test/scripts/boot-image "{distro}" "{arch}" "{image_type}" "{image_path}"
+    - ./test/scripts/upload-results "{distro}" "{image_type}" "{config}"
   extends: .terraform
   variables:
-    RUNNER: aws/rhel-9.4-ga-{arch}
+    RUNNER: {runner}-{arch}
     INTERNAL_NETWORK: "{internal}"
   needs:
     - pipeline: "$PARENT_PIPELINE_ID"
-      job: generate-ostree-build-config-{distro}-{arch}
+      job: "generate-ostree-build-config: [{distro}, {arch}]"
 """
 
 
@@ -216,14 +217,23 @@ def setup_dependencies(manifests, config_map, distro, arch):
                                             arches=arches,
                                             images=filters.get("image-types"))
 
+        distros_to_skip = []
+        for skip in filters.get("skip-distros", []):
+            distros_to_skip.append(skip["name"])
         for image_config in image_configs:
             ic_distro = image_config["distro"]
+            if ic_distro in distros_to_skip:
+                distro = image_config["distro"]
+                arch = image_config["arch"]
+                image_type = image_config["image-type"]
+                print(f"Skipping {distro} {arch} {image_type}: distro found in skip list")
+                continue
             ic_arch = image_config["arch"]
             ic_image_type = image_config["image-type"]
             dep_build_name = testlib.gen_build_name(ic_distro, ic_arch, dep_image_type, dep_config_name)
             manifest_id = manifests[dep_build_name + ".json"]["id"]
-            container_s3_prefix = testlib.gen_build_info_s3(distro, arch, manifest_id)
-            container_s3_path = f"{container_s3_prefix}container/container.tar"
+            container_s3_prefix = testlib.gen_build_info_s3_dir_path(distro, arch, manifest_id)
+            container_s3_path = os.path.join(container_s3_prefix, "container", "container.tar")
 
             # start each container once on an incremental port
             port = container_ports.get(container_s3_path)
@@ -237,14 +247,12 @@ def setup_dependencies(manifests, config_map, distro, arch):
             config_name = config_data["name"]
             config_name = f"{config_name}-{port}"
             # get the ref from the current config, or compute the default if unset
-            ref = config_data.get("options", {}).get("ostree", {}).get("ref", default_ref(ic_distro, ic_arch))
+            ref = config_data.get("ostree", {}).get("ref", default_ref(ic_distro, ic_arch))
             new_config = {
                 "name": config_name,
-                "options": {
-                    "ostree": {
-                        "url": f"http://localhost:{port}/repo",
-                        "ref": ref,
-                    }
+                "ostree": {
+                    "url": f"http://localhost:{port}/repo",
+                    "ref": ref,
                 },
                 "blueprint": config_data.get("blueprint"),
             }
@@ -311,6 +319,7 @@ def generate_configs(build_requests, container_configs, pipeline_file, configs_d
         run_container_cmd = f"sudo podman run -d --rm -p{container_port}:8080 oci-archive:container.tar"
 
         pipeline_file.write(JOB_TEMPLATE.format(distro=distro, arch=arch, image_type=image_type,
+                                                runner=testlib.get_common_ci_runner(),
                                                 config_name=config_name, config=build_config_path,
                                                 dl_container=dl_container_cmd,
                                                 start_container=run_container_cmd,

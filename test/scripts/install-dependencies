@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 
 dnf -y install \
-    device-mapper-devel \
+    awscli2 \
     gcc \
     go \
     gpgme-devel \
+    krb5-devel \
     osbuild \
     osbuild-depsolve-dnf \
     osbuild-luks2 \

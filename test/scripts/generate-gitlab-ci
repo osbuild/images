@@ -7,6 +7,7 @@ import imgtestlib as testlib
 
 ARCHITECTURES = ["x86_64", "aarch64"]
 MANIFEST_ONLY_ARCHES = ["ppc64le", "s390x"]
+RUNNER = testlib.get_common_ci_runner()
 
 
 BASE_CONFIG = """---
@@ -14,6 +15,9 @@ stages:
   - init
   - gen
   - build
+  - ostree-gen
+  - ostree-build
+  - verify
   - finish
 
 variables:
@@ -48,11 +52,11 @@ fail:
 """
 
 GEN_TEMPLATE = """
-generate-build-config-{distro}-{arch}:
+"generate-build-config: [{distro}, {arch}]":
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/rhel-9.4-ga-{arch}
+    RUNNER: {runner}-{arch}
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -68,28 +72,64 @@ generate-build-config-{distro}-{arch}:
 """
 
 TRIGGER_TEMPLATE = """
-image-build-trigger-{distro}-{arch}:
+"image-build-trigger: [{distro}, {arch}]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-{distro}-{arch}
+        job: "generate-build-config: [{distro}, {arch}]"
     strategy: depend
   needs:
-    - generate-build-config-{distro}-{arch}
+    - "generate-build-config: [{distro}, {arch}]"
 """
 
-MANIFEST_GEN_TEMPLATE = """
-generate-manifests-{distro}-{arch}:
-  stage: gen
+OSTREE_GEN_TEMPLATE = """
+"generate-ostree-build-config: [{distro}, {arch}]":
+  stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/rhel-9.4-ga-x86_64
+    RUNNER: {runner}-{arch}
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
     - sudo ./test/scripts/install-dependencies
-    - go run -tags=exclude_graphdriver_btrfs ./cmd/gen-manifests --arches {arch} --distros {distro} --workers 10 --metadata=false --output ./manifests
+    - ./test/scripts/generate-ostree-build-config --distro {distro} --arch {arch} build-config.yml build-configs
+  artifacts:
+    paths:
+      - build-config.yml
+      - build-configs
+  needs:
+    - "image-build-trigger: [{distro}, {arch}]"
+  cache:
+    key: testcache
+    paths:
+      - {cache}
+"""
+
+OSTREE_TRIGGER_TEMPLATE = """
+"image-build-ostree-trigger: [{distro}, {arch}]":
+  stage: ostree-build
+  trigger:
+    include:
+      - artifact: build-config.yml
+        job: "generate-ostree-build-config: [{distro}, {arch}]"
+    strategy: depend
+  needs:
+    - "generate-ostree-build-config: [{distro}, {arch}]"
+"""
+
+
+MANIFEST_GEN_TEMPLATE = """
+"generate-manifests: [{distro}, {arch}]":
+  stage: gen
+  extends: .terraform
+  variables:
+    RUNNER: {runner}-x86_64
+    INTERNAL_NETWORK: "true"
+  script:
+    - sudo ./test/scripts/setup-osbuild-repo
+    - sudo ./test/scripts/install-dependencies
+    - go run ./cmd/gen-manifests --arches {arch} --distros {distro} --workers 10 --metadata=false --output ./manifests
     - for manifest in ./manifests/*; do
         if osbuild --inspect $manifest > output; then
           echo "$manifest OK";
@@ -113,14 +153,37 @@ def main():
 
     gen_stage = []
     trigger_stage = []
+    ostree_gen_stage = []
+    ostree_trigger_stage = []
     for img in sort_configs(images):
         combo = (img["distro"], img["arch"])
         if combo in combos:
             continue
 
         combos.add(combo)
-        gen_stage.append(GEN_TEMPLATE.format(distro=img["distro"], arch=img["arch"], cache=cache))
-        trigger_stage.append(TRIGGER_TEMPLATE.format(distro=img["distro"], arch=img["arch"], cache=cache))
+        gen_stage.append(GEN_TEMPLATE.format(
+            distro=img["distro"],
+            arch=img["arch"],
+            runner=RUNNER,
+            cache=cache))
+
+        trigger_stage.append(TRIGGER_TEMPLATE.format(
+            distro=img["distro"],
+            arch=img["arch"],
+            runner=RUNNER,
+            cache=cache))
+
+        ostree_gen_stage.append(OSTREE_GEN_TEMPLATE.format(
+            distro=img["distro"],
+            arch=img["arch"],
+            runner=RUNNER,
+            cache=cache))
+
+        ostree_trigger_stage.append(OSTREE_TRIGGER_TEMPLATE.format(
+            distro=img["distro"],
+            arch=img["arch"],
+            runner=RUNNER,
+            cache=cache))
 
     man_only_images = testlib.list_images(arches=MANIFEST_ONLY_ARCHES)
     man_gen_stage = []
@@ -130,13 +193,15 @@ def main():
             continue
 
         combos.add(combo)
-        man_gen_stage.append(MANIFEST_GEN_TEMPLATE.format(distro=img["distro"], arch=img["arch"]))
+        man_gen_stage.append(MANIFEST_GEN_TEMPLATE.format(distro=img["distro"], arch=img["arch"], runner=RUNNER))
 
     with open(config_path, "w", encoding="utf-8") as config_file:
-        config_file.write(BASE_CONFIG)
+        config_file.write(BASE_CONFIG.format(runner=RUNNER))
         config_file.write(testlib.BASE_CONFIG)
         config_file.write("\n".join(gen_stage))
         config_file.write("\n".join(trigger_stage))
+        config_file.write("\n".join(ostree_gen_stage))
+        config_file.write("\n".join(ostree_trigger_stage))
         config_file.write("\n".join(man_gen_stage))
 
 

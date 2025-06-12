@@ -49,6 +49,9 @@ jobs:
       - name: Mark the working directory as safe for git
         run: git config --global --add safe.directory "$(pwd)"
 
+      - name: Install openssl for cgo test below
+        run: dnf -y install openssl
+
       - name: Run unit tests
         run: go test -v -race  ./...
 
@@ -103,28 +106,13 @@ jobs:
           # allow seemingly unreachable commands
           SHELLCHECK_OPTS: -e SC1091 -e SC2002 -e SC2317
 
-  python-test:
-    name: "🐍 pytest (imgtestlib)"
-    runs-on: ubuntu-latest
-    container:
-      image: registry.fedoraproject.org/fedora:latest
-    steps:
-
-      - name: Install build and test dependencies
-        run: dnf -y install python3-pytest podman skopeo
-
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Testing imgtestlib
-        run: |
-          python3 -m pytest -v
-
   python-lint:
     name: "🐍 Lint (test scripts)"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    env:
+      # workaround for expired cert at source of indirect dependency
+      # (go.opencensus.io/trace)
+      GOPROXY: "https://proxy.golang.org|direct"
     container:
       image: registry.fedoraproject.org/fedora:latest
     steps:
