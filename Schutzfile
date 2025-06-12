@@ -1,43 +1,59 @@
 {
-  "rngseed": 1,
-  "fedora-39": {
+  "common": {
+    "rngseed": 4,
+    "bootc-image-builder": {
+      "ref": "quay.io/centos-bootc/bootc-image-builder@sha256:9893e7209e5f449b86ababfd2ee02a58cca2e5990f77b06c3539227531fc8120"
+    },
+    "gitlab-ci-runner": "aws/centos-stream-9"
+  },
+  "centos-9": {
     "dependencies": {
       "osbuild": {
-        "commit": "b42e1afddc37dae3199e039f2a3d3cb10f01485c"
+        "commit": "0b7dcf3cf4ad6d51d153f8dfb2faaec1395f402f"
+      }
+    }
+  },
+  "centos-stream-9": {
+    "dependencies": {
+      "osbuild": {
+        "commit": "0b7dcf3cf4ad6d51d153f8dfb2faaec1395f402f"
       }
     },
     "repos": [
       {
-        "file": "/etc/yum.repos.d/fedora.repo",
+        "file": "/etc/yum.repos.d/centos.repo",
         "x86_64": [
           {
-            "title": "fedora",
-            "name": "fedora",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f39/f39-x86_64-fedora-20231109"
+            "title": "baseos",
+            "name": "baseos",
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/el9/cs9-x86_64-baseos-20250515"
+          },
+          {
+            "title": "appstream",
+            "name": "appstream",
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/el9/cs9-x86_64-appstream-20250515"
+          },
+          {
+            "title": "crb",
+            "name": "crb",
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/el9/cs9-x86_64-crb-20250515"
           }
         ],
         "aarch64": [
           {
-            "title": "fedora",
-            "name": "fedora",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f39/f39-aarch64-fedora-20231109"
-          }
-        ]
-      },
-      {
-        "file": "/etc/yum.repos.d/fedora-updates.repo",
-        "x86_64": [
+            "title": "baseos",
+            "name": "baseos",
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/el9/cs9-aarch64-baseos-20250515"
+          },
           {
-            "title": "updates",
-            "name": "updates",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f39/f39-x86_64-updates-released-20240101"
-          }
-        ],
-        "aarch64": [
+            "title": "appstream",
+            "name": "appstream",
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/el9/cs9-aarch64-appstream-20250515"
+          },
           {
-            "title": "updates",
-            "name": "updates",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f39/f39-aarch64-updates-released-20240101"
+            "title": "crb",
+            "name": "crb",
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/el9/cs9-aarch64-crb-20250515"
           }
         ]
       }
