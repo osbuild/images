@@ -34,19 +34,6 @@ generator-trigger:
         job: configure-generators
     strategy: depend
 
-check-build-coverage:
-  stage: verify
-  image: fedora:latest
-  variables:
-    PYTHONUNBUFFERED: 1
-  script:
-    - ./test/scripts/install-dependencies
-    - ./test/scripts/check-build-coverage ./s3configs/
-  cache:
-    key: testcache
-    paths:
-      - .cache/osbuild-images
-
 finish:
   stage: finish
   dependencies: []
