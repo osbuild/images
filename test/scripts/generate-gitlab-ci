@@ -7,29 +7,56 @@ import imgtestlib as testlib
 
 ARCHITECTURES = ["x86_64", "aarch64"]
 MANIFEST_ONLY_ARCHES = ["ppc64le", "s390x"]
+RUNNER = testlib.get_common_ci_runner()
 
 
-BASE_CONFIG = """
+BASE_CONFIG = """---
 stages:
+  - init
   - gen
   - build
   - ostree-gen
   - ostree-build
+  - verify
+  - finish
 
 variables:
   # Set the parent pipeline ID as a global variable so that the child pipeline
   # jobs can use it to retrieve artifacts.
   PARENT_PIPELINE_ID: $CI_PIPELINE_ID
-  GOFLAGS: "-tags=exclude_graphdriver_btrfs"
 
+init:
+  stage: init
+  interruptible: true
+  tags:
+    - shell
+  script:
+    - schutzbot/update_github_status.sh start
+
+finish:
+  stage: finish
+  dependencies: []
+  tags:
+    - shell
+  script:
+    - schutzbot/update_github_status.sh finish
+
+fail:
+  stage: finish
+  tags:
+    - shell
+  script:
+    - schutzbot/update_github_status.sh fail
+    - exit 1  # make the pipeline fail so it doesn't look like success
+  when: on_failure
 """
 
 GEN_TEMPLATE = """
-generate-build-config-{distro}-{arch}:
+"generate-build-config: [{distro}, {arch}]":
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/rhel-8.10-{arch}
+    RUNNER: {runner}-{arch}
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -45,23 +72,23 @@ generate-build-config-{distro}-{arch}:
 """
 
 TRIGGER_TEMPLATE = """
-image-build-trigger-{distro}-{arch}:
+"image-build-trigger: [{distro}, {arch}]":
   stage: build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-build-config-{distro}-{arch}
+        job: "generate-build-config: [{distro}, {arch}]"
     strategy: depend
   needs:
-    - generate-build-config-{distro}-{arch}
+    - "generate-build-config: [{distro}, {arch}]"
 """
 
 OSTREE_GEN_TEMPLATE = """
-generate-ostree-build-config-{distro}-{arch}:
+"generate-ostree-build-config: [{distro}, {arch}]":
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/rhel-8.10-{arch}
+    RUNNER: {runner}-{arch}
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -72,7 +99,7 @@ generate-ostree-build-config-{distro}-{arch}:
       - build-config.yml
       - build-configs
   needs:
-    - image-build-trigger-{distro}-{arch}
+    - "image-build-trigger: [{distro}, {arch}]"
   cache:
     key: testcache
     paths:
@@ -80,29 +107,41 @@ generate-ostree-build-config-{distro}-{arch}:
 """
 
 OSTREE_TRIGGER_TEMPLATE = """
-image-build-ostree-trigger-{distro}-{arch}:
+"image-build-ostree-trigger: [{distro}, {arch}]":
   stage: ostree-build
   trigger:
     include:
       - artifact: build-config.yml
-        job: generate-ostree-build-config-{distro}-{arch}
+        job: "generate-ostree-build-config: [{distro}, {arch}]"
     strategy: depend
   needs:
-    - generate-ostree-build-config-{distro}-{arch}
+    - "generate-ostree-build-config: [{distro}, {arch}]"
 """
 
 
 MANIFEST_GEN_TEMPLATE = """
-generate-manifests-{distro}-{arch}:
+"generate-manifests: [{distro}, {arch}]":
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/rhel-8.10-x86_64
+    RUNNER: {runner}-x86_64
     INTERNAL_NETWORK: "true"
   script:
+    - sudo ./test/scripts/setup-osbuild-repo
     - sudo ./test/scripts/install-dependencies
-    - go run ./cmd/gen-manifests --arches {arch} --distros {distro} --workers 10
+    - go run ./cmd/gen-manifests --arches {arch} --distros {distro} --workers 10 --metadata=false --output ./manifests
+    - for manifest in ./manifests/*; do
+        if osbuild --inspect $manifest > output; then
+          echo "$manifest OK";
+        else
+          cat output;
+        fi;
+      done
 """
+
+
+def sort_configs(configs):
+    return sorted(configs, key=lambda img: img["distro"]+img["arch"]+img["image-type"])
 
 
 def main():
@@ -116,29 +155,48 @@ def main():
     trigger_stage = []
     ostree_gen_stage = []
     ostree_trigger_stage = []
-    for img in images:
+    for img in sort_configs(images):
         combo = (img["distro"], img["arch"])
         if combo in combos:
             continue
 
         combos.add(combo)
-        gen_stage.append(GEN_TEMPLATE.format(distro=img["distro"], arch=img["arch"], cache=cache))
-        trigger_stage.append(TRIGGER_TEMPLATE.format(distro=img["distro"], arch=img["arch"], cache=cache))
-        ostree_gen_stage.append(OSTREE_GEN_TEMPLATE.format(distro=img["distro"], arch=img["arch"], cache=cache))
-        ostree_trigger_stage.append(OSTREE_TRIGGER_TEMPLATE.format(distro=img["distro"], arch=img["arch"], cache=cache))
+        gen_stage.append(GEN_TEMPLATE.format(
+            distro=img["distro"],
+            arch=img["arch"],
+            runner=RUNNER,
+            cache=cache))
+
+        trigger_stage.append(TRIGGER_TEMPLATE.format(
+            distro=img["distro"],
+            arch=img["arch"],
+            runner=RUNNER,
+            cache=cache))
+
+        ostree_gen_stage.append(OSTREE_GEN_TEMPLATE.format(
+            distro=img["distro"],
+            arch=img["arch"],
+            runner=RUNNER,
+            cache=cache))
+
+        ostree_trigger_stage.append(OSTREE_TRIGGER_TEMPLATE.format(
+            distro=img["distro"],
+            arch=img["arch"],
+            runner=RUNNER,
+            cache=cache))
 
     man_only_images = testlib.list_images(arches=MANIFEST_ONLY_ARCHES)
     man_gen_stage = []
-    for img in man_only_images:
+    for img in sort_configs(man_only_images):
         combo = (img["distro"], img["arch"])
         if combo in combos:
             continue
 
         combos.add(combo)
-        man_gen_stage.append(MANIFEST_GEN_TEMPLATE.format(distro=img["distro"], arch=img["arch"]))
+        man_gen_stage.append(MANIFEST_GEN_TEMPLATE.format(distro=img["distro"], arch=img["arch"], runner=RUNNER))
 
     with open(config_path, "w", encoding="utf-8") as config_file:
-        config_file.write(BASE_CONFIG)
+        config_file.write(BASE_CONFIG.format(runner=RUNNER))
         config_file.write(testlib.BASE_CONFIG)
         config_file.write("\n".join(gen_stage))
         config_file.write("\n".join(trigger_stage))

@@ -2,11 +2,11 @@
 
 dnf -y install \
     awscli2 \
-    btrfs-progs-devel \
     device-mapper-devel \
     gcc \
     go \
     gpgme-devel \
+    krb5-devel \
     osbuild \
     osbuild-depsolve-dnf \
     osbuild-luks2 \
