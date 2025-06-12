@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-set -euo pipefail
+# vim: sw=4:et
+set -euxo pipefail
 
 running_wait() {
     # simple implementation of 'systemctl is-system-running --wait' for older
@@ -78,6 +79,190 @@ get_oscap_score() {
     fi
 }
 
+check_ca_cert() {
+    serial=$(jq -r '.blueprint.customizations.cacerts.pem_certs[0]' "${config}" | openssl x509 -noout -serial | cut -d= -f 2- | tr '[:upper:]' '[:lower:]')
+    cn=$(jq -r '.blueprint.customizations.cacerts.pem_certs[0]' "${config}" | openssl x509 -noout -subject | sed -E 's/.*CN ?= ?//')
+
+    echo "📗 Checking CA cert anchor file serial '${serial}'"
+    if ! [ -e "/etc/pki/ca-trust/source/anchors/${serial}.pem" ]; then
+        echo "Anchor CA file does not exist, directory contents:"
+        find /etc/pki/ca-trust/source/anchors
+        exit 1
+    fi
+
+    echo "📗 Checking extracted CA cert file named '${cn}'"
+    if ! grep -q "${cn}" /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem; then
+        echo "Extracted CA cert not found in the bundle, tls-ca-bundle.pem contents:"
+        grep '^#' /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
+        exit 1
+    fi
+}
+
+check_modularity() {
+    echo "📗 Checking enabled modules"
+
+    # Verify modules that are enabled on a system, if any. Modules can either be enabled separately
+    # or they can be installed through packages directly. We test both cases here.
+    #
+    # Caveat is that when a module is enabled yet _no_ packages are installed from it this breaks.
+    # Let's not do that in the test?
+
+    modules_expected_0=$(jq -rc '.blueprint.enabled_modules[]? | .name + ":" + .stream' "${config}")
+    modules_expected_1=$(jq -rc '.blueprint.packages[]? | select(.name | startswith("@") and contains(":")) | .name' "${config}" | cut -c2-)
+
+    modules_expected="${modules_expected_0}\n${modules_expected_1}"
+    modules_enabled=$(dnf module list --enabled 2>&1 | tail -n+4 | head -n -2 | tr -s ' ' | cut -d' ' -f1,2 | tr ' ' ':')
+
+    # Go over the expected modules and check if each of them is installed
+    echo "$modules_expected" | while read -r module_expected; do
+        echo "📗 Module expected: ${module_expected}"
+        if [[ $module_expected != *$modules_enabled* ]]; then
+            echo "❌ Module was not enabled: ${module_expected}"
+            exit 1
+        else
+            echo "Module was enabled"
+        fi
+    done
+}
+
+check_hostname() {
+    echo "📗 Checking hostname"
+
+    # Verify that the hostname is set by running `hostname`
+    expected_hostname=$(jq -r '.blueprint.customizations.hostname' "${config}")
+    actual_hostname=$(hostname)
+
+    # we only emit a warning here since the hostname gets reset by cloud-init and we're not
+    # entirely sure how to deal with it yet on the service level
+    if [[ $actual_hostname != "${expected_hostname}" ]]; then 
+        echo "🟡 Hostname was not set: hostname=${actual_hostname} expected=${expected_hostname}"
+    else
+        echo "Hostname was set"
+    fi
+}
+
+check_services_enabled() {
+    echo "📗 Checking enabled services"
+
+    services_expected=$(jq -rc '.blueprint.customizations.services.enabled[]' "${config}")
+
+    echo "$services_expected" | while read -r service_expected; do
+        state=$(systemctl is-enabled "${service_expected}")
+        if [[ "${state}" == "enabled" ]]; then
+            echo "Service was enabled service=${service_expected} state=${state}"
+        else
+            echo "❌ Service was not enabled service=${service_expected} state=${state}"
+            exit 1
+        fi
+    done
+}
+
+check_services_disabled() {
+    echo "📗 Checking disabled services"
+
+    services_expected=$(jq -rc '.blueprint.customizations.services.disabled[]' "${config}")
+
+    echo "$services_expected" | while read -r service_expected; do
+        state=$(systemctl is-enabled "${service_expected}" || true)
+        if [[ "${state}" == "disabled" ]]; then
+            echo "Service was disabled service=${service_expected} state=${state}"
+        else
+            echo "❌ Service was not disabled service=${service_expected} state=${state}"
+            exit 1
+        fi
+    done
+}
+
+check_services_masked() {
+    echo "📗 Checking masked services"
+
+    services_expected=$(jq -rc '.blueprint.customizations.services.masked[]' "${config}")
+
+    echo "$services_expected" | while read -r service_expected; do
+        states=$(systemctl list-unit-files --state=masked)
+        if echo "${states}" | grep -q "${service_expected}"; then
+            echo "Service was masked service=${service_expected}"
+        else
+            echo "❌ Service was not masked service=${service_expected} output=${states}"
+            exit 1
+        fi
+    done
+}
+
+check_firewall_services_enabled() {
+    echo "📗 Checking enabled firewall services"
+
+    services_expected=$(jq -rc '.blueprint.customizations.firewall.services.enabled[]' "${config}")
+
+    echo "$services_expected" | while read -r service_expected; do
+        # NOTE: sudo works here without password because we test this only on ami
+        # initialised with cloud-init, which sets sudo NOPASSWD for the user
+        state=$(sudo firewall-cmd --query-service="${service_expected}")
+        if [[ "${state}" == "yes" ]]; then
+            echo "Firewall service was enabled service=${service_expected} state=${state}"
+        else
+            echo "❌ Firewall service was not enabled service=${service_expected} state=${state}"
+            exit 1
+        fi
+    done
+}
+
+check_firewall_ports() {
+    echo "📗 Checking enabled firewall ports"
+
+    ports_expected=$(jq -rc '.blueprint.customizations.firewall.ports[]' "${config}")
+
+    echo "$ports_expected" | while read -r port_expected; do
+        # NOTE: sudo works here without password because we test this only on ami
+        # initialised with cloud-init, which sets sudo NOPASSWD for the user
+        # firewall-cmd --query-port uses / as the port/protocol separator, but
+        # in the blueprint we use :.
+        port_expected="${port_expected//:/\/}"
+        state=$(sudo firewall-cmd --query-port="${port_expected}")
+        if [[ "${state}" == "yes" ]]; then
+            echo "Firewall port was enabled port=${port_expected} state=${state}"
+        else
+            echo "❌ Firewall port was not enabled port=${port_expected} state=${state}"
+            exit 1
+        fi
+    done
+}
+
+
+check_firewall_services_disabled() {
+    echo "📗 Checking disabled firewall services"
+
+    services_expected=$(jq -rc '.blueprint.customizations.firewall.services.disabled[]' "${config}")
+
+    echo "$services_expected" | while read -r service_expected; do
+        # NOTE: sudo works here without password because we test this only on ami
+        # initialised with cloud-init, which sets sudo NOPASSWD for the user
+        state=$(sudo firewall-cmd --query-service="${service_expected}" || true)
+        if [[ "${state}" == "no" ]]; then
+            echo "Firewall service was disabled service=${service_expected} state=${state}"
+        else
+            echo "❌ Firewall service was not disabled service=${service_expected} state=${state}"
+            exit 1
+        fi
+    done
+}
+
+check_users() {
+    echo "📗 Checking users"
+
+    users_expected=$(jq -rc '.blueprint.customizations.user[]' "$config")
+
+    echo "$users_expected" | while read -r user_expected; do
+        username=$(echo "$user_expected" | jq -rc .name)
+        if ! id "$username"; then
+            echo "❌ User did not exist: username=${username}"
+            exit 1
+        else
+            echo "User ${username} exists"
+        fi
+    done
+}
+
 echo "❓ Checking system status"
 if ! running_wait; then
 
@@ -113,5 +298,45 @@ if (( $# > 0 )); then
     config="$1"
     if jq -e .blueprint.customizations.openscap "${config}"; then
         get_oscap_score "${config}"
+    fi
+
+    if jq -e '.blueprint.customizations.cacerts.pem_certs[0]' "${config}"; then
+        check_ca_cert "${config}"
+    fi
+
+    if jq -e '.blueprint.enabled_modules' "${config}" || jq -e '.blueprint.packages[] | select(.name | startswith("@") and contains(":")) | .name' "${config}"; then
+        check_modularity "${config}"
+    fi
+
+    if jq -e '.blueprint.customizations.user' "${config}"; then
+        check_users "${config}"
+    fi
+
+    if jq -e '.blueprint.customizations.services.enabled' "${config}"; then
+        check_services_enabled "${config}"
+    fi
+
+    if jq -e '.blueprint.customizations.services.disabled' "${config}"; then
+        check_services_disabled "${config}"
+    fi
+
+    if jq -e '.blueprint.customizations.services.masked' "${config}"; then
+        check_services_masked "${config}"
+    fi
+
+    if jq -e '.blueprint.customizations.firewall.services.enabled' "${config}"; then
+        check_firewall_services_enabled "${config}"
+    fi
+
+    if jq -e '.blueprint.customizations.firewall.services.disabled' "${config}"; then
+        check_firewall_services_disabled "${config}"
+    fi
+
+    if jq -e '.blueprint.customizations.firewall.ports' "${config}"; then
+        check_firewall_ports "${config}"
+    fi
+
+    if jq -e '.blueprint.customizations.hostname' "${config}"; then
+        check_hostname "${config}"
     fi
 fi

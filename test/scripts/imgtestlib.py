@@ -5,6 +5,7 @@ import pathlib
 import subprocess as sp
 import sys
 from glob import glob
+from typing import Dict, List, Optional
 
 TEST_CACHE_ROOT = ".cache/osbuild-images"
 CONFIGS_PATH = "./test/configs"
@@ -46,6 +47,7 @@ BASE_CONFIG = """
     - terraform
   variables:
     PYTHONUNBUFFERED: 1
+    GOFLAGS: "-tags=exclude_graphdriver_btrfs,exclude_graphdriver_devicemapper"
 
 .terraform:
   extends: .base
@@ -102,38 +104,51 @@ def list_images(distros=None, arches=None, images=None):
     images_arg = "*"
     if images:
         images_arg = ",".join(images)
-    out, _ = runcmd(["go", "run", "-tags=exclude_graphdriver_btrfs", "./cmd/list-images", "--json",
+    out, _ = runcmd(["go", "run", "./cmd/list-images", "--json",
                      "--distros", distros_arg, "--arches", arches_arg, "--images", images_arg])
     return json.loads(out)
 
 
-def dl_build_info(destination, distro=None, arch=None):
+# pylint: disable=too-many-arguments,too-many-positional-arguments
+def dl_build_cache(
+        destination, distro: Optional[str]=None, arch: Optional[str]=None, osbuild_ref: Optional[str]=None,
+        runner_distro: Optional[str]=None, manifest_id: Optional[str]=None, include_only: Optional[List[str]]=None):
     """
-    Downloads all the configs from the s3 bucket.
+    Downloads image build cache files from the s3 bucket.
+
+    If 'include' is not specified, all files are downloaded. Otherwise, all files will be excluded and the items
+    in the 'include' list will be passed as '--include' arguments to the 'aws s3 sync' command.
     """
-    s3url = f"{S3_BUCKET}/{S3_PREFIX}"
-    if distro and arch:
-        # only take them into account if both are defined
-        s3url = f"{s3url}/{distro}/{arch}"
+    s3url = gen_build_info_s3_dir_path(distro, arch, manifest_id, osbuild_ref, runner_distro)
+    dl_what = "all files" if include_only is None else "only " + ', '.join(f"'{i}'" for i in include_only)
+    print(f"⬇️ Downloading {dl_what} from {s3url}")
 
-    s3url += "/"
+    cmd = [
+        "aws", "s3", "sync",
+        "--no-progress",  # wont show progress but will print file list
+    ]
+    if include_only:
+        cmd.extend(["--exclude=*"])
+        for i in include_only:
+            cmd.extend([f"--include={i}"])
+    cmd.extend([s3url, destination])
 
-    print(f"⬇️ Downloading configs from {s3url}")
-    # only download info.json (exclude everything, then include) files, otherwise we get manifests and whole images
-    job = sp.run(["aws", "s3", "sync",
-                  "--no-progress",  # wont show progress but will print file list
-                  "--exclude=*",
-                  "--include=*/info.json",
-                  "--include=*/bib-*",
-                  s3url, destination],
-                 capture_output=True,
-                 check=False)
+    job = sp.run(cmd, capture_output=True, check=False)
     ok = job.returncode == 0
     if not ok:
         print(f"⚠️ Failed to sync contents of {s3url}:")
         print(job.stdout.decode())
         print(job.stderr.decode())
     return job.stdout.decode(), ok
+
+
+def dl_build_info(destination, distro=None, arch=None, osbuild_ref=None, runner_distro=None):
+    """
+    Downloads all the configs from the s3 bucket.
+    """
+    # only download info.json and bib-* files, otherwise we get manifests and whole images
+    include = ["*/info.json", "*/bib-*"]
+    return dl_build_cache(destination, distro, arch, osbuild_ref, runner_distro, include_only=include)
 
 
 def get_manifest_id(manifest_data):
@@ -152,31 +167,50 @@ def gen_build_name(distro, arch, image_type, config_name):
     return f"{_u(distro)}-{_u(arch)}-{_u(image_type)}-{_u(config_name)}"
 
 
-def gen_build_info_dir_path(root, osbuild_ver, manifest_id):
+def gen_build_info_dir_path_prefix(distro=None, arch=None, manifest_id=None, osbuild_ref=None, runner_distro=None):
     """
-    Generates the path to the directory that contains the build info.
-    This is a simple os.path.join() of the components, but ensures that paths are consistent.
+    Generates the relative path prefix for the location where build info and artifacts will be stored for a specific
+    build. This is a simple concatenation of the components, but ensures that paths are consistent. The caller is
+    responsible for prepending the location root to the generated path.
+
+    If no 'osbuild_ref' is specified, the value returned by get_osbuild_commit() for the 'runner_distro' will be used.
+    if no 'runner_distro' is specified, the value returned by get_host_distro() will be used.
+
+    A fully specified path is returned if all of the 'distro', 'arch' and 'manifest_id' parameters are specified,
+    otherwise a partial path is returned. Partial path may be useful for working with a superset of build infos.
+    For a more specific path to be generated when specifying any of the optional parameters, the caller must specify
+    all of the previous parameters. For example, if 'arch' is specified, 'distro' must also be specified for 'arch' to
+    be included in the path.
+
+    The returned path always has a trailing separator at the end to signal that it is a directory.
     """
-    return os.path.join(root, osbuild_ver, manifest_id, "")
+    if runner_distro is None:
+        runner_distro = get_host_distro()
+    if osbuild_ref is None:
+        osbuild_ref = get_osbuild_commit(runner_distro)
+
+    path = os.path.join(f"osbuild-ref-{osbuild_ref}", f"runner-{runner_distro}")
+    for p in (distro, arch, f"manifest-id-{manifest_id}" if manifest_id else None):
+        if p is None:
+            return path + "/"
+        path = os.path.join(path, p)
+    return path + "/"
 
 
-def gen_build_info_path(root, osbuild_ver, manifest_id):
+def gen_build_info_s3_dir_path(distro=None, arch=None, manifest_id=None, osbuild_ref=None, runner_distro=None):
     """
-    Generates the path to the info.json.
-    This is a simple os.path.join() of the components, but ensures that paths are consistent.
-    """
-    return os.path.join(gen_build_info_dir_path(root, osbuild_ver, manifest_id), "info.json")
+    Generates the s3 URL for the location where build info and artifacts will be stored for a specific
+    one or more builds, depending on the parameters specified.
 
-
-def gen_build_info_s3(distro, arch, manifest_id):
+    A fully specified path is returned if all parameters are specified, otherwise a partial path is returned.
+    This function basically just prepends the S3_BUCKET and S3_PREFIX to the path generated by
+    gen_build_info_dir_path_prefix().
     """
-    Generates the s3 URL for the location where build info and artifacts will be stored for a specific build
-    configuration.
-    This is a simple concatenation of the components, but ensures that paths are consistent.
-    """
-    osbuild_ver = get_osbuild_nevra()
-    build_info_prefix = f"{S3_BUCKET}/images/builds/{distro}/{arch}"
-    return gen_build_info_dir_path(build_info_prefix, osbuild_ver, manifest_id)
+    return os.path.join(
+        S3_BUCKET,
+        S3_PREFIX,
+        gen_build_info_dir_path_prefix(distro, arch, manifest_id, osbuild_ref, runner_distro),
+    )
 
 
 def check_config_names():
@@ -200,9 +234,10 @@ def check_config_names():
 
 def gen_manifests(outputdir, config_map=None, distros=None, arches=None, images=None,
                   commits=False, skip_no_config=False):
-    # pylint: disable=too-many-arguments
-    cmd = ["go", "run",
-           "-tags=exclude_graphdriver_btrfs",
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
+    cmd = ["go",
+           "run",
+           "-tags", "exclude_graphdriver_btrfs exclude_graphdriver_devicemapper",
            "./cmd/gen-manifests",
            "--cache", os.path.join(TEST_CACHE_ROOT, "rpmmd"),
            "--output", outputdir,
@@ -314,13 +349,16 @@ def filter_builds(manifests, distro=None, arch=None, skip_ostree_pull=True):
     Returns a list of build requests for the manifests that have no matching config in the test build cache.
     """
     print(f"⚙️ Filtering {len(manifests)} build configurations")
-    dl_path = os.path.join(TEST_CACHE_ROOT, "s3configs", f"builds/{distro}/{arch}/")
+    dl_root_path = os.path.join(TEST_CACHE_ROOT, "s3configs", "builds")
+    dl_path = os.path.join(dl_root_path, gen_build_info_dir_path_prefix(distro, arch))
     os.makedirs(dl_path, exist_ok=True)
     build_requests = []
 
-    # NOTE: disabled cache download for RHEL because there no aws-cli, the build matrix is smaller, and we wont be
-    # making many PRs to the branch.
-    osbuild_ver = get_osbuild_nevra()
+    out, dl_ok = dl_build_info(dl_path, distro, arch)
+    # continue even if the dl failed; will build all configs
+    if dl_ok:
+        # print output which includes list of downloaded files for CI job log
+        print(out)
 
     errors: list[str] = []
     for manifest_fname, data in manifests.items():
@@ -342,7 +380,10 @@ def filter_builds(manifests, distro=None, arch=None, skip_ostree_pull=True):
         build_request["manifest-checksum"] = manifest_id
 
         # check if the hash_fname exists in the synced directory
-        build_info_dir = gen_build_info_dir_path(dl_path, osbuild_ver, manifest_id)
+        build_info_dir = os.path.join(
+            dl_root_path,
+            gen_build_info_dir_path_prefix(distro, arch, manifest_id)
+        )
 
         if check_for_build(manifest_fname, build_info_dir, errors):
             build_requests.append(build_request)
@@ -360,8 +401,8 @@ def clargs():
     default_arch = os.uname().machine
     parser = argparse.ArgumentParser()
     parser.add_argument("config", type=str, help="path to write config")
-    parser.add_argument("--distro", type=str, default=None,
-                        help="distro to generate configs for (omit to generate for all distros)")
+    parser.add_argument("--distro", type=str, required=True,
+                        help="distro to generate configs for")
     parser.add_argument("--arch", type=str, default=default_arch,
                         help="architecture to generate configs for (defaults to host architecture)")
 
@@ -390,6 +431,15 @@ def read_osrelease():
     return osrelease
 
 
+def get_host_distro():
+    """
+    Get the host distro version based on data in the os-release file.
+    The format is <distro>-<version> (e.g. fedora-41).
+    """
+    osrelease = read_osrelease()
+    return f"{osrelease['ID']}-{osrelease['VERSION_ID']}"
+
+
 def get_osbuild_commit(distro_version):
     """
     Get the osbuild commit defined in the Schutzfile for the host distro.
@@ -410,14 +460,6 @@ def get_bib_ref():
         data = json.load(schutzfile)
 
     return data.get("common", {}).get("bootc-image-builder", {}).get("ref", None)
-
-
-def get_osbuild_nevra():
-    """
-    Returned the installed osbuild version. Exits with an error if osbuild is not installed.
-    """
-    out, _ = runcmd(["rpm", "-q", "--qf", "%{nevra}", "osbuild"])
-    return out.decode().strip()
 
 
 def rng_seed_env():
@@ -494,3 +536,70 @@ def skopeo_inspect_id(image_name: str, arch: str) -> str:
 
     # don't error out, just return an empty string and let the caller handle it
     return ""
+
+
+def get_common_ci_runner():
+    """
+    CI runner for common tasks.
+
+    Currently this is used for all gitlab CI jobs. In the future, we might switch to running build jobs on the same host
+    distro as the target image, but this CI runner will still be used for generic tasks like check-build-coverage.
+    """
+    with open(SCHUTZFILE, encoding="utf-8") as schutzfile:
+        data = json.load(schutzfile)
+
+    if (runner := data.get("common", {}).get("gitlab-ci-runner")) is None:
+        raise KeyError(f"gitlab-ci-runner not defined in {SCHUTZFILE}")
+
+    return runner
+
+
+def get_common_ci_runner_distro():
+    """
+    CI runner distro for common tasks.
+
+    Returns the distro part from the value of the common.gitlab-ci-runner key in the Schutzfile.
+    For example, if the value is "aws/fedora-999", this function will return "fedora-999".
+    """
+    return get_common_ci_runner().split("/")[1]
+
+
+def find_image_file(build_path: str) -> str:
+    """
+    Find the path to the image by reading the manifest to get the name of the last pipeline and searching for the file
+    under the directory named after the pipeline. Raises RuntimeError if no or multiple files are found in the expected
+    path.
+    """
+    manifest_file = os.path.join(build_path, "manifest.json")
+    with open(manifest_file, encoding="utf-8") as manifest:
+        data = json.load(manifest)
+
+    last_pipeline = data["pipelines"][-1]["name"]
+    files = os.listdir(os.path.join(build_path, last_pipeline))
+    if len(files) > 1:
+        error = "Multiple files found in build path while searching for image file"
+        error += "\n".join(files)
+        raise RuntimeError(error)
+
+    if len(files) == 0:
+        raise RuntimeError("No found in build path while searching for image file")
+
+    return os.path.join(build_path, last_pipeline, files[0])
+
+
+def read_build_info(build_path: str) -> Dict:
+    """
+    Read the info.json file from the build directory and return the data as a dictionary.
+    """
+    info_file_path = os.path.join(build_path, "info.json")
+    with open(info_file_path, encoding="utf-8") as info_fp:
+        return json.load(info_fp)
+
+
+def write_build_info(build_path: str, data: Dict):
+    """
+    Write the data to the info.json file in the build directory.
+    """
+    info_file_path = os.path.join(build_path, "info.json")
+    with open(info_file_path, "w", encoding="utf-8") as info_fp:
+        json.dump(data, info_fp, indent=2)
