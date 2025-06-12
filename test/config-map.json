@@ -1,35 +1,63 @@
 {
   "./configs/all-customizations.json": {
+    "distros": [
+      "rhel-8.10",
+      "rhel-9.4"
+    ],
     "image-types": [
       "qcow2"
     ]
   },
   "./configs/all-with-fips.json": {
+    "distros": [
+      "rhel-8.10",
+      "rhel-9.4"
+    ],
     "image-types": [
       "qcow2"
     ]
   },
   "./configs/all-with-oscap.json": {
+    "distros": [
+      "rhel-8.10",
+      "rhel-9.4"
+    ],
     "image-types": [
       "qcow2"
     ]
   },
   "./configs/ec2-sap-empty.json": {
+    "distros": [
+      "rhel-8.10",
+      "rhel-9.4"
+    ],
     "image-types": [
       "ec2-sap"
     ]
   },
   "./configs/edge-ostree-pull-device-fips.json": {
+    "distros": [
+      "rhel-8.10",
+      "rhel-9.4"
+    ],
     "image-types": [
       "edge-simplified-installer"
     ]
   },
   "./configs/edge-ostree-pull-device.json": {
+    "distros": [
+      "rhel-8.10",
+      "rhel-9.4"
+    ],
     "image-types": [
       "edge-simplified-installer"
     ]
   },
   "./configs/edge-ostree-pull-empty.json": {
+    "distros": [
+      "rhel-8.10",
+      "rhel-9.4"
+    ],
     "image-types": [
       "edge-installer",
       "edge-raw-image",
@@ -37,6 +65,10 @@
     ]
   },
   "./configs/edge-ostree-pull-fips.json": {
+    "distros": [
+      "rhel-8.10",
+      "rhel-9.4"
+    ],
     "image-types": [
       "edge-installer",
       "edge-raw-image",
@@ -44,42 +76,64 @@
     ]
   },
   "./configs/edge-ostree-pull-user-fips.json": {
+    "distros": [
+      "rhel-8.10",
+      "rhel-9.4"
+    ],
     "image-types": [
       "edge-ami"
     ]
   },
   "./configs/edge-ostree-pull-user.json": {
+    "distros": [
+      "rhel-8.10",
+      "rhel-9.4"
+    ],
     "image-types": [
       "edge-ami"
     ]
   },
   "./configs/minimal-environment.json": {
+    "distros": [
+      "rhel-8.10",
+      "rhel-9.4"
+    ],
     "image-types": [
       "edge-container"
-    ],
-    "distros": [
-      "rhel-9*"
     ]
   },
   "./configs/edge-ostree-pull-user-minimalenv.json": {
+    "distros": [
+      "rhel-8.10",
+      "rhel-9.4"
+    ],
     "image-types": [
       "edge-ami"
-    ],
-    "distros": [
-      "rhel-9*"
     ]
   },
   "./configs/embed-containers-2.json": {
+    "distros": [
+      "rhel-8.10",
+      "rhel-9.4"
+    ],
     "image-types": [
       "edge-container"
     ]
   },
   "./configs/embed-containers.json": {
+    "distros": [
+      "rhel-8.10",
+      "rhel-9.4"
+    ],
     "image-types": [
       "edge-commit"
     ]
   },
   "./configs/empty.json": {
+    "distros": [
+      "rhel-8.10",
+      "rhel-9.4"
+    ],
     "arches": [],
     "image-types": [
       "ami",
@@ -107,34 +161,11 @@
       "wsl"
     ]
   },
-  "./configs/iot-customizations-full.json": {
-    "image-types": [
-      "iot-container"
-    ]
-  },
-  "./configs/iot-ostree-pull-device.json": {
-    "image-types": [
-      "iot-simplified-installer"
-    ]
-  },
-  "./configs/iot-ostree-pull-empty.json": {
-    "image-types": [
-      "iot-installer",
-      "iot-qcow2-image",
-      "iot-raw-image"
-    ]
-  },
-  "./configs/iot-ostree-pull-user.json": {
-    "image-types": [
-      "iot-ami"
-    ]
-  },
-  "./configs/kernel-debug.json": {
-    "image-types": [
-      "iot-commit"
-    ]
-  },
   "./configs/ostree.json": {
+    "distros": [
+      "rhel-8.10",
+      "rhel-9.4"
+    ],
     "image-types": [
       "edge-commit",
       "edge-container",
@@ -142,16 +173,19 @@
     ]
   },
   "./configs/unattended-iso-edge.json": {
+    "distros": [
+      "rhel-8.10",
+      "rhel-9.4"
+    ],
     "image-types": [
       "edge-installer"
     ]
   },
-  "./configs/unattended-iso-iot.json": {
-    "image-types": [
-      "iot-installer"
-    ]
-  },
   "./configs/unattended-iso.json": {
+    "distros": [
+      "rhel-8.10",
+      "rhel-9.4"
+    ],
     "image-types": [
       "image-installer"
     ]
