@@ -39,10 +39,11 @@
       - "NetworkManager-config-server"
       - "postfix"
     condition:
-      distro_name:
-        "rhel":
-          include:
-            - "insights-client"
+      "add insights client on rhel":
+        distro_name:
+          "rhel":
+            include:
+              - "insights-client"
 
   partitioning:
     ids:
@@ -248,7 +249,8 @@ image_types:
             - "libertas-sd8787-firmware"
             - "libertas-usb8388-firmware"
           condition:
-            distro_name:
-              "rhel":
-                include:
-                  - "insights-client"
+            "add insights client on rhel":
+              distro_name:
+                "rhel":
+                  include:
+                    - "insights-client"

@@ -75,13 +75,14 @@ image_types:
         - include: [inc1]
           exclude: [exc1]
           condition:
-            distro_name:
-              test-distro:
-                include: [from-condition-inc2]
-                exclude: [from-condition-exc2]
-              other-distro:
-                include: [inc3]
-                exclude: [exc3]
+            "some-description-1":
+              distro_name:
+                test-distro:
+                  include: [from-condition-inc2]
+                  exclude: [from-condition-exc2]
+                other-distro:
+                  include: [inc3]
+                  exclude: [exc3]
       container:
         - include: [inc-cnt1]
           exclude: [exc-cnt1]
@@ -160,10 +161,11 @@ func TestLoadYamlMergingWorks(t *testing.T) {
     include: [from-base-inc]
     exclude: [from-base-exc]
     condition:
-      distro_name:
-        test-distro:
-          include: [from-base-condition-inc]
-          exclude: [from-base-condition-exc]
+      "some description 1":
+        distro_name:
+          test-distro:
+            include: [from-base-condition-inc]
+            exclude: [from-base-condition-exc]
 image_types:
   other_type:
     package_sets:
@@ -179,10 +181,11 @@ image_types:
       - include: [from-type-inc]
         exclude: [from-type-exc]
         condition:
-          distro_name:
-            test-distro:
-              include: [from-condition-inc]
-              exclude: [from-condition-exc]
+          "some description 2":
+            distro_name:
+              test-distro:
+                include: [from-condition-inc]
+                exclude: [from-condition-exc]
 `
 	// XXX: we cannot use distro.Name() as it will give us a name+ver
 	baseDir := makeFakeDefs(t, test_distro.TestDistroNameBase, fakePkgsSetYaml)
@@ -323,31 +326,32 @@ image_types:
               fstab_options: "defaults"
     partition_tables_override:
       condition:
-        version_greater_or_equal:
-          # overrides are applied in order
-          "0":
-            test_arch:
-              <<: *test_arch_pt
-              partitions:
-                - <<: *default_part_0
-                  size: 111_111_111
-          "1":
-            test_arch:
-              <<: *test_arch_pt
-              partitions:
-                - <<: *default_part_0
-                  size: 222_222_222
-                - <<: *default_part_1
-                  payload:
-                    <<: *default_part_1_payload
-                    fstab_options: "defaults,ro"
-          "2":
-            test_arch:
-              <<: *test_arch_pt
-              partitions:
-                - <<: *default_part_0
-                  size: 333_333_333
-                - *default_part_1
+        "some description":
+          version_greater_or_equal:
+            # overrides are applied in order
+            "0":
+              test_arch:
+                <<: *test_arch_pt
+                partitions:
+                  - <<: *default_part_0
+                    size: 111_111_111
+            "1":
+              test_arch:
+                <<: *test_arch_pt
+                partitions:
+                  - <<: *default_part_0
+                    size: 222_222_222
+                  - <<: *default_part_1
+                    payload:
+                      <<: *default_part_1_payload
+                      fstab_options: "defaults,ro"
+            "2":
+              test_arch:
+                <<: *test_arch_pt
+                partitions:
+                  - <<: *default_part_0
+                    size: 333_333_333
+                  - *default_part_1
 `
 
 func TestDefsPartitionTableOverrideGreatEqual(t *testing.T) {
@@ -430,12 +434,13 @@ image_types:
             bootable: true
     partition_tables_override:
       condition:
-        distro_name:
-          "test-distro":
-              test_arch:
-                partitions:
-                  - <<: *default_part_0
-                    size: 111_111_111
+        "some description":
+          distro_name:
+            "test-distro":
+                test_arch:
+                  partitions:
+                    - <<: *default_part_0
+                      size: 111_111_111
 `
 	// XXX: we cannot use distro.Name() as it will give us a name+ver
 	baseDir := makeFakeDefs(t, test_distro.TestDistroNameBase, fakeDistroYaml)
@@ -463,9 +468,10 @@ image_config:
     users:
       - name: testuser
   condition:
-    distro_name:
-      "test-distro":
-        timezone: "OverrideTZ"
+    "some description":
+      distro_name:
+        "test-distro":
+          timezone: "OverrideTZ"
 `
 	fakeDistroName := "test-distro"
 	fakeDistroVer := "42"
@@ -535,18 +541,19 @@ image_types:
       timezone: "DefaultTZ"
       default_kernel_name: kernel
       condition:
-        version_less_than:
-          "2":
-            timezone: "OverrideTZ"
-          # test-distro is version "1" (no minor) so considered "1" is > "1.4"
-          "1.4":
-            default_kernel_name: kernel-lt-14
-        distro_name:
-          "test-distro":
-            locale: "en_US.UTF-8"
-        architecture:
-          "test_arch":
-            hostname: "test-arch-hn"
+        "some description":
+          version_less_than:
+            "2":
+              timezone: "OverrideTZ"
+            # test-distro is version "1" (no minor) so considered "1" is > "1.4"
+            "1.4":
+              default_kernel_name: kernel-lt-14
+          distro_name:
+            "test-distro":
+              locale: "en_US.UTF-8"
+          architecture:
+            "test_arch":
+              hostname: "test-arch-hn"
 `
 	fakeDistroName := "test-distro"
 	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
@@ -659,12 +666,13 @@ func TestImageTypeInstallerConfig(t *testing.T) {
 func TestImageTypeInstallerConfigErrorMultiple(t *testing.T) {
 	fakeDistroYaml := fakeDistroYamlInstallerConf + `
       condition:
-        version_less_than:
-          "2":
-            additional_dracut_modules:
-              - override-dracut-mod1
-        distro_name:
-          "test-distro":
+        "some description":
+          version_less_than:
+            "2":
+              additional_dracut_modules:
+                - override-dracut-mod1
+          distro_name:
+            "test-distro":
 `
 
 	fakeDistroName := "test-distro"
@@ -679,11 +687,12 @@ func TestImageTypeInstallerConfigErrorMultiple(t *testing.T) {
 func TestImageTypeInstallerConfigOverrideVerLT(t *testing.T) {
 	fakeDistroYaml := fakeDistroYamlInstallerConf + `
       condition:
-        version_less_than:
-          "2":
-            # Note that this fully override the installer config
-            additional_dracut_modules:
-              - override-dracut-mod1
+        "some description":
+          version_less_than:
+            "2":
+              # Note that this fully override the installer config
+              additional_dracut_modules:
+                - override-dracut-mod1
 `
 	fakeDistroName := "test-distro"
 	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
@@ -703,12 +712,13 @@ func TestImageTypeInstallerConfigOverrideVerLT(t *testing.T) {
 func TestImageTypeInstallerConfigOverrideDistroName(t *testing.T) {
 	fakeDistroYaml := fakeDistroYamlInstallerConf + `
       condition:
-        distro_name:
-          "test-distro":
-            additional_dracut_modules:
-              - override-dracut-mod1
-            additional_drivers:
-             - override-drv1
+        "some description":
+          distro_name:
+            "test-distro":
+              additional_dracut_modules:
+                - override-dracut-mod1
+              additional_drivers:
+               - override-drv1
 `
 
 	fakeDistroName := "test-distro"
@@ -727,10 +737,11 @@ func TestImageTypeInstallerConfigOverrideDistroName(t *testing.T) {
 func TestImageTypeInstallerConfigOverrideArch(t *testing.T) {
 	fakeDistroYaml := fakeDistroYamlInstallerConf + `
       condition:
-        architecture:
-          "test_arch":
-            additional_drivers:
-             - override-drv1
+        "some description":
+          architecture:
+            "test_arch":
+              additional_drivers:
+               - override-drv1
 `
 
 	fakeDistroName := "test-distro"

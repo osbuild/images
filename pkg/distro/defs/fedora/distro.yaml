@@ -168,17 +168,18 @@
       - "net-lib"
     squashfs_rootfs: true
     condition:
-      version_less_than:
-        "42":
-          # config is fully replaced
-          additional_dracut_modules:
-            - "ifcfg"
-          squashfs_rootfs: true
-        "41":
-          # config is fully replaced
-          additional_dracut_modules:
-            - "ifcfg"
-          squashfs_rootfs: false
+      "installer_config for installer config":
+        version_less_than:
+          "42":
+            # config is fully replaced
+            additional_dracut_modules:
+              - "ifcfg"
+            squashfs_rootfs: true
+          "41":
+            # config is fully replaced
+            additional_dracut_modules:
+              - "ifcfg"
+            squashfs_rootfs: false
 
   image_config:
     iot_enabled_services: &image_config_iot_enabled_services
@@ -196,25 +197,26 @@
         - "redboot-task-runner"
       kernel_options: *ostree_deployment_kernel_options
       condition:
-        version_less_than:
-          "42":
-            enabled_services:
-              - "NetworkManager.service"
-              - "firewalld.service"
-              - "sshd.service"
-              - "greenboot-grub2-set-counter"
-              - "greenboot-grub2-set-success"
-              - "greenboot-healthcheck"
-              - "greenboot-rpm-ostree-grub2-check-fallback"
-              - "greenboot-status"
-              - "greenboot-task-runner"
-              - "redboot-auto-reboot"
-              - "redboot-task-runner"
-              # only in < 42
-              - "zezere_ignition.timer"
-              - "zezere_ignition_banner.service"
-              - "parsec"
-              - "dbus-parsec"
+        "conditions for iot_enabled_services":
+          version_less_than:
+            "42":
+              enabled_services:
+                - "NetworkManager.service"
+                - "firewalld.service"
+                - "sshd.service"
+                - "greenboot-grub2-set-counter"
+                - "greenboot-grub2-set-success"
+                - "greenboot-healthcheck"
+                - "greenboot-rpm-ostree-grub2-check-fallback"
+                - "greenboot-status"
+                - "greenboot-task-runner"
+                - "redboot-auto-reboot"
+                - "redboot-task-runner"
+                # only in < 42
+                - "zezere_ignition.timer"
+                - "zezere_ignition_banner.service"
+                - "parsec"
+                - "dbus-parsec"
     iot: &image_config_iot
       <<: *image_config_iot_enabled_services
       keyboard:
@@ -823,27 +825,28 @@ image_types:
             - "xz"
             - "zram-generator"
           condition:
-            version_less_than:
-              "41":
-                include:
-                  - "dnsmasq"
-              "42":
-                include:
-                  - "dbus-parsec"
-                  - "kernel-tools"
-                  - "parsec"
-                  - "policycoreutils-python-utils"
-                  - "zezere-ignition"
-              "43":
-                include:
-                  - "basesystem"
-            version_greater_or_equal:
-              "41":
-                include:
-                  - "bootupd"
-              "43":
-                include:
-                  - "filesystem"
+            "pkgs for iot commit":
+              version_less_than:
+                "41":
+                  include:
+                    - "dnsmasq"
+                "42":
+                  include:
+                    - "dbus-parsec"
+                    - "kernel-tools"
+                    - "parsec"
+                    - "policycoreutils-python-utils"
+                    - "zezere-ignition"
+                "43":
+                  include:
+                    - "basesystem"
+              version_greater_or_equal:
+                "41":
+                  include:
+                    - "bootupd"
+                "43":
+                  include:
+                    - "filesystem"
 
   "iot-container":
     <<: *iot_commit
@@ -923,20 +926,21 @@ image_types:
       <<: *iot_base_partition_tables
     partition_tables_override:
       condition:
-        version_greater_or_equal:
-          "42":
-            x86_64:
-              <<: *iot_base_partition_table_x86_64
-              partitions:
-                - *iot_base_partition_table_part_efi
-                - *iot_base_partition_table_part_boot
-                - *iot_base_partition_table_part_root_fstab_ro
-            aarch64:
-              <<: *iot_base_partition_table_aarch64
-              partitions:
-                - *iot_base_partition_table_part_efi_aarch64
-                - *iot_base_partition_table_part_boot_aarch64
-                - *iot_base_partition_table_part_root_fstab_ro_aarch64
+        "conditions for iot-raw-xz":
+          version_greater_or_equal:
+            "42":
+              x86_64:
+                <<: *iot_base_partition_table_x86_64
+                partitions:
+                  - *iot_base_partition_table_part_efi
+                  - *iot_base_partition_table_part_boot
+                  - *iot_base_partition_table_part_root_fstab_ro
+              aarch64:
+                <<: *iot_base_partition_table_aarch64
+                partitions:
+                  - *iot_base_partition_table_part_efi_aarch64
+                  - *iot_base_partition_table_part_boot_aarch64
+                  - *iot_base_partition_table_part_root_fstab_ro_aarch64
 
   "iot-qcow2":
     name_aliases: ["iot-qcow2-image"]
@@ -1086,26 +1090,27 @@ image_types:
             - "plymouth"         # for (datacenter/cloud oriented) servers we want to see the details by default.  https:#lists.fedoraproject.org/archives/list/devel@lists.fedoraproject.org/thread/HSMISZ3ETWQ4ETVLWZQJ55ARZT27AAV3/
             - "systemd-networkd"  # we use NetworkManager
           condition:
-            architecture:
-              aarch64:
-                include:
-                  - "irqbalance"
-                  - "ostree-grub2"
-                exclude:
-                  - "perl"
-                  - "perl-interpreter"
-              ppc64le:
-                include:
-                  - "irqbalance"
-                  - "librtas"
-                  - "powerpc-utils-core"
-                  - "ppc64-diag-rtas"
-              x86_64:
-                include:
-                  - "irqbalance"
-                exclude:
-                  - "perl"
-                  - "perl-interpreter"
+            "conditions for iot-bootable-container":
+              architecture:
+                aarch64:
+                  include:
+                    - "irqbalance"
+                    - "ostree-grub2"
+                  exclude:
+                    - "perl"
+                    - "perl-interpreter"
+                ppc64le:
+                  include:
+                    - "irqbalance"
+                    - "librtas"
+                    - "powerpc-utils-core"
+                    - "ppc64-diag-rtas"
+                x86_64:
+                  include:
+                    - "irqbalance"
+                  exclude:
+                    - "perl"
+                    - "perl-interpreter"
 
   "minimal-raw-xz": &minimal_raw_xz
     name_aliases: ["minimal-raw"]
@@ -1157,17 +1162,18 @@ image_types:
       kernel_options:
         - "rw"
       condition:
-        version_less_than:
-          "43":
-            install_weak_deps: true
-            mount_units: false
-            enabled_services:
-              - "NetworkManager.service"
-              - "initial-setup.service"
-              - "sshd.service"
-              - "firewalld.service"
-            kernel_options:
-              - "ro"
+        "conditions for iot-raw-xz":
+          version_less_than:
+            "43":
+              install_weak_deps: true
+              mount_units: false
+              enabled_services:
+                - "NetworkManager.service"
+                - "initial-setup.service"
+                - "sshd.service"
+                - "firewalld.service"
+              kernel_options:
+                - "ro"
     partition_table:
       <<: *minimal_raw_partition_tables
     package_sets:
@@ -1184,17 +1190,18 @@ image_types:
           exclude:
             - "dracut-config-rescue"
           condition:
-            architecture:
-              riscv64:
-                include:
-                  # missing from @core in riscv64
-                  - "dnf5"
-                  - "policycoreutils"
-                  - "selinux-policy-targeted"
-            version_greater_or_equal:
-              "43":
-                exclude:
-                  - "firewalld"
+            "condition for minimal raw pkgs":
+              architecture:
+                riscv64:
+                  include:
+                    # missing from @core in riscv64
+                    - "dnf5"
+                    - "policycoreutils"
+                    - "selinux-policy-targeted"
+              version_greater_or_equal:
+                "43":
+                  exclude:
+                    - "firewalld"
   "minimal-raw-zst":
     <<: *minimal_raw_xz
     name_aliases: []
@@ -1374,16 +1381,17 @@ image_types:
             - "xrdb"
             - "xz"
           condition:
-            architecture:
-              x86_64:
-                include:
-                  - "biosdevname"
-                  - "dmidecode"
-                  - "grub2-tools-efi"
-                  - "memtest86+"
-              aarch64:
-                include:
-                  - "dmidecode"
+            "conditions for anaconda arch":
+              architecture:
+                x86_64:
+                  include:
+                    - "biosdevname"
+                    - "dmidecode"
+                    - "grub2-tools-efi"
+                    - "memtest86+"
+                aarch64:
+                  include:
+                    - "dmidecode"
 
   "iot-installer":
     name_aliases: ["fedora-iot-installer"]
@@ -1410,9 +1418,10 @@ image_types:
       locale: "en_US.UTF-8"
       iso_rootfs_type: "squashfs"
       condition:
-        version_less_than:
-          41:
-            iso_rootfs_type: "squashfs-ext4"
+        "condition for iot-installer":
+          version_less_than:
+            41:
+              iso_rootfs_type: "squashfs-ext4"
     package_sets:
       installer:
         - *anaconda_pkgset
@@ -1443,10 +1452,10 @@ image_types:
       locale: "en_US.UTF-8"
       iso_rootfs_type: "squashfs"
       condition:
-        version_less_than:
-          41:
-            iso_rootfs_type: "squashfs-ext4"
-
+        "conditions for workstation-live-installer":
+          version_less_than:
+            41:
+              iso_rootfs_type: "squashfs-ext4"
     package_sets:
       installer:
         - include:
@@ -1474,12 +1483,13 @@ image_types:
             - "reiserfs-utils"
             - "sdubby"
           condition:
-            version_greater_or_equal:
-              # XXX: this was VERSION_RAWHIDE, if we need this again lets add
-              # "alias" to defs.DistroYAML
-              43:
-                include:
-                  - "anaconda-webui"
+            "include anaconda webui in 43+":
+              version_greater_or_equal:
+                # XXX: this was VERSION_RAWHIDE, if we need this again lets add
+                # "alias" to defs.DistroYAML
+                43:
+                  include:
+                    - "anaconda-webui"
     platforms:
       - *x86_64_installer_platform
       - *aarch64_installer_platform
@@ -1511,23 +1521,25 @@ image_types:
         - "dbus-broker"
       squashfs_rootfs: true
       condition:
-        # on match the config is fully replaced
-        version_less_than:
-          "41":
-            additional_dracut_modules: &additional_dracut_f41
-              - "ifcfg"
-              - "dbus-broker"
-            squashfs_rootfs: false
-          "42":
-            additional_dracut_modules: *additional_dracut_f41
-            squashfs_rootfs: true
+        "conditional for minimal installer":
+          # on match the config is fully replaced
+          version_less_than:
+            "41":
+              additional_dracut_modules: &additional_dracut_f41
+                - "ifcfg"
+                - "dbus-broker"
+              squashfs_rootfs: false
+            "42":
+              additional_dracut_modules: *additional_dracut_f41
+              squashfs_rootfs: true
     image_config:
       locale: "en_US.UTF-8"
       iso_rootfs_type: "squashfs"
       condition:
-        version_less_than:
-          41:
-            iso_rootfs_type: "squashfs-ext4"
+        "old fedora used ext4 on squashfs":
+          version_less_than:
+            41:
+              iso_rootfs_type: "squashfs-ext4"
     platforms:
       - *x86_64_installer_platform
       - *aarch64_installer_platform
@@ -1619,18 +1631,19 @@ image_types:
     image_config:
       <<: *image_config_container
       condition:
-        version_less_than:
-          "42":
-            wsl_config:
-              boot_systemd: true
-            cloud_init:
-              - filename: "99_wsl.cfg"
-                config:
-                  datasource_list:
-                    - "WSL"
-                    - "None"
-                  network:
-                    config: "disabled"
+        "new f43 use the wsl-setup for setup":
+          version_less_than:
+            "42":
+              wsl_config:
+                boot_systemd: true
+              cloud_init:
+                - filename: "99_wsl.cfg"
+                  config:
+                    datasource_list:
+                      - "WSL"
+                      - "None"
+                    network:
+                      config: "disabled"
     package_sets:
       os:
         - include:
@@ -1673,17 +1686,18 @@ image_types:
             - "whois-nls"
             - "xkeyboard-config"
           condition:
-            version_greater_or_equal:
-              "41":
-                exclude:
-                  - "fuse-libs"
-              "42":
-                include:
-                  - "wsl-setup"
-            version_less_than:
-              "42":
-                include:
-                  - "cloud-init"
+            "new f43 use the wsl-setup for setup":
+              version_greater_or_equal:
+                "41":
+                  exclude:
+                    - "fuse-libs"
+                "42":
+                  include:
+                    - "wsl-setup"
+              version_less_than:
+                "42":
+                  include:
+                    - "cloud-init"
 
   "iot-simplified-installer":
     filename: "simplified-installer.iso"
@@ -1758,10 +1772,11 @@ image_types:
             - "util-linux"
             - "shadow-utils"  # includes passwd
           condition:
-            version_less_than:
-              "41":
-                include:
-                  - "dnsmasq"  # deprecated for F41+
+            "dnsmasq got deprecated in f41":
+              version_less_than:
+                "41":
+                  include:
+                    - "dnsmasq"  # deprecated for F41+
     platforms:
       - <<: *x86_64_uefi_platform
         packages:

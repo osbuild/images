@@ -18,14 +18,15 @@
       - "xfsprogs"
       - "xz"
     condition:
-      architecture:
-        x86_64:
-          include:
-            - "grub2-pc"
-        ppc64el:
-          include:
-            - "grub2-ppc64le"
-            - "grub2-ppc64le-modules"
+      "condition for build_pkgsset":
+        architecture:
+          x86_64:
+            include:
+              - "grub2-pc"
+          ppc64el:
+            include:
+              - "grub2-ppc64le"
+              - "grub2-ppc64le-modules"
 
   sap_image_config: &sap_image_config
     selinux_config:
@@ -182,37 +183,38 @@
 
   anaconda_boot_pkgset: &anaconda_boot_pkgset
     condition:
-      architecture:
-        x86_64:
-          include:
-            # eficommon
-            - "efibootmgr"
-            # XXX: de-dup?
-            # grub-common
-            - "grub2-tools"
-            - "grub2-tools-extra"
-            - "grub2-tools-minimal"
-            # arch specific
-            - "grub2-efi-x64"
-            - "grub2-efi-x64-cdboot"
-            - "grub2-pc"
-            - "grub2-pc-modules"
-            - "shim-x64"
-            - "syslinux"
-            - "syslinux-nonlinux"
-        aarch64:
-          include:
-            # eficommon
-            - "efibootmgr"
-            # XXX: de-dup?
-            # grub-common
-            - "grub2-tools"
-            - "grub2-tools-extra"
-            - "grub2-tools-minimal"
-            # arch specific
-            - "grub2-efi-aa64-cdboot"
-            - "grub2-efi-aa64"
-            - "shim-aa64"
+      "condition for anaconda boot pkgset":
+        architecture:
+          x86_64:
+            include:
+              # eficommon
+              - "efibootmgr"
+              # XXX: de-dup?
+              # grub-common
+              - "grub2-tools"
+              - "grub2-tools-extra"
+              - "grub2-tools-minimal"
+              # arch specific
+              - "grub2-efi-x64"
+              - "grub2-efi-x64-cdboot"
+              - "grub2-pc"
+              - "grub2-pc-modules"
+              - "shim-x64"
+              - "syslinux"
+              - "syslinux-nonlinux"
+          aarch64:
+            include:
+              # eficommon
+              - "efibootmgr"
+              # XXX: de-dup?
+              # grub-common
+              - "grub2-tools"
+              - "grub2-tools-extra"
+              - "grub2-tools-minimal"
+              # arch specific
+              - "grub2-efi-aa64-cdboot"
+              - "grub2-efi-aa64"
+              - "shim-aa64"
 
   partitioning:
     ids:
@@ -461,30 +463,31 @@
             - "driver:mlx4_core"
             - "driver:mlx5_core"
     condition:
-      distro_name:
-        rhel:
-          gpgkey_files:
-            - "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
-      architecture:
-        x86_64:
-          kernel_options:
-            # common
-            - "ro"
-            - "loglevel=3"
-            - "nvme_core.io_timeout=240"
-            # x86
-            - "console=tty1"
-            - "console=ttyS0"
-            - "earlyprintk=ttyS0"
-            - "rootdelay=300"
-        aarch64:
-          kernel_options:
-            # common
-            - "ro"
-            - "loglevel=3"
-            - "nvme_core.io_timeout=240"
-            # aarch64
-            - "console=ttyAMA0"
+      "image config for azure":
+        distro_name:
+          rhel:
+            gpgkey_files:
+              - "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
+        architecture:
+          x86_64:
+            kernel_options:
+              # common
+              - "ro"
+              - "loglevel=3"
+              - "nvme_core.io_timeout=240"
+              # x86
+              - "console=tty1"
+              - "console=ttyS0"
+              - "earlyprintk=ttyS0"
+              - "rootdelay=300"
+          aarch64:
+            kernel_options:
+              # common
+              - "ro"
+              - "loglevel=3"
+              - "nvme_core.io_timeout=240"
+              # aarch64
+              - "console=ttyAMA0"
 
 image_config:
   default:
@@ -498,9 +501,10 @@ image_config:
     timezone: "UTC"
     update_default_kernel: true
   condition:
-    distro_name:
-      centos:
-        default_oscap_datastream: "/usr/share/xml/scap/ssg/content/ssg-cs10-ds.xml"
+    "oscap needs a differnt path on centos":
+      distro_name:
+        centos:
+          default_oscap_datastream: "/usr/share/xml/scap/ssg/content/ssg-cs10-ds.xml"
 
 image_types:
   # XXX: not a real pkgset but the "os" pipeline pkgset for image-installer
@@ -548,25 +552,27 @@ image_types:
           exclude:
             - "dracut-config-rescue"
           condition:
-            distro_name:
-              rhel:
-                include:
-                  - "subscription-manager-cockpit"
+            "add subscription-manager-cockpit":
+              distro_name:
+                rhel:
+                  include:
+                    - "subscription-manager-cockpit"
 
   qcow2: &qcow2
     image_config:
       default_target: "multi-user.target"
       kernel_options: ["console=tty0", "console=ttyS0,115200n8", "no_timer_check"]
       condition:
-        distro_name:
-          rhel:
-            rhsm_config:
-              "no-subscription":
-                dnf_plugin:
-                  product_id:
-                    enabled: false
-                  subscription_manager:
-                    enabled: false
+        "conditions for qcow2":
+          distro_name:
+            rhel:
+              rhsm_config:
+                "no-subscription":
+                  dnf_plugin:
+                    product_id:
+                      enabled: false
+                    subscription_manager:
+                      enabled: false
     partition_table:
       <<: *default_partition_tables
     package_sets:
@@ -628,11 +634,12 @@ image_types:
             - "rng-tools"
             - "udisks2"
           condition:
-            distro_name:
-              rhel:
-                include:
-                  - "insights-client"
-                  - "subscription-manager-cockpit"
+            "add insights pkgs":
+              distro_name:
+                rhel:
+                  include:
+                    - "insights-client"
+                    - "subscription-manager-cockpit"
 
   oci: *qcow2
 
@@ -740,10 +747,11 @@ image_types:
             - "rhnsd"
             - "usb_modeswitch"
           condition:
-            distro_name:
-              rhel:
-                include:
-                  - "insights-client"
+            "add insights client":
+              distro_name:
+                rhel:
+                  include:
+                    - "insights-client"
 
   "azure-rhui": &azure_rhui
     <<: *vhd
@@ -949,30 +957,34 @@ image_types:
       sshd_config:
         config:
           PasswordAuthentication: false
-      condition:
-        architecture:
-          x86_64: &ami_image_config_cond_x86_64
-            dracut_conf:
-              - filename: "ec2.conf"
-                config:
-                  add_drivers:
-                    - "nvme"
-                    - "xen-blkfront"
-            # TODO: move these to the EC2 environment
-            kernel_options:
-              # common
-              - "console=tty0"
-              - "console=ttyS0,115200n8"
-              - "nvme_core.io_timeout=4294967295"
-          aarch64:
-            # TODO: move these to the EC2 environment
-            kernel_options:
-              # XXX: duplicated with above x86_64 kernel defaults
-              - "console=tty0"
-              - "console=ttyS0,115200n8"
-              - "nvme_core.io_timeout=4294967295"
-              # aarch64 specific
-              - "iommu.strict=0"
+      condition: &ami_image_config_cond
+        "conditions for ami arch dracut":
+          architecture:
+            x86_64:
+              dracut_conf:
+                - filename: "ec2.conf"
+                  config:
+                    add_drivers:
+                      - "nvme"
+                      - "xen-blkfront"
+        "conditions for ami arch kopts":
+          architecture:
+            x86_64:
+              # TODO: move these to the EC2 environment
+              kernel_options:
+                # common
+                - "console=tty0"
+                - "console=ttyS0,115200n8"
+                - "nvme_core.io_timeout=4294967295"
+            aarch64:
+              # TODO: move these to the EC2 environment
+              kernel_options:
+                # XXX: duplicated with above x86_64 kernel defaults
+                - "console=tty0"
+                - "console=ttyS0,115200n8"
+                - "nvme_core.io_timeout=4294967295"
+                # aarch64 specific
+                - "iommu.strict=0"
     partition_table:
       <<: *default_partition_tables
     package_sets:
@@ -1028,10 +1040,11 @@ image_types:
             # RHBZ#2075815
             - "qemu-guest-agent"
           condition:
-            distro_name:
-              rhel:
-                include:
-                  - "insights-client"
+            "add insights client":
+              distro_name:
+                rhel:
+                  include:
+                    - "insights-client"
 
   ec2: *ami
 
@@ -1054,18 +1067,19 @@ image_types:
     image_config:
       <<: [*ami_image_config, *sap_image_config]
       condition:
-        architecture:
-          x86_64:
-            # XXX: this shows that merging at the yaml level is tricky
-            <<: *ami_image_config_cond_x86_64
-            kernel_options:
-              # XXX: duplicated with ami.image_config.kernel_options :(
-              - "console=tty0"
-              - "console=ttyS0,115200n8"
-              - "nvme_core.io_timeout=4294967295"
-              # amiSapKernelOptions()
-              - "processor.max_cstate=1"
-              - "intel_idle.max_cstate=1"
+        <<: *ami_image_config_cond
+        # this needs to override the original ami key
+        "conditions for ami arch kopts":
+          architecture:
+            x86_64:
+              kernel_options:
+                # XXX: duplicated with ami.image_config.kernel_options :(
+                - "console=tty0"
+                - "console=ttyS0,115200n8"
+                - "nvme_core.io_timeout=4294967295"
+                # amiSapKernelOptions()
+                - "processor.max_cstate=1"
+                - "intel_idle.max_cstate=1"
 
   wsl:
     image_config:
@@ -1253,16 +1267,17 @@ image_types:
             - "xfsprogs"
             - "xz"
           condition:
-            architecture:
-              x86_64:
-                include:
-                  - "biosdevname"
-                  - "dmidecode"
-                  - "grub2-tools-efi"
-                  - "memtest86+"
-              aarch64:
-                include:
-                  - "dmidecode"
+            "arch pkgs for image installer":
+              architecture:
+                x86_64:
+                  include:
+                    - "biosdevname"
+                    - "dmidecode"
+                    - "grub2-tools-efi"
+                    - "memtest86+"
+                aarch64:
+                  include:
+                    - "dmidecode"
 
   gce:
     image_config:
@@ -1417,10 +1432,11 @@ image_types:
             # RHBZ#2075815
             - "qemu-guest-agent"
           condition:
-            distro_name:
-              rhel:
-                include:
-                  - "insights-client"
+            "add insights client":
+              distro_name:
+                rhel:
+                  include:
+                    - "insights-client"
 
   "azure-cvm":
     image_config:
