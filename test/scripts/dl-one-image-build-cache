@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+
+"""
+Download the image build CI cache files for a specific image from AWS S3.
+
+This script downloads the image build cache files for a specific image from AWS S3.
+The script reads the build info JSON file to determine the image build cache files to download.
+"""
+
+import argparse
+import os
+import sys
+
+import imgtestlib as testlib
+
+
+def get_argparser():
+    parser = argparse.ArgumentParser(description=__doc__)
+
+    parser.add_argument(
+        "--build-info", type=str, metavar="JSON_FILE",
+        help="Path to the build info JSON file containing the image build cache information. " +
+             "If not provided, the script will try to read '<build-dir>/info.json.'",
+    )
+    parser.add_argument(
+        "build_dir", type=os.path.abspath, metavar="BUILD_DIR",
+        help="Directory where the image build cache files are downloaded to. " +
+             "It may already contain the build cache files from a previous run.",
+    )
+
+    return parser
+
+
+def main():
+    parser = get_argparser()
+    args = parser.parse_args()
+
+    build_dir = args.build_dir
+    build_info_dir = os.path.dirname(args.build_info) if args.build_info else build_dir
+
+    print(f"📜 Reading 'info.json' from {build_info_dir}")
+    build_info = testlib.read_build_info(build_info_dir)
+
+    distro = build_info["distro"]
+    arch = build_info["arch"]
+    osbuild_ref = build_info["osbuild-commit"]
+    manifest_id = build_info["manifest-checksum"]
+    runner_distro = build_info.get("runner-distro")
+
+    if runner_distro is None:
+        runner_distro = testlib.get_common_ci_runner_distro()
+        print("⚠️ Runner distro not found in the build info. " +
+              f"Using the CI runner distro from the current branch: {runner_distro}", file=sys.stderr)
+
+    print("📥 Downloading the image build cache files for:")
+    print(f"    distro: {distro}")
+    print(f"    arch: {arch}")
+    print(f"    manifest-id: {manifest_id}")
+    print(f"    osbuild-ref: {osbuild_ref}")
+    print(f"    runner-distro: {runner_distro}")
+
+    out, dl_ok = testlib.dl_build_cache(build_dir, distro, arch, osbuild_ref, runner_distro, manifest_id)
+    print(out)
+    if not dl_ok:
+        print("❌ Failed to download the image build cache", file=sys.stderr)
+        sys.exit(1)
+
+    print("✅ Successfully downloaded the image build cache")
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("Interrupted by user", file=sys.stderr)
+        sys.exit(1)

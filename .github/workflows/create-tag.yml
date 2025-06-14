@@ -1,14 +1,15 @@
+---
 # This action creates a release every Monday at 5:00 UTC.
 name: "Create and push release tag"
 
-on:
+on:  # yamllint disable-line rule:truthy
   workflow_dispatch:
   schedule:
     - cron: "0 5 * * 1"
 
 jobs:
   tag-and-push:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Upstream tag
