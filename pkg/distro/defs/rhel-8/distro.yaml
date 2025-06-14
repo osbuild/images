@@ -50,9 +50,11 @@
       - "plymouth"
       # RHBZ#2075815
       - "qemu-guest-agent"
-    condition:
-      distro_name:
-        rhel:
+    conditions: &conditions_for_insights_client
+      "add insights client on rhel":
+        when:
+          distro_name: "rhel"
+        append:
           include:
             - "insights-client"
 
@@ -128,15 +130,13 @@
       - "rhnlib"
       - "rhnsd"
       - "usb_modeswitch"
-    condition:
-      distro_name:
-        "rhel":
-          include:
-            - "insights-client"
-            # XXX: this is defined in azure.go:commonPackageSets but
-            # there is a bug in the original code so this never gets
-            # actually added so we don't add it here either
-            # - "rhc"
+    conditions:
+      <<: *conditions_for_insights_client
+      # XXX: the below "rhc" is defined in
+      # azure.go:commonPackageSets but there is a bug in the
+      # original code so this never gets actually added so we
+      # don't add it here either
+      # - "rhc"
 
   sap_pkgset: &sap_pkgset
     include:
@@ -176,13 +176,17 @@
       - "tuned-profiles-sap-hana"
       # RHBZ#1961168
       - "libnsl"
-    condition:
-      version_less_than:
-        "8.6":
+    conditions:
+      "name of the ansible pkg rhel-8.6 and below":
+        when:
+          version_less_than: "8.6"
+        append:
           include:
             - "ansible"
-      version_greater_or_equal:
-        "8.6":
+      "name of the ansible pkg rhel-8.6+":
+        when:
+          version_greater_or_equal: "8.6"
+        append:
           include:
             - "ansible-core"
 
@@ -219,16 +223,20 @@
       - "tar"
       - "xfsprogs"
       - "xz"
-    condition:
-      architecture:
-        x86_64:
+    conditions:
+      "x86-64 needs biosdevname":
+        when:
+          arch: "x86_64"
+        append:
           include:
             - "biosdevname"
 
   anaconda_boot_pkgset: &anaconda_boot_pkgset
-    condition:
-      architecture:
-        x86_64:
+    conditions:
+      "x86_64 architecture dependant anaconda packages":
+        when:
+          arch: "x86_64"
+        append:
           include:
             # eficommon
             - "efibootmgr"
@@ -247,7 +255,10 @@
             - "shim-x64"
             - "syslinux"
             - "syslinux-nonlinux"
-        aarch64:
+      "aarch64 architecture dependant anaconda packages":
+        when:
+          arch: "aarch64"
+        append:
           include:
             # eficommon
             - "efibootmgr"
@@ -370,23 +381,23 @@
       - "xorg-x11-server-utils"
       - "xorg-x11-server-Xorg"
       - "xorg-x11-xauth"
-    condition:
-      architecture:
-        x86_64:
+      # XXX: this was originally centos or rhel
+      - "libreport-rhel-anaconda-bugzilla"
+    conditions:
+      "x86_64 architecture dependant packages for anaconda":
+        when:
+          arch: "x86_64"
+        append:
           include:
             - "biosdevname"
             - "dmidecode"
             - "memtest86+"
-        aarch64:
+      "aarch64 architecture dependant packages for anaconda":
+        when:
+          arch: "aarch64"
+        append:
           include:
             - "dmidecode"
-      distro_name:
-        rhel:
-          include:
-            - "libreport-rhel-anaconda-bugzilla"
-        centos:
-          include:
-            - "libreport-rhel-anaconda-bugzilla"
 
   gce_common_pkgset: &gce_common_pkgset
     include:
@@ -449,11 +460,8 @@
       - "zd1211-firmware"
       # RHBZ#2075815
       - "qemu-guest-agent"
-    condition:
-      distro_name:
-        rhel:
-          include:
-            - "insights-client"
+    conditions:
+      <<: *conditions_for_insights_client
 
   qcow2_common_pkgset: &qcow2_common_pkgset
     include:
@@ -523,9 +531,11 @@
       - "plymouth"
       - "rng-tools"
       - "udisks2"
-    condition:
-      distro_name:
-        rhel:
+    conditions: &condition_rhel_insights_clinet_subman
+      "add insights/subscription manager for copilot":
+        when:
+          distro_name: "rhel"
+        append:
           include:
             - "insights-client"
             - "subscription-manager-cockpit"
@@ -740,30 +750,31 @@
           - *ec2_partition_table_part_root
 
   ec2_partition_tables_override: &ec2_partition_tables_override
-    condition:
-      version_less_than:
-        "8.10":
-          aarch64:
+    conditions:
+      "rhel8.9  uses efi boot but small boot":
+        when:
+          version_equal: "8.9"
+        override:
+          x86_64:
+            <<: *ec2_partition_table_x86_64
+          aarch64: &ec2_partition_table_aarch64_8_9
             <<: *ec2_partition_table_aarch64
             partitions:
               - *ec2_partition_table_part_efi
               - *ec2_partition_table_part_boot512
               - *ec2_partition_table_part_root
-        "8.9":
+      "rhel-8.9 and below has no efi on x86 but is the same on aarch64":
+        when:
+          version_less_than: "8.9"
+          distro_name: "rhel"
+        override:
           x86_64:
             <<: *ec2_partition_table_x86_64
             partitions:
               - *default_partition_table_part_bios
               - *ec2_partition_table_part_root
-      distro_name:
-        # we need this override to ensure that centos always gets
-        # the latest partition-tables, otherwise "centos-8" is
-        # less than "8 <= 8.9"
-        "centos":
-          x86_64:
-            <<: *ec2_partition_table_x86_64
           aarch64:
-            <<: *ec2_partition_table_aarch64
+            <<: *ec2_partition_table_aarch64_8_9
 
 image_config:
   default:
@@ -777,9 +788,11 @@ image_config:
       no_zero_conf: true
     timezone: "America/New_York"
     update_default_kernel: true
-  condition:
-    distro_name:
-      centos:
+  conditions:
+    "centos has a different oscap path":
+      when:
+        distro_name: "centos"
+      merge:
         default_oscap_datastream: "/usr/share/xml/scap/ssg/content/ssg-centos8-ds.xml"
 
 image_types:
@@ -832,12 +845,8 @@ image_types:
             - "tar"
             - "tcpdump"
             - "yum"
-          condition:
-            distro_name:
-              rhel:
-                include:
-                  - "insights-client"
-                  - "subscription-manager-cockpit"
+          conditions:
+            <<: *condition_rhel_insights_clinet_subman
 
   ec2: &ec2
     partition_table:
@@ -851,9 +860,11 @@ image_types:
             - "rh-amazon-rhui-client"
           exclude:
             - "alsa-lib"
-          condition:
-            version_greater_or_equal:
-              "8.7":
+          conditions: &conditions_rh_cloud_client
+            "add redhat-cloud-client-configuration on rh8.7+":
+              when:
+                version_greater_or_equal: "8.7"
+              append:
                 include:
                   - "redhat-cloud-client-configuration"
 
@@ -869,11 +880,8 @@ image_types:
             - "rh-amazon-rhui-client-ha"
           exclude:
             - "alsa-lib"
-          condition:
-            version_greater_or_equal:
-              "8.7":
-                include:
-                  - "redhat-cloud-client-configuration"
+          conditions:
+            <<: *conditions_rh_cloud_client
 
   ami:
     <<: *ec2
@@ -887,18 +895,20 @@ image_types:
       os:
         - *ec2_common_pkgset
         - *sap_pkgset
-        - condition:
-            version_less_than:
-              "8.10":
+        - conditions:
+            <<: *conditions_rh_cloud_client
+            "rh-8.9 or below gets the e4s bundle":
+              when:
+                version_less_than: "8.10"
+              append:
                 include:
                   - "rh-amazon-rhui-client-sap-bundle-e4s"
-            version_greater_or_equal:
-              "8.10":
+            "rh-8.10+ get the rhui bundle":
+              when:
+                version_greater_or_equal: "8.10"
+              append:
                 include:
                   - "rh-amazon-rhui-client-sap-bundle"
-              "8.7":
-                include:
-                  - "redhat-cloud-client-configuration"
 
   "azure-rhui":
     package_sets:
@@ -917,13 +927,17 @@ image_types:
         - *sap_pkgset
         - include:
             - "firewalld"
-          condition:
-            version_greater_or_equal:
-              "8.10":
+          conditions:
+            "rh-8.10+ gets the the base sap ha pkgs":
+              when:
+                version_greater_or_equal: "8.10"
+              append:
                 include:
                   - "rhui-azure-rhel8-base-sap-ha"
-            version_less_than:
-              "8.10":
+            "rh-8.9 or below gets sap-ha":
+              when:
+                version_less_than: "8.10"
+              append:
                 include:
                   - "rhui-azure-rhel8-sap-ha"
 
@@ -1043,9 +1057,11 @@ image_types:
             - "xz"
           exclude:
             - "rng-tools"
-          condition:
-            architecture:
-              x86_64: &edge_commit_x86_64_pkgset
+          conditions: &conditions_pkgsets_edge_commit
+            "x86_64 specific packages for edge-commit":
+              when:
+                arch: "x86_64"
+              append: &edge_commit_x86_64_pkgset
                 include:
                   - "efibootmgr"
                   - "grub2"
@@ -1064,29 +1080,33 @@ image_types:
                   - "iwl7260-firmware"
                   - "microcode_ctl"
                   - "shim-x64"
-              aarch64: &edge_commit_aarch64_pkgset
+            "aarch64 specific packages for edge-commit":
+              when:
+                arch: "aarch64"
+              append: &edge_commit_aarch64_pkgset
                 include:
                   - "grub2-efi-aa64"
                   - "efibootmgr"
                   - "shim-aa64"
                   - "iwl7260-firmware"
-            version_less_than:
-              "8.6":
+            "rhel-8.5 or below uses greenboot":
+              when:
+                version_less_than: "8.6"
+              append:
                 include:
                   - "greenboot-grub2"
                   - "greenboot-reboot"
                   - "greenboot-rpm-ostree-grub2"
                   - "greenboot-status"
-            version_greater_or_equal:
-              "8.6": &edge_commit_new_rhel
+            "rhel-8.6+ uses fdo":
+              when:
+                version_greater_or_equal: "8.6"
+              append:
                 include:
                   - "fdo-client"
                   - "fdo-owner-cli"
                   - "greenboot-default-health-checks"
                   - "sos"
-            distro_name:
-              centos:
-                *edge_commit_new_rhel
 
   "edge-installer":
     package_sets:
@@ -1156,12 +1176,19 @@ image_types:
             - "sudo"
             - "traceroute"
             - "util-linux"
-          condition:
-            architecture:
-              x86_64:
-                *edge_commit_x86_64_pkgset
-              aarch64:
-                *edge_commit_aarch64_pkgset
+          conditions:
+            # XXX: should we instead "<<: *conditions_edge_commit" here?
+            # it will give different results
+            "x86_64 specific pkgset for edge-simplified-installer":
+              when:
+                arch: "x86_64"
+              append:
+                <<: *edge_commit_x86_64_pkgset
+            "aarch64 specific pkgset for edge-simplified-installer":
+              when:
+                arch: "aarch64"
+              append:
+                <<: *edge_commit_aarch64_pkgset
 
   "edge-container":
     package_sets:
