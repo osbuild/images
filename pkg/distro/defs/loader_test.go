@@ -533,10 +533,14 @@ image_types:
       hostname: "foo"
       locale: "C.UTF-8"
       timezone: "DefaultTZ"
+      default_kernel_name: kernel
       condition:
         version_less_than:
           "2":
             timezone: "OverrideTZ"
+          # test-distro is version "1" (no minor) so considered "1" is > "1.4"
+          "1.4":
+            default_kernel_name: kernel-lt-14
         distro_name:
           "test-distro":
             locale: "en_US.UTF-8"
@@ -552,11 +556,11 @@ image_types:
 	imgConfig, err := defs.ImageConfig("test-distro-1", "test_arch", "test_type")
 	require.NoError(t, err)
 	assert.Equal(t, &distro.ImageConfig{
-		Hostname: common.ToPtr("test-arch-hn"),
-		Locale:   common.ToPtr("en_US.UTF-8"),
-		Timezone: common.ToPtr("OverrideTZ"),
+		Hostname:          common.ToPtr("test-arch-hn"),
+		Locale:            common.ToPtr("en_US.UTF-8"),
+		Timezone:          common.ToPtr("OverrideTZ"),
+		DefaultKernelName: common.ToPtr("kernel"),
 	}, imgConfig)
-
 }
 
 func TestImageTypes(t *testing.T) {
