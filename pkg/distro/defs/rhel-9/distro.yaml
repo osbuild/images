@@ -17,16 +17,26 @@
       - "tar"
       - "xfsprogs"
       - "xz"
-    condition:
-      "condition for build_pkgsset":
-        architecture:
-          x86_64:
-            include:
-              - "grub2-pc"
-          ppc64el:
-            include:
-              - "grub2-ppc64le"
-              - "grub2-ppc64le-modules"
+    conditions:
+      "x86_64 specific packages for build pkgsset":
+        when: arch == "x86_64"
+        append:
+          include:
+            - "grub2-pc"
+      "ppc64le specific packages for build pkgsset":
+        when: arch == "ppc64le"
+        append:
+          include:
+            - "grub2-ppc64le"
+            - "grub2-ppc64le-modules"
+
+  common_conditions:
+    conditions: &conditions_pkgsets_insights_client_on_rhel
+      "add insights client on rhel":
+        when: distro_name == "rhel"
+        append:
+          include:
+            - "insights-client"
 
   ec2_base_pkgset: &ec2_base_pkgset
     include:
@@ -79,16 +89,13 @@
       - "dracut-config-rescue"
       # RHBZ#2075815
       - "qemu-guest-agent"
-    condition:
-      "condition for ec2 basepkgset":
-        distro_name:
-          rhel:
-            include:
-              - "insights-client"
-        version_greater_or_equal:
-          "9.6":
-            include:
-              - "system-reinstall-bootc"
+    conditions:
+      <<: *conditions_pkgsets_insights_client_on_rhel
+      "rhel-9.6+ gets system-reinstall-bootc":
+        when: version_greater_or_equal("9.6")
+        append:
+          include:
+            - "system-reinstall-bootc"
 
   sap_pkgset: &sap_pkgset
     include:
@@ -180,47 +187,49 @@
       # pipeline.
       - "mdadm"
       - "nss-softokn"
-    condition:
-      "condition for installer pkgset":
-        architecture:
-          x86_64:
-            include:
-              - "biosdevname"
+    conditions:
+      "x86_64 specific installer packages":
+        when: arch == "x86_64"
+        append:
+          include:
+            - "biosdevname"
 
   anaconda_boot_pkgset: &anaconda_boot_pkgset
-    condition:
-      "condition for anaconda boot pkgset":
-        architecture:
-          x86_64:
-            include:
-              # eficommon
-              - "efibootmgr"
-              # XXX: de-dup?
-              # grub-common
-              - "grub2-tools"
-              - "grub2-tools-extra"
-              - "grub2-tools-minimal"
-              # arch specific
-              - "grub2-efi-x64"
-              - "grub2-efi-x64-cdboot"
-              - "grub2-pc"
-              - "grub2-pc-modules"
-              - "shim-x64"
-              - "syslinux"
-              - "syslinux-nonlinux"
-          aarch64:
-            include:
-              # eficommon
-              - "efibootmgr"
-              # XXX: de-dup?
-              # grub-common
-              - "grub2-tools"
-              - "grub2-tools-extra"
-              - "grub2-tools-minimal"
-              # arch specific
-              - "grub2-efi-aa64-cdboot"
-              - "grub2-efi-aa64"
-              - "shim-aa64"
+    conditions:
+      "x86 specific packages for the anaconda boot pkgset":
+        when: arch == "x86_64"
+        append:
+          include:
+            # eficommon
+            - "efibootmgr"
+            # XXX: de-dup?
+            # grub-common
+            - "grub2-tools"
+            - "grub2-tools-extra"
+            - "grub2-tools-minimal"
+            # arch specific
+            - "grub2-efi-x64"
+            - "grub2-efi-x64-cdboot"
+            - "grub2-pc"
+            - "grub2-pc-modules"
+            - "shim-x64"
+            - "syslinux"
+            - "syslinux-nonlinux"
+      "aarch64 specific packages for the anaconda boot pkgset":
+        when: arch == "aarch64"
+        append:
+          include:
+            # eficommon
+            - "efibootmgr"
+            # XXX: de-dup?
+            # grub-common
+            - "grub2-tools"
+            - "grub2-tools-extra"
+            - "grub2-tools-minimal"
+            # arch specific
+            - "grub2-efi-aa64-cdboot"
+            - "grub2-efi-aa64"
+            - "shim-aa64"
 
   anaconda_pkgset: &anaconda_pkgset
     include:
@@ -358,18 +367,20 @@
       - "xorg-x11-server-Xorg"
       - "xorg-x11-xauth"
       - "xz"
-    condition:
-      "condition for anaconda pkgset":
-        architecture:
-          x86_64:
-            include:
-              - "biosdevname"
-              - "dmidecode"
-              - "grub2-tools-efi"
-              - "memtest86+"
-          aarch64:
-            include:
-              - "dmidecode"
+    conditions:
+      "x86 specific packages for the anaconda pkgset":
+        when: arch == "x86_64"
+        append:
+          include:
+            - "biosdevname"
+            - "dmidecode"
+            - "grub2-tools-efi"
+            - "memtest86+"
+      "aarch64 specific packages for the anaconda pkgset":
+        when: arch == "aarch64"
+        append:
+          include:
+            - "dmidecode"
 
   partitioning:
     ids:
@@ -493,30 +504,19 @@
             bootable: true
 
     ec2_partition_tables_override: &ec2_partition_tables_override
-      condition:
-        "condition for ec2 part table":
-          version_less_than:
-            "9.3":
-              x86_64:
-                <<: *default_partition_table_x86_64
-                partitions:
-                  - *default_partition_table_part_bios
-                  # note no boot efi
-                  - *default_partition_table_part_boot
-                  - *default_partition_table_part_root
-          distro_name:
-            # we need this override to ensure that centos always gets
-            # the latest partition-tables, othersie "centos-9" is
-            # less then "9 <= 9.3"
-            "centos":
-              x86_64:
-                <<: *default_partition_table_x86_64
-              aarch64:
-                <<: *default_partition_table_aarch64
-              ppc64le:
-                <<: *default_partition_table_ppc64le
-              s390x:
-                <<: *default_partition_table_s390x
+      conditions:
+        "rhel-9.2 and below have no efi partition":
+          when: version_less_than("9.3") and distro_name != "centos"
+          override:
+            x86_64:
+              <<: *default_partition_table_x86_64
+              partitions:
+                - *default_partition_table_part_bios
+                # note no boot efi
+                - *default_partition_table_part_boot
+                - *default_partition_table_part_root
+            aarch64:
+              <<: *default_partition_table_aarch64
 
 image_config:
   default:
@@ -529,11 +529,11 @@ image_config:
       no_zero_conf: true
     timezone: "America/New_York"
     update_default_kernel: true
-  condition:
+  conditions:
     "oscap needs a differnt path on centos":
-      distro_name:
-        centos:
-          default_oscap_datastream: "/usr/share/xml/scap/ssg/content/ssg-cs9-ds.xml"
+      when: distro_name == "centos"
+      merge:
+        default_oscap_datastream: "/usr/share/xml/scap/ssg/content/ssg-cs9-ds.xml"
 
 image_types:
   # XXX: not a real pkgset but the "os" pipeline pkgset for image-installer
@@ -582,12 +582,12 @@ image_types:
             - "tuned"
           exclude:
             - "dracut-config-rescue"
-          condition:
-            "add subscription-manager-co":
-              distro_name:
-                rhel:
-                  include:
-                    - "subscription-manager-cockpit"
+          conditions: &conditions_subscription_manager_cockpit
+            "add subscription-manager-cockpit on rhel":
+              when: distro_name == "rhel"
+              append:
+                include:
+                  - "subscription-manager-cockpit"
 
   qcow2: &qcow2
     partition_table:
@@ -652,13 +652,13 @@ image_types:
             - "plymouth"
             - "rng-tools"
             - "udisks2"
-          condition:
-            "add insights pkgs":
-              distro_name:
-                rhel:
-                  include:
-                    - "insights-client"
-                    - "subscription-manager-cockpit"
+          conditions: &conditions_pkgsets_insigths_pkgs
+            "add insights pkgs on rhel":
+              when: distro_name == "rhel"
+              append:
+                include:
+                  - "insights-client"
+                  - "subscription-manager-cockpit"
 
   oci: *qcow2
 
@@ -738,18 +738,15 @@ image_types:
             - "rhnlib"
             - "rhnsd"
             - "usb_modeswitch"
-          condition:
-            "vhd specific pkgs":
-              distro_name:
-                rhel:
-                  include:
-                    - "insights-client"
-              version_greater_or_equal:
-                "9.6":
-                  include:
-                    - "system-reinstall-bootc"
-                  exclude:
-                    - "microcode_ctl"
+          conditions:
+            <<: *conditions_pkgsets_insights_client_on_rhel
+            "rhel-9.6+ gets system-reinstall-bootc and drops microcode_ctl":
+              when: version_greater_or_equal("9.6")
+              append:
+                include:
+                  - "system-reinstall-bootc"
+                exclude:
+                  - "microcode_ctl"
 
   "azure-rhui": *vhd
 
@@ -965,12 +962,8 @@ image_types:
             - "zd1211-firmware"
             # RHBZ#2075815
             - "qemu-guest-agent"
-          condition:
-            "add insights":
-              distro_name:
-                rhel:
-                  include:
-                    - "insights-client"
+          conditions:
+            <<: *conditions_pkgsets_insights_client_on_rhel
 
   "minimal-raw":
     package_sets:
@@ -1083,51 +1076,48 @@ image_types:
           exclude:
             - "rng-tools"
             - "bootupd"
-          condition:
-            "arch specific packages for edge-commit":
-              architecture:
-                x86_64: &edge_commit_x86_64_pkgset
-                  include:
-                    - "grub2"
-                    - "grub2-efi-x64"
-                    - "efibootmgr"
-                    - "shim-x64"
-                    - "microcode_ctl"
-                    - "iwl1000-firmware"
-                    - "iwl100-firmware"
-                    - "iwl105-firmware"
-                    - "iwl135-firmware"
-                    - "iwl2000-firmware"
-                    - "iwl2030-firmware"
-                    - "iwl3160-firmware"
-                    - "iwl5000-firmware"
-                    - "iwl5150-firmware"
-                    - "iwl6050-firmware"
-                    - "iwl7260-firmware"
-                aarch64: &edge_commit_aarch64_pkgset
-                  include:
-                    - "grub2-efi-aa64"
-                    - "efibootmgr"
-                    - "shim-aa64"
-                    - "iwl7260-firmware"
-              distro_name:
-                centos:
-                  include:
-                    # XXX: duplicated to >= rhel-9.2
-                    - "ignition"
-                    - "ignition-edge"
-                    - "ssh-key-dir"
-              version_greater_or_equal:
-                "9.2":
-                  include:
-                    - "ignition"
-                    - "ignition-edge"
-                    - "ssh-key-dir"
-              version_less_than:
-                "9.6":
-                  include:
-                    # dnsmasq removed in 9.6+ but kept in older versions
-                    - "dnsmasq"
+          conditions: &conditions_pkgsets_edge_commit
+            "x86_64 specific packages for edge-commit":
+              when: arch == "x86_64"
+              append: &edge_commit_x86_64_pkgset
+                include:
+                  - "grub2"
+                  - "grub2-efi-x64"
+                  - "efibootmgr"
+                  - "shim-x64"
+                  - "microcode_ctl"
+                  - "iwl1000-firmware"
+                  - "iwl100-firmware"
+                  - "iwl105-firmware"
+                  - "iwl135-firmware"
+                  - "iwl2000-firmware"
+                  - "iwl2030-firmware"
+                  - "iwl3160-firmware"
+                  - "iwl5000-firmware"
+                  - "iwl5150-firmware"
+                  - "iwl6050-firmware"
+                  - "iwl7260-firmware"
+            "aarch64 specific packages for edge-commit":
+              when: arch == "aarch64"
+              append: &edge_commit_aarch64_pkgset
+                include:
+                  - "grub2-efi-aa64"
+                  - "efibootmgr"
+                  - "shim-aa64"
+                  - "iwl7260-firmware"
+            "rhel-9.2+ gets ignition":
+              when: version_greater_or_equal("9.2") or distro_name == "centos"
+              append:
+                include:
+                  - "ignition"
+                  - "ignition-edge"
+                  - "ssh-key-dir"
+            "rhel-9.5 and below includes dnsmasq":
+              when: version_less_than("9.6")
+              append:
+                include:
+                  # dnsmasq removed in 9.6+ but kept in older versions
+                  - "dnsmasq"
 
   "edge-container":
     package_sets:
@@ -1188,13 +1178,17 @@ image_types:
             - "sudo"
             - "traceroute"
             - "util-linux"
-          condition:
-            "arch specific packages for simplified edge installer":
-              architecture:
-                x86_64:
-                  *edge_commit_x86_64_pkgset
-                aarch64:
-                  *edge_commit_aarch64_pkgset
+          conditions:
+            # XXX: should we instead "<<: *conditions_edge_commit" here?
+            # it will give different results
+            "x86_64 specific pkgset for edge-simplified-installer":
+              when: arch == "x86_64"
+              append:
+                <<: *edge_commit_x86_64_pkgset
+            "aarch64 specific pkgset for edge-simplified-installer":
+              when: arch == "aarch64"
+              append:
+                <<: *edge_commit_aarch64_pkgset
 
   "azure-cvm":
     package_sets:

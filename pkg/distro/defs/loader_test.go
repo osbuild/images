@@ -74,15 +74,17 @@ image_types:
       os:
         - include: [inc1]
           exclude: [exc1]
-          condition:
+          conditions:
             "some-description-1":
-              distro_name:
-                test-distro:
-                  include: [from-condition-inc2]
-                  exclude: [from-condition-exc2]
-                other-distro:
-                  include: [inc3]
-                  exclude: [exc3]
+              when: distro_name == "test-distro"
+              append:
+                include: [from-condition-inc2]
+                exclude: [from-condition-exc2]
+            "some-description-2":
+              when: distro_name == "other-distro"
+              append:
+                include: [inc3]
+                exclude: [exc3]
       container:
         - include: [inc-cnt1]
           exclude: [exc-cnt1]
@@ -160,12 +162,12 @@ func TestLoadYamlMergingWorks(t *testing.T) {
   base: &base_pkgset
     include: [from-base-inc]
     exclude: [from-base-exc]
-    condition:
+    conditions:
       "some description 1":
-        distro_name:
-          test-distro:
-            include: [from-base-condition-inc]
-            exclude: [from-base-condition-exc]
+        when: distro_name == "test-distro"
+        append:
+          include: [from-base-condition-inc]
+          exclude: [from-base-condition-exc]
 image_types:
   other_type:
     package_sets:
@@ -180,12 +182,12 @@ image_types:
       - *other_type_pkgset
       - include: [from-type-inc]
         exclude: [from-type-exc]
-        condition:
+        conditions:
           "some description 2":
-            distro_name:
-              test-distro:
-                include: [from-condition-inc]
-                exclude: [from-condition-exc]
+            when: distro_name == "test-distro"
+            append:
+              include: [from-condition-inc]
+              exclude: [from-condition-exc]
 `
 	// XXX: we cannot use distro.Name() as it will give us a name+ver
 	baseDir := makeFakeDefs(t, test_distro.TestDistroNameBase, fakePkgsSetYaml)
@@ -325,33 +327,36 @@ image_types:
               mountpoint: "/"
               fstab_options: "defaults"
     partition_tables_override:
-      condition:
-        "some description":
-          version_greater_or_equal:
-            # overrides are applied in order
-            "0":
-              test_arch:
-                <<: *test_arch_pt
-                partitions:
-                  - <<: *default_part_0
-                    size: 111_111_111
-            "1":
-              test_arch:
-                <<: *test_arch_pt
-                partitions:
-                  - <<: *default_part_0
-                    size: 222_222_222
-                  - <<: *default_part_1
-                    payload:
-                      <<: *default_part_1_payload
-                      fstab_options: "defaults,ro"
-            "2":
-              test_arch:
-                <<: *test_arch_pt
-                partitions:
-                  - <<: *default_part_0
-                    size: 333_333_333
-                  - *default_part_1
+      conditions:
+        "some description-0":
+          when: distro_version == "0"
+          override:
+            test_arch:
+              <<: *test_arch_pt
+              partitions:
+                - <<: *default_part_0
+                  size: 111_111_111
+        "some description-1":
+          when: version_greater_or_equal("1") and version_less_than("2")
+          override:
+            test_arch:
+              <<: *test_arch_pt
+              partitions:
+                - <<: *default_part_0
+                  size: 222_222_222
+                - <<: *default_part_1
+                  payload:
+                    <<: *default_part_1_payload
+                    fstab_options: "defaults,ro"
+        "some description-2":
+          when: version_greater_or_equal("2")
+          override:
+            test_arch:
+              <<: *test_arch_pt
+              partitions:
+                - <<: *default_part_0
+                  size: 333_333_333
+                - *default_part_1
 `
 
 func TestDefsPartitionTableOverrideGreatEqual(t *testing.T) {
@@ -389,7 +394,7 @@ func TestDefsPartitionTableOverrideGreatEqual(t *testing.T) {
 func TestDefsPartitionTableOverridelessThan(t *testing.T) {
 	it := makeTestImageType(t)
 
-	patched := strings.Replace(fakeDistroYaml, "version_greater_or_equal:", "version_less_than:", -1)
+	patched := strings.Replace(fakeDistroYaml, "version_greater_or_equal(", "version_less_than(", -1)
 
 	// XXX: we cannot use distro.Name() as it will give us a name+ver
 	baseDir := makeFakeDefs(t, test_distro.TestDistroNameBase, patched)
@@ -433,14 +438,14 @@ image_types:
             size: 1_048_576
             bootable: true
     partition_tables_override:
-      condition:
+      conditions:
         "some description":
-          distro_name:
-            "test-distro":
-                test_arch:
-                  partitions:
-                    - <<: *default_part_0
-                      size: 111_111_111
+          when: distro_name == "test-distro"
+          override:
+            test_arch:
+              partitions:
+                - <<: *default_part_0
+                  size: 111_111_111
 `
 	// XXX: we cannot use distro.Name() as it will give us a name+ver
 	baseDir := makeFakeDefs(t, test_distro.TestDistroNameBase, fakeDistroYaml)
@@ -467,11 +472,11 @@ image_config:
     timezone: "DefaultTZ"
     users:
       - name: testuser
-  condition:
+  conditions:
     "some description":
-      distro_name:
-        "test-distro":
-          timezone: "OverrideTZ"
+      when: distro_name == "test-distro"
+      merge:
+        timezone: "OverrideTZ"
 `
 	fakeDistroName := "test-distro"
 	fakeDistroVer := "42"
@@ -539,21 +544,28 @@ image_types:
       hostname: "foo"
       locale: "C.UTF-8"
       timezone: "DefaultTZ"
-      default_kernel_name: kernel
-      condition:
-        "some description":
-          version_less_than:
-            "2":
-              timezone: "OverrideTZ"
-            # test-distro is version "1" (no minor) so considered "1" is > "1.4"
-            "1.4":
-              default_kernel_name: kernel-lt-14
-          distro_name:
-            "test-distro":
-              locale: "en_US.UTF-8"
-          architecture:
-            "test_arch":
-              hostname: "test-arch-hn"
+      default_kernel: "kernel"
+      conditions:
+        "some description for version lt":
+          when: version_less_than("2")
+          merge:
+            timezone: "OverrideTZ"
+        "test-distro is version '1' (no minor) so considered '1' is > '1.4'":
+          when: version_less_than("1.4")
+          merge:
+            default_kernel: kernel-lt-14
+        "some description for distro_name":
+          when: distro_name == "test-distro"
+          merge:
+            locale: "en_US.UTF-8"
+        "some description for architecture":
+          when: arch == "test_arch"
+          merge:
+            hostname: "test-arch-hn"
+        "some description for version":
+          when: version_less_than("2")
+          merge:
+            default_kernel: "kernel-lt-2"
 `
 	fakeDistroName := "test-distro"
 	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
@@ -563,10 +575,10 @@ image_types:
 	imgConfig, err := defs.ImageConfig("test-distro-1", "test_arch", "test_type")
 	require.NoError(t, err)
 	assert.Equal(t, &distro.ImageConfig{
-		Hostname:          common.ToPtr("test-arch-hn"),
-		Locale:            common.ToPtr("en_US.UTF-8"),
-		Timezone:          common.ToPtr("OverrideTZ"),
-		DefaultKernelName: common.ToPtr("kernel"),
+		Hostname:      common.ToPtr("test-arch-hn"),
+		Locale:        common.ToPtr("en_US.UTF-8"),
+		Timezone:      common.ToPtr("OverrideTZ"),
+		DefaultKernel: common.ToPtr("kernel-lt-2"),
 	}, imgConfig)
 }
 
@@ -663,36 +675,14 @@ func TestImageTypeInstallerConfig(t *testing.T) {
 	}, installerConfig)
 }
 
-func TestImageTypeInstallerConfigErrorMultiple(t *testing.T) {
-	fakeDistroYaml := fakeDistroYamlInstallerConf + `
-      condition:
-        "some description":
-          version_less_than:
-            "2":
-              additional_dracut_modules:
-                - override-dracut-mod1
-          distro_name:
-            "test-distro":
-`
-
-	fakeDistroName := "test-distro"
-	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
-	restore := defs.MockDataFS(baseDir)
-	defer restore()
-
-	_, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type")
-	require.ErrorContains(t, err, "only a single conditional allowed in installer config for test_type")
-}
-
 func TestImageTypeInstallerConfigOverrideVerLT(t *testing.T) {
 	fakeDistroYaml := fakeDistroYamlInstallerConf + `
-      condition:
+      conditions:
         "some description":
-          version_less_than:
-            "2":
-              # Note that this fully override the installer config
-              additional_dracut_modules:
-                - override-dracut-mod1
+          when: version_less_than("2")
+          override:
+            additional_dracut_modules:
+              - override-dracut-mod1
 `
 	fakeDistroName := "test-distro"
 	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
@@ -711,14 +701,14 @@ func TestImageTypeInstallerConfigOverrideVerLT(t *testing.T) {
 
 func TestImageTypeInstallerConfigOverrideDistroName(t *testing.T) {
 	fakeDistroYaml := fakeDistroYamlInstallerConf + `
-      condition:
+      conditions:
         "some description":
-          distro_name:
-            "test-distro":
-              additional_dracut_modules:
-                - override-dracut-mod1
-              additional_drivers:
-               - override-drv1
+          when: distro_name == "test-distro"
+          override:
+            additional_dracut_modules:
+              - override-dracut-mod1
+            additional_drivers:
+             - override-drv1
 `
 
 	fakeDistroName := "test-distro"
@@ -736,12 +726,12 @@ func TestImageTypeInstallerConfigOverrideDistroName(t *testing.T) {
 
 func TestImageTypeInstallerConfigOverrideArch(t *testing.T) {
 	fakeDistroYaml := fakeDistroYamlInstallerConf + `
-      condition:
+      conditions:
         "some description":
-          architecture:
-            "test_arch":
-              additional_drivers:
-               - override-drv1
+          when: arch == "test_arch"
+          override:
+            additional_drivers:
+             - override-drv1
 `
 
 	fakeDistroName := "test-distro"
