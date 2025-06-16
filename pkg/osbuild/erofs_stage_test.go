@@ -53,6 +53,10 @@ func TestErofStageJsonFull(t *testing.T) {
         },
         "options": {
                 "filename": "foo.ero",
+                "exclude_paths": [
+                        "boot/efi/.*",
+                        "boot/initramfs-.*"
+                ],
                 "compression": {
                         "method": "lz4hc",
                         "level": 9
@@ -67,6 +71,10 @@ func TestErofStageJsonFull(t *testing.T) {
 
 	opts := &osbuild.ErofsStageOptions{
 		Filename: "foo.ero",
+		ExcludePaths: []string{
+			"boot/efi/.*",
+			"boot/initramfs-.*",
+		},
 		Compression: &osbuild.ErofsCompression{
 			Method: "lz4hc",
 			Level:  common.ToPtr(9),
