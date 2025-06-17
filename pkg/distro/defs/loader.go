@@ -11,16 +11,13 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"slices"
 	"sort"
 	"sync"
 	"text/template"
 
 	"github.com/gobwas/glob"
-	"github.com/hashicorp/go-version"
 	"go.starlark.net/starlark"
 	"go.starlark.net/syntax"
-	"golang.org/x/exp/maps"
 	"gopkg.in/yaml.v3"
 
 	"github.com/osbuild/images/internal/common"
@@ -301,37 +298,6 @@ type partitionTablesOverrides struct {
 type partitionTablesOverwriteCondition struct {
 	When     string                          `yaml:"when"`
 	Override map[string]*disk.PartitionTable `yaml:"override"`
-}
-
-// XXX: use slices.Backward() once we move to go1.23
-// hint: use "git blame" on this comment and just revert
-// the commit that adds it and you will have the 1.23 version
-func backward[Slice ~[]E, E any](s Slice) []E {
-	out := make([]E, 0, len(s))
-	for i := len(s) - 1; i >= 0; i-- {
-		out = append(out, s[i])
-	}
-	return out
-}
-
-// XXX: use slices.SortedFunc() once we move to go1.23
-// hint: use "git blame" on this comment and just revert
-// the commit that adds it and you will have the 1.23 version
-func versionLessThanSortedKeys[T any](m map[string]T) []string {
-	versions := maps.Keys(m)
-	slices.SortFunc(versions, func(a, b string) int {
-		ver1 := version.Must(version.NewVersion(a))
-		ver2 := version.Must(version.NewVersion(b))
-		switch {
-		case ver1 == ver2:
-			return 0
-		case ver2.LessThan(ver1):
-			return -1
-		default:
-			return 1
-		}
-	})
-	return versions
 }
 
 type evalEnv struct {
