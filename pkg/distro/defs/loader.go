@@ -266,6 +266,7 @@ type conditionsImgConf struct {
 	Architecture    map[string]*distro.ImageConfig `yaml:"architecture,omitempty"`
 	DistroName      map[string]*distro.ImageConfig `yaml:"distro_name,omitempty"`
 	VersionLessThan map[string]*distro.ImageConfig `yaml:"version_less_than,omitempty"`
+	VersionEqual    map[string]*distro.ImageConfig `yaml:"version_equal,omitempty"`
 }
 
 type installerConfig struct {
@@ -646,6 +647,12 @@ func ImageConfig(distroNameVer, archName, typeName string) (*distro.ImageConfig,
 			ltOverrides := cond.VersionLessThan[ltVer]
 			if common.VersionLessThan(versionStringForVerCmp(*id), ltVer) {
 				imgConfig = ltOverrides.InheritFrom(imgConfig)
+			}
+		}
+		for _, eqVer := range versionLessThanSortedKeys(cond.VersionEqual) {
+			eqOverrides := cond.VersionEqual[eqVer]
+			if common.VersionEqual(id.VersionString(), eqVer) {
+				imgConfig = eqOverrides.InheritFrom(imgConfig)
 			}
 		}
 	}

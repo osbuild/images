@@ -49,8 +49,8 @@ type GRUB2Config struct {
 	DisableSubmenu  *bool                   `json:"disable_submenu,omitempty" yaml:"disable_submenu,omitempty"`
 	Distributor     string                  `json:"distributor,omitempty"`
 	Terminal        []string                `json:"terminal,omitempty"`
-	TerminalInput   []string                `json:"terminal_input,omitempty"`
-	TerminalOutput  []string                `json:"terminal_output,omitempty"`
+	TerminalInput   []string                `json:"terminal_input,omitempty" yaml:"terminal_input,omitempty"`
+	TerminalOutput  []string                `json:"terminal_output,omitempty" yaml:"terminal_output,omitempty"`
 	Timeout         int                     `json:"timeout,omitempty"`
 	TimeoutStyle    GRUB2ConfigTimeoutStyle `json:"timeout_style,omitempty" yaml:"timeout_style,omitempty"`
 	Serial          string                  `json:"serial,omitempty"`
