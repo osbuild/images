@@ -1100,6 +1100,7 @@ func TestAddPartitionsForBootMode(t *testing.T) {
 			diskCustomization: &blueprint.DiskCustomization{
 				Partitions: []blueprint.PartitionCustomization{
 					{
+						Type: "plain",
 						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
 							Mountpoint: "/boot/efi",
 						},
@@ -1114,6 +1115,7 @@ func TestAddPartitionsForBootMode(t *testing.T) {
 			diskCustomization: &blueprint.DiskCustomization{
 				Partitions: []blueprint.PartitionCustomization{
 					{
+						Type: "plain",
 						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
 							Mountpoint: "/boot/efi",
 						},
@@ -2575,6 +2577,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				Type: "dos",
 				Partitions: []blueprint.PartitionCustomization{
 					{
+						Type:     "plain",
 						MinSize:  1 * datasizes.GiB,
 						PartType: "06",
 						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
