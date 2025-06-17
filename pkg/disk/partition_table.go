@@ -1105,20 +1105,6 @@ func addBootPartition(pt *PartitionTable, bootFsType FSType) error {
 	return nil
 }
 
-func hasESP(disk *blueprint.DiskCustomization) bool {
-	if disk == nil {
-		return false
-	}
-
-	for _, part := range disk.Partitions {
-		if part.Type == "plain" && part.Mountpoint == "/boot/efi" {
-			return true
-		}
-	}
-
-	return false
-}
-
 // addPartitionsForBootMode creates partitions to satisfy the boot mode requirements:
 //   - BIOS/legacy: adds a 1 MiB BIOS boot partition.
 //   - UEFI: adds a 200 MiB EFI system partition.
@@ -1605,7 +1591,7 @@ func needsESP(disk *blueprint.DiskCustomization) bool {
 	}
 
 	for _, part := range disk.Partitions {
-		if part.Mountpoint == "/boot/efi" {
+		if part.Type == "plain" && part.Mountpoint == "/boot/efi" {
 			return false
 		}
 	}
