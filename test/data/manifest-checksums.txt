@@ -8,6 +8,7 @@ c4b1bd0e5caea2320d29534f838c660ff57d3b53  centos_10-aarch64-image_installer-unat
 ce2fc4269d4a095a6888dc6c77eb415d93346177  centos_10-aarch64-qcow2-all_with_fips.json
 4114301f0ba6de10564a7146e5dda684014db3cf  centos_10-aarch64-qcow2-empty_rhel.json
 44ad36bdc1c9ec52988661d393be994d947fbb22  centos_10-aarch64-tar-empty_rhel.json
+e7537d467765bcf1ed10324359bb0997947e38bc  centos_10-aarch64-vagrant_libvirt-empty_rhel.json
 8dae84eadfbac3808173635f05d9e2fbf7cfcc51  centos_10-aarch64-vhd-empty_rhel.json
 54e23adf084acea5a868fcc2791e7f5cbeb5eb9e  centos_10-aarch64-wsl-empty_rhel.json
 209bc492d409219bd95df6f5fc82cd0a12c9630d  centos_10-ppc64le-qcow2-all_with_fips.json
@@ -29,6 +30,7 @@ fa3cc34e03c48bc88d63cd134649f57bfb4cb020  centos_10-x86_64-ova-empty_rhel.json
 b1e5e9a17c6e7c64f1cadee29f51b11a1bba0dda  centos_10-x86_64-qcow2-all_with_fips.json
 23156d188c7344ca6a6fef49673ee753c4bf7f1f  centos_10-x86_64-qcow2-empty_rhel.json
 dedb2581a8bcec0075af61cb4faefdce08c89e40  centos_10-x86_64-tar-empty_rhel.json
+bfe4b5aa7eac06307a445d9d8b1b1da695833013  centos_10-x86_64-vagrant_libvirt-empty_rhel.json
 6b6d82020ecbad3bfb465c6f816d645459d23285  centos_10-x86_64-vhd-empty_rhel.json
 d0a50d599e6bece6180bd2b1e39c6173d4bc275f  centos_10-x86_64-vmdk-empty_rhel.json
 4c810ff60b2765117d5050e65d2298706b9b8d79  centos_10-x86_64-wsl-empty_rhel.json
@@ -436,6 +438,7 @@ ade27cbc8d36087e29be2ef3d3b56c346dd94e82  rhel_10.0-aarch64-image_installer-empt
 0904455456993f60aebcee9b29b7473494aba50f  rhel_10.0-aarch64-qcow2-empty_rhel.json
 f1f59edba9479ad8e109c57e5fd3d4a489b309df  rhel_10.0-aarch64-qcow2-rhsm.json
 5dd68ae3b9c6fc671398a6842e8d91cf82ae15c6  rhel_10.0-aarch64-tar-empty_rhel.json
+30077545dad3f5e9544bb21d5ca50629efca5c57  rhel_10.0-aarch64-vagrant_libvirt-empty_rhel.json
 f828f3dbb76aee19640d1f1591889c22f436a47f  rhel_10.0-aarch64-vhd-empty_rhel.json
 6243c03974fd7398dc7e549d54feddd832ebdd3b  rhel_10.0-aarch64-wsl-empty_rhel.json
 1173aedfada1c5486d38244e0c78567de3b89ed5  rhel_10.0-ppc64le-qcow2-empty_rhel.json
@@ -465,6 +468,7 @@ ef6f23b6b578b3bf40ececdf8d68435002dc69ca  rhel_10.0-x86_64-ova-empty_rhel.json
 efc616d67affb205bd7b9a3fc853054b5ef8dfa2  rhel_10.0-x86_64-qcow2-empty_rhel.json
 e2f6fa28353c959990eb1657babe52d1b4657d9c  rhel_10.0-x86_64-qcow2-rhsm.json
 b5a5ad3e4e331611ba674cfebb0a8e142e31dd8d  rhel_10.0-x86_64-tar-empty_rhel.json
+5a46f5ac33096731b25338472e45d8d7228fdea1  rhel_10.0-x86_64-vagrant_libvirt-empty_rhel.json
 d17ff5788a0ba8c07d7b447b49a70a608467f548  rhel_10.0-x86_64-vhd-empty_rhel.json
 98718b1bd67a0f383a1b305f41a3b79e7b4e329e  rhel_10.0-x86_64-vmdk-empty_rhel.json
 3cee1bd38a05f4f38e6113530b1be24131211a3b  rhel_10.0-x86_64-wsl-empty_rhel.json
@@ -480,6 +484,7 @@ e303be927c5a147a265c6f9e900604483d3a954a  rhel_10.1-aarch64-image_installer-empt
 15b8b5578d676d76f8c929de77ff1e509d39237e  rhel_10.1-aarch64-image_installer-unattended_iso.json
 9bc5f49e007d98b09a08862e7029f1ccafc28478  rhel_10.1-aarch64-qcow2-empty_rhel.json
 2d9b6b9310cf176d38c25efec961cdb139582500  rhel_10.1-aarch64-tar-empty_rhel.json
+1364e2b20becd3d84c663077af5d8258f516a0fa  rhel_10.1-aarch64-vagrant_libvirt-empty_rhel.json
 beb8998ba0ea11b5da2d7dc0fd56bab398db09ce  rhel_10.1-aarch64-vhd-empty_rhel.json
 cffd9fb88a353d1fe936e42d551ba0b16e0c9660  rhel_10.1-aarch64-wsl-empty_rhel.json
 83cf0bfc9695808ac5cdcd269266129e18493f95  rhel_10.1-ppc64le-qcow2-empty_rhel.json
@@ -505,6 +510,7 @@ f3f6e103a4b3c3bf5610bbaa1bcbc56cb52ae526  rhel_10.1-x86_64-oci-empty_rhel.json
 bf840816abbef6fb88d0bc8a484e629bfc440dad  rhel_10.1-x86_64-ova-empty_rhel.json
 7100463ca9eb86b9fe6cbb326ef735dd43258ea5  rhel_10.1-x86_64-qcow2-empty_rhel.json
 a7bc8c56070efbc2ac52cf4820c2c78dc1940349  rhel_10.1-x86_64-tar-empty_rhel.json
+c1c432a833febe13829e6de3d09563424e5e60ff  rhel_10.1-x86_64-vagrant_libvirt-empty_rhel.json
 a75ccf09727f37554304ba435e291c606e03d15f  rhel_10.1-x86_64-vhd-empty_rhel.json
 4c00bd0b4c332585b7ddddc413205d8051440fcb  rhel_10.1-x86_64-vmdk-empty_rhel.json
 4901fc525301e382db739abc253b926431da6647  rhel_10.1-x86_64-wsl-empty_rhel.json

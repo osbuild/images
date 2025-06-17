@@ -149,6 +149,7 @@
       "ova",
       "qcow2",
       "tar",
+      "vagrant-libvirt",
       "vhd",
       "vmdk",
       "wsl"

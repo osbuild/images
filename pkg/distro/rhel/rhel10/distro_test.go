@@ -288,6 +288,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"ec2",
 				"ec2-ha",
 				"ec2-sap",
+				"vagrant-libvirt",
 			},
 		},
 		{
@@ -301,6 +302,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"image-installer",
 				"azure-rhui",
 				"ec2",
+				"vagrant-libvirt",
 			},
 		},
 		{
