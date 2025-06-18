@@ -235,6 +235,30 @@ func (c *ImageConfig) WSLConfStageOptions() *osbuild.WSLConfStageOptions {
 	}
 }
 
+func (c *ImageConfig) WSLDistributionConfStageOptions() *osbuild.WSLDistributionConfStageOptions {
+	if c.WSL == nil || c.WSL.DistributionConfig == nil {
+		return nil
+	}
+
+	options := &osbuild.WSLDistributionConfStageOptions{}
+
+	if c.WSL.DistributionConfig.OOBE != nil {
+		options.OOBE = osbuild.WSLDistributionConfOOBEOptions{
+			DefaultUID:  c.WSL.DistributionConfig.OOBE.DefaultUID,
+			DefaultName: c.WSL.DistributionConfig.OOBE.DefaultName,
+		}
+	}
+
+	if c.WSL.DistributionConfig.Shortcut != nil {
+		options.Shortcut = osbuild.WSLDistributionConfShortcutOptions{
+			Enabled: c.WSL.DistributionConfig.Shortcut.Enabled,
+			Icon:    c.WSL.DistributionConfig.Shortcut.Icon,
+		}
+	}
+
+	return options
+}
+
 type Sysconfig struct {
 	Networking bool `yaml:"networking,omitempty"`
 	NoZeroConf bool `yaml:"no_zero_conf,omitempty"`
