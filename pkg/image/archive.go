@@ -22,6 +22,8 @@ type Archive struct {
 	Workload         workload.Workload
 	Filename         string
 	Compression      string
+
+	OSVersion string
 }
 
 func NewArchive() *Archive {
@@ -41,6 +43,7 @@ func (img *Archive) InstantiateManifest(m *manifest.Manifest,
 	osPipeline.OSCustomizations = img.OSCustomizations
 	osPipeline.Environment = img.Environment
 	osPipeline.Workload = img.Workload
+	osPipeline.OSVersion = img.OSVersion
 
 	tarPipeline := manifest.NewTar(buildPipeline, osPipeline, "archive")
 	tarPipeline.SetFilename(img.Filename)

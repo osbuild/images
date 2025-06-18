@@ -380,9 +380,12 @@ func tarImage(workload workload.Workload,
 		return nil, err
 	}
 
+	d := t.arch.distro
+
 	img.Environment = &t.ImageTypeYAML.Environment
 	img.Workload = workload
 	img.Compression = t.ImageTypeYAML.Compression
+	img.OSVersion = d.OsVersion()
 
 	img.Filename = t.Filename()
 
