@@ -1098,8 +1098,9 @@ image_types:
             network:
               config: "disabled"
       no_selinux: true
-      wsl_config:
-        boot_systemd: true
+      wsl:
+        config:
+          boot_systemd: true
     package_sets:
       os:
         - include:
