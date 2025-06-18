@@ -90,11 +90,35 @@
       image_format: "raw"
       packages:
         <<: *x86_64_bios_platform_packages
-        firmware:
+        booting:
           - "biosdevname"
+          - "grub2-pc-modules"
+          - "grub2-tools-efi"
+          - "grub2-tools"
+          - "grub2-tools-extra"
+          - "shim-ia32"
+          - "grub2-efi-ia32-cdboot"
+        firmware:
+          - "microcode_ctl"
+          - "amd-gpu-firmware"
+          - "amd-ucode-firmware"
+          - "atheros-firmware"
+          - "atmel-firmware"
+          - "b43-openfwwf"
+          - "brcmfmac-firmware"
+          - "intel-gpu-firmware"
+          - "iwlegacy-firmware"
           - "iwlwifi-dvm-firmware"
           - "iwlwifi-mvm-firmware"
-          - "microcode_ctl"
+          - "libertas-firmware"
+          - "linux-firmware"
+          - "mt7xxx-firmware"
+          - "nvidia-gpu-firmware"
+          - "nxpwireless-firmware"
+          - "qed-firmware"
+          - "realtek-firmware"
+          - "tiwilink-firmware"
+          - "zd1211-firmware"
       bootloader: "grub2"
     aarch64_platform: &aarch64_platform
       arch: "aarch64"
@@ -114,20 +138,41 @@
       uefi_vendor: "fedora"
       packages:
         <<: *aarch64_uefi_platform_packages
-        firmware:
+        booting:
           - "arm-image-installer"
+          - "grub2-efi-aa64-cdboot"
+          - "uboot-images-armv8"
+          - "uboot-tools"
+        firmware:
+          - "amd-gpu-firmware"
+          - "atheros-firmware"
+          - "atmel-firmware"
+          - "b43-openfwwf"
+          - "bcm2711-firmware"
+          - "bcm2835-firmware"
           - "bcm283x-firmware"
           - "brcmfmac-firmware"
+          - "intel-gpu-firmware"
+          - "iwlegacy-firmware"
+          - "iwlwifi-dvm-firmware"
           - "iwlwifi-mvm-firmware"
+          - "libertas-firmware"
+          - "linux-firmware"
+          - "mt7xxx-firmware"
+          - "nvidia-gpu-firmware"
+          - "nxpwireless-firmware"
+          - "qcom-firmware"
+          - "qed-firmware"
           - "realtek-firmware"
-          - "uboot-images-armv8"
+          - "tiwilink-firmware"
+          - "zd1211-firmware"
       bootloader: "grub2"
     ppc64le_bios_platform: &ppc64le_bios_platform
       arch: "ppc64le"
       bios_platform: "powerpc-ieee1275"
       image_format: "qcow2"
       qcow2_compat: "1.1"
-      packages:
+      packages: &ppc64le_bios_platform_packages
         bios:
           - "dracut-config-generic"
           - "powerpc-utils"
@@ -138,6 +183,36 @@
           - "grub2-ppc64le"
           - "grub2-ppc64le-modules"
       bootloader: "grub2"
+    ppc64le_installer_platform: &ppc64le_installer_platform
+      <<: *ppc64le_bios_platform
+      image_format: "qcow2"
+      packages:
+        <<: *ppc64le_bios_platform_packages
+        booting:
+          - "lsvpd"
+          - "ppc64-diag"
+          - "grub2-tools"
+          - "grub2-tools-minimal"
+          - "grub2-tools-extra"
+        firmware:
+          - "amd-gpu-firmware"
+          - "atheros-firmware"
+          - "atmel-firmware"
+          - "b43-openfwwf"
+          - "brcmfmac-firmware"
+          - "intel-gpu-firmware"
+          - "iwlegacy-firmware"
+          - "iwlwifi-dvm-firmware"
+          - "iwlwifi-mvm-firmware"
+          - "libertas-firmware"
+          - "linux-firmware"
+          - "mt7xxx-firmware"
+          - "nvidia-gpu-firmware"
+          - "nxpwireless-firmware"
+          - "qed-firmware"
+          - "realtek-firmware"
+          - "tiwilink-firmware"
+          - "zd1211-firmware"
     s390x_zipl_platform: &s390x_zipl_platform
       arch: "s390x"
       zipl_support: true
@@ -1931,7 +2006,6 @@ image_types:
           <<: *x86_64_uefi_platform_packages
           firmware:
             - "grub2-efi-x64"
-            - "grub2-efi-x64-cdboot"
             - "grub2-tools"
             - "grub2-tools-minimal"
             - "efibootmgr"
@@ -1948,7 +2022,6 @@ image_types:
             - "arm-image-installer"
             - "bcm283x-firmware"
             - "grub2-efi-aa64"
-            - "grub2-efi-aa64-cdboot"
             - "grub2-tools"
             - "grub2-tools-minimal"
             - "efibootmgr"
@@ -1958,3 +2031,133 @@ image_types:
             - "iwlwifi-mvm-firmware"
             - "realtek-firmware"
             - "uboot-images-armv8"
+
+  # Based on lorax runtime-install.tmpl
+  "everything-netinst":
+    name_aliases: ["netinst"]
+    filename: "netinst.iso"
+    mime_type: "application/x-iso9660-image"
+    bootable: true
+    boot_iso: true
+    image_func: "netinst"
+    iso_label: "Everything"
+    variant: "Everything"
+    build_pipelines: ["build"]
+    payload_pipelines:
+      - "anaconda-tree"
+      - "efiboot-tree"
+      - "bootiso-tree"
+      - "bootiso"
+    exports: ["bootiso"]
+    required_partition_sizes: *default_required_dir_sizes
+    installer_config: *default_installer_config
+    image_config:
+      locale: "en_US.UTF-8"
+      iso_rootfs_type: "squashfs"
+      conditions:
+        "on f40 and below we used ext4 on squashfs":
+          when:
+            version_less_than: "41"
+          shallow_merge:
+            iso_rootfs_type: "squashfs-ext4"
+        "x86_64 uses grub2":
+          when:
+            arch: "x86_64"
+          shallow_merge:
+            iso_boot_type: "grub2"
+    package_sets:
+      installer:
+        - include:
+            - anaconda
+            - anaconda-widgets
+            - anaconda-install-img-deps
+            - ostree
+            - rpm-ostree
+            - pigz
+            - audit
+            - bind-utils
+            - kernel
+            - kernel-modules
+            - kernel-modules-extra
+            - grubby
+            - glibc-all-langpacks
+            - plymouth
+            - anaconda-dracut
+            - dracut-network
+            - dracut-config-generic
+            - initscripts
+            - cryptsetup
+            - rpcbind
+            - kbd
+            - kbd-misc
+            - tar
+            - xz
+            - curl
+            - bzip2
+            - rsyslog
+            - device-mapper-persistent-data
+            - xfsdump
+            - volume_key
+            - nss-tools
+            - selinux-policy-targeted
+            - audit
+            - ethtool
+            - openssh-server
+            - nfs-utils
+            - openssh-clients
+            - tigervnc-server-minimal
+            - tigervnc-server-module
+            - net-tools
+            - bridge-utils
+            - nmap-ncat
+            - prefixdevname
+            - pciutils
+            - usbutils
+            - ipmitool
+            - mt-st
+            - smartmontools
+            - hdparm
+            - rdma-core
+            - rng-tools
+            - nvme-cli
+            - default-fonts-core-sans
+            - default-fonts-other-sans
+            - google-noto-sans-cjk-fonts
+            - gdb-gdbserver
+            - libreport-plugin-bugzilla
+            - libreport-plugin-reportuploader
+            - fpaste
+            - python3-pyatspi
+            - nano
+            - nano-default-editor
+            - vim-minimal
+            - strace
+            - lsof
+            - dump
+            - less
+            - wget2-wget
+            - rsync
+            - bind-utils
+            - ftp
+            - mtr
+            - vconfig
+            - spice-vdagent
+            - gdisk
+            - hexedit
+            - sg3_utils
+          conditions:
+            "x86_64 specific anaconda pkgs":
+              when:
+                arch: "x86_64"
+              append:
+                include:
+                  - dmidecode
+            "aarch64 specific anaconda pkgs":
+              when:
+                arch: "aarch64"
+              append:
+                include:
+                  - dmidecode
+    platforms:
+      - *x86_64_installer_platform
+      - *aarch64_installer_platform
