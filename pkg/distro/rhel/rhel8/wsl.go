@@ -22,8 +22,10 @@ func mkWslImgType() *rhel.ImageType {
 	it.DefaultImageConfig = &distro.ImageConfig{
 		Locale:    common.ToPtr("en_US.UTF-8"),
 		NoSElinux: common.ToPtr(true),
-		WSLConfig: &distro.WSLConfig{
-			BootSystemd: true,
+		WSL: &distro.WSL{
+			Config: &distro.WSLConfig{
+				BootSystemd: true,
+			},
 		},
 	}
 

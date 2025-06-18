@@ -1621,8 +1621,9 @@ image_types:
       condition:
         version_less_than:
           "42":
-            wsl_config:
-              boot_systemd: true
+            wsl:
+              config:
+                boot_systemd: true
             cloud_init:
               - filename: "99_wsl.cfg"
                 config:
