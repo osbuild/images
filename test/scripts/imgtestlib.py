@@ -235,7 +235,10 @@ def check_config_names():
 def gen_manifests(outputdir, config_map=None, distros=None, arches=None, images=None,
                   commits=False, skip_no_config=False):
     # pylint: disable=too-many-arguments,too-many-positional-arguments
-    cmd = ["go", "run", "./cmd/gen-manifests",
+    cmd = ["go",
+           "run",
+           "-tags", "containers_image_openpgp exclude_graphdriver_btrfs exclude_graphdriver_devicemapper",
+           "./cmd/gen-manifests",
            "--cache", os.path.join(TEST_CACHE_ROOT, "rpmmd"),
            "--output", outputdir,
            "--workers", "100"]
