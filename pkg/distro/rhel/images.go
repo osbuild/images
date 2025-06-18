@@ -283,6 +283,7 @@ func osCustomizations(
 	osc.UdevRules = imageConfig.UdevRules
 	osc.GCPGuestAgentConfig = imageConfig.GCPGuestAgentConfig
 	osc.WSLConfig = imageConfig.WSLConfStageOptions()
+	osc.WSLDistributionConfig = imageConfig.WSLDistributionConfStageOptions()
 	osc.NetworkManager = imageConfig.NetworkManager
 
 	osc.Files = append(osc.Files, imageConfig.Files...)
