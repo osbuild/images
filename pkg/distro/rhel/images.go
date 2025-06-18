@@ -820,6 +820,7 @@ func TarImage(workload workload.Workload,
 	img.Environment = t.Environment
 	img.Workload = workload
 	img.Compression = t.Compression
+	img.OSVersion = t.Arch().Distro().OsVersion()
 
 	img.Filename = t.Filename()
 
