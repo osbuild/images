@@ -546,6 +546,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"wsl",
 				"iot-bootable-container",
 				"iot-simplified-installer",
+				"everything-netinst",
 			},
 		},
 		{
@@ -568,6 +569,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"server-vagrant-libvirt",
 				"iot-bootable-container",
 				"iot-simplified-installer",
+				"everything-netinst",
 			},
 		},
 		{
