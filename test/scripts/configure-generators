@@ -20,7 +20,7 @@ variables:
   # Set the parent pipeline ID as a global variable so that the child pipeline
   # jobs can use it to retrieve artifacts.
   PARENT_PIPELINE_ID: $CI_PIPELINE_ID
-  GOFLAGS: "-tags=exclude_graphdriver_btrfs"
+  GOFLAGS: "-tags=exclude_graphdriver_btrfs,exclude_graphdriver_devicemapper"
 
 """
 
