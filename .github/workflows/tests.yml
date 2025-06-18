@@ -25,7 +25,7 @@ jobs:
     container:
       image: quay.io/centos/centos:${{ matrix.centos_stream.image_tag }}
     env:
-      GOFLAGS: "-tags=exclude_graphdriver_btrfs"
+      GOFLAGS: "-tags=exclude_graphdriver_btrfs,exclude_graphdriver_devicemapper"
       # workaround for expired cert at source of indirect dependency
       # (go.opencensus.io/trace)
       GOPROXY: "https://proxy.golang.org|direct"

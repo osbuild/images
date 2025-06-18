@@ -2,7 +2,6 @@
 
 dnf -y install \
     awscli2 \
-    device-mapper-devel \
     gcc \
     go \
     gpgme-devel \

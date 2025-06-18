@@ -20,7 +20,7 @@ build/{distro}/{arch}/{image_type}/{config_name}:
   variables:
     RUNNER: {runner}-{arch}
     INTERNAL_NETWORK: "{internal}"
-    GOFLAGS: "-tags=exclude_graphdriver_btrfs"
+    GOFLAGS: "-tags=exclude_graphdriver_btrfs,exclude_graphdriver_devicemapper"
 """
 
 
