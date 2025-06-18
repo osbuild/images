@@ -1,0 +1,186 @@
+#!/usr/bin/env python3
+
+"""
+Download the image build CI cache files for the current branch from AWS S3.
+
+This script downloads the image build cache files for the current branch from AWS S3.
+The script generates the current manifests to determine the image build cache files to download.
+"""
+
+import argparse
+import os
+import sys
+import tempfile
+from fnmatch import fnmatch
+from typing import Dict, List, Optional
+
+import imgtestlib as testlib
+
+
+def get_argparser():
+
+    class ExtendAction(argparse.Action):
+        """
+        Custom argparse action to append multiple values to a list option
+        to prevent overwriting the list with each new value.
+
+        This may be removed when Python 3.8 is the minimum supported version (in osbuild).
+        """
+        def __call__(self, parser, namespace, values, option_string=None):
+            items = getattr(namespace, self.dest) or []
+            items.extend(values)
+            setattr(namespace, self.dest, items)
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.register('action', 'extend', ExtendAction)
+
+    parser.add_argument(
+        "--distro", action="extend", metavar="DISTRO", nargs="+",
+        help="Distro for which the image build cache is downloaded. Can be specified multiple times. " +
+             "If not provided, all distros are downloaded.",
+    )
+    parser.add_argument(
+        "--arch", action="extend", metavar="ARCH", nargs="+",
+        help="Architecture for which the image build cache is downloaded. Can be specified multiple times. " +
+             "If not provided, all architectures are downloaded.",
+    )
+    parser.add_argument(
+        "--image-type", action="extend", metavar="TYPE", nargs="+",
+        help="Image type for which the image build cache is downloaded. Can be specified multiple times. " +
+             "If not provided, all image types are downloaded. " +
+             "The option is mutually exclusive with --skip-image-type.",
+    )
+    parser.add_argument(
+        "--skip-image-type", action="extend", metavar="TYPE_GLOB", nargs="+",
+        help="Image types to skip when downloading the image build cache. Can be specified multiple times. " +
+             "The option is mutually exclusive with --image-type.",
+    )
+    parser.add_argument(
+        "--config", action="extend", metavar="NAME_GLOB", nargs="+",
+        help="Config name globs used to filter which image build cache files are downloaded. " +
+             "Can be specified multiple times. If not provided, all configs are downloaded.",
+    )
+    parser.add_argument(
+        "--output", type=str, metavar="DIR",
+        help="Directory to download the image build cache to. " +
+             "If not provided, `./s3cache_osbuild-<ref>_runner-<runner-distro>` is used.",
+    )
+    parser.add_argument(
+        "--dl-image", action="store_true", default=False,
+        help="Download the built image files from the cache. " +
+             "These are not downloaded by default because of their size.",
+    )
+
+    return parser
+
+
+def gen_manifest_data_to_build_cache_info(
+        manifest_gen_data: Dict, config_names: Optional[List[str]]=None,
+        skip_img_types: Optional[List[str]]=None) -> List[Dict[str, str]]:
+    """
+    Transform the manifest generation data as returned by `read_manifests()` into a list of data structures
+    used to download the current image build cache files.
+
+    Passing a list of config name globs will filter the results to only include manifests generated for those configs.
+    """
+    build_cache_infos = []
+    for manifest_gen_value in manifest_gen_data.values():
+        build_request = manifest_gen_value["data"]["build-request"]
+        distro = build_request["distro"]
+        arch = build_request["arch"]
+        image_type = build_request["image-type"]
+        config_name = build_request["config"]["name"]
+        manifest_id = manifest_gen_value["id"]
+
+        if config_names and not any(fnmatch(config_name, config_glob) for config_glob in config_names):
+            continue
+
+        if skip_img_types and any(fnmatch(image_type, img_type_glob) for img_type_glob in skip_img_types):
+            continue
+
+        build_cache_infos.append({
+            "distro": distro,
+            "arch": arch,
+            "image-type": image_type,
+            "config": config_name,
+            "manifest-id": manifest_id,
+        })
+
+    return build_cache_infos
+
+
+def main():
+    parser = get_argparser()
+    args = parser.parse_args()
+
+    if args.image_type and args.skip_image_type:
+        parser.error("--image-type and --skip-image-type are mutually exclusive")
+
+    runner_distro = testlib.get_common_ci_runner_distro()
+    osbuild_ref = testlib.get_osbuild_commit(runner_distro)
+    if osbuild_ref is None:
+        raise RuntimeError(f"Failed to determine osbuild commit for {runner_distro} from the Schutzfile")
+
+    output_dir = args.output
+    if output_dir is None:
+        output_dir = f"./s3cache_osbuild-{osbuild_ref}_runner-{runner_distro}"
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        print("📜 Generating current manifests to determine their IDs")
+        _ = testlib.gen_manifests(tmpdir, arches=args.arch, distros=args.distro, images=args.image_type)
+        manifest_gen_data = testlib.read_manifests(tmpdir)
+
+    build_cache_infos = gen_manifest_data_to_build_cache_info(manifest_gen_data, args.config, args.skip_image_type)
+
+    if len(build_cache_infos) == 0:
+        print("⚠️ No image build cache files found for the specified configurations", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"📥 Downloading the image build cache files for osbuild-ref:{osbuild_ref} and ci-runner:{runner_distro}")
+    print(f"📥 Will download files for {len(build_cache_infos)} configurations into {output_dir}")
+
+    s3_include_only = None
+    if not args.dl_image:
+        s3_include_only = ["*.json", "bib-*"]
+
+    failed_downloads = []
+
+    for build_cache_info in build_cache_infos:
+        distro = build_cache_info["distro"]
+        arch = build_cache_info["arch"]
+        image_type = build_cache_info["image-type"]
+        config = build_cache_info["config"]
+        manifest_id = build_cache_info["manifest-id"]
+
+        target_dir = os.path.join(output_dir, testlib.gen_build_name(distro, arch, image_type, config))
+
+        out, dl_ok = testlib.dl_build_cache(
+            target_dir, distro, arch, osbuild_ref, runner_distro, manifest_id, s3_include_only)
+        if not dl_ok:
+            failed_downloads.append(build_cache_info)
+            continue
+        print(out)
+
+    if failed_downloads:
+        print(
+            f"❌ Failed to download the image build cache for {len(failed_downloads)} configurations:",
+            file=sys.stderr
+        )
+        for build_cache_info in failed_downloads:
+            distro = build_cache_info["distro"]
+            arch = build_cache_info["arch"]
+            image_type = build_cache_info["image-type"]
+            config = build_cache_info["config"]
+            manifest_id = build_cache_info["manifest-id"]
+            print(f"    {distro}/{arch}/{image_type}/{config} with manifest ID {manifest_id}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"✅ Successfully downloaded the image build cache for {len(build_cache_infos)} configurations")
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("Interrupted by user", file=sys.stderr)
+        sys.exit(1)

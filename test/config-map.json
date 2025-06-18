@@ -1,10 +1,7 @@
 {
   "./configs/all-customizations.json": {
     "distros": [
-      "rhel-9*",
-      "rhel-8*",
-      "centos*",
-      "fedora*"
+      "rhel-8*"
     ],
     "image-types": [
       "qcow2"
@@ -12,71 +9,18 @@
   },
   "./configs/all-with-fips.json": {
     "distros": [
-      "rhel-9.3",
-      "rhel-9.4",
-      "rhel-8.9",
-      "rhel-8.10",
-      "centos*",
-      "fedora*"
+      "rhel-8.10"
     ],
     "image-types": [
       "qcow2"
-    ]
-  },
-  "./configs/all-with-oscap.json": {
-    "distros": [
-      "rhel-9.1",
-      "rhel-9.2",
-      "rhel-8.7",
-      "rhel-8.8",
-      "rhel-8.9",
-      "centos*",
-      "fedora*"
-    ],
-    "image-types": [
-      "qcow2"
-    ]
-  },
-  "./configs/disable-lm_sensors.json": {
-    "distros": [
-      "rhel-8.4"
-    ],
-    "image-types": [
-      "ec2-sap"
     ]
   },
   "./configs/ec2-sap-empty.json": {
     "distros": [
-      "centos-8",
-      "centos-9",
-      "fedora-37",
-      "fedora-38",
-      "fedora-39",
-      "fedora-40",
-      "rhel-7.9",
-      "rhel-8.10",
-      "rhel-8.5",
-      "rhel-8.6",
-      "rhel-8.7",
-      "rhel-8.8",
-      "rhel-8.9",
-      "rhel-9.0",
-      "rhel-9.1",
-      "rhel-9.2",
-      "rhel-9.3",
-      "rhel-9.4"
+      "rhel-8.10"
     ],
     "image-types": [
       "ec2-sap"
-    ]
-  },
-  "./configs/edge-ostree-pull-device-fips.json": {
-    "distros": [
-      "rhel-9.3",
-      "rhel-9.4"
-    ],
-    "image-types": [
-      "edge-simplified-installer"
     ]
   },
   "./configs/edge-ostree-pull-device.json": {
@@ -89,26 +33,6 @@
       "edge-installer",
       "edge-raw-image",
       "edge-vsphere"
-    ]
-  },
-  "./configs/edge-ostree-pull-fips.json": {
-    "distros": [
-      "rhel-9.3",
-      "rhel-9.4"
-    ],
-    "image-types": [
-      "edge-installer",
-      "edge-raw-image",
-      "edge-vsphere"
-    ]
-  },
-  "./configs/edge-ostree-pull-user-fips.json": {
-    "distros": [
-      "rhel-9.3",
-      "rhel-9.4"
-    ],
-    "image-types": [
-      "edge-ami"
     ]
   },
   "./configs/edge-ostree-pull-user.json": {
@@ -155,49 +79,6 @@
       "wsl"
     ]
   },
-  "./configs/iot-customizations-full.json": {
-    "image-types": [
-      "iot-container"
-    ]
-  },
-  "./configs/iot-ostree-pull-device.json": {
-    "image-types": [
-      "iot-simplified-installer"
-    ]
-  },
-  "./configs/iot-ostree-pull-empty.json": {
-    "image-types": [
-      "iot-installer",
-      "iot-qcow2-image",
-      "iot-raw-image"
-    ]
-  },
-  "./configs/iot-ostree-pull-user.json": {
-    "image-types": [
-      "iot-ami"
-    ]
-  },
-  "./configs/kernel-debug.json": {
-    "image-types": [
-      "iot-commit"
-    ]
-  },
-  "./configs/minimal-pkgs.json": {
-    "distros": [
-      "fedora*"
-    ],
-    "image-types": [
-      "qcow2"
-    ]
-  },
-  "./configs/minimal.json": {
-    "distros": [
-      "fedora*"
-    ],
-    "image-types": [
-      "qcow2"
-    ]
-  },
   "./configs/ostree.json": {
     "image-types": [
       "edge-commit",
@@ -210,15 +91,9 @@
       "edge-installer"
     ]
   },
-  "./configs/unattended-iso-iot.json": {
-    "image-types": [
-      "iot-installer"
-    ]
-  },
   "./configs/unattended-iso.json": {
     "distros": [
-      "rhel-*",
-      "centos-*"
+      "rhel-*"
     ],
     "image-types": [
       "image-installer"
