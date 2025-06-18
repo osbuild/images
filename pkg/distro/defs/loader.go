@@ -349,7 +349,10 @@ func evalCondition(cond string, env *evalEnv) (bool, error) {
 	}
 	script := fmt.Sprintf("res = %v", cond)
 
+	// limit execution just to be on the safe side
 	t := &starlark.Thread{}
+	// 640 steps ought to be enough for anybody
+	t.SetMaxExecutionSteps(640)
 	t.SetLocal("distro_version", *env.DistroID)
 	globals, err := starlark.ExecFileOptions(&syntax.FileOptions{}, t, "condition.star", script, predeclared)
 	if err != nil {

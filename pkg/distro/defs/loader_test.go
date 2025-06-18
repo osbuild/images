@@ -909,3 +909,30 @@ func TestDistrosLoadingNotFound(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, distro)
 }
+
+func TestLoadConditionTryToAbuseForLzap(t *testing.T) {
+	it := makeTestImageType(t)
+	fakePkgsSetYaml := `
+image_types:
+  test_type:
+    package_sets:
+      os:
+        - include: [inc1]
+          conditions:
+            "some-description-1":
+              # try to abuse starlark, DoS it
+              when: |
+                True
+                def exploit():
+                  [x*x for x in range(100000000)]
+                exploit()
+              append:
+                include: [from-condition-inc2]
+`
+	baseDir := makeFakeDefs(t, test_distro.TestDistroNameBase, fakePkgsSetYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	_, err := defs.PackageSets(it)
+	assert.EqualError(t, err, "Starlark computation cancelled: too many steps")
+}
