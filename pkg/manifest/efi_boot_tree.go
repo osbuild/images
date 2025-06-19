@@ -36,7 +36,7 @@ func (p *EFIBootTree) serialize() osbuild.Pipeline {
 	a := p.Platform.GetArch().String()
 	var architectures []string
 	if a == arch.ARCH_X86_64.String() {
-		architectures = []string{"X64"}
+		architectures = []string{"X64", "ia32"}
 	} else if a == arch.ARCH_AARCH64.String() {
 		architectures = []string{"AA64"}
 	} else {

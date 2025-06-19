@@ -129,10 +129,13 @@ func (p *AnacondaInstaller) anacondaBootPackageSet() []string {
 	switch p.platform.GetArch() {
 	case arch.ARCH_X86_64:
 		packages = append(packages,
+			"grub2-efi-ia32",
+			"grub2-efi-ia32-cdboot",
 			"grub2-efi-x64",
 			"grub2-efi-x64-cdboot",
 			"grub2-pc",
 			"grub2-pc-modules",
+			"shim-ia32",
 			"shim-x64",
 			"syslinux",
 			"syslinux-nonlinux",
