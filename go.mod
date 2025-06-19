@@ -31,6 +31,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/ubccr/kerby v0.0.0-20230802201021-412be7bfaee5
 	github.com/vmware/govmomi v0.48.1
+	go.starlark.net v0.0.0-20250603171236-27fdb1d4744d
 	golang.org/x/exp v0.0.0-20250103183323-7d7fa50e5329
 	golang.org/x/oauth2 v0.26.0
 	golang.org/x/sys v0.30.0
