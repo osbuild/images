@@ -2,6 +2,7 @@ package rhel8
 
 import (
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/customizations/wsl"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/rhel"
 )
@@ -22,8 +23,8 @@ func mkWslImgType() *rhel.ImageType {
 	it.DefaultImageConfig = &distro.ImageConfig{
 		Locale:    common.ToPtr("en_US.UTF-8"),
 		NoSElinux: common.ToPtr(true),
-		WSL: &distro.WSL{
-			Config: &distro.WSLConfig{
+		WSL: &wsl.WSL{
+			Config: &wsl.WSLConfig{
 				BootSystemd: true,
 			},
 		},

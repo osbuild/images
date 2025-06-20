@@ -9,6 +9,7 @@ import (
 	"github.com/osbuild/images/pkg/customizations/shell"
 	"github.com/osbuild/images/pkg/customizations/subscription"
 	"github.com/osbuild/images/pkg/customizations/users"
+	"github.com/osbuild/images/pkg/customizations/wsl"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
 )
@@ -86,7 +87,7 @@ type ImageConfig struct {
 	GCPGuestAgentConfig *osbuild.GcpGuestAgentConfigOptions `yaml:"gcp_guest_agent_config,omitempty"`
 	NetworkManager      *osbuild.NMConfStageOptions         `yaml:"network_manager,omitempty"`
 
-	WSL *WSL `yaml:"wsl,omitempty"`
+	WSL *wsl.WSL `yaml:"wsl,omitempty"`
 
 	Users []users.User
 
@@ -141,30 +142,6 @@ type ImageConfig struct {
 type DNFConfig struct {
 	Options          []*osbuild.DNFConfigStageOptions
 	SetReleaseVerVar *bool `yaml:"set_release_ver_var"`
-}
-
-type WSLConfig struct {
-	BootSystemd bool `yaml:"boot_systemd,omitempty"`
-}
-
-type WSLDistributionOOBEConfig struct {
-	DefaultUID  *int   `yaml:"default_uid,omitempty"`
-	DefaultName string `yaml:"default_name,omitempty"`
-}
-
-type WSLDistributionShortcutConfig struct {
-	Enabled bool   `yaml:"enabled,omitempty"`
-	Icon    string `yaml:"icon,omitempty"`
-}
-
-type WSLDistributionConfig struct {
-	OOBE     *WSLDistributionOOBEConfig     `yaml:"oobe,omitempty"`
-	Shortcut *WSLDistributionShortcutConfig `yaml:"shortcut,omitempty"`
-}
-
-type WSL struct {
-	Config             *WSLConfig             `yaml:"config,omitempty"`
-	DistributionConfig *WSLDistributionConfig `yaml:"distribution_config,omitempty"`
 }
 
 // InheritFrom inherits unset values from the provided parent configuration and
