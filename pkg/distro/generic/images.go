@@ -226,9 +226,12 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, containers []
 	osc.SshdConfig = imageConfig.SshdConfig
 	osc.AuthConfig = imageConfig.Authconfig
 	osc.PwQuality = imageConfig.PwQuality
-	osc.WSLConfig = imageConfig.WSLConfStageOptions()
 	osc.WSLDistributionConfig = imageConfig.WSLDistributionConfStageOptions()
 	osc.NetworkManager = imageConfig.NetworkManager
+
+	if imageConfig.WSL != nil {
+		osc.WSLConfig = osbuild.NewWSLConfStageOptions(imageConfig.WSL.Config)
+	}
 
 	osc.Files = append(osc.Files, imageConfig.Files...)
 	osc.Directories = append(osc.Directories, imageConfig.Directories...)

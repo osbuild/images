@@ -282,9 +282,12 @@ func osCustomizations(
 	osc.WAAgentConfig = imageConfig.WAAgentConfig
 	osc.UdevRules = imageConfig.UdevRules
 	osc.GCPGuestAgentConfig = imageConfig.GCPGuestAgentConfig
-	osc.WSLConfig = imageConfig.WSLConfStageOptions()
 	osc.WSLDistributionConfig = imageConfig.WSLDistributionConfStageOptions()
 	osc.NetworkManager = imageConfig.NetworkManager
+
+	if imageConfig.WSL != nil {
+		osc.WSLConfig = osbuild.NewWSLConfStageOptions(imageConfig.WSL.Config)
+	}
 
 	osc.Files = append(osc.Files, imageConfig.Files...)
 	osc.Directories = append(osc.Directories, imageConfig.Directories...)

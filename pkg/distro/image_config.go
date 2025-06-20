@@ -201,17 +201,6 @@ func (c *ImageConfig) DNFConfigOptions(osVersion string) []*osbuild.DNFConfigSta
 	}
 }
 
-func (c *ImageConfig) WSLConfStageOptions() *osbuild.WSLConfStageOptions {
-	if c.WSL == nil || c.WSL.Config == nil {
-		return nil
-	}
-	return &osbuild.WSLConfStageOptions{
-		Boot: osbuild.WSLConfBootOptions{
-			Systemd: c.WSL.Config.BootSystemd,
-		},
-	}
-}
-
 func (c *ImageConfig) WSLDistributionConfStageOptions() *osbuild.WSLDistributionConfStageOptions {
 	if c.WSL == nil || c.WSL.DistributionConfig == nil {
 		return nil
