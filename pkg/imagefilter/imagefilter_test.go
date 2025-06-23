@@ -37,7 +37,7 @@ func TestImageFilterFilter(t *testing.T) {
 	}{
 		// no prefix is a "fuzzy" filter and will check distro/arch/imgType
 		{[]string{"foo"}, false},
-		{[]string{"rhel-9.1"}, true},
+		{[]string{"rhel-9.6"}, true},
 		{[]string{"rhel*"}, true},
 		{[]string{"x86_64"}, true},
 		{[]string{"qcow2"}, true},
