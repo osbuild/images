@@ -180,6 +180,9 @@ func (p *AnacondaInstaller) getBuildPackages(Distro) []string {
 func (p *AnacondaInstaller) getPackageSetChain(Distro) []rpmmd.PackageSet {
 	packages := p.anacondaBootPackageSet()
 
+	// Install firmware packages and other platform specific packages
+	packages = append(packages, p.platform.GetPackages()...)
+
 	if p.Biosdevname {
 		packages = append(packages, "biosdevname")
 	}
