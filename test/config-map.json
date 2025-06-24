@@ -134,6 +134,7 @@
       "azure-eap7-rhui",
       "azure-rhui",
       "azure-sap-rhui",
+      "azure-sapapps-rhui",
       "container",
       "ec2",
       "ec2-ha",

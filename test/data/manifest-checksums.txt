@@ -457,6 +457,7 @@ dc8b64ff1b7ac8618831fc1b7daa4ef129adf86c  rhel_10.0-x86_64-azure_rhui-empty_rhel
 f6030476f8f91152e03c3628c83a61205ac76891  rhel_10.0-x86_64-azure_rhui-rhel10_azure_rhui.json
 f19f7928241f983ce1110a233e0ccf3c9afb7760  rhel_10.0-x86_64-azure_rhui-rhel10_azure_rhui_cdn.json
 f52f28bc8a374cb8ff444cc0d6a346901c4a0aa4  rhel_10.0-x86_64-azure_sap_rhui-empty_rhel.json
+4f46bed835709048f8394ee61184e6c9a02277ca  rhel_10.0-x86_64-azure_sapapps_rhui-empty_rhel.json
 254d09df86b5eb964f4908509d90ef18bdeed2a6  rhel_10.0-x86_64-ec2-empty_rhel.json
 b56a1039a4a160e4df90ac7202617a7d6f2c5421  rhel_10.0-x86_64-ec2_ha-empty_rhel.json
 2807b2e3ffd8e0ac5ca1941207f4991292442868  rhel_10.0-x86_64-ec2_sap-ec2_sap_empty.json
@@ -500,6 +501,7 @@ e1e7c396954403a23e54c3a0e589ff4956d4f6a4  rhel_10.1-x86_64-azure_rhui-empty_rhel
 9e1b54787653f62bf581042650a99a5c9319c79b  rhel_10.1-x86_64-azure_rhui-rhel10_azure_rhui.json
 a42a5004196ddf087b8b32e01b183e66a3f222ab  rhel_10.1-x86_64-azure_rhui-rhel10_azure_rhui_cdn.json
 abae9161754ac09104dee5b02a0e4ee8d6003a09  rhel_10.1-x86_64-azure_sap_rhui-empty_rhel.json
+3d633a05c71fa344d4d87da0c55ff8f62af294af  rhel_10.1-x86_64-azure_sapapps_rhui-empty_rhel.json
 ad670cd41c238f443aa9dcf077eea6dddc8c1077  rhel_10.1-x86_64-ec2-empty_rhel.json
 94649043afcfde6247a3e5ea053a5532a8c4ae12  rhel_10.1-x86_64-ec2_ha-empty_rhel.json
 8d0e10fc175eb4df32c2c86c87061bc10f9ce379  rhel_10.1-x86_64-ec2_sap-ec2_sap_empty.json
@@ -1012,6 +1014,7 @@ eb9c6851de07d7176ec8fb64fb947f9296682c20  rhel_9.0-x86_64-ami-partitioning_lvm.j
 8f8b9b54751d8be784feb3500801387502177d84  rhel_9.0-x86_64-ami-partitioning_plain.json
 397766ee10b48c959b649396580d44ab8997cbbf  rhel_9.0-x86_64-azure_rhui-empty_rhel.json
 2866bc65d1b2a9e5cc237b93d93c009b1be8a511  rhel_9.0-x86_64-azure_sap_rhui-empty_rhel.json
+4091afecfedd8f0309bb8e8dcfe185836179e90e  rhel_9.0-x86_64-azure_sapapps_rhui-empty_rhel.json
 d75777090947b54eedb01fd326186b2185dd54e3  rhel_9.0-x86_64-ec2-empty_rhel.json
 1ae0b6282048ae07e41c6ff0e0057f5bdac224ad  rhel_9.0-x86_64-ec2_ha-empty_rhel.json
 55707f0360fec656572238f350df6879b7907656  rhel_9.0-x86_64-ec2_sap-ec2_sap_empty.json
@@ -1084,6 +1087,7 @@ a57a471261bc1646f2ef224498243584a3f32322  rhel_9.1-x86_64-ami-partitioning_lvm.j
 067788aee2bdb6b21672afc0749435d0718262fc  rhel_9.1-x86_64-ami-partitioning_plain.json
 598c6bc3b763706e8460ecc2a7e9d85a4a39b7c6  rhel_9.1-x86_64-azure_rhui-empty_rhel.json
 6b882714a407206eb5bd343e395e26c8b59efad1  rhel_9.1-x86_64-azure_sap_rhui-empty_rhel.json
+977da3f62cec60cb57302ef3ba799c4a2ecc993e  rhel_9.1-x86_64-azure_sapapps_rhui-empty_rhel.json
 51e40ef9cb8b2ac6162f1ff305781692e46fdf4a  rhel_9.1-x86_64-ec2-empty_rhel.json
 5e5373d9f7b07a77d186f552d334f69b62386800  rhel_9.1-x86_64-ec2_ha-empty_rhel.json
 a0bf7628c4dd04de0de8ac3e91920da7bf9e73b2  rhel_9.1-x86_64-ec2_sap-ec2_sap_empty.json
@@ -1161,6 +1165,7 @@ c3a422e4387983d99f031ac0baa3bdbe131ccb62  rhel_9.2-x86_64-ami-partitioning_lvm.j
 692d5c0352b50b36af49959d6eebdc96f8f02642  rhel_9.2-x86_64-ami-partitioning_plain.json
 56659364d33f07e95579a858f7480a9018f4983c  rhel_9.2-x86_64-azure_rhui-empty_rhel.json
 ad604d67e76a3bf8eae1d444384044e85d000554  rhel_9.2-x86_64-azure_sap_rhui-empty_rhel.json
+ca06c29ef5295ad43bafd86f157056debe12d61d  rhel_9.2-x86_64-azure_sapapps_rhui-empty_rhel.json
 61629f2f351bbfcb9d684948f18b518f1443de19  rhel_9.2-x86_64-ec2-empty_rhel.json
 98b51b4875cc87b0800c3c8a98dae6b986ae8d28  rhel_9.2-x86_64-ec2_ha-empty_rhel.json
 cbbd1edb26b43d559f3338e9990b32d7471a5cad  rhel_9.2-x86_64-ec2_sap-ec2_sap_empty.json
@@ -1247,6 +1252,7 @@ ca28b0d403194fa93d7291df923b5d97b70bc7f4  rhel_9.3-s390x-tar-empty_rhel.json
 06921eb84f863af7bd87026b332af5f2e463755e  rhel_9.3-x86_64-ami-partitioning_plain.json
 8faea330ca1ce39f0e31335f3c6feed7bd78056d  rhel_9.3-x86_64-azure_rhui-empty_rhel.json
 b8451cd7aa3f5fa8cdfdb558296e81fb5778c173  rhel_9.3-x86_64-azure_sap_rhui-empty_rhel.json
+084f659c1032631aef2e5a33fd07a90c145b0d91  rhel_9.3-x86_64-azure_sapapps_rhui-empty_rhel.json
 f3ea500faf2bf548752de9f5d76e002c6f343695  rhel_9.3-x86_64-ec2-empty_rhel.json
 a188d3d26423a833a39248f58e3bf439c4311624  rhel_9.3-x86_64-ec2_ha-empty_rhel.json
 0bd39eaa04607d2f821cacf498b6df8ed5d919eb  rhel_9.3-x86_64-ec2_sap-ec2_sap_empty.json
@@ -1343,6 +1349,7 @@ c16546968f1131d938a17995b9a56b13d67428c7  rhel_9.4-x86_64-ami-oscap_rhel9_with_j
 76b9be2b737fc4afb4f3c2b0da075bdbbe067a53  rhel_9.4-x86_64-ami-partitioning_plain.json
 e471ea5853741091b344fb0e51e40063743557d7  rhel_9.4-x86_64-azure_rhui-empty_rhel.json
 fbbb4e6026d3587c6750d89279a8ce5071fd8b0a  rhel_9.4-x86_64-azure_sap_rhui-empty_rhel.json
+cf6a8665afe01f5bf9a9e646017a31f9a7f9615c  rhel_9.4-x86_64-azure_sapapps_rhui-empty_rhel.json
 92003ff876be237658d75efc300e19928e820cca  rhel_9.4-x86_64-ec2-empty_rhel.json
 6da88c5aaee624cb9a297fbb54ba720d27b27dd8  rhel_9.4-x86_64-ec2_ha-empty_rhel.json
 93941b417cdb9efc6c32d7876f56ef7ecf09a24e  rhel_9.4-x86_64-ec2_sap-ec2_sap_empty.json
@@ -1430,6 +1437,7 @@ d798681c98c219f9b15c4680074e0a1a74fba519  rhel_9.5-s390x-qcow2-rhsm.json
 013e91e06effbc0633bbbe5c7c44c36be23152ee  rhel_9.5-x86_64-ami-partitioning_plain.json
 86427b9fc33ec515105ec896943f563dd6a8289d  rhel_9.5-x86_64-azure_rhui-empty_rhel.json
 803c6846502d0a20ac01469e1a1f83f2002c6999  rhel_9.5-x86_64-azure_sap_rhui-empty_rhel.json
+6ee58b7a32898049e0603b29081ac4064a3aa33e  rhel_9.5-x86_64-azure_sapapps_rhui-empty_rhel.json
 09027fea6524d9658e1de79c6628402105c4da90  rhel_9.5-x86_64-ec2-empty_rhel.json
 71717e8bf56ccfe67b44d6b37b63ac67225197bc  rhel_9.5-x86_64-ec2_ha-empty_rhel.json
 d82286daf821024a90d0568a647f3ae7c69c9318  rhel_9.5-x86_64-ec2_sap-ec2_sap_empty.json
@@ -1506,6 +1514,7 @@ ea6bdbb4184c506db9063821a889165772923167  rhel_9.6-x86_64-azure_cvm-empty_rhel.j
 93a0b4284257cf75648b92691c7171ef5faa8afd  rhel_9.6-x86_64-azure_rhui-rhel9_azure_rhui.json
 33694cf7170510c74e3bc6c4d2da97b92fd26d70  rhel_9.6-x86_64-azure_rhui-rhel9_azure_rhui_cdn.json
 d1cd100bcc2250f13f60683ef2175c33021b5653  rhel_9.6-x86_64-azure_sap_rhui-empty_rhel.json
+841a1a9403431968f72c801b5d5d5ebebdfcd8e1  rhel_9.6-x86_64-azure_sapapps_rhui-empty_rhel.json
 4d6cef057952b9321f94c2a195a3d4c102f60198  rhel_9.6-x86_64-ec2-empty_rhel.json
 3628fe7da4608b561f08ee9b19e56d661908743f  rhel_9.6-x86_64-ec2_ha-empty_rhel.json
 ca00368e4b67fadec4b0308015e25e0332b6b516  rhel_9.6-x86_64-ec2_sap-ec2_sap_empty.json
@@ -1580,6 +1589,7 @@ e27bd4aebbb9625ede571e423874bfc3360937d3  rhel_9.7-x86_64-azure_cvm-empty_rhel.j
 68b0d55de538dde1b8366b68ca83e8cef9a01458  rhel_9.7-x86_64-azure_rhui-rhel9_azure_rhui.json
 c1e0b6d6fe4d7873336a1b49b0a05d02c73bf781  rhel_9.7-x86_64-azure_rhui-rhel9_azure_rhui_cdn.json
 4b9cccf7514e1e76d84b99eb54e8b00dab1c202b  rhel_9.7-x86_64-azure_sap_rhui-empty_rhel.json
+d1ccfde339b98e36be0486d67cf1f2d2632c1db5  rhel_9.7-x86_64-azure_sapapps_rhui-empty_rhel.json
 5df2d15d6b0fed37516d898de70bbe6fed181195  rhel_9.7-x86_64-ec2-empty_rhel.json
 ea8ce9c85a0125a816e299ca064981488b975366  rhel_9.7-x86_64-ec2_ha-empty_rhel.json
 69d3cf804917d0e8eebac38bfd77a745604fa62b  rhel_9.7-x86_64-ec2_sap-ec2_sap_empty.json

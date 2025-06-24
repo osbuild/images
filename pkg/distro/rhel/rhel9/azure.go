@@ -71,6 +71,27 @@ func mkAzureSapInternalImgType(rd *rhel.Distribution, a arch.Arch) *rhel.ImageTy
 	return it
 }
 
+func mkAzureSapAppsImgType(rd *rhel.Distribution, a arch.Arch) *rhel.ImageType {
+	it := rhel.NewImageType(
+		"azure-sapapps-rhui",
+		"disk.vhd.xz",
+		"application/xz",
+		packageSetLoader,
+		rhel.DiskImage,
+		[]string{"build"},
+		[]string{"os", "image", "vpc", "xz"},
+		[]string{"xz"},
+	)
+
+	it.Compression = "xz"
+	it.Bootable = true
+	it.DefaultSize = 64 * datasizes.GibiByte
+	it.DefaultImageConfig = imageConfig(rd, a.String(), "azure-sapapps-rhui")
+	it.BasePartitionTables = defaultBasePartitionTables
+
+	return it
+}
+
 // Azure Confidential VM
 func mkAzureCVMImgType(rd *rhel.Distribution, a arch.Arch) *rhel.ImageType {
 	it := rhel.NewImageType(

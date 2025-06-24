@@ -285,6 +285,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"azure-cvm",
 				"azure-rhui",
 				"azure-sap-rhui",
+				"azure-sapapps-rhui",
 				"ec2",
 				"ec2-ha",
 				"ec2-sap",

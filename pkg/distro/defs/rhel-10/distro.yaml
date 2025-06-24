@@ -32,11 +32,9 @@
             - "grub2-ppc64le"
             - "grub2-ppc64le-modules"
 
-  sap_image_config: &sap_image_config
+  sapapps_image_config: &sapapps_image_config
     selinux_config:
       state: "permissive"
-    tuned:
-      profiles: ["sap-hana"]
     # RHBZ#1959979
     tmpfilesd:
       - filename: "sap.conf"
@@ -94,14 +92,16 @@
     dnf_config:
       set_release_ver_var: true
 
-  sap_pkgset: &sap_pkgset
+  sap_image_config: &sap_image_config
+    <<: *sapapps_image_config
+    tuned:
+      profiles: ["sap-hana"]
+
+  sap_base_pkgset: &sap_base_pkgset
     include:
       # RHBZ#2076763
       - "@Server"
-      # SAP System Roles
-      # https:#access.redhat.com/sites/default/files/attachments/rhel_system_roles_for_sap_1.pdf
       - "ansible-core"
-      - "rhel-system-roles-sap"
       # RHBZ#1959813
       - "bind-utils"
       - "nfs-utils"
@@ -124,8 +124,6 @@
       - "numactl"
       - "PackageKit-gtk3-module"
       - "xorg-x11-xauth"
-      # RHBZ#1960617
-      - "tuned-profiles-sap-hana"
       # RHBZ#1961168
       - "libnsl"
     exclude:
@@ -142,6 +140,14 @@
       - "iwl6000g2b-firmware"
       - "iwl6050-firmware"
       - "iwl7260-firmware"
+
+  sap_extras_pkgset: &sap_extras_pkgset
+    include:
+      # SAP System Roles
+      # https://access.redhat.com/sites/default/files/attachments/rhel_system_roles_for_sap_1.pdf
+      - "rhel-system-roles-sap"
+      # RHBZ#1960617
+      - "tuned-profiles-sap-hana"
 
   installer_pkgset: &installer_pkgset
     include:
@@ -893,7 +899,17 @@ image_types:
     package_sets:
       os:
         - *vhd_pkgset
-        - *sap_pkgset
+        - *sap_base_pkgset
+        - *sap_extras_pkgset
+
+  azure-sapapps-rhui:
+    <<: *azure_rhui
+    image_config:
+      <<: [*image_config_vhd, *sapapps_image_config]
+    package_sets:
+      os:
+        - *vhd_pkgset
+        - *sap_base_pkgset
 
   tar:
     package_sets:
@@ -1103,7 +1119,8 @@ image_types:
     package_sets:
       os:
         - *ami_pkgset
-        - *sap_pkgset
+        - *sap_base_pkgset
+        - *sap_extras_pkgset
     image_config:
       <<: [*ami_image_config, *sap_image_config]
       conditions:

@@ -514,6 +514,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				"vhd",
 				"azure-rhui",
 				"azure-sap-rhui",
+				"azure-sapapps-rhui",
 				"vmdk",
 				"ova",
 				"ami",

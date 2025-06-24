@@ -2,6 +2,7 @@ package rhel10
 
 import (
 	"math/rand"
+	"slices"
 	"testing"
 
 	"github.com/osbuild/images/pkg/blueprint"
@@ -164,6 +165,9 @@ func TestDistroFactory(t *testing.T) {
 }
 
 func TestRhel10_NoBootPartition(t *testing.T) {
+	// Azure RHEL images are LVM by default, so they always include a separate
+	// boot partition
+	typesWithBoot := []string{"azure-rhui", "azure-sap-rhui", "azure-sapapps-rhui"}
 	for _, distroName := range []string{"rhel-10.0", "centos-10"} {
 		dist := DistroFactory(distroName)
 		for _, archName := range dist.ListArches() {
@@ -176,9 +180,7 @@ func TestRhel10_NoBootPartition(t *testing.T) {
 				if it.BasePartitionTables == nil {
 					continue
 				}
-				if it.Name() == "azure-rhui" || it.Name() == "azure-sap-rhui" {
-					// Azure RHEL internal image type PT is by default LVM-based
-					// and we do not support /boot on LVM, so it must be on a separate partition.
+				if slices.Contains(typesWithBoot, it.Name()) {
 					continue
 				}
 				pt, err := it.GetPartitionTable(&blueprint.Customizations{}, distro.ImageOptions{}, rng)
