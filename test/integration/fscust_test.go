@@ -2,6 +2,8 @@ package integration_test
 
 import (
 	"fmt"
+	"net"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -12,17 +14,21 @@ import (
 )
 
 var fsCustConfigFmt = `{
-  "name": "fs-customizations from local file",
-  "blueprint": {
-    "customizations": {
-      "files": [
-	{
-	  "path": "/etc/file-from-host",
-	  "uri": "file://%s"
+	"name": "uri-fs-customizations",
+	"blueprint": {
+		"customizations": {
+			"files": [
+				{
+					"path": "/etc/file-from-host",
+					"uri": "file://%s"
+				},
+				{
+					"path": "/etc/file-from-uri",
+					"uri": "http://%s/testdata-from-uri"
+				}
+			]
+		}
 	}
-      ]
-    }
-  }
 }
 `
 
@@ -31,13 +37,31 @@ func TestFileCustomizationFromURI(t *testing.T) {
 		t.Skip("this test needs to run as root")
 	}
 
-	tmpdir := t.TempDir()
-	canaryString := "testdata"
-	canaryPath := filepath.Join(tmpdir, "canary.txt")
-	err := os.WriteFile(canaryPath, []byte(canaryString), 0644)
+	canaryStringURI := "testdata-from-uri"
+	ln, err := net.Listen("tcp", "localhost:0")
 	assert.NoError(t, err)
+	srv := &http.Server{
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Path {
+			case "/testdata-from-uri":
+				_, err := w.Write([]byte(canaryStringURI))
+				assert.NoError(t, err)
+			default:
+				http.NotFound(w, r)
+			}
+		}),
+	}
+	defer srv.Close()
+	go srv.Serve(ln)
+
+	tmpdir := t.TempDir()
+	canaryStringFile := "testdata"
+	canaryPath := filepath.Join(tmpdir, "canary.txt")
+	err = os.WriteFile(canaryPath, []byte(canaryStringFile), 0644)
+	assert.NoError(t, err)
+
 	buildConfigPath := filepath.Join(tmpdir, "buildConfig.json")
-	err = os.WriteFile(buildConfigPath, []byte(fmt.Sprintf(fsCustConfigFmt, canaryPath)), 0644)
+	err = os.WriteFile(buildConfigPath, []byte(fmt.Sprintf(fsCustConfigFmt, canaryPath, ln.Addr().String())), 0644)
 	assert.NoError(t, err)
 
 	cmd := exec.Command(
@@ -61,5 +85,9 @@ func TestFileCustomizationFromURI(t *testing.T) {
 	// ensure we get the expected content from the locally added file
 	output, err := exec.Command("tar", "xOf", l[0], "./etc/file-from-host").CombinedOutput()
 	assert.NoError(t, err, "tar output: %s", output)
-	assert.Equal(t, canaryString, string(output))
+	assert.Equal(t, canaryStringFile, string(output))
+	// eand for the URI
+	output, err = exec.Command("tar", "xOf", l[0], "./etc/file-from-uri").CombinedOutput()
+	assert.NoError(t, err, "tar output: %s", output)
+	assert.Equal(t, canaryStringURI, string(output))
 }
