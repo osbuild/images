@@ -67,6 +67,10 @@ func (p *OS) GetInline() []string {
 	return p.getInline()
 }
 
+func (p *OS) FileUris() []string {
+	return p.fileUris()
+}
+
 // NewTestOS is used in both internal and external package tests.
 // TODO: make all tests external and define this only in the manifest_test
 // package.

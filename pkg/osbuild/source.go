@@ -30,8 +30,8 @@ type SourceInputs struct {
 	Commits    []ostree.CommitSpec
 	// InlineData contans the inline data for fsnode.Files
 	InlineData []string
-	// FileRefs contains the references of paths/urls for fsnode.Files
-	FileRefs []string
+	// FileUris contains the references of paths/urls for fsnode.Files
+	FileUris []string
 }
 
 // A Sources map contains all the sources made available to an osbuild run
@@ -174,20 +174,20 @@ func GenSources(inputs SourceInputs, rpmDownloader RpmDownloader) (Sources, erro
 		}
 	}
 
-	// collect host resources
-	if len(inputs.FileRefs) > 0 {
+	// collect host/external resources
+	if len(inputs.FileUris) > 0 {
 		// XXX: fugly
 		curl, ok := sources["org.osbuild.curl"].(*CurlSource)
 		if !ok || curl == nil {
 			curl = NewCurlSource()
 		}
-		for _, hostRes := range inputs.FileRefs {
+		for _, hostRes := range inputs.FileUris {
 			checksum, err := hashutil.Sha256sum(hostRes)
 			if err != nil {
 				return nil, err
 			}
 			curl.Items["sha256:"+checksum] = &CurlSourceOptions{
-				URL: fmt.Sprintf("file:%s", hostRes),
+				URL: hostRes,
 			}
 		}
 		sources["org.osbuild.curl"] = curl

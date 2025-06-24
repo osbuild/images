@@ -348,7 +348,7 @@ func TestGenSourcesFileRefs(t *testing.T) {
 	assert.NoError(t, err)
 
 	sources, err := GenSources(SourceInputs{
-		FileRefs: []string{testFile},
+		FileUris: []string{testFile},
 	}, 0)
 	assert.NoError(t, err)
 

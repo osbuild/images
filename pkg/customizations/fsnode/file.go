@@ -65,8 +65,10 @@ func NewFileForURI(targetPath string, mode *os.FileMode, user interface{}, group
 	switch uri.Scheme {
 	case "", "file":
 		return newFileForURILocalFile(targetPath, mode, user, group, uri)
+	case "http", "https":
+		return newFile(targetPath, mode, user, group, nil, uriStr)
 	default:
-		return nil, fmt.Errorf("unsupported scheme for %v (try file://)", uri)
+		return nil, fmt.Errorf("unsupported scheme for %v (try file:// or https://)", uri)
 	}
 }
 

@@ -554,3 +554,14 @@ func TestHMACStageInclusion(t *testing.T) {
 		assert.NotContains(t, directories, "/boot/efi/EFI/Linux/ffffffffffffffffffffffffffffffff-13.3-7.el9.x86_64.efi.extra.d")
 	})
 }
+
+func TestOSUriRefsGetNormalized(t *testing.T) {
+	os := manifest.NewTestOS()
+	os.OSCustomizations.Files = []*fsnode.File{
+		// this gets a "file://" prefix
+		common.Must(fsnode.NewFileForURI("/local/path", nil, nil, nil, "/etc/os-release")),
+		common.Must(fsnode.NewFileForURI("/other/path", nil, nil, nil, "file:///etc/fstab")),
+		common.Must(fsnode.NewFileForURI("/local/path", nil, nil, nil, "http://example.com/path")),
+	}
+	assert.Equal(t, []string{"file:///etc/os-release", "file:///etc/fstab", "http://example.com/path"}, os.FileUris())
+}

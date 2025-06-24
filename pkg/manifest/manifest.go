@@ -166,7 +166,7 @@ func (m Manifest) Serialize(depsolvedSets map[string]dnfjson.DepsolveResult, con
 		mergedInputs.Depsolved.Repos = append(mergedInputs.Depsolved.Repos, depsolvedSets[pipeline.Name()].Repos...)
 		mergedInputs.Containers = append(mergedInputs.Containers, pipeline.getContainerSpecs()...)
 		mergedInputs.InlineData = append(mergedInputs.InlineData, pipeline.getInline()...)
-		mergedInputs.FileRefs = append(mergedInputs.FileRefs, pipeline.fileRefs()...)
+		mergedInputs.FileUris = append(mergedInputs.FileUris, pipeline.fileUris()...)
 	}
 	for _, pipeline := range m.pipelines {
 		pipeline.serializeEnd()

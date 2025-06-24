@@ -1164,12 +1164,12 @@ func (p *OS) addInlineDataAndStages(pipeline *osbuild.Pipeline, files []*fsnode.
 	}
 }
 
-// fileRefs ensures that any files from customizations that require fetching data
+// fileUris ensures that any files from customizations that require fetching data
 // (e.g. via the "uri" key in customizations) are added to the manifests "sources"
 //
 // Note that the actual copy/chmod/... stages are generated via addInlineDataAndStages
-func (p *OS) fileRefs() []string {
-	var fileRefs []string
+func (p *OS) fileUris() []string {
+	var fileUris []string
 
 	for _, file := range p.OSCustomizations.Files {
 		if uriStr := file.URI(); uriStr != "" {
@@ -1179,13 +1179,15 @@ func (p *OS) fileRefs() []string {
 			}
 
 			switch uri.Scheme {
-			case "", "file":
-				fileRefs = append(fileRefs, uri.Path)
+			case "":
+				fileUris = append(fileUris, "file://"+uri.Path)
+			case "file", "http", "https":
+				fileUris = append(fileUris, uri.String())
 			default:
 				panic(fmt.Errorf("internal error: unsupported schema for OSCustomizations.Files: %v", uriStr))
 			}
 		}
 	}
 
-	return fileRefs
+	return fileUris
 }

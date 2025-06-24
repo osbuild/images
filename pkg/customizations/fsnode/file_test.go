@@ -76,7 +76,7 @@ func TestNewFile(t *testing.T) {
 	}
 }
 
-func TestNewFileForURI(t *testing.T) {
+func TestNewFileForURILocalFile(t *testing.T) {
 	testFile1 := filepath.Join(t.TempDir(), "test1.txt")
 	err := os.WriteFile(testFile1, nil, 0511)
 	assert.NoError(t, err)
@@ -91,6 +91,12 @@ func TestNewFileForURI(t *testing.T) {
 	assert.Equal(t, nil, file.Group())
 }
 
+func TestNewFileForURIFromHttp(t *testing.T) {
+	file, err := NewFileForURI("/target/path", nil, nil, nil, "http://example.com/test.txt")
+	assert.NoError(t, err)
+	assert.Equal(t, "http://example.com/test.txt", file.URI())
+}
+
 func TestNewFileForURIBadURIs(t *testing.T) {
 	tmpdir := t.TempDir()
 
@@ -100,7 +106,7 @@ func TestNewFileForURIBadURIs(t *testing.T) {
 	}{
 		{"/not/exists", `cannot include blueprint file: stat /not/exists: no such file or directory`},
 		{"file://%g", `parse "file://%g": invalid URL escape "%g"`},
-		{"gopher://foo.txt", "unsupported scheme for gopher://foo.txt (try file://)"},
+		{"gopher://foo.txt", "unsupported scheme for gopher://foo.txt (try file:// or https://)"},
 		{tmpdir, fmt.Sprintf("%s is not a regular file", tmpdir)},
 	} {
 

@@ -70,8 +70,8 @@ type Pipeline interface {
 	// embed files in the pipeline tree.
 	getInline() []string
 
-	// files generated from url references
-	fileRefs() []string
+	// files generated from uri references
+	fileUris() []string
 }
 
 // A Base represents the core functionality shared between each of the pipeline
@@ -151,7 +151,7 @@ func (p Base) getInline() []string {
 	return []string{}
 }
 
-func (p Base) fileRefs() []string {
+func (p Base) fileUris() []string {
 	return nil
 }
 
