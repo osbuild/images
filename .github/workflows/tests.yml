@@ -23,7 +23,9 @@ jobs:
       fail-fast: false  # if one fails, keep the other(s) running
     name: "🛃 Unit tests (Fedora ${{ matrix.fedora_version }})"
     runs-on: ubuntu-24.04
-    container: registry.fedoraproject.org/fedora:${{ matrix.fedora_version }}
+    container:
+      image: registry.fedoraproject.org/fedora:${{ matrix.fedora_version }}
+      options: --privileged
     env:
       # workaround for expired cert at source of indirect dependency
       # (go.opencensus.io/trace)
@@ -85,7 +87,7 @@ jobs:
 
       # We need to run the test as root, since we use the root
       # containers-storage for the local resolvers
-      - name: Run unit tests
+      - name: Run container unit tests
         run: sudo go test ./pkg/container/... --force-local-resolver
 
   unit-tests-cs:
@@ -101,6 +103,7 @@ jobs:
     runs-on: ubuntu-24.04
     container:
       image: quay.io/centos/centos:${{ matrix.centos_stream.image_tag }}
+      options: --privileged
     env:
       GOFLAGS: "-tags=exclude_graphdriver_btrfs"
       # workaround for expired cert at source of indirect dependency
@@ -123,7 +126,7 @@ jobs:
         run: ./test/scripts/setup-osbuild-repo
 
       - name: Install build and test dependencies
-        run: dnf -y install krb5-devel gcc git-core go gpgme-devel osbuild-depsolve-dnf device-mapper-devel
+        run: dnf -y install krb5-devel gcc git-core go gpgme-devel osbuild-depsolve-dnf device-mapper-devel xz
 
       - name: Mark the working directory as safe for git
         run: git config --global --add safe.directory "$(pwd)"
