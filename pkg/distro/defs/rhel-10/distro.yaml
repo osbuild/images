@@ -315,6 +315,14 @@
           - <<: *default_partition_table_part_root_ppc64le
             bootable: true
 
+  azure_common_grub2_config: &azure_common_grub2_config
+    disable_recovery: true
+    disable_submenu: true
+    distributor: "$(sed 's, release .*$,,g' /etc/system-release)"
+    serial: "serial --speed=115200 --unit=0 --word=8 --parity=no --stop=1"
+    timeout: 10
+    timeout_style: "countdown"
+
   azure_image_config: &azure_image_config
     # from CreateAzureDatalossWarningScriptAndUnit
     files:
@@ -508,6 +516,20 @@
             - "nvme_core.io_timeout=240"
             # aarch64
             - "console=ttyAMA0"
+      "x86_64 grub2 config terminal=serial":
+        when:
+          arch: "x86_64"
+        merge:
+          grub2_config:
+            <<: *azure_common_grub2_config
+            terminal: ["serial"]
+      "aarch64 grub2 config terminal=console":
+        when:
+          arch: "aarch64"
+        merge:
+          grub2_config:
+            <<: *azure_common_grub2_config
+            terminal: ["console"]
 
 image_config:
   default:
