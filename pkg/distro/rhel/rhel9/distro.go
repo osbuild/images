@@ -332,7 +332,7 @@ func newDistro(name string, major, minor int) *rhel.Distribution {
 		x86_64.AddImageTypes(azureX64Platform, mkAzureInternalImgType(rd, azureX64Platform.GetArch()))
 		aarch64.AddImageTypes(azureAarch64Platform, mkAzureInternalImgType(rd, azureAarch64Platform.GetArch()))
 
-		x86_64.AddImageTypes(azureX64Platform, mkAzureSapInternalImgType(rd, azureX64Platform.GetArch()))
+		x86_64.AddImageTypes(azureX64Platform, mkAzureSapInternalImgType(rd, azureX64Platform.GetArch()), mkAzureSapAppsImgType(rd, azureX64Platform.GetArch()))
 
 		// add ec2 image types to RHEL distro only
 		x86_64.AddImageTypes(ec2X86Platform,
