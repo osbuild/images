@@ -310,57 +310,6 @@
             bootable: true
 
   azure_image_config: &azure_image_config
-    # from CreateAzureDatalossWarningScriptAndUnit
-    files:
-      - path: &dataloss_script "/usr/local/sbin/temp-disk-dataloss-warning"
-        mode: 0755
-        data: |
-          #!/bin/sh
-          # /usr/local/sbin/temp-disk-dataloss-warning
-          # Write dataloss warning file on mounted Azure resource disk
-
-          AZURE_RESOURCE_DISK_PART1="/dev/disk/cloud/azure_resource-part1"
-
-          MOUNTPATH=$(grep "$AZURE_RESOURCE_DISK_PART1" /etc/fstab | tr '\t' ' ' | cut -d' ' -f2)
-          if [ -z "$MOUNTPATH" ]; then
-              echo "There is no mountpoint of $AZURE_RESOURCE_DISK_PART1 in /etc/fstab"
-              exit 0
-          fi
-
-          if [ "$MOUNTPATH" = "none" ]; then
-              echo "Mountpoint of $AZURE_RESOURCE_DISK_PART1 is not a path"
-              exit 1
-          fi
-
-          if ! mountpoint -q "$MOUNTPATH"; then
-              echo "$AZURE_RESOURCE_DISK_PART1 is not mounted at $MOUNTPATH"
-              exit 1
-          fi
-
-          echo "Creating a dataloss warning file at ${MOUNTPATH}/DATALOSS_WARNING_README.txt"
-
-          cat <<'EOF' > "${MOUNTPATH}/DATALOSS_WARNING_README.txt"
-          WARNING: THIS IS A TEMPORARY DISK.
-
-          Any data stored on this drive is SUBJECT TO LOSS and THERE IS NO WAY TO RECOVER IT.
-
-          Please do not use this disk for storing any personal or application data.
-
-          EOF
-    systemd_unit:
-      - filename: &dataloss_systemd_unit_filename "temp-disk-dataloss-warning.service"
-        "unit-type": "system"
-        "unit-path": "etc"
-        config:
-          "Unit":
-            Description: "Azure temporary resource disk dataloss warning file creation"
-            After: ["multi-user.target", "cloud-final.service"]
-          "Service":
-            Type: "oneshot"
-            ExecStart: [*dataloss_script]
-            StandardOutput: "journal+console"
-          "Install":
-            WantedBy: ["default.target"]
     keyboard:
       keymap: "us"
       "x11-keymap":
@@ -376,7 +325,6 @@
       - "nm-cloud-setup.timer"
       - "sshd"
       - "waagent"
-      - *dataloss_systemd_unit_filename
     sshd_config:
       config:
         ClientAliveInterval: 180
@@ -421,7 +369,6 @@
         ocredit: 0
     waagent_config:
       config:
-        "ResourceDisk.Format": false
         "ResourceDisk.EnableSwap": false
     grub2_config:
       disable_recovery: true
