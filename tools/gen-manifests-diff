@@ -43,6 +43,7 @@ def top_srcdir() -> pathlib.Path:
 def run_gen_manifests(cmd, output_dir):
     env = os.environ.copy()
     env["OSBUILD_TESTING_RNG_SEED"] = "0"
+    env["IMAGE_BUILDER_EXPERIMENTAL"] = "gen-manifest-mock-bpfile-uris"
     p = subprocess.run(cmd + [
         "-packages=false",
         "-metadata=false",

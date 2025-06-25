@@ -28,6 +28,7 @@ import (
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distrofactory"
 	"github.com/osbuild/images/pkg/dnfjson"
+	"github.com/osbuild/images/pkg/experimentalflags"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/manifestgen"
 	"github.com/osbuild/images/pkg/ostree"
@@ -228,6 +229,24 @@ func makeManifestJob(
 	var bp blueprint.Blueprint
 	if bc.Blueprint != nil {
 		bp = *bc.Blueprint
+	}
+	if experimentalflags.Bool("gen-manifest-mock-bpfile-uris") && bp.Customizations != nil {
+		for i, fc := range bp.Customizations.Files {
+			// in mock mode, replace all file customizations
+			// urls with local ones that we auto-generate
+			// with predictable content (from the URL) and
+			// a predictable location (under cacheRoot)
+			if fc.URI != "" {
+				newBpFileUrl := filepath.Join(cacheRoot, "fake-bp-files-with-urls", fmt.Sprintf("%x", sha256.Sum256([]byte(fc.URI))))
+				if err := os.MkdirAll(filepath.Dir(newBpFileUrl), 0755); err != nil {
+					panic(err)
+				}
+				if err := os.WriteFile(newBpFileUrl, []byte(fc.URI), 0600); err != nil {
+					panic(err)
+				}
+				bp.Customizations.Files[i].URI = "file://" + newBpFileUrl
+			}
+		}
 	}
 
 	// add RHSM fact to detect changes
