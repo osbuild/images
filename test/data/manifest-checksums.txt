@@ -1501,7 +1501,7 @@ ef38bf62c390136a98f9f6da926c1a11c5a46c50  rhel_9.6-ppc64le-qcow2-empty_rhel.json
 6b0424383004d6273495e80f18fb549390da0c7c  rhel_9.6-x86_64-ami-empty_rhel.json
 06d8918d4f6c7d3b719b279a46ea2f983143c115  rhel_9.6-x86_64-ami-partitioning_lvm.json
 f6ad4e115a35691fc953ff67f968db2864125311  rhel_9.6-x86_64-ami-partitioning_plain.json
-6e9c67fff198b6c54591fe7bd577809880917a86  rhel_9.6-x86_64-azure_cvm-empty_rhel.json
+ea6bdbb4184c506db9063821a889165772923167  rhel_9.6-x86_64-azure_cvm-empty_rhel.json
 7620ffb039d0906257b2f12d14fff7dc9607d2a7  rhel_9.6-x86_64-azure_rhui-empty_rhel.json
 93a0b4284257cf75648b92691c7171ef5faa8afd  rhel_9.6-x86_64-azure_rhui-rhel9_azure_rhui.json
 33694cf7170510c74e3bc6c4d2da97b92fd26d70  rhel_9.6-x86_64-azure_rhui-rhel9_azure_rhui_cdn.json
@@ -1575,7 +1575,7 @@ e7e54caff9e94371a435141b750132a3b32a9250  rhel_9.7-s390x-tar-empty_rhel.json
 1b3cf68578c7bd693e642e7a17873eb877f928be  rhel_9.7-x86_64-ami-empty_rhel.json
 3de961235ac5cc37eef3e8b1d43a1e9ecbb18a10  rhel_9.7-x86_64-ami-partitioning_lvm.json
 66ecb994149976b110705296147f4e9229574572  rhel_9.7-x86_64-ami-partitioning_plain.json
-6fedbb7e86d443bd16a36bcb12edaf94964b3786  rhel_9.7-x86_64-azure_cvm-empty_rhel.json
+e27bd4aebbb9625ede571e423874bfc3360937d3  rhel_9.7-x86_64-azure_cvm-empty_rhel.json
 5ba216f31845d20a7858056a8db983b916ffdf51  rhel_9.7-x86_64-azure_rhui-empty_rhel.json
 68b0d55de538dde1b8366b68ca83e8cef9a01458  rhel_9.7-x86_64-azure_rhui-rhel9_azure_rhui.json
 c1e0b6d6fe4d7873336a1b49b0a05d02c73bf781  rhel_9.7-x86_64-azure_rhui-rhel9_azure_rhui_cdn.json
