@@ -31,7 +31,7 @@ Unit tests can be run using the standard `go test` command:
 go test ./...
 ```
 
-Integration tests run on GitLab using dynamic pipelines. See [the test README](/test/README.md) for full description.
+Integration tests run on GitLab using dynamic pipelines. See [the test README](../../test/README.md) for full description.
 
 ## Topics
 
