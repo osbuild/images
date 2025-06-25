@@ -1,8 +1,6 @@
 module github.com/osbuild/images
 
-go 1.22.8
-
-toolchain go1.22.11
+go 1.23.9
 
 require (
 	cloud.google.com/go/compute v1.33.0
