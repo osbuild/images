@@ -15,6 +15,7 @@ cleanup() {
 trap cleanup EXIT
 
 export OSBUILD_TESTING_RNG_SEED=0
+export IMAGE_BUILDER_EXPERIMENTAL=gen-manifest-mock-bpfile-uris
 
 # For the purposes of this script, failing to compile is not an error. It is
 # preferable for all commits to compile, but sometimes it's necessary or
