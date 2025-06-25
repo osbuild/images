@@ -62,7 +62,7 @@ df605bde00119ad035d4983ee8e72d0a342fd50b  centos_9-aarch64-qcow2-all_with_fips.j
 bef7f8559a84d0d3bfea24a0dd4de56b135ddbdf  centos_9-aarch64-qcow2-empty_rhel.json
 029f917a18eefe368ca844aea8d49732bbf3e6a1  centos_9-aarch64-qcow2-oscap_generic.json
 bf520a4fe6b7ba29c4e0d1c35b940f6006453031  centos_9-aarch64-tar-empty_rhel.json
-13d28a00895e3805879b710ad969e3b6d7422d4c  centos_9-aarch64-vhd-empty_rhel.json
+106d37649d789ea4bc58e40d7cea84584ab5ed7a  centos_9-aarch64-vhd-empty_rhel.json
 5421258256cc17297c6010115c63f92811fcc638  centos_9-aarch64-wsl-empty_rhel.json
 f1aea24948dc1c93fa1574843350a71263167f7d  centos_9-ppc64le-qcow2-all_with_fips.json
 e3ca9a002ca3d2a69b5d382f8092d308af46bd22  centos_9-ppc64le-qcow2-empty_rhel.json
@@ -103,7 +103,7 @@ e4e36faf12819562ab6c27ea639ce3b82aed2937  centos_9-x86_64-openstack-empty_rhel.j
 5b5ad905d85ba8593d9e60b03d4307f0763e25ca  centos_9-x86_64-qcow2-empty_rhel.json
 7472b95701b9a068479ac8c0ac7895b434a98a17  centos_9-x86_64-qcow2-oscap_generic.json
 9045d98fecf8576affdba47e060c41bedb97be25  centos_9-x86_64-tar-empty_rhel.json
-914928dcb3b5cfead1701d548e90908103be1175  centos_9-x86_64-vhd-empty_rhel.json
+fc0433bb26e5c0a62eac61f98c88e180d79d0b46  centos_9-x86_64-vhd-empty_rhel.json
 f8b4b3443b3eba2835351bed770091241f90aa9c  centos_9-x86_64-vmdk-empty_rhel.json
 23a760598787ec59b20c589bec8d1d4a85c2df3e  centos_9-x86_64-wsl-empty_rhel.json
 38e1f3e109774c552e57e5821dc9d720d1554166  fedora_40-aarch64-container-empty_fedora.json
