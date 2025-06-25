@@ -63,8 +63,8 @@ func (p *OS) GetPackageSetChain(d Distro) []rpmmd.PackageSet {
 	return p.getPackageSetChain(d)
 }
 
-func (p *OS) AddInlineDataAndStages(pipeline *osbuild.Pipeline, files []*fsnode.File) {
-	p.addInlineDataAndStages(pipeline, files)
+func (p *OS) AddStagesForAllFilesAndInlineData(pipeline *osbuild.Pipeline, files []*fsnode.File) {
+	p.addStagesForAllFilesAndInlineData(pipeline, files)
 }
 
 func (p *OS) GetInline() []string {
@@ -98,8 +98,8 @@ func (p *OSTreeDeployment) Serialize() osbuild.Pipeline {
 	return p.serialize()
 }
 
-func (p *OSTreeDeployment) AddInlineDataAndStages(pipeline *osbuild.Pipeline, files []*fsnode.File) {
-	p.addInlineDataAndStages(pipeline, files, "ostree/ref")
+func (p *OSTreeDeployment) AddStagesForAllFilesAndInlineData(pipeline *osbuild.Pipeline, files []*fsnode.File) {
+	p.addStagesForAllFilesAndInlineData(pipeline, files, "ostree/ref")
 }
 
 func (p *OSTreeDeployment) GetInline() []string {
