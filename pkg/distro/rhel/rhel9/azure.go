@@ -75,15 +75,16 @@ func mkAzureSapInternalImgType(rd *rhel.Distribution, a arch.Arch) *rhel.ImageTy
 func mkAzureCVMImgType(rd *rhel.Distribution, a arch.Arch) *rhel.ImageType {
 	it := rhel.NewImageType(
 		"azure-cvm",
-		"disk.vhd",
-		"application/x-vhd",
+		"disk.vhd.xz",
+		"application/xz",
 		packageSetLoader,
 		rhel.DiskImage,
 		[]string{"build"},
-		[]string{"os", "image", "vpc"},
-		[]string{"vpc"},
+		[]string{"os", "image", "vpc", "xz"},
+		[]string{"xz"},
 	)
 
+	it.Compression = "xz"
 	it.Bootable = true
 	it.DefaultSize = 32 * datasizes.GibiByte
 	it.DefaultImageConfig = imageConfig(rd, a.String(), "azure-cvm")
