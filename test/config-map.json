@@ -14,9 +14,7 @@
   },
   "./configs/all-with-fips.json": {
     "distros": [
-      "rhel-9.3",
       "rhel-9.4",
-      "rhel-8.9",
       "rhel-8.10",
       "centos*",
       "fedora*"
@@ -36,12 +34,7 @@
   },
   "./configs/ec2-sap-empty.json": {
     "distros": [
-      "rhel-8.10",
-      "rhel-8.5",
-      "rhel-8.6",
-      "rhel-8.7",
-      "rhel-8.8",
-      "rhel-8.9",
+      "rhel-8*",
       "rhel-9.*",
       "rhel-10.*"
     ],
@@ -51,7 +44,6 @@
   },
   "./configs/edge-ostree-pull-device-fips.json": {
     "distros": [
-      "rhel-9.3",
       "rhel-9.4"
     ],
     "image-types": [
@@ -72,7 +64,6 @@
   },
   "./configs/edge-ostree-pull-fips.json": {
     "distros": [
-      "rhel-9.3",
       "rhel-9.4"
     ],
     "image-types": [
@@ -83,7 +74,6 @@
   },
   "./configs/edge-ostree-pull-user-fips.json": {
     "distros": [
-      "rhel-9.3",
       "rhel-9.4"
     ],
     "image-types": [
@@ -231,12 +221,8 @@
   },
   "./configs/oscap-generic.json": {
     "distros": [
-      "rhel-9.1",
       "rhel-9.2",
-      "rhel-8.7",
-      "rhel-8.8",
-      "rhel-8.9",
-      "centos-8",
+      "rhel-8*",
       "centos-9",
       "fedora*"
     ],
@@ -328,7 +314,6 @@
     ],
     "distros": [
       "rhel-9.2",
-      "rhel-9.3",
       "rhel-9.4"
     ]
   },
@@ -340,7 +325,6 @@
     ],
     "distros": [
       "rhel-9.2",
-      "rhel-9.3",
       "rhel-9.4"
     ]
   },
@@ -350,7 +334,7 @@
     ],
     "distros": [
       "rhel-8.10",
-      "rhel-9.5"
+      "rhel-9.6"
     ]
   },
   "./configs/import-rpm-gpg-keys-from-tree-fedora.json": {
@@ -367,7 +351,7 @@
     ],
     "distros": [
       "rhel-8.10",
-      "rhel-9.5",
+      "rhel-9.6",
       "rhel-10.0"
     ]
   },
