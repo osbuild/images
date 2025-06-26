@@ -170,7 +170,7 @@
       - "net-lib"
     squashfs_rootfs: true
     conditions:
-      "f41 uses ifcfg in dract but already a squashfs rootfs":
+      "f41 dracut requires ifcfg, rootfs is squashfs":
         when:
           version_equal: "41"
         override:
@@ -178,7 +178,7 @@
           additional_dracut_modules:
             - "ifcfg"
           squashfs_rootfs: true
-      "f40 and lower uses ifcfg in dracut and no squashfs rootfs":
+      "f40 and lower uses ifcfg in dracut and squashfs+ext4 rootfs":
         when:
           version_less_than: "41"
         override:
@@ -896,7 +896,7 @@ image_types:
               append:
                 include:
                   - "basesystem"
-            "f41+ needs bootupd":
+            "f41 and above need bootupd":
               when:
                 version_greater_or_equal: "41"
               append:
