@@ -768,14 +768,14 @@
       "rhel needs the rhel release rpm gpg key":
         when:
           distro_name: "rhel"
-        merge:
+        shallow_merge:
           gpgkey_files:
             - "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
       "x86_64 specific kernel commandline for rhel-9.6+":
         when:
           arch: "x86_64"
           version_greater_or_equal: "9.6"
-        merge:
+        shallow_merge:
           kernel_options:
             - "ro"
             - "loglevel=3"
@@ -788,7 +788,7 @@
         when:
           arch: "aarch64"
           version_greater_or_equal: "9.6"
-        merge:
+        shallow_merge:
           kernel_options:
             - "ro"
             - "loglevel=3"
@@ -798,7 +798,7 @@
         when:
           arch: "x86_64"
           version_less_than: "9.6"
-        merge:
+        shallow_merge:
           kernel_options:
             - "ro"
             - "loglevel=3"
@@ -810,7 +810,7 @@
         when:
           arch: "aarch64"
           version_less_than: "9.6"
-        merge:
+        shallow_merge:
           kernel_options:
             - "ro"
             - "loglevel=3"
@@ -819,7 +819,7 @@
         when:
           distro_name: "rhel"
           version_greater_or_equal: "9.6"
-        merge:
+        shallow_merge:
           # from CreateAzureDatalossWarningScriptAndUnit
           files:
             - path: &dataloss_script "/usr/local/sbin/temp-disk-dataloss-warning"
@@ -926,14 +926,14 @@
       "x86_64 grub2 config terminal=serial":
         when:
           arch: "x86_64"
-        merge:
+        shallow_merge:
           grub2_config:
             <<: *azure_common_grub2_config
             terminal: ["serial"]
       "aarch64 grub2 config terminal=console":
         when:
           arch: "aarch64"
-        merge:
+        shallow_merge:
           grub2_config:
             <<: *azure_common_grub2_config
             terminal: ["console"]
@@ -954,7 +954,7 @@ image_config:
     "oscap needs a differnt path on centos":
       when:
         distro_name: "centos"
-      merge:
+      shallow_merge:
         default_oscap_datastream: "/usr/share/xml/scap/ssg/content/ssg-cs9-ds.xml"
 
 image_types:
@@ -1024,7 +1024,7 @@ image_types:
         "tweak the rhsm config on rhel":
           when:
             distro_name: "rhel"
-          merge:
+          shallow_merge:
             rhsm_config:
               "no-subscription":
                 dnf_plugin:
@@ -1130,7 +1130,7 @@ image_types:
         "chrony is added in rhel-9.6+":
           when:
             version_greater_or_equal: "9.6"
-          merge:
+          shallow_merge:
             time_synchronization:
               refclocks:
                 - driver:
@@ -1506,7 +1506,7 @@ image_types:
         "we need dracut conf with nvme/xen on x86":
           when:
             arch: "x86_64"
-          merge:
+          shallow_merge:
             dracut_conf:
               - *sgdisk_dracut_conf
               - filename: "ec2.conf"
@@ -1517,7 +1517,7 @@ image_types:
         "x86_64 specific kopts":
           when:
             arch: "x86_64"
-          merge:
+          shallow_merge:
             # TODO: move these to the EC2 environment
             kernel_options:
               # common
@@ -1528,7 +1528,7 @@ image_types:
         "aarch64 specific kopts":
           when:
             arch: "aarch64"
-          merge:
+          shallow_merge:
             # TODO: move these to the EC2 environment
             kernel_options:
               # XXX: duplicated with above x86_64 kernel defaults
@@ -1575,7 +1575,7 @@ image_types:
         "x86_64 specific kopts":
           when:
             arch: "x86_64"
-          merge:
+          shallow_merge:
             kernel_options:
               # XXX: duplicated with ami.image_config.kernel_options :(
               - "console=ttyS0,115200n8"
@@ -1969,7 +1969,7 @@ image_types:
         "rhel-9.1 and below do not have ignition":
           when:
             version_less_than: "9.2"
-          merge:
+          shallow_merge:
             enabled_services:
               # XXX: share with the above
               - "NetworkManager.service"
@@ -2128,7 +2128,7 @@ image_types:
         "rhel-9.1 and below is not using ignition":
           when:
             version_less_than: "9.2"
-          merge:
+          shallow_merge:
             ostree_conf_sysroot_readonly: false
             ignition_platform: ""
             kernel_options: ["modprobe.blacklist=vc4"]
@@ -2162,7 +2162,7 @@ image_types:
         "rhel-9.2+ uses ignition":
           when:
             version_greater_or_equal: "9.2"
-          merge:
+          shallow_merge:
             ostree_conf_sysroot_readonly: true
             ignition_platform: "metal"
             kernel_options:
@@ -2172,7 +2172,7 @@ image_types:
         "rhel < 9.2 has less kernel options":
           when:
             version_less_than: "9.2"
-          merge:
+          shallow_merge:
             kernel_options: ["modprobe.blacklist=vc4"]
     package_sets:
       installer:
@@ -2250,13 +2250,13 @@ image_types:
         "rhel-9.2+ uses ignitions":
           when:
             version_greater_or_equal: "9.2"
-          merge:
+          shallow_merge:
             ostree_conf_sysroot_readonly: true
             ignition_platform: "metal"
         "rhel < 9.2 uses less kernel options":
           when:
             version_less_than: "9.2"
-          merge:
+          shallow_merge:
             kernel_options:
               # ami-kernel-options
               - "console=tty0"
@@ -2280,7 +2280,7 @@ image_types:
         "rhel < 9.2 uses less kernel options":
           when:
             version_less_than: "9.2"
-          merge:
+          shallow_merge:
             kernel_options:
               - "modprobe.blacklist=vc4"
 

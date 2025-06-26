@@ -516,7 +516,7 @@ image_config:
     "some description":
       when:
         distro_name: "test-distro"
-      merge:
+      shallow_merge:
         timezone: "OverrideTZ"
 `
 	fakeDistroName := "test-distro"
@@ -590,27 +590,27 @@ image_types:
         "some description for version lt":
           when:
             version_less_than: "2"
-          merge:
+          shallow_merge:
             timezone: "OverrideTZ"
         "test-distro is version '1' (no minor) so considered '1' is > '1.4'":
           when:
             version_less_than: "1.4"
-          merge:
+          shallow_merge:
             default_kernel: kernel-lt-14
         "some description for distro_name":
           when:
             distro_name: "test-distro"
-          merge:
+          shallow_merge:
             locale: "en_US.UTF-8"
         "some description for architecture":
           when:
             arch: "test_arch"
-          merge:
+          shallow_merge:
             hostname: "test-arch-hn"
         "some description for version":
           when:
             version_less_than: "2"
-          merge:
+          shallow_merge:
             default_kernel: "kernel-lt-2"
 `
 	fakeDistroName := "test-distro"

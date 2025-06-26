@@ -488,13 +488,13 @@
       "rhel needs the rhel release rpm gpg key":
         when:
           distro_name: "rhel"
-        merge:
+        shallow_merge:
           gpgkey_files:
             - "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
       "x86_64 specific kernel commandline":
         when:
           arch: "x86_64"
-        merge:
+        shallow_merge:
           kernel_options:
             # common
             - "ro"
@@ -508,7 +508,7 @@
       "aarch64 specific kernel commandline":
         when:
           arch: "aarch64"
-        merge:
+        shallow_merge:
           kernel_options:
             # common
             - "ro"
@@ -519,14 +519,14 @@
       "x86_64 grub2 config terminal=serial":
         when:
           arch: "x86_64"
-        merge:
+        shallow_merge:
           grub2_config:
             <<: *azure_common_grub2_config
             terminal: ["serial"]
       "aarch64 grub2 config terminal=console":
         when:
           arch: "aarch64"
-        merge:
+        shallow_merge:
           grub2_config:
             <<: *azure_common_grub2_config
             terminal: ["console"]
@@ -546,7 +546,7 @@ image_config:
     "centos oscap datastream path":
       when:
         distro_name: "centos"
-      merge:
+      shallow_merge:
         default_oscap_datastream: "/usr/share/xml/scap/ssg/content/ssg-cs10-ds.xml"
 
 image_types:
@@ -610,7 +610,7 @@ image_types:
         "tweak the rhsm config on rhel":
           when:
             distro_name: "rhel"
-          merge:
+          shallow_merge:
             rhsm_config:
               "no-subscription":
                 dnf_plugin:
@@ -1038,7 +1038,7 @@ image_types:
         "we need dracut conf with nvme/xen on x86":
           when:
             arch: "x86_64"
-          merge:
+          shallow_merge:
             dracut_conf:
               - filename: "ec2.conf"
                 config:
@@ -1048,7 +1048,7 @@ image_types:
         "x86_64 specific kopts":
           when:
             arch: "x86_64"
-          merge:
+          shallow_merge:
             # TODO: move these to the EC2 environment
             kernel_options:
               # common
@@ -1058,7 +1058,7 @@ image_types:
         "aarch64 specific kopts":
           when:
             arch: "aarch64"
-          merge:
+          shallow_merge:
             # TODO: move these to the EC2 environment
             kernel_options:
               # XXX: duplicated with above x86_64 kernel defaults
@@ -1153,7 +1153,7 @@ image_types:
         "x86_64 specific kopts":
           when:
             arch: "x86_64"
-          merge:
+          shallow_merge:
             kernel_options:
               # XXX: duplicated with ami.image_config.kernel_options :(
               - "console=tty0"
@@ -1187,7 +1187,7 @@ image_types:
         "wsl config for rhel":
           when:
             distro_name: "rhel"
-          merge:
+          shallow_merge:
             wsl:
               <<: *wsl_config
               distribution_config:
@@ -1198,7 +1198,7 @@ image_types:
         "wsl config for centos":
           when:
             distro_name: "centos"
-          merge:
+          shallow_merge:
             wsl:
               <<: *wsl_config
               distribution_config:
@@ -1209,7 +1209,7 @@ image_types:
         "wsl config for almalinux":
           when:
             distro_name: "almalinux"
-          merge:
+          shallow_merge:
             wsl: &wsl_distribution_config_almalinux
               <<: *wsl_config
               distribution_config:
@@ -1220,7 +1220,7 @@ image_types:
         "wsl config for almalinuxkitten":
           when:
             distro_name: "almalinux_kitten"
-          merge:
+          shallow_merge:
             wsl:
               <<: *wsl_distribution_config_almalinux
     package_sets:
