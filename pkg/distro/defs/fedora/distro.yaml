@@ -202,7 +202,7 @@
         "f41 and below used zezere and parsec":
           when:
             version_less_than: "42"
-          merge:
+          shallow_merge:
             enabled_services:
               - "NetworkManager.service"
               - "firewalld.service"
@@ -1188,7 +1188,7 @@ image_types:
         "f42 and below was quite different":
           when:
             version_less_than: "43"
-          merge:
+          shallow_merge:
             install_weak_deps: true
             mount_units: false
             enabled_services:
@@ -1452,7 +1452,7 @@ image_types:
         "f40 and below uses ext4 based iso rootfs":
           when:
             version_less_than: "41"
-          merge:
+          shallow_merge:
             iso_rootfs_type: "squashfs-ext4"
     package_sets:
       installer:
@@ -1487,7 +1487,7 @@ image_types:
         "f40 and below uses ext4 based iso rootfs":
           when:
             version_less_than: "41"
-          merge:
+          shallow_merge:
             iso_rootfs_type: "squashfs-ext4"
     package_sets:
       installer:
@@ -1576,7 +1576,7 @@ image_types:
         "on f40 and below we used ext4 on squashfs":
           when:
             version_less_than: "41"
-          merge:
+          shallow_merge:
             iso_rootfs_type: "squashfs-ext4"
     platforms:
       - *x86_64_installer_platform
@@ -1672,7 +1672,7 @@ image_types:
         "on f42 and below we use cloud-init instead of wsl-setup":
           when:
             version_less_than: "42"
-          merge:
+          shallow_merge:
             wsl:
               config:
                 boot_systemd: true

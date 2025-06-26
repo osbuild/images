@@ -219,8 +219,8 @@ func (wc *whenCondition) Eval(id *distro.ID, archStr string) bool {
 }
 
 type distroImageConfigConditions struct {
-	When  whenCondition       `yaml:"when,omitempty"`
-	Merge *distro.ImageConfig `yaml:"merge,omitempty"`
+	When         whenCondition       `yaml:"when,omitempty"`
+	ShallowMerge *distro.ImageConfig `yaml:"shallow_merge,omitempty"`
 }
 
 // XXX: this should eventually implement the "distro.ImageType"
@@ -292,8 +292,8 @@ type imageConfig struct {
 }
 
 type conditionsImgConf struct {
-	When  whenCondition       `yaml:"when,omitempty"`
-	Merge *distro.ImageConfig `yaml:"merge"`
+	When         whenCondition       `yaml:"when,omitempty"`
+	ShallowMerge *distro.ImageConfig `yaml:"shallow_merge"`
 }
 
 type installerConfig struct {
@@ -364,7 +364,7 @@ func DistroImageConfig(distroNameVer string) (*distro.ImageConfig, error) {
 		}
 		for _, cond := range condMap {
 			if cond.When.Eval(id, "") {
-				imgConfig = cond.Merge.InheritFrom(imgConfig)
+				imgConfig = cond.ShallowMerge.InheritFrom(imgConfig)
 			}
 		}
 	}
@@ -588,7 +588,7 @@ func ImageConfig(distroNameVer, archName, typeName string) (*distro.ImageConfig,
 
 		for _, cond := range imgType.ImageConfig.Conditions {
 			if cond.When.Eval(id, archName) {
-				imgConfig = cond.Merge.InheritFrom(imgConfig)
+				imgConfig = cond.ShallowMerge.InheritFrom(imgConfig)
 			}
 		}
 	}
