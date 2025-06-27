@@ -170,7 +170,6 @@
     include:
       # RHBZ#2076763
       - "@Server"
-      - "ansible-core"
       # RHBZ#1959813
       - "bind-utils"
       - "nfs-utils"
@@ -214,6 +213,7 @@
     include:
       # SAP System Roles
       # https://access.redhat.com/sites/default/files/attachments/rhel_system_roles_for_sap_1.pdf
+      - "ansible-core"
       - "rhel-system-roles-sap"
       # RHBZ#1960617
       - "tuned-profiles-sap-hana"
