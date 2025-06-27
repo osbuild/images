@@ -48,8 +48,12 @@ fi
 # For mocked manifests though we want those things to be visible changes, so we
 # calculate the checksum of the file directly. Also it's faster.
 echo "Calculating checksums"
-checksums_file="./test/data/manifest-checksums.txt"
-export LC_ALL=C  # make sort stable
-(cd "${tmpdir}/manifests" && sha1sum -- *) | sort --key 2 > "${checksums_file}"
+checksums_dir="./test/data/manifest-checksums"
+mkdir -p "${checksums_dir}"
 
-echo "Checksums saved to ${checksums_file}"
+for manifest_path in "${tmpdir}/manifests/"*; do
+    filename=$(basename "${manifest_path/.json}")
+    sha1sum -- "${manifest_path}" | cut -d' ' -f1 > "${checksums_dir}/${filename}"
+done
+
+echo "Checksums saved to ${checksums_dir}"
