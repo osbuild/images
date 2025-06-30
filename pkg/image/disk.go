@@ -131,6 +131,10 @@ func (img *DiskImage) InstantiateManifest(m *manifest.Manifest,
 		zstdPipeline := manifest.NewZstd(buildPipeline, imagePipeline)
 		zstdPipeline.SetFilename(img.Filename)
 		return zstdPipeline.Export(), nil
+	case "gzip":
+		gzipPipeline := manifest.NewGzip(buildPipeline, imagePipeline)
+		gzipPipeline.SetFilename(img.Filename)
+		return gzipPipeline.Export(), nil
 	case "":
 		// don't compress, but make sure the pipeline's filename is set
 		imagePipeline.SetFilename(img.Filename)
