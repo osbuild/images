@@ -49,6 +49,7 @@ fi
 # calculate the checksum of the file directly. Also it's faster.
 echo "Calculating checksums"
 checksums_dir="./test/data/manifest-checksums"
+rm -rf "${checksums_dir}"
 mkdir -p "${checksums_dir}"
 
 for manifest_path in "${tmpdir}/manifests/"*; do
