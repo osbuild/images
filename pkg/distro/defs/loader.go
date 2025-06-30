@@ -214,6 +214,22 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 			v := toplevel.ImageTypes[name]
 			v.name = name
 			foundDistro.imageTypes[name] = v
+			for idx := range v.Platforms {
+				templ, err := template.New("uefi-vendor").Parse(v.Platforms[idx].UEFIVendor)
+				if err != nil {
+					return nil, err
+				}
+				var buf bytes.Buffer
+				input := struct {
+					DistroVendor string
+				}{
+					DistroVendor: foundDistro.Vendor,
+				}
+				if err := templ.Execute(&buf, input); err != nil {
+					return nil, err
+				}
+				v.Platforms[idx].UEFIVendor = buf.String()
+			}
 		}
 	}
 	foundDistro.imageConfig, err = toplevel.ImageConfig.For(nameVer)
