@@ -655,6 +655,7 @@ image_types:
         bios_platform: "powerpc-ieee1275"
         image_format: "qcow2"
         qcow2_compat: "1.1"
+        uefi_vendor: "{{.DistroVendor}}"
 `
 	fakeDistroName := "test-distro"
 	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
@@ -664,6 +665,7 @@ image_types:
 	testDistroYAML := `
 distros:
  - name: test-distro-1
+   vendor: test-vendor
    defs_path: test-distro/
 `
 	err := os.WriteFile(filepath.Join(baseDir, "distros.yaml"), []byte(testDistroYAML), 0644)
@@ -671,6 +673,7 @@ distros:
 
 	distro, err := defs.NewDistroYAML("test-distro-1")
 	require.NoError(t, err)
+
 	imgTypes := distro.ImageTypes()
 	assert.Len(t, imgTypes, 1)
 	imgType := imgTypes["server-qcow2"]
@@ -698,6 +701,7 @@ distros:
 			BIOSPlatform: "powerpc-ieee1275",
 			ImageFormat:  platform.FORMAT_QCOW2,
 			QCOW2Compat:  "1.1",
+			UEFIVendor:   "test-vendor",
 		},
 	}, imgType.Platforms)
 }
