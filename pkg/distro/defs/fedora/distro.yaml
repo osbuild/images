@@ -166,14 +166,14 @@
       - "net-lib"
     squashfs_rootfs: true
     conditions:
-      "f41 uses ifcfg in dract but already a squashfs rootfs":
+      "f41 dracut requires ifcfg, rootfs is squashfs":
         when:
           version_equal: "41"
         override:
           additional_dracut_modules:
             - "ifcfg"
           squashfs_rootfs: true
-      "f40 and lower uses ifcfg in dracut and no squashfs rootfs":
+      "f40 and lower uses ifcfg in dracut and squashfs+ext4 rootfs":
         when:
           version_less_than: "41"
         override:
@@ -200,7 +200,7 @@
         "f41 and below used zezere and parsec":
           when:
             version_less_than: "42"
-          merge:
+          shallow_merge:
             enabled_services:
               - "NetworkManager.service"
               - "firewalld.service"
@@ -882,7 +882,7 @@ image_types:
               append:
                 include:
                   - "basesystem"
-            "f41+ needs bootupd":
+            "f41 and above need bootupd":
               when:
                 version_greater_or_equal: "41"
               append:
@@ -1220,7 +1220,7 @@ image_types:
         "f42 and below was quite different":
           when:
             version_less_than: "43"
-          merge:
+          shallow_merge:
             install_weak_deps: true
             mount_units: false
             enabled_services:
@@ -1484,7 +1484,7 @@ image_types:
         "f40 and below uses ext4 based iso rootfs":
           when:
             version_less_than: "41"
-          merge:
+          shallow_merge:
             iso_rootfs_type: "squashfs-ext4"
     package_sets:
       installer:
@@ -1519,7 +1519,7 @@ image_types:
         "f40 and below uses ext4 based iso rootfs":
           when:
             version_less_than: "41"
-          merge:
+          shallow_merge:
             iso_rootfs_type: "squashfs-ext4"
     package_sets:
       installer:
@@ -1608,7 +1608,7 @@ image_types:
         "on f40 and below we used ext4 on squashfs":
           when:
             version_less_than: "41"
-          merge:
+          shallow_merge:
             iso_rootfs_type: "squashfs-ext4"
     platforms:
       - *x86_64_installer_platform
@@ -1704,7 +1704,7 @@ image_types:
         "on f42 and below we use cloud-init instead of wsl-setup":
           when:
             version_less_than: "42"
-          merge:
+          shallow_merge:
             wsl:
               config:
                 boot_systemd: true
