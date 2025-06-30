@@ -28,6 +28,10 @@ func (p *Tar) Serialize() osbuild.Pipeline {
 	return p.serialize()
 }
 
+func (p *Gzip) Serialize() osbuild.Pipeline {
+	return p.serialize()
+}
+
 func (p *Zstd) Serialize() osbuild.Pipeline {
 	return p.serialize()
 }
