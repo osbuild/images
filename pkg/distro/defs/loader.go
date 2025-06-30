@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"text/template"
 
@@ -96,6 +97,9 @@ type DistroYAML struct {
 	imageTypes map[string]ImageTypeYAML
 	// distro wide default image config
 	imageConfig *distro.ImageConfig `yaml:"default"`
+
+	// ignore the given image types
+	IgnoreImageTypes []string `yaml:"ignore_image_types"`
 }
 
 func (d *DistroYAML) ImageTypes() map[string]ImageTypeYAML {
@@ -204,6 +208,9 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 	if len(toplevel.ImageTypes) > 0 {
 		foundDistro.imageTypes = make(map[string]ImageTypeYAML, len(toplevel.ImageTypes))
 		for name := range toplevel.ImageTypes {
+			if slices.Contains(foundDistro.IgnoreImageTypes, name) {
+				continue
+			}
 			v := toplevel.ImageTypes[name]
 			v.name = name
 			foundDistro.imageTypes[name] = v
