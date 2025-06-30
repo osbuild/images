@@ -3,6 +3,7 @@ package generic
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 
 	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/arch"
@@ -15,6 +16,7 @@ import (
 	"github.com/osbuild/images/pkg/customizations/ignition"
 	"github.com/osbuild/images/pkg/customizations/kickstart"
 	"github.com/osbuild/images/pkg/customizations/oscap"
+	"github.com/osbuild/images/pkg/customizations/subscription"
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/image"
@@ -30,7 +32,16 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 	osc := manifest.OSCustomizations{}
 
 	if t.ImageTypeYAML.Bootable || t.ImageTypeYAML.RPMOSTree {
+		// TODO: for now the only image types that define a default kernel are
+		// ones that use UKIs and don't allow overriding, so this works.
+		// However, if we ever need to specify default kernels for image types
+		// that allow overriding, we will need to change c.GetKernel() to take
+		// an argument as fallback or make it not return the standard "kernel"
+		// when it's unset.
 		osc.KernelName = c.GetKernel().Name
+		if imageConfig.DefaultKernelName != nil {
+			osc.KernelName = *imageConfig.DefaultKernelName
+		}
 
 		var kernelOptions []string
 		// XXX: keep in sync with the identical copy in rhel/images.go
@@ -146,6 +157,11 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 		osc.SElinux = "targeted"
 	}
 
+	// XXX: move into pure YAML
+	if strings.HasPrefix(t.Arch().Distro().Name(), "rhel-") && options.Facts != nil {
+		osc.RHSMFacts = options.Facts
+	}
+
 	var err error
 	osc.Directories, err = blueprint.DirectoryCustomizationsToFsNodeDirectories(c.GetDirectories())
 	if err != nil {
@@ -221,6 +237,23 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 		osc.OpenSCAPRemediationConfig = remediationConfig
 	}
 
+	var subscriptionStatus subscription.RHSMStatus
+	if options.Subscription != nil {
+		subscriptionStatus = subscription.RHSMConfigWithSubscription
+		if options.Subscription.Proxy != "" {
+			osc.InsightsClientConfig = &osbuild.InsightsClientConfigStageOptions{Config: osbuild.InsightsClientConfig{Proxy: options.Subscription.Proxy}}
+		}
+	} else {
+		subscriptionStatus = subscription.RHSMConfigNoSubscription
+	}
+	if rhsmConfig, exists := imageConfig.RHSMConfig[subscriptionStatus]; exists {
+		osc.RHSMConfig = rhsmConfig
+	}
+
+	if bpRhsmConfig := subscription.RHSMConfigFromBP(c.GetRHSM()); bpRhsmConfig != nil {
+		osc.RHSMConfig = osc.RHSMConfig.Update(bpRhsmConfig)
+	}
+
 	osc.ShellInit = imageConfig.ShellInit
 	osc.Grub2Config = imageConfig.Grub2Config
 	osc.Sysconfig = imageConfig.SysconfigStageOptions()
@@ -255,6 +288,10 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 
 	osc.Files = append(osc.Files, imageConfig.Files...)
 	osc.Directories = append(osc.Directories, imageConfig.Directories...)
+
+	if imageConfig.NoBLS != nil {
+		osc.NoBLS = *imageConfig.NoBLS
+	}
 
 	ca, err := c.GetCACerts()
 	if err != nil {
