@@ -1,14 +1,15 @@
-package rpmmd
+package rpmmd_test
 
 import (
 	"encoding/json"
 	"testing"
 
+	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestPackageSpecGetEVRA(t *testing.T) {
-	specs := []PackageSpec{
+	specs := []rpmmd.PackageSpec{
 		{
 			Name:    "tmux",
 			Epoch:   0,
@@ -30,7 +31,7 @@ func TestPackageSpecGetEVRA(t *testing.T) {
 }
 
 func TestPackageSpecGetNEVRA(t *testing.T) {
-	specs := []PackageSpec{
+	specs := []rpmmd.PackageSpec{
 		{
 			Name:    "tmux",
 			Epoch:   0,
@@ -52,21 +53,21 @@ func TestPackageSpecGetNEVRA(t *testing.T) {
 }
 
 func TestRepoConfigMarshalEmpty(t *testing.T) {
-	repoCfg := &RepoConfig{}
+	repoCfg := &rpmmd.RepoConfig{}
 	js, err := json.Marshal(repoCfg)
 	assert.NoError(t, err)
 	assert.Equal(t, string(js), `{}`)
 }
 
 func TestPackageSpecEmptyJson(t *testing.T) {
-	pkg := &PackageSpec{Name: "pkg1"}
+	pkg := &rpmmd.PackageSpec{Name: "pkg1"}
 	js, err := json.Marshal(pkg)
 	assert.NoError(t, err)
 	assert.Equal(t, string(js), `{"name":"pkg1","epoch":0}`)
 }
 
 func TestPackageSpecFull(t *testing.T) {
-	pkg := &PackageSpec{
+	pkg := &rpmmd.PackageSpec{
 		Name:           "acl",
 		Epoch:          0,
 		Version:        "2.3.1",
