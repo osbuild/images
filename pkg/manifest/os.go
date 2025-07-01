@@ -1110,21 +1110,19 @@ func findESPMountpoint(pt *disk.PartitionTable) (string, error) {
 //
 // [1] https://gitlab.com/kraxel/virt-firmware/-/commit/ca385db4f74a4d542455b9d40c91c8448c7be90c
 func maybeAddHMACandDirStage(packages []rpmmd.PackageSpec, espMountpoint, kernelVer string) ([]*osbuild.Stage, error) {
-	ukiDirectVer, err := rpmmd.GetVerStrFromPackageSpecList(packages, "uki-direct")
+	ukiDirect, err := rpmmd.GetPackage(packages, "uki-direct")
 	if err != nil {
 		// the uki-direct package isn't in the list: no override necessary
 		return nil, nil
 	}
 
-	// The GetVerStrFromPackageSpecList function returns
-	// <version>-<release>.<arch>. For the real package version, this doesn't
-	// appear to cause any issues with the version parser used by
-	// VersionLessThan. If a mock depsolver is used this can cause issues
-	// (Malformed version: 0-8.fk1.x86_64). Make sure we only use the <version>
-	// component to avoid issues.
-	ukiDirectVer = strings.SplitN(ukiDirectVer, "-", 2)[0]
+	// if the package has an epoch > 0, we can skip the version check, because
+	// the issue we're working around occurred in Epoch 0.
+	if ukiDirect.Epoch > 0 {
+		return nil, nil
+	}
 
-	if common.VersionLessThan(ukiDirectVer, "25.3") {
+	if common.VersionLessThan(ukiDirect.Version, "25.3") {
 		// generate hmac file using stage
 		kernelFilename := fmt.Sprintf("ffffffffffffffffffffffffffffffff-%s.efi", kernelVer)
 		kernelPath := filepath.Join(espMountpoint, "EFI", "Linux", kernelFilename)
