@@ -1033,8 +1033,6 @@
             config:
               "ResourceDisk.Format": false
               "ResourceDisk.EnableSwap": false
-              "Provisioning.UseCloudInit": true
-              "Provisioning.Enabled": false
       "x86_64 grub2 config terminal=serial":
         when:
           arch: "x86_64"
