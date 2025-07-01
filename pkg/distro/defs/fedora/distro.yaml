@@ -1729,6 +1729,7 @@ image_types:
             - "rpm"
             - "shadow-utils"  # the oobe needs to be able to call adduser
             - "sudo"
+            - "systemd"  # the oobe needs to be able to check services
             - "tar"
             - "util-linux-core"
             - "vim-minimal"
