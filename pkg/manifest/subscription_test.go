@@ -277,7 +277,7 @@ func TestSubscriptionService(t *testing.T) {
 				BaseUrl:       "thebaseurl-wir",
 				Insights:      true,
 				Rhc:           true,
-				TemplateName:  "template-name",
+				TemplateName:  "template name",
 			},
 			srvcOpts: nil,
 			expectedStage: &osbuild.Stage{
@@ -298,7 +298,7 @@ func TestSubscriptionService(t *testing.T) {
 						Service: &osbuild.ServiceSection{
 							Type: osbuild.OneshotServiceType,
 							ExecStart: []string{
-								"/usr/bin/rhc connect --organization=${ORG_ID} --activation-key=${ACTIVATION_KEY} --server theserverurl-wir --content-template template-name",
+								"/usr/bin/rhc connect --organization=${ORG_ID} --activation-key=${ACTIVATION_KEY} --server theserverurl-wir --content-template=\"template name\"",
 								"/usr/sbin/semanage permissive --add rhcd_t", // added when rhc is enabled
 								"/usr/bin/rm " + subkeyFilepath,
 							},
