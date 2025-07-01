@@ -406,6 +406,10 @@ func (p *OS) getBuildPackages(distro Distro) []string {
 		// version of uki-direct. Add it conditioned just on the bootloader
 		// type for now, until we find a better way to decide.
 		packages = append(packages, "libkcapi-hmaccalc")
+
+		// UKI-based images set a dnf versionlock on shim, so we need to
+		// include the plugin.
+		packages = append(packages, "python3-dnf-plugin-versionlock")
 	}
 
 	if len(p.OSCustomizations.Users)+len(p.OSCustomizations.Groups) > 0 {
@@ -753,6 +757,24 @@ func (p *OS) serialize() osbuild.Pipeline {
 				panic(err)
 			}
 			pipeline.AddStages(stages...)
+
+			shimPkgName := ""
+			switch p.platform.GetArch() {
+			case arch.ARCH_X86_64:
+				shimPkgName = "shim-x64"
+			default:
+				// Shim locking is only used by the CVM image, which is
+				// currently only available on x86. If we need the
+				// functionality for other architectures, they should be added
+				// here.
+				panic(fmt.Sprintf("unsupported architecture %q for UKI-based image", p.platform.GetArch().String()))
+			}
+			versionlockStage, err := versionLock(p.packageSpecs, []string{shimPkgName})
+			if err != nil {
+				panic(err)
+			}
+
+			pipeline.AddStage(versionlockStage)
 		}
 	}
 
@@ -1161,4 +1183,26 @@ func (p *OS) addInlineDataAndStages(pipeline *osbuild.Pipeline, files []*fsnode.
 	for _, file := range files {
 		p.inlineData = append(p.inlineData, string(file.Data()))
 	}
+}
+
+// versionLockShim generates an osbuild stage and inline file to create a dnf
+// versionlock configuration file that locks the shim package to its installed
+// version. This is necessary for UKI-based images that can become unbootable
+// if the shim is upgraded to one signed by a newer certificate that does not
+// exist in the system's database.
+// See https://issues.redhat.com/browse/RHEL-93650
+func versionLock(osPackages []rpmmd.PackageSpec, lockPackages []string) (*osbuild.Stage, error) {
+	pkgNEVRs := make([]string, len(lockPackages))
+	for idx, pkgName := range lockPackages {
+		pkg, err := rpmmd.GetPackage(osPackages, pkgName)
+		if err != nil {
+			return nil, fmt.Errorf("versionLock: package %q not found in package list", pkgName)
+		}
+		nevr := fmt.Sprintf("%s-%d:%s-%s", pkg.Name, pkg.Epoch, pkg.Version, pkg.Release)
+		pkgNEVRs[idx] = nevr
+	}
+
+	return osbuild.NewDNF4VersionlockStage(&osbuild.DNF4VersionlockOptions{
+		Add: pkgNEVRs,
+	}), nil
 }
