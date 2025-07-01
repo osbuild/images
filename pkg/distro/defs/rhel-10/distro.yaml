@@ -538,8 +538,6 @@
       config:
         "ResourceDisk.Format": false
         "ResourceDisk.EnableSwap": false
-        "Provisioning.UseCloudInit": true
-        "Provisioning.Enabled": false
     grub2_config:
       disable_recovery: true
       disable_submenu: true
