@@ -1716,6 +1716,15 @@ image_types:
                     - "None"
                   network:
                     config: "disabled"
+        # https://github.com/microsoft/WSL/issues/13207
+        "work around WSL not reading /etc/locale.conf":
+          when:
+            version_greater_or_equal: "43"
+          merge:
+            files:
+              - path: "/etc/default/locale"
+                data: |
+                  LANG=C.UTF-8
     package_sets:
       os:
         - include:
