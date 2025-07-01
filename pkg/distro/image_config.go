@@ -86,6 +86,7 @@ type ImageConfig struct {
 	UdevRules           *osbuild.UdevRulesStageOptions      `yaml:"udev_rules,omitempty"`
 	GCPGuestAgentConfig *osbuild.GcpGuestAgentConfigOptions `yaml:"gcp_guest_agent_config,omitempty"`
 	NetworkManager      *osbuild.NMConfStageOptions         `yaml:"network_manager,omitempty"`
+	Presets             []osbuild.Preset                    `yaml:"presets,omitempty"`
 
 	WSL *wsl.WSL `yaml:"wsl,omitempty"`
 

@@ -766,6 +766,14 @@ image_types:
           config:
             add_dracutmodules:
               - "fips"
+      # see https://github.com/ostreedev/ostree/issues/2840
+      presets:
+        - name: "ignition-firstboot-complete.service"
+          state: "enable"
+        - name: "coreos-ignition-write-issues.service"
+          state: "enable"
+        - name: "fdo-client-linuxapp.service"
+          state: "enable"
       machine_id_uninitialized: false
     platforms:
       - *x86_64_installer_platform
