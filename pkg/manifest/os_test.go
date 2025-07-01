@@ -482,6 +482,14 @@ func TestHMACStageInclusion(t *testing.T) {
 						Arch:     "noarch",
 						Checksum: "sha256:c6ade8aef0282a228e1011f4f4b7efe41c035f6e635feb27082ac36cb1a1384b",
 					},
+					{
+						Name:     "shim-x64",
+						Epoch:    0,
+						Version:  "15.8",
+						Release:  "3",
+						Arch:     "x86_64",
+						Checksum: "sha256:aae94b3b8451ef28b02594d9abca5979e153c14f4db25283b011403fa92254fd",
+					},
 				},
 			},
 		}
@@ -529,6 +537,14 @@ func TestHMACStageInclusion(t *testing.T) {
 						Arch:     "noarch",
 						Checksum: "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
 					},
+					{
+						Name:     "shim-x64",
+						Epoch:    0,
+						Version:  "15.8",
+						Release:  "3",
+						Arch:     "x86_64",
+						Checksum: "sha256:aae94b3b8451ef28b02594d9abca5979e153c14f4db25283b011403fa92254fd",
+					},
 				},
 			},
 		}
@@ -551,4 +567,74 @@ func TestHMACStageInclusion(t *testing.T) {
 		}
 		assert.NotContains(t, directories, "/boot/efi/EFI/Linux/ffffffffffffffffffffffffffffffff-13.3-7.el9.x86_64.efi.extra.d")
 	})
+}
+
+func TestShimVersionLock(t *testing.T) {
+	repos := []rpmmd.RepoConfig{}
+	runner := &runner.CentOS{Version: 9}
+
+	platform := &platform.X86{
+		Bootloader: platform.BOOTLOADER_UKI,
+	}
+	pt := testdisk.TestPartitionTables()["plain"]
+
+	m := manifest.New()
+	build := manifest.NewBuild(&m, runner, repos, nil)
+	os := manifest.NewOS(build, platform, repos)
+	os.PartitionTable = &pt
+
+	// mark the shim-x64 package for version locking
+	os.OSCustomizations.VersionlockPackages = []string{"shim-x64"}
+
+	inputs := manifest.Inputs{
+		Depsolved: dnfjson.DepsolveResult{
+			Packages: []rpmmd.PackageSpec{
+				{
+					Name:     "test-kernel",
+					Epoch:    0,
+					Version:  "13.3",
+					Release:  "7.el9",
+					Arch:     "x86_64",
+					Checksum: "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+				},
+				{
+					Name:     "uki-direct",
+					Epoch:    0,
+					Version:  "25.11",
+					Release:  "1.el9",
+					Arch:     "noarch",
+					Checksum: "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+				},
+				{
+					Name:     "shim-x64",
+					Epoch:    0,
+					Version:  "15.8",
+					Release:  "3",
+					Arch:     "x86_64",
+					Checksum: "sha256:aae94b3b8451ef28b02594d9abca5979e153c14f4db25283b011403fa92254fd",
+				},
+				{
+					Name:     "dnf",
+					Version:  "4.14.0",
+					Release:  "29.el9",
+					Arch:     "noarch",
+					Checksum: "sha256:72874726d1a16651933e382a4f4683046efd4b278830ad564932ce481ab8b9eb",
+				},
+				{
+					Name:     "python3-dnf-plugin-versionlock",
+					Version:  "4.3.0",
+					Release:  "21.el9",
+					Arch:     "noarch",
+					Checksum: "sha256:e14c57f7d0011ea378e4319bbc523000d0e7be4d35b6af7177aa6246c5aaa9ef",
+				},
+			},
+		},
+	}
+
+	pipeline := os.SerializeWith(inputs)
+	versionlockStage := manifest.FindStage("org.osbuild.dnf4.versionlock", pipeline.Stages)
+	assert.NotNil(t, versionlockStage)
+	stageOptions := versionlockStage.Options.(*osbuild.DNF4VersionlockOptions)
+
+	assert.Equal(t, []string{"shim-x64-0:15.8-3"}, stageOptions.Add)
 }
