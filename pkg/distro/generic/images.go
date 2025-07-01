@@ -751,12 +751,6 @@ func iotInstallerImage(workload workload.Workload,
 		img.DisabledAnacondaModules = append(img.DisabledAnacondaModules, instCust.Modules.Disable...)
 	}
 
-	img.AdditionalAnacondaModules = append(img.AdditionalAnacondaModules, []string{
-		anaconda.ModuleTimezone,
-		anaconda.ModuleLocalization,
-		anaconda.ModuleUsers,
-	}...)
-
 	installerConfig, err := t.getDefaultInstallerConfig()
 	if err != nil {
 		return nil, err
@@ -765,6 +759,7 @@ func iotInstallerImage(workload workload.Workload,
 	if installerConfig != nil {
 		img.AdditionalDracutModules = append(img.AdditionalDracutModules, installerConfig.AdditionalDracutModules...)
 		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
+		img.AdditionalAnacondaModules = append(img.AdditionalAnacondaModules, installerConfig.AdditionalAnacondaModules...)
 		if installerConfig.SquashfsRootfs != nil && *installerConfig.SquashfsRootfs {
 			img.RootfsType = manifest.SquashfsRootfs
 		}
