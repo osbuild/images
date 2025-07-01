@@ -8,46 +8,29 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPackageSpecGetEVRA(t *testing.T) {
-	specs := []rpmmd.PackageSpec{
-		{
-			Name:    "tmux",
-			Epoch:   0,
-			Version: "3.3a",
-			Release: "3.fc38",
-			Arch:    "x86_64",
-		},
-		{
-			Name:    "grub2",
-			Epoch:   1,
-			Version: "2.06",
-			Release: "94.fc38",
-			Arch:    "noarch",
-		},
-	}
+var specs = []rpmmd.PackageSpec{
+	{
+		Name:    "tmux",
+		Epoch:   0,
+		Version: "3.3a",
+		Release: "3.fc38",
+		Arch:    "x86_64",
+	},
+	{
+		Name:    "grub2",
+		Epoch:   1,
+		Version: "2.06",
+		Release: "94.fc38",
+		Arch:    "noarch",
+	},
+}
 
+func TestPackageSpecGetEVRA(t *testing.T) {
 	assert.Equal(t, "3.3a-3.fc38.x86_64", specs[0].GetEVRA())
 	assert.Equal(t, "1:2.06-94.fc38.noarch", specs[1].GetEVRA())
 }
 
 func TestPackageSpecGetNEVRA(t *testing.T) {
-	specs := []rpmmd.PackageSpec{
-		{
-			Name:    "tmux",
-			Epoch:   0,
-			Version: "3.3a",
-			Release: "3.fc38",
-			Arch:    "x86_64",
-		},
-		{
-			Name:    "grub2",
-			Epoch:   1,
-			Version: "2.06",
-			Release: "94.fc38",
-			Arch:    "noarch",
-		},
-	}
-
 	assert.Equal(t, "tmux-3.3a-3.fc38.x86_64", specs[0].GetNEVRA())
 	assert.Equal(t, "grub2-1:2.06-94.fc38.noarch", specs[1].GetNEVRA())
 }
@@ -96,4 +79,16 @@ func TestPackageSpecFull(t *testing.T) {
  "path": "Packages/acl-2.3.1-3.el9.x86_64.rpm",
  "repo_id": "813859d10fe28ff54dbde44655a18b071c8adbaa849a551ec23cc415f0f7f1b0"
 }`)
+}
+
+func TestGetVerStrFromPackageSpecList(t *testing.T) {
+	assert := assert.New(t)
+
+	tmuxVra, err := rpmmd.GetVerStrFromPackageSpecList(specs, "tmux")
+	assert.NoError(err)
+	assert.Equal("3.3a-3.fc38.x86_64", tmuxVra)
+
+	grub2Vra, err := rpmmd.GetVerStrFromPackageSpecList(specs, "grub2")
+	assert.NoError(err)
+	assert.Equal("2.06-94.fc38.noarch", grub2Vra)
 }
