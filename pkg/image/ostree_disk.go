@@ -121,14 +121,24 @@ func (img *OSTreeDiskImage) InstantiateManifest(m *manifest.Manifest,
 	default:
 		switch img.Compression {
 		case "xz":
-			compressedImage := manifest.NewXZ(buildPipeline, baseImage)
-			compressedImage.SetFilename(img.Filename)
-			return compressedImage.Export(), nil
+			xzPipeline := manifest.NewXZ(buildPipeline, baseImage)
+			xzPipeline.SetFilename(img.Filename)
+			return xzPipeline.Export(), nil
+		case "zstd":
+			zstdPipeline := manifest.NewZstd(buildPipeline, baseImage)
+			zstdPipeline.SetFilename(img.Filename)
+			return zstdPipeline.Export(), nil
+		case "gzip":
+			gzipPipeline := manifest.NewGzip(buildPipeline, baseImage)
+			gzipPipeline.SetFilename(img.Filename)
+			return gzipPipeline.Export(), nil
 		case "":
+			// don't compress, but make sure the pipeline's filename is set
 			baseImage.SetFilename(img.Filename)
 			return baseImage.Export(), nil
 		default:
-			panic(fmt.Sprintf("unsupported compression type %q on %q", img.Compression, img.name))
+			// panic on unknown strings
+			panic(fmt.Sprintf("unsupported compression type %q", img.Compression))
 		}
 	}
 }
