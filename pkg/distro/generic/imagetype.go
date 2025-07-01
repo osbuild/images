@@ -64,6 +64,10 @@ func (t *imageType) MIMEType() string {
 	return t.ImageTypeYAML.MimeType
 }
 
+func (t *imageType) DefaultImageConfig() *distro.ImageConfig {
+	return t.defaultImageConfig
+}
+
 func (t *imageType) OSTreeRef() string {
 	d := t.arch.distro
 	if t.ImageTypeYAML.RPMOSTree {
@@ -303,7 +307,12 @@ func (t *imageType) Manifest(bp *blueprint.Blueprint,
 		return nil, nil, err
 	}
 	mf := manifest.New()
-	mf.Distro = manifest.DISTRO_FEDORA
+	// XXX: *sigh* remove the need for this entirely, the manifest
+	// has a bunch of code that checks the distro
+	mf.Distro = t.arch.distro.DistroYAML.DistroLike
+	if mf.Distro == manifest.DISTRO_NULL {
+		return nil, nil, fmt.Errorf("no distro_like set in yaml for %q", t.arch.distro.Name())
+	}
 	if options.UseBootstrapContainer {
 		mf.DistroBootstrapRef = bootstrapContainerFor(t)
 	}
@@ -489,7 +498,7 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 	}
 	if instCust != nil {
 		// only supported by the Anaconda installer
-		if slices.Index([]string{"iot-installer"}, t.Name()) == -1 {
+		if slices.Index([]string{"image-installer", "edge-installer", "live-installer", "iot-installer"}, t.Name()) == -1 {
 			return warnings, fmt.Errorf("installer customizations are not supported for %q", t.Name())
 		}
 

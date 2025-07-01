@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"text/template"
 
@@ -22,7 +23,9 @@ import (
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/experimentalflags"
+	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/olog"
+	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/runner"
@@ -96,6 +99,15 @@ type DistroYAML struct {
 	imageTypes map[string]ImageTypeYAML
 	// distro wide default image config
 	imageConfig *distro.ImageConfig `yaml:"default"`
+
+	// ignore the given image types
+	IgnoreImageTypes []string `yaml:"ignore_image_types"`
+
+	// XXX: remove this in favor of a better abstraction, this
+	// is currently needed because the manifest pkg has conditionals
+	// based on the distro, ideally it would not have this but
+	// here we are.
+	DistroLike manifest.Distro `yaml:"distro_like"`
 }
 
 func (d *DistroYAML) ImageTypes() map[string]ImageTypeYAML {
@@ -204,9 +216,28 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 	if len(toplevel.ImageTypes) > 0 {
 		foundDistro.imageTypes = make(map[string]ImageTypeYAML, len(toplevel.ImageTypes))
 		for name := range toplevel.ImageTypes {
+			if slices.Contains(foundDistro.IgnoreImageTypes, name) {
+				continue
+			}
 			v := toplevel.ImageTypes[name]
 			v.name = name
 			foundDistro.imageTypes[name] = v
+			for idx := range v.Platforms {
+				templ, err := template.New("uefi-vendor").Parse(v.Platforms[idx].UEFIVendor)
+				if err != nil {
+					return nil, err
+				}
+				var buf bytes.Buffer
+				input := struct {
+					DistroVendor string
+				}{
+					DistroVendor: foundDistro.Vendor,
+				}
+				if err := templ.Execute(&buf, input); err != nil {
+					return nil, err
+				}
+				v.Platforms[idx].UEFIVendor = buf.String()
+			}
 		}
 	}
 	foundDistro.imageConfig, err = toplevel.ImageConfig.For(nameVer)
@@ -319,6 +350,11 @@ type ImageTypeYAML struct {
 	// XXX: or iso_variant?
 	Variant string `yaml:"variant"`
 
+	// XXX: this is really here only for compatibility/because of drift in the "imageInstallerImage"
+	// between fedora/rhel
+	KickstartUnattendedExtraKernelOpts []string `yaml:"kickstart_unattended_extra_kernel_opts"`
+	ISORootKickstart                   bool     `yaml:"iso_root_kickstart"`
+
 	RPMOSTree bool `yaml:"rpm_ostree"`
 
 	OSTree struct {
@@ -337,6 +373,11 @@ type ImageTypeYAML struct {
 	Platforms []platform.PlatformConf `yaml:"platforms"`
 
 	NameAliases []string `yaml:"name_aliases"`
+
+	// for RHEL7 compat
+	// TODO: determine a better place for these options, but for now they are here
+	DiskImagePartTool     *osbuild.PartTool `yaml:"disk_image_part_tool"`
+	DiskImageVPCForceSize *bool             `yaml:"disk_image_vpc_force_size"`
 
 	// name is set by the loader
 	name string

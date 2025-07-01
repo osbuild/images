@@ -1,4 +1,4 @@
-package rhel7_test
+package generic_test
 
 import (
 	"testing"
@@ -9,7 +9,7 @@ import (
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/distro_test_common"
-	"github.com/osbuild/images/pkg/distro/rhel/rhel7"
+	"github.com/osbuild/images/pkg/distro/generic"
 )
 
 type rhelFamilyDistro struct {
@@ -20,11 +20,11 @@ type rhelFamilyDistro struct {
 var rhelFamilyDistros = []rhelFamilyDistro{
 	{
 		name:   "rhel-79",
-		distro: rhel7.DistroFactory("rhel-7.9"),
+		distro: generic.DistroFactory("rhel-7.9"),
 	},
 }
 
-func TestFilenameFromType(t *testing.T) {
+func TestRhel7FilenameFromType(t *testing.T) {
 	type args struct {
 		outputFormat string
 	}
@@ -73,7 +73,9 @@ func TestFilenameFromType(t *testing.T) {
 			for _, tt := range tests {
 				t.Run(tt.name, func(t *testing.T) {
 					dist := dist.distro
-					arch, _ := dist.GetArch("x86_64")
+					require.NotNil(t, dist)
+					arch, err := dist.GetArch("x86_64")
+					require.NoError(t, err)
 					imgType, err := arch.GetImageType(tt.args.outputFormat)
 					if tt.want.wantErr {
 						require.Error(t, err)
@@ -95,7 +97,7 @@ func TestFilenameFromType(t *testing.T) {
 	}
 }
 
-func TestImageType_BuildPackages(t *testing.T) {
+func TestRhel7ImageType_BuildPackages(t *testing.T) {
 	x8664BuildPackages := []string{
 		"dnf",
 		"dosfstools",
@@ -137,7 +139,7 @@ func TestImageType_BuildPackages(t *testing.T) {
 	}
 }
 
-func TestImageType_Name(t *testing.T) {
+func TestRhel7ImageType_Name(t *testing.T) {
 	imgMap := []struct {
 		arch     string
 		imgNames []string
@@ -171,7 +173,7 @@ func TestImageType_Name(t *testing.T) {
 
 // Check that Manifest() function returns an error for unsupported
 // configurations.
-func TestDistro_ManifestError(t *testing.T) {
+func TestRhel7Distro_ManifestError(t *testing.T) {
 	r7distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
@@ -194,7 +196,7 @@ func TestDistro_ManifestError(t *testing.T) {
 	}
 }
 
-func TestArchitecture_ListImageTypes(t *testing.T) {
+func TestRhel7Architecture_ListImageTypes(t *testing.T) {
 	imgMap := []struct {
 		arch                     string
 		imgNames                 []string
@@ -229,12 +231,12 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 	}
 }
 
-func TestRhel7_ListArches(t *testing.T) {
+func TestRhel7Rhel7_ListArches(t *testing.T) {
 	arches := rhelFamilyDistros[0].distro.ListArches()
 	assert.Equal(t, []string{"x86_64"}, arches)
 }
 
-func TestRhel7_GetArch(t *testing.T) {
+func TestRhel7Rhel7_GetArch(t *testing.T) {
 	arches := []struct {
 		name                  string
 		errorExpected         bool
@@ -265,21 +267,21 @@ func TestRhel7_GetArch(t *testing.T) {
 	}
 }
 
-func TestRhel7_Name(t *testing.T) {
+func TestRhel7Rhel7_Name(t *testing.T) {
 	distro := rhelFamilyDistros[0].distro
 	assert.Equal(t, "rhel-7.9", distro.Name())
 }
 
-func TestRhel7_ModulePlatformID(t *testing.T) {
+func TestRhel7Rhel7_ModulePlatformID(t *testing.T) {
 	distro := rhelFamilyDistros[0].distro
 	assert.Equal(t, "platform:el7", distro.ModulePlatformID())
 }
 
-func TestRhel7_KernelOption(t *testing.T) {
+func TestRhel7Rhel7_KernelOption(t *testing.T) {
 	distro_test_common.TestDistro_KernelOption(t, rhelFamilyDistros[0].distro)
 }
 
-func TestDistro_CustomFileSystemManifestError(t *testing.T) {
+func TestRhel7Distro_CustomFileSystemManifestError(t *testing.T) {
 	r7distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
@@ -301,7 +303,7 @@ func TestDistro_CustomFileSystemManifestError(t *testing.T) {
 	}
 }
 
-func TestDistro_TestRootMountPoint(t *testing.T) {
+func TestRhel7Distro_TestRhel7RootMountPoint(t *testing.T) {
 	r7distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
@@ -323,7 +325,7 @@ func TestDistro_TestRootMountPoint(t *testing.T) {
 	}
 }
 
-func TestDistro_CustomFileSystemSubDirectories(t *testing.T) {
+func TestRhel7Distro_CustomFileSystemSubDirectories(t *testing.T) {
 	r7distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
@@ -349,7 +351,7 @@ func TestDistro_CustomFileSystemSubDirectories(t *testing.T) {
 	}
 }
 
-func TestDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
+func TestRhel7Distro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
 	r7distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
@@ -383,7 +385,7 @@ func TestDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
 	}
 }
 
-func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
+func TestRhel7Distro_DirtyMountpointsNotAllowed(t *testing.T) {
 	r7distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
@@ -413,7 +415,7 @@ func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
 	}
 }
 
-func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
+func TestRhel7Distro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 	r7distro := rhelFamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
@@ -435,7 +437,7 @@ func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 	}
 }
 
-func TestDistroFactory(t *testing.T) {
+func TestRhel7DistroFactory(t *testing.T) {
 	type testCase struct {
 		strID    string
 		expected distro.Distro
@@ -452,41 +454,13 @@ func TestDistroFactory(t *testing.T) {
 		},
 		{
 			strID:    "rhel-7.9",
-			expected: rhel7.DistroFactory("rhel-7.9"),
-		},
-		{
-			strID:    "fedora-38",
-			expected: nil,
-		},
-		{
-			strID:    "fedora-38.1",
-			expected: nil,
-		},
-		{
-			strID:    "fedora",
-			expected: nil,
-		},
-		{
-			strID:    "rhel-9",
-			expected: nil,
-		},
-		{
-			strID:    "rhel-8.4",
-			expected: nil,
-		},
-		{
-			strID:    "rhel-810",
-			expected: nil,
-		},
-		{
-			strID:    "rhel-8.4.1",
-			expected: nil,
+			expected: generic.DistroFactory("rhel-7.9"),
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.strID, func(t *testing.T) {
-			d := rhel7.DistroFactory(tc.strID)
+			d := generic.DistroFactory(tc.strID)
 			if tc.expected == nil {
 				assert.Nil(t, d)
 			} else {
