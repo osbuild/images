@@ -1,7 +1,6 @@
 package image
 
 import (
-	"fmt"
 	"math/rand"
 
 	"github.com/osbuild/images/internal/environment"
@@ -45,27 +44,9 @@ func (img *Archive) InstantiateManifest(m *manifest.Manifest,
 	osPipeline.OSVersion = img.OSVersion
 
 	tarPipeline := manifest.NewTar(buildPipeline, osPipeline, "archive")
-	tarPipeline.SetFilename(img.Filename)
 
-	switch img.Compression {
-	case "xz":
-		xzPipeline := manifest.NewXZ(buildPipeline, tarPipeline)
-		xzPipeline.SetFilename(img.Filename)
-		return xzPipeline.Export(), nil
-	case "zstd":
-		zstdPipeline := manifest.NewZstd(buildPipeline, tarPipeline)
-		zstdPipeline.SetFilename(img.Filename)
-		return zstdPipeline.Export(), nil
-	case "gzip":
-		gzipPipeline := manifest.NewGzip(buildPipeline, tarPipeline)
-		gzipPipeline.SetFilename(img.Filename)
-		return gzipPipeline.Export(), nil
-	case "":
-		// don't compress, but make sure the pipeline's filename is set
-		tarPipeline.SetFilename(img.Filename)
-		return tarPipeline.Export(), nil
-	default:
-		// panic on unknown strings
-		panic(fmt.Sprintf("unsupported compression type %q", img.Compression))
-	}
+	compressionPipeline := GetCompressionPipeline(img.Compression, buildPipeline, tarPipeline)
+	compressionPipeline.SetFilename(img.Filename)
+
+	return compressionPipeline.Export(), nil
 }
