@@ -482,6 +482,14 @@ func TestHMACStageInclusion(t *testing.T) {
 						Arch:     "noarch",
 						Checksum: "sha256:c6ade8aef0282a228e1011f4f4b7efe41c035f6e635feb27082ac36cb1a1384b",
 					},
+					{
+						Name:     "shim-x64",
+						Epoch:    0,
+						Version:  "15.8",
+						Release:  "3",
+						Arch:     "x86_64",
+						Checksum: "sha256:aae94b3b8451ef28b02594d9abca5979e153c14f4db25283b011403fa92254fd",
+					},
 				},
 			},
 		}
@@ -529,6 +537,14 @@ func TestHMACStageInclusion(t *testing.T) {
 						Arch:     "noarch",
 						Checksum: "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
 					},
+					{
+						Name:     "shim-x64",
+						Epoch:    0,
+						Version:  "15.8",
+						Release:  "3",
+						Arch:     "x86_64",
+						Checksum: "sha256:aae94b3b8451ef28b02594d9abca5979e153c14f4db25283b011403fa92254fd",
+					},
 				},
 			},
 		}
@@ -551,4 +567,72 @@ func TestHMACStageInclusion(t *testing.T) {
 		}
 		assert.NotContains(t, directories, "/boot/efi/EFI/Linux/ffffffffffffffffffffffffffffffff-13.3-7.el9.x86_64.efi.extra.d")
 	})
+}
+
+func TestShimVersionLock(t *testing.T) {
+	repos := []rpmmd.RepoConfig{}
+	runner := &runner.CentOS{Version: 9}
+
+	// We need the OS pipeline to run the serialization functions for the UKI,
+	// which means we need a Platform with the correct bootloader setting and a
+	// partition table with an ESP.
+	platform := &platform.X86{
+		Bootloader: platform.BOOTLOADER_UKI,
+	}
+	pt := testdisk.TestPartitionTables()["plain"]
+
+	inputs := manifest.Inputs{
+		Depsolved: dnfjson.DepsolveResult{
+			Packages: []rpmmd.PackageSpec{
+				{
+					Name:     "test-kernel",
+					Epoch:    0,
+					Version:  "13.3",
+					Release:  "7.el9",
+					Arch:     "x86_64",
+					Checksum: "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+				},
+				{
+					Name:     "uki-direct",
+					Epoch:    0,
+					Version:  "24.11",
+					Release:  "1.el9",
+					Arch:     "noarch",
+					Checksum: "sha256:c6ade8aef0282a228e1011f4f4b7efe41c035f6e635feb27082ac36cb1a1384b",
+				},
+				{
+					Name:     "shim-x64",
+					Epoch:    0,
+					Version:  "15.8",
+					Release:  "3",
+					Arch:     "x86_64",
+					Checksum: "sha256:aae94b3b8451ef28b02594d9abca5979e153c14f4db25283b011403fa92254fd",
+				},
+			},
+		},
+	}
+
+	m := manifest.New()
+	build := manifest.NewBuild(&m, runner, repos, nil)
+	os := manifest.NewOS(build, platform, repos)
+	os.PartitionTable = &pt
+	pipeline := os.SerializeWith(inputs)
+	destinationPaths := collectCopyDestinationPaths(pipeline.Stages)
+
+	inline := os.GetInline()
+	expContents := `version = "1.0"
+
+[[packages]]
+name = "shim-x64"
+comment = "Added by osbuild"
+
+[[packages.conditions]]
+key = "evr"
+comparator = "="
+value = "0:15.8-3"
+`
+
+	assert := assert.New(t)
+	assert.Contains(destinationPaths, "tree:///etc/dnf/versionlock.toml")
+	assert.Contains(inline, expContents)
 }

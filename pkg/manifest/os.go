@@ -1,14 +1,17 @@
 package manifest
 
 import (
+	"bytes"
 	"fmt"
 	"path/filepath"
 	"strings"
 
+	"github.com/BurntSushi/toml"
 	"github.com/google/uuid"
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/environment"
+	"github.com/osbuild/images/internal/versionlock"
 	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/container"
@@ -406,6 +409,10 @@ func (p *OS) getBuildPackages(distro Distro) []string {
 		// version of uki-direct. Add it conditioned just on the bootloader
 		// type for now, until we find a better way to decide.
 		packages = append(packages, "libkcapi-hmaccalc")
+
+		// UKI-based images set a dnf versionlock on shim, so we need to
+		// include the plugin.
+		packages = append(packages, "python3-dnf-plugin-versionlock")
 	}
 
 	if len(p.OSCustomizations.Users)+len(p.OSCustomizations.Groups) > 0 {
@@ -753,6 +760,12 @@ func (p *OS) serialize() osbuild.Pipeline {
 				panic(err)
 			}
 			pipeline.AddStages(stages...)
+
+			lockcfg, err := versionLockShim(p.packageSpecs, p.platform.GetArch())
+			if err != nil {
+				panic(err)
+			}
+			p.addInlineDataAndStages(&pipeline, []*fsnode.File{lockcfg})
 		}
 	}
 
@@ -1161,4 +1174,65 @@ func (p *OS) addInlineDataAndStages(pipeline *osbuild.Pipeline, files []*fsnode.
 	for _, file := range files {
 		p.inlineData = append(p.inlineData, string(file.Data()))
 	}
+}
+
+// versionLockShim generates an osbuild stage and inline file to create a dnf
+// versionlock configuration file that locks the shim package to its installed
+// version. This is necessary for UKI-based images that can become unbootable
+// if the shim is upgraded to one signed by a newer certificate that does not
+// exist in the system's database.
+// See https://issues.redhat.com/browse/RHEL-93650
+func versionLockShim(packages []rpmmd.PackageSpec, a arch.Arch) (*fsnode.File, error) {
+	errPrefix := "versionLockShim"
+	shimPkgName := ""
+	switch a {
+	case arch.ARCH_X86_64:
+		shimPkgName = "shim-x64"
+	default:
+		// This function is only used by the CVM image, which is currently only
+		// available on x86. This functionality is meant to be temporary until
+		// we get an osbuild stage to do the same, so we don't need to worry
+		// about other architectures for now. If we do need the functionality
+		// for other architectures before it's replaced, they should be added
+		// here.
+		return nil, fmt.Errorf("%s: unsupported architecture %q for shim version-lock function", errPrefix, a.String())
+	}
+
+	shimPkg, err := rpmmd.GetPackage(packages, shimPkgName)
+	if err != nil {
+		return nil, fmt.Errorf("%s: shim package %q not found in package list", errPrefix, shimPkgName)
+	}
+
+	shimEvr := fmt.Sprintf("%d:%s-%s", shimPkg.Epoch, shimPkg.Version, shimPkg.Release)
+	versionLockConfig := versionlock.Config{
+		Version: "1.0",
+		Packages: []versionlock.Package{
+			{
+				Name:    shimPkgName,
+				Comment: "Added by osbuild",
+				Conditions: []versionlock.Condition{
+					{
+						Key:        "evr",
+						Comparator: "=",
+						Value:      shimEvr,
+					},
+				},
+			},
+		},
+	}
+
+	versionLockData := new(bytes.Buffer)
+	encoder := toml.NewEncoder(versionLockData)
+	encoder.Indent = ""
+
+	if err := encoder.Encode(versionLockConfig); err != nil {
+		return nil, fmt.Errorf("%s: error marshalling config: %w", errPrefix, err)
+	}
+
+	configFile, err := fsnode.NewFile("/etc/dnf/versionlock.toml", nil, nil, nil, versionLockData.Bytes())
+	if err != nil {
+		return nil, fmt.Errorf("%s: error creating file node: %w", errPrefix, err)
+	}
+
+	return configFile, nil
 }
