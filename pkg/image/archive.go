@@ -8,7 +8,6 @@ import (
 	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/artifact"
 	"github.com/osbuild/images/pkg/manifest"
-	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/runner"
@@ -50,20 +49,23 @@ func (img *Archive) InstantiateManifest(m *manifest.Manifest,
 
 	switch img.Compression {
 	case "xz":
-		tarPipeline.Compression = osbuild.TarArchiveCompressionXz
-	case "gzip":
-		tarPipeline.Compression = osbuild.TarArchiveCompressionGzip
+		xzPipeline := manifest.NewXZ(buildPipeline, tarPipeline)
+		xzPipeline.SetFilename(img.Filename)
+		return xzPipeline.Export(), nil
 	case "zstd":
-		tarPipeline.Compression = osbuild.TarArchiveCompressionZstd
+		zstdPipeline := manifest.NewZstd(buildPipeline, tarPipeline)
+		zstdPipeline.SetFilename(img.Filename)
+		return zstdPipeline.Export(), nil
+	case "gzip":
+		gzipPipeline := manifest.NewGzip(buildPipeline, tarPipeline)
+		gzipPipeline.SetFilename(img.Filename)
+		return gzipPipeline.Export(), nil
 	case "":
-		// this defaults to automatic compression based on filename which
-		// has already been set
+		// don't compress, but make sure the pipeline's filename is set
+		tarPipeline.SetFilename(img.Filename)
+		return tarPipeline.Export(), nil
 	default:
 		// panic on unknown strings
 		panic(fmt.Sprintf("unsupported compression type %q", img.Compression))
 	}
-
-	artifact := tarPipeline.Export()
-
-	return artifact, nil
 }

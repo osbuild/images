@@ -1707,8 +1707,8 @@ image_types:
     mime_type: "application/x-tar"
     image_func: "tar"
     build_pipelines: ["build"]
-    payload_pipelines: ["os", "archive"]
-    exports: ["archive"]
+    payload_pipelines: ["os", "archive", "xz"]
+    exports: ["xz"]
     required_partition_sizes: *default_required_dir_sizes
     platforms:
       - arch: "x86_64"
