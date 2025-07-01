@@ -593,21 +593,9 @@ func iotCommitImage(workload workload.Workload,
 	if err != nil {
 		return nil, err
 	}
-
-	// see https://github.com/ostreedev/ostree/issues/2840
-	img.OSCustomizations.Presets = []osbuild.Preset{
-		{
-			Name:  "ignition-firstboot-complete.service",
-			State: osbuild.StateEnable,
-		},
-		{
-			Name:  "coreos-ignition-write-issues.service",
-			State: osbuild.StateEnable,
-		},
-		{
-			Name:  "fdo-client-linuxapp.service",
-			State: osbuild.StateEnable,
-		},
+	imgConfig := t.getDefaultImageConfig()
+	if imgConfig != nil {
+		img.OSCustomizations.Presets = imgConfig.Presets
 	}
 
 	img.Environment = &t.ImageTypeYAML.Environment
@@ -679,20 +667,9 @@ func iotContainerImage(workload workload.Workload,
 		return nil, err
 	}
 
-	// see https://github.com/ostreedev/ostree/issues/2840
-	img.OSCustomizations.Presets = []osbuild.Preset{
-		{
-			Name:  "ignition-firstboot-complete.service",
-			State: osbuild.StateEnable,
-		},
-		{
-			Name:  "coreos-ignition-write-issues.service",
-			State: osbuild.StateEnable,
-		},
-		{
-			Name:  "fdo-client-linuxapp.service",
-			State: osbuild.StateEnable,
-		},
+	imgConfig := t.getDefaultImageConfig()
+	if imgConfig != nil {
+		img.OSCustomizations.Presets = imgConfig.Presets
 	}
 
 	img.ContainerLanguage = img.OSCustomizations.Language
