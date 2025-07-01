@@ -239,7 +239,7 @@ func (ps *PackageSpec) GetNEVRA() string {
 func GetVerStrFromPackageSpecList(pkgs []PackageSpec, packageName string) (string, error) {
 	for _, pkg := range pkgs {
 		if pkg.Name == packageName {
-			return fmt.Sprintf("%s-%s.%s", pkg.Version, pkg.Release, pkg.Arch), nil
+			return pkg.GetEVRA(), nil
 		}
 	}
 	return "", fmt.Errorf("package %q not found in the PackageSpec list", packageName)
