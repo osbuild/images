@@ -213,23 +213,10 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 			}
 			v := toplevel.ImageTypes[name]
 			v.name = name
-			foundDistro.imageTypes[name] = v
-			for idx := range v.Platforms {
-				templ, err := template.New("uefi-vendor").Parse(v.Platforms[idx].UEFIVendor)
-				if err != nil {
-					return nil, err
-				}
-				var buf bytes.Buffer
-				input := struct {
-					DistroVendor string
-				}{
-					DistroVendor: foundDistro.Vendor,
-				}
-				if err := templ.Execute(&buf, input); err != nil {
-					return nil, err
-				}
-				v.Platforms[idx].UEFIVendor = buf.String()
+			if err := v.runTemplates(foundDistro); err != nil {
+				return nil, err
 			}
+			foundDistro.imageTypes[name] = v
 		}
 	}
 	foundDistro.imageConfig, err = toplevel.ImageConfig.For(nameVer)
@@ -372,6 +359,34 @@ type ImageTypeYAML struct {
 
 func (it *ImageTypeYAML) Name() string {
 	return it.name
+}
+
+func (it *ImageTypeYAML) runTemplates(distro *DistroYAML) error {
+	var data any
+	// set the DistroVendor in the struct only if its actually
+	// set, this ensures that the template execution fails if the
+	// template is used by the user has not set it
+	if distro.Vendor != "" {
+		data = struct {
+			DistroVendor string
+		}{
+			DistroVendor: distro.Vendor,
+		}
+	}
+	for idx := range it.Platforms {
+		// fill the UEFI vendor string
+		templ, err := template.New("uefi-vendor").Parse(it.Platforms[idx].UEFIVendor)
+		templ.Option("missingkey=error")
+		if err != nil {
+			return fmt.Errorf(`cannot parse template for "vendor" field: %w`, err)
+		}
+		var buf bytes.Buffer
+		if err := templ.Execute(&buf, data); err != nil {
+			return fmt.Errorf(`cannot execute template for "vendor" field (is it set?): %w`, err)
+		}
+		it.Platforms[idx].UEFIVendor = buf.String()
+	}
+	return nil
 }
 
 type imageConfig struct {
