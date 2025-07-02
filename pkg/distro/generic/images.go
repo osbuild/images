@@ -685,6 +685,9 @@ func iotCommitImage(workload workload.Workload,
 	imgConfig := t.getDefaultImageConfig()
 	if imgConfig != nil {
 		img.OSCustomizations.Presets = imgConfig.Presets
+		if imgConfig.InstallWeakDeps != nil {
+			img.InstallWeakDeps = *imgConfig.InstallWeakDeps
+		}
 	}
 
 	img.Environment = &t.ImageTypeYAML.Environment
@@ -692,11 +695,6 @@ func iotCommitImage(workload workload.Workload,
 	img.OSTreeParent = parentCommit
 	img.OSVersion = d.OsVersion()
 	img.Filename = t.Filename()
-	// no weak deps by default but let the imagetype override it
-	img.InstallWeakDeps = false
-	if imgConfig != nil && imgConfig.InstallWeakDeps != nil {
-		img.InstallWeakDeps = *imgConfig.InstallWeakDeps
-	}
 
 	return img, nil
 }
@@ -763,6 +761,9 @@ func iotContainerImage(workload workload.Workload,
 	imgConfig := t.getDefaultImageConfig()
 	if imgConfig != nil {
 		img.OSCustomizations.Presets = imgConfig.Presets
+		if imgConfig.InstallWeakDeps != nil {
+			img.OSCustomizations.InstallWeakDeps = *imgConfig.InstallWeakDeps
+		}
 	}
 
 	img.ContainerLanguage = img.OSCustomizations.Language
