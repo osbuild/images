@@ -937,7 +937,7 @@ image_types:
     bootable: true
     image_func: "iot"
     ostree:
-      name: "fedora"
+      name: "fedora-iot"
       remote_name: "fedora-iot"
     build_pipelines: ["build"]
     payload_pipelines: ["ostree-deployment", "image", "xz"]
@@ -1016,7 +1016,7 @@ image_types:
     bootable: true
     image_func: "iot"
     ostree:
-      name: "fedora"
+      name: "fedora-iot"
       remote_name: "fedora-iot"
     build_pipelines: ["build"]
     payload_pipelines: ["ostree-deployment", "image", "qcow2"]
