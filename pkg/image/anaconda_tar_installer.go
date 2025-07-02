@@ -94,17 +94,13 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	buildPipeline := addBuildBootstrapPipelines(m, runner, repos, nil)
 	buildPipeline.Checkpoint()
 
-	if img.Kickstart == nil {
-		img.Kickstart = &kickstart.Options{}
-	}
-
-	if img.Kickstart.Unattended {
+	if img.Kickstart != nil && img.Kickstart.Unattended {
 		// if we're building an unattended installer, override the
 		// ISORootKickstart option
 		img.ISORootKickstart = true
 	}
 
-	if img.ISORootKickstart {
+	if img.Kickstart != nil && img.ISORootKickstart {
 		// kickstart file will be in the iso root and not interactive-defaults,
 		// so let's make sure the kickstart path option is set
 		if img.Kickstart.Path == "" {
@@ -112,8 +108,13 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 		}
 	}
 
+	installerType := manifest.AnacondaInstallerTypeNetinst
+	if img.Kickstart != nil {
+		installerType = manifest.AnacondaInstallerTypePayload
+	}
+
 	anacondaPipeline := manifest.NewAnacondaInstaller(
-		manifest.AnacondaInstallerTypePayload,
+		installerType,
 		buildPipeline,
 		img.Platform,
 		repos,
@@ -150,7 +151,7 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 
 	tarPath := "/liveimg.tar.gz"
 
-	if !img.ISORootKickstart {
+	if img.Kickstart != nil && !img.ISORootKickstart {
 		payloadPath := filepath.Join("/run/install/repo/", tarPath)
 		anacondaPipeline.InteractiveDefaults = manifest.NewAnacondaInteractiveDefaults(fmt.Sprintf("file://%s", payloadPath))
 	}
@@ -171,7 +172,7 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	bootTreePipeline.ISOLabel = img.ISOLabel
 
 	kernelOpts := []string{fmt.Sprintf("inst.stage2=hd:LABEL=%s", img.ISOLabel)}
-	if img.ISORootKickstart {
+	if img.Kickstart != nil && img.ISORootKickstart {
 		kernelOpts = append(kernelOpts, fmt.Sprintf("inst.ks=hd:LABEL=%s:%s", img.ISOLabel, img.Kickstart.Path))
 	}
 	if img.OSCustomizations.FIPS {
@@ -180,10 +181,14 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	kernelOpts = append(kernelOpts, img.AdditionalKernelOpts...)
 	bootTreePipeline.KernelOpts = kernelOpts
 
-	osPipeline := manifest.NewOS(buildPipeline, img.Platform, repos)
-	osPipeline.OSCustomizations = img.OSCustomizations
-	osPipeline.Environment = img.Environment
-	osPipeline.Workload = img.Workload
+	// Payload type uses an OS Pipeline for the payload
+	var osPipeline *manifest.OS
+	if anacondaPipeline.Type == manifest.AnacondaInstallerTypePayload {
+		osPipeline = manifest.NewOS(buildPipeline, img.Platform, repos)
+		osPipeline.OSCustomizations = img.OSCustomizations
+		osPipeline.Environment = img.Environment
+		osPipeline.Workload = img.Workload
+	}
 
 	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
 	// TODO: the partition table is required - make it a ctor arg or set a default one in the pipeline
@@ -191,7 +196,7 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoTreePipeline.Release = img.Release
 	isoTreePipeline.Kickstart = img.Kickstart
 	isoTreePipeline.PayloadPath = tarPath
-	if img.ISORootKickstart {
+	if img.Kickstart != nil && img.ISORootKickstart {
 		isoTreePipeline.Kickstart.Path = img.Kickstart.Path
 	}
 
