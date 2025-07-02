@@ -96,7 +96,11 @@ func newDistro(nameVer string) (distro.Distro, error) {
 		if imgTypeYAML.Filename == "" {
 			continue
 		}
-		for _, pl := range imgTypeYAML.Platforms {
+		platforms, err := imgTypeYAML.PlatformsFor(nameVer)
+		if err != nil {
+			return nil, err
+		}
+		for _, pl := range platforms {
 			ar, ok := rd.arches[pl.Arch.String()]
 			if !ok {
 				ar = newArchitecture(rd, pl.Arch.String())
