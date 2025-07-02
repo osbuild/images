@@ -703,7 +703,7 @@ distros:
 			QCOW2Compat:  "1.1",
 			UEFIVendor:   "test-vendor",
 		},
-	}, imgType.Platforms)
+	}, imgType.InternalPlatforms)
 }
 
 func TestImageTypesUEFIVendorErrorWhenEmpty(t *testing.T) {
