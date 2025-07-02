@@ -18,6 +18,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/environment"
+	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/disk"
@@ -353,6 +354,8 @@ type ImageTypeYAML struct {
 	RequiredPartitionSizes map[string]uint64 `yaml:"required_partition_sizes"`
 
 	Platforms []platform.PlatformConf `yaml:"platforms"`
+
+	Workload *workload.WorkloadConf `yaml:"workload,omitempty"`
 
 	NameAliases []string `yaml:"name_aliases"`
 

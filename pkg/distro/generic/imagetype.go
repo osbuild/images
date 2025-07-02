@@ -40,7 +40,6 @@ type imageType struct {
 	platform platform.Platform
 
 	// XXX: make definable via YAML
-	workload               workload.Workload
 	defaultImageConfig     *distro.ImageConfig
 	defaultInstallerConfig *distro.InstallerConfig
 
@@ -257,8 +256,10 @@ func (t *imageType) Manifest(bp *blueprint.Blueprint,
 		}
 	}
 
-	w := t.workload
-	if w == nil {
+	var w workload.Workload
+	if t.ImageTypeYAML.Workload != nil {
+		w = t.ImageTypeYAML.Workload
+	} else {
 		// XXX: this needs to get duplicaed in exactly the same
 		// way in rhel/imagetype.go
 		workloadRepos := payloadRepos
