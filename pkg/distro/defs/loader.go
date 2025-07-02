@@ -102,7 +102,7 @@ type DistroYAML struct {
 	imageConfig *distro.ImageConfig `yaml:"default"`
 
 	// ignore the given image types
-	IgnoreImageTypes []string `yaml:"ignore_image_types"`
+	Conditions map[string]distroConditions `yaml:"conditions"`
 
 	// XXX: remove this in favor of a better abstraction, this
 	// is currently needed because the manifest pkg has conditionals
@@ -153,6 +153,22 @@ func (d *DistroYAML) runTemplates(nameVer string) error {
 	}
 
 	return errors.Join(errs...)
+}
+
+// XXX: is there a nice way?
+func (d *DistroYAML) SkipImageType(imgTypeName, archName string) bool {
+	if d.Conditions == nil {
+		return false
+	}
+	id := common.Must(distro.ParseID(d.Name))
+
+	for _, cond := range d.Conditions {
+		if cond.When.Eval(id, archName) && slices.Contains(cond.IgnoreImageTypes, imgTypeName) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // NewDistroYAML return the given distro or nil if the distro is not
@@ -214,12 +230,10 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 	if err := decoder.Decode(&toplevel); err != nil {
 		return nil, err
 	}
+
 	if len(toplevel.ImageTypes) > 0 {
 		foundDistro.imageTypes = make(map[string]ImageTypeYAML, len(toplevel.ImageTypes))
 		for name := range toplevel.ImageTypes {
-			if slices.Contains(foundDistro.IgnoreImageTypes, name) {
-				continue
-			}
 			v := toplevel.ImageTypes[name]
 			v.name = name
 			if err := v.runTemplates(foundDistro); err != nil {
@@ -234,6 +248,11 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 	}
 
 	return foundDistro, nil
+}
+
+type distroConditions struct {
+	When             *whenCondition `yaml:"when"`
+	IgnoreImageTypes []string       `yaml:"ignore_image_types"`
 }
 
 // imageTypesYAML describes the image types for a given distribution
@@ -253,6 +272,7 @@ type distroImageConfig struct {
 // multiple whenConditions are considred AND
 type whenCondition struct {
 	DistroName            string `yaml:"distro_name,omitempty"`
+	NotDistroName         string `yaml:"not_distro_name,omitempty"`
 	Architecture          string `yaml:"arch,omitempty"`
 	VersionLessThan       string `yaml:"version_less_than,omitempty"`
 	VersionGreaterOrEqual string `yaml:"version_greater_or_equal,omitempty"`
@@ -260,10 +280,17 @@ type whenCondition struct {
 }
 
 func (wc *whenCondition) Eval(id *distro.ID, archStr string) bool {
+	// empty conditions are always true
+	if wc == nil {
+		return true
+	}
 	match := true
 
 	if wc.DistroName != "" {
 		match = match && (wc.DistroName == id.Name)
+	}
+	if wc.NotDistroName != "" {
+		match = match && (wc.NotDistroName != id.Name)
 	}
 	if wc.Architecture != "" {
 		match = match && (wc.Architecture == archStr)
@@ -353,7 +380,8 @@ type ImageTypeYAML struct {
 	Exports                []string          `yaml:"exports"`
 	RequiredPartitionSizes map[string]uint64 `yaml:"required_partition_sizes"`
 
-	Platforms []platform.PlatformConf `yaml:"platforms"`
+	InternalPlatforms []platform.PlatformConf `yaml:"platforms"`
+	PlatformsOverride *platformsOverride      `yaml:"platforms_override"`
 
 	Workload *workload.WorkloadConf `yaml:"workload,omitempty"`
 
@@ -372,6 +400,24 @@ func (it *ImageTypeYAML) Name() string {
 	return it.name
 }
 
+func (it *ImageTypeYAML) PlatformsFor(distroNameVer string) ([]platform.PlatformConf, error) {
+	pl := it.InternalPlatforms
+	if it.PlatformsOverride != nil {
+		id, err := distro.ParseID(distroNameVer)
+		if err != nil {
+			return nil, err
+		}
+		for _, cond := range it.PlatformsOverride.Conditions {
+			// arch does not make sense for platform overrides
+			arch := ""
+			if cond.When.Eval(id, arch) {
+				pl = cond.Override
+			}
+		}
+	}
+	return pl, nil
+}
+
 func (it *ImageTypeYAML) runTemplates(distro *DistroYAML) error {
 	var data any
 	// set the DistroVendor in the struct only if its actually
@@ -384,20 +430,46 @@ func (it *ImageTypeYAML) runTemplates(distro *DistroYAML) error {
 			DistroVendor: distro.Vendor,
 		}
 	}
-	for idx := range it.Platforms {
-		// fill the UEFI vendor string
-		templ, err := template.New("uefi-vendor").Parse(it.Platforms[idx].UEFIVendor)
+	subs := func(inp string) (string, error) {
+		templ, err := template.New("uefi-vendor").Parse(inp)
 		templ.Option("missingkey=error")
 		if err != nil {
-			return fmt.Errorf(`cannot parse template for "vendor" field: %w`, err)
+			return "", fmt.Errorf(`cannot parse template for "vendor" field: %w`, err)
 		}
 		var buf bytes.Buffer
 		if err := templ.Execute(&buf, data); err != nil {
-			return fmt.Errorf(`cannot execute template for "vendor" field (is it set?): %w`, err)
+			return "", fmt.Errorf(`cannot execute template for "vendor" field (is it set?): %w`, err)
 		}
-		it.Platforms[idx].UEFIVendor = buf.String()
+		return buf.String(), nil
+	}
+	for idx := range it.InternalPlatforms {
+		newVendor, err := subs(it.InternalPlatforms[idx].UEFIVendor)
+		if err != nil {
+			return err
+		}
+		it.InternalPlatforms[idx].UEFIVendor = newVendor
+	}
+	if it.PlatformsOverride != nil {
+		for _, cond := range it.PlatformsOverride.Conditions {
+			for idx := range cond.Override {
+				newVendor, err := subs(cond.Override[idx].UEFIVendor)
+				if err != nil {
+					return err
+				}
+				cond.Override[idx].UEFIVendor = newVendor
+			}
+		}
 	}
 	return nil
+}
+
+type platformsOverride struct {
+	Conditions map[string]*conditionsPlatforms `yaml:"conditions,omitempty"`
+}
+
+type conditionsPlatforms struct {
+	When     whenCondition           `yaml:"when,omitempty"`
+	Override []platform.PlatformConf `yaml:"override"`
 }
 
 type imageConfig struct {
