@@ -706,6 +706,31 @@ distros:
 	}, imgType.Platforms)
 }
 
+func TestImageTypesUEFIVendorErrorWhenEmpty(t *testing.T) {
+	fakeDistroYaml := `
+image_types:
+  server-qcow2:
+    platforms:
+      - arch: x86_64
+        uefi_vendor: "{{.DistroVendor}}"
+`
+	fakeDistroName := "test-distro"
+	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	testDistroYAML := `
+distros:
+ - name: test-distro-1
+   defs_path: test-distro/
+`
+	err := os.WriteFile(filepath.Join(baseDir, "distros.yaml"), []byte(testDistroYAML), 0644)
+	require.NoError(t, err)
+
+	_, err = defs.NewDistroYAML("test-distro-1")
+	require.ErrorContains(t, err, `cannot execute template for "vendor" field (is it set?)`)
+}
+
 var fakeDistroYamlInstallerConf = `
 image_types:
   test_type:
