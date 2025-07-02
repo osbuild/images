@@ -1121,6 +1121,23 @@ image_types:
             - "dracut-config-rescue"
             # RHBZ#2075815
             - "qemu-guest-agent"
+            # RHEL-96793
+            - "conmon"
+            - "containers-common"
+            - "containers-common-extra"
+            - "container-selinux"
+            - "criu"
+            - "criu-libs"
+            - "crun"
+            - "libnet"
+            - "libnftnl"
+            - "netavark"
+            - "nftables"
+            - "passt"
+            - "passt-selinux"
+            - "podman"
+            - "protobuf-c"
+            - "shadow-utils-subid"
           conditions:
             <<: *conditions_pkgsets_insights_client_on_rhel
 

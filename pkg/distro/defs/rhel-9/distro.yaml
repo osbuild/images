@@ -92,6 +92,31 @@
       - "dracut-config-rescue"
       # RHBZ#2075815
       - "qemu-guest-agent"
+      # RHEL-96793
+      - "aardvark-dns"
+      - "conmon"
+      - "containers-common"
+      - "container-selinux"
+      - "criu"
+      - "criu-libs"
+      - "crun"
+      - "fuse3"
+      - "fuse3-libs"
+      - "fuse-common"
+      - "fuse-overlayfs"
+      - "iptables-nft"
+      - "libnet"
+      - "libnftnl"
+      - "libslirp"
+      - "netavark"
+      - "nftables"
+      - "passt"
+      - "passt-selinux"
+      - "podman"
+      - "protobuf-c"
+      - "shadow-utils-subid"
+      - "slirp4netns"
+      - "yajl"
     conditions:
       <<: *conditions_pkgsets_insights_client_on_rhel
       "rhel-9.6+ gets system-reinstall-bootc":
