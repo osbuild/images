@@ -956,7 +956,6 @@ func TestDistrosLoadingExact(t *testing.T) {
 		OSTreeRefTmpl:    "centos/10/%s/edge",
 		DefsPath:         "rhel-10",
 		DefaultFSType:    disk.FS_XFS,
-		IgnoreImageTypes: []string{"test_type"},
 	}, distro)
 }
 

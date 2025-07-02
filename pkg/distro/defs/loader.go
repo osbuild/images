@@ -102,7 +102,7 @@ type DistroYAML struct {
 	imageConfig *distro.ImageConfig `yaml:"default"`
 
 	// ignore the given image types
-	IgnoreImageTypes []string `yaml:"ignore_image_types"`
+	Conditions map[string]distroConditions `yaml:"conditions"`
 
 	// XXX: remove this in favor of a better abstraction, this
 	// is currently needed because the manifest pkg has conditionals
@@ -153,6 +153,22 @@ func (d *DistroYAML) runTemplates(nameVer string) error {
 	}
 
 	return errors.Join(errs...)
+}
+
+// XXX: ugly
+func (d *DistroYAML) SkipImageType(imgTypeName, archName string) bool {
+	if d.Conditions == nil {
+		return false
+	}
+	id := common.Must(distro.ParseID(d.Name))
+
+	for _, cond := range d.Conditions {
+		if cond.When.Eval(id, archName) && slices.Contains(cond.IgnoreImageTypes, imgTypeName) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // NewDistroYAML return the given distro or nil if the distro is not
@@ -214,12 +230,10 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 	if err := decoder.Decode(&toplevel); err != nil {
 		return nil, err
 	}
+
 	if len(toplevel.ImageTypes) > 0 {
 		foundDistro.imageTypes = make(map[string]ImageTypeYAML, len(toplevel.ImageTypes))
 		for name := range toplevel.ImageTypes {
-			if slices.Contains(foundDistro.IgnoreImageTypes, name) {
-				continue
-			}
 			v := toplevel.ImageTypes[name]
 			v.name = name
 			if err := v.runTemplates(foundDistro); err != nil {
@@ -234,6 +248,11 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 	}
 
 	return foundDistro, nil
+}
+
+type distroConditions struct {
+	When             *whenCondition `yaml:"when"`
+	IgnoreImageTypes []string       `yaml:"ignore_image_types"`
 }
 
 // imageTypesYAML describes the image types for a given distribution
@@ -253,6 +272,7 @@ type distroImageConfig struct {
 // multiple whenConditions are considred AND
 type whenCondition struct {
 	DistroName            string `yaml:"distro_name,omitempty"`
+	NotDistroName         string `yaml:"not_distro_name,omitempty"`
 	Architecture          string `yaml:"arch,omitempty"`
 	VersionLessThan       string `yaml:"version_less_than,omitempty"`
 	VersionGreaterOrEqual string `yaml:"version_greater_or_equal,omitempty"`
@@ -264,6 +284,9 @@ func (wc *whenCondition) Eval(id *distro.ID, archStr string) bool {
 
 	if wc.DistroName != "" {
 		match = match && (wc.DistroName == id.Name)
+	}
+	if wc.NotDistroName != "" {
+		match = match && (wc.NotDistroName != id.Name)
 	}
 	if wc.Architecture != "" {
 		match = match && (wc.Architecture == archStr)

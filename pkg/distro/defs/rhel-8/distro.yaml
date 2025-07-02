@@ -803,7 +803,7 @@
           - "grub2-pc"
       build_packages:
         bios:
-          - "grub2-pc"          
+          - "grub2-pc"
     # XXX: rename to bareMetalX86Platform?
     x86_64_installer_platform: &x86_64_installer_platform
       <<: *x86_64_bios_platform

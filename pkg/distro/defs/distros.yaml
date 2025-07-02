@@ -81,6 +81,19 @@ distros:
         - "platform-python"  # osbuild
         - "systemd"  # systemd-tmpfiles and systemd-sysusers
         - "python3"  # osbuild stages
+    conditions:
+      "some image types are rhel-only":
+        when:
+          # if only we had starlark (or something like it) :( 
+          not_distro_name: "rhel"
+        ignore_image_types:
+          - azure-cvm
+          - azure-rhui
+          - azure-sap-rhui
+          - azure-sapapps-rhui
+          - ec2
+          - ec2-sap
+          - ec2-ha
     # rhel9 & cs9 share the same list
     # of allowed profiles so a single
     # allow list can be used
@@ -111,6 +124,7 @@ distros:
     iso_label_tmpl: "AlmaLinux-{{.Distro.MajorVersion}}-{{.Distro.MinorVersion}}-{{.Arch}}-dvd"
 
   - &centos10
+    <<: *rhel10
     name: centos-10
     distro_like: rhel-10
     product: "CentOS Stream"
@@ -122,14 +136,6 @@ distros:
     default_fs_type: "xfs"
     defs_path: rhel-10
     iso_label_tmpl: "CentOS-Stream-{{.Distro.MajorVersion}}-BaseOS-{{.Arch}}"
-    ignore_image_types:
-      - azure-cvm
-      - azure-rhui
-      - azure-sap-rhui
-      - azure-sapapps-rhui
-      - ec2
-      - ec2-sap
-      - ec2-ha
     runner:
       name: org.osbuild.centos10
       build_packages:
@@ -161,6 +167,25 @@ distros:
     default_fs_type: "xfs"
     defs_path: rhel-8
     iso_label_tmpl: "RHEL-{{.Distro.MajorVersion}}-{{.Distro.MinorVersion}}-0-BaseOS-{{.Arch}}"
+    conditions:
+      "edge image types require FDO which aren't available on older versions":
+        when:
+          version_less_than: "8.6"
+        ignore_image_types:
+          - "edge-simplified-installer"
+          - "edge-raw-image"
+      "azure eap7 is only available for rhel8.6+":
+        when:
+          version_less_than: "8.6"
+        ignore_image_types:
+          - "azure-eap7-rhui"
+      "Azure image types require hyperv-daemons which isn't available on older versions":
+        when:
+          version_less_than: "8.6"
+          arch: "aarch64"
+        ignore_image_types:
+          - "azure-rhui"
+          - "vhd"
     runner:
       name: "org.osbuild.rhel{{.MajorVersion}}{{.MinorVersion}}"
       build_packages: &rhel_runner_build_packages
