@@ -370,7 +370,8 @@ type ImageTypeYAML struct {
 	Exports                []string          `yaml:"exports"`
 	RequiredPartitionSizes map[string]uint64 `yaml:"required_partition_sizes"`
 
-	Platforms []platform.PlatformConf `yaml:"platforms"`
+	InternalPlatforms []platform.PlatformConf `yaml:"platforms"`
+	PlatformsOverride *platformsOverride      `yaml:"platforms_override"`
 
 	NameAliases []string `yaml:"name_aliases"`
 
@@ -389,6 +390,29 @@ func (it *ImageTypeYAML) Name() string {
 	return it.name
 }
 
+func (it *ImageTypeYAML) PlatformsFor(distroNameVer string) ([]platform.PlatformConf, error) {
+	pl := it.InternalPlatforms
+	if it.PlatformsOverride != nil {
+		id, err := distro.ParseID(distroNameVer)
+		if err != nil {
+			return nil, err
+		}
+		var nMatches int
+		for _, cond := range it.PlatformsOverride.Conditions {
+			// arch does not make sense for platform overrides
+			arch := ""
+			if cond.When.Eval(id, arch) {
+				pl = cond.Override
+				nMatches++
+			}
+		}
+		if nMatches > 1 {
+			return nil, fmt.Errorf("platform conditionals for image type %q should match only once but matched %v times", it.Name(), nMatches)
+		}
+	}
+	return pl, nil
+}
+
 func (it *ImageTypeYAML) runTemplates(distro *DistroYAML) error {
 	var data any
 	// set the DistroVendor in the struct only if its actually
@@ -401,20 +425,46 @@ func (it *ImageTypeYAML) runTemplates(distro *DistroYAML) error {
 			DistroVendor: distro.Vendor,
 		}
 	}
-	for idx := range it.Platforms {
-		// fill the UEFI vendor string
-		templ, err := template.New("uefi-vendor").Parse(it.Platforms[idx].UEFIVendor)
+	subs := func(inp string) (string, error) {
+		templ, err := template.New("uefi-vendor").Parse(inp)
 		templ.Option("missingkey=error")
 		if err != nil {
-			return fmt.Errorf(`cannot parse template for "vendor" field: %w`, err)
+			return "", fmt.Errorf(`cannot parse template for "vendor" field: %w`, err)
 		}
 		var buf bytes.Buffer
 		if err := templ.Execute(&buf, data); err != nil {
-			return fmt.Errorf(`cannot execute template for "vendor" field (is it set?): %w`, err)
+			return "", fmt.Errorf(`cannot execute template for "vendor" field (is it set?): %w`, err)
 		}
-		it.Platforms[idx].UEFIVendor = buf.String()
+		return buf.String(), nil
+	}
+	for idx := range it.InternalPlatforms {
+		newVendor, err := subs(it.InternalPlatforms[idx].UEFIVendor)
+		if err != nil {
+			return err
+		}
+		it.InternalPlatforms[idx].UEFIVendor = newVendor
+	}
+	if it.PlatformsOverride != nil {
+		for _, cond := range it.PlatformsOverride.Conditions {
+			for idx := range cond.Override {
+				newVendor, err := subs(cond.Override[idx].UEFIVendor)
+				if err != nil {
+					return err
+				}
+				cond.Override[idx].UEFIVendor = newVendor
+			}
+		}
 	}
 	return nil
+}
+
+type platformsOverride struct {
+	Conditions map[string]*conditionsPlatforms `yaml:"conditions,omitempty"`
+}
+
+type conditionsPlatforms struct {
+	When     whenCondition           `yaml:"when,omitempty"`
+	Override []platform.PlatformConf `yaml:"override"`
 }
 
 type imageConfig struct {

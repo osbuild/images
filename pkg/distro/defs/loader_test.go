@@ -314,6 +314,10 @@ image_types:
 var fakeImageTypesYaml = `
 image_types:
   test_type:
+    filename: "disk.img"
+    image_func: "disk"
+    platforms:
+      - arch: x86_64
     partition_table:
       test_arch: &test_arch_pt
         size: 1_000_000_000
@@ -704,7 +708,7 @@ distros:
 			QCOW2Compat:  "1.1",
 			UEFIVendor:   "test-vendor",
 		},
-	}, imgType.Platforms)
+	}, imgType.InternalPlatforms)
 }
 
 func TestImageTypesUEFIVendorErrorWhenEmpty(t *testing.T) {
@@ -1094,4 +1098,104 @@ func TestWhenConditionEvalAnd(t *testing.T) {
 	wc := &defs.WhenCondition{DistroName: "distro", Architecture: "arch"}
 	assert.Equal(t, wc.Eval(&distro.ID{Name: "distro"}, "other-arch"), false)
 	assert.Equal(t, wc.Eval(&distro.ID{Name: "distro"}, "arch"), true)
+}
+
+func TestImageTypesPlatformOverrides(t *testing.T) {
+	fakeImageTypesYaml := `
+image_types:
+  server-qcow2:
+    filename: "disk.qcow2"
+    exports: ["qcow2"]
+    platforms_override:
+      conditions:
+        "test platform override, simulate old distro is bios only":
+          when:
+            version_less_than: "2"
+          override:
+            - arch: x86_64
+              # note no uefi_vendor here
+    platforms:
+      - arch: x86_64
+        uefi_vendor: "some-uefi-vendor"
+`
+
+	fakeDistrosYAML := `
+distros:
+ - name: test-distro-1
+   vendor: test-vendor
+   defs_path: test-distro/
+ - name: test-distro-2
+   vendor: test-vendor
+   defs_path: test-distro/
+`
+	baseDir := makeFakeDistrosYAML(t, fakeDistrosYAML, fakeImageTypesYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	for _, tc := range []struct {
+		distroNameVer      string
+		expectedUEFIVendor string
+	}{
+		{"test-distro-1", ""},
+		{"test-distro-2", "some-uefi-vendor"},
+	} {
+
+		distro, err := defs.NewDistroYAML(tc.distroNameVer)
+		require.NoError(t, err)
+
+		imgTypes := distro.ImageTypes()
+		assert.Len(t, imgTypes, 1)
+		imgType := imgTypes["server-qcow2"]
+		platforms, err := imgType.PlatformsFor(tc.distroNameVer)
+		assert.NoError(t, err)
+		assert.Equal(t, []platform.PlatformConf{
+			{
+				Arch:       arch.ARCH_X86_64,
+				UEFIVendor: tc.expectedUEFIVendor,
+			},
+		}, platforms)
+	}
+}
+
+func TestImageTypesPlatformOverridesMultiMarchError(t *testing.T) {
+	fakeImageTypesYaml := `
+image_types:
+  server-qcow2:
+    filename: "disk.qcow2"
+    exports: ["qcow2"]
+    platforms:
+      - arch: x86_64
+    platforms_override:
+      conditions:
+        "this is true":
+          when:
+            version_less_than: "2"
+          override:
+            - arch: x86_64
+              uefi_vendor: "uefi-for-ver-2"
+        "this is also true":
+          when:
+            version_less_than: "3"
+          override:
+            - arch: x86_64
+              uefi_vendor: "uefi-for-ver-3"
+`
+
+	fakeDistrosYAML := `
+distros:
+ - name: test-distro-1
+   vendor: test-vendor
+   defs_path: test-distro/
+`
+	baseDir := makeFakeDistrosYAML(t, fakeDistrosYAML, fakeImageTypesYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	distro, err := defs.NewDistroYAML("test-distro-1")
+	assert.NoError(t, err)
+	imgTypes := distro.ImageTypes()
+	assert.Len(t, imgTypes, 1)
+	imgType := imgTypes["server-qcow2"]
+	_, err = imgType.PlatformsFor("test-distro-1")
+	assert.EqualError(t, err, `platform conditionals for image type "server-qcow2" should match only once but matched 2 times`)
 }
