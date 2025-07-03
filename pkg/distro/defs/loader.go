@@ -329,11 +329,6 @@ type ImageTypeYAML struct {
 	// XXX: or iso_variant?
 	Variant string `yaml:"variant"`
 
-	// XXX: this is really here only for compatibility/because of drift in the "imageInstallerImage"
-	// between fedora/rhel
-	KickstartUnattendedExtraKernelOpts []string `yaml:"kickstart_unattended_extra_kernel_opts"`
-	ISORootKickstart                   bool     `yaml:"iso_root_kickstart"`
-
 	RPMOSTree bool `yaml:"rpm_ostree"`
 
 	OSTree struct {
@@ -405,8 +400,8 @@ type installerConfig struct {
 }
 
 type conditionsInstallerConf struct {
-	When     whenCondition           `yaml:"when,omitempty"`
-	Override *distro.InstallerConfig `yaml:"override,omitempty"`
+	When         whenCondition           `yaml:"when,omitempty"`
+	ShallowMerge *distro.InstallerConfig `yaml:"shallow_merge,omitempty"`
 }
 
 type packageSet struct {
@@ -545,7 +540,7 @@ func (imgType *ImageTypeYAML) InstallerConfig(distroNameVer, archName string) (*
 
 		for _, cond := range condMap {
 			if cond.When.Eval(id, archName) {
-				installerConfig = cond.Override
+				installerConfig = cond.ShallowMerge.InheritFrom(installerConfig)
 			}
 		}
 	}

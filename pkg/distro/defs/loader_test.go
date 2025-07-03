@@ -759,13 +759,13 @@ func TestImageTypeInstallerConfig(t *testing.T) {
 	}, installerConfig)
 }
 
-func TestImageTypeInstallerConfigOverrideVerLT(t *testing.T) {
+func TestImageTypeInstallerConfigMergeVerLT(t *testing.T) {
 	fakeDistroYaml := fakeDistroYamlInstallerConf + `
       conditions:
         "some description":
           when:
             version_less_than: "2"
-          override:
+          shallow_merge:
             additional_dracut_modules:
               - override-dracut-mod1
 `
@@ -777,20 +777,20 @@ func TestImageTypeInstallerConfigOverrideVerLT(t *testing.T) {
 	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type")
 	require.NoError(t, err)
 	assert.Equal(t, &distro.InstallerConfig{
+		// AdditionalDrivers,SquashfsRootfs merged from parent
+		AdditionalDrivers:       []string{"base-drv1"},
+		SquashfsRootfs:          common.ToPtr(true),
 		AdditionalDracutModules: []string{"override-dracut-mod1"},
-		// Note that there is no "AdditionalDrivers" here as
-		// the InstallerConfig is fully replaced, do any
-		// merging in YAML
 	}, installerConfig)
 }
 
-func TestImageTypeInstallerConfigOverrideDistroName(t *testing.T) {
+func TestImageTypeInstallerConfigMergeDistroName(t *testing.T) {
 	fakeDistroYaml := fakeDistroYamlInstallerConf + `
       conditions:
         "some description":
           when:
             distro_name: "test-distro"
-          override:
+          shallow_merge:
             additional_dracut_modules:
               - override-dracut-mod1
             additional_drivers:
@@ -807,16 +807,18 @@ func TestImageTypeInstallerConfigOverrideDistroName(t *testing.T) {
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDracutModules: []string{"override-dracut-mod1"},
 		AdditionalDrivers:       []string{"override-drv1"},
+		// SquashfsRootfs merged from parent
+		SquashfsRootfs: common.ToPtr(true),
 	}, installerConfig)
 }
 
-func TestImageTypeInstallerConfigOverrideArch(t *testing.T) {
+func TestImageTypeInstallerConfigMergeArch(t *testing.T) {
 	fakeDistroYaml := fakeDistroYamlInstallerConf + `
       conditions:
         "some description":
           when:
             arch: "test_arch"
-          override:
+          shallow_merge:
             additional_drivers:
              - override-drv1
 `
@@ -830,6 +832,9 @@ func TestImageTypeInstallerConfigOverrideArch(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDrivers: []string{"override-drv1"},
+		// AdditionalDracutModules,SquashfsRootfs merged from parent
+		AdditionalDracutModules: []string{"base-dracut-mod1"},
+		SquashfsRootfs:          common.ToPtr(true),
 	}, installerConfig)
 }
 

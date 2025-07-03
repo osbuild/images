@@ -1512,8 +1512,6 @@ image_types:
     bootable: true
     boot_iso: true
     image_func: "image_installer"
-    # see commit c6bfb22f54, controls the kickstart location
-    iso_root_kickstart: true
     # We don't know the variant of the OS pipeline being installed
     iso_label: "Unknown"
     build_pipelines: ["build"]
@@ -1534,6 +1532,8 @@ image_types:
       additional_drivers:
         - "ipmi_devintf"
         - "ipmi_msghandler"
+      # see commit c6bfb22f54, controls the kickstart location
+      iso_root_kickstart: true
     platforms:
       - *x86_64_installer_platform
       - *aarch64_platform
