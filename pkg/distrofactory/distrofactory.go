@@ -6,7 +6,6 @@ import (
 
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/generic"
-	"github.com/osbuild/images/pkg/distro/rhel/rhel9"
 	"github.com/osbuild/images/pkg/distro/test_distro"
 )
 
@@ -107,7 +106,6 @@ func New(factories ...FactoryFunc) *Factory {
 func NewDefault() *Factory {
 	return New(
 		generic.DistroFactory,
-		rhel9.DistroFactory,
 	)
 }
 

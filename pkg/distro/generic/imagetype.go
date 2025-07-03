@@ -424,6 +424,19 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 		}
 	}
 
+	if t.Name() == "edge-raw-image" || t.Name() == "edge-ami" || t.Name() == "edge-vsphere" {
+		// ostree-based bootable images require a URL from which to pull a payload commit
+		if options.OSTree == nil || options.OSTree.URL == "" {
+			return warnings, fmt.Errorf("%q images require specifying a URL from which to retrieve the OSTree commit", t.Name())
+		}
+
+		allowed := []string{"Ignition", "Kernel", "User", "Group", "FIPS", "Filesystem"}
+		if err := customizations.CheckAllowed(allowed...); err != nil {
+			return warnings, fmt.Errorf(distro.UnsupportedCustomizationError, t.Name(), strings.Join(allowed, ", "))
+		}
+		// TODO: consider additional checks, such as those in "edge-simplified-installer"
+	}
+
 	if kernelOpts := customizations.GetKernel(); kernelOpts.Append != "" && t.ImageTypeYAML.RPMOSTree {
 		return warnings, fmt.Errorf("kernel boot parameter customizations are not supported for ostree types")
 	}
@@ -433,11 +446,14 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 	if err != nil {
 		return warnings, err
 	}
-	if (len(mountpoints) > 0 || partitioning != nil) && t.ImageTypeYAML.RPMOSTree {
-		return warnings, fmt.Errorf("Custom mountpoints and partitioning are not supported for ostree types")
-	}
-	if len(mountpoints) > 0 && partitioning != nil {
-		return warnings, fmt.Errorf("partitioning customizations cannot be used with custom filesystems (mountpoints)")
+	if (mountpoints != nil || partitioning != nil) && t.RPMOSTree && (t.Name() == "edge-container" || t.Name() == "edge-commit") {
+		return warnings, fmt.Errorf("custom mountpoints and partitioning are not supported for ostree types")
+	} else if (mountpoints != nil || partitioning != nil) && t.RPMOSTree && !(t.Name() == "edge-container" || t.Name() == "edge-commit") {
+		//customization allowed for edge-raw-image,edge-ami,edge-vsphere,edge-simplified-installer
+		err := blueprint.CheckMountpointsPolicy(mountpoints, policies.OstreeMountpointPolicies)
+		if err != nil {
+			return warnings, err
+		}
 	}
 
 	if err := blueprint.CheckMountpointsPolicy(mountpoints, policies.MountpointPolicies); err != nil {
