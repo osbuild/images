@@ -148,6 +148,73 @@ distros:
     vendor: "almalinux"
     ostree_ref_tmpl: "almalinux/10/%s/edge"
 
+  - &rhel9
+    name: "rhel-{{.MajorVersion}}.{{.MinorVersion}}"
+    match: "rhel-9.[0-9]{,[0-9]}"
+    # rhel9 support being named "rhel-91" for "rhel-9.1" or "rhel-910" for "rhel-9.10" etc
+    transform_re: "^(?P<name>rhel)-(?P<major>9)(?P<minor>[0-9]{1,2})$"
+    distro_like: rhel-9
+    product: "Red Hat Enterprise Linux"
+    os_version: "9.{{.MinorVersion}}"
+    release_version: 9
+    module_platform_id: "platform:el9"
+    vendor: "redhat"
+    ostree_ref_tmpl: "rhel/9/%s/edge"
+    default_fs_type: "xfs"
+    defs_path: rhel-9
+    iso_label_tmpl: "RHEL-{{.Distro.MajorVersion}}-{{.Distro.MinorVersion}}-0-BaseOS-{{.Arch}}"
+    conditions:
+      "some image types are rhel-only":
+        when:
+          not_distro_name: "rhel"
+        ignore_image_types:
+          - azure-cvm
+          - azure-rhui
+          - azure-sap-rhui
+          - azure-sapapps-rhui
+          - ec2
+          - ec2-sap
+          - ec2-ha
+      "CVM is only available starting from 9.6":
+        when:
+          version_less_than: "9.6"
+        ignore_image_types:
+          - "azure-cvm"
+    runner:
+      name: "org.osbuild.rhel{{.MajorVersion}}{{.MinorVersion}}"
+      build_packages: &rhel9_runner_build_packages
+        - "glibc"  # ldconfig
+        - "systemd"  # systemd-tmpfiles and systemd-sysusers
+        - "platform-python"  # osbuild
+        - "python3"
+    # rhel9 allow all
+    oscap_profiles_allowlist: *oscap_profile_allowlist_rhel
+    bootstrap_containers:
+      x86_64: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
+      aarch64: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
+      ppc64le: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
+      s390x: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
+
+  - &centos9
+    <<: *rhel9
+    name: centos-9
+    distro_like: rhel-9
+    product: "CentOS Stream"
+    os_version: "9-stream"
+    vendor: "centos"
+    ostree_ref_tmpl: "centos/9/%s/edge"
+    default_fs_type: "xfs"
+    defs_path: rhel-9
+    iso_label_tmpl: "CentOS-Stream-{{.Distro.MajorVersion}}-BaseOS-{{.Arch}}"
+    runner:
+      name: org.osbuild.centos9
+      build_packages: *rhel9_runner_build_packages
+    bootstrap_containers:
+      # we need the toolbox container because stock centos has e.g. no
+      # mount util
+      x86_64: "quay.io/toolbx-images/centos-toolbox:stream{{.MajorVersion}}"
+      aarch64: "quay.io/toolbx-images/centos-toolbox:stream{{.MajorVersion}}"
+
   - &rhel8
     name: "rhel-{{.MajorVersion}}.{{.MinorVersion}}"
     match: "rhel-8.[0-9]{,[0-9]}"
