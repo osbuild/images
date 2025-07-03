@@ -34,6 +34,8 @@ func findStages(name string, stages []*osbuild.Stage) []*osbuild.Stage {
 
 // CheckSystemdStageOptions checks the Command strings
 func CheckSystemdStageOptions(t *testing.T, stages []*osbuild.Stage, commands []string) {
+	t.Helper()
+
 	// Find the systemd.unit.create stage
 	s := manifest.FindStage("org.osbuild.systemd.unit.create", stages)
 	require.NotNil(t, s)
@@ -51,7 +53,7 @@ func CheckSystemdStageOptions(t *testing.T, stages []*osbuild.Stage, commands []
 
 	execStart := options.Config.Service.ExecStart
 	// the rm command gets prepended in every case
-	commands = append(commands, fmt.Sprintf("/usr/bin/rm %s", keyfile))
+	commands = append(commands, fmt.Sprintf("/usr/bin/rm '%s'", keyfile))
 	require.Equal(t, len(execStart), len(commands))
 
 	// Make sure the commands are the same
@@ -84,7 +86,7 @@ func TestSubscriptionManagerCommands(t *testing.T) {
 	}
 	pipeline := os.Serialize()
 	CheckSystemdStageOptions(t, pipeline.Stages, []string{
-		"/usr/sbin/subscription-manager register --org=${ORG_ID} --activationkey=${ACTIVATION_KEY} --serverurl subscription.rhsm.redhat.com --baseurl http://cdn.redhat.com/",
+		"/usr/sbin/subscription-manager register --org=${ORG_ID} --activationkey=${ACTIVATION_KEY} --serverurl 'subscription.rhsm.redhat.com' --baseurl 'http://cdn.redhat.com/'",
 	})
 }
 
@@ -99,7 +101,7 @@ func TestSubscriptionManagerInsightsCommands(t *testing.T) {
 	}
 	pipeline := os.Serialize()
 	CheckSystemdStageOptions(t, pipeline.Stages, []string{
-		"/usr/sbin/subscription-manager register --org=${ORG_ID} --activationkey=${ACTIVATION_KEY} --serverurl subscription.rhsm.redhat.com --baseurl http://cdn.redhat.com/",
+		"/usr/sbin/subscription-manager register --org=${ORG_ID} --activationkey=${ACTIVATION_KEY} --serverurl 'subscription.rhsm.redhat.com' --baseurl 'http://cdn.redhat.com/'",
 		"/usr/bin/insights-client --register",
 	})
 }
@@ -117,7 +119,7 @@ func TestRhcInsightsCommands(t *testing.T) {
 	os.OSCustomizations.PermissiveRHC = common.ToPtr(true)
 	pipeline := os.Serialize()
 	CheckSystemdStageOptions(t, pipeline.Stages, []string{
-		"/usr/bin/rhc connect --organization=${ORG_ID} --activation-key=${ACTIVATION_KEY} --server subscription.rhsm.redhat.com",
+		"/usr/bin/rhc connect --organization=${ORG_ID} --activation-key=${ACTIVATION_KEY} --server 'subscription.rhsm.redhat.com'",
 		"/usr/sbin/semanage permissive --add rhcd_t",
 	})
 }
