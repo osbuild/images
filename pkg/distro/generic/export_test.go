@@ -19,3 +19,9 @@ func GetPartitionTable(it distro.ImageType) (*disk.PartitionTable, error) {
 func BootstrapContainerFor(it distro.ImageType) string {
 	return bootstrapContainerFor(it.(*imageType))
 }
+
+type ImageType = imageType
+
+func (t *imageType) GetDefaultImageConfig() *distro.ImageConfig {
+	return t.getDefaultImageConfig()
+}

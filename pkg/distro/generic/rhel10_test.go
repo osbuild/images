@@ -1,6 +1,7 @@
-package rhel10_test
+package generic_test
 
 import (
+	"sort"
 	"strings"
 	"testing"
 
@@ -11,23 +12,22 @@ import (
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/distro_test_common"
-	"github.com/osbuild/images/pkg/distro/rhel"
-	"github.com/osbuild/images/pkg/distro/rhel/rhel10"
+	"github.com/osbuild/images/pkg/distro/generic"
 )
 
-type rhelFamilyDistro struct {
+type rhel10FamilyDistro struct {
 	name   string
 	distro distro.Distro
 }
 
-var rhelFamilyDistros = []rhelFamilyDistro{
+var rhel10FamilyDistros = []rhel10FamilyDistro{
 	{
 		name:   "rhel-10.0",
-		distro: rhel10.DistroFactory("rhel-10.0"),
+		distro: generic.DistroFactory("rhel-10.0"),
 	},
 }
 
-func TestFilenameFromType(t *testing.T) {
+func TestRH10FilenameFromType(t *testing.T) {
 	type args struct {
 		outputFormat string
 	}
@@ -95,7 +95,7 @@ func TestFilenameFromType(t *testing.T) {
 			want: wantResult{wantErr: true},
 		},
 	}
-	for _, dist := range rhelFamilyDistros {
+	for _, dist := range rhel10FamilyDistros {
 		t.Run(dist.name, func(t *testing.T) {
 			for _, tt := range tests {
 				t.Run(tt.name, func(t *testing.T) {
@@ -122,7 +122,7 @@ func TestFilenameFromType(t *testing.T) {
 	}
 }
 
-func TestImageType_BuildPackages(t *testing.T) {
+func TestRH10ImageType_BuildPackages(t *testing.T) {
 	x8664BuildPackages := []string{
 		"dnf",
 		"dosfstools",
@@ -150,7 +150,7 @@ func TestImageType_BuildPackages(t *testing.T) {
 		"x86_64":  x8664BuildPackages,
 		"aarch64": aarch64BuildPackages,
 	}
-	for _, dist := range rhelFamilyDistros {
+	for _, dist := range rhel10FamilyDistros {
 		t.Run(dist.name, func(t *testing.T) {
 			d := dist.distro
 			for _, archLabel := range d.ListArches() {
@@ -175,7 +175,7 @@ func TestImageType_BuildPackages(t *testing.T) {
 	}
 }
 
-func TestImageType_Name(t *testing.T) {
+func TestRH10ImageType_Name(t *testing.T) {
 	imgMap := []struct {
 		arch     string
 		imgNames []string
@@ -216,7 +216,7 @@ func TestImageType_Name(t *testing.T) {
 		},
 	}
 
-	for _, dist := range rhelFamilyDistros {
+	for _, dist := range rhel10FamilyDistros {
 		t.Run(dist.name, func(t *testing.T) {
 			for _, mapping := range imgMap {
 				if mapping.arch == arch.ARCH_S390X.String() && dist.name == "centos" {
@@ -238,10 +238,10 @@ func TestImageType_Name(t *testing.T) {
 
 // Check that Manifest() function returns an error for unsupported
 // configurations.
-func TestDistro_ManifestError(t *testing.T) {
+func TestRH10Distro_ManifestError(t *testing.T) {
 	// Currently, the only unsupported configuration is OSTree commit types
 	// with Kernel boot options
-	r10distro := rhelFamilyDistros[0].distro
+	r10distro := rhel10FamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Kernel: &blueprint.KernelCustomization{
@@ -263,7 +263,7 @@ func TestDistro_ManifestError(t *testing.T) {
 	}
 }
 
-func TestArchitecture_ListImageTypes(t *testing.T) {
+func TestRH10Architecture_ListImageTypes(t *testing.T) {
 	imgMap := []struct {
 		arch                     string
 		imgNames                 []string
@@ -322,7 +322,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 		},
 	}
 
-	for _, dist := range rhelFamilyDistros {
+	for _, dist := range rhel10FamilyDistros {
 		t.Run(dist.name, func(t *testing.T) {
 			for _, mapping := range imgMap {
 				arch, err := dist.distro.GetArch(mapping.arch)
@@ -335,18 +335,20 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 					expectedImageTypes = append(expectedImageTypes, mapping.rhelAdditionalImageTypes...)
 				}
 
-				require.ElementsMatch(t, expectedImageTypes, imageTypes)
+				sort.Strings(expectedImageTypes)
+				sort.Strings(imageTypes)
+				require.Equal(t, expectedImageTypes, imageTypes)
 			}
 		})
 	}
 }
 
-func TestRhel10_ListArches(t *testing.T) {
-	arches := rhelFamilyDistros[0].distro.ListArches()
+func TestRH10Rhel10_ListArches(t *testing.T) {
+	arches := rhel10FamilyDistros[0].distro.ListArches()
 	assert.Equal(t, []string{"aarch64", "ppc64le", "s390x", "x86_64"}, arches)
 }
 
-func TestRhel10_GetArch(t *testing.T) {
+func TestRH10Rhel10_GetArch(t *testing.T) {
 	arches := []struct {
 		name                  string
 		errorExpected         bool
@@ -370,7 +372,7 @@ func TestRhel10_GetArch(t *testing.T) {
 		},
 	}
 
-	for _, dist := range rhelFamilyDistros {
+	for _, dist := range rhel10FamilyDistros {
 		t.Run(dist.name, func(t *testing.T) {
 			for _, a := range arches {
 				actualArch, err := dist.distro.GetArch(a.name)
@@ -386,30 +388,30 @@ func TestRhel10_GetArch(t *testing.T) {
 	}
 }
 
-func TestRhel10_Name(t *testing.T) {
-	distro := rhelFamilyDistros[0].distro
+func TestRH10Rhel10_Name(t *testing.T) {
+	distro := rhel10FamilyDistros[0].distro
 	assert.Equal(t, "rhel-10.0", distro.Name())
 }
 
-func TestRhel10_ModulePlatformID(t *testing.T) {
-	distro := rhelFamilyDistros[0].distro
+func TestRH10Rhel10_ModulePlatformID(t *testing.T) {
+	distro := rhel10FamilyDistros[0].distro
 	assert.Equal(t, "platform:el10", distro.ModulePlatformID())
 }
 
-func TestRhel10_KernelOption(t *testing.T) {
-	distro_test_common.TestDistro_KernelOption(t, rhelFamilyDistros[0].distro)
+func TestRH10Rhel10_KernelOption(t *testing.T) {
+	distro_test_common.TestDistro_KernelOption(t, rhel10FamilyDistros[0].distro)
 }
 
-func TestRhel10_KernelOption_NoIfnames(t *testing.T) {
+func TestRH10Rhel10_KernelOption_NoIfnames(t *testing.T) {
 	for _, distroName := range []string{"rhel-10.0", "centos-10"} {
-		distro := rhel10.DistroFactory(distroName)
+		distro := generic.DistroFactory(distroName)
 		for _, archName := range distro.ListArches() {
 			arch, err := distro.GetArch(archName)
 			assert.NoError(t, err)
 			for _, imgTypeName := range arch.ListImageTypes() {
 				imgType, err := arch.GetImageType(imgTypeName)
 				assert.NoError(t, err)
-				imgCfg := imgType.(*rhel.ImageType).DefaultImageConfig
+				imgCfg := imgType.(*generic.ImageType).GetDefaultImageConfig()
 				if imgCfg != nil {
 					assert.NotContains(t, imgCfg.KernelOptions, "net.ifnames=0", "type %s contains unwanted net.ifnames=0", imgType.Name())
 				}
@@ -418,8 +420,8 @@ func TestRhel10_KernelOption_NoIfnames(t *testing.T) {
 	}
 }
 
-func TestDistro_CustomFileSystemManifestError(t *testing.T) {
-	r10distro := rhelFamilyDistros[0].distro
+func TestRH10Distro_CustomFileSystemManifestError(t *testing.T) {
+	r10distro := rhel10FamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -440,8 +442,8 @@ func TestDistro_CustomFileSystemManifestError(t *testing.T) {
 	}
 }
 
-func TestDistro_TestRootMountPoint(t *testing.T) {
-	r10distro := rhelFamilyDistros[0].distro
+func TestRH10Distro_TestRootMountPoint(t *testing.T) {
+	r10distro := rhel10FamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -462,8 +464,8 @@ func TestDistro_TestRootMountPoint(t *testing.T) {
 	}
 }
 
-func TestDistro_CustomFileSystemSubDirectories(t *testing.T) {
-	r10distro := rhelFamilyDistros[0].distro
+func TestRH10Distro_CustomFileSystemSubDirectories(t *testing.T) {
+	r10distro := rhel10FamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -492,8 +494,8 @@ func TestDistro_CustomFileSystemSubDirectories(t *testing.T) {
 	}
 }
 
-func TestDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
-	r10distro := rhelFamilyDistros[0].distro
+func TestRH10Distro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
+	r10distro := rhel10FamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -530,8 +532,8 @@ func TestDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
 	}
 }
 
-func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
-	r10distro := rhelFamilyDistros[0].distro
+func TestRH10Distro_DirtyMountpointsNotAllowed(t *testing.T) {
+	r10distro := rhel10FamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -560,8 +562,8 @@ func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
 	}
 }
 
-func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
-	r10distro := rhelFamilyDistros[0].distro
+func TestRH10Distro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
+	r10distro := rhel10FamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -582,9 +584,9 @@ func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 	}
 }
 
-func TestDiskAndFilesystemCustomizationsError(t *testing.T) {
+func TestRH10DiskAndFilesystemCustomizationsError(t *testing.T) {
 	// simple test that checks that disk customizations are allowed
-	r8distro := rhelFamilyDistros[0].distro
+	r8distro := rhel10FamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -634,9 +636,9 @@ func TestDiskAndFilesystemCustomizationsError(t *testing.T) {
 	}
 }
 
-func TestNoDiskCustomizationsNoError(t *testing.T) {
+func TestRH10NoDiskCustomizationsNoError(t *testing.T) {
 	// simple test that checks that disk customizations are allowed
-	r8distro := rhelFamilyDistros[0].distro
+	r8distro := rhel10FamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Disk: &blueprint.DiskCustomization{

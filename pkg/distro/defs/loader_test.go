@@ -310,7 +310,7 @@ image_types:
 	}, partTable)
 }
 
-var fakeDistroYaml = `
+var fakeImageTypesYaml = `
 image_types:
   test_type:
     partition_table:
@@ -371,7 +371,7 @@ func TestDefsPartitionTableOverrideGreatEqual(t *testing.T) {
 	it := makeTestImageType(t)
 
 	// XXX: we cannot use distro.Name() as it will give us a name+ver
-	baseDir := makeFakeDefs(t, test_distro.TestDistroNameBase, fakeDistroYaml)
+	baseDir := makeFakeDefs(t, test_distro.TestDistroNameBase, fakeImageTypesYaml)
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
@@ -655,6 +655,7 @@ image_types:
         bios_platform: "powerpc-ieee1275"
         image_format: "qcow2"
         qcow2_compat: "1.1"
+        uefi_vendor: "{{.DistroVendor}}"
 `
 	fakeDistroName := "test-distro"
 	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
@@ -664,6 +665,7 @@ image_types:
 	testDistroYAML := `
 distros:
  - name: test-distro-1
+   vendor: test-vendor
    defs_path: test-distro/
 `
 	err := os.WriteFile(filepath.Join(baseDir, "distros.yaml"), []byte(testDistroYAML), 0644)
@@ -671,6 +673,7 @@ distros:
 
 	distro, err := defs.NewDistroYAML("test-distro-1")
 	require.NoError(t, err)
+
 	imgTypes := distro.ImageTypes()
 	assert.Len(t, imgTypes, 1)
 	imgType := imgTypes["server-qcow2"]
@@ -698,8 +701,34 @@ distros:
 			BIOSPlatform: "powerpc-ieee1275",
 			ImageFormat:  platform.FORMAT_QCOW2,
 			QCOW2Compat:  "1.1",
+			UEFIVendor:   "test-vendor",
 		},
 	}, imgType.Platforms)
+}
+
+func TestImageTypesUEFIVendorErrorWhenEmpty(t *testing.T) {
+	fakeDistroYaml := `
+image_types:
+  server-qcow2:
+    platforms:
+      - arch: x86_64
+        uefi_vendor: "{{.DistroVendor}}"
+`
+	fakeDistroName := "test-distro"
+	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	testDistroYAML := `
+distros:
+ - name: test-distro-1
+   defs_path: test-distro/
+`
+	err := os.WriteFile(filepath.Join(baseDir, "distros.yaml"), []byte(testDistroYAML), 0644)
+	require.NoError(t, err)
+
+	_, err = defs.NewDistroYAML("test-distro-1")
+	require.ErrorContains(t, err, `cannot execute template for "vendor" field (is it set?)`)
 }
 
 var fakeDistroYamlInstallerConf = `
@@ -730,13 +759,13 @@ func TestImageTypeInstallerConfig(t *testing.T) {
 	}, installerConfig)
 }
 
-func TestImageTypeInstallerConfigOverrideVerLT(t *testing.T) {
+func TestImageTypeInstallerConfigMergeVerLT(t *testing.T) {
 	fakeDistroYaml := fakeDistroYamlInstallerConf + `
       conditions:
         "some description":
           when:
             version_less_than: "2"
-          override:
+          shallow_merge:
             additional_dracut_modules:
               - override-dracut-mod1
 `
@@ -748,20 +777,20 @@ func TestImageTypeInstallerConfigOverrideVerLT(t *testing.T) {
 	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type")
 	require.NoError(t, err)
 	assert.Equal(t, &distro.InstallerConfig{
+		// AdditionalDrivers,SquashfsRootfs merged from parent
+		AdditionalDrivers:       []string{"base-drv1"},
+		SquashfsRootfs:          common.ToPtr(true),
 		AdditionalDracutModules: []string{"override-dracut-mod1"},
-		// Note that there is no "AdditionalDrivers" here as
-		// the InstallerConfig is fully replaced, do any
-		// merging in YAML
 	}, installerConfig)
 }
 
-func TestImageTypeInstallerConfigOverrideDistroName(t *testing.T) {
+func TestImageTypeInstallerConfigMergeDistroName(t *testing.T) {
 	fakeDistroYaml := fakeDistroYamlInstallerConf + `
       conditions:
         "some description":
           when:
             distro_name: "test-distro"
-          override:
+          shallow_merge:
             additional_dracut_modules:
               - override-dracut-mod1
             additional_drivers:
@@ -778,16 +807,18 @@ func TestImageTypeInstallerConfigOverrideDistroName(t *testing.T) {
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDracutModules: []string{"override-dracut-mod1"},
 		AdditionalDrivers:       []string{"override-drv1"},
+		// SquashfsRootfs merged from parent
+		SquashfsRootfs: common.ToPtr(true),
 	}, installerConfig)
 }
 
-func TestImageTypeInstallerConfigOverrideArch(t *testing.T) {
+func TestImageTypeInstallerConfigMergeArch(t *testing.T) {
 	fakeDistroYaml := fakeDistroYamlInstallerConf + `
       conditions:
         "some description":
           when:
             arch: "test_arch"
-          override:
+          shallow_merge:
             additional_drivers:
              - override-drv1
 `
@@ -801,10 +832,13 @@ func TestImageTypeInstallerConfigOverrideArch(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDrivers: []string{"override-drv1"},
+		// AdditionalDracutModules,SquashfsRootfs merged from parent
+		AdditionalDracutModules: []string{"base-dracut-mod1"},
+		SquashfsRootfs:          common.ToPtr(true),
 	}, installerConfig)
 }
 
-func makeFakeDistrosYAML(t *testing.T, content string) string {
+func makeFakeDistrosYAML(t *testing.T, content, imgTypes string) string {
 	t.Helper()
 
 	tmpdir := t.TempDir()
@@ -821,7 +855,7 @@ func makeFakeDistrosYAML(t *testing.T, content string) string {
 		p := filepath.Join(tmpdir, d.DefsPath, "distro.yaml")
 		err = os.MkdirAll(filepath.Dir(p), 0755)
 		assert.NoError(t, err)
-		err = os.WriteFile(p, []byte(`---`), 0644)
+		err = os.WriteFile(p, []byte(`---`+"\n"+imgTypes), 0644)
 		assert.NoError(t, err)
 	}
 
@@ -872,6 +906,7 @@ distros:
     ostree_ref_tmpl: "centos/10/%s/edge"
     default_fs_type: "xfs"
     defs_path: rhel-10
+    ignore_image_types: ["test_type"]
 
   - name: "rhel-{{.MajorVersion}}.{{.MinorVersion}}"
     match: "rhel-10.*"
@@ -886,7 +921,7 @@ distros:
 `
 
 func TestDistrosLoadingExact(t *testing.T) {
-	baseDir := makeFakeDistrosYAML(t, fakeDistrosYAML)
+	baseDir := makeFakeDistrosYAML(t, fakeDistrosYAML, "")
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
@@ -926,11 +961,12 @@ func TestDistrosLoadingExact(t *testing.T) {
 		OSTreeRefTmpl:    "centos/10/%s/edge",
 		DefsPath:         "rhel-10",
 		DefaultFSType:    disk.FS_XFS,
+		IgnoreImageTypes: []string{"test_type"},
 	}, distro)
 }
 
 func TestDistrosLoadingFactoryCompat(t *testing.T) {
-	baseDir := makeFakeDistrosYAML(t, fakeDistrosYAML)
+	baseDir := makeFakeDistrosYAML(t, fakeDistrosYAML, "")
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
@@ -974,8 +1010,25 @@ func TestDistrosLoadingFactoryCompat(t *testing.T) {
 	}, distro)
 }
 
+func TestDistrosLoadingIgnore(t *testing.T) {
+	// fakeImageTypes contains a single "test_type"
+	baseDir := makeFakeDistrosYAML(t, fakeDistrosYAML, fakeImageTypesYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	distro, err := defs.NewDistroYAML("fedora-43")
+	require.NoError(t, err)
+	// fedora-43 does not exclude this "test_type"
+	assert.Len(t, distro.ImageTypes(), 1)
+
+	distro, err = defs.NewDistroYAML("centos-10")
+	require.NoError(t, err)
+	// but centos-10 does exclude this "test_type"
+	assert.Len(t, distro.ImageTypes(), 0)
+}
+
 func TestDistrosLoadingNotFound(t *testing.T) {
-	baseDir := makeFakeDistrosYAML(t, fakeDistrosYAML)
+	baseDir := makeFakeDistrosYAML(t, fakeDistrosYAML, "")
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
