@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/subscription"
 	"github.com/osbuild/images/pkg/osbuild"
@@ -119,11 +120,11 @@ func subscriptionService(subscriptionOptions subscription.ImageOptions, serviceO
 	if subscriptionOptions.Rhc {
 		var curlToAssociateSystem string
 		// Use rhc for registration instead of subscription manager
-		rhcConnect := fmt.Sprintf("/usr/bin/rhc connect --organization=${ORG_ID} --activation-key=${ACTIVATION_KEY} --server %s", subscriptionOptions.ServerUrl)
+		rhcConnect := fmt.Sprintf("/usr/bin/rhc connect --organization=${ORG_ID} --activation-key=${ACTIVATION_KEY} --server %s", common.ShlexQuote(subscriptionOptions.ServerUrl))
 		if subscriptionOptions.TemplateUUID != "" {
 			curlToAssociateSystem = getCurlToAssociateSystem(subscriptionOptions)
 		} else if subscriptionOptions.TemplateName != "" {
-			rhcConnect += fmt.Sprintf(" --content-template=\"%s\"", subscriptionOptions.TemplateName)
+			rhcConnect += fmt.Sprintf(" --content-template=%s", common.ShlexQuote(subscriptionOptions.TemplateName))
 		}
 		commands = append(commands, rhcConnect)
 		// execute the rhc post install script as the selinuxenabled check doesn't work in the buildroot container
@@ -142,7 +143,7 @@ func subscriptionService(subscriptionOptions subscription.ImageOptions, serviceO
 			files = append(files, icFile)
 		}
 	} else {
-		commands = []string{fmt.Sprintf("/usr/sbin/subscription-manager register --org=${ORG_ID} --activationkey=${ACTIVATION_KEY} --serverurl %s --baseurl %s", subscriptionOptions.ServerUrl, subscriptionOptions.BaseUrl)}
+		commands = []string{fmt.Sprintf("/usr/sbin/subscription-manager register --org=${ORG_ID} --activationkey=${ACTIVATION_KEY} --serverurl %s --baseurl %s", common.ShlexQuote(subscriptionOptions.ServerUrl), common.ShlexQuote(subscriptionOptions.BaseUrl))}
 
 		// Insights is optional when using subscription-manager
 		if subscriptionOptions.Insights {
@@ -164,7 +165,7 @@ func subscriptionService(subscriptionOptions subscription.ImageOptions, serviceO
 		}
 	}
 
-	commands = append(commands, fmt.Sprintf("/usr/bin/rm %s", subkeyFilepath))
+	commands = append(commands, fmt.Sprintf("/usr/bin/rm %s", common.ShlexQuote(subkeyFilepath)))
 
 	subscribeServiceFile := "osbuild-subscription-register.service"
 	regServiceStageOptions := &osbuild.SystemdUnitCreateStageOptions{
@@ -248,9 +249,9 @@ WantedBy=multi-user.target
 func getCurlToAssociateSystem(subscriptionOptions subscription.ImageOptions) string {
 	patchURL := strings.TrimSuffix(subscriptionOptions.PatchURL, "/")
 	addTemplateURL := fmt.Sprintf("%s/templates/%s/subscribed-systems", patchURL, subscriptionOptions.TemplateUUID)
-	curlToAssociateSystem := fmt.Sprintf("curl -v --retry 5 --cert /etc/pki/consumer/cert.pem --key /etc/pki/consumer/key.pem -X PATCH %s", addTemplateURL)
+	curlToAssociateSystem := fmt.Sprintf("curl -v --retry 5 --cert /etc/pki/consumer/cert.pem --key /etc/pki/consumer/key.pem -X PATCH %s", common.ShlexQuote(addTemplateURL))
 	if subscriptionOptions.Proxy != "" {
-		curlToAssociateSystem += fmt.Sprintf(" --proxy %s", subscriptionOptions.Proxy)
+		curlToAssociateSystem += fmt.Sprintf(" --proxy %s", common.ShlexQuote(subscriptionOptions.Proxy))
 	}
 	return curlToAssociateSystem
 }
