@@ -406,6 +406,10 @@ func (p *OS) getBuildPackages(distro Distro) []string {
 		// version of uki-direct. Add it conditioned just on the bootloader
 		// type for now, until we find a better way to decide.
 		packages = append(packages, "libkcapi-hmaccalc")
+
+		// UKI-based images set a dnf versionlock on shim, so we need to
+		// include the plugin.
+		packages = append(packages, "python3-dnf-plugin-versionlock")
 	}
 
 	if len(p.OSCustomizations.Users)+len(p.OSCustomizations.Groups) > 0 {
@@ -753,6 +757,24 @@ func (p *OS) serialize() osbuild.Pipeline {
 				panic(err)
 			}
 			pipeline.AddStages(stages...)
+
+			shimPkgName := ""
+			switch p.platform.GetArch() {
+			case arch.ARCH_X86_64:
+				shimPkgName = "shim-x64"
+			default:
+				// Shim locking is only used by the CVM image, which is
+				// currently only available on x86. If we need the
+				// functionality for other architectures, they should be added
+				// here.
+				panic(fmt.Sprintf("unsupported architecture %q for UKI-based image", p.platform.GetArch().String()))
+			}
+			versionlockStage, err := versionLock(p.packageSpecs, []string{shimPkgName})
+			if err != nil {
+				panic(err)
+			}
+
+			pipeline.AddStage(versionlockStage)
 		}
 	}
 
@@ -1110,21 +1132,19 @@ func findESPMountpoint(pt *disk.PartitionTable) (string, error) {
 //
 // [1] https://gitlab.com/kraxel/virt-firmware/-/commit/ca385db4f74a4d542455b9d40c91c8448c7be90c
 func maybeAddHMACandDirStage(packages []rpmmd.PackageSpec, espMountpoint, kernelVer string) ([]*osbuild.Stage, error) {
-	ukiDirectVer, err := rpmmd.GetVerStrFromPackageSpecList(packages, "uki-direct")
+	ukiDirect, err := rpmmd.GetPackage(packages, "uki-direct")
 	if err != nil {
 		// the uki-direct package isn't in the list: no override necessary
 		return nil, nil
 	}
 
-	// The GetVerStrFromPackageSpecList function returns
-	// <version>-<release>.<arch>. For the real package version, this doesn't
-	// appear to cause any issues with the version parser used by
-	// VersionLessThan. If a mock depsolver is used this can cause issues
-	// (Malformed version: 0-8.fk1.x86_64). Make sure we only use the <version>
-	// component to avoid issues.
-	ukiDirectVer = strings.SplitN(ukiDirectVer, "-", 2)[0]
+	// if the package has an epoch > 0, we can skip the version check, because
+	// the issue we're working around occurred in Epoch 0.
+	if ukiDirect.Epoch > 0 {
+		return nil, nil
+	}
 
-	if common.VersionLessThan(ukiDirectVer, "25.3") {
+	if common.VersionLessThan(ukiDirect.Version, "25.3") {
 		// generate hmac file using stage
 		kernelFilename := fmt.Sprintf("ffffffffffffffffffffffffffffffff-%s.efi", kernelVer)
 		kernelPath := filepath.Join(espMountpoint, "EFI", "Linux", kernelFilename)
@@ -1163,4 +1183,26 @@ func (p *OS) addInlineDataAndStages(pipeline *osbuild.Pipeline, files []*fsnode.
 	for _, file := range files {
 		p.inlineData = append(p.inlineData, string(file.Data()))
 	}
+}
+
+// versionLockShim generates an osbuild stage and inline file to create a dnf
+// versionlock configuration file that locks the shim package to its installed
+// version. This is necessary for UKI-based images that can become unbootable
+// if the shim is upgraded to one signed by a newer certificate that does not
+// exist in the system's database.
+// See https://issues.redhat.com/browse/RHEL-93650
+func versionLock(osPackages []rpmmd.PackageSpec, lockPackages []string) (*osbuild.Stage, error) {
+	pkgNEVRs := make([]string, len(lockPackages))
+	for idx, pkgName := range lockPackages {
+		pkg, err := rpmmd.GetPackage(osPackages, pkgName)
+		if err != nil {
+			return nil, fmt.Errorf("versionLock: package %q not found in package list", pkgName)
+		}
+		nevr := fmt.Sprintf("%s-%d:%s-%s", pkg.Name, pkg.Epoch, pkg.Version, pkg.Release)
+		pkgNEVRs[idx] = nevr
+	}
+
+	return osbuild.NewDNF4VersionlockStage(&osbuild.DNF4VersionlockOptions{
+		Add: pkgNEVRs,
+	}), nil
 }
