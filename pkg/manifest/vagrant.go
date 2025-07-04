@@ -1,6 +1,8 @@
 package manifest
 
 import (
+	"fmt"
+
 	"github.com/osbuild/images/pkg/artifact"
 	"github.com/osbuild/images/pkg/osbuild"
 )
@@ -8,6 +10,7 @@ import (
 type Vagrant struct {
 	Base
 	filename string
+	provider osbuild.VagrantProvider
 
 	imgPipeline FilePipeline
 }
@@ -20,11 +23,12 @@ func (p *Vagrant) SetFilename(filename string) {
 	p.filename = filename
 }
 
-func NewVagrant(buildPipeline Build, imgPipeline FilePipeline) *Vagrant {
+func NewVagrant(buildPipeline Build, imgPipeline FilePipeline, provider osbuild.VagrantProvider) *Vagrant {
 	p := &Vagrant{
 		Base:        NewBase("vagrant", buildPipeline),
 		imgPipeline: imgPipeline,
 		filename:    "image.box",
+		provider:    provider,
 	}
 
 	if buildPipeline != nil {
@@ -39,8 +43,30 @@ func NewVagrant(buildPipeline Build, imgPipeline FilePipeline) *Vagrant {
 func (p *Vagrant) serialize() osbuild.Pipeline {
 	pipeline := p.Base.serialize()
 
+	// For the VirtualBox provider we need to inject the ovf stage as well
+	if p.provider == osbuild.VagrantProviderVirtualbox {
+		// The ovf stage needs the vmdk at root, I really don't quite like this
+		// and don't see why it can't be through an input?
+		inputName := "vmdk-tree"
+		pipeline.AddStage(osbuild.NewCopyStageSimple(
+			&osbuild.CopyStageOptions{
+				Paths: []osbuild.CopyStagePath{
+					{
+						From: fmt.Sprintf("input://%s/%s", inputName, p.imgPipeline.Export().Filename()),
+						To:   "tree:///",
+					},
+				},
+			},
+			osbuild.NewPipelineTreeInputs(inputName, p.imgPipeline.Name()),
+		))
+
+		pipeline.AddStage(osbuild.NewOVFStage(&osbuild.OVFStageOptions{
+			Vmdk: p.imgPipeline.Filename(),
+		}))
+	}
+
 	pipeline.AddStage(osbuild.NewVagrantStage(
-		osbuild.NewVagrantStageOptions(osbuild.VagrantProviderLibvirt),
+		osbuild.NewVagrantStageOptions(p.provider),
 		osbuild.NewVagrantStagePipelineFilesInputs(p.imgPipeline.Name(), p.imgPipeline.Filename()),
 	))
 
