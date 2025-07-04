@@ -82,7 +82,7 @@ func (f *baseFsNodeJSON) validate() error {
 		return fmt.Errorf("path must not be empty")
 	}
 	if f.Path[0] != '/' {
-		return fmt.Errorf("path must be absolute")
+		return fmt.Errorf("path %q must be absolute", f.Path)
 	}
 	if f.Path[len(f.Path)-1] == '/' {
 		return fmt.Errorf("path must not end with a slash")
