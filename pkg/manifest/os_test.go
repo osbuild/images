@@ -86,7 +86,7 @@ func TestSubscriptionManagerCommands(t *testing.T) {
 	}
 	pipeline := os.Serialize()
 	CheckSystemdStageOptions(t, pipeline.Stages, []string{
-		"/usr/sbin/subscription-manager register --org=${ORG_ID} --activationkey=${ACTIVATION_KEY} --serverurl 'subscription.rhsm.redhat.com' --baseurl 'http://cdn.redhat.com/'",
+		`/usr/sbin/subscription-manager register --org="${ORG_ID}" --activationkey="${ACTIVATION_KEY}" --serverurl 'subscription.rhsm.redhat.com' --baseurl 'http://cdn.redhat.com/'`,
 	})
 }
 
@@ -101,7 +101,7 @@ func TestSubscriptionManagerInsightsCommands(t *testing.T) {
 	}
 	pipeline := os.Serialize()
 	CheckSystemdStageOptions(t, pipeline.Stages, []string{
-		"/usr/sbin/subscription-manager register --org=${ORG_ID} --activationkey=${ACTIVATION_KEY} --serverurl 'subscription.rhsm.redhat.com' --baseurl 'http://cdn.redhat.com/'",
+		`/usr/sbin/subscription-manager register --org="${ORG_ID}" --activationkey="${ACTIVATION_KEY}" --serverurl 'subscription.rhsm.redhat.com' --baseurl 'http://cdn.redhat.com/'`,
 		"/usr/bin/insights-client --register",
 	})
 }
@@ -119,7 +119,7 @@ func TestRhcInsightsCommands(t *testing.T) {
 	os.OSCustomizations.PermissiveRHC = common.ToPtr(true)
 	pipeline := os.Serialize()
 	CheckSystemdStageOptions(t, pipeline.Stages, []string{
-		"/usr/bin/rhc connect --organization=${ORG_ID} --activation-key=${ACTIVATION_KEY} --server 'subscription.rhsm.redhat.com'",
+		`/usr/bin/rhc connect --organization="${ORG_ID}" --activation-key="${ACTIVATION_KEY}" --server 'subscription.rhsm.redhat.com'`,
 		"/usr/sbin/semanage permissive --add rhcd_t",
 	})
 }
