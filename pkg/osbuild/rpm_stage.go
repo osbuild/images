@@ -94,16 +94,16 @@ type RPMPackageMetadata struct {
 	SigGPG  string  `json:"siggpg"`
 }
 
-func (RPMStageMetadata) isStageMetadata() {}
-
-func RPMPackageMetadataToSignature(pkg RPMPackageMetadata) *string {
-	if pkg.SigGPG != "" {
-		return &pkg.SigGPG
-	} else if pkg.SigPGP != "" {
-		return &pkg.SigPGP
+func (pkgmd RPMPackageMetadata) Signature() *string {
+	if pkgmd.SigGPG != "" {
+		return &pkgmd.SigGPG
+	} else if pkgmd.SigPGP != "" {
+		return &pkgmd.SigPGP
 	}
 	return nil
 }
+
+func (RPMStageMetadata) isStageMetadata() {}
 
 func NewRpmStageSourceFilesInputs(specs []rpmmd.PackageSpec) *RPMStageInputs {
 	input := NewFilesInput(pkgRefs(specs))
