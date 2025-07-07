@@ -85,9 +85,12 @@ type OSCustomizations struct {
 	MaskedServices   []string
 	DefaultTarget    string
 
-	// SELinux policy, when set it enables the labeling of the tree with the
-	// selected profile
+	// SELinux policy, when set it enables the labeling of the
+	// tree with the selected profile
 	SELinux string
+	// BuildSELinux policy, when set it enables the labeling of
+	// the *build tree* with the selected profile
+	BuildSELinux string
 
 	SELinuxForceRelabel *bool
 

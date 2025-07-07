@@ -76,12 +76,12 @@ func makeBootcDiskImageOsbuildManifest(t *testing.T, opts *bootcDiskImageTestOpt
 	require.NotNil(t, img)
 	img.Platform = makeFakePlatform(opts)
 	img.PartitionTable = testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi")
-	img.KernelOptionsAppend = opts.KernelOptionsAppend
-	img.Users = opts.Users
-	img.Groups = opts.Groups
-	img.SELinux = opts.SELinux
-	img.Files = opts.Files
-	img.Directories = opts.Directories
+	img.OSCustomizations.KernelOptionsAppend = opts.KernelOptionsAppend
+	img.OSCustomizations.Users = opts.Users
+	img.OSCustomizations.Groups = opts.Groups
+	img.OSCustomizations.SELinux = opts.SELinux
+	img.OSCustomizations.Files = opts.Files
+	img.OSCustomizations.Directories = opts.Directories
 
 	m := &manifest.Manifest{}
 	runi := &runner.Fedora{}
