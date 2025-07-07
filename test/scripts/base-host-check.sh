@@ -141,6 +141,29 @@ check_hostname() {
     fi
 }
 
+# Note that this test only checks for the existance of the filesystem
+# customizatons target path not the content. For the simple case when
+# "data" is provided we could check but for the "uri" case we do not
+# know the content as the file usually comes from the host.  The
+# existing testing framework makes the content check difficult, so we
+# settle for this for now. There is an alternative approach in
+# https://github.com/osbuild/images/pull/1157/commits/7784f3dc6b435fa03951263e48ea7cfca84c2ebd
+# that may eventually be considered that is more direct and runs
+# runs locally but different from the existing paradigm so it
+# needs further discussion.
+check_files_customizations() {
+    echo "📗 Checking files customization (basic check only)"
+
+    expected_paths=$(jq -r '.blueprint.customizations.files | .[] | .path' "${config}")
+
+    for path in $expected_paths; do
+	if [ ! -e "$path" ]; then
+	    echo "❌ Expected path from filesystem customization is not there: $path"
+	    exit 1
+	fi
+    done
+}
+
 check_services_enabled() {
     echo "📗 Checking enabled services"
 
@@ -338,5 +361,9 @@ if (( $# > 0 )); then
 
     if jq -e '.blueprint.customizations.hostname' "${config}"; then
         check_hostname "${config}"
+    fi
+
+    if jq -e '.blueprint.customizations.files' "${config}"; then
+        check_files_customizations "${config}"
     fi
 fi
