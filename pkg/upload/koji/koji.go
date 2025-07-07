@@ -8,7 +8,6 @@ package koji
 import (
 	"bytes"
 	"context"
-	"math"
 
 	// koji uses MD5 hashes
 	/* #nosec G501 */
@@ -16,108 +15,28 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"hash/adler32"
 	"io"
 	"net"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"time"
 
 	rh "github.com/hashicorp/go-retryablehttp"
 	"github.com/kolo/xmlrpc"
 	"github.com/ubccr/kerby/khttp"
-
-	"github.com/osbuild/images/pkg/datasizes"
-	"github.com/osbuild/images/pkg/olog"
-	"github.com/osbuild/images/pkg/rpmmd"
 )
 
 type Koji struct {
 	xmlrpc    *xmlrpc.Client
 	server    string
 	transport http.RoundTripper
+	logger    rh.LeveledLogger
 }
 
-type TypeInfo struct {
-	Image struct{} `json:"image"`
-}
-
-type ImageBuildExtra struct {
-	TypeInfo TypeInfo `json:"typeinfo"`
-}
-
-type ImageBuild struct {
-	BuildID   uint64          `json:"build_id"`
-	TaskID    uint64          `json:"task_id"`
-	Name      string          `json:"name"`
-	Version   string          `json:"version"`
-	Release   string          `json:"release"`
-	Source    string          `json:"source"`
-	StartTime int64           `json:"start_time"`
-	EndTime   int64           `json:"end_time"`
-	Extra     ImageBuildExtra `json:"extra"`
-}
-
-type Host struct {
-	Os   string `json:"os"`
-	Arch string `json:"arch"`
-}
-
-type ContentGenerator struct {
-	Name    string `json:"name"` // Must be 'osbuild'.
-	Version string `json:"version"`
-}
-
-type Container struct {
-	Type string `json:"type"`
-	Arch string `json:"arch"`
-}
-
-type Tool struct {
-	Name    string `json:"name"`
-	Version string `json:"version"`
-}
-
-type BuildRoot struct {
-	ID               uint64           `json:"id"`
-	Host             Host             `json:"host"`
-	ContentGenerator ContentGenerator `json:"content_generator"`
-	Container        Container        `json:"container"`
-	Tools            []Tool           `json:"tools"`
-	RPMs             []rpmmd.RPM      `json:"components"`
-}
-
-type ImageExtraInfo struct {
-	// TODO: Ideally this is where the pipeline would be passed.
-	Arch string `json:"arch"` // TODO: why?
-}
-
-type ImageExtra struct {
-	Info ImageExtraInfo `json:"image"`
-}
-
-type Image struct {
-	BuildRootID  uint64      `json:"buildroot_id"`
-	Filename     string      `json:"filename"`
-	FileSize     uint64      `json:"filesize"`
-	Arch         string      `json:"arch"`
-	ChecksumType string      `json:"checksum_type"` // must be 'md5'
-	MD5          string      `json:"checksum"`
-	Type         string      `json:"type"`
-	RPMs         []rpmmd.RPM `json:"components"`
-	Extra        ImageExtra  `json:"extra"`
-}
-
-type Metadata struct {
-	MetadataVersion int         `json:"metadata_version"` // must be '0'
-	ImageBuild      ImageBuild  `json:"build"`
-	BuildRoots      []BuildRoot `json:"buildroots"`
-	Images          []Image     `json:"output"`
-}
+// KOJI API STRUCTURES
 
 type CGInitBuildResult struct {
 	BuildID int    `xmlrpc:"build_id"`
@@ -138,7 +57,7 @@ type loginReply struct {
 	SessionKey string `xmlrpc:"session-key"`
 }
 
-func newKoji(server string, transport http.RoundTripper, reply loginReply) (*Koji, error) {
+func newKoji(server string, transport http.RoundTripper, reply loginReply, logger rh.LeveledLogger) (*Koji, error) {
 	// Create the final xmlrpc client with our custom RoundTripper handling
 	// sessionID, sessionKey and callnum
 	kojiTransport := &Transport{
@@ -157,37 +76,18 @@ func newKoji(server string, transport http.RoundTripper, reply loginReply) (*Koj
 		xmlrpc:    client,
 		server:    server,
 		transport: kojiTransport,
+		logger:    logger,
 	}, nil
-}
-
-// NewFromPlain creates a new Koji sessions  =authenticated using the plain
-// username/password method. If you want to speak to a public koji instance,
-// you probably cannot use this method.
-func NewFromPlain(server, user, password string, transport http.RoundTripper) (*Koji, error) {
-	// Create a temporary xmlrpc client.
-	// The API doesn't require sessionID, sessionKey and callnum yet,
-	// so there's no need to use the custom Koji RoundTripper,
-	// let's just use the one that the called passed in.
-	rhTransport := CreateRetryableTransport()
-	loginClient, err := xmlrpc.NewClient(server, rhTransport)
-	if err != nil {
-		return nil, err
-	}
-
-	args := []interface{}{user, password}
-	var reply loginReply
-	err = loginClient.Call("login", args, &reply)
-	if err != nil {
-		return nil, err
-	}
-
-	return newKoji(server, transport, reply)
 }
 
 // NewFromGSSAPI creates a new Koji session authenticated using GSSAPI.
 // Principal and keytab used for the session is passed using credentials
 // parameter.
-func NewFromGSSAPI(server string, credentials *GSSAPICredentials, transport http.RoundTripper) (*Koji, error) {
+func NewFromGSSAPI(
+	server string,
+	credentials *GSSAPICredentials,
+	transport http.RoundTripper,
+	logger rh.LeveledLogger) (*Koji, error) {
 	// Create a temporary xmlrpc client with kerberos transport.
 	// The API doesn't require sessionID, sessionKey and callnum yet,
 	// so there's no need to use the custom Koji RoundTripper,
@@ -207,7 +107,7 @@ func NewFromGSSAPI(server string, credentials *GSSAPICredentials, transport http
 		return nil, err
 	}
 
-	return newKoji(server, transport, reply)
+	return newKoji(server, transport, reply, logger)
 }
 
 // GetAPIVersion gets the version of the API of the remote Koji instance
@@ -284,11 +184,11 @@ func (k *Koji) CGCancelBuild(buildID int, token string) error {
 
 // CGImport imports previously uploaded content, by specifying its metadata, and the temporary
 // directory where it is located.
-func (k *Koji) CGImport(build ImageBuild, buildRoots []BuildRoot, images []Image, directory, token string) (*CGImportResult, error) {
+func (k *Koji) CGImport(build Build, buildRoots []BuildRoot, outputs []BuildOutput, directory, token string) (*CGImportResult, error) {
 	m := &Metadata{
-		ImageBuild: build,
+		Build:      build,
 		BuildRoots: buildRoots,
-		Images:     images,
+		Outputs:    outputs,
 	}
 	metadata, err := json.Marshal(m)
 	if err != nil {
@@ -315,7 +215,9 @@ func (k *Koji) CGImport(build ImageBuild, buildRoots []BuildRoot, images []Image
 			return nil, err
 		}
 
-		olog.Printf("CGImport succeeded after %d attempts", attempt+1)
+		if k.logger != nil {
+			k.logger.Info(fmt.Sprintf("CGImport succeeded after %d attempts", attempt+1))
+		}
 
 		return &result, nil
 	}
@@ -341,7 +243,7 @@ func (k *Koji) uploadChunk(chunk []byte, filepath, filename string, offset uint6
 	q.Add("overwrite", "true")
 	u.RawQuery = q.Encode()
 
-	client := createCustomRetryableClient()
+	client := createCustomRetryableClient(k.logger)
 
 	client.HTTPClient = &http.Client{
 		Transport: k.transport,
@@ -391,7 +293,7 @@ func (k *Koji) uploadChunk(chunk []byte, filepath, filename string, offset uint6
 // Upload uploads file to the temporary filepath on the kojiserver under the name filename
 // The md5sum and size of the file is returned on success.
 func (k *Koji) Upload(file io.Reader, filepath, filename string) (string, uint64, error) {
-	chunk := make([]byte, datasizes.MiB) // upload a mebiByte at a time
+	chunk := make([]byte, 1024*1024) // upload a megabyte at a time
 	offset := uint64(0)
 	// Koji uses MD5 hashes
 	/* #nosec G401 */
@@ -409,9 +311,7 @@ func (k *Koji) Upload(file io.Reader, filepath, filename string) (string, uint64
 			return "", 0, err
 		}
 
-		if n > 0 {
-			offset += uint64(n)
-		}
+		offset += uint64(n)
 
 		m, err := hash.Write(chunk[:n])
 		if err != nil {
@@ -458,24 +358,10 @@ func (rt *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return rt.transport.RoundTrip(rClone)
 }
 
-func GSSAPICredentialsFromEnv() (*GSSAPICredentials, error) {
-	principal, principalExists := os.LookupEnv("OSBUILD_COMPOSER_KOJI_PRINCIPAL")
-	keyTab, keyTabExists := os.LookupEnv("OSBUILD_COMPOSER_KOJI_KEYTAB")
-
-	if !principalExists || !keyTabExists {
-		return nil, errors.New("Both OSBUILD_COMPOSER_KOJI_PRINCIPAL and OSBUILD_COMPOSER_KOJI_KEYTAB must be set")
-	}
-
-	return &GSSAPICredentials{
-		Principal: principal,
-		KeyTab:    keyTab,
-	}, nil
-}
-
-func CreateKojiTransport(relaxTimeout uint) http.RoundTripper {
+func CreateKojiTransport(relaxTimeout time.Duration, logger rh.LeveledLogger) http.RoundTripper {
 	// Koji for some reason needs TLS renegotiation enabled.
 	// Clone the default http rt and enable renegotiation.
-	rt := CreateRetryableTransport()
+	rt := CreateRetryableTransport(logger)
 
 	transport := rt.Client.HTTPClient.Transport.(*http.Transport)
 
@@ -486,12 +372,9 @@ func CreateKojiTransport(relaxTimeout uint) http.RoundTripper {
 
 	// Relax timeouts a bit
 	if relaxTimeout > 0 {
-		if relaxTimeout > math.MaxInt64 {
-			panic("relaxTimeout would overflow int64 in call to time.Duration()")
-		}
-		transport.TLSHandshakeTimeout *= time.Duration(relaxTimeout)
+		transport.TLSHandshakeTimeout *= relaxTimeout
 		transport.DialContext = (&net.Dialer{
-			Timeout:   30 * time.Second * time.Duration(relaxTimeout),
+			Timeout:   30 * time.Second * relaxTimeout,
 			KeepAlive: 30 * time.Second,
 		}).DialContext
 	}
@@ -499,36 +382,35 @@ func CreateKojiTransport(relaxTimeout uint) http.RoundTripper {
 	return rt
 }
 
-func customCheckRetry(ctx context.Context, resp *http.Response, err error) (bool, error) {
-	shouldRetry, retErr := rh.DefaultRetryPolicy(ctx, resp, err)
+func createCustomRetryableClient(logger rh.LeveledLogger) *rh.Client {
+	client := rh.NewClient()
+	client.Logger = logger
 
-	// DefaultRetryPolicy denies retrying for any certificate related error.
-	// Override it in case the error is a timeout.
-	if !shouldRetry && err != nil {
-		if v, ok := err.(*url.Error); ok {
-			if _, ok := v.Err.(x509.UnknownAuthorityError); ok {
-				// retry if it's a timeout
-				return strings.Contains(strings.ToLower(v.Error()), "timeout"), v
+	client.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+		shouldRetry, retErr := rh.DefaultRetryPolicy(ctx, resp, err)
+
+		// DefaultRetryPolicy denies retrying for any certificate related error.
+		// Override it in case the error is a timeout.
+		if !shouldRetry && err != nil {
+			if v, ok := err.(*url.Error); ok {
+				if _, ok := v.Err.(x509.UnknownAuthorityError); ok {
+					// retry if it's a timeout
+					return strings.Contains(strings.ToLower(v.Error()), "timeout"), v
+				}
 			}
 		}
+
+		if logger != nil && (!shouldRetry && !(resp.StatusCode >= 200 && resp.StatusCode < 300)) {
+			logger.Info(fmt.Sprintf("Not retrying: %v", resp.Status))
+		}
+
+		return shouldRetry, retErr
 	}
-
-	if !shouldRetry && !(resp.StatusCode >= 200 && resp.StatusCode < 300) {
-		olog.Println("Not retrying: ", resp.Status)
-	}
-
-	return shouldRetry, retErr
-}
-
-func createCustomRetryableClient() *rh.Client {
-	client := rh.NewClient()
-	client.Logger = olog.Default()
-	client.CheckRetry = customCheckRetry
 	return client
 }
 
-func CreateRetryableTransport() *rh.RoundTripper {
+func CreateRetryableTransport(logger rh.LeveledLogger) *rh.RoundTripper {
 	rt := rh.RoundTripper{}
-	rt.Client = createCustomRetryableClient()
+	rt.Client = createCustomRetryableClient(logger)
 	return &rt
 }
