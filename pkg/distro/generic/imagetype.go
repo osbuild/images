@@ -48,6 +48,8 @@ func newImageTypeFrom(d *distribution, ar *architecture, imgYAML defs.ImageTypeY
 	switch imgYAML.Image {
 	case "disk":
 		it.image = diskImage
+	case "bootc_disk":
+		it.image = bootcDiskImage
 	case "container":
 		it.image = containerImage
 	case "image_installer":
