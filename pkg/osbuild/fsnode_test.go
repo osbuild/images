@@ -4,11 +4,13 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestGenFileNodesStages(t *testing.T) {
@@ -269,4 +271,20 @@ func TestGenDirectoryNodesStages(t *testing.T) {
 			assert.EqualValues(t, tc.expected, gotStages)
 		})
 	}
+}
+
+func TestGenFileNodeStage(t *testing.T) {
+	testFile := filepath.Join(t.TempDir(), "testfile.txt")
+	err := os.WriteFile(testFile, []byte("content"), 0644)
+	assert.NoError(t, err)
+	// sha256sum("content")
+	sha256sum := "ed7002b439e9ac845f22357d822bac1444730fbdb6016d3ec9432297b9ec9f73"
+
+	fsNodeFile, err := fsnode.NewFileForURI("/some/path", nil, nil, nil, testFile)
+	assert.NoError(t, err)
+
+	files := []*fsnode.File{fsNodeFile}
+	stages := GenFileNodesStages(files)
+	st := stages[0]
+	assert.Contains(t, st.Options.(*CopyStageOptions).Paths[0].From, sha256sum)
 }
