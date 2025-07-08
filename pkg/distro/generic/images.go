@@ -156,8 +156,8 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 	}
 
 	// Relabel the tree, unless the `NoSElinux` flag is explicitly set to `true`
-	if imageConfig.NoSElinux == nil || imageConfig.NoSElinux != nil && !*imageConfig.NoSElinux {
-		osc.SElinux = "targeted"
+	if imageConfig.NoSELinux == nil || imageConfig.NoSELinux != nil && !*imageConfig.NoSELinux {
+		osc.SELinux = "targeted"
 		osc.SELinuxForceRelabel = imageConfig.SELinuxForceRelabel
 	}
 
