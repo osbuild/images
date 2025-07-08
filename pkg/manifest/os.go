@@ -87,7 +87,7 @@ type OSCustomizations struct {
 
 	// SELinux policy, when set it enables the labeling of the tree with the
 	// selected profile
-	SElinux string
+	SELinux string
 
 	SELinuxForceRelabel *bool
 
@@ -259,8 +259,8 @@ func (p *OS) getPackageSetChain(Distro) []rpmmd.PackageSet {
 		customizationPackages = append(customizationPackages, "chrony")
 	}
 
-	if p.OSCustomizations.SElinux != "" {
-		customizationPackages = append(customizationPackages, fmt.Sprintf("selinux-policy-%s", p.OSCustomizations.SElinux))
+	if p.OSCustomizations.SELinux != "" {
+		customizationPackages = append(customizationPackages, fmt.Sprintf("selinux-policy-%s", p.OSCustomizations.SELinux))
 	}
 
 	if p.OSCustomizations.OpenSCAPRemediationConfig != nil {
@@ -383,8 +383,8 @@ func (p *OS) getBuildPackages(distro Distro) []string {
 	if p.OSTreeRef != "" {
 		packages = append(packages, "rpm-ostree")
 	}
-	if p.OSCustomizations.SElinux != "" {
-		packages = append(packages, "policycoreutils", fmt.Sprintf("selinux-policy-%s", p.OSCustomizations.SElinux))
+	if p.OSCustomizations.SELinux != "" {
+		packages = append(packages, "policycoreutils", fmt.Sprintf("selinux-policy-%s", p.OSCustomizations.SELinux))
 	}
 	if len(p.OSCustomizations.CloudInit) > 0 {
 		switch distro {
@@ -931,9 +931,9 @@ func (p *OS) serialize() osbuild.Pipeline {
 		}))
 	}
 
-	if p.OSCustomizations.SElinux != "" {
+	if p.OSCustomizations.SELinux != "" {
 		pipeline.AddStage(osbuild.NewSELinuxStage(&osbuild.SELinuxStageOptions{
-			FileContexts:     fmt.Sprintf("etc/selinux/%s/contexts/files/file_contexts", p.OSCustomizations.SElinux),
+			FileContexts:     fmt.Sprintf("etc/selinux/%s/contexts/files/file_contexts", p.OSCustomizations.SELinux),
 			ForceAutorelabel: p.OSCustomizations.SELinuxForceRelabel,
 		}))
 	}
