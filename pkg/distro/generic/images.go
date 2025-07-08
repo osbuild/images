@@ -721,6 +721,49 @@ func bootableContainerImage(workload workload.Workload,
 	return img, nil
 }
 
+func bootcDiskImage(workload workload.Workload,
+	t *imageType,
+	bp *blueprint.Blueprint,
+	options distro.ImageOptions,
+	packageSets map[string]rpmmd.PackageSet,
+	containers []container.SourceSpec,
+	rng *rand.Rand) (image.ImageKind, error) {
+
+	if options.Bootc.Imgref == nil {
+		return nil, fmt.Errorf("no base image defined")
+	}
+	containerSource := container.SourceSpec{
+		Source: *options.Bootc.Imgref,
+		Name:   *options.Bootc.Imgref,
+		Local:  true,
+	}
+	buildContainerSource := containerSource
+	if options.Bootc.BuildImgref != nil {
+		buildContainerSource = container.SourceSpec{
+			Source: *options.Bootc.BuildImgref,
+			Name:   *options.Bootc.BuildImgref,
+			Local:  true,
+		}
+	}
+	img := image.NewBootcDiskImage(containerSource, buildContainerSource)
+	img.Platform = t.platform
+
+	var err error
+	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, bp.Customizations)
+	if err != nil {
+		return nil, err
+	}
+
+	pt, err := t.getPartitionTable(bp.Customizations, options, rng)
+	if err != nil {
+		return nil, err
+	}
+	img.PartitionTable = pt
+	img.Filename = t.Filename()
+
+	return img, nil
+}
+
 func iotContainerImage(workload workload.Workload,
 	t *imageType,
 	bp *blueprint.Blueprint,
