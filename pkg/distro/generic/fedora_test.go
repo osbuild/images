@@ -959,10 +959,6 @@ func TestDistroFactory(t *testing.T) {
 			expected: nil,
 		},
 		{
-			strID:    "rhel-8.4",
-			expected: nil,
-		},
-		{
 			strID:    "rhel-810",
 			expected: nil,
 		},
