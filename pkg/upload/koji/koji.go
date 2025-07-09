@@ -311,6 +311,8 @@ func (k *Koji) Upload(file io.Reader, filepath, filename string) (string, uint64
 			return "", 0, err
 		}
 
+		// NB: the 'n' returned by Read() of an io.Reader can never be negative
+		/* #nosec G115 */
 		offset += uint64(n)
 
 		m, err := hash.Write(chunk[:n])
