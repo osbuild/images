@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"sort"
 	"text/template"
@@ -60,13 +61,15 @@ type distrosYAML struct {
 
 type DistroYAML struct {
 	// Match can be used to match multiple versions via a
-	// fnmatch/glob style expression. We could also use a
-	// regex and do something like:
-	//   rhel-(?P<major>[0-9]+)\.(?P<minor>[0-9]+)
-	// if we need to be more precise in the future, but for
-	// now every match will be split into "$distroname-$major.$minor"
-	// (with minor being optional)
+	// fnmatch/glob style expression.
 	Match string `yaml:"match"`
+
+	// TransformRE can be used to transform a given name
+	// into the canonical <distro>-<major>{,.<minor>} form.
+	// E.g.
+	//   (?P<distro>rhel)-(?P<major>8)(?P<minor>[0-9]+)
+	// will support a format like e.g. rhel-810
+	TransformRE string `yaml:"transform_re"`
 
 	// The distro metadata, can contain go text template strings
 	// for {{.Major}}, {{.Minor}} which will be expanded by the
@@ -195,12 +198,23 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 			break
 		}
 
+		// apply any transformations things
+		transformedNameVer := nameVer
+		re, err := regexp.Compile(distro.TransformRE)
+		if err != nil {
+			return nil, err
+		}
+		if l := re.FindStringSubmatch(nameVer); len(l) == 4 {
+			transformedNameVer = fmt.Sprintf("%s-%s.%s", l[re.SubexpIndex("name")], l[re.SubexpIndex("major")], l[re.SubexpIndex("minor")])
+		}
+
 		pat, err := glob.Compile(distro.Match)
 		if err != nil {
 			return nil, err
 		}
-		if pat.Match(nameVer) {
-			if err := distro.runTemplates(nameVer); err != nil {
+
+		if pat.Match(transformedNameVer) {
+			if err := distro.runTemplates(transformedNameVer); err != nil {
 				return nil, err
 			}
 
