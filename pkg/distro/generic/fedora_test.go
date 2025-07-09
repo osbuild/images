@@ -14,6 +14,7 @@ import (
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/distro_test_common"
 	"github.com/osbuild/images/pkg/distro/generic"
+	"github.com/osbuild/images/pkg/ostree"
 )
 
 var fedoraFamilyDistros = []distro.Distro{
@@ -1046,6 +1047,42 @@ func TestFedoraDistroBootstrapRef(t *testing.T) {
 				} else {
 					require.Equal(t, "registry.fedoraproject.org/fedora-toolbox:"+fedoraDistro.OsVersion(), generic.BootstrapContainerFor(imgType))
 				}
+			}
+		}
+	}
+}
+
+func TestFedoraDistro_PartioningModeConstraints(t *testing.T) {
+	for _, fedoraDistro := range fedoraFamilyDistros {
+		for _, archName := range fedoraDistro.ListArches() {
+			arch, err := fedoraDistro.GetArch(archName)
+			assert.NoError(t, err)
+
+			for _, imgTypeName := range arch.ListImageTypes() {
+				bp := blueprint.Blueprint{}
+
+				imgType, err := arch.GetImageType(imgTypeName)
+				assert.NoError(t, err, imgTypeName)
+				if imgType.OSTreeRef() == "" || imgType.PartitionType() == disk.PT_NONE {
+					continue
+				}
+
+				t.Run(fmt.Sprintf("%s/%s", archName, imgTypeName), func(t *testing.T) {
+					imgType, _ := arch.GetImageType(imgType.Name())
+					imgOpts := distro.ImageOptions{
+						PartitioningMode: disk.RawPartitioningMode,
+						OSTree: &ostree.ImageOptions{
+							URL: "http://example.com/ostree",
+						},
+					}
+					if imgType.Name() == "iot-simplified-installer" {
+						bp.Customizations = &blueprint.Customizations{
+							InstallationDevice: "/dev/foo",
+						}
+					}
+					_, _, err := imgType.Manifest(&bp, imgOpts, nil, nil)
+					assert.ErrorContains(t, err, "partitioning mode raw not supported for")
+				})
 			}
 		}
 	}
