@@ -1199,3 +1199,42 @@ distros:
 	_, err = imgType.PlatformsFor("test-distro-1")
 	assert.EqualError(t, err, `platform conditionals for image type "server-qcow2" should match only once but matched 2 times`)
 }
+
+func TestDistrosLoadingTransformRE(t *testing.T) {
+	fakeDistrosYAML := `
+distros:
+  - name: "rhel-{{.MajorVersion}}.{{.MinorVersion}}"
+    match: "rhel-8.*"
+    transform_re: "(?P<name>rhel)-(?P<major>8)(?P<minor>[0-9]+)"
+    os_version: "{{.MajorVersion}}.{{.MinorVersion}}"
+    release_version: "{{.MajorVersion}}"
+    module_platform_id: "platform:el{{.MajorVersion}}"
+`
+	baseDir := makeFakeDistrosYAML(t, fakeDistrosYAML, "")
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	for _, tc := range []struct {
+		nameVer               string
+		expectedDistroNameVer string
+		expectedOsVersion     string
+	}{
+		{"rhel-8.1", "rhel-8.1", "8.1"},
+		{"rhel-81", "rhel-8.1", "8.1"},
+		{"rhel-8.9", "rhel-8.9", "8.9"},
+		{"rhel-89", "rhel-8.9", "8.9"},
+		{"rhel-8.10", "rhel-8.10", "8.10"},
+		{"rhel-810", "rhel-8.10", "8.10"},
+	} {
+		distro, err := defs.NewDistroYAML(tc.nameVer)
+		require.NoError(t, err)
+		assert.Equal(t, &defs.DistroYAML{
+			Name:             tc.expectedDistroNameVer,
+			Match:            "rhel-8.*",
+			TransformRE:      "(?P<name>rhel)-(?P<major>8)(?P<minor>[0-9]+)",
+			OsVersion:        tc.expectedOsVersion,
+			ReleaseVersion:   "8",
+			ModulePlatformID: "platform:el8",
+		}, distro)
+	}
+}
