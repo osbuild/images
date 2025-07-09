@@ -22,7 +22,7 @@ var fedoraFamilyDistros = []distro.Distro{
 	generic.DistroFactory("fedora-42"),
 }
 
-func TestFilenameFromType(t *testing.T) {
+func TestFedoraFilenameFromType(t *testing.T) {
 	type args struct {
 		outputFormat string
 	}
@@ -261,7 +261,7 @@ func TestFilenameFromType(t *testing.T) {
 	}
 }
 
-func TestImageType_BuildPackages(t *testing.T) {
+func TestFedoraImageType_BuildPackages(t *testing.T) {
 	x8664BuildPackages := []string{
 		"dnf",
 		"dosfstools",
@@ -313,7 +313,7 @@ func TestImageType_BuildPackages(t *testing.T) {
 	}
 }
 
-func TestImageType_Name(t *testing.T) {
+func TestFedoraImageType_Name(t *testing.T) {
 	imgMap := []struct {
 		arch     string
 		imgNames []string
@@ -400,7 +400,7 @@ func TestImageType_Name(t *testing.T) {
 	}
 }
 
-func TestImageTypeAliases(t *testing.T) {
+func TestFedoraImageTypeAliases(t *testing.T) {
 	type args struct {
 		imageTypeAliases []string
 	}
@@ -476,7 +476,7 @@ func TestImageTypeAliases(t *testing.T) {
 
 // Check that Manifest() function returns an error for unsupported
 // configurations.
-func TestDistro_ManifestError(t *testing.T) {
+func TestFedoraDistro_ManifestError(t *testing.T) {
 	// Currently, the only unsupported configuration is OSTree commit types
 	// with Kernel boot options
 	bp := blueprint.Blueprint{
@@ -516,7 +516,7 @@ func TestDistro_ManifestError(t *testing.T) {
 	}
 }
 
-func TestArchitecture_ListImageTypes(t *testing.T) {
+func TestFedoraArchitecture_ListImageTypes(t *testing.T) {
 	imgMap := []struct {
 		arch     string
 		imgNames []string
@@ -615,7 +615,7 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 	}
 }
 
-func TestFedora_ListArches(t *testing.T) {
+func TestFedoraFedora_ListArches(t *testing.T) {
 	for _, fedoraDistro := range fedoraFamilyDistros {
 		t.Run(fedoraDistro.Name(), func(t *testing.T) {
 			arches := fedoraDistro.ListArches()
@@ -624,7 +624,7 @@ func TestFedora_ListArches(t *testing.T) {
 	}
 }
 
-func TestFedora38_GetArch(t *testing.T) {
+func TestFedoraFedora38_GetArch(t *testing.T) {
 	arches := []struct {
 		name                  string
 		errorExpected         bool
@@ -664,7 +664,7 @@ func TestFedora38_GetArch(t *testing.T) {
 	}
 }
 
-func TestFedora_KernelOption(t *testing.T) {
+func TestFedoraFedora_KernelOption(t *testing.T) {
 	for _, fedoraDistro := range fedoraFamilyDistros {
 		t.Run(fedoraDistro.Name(), func(t *testing.T) {
 			distro_test_common.TestDistro_KernelOption(t, fedoraDistro)
@@ -672,7 +672,7 @@ func TestFedora_KernelOption(t *testing.T) {
 	}
 }
 
-func TestFedora_OSTreeOptions(t *testing.T) {
+func TestFedoraFedora_OSTreeOptions(t *testing.T) {
 	for _, fedoraDistro := range fedoraFamilyDistros {
 		t.Run(fedoraDistro.Name(), func(t *testing.T) {
 			distro_test_common.TestDistro_OSTreeOptions(t, fedoraDistro)
@@ -680,7 +680,7 @@ func TestFedora_OSTreeOptions(t *testing.T) {
 	}
 }
 
-func TestDistro_CustomFileSystemManifestError(t *testing.T) {
+func TestFedoraDistro_CustomFileSystemManifestError(t *testing.T) {
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -713,7 +713,7 @@ func TestDistro_CustomFileSystemManifestError(t *testing.T) {
 	}
 }
 
-func TestDistro_TestRootMountPoint(t *testing.T) {
+func TestFedoraDistro_TestRootMountPoint(t *testing.T) {
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -746,7 +746,7 @@ func TestDistro_TestRootMountPoint(t *testing.T) {
 	}
 }
 
-func TestDistro_CustomFileSystemSubDirectories(t *testing.T) {
+func TestFedoraDistro_CustomFileSystemSubDirectories(t *testing.T) {
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -779,7 +779,7 @@ func TestDistro_CustomFileSystemSubDirectories(t *testing.T) {
 	}
 }
 
-func TestDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
+func TestFedoraDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -820,7 +820,7 @@ func TestDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
 	}
 }
 
-func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
+func TestFedoraDistro_DirtyMountpointsNotAllowed(t *testing.T) {
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -857,7 +857,7 @@ func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
 	}
 }
 
-func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
+func TestFedoraDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -890,7 +890,7 @@ func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 	}
 }
 
-func TestDistro_PartitioningConflict(t *testing.T) {
+func TestFedoraDistro_PartitioningConflict(t *testing.T) {
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -935,7 +935,7 @@ func TestDistro_PartitioningConflict(t *testing.T) {
 
 }
 
-func TestDistroFactory(t *testing.T) {
+func TestFedoraDistroFactory(t *testing.T) {
 	type testCase struct {
 		strID    string
 		expected distro.Distro
@@ -985,7 +985,7 @@ func TestDistroFactory(t *testing.T) {
 	}
 }
 
-func TestDistro_DiskCustomizationRunsValidateLayoutConstraints(t *testing.T) {
+func TestFedoraDistro_DiskCustomizationRunsValidateLayoutConstraints(t *testing.T) {
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Disk: &blueprint.DiskCustomization{
@@ -1027,13 +1027,13 @@ func TestDistro_DiskCustomizationRunsValidateLayoutConstraints(t *testing.T) {
 	}
 }
 
-func TestESP(t *testing.T) {
+func TestFedoraESP(t *testing.T) {
 	distro_test_common.TestESP(t, fedoraFamilyDistros, func(it distro.ImageType) (*disk.PartitionTable, error) {
 		return generic.GetPartitionTable(it)
 	})
 }
 
-func TestDistroBootstrapRef(t *testing.T) {
+func TestFedoraDistroBootstrapRef(t *testing.T) {
 	for _, fedoraDistro := range fedoraFamilyDistros {
 		for _, archName := range fedoraDistro.ListArches() {
 			arch, err := fedoraDistro.GetArch(archName)
