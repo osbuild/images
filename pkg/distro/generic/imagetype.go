@@ -406,6 +406,19 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 		}
 	}
 
+	if t.Name() == "edge-raw-image" || t.Name() == "iot-raw-xz" {
+		// ostree-based bootable images require a URL from which to pull a payload commit
+		if options.OSTree == nil || options.OSTree.URL == "" {
+			return warnings, fmt.Errorf("%q images require specifying a URL from which to retrieve the OSTree commit", t.Name())
+		}
+
+		allowed := []string{"User", "Group", "FIPS"}
+		if err := customizations.CheckAllowed(allowed...); err != nil {
+			return warnings, fmt.Errorf(distro.UnsupportedCustomizationError, t.Name(), strings.Join(allowed, ", "))
+		}
+		// TODO: consider additional checks, such as those in "edge-simplified-installer"
+	}
+
 	if kernelOpts := customizations.GetKernel(); kernelOpts.Append != "" && t.ImageTypeYAML.RPMOSTree {
 		return warnings, fmt.Errorf("kernel boot parameter customizations are not supported for ostree types")
 	}
@@ -415,6 +428,25 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 	if err != nil {
 		return warnings, err
 	}
+
+	// (see commit ff53493): We are not enabling swap for disk
+	// customizations on RHEL8/aarch64 currently because of issues with
+	// kernel page size differences in some versions on aarch64.
+	if t.arch.distro.DistroYAML.DistroLike == manifest.DISTRO_EL8 && partitioning != nil {
+		for _, partition := range partitioning.Partitions {
+			if t.Arch().Name() == arch.ARCH_AARCH64.String() {
+				if partition.FSType == "swap" {
+					return warnings, fmt.Errorf("swap partition creation is not supported on %s %s", t.Arch().Distro().Name(), t.Arch().Name())
+				}
+				for _, lv := range partition.LogicalVolumes {
+					if lv.FSType == "swap" {
+						return warnings, fmt.Errorf("swap partition creation is not supported on %s %s", t.Arch().Distro().Name(), t.Arch().Name())
+					}
+				}
+			}
+		}
+	}
+
 	if (len(mountpoints) > 0 || partitioning != nil) && t.ImageTypeYAML.RPMOSTree {
 		return warnings, fmt.Errorf("Custom mountpoints and partitioning are not supported for ostree types")
 	}
