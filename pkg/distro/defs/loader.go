@@ -9,7 +9,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"regexp"
 	"slices"
 	"sort"
 	"text/template"
@@ -169,14 +168,7 @@ func (d *DistroYAML) runTemplates(nameVer string) error {
 	return errors.Join(errs...)
 }
 
-// NewDistroYAML return the given distro or nil if the distro is not
-// found. This mimics the "distrofactory.GetDistro() interface.
-//
-// Note that eventually we want something like "Distros()" instead
-// that returns all known distros but for now we keep compatibility
-// with the way distrofactory/reporegistry work which is by defining
-// distros via repository files.
-func NewDistroYAML(nameVer string) (*DistroYAML, error) {
+func loadDistros() (*distrosYAML, error) {
 	f, err := dataFS().Open("distros.yaml")
 	if err != nil {
 		return nil, err
@@ -191,6 +183,27 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 		return nil, err
 	}
 
+	return &distros, nil
+}
+
+// NewDistroYAML return the given distro or nil if the distro is not
+// found. This mimics the "distrofactory.GetDistro() interface.
+//
+// Note that eventually we want something like "Distros()" instead
+// that returns all known distros but for now we keep compatibility
+// with the way distrofactory/reporegistry work which is by defining
+// distros via repository files.
+func NewDistroYAML(nameVer string) (*DistroYAML, error) {
+	distros, err := loadDistros()
+	if err != nil {
+		return nil, err
+	}
+
+	// ParseID will also canonicalize the name
+	if id, err := ParseID(nameVer); err == nil && id != nil {
+		nameVer = id.String()
+	}
+
 	var foundDistro *DistroYAML
 	for _, distro := range distros.Distros {
 		if distro.Name == nameVer {
@@ -198,23 +211,13 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 			break
 		}
 
-		// apply any transformations things
-		transformedNameVer := nameVer
-		re, err := regexp.Compile(distro.TransformRE)
-		if err != nil {
-			return nil, err
-		}
-		if l := re.FindStringSubmatch(nameVer); len(l) == 4 {
-			transformedNameVer = fmt.Sprintf("%s-%s.%s", l[re.SubexpIndex("name")], l[re.SubexpIndex("major")], l[re.SubexpIndex("minor")])
-		}
-
 		pat, err := glob.Compile(distro.Match)
 		if err != nil {
 			return nil, err
 		}
 
-		if pat.Match(transformedNameVer) {
-			if err := distro.runTemplates(transformedNameVer); err != nil {
+		if pat.Match(nameVer) {
+			if err := distro.runTemplates(nameVer); err != nil {
 				return nil, err
 			}
 
@@ -227,14 +230,14 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 	}
 
 	// load imageTypes
-	f, err = dataFS().Open(filepath.Join(foundDistro.DefsPath, "distro.yaml"))
+	f, err := dataFS().Open(filepath.Join(foundDistro.DefsPath, "distro.yaml"))
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
 
 	var toplevel imageTypesYAML
-	decoder = yaml.NewDecoder(f)
+	decoder := yaml.NewDecoder(f)
 	decoder.KnownFields(true)
 	if err := decoder.Decode(&toplevel); err != nil {
 		return nil, err
