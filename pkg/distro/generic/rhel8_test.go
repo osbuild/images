@@ -9,9 +9,11 @@ import (
 
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
+	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/distro_test_common"
 	"github.com/osbuild/images/pkg/distro/generic"
+	"github.com/osbuild/images/pkg/ostree"
 )
 
 var rhel8_FamilyDistros = []rhelFamilyDistro{
@@ -988,5 +990,54 @@ func TestRH8_DiskCustomizationsCheckOptions(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+func TestRH8_UnsupportedPartitioningModes(t *testing.T) {
+	r8distro := rhel8_FamilyDistros[0].distro
+	rawBP := &blueprint.Blueprint{}
+	instBP := &blueprint.Blueprint{
+		Customizations: &blueprint.Customizations{
+			InstallationDevice: "/dev/foo",
+		},
+	}
+
+	for _, tc := range []struct {
+		imgTypeName      string
+		bp               *blueprint.Blueprint
+		partitioningMode disk.PartitioningMode
+		expectedErrTmpl  string
+	}{
+		{"edge-raw-image", rawBP, "", ""},
+		{"edge-raw-image", rawBP, disk.RawPartitioningMode, ""},
+		{"edge-simplified-installer", instBP, "", ""},
+		{"edge-raw-image", rawBP, disk.LVMPartitioningMode, `partitioning mode %q is not supported for %q on %q`},
+		{"edge-raw-image", rawBP, disk.AutoLVMPartitioningMode, `partitioning mode %q is not supported for %q on %q`},
+		{"edge-simplified-installer", instBP, disk.LVMPartitioningMode, `partitioning mode %q is not supported for %q on %q`},
+		{"edge-simplified-installer", instBP, disk.AutoLVMPartitioningMode, `partitioning mode %q is not supported for %q on %q`},
+	} {
+		distroArch, _ := r8distro.GetArch("x86_64")
+		imgType, err := distroArch.GetImageType(tc.imgTypeName)
+		require.NoError(t, err)
+
+		testname := fmt.Sprintf("%s-%s", r8distro.Name(), tc.imgTypeName)
+		t.Run(testname, func(t *testing.T) {
+			assert := assert.New(t)
+
+			opts := distro.ImageOptions{
+				OSTree: &ostree.ImageOptions{
+					URL: "http://example.com/foo",
+				},
+				PartitioningMode: tc.partitioningMode,
+			}
+			_, _, err := imgType.Manifest(tc.bp, opts, nil, nil)
+			if tc.expectedErrTmpl == "" {
+				assert.NoError(err)
+			} else {
+				expectedErr := fmt.Sprintf(tc.expectedErrTmpl, tc.partitioningMode, tc.imgTypeName, r8distro.Name())
+				assert.EqualError(err, expectedErr)
+			}
+		})
+
 	}
 }

@@ -417,6 +417,8 @@ type ImageTypeYAML struct {
 	DiskImagePartTool     *osbuild.PartTool `yaml:"disk_image_part_tool"`
 	DiskImageVPCForceSize *bool             `yaml:"disk_image_vpc_force_size"`
 
+	UnsupportedPartitioningModes []disk.PartitioningMode `yaml:"unsupported_partitioning_modes"`
+
 	// name is set by the loader
 	name string
 }

@@ -159,7 +159,9 @@ func (t *imageType) getPartitionTable(customizations *blueprint.Customizations, 
 	}
 
 	partitioningMode := options.PartitioningMode
-	if t.ImageTypeYAML.RPMOSTree {
+	// XXX: this needs to go into YAML too :(
+	// XXX2: this was also not covered by the manifests tests, why?
+	if t.arch.distro.DistroYAML.DistroLike == manifest.DISTRO_FEDORA && t.ImageTypeYAML.RPMOSTree {
 		// IoT supports only LVM, force it.
 		// Raw is not supported, return an error if it is requested
 		// TODO Need a central location for logic like this
@@ -344,12 +346,9 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 		return warnings, fmt.Errorf("OSTree is not supported for %q", t.Name())
 	}
 
-	// XXX: add via ImageTypeYAML
-	/*
-		if slices.Contains(t.UnsupportedPartitioningModes, options.PartitioningMode) {
-			return warnings, fmt.Errorf("partitioning mode %q is not supported for %q", options.PartitioningMode, t.Name())
-		}
-	*/
+	if slices.Contains(t.ImageTypeYAML.UnsupportedPartitioningModes, options.PartitioningMode) {
+		return warnings, fmt.Errorf("partitioning mode %q is not supported for %q on %q", options.PartitioningMode, t.Name(), t.arch.distro.Name())
+	}
 
 	// we do not support embedding containers on ostree-derived images, only on commits themselves
 	if len(bp.Containers) > 0 && t.ImageTypeYAML.RPMOSTree && (t.Name() != "iot-commit" && t.Name() != "iot-container" && t.Name() != "edge-commit" && t.Name() != "edge-container") {

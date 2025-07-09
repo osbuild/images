@@ -2045,6 +2045,9 @@ image_types:
       kernel_options: ["modprobe.blacklist=vc4"]
     partition_table:
       <<: *edge_base_partition_tables
+    unsupported_partitioning_modes:
+      - "auto-lvm"
+      - "lvm"
 
   "edge-simplified-installer":
     filename: "simplified-installer.iso"
@@ -2085,6 +2088,9 @@ image_types:
       - <<: *aarch64_platform
     partition_table:
       <<: *edge_base_partition_tables
+    unsupported_partitioning_modes:
+      - "auto-lvm"
+      - "lvm"
     image_config:
       enabled_services: *enabled_services_edge
       keyboard:
