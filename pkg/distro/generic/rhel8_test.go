@@ -943,6 +943,8 @@ func TestRH8_DiskCustomizationsCheckOptions(t *testing.T) {
 
 	// these produce a different error message and are tested elsewhere
 	skipTest := map[string]bool{
+		"edge-commit":               true,
+		"edge-container":            true,
 		"edge-installer":            true,
 		"edge-simplified-installer": true,
 		"edge-raw-image":            true,
