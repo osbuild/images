@@ -151,6 +151,8 @@ distros:
   - &rhel8
     name: "rhel-{{.MajorVersion}}.{{.MinorVersion}}"
     match: "rhel-8.[0-9]{,[0-9]}"
+    # rhel8 support being named "rhel-81" for "rhel-8.1" or "rhel-810" for "rhel-8.10" etc
+    transform_re: "(?P<name>rhel)-(?P<major>8)(?P<minor>[0-9]+)"
     distro_like: rhel-8
     product: "Red Hat Enterprise Linux"
     os_version: "8.{{.MinorVersion}}"
