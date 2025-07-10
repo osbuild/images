@@ -133,10 +133,30 @@ func TestImageTypePipelineNames(t *testing.T) {
 								})
 							}
 						}
+
 						depsolvedSets[name] = dnfjson.DepsolveResult{
 							Packages: packages,
 						}
 					}
+
+					// Some parts of the manifest generation for certain image types require specific packages. Add them here.
+					// azure-cvm requires dnf and python3-dnf-plugin-versionlock in the OS pipeline
+					osPkgs := depsolvedSets["os"]
+					osPkgs.Packages = append(osPkgs.Packages,
+						rpmmd.PackageSpec{
+							Name:     "dnf",
+							Version:  "4",
+							Checksum: fmt.Sprintf("sha256:%064x", len(osPkgs.Packages)),
+						},
+					)
+					osPkgs.Packages = append(osPkgs.Packages,
+						rpmmd.PackageSpec{
+							Name:     "python3-dnf-plugin-versionlock",
+							Version:  "3",
+							Checksum: fmt.Sprintf("sha256:%064x", len(osPkgs.Packages)),
+						},
+					)
+					depsolvedSets["os"] = osPkgs
 
 					ostreeSources := m.GetOSTreeSourceSpecs()
 					commits := make(map[string][]ostree.CommitSpec, len(ostreeSources))

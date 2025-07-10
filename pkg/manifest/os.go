@@ -169,6 +169,12 @@ type OSCustomizations struct {
 	// MountUnits creates systemd .mount units to describe the filesystem
 	// instead of writing to /etc/fstab
 	MountUnits bool
+
+	// VersionlockPackges uses dnf versionlock to lock a package to the version
+	// that is installed during image build, preventing it from being updated.
+	// This is only supported for distributions that use dnf4, because osbuild
+	// only has a stage for dnf4 version locking.
+	VersionlockPackages []string
 }
 
 // OS represents the filesystem tree of the target image. This roughly
@@ -288,6 +294,11 @@ func (p *OS) getPackageSetChain(Distro) []rpmmd.PackageSet {
 		// org.osbuild.firewall runs 'firewall-offline-cmd' in the os tree
 		// using chroot, so we don't need a build package for this.
 		customizationPackages = append(customizationPackages, "firewalld")
+	}
+
+	if len(p.OSCustomizations.VersionlockPackages) > 0 {
+		// versionlocking packages requires dnf and the dnf plugin
+		customizationPackages = append(customizationPackages, "dnf", "python3-dnf-plugin-versionlock")
 	}
 
 	osRepos := append(p.repos, p.OSCustomizations.ExtraBaseRepos...)
@@ -904,6 +915,14 @@ func (p *OS) serialize() osbuild.Pipeline {
 			}
 		}
 		pipeline.AddStage(osbuild.NewUpdateCATrustStage())
+	}
+
+	if len(p.OSCustomizations.VersionlockPackages) > 0 {
+		versionlockStageOptions, err := osbuild.GenDNF4VersionlockStageOptions(p.OSCustomizations.VersionlockPackages, p.packageSpecs)
+		if err != nil {
+			panic(err)
+		}
+		pipeline.AddStage(osbuild.NewDNF4VersionlockStage(versionlockStageOptions))
 	}
 
 	if p.OSCustomizations.MachineIdUninitialized {

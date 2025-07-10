@@ -312,6 +312,8 @@ func osCustomizations(
 		osc.MountUnits = *imageConfig.MountUnits
 	}
 
+	osc.VersionlockPackages = imageConfig.VersionlockPackages
+
 	return osc, nil
 }
 
