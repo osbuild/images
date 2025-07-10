@@ -729,7 +729,7 @@ func bootcDiskImage(workload workload.Workload,
 	containers []container.SourceSpec,
 	rng *rand.Rand) (image.ImageKind, error) {
 
-	if options.Bootc.Imgref == nil {
+	if options.Bootc == nil || options.Bootc.Imgref == nil {
 		return nil, fmt.Errorf("no base image defined")
 	}
 	containerSource := container.SourceSpec{

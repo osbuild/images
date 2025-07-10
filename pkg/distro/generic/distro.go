@@ -8,6 +8,8 @@ import (
 	"text/template"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/bib/container"
+	"github.com/osbuild/images/pkg/bib/osinfo"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
 	"github.com/osbuild/images/pkg/platform"
@@ -68,6 +70,45 @@ func (d *distribution) getISOLabelFunc(isoLabel string) isoLabelFunc {
 	}
 }
 
+// XXX: wrong layer
+func ImageFromBootc(bootcRef, imgTypeStr, archStr string) (distro.ImageType, error) {
+	cnt, err := container.New(bootcRef)
+	if err != nil {
+		return nil, err
+	}
+	defer cnt.Stop()
+
+	info, err := osinfo.Load(cnt.Root())
+	if err != nil {
+		return nil, err
+	}
+
+	nameVer := fmt.Sprintf("bootc-%s-%s", info.OSRelease.ID, info.OSRelease.VersionID)
+	rd := &distribution{
+		DistroYAML: defs.DistroYAML{
+			Name:     nameVer,
+			DefsPath: "./bootc",
+		},
+		arches: make(map[string]*architecture),
+	}
+	if err := rd.DistroYAML.LoadImageTypes(); err != nil {
+		return nil, err
+	}
+	if err := rd.populateArchitectures(); err != nil {
+		return nil, err
+	}
+	a, err := rd.GetArch(archStr)
+	if err != nil {
+		return nil, err
+	}
+	imgType, err := a.GetImageType(imgTypeStr)
+	if err != nil {
+		return nil, err
+	}
+
+	return imgType, nil
+}
+
 func newDistro(nameVer string) (distro.Distro, error) {
 	distroYAML, err := defs.NewDistroYAML(nameVer)
 	if err != nil {
@@ -81,16 +122,22 @@ func newDistro(nameVer string) (distro.Distro, error) {
 		DistroYAML: *distroYAML,
 		arches:     make(map[string]*architecture),
 	}
+	if err := rd.populateArchitectures(); err != nil {
+		return nil, err
+	}
+	return rd, nil
+}
 
-	for _, imgTypeYAML := range distroYAML.ImageTypes() {
+func (rd *distribution) populateArchitectures() error {
+	for _, imgTypeYAML := range rd.DistroYAML.ImageTypes() {
 		// use as marker for images that are not converted to
 		// YAML yet
 		if imgTypeYAML.Filename == "" {
 			continue
 		}
-		platforms, err := imgTypeYAML.PlatformsFor(nameVer)
+		platforms, err := imgTypeYAML.PlatformsFor(rd.Name())
 		if err != nil {
-			return nil, err
+			return err
 		}
 		for _, pl := range platforms {
 			ar, ok := rd.arches[pl.Arch.String()]
@@ -98,17 +145,17 @@ func newDistro(nameVer string) (distro.Distro, error) {
 				ar = newArchitecture(rd, pl.Arch.String())
 				rd.arches[pl.Arch.String()] = ar
 			}
-			if distroYAML.SkipImageType(imgTypeYAML.Name(), pl.Arch.String()) {
+			if rd.DistroYAML.SkipImageType(imgTypeYAML.Name(), pl.Arch.String()) {
 				continue
 			}
 			it := newImageTypeFrom(rd, ar, imgTypeYAML)
 			if err := ar.addImageType(&pl, it); err != nil {
-				return nil, err
+				return err
 			}
 		}
 	}
 
-	return rd, nil
+	return nil
 }
 
 func (d *distribution) Name() string {

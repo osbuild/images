@@ -311,8 +311,8 @@ func (t *imageType) Manifest(bp *blueprint.Blueprint,
 	// TODO: consider changing the ImageKind.InstantiateManifest interface
 	// to take a "container.SourceSpec" or a generalized struct with both
 	// distros/containers
-	switch img.(type) {
-	case BootcImageKind:
+	switch img := img.(type) {
+	case image.BootcImageKind:
 		containerSource := container.SourceSpec{
 			Source: *options.Bootc.Imgref,
 			Name:   *options.Bootc.Imgref,
