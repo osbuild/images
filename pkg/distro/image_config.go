@@ -138,6 +138,12 @@ type ImageConfig struct {
 	// IsoRootfsType defines what rootfs (squashfs, erofs,ext4)
 	// is used
 	IsoRootfsType *manifest.RootfsType `yaml:"iso_rootfs_type,omitempty"`
+
+	// VersionlockPackges uses dnf versionlock to lock a package to the version
+	// that is installed during image build, preventing it from being updated.
+	// This is only supported for distributions that use dnf4, because osbuild
+	// only has a stage for dnf4 version locking.
+	VersionlockPackages []string `yaml:"versionlock_packages,omitempty"`
 }
 
 // shallowMerge creates a new struct by merging a child and a parent.
