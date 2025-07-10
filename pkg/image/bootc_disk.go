@@ -3,6 +3,7 @@ package image
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 
 	"github.com/osbuild/images/pkg/artifact"
 	"github.com/osbuild/images/pkg/container"
@@ -126,7 +127,9 @@ func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifes
 	// In BIB, we export multiple images from the same pipeline so we use the
 	// filename as the basename for each export and set the extensions based on
 	// each file format.
-	fileBasename := img.Filename
+	//
+	// XXX: how to converge these two worlds?
+	fileBasename := strings.SplitN(img.Filename, ".", 2)[0]
 	rawImage.SetFilename(fmt.Sprintf("%s.raw", fileBasename))
 
 	qcow2Pipeline := manifest.NewQCOW2(hostPipeline, rawImage)
