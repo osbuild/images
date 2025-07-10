@@ -1029,7 +1029,7 @@ func TestDistro_DiskCustomizationRunsValidateLayoutConstraints(t *testing.T) {
 
 func TestESP(t *testing.T) {
 	distro_test_common.TestESP(t, fedoraFamilyDistros, func(it distro.ImageType) (*disk.PartitionTable, error) {
-		return generic.GetPartitionTable(it)
+		return generic.GetPartitionTable(it, nil)
 	})
 }
 
