@@ -220,13 +220,15 @@ func TestGetServices(t *testing.T) {
 }
 
 func TestError(t *testing.T) {
-	expectedError := CustomizationError{
-		Message: "test error",
+	err := CustomizationError{
+		Message: "not supported",
+		RevPath: []string{"Name", "User", "Customizations"},
 	}
 
-	retError := expectedError.Error()
+	expMessage := "Customizations.User.Name: not supported"
 
-	assert.Equal(t, expectedError.Message, retError)
+	assert.Equal(t, err.Error(), expMessage)
+
 }
 
 // This tests calling all the functions on a Blueprint with no Customizations
