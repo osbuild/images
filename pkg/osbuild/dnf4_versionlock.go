@@ -2,6 +2,8 @@ package osbuild
 
 import (
 	"fmt"
+
+	"github.com/osbuild/images/pkg/rpmmd"
 )
 
 const dnf4VersionlockType = "org.osbuild.dnf4.versionlock"
@@ -28,4 +30,22 @@ func NewDNF4VersionlockStage(options *DNF4VersionlockOptions) *Stage {
 		Type:    dnf4VersionlockType,
 		Options: options,
 	}
+}
+
+// GenDNF4VersionlockStageOptions creates DNF4VersionlockOptions for the provided
+// packages at the specific EVR that is contained in the package spec list.
+func GenDNF4VersionlockStageOptions(lockPackageNames []string, packageSpecs []rpmmd.PackageSpec) (*DNF4VersionlockOptions, error) {
+	pkgNEVRs := make([]string, len(lockPackageNames))
+	for idx, pkgName := range lockPackageNames {
+		pkg, err := rpmmd.GetPackage(packageSpecs, pkgName)
+		if err != nil {
+			return nil, fmt.Errorf("%s: package %q not found in package list", dnf4VersionlockType, pkgName)
+		}
+		nevr := fmt.Sprintf("%s-%d:%s-%s", pkg.Name, pkg.Epoch, pkg.Version, pkg.Release)
+		pkgNEVRs[idx] = nevr
+	}
+
+	return &DNF4VersionlockOptions{
+		Add: pkgNEVRs,
+	}, nil
 }
