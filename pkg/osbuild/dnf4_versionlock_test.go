@@ -79,12 +79,25 @@ func TestGenVersionlockStageOptions(t *testing.T) {
 			Arch:     "x86_64",
 			Checksum: "sha256:4242424242424242424242424242424242424242424242424242424242424242",
 		},
+		{
+			Name:     "dnf",
+			Version:  "4.14.0",
+			Release:  "29.el9",
+			Arch:     "noarch",
+			Checksum: "sha256:72874726d1a16651933e382a4f4683046efd4b278830ad564932ce481ab8b9eb",
+		},
+		{
+			Name:     "python3-dnf-plugin-versionlock",
+			Version:  "4.3.0",
+			Release:  "21.el9",
+			Arch:     "noarch",
+			Checksum: "sha256:e14c57f7d0011ea378e4319bbc523000d0e7be4d35b6af7177aa6246c5aaa9ef",
+		},
 	}
 
 	type testCase struct {
 		packageNames []string
 		expOut       []string
-		expErr       string
 	}
 
 	testCases := map[string]testCase{
@@ -114,32 +127,100 @@ func TestGenVersionlockStageOptions(t *testing.T) {
 				"pkg42-7:42.13-9",
 			},
 		},
-		"not-found": {
-			packageNames: []string{
-				"not-a-package",
-			},
-			expErr: `org.osbuild.dnf4.versionlock: package "not-a-package" not found in package list`,
-		},
-		"mixed": {
-			packageNames: []string{
-				"pkg42",
-				"not-a-package",
-			},
-			expErr: `org.osbuild.dnf4.versionlock: package "not-a-package" not found in package list`,
-		},
 	}
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			assert := assert.New(t)
 			options, err := GenDNF4VersionlockStageOptions(tc.packageNames, packages)
-			if tc.expErr != "" {
-				assert.EqualError(err, tc.expErr)
-			} else {
-				assert.NoError(err)
-				expOptions := &DNF4VersionlockOptions{Add: tc.expOut}
-				assert.Equal(expOptions, options)
-			}
+			assert.NoError(err)
+			expOptions := &DNF4VersionlockOptions{Add: tc.expOut}
+			assert.Equal(expOptions, options)
+		})
+	}
+}
+
+func TestGenVersionlockStageOptionsError(t *testing.T) {
+	dnfPkg := rpmmd.PackageSpec{
+		Name:     "dnf",
+		Version:  "4.14.0",
+		Release:  "29.el9",
+		Arch:     "noarch",
+		Checksum: "sha256:72874726d1a16651933e382a4f4683046efd4b278830ad564932ce481ab8b9eb",
+	}
+	pluginPkg := rpmmd.PackageSpec{
+		Name:     "python3-dnf-plugin-versionlock",
+		Version:  "4.3.0",
+		Release:  "21.el9",
+		Arch:     "noarch",
+		Checksum: "sha256:e14c57f7d0011ea378e4319bbc523000d0e7be4d35b6af7177aa6246c5aaa9ef",
+	}
+	fakePkg := rpmmd.PackageSpec{
+		Name:     "pkg42",
+		Epoch:    7,
+		Version:  "42.13",
+		Release:  "9",
+		Arch:     "x86_64",
+		Checksum: "sha256:4242424242424242424242424242424242424242424242424242424242424242",
+	}
+
+	type testCase struct {
+		packageNames []string
+		packageSpecs []rpmmd.PackageSpec
+		expErr       string
+	}
+
+	testCases := map[string]testCase{
+		"not-found": {
+			packageNames: []string{
+				"not-a-package",
+			},
+			packageSpecs: []rpmmd.PackageSpec{
+				fakePkg,
+				dnfPkg,
+				pluginPkg,
+			},
+			expErr: `org.osbuild.dnf4.versionlock: package "not-a-package" not found in package list`,
+		},
+		"mixed": {
+			packageNames: []string{
+				fakePkg.Name,
+				"not-a-package",
+			},
+			packageSpecs: []rpmmd.PackageSpec{
+				fakePkg,
+				dnfPkg,
+				pluginPkg,
+			},
+			expErr: `org.osbuild.dnf4.versionlock: package "not-a-package" not found in package list`,
+		},
+		"nodnf": {
+			packageNames: []string{
+				fakePkg.Name,
+			},
+			packageSpecs: []rpmmd.PackageSpec{
+				fakePkg,
+				pluginPkg,
+			},
+			expErr: `org.osbuild.dnf4.versionlock: dnf version locking enabled for an image that does not contain dnf: package "dnf" not found in the PackageSpec list`,
+		},
+		"noplugin": {
+			packageNames: []string{
+				fakePkg.Name,
+			},
+			packageSpecs: []rpmmd.PackageSpec{
+				fakePkg,
+				dnfPkg,
+			},
+			expErr: `org.osbuild.dnf4.versionlock: dnf version locking enabled for an image that does not contain the versionlock plugin: package "python3-dnf-plugin-versionlock" not found in the PackageSpec list`,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			_, err := GenDNF4VersionlockStageOptions(tc.packageNames, tc.packageSpecs)
+			assert.EqualError(err, tc.expErr)
 		})
 	}
 }
