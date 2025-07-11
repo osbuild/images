@@ -1,4 +1,4 @@
-package buildconfig
+package blueprintload
 
 import (
 	"bytes"
@@ -24,8 +24,6 @@ import (
 type legacyBuildConfig struct {
 	Blueprint *json.RawMessage `json:"blueprint"`
 }
-
-type BuildConfig imagesBlueprint.Blueprint
 
 // configRootDir is only overriden in tests
 var configRootDir = "/"
@@ -101,7 +99,10 @@ func loadConfig(path string) (*externalBlueprint.Blueprint, error) {
 	}
 }
 
-func LoadConfig(path string) (*imagesBlueprint.Blueprint, error) {
+// Load loads the blueprint from the given path, it auto
+// detects if the blueprint is in json/toml based on the
+// filename
+func Load(path string) (*imagesBlueprint.Blueprint, error) {
 	externalBp, err := loadConfig(path)
 	if err != nil {
 		return nil, err
@@ -135,11 +136,13 @@ func readWithFallback(userConfig string) (*externalBlueprint.Blueprint, error) {
 	return loadConfig(foundConfig)
 }
 
-func ReadWithFallback(userConfig string) (*BuildConfig, error) {
+// LoadWithFallback will load the userConfig path if given or if
+// unset fallback to try the default configurations.
+func LoadWithFallback(userConfig string) (*imagesBlueprint.Blueprint, error) {
 	externalBp, err := readWithFallback(userConfig)
 	if err != nil {
 		return nil, err
 	}
-	internalBp := BuildConfig(externalBlueprint.Convert(*externalBp))
+	internalBp := externalBlueprint.Convert(*externalBp)
 	return &internalBp, nil
 }
