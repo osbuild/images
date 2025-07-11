@@ -26,8 +26,6 @@ require (
 	github.com/opencontainers/image-spec v1.1.1
 	github.com/oracle/oci-go-sdk/v54 v54.0.0
 	github.com/osbuild/blueprint v1.10.0
-	github.com/osbuild/bootc-image-builder/bib v0.0.0-20250715070533-5c4376fb716a
-	github.com/osbuild/image-builder-cli v0.0.0-20250715085019-7b535fdff548
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/pflag v1.0.6
@@ -85,6 +83,7 @@ require (
 	github.com/dougm/pretty v0.0.0-20160325215624-add1dbc86daf // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.32.4 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect
+	github.com/fatih/color v1.18.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.5 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
@@ -122,6 +121,7 @@ require (
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/letsencrypt/boulder v0.0.0-20240620165639-de9c06129bec // indirect
 	github.com/mailru/easyjson v0.9.0 // indirect
+	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/mattn/go-sqlite3 v1.14.27 // indirect
 	github.com/miekg/pkcs11 v1.1.1 // indirect

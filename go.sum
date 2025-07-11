@@ -334,10 +334,6 @@ github.com/oracle/oci-go-sdk/v54 v54.0.0 h1:CDLjeSejv2aDpElAJrhKpi6zvT/zhZCZuXch
 github.com/oracle/oci-go-sdk/v54 v54.0.0/go.mod h1:+t+yvcFGVp+3ZnztnyxqXfQDsMlq8U25faBLa+mqCMc=
 github.com/osbuild/blueprint v1.10.0 h1:6TG+mSV5kUA3Vq+0fc10MchDilBcDd8SEA8KbDFUn2w=
 github.com/osbuild/blueprint v1.10.0/go.mod h1:uknOfX/bAoi+dbeNJj+uAir1T++/LVEtoY8HO3U7MiQ=
-github.com/osbuild/bootc-image-builder/bib v0.0.0-20250715070533-5c4376fb716a h1:1kNwYYUvrejYBK7aGDX3fm5qcvfNw4UGE1DaEQMK6pg=
-github.com/osbuild/bootc-image-builder/bib v0.0.0-20250715070533-5c4376fb716a/go.mod h1:7lPsy9YksD5Sj9dBujYVSV9xEWHhqzDrmNW1fikkltE=
-github.com/osbuild/image-builder-cli v0.0.0-20250715085019-7b535fdff548 h1:rnQ4EBUKU5VmYqzt3W2fCTbkecLPf9HkHeZa9EX/yjQ=
-github.com/osbuild/image-builder-cli v0.0.0-20250715085019-7b535fdff548/go.mod h1:bsynesqZec7qIGbwSuD7v3jut8F28lR2dFS0fFaBNMM=
 github.com/ostreedev/ostree-go v0.0.0-20210805093236-719684c64e4f h1:/UDgs8FGMqwnHagNDPGOlts35QkhAZ8by3DR7nMih7M=
 github.com/ostreedev/ostree-go v0.0.0-20210805093236-719684c64e4f/go.mod h1:J6OG6YJVEWopen4avK3VNQSnALmmjvniMmni/YFYAwc=
 github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c h1:+mdjkGKdHQG3305AYmdv1U2eRNDiU2ErMBj1gwrq8eQ=
