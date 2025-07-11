@@ -38,6 +38,9 @@ jobs:
         # The Fedora 41 container doesn't have python3 installed by default
         run: dnf -y install python3
 
+      - name: Install podman
+        run: dnf -y install podman
+
       - name: Set up repository for pinned osbuild commit
         run: ./test/scripts/setup-osbuild-repo
 
@@ -110,6 +113,9 @@ jobs:
     steps:
       - name: Install dnf plugins
         run: dnf -y install dnf-plugins-core
+
+      - name: Install podman
+        run: dnf -y install podman
 
       - name: Enable crb repo
         run: dnf config-manager --set-enabled crb
