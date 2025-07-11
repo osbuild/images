@@ -7,9 +7,8 @@ import (
 	"path/filepath"
 
 	"github.com/osbuild/images/pkg/arch"
+	"github.com/osbuild/images/pkg/bib/source"
 	"github.com/osbuild/images/pkg/dnfjson"
-
-	"github.com/osbuild/bootc-image-builder/bib/internal/source"
 )
 
 func forceSymlink(symlinkPath, target string) error {

@@ -8,9 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osbuild/images/pkg/bib/buildconfig"
 	"github.com/osbuild/images/pkg/blueprint"
-
-	"github.com/osbuild/bootc-image-builder/bib/internal/buildconfig"
 )
 
 var expectedBuildConfig = &buildconfig.BuildConfig{
