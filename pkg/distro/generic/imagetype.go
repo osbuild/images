@@ -129,6 +129,8 @@ func (t *imageType) BasePartitionTable() (*disk.PartitionTable, error) {
 	return t.ImageTypeYAML.PartitionTable(t.arch.distro.Name(), t.arch.name)
 }
 
+var diskNewPartitionTable = disk.NewPartitionTable
+
 func (t *imageType) getPartitionTable(customizations *blueprint.Customizations, options distro.ImageOptions, rng *rand.Rand) (*disk.PartitionTable, error) {
 	basePartitionTable, err := t.BasePartitionTable()
 	if err != nil {
@@ -160,7 +162,9 @@ func (t *imageType) getPartitionTable(customizations *blueprint.Customizations, 
 	}
 
 	partitioningMode := options.PartitioningMode
-	if t.ImageTypeYAML.RPMOSTree {
+	// XXX: on fedora we had this code, we need to keep it for
+	// compatibility
+	if t.arch.distro.DistroYAML.DistroLike == manifest.DISTRO_FEDORA && t.ImageTypeYAML.RPMOSTree {
 		// IoT supports only LVM, force it.
 		// Raw is not supported, return an error if it is requested
 		// TODO Need a central location for logic like this
@@ -171,7 +175,7 @@ func (t *imageType) getPartitionTable(customizations *blueprint.Customizations, 
 	}
 
 	mountpoints := customizations.GetFilesystems()
-	return disk.NewPartitionTable(basePartitionTable, mountpoints, imageSize, partitioningMode, t.platform.GetArch(), t.ImageTypeYAML.RequiredPartitionSizes, rng)
+	return diskNewPartitionTable(basePartitionTable, mountpoints, imageSize, partitioningMode, t.platform.GetArch(), t.ImageTypeYAML.RequiredPartitionSizes, rng)
 }
 
 func (t *imageType) getDefaultImageConfig() *distro.ImageConfig {
