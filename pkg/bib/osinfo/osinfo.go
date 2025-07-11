@@ -1,4 +1,4 @@
-package source
+package osinfo
 
 import (
 	"bufio"
@@ -119,7 +119,7 @@ func readImageCustomization(root string) (*blueprint.Customizations, error) {
 	return config.Customizations, nil
 }
 
-func LoadInfo(root string) (*Info, error) {
+func Load(root string) (*Info, error) {
 	osrelease, err := distro.ReadOSReleaseFromTree(root)
 	if err != nil {
 		return nil, err

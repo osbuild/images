@@ -1,4 +1,4 @@
-package source
+package osinfo
 
 import (
 	"fmt"
@@ -133,7 +133,7 @@ func TestLoadInfo(t *testing.T) {
 
 			}
 
-			info, err := LoadInfo(root)
+			info, err := Load(root)
 
 			if c.errorStr != "" {
 				require.EqualError(t, err, strings.ReplaceAll(c.errorStr, "$ROOT", root))

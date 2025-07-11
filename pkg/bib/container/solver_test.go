@@ -15,7 +15,7 @@ import (
 	"github.com/osbuild/images/pkg/rpmmd"
 
 	"github.com/osbuild/images/pkg/bib/container"
-	"github.com/osbuild/images/pkg/bib/source"
+	"github.com/osbuild/images/pkg/bib/osinfo"
 )
 
 const (
@@ -53,7 +53,7 @@ func TestDNFJsonWorks(t *testing.T) {
 	err = cnt.InitDNF()
 	require.NoError(t, err)
 
-	sourceInfo, err := source.LoadInfo(cnt.Root())
+	sourceInfo, err := osinfo.Load(cnt.Root())
 	require.NoError(t, err)
 	solver, err := cnt.NewContainerSolver(cacheRoot, arch.Current(), sourceInfo)
 	require.NoError(t, err)
@@ -131,7 +131,7 @@ func TestDNFJsonWorkWithSubscribedContent(t *testing.T) {
 	err = cnt.InitDNF()
 	require.NoError(t, err)
 
-	sourceInfo, err := source.LoadInfo(cnt.Root())
+	sourceInfo, err := osinfo.Load(cnt.Root())
 	require.NoError(t, err)
 	solver, err := cnt.NewContainerSolver(cacheRoot, arch.ARCH_X86_64, sourceInfo)
 	require.NoError(t, err)
