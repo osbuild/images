@@ -105,3 +105,7 @@ func (p *OSTreeDeployment) AddStagesForAllFilesAndInlineData(pipeline *osbuild.P
 func (p *OSTreeDeployment) GetInline() []string {
 	return p.getInline()
 }
+
+func (p *Vagrant) GetMacAddress() string {
+	return p.macAddress
+}
