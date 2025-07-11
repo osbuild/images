@@ -14,8 +14,8 @@ import (
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/rpmmd"
 
-	"github.com/osbuild/bootc-image-builder/bib/internal/container"
-	"github.com/osbuild/bootc-image-builder/bib/internal/source"
+	"github.com/osbuild/images/pkg/bib/container"
+	"github.com/osbuild/images/pkg/bib/source"
 )
 
 const (

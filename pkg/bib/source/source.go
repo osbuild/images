@@ -10,7 +10,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/osbuild/bootc-image-builder/bib/internal/buildconfig"
+	"github.com/osbuild/images/pkg/bib/buildconfig"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/distro"
 )

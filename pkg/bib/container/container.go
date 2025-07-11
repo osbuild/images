@@ -8,8 +8,6 @@ import (
 	"strings"
 
 	"golang.org/x/exp/slices"
-
-	"github.com/osbuild/image-builder-cli/pkg/util"
 )
 
 // Container is a simpler wrapper around a running podman container.
@@ -129,7 +127,7 @@ func (c *Container) ExecArgv() []string {
 func (c *Container) DefaultRootfsType() (string, error) {
 	output, err := exec.Command("podman", "exec", c.id, "bootc", "install", "print-configuration").Output()
 	if err != nil {
-		return "", fmt.Errorf("failed to run bootc install print-configuration: %w", util.OutputErr(err))
+		return "", fmt.Errorf("failed to run bootc install print-configuration: %w, output:\n%s", err, output)
 	}
 
 	var bootcConfig struct {
