@@ -1,4 +1,4 @@
-package buildconfig_test
+package blueprintload_test
 
 import (
 	"os"
@@ -8,11 +8,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osbuild/images/pkg/bib/buildconfig"
+	"github.com/osbuild/images/pkg/bib/blueprintload"
 	"github.com/osbuild/images/pkg/blueprint"
 )
 
-var expectedBuildConfig = &buildconfig.BuildConfig{
+var expectedBuildConfig = &blueprint.Blueprint{
 	Customizations: &blueprint.Customizations{
 		User: []blueprint.UserCustomization{
 			{
@@ -46,12 +46,12 @@ func makeFakeConfig(t *testing.T, filename, content string) string {
 }
 
 func TestReadWithFallbackUserNoConfigNoFallack(t *testing.T) {
-	cfg, err := buildconfig.ReadWithFallback("")
+	cfg, err := blueprintload.LoadWithFallback("")
 	assert.NoError(t, err)
-	assert.Equal(t, &buildconfig.BuildConfig{}, cfg)
+	assert.Equal(t, &blueprint.Blueprint{}, cfg)
 }
 
-func TestReadWithFallbackUserProvidedConfig(t *testing.T) {
+func TestLoadWithFallbackUserProvidedConfig(t *testing.T) {
 	for _, tc := range []struct {
 		fname   string
 		content string
@@ -61,7 +61,7 @@ func TestReadWithFallbackUserProvidedConfig(t *testing.T) {
 	} {
 		fakeUserCnfPath := makeFakeConfig(t, tc.fname, tc.content)
 
-		cfg, err := buildconfig.ReadWithFallback(fakeUserCnfPath)
+		cfg, err := blueprintload.LoadWithFallback(fakeUserCnfPath)
 		assert.NoError(t, err)
 		assert.Equal(t, expectedBuildConfig, cfg)
 	}
@@ -76,10 +76,10 @@ func TestReadWithFallProvidedConfig(t *testing.T) {
 		{"config.json", fakeConfigJSON},
 	} {
 		fakeCnfPath := makeFakeConfig(t, tc.fname, tc.content)
-		restore := buildconfig.MockConfigRootDir(filepath.Dir(fakeCnfPath))
+		restore := blueprintload.MockConfigRootDir(filepath.Dir(fakeCnfPath))
 		defer restore()
 
-		cfg, err := buildconfig.ReadWithFallback("")
+		cfg, err := blueprintload.LoadWithFallback("")
 		assert.NoError(t, err)
 		assert.Equal(t, expectedBuildConfig, cfg)
 	}
@@ -96,7 +96,7 @@ func TestReadUserConfigErrorWrongFormat(t *testing.T) {
 	} {
 		fakeCnfPath := makeFakeConfig(t, tc.fname, tc.content)
 
-		_, err := buildconfig.ReadWithFallback(fakeCnfPath)
+		_, err := blueprintload.LoadWithFallback(fakeCnfPath)
 		assert.ErrorContains(t, err, tc.expectedErr)
 	}
 }
@@ -107,10 +107,10 @@ func TestReadUserConfigTwoConfigsError(t *testing.T) {
 		err := os.WriteFile(filepath.Join(tmpdir, fname), nil, 0644)
 		assert.NoError(t, err)
 	}
-	restore := buildconfig.MockConfigRootDir(tmpdir)
+	restore := blueprintload.MockConfigRootDir(tmpdir)
 	defer restore()
 
-	_, err := buildconfig.ReadWithFallback("")
+	_, err := blueprintload.LoadWithFallback("")
 	assert.ErrorContains(t, err, `found "config.json" and also "config.toml", only a single one is supported`)
 }
 
@@ -128,7 +128,7 @@ var fakeLegacyConfigJSON = `{
 
 func TestReadLegacyJSONConfig(t *testing.T) {
 	fakeUserCnfPath := makeFakeConfig(t, "config.json", fakeLegacyConfigJSON)
-	cfg, err := buildconfig.ReadWithFallback(fakeUserCnfPath)
+	cfg, err := blueprintload.LoadWithFallback(fakeUserCnfPath)
 	assert.NoError(t, err)
 	assert.Equal(t, expectedBuildConfig, cfg)
 }
@@ -138,7 +138,7 @@ func TestTomlUnknownKeysError(t *testing.T) {
 [[birds]]
 name = "toucan"
 `)
-	_, err := buildconfig.ReadWithFallback(fakeUserCnfPath)
+	_, err := blueprintload.LoadWithFallback(fakeUserCnfPath)
 
 	assert.ErrorContains(t, err, "unknown keys found: [birds birds.name]")
 }
@@ -153,7 +153,7 @@ func TestJsonUnknownKeysError(t *testing.T) {
   ]
 }
 `)
-	_, err := buildconfig.ReadWithFallback(fakeUserCnfPath)
+	_, err := blueprintload.LoadWithFallback(fakeUserCnfPath)
 
 	assert.ErrorContains(t, err, `json: unknown field "birds"`)
 }
@@ -165,9 +165,9 @@ mountpoint = "/"
 minsize = 1000
 `)
 
-	conf, err := buildconfig.ReadWithFallback(fakeUserCnfPath)
+	conf, err := blueprintload.LoadWithFallback(fakeUserCnfPath)
 	assert.NoError(t, err)
-	assert.Equal(t, &buildconfig.BuildConfig{
+	assert.Equal(t, &blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
 				{
@@ -179,17 +179,17 @@ minsize = 1000
 	}, conf)
 }
 
-func TestReadWithFallbackFromStdin(t *testing.T) {
+func TestLoadWithFallbackFromStdin(t *testing.T) {
 	fakeUserCnfPath := makeFakeConfig(t, "fake-stdin", fakeConfigJSON)
 	fakeStdinFp, err := os.Open(fakeUserCnfPath)
 	require.NoError(t, err)
 	// nolint:errcheck
 	defer fakeStdinFp.Close()
 
-	restore := buildconfig.MockOsStdin(fakeStdinFp)
+	restore := blueprintload.MockOsStdin(fakeStdinFp)
 	defer restore()
 
-	cfg, err := buildconfig.ReadWithFallback("-")
+	cfg, err := blueprintload.LoadWithFallback("-")
 	assert.NoError(t, err)
 	assert.Equal(t, expectedBuildConfig, cfg)
 }

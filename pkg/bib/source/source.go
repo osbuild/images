@@ -10,7 +10,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/osbuild/images/pkg/bib/buildconfig"
+	"github.com/osbuild/images/pkg/bib/blueprintload"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/distro"
 )
@@ -101,12 +101,12 @@ func readSelinuxPolicy(root string) (string, error) {
 
 func readImageCustomization(root string) (*blueprint.Customizations, error) {
 	prefix := path.Join(root, bibPathPrefix)
-	config, err := buildconfig.LoadConfig(path.Join(prefix, "config.json"))
+	config, err := blueprintload.Load(path.Join(prefix, "config.json"))
 	if err != nil && !os.IsNotExist(err) {
 		return nil, err
 	}
 	if config == nil {
-		config, err = buildconfig.LoadConfig(path.Join(prefix, "config.toml"))
+		config, err = blueprintload.Load(path.Join(prefix, "config.toml"))
 		if err != nil && !os.IsNotExist(err) {
 			return nil, err
 		}
