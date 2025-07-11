@@ -40,6 +40,10 @@ func ensureAMD64(t *testing.T) {
 }
 
 func TestDNFJsonWorks(t *testing.T) {
+	if !hasPodman() {
+		t.Skip("skipping test: no podman")
+	}
+
 	ensureCanRunDNFJsonTests(t)
 
 	cacheRoot := t.TempDir()
