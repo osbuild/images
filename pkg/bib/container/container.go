@@ -63,6 +63,7 @@ func New(ref string) (*Container, error) {
 		}
 	}()
 
+	/* #nosec G204 */
 	output, err = exec.Command("podman", "mount", c.id).Output()
 	if err != nil {
 		if err, ok := err.(*exec.ExitError); ok {
@@ -78,11 +79,13 @@ func New(ref string) (*Container, error) {
 // Stop stops the container. Since New() creates a container with --rm, this
 // removes the container as well.
 func (c *Container) Stop() error {
+	/* #nosec G204 */
 	if output, err := exec.Command("podman", "stop", c.id).CombinedOutput(); err != nil {
 		return fmt.Errorf("stopping %s container failed: %w\noutput:\n%s", c.id, err, output)
 	}
 	// when the container is stopped by podman it may not honor the "--rm"
 	// that was passed in `New()` so manually remove the container here if it is still available
+	/* #nosec G204 */
 	if output, err := exec.Command("podman", "rm", "--ignore", c.id).CombinedOutput(); err != nil {
 		return fmt.Errorf("removing %s container failed: %w\noutput:\n%s", c.id, err, output)
 	}
@@ -97,6 +100,7 @@ func (c *Container) Root() string {
 
 // Reads a file from the container
 func (c *Container) ReadFile(path string) ([]byte, error) {
+	/* #nosec G204 */
 	output, err := exec.Command("podman", "exec", c.id, "cat", path).Output()
 	if err != nil {
 		if err, ok := err.(*exec.ExitError); ok {
@@ -110,6 +114,7 @@ func (c *Container) ReadFile(path string) ([]byte, error) {
 
 // CopyInto copies a file into the container.
 func (c *Container) CopyInto(src, dest string) error {
+	/* #nosec G204 */
 	if output, err := exec.Command("podman", "cp", src, c.id+":"+dest).CombinedOutput(); err != nil {
 		return fmt.Errorf("copying %s into %s container failed: %w\noutput:\n%s", src, c.id, err, output)
 	}
@@ -125,6 +130,7 @@ func (c *Container) ExecArgv() []string {
 // specified by the bootc container install configuration. An empty
 // string is valid and means the container sets no default.
 func (c *Container) DefaultRootfsType() (string, error) {
+	/* #nosec G204 */
 	output, err := exec.Command("podman", "exec", c.id, "bootc", "install", "print-configuration").Output()
 	if err != nil {
 		return "", fmt.Errorf("failed to run bootc install print-configuration: %w, output:\n%s", err, output)

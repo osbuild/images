@@ -31,6 +31,7 @@ func forceSymlink(symlinkPath, target string) error {
 // check" without arguments takes around 25s so that is not a great
 // option).
 func (c *Container) InitDNF() error {
+	/* #nosec G204 */
 	if output, err := exec.Command("podman", "exec", c.id, "dnf", "check", "--duplicates").CombinedOutput(); err != nil {
 		return fmt.Errorf("initializing dnf in %s container failed: %w\noutput:\n%s", c.id, err, string(output))
 	}
