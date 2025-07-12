@@ -3,14 +3,16 @@ package image
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 
+	"github.com/osbuild/images/pkg/artifact"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
-	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
+	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/runner"
 )
 
@@ -26,21 +28,7 @@ type BootcDiskImage struct {
 	BuildContainerSource *container.SourceSpec
 
 	// Customizations
-	KernelOptionsAppend []string
-
-	// The users to put into the image, note that /etc/paswd (and friends)
-	// will become unmanaged state by bootc when used
-	Users  []users.User
-	Groups []users.Group
-
-	// Custom directories and files to create in the image
-	Directories []*fsnode.Directory
-	Files       []*fsnode.File
-
-	// SELinux policy, when set it enables the labeling of the tree with the
-	// selected profile
-	SELinux      string
-	BuildSELinux string
+	OSCustomizations manifest.OSCustomizations
 }
 
 func NewBootcDiskImage(container container.SourceSpec, buildContainer container.SourceSpec) *BootcDiskImage {
@@ -51,14 +39,26 @@ func NewBootcDiskImage(container container.SourceSpec, buildContainer container.
 	}
 }
 
+// XXX: consider what to do here, ideally the InstanciateManifest
+// signature would change to pass containers (or a new union of
+// repos and containers) so that we can use the same method
+// everywhere
+func (img *BootcDiskImage) InstantiateManifest(m *manifest.Manifest,
+	repos []rpmmd.RepoConfig,
+	runner runner.Runner,
+	rng *rand.Rand) (*artifact.Artifact, error) {
+
+	return nil, fmt.Errorf("internal error: BootcDiskImage  only supported InstantiateManifestFromContainers")
+}
+
 func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifest,
 	containers []container.SourceSpec,
 	runner runner.Runner,
 	rng *rand.Rand) error {
 
-	policy := img.SELinux
-	if img.BuildSELinux != "" {
-		policy = img.BuildSELinux
+	policy := img.OSCustomizations.SELinux
+	if img.OSCustomizations.BuildSELinux != "" {
+		policy = img.OSCustomizations.BuildSELinux
 	}
 
 	var copyFilesFrom map[string][]string
@@ -116,18 +116,20 @@ func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifes
 
 	rawImage := manifest.NewRawBootcImage(buildPipeline, containers, img.Platform)
 	rawImage.PartitionTable = img.PartitionTable
-	rawImage.Users = img.Users
-	rawImage.Groups = img.Groups
-	rawImage.Files = img.Files
-	rawImage.Directories = img.Directories
-	rawImage.KernelOptionsAppend = img.KernelOptionsAppend
-	rawImage.SELinux = img.SELinux
+	rawImage.Users = img.OSCustomizations.Users
+	rawImage.Groups = img.OSCustomizations.Groups
+	rawImage.Files = img.OSCustomizations.Files
+	rawImage.Directories = img.OSCustomizations.Directories
+	rawImage.KernelOptionsAppend = img.OSCustomizations.KernelOptionsAppend
+	rawImage.SELinux = img.OSCustomizations.SELinux
 	rawImage.MountUnits = true // always use mount units for bootc disk images
 
 	// In BIB, we export multiple images from the same pipeline so we use the
 	// filename as the basename for each export and set the extensions based on
 	// each file format.
-	fileBasename := img.Filename
+	//
+	// XXX: how to converge these two worlds?
+	fileBasename := strings.SplitN(img.Filename, ".", 2)[0]
 	rawImage.SetFilename(fmt.Sprintf("%s.raw", fileBasename))
 
 	qcow2Pipeline := manifest.NewQCOW2(hostPipeline, rawImage)

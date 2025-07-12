@@ -156,8 +156,8 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 	}
 
 	// Relabel the tree, unless the `NoSElinux` flag is explicitly set to `true`
-	if imageConfig.NoSElinux == nil || imageConfig.NoSElinux != nil && !*imageConfig.NoSElinux {
-		osc.SElinux = "targeted"
+	if imageConfig.NoSELinux == nil || imageConfig.NoSELinux != nil && !*imageConfig.NoSELinux {
+		osc.SELinux = "targeted"
 		osc.SELinuxForceRelabel = imageConfig.SELinuxForceRelabel
 	}
 
@@ -725,6 +725,49 @@ func bootableContainerImage(workload workload.Workload,
 		Filename:           fmt.Sprintf("20-%s.toml", id.Name),
 		RootFilesystemType: "ext4",
 	}
+
+	return img, nil
+}
+
+func bootcDiskImage(workload workload.Workload,
+	t *imageType,
+	bp *blueprint.Blueprint,
+	options distro.ImageOptions,
+	packageSets map[string]rpmmd.PackageSet,
+	containers []container.SourceSpec,
+	rng *rand.Rand) (image.ImageKind, error) {
+
+	if options.Bootc == nil || options.Bootc.Imgref == nil {
+		return nil, fmt.Errorf("no base image defined")
+	}
+	containerSource := container.SourceSpec{
+		Source: *options.Bootc.Imgref,
+		Name:   *options.Bootc.Imgref,
+		Local:  true,
+	}
+	buildContainerSource := containerSource
+	if options.Bootc.BuildImgref != nil {
+		buildContainerSource = container.SourceSpec{
+			Source: *options.Bootc.BuildImgref,
+			Name:   *options.Bootc.BuildImgref,
+			Local:  true,
+		}
+	}
+	img := image.NewBootcDiskImage(containerSource, buildContainerSource)
+	img.Platform = t.platform
+
+	var err error
+	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, bp.Customizations)
+	if err != nil {
+		return nil, err
+	}
+
+	pt, err := t.getPartitionTable(bp.Customizations, options, rng)
+	if err != nil {
+		return nil, err
+	}
+	img.PartitionTable = pt
+	img.Filename = t.Filename()
 
 	return img, nil
 }
