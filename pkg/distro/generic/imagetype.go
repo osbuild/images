@@ -40,7 +40,6 @@ type imageType struct {
 	platform platform.Platform
 
 	// XXX: make definable via YAML
-	workload               workload.Workload
 	defaultImageConfig     *distro.ImageConfig
 	defaultInstallerConfig *distro.InstallerConfig
 
@@ -160,7 +159,9 @@ func (t *imageType) getPartitionTable(customizations *blueprint.Customizations, 
 	}
 
 	partitioningMode := options.PartitioningMode
-	if t.ImageTypeYAML.RPMOSTree {
+	// XXX: this needs to go into YAML too :(
+	// XXX2: this was also not covered by the manifests tests, why?
+	if t.arch.distro.DistroYAML.DistroLike == manifest.DISTRO_FEDORA && t.ImageTypeYAML.RPMOSTree {
 		// IoT supports only LVM, force it.
 		// Raw is not supported, return an error if it is requested
 		// TODO Need a central location for logic like this
@@ -210,6 +211,17 @@ func (t *imageType) Manifest(bp *blueprint.Blueprint,
 	seedp *int64) (*manifest.Manifest, []string, error) {
 	seed := distro.SeedFrom(seedp)
 
+	if t.Workload != nil {
+		// For now, if an image type defines its own workload, don't allow any
+		// user customizations.
+		// Soon we will have more workflows and each will define its allowed
+		// set of customizations.  The current set of customizations defined in
+		// the blueprint spec corresponds to the Custom workflow.
+		if bp.Customizations != nil {
+			return nil, nil, fmt.Errorf(distro.NoCustomizationsAllowedError, t.Name())
+		}
+	}
+
 	warnings, err := t.checkOptions(bp, options)
 	if err != nil {
 		return nil, nil, err
@@ -246,8 +258,10 @@ func (t *imageType) Manifest(bp *blueprint.Blueprint,
 		}
 	}
 
-	w := t.workload
-	if w == nil {
+	var w workload.Workload
+	if t.ImageTypeYAML.Workload != nil {
+		w = t.ImageTypeYAML.Workload
+	} else {
 		// XXX: this needs to get duplicaed in exactly the same
 		// way in rhel/imagetype.go
 		workloadRepos := payloadRepos
@@ -332,8 +346,12 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 		return warnings, fmt.Errorf("OSTree is not supported for %q", t.Name())
 	}
 
+	if slices.Contains(t.ImageTypeYAML.UnsupportedPartitioningModes, options.PartitioningMode) {
+		return warnings, fmt.Errorf("partitioning mode %q is not supported for %q on %q", options.PartitioningMode, t.Name(), t.arch.distro.Name())
+	}
+
 	// we do not support embedding containers on ostree-derived images, only on commits themselves
-	if len(bp.Containers) > 0 && t.ImageTypeYAML.RPMOSTree && (t.Name() != "iot-commit" && t.Name() != "iot-container") {
+	if len(bp.Containers) > 0 && t.ImageTypeYAML.RPMOSTree && (t.Name() != "iot-commit" && t.Name() != "iot-container" && t.Name() != "edge-commit" && t.Name() != "edge-container") {
 		return warnings, fmt.Errorf("embedding containers is not supported for %s on %s", t.Name(), t.arch.distro.Name())
 	}
 
@@ -413,6 +431,19 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 		}
 	}
 
+	if t.Name() == "edge-raw-image" || t.Name() == "iot-raw-xz" {
+		// ostree-based bootable images require a URL from which to pull a payload commit
+		if options.OSTree == nil || options.OSTree.URL == "" {
+			return warnings, fmt.Errorf("%q images require specifying a URL from which to retrieve the OSTree commit", t.Name())
+		}
+
+		allowed := []string{"User", "Group", "FIPS"}
+		if err := customizations.CheckAllowed(allowed...); err != nil {
+			return warnings, fmt.Errorf(distro.UnsupportedCustomizationError, t.Name(), strings.Join(allowed, ", "))
+		}
+		// TODO: consider additional checks, such as those in "edge-simplified-installer"
+	}
+
 	if kernelOpts := customizations.GetKernel(); kernelOpts.Append != "" && t.ImageTypeYAML.RPMOSTree {
 		return warnings, fmt.Errorf("kernel boot parameter customizations are not supported for ostree types")
 	}
@@ -422,6 +453,25 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 	if err != nil {
 		return warnings, err
 	}
+
+	// (see commit ff53493): We are not enabling disk
+	// customizations on RHEL 8 currently because of issues with
+	// kernel page size differences in some versions on aarch64.
+	if t.arch.distro.DistroYAML.DistroLike == manifest.DISTRO_EL8 && partitioning != nil {
+		for _, partition := range partitioning.Partitions {
+			if t.Arch().Name() == arch.ARCH_AARCH64.String() {
+				if partition.FSType == "swap" {
+					return warnings, fmt.Errorf("swap partition creation is not supported on %s %s", t.Arch().Distro().Name(), t.Arch().Name())
+				}
+				for _, lv := range partition.LogicalVolumes {
+					if lv.FSType == "swap" {
+						return warnings, fmt.Errorf("swap partition creation is not supported on %s %s", t.Arch().Distro().Name(), t.Arch().Name())
+					}
+				}
+			}
+		}
+	}
+
 	if (len(mountpoints) > 0 || partitioning != nil) && t.ImageTypeYAML.RPMOSTree {
 		return warnings, fmt.Errorf("Custom mountpoints and partitioning are not supported for ostree types")
 	}

@@ -96,12 +96,21 @@ func newDistro(nameVer string) (distro.Distro, error) {
 		if imgTypeYAML.Filename == "" {
 			continue
 		}
-		for _, pl := range imgTypeYAML.Platforms {
+		platforms, err := imgTypeYAML.PlatformsFor(nameVer)
+		if err != nil {
+			return nil, err
+		}
+		for _, pl := range platforms {
 			ar, ok := rd.arches[pl.Arch.String()]
 			if !ok {
 				ar = newArchitecture(rd, pl.Arch.String())
 				rd.arches[pl.Arch.String()] = ar
 			}
+			// XXX: weird, weird layering
+			if distroYAML.SkipImageType(imgTypeYAML.Name(), pl.Arch.String()) {
+				continue
+			}
+
 			it := newImageTypeFrom(rd, ar, imgTypeYAML)
 			if err := ar.addImageType(&pl, it); err != nil {
 				return nil, err

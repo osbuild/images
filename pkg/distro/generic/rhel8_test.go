@@ -1,4 +1,4 @@
-package rhel8_test
+package generic_test
 
 import (
 	"fmt"
@@ -9,24 +9,21 @@ import (
 
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
+	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/distro_test_common"
-	"github.com/osbuild/images/pkg/distro/rhel/rhel8"
+	"github.com/osbuild/images/pkg/distro/generic"
+	"github.com/osbuild/images/pkg/ostree"
 )
 
-type rhelFamilyDistro struct {
-	name   string
-	distro distro.Distro
-}
-
-var rhelFamilyDistros = []rhelFamilyDistro{
+var rhel8_FamilyDistros = []rhelFamilyDistro{
 	{
 		name:   "rhel-810",
-		distro: rhel8.DistroFactory("rhel-810"),
+		distro: generic.DistroFactory("rhel-810"),
 	},
 }
 
-func TestFilenameFromType(t *testing.T) {
+func TestRH8_FilenameFromType(t *testing.T) {
 	type args struct {
 		outputFormat string
 	}
@@ -225,7 +222,7 @@ func TestFilenameFromType(t *testing.T) {
 			},
 		},
 	}
-	for _, dist := range rhelFamilyDistros {
+	for _, dist := range rhel8_FamilyDistros {
 		t.Run(dist.name, func(t *testing.T) {
 			for _, tt := range tests {
 				t.Run(tt.name, func(t *testing.T) {
@@ -252,7 +249,7 @@ func TestFilenameFromType(t *testing.T) {
 	}
 }
 
-func TestImageType_BuildPackages(t *testing.T) {
+func TestRH8_ImageType_BuildPackages(t *testing.T) {
 	x8664BuildPackages := []string{
 		"dnf",
 		"dosfstools",
@@ -280,7 +277,7 @@ func TestImageType_BuildPackages(t *testing.T) {
 		"x86_64":  x8664BuildPackages,
 		"aarch64": aarch64BuildPackages,
 	}
-	for _, dist := range rhelFamilyDistros {
+	for _, dist := range rhel8_FamilyDistros {
 		t.Run(dist.name, func(t *testing.T) {
 			d := dist.distro
 			for _, archLabel := range d.ListArches() {
@@ -305,7 +302,7 @@ func TestImageType_BuildPackages(t *testing.T) {
 	}
 }
 
-func TestImageType_Name(t *testing.T) {
+func TestRH8_ImageType_Name(t *testing.T) {
 	imgMap := []struct {
 		arch     string
 		imgNames []string
@@ -366,7 +363,7 @@ func TestImageType_Name(t *testing.T) {
 		},
 	}
 
-	for _, dist := range rhelFamilyDistros {
+	for _, dist := range rhel8_FamilyDistros {
 		t.Run(dist.name, func(t *testing.T) {
 			for _, mapping := range imgMap {
 				if mapping.arch == arch.ARCH_S390X.String() && dist.name == "centos" {
@@ -389,7 +386,7 @@ func TestImageType_Name(t *testing.T) {
 	}
 }
 
-func TestImageTypeAliases(t *testing.T) {
+func TestRH8_ImageTypeAliases(t *testing.T) {
 	type args struct {
 		imageTypeAliases []string
 	}
@@ -429,7 +426,7 @@ func TestImageTypeAliases(t *testing.T) {
 			},
 		},
 	}
-	for _, dist := range rhelFamilyDistros {
+	for _, dist := range rhel8_FamilyDistros {
 		t.Run(dist.name, func(t *testing.T) {
 			for _, tt := range tests {
 				t.Run(tt.name, func(t *testing.T) {
@@ -466,10 +463,10 @@ func TestImageTypeAliases(t *testing.T) {
 
 // Check that Manifest() function returns an error for unsupported
 // configurations.
-func TestDistro_ManifestError(t *testing.T) {
+func TestRH8_Distro_ManifestError(t *testing.T) {
 	// Currently, the only unsupported configuration is OSTree commit types
 	// with Kernel boot options
-	r8distro := rhelFamilyDistros[0].distro
+	r8distro := rhel8_FamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Kernel: &blueprint.KernelCustomization{
@@ -501,7 +498,7 @@ func TestDistro_ManifestError(t *testing.T) {
 	}
 }
 
-func TestArchitecture_ListImageTypes(t *testing.T) {
+func TestRH8_Architecture_ListImageTypes(t *testing.T) {
 	imgMap := []struct {
 		arch                     string
 		imgNames                 []string
@@ -572,9 +569,10 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 		},
 	}
 
-	for _, dist := range rhelFamilyDistros {
-		t.Run(dist.name, func(t *testing.T) {
-			for _, mapping := range imgMap {
+	for _, dist := range rhel8_FamilyDistros {
+		for _, mapping := range imgMap {
+			t.Run(dist.name+"/"+mapping.arch, func(t *testing.T) {
+
 				arch, err := dist.distro.GetArch(mapping.arch)
 				require.NoError(t, err)
 				imageTypes := arch.ListImageTypes()
@@ -586,13 +584,13 @@ func TestArchitecture_ListImageTypes(t *testing.T) {
 				}
 
 				require.ElementsMatch(t, expectedImageTypes, imageTypes)
-			}
-		})
+			})
+		}
 	}
 }
 
 func TestRHEL8_ListArches(t *testing.T) {
-	arches := rhelFamilyDistros[0].distro.ListArches()
+	arches := rhel8_FamilyDistros[0].distro.ListArches()
 	assert.Equal(t, []string{"aarch64", "ppc64le", "s390x", "x86_64"}, arches)
 }
 
@@ -620,7 +618,7 @@ func TestRHEL8_GetArch(t *testing.T) {
 		},
 	}
 
-	for _, dist := range rhelFamilyDistros {
+	for _, dist := range rhel8_FamilyDistros {
 		t.Run(dist.name, func(t *testing.T) {
 			for _, a := range arches {
 				actualArch, err := dist.distro.GetArch(a.name)
@@ -628,7 +626,7 @@ func TestRHEL8_GetArch(t *testing.T) {
 					assert.Nil(t, actualArch)
 					assert.Error(t, err)
 				} else {
-					assert.Equal(t, a.name, actualArch.Name())
+					require.Equal(t, a.name, actualArch.Name())
 					assert.NoError(t, err)
 				}
 			}
@@ -637,25 +635,25 @@ func TestRHEL8_GetArch(t *testing.T) {
 }
 
 func TestRhel8_Name(t *testing.T) {
-	distro := rhelFamilyDistros[0].distro
+	distro := rhel8_FamilyDistros[0].distro
 	assert.Equal(t, "rhel-8.10", distro.Name())
 }
 
 func TestRhel8_ModulePlatformID(t *testing.T) {
-	distro := rhelFamilyDistros[0].distro
+	distro := rhel8_FamilyDistros[0].distro
 	assert.Equal(t, "platform:el8", distro.ModulePlatformID())
 }
 
 func TestRhel86_KernelOption(t *testing.T) {
-	distro_test_common.TestDistro_KernelOption(t, rhelFamilyDistros[0].distro)
+	distro_test_common.TestDistro_KernelOption(t, rhel8_FamilyDistros[0].distro)
 }
 
 func TestRhel8_OSTreeOptions(t *testing.T) {
-	distro_test_common.TestDistro_OSTreeOptions(t, rhelFamilyDistros[0].distro)
+	distro_test_common.TestDistro_OSTreeOptions(t, rhel8_FamilyDistros[0].distro)
 }
 
-func TestDistro_CustomFileSystemManifestError(t *testing.T) {
-	r8distro := rhelFamilyDistros[0].distro
+func TestRH8_Distro_CustomFileSystemManifestError(t *testing.T) {
+	r8distro := rhel8_FamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -678,7 +676,7 @@ func TestDistro_CustomFileSystemManifestError(t *testing.T) {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
 			if imgTypeName == "edge-commit" || imgTypeName == "edge-container" {
-				assert.EqualError(t, err, "custom mountpoints are not supported for ostree types")
+				assert.EqualError(t, err, "Custom mountpoints and partitioning are not supported for ostree types")
 			} else if unsupported[imgTypeName] {
 				assert.Error(t, err)
 			} else {
@@ -688,8 +686,8 @@ func TestDistro_CustomFileSystemManifestError(t *testing.T) {
 	}
 }
 
-func TestDistro_TestRootMountPoint(t *testing.T) {
-	r8distro := rhelFamilyDistros[0].distro
+func TestRH8_Distro_TestRootMountPoint(t *testing.T) {
+	r8distro := rhel8_FamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -712,7 +710,7 @@ func TestDistro_TestRootMountPoint(t *testing.T) {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
 			if imgTypeName == "edge-commit" || imgTypeName == "edge-container" {
-				assert.EqualError(t, err, "custom mountpoints are not supported for ostree types")
+				assert.EqualError(t, err, "Custom mountpoints and partitioning are not supported for ostree types")
 			} else if unsupported[imgTypeName] {
 				assert.Error(t, err)
 			} else {
@@ -722,8 +720,8 @@ func TestDistro_TestRootMountPoint(t *testing.T) {
 	}
 }
 
-func TestDistro_CustomFileSystemSubDirectories(t *testing.T) {
-	r8distro := rhelFamilyDistros[0].distro
+func TestRH8_Distro_CustomFileSystemSubDirectories(t *testing.T) {
+	r8distro := rhel8_FamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -760,8 +758,8 @@ func TestDistro_CustomFileSystemSubDirectories(t *testing.T) {
 	}
 }
 
-func TestDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
-	r8distro := rhelFamilyDistros[0].distro
+func TestRH8_Distro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
+	r8distro := rhel8_FamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -806,8 +804,8 @@ func TestDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
 	}
 }
 
-func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
-	r8distro := rhelFamilyDistros[0].distro
+func TestRH8_Distro_DirtyMountpointsNotAllowed(t *testing.T) {
+	r8distro := rhel8_FamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -848,8 +846,8 @@ func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
 	}
 }
 
-func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
-	r8distro := rhelFamilyDistros[0].distro
+func TestRH8_Distro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
+	r8distro := rhel8_FamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Filesystem: []blueprint.FilesystemCustomization{
@@ -872,7 +870,7 @@ func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
 			if imgTypeName == "edge-commit" || imgTypeName == "edge-container" {
-				assert.EqualError(t, err, "custom mountpoints are not supported for ostree types")
+				assert.EqualError(t, err, "Custom mountpoints and partitioning are not supported for ostree types")
 			} else if unsupported[imgTypeName] {
 				assert.Error(t, err)
 			} else {
@@ -882,8 +880,8 @@ func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 	}
 }
 
-func TestDiskCustomizationsCheckOptions(t *testing.T) {
-	r8distro := rhelFamilyDistros[0].distro
+func TestRH8_DiskCustomizationsCheckOptions(t *testing.T) {
+	r8distro := rhel8_FamilyDistros[0].distro
 	plainBP := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Disk: &blueprint.DiskCustomization{
@@ -954,6 +952,8 @@ func TestDiskCustomizationsCheckOptions(t *testing.T) {
 
 	// these produce a different error message and are tested elsewhere
 	skipTest := map[string]bool{
+		"edge-commit":               true,
+		"edge-container":            true,
 		"edge-installer":            true,
 		"edge-simplified-installer": true,
 		"edge-raw-image":            true,
@@ -990,5 +990,54 @@ func TestDiskCustomizationsCheckOptions(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+func TestRH8_UnsupportedPartitioningModes(t *testing.T) {
+	r8distro := rhel8_FamilyDistros[0].distro
+	rawBP := &blueprint.Blueprint{}
+	instBP := &blueprint.Blueprint{
+		Customizations: &blueprint.Customizations{
+			InstallationDevice: "/dev/foo",
+		},
+	}
+
+	for _, tc := range []struct {
+		imgTypeName      string
+		bp               *blueprint.Blueprint
+		partitioningMode disk.PartitioningMode
+		expectedErrTmpl  string
+	}{
+		{"edge-raw-image", rawBP, "", ""},
+		{"edge-raw-image", rawBP, disk.RawPartitioningMode, ""},
+		{"edge-simplified-installer", instBP, "", ""},
+		{"edge-raw-image", rawBP, disk.LVMPartitioningMode, `partitioning mode %q is not supported for %q on %q`},
+		{"edge-raw-image", rawBP, disk.AutoLVMPartitioningMode, `partitioning mode %q is not supported for %q on %q`},
+		{"edge-simplified-installer", instBP, disk.LVMPartitioningMode, `partitioning mode %q is not supported for %q on %q`},
+		{"edge-simplified-installer", instBP, disk.AutoLVMPartitioningMode, `partitioning mode %q is not supported for %q on %q`},
+	} {
+		distroArch, _ := r8distro.GetArch("x86_64")
+		imgType, err := distroArch.GetImageType(tc.imgTypeName)
+		require.NoError(t, err)
+
+		testname := fmt.Sprintf("%s-%s", r8distro.Name(), tc.imgTypeName)
+		t.Run(testname, func(t *testing.T) {
+			assert := assert.New(t)
+
+			opts := distro.ImageOptions{
+				OSTree: &ostree.ImageOptions{
+					URL: "http://example.com/foo",
+				},
+				PartitioningMode: tc.partitioningMode,
+			}
+			_, _, err := imgType.Manifest(tc.bp, opts, nil, nil)
+			if tc.expectedErrTmpl == "" {
+				assert.NoError(err)
+			} else {
+				expectedErr := fmt.Sprintf(tc.expectedErrTmpl, tc.partitioningMode, tc.imgTypeName, r8distro.Name())
+				assert.EqualError(err, expectedErr)
+			}
+		})
+
 	}
 }

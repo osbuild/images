@@ -20,6 +20,7 @@ import (
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
+	"github.com/osbuild/images/pkg/distro/generic"
 	"github.com/osbuild/images/pkg/distro/test_distro"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -313,6 +314,10 @@ image_types:
 var fakeImageTypesYaml = `
 image_types:
   test_type:
+    filename: "disk.img"
+    image_func: "disk"
+    platforms:
+      - arch: x86_64
     partition_table:
       test_arch: &test_arch_pt
         size: 1_000_000_000
@@ -703,7 +708,7 @@ distros:
 			QCOW2Compat:  "1.1",
 			UEFIVendor:   "test-vendor",
 		},
-	}, imgType.Platforms)
+	}, imgType.InternalPlatforms)
 }
 
 func TestImageTypesUEFIVendorErrorWhenEmpty(t *testing.T) {
@@ -906,7 +911,10 @@ distros:
     ostree_ref_tmpl: "centos/10/%s/edge"
     default_fs_type: "xfs"
     defs_path: rhel-10
-    ignore_image_types: ["test_type"]
+    conditions:
+      "ignore example":
+        when:
+        ignore_image_types: ["test_type"]
 
   - name: "rhel-{{.MajorVersion}}.{{.MinorVersion}}"
     match: "rhel-10.*"
@@ -951,6 +959,9 @@ func TestDistrosLoadingExact(t *testing.T) {
 
 	distro, err = defs.NewDistroYAML("centos-10")
 	require.NoError(t, err)
+	assert.Len(t, distro.Conditions, 1)
+	// we cannot assert.Equal() the conditions as it as unexported types
+	distro.Conditions = nil
 	assert.Equal(t, &defs.DistroYAML{
 		Name:             "centos-10",
 		Vendor:           "centos",
@@ -961,7 +972,6 @@ func TestDistrosLoadingExact(t *testing.T) {
 		OSTreeRefTmpl:    "centos/10/%s/edge",
 		DefsPath:         "rhel-10",
 		DefaultFSType:    disk.FS_XFS,
-		IgnoreImageTypes: []string{"test_type"},
 	}, distro)
 }
 
@@ -1016,15 +1026,21 @@ func TestDistrosLoadingIgnore(t *testing.T) {
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	distro, err := defs.NewDistroYAML("fedora-43")
-	require.NoError(t, err)
+	// Note that we load from the "generic" distro here as
+	// the resolving of available image types happens on
+	// this layer. XXX: consolidate it to the YAML level
+	// already?
+	distro := generic.DistroFactory("fedora-43")
+	require.NotNil(t, distro)
 	// fedora-43 does not exclude this "test_type"
-	assert.Len(t, distro.ImageTypes(), 1)
+	a := common.Must(distro.GetArch("x86_64"))
+	assert.Len(t, a.ListImageTypes(), 1)
 
-	distro, err = defs.NewDistroYAML("centos-10")
-	require.NoError(t, err)
+	distro = generic.DistroFactory("centos-10")
+	require.NotNil(t, distro)
+	a = common.Must(distro.GetArch("x86_64"))
 	// but centos-10 does exclude this "test_type"
-	assert.Len(t, distro.ImageTypes(), 0)
+	assert.Len(t, a.ListImageTypes(), 0)
 }
 
 func TestDistrosLoadingNotFound(t *testing.T) {
@@ -1051,4 +1067,161 @@ func TestWhenConditionEvalAnd(t *testing.T) {
 	wc := &defs.WhenCondition{DistroName: "distro", Architecture: "arch"}
 	assert.Equal(t, wc.Eval(&distro.ID{Name: "distro"}, "other-arch"), false)
 	assert.Equal(t, wc.Eval(&distro.ID{Name: "distro"}, "arch"), true)
+}
+
+func TestImageTypesPlatformOverrides(t *testing.T) {
+	fakeImageTypesYaml := `
+image_types:
+  server-qcow2:
+    filename: "disk.qcow2"
+    exports: ["qcow2"]
+    platforms_override:
+      conditions:
+        "test platform override, simulate old distro is bios only":
+          when:
+            version_less_than: "2"
+          override:
+            - arch: x86_64
+              # note no uefi_vendor here
+    platforms:
+      - arch: x86_64
+        uefi_vendor: "some-uefi-vendor"
+`
+
+	fakeDistrosYAML := `
+distros:
+ - name: test-distro-1
+   vendor: test-vendor
+   defs_path: test-distro/
+ - name: test-distro-2
+   vendor: test-vendor
+   defs_path: test-distro/
+`
+	baseDir := makeFakeDistrosYAML(t, fakeDistrosYAML, fakeImageTypesYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	for _, tc := range []struct {
+		distroNameVer      string
+		expectedUEFIVendor string
+	}{
+		{"test-distro-1", ""},
+		{"test-distro-2", "some-uefi-vendor"},
+	} {
+
+		distro, err := defs.NewDistroYAML(tc.distroNameVer)
+		require.NoError(t, err)
+
+		imgTypes := distro.ImageTypes()
+		assert.Len(t, imgTypes, 1)
+		imgType := imgTypes["server-qcow2"]
+		platforms, err := imgType.PlatformsFor(tc.distroNameVer)
+		assert.NoError(t, err)
+		assert.Equal(t, []platform.PlatformConf{
+			{
+				Arch:       arch.ARCH_X86_64,
+				UEFIVendor: tc.expectedUEFIVendor,
+			},
+		}, platforms)
+	}
+}
+
+func TestDistroYAMLCondition(t *testing.T) {
+	fakeImageTypesYaml := `
+image_types:
+  ec2:
+    filename: "disk.raw"
+    image_func: "disk"
+    exports: ["image"]
+    platforms:
+      - arch: x86_64
+        uefi_vendor: "some-uefi-vendor"
+  container:
+    filename: "container.tar.gz"
+    image_func: "container"
+    exports: ["archive"]
+    platforms:
+      - arch: x86_64
+`
+
+	fakeDistrosYAML := `
+distros:
+ - &rhel8
+   name: rhel-8
+   conditions:
+     "some image types are rhel-only":
+       when:
+         not_distro_name: "rhel"
+       ignore_image_types:
+         - ec2
+   defs_path: test-distro/
+ - <<: *rhel8
+   name: centos-8
+   defs_path: test-distro/
+`
+	baseDir := makeFakeDistrosYAML(t, fakeDistrosYAML, fakeImageTypesYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	for _, tc := range []struct {
+		distroNameVer    string
+		expectedImgTypes []string
+	}{
+		{"rhel-8", []string{"container", "ec2"}},
+		{"centos-8", []string{"container"}},
+	} {
+		t.Run(tc.distroNameVer, func(t *testing.T) {
+			// Note that we load from the "generic" distro here as
+			// the resolving of available image types happens on
+			// this layer. XXX: consolidate it to the YAML level
+			// already?
+
+			distro := generic.DistroFactory(tc.distroNameVer)
+			require.NotNil(t, distro)
+			assert.Equal(t, tc.distroNameVer, distro.Name())
+			a, err := distro.GetArch("x86_64")
+			require.NoError(t, err)
+
+			assert.Equal(t, tc.expectedImgTypes, a.ListImageTypes())
+		})
+	}
+}
+
+func TestDistrosLoadingTransformRE(t *testing.T) {
+	fakeDistrosYAML := `
+distros:
+  - name: "rhel-{{.MajorVersion}}.{{.MinorVersion}}"
+    match: "rhel-8.*"
+    transform_re: "(?P<name>rhel)-(?P<major>8)(?P<minor>[0-9]+)"
+    os_version: "{{.MajorVersion}}.{{.MinorVersion}}"
+    release_version: "{{.MajorVersion}}"
+    module_platform_id: "platform:el{{.MajorVersion}}"
+`
+	baseDir := makeFakeDistrosYAML(t, fakeDistrosYAML, "")
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
+
+	for _, tc := range []struct {
+		nameVer               string
+		expectedDistroNameVer string
+		expectedOsVersion     string
+	}{
+		{"rhel-8.1", "rhel-8.1", "8.1"},
+		{"rhel-81", "rhel-8.1", "8.1"},
+		{"rhel-8.9", "rhel-8.9", "8.9"},
+		{"rhel-89", "rhel-8.9", "8.9"},
+		{"rhel-8.10", "rhel-8.10", "8.10"},
+		{"rhel-810", "rhel-8.10", "8.10"},
+	} {
+		distro, err := defs.NewDistroYAML(tc.nameVer)
+		require.NoError(t, err)
+		assert.Equal(t, &defs.DistroYAML{
+			Name:             tc.expectedDistroNameVer,
+			Match:            "rhel-8.*",
+			TransformRE:      "(?P<name>rhel)-(?P<major>8)(?P<minor>[0-9]+)",
+			OsVersion:        tc.expectedOsVersion,
+			ReleaseVersion:   "8",
+			ModulePlatformID: "platform:el8",
+		}, distro)
+	}
 }

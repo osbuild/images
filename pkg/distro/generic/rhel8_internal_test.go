@@ -1,25 +1,22 @@
-package rhel8
+package generic
 
 import (
 	"fmt"
-	"math/rand"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/datasizes"
+	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/distro/rhel"
+	"github.com/osbuild/images/pkg/distro/distro_test_common"
 )
 
-// math/rand is good enough in this case
-/* #nosec G404 */
-var rng = rand.New(rand.NewSource(0))
-
-func TestEC2Partitioning(t *testing.T) {
+func TestRH8_EC2Partitioning(t *testing.T) {
 	testCases := []struct {
 		distro             string
 		aarch64bootSizeMiB uint64
@@ -53,13 +50,15 @@ func TestEC2Partitioning(t *testing.T) {
 					continue
 				}
 				t.Run(fmt.Sprintf("%s/%s/%s", tt.distro, arch, it), func(t *testing.T) {
-					a, err := DistroFactory(tt.distro).GetArch(arch)
+					d := DistroFactory(tt.distro)
+					require.NotNil(t, d)
+					a, err := d.GetArch(arch)
 					require.NoError(t, err)
 					i, err := a.GetImageType(it)
 					require.NoError(t, err)
 
-					it := i.(*rhel.ImageType)
-					pt, err := it.GetPartitionTable(&blueprint.Customizations{}, distro.ImageOptions{}, rng)
+					it := i.(*imageType)
+					pt, err := it.getPartitionTable(&blueprint.Customizations{}, distro.ImageOptions{}, rng)
 					require.NoError(t, err)
 
 					// x86_64 is /boot-less, check that
@@ -79,7 +78,7 @@ func TestEC2Partitioning(t *testing.T) {
 	}
 }
 
-func TestDistroFactory(t *testing.T) {
+func TestRH8_DistroFactory(t *testing.T) {
 	type testCase struct {
 		strID    string
 		expected distro.Distro
@@ -88,31 +87,31 @@ func TestDistroFactory(t *testing.T) {
 	testCases := []testCase{
 		{
 			strID:    "rhel-8.0",
-			expected: newDistro("rhel", 0),
+			expected: common.Must(newDistro("rhel-8.0")),
 		},
 		{
 			strID:    "rhel-80",
-			expected: newDistro("rhel", 0),
+			expected: common.Must(newDistro("rhel-8.0")),
 		},
 		{
 			strID:    "rhel-8.4",
-			expected: newDistro("rhel", 4),
+			expected: common.Must(newDistro("rhel-8.4")),
 		},
 		{
 			strID:    "rhel-84",
-			expected: newDistro("rhel", 4),
+			expected: common.Must(newDistro("rhel-8.4")),
 		},
 		{
 			strID:    "rhel-8.10",
-			expected: newDistro("rhel", 10),
+			expected: common.Must(newDistro("rhel-8.10")),
 		},
 		{
 			strID:    "rhel-810",
-			expected: newDistro("rhel", 10),
+			expected: common.Must(newDistro("rhel-8.10")),
 		},
 		{
 			strID:    "centos-8",
-			expected: newDistro("centos", -1),
+			expected: common.Must(newDistro("centos-8")),
 		},
 		{
 			strID:    "centos-8.4",
@@ -126,46 +125,6 @@ func TestDistroFactory(t *testing.T) {
 			strID:    "rhel-8.4.1",
 			expected: nil,
 		},
-		{
-			strID:    "rhel-7",
-			expected: nil,
-		},
-		{
-			strID:    "rhel-79",
-			expected: nil,
-		},
-		{
-			strID:    "rhel-7.9",
-			expected: nil,
-		},
-		{
-			strID:    "fedora-8",
-			expected: nil,
-		},
-		{
-			strID:    "fedora-38",
-			expected: nil,
-		},
-		{
-			strID:    "fedora-38.1",
-			expected: nil,
-		},
-		{
-			strID:    "fedora",
-			expected: nil,
-		},
-		{
-			strID:    "rhel-9",
-			expected: nil,
-		},
-		{
-			strID:    "rhel-910",
-			expected: nil,
-		},
-		{
-			strID:    "rhel-9.10",
-			expected: nil,
-		},
 	}
 
 	for _, tc := range testCases {
@@ -174,9 +133,21 @@ func TestDistroFactory(t *testing.T) {
 			if tc.expected == nil {
 				assert.Nil(t, d)
 			} else {
-				assert.NotNil(t, d)
+				require.NotNil(t, d)
 				assert.Equal(t, tc.expected.Name(), d.Name())
 			}
 		})
 	}
+}
+
+func RH8_TestESP(t *testing.T) {
+	var distros []distro.Distro
+	for _, distroName := range []string{"rhel-8.8", "rhel-8.9", "rhel-8.10", "centos-8"} {
+		distros = append(distros, DistroFactory(distroName))
+	}
+
+	distro_test_common.TestESP(t, distros, func(i distro.ImageType) (*disk.PartitionTable, error) {
+		it := i.(*imageType)
+		return it.getPartitionTable(&blueprint.Customizations{}, distro.ImageOptions{}, rng)
+	})
 }
