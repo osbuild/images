@@ -1511,6 +1511,12 @@ image_types:
             - "rhui-azure-rhel8"
           exclude:
             - "firewalld"
+        # eapWorkload()
+        - include:
+            - "java-1.8.0-openjdk"
+            - "java-1.8.0-openjdk-devel"
+            - "eap7-wildfly"
+            - "eap7-artemis-native-wildfly"
 
   "image-installer":
     package_sets:
