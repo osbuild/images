@@ -1511,12 +1511,49 @@ image_types:
             - "rhui-azure-rhel8"
           exclude:
             - "firewalld"
-        # eapWorkload()
+        # from the previous eapWorkload() workload, for simplicity
+        # this is now a normal packageset
         - include:
             - "java-1.8.0-openjdk"
             - "java-1.8.0-openjdk-devel"
             - "eap7-wildfly"
             - "eap7-artemis-native-wildfly"
+          exclude:
+            # weak dependencies of the above eapWorkload packages
+            # that we don't need (and were not part of the original
+            # eapWorkload() package set (as it excluded weak deps)
+            - "graphite2"
+            - "libXdamage"
+            - "libXrandr"
+            - "libthai"
+            - "libXfixes"
+            - "atk"
+            - "fribidi"
+            - "jbigkit-libs"
+            - "hicolor-icon-theme"
+            - "libtiff"
+            - "gtk2"
+            - "harfbuzz"
+            - "libXinerama"
+            - "libatrie"
+            - "libXft"
+            - "pango"
+            - "gdk-pixbuf2-modules"
+            - "libXcursor"
+          conditions:
+            "rhel-8.8+ needs to exclude libjpeg-turbo as well":
+              when:
+                version_greater_or_equal: "8.8"
+              append:
+                exclude:
+                  - "libjpeg-turbo"
+            "rhel-8.10 must exclude python3-{webencodings,html5lib":
+              when:
+                version_greater_or_equal: "8.10"
+              append:
+                exclude:
+                  - "python3-webencodings"
+                  - "python3-html5lib"
 
   "image-installer":
     package_sets:

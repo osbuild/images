@@ -492,8 +492,6 @@ func TestDistro_ManifestError(t *testing.T) {
 				assert.EqualError(t, err, fmt.Sprintf("%q images require specifying a URL from which to retrieve the OSTree commit", imgTypeName))
 			} else if imgTypeName == "edge-installer" || imgTypeName == "edge-simplified-installer" {
 				assert.EqualError(t, err, fmt.Sprintf("boot ISO image type %q requires specifying a URL from which to retrieve the OSTree commit", imgTypeName))
-			} else if imgTypeName == "azure-eap7-rhui" {
-				assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
 			} else {
 				assert.NoError(t, err)
 			}
@@ -670,7 +668,6 @@ func TestDistro_CustomFileSystemManifestError(t *testing.T) {
 		"edge-installer":            true,
 		"edge-simplified-installer": true,
 		"edge-raw-image":            true,
-		"azure-eap7-rhui":           true,
 	}
 	for _, archName := range r8distro.ListArches() {
 		arch, _ := r8distro.GetArch(archName)
@@ -704,7 +701,6 @@ func TestDistro_TestRootMountPoint(t *testing.T) {
 		"edge-installer":            true,
 		"edge-simplified-installer": true,
 		"edge-raw-image":            true,
-		"azure-eap7-rhui":           true,
 	}
 	for _, archName := range r8distro.ListArches() {
 		arch, _ := r8distro.GetArch(archName)
@@ -744,7 +740,6 @@ func TestDistro_CustomFileSystemSubDirectories(t *testing.T) {
 		"edge-installer":            true,
 		"edge-simplified-installer": true,
 		"edge-raw-image":            true,
-		"azure-eap7-rhui":           true,
 	}
 	for _, archName := range r8distro.ListArches() {
 		arch, _ := r8distro.GetArch(archName)
@@ -790,7 +785,6 @@ func TestDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
 		"edge-installer":            true,
 		"edge-simplified-installer": true,
 		"edge-raw-image":            true,
-		"azure-eap7-rhui":           true,
 	}
 	for _, archName := range r8distro.ListArches() {
 		arch, _ := r8distro.GetArch(archName)
@@ -832,7 +826,6 @@ func TestDistro_DirtyMountpointsNotAllowed(t *testing.T) {
 		"edge-installer":            true,
 		"edge-simplified-installer": true,
 		"edge-raw-image":            true,
-		"azure-eap7-rhui":           true,
 	}
 	for _, archName := range r8distro.ListArches() {
 		arch, _ := r8distro.GetArch(archName)
@@ -864,7 +857,6 @@ func TestDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 		"edge-installer":            true,
 		"edge-simplified-installer": true,
 		"edge-raw-image":            true,
-		"azure-eap7-rhui":           true,
 	}
 	for _, archName := range r8distro.ListArches() {
 		arch, _ := r8distro.GetArch(archName)
@@ -957,7 +949,6 @@ func TestDiskCustomizationsCheckOptions(t *testing.T) {
 		"edge-installer":            true,
 		"edge-simplified-installer": true,
 		"edge-raw-image":            true,
-		"azure-eap7-rhui":           true,
 	}
 
 	for _, archName := range r8distro.ListArches() {
