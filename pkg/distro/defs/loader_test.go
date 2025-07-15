@@ -20,6 +20,7 @@ import (
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
+	"github.com/osbuild/images/pkg/distro/generic"
 	"github.com/osbuild/images/pkg/distro/test_distro"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -906,7 +907,6 @@ distros:
     ostree_ref_tmpl: "centos/10/%s/edge"
     default_fs_type: "xfs"
     defs_path: rhel-10
-    ignore_image_types: ["test_type"]
 
   - name: "rhel-{{.MajorVersion}}.{{.MinorVersion}}"
     match: "rhel-10.*"
@@ -961,7 +961,6 @@ func TestDistrosLoadingExact(t *testing.T) {
 		OSTreeRefTmpl:    "centos/10/%s/edge",
 		DefsPath:         "rhel-10",
 		DefaultFSType:    disk.FS_XFS,
-		IgnoreImageTypes: []string{"test_type"},
 	}, distro)
 }
 
@@ -1010,21 +1009,65 @@ func TestDistrosLoadingFactoryCompat(t *testing.T) {
 	}, distro)
 }
 
-func TestDistrosLoadingIgnore(t *testing.T) {
-	// fakeImageTypes contains a single "test_type"
+func TestDistroYAMLCondition(t *testing.T) {
+	fakeImageTypesYaml := `
+image_types:
+  ec2:
+    filename: "disk.raw"
+    image_func: "disk"
+    exports: ["image"]
+    platforms:
+      - arch: x86_64
+        uefi_vendor: "some-uefi-vendor"
+  container:
+    filename: "container.tar.gz"
+    image_func: "container"
+    exports: ["archive"]
+    platforms:
+      - arch: x86_64
+`
+
+	fakeDistrosYAML := `
+distros:
+ - &rhel8
+   name: rhel-8
+   conditions:
+     "some image types are rhel-only":
+       when:
+         not_distro_name: "rhel"
+       ignore_image_types:
+         - ec2
+   defs_path: test-distro/
+ - <<: *rhel8
+   name: centos-8
+   defs_path: test-distro/
+`
 	baseDir := makeFakeDistrosYAML(t, fakeDistrosYAML, fakeImageTypesYaml)
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	distro, err := defs.NewDistroYAML("fedora-43")
-	require.NoError(t, err)
-	// fedora-43 does not exclude this "test_type"
-	assert.Len(t, distro.ImageTypes(), 1)
+	for _, tc := range []struct {
+		distroNameVer    string
+		expectedImgTypes []string
+	}{
+		{"rhel-8", []string{"container", "ec2"}},
+		{"centos-8", []string{"container"}},
+	} {
+		t.Run(tc.distroNameVer, func(t *testing.T) {
+			// Note that we load from the "generic" distro here as
+			// the resolving of available image types happens on
+			// this layer. XXX: consolidate it to the YAML level
+			// already?
 
-	distro, err = defs.NewDistroYAML("centos-10")
-	require.NoError(t, err)
-	// but centos-10 does exclude this "test_type"
-	assert.Len(t, distro.ImageTypes(), 0)
+			distro := generic.DistroFactory(tc.distroNameVer)
+			require.NotNil(t, distro)
+			assert.Equal(t, tc.distroNameVer, distro.Name())
+			a, err := distro.GetArch("x86_64")
+			require.NoError(t, err)
+
+			assert.Equal(t, tc.expectedImgTypes, a.ListImageTypes())
+		})
+	}
 }
 
 func TestDistrosLoadingNotFound(t *testing.T) {
