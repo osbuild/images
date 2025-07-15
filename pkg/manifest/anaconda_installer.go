@@ -192,7 +192,7 @@ func (p *AnacondaInstaller) getPackageSetChain(Distro) []rpmmd.PackageSet {
 			Include:         append(packages, p.ExtraPackages...),
 			Exclude:         p.ExcludePackages,
 			Repositories:    append(p.repos, p.ExtraRepos...),
-			InstallWeakDeps: p.Type == AnacondaInstallerTypeLive,
+			InstallWeakDeps: true,
 		},
 	}
 }
