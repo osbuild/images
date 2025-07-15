@@ -33,22 +33,22 @@ type Client struct {
 func NewClient(credentials Credentials, tenantID, subscriptionID string) (*Client, error) {
 	creds, err := azidentity.NewClientSecretCredential(tenantID, credentials.clientID, credentials.clientSecret, nil)
 	if err != nil {
-		return nil, fmt.Errorf("creating azure ClientSecretCredential failed: %v", err)
+		return nil, fmt.Errorf("creating azure ClientSecretCredential failed: %w", err)
 	}
 
 	resFact, err := armresources.NewClientFactory(subscriptionID, creds, nil)
 	if err != nil {
-		return nil, fmt.Errorf("creating resources client factory failed: %v", err)
+		return nil, fmt.Errorf("creating resources client factory failed: %w", err)
 	}
 
 	storFact, err := armstorage.NewClientFactory(subscriptionID, creds, nil)
 	if err != nil {
-		return nil, fmt.Errorf("creating storage client factory failed: %v", err)
+		return nil, fmt.Errorf("creating storage client factory failed: %w", err)
 	}
 
 	compFact, err := armcompute.NewClientFactory(subscriptionID, creds, nil)
 	if err != nil {
-		return nil, fmt.Errorf("creating compute client factory failed: %v", err)
+		return nil, fmt.Errorf("creating compute client factory failed: %w", err)
 	}
 
 	return &Client{
@@ -78,7 +78,7 @@ func (ac Client) GetResourceNameByTag(ctx context.Context, resourceGroup string,
 
 	result, err := pager.NextPage(ctx)
 	if err != nil {
-		return "", fmt.Errorf("listing resources failed: %v", err)
+		return "", fmt.Errorf("listing resources failed: %w", err)
 	}
 
 	if len(result.Value) < 1 {
@@ -93,7 +93,7 @@ func (ac Client) GetResourceGroupLocation(ctx context.Context, resourceGroup str
 
 	group, err := c.Get(ctx, resourceGroup, nil)
 	if err != nil {
-		return "", fmt.Errorf("retrieving resource group failed: %v", err)
+		return "", fmt.Errorf("retrieving resource group failed: %w", err)
 	}
 
 	return *group.Location, nil
@@ -111,7 +111,7 @@ func (ac Client) CreateStorageAccount(ctx context.Context, resourceGroup, name, 
 	if location == "" {
 		location, err = ac.GetResourceGroupLocation(ctx, resourceGroup)
 		if err != nil {
-			return fmt.Errorf("retrieving resource group location failed: %v", err)
+			return fmt.Errorf("retrieving resource group location failed: %w", err)
 		}
 	}
 
@@ -130,12 +130,12 @@ func (ac Client) CreateStorageAccount(ctx context.Context, resourceGroup, name, 
 		},
 	}, nil)
 	if err != nil {
-		return fmt.Errorf("sending the create storage account request failed: %v", err)
+		return fmt.Errorf("sending the create storage account request failed: %w", err)
 	}
 
 	_, err = poller.PollUntilDone(ctx, nil)
 	if err != nil {
-		return fmt.Errorf("create storage account request failed: %v", err)
+		return fmt.Errorf("create storage account request failed: %w", err)
 	}
 
 	return nil
@@ -148,7 +148,7 @@ func (ac Client) GetStorageAccountKey(ctx context.Context, resourceGroup string,
 	c := ac.storFact.NewAccountsClient()
 	keys, err := c.ListKeys(ctx, resourceGroup, storageAccount, nil)
 	if err != nil {
-		return "", fmt.Errorf("retrieving keys for a storage account failed: %v", err)
+		return "", fmt.Errorf("retrieving keys for a storage account failed: %w", err)
 	}
 
 	if len(keys.Keys) == 0 {
@@ -169,7 +169,7 @@ func (ac Client) RegisterImage(ctx context.Context, resourceGroup, storageAccoun
 	if location == "" {
 		location, err = ac.GetResourceGroupLocation(ctx, resourceGroup)
 		if err != nil {
-			return fmt.Errorf("retrieving resource group location failed: %v", err)
+			return fmt.Errorf("retrieving resource group location failed: %w", err)
 		}
 	}
 
@@ -198,12 +198,12 @@ func (ac Client) RegisterImage(ctx context.Context, resourceGroup, storageAccoun
 		Location: &location,
 	}, nil)
 	if err != nil {
-		return fmt.Errorf("sending the create image request failed: %v", err)
+		return fmt.Errorf("sending the create image request failed: %w", err)
 	}
 
 	_, err = imageFuture.PollUntilDone(ctx, nil)
 	if err != nil {
-		return fmt.Errorf("create image request failed: %v", err)
+		return fmt.Errorf("create image request failed: %w", err)
 	}
 
 	return nil
