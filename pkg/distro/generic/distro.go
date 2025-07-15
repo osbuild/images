@@ -10,6 +10,7 @@ import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/bib/container"
 	"github.com/osbuild/images/pkg/bib/osinfo"
+	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
 	"github.com/osbuild/images/pkg/platform"
@@ -82,12 +83,21 @@ func ImageFromBootc(bootcRef, imgTypeStr, archStr string) (distro.ImageType, err
 	if err != nil {
 		return nil, err
 	}
+	rootfsTypeStr, err := cnt.DefaultRootfsType()
+	if err != nil {
+		return nil, err
+	}
+	rootfsType, err := disk.NewFSType(rootfsTypeStr)
+	if err != nil {
+		return nil, err
+	}
 
 	nameVer := fmt.Sprintf("bootc-%s-%s", info.OSRelease.ID, info.OSRelease.VersionID)
 	rd := &distribution{
 		DistroYAML: defs.DistroYAML{
-			Name:     nameVer,
-			DefsPath: "./bootc",
+			Name:          nameVer,
+			DefaultFSType: rootfsType,
+			DefsPath:      "./bootc",
 		},
 		arches: make(map[string]*architecture),
 	}
