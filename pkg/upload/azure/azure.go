@@ -5,29 +5,50 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Azure/azure-sdk-for-go/profiles/2019-03-01/compute/mgmt/compute"
-	"github.com/Azure/azure-sdk-for-go/profiles/2019-03-01/resources/mgmt/resources"
-	"github.com/Azure/azure-sdk-for-go/profiles/2019-03-01/storage/mgmt/storage"
-	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/azure/auth"
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v5"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
+
+	"github.com/osbuild/images/internal/common"
+)
+
+type HyperVGenerationType string
+
+const (
+	HyperVGenV1 HyperVGenerationType = "V1"
+	HyperVGenV2 HyperVGenerationType = "V2"
 )
 
 type Client struct {
-	authorizer autorest.Authorizer
+	creds    *azidentity.ClientSecretCredential
+	resFact  *armresources.ClientFactory
+	storFact *armstorage.ClientFactory
 }
 
 // NewClient creates a client for accessing the Azure API.
 // See https://docs.microsoft.com/en-us/rest/api/azure/
 // If you need to work with the Azure Storage API, see NewStorageClient
-func NewClient(credentials Credentials, tenantID string) (*Client, error) {
-	credentialsConfig := auth.NewClientCredentialsConfig(credentials.clientID, credentials.clientSecret, tenantID)
-	authorizer, err := credentialsConfig.Authorizer()
+func NewClient(credentials Credentials, tenantID, subscriptionID string) (*Client, error) {
+	creds, err := azidentity.NewClientSecretCredential(tenantID, credentials.clientID, credentials.clientSecret, nil)
 	if err != nil {
-		return nil, fmt.Errorf("creating an azure authorizer failed: %v", err)
+		return nil, fmt.Errorf("creating azure ClientSecretCredential failed: %v", err)
+	}
+
+	resFact, err := armresources.NewClientFactory(subscriptionID, creds, nil)
+	if err != nil {
+		return nil, fmt.Errorf("creating resources client factory failed: %v", err)
+	}
+
+	storFact, err := armstorage.NewClientFactory(subscriptionID, creds, nil)
+	if err != nil {
+		return nil, fmt.Errorf("creating storage client factory failed: %v", err)
 	}
 
 	return &Client{
-		authorizer: authorizer,
+		creds,
+		resFact,
+		storFact,
 	}, nil
 }
 
@@ -41,29 +62,29 @@ type Tag struct {
 // given `tag`. Note that if multiple resources with the same tag exists
 // in the specified resource group, only one name is returned. It's undefined
 // which one it is.
-func (ac Client) GetResourceNameByTag(ctx context.Context, subscriptionID, resourceGroup string, tag Tag) (string, error) {
-	c := resources.NewClient(subscriptionID)
-	c.Authorizer = ac.authorizer
+func (ac Client) GetResourceNameByTag(ctx context.Context, resourceGroup string, tag Tag) (string, error) {
+	c := ac.resFact.NewClient()
 
-	filter := fmt.Sprintf("tagName eq '%s' and tagValue eq '%s'", tag.Name, tag.Value)
-	result, err := c.ListByResourceGroup(ctx, resourceGroup, filter, "", nil)
+	pager := c.NewListByResourceGroupPager(resourceGroup, &armresources.ClientListByResourceGroupOptions{
+		Filter: common.ToPtr(fmt.Sprintf("tagName eq '%s' and tagValue eq '%s'", tag.Name, tag.Value)),
+	})
+
+	result, err := pager.NextPage(ctx)
 	if err != nil {
 		return "", fmt.Errorf("listing resources failed: %v", err)
 	}
 
-	if len(result.Values()) < 1 {
+	if len(result.Value) < 1 {
 		return "", nil
 	}
-
-	return *result.Values()[0].Name, nil
+	return *result.Value[0].Name, nil
 }
 
 // GetResourceGroupLocation returns the location of the given resource group.
-func (ac Client) GetResourceGroupLocation(ctx context.Context, subscriptionID, resourceGroup string) (string, error) {
-	c := resources.NewGroupsClient(subscriptionID)
-	c.Authorizer = ac.authorizer
+func (ac Client) GetResourceGroupLocation(ctx context.Context, resourceGroup string) (string, error) {
+	c := ac.resFact.NewResourceGroupsClient()
 
-	group, err := c.Get(ctx, resourceGroup)
+	group, err := c.Get(ctx, resourceGroup, nil)
 	if err != nil {
 		return "", fmt.Errorf("retrieving resource group failed: %v", err)
 	}
@@ -76,39 +97,36 @@ func (ac Client) GetResourceGroupLocation(ctx context.Context, subscriptionID, r
 // can be used to specify a tag attached to the account.
 // The location is optional and if not provided, it is determined
 // from the resource group.
-func (ac Client) CreateStorageAccount(ctx context.Context, subscriptionID, resourceGroup, name, location string, tag Tag) error {
-	c := storage.NewAccountsClient(subscriptionID)
-	c.Authorizer = ac.authorizer
+func (ac Client) CreateStorageAccount(ctx context.Context, resourceGroup, name, location string, tag Tag) error {
+	c := ac.storFact.NewAccountsClient()
 
 	var err error
 	if location == "" {
-		location, err = ac.GetResourceGroupLocation(ctx, subscriptionID, resourceGroup)
+		location, err = ac.GetResourceGroupLocation(ctx, resourceGroup)
 		if err != nil {
 			return fmt.Errorf("retrieving resource group location failed: %v", err)
 		}
 	}
 
-	result, err := c.Create(ctx, resourceGroup, name, storage.AccountCreateParameters{
-		Sku: &storage.Sku{
-			Name: storage.StandardLRS,
-			Tier: storage.Standard,
-			Kind: storage.StorageV2,
+	poller, err := c.BeginCreate(ctx, resourceGroup, name, armstorage.AccountCreateParameters{
+		SKU: &armstorage.SKU{
+			Name: common.ToPtr(armstorage.SKUNameStandardLRS),
+			Tier: common.ToPtr(armstorage.SKUTierStandard),
 		},
 		Location: &location,
 		Tags: map[string]*string{
 			tag.Name: &tag.Value,
 		},
-	})
+		Properties: &armstorage.AccountPropertiesCreateParameters{
+			AllowBlobPublicAccess: common.ToPtr(false),
+			MinimumTLSVersion:     common.ToPtr(armstorage.MinimumTLSVersionTLS12),
+		},
+	}, nil)
 	if err != nil {
 		return fmt.Errorf("sending the create storage account request failed: %v", err)
 	}
 
-	err = result.WaitForCompletionRef(ctx, c.Client)
-	if err != nil {
-		return fmt.Errorf("waiting for the create storage account request failed: %v", err)
-	}
-
-	_, err = result.Result(c)
+	_, err = poller.PollUntilDone(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("create storage account request failed: %v", err)
 	}
@@ -119,63 +137,67 @@ func (ac Client) CreateStorageAccount(ctx context.Context, subscriptionID, resou
 // GetStorageAccountKey returns a storage account key that can be used to
 // access the given storage account. This method always returns only the first
 // key.
-func (ac Client) GetStorageAccountKey(ctx context.Context, subscriptionID, resourceGroup string, storageAccount string) (string, error) {
-	c := storage.NewAccountsClient(subscriptionID)
-	c.Authorizer = ac.authorizer
-
-	keys, err := c.ListKeys(ctx, resourceGroup, storageAccount)
+func (ac Client) GetStorageAccountKey(ctx context.Context, resourceGroup string, storageAccount string) (string, error) {
+	c := ac.storFact.NewAccountsClient()
+	keys, err := c.ListKeys(ctx, resourceGroup, storageAccount, nil)
 	if err != nil {
 		return "", fmt.Errorf("retrieving keys for a storage account failed: %v", err)
 	}
 
-	if len(*keys.Keys) == 0 {
+	if len(keys.Keys) == 0 {
 		return "", errors.New("azure returned an empty list of keys")
 	}
 
-	return *(*keys.Keys)[0].Value, nil
+	return *keys.Keys[0].Value, nil
 }
 
 // RegisterImage creates a generalized V1 Linux image from a given blob.
 // The location is optional and if not provided, it is determined
 // from the resource group.
-func (ac Client) RegisterImage(ctx context.Context, subscriptionID, resourceGroup, storageAccount, storageContainer, blobName, imageName, location string) error {
-	c := compute.NewImagesClient(subscriptionID)
-	c.Authorizer = ac.authorizer
+func (ac Client) RegisterImage(ctx context.Context, subscriptionID, resourceGroup, storageAccount, storageContainer, blobName, imageName, location string, hyperVGen HyperVGenerationType) error {
+	c, err := armcompute.NewImagesClient(subscriptionID, ac.creds, nil)
+	if err != nil {
+		return fmt.Errorf("unable to create compute client: %v", err)
+	}
 
 	blobURI := fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s", storageAccount, storageContainer, blobName)
 
-	var err error
 	if location == "" {
-		location, err = ac.GetResourceGroupLocation(ctx, subscriptionID, resourceGroup)
+		location, err = ac.GetResourceGroupLocation(ctx, resourceGroup)
 		if err != nil {
 			return fmt.Errorf("retrieving resource group location failed: %v", err)
 		}
 	}
 
-	imageFuture, err := c.CreateOrUpdate(ctx, resourceGroup, imageName, compute.Image{
-		Response: autorest.Response{},
-		ImageProperties: &compute.ImageProperties{
+	var hypvgen armcompute.HyperVGenerationTypes
+	switch hyperVGen {
+	case HyperVGenV1:
+		hypvgen = armcompute.HyperVGenerationTypes(armcompute.HyperVGenerationTypesV1)
+	case HyperVGenV2:
+		hypvgen = armcompute.HyperVGenerationTypes(armcompute.HyperVGenerationTypesV2)
+	default:
+		return fmt.Errorf("Unknown hyper v generation type %v", hyperVGen)
+	}
+
+	imageFuture, err := c.BeginCreateOrUpdate(ctx, resourceGroup, imageName, armcompute.Image{
+		Properties: &armcompute.ImageProperties{
+			HyperVGeneration:     common.ToPtr(hypvgen),
 			SourceVirtualMachine: nil,
-			StorageProfile: &compute.ImageStorageProfile{
-				OsDisk: &compute.ImageOSDisk{
-					OsType:  compute.Linux,
+			StorageProfile: &armcompute.ImageStorageProfile{
+				OSDisk: &armcompute.ImageOSDisk{
+					OSType:  common.ToPtr(armcompute.OperatingSystemTypesLinux),
 					BlobURI: &blobURI,
-					OsState: compute.Generalized,
+					OSState: common.ToPtr(armcompute.OperatingSystemStateTypesGeneralized),
 				},
 			},
 		},
 		Location: &location,
-	})
+	}, nil)
 	if err != nil {
 		return fmt.Errorf("sending the create image request failed: %v", err)
 	}
 
-	err = imageFuture.WaitForCompletionRef(ctx, c.Client)
-	if err != nil {
-		return fmt.Errorf("waiting for the create image request failed: %v", err)
-	}
-
-	_, err = imageFuture.Result(c)
+	_, err = imageFuture.PollUntilDone(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("create image request failed: %v", err)
 	}
