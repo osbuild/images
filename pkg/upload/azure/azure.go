@@ -24,6 +24,7 @@ type Client struct {
 	creds    *azidentity.ClientSecretCredential
 	resFact  *armresources.ClientFactory
 	storFact *armstorage.ClientFactory
+	compFact *armcompute.ClientFactory
 }
 
 // NewClient creates a client for accessing the Azure API.
@@ -45,10 +46,13 @@ func NewClient(credentials Credentials, tenantID, subscriptionID string) (*Clien
 		return nil, fmt.Errorf("creating storage client factory failed: %v", err)
 	}
 
+	compFact, err := armcompute.NewClientFactory(subscriptionID, creds, nil)
+
 	return &Client{
 		creds,
 		resFact,
 		storFact,
+		compFact,
 	}, nil
 }
 
@@ -154,14 +158,11 @@ func (ac Client) GetStorageAccountKey(ctx context.Context, resourceGroup string,
 // RegisterImage creates a generalized V1 Linux image from a given blob.
 // The location is optional and if not provided, it is determined
 // from the resource group.
-func (ac Client) RegisterImage(ctx context.Context, subscriptionID, resourceGroup, storageAccount, storageContainer, blobName, imageName, location string, hyperVGen HyperVGenerationType) error {
-	c, err := armcompute.NewImagesClient(subscriptionID, ac.creds, nil)
-	if err != nil {
-		return fmt.Errorf("unable to create compute client: %v", err)
-	}
-
+func (ac Client) RegisterImage(ctx context.Context, resourceGroup, storageAccount, storageContainer, blobName, imageName, location string, hyperVGen HyperVGenerationType) error {
+	c := ac.compFact.NewImagesClient()
 	blobURI := fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s", storageAccount, storageContainer, blobName)
 
+	var err error
 	if location == "" {
 		location, err = ac.GetResourceGroupLocation(ctx, resourceGroup)
 		if err != nil {
