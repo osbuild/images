@@ -1,4 +1,4 @@
-package distro
+package distro_test
 
 import (
 	"testing"
@@ -6,6 +6,7 @@ import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/disk"
+	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -22,7 +23,7 @@ func (t *TestImageType) Name() string {
 	return t.name
 }
 
-func (t *TestImageType) Arch() Arch {
+func (t *TestImageType) Arch() distro.Arch {
 	return nil
 }
 
@@ -51,11 +52,11 @@ func (t *TestImageType) BootMode() platform.BootMode {
 }
 
 func (t *TestImageType) BuildPipelines() []string {
-	return BuildPipelinesFallback()
+	return distro.BuildPipelinesFallback()
 }
 
 func (t *TestImageType) PayloadPipelines() []string {
-	return PayloadPipelinesFallback()
+	return distro.PayloadPipelinesFallback()
 }
 
 func (t *TestImageType) PayloadPackageSets() []string {
@@ -67,7 +68,7 @@ func (t *TestImageType) PackageSetsChains() map[string][]string {
 }
 
 func (t *TestImageType) Exports() []string {
-	return ExportsFallback()
+	return distro.ExportsFallback()
 }
 
 func (t *TestImageType) BasePartitionTable() (*disk.PartitionTable, error) {
@@ -78,7 +79,7 @@ func (t *TestImageType) ISOLabel() (string, error) {
 	return "", nil
 }
 
-func (t *TestImageType) Manifest(b *blueprint.Blueprint, options ImageOptions, repos []rpmmd.RepoConfig, seed *int64) (*manifest.Manifest, []string, error) {
+func (t *TestImageType) Manifest(b *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, seed *int64) (*manifest.Manifest, []string, error) {
 	return nil, nil, nil
 }
 
@@ -506,7 +507,7 @@ func TestValidateConfig(t *testing.T) {
 				requiredCustomizations:  tc.required,
 			}
 
-			err := ValidateConfig(testImage, tc.bp, ImageOptions{})
+			err := distro.ValidateConfig(testImage, tc.bp, distro.ImageOptions{})
 			if tc.err == "" {
 				assert.NoError(t, err)
 			} else {
