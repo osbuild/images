@@ -1753,6 +1753,12 @@ image_types:
   "edge-installer":
     image_config:
       iso_rootfs_type: "squashfs-ext4"
+      conditions:
+        "x86_64 uses syslinux":
+          when:
+            arch: "x86_64"
+          shallow_merge:
+            iso_boot_type: "syslinux"
     package_sets:
       installer:
         # TODO: non-arch-specific package set handling for installers

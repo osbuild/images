@@ -539,15 +539,11 @@ func EdgeInstallerImage(workload workload.Workload,
 		img.RootfsType = manifest.SquashfsRootfs
 	}
 
-	// Enable BIOS iso on x86_64 only
-	// Use grub2 on RHEL10, otherwise use syslinux
-	// NOTE: Will need to be updated for RHEL11 and later
-	if img.Platform.GetArch() == arch.ARCH_X86_64 {
-		if t.Arch().Distro().Releasever() == "10" {
-			img.ISOBoot = manifest.Grub2ISOBoot
-		} else {
-			img.ISOBoot = manifest.SyslinuxISOBoot
-		}
+	if locale := t.getDefaultImageConfig().Locale; locale != nil {
+		img.Locale = *locale
+	}
+	if isoboot := t.getDefaultImageConfig().ISOBootType; isoboot != nil {
+		img.ISOBoot = *isoboot
 	}
 
 	installerConfig, err := t.getDefaultInstallerConfig()
@@ -586,10 +582,6 @@ func EdgeInstallerImage(workload workload.Workload,
 	img.FIPS = customizations.GetFIPS()
 
 	img.Filename = t.Filename()
-
-	if locale := t.getDefaultImageConfig().Locale; locale != nil {
-		img.Locale = *locale
-	}
 
 	return img, nil
 }
