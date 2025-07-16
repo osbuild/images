@@ -537,11 +537,11 @@ func TestValidateSupportedConfig(t *testing.T) {
 	}
 
 	type testConfigType struct {
-		TopA   abType     `json:"top_a"`
-		TopB   abType     `json:"top_b"`
-		TopStr string     `json:"top_str"`
-		TopT   bool       `json:"top_t"`
-		N      nestedType `json:"nested"`
+		TopA   abType      `json:"top_a"`
+		TopB   abType      `json:"top_b"`
+		TopStr string      `json:"top_str"`
+		TopT   bool        `json:"top_t"`
+		N      *nestedType `json:"nested"`
 	}
 
 	testCases := map[string]testCase{
@@ -550,7 +550,55 @@ func TestValidateSupportedConfig(t *testing.T) {
 			config:    struct{}{},
 			expErr:    "",
 		},
-		"simple": {
+		"all-supported/partial-values": {
+			supported: []string{
+				"top_a",
+				"top_b",
+				"top_str",
+				"top_t",
+				"nested",
+			},
+			config: testConfigType{
+				TopA: abType{
+					A: "value",
+					B: "value",
+				},
+			},
+			expErr: "",
+		},
+		"all-supported/all-values": {
+			supported: []string{
+				"top_a",
+				"top_b",
+				"top_str",
+				"top_t",
+				"nested",
+			},
+			config: testConfigType{
+				TopA: abType{
+					A: "value",
+					B: "value",
+				},
+				TopB: abType{
+					A: "value",
+					B: "value",
+				},
+				TopStr: "value",
+				TopT:   true,
+				N: &nestedType{
+					A: abType{
+						A: "value",
+						B: "value",
+					},
+					B: abType{
+						A: "value",
+						B: "value",
+					},
+				},
+			},
+			expErr: "",
+		},
+		"nested-supported/ok": {
 			supported: []string{
 				"top_a",
 				"top_b.b",
@@ -563,6 +611,42 @@ func TestValidateSupportedConfig(t *testing.T) {
 				},
 			},
 			expErr: "",
+		},
+		"nested-supported/error": {
+			supported: []string{
+				"top_a",
+				"top_b.b",
+				"nested.b.a",
+			},
+			config: testConfigType{
+				TopA: abType{
+					A: "value",
+					B: "value",
+				},
+				TopB: abType{
+					A: "value", // this is not supported
+				},
+			},
+			expErr: "top_b.a: not supported by image type",
+		},
+		"nested-supported/error-2": {
+			supported: []string{
+				"top_a",
+				"top_b.b",
+				"nested.b.a",
+			},
+			config: testConfigType{
+				TopA: abType{
+					A: "value",
+					B: "value",
+				},
+				N: &nestedType{
+					B: abType{
+						B: "value", // this is not supported
+					},
+				},
+			},
+			expErr: "nested.b.b: not supported by image type",
 		},
 	}
 	for name, tc := range testCases {
