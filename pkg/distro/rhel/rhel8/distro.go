@@ -141,7 +141,7 @@ func newDistro(name string, minor int) *rhel.Distribution {
 		mkEdgeOCIImgType(rd, arch.ARCH_X86_64),
 		mkEdgeCommitImgType(rd, arch.ARCH_X86_64),
 		mkEdgeInstallerImgType(rd, arch.ARCH_X86_64),
-		mkImageInstaller(),
+		mkImageInstaller(rd, arch.ARCH_X86_64),
 	)
 
 	gceX86Platform := &platform.X86{
@@ -221,7 +221,7 @@ func newDistro(name string, minor int) *rhel.Distribution {
 		mkEdgeOCIImgType(rd, arch.ARCH_AARCH64),
 		mkEdgeCommitImgType(rd, arch.ARCH_AARCH64),
 		mkEdgeInstallerImgType(rd, arch.ARCH_AARCH64),
-		mkImageInstaller(),
+		mkImageInstaller(rd, arch.ARCH_AARCH64),
 	)
 
 	rawAarch64Platform := &platform.Aarch64{

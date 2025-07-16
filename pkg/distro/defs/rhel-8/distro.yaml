@@ -1556,6 +1556,13 @@ image_types:
                   - "python3-html5lib"
 
   "image-installer":
+    image_config:
+      conditions:
+        "x86_64 uses syslinux":
+          when:
+            arch: "x86_64"
+          shallow_merge:
+            iso_boot_type: "syslinux"
     package_sets:
       <<: *bare_metal_pkgset
       installer:
