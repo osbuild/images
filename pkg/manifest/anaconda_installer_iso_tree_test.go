@@ -804,7 +804,7 @@ func TestPayloadRemoveSignatures(t *testing.T) {
 
 func TestUnmarshalHappy(t *testing.T) {
 	var rootFS struct {
-		IsoRootfsType RootfsType `yaml:"iso_rootfs_type"`
+		ISORootfsType RootfsType `yaml:"iso_rootfs_type"`
 	}
 
 	for _, tc := range []struct {
@@ -817,13 +817,13 @@ func TestUnmarshalHappy(t *testing.T) {
 	} {
 		err := yaml.Unmarshal([]byte(fmt.Sprintf("iso_rootfs_type: %s", tc.fstype)), &rootFS)
 		require.NoError(t, err)
-		assert.Equal(t, tc.expected, rootFS.IsoRootfsType)
+		assert.Equal(t, tc.expected, rootFS.ISORootfsType)
 	}
 }
 
 func TestUnmarshalError(t *testing.T) {
 	var rootFS struct {
-		IsoRootfsType RootfsType `yaml:"iso_rootfs_type"`
+		ISORootfsType RootfsType `yaml:"iso_rootfs_type"`
 	}
 
 	err := yaml.Unmarshal([]byte("iso_rootfs_type: non-exiting"), &rootFS)
