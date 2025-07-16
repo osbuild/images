@@ -637,14 +637,11 @@ func imageInstallerImage(workload workload.Workload,
 	img.Filename = t.Filename()
 
 	img.RootfsCompression = "xz" // This also triggers using the bcj filter
-	imgConfig := t.getDefaultImageConfig()
-	if imgConfig != nil && imgConfig.ISORootfsType != nil {
-		img.RootfsType = *imgConfig.ISORootfsType
+	if isoroot := t.getDefaultImageConfig().ISORootfsType; isoroot != nil {
+		img.RootfsType = *isoroot
 	}
-
-	// Enable grub2 BIOS iso on x86_64 only
-	if img.Platform.GetArch() == arch.ARCH_X86_64 {
-		img.ISOBoot = manifest.Grub2ISOBoot
+	if isoboot := t.getDefaultImageConfig().ISOBootType; isoboot != nil {
+		img.ISOBoot = *isoboot
 	}
 
 	return img, nil

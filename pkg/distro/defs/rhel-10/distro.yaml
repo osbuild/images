@@ -1530,6 +1530,12 @@ image_types:
     required_partition_sizes: *default_required_dir_sizes
     image_config:
       iso_rootfs_type: "squashfs"
+      conditions:
+        "x86_64 uses grub2":
+          when:
+            arch: "x86_64"
+          shallow_merge:
+            iso_boot_type: "grub2"
     installer_config:
       additional_dracut_modules:
         - "nvdimm"  # non-volatile DIMM firmware (provides nfit, cuse, and nd_e820)
