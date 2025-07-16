@@ -79,6 +79,9 @@ func validateSupportedConfig(supported []string, conf reflect.Value) error {
 			// not listed: check if it's non-zero
 			empty := conf.Field(i).IsZero()
 			if !empty && !supportedMap[tag] {
+				// TODO: remove mention of image type: this function should be
+				// blueprint and image type agnostic, it just validates a
+				// config against some constraints
 				return &blueprint.CustomizationError{Message: "not supported by image type", RevPath: []string{tag}}
 			}
 		}
