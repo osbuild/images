@@ -139,6 +139,9 @@ type ImageConfig struct {
 	// is used
 	ISORootfsType *manifest.RootfsType `yaml:"iso_rootfs_type,omitempty"`
 
+	// ISOBootType defines what type of bootloader is used for the iso
+	ISOBootType *manifest.ISOBootType `yaml:"iso_boot_type,omitempty"`
+
 	// VersionlockPackges uses dnf versionlock to lock a package to the version
 	// that is installed during image build, preventing it from being updated.
 	// This is only supported for distributions that use dnf4, because osbuild
