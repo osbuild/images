@@ -38,8 +38,9 @@ func validateSupportedConfig(supported []string, conf reflect.Value) error {
 
 	confT := conf.Type()
 	for i := 0; i < confT.NumField(); i++ {
-		name := confT.Field(i).Name
-		if subList, listed := subMap[name]; listed {
+		tag := confT.Field(i).Tag.Get("json")
+		tag = strings.Split(tag, ",")[0] // strip things like omitempty
+		if subList, listed := subMap[tag]; listed {
 			subStruct := conf.Field(i)
 			if subStruct.IsZero() {
 				// nothing to validate: continue
@@ -54,7 +55,7 @@ func validateSupportedConfig(supported []string, conf reflect.Value) error {
 				for idx := 0; idx < subStruct.Len(); idx++ {
 					if err := validateSupportedConfig(subList, subStruct.Index(idx)); err != nil {
 						cerr := err.(*blueprint.CustomizationError)
-						cerr.RevPath = append(cerr.RevPath, fmt.Sprintf("%s[%d]", name, idx))
+						cerr.RevPath = append(cerr.RevPath, fmt.Sprintf("%s[%d]", tag, idx))
 						return cerr
 					}
 				}
@@ -62,20 +63,26 @@ func validateSupportedConfig(supported []string, conf reflect.Value) error {
 				// single element
 				if err := validateSupportedConfig(subList, subStruct); err != nil {
 					cerr := err.(*blueprint.CustomizationError)
-					cerr.RevPath = append(cerr.RevPath, name)
+					cerr.RevPath = append(cerr.RevPath, tag)
 					return cerr
 				}
 			}
 		} else {
 			// not listed: check if it's non-zero
 			empty := conf.Field(i).IsZero()
-			if !empty && !supportedMap[name] {
-				return &blueprint.CustomizationError{Message: "not supported by image type", RevPath: []string{name}}
+			if !empty && !supportedMap[tag] {
+				return &blueprint.CustomizationError{Message: "not supported by image type", RevPath: []string{tag}}
 			}
 		}
 	}
 
 	return nil
+}
+
+func fieldByTag(p reflect.Value, tag string) reflect.Value {
+	for idx := 0; idx < p.Len(); idx++ {
+		if p.FieldByIndex(idx).
+	}
 }
 
 func validateRequiredConfig(required []string, conf reflect.Value) error {

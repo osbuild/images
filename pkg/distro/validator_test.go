@@ -334,14 +334,14 @@ func TestValidateConfig(t *testing.T) {
 		"simple": {
 			// Support some options and set them
 			supported: []string{
-				"Packages",
-				"Customizations",
-				"Customizations.Kernel",
-				"Customizations.Timezone",
-				"Customizations.OpenSCAP.ProfileID",
-				"Customizations.Locale.Keyboard",
+				"packages",
+				"customizations",
+				"customizations.kernel",
+				"customizations.timezone",
+				"customizations.openscap.profile_id",
+				"customizations.locale.keyboard",
 			},
-			required: []string{"Packages"},
+			required: []string{"packages"},
 			bp: blueprint.Blueprint{
 				Packages: []blueprint.Package{
 					{Name: "vim"},
@@ -358,7 +358,7 @@ func TestValidateConfig(t *testing.T) {
 		},
 		"full-array-supported": {
 			supported: []string{
-				"Customizations.User",
+				"customizations.user",
 			},
 			bp: blueprint.Blueprint{
 				Customizations: &blueprint.Customizations{
@@ -387,7 +387,7 @@ func TestValidateConfig(t *testing.T) {
 		"category-not-supported": {
 			// Support just the Locale under customizations and select Kernel
 			supported: []string{
-				"Customizations.Locale",
+				"customizations.locale",
 			},
 			bp: blueprint.Blueprint{
 				Customizations: &blueprint.Customizations{
@@ -401,7 +401,7 @@ func TestValidateConfig(t *testing.T) {
 		"leaf-not-supported": {
 			// Support only Enabled under Services and select Disabled as well
 			supported: []string{
-				"Customizations.Services.Enabled",
+				"customizations.services.enabled",
 			},
 			bp: blueprint.Blueprint{
 				Customizations: &blueprint.Customizations{
@@ -416,7 +416,7 @@ func TestValidateConfig(t *testing.T) {
 		"leaf-array-not-supported": {
 			// Support only Mountpoint under Filesystem (an array) and select MinSize as well
 			supported: []string{
-				"Customizations.Filesystem.Mountpoint",
+				"customizations.filesystem.mountpoint",
 			},
 			bp: blueprint.Blueprint{
 				Customizations: &blueprint.Customizations{
@@ -433,13 +433,13 @@ func TestValidateConfig(t *testing.T) {
 		"everything-toplevel": {
 			// Support all options and customizations at the top level.
 			supported: []string{
-				"Containers",
-				"Customizations",
-				"Distro",
-				"Groups",
-				"Minimal",
-				"Modules",
-				"Packages",
+				"containers",
+				"customizations",
+				"distro",
+				"groups",
+				"minimal",
+				"modules",
+				"packages",
 			},
 			required: []string{},
 			bp:       fullBlueprint(),
@@ -460,15 +460,15 @@ func TestValidateConfig(t *testing.T) {
 			bp:        fullBlueprint(),
 		},
 		"missing-customizations-required": {
+			supported: []string{"customizations.user"},
 			// Require User and don't set anything.
-			supported: []string{"Customizations.User"},
-			required:  []string{"Customizations.User"},
-			err:       `Customizations: required by image type`,
+			required: []string{"customizations.user"},
+			err:      `Customizations: required by image type`,
 		},
 		"missing-users-required": {
 			// Require User and set a Customization but not User.
-			supported: []string{"Customizations"},
-			required:  []string{"Customizations.User"},
+			supported: []string{"customizations"},
+			required:  []string{"customizations.user"},
 			bp: blueprint.Blueprint{
 				Customizations: &blueprint.Customizations{
 					Hostname: common.ToPtr("fail"),
@@ -478,8 +478,8 @@ func TestValidateConfig(t *testing.T) {
 		},
 		"required-slice-leaf": {
 			// Require the Name under User and set it only for one of the two.
-			supported: []string{"Customizations.User"},
-			required:  []string{"Customizations.User.Name"},
+			supported: []string{"customizations.user"},
+			required:  []string{"customizations.user.name"},
 			bp: blueprint.Blueprint{
 				Customizations: &blueprint.Customizations{
 					User: []blueprint.UserCustomization{
