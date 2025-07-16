@@ -1,6 +1,7 @@
 package distro_test
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/osbuild/images/internal/common"
@@ -516,4 +517,66 @@ func TestValidateConfig(t *testing.T) {
 		},
 		)
 	}
+}
+
+func TestValidateSupportedConfig(t *testing.T) {
+	type testCase struct {
+		supported []string
+		config    any
+		expErr    string
+	}
+
+	type abType struct {
+		A string `json:"a"`
+		B string `json:"b"`
+	}
+
+	type nestedType struct {
+		A abType `json:"a"`
+		B abType `json:"b"`
+	}
+
+	type testConfigType struct {
+		TopA   abType     `json:"top_a"`
+		TopB   abType     `json:"top_b"`
+		TopStr string     `json:"top_str"`
+		TopT   bool       `json:"top_t"`
+		N      nestedType `json:"nested"`
+	}
+
+	testCases := map[string]testCase{
+		"empty": {
+			supported: nil,
+			config:    struct{}{},
+			expErr:    "",
+		},
+		"simple": {
+			supported: []string{
+				"top_a",
+				"top_b.b",
+				"nested.b.a",
+			},
+			config: testConfigType{
+				TopA: abType{
+					A: "value",
+					B: "value",
+				},
+			},
+			expErr: "",
+		},
+	}
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			v := reflect.ValueOf(tc.config)
+			err := distro.ValidateSupportedConfig(tc.supported, v)
+			if tc.expErr == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tc.expErr)
+			}
+		})
+	}
+}
+
+func TestValidateRequiredConfig(t *testing.T) {
 }
