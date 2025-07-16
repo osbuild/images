@@ -529,13 +529,14 @@ func liveInstallerImage(workload workload.Workload,
 
 	img.Filename = t.Filename()
 
-	// Enable grub2 BIOS iso on x86_64 only
-	if img.Platform.GetArch() == arch.ARCH_X86_64 {
-		img.ISOBoot = manifest.Grub2ISOBoot
-	}
-
 	if locale := t.getDefaultImageConfig().Locale; locale != nil {
 		img.Locale = *locale
+	}
+	if isoroot := t.getDefaultImageConfig().ISORootfsType; isoroot != nil {
+		img.RootfsType = *isoroot
+	}
+	if isoboot := t.getDefaultImageConfig().ISOBootType; isoboot != nil {
+		img.ISOBoot = *isoboot
 	}
 
 	installerConfig, err := t.getDefaultInstallerConfig()
@@ -548,11 +549,6 @@ func liveInstallerImage(workload workload.Workload,
 		if installerConfig.SquashfsRootfs != nil && *installerConfig.SquashfsRootfs {
 			img.RootfsType = manifest.SquashfsRootfs
 		}
-	}
-
-	imgConfig := t.getDefaultImageConfig()
-	if imgConfig != nil && imgConfig.ISORootfsType != nil {
-		img.RootfsType = *imgConfig.ISORootfsType
 	}
 
 	return img, nil

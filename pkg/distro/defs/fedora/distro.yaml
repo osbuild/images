@@ -1545,6 +1545,11 @@ image_types:
             version_less_than: "41"
           shallow_merge:
             iso_rootfs_type: "squashfs-ext4"
+        "x86_64 uses grub2":
+          when:
+            arch: "x86_64"
+          shallow_merge:
+            iso_boot_type: "grub2"
     package_sets:
       installer:
         - include:
