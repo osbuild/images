@@ -8,6 +8,11 @@ import (
 	"github.com/osbuild/images/pkg/blueprint"
 )
 
+func jsonTagFor(f reflect.StructField) string {
+	tag := f.Tag.Get("json")
+	return strings.Split(tag, ",")[0]
+}
+
 func validateSupportedConfig(supported []string, conf reflect.Value) error {
 
 	// Construct two maps:
@@ -90,6 +95,17 @@ func validateSupportedConfig(supported []string, conf reflect.Value) error {
 	return nil
 }
 
+func fieldByTag(p reflect.Value, tag string) (reflect.Value, error) {
+	for idx := 0; idx < p.Type().NumField(); idx++ {
+		c := p.Type().Field(idx)
+		if jsonTagFor(c) == tag {
+			return p.Field(idx), nil
+		}
+	}
+
+	return reflect.Value{}, fmt.Errorf("%s does not have a field with JSON tag %q", p.Type().Name(), tag)
+}
+
 func validateRequiredConfig(required []string, conf reflect.Value) error {
 	// create two maps from the required list:
 	//
@@ -130,7 +146,10 @@ func validateRequiredConfig(required []string, conf reflect.Value) error {
 		//   Struct, Pointer, Slice, and String
 		// The Zero value for other types could be a valid value, so we
 		// shouldn't assume that a zero value is the same as a missing one.
-		value := conf.FieldByName(key)
+		value, err := fieldByTag(conf, key)
+		if err != nil {
+			return &blueprint.CustomizationError{Message: err.Error(), RevPath: []string{key}}
+		}
 		switch value.Kind() {
 		case reflect.Ptr, reflect.Struct, reflect.String, reflect.Slice:
 			// Required should only be used for Pointer, String, and Slice types.
@@ -148,7 +167,10 @@ func validateRequiredConfig(required []string, conf reflect.Value) error {
 		// caught by the requiredMap checks above.
 		// If it's a Struct, descend into it.
 		// If it's s Slice, descend into each element.
-		value := conf.FieldByName(key)
+		value, err := fieldByTag(conf, key)
+		if err != nil {
+			return &blueprint.CustomizationError{Message: err.Error(), RevPath: []string{key}}
+		}
 		if value.Kind() == reflect.Ptr {
 			// Dereference pointer before validating.
 			// We don't need to worry about Zero values because of the previous
