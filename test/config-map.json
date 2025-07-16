@@ -526,5 +526,10 @@
     "image-types": [
       "vhd"
     ]
+  },
+  "./configs/empty.json": {
+    "distros": [
+      "bootc-*"
+    ]
   }
 }

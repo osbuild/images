@@ -35,9 +35,9 @@ type KernelInfo struct {
 }
 
 type Info struct {
-	OSRelease          OSRelease
-	UEFIVendor         string
-	SELinuxPolicy      string
+	OSRelease          OSRelease `yaml:"os_release"`
+	UEFIVendor         string    `yaml:"uefi_vendor"`
+	SELinuxPolicy      string    `yaml:"selinux_policy"`
 	ImageCustomization *blueprint.Customizations
 	KernelInfo         *KernelInfo
 
