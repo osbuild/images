@@ -551,8 +551,8 @@ func liveInstallerImage(workload workload.Workload,
 	}
 
 	imgConfig := t.getDefaultImageConfig()
-	if imgConfig != nil && imgConfig.IsoRootfsType != nil {
-		img.RootfsType = *imgConfig.IsoRootfsType
+	if imgConfig != nil && imgConfig.ISORootfsType != nil {
+		img.RootfsType = *imgConfig.ISORootfsType
 	}
 
 	return img, nil
@@ -642,8 +642,8 @@ func imageInstallerImage(workload workload.Workload,
 
 	img.RootfsCompression = "xz" // This also triggers using the bcj filter
 	imgConfig := t.getDefaultImageConfig()
-	if imgConfig != nil && imgConfig.IsoRootfsType != nil {
-		img.RootfsType = *imgConfig.IsoRootfsType
+	if imgConfig != nil && imgConfig.ISORootfsType != nil {
+		img.RootfsType = *imgConfig.ISORootfsType
 	}
 
 	// Enable grub2 BIOS iso on x86_64 only
@@ -841,8 +841,8 @@ func iotInstallerImage(workload workload.Workload,
 
 	img.RootfsCompression = "xz" // This also triggers using the bcj filter
 	imgConfig := t.getDefaultImageConfig()
-	if imgConfig != nil && imgConfig.IsoRootfsType != nil {
-		img.RootfsType = *imgConfig.IsoRootfsType
+	if imgConfig != nil && imgConfig.ISORootfsType != nil {
+		img.RootfsType = *imgConfig.ISORootfsType
 	}
 
 	// Enable grub2 BIOS iso on x86_64 only
