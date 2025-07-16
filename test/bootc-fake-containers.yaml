@@ -1,0 +1,25 @@
+---
+containers:
+  - &default_fake_container
+    arch: riscv64
+    info: &default_info
+      os_release:
+        id: "test-os"
+        versionid: "1"
+    image_ref: "bootc-fake-imgref"
+    default_fs: "ext4"
+    container_size: 10_000_000_000
+  - <<: *default_fake_container
+    arch: s390x
+  - <<: *default_fake_container
+    arch: ppc64le
+  - <<: *default_fake_container
+    arch: x86_64
+    info:
+      <<: *default_info
+      uefi_vendor: "uefi-vendor-x86_64"
+  - <<: *default_fake_container
+    arch: aarch64
+    info:
+      <<: *default_info
+      uefi_vendor: "uefi-vendor-aarch64"
