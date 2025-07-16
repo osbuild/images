@@ -65,7 +65,7 @@ def manifests_diff(tmp_path, rev):
     cmd_new = ["go", "run", f"github.com/osbuild/images/cmd/gen-manifests@{rev}"]
     run_gen_manifests(cmd_new, manifests_old)
 
-    cmd_new = ["go", "run", os.fspath(top_srcdir() / "cmd/gen-manifests")]
+    cmd_new = ["go", "run", os.fspath(top_srcdir() / "cmd/gen-manifests"), "-bootc-refs=fake"]
     run_gen_manifests(cmd_new, manifests_new)
 
     ret = subprocess.run([

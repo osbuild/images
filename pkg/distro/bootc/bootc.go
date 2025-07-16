@@ -371,7 +371,7 @@ func (t *BootcImageType) Manifest(bp *blueprint.Blueprint, options distro.ImageO
 
 // newBootcDistro returns a new instance of BootcDistro
 // from the given url
-func NewBootcDistro(imgref string) (bd *BootcDistro, err error) {
+func NewBootcDistro(imgref string) (*BootcDistro, error) {
 	cnt, err := bibcontainer.New(imgref)
 	if err != nil {
 		return nil, err
@@ -384,7 +384,6 @@ func NewBootcDistro(imgref string) (bd *BootcDistro, err error) {
 	if err != nil {
 		return nil, err
 	}
-
 	// XXX: provide a way to set defaultfs (needed for bib)
 	defaultFs, err := cnt.DefaultRootfsType()
 	if err != nil {
@@ -394,9 +393,12 @@ func NewBootcDistro(imgref string) (bd *BootcDistro, err error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot get container size: %w", err)
 	}
+	return newBootcDistroAfterIntrospect(cnt.Arch(), info, imgref, defaultFs, cntSize)
+}
 
+func newBootcDistroAfterIntrospect(archStr string, info *osinfo.Info, imgref, defaultFs string, cntSize uint64) (*BootcDistro, error) {
 	nameVer := fmt.Sprintf("bootc-%s-%s", info.OSRelease.ID, info.OSRelease.VersionID)
-	bd = &BootcDistro{
+	bd := &BootcDistro{
 		name:          nameVer,
 		releasever:    info.OSRelease.VersionID,
 		defaultFs:     defaultFs,
@@ -410,53 +412,60 @@ func NewBootcDistro(imgref string) (bd *BootcDistro, err error) {
 		buildSourceInfo: info,
 	}
 
-	for _, archStr := range []string{"x86_64", "aarch64", "ppc64le", "s390x", "riscv64"} {
-		ba := &BootcArch{
-			arch: common.Must(arch.FromString(archStr)),
-		}
-		// TODO: add iso image types, see bootc-image-builder
-		//
-		// Note that the file extension is hardcoded in
-		// pkg/image/bootc_disk.go, we have no way to access
-		// it here so we need to duplicate it
-		// XXX: find a way to avoid this duplication
-		ba.addImageTypes(
-			BootcImageType{
-				name:   "ami",
-				export: "image",
-				ext:    "raw",
-			},
-			BootcImageType{
-				name:   "qcow2",
-				export: "qcow2",
-				ext:    "qcow2",
-			},
-			BootcImageType{
-				name:   "raw",
-				export: "image",
-				ext:    "raw",
-			},
-			BootcImageType{
-				name:   "vmdk",
-				export: "vmdk",
-				ext:    "vmdk",
-			},
-			BootcImageType{
-				name:   "vhd",
-				export: "bpc",
-				ext:    "vhd",
-			},
-			BootcImageType{
-				name:   "gce",
-				export: "gce",
-				ext:    "tar.gz",
-			},
-		)
-		bd.addArches(ba)
+	archi, err := arch.FromString(archStr)
+	if err != nil {
+		return nil, err
 	}
+	ba := &BootcArch{
+		arch: archi,
+	}
+	// TODO: add iso image types, see bootc-image-builder
+	//
+	// Note that the file extension is hardcoded in
+	// pkg/image/bootc_disk.go, we have no way to access
+	// it here so we need to duplicate it
+	// XXX: find a way to avoid this duplication
+	ba.addImageTypes(
+		BootcImageType{
+			name:   "ami",
+			export: "image",
+			ext:    "raw",
+		},
+		BootcImageType{
+			name:   "qcow2",
+			export: "qcow2",
+			ext:    "qcow2",
+		},
+		BootcImageType{
+			name:   "raw",
+			export: "image",
+			ext:    "raw",
+		},
+		BootcImageType{
+			name:   "vmdk",
+			export: "vmdk",
+			ext:    "vmdk",
+		},
+		BootcImageType{
+			name:   "vhd",
+			export: "bpc",
+			ext:    "vhd",
+		},
+		BootcImageType{
+			name:   "gce",
+			export: "gce",
+			ext:    "tar.gz",
+		},
+	)
+	bd.addArches(ba)
 
 	return bd, nil
 }
+
+// NewBootcDistroForTesting can be used to generate test manifests.
+// The container introspection is skipped. Do not use this for
+// anything but tests.
+var NewBootcDistroForTesting = newBootcDistroAfterIntrospect
 
 func DistroFactory(idStr string) distro.Distro {
 	l := strings.SplitN(idStr, ":", 2)
