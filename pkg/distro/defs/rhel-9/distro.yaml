@@ -1671,6 +1671,12 @@ image_types:
   "image-installer":
     image_config:
       locale: "C.UTF-8"
+      conditions:
+        "x86_64 uses syslinux":
+          when:
+            arch: "x86_64"
+          shallow_merge:
+            iso_boot_type: "syslinux"
     package_sets:
       <<: *bare_metal_pkgset
       installer:
