@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/osbuild/images/internal/workload"
-	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/anaconda"
@@ -833,18 +832,14 @@ func iotInstallerImage(workload workload.Workload,
 	img.Filename = t.Filename()
 
 	img.RootfsCompression = "xz" // This also triggers using the bcj filter
-	imgConfig := t.getDefaultImageConfig()
-	if imgConfig != nil && imgConfig.ISORootfsType != nil {
-		img.RootfsType = *imgConfig.ISORootfsType
-	}
-
-	// Enable grub2 BIOS iso on x86_64 only
-	if img.Platform.GetArch() == arch.ARCH_X86_64 {
-		img.ISOBoot = manifest.Grub2ISOBoot
-	}
-
 	if locale := t.getDefaultImageConfig().Locale; locale != nil {
 		img.Locale = *locale
+	}
+	if isoroot := t.getDefaultImageConfig().ISORootfsType; isoroot != nil {
+		img.RootfsType = *isoroot
+	}
+	if isoboot := t.getDefaultImageConfig().ISOBootType; isoboot != nil {
+		img.ISOBoot = *isoboot
 	}
 
 	return img, nil
