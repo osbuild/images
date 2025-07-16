@@ -23,6 +23,7 @@ import (
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distro/generic"
 	"github.com/osbuild/images/pkg/distrofactory"
 	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/experimentalflags"
@@ -400,10 +401,12 @@ func main() {
 	flag.BoolVar(&commits, "commits", false, "resolve ostree commit IDs")
 
 	// manifest selection args
-	var arches, distros, imgTypes cmdutil.MultiValue
+	var arches, distros, imgTypes, bootcRefs cmdutil.MultiValue
 	flag.Var(&arches, "arches", "comma-separated list of architectures (globs supported)")
 	flag.Var(&distros, "distros", "comma-separated list of distributions (globs supported)")
 	flag.Var(&imgTypes, "types", "comma-separated list of image types (globs supported)")
+
+	flag.Var(&bootcRefs, "bootc-refs", "comma-separated list of bootc-refs")
 
 	flag.Parse()
 
@@ -506,6 +509,36 @@ func main() {
 					}
 
 					job := makeManifestJob(itConfig, imgType, distribution, repos, archName, cacheRoot, outputDir, contentResolve, metadata, tmpdirRoot)
+					jobs = append(jobs, job)
+				}
+			}
+		}
+	}
+	for _, bootcRef := range bootcRefs {
+		for _, archName := range arches {
+			for _, imgTypeName := range imgTypes {
+				imgType, err := generic.ImageFromBootc(bootcRef, imgTypeName, archName)
+				if err != nil {
+					panic(err)
+				}
+				distribution := imgType.Arch().Distro()
+
+				// XXX: copied from loop above
+				imgTypeConfigs := configs.Get(distribution.Name(), archName, imgTypeName)
+				if len(imgTypeConfigs) == 0 {
+					if skipNoconfig {
+						continue
+					}
+					panic(fmt.Sprintf("no configs defined for image type %q for %s", imgTypeName, distribution.Name()))
+				}
+				for _, itConfig := range imgTypeConfigs {
+					if needsSkipping, reason := configs.needsSkipping(distribution.Name(), itConfig); needsSkipping {
+						fmt.Printf("Skipping %s for %s/%s (reason: %v)\n", itConfig.Name, imgTypeName, distribution.Name(), reason)
+						continue
+					}
+
+					var repos []rpmmd.RepoConfig
+					job := makeManifestJob(itConfig, imgType, distribution, repos, archName, cacheRoot, outputDir, contentResolve, metadata)
 					jobs = append(jobs, job)
 				}
 			}

@@ -70,6 +70,14 @@
       "edge-simplified-installer"
     ]
   },
+  "./configs/bootc-empty.json": {
+    "distros": [
+      "bootc-*"
+    ],
+    "image-types": [
+      "qcow2"
+    ]
+  },
   "./configs/edge-ostree-pull-empty.json": {
     "image-types": [
       "edge-installer",
