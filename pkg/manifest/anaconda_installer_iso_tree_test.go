@@ -802,7 +802,7 @@ func TestPayloadRemoveSignatures(t *testing.T) {
 	}
 }
 
-func TestUnmarshalHappy(t *testing.T) {
+func TestISORootfsType(t *testing.T) {
 	var rootFS struct {
 		ISORootfsType RootfsType `yaml:"iso_rootfs_type"`
 	}
@@ -821,13 +821,42 @@ func TestUnmarshalHappy(t *testing.T) {
 	}
 }
 
-func TestUnmarshalError(t *testing.T) {
+func TestISORootfsTypeError(t *testing.T) {
 	var rootFS struct {
 		ISORootfsType RootfsType `yaml:"iso_rootfs_type"`
 	}
 
 	err := yaml.Unmarshal([]byte("iso_rootfs_type: non-exiting"), &rootFS)
 	assert.EqualError(t, err, `unmarshal yaml via json for "non-exiting" failed: unknown RootfsType: "non-exiting"`)
+}
+
+func TestISOBootType(t *testing.T) {
+	var isoBoot struct {
+		ISOBootType ISOBootType `yaml:"iso_boot_type"`
+	}
+
+	for _, tc := range []struct {
+		boottype string
+		expected ISOBootType
+	}{
+		{"", Grub2UEFIOnlyISOBoot},
+		{"grub2-uefi", Grub2UEFIOnlyISOBoot},
+		{"syslinux", SyslinuxISOBoot},
+		{"grub2", Grub2ISOBoot},
+	} {
+		err := yaml.Unmarshal([]byte(fmt.Sprintf("iso_boot_type: %s", tc.boottype)), &isoBoot)
+		require.NoError(t, err)
+		assert.Equal(t, tc.expected, isoBoot.ISOBootType)
+	}
+}
+
+func TestISOBootTypeError(t *testing.T) {
+	var isoBoot struct {
+		ISOBootType ISOBootType `yaml:"iso_boot_type"`
+	}
+
+	err := yaml.Unmarshal([]byte("iso_boot_type: lilo"), &isoBoot)
+	assert.EqualError(t, err, `unmarshal yaml via json for "lilo" failed: unknown ISOBootType: "lilo"`)
 }
 
 func TestAnacondaISOTreeSerializeInstallRootfsType(t *testing.T) {
