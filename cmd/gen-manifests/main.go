@@ -168,7 +168,7 @@ func loadConfigMap(configPath string) *BuildConfigs {
 			cfgDir := filepath.Dir(configPath)
 			path = filepath.Join(cfgDir, path)
 		}
-		config, err := buildconfig.New(path)
+		config, err := buildconfig.New(path, nil)
 		if err != nil {
 			panic(err)
 		}
@@ -192,7 +192,7 @@ func loadConfigMap(configPath string) *BuildConfigs {
 // image types.
 func loadImgConfig(configPath string) *BuildConfigs {
 	cm := newBuildConfigs()
-	config, err := buildconfig.New(configPath)
+	config, err := buildconfig.New(configPath, nil)
 	if err != nil {
 		panic(err)
 	}

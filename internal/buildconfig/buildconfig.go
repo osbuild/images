@@ -16,7 +16,15 @@ type BuildConfig struct {
 	Depends   interface{}          `json:"depends,omitempty"` // ignored
 }
 
-func New(path string) (*BuildConfig, error) {
+type Options struct {
+	AllowUnknownFields bool
+}
+
+func New(path string, opts *Options) (*BuildConfig, error) {
+	if opts == nil {
+		opts = &Options{}
+	}
+
 	fp, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -24,11 +32,13 @@ func New(path string) (*BuildConfig, error) {
 	defer fp.Close()
 
 	dec := json.NewDecoder(fp)
-	dec.DisallowUnknownFields()
+	if !opts.AllowUnknownFields {
+		dec.DisallowUnknownFields()
+	}
 	var conf BuildConfig
 
 	if err := dec.Decode(&conf); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot decode build config: %w", err)
 	}
 	if dec.More() {
 		return nil, fmt.Errorf("multiple configuration objects or extra data found in %q", path)
