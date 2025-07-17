@@ -656,6 +656,22 @@ func TestInstallerLocales(t *testing.T) {
 			assert.Equal(expected, actual)
 		}
 
+		{ // Net
+			img := image.NewAnacondaNetInstaller()
+			assert.NotNil(t, img)
+
+			img.Product = product
+			img.OSVersion = osversion
+			img.ISOLabel = isolabel
+			img.Platform = testPlatform
+			img.OSCustomizations.Language = input
+
+			mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
+			actual := findAnacondaLocale(t, manifest.OSBuildManifest(mfs))
+
+			assert.Equal(expected, actual)
+		}
+
 		{ // Live
 			img := image.NewAnacondaLiveInstaller()
 			assert.NotNil(t, img)
@@ -821,4 +837,59 @@ func TestTarInstallerKernelOpts(t *testing.T) {
 
 	assert.NotNil(t, opts)
 	assert.Subset(t, opts, testOpts)
+}
+
+func TestNetInstallerExt4Rootfs(t *testing.T) {
+	img := image.NewAnacondaNetInstaller()
+	assert.NotNil(t, img)
+
+	img.Product = product
+	img.OSVersion = osversion
+	img.ISOLabel = isolabel
+	img.Platform = testPlatform
+
+	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
+	// Confirm that it includes the rootfs-image pipeline that makes the ext4 rootfs
+	assert.Contains(t, mfs, `"name":"rootfs-image"`)
+	assert.Contains(t, mfs, `"name:rootfs-image"`)
+}
+
+func TestNetInstallerSquashfsRootfs(t *testing.T) {
+	img := image.NewAnacondaNetInstaller()
+	assert.NotNil(t, img)
+
+	img.Product = product
+	img.OSVersion = osversion
+	img.ISOLabel = isolabel
+	img.RootfsType = manifest.SquashfsRootfs
+	img.Platform = testPlatform
+
+	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
+	// Confirm that it does not include rootfs-image pipeline
+	assert.NotContains(t, mfs, `"name":"rootfs-image"`)
+	assert.NotContains(t, mfs, `"name:rootfs-image"`)
+}
+
+func TestNetInstallerDracut(t *testing.T) {
+	img := image.NewAnacondaNetInstaller()
+	img.Product = product
+	img.OSVersion = osversion
+	img.ISOLabel = isolabel
+	testModules := []string{"test-module"}
+	testDrivers := []string{"test-driver"}
+
+	img.AdditionalDracutModules = testModules
+	img.AdditionalDrivers = testDrivers
+
+	assert.NotNil(t, img)
+	img.Platform = testPlatform
+	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
+	modules, addModules, drivers, addDrivers := findDracutStageOptions(t, manifest.OSBuildManifest(mfs), "anaconda-tree")
+	assert.Nil(t, modules)
+	assert.NotNil(t, addModules)
+	assert.Nil(t, drivers)
+	assert.NotNil(t, addDrivers)
+
+	assert.Subset(t, addModules, testModules)
+	assert.Subset(t, addDrivers, testDrivers)
 }
