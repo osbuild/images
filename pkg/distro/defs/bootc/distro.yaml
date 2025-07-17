@@ -83,6 +83,32 @@
               label: "root"
               mountpoint: "/"
               fstab_options: "defaults"
+      # XXX: double check with bib
+      aarch64: &default_partition_table_aarch64
+        uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
+        type: "gpt"
+        partitions:
+          - *default_partition_table_part_efi
+          - *default_partition_table_part_root
+      ppc64le:
+        uuid: "0x14fc63d2"
+        type: "dos"
+        partitions:
+          - size: "4 MiB"
+            bootable: true
+            type: *prep_partition_dosid
+          - &default_partition_table_part_root_ppc64le
+            size: "2 GiB"
+            payload_type: "filesystem"
+            payload:
+              <<: *default_partition_table_part_root_payload
+              label: ""
+      s390x:
+        uuid: "0x14fc63d2"
+        type: "dos"
+        partitions:
+          - <<: *default_partition_table_part_root_ppc64le
+            bootable: true
 
 image_types:
   "raw": &raw_image_type

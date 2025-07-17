@@ -249,7 +249,6 @@ func makeManifestJob(
 	options.Facts = &facts.ImageOptions{
 		APIType: facts.TEST_APITYPE,
 	}
-
 	job := func(msgq chan string) (err error) {
 		defer func() {
 			msg := fmt.Sprintf("Finished job %s", filename)
@@ -499,7 +498,7 @@ func main() {
 					if skipNoconfig {
 						continue
 					}
-					panic(fmt.Sprintf("no configs defined for image type %q for %s", imgTypeName, distribution.Name()))
+					panic(fmt.Sprintf("no configs defined for image type %q for %s/%s", imgTypeName, distribution.Name(), archName))
 				}
 
 				for _, itConfig := range imgTypeConfigs {

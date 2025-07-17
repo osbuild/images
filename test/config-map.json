@@ -75,7 +75,12 @@
       "bootc-*"
     ],
     "image-types": [
-      "qcow2"
+      "ami",
+      "raw",
+      "qcow2",
+      "vmdk",
+      "vhd",
+      "gce"
     ]
   },
   "./configs/edge-ostree-pull-empty.json": {
