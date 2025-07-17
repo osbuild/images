@@ -361,6 +361,9 @@ type ImageTypeYAML struct {
 	DiskImagePartTool     *osbuild.PartTool `yaml:"disk_image_part_tool"`
 	DiskImageVPCForceSize *bool             `yaml:"disk_image_vpc_force_size"`
 
+	RequiredCustomizations  []string `yaml:"required_customizations"`
+	SupportedCustomizations []string `yaml:"supported_customizations"`
+
 	// name is set by the loader
 	name string
 }

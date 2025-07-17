@@ -280,6 +280,14 @@ func (t *ImageType) PartitionType() disk.PartitionTableType {
 	return basePartitionTable.Type
 }
 
+func (t *ImageType) RequiredCustomizations() []string {
+	return nil
+}
+
+func (t *ImageType) SupportedCustomizations() []string {
+	return nil
+}
+
 func (t *ImageType) Manifest(bp *blueprint.Blueprint,
 	options distro.ImageOptions,
 	repos []rpmmd.RepoConfig,
