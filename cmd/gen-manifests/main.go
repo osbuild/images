@@ -128,7 +128,7 @@ func (bc BuildConfigs) Get(distro, arch, imageType string) []*buildconfig.BuildC
 	return configs
 }
 
-func loadConfigMap(configPath string) *BuildConfigs {
+func loadConfigMap(configPath string, opts *buildconfig.Options) *BuildConfigs {
 	type configFilters struct {
 		ImageTypes  []string     `json:"image-types"`
 		Distros     []string     `json:"distros"`
@@ -168,7 +168,7 @@ func loadConfigMap(configPath string) *BuildConfigs {
 			cfgDir := filepath.Dir(configPath)
 			path = filepath.Join(cfgDir, path)
 		}
-		config, err := buildconfig.New(path, nil)
+		config, err := buildconfig.New(path, opts)
 		if err != nil {
 			panic(err)
 		}
@@ -190,9 +190,9 @@ func loadConfigMap(configPath string) *BuildConfigs {
 // loadImgConfig loads a single image config from a file and returns a
 // a BuildConfigs map with the config mapped to all distros, arches, and
 // image types.
-func loadImgConfig(configPath string) *BuildConfigs {
+func loadImgConfig(configPath string, opts *buildconfig.Options) *BuildConfigs {
 	cm := newBuildConfigs()
-	config, err := buildconfig.New(configPath, nil)
+	config, err := buildconfig.New(configPath, opts)
 	if err != nil {
 		panic(err)
 	}
@@ -539,7 +539,7 @@ func main() {
 	// common args
 	var outputDir, cacheRoot, configPath, configMapPath string
 	var nWorkers int
-	var metadata, skipNoconfig, skipNorepos bool
+	var metadata, skipNoconfig, skipNorepos, buildconfigAllowUnknown bool
 	flag.StringVar(&outputDir, "output", "test/data/manifests/", "manifest store directory")
 	flag.IntVar(&nWorkers, "workers", 16, "number of workers to run concurrently")
 	flag.StringVar(&cacheRoot, "cache", "/tmp/rpmmd", "rpm metadata cache directory")
@@ -548,6 +548,7 @@ func main() {
 	flag.StringVar(&configMapPath, "config-map", "test/config-map.json", "configuration file mapping image types to configs")
 	flag.BoolVar(&skipNoconfig, "skip-noconfig", false, "skip distro-arch-image configurations that have no config (otherwise fail)")
 	flag.BoolVar(&skipNorepos, "skip-norepos", false, "skip distro-arch-image configurations that have no repositories (otherwise fail)")
+	flag.BoolVar(&buildconfigAllowUnknown, "buildconfig-allow-unknown", false, "allow unknown keys in buildconfig")
 
 	// content args
 	var packages, containers, commits bool
@@ -578,11 +579,12 @@ func main() {
 	}
 
 	var configs *BuildConfigs
+	opts := &buildconfig.Options{AllowUnknownFields: buildconfigAllowUnknown}
 	if configPath != "" {
 		fmt.Println("'-config' was provided, thus ignoring '-config-map' option")
-		configs = loadImgConfig(configPath)
+		configs = loadImgConfig(configPath, opts)
 	} else {
-		configs = loadConfigMap(configMapPath)
+		configs = loadConfigMap(configMapPath, opts)
 	}
 
 	if err := os.MkdirAll(outputDir, 0770); err != nil {
