@@ -51,7 +51,7 @@ func run() error {
 	}
 
 	distroFac := distrofactory.NewDefault()
-	config, err := buildconfig.New(configFile)
+	config, err := buildconfig.New(configFile, nil)
 	if err != nil {
 		return err
 	}
