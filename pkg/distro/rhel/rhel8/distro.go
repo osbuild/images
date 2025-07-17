@@ -202,7 +202,7 @@ func newDistro(name string, minor int) *rhel.Distribution {
 				ImageFormat: platform.FORMAT_QCOW2,
 			},
 		},
-		mkOpenstackImgType(rd, arch.ARCH_X86_64),
+		mkOpenstackImgType(rd, arch.ARCH_AARCH64),
 	)
 
 	aarch64.AddImageTypes(
@@ -218,9 +218,9 @@ func newDistro(name string, minor int) *rhel.Distribution {
 
 	aarch64.AddImageTypes(
 		bareMetalAarch64Platform,
-		mkEdgeOCIImgType(rd, arch.ARCH_X86_64),
-		mkEdgeCommitImgType(rd, arch.ARCH_X86_64),
-		mkEdgeInstallerImgType(rd, arch.ARCH_X86_64),
+		mkEdgeOCIImgType(rd, arch.ARCH_AARCH64),
+		mkEdgeCommitImgType(rd, arch.ARCH_AARCH64),
+		mkEdgeInstallerImgType(rd, arch.ARCH_AARCH64),
 		mkImageInstaller(),
 	)
 
@@ -234,7 +234,7 @@ func newDistro(name string, minor int) *rhel.Distribution {
 	aarch64.AddImageTypes(
 		rawAarch64Platform,
 		mkAmiImgTypeAarch64(rd),
-		mkMinimalRawImgType(rd, arch.ARCH_X86_64),
+		mkMinimalRawImgType(rd, arch.ARCH_AARCH64),
 	)
 
 	ppc64le.AddImageTypes(
