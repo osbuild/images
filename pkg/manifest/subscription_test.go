@@ -177,7 +177,7 @@ func TestSubscriptionService(t *testing.T) {
 			expectedDirs:     make([]*fsnode.Directory, 0),
 			expectedServices: []string{serviceFilename},
 		},
-		"with-rhc": {
+		"with-rhc-no-permissive": {
 			subOpts: subscription.ImageOptions{
 				Organization:  "theorg-wr",
 				ActivationKey: "thekey-wr",
@@ -185,6 +185,7 @@ func TestSubscriptionService(t *testing.T) {
 				BaseUrl:       "thebaseurl-wr",
 				Insights:      false,
 				Rhc:           true,
+				PermissiveRHC: false,
 			},
 			srvcOpts: nil,
 			expectedStage: &osbuild.Stage{
@@ -206,7 +207,6 @@ func TestSubscriptionService(t *testing.T) {
 							Type: osbuild.OneshotServiceType,
 							ExecStart: []string{
 								"/usr/bin/rhc connect --organization=${ORG_ID} --activation-key=${ACTIVATION_KEY} --server theserverurl-wr",
-								"/usr/sbin/semanage permissive --add rhcd_t", // added when rhc is enabled
 								"/usr/bin/rm " + subkeyFilepath,
 							},
 							EnvironmentFile: []string{
@@ -231,6 +231,7 @@ func TestSubscriptionService(t *testing.T) {
 				BaseUrl:       "thebaseurl-wir",
 				Insights:      true,
 				Rhc:           true,
+				PermissiveRHC: true,
 			},
 			srvcOpts: nil,
 			expectedStage: &osbuild.Stage{
@@ -277,6 +278,7 @@ func TestSubscriptionService(t *testing.T) {
 				BaseUrl:       "thebaseurl-wir",
 				Insights:      true,
 				Rhc:           true,
+				PermissiveRHC: true,
 				TemplateName:  "template name",
 			},
 			srvcOpts: nil,
@@ -324,6 +326,7 @@ func TestSubscriptionService(t *testing.T) {
 				BaseUrl:       "thebaseurl-wir",
 				Insights:      true,
 				Rhc:           true,
+				PermissiveRHC: true,
 				TemplateName:  "template-name",
 				TemplateUUID:  "template-uuid",
 				Proxy:         "proxy-url",

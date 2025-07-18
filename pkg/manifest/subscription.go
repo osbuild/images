@@ -126,8 +126,10 @@ func subscriptionService(subscriptionOptions subscription.ImageOptions, serviceO
 			rhcConnect += fmt.Sprintf(" --content-template=\"%s\"", subscriptionOptions.TemplateName)
 		}
 		commands = append(commands, rhcConnect)
-		// execute the rhc post install script as the selinuxenabled check doesn't work in the buildroot container
-		commands = append(commands, "/usr/sbin/semanage permissive --add rhcd_t")
+		if subscriptionOptions.PermissiveRHC {
+			// execute the rhc post install script as the selinuxenabled check doesn't work in the buildroot container
+			commands = append(commands, "/usr/sbin/semanage permissive --add rhcd_t")
+		}
 		// register to template if template uuid is specified
 		if curlToAssociateSystem != "" {
 			commands = append(commands, curlToAssociateSystem)

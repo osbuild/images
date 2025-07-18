@@ -15,6 +15,7 @@ type ImageOptions struct {
 	BaseUrl       string `json:"base_url"`
 	Insights      bool   `json:"insights"`
 	Rhc           bool   `json:"rhc"`
+	PermissiveRHC bool   `json:"permissive_rhc"`
 	Proxy         string `json:"proxy"`
 	TemplateName  string `json:"template_name"`
 	TemplateUUID  string `json:"template_uuid"`
