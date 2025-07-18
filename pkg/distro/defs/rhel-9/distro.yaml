@@ -1067,6 +1067,7 @@ image_config:
     default_oscap_datastream: "/usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml"
     install_weak_deps: true
     locale: "C.UTF-8"
+    permissive_rhc: true
     sysconfig:
       networking: true
       no_zero_conf: true
