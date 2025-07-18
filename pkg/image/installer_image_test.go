@@ -469,6 +469,7 @@ var moduleTestCases = map[string]testCase{
 			anaconda.ModulePayloads,
 			anaconda.ModuleNetwork,
 			anaconda.ModuleStorage,
+			anaconda.ModuleRuntime,
 		},
 	},
 	"no-op": {
@@ -481,6 +482,7 @@ var moduleTestCases = map[string]testCase{
 			anaconda.ModulePayloads,
 			anaconda.ModuleNetwork,
 			anaconda.ModuleStorage,
+			anaconda.ModuleRuntime,
 		},
 	},
 	"enable-users": {
@@ -492,6 +494,7 @@ var moduleTestCases = map[string]testCase{
 			anaconda.ModuleNetwork,
 			anaconda.ModuleStorage,
 			anaconda.ModuleUsers,
+			anaconda.ModuleRuntime,
 		},
 	},
 	"disable-storage": {
@@ -501,6 +504,7 @@ var moduleTestCases = map[string]testCase{
 		expected: []string{
 			anaconda.ModulePayloads,
 			anaconda.ModuleNetwork,
+			anaconda.ModuleRuntime,
 		},
 	},
 	"enable-users-disable-storage": {
@@ -514,6 +518,7 @@ var moduleTestCases = map[string]testCase{
 			anaconda.ModulePayloads,
 			anaconda.ModuleNetwork,
 			anaconda.ModuleUsers,
+			anaconda.ModuleRuntime,
 		},
 	},
 }
