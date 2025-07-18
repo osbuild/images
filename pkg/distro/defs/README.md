@@ -83,6 +83,12 @@ Conditions can be used and *only* the "append" action is supported,
 this means that the packages from the conditions is appended to the
 original package sets.
 
+### platforms_override
+
+This can be used to verride the platforms for the image type based
+on some condition. See the rhel-8 "ami" image type for an example
+where the `aarch64` architecture is only available for rhel-8.9+.
+
 ### conditions
 
 Conditions are expressed using the following form:
@@ -113,6 +119,7 @@ shared and merge via the  `<<:` operation.
 The `when` part of the condition can contain one or more
 of:
 - distro_name
+- `not_distro_name`
 - arch
 - version_less_than
 - version_equal
