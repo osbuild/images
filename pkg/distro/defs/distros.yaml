@@ -176,3 +176,10 @@ distros:
         # https://github.com/osbuild/osbuild/blob/ea8261cad6c5c606c00c0f2824c3f483c01a0cc9/runners/org.osbuild.rhel82#L61
         # Install python36 explicitly for RHEL 8.
         - "python36"
+
+  # XXX: ideally we had a "testdata/defs.d" overlay/droping for this
+  # Note that this will not be visible by default because we do not
+  # ship with a reporegistry that contains repositories for it
+  - name: bootc-centos-9
+    default_fs_type: "xfs"
+    defs_path: bootc

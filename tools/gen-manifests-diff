@@ -50,6 +50,7 @@ def run_gen_manifests(cmd, output_dir):
         "-containers=false",
         "-arches", ",".join(arches),
         "-output", output_dir,
+        "-buildconfig-allow-unknown",
     ], env=env, text=True, capture_output=True, check=False)
     if p.returncode != 0:
         print(p.stdout)

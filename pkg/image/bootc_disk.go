@@ -3,13 +3,16 @@ package image
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 
+	"github.com/osbuild/images/pkg/artifact"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
+	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/runner"
 )
 
@@ -34,6 +37,18 @@ func NewBootcDiskImage(container container.SourceSpec, buildContainer container.
 		ContainerSource:      &container,
 		BuildContainerSource: &buildContainer,
 	}
+}
+
+// XXX: consider what to do here, ideally the InstanciateManifest
+// signature would change to pass containers (or a new union of
+// repos and containers) so that we can use the same method
+// everywhere
+func (img *BootcDiskImage) InstantiateManifest(m *manifest.Manifest,
+	repos []rpmmd.RepoConfig,
+	runner runner.Runner,
+	rng *rand.Rand) (*artifact.Artifact, error) {
+
+	return nil, fmt.Errorf("internal error: BootcDiskImage  only supported InstantiateManifestFromContainers")
 }
 
 func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifest,
@@ -112,7 +127,9 @@ func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifes
 	// In BIB, we export multiple images from the same pipeline so we use the
 	// filename as the basename for each export and set the extensions based on
 	// each file format.
-	fileBasename := img.Filename
+	//
+	// XXX: how to converge these two worlds?
+	fileBasename := strings.SplitN(img.Filename, ".", 2)[0]
 	rawImage.SetFilename(fmt.Sprintf("%s.raw", fileBasename))
 
 	qcow2Pipeline := manifest.NewQCOW2(hostPipeline, rawImage)
