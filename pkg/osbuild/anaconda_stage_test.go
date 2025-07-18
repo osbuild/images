@@ -21,6 +21,7 @@ func TestAnacondaStageOptions(t *testing.T) {
 			expected: []string{
 				anaconda.ModulePayloads,
 				anaconda.ModuleNetwork,
+				anaconda.ModuleRuntime,
 				anaconda.ModuleStorage,
 			},
 		},
@@ -34,6 +35,7 @@ func TestAnacondaStageOptions(t *testing.T) {
 				anaconda.ModulePayloads,
 				anaconda.ModuleNetwork,
 				anaconda.ModuleStorage,
+				anaconda.ModuleRuntime,
 			},
 		},
 		"add-users": {
@@ -43,6 +45,7 @@ func TestAnacondaStageOptions(t *testing.T) {
 			expected: []string{
 				anaconda.ModulePayloads,
 				anaconda.ModuleNetwork,
+				anaconda.ModuleRuntime,
 				anaconda.ModuleStorage,
 				anaconda.ModuleUsers,
 			},
@@ -57,6 +60,7 @@ func TestAnacondaStageOptions(t *testing.T) {
 				anaconda.ModulePayloads,
 				anaconda.ModuleNetwork,
 				anaconda.ModuleStorage,
+				anaconda.ModuleRuntime,
 				anaconda.ModuleSubscription,
 				anaconda.ModuleTimezone,
 				anaconda.ModuleUsers,
@@ -69,6 +73,7 @@ func TestAnacondaStageOptions(t *testing.T) {
 			expected: []string{
 				anaconda.ModulePayloads,
 				anaconda.ModuleNetwork,
+				anaconda.ModuleRuntime,
 				anaconda.ModuleStorage,
 				"org.osbuild.not.anaconda.module",
 			},
@@ -80,6 +85,7 @@ func TestAnacondaStageOptions(t *testing.T) {
 			expected: []string{
 				anaconda.ModulePayloads,
 				anaconda.ModuleNetwork,
+				anaconda.ModuleRuntime,
 				anaconda.ModuleStorage,
 			},
 		},
@@ -87,6 +93,7 @@ func TestAnacondaStageOptions(t *testing.T) {
 			disable: []string{
 				anaconda.ModulePayloads,
 				anaconda.ModuleNetwork,
+				anaconda.ModuleRuntime,
 				anaconda.ModuleStorage,
 			},
 			expected: nil,
@@ -98,6 +105,7 @@ func TestAnacondaStageOptions(t *testing.T) {
 			expected: []string{
 				anaconda.ModulePayloads,
 				anaconda.ModuleNetwork,
+				anaconda.ModuleRuntime,
 			},
 		},
 		"enable-then-disable": {
@@ -111,6 +119,7 @@ func TestAnacondaStageOptions(t *testing.T) {
 				anaconda.ModuleStorage,
 				anaconda.ModulePayloads,
 				anaconda.ModuleNetwork,
+				anaconda.ModuleRuntime,
 			},
 		},
 		"enable-then-disable-nonsense": {
@@ -124,6 +133,7 @@ func TestAnacondaStageOptions(t *testing.T) {
 				anaconda.ModuleStorage,
 				anaconda.ModulePayloads,
 				anaconda.ModuleNetwork,
+				anaconda.ModuleRuntime,
 			},
 		},
 		"enable-then-disable-multi": {
@@ -141,6 +151,7 @@ func TestAnacondaStageOptions(t *testing.T) {
 				anaconda.ModuleStorage,
 				anaconda.ModulePayloads,
 				anaconda.ModuleNetwork,
+				anaconda.ModuleRuntime,
 			},
 		},
 	}

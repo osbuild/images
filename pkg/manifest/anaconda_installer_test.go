@@ -48,6 +48,7 @@ func TestAnacondaInstallerModules(t *testing.T) {
 				anaconda.ModulePayloads,
 				anaconda.ModuleNetwork,
 				anaconda.ModuleStorage,
+				anaconda.ModuleRuntime,
 			},
 		},
 		"no-op": {
@@ -60,6 +61,7 @@ func TestAnacondaInstallerModules(t *testing.T) {
 				anaconda.ModulePayloads,
 				anaconda.ModuleNetwork,
 				anaconda.ModuleStorage,
+				anaconda.ModuleRuntime,
 			},
 		},
 		"enable-users": {
@@ -71,6 +73,7 @@ func TestAnacondaInstallerModules(t *testing.T) {
 				anaconda.ModuleNetwork,
 				anaconda.ModuleStorage,
 				anaconda.ModuleUsers,
+				anaconda.ModuleRuntime,
 			},
 		},
 		"disable-storage": {
@@ -80,6 +83,7 @@ func TestAnacondaInstallerModules(t *testing.T) {
 			expected: []string{
 				anaconda.ModulePayloads,
 				anaconda.ModuleNetwork,
+				anaconda.ModuleRuntime,
 			},
 		},
 		"enable-users-disable-storage": {
@@ -93,6 +97,7 @@ func TestAnacondaInstallerModules(t *testing.T) {
 				anaconda.ModulePayloads,
 				anaconda.ModuleNetwork,
 				anaconda.ModuleUsers,
+				anaconda.ModuleRuntime,
 			},
 		},
 	}
