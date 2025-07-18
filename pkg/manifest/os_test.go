@@ -113,6 +113,7 @@ func TestRhcInsightsCommands(t *testing.T) {
 		BaseUrl:       "http://cdn.redhat.com/",
 		Insights:      false,
 		Rhc:           true,
+		PermissiveRHC: true,
 	}
 	pipeline := os.Serialize()
 	CheckSystemdStageOptions(t, pipeline.Stages, []string{

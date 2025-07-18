@@ -3,6 +3,7 @@ package rhel
 import (
 	"fmt"
 	"math/rand"
+	"slices"
 
 	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/blueprint"
@@ -245,6 +246,8 @@ func osCustomizations(
 		if options.Subscription.Proxy != "" {
 			osc.InsightsClientConfig = &osbuild.InsightsClientConfigStageOptions{Config: osbuild.InsightsClientConfig{Proxy: options.Subscription.Proxy}}
 		}
+		// selinux policy for rhc is set in registration service on rhel 9 and 10
+		options.Subscription.PermissiveRHC = slices.Contains([]string{"9", "10"}, t.Arch().Distro().Releasever())
 	} else {
 		subscriptionStatus = subscription.RHSMConfigNoSubscription
 	}
