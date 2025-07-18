@@ -186,7 +186,9 @@ func TestSubscriptionService(t *testing.T) {
 				Insights:      false,
 				Rhc:           true,
 			},
-			srvcOpts: nil,
+			srvcOpts: &subscriptionServiceOptions{
+				PermissiveRHC: true,
+			},
 			expectedStage: &osbuild.Stage{
 				Type: stageType,
 				Options: &osbuild.SystemdUnitCreateStageOptions{
@@ -232,7 +234,9 @@ func TestSubscriptionService(t *testing.T) {
 				Insights:      true,
 				Rhc:           true,
 			},
-			srvcOpts: nil,
+			srvcOpts: &subscriptionServiceOptions{
+				PermissiveRHC: true,
+			},
 			expectedStage: &osbuild.Stage{
 				Type: stageType,
 				Options: &osbuild.SystemdUnitCreateStageOptions{
@@ -269,6 +273,53 @@ func TestSubscriptionService(t *testing.T) {
 			expectedDirs:     make([]*fsnode.Directory, 0),
 			expectedServices: []string{serviceFilename},
 		},
+		"with-rhc-no-permissive": {
+			subOpts: subscription.ImageOptions{
+				Organization:  "theorg-wr",
+				ActivationKey: "thekey-wr",
+				ServerUrl:     "theserverurl-wr",
+				BaseUrl:       "thebaseurl-wr",
+				Insights:      false,
+				Rhc:           true,
+			},
+			srvcOpts: &subscriptionServiceOptions{
+				PermissiveRHC: false,
+			},
+			expectedStage: &osbuild.Stage{
+				Type: stageType,
+				Options: &osbuild.SystemdUnitCreateStageOptions{
+					Filename: serviceFilename,
+					UnitType: unitType,
+					UnitPath: osbuild.UsrUnitPath,
+					Config: osbuild.SystemdUnit{
+						Unit: &osbuild.UnitSection{
+							Description: serviceDescription,
+							ConditionPathExists: []string{
+								subkeyFilepath,
+							},
+							Wants: serviceWants,
+							After: serviceAfter,
+						},
+						Service: &osbuild.ServiceSection{
+							Type: osbuild.OneshotServiceType,
+							ExecStart: []string{
+								"/usr/bin/rhc connect --organization=${ORG_ID} --activation-key=${ACTIVATION_KEY} --server theserverurl-wr",
+								"/usr/bin/rm " + subkeyFilepath,
+							},
+							EnvironmentFile: []string{
+								subkeyFilepath,
+							},
+						},
+						Install: &osbuild.InstallSection{
+							WantedBy: serviceWantedBy,
+						},
+					},
+				},
+			},
+			expectedFiles:    []*fsnode.File{mkKeyfile("theorg-wr", "thekey-wr")},
+			expectedDirs:     make([]*fsnode.Directory, 0),
+			expectedServices: []string{serviceFilename},
+		},
 		"with-insights-rhc-template-name": {
 			subOpts: subscription.ImageOptions{
 				Organization:  "theorg-wir",
@@ -279,7 +330,9 @@ func TestSubscriptionService(t *testing.T) {
 				Rhc:           true,
 				TemplateName:  "template name",
 			},
-			srvcOpts: nil,
+			srvcOpts: &subscriptionServiceOptions{
+				PermissiveRHC: true,
+			},
 			expectedStage: &osbuild.Stage{
 				Type: stageType,
 				Options: &osbuild.SystemdUnitCreateStageOptions{
@@ -329,7 +382,9 @@ func TestSubscriptionService(t *testing.T) {
 				Proxy:         "proxy-url",
 				PatchURL:      "https://cert.console.redhat.com/api/patch/v3/",
 			},
-			srvcOpts: nil,
+			srvcOpts: &subscriptionServiceOptions{
+				PermissiveRHC: true,
+			},
 			expectedStage: &osbuild.Stage{
 				Type: stageType,
 				Options: &osbuild.SystemdUnitCreateStageOptions{

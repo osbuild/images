@@ -1196,6 +1196,7 @@ image_config:
     install_weak_deps: true
     kernel_options_bootloader: true
     locale: "en_US.UTF-8"
+    permissive_rhc: false
     sysconfig:
       networking: true
       no_zero_conf: true

@@ -243,6 +243,7 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 		if options.Subscription.Proxy != "" {
 			osc.InsightsClientConfig = &osbuild.InsightsClientConfigStageOptions{Config: osbuild.InsightsClientConfig{Proxy: options.Subscription.Proxy}}
 		}
+		osc.PermissiveRHC = imageConfig.PermissiveRHC
 	} else {
 		subscriptionStatus = subscription.RHSMConfigNoSubscription
 	}
