@@ -197,16 +197,25 @@
         - "NetworkManager.service"
         - "firewalld.service"
         - "sshd.service"
-        - "greenboot-grub2-set-counter"
-        - "greenboot-grub2-set-success"
         - "greenboot-healthcheck"
-        - "greenboot-rpm-ostree-grub2-check-fallback"
-        - "greenboot-status"
-        - "greenboot-task-runner"
-        - "redboot-auto-reboot"
-        - "redboot-task-runner"
       kernel_options: *ostree_deployment_kernel_options
       conditions:
+        "f42 and below uses old greenboot"
+          when:
+            version_less_than: "43"
+          shallow_merge:
+            enabled_services:
+              - "NetworkManager.service"
+              - "firewalld.service"
+              - "sshd.service"
+              - "greenboot-grub2-set-counter"
+              - "greenboot-grub2-set-success"
+              - "greenboot-healthcheck"
+              - "greenboot-rpm-ostree-grub2-check-fallback"
+              - "greenboot-status"
+              - "greenboot-task-runner"
+              - "redboot-auto-reboot"
+              - "redboot-task-runner"
         "f41 and below used zezere and parsec":
           when:
             version_less_than: "42"
@@ -831,8 +840,6 @@ image_types:
             - "glibc"
             - "glibc-minimal-langpack"
             - "gnupg2"
-            - "greenboot"
-            - "greenboot-default-health-checks"
             - "gzip"
             - "hostname"
             - "ignition"
