@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 
 	"github.com/osbuild/images/pkg/cloud/awscloud"
 )
@@ -55,5 +55,5 @@ func main() {
 		}
 	}
 
-	fmt.Printf("file uploaded to %s\n", aws.StringValue(&uploadOutput.Location))
+	fmt.Printf("file uploaded to %s\n", aws.ToString(&uploadOutput.Location))
 }

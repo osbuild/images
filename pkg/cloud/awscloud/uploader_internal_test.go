@@ -3,11 +3,10 @@ package awscloud
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/stretchr/testify/assert"
-
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/platform"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestUploaderOptionsEc2BootMode(t *testing.T) {
@@ -32,21 +31,21 @@ func TestUploaderOptionsEc2BootMode(t *testing.T) {
 			opts: &UploaderOptions{
 				BootMode: common.ToPtr(platform.BOOT_LEGACY),
 			},
-			expected: common.ToPtr(ec2.BootModeValuesLegacyBios),
+			expected: common.ToPtr(string(ec2types.BootModeValuesLegacyBios)),
 		},
 		{
 			name: "boot-mode-uefi",
 			opts: &UploaderOptions{
 				BootMode: common.ToPtr(platform.BOOT_UEFI),
 			},
-			expected: common.ToPtr(ec2.BootModeValuesUefi),
+			expected: common.ToPtr(string(ec2types.BootModeValuesUefi)),
 		},
 		{
 			name: "boot-mode-hybrid",
 			opts: &UploaderOptions{
 				BootMode: common.ToPtr(platform.BOOT_HYBRID),
 			},
-			expected: common.ToPtr(ec2.BootModeValuesUefiPreferred),
+			expected: common.ToPtr(string(ec2types.BootModeValuesUefiPreferred)),
 		},
 		{
 			name: "boot-mode-invalid",
