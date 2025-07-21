@@ -76,7 +76,7 @@ distros:
     iso_label_tmpl: "RHEL-{{.Distro.MajorVersion}}-{{.Distro.MinorVersion}}-0-BaseOS-{{.Arch}}"
     runner:
       name: "org.osbuild.rhel{{.MajorVersion}}{{.MinorVersion}}"
-      build_packages: &rhel_runner_build_packages
+      build_packages: &rhel10_runner_build_packages
         - "glibc"  # ldconfig
         - "platform-python"  # osbuild
         - "systemd"  # systemd-tmpfiles and systemd-sysusers
@@ -137,11 +137,7 @@ distros:
     iso_label_tmpl: "CentOS-Stream-{{.Distro.MajorVersion}}-BaseOS-{{.Arch}}"
     runner:
       name: org.osbuild.centos10
-      build_packages:
-        - "glibc"  # ldconfig
-        - "platform-python"  # osbuild
-        - "systemd"  # systemd-tmpfiles and systemd-sysusers
-        - "python3"  # osbuild stages
+      build_packages: *rhel10_runner_build_packages
     oscap_profiles_allowlist: *oscap_profile_allowlist_rhel10
 
   - <<: *centos10
