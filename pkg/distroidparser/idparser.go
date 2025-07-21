@@ -3,7 +3,6 @@ package distroidparser
 import (
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
-	"github.com/osbuild/images/pkg/distro/rhel/rhel9"
 )
 
 var DefaultParser = NewDefaultParser()
@@ -61,6 +60,5 @@ func (p *Parser) Standardize(idStr string) (string, error) {
 func NewDefaultParser() *Parser {
 	return New(
 		defs.ParseID,
-		rhel9.ParseID,
 	)
 }

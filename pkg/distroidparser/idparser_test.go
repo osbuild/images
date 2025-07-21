@@ -3,9 +3,10 @@ package distroidparser
 import (
 	"testing"
 
-	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/distro/rhel/rhel9"
 	"github.com/stretchr/testify/require"
+
+	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distro/defs"
 )
 
 func TestDefaltParser(t *testing.T) {
@@ -193,9 +194,9 @@ func TestDefaltParser(t *testing.T) {
 }
 
 func TestParserDoubleMatch(t *testing.T) {
-	Parser := New(rhel9.ParseID, rhel9.ParseID)
+	Parser := New(defs.ParseID, defs.ParseID)
 
 	require.Panics(t, func() {
-		_, _ = Parser.Parse("rhel-9.0")
+		_, _ = Parser.Parse("rhel-90")
 	}, "Parser should panic when rhel-9.0 is matched by multiple parsers")
 }
