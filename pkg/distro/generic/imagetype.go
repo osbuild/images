@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
-	"strings"
-
 	"slices"
 
 	"github.com/osbuild/images/internal/common"
@@ -13,7 +11,6 @@ import (
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
-	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
@@ -22,7 +19,6 @@ import (
 	"github.com/osbuild/images/pkg/image"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/platform"
-	"github.com/osbuild/images/pkg/policies"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
@@ -313,198 +309,23 @@ func (t *imageType) Manifest(bp *blueprint.Blueprint,
 // checkOptions checks the validity and compatibility of options and customizations for the image type.
 // Returns ([]string, error) where []string, if non-nil, will hold any generated warnings (e.g. deprecation notices).
 func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOptions) ([]string, error) {
-	customizations := bp.Customizations
 
-	var warnings []string
-
-	if !t.ImageTypeYAML.RPMOSTree && options.OSTree != nil {
-		return warnings, fmt.Errorf("OSTree is not supported for %q", t.Name())
-	}
-
-	if len(t.ImageTypeYAML.SupportedPartitioningModes) > 0 && !slices.Contains(t.ImageTypeYAML.SupportedPartitioningModes, options.PartitioningMode) {
-		return warnings, fmt.Errorf("partitioning mode %s not supported for %q on %q", options.PartitioningMode, t.Name(), t.arch.distro.Name())
-	}
-
-	// we do not support embedding containers on ostree-derived images, only on commits themselves
-	if len(bp.Containers) > 0 && t.ImageTypeYAML.RPMOSTree && (t.Name() != "iot-commit" && t.Name() != "iot-container") {
-		return warnings, fmt.Errorf("embedding containers is not supported for %s on %s", t.Name(), t.arch.distro.Name())
-	}
-
-	if options.OSTree != nil {
-		if err := options.OSTree.Validate(); err != nil {
-			return warnings, err
-		}
-	}
-
-	if t.ImageTypeYAML.BootISO && t.ImageTypeYAML.RPMOSTree {
-		// ostree-based ISOs require a URL from which to pull a payload commit
-		if options.OSTree == nil || options.OSTree.URL == "" {
-			return warnings, fmt.Errorf("boot ISO image type %q requires specifying a URL from which to retrieve the OSTree commit", t.Name())
-		}
-	}
-
-	if t.Name() == "iot-raw-xz" || t.Name() == "iot-qcow2" {
-		allowed := []string{"User", "Group", "Directories", "Files", "Services", "FIPS"}
-		if err := customizations.CheckAllowed(allowed...); err != nil {
-			return warnings, fmt.Errorf(distro.UnsupportedCustomizationError, t.Name(), strings.Join(allowed, ", "))
-		}
-		// TODO: consider additional checks, such as those in "edge-simplified-installer" in RHEL distros
-	}
-
-	// BootISOs have limited support for customizations.
-	// TODO: Support kernel name selection for image-installer
-	if t.ImageTypeYAML.BootISO {
-		if t.Name() == "iot-simplified-installer" {
-			allowed := []string{"InstallationDevice", "FDO", "Ignition", "Kernel", "User", "Group", "FIPS"}
-			if err := customizations.CheckAllowed(allowed...); err != nil {
-				return warnings, fmt.Errorf(distro.UnsupportedCustomizationError, t.Name(), strings.Join(allowed, ", "))
-			}
-			if customizations.GetInstallationDevice() == "" {
-				return warnings, fmt.Errorf("boot ISO image type %q requires specifying an installation device to install to", t.Name())
-			}
-
-			// FDO is optional, but when specified has some restrictions
-			if customizations.GetFDO() != nil {
-				if customizations.GetFDO().ManufacturingServerURL == "" {
-					return warnings, fmt.Errorf("boot ISO image type %q requires specifying FDO.ManufacturingServerURL configuration to install to when using FDO", t.Name())
-				}
-				var diunSet int
-				if customizations.GetFDO().DiunPubKeyHash != "" {
-					diunSet++
-				}
-				if customizations.GetFDO().DiunPubKeyInsecure != "" {
-					diunSet++
-				}
-				if customizations.GetFDO().DiunPubKeyRootCerts != "" {
-					diunSet++
-				}
-				if diunSet != 1 {
-					return warnings, fmt.Errorf("boot ISO image type %q requires specifying one of [FDO.DiunPubKeyHash,FDO.DiunPubKeyInsecure,FDO.DiunPubKeyRootCerts] configuration to install to when using FDO", t.Name())
-				}
-			}
-
-			// ignition is optional, we might be using FDO
-			if customizations.GetIgnition() != nil {
-				if customizations.GetIgnition().Embedded != nil && customizations.GetIgnition().FirstBoot != nil {
-					return warnings, fmt.Errorf("both ignition embedded and firstboot configurations found")
-				}
-				if customizations.GetIgnition().FirstBoot != nil && customizations.GetIgnition().FirstBoot.ProvisioningURL == "" {
-					return warnings, fmt.Errorf("ignition.firstboot requires a provisioning url")
-				}
-			}
-		} else if t.Name() == "iot-installer" || t.Name() == "minimal-installer" {
-			// "Installer" is actually not allowed for image-installer right now, but this is checked at the end
-			allowed := []string{"User", "Group", "FIPS", "Installer", "Timezone", "Locale"}
-			if err := customizations.CheckAllowed(allowed...); err != nil {
-				return warnings, fmt.Errorf(distro.UnsupportedCustomizationError, t.Name(), strings.Join(allowed, ", "))
-			}
-		} else if t.Name() == "workstation-live-installer" {
-			allowed := []string{"Installer"}
-			if err := customizations.CheckAllowed(allowed...); err != nil {
-				return warnings, fmt.Errorf(distro.NoCustomizationsAllowedError, t.Name())
-			}
-		}
-	}
-
-	if kernelOpts := customizations.GetKernel(); kernelOpts.Append != "" && t.ImageTypeYAML.RPMOSTree {
-		return warnings, fmt.Errorf("kernel boot parameter customizations are not supported for ostree types")
-	}
-
-	mountpoints := customizations.GetFilesystems()
-	partitioning, err := customizations.GetPartitioning()
-	if err != nil {
-		return warnings, err
-	}
-	if (len(mountpoints) > 0 || partitioning != nil) && t.ImageTypeYAML.RPMOSTree {
-		return warnings, fmt.Errorf("Custom mountpoints and partitioning are not supported for ostree types")
-	}
-	if len(mountpoints) > 0 && partitioning != nil {
-		return warnings, fmt.Errorf("partitioning customizations cannot be used with custom filesystems (mountpoints)")
-	}
-
-	if err := blueprint.CheckMountpointsPolicy(mountpoints, policies.MountpointPolicies); err != nil {
-		return warnings, err
-	}
-	if err := blueprint.CheckDiskMountpointsPolicy(partitioning, policies.MountpointPolicies); err != nil {
-		return warnings, err
-	}
-	if err := partitioning.ValidateLayoutConstraints(); err != nil {
-		return nil, err
-	}
-
-	if osc := customizations.GetOpenSCAP(); osc != nil {
-		supported := oscap.IsProfileAllowed(osc.ProfileID, t.arch.distro.DistroYAML.OscapProfilesAllowList)
-		if !supported {
-			return warnings, fmt.Errorf("OpenSCAP unsupported profile: %s", osc.ProfileID)
-		}
-		if t.ImageTypeYAML.RPMOSTree {
-			return warnings, fmt.Errorf("OpenSCAP customizations are not supported for ostree types")
-		}
-		if osc.ProfileID == "" {
-			return warnings, fmt.Errorf("OpenSCAP profile cannot be empty")
-		}
-	}
-
-	// Check Directory/File Customizations are valid
-	dc := customizations.GetDirectories()
-	fc := customizations.GetFiles()
-
-	err = blueprint.ValidateDirFileCustomizations(dc, fc)
-	if err != nil {
+	if warnings, err := checkOptionsCommon(t, bp, options); err != nil {
 		return warnings, err
 	}
 
-	dcp := policies.CustomDirectoriesPolicies
-	fcp := policies.CustomFilesPolicies
-
-	if t.ImageTypeYAML.RPMOSTree {
-		dcp = policies.OstreeCustomDirectoriesPolicies
-		fcp = policies.OstreeCustomFilesPolicies
+	switch idLike := t.arch.distro.DistroYAML.DistroLike; idLike {
+	case manifest.DISTRO_FEDORA:
+		return checkOptionsFedora(t, bp, options)
+	case manifest.DISTRO_EL7:
+		return checkOptionsRhel7(t, bp, options)
+	// TODO: add checkOptionsRhel{8,9} once we move them to
+	// generic distros
+	case manifest.DISTRO_EL10:
+		return checkOptionsRhel10(t, bp, options)
+	default:
+		return nil, fmt.Errorf("checkOptions called with unknown distro-like %v", idLike)
 	}
-
-	err = blueprint.CheckDirectoryCustomizationsPolicy(dc, dcp)
-	if err != nil {
-		return warnings, err
-	}
-
-	err = blueprint.CheckFileCustomizationsPolicy(fc, fcp)
-	if err != nil {
-		return warnings, err
-	}
-
-	// check if repository customizations are valid
-	_, err = customizations.GetRepositories()
-	if err != nil {
-		return warnings, err
-	}
-
-	if customizations.GetFIPS() && !common.IsBuildHostFIPSEnabled() {
-		warnings = append(warnings, fmt.Sprintln(common.FIPSEnabledImageWarning))
-	}
-
-	instCust, err := customizations.GetInstaller()
-	if err != nil {
-		return warnings, err
-	}
-	if instCust != nil {
-		// only supported by the Anaconda installer
-		if !slices.Contains([]string{"image-installer", "edge-installer", "live-installer", "iot-installer"}, t.Name()) {
-			return warnings, fmt.Errorf("installer customizations are not supported for %q", t.Name())
-		}
-
-		// NOTE: the image type check is redundant with the check above, but
-		// let's keep it explicit in case one of the two changes.
-		// The kickstart contents is incompatible with the users and groups
-		// customization only for the iot-installer.
-		if t.Name() == "iot-installer" &&
-			instCust.Kickstart != nil &&
-			len(instCust.Kickstart.Contents) > 0 &&
-			(customizations.GetUsers() != nil || customizations.GetGroups() != nil) {
-			return warnings, fmt.Errorf("iot-installer installer.kickstart.contents are not supported in combination with users or groups")
-		}
-	}
-
-	return warnings, nil
 }
 
 func bootstrapContainerFor(t *imageType) string {
