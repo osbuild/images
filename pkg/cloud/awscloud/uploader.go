@@ -6,9 +6,10 @@ import (
 	"io"
 	"slices"
 
+	s3manager "github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/google/uuid"
 
 	"github.com/osbuild/images/internal/common"
@@ -54,7 +55,7 @@ func (ou *UploaderOptions) ec2BootMode() (*string, error) {
 type awsClient interface {
 	Regions() ([]string, error)
 	Buckets() ([]string, error)
-	CheckBucketPermission(string, S3Permission) (bool, error)
+	CheckBucketPermission(string, s3types.Permission) (bool, error)
 	UploadFromReader(io.Reader, string, string) (*s3manager.UploadOutput, error)
 	Register(name, bucket, key string, shareWith []string, rpmArch string, bootMode, importRole *string) (*string, *string, error)
 	DeleteObject(string, string) error
@@ -110,7 +111,7 @@ func (au *awsUploader) Check(status io.Writer) error {
 	}
 
 	fmt.Fprintf(status, "Checking AWS bucket permissions...\n")
-	writePermission, err := au.client.CheckBucketPermission(au.bucketName, S3PermissionWrite)
+	writePermission, err := au.client.CheckBucketPermission(au.bucketName, s3types.PermissionWrite)
 	if err != nil {
 		return err
 	}
