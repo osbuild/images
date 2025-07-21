@@ -6,16 +6,1124 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/cloud/awscloud"
 )
 
+func TestRegister(t *testing.T) {
+	tmpDir := t.TempDir()
+	tmpFilePath := filepath.Join(tmpDir, "file")
+	require.NoError(t, os.WriteFile(tmpFilePath, []byte("test content"), 0600))
+
+	testCases := []struct {
+		testName string
+
+		name       string
+		bucket     string
+		key        string
+		shareWith  []string
+		rpmArch    string
+		bootMode   *string
+		importRole *string
+
+		ec2Client  *fakeEC2Client
+		s3Client   *fakeS3Client
+		s3Uploader *fakeS3Uploader
+
+		snapshotImportedWaiterOutput *ec2.DescribeImportSnapshotTasksOutput
+		snapshotImportedWaiterErr    error
+
+		expectErr bool
+		errMsg    string
+	}{
+		{
+			testName:  "happy minimal",
+			name:      "test-image",
+			bucket:    "test-bucket",
+			key:       "test-key",
+			rpmArch:   "x86_64",
+			expectErr: false,
+		},
+		{
+			testName:   "happy full",
+			name:       "test-image",
+			bucket:     "test-bucket",
+			key:        "test-key",
+			shareWith:  []string{"123456789012"},
+			rpmArch:    "x86_64",
+			bootMode:   aws.String(string(ec2types.BootModeValuesUefi)),
+			importRole: aws.String("arn:aws:iam::123456789012:role/ImportRole"),
+			expectErr:  false,
+		},
+		{
+			name:      "error: invalid architecture",
+			bucket:    "test-bucket",
+			key:       "test-key",
+			rpmArch:   "invalid-arch",
+			expectErr: true,
+			errMsg:    "ec2 doesn't support the following arch: invalid-arch",
+		},
+		{
+			name:      "error: invalid boot mode",
+			bucket:    "test-bucket",
+			key:       "test-key",
+			rpmArch:   "x86_64",
+			bootMode:  aws.String("invalid-boot-mode"),
+			expectErr: true,
+			errMsg:    "ec2 doesn't support the following boot mode: invalid-boot-mode",
+		},
+		{
+			name:    "error: import snapshot failure",
+			bucket:  "test-bucket",
+			key:     "test-key",
+			rpmArch: "x86_64",
+			ec2Client: &fakeEC2Client{
+				importSnapshotErr: fmt.Errorf("import snapshot error"),
+			},
+			expectErr: true,
+			errMsg:    "import snapshot error",
+		},
+		{
+			name:                         "error: import snapshot waiter failure",
+			bucket:                       "test-bucket",
+			key:                          "test-key",
+			rpmArch:                      "x86_64",
+			snapshotImportedWaiterErr:    fmt.Errorf("waiter error"),
+			snapshotImportedWaiterOutput: &ec2.DescribeImportSnapshotTasksOutput{},
+			expectErr:                    true,
+			errMsg:                       "waiter error",
+		},
+		{
+			name:    "error: import snapshot wait done not completed",
+			bucket:  "test-bucket",
+			key:     "test-key",
+			rpmArch: "x86_64",
+			snapshotImportedWaiterOutput: &ec2.DescribeImportSnapshotTasksOutput{
+				ImportSnapshotTasks: []ec2types.ImportSnapshotTask{
+					{
+						SnapshotTaskDetail: &ec2types.SnapshotTaskDetail{
+							SnapshotId:    aws.String("snap-1234567890abcdef0"),
+							Status:        aws.String("pending"),
+							StatusMessage: aws.String("Task is still in progress"),
+						},
+					},
+				},
+			},
+			expectErr: true,
+			errMsg:    "Unable to import snapshot, task result: pending, msg: Task is still in progress",
+		},
+		{
+			name:    "error: delete S3 object failure",
+			bucket:  "test-bucket",
+			key:     "test-key",
+			rpmArch: "x86_64",
+			s3Client: &fakeS3Client{
+				deleteObjectErr: fmt.Errorf("delete object error"),
+			},
+			expectErr: true,
+			errMsg:    "delete object error",
+		},
+		{
+			name:    "error: create tags failure",
+			bucket:  "test-bucket",
+			key:     "test-key",
+			rpmArch: "x86_64",
+			ec2Client: &fakeEC2Client{
+				importSnapshot: &ec2.ImportSnapshotOutput{
+					ImportTaskId: aws.String("import-task-id"),
+				},
+				registerImage: &ec2.RegisterImageOutput{
+					ImageId: aws.String("ami-1234567890abcdef0"),
+				},
+				createTagsErr: fmt.Errorf("create tags error"),
+			},
+			expectErr: true,
+			errMsg:    "create tags error",
+		},
+		{
+			name:    "error: register image failure",
+			bucket:  "test-bucket",
+			key:     "test-key",
+			rpmArch: "x86_64",
+			ec2Client: &fakeEC2Client{
+				importSnapshot: &ec2.ImportSnapshotOutput{
+					ImportTaskId: aws.String("import-task-id"),
+				},
+				registerImage: &ec2.RegisterImageOutput{
+					ImageId: aws.String("ami-1234567890abcdef0"),
+				},
+				registerImageErr: fmt.Errorf("register image error"),
+			},
+			expectErr: true,
+			errMsg:    "register image error",
+		},
+		{
+			name:      "error: share snapshot with accounts failure",
+			bucket:    "test-bucket",
+			key:       "test-key",
+			rpmArch:   "x86_64",
+			shareWith: []string{"123456789012"},
+			ec2Client: &fakeEC2Client{
+				importSnapshot: &ec2.ImportSnapshotOutput{
+					ImportTaskId: aws.String("import-task-id"),
+				},
+				registerImage: &ec2.RegisterImageOutput{
+					ImageId: aws.String("ami-1234567890abcdef0"),
+				},
+				modifySnapshotAttributeErr: fmt.Errorf("modify snapshot attribute error"),
+			},
+			expectErr: true,
+			errMsg:    "modify snapshot attribute error",
+		},
+		{
+			name:      "error: share image with accounts failure",
+			bucket:    "test-bucket",
+			key:       "test-key",
+			rpmArch:   "x86_64",
+			shareWith: []string{"123456789012"},
+			ec2Client: &fakeEC2Client{
+				importSnapshot: &ec2.ImportSnapshotOutput{
+					ImportTaskId: aws.String("import-task-id"),
+				},
+				registerImage: &ec2.RegisterImageOutput{
+					ImageId: aws.String("ami-1234567890abcdef0"),
+				},
+				modifyImageAttributeErr: fmt.Errorf("modify image attribute error"),
+			},
+			expectErr: true,
+			errMsg:    "modify image attribute error",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.testName, func(t *testing.T) {
+			// Use happy path defaults if no clients are provided
+			fec2 := &fakeEC2Client{
+				importSnapshot: &ec2.ImportSnapshotOutput{
+					ImportTaskId: aws.String("import-task-id"),
+				},
+				registerImage: &ec2.RegisterImageOutput{
+					ImageId: aws.String("ami-1234567890abcdef0"),
+				},
+			}
+			if tc.ec2Client != nil {
+				fec2 = tc.ec2Client
+			}
+			fs3 := &fakeS3Client{}
+			if tc.s3Client != nil {
+				fs3 = tc.s3Client
+			}
+			fs3u := &fakeS3Uploader{}
+			if tc.s3Uploader != nil {
+				fs3u = tc.s3Uploader
+			}
+			snapImportedWaiterOutput := tc.snapshotImportedWaiterOutput
+			if snapImportedWaiterOutput == nil {
+				snapImportedWaiterOutput = &ec2.DescribeImportSnapshotTasksOutput{
+					ImportSnapshotTasks: []ec2types.ImportSnapshotTask{
+						{
+							SnapshotTaskDetail: &ec2types.SnapshotTaskDetail{
+								SnapshotId: aws.String("snap-1234567890abcdef0"),
+								Status:     aws.String("completed"),
+							},
+						},
+					},
+				}
+			}
+
+			restore := awscloud.MockNewSnapshotImportedWaiterEC2(snapImportedWaiterOutput, tc.snapshotImportedWaiterErr)
+			defer restore()
+
+			awsClient := awscloud.NewAWSForTest(fec2, fs3, fs3u, nil)
+			require.NotNil(t, awsClient)
+
+			imageId, snapshotId, err := awsClient.Register(tc.name, tc.bucket, tc.key, tc.shareWith, tc.rpmArch, tc.bootMode, tc.importRole)
+
+			if tc.expectErr {
+				require.Error(t, err)
+				if tc.errMsg != "" {
+					require.Equal(t, tc.errMsg, err.Error())
+				}
+
+				require.Empty(t, imageId)
+				require.Empty(t, snapshotId)
+
+				// TODO: check number of calls based on which error is expected
+				return
+			}
+
+			require.NoError(t, err)
+			require.NotEmpty(t, imageId)
+			require.NotEmpty(t, snapshotId)
+
+			// import snapshot
+			require.Len(t, fec2.importSnapshotCalls, 1)
+			require.Equal(t, tc.bucket, *fec2.importSnapshotCalls[0].DiskContainer.UserBucket.S3Bucket)
+			require.Equal(t, tc.key, *fec2.importSnapshotCalls[0].DiskContainer.UserBucket.S3Key)
+			require.Equal(t, tc.importRole, fec2.importSnapshotCalls[0].RoleName)
+
+			// delete S3 object
+			require.Len(t, fs3.deleteObjectCalls, 1)
+			require.Equal(t, tc.bucket, *fs3.deleteObjectCalls[0].Bucket)
+			require.Equal(t, tc.key, *fs3.deleteObjectCalls[0].Key)
+
+			// the image and the snapshot are tagged with the same name
+			require.Len(t, fec2.createTagsCalls, 2)
+			for _, tagCalls := range fec2.createTagsCalls {
+				require.Len(t, tagCalls.Tags, 1)
+				require.Equal(t, "Name", *tagCalls.Tags[0].Key)
+				require.Equal(t, tc.name, *tagCalls.Tags[0].Value)
+			}
+
+			// register image
+			require.Len(t, fec2.registerImageCalls, 1)
+			require.Equal(t, tc.name, *fec2.registerImageCalls[0].Name)
+			require.Equal(t, ec2types.ArchitectureValues(tc.rpmArch), fec2.registerImageCalls[0].Architecture)
+			require.Equal(t, ec2types.BootModeValues(aws.ToString(tc.bootMode)), fec2.registerImageCalls[0].BootMode)
+			require.Len(t, fec2.registerImageCalls[0].BlockDeviceMappings, 1)
+			require.Equal(t, snapImportedWaiterOutput.ImportSnapshotTasks[0].SnapshotTaskDetail.SnapshotId, fec2.registerImageCalls[0].BlockDeviceMappings[0].Ebs.SnapshotId)
+
+			if len(tc.shareWith) > 0 {
+				// share snapshot with accounts
+				require.Len(t, fec2.modifySnapshotAttributeCalls, 1)
+				require.Equal(t, ec2types.SnapshotAttributeNameCreateVolumePermission, fec2.modifySnapshotAttributeCalls[0].Attribute)
+				require.Equal(t, ec2types.OperationTypeAdd, fec2.modifySnapshotAttributeCalls[0].OperationType)
+				require.Equal(t, snapImportedWaiterOutput.ImportSnapshotTasks[0].SnapshotTaskDetail.SnapshotId, fec2.modifySnapshotAttributeCalls[0].SnapshotId)
+				require.Equal(t, tc.shareWith, fec2.modifySnapshotAttributeCalls[0].UserIds)
+
+				// share image with accounts
+				require.Len(t, fec2.modifyImageAttributeCalls, 1)
+				require.Equal(t, fec2.registerImage.ImageId, fec2.modifyImageAttributeCalls[0].ImageId)
+				require.Len(t, fec2.modifyImageAttributeCalls[0].LaunchPermission.Add, len(tc.shareWith))
+				for _, userId := range tc.shareWith {
+					require.Equal(t, userId, *fec2.modifyImageAttributeCalls[0].LaunchPermission.Add[0].UserId)
+				}
+			}
+		})
+	}
+}
+
+func TestShareImage(t *testing.T) {
+	knownImageId := "ami-1234567890abcdef0"
+	knownSnapshotId1 := "snap-1234567890abcdef0"
+	knownSnapshotId2 := "snap-0987654321fedcba0"
+
+	testCases := []struct {
+		name          string
+		shareWith     []string
+		fakeEC2Client *fakeEC2Client
+		expectErr     bool
+		errMsg        string
+	}{
+		{
+			name:      "happy path - 2 accounts, 1 snapshot",
+			shareWith: []string{"123456789012", "098765432109"},
+			fakeEC2Client: &fakeEC2Client{
+				describeImages: &ec2.DescribeImagesOutput{
+					Images: []ec2types.Image{
+						{
+							ImageId: &knownImageId,
+							BlockDeviceMappings: []ec2types.BlockDeviceMapping{
+								{
+									Ebs: &ec2types.EbsBlockDevice{
+										SnapshotId: &knownSnapshotId1,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:      "happy path - 1 account, 2 snapshots",
+			shareWith: []string{"123456789012"},
+			fakeEC2Client: &fakeEC2Client{
+				describeImages: &ec2.DescribeImagesOutput{
+					Images: []ec2types.Image{
+						{
+							ImageId: &knownImageId,
+							BlockDeviceMappings: []ec2types.BlockDeviceMapping{
+								{
+									Ebs: &ec2types.EbsBlockDevice{
+										SnapshotId: &knownSnapshotId1,
+									},
+								},
+								{
+									Ebs: &ec2types.EbsBlockDevice{
+										SnapshotId: &knownSnapshotId2,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "no accounts to share with",
+			fakeEC2Client: &fakeEC2Client{
+				describeImages: &ec2.DescribeImagesOutput{
+					Images: []ec2types.Image{
+						{
+							ImageId: &knownImageId,
+							BlockDeviceMappings: []ec2types.BlockDeviceMapping{
+								{
+									Ebs: &ec2types.EbsBlockDevice{
+										SnapshotId: &knownSnapshotId1,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:      "error: describe images failure",
+			expectErr: true,
+			errMsg:    "describe images error",
+			fakeEC2Client: &fakeEC2Client{
+				describeImagesErr: fmt.Errorf("describe images error"),
+			},
+		},
+		{
+			name:      "error: image not found",
+			expectErr: true,
+			errMsg:    fmt.Sprintf("Unable to find image with id: %s", knownImageId),
+			fakeEC2Client: &fakeEC2Client{
+				describeImages: &ec2.DescribeImagesOutput{
+					Images: []ec2types.Image{},
+				},
+			},
+		},
+		{
+			name:      "error: modify snapshot attribute failure",
+			expectErr: true,
+			errMsg:    "modify snapshot attribute error",
+			fakeEC2Client: &fakeEC2Client{
+				describeImages: &ec2.DescribeImagesOutput{
+					Images: []ec2types.Image{
+						{
+							ImageId: &knownImageId,
+							BlockDeviceMappings: []ec2types.BlockDeviceMapping{
+								{
+									Ebs: &ec2types.EbsBlockDevice{
+										SnapshotId: &knownSnapshotId1,
+									},
+								},
+							},
+						},
+					},
+				},
+				modifySnapshotAttributeErr: fmt.Errorf("modify snapshot attribute error"),
+			},
+		},
+		{
+			name:      "error: modify image attribute failure",
+			expectErr: true,
+			errMsg:    "modify image attribute error",
+			fakeEC2Client: &fakeEC2Client{
+				describeImages: &ec2.DescribeImagesOutput{
+					Images: []ec2types.Image{
+						{
+							ImageId: &knownImageId,
+							BlockDeviceMappings: []ec2types.BlockDeviceMapping{
+								{
+									Ebs: &ec2types.EbsBlockDevice{
+										SnapshotId: &knownSnapshotId1,
+									},
+								},
+							},
+						},
+					},
+				},
+				modifyImageAttributeErr: fmt.Errorf("modify image attribute error"),
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			client := awscloud.NewAWSForTest(tc.fakeEC2Client, nil, nil, nil)
+			require.NotNil(t, client)
+			err := client.ShareImage(knownImageId, tc.shareWith)
+
+			require.Len(t, tc.fakeEC2Client.describeImagesCalls, 1)
+			if tc.fakeEC2Client.describeImagesErr != nil || len(tc.fakeEC2Client.describeImages.Images) == 0 {
+				require.Len(t, tc.fakeEC2Client.modifySnapshotAttributeCalls, 0)
+				require.Len(t, tc.fakeEC2Client.modifyImageAttributeCalls, 0)
+			} else if tc.fakeEC2Client.modifySnapshotAttributeErr != nil {
+				require.Len(t, tc.fakeEC2Client.modifySnapshotAttributeCalls, 1)
+				require.Len(t, tc.fakeEC2Client.modifyImageAttributeCalls, 0)
+			} else if tc.fakeEC2Client.modifyImageAttributeErr != nil {
+				require.Len(t, tc.fakeEC2Client.modifySnapshotAttributeCalls, 1)
+				require.Len(t, tc.fakeEC2Client.modifyImageAttributeCalls, 1)
+			}
+
+			if tc.expectErr {
+				require.Error(t, err)
+				require.EqualError(t, err, tc.errMsg)
+				return
+			}
+
+			require.NoError(t, err)
+
+			require.Len(t, tc.fakeEC2Client.modifySnapshotAttributeCalls, len(tc.fakeEC2Client.describeImages.Images[0].BlockDeviceMappings))
+			for i, snapshotMapping := range tc.fakeEC2Client.describeImages.Images[0].BlockDeviceMappings {
+				require.Equal(t, ec2types.SnapshotAttributeNameCreateVolumePermission, tc.fakeEC2Client.modifySnapshotAttributeCalls[i].Attribute)
+				require.Equal(t, ec2types.OperationTypeAdd, tc.fakeEC2Client.modifySnapshotAttributeCalls[i].OperationType)
+				require.Equal(t, snapshotMapping.Ebs.SnapshotId, tc.fakeEC2Client.modifySnapshotAttributeCalls[i].SnapshotId)
+				require.Equal(t, tc.shareWith, tc.fakeEC2Client.modifySnapshotAttributeCalls[i].UserIds)
+			}
+
+			require.Len(t, tc.fakeEC2Client.modifyImageAttributeCalls, 1)
+			require.Equal(t, &knownImageId, tc.fakeEC2Client.modifyImageAttributeCalls[0].ImageId)
+			require.Len(t, tc.fakeEC2Client.modifyImageAttributeCalls[0].LaunchPermission.Add, len(tc.shareWith))
+			for idx, userId := range tc.shareWith {
+				require.Equal(t, userId, *tc.fakeEC2Client.modifyImageAttributeCalls[0].LaunchPermission.Add[idx].UserId)
+			}
+		})
+	}
+}
+
+func TestRegions(t *testing.T) {
+	type testCase struct {
+		name      string
+		fec2      *fakeEC2Client
+		expectErr bool
+		errMsg    string
+	}
+	testCases := []testCase{
+		{
+			name: "happy path",
+			fec2: &fakeEC2Client{
+				describeRegions: &ec2.DescribeRegionsOutput{
+					Regions: []ec2types.Region{
+						{RegionName: aws.String("us-east-1")},
+						{RegionName: aws.String("us-west-2")},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "error: unable to list regions",
+			fec2: &fakeEC2Client{
+				describeRegionsErr: fmt.Errorf("unable to list regions"),
+			},
+			expectErr: true,
+			errMsg:    "unable to list regions",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			awsClient := awscloud.NewAWSForTest(tc.fec2, nil, nil, nil)
+			require.NotNil(t, awsClient)
+
+			regions, err := awsClient.Regions()
+			require.Len(t, tc.fec2.describeRegionsCalls, 1)
+
+			if tc.expectErr {
+				require.Empty(t, regions)
+				require.Error(t, err)
+				require.Equal(t, tc.errMsg, err.Error())
+				return
+			}
+
+			require.NoError(t, err)
+			require.Len(t, regions, len(tc.fec2.describeRegions.Regions))
+			for idx, region := range regions {
+				require.Equal(t, *tc.fec2.describeRegions.Regions[idx].RegionName, region)
+			}
+		})
+	}
+}
+
+func TestCreateSecurityGroupEC2(t *testing.T) {
+	type testCase struct {
+		name      string
+		sgName    string
+		fec2      *fakeEC2Client
+		expectErr bool
+		errMsg    string
+	}
+	testCases := []testCase{
+		{
+			name:   "happy path",
+			sgName: "test-group",
+			fec2: &fakeEC2Client{
+				createSecurityGroup: &ec2.CreateSecurityGroupOutput{
+					GroupId: aws.String("sg-12345678"),
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name:   "error: unable to create security group",
+			sgName: "test-group",
+			fec2: &fakeEC2Client{
+				createSecurityGroupErr: fmt.Errorf("unable to create security group"),
+			},
+			expectErr: true,
+			errMsg:    "unable to create security group",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			awsClient := awscloud.NewAWSForTest(tc.fec2, nil, nil, nil)
+			require.NotNil(t, awsClient)
+
+			createSGOut, err := awsClient.CreateSecurityGroupEC2(tc.sgName, "Test security group")
+			require.Len(t, tc.fec2.createSecurityGroupCalls, 1)
+			require.Equal(t, tc.sgName, *tc.fec2.createSecurityGroupCalls[0].GroupName)
+
+			if tc.expectErr {
+				require.Empty(t, createSGOut)
+				require.Error(t, err)
+				require.Equal(t, tc.errMsg, err.Error())
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, tc.fec2.createSecurityGroup.GroupId, createSGOut.GroupId)
+		})
+	}
+}
+
+func TestDeleteSecurityGroupEC2(t *testing.T) {
+	type testCase struct {
+		name      string
+		sgID      string
+		fec2      *fakeEC2Client
+		expectErr bool
+		errMsg    string
+	}
+	testCases := []testCase{
+		{
+			name: "happy path",
+			sgID: "sg-12345678",
+			fec2: &fakeEC2Client{
+				deleteSecurityGroup: &ec2.DeleteSecurityGroupOutput{
+					GroupId: aws.String("sg-12345678"),
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "error: unable to delete security group",
+			sgID: "sg-12345678",
+			fec2: &fakeEC2Client{
+				deleteSecurityGroupErr: fmt.Errorf("unable to delete security group"),
+			},
+			expectErr: true,
+			errMsg:    "unable to delete security group",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			awsClient := awscloud.NewAWSForTest(tc.fec2, nil, nil, nil)
+			require.NotNil(t, awsClient)
+
+			deleteSGOut, err := awsClient.DeleteSecurityGroupEC2(&tc.sgID)
+			require.Len(t, tc.fec2.deleteSecurityGroupCalls, 1)
+			require.Equal(t, tc.sgID, *tc.fec2.deleteSecurityGroupCalls[0].GroupId)
+
+			if tc.expectErr {
+				require.Error(t, err)
+				require.Equal(t, tc.errMsg, err.Error())
+				return
+			}
+
+			require.NoError(t, err)
+			require.NotNil(t, deleteSGOut)
+			require.Equal(t, tc.sgID, *deleteSGOut.GroupId)
+		})
+	}
+}
+
+func TestAuthorizeSecurityGroupIngressEC2(t *testing.T) {
+	type testCase struct {
+		name      string
+		sgID      string
+		cidr      string
+		fromPort  int32
+		toPort    int32
+		protocol  string
+		fec2      *fakeEC2Client
+		expectErr bool
+		errMsg    string
+	}
+	testCases := []testCase{
+		{
+			name:     "happy path",
+			sgID:     "sg-12345678",
+			cidr:     "0.0.0.0/0",
+			fromPort: 22,
+			toPort:   22,
+			protocol: "tcp",
+			fec2: &fakeEC2Client{
+				authorizeSecurityGroupIngress: &ec2.AuthorizeSecurityGroupIngressOutput{
+					SecurityGroupRules: []ec2types.SecurityGroupRule{
+						{
+							GroupId:    aws.String("sg-12345678"),
+							CidrIpv4:   common.ToPtr("0.0.0.0/0"),
+							FromPort:   common.ToPtr(int32(22)),
+							ToPort:     common.ToPtr(int32(22)),
+							IpProtocol: common.ToPtr("tcp"),
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name:     "error: unable to authorize security group ingress",
+			sgID:     "sg-12345678",
+			cidr:     "0.0.0.0/0",
+			fromPort: 22,
+			toPort:   22,
+			protocol: "tcp",
+			fec2: &fakeEC2Client{
+				authorizeSecurityGroupIngressErr: fmt.Errorf("unable to authorize security group ingress"),
+			},
+			expectErr: true,
+			errMsg:    "unable to authorize security group ingress",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			awsClient := awscloud.NewAWSForTest(tc.fec2, nil, nil, nil)
+			require.NotNil(t, awsClient)
+
+			output, err := awsClient.AuthorizeSecurityGroupIngressEC2(&tc.sgID, tc.cidr, tc.fromPort, tc.toPort, tc.protocol)
+			require.Len(t, tc.fec2.authorizeSecurityGroupIngressCalls, 1)
+
+			if tc.expectErr {
+				require.Error(t, err)
+				require.Equal(t, tc.errMsg, err.Error())
+				require.Nil(t, output)
+				return
+			}
+
+			require.NoError(t, err)
+			require.NotNil(t, output)
+			require.Equal(t, tc.sgID, *output.SecurityGroupRules[0].GroupId)
+			require.Equal(t, tc.cidr, *output.SecurityGroupRules[0].CidrIpv4)
+			require.Equal(t, tc.fromPort, *output.SecurityGroupRules[0].FromPort)
+			require.Equal(t, tc.toPort, *output.SecurityGroupRules[0].ToPort)
+			require.Equal(t, tc.protocol, *output.SecurityGroupRules[0].IpProtocol)
+		})
+	}
+}
+
+func TestRunInstanceEC2(t *testing.T) {
+	type testCase struct {
+		name                        string
+		imageId                     string
+		sgID                        string
+		userData                    []byte
+		instanceType                string
+		fec2                        *fakeEC2Client
+		newInstanceRunningWaiterErr error
+		expectErr                   bool
+		errMsg                      string
+	}
+	testCases := []testCase{
+		{
+			name:         "happy path",
+			imageId:      "ami-1234567890abcdef0",
+			sgID:         "sg-12345678",
+			userData:     []byte("test user data"),
+			instanceType: "t2.micro",
+			fec2: &fakeEC2Client{
+				runInstances: &ec2.RunInstancesOutput{
+					Instances: []ec2types.Instance{
+						{
+							InstanceId: aws.String("i-1234567890abcdef0"),
+							ImageId:    aws.String("ami-1234567890abcdef0"),
+							SecurityGroups: []ec2types.GroupIdentifier{
+								{
+									GroupId: aws.String("sg-12345678"),
+								},
+							},
+							InstanceType: ec2types.InstanceTypeT2Micro,
+						},
+					},
+				},
+				describeInstances: &ec2.DescribeInstancesOutput{
+					Reservations: []ec2types.Reservation{
+						{
+							Instances: []ec2types.Instance{
+								{
+									InstanceId: aws.String("i-1234567890abcdef0"),
+									ImageId:    aws.String("ami-1234567890abcdef0"),
+									SecurityGroups: []ec2types.GroupIdentifier{
+										{
+											GroupId: aws.String("sg-12345678"),
+										},
+									},
+									InstanceType: ec2types.InstanceTypeT2Micro,
+								},
+							},
+						},
+					},
+				},
+			},
+			newInstanceRunningWaiterErr: nil,
+			expectErr:                   false,
+		},
+		{
+			name:         "error: invalid instance type",
+			imageId:      "ami-1234567890abcdef0",
+			sgID:         "sg-12345678",
+			userData:     []byte("test user data"),
+			instanceType: "invalid-type",
+			fec2:         &fakeEC2Client{},
+			expectErr:    true,
+			errMsg:       "ec2 doesn't support the following instance type: invalid-type",
+		},
+		{
+			name:         "error: unable to run instance",
+			imageId:      "ami-1234567890abcdef0",
+			sgID:         "sg-12345678",
+			userData:     []byte("test user data"),
+			instanceType: "t2.micro",
+			fec2: &fakeEC2Client{
+				runInstancesErr: fmt.Errorf("unable to run instance"),
+			},
+			newInstanceRunningWaiterErr: nil,
+			expectErr:                   true,
+			errMsg:                      "unable to run instance",
+		},
+		{
+			name:         "error: instance running waiter error",
+			imageId:      "ami-1234567890abcdef0",
+			sgID:         "sg-12345678",
+			userData:     []byte("test user data"),
+			instanceType: "t2.micro",
+			fec2: &fakeEC2Client{
+				runInstances: &ec2.RunInstancesOutput{
+					Instances: []ec2types.Instance{
+						{
+							InstanceId: aws.String("i-1234567890abcdef0"),
+							ImageId:    aws.String("ami-1234567890abcdef0"),
+							SecurityGroups: []ec2types.GroupIdentifier{
+								{
+									GroupId: aws.String("sg-12345678"),
+								},
+							},
+							InstanceType: ec2types.InstanceTypeT2Micro,
+						},
+					},
+				},
+			},
+			newInstanceRunningWaiterErr: fmt.Errorf("instance running waiter error"),
+			expectErr:                   true,
+			errMsg:                      "instance running waiter error",
+		},
+		{
+			name:         "error: fail to create instance",
+			imageId:      "ami-1234567890abcdef0",
+			sgID:         "sg-12345678",
+			userData:     []byte("test user data"),
+			instanceType: "t2.micro",
+			fec2: &fakeEC2Client{
+				runInstances: &ec2.RunInstancesOutput{
+					Instances: []ec2types.Instance{
+						{
+							InstanceId: aws.String("i-1234567890abcdef0"),
+							ImageId:    aws.String("ami-1234567890abcdef0"),
+							SecurityGroups: []ec2types.GroupIdentifier{
+								{
+									GroupId: aws.String("sg-12345678"),
+								},
+							},
+							InstanceType: ec2types.InstanceTypeT2Micro,
+						},
+					},
+				},
+				describeInstancesErr: fmt.Errorf("unable to describe instances"),
+			},
+			newInstanceRunningWaiterErr: nil,
+			expectErr:                   true,
+			errMsg:                      "failed to get reservation for instance i-1234567890abcdef0: unable to describe instances",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			awsClient := awscloud.NewAWSForTest(tc.fec2, nil, nil, nil)
+			require.NotNil(t, awsClient)
+
+			// Mock the waiter for instance running
+			restore := awscloud.MockNewInstanceRunningWaiterEC2(tc.newInstanceRunningWaiterErr)
+			defer restore()
+
+			output, err := awsClient.RunInstanceEC2(&tc.imageId, &tc.sgID, string(tc.userData), tc.instanceType)
+
+			if tc.expectErr {
+				require.Error(t, err)
+				require.Equal(t, tc.errMsg, err.Error())
+				require.Nil(t, output)
+				return
+			}
+
+			require.Len(t, tc.fec2.runInstancesCalls, 1)
+			require.Equal(t, tc.imageId, *tc.fec2.runInstancesCalls[0].ImageId)
+			require.Equal(t, tc.sgID, tc.fec2.runInstancesCalls[0].SecurityGroupIds[0])
+			require.Equal(t, ec2types.InstanceType(tc.instanceType), tc.fec2.runInstancesCalls[0].InstanceType)
+
+			require.NoError(t, err)
+			require.NotNil(t, output)
+			require.Equal(t, tc.fec2.runInstances.Instances[0].InstanceId, output.Instances[0].InstanceId)
+			require.Equal(t, tc.imageId, *output.Instances[0].ImageId)
+			require.Equal(t, tc.sgID, *output.Instances[0].SecurityGroups[0].GroupId)
+			require.Equal(t, ec2types.InstanceType(tc.instanceType), output.Instances[0].InstanceType)
+		})
+	}
+
+}
+
+func TestTerminateInstanceEC2(t *testing.T) {
+	type testCase struct {
+		name                        string
+		instanceId                  string
+		fec2                        *fakeEC2Client
+		instanceTerminatedWaiterErr error
+		expectErr                   bool
+		errMsg                      string
+	}
+
+	testCases := []testCase{
+		{
+			name:       "happy path",
+			instanceId: "i-1234567890abcdef0",
+			fec2: &fakeEC2Client{
+				terminateInstances: &ec2.TerminateInstancesOutput{
+					TerminatingInstances: []ec2types.InstanceStateChange{
+						{
+							InstanceId: aws.String("i-1234567890abcdef0"),
+							CurrentState: &ec2types.InstanceState{
+								Name: ec2types.InstanceStateNameTerminated,
+							},
+						},
+					},
+				},
+			},
+			instanceTerminatedWaiterErr: nil,
+			expectErr:                   false,
+		},
+		{
+			name:       "error: unable to terminate instance",
+			instanceId: "i-1234567890abcdef0",
+			fec2: &fakeEC2Client{
+				terminateInstancesErr: fmt.Errorf("unable to terminate instance"),
+			},
+			instanceTerminatedWaiterErr: nil,
+			expectErr:                   true,
+			errMsg:                      "unable to terminate instance",
+		},
+		{
+			name:       "error: instance terminated waiter error",
+			instanceId: "i-1234567890abcdef0",
+			fec2: &fakeEC2Client{
+				terminateInstances: &ec2.TerminateInstancesOutput{
+					TerminatingInstances: []ec2types.InstanceStateChange{
+						{
+							InstanceId: aws.String("i-1234567890abcdef0"),
+							CurrentState: &ec2types.InstanceState{
+								Name: ec2types.InstanceStateNameTerminated,
+							},
+						},
+					},
+				},
+			},
+			instanceTerminatedWaiterErr: fmt.Errorf("instance terminated waiter error"),
+			expectErr:                   true,
+			errMsg:                      "instance terminated waiter error",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			awsClient := awscloud.NewAWSForTest(tc.fec2, nil, nil, nil)
+			require.NotNil(t, awsClient)
+
+			// Mock the waiter for instance terminated
+			restore := awscloud.MockNewTerminateInstancesWaiterEC2(tc.instanceTerminatedWaiterErr)
+			defer restore()
+
+			out, err := awsClient.TerminateInstanceEC2(&tc.instanceId)
+
+			if tc.expectErr {
+				require.Error(t, err)
+				require.Nil(t, out)
+				require.Equal(t, tc.errMsg, err.Error())
+				return
+			}
+
+			require.NoError(t, err)
+			require.NotNil(t, out)
+			require.Len(t, tc.fec2.terminateInstancesCalls, 1)
+			require.Equal(t, tc.instanceId, tc.fec2.terminateInstancesCalls[0].InstanceIds[0])
+		})
+	}
+}
+
+func TestGetInstanceAddress(t *testing.T) {
+	type testCase struct {
+		name            string
+		instanceId      string
+		expectedAddress string
+		fec2            *fakeEC2Client
+		expectErr       bool
+		errMsg          string
+	}
+	testCases := []testCase{
+		{
+			name:            "happy path",
+			instanceId:      "i-1234567890abcdef0",
+			expectedAddress: "192.168.1.1",
+			fec2: &fakeEC2Client{
+				describeInstances: &ec2.DescribeInstancesOutput{
+					Reservations: []ec2types.Reservation{
+						{
+							Instances: []ec2types.Instance{
+								{
+									InstanceId:      aws.String("i-1234567890abcdef0"),
+									PublicIpAddress: aws.String("192.168.1.1"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name:       "error: instance not found",
+			instanceId: "i-1234567890abcdef0",
+			fec2: &fakeEC2Client{
+				describeInstances: &ec2.DescribeInstancesOutput{
+					Reservations: []ec2types.Reservation{},
+				},
+			},
+			expectErr: true,
+			errMsg:    "no reservation found for instance i-1234567890abcdef0",
+		},
+		{
+			name:       "error: describe instances failure",
+			instanceId: "i-1234567890abcdef0",
+			fec2: &fakeEC2Client{
+				describeInstancesErr: fmt.Errorf("describe instances error"),
+			},
+			expectErr: true,
+			errMsg:    "describe instances error",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			awsClient := awscloud.NewAWSForTest(tc.fec2, nil, nil, nil)
+			require.NotNil(t, awsClient)
+
+			address, err := awsClient.GetInstanceAddress(&tc.instanceId)
+
+			require.Len(t, tc.fec2.describeInstancesCalls, 1)
+			require.Equal(t, tc.instanceId, tc.fec2.describeInstancesCalls[0].InstanceIds[0])
+
+			if tc.expectErr {
+				require.Error(t, err)
+				require.Equal(t, tc.errMsg, err.Error())
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedAddress, address)
+		})
+	}
+}
+
+func TestDeleteEC2Image(t *testing.T) {
+	type testCase struct {
+		name       string
+		imageId    string
+		snapshotID string
+		fec2       *fakeEC2Client
+		expectErr  bool
+		errMsg     string
+	}
+	testCases := []testCase{
+		{
+			name:       "happy path",
+			imageId:    "ami-1234567890abcdef0",
+			snapshotID: "snap-1234567890abcdef0",
+			fec2: &fakeEC2Client{
+				deregisterImage: &ec2.DeregisterImageOutput{},
+				deleteSnapshot:  &ec2.DeleteSnapshotOutput{},
+			},
+			expectErr: false,
+		},
+		{
+			name:       "error: unable to deregister image",
+			imageId:    "ami-1234567890abcdef0",
+			snapshotID: "snap-1234567890abcdef0",
+			fec2: &fakeEC2Client{
+				deregisterImageErr: fmt.Errorf("unable to deregister image"),
+			},
+			expectErr: true,
+			errMsg:    "unable to deregister image",
+		},
+		{
+			name:       "error: unable to delete snapshot",
+			imageId:    "ami-1234567890abcdef0",
+			snapshotID: "snap-1234567890abcdef0",
+			fec2: &fakeEC2Client{
+				deregisterImage:   &ec2.DeregisterImageOutput{},
+				deleteSnapshotErr: fmt.Errorf("unable to delete snapshot"),
+			},
+			expectErr: true,
+			errMsg:    "unable to delete snapshot",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			awsClient := awscloud.NewAWSForTest(tc.fec2, nil, nil, nil)
+			require.NotNil(t, awsClient)
+
+			err := awsClient.DeleteEC2Image(&tc.imageId, &tc.snapshotID)
+
+			if tc.expectErr {
+				require.Error(t, err)
+				require.Equal(t, tc.errMsg, err.Error())
+				return
+			}
+
+			require.NoError(t, err)
+			require.Len(t, tc.fec2.deregisterImageCalls, 1)
+			require.Equal(t, tc.imageId, *tc.fec2.deregisterImageCalls[0].ImageId)
+
+			require.Len(t, tc.fec2.deleteSnapshotCalls, 1)
+			require.Equal(t, tc.snapshotID, *tc.fec2.deleteSnapshotCalls[0].SnapshotId)
+		})
+	}
+}
+
 func TestS3MarkObjectAsPublic(t *testing.T) {
 	fc := &fakeS3Client{}
-	aws := awscloud.NewAWSForTest(fc, nil, nil)
+	aws := awscloud.NewAWSForTest(nil, fc, nil, nil)
 	require.NotNil(t, aws)
 
 	require.NoError(t, aws.MarkS3ObjectAsPublic("bucket", "object-key"))
@@ -29,7 +1137,7 @@ func TestS3MarkObjectAsPublicError(t *testing.T) {
 	fc := &fakeS3Client{
 		putObjectAclErr: fmt.Errorf("error marking object as public"),
 	}
-	aws := awscloud.NewAWSForTest(fc, nil, nil)
+	aws := awscloud.NewAWSForTest(nil, fc, nil, nil)
 	require.NotNil(t, aws)
 
 	err := aws.MarkS3ObjectAsPublic("bucket", "object-key")
@@ -44,7 +1152,7 @@ func TestS3Upload(t *testing.T) {
 	tmpFilePath := filepath.Join(tmpDir, "file")
 	require.NoError(t, os.WriteFile(tmpFilePath, []byte("test content"), 0600))
 	fm := &fakeS3Uploader{}
-	aws := awscloud.NewAWSForTest(nil, fm, nil)
+	aws := awscloud.NewAWSForTest(nil, nil, fm, nil)
 	require.NotNil(t, aws)
 
 	uo, err := aws.Upload(tmpFilePath, "bucket", "object-key")
@@ -62,7 +1170,7 @@ func TestS3UploadError(t *testing.T) {
 	fm := &fakeS3Uploader{
 		uploadErr: fmt.Errorf("upload error"),
 	}
-	aws := awscloud.NewAWSForTest(nil, fm, nil)
+	aws := awscloud.NewAWSForTest(nil, nil, fm, nil)
 	require.NotNil(t, aws)
 
 	_, err := aws.Upload(tmpFilePath, "bucket", "object-key")
@@ -74,7 +1182,7 @@ func TestS3UploadError(t *testing.T) {
 
 func TestS3ObjectPresignedURL(t *testing.T) {
 	fs := &fakeS3Presign{}
-	aws := awscloud.NewAWSForTest(nil, nil, fs)
+	aws := awscloud.NewAWSForTest(nil, nil, nil, fs)
 	require.NotNil(t, aws)
 
 	url, err := aws.S3ObjectPresignedURL("bucket", "object-key")
@@ -89,7 +1197,7 @@ func TestS3ObjectPresignedURLError(t *testing.T) {
 	fs := &fakeS3Presign{
 		presignGetObjectErr: fmt.Errorf("presign error"),
 	}
-	aws := awscloud.NewAWSForTest(nil, nil, fs)
+	aws := awscloud.NewAWSForTest(nil, nil, nil, fs)
 	require.NotNil(t, aws)
 
 	_, err := aws.S3ObjectPresignedURL("bucket", "object-key")
@@ -101,7 +1209,7 @@ func TestS3ObjectPresignedURLError(t *testing.T) {
 
 func TestDeleteObject(t *testing.T) {
 	fc := &fakeS3Client{}
-	aws := awscloud.NewAWSForTest(fc, nil, nil)
+	aws := awscloud.NewAWSForTest(nil, fc, nil, nil)
 	require.NotNil(t, aws)
 
 	require.NoError(t, aws.DeleteObject("bucket", "object-key"))
@@ -114,7 +1222,7 @@ func TestDeleteObjectError(t *testing.T) {
 	fc := &fakeS3Client{
 		deleteObjectErr: fmt.Errorf("error deleting object"),
 	}
-	aws := awscloud.NewAWSForTest(fc, nil, nil)
+	aws := awscloud.NewAWSForTest(nil, fc, nil, nil)
 	require.NotNil(t, aws)
 
 	err := aws.DeleteObject("bucket", "object-key")
@@ -128,7 +1236,7 @@ func TestBuckets(t *testing.T) {
 	fc := &fakeS3Client{
 		buckets: []string{"bucket1", "bucket2"},
 	}
-	aws := awscloud.NewAWSForTest(fc, nil, nil)
+	aws := awscloud.NewAWSForTest(nil, fc, nil, nil)
 	require.NotNil(t, aws)
 
 	buckets, err := aws.Buckets()
@@ -143,7 +1251,7 @@ func TestBucketsError(t *testing.T) {
 	fc := &fakeS3Client{
 		listBucketsErr: fmt.Errorf("error listing buckets"),
 	}
-	aws := awscloud.NewAWSForTest(fc, nil, nil)
+	aws := awscloud.NewAWSForTest(nil, fc, nil, nil)
 	require.NotNil(t, aws)
 
 	_, err := aws.Buckets()
@@ -228,7 +1336,7 @@ func TestCheckBucketPermission(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			aws := awscloud.NewAWSForTest(tc.fc, nil, nil)
+			aws := awscloud.NewAWSForTest(nil, tc.fc, nil, nil)
 			require.NotNil(t, aws)
 
 			result, err := aws.CheckBucketPermission("bucket", tc.permission)

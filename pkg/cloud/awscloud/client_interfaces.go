@@ -2,6 +2,7 @@ package awscloud
 
 import (
 	"context"
+	"time"
 
 	awsSigner "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
@@ -36,6 +37,18 @@ type ec2Client interface {
 
 	// Tags
 	CreateTags(context.Context, *ec2.CreateTagsInput, ...func(*ec2.Options)) (*ec2.CreateTagsOutput, error)
+}
+
+type snapshotImportedWaiterEC2 interface {
+	WaitForOutput(ctx context.Context, params *ec2.DescribeImportSnapshotTasksInput, maxWaitDur time.Duration, optFns ...func(*ec2.SnapshotImportedWaiterOptions)) (*ec2.DescribeImportSnapshotTasksOutput, error)
+}
+
+type instanceRunningWaiterEC2 interface {
+	Wait(ctx context.Context, params *ec2.DescribeInstancesInput, maxWaitDur time.Duration, optFns ...func(*ec2.InstanceRunningWaiterOptions)) error
+}
+
+type instanceTerminatedWaiterEC2 interface {
+	Wait(ctx context.Context, params *ec2.DescribeInstancesInput, maxWaitDur time.Duration, optFns ...func(*ec2.InstanceTerminatedWaiterOptions)) error
 }
 
 type s3Client interface {
