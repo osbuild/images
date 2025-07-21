@@ -30,6 +30,20 @@ type AWS struct {
 	s3presign  s3Presign
 }
 
+// Allow to mock the EC2 SnapshotImportedWaiter for testing purposes
+var newSnapshotImportedWaiterEC2 = func(client ec2.DescribeImportSnapshotTasksAPIClient, optFns ...func(*ec2.SnapshotImportedWaiterOptions)) snapshotImportedWaiterEC2 {
+	return ec2.NewSnapshotImportedWaiter(client, optFns...)
+}
+
+// Allow to mock the EC2 NewInstanceRunningWaiter for testing purposes
+var newInstanceRunningWaiterEC2 = func(client ec2.DescribeInstancesAPIClient, optFns ...func(*ec2.InstanceRunningWaiterOptions)) instanceRunningWaiterEC2 {
+	return ec2.NewInstanceRunningWaiter(client, optFns...)
+}
+
+var newTerminateInstancesWaiterEC2 = func(client ec2.DescribeInstancesAPIClient, optFns ...func(*ec2.InstanceTerminatedWaiterOptions)) instanceTerminatedWaiterEC2 {
+	return ec2.NewInstanceTerminatedWaiter(client, optFns...)
+}
+
 // S3PermissionsMatrix Maps a requested permission to all permissions that are sufficient for the requested one
 var S3PermissionsMatrix = map[s3types.Permission][]s3types.Permission{
 	s3types.PermissionRead:        {s3types.PermissionRead, s3types.PermissionWrite, s3types.PermissionFullControl},
@@ -200,9 +214,6 @@ func (a *AWS) UploadFromReader(r io.Reader, bucket, key string) (*s3manager.Uplo
 // The caller can optionally specify the boot mode of the AMI. If the boot
 // mode is not specified, then the instances launched from this AMI use the
 // default boot mode value of the instance type.
-// The caller can also specify the name of the role used to do the import.
-// If nil is given, the default one from the SDK is used (vmimport).
-// Returns the image ID and the snapshot ID.
 //
 // XXX: make this return (string, string, error) instead of pointers
 func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch string, bootMode, importRole *string) (*string, *string, error) {
@@ -245,7 +256,7 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch str
 	}
 
 	olog.Printf("[AWS] 🚚 Waiting for snapshot to finish importing: %s", *importTaskOutput.ImportTaskId)
-	snapWaiter := ec2.NewSnapshotImportedWaiter(a.ec2)
+	snapWaiter := newSnapshotImportedWaiterEC2(a.ec2)
 	snapWaitOutput, err := snapWaiter.WaitForOutput(
 		context.TODO(),
 		&ec2.DescribeImportSnapshotTasksInput{
@@ -595,7 +606,7 @@ func (a *AWS) RunInstanceEC2(imageID, secGroupID *string, userData, instanceType
 	}
 
 	// XXX: we should probably check that the runInstanceOutput.Instances is not empty
-	instanceWaiter := ec2.NewInstanceRunningWaiter(a.ec2)
+	instanceWaiter := newInstanceRunningWaiterEC2(a.ec2)
 	err = instanceWaiter.Wait(
 		context.TODO(),
 		&ec2.DescribeInstancesInput{
@@ -629,7 +640,7 @@ func (a *AWS) TerminateInstanceEC2(instanceID *string) (*ec2.TerminateInstancesO
 		return nil, err
 	}
 
-	instanceWaiter := ec2.NewInstanceTerminatedWaiter(a.ec2)
+	instanceWaiter := newTerminateInstancesWaiterEC2(a.ec2)
 	err = instanceWaiter.Wait(
 		context.TODO(),
 		&ec2.DescribeInstancesInput{
