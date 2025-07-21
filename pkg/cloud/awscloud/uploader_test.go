@@ -6,8 +6,9 @@ import (
 	"io"
 	"testing"
 
+	s3manager "github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
@@ -54,7 +55,7 @@ func (fa *fakeAWSClient) Buckets() ([]string, error) {
 	return fa.buckets, fa.bucketsErr
 }
 
-func (fa *fakeAWSClient) CheckBucketPermission(string, awscloud.S3Permission) (bool, error) {
+func (fa *fakeAWSClient) CheckBucketPermission(string, s3types.Permission) (bool, error) {
 	fa.checkBucketPermissionCalls++
 	return fa.checkBucketPermission, fa.checkBucketPermissionErr
 }

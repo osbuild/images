@@ -1,6 +1,7 @@
 package awscloud
 
 import (
+	"context"
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
@@ -11,40 +12,33 @@ import (
 
 	"slices"
 
+	"github.com/aws/aws-sdk-go-v2/config"
+	credentialsv2 "github.com/aws/aws-sdk-go-v2/credentials"
+	s3manager "github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/osbuild/images/pkg/olog"
 )
 
 type AWS struct {
-	uploader *s3manager.Uploader
-	ec2      *ec2.EC2
-	s3       *s3.S3
+	ec2        *ec2.EC2
+	s3         s3Client
+	s3uploader s3Uploader
+	s3presign  s3Presign
 }
 
-// S3Permission Implementing an "enum type" for aws-sdk-go permission constants
-type S3Permission string
-
-const (
-	S3PermissionRead        S3Permission = s3.PermissionRead
-	S3PermissionWrite       S3Permission = s3.PermissionWrite
-	S3PermissionFullControl S3Permission = s3.PermissionFullControl
-	S3PermissionReadAcp     S3Permission = s3.PermissionReadAcp
-	S3PermissionWriteAcp    S3Permission = s3.PermissionWriteAcp
-)
-
-// PermissionsMatrix Maps a requested permission to all permissions that are sufficient for the requested one
-var PermissionsMatrix = map[S3Permission][]S3Permission{
-	S3PermissionRead:        {S3PermissionRead, S3PermissionWrite, S3PermissionFullControl},
-	S3PermissionWrite:       {S3PermissionWrite, S3PermissionFullControl},
-	S3PermissionFullControl: {S3PermissionFullControl},
-	S3PermissionReadAcp:     {S3PermissionReadAcp, S3PermissionWriteAcp},
-	S3PermissionWriteAcp:    {S3PermissionWriteAcp},
+// S3PermissionsMatrix Maps a requested permission to all permissions that are sufficient for the requested one
+var S3PermissionsMatrix = map[s3types.Permission][]s3types.Permission{
+	s3types.PermissionRead:        {s3types.PermissionRead, s3types.PermissionWrite, s3types.PermissionFullControl},
+	s3types.PermissionWrite:       {s3types.PermissionWrite, s3types.PermissionFullControl},
+	s3types.PermissionFullControl: {s3types.PermissionFullControl},
+	s3types.PermissionReadAcp:     {s3types.PermissionReadAcp, s3types.PermissionWriteAcp},
+	s3types.PermissionWriteAcp:    {s3types.PermissionWriteAcp},
 }
 
 // Create a new session from the credentials and the region and returns an *AWS object initialized with it.
@@ -58,12 +52,30 @@ func newAwsFromCreds(creds *credentials.Credentials, region string) (*AWS, error
 		return nil, err
 	}
 
+	credsValue, err := creds.Get()
+	if err != nil {
+		return nil, err
+	}
+	cfg, err := config.LoadDefaultConfig(
+		context.TODO(),
+		config.WithRegion(region),
+		config.WithCredentialsProvider(credentialsv2.NewStaticCredentialsProvider(
+			credsValue.AccessKeyID,
+			credsValue.SecretAccessKey,
+			credsValue.SessionToken,
+		)),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	s3cli := s3.NewFromConfig(cfg)
+
 	return &AWS{
-		uploader: s3manager.NewUploader(sess, func(u *s3manager.Uploader) {
-			u.PartSize = 64 * 1024 * 1024 // 64MB per part
-		}),
-		ec2: ec2.New(sess),
-		s3:  s3.New(sess),
+		ec2:        ec2.New(sess),
+		s3:         s3cli,
+		s3uploader: s3manager.NewUploader(s3cli),
+		s3presign:  s3.NewPresignClient(s3cli),
 	}, nil
 }
 
@@ -104,6 +116,19 @@ func newAwsFromCredsWithEndpoint(creds *credentials.Credentials, region, endpoin
 		},
 	}
 
+	credsValue, err := creds.Get()
+	if err != nil {
+		return nil, err
+	}
+	v2OptionFuncs := []func(*config.LoadOptions) error{
+		config.WithRegion(region),
+		config.WithCredentialsProvider(credentialsv2.NewStaticCredentialsProvider(
+			credsValue.AccessKeyID,
+			credsValue.SecretAccessKey,
+			credsValue.SessionToken,
+		)),
+	}
+
 	if caBundle != "" {
 		caBundleReader, err := os.Open(caBundle)
 		if err != nil {
@@ -111,6 +136,7 @@ func newAwsFromCredsWithEndpoint(creds *credentials.Credentials, region, endpoin
 		}
 		defer caBundleReader.Close()
 		sessionOptions.CustomCABundle = caBundleReader
+		v2OptionFuncs = append(v2OptionFuncs, config.WithCustomCABundle(caBundleReader))
 	}
 
 	if skipSSLVerification {
@@ -119,6 +145,9 @@ func newAwsFromCredsWithEndpoint(creds *credentials.Credentials, region, endpoin
 		sessionOptions.Config.HTTPClient = &http.Client{
 			Transport: transport,
 		}
+		v2OptionFuncs = append(v2OptionFuncs, config.WithHTTPClient(&http.Client{
+			Transport: transport,
+		}))
 	}
 
 	sess, err := session.NewSessionWithOptions(sessionOptions)
@@ -126,10 +155,24 @@ func newAwsFromCredsWithEndpoint(creds *credentials.Credentials, region, endpoin
 		return nil, err
 	}
 
+	cfg, err := config.LoadDefaultConfig(
+		context.TODO(),
+		v2OptionFuncs...,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	s3cli := s3.NewFromConfig(cfg, func(options *s3.Options) {
+		options.BaseEndpoint = aws.String(endpoint)
+		options.UsePathStyle = true
+	})
+
 	return &AWS{
-		uploader: s3manager.NewUploader(sess),
-		ec2:      ec2.New(sess),
-		s3:       s3.New(sess),
+		ec2:        ec2.New(sess),
+		s3:         s3cli,
+		s3uploader: s3manager.NewUploader(s3cli),
+		s3presign:  s3.NewPresignClient(s3cli),
 	}, nil
 }
 
@@ -168,8 +211,9 @@ func (a *AWS) Upload(filename, bucket, key string) (*s3manager.UploadOutput, err
 
 func (a *AWS) UploadFromReader(r io.Reader, bucket, key string) (*s3manager.UploadOutput, error) {
 	olog.Printf("[AWS] 🚀 Uploading image to S3: %s/%s", bucket, key)
-	return a.uploader.Upload(
-		&s3manager.UploadInput{
+	return a.s3uploader.Upload(
+		context.TODO(),
+		&s3.PutObjectInput{
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key),
 			Body:   r,
@@ -387,10 +431,13 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch str
 }
 
 func (a *AWS) DeleteObject(bucket, key string) error {
-	_, err := a.s3.DeleteObject(&s3.DeleteObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-	})
+	_, err := a.s3.DeleteObject(
+		context.TODO(),
+		&s3.DeleteObjectInput{
+			Bucket: aws.String(bucket),
+			Key:    aws.String(key),
+		},
+	)
 	return err
 }
 
@@ -619,30 +666,39 @@ func (a *AWS) DescribeImagesByTag(tagKey, tagValue string) ([]*ec2.Image, error)
 
 func (a *AWS) S3ObjectPresignedURL(bucket, objectKey string) (string, error) {
 	olog.Printf("[AWS] 📋 Generating Presigned URL for S3 object %s/%s", bucket, objectKey)
-	req, _ := a.s3.GetObjectRequest(&s3.GetObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(objectKey),
-	})
-	url, err := req.Presign(7 * 24 * time.Hour) // maximum allowed
+	req, err := a.s3presign.PresignGetObject(
+		context.TODO(),
+		&s3.GetObjectInput{
+			Bucket: aws.String(bucket),
+			Key:    aws.String(objectKey),
+		},
+		func(opts *s3.PresignOptions) {
+			opts.Expires = time.Duration(7 * 24 * time.Hour)
+		},
+	)
 	if err != nil {
 		return "", err
 	}
+
 	olog.Println("[AWS] 🎉 S3 Presigned URL ready")
-	return url, nil
+	return req.URL, nil
 }
 
 func (a *AWS) MarkS3ObjectAsPublic(bucket, objectKey string) error {
 	olog.Printf("[AWS] 👐 Making S3 object public %s/%s", bucket, objectKey)
-	_, err := a.s3.PutObjectAcl(&s3.PutObjectAclInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(objectKey),
-		ACL:    aws.String(s3.BucketCannedACLPublicRead),
-	})
+	_, err := a.s3.PutObjectAcl(
+		context.TODO(),
+		&s3.PutObjectAclInput{
+			Bucket: aws.String(bucket),
+			Key:    aws.String(objectKey),
+			ACL:    s3types.ObjectCannedACL(s3types.ObjectCannedACLPublicRead),
+		},
+	)
 	if err != nil {
 		return err
 	}
-	olog.Println("[AWS] ✔️ Making S3 object public successful")
 
+	olog.Println("[AWS] ✔️ Making S3 object public successful")
 	return nil
 }
 
@@ -661,7 +717,10 @@ func (a *AWS) Regions() ([]string, error) {
 }
 
 func (a *AWS) Buckets() ([]string, error) {
-	out, err := a.s3.ListBuckets(nil)
+	out, err := a.s3.ListBuckets(
+		context.TODO(),
+		nil,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -676,8 +735,8 @@ func (a *AWS) Buckets() ([]string, error) {
 
 // checkAWSPermissionMatrix internal helper function, checks if the requiredPermission is
 // covered by the currentPermission (consulting the PermissionsMatrix)
-func checkAWSPermissionMatrix(requiredPermission S3Permission, currentPermission S3Permission) bool {
-	requiredPermissions, exists := PermissionsMatrix[requiredPermission]
+func checkAWSPermissionMatrix(requiredPermission s3types.Permission, currentPermission s3types.Permission) bool {
+	requiredPermissions, exists := S3PermissionsMatrix[requiredPermission]
 	if !exists {
 		return false
 	}
@@ -691,16 +750,19 @@ func checkAWSPermissionMatrix(requiredPermission S3Permission, currentPermission
 }
 
 // CheckBucketPermission check if the current account (of a.s3) has the `permission` on the given bucket
-func (a *AWS) CheckBucketPermission(bucketName string, permission S3Permission) (bool, error) {
-	resp, err := a.s3.GetBucketAcl(&s3.GetBucketAclInput{
-		Bucket: aws.String(bucketName),
-	})
+func (a *AWS) CheckBucketPermission(bucketName string, permission s3types.Permission) (bool, error) {
+	resp, err := a.s3.GetBucketAcl(
+		context.TODO(),
+		&s3.GetBucketAclInput{
+			Bucket: aws.String(bucketName),
+		},
+	)
 	if err != nil {
 		return false, err
 	}
 
 	for _, grant := range resp.Grants {
-		if checkAWSPermissionMatrix(permission, S3Permission(*grant.Permission)) {
+		if checkAWSPermissionMatrix(permission, grant.Permission) {
 			return true, nil
 		}
 	}
