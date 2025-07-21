@@ -195,6 +195,11 @@ distros:
         # Install python36 explicitly for RHEL 8.
         - "python36"
     oscap_profiles_allowlist: *oscap_profile_allowlist_rhel
+    bootstrap_containers:
+      x86_64: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
+      aarch64: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
+      ppc64le: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
+      s390x: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
 
   - &centos8
     <<: *rhel8
@@ -209,6 +214,11 @@ distros:
       name: org.osbuild.centos8
       build_packages: *rhel8_runner_build_packages
     oscap_profiles_allowlist: *oscap_profile_allowlist_rhel
+    bootstrap_containers:
+      # we need the toolbox container because stock centos has e.g. no
+      # mount util
+      x86_64: "quay.io/toolbx-images/centos-toolbox:stream{{.MajorVersion}}"
+      aarch64: "quay.io/toolbx-images/centos-toolbox:stream{{.MajorVersion}}"
 
   - &rhel7
     name: "rhel-{{.MajorVersion}}.{{.MinorVersion}}"
