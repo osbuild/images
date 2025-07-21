@@ -112,6 +112,11 @@ distros:
       - "xccdf_org.ssgproject.content_profile_pci-dss"
       - "xccdf_org.ssgproject.content_profile_stig"
       - "xccdf_org.ssgproject.content_profile_stig_gui"
+    bootstrap_containers:
+      x86_64: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
+      aarch64: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
+      ppc64le: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
+      s390x: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
 
   - <<: *rhel10
     name: "almalinux-{{.MajorVersion}}.{{.MinorVersion}}"
@@ -138,6 +143,11 @@ distros:
       name: org.osbuild.centos10
       build_packages: *rhel10_runner_build_packages
     oscap_profiles_allowlist: *oscap_profile_allowlist_rhel
+    bootstrap_containers:
+      # we need the toolbox container because stock centos has e.g. no
+      # mount util
+      x86_64: "quay.io/toolbx-images/centos-toolbox:stream{{.MajorVersion}}"
+      aarch64: "quay.io/toolbx-images/centos-toolbox:stream{{.MajorVersion}}"
 
   - <<: *centos10
     name: "almalinux_kitten-10"
@@ -310,3 +320,7 @@ distros:
         # https://github.com/osbuild/osbuild/blob/ea8261cad6c5c606c00c0f2824c3f483c01a0cc9/runners/org.osbuild.rhel82#L61
         # Install python36 explicitly for RHEL 8.
         - "python36"
+    bootstrap_containers:
+      x86_64: "registry.access.redhat.com/ubi{{.MajorVersion}}/ub i:latest"
+      ppc64le: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
+      s390x: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
