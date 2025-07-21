@@ -231,6 +231,15 @@
               - "zezere_ignition_banner.service"
               - "parsec"
               - "dbus-parsec"
+        "f43 uses new greenboot":
+          when:
+            version_greater_or_equal: "43"
+          shallow_merge:
+            enabled_services:
+              - "NetworkManager.service"
+              - "firewalld.service"
+              - "sshd.service"
+              - "greenboot-healthcheck"
     iot: &image_config_iot
       <<: *image_config_iot_enabled_services
       keyboard:
