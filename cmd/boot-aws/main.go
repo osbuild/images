@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -196,7 +196,7 @@ func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resour
 		return fmt.Errorf("Upload() failed: %s", err.Error())
 	}
 
-	fmt.Printf("file uploaded to %s\n", aws.StringValue(&uploadOutput.Location))
+	fmt.Printf("file uploaded to %s\n", uploadOutput.Location)
 
 	bootMode, err := getOptionalStringFlag(flags, "boot-mode")
 	if err != nil {
@@ -226,7 +226,7 @@ func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resour
 	res.AMI = ami
 	res.Snapshot = snapshot
 
-	fmt.Printf("AMI registered: %s\n", aws.StringValue(ami))
+	fmt.Printf("AMI registered: %s\n", aws.ToString(ami))
 
 	securityGroupName := fmt.Sprintf("image-boot-tests-%s", uuid.New().String())
 	securityGroup, err := a.CreateSecurityGroupEC2(securityGroupName, "image-tests-security-group")

@@ -6,10 +6,10 @@ import (
 	"io"
 	"slices"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	s3manager "github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/google/uuid"
 
 	"github.com/osbuild/images/internal/common"
@@ -41,11 +41,11 @@ func (ou *UploaderOptions) ec2BootMode() (*string, error) {
 
 	switch *ou.BootMode {
 	case platform.BOOT_LEGACY:
-		return common.ToPtr(ec2.BootModeValuesLegacyBios), nil
+		return common.ToPtr(string(ec2types.BootModeValuesLegacyBios)), nil
 	case platform.BOOT_UEFI:
-		return common.ToPtr(ec2.BootModeValuesUefi), nil
+		return common.ToPtr(string(ec2types.BootModeValuesUefi)), nil
 	case platform.BOOT_HYBRID:
-		return common.ToPtr(ec2.BootModeValuesUefiPreferred), nil
+		return common.ToPtr(string(ec2types.BootModeValuesUefiPreferred)), nil
 	default:
 		return nil, fmt.Errorf("invalid boot mode: %s", ou.BootMode)
 	}
@@ -137,7 +137,7 @@ func (au *awsUploader) UploadAndRegister(r io.Reader, status io.Writer) (err err
 			err = errors.Join(err, aErr)
 		}
 	}()
-	fmt.Fprintf(status, "File uploaded to %s\n", aws.StringValue(&res.Location))
+	fmt.Fprintf(status, "File uploaded to %s\n", res.Location)
 	if au.targetArch == "" {
 		au.targetArch = arch.Current().String()
 	}
@@ -152,7 +152,7 @@ func (au *awsUploader) UploadAndRegister(r io.Reader, status io.Writer) (err err
 	if err := au.client.DeleteObject(au.bucketName, keyName); err != nil {
 		return err
 	}
-	fmt.Fprintf(status, "AMI registered: %s\nSnapshot ID: %s\n", aws.StringValue(ami), aws.StringValue(snapshot))
+	fmt.Fprintf(status, "AMI registered: %s\nSnapshot ID: %s\n", aws.ToString(ami), aws.ToString(snapshot))
 	if err != nil {
 		return err
 	}

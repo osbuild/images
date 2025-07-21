@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	s3manager "github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
@@ -132,7 +132,7 @@ func TestUploaderUploadHappy(t *testing.T) {
 			},
 			check_fn: func(t *testing.T, fa *fakeAWSClient) {
 				assert.NotNil(t, fa.registerBootMode)
-				assert.Equal(t, ec2.BootModeValuesUefi, *fa.registerBootMode)
+				assert.Equal(t, string(ec2types.BootModeValuesUefi), *fa.registerBootMode)
 			},
 		},
 	}
