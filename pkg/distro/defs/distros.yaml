@@ -342,3 +342,8 @@ distros:
   - name: bootc-centos-9
     default_fs_type: "xfs"
     defs_path: bootc
+    # the installer needs those
+    distro_like: rhel-9
+    release_version: 9
+    os_version: 9
+    iso_label_tmpl: "CentOS-Stream-{{.Distro.MajorVersion}}-BaseOS-{{.Arch}}"

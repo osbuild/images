@@ -154,3 +154,376 @@ image_types:
     mime_type: "application/gzip"
     payload_pipelines: ["os", "image", "gce"]
     exports: ["gce"]
+
+  "anaconda-iso":
+    filename: "installer.iso"
+    mime_type: "application/x-iso9660-image"
+    bootable: true
+    boot_iso: true
+    # XXX: not part of the bib go code
+    default_size: 10_737_418_240  # 10 * datasizes.GibiByte
+    image_func: "bootc_installer"
+    build_pipelines: ["build"]
+    payload_pipelines:
+      - "ostree-deployment"
+      - "image"
+      # this should be zstd
+      - "xz"
+      - "coi-tree"
+      - "efiboot-tree"
+      - "bootiso-tree"
+      - "bootiso"
+    exports: ["bootiso"]
+    platforms:
+      # no iso support for ppc64le/s390x yet
+      - arch: "x86_64"
+        bios_platform: "i386-pc"
+      - arch: "aarch64"
+        uefi_vendor: "fedora"
+        qcow2_compat: "1.1"
+    partition_table: *default_bootc_partition_table
+    package_sets:
+      installer:
+        - conditions:
+            "rhel-10":
+              when:
+                distro_name: "bootc-rhel"
+                version_greater_or_equal: "10"
+              append: &pkgset_rhel10
+                include:
+                  - "@hardware-support"
+                  - alsa-firmware
+                  - alsa-tools-firmware
+                  - anaconda
+                  - anaconda-dracut
+                  - anaconda-install-img-deps
+                  - anaconda-widgets
+                  - audit
+                  - bind-utils
+                  - bzip2
+                  - cryptsetup
+                  - curl
+                  - dbus-x11
+                  - dejavu-sans-fonts
+                  - dejavu-sans-mono-fonts
+                  - device-mapper-persistent-data
+                  - dmidecode
+                  - dnf
+                  - dracut-config-generic
+                  - dracut-network
+                  - efibootmgr
+                  - ethtool
+                  - fcoe-utils
+                  - ftp
+                  - gdb-gdbserver
+                  - glibc-all-langpacks
+                  - gnome-kiosk
+                  - google-noto-sans-cjk-ttc-fonts
+                  - grub2-tools
+                  - grub2-tools-extra
+                  - grub2-tools-minimal
+                  - grubby
+                  - gsettings-desktop-schemas
+                  - hdparm
+                  - hexedit
+                  - hostname
+                  - initscripts
+                  - ipmitool
+                  - jomolhari-fonts
+                  - kbd
+                  - kbd-misc
+                  - kdump-anaconda-addon
+                  - kernel
+                  - less
+                  - libblockdev-lvm-dbus
+                  - libibverbs
+                  - librsvg2
+                  - linux-firmware
+                  - lldpad
+                  - lsof
+                  - madan-fonts
+                  - mt-st
+                  - mtr
+                  - net-tools
+                  - nfs-utils
+                  - nm-connection-editor
+                  - nmap-ncat
+                  - nss-tools
+                  - openssh-clients
+                  - openssh-server
+                  - ostree
+                  - pciutils
+                  - perl-interpreter
+                  - pigz
+                  - plymouth
+                  - prefixdevname
+                  - python3-pyatspi
+                  - rdma-core
+                  - rng-tools
+                  - rpcbind
+                  - rpm-ostree
+                  - rsync
+                  - rsyslog
+                  - selinux-policy-targeted
+                  - sg3_utils
+                  - sil-padauk-fonts
+                  - smartmontools
+                  - spice-vdagent
+                  - strace
+                  - systemd
+                  - tar
+                  - udisks2
+                  - udisks2-iscsi
+                  - usbutils
+                  - vim-minimal
+                  - volume_key
+                  - wget
+                  - xfsdump
+                  - xfsprogs
+                  - xrdb
+                  - xz
+            "centos-10":
+              when:
+                # XXX: add almalinux,bazzite,heliumos,auora-helium
+                distro_name: "bootc-centos"
+                version_greater_or_equal: "10.0"
+              append: *pkgset_rhel10
+            "rhel-9":
+              when:
+                distro_name: "bootc-rhel"
+                version_greater_or_equal: "9.0"
+                version_less_than: "10.0"
+              append: &pkgset_rhel9
+                include:
+                  # This is the same set as the Fedora one, but without
+                  # packages not available in CentOS/RHEL:
+                  # atheros-firmware, brcmfmac-firmware,
+                  # iwlwifi-dvm-firmware, iwlwifi-mvm-firmware,
+                  # realtek-firmware, rit-meera-new-fonts
+                  - aajohan-comfortaa-fonts
+                  - abattis-cantarell-fonts
+                  - alsa-firmware
+                  - alsa-tools-firmware
+                  - anaconda
+                  - anaconda-dracut
+                  - anaconda-install-env-deps
+                  - anaconda-widgets
+                  - audit
+                  - bind-utils
+                  - bitmap-fangsongti-fonts
+                  - bzip2
+                  - cryptsetup
+                  - curl
+                  - dbus-x11
+                  - dejavu-sans-fonts
+                  - dejavu-sans-mono-fonts
+                  - device-mapper-persistent-data
+                  - dmidecode
+                  - dnf
+                  - dracut-config-generic
+                  - dracut-network
+                  - efibootmgr
+                  - ethtool
+                  - fcoe-utils
+                  - ftp
+                  - gdb-gdbserver
+                  - gdisk
+                  - glibc-all-langpacks
+                  - gnome-kiosk
+                  - google-noto-sans-cjk-ttc-fonts
+                  - grub2-tools
+                  - grub2-tools-extra
+                  - grub2-tools-minimal
+                  - grubby
+                  - gsettings-desktop-schemas
+                  - hdparm
+                  - hexedit
+                  - hostname
+                  - initscripts
+                  - ipmitool
+                  - jomolhari-fonts
+                  - kbd
+                  - kbd-misc
+                  - kdump-anaconda-addon
+                  - kernel
+                  - khmeros-base-fonts
+                  - less
+                  - libblockdev-lvm-dbus
+                  - libibverbs
+                  - libreport-plugin-bugzilla
+                  - libreport-plugin-reportuploader
+                  - librsvg2
+                  - linux-firmware
+                  - lldpad
+                  - lsof
+                  - madan-fonts
+                  - mt-st
+                  - mtr
+                  - net-tools
+                  - nfs-utils
+                  - nm-connection-editor
+                  - nmap-ncat
+                  - nss-tools
+                  - openssh-clients
+                  - openssh-server
+                  - ostree
+                  - pciutils
+                  - perl-interpreter
+                  - pigz
+                  - plymouth
+                  - prefixdevname
+                  - python3-pyatspi
+                  - rdma-core
+                  - rng-tools
+                  - rpcbind
+                  - rpm-ostree
+                  - rsync
+                  - rsyslog
+                  - selinux-policy-targeted
+                  - sg3_utils
+                  - sil-abyssinica-fonts
+                  - sil-padauk-fonts
+                  - smartmontools
+                  - spice-vdagent
+                  - strace
+                  - systemd
+                  - tar
+                  - tigervnc-server-minimal
+                  - tigervnc-server-module
+                  - udisks2
+                  - udisks2-iscsi
+                  - usbutils
+                  - vim-minimal
+                  - volume_key
+                  - wget
+                  - xfsdump
+                  - xfsprogs
+                  - xorg-x11-drivers
+                  - xorg-x11-fonts-misc
+                  - xorg-x11-server-Xorg
+                  - xorg-x11-xauth
+                  - xrdb
+                  - xz
+            "centos-9":
+              when:
+                distro_name: "bootc-centos"
+                version_greater_or_equal: "9.0"
+                version_less_than: "10.0"
+              append: *pkgset_rhel10
+            "fedora-40plus":
+              when:
+                # XXX: add bazzite,aurora,bluefin
+                distro_name: "bootc-fedora"
+                version_greater_or_equal: "40"
+              append:
+                include:
+                  - aajohan-comfortaa-fonts
+                  - abattis-cantarell-fonts
+                  - alsa-firmware
+                  - alsa-tools-firmware
+                  - anaconda
+                  - anaconda-dracut
+                  - anaconda-install-img-deps
+                  - anaconda-widgets
+                  - atheros-firmware
+                  - audit
+                  - bind-utils
+                  - bitmap-fangsongti-fonts
+                  - brcmfmac-firmware
+                  - bzip2
+                  - cryptsetup
+                  - curl
+                  - dbus-x11
+                  - dejavu-sans-fonts
+                  - dejavu-sans-mono-fonts
+                  - device-mapper-persistent-data
+                  - dmidecode
+                  - dnf
+                  - dracut-config-generic
+                  - dracut-network
+                  - efibootmgr
+                  - ethtool
+                  - fcoe-utils
+                  - ftp
+                  - gdb-gdbserver
+                  - gdisk
+                  - glibc-all-langpacks
+                  - gnome-kiosk
+                  - google-noto-sans-cjk-ttc-fonts
+                  - grub2-tools
+                  - grub2-tools-extra
+                  - grub2-tools-minimal
+                  - grubby
+                  - gsettings-desktop-schemas
+                  - hdparm
+                  - hexedit
+                  - hostname
+                  - initscripts
+                  - ipmitool
+                  - iwlwifi-dvm-firmware
+                  - iwlwifi-mvm-firmware
+                  - jomolhari-fonts
+                  - kbd
+                  - kbd-misc
+                  - kdump-anaconda-addon
+                  - kernel
+                  - khmeros-base-fonts
+                  - less
+                  - libblockdev-lvm-dbus
+                  - libibverbs
+                  - libreport-plugin-bugzilla
+                  - libreport-plugin-reportuploader
+                  - librsvg2
+                  - linux-firmware
+                  - lldpad
+                  - lsof
+                  - madan-fonts
+                  - mt-st
+                  - mtr
+                  - net-tools
+                  - nfs-utils
+                  - nm-connection-editor
+                  - nmap-ncat
+                  - nss-tools
+                  - openssh-clients
+                  - openssh-server
+                  - ostree
+                  - pciutils
+                  - perl-interpreter
+                  - pigz
+                  - plymouth
+                  - prefixdevname
+                  - python3-pyatspi
+                  - rdma-core
+                  - realtek-firmware
+                  - rit-meera-new-fonts
+                  - rng-tools
+                  - rpcbind
+                  - rpm-ostree
+                  - rsync
+                  - rsyslog
+                  - selinux-policy-targeted
+                  - sg3_utils
+                  - sil-abyssinica-fonts
+                  - sil-padauk-fonts
+                  - smartmontools
+                  - spice-vdagent
+                  - strace
+                  - systemd
+                  - tar
+                  - tigervnc-server-minimal
+                  - tigervnc-server-module
+                  - udisks2
+                  - udisks2-iscsi
+                  - usbutils
+                  - vim-minimal
+                  - volume_key
+                  - wget
+                  - xfsdump
+                  - xfsprogs
+                  - xorg-x11-drivers
+                  - xorg-x11-fonts-misc
+                  - xorg-x11-server-Xorg
+                  - xorg-x11-xauth
+                  - xrdb
+                  - xz

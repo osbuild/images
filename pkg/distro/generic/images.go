@@ -893,6 +893,82 @@ func iotInstallerImage(workload workload.Workload,
 	return img, nil
 }
 
+func bootcAnacondaInstallerImage(workload workload.Workload,
+	t *imageType,
+	bp *blueprint.Blueprint,
+	options distro.ImageOptions,
+	packageSets map[string]rpmmd.PackageSet,
+	containers []container.SourceSpec,
+	rng *rand.Rand) (image.ImageKind, error) {
+
+	if options.Bootc == nil || options.Bootc.Imgref == nil {
+		return nil, fmt.Errorf("no bootc base image defined")
+	}
+	containerSource := container.SourceSpec{
+		Source: *options.Bootc.Imgref,
+		Name:   *options.Bootc.Imgref,
+		Local:  true,
+	}
+
+	d := t.arch.distro
+
+	// The ref is not needed and will be removed from the ctor later
+	// in time
+	img := image.NewAnacondaContainerInstaller(containerSource, "")
+	img.ContainerRemoveSignatures = true
+	img.RootfsCompression = "zstd"
+
+	img.Platform = t.platform
+	img.ExtraBasePackages = packageSets[installerPkgsKey]
+
+	// XXX: double check this was OSRelease.{Name,VersionID}
+	img.Product = d.Name()
+	img.OSVersion = d.OsVersion()
+
+	var err error
+	img.ISOLabel, err = t.ISOLabel()
+	if err != nil {
+		return nil, err
+	}
+
+	customizations := bp.Customizations
+	img.FIPS = customizations.GetFIPS()
+	img.Kickstart, err = kickstart.New(customizations)
+	if err != nil {
+		return nil, err
+	}
+	img.Kickstart.Path = osbuild.KickstartPathOSBuild
+	if kopts := customizations.GetKernel(); kopts != nil && kopts.Append != "" {
+		img.Kickstart.KernelOptionsAppend = append(img.Kickstart.KernelOptionsAppend, kopts.Append)
+	}
+	img.Kickstart.NetworkOnBoot = true
+
+	instCust, err := customizations.GetInstaller()
+	if err != nil {
+		return nil, err
+	}
+	if instCust != nil && instCust.Modules != nil {
+		img.AdditionalAnacondaModules = append(img.AdditionalAnacondaModules, instCust.Modules.Enable...)
+		img.DisabledAnacondaModules = append(img.DisabledAnacondaModules, instCust.Modules.Disable...)
+	}
+	img.AdditionalAnacondaModules = append(img.AdditionalAnacondaModules,
+		anaconda.ModuleUsers,
+		anaconda.ModuleServices,
+		anaconda.ModuleSecurity,
+	)
+
+	img.Kickstart.OSTree = &kickstart.OSTree{
+		OSName: "default",
+	}
+	// XXX: TODO this sucks
+	img.UseRHELLoraxTemplates = (d.DistroYAML.DistroLike == manifest.DISTRO_EL10 || d.DistroYAML.DistroLike == manifest.DISTRO_EL9 || d.DistroYAML.DistroLike == manifest.DISTRO_EL8 || d.DistroYAML.DistroLike == manifest.DISTRO_EL7)
+	// see https://github.com/osbuild/bootc-image-builder/issues/733
+	img.RootfsType = manifest.SquashfsRootfs
+	img.Filename = "install.iso"
+
+	return img, nil
+}
+
 func iotImage(workload workload.Workload,
 	t *imageType,
 	bp *blueprint.Blueprint,
