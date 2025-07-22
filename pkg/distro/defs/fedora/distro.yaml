@@ -532,6 +532,31 @@
       aarch64:
         <<: *iot_simplified_installer_partition_tables_x86
 
+  supported_options_lists:
+    # common options supported by all disk image types
+    # this includes everything that is not specific to installers
+    supported_disk_options: &supported_disk_options
+      - "distro"
+      - "packages"
+      - "modules"
+      - "minimal"
+      - "containers"
+      - "customizations.directories"
+      - "customizations.files"
+      - "customizations.filesystem"
+      - "customizations.fips"
+      - "customizations.firewall"
+      - "customizations.user"
+      - "customizations.group"
+      - "customizations.hostname"
+      - "customizations.kernel"
+      - "customizations.locale"
+      - "customizations.openscap"
+      - "customizations.fdo"
+      - "customizations.repositories"
+      - "customizations.services"
+      - "customizations.timezone"
+
 image_config:
   default:
     default_oscap_datastream: "/usr/share/xml/scap/ssg/content/ssg-fedora-ds.xml"
@@ -1964,3 +1989,14 @@ image_types:
             - "iwlwifi-mvm-firmware"
             - "realtek-firmware"
             - "uboot-images-armv8"
+    supported_blueprint_options:
+      - "distro"
+      - "customizations.installation_device"
+      - "customizations.fdo"
+      - "customizations.ignition"
+      - "customizations.kernel"
+      - "customizations.user"
+      - "customizations.group"
+      - "customizations.fips"
+    required_blueprint_options:
+      - "customizations.installation_device"
