@@ -67,7 +67,8 @@
       "qcow2",
       "vmdk",
       "vhd",
-      "gce"
+      "gce",
+      "anaconda-iso"
     ]
   },
   "./configs/edge-ostree-pull-empty.json": {
