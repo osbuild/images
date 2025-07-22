@@ -1120,7 +1120,7 @@ func TestAddPartitionsForBootMode(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			assert := assert.New(t)
 			pt := tc.pt
-			err := disk.AddPartitionsForBootMode(&pt, nil, tc.bootMode)
+			err := disk.AddPartitionsForBootMode(&pt, nil, tc.bootMode, arch.ARCH_X86_64)
 			if tc.errmsg == "" {
 				assert.NoError(err)
 				assert.Equal(tc.expected, pt)
@@ -1677,7 +1677,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				},
 			},
 		},
-		"plain+": {
+		"plain+s390x": {
 			customizations: &blueprint.DiskCustomization{
 				Type: "gpt", // overrides the default option
 				Partitions: []blueprint.PartitionCustomization{
@@ -1715,35 +1715,13 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			},
 			expected: &disk.PartitionTable{
 				Type: disk.PT_GPT,
-				Size: 234*datasizes.MiB + 3*datasizes.GiB + datasizes.MiB, // start + size of last partition + footer
+				Size: (20+12+1)*datasizes.MiB + 3*datasizes.GiB + datasizes.MiB, // start + size of last partition + footer
 
 				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
 				Partitions: []disk.Partition{
-					{
-						Start:    1 * datasizes.MiB, // header
-						Size:     1 * datasizes.MiB,
-						Bootable: true,
-						Type:     disk.BIOSBootPartitionGUID,
-						UUID:     disk.BIOSBootPartitionUUID,
-					},
-					{
-						Start: 2 * datasizes.MiB,
-						Size:  200 * datasizes.MiB,
-						Type:  disk.EFISystemPartitionGUID,
-						UUID:  disk.EFISystemPartitionUUID,
-						Payload: &disk.Filesystem{
-							Type:         "vfat",
-							UUID:         disk.EFIFilesystemUUID,
-							Mountpoint:   "/boot/efi",
-							Label:        "ESP",
-							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
-							FSTabFreq:    0,
-							FSTabPassNo:  2,
-						},
-					},
 					// root is aligned to the end but not reindexed
 					{
-						Start:    234 * datasizes.MiB,
+						Start:    (20 + 12 + 1) * datasizes.MiB,
 						Size:     3*datasizes.GiB + datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
 						Type:     disk.RootPartitionS390xGUID,
 						UUID:     "e2d3d0d0-de6b-48f9-b44c-e85ff044c6b1",
@@ -1759,7 +1737,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						},
 					},
 					{
-						Start:    202 * datasizes.MiB,
+						Start:    1 * datasizes.MiB,
 						Size:     20 * datasizes.MiB,
 						Type:     disk.FilesystemDataGUID,
 						UUID:     "f83b8e88-3bbf-457a-ab99-c5b252c7429c",
@@ -1775,7 +1753,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						},
 					},
 					{
-						Start: 222 * datasizes.MiB,
+						Start: (20 + 1) * datasizes.MiB,
 						Size:  12 * datasizes.MiB,
 						Type:  disk.SwapPartitionGUID,
 						UUID:  "32f3a8ae-b79e-4856-b659-c18f0dcecc77",
@@ -1783,6 +1761,112 @@ func TestNewCustomPartitionTable(t *testing.T) {
 							Label:        "swappyswaps",
 							UUID:         "a178892e-e285-4ce1-9114-55780875d64e",
 							FSTabOptions: "defaults",
+						},
+					},
+				},
+			},
+		},
+		"plain+ppc64le+dos": {
+			customizations: &blueprint.DiskCustomization{
+				Type: "dos", // overrides the default option
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						MinSize: 50 * datasizes.MiB,
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Mountpoint: "/",
+							Label:      "root",
+							FSType:     "xfs",
+						},
+					},
+				},
+			},
+			options: &disk.CustomPartitionTableOptions{
+				DefaultFSType:      disk.FS_EXT4,
+				BootMode:           platform.BOOT_HYBRID,
+				PartitionTableType: disk.PT_DOS,
+				RequiredMinSizes:   map[string]uint64{"/": 3 * datasizes.GiB},
+				Architecture:       arch.ARCH_PPC64LE,
+			},
+			expected: &disk.PartitionTable{
+				Type: disk.PT_DOS,
+				Size: 4*datasizes.MiB + 3*datasizes.GiB + datasizes.MiB, // start + size of last partition + footer
+
+				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+				Partitions: []disk.Partition{
+					{
+						Start:    1 * datasizes.MiB, // header
+						Size:     4 * datasizes.MiB,
+						Bootable: true,
+						Type:     disk.PRepPartitionDOSID,
+					},
+					// root is aligned to the end but not reindexed
+					{
+						Start:    5 * datasizes.MiB,
+						Size:     3 * datasizes.GiB,
+						Type:     disk.FilesystemLinuxDOSID,
+						Bootable: false,
+						Payload: &disk.Filesystem{
+							Type:         "xfs",
+							Label:        "root",
+							Mountpoint:   "/",
+							FSTabOptions: "defaults",
+							UUID:         "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
+						},
+					},
+				},
+			},
+		},
+		"plain+ppc64le+gpt": {
+			customizations: &blueprint.DiskCustomization{
+				Type: "gpt", // overrides the default option
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						MinSize: 50 * datasizes.MiB,
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Mountpoint: "/",
+							Label:      "root",
+							FSType:     "xfs",
+						},
+					},
+				},
+			},
+			options: &disk.CustomPartitionTableOptions{
+				DefaultFSType:      disk.FS_EXT4,
+				BootMode:           platform.BOOT_HYBRID,
+				PartitionTableType: disk.PT_DOS,
+				RequiredMinSizes:   map[string]uint64{"/": 3 * datasizes.GiB},
+				Architecture:       arch.ARCH_PPC64LE,
+			},
+			expected: &disk.PartitionTable{
+				Type: disk.PT_GPT,
+				Size: (4+1)*datasizes.MiB + 3*datasizes.GiB + datasizes.MiB, // start + size of last partition + footer
+
+				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+				Partitions: []disk.Partition{
+					{
+						Start:    1 * datasizes.MiB, // header
+						Size:     4 * datasizes.MiB,
+						Bootable: true,
+						Type:     disk.PRePartitionGUID,
+						UUID:     "fb180daf-48a7-4ee0-b10d-394651850fd4",
+					},
+					// root is aligned to the end but not reindexed
+					{
+						Start:    5 * datasizes.MiB,
+						Size:     3*datasizes.GiB + datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
+						Type:     disk.RootPartitionPpc64leGUID,
+						UUID:     "a178892e-e285-4ce1-9114-55780875d64e",
+						Bootable: false,
+						Payload: &disk.Filesystem{
+							Type:         "xfs",
+							Label:        "root",
+							Mountpoint:   "/",
+							FSTabOptions: "defaults",
+							UUID:         "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
 						},
 					},
 				},
