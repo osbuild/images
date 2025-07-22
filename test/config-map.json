@@ -57,6 +57,20 @@
       "edge-simplified-installer"
     ]
   },
+  "./configs/bootc-empty.json": {
+    "distros": [
+      "bootc-*"
+    ],
+    "image-types": [
+      "ami",
+      "raw",
+      "qcow2",
+      "vmdk",
+      "vhd",
+      "gce",
+      "anaconda-iso"
+    ]
+  },
   "./configs/edge-ostree-pull-empty.json": {
     "image-types": [
       "edge-installer",

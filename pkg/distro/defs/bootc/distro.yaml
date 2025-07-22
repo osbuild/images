@@ -1,0 +1,529 @@
+.common:
+  disk_sizes:
+    default_required_partition_sizes: &default_required_dir_sizes
+      "/": 1_073_741_824     # 1 * datasizes.GiB
+      "/usr": 2_147_483_648  # 2 * datasizes.GiB
+  partitioning:
+    ids:
+      - &prep_partition_dosid "41"
+      - &filesystem_linux_dosid "83"
+      - &fat16_bdosid "06"
+    guids:
+      - &bios_boot_partition_guid "21686148-6449-6E6F-744E-656564454649"
+      - &efi_system_partition_guid "C12A7328-F81F-11D2-BA4B-00A0C93EC93B"
+      - &filesystem_data_guid "0FC63DAF-8483-4772-8E79-3D69D8477DE4"
+      - &xboot_ldr_partition_guid "BC13C2FF-59E6-4262-A352-B275FD6F7172"
+    # static UUIDs for partitions and filesystems
+    # NOTE(akoutsou): These are unnecessary and have stuck around since the
+    # beginning where (I believe) the goal was to have predictable,
+    # reproducible partition tables. They might be removed soon in favour of
+    # proper, random UUIDs, with reproducibility being controlled by fixing
+    # rng seeds.
+    uuids:
+      - &bios_boot_partition_uuid "FAC7F1FB-3E8D-4137-A512-961DE09A5549"
+      - &root_partition_uuid "6264D520-3FB9-423F-8AB8-7A0A8E3D3562"
+      - &data_partition_uuid "CB07C243-BC44-4717-853E-28852021225B"
+      - &efi_system_partition_uuid "68B2905B-DF3E-4FB3-80FA-49D1E773AA33"
+      - &efi_filesystem_uuid "7B77-95E7"
+
+  platforms: &default_bootc_platforms
+      - arch: "x86_64"
+        bios_platform: "i386-pc"
+      - arch: "aarch64"
+        uefi_vendor: "fedora"
+        qcow2_compat: "1.1"
+      - arch: "s390x"
+        qcow2_compat: "1.1"
+        zipl_support: true
+      - arch: "ppc64le"
+        bios_platform: "powerpc-ieee1275"
+        qcow2_compat: "1.1"
+
+  partition_tables:
+    default_bootc_partition_table: &default_bootc_partition_table
+      x86_64:
+        uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
+        type: "gpt"
+        partitions:
+          - &default_partition_table_part_bios
+            size: "1 MiB"
+            bootable: true
+            type: *bios_boot_partition_guid
+            uuid: *bios_boot_partition_uuid
+          - &default_partition_table_part_efi
+            size: "200 MiB"
+            type: *efi_system_partition_guid
+            uuid: *efi_system_partition_uuid
+            payload_type: "filesystem"
+            payload:
+              type: vfat
+              uuid: *efi_filesystem_uuid
+              mountpoint: "/boot/efi"
+              label: "ESP"
+              fstab_options: "defaults,uid=0,gid=0,umask=077,shortname=winnt"
+              fstab_freq: 0
+              fstab_passno: 2
+          - &default_partition_table_part_boot
+            size: "1 GiB"
+            type: *filesystem_data_guid
+            uuid: *data_partition_uuid
+            payload_type: "filesystem"
+            payload:
+              type: "ext4"
+              mountpoint: "/boot"
+              label: "boot"
+              fstab_options: "defaults"
+          - &default_partition_table_part_root
+            size: "2 GiB"
+            type: *filesystem_data_guid
+            uuid: *root_partition_uuid
+            payload_type: "filesystem"
+            payload: &default_partition_table_part_root_payload
+              type: "ext4"
+              label: "root"
+              mountpoint: "/"
+              fstab_options: "defaults"
+      # XXX: double check with bib
+      aarch64: &default_partition_table_aarch64
+        uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
+        type: "gpt"
+        partitions:
+          - *default_partition_table_part_efi
+          - *default_partition_table_part_root
+      ppc64le:
+        uuid: "0x14fc63d2"
+        type: "dos"
+        partitions:
+          - size: "4 MiB"
+            bootable: true
+            type: *prep_partition_dosid
+          - &default_partition_table_part_root_ppc64le
+            size: "2 GiB"
+            payload_type: "filesystem"
+            payload:
+              <<: *default_partition_table_part_root_payload
+              label: ""
+      s390x:
+        uuid: "0x14fc63d2"
+        type: "dos"
+        partitions:
+          - <<: *default_partition_table_part_root_ppc64le
+            bootable: true
+
+image_types:
+  "raw": &raw_image_type
+    filename: "image.raw"
+    image_func: "bootc_disk"
+    mime_type: "application/octet-stream"
+    bootable: true
+    default_size: 10_737_418_240  # 10 GiB
+    payload_pipelines: ["os", "image"]
+    exports: ["image"]
+    required_partition_sizes: *default_required_dir_sizes
+    platforms: *default_bootc_platforms
+    partition_table: *default_bootc_partition_table
+
+  "ami":
+    <<: *raw_image_type
+
+  "qcow2":
+    <<: *raw_image_type
+    filename: "disk.qcow2"
+    mime_type: "application/x-qemu-disk"
+    build_pipelines: ["build"]
+    payload_pipelines: ["image", "qcow2"]
+    exports: ["qcow2"]
+
+  "vmdk":
+    <<: *raw_image_type
+    filename: "disk.vmdk"
+    mime_type: "application/x-vmdk"
+    payload_pipelines: ["os", "image", "vmdk"]
+    exports: ["vmdk"]
+
+  "vhd":
+    <<: *raw_image_type
+    filename: "disk.vhd"
+    mime_type: "application/x-vhd"
+    payload_pipelines: ["os", "image", "vpc"]
+    exports: ["vpc"]
+
+  "gce":
+    <<: *raw_image_type
+    filename: "image.tar.gz"
+    mime_type: "application/gzip"
+    payload_pipelines: ["os", "image", "gce"]
+    exports: ["gce"]
+
+  "anaconda-iso":
+    filename: "installer.iso"
+    mime_type: "application/x-iso9660-image"
+    bootable: true
+    boot_iso: true
+    # XXX: not part of the bib go code
+    default_size: 10_737_418_240  # 10 * datasizes.GibiByte
+    image_func: "bootc_installer"
+    build_pipelines: ["build"]
+    payload_pipelines:
+      - "ostree-deployment"
+      - "image"
+      # this should be zstd
+      - "xz"
+      - "coi-tree"
+      - "efiboot-tree"
+      - "bootiso-tree"
+      - "bootiso"
+    exports: ["bootiso"]
+    platforms:
+      # no iso support for ppc64le/s390x yet
+      - arch: "x86_64"
+        bios_platform: "i386-pc"
+      - arch: "aarch64"
+        uefi_vendor: "fedora"
+        qcow2_compat: "1.1"
+    partition_table: *default_bootc_partition_table
+    package_sets:
+      installer:
+        - conditions:
+            "rhel-10":
+              when:
+                distro_name: "bootc-rhel"
+                version_greater_or_equal: "10"
+              append: &pkgset_rhel10
+                include:
+                  - "@hardware-support"
+                  - alsa-firmware
+                  - alsa-tools-firmware
+                  - anaconda
+                  - anaconda-dracut
+                  - anaconda-install-img-deps
+                  - anaconda-widgets
+                  - audit
+                  - bind-utils
+                  - bzip2
+                  - cryptsetup
+                  - curl
+                  - dbus-x11
+                  - dejavu-sans-fonts
+                  - dejavu-sans-mono-fonts
+                  - device-mapper-persistent-data
+                  - dmidecode
+                  - dnf
+                  - dracut-config-generic
+                  - dracut-network
+                  - efibootmgr
+                  - ethtool
+                  - fcoe-utils
+                  - ftp
+                  - gdb-gdbserver
+                  - glibc-all-langpacks
+                  - gnome-kiosk
+                  - google-noto-sans-cjk-ttc-fonts
+                  - grub2-tools
+                  - grub2-tools-extra
+                  - grub2-tools-minimal
+                  - grubby
+                  - gsettings-desktop-schemas
+                  - hdparm
+                  - hexedit
+                  - hostname
+                  - initscripts
+                  - ipmitool
+                  - jomolhari-fonts
+                  - kbd
+                  - kbd-misc
+                  - kdump-anaconda-addon
+                  - kernel
+                  - less
+                  - libblockdev-lvm-dbus
+                  - libibverbs
+                  - librsvg2
+                  - linux-firmware
+                  - lldpad
+                  - lsof
+                  - madan-fonts
+                  - mt-st
+                  - mtr
+                  - net-tools
+                  - nfs-utils
+                  - nm-connection-editor
+                  - nmap-ncat
+                  - nss-tools
+                  - openssh-clients
+                  - openssh-server
+                  - ostree
+                  - pciutils
+                  - perl-interpreter
+                  - pigz
+                  - plymouth
+                  - prefixdevname
+                  - python3-pyatspi
+                  - rdma-core
+                  - rng-tools
+                  - rpcbind
+                  - rpm-ostree
+                  - rsync
+                  - rsyslog
+                  - selinux-policy-targeted
+                  - sg3_utils
+                  - sil-padauk-fonts
+                  - smartmontools
+                  - spice-vdagent
+                  - strace
+                  - systemd
+                  - tar
+                  - udisks2
+                  - udisks2-iscsi
+                  - usbutils
+                  - vim-minimal
+                  - volume_key
+                  - wget
+                  - xfsdump
+                  - xfsprogs
+                  - xrdb
+                  - xz
+            "centos-10":
+              when:
+                # XXX: add almalinux,bazzite,heliumos,auora-helium
+                distro_name: "bootc-centos"
+                version_greater_or_equal: "10.0"
+              append: *pkgset_rhel10
+            "rhel-9":
+              when:
+                distro_name: "bootc-rhel"
+                version_greater_or_equal: "9.0"
+                version_less_than: "10.0"
+              append: &pkgset_rhel9
+                include:
+                  # This is the same set as the Fedora one, but without
+                  # packages not available in CentOS/RHEL:
+                  # atheros-firmware, brcmfmac-firmware,
+                  # iwlwifi-dvm-firmware, iwlwifi-mvm-firmware,
+                  # realtek-firmware, rit-meera-new-fonts
+                  - aajohan-comfortaa-fonts
+                  - abattis-cantarell-fonts
+                  - alsa-firmware
+                  - alsa-tools-firmware
+                  - anaconda
+                  - anaconda-dracut
+                  - anaconda-install-env-deps
+                  - anaconda-widgets
+                  - audit
+                  - bind-utils
+                  - bitmap-fangsongti-fonts
+                  - bzip2
+                  - cryptsetup
+                  - curl
+                  - dbus-x11
+                  - dejavu-sans-fonts
+                  - dejavu-sans-mono-fonts
+                  - device-mapper-persistent-data
+                  - dmidecode
+                  - dnf
+                  - dracut-config-generic
+                  - dracut-network
+                  - efibootmgr
+                  - ethtool
+                  - fcoe-utils
+                  - ftp
+                  - gdb-gdbserver
+                  - gdisk
+                  - glibc-all-langpacks
+                  - gnome-kiosk
+                  - google-noto-sans-cjk-ttc-fonts
+                  - grub2-tools
+                  - grub2-tools-extra
+                  - grub2-tools-minimal
+                  - grubby
+                  - gsettings-desktop-schemas
+                  - hdparm
+                  - hexedit
+                  - hostname
+                  - initscripts
+                  - ipmitool
+                  - jomolhari-fonts
+                  - kbd
+                  - kbd-misc
+                  - kdump-anaconda-addon
+                  - kernel
+                  - khmeros-base-fonts
+                  - less
+                  - libblockdev-lvm-dbus
+                  - libibverbs
+                  - libreport-plugin-bugzilla
+                  - libreport-plugin-reportuploader
+                  - librsvg2
+                  - linux-firmware
+                  - lldpad
+                  - lsof
+                  - madan-fonts
+                  - mt-st
+                  - mtr
+                  - net-tools
+                  - nfs-utils
+                  - nm-connection-editor
+                  - nmap-ncat
+                  - nss-tools
+                  - openssh-clients
+                  - openssh-server
+                  - ostree
+                  - pciutils
+                  - perl-interpreter
+                  - pigz
+                  - plymouth
+                  - prefixdevname
+                  - python3-pyatspi
+                  - rdma-core
+                  - rng-tools
+                  - rpcbind
+                  - rpm-ostree
+                  - rsync
+                  - rsyslog
+                  - selinux-policy-targeted
+                  - sg3_utils
+                  - sil-abyssinica-fonts
+                  - sil-padauk-fonts
+                  - smartmontools
+                  - spice-vdagent
+                  - strace
+                  - systemd
+                  - tar
+                  - tigervnc-server-minimal
+                  - tigervnc-server-module
+                  - udisks2
+                  - udisks2-iscsi
+                  - usbutils
+                  - vim-minimal
+                  - volume_key
+                  - wget
+                  - xfsdump
+                  - xfsprogs
+                  - xorg-x11-drivers
+                  - xorg-x11-fonts-misc
+                  - xorg-x11-server-Xorg
+                  - xorg-x11-xauth
+                  - xrdb
+                  - xz
+            "centos-9":
+              when:
+                distro_name: "bootc-centos"
+                version_greater_or_equal: "9.0"
+                version_less_than: "10.0"
+              append: *pkgset_rhel10
+            "fedora-40plus":
+              when:
+                # XXX: add bazzite,aurora,bluefin
+                distro_name: "bootc-fedora"
+                version_greater_or_equal: "40"
+              append:
+                include:
+                  - aajohan-comfortaa-fonts
+                  - abattis-cantarell-fonts
+                  - alsa-firmware
+                  - alsa-tools-firmware
+                  - anaconda
+                  - anaconda-dracut
+                  - anaconda-install-img-deps
+                  - anaconda-widgets
+                  - atheros-firmware
+                  - audit
+                  - bind-utils
+                  - bitmap-fangsongti-fonts
+                  - brcmfmac-firmware
+                  - bzip2
+                  - cryptsetup
+                  - curl
+                  - dbus-x11
+                  - dejavu-sans-fonts
+                  - dejavu-sans-mono-fonts
+                  - device-mapper-persistent-data
+                  - dmidecode
+                  - dnf
+                  - dracut-config-generic
+                  - dracut-network
+                  - efibootmgr
+                  - ethtool
+                  - fcoe-utils
+                  - ftp
+                  - gdb-gdbserver
+                  - gdisk
+                  - glibc-all-langpacks
+                  - gnome-kiosk
+                  - google-noto-sans-cjk-ttc-fonts
+                  - grub2-tools
+                  - grub2-tools-extra
+                  - grub2-tools-minimal
+                  - grubby
+                  - gsettings-desktop-schemas
+                  - hdparm
+                  - hexedit
+                  - hostname
+                  - initscripts
+                  - ipmitool
+                  - iwlwifi-dvm-firmware
+                  - iwlwifi-mvm-firmware
+                  - jomolhari-fonts
+                  - kbd
+                  - kbd-misc
+                  - kdump-anaconda-addon
+                  - kernel
+                  - khmeros-base-fonts
+                  - less
+                  - libblockdev-lvm-dbus
+                  - libibverbs
+                  - libreport-plugin-bugzilla
+                  - libreport-plugin-reportuploader
+                  - librsvg2
+                  - linux-firmware
+                  - lldpad
+                  - lsof
+                  - madan-fonts
+                  - mt-st
+                  - mtr
+                  - net-tools
+                  - nfs-utils
+                  - nm-connection-editor
+                  - nmap-ncat
+                  - nss-tools
+                  - openssh-clients
+                  - openssh-server
+                  - ostree
+                  - pciutils
+                  - perl-interpreter
+                  - pigz
+                  - plymouth
+                  - prefixdevname
+                  - python3-pyatspi
+                  - rdma-core
+                  - realtek-firmware
+                  - rit-meera-new-fonts
+                  - rng-tools
+                  - rpcbind
+                  - rpm-ostree
+                  - rsync
+                  - rsyslog
+                  - selinux-policy-targeted
+                  - sg3_utils
+                  - sil-abyssinica-fonts
+                  - sil-padauk-fonts
+                  - smartmontools
+                  - spice-vdagent
+                  - strace
+                  - systemd
+                  - tar
+                  - tigervnc-server-minimal
+                  - tigervnc-server-module
+                  - udisks2
+                  - udisks2-iscsi
+                  - usbutils
+                  - vim-minimal
+                  - volume_key
+                  - wget
+                  - xfsdump
+                  - xfsprogs
+                  - xorg-x11-drivers
+                  - xorg-x11-fonts-misc
+                  - xorg-x11-server-Xorg
+                  - xorg-x11-xauth
+                  - xrdb
+                  - xz
