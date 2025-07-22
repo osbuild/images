@@ -752,6 +752,36 @@
       aarch64:
         <<: *iot_simplified_installer_partition_tables_x86
 
+  supported_options_lists:
+    # common options supported by all disk image types this includes everything
+    # that is not specific to installers or ostree-based images
+    supported_options_disk: &supported_options_disk
+      - "distro"
+      - "packages"
+      - "modules"
+      - "groups"
+      - "containers"
+      - "minimal"
+      - "customizations.cacerts"
+      - "customizations.directories"
+      - "customizations.disk"
+      - "customizations.files"
+      - "customizations.filesystem"
+      - "customizations.partitioning_mode"
+      - "customizations.fips"
+      - "customizations.firewall"
+      - "customizations.user"
+      - "customizations.sshkey"
+      - "customizations.group"
+      - "customizations.hostname"
+      - "customizations.kernel"
+      - "customizations.locale"
+      - "customizations.openscap"
+      - "customizations.repositories"
+      - "customizations.rpm"
+      - "customizations.services"
+      - "customizations.timezone"
+
 image_config:
   default:
     default_oscap_datastream: "/usr/share/xml/scap/ssg/content/ssg-fedora-ds.xml"
@@ -813,6 +843,7 @@ image_types:
         image_format: "vagrant_libvirt"
       - <<: *aarch64_platform
         image_format: "vagrant_libvirt"
+    supported_blueprint_options: *supported_options_disk
 
   "server-vagrant-virtualbox": &server_vagrant_virtualbox
     <<: *server_vagrant_libvirt
@@ -863,6 +894,7 @@ image_types:
         image_format: "qcow2"
       - <<: *s390x_zipl_platform
         image_format: "qcow2"
+    supported_blueprint_options: *supported_options_disk
 
   "server-ami":
     <<: *server_qcow2
@@ -970,6 +1002,7 @@ image_types:
             - "zram-generator-defaults"
             - "grubby-deprecated"
             - "extlinux-bootloader"
+    supported_blueprint_options: *supported_options_disk
 
   "server-ova":
     <<: *server_vmdk
@@ -1494,6 +1527,8 @@ image_types:
               append:
                 exclude:
                   - "firewalld"
+    supported_blueprint_options: *supported_options_disk
+
   "minimal-raw-zst":
     <<: *minimal_raw_xz
     name_aliases: []
