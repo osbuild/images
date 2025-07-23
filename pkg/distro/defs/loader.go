@@ -13,7 +13,6 @@ import (
 	"sort"
 	"text/template"
 
-	"github.com/gobwas/glob"
 	"gopkg.in/yaml.v3"
 
 	"github.com/osbuild/images/internal/common"
@@ -58,16 +57,12 @@ type distrosYAML struct {
 }
 
 type DistroYAML struct {
-	// Match can be used to match multiple versions via a
-	// fnmatch/glob style expression.
-	Match string `yaml:"match"`
-
-	// TransformRE can be used to transform a given name
+	// Match can be used to match/transform a given name
 	// into the canonical <distro>-<major>{,.<minor>} form.
 	// E.g.
-	//   (?P<distro>rhel)-(?P<major>8)(?P<minor>[0-9]+)
-	// will support a format like e.g. rhel-810
-	TransformRE string `yaml:"transform_re"`
+	//   (?P<distro>rhel)-(?P<major>8)\.?(?P<minor>[0-9]+)
+	// will support a format like e.g. rhel-810 and rhel-8.10
+	Match string `yaml:"match"`
 
 	// The distro metadata, can contain go text template strings
 	// for {{.Major}}, {{.Minor}} which will be expanded by the
@@ -210,13 +205,12 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 			break
 		}
 
-		pat, err := glob.Compile(distro.Match)
+		found, err := matchAndNormalize(distro.Match, nameVer)
 		if err != nil {
 			return nil, err
 		}
-
-		if pat.Match(nameVer) {
-			if err := distro.runTemplates(nameVer); err != nil {
+		if found != "" {
+			if err := distro.runTemplates(found); err != nil {
 				return nil, err
 			}
 

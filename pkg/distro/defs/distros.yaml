@@ -43,7 +43,7 @@ distros:
   - &fedora_stable
     <<: *fedora_rawhide
     name: "fedora-{{.MajorVersion}}"
-    match: "fedora-[0-9][0-9]{,[0-9]}"
+    match: 'fedora-[0-9][0-9]+'
     preview: false
     os_version: "{{.MajorVersion}}"
     release_version: "{{.MajorVersion}}"
@@ -63,7 +63,7 @@ distros:
 
   - &rhel10
     name: "rhel-{{.MajorVersion}}.{{.MinorVersion}}"
-    match: "rhel-10.[0-9]{,[0-9]}"
+    match: 'rhel-10\.[0-9]{1,2}'
     distro_like: rhel-10
     product: "Red Hat Enterprise Linux"
     os_version: "10.{{.MinorVersion}}"
@@ -120,7 +120,7 @@ distros:
 
   - <<: *rhel10
     name: "almalinux-{{.MajorVersion}}.{{.MinorVersion}}"
-    match: "almalinux-10.[0-9]{,[0-9]}"
+    match: 'almalinux-10\.[0-9]{1,2}'
     product: "AlmaLinux"
     vendor: "almalinux"
     ostree_ref_tmpl: "almalinux/10/%%s/edge"
@@ -160,9 +160,8 @@ distros:
 
   - &rhel9
     name: "rhel-{{.MajorVersion}}.{{.MinorVersion}}"
-    match: "rhel-9.[0-9]{,[0-9]}"
     # rhel9 support being named "rhel-91" for "rhel-9.1" or "rhel-910" for "rhel-9.10" etc
-    transform_re: "^(?P<name>rhel)-(?P<major>9)(?P<minor>[0-9]{1,2})$"
+    match: '(?P<name>rhel)-(?P<major>9)\.?(?P<minor>[0-9]{1,2})'
     distro_like: rhel-9
     product: "Red Hat Enterprise Linux"
     os_version: "9.{{.MinorVersion}}"
@@ -227,9 +226,8 @@ distros:
 
   - &rhel8
     name: "rhel-{{.MajorVersion}}.{{.MinorVersion}}"
-    match: "rhel-8.[0-9]{,[0-9]}"
     # rhel8 support being named "rhel-81" for "rhel-8.1" or "rhel-810" for "rhel-8.10" etc
-    transform_re: "^(?P<name>rhel)-(?P<major>8)(?P<minor>[0-9]{1,2})$"
+    match: '(?P<name>rhel)-(?P<major>8)\.?(?P<minor>[0-9]{1,2})'
     distro_like: rhel-8
     product: "Red Hat Enterprise Linux"
     os_version: "8.{{.MinorVersion}}"
@@ -299,7 +297,7 @@ distros:
 
   - &rhel7
     name: "rhel-{{.MajorVersion}}.{{.MinorVersion}}"
-    match: "rhel-7.[0-9]{,[0-9]}"
+    match: 'rhel-7\.[0-9]{1,2}'
     distro_like: rhel-7
     product: "Red Hat Enterprise Linux"
     codename: "Maipo"

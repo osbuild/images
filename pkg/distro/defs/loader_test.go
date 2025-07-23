@@ -1105,12 +1105,11 @@ image_types:
 	assert.EqualError(t, err, `platform conditionals for image type "test_type" should match only once but matched 2 times`)
 }
 
-func TestDistrosLoadingTransformRE(t *testing.T) {
+func TestDistrosLoadingMatchTransforms(t *testing.T) {
 	fakeDistrosYAML := `
 distros:
   - name: "rhel-{{.MajorVersion}}.{{.MinorVersion}}"
-    match: "rhel-8.*"
-    transform_re: "(?P<name>rhel)-(?P<major>8)(?P<minor>[0-9]+)"
+    match: '(?P<name>rhel)-(?P<major>8)\.?(?P<minor>[0-9]+)'
     os_version: "{{.MajorVersion}}.{{.MinorVersion}}"
     release_version: "{{.MajorVersion}}"
     module_platform_id: "platform:el{{.MajorVersion}}"
@@ -1135,8 +1134,7 @@ distros:
 		require.NoError(t, err)
 		assert.Equal(t, &defs.DistroYAML{
 			Name:             tc.expectedDistroNameVer,
-			Match:            "rhel-8.*",
-			TransformRE:      "(?P<name>rhel)-(?P<major>8)(?P<minor>[0-9]+)",
+			Match:            `(?P<name>rhel)-(?P<major>8)\.?(?P<minor>[0-9]+)`,
 			OsVersion:        tc.expectedOsVersion,
 			ReleaseVersion:   "8",
 			ModulePlatformID: "platform:el8",
