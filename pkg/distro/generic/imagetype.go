@@ -167,6 +167,7 @@ func (t *imageType) getPartitionTable(customizations *blueprint.Customizations, 
 		return nil, err
 	}
 
+	defaultFSType := t.arch.distro.DefaultFSType
 	imageSize := t.Size(options.Size)
 	partitioning, err := customizations.GetPartitioning()
 	if err != nil {
@@ -184,7 +185,7 @@ func (t *imageType) getPartitionTable(customizations *blueprint.Customizations, 
 		partOptions := &disk.CustomPartitionTableOptions{
 			PartitionTableType: basePartitionTable.Type, // PT type is not customizable, it is determined by the base PT for an image type or architecture
 			BootMode:           t.BootMode(),
-			DefaultFSType:      t.arch.distro.DefaultFSType,
+			DefaultFSType:      defaultFSType,
 			RequiredMinSizes:   t.ImageTypeYAML.RequiredPartitionSizes,
 			Architecture:       t.platform.GetArch(),
 		}
