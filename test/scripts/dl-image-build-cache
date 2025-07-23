@@ -109,6 +109,7 @@ def gen_manifest_data_to_build_cache_info(
     return build_cache_infos
 
 
+# pylint: disable=too-many-statements
 def main():
     parser = get_argparser()
     args = parser.parse_args()
@@ -127,7 +128,16 @@ def main():
 
     with tempfile.TemporaryDirectory() as tmpdir:
         print("📜 Generating current manifests to determine their IDs")
-        _ = testlib.gen_manifests(tmpdir, arches=args.arch, distros=args.distro, images=args.image_type)
+        err = testlib.gen_manifests(tmpdir, arches=args.arch, distros=args.distro, images=args.image_type)
+        # print stderr in case there were errors or warnings about skipped configurations
+        # but filter out the annoying ones
+        stderr = err.decode().splitlines()
+        for line in stderr:
+            if "No match for group package" in line:
+                continue
+            if "Failed to load consumer certs" in line:
+                continue
+            print(line)
         manifest_gen_data = testlib.read_manifests(tmpdir)
 
     build_cache_infos = gen_manifest_data_to_build_cache_info(manifest_gen_data, args.config, args.skip_image_type)
