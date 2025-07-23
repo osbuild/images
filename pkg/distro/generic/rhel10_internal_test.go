@@ -66,6 +66,7 @@ func TestRH10DistroFactory(t *testing.T) {
 func TestRhel10_NoBootPartition(t *testing.T) {
 	for _, distroName := range []string{"rhel-10.0", "centos-10"} {
 		dist := DistroFactory(distroName)
+		require.NotNil(t, dist, distroName)
 		for _, archName := range dist.ListArches() {
 			arch, err := dist.GetArch(archName)
 			assert.NoError(t, err)
