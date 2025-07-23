@@ -24,6 +24,19 @@
       "server-qcow2"
     ]
   },
+  "./configs/file-customizations.json": {
+    "distros": [
+      "rhel-8.10",
+      "rhel-9.6",
+      "rhel-10.0",
+      "centos*",
+      "fedora*"
+    ],
+    "image-types": [
+      "ami",
+      "server-ami"
+    ]
+  },
   "./configs/disable-lm_sensors.json": {
     "distros": [
       "rhel-8.4"
