@@ -130,12 +130,48 @@ func (t *imageType) BasePartitionTable() (*disk.PartitionTable, error) {
 	return t.ImageTypeYAML.PartitionTable(t.arch.distro.Name(), t.arch.name)
 }
 
+// XXX: copied fromb bib
+// setFSTypes sets the filesystem types for all mountable entities to match the
+// selected rootfs type.
+// If rootfs is 'btrfs', the function will keep '/boot' to its default.
+func setFSTypes(pt *disk.PartitionTable, rootfs disk.FSType) error {
+	if rootfs == disk.FS_NONE {
+		return nil
+	}
+
+	return pt.ForEachMountable(func(mnt disk.Mountable, _ []disk.Entity) error {
+		switch mnt.GetMountpoint() {
+		case "/boot/efi":
+			// never change the efi partition's type
+			return nil
+		case "/boot":
+			// change only if we're not doing btrfs
+			if rootfs == disk.FS_BTRFS {
+				return nil
+			}
+			fallthrough
+		default:
+			switch elem := mnt.(type) {
+			case *disk.Filesystem:
+				// elem.Type should also be disk.FS_TYPE
+				elem.Type = rootfs.String()
+			case *disk.BtrfsSubvolume:
+				// nothing to do
+			default:
+				return fmt.Errorf("the mountable disk entity for %q of the base partition table is not an ordinary filesystem but %T", mnt.GetMountpoint(), mnt)
+			}
+			return nil
+		}
+	})
+}
+
 func (t *imageType) getPartitionTable(customizations *blueprint.Customizations, options distro.ImageOptions, rng *rand.Rand) (*disk.PartitionTable, error) {
 	basePartitionTable, err := t.BasePartitionTable()
 	if err != nil {
 		return nil, err
 	}
 
+	defaultFSType := t.arch.distro.DefaultFSType
 	imageSize := t.Size(options.Size)
 	partitioning, err := customizations.GetPartitioning()
 	if err != nil {
@@ -153,7 +189,7 @@ func (t *imageType) getPartitionTable(customizations *blueprint.Customizations, 
 		partOptions := &disk.CustomPartitionTableOptions{
 			PartitionTableType: basePartitionTable.Type, // PT type is not customizable, it is determined by the base PT for an image type or architecture
 			BootMode:           t.BootMode(),
-			DefaultFSType:      t.arch.distro.DefaultFSType,
+			DefaultFSType:      defaultFSType,
 			RequiredMinSizes:   t.ImageTypeYAML.RequiredPartitionSizes,
 			Architecture:       t.platform.GetArch(),
 		}
@@ -161,7 +197,20 @@ func (t *imageType) getPartitionTable(customizations *blueprint.Customizations, 
 	}
 
 	mountpoints := customizations.GetFilesystems()
-	return disk.NewPartitionTable(basePartitionTable, mountpoints, imageSize, options.PartitioningMode, t.platform.GetArch(), t.ImageTypeYAML.RequiredPartitionSizes, rng)
+	pt, err := disk.NewPartitionTable(basePartitionTable, mountpoints, imageSize, options.PartitioningMode, t.platform.GetArch(), t.ImageTypeYAML.RequiredPartitionSizes, rng)
+	if err != nil {
+		return nil, err
+	}
+
+	// XXX: bootc partition tables are more "stubs" and need to
+	// be filled with the real partition tables but the fstype
+	// needs to be filled
+	if options.Bootc != nil && options.Bootc.Imgref != nil {
+		if err := setFSTypes(pt, defaultFSType); err != nil {
+			return nil, fmt.Errorf("error setting root filesystem type: %w", err)
+		}
+	}
+	return pt, nil
 }
 
 func (t *imageType) getDefaultImageConfig() *distro.ImageConfig {
