@@ -212,6 +212,7 @@ func makeManifestJob(
 	path string,
 	content map[string]bool,
 	metadata bool,
+	tmpdirRoot string,
 ) manifestJob {
 	name := bc.Name
 	distroName := distribution.Name()
@@ -232,12 +233,8 @@ func makeManifestJob(
 	}
 	if experimentalflags.Bool("gen-manifest-mock-bpfile-uris") && bp.Customizations != nil {
 		for i, fc := range bp.Customizations.Files {
-			// in mock mode, replace all file customizations
-			// urls with local ones that we auto-generate
-			// with predictable content (from the URL) and
-			// a predictable location (under cacheRoot)
 			if fc.URI != "" {
-				newBpFileUrl := filepath.Join(cacheRoot, "fake-bp-files-with-urls", fmt.Sprintf("%x", sha256.Sum256([]byte(fc.URI))))
+				newBpFileUrl := filepath.Join(tmpdirRoot, "fake-bp-files-with-urls", fmt.Sprintf("%x", sha256.Sum256([]byte(fc.URI))))
 				if err := os.MkdirAll(filepath.Dir(newBpFileUrl), 0755); err != nil {
 					panic(err)
 				}
@@ -591,6 +588,13 @@ func main() {
 		panic(fmt.Sprintf("failed to create target directory: %s", err.Error()))
 	}
 
+	// temporary directory for mocking file embeds with URIs (and anything else
+	// we might need to write temporarily)
+	// We can't use os.MkdirTemp to get an uniquw tmp dir here because the path
+	// of the CURL source in the manifest would change every time we run this tool.
+	tmpdirRoot := filepath.Join(os.TempDir(), "gen-manifests-tmpdir")
+	defer os.RemoveAll(tmpdirRoot)
+
 	fmt.Println("Collecting jobs")
 
 	distros, invalidDistros := distros.ResolveArgValues(testedRepoRegistry.ListDistros())
@@ -655,7 +659,7 @@ func main() {
 						continue
 					}
 
-					job := makeManifestJob(itConfig, imgType, distribution, repos, archName, cacheRoot, outputDir, contentResolve, metadata)
+					job := makeManifestJob(itConfig, imgType, distribution, repos, archName, cacheRoot, outputDir, contentResolve, metadata, tmpdirRoot)
 					jobs = append(jobs, job)
 				}
 			}
