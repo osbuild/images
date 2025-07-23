@@ -250,8 +250,9 @@ def gen_manifests(outputdir, config_map=None, distros=None, arches=None, images=
         cmd.append("--commits")
     if skip_no_config:
         cmd.append("--skip-noconfig")
-    print("⌨️" + " ".join(cmd))
-    _, stderr = runcmd(cmd, extra_env=rng_seed_env())
+    env = rng_seed_env()
+    print("⌨️" + " ".join(cmd) + " ENV: " + str(env))
+    _, stderr = runcmd(cmd, extra_env=env)
     return stderr
 
 
