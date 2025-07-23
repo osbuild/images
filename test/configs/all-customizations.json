@@ -155,10 +155,6 @@
           "path": "/etc/empty_file.txt",
           "user": 0,
           "group": 0
-        },
-        {
-          "path": "/etc/os-release_from_host.txt",
-          "uri": "file:///etc/os-release"
         }
       ],
       "repositories": [
