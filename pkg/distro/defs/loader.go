@@ -121,10 +121,8 @@ func (d *DistroYAML) ImageConfig() *distro.ImageConfig {
 }
 
 func (d *DistroYAML) SkipImageType(imgTypeName, archName string) bool {
-	id := common.Must(distro.ParseID(d.Name))
-
 	for _, cond := range d.Conditions {
-		if cond.When.Eval(id, archName) && slices.Contains(cond.IgnoreImageTypes, imgTypeName) {
+		if cond.When.Eval(d.ID, archName) && slices.Contains(cond.IgnoreImageTypes, imgTypeName) {
 			return true
 		}
 	}
@@ -249,10 +247,7 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 			foundDistro.imageTypes[name] = v
 		}
 	}
-	foundDistro.imageConfig, err = toplevel.ImageConfig.For(nameVer)
-	if err != nil {
-		return nil, err
-	}
+	foundDistro.imageConfig = toplevel.ImageConfig.For(foundDistro.ID)
 
 	return foundDistro, nil
 }
@@ -281,7 +276,7 @@ type whenCondition struct {
 	VersionEqual          string `yaml:"version_equal,omitempty"`
 }
 
-func (wc *whenCondition) Eval(id *distro.ID, archStr string) bool {
+func (wc *whenCondition) Eval(id distro.ID, archStr string) bool {
 	match := true
 
 	if wc.DistroName != "" {
@@ -294,10 +289,10 @@ func (wc *whenCondition) Eval(id *distro.ID, archStr string) bool {
 		match = match && (wc.Architecture == archStr)
 	}
 	if wc.VersionLessThan != "" {
-		match = match && (common.VersionLessThan(versionStringForVerCmp(*id), wc.VersionLessThan))
+		match = match && (common.VersionLessThan(versionStringForVerCmp(id), wc.VersionLessThan))
 	}
 	if wc.VersionGreaterOrEqual != "" {
-		match = match && (common.VersionGreaterThanOrEqual(versionStringForVerCmp(*id), wc.VersionGreaterOrEqual))
+		match = match && (common.VersionGreaterThanOrEqual(versionStringForVerCmp(id), wc.VersionGreaterOrEqual))
 	}
 	if wc.VersionEqual != "" {
 		match = match && (id.VersionString() == wc.VersionEqual)
@@ -306,14 +301,10 @@ func (wc *whenCondition) Eval(id *distro.ID, archStr string) bool {
 	return match
 }
 
-func (di *distroImageConfig) For(nameVer string) (*distro.ImageConfig, error) {
+func (di *distroImageConfig) For(id distro.ID) *distro.ImageConfig {
 	imgConfig := di.Default
 
 	if di.Conditions != nil {
-		id, err := distro.ParseID(nameVer)
-		if err != nil {
-			return nil, err
-		}
 		for _, cond := range di.Conditions {
 			// distro image config cannot have architecure
 			// specific conditions
@@ -324,7 +315,7 @@ func (di *distroImageConfig) For(nameVer string) (*distro.ImageConfig, error) {
 		}
 	}
 
-	return imgConfig, nil
+	return imgConfig
 }
 
 type distroImageConfigConditions struct {
@@ -411,13 +402,9 @@ func (it *ImageTypeYAML) Name() string {
 	return it.name
 }
 
-func (it *ImageTypeYAML) PlatformsFor(distroNameVer string) ([]platform.PlatformConf, error) {
+func (it *ImageTypeYAML) PlatformsFor(id distro.ID) ([]platform.PlatformConf, error) {
 	pl := it.InternalPlatforms
 	if it.PlatformsOverride != nil {
-		id, err := distro.ParseID(distroNameVer)
-		if err != nil {
-			return nil, err
-		}
 		var nMatches int
 		for _, cond := range it.PlatformsOverride.Conditions {
 			// arch does not make sense for platform overrides
@@ -550,7 +537,7 @@ func versionStringForVerCmp(u distro.ID) string {
 
 // PackageSets loads the PackageSets from the yaml source file
 // discovered via the imagetype.
-func (imgType *ImageTypeYAML) PackageSets(distroNameVer, archName string) (map[string]rpmmd.PackageSet, error) {
+func (imgType *ImageTypeYAML) PackageSets(id distro.ID, archName string) map[string]rpmmd.PackageSet {
 	res := make(map[string]rpmmd.PackageSet)
 	for key, pkgSets := range imgType.PackageSetsYAML {
 		var rpmmdPkgSet rpmmd.PackageSet
@@ -561,11 +548,6 @@ func (imgType *ImageTypeYAML) PackageSets(distroNameVer, archName string) (map[s
 			})
 
 			if pkgSet.Conditions != nil {
-				id, err := distro.ParseID(distroNameVer)
-				if err != nil {
-					return nil, err
-				}
-
 				for _, cond := range pkgSet.Conditions {
 					if cond.When.Eval(id, archName) {
 						rpmmdPkgSet = rpmmdPkgSet.Append(rpmmd.PackageSet{
@@ -582,24 +564,20 @@ func (imgType *ImageTypeYAML) PackageSets(distroNameVer, archName string) (map[s
 		res[key] = rpmmdPkgSet
 	}
 
-	return res, nil
+	return res
 }
 
 // PartitionTable returns the partionTable for the given distro/imgType.
-func (imgType *ImageTypeYAML) PartitionTable(distroNameVer, archName string) (*disk.PartitionTable, error) {
+func (imgType *ImageTypeYAML) PartitionTable(id distro.ID, archName string) (*disk.PartitionTable, error) {
 	if imgType.PartitionTables == nil {
-		return nil, fmt.Errorf("%w: %q", ErrNoPartitionTableForImgType, distroNameVer)
+		return nil, fmt.Errorf("%w: %q", ErrNoPartitionTableForImgType, id)
 	}
 	pt, ok := imgType.PartitionTables[archName]
 	if !ok {
-		return nil, fmt.Errorf("%w (%q): %q", ErrNoPartitionTableForArch, distroNameVer, archName)
+		return nil, fmt.Errorf("%w (%q): %q", ErrNoPartitionTableForArch, id, archName)
 	}
 
 	if imgType.PartitionTablesOverrides != nil {
-		id, err := distro.ParseID(distroNameVer)
-		if err != nil {
-			return nil, err
-		}
 		for _, cond := range imgType.PartitionTablesOverrides.Conditions {
 			if cond.When.Eval(id, archName) {
 				pt = cond.Override[archName]
@@ -611,15 +589,10 @@ func (imgType *ImageTypeYAML) PartitionTable(distroNameVer, archName string) (*d
 }
 
 // ImageConfig returns the image type specific ImageConfig
-func (imgType *ImageTypeYAML) ImageConfig(distroNameVer, archName string) (*distro.ImageConfig, error) {
+func (imgType *ImageTypeYAML) ImageConfig(id distro.ID, archName string) *distro.ImageConfig {
 	imgConfig := imgType.ImageConfigYAML.ImageConfig
 	condMap := imgType.ImageConfigYAML.Conditions
 	if condMap != nil {
-		id, err := distro.ParseID(distroNameVer)
-		if err != nil {
-			return nil, err
-		}
-
 		for _, cond := range condMap {
 			if cond.When.Eval(id, archName) {
 				imgConfig = cond.ShallowMerge.InheritFrom(imgConfig)
@@ -627,21 +600,16 @@ func (imgType *ImageTypeYAML) ImageConfig(distroNameVer, archName string) (*dist
 		}
 	}
 
-	return imgConfig, nil
+	return imgConfig
 }
 
 // InstallerConfig returns the InstallerConfig for the given imgType
 // Note that on conditions the InstallerConfig is fully replaced, do
 // any merging in YAML
-func (imgType *ImageTypeYAML) InstallerConfig(distroNameVer, archName string) (*distro.InstallerConfig, error) {
+func (imgType *ImageTypeYAML) InstallerConfig(id distro.ID, archName string) *distro.InstallerConfig {
 	installerConfig := imgType.InstallerConfigYAML.InstallerConfig
 	condMap := imgType.InstallerConfigYAML.Conditions
 	if condMap != nil {
-		id, err := distro.ParseID(distroNameVer)
-		if err != nil {
-			return nil, err
-		}
-
 		for _, cond := range condMap {
 			if cond.When.Eval(id, archName) {
 				installerConfig = cond.ShallowMerge.InheritFrom(installerConfig)
@@ -649,5 +617,5 @@ func (imgType *ImageTypeYAML) InstallerConfig(distroNameVer, archName string) (*
 		}
 	}
 
-	return installerConfig, nil
+	return installerConfig
 }
