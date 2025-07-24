@@ -137,6 +137,12 @@ func (fs *Filesystem) GetFSTabOptions() (FSTabOptions, error) {
 }
 
 func (fs *Filesystem) GenUUID(rng *rand.Rand) {
+	if fs.Type == "none" {
+		// for none, the filesystem uuid should be empty
+		fs.UUID = ""
+		return
+	}
+
 	if fs.Type == "vfat" && fs.UUID == "" {
 		// vfat has no uuids, it has "serial numbers" (volume IDs)
 		fs.UUID = NewVolIDFromRand(rng)
