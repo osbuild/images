@@ -1405,14 +1405,6 @@ image_types:
       - arch: "x86_64"
       - arch: "aarch64"
     image_config:
-      cloud_init:
-        - filename: "99_wsl.cfg"
-          config:
-            datasource_list:
-              - "WSL"
-              - "None"
-            network:
-              config: "disabled"
       no_selinux: true
       conditions:
         "wsl config for rhel":
@@ -1426,17 +1418,6 @@ image_types:
                 oobe:
                   <<: *wsl_distribution_oobe_config
                   default_name: RedHatEnterpriseLinux-%s
-        "wsl config for centos":
-          when:
-            distro_name: "centos"
-          shallow_merge:
-            wsl:
-              <<: *wsl_config
-              distribution_config:
-                <<: *wsl_distribution_config
-                oobe:
-                  <<: *wsl_distribution_oobe_config
-                  default_name: CentOS-%s
         "wsl config for almalinux":
           when:
             distro_name: "almalinux"
@@ -1454,6 +1435,19 @@ image_types:
           shallow_merge:
             wsl:
               <<: *wsl_distribution_config_almalinux
+        "cloud-init config for non-centos":
+          when:
+            not_distro_name: "centos"
+          shallow_merge:
+            cloud_init:
+              - filename: "99_wsl.cfg"
+                config:
+                  datasource_list:
+                    - "WSL"
+                    - "None"
+                  network:
+                    config: "disabled"
+
     package_sets:
       os:
         - include:
@@ -1522,6 +1516,12 @@ image_types:
               append:
                 include:
                   - "cloud-init"
+            "use wsl-setup on centos":
+              when:
+                distro_name: "centos"
+              append:
+                include:
+                  - "wsl-setup"
 
   "image-installer":
     filename: "installer.iso"
