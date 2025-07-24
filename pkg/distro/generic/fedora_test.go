@@ -965,11 +965,7 @@ func TestFedoraDistroFactory(t *testing.T) {
 			expected: nil,
 		},
 		{
-			strID:    "rhel-9",
-			expected: nil,
-		},
-		{
-			strID:    "rhel-8.4.1",
+			strID:    "fedora-043",
 			expected: nil,
 		},
 	}

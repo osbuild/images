@@ -939,3 +939,37 @@ func TestRhel9_NoDiskCustomizationsNoError(t *testing.T) {
 		}
 	}
 }
+
+func TestRhel9_DistroFactory(t *testing.T) {
+	type testCase struct {
+		strID    string
+		expected distro.Distro
+	}
+
+	testCases := []testCase{
+		{
+			strID:    "rhel-9.6",
+			expected: generic.DistroFactory("rhel-9.6"),
+		},
+		{
+			strID:    "rhel-9.6.1",
+			expected: nil,
+		},
+		{
+			strID:    "rhel-9",
+			expected: nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.strID, func(t *testing.T) {
+			d := generic.DistroFactory(tc.strID)
+			if tc.expected == nil {
+				assert.Nil(t, d)
+			} else {
+				assert.NotNil(t, d)
+				assert.Equal(t, tc.expected.Name(), d.Name())
+			}
+		})
+	}
+}

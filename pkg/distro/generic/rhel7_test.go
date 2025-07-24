@@ -449,7 +449,13 @@ func TestRhel7DistroFactory(t *testing.T) {
 			expected: nil,
 		},
 		{
-			strID:    "rhel-79", // this is intentionally not supported for el7
+			// the latest RHEL-7 is 7.9 and there won't be any newer one
+			strID:    "rhel-7.10",
+			expected: nil,
+		},
+		{
+			// this is intentionally not supported for el7
+			strID:    "rhel-79",
 			expected: nil,
 		},
 		{
