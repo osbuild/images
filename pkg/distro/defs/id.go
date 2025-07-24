@@ -36,9 +36,8 @@ func matchAndNormalize(reStr, nameVer string) (string, error) {
 	case 1:
 		// simple match, no named matching
 		return nameVer, nil
-	case 2:
-		// incomplete match, user did not provide <name>,<major>,<minor>
-		return "", fmt.Errorf("invalid number of submatches for %q %q (%v)", reStr, nameVer, len(l))
+	// handling case 2: is not needed, its an incomplete match, we need at least name,major and
+	// captured by the "default" below
 	case 3:
 		// distro only uses major ver and needs normalizing
 		if err := validateSubexpMatch(re, "name", "major"); err != nil {
