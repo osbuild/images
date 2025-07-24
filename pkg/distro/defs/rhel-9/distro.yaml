@@ -369,6 +369,16 @@
           include:
             - "biosdevname"
 
+  wsl: &wsl_config
+    config:
+      boot_systemd: true
+    distribution_config: &wsl_distribution_config
+      shortcut:
+        enabled: true
+        icon: /usr/share/pixmaps/fedora-logo.ico
+      oobe: &wsl_distribution_oobe_config
+        default_uid: 1000
+
   anaconda_boot_pkgset: &anaconda_boot_pkgset
     conditions:
       "x86 specific packages for the anaconda boot pkgset":
@@ -1862,15 +1872,6 @@ image_types:
               config: "disabled"
       locale: "en_US.UTF-8"
       no_selinux: true
-      wsl: &wsl_config
-        config:
-          boot_systemd: true
-        distribution_config: &wsl_distribution_config
-          shortcut:
-            enabled: true
-            icon: /usr/share/pixmaps/fedora-logo.ico
-          oobe: &wsl_distribution_oobe_config
-            default_uid: 1000
       conditions:
         "wsl config for rhel":
           when:
