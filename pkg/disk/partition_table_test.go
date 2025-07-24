@@ -2710,6 +2710,112 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				},
 			},
 		},
+		"ukiboot": {
+			customizations: &blueprint.DiskCustomization{
+				Type: "gpt",
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						MinSize: 64 * datasizes.MiB,
+						// Partition type used for raw UKI UEFI binaries, more info at:
+						// https://gitlab.com/CentOS/automotive/src/ukiboot/-/blob/main/README.md
+						PartType:  "DF331E4D-BE00-463F-B4A7-8B43E18FB53A",
+						PartLabel: "ukiboot_a",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType: "none",
+						},
+					},
+					{
+						MinSize: 64 * datasizes.MiB,
+						// Partition type used for raw UKI UEFI binaries, more info at:
+						// https://gitlab.com/CentOS/automotive/src/ukiboot/-/blob/main/README.md
+						PartType:  "DF331E4D-BE00-463F-B4A7-8B43E18FB53A",
+						PartLabel: "ukiboot_b",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType: "none",
+						},
+					},
+					{
+						MinSize: 1 * datasizes.MiB,
+						// Partition type used for UKIBoot control data, more info at:
+						// https://gitlab.com/CentOS/automotive/src/ukiboot/-/blob/main/README.md
+						PartType:  "FEFD9070-346F-4C9A-85E6-17F07F922773",
+						PartLabel: "ukibootctl",
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType: "none",
+						},
+					},
+				},
+			},
+			options: &disk.CustomPartitionTableOptions{
+				BootMode:           platform.BOOT_UEFI,
+				PartitionTableType: disk.PT_GPT,
+				DefaultFSType:      disk.FS_XFS,
+				Architecture:       arch.ARCH_X86_64,
+			},
+			expected: &disk.PartitionTable{
+				Type: disk.PT_GPT,
+				Size: (1 + 200 + 64 + 64 + 1 + 1) * datasizes.MiB,
+				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+				Partitions: []disk.Partition{
+					// ESP created by BOOT_UEFI option
+					{
+						Start: 1 * datasizes.MiB,
+						Size:  200 * datasizes.MiB,
+						Type:  disk.EFISystemPartitionGUID,
+						UUID:  disk.EFISystemPartitionUUID,
+						Payload: &disk.Filesystem{
+							Type:         "vfat",
+							UUID:         disk.EFIFilesystemUUID,
+							Mountpoint:   "/boot/efi",
+							Label:        "ESP",
+							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+							FSTabFreq:    0,
+							FSTabPassNo:  2,
+						},
+					},
+					// Raw UKI partitions from customizations
+					{
+						Start:   201 * datasizes.MiB,
+						Size:    64 * datasizes.MiB,
+						Type:    "DF331E4D-BE00-463F-B4A7-8B43E18FB53A",
+						Label:   "ukiboot_a",
+						UUID:    "fb180daf-48a7-4ee0-b10d-394651850fd4",
+						Payload: nil,
+					},
+					{
+						Start:   265 * datasizes.MiB,
+						Size:    64 * datasizes.MiB,
+						Type:    "DF331E4D-BE00-463F-B4A7-8B43E18FB53A",
+						Label:   "ukiboot_b",
+						UUID:    "a178892e-e285-4ce1-9114-55780875d64e",
+						Payload: nil,
+					},
+					{
+						Start:   329 * datasizes.MiB,
+						Size:    1 * datasizes.MiB,
+						Type:    "FEFD9070-346F-4C9A-85E6-17F07F922773",
+						Label:   "ukibootctl",
+						UUID:    "e2d3d0d0-de6b-48f9-b44c-e85ff044c6b1",
+						Payload: nil,
+					},
+					{
+						Start: 330 * datasizes.MiB,
+						Size:  1*datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
+						Type:  disk.RootPartitionX86_64GUID,
+						UUID:  "f83b8e88-3bbf-457a-ab99-c5b252c7429c",
+						Payload: &disk.Filesystem{
+							Type:         "xfs",
+							Label:        "root",
+							Mountpoint:   "/",
+							UUID:         "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+							FSTabOptions: "defaults",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for name := range testCases {
