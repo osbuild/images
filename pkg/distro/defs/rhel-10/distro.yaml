@@ -1502,36 +1502,21 @@ image_types:
             - "redhat-release-eula"
             - "rpm-plugin-systemd-inhibit"
           conditions:
-            "no subscription-manager on centos":
+            "subscription-manager, cloud-init, and redhat-* on rhel-likes except centos":
               when:
                 not_distro_name: "centos"
               append:
                 include:
                   - "subscription-manager"
-            "use cloud-init on rhel-likes except centos":
-              when:
-                not_distro_name: "centos"
-              append:
-                include:
                   - "cloud-init"
-            "use redhat-* named packages on rhel-likes except centos":
-              when:
-                not_distro_name: "centos"
-              append:
-                include:
                   - "redhat-logos"
                   - "redhat-release"
-            "use wsl-setup on centos":
+            "wsl-setup, and centos-* on centos":
               when:
                 distro_name: "centos"
               append:
                 include:
                   - "wsl-setup"
-            "use centos-* named packages on centos":
-              when:
-                distro_name: "centos"
-              append:
-                include:
                   - "centos-logos"
                   - "centos-release"
 
