@@ -67,12 +67,11 @@ func (t *imageType) ISOLabel() (string, error) {
 	if !t.ImageTypeYAML.BootISO {
 		return "", fmt.Errorf("image type %q is not an ISO", t.Name())
 	}
-
-	if t.isoLabel != nil {
-		return t.isoLabel(t), nil
+	if t.isoLabel == nil {
+		return "", fmt.Errorf("no iso label function for %q", t.Name())
 	}
 
-	return "", nil
+	return t.isoLabel(t), nil
 }
 
 func (t *imageType) Size(size uint64) uint64 {
