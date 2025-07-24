@@ -43,7 +43,7 @@ distros:
   - &fedora_stable
     <<: *fedora_rawhide
     name: "fedora-{{.MajorVersion}}"
-    match: 'fedora-[0-9][0-9]+'
+    match: 'fedora-[1-9][0-9]+'
     preview: false
     os_version: "{{.MajorVersion}}"
     release_version: "{{.MajorVersion}}"
@@ -297,7 +297,7 @@ distros:
 
   - &rhel7
     name: "rhel-{{.MajorVersion}}.{{.MinorVersion}}"
-    match: 'rhel-7\.[0-9]{1,2}'
+    match: 'rhel-7\.[0-9]'
     distro_like: rhel-7
     product: "Red Hat Enterprise Linux"
     codename: "Maipo"
