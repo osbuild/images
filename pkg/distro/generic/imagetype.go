@@ -192,7 +192,7 @@ func (t *imageType) getDefaultImageConfig() *distro.ImageConfig {
 	if imageConfig == nil {
 		imageConfig = &distro.ImageConfig{}
 	}
-	return imageConfig.InheritFrom(t.arch.distro.defaultImageConfig)
+	return imageConfig.InheritFrom(t.arch.distro.ImageConfig())
 
 }
 
