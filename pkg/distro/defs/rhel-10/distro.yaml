@@ -1494,7 +1494,6 @@ image_types:
             - "sed"
             - "setup"
             - "shadow-utils"
-            - "subscription-manager"
             - "sudo"
             - "systemd"
             - "tar"
@@ -1511,6 +1510,13 @@ image_types:
             - "python-unversioned-command"
             - "redhat-release-eula"
             - "rpm-plugin-systemd-inhibit"
+          conditions:
+            "no subscription-manager on centos":
+              when:
+                not_distro_name: "centos"
+              append:
+                include:
+                  - "subscription-manager"
 
   "image-installer":
     filename: "installer.iso"
