@@ -35,9 +35,6 @@ type imageType struct {
 	arch     *architecture
 	platform platform.Platform
 
-	// TODO: workload is never set
-	workload workload.Workload
-
 	image    imageFunc
 	isoLabel isoLabelFunc
 }
@@ -228,31 +225,24 @@ func (t *imageType) Manifest(bp *blueprint.Blueprint,
 		}
 	}
 
-	w := t.workload
-	if w == nil {
-		// XXX: this needs to get duplicaed in exactly the same
-		// way in rhel/imagetype.go
-		workloadRepos := payloadRepos
-		customRepos, err := bp.Customizations.GetRepositories()
-		if err != nil {
-			return nil, nil, err
-		}
-		installFromRepos := blueprint.RepoCustomizationsInstallFromOnly(customRepos)
-		workloadRepos = append(workloadRepos, installFromRepos...)
+	customRepos, err := bp.Customizations.GetRepositories()
+	if err != nil {
+		return nil, nil, err
+	}
+	installFromRepos := blueprint.RepoCustomizationsInstallFromOnly(customRepos)
+	payloadRepos = append(payloadRepos, installFromRepos...)
 
-		cw := &workload.Custom{
-			BaseWorkload: workload.BaseWorkload{
-				Repos: workloadRepos,
-			},
-			Packages:       bp.GetPackagesEx(false),
-			EnabledModules: bp.GetEnabledModules(),
-		}
-		if services := bp.Customizations.GetServices(); services != nil {
-			cw.Services = services.Enabled
-			cw.DisabledServices = services.Disabled
-			cw.MaskedServices = services.Masked
-		}
-		w = cw
+	cw := &workload.Custom{
+		BaseWorkload: workload.BaseWorkload{
+			Repos: payloadRepos,
+		},
+		Packages:       bp.GetPackagesEx(false),
+		EnabledModules: bp.GetEnabledModules(),
+	}
+	if services := bp.Customizations.GetServices(); services != nil {
+		cw.Services = services.Enabled
+		cw.DisabledServices = services.Disabled
+		cw.MaskedServices = services.Masked
 	}
 
 	if experimentalflags.Bool("no-fstab") {
@@ -277,7 +267,7 @@ func (t *imageType) Manifest(bp *blueprint.Blueprint,
 	/* #nosec G404 */
 	rng := rand.New(source)
 
-	img, err := t.image(w, t, bp, options, staticPackageSets, containerSources, rng)
+	img, err := t.image(cw, t, bp, options, staticPackageSets, containerSources, rng)
 	if err != nil {
 		return nil, nil, err
 	}
