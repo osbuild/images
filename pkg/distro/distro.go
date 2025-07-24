@@ -102,10 +102,6 @@ type ImageType interface {
 	// has no partition table. Only support for RHEL 8.5+
 	PartitionType() disk.PartitionTableType
 
-	// Return the base partition tabe for the given image type, will
-	// return `nil` if there is none
-	BasePartitionTable() (*disk.PartitionTable, error)
-
 	// Returns the corresponding boot mode ("legacy", "uefi", "hybrid") or "none"
 	BootMode() platform.BootMode
 
