@@ -104,6 +104,9 @@ type DistroYAML struct {
 	// based on the distro, ideally it would not have this but
 	// here we are.
 	DistroLike manifest.Distro `yaml:"distro_like"`
+
+	// set by the loader
+	ID distro.ID
 }
 
 func (d *DistroYAML) ImageTypes() map[string]ImageTypeYAML {
@@ -193,11 +196,6 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 		return nil, err
 	}
 
-	// ParseID will also canonicalize the name
-	if id, err := ParseID(nameVer); err == nil && id != nil {
-		nameVer = id.String()
-	}
-
 	var foundDistro *DistroYAML
 	for _, distro := range distros.Distros {
 		if distro.Name == nameVer {
@@ -222,6 +220,12 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 	if err := foundDistro.runTemplates(nameVer); err != nil {
 		return nil, err
 	}
+	// having "foundDistro.id" avoid re-parsing this in the various helpers
+	id, err := distro.ParseID(foundDistro.Name)
+	if err != nil {
+		return nil, err
+	}
+	foundDistro.ID = *id
 
 	// load imageTypes
 	f, err := dataFS().Open(filepath.Join(foundDistro.DefsPath, "distro.yaml"))
