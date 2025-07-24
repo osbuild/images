@@ -1884,17 +1884,6 @@ image_types:
                 oobe:
                   <<: *wsl_distribution_oobe_config
                   default_name: RedHatEnterpriseLinux-%s
-        "wsl config for centos":
-          when:
-            distro_name: "centos"
-          shallow_merge:
-            wsl:
-              <<: *wsl_config
-              distribution_config:
-                <<: *wsl_distribution_config
-                oobe:
-                  <<: *wsl_distribution_oobe_config
-                  default_name: CentOS-%s
         "wsl config for almalinux":
           when:
             distro_name: "almalinux"
@@ -1973,6 +1962,12 @@ image_types:
               append:
                 include:
                   - "cloud-init"
+            "use wsl-setup on centos":
+              when:
+                distro_name: "centos"
+              append:
+                include:
+                  - "wsl-setup"
 
   "image-installer":
     filename: "installer.iso"
