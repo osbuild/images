@@ -1954,7 +1954,6 @@ image_types:
             - "basesystem"
             - "bash"
             - "ca-certificates"
-            - "cloud-init"
             - "coreutils-single"
             - "crypto-policies-scripts"
             - "curl-minimal"
@@ -2008,6 +2007,12 @@ image_types:
               append:
                 include:
                   - "subscription-manager"
+            "use cloud-init on rhel-likes except centos":
+              when:
+                not_distro_name: "centos"
+              append:
+                include:
+                  - "cloud-init"
 
   "image-installer":
     filename: "installer.iso"
