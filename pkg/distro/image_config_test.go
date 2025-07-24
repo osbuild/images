@@ -158,6 +158,20 @@ func TestImageConfigInheritFrom(t *testing.T) {
 				DisabledServices: []string{"named"},
 				DefaultTarget:    common.ToPtr("multi-user.target"),
 			},
+		}, {
+			name: "inheritance with nil imageConfig",
+			distroConfig: &ImageConfig{
+				Timezone: common.ToPtr("America/New_York"),
+			},
+			imageConfig: nil,
+			expectedConfig: &ImageConfig{
+				Timezone: common.ToPtr("America/New_York"),
+			},
+		}, {
+			name:           "inheritance with nil imageConfig and distroConfig",
+			distroConfig:   nil,
+			imageConfig:    nil,
+			expectedConfig: &ImageConfig{},
 		},
 	}
 	for idx, tt := range tests {
