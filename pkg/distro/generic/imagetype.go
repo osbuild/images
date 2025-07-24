@@ -35,10 +35,8 @@ type imageType struct {
 	arch     *architecture
 	platform platform.Platform
 
-	// XXX: make definable via YAML
-	workload               workload.Workload
-	defaultImageConfig     *distro.ImageConfig
-	defaultInstallerConfig *distro.InstallerConfig
+	// TODO: workload is never set
+	workload workload.Workload
 
 	image    imageFunc
 	isoLabel isoLabelFunc
@@ -160,8 +158,8 @@ func (t *imageType) getPartitionTable(customizations *blueprint.Customizations, 
 }
 
 func (t *imageType) getDefaultImageConfig() *distro.ImageConfig {
+	imageConfig := common.Must(t.ImageConfig(t.arch.distro.Name(), t.arch.name))
 	// ensure that image always returns non-nil default config
-	imageConfig := t.defaultImageConfig
 	if imageConfig == nil {
 		imageConfig = &distro.ImageConfig{}
 	}
@@ -173,8 +171,7 @@ func (t *imageType) getDefaultInstallerConfig() (*distro.InstallerConfig, error)
 	if !t.ImageTypeYAML.BootISO {
 		return nil, fmt.Errorf("image type %q is not an ISO", t.Name())
 	}
-
-	return t.defaultInstallerConfig, nil
+	return t.InstallerConfig(t.arch.distro.Name(), t.arch.name)
 }
 
 func (t *imageType) PartitionType() disk.PartitionTableType {
@@ -259,13 +256,10 @@ func (t *imageType) Manifest(bp *blueprint.Blueprint,
 	}
 
 	if experimentalflags.Bool("no-fstab") {
-		if t.defaultImageConfig == nil {
-			t.defaultImageConfig = &distro.ImageConfig{
-				MountUnits: common.ToPtr(true),
-			}
-		} else {
-			t.defaultImageConfig.MountUnits = common.ToPtr(true)
+		if t.ImageConfigYAML.ImageConfig != nil {
+			t.ImageConfigYAML.ImageConfig = &distro.ImageConfig{}
 		}
+		t.ImageConfigYAML.ImageConfig.MountUnits = common.ToPtr(true)
 	}
 
 	containerSources := make([]container.SourceSpec, len(bp.Containers))
