@@ -983,3 +983,37 @@ func TestRH8_DiskCustomizationsCheckOptions(t *testing.T) {
 		}
 	}
 }
+
+func TestRhel8_DistroFactory(t *testing.T) {
+	type testCase struct {
+		strID    string
+		expected distro.Distro
+	}
+
+	testCases := []testCase{
+		{
+			strID:    "rhel-8.10",
+			expected: generic.DistroFactory("rhel-8.10"),
+		},
+		{
+			strID:    "rhel-8.4.1",
+			expected: nil,
+		},
+		{
+			strID:    "rhel-8",
+			expected: nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.strID, func(t *testing.T) {
+			d := generic.DistroFactory(tc.strID)
+			if tc.expected == nil {
+				assert.Nil(t, d)
+			} else {
+				assert.NotNil(t, d)
+				assert.Equal(t, tc.expected.Name(), d.Name())
+			}
+		})
+	}
+}
