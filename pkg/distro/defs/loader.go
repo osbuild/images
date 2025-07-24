@@ -32,7 +32,6 @@ import (
 )
 
 var (
-	ErrImageTypeNotFound          = errors.New("image type not found")
 	ErrNoPartitionTableForImgType = errors.New("no partition table for image type")
 	ErrNoPartitionTableForArch    = errors.New("no partition table for arch")
 )
