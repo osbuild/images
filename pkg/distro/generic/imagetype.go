@@ -188,10 +188,6 @@ func (t *imageType) getPartitionTable(customizations *blueprint.Customizations, 
 
 func (t *imageType) getDefaultImageConfig() *distro.ImageConfig {
 	imageConfig := common.Must(t.ImageConfig(t.arch.distro.Name(), t.arch.name))
-	// ensure that image always returns non-nil default config
-	if imageConfig == nil {
-		imageConfig = &distro.ImageConfig{}
-	}
 	return imageConfig.InheritFrom(t.arch.distro.ImageConfig())
 
 }
