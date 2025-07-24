@@ -153,7 +153,7 @@ func (t *imageType) BootMode() platform.BootMode {
 }
 
 func (t *imageType) BasePartitionTable() (*disk.PartitionTable, error) {
-	return t.ImageTypeYAML.PartitionTable(t.arch.distro.Name(), t.arch.name)
+	return t.ImageTypeYAML.PartitionTable(t.arch.distro.ID, t.arch.name)
 }
 
 func (t *imageType) getPartitionTable(customizations *blueprint.Customizations, options distro.ImageOptions, rng *rand.Rand) (*disk.PartitionTable, error) {
@@ -191,7 +191,7 @@ func (t *imageType) getPartitionTable(customizations *blueprint.Customizations, 
 }
 
 func (t *imageType) getDefaultImageConfig() *distro.ImageConfig {
-	imageConfig := common.Must(t.ImageConfig(t.arch.distro.Name(), t.arch.name))
+	imageConfig := t.ImageConfig(t.arch.distro.ID, t.arch.name)
 	return imageConfig.InheritFrom(t.arch.distro.ImageConfig())
 
 }
@@ -200,7 +200,7 @@ func (t *imageType) getDefaultInstallerConfig() (*distro.InstallerConfig, error)
 	if !t.ImageTypeYAML.BootISO {
 		return nil, fmt.Errorf("image type %q is not an ISO", t.Name())
 	}
-	return t.InstallerConfig(t.arch.distro.Name(), t.arch.name)
+	return t.InstallerConfig(t.arch.distro.ID, t.arch.name), nil
 }
 
 func (t *imageType) PartitionType() disk.PartitionTableType {
@@ -232,10 +232,7 @@ func (t *imageType) Manifest(bp *blueprint.Blueprint,
 
 	// don't add any static packages if Minimal was selected
 	if !bp.Minimal {
-		pkgSets, err := t.ImageTypeYAML.PackageSets(t.arch.distro.Name(), t.arch.name)
-		if err != nil {
-			return nil, nil, err
-		}
+		pkgSets := t.ImageTypeYAML.PackageSets(t.arch.distro.ID, t.arch.name)
 		for name, pkgSet := range pkgSets {
 			staticPackageSets[name] = pkgSet
 		}

@@ -88,7 +88,7 @@ func newDistro(nameVer string) (distro.Distro, error) {
 		if imgTypeYAML.Filename == "" {
 			continue
 		}
-		platforms, err := imgTypeYAML.PlatformsFor(nameVer)
+		platforms, err := imgTypeYAML.PlatformsFor(distroYAML.ID)
 		if err != nil {
 			return nil, err
 		}
