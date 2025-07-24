@@ -39,6 +39,10 @@ func TestMatchAndNormalizeSad(t *testing.T) {
 		{`rhel-([0-9]+)`, "rhel-100", `invalid number of submatches for "rhel-([0-9]+)" "rhel-100" (2)`},
 		// too many capture groups
 		{`(rhel)-([0-9])([0-9])([0-9])`, "rhel-100", `invalid number of submatches for "(rhel)-([0-9])([0-9])([0-9])" "rhel-100" (5)`},
+		// capture groups have incorrect names
+		{`(?P<missingName>centos)-(?P<major>[0-9])stream`, "centos-9stream", `cannot find submatch field "name"`},
+		{`(?P<name>centos)-(?P<missingMajor>[0-9])stream`, "centos-9stream", `cannot find submatch field "major"`},
+		{`(?P<name>rhel)-(?P<major>8)\.?(?P<missingMinor>[0-9]{1,2})`, "rhel-8.10", `cannot find submatch field "minor"`},
 	} {
 		_, err := matchAndNormalize(tc.reStr, tc.nameVer)
 		assert.ErrorContains(t, err, tc.expectedErr)
