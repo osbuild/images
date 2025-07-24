@@ -3,7 +3,6 @@ package generic
 import (
 	"fmt"
 
-	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/distro/defs"
 )
 
@@ -12,8 +11,6 @@ func newImageTypeFrom(d *distribution, ar *architecture, imgYAML defs.ImageTypeY
 		ImageTypeYAML: imgYAML,
 		isoLabel:      d.getISOLabelFunc(imgYAML.ISOLabel),
 	}
-	it.defaultImageConfig = common.Must(it.ImageConfig(d.Name(), ar.name))
-	it.defaultInstallerConfig = common.Must(it.InstallerConfig(d.Name(), ar.name))
 
 	switch imgYAML.Image {
 	case "disk":
