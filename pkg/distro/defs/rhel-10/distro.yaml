@@ -1480,8 +1480,6 @@ image_types:
             - "procps-ng"
             - "python3"
             - "python3-inotify"
-            - "redhat-logos"
-            - "redhat-release"
             - "rootfiles"
             - "rpm"
             - "sed"
@@ -1516,12 +1514,27 @@ image_types:
               append:
                 include:
                   - "cloud-init"
+            "use redhat-* named packages on rhel-likes except centos":
+              when:
+                not_distro_name: "centos"
+              append:
+                include:
+                  - "redhat-logos"
+                  - "redhat-release"
             "use wsl-setup on centos":
               when:
                 distro_name: "centos"
               append:
                 include:
                   - "wsl-setup"
+            "use centos-* named packages on centos":
+              when:
+                distro_name: "centos"
+              append:
+                include:
+                  - "centos-logos"
+                  - "centos-release"
+
 
   "image-installer":
     filename: "installer.iso"
