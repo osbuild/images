@@ -841,9 +841,9 @@ func TestDistrosLoadingExact(t *testing.T) {
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	distro, err := defs.NewDistroYAML("fedora-43")
+	dist, err := defs.NewDistroYAML("fedora-43")
 	require.NoError(t, err)
-	assert.Equal(t, &defs.DistroYAML{
+	assert.Equal(t, dist, &defs.DistroYAML{
 		Name:             "fedora-43",
 		Preview:          true,
 		OsVersion:        "43",
@@ -863,11 +863,12 @@ func TestDistrosLoadingExact(t *testing.T) {
 		OscapProfilesAllowList: []oscap.Profile{
 			oscap.Ospp,
 		},
-	}, distro)
+		ID: distro.ID{Name: "fedora", MajorVersion: 43, MinorVersion: -1},
+	})
 
-	distro, err = defs.NewDistroYAML("centos-10")
+	dist, err = defs.NewDistroYAML("centos-10")
 	require.NoError(t, err)
-	assert.Equal(t, &defs.DistroYAML{
+	assert.Equal(t, dist, &defs.DistroYAML{
 		Name:             "centos-10",
 		Vendor:           "centos",
 		OsVersion:        "10-stream",
@@ -877,7 +878,8 @@ func TestDistrosLoadingExact(t *testing.T) {
 		OSTreeRefTmpl:    "centos/10/%s/edge",
 		DefsPath:         "rhel-10",
 		DefaultFSType:    disk.FS_XFS,
-	}, distro)
+		ID:               distro.ID{Name: "centos", MajorVersion: 10, MinorVersion: -1},
+	})
 }
 
 func TestDistrosLoadingFactoryCompat(t *testing.T) {
@@ -885,9 +887,9 @@ func TestDistrosLoadingFactoryCompat(t *testing.T) {
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	distro, err := defs.NewDistroYAML("rhel-10.1")
+	dist, err := defs.NewDistroYAML("rhel-10.1")
 	require.NoError(t, err)
-	assert.Equal(t, &defs.DistroYAML{
+	assert.Equal(t, dist, &defs.DistroYAML{
 		Name:             "rhel-10.1",
 		Match:            "rhel-10.*",
 		Vendor:           "redhat",
@@ -898,11 +900,12 @@ func TestDistrosLoadingFactoryCompat(t *testing.T) {
 		OSTreeRefTmpl:    "rhel/10/%s/edge",
 		DefsPath:         "rhel-10",
 		DefaultFSType:    disk.FS_XFS,
-	}, distro)
+		ID:               distro.ID{Name: "rhel", MajorVersion: 10, MinorVersion: 1},
+	})
 
-	distro, err = defs.NewDistroYAML("fedora-40")
+	dist, err = defs.NewDistroYAML("fedora-40")
 	require.NoError(t, err)
-	assert.Equal(t, &defs.DistroYAML{
+	assert.Equal(t, dist, &defs.DistroYAML{
 		Name:             "fedora-40",
 		Match:            "fedora-[0-9]*",
 		OsVersion:        "40",
@@ -922,7 +925,8 @@ func TestDistrosLoadingFactoryCompat(t *testing.T) {
 		OscapProfilesAllowList: []oscap.Profile{
 			oscap.Ospp,
 		},
-	}, distro)
+		ID: distro.ID{Name: "fedora", MajorVersion: 40, MinorVersion: -1},
+	})
 }
 
 func TestDistroYAMLCondition(t *testing.T) {
@@ -1130,14 +1134,15 @@ distros:
 		{"rhel-8.10", "rhel-8.10", "8.10"},
 		{"rhel-810", "rhel-8.10", "8.10"},
 	} {
-		distro, err := defs.NewDistroYAML(tc.nameVer)
+		dist, err := defs.NewDistroYAML(tc.nameVer)
 		require.NoError(t, err)
-		assert.Equal(t, &defs.DistroYAML{
+		assert.Equal(t, dist, &defs.DistroYAML{
 			Name:             tc.expectedDistroNameVer,
 			Match:            `(?P<name>rhel)-(?P<major>8)\.?(?P<minor>[0-9]+)`,
 			OsVersion:        tc.expectedOsVersion,
 			ReleaseVersion:   "8",
 			ModulePlatformID: "platform:el8",
-		}, distro)
+			ID:               *common.Must(distro.ParseID(tc.expectedDistroNameVer)),
+		})
 	}
 }
