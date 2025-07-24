@@ -21,30 +21,56 @@ import (
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
 	"github.com/osbuild/images/pkg/distro/generic"
-	"github.com/osbuild/images/pkg/distro/test_distro"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/runner"
 )
 
-func makeTestImageType(t *testing.T) distro.ImageType {
-	// XXX: it would be nice if testdistro had a ready-made image-type,
-	// i.e. testdistro.TestImageType1
-	distro := test_distro.DistroFactory(test_distro.TestDistro1Name)
-	arch, err := distro.GetArch(test_distro.TestArchName)
-	assert.NoError(t, err)
-	it, err := arch.GetImageType(test_distro.TestImageTypeName)
-	assert.NoError(t, err)
+func makeTestImageType(t *testing.T, fakeContent string) defs.ImageTypeYAML {
+	t.Helper()
+
+	baseDir := makeFakeDistrosYAML(t, "", fakeContent)
+	restore := defs.MockDataFS(baseDir)
+	t.Cleanup(restore)
+
+	distro, err := defs.NewDistroYAML("test-distro-1")
+	require.NoError(t, err)
+	it, ok := distro.ImageTypes()["test_type"]
+	require.True(t, ok, "cannot find test_type in %s", fakeContent)
 	return it
 }
 
-func makeFakeDefs(t *testing.T, distroName, content string) string {
+func makeFakeDistrosYAML(t *testing.T, distrosContent, imgTypesContent string) string {
+	t.Helper()
+
+	// if distros is unset use a sensible default
+	if distrosContent == "" {
+		distrosContent = `
+distros:
+ - name: test-distro-1
+   vendor: test-vendor
+   defs_path: test-distro-1/
+`
+	}
+
 	tmpdir := t.TempDir()
-	fakePkgsSetPath := filepath.Join(tmpdir, distroName, "distro.yaml")
-	err := os.MkdirAll(filepath.Dir(fakePkgsSetPath), 0755)
+	distrosPath := filepath.Join(tmpdir, "distros.yaml")
+	err := os.WriteFile(distrosPath, []byte(distrosContent), 0644)
 	assert.NoError(t, err)
-	err = os.WriteFile(fakePkgsSetPath, []byte(content), 0644)
+
+	var di struct {
+		Distros []defs.DistroYAML `yaml:"distros"`
+	}
+	err = yaml.Unmarshal([]byte(distrosContent), &di)
 	assert.NoError(t, err)
+	for _, d := range di.Distros {
+		p := filepath.Join(tmpdir, d.DefsPath, "distro.yaml")
+		err = os.MkdirAll(filepath.Dir(p), 0755)
+		assert.NoError(t, err)
+		err = os.WriteFile(p, []byte(`---`+"\n"+imgTypesContent), 0644)
+		assert.NoError(t, err)
+	}
+
 	return tmpdir
 }
 
@@ -67,7 +93,6 @@ func TestYamlLintClean(t *testing.T) {
 }
 
 func TestLoadConditionDistro(t *testing.T) {
-	it := makeTestImageType(t)
 	fakePkgsSetYaml := `
 image_types:
   test_type:
@@ -92,12 +117,9 @@ image_types:
         - include: [inc-cnt1]
           exclude: [exc-cnt1]
 `
-	// XXX: we cannot use distro.Name() as it will give us a name+ver
-	baseDir := makeFakeDefs(t, test_distro.TestDistroNameBase, fakePkgsSetYaml)
-	restore := defs.MockDataFS(baseDir)
-	defer restore()
+	it := makeTestImageType(t, fakePkgsSetYaml)
 
-	pkgSet, err := defs.PackageSets(it)
+	pkgSet, err := it.PackageSets("test-distro-1", "x86_64")
 	assert.NoError(t, err)
 	assert.Equal(t, map[string]rpmmd.PackageSet{
 		"os": {
@@ -112,54 +134,45 @@ image_types:
 }
 
 func TestLoadExperimentalYamldirIsHonored(t *testing.T) {
-	// XXX: it would be nice if testdistro had a ready-made image-type,
-	// i.e. testdistro.TestImageType1
-	distro := test_distro.DistroFactory(test_distro.TestDistro1Name)
-	arch, err := distro.GetArch(test_distro.TestArchName)
-	assert.NoError(t, err)
-	it, err := arch.GetImageType(test_distro.TestImageTypeName)
-	assert.NoError(t, err)
-
-	tmpdir := t.TempDir()
-	t.Setenv("IMAGE_BUILDER_EXPERIMENTAL", fmt.Sprintf("yamldir=%s", tmpdir))
-
-	fakePkgsSetYaml := []byte(`
+	fakeImgTypesYAML := `
 image_types:
   test_type:
+    filename: foo
+    image_func: disk
     package_sets:
      os:
       - include:
           - inc1
         exclude:
           - exc1
+    platforms:
+      - arch: x86_64
 
   unrelated:
+    filename: bar
+    image_func: disk
     package_sets:
      os:
       - include:
           - inc2
         exclude:
           - exc2
-`)
-	// XXX: we cannot use distro.Name() as it will give us a name+ver
-	fakePkgsSetPath := filepath.Join(tmpdir, test_distro.TestDistroNameBase, "distro.yaml")
-	err = os.MkdirAll(filepath.Dir(fakePkgsSetPath), 0755)
-	assert.NoError(t, err)
-	err = os.WriteFile(fakePkgsSetPath, fakePkgsSetYaml, 0644)
-	assert.NoError(t, err)
+    platforms:
+      - arch: x86_64
+`
+	fakeBaseDir := makeFakeDistrosYAML(t, "", fakeImgTypesYAML)
 
-	pkgSet, err := defs.PackageSets(it)
+	t.Setenv("IMAGE_BUILDER_EXPERIMENTAL", fmt.Sprintf("yamldir=%s", fakeBaseDir))
+	dist := generic.DistroFactory("test-distro-1")
+	assert.NotNil(t, dist)
+	ar, err := dist.GetArch("x86_64")
 	assert.NoError(t, err)
-	assert.Equal(t, map[string]rpmmd.PackageSet{
-		"os": {
-			Include: []string{"inc1"},
-			Exclude: []string{"exc1"},
-		},
-	}, pkgSet)
+	it, err := ar.GetImageType("test_type")
+	assert.NoError(t, err)
+	assert.Equal(t, "foo", it.Filename())
 }
 
 func TestLoadYamlMergingWorks(t *testing.T) {
-	it := makeTestImageType(t)
 	fakePkgsSetYaml := `
 .common:
   base: &base_pkgset
@@ -194,12 +207,9 @@ image_types:
               include: [from-condition-inc]
               exclude: [from-condition-exc]
 `
-	// XXX: we cannot use distro.Name() as it will give us a name+ver
-	baseDir := makeFakeDefs(t, test_distro.TestDistroNameBase, fakePkgsSetYaml)
-	restore := defs.MockDataFS(baseDir)
-	defer restore()
+	it := makeTestImageType(t, fakePkgsSetYaml)
 
-	pkgSet, err := defs.PackageSets(it)
+	pkgSet, err := it.PackageSets("test-distro-1", "x86_64")
 	assert.NoError(t, err)
 	assert.Equal(t, map[string]rpmmd.PackageSet{
 		"os": {
@@ -210,7 +220,6 @@ image_types:
 }
 
 func TestDefsPartitionTable(t *testing.T) {
-	it := makeTestImageType(t)
 	fakeDistroYaml := `
 image_types:
   test_type:
@@ -253,12 +262,9 @@ image_types:
                       type: ext4
                       mountpoint: "/"
 `
-	// XXX: we cannot use distro.Name() as it will give us a name+ver
-	baseDir := makeFakeDefs(t, test_distro.TestDistroNameBase, fakeDistroYaml)
-	restore := defs.MockDataFS(baseDir)
-	defer restore()
+	it := makeTestImageType(t, fakeDistroYaml)
 
-	partTable, err := defs.PartitionTable(it)
+	partTable, err := it.PartitionTable("test-distro-1", "test_arch")
 	require.NoError(t, err)
 	assert.Equal(t, &disk.PartitionTable{
 		Size: 1_000_000_000,
@@ -373,14 +379,9 @@ image_types:
 `
 
 func TestDefsPartitionTableOverrideGreatEqual(t *testing.T) {
-	it := makeTestImageType(t)
+	it := makeTestImageType(t, fakeImageTypesYaml)
 
-	// XXX: we cannot use distro.Name() as it will give us a name+ver
-	baseDir := makeFakeDefs(t, test_distro.TestDistroNameBase, fakeImageTypesYaml)
-	restore := defs.MockDataFS(baseDir)
-	defer restore()
-
-	partTable, err := defs.PartitionTable(it)
+	partTable, err := it.PartitionTable("test-distro-1", "test_arch")
 	require.NoError(t, err)
 	assert.Equal(t, &disk.PartitionTable{
 		Size: 1_000_000_000,
@@ -405,8 +406,6 @@ func TestDefsPartitionTableOverrideGreatEqual(t *testing.T) {
 }
 
 func TestDefsPartitionTableOverridelessThan(t *testing.T) {
-	it := makeTestImageType(t)
-
 	fakeDistroYaml := `
 image_types:
   test_type:
@@ -440,12 +439,9 @@ image_types:
                   size: 333_333_333
                 - *default_part_1
 `
-	// XXX: we cannot use distro.Name() as it will give us a name+ver
-	baseDir := makeFakeDefs(t, test_distro.TestDistroNameBase, fakeDistroYaml)
-	restore := defs.MockDataFS(baseDir)
-	defer restore()
+	it := makeTestImageType(t, fakeDistroYaml)
 
-	partTable, err := defs.PartitionTable(it)
+	partTable, err := it.PartitionTable("test-distro-1", "test_arch")
 	require.NoError(t, err)
 	assert.Equal(t, &disk.PartitionTable{
 		Size: 1_000_000_000,
@@ -470,8 +466,6 @@ image_types:
 }
 
 func TestDefsPartitionTableOverrideDistoName(t *testing.T) {
-	it := makeTestImageType(t)
-
 	fakeDistroYaml := `
 image_types:
   test_type:
@@ -492,12 +486,9 @@ image_types:
                 - <<: *default_part_0
                   size: 111_111_111
 `
-	// XXX: we cannot use distro.Name() as it will give us a name+ver
-	baseDir := makeFakeDefs(t, test_distro.TestDistroNameBase, fakeDistroYaml)
-	restore := defs.MockDataFS(baseDir)
-	defer restore()
+	it := makeTestImageType(t, fakeDistroYaml)
 
-	partTable, err := defs.PartitionTable(it)
+	partTable, err := it.PartitionTable("test-distro-1", "test_arch")
 	require.NoError(t, err)
 	assert.Equal(t, &disk.PartitionTable{
 		Partitions: []disk.Partition{
@@ -523,34 +514,23 @@ image_config:
         distro_name: "test-distro"
       shallow_merge:
         timezone: "OverrideTZ"
-`
-	fakeDistroName := "test-distro"
-	fakeDistroVer := "42"
-	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
-	restore := defs.MockDataFS(baseDir)
-	defer restore()
 
-	distroNameVer := fakeDistroName + "-" + fakeDistroVer
-	imgConfig, err := defs.DistroImageConfig(distroNameVer)
+image_types:
+  test_type:
+    filename: foo
+`
+	makeTestImageType(t, fakeDistroYaml)
+
+	dist, err := defs.NewDistroYAML("test-distro-1")
 	assert.NoError(t, err)
-	assert.Equal(t, &distro.ImageConfig{
+	assert.Equal(t, dist.ImageConfig(), &distro.ImageConfig{
 		Locale:   common.ToPtr("C.UTF-8"),
 		Timezone: common.ToPtr("OverrideTZ"),
 		Users:    []users.User{users.User{Name: "testuser"}},
-	}, imgConfig)
+	})
 }
 
 func TestDefsPartitionTableErrorsNotForImageType(t *testing.T) {
-	it := makeTestImageType(t)
-
-	badDistroYamlUnknownImgType := `
-image_types:
-  other_image_type:
-    partition_table:
-      test_arch:
-        partitions:
-          - size: 1_048_576
-`
 	badDistroYamlMissingPartitionTable := `
 image_types:
   test_type:
@@ -563,21 +543,16 @@ image_types:
         partitions:
           - size: 1_048_576
 `
-
 	for _, tc := range []struct {
 		badYaml     string
 		expectedErr error
 	}{
-		{badDistroYamlUnknownImgType, defs.ErrImageTypeNotFound},
 		{badDistroYamlMissingPartitionTable, defs.ErrNoPartitionTableForImgType},
 		{badDistroYamlUnknownArch, defs.ErrNoPartitionTableForArch},
 	} {
-		// XXX: we cannot use distro.Name() as it will give us a name+ver
-		baseDir := makeFakeDefs(t, test_distro.TestDistroNameBase, tc.badYaml)
-		restore := defs.MockDataFS(baseDir)
-		defer restore()
+		it := makeTestImageType(t, tc.badYaml)
 
-		_, err := defs.PartitionTable(it)
+		_, err := it.PartitionTable("test-distro-1", "test_arch")
 		assert.ErrorIs(t, err, tc.expectedErr)
 	}
 }
@@ -618,12 +593,9 @@ image_types:
           shallow_merge:
             default_kernel: "kernel-lt-2"
 `
-	fakeDistroName := "test-distro"
-	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
-	restore := defs.MockDataFS(baseDir)
-	defer restore()
+	it := makeTestImageType(t, fakeDistroYaml)
 
-	imgConfig, err := defs.ImageConfig("test-distro-1", "test_arch", "test_type")
+	imgConfig, err := it.ImageConfig("test-distro-1", "test_arch")
 	require.NoError(t, err)
 	assert.Equal(t, &distro.ImageConfig{
 		Hostname:      common.ToPtr("test-arch-hn"),
@@ -636,7 +608,7 @@ image_types:
 func TestImageTypes(t *testing.T) {
 	fakeDistroYaml := `
 image_types:
-  server-qcow2:
+  test_type:
     name_aliases: ["qcow2"]
     filename: "disk.qcow2"
     compression: xz
@@ -662,27 +634,15 @@ image_types:
         qcow2_compat: "1.1"
         uefi_vendor: "{{.DistroVendor}}"
 `
-	fakeDistroName := "test-distro"
-	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
-	restore := defs.MockDataFS(baseDir)
-	defer restore()
-
-	testDistroYAML := `
-distros:
- - name: test-distro-1
-   vendor: test-vendor
-   defs_path: test-distro/
-`
-	err := os.WriteFile(filepath.Join(baseDir, "distros.yaml"), []byte(testDistroYAML), 0644)
-	require.NoError(t, err)
+	makeTestImageType(t, fakeDistroYaml)
 
 	distro, err := defs.NewDistroYAML("test-distro-1")
 	require.NoError(t, err)
 
 	imgTypes := distro.ImageTypes()
 	assert.Len(t, imgTypes, 1)
-	imgType := imgTypes["server-qcow2"]
-	assert.Equal(t, "server-qcow2", imgType.Name())
+	imgType := imgTypes["test_type"]
+	assert.Equal(t, "test_type", imgType.Name())
 	assert.Equal(t, []string{"qcow2"}, imgType.NameAliases)
 	assert.Equal(t, "disk.qcow2", imgType.Filename)
 	assert.Equal(t, "xz", imgType.Compression)
@@ -714,25 +674,17 @@ distros:
 func TestImageTypesUEFIVendorErrorWhenEmpty(t *testing.T) {
 	fakeDistroYaml := `
 image_types:
-  server-qcow2:
+  test_type:
+    filename: foo
     platforms:
       - arch: x86_64
-        uefi_vendor: "{{.DistroVendor}}"
+        uefi_vendor: "{{.unavailable}}"
 `
-	fakeDistroName := "test-distro"
-	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
+	baseDir := makeFakeDistrosYAML(t, "", fakeDistroYaml)
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	testDistroYAML := `
-distros:
- - name: test-distro-1
-   defs_path: test-distro/
-`
-	err := os.WriteFile(filepath.Join(baseDir, "distros.yaml"), []byte(testDistroYAML), 0644)
-	require.NoError(t, err)
-
-	_, err = defs.NewDistroYAML("test-distro-1")
+	_, err := defs.NewDistroYAML("test-distro-1")
 	require.ErrorContains(t, err, `cannot execute template for "vendor" field (is it set?)`)
 }
 
@@ -748,14 +700,9 @@ image_types:
 `
 
 func TestImageTypeInstallerConfig(t *testing.T) {
-	fakeDistroYaml := fakeDistroYamlInstallerConf
+	it := makeTestImageType(t, fakeDistroYamlInstallerConf)
 
-	fakeDistroName := "test-distro"
-	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
-	restore := defs.MockDataFS(baseDir)
-	defer restore()
-
-	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type")
+	installerConfig, err := it.InstallerConfig("test-distro-1", "test_arch")
 	require.NoError(t, err)
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDracutModules: []string{"base-dracut-mod1"},
@@ -774,12 +721,9 @@ func TestImageTypeInstallerConfigMergeVerLT(t *testing.T) {
             additional_dracut_modules:
               - override-dracut-mod1
 `
-	fakeDistroName := "test-distro"
-	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
-	restore := defs.MockDataFS(baseDir)
-	defer restore()
+	it := makeTestImageType(t, fakeDistroYaml)
 
-	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type")
+	installerConfig, err := it.InstallerConfig("test-distro-1", "test_arch")
 	require.NoError(t, err)
 	assert.Equal(t, &distro.InstallerConfig{
 		// AdditionalDrivers,SquashfsRootfs merged from parent
@@ -801,13 +745,9 @@ func TestImageTypeInstallerConfigMergeDistroName(t *testing.T) {
             additional_drivers:
              - override-drv1
 `
+	it := makeTestImageType(t, fakeDistroYaml)
 
-	fakeDistroName := "test-distro"
-	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
-	restore := defs.MockDataFS(baseDir)
-	defer restore()
-
-	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type")
+	installerConfig, err := it.InstallerConfig("test-distro-1", "test_arch")
 	require.NoError(t, err)
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDracutModules: []string{"override-dracut-mod1"},
@@ -827,13 +767,9 @@ func TestImageTypeInstallerConfigMergeArch(t *testing.T) {
             additional_drivers:
              - override-drv1
 `
+	it := makeTestImageType(t, fakeDistroYaml)
 
-	fakeDistroName := "test-distro"
-	baseDir := makeFakeDefs(t, fakeDistroName, fakeDistroYaml)
-	restore := defs.MockDataFS(baseDir)
-	defer restore()
-
-	installerConfig, err := defs.InstallerConfig("test-distro-1", "test_arch", "test_type")
+	installerConfig, err := it.InstallerConfig("test-distro-1", "test_arch")
 	require.NoError(t, err)
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDrivers: []string{"override-drv1"},
@@ -841,30 +777,6 @@ func TestImageTypeInstallerConfigMergeArch(t *testing.T) {
 		AdditionalDracutModules: []string{"base-dracut-mod1"},
 		SquashfsRootfs:          common.ToPtr(true),
 	}, installerConfig)
-}
-
-func makeFakeDistrosYAML(t *testing.T, content, imgTypes string) string {
-	t.Helper()
-
-	tmpdir := t.TempDir()
-	distrosPath := filepath.Join(tmpdir, "distros.yaml")
-	err := os.WriteFile(distrosPath, []byte(content), 0644)
-	assert.NoError(t, err)
-
-	var di struct {
-		Distros []defs.DistroYAML `yaml:"distros"`
-	}
-	err = yaml.Unmarshal([]byte(content), &di)
-	assert.NoError(t, err)
-	for _, d := range di.Distros {
-		p := filepath.Join(tmpdir, d.DefsPath, "distro.yaml")
-		err = os.MkdirAll(filepath.Dir(p), 0755)
-		assert.NoError(t, err)
-		err = os.WriteFile(p, []byte(`---`+"\n"+imgTypes), 0644)
-		assert.NoError(t, err)
-	}
-
-	return tmpdir
 }
 
 var fakeDistrosYAML = `
@@ -1160,7 +1072,7 @@ distros:
 func TestImageTypesPlatformOverridesMultiMarchError(t *testing.T) {
 	fakeImageTypesYaml := `
 image_types:
-  server-qcow2:
+  test_type:
     filename: "disk.qcow2"
     exports: ["qcow2"]
     platforms:
@@ -1180,24 +1092,17 @@ image_types:
             - arch: x86_64
               uefi_vendor: "uefi-for-ver-3"
 `
-
-	fakeDistrosYAML := `
-distros:
- - name: test-distro-1
-   vendor: test-vendor
-   defs_path: test-distro/
-`
-	baseDir := makeFakeDistrosYAML(t, fakeDistrosYAML, fakeImageTypesYaml)
-	restore := defs.MockDataFS(baseDir)
-	defer restore()
+	makeTestImageType(t, fakeImageTypesYaml)
 
 	distro, err := defs.NewDistroYAML("test-distro-1")
 	assert.NoError(t, err)
+	require.NotNil(t, distro)
 	imgTypes := distro.ImageTypes()
 	assert.Len(t, imgTypes, 1)
-	imgType := imgTypes["server-qcow2"]
+	imgType := imgTypes["test_type"]
+	require.NotNil(t, imgType)
 	_, err = imgType.PlatformsFor("test-distro-1")
-	assert.EqualError(t, err, `platform conditionals for image type "server-qcow2" should match only once but matched 2 times`)
+	assert.EqualError(t, err, `platform conditionals for image type "test_type" should match only once but matched 2 times`)
 }
 
 func TestDistrosLoadingMatchTransforms(t *testing.T) {
