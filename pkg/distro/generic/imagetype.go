@@ -115,12 +115,8 @@ func (t *imageType) BootMode() platform.BootMode {
 	return platform.BOOT_NONE
 }
 
-func (t *imageType) BasePartitionTable() (*disk.PartitionTable, error) {
-	return t.ImageTypeYAML.PartitionTable(t.arch.distro.Name(), t.arch.name)
-}
-
 func (t *imageType) getPartitionTable(customizations *blueprint.Customizations, options distro.ImageOptions, rng *rand.Rand) (*disk.PartitionTable, error) {
-	basePartitionTable, err := t.BasePartitionTable()
+	basePartitionTable, err := t.ImageTypeYAML.PartitionTable(t.arch.distro.Name(), t.arch.name)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +167,7 @@ func (t *imageType) getDefaultInstallerConfig() (*distro.InstallerConfig, error)
 }
 
 func (t *imageType) PartitionType() disk.PartitionTableType {
-	basePartitionTable, err := t.BasePartitionTable()
+	basePartitionTable, err := t.ImageTypeYAML.PartitionTable(t.arch.distro.Name(), t.arch.name)
 	if errors.Is(err, defs.ErrNoPartitionTableForImgType) {
 		return disk.PT_NONE
 	}
