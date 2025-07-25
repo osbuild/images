@@ -701,8 +701,6 @@ image_types:
     bootable: true
     default_size: 10_737_418_240  # 10 * datasizes.GibiByte
     image_func: "disk"
-    build_pipelines: ["build"]
-    payload_pipelines: ["os", "image", "qcow2"]
     exports: ["qcow2"]
     required_partition_sizes: *default_required_dir_sizes
     platforms:
@@ -806,8 +804,6 @@ image_types:
     bootable: true
     default_size: 10_737_418_240  # 10 * datasizes.GibiByte
     image_func: "disk"
-    build_pipelines: ["build"]
-    payload_pipelines: ["os", "image", "vagrant", "archive"]
     exports: ["archive"]
     required_partition_sizes: *default_required_dir_sizes
     platforms:
@@ -850,7 +846,6 @@ image_types:
     filename: "disk.vhd"
     mime_type: "application/x-vhd"
     default_size: 4_294_967_296  # 4 * datasizes.GibiByte
-    payload_pipelines: ["os", "image", "vpc"]
     exports: ["vpc"]
     # note that unlike fedora no "environment.Azure" is used here for
     # unknown reasons
@@ -971,7 +966,6 @@ image_types:
 
   "azure-rhui": &azure_rhui
     <<: *vhd
-    payload_pipelines: ["os", "image", "vpc", "xz"]
     exports: ["xz"]
     compression: "xz"
     filename: "disk.vhd.xz"
@@ -1096,8 +1090,6 @@ image_types:
     filename: "root.tar.xz"
     mime_type: "application/x-tar"
     image_func: "tar"
-    build_pipelines: ["build"]
-    payload_pipelines: ["os", "archive"]
     exports: ["archive"]
     package_sets:
       os:
@@ -1118,8 +1110,6 @@ image_types:
     bootable: true
     default_size: 4_294_967_296  # 4 * datasizes.GibiByte
     image_func: "disk"
-    build_pipelines: ["build"]
-    payload_pipelines: ["os", "image", "vmdk"]
     exports: ["vmdk"]
     required_partition_sizes: *default_required_dir_sizes
     platforms:
@@ -1148,7 +1138,6 @@ image_types:
     <<: *vmdk
     filename: "image.ova"
     mime_type: "application/ovf"
-    payload_pipelines: ["os", "image", "vmdk", "ovf", "archive"]
     exports: ["archive"]
     platforms:
       - <<: *x86_64_bios_platform
@@ -1158,8 +1147,6 @@ image_types:
     filename: "image.raw"
     mime_type: "application/octet-stream"
     image_func: "disk"
-    build_pipelines: ["build"]
-    payload_pipelines: ["os", "image"]
     exports: ["image"]
     bootable: true
     default_size: 10_737_418_240  # 10 * datasizes.GibiByte
@@ -1331,7 +1318,6 @@ image_types:
   # RHEL internal-only x86_64 EC2 image type
   ec2: &ec2
     <<: *ami
-    payload_pipelines: ["os", "image", "xz"]
     exports: ["xz"]
     filename: "image.raw.xz"
     compression: "xz"
@@ -1387,8 +1373,6 @@ image_types:
     filename: "image.wsl"
     mime_type: "application/x-tar"
     image_func: "tar"
-    build_pipelines: ["build"]
-    payload_pipelines: ["os", "archive", "xz"]
     exports: ["xz"]
     compression: "xz"
     platforms:
@@ -1519,13 +1503,6 @@ image_types:
     image_func: "image_installer"
     # We don't know the variant of the OS pipeline being installed
     iso_label: "Unknown"
-    build_pipelines: ["build"]
-    payload_pipelines:
-      - "anaconda-tree"
-      - "efiboot-tree"
-      - "os"
-      - "bootiso-tree"
-      - "bootiso"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
     image_config:
@@ -1683,8 +1660,6 @@ image_types:
     filename: "image.tar.gz"
     mime_type: "application/gzip"
     image_func: "disk"
-    build_pipelines: ["build"]
-    payload_pipelines: ["os", "image", "archive"]
     exports: ["archive"]
     bootable: true
     default_size: 21_474_836_480  # 20 * datasizes.GibiByte
@@ -1852,7 +1827,6 @@ image_types:
     <<: *vhd
     filename: "disk.vhd.xz"
     mime_type: "application/xz"
-    payload_pipelines: ["os", "image", "vpc", "xz"]
     exports: ["xz"]
     compression: "xz"
     default_size: 34_359_738_368  # 32 * datasizes.GibiByte
