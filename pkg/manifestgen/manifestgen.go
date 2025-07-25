@@ -194,9 +194,9 @@ func (mg *Generator) Generate(bp *blueprint.Blueprint, dist distro.Distro, imgTy
 		for plName, depsolvedPipeline := range depsolved {
 			pipelinePurpose := "unknown"
 			switch {
-			case slices.Contains(imgType.PayloadPipelines(), plName):
+			case slices.Contains(preManifest.PayloadPipelines(), plName):
 				pipelinePurpose = "image"
-			case slices.Contains(imgType.BuildPipelines(), plName):
+			case slices.Contains(preManifest.BuildPipelines(), plName):
 				pipelinePurpose = "buildroot"
 			}
 			// XXX: sync with image-builder-cli:build.go name generation - can we have a shared helper?

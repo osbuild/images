@@ -127,14 +127,6 @@ func (t *imageType) Size(size uint64) uint64 {
 	return size
 }
 
-func (t *imageType) BuildPipelines() []string {
-	return t.ImageTypeYAML.BuildPipelines
-}
-
-func (t *imageType) PayloadPipelines() []string {
-	return t.ImageTypeYAML.PayloadPipelines
-}
-
 func (t *imageType) PayloadPackageSets() []string {
 	return []string{blueprintPkgsKey}
 }
