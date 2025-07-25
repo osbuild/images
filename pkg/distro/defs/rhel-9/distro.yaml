@@ -1145,7 +1145,7 @@ image_types:
         image_format: "qcow2"
       - <<: *s390x_zipl_platform
         image_format: "qcow2"
-    image_config:
+    image_config: &qcow2_image_config
       default_target: "multi-user.target"
       kernel_options:
         - "console=tty0"
@@ -1234,6 +1234,46 @@ image_types:
                 include:
                   - "insights-client"
                   - "subscription-manager-cockpit"
+
+  "vagrant-libvirt": &vagrant_libvirt
+    <<: *qcow2
+    filename: "vagrant-libvirt.box"
+    mime_type: "application/x-tar"
+    bootable: true
+    default_size: 10_737_418_240  # 10 * datasizes.GibiByte
+    image_func: "disk"
+    build_pipelines: ["build"]
+    payload_pipelines: ["os", "image", "vagrant", "archive"]
+    exports: ["archive"]
+    required_partition_sizes: *default_required_dir_sizes
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "vagrant_libvirt"
+      - <<: *aarch64_platform
+        image_format: "vagrant_libvirt"
+    image_config:
+      <<: *qcow2_image_config
+      users:
+        - name: "vagrant"
+          # yamllint disable rule:line-length
+          key: |
+            ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zQPyUecp4pzC6kivAIhyfHilFR61RGL+GPXQ2MWZWFYbAGjyiYJnAmCP3NOTd0jMZEnDkbUvxhMmBYSdETk1rRgm+R4LOzFUGaHqHDLKLX+FIPKcF96hrucXzcWyLbIbEgE98OHlnVYCzRdK8jlqm8tehUc9c9WhQ== vagrant insecure public key
+            ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN1YdxBpNlzxDqfJyw/QKow1F+wvG9hXGoqiysfJOn5Y vagrant insecure public key
+          # yamllint enable rule:line-length
+      files:
+        - path: "/etc/sudoers.d/vagrant"
+          user: "root"
+          group: "root"
+          mode: 440
+          data: |
+            vagrant ALL=(ALL) NOPASSWD: ALL
+
+  "vagrant-virtualbox":
+    <<: *vagrant_libvirt
+    filename: "vagrant-virtualbox.box"
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "vagrant_virtualbox"
 
   oci:
     <<: *qcow2
