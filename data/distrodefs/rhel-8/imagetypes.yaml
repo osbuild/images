@@ -1311,6 +1311,9 @@ image_types:
 
   ec2: &ec2
     <<: *ami
+    # we have to reset the aliases otherwise this type
+    # will inherit the name aliases causing a conflict
+    name_aliases: []
     filename: "image.raw.xz"
     mime_type: "application/xz"
     compression: "xz"
@@ -1417,6 +1420,7 @@ image_types:
                   - "rh-amazon-rhui-client-sap-bundle"
 
   qcow2: &qcow2
+    name_aliases: ["guest-image"]
     filename: "disk.qcow2"
     mime_type: "application/x-qemu-disk"
     # note that unlike fedora rhel does not use the environment.KVM
@@ -1468,6 +1472,7 @@ image_types:
         - *qcow2_common_pkgset
 
   vhd:
+    name_aliases: ["azure"]
     filename: "disk.vhd"
     mime_type: "application/x-vhd"
     image_func: "disk"
@@ -2231,6 +2236,7 @@ image_types:
         - *edge_commit_pkgset
 
   vmdk: &vmdk
+    name_aliases: ["vsphere"]
     filename: "disk.vmdk"
     mime_type: "application/x-vmdk"
     bootable: true
@@ -2265,6 +2271,7 @@ image_types:
 
   ova:
     <<: *vmdk
+    name_aliases: ["vsphere-ova"]
     filename: "image.ova"
     mime_type: "application/ovf"
     payload_pipelines: ["os", "image", "vmdk", "ovf", "archive"]
@@ -2274,6 +2281,9 @@ image_types:
         image_format: "ova"
 
   gce: &gce
+    # this image type is set to `gcp` in image-builder-crc
+    # & `osbuild-composer`, so set the alias here
+    name_aliases: ["gcp"]
     filename: "image.tar.gz"
     mime_type: "application/gzip"
     image_func: "disk"
@@ -2377,6 +2387,9 @@ image_types:
 
   "gce-rhui":
     <<: *gce
+    # we have to reset the aliases otherwise this type
+    # will inherit the name aliases causing a conflict
+    name_aliases: []
     image_config:
       <<: *gce_image_config
       rhsm_config:
@@ -2400,6 +2413,9 @@ image_types:
 
   oci:
     <<: *qcow2
+    # we have to reset the aliases otherwise this type
+    # will inherit the name aliases causing a conflict
+    name_aliases: []
     platforms:
       - <<: *x86_64_bios_platform
         image_format: "qcow2"
@@ -2407,6 +2423,9 @@ image_types:
 
   openstack:
     <<: *qcow2
+    # we have to reset the aliases otherwise this type
+    # will inherit the name aliases causing a conflict
+    name_aliases: []
     default_size: 4_294_967_296  # 4 * datasizes.GibiByte
     image_config:
       kernel_options:
