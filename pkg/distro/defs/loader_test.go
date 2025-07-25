@@ -64,7 +64,7 @@ distros:
 	err = yaml.Unmarshal([]byte(distrosContent), &di)
 	assert.NoError(t, err)
 	for _, d := range di.Distros {
-		p := filepath.Join(tmpdir, d.DefsPath, "distro.yaml")
+		p := filepath.Join(tmpdir, d.DefsPath, "imagetypes.yaml")
 		err = os.MkdirAll(filepath.Dir(p), 0755)
 		assert.NoError(t, err)
 		err = os.WriteFile(p, []byte(`---`+"\n"+imgTypesContent), 0644)
