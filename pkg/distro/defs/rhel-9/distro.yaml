@@ -1971,6 +1971,7 @@ image_types:
             - "procps-ng"
             - "python3"
             - "python3-inotify"
+            - "redhat-logos"
             - "redhat-release"
             - "rootfiles"
             - "rpm"
