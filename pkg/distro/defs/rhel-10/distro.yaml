@@ -414,7 +414,7 @@
     timeout: 10
     timeout_style: "countdown"
 
-  azure_image_config: &azure_image_config
+  azure_image_config_base: &azure_image_config_base
     # from CreateAzureDatalossWarningScriptAndUnit
     files:
       - path: &dataloss_script "/usr/local/sbin/temp-disk-dataloss-warning"
@@ -861,7 +861,7 @@ image_types:
         image_format: "vhd"
     # based on https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/deploying_rhel_9_on_microsoft_azure/assembly_deploying-a-rhel-image-as-a-virtual-machine-on-microsoft-azure_cloud-content-azure#making-configuration-changes_configure-the-image-azure
     image_config: &image_config_vhd
-      <<: *azure_image_config
+      <<: *azure_image_config_base
       time_synchronization:
         refclocks:
           - driver:
@@ -1867,8 +1867,35 @@ image_types:
             - "kernel-uki-virt-addons"  # provides useful cmdline utilities for the UKI
             - "shim-x64"
             - "uki-direct"
+    partition_table:
+      x86_64:
+        uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
+        type: "gpt"
+        partitions:
+          - size: 264_241_152  # 52 MiB
+            type: *efi_system_partition_guid
+            uuid: *efi_system_partition_uuid
+            payload_type: "filesystem"
+            payload:
+              type: vfat
+              uuid: *efi_filesystem_uuid
+              mountpoint: "/boot/efi"
+              label: "ESP"
+              fstab_options: "defaults,uid=0,gid=0,umask=077,shortname=winnt"
+              fstab_freq: 0
+              fstab_passno: 2
+          - size: 5_368_709_120  # 5 * datasizes.GibiByte,
+            type: *root_partition_x86_64_guid
+            payload_type: "filesystem"
+            payload:
+              type: "ext4"
+              label: "root"
+              mountpoint: "/"
+              fstab_options: "defaults"
+              fstab_freq: 0
+              fstab_passno: 0
     image_config:
-      <<: *azure_image_config
+      <<: *azure_image_config_base
       default_kernel: "kernel-uki-virt"
       default_kernel_name: "kernel-uki-virt"
       no_bls: true
@@ -1904,30 +1931,3 @@ image_types:
             # package here.
             - "linux-firmware"
             - "os-prober"
-    partition_table:
-      x86_64:
-        uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
-        type: "gpt"
-        partitions:
-          - size: 264_241_152  # 52 MiB
-            type: *efi_system_partition_guid
-            uuid: *efi_system_partition_uuid
-            payload_type: "filesystem"
-            payload:
-              type: vfat
-              uuid: *efi_filesystem_uuid
-              mountpoint: "/boot/efi"
-              label: "ESP"
-              fstab_options: "defaults,uid=0,gid=0,umask=077,shortname=winnt"
-              fstab_freq: 0
-              fstab_passno: 2
-          - size: 5_368_709_120  # 5 * datasizes.GibiByte,
-            type: *root_partition_x86_64_guid
-            payload_type: "filesystem"
-            payload:
-              type: "ext4"
-              label: "root"
-              mountpoint: "/"
-              fstab_options: "defaults"
-              fstab_freq: 0
-              fstab_passno: 0
