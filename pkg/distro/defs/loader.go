@@ -3,7 +3,6 @@ package defs
 
 import (
 	"bytes"
-	"embed"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -15,6 +14,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/osbuild/images/data/distrodefs"
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/environment"
 	"github.com/osbuild/images/pkg/arch"
@@ -35,10 +35,8 @@ var (
 	ErrNoPartitionTableForArch    = errors.New("no partition table for arch")
 )
 
-//go:embed *.yaml */*.yaml
-var data embed.FS
-
-var defaultDataFS fs.FS = data
+// this can be overriden in tests
+var defaultDataFS fs.FS = distrodefs.Data
 
 func dataFS() fs.FS {
 	// XXX: this is a short term measure, pass a set of
