@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"slices"
 	"strings"
 
 	"github.com/osbuild/images/pkg/blueprint"
@@ -194,10 +193,10 @@ func (mg *Generator) Generate(bp *blueprint.Blueprint, dist distro.Distro, imgTy
 		for plName, depsolvedPipeline := range depsolved {
 			pipelinePurpose := "unknown"
 			switch {
-			case slices.Contains(imgType.PayloadPipelines(), plName):
-				pipelinePurpose = "image"
-			case slices.Contains(imgType.BuildPipelines(), plName):
+			case plName == "build":
 				pipelinePurpose = "buildroot"
+			default:
+				pipelinePurpose = "image"
 			}
 			// XXX: sync with image-builder-cli:build.go name generation - can we have a shared helper?
 			imageName := fmt.Sprintf("%s-%s-%s", dist.Name(), imgType.Name(), a.Name())

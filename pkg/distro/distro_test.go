@@ -209,17 +209,6 @@ func TestImageTypePipelineNames(t *testing.T) {
 					// This might change in the future, but for now, let's make
 					// sure they match.
 					assert.Equal(imageType.Exports()[0], pm.Pipelines[len(pm.Pipelines)-1].Name)
-
-					// The pipelines named in allPipelines must exist in the manifest, and in the
-					// order specified (eg. 'build' first) but it does not need to be an exact
-					// match. Only the pipelines with rpm or ostree metadata are required.
-					var order int
-					allPipelines := append(imageType.BuildPipelines(), imageType.PayloadPipelines()...)
-					for _, name := range allPipelines {
-						idx := slices.Index(pmNames, name)
-						assert.True(idx >= order, "%s not in order %v", name, pmNames)
-						order = idx
-					}
 				})
 			}
 		}
