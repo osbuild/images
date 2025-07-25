@@ -1862,9 +1862,49 @@ image_types:
               config: "disabled"
       locale: "en_US.UTF-8"
       no_selinux: true
-      wsl:
+      wsl: &wsl_config
         config:
           boot_systemd: true
+        distribution_config: &wsl_distribution_config
+          shortcut:
+            enabled: true
+            icon: /usr/share/pixmaps/fedora-logo.ico
+          oobe: &wsl_distribution_oobe_config
+            default_uid: 1000
+      conditions:
+        "wsl config for rhel":
+          when:
+            distro_name: "rhel"
+          shallow_merge:
+            wsl:
+              <<: *wsl_config
+              distribution_config:
+                <<: *wsl_distribution_config
+                oobe:
+                  <<: *wsl_distribution_oobe_config
+                  default_name: RedHatEnterpriseLinux-%s
+        "wsl config for centos":
+          when:
+            distro_name: "centos"
+          shallow_merge:
+            wsl:
+              <<: *wsl_config
+              distribution_config:
+                <<: *wsl_distribution_config
+                oobe:
+                  <<: *wsl_distribution_oobe_config
+                  default_name: CentOS-%s
+        "wsl config for almalinux":
+          when:
+            distro_name: "almalinux"
+          shallow_merge:
+            wsl: &wsl_distribution_config_almalinux
+              <<: *wsl_config
+              distribution_config:
+                <<: *wsl_distribution_config
+                oobe:
+                  <<: *wsl_distribution_oobe_config
+                  default_name: AlmaLinux-%s
     package_sets:
       os:
         - include:
