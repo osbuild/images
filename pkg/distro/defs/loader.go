@@ -221,7 +221,7 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 	}
 
 	// load imageTypes
-	f, err := dataFS().Open(filepath.Join(foundDistro.DefsPath, "distro.yaml"))
+	f, err := dataFS().Open(filepath.Join(foundDistro.DefsPath, "imagetypes.yaml"))
 	if err != nil {
 		return nil, err
 	}
@@ -522,7 +522,7 @@ type partitionTablesOverwriteCondition struct {
 // The rational is that "centos-9" is always higher than any "rhel-9.X"
 // version for our version compare (centos is always "rolling").
 //
-// TODO: this should become an explicit chose in "distro.yaml" but until
+// TODO: this should become an explicit chose in "imagetypes.yaml" but until
 // we have everything converted to generic.Distro accessing the properites
 // from an image type is very hard so we start here.
 func versionStringForVerCmp(u distro.ID) string {
