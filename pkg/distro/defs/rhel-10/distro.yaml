@@ -282,6 +282,16 @@
       - "mdadm"
       - "nss-softokn"
 
+  wsl_config: &wsl_config
+    config:
+      boot_systemd: true
+    distribution_config: &wsl_distribution_config
+      shortcut:
+        enabled: true
+        icon: /usr/share/pixmaps/fedora-logo.ico
+      oobe: &wsl_distribution_oobe_config
+        default_uid: 1000
+
   anaconda_boot_pkgset: &anaconda_boot_pkgset
     conditions:
       "x86 specific packages for the anaconda boot pkgset":
@@ -1404,15 +1414,6 @@ image_types:
             network:
               config: "disabled"
       no_selinux: true
-      wsl: &wsl_config
-        config:
-          boot_systemd: true
-        distribution_config: &wsl_distribution_config
-          shortcut:
-            enabled: true
-            icon: /usr/share/pixmaps/fedora-logo.ico
-          oobe: &wsl_distribution_oobe_config
-            default_uid: 1000
       conditions:
         "wsl config for rhel":
           when:
@@ -1425,17 +1426,6 @@ image_types:
                 oobe:
                   <<: *wsl_distribution_oobe_config
                   default_name: RedHatEnterpriseLinux-%s
-        "wsl config for centos":
-          when:
-            distro_name: "centos"
-          shallow_merge:
-            wsl:
-              <<: *wsl_config
-              distribution_config:
-                <<: *wsl_distribution_config
-                oobe:
-                  <<: *wsl_distribution_oobe_config
-                  default_name: CentOS-%s
         "wsl config for almalinux":
           when:
             distro_name: "almalinux"
@@ -1461,7 +1451,6 @@ image_types:
             - "basesystem"
             - "bash"
             - "ca-certificates"
-            - "cloud-init"
             - "coreutils-single"
             - "crypto-policies-scripts"
             - "curl-minimal"
@@ -1486,14 +1475,11 @@ image_types:
             - "procps-ng"
             - "python3"
             - "python3-inotify"
-            - "redhat-logos"
-            - "redhat-release"
             - "rootfiles"
             - "rpm"
             - "sed"
             - "setup"
             - "shadow-utils"
-            - "subscription-manager"
             - "sudo"
             - "systemd"
             - "tar"
@@ -1510,6 +1496,25 @@ image_types:
             - "python-unversioned-command"
             - "redhat-release-eula"
             - "rpm-plugin-systemd-inhibit"
+          conditions:
+            "subscription-manager, cloud-init, and redhat-* on rhel-likes except centos":
+              when:
+                not_distro_name: "centos"
+              append:
+                include:
+                  - "subscription-manager"
+                  - "cloud-init"
+                  - "redhat-logos"
+                  - "redhat-release"
+            "wsl-setup, and centos-* on centos":
+              when:
+                distro_name: "centos"
+              append:
+                include:
+                  - "wsl-setup"
+                  - "centos-logos"
+                  - "centos-release"
+
 
   "image-installer":
     filename: "installer.iso"
