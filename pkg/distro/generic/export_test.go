@@ -25,3 +25,7 @@ type ImageType = imageType
 func (t *imageType) GetDefaultImageConfig() *distro.ImageConfig {
 	return t.getDefaultImageConfig()
 }
+
+func ImageTypeCheckOptions(it *imageType, bp *blueprint.Blueprint, options distro.ImageOptions) ([]string, error) {
+	return it.checkOptions(bp, options)
+}
