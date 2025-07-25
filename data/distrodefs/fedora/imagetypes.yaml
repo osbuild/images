@@ -769,8 +769,6 @@ image_types:
     bootable: true
     default_size: 5_368_709_120  # 5 * datasizes.GibiByte
     image_func: "disk"
-    build_pipelines: ["build"]
-    payload_pipelines: ["os", "image", "vagrant", "archive"]
     exports: ["archive"]
     required_partition_sizes: *default_required_dir_sizes
     image_config: &image_config_vagrant
@@ -831,8 +829,6 @@ image_types:
     bootable: true
     default_size: 5_368_709_120  # 5 * datasizes.GibiByte
     image_func: "disk"
-    build_pipelines: ["build"]
-    payload_pipelines: ["os", "image", "qcow2"]
     exports: ["qcow2"]
     required_partition_sizes: *default_required_dir_sizes
     image_config: &image_config_qcow2
@@ -873,7 +869,6 @@ image_types:
     name_aliases: ["ami", "aws"]
     filename: "image.raw"
     mime_type: "application/octet-stream"
-    payload_pipelines: ["os", "image"]
     exports: ["image"]
     environment: *ec2_env
     platforms:
@@ -907,7 +902,6 @@ image_types:
     name_aliases: ["vhd", "azure"]
     filename: "disk.vhd"
     mime_type: "application/x-vhd"
-    payload_pipelines: ["os", "image", "vpc"]
     exports: ["vpc"]
     environment: *azure_env
     platforms:
@@ -934,8 +928,6 @@ image_types:
     bootable: true
     default_size: 2_147_483_648  # 2 * datasizes.GibiByte
     image_func: "disk"
-    build_pipelines: ["build"]
-    payload_pipelines: ["os", "image", "vmdk"]
     exports: ["vmdk"]
     required_partition_sizes: *default_required_dir_sizes
     platforms:
@@ -984,7 +976,6 @@ image_types:
     name_aliases: ["ova", "vsphere-ova"]
     filename: "image.ova"
     mime_type: "application/ovf"
-    payload_pipelines: ["os", "image", "vmdk", "ovf", "archive"]
     exports: ["archive"]
     platforms:
       - <<: *x86_64_bios_platform
@@ -998,8 +989,6 @@ image_types:
     filename: "commit.tar"
     mime_type: "application/x-tar"
     image_func: "iot_commit"
-    build_pipelines: ["build"]
-    payload_pipelines: ["os", "ostree-commit", "commit-archive"]
     exports: ["commit-archive"]
     required_partition_sizes: *default_required_dir_sizes
     image_config: &image_config_iot_commit
@@ -1153,8 +1142,6 @@ image_types:
     filename: "container.tar"
     mime_type: "application/x-tar"
     image_func: "iot_container"
-    build_pipelines: ["build"]
-    payload_pipelines: ["os", "ostree-commit", "container-tree", "container"]
     exports: ["container"]
     required_partition_sizes: *default_required_dir_sizes
     image_config:
@@ -1176,8 +1163,6 @@ image_types:
     ostree:
       name: "fedora-iot"
       remote_name: "fedora-iot"
-    build_pipelines: ["build"]
-    payload_pipelines: ["ostree-deployment", "image", "xz"]
     exports: ["xz"]
     # Passing an empty map into the required partition sizes disables the
     # default partition sizes normally set so our `basePartitionTables` can
@@ -1255,8 +1240,6 @@ image_types:
     ostree:
       name: "fedora-iot"
       remote_name: "fedora-iot"
-    build_pipelines: ["build"]
-    payload_pipelines: ["ostree-deployment", "image", "qcow2"]
     exports: ["qcow2"]
     required_partition_sizes: *default_required_dir_sizes
     image_config:
@@ -1278,8 +1261,6 @@ image_types:
     filename: "iot-bootable-container.tar"
     mime_type: "application/x-tar"
     image_func: "bootable_container"
-    build_pipelines: ["build"]
-    payload_pipelines: ["os", "ostree-commit", "ostree-encapsulate"]
     exports: ["ostree-encapsulate"]
     required_partition_sizes: *default_required_dir_sizes
     image_config:
@@ -1429,8 +1410,6 @@ image_types:
     bootable: true
     default_size: 2_147_483_648  # 2 * datasizes.GibiByte
     image_func: "disk"
-    build_pipelines: ["build"]
-    payload_pipelines: ["os", "image", "xz"]
     exports: ["xz"]
     required_partition_sizes: *default_required_dir_sizes
     platforms:
@@ -1520,7 +1499,6 @@ image_types:
     name_aliases: []
     filename: "disk.raw.zst"
     compression: zstd
-    payload_pipelines: ["os", "image", "zstd"]
     exports: ["zstd"]
 
   "iot-installer":
@@ -1535,12 +1513,6 @@ image_types:
     ostree:
       name: "fedora-iot"
       remote_name: "fedora-iot"
-    build_pipelines: ["build"]
-    payload_pipelines:
-      - "anaconda-tree"
-      - "efiboot-tree"
-      - "bootiso-tree"
-      - "bootiso"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
     installer_config:
@@ -1566,12 +1538,6 @@ image_types:
     boot_iso: true
     image_func: "live_installer"
     iso_label: "Workstation"
-    build_pipelines: ["build"]
-    payload_pipelines:
-      - "anaconda-tree"
-      - "efiboot-tree"
-      - "bootiso-tree"
-      - "bootiso"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
     installer_config: 
@@ -1641,13 +1607,6 @@ image_types:
     iso_label: "Unknown"
     # We don't know the variant that goes into the OS pipeline that gets installed
     variant: "Unknown"
-    build_pipelines: ["build"]
-    payload_pipelines:
-      - "anaconda-tree"
-      - "efiboot-tree"
-      - "os"
-      - "bootiso-tree"
-      - "bootiso"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
     installer_config:
@@ -1684,8 +1643,6 @@ image_types:
     mime_type: "application/x-tar"
     image_func: "container"
     bootable: false
-    build_pipelines: ["build"]
-    payload_pipelines: ["os", "container"]
     exports: ["container"]
     required_partition_sizes: *default_required_dir_sizes
     platforms:
@@ -1757,8 +1714,6 @@ image_types:
     compression: "xz"
     mime_type: "application/x-tar"
     image_func: "tar"
-    build_pipelines: ["build"]
-    payload_pipelines: ["os", "archive", "xz"]
     exports: ["xz"]
     required_partition_sizes: *default_required_dir_sizes
     platforms:
@@ -1866,15 +1821,6 @@ image_types:
     ostree:
       name: "fedora"
       remote_name: "fedora-iot"
-    build_pipelines: ["build"]
-    payload_pipelines:
-      - "ostree-deployment"
-      - "image"
-      - "xz"
-      - "coi-tree"
-      - "efiboot-tree"
-      - "bootiso-tree"
-      - "bootiso"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
     installer_config:
@@ -1992,12 +1938,6 @@ image_types:
     image_func: "netinst"
     iso_label: "Everything"
     variant: "Everything"
-    build_pipelines: ["build"]
-    payload_pipelines:
-      - "anaconda-tree"
-      - "efiboot-tree"
-      - "bootiso-tree"
-      - "bootiso"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
     installer_config: *default_installer_config

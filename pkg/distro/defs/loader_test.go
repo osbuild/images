@@ -620,8 +620,6 @@ image_types:
     iso_label: "Workstation"
     default_size: 5_368_709_120  # 5 * datasizes.GibiByte
     image_func: "disk"
-    build_pipelines: ["build"]
-    payload_pipelines: ["os", "image", "qcow2"]
     exports: ["qcow2"]
     required_partition_sizes:
       "/": 1_073_741_824  # 1 * datasizes.GiB
@@ -654,8 +652,6 @@ image_types:
 	assert.Equal(t, "Workstation", imgType.ISOLabel)
 	assert.Equal(t, uint64(5*datasizes.GibiByte), imgType.DefaultSize)
 	assert.Equal(t, "disk", imgType.Image)
-	assert.Equal(t, []string{"build"}, imgType.BuildPipelines)
-	assert.Equal(t, []string{"os", "image", "qcow2"}, imgType.PayloadPipelines)
 	assert.Equal(t, []string{"qcow2"}, imgType.Exports)
 	assert.Equal(t, map[string]uint64{"/": 1_073_741_824}, imgType.RequiredPartitionSizes)
 	assert.Equal(t, []platform.PlatformConf{

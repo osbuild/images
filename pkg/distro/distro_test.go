@@ -214,7 +214,7 @@ func TestImageTypePipelineNames(t *testing.T) {
 					// order specified (eg. 'build' first) but it does not need to be an exact
 					// match. Only the pipelines with rpm or ostree metadata are required.
 					var order int
-					allPipelines := append(imageType.BuildPipelines(), imageType.PayloadPipelines()...)
+					allPipelines := append(m.BuildPipelines(), m.PayloadPipelines()...)
 					for _, name := range allPipelines {
 						idx := slices.Index(pmNames, name)
 						assert.True(idx >= order, "%s not in order %v", name, pmNames)
