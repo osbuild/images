@@ -24,3 +24,37 @@ func TestToPtr(t *testing.T) {
 	assert.Equal(t, valueStr, *gotStr)
 
 }
+
+func TestFromPtr(t *testing.T) {
+	var ptrInt *int
+	valueInt := FromPtr(ptrInt)
+	assert.Equal(t, 0, valueInt)
+	helperInt := 20
+	ptrInt = &helperInt
+	valueInt = FromPtr(ptrInt)
+	assert.Equal(t, 20, valueInt)
+
+	var ptrBool *bool
+	valueBool := FromPtr(ptrBool)
+	assert.Equal(t, false, valueBool)
+	helperBool := true
+	ptrBool = &helperBool
+	valueBool = FromPtr(ptrBool)
+	assert.Equal(t, true, valueBool)
+
+	var ptrUint64 *uint64
+	valueUint64 := FromPtr(ptrUint64)
+	assert.Equal(t, uint64(0), valueUint64)
+	helperUint64 := uint64(20)
+	ptrUint64 = &helperUint64
+	valueUint64 = FromPtr(ptrUint64)
+	assert.Equal(t, uint64(20), valueUint64)
+
+	var ptrString *string
+	valueString := FromPtr(ptrString)
+	assert.Equal(t, "", valueString)
+	helperString := "the-greatest-test-value"
+	ptrString = &helperString
+	valueString = FromPtr(ptrString)
+	assert.Equal(t, "the-greatest-test-value", valueString)
+}
