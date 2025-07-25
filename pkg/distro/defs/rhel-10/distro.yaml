@@ -414,7 +414,7 @@
     timeout: 10
     timeout_style: "countdown"
 
-  azure_image_config: &azure_image_config
+  azure_image_config_base: &azure_image_config_base
     # from CreateAzureDatalossWarningScriptAndUnit
     files:
       - path: &dataloss_script "/usr/local/sbin/temp-disk-dataloss-warning"
@@ -861,7 +861,7 @@ image_types:
         image_format: "vhd"
     # based on https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/deploying_rhel_9_on_microsoft_azure/assembly_deploying-a-rhel-image-as-a-virtual-machine-on-microsoft-azure_cloud-content-azure#making-configuration-changes_configure-the-image-azure
     image_config: &image_config_vhd
-      <<: *azure_image_config
+      <<: *azure_image_config_base
       time_synchronization:
         refclocks:
           - driver:
@@ -1867,43 +1867,6 @@ image_types:
             - "kernel-uki-virt-addons"  # provides useful cmdline utilities for the UKI
             - "shim-x64"
             - "uki-direct"
-    image_config:
-      <<: *azure_image_config
-      default_kernel: "kernel-uki-virt"
-      default_kernel_name: "kernel-uki-virt"
-      no_bls: true
-      cloud_init:
-        - filename: "91-azure_datasource.cfg"
-          config:
-            datasource:
-              azure:
-                apply_network_config: false
-            datasource_list:
-              - "Azure"
-    package_sets:
-      os:
-        - include:
-            - "@minimal-environment"
-            - "chrony"
-            - "cloud-init"
-            - "cloud-utils-growpart"
-            - "cryptsetup"
-            - "NetworkManager-cloud-setup"
-            - "openssh-server"
-            - "redhat-cloud-client-configuration"
-            - "redhat-release"
-            - "tpm2-tools"
-            - "WALinuxAgent"
-        - exclude:
-            - "dracut-config-rescue"
-            - "grubby"
-            - "iwl*"
-            # In EL9 we exclude linux-firmware* (note the asterisk).
-            # In EL10, packages in the minimal-environment group require
-            # linux-firmware-whence, so we only exclude the linux-firmware
-            # package here.
-            - "linux-firmware"
-            - "os-prober"
     partition_table:
       x86_64:
         uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
@@ -1931,3 +1894,52 @@ image_types:
               fstab_options: "defaults"
               fstab_freq: 0
               fstab_passno: 0
+    image_config:
+      <<: *azure_image_config_base
+      default_kernel: "kernel-uki-virt"
+      default_kernel_name: "kernel-uki-virt"
+      no_bls: true
+      cloud_init:
+        - filename: "91-azure_datasource.cfg"
+          config:
+            datasource:
+              azure:
+                apply_network_config: false
+            datasource_list:
+              - "Azure"
+      conditions:
+        "x86_64 shim package version lock":
+          # Lock the shim package to its installed version. This is necessary
+          # for UKI-based images that can become unbootable if the shim is
+          # upgraded to one signed by a newer certificate that does not exist
+          # in the system's database.
+          # See https://issues.redhat.com/browse/RHEL-93650
+          when:
+            arch: "x86_64"
+          shallow_merge:
+            versionlock_packages:
+              - "shim-x64"
+    package_sets:
+      os:
+        - include:
+            - "@minimal-environment"
+            - "chrony"
+            - "cloud-init"
+            - "cloud-utils-growpart"
+            - "cryptsetup"
+            - "NetworkManager-cloud-setup"
+            - "openssh-server"
+            - "redhat-cloud-client-configuration"
+            - "redhat-release"
+            - "tpm2-tools"
+            - "WALinuxAgent"
+        - exclude:
+            - "dracut-config-rescue"
+            - "grubby"
+            - "iwl*"
+            # In EL9 we exclude linux-firmware* (note the asterisk).
+            # In EL10, packages in the minimal-environment group require
+            # linux-firmware-whence, so we only exclude the linux-firmware
+            # package here.
+            - "linux-firmware"
+            - "os-prober"
