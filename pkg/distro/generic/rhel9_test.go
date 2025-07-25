@@ -529,6 +529,8 @@ func TestRhel9_Architecture_ListImageTypes(t *testing.T) {
 				"oci",
 				"wsl",
 				"minimal-raw",
+				"vagrant-libvirt",
+				"vagrant-virtualbox",
 			},
 			verTypes: map[string][]string{
 				"9.6": {
@@ -554,6 +556,7 @@ func TestRhel9_Architecture_ListImageTypes(t *testing.T) {
 				"image-installer",
 				"vhd",
 				"azure-rhui",
+				"vagrant-libvirt",
 				"wsl",
 				"minimal-raw",
 			},
