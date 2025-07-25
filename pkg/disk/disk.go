@@ -104,6 +104,10 @@ const (
 	EFISystemPartitionUUID = "68B2905B-DF3E-4FB3-80FA-49D1E773AA33"
 
 	EFIFilesystemUUID = "7B77-95E7"
+
+	// Partition type ID for UKIBoot raw data partitions
+	UKIBootPartitionUUID    = "DF331E4D-BE00-463F-B4A7-8B43E18FB53A"
+	UKIBootCtlPartitionUUID = "FEFD9070-346F-4C9A-85E6-17F07F922773"
 )
 
 func getPartitionTypeIDfor(ptType PartitionTableType, partTypeName string, architecture arch.Arch) (string, error) {
@@ -171,6 +175,10 @@ func getPartitionTypeIDfor(ptType PartitionTableType, partTypeName string, archi
 			default:
 				return "", fmt.Errorf("unknown or unsupported architecture enum value: %d", architecture)
 			}
+		case "ukiboot_a", "ukiboot_b":
+			return UKIBootPartitionUUID, nil
+		case "ukibootctl":
+			return UKIBootCtlPartitionUUID, nil
 		default:
 			return "", fmt.Errorf("unknown or unsupported partition type name: %s", partTypeName)
 		}
