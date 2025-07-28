@@ -2,6 +2,10 @@
 // OSBuild (schema v2) types.
 package osbuild
 
+import (
+	"fmt"
+)
+
 const (
 	// should be "^\\/(?!\\.\\.)((?!\\/\\.\\.\\/).)+$" but Go doesn't support lookaheads
 	// therefore we have to instead check for the invalid cases, which is much simpler
@@ -50,4 +54,20 @@ func (p *Pipeline) AddStages(stages ...*Stage) {
 	for _, stage := range stages {
 		p.AddStage(stage)
 	}
+}
+
+// GetID gets the pipeline identifiers for an *inspected* manifest. These are
+// not available for non-inspected manifests and will return an error there.
+func (p *Pipeline) GetID() (string, error) {
+	if len(p.Stages) == 0 {
+		return "", fmt.Errorf("no stages in manifest")
+	}
+
+	lastStage := p.Stages[len(p.Stages)-1]
+
+	if len(lastStage.ID) == 0 {
+		return "", fmt.Errorf("un-inspected manifest, identifiers are not available")
+	}
+
+	return lastStage.ID, nil
 }
