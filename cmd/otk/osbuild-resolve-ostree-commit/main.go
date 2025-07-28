@@ -6,8 +6,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/osbuild/images/internal/cmdutil"
 	"github.com/osbuild/images/internal/otkostree"
+	"github.com/osbuild/images/pkg/manifestgen/manifestmock"
 	"github.com/osbuild/images/pkg/ostree"
 )
 
@@ -81,7 +81,7 @@ func run(r io.Reader, w io.Writer) error {
 			return fmt.Errorf("failed to resolve ostree commit: %w", err)
 		}
 	} else {
-		commitSpec = cmdutil.MockOSTreeResolve(sourceSpec)
+		commitSpec = manifestmock.OSTreeResolve(sourceSpec)
 	}
 
 	output := map[string]Output{
