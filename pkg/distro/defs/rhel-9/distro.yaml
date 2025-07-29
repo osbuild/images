@@ -883,10 +883,22 @@
         shallow_merge:
           gpgkey_files:
             - "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
-      "x86_64 specific kernel commandline for rhel-9.6+":
+      "x86_64 specific kernel commandline for rhel-9.7+":
         when:
           arch: "x86_64"
-          version_greater_or_equal: "9.6"
+          version_greater_or_equal: "9.7"
+        shallow_merge:
+          kernel_options:
+            - "ro"
+            - "console=tty1"
+            - "console=ttyS0"
+            - "earlyprintk=ttyS0"
+            - "rootdelay=300"
+            - "nvme_core.io_timeout=240"
+      "x86_64 specific kernel commandline for rhel-9.6":
+        when:
+          arch: "x86_64"
+          version_equal: "9.6"
         shallow_merge:
           kernel_options:
             - "ro"
@@ -896,14 +908,23 @@
             - "earlyprintk=ttyS0"
             - "rootdelay=300"
             - "nvme_core.io_timeout=240"
-      "aarch64 specific kernel options for rhel 9.6+":
+      "aarch64 specific kernel options for rhel 9.6":
         when:
           arch: "aarch64"
-          version_greater_or_equal: "9.6"
+          version_equal: "9.6"
         shallow_merge:
           kernel_options:
             - "ro"
             - "loglevel=3"
+            - "console=ttyAMA0"
+            - "nvme_core.io_timeout=240"
+      "aarch64 specific kernel options for rhel 9.7+":
+        when:
+          arch: "aarch64"
+          version_greater_or_equal: "9.7"
+        shallow_merge:
+          kernel_options:
+            - "ro"
             - "console=ttyAMA0"
             - "nvme_core.io_timeout=240"
       "x86_64 specific kernel options rhel-9.5 or below":

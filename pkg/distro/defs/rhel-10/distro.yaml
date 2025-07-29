@@ -590,9 +590,24 @@
         shallow_merge:
           gpgkey_files:
             - "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
-      "x86_64 specific kernel commandline":
+      "x86_64 specific kernel commandline for rhel-10.1+":
         when:
           arch: "x86_64"
+          version_greater_or_equal: "10.1"
+        shallow_merge:
+          kernel_options:
+            # common
+            - "ro"
+            - "nvme_core.io_timeout=240"
+            # x86
+            - "console=tty1"
+            - "console=ttyS0"
+            - "earlyprintk=ttyS0"
+            - "rootdelay=300"
+      "x86_64 specific kernel commandline for rhel-10.0":
+        when:
+          arch: "x86_64"
+          version_equal: "10.0"
         shallow_merge:
           kernel_options:
             # common
@@ -604,9 +619,21 @@
             - "console=ttyS0"
             - "earlyprintk=ttyS0"
             - "rootdelay=300"
-      "aarch64 specific kernel commandline":
+      "aarch64 specific kernel commandline for rhel-10.1+":
         when:
           arch: "aarch64"
+          version_greater_or_equal: "10.1"
+        shallow_merge:
+          kernel_options:
+            # common
+            - "ro"
+            - "nvme_core.io_timeout=240"
+            # aarch64
+            - "console=ttyAMA0"
+      "aarch64 specific kernel commandline for rhel-10.0":
+        when:
+          arch: "aarch64"
+          version_equal: "10.0"
         shallow_merge:
           kernel_options:
             # common
