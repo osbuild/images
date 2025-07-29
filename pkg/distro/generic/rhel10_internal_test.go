@@ -77,7 +77,7 @@ func TestRhel10_NoBootPartition(t *testing.T) {
 				if it.ImageTypeYAML.PartitionTables == nil {
 					continue
 				}
-				if it.Name() == "azure-rhui" || it.Name() == "azure-sap-rhui" || it.Name() == "azure-sapapps-rhui" {
+				if it.Name() == "azure-rhui" || it.Name() == "azure-sap-rhui" || it.Name() == "azure-sapapps-rhui" || it.Name() == "azure" {
 					// Azure RHEL internal image type PT is by default LVM-based
 					// and we do not support /boot on LVM, so it must be on a separate partition.
 					continue

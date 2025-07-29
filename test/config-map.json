@@ -135,6 +135,7 @@
     ],
     "image-types": [
       "ami",
+      "azure",
       "azure-cvm",
       "azure-eap7-rhui",
       "azure-rhui",

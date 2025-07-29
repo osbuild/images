@@ -1441,7 +1441,7 @@ image_types:
                 exclude:
                   - "microcode_ctl"
 
-  "azure-rhui": &azure_rhui
+  "azure": &azure
     <<: *vhd
     mime_type: "application/xz"
     payload_pipelines: ["os", "image", "vpc", "xz"]
@@ -1596,6 +1596,9 @@ image_types:
                 - *azure_rhui_part_boot_efi
                 - *azure_rhui_part_boot_600
                 - *azure_rhui_part_lvm
+
+  "azure-rhui": &azure_rhui
+    <<: *azure
 
   "azure-sap-rhui":
     <<: *azure_rhui
