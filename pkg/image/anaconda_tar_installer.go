@@ -79,6 +79,9 @@ type AnacondaTarInstaller struct {
 	// Uses the old, deprecated, Anaconda config option "kickstart-modules".
 	// Only for RHEL 8.
 	UseLegacyAnacondaConfig bool
+
+	// Default Grub2 menu on the ISO
+	DefaultMenu int
 }
 
 func NewAnacondaTarInstaller() *AnacondaTarInstaller {
@@ -147,6 +150,7 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	anacondaPipeline.AdditionalDracutModules = img.AdditionalDracutModules
 	anacondaPipeline.AdditionalDrivers = img.AdditionalDrivers
 	anacondaPipeline.Locale = img.OSCustomizations.Language
+	anacondaPipeline.DefaultMenu = img.DefaultMenu
 
 	tarPath := "/liveimg.tar.gz"
 
@@ -169,6 +173,7 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	bootTreePipeline.Platform = img.Platform
 	bootTreePipeline.UEFIVendor = img.Platform.GetUEFIVendor()
 	bootTreePipeline.ISOLabel = img.ISOLabel
+	bootTreePipeline.DefaultMenu = img.DefaultMenu
 
 	kernelOpts := []string{fmt.Sprintf("inst.stage2=hd:LABEL=%s", img.ISOLabel)}
 	if img.ISORootKickstart {

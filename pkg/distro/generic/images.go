@@ -542,6 +542,9 @@ func liveInstallerImage(workload workload.Workload,
 		if installerConfig.SquashfsRootfs != nil && *installerConfig.SquashfsRootfs {
 			img.RootfsType = manifest.SquashfsRootfs
 		}
+		if menu := installerConfig.DefaultMenu; menu != nil {
+			img.DefaultMenu = *menu
+		}
 	}
 
 	return img, nil
@@ -613,6 +616,9 @@ func imageInstallerImage(workload workload.Workload,
 		// XXX: unify with rhel-11 ? or rhel-10.x?
 		if installerConfig.ISORootKickstart != nil {
 			img.ISORootKickstart = *installerConfig.ISORootKickstart
+		}
+		if menu := installerConfig.DefaultMenu; menu != nil {
+			img.DefaultMenu = *menu
 		}
 	}
 
@@ -814,6 +820,9 @@ func iotInstallerImage(workload workload.Workload,
 		if installerConfig.SquashfsRootfs != nil && *installerConfig.SquashfsRootfs {
 			img.RootfsType = manifest.SquashfsRootfs
 		}
+		if menu := installerConfig.DefaultMenu; menu != nil {
+			img.DefaultMenu = *menu
+		}
 	}
 	if len(img.Kickstart.Users)+len(img.Kickstart.Groups) > 0 {
 		// only enable the users module if needed
@@ -1012,6 +1021,9 @@ func netinstImage(workload workload.Workload,
 	if installerConfig != nil {
 		img.AdditionalDracutModules = append(img.AdditionalDracutModules, installerConfig.AdditionalDracutModules...)
 		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
+		if menu := installerConfig.DefaultMenu; menu != nil {
+			img.DefaultMenu = *menu
+		}
 
 		// This duplicates the iso_rootfs_type in image config
 		// use it as a default which may be overridden by image config

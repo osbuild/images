@@ -44,6 +44,9 @@ type AnacondaLiveInstaller struct {
 
 	AdditionalDracutModules []string
 	AdditionalDrivers       []string
+
+	// Default Grub2 menu on the ISO
+	DefaultMenu int
 }
 
 func NewAnacondaLiveInstaller() *AnacondaLiveInstaller {
@@ -76,6 +79,7 @@ func (img *AnacondaLiveInstaller) InstantiateManifest(m *manifest.Manifest,
 	livePipeline.Variant = img.Variant
 	livePipeline.Biosdevname = (img.Platform.GetArch() == arch.ARCH_X86_64)
 	livePipeline.Locale = img.Locale
+	livePipeline.DefaultMenu = img.DefaultMenu
 
 	// The live installer has SELinux enabled and targeted
 	livePipeline.SELinux = "targeted"
@@ -94,6 +98,7 @@ func (img *AnacondaLiveInstaller) InstantiateManifest(m *manifest.Manifest,
 	bootTreePipeline.Platform = img.Platform
 	bootTreePipeline.UEFIVendor = img.Platform.GetUEFIVendor()
 	bootTreePipeline.ISOLabel = img.ISOLabel
+	bootTreePipeline.DefaultMenu = img.DefaultMenu
 
 	kernelOpts := []string{
 		fmt.Sprintf("root=live:CDLABEL=%s", img.ISOLabel),
