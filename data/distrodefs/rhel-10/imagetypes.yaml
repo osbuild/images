@@ -1616,6 +1616,16 @@ image_types:
     platforms:
       - *x86_64_installer_platform
       - *aarch64_platform
+    platforms_override:
+      conditions:
+        "RHEL 10.1+ adds FIPS menu":
+          when:
+            version_greater_or_equal: "10.1"
+          override:
+            - <<: *x86_64_installer_platform
+              fips_menu: true
+            - <<: *aarch64_platform
+              fips_menu: true
     package_sets:
       <<: *bare_metal_pkgset
       installer:
