@@ -2875,6 +2875,7 @@ image_types:
               fstab_passno: 0
     image_config:
       <<: *azure_image_config_base
+      default_kernel: "kernel-uki-virt"
       default_kernel_name: "kernel-uki-virt"
       no_bls: true
       cloud_init:
