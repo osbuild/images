@@ -1,3 +1,4 @@
+---
 distros:
   - &fedora_rawhide
     name: fedora-43
@@ -29,17 +30,19 @@ distros:
       # XXX: remove once fedora containers are part of the upstream
       # fedora registry (and can be validated via tls)
       riscv64: "ghcr.io/mvo5/fedora-buildroot:43"
-    # XXX: add repos here too, that requires some churn, see
-    # https://github.com/osbuild/images/compare/main...mvo5:yaml-distroconfig?expand=1
-    # and we will also need to think about backward compat, as currently
-    # dropping "$distro-$ver.json" files into
-    # /etc/osbuild-composer/repositories will define what distros are
-    # available via images and we will need to provide compatibility for
-    # that.
-    #
-    # Having the repos separated means when a new fedora release is out
-    # we will need to update two places which is clearly a regression from
-    # before.
+
+      # XXX: add repos here too, that requires some churn, see
+      # https://github.com/osbuild/images/compare/main...mvo5:yaml-distroconfig?expand=1
+      # and we will also need to think about backward compat, as currently
+      # dropping "$distro-$ver.json" files into
+      # /etc/osbuild-composer/repositories will define what distros are
+      # available via images and we will need to provide compatibility for
+      # that.
+      #
+      # Having the repos separated means when a new fedora release is out
+      # we will need to update two places which is clearly a regression from
+      # before.
+
   - &fedora_stable
     <<: *fedora_rawhide
     name: "fedora-{{.MajorVersion}}"
