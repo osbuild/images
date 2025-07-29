@@ -1682,7 +1682,7 @@ image_types:
       - <<: *aarch64_platform
         image_format: "raw"
     platforms_override:
-      conditions: &platform_override_conditions_ami
+      conditions:
         "Keep the RHEL EC2 x86_64 images before 9.3 BIOS-only":
           when:
             distro_name: "rhel"
@@ -1826,7 +1826,7 @@ image_types:
       - <<: *x86_64_bios_platform
         image_format: "raw"
     platforms_override:
-      conditions: &platform_override_conditions_ami
+      conditions:
         # XXX: duplicated with "ec2" but drops "aarch64", I cannot
         # find a better way to express this complex condition in YAML
         "Keep the RHEL EC2 x86_64 images before 9.3 BIOS-only":
@@ -1851,7 +1851,7 @@ image_types:
       - <<: *x86_64_bios_platform
         image_format: "raw"
     platforms_override:
-      conditions: &platform_override_conditions_ami
+      conditions:
         # XXX: duplicated with "ec2" but drops "aarch64", I cannot
         # find a better way to express this complex condition in YAML
         "Keep the RHEL EC2 x86_64 images before 9.3 BIOS-only":
@@ -2248,25 +2248,15 @@ image_types:
             type: *xboot_ldr_partition_guid
             uuid: *data_partition_uuid
             payload_type: "filesystem"
-            payload: &default_partition_table_part_boot_payload
-              type: "xfs"
-              mountpoint: "/boot"
-              label: "boot"
-              fstab_options: "defaults"
-              fstab_freq: 0
-              fstab_passno: 0
+            payload:
+              <<: *default_partition_table_part_boot_payload
           - &minimal_raw_partition_table_part_root
             size: "2 GiB"
             type: *filesystem_data_guid
             uuid: *root_partition_uuid
             payload_type: "filesystem"
-            payload: &default_partition_table_part_root_payload
-              type: "xfs"
-              label: "root"
-              mountpoint: "/"
-              fstab_options: "defaults"
-              fstab_freq: 0
-              fstab_passno: 0
+            payload:
+              <<: *default_partition_table_part_root_payload
       aarch64: &partition_table_minimal_raw_aarch64
         <<: *partition_table_minimal_raw_x86_64
     partition_tables_override:
