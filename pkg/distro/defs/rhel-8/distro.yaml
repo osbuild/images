@@ -1278,7 +1278,7 @@ image_types:
       - <<: *aarch64_platform
         image_format: "raw"
     platforms_override:
-      conditions: &platform_override_conditions_ami
+      conditions:
         "Keep the RHEL EC2 x86_64 images before 8.9 BIOS-only":
           when:
             # Keep the RHEL EC2 x86_64 images before 8.9 BIOS-only for backward compatibility.
@@ -1330,7 +1330,7 @@ image_types:
       - <<: *x86_64_bios_platform
         image_format: "raw"
     platforms_override:
-      conditions: &platform_override_conditions_ami
+      conditions:
         # XXX: duplicated with "ami" but drops "aarch64", I cannot
         # find a better way to express this complex condition in YAML
         "Keep the RHEL EC2 x86_64 images before 8.9 BIOS-only":
@@ -1358,7 +1358,7 @@ image_types:
       - <<: *x86_64_bios_platform
         image_format: "raw"
     platforms_override:
-      conditions: &platform_override_conditions_ami
+      conditions:
         # XXX: duplicated with "ami" but drops "aarch64", I cannot
         # find a better way to express this complex condition in YAML
         "Keep the RHEL EC2 x86_64 images before 8.9 BIOS-only":
