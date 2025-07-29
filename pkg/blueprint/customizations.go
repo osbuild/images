@@ -34,6 +34,7 @@ type Customizations struct {
 	RPM                *RPMCustomization              `json:"rpm,omitempty" toml:"rpm,omitempty"`
 	RHSM               *RHSMCustomization             `json:"rhsm,omitempty" toml:"rhsm,omitempty"`
 	CACerts            *CACustomization               `json:"cacerts,omitempty" toml:"cacerts,omitempty"`
+	Firstboot          []FirstbootCustomization       `json:"firstboot,omitempty" toml:"firstboot,omitempty"`
 }
 
 type IgnitionCustomization struct {
