@@ -1,4 +1,10 @@
 .common:
+  kernel_options:
+    bootc_kernel_options: &bootc_kernel_options
+      - rw
+      - console=tty0
+      - console=ttyS0
+
   disk_sizes:
     default_required_partition_sizes: &default_required_dir_sizes
       "/": 1_073_741_824     # 1 * datasizes.GiB
@@ -122,6 +128,8 @@ image_types:
     required_partition_sizes: *default_required_dir_sizes
     platforms: *default_bootc_platforms
     partition_table: *default_bootc_partition_table
+    image_config:
+      kernel_options: *bootc_kernel_options
 
   "ami":
     <<: *raw_image_type

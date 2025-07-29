@@ -101,6 +101,7 @@ def main():
     print("Note that this diff does *not* include depsolved rpms,")
     print("so upstream dependency changes will not be caught\n")
     with tempfile.TemporaryDirectory() as tmpdir:
+        tmpdir = "/tmp"
         manifests_diff(pathlib.Path(tmpdir), rev)
 
 
