@@ -16,6 +16,9 @@ type InstallerConfig struct {
 
 	// SquashfsRootfs will set SquashfsRootfs as rootfs in the iso image
 	SquashfsRootfs *bool `yaml:"squashfs_rootfs"`
+
+	// DefaultMenu will set the grub2 iso menu's default setting
+	DefaultMenu *int `yaml:"default_menu"`
 }
 
 // InheritFrom inherits unset values from the provided parent configuration and

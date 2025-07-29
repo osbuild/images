@@ -694,6 +694,7 @@ image_types:
       additional_drivers:
         - base-drv1
       squashfs_rootfs: true
+      default_menu: 1
 `
 
 func TestImageTypeInstallerConfig(t *testing.T) {
@@ -704,6 +705,7 @@ func TestImageTypeInstallerConfig(t *testing.T) {
 		AdditionalDracutModules: []string{"base-dracut-mod1"},
 		AdditionalDrivers:       []string{"base-drv1"},
 		SquashfsRootfs:          common.ToPtr(true),
+		DefaultMenu:             common.ToPtr(1),
 	}, installerConfig)
 }
 
@@ -716,6 +718,7 @@ func TestImageTypeInstallerConfigMergeVerLT(t *testing.T) {
           shallow_merge:
             additional_dracut_modules:
               - override-dracut-mod1
+            default_menu: 2
 `
 	it := makeTestImageType(t, fakeDistroYaml)
 
@@ -724,6 +727,7 @@ func TestImageTypeInstallerConfigMergeVerLT(t *testing.T) {
 		// AdditionalDrivers,SquashfsRootfs merged from parent
 		AdditionalDrivers:       []string{"base-drv1"},
 		SquashfsRootfs:          common.ToPtr(true),
+		DefaultMenu:             common.ToPtr(2),
 		AdditionalDracutModules: []string{"override-dracut-mod1"},
 	}, installerConfig)
 }
@@ -738,7 +742,7 @@ func TestImageTypeInstallerConfigMergeDistroName(t *testing.T) {
             additional_dracut_modules:
               - override-dracut-mod1
             additional_drivers:
-             - override-drv1
+              - override-drv1
 `
 	it := makeTestImageType(t, fakeDistroYaml)
 
@@ -748,6 +752,7 @@ func TestImageTypeInstallerConfigMergeDistroName(t *testing.T) {
 		AdditionalDrivers:       []string{"override-drv1"},
 		// SquashfsRootfs merged from parent
 		SquashfsRootfs: common.ToPtr(true),
+		DefaultMenu:    common.ToPtr(1),
 	}, installerConfig)
 }
 
@@ -759,7 +764,7 @@ func TestImageTypeInstallerConfigMergeArch(t *testing.T) {
             arch: "test_arch"
           shallow_merge:
             additional_drivers:
-             - override-drv1
+              - override-drv1
 `
 	it := makeTestImageType(t, fakeDistroYaml)
 
@@ -769,6 +774,7 @@ func TestImageTypeInstallerConfigMergeArch(t *testing.T) {
 		// AdditionalDracutModules,SquashfsRootfs merged from parent
 		AdditionalDracutModules: []string{"base-dracut-mod1"},
 		SquashfsRootfs:          common.ToPtr(true),
+		DefaultMenu:             common.ToPtr(1),
 	}, installerConfig)
 }
 
