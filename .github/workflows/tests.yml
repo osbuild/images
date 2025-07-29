@@ -239,3 +239,28 @@ jobs:
         run: |
           python3 -m pylint --version
           python3 -m pylint $(grep -l "/usr/bin/env python3" -r test/scripts) test/scripts/*.py
+
+  yaml-checks:
+    name: "YAML checks"
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Install checkers
+        run: |
+          sudo apt update
+          sudo apt install -y yamllint yq
+
+      - name: YAML Lint
+        # We only care about distro definitions for this check
+        run: |
+          find pkg/distro/defs "(" -iname "*.yaml" -or -iname "*.yml" ")" -exec yamllint --strict {} \+
+
+      - name: Check YAML definitions with yq
+        # yq will catch issues that yamllint will not, like duplicate anchros
+        # We only care about distro definitions for this check
+        run: |
+          find pkg/distro/defs "(" -iname "*.yaml" -or -iname "*.yml" ")" -exec yq . {} \+ > /dev/null
