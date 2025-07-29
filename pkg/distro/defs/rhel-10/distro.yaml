@@ -1005,7 +1005,7 @@ image_types:
                 include:
                   - "insights-client"
 
-  "azure-rhui": &azure_rhui
+  "azure": &azure
     <<: *vhd
     payload_pipelines: ["os", "image", "vpc", "xz"]
     exports: ["xz"]
@@ -1102,6 +1102,9 @@ image_types:
           # NB: we currently don't support /boot on LVM
           - *azure_rhui_part_boot
           - *azure_rhui_part_lvm
+
+  "azure-rhui": &azure_rhui
+    <<: *azure
 
   "azure-sap-rhui":
     <<: *azure_rhui

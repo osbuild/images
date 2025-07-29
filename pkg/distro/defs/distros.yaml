@@ -96,6 +96,11 @@ distros:
           - ec2
           - ec2-sap
           - ec2-ha
+      "some image types are non-rhel-only":
+        when:
+          distro_name: "rhel"
+        ignore_image_types:
+          - azure
     # rhel & centos share the same list of allowed profiles so a
     # single allow list can be used
     oscap_profiles_allowlist: &oscap_profile_allowlist_rhel
@@ -187,6 +192,11 @@ distros:
           - ec2
           - ec2-sap
           - ec2-ha
+      "some image types are non-rhel-only":
+        when:
+          distro_name: "rhel"
+        ignore_image_types:
+          - azure
       "CVM is only available starting from 9.6":
         when:
           version_less_than: "9.6"
