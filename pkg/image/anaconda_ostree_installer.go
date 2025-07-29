@@ -58,6 +58,9 @@ type AnacondaOSTreeInstaller struct {
 	// Locale for the installer. This should be set to the same locale as the
 	// ISO OS payload, if known.
 	Locale string
+
+	// Default Grub2 menu on the ISO
+	DefaultMenu int
 }
 
 func NewAnacondaOSTreeInstaller(commit ostree.SourceSpec) *AnacondaOSTreeInstaller {
@@ -109,6 +112,7 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 	anacondaPipeline.DisabledAnacondaModules = img.DisabledAnacondaModules
 	anacondaPipeline.AdditionalDrivers = img.AdditionalDrivers
 	anacondaPipeline.Locale = img.Locale
+	anacondaPipeline.DefaultMenu = img.DefaultMenu
 
 	var rootfsImagePipeline *manifest.ISORootfsImg
 	switch img.RootfsType {
@@ -122,6 +126,7 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 	bootTreePipeline.Platform = img.Platform
 	bootTreePipeline.UEFIVendor = img.Platform.GetUEFIVendor()
 	bootTreePipeline.ISOLabel = img.ISOLabel
+	bootTreePipeline.DefaultMenu = img.DefaultMenu
 
 	if img.Kickstart == nil || img.Kickstart.OSTree == nil {
 		return nil, fmt.Errorf("kickstart options not set for ostree installer")

@@ -450,6 +450,13 @@ func (p *AnacondaInstallerISOTree) serialize() osbuild.Pipeline {
 		stage := osbuild.NewISOLinuxStage(options, p.anacondaPipeline.Name())
 		pipeline.AddStage(stage)
 	} else if p.ISOBoot == Grub2ISOBoot {
+		var grub2config *osbuild.Grub2Config
+		if p.anacondaPipeline.DefaultMenu > 0 {
+			grub2config = &osbuild.Grub2Config{
+				Default: p.anacondaPipeline.DefaultMenu,
+			}
+		}
+
 		options := &osbuild.Grub2ISOLegacyStageOptions{
 			Product: osbuild.Product{
 				Name:    p.anacondaPipeline.product,
@@ -461,6 +468,7 @@ func (p *AnacondaInstallerISOTree) serialize() osbuild.Pipeline {
 			},
 			ISOLabel: p.isoLabel,
 			FIPS:     p.anacondaPipeline.platform.GetFIPSMenu(),
+			Config:   grub2config,
 		}
 
 		stage := osbuild.NewGrub2ISOLegacyStage(options)

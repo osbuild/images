@@ -49,6 +49,8 @@ type AnacondaNetInstaller struct {
 	UseLegacyAnacondaConfig bool
 	FIPS                    bool // Adds fips=1 to the iso kernel cmdline
 	Language                string
+	// Default Grub2 menu on the ISO
+	DefaultMenu int
 }
 
 func NewAnacondaNetInstaller() *AnacondaNetInstaller {
@@ -94,6 +96,7 @@ func (img *AnacondaNetInstaller) InstantiateManifest(m *manifest.Manifest,
 	anacondaPipeline.AdditionalDracutModules = img.AdditionalDracutModules
 	anacondaPipeline.AdditionalDrivers = img.AdditionalDrivers
 	anacondaPipeline.Locale = img.Language
+	anacondaPipeline.DefaultMenu = img.DefaultMenu
 
 	anacondaPipeline.Checkpoint()
 
@@ -109,6 +112,7 @@ func (img *AnacondaNetInstaller) InstantiateManifest(m *manifest.Manifest,
 	bootTreePipeline.Platform = img.Platform
 	bootTreePipeline.UEFIVendor = img.Platform.GetUEFIVendor()
 	bootTreePipeline.ISOLabel = img.ISOLabel
+	bootTreePipeline.DefaultMenu = img.DefaultMenu
 
 	kernelOpts := []string{fmt.Sprintf("inst.stage2=hd:LABEL=%s", img.ISOLabel)}
 	if img.FIPS {

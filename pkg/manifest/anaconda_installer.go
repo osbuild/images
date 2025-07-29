@@ -92,6 +92,9 @@ type AnacondaInstaller struct {
 	// Locale for the installer. This should be set to the same locale as the
 	// ISO OS payload, if known.
 	Locale string
+
+	// Default Grub2 menu on the ISO
+	DefaultMenu int
 }
 
 func NewAnacondaInstaller(installerType AnacondaInstallerType,
