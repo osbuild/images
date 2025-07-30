@@ -13,6 +13,7 @@ import (
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
+	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/platform"
 )
 
@@ -98,6 +99,10 @@ func ImageFromBootc(bootcRef, imgTypeStr, archStr string) (distro.ImageType, err
 			Name:          nameVer,
 			DefaultFSType: rootfsType,
 			DefsPath:      "./bootc",
+			// XXX: hack, we need a new "DISTRO_BOOTC"
+			// probably but checkOptions() needs *something*
+			// for now
+			DistroLike: manifest.DISTRO_FEDORA,
 		},
 		arches: make(map[string]*architecture),
 	}
