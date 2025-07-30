@@ -1,0 +1,134 @@
+package azure_test
+
+import (
+	"context"
+	"testing"
+
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v5"
+	"github.com/stretchr/testify/require"
+
+	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/cloud/azure"
+)
+
+type azm struct {
+	az  *azure.Client
+	rcm *resourcesMock
+	rgm *resourceGroupsMock
+	acm *accountsMock
+	im  *imagesMock
+}
+
+func newAZ() azm {
+	rcm := &resourcesMock{}
+	rgm := &resourceGroupsMock{}
+	acm := &accountsMock{}
+	im := &imagesMock{}
+	return azm{
+		azure.NewTestclient(rcm, rgm, acm, im),
+		rcm,
+		rgm,
+		acm,
+		im,
+	}
+}
+
+func TestGetResourceNameByTag(t *testing.T) {
+	azm := newAZ()
+
+	res, err := azm.az.GetResourceNameByTag(context.Background(), "rg", azure.Tag{
+		Name:  "tag name",
+		Value: "tag value",
+	})
+	require.NoError(t, err)
+	require.Equal(t, "storage-account", res)
+
+	require.Len(t, azm.rcm.list, 1)
+	require.Equal(t, "rg", azm.rcm.list[0].rg)
+	require.Equal(t, "tagName eq 'tag name' and tagValue eq 'tag value'", common.ValueOrEmpty(azm.rcm.list[0].options.Filter))
+}
+
+func TestCreateStorageAccount(t *testing.T) {
+	azm := newAZ()
+	err := azm.az.CreateStorageAccount(context.Background(), "rg", "name", "loc", azure.Tag{
+		Name:  "tag name",
+		Value: "tag value",
+	})
+	require.NoError(t, err)
+
+	require.Len(t, azm.acm.beginCreate, 1)
+	require.Equal(t, "rg", azm.acm.beginCreate[0].rg)
+	require.Equal(t, "name", azm.acm.beginCreate[0].account)
+	require.Equal(t, "loc", common.ValueOrEmpty(azm.acm.beginCreate[0].params.Location))
+	require.Equal(t, "tag value", common.ValueOrEmpty(azm.acm.beginCreate[0].params.Tags["tag name"]))
+
+	require.Len(t, azm.rgm.get, 0)
+}
+
+func TestCreateStorageAccountEmptyLocation(t *testing.T) {
+	azm := newAZ()
+	err := azm.az.CreateStorageAccount(context.Background(), "rg", "name", "", azure.Tag{
+		Name:  "tag name",
+		Value: "tag value",
+	})
+	require.NoError(t, err)
+
+	require.Len(t, azm.rgm.get, 1)
+	require.Equal(t, "rg", azm.rgm.get[0].rg)
+	require.Nil(t, azm.rgm.get[0].options)
+
+	require.Len(t, azm.acm.beginCreate, 1)
+	require.Equal(t, "rg", azm.acm.beginCreate[0].rg)
+	require.Equal(t, "name", azm.acm.beginCreate[0].account)
+	require.Equal(t, "test-universe", common.ValueOrEmpty(azm.acm.beginCreate[0].params.Location))
+	require.Equal(t, "tag value", common.ValueOrEmpty(azm.acm.beginCreate[0].params.Tags["tag name"]))
+}
+
+func TestGetResourceGroups(t *testing.T) {
+	azm := newAZ()
+	group, err := azm.az.GetResourceGroupLocation(context.Background(), "group-test")
+	require.NoError(t, err)
+	require.Equal(t, "test-universe", group)
+
+	require.Len(t, azm.rgm.get, 1)
+	require.Equal(t, "group-test", azm.rgm.get[0].rg)
+	require.Nil(t, azm.rgm.get[0].options)
+}
+
+func TestGetStorageAccountKey(t *testing.T) {
+	azm := newAZ()
+	acc, err := azm.az.GetStorageAccountKey(context.Background(), "rg", "storacc")
+	require.NoError(t, err)
+	require.Equal(t, "real key", acc)
+
+	require.Len(t, azm.acm.listKeys, 1)
+	require.Equal(t, "storacc", azm.acm.listKeys[0].account)
+	require.Equal(t, "rg", azm.acm.listKeys[0].rg)
+}
+
+func TestRegisterImage(t *testing.T) {
+	azm := newAZ()
+	err := azm.az.RegisterImage(context.Background(), "rg", "storacc", "storcontainer", "blobname", "imgname", "", azure.HyperVGenV2)
+	require.NoError(t, err)
+
+	// resolving the empty location
+	require.Len(t, azm.rgm.get, 1)
+
+	require.Len(t, azm.im.createOrUpdate, 1)
+	require.Equal(t, "rg", azm.im.createOrUpdate[0].rg)
+	require.Equal(t, "imgname", azm.im.createOrUpdate[0].name)
+	require.Equal(t, armcompute.Image{
+		Properties: &armcompute.ImageProperties{
+			HyperVGeneration:     common.ToPtr(armcompute.HyperVGenerationTypesV2),
+			SourceVirtualMachine: nil,
+			StorageProfile: &armcompute.ImageStorageProfile{
+				OSDisk: &armcompute.ImageOSDisk{
+					OSType:  common.ToPtr(armcompute.OperatingSystemTypesLinux),
+					BlobURI: common.ToPtr("https://storacc.blob.core.windows.net/storcontainer/blobname"),
+					OSState: common.ToPtr(armcompute.OperatingSystemStateTypesGeneralized),
+				},
+			},
+		},
+		Location: common.ToPtr("test-universe"),
+	}, azm.im.createOrUpdate[0].img)
+}
