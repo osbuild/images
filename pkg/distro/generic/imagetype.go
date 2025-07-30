@@ -346,6 +346,14 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 	}
 }
 
+func (t *imageType) RequiredBlueprintOptions() []string {
+	return nil
+}
+
+func (t *imageType) SupportedBlueprintOptions() []string {
+	return nil
+}
+
 func bootstrapContainerFor(t *imageType) string {
 	a := common.Must(arch.FromString(t.arch.name))
 	return t.arch.distro.DistroYAML.BootstrapContainers[a]

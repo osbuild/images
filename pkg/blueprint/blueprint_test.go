@@ -186,3 +186,14 @@ func TestKernelNameCustomization(t *testing.T) {
 		}
 	}
 }
+
+func TestBlueprintError(t *testing.T) {
+	err := BlueprintError{
+		Message: "not supported",
+		RevPath: []string{"name", "user", "customizations"},
+	}
+
+	expMessage := "customizations.user.name: not supported"
+
+	assert.Equal(t, expMessage, err.Error())
+}

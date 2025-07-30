@@ -25,3 +25,11 @@ type ImageType = imageType
 func (t *imageType) GetDefaultImageConfig() *distro.ImageConfig {
 	return t.getDefaultImageConfig()
 }
+
+var (
+	CheckOptionsFedora = checkOptionsFedora
+	CheckOptionsRhel7  = checkOptionsRhel7
+	CheckOptionsRhel8  = checkOptionsRhel8
+	CheckOptionsRhel9  = checkOptionsRhel9
+	CheckOptionsRhel10 = checkOptionsRhel10
+)

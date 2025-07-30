@@ -1,6 +1,12 @@
 // Package blueprint contains primitives for representing weldr blueprints
 package blueprint
 
+import (
+	"fmt"
+	"slices"
+	"strings"
+)
+
 // A Blueprint is a high-level description of an image.
 type Blueprint struct {
 	Name        string    `json:"name" toml:"name"`
@@ -95,4 +101,16 @@ func (p Package) ToNameVersion() string {
 
 func (p EnabledModule) ToNameStream() string {
 	return p.Name + ":" + p.Stream
+}
+
+type BlueprintError struct {
+	// Reverse path to the customization that caused the error.
+	RevPath []string
+	Message string
+}
+
+func (e BlueprintError) Error() string {
+	path := e.RevPath
+	slices.Reverse(path)
+	return fmt.Sprintf("%s: %s", strings.Join(path, "."), e.Message)
 }
