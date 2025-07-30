@@ -137,6 +137,7 @@
       - "ipmi_msghandler"
     # see commit c6bfb22f54, controls the kickstart location
     iso_root_kickstart: true
+    default_menu: 1
 
   sapapps_image_config: &sapapps_image_config
     selinux_config:
