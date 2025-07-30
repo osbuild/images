@@ -19,6 +19,7 @@
       - &efi_system_partition_guid "C12A7328-F81F-11D2-BA4B-00A0C93EC93B"
       - &filesystem_data_guid "0FC63DAF-8483-4772-8E79-3D69D8477DE4"
       - &xboot_ldr_partition_guid "BC13C2FF-59E6-4262-A352-B275FD6F7172"
+      - &prep_partition_guid "9E1A2D38-C612-4316-AA26-8B49521E5A8B"
     # static UUIDs for partitions and filesystems
     # NOTE(akoutsou): These are unnecessary and have stuck around since the
     # beginning where (I believe) the goal was to have predictable,
@@ -89,36 +90,33 @@
               label: "root"
               mountpoint: "/"
               fstab_options: "ro"
-      # XXX: double check with bib
       aarch64: &default_partition_table_aarch64
         uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
         type: "gpt"
         partitions:
           - *default_partition_table_part_efi
+          - *default_partition_table_part_boot
           - *default_partition_table_part_root
       ppc64le:
-        uuid: "0x14fc63d2"
-        type: "dos"
+        uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
+        type: "gpt"
         partitions:
           - size: "4 MiB"
             bootable: true
-            type: *prep_partition_dosid
-          - &default_partition_table_part_root_ppc64le
-            size: "2 GiB"
-            payload_type: "filesystem"
-            payload:
-              <<: *default_partition_table_part_root_payload
-              label: ""
+            type: *prep_partition_guid
+          - *default_partition_table_part_boot
+          - *default_partition_table_part_root
       s390x:
-        uuid: "0x14fc63d2"
-        type: "dos"
+        uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
+        type: "gpt"
         partitions:
-          - <<: *default_partition_table_part_root_ppc64le
-            bootable: true
+          - *default_partition_table_part_boot
+          - *default_partition_table_part_root
 
 image_types:
   "raw": &raw_image_type
-    filename: "image.raw"
+    # XXX: the filenames are all hardcoded in the bootcDisk image
+    filename: "disk.raw"
     image_func: "bootc_disk"
     mime_type: "application/octet-stream"
     bootable: true
@@ -136,7 +134,6 @@ image_types:
 
   "qcow2":
     <<: *raw_image_type
-    filename: "disk.qcow2"
     mime_type: "application/x-qemu-disk"
     build_pipelines: ["build"]
     payload_pipelines: ["image", "qcow2"]
@@ -144,21 +141,18 @@ image_types:
 
   "vmdk":
     <<: *raw_image_type
-    filename: "disk.vmdk"
     mime_type: "application/x-vmdk"
     payload_pipelines: ["os", "image", "vmdk"]
     exports: ["vmdk"]
 
   "vhd":
     <<: *raw_image_type
-    filename: "disk.vhd"
     mime_type: "application/x-vhd"
     payload_pipelines: ["os", "image", "vpc"]
     exports: ["vpc"]
 
   "gce":
     <<: *raw_image_type
-    filename: "image.tar.gz"
     mime_type: "application/gzip"
     payload_pipelines: ["os", "image", "gce"]
     exports: ["gce"]
