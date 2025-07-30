@@ -382,8 +382,8 @@ type ImageTypeYAML struct {
 	DefaultSize uint64 `yaml:"default_size"`
 	// the image func name: disk,container,live-installer,...
 	Image                  string            `yaml:"image_func"`
-	BuildPipelines         []string          `yaml:"build_pipelines"`
-	PayloadPipelines       []string          `yaml:"payload_pipelines"`
+	XXXUnused              []string          `yaml:"build_pipelines"`
+	XXXUnused2             []string          `yaml:"payload_pipelines"`
 	Exports                []string          `yaml:"exports"`
 	RequiredPartitionSizes map[string]uint64 `yaml:"required_partition_sizes"`
 
