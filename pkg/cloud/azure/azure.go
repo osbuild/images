@@ -28,6 +28,16 @@ type Client struct {
 	images         ImagesClient
 }
 
+func newTestClient(rc ResourcesClient, rgc ResourceGroupsClient, ac AccountsClient, ic ImagesClient) *Client {
+	return &Client{
+		creds:          nil,
+		resources:      rc,
+		resourceGroups: rgc,
+		accounts:       ac,
+		images:         ic,
+	}
+}
+
 // NewClient creates a client for accessing the Azure API.
 // See https://docs.microsoft.com/en-us/rest/api/azure/
 // If you need to work with the Azure Storage API, see NewStorageClient
