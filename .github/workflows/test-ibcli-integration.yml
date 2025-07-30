@@ -1,0 +1,50 @@
+---
+name: "ibcli integration"
+
+
+
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  unit-tests:
+    name: "🛃 Unit tests for image-builder-cli"
+    runs-on: ubuntu-latest
+    container:
+      image: registry.fedoraproject.org/fedora:latest
+    outputs:
+      base_test: ${{ steps.tests-base.outputs.base_test }}
+      pr_test: ${{ steps.tests-pr.outputs.pr_test }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: image-builder-cli
+          repository: osbuild/image-builder-cli
+          ref: main
+
+      - uses: actions/checkout@v4
+        with:
+          path: images
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      # XXX: install the test deps form ibcli instead
+      - name: Install build and test dependencies
+        run: ./images/test/scripts/install-dependencies
+
+      - name: Mark the working directory as safe for git
+        run: git config --global --add safe.directory "$(pwd)"
+
+      - name: Update the osbuild/images reference to the PR HEAD
+        run: |
+          cd image-builder-cli
+          go mod edit -replace github.com/osbuild/images=../images
+          go mod tidy
+
+      - name: Run unit tests (PR HEAD)
+        id: tests-pr
+        working-directory: image-builder-cli
+        run: |
+          go test -v -race ./...
