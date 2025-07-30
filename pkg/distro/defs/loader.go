@@ -210,16 +210,17 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 			return nil, err
 		}
 		if found != "" {
-			if err := distro.runTemplates(found); err != nil {
-				return nil, err
-			}
-
 			foundDistro = &distro
+			// nameVer must be replaced with normalized name
+			nameVer = found
 			break
 		}
 	}
 	if foundDistro == nil {
 		return nil, nil
+	}
+	if err := foundDistro.runTemplates(nameVer); err != nil {
+		return nil, err
 	}
 
 	// load imageTypes

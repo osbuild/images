@@ -795,7 +795,7 @@ distros:
       name: org.osbuild.fedora43
       build_packages: ["glibc"]
     bootstrap_containers:
-      x86_64: "registry.fedoraproject.org/fedora-toolbox:43"
+      x86_64: "registry.fedoraproject.org/fedora-toolbox:{{.MajorVersion}}"
     oscap_profiles_allowlist:
       - "xccdf_org.ssgproject.content_profile_ospp"
 
