@@ -250,7 +250,7 @@ func genPartitionTable(genPartInput *Input, rng *rand.Rand) (*Output, error) {
 			return nil, err
 		}
 	}
-	pt, err := disk.NewPartitionTable(basePt, genPartInput.Modifications.Filesystems, diskSize, genPartInput.Modifications.PartitionMode, architecture, nil, rng)
+	pt, err := disk.NewPartitionTable(basePt, genPartInput.Modifications.Filesystems, diskSize, genPartInput.Modifications.PartitionMode, architecture, nil, "", rng)
 	if err != nil {
 		return nil, err
 	}
