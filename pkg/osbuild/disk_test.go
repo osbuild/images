@@ -44,7 +44,7 @@ func TestGenImageKernelOptions(t *testing.T) {
 
 	luks_lvm := testPartitionTables["luks+lvm"]
 
-	pt, err := disk.NewPartitionTable(&luks_lvm, []blueprint.FilesystemCustomization{}, 0, partition.AutoLVMPartitioningMode, arch.ARCH_X86_64, make(map[string]uint64), rng)
+	pt, err := disk.NewPartitionTable(&luks_lvm, []blueprint.FilesystemCustomization{}, 0, partition.AutoLVMPartitioningMode, arch.ARCH_X86_64, make(map[string]uint64), "", rng)
 	assert.NoError(err)
 
 	uuids := collectUUIDs(pt)
