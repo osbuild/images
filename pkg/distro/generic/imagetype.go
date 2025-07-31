@@ -193,7 +193,7 @@ func (t *imageType) getPartitionTable(customizations *blueprint.Customizations, 
 	}
 
 	mountpoints := customizations.GetFilesystems()
-	return disk.NewPartitionTable(basePartitionTable, mountpoints, imageSize, options.PartitioningMode, t.platform.GetArch(), t.ImageTypeYAML.RequiredPartitionSizes, rng)
+	return disk.NewPartitionTable(basePartitionTable, mountpoints, imageSize, options.PartitioningMode, t.platform.GetArch(), t.ImageTypeYAML.RequiredPartitionSizes, defaultFSType.String(), rng)
 }
 
 func (t *imageType) getDefaultImageConfig() *distro.ImageConfig {
