@@ -73,7 +73,7 @@ func (d *distribution) getISOLabelFunc(isoLabel string) isoLabelFunc {
 }
 
 // XXX: wrong layer
-func ImageFromBootc(bootcRef, imgTypeStr, archStr string) (distro.ImageType, error) {
+func ImageFromBootc(bootcRef, imgTypeStr, archStr, defaultFs string) (distro.ImageType, error) {
 	cnt, err := container.New(bootcRef)
 	if err != nil {
 		return nil, err
@@ -84,11 +84,13 @@ func ImageFromBootc(bootcRef, imgTypeStr, archStr string) (distro.ImageType, err
 	if err != nil {
 		return nil, err
 	}
-	rootfsTypeStr, err := cnt.DefaultRootfsType()
-	if err != nil {
-		return nil, err
+	if defaultFs == "" {
+		defaultFs, err = cnt.DefaultRootfsType()
+		if err != nil {
+			return nil, err
+		}
 	}
-	rootfsType, err := disk.NewFSType(rootfsTypeStr)
+	rootfsType, err := disk.NewFSType(defaultFs)
 	if err != nil {
 		return nil, err
 	}
