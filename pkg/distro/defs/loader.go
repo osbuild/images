@@ -244,6 +244,10 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 			if err := v.runTemplates(foundDistro); err != nil {
 				return nil, err
 			}
+			if err := v.setupDefaultFS(foundDistro.DefaultFSType.String()); err != nil {
+				return nil, err
+			}
+
 			foundDistro.imageTypes[name] = v
 		}
 	}
@@ -474,6 +478,44 @@ func (it *ImageTypeYAML) runTemplates(distro *DistroYAML) error {
 			}
 		}
 	}
+	return nil
+}
+
+func (it *ImageTypeYAML) setupDefaultFS(distroDefaultFS string) error {
+	subs := func(pts map[string]*disk.PartitionTable) error {
+		for _, pt := range pts {
+			err := pt.ForEachMountable(func(mnt disk.Mountable, _ []disk.Entity) error {
+				elem, ok := mnt.(*disk.Filesystem)
+				if !ok {
+					return nil
+				}
+				if elem.Type == "distro-default" {
+					if distroDefaultFS == "" {
+						return fmt.Errorf("mount %q requires a default filesystem for the distribution but none set", mnt.GetMountpoint())
+					}
+					elem.Type = distroDefaultFS
+				}
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	// we need to update both the partition tables and all
+	// partition tables overrides
+	if err := subs(it.PartitionTables); err != nil {
+		return err
+	}
+	if it.PartitionTablesOverrides != nil {
+		for _, cond := range it.PartitionTablesOverrides.Conditions {
+			if err := subs(cond.Override); err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 
