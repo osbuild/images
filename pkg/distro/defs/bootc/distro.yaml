@@ -76,7 +76,7 @@
             uuid: *data_partition_uuid
             payload_type: "filesystem"
             payload:
-              type: "ext4"
+              type: distro-default
               mountpoint: "/boot"
               label: "boot"
               fstab_options: "ro"
@@ -86,7 +86,7 @@
             uuid: *root_partition_uuid
             payload_type: "filesystem"
             payload: &default_partition_table_part_root_payload
-              type: "ext4"
+              type: distro-default
               label: "root"
               mountpoint: "/"
               fstab_options: "ro"
