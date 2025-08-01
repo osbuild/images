@@ -3,6 +3,7 @@
 package osbuild
 
 import (
+	"encoding/json"
 	"fmt"
 )
 
@@ -54,6 +55,18 @@ func (p *Pipeline) AddStages(stages ...*Stage) {
 	for _, stage := range stages {
 		p.AddStage(stage)
 	}
+}
+
+// Take some bytes and deserialize them into a Manifest; mostly used to take
+// an inspected manifest
+func NewManifestFromBytes(data []byte) (*Manifest, error) {
+	manifest := &Manifest{}
+
+	if err := json.Unmarshal(data, &manifest); err != nil {
+		return nil, err
+	}
+
+	return manifest, nil
 }
 
 // GetID gets the pipeline identifiers for an *inspected* manifest. These are
