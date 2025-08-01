@@ -341,6 +341,7 @@ distros:
   # ship with a reporegistry that contains repositories for it
   - name: bootc-centos-9
     default_fs_type: "xfs"
+    vendor: centos
     defs_path: bootc
     # the installer needs those
     distro_like: rhel-9

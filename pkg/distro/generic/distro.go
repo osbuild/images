@@ -101,6 +101,7 @@ func ImageFromBootc(bootcRef, imgTypeStr, archStr, defaultFs string) (distro.Ima
 			Name:          nameVer,
 			DefaultFSType: rootfsType,
 			DefsPath:      "./bootc",
+			Vendor:        info.UEFIVendor,
 			// XXX: hack, we need a new "DISTRO_BOOTC"
 			// probably but checkOptions() needs *something*
 			// for now

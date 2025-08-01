@@ -36,8 +36,9 @@
   platforms: &default_bootc_platforms
       - arch: "x86_64"
         bios_platform: "i386-pc"
+        uefi_vendor: "{{.DistroVendor}}"
       - arch: "aarch64"
-        uefi_vendor: "fedora"
+        uefi_vendor: "{{.DistroVendor}}"
         qcow2_compat: "1.1"
       - arch: "s390x"
         qcow2_compat: "1.1"
