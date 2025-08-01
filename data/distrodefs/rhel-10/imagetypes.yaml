@@ -745,6 +745,7 @@ image_types:
                   - "subscription-manager-cockpit"
 
   qcow2: &qcow2
+    name_aliases: ["guest-image"]
     filename: "disk.qcow2"
     mime_type: "application/x-qemu-disk"
     # note that unlike fedora rhel does not use the environment.KVM
@@ -853,6 +854,9 @@ image_types:
 
   "vagrant-libvirt": &vagrant_libvirt
     <<: *qcow2
+    # we have to reset the aliases otherwise this type
+    # will inherit the name aliases causing a conflict
+    name_aliases: []
     filename: "vagrant-libvirt.box"
     mime_type: "application/x-tar"
     bootable: true
@@ -893,12 +897,18 @@ image_types:
 
   oci:
     <<: *qcow2
+    # we have to reset the aliases otherwise this type
+    # will inherit the name aliases causing a conflict
+    name_aliases: []
     platforms:
       - <<: *x86_64_bios_platform
         image_format: "qcow2"
 
   vhd: &vhd
     <<: *qcow2
+    # we have to reset the aliases otherwise this type
+    # will inherit the name aliases causing a conflict
+    name_aliases: []
     filename: "disk.vhd"
     mime_type: "application/x-vhd"
     default_size: 4_294_967_296  # 4 * datasizes.GibiByte
@@ -1168,6 +1178,7 @@ image_types:
       - arch: "s390x"
 
   vmdk: &vmdk
+    name_aliases: ["vshpere"]
     filename: "disk.vmdk"
     mime_type: "application/x-vmdk"
     bootable: true
@@ -1201,6 +1212,7 @@ image_types:
 
   ova:
     <<: *vmdk
+    name_aliases: ["vsphere-ova"]
     filename: "image.ova"
     mime_type: "application/ovf"
     payload_pipelines: ["os", "image", "vmdk", "ovf", "archive"]
@@ -1210,6 +1222,7 @@ image_types:
         image_format: "ova"
 
   ami: &ami
+    name_aliases: ['aws']
     filename: "image.raw"
     mime_type: "application/octet-stream"
     image_func: "disk"
@@ -1391,6 +1404,9 @@ image_types:
   # RHEL internal-only x86_64 EC2 image type
   ec2: &ec2
     <<: *ami
+    # we have to reset the aliases otherwise this type
+    # will inherit the name aliases causing a conflict
+    name_aliases: []
     payload_pipelines: ["os", "image", "xz"]
     exports: ["xz"]
     filename: "image.raw.xz"
@@ -1732,6 +1748,9 @@ image_types:
                   - "dmidecode"
 
   gce:
+    # this image type is set to `gcp` in image-builder-crc
+    # & `osbuild-composer`, so set the alias here
+    name_aliases: ["gcp"]
     filename: "image.tar.gz"
     mime_type: "application/gzip"
     image_func: "disk"
