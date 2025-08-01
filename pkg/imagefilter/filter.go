@@ -89,13 +89,34 @@ func (fl filter) Matches(distro distro.Distro, arch distro.Arch, imgType distro.
 			m1 := term.pattern.Match(distro.Name())
 			m2 := term.pattern.Match(arch.Name())
 			m3 := term.pattern.Match(imgType.Name())
-			m = m && (m1 || m2 || m3)
+			// Also check image type aliases
+			m4 := false
+			if !m3 {
+				for _, alias := range imgType.Aliases() {
+					if term.pattern.Match(alias) {
+						m4 = true
+						break
+					}
+				}
+			}
+			m = m && (m1 || m2 || m3 || m4)
 		case prefixDistro:
 			m = m && term.pattern.Match(distro.Name())
 		case prefixArch:
 			m = m && term.pattern.Match(arch.Name())
 		case prefixType:
-			m = m && term.pattern.Match(imgType.Name())
+			// Check the main image type name
+			m1 := term.pattern.Match(imgType.Name())
+			// Also check all aliases
+			if !m1 {
+				for _, alias := range imgType.Aliases() {
+					if term.pattern.Match(alias) {
+						m1 = true
+						break
+					}
+				}
+			}
+			m = m && m1
 			// mostly here to show how flexible this is
 		case prefixBootmode:
 			m = m && term.pattern.Match(imgType.BootMode().String())

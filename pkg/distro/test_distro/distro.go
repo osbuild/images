@@ -178,6 +178,10 @@ func (t *TestImageType) Name() string {
 	return t.name
 }
 
+func (t *TestImageType) Aliases() []string {
+	return []string{}
+}
+
 func (t *TestImageType) Arch() distro.Arch {
 	return t.architecture
 }
