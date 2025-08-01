@@ -863,6 +863,25 @@ func TestPartitioningValidation(t *testing.T) {
 			},
 			expectedMsg: "invalid partitioning customizations:\nunknown partition type: what",
 		},
+		"unhappy-none-with-mountpoint": {
+			partitioning: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType:     "ext4",
+							Mountpoint: "/home",
+						},
+					},
+					{
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							FSType:     "none",
+							Mountpoint: "/none",
+						},
+					},
+				},
+			},
+			expectedMsg: "invalid partitioning customizations:\nmountpoint for none partition must be empty (got \"/none\")",
+		},
 		"unhappy-swap-with-mountpoint": {
 			partitioning: &blueprint.DiskCustomization{
 				Partitions: []blueprint.PartitionCustomization{

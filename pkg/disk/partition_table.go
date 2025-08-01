@@ -1427,6 +1427,8 @@ func addPlainPartition(pt *PartitionTable, partition blueprint.PartitionCustomiz
 			typeName = "usr"
 		case partition.Mountpoint == "/boot":
 			typeName = "boot"
+		case fstype == "none":
+			typeName = "data"
 		case fstype == "swap":
 			typeName = "swap"
 		default:
@@ -1441,6 +1443,8 @@ func addPlainPartition(pt *PartitionTable, partition blueprint.PartitionCustomiz
 
 	var payload PayloadEntity
 	switch fstype {
+	case "none":
+		payload = nil
 	case "swap":
 		payload = &Swap{
 			Label:        partition.Label,
