@@ -223,39 +223,50 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 		return nil, err
 	}
 
-	// load imageTypes
-	f, err := dataFS().Open(filepath.Join(foundDistro.DefsPath, "distro.yaml"))
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	var toplevel imageTypesYAML
-	decoder := yaml.NewDecoder(f)
-	decoder.KnownFields(true)
-	if err := decoder.Decode(&toplevel); err != nil {
-		return nil, err
-	}
-	if len(toplevel.ImageTypes) > 0 {
-		foundDistro.imageTypes = make(map[string]ImageTypeYAML, len(toplevel.ImageTypes))
-		for name := range toplevel.ImageTypes {
-			v := toplevel.ImageTypes[name]
-			v.name = name
-			if err := v.runTemplates(foundDistro); err != nil {
-				return nil, err
-			}
-			foundDistro.imageTypes[name] = v
-		}
-	}
-	foundDistro.imageConfig, err = toplevel.ImageConfig.For(nameVer)
-	if err != nil {
+	if err := foundDistro.LoadImageTypes(); err != nil {
 		return nil, err
 	}
 
 	return foundDistro, nil
 }
 
-// imageTypesYAML describes the image types for a given distribution
+// LoadImageTypes loads the images types for the current distribution
+func (d *DistroYAML) LoadImageTypes() error {
+	f, err := dataFS().Open(filepath.Join(d.DefsPath, "distro.yaml"))
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	decoder := yaml.NewDecoder(f)
+	decoder.KnownFields(true)
+
+	var toplevel imageTypesYAML
+	if err := decoder.Decode(&toplevel); err != nil {
+		return err
+	}
+	if len(toplevel.ImageTypes) > 0 {
+		d.imageTypes = make(map[string]ImageTypeYAML, len(toplevel.ImageTypes))
+		for name := range toplevel.ImageTypes {
+			v := toplevel.ImageTypes[name]
+			if err := v.runTemplates(d); err != nil {
+				return err
+			}
+			if err := v.setupDefaultFS(d.DefaultFSType.String()); err != nil {
+				return err
+			}
+			v.name = name
+			d.imageTypes[name] = v
+		}
+	}
+	d.imageConfig, err = toplevel.ImageConfig.For(d.Name)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // family. Note that multiple distros may use the same image types,
 // e.g. centos/rhel
 type imageTypesYAML struct {
@@ -474,6 +485,44 @@ func (it *ImageTypeYAML) runTemplates(distro *DistroYAML) error {
 			}
 		}
 	}
+	return nil
+}
+
+func (it *ImageTypeYAML) setupDefaultFS(distroDefaultFS string) error {
+	subs := func(pts map[string]*disk.PartitionTable) error {
+		for _, pt := range pts {
+			err := pt.ForEachMountable(func(mnt disk.Mountable, _ []disk.Entity) error {
+				elem, ok := mnt.(*disk.Filesystem)
+				if !ok {
+					return nil
+				}
+				if elem.Type == "distro-default" {
+					if distroDefaultFS == "" {
+						return fmt.Errorf("mount %q requires a default filesystem for the distribution but none set", mnt.GetMountpoint())
+					}
+					elem.Type = distroDefaultFS
+				}
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	// we need to update both the partition tables and all
+	// partition tables overrides
+	if err := subs(it.PartitionTables); err != nil {
+		return err
+	}
+	if it.PartitionTablesOverrides != nil {
+		for _, cond := range it.PartitionTablesOverrides.Conditions {
+			if err := subs(cond.Override); err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 

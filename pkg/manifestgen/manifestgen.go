@@ -14,7 +14,9 @@ import (
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/dnfjson"
+	"github.com/osbuild/images/pkg/experimentalflags"
 	"github.com/osbuild/images/pkg/manifest"
+	"github.com/osbuild/images/pkg/manifestgen/manifestmock"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/reporegistry"
@@ -128,6 +130,12 @@ func New(reporegistry *reporegistry.RepoRegistry, opts *Options) (*Generator, er
 	}
 	if mg.commitResolver == nil {
 		mg.commitResolver = DefaultCommitResolver
+	}
+	if experimentalflags.Bool("bib-mock-resolvers") {
+		mg.containerResolver = func(containerSources map[string][]container.SourceSpec, archName string) (map[string][]container.Spec, error) {
+			// XXX: we don't consider arch right now
+			return manifestmock.ResolveContainers(containerSources), nil
+		}
 	}
 
 	return mg, nil

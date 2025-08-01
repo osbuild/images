@@ -5,6 +5,7 @@ import (
 	"math/rand"
 
 	"github.com/osbuild/images/pkg/artifact"
+	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/runner"
@@ -13,6 +14,11 @@ import (
 type ImageKind interface {
 	Name() string
 	InstantiateManifest(m *manifest.Manifest, repos []rpmmd.RepoConfig, runner runner.Runner, rng *rand.Rand) (*artifact.Artifact, error)
+}
+
+type BootcImageKind interface {
+	Name() string
+	InstantiateManifestFromContainers(m *manifest.Manifest, containers []container.SourceSpec, runner runner.Runner, rng *rand.Rand) error
 }
 
 type Base struct {

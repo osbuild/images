@@ -1,0 +1,11 @@
+{
+  "name": "bootc-empty",
+  "options": {
+    "bootc": {
+      "imgref": "quay.io/centos-bootc/centos-bootc:stream9"
+    }
+  },
+  "depends": {
+    "config": "empty.json"
+  }
+}

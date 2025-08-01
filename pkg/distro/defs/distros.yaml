@@ -335,3 +335,16 @@ distros:
       x86_64: "registry.access.redhat.com/ubi{{.MajorVersion}}/ub i:latest"
       ppc64le: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
       s390x: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
+
+  # XXX: ideally we had a "testdata/defs.d" overlay/droping for this
+  # Note that this will not be visible by default because we do not
+  # ship with a reporegistry that contains repositories for it
+  - name: bootc-centos-9
+    default_fs_type: "xfs"
+    vendor: centos
+    defs_path: bootc
+    # the installer needs those
+    distro_like: rhel-9
+    release_version: 9
+    os_version: 9
+    iso_label_tmpl: "CentOS-Stream-{{.Distro.MajorVersion}}-BaseOS-{{.Arch}}"
