@@ -2,6 +2,11 @@
 // OSBuild (schema v2) types.
 package osbuild
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 const (
 	// should be "^\\/(?!\\.\\.)((?!\\/\\.\\.\\/).)+$" but Go doesn't support lookaheads
 	// therefore we have to instead check for the invalid cases, which is much simpler
@@ -50,4 +55,31 @@ func (p *Pipeline) AddStages(stages ...*Stage) {
 	for _, stage := range stages {
 		p.AddStage(stage)
 	}
+}
+
+// Take some bytes and deserialize them into a Manifest; mostly used to take
+// an inspected manifest
+func NewManifestFromBytes(data []byte) (*Manifest, error) {
+	manifest := &Manifest{}
+
+	if err := json.Unmarshal(data, &manifest); err != nil {
+		return nil, err
+	}
+
+	return manifest, nil
+}
+
+// GetID
+func (p *Pipeline) GetID() (string, error) {
+	if len(p.Stages) == 0 {
+		return "", fmt.Errorf("somethingelse")
+	}
+
+	lastStage := p.Stages[len(p.Stages)-1]
+
+	if len(lastStage.ID) == 0 {
+		return "", fmt.Errorf("something")
+	}
+
+	return lastStage.ID, nil
 }
