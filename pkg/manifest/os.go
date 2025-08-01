@@ -14,6 +14,7 @@ import (
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/bootc"
+	"github.com/osbuild/images/pkg/customizations/firstboot"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/customizations/shell"
@@ -156,6 +157,8 @@ type OSCustomizations struct {
 	Files []*fsnode.File
 
 	CACerts []string
+
+	Firstboot *firstboot.FirstbootOptions
 
 	FIPS bool
 
@@ -913,6 +916,18 @@ func (p *OS) serialize() osbuild.Pipeline {
 		pipeline.AddStage(osbuild.NewSystemdPresetStage(&osbuild.SystemdPresetStageOptions{
 			Presets: p.OSCustomizations.Presets,
 		}))
+	}
+
+	fbCerts, fbFiles, err := firstbootFileNodes(p.OSCustomizations.Firstboot)
+	if err != nil {
+		panic(err.Error())
+	}
+	if len(fbFiles) > 0 {
+		p.addStagesForAllFilesAndInlineData(&pipeline, fbFiles)
+	}
+
+	if len(fbCerts) > 0 {
+		p.OSCustomizations.CACerts = append(p.OSCustomizations.CACerts, fbCerts...)
 	}
 
 	if len(p.OSCustomizations.CACerts) > 0 {
