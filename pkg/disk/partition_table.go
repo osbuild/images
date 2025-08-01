@@ -823,6 +823,15 @@ func (pt *PartitionTable) ensureBtrfs(architecture arch.Arch) error {
 
 		rootPath = entityPath(pt, "/")
 	}
+	// ensure /boot is not set to "btrfs", this can happen on e.g. bootc partition tables that
+	// do not declare a default fs
+	bootFilesystem, ok := bootPath[0].(*Filesystem)
+	if !ok {
+		return fmt.Errorf("internal error: boot entity not a filesystem: %T", bootPath[0])
+	}
+	if bootFilesystem.Type == "btrfs" {
+		bootFilesystem.Type = "ext4"
+	}
 
 	parent := rootPath[1] // NB: entityPath has reversed order
 
