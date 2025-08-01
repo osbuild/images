@@ -119,8 +119,7 @@ image_types:
 `
 	it := makeTestImageType(t, fakePkgsSetYaml)
 
-	pkgSet, err := it.PackageSets("test-distro-1", "x86_64")
-	assert.NoError(t, err)
+	pkgSet := it.PackageSets(distro.ID{Name: "test-distro", MajorVersion: 1}, "x86_64")
 	assert.Equal(t, map[string]rpmmd.PackageSet{
 		"os": {
 			Include: []string{"from-condition-inc2", "inc1"},
@@ -209,8 +208,7 @@ image_types:
 `
 	it := makeTestImageType(t, fakePkgsSetYaml)
 
-	pkgSet, err := it.PackageSets("test-distro-1", "x86_64")
-	assert.NoError(t, err)
+	pkgSet := it.PackageSets(distro.ID{Name: "test-distro", MajorVersion: 1}, "x86_64")
 	assert.Equal(t, map[string]rpmmd.PackageSet{
 		"os": {
 			Include: []string{"from-base-condition-inc", "from-base-inc", "from-condition-inc", "from-other-type-inc", "from-type-inc"},
@@ -264,7 +262,7 @@ image_types:
 `
 	it := makeTestImageType(t, fakeDistroYaml)
 
-	partTable, err := it.PartitionTable("test-distro-1", "test_arch")
+	partTable, err := it.PartitionTable(distro.ID{Name: "test-distro", MajorVersion: 1}, "test_arch")
 	require.NoError(t, err)
 	assert.Equal(t, &disk.PartitionTable{
 		Size: 1_000_000_000,
@@ -381,7 +379,7 @@ image_types:
 func TestDefsPartitionTableOverrideGreatEqual(t *testing.T) {
 	it := makeTestImageType(t, fakeImageTypesYaml)
 
-	partTable, err := it.PartitionTable("test-distro-1", "test_arch")
+	partTable, err := it.PartitionTable(distro.ID{Name: "test-distro", MajorVersion: 1}, "test_arch")
 	require.NoError(t, err)
 	assert.Equal(t, &disk.PartitionTable{
 		Size: 1_000_000_000,
@@ -441,7 +439,7 @@ image_types:
 `
 	it := makeTestImageType(t, fakeDistroYaml)
 
-	partTable, err := it.PartitionTable("test-distro-1", "test_arch")
+	partTable, err := it.PartitionTable(distro.ID{Name: "test-distro", MajorVersion: 1}, "test_arch")
 	require.NoError(t, err)
 	assert.Equal(t, &disk.PartitionTable{
 		Size: 1_000_000_000,
@@ -488,7 +486,7 @@ image_types:
 `
 	it := makeTestImageType(t, fakeDistroYaml)
 
-	partTable, err := it.PartitionTable("test-distro-1", "test_arch")
+	partTable, err := it.PartitionTable(distro.ID{Name: "test-distro", MajorVersion: 1}, "test_arch")
 	require.NoError(t, err)
 	assert.Equal(t, &disk.PartitionTable{
 		Partitions: []disk.Partition{
@@ -552,7 +550,7 @@ image_types:
 	} {
 		it := makeTestImageType(t, tc.badYaml)
 
-		_, err := it.PartitionTable("test-distro-1", "test_arch")
+		_, err := it.PartitionTable(distro.ID{Name: "test-distro", MajorVersion: 1}, "test_arch")
 		assert.ErrorIs(t, err, tc.expectedErr)
 	}
 }
@@ -595,8 +593,7 @@ image_types:
 `
 	it := makeTestImageType(t, fakeDistroYaml)
 
-	imgConfig, err := it.ImageConfig("test-distro-1", "test_arch")
-	require.NoError(t, err)
+	imgConfig := it.ImageConfig(distro.ID{Name: "test-distro", MajorVersion: 1, MinorVersion: -1}, "test_arch")
 	assert.Equal(t, &distro.ImageConfig{
 		Hostname:      common.ToPtr("test-arch-hn"),
 		Locale:        common.ToPtr("en_US.UTF-8"),
@@ -702,8 +699,7 @@ image_types:
 func TestImageTypeInstallerConfig(t *testing.T) {
 	it := makeTestImageType(t, fakeDistroYamlInstallerConf)
 
-	installerConfig, err := it.InstallerConfig("test-distro-1", "test_arch")
-	require.NoError(t, err)
+	installerConfig := it.InstallerConfig(distro.ID{Name: "test-distro", MajorVersion: 1}, "test_arch")
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDracutModules: []string{"base-dracut-mod1"},
 		AdditionalDrivers:       []string{"base-drv1"},
@@ -723,8 +719,7 @@ func TestImageTypeInstallerConfigMergeVerLT(t *testing.T) {
 `
 	it := makeTestImageType(t, fakeDistroYaml)
 
-	installerConfig, err := it.InstallerConfig("test-distro-1", "test_arch")
-	require.NoError(t, err)
+	installerConfig := it.InstallerConfig(distro.ID{Name: "test-distro", MajorVersion: 1}, "test_arch")
 	assert.Equal(t, &distro.InstallerConfig{
 		// AdditionalDrivers,SquashfsRootfs merged from parent
 		AdditionalDrivers:       []string{"base-drv1"},
@@ -747,8 +742,7 @@ func TestImageTypeInstallerConfigMergeDistroName(t *testing.T) {
 `
 	it := makeTestImageType(t, fakeDistroYaml)
 
-	installerConfig, err := it.InstallerConfig("test-distro-1", "test_arch")
-	require.NoError(t, err)
+	installerConfig := it.InstallerConfig(distro.ID{Name: "test-distro", MajorVersion: 1}, "test_arch")
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDracutModules: []string{"override-dracut-mod1"},
 		AdditionalDrivers:       []string{"override-drv1"},
@@ -769,8 +763,7 @@ func TestImageTypeInstallerConfigMergeArch(t *testing.T) {
 `
 	it := makeTestImageType(t, fakeDistroYaml)
 
-	installerConfig, err := it.InstallerConfig("test-distro-1", "test_arch")
-	require.NoError(t, err)
+	installerConfig := it.InstallerConfig(distro.ID{Name: "test-distro", MajorVersion: 1}, "test_arch")
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDrivers: []string{"override-drv1"},
 		// AdditionalDracutModules,SquashfsRootfs merged from parent
@@ -841,9 +834,9 @@ func TestDistrosLoadingExact(t *testing.T) {
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	distro, err := defs.NewDistroYAML("fedora-43")
+	dist, err := defs.NewDistroYAML("fedora-43")
 	require.NoError(t, err)
-	assert.Equal(t, &defs.DistroYAML{
+	assert.Equal(t, dist, &defs.DistroYAML{
 		Name:             "fedora-43",
 		Preview:          true,
 		OsVersion:        "43",
@@ -863,11 +856,12 @@ func TestDistrosLoadingExact(t *testing.T) {
 		OscapProfilesAllowList: []oscap.Profile{
 			oscap.Ospp,
 		},
-	}, distro)
+		ID: distro.ID{Name: "fedora", MajorVersion: 43, MinorVersion: -1},
+	})
 
-	distro, err = defs.NewDistroYAML("centos-10")
+	dist, err = defs.NewDistroYAML("centos-10")
 	require.NoError(t, err)
-	assert.Equal(t, &defs.DistroYAML{
+	assert.Equal(t, dist, &defs.DistroYAML{
 		Name:             "centos-10",
 		Vendor:           "centos",
 		OsVersion:        "10-stream",
@@ -877,7 +871,8 @@ func TestDistrosLoadingExact(t *testing.T) {
 		OSTreeRefTmpl:    "centos/10/%s/edge",
 		DefsPath:         "rhel-10",
 		DefaultFSType:    disk.FS_XFS,
-	}, distro)
+		ID:               distro.ID{Name: "centos", MajorVersion: 10, MinorVersion: -1},
+	})
 }
 
 func TestDistrosLoadingFactoryCompat(t *testing.T) {
@@ -885,9 +880,9 @@ func TestDistrosLoadingFactoryCompat(t *testing.T) {
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	distro, err := defs.NewDistroYAML("rhel-10.1")
+	dist, err := defs.NewDistroYAML("rhel-10.1")
 	require.NoError(t, err)
-	assert.Equal(t, &defs.DistroYAML{
+	assert.Equal(t, dist, &defs.DistroYAML{
 		Name:             "rhel-10.1",
 		Match:            "rhel-10.*",
 		Vendor:           "redhat",
@@ -898,11 +893,12 @@ func TestDistrosLoadingFactoryCompat(t *testing.T) {
 		OSTreeRefTmpl:    "rhel/10/%s/edge",
 		DefsPath:         "rhel-10",
 		DefaultFSType:    disk.FS_XFS,
-	}, distro)
+		ID:               distro.ID{Name: "rhel", MajorVersion: 10, MinorVersion: 1},
+	})
 
-	distro, err = defs.NewDistroYAML("fedora-40")
+	dist, err = defs.NewDistroYAML("fedora-40")
 	require.NoError(t, err)
-	assert.Equal(t, &defs.DistroYAML{
+	assert.Equal(t, dist, &defs.DistroYAML{
 		Name:             "fedora-40",
 		Match:            "fedora-[0-9]*",
 		OsVersion:        "40",
@@ -922,7 +918,8 @@ func TestDistrosLoadingFactoryCompat(t *testing.T) {
 		OscapProfilesAllowList: []oscap.Profile{
 			oscap.Ospp,
 		},
-	}, distro)
+		ID: distro.ID{Name: "fedora", MajorVersion: 40, MinorVersion: -1},
+	})
 }
 
 func TestDistroYAMLCondition(t *testing.T) {
@@ -998,18 +995,18 @@ func TestDistrosLoadingNotFound(t *testing.T) {
 
 func TestWhenConditionEvalEmpty(t *testing.T) {
 	wc := &defs.WhenCondition{}
-	assert.Equal(t, wc.Eval(&distro.ID{Name: "foo"}, "arch"), true)
+	assert.Equal(t, wc.Eval(distro.ID{Name: "foo"}, "arch"), true)
 }
 
 func TestWhenConditionEvalSimple(t *testing.T) {
 	wc := &defs.WhenCondition{DistroName: "distro"}
-	assert.Equal(t, wc.Eval(&distro.ID{Name: "distro"}, "other-arch"), true)
+	assert.Equal(t, wc.Eval(distro.ID{Name: "distro"}, "other-arch"), true)
 }
 
 func TestWhenConditionEvalAnd(t *testing.T) {
 	wc := &defs.WhenCondition{DistroName: "distro", Architecture: "arch"}
-	assert.Equal(t, wc.Eval(&distro.ID{Name: "distro"}, "other-arch"), false)
-	assert.Equal(t, wc.Eval(&distro.ID{Name: "distro"}, "arch"), true)
+	assert.Equal(t, wc.Eval(distro.ID{Name: "distro"}, "other-arch"), false)
+	assert.Equal(t, wc.Eval(distro.ID{Name: "distro"}, "arch"), true)
 }
 
 func TestImageTypesPlatformOverrides(t *testing.T) {
@@ -1058,7 +1055,7 @@ distros:
 		imgTypes := distro.ImageTypes()
 		assert.Len(t, imgTypes, 1)
 		imgType := imgTypes["server-qcow2"]
-		platforms, err := imgType.PlatformsFor(tc.distroNameVer)
+		platforms, err := imgType.PlatformsFor(distro.ID)
 		assert.NoError(t, err)
 		assert.Equal(t, []platform.PlatformConf{
 			{
@@ -1100,8 +1097,7 @@ image_types:
 	imgTypes := distro.ImageTypes()
 	assert.Len(t, imgTypes, 1)
 	imgType := imgTypes["test_type"]
-	require.NotNil(t, imgType)
-	_, err = imgType.PlatformsFor("test-distro-1")
+	_, err = imgType.PlatformsFor(distro.ID)
 	assert.EqualError(t, err, `platform conditionals for image type "test_type" should match only once but matched 2 times`)
 }
 
@@ -1130,14 +1126,15 @@ distros:
 		{"rhel-8.10", "rhel-8.10", "8.10"},
 		{"rhel-810", "rhel-8.10", "8.10"},
 	} {
-		distro, err := defs.NewDistroYAML(tc.nameVer)
+		dist, err := defs.NewDistroYAML(tc.nameVer)
 		require.NoError(t, err)
-		assert.Equal(t, &defs.DistroYAML{
+		assert.Equal(t, dist, &defs.DistroYAML{
 			Name:             tc.expectedDistroNameVer,
 			Match:            `(?P<name>rhel)-(?P<major>8)\.?(?P<minor>[0-9]+)`,
 			OsVersion:        tc.expectedOsVersion,
 			ReleaseVersion:   "8",
 			ModulePlatformID: "platform:el8",
-		}, distro)
+			ID:               *common.Must(distro.ParseID(tc.expectedDistroNameVer)),
+		})
 	}
 }
