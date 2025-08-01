@@ -68,6 +68,7 @@ type DistroYAML struct {
 	// for {{.Major}}, {{.Minor}} which will be expanded by the
 	// upper layers.
 	Name             string            `yaml:"name"`
+	Aliases          []string          `yaml:"name_aliases"`
 	Codename         string            `yaml:"codename"`
 	Vendor           string            `yaml:"vendor"`
 	Preview          bool              `yaml:"preview"`

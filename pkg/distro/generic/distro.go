@@ -29,9 +29,7 @@ const (
 	blueprintPkgsKey = "blueprint"
 )
 
-var (
-	ErrDistroNotFound = errors.New("distribution not found")
-)
+var ErrDistroNotFound = errors.New("distribution not found")
 
 // distribution implements the distro.Distro interface
 var _ = distro.Distro(&distribution{})
@@ -113,6 +111,10 @@ func newDistro(nameVer string) (distro.Distro, error) {
 
 func (d *distribution) Name() string {
 	return d.DistroYAML.Name
+}
+
+func (d *distribution) Aliases() []string {
+	return d.DistroYAML.Aliases
 }
 
 func (d *distribution) Codename() string {
