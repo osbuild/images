@@ -3,6 +3,7 @@ package manifestgen
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/osbuild/blueprint/pkg/blueprint"
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/dnfjson"
@@ -27,6 +29,10 @@ const (
 	defaultSBOMExt           = "spdx.json"
 
 	defaultDepsolveCacheDir = "osbuild-depsolve-dnf"
+)
+
+var (
+	ErrContainerArchMismatch = errors.New("requested container architecture does not match resolved container")
 )
 
 // Options contains the optional settings for the manifest generation.
@@ -174,6 +180,14 @@ func (mg *Generator) Generate(bp *blueprint.Blueprint, dist distro.Distro, imgTy
 	if err != nil {
 		return err
 	}
+	for _, specs := range containerSpecs {
+		for _, spec := range specs {
+			if spec.Arch != arch.ARCH_UNSET && spec.Arch.String() != a.Name() {
+				return fmt.Errorf("%w: %q != %q", ErrContainerArchMismatch, spec.Arch, a.Name())
+			}
+		}
+	}
+
 	commitSpecs, err := mg.commitResolver(preManifest.GetOSTreeSourceSpecs())
 	if err != nil {
 		return err
