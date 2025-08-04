@@ -94,6 +94,11 @@ func ImageFromBootc(bootcRef, imgTypeStr, archStr, defaultFs string) (distro.Ima
 	if err != nil {
 		return nil, err
 	}
+	// best effort to find a uefiVedor
+	uefiVendor := info.UEFIVendor
+	if uefiVendor == "" {
+		uefiVendor = info.OSRelease.ID
+	}
 
 	nameVer := fmt.Sprintf("bootc-%s-%s", info.OSRelease.ID, info.OSRelease.VersionID)
 	rd := &distribution{
@@ -101,7 +106,7 @@ func ImageFromBootc(bootcRef, imgTypeStr, archStr, defaultFs string) (distro.Ima
 			Name:          nameVer,
 			DefaultFSType: rootfsType,
 			DefsPath:      "./bootc",
-			Vendor:        info.UEFIVendor,
+			Vendor:        uefiVendor,
 			// DistroLike is used to check valid options
 			// on manifest generation mostly so have a
 			// custom for now, not orthogonal but best we
