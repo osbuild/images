@@ -195,7 +195,7 @@ func (ve *ValidationError) UnmarshalJSON(data []byte) error {
 		case string:
 			path = append(path, v)
 		default:
-			return fmt.Errorf("Unexpected type in ValidationError Path: %#v", v)
+			return fmt.Errorf("unexpected type in ValidationError Path: %#v", v)
 		}
 	}
 	ve.Path = path

@@ -39,11 +39,11 @@ func (c *Client) makeRequest(u *url.URL) ([]byte, error) {
 
 func (c *Client) validateURL(u string) (*url.URL, error) {
 	if u == "" {
-		return nil, fmt.Errorf("File resolver: url is required")
+		return nil, fmt.Errorf("file resolver: url is required")
 	}
 	parsedURL, err := url.ParseRequestURI(u)
 	if err != nil {
-		return nil, fmt.Errorf("File resolver: invalid url %s", u)
+		return nil, fmt.Errorf("file resolver: invalid url %s", u)
 	}
 	return parsedURL, nil
 }

@@ -77,7 +77,7 @@ func (r *RepoRegistry) ReposByArchName(distro, arch string, includeTagged bool) 
 
 	archRepos, err := r.DistroHasRepos(distro, arch)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get repositories for distribution '%s' and architecture '%s': %v", distro, arch, err)
+		return nil, fmt.Errorf("failed to get repositories for distribution '%s' and architecture '%s': %v", distro, arch, err)
 	}
 
 	for _, repo := range archRepos {

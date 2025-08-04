@@ -356,7 +356,7 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 					Install: installSection,
 				},
 			},
-			expected: fmt.Errorf(`What option for Mount section of systemd unit "test.mount" is required`),
+			expected: fmt.Errorf(`what option for Mount section of systemd unit "test.mount" is required`),
 		},
 		"mount-no-where": {
 			options: SystemdUnitCreateStageOptions{
@@ -373,7 +373,7 @@ func TestSystemdUnitStageOptionsValidation(t *testing.T) {
 					Install: installSection,
 				},
 			},
-			expected: fmt.Errorf(`Where option for Mount section of systemd unit "test.mount" is required`),
+			expected: fmt.Errorf(`where option for Mount section of systemd unit "test.mount" is required`),
 		},
 
 		// invalid values

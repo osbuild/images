@@ -388,7 +388,7 @@ func (s *Solver) reposFromRPMMD(rpmRepos []rpmmd.RepoConfig) ([]repoConfig, erro
 
 		if rr.RHSM {
 			if s.subscriptions == nil {
-				return nil, fmt.Errorf("This system does not have any valid subscriptions. Subscribe it before specifying rhsm: true in sources (error details: %w)", s.subscriptionsErr)
+				return nil, fmt.Errorf("this system does not have any valid subscriptions. Subscribe it before specifying rhsm: true in sources (error details: %w)", s.subscriptionsErr)
 			}
 			secrets, err := s.subscriptions.GetSecretsForBaseurl(rr.BaseURLs, s.arch, s.releaseVer)
 			if err != nil {

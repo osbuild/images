@@ -138,7 +138,7 @@ func TestCheckMountpointsPolicy(t *testing.T) {
 		{Mountpoint: "/boot/"},
 	}
 
-	expectedErr := `The following errors occurred while setting up custom mountpoints:
+	expectedErr := `the following errors occurred while setting up custom mountpoints:
 path "/foo" is not allowed
 path "/boot/" must be canonical`
 	err := blueprint.CheckMountpointsPolicy(mps, policy)

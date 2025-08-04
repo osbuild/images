@@ -896,7 +896,7 @@ func TestCheckOptionsFedora(t *testing.T) {
 					},
 				},
 			},
-			expErr: "Custom mountpoints and partitioning are not supported for ostree types",
+			expErr: "custom mountpoints and partitioning are not supported for ostree types",
 		},
 
 		"r8/ostree-partitioning-not-supported": {

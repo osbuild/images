@@ -391,7 +391,7 @@ func checkOptionsRhel8(t *imageType, bp *blueprint.Blueprint, options distro.Ima
 	}
 
 	if mountpoints != nil && t.RPMOSTree {
-		return warnings, fmt.Errorf("Custom mountpoints and partitioning are not supported for ostree types")
+		return warnings, fmt.Errorf("custom mountpoints and partitioning are not supported for ostree types")
 	}
 
 	if err := blueprint.CheckMountpointsPolicy(mountpoints, policies.MountpointPolicies); err != nil {
@@ -621,7 +621,7 @@ func checkOptionsFedora(t *imageType, bp *blueprint.Blueprint, options distro.Im
 		return warnings, err
 	}
 	if (len(mountpoints) > 0 || partitioning != nil) && t.RPMOSTree {
-		return warnings, fmt.Errorf("Custom mountpoints and partitioning are not supported for ostree types")
+		return warnings, fmt.Errorf("custom mountpoints and partitioning are not supported for ostree types")
 	}
 	if len(mountpoints) > 0 && partitioning != nil {
 		return warnings, fmt.Errorf("partitioning customizations cannot be used with custom filesystems (mountpoints)")

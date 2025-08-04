@@ -19,7 +19,7 @@ func TestOscapConfigGeneration(t *testing.T) {
 		{
 			name:    "no-datastream",
 			options: blueprint.OpenSCAPCustomization{},
-			err:     fmt.Errorf("No OSCAP datastream specified and the distro does not have any default set"),
+			err:     fmt.Errorf("no OSCAP datastream specified and the distro does not have any default set"),
 		},
 		{
 			name: "multiple-tailoring-options",
@@ -28,7 +28,7 @@ func TestOscapConfigGeneration(t *testing.T) {
 				Tailoring:     &blueprint.OpenSCAPTailoringCustomizations{},
 				JSONTailoring: &blueprint.OpenSCAPJSONTailoringCustomizations{},
 			},
-			err: fmt.Errorf("Multiple tailoring types set, only one type can be chosen (JSON/Override rules)"),
+			err: fmt.Errorf("multiple tailoring types set, only one type can be chosen (JSON/Override rules)"),
 		},
 		{
 			name: "no-json-filepath",
@@ -36,7 +36,7 @@ func TestOscapConfigGeneration(t *testing.T) {
 				DataStream:    "datastream",
 				JSONTailoring: &blueprint.OpenSCAPJSONTailoringCustomizations{},
 			},
-			err: fmt.Errorf("Filepath to an JSON tailoring file is required"),
+			err: fmt.Errorf("filepath to an JSON tailoring file is required"),
 		},
 		{
 			name: "no-json-tailoring-id",
@@ -46,7 +46,7 @@ func TestOscapConfigGeneration(t *testing.T) {
 					Filepath: "/some/filepath.json",
 				},
 			},
-			err: fmt.Errorf("Tailoring profile ID is required for an JSON tailoring file"),
+			err: fmt.Errorf("tailoring profile ID is required for an JSON tailoring file"),
 		},
 		{
 			name: "valid-json-tailoring",

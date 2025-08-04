@@ -241,7 +241,7 @@ func GenerateCIArtifactName(prefix string) (string, error) {
 	branchName := os.Getenv("BRANCH_NAME")
 	buildId := os.Getenv("BUILD_ID")
 	if branchName == "" || buildId == "" || distroCode == "" {
-		return "", fmt.Errorf("The environment variables must specify BRANCH_NAME, BUILD_ID, and DISTRO_CODE")
+		return "", fmt.Errorf("the environment variables must specify BRANCH_NAME, BUILD_ID, and DISTRO_CODE")
 	}
 
 	arch := arch.Current().String()

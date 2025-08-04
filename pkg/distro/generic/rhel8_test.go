@@ -671,11 +671,11 @@ func TestRH8_Distro_CustomFileSystemManifestError(t *testing.T) {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
 			if imgTypeName == "edge-commit" || imgTypeName == "edge-container" {
-				assert.EqualError(t, err, "Custom mountpoints and partitioning are not supported for ostree types")
+				assert.EqualError(t, err, "custom mountpoints and partitioning are not supported for ostree types")
 			} else if unsupported[imgTypeName] {
 				assert.Error(t, err)
 			} else {
-				assert.EqualError(t, err, "The following errors occurred while setting up custom mountpoints:\npath \"/etc\" is not allowed")
+				assert.EqualError(t, err, "the following errors occurred while setting up custom mountpoints:\npath \"/etc\" is not allowed")
 			}
 		}
 	}
@@ -704,7 +704,7 @@ func TestRH8_Distro_TestRootMountPoint(t *testing.T) {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
 			if imgTypeName == "edge-commit" || imgTypeName == "edge-container" {
-				assert.EqualError(t, err, "Custom mountpoints and partitioning are not supported for ostree types")
+				assert.EqualError(t, err, "custom mountpoints and partitioning are not supported for ostree types")
 			} else if unsupported[imgTypeName] {
 				assert.Error(t, err)
 			} else {
@@ -832,7 +832,7 @@ func TestRH8_Distro_DirtyMountpointsNotAllowed(t *testing.T) {
 			if unsupported[imgTypeName] {
 				assert.Error(t, err)
 			} else {
-				assert.EqualError(t, err, "The following errors occurred while setting up custom mountpoints:\npath \"//\" must be canonical\npath \"/var//\" must be canonical\npath \"/var//log/audit/\" must be canonical")
+				assert.EqualError(t, err, "the following errors occurred while setting up custom mountpoints:\npath \"//\" must be canonical\npath \"/var//\" must be canonical\npath \"/var//log/audit/\" must be canonical")
 			}
 		}
 	}
@@ -861,7 +861,7 @@ func TestRH8_Distro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
 			if imgTypeName == "edge-commit" || imgTypeName == "edge-container" {
-				assert.EqualError(t, err, "Custom mountpoints and partitioning are not supported for ostree types")
+				assert.EqualError(t, err, "custom mountpoints and partitioning are not supported for ostree types")
 			} else if unsupported[imgTypeName] {
 				assert.Error(t, err)
 			} else {

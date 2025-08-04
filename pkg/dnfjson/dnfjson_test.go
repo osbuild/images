@@ -932,5 +932,5 @@ func TestDepsolverSubscriptionsError(t *testing.T) {
 	}
 	solver.SetRootDir(rootDir)
 	_, err := solver.Depsolve(pkgsets, 0)
-	assert.EqualError(t, err, "makeDepsolveRequest failed: This system does not have any valid subscriptions. Subscribe it before specifying rhsm: true in sources (error details: no matching key and certificate pair)")
+	assert.EqualError(t, err, "makeDepsolveRequest failed: this system does not have any valid subscriptions. Subscribe it before specifying rhsm: true in sources (error details: no matching key and certificate pair)")
 }

@@ -47,7 +47,7 @@ func CheckMountpointsPolicy(mountpoints []FilesystemCustomization, mountpointAll
 	}
 
 	if len(errs) > 0 {
-		return fmt.Errorf("The following errors occurred while setting up custom mountpoints:\n%w", errors.Join(errs...))
+		return fmt.Errorf("the following errors occurred while setting up custom mountpoints:\n%w", errors.Join(errs...))
 	}
 
 	return nil

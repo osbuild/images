@@ -384,7 +384,7 @@ func (cl *Client) getLocalImageIDFromDigest(instance digest.Digest) (string, err
 		return "", err
 	}
 	if len(images) == 0 {
-		return "", fmt.Errorf("Unable to find image id for digest: %v", instance)
+		return "", fmt.Errorf("unable to find image id for digest: %v", instance)
 	}
 	// the `ImagesByDigest` function always returns a list
 	// of images. The list could be larger than 1 in the case
