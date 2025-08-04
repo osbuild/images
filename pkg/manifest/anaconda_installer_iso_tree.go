@@ -242,11 +242,12 @@ var installerBootExcludePaths = []string{
 func (p *AnacondaInstallerISOTree) NewSquashfsStage() *osbuild.Stage {
 	var squashfsOptions osbuild.SquashfsStageOptions
 
-	if p.anacondaPipeline.Type == AnacondaInstallerTypePayload {
+	switch p.anacondaPipeline.Type {
+	case AnacondaInstallerTypePayload:
 		squashfsOptions = osbuild.SquashfsStageOptions{
 			Filename: "images/install.img",
 		}
-	} else if p.anacondaPipeline.Type == AnacondaInstallerTypeLive {
+	case AnacondaInstallerTypeLive:
 		squashfsOptions = osbuild.SquashfsStageOptions{
 			Filename: "LiveOS/squashfs.img",
 		}
@@ -281,11 +282,12 @@ func (p *AnacondaInstallerISOTree) NewSquashfsStage() *osbuild.Stage {
 func (p *AnacondaInstallerISOTree) NewErofsStage() *osbuild.Stage {
 	var erofsOptions osbuild.ErofsStageOptions
 
-	if p.anacondaPipeline.Type == AnacondaInstallerTypePayload {
+	switch p.anacondaPipeline.Type {
+	case AnacondaInstallerTypePayload:
 		erofsOptions = osbuild.ErofsStageOptions{
 			Filename: "images/install.img",
 		}
-	} else if p.anacondaPipeline.Type == AnacondaInstallerTypeLive {
+	case AnacondaInstallerTypeLive:
 		erofsOptions = osbuild.ErofsStageOptions{
 			Filename: "LiveOS/squashfs.img",
 		}
@@ -425,7 +427,8 @@ func (p *AnacondaInstallerISOTree) serialize() osbuild.Pipeline {
 	default:
 	}
 
-	if p.ISOBoot == SyslinuxISOBoot {
+	switch p.ISOBoot {
+	case SyslinuxISOBoot:
 		options := &osbuild.ISOLinuxStageOptions{
 			Product: osbuild.ISOLinuxProduct{
 				Name:    p.anacondaPipeline.product,
@@ -439,7 +442,7 @@ func (p *AnacondaInstallerISOTree) serialize() osbuild.Pipeline {
 
 		stage := osbuild.NewISOLinuxStage(options, p.anacondaPipeline.Name())
 		pipeline.AddStage(stage)
-	} else if p.ISOBoot == Grub2ISOBoot {
+	case Grub2ISOBoot:
 		options := &osbuild.Grub2ISOLegacyStageOptions{
 			Product: osbuild.Product{
 				Name:    p.anacondaPipeline.product,
