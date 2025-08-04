@@ -8,6 +8,7 @@ linters:
   enable:
     - gosec
     - gomoddirectives
+    - staticcheck
   settings:
     gosec:
       excludes:
@@ -28,6 +29,10 @@ linters:
       - linters:
           - gosec
         path: ^(images/)?(pkg|internal)/.*_test\.go$
+      # unnecessary field selector
+      - linters:
+          - staticcheck
+        text: "QF1008"
     paths:
       - third_party$
       - builtin$
