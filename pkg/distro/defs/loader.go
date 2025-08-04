@@ -42,7 +42,7 @@ var defaultDataFS fs.FS = distrodefs.Data
 func dataFS() fs.FS {
 	// XXX: this is a short term measure, pass a set of
 	// searchPaths down the stack instead
-	var dataFS fs.FS = defaultDataFS
+	dataFS := defaultDataFS
 	if overrideDir := experimentalflags.String("yamldir"); overrideDir != "" {
 		olog.Printf("WARNING: using experimental override dir %q", overrideDir)
 		dataFS = os.DirFS(overrideDir)
