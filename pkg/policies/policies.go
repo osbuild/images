@@ -117,3 +117,50 @@ var OstreeCustomFilesPolicies = pathpolicy.NewPathPolicies(map[string]pathpolicy
 	"/etc/passwd":     {Deny: true},
 	"/etc/group":      {Deny: true},
 })
+
+// BootcMountpointPolciies are more restrictive than the ostree
+// mountpoint policy defined in osbuild/images. It only allows / (for
+// sizing the root partition) and custom mountpoints under /var but
+// not /var itself.
+
+// Since our policy library doesn't support denying a path while allowing
+// its subpaths (only the opposite), we augment the standard policy check
+// with a simple search through the custom mountpoints to deny /var
+// specifically.
+var BootcMountpointPolicies = pathpolicy.NewPathPolicies(map[string]pathpolicy.PathPolicy{
+	// allow all existing mountpoints (but no subdirs) to support size customizations
+	"/":     {Deny: false, Exact: true},
+	"/boot": {Deny: false, Exact: true},
+
+	// /var is not allowed, but we need to allow any subdirectories that
+	// are not denied below, so we allow it initially and then check it
+	// separately (in checkMountpoints())
+	"/var": {Deny: false},
+
+	// /var subdir denials
+	"/var/home":     {Deny: true},
+	"/var/lock":     {Deny: true}, // symlink to ../run/lock which is on tmpfs
+	"/var/mail":     {Deny: true}, // symlink to spool/mail
+	"/var/mnt":      {Deny: true},
+	"/var/roothome": {Deny: true},
+	"/var/run":      {Deny: true}, // symlink to ../run which is on tmpfs
+	"/var/srv":      {Deny: true},
+	"/var/usrlocal": {Deny: true},
+})
+
+// BootcMountpointMinimalPolicy is a minimal policy for btrfs
+//
+// btrfs subvolumes are not supported at build time yet, so we only
+// allow / and /boot to be customized when building a btrfs disk (the
+// minimal policy)
+var BootcMountpointMinimalPolicy = pathpolicy.NewPathPolicies(map[string]pathpolicy.PathPolicy{
+	// allow all existing mountpoints to support size customizations
+	"/":     {Deny: false, Exact: true},
+	"/boot": {Deny: false, Exact: true},
+})
+
+// BootcCustomDirectoryPolicies follow the same rules as ostree right now
+var BootcCustomDirectoriesPolicies = OstreeCustomDirectoriesPolicies
+
+// BootcCustomFilesPolicies follow the same rules as ostree right now
+var BootcCustomFilesPolicies = OstreeCustomFilesPolicies
