@@ -803,6 +803,22 @@
       - "customizations.services"
       - "customizations.timezone"
 
+    # options supported by ostree disk (deployment) image types
+    supported_options_ostree_disk: &supported_options_ostree_disk
+      - "distro"
+      - "customizations.files"
+      - "customizations.directories"
+      - "customizations.disk"
+      - "customizations.filesystem"
+      - "customizations.partitioning_mode"
+      - "customizations.fips"
+      - "customizations.user"
+      - "customizations.sshkey"
+      - "customizations.group"
+      - "customizations.kernel.append"
+      - "customizations.locale"
+      - "customizations.services"
+
 
 image_config:
   default:
@@ -1284,6 +1300,7 @@ image_types:
                 - *iot_base_partition_table_part_efi_aarch64
                 - *iot_base_partition_table_part_boot_aarch64
                 - *iot_base_partition_table_part_root_fstab_ro_aarch64
+    supported_blueprint_options: *supported_options_ostree_disk
 
   "iot-qcow2":
     <<: *rpm_ostree_imgtype_common
@@ -1311,6 +1328,7 @@ image_types:
       - <<: *aarch64_platform
         image_format: "qcow2"
         qcow2_compat: "1.1"
+    supported_blueprint_options: *supported_options_ostree_disk
 
   "iot-bootable-container":
     <<: *rpm_ostree_imgtype_common
