@@ -693,7 +693,7 @@ func (r *Request) Hash() string {
 	for _, repo := range r.Arguments.Repos {
 		h.Write([]byte(repo.Hash()))
 	}
-	h.Write([]byte(fmt.Sprintf("%T", r.Arguments.Search.Latest)))
+	fmt.Fprintf(h, "%T", r.Arguments.Search.Latest)
 	h.Write([]byte(strings.Join(r.Arguments.Search.Packages, "")))
 
 	return fmt.Sprintf("%x", h.Sum(nil))
