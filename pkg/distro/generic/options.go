@@ -1,6 +1,7 @@
 package generic
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -9,7 +10,9 @@ import (
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/customizations/oscap"
+	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/pathpolicy"
 	"github.com/osbuild/images/pkg/policies"
 )
 
@@ -707,6 +710,60 @@ func checkOptionsFedora(t *imageType, bp *blueprint.Blueprint, options distro.Im
 			(customizations.GetUsers() != nil || customizations.GetGroups() != nil) {
 			return warnings, fmt.Errorf("iot-installer installer.kickstart.contents are not supported in combination with users or groups")
 		}
+	}
+
+	return warnings, nil
+}
+
+// checkBootcMountpoints is needed because /var is not allowed, but we
+// need to allow any subdirectories that denied by BootcMountPointPolicy
+func checkBootcMountpoints(filesystems []blueprint.FilesystemCustomization, policy *pathpolicy.PathPolicies) error {
+	errs := []error{}
+	for _, fs := range filesystems {
+		if err := policy.Check(fs.Mountpoint); err != nil {
+			errs = append(errs, err)
+		}
+		if fs.Mountpoint == "/var" {
+			// this error message is consistent with the errors returned by policy.Check()
+			// TODO: remove trailing space inside the quoted path when the function is fixed in osbuild/images.
+			errs = append(errs, fmt.Errorf(`path "/var" is not allowed`))
+		}
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf("the following errors occurred while validating custom mountpoints:\n%w", errors.Join(errs...))
+	}
+	return nil
+}
+
+func checkOptionsBootc(t *imageType, bp *blueprint.Blueprint, options distro.ImageOptions) ([]string, error) {
+	var warnings []string
+
+	customizations := bp.Customizations
+	dc := customizations.GetDirectories()
+	fc := customizations.GetFiles()
+	if err := blueprint.ValidateDirFileCustomizations(dc, fc); err != nil {
+		return nil, err
+	}
+	if err := blueprint.CheckDirectoryCustomizationsPolicy(dc, policies.BootcCustomDirectoriesPolicies); err != nil {
+		return nil, err
+	}
+	if err := blueprint.CheckFileCustomizationsPolicy(fc, policies.BootcCustomFilesPolicies); err != nil {
+		return nil, err
+	}
+
+	var policy *pathpolicy.PathPolicies
+	switch options.PartitioningMode {
+	case disk.BtrfsPartitioningMode:
+		// btrfs subvolumes are not supported at build time yet, so we only
+		// allow / and /boot to be customized when building a btrfs disk (the
+		// minimal policy)
+		policy = policies.BootcMountpointMinimalPolicy
+	default:
+		policy = policies.BootcMountpointPolicies
+	}
+	fsCust := customizations.GetFilesystems()
+	if err := checkBootcMountpoints(fsCust, policy); err != nil {
+		return nil, err
 	}
 
 	return warnings, nil

@@ -102,10 +102,11 @@ func ImageFromBootc(bootcRef, imgTypeStr, archStr, defaultFs string) (distro.Ima
 			DefaultFSType: rootfsType,
 			DefsPath:      "./bootc",
 			Vendor:        info.UEFIVendor,
-			// XXX: hack, we need a new "DISTRO_BOOTC"
-			// probably but checkOptions() needs *something*
-			// for now
-			DistroLike: manifest.DISTRO_FEDORA,
+			// DistroLike is used to check valid options
+			// on manifest generation mostly so have a
+			// custom for now, not orthogonal but best we
+			// can do for now
+			DistroLike: manifest.DISTRO_BOOTC,
 		},
 		arches: make(map[string]*architecture),
 	}

@@ -33,6 +33,7 @@ const (
 	DISTRO_EL8
 	DISTRO_EL7
 	DISTRO_FEDORA
+	DISTRO_BOOTC
 )
 
 func (d *Distro) UnmarshalJSON(data []byte) error {
@@ -52,6 +53,8 @@ func (d *Distro) UnmarshalJSON(data []byte) error {
 		*d = DISTRO_EL7
 	case "fedora":
 		*d = DISTRO_FEDORA
+	case "bootc":
+		*d = DISTRO_BOOTC
 	default:
 		return fmt.Errorf("unknown distro: %q", s)
 	}
