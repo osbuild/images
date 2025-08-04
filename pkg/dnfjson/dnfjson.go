@@ -849,7 +849,7 @@ func parseError(data []byte, repos []repoConfig) Error {
 		if len(repo.Name) > 0 {
 			nameURL = fmt.Sprintf("%s: %s", repo.Name, nameURL)
 		}
-		e.Reason = strings.Replace(e.Reason, idstr, fmt.Sprintf("%s [%s]", idstr, nameURL), -1)
+		e.Reason = strings.ReplaceAll(e.Reason, idstr, fmt.Sprintf("%s [%s]", idstr, nameURL))
 	}
 
 	return e
