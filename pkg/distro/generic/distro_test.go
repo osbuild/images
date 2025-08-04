@@ -5,6 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/distro/defs"
 	testrepos "github.com/osbuild/images/test/data/repositories"
 )
@@ -12,7 +14,7 @@ import (
 func TestISOLabel(t *testing.T) {
 	imgType := &imageType{
 		arch: &architecture{
-			name: "some-arch",
+			arch: common.Must(arch.FromString("s390x")),
 		},
 	}
 	d := &distribution{
@@ -24,7 +26,7 @@ func TestISOLabel(t *testing.T) {
 	}
 
 	isoLabelFunc := d.getISOLabelFunc("iso-label")
-	assert.Equal(t, "name:rhel,major:9,minor:1,product:some-product,arch:some-arch,iso-label:iso-label", isoLabelFunc(imgType))
+	assert.Equal(t, "name:rhel,major:9,minor:1,product:some-product,arch:s390x,iso-label:iso-label", isoLabelFunc(imgType))
 }
 
 func TestBootstrapContainers(t *testing.T) {
