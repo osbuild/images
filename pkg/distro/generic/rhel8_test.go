@@ -481,13 +481,14 @@ func TestRH8_Distro_ManifestError(t *testing.T) {
 				Size: imgType.Size(0),
 			}
 			_, _, err := imgType.Manifest(&bp, imgOpts, nil, nil)
-			if imgTypeName == "edge-commit" || imgTypeName == "edge-container" {
+			switch imgTypeName {
+			case "edge-commit", "edge-container":
 				assert.EqualError(t, err, "kernel boot parameter customizations are not supported for ostree types")
-			} else if imgTypeName == "edge-raw-image" {
+			case "edge-raw-image":
 				assert.EqualError(t, err, fmt.Sprintf("%q images require specifying a URL from which to retrieve the OSTree commit", imgTypeName))
-			} else if imgTypeName == "edge-installer" || imgTypeName == "edge-simplified-installer" {
+			case "edge-installer", "edge-simplified-installer":
 				assert.EqualError(t, err, fmt.Sprintf("boot ISO image type %q requires specifying a URL from which to retrieve the OSTree commit", imgTypeName))
-			} else {
+			default:
 				assert.NoError(t, err)
 			}
 		}

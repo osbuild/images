@@ -85,15 +85,16 @@ func GenImagePrepareStages(pt *disk.PartitionTable, filename string, partTool Pa
 		},
 	)
 
-	if partTool == PTSfdisk {
+	switch partTool {
+	case PTSfdisk:
 		sfOptions := sfdiskStageOptions(pt)
 		sfdisk := NewSfdiskStage(sfOptions, loopback)
 		stages = append(stages, sfdisk)
-	} else if partTool == PTSgdisk {
+	case PTSgdisk:
 		sgOptions := sgdiskStageOptions(pt)
 		sgdisk := NewSgdiskStage(sgOptions, loopback)
 		stages = append(stages, sgdisk)
-	} else {
+	default:
 		panic("programming error: unknown PartTool: " + partTool)
 	}
 

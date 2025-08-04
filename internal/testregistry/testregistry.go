@@ -290,11 +290,12 @@ func (reg *Registry) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if cmd == "manifests" {
+	switch cmd {
+	case "manifests":
 		repo.ServeManifest(ref, w, req)
-	} else if cmd == "blobs" {
+	case "blobs":
 		repo.ServeBlob(ref, w, req)
-	} else {
+	default:
 		http.NotFound(w, req)
 	}
 }
