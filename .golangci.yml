@@ -7,6 +7,7 @@ run:
 linters:
   enable:
     - gosec
+    - gomoddirectives
   settings:
     gosec:
       excludes:
