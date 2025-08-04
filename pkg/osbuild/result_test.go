@@ -166,11 +166,12 @@ func TestUnmarshalV2Success(t *testing.T) {
 	// check metadata
 	for _, pipeline := range result.Metadata {
 		for stageType, stageMetadata := range pipeline {
-			if stageType == "org.osbuild.rpm" {
+			switch stageType {
+			case "org.osbuild.rpm":
 				rpmMd, convOk := stageMetadata.(*RPMStageMetadata)
 				assert.True(convOk)
 				assert.Greater(len(rpmMd.Packages), 0)
-			} else if stageType == "org.osbuild.ostree.commit" {
+			case "org.osbuild.ostree.commit":
 				commitMd, convOk := stageMetadata.(*OSTreeCommitStageMetadata)
 				assert.True(convOk)
 				assert.NotEmpty(commitMd.Compose.Ref)
