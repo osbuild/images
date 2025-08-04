@@ -819,6 +819,17 @@
       - "customizations.locale"
       - "customizations.services"
 
+    # options supported by Anaconda installer (ISO) image types
+    supported_options_anaconda: &supported_options_anaconda
+      - "distro"
+      - "customizations.installer"
+      - "customizations.user"
+      - "customizations.sshkey"
+      - "customizations.group"
+      - "customizations.fips"
+      - "customizations.timezone"
+      - "customizations.locale"
+
 
 image_config:
   default:
@@ -1605,6 +1616,7 @@ image_types:
     platforms:
       - *x86_64_installer_platform
       - *aarch64_installer_platform
+    supported_blueprint_options: *supported_options_anaconda
 
   "workstation-live-installer":
     name_aliases: ["live-installer"]
@@ -1616,7 +1628,7 @@ image_types:
     iso_label: "Workstation"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
-    installer_config: 
+    installer_config:
       <<: *default_installer_config
       # for some reason the live-installer never had or never took into account
       # the additional dracut modules. This might be a bug but for now we reset
@@ -1713,6 +1725,7 @@ image_types:
         - *minimal_raw_pkgset
       installer:
         - *anaconda_pkgset
+    supported_blueprint_options: *supported_options_anaconda
 
   container: &container
     filename: "container.tar"
