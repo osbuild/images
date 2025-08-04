@@ -673,6 +673,16 @@
       - "customizations.locale"
       - "customizations.services"
 
+    # options supported by Anaconda installer (ISO) image types
+    supported_options_anaconda: &supported_options_anaconda
+      - "distro"
+      - "customizations.installer"
+      - "customizations.user"
+      - "customizations.group"
+      - "customizations.fips"
+      - "customizations.timezone"
+      - "customizations.locale"
+
 
 image_config:
   default:
@@ -1613,6 +1623,7 @@ image_types:
               append:
                 include:
                   - "dmidecode"
+    supported_blueprint_options: *supported_options_anaconda
 
   "iot-installer":
     <<: *rpm_ostree_imgtype_common
@@ -1658,6 +1669,7 @@ image_types:
     platforms:
       - *x86_64_installer_platform
       - *aarch64_installer_platform
+    supported_blueprint_options: *supported_options_anaconda
 
   "workstation-live-installer":
     name_aliases: ["live-installer"]
