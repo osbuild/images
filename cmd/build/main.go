@@ -22,7 +22,7 @@ import (
 )
 
 func u(s string) string {
-	return strings.Replace(s, "-", "_", -1)
+	return strings.ReplaceAll(s, "-", "_")
 }
 
 func run() error {
