@@ -1,6 +1,7 @@
 package imagefilter_test
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/osbuild/images/pkg/distrofactory"
 	"github.com/osbuild/images/pkg/imagefilter"
+	"github.com/osbuild/images/pkg/rpmmd"
 	testrepos "github.com/osbuild/images/test/data/repositories"
 )
 
@@ -21,6 +23,26 @@ func TestImageFilterSmoke(t *testing.T) {
 	res, err := imgFilter.Filter("*")
 	require.NoError(t, err)
 	assert.True(t, len(res) > 0)
+}
+
+func TestImageFilterSpecificResult(t *testing.T) {
+	fac := distrofactory.NewDefault()
+	repos, err := testrepos.New()
+	require.NoError(t, err)
+
+	imgFilter, err := imagefilter.New(fac, repos)
+	require.NoError(t, err)
+
+	res, err := imgFilter.Filter("distro:centos-9", "arch:x86_64", "type:qcow2")
+	require.NoError(t, err)
+	assert.Len(t, res, 1)
+	assert.Equal(t, "centos-9", res[0].Distro.Name())
+	assert.Equal(t, "x86_64", res[0].Arch.Name())
+	assert.Equal(t, "qcow2", res[0].ImgType.Name())
+	assert.True(t, len(res[0].Repos) > 0)
+	assert.True(t, slices.IndexFunc(res[0].Repos, func(r rpmmd.RepoConfig) bool {
+		return r.Name == "BaseOS"
+	}) >= 0)
 }
 
 func TestImageFilterFilter(t *testing.T) {

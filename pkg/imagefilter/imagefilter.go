@@ -1,15 +1,19 @@
 package imagefilter
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distrofactory"
 	"github.com/osbuild/images/pkg/distrosort"
+	"github.com/osbuild/images/pkg/reporegistry"
+	"github.com/osbuild/images/pkg/rpmmd"
 )
 
-type DistroLister interface {
+type MinimalRepoRegistry interface {
 	ListDistros() []string
+	ReposByImageTypeName(distro, arch, imageType string) ([]rpmmd.RepoConfig, error)
 }
 
 // Result contains a result from a imagefilter.Filter run
@@ -17,17 +21,18 @@ type Result struct {
 	Distro  distro.Distro
 	Arch    distro.Arch
 	ImgType distro.ImageType
+	Repos   []rpmmd.RepoConfig
 }
 
 // ImageFilter is an a flexible way to filter the available images.
 type ImageFilter struct {
 	fac   *distrofactory.Factory
-	repos DistroLister
+	repos MinimalRepoRegistry
 }
 
 // New creates a new ImageFilter that can be used to filter the list
 // of available images
-func New(fac *distrofactory.Factory, repos DistroLister) (*ImageFilter, error) {
+func New(fac *distrofactory.Factory, repos MinimalRepoRegistry) (*ImageFilter, error) {
 	if fac == nil {
 		return nil, fmt.Errorf("cannot create ImageFilter without a valid distrofactory")
 	}
@@ -80,7 +85,15 @@ func (i *ImageFilter) Filter(searchTerms ...string) ([]Result, error) {
 					return nil, err
 				}
 				if filter.Matches(distro, a, imgType) {
-					res = append(res, Result{distro, a, imgType})
+					repos, err := i.repos.ReposByImageTypeName(distroName, archName, imgTypeName)
+					if errors.Is(err, reporegistry.ErrNoRepoFound) {
+						// skip the image if no repositories are found, we cannot build it without repos (except bootc images but those do not use ImageFilter)
+						continue
+					}
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, Result{distro, a, imgType, repos})
 				}
 			}
 		}
