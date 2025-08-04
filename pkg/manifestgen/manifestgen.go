@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
@@ -182,6 +183,16 @@ func (mg *Generator) Generate(bp *blueprint.Blueprint, dist distro.Distro, imgTy
 	if err != nil {
 		return err
 	}
+	for _, specs := range containerSpecs {
+		for _, spec := range specs {
+			// XXX: if only distro.Arch had .Arch()
+			if spec.Arch != arch.ARCH_UNSET && spec.Arch.String() != a.Name() {
+				// XXX: add ErrContainerResolveArchmistmatch type
+				return fmt.Errorf("image found is for unexpected architecture %q (expected %q)", spec.Arch, a)
+			}
+		}
+	}
+
 	commitSpecs, err := mg.commitResolver(preManifest.GetOSTreeSourceSpecs())
 	if err != nil {
 		return err
