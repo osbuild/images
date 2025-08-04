@@ -188,7 +188,7 @@ func checkOptionsRhel9(t *imageType, bp *blueprint.Blueprint, options distro.Ima
 	}
 	if (mountpoints != nil || partitioning != nil) && t.RPMOSTree && (t.Name() == "edge-container" || t.Name() == "edge-commit") {
 		return warnings, fmt.Errorf("custom mountpoints and partitioning are not supported for ostree types")
-	} else if (mountpoints != nil || partitioning != nil) && t.RPMOSTree && !(t.Name() == "edge-container" || t.Name() == "edge-commit") {
+	} else if (mountpoints != nil || partitioning != nil) && t.RPMOSTree && (t.Name() != "edge-container" && t.Name() != "edge-commit") {
 		//customization allowed for edge-raw-image,edge-ami,edge-vsphere,edge-simplified-installer
 		err := blueprint.CheckMountpointsPolicy(mountpoints, policies.OstreeMountpointPolicies)
 		if err != nil {
