@@ -788,6 +788,7 @@ image_types:
             - "redhat-release"
             - "redhat-release-eula"
             - "rsync"
+            - "system-reinstall-bootc"
             - "tar"
             - "tuned"
             - "tcpdump"
