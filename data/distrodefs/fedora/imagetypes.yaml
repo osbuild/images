@@ -1486,6 +1486,14 @@ image_types:
                 exclude:
                   - "perl"
                   - "perl-interpreter"
+    supported_blueprint_options:
+      # Only supporting a few basic options for now because we never tested any
+      # other customization with this image type
+      - "distro"
+      - "packages"
+      - "modules"
+      - "groups"
+      - "minimal"
 
   "minimal-raw-xz": &minimal_raw_xz
     name_aliases: ["minimal-raw"]
@@ -1683,6 +1691,9 @@ image_types:
     platforms:
       - *x86_64_installer_platform
       - *aarch64_installer_platform
+    supported_blueprint_options:
+      - "distro"
+      - "customizations.installer"
 
   "minimal-installer":
     name_aliases: ["image-installer", "fedora-image-installer"]
@@ -1791,6 +1802,14 @@ image_types:
             - "trousers"
             - "whois-nls"
             - "xkeyboard-config"
+    supported_blueprint_options:
+      # Only supporting a few basic options for now because we never tested any
+      # other customization with this image type
+      - "distro"
+      - "packages"
+      - "modules"
+      - "groups"
+      - "minimal"
 
   wsl:
     # this is the eventual name, and `wsl` the alias but we've been
@@ -1896,6 +1915,14 @@ image_types:
               append:
                 exclude:
                   - "fuse-libs"
+    supported_blueprint_options:
+      # Only supporting a few basic options for now because we never tested any
+      # other customization with this image type
+      - "distro"
+      - "packages"
+      - "modules"
+      - "groups"
+      - "minimal"
 
   "iot-simplified-installer":
     <<: *rpm_ostree_imgtype_common
@@ -2016,6 +2043,18 @@ image_types:
             - "iwlwifi-mvm-firmware"
             - "realtek-firmware"
             - "uboot-images-armv8"
+    supported_blueprint_options:
+      - "distro"
+      - "customizations.installation_device"
+      - "customizations.fdo"
+      - "customizations.ignition"
+      - "customizations.kernel"
+      - "customizations.user"
+      - "customizations.sshkey"
+      - "customizations.group"
+      - "customizations.fips"
+    required_blueprint_options:
+      - "customizations.installation_device"
 
   # Based on lorax runtime-install.tmpl
   "everything-netinst":
