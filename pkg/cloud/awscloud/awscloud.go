@@ -580,11 +580,11 @@ func (a *AWS) CreateSecurityGroupEC2(name, description string) (*ec2.CreateSecur
 	)
 }
 
-func (a *AWS) DeleteSecurityGroupEC2(groupID *string) (*ec2.DeleteSecurityGroupOutput, error) {
+func (a *AWS) DeleteSecurityGroupEC2(groupID string) (*ec2.DeleteSecurityGroupOutput, error) {
 	return a.ec2.DeleteSecurityGroup(
 		context.TODO(),
 		&ec2.DeleteSecurityGroupInput{
-			GroupId: groupID,
+			GroupId: &groupID,
 		})
 }
 
