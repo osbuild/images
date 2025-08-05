@@ -22,6 +22,7 @@ import (
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/olog"
+	"github.com/osbuild/images/pkg/platform"
 )
 
 type AWS struct {
@@ -209,13 +210,30 @@ func (a *AWS) UploadFromReader(r io.Reader, bucket, key string) (*s3manager.Uplo
 	)
 }
 
+func ec2BootMode(bootMode *platform.BootMode) (ec2types.BootModeValues, error) {
+	if bootMode == nil {
+		return ec2types.BootModeValues(""), nil
+	}
+
+	switch *bootMode {
+	case platform.BOOT_LEGACY:
+		return ec2types.BootModeValuesLegacyBios, nil
+	case platform.BOOT_UEFI:
+		return ec2types.BootModeValuesUefi, nil
+	case platform.BOOT_HYBRID:
+		return ec2types.BootModeValuesUefiPreferred, nil
+	default:
+		return ec2types.BootModeValues(""), fmt.Errorf("invalid boot mode: %s", *bootMode)
+	}
+}
+
 // Register is a function that imports a snapshot, waits for the snapshot to
 // fully import, tags the snapshot, cleans up the image in S3, and registers
 // an AMI in AWS.
 // The caller can optionally specify the boot mode of the AMI. If the boot
 // mode is not specified, then the instances launched from this AMI use the
 // default boot mode value of the instance type.
-func (a *AWS) Register(name, bucket, key string, shareWith []string, architecture arch.Arch, bootMode, importRole *string) (string, string, error) {
+func (a *AWS) Register(name, bucket, key string, shareWith []string, architecture arch.Arch, bootMode *platform.BootMode, importRole *string) (string, string, error) {
 	rpmArchToEC2Arch := map[arch.Arch]ec2types.ArchitectureValues{
 		arch.ARCH_X86_64:  ec2types.ArchitectureValuesX8664,
 		arch.ARCH_AARCH64: ec2types.ArchitectureValuesArm64,
@@ -226,12 +244,9 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, architectur
 		return "", "", fmt.Errorf("ec2 doesn't support the following arch: %s", architecture)
 	}
 
-	var ec2BootMode ec2types.BootModeValues
-	if bootMode != nil {
-		ec2BootMode = ec2types.BootModeValues(*bootMode)
-		if !slices.Contains(ec2BootMode.Values(), ec2BootMode) {
-			return "", "", fmt.Errorf("ec2 doesn't support the following boot mode: %s", *bootMode)
-		}
+	ec2BootMode, err := ec2BootMode(bootMode)
+	if err != nil {
+		return "", "", fmt.Errorf("ec2 doesn't support the following boot mode: %s", bootMode)
 	}
 
 	olog.Printf("[AWS] 📥 Importing snapshot from image: %s/%s", bucket, key)
