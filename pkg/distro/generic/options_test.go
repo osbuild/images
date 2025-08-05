@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCheckOptionsFedora(t *testing.T) {
+func TestCheckOptions(t *testing.T) {
 	type testCase struct {
 		distro  string
 		it      string
@@ -38,7 +38,7 @@ func TestCheckOptionsFedora(t *testing.T) {
 					},
 				},
 			},
-			expErr: "installer customizations are not supported for \"server-ami\"",
+			expErr: "blueprint validation failed for image type \"server-ami\": customizations.installer: not supported",
 		},
 		"f42/ami-ostree-error": {
 			distro: "fedora-42",
@@ -53,7 +53,7 @@ func TestCheckOptionsFedora(t *testing.T) {
 		"f42/ostree-installer-requires-ostree-url": {
 			distro: "fedora-42",
 			it:     "iot-installer",
-			expErr: "boot ISO image type \"iot-installer\" requires specifying a URL from which to retrieve the OSTree commit",
+			expErr: "options validation failed for image type \"iot-installer\": ostree.url: required",
 		},
 		"f42/ostree-disk-supported": {
 			distro: "fedora-42",
@@ -105,7 +105,7 @@ func TestCheckOptionsFedora(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "unsupported blueprint customizations found for image type \"iot-qcow2\": (allowed: User, Group, Directories, Files, Services, FIPS)",
+			expErr: "blueprint validation failed for image type \"iot-qcow2\": customizations.kernel.name: not supported",
 		},
 		"f42/iot-simplified-requires-install-device": {
 			distro: "fedora-42",
@@ -132,7 +132,7 @@ func TestCheckOptionsFedora(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "boot ISO image type \"iot-simplified-installer\" requires specifying an installation device to install to",
+			expErr: "blueprint validation failed for image type \"iot-simplified-installer\": customizations.installation_device: required",
 		},
 		"f42/iot-simplified-supported-customizations": {
 			distro: "fedora-42",
@@ -194,7 +194,7 @@ func TestCheckOptionsFedora(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "unsupported blueprint customizations found for image type \"iot-simplified-installer\": (allowed: InstallationDevice, FDO, Ignition, Kernel, User, Group, FIPS)",
+			expErr: "blueprint validation failed for image type \"iot-simplified-installer\": customizations.services: not supported",
 		},
 		"f42/iot-simplified-fdo-requires-manufacturing-url": {
 			distro: "fedora-42",
@@ -223,7 +223,7 @@ func TestCheckOptionsFedora(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "boot ISO image type \"iot-simplified-installer\" requires specifying FDO.ManufacturingServerURL configuration to install to when using FDO",
+			expErr: "blueprint validation failed for image type \"iot-simplified-installer\": customizations.fdo.manufacturing_server_url: required when using fdo",
 		},
 		"f42/iot-simplified-fdo-requires-a-diun-option": {
 			distro: "fedora-42",
@@ -252,7 +252,7 @@ func TestCheckOptionsFedora(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "boot ISO image type \"iot-simplified-installer\" requires specifying one of [FDO.DiunPubKeyHash,FDO.DiunPubKeyInsecure,FDO.DiunPubKeyRootCerts] configuration to install to when using FDO",
+			expErr: "blueprint validation failed for image type \"iot-simplified-installer\": one of customizations.fdo.diun_pub_key_hash, customizations.fdo.diun_pub_key_insecure, customizations.fdo.diun_pub_key_root_certs: required when using fdo",
 		},
 		"f42/iot-simplified-fdo-requires-exactly-one-diun-option": {
 			distro: "fedora-42",
@@ -283,7 +283,7 @@ func TestCheckOptionsFedora(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "boot ISO image type \"iot-simplified-installer\" requires specifying one of [FDO.DiunPubKeyHash,FDO.DiunPubKeyInsecure,FDO.DiunPubKeyRootCerts] configuration to install to when using FDO",
+			expErr: "blueprint validation failed for image type \"iot-simplified-installer\": one of customizations.fdo.diun_pub_key_hash, customizations.fdo.diun_pub_key_insecure, customizations.fdo.diun_pub_key_root_certs: required when using fdo",
 		},
 		"f42/iot-simplified-ignition": {
 			distro: "fedora-42",
@@ -320,7 +320,7 @@ func TestCheckOptionsFedora(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "ignition.firstboot requires a provisioning url",
+			expErr: "blueprint validation failed for image type \"iot-simplified-installer\": customizations.ignition.firstboot requires customizations.ignition.firstboot.provisioning_url",
 		},
 		"f42/iot-simplified-ignition-option-conflict": {
 			distro: "fedora-42",
@@ -343,7 +343,7 @@ func TestCheckOptionsFedora(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "both ignition embedded and firstboot configurations found",
+			expErr: "blueprint validation failed for image type \"iot-simplified-installer\": customizations.ignition.embedded cannot be used with customizations.ignition.firstboot",
 		},
 
 		"f42/iot-installer-supported-customizations": {
@@ -392,7 +392,7 @@ func TestCheckOptionsFedora(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "unsupported blueprint customizations found for image type \"iot-installer\": (allowed: User, Group, FIPS, Installer, Timezone, Locale)",
+			expErr: "blueprint validation failed for image type \"iot-installer\": customizations.kernel: not supported",
 		},
 
 		"f42/live-installer-no-installer-customizations": {
@@ -405,10 +405,6 @@ func TestCheckOptionsFedora(t *testing.T) {
 					},
 				},
 			},
-			// NOTE: this is listed as supported in the checks that are
-			// specific to the image type but the image type is not listed as
-			// supporting installer customizations later in the function
-			expErr: "installer customizations are not supported for \"workstation-live-installer\"",
 		},
 		"f42/live-installer-unsupported-customizations": {
 			distro: "fedora-42",
@@ -421,7 +417,7 @@ func TestCheckOptionsFedora(t *testing.T) {
 					},
 				},
 			},
-			expErr: "image type \"workstation-live-installer\" does not support customizations",
+			expErr: "blueprint validation failed for image type \"workstation-live-installer\": customizations.user: not supported",
 		},
 
 		"f42/ostree-types-no-oscap": {
@@ -434,7 +430,7 @@ func TestCheckOptionsFedora(t *testing.T) {
 					},
 				},
 			},
-			expErr: "OpenSCAP customizations are not supported for ostree types",
+			expErr: "blueprint validation failed for image type \"iot-container\": customizations.openscap: not supported",
 		},
 
 		"f42/iot-installer-installer-customizations": {
@@ -471,7 +467,7 @@ func TestCheckOptionsFedora(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "iot-installer installer.kickstart.contents are not supported in combination with users or groups",
+			expErr: "blueprint validation failed for image type \"iot-installer\": customizations.installer.kickstart.contents cannot be used with customizations.user or customizations.group",
 		},
 
 		"f42/ostree-disk-unsupported-containers": {
@@ -484,7 +480,7 @@ func TestCheckOptionsFedora(t *testing.T) {
 					},
 				},
 			},
-			expErr: "embedding containers is not supported for iot-qcow2 on fedora-42",
+			expErr: "blueprint validation failed for image type \"iot-qcow2\": containers: not supported",
 		},
 
 		"f42/ostree-commit-unsupported-kernel-append": {
@@ -497,7 +493,7 @@ func TestCheckOptionsFedora(t *testing.T) {
 					},
 				},
 			},
-			expErr: "kernel boot parameter customizations are not supported for ostree types",
+			expErr: "blueprint validation failed for image type \"iot-commit\": customizations.kernel.append: not supported",
 		},
 
 		"f42/oscap-empty-profile": {
@@ -510,7 +506,7 @@ func TestCheckOptionsFedora(t *testing.T) {
 					},
 				},
 			},
-			expErr: "OpenSCAP profile cannot be empty",
+			expErr: "blueprint validation failed for image type \"server-vhd\": customizations.oscap.profile_id: required when using customizations.oscap",
 		},
 
 		// NOTE: the following tests verify the current behaviour of the
@@ -1591,17 +1587,17 @@ func TestCheckOptionsFedora(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			assert := assert.New(t)
 
-			fedora := generic.DistroFactory(tc.distro)
+			d := generic.DistroFactory(tc.distro)
 			// NOTE: The architecture is only relevant in one small case: swap
 			// partitions on RHEL 8. Let's ignore that for now and return to it
 			// when we redo the validation.
-			imageTypes, err := fedora.GetArch("x86_64")
+			imageTypes, err := d.GetArch("x86_64")
 			assert.NoError(err)
 			it, err := imageTypes.GetImageType(tc.it)
 			assert.NoError(err)
 
 			genit, ok := it.(*generic.ImageType) // checkOptions() function is defined on generic.ImageType
-			assert.True(ok, "image type %q for distro %q does not appear to be valid", tc.it, fedora.Name())
+			assert.True(ok, "image type %q for distro %q does not appear to be valid", tc.it, d.Name())
 			_, err = generic.ImageTypeCheckOptions(genit, &tc.bp, tc.options)
 			if tc.expErr == "" {
 				assert.NoError(err)
