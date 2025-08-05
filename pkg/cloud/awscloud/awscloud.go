@@ -359,11 +359,7 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, architectur
 	}
 
 	if len(shareWith) > 0 {
-		err = a.shareSnapshot(&snapshotID, shareWith)
-		if err != nil {
-			return "", "", err
-		}
-		err = a.shareImage(&imageID, shareWith)
+		err = a.ShareImage(imageID, []string{snapshotID}, shareWith)
 		if err != nil {
 			return "", "", err
 		}
@@ -383,28 +379,38 @@ func (a *AWS) DeleteObject(bucket, key string) error {
 	return err
 }
 
-func (a *AWS) ShareImage(ami string, userIds []string) error {
-	imgs, err := a.ec2.DescribeImages(
-		context.TODO(),
-		&ec2.DescribeImagesInput{
-			ImageIds: []string{ami},
-		},
-	)
-	if err != nil {
-		return err
-	}
-	if len(imgs.Images) == 0 {
-		return fmt.Errorf("Unable to find image with id: %v", ami)
+// ShareImage shares the AMI and its associated snapshots with the specified user IDs.
+// If no snapshot IDs are provided, it will find the snapshot IDs associated with the AMI.
+func (a *AWS) ShareImage(ami string, snapshotIDs, userIDs []string) error {
+	// If no snapshot IDs are provided, we will try to find the snapshot IDs
+	// associated with the AMI.
+	if len(snapshotIDs) == 0 {
+		imgs, err := a.ec2.DescribeImages(
+			context.TODO(),
+			&ec2.DescribeImagesInput{
+				ImageIds: []string{ami},
+			},
+		)
+		if err != nil {
+			return err
+		}
+		if len(imgs.Images) == 0 {
+			return fmt.Errorf("Unable to find image with id: %v", ami)
+		}
+
+		for _, bdm := range imgs.Images[0].BlockDeviceMappings {
+			snapshotIDs = append(snapshotIDs, *bdm.Ebs.SnapshotId)
+		}
 	}
 
-	for _, bdm := range imgs.Images[0].BlockDeviceMappings {
-		err = a.shareSnapshot(bdm.Ebs.SnapshotId, userIds)
+	for _, snapshotID := range snapshotIDs {
+		err := a.shareSnapshot(&snapshotID, userIDs)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = a.shareImage(&ami, userIds)
+	err := a.shareImage(&ami, userIDs)
 	if err != nil {
 		return err
 	}
