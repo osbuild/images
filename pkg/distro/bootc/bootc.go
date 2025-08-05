@@ -58,6 +58,36 @@ type BootcImageType struct {
 	export string
 }
 
+func (d *BootcDistro) SetBuildContainer(imgref string) (err error) {
+	if imgref == "" {
+		return nil
+	}
+
+	cnt, err := bibcontainer.New(imgref)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err = errors.Join(err, cnt.Stop())
+	}()
+
+	info, err := osinfo.Load(cnt.Root())
+	if err != nil {
+		return err
+	}
+	d.buildSourceInfo = info
+	return nil
+}
+
+func (d *BootcDistro) SetDefaultFs(defaultFs string) error {
+	if defaultFs == "" {
+		return nil
+	}
+
+	d.defaultFs = defaultFs
+	return nil
+}
+
 func (d *BootcDistro) Name() string {
 	return d.name
 }
@@ -340,6 +370,7 @@ func NewBootcDistro(imgref string) (bd *BootcDistro, err error) {
 	if err != nil {
 		return nil, err
 	}
+
 	// XXX: provide a way to set defaultfs (needed for bib)
 	defaultFs, err := cnt.DefaultRootfsType()
 	if err != nil {
@@ -357,8 +388,8 @@ func NewBootcDistro(imgref string) (bd *BootcDistro, err error) {
 		defaultFs:     defaultFs,
 		sourceInfo:    info,
 		rootfsMinSize: cntSize * containerSizeToDiskSizeMultiplier,
-		imgref:        imgref,
-		// XXX: add support for buildimgref
+
+		imgref:      imgref,
 		buildImgref: imgref,
 	}
 
