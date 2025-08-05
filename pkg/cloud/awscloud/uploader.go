@@ -24,12 +24,12 @@ type awsUploader struct {
 	region     string
 	bucketName string
 	imageName  string
-	targetArch string
+	targetArch arch.Arch
 	bootMode   *string
 }
 
 type UploaderOptions struct {
-	TargetArch string
+	TargetArch arch.Arch
 	// BootMode to set for the AMI. If nil, no explicit boot mode will be set.
 	BootMode *platform.BootMode
 }
@@ -57,7 +57,7 @@ type awsClient interface {
 	Buckets() ([]string, error)
 	CheckBucketPermission(string, s3types.Permission) (bool, error)
 	UploadFromReader(io.Reader, string, string) (*s3manager.UploadOutput, error)
-	Register(name, bucket, key string, shareWith []string, rpmArch string, bootMode, importRole *string) (*string, *string, error)
+	Register(name, bucket, key string, shareWith []string, architecture arch.Arch, bootMode, importRole *string) (*string, *string, error)
 	DeleteObject(string, string) error
 }
 
@@ -138,8 +138,8 @@ func (au *awsUploader) UploadAndRegister(r io.Reader, status io.Writer) (err err
 		}
 	}()
 	fmt.Fprintf(status, "File uploaded to %s\n", res.Location)
-	if au.targetArch == "" {
-		au.targetArch = arch.Current().String()
+	if au.targetArch == arch.ARCH_UNSET {
+		au.targetArch = arch.Current()
 	}
 
 	fmt.Fprintf(status, "Registering AMI %s\n", au.imageName)

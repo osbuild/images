@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/cloud/awscloud"
 )
 
@@ -25,13 +26,13 @@ func TestRegister(t *testing.T) {
 	testCases := []struct {
 		testName string
 
-		name       string
-		bucket     string
-		key        string
-		shareWith  []string
-		rpmArch    string
-		bootMode   *string
-		importRole *string
+		name         string
+		bucket       string
+		key          string
+		shareWith    []string
+		architecture arch.Arch
+		bootMode     *string
+		importRole   *string
 
 		ec2Client  *fakeEC2Client
 		s3Client   *fakeS3Client
@@ -44,46 +45,46 @@ func TestRegister(t *testing.T) {
 		errMsg    string
 	}{
 		{
-			testName:  "happy minimal",
-			name:      "test-image",
-			bucket:    "test-bucket",
-			key:       "test-key",
-			rpmArch:   "x86_64",
-			expectErr: false,
+			testName:     "happy minimal",
+			name:         "test-image",
+			bucket:       "test-bucket",
+			key:          "test-key",
+			architecture: arch.ARCH_X86_64,
+			expectErr:    false,
 		},
 		{
-			testName:   "happy full",
-			name:       "test-image",
-			bucket:     "test-bucket",
-			key:        "test-key",
-			shareWith:  []string{"123456789012"},
-			rpmArch:    "x86_64",
-			bootMode:   aws.String(string(ec2types.BootModeValuesUefi)),
-			importRole: aws.String("arn:aws:iam::123456789012:role/ImportRole"),
-			expectErr:  false,
+			testName:     "happy full",
+			name:         "test-image",
+			bucket:       "test-bucket",
+			key:          "test-key",
+			shareWith:    []string{"123456789012"},
+			architecture: arch.ARCH_X86_64,
+			bootMode:     aws.String(string(ec2types.BootModeValuesUefi)),
+			importRole:   aws.String("arn:aws:iam::123456789012:role/ImportRole"),
+			expectErr:    false,
 		},
 		{
-			name:      "error: invalid architecture",
-			bucket:    "test-bucket",
-			key:       "test-key",
-			rpmArch:   "invalid-arch",
-			expectErr: true,
-			errMsg:    "ec2 doesn't support the following arch: invalid-arch",
+			name:         "error: invalid architecture",
+			bucket:       "test-bucket",
+			key:          "test-key",
+			architecture: arch.ARCH_S390X, // invalid arch
+			expectErr:    true,
+			errMsg:       "ec2 doesn't support the following arch: s390x",
 		},
 		{
-			name:      "error: invalid boot mode",
-			bucket:    "test-bucket",
-			key:       "test-key",
-			rpmArch:   "x86_64",
-			bootMode:  aws.String("invalid-boot-mode"),
-			expectErr: true,
-			errMsg:    "ec2 doesn't support the following boot mode: invalid-boot-mode",
+			name:         "error: invalid boot mode",
+			bucket:       "test-bucket",
+			key:          "test-key",
+			architecture: arch.ARCH_X86_64,
+			bootMode:     aws.String("invalid-boot-mode"),
+			expectErr:    true,
+			errMsg:       "ec2 doesn't support the following boot mode: invalid-boot-mode",
 		},
 		{
-			name:    "error: import snapshot failure",
-			bucket:  "test-bucket",
-			key:     "test-key",
-			rpmArch: "x86_64",
+			name:         "error: import snapshot failure",
+			bucket:       "test-bucket",
+			key:          "test-key",
+			architecture: arch.ARCH_X86_64,
 			ec2Client: &fakeEC2Client{
 				importSnapshotErr: fmt.Errorf("import snapshot error"),
 			},
@@ -94,17 +95,17 @@ func TestRegister(t *testing.T) {
 			name:                         "error: import snapshot waiter failure",
 			bucket:                       "test-bucket",
 			key:                          "test-key",
-			rpmArch:                      "x86_64",
+			architecture:                 arch.ARCH_X86_64,
 			snapshotImportedWaiterErr:    fmt.Errorf("waiter error"),
 			snapshotImportedWaiterOutput: &ec2.DescribeImportSnapshotTasksOutput{},
 			expectErr:                    true,
 			errMsg:                       "waiter error",
 		},
 		{
-			name:    "error: import snapshot wait done not completed",
-			bucket:  "test-bucket",
-			key:     "test-key",
-			rpmArch: "x86_64",
+			name:         "error: import snapshot wait done not completed",
+			bucket:       "test-bucket",
+			key:          "test-key",
+			architecture: arch.ARCH_X86_64,
 			snapshotImportedWaiterOutput: &ec2.DescribeImportSnapshotTasksOutput{
 				ImportSnapshotTasks: []ec2types.ImportSnapshotTask{
 					{
@@ -120,10 +121,10 @@ func TestRegister(t *testing.T) {
 			errMsg:    "Unable to import snapshot, task result: pending, msg: Task is still in progress",
 		},
 		{
-			name:    "error: delete S3 object failure",
-			bucket:  "test-bucket",
-			key:     "test-key",
-			rpmArch: "x86_64",
+			name:         "error: delete S3 object failure",
+			bucket:       "test-bucket",
+			key:          "test-key",
+			architecture: arch.ARCH_X86_64,
 			s3Client: &fakeS3Client{
 				deleteObjectErr: fmt.Errorf("delete object error"),
 			},
@@ -131,10 +132,10 @@ func TestRegister(t *testing.T) {
 			errMsg:    "delete object error",
 		},
 		{
-			name:    "error: create tags failure",
-			bucket:  "test-bucket",
-			key:     "test-key",
-			rpmArch: "x86_64",
+			name:         "error: create tags failure",
+			bucket:       "test-bucket",
+			key:          "test-key",
+			architecture: arch.ARCH_X86_64,
 			ec2Client: &fakeEC2Client{
 				importSnapshot: &ec2.ImportSnapshotOutput{
 					ImportTaskId: aws.String("import-task-id"),
@@ -148,10 +149,10 @@ func TestRegister(t *testing.T) {
 			errMsg:    "create tags error",
 		},
 		{
-			name:    "error: register image failure",
-			bucket:  "test-bucket",
-			key:     "test-key",
-			rpmArch: "x86_64",
+			name:         "error: register image failure",
+			bucket:       "test-bucket",
+			key:          "test-key",
+			architecture: arch.ARCH_X86_64,
 			ec2Client: &fakeEC2Client{
 				importSnapshot: &ec2.ImportSnapshotOutput{
 					ImportTaskId: aws.String("import-task-id"),
@@ -165,11 +166,11 @@ func TestRegister(t *testing.T) {
 			errMsg:    "register image error",
 		},
 		{
-			name:      "error: share snapshot with accounts failure",
-			bucket:    "test-bucket",
-			key:       "test-key",
-			rpmArch:   "x86_64",
-			shareWith: []string{"123456789012"},
+			name:         "error: share snapshot with accounts failure",
+			bucket:       "test-bucket",
+			key:          "test-key",
+			architecture: arch.ARCH_X86_64,
+			shareWith:    []string{"123456789012"},
 			ec2Client: &fakeEC2Client{
 				importSnapshot: &ec2.ImportSnapshotOutput{
 					ImportTaskId: aws.String("import-task-id"),
@@ -183,11 +184,11 @@ func TestRegister(t *testing.T) {
 			errMsg:    "modify snapshot attribute error",
 		},
 		{
-			name:      "error: share image with accounts failure",
-			bucket:    "test-bucket",
-			key:       "test-key",
-			rpmArch:   "x86_64",
-			shareWith: []string{"123456789012"},
+			name:         "error: share image with accounts failure",
+			bucket:       "test-bucket",
+			key:          "test-key",
+			architecture: arch.ARCH_X86_64,
+			shareWith:    []string{"123456789012"},
 			ec2Client: &fakeEC2Client{
 				importSnapshot: &ec2.ImportSnapshotOutput{
 					ImportTaskId: aws.String("import-task-id"),
@@ -244,7 +245,7 @@ func TestRegister(t *testing.T) {
 			awsClient := awscloud.NewAWSForTest(fec2, fs3, fs3u, nil)
 			require.NotNil(t, awsClient)
 
-			imageId, snapshotId, err := awsClient.Register(tc.name, tc.bucket, tc.key, tc.shareWith, tc.rpmArch, tc.bootMode, tc.importRole)
+			imageId, snapshotId, err := awsClient.Register(tc.name, tc.bucket, tc.key, tc.shareWith, tc.architecture, tc.bootMode, tc.importRole)
 
 			if tc.expectErr {
 				require.Error(t, err)
@@ -285,7 +286,7 @@ func TestRegister(t *testing.T) {
 			// register image
 			require.Len(t, fec2.registerImageCalls, 1)
 			require.Equal(t, tc.name, *fec2.registerImageCalls[0].Name)
-			require.Equal(t, ec2types.ArchitectureValues(tc.rpmArch), fec2.registerImageCalls[0].Architecture)
+			require.Equal(t, ec2types.ArchitectureValues(tc.architecture.String()), fec2.registerImageCalls[0].Architecture)
 			require.Equal(t, ec2types.BootModeValues(aws.ToString(tc.bootMode)), fec2.registerImageCalls[0].BootMode)
 			require.Len(t, fec2.registerImageCalls[0].BlockDeviceMappings, 1)
 			require.Equal(t, snapImportedWaiterOutput.ImportSnapshotTasks[0].SnapshotTaskDetail.SnapshotId, fec2.registerImageCalls[0].BlockDeviceMappings[0].Ebs.SnapshotId)

@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/cloud/awscloud"
 	"github.com/osbuild/images/pkg/platform"
 )
@@ -65,7 +66,7 @@ func (fa *fakeAWSClient) UploadFromReader(io.Reader, string, string) (*s3manager
 	return fa.uploadFromReader, fa.uploadFromReaderErr
 }
 
-func (fa *fakeAWSClient) Register(name, bucket, key string, shareWith []string, rpmArch string, bootMode, importRole *string) (*string, *string, error) {
+func (fa *fakeAWSClient) Register(name, bucket, key string, shareWith []string, architecture arch.Arch, bootMode, importRole *string) (*string, *string, error) {
 	fa.registerCalls++
 	fa.registerBootMode = bootMode
 	return &fa.registerImageId, &fa.registerSnapshotId, fa.registerErr
