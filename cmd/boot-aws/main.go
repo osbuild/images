@@ -271,7 +271,7 @@ func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resour
 	instanceID := runResult.Instances[0].InstanceId
 	res.InstanceID = instanceID
 
-	ip, err := a.GetInstanceAddress(instanceID)
+	ip, err := a.GetInstanceAddress(*instanceID)
 	if err != nil {
 		return fmt.Errorf("GetInstanceAddress(): %s", err.Error())
 	}
@@ -411,7 +411,7 @@ func doRunExec(a *awscloud.AWS, command []string, flags *pflag.FlagSet, res *res
 	defer os.RemoveAll(tmpdir)
 
 	hostsfile := filepath.Join(tmpdir, "known_hosts")
-	ip, err := a.GetInstanceAddress(res.InstanceID)
+	ip, err := a.GetInstanceAddress(*res.InstanceID)
 	if err != nil {
 		return err
 	}
