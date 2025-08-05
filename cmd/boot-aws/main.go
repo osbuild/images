@@ -255,7 +255,7 @@ func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resour
 
 	res.SecurityGroup = securityGroup.GroupId
 
-	_, err = a.AuthorizeSecurityGroupIngressEC2(securityGroup.GroupId, "0.0.0.0/0", 22, 22, "tcp")
+	_, err = a.AuthorizeSecurityGroupIngressEC2(*securityGroup.GroupId, "0.0.0.0/0", 22, 22, "tcp")
 	if err != nil {
 		return fmt.Errorf("AuthorizeSecurityGroupIngressEC2(): %s", err.Error())
 	}

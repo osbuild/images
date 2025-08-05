@@ -588,12 +588,12 @@ func (a *AWS) DeleteSecurityGroupEC2(groupID string) (*ec2.DeleteSecurityGroupOu
 		})
 }
 
-func (a *AWS) AuthorizeSecurityGroupIngressEC2(groupID *string, address string, from, to int32, proto string) (*ec2.AuthorizeSecurityGroupIngressOutput, error) {
+func (a *AWS) AuthorizeSecurityGroupIngressEC2(groupID, address string, from, to int32, proto string) (*ec2.AuthorizeSecurityGroupIngressOutput, error) {
 	return a.ec2.AuthorizeSecurityGroupIngress(
 		context.TODO(),
 		&ec2.AuthorizeSecurityGroupIngressInput{
 			CidrIp:     aws.String(address),
-			GroupId:    groupID,
+			GroupId:    &groupID,
 			FromPort:   aws.Int32(from),
 			ToPort:     aws.Int32(to),
 			IpProtocol: aws.String(proto),

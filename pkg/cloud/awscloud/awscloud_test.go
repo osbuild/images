@@ -705,7 +705,7 @@ func TestAuthorizeSecurityGroupIngressEC2(t *testing.T) {
 			awsClient := awscloud.NewAWSForTest(tc.fec2, nil, nil, nil)
 			require.NotNil(t, awsClient)
 
-			output, err := awsClient.AuthorizeSecurityGroupIngressEC2(&tc.sgID, tc.cidr, tc.fromPort, tc.toPort, tc.protocol)
+			output, err := awsClient.AuthorizeSecurityGroupIngressEC2(tc.sgID, tc.cidr, tc.fromPort, tc.toPort, tc.protocol)
 			require.Len(t, tc.fec2.authorizeSecurityGroupIngressCalls, 1)
 
 			if tc.expectErr {
