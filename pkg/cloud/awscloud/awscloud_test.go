@@ -633,7 +633,7 @@ func TestDeleteSecurityGroupEC2(t *testing.T) {
 			awsClient := awscloud.NewAWSForTest(tc.fec2, nil, nil, nil)
 			require.NotNil(t, awsClient)
 
-			deleteSGOut, err := awsClient.DeleteSecurityGroupEC2(&tc.sgID)
+			deleteSGOut, err := awsClient.DeleteSecurityGroupEC2(tc.sgID)
 			require.Len(t, tc.fec2.deleteSecurityGroupCalls, 1)
 			require.Equal(t, tc.sgID, *tc.fec2.deleteSecurityGroupCalls[0].GroupId)
 

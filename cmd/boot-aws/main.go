@@ -343,7 +343,7 @@ func doTeardown(aws *awscloud.AWS, res *resources) error {
 
 	if res.SecurityGroup != nil {
 		fmt.Printf("deleting security group %s\n", *res.SecurityGroup)
-		if _, err := aws.DeleteSecurityGroupEC2(res.SecurityGroup); err != nil {
+		if _, err := aws.DeleteSecurityGroupEC2(*res.SecurityGroup); err != nil {
 			return fmt.Errorf("cannot delete the security group: %v", err)
 		}
 	}
