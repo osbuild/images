@@ -20,6 +20,7 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/olog"
 )
 
@@ -216,15 +217,15 @@ func (a *AWS) UploadFromReader(r io.Reader, bucket, key string) (*s3manager.Uplo
 // default boot mode value of the instance type.
 //
 // XXX: make this return (string, string, error) instead of pointers
-func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch string, bootMode, importRole *string) (*string, *string, error) {
-	rpmArchToEC2Arch := map[string]ec2types.ArchitectureValues{
-		"x86_64":  ec2types.ArchitectureValuesX8664,
-		"aarch64": ec2types.ArchitectureValuesArm64,
+func (a *AWS) Register(name, bucket, key string, shareWith []string, architecture arch.Arch, bootMode, importRole *string) (*string, *string, error) {
+	rpmArchToEC2Arch := map[arch.Arch]ec2types.ArchitectureValues{
+		arch.ARCH_X86_64:  ec2types.ArchitectureValuesX8664,
+		arch.ARCH_AARCH64: ec2types.ArchitectureValuesArm64,
 	}
 
-	ec2Arch, validArch := rpmArchToEC2Arch[rpmArch]
+	ec2Arch, validArch := rpmArchToEC2Arch[architecture]
 	if !validArch {
-		return nil, nil, fmt.Errorf("ec2 doesn't support the following arch: %s", rpmArch)
+		return nil, nil, fmt.Errorf("ec2 doesn't support the following arch: %s", architecture)
 	}
 
 	var ec2BootMode ec2types.BootModeValues

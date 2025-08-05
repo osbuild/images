@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/cloud/awscloud"
 )
 
@@ -213,12 +214,16 @@ func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resour
 		return err
 	}
 
-	arch, err := flags.GetString("arch")
+	archArg, err := flags.GetString("arch")
+	if err != nil {
+		return err
+	}
+	imgArch, err := arch.FromString(archArg)
 	if err != nil {
 		return err
 	}
 
-	ami, snapshot, err := a.Register(imageName, bucketName, keyName, nil, arch, bootMode, importRole)
+	ami, snapshot, err := a.Register(imageName, bucketName, keyName, nil, imgArch, bootMode, importRole)
 	if err != nil {
 		return fmt.Errorf("Register(): %s", err.Error())
 	}
@@ -241,7 +246,7 @@ func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resour
 		return fmt.Errorf("AuthorizeSecurityGroupIngressEC2(): %s", err.Error())
 	}
 
-	instance, err := getInstanceType(arch)
+	instance, err := getInstanceType(archArg)
 	if err != nil {
 		return err
 	}
