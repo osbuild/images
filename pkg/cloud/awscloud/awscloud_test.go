@@ -294,6 +294,7 @@ func TestShareImage(t *testing.T) {
 
 	testCases := []struct {
 		name          string
+		snapIDs       []string
 		shareWith     []string
 		fakeEC2Client *fakeEC2Client
 		expectErr     bool
@@ -343,6 +344,12 @@ func TestShareImage(t *testing.T) {
 					},
 				},
 			},
+		},
+		{
+			name:          "happy path - 1 account, 1 snapshot, snapshots provided",
+			shareWith:     []string{"123456789012"},
+			snapIDs:       []string{knownSnapshotId1},
+			fakeEC2Client: &fakeEC2Client{},
 		},
 		{
 			name: "no accounts to share with",
@@ -431,10 +438,16 @@ func TestShareImage(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			client := awscloud.NewAWSForTest(tc.fakeEC2Client, nil, nil, nil)
 			require.NotNil(t, client)
-			err := client.ShareImage(knownImageId, tc.shareWith)
+			err := client.ShareImage(knownImageId, tc.snapIDs, tc.shareWith)
 
-			require.Len(t, tc.fakeEC2Client.describeImagesCalls, 1)
-			if tc.fakeEC2Client.describeImagesErr != nil || len(tc.fakeEC2Client.describeImages.Images) == 0 {
+			if len(tc.snapIDs) == 0 {
+				// if no snapshots were provided, the function should describe the image
+				require.Len(t, tc.fakeEC2Client.describeImagesCalls, 1)
+			} else {
+				require.Len(t, tc.fakeEC2Client.describeImagesCalls, 0)
+			}
+			if tc.fakeEC2Client.describeImagesErr != nil ||
+				(tc.fakeEC2Client.describeImages != nil && len(tc.fakeEC2Client.describeImages.Images) == 0) {
 				require.Len(t, tc.fakeEC2Client.modifySnapshotAttributeCalls, 0)
 				require.Len(t, tc.fakeEC2Client.modifyImageAttributeCalls, 0)
 			} else if tc.fakeEC2Client.modifySnapshotAttributeErr != nil {
@@ -453,11 +466,20 @@ func TestShareImage(t *testing.T) {
 
 			require.NoError(t, err)
 
-			require.Len(t, tc.fakeEC2Client.modifySnapshotAttributeCalls, len(tc.fakeEC2Client.describeImages.Images[0].BlockDeviceMappings))
-			for i, snapshotMapping := range tc.fakeEC2Client.describeImages.Images[0].BlockDeviceMappings {
+			var snapIDs []string
+			if len(tc.snapIDs) > 0 {
+				snapIDs = tc.snapIDs
+			} else {
+				for _, mapping := range tc.fakeEC2Client.describeImages.Images[0].BlockDeviceMappings {
+					snapIDs = append(snapIDs, *mapping.Ebs.SnapshotId)
+				}
+			}
+
+			require.Len(t, tc.fakeEC2Client.modifySnapshotAttributeCalls, len(snapIDs))
+			for i, snapID := range snapIDs {
 				require.Equal(t, ec2types.SnapshotAttributeNameCreateVolumePermission, tc.fakeEC2Client.modifySnapshotAttributeCalls[i].Attribute)
 				require.Equal(t, ec2types.OperationTypeAdd, tc.fakeEC2Client.modifySnapshotAttributeCalls[i].OperationType)
-				require.Equal(t, snapshotMapping.Ebs.SnapshotId, tc.fakeEC2Client.modifySnapshotAttributeCalls[i].SnapshotId)
+				require.Equal(t, snapID, *tc.fakeEC2Client.modifySnapshotAttributeCalls[i].SnapshotId)
 				require.Equal(t, tc.shareWith, tc.fakeEC2Client.modifySnapshotAttributeCalls[i].UserIds)
 			}
 
