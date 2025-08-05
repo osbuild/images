@@ -404,7 +404,7 @@ func (a *AWS) ShareImage(ami string, snapshotIDs, userIDs []string) error {
 	}
 
 	for _, snapshotID := range snapshotIDs {
-		err := a.shareSnapshot(&snapshotID, userIDs)
+		err := a.shareSnapshot(snapshotID, userIDs)
 		if err != nil {
 			return err
 		}
@@ -443,14 +443,14 @@ func (a *AWS) shareImage(ami string, userIDs []string) error {
 	return nil
 }
 
-func (a *AWS) shareSnapshot(snapshotId *string, userIds []string) error {
+func (a *AWS) shareSnapshot(snapshotId string, userIds []string) error {
 	olog.Println("[AWS] 🎥 Sharing ec2 snapshot")
 	_, err := a.ec2.ModifySnapshotAttribute(
 		context.TODO(),
 		&ec2.ModifySnapshotAttributeInput{
 			Attribute:     ec2types.SnapshotAttributeNameCreateVolumePermission,
 			OperationType: ec2types.OperationTypeAdd,
-			SnapshotId:    snapshotId,
+			SnapshotId:    &snapshotId,
 			UserIds:       userIds,
 		},
 	)
