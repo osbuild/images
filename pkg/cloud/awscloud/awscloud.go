@@ -620,7 +620,9 @@ func (a *AWS) RunInstanceEC2(imageID, secGroupID, userData, instanceType string)
 		return nil, err
 	}
 
-	// XXX: we should probably check that the runInstanceOutput.Instances is not empty
+	if len(runInstanceOutput.Instances) == 0 {
+		return nil, fmt.Errorf("no instances were created")
+	}
 	instanceWaiter := newInstanceRunningWaiterEC2(a.ec2)
 	err = instanceWaiter.Wait(
 		context.TODO(),
@@ -633,7 +635,7 @@ func (a *AWS) RunInstanceEC2(imageID, secGroupID, userData, instanceType string)
 		return nil, err
 	}
 
-	reservation, err := a.instanceReservation(runInstanceOutput.Instances[0].InstanceId)
+	reservation, err := a.instanceReservation(aws.ToString(runInstanceOutput.Instances[0].InstanceId))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get reservation for instance %s: %w", aws.ToString(runInstanceOutput.Instances[0].InstanceId), err)
 	}
@@ -670,7 +672,7 @@ func (a *AWS) TerminateInstanceEC2(instanceID string) (*ec2.TerminateInstancesOu
 	return res, nil
 }
 
-func (a *AWS) GetInstanceAddress(instanceID *string) (string, error) {
+func (a *AWS) GetInstanceAddress(instanceID string) (string, error) {
 	reservation, err := a.instanceReservation(instanceID)
 	if err != nil {
 		return "", err
@@ -708,11 +710,11 @@ func (a *AWS) DeleteEC2Image(imageID, snapshotID *string) error {
 	return retErr
 }
 
-func (a *AWS) instanceReservation(id *string) (*ec2types.Reservation, error) {
+func (a *AWS) instanceReservation(id string) (*ec2types.Reservation, error) {
 	describeInstancesOutput, err := a.ec2.DescribeInstances(
 		context.TODO(),
 		&ec2.DescribeInstancesInput{
-			InstanceIds: []string{aws.ToString(id)},
+			InstanceIds: []string{id},
 		},
 	)
 	if err != nil {
@@ -720,7 +722,7 @@ func (a *AWS) instanceReservation(id *string) (*ec2types.Reservation, error) {
 	}
 
 	if len(describeInstancesOutput.Reservations) == 0 || len(describeInstancesOutput.Reservations[0].Instances) == 0 {
-		return nil, fmt.Errorf("no reservation found for instance %s", aws.ToString(id))
+		return nil, fmt.Errorf("no reservation found for instance %s", id)
 	}
 
 	return &describeInstancesOutput.Reservations[0], nil

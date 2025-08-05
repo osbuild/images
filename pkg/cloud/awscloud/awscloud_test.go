@@ -1037,7 +1037,7 @@ func TestGetInstanceAddress(t *testing.T) {
 			awsClient := awscloud.NewAWSForTest(tc.fec2, nil, nil, nil)
 			require.NotNil(t, awsClient)
 
-			address, err := awsClient.GetInstanceAddress(&tc.instanceId)
+			address, err := awsClient.GetInstanceAddress(tc.instanceId)
 
 			require.Len(t, tc.fec2.describeInstancesCalls, 1)
 			require.Equal(t, tc.instanceId, tc.fec2.describeInstancesCalls[0].InstanceIds[0])
