@@ -215,9 +215,7 @@ func (a *AWS) UploadFromReader(r io.Reader, bucket, key string) (*s3manager.Uplo
 // The caller can optionally specify the boot mode of the AMI. If the boot
 // mode is not specified, then the instances launched from this AMI use the
 // default boot mode value of the instance type.
-//
-// XXX: make this return (string, string, error) instead of pointers
-func (a *AWS) Register(name, bucket, key string, shareWith []string, architecture arch.Arch, bootMode, importRole *string) (*string, *string, error) {
+func (a *AWS) Register(name, bucket, key string, shareWith []string, architecture arch.Arch, bootMode, importRole *string) (string, string, error) {
 	rpmArchToEC2Arch := map[arch.Arch]ec2types.ArchitectureValues{
 		arch.ARCH_X86_64:  ec2types.ArchitectureValuesX8664,
 		arch.ARCH_AARCH64: ec2types.ArchitectureValuesArm64,
@@ -225,14 +223,14 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, architectur
 
 	ec2Arch, validArch := rpmArchToEC2Arch[architecture]
 	if !validArch {
-		return nil, nil, fmt.Errorf("ec2 doesn't support the following arch: %s", architecture)
+		return "", "", fmt.Errorf("ec2 doesn't support the following arch: %s", architecture)
 	}
 
 	var ec2BootMode ec2types.BootModeValues
 	if bootMode != nil {
 		ec2BootMode = ec2types.BootModeValues(*bootMode)
 		if !slices.Contains(ec2BootMode.Values(), ec2BootMode) {
-			return nil, nil, fmt.Errorf("ec2 doesn't support the following boot mode: %s", *bootMode)
+			return "", "", fmt.Errorf("ec2 doesn't support the following boot mode: %s", *bootMode)
 		}
 	}
 
@@ -253,7 +251,7 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, architectur
 	)
 	if err != nil {
 		olog.Printf("[AWS] error importing snapshot: %s", err)
-		return nil, nil, err
+		return "", "", err
 	}
 
 	olog.Printf("[AWS] 🚚 Waiting for snapshot to finish importing: %s", *importTaskOutput.ImportTaskId)
@@ -268,19 +266,19 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, architectur
 		time.Hour*24,
 	)
 	if err != nil {
-		return nil, nil, err
+		return "", "", err
 	}
 
 	snapshotTaskStatus := *snapWaitOutput.ImportSnapshotTasks[0].SnapshotTaskDetail.Status
 	if snapshotTaskStatus != "completed" {
-		return nil, nil, fmt.Errorf("Unable to import snapshot, task result: %v, msg: %v", snapshotTaskStatus, *snapWaitOutput.ImportSnapshotTasks[0].SnapshotTaskDetail.StatusMessage)
+		return "", "", fmt.Errorf("Unable to import snapshot, task result: %v, msg: %v", snapshotTaskStatus, *snapWaitOutput.ImportSnapshotTasks[0].SnapshotTaskDetail.StatusMessage)
 	}
 
 	// we no longer need the object in s3, let's just delete it
 	olog.Printf("[AWS] 🧹 Deleting image from S3: %s/%s", bucket, key)
 	err = a.DeleteObject(bucket, key)
 	if err != nil {
-		return nil, nil, err
+		return "", "", err
 	}
 
 	snapshotID := *snapWaitOutput.ImportSnapshotTasks[0].SnapshotTaskDetail.SnapshotId
@@ -298,7 +296,7 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, architectur
 		},
 	)
 	if err != nil {
-		return nil, nil, err
+		return "", "", err
 	}
 
 	olog.Printf("[AWS] 📋 Registering AMI from imported snapshot: %s", snapshotID)
@@ -322,7 +320,7 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, architectur
 		},
 	)
 	if err != nil {
-		return nil, nil, err
+		return "", "", err
 	}
 
 	imageID := aws.ToString(registerOutput.ImageId)
@@ -342,21 +340,21 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, architectur
 		},
 	)
 	if err != nil {
-		return nil, nil, err
+		return "", "", err
 	}
 
 	if len(shareWith) > 0 {
 		err = a.shareSnapshot(&snapshotID, shareWith)
 		if err != nil {
-			return nil, nil, err
+			return "", "", err
 		}
 		err = a.shareImage(&imageID, shareWith)
 		if err != nil {
-			return nil, nil, err
+			return "", "", err
 		}
 	}
 
-	return &imageID, &snapshotID, nil
+	return imageID, snapshotID, nil
 }
 
 func (a *AWS) DeleteObject(bucket, key string) error {

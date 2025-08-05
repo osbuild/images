@@ -6,7 +6,6 @@ import (
 	"io"
 	"slices"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	s3manager "github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
@@ -57,7 +56,7 @@ type awsClient interface {
 	Buckets() ([]string, error)
 	CheckBucketPermission(string, s3types.Permission) (bool, error)
 	UploadFromReader(io.Reader, string, string) (*s3manager.UploadOutput, error)
-	Register(name, bucket, key string, shareWith []string, architecture arch.Arch, bootMode, importRole *string) (*string, *string, error)
+	Register(name, bucket, key string, shareWith []string, architecture arch.Arch, bootMode, importRole *string) (string, string, error)
 	DeleteObject(string, string) error
 }
 
@@ -152,7 +151,7 @@ func (au *awsUploader) UploadAndRegister(r io.Reader, status io.Writer) (err err
 	if err := au.client.DeleteObject(au.bucketName, keyName); err != nil {
 		return err
 	}
-	fmt.Fprintf(status, "AMI registered: %s\nSnapshot ID: %s\n", aws.ToString(ami), aws.ToString(snapshot))
+	fmt.Fprintf(status, "AMI registered: %s\nSnapshot ID: %s\n", ami, snapshot)
 	if err != nil {
 		return err
 	}
