@@ -7,11 +7,9 @@ import (
 	"slices"
 
 	s3manager "github.com/aws/aws-sdk-go-v2/feature/s3/manager"
-	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/google/uuid"
 
-	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/cloud"
 	"github.com/osbuild/images/pkg/platform"
@@ -24,7 +22,7 @@ type awsUploader struct {
 	bucketName string
 	imageName  string
 	targetArch arch.Arch
-	bootMode   *string
+	bootMode   *platform.BootMode
 }
 
 type UploaderOptions struct {
@@ -33,30 +31,13 @@ type UploaderOptions struct {
 	BootMode *platform.BootMode
 }
 
-func (ou *UploaderOptions) ec2BootMode() (*string, error) {
-	if ou == nil || ou.BootMode == nil {
-		return nil, nil
-	}
-
-	switch *ou.BootMode {
-	case platform.BOOT_LEGACY:
-		return common.ToPtr(string(ec2types.BootModeValuesLegacyBios)), nil
-	case platform.BOOT_UEFI:
-		return common.ToPtr(string(ec2types.BootModeValuesUefi)), nil
-	case platform.BOOT_HYBRID:
-		return common.ToPtr(string(ec2types.BootModeValuesUefiPreferred)), nil
-	default:
-		return nil, fmt.Errorf("invalid boot mode: %s", ou.BootMode)
-	}
-}
-
 // testing support
 type awsClient interface {
 	Regions() ([]string, error)
 	Buckets() ([]string, error)
 	CheckBucketPermission(string, s3types.Permission) (bool, error)
 	UploadFromReader(io.Reader, string, string) (*s3manager.UploadOutput, error)
-	Register(name, bucket, key string, shareWith []string, architecture arch.Arch, bootMode, importRole *string) (string, string, error)
+	Register(name, bucket, key string, shareWith []string, architecture arch.Arch, bootMode *platform.BootMode, importRole *string) (string, string, error)
 	DeleteObject(string, string) error
 }
 
@@ -67,10 +48,6 @@ var newAwsClient = func(region string) (awsClient, error) {
 func NewUploader(region, bucketName, imageName string, opts *UploaderOptions) (cloud.Uploader, error) {
 	if opts == nil {
 		opts = &UploaderOptions{}
-	}
-	bootMode, err := opts.ec2BootMode()
-	if err != nil {
-		return nil, err
 	}
 	client, err := newAwsClient(region)
 	if err != nil {
@@ -83,7 +60,7 @@ func NewUploader(region, bucketName, imageName string, opts *UploaderOptions) (c
 		bucketName: bucketName,
 		imageName:  imageName,
 		targetArch: opts.TargetArch,
-		bootMode:   bootMode,
+		bootMode:   opts.BootMode,
 	}, nil
 }
 

@@ -16,6 +16,7 @@ import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/cloud/awscloud"
+	"github.com/osbuild/images/pkg/platform"
 )
 
 func TestRegister(t *testing.T) {
@@ -31,7 +32,7 @@ func TestRegister(t *testing.T) {
 		key          string
 		shareWith    []string
 		architecture arch.Arch
-		bootMode     *string
+		bootMode     *platform.BootMode
 		importRole   *string
 
 		ec2Client  *fakeEC2Client
@@ -59,7 +60,7 @@ func TestRegister(t *testing.T) {
 			key:          "test-key",
 			shareWith:    []string{"123456789012"},
 			architecture: arch.ARCH_X86_64,
-			bootMode:     aws.String(string(ec2types.BootModeValuesUefi)),
+			bootMode:     common.ToPtr(platform.BOOT_UEFI),
 			importRole:   aws.String("arn:aws:iam::123456789012:role/ImportRole"),
 			expectErr:    false,
 		},
@@ -76,9 +77,9 @@ func TestRegister(t *testing.T) {
 			bucket:       "test-bucket",
 			key:          "test-key",
 			architecture: arch.ARCH_X86_64,
-			bootMode:     aws.String("invalid-boot-mode"),
+			bootMode:     common.ToPtr(platform.BootMode(123456)), // invalid boot mode
 			expectErr:    true,
-			errMsg:       "ec2 doesn't support the following boot mode: invalid-boot-mode",
+			errMsg:       "ec2 doesn't support the following boot mode: %!s(PANIC=String method: invalid boot mode)",
 		},
 		{
 			name:         "error: import snapshot failure",
@@ -287,7 +288,7 @@ func TestRegister(t *testing.T) {
 			require.Len(t, fec2.registerImageCalls, 1)
 			require.Equal(t, tc.name, *fec2.registerImageCalls[0].Name)
 			require.Equal(t, ec2types.ArchitectureValues(tc.architecture.String()), fec2.registerImageCalls[0].Architecture)
-			require.Equal(t, ec2types.BootModeValues(aws.ToString(tc.bootMode)), fec2.registerImageCalls[0].BootMode)
+			require.Equal(t, ec2types.BootModeValues(common.Must(awscloud.EC2BootMode(tc.bootMode))), fec2.registerImageCalls[0].BootMode)
 			require.Len(t, fec2.registerImageCalls[0].BlockDeviceMappings, 1)
 			require.Equal(t, snapImportedWaiterOutput.ImportSnapshotTasks[0].SnapshotTaskDetail.SnapshotId, fec2.registerImageCalls[0].BlockDeviceMappings[0].Ebs.SnapshotId)
 

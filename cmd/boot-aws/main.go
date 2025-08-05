@@ -15,8 +15,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/cloud/awscloud"
+	"github.com/osbuild/images/pkg/platform"
 )
 
 // exitCheck can be deferred from the top of command functions to exit with an
@@ -198,9 +200,22 @@ func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resour
 
 	fmt.Printf("file uploaded to %s\n", uploadOutput.Location)
 
-	bootMode, err := getOptionalStringFlag(flags, "boot-mode")
+	var bootMode *platform.BootMode
+	bootModeFlag, err := flags.GetString("boot-mode")
 	if err != nil {
 		return err
+	}
+	switch bootModeFlag {
+	case "legacy-bios":
+		bootMode = common.ToPtr(platform.BOOT_LEGACY)
+	case "uefi":
+		bootMode = common.ToPtr(platform.BOOT_UEFI)
+	case "uefi-preferred":
+		bootMode = common.ToPtr(platform.BOOT_HYBRID)
+	case "":
+		bootMode = nil // no explicit boot mode set
+	default:
+		return fmt.Errorf("invalid boot mode: %s", bootModeFlag)
 	}
 
 	importRole, err := getOptionalStringFlag(flags, "import-role")
