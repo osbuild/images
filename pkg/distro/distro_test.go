@@ -437,6 +437,8 @@ func TestPipelineRepositories(t *testing.T) {
 							// based on this information. For image types with
 							// a preset workload, payload packages are ignored
 							// and dropped.
+							// This is now supported in Fedora. RHEL coming
+							// soon.
 							continue
 						}
 						t.Run(fmt.Sprintf("%s/%s/%s", distroName, archName, imageTypeName), func(t *testing.T) {
@@ -444,6 +446,10 @@ func TestPipelineRepositories(t *testing.T) {
 							require := require.New(t)
 							imageType, err := arch.GetImageType(imageTypeName)
 							require.Nil(err)
+							// skip any image type that does not support custom packages
+							if !slices.Contains(imageType.SupportedBlueprintOptions(), "packages") {
+								return
+							}
 
 							// set up bare minimum args for image type
 							var customizations *blueprint.Customizations
@@ -589,6 +595,7 @@ func TestDistro_ManifestFIPSWarning(t *testing.T) {
 	noCustomizableImages := []string{
 		"workstation-live-installer",
 		"azure-eap7-rhui",
+		"container",
 	}
 
 	distroFactory := distrofactory.NewDefault()
@@ -626,12 +633,27 @@ func TestDistro_ManifestFIPSWarning(t *testing.T) {
 						bp.Customizations.InstallationDevice = "/dev/dummy"
 					}
 					_, warn, err := imgType.Manifest(&bp, imgOpts, nil, nil)
-					if err != nil {
-						assert.True(t, slices.Contains(noCustomizableImages, imgTypeName))
-						assert.Equal(t, err, fmt.Errorf(distro.NoCustomizationsAllowedError, imgTypeName))
+					if strings.Contains(distroName, "fedora") {
+						// NOTE: Fedora uses the new customization validation
+						// functionality which produces different error
+						// messages. These will be added to RHEL as well soon.
+						switch imgTypeName {
+						case "workstation-live-installer":
+							assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.fips: not supported", imgTypeName))
+						case "wsl", "iot-bootable-container", "container", "everything-netinst":
+							assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations: not supported", imgTypeName))
+						default:
+							assert.Equal(t, slices.Contains(warn, msg), !common.IsBuildHostFIPSEnabled(),
+								"FIPS warning not shown for image: distro='%s', imgTypeName='%s', archName='%s', warn='%v'", distroName, imgTypeName, archName, warn)
+						}
 					} else {
-						assert.Equal(t, slices.Contains(warn, msg), !common.IsBuildHostFIPSEnabled(),
-							"FIPS warning not shown for image: distro='%s', imgTypeName='%s', archName='%s', warn='%v'", distroName, imgTypeName, archName, warn)
+						if err != nil {
+							assert.True(t, slices.Contains(noCustomizableImages, imgTypeName))
+							assert.Equal(t, err, fmt.Errorf(distro.NoCustomizationsAllowedError, imgTypeName))
+						} else {
+							assert.Equal(t, slices.Contains(warn, msg), !common.IsBuildHostFIPSEnabled(),
+								"FIPS warning not shown for image: distro='%s', imgTypeName='%s', archName='%s', warn='%v'", distroName, imgTypeName, archName, warn)
+						}
 					}
 				})
 			}
