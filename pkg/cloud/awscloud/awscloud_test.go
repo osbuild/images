@@ -869,7 +869,7 @@ func TestRunInstanceEC2(t *testing.T) {
 			restore := awscloud.MockNewInstanceRunningWaiterEC2(tc.newInstanceRunningWaiterErr)
 			defer restore()
 
-			output, err := awsClient.RunInstanceEC2(&tc.imageId, &tc.sgID, string(tc.userData), tc.instanceType)
+			output, err := awsClient.RunInstanceEC2(tc.imageId, tc.sgID, string(tc.userData), tc.instanceType)
 
 			if tc.expectErr {
 				require.Error(t, err)
