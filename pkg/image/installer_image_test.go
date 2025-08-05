@@ -708,6 +708,22 @@ func findDracutStageOptions(t *testing.T, mf manifest.OSBuildManifest, pipelineN
 	return modules, addModules, drivers, addDrivers
 }
 
+func findGrub2IsoStageOptions(t *testing.T, mf manifest.OSBuildManifest, pipelineName string) []string {
+	pipeline := findPipelineFromOsbuildManifest(t, mf, pipelineName)
+	assert.NotNil(t, pipeline)
+	stage := findStageFromOsbuildPipeline(t, pipeline, "org.osbuild.grub2.iso")
+	assert.NotNil(t, stage)
+	stageOptions := stage["options"].(map[string]any)
+	assert.NotNil(t, stageOptions)
+
+	stageKernelOptions := stageOptions["kernel"].(map[string]any)
+	assert.NotNil(t, stageKernelOptions)
+
+	kernelOpts := getStageOptions(stageKernelOptions, "opts")
+
+	return kernelOpts
+}
+
 func TestContainerInstallerDracut(t *testing.T) {
 	img := image.NewAnacondaContainerInstaller(container.SourceSpec{}, "")
 	img.Product = product
@@ -785,4 +801,24 @@ func TestTarInstallerDracut(t *testing.T) {
 
 	assert.Subset(t, addModules, testModules)
 	assert.Subset(t, addDrivers, testDrivers)
+}
+
+func TestTarInstallerKernelOpts(t *testing.T) {
+	img := image.NewAnacondaTarInstaller()
+	img.Product = product
+	img.OSVersion = osversion
+	img.ISOLabel = isolabel
+
+	testOpts := []string{"foo=1", "bar=2"}
+
+	img.AdditionalKernelOpts = testOpts
+
+	assert.NotNil(t, img)
+	img.Platform = testPlatform
+	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
+
+	opts := findGrub2IsoStageOptions(t, manifest.OSBuildManifest(mfs), "efiboot-tree")
+
+	assert.NotNil(t, opts)
+	assert.Subset(t, opts, testOpts)
 }
