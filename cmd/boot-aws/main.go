@@ -350,7 +350,7 @@ func doTeardown(aws *awscloud.AWS, res *resources) error {
 
 	if res.AMI != nil {
 		fmt.Printf("deleting EC2 image %s and snapshot %s\n", *res.AMI, *res.Snapshot)
-		if err := aws.DeleteEC2Image(res.AMI, res.Snapshot); err != nil {
+		if err := aws.DeleteEC2Image(*res.AMI, *res.Snapshot); err != nil {
 			return fmt.Errorf("failed to deregister image: %v", err)
 		}
 	}

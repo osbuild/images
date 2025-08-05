@@ -1102,7 +1102,7 @@ func TestDeleteEC2Image(t *testing.T) {
 			awsClient := awscloud.NewAWSForTest(tc.fec2, nil, nil, nil)
 			require.NotNil(t, awsClient)
 
-			err := awsClient.DeleteEC2Image(&tc.imageId, &tc.snapshotID)
+			err := awsClient.DeleteEC2Image(tc.imageId, tc.snapshotID)
 
 			if tc.expectErr {
 				require.Error(t, err)

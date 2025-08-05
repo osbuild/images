@@ -682,14 +682,14 @@ func (a *AWS) GetInstanceAddress(instanceID string) (string, error) {
 }
 
 // DeleteEC2Image deletes the specified image and its associated snapshot
-func (a *AWS) DeleteEC2Image(imageID, snapshotID *string) error {
+func (a *AWS) DeleteEC2Image(imageID, snapshotID string) error {
 	var retErr error
 
 	// firstly, deregister the image
 	_, err := a.ec2.DeregisterImage(
 		context.TODO(),
 		&ec2.DeregisterImageInput{
-			ImageId: imageID,
+			ImageId: &imageID,
 		})
 
 	if err != nil {
@@ -700,7 +700,7 @@ func (a *AWS) DeleteEC2Image(imageID, snapshotID *string) error {
 	_, err = a.ec2.DeleteSnapshot(
 		context.TODO(),
 		&ec2.DeleteSnapshotInput{
-			SnapshotId: snapshotID,
+			SnapshotId: &snapshotID,
 		})
 
 	if err != nil {
