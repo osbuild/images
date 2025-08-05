@@ -579,9 +579,15 @@ func imageInstallerImage(workload workload.Workload,
 	if err != nil {
 		return nil, err
 	}
-	if instCust != nil && instCust.Modules != nil {
-		img.AdditionalAnacondaModules = append(img.AdditionalAnacondaModules, instCust.Modules.Enable...)
-		img.DisabledAnacondaModules = append(img.DisabledAnacondaModules, instCust.Modules.Disable...)
+	if instCust != nil {
+		if instCust.Modules != nil {
+			img.AdditionalAnacondaModules = append(img.AdditionalAnacondaModules, instCust.Modules.Enable...)
+			img.DisabledAnacondaModules = append(img.DisabledAnacondaModules, instCust.Modules.Disable...)
+		}
+
+		if instCust.Kernel != nil && instCust.Kernel.Append != "" {
+			img.AdditionalKernelOpts = append(img.AdditionalKernelOpts, instCust.Kernel.Append)
+		}
 	}
 	img.AdditionalAnacondaModules = append(img.AdditionalAnacondaModules, anaconda.ModuleUsers)
 
