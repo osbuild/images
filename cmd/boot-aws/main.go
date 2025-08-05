@@ -336,7 +336,7 @@ func setup(cmd *cobra.Command, args []string) {
 func doTeardown(aws *awscloud.AWS, res *resources) error {
 	if res.InstanceID != nil {
 		fmt.Printf("terminating instance %s\n", *res.InstanceID)
-		if _, err := aws.TerminateInstanceEC2(res.InstanceID); err != nil {
+		if _, err := aws.TerminateInstanceEC2(*res.InstanceID); err != nil {
 			return fmt.Errorf("failed to terminate instance: %v", err)
 		}
 	}
