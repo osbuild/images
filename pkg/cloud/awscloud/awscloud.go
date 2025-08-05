@@ -641,14 +641,14 @@ func (a *AWS) RunInstanceEC2(imageID, secGroupID, userData, instanceType string)
 	return reservation, nil
 }
 
-func (a *AWS) TerminateInstanceEC2(instanceID *string) (*ec2.TerminateInstancesOutput, error) {
+func (a *AWS) TerminateInstanceEC2(instanceID string) (*ec2.TerminateInstancesOutput, error) {
 	// We need to terminate the instance now and wait until the termination is done.
 	// Otherwise, it wouldn't be possible to delete the image.
 	res, err := a.ec2.TerminateInstances(
 		context.TODO(),
 		&ec2.TerminateInstancesInput{
 			InstanceIds: []string{
-				aws.ToString(instanceID),
+				instanceID,
 			},
 		})
 	if err != nil {
@@ -659,7 +659,7 @@ func (a *AWS) TerminateInstanceEC2(instanceID *string) (*ec2.TerminateInstancesO
 	err = instanceWaiter.Wait(
 		context.TODO(),
 		&ec2.DescribeInstancesInput{
-			InstanceIds: []string{aws.ToString(instanceID)},
+			InstanceIds: []string{instanceID},
 		},
 		time.Hour,
 	)

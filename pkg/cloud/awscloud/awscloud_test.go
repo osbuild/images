@@ -963,7 +963,7 @@ func TestTerminateInstanceEC2(t *testing.T) {
 			restore := awscloud.MockNewTerminateInstancesWaiterEC2(tc.instanceTerminatedWaiterErr)
 			defer restore()
 
-			out, err := awsClient.TerminateInstanceEC2(&tc.instanceId)
+			out, err := awsClient.TerminateInstanceEC2(tc.instanceId)
 
 			if tc.expectErr {
 				require.Error(t, err)
