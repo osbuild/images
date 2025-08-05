@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -228,10 +227,10 @@ func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resour
 		return fmt.Errorf("Register(): %s", err.Error())
 	}
 
-	res.AMI = ami
-	res.Snapshot = snapshot
+	res.AMI = &ami
+	res.Snapshot = &snapshot
 
-	fmt.Printf("AMI registered: %s\n", aws.ToString(ami))
+	fmt.Printf("AMI registered: %s\n", ami)
 
 	securityGroupName := fmt.Sprintf("image-boot-tests-%s", uuid.New().String())
 	securityGroup, err := a.CreateSecurityGroupEC2(securityGroupName, "image-tests-security-group")
@@ -250,7 +249,7 @@ func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resour
 	if err != nil {
 		return err
 	}
-	runResult, err := a.RunInstanceEC2(ami, securityGroup.GroupId, userData, instance)
+	runResult, err := a.RunInstanceEC2(&ami, securityGroup.GroupId, userData, instance)
 	if err != nil {
 		return fmt.Errorf("RunInstanceEC2(): %s", err.Error())
 	}

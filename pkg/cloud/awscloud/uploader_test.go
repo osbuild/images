@@ -66,10 +66,10 @@ func (fa *fakeAWSClient) UploadFromReader(io.Reader, string, string) (*s3manager
 	return fa.uploadFromReader, fa.uploadFromReaderErr
 }
 
-func (fa *fakeAWSClient) Register(name, bucket, key string, shareWith []string, architecture arch.Arch, bootMode, importRole *string) (*string, *string, error) {
+func (fa *fakeAWSClient) Register(name, bucket, key string, shareWith []string, architecture arch.Arch, bootMode, importRole *string) (string, string, error) {
 	fa.registerCalls++
 	fa.registerBootMode = bootMode
-	return &fa.registerImageId, &fa.registerSnapshotId, fa.registerErr
+	return fa.registerImageId, fa.registerSnapshotId, fa.registerErr
 }
 
 func (fa *fakeAWSClient) DeleteObject(string, string) error {
