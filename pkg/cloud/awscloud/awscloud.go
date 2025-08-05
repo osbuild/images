@@ -417,18 +417,13 @@ func (a *AWS) ShareImage(ami string, snapshotIDs, userIDs []string) error {
 	return nil
 }
 
-func (a *AWS) shareImage(ami string, userIds []string) error {
-	olog.Println("[AWS] 🎥 Sharing ec2 snapshot")
-	var uIds []*string
-	for i := range userIds {
-		uIds = append(uIds, &userIds[i])
-	}
-
+func (a *AWS) shareImage(ami string, userIDs []string) error {
 	olog.Println("[AWS] 💿 Sharing ec2 AMI")
 	var launchPerms []ec2types.LaunchPermission
-	for _, id := range uIds {
+
+	for idx := range userIDs {
 		launchPerms = append(launchPerms, ec2types.LaunchPermission{
-			UserId: id,
+			UserId: aws.String(userIDs[idx]),
 		})
 	}
 	_, err := a.ec2.ModifyImageAttribute(
