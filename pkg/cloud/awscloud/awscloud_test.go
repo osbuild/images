@@ -24,12 +24,13 @@ func TestRegister(t *testing.T) {
 	tmpFilePath := filepath.Join(tmpDir, "file")
 	require.NoError(t, os.WriteFile(tmpFilePath, []byte("test content"), 0600))
 
+	testImageName := "test-image"
+	testBucketName := "test-bucket"
+	testObjectName := "test-object"
+
 	testCases := []struct {
 		testName string
 
-		name         string
-		bucket       string
-		key          string
 		shareWith    []string
 		architecture arch.Arch
 		bootMode     *platform.BootMode
@@ -47,17 +48,11 @@ func TestRegister(t *testing.T) {
 	}{
 		{
 			testName:     "happy minimal",
-			name:         "test-image",
-			bucket:       "test-bucket",
-			key:          "test-key",
 			architecture: arch.ARCH_X86_64,
 			expectErr:    false,
 		},
 		{
 			testName:     "happy full",
-			name:         "test-image",
-			bucket:       "test-bucket",
-			key:          "test-key",
 			shareWith:    []string{"123456789012"},
 			architecture: arch.ARCH_X86_64,
 			bootMode:     common.ToPtr(platform.BOOT_UEFI),
@@ -65,26 +60,20 @@ func TestRegister(t *testing.T) {
 			expectErr:    false,
 		},
 		{
-			name:         "error: invalid architecture",
-			bucket:       "test-bucket",
-			key:          "test-key",
+			testName:     "error: invalid architecture",
 			architecture: arch.ARCH_S390X, // invalid arch
 			expectErr:    true,
 			errMsg:       "ec2 doesn't support the following arch: s390x",
 		},
 		{
-			name:         "error: invalid boot mode",
-			bucket:       "test-bucket",
-			key:          "test-key",
+			testName:     "error: invalid boot mode",
 			architecture: arch.ARCH_X86_64,
 			bootMode:     common.ToPtr(platform.BootMode(123456)), // invalid boot mode
 			expectErr:    true,
 			errMsg:       "ec2 doesn't support the following boot mode: %!s(PANIC=String method: invalid boot mode)",
 		},
 		{
-			name:         "error: import snapshot failure",
-			bucket:       "test-bucket",
-			key:          "test-key",
+			testName:     "error: import snapshot failure",
 			architecture: arch.ARCH_X86_64,
 			ec2Client: &fakeEC2Client{
 				importSnapshotErr: fmt.Errorf("import snapshot error"),
@@ -93,9 +82,7 @@ func TestRegister(t *testing.T) {
 			errMsg:    "import snapshot error",
 		},
 		{
-			name:                         "error: import snapshot waiter failure",
-			bucket:                       "test-bucket",
-			key:                          "test-key",
+			testName:                     "error: import snapshot waiter failure",
 			architecture:                 arch.ARCH_X86_64,
 			snapshotImportedWaiterErr:    fmt.Errorf("waiter error"),
 			snapshotImportedWaiterOutput: &ec2.DescribeImportSnapshotTasksOutput{},
@@ -103,9 +90,7 @@ func TestRegister(t *testing.T) {
 			errMsg:                       "waiter error",
 		},
 		{
-			name:         "error: import snapshot wait done not completed",
-			bucket:       "test-bucket",
-			key:          "test-key",
+			testName:     "error: import snapshot wait done not completed",
 			architecture: arch.ARCH_X86_64,
 			snapshotImportedWaiterOutput: &ec2.DescribeImportSnapshotTasksOutput{
 				ImportSnapshotTasks: []ec2types.ImportSnapshotTask{
@@ -122,9 +107,7 @@ func TestRegister(t *testing.T) {
 			errMsg:    "Unable to import snapshot, task result: pending, msg: Task is still in progress",
 		},
 		{
-			name:         "error: delete S3 object failure",
-			bucket:       "test-bucket",
-			key:          "test-key",
+			testName:     "error: delete S3 object failure",
 			architecture: arch.ARCH_X86_64,
 			s3Client: &fakeS3Client{
 				deleteObjectErr: fmt.Errorf("delete object error"),
@@ -133,9 +116,7 @@ func TestRegister(t *testing.T) {
 			errMsg:    "delete object error",
 		},
 		{
-			name:         "error: create tags failure",
-			bucket:       "test-bucket",
-			key:          "test-key",
+			testName:     "error: create tags failure",
 			architecture: arch.ARCH_X86_64,
 			ec2Client: &fakeEC2Client{
 				importSnapshot: &ec2.ImportSnapshotOutput{
@@ -150,9 +131,7 @@ func TestRegister(t *testing.T) {
 			errMsg:    "create tags error",
 		},
 		{
-			name:         "error: register image failure",
-			bucket:       "test-bucket",
-			key:          "test-key",
+			testName:     "error: register image failure",
 			architecture: arch.ARCH_X86_64,
 			ec2Client: &fakeEC2Client{
 				importSnapshot: &ec2.ImportSnapshotOutput{
@@ -167,9 +146,7 @@ func TestRegister(t *testing.T) {
 			errMsg:    "register image error",
 		},
 		{
-			name:         "error: share snapshot with accounts failure",
-			bucket:       "test-bucket",
-			key:          "test-key",
+			testName:     "error: share snapshot with accounts failure",
 			architecture: arch.ARCH_X86_64,
 			shareWith:    []string{"123456789012"},
 			ec2Client: &fakeEC2Client{
@@ -185,9 +162,7 @@ func TestRegister(t *testing.T) {
 			errMsg:    "modify snapshot attribute error",
 		},
 		{
-			name:         "error: share image with accounts failure",
-			bucket:       "test-bucket",
-			key:          "test-key",
+			testName:     "error: share image with accounts failure",
 			architecture: arch.ARCH_X86_64,
 			shareWith:    []string{"123456789012"},
 			ec2Client: &fakeEC2Client{
@@ -246,7 +221,7 @@ func TestRegister(t *testing.T) {
 			awsClient := awscloud.NewAWSForTest(fec2, fs3, fs3u, nil)
 			require.NotNil(t, awsClient)
 
-			imageId, snapshotId, err := awsClient.Register(tc.name, tc.bucket, tc.key, tc.shareWith, tc.architecture, tc.bootMode, tc.importRole)
+			imageId, snapshotId, err := awsClient.Register(testImageName, testBucketName, testObjectName, tc.shareWith, tc.architecture, tc.bootMode, tc.importRole)
 
 			if tc.expectErr {
 				require.Error(t, err)
@@ -267,26 +242,26 @@ func TestRegister(t *testing.T) {
 
 			// import snapshot
 			require.Len(t, fec2.importSnapshotCalls, 1)
-			require.Equal(t, tc.bucket, *fec2.importSnapshotCalls[0].DiskContainer.UserBucket.S3Bucket)
-			require.Equal(t, tc.key, *fec2.importSnapshotCalls[0].DiskContainer.UserBucket.S3Key)
+			require.Equal(t, testBucketName, *fec2.importSnapshotCalls[0].DiskContainer.UserBucket.S3Bucket)
+			require.Equal(t, testObjectName, *fec2.importSnapshotCalls[0].DiskContainer.UserBucket.S3Key)
 			require.Equal(t, tc.importRole, fec2.importSnapshotCalls[0].RoleName)
 
 			// delete S3 object
 			require.Len(t, fs3.deleteObjectCalls, 1)
-			require.Equal(t, tc.bucket, *fs3.deleteObjectCalls[0].Bucket)
-			require.Equal(t, tc.key, *fs3.deleteObjectCalls[0].Key)
+			require.Equal(t, testBucketName, *fs3.deleteObjectCalls[0].Bucket)
+			require.Equal(t, testObjectName, *fs3.deleteObjectCalls[0].Key)
 
 			// the image and the snapshot are tagged with the same name
 			require.Len(t, fec2.createTagsCalls, 2)
 			for _, tagCalls := range fec2.createTagsCalls {
 				require.Len(t, tagCalls.Tags, 1)
 				require.Equal(t, "Name", *tagCalls.Tags[0].Key)
-				require.Equal(t, tc.name, *tagCalls.Tags[0].Value)
+				require.Equal(t, testImageName, *tagCalls.Tags[0].Value)
 			}
 
 			// register image
 			require.Len(t, fec2.registerImageCalls, 1)
-			require.Equal(t, tc.name, *fec2.registerImageCalls[0].Name)
+			require.Equal(t, testImageName, *fec2.registerImageCalls[0].Name)
 			require.Equal(t, ec2types.ArchitectureValues(tc.architecture.String()), fec2.registerImageCalls[0].Architecture)
 			require.Equal(t, ec2types.BootModeValues(common.Must(awscloud.EC2BootMode(tc.bootMode))), fec2.registerImageCalls[0].BootMode)
 			require.Len(t, fec2.registerImageCalls[0].BlockDeviceMappings, 1)
