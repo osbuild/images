@@ -600,7 +600,7 @@ func (a *AWS) AuthorizeSecurityGroupIngressEC2(groupID, address string, from, to
 		})
 }
 
-func (a *AWS) RunInstanceEC2(imageID, secGroupID *string, userData, instanceType string) (*ec2types.Reservation, error) {
+func (a *AWS) RunInstanceEC2(imageID, secGroupID, userData, instanceType string) (*ec2types.Reservation, error) {
 	ec2InstanceType := ec2types.InstanceType(instanceType)
 	if !slices.Contains(ec2InstanceType.Values(), ec2InstanceType) {
 		return nil, fmt.Errorf("ec2 doesn't support the following instance type: %s", instanceType)
@@ -611,9 +611,9 @@ func (a *AWS) RunInstanceEC2(imageID, secGroupID *string, userData, instanceType
 		&ec2.RunInstancesInput{
 			MaxCount:         aws.Int32(1),
 			MinCount:         aws.Int32(1),
-			ImageId:          imageID,
+			ImageId:          &imageID,
 			InstanceType:     ec2InstanceType,
-			SecurityGroupIds: []string{aws.ToString(secGroupID)},
+			SecurityGroupIds: []string{secGroupID},
 			UserData:         aws.String(encodeBase64(userData)),
 		})
 	if err != nil {

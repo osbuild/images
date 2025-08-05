@@ -264,7 +264,7 @@ func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resour
 	if err != nil {
 		return err
 	}
-	runResult, err := a.RunInstanceEC2(&ami, securityGroup.GroupId, userData, instance)
+	runResult, err := a.RunInstanceEC2(ami, *securityGroup.GroupId, userData, instance)
 	if err != nil {
 		return fmt.Errorf("RunInstanceEC2(): %s", err.Error())
 	}
