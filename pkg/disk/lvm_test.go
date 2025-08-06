@@ -19,15 +19,15 @@ func TestLVMVCreateMountpoint(t *testing.T) {
 		Description: "root volume group",
 	}
 
-	entity, err := vg.CreateMountpoint("/", 0)
+	entity, err := vg.CreateMountpoint("/", "", 0)
 	assert.NoError(err)
 	rootlv := entity.(*LVMLogicalVolume)
 	assert.Equal("rootlv", rootlv.Name)
 
-	_, err = vg.CreateMountpoint("/home_test", 0)
+	_, err = vg.CreateMountpoint("/home_test", "", 0)
 	assert.NoError(err)
 
-	entity, err = vg.CreateMountpoint("/home/test", 0)
+	entity, err = vg.CreateMountpoint("/home/test", "", 0)
 	assert.NoError(err)
 
 	dedup := entity.(*LVMLogicalVolume)
@@ -35,11 +35,11 @@ func TestLVMVCreateMountpoint(t *testing.T) {
 
 	// Lets collide it
 	for i := 0; i < 99; i++ {
-		_, err = vg.CreateMountpoint("/home/test", 0)
+		_, err = vg.CreateMountpoint("/home/test", "", 0)
 		assert.NoError(err)
 	}
 
-	_, err = vg.CreateMountpoint("/home/test", 0)
+	_, err = vg.CreateMountpoint("/home/test", "", 0)
 	assert.Error(err)
 }
 
