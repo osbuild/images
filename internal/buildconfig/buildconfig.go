@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/osbuild/images/pkg/blueprint"
+	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/pkg/distro"
 )
 

@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osbuild/images/pkg/blueprint"
+	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/disk/partition"
 	"github.com/osbuild/images/pkg/distro"

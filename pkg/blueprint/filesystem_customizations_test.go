@@ -7,7 +7,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/osbuild/images/pkg/blueprint"
+	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/pkg/pathpolicy"
 )
 
