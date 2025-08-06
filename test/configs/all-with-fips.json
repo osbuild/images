@@ -1,6 +1,9 @@
 {
   "name": "all-with-fips",
   "blueprint": {
+    "name": "all-with-fips",
+    "description": "Similar to all-customizations, but with FIPS enabled as well",
+    "version": "1.0",
     "packages": [
       {
         "name": "bash",

@@ -6,6 +6,7 @@
     }
   },
   "blueprint": {
+    "description": "For edge disk images, with user and filesystem customizations.",
     "customizations": {
       "user": [
         {

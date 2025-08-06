@@ -1,6 +1,9 @@
 {
   "name": "edge-ostree-pull-device",
   "blueprint": {
+    "name": "edge-ostree-pull-device",
+    "description": "For the edge-simplified-installer.",
+    "version": "1.0",
     "customizations": {
       "installation_device": "/dev/sda"
     }

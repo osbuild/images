@@ -6,6 +6,9 @@
     }
   },
   "blueprint": {
+    "name": "iot-customizations-full",
+    "description": "Similar to all-customizations, but for iot-commit/container builds.",
+    "version": "1.0",
     "customizations": {
       "user": [
         {

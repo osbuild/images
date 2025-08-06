@@ -1,6 +1,9 @@
 {
   "name": "unattended-iso-edge",
   "blueprint": {
+    "name": "unattended-iso-edge",
+    "description": "Configures any Anaconda-based ISO to install the system with no user interaction (RHEL Edge variant).",
+    "version": "1.0",
     "customizations": {
       "user": [
         {

@@ -1,6 +1,9 @@
 {
   "name": "edge-ostree-pull-device-fips",
   "blueprint": {
+    "name": "edge-ostree-pull-device-fips",
+    "description": "For the edge-simplified-installer with FIPS enabled.",
+    "version": "1.0",
     "customizations": {
       "fips": true,
       "installation_device": "/dev/vda"

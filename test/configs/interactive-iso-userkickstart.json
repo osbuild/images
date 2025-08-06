@@ -1,6 +1,9 @@
 {
   "name": "interactive-iso-userkickstart",
   "blueprint": {
+    "name": "interactive-iso-userkickstart",
+    "description": "Blueprint for ISO builds with custom kickstart contents that create a user account in %post (not unattended).",
+    "version": "1.0",
     "customizations": {
       "locale": {
         "languages": [

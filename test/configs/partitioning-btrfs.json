@@ -1,6 +1,9 @@
 {
   "name": "partitioning-btrfs",
   "blueprint": {
+    "name": "partitioning-btrfs",
+    "description": "Disk customizations to create a btrfs volume with subvolumes and a plain data partition.",
+    "version": "1.0",
     "customizations": {
       "disk": {
         "partitions": [

@@ -1,6 +1,9 @@
 {
   "name": "edge-ostree-pull-user-minimalenv",
   "blueprint": {
+    "name": "edge-ostree-pull-user-minimalenv",
+    "description": "For image types that require an edge-commit/container to pull, with a user defined in the deployment. Pulls the edge-container built from the minimal-environment config.",
+    "version": "1.0",
     "customizations": {
       "user": [
         {

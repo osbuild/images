@@ -1,6 +1,9 @@
 {
   "name": "edge-ostree-pull-fips",
   "blueprint": {
+    "name": "edge-ostree-pull-fips",
+    "description": "For image types that require an edge-commit/container to pull with FIPS enabled.",
+    "version": "1.0",
     "customizations": {
       "fips": true
     }

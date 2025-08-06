@@ -1,6 +1,9 @@
 {
   "name": "all-customizations",
   "blueprint": {
+    "name": "all-customizations",
+    "description": "Blueprint that uses (almost) all available customizations for the disk image types",
+    "version": "1.0",
     "packages": [
       {
         "name": "bash",
@@ -179,10 +182,17 @@
       },
       "firewall": {
         "services": {
-          "enabled": ["ftp"],
-          "disabled": ["telnet"]
+          "enabled": [
+            "ftp"
+          ],
+          "disabled": [
+            "telnet"
+          ]
         },
-        "ports": ["1337:udp", "42-48:tcp"]
+        "ports": [
+          "1337:udp",
+          "42-48:tcp"
+        ]
       }
     }
   }

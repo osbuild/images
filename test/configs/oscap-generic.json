@@ -1,6 +1,9 @@
 {
   "name": "oscap-generic",
   "blueprint": {
+    "name": "oscap-generic",
+    "description": "Almost full (disk) blueprint with additional openscap options.",
+    "version": "1.0",
     "packages": [
       {
         "name": "bash",

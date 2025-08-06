@@ -1,6 +1,9 @@
 {
   "name": "oscap-rhel9-with-json-tailoring",
   "blueprint": {
+    "name": "oscap-rhel9-with-json-tailoring",
+    "description": "Simple blueprint with openscap options for RHEL 9 (uses rhel9 datastream). JSON tailoring variant.",
+    "version": "1.0",
     "packages": [
       {
         "name": "xmlstarlet"
