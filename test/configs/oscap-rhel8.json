@@ -1,6 +1,9 @@
 {
   "name": "oscap-rhel8",
   "blueprint": {
+    "name": "oscap-rhel8",
+    "description": "Simple blueprint with openscap options for RHEL 8 (uses rhel8 datastream).",
+    "version": "1.0",
     "packages": [
       {
         "name": "xmlstarlet"

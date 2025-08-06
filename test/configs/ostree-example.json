@@ -1,9 +1,0 @@
-{
-  "name": "ostree-example",
-  "options": {
-    "ostree": {
-      "ref": "test/fedora/iot",
-      "url": "http://fedora.example.com/repo"
-    }
-  }
-}

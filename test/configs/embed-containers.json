@@ -1,6 +1,9 @@
 {
   "name": "embed-containers",
   "blueprint": {
+    "name": "embed-containers",
+    "description": "Container embedding test for edge-commits with a manifest list. See https://github.com/osbuild/osbuild-composer/pull/3336 for the original version of this test. This variant tests the short name for the container manifest list.",
+    "version": "1.0",
     "containers": [
       {
         "source": "registry.gitlab.com/redhat/services/products/image-builder/ci/osbuild-composer/fedora-minimal"
