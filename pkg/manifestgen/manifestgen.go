@@ -163,7 +163,7 @@ func (mg *Generator) Generate(bp *blueprint.Blueprint, dist distro.Distro, imgTy
 		if mg.warningsOutput != nil {
 			fmt.Fprint(mg.warningsOutput, warn)
 		} else {
-			return fmt.Errorf("Warnings during manifest creation:\n%v", warn)
+			return fmt.Errorf("warnings during manifest creation:\n%v", warn)
 		}
 	}
 	depsolved, err := mg.depsolver(mg.cacheDir, mg.depsolveWarningsOutput, preManifest.GetPackageSetChains(), dist, a.Name())

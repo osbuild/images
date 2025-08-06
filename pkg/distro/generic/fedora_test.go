@@ -506,17 +506,18 @@ func TestFedoraDistro_ManifestError(t *testing.T) {
 						Size: imgType.Size(0),
 					}
 					_, _, err := imgType.Manifest(&bp, imgOpts, nil, nil)
-					if imgTypeName == "iot-commit" || imgTypeName == "iot-container" || imgTypeName == "iot-bootable-container" {
+					switch imgTypeName {
+					case "iot-commit", "iot-container", "iot-bootable-container":
 						assert.EqualError(t, err, "kernel boot parameter customizations are not supported for ostree types")
-					} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" {
+					case "iot-installer", "iot-simplified-installer":
 						assert.EqualError(t, err, fmt.Sprintf("boot ISO image type \"%s\" requires specifying a URL from which to retrieve the OSTree commit", imgTypeName))
-					} else if imgTypeName == "minimal-installer" {
+					case "minimal-installer":
 						assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, FIPS, Installer, Timezone, Locale"))
-					} else if imgTypeName == "workstation-live-installer" {
+					case "workstation-live-installer":
 						assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
-					} else if imgTypeName == "iot-raw-xz" || imgTypeName == "iot-qcow2" {
+					case "iot-raw-xz", "iot-qcow2":
 						assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, Directories, Files, Services, FIPS"))
-					} else {
+					default:
 						assert.NoError(t, err)
 					}
 				})
@@ -708,7 +709,7 @@ func TestFedoraDistro_CustomFileSystemManifestError(t *testing.T) {
 				imgType, _ := arch.GetImageType(imgTypeName)
 				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
 				if imgTypeName == "iot-commit" || imgTypeName == "iot-container" || imgTypeName == "iot-bootable-container" {
-					assert.EqualError(t, err, "Custom mountpoints and partitioning are not supported for ostree types")
+					assert.EqualError(t, err, "custom mountpoints and partitioning are not supported for ostree types")
 				} else if imgTypeName == "iot-raw-xz" || imgTypeName == "iot-qcow2" {
 					assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, Directories, Files, Services, FIPS"))
 				} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "minimal-installer" {
@@ -716,7 +717,7 @@ func TestFedoraDistro_CustomFileSystemManifestError(t *testing.T) {
 				} else if imgTypeName == "workstation-live-installer" {
 					assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
 				} else {
-					assert.EqualError(t, err, "The following errors occurred while setting up custom mountpoints:\npath \"/etc\" is not allowed")
+					assert.EqualError(t, err, "the following errors occurred while setting up custom mountpoints:\npath \"/etc\" is not allowed")
 				}
 			}
 		}
@@ -741,7 +742,7 @@ func TestFedoraDistro_TestRootMountPoint(t *testing.T) {
 				imgType, _ := arch.GetImageType(imgTypeName)
 				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
 				if imgTypeName == "iot-commit" || imgTypeName == "iot-container" || imgTypeName == "iot-bootable-container" {
-					assert.EqualError(t, err, "Custom mountpoints and partitioning are not supported for ostree types")
+					assert.EqualError(t, err, "custom mountpoints and partitioning are not supported for ostree types")
 				} else if imgTypeName == "iot-raw-xz" || imgTypeName == "iot-qcow2" {
 					assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, Directories, Files, Services, FIPS"))
 				} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "minimal-installer" {
@@ -860,7 +861,7 @@ func TestFedoraDistro_DirtyMountpointsNotAllowed(t *testing.T) {
 				} else if imgTypeName == "workstation-live-installer" {
 					assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
 				} else {
-					assert.EqualError(t, err, "The following errors occurred while setting up custom mountpoints:\npath \"//\" must be canonical\npath \"/var//\" must be canonical\npath \"/var//log/audit/\" must be canonical")
+					assert.EqualError(t, err, "the following errors occurred while setting up custom mountpoints:\npath \"//\" must be canonical\npath \"/var//\" must be canonical\npath \"/var//log/audit/\" must be canonical")
 				}
 			}
 		}
@@ -885,7 +886,7 @@ func TestFedoraDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 				imgType, _ := arch.GetImageType(imgTypeName)
 				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
 				if imgTypeName == "iot-commit" || imgTypeName == "iot-container" || imgTypeName == "iot-bootable-container" {
-					assert.EqualError(t, err, "Custom mountpoints and partitioning are not supported for ostree types")
+					assert.EqualError(t, err, "custom mountpoints and partitioning are not supported for ostree types")
 				} else if imgTypeName == "iot-raw-xz" || imgTypeName == "iot-qcow2" {
 					assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, Directories, Files, Services, FIPS"))
 				} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "minimal-installer" {
@@ -929,7 +930,7 @@ func TestFedoraDistro_PartitioningConflict(t *testing.T) {
 				imgType, _ := arch.GetImageType(imgTypeName)
 				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
 				if imgTypeName == "iot-commit" || imgTypeName == "iot-container" || imgTypeName == "iot-bootable-container" {
-					assert.EqualError(t, err, "Custom mountpoints and partitioning are not supported for ostree types")
+					assert.EqualError(t, err, "custom mountpoints and partitioning are not supported for ostree types")
 				} else if imgTypeName == "iot-raw-xz" || imgTypeName == "iot-qcow2" {
 					assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, Directories, Files, Services, FIPS"))
 				} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" || imgTypeName == "minimal-installer" {

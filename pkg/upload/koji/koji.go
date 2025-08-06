@@ -279,12 +279,12 @@ func (k *Koji) uploadChunk(chunk []byte, filepath, filename string, offset uint6
 	}
 
 	if reply.Size != len(chunk) {
-		return fmt.Errorf("Sent a chunk of %d bytes, but server got %d bytes", len(chunk), reply.Size)
+		return fmt.Errorf("sent a chunk of %d bytes, but server got %d bytes", len(chunk), reply.Size)
 	}
 
 	digest := fmt.Sprintf("%08x", adler32.Checksum(chunk))
 	if reply.HexDigest != digest {
-		return fmt.Errorf("Sent a chunk with Adler32 digest %s, but server computed digest %s", digest, reply.HexDigest)
+		return fmt.Errorf("sent a chunk with Adler32 digest %s, but server computed digest %s", digest, reply.HexDigest)
 	}
 
 	return nil
@@ -402,7 +402,7 @@ func createCustomRetryableClient(logger rh.LeveledLogger) *rh.Client {
 			}
 		}
 
-		if logger != nil && (!shouldRetry && !(resp.StatusCode >= 200 && resp.StatusCode < 300)) {
+		if logger != nil && (!shouldRetry && (resp.StatusCode < 200 || resp.StatusCode >= 300)) {
 			logger.Info(fmt.Sprintf("Not retrying: %v", resp.Status))
 		}
 

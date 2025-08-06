@@ -42,7 +42,7 @@ func NewMTLSServerInPath(handler http.Handler, certsPath string) (*MTLSServer, e
 	caPool := x509.NewCertPool()
 	ok := caPool.AppendCertsFromPEM(caCertPem)
 	if !ok {
-		return nil, fmt.Errorf("Unable to append ca cert (%s) to ca pool", caPath)
+		return nil, fmt.Errorf("unable to append ca cert (%s) to ca pool", caPath)
 	}
 
 	serverCrt, err := tls.LoadX509KeyPair(serverCrtPath, serverKeyPath)

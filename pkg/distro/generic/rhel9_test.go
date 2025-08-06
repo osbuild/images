@@ -480,15 +480,16 @@ func TestRhel9_Distro_ManifestError(t *testing.T) {
 				Size: imgType.Size(0),
 			}
 			_, _, err := imgType.Manifest(&bp, imgOpts, nil, nil)
-			if imgTypeName == "edge-commit" || imgTypeName == "edge-container" {
+			switch imgTypeName {
+			case "edge-commit", "edge-container":
 				assert.EqualError(t, err, "kernel boot parameter customizations are not supported for ostree types")
-			} else if imgTypeName == "edge-raw-image" || imgTypeName == "edge-ami" || imgTypeName == "edge-vsphere" {
+			case "edge-raw-image", "edge-ami", "edge-vsphere":
 				assert.EqualError(t, err, fmt.Sprintf("\"%s\" images require specifying a URL from which to retrieve the OSTree commit", imgTypeName))
-			} else if imgTypeName == "edge-installer" || imgTypeName == "edge-simplified-installer" {
+			case "edge-installer", "edge-simplified-installer":
 				assert.EqualError(t, err, fmt.Sprintf("boot ISO image type \"%s\" requires specifying a URL from which to retrieve the OSTree commit", imgTypeName))
-			} else if imgTypeName == "azure-cvm" {
+			case "azure-cvm":
 				assert.EqualError(t, err, fmt.Sprintf("kernel customizations are not supported for %q", imgTypeName))
-			} else {
+			default:
 				assert.NoError(t, err)
 			}
 		}
@@ -681,7 +682,7 @@ func TestRhel9_Distro_CustomFileSystemManifestError(t *testing.T) {
 			} else if imgTypeName == "edge-installer" || imgTypeName == "edge-simplified-installer" || imgTypeName == "edge-raw-image" || imgTypeName == "edge-ami" || imgTypeName == "edge-vsphere" {
 				continue
 			} else {
-				assert.EqualError(t, err, "The following errors occurred while setting up custom mountpoints:\npath \"/etc\" is not allowed")
+				assert.EqualError(t, err, "the following errors occurred while setting up custom mountpoints:\npath \"/etc\" is not allowed")
 			}
 		}
 	}
@@ -811,7 +812,7 @@ func TestRhel9_Distro_DirtyMountpointsNotAllowed(t *testing.T) {
 			if strings.HasPrefix(imgTypeName, "edge-") {
 				continue
 			} else {
-				assert.EqualError(t, err, "The following errors occurred while setting up custom mountpoints:\npath \"//\" must be canonical\npath \"/var//\" must be canonical\npath \"/var//log/audit/\" must be canonical")
+				assert.EqualError(t, err, "the following errors occurred while setting up custom mountpoints:\npath \"//\" must be canonical\npath \"/var//\" must be canonical\npath \"/var//log/audit/\" must be canonical")
 			}
 		}
 	}

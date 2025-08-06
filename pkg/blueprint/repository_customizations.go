@@ -35,20 +35,20 @@ const repoFilenameRegex = "^[\\w.-]{1,250}\\.repo$"
 
 func validateCustomRepository(repo *RepositoryCustomization) error {
 	if repo.Id == "" {
-		return fmt.Errorf("Repository ID is required")
+		return fmt.Errorf("repository ID is required")
 	}
 
 	filenameRegex := regexp.MustCompile(repoFilenameRegex)
 	if !filenameRegex.MatchString(repo.getFilename()) {
-		return fmt.Errorf("Repository filename %q is invalid", repo.getFilename())
+		return fmt.Errorf("repository filename %q is invalid", repo.getFilename())
 	}
 
 	if len(repo.BaseURLs) == 0 && repo.Mirrorlist == "" && repo.Metalink == "" {
-		return fmt.Errorf("Repository base URL, mirrorlist or metalink is required")
+		return fmt.Errorf("repository base URL, mirrorlist or metalink is required")
 	}
 
 	if repo.GPGCheck != nil && *repo.GPGCheck && len(repo.GPGKeys) == 0 {
-		return fmt.Errorf("Repository gpg check is set to true but no gpg keys are provided")
+		return fmt.Errorf("repository gpg check is set to true but no gpg keys are provided")
 	}
 
 	for _, key := range repo.GPGKeys {
@@ -63,7 +63,7 @@ func validateCustomRepository(repo *RepositoryCustomization) error {
 		}
 
 		if !keyIsGPGKey && !keyIsURL {
-			return fmt.Errorf("Repository gpg key is not a valid URL or a valid gpg key")
+			return fmt.Errorf("repository gpg key is not a valid URL or a valid gpg key")
 		}
 	}
 

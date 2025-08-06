@@ -388,7 +388,7 @@ func (s *Solver) reposFromRPMMD(rpmRepos []rpmmd.RepoConfig) ([]repoConfig, erro
 
 		if rr.RHSM {
 			if s.subscriptions == nil {
-				return nil, fmt.Errorf("This system does not have any valid subscriptions. Subscribe it before specifying rhsm: true in sources (error details: %w)", s.subscriptionsErr)
+				return nil, fmt.Errorf("this system does not have any valid subscriptions. Subscribe it before specifying rhsm: true in sources (error details: %w)", s.subscriptionsErr)
 			}
 			secrets, err := s.subscriptions.GetSecretsForBaseurl(rr.BaseURLs, s.arch, s.releaseVer)
 			if err != nil {
@@ -693,7 +693,7 @@ func (r *Request) Hash() string {
 	for _, repo := range r.Arguments.Repos {
 		h.Write([]byte(repo.Hash()))
 	}
-	h.Write([]byte(fmt.Sprintf("%T", r.Arguments.Search.Latest)))
+	fmt.Fprintf(h, "%T", r.Arguments.Search.Latest)
 	h.Write([]byte(strings.Join(r.Arguments.Search.Packages, "")))
 
 	return fmt.Sprintf("%x", h.Sum(nil))
@@ -849,7 +849,7 @@ func parseError(data []byte, repos []repoConfig) Error {
 		if len(repo.Name) > 0 {
 			nameURL = fmt.Sprintf("%s: %s", repo.Name, nameURL)
 		}
-		e.Reason = strings.Replace(e.Reason, idstr, fmt.Sprintf("%s [%s]", idstr, nameURL), -1)
+		e.Reason = strings.ReplaceAll(e.Reason, idstr, fmt.Sprintf("%s [%s]", idstr, nameURL))
 	}
 
 	return e

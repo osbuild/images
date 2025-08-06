@@ -272,7 +272,7 @@ func (a *AWS) Register(name, bucket, key string, shareWith []string, rpmArch str
 
 	snapshotTaskStatus := *snapWaitOutput.ImportSnapshotTasks[0].SnapshotTaskDetail.Status
 	if snapshotTaskStatus != "completed" {
-		return nil, nil, fmt.Errorf("Unable to import snapshot, task result: %v, msg: %v", snapshotTaskStatus, *snapWaitOutput.ImportSnapshotTasks[0].SnapshotTaskDetail.StatusMessage)
+		return nil, nil, fmt.Errorf("unable to import snapshot, task result: %v, msg: %v", snapshotTaskStatus, *snapWaitOutput.ImportSnapshotTasks[0].SnapshotTaskDetail.StatusMessage)
 	}
 
 	// we no longer need the object in s3, let's just delete it
@@ -380,7 +380,7 @@ func (a *AWS) ShareImage(ami string, userIds []string) error {
 		return err
 	}
 	if len(imgs.Images) == 0 {
-		return fmt.Errorf("Unable to find image with id: %v", ami)
+		return fmt.Errorf("unable to find image with id: %v", ami)
 	}
 
 	for _, bdm := range imgs.Images[0].BlockDeviceMappings {

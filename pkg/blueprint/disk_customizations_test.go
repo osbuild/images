@@ -1355,7 +1355,7 @@ func TestCheckDiskMountpointsPolicy(t *testing.T) {
 		},
 	}
 
-	strictErr := `The following errors occurred while setting up custom mountpoints:
+	strictErr := `the following errors occurred while setting up custom mountpoints:
 path "/some/stuff" is not allowed
 path "/data/" must be canonical
 path "/scratch" is not allowed
@@ -1365,7 +1365,7 @@ path "/etc" is not allowed`
 	err := blueprint.CheckDiskMountpointsPolicy(&disk, strict)
 	assert.EqualError(t, err, strictErr)
 
-	noEtcErr := `The following errors occurred while setting up custom mountpoints:
+	noEtcErr := `the following errors occurred while setting up custom mountpoints:
 path "/data/" must be canonical
 path "/etc" is not allowed`
 	err = blueprint.CheckDiskMountpointsPolicy(&disk, noEtc)

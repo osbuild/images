@@ -768,7 +768,7 @@ func (pt *PartitionTable) ensureLVM() error {
 	}
 	part, ok := parent.(*Partition)
 	if !ok {
-		return fmt.Errorf("Unsupported parent for LVM")
+		return fmt.Errorf("unsupported parent for LVM")
 	}
 	filesystem := part.Payload
 

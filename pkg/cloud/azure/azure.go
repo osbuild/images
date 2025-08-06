@@ -184,7 +184,7 @@ func (ac Client) RegisterImage(ctx context.Context, resourceGroup, storageAccoun
 	case HyperVGenV2:
 		hypvgen = armcompute.HyperVGenerationTypes(armcompute.HyperVGenerationTypesV2)
 	default:
-		return fmt.Errorf("Unknown hyper v generation type %v", hyperVGen)
+		return fmt.Errorf("unknown hyper v generation type %v", hyperVGen)
 	}
 
 	imageFuture, err := ac.images.BeginCreateOrUpdate(ctx, resourceGroup, imageName, armcompute.Image{

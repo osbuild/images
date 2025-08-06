@@ -69,7 +69,7 @@ func TestInvalidInputResolver(t *testing.T) {
 
 	resolver.Add(url)
 
-	expectedErr := fmt.Errorf("File resolver: url is required")
+	expectedErr := fmt.Errorf("file resolver: url is required")
 
 	resultItems := resolver.Finish()
 
@@ -87,8 +87,8 @@ func TestMultiInvalidInputResolver(t *testing.T) {
 	resolver.Add(urlOne)
 	resolver.Add(urlTwo)
 
-	expectedErrMessageOne := "File resolver: url is required"
-	expectedErrMessageTwo := fmt.Sprintf("File resolver: invalid url %s", urlTwo)
+	expectedErrMessageOne := "file resolver: url is required"
+	expectedErrMessageTwo := fmt.Sprintf("file resolver: invalid url %s", urlTwo)
 
 	resultItems := resolver.Finish()
 

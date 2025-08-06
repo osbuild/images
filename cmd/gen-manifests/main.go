@@ -342,17 +342,17 @@ func save(ms manifest.OSBuildManifest, depsolved map[string]dnfjson.DepsolveResu
 	}
 	b, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
-		return fmt.Errorf("failed to marshal data for %q: %s\n", filename, err.Error())
+		return fmt.Errorf("failed to marshal data for %q: %s", filename, err.Error())
 	}
 	b = append(b, '\n') // add new line at end of file
 	fpath := filepath.Join(path, filename)
 	fp, err := os.Create(fpath)
 	if err != nil {
-		return fmt.Errorf("failed to create output file %q: %s\n", fpath, err.Error())
+		return fmt.Errorf("failed to create output file %q: %s", fpath, err.Error())
 	}
 	defer fp.Close()
 	if _, err := fp.Write(b); err != nil {
-		return fmt.Errorf("failed to write output file %q: %s\n", fpath, err.Error())
+		return fmt.Errorf("failed to write output file %q: %s", fpath, err.Error())
 	}
 	return nil
 }
@@ -375,7 +375,7 @@ func filterRepos(repos []rpmmd.RepoConfig, typeName string) []rpmmd.RepoConfig {
 }
 
 func u(s string) string {
-	return strings.Replace(s, "-", "_", -1)
+	return strings.ReplaceAll(s, "-", "_")
 }
 
 func main() {

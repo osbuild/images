@@ -173,7 +173,7 @@ func (du CloudInitConfigDefaultUser) validate() error {
 
 func (n CloudInitConfigNetwork) validate() error {
 	if n.Config != "disabled" {
-		return fmt.Errorf("Network config must be set to disabled if the network section is specified")
+		return fmt.Errorf("network config must be set to disabled if the network section is specified")
 	}
 	return nil
 }

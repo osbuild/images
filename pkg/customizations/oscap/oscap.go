@@ -77,11 +77,11 @@ func (rc *RemediationConfig) addTailoringConfigs(tc blueprint.OpenSCAPTailoringC
 
 func (rc *RemediationConfig) addJsonConfigs(json blueprint.OpenSCAPJSONTailoringCustomizations) (*RemediationConfig, error) {
 	if json.Filepath == "" {
-		return nil, fmt.Errorf("Filepath to an JSON tailoring file is required")
+		return nil, fmt.Errorf("filepath to an JSON tailoring file is required")
 	}
 
 	if json.ProfileID == "" {
-		return nil, fmt.Errorf("Tailoring profile ID is required for an JSON tailoring file")
+		return nil, fmt.Errorf("tailoring profile ID is required for an JSON tailoring file")
 	}
 
 	rc.TailoringConfig = &TailoringConfig{
@@ -97,7 +97,7 @@ func NewConfigs(oscapConfig blueprint.OpenSCAPCustomization, defaultDatastream *
 	var datastream = oscapConfig.DataStream
 	if datastream == "" {
 		if defaultDatastream == nil {
-			return nil, fmt.Errorf("No OSCAP datastream specified and the distro does not have any default set")
+			return nil, fmt.Errorf("no OSCAP datastream specified and the distro does not have any default set")
 		}
 		datastream = *defaultDatastream
 	}
@@ -113,7 +113,7 @@ func NewConfigs(oscapConfig blueprint.OpenSCAPCustomization, defaultDatastream *
 
 	switch {
 	case tc != nil && json != nil:
-		return nil, fmt.Errorf("Multiple tailoring types set, only one type can be chosen (JSON/Override rules)")
+		return nil, fmt.Errorf("multiple tailoring types set, only one type can be chosen (JSON/Override rules)")
 	case tc != nil:
 		return remediationConfig.addTailoringConfigs(*tc)
 	case json != nil:

@@ -167,11 +167,11 @@ func (o *SystemdUnitCreateStageOptions) validateMount() error {
 	}
 
 	if o.Config.Mount.What == "" {
-		return fmt.Errorf("What option for Mount section of systemd unit %q is required", o.Filename)
+		return fmt.Errorf("what option for Mount section of systemd unit %q is required", o.Filename)
 	}
 
 	if o.Config.Mount.Where == "" {
-		return fmt.Errorf("Where option for Mount section of systemd unit %q is required", o.Filename)
+		return fmt.Errorf("where option for Mount section of systemd unit %q is required", o.Filename)
 	}
 
 	return nil

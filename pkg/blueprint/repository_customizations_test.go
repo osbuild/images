@@ -39,7 +39,7 @@ func TestGetCustomRepositories(t *testing.T) {
 					{},
 				},
 			},
-			wantErr: fmt.Errorf("Repository ID is required"),
+			wantErr: fmt.Errorf("repository ID is required"),
 		},
 		{
 			name: "Test empty baseurl, mirrorlist or metalink error",
@@ -50,7 +50,7 @@ func TestGetCustomRepositories(t *testing.T) {
 					},
 				},
 			},
-			wantErr: fmt.Errorf("Repository base URL, mirrorlist or metalink is required"),
+			wantErr: fmt.Errorf("repository base URL, mirrorlist or metalink is required"),
 		},
 		{
 			name: "Test missing GPG keys error",
@@ -63,7 +63,7 @@ func TestGetCustomRepositories(t *testing.T) {
 					},
 				},
 			},
-			wantErr: fmt.Errorf("Repository gpg check is set to true but no gpg keys are provided"),
+			wantErr: fmt.Errorf("repository gpg check is set to true but no gpg keys are provided"),
 		},
 		{
 			name: "Test invalid GPG keys error",
@@ -77,7 +77,7 @@ func TestGetCustomRepositories(t *testing.T) {
 					},
 				},
 			},
-			wantErr: fmt.Errorf("Repository gpg key is not a valid URL or a valid gpg key"),
+			wantErr: fmt.Errorf("repository gpg key is not a valid URL or a valid gpg key"),
 		},
 		{
 			name: "Test invalid repository filename error",
@@ -90,7 +90,7 @@ func TestGetCustomRepositories(t *testing.T) {
 					},
 				},
 			},
-			wantErr: fmt.Errorf("Repository filename %q is invalid", "!nval!d.repo"),
+			wantErr: fmt.Errorf("repository filename %q is invalid", "!nval!d.repo"),
 		},
 	}
 

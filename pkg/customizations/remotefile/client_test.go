@@ -53,7 +53,7 @@ func TestInputSpecValidation(t *testing.T) {
 		{
 			name: "missing url spec",
 			url:  "",
-			want: fmt.Errorf("File resolver: url is required"),
+			want: fmt.Errorf("file resolver: url is required"),
 		},
 	}
 

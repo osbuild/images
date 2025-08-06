@@ -33,7 +33,7 @@ func main() {
 
 	d := df.GetDistro(distroName)
 	if d == nil {
-		panic(fmt.Errorf("Distro %q does not exist", distroName))
+		panic(fmt.Errorf("distro %q does not exist", distroName))
 	}
 
 	arch, err := d.GetArch(archName)
