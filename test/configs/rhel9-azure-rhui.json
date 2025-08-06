@@ -1,6 +1,9 @@
 {
   "name": "rhel9-azure-rhui",
   "blueprint": {
+    "name": "rhel9-azure-rhui",
+    "description": "Replicates the pungi build config for the RHEL 9 Azure images with RHUI installed.",
+    "version": "1.0",
     "packages": [
       {
         "name": "rhui-azure-rhel9"

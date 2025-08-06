@@ -1,5 +1,10 @@
 {
   "name": "iot-ostree-pull-empty",
+  "blueprint": {
+    "name": "iot-ostree-pull-empty",
+    "description": "Empty blueprint for image types that require an iot-commit/container to pull.",
+    "version": "1.0"
+  },
   "options": {
     "ostree": {
       "url": "http://example.com/repo"

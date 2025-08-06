@@ -1,6 +1,7 @@
 {
   "name": "partitioning-plain",
   "blueprint": {
+    "description": "Disk customizations with plain partitioning.",
     "customizations": {
       "disk": {
         "partitions": [

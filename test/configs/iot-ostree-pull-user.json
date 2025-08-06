@@ -1,6 +1,9 @@
 {
   "name": "iot-ostree-pull-user",
   "blueprint": {
+    "name": "iot-ostree-pull-user",
+    "description": "For image types that require an iot-commit/container to pull, with a user defined in the deployment.",
+    "version": "1.0",
     "customizations": {
       "user": [
         {

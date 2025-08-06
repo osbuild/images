@@ -1,6 +1,9 @@
 {
   "name": "rhel10-azure-rhui-cdn",
   "blueprint": {
+    "name": "rhel10-azure-rhui-cdn",
+    "description": "Replicates the pungi build config for the RHEL 10 Azure images with RHUI installed and the CDN cloud client config.",
+    "version": "1.0",
     "packages": [
       {
         "name": "rhui-azure-rhel10"

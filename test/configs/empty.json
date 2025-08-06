@@ -1,4 +1,8 @@
 {
   "name": "empty",
-  "blueprint": {}
+  "blueprint": {
+    "name": "empty",
+    "description": "Empty blueprint for testing base image types.",
+    "version": "1.0"
+  }
 }

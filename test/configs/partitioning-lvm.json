@@ -1,6 +1,9 @@
 {
   "name": "partitioning-lvm",
   "blueprint": {
+    "name": "paritioning-lvm",
+    "description": "Disk customizations to create an LVM volume group with logical volumes (GPT partition table variant).",
+    "version": "1.0",
     "customizations": {
       "disk": {
         "type": "gpt",
