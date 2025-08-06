@@ -681,7 +681,7 @@ func TestRhel9_Distro_CustomFileSystemManifestError(t *testing.T) {
 			} else if imgTypeName == "edge-installer" || imgTypeName == "edge-simplified-installer" || imgTypeName == "edge-raw-image" || imgTypeName == "edge-ami" || imgTypeName == "edge-vsphere" {
 				continue
 			} else {
-				assert.EqualError(t, err, "The following errors occurred while setting up custom mountpoints:\npath \"/etc\" is not allowed")
+				assert.EqualError(t, err, "The following custom mountpoints are not supported [\"/etc\"]")
 			}
 		}
 	}
@@ -811,7 +811,7 @@ func TestRhel9_Distro_DirtyMountpointsNotAllowed(t *testing.T) {
 			if strings.HasPrefix(imgTypeName, "edge-") {
 				continue
 			} else {
-				assert.EqualError(t, err, "The following errors occurred while setting up custom mountpoints:\npath \"//\" must be canonical\npath \"/var//\" must be canonical\npath \"/var//log/audit/\" must be canonical")
+				assert.EqualError(t, err, "The following custom mountpoints are not supported [\"//\" \"/var//\" \"/var//log/audit/\"]")
 			}
 		}
 	}
