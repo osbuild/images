@@ -1983,6 +1983,7 @@ image_types:
             - "redhat-release"
             - "tpm2-tools"
             - "WALinuxAgent"
+            - "yum-utils"
         - exclude:
             - "dracut-config-rescue"
             - "grubby"
