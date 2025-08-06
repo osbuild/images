@@ -1,8 +1,14 @@
 {
   "name": "modularity-enabled-modules",
   "blueprint": {
+    "name": "modularity-enabled-modules",
+    "description": "Simple blueprint that enables and installs modules.",
+    "version": "1.0",
     "enabled_modules": [
-      {"name": "nodejs", "stream": "18"}
+      {
+        "name": "nodejs",
+        "stream": "18"
+      }
     ],
     "packages": [
       {

@@ -1,6 +1,9 @@
 {
   "name": "rhsm",
   "blueprint": {
+    "name": "rhsm",
+    "description": "Simple blueprint with subscription manager options.",
+    "version": "1.0",
     "customizations": {
       "rhsm": {
         "config": {

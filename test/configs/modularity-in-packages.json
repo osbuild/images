@@ -1,6 +1,9 @@
 {
   "name": "modularity-in-packages",
   "blueprint": {
+    "name": "modularity-in-packages",
+    "description": "Simple blueprint that enables and installs modules using the shorthand syntax under the 'packages' option.",
+    "version": "1.0",
     "packages": [
       {
         "name": "@nodejs:18"

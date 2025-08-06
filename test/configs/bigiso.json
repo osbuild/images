@@ -1,6 +1,9 @@
 {
   "name": "bigiso",
   "blueprint": {
+    "name": "bigiso",
+    "description": "ISO build with a large payload",
+    "version": "1.0",
     "packages": [
       {
         "name": "httpd",

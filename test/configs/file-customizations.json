@@ -1,6 +1,9 @@
 {
   "name": "file-customizations",
   "blueprint": {
+    "name": "file-customizations",
+    "description": "Simple blueprint with directory and file customizations.",
+    "version": "1.0",
     "customizations": {
       "directories": [
         {

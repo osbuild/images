@@ -1,5 +1,10 @@
 {
   "name": "ostree",
+  "blueprint": {
+    "name": "ostree",
+    "description": "Empty blueprint, with ostree options to set a custom ostree ref.",
+    "version": "1.0"
+  },
   "options": {
     "ostree": {
       "ref": "osbuild/images/ostree/test"

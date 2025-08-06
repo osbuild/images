@@ -1,6 +1,9 @@
 {
   "name": "import-rpm-gpg-keys-from-tree-rhel",
   "blueprint": {
+    "name": "import-rpm-gpg-keys-from-tree-fedora",
+    "description": "Simple blueprint with RPM GPG key import customizations (RHEL variant).",
+    "version": "1.0",
     "customizations": {
       "rpm": {
         "import_keys": {

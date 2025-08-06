@@ -1,6 +1,9 @@
 {
   "name": "unattended-iso",
   "blueprint": {
+    "name": "unattended-iso",
+    "description": "Configures any Anaconda-based ISO to install the system with no user interaction.",
+    "version": "1.0",
     "customizations": {
       "user": [
         {

@@ -1,6 +1,9 @@
 {
   "name": "disable-lm_sensors",
   "blueprint": {
+    "name": "disable-lm-sensors",
+    "description": "The lm-sensors service fails to start on RHEL 8.4 EC2 SAP (RHEL-14096). We use this config to disable the service so it doesn't fail our boot tests.",
+    "version": "1.0",
     "customizations": {
       "services": {
         "disabled": [

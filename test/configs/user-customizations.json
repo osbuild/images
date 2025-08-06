@@ -1,6 +1,9 @@
 {
   "name": "user-customizations",
   "blueprint": {
+    "name": "user-customizations",
+    "description": "Simple blueprint with a user customization.",
+    "version": "1.0",
     "customizations": {
       "user": [
         {

@@ -1,6 +1,9 @@
 {
   "name": "firewall",
   "blueprint": {
+    "name": "firewall",
+    "description": "Simple blueprint with firewall customizations.",
+    "version": "1.0",
     "customizations": {
       "firewall": {
         "ports": [

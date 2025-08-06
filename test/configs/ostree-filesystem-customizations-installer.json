@@ -6,6 +6,9 @@
     }
   },
   "blueprint": {
+    "name": "ostree-filesystem-customizations-installer",
+    "description": "For edge-simplified-installer, with user and filesystem customizations.",
+    "version": "1.0",
     "customizations": {
       "user": [
         {
