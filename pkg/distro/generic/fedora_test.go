@@ -717,7 +717,7 @@ func TestFedoraDistro_CustomFileSystemManifestError(t *testing.T) {
 				} else if imgTypeName == "workstation-live-installer" {
 					assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
 				} else {
-					assert.EqualError(t, err, "The following errors occurred while setting up custom mountpoints:\npath \"/etc\" is not allowed")
+					assert.EqualError(t, err, "The following custom mountpoints are not supported [\"/etc\"]")
 				}
 			}
 		}
@@ -861,7 +861,7 @@ func TestFedoraDistro_DirtyMountpointsNotAllowed(t *testing.T) {
 				} else if imgTypeName == "workstation-live-installer" {
 					assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
 				} else {
-					assert.EqualError(t, err, "The following errors occurred while setting up custom mountpoints:\npath \"//\" must be canonical\npath \"/var//\" must be canonical\npath \"/var//log/audit/\" must be canonical")
+					assert.EqualError(t, err, "The following custom mountpoints are not supported [\"//\" \"/var//\" \"/var//log/audit/\"]")
 				}
 			}
 		}

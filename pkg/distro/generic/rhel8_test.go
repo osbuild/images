@@ -675,7 +675,7 @@ func TestRH8_Distro_CustomFileSystemManifestError(t *testing.T) {
 			} else if unsupported[imgTypeName] {
 				assert.Error(t, err)
 			} else {
-				assert.EqualError(t, err, "The following errors occurred while setting up custom mountpoints:\npath \"/etc\" is not allowed")
+				assert.EqualError(t, err, "The following custom mountpoints are not supported [\"/etc\"]")
 			}
 		}
 	}
@@ -832,7 +832,7 @@ func TestRH8_Distro_DirtyMountpointsNotAllowed(t *testing.T) {
 			if unsupported[imgTypeName] {
 				assert.Error(t, err)
 			} else {
-				assert.EqualError(t, err, "The following errors occurred while setting up custom mountpoints:\npath \"//\" must be canonical\npath \"/var//\" must be canonical\npath \"/var//log/audit/\" must be canonical")
+				assert.EqualError(t, err, "The following custom mountpoints are not supported [\"//\" \"/var//\" \"/var//log/audit/\"]")
 			}
 		}
 	}

@@ -298,7 +298,7 @@ func TestRhel7Distro_CustomFileSystemManifestError(t *testing.T) {
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
-			assert.EqualError(t, err, "The following errors occurred while setting up custom mountpoints:\npath \"/etc\" is not allowed")
+			assert.EqualError(t, err, "The following custom mountpoints are not supported [\"/etc\"]")
 		}
 	}
 }
@@ -410,7 +410,7 @@ func TestRhel7Distro_DirtyMountpointsNotAllowed(t *testing.T) {
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
-			assert.EqualError(t, err, "The following errors occurred while setting up custom mountpoints:\npath \"//\" must be canonical\npath \"/var//\" must be canonical\npath \"/var//log/audit/\" must be canonical")
+			assert.EqualError(t, err, "The following custom mountpoints are not supported [\"//\" \"/var//\" \"/var//log/audit/\"]")
 		}
 	}
 }
