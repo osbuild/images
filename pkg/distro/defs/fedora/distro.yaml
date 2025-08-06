@@ -604,7 +604,7 @@ image_types:
         image_format: "vagrant_virtualbox"
 
   "server-qcow2": &server_qcow2
-    name_aliases: ["qcow2"]
+    name_aliases: ["qcow2", "guest-image"]
     filename: "disk.qcow2"
     mime_type: "application/x-qemu-disk"
     environment: *kvm_env
@@ -650,7 +650,7 @@ image_types:
 
   "server-ami":
     <<: *server_qcow2
-    name_aliases: ["ami"]
+    name_aliases: ["ami", "aws"]
     filename: "image.raw"
     mime_type: "application/octet-stream"
     payload_pipelines: ["os", "image"]
@@ -684,7 +684,7 @@ image_types:
 
   "server-vhd":
     <<: *server_qcow2
-    name_aliases: ["vhd"]
+    name_aliases: ["vhd", "azure"]
     filename: "disk.vhd"
     mime_type: "application/x-vhd"
     payload_pipelines: ["os", "image", "vpc"]
@@ -708,7 +708,7 @@ image_types:
             - "WALinuxAgent"
 
   "server-vmdk": &server_vmdk
-    name_aliases: ["vmdk"]
+    name_aliases: ["vmdk", "vsphere"]
     filename: "disk.vmdk"
     mime_type: "application/x-vmdk"
     bootable: true
@@ -761,7 +761,7 @@ image_types:
 
   "server-ova":
     <<: *server_vmdk
-    name_aliases: ["ova"]
+    name_aliases: ["ova", "vsphere-ova"]
     filename: "image.ova"
     mime_type: "application/ovf"
     payload_pipelines: ["os", "image", "vmdk", "ovf", "archive"]
