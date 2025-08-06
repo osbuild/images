@@ -18,9 +18,9 @@ import (
 
 	"github.com/gobwas/glob"
 
+	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/internal/buildconfig"
 	"github.com/osbuild/images/internal/cmdutil"
-	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distrofactory"

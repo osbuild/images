@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/testregistry"
 	"github.com/osbuild/images/pkg/arch"
-	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 

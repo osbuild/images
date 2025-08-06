@@ -10,8 +10,8 @@ import (
 
 	"github.com/sirupsen/logrus"
 
+	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/pkg/bib/blueprintload"
-	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/distro"
 )
 

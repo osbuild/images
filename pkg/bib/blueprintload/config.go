@@ -11,10 +11,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/sirupsen/logrus"
 
-	// XXX: eventually there will be only be one importable blueprint, i.e.
-	// see https://github.com/osbuild/blueprint/issues/3
-	externalBlueprint "github.com/osbuild/blueprint/pkg/blueprint"
-	imagesBlueprint "github.com/osbuild/images/pkg/blueprint"
+	"github.com/osbuild/blueprint/pkg/blueprint"
 )
 
 // legacyBuildConfig is the json based configuration that was used in
@@ -28,7 +25,7 @@ type legacyBuildConfig struct {
 // configRootDir is only overriden in tests
 var configRootDir = "/"
 
-func decodeJsonBuildConfig(r io.Reader, what string) (*externalBlueprint.Blueprint, error) {
+func decodeJsonBuildConfig(r io.Reader, what string) (*blueprint.Blueprint, error) {
 	content, err := io.ReadAll(r)
 	if err != nil && err != io.EOF {
 		return nil, fmt.Errorf("cannot read %q: %w", what, err)
@@ -46,7 +43,7 @@ func decodeJsonBuildConfig(r io.Reader, what string) (*externalBlueprint.Bluepri
 	dec := json.NewDecoder(bytes.NewBuffer(content))
 	dec.DisallowUnknownFields()
 
-	var conf externalBlueprint.Blueprint
+	var conf blueprint.Blueprint
 	if err := dec.Decode(&conf); err != nil {
 		return nil, fmt.Errorf("cannot decode %q: %w", what, err)
 	}
@@ -56,10 +53,10 @@ func decodeJsonBuildConfig(r io.Reader, what string) (*externalBlueprint.Bluepri
 	return &conf, nil
 }
 
-func decodeTomlBuildConfig(r io.Reader, what string) (*externalBlueprint.Blueprint, error) {
+func decodeTomlBuildConfig(r io.Reader, what string) (*blueprint.Blueprint, error) {
 	dec := toml.NewDecoder(r)
 
-	var conf externalBlueprint.Blueprint
+	var conf blueprint.Blueprint
 	metadata, err := dec.Decode(&conf)
 	if err != nil {
 		return nil, fmt.Errorf("cannot decode %q: %w", what, err)
@@ -74,7 +71,7 @@ func decodeTomlBuildConfig(r io.Reader, what string) (*externalBlueprint.Bluepri
 
 var osStdin = os.Stdin
 
-func loadConfig(path string) (*externalBlueprint.Blueprint, error) {
+func loadConfig(path string) (*blueprint.Blueprint, error) {
 	var fp *os.File
 	var err error
 
@@ -102,17 +99,11 @@ func loadConfig(path string) (*externalBlueprint.Blueprint, error) {
 // Load loads the blueprint from the given path, it auto
 // detects if the blueprint is in json/toml based on the
 // filename
-func Load(path string) (*imagesBlueprint.Blueprint, error) {
-	externalBp, err := loadConfig(path)
-	if err != nil {
-		return nil, err
-	}
-
-	bp := externalBlueprint.Convert(*externalBp)
-	return &bp, nil
+func Load(path string) (*blueprint.Blueprint, error) {
+	return loadConfig(path)
 }
 
-func readWithFallback(userConfig string) (*externalBlueprint.Blueprint, error) {
+func readWithFallback(userConfig string) (*blueprint.Blueprint, error) {
 	// user asked for an explicit config
 	if userConfig != "" {
 		return loadConfig(userConfig)
@@ -130,7 +121,7 @@ func readWithFallback(userConfig string) (*externalBlueprint.Blueprint, error) {
 		}
 	}
 	if foundConfig == "" {
-		return &externalBlueprint.Blueprint{}, nil
+		return &blueprint.Blueprint{}, nil
 	}
 
 	return loadConfig(foundConfig)
@@ -138,11 +129,6 @@ func readWithFallback(userConfig string) (*externalBlueprint.Blueprint, error) {
 
 // LoadWithFallback will load the userConfig path if given or if
 // unset fallback to try the default configurations.
-func LoadWithFallback(userConfig string) (*imagesBlueprint.Blueprint, error) {
-	externalBp, err := readWithFallback(userConfig)
-	if err != nil {
-		return nil, err
-	}
-	internalBp := externalBlueprint.Convert(*externalBp)
-	return &internalBp, nil
+func LoadWithFallback(userConfig string) (*blueprint.Blueprint, error) {
+	return readWithFallback(userConfig)
 }

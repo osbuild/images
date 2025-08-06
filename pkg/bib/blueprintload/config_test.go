@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/pkg/bib/blueprintload"
-	"github.com/osbuild/images/pkg/blueprint"
 )
 
 var expectedBuildConfig = &blueprint.Blueprint{
