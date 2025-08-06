@@ -146,7 +146,7 @@
         },
         {
           "path": "/etc/custom_file.txt",
-          "data": "image builder is the best",
+          "data": "image builder is the bestt",
           "mode": "0644",
           "user": "root",
           "group": "root"
