@@ -17,6 +17,9 @@ type Pipeline interface {
 	// Name of the pipeline.
 	Name() string
 
+	// Role of the pipeline (build, payload)
+	Role() PipelineRole
+
 	// Checkpoint this pipeline when osbuild is called.
 	Checkpoint()
 
@@ -79,6 +82,14 @@ type ExportingPipeline interface {
 	Export() *artifact.Artifact
 }
 
+type PipelineRole string
+
+const (
+	PipelineRoleUnset   PipelineRole = ""
+	PipelineRoleBuild   PipelineRole = "build"
+	PipelineRolePayload PipelineRole = "payload"
+)
+
 // A Base represents the core functionality shared between each of the pipeline
 // implementations, and the Base struct must be embedded in each of them.
 type Base struct {
@@ -87,6 +98,7 @@ type Base struct {
 	build      Build
 	checkpoint bool
 	export     bool
+	role       PipelineRole
 }
 
 // Name returns the name of the pipeline. The name must be unique for a given manifest.
@@ -94,6 +106,10 @@ type Base struct {
 // or for exporting them.
 func (p Base) Name() string {
 	return p.name
+}
+
+func (p Base) Role() PipelineRole {
+	return p.role
 }
 
 func (p *Base) Checkpoint() {
@@ -168,6 +184,8 @@ func NewBase(name string, build Build) Base {
 	p := Base{
 		name:  name,
 		build: build,
+		// default to payload pipelines as most are
+		role: PipelineRolePayload,
 	}
 	return p
 }
