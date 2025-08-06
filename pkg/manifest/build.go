@@ -96,7 +96,11 @@ func NewBuild(m *Manifest, runner runner.Runner, repos []rpmmd.RepoConfig, opts 
 		name = opts.PipelineName
 	}
 	pipeline := &BuildrootFromPackages{
-		Base:               NewBase(name, opts.BootstrapPipeline),
+		Base: Base{
+			name:  name,
+			build: opts.BootstrapPipeline,
+			role:  PipelineRoleBuild,
+		},
 		runner:             runner,
 		dependents:         make([]Pipeline, 0),
 		repos:              filterRepos(repos, name),
@@ -229,7 +233,11 @@ func NewBuildFromContainer(m *Manifest, runner runner.Runner, containerSources [
 		name = opts.PipelineName
 	}
 	pipeline := &BuildrootFromContainer{
-		Base:       NewBase(name, opts.BootstrapPipeline),
+		Base: Base{
+			name:  name,
+			build: opts.BootstrapPipeline,
+			role:  PipelineRoleBuild,
+		},
 		runner:     runner,
 		dependents: make([]Pipeline, 0),
 		containers: containerSources,
@@ -241,6 +249,7 @@ func NewBuildFromContainer(m *Manifest, runner runner.Runner, containerSources [
 		copyFilesFrom: opts.CopyFilesFrom,
 		ensureDirs:    opts.EnsureDirs,
 	}
+
 	m.addPipeline(pipeline)
 	return pipeline
 }
