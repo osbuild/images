@@ -135,7 +135,7 @@ func New(reporegistry *reporegistry.RepoRegistry, opts *Options) (*Generator, er
 
 // Generate will generate a new manifest for the given distro/imageType/arch
 // combination.
-func (mg *Generator) Generate(bp *blueprint.Blueprint, dist distro.Distro, imgType distro.ImageType, a distro.Arch, imgOpts *distro.ImageOptions) (err error) {
+func (mg *Generator) Generate(bp *blueprint.Blueprint, dist distro.Distro, imgType distro.ImageType, a distro.Arch, imgOpts *distro.ImageOptions) (exports []string, err error) {
 	if imgOpts == nil {
 		imgOpts = &distro.ImageOptions{}
 	}
@@ -147,7 +147,7 @@ func (mg *Generator) Generate(bp *blueprint.Blueprint, dist distro.Distro, imgTy
 	} else {
 		repos, err = mg.reporegistry.ReposByImageTypeName(dist.Name(), a.Name(), imgType.Name())
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 	// To support "user" a.k.a. "3rd party" repositories, these
@@ -156,34 +156,34 @@ func (mg *Generator) Generate(bp *blueprint.Blueprint, dist distro.Distro, imgTy
 	// for the given image type, see e.g. distro/rhel/imagetype.go:Manifest()
 	preManifest, warnings, err := imgType.Manifest(bp, *imgOpts, repos, mg.customSeed)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if len(warnings) > 0 {
 		warn := strings.Join(warnings, "\n")
 		if mg.warningsOutput != nil {
 			fmt.Fprint(mg.warningsOutput, warn)
 		} else {
-			return fmt.Errorf("Warnings during manifest creation:\n%v", warn)
+			return nil, fmt.Errorf("Warnings during manifest creation:\n%v", warn)
 		}
 	}
 	depsolved, err := mg.depsolver(mg.cacheDir, mg.depsolveWarningsOutput, preManifest.GetPackageSetChains(), dist, a.Name())
 	if err != nil {
-		return err
+		return nil, err
 	}
 	containerSpecs, err := mg.containerResolver(preManifest.GetContainerSourceSpecs(), a.Name())
 	if err != nil {
-		return err
+		return nil, err
 	}
 	commitSpecs, err := mg.commitResolver(preManifest.GetOSTreeSourceSpecs())
 	if err != nil {
-		return err
+		return nil, err
 	}
 	opts := &manifest.SerializeOptions{
 		RpmDownloader: mg.rpmDownloader,
 	}
 	mf, err := preManifest.Serialize(depsolved, containerSpecs, commitSpecs, opts)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	fmt.Fprintf(mg.out, "%s\n", mf)
 
@@ -206,15 +206,15 @@ func (mg *Generator) Generate(bp *blueprint.Blueprint, dist distro.Distro, imgTy
 			var buf bytes.Buffer
 			enc := json.NewEncoder(&buf)
 			if err := enc.Encode(depsolvedPipeline.SBOM.Document); err != nil {
-				return err
+				return nil, err
 			}
 			if err := mg.sbomWriter(sbomDocOutputFilename, &buf, depsolvedPipeline.SBOM.DocType); err != nil {
-				return err
+				return nil, err
 			}
 		}
 	}
 
-	return nil
+	return preManifest.GetExports(), nil
 }
 
 func xdgCacheHome() (string, error) {
