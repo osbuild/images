@@ -214,7 +214,7 @@ func (mg *Generator) Generate(bp *blueprint.Blueprint, dist distro.Distro, imgTy
 		}
 	}
 
-	return preManifest.GetExports(), nil
+	return preManifest.Exports(), nil
 }
 
 func xdgCacheHome() (string, error) {

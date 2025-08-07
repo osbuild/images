@@ -224,7 +224,7 @@ func (m Manifest) GetCheckpoints() []string {
 	return checkpoints
 }
 
-func (m Manifest) GetExports() []string {
+func (m Manifest) Exports() []string {
 	exports := []string{}
 	for _, p := range m.pipelines {
 		if p.getExport() {
