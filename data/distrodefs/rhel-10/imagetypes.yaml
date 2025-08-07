@@ -739,7 +739,6 @@ image_types:
     image_func: "disk"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "image", "qcow2"]
-    exports: ["qcow2"]
     required_partition_sizes: *default_required_dir_sizes
     platforms:
       - <<: *x86_64_bios_platform
@@ -845,7 +844,6 @@ image_types:
     image_func: "disk"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "image", "vagrant", "archive"]
-    exports: ["archive"]
     required_partition_sizes: *default_required_dir_sizes
     platforms:
       - <<: *x86_64_bios_platform
@@ -888,7 +886,6 @@ image_types:
     mime_type: "application/x-vhd"
     default_size: 4_294_967_296  # 4 * datasizes.GibiByte
     payload_pipelines: ["os", "image", "vpc"]
-    exports: ["vpc"]
     # note that unlike fedora no "environment.Azure" is used here for
     # unknown reasons
     platforms:
@@ -1009,7 +1006,6 @@ image_types:
   "azure": &azure
     <<: *vhd
     payload_pipelines: ["os", "image", "vpc", "xz"]
-    exports: ["xz"]
     compression: "xz"
     filename: "disk.vhd.xz"
     partition_table:
@@ -1138,7 +1134,6 @@ image_types:
     image_func: "tar"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "archive"]
-    exports: ["archive"]
     package_sets:
       os:
         - include:
@@ -1160,7 +1155,6 @@ image_types:
     image_func: "disk"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "image", "vmdk"]
-    exports: ["vmdk"]
     required_partition_sizes: *default_required_dir_sizes
     platforms:
       - <<: *x86_64_bios_platform
@@ -1189,7 +1183,6 @@ image_types:
     filename: "image.ova"
     mime_type: "application/ovf"
     payload_pipelines: ["os", "image", "vmdk", "ovf", "archive"]
-    exports: ["archive"]
     platforms:
       - <<: *x86_64_bios_platform
         image_format: "ova"
@@ -1200,7 +1193,6 @@ image_types:
     image_func: "disk"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "image"]
-    exports: ["image"]
     bootable: true
     default_size: 10_737_418_240  # 10 * datasizes.GibiByte
     required_partition_sizes: *default_required_dir_sizes
@@ -1377,7 +1369,6 @@ image_types:
   ec2: &ec2
     <<: *ami
     payload_pipelines: ["os", "image", "xz"]
-    exports: ["xz"]
     filename: "image.raw.xz"
     compression: "xz"
 
@@ -1434,7 +1425,6 @@ image_types:
     image_func: "tar"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "archive", "xz"]
-    exports: ["xz"]
     compression: "xz"
     platforms:
       - arch: "x86_64"
@@ -1571,7 +1561,6 @@ image_types:
       - "os"
       - "bootiso-tree"
       - "bootiso"
-    exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
     image_config:
       iso_rootfs_type: "squashfs"
@@ -1730,7 +1719,6 @@ image_types:
     image_func: "disk"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "image", "archive"]
-    exports: ["archive"]
     bootable: true
     default_size: 21_474_836_480  # 20 * datasizes.GibiByte
     required_partition_sizes: *default_required_dir_sizes
@@ -1903,7 +1891,6 @@ image_types:
     filename: "disk.vhd.xz"
     mime_type: "application/xz"
     payload_pipelines: ["os", "image", "vpc", "xz"]
-    exports: ["xz"]
     compression: "xz"
     default_size: 34_359_738_368  # 32 * datasizes.GibiByte
     platforms:

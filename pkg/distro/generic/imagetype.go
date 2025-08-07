@@ -133,13 +133,6 @@ func (t *imageType) PayloadPackageSets() []string {
 	return []string{blueprintPkgsKey}
 }
 
-func (t *imageType) Exports() []string {
-	if len(t.ImageTypeYAML.Exports) > 0 {
-		return t.ImageTypeYAML.Exports
-	}
-	return []string{"assembler"}
-}
-
 func (t *imageType) BootMode() platform.BootMode {
 	if t.platform.GetUEFIVendor() != "" && t.platform.GetBIOSPlatform() != "" {
 		return platform.BOOT_HYBRID
