@@ -103,8 +103,9 @@ def list_images(distros=None, arches=None, images=None):
     images_arg = "*"
     if images:
         images_arg = ",".join(images)
+    env = {"GOPROXY": "https://proxy.golang.org,direct"}
     out, _ = runcmd(["go", "run", "./cmd/list-images", "--json",
-                     "--distros", distros_arg, "--arches", arches_arg, "--types", images_arg])
+                     "--distros", distros_arg, "--arches", arches_arg, "--types", images_arg], extra_env=env)
     return json.loads(out)
 
 
@@ -251,6 +252,7 @@ def gen_manifests(outputdir, config_map=None, distros=None, arches=None, images=
     if skip_no_config:
         cmd.append("--skip-noconfig")
     env = rng_seed_env()
+    env["GOPROXY"] = "https://proxy.golang.org,direct"
     print("⌨️" + " ".join(cmd) + " ENV: " + str(env))
     _, stderr = runcmd(cmd, extra_env=env)
     return stderr

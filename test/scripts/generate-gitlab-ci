@@ -24,6 +24,7 @@ variables:
   # Set the parent pipeline ID as a global variable so that the child pipeline
   # jobs can use it to retrieve artifacts.
   PARENT_PIPELINE_ID: $CI_PIPELINE_ID
+  GOPROXY: "https://proxy.golang.org,direct"
 
 init:
   stage: init
@@ -129,6 +130,7 @@ MANIFEST_GEN_TEMPLATE = """
   script:
     - sudo ./test/scripts/setup-osbuild-repo
     - sudo ./test/scripts/install-dependencies
+    - echo "GOPROXY=$GOPROXY"
     - go run ./cmd/gen-manifests --arches {arch} --distros {distro} --workers 10 --metadata=false --output ./manifests
     - for manifest in ./manifests/*; do
         if osbuild --inspect $manifest > output; then
