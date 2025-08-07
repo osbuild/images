@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/osbuild/images/pkg/blueprint"
+	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/pkg/disk"
+	"github.com/osbuild/images/pkg/disk/partition"
 	"github.com/osbuild/images/pkg/pathpolicy"
 	"github.com/osbuild/images/pkg/platform"
 )
@@ -144,9 +145,9 @@ func (t *BootcImageType) genPartitionTableFsCust(fsCust []blueprint.FilesystemCu
 		return nil, fmt.Errorf("pipelines: no partition tables defined for %s", t.arch.Name())
 	}
 
-	partitioningMode := disk.RawPartitioningMode
+	partitioningMode := partition.RawPartitioningMode
 	if t.arch.distro.defaultFs == "btrfs" {
-		partitioningMode = disk.BtrfsPartitioningMode
+		partitioningMode = partition.BtrfsPartitioningMode
 	}
 	if err := checkFilesystemCustomizations(fsCust, partitioningMode); err != nil {
 		return nil, err
@@ -220,10 +221,10 @@ func calcRequiredDirectorySizes(distCust *blueprint.DiskCustomization, rootfsMin
 	}, nil
 }
 
-func checkFilesystemCustomizations(fsCustomizations []blueprint.FilesystemCustomization, ptmode disk.PartitioningMode) error {
+func checkFilesystemCustomizations(fsCustomizations []blueprint.FilesystemCustomization, ptmode partition.PartitioningMode) error {
 	var policy *pathpolicy.PathPolicies
 	switch ptmode {
-	case disk.BtrfsPartitioningMode:
+	case partition.BtrfsPartitioningMode:
 		// btrfs subvolumes are not supported at build time yet, so we only
 		// allow / and /boot to be customized when building a btrfs disk (the
 		// minimal policy)

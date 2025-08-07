@@ -3,9 +3,9 @@ package bootc
 import (
 	"math/rand"
 
+	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/bib/osinfo"
-	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/disk"
 )
 

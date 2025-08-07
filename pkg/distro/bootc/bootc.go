@@ -6,11 +6,11 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
 	bibcontainer "github.com/osbuild/images/pkg/bib/container"
 	"github.com/osbuild/images/pkg/bib/osinfo"
-	"github.com/osbuild/images/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/disk"
