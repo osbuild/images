@@ -245,6 +245,10 @@ func (t *BootcImageType) Exports() []string {
 }
 
 func (t *BootcImageType) Manifest(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, seedp *int64) (*manifest.Manifest, []string, error) {
+	if t.arch.distro.imgref == "" {
+		return nil, nil, fmt.Errorf("internal error: no base image defined")
+	}
+
 	containerSource := container.SourceSpec{
 		Source: t.arch.distro.imgref,
 		Name:   t.arch.distro.imgref,

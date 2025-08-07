@@ -25,6 +25,7 @@ func NewTestBootcImageType() *BootcImageType {
 				ID: "bootc-test",
 			},
 		},
+		imgref:    "quay.io/example/example:ref",
 		defaultFs: "xfs",
 	}
 	a := &BootcArch{distro: d, arch: arch.ARCH_X86_64}
