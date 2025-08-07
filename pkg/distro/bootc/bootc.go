@@ -140,6 +140,12 @@ func (d *BootcDistro) addArches(arches ...*BootcArch) {
 	}
 }
 
+func NewBootcArch(arch arch.Arch) *BootcArch {
+	return &BootcArch{
+		arch: arch,
+	}
+}
+
 func (a *BootcArch) Name() string {
 	return a.arch.String()
 }
