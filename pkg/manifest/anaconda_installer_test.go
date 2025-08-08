@@ -44,47 +44,21 @@ func TestAnacondaInstallerModules(t *testing.T) {
 
 	testCases := map[string]testCase{
 		"empty-args": {
-			expected: []string{
-				anaconda.ModulePayloads,
-				anaconda.ModuleNetwork,
-				anaconda.ModuleStorage,
-				anaconda.ModuleRuntime,
-			},
-		},
-		"no-op": {
-			enable: []string{
-				anaconda.ModulePayloads,
-				anaconda.ModuleNetwork,
-				anaconda.ModuleStorage,
-			},
-			expected: []string{
-				anaconda.ModulePayloads,
-				anaconda.ModuleNetwork,
-				anaconda.ModuleStorage,
-				anaconda.ModuleRuntime,
-			},
+			expected: []string{},
 		},
 		"enable-users": {
 			enable: []string{
 				anaconda.ModuleUsers,
 			},
 			expected: []string{
-				anaconda.ModulePayloads,
-				anaconda.ModuleNetwork,
-				anaconda.ModuleStorage,
 				anaconda.ModuleUsers,
-				anaconda.ModuleRuntime,
 			},
 		},
 		"disable-storage": {
 			disable: []string{
 				anaconda.ModuleStorage,
 			},
-			expected: []string{
-				anaconda.ModulePayloads,
-				anaconda.ModuleNetwork,
-				anaconda.ModuleRuntime,
-			},
+			expected: []string{},
 		},
 		"enable-users-disable-storage": {
 			enable: []string{
@@ -94,10 +68,7 @@ func TestAnacondaInstallerModules(t *testing.T) {
 				anaconda.ModuleStorage,
 			},
 			expected: []string{
-				anaconda.ModulePayloads,
-				anaconda.ModuleNetwork,
 				anaconda.ModuleUsers,
-				anaconda.ModuleRuntime,
 			},
 		},
 	}

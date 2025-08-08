@@ -18,63 +18,33 @@ func TestAnacondaStageOptions(t *testing.T) {
 
 	testCases := map[string]testCase{
 		"empty-args": {
-			expected: []string{
-				anaconda.ModulePayloads,
-				anaconda.ModuleNetwork,
-				anaconda.ModuleRuntime,
-				anaconda.ModuleStorage,
-			},
+			expected: []string{},
 		},
-		"no-op": {
-			enable: []string{
-				anaconda.ModulePayloads,
-				anaconda.ModuleNetwork,
-				anaconda.ModuleStorage,
-			},
-			expected: []string{
-				anaconda.ModulePayloads,
-				anaconda.ModuleNetwork,
-				anaconda.ModuleStorage,
-				anaconda.ModuleRuntime,
-			},
-		},
-		"add-users": {
+		"enabled-module": {
 			enable: []string{
 				anaconda.ModuleUsers,
 			},
 			expected: []string{
-				anaconda.ModulePayloads,
-				anaconda.ModuleNetwork,
-				anaconda.ModuleRuntime,
-				anaconda.ModuleStorage,
 				anaconda.ModuleUsers,
 			},
 		},
-		"add-multi": {
+		"multi-enabled-module": {
 			enable: []string{
 				anaconda.ModuleSubscription,
 				anaconda.ModuleTimezone,
 				anaconda.ModuleUsers,
 			},
 			expected: []string{
-				anaconda.ModulePayloads,
-				anaconda.ModuleNetwork,
-				anaconda.ModuleStorage,
-				anaconda.ModuleRuntime,
 				anaconda.ModuleSubscription,
 				anaconda.ModuleTimezone,
 				anaconda.ModuleUsers,
 			},
 		},
-		"add-nonsense": {
+		"add-non-constant": {
 			enable: []string{
 				"org.osbuild.not.anaconda.module",
 			},
 			expected: []string{
-				anaconda.ModulePayloads,
-				anaconda.ModuleNetwork,
-				anaconda.ModuleRuntime,
-				anaconda.ModuleStorage,
 				"org.osbuild.not.anaconda.module",
 			},
 		},
@@ -82,31 +52,7 @@ func TestAnacondaStageOptions(t *testing.T) {
 			disable: []string{
 				anaconda.ModuleUsers,
 			},
-			expected: []string{
-				anaconda.ModulePayloads,
-				anaconda.ModuleNetwork,
-				anaconda.ModuleRuntime,
-				anaconda.ModuleStorage,
-			},
-		},
-		"disable-all": {
-			disable: []string{
-				anaconda.ModulePayloads,
-				anaconda.ModuleNetwork,
-				anaconda.ModuleRuntime,
-				anaconda.ModuleStorage,
-			},
-			expected: nil,
-		},
-		"disable-one": {
-			disable: []string{
-				anaconda.ModuleStorage,
-			},
-			expected: []string{
-				anaconda.ModulePayloads,
-				anaconda.ModuleNetwork,
-				anaconda.ModuleRuntime,
-			},
+			expected: []string{},
 		},
 		"enable-then-disable": {
 			enable: []string{
@@ -115,12 +61,7 @@ func TestAnacondaStageOptions(t *testing.T) {
 			disable: []string{
 				anaconda.ModuleServices,
 			},
-			expected: []string{
-				anaconda.ModuleStorage,
-				anaconda.ModulePayloads,
-				anaconda.ModuleNetwork,
-				anaconda.ModuleRuntime,
-			},
+			expected: []string{},
 		},
 		"enable-then-disable-nonsense": {
 			enable: []string{
@@ -129,12 +70,7 @@ func TestAnacondaStageOptions(t *testing.T) {
 			disable: []string{
 				"org.osbuild.not.anaconda.module.2",
 			},
-			expected: []string{
-				anaconda.ModuleStorage,
-				anaconda.ModulePayloads,
-				anaconda.ModuleNetwork,
-				anaconda.ModuleRuntime,
-			},
+			expected: []string{},
 		},
 		"enable-then-disable-multi": {
 			enable: []string{
@@ -147,12 +83,7 @@ func TestAnacondaStageOptions(t *testing.T) {
 				anaconda.ModuleTimezone,
 				anaconda.ModuleUsers,
 			},
-			expected: []string{
-				anaconda.ModuleStorage,
-				anaconda.ModulePayloads,
-				anaconda.ModuleNetwork,
-				anaconda.ModuleRuntime,
-			},
+			expected: []string{},
 		},
 	}
 
