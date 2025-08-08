@@ -4,9 +4,9 @@ import (
 	"github.com/osbuild/images/pkg/arch"
 )
 
-// PlatformConf is a platform configured from YAML inputs
+// Data is a platform configured from YAML inputs
 // that implements the "Platform" interface
-type PlatformConf struct {
+type Data struct {
 	Arch         arch.Arch   `yaml:"arch"`
 	ImageFormat  ImageFormat `yaml:"image_format"`
 	QCOW2Compat  string      `yaml:"qcow2_compat"`
@@ -24,45 +24,45 @@ type PlatformConf struct {
 	Bootloader Bootloader `yaml:"bootloader"`
 }
 
-// ensure PlatformConf implements the Platform interface
-var _ = Platform(&PlatformConf{})
+// ensure platform.Data implements the Platform interface
+var _ = Platform(&Data{})
 
-func (pc *PlatformConf) GetArch() arch.Arch {
+func (pc *Data) GetArch() arch.Arch {
 	return pc.Arch
 }
-func (pc *PlatformConf) GetImageFormat() ImageFormat {
+func (pc *Data) GetImageFormat() ImageFormat {
 	return pc.ImageFormat
 }
-func (pc *PlatformConf) GetQCOW2Compat() string {
+func (pc *Data) GetQCOW2Compat() string {
 	return pc.QCOW2Compat
 }
-func (pc *PlatformConf) GetBIOSPlatform() string {
+func (pc *Data) GetBIOSPlatform() string {
 	return pc.BIOSPlatform
 }
-func (pc *PlatformConf) GetUEFIVendor() string {
+func (pc *Data) GetUEFIVendor() string {
 	return pc.UEFIVendor
 }
-func (pc *PlatformConf) GetZiplSupport() bool {
+func (pc *Data) GetZiplSupport() bool {
 	return pc.ZiplSupport
 }
-func (pc *PlatformConf) GetPackages() []string {
+func (pc *Data) GetPackages() []string {
 	var merged []string
 	for _, pkgList := range pc.Packages {
 		merged = append(merged, pkgList...)
 	}
 	return merged
 }
-func (pc *PlatformConf) GetBuildPackages() []string {
+func (pc *Data) GetBuildPackages() []string {
 	var merged []string
 	for _, pkgList := range pc.BuildPackages {
 		merged = append(merged, pkgList...)
 	}
 	return merged
 }
-func (pc *PlatformConf) GetBootFiles() [][2]string {
+func (pc *Data) GetBootFiles() [][2]string {
 	return pc.BootFiles
 }
 
-func (pc *PlatformConf) GetBootloader() Bootloader {
+func (pc *Data) GetBootloader() Bootloader {
 	return pc.Bootloader
 }

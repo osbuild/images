@@ -16,7 +16,7 @@ func TestSimplifiedInstallerDracut(t *testing.T) {
 	commit := ostree.SourceSpec{}
 	ostreeDiskImage := image.NewOSTreeDiskImageFromCommit(commit)
 	ostreeDiskImage.PartitionTable = testdisk.MakeFakePartitionTable("/")
-	ostreeDiskImage.Platform = &platform.PlatformConf{Arch: arch.ARCH_X86_64}
+	ostreeDiskImage.Platform = &platform.Data{Arch: arch.ARCH_X86_64}
 	img := image.NewOSTreeSimplifiedInstaller(ostreeDiskImage, "")
 	img.Product = product
 	img.OSVersion = osversion

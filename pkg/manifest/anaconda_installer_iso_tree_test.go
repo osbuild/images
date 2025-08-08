@@ -36,7 +36,7 @@ func newTestAnacondaISOTree() *AnacondaInstallerISOTree {
 	runner := &runner.Linux{}
 	build := NewBuild(m, runner, nil, nil)
 
-	x86plat := &platform.PlatformConf{Arch: arch.ARCH_X86_64}
+	x86plat := &platform.Data{Arch: arch.ARCH_X86_64}
 
 	product := "test-iso"
 	osversion := "1"
