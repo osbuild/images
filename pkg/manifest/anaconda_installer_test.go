@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/customizations/anaconda"
 	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/manifest"
@@ -19,7 +20,7 @@ func newAnacondaInstaller() *manifest.AnacondaInstaller {
 	runner := &runner.Linux{}
 	build := manifest.NewBuild(m, runner, nil, nil)
 
-	x86plat := &platform.X86{}
+	x86plat := &platform.PlatformConf{Arch: arch.ARCH_X86_64}
 
 	product := ""
 	osversion := ""

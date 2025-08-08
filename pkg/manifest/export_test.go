@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/osbuild"
@@ -32,8 +33,9 @@ func NewTestOS() *OS {
 	build.Checkpoint()
 
 	// create an x86_64 platform with bios boot
-	platform := &platform.X86{
-		BIOS: true,
+	platform := &platform.PlatformConf{
+		Arch:         arch.ARCH_X86_64,
+		BIOSPlatform: "i386-pc",
 	}
 
 	os := NewOS(build, platform, repos)

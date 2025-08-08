@@ -10,6 +10,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/testdisk"
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/bootc"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
@@ -450,7 +451,8 @@ func TestHMACStageInclusion(t *testing.T) {
 	// We need the OS pipeline to run the serialization functions for the UKI,
 	// which means we need a Platform with the correct bootloader setting and a
 	// partition table with an ESP.
-	platform := &platform.X86{
+	platform := &platform.PlatformConf{
+		Arch:       arch.ARCH_X86_64,
 		Bootloader: platform.BOOTLOADER_UKI,
 	}
 	pt := testdisk.TestPartitionTables()["plain"]
@@ -566,7 +568,8 @@ func TestShimVersionLock(t *testing.T) {
 	repos := []rpmmd.RepoConfig{}
 	runner := &runner.CentOS{Version: 9}
 
-	platform := &platform.X86{
+	platform := &platform.PlatformConf{
+		Arch:       arch.ARCH_X86_64,
 		Bootloader: platform.BOOTLOADER_UKI,
 	}
 	pt := testdisk.TestPartitionTables()["plain"]

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/osbuild/images/internal/testdisk"
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/image"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/ostree"
@@ -15,7 +16,7 @@ func TestSimplifiedInstallerDracut(t *testing.T) {
 	commit := ostree.SourceSpec{}
 	ostreeDiskImage := image.NewOSTreeDiskImageFromCommit(commit)
 	ostreeDiskImage.PartitionTable = testdisk.MakeFakePartitionTable("/")
-	ostreeDiskImage.Platform = &platform.X86{}
+	ostreeDiskImage.Platform = &platform.PlatformConf{Arch: arch.ARCH_X86_64}
 	img := image.NewOSTreeSimplifiedInstaller(ostreeDiskImage, "")
 	img.Product = product
 	img.OSVersion = osversion

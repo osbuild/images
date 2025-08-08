@@ -3,6 +3,7 @@ package main
 import (
 	"math/rand"
 
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/artifact"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/disk/partition"
@@ -35,8 +36,9 @@ func (img *MyImage) InstantiateManifest(m *manifest.Manifest,
 	build.Checkpoint()
 
 	// create an x86_64 platform with bios boot
-	platform := &platform.X86{
-		BIOS: true,
+	platform := &platform.PlatformConf{
+		Arch:         arch.ARCH_X86_64,
+		BIOSPlatform: "i386-pc",
 	}
 
 	// TODO: add helper

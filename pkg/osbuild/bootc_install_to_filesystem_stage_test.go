@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
@@ -29,9 +30,9 @@ func TestBootcInstallToFilesystemStageNewHappy(t *testing.T) {
 	devices := makeOsbuildDevices("dev-for-/", "dev-for-/boot", "dev-for-/boot/efi")
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
 	inputs := makeFakeContainerInputs()
-	pf := &platform.X86{
-		BasePlatform: platform.BasePlatform{},
-		UEFIVendor:   "test",
+	pf := &platform.PlatformConf{
+		Arch:       arch.ARCH_X86_64,
+		UEFIVendor: "test",
 	}
 
 	expectedStage := &osbuild.Stage{
@@ -50,9 +51,9 @@ func TestBootcInstallToFilesystemStageNewEssentialMountsOnly(t *testing.T) {
 	devices := makeOsbuildDevices("dev-for-/", "dev-for-/boot/efi", "dev-for-/var/log")
 	mounts := makeOsbuildMounts("/", "/boot/efi", "/var/log")
 	inputs := makeFakeContainerInputs()
-	pf := &platform.X86{
-		BasePlatform: platform.BasePlatform{},
-		UEFIVendor:   "test",
+	pf := &platform.PlatformConf{
+		Arch:       arch.ARCH_X86_64,
+		UEFIVendor: "test",
 	}
 
 	expectedStage := &osbuild.Stage{
@@ -74,9 +75,9 @@ func TestBootcInstallToFilesystemStageNewNoContainers(t *testing.T) {
 	devices := makeOsbuildDevices("dev-for-/", "dev-for-/boot", "dev-for-/boot/efi")
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
 	inputs := osbuild.ContainerDeployInputs{}
-	pf := &platform.X86{
-		BasePlatform: platform.BasePlatform{},
-		UEFIVendor:   "test",
+	pf := &platform.PlatformConf{
+		Arch:       arch.ARCH_X86_64,
+		UEFIVendor: "test",
 	}
 
 	_, err := osbuild.NewBootcInstallToFilesystemStage(nil, inputs, devices, mounts, pf)
@@ -94,9 +95,9 @@ func TestBootcInstallToFilesystemStageNewTwoContainers(t *testing.T) {
 			},
 		},
 	}
-	pf := &platform.X86{
-		BasePlatform: platform.BasePlatform{},
-		UEFIVendor:   "test",
+	pf := &platform.PlatformConf{
+		Arch:       arch.ARCH_X86_64,
+		UEFIVendor: "test",
 	}
 
 	_, err := osbuild.NewBootcInstallToFilesystemStage(nil, inputs, devices, mounts, pf)
@@ -107,9 +108,9 @@ func TestBootcInstallToFilesystemStageMissingMounts(t *testing.T) {
 	devices := makeOsbuildDevices("dev-for-/")
 	mounts := makeOsbuildMounts("/")
 	inputs := makeFakeContainerInputs()
-	pf := &platform.X86{
-		BasePlatform: platform.BasePlatform{},
-		UEFIVendor:   "test",
+	pf := &platform.PlatformConf{
+		Arch:       arch.ARCH_X86_64,
+		UEFIVendor: "test",
 	}
 
 	stage, err := osbuild.NewBootcInstallToFilesystemStage(nil, inputs, devices, mounts, pf)
@@ -122,9 +123,9 @@ func TestBootcInstallToFilesystemStageJsonHappy(t *testing.T) {
 	devices := makeOsbuildDevices("disk", "dev-for-/", "dev-for-/boot", "dev-for-/boot/efi")
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
 	inputs := makeFakeContainerInputs()
-	pf := &platform.X86{
-		BasePlatform: platform.BasePlatform{},
-		UEFIVendor:   "test",
+	pf := &platform.PlatformConf{
+		Arch:       arch.ARCH_X86_64,
+		UEFIVendor: "test",
 	}
 
 	opts := &osbuild.BootcInstallToFilesystemOptions{

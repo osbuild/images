@@ -14,6 +14,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/kickstart"
 	"github.com/osbuild/images/pkg/datasizes"
@@ -36,7 +37,7 @@ func newTestAnacondaISOTree() *manifest.AnacondaInstallerISOTree {
 	runner := &runner.Linux{}
 	build := manifest.NewBuild(m, runner, nil, nil)
 
-	x86plat := &platform.X86{}
+	x86plat := &platform.PlatformConf{Arch: arch.ARCH_X86_64}
 
 	product := "test-iso"
 	osversion := "1"
