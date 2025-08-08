@@ -536,7 +536,7 @@ func TestContainerInstallerModules(t *testing.T) {
 				img.ISOLabel = isolabel
 
 				img.UseLegacyAnacondaConfig = legacy
-				img.AdditionalAnacondaModules = tc.enable
+				img.EnabledAnacondaModules = tc.enable
 				img.DisabledAnacondaModules = tc.disable
 
 				assert.NotNil(t, img)
@@ -567,7 +567,7 @@ func TestOSTreeInstallerModules(t *testing.T) {
 				}
 
 				img.UseLegacyAnacondaConfig = legacy
-				img.AdditionalAnacondaModules = tc.enable
+				img.EnabledAnacondaModules = tc.enable
 				img.DisabledAnacondaModules = tc.disable
 
 				assert.NotNil(t, img)
@@ -594,7 +594,7 @@ func TestTarInstallerModules(t *testing.T) {
 				img.ISOLabel = isolabel
 
 				img.UseLegacyAnacondaConfig = legacy
-				img.AdditionalAnacondaModules = tc.enable
+				img.EnabledAnacondaModules = tc.enable
 				img.DisabledAnacondaModules = tc.disable
 
 				assert.NotNil(t, img)

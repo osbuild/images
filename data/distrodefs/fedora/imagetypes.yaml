@@ -169,7 +169,7 @@
 
 
   installer_config: &default_installer_config
-    additional_anaconda_modules: &install_config_additional_anaconda_modules
+    enabled_anaconda_modules: &install_config_enabled_anaconda_modules
       - "org.fedoraproject.Anaconda.Modules.Timezone"
       - "org.fedoraproject.Anaconda.Modules.Localization"
       - "org.fedoraproject.Anaconda.Modules.Users"

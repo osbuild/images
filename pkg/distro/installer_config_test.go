@@ -48,13 +48,13 @@ func TestInstallerConfigInheritFrom(t *testing.T) {
 				AdditionalDrivers:       []string{"parent-drv"},
 			},
 			childConfig: &distro.InstallerConfig{
-				AdditionalDracutModules:   []string{"mod-child"},
-				AdditionalAnacondaModules: []string{"child-ana"},
+				AdditionalDracutModules: []string{"mod-child"},
+				EnabledAnacondaModules:  []string{"child-ana"},
 			},
 			expectedConfig: &distro.InstallerConfig{
-				AdditionalDracutModules:   []string{"mod-child"},
-				AdditionalDrivers:         []string{"parent-drv"},
-				AdditionalAnacondaModules: []string{"child-ana"},
+				AdditionalDracutModules: []string{"mod-child"},
+				AdditionalDrivers:       []string{"parent-drv"},
+				EnabledAnacondaModules:  []string{"child-ana"},
 			},
 		},
 	}
