@@ -110,7 +110,7 @@ func TestAnacondaInstallerModules(t *testing.T) {
 			for _, legacy := range []bool{true, false} {
 				installerPipeline := newAnacondaInstaller()
 				installerPipeline.UseLegacyAnacondaConfig = legacy
-				installerPipeline.AdditionalAnacondaModules = tc.enable
+				installerPipeline.EnabledAnacondaModules = tc.enable
 				installerPipeline.DisabledAnacondaModules = tc.disable
 				installerPipeline.serializeStart(Inputs{Depsolved: dnfjson.DepsolveResult{Packages: pkgs}})
 				pipeline := installerPipeline.serialize()
