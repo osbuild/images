@@ -9,21 +9,21 @@
   "centos-9": {
     "dependencies": {
       "osbuild": {
-        "commit": "fd6801e380a87fb0026c1c73af7e17614fa6efb8"
+        "commit": "e3236a8b34e86712463130ba8edc6a8707c7ed0d"
       }
     }
   },
   "centos-10": {
     "dependencies": {
       "osbuild": {
-        "commit": "fd6801e380a87fb0026c1c73af7e17614fa6efb8"
+        "commit": "e3236a8b34e86712463130ba8edc6a8707c7ed0d"
       }
     }
   },
   "fedora-41": {
     "dependencies": {
       "osbuild": {
-        "commit": "fd6801e380a87fb0026c1c73af7e17614fa6efb8"
+        "commit": "e3236a8b34e86712463130ba8edc6a8707c7ed0d"
       }
     },
     "repos": [
@@ -66,7 +66,7 @@
   "fedora-42": {
     "dependencies": {
       "osbuild": {
-        "commit": "fd6801e380a87fb0026c1c73af7e17614fa6efb8"
+        "commit": "e3236a8b34e86712463130ba8edc6a8707c7ed0d"
       }
     }
   }
