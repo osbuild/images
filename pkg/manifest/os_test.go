@@ -451,7 +451,7 @@ func TestHMACStageInclusion(t *testing.T) {
 	// We need the OS pipeline to run the serialization functions for the UKI,
 	// which means we need a Platform with the correct bootloader setting and a
 	// partition table with an ESP.
-	platform := &platform.PlatformConf{
+	platform := &platform.Data{
 		Arch:       arch.ARCH_X86_64,
 		Bootloader: platform.BOOTLOADER_UKI,
 	}
@@ -568,7 +568,7 @@ func TestShimVersionLock(t *testing.T) {
 	repos := []rpmmd.RepoConfig{}
 	runner := &runner.CentOS{Version: 9}
 
-	platform := &platform.PlatformConf{
+	platform := &platform.Data{
 		Arch:       arch.ARCH_X86_64,
 		Bootloader: platform.BOOTLOADER_UKI,
 	}

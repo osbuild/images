@@ -51,7 +51,7 @@ type bootcDiskImageTestOpts struct {
 }
 
 func makeFakePlatform(opts *bootcDiskImageTestOpts) platform.Platform {
-	platform := &platform.PlatformConf{
+	platform := &platform.Data{
 		Arch:        arch.ARCH_X86_64,
 		ImageFormat: opts.ImageFormat,
 	}

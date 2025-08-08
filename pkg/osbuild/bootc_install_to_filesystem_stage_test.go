@@ -30,7 +30,7 @@ func TestBootcInstallToFilesystemStageNewHappy(t *testing.T) {
 	devices := makeOsbuildDevices("dev-for-/", "dev-for-/boot", "dev-for-/boot/efi")
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
 	inputs := makeFakeContainerInputs()
-	pf := &platform.PlatformConf{
+	pf := &platform.Data{
 		Arch:       arch.ARCH_X86_64,
 		UEFIVendor: "test",
 	}
@@ -51,7 +51,7 @@ func TestBootcInstallToFilesystemStageNewEssentialMountsOnly(t *testing.T) {
 	devices := makeOsbuildDevices("dev-for-/", "dev-for-/boot/efi", "dev-for-/var/log")
 	mounts := makeOsbuildMounts("/", "/boot/efi", "/var/log")
 	inputs := makeFakeContainerInputs()
-	pf := &platform.PlatformConf{
+	pf := &platform.Data{
 		Arch:       arch.ARCH_X86_64,
 		UEFIVendor: "test",
 	}
@@ -75,7 +75,7 @@ func TestBootcInstallToFilesystemStageNewNoContainers(t *testing.T) {
 	devices := makeOsbuildDevices("dev-for-/", "dev-for-/boot", "dev-for-/boot/efi")
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
 	inputs := osbuild.ContainerDeployInputs{}
-	pf := &platform.PlatformConf{
+	pf := &platform.Data{
 		Arch:       arch.ARCH_X86_64,
 		UEFIVendor: "test",
 	}
@@ -95,7 +95,7 @@ func TestBootcInstallToFilesystemStageNewTwoContainers(t *testing.T) {
 			},
 		},
 	}
-	pf := &platform.PlatformConf{
+	pf := &platform.Data{
 		Arch:       arch.ARCH_X86_64,
 		UEFIVendor: "test",
 	}
@@ -108,7 +108,7 @@ func TestBootcInstallToFilesystemStageMissingMounts(t *testing.T) {
 	devices := makeOsbuildDevices("dev-for-/")
 	mounts := makeOsbuildMounts("/")
 	inputs := makeFakeContainerInputs()
-	pf := &platform.PlatformConf{
+	pf := &platform.Data{
 		Arch:       arch.ARCH_X86_64,
 		UEFIVendor: "test",
 	}
@@ -123,7 +123,7 @@ func TestBootcInstallToFilesystemStageJsonHappy(t *testing.T) {
 	devices := makeOsbuildDevices("disk", "dev-for-/", "dev-for-/boot", "dev-for-/boot/efi")
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
 	inputs := makeFakeContainerInputs()
-	pf := &platform.PlatformConf{
+	pf := &platform.Data{
 		Arch:       arch.ARCH_X86_64,
 		UEFIVendor: "test",
 	}
