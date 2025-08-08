@@ -10,6 +10,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/testdisk"
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/users"
@@ -53,9 +54,9 @@ func TestRawBootcImageSerialize(t *testing.T) {
 	mani := manifest.New()
 	runner := &runner.Linux{}
 	build := manifest.NewBuildFromContainer(&mani, runner, nil, nil)
-	pf := &platform.X86{
-		BasePlatform: platform.BasePlatform{},
-		UEFIVendor:   "test",
+	pf := &platform.PlatformConf{
+		Arch:       arch.ARCH_X86_64,
+		UEFIVendor: "test",
 	}
 
 	rawBootcPipeline := manifest.NewRawBootcImage(build, containers, pf)
@@ -81,9 +82,9 @@ func TestRawBootcImageSerializeMountsValidated(t *testing.T) {
 	mani := manifest.New()
 	runner := &runner.Linux{}
 	build := manifest.NewBuildFromContainer(&mani, runner, nil, nil)
-	pf := &platform.X86{
-		BasePlatform: platform.BasePlatform{},
-		UEFIVendor:   "test",
+	pf := &platform.PlatformConf{
+		Arch:       arch.ARCH_X86_64,
+		UEFIVendor: "test",
 	}
 
 	rawBootcPipeline := manifest.NewRawBootcImage(build, nil, pf)
@@ -107,9 +108,9 @@ func findMountIdx(mounts []osbuild.Mount, mntType string) int {
 func makeFakeRawBootcPipeline() *manifest.RawBootcImage {
 	mani := manifest.New()
 	runner := &runner.Linux{}
-	pf := &platform.X86{
-		BasePlatform: platform.BasePlatform{},
-		UEFIVendor:   "test",
+	pf := &platform.PlatformConf{
+		Arch:       arch.ARCH_X86_64,
+		UEFIVendor: "test",
 	}
 	build := manifest.NewBuildFromContainer(&mani, runner, nil, nil)
 	rawBootcPipeline := manifest.NewRawBootcImage(build, nil, pf)

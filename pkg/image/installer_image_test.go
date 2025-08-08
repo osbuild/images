@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/anaconda"
 	"github.com/osbuild/images/pkg/customizations/kickstart"
@@ -72,12 +73,12 @@ func mockOSTreeCommitSpecs() map[string][]ostree.CommitSpec {
 	}
 }
 
-var testPlatform = &platform.X86{
-	BasePlatform: platform.BasePlatform{
-		ImageFormat: platform.FORMAT_ISO,
-	},
-	BIOS:       true,
-	UEFIVendor: "test",
+var testPlatform = &platform.PlatformConf{
+	ImageFormat: platform.FORMAT_ISO,
+
+	Arch:         arch.ARCH_X86_64,
+	BIOSPlatform: "i386-pc",
+	UEFIVendor:   "test",
 }
 
 const (

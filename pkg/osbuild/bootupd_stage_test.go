@@ -11,6 +11,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/testdisk"
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/osbuild"
@@ -50,9 +51,9 @@ func TestBootupdStageNewHappy(t *testing.T) {
 	}
 	devices := makeOsbuildDevices("dev-for-/", "dev-for-/boot", "dev-for-/boot/efi")
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
-	pf := &platform.X86{
-		BasePlatform: platform.BasePlatform{},
-		UEFIVendor:   "test",
+	pf := &platform.PlatformConf{
+		Arch:       arch.ARCH_X86_64,
+		UEFIVendor: "test",
 	}
 
 	expectedStage := &osbuild.Stage{
@@ -72,9 +73,9 @@ func TestBootupdStageMissingMounts(t *testing.T) {
 	}
 	devices := makeOsbuildDevices("dev-for-/")
 	mounts := makeOsbuildMounts("/")
-	pf := &platform.X86{
-		BasePlatform: platform.BasePlatform{},
-		UEFIVendor:   "test",
+	pf := &platform.PlatformConf{
+		Arch:       arch.ARCH_X86_64,
+		UEFIVendor: "test",
 	}
 
 	stage, err := osbuild.NewBootupdStage(opts, devices, mounts, pf)
@@ -90,9 +91,9 @@ func TestBootupdStageMissingDevice(t *testing.T) {
 	}
 	devices := makeOsbuildDevices("dev-for-/", "dev-for-/boot", "dev-for-/boot/efi")
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
-	pf := &platform.X86{
-		BasePlatform: platform.BasePlatform{},
-		UEFIVendor:   "test",
+	pf := &platform.PlatformConf{
+		Arch:       arch.ARCH_X86_64,
+		UEFIVendor: "test",
 	}
 
 	stage, err := osbuild.NewBootupdStage(opts, devices, mounts, pf)
@@ -113,9 +114,9 @@ func TestBootupdStageJsonHappy(t *testing.T) {
 	}
 	devices := makeOsbuildDevices("disk", "dev-for-/", "dev-for-/boot", "dev-for-/boot/efi")
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
-	pf := &platform.X86{
-		BasePlatform: platform.BasePlatform{},
-		UEFIVendor:   "test",
+	pf := &platform.PlatformConf{
+		Arch:       arch.ARCH_X86_64,
+		UEFIVendor: "test",
 	}
 
 	stage, err := osbuild.NewBootupdStage(opts, devices, mounts, pf)
@@ -174,9 +175,9 @@ func TestBootupdStageJsonHappy(t *testing.T) {
 func TestGenBootupdDevicesMountsMissingRoot(t *testing.T) {
 	filename := "fake-disk.img"
 	pt := &disk.PartitionTable{}
-	pf := &platform.X86{
-		BasePlatform: platform.BasePlatform{},
-		UEFIVendor:   "test",
+	pf := &platform.PlatformConf{
+		Arch:       arch.ARCH_X86_64,
+		UEFIVendor: "test",
 	}
 	_, _, err := osbuild.GenBootupdDevicesMounts(filename, pt, pf)
 	assert.EqualError(t, err, "required mounts for bootupd stage [/ /boot/efi] missing")
@@ -191,9 +192,9 @@ func TestGenBootupdDevicesMountsUnexpectedEntity(t *testing.T) {
 			},
 		},
 	}
-	pf := &platform.X86{
-		BasePlatform: platform.BasePlatform{},
-		UEFIVendor:   "test",
+	pf := &platform.PlatformConf{
+		Arch:       arch.ARCH_X86_64,
+		UEFIVendor: "test",
 	}
 	_, _, err := osbuild.GenBootupdDevicesMounts(filename, pt, pf)
 	assert.EqualError(t, err, "type *disk.LUKSContainer not supported by bootupd handling yet")
@@ -261,9 +262,9 @@ var fakePt = &disk.PartitionTable{
 
 func TestGenBootupdDevicesMountsHappy(t *testing.T) {
 	filename := "fake-disk.img"
-	pf := &platform.X86{
-		BasePlatform: platform.BasePlatform{},
-		UEFIVendor:   "test",
+	pf := &platform.PlatformConf{
+		Arch:       arch.ARCH_X86_64,
+		UEFIVendor: "test",
 	}
 
 	devices, mounts, err := osbuild.GenBootupdDevicesMounts(filename, fakePt, pf)
@@ -304,9 +305,9 @@ func TestGenBootupdDevicesMountsHappy(t *testing.T) {
 
 func TestGenBootupdDevicesMountsHappyBtrfs(t *testing.T) {
 	filename := "fake-disk.img"
-	pf := &platform.X86{
-		BasePlatform: platform.BasePlatform{},
-		UEFIVendor:   "test",
+	pf := &platform.PlatformConf{
+		Arch:       arch.ARCH_X86_64,
+		UEFIVendor: "test",
 	}
 
 	devices, mounts, err := osbuild.GenBootupdDevicesMounts(filename, testdisk.MakeFakeBtrfsPartitionTable("/", "/home", "/boot/efi", "/boot"), pf)
@@ -356,9 +357,9 @@ func TestGenBootupdDevicesMountsHappyBtrfs(t *testing.T) {
 
 func TestGenBootupdDevicesMountsHappyLVM(t *testing.T) {
 	filename := "fake-disk.img"
-	pf := &platform.X86{
-		BasePlatform: platform.BasePlatform{},
-		UEFIVendor:   "test",
+	pf := &platform.PlatformConf{
+		Arch:       arch.ARCH_X86_64,
+		UEFIVendor: "test",
 	}
 
 	fakePt := testdisk.MakeFakeLVMPartitionTable("/", "/home", "/boot/efi", "/boot", "swap")
@@ -430,9 +431,9 @@ func TestGenBootupdDevicesMountsHappyLVM(t *testing.T) {
 
 func TestGenBootupdDevicesMountsLVM_NotMountableLV(t *testing.T) {
 	filename := "fake-disk.img"
-	pf := &platform.X86{
-		BasePlatform: platform.BasePlatform{},
-		UEFIVendor:   "test",
+	pf := &platform.PlatformConf{
+		Arch:       arch.ARCH_X86_64,
+		UEFIVendor: "test",
 	}
 
 	fakePt := testdisk.MakeFakeLVMPartitionTable("/", "/home", "/boot/efi", "/boot")

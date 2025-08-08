@@ -3,13 +3,15 @@ package manifest_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/osbuild/images/internal/testdisk"
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/runner"
-	"github.com/stretchr/testify/require"
 )
 
 // Creates a manifest.Inputs with one (empty) commit spec for serializing
@@ -31,8 +33,9 @@ func NewTestOSTreeDeployment() *manifest.OSTreeDeployment {
 	build.Checkpoint()
 
 	// create an x86_64 platform with bios boot
-	platform := &platform.X86{
-		BIOS: true,
+	platform := &platform.PlatformConf{
+		Arch:         arch.ARCH_X86_64,
+		BIOSPlatform: "i386-pc",
 	}
 	commit := &ostree.SourceSpec{}
 	os := manifest.NewOSTreeCommitDeployment(build, commit, "fedora", platform)

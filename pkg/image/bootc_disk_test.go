@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/internal/testdisk"
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/users"
@@ -50,12 +51,14 @@ type bootcDiskImageTestOpts struct {
 }
 
 func makeFakePlatform(opts *bootcDiskImageTestOpts) platform.Platform {
-	return &platform.X86{
-		BasePlatform: platform.BasePlatform{
-			ImageFormat: opts.ImageFormat,
-		},
-		BIOS: opts.BIOS,
+	platform := &platform.PlatformConf{
+		Arch:        arch.ARCH_X86_64,
+		ImageFormat: opts.ImageFormat,
 	}
+	if opts.BIOS {
+		platform.BIOSPlatform = "i386-pc"
+	}
+	return platform
 }
 
 func makeBootcDiskImageOsbuildManifest(t *testing.T, opts *bootcDiskImageTestOpts) manifest.OSBuildManifest {
