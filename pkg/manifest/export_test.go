@@ -33,7 +33,7 @@ func NewTestOS() *OS {
 	build.Checkpoint()
 
 	// create an x86_64 platform with bios boot
-	platform := &platform.PlatformConf{
+	platform := &platform.Data{
 		Arch:         arch.ARCH_X86_64,
 		BIOSPlatform: "i386-pc",
 	}

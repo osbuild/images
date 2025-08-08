@@ -54,7 +54,7 @@ func TestRawBootcImageSerialize(t *testing.T) {
 	mani := manifest.New()
 	runner := &runner.Linux{}
 	build := manifest.NewBuildFromContainer(&mani, runner, nil, nil)
-	pf := &platform.PlatformConf{
+	pf := &platform.Data{
 		Arch:       arch.ARCH_X86_64,
 		UEFIVendor: "test",
 	}
@@ -82,7 +82,7 @@ func TestRawBootcImageSerializeMountsValidated(t *testing.T) {
 	mani := manifest.New()
 	runner := &runner.Linux{}
 	build := manifest.NewBuildFromContainer(&mani, runner, nil, nil)
-	pf := &platform.PlatformConf{
+	pf := &platform.Data{
 		Arch:       arch.ARCH_X86_64,
 		UEFIVendor: "test",
 	}
@@ -108,7 +108,7 @@ func findMountIdx(mounts []osbuild.Mount, mntType string) int {
 func makeFakeRawBootcPipeline() *manifest.RawBootcImage {
 	mani := manifest.New()
 	runner := &runner.Linux{}
-	pf := &platform.PlatformConf{
+	pf := &platform.Data{
 		Arch:       arch.ARCH_X86_64,
 		UEFIVendor: "test",
 	}
