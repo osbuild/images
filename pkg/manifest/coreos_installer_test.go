@@ -3,12 +3,14 @@ package manifest
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/runner"
-	"github.com/stretchr/testify/require"
 )
 
 func newCoreOSInstaller() *CoreOSInstaller {
@@ -16,7 +18,7 @@ func newCoreOSInstaller() *CoreOSInstaller {
 	runner := &runner.Linux{}
 	build := NewBuild(m, runner, nil, nil)
 
-	x86plat := &platform.X86{}
+	x86plat := &platform.PlatformConf{Arch: arch.ARCH_X86_64}
 
 	product := ""
 	osversion := ""
