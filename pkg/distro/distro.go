@@ -119,9 +119,6 @@ type ImageType interface {
 	// Returns the package set names safe to install custom packages via custom repositories.
 	PayloadPackageSets() []string
 
-	// Returns the names of the stages that will produce the build output.
-	Exports() []string
-
 	// Returns an osbuild manifest, containing the sources and pipeline necessary
 	// to build an image, given output format with all packages and customizations
 	// specified in the given blueprint; it also returns any warnings (e.g.

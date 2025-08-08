@@ -1268,7 +1268,6 @@ image_types:
     image_func: "disk"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "image"]
-    exports: ["image"]
     bootable: true
     default_size: 10_737_418_240  # 10 * datasizes.GibiByte
     required_partition_sizes: *default_required_dir_sizes
@@ -1306,7 +1305,6 @@ image_types:
     mime_type: "application/xz"
     compression: "xz"
     payload_pipelines: ["os", "image", "xz"]
-    exports: ["xz"]
     image_config:
       <<: *ec2_image_config
     package_sets:
@@ -1417,7 +1415,6 @@ image_types:
     image_func: "disk"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "image", "qcow2"]
-    exports: ["qcow2"]
     required_partition_sizes: *default_required_dir_sizes
     platforms:
       - <<: *x86_64_bios_platform
@@ -1465,7 +1462,6 @@ image_types:
     default_size: 4_294_967_296  # 4 * datasizes.GibiByte
     build_pipelines: ["build"]
     payload_pipelines: ["os", "image", "vpc"]
-    exports: ["vpc"]
     bootable: true
     # note that unlike fedora no "environment.Azure" is used here for
     # unknown reasons
@@ -1626,7 +1622,6 @@ image_types:
     default_size: 68_719_476_736  # 64 * datasizes.GibiByte
     build_pipelines: ["build"]
     payload_pipelines: ["os", "image", "vpc", "xz"]
-    exports: ["xz"]
     compression: "xz"
     bootable: true
     platforms:
@@ -1790,7 +1785,6 @@ image_types:
       - "os"
       - "bootiso-tree"
       - "bootiso"
-    exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
     image_config:
       iso_rootfs_type: "squashfs-ext4"
@@ -1821,7 +1815,6 @@ image_types:
     image_func: "tar"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "archive"]
-    exports: ["archive"]
     platforms:
       - arch: "x86_64"
       - arch: "aarch64"
@@ -1843,7 +1836,6 @@ image_types:
     image_func: "iot_commit"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "ostree-commit", "commit-archive"]
-    exports: ["commit-archive"]
     platforms:
       - *x86_64_bios_platform
       - *aarch64_platform
@@ -2035,7 +2027,6 @@ image_types:
       - "efiboot-tree"
       - "bootiso-tree"
       - "bootiso"
-    exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
     image_config:
       iso_rootfs_type: "squashfs-ext4"
@@ -2080,7 +2071,6 @@ image_types:
     use_ostree_remotes: true
     build_pipelines: ["build"]
     payload_pipelines: ["ostree-deployment", "image", "xz"]
-    exports: ["xz"]
     platforms:
       - <<: *x86_64_installer_platform
         image_format: "raw"
@@ -2126,7 +2116,6 @@ image_types:
       - "efiboot-tree"
       - "bootiso-tree"
       - "bootiso"
-    exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
     installer_config:
       additional_dracut_modules:
@@ -2216,7 +2205,6 @@ image_types:
     image_func: "iot_container"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "ostree-commit", "container-tree", "container"]
-    exports: ["container"]
     required_partition_sizes: *default_required_dir_sizes
     platforms:
       - *x86_64_bios_platform
@@ -2235,7 +2223,6 @@ image_types:
     image_func: "disk"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "image", "vmdk"]
-    exports: ["vmdk"]
     required_partition_sizes: *default_required_dir_sizes
     platforms:
       - <<: *x86_64_bios_platform
@@ -2265,7 +2252,6 @@ image_types:
     filename: "image.ova"
     mime_type: "application/ovf"
     payload_pipelines: ["os", "image", "vmdk", "ovf", "archive"]
-    exports: ["archive"]
     platforms:
       - <<: *x86_64_bios_platform
         image_format: "ova"
@@ -2276,7 +2262,6 @@ image_types:
     image_func: "disk"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "image", "archive"]
-    exports: ["archive"]
     bootable: true
     default_size: 21_474_836_480  # 20 * datasizes.GibiByte
     # The configuration for non-RHUI images does not touch the RHSM configuration at all.
@@ -2436,7 +2421,6 @@ image_types:
     image_func: "tar"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "archive", "xz"]
-    exports: ["xz"]
     compression: "xz"
     platforms:
       - arch: "x86_64"
@@ -2562,7 +2546,6 @@ image_types:
     image_func: "disk"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "image", "xz"]
-    exports: ["xz"]
     required_partition_sizes: *default_required_dir_sizes
     image_config:
       enabled_services:

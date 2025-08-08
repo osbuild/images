@@ -264,7 +264,6 @@ image_types:
     default_size: 68_719_476_736  # 64 * datasizes.GibiByte
     build_pipelines: ["build"]
     payload_pipelines: ["os", "image", "vpc", "xz"]
-    exports: ["xz"]
     compression: "xz"
     bootable: true
     # RHEL 7 qemu vpc subformat does not support force_size
@@ -421,7 +420,6 @@ image_types:
     image_func: "disk"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "image", "xz"]
-    exports: ["xz"]
     compression: "xz"
     bootable: true
     default_size: 10_737_418_240  # 10 * datasizes.GibiByte
@@ -578,7 +576,6 @@ image_types:
     image_func: "disk"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "image", "qcow2"]
-    exports: ["qcow2"]
     required_partition_sizes: *default_required_dir_sizes
     disk_image_part_tool: sgdisk
     platforms:
