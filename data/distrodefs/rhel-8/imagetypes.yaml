@@ -867,7 +867,6 @@
     enabled_anaconda_modules: &install_config_enabled_anaconda_modules
       - "org.fedoraproject.Anaconda.Modules.Network"
       - "org.fedoraproject.Anaconda.Modules.Payloads"
-      - "org.fedoraproject.Anaconda.Modules.Runtime"
       - "org.fedoraproject.Anaconda.Modules.Storage"
     iso_root_kickstart: true
     additional_dracut_modules:
