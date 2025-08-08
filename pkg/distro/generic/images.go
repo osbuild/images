@@ -596,6 +596,7 @@ func imageInstallerImage(workload workload.Workload,
 	}
 
 	if installerConfig != nil {
+		img.EnabledAnacondaModules = append(img.EnabledAnacondaModules, installerConfig.EnabledAnacondaModules...)
 		img.AdditionalDracutModules = append(img.AdditionalDracutModules, installerConfig.AdditionalDracutModules...)
 		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
 		if installerConfig.SquashfsRootfs != nil && *installerConfig.SquashfsRootfs {
