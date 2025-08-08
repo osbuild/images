@@ -1,6 +1,9 @@
 {
   "name": "edge-ostree-pull-user",
   "blueprint": {
+    "name": "edge-ostree-pull-user",
+    "description": "For image types that require an edge-commit/container to pull, with a user defined in the deployment.",
+    "version": "1.0",
     "customizations": {
       "user": [
         {

@@ -1,6 +1,9 @@
 {
   "name": "oscap-rhel9",
   "blueprint": {
+    "name": "oscap-rhel9",
+    "description": "Simple blueprint with openscap options for RHEL 9 (uses rhel9 datastream).",
+    "version": "1.0",
     "packages": [
       {
         "name": "xmlstarlet"

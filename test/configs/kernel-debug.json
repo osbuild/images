@@ -1,6 +1,9 @@
 {
   "name": "kernel-debug",
   "blueprint": {
+    "name": "kernel-debug",
+    "description": "Simple blueprint with an alternative kernel (kernel-debug).",
+    "version": "1.0",
     "customizations": {
       "kernel": {
         "name": "kernel-debug"

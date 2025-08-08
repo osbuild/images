@@ -1,6 +1,9 @@
 {
   "name": "unattended-iso-iot",
   "blueprint": {
+    "name": "unattended-iso-iot",
+    "description": "Configures any Anaconda-based ISO to install the system with no user interaction (Fedora IoT variant).",
+    "version": "1.0",
     "customizations": {
       "user": [
         {

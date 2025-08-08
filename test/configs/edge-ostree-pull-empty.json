@@ -1,5 +1,10 @@
 {
   "name": "edge-ostree-pull-empty",
+  "blueprint": {
+    "name": "edge-ostree-pull-empty",
+    "description": "Empty blueprint for image types that require an edge-commit/container to pull",
+    "version": "1.0"
+  },
   "options": {
     "ostree": {
       "url": "http://example.com/repo"
