@@ -3,6 +3,7 @@ package main
 import (
 	"math/rand"
 
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/artifact"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/platform"
@@ -50,7 +51,7 @@ func (img *MyContainer) InstantiateManifest(m *manifest.Manifest,
 	build.Checkpoint()
 
 	// create a minimal non-bootable OS tree
-	os := manifest.NewOS(build, &platform.X86{}, repos)
+	os := manifest.NewOS(build, &platform.PlatformConf{Arch: arch.ARCH_X86_64}, repos)
 	os.OSCustomizations.BasePackages = []string{"@core"}
 	os.OSCustomizations.Language = "en_US.UTF-8"
 	os.OSCustomizations.Hostname = "my-host"
