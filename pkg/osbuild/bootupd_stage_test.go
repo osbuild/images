@@ -51,7 +51,7 @@ func TestBootupdStageNewHappy(t *testing.T) {
 	}
 	devices := makeOsbuildDevices("dev-for-/", "dev-for-/boot", "dev-for-/boot/efi")
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
-	pf := &platform.PlatformConf{
+	pf := &platform.Data{
 		Arch:       arch.ARCH_X86_64,
 		UEFIVendor: "test",
 	}
@@ -73,7 +73,7 @@ func TestBootupdStageMissingMounts(t *testing.T) {
 	}
 	devices := makeOsbuildDevices("dev-for-/")
 	mounts := makeOsbuildMounts("/")
-	pf := &platform.PlatformConf{
+	pf := &platform.Data{
 		Arch:       arch.ARCH_X86_64,
 		UEFIVendor: "test",
 	}
@@ -91,7 +91,7 @@ func TestBootupdStageMissingDevice(t *testing.T) {
 	}
 	devices := makeOsbuildDevices("dev-for-/", "dev-for-/boot", "dev-for-/boot/efi")
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
-	pf := &platform.PlatformConf{
+	pf := &platform.Data{
 		Arch:       arch.ARCH_X86_64,
 		UEFIVendor: "test",
 	}
@@ -114,7 +114,7 @@ func TestBootupdStageJsonHappy(t *testing.T) {
 	}
 	devices := makeOsbuildDevices("disk", "dev-for-/", "dev-for-/boot", "dev-for-/boot/efi")
 	mounts := makeOsbuildMounts("/", "/boot", "/boot/efi")
-	pf := &platform.PlatformConf{
+	pf := &platform.Data{
 		Arch:       arch.ARCH_X86_64,
 		UEFIVendor: "test",
 	}
@@ -175,7 +175,7 @@ func TestBootupdStageJsonHappy(t *testing.T) {
 func TestGenBootupdDevicesMountsMissingRoot(t *testing.T) {
 	filename := "fake-disk.img"
 	pt := &disk.PartitionTable{}
-	pf := &platform.PlatformConf{
+	pf := &platform.Data{
 		Arch:       arch.ARCH_X86_64,
 		UEFIVendor: "test",
 	}
@@ -192,7 +192,7 @@ func TestGenBootupdDevicesMountsUnexpectedEntity(t *testing.T) {
 			},
 		},
 	}
-	pf := &platform.PlatformConf{
+	pf := &platform.Data{
 		Arch:       arch.ARCH_X86_64,
 		UEFIVendor: "test",
 	}
@@ -262,7 +262,7 @@ var fakePt = &disk.PartitionTable{
 
 func TestGenBootupdDevicesMountsHappy(t *testing.T) {
 	filename := "fake-disk.img"
-	pf := &platform.PlatformConf{
+	pf := &platform.Data{
 		Arch:       arch.ARCH_X86_64,
 		UEFIVendor: "test",
 	}
@@ -305,7 +305,7 @@ func TestGenBootupdDevicesMountsHappy(t *testing.T) {
 
 func TestGenBootupdDevicesMountsHappyBtrfs(t *testing.T) {
 	filename := "fake-disk.img"
-	pf := &platform.PlatformConf{
+	pf := &platform.Data{
 		Arch:       arch.ARCH_X86_64,
 		UEFIVendor: "test",
 	}
@@ -357,7 +357,7 @@ func TestGenBootupdDevicesMountsHappyBtrfs(t *testing.T) {
 
 func TestGenBootupdDevicesMountsHappyLVM(t *testing.T) {
 	filename := "fake-disk.img"
-	pf := &platform.PlatformConf{
+	pf := &platform.Data{
 		Arch:       arch.ARCH_X86_64,
 		UEFIVendor: "test",
 	}
@@ -431,7 +431,7 @@ func TestGenBootupdDevicesMountsHappyLVM(t *testing.T) {
 
 func TestGenBootupdDevicesMountsLVM_NotMountableLV(t *testing.T) {
 	filename := "fake-disk.img"
-	pf := &platform.PlatformConf{
+	pf := &platform.Data{
 		Arch:       arch.ARCH_X86_64,
 		UEFIVendor: "test",
 	}

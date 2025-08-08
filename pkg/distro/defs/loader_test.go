@@ -654,7 +654,7 @@ image_types:
 	assert.Equal(t, "disk", imgType.Image)
 	assert.Equal(t, []string{"qcow2"}, imgType.Exports)
 	assert.Equal(t, map[string]uint64{"/": 1_073_741_824}, imgType.RequiredPartitionSizes)
-	assert.Equal(t, []platform.PlatformConf{
+	assert.Equal(t, []platform.Data{
 		{
 			Arch:         arch.ARCH_PPC64LE,
 			BIOSPlatform: "powerpc-ieee1275",
@@ -1060,7 +1060,7 @@ distros:
 		imgType := imgTypes["server-qcow2"]
 		platforms, err := imgType.PlatformsFor(distro.ID)
 		assert.NoError(t, err)
-		assert.Equal(t, []platform.PlatformConf{
+		assert.Equal(t, []platform.Data{
 			{
 				Arch:       arch.ARCH_X86_64,
 				UEFIVendor: tc.expectedUEFIVendor,

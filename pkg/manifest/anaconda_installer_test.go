@@ -20,7 +20,7 @@ func newAnacondaInstaller() *manifest.AnacondaInstaller {
 	runner := &runner.Linux{}
 	build := manifest.NewBuild(m, runner, nil, nil)
 
-	x86plat := &platform.PlatformConf{Arch: arch.ARCH_X86_64}
+	x86plat := &platform.Data{Arch: arch.ARCH_X86_64}
 
 	product := ""
 	osversion := ""

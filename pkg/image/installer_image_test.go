@@ -73,7 +73,7 @@ func mockOSTreeCommitSpecs() map[string][]ostree.CommitSpec {
 	}
 }
 
-var testPlatform = &platform.PlatformConf{
+var testPlatform = &platform.Data{
 	ImageFormat: platform.FORMAT_ISO,
 
 	Arch:         arch.ARCH_X86_64,

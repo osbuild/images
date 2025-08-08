@@ -28,10 +28,10 @@ func TestPlatformYamlSmoke(t *testing.T) {
         boot_files:
           - ["/usr/share/uboot/rpi_arm64/u-boot.bin", "/boot/efi/rpi-u-boot.bin"]
 `)
-	var pc platform.PlatformConf
+	var pc platform.Data
 	err := yaml.Unmarshal(inputYAML, &pc)
 	assert.NoError(t, err)
-	expected := platform.PlatformConf{
+	expected := platform.Data{
 		Arch:         common.Must(arch.FromString("x86_64")),
 		BIOSPlatform: "i386-pc",
 		UEFIVendor:   "fedora",
@@ -58,14 +58,14 @@ func TestPlatformYamlFIPSMenu(t *testing.T) {
         uefi_vendor: "fedora"
         fips_menu: true
 `)
-	var pc platform.PlatformConf
-	err := yaml.Unmarshal(inputYAML, &pc)
+	var pd platform.Data
+	err := yaml.Unmarshal(inputYAML, &pd)
 	assert.NoError(t, err)
-	expected := platform.PlatformConf{
+	expected := platform.Data{
 		Arch:         common.Must(arch.FromString("x86_64")),
 		BIOSPlatform: "i386-pc",
 		UEFIVendor:   "fedora",
 		FIPSMenu:     true,
 	}
-	assert.Equal(t, expected, pc)
+	assert.Equal(t, expected, pd)
 }
