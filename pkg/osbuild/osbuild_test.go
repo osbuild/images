@@ -26,3 +26,9 @@ func TestPipeline_AddStage(t *testing.T) {
 	assert.Equal(t, expectedPipeline, actualPipeline)
 	assert.Equal(t, 1, len(actualPipeline.Stages))
 }
+
+func TestManifestFromBytes(t *testing.T) {
+	bytes := []byte(`{}`)
+	_, err := NewManifestFromBytes(bytes)
+	assert.NoError(t, err)
+}
