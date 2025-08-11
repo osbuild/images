@@ -77,6 +77,17 @@ type filter struct {
 	terms []term
 }
 
+func containsAlias(term term, aliases []string) bool {
+	result := false
+	for _, alias := range aliases {
+		if term.pattern.Match(alias) {
+			result = true
+			break
+		}
+	}
+	return result
+}
+
 // Matches returns true if the given (distro,arch,imgType) tuple matches
 // the filter expressions
 func (fl filter) Matches(distro distro.Distro, arch distro.Arch, imgType distro.ImageType) bool {
@@ -89,13 +100,17 @@ func (fl filter) Matches(distro distro.Distro, arch distro.Arch, imgType distro.
 			m1 := term.pattern.Match(distro.Name())
 			m2 := term.pattern.Match(arch.Name())
 			m3 := term.pattern.Match(imgType.Name())
-			m = m && (m1 || m2 || m3)
+			m4 := containsAlias(term, imgType.Aliases())
+			m = m && (m1 || m2 || m3 || m4)
 		case prefixDistro:
 			m = m && term.pattern.Match(distro.Name())
 		case prefixArch:
 			m = m && term.pattern.Match(arch.Name())
 		case prefixType:
-			m = m && term.pattern.Match(imgType.Name())
+			// Check the main image type name
+			m1 := term.pattern.Match(imgType.Name())
+			m2 := containsAlias(term, imgType.Aliases())
+			m = m && (m1 || m2)
 			// mostly here to show how flexible this is
 		case prefixBootmode:
 			m = m && term.pattern.Match(imgType.BootMode().String())

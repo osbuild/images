@@ -37,6 +37,12 @@ func TestImageFilterFilter(t *testing.T) {
 		{[]string{"type:qcow2"}, "test-distro-1", "test_arch3", "qcow2", true},
 		{[]string{"type:qcow"}, "test-distro-1", "test_arch3", "qcow2", false},
 		{[]string{"type:qcow?"}, "test-distro-1", "test_arch3", "qcow2", true},
+		// type: alias tests
+		{[]string{"type:aws"}, "test-distro-3", "test_arch3", "ami", true},
+		{[]string{"type:guest-image"}, "test-distro-3", "test_arch3", "qcow2", true},
+		{[]string{"type:vsphere"}, "test-distro-3", "test_arch3", "vmdk", true},
+		{[]string{"type:gcp"}, "test-distro-3", "test_arch3", "gce", true},
+		{[]string{"type:non-existent-alias"}, "test-distro-3", "test_arch3", "qcow2", false},
 		// bootmode: prefix
 		{[]string{"bootmode:uefi"}, "test-distro-1", "test_arch3", "qcow2", false},
 		{[]string{"bootmode:hybrid"}, "test-distro-1", "test_arch3", "qcow2", true},
