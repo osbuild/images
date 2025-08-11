@@ -643,30 +643,29 @@ func (a *AWS) RunInstanceEC2(imageID, secGroupID, userData, instanceType string)
 	return reservation, nil
 }
 
-func (a *AWS) TerminateInstanceEC2(instanceID string) (*ec2.TerminateInstancesOutput, error) {
-	// We need to terminate the instance now and wait until the termination is done.
-	// Otherwise, it wouldn't be possible to delete the image.
+// TerminateInstancesEC2 terminates the specified EC2 instances and waits for them to be terminated if timeout is greater than 0.
+func (a *AWS) TerminateInstancesEC2(instanceIDs []string, timeout time.Duration) (*ec2.TerminateInstancesOutput, error) {
 	res, err := a.ec2.TerminateInstances(
 		context.TODO(),
 		&ec2.TerminateInstancesInput{
-			InstanceIds: []string{
-				instanceID,
-			},
+			InstanceIds: slices.Clone(instanceIDs),
 		})
 	if err != nil {
 		return nil, err
 	}
 
-	instanceWaiter := newTerminateInstancesWaiterEC2(a.ec2)
-	err = instanceWaiter.Wait(
-		context.TODO(),
-		&ec2.DescribeInstancesInput{
-			InstanceIds: []string{instanceID},
-		},
-		time.Hour,
-	)
-	if err != nil {
-		return nil, err
+	if timeout > 0 {
+		instanceWaiter := newTerminateInstancesWaiterEC2(a.ec2)
+		err = instanceWaiter.Wait(
+			context.TODO(),
+			&ec2.DescribeInstancesInput{
+				InstanceIds: slices.Clone(instanceIDs),
+			},
+			timeout,
+		)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return res, nil
