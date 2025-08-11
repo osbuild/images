@@ -2816,6 +2816,148 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				},
 			},
 		},
+		"gpt-blueprint-efi": {
+			customizations: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						MinSize: 500 * datasizes.MiB,
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Mountpoint: "/boot/efi",
+							FSType:     "vfat",
+						},
+					},
+				},
+			},
+			options: &disk.CustomPartitionTableOptions{
+				DefaultFSType:      disk.FS_XFS,
+				BootMode:           platform.BOOT_UEFI,
+				PartitionTableType: disk.PT_GPT,
+				Architecture:       arch.ARCH_X86_64,
+			},
+			expected: &disk.PartitionTable{
+				Type: disk.PT_GPT,
+				Size: (1 + 200 + 500 + 1) * datasizes.MiB,
+				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+				Partitions: []disk.Partition{
+					{
+						Start: 1 * datasizes.MiB,
+						Size:  200 * datasizes.MiB,
+						Type:  disk.EFISystemPartitionGUID,
+						UUID:  disk.EFISystemPartitionUUID,
+						Payload: &disk.Filesystem{
+							Type:         "vfat",
+							UUID:         disk.EFIFilesystemUUID,
+							Mountpoint:   "/boot/efi",
+							Label:        "ESP",
+							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+							FSTabFreq:    0,
+							FSTabPassNo:  2,
+						},
+					},
+					{
+						// NOTE: this is all wrong
+						Start: 201 * datasizes.MiB,
+						Size:  500 * datasizes.MiB,
+						Type:  disk.FilesystemDataGUID,
+						UUID:  "48a79ee0-b10d-4946-9185-0fd4a178892e",
+						Payload: &disk.Filesystem{
+							Type:         "vfat",
+							UUID:         "6e4ff95f",
+							Mountpoint:   "/boot/efi",
+							FSTabOptions: "defaults",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
+						},
+					},
+					{
+						Start:    701 * datasizes.MiB,
+						Size:     1*datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)),
+						Type:     disk.RootPartitionX86_64GUID,
+						UUID:     "e285ece1-5114-4578-8875-d64ee2d3d0d0",
+						Bootable: false,
+						Payload: &disk.Filesystem{
+							Type:         "xfs",
+							Label:        "root",
+							Mountpoint:   "/",
+							UUID:         "f662a5ee-e82a-4df4-8a2d-0b75fb180daf",
+							FSTabOptions: "defaults",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
+						},
+					},
+				},
+			},
+		},
+		"dos-blueprint-efi-type": {
+			customizations: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						MinSize: 500 * datasizes.MiB,
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Mountpoint: "/boot/efi",
+							FSType:     "vfat",
+						},
+					},
+				},
+			},
+			options: &disk.CustomPartitionTableOptions{
+				DefaultFSType:      disk.FS_XFS,
+				BootMode:           platform.BOOT_UEFI,
+				PartitionTableType: disk.PT_DOS,
+				Architecture:       arch.ARCH_X86_64,
+			},
+			expected: &disk.PartitionTable{
+				Type: disk.PT_DOS,
+				Size: (200 + 500 + 1) * datasizes.MiB,
+				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+				Partitions: []disk.Partition{
+					{
+						Start: 1 * datasizes.MiB,
+						Size:  200 * datasizes.MiB,
+						Type:  disk.EFISystemPartitionDOSID,
+						UUID:  disk.EFISystemPartitionUUID,
+						Payload: &disk.Filesystem{
+							Type:         "vfat",
+							UUID:         disk.EFIFilesystemUUID,
+							Mountpoint:   "/boot/efi",
+							Label:        "ESP",
+							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+							FSTabFreq:    0,
+							FSTabPassNo:  2,
+						},
+					},
+					{
+						// NOTE: this is all wrong
+						Start: 201 * datasizes.MiB,
+						Size:  500 * datasizes.MiB,
+						Type:  disk.FilesystemLinuxDOSID,
+						Payload: &disk.Filesystem{
+							Type:         "vfat",
+							UUID:         "6e4ff95f",
+							Mountpoint:   "/boot/efi",
+							FSTabOptions: "defaults",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
+						},
+					},
+					{
+						Start:    701 * datasizes.MiB,
+						Size:     0 * datasizes.MiB,
+						Type:     disk.FilesystemLinuxDOSID,
+						Bootable: false,
+						Payload: &disk.Filesystem{
+							Type:         "xfs",
+							Label:        "root",
+							Mountpoint:   "/",
+							UUID:         "f662a5ee-e82a-4df4-8a2d-0b75fb180daf",
+							FSTabOptions: "defaults",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for name := range testCases {
