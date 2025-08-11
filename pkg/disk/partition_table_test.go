@@ -2840,10 +2840,9 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
 				Partitions: []disk.Partition{
 					{
-						// NOTE: this is partially wrong
 						Start: 1 * datasizes.MiB,
 						Size:  500 * datasizes.MiB,
-						Type:  disk.FilesystemDataGUID,
+						Type:  disk.EFISystemPartitionGUID,
 						UUID:  "48a79ee0-b10d-4946-9185-0fd4a178892e",
 						Payload: &disk.Filesystem{
 							Type:         "vfat",
@@ -2897,10 +2896,9 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
 				Partitions: []disk.Partition{
 					{
-						// NOTE: this is partially wrong
 						Start: 1 * datasizes.MiB,
 						Size:  500 * datasizes.MiB,
-						Type:  disk.FilesystemLinuxDOSID,
+						Type:  disk.EFISystemPartitionDOSID,
 						Payload: &disk.Filesystem{
 							Type:         "vfat",
 							UUID:         "6e4ff95f",
