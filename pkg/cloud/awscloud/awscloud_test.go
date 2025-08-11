@@ -1056,44 +1056,159 @@ func TestGetInstanceAddress(t *testing.T) {
 
 func TestDeleteEC2Image(t *testing.T) {
 	type testCase struct {
-		name       string
-		imageId    string
-		snapshotID string
-		fec2       *fakeEC2Client
-		expectErr  bool
-		errMsg     string
+		name      string
+		imageId   string
+		fec2      *fakeEC2Client
+		expectErr bool
+		errMsg    string
 	}
 	testCases := []testCase{
 		{
-			name:       "happy path",
-			imageId:    "ami-1234567890abcdef0",
-			snapshotID: "snap-1234567890abcdef0",
+			name:    "happy path",
+			imageId: "ami-1234567890abcdef0",
 			fec2: &fakeEC2Client{
 				deregisterImage: &ec2.DeregisterImageOutput{},
 				deleteSnapshot:  &ec2.DeleteSnapshotOutput{},
+				describeImages: &ec2.DescribeImagesOutput{
+					Images: []ec2types.Image{
+						{
+							ImageId: aws.String("ami-1234567890abcdef0"),
+							BlockDeviceMappings: []ec2types.BlockDeviceMapping{
+								{
+									Ebs: &ec2types.EbsBlockDevice{
+										SnapshotId: aws.String("snap-1234567890abcdef0"),
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			expectErr: false,
 		},
 		{
-			name:       "error: unable to deregister image",
-			imageId:    "ami-1234567890abcdef0",
-			snapshotID: "snap-1234567890abcdef0",
+			name:    "happy path - 2 snapshots",
+			imageId: "ami-1234567890abcdef0",
 			fec2: &fakeEC2Client{
-				deregisterImageErr: fmt.Errorf("unable to deregister image"),
+				deregisterImage: &ec2.DeregisterImageOutput{},
+				deleteSnapshot:  &ec2.DeleteSnapshotOutput{},
+				describeImages: &ec2.DescribeImagesOutput{
+					Images: []ec2types.Image{
+						{
+							ImageId: aws.String("ami-1234567890abcdef0"),
+							BlockDeviceMappings: []ec2types.BlockDeviceMapping{
+								{
+									Ebs: &ec2types.EbsBlockDevice{
+										SnapshotId: aws.String("snap-1234567890abcdef0"),
+									},
+								},
+								{
+									Ebs: &ec2types.EbsBlockDevice{
+										SnapshotId: aws.String("snap-0987654321fedcba0"),
+									},
+								},
+							},
+						},
+					},
+				},
 			},
-			expectErr: true,
-			errMsg:    "unable to deregister image",
+			expectErr: false,
 		},
 		{
-			name:       "error: unable to delete snapshot",
-			imageId:    "ami-1234567890abcdef0",
-			snapshotID: "snap-1234567890abcdef0",
+			name:    "error: image not found",
+			imageId: "ami-1234567890abcdef0",
+			fec2: &fakeEC2Client{
+				describeImages: &ec2.DescribeImagesOutput{
+					Images: []ec2types.Image{},
+				},
+			},
+			expectErr: true,
+			errMsg:    "image ami-1234567890abcdef0 not found",
+		},
+		{
+			name:    "error: describe images failure",
+			imageId: "ami-1234567890abcdef0",
+			fec2: &fakeEC2Client{
+				describeImagesErr: fmt.Errorf("failed to describe image"),
+			},
+			expectErr: true,
+			errMsg:    "failed to describe image",
+		},
+		{
+			name:    "error: unable to deregister image",
+			imageId: "ami-1234567890abcdef0",
+			fec2: &fakeEC2Client{
+				deregisterImageErr: fmt.Errorf("unable to deregister image"),
+				describeImages: &ec2.DescribeImagesOutput{
+					Images: []ec2types.Image{
+						{
+							ImageId: aws.String("ami-1234567890abcdef0"),
+							BlockDeviceMappings: []ec2types.BlockDeviceMapping{
+								{
+									Ebs: &ec2types.EbsBlockDevice{
+										SnapshotId: aws.String("snap-1234567890abcdef0"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+			errMsg:    "failed to deregister image ami-1234567890abcdef0: unable to deregister image",
+		},
+		{
+			name:    "error: unable to delete snapshot",
+			imageId: "ami-1234567890abcdef0",
 			fec2: &fakeEC2Client{
 				deregisterImage:   &ec2.DeregisterImageOutput{},
 				deleteSnapshotErr: fmt.Errorf("unable to delete snapshot"),
+				describeImages: &ec2.DescribeImagesOutput{
+					Images: []ec2types.Image{
+						{
+							ImageId: aws.String("ami-1234567890abcdef0"),
+							BlockDeviceMappings: []ec2types.BlockDeviceMapping{
+								{
+									Ebs: &ec2types.EbsBlockDevice{
+										SnapshotId: aws.String("snap-1234567890abcdef0"),
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			expectErr: true,
-			errMsg:    "unable to delete snapshot",
+			errMsg:    "failed to delete snapshot snap-1234567890abcdef0: unable to delete snapshot",
+		},
+		{
+			name:    "error: unable to delete 2 snapshots",
+			imageId: "ami-1234567890abcdef0",
+			fec2: &fakeEC2Client{
+				deregisterImage:   &ec2.DeregisterImageOutput{},
+				deleteSnapshotErr: fmt.Errorf("unable to delete snapshot"),
+				describeImages: &ec2.DescribeImagesOutput{
+					Images: []ec2types.Image{
+						{
+							ImageId: aws.String("ami-1234567890abcdef0"),
+							BlockDeviceMappings: []ec2types.BlockDeviceMapping{
+								{
+									Ebs: &ec2types.EbsBlockDevice{
+										SnapshotId: aws.String("snap-1234567890abcdef0"),
+									},
+								},
+								{
+									Ebs: &ec2types.EbsBlockDevice{
+										SnapshotId: aws.String("snap-0987654321fedcba0"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+			errMsg:    "failed to delete snapshot snap-1234567890abcdef0: unable to delete snapshot; failed to delete snapshot snap-0987654321fedcba0: unable to delete snapshot",
 		},
 	}
 
@@ -1102,7 +1217,10 @@ func TestDeleteEC2Image(t *testing.T) {
 			awsClient := awscloud.NewAWSForTest(tc.fec2, nil, nil, nil)
 			require.NotNil(t, awsClient)
 
-			err := awsClient.DeleteEC2Image(tc.imageId, tc.snapshotID)
+			err := awsClient.DeleteEC2Image(tc.imageId)
+
+			require.Len(t, tc.fec2.describeImagesCalls, 1)
+			require.Equal(t, tc.imageId, tc.fec2.describeImagesCalls[0].ImageIds[0])
 
 			if tc.expectErr {
 				require.Error(t, err)
@@ -1114,8 +1232,7 @@ func TestDeleteEC2Image(t *testing.T) {
 			require.Len(t, tc.fec2.deregisterImageCalls, 1)
 			require.Equal(t, tc.imageId, *tc.fec2.deregisterImageCalls[0].ImageId)
 
-			require.Len(t, tc.fec2.deleteSnapshotCalls, 1)
-			require.Equal(t, tc.snapshotID, *tc.fec2.deleteSnapshotCalls[0].SnapshotId)
+			require.Len(t, tc.fec2.deleteSnapshotCalls, len(tc.fec2.describeImages.Images[0].BlockDeviceMappings))
 		})
 	}
 }
