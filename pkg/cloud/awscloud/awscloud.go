@@ -681,30 +681,56 @@ func (a *AWS) GetInstanceAddress(instanceID string) (string, error) {
 	return *reservation.Instances[0].PublicIpAddress, nil
 }
 
-// DeleteEC2Image deletes the specified image and its associated snapshot
-func (a *AWS) DeleteEC2Image(imageID, snapshotID string) error {
-	var retErr error
+// DeleteEC2Image deletes the specified image and all of its associated snapshots
+func (a *AWS) DeleteEC2Image(imageID string) error {
+	img, err := a.ec2.DescribeImages(
+		context.TODO(),
+		&ec2.DescribeImagesInput{
+			ImageIds: []string{imageID},
+		},
+	)
+	if err != nil {
+		return err
+	}
 
+	if len(img.Images) == 0 {
+		return fmt.Errorf("image %s not found", imageID)
+	}
+
+	var snapshotIDs []string
+	for _, bdm := range img.Images[0].BlockDeviceMappings {
+		if bdm.Ebs != nil && bdm.Ebs.SnapshotId != nil {
+			snapshotIDs = append(snapshotIDs, *bdm.Ebs.SnapshotId)
+		}
+	}
+
+	var retErr error
 	// firstly, deregister the image
-	_, err := a.ec2.DeregisterImage(
+	_, err = a.ec2.DeregisterImage(
 		context.TODO(),
 		&ec2.DeregisterImageInput{
 			ImageId: &imageID,
 		})
 
 	if err != nil {
-		return err
+		retErr = fmt.Errorf("failed to deregister image %s: %w", imageID, err)
 	}
 
-	// now it's possible to delete the snapshot
-	_, err = a.ec2.DeleteSnapshot(
-		context.TODO(),
-		&ec2.DeleteSnapshotInput{
-			SnapshotId: &snapshotID,
-		})
+	// now it's possible to delete snapshots
+	for _, snapshotID := range snapshotIDs {
+		_, err = a.ec2.DeleteSnapshot(
+			context.TODO(),
+			&ec2.DeleteSnapshotInput{
+				SnapshotId: &snapshotID,
+			})
 
-	if err != nil {
-		return err
+		if err != nil {
+			if retErr != nil {
+				retErr = fmt.Errorf("%w; failed to delete snapshot %s: %v", retErr, snapshotID, err)
+				continue
+			}
+			retErr = fmt.Errorf("failed to delete snapshot %s: %w", snapshotID, err)
+		}
 	}
 
 	return retErr
