@@ -1091,7 +1091,7 @@ func hasESP(disk *blueprint.DiskCustomization) bool {
 	}
 
 	for _, part := range disk.Partitions {
-		if part.Type == "plain" && part.Mountpoint == "/boot/efi" {
+		if (part.Type == "plain" || part.Type == "") && part.Mountpoint == "/boot/efi" {
 			return true
 		}
 	}
