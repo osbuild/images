@@ -1407,6 +1407,8 @@ func addPlainPartition(pt *PartitionTable, partition blueprint.PartitionCustomiz
 			typeName = "usr"
 		case partition.Mountpoint == "/boot":
 			typeName = "boot"
+		case partition.Mountpoint == "/boot/efi":
+			typeName = "esp"
 		case fstype == "none":
 			typeName = "data"
 		case fstype == "swap":
