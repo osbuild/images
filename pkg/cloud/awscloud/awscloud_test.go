@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -897,7 +898,8 @@ func TestRunInstanceEC2(t *testing.T) {
 func TestTerminateInstanceEC2(t *testing.T) {
 	type testCase struct {
 		name                        string
-		instanceId                  string
+		instanceIDs                 []string
+		timeout                     time.Duration
 		fec2                        *fakeEC2Client
 		instanceTerminatedWaiterErr error
 		expectErr                   bool
@@ -906,8 +908,8 @@ func TestTerminateInstanceEC2(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			name:       "happy path",
-			instanceId: "i-1234567890abcdef0",
+			name:        "happy path",
+			instanceIDs: []string{"i-1234567890abcdef0"},
 			fec2: &fakeEC2Client{
 				terminateInstances: &ec2.TerminateInstancesOutput{
 					TerminatingInstances: []ec2types.InstanceStateChange{
@@ -920,12 +922,32 @@ func TestTerminateInstanceEC2(t *testing.T) {
 					},
 				},
 			},
-			instanceTerminatedWaiterErr: nil,
-			expectErr:                   false,
 		},
 		{
-			name:       "error: unable to terminate instance",
-			instanceId: "i-1234567890abcdef0",
+			name:        "happy path with multiple instance IDs",
+			instanceIDs: []string{"i-1234567890abcdef0", "i-0987654321fedcba0"},
+			fec2: &fakeEC2Client{
+				terminateInstances: &ec2.TerminateInstancesOutput{
+					TerminatingInstances: []ec2types.InstanceStateChange{
+						{
+							InstanceId: aws.String("i-1234567890abcdef0"),
+							CurrentState: &ec2types.InstanceState{
+								Name: ec2types.InstanceStateNameTerminated,
+							},
+						},
+						{
+							InstanceId: aws.String("i-0987654321fedcba0"),
+							CurrentState: &ec2types.InstanceState{
+								Name: ec2types.InstanceStateNameTerminated,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:        "error: unable to terminate instance",
+			instanceIDs: []string{"i-1234567890abcdef0"},
 			fec2: &fakeEC2Client{
 				terminateInstancesErr: fmt.Errorf("unable to terminate instance"),
 			},
@@ -934,8 +956,9 @@ func TestTerminateInstanceEC2(t *testing.T) {
 			errMsg:                      "unable to terminate instance",
 		},
 		{
-			name:       "error: instance terminated waiter error",
-			instanceId: "i-1234567890abcdef0",
+			name:        "error: instance terminated waiter error",
+			instanceIDs: []string{"i-1234567890abcdef0"},
+			timeout:     30 * time.Second,
 			fec2: &fakeEC2Client{
 				terminateInstances: &ec2.TerminateInstancesOutput{
 					TerminatingInstances: []ec2types.InstanceStateChange{
@@ -963,7 +986,7 @@ func TestTerminateInstanceEC2(t *testing.T) {
 			restore := awscloud.MockNewTerminateInstancesWaiterEC2(tc.instanceTerminatedWaiterErr)
 			defer restore()
 
-			out, err := awsClient.TerminateInstanceEC2(tc.instanceId)
+			out, err := awsClient.TerminateInstancesEC2(tc.instanceIDs, tc.timeout)
 
 			if tc.expectErr {
 				require.Error(t, err)
@@ -975,7 +998,7 @@ func TestTerminateInstanceEC2(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, out)
 			require.Len(t, tc.fec2.terminateInstancesCalls, 1)
-			require.Equal(t, tc.instanceId, tc.fec2.terminateInstancesCalls[0].InstanceIds[0])
+			require.Equal(t, tc.instanceIDs, tc.fec2.terminateInstancesCalls[0].InstanceIds)
 		})
 	}
 }
