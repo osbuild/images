@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/osbuild/images/pkg/manifest"
+	"github.com/osbuild/images/pkg/osbuild"
 )
 
 func TestDistroUnmarshal(t *testing.T) {
@@ -25,4 +26,23 @@ func TestDistroUnmarshal(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, tc.expected, distro)
 	}
+}
+
+func findStage(name string, stages []*osbuild.Stage) *osbuild.Stage {
+	for _, s := range stages {
+		if s.Type == name {
+			return s
+		}
+	}
+	return nil
+}
+
+func findStages(name string, stages []*osbuild.Stage) []*osbuild.Stage {
+	var foundStages []*osbuild.Stage
+	for _, s := range stages {
+		if s.Type == name {
+			foundStages = append(foundStages, s)
+		}
+	}
+	return foundStages
 }

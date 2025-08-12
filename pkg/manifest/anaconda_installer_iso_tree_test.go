@@ -1,4 +1,4 @@
-package manifest
+package manifest_test
 
 import (
 	"crypto/sha256"
@@ -18,6 +18,7 @@ import (
 	"github.com/osbuild/images/pkg/customizations/kickstart"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
+	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/platform"
@@ -30,10 +31,10 @@ const (
 )
 
 // newTestAnacondaISOTree returns a base AnacondaInstallerISOTree pipeline.
-func newTestAnacondaISOTree() *AnacondaInstallerISOTree {
-	m := &Manifest{}
+func newTestAnacondaISOTree() *manifest.AnacondaInstallerISOTree {
+	m := &manifest.Manifest{}
 	runner := &runner.Linux{}
-	build := NewBuild(m, runner, nil, nil)
+	build := manifest.NewBuild(m, runner, nil, nil)
 
 	x86plat := &platform.X86{}
 
@@ -42,8 +43,8 @@ func newTestAnacondaISOTree() *AnacondaInstallerISOTree {
 
 	preview := false
 
-	anacondaPipeline := NewAnacondaInstaller(
-		AnacondaInstallerTypePayload,
+	anacondaPipeline := manifest.NewAnacondaInstaller(
+		manifest.AnacondaInstallerTypePayload,
 		build,
 		x86plat,
 		nil,
@@ -52,11 +53,11 @@ func newTestAnacondaISOTree() *AnacondaInstallerISOTree {
 		osversion,
 		preview,
 	)
-	rootfsImagePipeline := NewISORootfsImg(build, anacondaPipeline)
-	bootTreePipeline := NewEFIBootTree(build, product, osversion)
+	rootfsImagePipeline := manifest.NewISORootfsImg(build, anacondaPipeline)
+	bootTreePipeline := manifest.NewEFIBootTree(build, product, osversion)
 	bootTreePipeline.ISOLabel = "test-iso-1"
 
-	pipeline := NewAnacondaInstallerISOTree(build, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
+	pipeline := manifest.NewAnacondaInstallerISOTree(build, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
 	// copy of the default in pkg/image - will be moved to the pipeline
 	var efibootImageSize uint64 = 20 * datasizes.MebiByte
 	pipeline.PartitionTable = &disk.PartitionTable{
@@ -303,16 +304,16 @@ func TestAnacondaISOTreePayloadsBad(t *testing.T) {
 
 	assert.PanicsWithValue(
 		"pipeline supports at most one ostree commit",
-		func() { pipeline.serializeStart(Inputs{Commits: make([]ostree.CommitSpec, 2)}) },
+		func() { manifest.SerializeWith(pipeline, manifest.Inputs{Commits: make([]ostree.CommitSpec, 2)}) },
 	)
 	assert.PanicsWithValue(
 		"pipeline supports at most one container",
-		func() { pipeline.serializeStart(Inputs{Containers: make([]container.Spec, 2)}) },
+		func() { manifest.SerializeWith(pipeline, manifest.Inputs{Containers: make([]container.Spec, 2)}) },
 	)
 }
 
 func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
-	osPayload := NewTestOS()
+	osPayload := manifest.NewTestOS()
 
 	// stages required for the payload type
 	payloadStages := []string{"org.osbuild.tar"}
@@ -327,9 +328,7 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 	t.Run("plain", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.OSPipeline = osPayload
-		pipeline.serializeStart(Inputs{})
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
+		sp := manifest.SerializeWith(pipeline, manifest.Inputs{})
 		assert.NoError(t, checkISOTreeStages(sp.Stages, payloadStages,
 			append(variantStages, []string{"org.osbuild.kickstart", "org.osbuild.isolinux"}...)))
 	})
@@ -340,9 +339,7 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.OSPipeline = osPayload
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
-		pipeline.serializeStart(Inputs{})
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
+		sp := manifest.SerializeWith(pipeline, manifest.Inputs{})
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.kickstart"),
 			append(variantStages, "org.osbuild.isolinux")))
 	})
@@ -352,10 +349,8 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.OSPipeline = osPayload
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
-		pipeline.ISOBoot = SyslinuxISOBoot
-		pipeline.serializeStart(Inputs{})
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
+		pipeline.ISOBoot = manifest.SyslinuxISOBoot
+		sp := manifest.SerializeWith(pipeline, manifest.Inputs{})
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"),
 			variantStages))
 	})
@@ -365,10 +360,8 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.OSPipeline = osPayload
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
-		pipeline.ISOBoot = Grub2ISOBoot
-		pipeline.serializeStart(Inputs{})
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
+		pipeline.ISOBoot = manifest.Grub2ISOBoot
+		sp := manifest.SerializeWith(pipeline, manifest.Inputs{})
 
 		// No isolinux stage
 		assert.Error(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux",
@@ -383,12 +376,9 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.OSPipeline = osPayload
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath, Unattended: true}
-		pipeline.ISOBoot = SyslinuxISOBoot
-		pipeline.serializeStart(Inputs{})
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
-		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"),
-			variantStages))
+		pipeline.ISOBoot = manifest.SyslinuxISOBoot
+		sp := manifest.SerializeWith(pipeline, manifest.Inputs{})
+		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"), variantStages))
 		assert.NoError(t, checkKickstartOptions(sp.Stages, pipeline.Kickstart.Unattended, len(pipeline.Kickstart.SudoNopasswd) > 0, ""))
 	})
 
@@ -400,12 +390,9 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 			Unattended:   true,
 			SudoNopasswd: []string{`%wheel`, `%sudo`},
 		}
-		pipeline.ISOBoot = SyslinuxISOBoot
-		pipeline.serializeStart(Inputs{})
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
-		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"),
-			variantStages))
+		pipeline.ISOBoot = manifest.SyslinuxISOBoot
+		sp := manifest.SerializeWith(pipeline, manifest.Inputs{})
+		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"), variantStages))
 		assert.NoError(t, checkKickstartOptions(sp.Stages, pipeline.Kickstart.Unattended, len(pipeline.Kickstart.SudoNopasswd) > 0, ""))
 	})
 
@@ -420,12 +407,9 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 				Contents: userks,
 			},
 		}
-		pipeline.ISOBoot = SyslinuxISOBoot
-		pipeline.serializeStart(Inputs{})
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
-		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"),
-			variantStages))
+		pipeline.ISOBoot = manifest.SyslinuxISOBoot
+		sp := manifest.SerializeWith(pipeline, manifest.Inputs{})
+		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux", "org.osbuild.kickstart"), variantStages))
 		assert.NoError(t, checkKickstartOptions(sp.Stages, pipeline.Kickstart.Unattended, len(pipeline.Kickstart.SudoNopasswd) > 0, userks))
 	})
 
@@ -440,9 +424,8 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 				Contents: userks,
 			},
 		}
-		pipeline.ISOBoot = SyslinuxISOBoot
-		pipeline.serializeStart(Inputs{})
-		assert.Panics(t, func() { pipeline.serialize() })
+		pipeline.ISOBoot = manifest.SyslinuxISOBoot
+		assert.Panics(t, func() { manifest.SerializeWith(pipeline, manifest.Inputs{}) })
 	})
 
 	t.Run("unhappy/user-kickstart-with-sudo-bits", func(t *testing.T) {
@@ -456,18 +439,15 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 				Contents: userks,
 			},
 		}
-		pipeline.ISOBoot = SyslinuxISOBoot
-		pipeline.serializeStart(Inputs{})
-		assert.Panics(t, func() { pipeline.serialize() })
+		pipeline.ISOBoot = manifest.SyslinuxISOBoot
+		assert.Panics(t, func() { manifest.SerializeWith(pipeline, manifest.Inputs{}) })
 	})
 
 	t.Run("plain+squashfs-rootfs", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.OSPipeline = osPayload
-		pipeline.RootfsType = SquashfsRootfs
-		pipeline.serializeStart(Inputs{})
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
+		pipeline.RootfsType = manifest.SquashfsRootfs
+		sp := manifest.SerializeWith(pipeline, manifest.Inputs{})
 		assert.NoError(t, checkISOTreeStages(sp.Stages, payloadStages,
 			append(variantStages, []string{"org.osbuild.kickstart", "org.osbuild.isolinux"}...)),
 			dumpStages(sp.Stages))
@@ -476,10 +456,8 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 	t.Run("plain+erofs-rootfs", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.OSPipeline = osPayload
-		pipeline.RootfsType = ErofsRootfs
-		pipeline.serializeStart(Inputs{})
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
+		pipeline.RootfsType = manifest.ErofsRootfs
+		sp := manifest.SerializeWith(pipeline, manifest.Inputs{})
 		assert.NoError(t, checkISOTreeStages(sp.Stages,
 			append(payloadStages, "org.osbuild.erofs"),
 			append(variantStages, []string{"org.osbuild.kickstart", "org.osbuild.isolinux", "org.osbuild.squashfs"}...)),
@@ -509,9 +487,7 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 	t.Run("plain", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath, OSTree: &kickstart.OSTree{}}
-		pipeline.serializeStart(Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
+		sp := manifest.SerializeWith(pipeline, manifest.Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
 		assert.NoError(t, checkISOTreeStages(sp.Stages, payloadStages,
 			append(variantStages, "org.osbuild.isolinux")))
 	})
@@ -520,20 +496,16 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 	t.Run("isolinux", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath, OSTree: &kickstart.OSTree{}}
-		pipeline.ISOBoot = SyslinuxISOBoot
-		pipeline.serializeStart(Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
+		pipeline.ISOBoot = manifest.SyslinuxISOBoot
+		sp := manifest.SerializeWith(pipeline, manifest.Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
 	})
 
 	t.Run("unattended", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath, Unattended: true, OSTree: &kickstart.OSTree{}}
-		pipeline.ISOBoot = SyslinuxISOBoot
-		pipeline.serializeStart(Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
+		pipeline.ISOBoot = manifest.SyslinuxISOBoot
+		sp := manifest.SerializeWith(pipeline, manifest.Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
 		assert.NoError(t, checkKickstartOptions(sp.Stages, pipeline.Kickstart.Unattended, len(pipeline.Kickstart.SudoNopasswd) > 0, ""))
 	})
@@ -546,10 +518,8 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 			SudoNopasswd: []string{`%wheel`, `%sudo`},
 			OSTree:       &kickstart.OSTree{},
 		}
-		pipeline.ISOBoot = SyslinuxISOBoot
-		pipeline.serializeStart(Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
+		pipeline.ISOBoot = manifest.SyslinuxISOBoot
+		sp := manifest.SerializeWith(pipeline, manifest.Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
 		assert.NoError(t, checkKickstartOptions(sp.Stages, pipeline.Kickstart.Unattended, len(pipeline.Kickstart.SudoNopasswd) > 0, ""))
 	})
@@ -565,10 +535,8 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 			},
 			OSTree: &kickstart.OSTree{},
 		}
-		pipeline.ISOBoot = SyslinuxISOBoot
-		pipeline.serializeStart(Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
+		pipeline.ISOBoot = manifest.SyslinuxISOBoot
+		sp := manifest.SerializeWith(pipeline, manifest.Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
 		assert.NoError(t, checkKickstartOptions(sp.Stages, pipeline.Kickstart.Unattended, len(pipeline.Kickstart.SudoNopasswd) > 0, userks))
 	})
@@ -584,9 +552,8 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 			},
 			OSTree: &kickstart.OSTree{},
 		}
-		pipeline.ISOBoot = SyslinuxISOBoot
-		pipeline.serializeStart(Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
-		assert.Panics(t, func() { pipeline.serialize() })
+		pipeline.ISOBoot = manifest.SyslinuxISOBoot
+		assert.Panics(t, func() { manifest.SerializeWith(pipeline, manifest.Inputs{Commits: []ostree.CommitSpec{ostreeCommit}}) })
 	})
 
 	t.Run("unhappy/user-kickstart-with-sudo-bits", func(t *testing.T) {
@@ -601,30 +568,23 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 			SudoNopasswd: []string{`%wheel`, `%sudo`},
 			OSTree:       &kickstart.OSTree{},
 		}
-		pipeline.ISOBoot = SyslinuxISOBoot
-		pipeline.serializeStart(Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
-		assert.Panics(t, func() { pipeline.serialize() })
+		pipeline.ISOBoot = manifest.SyslinuxISOBoot
+		assert.Panics(t, func() { manifest.SerializeWith(pipeline, manifest.Inputs{Commits: []ostree.CommitSpec{ostreeCommit}}) })
 	})
 
 	t.Run("plain+squashfs-rootfs", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
-		pipeline.RootfsType = SquashfsRootfs
+		pipeline.RootfsType = manifest.SquashfsRootfs
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath, OSTree: &kickstart.OSTree{}}
-		pipeline.serializeStart(Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
-		assert.NoError(t, checkISOTreeStages(sp.Stages, payloadStages,
-			append(variantStages, "org.osbuild.isolinux")),
-			dumpStages(sp.Stages))
+		sp := manifest.SerializeWith(pipeline, manifest.Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
+		assert.NoError(t, checkISOTreeStages(sp.Stages, payloadStages, append(variantStages, "org.osbuild.isolinux")), dumpStages(sp.Stages))
 	})
 
 	t.Run("plain+erofs-erofs", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
-		pipeline.RootfsType = ErofsRootfs
+		pipeline.RootfsType = manifest.ErofsRootfs
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath, OSTree: &kickstart.OSTree{}}
-		pipeline.serializeStart(Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
+		sp := manifest.SerializeWith(pipeline, manifest.Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
 		assert.NoError(t, checkISOTreeStages(sp.Stages,
 			append(payloadStages, "org.osbuild.erofs"),
 			append(variantStages, []string{"org.osbuild.isolinux", "org.osbuild.squashfs"}...)),
@@ -658,21 +618,16 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 	t.Run("kspath", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
-		pipeline.serializeStart(Inputs{Containers: []container.Spec{containerPayload}})
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
-		assert.NoError(t, checkISOTreeStages(sp.Stages, payloadStages,
-			append(variantStages, "org.osbuild.isolinux")))
+		sp := manifest.SerializeWith(pipeline, manifest.Inputs{Containers: []container.Spec{containerPayload}})
+		assert.NoError(t, checkISOTreeStages(sp.Stages, payloadStages, append(variantStages, "org.osbuild.isolinux")))
 	})
 
 	// enable syslinux iso and check again
 	t.Run("isolinux", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
-		pipeline.ISOBoot = SyslinuxISOBoot
-		pipeline.serializeStart(Inputs{Containers: []container.Spec{containerPayload}})
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
+		pipeline.ISOBoot = manifest.SyslinuxISOBoot
+		sp := manifest.SerializeWith(pipeline, manifest.Inputs{Containers: []container.Spec{containerPayload}})
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
 	})
 
@@ -683,9 +638,7 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 			Unattended:          true,
 			KernelOptionsAppend: []string{"kernel.opt=1", "debug"},
 		}
-		pipeline.serializeStart(Inputs{Containers: []container.Spec{containerPayload}})
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
+		sp := manifest.SerializeWith(pipeline, manifest.Inputs{Containers: []container.Spec{containerPayload}})
 		kickstartSt := findStage("org.osbuild.kickstart", sp.Stages)
 		assert.NotNil(t, kickstartSt)
 		opts := kickstartSt.Options.(*osbuild.KickstartStageOptions)
@@ -695,9 +648,7 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 	t.Run("network-on-boot", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath, NetworkOnBoot: true}
-		pipeline.serializeStart(Inputs{Containers: []container.Spec{containerPayload}})
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
+		sp := manifest.SerializeWith(pipeline, manifest.Inputs{Containers: []container.Spec{containerPayload}})
 		kickstartSt := findStage("org.osbuild.kickstart", sp.Stages)
 		assert.NotNil(t, kickstartSt)
 		opts := kickstartSt.Options.(*osbuild.KickstartStageOptions)
@@ -714,10 +665,8 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 				Contents: userks,
 			},
 		}
-		pipeline.ISOBoot = SyslinuxISOBoot
-		pipeline.serializeStart(Inputs{Containers: []container.Spec{containerPayload}})
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
+		pipeline.ISOBoot = manifest.SyslinuxISOBoot
+		sp := manifest.SerializeWith(pipeline, manifest.Inputs{Containers: []container.Spec{containerPayload}})
 		assert.NoError(t, checkISOTreeStages(sp.Stages, append(payloadStages, "org.osbuild.isolinux"), variantStages))
 		assert.NoError(t, checkRawKickstartForContainer(sp.Stages, userks))
 	})
@@ -726,9 +675,7 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
 		pipeline.PayloadRemoveSignatures = true
-		pipeline.serializeStart(Inputs{Containers: []container.Spec{containerPayload}})
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
+		sp := manifest.SerializeWith(pipeline, manifest.Inputs{Containers: []container.Spec{containerPayload}})
 		skopeoStage := findStage("org.osbuild.skopeo", sp.Stages)
 		assert.NotNil(t, skopeoStage)
 		assert.Equal(t, skopeoStage.Options.(*osbuild.SkopeoStageOptions).RemoveSignatures, common.ToPtr(true))
@@ -736,11 +683,9 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 
 	t.Run("plain+squashfs-rootfs", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
-		pipeline.RootfsType = SquashfsRootfs
+		pipeline.RootfsType = manifest.SquashfsRootfs
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
-		pipeline.serializeStart(Inputs{Containers: []container.Spec{containerPayload}})
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
+		sp := manifest.SerializeWith(pipeline, manifest.Inputs{Containers: []container.Spec{containerPayload}})
 		assert.NoError(t, checkISOTreeStages(sp.Stages, payloadStages,
 			append(variantStages, "org.osbuild.isolinux")),
 			dumpStages(sp.Stages))
@@ -748,11 +693,9 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 
 	t.Run("plain+erofs-rootfs", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree()
-		pipeline.RootfsType = ErofsRootfs
+		pipeline.RootfsType = manifest.ErofsRootfs
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
-		pipeline.serializeStart(Inputs{Containers: []container.Spec{containerPayload}})
-		sp := pipeline.serialize()
-		pipeline.serializeEnd()
+		sp := manifest.SerializeWith(pipeline, manifest.Inputs{Containers: []container.Spec{containerPayload}})
 		assert.NoError(t, checkISOTreeStages(sp.Stages,
 			append(payloadStages, "org.osbuild.erofs"),
 			append(variantStages, []string{"org.osbuild.isolinux", "org.osbuild.squashfs"}...)),
@@ -770,17 +713,15 @@ func TestMakeKickstartSudoersPost(t *testing.T) {
 			`restorecon -rvF /etc/sudoers.d`,
 		},
 	}
-	assert.Equal(t, exp, makeKickstartSudoersPost([]string{"user42", "%group31"}))
-	assert.Equal(t, exp, makeKickstartSudoersPost([]string{"%group31", "user42"}))
-	assert.Equal(t, exp, makeKickstartSudoersPost([]string{"%group31", "user42", "%group31"}))
-	assert.Equal(t, exp, makeKickstartSudoersPost([]string{"%group31", "user42", "%group31", "%group31", "user42", "%group31", "%group31", "user42", "%group31"}))
+	assert.Equal(t, exp, manifest.MakeKickstartSudoersPost([]string{"user42", "%group31"}))
+	assert.Equal(t, exp, manifest.MakeKickstartSudoersPost([]string{"%group31", "user42"}))
+	assert.Equal(t, exp, manifest.MakeKickstartSudoersPost([]string{"%group31", "user42", "%group31"}))
+	assert.Equal(t, exp, manifest.MakeKickstartSudoersPost([]string{"%group31", "user42", "%group31", "%group31", "user42", "%group31", "%group31", "user42", "%group31"}))
 }
 
-func stagesFrom(pipeline Pipeline) []*osbuild.Stage {
+func stagesFrom(pipeline manifest.Pipeline) []*osbuild.Stage {
 	containerPayload := makeFakeContainerPayload()
-	pipeline.serializeStart(Inputs{Containers: []container.Spec{containerPayload}})
-	sp := pipeline.serialize()
-	pipeline.serializeEnd()
+	sp := manifest.SerializeWith(pipeline, manifest.Inputs{Containers: []container.Spec{containerPayload}})
 	return sp.Stages
 }
 
@@ -804,16 +745,16 @@ func TestPayloadRemoveSignatures(t *testing.T) {
 
 func TestISORootfsType(t *testing.T) {
 	var rootFS struct {
-		ISORootfsType RootfsType `yaml:"iso_rootfs_type"`
+		ISORootfsType manifest.RootfsType `yaml:"iso_rootfs_type"`
 	}
 
 	for _, tc := range []struct {
 		fstype   string
-		expected RootfsType
+		expected manifest.RootfsType
 	}{
-		{"squashfs-ext4", SquashfsExt4Rootfs},
-		{"squashfs", SquashfsRootfs},
-		{"erofs", ErofsRootfs},
+		{"squashfs-ext4", manifest.SquashfsExt4Rootfs},
+		{"squashfs", manifest.SquashfsRootfs},
+		{"erofs", manifest.ErofsRootfs},
 	} {
 		err := yaml.Unmarshal([]byte(fmt.Sprintf("iso_rootfs_type: %s", tc.fstype)), &rootFS)
 		require.NoError(t, err)
@@ -823,7 +764,7 @@ func TestISORootfsType(t *testing.T) {
 
 func TestISORootfsTypeError(t *testing.T) {
 	var rootFS struct {
-		ISORootfsType RootfsType `yaml:"iso_rootfs_type"`
+		ISORootfsType manifest.RootfsType `yaml:"iso_rootfs_type"`
 	}
 
 	err := yaml.Unmarshal([]byte("iso_rootfs_type: non-exiting"), &rootFS)
@@ -832,17 +773,17 @@ func TestISORootfsTypeError(t *testing.T) {
 
 func TestISOBootType(t *testing.T) {
 	var isoBoot struct {
-		ISOBootType ISOBootType `yaml:"iso_boot_type"`
+		ISOBootType manifest.ISOBootType `yaml:"iso_boot_type"`
 	}
 
 	for _, tc := range []struct {
 		boottype string
-		expected ISOBootType
+		expected manifest.ISOBootType
 	}{
-		{"", Grub2UEFIOnlyISOBoot},
-		{"grub2-uefi", Grub2UEFIOnlyISOBoot},
-		{"syslinux", SyslinuxISOBoot},
-		{"grub2", Grub2ISOBoot},
+		{"", manifest.Grub2UEFIOnlyISOBoot},
+		{"grub2-uefi", manifest.Grub2UEFIOnlyISOBoot},
+		{"syslinux", manifest.SyslinuxISOBoot},
+		{"grub2", manifest.Grub2ISOBoot},
 	} {
 		err := yaml.Unmarshal([]byte(fmt.Sprintf("iso_boot_type: %s", tc.boottype)), &isoBoot)
 		require.NoError(t, err)
@@ -852,7 +793,7 @@ func TestISOBootType(t *testing.T) {
 
 func TestISOBootTypeError(t *testing.T) {
 	var isoBoot struct {
-		ISOBootType ISOBootType `yaml:"iso_boot_type"`
+		ISOBootType manifest.ISOBootType `yaml:"iso_boot_type"`
 	}
 
 	err := yaml.Unmarshal([]byte("iso_boot_type: lilo"), &isoBoot)
@@ -874,11 +815,9 @@ func TestAnacondaISOTreeSerializeInstallRootfsType(t *testing.T) {
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
 		pipeline.InstallRootfsType = tc.fs
 
-		pipeline.serializeStart(Inputs{Containers: []container.Spec{makeFakeContainerPayload()}})
-		_ = pipeline.serialize()
-		pipeline.serializeEnd()
+		_ = manifest.SerializeWith(pipeline, manifest.Inputs{Containers: []container.Spec{makeFakeContainerPayload()}})
 
-		inlineData := pipeline.getInline()
+		inlineData := manifest.GetInline(pipeline)
 		assert.Len(t, inlineData, 1)
 
 		assert.Contains(t, inlineData[0], tc.expected)

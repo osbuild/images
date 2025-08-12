@@ -67,7 +67,7 @@ func TestRawBootcImageSerialize(t *testing.T) {
 	imagePipeline := rawBootcPipeline.Serialize()
 	assert.Equal(t, "image", imagePipeline.Name)
 
-	bootcInst := manifest.FindStage("org.osbuild.bootc.install-to-filesystem", imagePipeline.Stages)
+	bootcInst := findStage("org.osbuild.bootc.install-to-filesystem", imagePipeline.Stages)
 	require.NotNil(t, bootcInst)
 	opts := bootcInst.Options.(*osbuild.BootcInstallToFilesystemOptions)
 	// Note that the root account is customized via the "users" stage
@@ -134,7 +134,7 @@ func TestRawBootcImageSerializeCreateUsersOptions(t *testing.T) {
 		rawBootcPipeline.Users = tc.users
 
 		pipeline := rawBootcPipeline.Serialize()
-		usersStage := manifest.FindStage("org.osbuild.users", pipeline.Stages)
+		usersStage := findStage("org.osbuild.users", pipeline.Stages)
 		if tc.expectedUsersStage {
 			// ensure options got passed
 			require.NotNil(t, usersStage)
@@ -176,7 +176,7 @@ func TestRawBootcImageSerializeMkdirOptions(t *testing.T) {
 		rawBootcPipeline.Users = tc.users
 
 		pipeline := rawBootcPipeline.Serialize()
-		mkdirStage := manifest.FindStage("org.osbuild.mkdir", pipeline.Stages)
+		mkdirStage := findStage("org.osbuild.mkdir", pipeline.Stages)
 		if len(tc.expectedMkdirPaths) > 0 {
 			// ensure options got passed
 			require.NotNil(t, mkdirStage)
@@ -203,7 +203,7 @@ func TestRawBootcImageSerializeCreateGroupOptions(t *testing.T) {
 		rawBootcPipeline.Groups = tc.groups
 
 		pipeline := rawBootcPipeline.Serialize()
-		groupsStage := manifest.FindStage("org.osbuild.groups", pipeline.Stages)
+		groupsStage := findStage("org.osbuild.groups", pipeline.Stages)
 		if tc.expectedGroupsStage {
 			// ensure options got passed
 			require.NotNil(t, groupsStage)
@@ -248,7 +248,7 @@ func TestRawBootcImageSerializeCustomizationGenCorrectStages(t *testing.T) {
 
 		pipeline := rawBootcPipeline.Serialize()
 		for _, expectedStage := range tc.expectedStages {
-			stage := manifest.FindStage(expectedStage, pipeline.Stages)
+			stage := findStage(expectedStage, pipeline.Stages)
 			assert.NotNil(t, stage)
 			assertBootcDeploymentAndBindMount(t, stage)
 		}
@@ -279,7 +279,7 @@ func RawBootcImageSerializeFstabPipelineHasBootcMounts(t *testing.T) {
 	rawBootcPipeline := makeFakeRawBootcPipeline()
 	pipeline := rawBootcPipeline.Serialize()
 
-	stage := manifest.FindStage("org.osbuild.fstab", pipeline.Stages)
+	stage := findStage("org.osbuild.fstab", pipeline.Stages)
 	assert.NotNil(t, stage)
 	assertBootcDeploymentAndBindMount(t, stage)
 }
@@ -309,7 +309,7 @@ func TestRawBootcImageSerializeCreateFilesDirs(t *testing.T) {
 			pipeline := rawBootcPipeline.Serialize()
 
 			// check dirs
-			mkdirStage := manifest.FindStage("org.osbuild.mkdir", pipeline.Stages)
+			mkdirStage := findStage("org.osbuild.mkdir", pipeline.Stages)
 			if len(tc.dirs) > 0 {
 				// ensure options got passed
 				require.NotNil(t, mkdirStage)
@@ -321,7 +321,7 @@ func TestRawBootcImageSerializeCreateFilesDirs(t *testing.T) {
 			}
 
 			// check files
-			copyStage := manifest.FindStage("org.osbuild.copy", pipeline.Stages)
+			copyStage := findStage("org.osbuild.copy", pipeline.Stages)
 			if len(tc.files) > 0 {
 				// ensure options got passed
 				require.NotNil(t, copyStage)
@@ -332,7 +332,7 @@ func TestRawBootcImageSerializeCreateFilesDirs(t *testing.T) {
 				assert.Nil(t, copyStage)
 			}
 
-			selinuxStage := manifest.FindStage("org.osbuild.selinux", pipeline.Stages)
+			selinuxStage := findStage("org.osbuild.selinux", pipeline.Stages)
 
 			assert.NotNil(t, selinuxStage)
 

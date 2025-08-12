@@ -12,6 +12,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Creates a manifest.Inputs with one (empty) commit spec for serializing
+// pipelines that require a single ostree commit. The contents of the commit
+// spec don't matter.
+func testCommitInputs() manifest.Inputs {
+	return manifest.Inputs{
+		Commits: []ostree.CommitSpec{{}},
+	}
+}
+
 // NewTestOSTreeDeployment returns a minimally populated OSTreeDeployment for
 // use in testing
 func NewTestOSTreeDeployment() *manifest.OSTreeDeployment {
@@ -36,7 +45,7 @@ func TestOSTreeDeploymentPipelineFStabStage(t *testing.T) {
 	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/") // PT specifics don't matter
 	pipeline.MountUnits = false                                    // set it explicitly just to be sure
 
-	checkStagesForFSTab(t, pipeline.Serialize().Stages)
+	checkStagesForFSTab(t, manifest.SerializeWith(pipeline, testCommitInputs()).Stages)
 }
 
 func TestOSTreeDeploymentPipelineMountUnitStages(t *testing.T) {
@@ -46,7 +55,7 @@ func TestOSTreeDeploymentPipelineMountUnitStages(t *testing.T) {
 	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/home")
 	pipeline.MountUnits = true
 
-	checkStagesForMountUnits(t, pipeline.Serialize().Stages, expectedUnits)
+	checkStagesForMountUnits(t, manifest.SerializeWith(pipeline, testCommitInputs()).Stages, expectedUnits)
 }
 
 func TestAddInlineOSTreeDeployment(t *testing.T) {
@@ -69,7 +78,7 @@ func TestAddInlineOSTreeDeployment(t *testing.T) {
 
 	// the OSTreeDeployment pipeline *requires* a partition table
 	deployment.PartitionTable = testdisk.MakeFakeBtrfsPartitionTable("/")
-	pipeline := deployment.Serialize()
+	pipeline := manifest.SerializeWith(deployment, testCommitInputs())
 
 	destinationPaths := collectCopyDestinationPaths(pipeline.Stages)
 
@@ -82,7 +91,7 @@ func TestAddInlineOSTreeDeployment(t *testing.T) {
 		"# FIPS module installation complete\n",
 	}
 
-	fileContents := deployment.GetInline()
+	fileContents := manifest.GetInline(deployment)
 	// These are used to define the 'sources' part of the manifest, so the
 	// order doesn't matter
 	require.ElementsMatch(expectedContents, fileContents)

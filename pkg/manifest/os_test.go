@@ -22,22 +22,12 @@ import (
 	"github.com/osbuild/images/pkg/runner"
 )
 
-func findStages(name string, stages []*osbuild.Stage) []*osbuild.Stage {
-	var foundStages []*osbuild.Stage
-	for _, s := range stages {
-		if s.Type == name {
-			foundStages = append(foundStages, s)
-		}
-	}
-	return foundStages
-}
-
 // CheckSystemdStageOptions checks the Command strings
 func CheckSystemdStageOptions(t *testing.T, stages []*osbuild.Stage, commands []string) {
 	t.Helper()
 
 	// Find the systemd.unit.create stage
-	s := manifest.FindStage("org.osbuild.systemd.unit.create", stages)
+	s := findStage("org.osbuild.systemd.unit.create", stages)
 	require.NotNil(t, s)
 
 	require.NotNil(t, s.Options)
@@ -166,7 +156,7 @@ func TestBootupdStage(t *testing.T) {
 	os.OSTreeRef = "some/ref"
 	os.Bootupd = true
 	pipeline := os.Serialize()
-	st := manifest.FindStage("org.osbuild.bootupd.gen-metadata", pipeline.Stages)
+	st := findStage("org.osbuild.bootupd.gen-metadata", pipeline.Stages)
 	require.NotNil(t, st)
 }
 
@@ -179,7 +169,7 @@ func TestInsightsClientConfigStage(t *testing.T) {
 		},
 	}
 	pipeline := os.Serialize()
-	st := manifest.FindStage("org.osbuild.insights-client.config", pipeline.Stages)
+	st := findStage("org.osbuild.insights-client.config", pipeline.Stages)
 	require.NotNil(t, st)
 }
 
@@ -229,7 +219,7 @@ func TestMachineIdUninitializedIncludesMachineIdStage(t *testing.T) {
 	os.OSCustomizations.MachineIdUninitialized = true
 
 	pipeline := os.Serialize()
-	st := manifest.FindStage("org.osbuild.machine-id", pipeline.Stages)
+	st := findStage("org.osbuild.machine-id", pipeline.Stages)
 	require.NotNil(t, st)
 }
 
@@ -237,7 +227,7 @@ func TestMachineIdUninitializedDoesNotIncludeMachineIdStage(t *testing.T) {
 	os := manifest.NewTestOS()
 
 	pipeline := os.Serialize()
-	st := manifest.FindStage("org.osbuild.machine-id", pipeline.Stages)
+	st := findStage("org.osbuild.machine-id", pipeline.Stages)
 	require.Nil(t, st)
 }
 
@@ -263,8 +253,8 @@ func TestModularityIncludesConfigStage(t *testing.T) {
 				},
 			}},
 	}
-	pipeline := os.SerializeWith(inputs)
-	st := manifest.FindStage("org.osbuild.dnf.module-config", pipeline.Stages)
+	pipeline := manifest.SerializeWith(os, inputs)
+	st := findStage("org.osbuild.dnf.module-config", pipeline.Stages)
 	require.NotNil(t, st)
 }
 
@@ -272,12 +262,12 @@ func TestModularityDoesNotIncludeConfigStage(t *testing.T) {
 	os := manifest.NewTestOS()
 
 	pipeline := os.Serialize()
-	st := manifest.FindStage("org.osbuild.dnf.module-config", pipeline.Stages)
+	st := findStage("org.osbuild.dnf.module-config", pipeline.Stages)
 	require.Nil(t, st)
 }
 
 func checkStagesForFSTab(t *testing.T, stages []*osbuild.Stage) {
-	fstab := manifest.FindStage("org.osbuild.fstab", stages)
+	fstab := findStage("org.osbuild.fstab", stages)
 	require.NotNil(t, fstab)
 
 	// The plain OS pipeline doesn't have any systemd.unit.create stages by
@@ -289,7 +279,7 @@ func checkStagesForFSTab(t *testing.T, stages []*osbuild.Stage) {
 }
 
 func checkStagesForMountUnits(t *testing.T, stages []*osbuild.Stage, expectedUnits []string) {
-	fstab := manifest.FindStage("org.osbuild.fstab", stages)
+	fstab := findStage("org.osbuild.fstab", stages)
 	require.Nil(t, fstab)
 
 	// The plain OS pipeline doesn't have any systemd.unit.create stages by
@@ -307,7 +297,7 @@ func checkStagesForMountUnits(t *testing.T, stages []*osbuild.Stage, expectedUni
 	require.ElementsMatch(t, mountUnitFilenames, expectedUnits)
 
 	// creating mount units also adds a systemd stage to enable them
-	enable := manifest.FindStage("org.osbuild.systemd", stages)
+	enable := findStage("org.osbuild.systemd", stages)
 	require.NotNil(t, enable)
 	enableOptions := enable.Options.(*osbuild.SystemdStageOptions)
 	require.ElementsMatch(t, enableOptions.EnabledServices, expectedUnits)
@@ -339,7 +329,7 @@ func TestLanguageIncludesLocaleStage(t *testing.T) {
 	os.OSCustomizations.Language = "en_US.UTF-8"
 
 	pipeline := os.Serialize()
-	st := manifest.FindStage("org.osbuild.locale", pipeline.Stages)
+	st := findStage("org.osbuild.locale", pipeline.Stages)
 	require.NotNil(t, st)
 }
 
@@ -347,7 +337,7 @@ func TestLanguageDoesNotIncludeLocaleStage(t *testing.T) {
 	os := manifest.NewTestOS()
 
 	pipeline := os.Serialize()
-	st := manifest.FindStage("org.osbuild.locale", pipeline.Stages)
+	st := findStage("org.osbuild.locale", pipeline.Stages)
 	require.Nil(t, st)
 }
 
@@ -357,7 +347,7 @@ func TestTimezoneIncludesTimezoneStage(t *testing.T) {
 	os.OSCustomizations.Timezone = "Etc/UTC"
 
 	pipeline := os.Serialize()
-	st := manifest.FindStage("org.osbuild.timezone", pipeline.Stages)
+	st := findStage("org.osbuild.timezone", pipeline.Stages)
 	require.NotNil(t, st)
 }
 
@@ -365,7 +355,7 @@ func TestTimezoneDoesNotIncludeTimezoneStage(t *testing.T) {
 	os := manifest.NewTestOS()
 
 	pipeline := os.Serialize()
-	st := manifest.FindStage("org.osbuild.timezone", pipeline.Stages)
+	st := findStage("org.osbuild.timezone", pipeline.Stages)
 	require.Nil(t, st)
 }
 
@@ -375,7 +365,7 @@ func TestHostnameIncludesHostnameStage(t *testing.T) {
 	os.OSCustomizations.Hostname = "funky.name"
 
 	pipeline := os.Serialize()
-	st := manifest.FindStage("org.osbuild.hostname", pipeline.Stages)
+	st := findStage("org.osbuild.hostname", pipeline.Stages)
 	require.NotNil(t, st)
 }
 
@@ -383,7 +373,7 @@ func TestHostnameDoesNotIncludeHostnameStage(t *testing.T) {
 	os := manifest.NewTestOS()
 
 	pipeline := os.Serialize()
-	st := manifest.FindStage("org.osbuild.hostname", pipeline.Stages)
+	st := findStage("org.osbuild.hostname", pipeline.Stages)
 	require.Nil(t, st)
 }
 
@@ -426,7 +416,7 @@ func TestAddInlineOS(t *testing.T) {
 		"# FIPS module installation complete\n",
 	}
 
-	fileContents := os.GetInline()
+	fileContents := manifest.GetInline(os)
 	// These are used to define the 'sources' part of the manifest, so the
 	// order doesn't matter
 	require.ElementsMatch(expectedContents, fileContents)
@@ -502,9 +492,9 @@ func TestHMACStageInclusion(t *testing.T) {
 		os := manifest.NewOS(build, platform, repos)
 		os.PartitionTable = &pt
 		os.OSCustomizations.KernelName = "test-kernel"
-		pipeline := os.SerializeWith(inputs)
+		pipeline := manifest.SerializeWith(os, inputs)
 
-		hmacStage := manifest.FindStage("org.osbuild.hmac", pipeline.Stages)
+		hmacStage := findStage("org.osbuild.hmac", pipeline.Stages)
 		assert.NotNil(t, hmacStage)
 		hmacStageOptions := hmacStage.Options.(*osbuild.HMACStageOptions)
 		assert.Equal(t, hmacStageOptions.Paths, []string{"/boot/efi/EFI/Linux/ffffffffffffffffffffffffffffffff-13.3-7.el9.x86_64.efi"})
@@ -556,9 +546,9 @@ func TestHMACStageInclusion(t *testing.T) {
 		build := manifest.NewBuild(&m, runner, repos, nil)
 		os := manifest.NewOS(build, platform, repos)
 		os.PartitionTable = &pt
-		pipeline := os.SerializeWith(inputs)
+		pipeline := manifest.SerializeWith(os, inputs)
 
-		hmacStage := manifest.FindStage("org.osbuild.hmac", pipeline.Stages)
+		hmacStage := findStage("org.osbuild.hmac", pipeline.Stages)
 		assert.Nil(t, hmacStage)
 
 		dirStages := findStages("org.osbuild.mkdir", pipeline.Stages)
@@ -634,8 +624,8 @@ func TestShimVersionLock(t *testing.T) {
 		},
 	}
 
-	pipeline := os.SerializeWith(inputs)
-	versionlockStage := manifest.FindStage("org.osbuild.dnf4.versionlock", pipeline.Stages)
+	pipeline := manifest.SerializeWith(os, inputs)
+	versionlockStage := findStage("org.osbuild.dnf4.versionlock", pipeline.Stages)
 	assert.NotNil(t, versionlockStage)
 	stageOptions := versionlockStage.Options.(*osbuild.DNF4VersionlockOptions)
 

@@ -1,4 +1,4 @@
-package manifest
+package manifest_test
 
 import (
 	"testing"
@@ -7,16 +7,17 @@ import (
 
 	"github.com/osbuild/images/pkg/customizations/anaconda"
 	"github.com/osbuild/images/pkg/dnfjson"
+	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/runner"
 )
 
-func newAnacondaInstaller() *AnacondaInstaller {
-	m := &Manifest{}
+func newAnacondaInstaller() *manifest.AnacondaInstaller {
+	m := &manifest.Manifest{}
 	runner := &runner.Linux{}
-	build := NewBuild(m, runner, nil, nil)
+	build := manifest.NewBuild(m, runner, nil, nil)
 
 	x86plat := &platform.X86{}
 
@@ -25,7 +26,7 @@ func newAnacondaInstaller() *AnacondaInstaller {
 
 	preview := false
 
-	installer := NewAnacondaInstaller(AnacondaInstallerTypePayload, build, x86plat, nil, "kernel", product, osversion, preview)
+	installer := manifest.NewAnacondaInstaller(manifest.AnacondaInstallerTypePayload, build, x86plat, nil, "kernel", product, osversion, preview)
 	return installer
 }
 
@@ -83,9 +84,7 @@ func TestAnacondaInstallerModules(t *testing.T) {
 				installerPipeline.UseLegacyAnacondaConfig = legacy
 				installerPipeline.EnabledAnacondaModules = tc.enable
 				installerPipeline.DisabledAnacondaModules = tc.disable
-				installerPipeline.serializeStart(Inputs{Depsolved: dnfjson.DepsolveResult{Packages: pkgs}})
-				pipeline := installerPipeline.serialize()
-
+				pipeline := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: dnfjson.DepsolveResult{Packages: pkgs}})
 				require := require.New(t)
 				require.NotNil(pipeline)
 				require.NotNil(pipeline.Stages)
@@ -130,9 +129,7 @@ func TestISOLocale(t *testing.T) {
 		t.Run(input, func(t *testing.T) {
 			installerPipeline := newAnacondaInstaller()
 			installerPipeline.Locale = input
-			installerPipeline.serializeStart(Inputs{Depsolved: dnfjson.DepsolveResult{Packages: pkgs}})
-			pipeline := installerPipeline.serialize()
-
+			pipeline := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: dnfjson.DepsolveResult{Packages: pkgs}})
 			require := require.New(t)
 			require.NotNil(pipeline)
 			require.NotNil(pipeline.Stages)
@@ -161,8 +158,7 @@ func TestAnacondaInstallerDracutModulesAndDrivers(t *testing.T) {
 	installerPipeline := newAnacondaInstaller()
 	installerPipeline.AdditionalDracutModules = []string{"test-module"}
 	installerPipeline.AdditionalDrivers = []string{"test-driver"}
-	installerPipeline.serializeStart(Inputs{Depsolved: dnfjson.DepsolveResult{Packages: pkgs}})
-	pipeline := installerPipeline.serialize()
+	pipeline := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: dnfjson.DepsolveResult{Packages: pkgs}})
 
 	require := require.New(t)
 	require.NotNil(pipeline)
