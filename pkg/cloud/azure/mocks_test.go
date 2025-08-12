@@ -6,6 +6,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v5"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v7"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 
@@ -36,6 +37,7 @@ func makePoller[T any](result *T) (*runtime.Poller[T], error) {
 			Handler: &mockPollerHandler[T]{
 				result: result,
 			},
+			Response: result,
 		},
 	)
 }
@@ -167,5 +169,252 @@ func (im *imagesMock) BeginCreateOrUpdate(ctx context.Context, rg string, name s
 		&armcompute.ImagesClientCreateOrUpdateResponse{
 			Image: img,
 		},
+	)
+}
+
+type vnetMock struct {
+	createOrUpdate []vnetCreateOrUpdateArgs
+	delete         []vnetDeleteArgs
+}
+
+type vnetCreateOrUpdateArgs struct {
+	rg      string
+	name    string
+	vnet    armnetwork.VirtualNetwork
+	options *armnetwork.VirtualNetworksClientBeginCreateOrUpdateOptions
+}
+
+type vnetDeleteArgs struct {
+	rg      string
+	name    string
+	options *armnetwork.VirtualNetworksClientBeginDeleteOptions
+}
+
+func (vnetm *vnetMock) BeginCreateOrUpdate(ctx context.Context, rg, name string, vnet armnetwork.VirtualNetwork, options *armnetwork.VirtualNetworksClientBeginCreateOrUpdateOptions) (*runtime.Poller[armnetwork.VirtualNetworksClientCreateOrUpdateResponse], error) {
+	vnetm.createOrUpdate = append(vnetm.createOrUpdate, vnetCreateOrUpdateArgs{rg, name, vnet, options})
+
+	vnet.ID = common.ToPtr("vnet-id")
+	vnet.Name = &name
+	return makePoller[armnetwork.VirtualNetworksClientCreateOrUpdateResponse](
+		&armnetwork.VirtualNetworksClientCreateOrUpdateResponse{
+			VirtualNetwork: vnet,
+		},
+	)
+}
+
+func (vnetm *vnetMock) BeginDelete(ctx context.Context, rg, name string, options *armnetwork.VirtualNetworksClientBeginDeleteOptions) (*runtime.Poller[armnetwork.VirtualNetworksClientDeleteResponse], error) {
+	vnetm.delete = append(vnetm.delete, vnetDeleteArgs{rg, name, options})
+	return makePoller[armnetwork.VirtualNetworksClientDeleteResponse](
+		&armnetwork.VirtualNetworksClientDeleteResponse{},
+	)
+}
+
+type subnetMock struct {
+	createOrUpdate []subnetCreateOrUpdateArgs
+	delete         []subnetDeleteArgs
+}
+
+type subnetCreateOrUpdateArgs struct {
+	rg      string
+	vnet    string
+	name    string
+	subnet  armnetwork.Subnet
+	options *armnetwork.SubnetsClientBeginCreateOrUpdateOptions
+}
+
+type subnetDeleteArgs struct {
+	rg      string
+	vnet    string
+	name    string
+	options *armnetwork.SubnetsClientBeginDeleteOptions
+}
+
+func (snm *subnetMock) BeginCreateOrUpdate(ctx context.Context, rg, vnet, name string, sn armnetwork.Subnet, options *armnetwork.SubnetsClientBeginCreateOrUpdateOptions) (*runtime.Poller[armnetwork.SubnetsClientCreateOrUpdateResponse], error) {
+	snm.createOrUpdate = append(snm.createOrUpdate, subnetCreateOrUpdateArgs{rg, vnet, name, sn, options})
+
+	sn.ID = common.ToPtr("sn-id")
+	sn.Name = &name
+	return makePoller[armnetwork.SubnetsClientCreateOrUpdateResponse](
+		&armnetwork.SubnetsClientCreateOrUpdateResponse{
+			Subnet: sn,
+		},
+	)
+}
+
+func (snm *subnetMock) BeginDelete(ctx context.Context, rg, vnet, name string, options *armnetwork.SubnetsClientBeginDeleteOptions) (*runtime.Poller[armnetwork.SubnetsClientDeleteResponse], error) {
+	snm.delete = append(snm.delete, subnetDeleteArgs{rg, vnet, name, options})
+	return makePoller[armnetwork.SubnetsClientDeleteResponse](
+		&armnetwork.SubnetsClientDeleteResponse{},
+	)
+}
+
+type pipMock struct {
+	createOrUpdate []pipCreateOrUpdateArgs
+	delete         []pipDeleteArgs
+}
+
+type pipCreateOrUpdateArgs struct {
+	rg      string
+	name    string
+	pip     armnetwork.PublicIPAddress
+	options *armnetwork.PublicIPAddressesClientBeginCreateOrUpdateOptions
+}
+
+type pipDeleteArgs struct {
+	rg      string
+	name    string
+	options *armnetwork.PublicIPAddressesClientBeginDeleteOptions
+}
+
+func (pipm *pipMock) BeginCreateOrUpdate(ctx context.Context, rg, name string, pip armnetwork.PublicIPAddress, options *armnetwork.PublicIPAddressesClientBeginCreateOrUpdateOptions) (*runtime.Poller[armnetwork.PublicIPAddressesClientCreateOrUpdateResponse], error) {
+	pipm.createOrUpdate = append(pipm.createOrUpdate, pipCreateOrUpdateArgs{rg, name, pip, options})
+
+	return makePoller[armnetwork.PublicIPAddressesClientCreateOrUpdateResponse](
+		&armnetwork.PublicIPAddressesClientCreateOrUpdateResponse{
+			PublicIPAddress: armnetwork.PublicIPAddress{
+				Location: pip.Location,
+				ID:       common.ToPtr("pip-id"),
+				Name:     &name,
+				Properties: &armnetwork.PublicIPAddressPropertiesFormat{
+					PublicIPAllocationMethod: pip.Properties.PublicIPAllocationMethod,
+					IPAddress:                common.ToPtr("0.0.0.0"),
+				},
+			},
+		},
+	)
+}
+
+func (pipm *pipMock) BeginDelete(ctx context.Context, rg, name string, options *armnetwork.PublicIPAddressesClientBeginDeleteOptions) (*runtime.Poller[armnetwork.PublicIPAddressesClientDeleteResponse], error) {
+	pipm.delete = append(pipm.delete, pipDeleteArgs{rg, name, options})
+	return makePoller[armnetwork.PublicIPAddressesClientDeleteResponse](
+		&armnetwork.PublicIPAddressesClientDeleteResponse{},
+	)
+}
+
+type sgMock struct {
+	createOrUpdate []sgCreateOrUpdateArgs
+	delete         []sgDeleteArgs
+}
+
+type sgCreateOrUpdateArgs struct {
+	rg      string
+	name    string
+	sg      armnetwork.SecurityGroup
+	options *armnetwork.SecurityGroupsClientBeginCreateOrUpdateOptions
+}
+
+type sgDeleteArgs struct {
+	rg      string
+	name    string
+	options *armnetwork.SecurityGroupsClientBeginDeleteOptions
+}
+
+func (sgm *sgMock) BeginCreateOrUpdate(ctx context.Context, rg, name string, sg armnetwork.SecurityGroup, options *armnetwork.SecurityGroupsClientBeginCreateOrUpdateOptions) (*runtime.Poller[armnetwork.SecurityGroupsClientCreateOrUpdateResponse], error) {
+	sgm.createOrUpdate = append(sgm.createOrUpdate, sgCreateOrUpdateArgs{rg, name, sg, options})
+
+	sg.ID = common.ToPtr("sg-id")
+	sg.Name = &name
+	return makePoller[armnetwork.SecurityGroupsClientCreateOrUpdateResponse](
+		&armnetwork.SecurityGroupsClientCreateOrUpdateResponse{
+			SecurityGroup: sg,
+		},
+	)
+}
+
+func (sgm *sgMock) BeginDelete(ctx context.Context, rg, name string, options *armnetwork.SecurityGroupsClientBeginDeleteOptions) (*runtime.Poller[armnetwork.SecurityGroupsClientDeleteResponse], error) {
+	sgm.delete = append(sgm.delete, sgDeleteArgs{rg, name, options})
+	return makePoller[armnetwork.SecurityGroupsClientDeleteResponse](
+		&armnetwork.SecurityGroupsClientDeleteResponse{},
+	)
+}
+
+type intfMock struct {
+	createOrUpdate []intfCreateOrUpdateArgs
+	delete         []intfDeleteArgs
+}
+
+type intfCreateOrUpdateArgs struct {
+	rg      string
+	name    string
+	intf    armnetwork.Interface
+	options *armnetwork.InterfacesClientBeginCreateOrUpdateOptions
+}
+
+type intfDeleteArgs struct {
+	rg      string
+	name    string
+	options *armnetwork.InterfacesClientBeginDeleteOptions
+}
+
+func (intfm *intfMock) BeginCreateOrUpdate(ctx context.Context, rg, name string, intf armnetwork.Interface, options *armnetwork.InterfacesClientBeginCreateOrUpdateOptions) (*runtime.Poller[armnetwork.InterfacesClientCreateOrUpdateResponse], error) {
+	intfm.createOrUpdate = append(intfm.createOrUpdate, intfCreateOrUpdateArgs{rg, name, intf, options})
+
+	intf.ID = common.ToPtr("intf-id")
+	intf.Name = &name
+	return makePoller[armnetwork.InterfacesClientCreateOrUpdateResponse](
+		&armnetwork.InterfacesClientCreateOrUpdateResponse{
+			Interface: intf,
+		},
+	)
+}
+
+func (intfm *intfMock) BeginDelete(ctx context.Context, rg, name string, options *armnetwork.InterfacesClientBeginDeleteOptions) (*runtime.Poller[armnetwork.InterfacesClientDeleteResponse], error) {
+	intfm.delete = append(intfm.delete, intfDeleteArgs{rg, name, options})
+	return makePoller[armnetwork.InterfacesClientDeleteResponse](
+		&armnetwork.InterfacesClientDeleteResponse{},
+	)
+}
+
+type vmMock struct {
+	createOrUpdate []vmCreateOrUpdateArgs
+	delete         []vmDeleteArgs
+}
+
+type vmCreateOrUpdateArgs struct {
+	rg      string
+	name    string
+	vm      armcompute.VirtualMachine
+	options *armcompute.VirtualMachinesClientBeginCreateOrUpdateOptions
+}
+
+type vmDeleteArgs struct {
+	rg      string
+	name    string
+	options *armcompute.VirtualMachinesClientBeginDeleteOptions
+}
+
+func (vmm *vmMock) BeginCreateOrUpdate(ctx context.Context, rg, name string, vm armcompute.VirtualMachine, options *armcompute.VirtualMachinesClientBeginCreateOrUpdateOptions) (*runtime.Poller[armcompute.VirtualMachinesClientCreateOrUpdateResponse], error) {
+	vmm.createOrUpdate = append(vmm.createOrUpdate, vmCreateOrUpdateArgs{rg, name, vm, options})
+
+	vm.ID = common.ToPtr("vm-id")
+	vm.Name = &name
+	return makePoller[armcompute.VirtualMachinesClientCreateOrUpdateResponse](
+		&armcompute.VirtualMachinesClientCreateOrUpdateResponse{
+			VirtualMachine: vm,
+		},
+	)
+}
+
+func (vmm *vmMock) BeginDelete(ctx context.Context, rg, name string, options *armcompute.VirtualMachinesClientBeginDeleteOptions) (*runtime.Poller[armcompute.VirtualMachinesClientDeleteResponse], error) {
+	vmm.delete = append(vmm.delete, vmDeleteArgs{rg, name, options})
+	return makePoller[armcompute.VirtualMachinesClientDeleteResponse](
+		&armcompute.VirtualMachinesClientDeleteResponse{},
+	)
+}
+
+type diskMock struct {
+	delete []diskDeleteArgs
+}
+
+type diskDeleteArgs struct {
+	rg      string
+	name    string
+	options *armcompute.DisksClientBeginDeleteOptions
+}
+
+func (diskm *diskMock) BeginDelete(ctx context.Context, rg, name string, options *armcompute.DisksClientBeginDeleteOptions) (*runtime.Poller[armcompute.DisksClientDeleteResponse], error) {
+	diskm.delete = append(diskm.delete, diskDeleteArgs{rg, name, options})
+	return makePoller[armcompute.DisksClientDeleteResponse](
+		&armcompute.DisksClientDeleteResponse{},
 	)
 }
