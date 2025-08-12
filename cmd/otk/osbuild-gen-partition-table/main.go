@@ -14,7 +14,6 @@ import (
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
-	"github.com/osbuild/images/pkg/disk/partition"
 	"github.com/osbuild/images/pkg/osbuild"
 )
 
@@ -72,7 +71,7 @@ type InputPartition struct {
 // InputModifications allow modifiying the partition generation to e.g.
 // increase the default disk size
 type InputModifications struct {
-	PartitionMode partition.PartitioningMode          `json:"partition_mode"`
+	PartitionMode blueprint.PartitioningMode          `json:"partition_mode"`
 	Filesystems   []blueprint.FilesystemCustomization `json:"filesystems"`
 	MinDiskSize   string                              `json:"min_disk_size"`
 	Filename      string                              `json:"filename"`

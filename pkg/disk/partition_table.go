@@ -11,7 +11,6 @@ import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/datasizes"
-	"github.com/osbuild/images/pkg/disk/partition"
 	"github.com/osbuild/images/pkg/platform"
 )
 
@@ -90,10 +89,10 @@ const DefaultBootPartitionSize = 1 * datasizes.GiB
 // containing the root filesystem is grown to fill any left over space on the
 // partition table. Logical Volumes are not grown to fill the space in the
 // Volume Group since they are trivial to grow on a live system.
-func NewPartitionTable(basePT *PartitionTable, mountpoints []blueprint.FilesystemCustomization, imageSize uint64, mode partition.PartitioningMode, architecture arch.Arch, requiredSizes map[string]uint64, rng *rand.Rand) (*PartitionTable, error) {
+func NewPartitionTable(basePT *PartitionTable, mountpoints []blueprint.FilesystemCustomization, imageSize uint64, mode blueprint.PartitioningMode, architecture arch.Arch, requiredSizes map[string]uint64, rng *rand.Rand) (*PartitionTable, error) {
 	newPT := basePT.Clone().(*PartitionTable)
 
-	if basePT.features().LVM && (mode == partition.RawPartitioningMode || mode == partition.BtrfsPartitioningMode) {
+	if basePT.features().LVM && (mode == blueprint.RawPartitioningMode || mode == blueprint.BtrfsPartitioningMode) {
 		return nil, fmt.Errorf("%s partitioning mode set for a base partition table with LVM, this is unsupported", mode)
 	}
 
@@ -102,13 +101,13 @@ func NewPartitionTable(basePT *PartitionTable, mountpoints []blueprint.Filesyste
 
 	var ensureLVM, ensureBtrfs bool
 	switch mode {
-	case partition.LVMPartitioningMode:
+	case blueprint.LVMPartitioningMode:
 		ensureLVM = true
-	case partition.RawPartitioningMode:
+	case blueprint.RawPartitioningMode:
 		ensureLVM = false
-	case partition.DefaultPartitioningMode, partition.AutoLVMPartitioningMode:
+	case blueprint.DefaultPartitioningMode, blueprint.AutoLVMPartitioningMode:
 		ensureLVM = len(newMountpoints) > 0
-	case partition.BtrfsPartitioningMode:
+	case blueprint.BtrfsPartitioningMode:
 		ensureBtrfs = true
 	default:
 		return nil, fmt.Errorf("unsupported partitioning mode %q", mode)

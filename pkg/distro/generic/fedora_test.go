@@ -11,7 +11,6 @@ import (
 
 	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/pkg/disk"
-	"github.com/osbuild/images/pkg/disk/partition"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/distro_test_common"
 	"github.com/osbuild/images/pkg/distro/generic"
@@ -1068,7 +1067,7 @@ func TestFedoraDistro_PartioningModeConstraints(t *testing.T) {
 				t.Run(fmt.Sprintf("%s/%s", archName, imgTypeName), func(t *testing.T) {
 					imgType, _ := arch.GetImageType(imgType.Name())
 					imgOpts := distro.ImageOptions{
-						PartitioningMode: partition.RawPartitioningMode,
+						PartitioningMode: blueprint.RawPartitioningMode,
 						OSTree: &ostree.ImageOptions{
 							URL: "http://example.com/ostree",
 						},
