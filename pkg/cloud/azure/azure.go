@@ -69,7 +69,7 @@ func newTestClient(
 // See https://docs.microsoft.com/en-us/rest/api/azure/
 // If you need to work with the Azure Storage API, see NewStorageClient
 func NewClient(credentials Credentials, tenantID, subscriptionID string) (*Client, error) {
-	creds, err := azidentity.NewClientSecretCredential(tenantID, credentials.clientID, credentials.clientSecret, nil)
+	creds, err := azidentity.NewClientSecretCredential(tenantID, credentials.ClientID, credentials.ClientSecret, nil)
 	if err != nil {
 		return nil, fmt.Errorf("creating azure ClientSecretCredential failed: %w", err)
 	}
