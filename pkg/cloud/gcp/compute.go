@@ -48,7 +48,41 @@ var GuestOsFeaturesRHEL9 []*computepb.GuestOsFeature = []*computepb.GuestOsFeatu
 	{Type: common.ToPtr(computepb.GuestOsFeature_SEV_LIVE_MIGRATABLE_V2.String())},
 	{Type: common.ToPtr(computepb.GuestOsFeature_GVNIC.String())},
 	{Type: common.ToPtr(computepb.GuestOsFeature_IDPF.String())},
+	{Type: common.ToPtr(computepb.GuestOsFeature_TDX_CAPABLE.String())},
 }
+
+// Guest OS Features for RHEL images up to RHEL9.5.
+// The TDX support was added since RHEL-9.6.
+var GuestOsFeaturesRHEL95 []*computepb.GuestOsFeature = []*computepb.GuestOsFeature{
+	{Type: common.ToPtr(computepb.GuestOsFeature_UEFI_COMPATIBLE.String())},
+	{Type: common.ToPtr(computepb.GuestOsFeature_VIRTIO_SCSI_MULTIQUEUE.String())},
+	{Type: common.ToPtr(computepb.GuestOsFeature_SEV_CAPABLE.String())},
+	{Type: common.ToPtr(computepb.GuestOsFeature_GVNIC.String())},
+	{Type: common.ToPtr(computepb.GuestOsFeature_SEV_SNP_CAPABLE.String())},
+	{Type: common.ToPtr(computepb.GuestOsFeature_SEV_LIVE_MIGRATABLE_V2.String())},
+}
+
+// Guest OS Features for RHEL9.1 images.
+// The SEV_LIVE_MIGRATABLE_V2 support was added since RHEL-9.2
+var GuestOsFeaturesRHEL91 []*computepb.GuestOsFeature = []*computepb.GuestOsFeature{
+	{Type: common.ToPtr(computepb.GuestOsFeature_UEFI_COMPATIBLE.String())},
+	{Type: common.ToPtr(computepb.GuestOsFeature_VIRTIO_SCSI_MULTIQUEUE.String())},
+	{Type: common.ToPtr(computepb.GuestOsFeature_SEV_CAPABLE.String())},
+	{Type: common.ToPtr(computepb.GuestOsFeature_GVNIC.String())},
+	{Type: common.ToPtr(computepb.GuestOsFeature_SEV_SNP_CAPABLE.String())},
+}
+
+// Guest OS Features for RHEL9.0 images.
+// The SEV-SNP support was added since RHEL-9.1, so keeping this for RHEL-9.0 only.
+var GuestOsFeaturesRHEL90 []*computepb.GuestOsFeature = []*computepb.GuestOsFeature{
+	{Type: common.ToPtr(computepb.GuestOsFeature_UEFI_COMPATIBLE.String())},
+	{Type: common.ToPtr(computepb.GuestOsFeature_VIRTIO_SCSI_MULTIQUEUE.String())},
+	{Type: common.ToPtr(computepb.GuestOsFeature_SEV_CAPABLE.String())},
+	{Type: common.ToPtr(computepb.GuestOsFeature_GVNIC.String())},
+}
+
+// Guest OS Features for RHEL-10 images.
+var GuestOsFeaturesRHEL10 []*computepb.GuestOsFeature = GuestOsFeaturesRHEL9
 
 // GuestOsFeaturesByDistro returns the the list of Guest OS Features, which
 // should be used when importing an image of the specified distribution.
@@ -62,10 +96,27 @@ func GuestOsFeaturesByDistro(distroName string) []*computepb.GuestOsFeature {
 	case strings.HasPrefix(distroName, "rhel-8"):
 		return GuestOsFeaturesRHEL8
 
+	case distroName == "rhel-9.0":
+		return GuestOsFeaturesRHEL90
+	case distroName == "rhel-9.1":
+		return GuestOsFeaturesRHEL91
+	case distroName == "rhel-9.2":
+		fallthrough
+	case distroName == "rhel-9.3":
+		fallthrough
+	case distroName == "rhel-9.4":
+		fallthrough
+	case distroName == "rhel-9.5":
+		return GuestOsFeaturesRHEL95
 	case strings.HasPrefix(distroName, "centos-9"):
 		fallthrough
 	case strings.HasPrefix(distroName, "rhel-9"):
 		return GuestOsFeaturesRHEL9
+
+	case strings.HasPrefix(distroName, "centos-10"):
+		fallthrough
+	case strings.HasPrefix(distroName, "rhel-10"):
+		return GuestOsFeaturesRHEL10
 
 	default:
 		return nil
