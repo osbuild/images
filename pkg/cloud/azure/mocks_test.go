@@ -28,6 +28,18 @@ func (mp *mockPollerHandler[T]) Result(ctx context.Context, out *T) error {
 	return nil
 }
 
+func makePoller[T any](result *T) (*runtime.Poller[T], error) {
+	return runtime.NewPoller(
+		&http.Response{},
+		runtime.NewPipeline("", "", runtime.PipelineOptions{}, nil),
+		&runtime.NewPollerOptions[T]{
+			Handler: &mockPollerHandler[T]{
+				result: result,
+			},
+		},
+	)
+}
+
 type resourcesMock struct {
 	list []rmListArgs
 }
@@ -104,23 +116,13 @@ func (acm *accountsMock) BeginCreate(
 	options *armstorage.AccountsClientBeginCreateOptions) (*runtime.Poller[armstorage.AccountsClientCreateResponse], error) {
 	acm.beginCreate = append(acm.beginCreate, acmBeginCreateArgs{rg, account, params, options})
 
-	p, err := runtime.NewPoller(
-		&http.Response{},
-		runtime.NewPipeline("", "", runtime.PipelineOptions{}, nil),
-		&runtime.NewPollerOptions[armstorage.AccountsClientCreateResponse]{
-			Handler: &mockPollerHandler[armstorage.AccountsClientCreateResponse]{
-				result: &armstorage.AccountsClientCreateResponse{
-					Account: armstorage.Account{
-						Name: &account,
-					},
-				},
+	return makePoller[armstorage.AccountsClientCreateResponse](
+		&armstorage.AccountsClientCreateResponse{
+			Account: armstorage.Account{
+				Name: &account,
 			},
 		},
 	)
-	if err != nil {
-		return nil, err
-	}
-	return p, nil
 }
 
 type acmListKeysArgs struct {
@@ -161,19 +163,9 @@ type imBeginCreateOrUpdateArgs struct {
 func (im *imagesMock) BeginCreateOrUpdate(ctx context.Context, rg string, name string, img armcompute.Image, options *armcompute.ImagesClientBeginCreateOrUpdateOptions) (*runtime.Poller[armcompute.ImagesClientCreateOrUpdateResponse], error) {
 	im.createOrUpdate = append(im.createOrUpdate, imBeginCreateOrUpdateArgs{rg, name, img, options})
 
-	p, err := runtime.NewPoller(
-		&http.Response{},
-		runtime.NewPipeline("", "", runtime.PipelineOptions{}, nil),
-		&runtime.NewPollerOptions[armcompute.ImagesClientCreateOrUpdateResponse]{
-			Handler: &mockPollerHandler[armcompute.ImagesClientCreateOrUpdateResponse]{
-				result: &armcompute.ImagesClientCreateOrUpdateResponse{
-					Image: img,
-				},
-			},
+	return makePoller[armcompute.ImagesClientCreateOrUpdateResponse](
+		&armcompute.ImagesClientCreateOrUpdateResponse{
+			Image: img,
 		},
 	)
-	if err != nil {
-		return nil, err
-	}
-	return p, nil
 }
