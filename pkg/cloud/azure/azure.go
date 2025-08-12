@@ -36,13 +36,32 @@ type Client struct {
 	interfaces     InterfacesClient
 }
 
-func newTestClient(rc ResourcesClient, rgc ResourceGroupsClient, ac AccountsClient, ic ImagesClient) *Client {
+func newTestClient(
+	rc ResourcesClient,
+	rgc ResourceGroupsClient,
+	ac AccountsClient,
+	ic ImagesClient,
+	vnets VirtualNetworksClient,
+	subnets SubnetsClient,
+	pips PublicIPsClient,
+	sgs SecurityGroupsClient,
+	intfs InterfacesClient,
+	vms VMsClient,
+	disks DisksClient,
+) *Client {
 	return &Client{
 		creds:          nil,
 		resources:      rc,
 		resourceGroups: rgc,
 		accounts:       ac,
 		images:         ic,
+		vnets:          vnets,
+		subnets:        subnets,
+		publicIPs:      pips,
+		securityGroups: sgs,
+		interfaces:     intfs,
+		vms:            vms,
+		disks:          disks,
 	}
 }
 
