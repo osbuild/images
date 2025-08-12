@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/osbuild/images/pkg/olog"
 	"github.com/osbuild/pulp-client/pulpclient"
-	"github.com/sirupsen/logrus"
 )
 
 type Client struct {
@@ -107,7 +107,7 @@ func (cl *Client) GetOSTreeRepositoryByName(name string) (string, error) {
 	}
 
 	if list.GetCount() == 0 {
-		logrus.Infof("no repository named %s was found", name)
+		olog.Printf("no repository named %s was found", name)
 		return "", nil
 	}
 
@@ -119,7 +119,7 @@ func (cl *Client) GetOSTreeRepositoryByName(name string) (string, error) {
 	repo := results[0]
 
 	repoHref := repo.GetPulpHref()
-	logrus.Infof("found repository %s: %s", name, repoHref)
+	olog.Printf("found repository %s: %s", name, repoHref)
 	return repoHref, nil
 }
 
@@ -195,7 +195,7 @@ func (cl *Client) GetDistributionURLForOSTreeRepo(repoHref string) (string, erro
 	list, resp, err := cl.client.DistributionsOstreeAPI.DistributionsOstreeOstreeList(cl.ctx).Repository(repoHref).Execute()
 
 	if list.GetCount() == 0 {
-		logrus.Infof("no distribution for repo %s was found: %s", repoHref, readBody(resp))
+		olog.Printf("no distribution for repo %s was found: %s", repoHref, readBody(resp))
 		return "", nil
 	}
 
@@ -243,7 +243,7 @@ func (cl *Client) TaskWaitingOrRunning(task string) bool {
 	state, err := cl.TaskState(task)
 	if err != nil {
 		// log the error and return false
-		logrus.Errorf("failed to get task state: %s", err.Error())
+		olog.Printf("ERROR: failed to get task state: %s", err.Error())
 		return false
 	}
 	return state == TASK_RUNNING || state == TASK_WAITING
@@ -252,17 +252,17 @@ func (cl *Client) TaskWaitingOrRunning(task string) bool {
 // Block until all tasks are complete.
 func (cl *Client) waitFor(tasks []string) {
 	wg := sync.WaitGroup{}
-	logrus.Info("setting up wait group")
+	olog.Print("setting up wait group")
 	for idx := range tasks {
 		task := tasks[idx]
-		logrus.Infof("task %q", task)
+		olog.Printf("task %q", task)
 		wg.Add(1)
 		go func() {
-			logrus.Infof("waiting for task %q to finish", task)
+			olog.Printf("waiting for task %q to finish", task)
 			for cl.TaskWaitingOrRunning(task) {
 				time.Sleep(15 * time.Second)
 			}
-			logrus.Infof("task %q done", task)
+			olog.Printf("task %q done", task)
 			wg.Done()
 		}()
 	}
@@ -276,7 +276,7 @@ func (cl *Client) UploadAndDistributeCommit(archivePath, repoName, basePath stri
 	// Check for the repository before uploading the commit:
 	// If the repository needs to be created but the basePath is empty, we
 	// should fail before uploading the commit.
-	logrus.Infof("checking if repository %q already exists", repoName)
+	olog.Printf("checking if repository %q already exists", repoName)
 	repoHref, err := cl.GetOSTreeRepositoryByName(repoName)
 	if err != nil {
 		return "", err
@@ -289,7 +289,7 @@ func (cl *Client) UploadAndDistributeCommit(archivePath, repoName, basePath stri
 	// Upload the file before creating the repository (if we need to create it)
 	// in case it fails. We don't want to have an empty repository if the
 	// commit upload fails.
-	logrus.Infof("uploading ostree commit to pulp")
+	olog.Printf("uploading ostree commit to pulp")
 	fileHref, err := cl.UploadFile(archivePath)
 	if err != nil {
 		return "", err
@@ -299,15 +299,15 @@ func (cl *Client) UploadAndDistributeCommit(archivePath, repoName, basePath stri
 
 	if repoHref == "" {
 		// repository does not exist: create it and distribute
-		logrus.Infof("repository not found - creating repository %q", repoName)
+		olog.Printf("repository not found - creating repository %q", repoName)
 		href, err := cl.CreateOSTreeRepository(repoName, "")
 		if err != nil {
 			return "", err
 		}
 
 		repoHref = href
-		logrus.Infof("created repository %q (%s)", repoName, repoHref)
-		logrus.Infof("creating distribution at %q", basePath)
+		olog.Printf("created repository %q (%s)", repoName, repoHref)
+		olog.Printf("creating distribution at %q", basePath)
 		distTask, err := cl.DistributeOSTreeRepo(basePath, repoName, repoHref)
 		if err != nil {
 			return "", err
@@ -315,21 +315,21 @@ func (cl *Client) UploadAndDistributeCommit(archivePath, repoName, basePath stri
 		tasks = append(tasks, distTask)
 	}
 
-	logrus.Infof("importing commit %q to repo %q", fileHref, repoHref)
+	olog.Printf("importing commit %q to repo %q", fileHref, repoHref)
 	importTask, err := cl.ImportCommit(fileHref, repoHref)
 	if err != nil {
 		return "", err
 	}
 	tasks = append(tasks, importTask)
 
-	logrus.Infof("blocking on %d tasks", len(tasks))
+	olog.Printf("blocking on %d tasks", len(tasks))
 	cl.waitFor(tasks)
 
 	repoURL, err := cl.GetDistributionURLForOSTreeRepo(repoHref)
 	if err != nil {
 		return "", err
 	}
-	logrus.Infof("repository url: %s", repoURL)
+	olog.Printf("repository url: %s", repoURL)
 
 	return repoURL, nil
 }
