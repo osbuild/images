@@ -21,7 +21,7 @@ func TestGzipSerialize(t *testing.T) {
 	gzipPipeline.SetFilename("filename.gz")
 
 	// run
-	osbuildPipeline := gzipPipeline.Serialize()
+	osbuildPipeline := manifest.Serialize(gzipPipeline)
 
 	// assert
 	assert.Equal(t, "gzip", osbuildPipeline.Name)
