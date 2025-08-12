@@ -12,11 +12,18 @@ import (
 )
 
 type azm struct {
-	az  *azure.Client
-	rcm *resourcesMock
-	rgm *resourceGroupsMock
-	acm *accountsMock
-	im  *imagesMock
+	az    *azure.Client
+	rcm   *resourcesMock
+	rgm   *resourceGroupsMock
+	acm   *accountsMock
+	im    *imagesMock
+	vnetm *vnetMock
+	snm   *subnetMock
+	pipm  *pipMock
+	sgm   *sgMock
+	intfm *intfMock
+	vmm   *vmMock
+	diskm *diskMock
 }
 
 func newAZ() azm {
@@ -24,12 +31,26 @@ func newAZ() azm {
 	rgm := &resourceGroupsMock{}
 	acm := &accountsMock{}
 	im := &imagesMock{}
+	vnetm := &vnetMock{}
+	snm := &subnetMock{}
+	pipm := &pipMock{}
+	sgm := &sgMock{}
+	intfm := &intfMock{}
+	vmm := &vmMock{}
+	diskm := &diskMock{}
 	return azm{
-		azure.NewTestclient(rcm, rgm, acm, im),
+		azure.NewTestclient(rcm, rgm, acm, im, vnetm, snm, pipm, sgm, intfm, vmm, diskm),
 		rcm,
 		rgm,
 		acm,
 		im,
+		vnetm,
+		snm,
+		pipm,
+		sgm,
+		intfm,
+		vmm,
+		diskm,
 	}
 }
 

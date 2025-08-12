@@ -3,12 +3,12 @@ package azure
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v5"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v7"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/olog"
 )
 
 type VM struct {
@@ -31,7 +31,10 @@ func (ac Client) CreateVM(ctx context.Context, resourceGroup, image, name, size,
 	var err error
 	defer func() {
 		if err != nil {
-			ac.DestroyVM(ctx, &vm)
+			err = ac.DestroyVM(ctx, &vm)
+			if err != nil {
+				olog.Printf("unable to destroy vm: %s", err.Error())
+			}
 		}
 	}()
 
@@ -54,7 +57,7 @@ func (ac Client) CreateVM(ctx context.Context, resourceGroup, image, name, size,
 
 	publicIP, err := ac.createPublicIP(ctx, resourceGroup, location, fmt.Sprintf("%s-ip", vm.Name))
 	if err != nil {
-		log.Fatalf("cannot create public IP address:%+v", err)
+		return nil, err
 	}
 	vm.IPName = common.ValueOrEmpty(publicIP.Name)
 	vm.IPAddress = common.ValueOrEmpty(publicIP.Properties.IPAddress)
