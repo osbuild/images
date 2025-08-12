@@ -17,7 +17,9 @@ import (
 )
 
 type Uploader interface {
-	Upload(name string, bucketName string, namespace string, file *os.File, user, compartment string) (string, error)
+	Upload(name string, bucketName string, namespace string, file *os.File) error
+	CreateImage(name, bucketName, namespace, user, compartment string) (string, error)
+	PreAuthenticatedRequest(objectName, bucketName, namespace string) (string, error)
 }
 
 type ImageCreator interface {
@@ -31,17 +33,19 @@ type Client struct {
 }
 
 // Upload uploads a file into an objectName under the bucketName in the namespace.
-func (c Client) Upload(objectName string, bucketName string, namespace string, file *os.File, compartmentID, imageName string) (string, error) {
+func (c Client) Upload(objectName, bucketName, namespace string, file *os.File) error {
 	err := c.uploadToBucket(objectName, bucketName, namespace, file)
+	return err
+}
+
+// Creates an image from an existing storage object, deletes the storage object
+func (c Client) CreateImage(objectName, bucketName, namespace, compartmentID, imageName string) (string, error) {
 	// clean up the object even if we fail
 	defer func() {
 		if err := c.deleteObjectFromBucket(objectName, bucketName, namespace); err != nil {
 			log.Printf("failed to clean up the object '%s' from bucket '%s'", objectName, bucketName)
 		}
 	}()
-	if err != nil {
-		return "", err
-	}
 
 	imageID, err := c.createImage(objectName, bucketName, namespace, compartmentID, imageName)
 	if err != nil {
@@ -52,6 +56,32 @@ func (c Client) Upload(objectName string, bucketName string, namespace string, f
 			err)
 	}
 	return imageID, nil
+}
+
+// https://docs.oracle.com/en-us/iaas/Content/Object/Tasks/usingpreauthenticatedrequests.htm
+func (c Client) PreAuthenticatedRequest(objectName, bucketName, namespace string) (string, error) {
+	req := objectstorage.CreatePreauthenticatedRequestRequest{
+		BucketName:    common.String(bucketName),
+		NamespaceName: common.String(namespace),
+		CreatePreauthenticatedRequestDetails: objectstorage.CreatePreauthenticatedRequestDetails{
+			ObjectName:          common.String(objectName),
+			TimeExpires:         &common.SDKTime{Time: time.Now().Add(24 * time.Hour)},
+			AccessType:          objectstorage.CreatePreauthenticatedRequestDetailsAccessTypeObjectread,
+			BucketListingAction: objectstorage.PreauthenticatedRequestBucketListingActionDeny,
+			Name:                common.String(fmt.Sprintf("pre-auth-req-for-%s", objectName)),
+		},
+	}
+
+	resp, err := c.storageClient.CreatePreauthenticatedRequest(context.Background(), req)
+	if err != nil {
+		return "", fmt.Errorf("failed to create a pre-authenticated request for object '%s': %w", objectName, err)
+	}
+	sc := resp.HTTPResponse().StatusCode
+	if sc != 200 {
+		return "", fmt.Errorf("failed to create a pre-authenticated request for object, status %d", sc)
+	}
+
+	return fmt.Sprintf("https://%s.objectstorage.%s.oci.customer-oci.com%s", namespace, c.region, *resp.AccessUri), nil
 }
 
 func (c Client) uploadToBucket(objectName string, bucketName string, namespace string, file *os.File) error {
@@ -77,7 +107,9 @@ func (c Client) uploadToBucket(objectName string, bucketName string, namespace s
 	ctx := context.Background()
 	resp, err := uploadManager.UploadFile(ctx, req)
 	if err != nil {
-		if resp.IsResumable() {
+		// resp.IsResumable crashes if resp.MultipartUploadResponse == nil
+		// Thus, we need to check for both.
+		if resp.MultipartUploadResponse != nil && resp.IsResumable() {
 			resp, err = uploadManager.ResumeUploadFile(ctx, *resp.MultipartUploadResponse.UploadID)
 			if err != nil {
 				return err
@@ -123,25 +155,98 @@ func (c Client) createImage(objectName, bucketName, namespace, compartmentID, im
 		if err != nil {
 			return "", fmt.Errorf("failed to fetch the work request for creating the image: %w", err)
 		}
-		switch r.Status {
-		case workrequests.WorkRequestStatusSucceeded:
-			return *createImageResponse.Id, nil
-		case workrequests.WorkRequestStatusCanceled, workrequests.WorkRequestStatusFailed:
+		if r.Status == workrequests.WorkRequestStatusSucceeded {
+			break
+		}
+		if r.Status == workrequests.WorkRequestStatusCanceled || r.Status == workrequests.WorkRequestStatusFailed {
 			return "", fmt.Errorf("the work request for creating an image is in status %s", r.Status)
 		}
 		time.Sleep(1 * time.Second)
 	}
+
+	log.Printf("work request complete, creating the compute image capability schema based on a global one")
+	listGlobalCS := core.ListComputeGlobalImageCapabilitySchemasRequest{
+		Limit: common.Int(1),
+	}
+	globalCSR, err := c.computeClient.ListComputeGlobalImageCapabilitySchemas(context.Background(), listGlobalCS)
+	if err != nil {
+		return *createImageResponse.Id, fmt.Errorf("failed to list the global capability schemas: %w", err)
+	}
+	if globalCSR.HTTPResponse().StatusCode != 200 {
+		return *createImageResponse.Id, fmt.Errorf("failed to list the global capability schemas: %d", globalCSR.HTTPResponse().StatusCode)
+	}
+	if len(globalCSR.Items) == 0 || globalCSR.Items[0].CurrentVersionName == nil {
+		return *createImageResponse.Id, fmt.Errorf("no global capability schema version found")
+	}
+
+	createComputeCapabilitiesReq := core.CreateComputeImageCapabilitySchemaRequest{
+		CreateComputeImageCapabilitySchemaDetails: core.CreateComputeImageCapabilitySchemaDetails{
+			CompartmentId: common.String(compartmentID),
+			ImageId:       createImageResponse.Id,
+			ComputeGlobalImageCapabilitySchemaVersionName: globalCSR.Items[0].CurrentVersionName,
+			SchemaData: map[string]core.ImageCapabilitySchemaDescriptor{
+				"Storage.RemoteDataVolumeType": core.EnumStringImageCapabilitySchemaDescriptor{
+					Source: core.ImageCapabilitySchemaDescriptorSourceImage,
+					Values: []string{
+						"PARAVIRTUALIZED",
+					},
+					DefaultValue: common.String("PARAVIRTUALIZED"),
+				},
+				"Storage.LocalDataVolumeType": core.EnumStringImageCapabilitySchemaDescriptor{
+					Source: core.ImageCapabilitySchemaDescriptorSourceImage,
+					Values: []string{
+						"PARAVIRTUALIZED",
+					},
+					DefaultValue: common.String("PARAVIRTUALIZED"),
+				},
+				"Storage.BootVolumeType": core.EnumStringImageCapabilitySchemaDescriptor{
+					Source: core.ImageCapabilitySchemaDescriptorSourceImage,
+					Values: []string{
+						"PARAVIRTUALIZED",
+					},
+					DefaultValue: common.String("PARAVIRTUALIZED"),
+				},
+				"Network.AttachmentType": core.EnumStringImageCapabilitySchemaDescriptor{
+					Source: core.ImageCapabilitySchemaDescriptorSourceImage,
+					Values: []string{
+						"PARAVIRTUALIZED",
+					},
+					DefaultValue: common.String("PARAVIRTUALIZED"),
+				},
+				"Compute.LaunchMode": core.EnumStringImageCapabilitySchemaDescriptor{
+					Source: core.ImageCapabilitySchemaDescriptorSourceImage,
+					Values: []string{
+						"NATIVE",
+						"PARAVIRTUALIZED",
+					},
+					DefaultValue: common.String("PARAVIRTUALIZED"),
+				},
+			},
+		},
+	}
+
+	createCICSR, err := c.computeClient.CreateComputeImageCapabilitySchema(context.Background(), createComputeCapabilitiesReq)
+	if err != nil {
+		return *createImageResponse.Id, fmt.Errorf("failed to create the image's capability schema: %w", err)
+	}
+	if createCICSR.HTTPResponse().StatusCode != 200 {
+		return *createImageResponse.Id, fmt.Errorf("failed to create the image's capability schema: %d", createCICSR.HTTPResponse().StatusCode)
+	}
+
+	return *createImageResponse.Id, nil
+
 }
 
 type ClientParams struct {
-	User        string
-	Region      string
-	Tenancy     string
-	PrivateKey  string
-	Fingerprint string
+	User        string `toml:"user"`
+	Region      string `toml:"region"`
+	Tenancy     string `toml:"tenancy"`
+	PrivateKey  string `toml:"private_key"`
+	Fingerprint string `toml:"fingerprint"`
 }
 
 type ociClient struct {
+	region             string
 	storageClient      objectstorage.ObjectStorageClient
 	identityClient     identity.IdentityClient
 	computeClient      core.ComputeClient
@@ -198,6 +303,7 @@ func NewClient(clientParams *ClientParams) (Client, error) {
 		return Client{}, fmt.Errorf("failed to create an Oracle workrequests client: %w", err)
 	}
 	return Client{ociClient: ociClient{
+		region:             clientParams.Region,
 		storageClient:      storageClient,
 		identityClient:     identityClient,
 		computeClient:      computeClient,
