@@ -621,7 +621,6 @@ image_types:
     image_func: "disk"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "image", "qcow2"]
-    exports: ["qcow2"]
     required_partition_sizes:
       "/": 1_073_741_824  # 1 * datasizes.GiB
     platforms:
@@ -655,7 +654,6 @@ image_types:
 	assert.Equal(t, "disk", imgType.Image)
 	assert.Equal(t, []string{"build"}, imgType.BuildPipelines)
 	assert.Equal(t, []string{"os", "image", "qcow2"}, imgType.PayloadPipelines)
-	assert.Equal(t, []string{"qcow2"}, imgType.Exports)
 	assert.Equal(t, map[string]uint64{"/": 1_073_741_824}, imgType.RequiredPartitionSizes)
 	assert.Equal(t, []platform.PlatformConf{
 		{
@@ -928,14 +926,12 @@ image_types:
   ec2:
     filename: "disk.raw"
     image_func: "disk"
-    exports: ["image"]
     platforms:
       - arch: x86_64
         uefi_vendor: "some-uefi-vendor"
   container:
     filename: "container.tar.gz"
     image_func: "container"
-    exports: ["archive"]
     platforms:
       - arch: x86_64
 `
@@ -1014,7 +1010,6 @@ func TestImageTypesPlatformOverrides(t *testing.T) {
 image_types:
   server-qcow2:
     filename: "disk.qcow2"
-    exports: ["qcow2"]
     platforms_override:
       conditions:
         "test platform override, simulate old distro is bios only":
@@ -1071,7 +1066,6 @@ func TestImageTypesPlatformOverridesMultiMarchError(t *testing.T) {
 image_types:
   test_type:
     filename: "disk.qcow2"
-    exports: ["qcow2"]
     platforms:
       - arch: x86_64
     platforms_override:

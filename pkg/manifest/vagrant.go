@@ -73,7 +73,7 @@ func (p *Vagrant) serialize() osbuild.Pipeline {
 			&osbuild.CopyStageOptions{
 				Paths: []osbuild.CopyStagePath{
 					{
-						From: fmt.Sprintf("input://%s/%s", inputName, p.imgPipeline.Export().Filename()),
+						From: fmt.Sprintf("input://%s/%s", inputName, p.imgPipeline.Filename()),
 						To:   "tree:///",
 					},
 				},

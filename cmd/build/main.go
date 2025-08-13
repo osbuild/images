@@ -124,7 +124,8 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("[ERROR] manifest generator creation failed: %w", err)
 	}
-	if err := mg.Generate(config.Blueprint, distribution, imgType, arch, &config.Options); err != nil {
+	exports, err := mg.Generate(config.Blueprint, distribution, imgType, arch, &config.Options)
+	if err != nil {
 		return fmt.Errorf("[ERROR] manifest generation failed: %w", err)
 	}
 	fmt.Print("DONE\n")
@@ -138,7 +139,7 @@ func run() error {
 	fmt.Printf("Building manifest: %s\n", manifestPath)
 
 	jobOutput := filepath.Join(outputDir, buildName)
-	_, err = osbuild.RunOSBuild(mf.Bytes(), osbuildStore, jobOutput, imgType.Exports(), checkpoints, nil, false, os.Stderr)
+	_, err = osbuild.RunOSBuild(mf.Bytes(), osbuildStore, jobOutput, exports, checkpoints, nil, false, os.Stderr)
 	if err != nil {
 		return err
 	}

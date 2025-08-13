@@ -1174,7 +1174,6 @@ image_types:
     image_func: "disk"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "image", "qcow2"]
-    exports: ["qcow2"]
     required_partition_sizes: *default_required_dir_sizes
     platforms:
       - <<: *x86_64_bios_platform
@@ -1287,7 +1286,6 @@ image_types:
     image_func: "disk"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "image", "vagrant", "archive"]
-    exports: ["archive"]
     required_partition_sizes: *default_required_dir_sizes
     platforms:
       - <<: *x86_64_bios_platform
@@ -1336,7 +1334,6 @@ image_types:
     mime_type: "application/x-vhd"
     default_size: 4_294_967_296  # 4 * datasizes.GibiByte
     payload_pipelines: ["os", "image", "vpc"]
-    exports: ["vpc"]
     platforms:
       - <<: *x86_64_bios_platform
         image_format: "vhd"
@@ -1464,7 +1461,6 @@ image_types:
     <<: *vhd
     mime_type: "application/xz"
     payload_pipelines: ["os", "image", "vpc", "xz"]
-    exports: ["xz"]
     compression: "xz"
     filename: "disk.vhd.xz"
     partition_table: &partition_table_azure_internal
@@ -1650,7 +1646,6 @@ image_types:
     image_func: "tar"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "archive"]
-    exports: ["archive"]
     platforms:
       - arch: "x86_64"
       - arch: "aarch64"
@@ -1673,7 +1668,6 @@ image_types:
     image_func: "disk"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "image", "vmdk"]
-    exports: ["vmdk"]
     required_partition_sizes: *default_required_dir_sizes
     platforms:
       - <<: *x86_64_bios_platform
@@ -1703,7 +1697,6 @@ image_types:
     filename: "image.ova"
     mime_type: "application/ovf"
     payload_pipelines: ["os", "image", "vmdk", "ovf", "archive"]
-    exports: ["archive"]
     platforms:
       - <<: *x86_64_bios_platform
         image_format: "ova"
@@ -1713,7 +1706,6 @@ image_types:
     mime_type: "application/xz"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "image", "xz"]
-    exports: ["xz"]
     compression: "xz"
     image_func: "disk"
     bootable: true
@@ -1861,7 +1853,6 @@ image_types:
     mime_type: "application/octet-stream"
     filename: "image.raw"
     payload_pipelines: ["os", "image"]
-    exports: ["image"]
     compression: ""
 
   "ec2-ha":
@@ -1941,7 +1932,6 @@ image_types:
     image_func: "tar"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "archive"]
-    exports: ["xz"]
     compression: "xz"
     platforms:
       - arch: "x86_64"
@@ -2074,7 +2064,6 @@ image_types:
       - "os"
       - "bootiso-tree"
       - "bootiso"
-    exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
     platforms:
       - *x86_64_installer_platform
@@ -2113,7 +2102,6 @@ image_types:
     image_func: "disk"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "image", "archive"]
-    exports: ["archive"]
     bootable: true
     default_size: 21_474_836_480  # 20 * datasizes.GibiByte
     required_partition_sizes: *default_required_dir_sizes
@@ -2273,7 +2261,6 @@ image_types:
     image_func: "disk"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "image", "xz"]
-    exports: ["xz"]
     required_partition_sizes: *default_required_dir_sizes
     platforms:
       - <<: *x86_64_uefi_platform
@@ -2410,7 +2397,6 @@ image_types:
     image_func: "iot_commit"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "ostree-commit", "commit-archive"]
-    exports: ["commit-archive"]
     platforms:
       - *x86_64_bios_platform
       - *aarch64_platform
@@ -2583,7 +2569,6 @@ image_types:
     image_func: "iot_container"
     build_pipelines: ["build"]
     payload_pipelines: ["os", "ostree-commit", "container-tree", "container"]
-    exports: ["container"]
     <<: *edge_commit
 
   "edge-raw-image":
@@ -2593,7 +2578,6 @@ image_types:
     mime_type: "application/xz"
     build_pipelines: ["build"]
     payload_pipelines: ["ostree-deployment", "image", "xz"]
-    exports: ["xz"]
     default_size: 10_737_418_240  # 10 * datasizes.GibiByte
     rpm_ostree: true
     bootable: true
@@ -2657,7 +2641,6 @@ image_types:
       - "efiboot-tree"
       - "bootiso-tree"
       - "bootiso"
-    exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
     platforms:
       - *x86_64_uefi_platform
@@ -2706,7 +2689,6 @@ image_types:
       - "efiboot-tree"
       - "bootiso-tree"
       - "bootiso"
-    exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
     installer_config:
       additional_dracut_modules:
@@ -2799,7 +2781,6 @@ image_types:
     default_size: 10_737_418_240  # 10 * datasizes.GibiByte
     build_pipelines: ["build"]
     payload_pipelines: ["ostree-deployment", "image"]
-    exports: ["image"]
     rpm_ostree: true
     bootable: true
     image_func: "iot"
@@ -2854,7 +2835,6 @@ image_types:
     filename: "image.vmdk"
     mime_type: "application/x-vmdk"
     payload_pipelines: ["ostree-deployment", "image", "vmdk"]
-    exports: ["vmdk"]
     platforms:
       - <<: *x86_64_bios_platform
         image_format: "vmdk"
@@ -2881,7 +2861,6 @@ image_types:
     filename: "disk.vhd.xz"
     mime_type: "application/xz"
     payload_pipelines: ["os", "image", "vpc", "xz"]
-    exports: ["xz"]
     compression: "xz"
     default_size: 34_359_738_368  # 32 * datasizes.GibiByte
     platforms:
