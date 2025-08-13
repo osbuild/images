@@ -1001,6 +1001,11 @@ func netinstImage(workload workload.Workload,
 		img.EnabledAnacondaModules = append(img.EnabledAnacondaModules, instCust.Modules.Enable...)
 		img.DisabledAnacondaModules = append(img.DisabledAnacondaModules, instCust.Modules.Disable...)
 	}
+	img.FIPS = customizations.GetFIPS()
+	language, _ := customizations.GetPrimaryLocale()
+	if language != nil {
+		img.Language = *language
+	}
 
 	img.Platform = t.platform
 	img.Workload = workload
