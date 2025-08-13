@@ -169,8 +169,8 @@ func shallowMerge[T any](child *T, parent *T) *T {
 			// Only container types or pointer are supported.
 			// The reason is that with basic types, we can't distinguish between unset value and zero value.
 			if kind := field.Kind(); kind != reflect.Ptr && kind != reflect.Slice && kind != reflect.Map {
-				panic(fmt.Sprintf("unsupported field type: %s (only container types or pointer are supported)",
-					field.Kind()))
+				panic(fmt.Sprintf("unsupported field type for %s: %s (only container types or pointer are supported)",
+					fieldName, field.Kind()))
 			}
 
 			if field.IsNil() {
