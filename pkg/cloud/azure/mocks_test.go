@@ -153,6 +153,7 @@ func (acm *accountsMock) ListKeys(
 
 type imagesMock struct {
 	createOrUpdate []imBeginCreateOrUpdateArgs
+	delete         []imDeleteArgs
 }
 
 type imBeginCreateOrUpdateArgs struct {
@@ -162,6 +163,12 @@ type imBeginCreateOrUpdateArgs struct {
 	options *armcompute.ImagesClientBeginCreateOrUpdateOptions
 }
 
+type imDeleteArgs struct {
+	rg      string
+	name    string
+	options *armcompute.ImagesClientBeginDeleteOptions
+}
+
 func (im *imagesMock) BeginCreateOrUpdate(ctx context.Context, rg string, name string, img armcompute.Image, options *armcompute.ImagesClientBeginCreateOrUpdateOptions) (*runtime.Poller[armcompute.ImagesClientCreateOrUpdateResponse], error) {
 	im.createOrUpdate = append(im.createOrUpdate, imBeginCreateOrUpdateArgs{rg, name, img, options})
 
@@ -169,6 +176,14 @@ func (im *imagesMock) BeginCreateOrUpdate(ctx context.Context, rg string, name s
 		&armcompute.ImagesClientCreateOrUpdateResponse{
 			Image: img,
 		},
+	)
+}
+
+func (im *imagesMock) BeginDelete(ctx context.Context, rg string, name string, options *armcompute.ImagesClientBeginDeleteOptions) (*runtime.Poller[armcompute.ImagesClientDeleteResponse], error) {
+	im.delete = append(im.delete, imDeleteArgs{rg, name, options})
+
+	return makePoller[armcompute.ImagesClientDeleteResponse](
+		&armcompute.ImagesClientDeleteResponse{},
 	)
 }
 

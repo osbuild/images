@@ -25,6 +25,7 @@ type AccountsClient interface {
 
 type ImagesClient interface {
 	BeginCreateOrUpdate(context.Context, string, string, armcompute.Image, *armcompute.ImagesClientBeginCreateOrUpdateOptions) (*runtime.Poller[armcompute.ImagesClientCreateOrUpdateResponse], error)
+	BeginDelete(context.Context, string, string, *armcompute.ImagesClientBeginDeleteOptions) (*runtime.Poller[armcompute.ImagesClientDeleteResponse], error)
 }
 
 type VMsClient interface {

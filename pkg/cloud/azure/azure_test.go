@@ -153,3 +153,15 @@ func TestRegisterImage(t *testing.T) {
 		Location: common.ToPtr("test-universe"),
 	}, azm.im.createOrUpdate[0].img)
 }
+
+func TestDeleteImage(t *testing.T) {
+	azm := newAZ()
+	err := azm.az.DeleteImage(context.Background(), "rg", "imgname")
+	require.NoError(t, err)
+
+	require.Len(t, azm.im.delete, 1)
+	require.Equal(t, imDeleteArgs{
+		rg:   "rg",
+		name: "imgname",
+	}, azm.im.delete[0])
+}
