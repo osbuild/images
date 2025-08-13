@@ -1035,7 +1035,7 @@ image_types:
     filename: "image.raw.xz"
     compression: "xz"
     mime_type: "application/xz"
-    default_size: 4_294_967_296  # 4 * datasizes.GibiByte
+    default_size: 5_368_709_120  # 5 * datasizes.GibiByte
     bootable: true
     image_func: "iot"
     ostree:
