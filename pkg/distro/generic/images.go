@@ -992,15 +992,6 @@ func netinstImage(workload workload.Workload,
 	customizations := bp.Customizations
 
 	img := image.NewAnacondaNetInstaller()
-
-	instCust, err := customizations.GetInstaller()
-	if err != nil {
-		return nil, err
-	}
-	if instCust != nil && instCust.Modules != nil {
-		img.EnabledAnacondaModules = append(img.EnabledAnacondaModules, instCust.Modules.Enable...)
-		img.DisabledAnacondaModules = append(img.DisabledAnacondaModules, instCust.Modules.Disable...)
-	}
 	img.FIPS = customizations.GetFIPS()
 	language, _ := customizations.GetPrimaryLocale()
 	if language != nil {
@@ -1016,9 +1007,17 @@ func netinstImage(workload workload.Workload,
 		return nil, err
 	}
 
+	// NOTE: The netinst does not enable/disable anaconda modules in order to allow
+	// the default Anaconda behavior, ie. showing all the spokes in the UI
 	if installerConfig != nil {
 		img.AdditionalDracutModules = append(img.AdditionalDracutModules, installerConfig.AdditionalDracutModules...)
 		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
+
+		// This duplicates the iso_rootfs_type in image config
+		// use it as a default which may be overridden by image config
+		if installerConfig.SquashfsRootfs != nil && *installerConfig.SquashfsRootfs {
+			img.RootfsType = manifest.SquashfsRootfs
+		}
 	}
 
 	d := t.arch.distro
