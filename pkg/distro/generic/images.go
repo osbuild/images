@@ -1021,9 +1021,6 @@ func netinstImage(workload workload.Workload,
 		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
 	}
 
-	// On Fedora anaconda needs dbus-broker, but isn't added when dracut runs.
-	img.AdditionalDracutModules = append(img.AdditionalDracutModules, "dbus-broker")
-
 	d := t.arch.distro
 
 	img.Product = d.Product()
