@@ -20,14 +20,19 @@ SCHUTZFILE = "Schutzfile"
 OS_RELEASE_FILE = "/etc/os-release"
 
 # image types that can be boot tested
-CAN_BOOT_TEST = [
-    "ami",
-    "ec2",
-    "ec2-ha",
-    "ec2-sap",
-    "edge-ami",
-    "iot-bootable-container",
-]
+CAN_BOOT_TEST = {
+    "*": [
+        "ami",
+        "ec2",
+        "ec2-ha",
+        "ec2-sap",
+        "edge-ami",
+        "iot-bootable-container",
+    ],
+    "x86_64": [
+        "vhd"
+    ],
+}
 
 BIB_TYPES = [
     "iot-bootable-container"
@@ -307,7 +312,7 @@ def check_for_build(manifest_fname, build_info_dir, errors):
         print("  No PR/branch info available")
 
     image_type = dl_config["image-type"]
-    if image_type not in CAN_BOOT_TEST:
+    if image_type not in CAN_BOOT_TEST.get("*", []) + CAN_BOOT_TEST.get(dl_config["arch"], []):
         print(f"  Boot testing for {image_type} is not yet supported")
         return False
 
