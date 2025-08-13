@@ -250,3 +250,15 @@ func (ac Client) RegisterImage(ctx context.Context, resourceGroup, storageAccoun
 
 	return nil
 }
+
+func (ac Client) DeleteImage(ctx context.Context, resourceGroup, imageName string) error {
+	poller, err := ac.images.BeginDelete(ctx, resourceGroup, imageName, nil)
+	if err != nil {
+		return err
+	}
+	_, err = poller.PollUntilDone(ctx, nil)
+	if err != nil {
+		return err
+	}
+	return nil
+}
