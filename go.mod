@@ -22,7 +22,6 @@ require (
 	github.com/containers/image/v5 v5.36.1
 	github.com/containers/storage v1.59.1
 	github.com/gobwas/glob v0.2.3
-	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-retryablehttp v0.7.8
