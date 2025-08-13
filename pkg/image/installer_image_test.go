@@ -664,7 +664,7 @@ func TestInstallerLocales(t *testing.T) {
 			img.OSVersion = osversion
 			img.ISOLabel = isolabel
 			img.Platform = testPlatform
-			img.OSCustomizations.Language = input
+			img.Language = input
 
 			mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
 			actual := findAnacondaLocale(t, manifest.OSBuildManifest(mfs))

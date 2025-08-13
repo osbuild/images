@@ -18,10 +18,9 @@ import (
 
 type AnacondaNetInstaller struct {
 	Base
-	Platform         platform.Platform
-	OSCustomizations manifest.OSCustomizations
-	Environment      environment.Environment
-	Workload         workload.Workload
+	Platform    platform.Platform
+	Environment environment.Environment
+	Workload    workload.Workload
 
 	ExtraBasePackages rpmmd.PackageSet
 
@@ -48,6 +47,8 @@ type AnacondaNetInstaller struct {
 	// Uses the old, deprecated, Anaconda config option "kickstart-modules".
 	// Only for RHEL 8.
 	UseLegacyAnacondaConfig bool
+	FIPS                    bool // Adds fips=1 to the iso kernel cmdline
+	Language                string
 }
 
 func NewAnacondaNetInstaller() *AnacondaNetInstaller {
@@ -83,7 +84,7 @@ func (img *AnacondaNetInstaller) InstantiateManifest(m *manifest.Manifest,
 
 	anacondaPipeline.UseLegacyAnacondaConfig = img.UseLegacyAnacondaConfig
 	anacondaPipeline.EnabledAnacondaModules = img.EnabledAnacondaModules
-	if img.OSCustomizations.FIPS {
+	if img.FIPS {
 		anacondaPipeline.EnabledAnacondaModules = append(
 			anacondaPipeline.EnabledAnacondaModules,
 			anaconda.ModuleSecurity,
@@ -92,7 +93,7 @@ func (img *AnacondaNetInstaller) InstantiateManifest(m *manifest.Manifest,
 	anacondaPipeline.DisabledAnacondaModules = img.DisabledAnacondaModules
 	anacondaPipeline.AdditionalDracutModules = img.AdditionalDracutModules
 	anacondaPipeline.AdditionalDrivers = img.AdditionalDrivers
-	anacondaPipeline.Locale = img.OSCustomizations.Language
+	anacondaPipeline.Locale = img.Language
 
 	anacondaPipeline.Checkpoint()
 
@@ -110,20 +111,11 @@ func (img *AnacondaNetInstaller) InstantiateManifest(m *manifest.Manifest,
 	bootTreePipeline.ISOLabel = img.ISOLabel
 
 	kernelOpts := []string{fmt.Sprintf("inst.stage2=hd:LABEL=%s", img.ISOLabel)}
-	if img.OSCustomizations.FIPS {
+	if img.FIPS {
 		kernelOpts = append(kernelOpts, "fips=1")
 	}
 	kernelOpts = append(kernelOpts, img.AdditionalKernelOpts...)
 	bootTreePipeline.KernelOpts = kernelOpts
-
-	// Payload type uses an OS Pipeline for the payload
-	var osPipeline *manifest.OS
-	if anacondaPipeline.Type == manifest.AnacondaInstallerTypePayload {
-		osPipeline = manifest.NewOS(buildPipeline, img.Platform, repos)
-		osPipeline.OSCustomizations = img.OSCustomizations
-		osPipeline.Environment = img.Environment
-		osPipeline.Workload = img.Workload
-	}
 
 	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
 	// TODO: the partition table is required - make it a ctor arg or set a default one in the pipeline
@@ -133,9 +125,8 @@ func (img *AnacondaNetInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoTreePipeline.RootfsCompression = img.RootfsCompression
 	isoTreePipeline.RootfsType = img.RootfsType
 
-	isoTreePipeline.OSPipeline = osPipeline
 	isoTreePipeline.KernelOpts = img.AdditionalKernelOpts
-	if img.OSCustomizations.FIPS {
+	if img.FIPS {
 		isoTreePipeline.KernelOpts = append(isoTreePipeline.KernelOpts, "fips=1")
 	}
 
