@@ -345,6 +345,15 @@ func installerCustomizations(t *imageType, c *blueprint.Customizations) (manifes
 		if isoboot := installerConfig.ISOBootType; isoboot != nil {
 			isc.ISOBoot = *isoboot
 		}
+
+		// Put the kickstart file in the root of the iso, some image
+		// types (like rhel10/image-installer) put them there, some
+		// others (like fedora/image-installer) do not and because
+		// its not uniform we need to make it configurable.
+		// XXX: unify with rhel-11 ? or rhel-10.x?
+		if rootkickstart := installerConfig.ISORootKickstart; rootkickstart != nil {
+			isc.ISORootKickstart = *rootkickstart
+		}
 	}
 
 	installerCust, err := c.GetInstaller()
@@ -625,17 +634,6 @@ func imageInstallerImage(workload workload.Workload,
 
 	if img.Kickstart.Unattended {
 		img.InstallerCustomizations.AdditionalKernelOpts = append(img.InstallerCustomizations.AdditionalKernelOpts, installerConfig.KickstartUnattendedExtraKernelOpts...)
-	}
-
-	if installerConfig != nil {
-		// Put the kickstart file in the root of the iso, some image
-		// types (like rhel10/image-installer) put them there, some
-		// others (like fedora/image-installer) do not and because
-		// its not uniform we need to make it configurable.
-		// XXX: unify with rhel-11 ? or rhel-10.x?
-		if installerConfig.ISORootKickstart != nil {
-			img.ISORootKickstart = *installerConfig.ISORootKickstart
-		}
 	}
 
 	d := t.arch.distro
