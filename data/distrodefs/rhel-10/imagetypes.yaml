@@ -764,6 +764,12 @@
         append:
           include:
             - "insights-client"
+      "rhel-10.2+ gets azure-vm-utils":
+        when:
+          version_greater_or_equal: "10.2"
+        append:
+          include:
+            - "azure-vm-utils"
 
 image_config:
   default:
@@ -2015,6 +2021,13 @@ image_types:
             # package here.
             - "linux-firmware"
             - "os-prober"
+          conditions:
+            "rhel-10.2+ gets azure-vm-utils":
+              when:
+                version_greater_or_equal: "10.2"
+              append:
+                include:
+                  - "azure-vm-utils"
 
   # Based on lorax runtime-install.tmpl
   "netinst":
