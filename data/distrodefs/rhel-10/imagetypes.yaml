@@ -123,7 +123,7 @@
         zipl:
           - "s390utils-base"
 
-  installer_config: &default_installer_config
+  default_installer_config: &default_installer_config
     enabled_anaconda_modules: &install_config_enabled_anaconda_modules
       - "org.fedoraproject.Anaconda.Modules.Network"
       - "org.fedoraproject.Anaconda.Modules.Payloads"
@@ -138,6 +138,13 @@
     # see commit c6bfb22f54, controls the kickstart location
     iso_root_kickstart: true
     default_menu: 1
+    iso_rootfs_type: "squashfs"
+    conditions:
+      "x86_64 uses grub2":
+        when:
+          arch: "x86_64"
+        shallow_merge:
+          iso_boot_type: "grub2"
 
   sapapps_image_config: &sapapps_image_config
     selinux_config:
@@ -1582,15 +1589,7 @@ image_types:
       - "bootiso"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
-    installer_config:
-      <<: *default_installer_config
-      iso_rootfs_type: "squashfs"
-      conditions:
-        "x86_64 uses grub2":
-          when:
-            arch: "x86_64"
-          shallow_merge:
-            iso_boot_type: "grub2"
+    installer_config: *default_installer_config
     platforms:
       - *x86_64_installer_platform
       - *aarch64_platform
