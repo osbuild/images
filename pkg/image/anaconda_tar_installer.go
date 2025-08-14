@@ -57,7 +57,7 @@ type AnacondaTarInstaller struct {
 	Kickstart        *kickstart.Options
 
 	RootfsCompression string
-	RootfsType        manifest.RootfsType
+	RootfsType        manifest.ISORootfsType
 	ISOBoot           manifest.ISOBootType
 
 	ISOLabel  string
