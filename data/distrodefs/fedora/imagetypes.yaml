@@ -265,14 +265,6 @@
           additional_dracut_modules:
             - "ifcfg"
             - "dbus-broker"
-      "f40 and lower uses ifcfg in dracut and squashfs+ext4 rootfs":
-        when:
-          version_less_than: "41"
-        shallow_merge:
-          additional_dracut_modules:
-            - "ifcfg"
-            - "dbus-broker"
-          iso_rootfs_type: "squashfs-ext4"
 
   image_config:
     iot_enabled_services: &image_config_iot_enabled_services
@@ -978,12 +970,6 @@ image_types:
             - "xz"
             - "zram-generator"
           conditions:
-            "f40 and below use dnsmasq":
-              when:
-                version_less_than: "41"
-              append:
-                include:
-                  - "dnsmasq"
             "f41 and below uses parsec/zezere":
               when:
                 version_less_than: "42"
@@ -1985,13 +1971,6 @@ image_types:
             - "traceroute"
             - "util-linux"
             - "shadow-utils"  # includes passwd
-          conditions:
-            "dnsmasq got deprecated in f41":
-              when:
-                version_less_than: "41"
-              append:
-                include:
-                  - "dnsmasq"  # deprecated for F41+
     platforms:
       - <<: *x86_64_uefi_platform
         packages:
