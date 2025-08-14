@@ -255,7 +255,6 @@
     additional_dracut_modules:
       - "net-lib"
       - "dbus-broker"
-    squashfs_rootfs: true
     default_menu: 1
     conditions: &default_installer_config_conditions
       "f41 dracut requires ifcfg, rootfs is squashfs":
@@ -272,7 +271,7 @@
           additional_dracut_modules:
             - "ifcfg"
             - "dbus-broker"
-          squashfs_rootfs: false
+          iso_rootfs_type: "squashfs-ext4"
 
   image_config:
     iot_enabled_services: &image_config_iot_enabled_services
