@@ -1582,7 +1582,8 @@ image_types:
       - "bootiso"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
-    image_config:
+    installer_config:
+      <<: *default_installer_config
       iso_rootfs_type: "squashfs"
       conditions:
         "x86_64 uses grub2":
@@ -1590,7 +1591,6 @@ image_types:
             arch: "x86_64"
           shallow_merge:
             iso_boot_type: "grub2"
-    installer_config: *default_installer_config
     platforms:
       - *x86_64_installer_platform
       - *aarch64_platform
