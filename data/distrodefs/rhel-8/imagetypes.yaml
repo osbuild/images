@@ -872,6 +872,13 @@
     additional_dracut_modules:
       - "ifcfg"
     default_menu: 1
+    iso_rootfs_type: "squashfs-ext4"
+    conditions:
+      "x86_64 uses syslinux":
+        when:
+          arch: "x86_64"
+        shallow_merge:
+          iso_boot_type: "syslinux"
 
   partitioning:
     ids:
@@ -1807,15 +1814,7 @@ image_types:
       - "bootiso"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
-    installer_config:
-      <<: *default_installer_config
-      iso_rootfs_type: "squashfs-ext4"
-      conditions:
-        "x86_64 uses syslinux":
-          when:
-            arch: "x86_64"
-          shallow_merge:
-            iso_boot_type: "syslinux"
+    installer_config: *default_installer_config
     platforms:
       - *x86_64_installer_platform
       - *aarch64_platform
@@ -2051,13 +2050,6 @@ image_types:
     installer_config:
       <<: *default_installer_config
       default_menu: 0
-      iso_rootfs_type: "squashfs-ext4"
-      conditions:
-        "x86_64 uses syslinux":
-          when:
-            arch: "x86_64"
-          shallow_merge:
-            iso_boot_type: "syslinux"
     platforms:
       - *x86_64_uefi_platform
       - *aarch64_platform
