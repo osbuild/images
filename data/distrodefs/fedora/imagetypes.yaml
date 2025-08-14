@@ -1380,38 +1380,6 @@ image_types:
     payload_pipelines: ["os", "image", "zstd"]
     exports: ["zstd"]
 
-  installer:
-    package_sets:
-      os:
-        - *minimal_raw_pkgset
-      installer:
-        - &installer_pkgset
-          include:
-            - "anaconda-dracut"
-            - "atheros-firmware"
-            - "brcmfmac-firmware"
-            - "curl"
-            - "dracut-config-generic"
-            - "dracut-network"
-            - "hostname"
-            - "iwlwifi-dvm-firmware"
-            - "iwlwifi-mvm-firmware"
-            - "kernel"
-            - "linux-firmware"
-            - "less"
-            - "nfs-utils"
-            - "openssh-clients"
-            - "ostree"
-            - "plymouth"
-            - "realtek-firmware"
-            - "rng-tools"
-            - "rpcbind"
-            - "selinux-policy-targeted"
-            - "systemd"
-            - "tar"
-            - "xfsprogs"
-            - "xz"
-
   anaconda: &anaconda
     installer_config: *default_installer_config
     image_config:
@@ -1913,11 +1881,13 @@ image_types:
       <<: *iot_simplified_installer_partition_tables
     package_sets:
       installer:
-        - *installer_pkgset
         - include:
+            - "anaconda-dracut"
+            - "atheros-firmware"
             - "attr"
             - "basesystem"
             - "binutils"
+            - "brcmfmac-firmware"
             - "bsdtar"
             - "clevis-dracut"
             - "clevis-luks"
@@ -1925,34 +1895,55 @@ image_types:
             - "coreos-installer"
             - "coreos-installer-dracut"
             - "coreutils"
+            - "curl"
             - "device-mapper-multipath"
             - "dosfstools"
+            - "dracut-config-generic"
             - "dracut-live"
+            - "dracut-network"
             - "e2fsprogs"
             - "fcoe-utils"
             - "fdo-init"
             - "fedora-logos"
             - "gdisk"
             - "gzip"
+            - "hostname"
             - "ima-evm-utils"
             - "iproute"
             - "iptables"
             - "iputils"
             - "iscsi-initiator-utils"
+            - "iwlwifi-dvm-firmware"
+            - "iwlwifi-mvm-firmware"
+            - "kernel"
             - "keyutils"
+            - "less"
+            - "linux-firmware"
             - "lldpad"
             - "lvm2"
             - "mdadm"
+            - "nfs-utils"
             - "nss-softokn"
+            - "openssh-clients"
+            - "ostree"
+            - "plymouth"
             - "policycoreutils"
             - "policycoreutils-python-utils"
             - "procps-ng"
+            - "realtek-firmware"
+            - "rng-tools"
             - "rootfiles"
+            - "rpcbind"
+            - "selinux-policy-targeted"
             - "setools-console"
+            - "shadow-utils"  # includes passwd
             - "sudo"
+            - "systemd"
+            - "tar"
             - "traceroute"
             - "util-linux"
-            - "shadow-utils"  # includes passwd
+            - "xfsprogs"
+            - "xz"
     platforms:
       - <<: *x86_64_uefi_platform
         packages:
