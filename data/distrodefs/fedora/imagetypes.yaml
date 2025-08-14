@@ -265,6 +265,11 @@
           additional_dracut_modules:
             - "ifcfg"
             - "dbus-broker"
+      "x86_64 uses grub2":
+        when:
+          arch: "x86_64"
+        shallow_merge:
+          iso_boot_type: "grub2"
 
   image_config:
     iot_enabled_services: &image_config_iot_enabled_services
@@ -1585,13 +1590,6 @@ image_types:
     installer_config:
       <<: *default_installer_config
       default_menu: 0
-      conditions:
-        <<: *default_installer_config_conditions
-        "x86_64 uses grub2":
-          when:
-            arch: "x86_64"
-          shallow_merge:
-            iso_boot_type: "grub2"
     image_config:
       <<: *image_config_iot_enabled_services
       locale: "en_US.UTF-8"
@@ -1620,16 +1618,7 @@ image_types:
       - "bootiso"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
-    installer_config:
-      <<: *default_installer_config
-      conditions:
-        <<: *default_installer_config_conditions
-        "x86_64 uses grub2":
-          when:
-            arch: "x86_64"
-          shallow_merge:
-            iso_boot_type: "grub2"
-
+    installer_config: *default_installer_config
     image_config:
       locale: "en_US.UTF-8"
     package_sets:
@@ -1710,13 +1699,6 @@ image_types:
         - "org.fedoraproject.Anaconda.Modules.Runtime"
         - "org.fedoraproject.Anaconda.Modules.Storage"
         - "org.fedoraproject.Anaconda.Modules.Users"
-      conditions:
-        <<: *default_installer_config_conditions
-        "x86_64 uses grub2":
-          when:
-            arch: "x86_64"
-          shallow_merge:
-            iso_boot_type: "grub2"
     image_config:
       locale: "en_US.UTF-8"
     platforms:
@@ -2021,15 +2003,7 @@ image_types:
       - "bootiso"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
-    installer_config:
-      <<: *default_installer_config
-      conditions:
-        <<: *default_installer_config_conditions
-        "x86_64 uses grub2":
-          when:
-            arch: "x86_64"
-          shallow_merge:
-            iso_boot_type: "grub2"
+    installer_config: *default_installer_config
     image_config:
       locale: "en_US.UTF-8"
     package_sets:
