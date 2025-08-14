@@ -451,9 +451,9 @@ func (p *AnacondaInstallerISOTree) serialize() osbuild.Pipeline {
 		pipeline.AddStage(stage)
 	} else if p.ISOBoot == Grub2ISOBoot {
 		var grub2config *osbuild.Grub2Config
-		if p.anacondaPipeline.DefaultMenu > 0 {
+		if p.anacondaPipeline.InstallerCustomizations.DefaultMenu > 0 {
 			grub2config = &osbuild.Grub2Config{
-				Default: p.anacondaPipeline.DefaultMenu,
+				Default: p.anacondaPipeline.InstallerCustomizations.DefaultMenu,
 			}
 		}
 

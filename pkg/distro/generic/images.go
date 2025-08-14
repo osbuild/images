@@ -318,6 +318,56 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 	return osc, nil
 }
 
+func installerCustomizations(t *imageType, c *blueprint.Customizations) (manifest.InstallerCustomizations, error) {
+	isc := manifest.InstallerCustomizations{}
+	isc.FIPS = c.GetFIPS()
+	isc.UseLegacyAnacondaConfig = t.ImageTypeYAML.UseLegacyAnacondaConfig
+
+	installerConfig, err := t.getDefaultInstallerConfig()
+	if err != nil {
+		return isc, err
+	}
+
+	if installerConfig != nil {
+		isc.EnabledAnacondaModules = append(isc.EnabledAnacondaModules, installerConfig.EnabledAnacondaModules...)
+		isc.AdditionalDracutModules = append(isc.AdditionalDracutModules, installerConfig.AdditionalDracutModules...)
+		isc.AdditionalDrivers = append(isc.AdditionalDrivers, installerConfig.AdditionalDrivers...)
+
+		if menu := installerConfig.DefaultMenu; menu != nil {
+			isc.DefaultMenu = *menu
+		}
+
+		if isoroot := installerConfig.ISORootfsType; isoroot != nil {
+			isc.ISORootfsType = *isoroot
+		}
+
+		if isoboot := installerConfig.ISOBootType; isoboot != nil {
+			isc.ISOBoot = *isoboot
+		}
+
+		// Put the kickstart file in the root of the iso, some image
+		// types (like rhel10/image-installer) put them there, some
+		// others (like fedora/image-installer) do not and because
+		// its not uniform we need to make it configurable.
+		// XXX: unify with rhel-11 ? or rhel-10.x?
+		if rootkickstart := installerConfig.ISORootKickstart; rootkickstart != nil {
+			isc.ISORootKickstart = *rootkickstart
+		}
+	}
+
+	installerCust, err := c.GetInstaller()
+	if err != nil {
+		return isc, err
+	}
+
+	if installerCust != nil && installerCust.Modules != nil {
+		isc.EnabledAnacondaModules = append(isc.EnabledAnacondaModules, installerCust.Modules.Enable...)
+		isc.DisabledAnacondaModules = append(isc.DisabledAnacondaModules, installerCust.Modules.Disable...)
+	}
+
+	return isc, nil
+}
+
 func ostreeDeploymentCustomizations(
 	t *imageType,
 	c *blueprint.Customizations) (manifest.OSTreeDeploymentCustomizations, error) {
@@ -526,26 +576,10 @@ func liveInstallerImage(workload workload.Workload,
 		img.Locale = *locale
 	}
 
-	installerConfig, err := t.getDefaultInstallerConfig()
+	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations)
+
 	if err != nil {
 		return nil, err
-	}
-
-	if installerConfig != nil {
-		img.AdditionalDracutModules = append(img.AdditionalDracutModules, installerConfig.AdditionalDracutModules...)
-		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
-
-		if menu := installerConfig.DefaultMenu; menu != nil {
-			img.DefaultMenu = *menu
-		}
-
-		if isoroot := installerConfig.ISORootfsType; isoroot != nil {
-			img.RootfsType = *isoroot
-		}
-
-		if isoboot := installerConfig.ISOBootType; isoboot != nil {
-			img.ISOBoot = *isoboot
-		}
 	}
 
 	return img, nil
@@ -569,8 +603,6 @@ func imageInstallerImage(workload workload.Workload,
 		return nil, err
 	}
 
-	img.UseLegacyAnacondaConfig = t.ImageTypeYAML.UseLegacyAnacondaConfig
-
 	img.Kickstart, err = kickstart.New(customizations)
 	if err != nil {
 		return nil, err
@@ -579,54 +611,27 @@ func imageInstallerImage(workload workload.Workload,
 	img.Kickstart.Keyboard = img.OSCustomizations.Keyboard
 	img.Kickstart.Timezone = &img.OSCustomizations.Timezone
 
-	instCust, err := customizations.GetInstaller()
-	if err != nil {
-		return nil, err
-	}
-	if instCust != nil && instCust.Modules != nil {
-		img.EnabledAnacondaModules = append(img.EnabledAnacondaModules, instCust.Modules.Enable...)
-		img.DisabledAnacondaModules = append(img.DisabledAnacondaModules, instCust.Modules.Disable...)
-	}
-	img.EnabledAnacondaModules = append(img.EnabledAnacondaModules, anaconda.ModuleUsers)
-
 	img.Platform = t.platform
 	img.Workload = workload
 
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
+
+	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations)
+	if err != nil {
+		return nil, err
+	}
 
 	installerConfig, err := t.getDefaultInstallerConfig()
 	if err != nil {
 		return nil, err
 	}
 
-	if installerConfig != nil {
-		img.EnabledAnacondaModules = append(img.EnabledAnacondaModules, installerConfig.EnabledAnacondaModules...)
-		img.AdditionalDracutModules = append(img.AdditionalDracutModules, installerConfig.AdditionalDracutModules...)
-		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
-		if img.Kickstart.Unattended {
-			img.AdditionalKernelOpts = append(img.AdditionalKernelOpts, installerConfig.KickstartUnattendedExtraKernelOpts...)
-		}
+	// XXX these bits should move into the `installerCustomization` function
+	// XXX directly
+	img.InstallerCustomizations.EnabledAnacondaModules = append(img.InstallerCustomizations.EnabledAnacondaModules, anaconda.ModuleUsers)
 
-		// Put the kickstart file in the root of the iso, some image
-		// types (like rhel10/image-installer) put them there, some
-		// others (like fedora/image-installer) do not and because
-		// its not uniform we need to make it configurable.
-		// XXX: unify with rhel-11 ? or rhel-10.x?
-		if installerConfig.ISORootKickstart != nil {
-			img.ISORootKickstart = *installerConfig.ISORootKickstart
-		}
-
-		if menu := installerConfig.DefaultMenu; menu != nil {
-			img.DefaultMenu = *menu
-		}
-
-		if isoroot := installerConfig.ISORootfsType; isoroot != nil {
-			img.RootfsType = *isoroot
-		}
-
-		if isoboot := installerConfig.ISOBootType; isoboot != nil {
-			img.ISOBoot = *isoboot
-		}
+	if img.Kickstart.Unattended {
+		img.InstallerCustomizations.AdditionalKernelOpts = append(img.InstallerCustomizations.AdditionalKernelOpts, installerConfig.KickstartUnattendedExtraKernelOpts...)
 	}
 
 	d := t.arch.distro
@@ -780,10 +785,8 @@ func iotInstallerImage(workload workload.Workload,
 	img := image.NewAnacondaOSTreeInstaller(commit)
 
 	customizations := bp.Customizations
-	img.FIPS = customizations.GetFIPS()
 	img.Platform = t.platform
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
-	img.UseLegacyAnacondaConfig = t.ImageTypeYAML.UseLegacyAnacondaConfig
 
 	img.Kickstart, err = kickstart.New(customizations)
 	if err != nil {
@@ -799,40 +802,17 @@ func iotInstallerImage(workload workload.Workload,
 	// kickstart though kickstart does support setting them
 	img.Kickstart.Timezone, _ = customizations.GetTimezoneSettings()
 
-	instCust, err := customizations.GetInstaller()
-	if err != nil {
-		return nil, err
-	}
-	if instCust != nil && instCust.Modules != nil {
-		img.EnabledAnacondaModules = append(img.EnabledAnacondaModules, instCust.Modules.Enable...)
-		img.DisabledAnacondaModules = append(img.DisabledAnacondaModules, instCust.Modules.Disable...)
-	}
+	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations)
 
-	installerConfig, err := t.getDefaultInstallerConfig()
 	if err != nil {
 		return nil, err
 	}
 
-	if installerConfig != nil {
-		img.AdditionalDracutModules = append(img.AdditionalDracutModules, installerConfig.AdditionalDracutModules...)
-		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
-		img.EnabledAnacondaModules = append(img.EnabledAnacondaModules, installerConfig.EnabledAnacondaModules...)
-
-		if menu := installerConfig.DefaultMenu; menu != nil {
-			img.DefaultMenu = *menu
-		}
-
-		if isoroot := installerConfig.ISORootfsType; isoroot != nil {
-			img.RootfsType = *isoroot
-		}
-
-		if isoboot := installerConfig.ISOBootType; isoboot != nil {
-			img.ISOBoot = *isoboot
-		}
-	}
+	// XXX these bits should move into the `installerCustomization` function
+	// XXX directly
 	if len(img.Kickstart.Users)+len(img.Kickstart.Groups) > 0 {
 		// only enable the users module if needed
-		img.EnabledAnacondaModules = append(img.EnabledAnacondaModules, anaconda.ModuleUsers)
+		img.InstallerCustomizations.EnabledAnacondaModules = append(img.InstallerCustomizations.EnabledAnacondaModules, anaconda.ModuleUsers)
 	}
 
 	img.Product = d.Product()
@@ -1001,7 +981,6 @@ func netinstImage(workload workload.Workload,
 	customizations := bp.Customizations
 
 	img := image.NewAnacondaNetInstaller()
-	img.FIPS = customizations.GetFIPS()
 	language, _ := customizations.GetPrimaryLocale()
 	if language != nil {
 		img.Language = *language
@@ -1011,27 +990,12 @@ func netinstImage(workload workload.Workload,
 	img.Workload = workload
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
 
-	installerConfig, err := t.getDefaultInstallerConfig()
+	var err error
+
+	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations)
+
 	if err != nil {
 		return nil, err
-	}
-
-	// NOTE: The netinst does not enable/disable anaconda modules in order to allow
-	// the default Anaconda behavior, ie. showing all the spokes in the UI
-	if installerConfig != nil {
-		img.AdditionalDracutModules = append(img.AdditionalDracutModules, installerConfig.AdditionalDracutModules...)
-		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
-		if menu := installerConfig.DefaultMenu; menu != nil {
-			img.DefaultMenu = *menu
-		}
-
-		if isoroot := installerConfig.ISORootfsType; isoroot != nil {
-			img.RootfsType = *isoroot
-		}
-
-		if isoboot := installerConfig.ISOBootType; isoboot != nil {
-			img.ISOBoot = *isoboot
-		}
 	}
 
 	d := t.arch.distro

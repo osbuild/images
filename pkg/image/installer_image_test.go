@@ -154,7 +154,7 @@ func TestContainerInstallerSquashfsRootfs(t *testing.T) {
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-	img.RootfsType = manifest.SquashfsRootfs
+	img.InstallerCustomizations.ISORootfsType = manifest.SquashfsRootfs
 	img.Platform = testPlatform
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil)
@@ -227,7 +227,7 @@ func TestOSTreeInstallerSquashfsRootfs(t *testing.T) {
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-	img.RootfsType = manifest.SquashfsRootfs
+	img.InstallerCustomizations.ISORootfsType = manifest.SquashfsRootfs
 	img.Platform = testPlatform
 	img.Kickstart = &kickstart.Options{
 		// the ostree options must be non-nil
@@ -325,7 +325,7 @@ func TestTarInstallerSquashfsRootfs(t *testing.T) {
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-	img.RootfsType = manifest.SquashfsRootfs
+	img.InstallerCustomizations.ISORootfsType = manifest.SquashfsRootfs
 	img.Platform = testPlatform
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
@@ -356,7 +356,7 @@ func TestLiveInstallerSquashfsRootfs(t *testing.T) {
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-	img.RootfsType = manifest.SquashfsRootfs
+	img.InstallerCustomizations.ISORootfsType = manifest.SquashfsRootfs
 	img.Platform = testPlatform
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
@@ -510,9 +510,9 @@ func TestContainerInstallerModules(t *testing.T) {
 				img.OSVersion = osversion
 				img.ISOLabel = isolabel
 
-				img.UseLegacyAnacondaConfig = legacy
-				img.EnabledAnacondaModules = tc.enable
-				img.DisabledAnacondaModules = tc.disable
+				img.InstallerCustomizations.UseLegacyAnacondaConfig = legacy
+				img.InstallerCustomizations.EnabledAnacondaModules = tc.enable
+				img.InstallerCustomizations.DisabledAnacondaModules = tc.disable
 
 				assert.NotNil(t, img)
 				img.Platform = testPlatform
@@ -541,9 +541,9 @@ func TestOSTreeInstallerModules(t *testing.T) {
 					OSTree: &kickstart.OSTree{},
 				}
 
-				img.UseLegacyAnacondaConfig = legacy
-				img.EnabledAnacondaModules = tc.enable
-				img.DisabledAnacondaModules = tc.disable
+				img.InstallerCustomizations.UseLegacyAnacondaConfig = legacy
+				img.InstallerCustomizations.EnabledAnacondaModules = tc.enable
+				img.InstallerCustomizations.DisabledAnacondaModules = tc.disable
 
 				assert.NotNil(t, img)
 				img.Platform = testPlatform
@@ -568,9 +568,9 @@ func TestTarInstallerModules(t *testing.T) {
 				img.OSVersion = osversion
 				img.ISOLabel = isolabel
 
-				img.UseLegacyAnacondaConfig = legacy
-				img.EnabledAnacondaModules = tc.enable
-				img.DisabledAnacondaModules = tc.disable
+				img.InstallerCustomizations.UseLegacyAnacondaConfig = legacy
+				img.InstallerCustomizations.EnabledAnacondaModules = tc.enable
+				img.InstallerCustomizations.DisabledAnacondaModules = tc.disable
 
 				assert.NotNil(t, img)
 				img.Platform = testPlatform
@@ -749,8 +749,8 @@ func TestContainerInstallerDracut(t *testing.T) {
 	testModules := []string{"test-module"}
 	testDrivers := []string{"test-driver"}
 
-	img.AdditionalDracutModules = testModules
-	img.AdditionalDrivers = testDrivers
+	img.InstallerCustomizations.AdditionalDracutModules = testModules
+	img.InstallerCustomizations.AdditionalDrivers = testDrivers
 
 	assert.NotNil(t, img)
 	img.Platform = testPlatform
@@ -778,8 +778,8 @@ func TestOSTreeInstallerDracut(t *testing.T) {
 	testModules := []string{"test-module"}
 	testDrivers := []string{"test-driver"}
 
-	img.AdditionalDracutModules = testModules
-	img.AdditionalDrivers = testDrivers
+	img.InstallerCustomizations.AdditionalDracutModules = testModules
+	img.InstallerCustomizations.AdditionalDrivers = testDrivers
 
 	assert.NotNil(t, img)
 	img.Platform = testPlatform
@@ -803,8 +803,8 @@ func TestTarInstallerDracut(t *testing.T) {
 	testModules := []string{"test-module"}
 	testDrivers := []string{"test-driver"}
 
-	img.AdditionalDracutModules = testModules
-	img.AdditionalDrivers = testDrivers
+	img.InstallerCustomizations.AdditionalDracutModules = testModules
+	img.InstallerCustomizations.AdditionalDrivers = testDrivers
 
 	assert.NotNil(t, img)
 	img.Platform = testPlatform
@@ -827,7 +827,7 @@ func TestTarInstallerKernelOpts(t *testing.T) {
 
 	testOpts := []string{"foo=1", "bar=2"}
 
-	img.AdditionalKernelOpts = testOpts
+	img.InstallerCustomizations.AdditionalKernelOpts = testOpts
 
 	assert.NotNil(t, img)
 	img.Platform = testPlatform
@@ -861,7 +861,7 @@ func TestNetInstallerSquashfsRootfs(t *testing.T) {
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-	img.RootfsType = manifest.SquashfsRootfs
+	img.InstallerCustomizations.ISORootfsType = manifest.SquashfsRootfs
 	img.Platform = testPlatform
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
@@ -878,8 +878,8 @@ func TestNetInstallerDracut(t *testing.T) {
 	testModules := []string{"test-module"}
 	testDrivers := []string{"test-driver"}
 
-	img.AdditionalDracutModules = testModules
-	img.AdditionalDrivers = testDrivers
+	img.InstallerCustomizations.AdditionalDracutModules = testModules
+	img.InstallerCustomizations.AdditionalDrivers = testDrivers
 
 	assert.NotNil(t, img)
 	img.Platform = testPlatform
