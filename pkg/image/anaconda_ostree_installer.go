@@ -29,7 +29,7 @@ type AnacondaOSTreeInstaller struct {
 	Subscription *subscription.ImageOptions
 
 	RootfsCompression string
-	RootfsType        manifest.RootfsType
+	RootfsType        manifest.ISORootfsType
 	ISOBoot           manifest.ISOBootType
 
 	ISOLabel  string
