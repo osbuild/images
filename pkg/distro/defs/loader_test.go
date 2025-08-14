@@ -21,6 +21,7 @@ import (
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
 	"github.com/osbuild/images/pkg/distro/generic"
+	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/runner"
@@ -693,8 +694,8 @@ image_types:
         - base-dracut-mod1
       additional_drivers:
         - base-drv1
-      squashfs_rootfs: true
       default_menu: 1
+      iso_rootfs_type: "squashfs"
 `
 
 func TestImageTypeInstallerConfig(t *testing.T) {
@@ -704,8 +705,8 @@ func TestImageTypeInstallerConfig(t *testing.T) {
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDracutModules: []string{"base-dracut-mod1"},
 		AdditionalDrivers:       []string{"base-drv1"},
-		SquashfsRootfs:          common.ToPtr(true),
 		DefaultMenu:             common.ToPtr(1),
+		ISORootfsType:           common.ToPtr(manifest.SquashfsRootfs),
 	}, installerConfig)
 }
 
@@ -724,10 +725,10 @@ func TestImageTypeInstallerConfigMergeVerLT(t *testing.T) {
 
 	installerConfig := it.InstallerConfig(distro.ID{Name: "test-distro", MajorVersion: 1}, "test_arch")
 	assert.Equal(t, &distro.InstallerConfig{
-		// AdditionalDrivers,SquashfsRootfs merged from parent
+		// AdditionalDrivers,ISOrootfsType merged from parent
 		AdditionalDrivers:       []string{"base-drv1"},
-		SquashfsRootfs:          common.ToPtr(true),
 		DefaultMenu:             common.ToPtr(2),
+		ISORootfsType:           common.ToPtr(manifest.SquashfsRootfs),
 		AdditionalDracutModules: []string{"override-dracut-mod1"},
 	}, installerConfig)
 }
@@ -750,9 +751,9 @@ func TestImageTypeInstallerConfigMergeDistroName(t *testing.T) {
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDracutModules: []string{"override-dracut-mod1"},
 		AdditionalDrivers:       []string{"override-drv1"},
-		// SquashfsRootfs merged from parent
-		SquashfsRootfs: common.ToPtr(true),
-		DefaultMenu:    common.ToPtr(1),
+		DefaultMenu:             common.ToPtr(1),
+		// ISORootfsType merged from parent
+		ISORootfsType: common.ToPtr(manifest.SquashfsRootfs),
 	}, installerConfig)
 }
 
@@ -771,10 +772,10 @@ func TestImageTypeInstallerConfigMergeArch(t *testing.T) {
 	installerConfig := it.InstallerConfig(distro.ID{Name: "test-distro", MajorVersion: 1}, "test_arch")
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDrivers: []string{"override-drv1"},
-		// AdditionalDracutModules,SquashfsRootfs merged from parent
+		// AdditionalDracutModules,ISORootfsType merged from parent
 		AdditionalDracutModules: []string{"base-dracut-mod1"},
-		SquashfsRootfs:          common.ToPtr(true),
 		DefaultMenu:             common.ToPtr(1),
+		ISORootfsType:           common.ToPtr(manifest.SquashfsRootfs),
 	}, installerConfig)
 }
 

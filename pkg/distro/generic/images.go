@@ -535,10 +535,6 @@ func liveInstallerImage(workload workload.Workload,
 		img.AdditionalDracutModules = append(img.AdditionalDracutModules, installerConfig.AdditionalDracutModules...)
 		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
 
-		if installerConfig.SquashfsRootfs != nil && *installerConfig.SquashfsRootfs {
-			img.RootfsType = manifest.SquashfsRootfs
-		}
-
 		if menu := installerConfig.DefaultMenu; menu != nil {
 			img.DefaultMenu = *menu
 		}
@@ -607,9 +603,6 @@ func imageInstallerImage(workload workload.Workload,
 		img.EnabledAnacondaModules = append(img.EnabledAnacondaModules, installerConfig.EnabledAnacondaModules...)
 		img.AdditionalDracutModules = append(img.AdditionalDracutModules, installerConfig.AdditionalDracutModules...)
 		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
-		if installerConfig.SquashfsRootfs != nil && *installerConfig.SquashfsRootfs {
-			img.RootfsType = manifest.SquashfsRootfs
-		}
 		if img.Kickstart.Unattended {
 			img.AdditionalKernelOpts = append(img.AdditionalKernelOpts, installerConfig.KickstartUnattendedExtraKernelOpts...)
 		}
@@ -824,9 +817,6 @@ func iotInstallerImage(workload workload.Workload,
 		img.AdditionalDracutModules = append(img.AdditionalDracutModules, installerConfig.AdditionalDracutModules...)
 		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
 		img.EnabledAnacondaModules = append(img.EnabledAnacondaModules, installerConfig.EnabledAnacondaModules...)
-		if installerConfig.SquashfsRootfs != nil && *installerConfig.SquashfsRootfs {
-			img.RootfsType = manifest.SquashfsRootfs
-		}
 
 		if menu := installerConfig.DefaultMenu; menu != nil {
 			img.DefaultMenu = *menu
@@ -1041,12 +1031,6 @@ func netinstImage(workload workload.Workload,
 
 		if isoboot := installerConfig.ISOBootType; isoboot != nil {
 			img.ISOBoot = *isoboot
-		}
-
-		// This duplicates the iso_rootfs_type in image config
-		// use it as a default which may be overridden by image config
-		if installerConfig.SquashfsRootfs != nil && *installerConfig.SquashfsRootfs {
-			img.RootfsType = manifest.SquashfsRootfs
 		}
 	}
 
