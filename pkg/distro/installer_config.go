@@ -18,9 +18,6 @@ type InstallerConfig struct {
 	KickstartUnattendedExtraKernelOpts []string `yaml:"kickstart_unattended_extra_kernel_opts"`
 	ISORootKickstart                   *bool    `yaml:"iso_root_kickstart"`
 
-	// SquashfsRootfs will set SquashfsRootfs as rootfs in the iso image
-	SquashfsRootfs *bool `yaml:"squashfs_rootfs"`
-
 	// DefaultMenu will set the grub2 iso menu's default setting
 	DefaultMenu *int `yaml:"default_menu"`
 
