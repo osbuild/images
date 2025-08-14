@@ -280,6 +280,12 @@
             - "system-reinstall-bootc"
           exclude:
             - "microcode_ctl"
+      "rhel-9.8+ gets azure-vm-utils":
+        when:
+          version_greater_or_equal: "9.8"
+        append:
+          include:
+            - "azure-vm-utils"
 
   sapapps_image_config: &sapapps_image_config
     selinux_config:
@@ -2974,3 +2980,10 @@ image_types:
             - "linux-firmware*"
             - "grubby"
             - "os-prober"
+          conditions:
+            "rhel-9.8+ gets azure-vm-utils":
+              when:
+                version_greater_or_equal: "9.8"
+              append:
+                include:
+                  - "azure-vm-utils"
