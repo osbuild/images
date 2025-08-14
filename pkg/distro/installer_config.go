@@ -23,7 +23,7 @@ type InstallerConfig struct {
 
 	// RootfsType defines what rootfs (squashfs, erofs,ext4)
 	// is used
-	ISORootfsType *manifest.RootfsType `yaml:"iso_rootfs_type,omitempty"`
+	ISORootfsType *manifest.ISORootfsType `yaml:"iso_rootfs_type,omitempty"`
 
 	// BootType defines what type of bootloader is used for the iso
 	ISOBootType *manifest.ISOBootType `yaml:"iso_boot_type,omitempty"`

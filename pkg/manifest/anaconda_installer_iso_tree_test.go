@@ -745,12 +745,12 @@ func TestPayloadRemoveSignatures(t *testing.T) {
 
 func TestISORootfsType(t *testing.T) {
 	var rootFS struct {
-		ISORootfsType manifest.RootfsType `yaml:"iso_rootfs_type"`
+		ISORootfsType manifest.ISORootfsType `yaml:"iso_rootfs_type"`
 	}
 
 	for _, tc := range []struct {
 		fstype   string
-		expected manifest.RootfsType
+		expected manifest.ISORootfsType
 	}{
 		{"squashfs-ext4", manifest.SquashfsExt4Rootfs},
 		{"squashfs", manifest.SquashfsRootfs},
@@ -764,11 +764,11 @@ func TestISORootfsType(t *testing.T) {
 
 func TestISORootfsTypeError(t *testing.T) {
 	var rootFS struct {
-		ISORootfsType manifest.RootfsType `yaml:"iso_rootfs_type"`
+		ISORootfsType manifest.ISORootfsType `yaml:"iso_rootfs_type"`
 	}
 
 	err := yaml.Unmarshal([]byte("iso_rootfs_type: non-exiting"), &rootFS)
-	assert.EqualError(t, err, `unmarshal yaml via json for "non-exiting" failed: unknown RootfsType: "non-exiting"`)
+	assert.EqualError(t, err, `unmarshal yaml via json for "non-exiting" failed: unknown ISORootfsType: "non-exiting"`)
 }
 
 func TestISOBootType(t *testing.T) {
