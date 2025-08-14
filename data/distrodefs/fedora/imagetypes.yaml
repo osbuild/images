@@ -1574,7 +1574,21 @@ image_types:
       - "bootiso"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
-    installer_config: *default_installer_config
+    installer_config: 
+      <<: *default_installer_config
+      # for some reason the live-installer never had or never took into account
+      # the additional dracut modules. This might be a bug but for now we reset
+      # them to empty to avoid changing the live-installer definition
+      additional_dracut_modules: []
+      # also reset the condition that adds dracut modules
+      conditions:
+        <<: *default_installer_config_conditions
+        "f41 dracut requires ifcfg, rootfs is squashfs":
+          when:
+            version_equal: "41"
+          shallow_merge:
+            additional_dracut_modules: []
+
     image_config:
       locale: "en_US.UTF-8"
     package_sets:
