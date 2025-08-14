@@ -244,6 +244,7 @@
 
 
   installer_config: &default_installer_config
+    iso_rootfs_type: "squashfs"
     enabled_anaconda_modules: &install_config_enabled_anaconda_modules
       - "org.fedoraproject.Anaconda.Modules.Localization"
       - "org.fedoraproject.Anaconda.Modules.Network"
@@ -1598,14 +1599,8 @@ image_types:
     installer_config:
       <<: *default_installer_config
       default_menu: 0
-      iso_rootfs_type: "squashfs"
       conditions:
         <<: *default_installer_config_conditions
-        "f40 and below uses ext4 based iso rootfs":
-          when:
-            version_less_than: "41"
-          shallow_merge:
-            iso_rootfs_type: "squashfs-ext4"
         "x86_64 uses grub2":
           when:
             arch: "x86_64"
@@ -1641,14 +1636,8 @@ image_types:
     required_partition_sizes: *default_required_dir_sizes
     installer_config:
       <<: *default_installer_config
-      iso_rootfs_type: "squashfs"
       conditions:
         <<: *default_installer_config_conditions
-        "f40 and below uses ext4 based iso rootfs":
-          when:
-            version_less_than: "41"
-          shallow_merge:
-            iso_rootfs_type: "squashfs-ext4"
         "x86_64 uses grub2":
           when:
             arch: "x86_64"
@@ -1735,14 +1724,8 @@ image_types:
         - "org.fedoraproject.Anaconda.Modules.Runtime"
         - "org.fedoraproject.Anaconda.Modules.Storage"
         - "org.fedoraproject.Anaconda.Modules.Users"
-      iso_rootfs_type: "squashfs"
       conditions:
         <<: *default_installer_config_conditions
-        "on f40 and below we used ext4 on squashfs":
-          when:
-            version_less_than: "41"
-          shallow_merge:
-            iso_rootfs_type: "squashfs-ext4"
         "x86_64 uses grub2":
           when:
             arch: "x86_64"
@@ -2061,14 +2044,8 @@ image_types:
     required_partition_sizes: *default_required_dir_sizes
     installer_config:
       <<: *default_installer_config
-      iso_rootfs_type: "squashfs"
       conditions:
         <<: *default_installer_config_conditions
-        "on f40 and below we used ext4 on squashfs":
-          when:
-            version_less_than: "41"
-          shallow_merge:
-            iso_rootfs_type: "squashfs-ext4"
         "x86_64 uses grub2":
           when:
             arch: "x86_64"
