@@ -1,5 +1,9 @@
 package distro
 
+import (
+	"github.com/osbuild/images/pkg/manifest"
+)
+
 // InstallerConfig represents a configuration for the installer
 // part of an Installer image type.
 type InstallerConfig struct {
@@ -19,6 +23,13 @@ type InstallerConfig struct {
 
 	// DefaultMenu will set the grub2 iso menu's default setting
 	DefaultMenu *int `yaml:"default_menu"`
+
+	// RootfsType defines what rootfs (squashfs, erofs,ext4)
+	// is used
+	ISORootfsType *manifest.RootfsType `yaml:"iso_rootfs_type,omitempty"`
+
+	// BootType defines what type of bootloader is used for the iso
+	ISOBootType *manifest.ISOBootType `yaml:"iso_boot_type,omitempty"`
 }
 
 // InheritFrom inherits unset values from the provided parent configuration and

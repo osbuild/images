@@ -257,7 +257,7 @@
       - "dbus-broker"
     squashfs_rootfs: true
     default_menu: 1
-    conditions:
+    conditions: &default_installer_config_conditions
       "f41 dracut requires ifcfg, rootfs is squashfs":
         when:
           version_equal: "41"
@@ -1599,11 +1599,9 @@ image_types:
     installer_config:
       <<: *default_installer_config
       default_menu: 0
-    image_config:
-      <<: *image_config_iot_enabled_services
-      locale: "en_US.UTF-8"
       iso_rootfs_type: "squashfs"
       conditions:
+        <<: *default_installer_config_conditions
         "f40 and below uses ext4 based iso rootfs":
           when:
             version_less_than: "41"
@@ -1614,6 +1612,9 @@ image_types:
             arch: "x86_64"
           shallow_merge:
             iso_boot_type: "grub2"
+    image_config:
+      <<: *image_config_iot_enabled_services
+      locale: "en_US.UTF-8"
     package_sets:
       installer:
         - *anaconda_pkgset
@@ -1639,11 +1640,11 @@ image_types:
       - "bootiso"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
-    installer_config: *default_installer_config
-    image_config:
-      locale: "en_US.UTF-8"
+    installer_config:
+      <<: *default_installer_config
       iso_rootfs_type: "squashfs"
       conditions:
+        <<: *default_installer_config_conditions
         "f40 and below uses ext4 based iso rootfs":
           when:
             version_less_than: "41"
@@ -1654,6 +1655,9 @@ image_types:
             arch: "x86_64"
           shallow_merge:
             iso_boot_type: "grub2"
+
+    image_config:
+      locale: "en_US.UTF-8"
     package_sets:
       installer:
         - include:
@@ -1732,10 +1736,9 @@ image_types:
         - "org.fedoraproject.Anaconda.Modules.Runtime"
         - "org.fedoraproject.Anaconda.Modules.Storage"
         - "org.fedoraproject.Anaconda.Modules.Users"
-    image_config:
-      locale: "en_US.UTF-8"
       iso_rootfs_type: "squashfs"
       conditions:
+        <<: *default_installer_config_conditions
         "on f40 and below we used ext4 on squashfs":
           when:
             version_less_than: "41"
@@ -1746,6 +1749,8 @@ image_types:
             arch: "x86_64"
           shallow_merge:
             iso_boot_type: "grub2"
+    image_config:
+      locale: "en_US.UTF-8"
     platforms:
       - *x86_64_installer_platform
       - *aarch64_installer_platform
@@ -2055,11 +2060,11 @@ image_types:
       - "bootiso"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
-    installer_config: *default_installer_config
-    image_config:
-      locale: "en_US.UTF-8"
+    installer_config:
+      <<: *default_installer_config
       iso_rootfs_type: "squashfs"
       conditions:
+        <<: *default_installer_config_conditions
         "on f40 and below we used ext4 on squashfs":
           when:
             version_less_than: "41"
@@ -2070,6 +2075,8 @@ image_types:
             arch: "x86_64"
           shallow_merge:
             iso_boot_type: "grub2"
+    image_config:
+      locale: "en_US.UTF-8"
     package_sets:
       installer:
         - include:

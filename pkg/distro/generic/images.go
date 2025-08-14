@@ -525,25 +525,30 @@ func liveInstallerImage(workload workload.Workload,
 	if locale := imgConfig.Locale; locale != nil {
 		img.Locale = *locale
 	}
-	if isoroot := imgConfig.ISORootfsType; isoroot != nil {
-		img.RootfsType = *isoroot
-	}
-	if isoboot := imgConfig.ISOBootType; isoboot != nil {
-		img.ISOBoot = *isoboot
-	}
 
 	installerConfig, err := t.getDefaultInstallerConfig()
 	if err != nil {
 		return nil, err
 	}
+
 	if installerConfig != nil {
 		img.AdditionalDracutModules = append(img.AdditionalDracutModules, installerConfig.AdditionalDracutModules...)
 		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
+
 		if installerConfig.SquashfsRootfs != nil && *installerConfig.SquashfsRootfs {
 			img.RootfsType = manifest.SquashfsRootfs
 		}
+
 		if menu := installerConfig.DefaultMenu; menu != nil {
 			img.DefaultMenu = *menu
+		}
+
+		if isoroot := installerConfig.ISORootfsType; isoroot != nil {
+			img.RootfsType = *isoroot
+		}
+
+		if isoboot := installerConfig.ISOBootType; isoboot != nil {
+			img.ISOBoot = *isoboot
 		}
 	}
 
@@ -617,8 +622,17 @@ func imageInstallerImage(workload workload.Workload,
 		if installerConfig.ISORootKickstart != nil {
 			img.ISORootKickstart = *installerConfig.ISORootKickstart
 		}
+
 		if menu := installerConfig.DefaultMenu; menu != nil {
 			img.DefaultMenu = *menu
+		}
+
+		if isoroot := installerConfig.ISORootfsType; isoroot != nil {
+			img.RootfsType = *isoroot
+		}
+
+		if isoboot := installerConfig.ISOBootType; isoboot != nil {
+			img.ISOBoot = *isoboot
 		}
 	}
 
@@ -639,13 +653,6 @@ func imageInstallerImage(workload workload.Workload,
 	img.Filename = t.Filename()
 
 	img.RootfsCompression = "xz" // This also triggers using the bcj filter
-	imgConfig := t.getDefaultImageConfig()
-	if isoroot := imgConfig.ISORootfsType; isoroot != nil {
-		img.RootfsType = *isoroot
-	}
-	if isoboot := imgConfig.ISOBootType; isoboot != nil {
-		img.ISOBoot = *isoboot
-	}
 
 	return img, nil
 }
@@ -820,8 +827,17 @@ func iotInstallerImage(workload workload.Workload,
 		if installerConfig.SquashfsRootfs != nil && *installerConfig.SquashfsRootfs {
 			img.RootfsType = manifest.SquashfsRootfs
 		}
+
 		if menu := installerConfig.DefaultMenu; menu != nil {
 			img.DefaultMenu = *menu
+		}
+
+		if isoroot := installerConfig.ISORootfsType; isoroot != nil {
+			img.RootfsType = *isoroot
+		}
+
+		if isoboot := installerConfig.ISOBootType; isoboot != nil {
+			img.ISOBoot = *isoboot
 		}
 	}
 	if len(img.Kickstart.Users)+len(img.Kickstart.Groups) > 0 {
@@ -846,12 +862,6 @@ func iotInstallerImage(workload workload.Workload,
 	imgConfig := t.getDefaultImageConfig()
 	if locale := imgConfig.Locale; locale != nil {
 		img.Locale = *locale
-	}
-	if isoroot := imgConfig.ISORootfsType; isoroot != nil {
-		img.RootfsType = *isoroot
-	}
-	if isoboot := imgConfig.ISOBootType; isoboot != nil {
-		img.ISOBoot = *isoboot
 	}
 
 	return img, nil
@@ -1025,6 +1035,14 @@ func netinstImage(workload workload.Workload,
 			img.DefaultMenu = *menu
 		}
 
+		if isoroot := installerConfig.ISORootfsType; isoroot != nil {
+			img.RootfsType = *isoroot
+		}
+
+		if isoboot := installerConfig.ISOBootType; isoboot != nil {
+			img.ISOBoot = *isoboot
+		}
+
 		// This duplicates the iso_rootfs_type in image config
 		// use it as a default which may be overridden by image config
 		if installerConfig.SquashfsRootfs != nil && *installerConfig.SquashfsRootfs {
@@ -1048,12 +1066,6 @@ func netinstImage(workload workload.Workload,
 	img.Filename = t.Filename()
 
 	img.RootfsCompression = "xz" // This also triggers using the bcj filter
-	if isoroot := t.getDefaultImageConfig().ISORootfsType; isoroot != nil {
-		img.RootfsType = *isoroot
-	}
-	if isoboot := t.getDefaultImageConfig().ISOBootType; isoboot != nil {
-		img.ISOBoot = *isoboot
-	}
 
 	return img, nil
 }

@@ -10,7 +10,6 @@ import (
 	"github.com/osbuild/images/pkg/customizations/subscription"
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/customizations/wsl"
-	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
 )
 
@@ -134,13 +133,6 @@ type ImageConfig struct {
 	// MountUnits creates systemd .mount units to describe the filesystem
 	// instead of writing to /etc/fstab
 	MountUnits *bool `yaml:"mount_units,omitempty"`
-
-	// ISORootfsType defines what rootfs (squashfs, erofs,ext4)
-	// is used
-	ISORootfsType *manifest.RootfsType `yaml:"iso_rootfs_type,omitempty"`
-
-	// ISOBootType defines what type of bootloader is used for the iso
-	ISOBootType *manifest.ISOBootType `yaml:"iso_boot_type,omitempty"`
 
 	// Indicates if rhc should be set to permissive when creating the registration script
 	PermissiveRHC *bool `yaml:"permissive_rhc,omitempty"`

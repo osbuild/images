@@ -1807,7 +1807,8 @@ image_types:
       - "bootiso"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
-    image_config:
+    installer_config:
+      <<: *default_installer_config
       iso_rootfs_type: "squashfs-ext4"
       conditions:
         "x86_64 uses syslinux":
@@ -1815,7 +1816,6 @@ image_types:
             arch: "x86_64"
           shallow_merge:
             iso_boot_type: "syslinux"
-    installer_config: *default_installer_config
     platforms:
       - *x86_64_installer_platform
       - *aarch64_platform
@@ -2048,7 +2048,9 @@ image_types:
       - "bootiso"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
-    image_config:
+    installer_config:
+      <<: *default_installer_config
+      default_menu: 0
       iso_rootfs_type: "squashfs-ext4"
       conditions:
         "x86_64 uses syslinux":
@@ -2056,9 +2058,6 @@ image_types:
             arch: "x86_64"
           shallow_merge:
             iso_boot_type: "syslinux"
-    installer_config:
-      <<: *default_installer_config
-      default_menu: 0
     platforms:
       - *x86_64_uefi_platform
       - *aarch64_platform
