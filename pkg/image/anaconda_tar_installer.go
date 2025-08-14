@@ -40,10 +40,11 @@ func efiBootPartitionTable(rng *rand.Rand) *disk.PartitionTable {
 
 type AnacondaTarInstaller struct {
 	Base
-	Platform         platform.Platform
-	OSCustomizations manifest.OSCustomizations
-	Environment      environment.Environment
-	Workload         workload.Workload
+	Platform                platform.Platform
+	OSCustomizations        manifest.OSCustomizations
+	InstallerCustomizations manifest.InstallerCustomizations
+	Environment             environment.Environment
+	Workload                workload.Workload
 
 	ExtraBasePackages rpmmd.PackageSet
 
@@ -57,8 +58,6 @@ type AnacondaTarInstaller struct {
 	Kickstart        *kickstart.Options
 
 	RootfsCompression string
-	RootfsType        manifest.ISORootfsType
-	ISOBoot           manifest.ISOBootType
 
 	ISOLabel  string
 	Product   string
@@ -68,20 +67,6 @@ type AnacondaTarInstaller struct {
 	Preview   bool
 
 	Filename string
-
-	AdditionalKernelOpts    []string
-	EnabledAnacondaModules  []string
-	DisabledAnacondaModules []string
-
-	AdditionalDracutModules []string
-	AdditionalDrivers       []string
-
-	// Uses the old, deprecated, Anaconda config option "kickstart-modules".
-	// Only for RHEL 8.
-	UseLegacyAnacondaConfig bool
-
-	// Default Grub2 menu on the ISO
-	DefaultMenu int
 }
 
 func NewAnacondaTarInstaller() *AnacondaTarInstaller {
@@ -138,19 +123,16 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	anacondaPipeline.Variant = img.Variant
 	anacondaPipeline.Biosdevname = (img.Platform.GetArch() == arch.ARCH_X86_64)
 
-	anacondaPipeline.UseLegacyAnacondaConfig = img.UseLegacyAnacondaConfig
-	anacondaPipeline.EnabledAnacondaModules = img.EnabledAnacondaModules
+	anacondaPipeline.InstallerCustomizations = img.InstallerCustomizations
+
 	if img.OSCustomizations.FIPS {
-		anacondaPipeline.EnabledAnacondaModules = append(
-			anacondaPipeline.EnabledAnacondaModules,
+		anacondaPipeline.InstallerCustomizations.EnabledAnacondaModules = append(
+			anacondaPipeline.InstallerCustomizations.EnabledAnacondaModules,
 			anaconda.ModuleSecurity,
 		)
 	}
-	anacondaPipeline.DisabledAnacondaModules = img.DisabledAnacondaModules
-	anacondaPipeline.AdditionalDracutModules = img.AdditionalDracutModules
-	anacondaPipeline.AdditionalDrivers = img.AdditionalDrivers
+
 	anacondaPipeline.Locale = img.OSCustomizations.Language
-	anacondaPipeline.DefaultMenu = img.DefaultMenu
 
 	tarPath := "/liveimg.tar.gz"
 
@@ -162,7 +144,7 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	anacondaPipeline.Checkpoint()
 
 	var rootfsImagePipeline *manifest.ISORootfsImg
-	switch img.RootfsType {
+	switch img.InstallerCustomizations.ISORootfsType {
 	case manifest.SquashfsExt4Rootfs:
 		rootfsImagePipeline = manifest.NewISORootfsImg(buildPipeline, anacondaPipeline)
 		rootfsImagePipeline.Size = 5 * datasizes.GibiByte
@@ -173,7 +155,7 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	bootTreePipeline.Platform = img.Platform
 	bootTreePipeline.UEFIVendor = img.Platform.GetUEFIVendor()
 	bootTreePipeline.ISOLabel = img.ISOLabel
-	bootTreePipeline.DefaultMenu = img.DefaultMenu
+	bootTreePipeline.DefaultMenu = img.InstallerCustomizations.DefaultMenu
 
 	kernelOpts := []string{fmt.Sprintf("inst.stage2=hd:LABEL=%s", img.ISOLabel)}
 	if img.ISORootKickstart {
@@ -182,7 +164,7 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	if img.OSCustomizations.FIPS {
 		kernelOpts = append(kernelOpts, "fips=1")
 	}
-	kernelOpts = append(kernelOpts, img.AdditionalKernelOpts...)
+	kernelOpts = append(kernelOpts, img.InstallerCustomizations.AdditionalKernelOpts...)
 	kernelOpts = append(kernelOpts, img.OSCustomizations.KernelOptionsAppend...)
 	bootTreePipeline.KernelOpts = kernelOpts
 
@@ -202,20 +184,20 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	}
 
 	isoTreePipeline.RootfsCompression = img.RootfsCompression
-	isoTreePipeline.RootfsType = img.RootfsType
+	isoTreePipeline.RootfsType = img.InstallerCustomizations.ISORootfsType
 
 	isoTreePipeline.OSPipeline = osPipeline
-	isoTreePipeline.KernelOpts = img.AdditionalKernelOpts
+	isoTreePipeline.KernelOpts = img.InstallerCustomizations.AdditionalKernelOpts
 	isoTreePipeline.KernelOpts = append(isoTreePipeline.KernelOpts, img.OSCustomizations.KernelOptionsAppend...)
 	if img.OSCustomizations.FIPS {
 		isoTreePipeline.KernelOpts = append(isoTreePipeline.KernelOpts, "fips=1")
 	}
 
-	isoTreePipeline.ISOBoot = img.ISOBoot
+	isoTreePipeline.ISOBoot = img.InstallerCustomizations.ISOBoot
 
 	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.ISOLabel)
 	isoPipeline.SetFilename(img.Filename)
-	isoPipeline.ISOBoot = img.ISOBoot
+	isoPipeline.ISOBoot = img.InstallerCustomizations.ISOBoot
 
 	artifact := isoPipeline.Export()
 
