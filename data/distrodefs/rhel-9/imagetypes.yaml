@@ -1167,6 +1167,12 @@
       - "ipmi_devintf"
       - "ipmi_msghandler"
     default_menu: 1
+    conditions:
+      "x86_64 uses syslinux":
+        when:
+          arch: "x86_64"
+        shallow_merge:
+          iso_boot_type: "syslinux"
 
 image_config:
   default:
@@ -2088,14 +2094,7 @@ image_types:
               fips_menu: true
             - <<: *aarch64_platform
               fips_menu: true
-    installer_config:
-      <<: *default_installer_config
-      conditions:
-        "x86_64 uses syslinux":
-          when:
-            arch: "x86_64"
-          shallow_merge:
-            iso_boot_type: "syslinux"
+    installer_config: *default_installer_config
     image_config:
       locale: "C.UTF-8"
     package_sets:
@@ -2665,12 +2664,6 @@ image_types:
     installer_config:
       <<: *default_installer_config
       default_menu: 0
-      conditions:
-        "x86_64 uses syslinux":
-          when:
-            arch: "x86_64"
-          shallow_merge:
-            iso_boot_type: "syslinux"
     image_config:
       enabled_services: *enabled_services_edge
       locale: "en_US.UTF-8"
