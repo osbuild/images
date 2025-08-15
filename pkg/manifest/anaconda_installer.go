@@ -32,6 +32,9 @@ type AnacondaInstaller struct {
 	// manifest.
 	Type AnacondaInstallerType
 
+	// InstallerCustomizations to apply to the installer pipeline(s)
+	InstallerCustomizations InstallerCustomizations
+
 	// Packages to install and/or exclude in addition to the ones required by the
 	// pipeline.
 	ExtraPackages   []string
@@ -66,23 +69,7 @@ type AnacondaInstaller struct {
 	// properties are ignored.
 	InteractiveDefaultsKickstart *kickstart.Options
 
-	// Additional anaconda modules to enable
-	EnabledAnacondaModules []string
-	// Anaconda modules to explicitly disable
-	DisabledAnacondaModules []string
-
-	// Additional dracut modules and drivers to enable
-	AdditionalDracutModules []string
-	AdditionalDrivers       []string
-
 	Files []*fsnode.File
-
-	// Temporary
-	UseRHELLoraxTemplates bool
-
-	// Uses the old, deprecated, Anaconda config option "kickstart-modules".
-	// Only for RHEL 8.
-	UseLegacyAnacondaConfig bool
 
 	// SELinux policy, when set it enables the labeling of the installer
 	// tree with the selected profile and selects the required package
@@ -92,9 +79,6 @@ type AnacondaInstaller struct {
 	// Locale for the installer. This should be set to the same locale as the
 	// ISO OS payload, if known.
 	Locale string
-
-	// Default Grub2 menu on the ISO
-	DefaultMenu int
 }
 
 func NewAnacondaInstaller(installerType AnacondaInstallerType,
@@ -161,7 +145,7 @@ func (p *AnacondaInstaller) getBuildPackages(Distro) []string {
 		"shadow-utils", // The pipeline always creates a root and installer user
 	)
 
-	if p.UseRHELLoraxTemplates {
+	if p.InstallerCustomizations.UseRHELLoraxTemplates {
 		packages = append(packages,
 			"lorax-templates-rhel",
 		)
@@ -315,16 +299,16 @@ func (p *AnacondaInstaller) payloadStages() []*osbuild.Stage {
 	// Limit the Anaconda spokes on non-netinst iso types
 	if p.Type != AnacondaInstallerTypeNetinst {
 		var anacondaStageOptions *osbuild.AnacondaStageOptions
-		if p.UseLegacyAnacondaConfig {
-			anacondaStageOptions = osbuild.NewAnacondaStageOptionsLegacy(p.EnabledAnacondaModules, p.DisabledAnacondaModules)
+		if p.InstallerCustomizations.UseLegacyAnacondaConfig {
+			anacondaStageOptions = osbuild.NewAnacondaStageOptionsLegacy(p.InstallerCustomizations.EnabledAnacondaModules, p.InstallerCustomizations.DisabledAnacondaModules)
 		} else {
-			anacondaStageOptions = osbuild.NewAnacondaStageOptions(p.EnabledAnacondaModules, p.DisabledAnacondaModules)
+			anacondaStageOptions = osbuild.NewAnacondaStageOptions(p.InstallerCustomizations.EnabledAnacondaModules, p.InstallerCustomizations.DisabledAnacondaModules)
 		}
 		stages = append(stages, osbuild.NewAnacondaStage(anacondaStageOptions))
 	}
 
 	LoraxPath := "99-generic/runtime-postinstall.tmpl"
-	if p.UseRHELLoraxTemplates {
+	if p.InstallerCustomizations.UseRHELLoraxTemplates {
 		LoraxPath = "80-rhel/runtime-postinstall.tmpl"
 	}
 	stages = append(stages, osbuild.NewLoraxScriptStage(&osbuild.LoraxScriptStageOptions{
@@ -434,9 +418,9 @@ func (p *AnacondaInstaller) dracutStageOptions() *osbuild.DracutStageOptions {
 		EarlyMicrocode: false,
 		AddModules:     []string{"pollcdrom", "qemu", "qemu-net"},
 		Extra:          []string{"--xz"},
-		AddDrivers:     p.AdditionalDrivers,
+		AddDrivers:     p.InstallerCustomizations.AdditionalDrivers,
 	}
-	options.AddModules = append(options.AddModules, p.AdditionalDracutModules...)
+	options.AddModules = append(options.AddModules, p.InstallerCustomizations.AdditionalDracutModules...)
 
 	if p.Biosdevname {
 		options.AddModules = append(options.AddModules, "biosdevname")

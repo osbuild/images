@@ -17,16 +17,16 @@ import (
 	"github.com/osbuild/images/pkg/ostree"
 )
 
-type RootfsType uint64
+type ISORootfsType uint64
 
 // These constants are used by the ISO images to control the style of the root filesystem
 const ( // Rootfs type enum
-	SquashfsExt4Rootfs RootfsType = iota // Create an EXT4 rootfs compressed by Squashfs
-	SquashfsRootfs                       // Create a plain squashfs rootfs
-	ErofsRootfs                          // Create a plain erofs rootfs
+	SquashfsExt4Rootfs ISORootfsType = iota // Create an EXT4 rootfs compressed by Squashfs
+	SquashfsRootfs                          // Create a plain squashfs rootfs
+	ErofsRootfs                             // Create a plain erofs rootfs
 )
 
-func (r *RootfsType) UnmarshalJSON(data []byte) error {
+func (r *ISORootfsType) UnmarshalJSON(data []byte) error {
 	var s string
 	if err := json.Unmarshal(data, &s); err != nil {
 		return err
@@ -39,13 +39,13 @@ func (r *RootfsType) UnmarshalJSON(data []byte) error {
 	case "erofs":
 		*r = ErofsRootfs
 	default:
-		return fmt.Errorf("unknown RootfsType: %q", s)
+		return fmt.Errorf("unknown ISORootfsType: %q", s)
 	}
 
 	return nil
 }
 
-func (r *RootfsType) UnmarshalYAML(unmarshal func(any) error) error {
+func (r *ISORootfsType) UnmarshalYAML(unmarshal func(any) error) error {
 	return common.UnmarshalYAMLviaJSON(r, unmarshal)
 }
 
@@ -106,7 +106,7 @@ type AnacondaInstallerISOTree struct {
 	isoLabel string
 
 	RootfsCompression string
-	RootfsType        RootfsType
+	RootfsType        ISORootfsType
 
 	OSPipeline         *OS
 	OSTreeCommitSource *ostree.SourceSpec
@@ -451,9 +451,9 @@ func (p *AnacondaInstallerISOTree) serialize() osbuild.Pipeline {
 		pipeline.AddStage(stage)
 	} else if p.ISOBoot == Grub2ISOBoot {
 		var grub2config *osbuild.Grub2Config
-		if p.anacondaPipeline.DefaultMenu > 0 {
+		if p.anacondaPipeline.InstallerCustomizations.DefaultMenu > 0 {
 			grub2config = &osbuild.Grub2Config{
-				Default: p.anacondaPipeline.DefaultMenu,
+				Default: p.anacondaPipeline.InstallerCustomizations.DefaultMenu,
 			}
 		}
 

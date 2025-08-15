@@ -81,9 +81,9 @@ func TestAnacondaInstallerModules(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			for _, legacy := range []bool{true, false} {
 				installerPipeline := newAnacondaInstaller()
-				installerPipeline.UseLegacyAnacondaConfig = legacy
-				installerPipeline.EnabledAnacondaModules = tc.enable
-				installerPipeline.DisabledAnacondaModules = tc.disable
+				installerPipeline.InstallerCustomizations.UseLegacyAnacondaConfig = legacy
+				installerPipeline.InstallerCustomizations.EnabledAnacondaModules = tc.enable
+				installerPipeline.InstallerCustomizations.DisabledAnacondaModules = tc.disable
 				pipeline := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: dnfjson.DepsolveResult{Packages: pkgs}})
 				require := require.New(t)
 				require.NotNil(pipeline)
@@ -156,8 +156,8 @@ func TestAnacondaInstallerDracutModulesAndDrivers(t *testing.T) {
 	}
 
 	installerPipeline := newAnacondaInstaller()
-	installerPipeline.AdditionalDracutModules = []string{"test-module"}
-	installerPipeline.AdditionalDrivers = []string{"test-driver"}
+	installerPipeline.InstallerCustomizations.AdditionalDracutModules = []string{"test-module"}
+	installerPipeline.InstallerCustomizations.AdditionalDrivers = []string{"test-driver"}
 	pipeline := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: dnfjson.DepsolveResult{Packages: pkgs}})
 
 	require := require.New(t)
