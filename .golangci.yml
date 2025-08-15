@@ -33,6 +33,15 @@ linters:
       - linters:
           - staticcheck
         text: "QF1008"
+      # error strings should not be capitalized
+      - linters:
+          - staticcheck
+        text: "ST1005"
+      # unicode control character
+      - linters:
+          - staticcheck
+        path: ^(images/)?(pkg|internal)/.*_test\.go$
+        text: "ST1018"
     paths:
       - third_party$
       - builtin$
