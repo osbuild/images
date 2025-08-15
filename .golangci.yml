@@ -42,6 +42,11 @@ linters:
           - staticcheck
         path: ^(images/)?(pkg|internal)/.*_test\.go$
         text: "ST1018"
+      # possible nil pointer dereference (many false alerts when t.Skip is used)
+      - linters:
+          - staticcheck
+        path: ^(images/)?(pkg|internal|internal/test)/(.*_test|helpers)\.go$
+        text: "SA5011"
     paths:
       - third_party$
       - builtin$
