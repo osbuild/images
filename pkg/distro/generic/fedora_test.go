@@ -507,17 +507,18 @@ func TestFedoraDistro_ManifestError(t *testing.T) {
 						Size: imgType.Size(0),
 					}
 					_, _, err := imgType.Manifest(&bp, imgOpts, nil, nil)
-					if imgTypeName == "iot-commit" || imgTypeName == "iot-container" || imgTypeName == "iot-bootable-container" {
+					switch imgTypeName {
+					case "iot-commit", "iot-container", "iot-bootable-container":
 						assert.EqualError(t, err, "kernel boot parameter customizations are not supported for ostree types")
-					} else if imgTypeName == "iot-installer" || imgTypeName == "iot-simplified-installer" {
+					case "iot-installer", "iot-simplified-installer":
 						assert.EqualError(t, err, fmt.Sprintf("boot ISO image type \"%s\" requires specifying a URL from which to retrieve the OSTree commit", imgTypeName))
-					} else if imgTypeName == "minimal-installer" {
+					case "minimal-installer":
 						assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, FIPS, Installer, Timezone, Locale"))
-					} else if imgTypeName == "workstation-live-installer" {
+					case "workstation-live-installer":
 						assert.EqualError(t, err, fmt.Sprintf(distro.NoCustomizationsAllowedError, imgTypeName))
-					} else if imgTypeName == "iot-raw-xz" || imgTypeName == "iot-qcow2" {
+					case "iot-raw-xz", "iot-qcow2":
 						assert.EqualError(t, err, fmt.Sprintf(distro.UnsupportedCustomizationError, imgTypeName, "User, Group, Directories, Files, Services, FIPS"))
-					} else {
+					default:
 						assert.NoError(t, err)
 					}
 				})

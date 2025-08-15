@@ -10,9 +10,7 @@ import (
 // needed until https://github.com/stretchr/testify/issues/1304 is fixed
 func PanicsWithErrorRegexp(t assert.TestingT, reg *regexp.Regexp, f assert.PanicTestFunc) (assertOk bool) {
 	defer func() {
-		var message interface{} // nolint: gosimple
-
-		message = recover()
+		message := recover()
 		if message == nil {
 			return
 		}

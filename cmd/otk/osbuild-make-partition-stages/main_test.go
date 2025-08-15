@@ -113,7 +113,7 @@ func TestIntegration(t *testing.T) {
 func TestModificationFname(t *testing.T) {
 	input := minimalInputBase
 	input.Tree.Const.Filename = "mydisk.img2"
-	expectedStages := strings.Replace(minimalExpectedStages, `"disk.img"`, `"mydisk.img2"`, -1)
+	expectedStages := strings.ReplaceAll(minimalExpectedStages, `"disk.img"`, `"mydisk.img2"`)
 
 	inpJSON, err := json.Marshal(&input)
 	assert.NoError(t, err)
