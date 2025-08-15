@@ -1,6 +1,9 @@
 {
   "name": "minimal-environment",
   "blueprint": {
+    "name": "minimal-environment",
+    "description": "Simple blueprint that installs the minimal-environment package group",
+    "version": "1.0",
     "groups": [
       {
         "name": "minimal-environment"

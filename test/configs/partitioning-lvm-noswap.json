@@ -1,6 +1,9 @@
 {
   "name": "partitioning-lvm-noswap",
   "blueprint": {
+    "name": "partitioning-lvm",
+    "description": "Disk customizations to create an LVM volume group with logical volumes and a plain data partition (variant without swap).",
+    "version": "1.0",
     "customizations": {
       "disk": {
         "type": "gpt",

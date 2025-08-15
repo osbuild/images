@@ -1,6 +1,9 @@
 {
   "name": "edge-ostree-pull-user-fips",
   "blueprint": {
+    "name": "edge-ostree-pull-user-fips",
+    "description": "For image types that require an edge-commit/container to pull, with a user defined in the deployment and FIPS enabled.",
+    "version": "1.0",
     "customizations": {
       "fips": true,
       "user": [

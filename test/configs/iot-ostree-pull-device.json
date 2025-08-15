@@ -1,6 +1,9 @@
 {
   "name": "iot-ostree-pull-device",
   "blueprint": {
+    "name": "iot-ostree-pull-device",
+    "description": "For the iot-simplified-installer.",
+    "version": "1.0",
     "customizations": {
       "installation_device": "/dev/sda"
     }
