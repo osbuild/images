@@ -2169,3 +2169,5 @@ image_types:
       - *aarch64_installer_platform
     supported_blueprint_options:
       - "distro"
+      - "customizations.fips"
+      - "customizations.locale"
