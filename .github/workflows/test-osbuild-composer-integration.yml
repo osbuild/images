@@ -72,14 +72,14 @@ jobs:
         run: dnf -y install krb5-devel gcc git-core go gpgme-devel osbuild-depsolve-dnf btrfs-progs-devel device-mapper-devel jq
 
       - name: Check out osbuild-composer main branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: osbuild-composer
           repository: osbuild/osbuild-composer
           ref: main
 
       - name: Check out osbuild/images for the PR
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: images
           ref: ${{ github.event.pull_request.head.sha }}
