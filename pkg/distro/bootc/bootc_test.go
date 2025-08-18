@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -53,9 +54,19 @@ func TestManifestGenerationEmptyConfig(t *testing.T) {
 	}
 }
 
+func randomLetters(n int) string {
+	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
+}
+
 func getUserConfig() *blueprint.Blueprint {
 	// add a user
-	pass := "super-secret-password-42"
+	pass := randomLetters(20)
 	key := "ssh-ed25519 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 	return &blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
