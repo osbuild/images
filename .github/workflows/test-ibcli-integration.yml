@@ -19,13 +19,13 @@ jobs:
       pr_test: ${{ steps.tests-pr.outputs.pr_test }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           path: image-builder-cli
           repository: osbuild/image-builder-cli
           ref: main
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           path: images
           ref: ${{ github.event.pull_request.head.sha }}
