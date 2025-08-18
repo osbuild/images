@@ -77,48 +77,50 @@ func validateSupportedConfig(supported []string, conf reflect.Value) *validation
 		}
 
 		tag := jsonTagFor(field)
-		if subList, listed := subMap[tag]; listed {
-			subStruct := conf.Field(fieldIdx)
-			if subStruct.IsZero() {
-				// nothing to validate: continue
-				continue
-			}
-			if subStruct.Kind() == reflect.Ptr {
-				// dereference pointer before validating
-				subStruct = subStruct.Elem()
-			}
-
-			switch subStruct.Kind() {
-			case reflect.Slice:
-				// iterate over slice and validate each element as a substructure
-				for sliceIdx := 0; sliceIdx < subStruct.Len(); sliceIdx++ {
-					if err := validateSupportedConfig(subList, subStruct.Index(sliceIdx)); err != nil {
-						err.revPath = append(err.revPath, fmt.Sprintf("%s[%d]", tag, sliceIdx))
-						return err
-					}
-				}
-			case reflect.Struct:
-				// single element
-				if err := validateSupportedConfig(subList, subStruct); err != nil {
-					err.revPath = append(err.revPath, tag)
-					return err
-				}
-			case reflect.Int, reflect.Bool, reflect.String:
-				// this can happen if the supported list contains an invalid
-				// string, where a non-container type field is followed by a
-				// period, for example, "a.b" where a is an integer
-				return &validationError{message: fmt.Sprintf("internal error: supported list specifies child element of non-container type %v: %v", subStruct.Kind(), subStruct), revPath: []string{tag}}
-			default:
-				// this can happen if the config uses a container type that's
-				// not a struct or an array (e.g. a map).
-				return &validationError{message: fmt.Sprintf("internal error: unexpected field type: %v (%v)", subStruct.Kind(), subStruct), revPath: []string{tag}}
-			}
-		} else {
+		subList, listed := subMap[tag]
+		if !listed {
 			// not listed: check if it's non-zero
 			empty := conf.Field(fieldIdx).IsZero()
 			if !empty && !supportedMap[tag] {
 				return &validationError{message: "not supported", revPath: []string{tag}}
 			}
+			continue
+		}
+
+		subStruct := conf.Field(fieldIdx)
+		if subStruct.IsZero() {
+			// nothing to validate: continue
+			continue
+		}
+		if subStruct.Kind() == reflect.Ptr {
+			// dereference pointer before validating
+			subStruct = subStruct.Elem()
+		}
+
+		switch subStruct.Kind() {
+		case reflect.Slice:
+			// iterate over slice and validate each element as a substructure
+			for sliceIdx := 0; sliceIdx < subStruct.Len(); sliceIdx++ {
+				if err := validateSupportedConfig(subList, subStruct.Index(sliceIdx)); err != nil {
+					err.revPath = append(err.revPath, fmt.Sprintf("%s[%d]", tag, sliceIdx))
+					return err
+				}
+			}
+		case reflect.Struct:
+			// single element
+			if err := validateSupportedConfig(subList, subStruct); err != nil {
+				err.revPath = append(err.revPath, tag)
+				return err
+			}
+		case reflect.Int, reflect.Bool, reflect.String:
+			// this can happen if the supported list contains an invalid
+			// string, where a non-container type field is followed by a
+			// period, for example, "a.b" where a is an integer
+			return &validationError{message: fmt.Sprintf("internal error: supported list specifies child element of non-container type %v: %v", subStruct.Kind(), subStruct), revPath: []string{tag}}
+		default:
+			// this can happen if the config uses a container type that's
+			// not a struct or an array (e.g. a map).
+			return &validationError{message: fmt.Sprintf("internal error: unexpected field type: %v (%v)", subStruct.Kind(), subStruct), revPath: []string{tag}}
 		}
 	}
 
