@@ -97,14 +97,21 @@ func validateSupportedConfig(supported []string, conf reflect.Value) *validation
 						return err
 					}
 				}
-			case reflect.Bool, reflect.String, reflect.Int, reflect.Struct:
+			case reflect.Struct:
 				// single element
 				if err := validateSupportedConfig(subList, subStruct); err != nil {
 					err.revPath = append(err.revPath, tag)
 					return err
 				}
+			case reflect.Int, reflect.Bool, reflect.String:
+				// this can happen if the supported list contains an invalid
+				// string, where a non-container type field is followed by a
+				// period, for example, "a.b" where a is an integer
+				return &validationError{message: fmt.Sprintf("internal error: supported list specifies child element of non-container type %v: %v", subStruct.Kind(), subStruct), revPath: []string{tag}}
 			default:
-				return &validationError{message: fmt.Sprintf("internal error: unexpected field type found %v: %v", subStruct.Kind(), subStruct)}
+				// this can happen if the config uses a container type that's
+				// not a struct or an array (e.g. a map).
+				return &validationError{message: fmt.Sprintf("internal error: unexpected field type: %v (%v)", subStruct.Kind(), subStruct), revPath: []string{tag}}
 			}
 		} else {
 			// not listed: check if it's non-zero
