@@ -202,6 +202,8 @@ func validateRequiredConfig(required []string, conf reflect.Value) *validationEr
 			if value.IsZero() {
 				return &validationError{message: "required", revPath: []string{key}}
 			}
+		default:
+			return &validationError{message: fmt.Sprintf("field of type %v cannot be marked required", value.Kind()), revPath: []string{key}}
 		}
 	}
 
@@ -236,13 +238,16 @@ func validateRequiredConfig(required []string, conf reflect.Value) *validationEr
 					return err
 				}
 			}
-		case reflect.Ptr:
-			// if it's a pointer, it's already been checked for zero value
-			// above, so dereference and descend
-			if err := validateRequiredConfig(subMap[key], value.Elem()); err != nil {
-				err.revPath = append(err.revPath, key)
-				return err
-			}
+		case reflect.String:
+			// this can happen if the required list contains an invalid
+			// string, where a non-container type field is followed by a
+			// period, for example, "a.b" where a is a string
+			return &validationError{message: fmt.Sprintf("internal error: required list specifies child element of non-container type %v: %v", value.Kind(), value), revPath: []string{key}}
+		default:
+			// this should never happen, because we check above that only
+			// struct, string, and slice types can be required (and ptr types
+			// are dereferenced before the switch)
+			return &validationError{message: fmt.Sprintf("internal error: unexpected field type: %v (%v)", value.Kind(), value), revPath: []string{key}}
 		}
 	}
 	return nil

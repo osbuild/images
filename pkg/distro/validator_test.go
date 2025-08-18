@@ -530,13 +530,6 @@ func TestValidateConfig(t *testing.T) {
 			supported: allOptionStrings(),
 			bp:        fullBlueprint(),
 		},
-		"everything-required": {
-			// Explicitly require all customizations down to each individual value.
-			// Required customizations should also be supported.
-			supported: allOptionStrings(),
-			required:  allOptionStrings(),
-			bp:        fullBlueprint(),
-		},
 		"missing-customizations-required": {
 			supported: []string{"customizations.user"},
 			// Require User and don't set anything.
@@ -1170,6 +1163,55 @@ func TestValidateRequiredConfig(t *testing.T) {
 				},
 			},
 			expErr: "customizations.embed.name: required",
+		},
+	}
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			v := reflect.ValueOf(tc.config)
+			err := distro.ValidateRequiredConfig(tc.required, v)
+			if tc.expErr == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tc.expErr)
+			}
+		})
+	}
+}
+
+func TestValidateRequiredConfigTypeError(t *testing.T) {
+	type testCase struct {
+		required []string
+		config   any
+		expErr   string
+	}
+
+	type customizations struct {
+		Map map[string]string `json:"map"`
+		Str string            `json:"str"`
+	}
+
+	type testConfigType struct {
+		Customizations customizations `json:"customizations"`
+	}
+
+	testCases := map[string]testCase{
+		"map-key-required": {
+			required: []string{"customizations.map.somekey"},
+			config: testConfigType{
+				Customizations: customizations{
+					Map: map[string]string{"key": "value"},
+				},
+			},
+			expErr: "customizations.map: field of type map cannot be marked required",
+		},
+		"string-has-child": {
+			required: []string{"customizations.str.whatever"},
+			config: testConfigType{
+				Customizations: customizations{
+					Str: "hello",
+				},
+			},
+			expErr: "customizations.str: internal error: required list specifies child element of non-container type string: hello",
 		},
 	}
 	for name, tc := range testCases {
