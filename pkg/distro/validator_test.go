@@ -869,6 +869,55 @@ func TestValidateSupportedConfig(t *testing.T) {
 	}
 }
 
+func TestValidateSupportedConfigTypeError(t *testing.T) {
+	type testCase struct {
+		supported []string
+		config    any
+		expErr    string
+	}
+
+	type customizations struct {
+		Map map[string]string `json:"map"`
+		Int int               `json:"int"`
+	}
+
+	type testConfigType struct {
+		Customizations customizations `json:"customizations"`
+	}
+
+	testCases := map[string]testCase{
+		"map-key-supported": {
+			supported: []string{"customizations.map.somekey"},
+			config: testConfigType{
+				Customizations: customizations{
+					Map: map[string]string{"key": "value"},
+				},
+			},
+			expErr: "customizations.map: internal error: unexpected field type: map (map[key:value])",
+		},
+		"int-has-child": {
+			supported: []string{"customizations.int.whatever"},
+			config: testConfigType{
+				Customizations: customizations{
+					Int: 12,
+				},
+			},
+			expErr: "customizations.int: internal error: supported list specifies child element of non-container type int: 12",
+		},
+	}
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			v := reflect.ValueOf(tc.config)
+			err := distro.ValidateSupportedConfig(tc.supported, v)
+			if tc.expErr == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tc.expErr)
+			}
+		})
+	}
+}
+
 func TestValidateRequiredConfig(t *testing.T) {
 	type testCase struct {
 		required []string
