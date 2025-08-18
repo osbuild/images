@@ -756,9 +756,6 @@
     # common options supported by all disk image types this includes everything
     # that is not specific to installers or ostree-based images
     supported_options_disk: &supported_options_disk
-      - "name"
-      - "version"
-      - "description"
       - "distro"
       - "packages"
       - "modules"
@@ -787,9 +784,6 @@
 
     # options supported by base ostree image types (commit and container)
     supported_options_ostree_commit: &supported_options_ostree_commit
-      - "name"
-      - "version"
-      - "description"
       - "distro"
       - "packages"
       - "modules"
@@ -811,9 +805,6 @@
 
     # options supported by ostree disk (deployment) image types
     supported_options_ostree_disk: &supported_options_ostree_disk
-      - "name"
-      - "version"
-      - "description"
       - "distro"
       - "customizations.files"
       - "customizations.directories"
@@ -830,9 +821,6 @@
 
     # options supported by Anaconda installer (ISO) image types
     supported_options_anaconda: &supported_options_anaconda
-      - "name"
-      - "version"
-      - "description"
       - "distro"
       - "customizations.installer"
       - "customizations.user"
@@ -1501,9 +1489,6 @@ image_types:
     supported_blueprint_options:
       # Only supporting a few basic options for now because we never tested any
       # other customization with this image type
-      - "name"
-      - "version"
-      - "description"
       - "distro"
       - "packages"
       - "modules"
@@ -1707,9 +1692,6 @@ image_types:
       - *x86_64_installer_platform
       - *aarch64_installer_platform
     supported_blueprint_options:
-      - "name"
-      - "version"
-      - "description"
       - "distro"
       - "customizations.installer"
 
@@ -1823,9 +1805,6 @@ image_types:
     supported_blueprint_options:
       # Only supporting a few basic options for now because we never tested any
       # other customization with this image type
-      - "name"
-      - "version"
-      - "description"
       - "distro"
       - "packages"
       - "modules"
@@ -1939,9 +1918,6 @@ image_types:
     supported_blueprint_options:
       # Only supporting a few basic options for now because we never tested any
       # other customization with this image type
-      - "name"
-      - "version"
-      - "description"
       - "distro"
       - "packages"
       - "modules"
@@ -2068,9 +2044,6 @@ image_types:
             - "realtek-firmware"
             - "uboot-images-armv8"
     supported_blueprint_options:
-      - "name"
-      - "version"
-      - "description"
       - "distro"
       - "customizations.installation_device"
       - "customizations.fdo"
@@ -2195,7 +2168,4 @@ image_types:
       - *x86_64_installer_platform
       - *aarch64_installer_platform
     supported_blueprint_options:
-      - "name"
-      - "version"
-      - "description"
       - "distro"

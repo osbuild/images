@@ -331,7 +331,10 @@ func (t *imageType) RequiredBlueprintOptions() []string {
 }
 
 func (t *imageType) SupportedBlueprintOptions() []string {
-	return t.ImageTypeYAML.SupportedBlueprintOptions
+	// The blueprint contains a few fields that are essentially metadata and
+	// not configuration / customizations. These should always be implicitly
+	// supported by all image types.
+	return append(t.ImageTypeYAML.SupportedBlueprintOptions, "name", "version", "description")
 }
 
 func bootstrapContainerFor(t *imageType) string {
