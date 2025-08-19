@@ -621,11 +621,12 @@ func NewBootcDistro(imgref string) (bd *BootcDistro, err error) {
 
 	nameVer := fmt.Sprintf("bootc-%s-%s", info.OSRelease.ID, info.OSRelease.VersionID)
 	bd = &BootcDistro{
-		name:          nameVer,
-		releasever:    info.OSRelease.VersionID,
-		defaultFs:     defaultFs,
-		sourceInfo:    info,
-		rootfsMinSize: cntSize * containerSizeToDiskSizeMultiplier,
+		name:            nameVer,
+		releasever:      info.OSRelease.VersionID,
+		defaultFs:       defaultFs,
+		sourceInfo:      info,
+		buildSourceInfo: info,
+		rootfsMinSize:   cntSize * containerSizeToDiskSizeMultiplier,
 
 		imgref:      imgref,
 		buildImgref: imgref,
