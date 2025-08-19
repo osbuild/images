@@ -14,13 +14,13 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/data/distrodefs"
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/environment"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/disk"
-	"github.com/osbuild/images/pkg/disk/partition"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/experimentalflags"
 	"github.com/osbuild/images/pkg/manifest"
@@ -388,7 +388,7 @@ type ImageTypeYAML struct {
 	DiskImagePartTool     *osbuild.PartTool `yaml:"disk_image_part_tool"`
 	DiskImageVPCForceSize *bool             `yaml:"disk_image_vpc_force_size"`
 
-	SupportedPartitioningModes []partition.PartitioningMode `yaml:"supported_partitioning_modes"`
+	SupportedPartitioningModes []blueprint.PartitioningMode `yaml:"supported_partitioning_modes"`
 
 	// name is set by the loader
 	name string
