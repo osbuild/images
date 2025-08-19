@@ -38,7 +38,7 @@ func (p *XZ) serialize() osbuild.Pipeline {
 
 	pipeline.AddStage(osbuild.NewXzStage(
 		osbuild.NewXzStageOptions(p.Filename()),
-		osbuild.NewXzStageInputs(osbuild.NewFilesInputPipelineObjectRef(p.imgPipeline.Name(), p.imgPipeline.Export().Filename(), nil)),
+		osbuild.NewXzStageInputs(osbuild.NewFilesInputPipelineObjectRef(p.imgPipeline.Name(), p.imgPipeline.Filename(), nil)),
 	))
 
 	return pipeline

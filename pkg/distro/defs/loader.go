@@ -373,7 +373,6 @@ type ImageTypeYAML struct {
 	Image                  string            `yaml:"image_func"`
 	BuildPipelines         []string          `yaml:"build_pipelines"`
 	PayloadPipelines       []string          `yaml:"payload_pipelines"`
-	Exports                []string          `yaml:"exports"`
 	RequiredPartitionSizes map[string]uint64 `yaml:"required_partition_sizes"`
 
 	InternalPlatforms []platform.PlatformConf `yaml:"platforms"`
