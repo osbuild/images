@@ -196,8 +196,10 @@ type OS struct {
 
 	// Environment the system will run in
 	Environment environment.Environment
-	// Workload to install on top of the base system
-	Workload OSCustomizations
+
+	// ImageTypeCustomizations come from the image type
+	ImgTypeCustomizations OSCustomizations
+
 	// Ref of ostree commit (optional). If empty the tree cannot be in an ostree commit
 	OSTreeRef string
 	// OSTreeParent source spec (optional). If nil the new commit (if
@@ -338,19 +340,19 @@ func (p *OS) getPackageSetChain(Distro) []rpmmd.PackageSet {
 		},
 	}
 
-	workloadPackages := p.Workload.BasePackages
-	if len(workloadPackages) > 0 {
+	imgTypePackages := p.ImgTypeCustomizations.BasePackages
+	if len(imgTypePackages) > 0 {
 		ps := rpmmd.PackageSet{
-			Include:      workloadPackages,
-			Repositories: append(osRepos, p.Workload.ExtraBaseRepos...),
+			Include:      imgTypePackages,
+			Repositories: append(osRepos, p.ImgTypeCustomizations.ExtraBaseRepos...),
 			// Although 'false' is the default value, set it explicitly to make
 			// it visible that we are not adding weak dependencies.
 			InstallWeakDeps: false,
 		}
 
-		workloadModules := p.Workload.BaseModules
-		if len(workloadModules) > 0 {
-			ps.EnabledModules = workloadModules
+		imgTypeModules := p.ImgTypeCustomizations.BaseModules
+		if len(imgTypeModules) > 0 {
+			ps.EnabledModules = imgTypeModules
 		}
 		chain = append(chain, ps)
 	}
@@ -504,7 +506,7 @@ func (p *OS) serialize() osbuild.Pipeline {
 
 	// collect all repos for this pipeline to create the repository options
 	allRepos := append(p.repos, p.OSCustomizations.ExtraBaseRepos...)
-	allRepos = append(allRepos, p.Workload.ExtraBaseRepos...)
+	allRepos = append(allRepos, p.ImgTypeCustomizations.ExtraBaseRepos...)
 
 	rpmOptions := osbuild.NewRPMStageOptions(allRepos)
 	if p.OSCustomizations.ExcludeDocs {
@@ -858,9 +860,9 @@ func (p *OS) serialize() osbuild.Pipeline {
 	if p.Environment != nil {
 		enabledServices = append(enabledServices, p.Environment.GetServices()...)
 	}
-	enabledServices = append(enabledServices, p.Workload.EnabledServices...)
-	disabledServices = append(disabledServices, p.Workload.DisabledServices...)
-	maskedServices = append(maskedServices, p.Workload.MaskedServices...)
+	enabledServices = append(enabledServices, p.ImgTypeCustomizations.EnabledServices...)
+	disabledServices = append(disabledServices, p.ImgTypeCustomizations.DisabledServices...)
+	maskedServices = append(maskedServices, p.ImgTypeCustomizations.MaskedServices...)
 
 	if len(enabledServices) != 0 ||
 		len(disabledServices) != 0 ||

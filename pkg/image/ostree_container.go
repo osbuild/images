@@ -14,10 +14,10 @@ import (
 
 type OSTreeContainer struct {
 	Base
-	Platform         platform.Platform
-	OSCustomizations manifest.OSCustomizations
-	Environment      environment.Environment
-	Workload         manifest.OSCustomizations
+	Platform              platform.Platform
+	OSCustomizations      manifest.OSCustomizations
+	Environment           environment.Environment
+	ImgTypeCustomizations manifest.OSCustomizations
 
 	// OSTreeParent specifies the source for an optional parent commit for the
 	// new commit being built.
@@ -49,7 +49,7 @@ func (img *OSTreeContainer) InstantiateManifest(m *manifest.Manifest,
 	osPipeline := manifest.NewOS(buildPipeline, img.Platform, repos)
 	osPipeline.OSCustomizations = img.OSCustomizations
 	osPipeline.Environment = img.Environment
-	osPipeline.Workload = img.Workload
+	osPipeline.ImgTypeCustomizations = img.ImgTypeCustomizations
 	osPipeline.OSTreeRef = img.OSTreeRef
 	osPipeline.OSTreeParent = img.OSTreeParent
 

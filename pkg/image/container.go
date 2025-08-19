@@ -13,11 +13,11 @@ import (
 
 type BaseContainer struct {
 	Base
-	Platform         platform.Platform
-	OSCustomizations manifest.OSCustomizations
-	Environment      environment.Environment
-	Workload         manifest.OSCustomizations
-	Filename         string
+	Platform              platform.Platform
+	OSCustomizations      manifest.OSCustomizations
+	Environment           environment.Environment
+	ImgTypeCustomizations manifest.OSCustomizations
+	Filename              string
 }
 
 func NewBaseContainer() *BaseContainer {
@@ -36,7 +36,7 @@ func (img *BaseContainer) InstantiateManifest(m *manifest.Manifest,
 	osPipeline := manifest.NewOS(buildPipeline, img.Platform, repos)
 	osPipeline.OSCustomizations = img.OSCustomizations
 	osPipeline.Environment = img.Environment
-	osPipeline.Workload = img.Workload
+	osPipeline.ImgTypeCustomizations = img.ImgTypeCustomizations
 
 	ociPipeline := manifest.NewOCIContainer(buildPipeline, osPipeline)
 	ociPipeline.SetFilename(img.Filename)

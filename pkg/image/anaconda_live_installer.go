@@ -19,7 +19,7 @@ type AnacondaLiveInstaller struct {
 	Platform                platform.Platform
 	InstallerCustomizations manifest.InstallerCustomizations
 	Environment             environment.Environment
-	Workload                manifest.OSCustomizations
+	ImgTypeCustomizations   manifest.OSCustomizations
 
 	ExtraBasePackages rpmmd.PackageSet
 

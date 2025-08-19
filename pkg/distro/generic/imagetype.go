@@ -20,7 +20,7 @@ import (
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
-type imageFunc func(osc manifest.OSCustomizations, t *imageType, bp *blueprint.Blueprint, options distro.ImageOptions, packageSets map[string]rpmmd.PackageSet, containers []container.SourceSpec, rng *rand.Rand) (image.ImageKind, error)
+type imageFunc func(imgTypeCustomizations manifest.OSCustomizations, t *imageType, bp *blueprint.Blueprint, options distro.ImageOptions, packageSets map[string]rpmmd.PackageSet, containers []container.SourceSpec, rng *rand.Rand) (image.ImageKind, error)
 
 type isoLabelFunc func(t *imageType) string
 
