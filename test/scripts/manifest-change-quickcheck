@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+"""
+Runs some quick checks to determine if any manifest rebuilds are necessary when compared against the given commit.
+Exits with 0 if it determines that no rebuilds are required.
+
+Rebuilds are determined to be required if *any* of the following are true:
+- At least one manifest checksum has changed (./test/data/manifest-checksums/).
+- At least one test repository has changed (./test/data/repositories/).
+- The Schutzfile has changed (./Schutzfile), which includes:
+    - The osbuild commit ID.
+    - The rng seed.
+    - The CI runner.
+    - The CI runner repositories.
+- Any test script has changed (./test/scripts/).
+- Any schutzbot file has changed (./schutzbot/), which includes:
+    - The terraform ID (CI runner configs).
+
+The script must be run from the root of the repository.
+"""
+import argparse
+import subprocess as sp
+import sys
+
+
+def has_diff(commit, path):
+    cmd = ["git", "diff", "--exit-code", commit, "--", path]
+    ret = sp.run(cmd, check=False)
+    return ret.returncode == 1
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("commit", help="commit or ref to diff against")
+    args = parser.parse_args()
+    commit = args.commit
+
+    paths_to_check = [
+        "./test/data/manifest-checksums",
+        "./test/data/repositories",
+        "./Schutzfile",
+        "./test/scripts",
+        "./schutzbot",
+    ]
+
+    print(f"Comparing paths against {commit}")
+    for path in paths_to_check:
+        print(f"Checking {path}")
+        if has_diff(commit, path):
+            print("Changes detected!")
+            return 1
+
+    print("No changes detected")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
