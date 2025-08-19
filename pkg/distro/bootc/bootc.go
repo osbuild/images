@@ -560,6 +560,11 @@ func (t *BootcImageType) manifestForISO(bp *blueprint.Blueprint, options distro.
 		img.InstallerCustomizations.DisabledAnacondaModules = append(img.InstallerCustomizations.DisabledAnacondaModules, instCust.Modules.Disable...)
 	}
 	img.InstallerCustomizations.EnabledAnacondaModules = append(img.InstallerCustomizations.EnabledAnacondaModules,
+		// XXX: ???
+		"org.fedoraproject.Anaconda.Modules.Network",
+		"org.fedoraproject.Anaconda.Modules.Payloads",
+		"org.fedoraproject.Anaconda.Modules.Runtime",
+		"org.fedoraproject.Anaconda.Modules.Storage",
 		anaconda.ModuleUsers,
 		anaconda.ModuleServices,
 		anaconda.ModuleSecurity,
