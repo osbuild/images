@@ -13,7 +13,6 @@ import (
 	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/image"
 	"github.com/osbuild/images/pkg/manifest"
-	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -251,12 +250,9 @@ func TestTarInstallerUnsetKSOptions(t *testing.T) {
 	img.Platform = testPlatform
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
-	// the tar installer doesn't set a custom kickstart path unless the
-	// unattended option is enabled, so the inst.ks option isn't set and
-	// interactive-defaults.ks is used
+
 	assert.Contains(t, mfs, fmt.Sprintf(`"inst.stage2=hd:LABEL=%s"`, isolabel))
-	assert.Contains(t, mfs, fmt.Sprintf("%q", osbuild.KickstartPathInteractiveDefaults))
-	assert.NotContains(t, mfs, "osbuild.ks") // no mention of the default (custom) value
+	assert.Contains(t, mfs, fmt.Sprintf(`"inst.ks=hd:LABEL=%s:/osbuild.ks"`, isolabel))
 }
 
 func TestTarInstallerUnsetKSPath(t *testing.T) {
@@ -270,18 +266,9 @@ func TestTarInstallerUnsetKSPath(t *testing.T) {
 	img.Kickstart = &kickstart.Options{}
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
-	// the tar installer doesn't set a custom kickstart path unless the
-	// unattended option is enabled, so the inst.ks option isn't set and
-	// interactive-defaults.ks is used
-	assert.Contains(t, mfs, fmt.Sprintf(`"inst.stage2=hd:LABEL=%s"`, isolabel))
-	assert.Contains(t, mfs, fmt.Sprintf("%q", osbuild.KickstartPathInteractiveDefaults))
-	assert.NotContains(t, mfs, "osbuild.ks") // no mention of the default (custom) value
 
-	// enable unattended and retest
-	img.Kickstart.Unattended = true
-	mfs = instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
+	assert.Contains(t, mfs, fmt.Sprintf(`"inst.stage2=hd:LABEL=%s"`, isolabel))
 	assert.Contains(t, mfs, fmt.Sprintf(`"inst.ks=hd:LABEL=%s:/osbuild.ks"`, isolabel))
-	assert.NotContains(t, mfs, osbuild.KickstartPathInteractiveDefaults)
 }
 
 func TestTarInstallerSetKSPath(t *testing.T) {
