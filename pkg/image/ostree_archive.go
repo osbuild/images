@@ -4,7 +4,6 @@ import (
 	"math/rand"
 
 	"github.com/osbuild/images/internal/environment"
-	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/artifact"
 	"github.com/osbuild/images/pkg/customizations/bootc"
 	"github.com/osbuild/images/pkg/manifest"
@@ -19,7 +18,7 @@ type OSTreeArchive struct {
 	Platform         platform.Platform
 	OSCustomizations manifest.OSCustomizations
 	Environment      environment.Environment
-	Workload         workload.Workload
+	Workload         manifest.OSCustomizations
 
 	// OSTreeParent specifies the source for an optional parent commit for the
 	// new commit being built.

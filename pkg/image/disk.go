@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/osbuild/images/internal/environment"
-	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/artifact"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/manifest"
@@ -23,7 +22,7 @@ type DiskImage struct {
 	PartitionTable   *disk.PartitionTable
 	OSCustomizations manifest.OSCustomizations
 	Environment      environment.Environment
-	Workload         workload.Workload
+	Workload         manifest.OSCustomizations
 	Filename         string
 	Compression      string
 

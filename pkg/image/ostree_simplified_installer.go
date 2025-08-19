@@ -5,7 +5,6 @@ import (
 	"math/rand"
 
 	"github.com/osbuild/images/internal/environment"
-	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/artifact"
 	"github.com/osbuild/images/pkg/customizations/fdo"
@@ -25,7 +24,7 @@ type OSTreeSimplifiedInstaller struct {
 	Platform         platform.Platform
 	OSCustomizations manifest.OSCustomizations
 	Environment      environment.Environment
-	Workload         workload.Workload
+	Workload         manifest.OSCustomizations
 
 	ExtraBasePackages rpmmd.PackageSet
 
