@@ -4,7 +4,6 @@ import (
 	"math/rand"
 
 	"github.com/osbuild/images/internal/environment"
-	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/artifact"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/platform"
@@ -17,7 +16,7 @@ type Archive struct {
 	Platform         platform.Platform
 	OSCustomizations manifest.OSCustomizations
 	Environment      environment.Environment
-	Workload         workload.Workload
+	Workload         manifest.OSCustomizations
 	Filename         string
 	Compression      string
 

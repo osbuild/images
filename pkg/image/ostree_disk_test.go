@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osbuild/images/internal/workload"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/image"
@@ -48,7 +47,6 @@ func TestOSTreeDiskImageManifestSetsContainerBuildable(t *testing.T) {
 			BIOSPlatform: "i386-pc",
 			UEFIVendor:   "fedora",
 		}
-		img.Workload = &workload.BaseWorkload{}
 		img.OSName = "osname"
 		img.ContainerBuildable = containerBuildable
 
