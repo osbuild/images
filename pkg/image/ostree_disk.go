@@ -17,9 +17,9 @@ import (
 type OSTreeDiskImage struct {
 	Base
 
-	Platform       platform.Platform
-	Workload       manifest.OSCustomizations
-	PartitionTable *disk.PartitionTable
+	Platform              platform.Platform
+	ImgTypeCustomizations manifest.OSCustomizations
+	PartitionTable        *disk.PartitionTable
 
 	OSTreeDeploymentCustomizations manifest.OSTreeDeploymentCustomizations
 
@@ -79,8 +79,8 @@ func baseRawOstreeImage(img *OSTreeDiskImage, buildPipeline manifest.Build, opts
 	osPipeline.UseBootupd = opts.useBootupd
 
 	// other image types (e.g. live) pass the workload to the pipeline.
-	osPipeline.EnabledServices = img.Workload.EnabledServices
-	osPipeline.DisabledServices = img.Workload.DisabledServices
+	osPipeline.EnabledServices = img.ImgTypeCustomizations.EnabledServices
+	osPipeline.DisabledServices = img.ImgTypeCustomizations.DisabledServices
 
 	return manifest.NewRawOStreeImage(buildPipeline, osPipeline, img.Platform)
 }

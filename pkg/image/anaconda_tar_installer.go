@@ -43,7 +43,7 @@ type AnacondaTarInstaller struct {
 	OSCustomizations        manifest.OSCustomizations
 	InstallerCustomizations manifest.InstallerCustomizations
 	Environment             environment.Environment
-	Workload                manifest.OSCustomizations
+	ImgTypeCustomizations   manifest.OSCustomizations
 
 	ExtraBasePackages rpmmd.PackageSet
 
@@ -163,7 +163,7 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	osPipeline := manifest.NewOS(buildPipeline, img.Platform, repos)
 	osPipeline.OSCustomizations = img.OSCustomizations
 	osPipeline.Environment = img.Environment
-	osPipeline.Workload = img.Workload
+	osPipeline.ImgTypeCustomizations = img.ImgTypeCustomizations
 
 	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
 	// TODO: the partition table is required - make it a ctor arg or set a default one in the pipeline
