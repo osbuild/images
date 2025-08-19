@@ -16,6 +16,7 @@ import (
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/image"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/platform"
@@ -24,7 +25,7 @@ import (
 	"github.com/osbuild/images/pkg/runner"
 )
 
-var _ = distro.Distro(&BootcDistro{})
+var _ = distro.CustomDepsolverDistro(&BootcDistro{})
 
 type BootcDistro struct {
 	imgref          string
@@ -121,6 +122,31 @@ func (d *BootcDistro) ModulePlatformID() string {
 
 func (d *BootcDistro) OSTreeRef() string {
 	return ""
+}
+
+func (d *BootcDistro) Depsolver(rpmCacheRoot string, archi arch.Arch) (solver *dnfjson.Solver, cleanup func(), err error) {
+	cnt, err := bibcontainer.New(d.buildImgref)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer func() {
+		if err != nil {
+			err = errors.Join(err, cnt.Stop())
+		}
+	}()
+
+	cleanup = func() {
+		cnt.Stop()
+	}
+	if err := cnt.InitDNF(); err != nil {
+		return nil, nil, err
+	}
+	solver, err = cnt.NewContainerSolver(rpmCacheRoot, archi, d.buildSourceInfo)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return solver, cleanup, nil
 }
 
 func (d *BootcDistro) ListArches() []string {
