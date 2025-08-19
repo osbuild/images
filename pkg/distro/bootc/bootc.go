@@ -3,8 +3,12 @@ package bootc
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"sort"
+	"strconv"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/osbuild/blueprint/pkg/blueprint"
 
@@ -13,12 +17,16 @@ import (
 	bibcontainer "github.com/osbuild/images/pkg/bib/container"
 	"github.com/osbuild/images/pkg/bib/osinfo"
 	"github.com/osbuild/images/pkg/container"
+	"github.com/osbuild/images/pkg/customizations/anaconda"
+	"github.com/osbuild/images/pkg/customizations/kickstart"
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distro/defs"
 	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/image"
 	"github.com/osbuild/images/pkg/manifest"
+	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/policies"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -59,6 +67,8 @@ type BootcImageType struct {
 	export string
 	// file extension
 	ext string
+	// image is an iso
+	iso bool
 }
 
 func (d *BootcDistro) SetBuildContainer(imgref string) (err error) {
@@ -292,7 +302,7 @@ func (t *BootcImageType) RequiredBlueprintOptions() []string {
 	return nil
 }
 
-func (t *BootcImageType) Manifest(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, seedp *int64) (*manifest.Manifest, []string, error) {
+func (t *BootcImageType) manifestForDisk(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, seedp *int64) (*manifest.Manifest, []string, error) {
 	if t.arch.distro.imgref == "" {
 		return nil, nil, fmt.Errorf("internal error: no base image defined")
 	}
@@ -392,6 +402,202 @@ func (t *BootcImageType) Manifest(bp *blueprint.Blueprint, options distro.ImageO
 	return &mf, nil, nil
 }
 
+func needsRHELLoraxTemplates(si osinfo.OSRelease) bool {
+	return si.ID == "rhel" || slices.Contains(si.IDLike, "rhel") || si.VersionID == "eln"
+}
+func getDistroAndRunner(osRelease osinfo.OSRelease) (manifest.Distro, runner.Runner, error) {
+	switch osRelease.ID {
+	case "fedora":
+		version, err := strconv.ParseUint(osRelease.VersionID, 10, 64)
+		if err != nil {
+			return manifest.DISTRO_NULL, nil, fmt.Errorf("cannot parse Fedora version (%s): %w", osRelease.VersionID, err)
+		}
+
+		return manifest.DISTRO_FEDORA, &runner.Fedora{
+			Version: version,
+		}, nil
+	case "centos":
+		version, err := strconv.ParseUint(osRelease.VersionID, 10, 64)
+		if err != nil {
+			return manifest.DISTRO_NULL, nil, fmt.Errorf("cannot parse CentOS version (%s): %w", osRelease.VersionID, err)
+		}
+		r := &runner.CentOS{
+			Version: version,
+		}
+		switch version {
+		case 9:
+			return manifest.DISTRO_EL9, r, nil
+		case 10:
+			return manifest.DISTRO_EL10, r, nil
+		default:
+			logrus.Warnf("Unknown CentOS version %d, using default distro for manifest generation", version)
+			return manifest.DISTRO_NULL, r, nil
+		}
+
+	case "rhel":
+		versionParts := strings.Split(osRelease.VersionID, ".")
+		if len(versionParts) != 2 {
+			return manifest.DISTRO_NULL, nil, fmt.Errorf("invalid RHEL version format: %s", osRelease.VersionID)
+		}
+		major, err := strconv.ParseUint(versionParts[0], 10, 64)
+		if err != nil {
+			return manifest.DISTRO_NULL, nil, fmt.Errorf("cannot parse RHEL major version (%s): %w", versionParts[0], err)
+		}
+		minor, err := strconv.ParseUint(versionParts[1], 10, 64)
+		if err != nil {
+			return manifest.DISTRO_NULL, nil, fmt.Errorf("cannot parse RHEL minor version (%s): %w", versionParts[1], err)
+		}
+		r := &runner.RHEL{
+			Major: major,
+			Minor: minor,
+		}
+		switch major {
+		case 9:
+			return manifest.DISTRO_EL9, r, nil
+		case 10:
+			return manifest.DISTRO_EL10, r, nil
+		default:
+			logrus.Warnf("Unknown RHEL version %d, using default distro for manifest generation", major)
+			return manifest.DISTRO_NULL, r, nil
+		}
+	}
+
+	logrus.Warnf("Unknown distro %s, using default runner", osRelease.ID)
+	return manifest.DISTRO_NULL, &runner.Linux{}, nil
+}
+
+func labelForISO(os *osinfo.OSRelease, arch *arch.Arch) string {
+	switch os.ID {
+	case "fedora":
+		return fmt.Sprintf("Fedora-S-dvd-%s-%s", arch, os.VersionID)
+	case "centos":
+		labelTemplate := "CentOS-Stream-%s-BaseOS-%s"
+		if os.VersionID == "8" {
+			labelTemplate = "CentOS-Stream-%s-%s-dvd"
+		}
+		return fmt.Sprintf(labelTemplate, os.VersionID, arch)
+	case "rhel":
+		version := strings.ReplaceAll(os.VersionID, ".", "-")
+		return fmt.Sprintf("RHEL-%s-BaseOS-%s", version, arch)
+	default:
+		return fmt.Sprintf("Container-Installer-%s", arch)
+	}
+}
+
+func (t *BootcImageType) manifestForISO(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, seedp *int64) (*manifest.Manifest, []string, error) {
+	if t.arch.distro.imgref == "" {
+		return nil, nil, fmt.Errorf("pipeline: no base image defined")
+	}
+
+	containerSource := container.SourceSpec{
+		Source: t.arch.distro.imgref,
+		Name:   t.arch.distro.imgref,
+		Local:  true,
+	}
+
+	// XXX: duplicated
+	archi := common.Must(arch.FromString(t.arch.Name()))
+	platform := &platform.Data{
+		Arch:        archi,
+		UEFIVendor:  t.arch.distro.sourceInfo.UEFIVendor,
+		QCOW2Compat: "1.1",
+	}
+	switch archi {
+	case arch.ARCH_X86_64:
+		platform.BIOSPlatform = "i386-pc"
+	case arch.ARCH_PPC64LE:
+		platform.BIOSPlatform = "powerpc-ieee1275"
+	case arch.ARCH_S390X:
+		platform.ZiplSupport = true
+	}
+
+	// The ref is not needed and will be removed from the ctor later
+	// in time
+	img := image.NewAnacondaContainerInstaller(platform, "install.iso", containerSource, "")
+	img.ContainerRemoveSignatures = true
+	img.RootfsCompression = "zstd"
+
+	img.InstallerCustomizations.Product = t.arch.distro.sourceInfo.OSRelease.Name
+	img.InstallerCustomizations.OSVersion = t.arch.distro.sourceInfo.OSRelease.VersionID
+
+	nameVer := fmt.Sprintf("%s-%v", t.arch.distro.sourceInfo.OSRelease.ID, t.arch.distro.sourceInfo.OSRelease.VersionID)
+	id, err := distro.ParseID(nameVer)
+	if err != nil {
+		return nil, nil, err
+	}
+	dy, err := defs.NewDistroYAML(nameVer)
+	if err != nil {
+		return nil, nil, err
+	}
+	di := dy.ImageTypes()["image-installer"]
+	img.ExtraBasePackages = rpmmd.PackageSet{
+		Include: di.PackageSets(*id, t.arch.Name())["installer"].Include,
+	}
+	// XXX: use dy.getISOLabelFunc()
+	img.InstallerCustomizations.ISOLabel = labelForISO(&t.arch.distro.sourceInfo.OSRelease, &archi)
+
+	var customizations *blueprint.Customizations
+	if bp != nil {
+		customizations = bp.Customizations
+	}
+	img.InstallerCustomizations.FIPS = customizations.GetFIPS()
+	img.Kickstart, err = kickstart.New(customizations)
+	if err != nil {
+		return nil, nil, err
+	}
+	img.Kickstart.Path = osbuild.KickstartPathOSBuild
+	if kopts := customizations.GetKernel(); kopts != nil && kopts.Append != "" {
+		img.Kickstart.KernelOptionsAppend = append(img.Kickstart.KernelOptionsAppend, kopts.Append)
+	}
+	img.Kickstart.NetworkOnBoot = true
+
+	instCust, err := customizations.GetInstaller()
+	if err != nil {
+		return nil, nil, err
+	}
+	if instCust != nil && instCust.Modules != nil {
+		img.InstallerCustomizations.EnabledAnacondaModules = append(img.InstallerCustomizations.EnabledAnacondaModules, instCust.Modules.Enable...)
+		img.InstallerCustomizations.DisabledAnacondaModules = append(img.InstallerCustomizations.DisabledAnacondaModules, instCust.Modules.Disable...)
+	}
+	img.InstallerCustomizations.EnabledAnacondaModules = append(img.InstallerCustomizations.EnabledAnacondaModules,
+		anaconda.ModuleUsers,
+		anaconda.ModuleServices,
+		anaconda.ModuleSecurity,
+	)
+
+	img.Kickstart.OSTree = &kickstart.OSTree{
+		OSName: "default",
+	}
+	img.InstallerCustomizations.UseRHELLoraxTemplates = needsRHELLoraxTemplates(t.arch.distro.sourceInfo.OSRelease)
+	// see https://github.com/osbuild/bootc-image-builder/issues/733
+	img.InstallerCustomizations.ISORootfsType = manifest.SquashfsRootfs
+
+	installRootfsType, err := disk.NewFSType(t.arch.distro.defaultFs)
+	if err != nil {
+		return nil, nil, err
+	}
+	img.InstallRootfsType = installRootfsType
+
+	mf := manifest.New()
+
+	foundDistro, foundRunner, err := getDistroAndRunner(t.arch.distro.sourceInfo.OSRelease)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to infer distro and runner: %w", err)
+	}
+	mf.Distro = foundDistro
+
+	rng := createRand()
+	_, err = img.InstantiateManifest(&mf, nil, foundRunner, rng)
+	return &mf, nil, err
+}
+
+func (t *BootcImageType) Manifest(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, seedp *int64) (*manifest.Manifest, []string, error) {
+	if t.iso {
+		return t.manifestForISO(bp, options, repos, seedp)
+	}
+	return t.manifestForDisk(bp, options, repos, seedp)
+}
+
 // newBootcDistro returns a new instance of BootcDistro
 // from the given url
 func NewBootcDistro(imgref string) (bd *BootcDistro, err error) {
@@ -473,6 +679,17 @@ func NewBootcDistro(imgref string) (bd *BootcDistro, err error) {
 				name:   "gce",
 				export: "gce",
 				ext:    "tar.gz",
+			},
+			// Image types that build ISOs
+			BootcImageType{
+				name:   "anaconda-iso",
+				export: "bootiso",
+				iso:    true,
+			},
+			BootcImageType{
+				name:   "iso",
+				export: "bootiso",
+				iso:    true,
 			},
 		)
 		bd.addArches(ba)
