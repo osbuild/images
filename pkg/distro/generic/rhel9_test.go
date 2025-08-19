@@ -326,6 +326,7 @@ func TestRhel9_ImageType_Name(t *testing.T) {
 				"tar",
 				"image-installer",
 				"minimal-raw",
+				"netinst",
 			},
 		},
 		{
@@ -342,6 +343,7 @@ func TestRhel9_ImageType_Name(t *testing.T) {
 				"vhd",
 				"azure-rhui",
 				"minimal-raw",
+				"netinst",
 			},
 		},
 		{
@@ -529,6 +531,7 @@ func TestRhel9_Architecture_ListImageTypes(t *testing.T) {
 				"oci",
 				"wsl",
 				"minimal-raw",
+				"netinst",
 				"vagrant-libvirt",
 				"vagrant-virtualbox",
 			},
@@ -559,6 +562,7 @@ func TestRhel9_Architecture_ListImageTypes(t *testing.T) {
 				"vagrant-libvirt",
 				"wsl",
 				"minimal-raw",
+				"netinst",
 			},
 		},
 		{
