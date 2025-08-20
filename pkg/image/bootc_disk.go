@@ -60,8 +60,8 @@ func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifes
 
 		pipelineName := "target"
 		// files to copy have slash at end to copy directory contents, not directory itself
-		copyFiles := []string{"/usr/lib/bootc/install/", "/usr/lib/ostree/"}
-		ensureDirPaths := []string{"/usr/lib/bootc/install", "/usr/lib/ostree"}
+		copyFiles := []string{"/usr/lib/bootc/install/", "/usr/lib/ostree/", "/usr/lib/bootupd/"}
+		ensureDirPaths := []string{"/usr/lib/bootc/install", "/usr/lib/ostree", "/usr/lib/bootupd"}
 
 		copyFilesFrom = map[string][]string{pipelineName: copyFiles}
 		for _, path := range ensureDirPaths {
