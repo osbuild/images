@@ -168,3 +168,47 @@ func TestLoadInfo(t *testing.T) {
 		})
 	}
 }
+
+func TestLoadInfoKernel(t *testing.T) {
+	type testCase struct {
+		desc     string
+		dirs     []string
+		files    []string
+		expected *KernelInfo
+	}
+
+	cases := []testCase{
+		// Incorrect kernel trees
+		{"nodir", []string{}, []string{"not-a-dir"}, nil},
+		{"novmlinuz", []string{"6.15.9-201.fc42.x86_64"}, []string{}, nil},
+		{"novmlinuz2", []string{"6.15.9-201.fc42.x86_64", "6.14.11-300.fc42.x86_64"}, []string{"not-a-dir"}, nil},
+		{"novmlinuz3", []string{"6.15.9-201.fc42.x86_64", "6.14.11-300.fc42.x86_64"}, []string{"6.15.9-201.fc42.x86_64/not-vmlinuz"}, nil},
+		// Correct kernel trees
+		{"noaboot", []string{"6.15.9-201.fc42.x86_64"}, []string{"6.15.9-201.fc42.x86_64/vmlinuz"}, &KernelInfo{"6.15.9-201.fc42.x86_64", false}},
+		{"aboot", []string{"6.15.9-201.fc42.x86_64"}, []string{"6.15.9-201.fc42.x86_64/vmlinuz", "6.15.9-201.fc42.x86_64/aboot.img"}, &KernelInfo{"6.15.9-201.fc42.x86_64", true}},
+		{"severaldirs", []string{"6.15.9-201.fc42.x86_64", "6.14.11-300.fc42.x86_64"}, []string{"6.14.11-300.fc42.x86_64/vmlinuz"}, &KernelInfo{"6.14.11-300.fc42.x86_64", false}},
+	}
+	for _, c := range cases {
+		t.Run(c.desc, func(t *testing.T) {
+			root := t.TempDir()
+			baseDir := path.Join(root, "usr/lib/modules")
+			require.NoError(t, os.MkdirAll(baseDir, 0755))
+			for _, dir := range c.dirs {
+				dirPath := path.Join(baseDir, dir)
+				require.NoError(t, os.MkdirAll(dirPath, 0755))
+			}
+			for _, file := range c.files {
+				filePath := path.Join(baseDir, file)
+				require.NoError(t, os.WriteFile(filePath, nil, 0644))
+			}
+			info, err := readKernelInfo(root)
+			if c.expected == nil {
+				require.Error(t, err)
+				assert.Nil(t, info)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, info, c.expected)
+			}
+		})
+	}
+}

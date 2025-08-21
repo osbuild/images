@@ -26,11 +26,17 @@ type OSRelease struct {
 	IDLike     []string
 }
 
+type KernelInfo struct {
+	Version     string
+	HasAbootImg bool
+}
+
 type Info struct {
 	OSRelease          OSRelease
 	UEFIVendor         string
 	SELinuxPolicy      string
 	ImageCustomization *blueprint.Customizations
+	KernelInfo         *KernelInfo
 }
 
 func validateOSRelease(osrelease map[string]string) error {
@@ -119,6 +125,39 @@ func readImageCustomization(root string) (*blueprint.Customizations, error) {
 	return config.Customizations, nil
 }
 
+func readKernelInfo(root string) (*KernelInfo, error) {
+	modulesDir := path.Join(root, "usr/lib/modules")
+	entries, err := os.ReadDir(modulesDir)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+
+		// A kernel dir is valid if there is a vmlinuz in it.
+		// bootc checks that there is only one such dir, so we
+		// pick the first here
+		kernelDir := path.Join(modulesDir, e.Name())
+		kernelPath := path.Join(kernelDir, "vmlinuz")
+		_, err := os.Stat(kernelPath)
+		if err == nil {
+
+			abootPath := path.Join(kernelDir, "aboot.img")
+			_, err := os.Stat(abootPath)
+			hasAbootImg := err == nil
+			return &KernelInfo{
+				Version:     e.Name(),
+				HasAbootImg: hasAbootImg,
+			}, nil
+		}
+	}
+
+	return nil, fmt.Errorf("no valid kernel modules directory")
+}
+
 func Load(root string) (*Info, error) {
 	osrelease, err := distro.ReadOSReleaseFromTree(root)
 	if err != nil {
@@ -136,6 +175,11 @@ func Load(root string) (*Info, error) {
 	customization, err := readImageCustomization(root)
 	if err != nil {
 		return nil, err
+	}
+
+	kernelInfo, err := readKernelInfo(root)
+	if err != nil {
+		logrus.Debugf("cannot read kernel info: %v", err)
 	}
 
 	selinuxPolicy, err := readSelinuxPolicy(root)
@@ -161,5 +205,6 @@ func Load(root string) (*Info, error) {
 		UEFIVendor:         vendor,
 		SELinuxPolicy:      selinuxPolicy,
 		ImageCustomization: customization,
+		KernelInfo:         kernelInfo,
 	}, nil
 }
