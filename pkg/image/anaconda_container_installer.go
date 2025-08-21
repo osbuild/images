@@ -23,6 +23,7 @@ type AnacondaContainerInstaller struct {
 	Platform                platform.Platform
 	InstallerCustomizations manifest.InstallerCustomizations
 	ExtraBasePackages       rpmmd.PackageSet
+	OSCustomizations        manifest.OSCustomizations
 
 	RootfsCompression string
 
@@ -116,6 +117,7 @@ func (img *AnacondaContainerInstaller) InstantiateManifest(m *manifest.Manifest,
 	if anacondaPipeline.InstallerCustomizations.FIPS {
 		bootTreePipeline.KernelOpts = append(bootTreePipeline.KernelOpts, "fips=1")
 	}
+	bootTreePipeline.KernelOpts = append(bootTreePipeline.KernelOpts, img.OSCustomizations.KernelOptionsAppend...)
 
 	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
 	isoTreePipeline.PartitionTable = efiBootPartitionTable(rng)
@@ -134,6 +136,7 @@ func (img *AnacondaContainerInstaller) InstantiateManifest(m *manifest.Manifest,
 	if anacondaPipeline.InstallerCustomizations.FIPS {
 		isoTreePipeline.KernelOpts = append(isoTreePipeline.KernelOpts, "fips=1")
 	}
+	isoTreePipeline.KernelOpts = append(isoTreePipeline.KernelOpts, img.OSCustomizations.KernelOptionsAppend...)
 
 	isoTreePipeline.InstallRootfsType = img.InstallRootfsType
 
