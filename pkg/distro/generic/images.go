@@ -798,7 +798,10 @@ func iotInstallerImage(imgTypeCustomizations manifest.OSCustomizations,
 	img.Kickstart.Timezone, _ = customizations.GetTimezoneSettings()
 
 	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations)
-
+	if err != nil {
+		return nil, err
+	}
+	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, bp.Customizations)
 	if err != nil {
 		return nil, err
 	}

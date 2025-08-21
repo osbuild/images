@@ -22,6 +22,7 @@ type AnacondaOSTreeInstaller struct {
 	Base
 	Platform                platform.Platform
 	InstallerCustomizations manifest.InstallerCustomizations
+	OSCustomizations        manifest.OSCustomizations
 	ExtraBasePackages       rpmmd.PackageSet
 
 	Kickstart *kickstart.Options
@@ -119,6 +120,7 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 	if anacondaPipeline.InstallerCustomizations.FIPS {
 		bootTreePipeline.KernelOpts = append(bootTreePipeline.KernelOpts, "fips=1")
 	}
+	bootTreePipeline.KernelOpts = append(bootTreePipeline.KernelOpts, img.OSCustomizations.KernelOptionsAppend...)
 
 	var subscriptionPipeline *manifest.Subscription
 	if img.Subscription != nil {
@@ -140,6 +142,7 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 	if anacondaPipeline.InstallerCustomizations.FIPS {
 		isoTreePipeline.KernelOpts = append(isoTreePipeline.KernelOpts, "fips=1")
 	}
+	isoTreePipeline.KernelOpts = append(isoTreePipeline.KernelOpts, img.OSCustomizations.KernelOptionsAppend...)
 	isoTreePipeline.SubscriptionPipeline = subscriptionPipeline
 
 	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.ISOLabel)
