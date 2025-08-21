@@ -363,6 +363,78 @@ func TestGenFsStagesLVM(t *testing.T) {
 	}, stages)
 }
 
+func TestGenFsStagesRaw(t *testing.T) {
+	pt := testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi", "raw")
+	stages := GenFsStages(pt, "file.img")
+	assert.Equal(t, []*Stage{
+		{
+			Type: "org.osbuild.mkfs.ext4",
+			Options: &MkfsExt4StageOptions{
+				UUID: disk.RootPartitionUUID,
+			},
+			Devices: map[string]Device{
+				"device": {
+					Type: "org.osbuild.loopback",
+					Options: &LoopbackDeviceOptions{
+						Filename: "file.img",
+						Size:     testdisk.FakePartitionSize / disk.DefaultSectorSize,
+						Lock:     true,
+					},
+				},
+			},
+		},
+		{
+			Type: "org.osbuild.mkfs.ext4",
+			Options: &MkfsExt4StageOptions{
+				UUID: disk.DataPartitionUUID,
+			},
+			Devices: map[string]Device{
+				"device": {
+					Type: "org.osbuild.loopback",
+					Options: &LoopbackDeviceOptions{
+						Filename: "file.img",
+						Size:     testdisk.FakePartitionSize / disk.DefaultSectorSize,
+						Lock:     true,
+					},
+				},
+			},
+		},
+		{
+			Type: "org.osbuild.mkfs.fat",
+			Options: &MkfsFATStageOptions{
+				VolID: strings.ReplaceAll(disk.EFIFilesystemUUID, "-", ""),
+			},
+			Devices: map[string]Device{
+				"device": {
+					Type: "org.osbuild.loopback",
+					Options: &LoopbackDeviceOptions{
+						Filename: "file.img",
+						Size:     testdisk.FakePartitionSize / disk.DefaultSectorSize,
+						Lock:     true,
+					},
+				},
+			},
+		},
+		{
+			Type: "org.osbuild.write-device",
+			Options: &WriteDeviceStageOptions{
+				From: "input://tree/usr/lib/modules/5.0/aboot.img",
+			},
+			Inputs: NewPipelineTreeInputs("tree", "build"),
+			Devices: map[string]Device{
+				"device": {
+					Type: "org.osbuild.loopback",
+					Options: &LoopbackDeviceOptions{
+						Filename: "file.img",
+						Size:     testdisk.FakePartitionSize / disk.DefaultSectorSize,
+						Lock:     true,
+					},
+				},
+			},
+		},
+	}, stages)
+}
+
 func TestGenFsStagesUnhappy(t *testing.T) {
 	pt := &disk.PartitionTable{
 		Type: disk.PT_GPT,

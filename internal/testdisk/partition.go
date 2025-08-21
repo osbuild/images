@@ -398,6 +398,11 @@ func MakeFakePartitionTable(mntPoints ...string) *disk.PartitionTable {
 			}
 			swap.GenUUID(rng)
 			payload = swap
+		case "raw":
+			payload = &disk.Raw{
+				SourcePipeline: "build",
+				SourcePath:     "/usr/lib/modules/5.0/aboot.img",
+			}
 		default:
 			payload = &disk.Filesystem{
 				Type:       "ext4",
