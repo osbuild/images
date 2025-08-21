@@ -552,7 +552,6 @@ func liveInstallerImage(t *imageType,
 
 	img.Platform = t.platform
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
-	img.OSCustomizations.PayloadRepos = payloadRepos
 	d := t.arch.distro
 
 	img.Product = d.Product()
@@ -785,7 +784,6 @@ func iotInstallerImage(t *imageType,
 	customizations := bp.Customizations
 	img.Platform = t.platform
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
-	img.OSCustomizations.PayloadRepos = payloadRepos
 	img.Kickstart, err = kickstart.New(customizations)
 	if err != nil {
 		return nil, err
@@ -984,7 +982,6 @@ func netinstImage(t *imageType,
 	}
 
 	img.Platform = t.platform
-	img.OSCustomizations.PayloadRepos = payloadRepos
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
 
 	var err error
