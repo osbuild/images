@@ -20,6 +20,7 @@ type AnacondaLiveInstaller struct {
 	InstallerCustomizations manifest.InstallerCustomizations
 	Environment             environment.Environment
 	ImgTypeCustomizations   manifest.OSCustomizations
+	OSCustomizations        manifest.OSCustomizations
 
 	ExtraBasePackages rpmmd.PackageSet
 
@@ -101,6 +102,7 @@ func (img *AnacondaLiveInstaller) InstantiateManifest(m *manifest.Manifest,
 	}
 
 	kernelOpts = append(kernelOpts, img.InstallerCustomizations.AdditionalKernelOpts...)
+	kernelOpts = append(kernelOpts, img.OSCustomizations.KernelOptionsAppend...)
 
 	bootTreePipeline.KernelOpts = kernelOpts
 

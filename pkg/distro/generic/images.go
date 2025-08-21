@@ -541,6 +541,12 @@ func liveInstallerImage(imgTypeCustomizations manifest.OSCustomizations,
 
 	img := image.NewAnacondaLiveInstaller()
 
+	var err error
+	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, bp.Customizations)
+	if err != nil {
+		return nil, err
+	}
+
 	img.Platform = t.platform
 	img.ImgTypeCustomizations = imgTypeCustomizations
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
@@ -553,7 +559,6 @@ func liveInstallerImage(imgTypeCustomizations manifest.OSCustomizations,
 	img.Release = fmt.Sprintf("%s %s", d.Product(), d.OsVersion())
 	img.Preview = d.DistroYAML.Preview
 
-	var err error
 	img.ISOLabel, err = t.ISOLabel()
 	if err != nil {
 		return nil, err
