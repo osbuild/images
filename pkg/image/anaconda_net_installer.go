@@ -21,6 +21,7 @@ type AnacondaNetInstaller struct {
 	InstallerCustomizations manifest.InstallerCustomizations
 	Environment             environment.Environment
 	ImgTypeCustomizations   manifest.OSCustomizations
+	OSCustomizations        manifest.OSCustomizations
 
 	ExtraBasePackages rpmmd.PackageSet
 
@@ -100,6 +101,7 @@ func (img *AnacondaNetInstaller) InstantiateManifest(m *manifest.Manifest,
 		kernelOpts = append(kernelOpts, "fips=1")
 	}
 	kernelOpts = append(kernelOpts, img.InstallerCustomizations.AdditionalKernelOpts...)
+	kernelOpts = append(kernelOpts, img.OSCustomizations.KernelOptionsAppend...)
 	bootTreePipeline.KernelOpts = kernelOpts
 
 	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
@@ -111,6 +113,7 @@ func (img *AnacondaNetInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoTreePipeline.RootfsType = img.InstallerCustomizations.ISORootfsType
 
 	isoTreePipeline.KernelOpts = img.InstallerCustomizations.AdditionalKernelOpts
+	isoTreePipeline.KernelOpts = append(isoTreePipeline.KernelOpts, img.OSCustomizations.KernelOptionsAppend...)
 	if anacondaPipeline.InstallerCustomizations.FIPS {
 		isoTreePipeline.KernelOpts = append(isoTreePipeline.KernelOpts, "fips=1")
 	}

@@ -986,6 +986,10 @@ func netinstImage(imgTypeCustomizations manifest.OSCustomizations,
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
 
 	var err error
+	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, bp.Customizations)
+	if err != nil {
+		return nil, err
+	}
 
 	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations)
 
