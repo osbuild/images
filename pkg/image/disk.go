@@ -18,13 +18,12 @@ import (
 
 type DiskImage struct {
 	Base
-	Platform              platform.Platform
-	PartitionTable        *disk.PartitionTable
-	OSCustomizations      manifest.OSCustomizations
-	Environment           environment.Environment
-	ImgTypeCustomizations manifest.OSCustomizations
-	Filename              string
-	Compression           string
+	Platform         platform.Platform
+	PartitionTable   *disk.PartitionTable
+	OSCustomizations manifest.OSCustomizations
+	Environment      environment.Environment
+	Filename         string
+	Compression      string
 
 	// Control the VPC subformat use of force_size
 	VPCForceSize *bool
@@ -55,7 +54,6 @@ func (img *DiskImage) InstantiateManifest(m *manifest.Manifest,
 	osPipeline.PartitionTable = img.PartitionTable
 	osPipeline.OSCustomizations = img.OSCustomizations
 	osPipeline.Environment = img.Environment
-	osPipeline.ImgTypeCustomizations = img.ImgTypeCustomizations
 	osPipeline.OSProduct = img.OSProduct
 	osPipeline.OSVersion = img.OSVersion
 	osPipeline.OSNick = img.OSNick

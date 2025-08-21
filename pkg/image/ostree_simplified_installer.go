@@ -21,10 +21,9 @@ type OSTreeSimplifiedInstaller struct {
 	// Raw image that will be created and embedded
 	rawImage *OSTreeDiskImage
 
-	Platform              platform.Platform
-	OSCustomizations      manifest.OSCustomizations
-	Environment           environment.Environment
-	ImgTypeCustomizations manifest.OSCustomizations
+	Platform         platform.Platform
+	OSCustomizations manifest.OSCustomizations
+	Environment      environment.Environment
 
 	ExtraBasePackages rpmmd.PackageSet
 
