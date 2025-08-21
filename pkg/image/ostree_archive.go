@@ -15,10 +15,9 @@ import (
 
 type OSTreeArchive struct {
 	Base
-	Platform              platform.Platform
-	OSCustomizations      manifest.OSCustomizations
-	Environment           environment.Environment
-	ImgTypeCustomizations manifest.OSCustomizations
+	Platform         platform.Platform
+	OSCustomizations manifest.OSCustomizations
+	Environment      environment.Environment
 
 	// OSTreeParent specifies the source for an optional parent commit for the
 	// new commit being built.
@@ -58,7 +57,6 @@ func (img *OSTreeArchive) InstantiateManifest(m *manifest.Manifest,
 	osPipeline := manifest.NewOS(buildPipeline, img.Platform, repos)
 	osPipeline.OSCustomizations = img.OSCustomizations
 	osPipeline.Environment = img.Environment
-	osPipeline.ImgTypeCustomizations = img.ImgTypeCustomizations
 	osPipeline.OSTreeParent = img.OSTreeParent
 	osPipeline.OSTreeRef = img.OSTreeRef
 	osPipeline.OSCustomizations.InstallWeakDeps = img.InstallWeakDeps

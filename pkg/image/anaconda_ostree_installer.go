@@ -21,6 +21,7 @@ import (
 type AnacondaOSTreeInstaller struct {
 	Base
 	Platform                platform.Platform
+	OSCustomizations        manifest.OSCustomizations
 	InstallerCustomizations manifest.InstallerCustomizations
 	ExtraBasePackages       rpmmd.PackageSet
 

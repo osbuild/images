@@ -20,7 +20,7 @@ type AnacondaNetInstaller struct {
 	Platform                platform.Platform
 	InstallerCustomizations manifest.InstallerCustomizations
 	Environment             environment.Environment
-	ImgTypeCustomizations   manifest.OSCustomizations
+	OSCustomizations        manifest.OSCustomizations
 
 	ExtraBasePackages rpmmd.PackageSet
 
