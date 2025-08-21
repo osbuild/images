@@ -39,8 +39,7 @@ type OSCustomizations struct {
 	// These are the statically defined packages for the image type.
 	BasePackages []string
 
-	// Modules to install in addition to the ones required by the pipeline.
-	// These are the statically defined packages for the image type.
+	// Module streams to make available for installation.
 	BaseModules []string
 
 	// Packages to exclude from the base package set. This is useful in
