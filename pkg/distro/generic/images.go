@@ -394,7 +394,7 @@ func installerCustomizations(t *imageType, c *blueprint.Customizations) (manifes
 		isc.EnabledAnacondaModules = append(isc.EnabledAnacondaModules, installerCust.Modules.Enable...)
 		isc.DisabledAnacondaModules = append(isc.DisabledAnacondaModules, installerCust.Modules.Disable...)
 	}
-	isc.AdditionalKernelOpts = kernelOptions(t, c)
+	isc.KernelOptionsAppend = kernelOptions(t, c)
 
 	return isc, nil
 }
@@ -630,7 +630,7 @@ func imageInstallerImage(t *imageType,
 	img.InstallerCustomizations.EnabledAnacondaModules = append(img.InstallerCustomizations.EnabledAnacondaModules, anaconda.ModuleUsers)
 
 	if img.Kickstart.Unattended {
-		img.InstallerCustomizations.AdditionalKernelOpts = append(installerConfig.KickstartUnattendedExtraKernelOpts, img.InstallerCustomizations.AdditionalKernelOpts...)
+		img.InstallerCustomizations.KernelOptionsAppend = append(installerConfig.KickstartUnattendedExtraKernelOpts, img.InstallerCustomizations.KernelOptionsAppend...)
 	}
 
 	img.RootfsCompression = "xz" // This also triggers using the bcj filter
