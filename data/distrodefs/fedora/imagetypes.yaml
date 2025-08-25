@@ -1658,6 +1658,8 @@ image_types:
     image_config:
       <<: *image_config_iot_enabled_services
       locale: "en_US.UTF-8"
+      # iot-installer is not using the default ostree kernel options
+      kernel_options:
     package_sets:
       installer:
         - *anaconda_pkgset
