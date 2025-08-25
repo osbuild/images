@@ -5,6 +5,9 @@
     "description": "Configures any Anaconda-based ISO to install the system with no user interaction.",
     "version": "1.0",
     "customizations": {
+      "kernel": {
+        "append": "debug"
+      },
       "user": [
         {
           "groups": [
