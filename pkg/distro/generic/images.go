@@ -763,7 +763,6 @@ func iotInstallerImage(t *imageType,
 	img.Kickstart.Timezone, _ = customizations.GetTimezoneSettings()
 
 	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations)
-
 	if err != nil {
 		return nil, err
 	}
