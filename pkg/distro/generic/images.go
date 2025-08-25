@@ -893,28 +893,11 @@ func iotSimplifiedInstallerImage(t *imageType,
 			}
 		}
 	}
-
-	installerConfig, err := t.getDefaultInstallerConfig()
+	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations)
 	if err != nil {
 		return nil, err
 	}
-
-	if installerConfig != nil {
-		img.AdditionalDracutModules = append(img.AdditionalDracutModules, installerConfig.AdditionalDracutModules...)
-		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
-	}
-
-	// XXX: move to use InstallerCustomizations too
-	d := t.arch.distro
-	img.Product = d.Product()
-	img.Variant = t.ImageTypeYAML.Variant
 	img.OSName = t.OSTree.Name
-	img.OSVersion = d.OsVersion()
-
-	img.ISOLabel, err = t.ISOLabel()
-	if err != nil {
-		return nil, err
-	}
 
 	return img, nil
 }
