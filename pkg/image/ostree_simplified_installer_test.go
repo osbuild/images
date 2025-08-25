@@ -19,15 +19,15 @@ func TestSimplifiedInstallerDracut(t *testing.T) {
 	ostreeDiskImage := image.NewOSTreeDiskImageFromCommit(platform, "filename", commit)
 	ostreeDiskImage.PartitionTable = testdisk.MakeFakePartitionTable("/")
 	img := image.NewOSTreeSimplifiedInstaller(testPlatform, "filename", ostreeDiskImage, "")
-	img.Product = product
-	img.OSVersion = osversion
-	img.ISOLabel = isolabel
+	img.InstallerCustomizations.Product = product
+	img.InstallerCustomizations.OSVersion = osversion
+	img.InstallerCustomizations.ISOLabel = isolabel
 
 	testModules := []string{"test-module"}
 	testDrivers := []string{"test-driver"}
 
-	img.AdditionalDracutModules = testModules
-	img.AdditionalDrivers = testDrivers
+	img.InstallerCustomizations.AdditionalDracutModules = testModules
+	img.InstallerCustomizations.AdditionalDrivers = testDrivers
 
 	commitSpec := map[string][]ostree.CommitSpec{
 		"ostree-deployment": {
