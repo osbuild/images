@@ -5,8 +5,7 @@ package manifest
 type InstallerCustomizations struct {
 	FIPS bool
 
-	// XXX: rename to "KernelOptionsAppend" to match OSCustomizations
-	AdditionalKernelOpts []string
+	KernelOptionsAppend []string
 
 	EnabledAnacondaModules  []string
 	DisabledAnacondaModules []string
