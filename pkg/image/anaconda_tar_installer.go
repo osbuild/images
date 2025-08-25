@@ -125,7 +125,7 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	if img.OSCustomizations.FIPS {
 		kernelOpts = append(kernelOpts, "fips=1")
 	}
-	kernelOpts = append(kernelOpts, img.InstallerCustomizations.AdditionalKernelOpts...)
+	kernelOpts = append(kernelOpts, img.InstallerCustomizations.KernelOptionsAppend...)
 	bootTreePipeline.KernelOpts = kernelOpts
 
 	osPipeline := manifest.NewOS(buildPipeline, img.platform, repos)
@@ -144,7 +144,7 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoTreePipeline.RootfsType = img.InstallerCustomizations.ISORootfsType
 
 	isoTreePipeline.OSPipeline = osPipeline
-	isoTreePipeline.KernelOpts = img.InstallerCustomizations.AdditionalKernelOpts
+	isoTreePipeline.KernelOpts = img.InstallerCustomizations.KernelOptionsAppend
 	if img.OSCustomizations.FIPS {
 		isoTreePipeline.KernelOpts = append(isoTreePipeline.KernelOpts, "fips=1")
 	}
