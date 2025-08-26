@@ -62,18 +62,14 @@ func (img *AnacondaContainerInstaller) InstantiateManifest(m *manifest.Manifest,
 		img.platform,
 		repos,
 		"kernel",
-		img.InstallerCustomizations.Product,
-		img.InstallerCustomizations.OSVersion,
-		img.InstallerCustomizations.Preview,
+		img.InstallerCustomizations,
 	)
 
 	anacondaPipeline.ExtraPackages = img.ExtraBasePackages.Include
 	anacondaPipeline.ExcludePackages = img.ExtraBasePackages.Exclude
 	anacondaPipeline.ExtraRepos = img.ExtraBasePackages.Repositories
-	anacondaPipeline.Variant = img.InstallerCustomizations.Variant
 	anacondaPipeline.Biosdevname = (img.platform.GetArch() == arch.ARCH_X86_64)
 	anacondaPipeline.Checkpoint()
-	anacondaPipeline.InstallerCustomizations = img.InstallerCustomizations
 
 	if anacondaPipeline.InstallerCustomizations.FIPS {
 		anacondaPipeline.InstallerCustomizations.EnabledAnacondaModules = append(

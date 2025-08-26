@@ -57,9 +57,7 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 		img.platform,
 		repos,
 		"kernel",
-		img.InstallerCustomizations.Product,
-		img.InstallerCustomizations.OSVersion,
-		img.InstallerCustomizations.Preview,
+		img.InstallerCustomizations,
 	)
 	anacondaPipeline.ExtraPackages = img.ExtraBasePackages.Include
 	anacondaPipeline.ExcludePackages = img.ExtraBasePackages.Exclude
@@ -70,11 +68,8 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 			Groups: img.Kickstart.Groups,
 		}
 	}
-	anacondaPipeline.Variant = img.InstallerCustomizations.Variant
 	anacondaPipeline.Biosdevname = (img.platform.GetArch() == arch.ARCH_X86_64)
 	anacondaPipeline.Checkpoint()
-
-	anacondaPipeline.InstallerCustomizations = img.InstallerCustomizations
 
 	if anacondaPipeline.InstallerCustomizations.FIPS {
 		anacondaPipeline.InstallerCustomizations.EnabledAnacondaModules = append(

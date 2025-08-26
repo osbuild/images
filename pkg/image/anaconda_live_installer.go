@@ -50,19 +50,14 @@ func (img *AnacondaLiveInstaller) InstantiateManifest(m *manifest.Manifest,
 		img.platform,
 		repos,
 		"kernel",
-		img.InstallerCustomizations.Product,
-		img.InstallerCustomizations.OSVersion,
-		img.InstallerCustomizations.Preview,
+		img.InstallerCustomizations,
 	)
 
 	livePipeline.ExtraPackages = img.ExtraBasePackages.Include
 	livePipeline.ExcludePackages = img.ExtraBasePackages.Exclude
 
-	livePipeline.Variant = img.InstallerCustomizations.Variant
 	livePipeline.Biosdevname = (img.platform.GetArch() == arch.ARCH_X86_64)
-
 	livePipeline.Locale = img.Locale
-	livePipeline.InstallerCustomizations = img.InstallerCustomizations
 
 	// The live installer has SELinux enabled and targeted
 	livePipeline.SELinux = "targeted"

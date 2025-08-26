@@ -438,8 +438,8 @@ func (p *AnacondaInstallerISOTree) serialize() osbuild.Pipeline {
 	case SyslinuxISOBoot:
 		options := &osbuild.ISOLinuxStageOptions{
 			Product: osbuild.ISOLinuxProduct{
-				Name:    p.anacondaPipeline.product,
-				Version: p.anacondaPipeline.version,
+				Name:    p.anacondaPipeline.InstallerCustomizations.Product,
+				Version: p.anacondaPipeline.InstallerCustomizations.OSVersion,
 			},
 			Kernel: osbuild.ISOLinuxKernel{
 				Dir:  "/images/pxeboot",
@@ -459,8 +459,8 @@ func (p *AnacondaInstallerISOTree) serialize() osbuild.Pipeline {
 		}
 		options := &osbuild.Grub2ISOLegacyStageOptions{
 			Product: osbuild.Product{
-				Name:    p.anacondaPipeline.product,
-				Version: p.anacondaPipeline.version,
+				Name:    p.anacondaPipeline.InstallerCustomizations.Product,
+				Version: p.anacondaPipeline.InstallerCustomizations.OSVersion,
 			},
 			Kernel: osbuild.ISOKernel{
 				Dir:  "/images/pxeboot",
