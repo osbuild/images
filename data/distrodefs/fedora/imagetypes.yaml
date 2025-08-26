@@ -1635,6 +1635,7 @@ image_types:
     boot_iso: true
     image_func: "live_installer"
     iso_label: "Workstation"
+    variant: "Workstation"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
     installer_config:
