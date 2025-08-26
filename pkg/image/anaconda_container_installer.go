@@ -20,7 +20,7 @@ import (
 
 type AnacondaContainerInstaller struct {
 	Base
-	Platform                platform.Platform
+
 	InstallerCustomizations manifest.InstallerCustomizations
 	ExtraBasePackages       rpmmd.PackageSet
 
@@ -37,8 +37,6 @@ type AnacondaContainerInstaller struct {
 	ContainerSource           container.SourceSpec
 	ContainerRemoveSignatures bool
 
-	Filename string
-
 	Kickstart *kickstart.Options
 
 	// Locale for the installer. This should be set to the same locale as the
@@ -51,9 +49,7 @@ type AnacondaContainerInstaller struct {
 
 func NewAnacondaContainerInstaller(platform platform.Platform, filename string, container container.SourceSpec, ref string) *AnacondaContainerInstaller {
 	return &AnacondaContainerInstaller{
-		Base:            NewBase("container-installer"),
-		Platform:        platform,
-		Filename:        filename,
+		Base:            NewBase("container-installer", platform, filename),
 		ContainerSource: container,
 		Ref:             ref,
 	}
@@ -69,7 +65,7 @@ func (img *AnacondaContainerInstaller) InstantiateManifest(m *manifest.Manifest,
 	anacondaPipeline := manifest.NewAnacondaInstaller(
 		manifest.AnacondaInstallerTypePayload,
 		buildPipeline,
-		img.Platform,
+		img.platform,
 		repos,
 		"kernel",
 		img.Product,
@@ -81,7 +77,7 @@ func (img *AnacondaContainerInstaller) InstantiateManifest(m *manifest.Manifest,
 	anacondaPipeline.ExcludePackages = img.ExtraBasePackages.Exclude
 	anacondaPipeline.ExtraRepos = img.ExtraBasePackages.Repositories
 	anacondaPipeline.Variant = img.Variant
-	anacondaPipeline.Biosdevname = (img.Platform.GetArch() == arch.ARCH_X86_64)
+	anacondaPipeline.Biosdevname = (img.platform.GetArch() == arch.ARCH_X86_64)
 	anacondaPipeline.Checkpoint()
 	anacondaPipeline.InstallerCustomizations = img.InstallerCustomizations
 
@@ -103,8 +99,8 @@ func (img *AnacondaContainerInstaller) InstantiateManifest(m *manifest.Manifest,
 	}
 
 	bootTreePipeline := manifest.NewEFIBootTree(buildPipeline, img.Product, img.OSVersion)
-	bootTreePipeline.Platform = img.Platform
-	bootTreePipeline.UEFIVendor = img.Platform.GetUEFIVendor()
+	bootTreePipeline.Platform = img.platform
+	bootTreePipeline.UEFIVendor = img.platform.GetUEFIVendor()
 	bootTreePipeline.ISOLabel = img.ISOLabel
 
 	if img.Kickstart == nil {
@@ -140,7 +136,7 @@ func (img *AnacondaContainerInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoTreePipeline.InstallRootfsType = img.InstallRootfsType
 
 	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.ISOLabel)
-	isoPipeline.SetFilename(img.Filename)
+	isoPipeline.SetFilename(img.filename)
 	isoPipeline.ISOBoot = img.InstallerCustomizations.ISOBoot
 	artifact := isoPipeline.Export()
 

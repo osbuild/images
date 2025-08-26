@@ -13,10 +13,8 @@ import (
 
 type Archive struct {
 	Base
-	Platform         platform.Platform
 	OSCustomizations manifest.OSCustomizations
 	Environment      environment.Environment
-	Filename         string
 	Compression      string
 
 	OSVersion string
@@ -24,9 +22,7 @@ type Archive struct {
 
 func NewArchive(platform platform.Platform, filename string) *Archive {
 	return &Archive{
-		Base:     NewBase("archive"),
-		Platform: platform,
-		Filename: filename,
+		Base: NewBase("archive", platform, filename),
 	}
 }
 
@@ -37,7 +33,7 @@ func (img *Archive) InstantiateManifest(m *manifest.Manifest,
 	buildPipeline := addBuildBootstrapPipelines(m, runner, repos, nil)
 	buildPipeline.Checkpoint()
 
-	osPipeline := manifest.NewOS(buildPipeline, img.Platform, repos)
+	osPipeline := manifest.NewOS(buildPipeline, img.platform, repos)
 	osPipeline.OSCustomizations = img.OSCustomizations
 	osPipeline.Environment = img.Environment
 	osPipeline.OSVersion = img.OSVersion
@@ -45,7 +41,7 @@ func (img *Archive) InstantiateManifest(m *manifest.Manifest,
 	tarPipeline := manifest.NewTar(buildPipeline, osPipeline, "archive")
 
 	compressionPipeline := GetCompressionPipeline(img.Compression, buildPipeline, tarPipeline)
-	compressionPipeline.SetFilename(img.Filename)
+	compressionPipeline.SetFilename(img.filename)
 
 	return compressionPipeline.Export(), nil
 }

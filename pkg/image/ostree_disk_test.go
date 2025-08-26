@@ -6,11 +6,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/image"
 	"github.com/osbuild/images/pkg/manifest"
-	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/runner"
 )
@@ -40,13 +38,6 @@ func TestOSTreeDiskImageManifestSetsContainerBuildable(t *testing.T) {
 		mf := manifest.New()
 		img := image.NewOSTreeDiskImageFromContainer(testPlatform, "filename", containerSource, ref)
 		require.NotNil(t, img)
-		img.Platform = &platform.Data{
-			ImageFormat: platform.FORMAT_QCOW2,
-
-			Arch:         arch.ARCH_X86_64,
-			BIOSPlatform: "i386-pc",
-			UEFIVendor:   "fedora",
-		}
 		img.OSName = "osname"
 		img.ContainerBuildable = containerBuildable
 
