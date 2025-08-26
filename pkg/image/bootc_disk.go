@@ -16,10 +16,7 @@ import (
 type BootcDiskImage struct {
 	Base
 
-	Platform       platform.Platform
 	PartitionTable *disk.PartitionTable
-
-	Filename string
 
 	ContainerSource      *container.SourceSpec
 	BuildContainerSource *container.SourceSpec
@@ -30,9 +27,7 @@ type BootcDiskImage struct {
 
 func NewBootcDiskImage(platform platform.Platform, filename string, container container.SourceSpec, buildContainer container.SourceSpec) *BootcDiskImage {
 	return &BootcDiskImage{
-		Base:                 NewBase("bootc-raw-image"),
-		Platform:             platform,
-		Filename:             filename,
+		Base:                 NewBase("bootc-raw-image", platform, filename),
 		ContainerSource:      &container,
 		BuildContainerSource: &buildContainer,
 	}
@@ -101,7 +96,7 @@ func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifes
 	// this is signified by passing nil to the below pipelines.
 	var hostPipeline manifest.Build
 
-	rawImage := manifest.NewRawBootcImage(buildPipeline, containers, img.Platform)
+	rawImage := manifest.NewRawBootcImage(buildPipeline, containers, img.platform)
 	rawImage.PartitionTable = img.PartitionTable
 	rawImage.Users = img.OSCustomizations.Users
 	rawImage.Groups = img.OSCustomizations.Groups
@@ -114,11 +109,11 @@ func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifes
 	// In BIB, we export multiple images from the same pipeline so we use the
 	// filename as the basename for each export and set the extensions based on
 	// each file format.
-	fileBasename := img.Filename
+	fileBasename := img.filename
 	rawImage.SetFilename(fmt.Sprintf("%s.raw", fileBasename))
 
 	qcow2Pipeline := manifest.NewQCOW2(hostPipeline, rawImage)
-	qcow2Pipeline.Compat = img.Platform.GetQCOW2Compat()
+	qcow2Pipeline.Compat = img.platform.GetQCOW2Compat()
 	qcow2Pipeline.SetFilename(fmt.Sprintf("%s.qcow2", fileBasename))
 
 	vmdkPipeline := manifest.NewVMDK(hostPipeline, rawImage)

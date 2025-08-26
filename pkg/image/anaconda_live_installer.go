@@ -16,7 +16,6 @@ import (
 
 type AnacondaLiveInstaller struct {
 	Base
-	Platform                platform.Platform
 	InstallerCustomizations manifest.InstallerCustomizations
 	Environment             environment.Environment
 
@@ -31,8 +30,6 @@ type AnacondaLiveInstaller struct {
 	Release   string
 	Preview   bool
 
-	Filename string
-
 	// Locale for the installer. This should be set to the same locale as the
 	// ISO OS payload, if known.
 	Locale string
@@ -43,9 +40,7 @@ type AnacondaLiveInstaller struct {
 
 func NewAnacondaLiveInstaller(platform platform.Platform, filename string) *AnacondaLiveInstaller {
 	return &AnacondaLiveInstaller{
-		Base:     NewBase("live-installer"),
-		Platform: platform,
-		Filename: filename,
+		Base: NewBase("live-installer", platform, filename),
 	}
 }
 
@@ -59,7 +54,7 @@ func (img *AnacondaLiveInstaller) InstantiateManifest(m *manifest.Manifest,
 	livePipeline := manifest.NewAnacondaInstaller(
 		manifest.AnacondaInstallerTypeLive,
 		buildPipeline,
-		img.Platform,
+		img.platform,
 		repos,
 		"kernel",
 		img.Product,
@@ -71,7 +66,7 @@ func (img *AnacondaLiveInstaller) InstantiateManifest(m *manifest.Manifest,
 	livePipeline.ExcludePackages = img.ExtraBasePackages.Exclude
 
 	livePipeline.Variant = img.Variant
-	livePipeline.Biosdevname = (img.Platform.GetArch() == arch.ARCH_X86_64)
+	livePipeline.Biosdevname = (img.platform.GetArch() == arch.ARCH_X86_64)
 	livePipeline.Locale = img.Locale
 	livePipeline.InstallerCustomizations = img.InstallerCustomizations
 
@@ -89,8 +84,8 @@ func (img *AnacondaLiveInstaller) InstantiateManifest(m *manifest.Manifest,
 	}
 
 	bootTreePipeline := manifest.NewEFIBootTree(buildPipeline, img.Product, img.OSVersion)
-	bootTreePipeline.Platform = img.Platform
-	bootTreePipeline.UEFIVendor = img.Platform.GetUEFIVendor()
+	bootTreePipeline.Platform = img.platform
+	bootTreePipeline.UEFIVendor = img.platform.GetUEFIVendor()
 	bootTreePipeline.ISOLabel = img.ISOLabel
 	bootTreePipeline.DefaultMenu = img.InstallerCustomizations.DefaultMenu
 
@@ -116,7 +111,7 @@ func (img *AnacondaLiveInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoTreePipeline.RootfsType = img.InstallerCustomizations.ISORootfsType
 
 	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.ISOLabel)
-	isoPipeline.SetFilename(img.Filename)
+	isoPipeline.SetFilename(img.filename)
 	isoPipeline.ISOBoot = img.InstallerCustomizations.ISOBoot
 
 	artifact := isoPipeline.Export()

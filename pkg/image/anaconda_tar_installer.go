@@ -38,7 +38,6 @@ func efiBootPartitionTable(rng *rand.Rand) *disk.PartitionTable {
 
 type AnacondaTarInstaller struct {
 	Base
-	Platform                platform.Platform
 	OSCustomizations        manifest.OSCustomizations
 	InstallerCustomizations manifest.InstallerCustomizations
 	Environment             environment.Environment
@@ -55,15 +54,11 @@ type AnacondaTarInstaller struct {
 	OSVersion string
 	Release   string
 	Preview   bool
-
-	Filename string
 }
 
 func NewAnacondaTarInstaller(platform platform.Platform, filename string) *AnacondaTarInstaller {
 	return &AnacondaTarInstaller{
-		Base:     NewBase("image-installer"),
-		Platform: platform,
-		Filename: filename,
+		Base: NewBase("image-installer", platform, filename),
 	}
 }
 
@@ -85,7 +80,7 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	anacondaPipeline := manifest.NewAnacondaInstaller(
 		manifest.AnacondaInstallerTypePayload,
 		buildPipeline,
-		img.Platform,
+		img.platform,
 		repos,
 		"kernel",
 		img.Product,
@@ -103,7 +98,7 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 		}
 	}
 	anacondaPipeline.Variant = img.Variant
-	anacondaPipeline.Biosdevname = (img.Platform.GetArch() == arch.ARCH_X86_64)
+	anacondaPipeline.Biosdevname = (img.platform.GetArch() == arch.ARCH_X86_64)
 
 	anacondaPipeline.InstallerCustomizations = img.InstallerCustomizations
 
@@ -129,8 +124,8 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	}
 
 	bootTreePipeline := manifest.NewEFIBootTree(buildPipeline, img.Product, img.OSVersion)
-	bootTreePipeline.Platform = img.Platform
-	bootTreePipeline.UEFIVendor = img.Platform.GetUEFIVendor()
+	bootTreePipeline.Platform = img.platform
+	bootTreePipeline.UEFIVendor = img.platform.GetUEFIVendor()
 	bootTreePipeline.ISOLabel = img.ISOLabel
 	bootTreePipeline.DefaultMenu = img.InstallerCustomizations.DefaultMenu
 
@@ -146,7 +141,7 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	kernelOpts = append(kernelOpts, img.OSCustomizations.KernelOptionsAppend...)
 	bootTreePipeline.KernelOpts = kernelOpts
 
-	osPipeline := manifest.NewOS(buildPipeline, img.Platform, repos)
+	osPipeline := manifest.NewOS(buildPipeline, img.platform, repos)
 	osPipeline.OSCustomizations = img.OSCustomizations
 	osPipeline.Environment = img.Environment
 
@@ -171,7 +166,7 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoTreePipeline.ISOBoot = img.InstallerCustomizations.ISOBoot
 
 	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.ISOLabel)
-	isoPipeline.SetFilename(img.Filename)
+	isoPipeline.SetFilename(img.filename)
 	isoPipeline.ISOBoot = img.InstallerCustomizations.ISOBoot
 
 	artifact := isoPipeline.Export()

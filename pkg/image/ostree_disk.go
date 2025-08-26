@@ -16,8 +16,6 @@ import (
 
 type OSTreeDiskImage struct {
 	Base
-
-	Platform         platform.Platform
 	OSCustomizations manifest.OSCustomizations
 	PartitionTable   *disk.PartitionTable
 
@@ -30,8 +28,6 @@ type OSTreeDiskImage struct {
 	OSName string
 	Ref    string
 
-	Filename string
-
 	Compression string
 
 	// Container buildable tweaks the buildroot to be container friendly,
@@ -41,19 +37,14 @@ type OSTreeDiskImage struct {
 
 func NewOSTreeDiskImageFromCommit(platform platform.Platform, filename string, commit ostree.SourceSpec) *OSTreeDiskImage {
 	return &OSTreeDiskImage{
-		Base:     NewBase("ostree-raw-image"),
-		Platform: platform,
-		Filename: filename,
-
+		Base:         NewBase("ostree-raw-image", platform, filename),
 		CommitSource: &commit,
 	}
 }
 
 func NewOSTreeDiskImageFromContainer(platform platform.Platform, filename string, container container.SourceSpec, ref string) *OSTreeDiskImage {
 	return &OSTreeDiskImage{
-		Base:            NewBase("ostree-raw-image"),
-		Platform:        platform,
-		Filename:        filename,
+		Base:            NewBase("ostree-raw-image", platform, filename),
 		ContainerSource: &container,
 		Ref:             ref,
 	}
@@ -71,9 +62,9 @@ func baseRawOstreeImage(img *OSTreeDiskImage, buildPipeline manifest.Build, opts
 	var osPipeline *manifest.OSTreeDeployment
 	switch {
 	case img.CommitSource != nil:
-		osPipeline = manifest.NewOSTreeCommitDeployment(buildPipeline, img.CommitSource, img.OSName, img.Platform)
+		osPipeline = manifest.NewOSTreeCommitDeployment(buildPipeline, img.CommitSource, img.OSName, img.platform)
 	case img.ContainerSource != nil:
-		osPipeline = manifest.NewOSTreeContainerDeployment(buildPipeline, img.ContainerSource, img.Ref, img.OSName, img.Platform)
+		osPipeline = manifest.NewOSTreeContainerDeployment(buildPipeline, img.ContainerSource, img.Ref, img.OSName, img.platform)
 	default:
 		panic("no content source defined for ostree image")
 	}
@@ -87,7 +78,7 @@ func baseRawOstreeImage(img *OSTreeDiskImage, buildPipeline manifest.Build, opts
 	osPipeline.EnabledServices = img.OSCustomizations.EnabledServices
 	osPipeline.DisabledServices = img.OSCustomizations.DisabledServices
 
-	return manifest.NewRawOStreeImage(buildPipeline, osPipeline, img.Platform)
+	return manifest.NewRawOStreeImage(buildPipeline, osPipeline, img.platform)
 }
 
 // replaced in testing
@@ -101,7 +92,7 @@ func (img *OSTreeDiskImage) InstantiateManifest(m *manifest.Manifest,
 	buildPipeline.Checkpoint()
 
 	// don't support compressing non-raw images
-	imgFormat := img.Platform.GetImageFormat()
+	imgFormat := img.platform.GetImageFormat()
 	if imgFormat == platform.FORMAT_UNSET {
 		// treat unset as raw for this check
 		imgFormat = platform.FORMAT_RAW
@@ -111,19 +102,19 @@ func (img *OSTreeDiskImage) InstantiateManifest(m *manifest.Manifest,
 	}
 
 	baseImage := baseRawOstreeImage(img, buildPipeline, nil)
-	switch img.Platform.GetImageFormat() {
+	switch img.platform.GetImageFormat() {
 	case platform.FORMAT_VMDK:
 		vmdkPipeline := manifest.NewVMDK(buildPipeline, baseImage)
-		vmdkPipeline.SetFilename(img.Filename)
+		vmdkPipeline.SetFilename(img.filename)
 		return vmdkPipeline.Export(), nil
 	case platform.FORMAT_QCOW2:
 		qcow2Pipeline := manifest.NewQCOW2(buildPipeline, baseImage)
-		qcow2Pipeline.Compat = img.Platform.GetQCOW2Compat()
-		qcow2Pipeline.SetFilename(img.Filename)
+		qcow2Pipeline.Compat = img.platform.GetQCOW2Compat()
+		qcow2Pipeline.SetFilename(img.filename)
 		return qcow2Pipeline.Export(), nil
 	default:
 		compressionPipeline := GetCompressionPipeline(img.Compression, buildPipeline, baseImage)
-		compressionPipeline.SetFilename(img.Filename)
+		compressionPipeline.SetFilename(img.filename)
 
 		return compressionPipeline.Export(), nil
 	}

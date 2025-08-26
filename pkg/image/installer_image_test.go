@@ -93,7 +93,6 @@ func TestContainerInstallerUnsetKSOptions(t *testing.T) {
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-	img.Platform = testPlatform
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil)
 	assert.Contains(t, mfs, fmt.Sprintf(`"inst.ks=hd:LABEL=%s:/osbuild.ks"`, isolabel))
@@ -106,7 +105,6 @@ func TestContainerInstallerUnsetKSPath(t *testing.T) {
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-	img.Platform = testPlatform
 	// set empty kickstart options (no path)
 	img.Kickstart = &kickstart.Options{}
 
@@ -121,7 +119,6 @@ func TestContainerInstallerSetKSPath(t *testing.T) {
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-	img.Platform = testPlatform
 	img.Kickstart = &kickstart.Options{
 		Path: "/test.ks",
 	}
@@ -138,7 +135,6 @@ func TestContainerInstallerExt4Rootfs(t *testing.T) {
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-	img.Platform = testPlatform
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil)
 
@@ -155,7 +151,6 @@ func TestContainerInstallerSquashfsRootfs(t *testing.T) {
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
 	img.InstallerCustomizations.ISORootfsType = manifest.SquashfsRootfs
-	img.Platform = testPlatform
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil)
 
@@ -171,7 +166,6 @@ func TestOSTreeInstallerUnsetKSPath(t *testing.T) {
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-	img.Platform = testPlatform
 	img.Kickstart = &kickstart.Options{
 		// the ostree options must be non-nil
 		OSTree: &kickstart.OSTree{},
@@ -188,7 +182,6 @@ func TestOSTreeInstallerSetKSPath(t *testing.T) {
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-	img.Platform = testPlatform
 	img.Kickstart = &kickstart.Options{
 		// the ostree options must be non-nil
 		OSTree: &kickstart.OSTree{},
@@ -207,7 +200,6 @@ func TestOSTreeInstallerExt4Rootfs(t *testing.T) {
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-	img.Platform = testPlatform
 	img.Kickstart = &kickstart.Options{
 		// the ostree options must be non-nil
 		OSTree: &kickstart.OSTree{},
@@ -228,7 +220,6 @@ func TestOSTreeInstallerSquashfsRootfs(t *testing.T) {
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
 	img.InstallerCustomizations.ISORootfsType = manifest.SquashfsRootfs
-	img.Platform = testPlatform
 	img.Kickstart = &kickstart.Options{
 		// the ostree options must be non-nil
 		OSTree: &kickstart.OSTree{},
@@ -248,7 +239,6 @@ func TestTarInstallerUnsetKSOptions(t *testing.T) {
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-	img.Platform = testPlatform
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
 
@@ -263,7 +253,6 @@ func TestTarInstallerUnsetKSPath(t *testing.T) {
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-	img.Platform = testPlatform
 	img.Kickstart = &kickstart.Options{}
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
@@ -279,7 +268,6 @@ func TestTarInstallerSetKSPath(t *testing.T) {
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-	img.Platform = testPlatform
 	img.Kickstart = &kickstart.Options{
 		Path: "/test.ks",
 	}
@@ -298,7 +286,6 @@ func TestTarInstallerExt4Rootfs(t *testing.T) {
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-	img.Platform = testPlatform
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
 	// Confirm that it includes the rootfs-image pipeline that makes the ext4 rootfs
@@ -314,7 +301,6 @@ func TestTarInstallerSquashfsRootfs(t *testing.T) {
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
 	img.InstallerCustomizations.ISORootfsType = manifest.SquashfsRootfs
-	img.Platform = testPlatform
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
 	// Confirm that it does not include rootfs-image pipeline
@@ -329,7 +315,6 @@ func TestLiveInstallerExt4Rootfs(t *testing.T) {
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-	img.Platform = testPlatform
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
 	// Confirm that it includes the rootfs-image pipeline that makes the ext4 rootfs
@@ -345,7 +330,6 @@ func TestLiveInstallerSquashfsRootfs(t *testing.T) {
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
 	img.InstallerCustomizations.ISORootfsType = manifest.SquashfsRootfs
-	img.Platform = testPlatform
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
 	// Confirm that it does not include rootfs-image pipeline
@@ -380,7 +364,6 @@ func instantiateAndSerialize(t *testing.T, img image.ImageKind, depsolved map[st
 func TestContainerInstallerPanics(t *testing.T) {
 	assert := assert.New(t)
 	img := image.NewAnacondaContainerInstaller(testPlatform, "filename", container.SourceSpec{}, "")
-	img.Platform = testPlatform
 	assert.PanicsWithError("org.osbuild.grub2.iso: product.name option is required", func() { instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil) })
 	img.Product = product
 	assert.PanicsWithError("org.osbuild.grub2.iso: product.version option is required", func() { instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil) })
@@ -391,7 +374,6 @@ func TestContainerInstallerPanics(t *testing.T) {
 func TestOSTreeInstallerPanics(t *testing.T) {
 	assert := assert.New(t)
 	img := image.NewAnacondaOSTreeInstaller(testPlatform, "filename", ostree.SourceSpec{})
-	img.Platform = testPlatform
 	img.Kickstart = &kickstart.Options{
 		// the ostree options must be non-nil
 		OSTree: &kickstart.OSTree{},
@@ -502,7 +484,6 @@ func TestContainerInstallerModules(t *testing.T) {
 				img.InstallerCustomizations.DisabledAnacondaModules = tc.disable
 
 				assert.NotNil(t, img)
-				img.Platform = testPlatform
 				mfs := instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil)
 				modules := findAnacondaStageModules(t, manifest.OSBuildManifest(mfs), legacy)
 				assert.NotNil(t, modules)
@@ -533,7 +514,6 @@ func TestOSTreeInstallerModules(t *testing.T) {
 				img.InstallerCustomizations.DisabledAnacondaModules = tc.disable
 
 				assert.NotNil(t, img)
-				img.Platform = testPlatform
 				mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, mockOSTreeCommitSpecs())
 				modules := findAnacondaStageModules(t, manifest.OSBuildManifest(mfs), legacy)
 				assert.NotNil(t, modules)
@@ -560,7 +540,6 @@ func TestTarInstallerModules(t *testing.T) {
 				img.InstallerCustomizations.DisabledAnacondaModules = tc.disable
 
 				assert.NotNil(t, img)
-				img.Platform = testPlatform
 				mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
 				modules := findAnacondaStageModules(t, manifest.OSBuildManifest(mfs), legacy)
 				assert.NotNil(t, modules)
@@ -598,7 +577,6 @@ func TestInstallerLocales(t *testing.T) {
 			img.Product = product
 			img.OSVersion = osversion
 			img.ISOLabel = isolabel
-			img.Platform = testPlatform
 			img.Locale = input
 
 			mfs := instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil)
@@ -614,7 +592,6 @@ func TestInstallerLocales(t *testing.T) {
 			img.Product = product
 			img.OSVersion = osversion
 			img.ISOLabel = isolabel
-			img.Platform = testPlatform
 			img.Kickstart = &kickstart.Options{
 				// the ostree options must be non-nil
 				OSTree: &kickstart.OSTree{},
@@ -634,7 +611,6 @@ func TestInstallerLocales(t *testing.T) {
 			img.Product = product
 			img.OSVersion = osversion
 			img.ISOLabel = isolabel
-			img.Platform = testPlatform
 			img.OSCustomizations.Language = input
 
 			mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
@@ -650,7 +626,6 @@ func TestInstallerLocales(t *testing.T) {
 			img.Product = product
 			img.OSVersion = osversion
 			img.ISOLabel = isolabel
-			img.Platform = testPlatform
 			img.Language = input
 
 			mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
@@ -666,7 +641,6 @@ func TestInstallerLocales(t *testing.T) {
 			img.Product = product
 			img.OSVersion = osversion
 			img.ISOLabel = isolabel
-			img.Platform = testPlatform
 			img.Locale = input
 
 			mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
@@ -740,7 +714,6 @@ func TestContainerInstallerDracut(t *testing.T) {
 	img.InstallerCustomizations.AdditionalDrivers = testDrivers
 
 	assert.NotNil(t, img)
-	img.Platform = testPlatform
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil)
 	modules, addModules, drivers, addDrivers := findDracutStageOptions(t, manifest.OSBuildManifest(mfs), "anaconda-tree")
 	assert.Nil(t, modules)
@@ -769,7 +742,6 @@ func TestOSTreeInstallerDracut(t *testing.T) {
 	img.InstallerCustomizations.AdditionalDrivers = testDrivers
 
 	assert.NotNil(t, img)
-	img.Platform = testPlatform
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, mockOSTreeCommitSpecs())
 	modules, addModules, drivers, addDrivers := findDracutStageOptions(t, manifest.OSBuildManifest(mfs), "anaconda-tree")
 	assert.Nil(t, modules)
@@ -794,7 +766,6 @@ func TestTarInstallerDracut(t *testing.T) {
 	img.InstallerCustomizations.AdditionalDrivers = testDrivers
 
 	assert.NotNil(t, img)
-	img.Platform = testPlatform
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
 	modules, addModules, drivers, addDrivers := findDracutStageOptions(t, manifest.OSBuildManifest(mfs), "anaconda-tree")
 	assert.Nil(t, modules)
@@ -817,7 +788,6 @@ func TestTarInstallerKernelOpts(t *testing.T) {
 	img.InstallerCustomizations.AdditionalKernelOpts = testOpts
 
 	assert.NotNil(t, img)
-	img.Platform = testPlatform
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
 
 	opts := findGrub2IsoStageOptions(t, manifest.OSBuildManifest(mfs), "efiboot-tree")
@@ -833,7 +803,6 @@ func TestNetInstallerExt4Rootfs(t *testing.T) {
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
-	img.Platform = testPlatform
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
 	// Confirm that it includes the rootfs-image pipeline that makes the ext4 rootfs
@@ -849,7 +818,6 @@ func TestNetInstallerSquashfsRootfs(t *testing.T) {
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
 	img.InstallerCustomizations.ISORootfsType = manifest.SquashfsRootfs
-	img.Platform = testPlatform
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
 	// Confirm that it does not include rootfs-image pipeline
@@ -869,7 +837,6 @@ func TestNetInstallerDracut(t *testing.T) {
 	img.InstallerCustomizations.AdditionalDrivers = testDrivers
 
 	assert.NotNil(t, img)
-	img.Platform = testPlatform
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
 	modules, addModules, drivers, addDrivers := findDracutStageOptions(t, manifest.OSBuildManifest(mfs), "anaconda-tree")
 	assert.Nil(t, modules)

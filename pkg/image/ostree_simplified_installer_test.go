@@ -3,20 +3,21 @@ package image_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/osbuild/images/internal/testdisk"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/image"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/platform"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestSimplifiedInstallerDracut(t *testing.T) {
 	commit := ostree.SourceSpec{}
-	ostreeDiskImage := image.NewOSTreeDiskImageFromCommit(testPlatform, "filename", commit)
+	platform := &platform.Data{Arch: arch.ARCH_X86_64}
+	ostreeDiskImage := image.NewOSTreeDiskImageFromCommit(platform, "filename", commit)
 	ostreeDiskImage.PartitionTable = testdisk.MakeFakePartitionTable("/")
-	ostreeDiskImage.Platform = &platform.Data{Arch: arch.ARCH_X86_64}
 	img := image.NewOSTreeSimplifiedInstaller(testPlatform, "filename", ostreeDiskImage, "")
 	img.Product = product
 	img.OSVersion = osversion
@@ -41,7 +42,6 @@ func TestSimplifiedInstallerDracut(t *testing.T) {
 	packageSets["coi-tree"] = packageSets["os"]
 
 	assert.NotNil(t, img)
-	img.Platform = testPlatform
 	mfs := instantiateAndSerialize(t, img, packageSets, nil, commitSpec)
 	modules, addModules, drivers, addDrivers := findDracutStageOptions(t, manifest.OSBuildManifest(mfs), "coi-tree")
 	assert.NotNil(t, modules)

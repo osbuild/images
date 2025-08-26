@@ -20,7 +20,6 @@ import (
 
 type AnacondaOSTreeInstaller struct {
 	Base
-	Platform                platform.Platform
 	InstallerCustomizations manifest.InstallerCustomizations
 	ExtraBasePackages       rpmmd.PackageSet
 
@@ -40,8 +39,6 @@ type AnacondaOSTreeInstaller struct {
 
 	Commit ostree.SourceSpec
 
-	Filename string
-
 	// Locale for the installer. This should be set to the same locale as the
 	// ISO OS payload, if known.
 	Locale string
@@ -49,10 +46,8 @@ type AnacondaOSTreeInstaller struct {
 
 func NewAnacondaOSTreeInstaller(platform platform.Platform, filename string, commit ostree.SourceSpec) *AnacondaOSTreeInstaller {
 	return &AnacondaOSTreeInstaller{
-		Base:     NewBase("ostree-installer"),
-		Platform: platform,
-		Filename: filename,
-		Commit:   commit,
+		Base:   NewBase("ostree-installer", platform, filename),
+		Commit: commit,
 	}
 }
 
@@ -66,7 +61,7 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 	anacondaPipeline := manifest.NewAnacondaInstaller(
 		manifest.AnacondaInstallerTypePayload,
 		buildPipeline,
-		img.Platform,
+		img.platform,
 		repos,
 		"kernel",
 		img.Product,
@@ -83,7 +78,7 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 		}
 	}
 	anacondaPipeline.Variant = img.Variant
-	anacondaPipeline.Biosdevname = (img.Platform.GetArch() == arch.ARCH_X86_64)
+	anacondaPipeline.Biosdevname = (img.platform.GetArch() == arch.ARCH_X86_64)
 	anacondaPipeline.Checkpoint()
 
 	anacondaPipeline.InstallerCustomizations = img.InstallerCustomizations
@@ -106,8 +101,8 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 	}
 
 	bootTreePipeline := manifest.NewEFIBootTree(buildPipeline, img.Product, img.OSVersion)
-	bootTreePipeline.Platform = img.Platform
-	bootTreePipeline.UEFIVendor = img.Platform.GetUEFIVendor()
+	bootTreePipeline.Platform = img.platform
+	bootTreePipeline.UEFIVendor = img.platform.GetUEFIVendor()
 	bootTreePipeline.ISOLabel = img.ISOLabel
 	bootTreePipeline.DefaultMenu = img.InstallerCustomizations.DefaultMenu
 
@@ -145,7 +140,7 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoTreePipeline.SubscriptionPipeline = subscriptionPipeline
 
 	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.ISOLabel)
-	isoPipeline.SetFilename(img.Filename)
+	isoPipeline.SetFilename(img.filename)
 	isoPipeline.ISOBoot = img.InstallerCustomizations.ISOBoot
 	artifact := isoPipeline.Export()
 
