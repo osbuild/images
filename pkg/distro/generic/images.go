@@ -564,8 +564,6 @@ func liveInstallerImage(t *imageType,
 	if err != nil {
 		return nil, err
 	}
-	// XXX: get from yaml
-	img.InstallerCustomizations.Variant = "Workstation"
 
 	return img, nil
 }
