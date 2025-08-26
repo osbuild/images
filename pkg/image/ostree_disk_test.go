@@ -38,7 +38,7 @@ func TestOSTreeDiskImageManifestSetsContainerBuildable(t *testing.T) {
 		buildOpts = nil
 
 		mf := manifest.New()
-		img := image.NewOSTreeDiskImageFromContainer(containerSource, ref)
+		img := image.NewOSTreeDiskImageFromContainer(testPlatform, "filename", containerSource, ref)
 		require.NotNil(t, img)
 		img.Platform = &platform.Data{
 			ImageFormat: platform.FORMAT_QCOW2,

@@ -60,9 +60,12 @@ type OSTreeSimplifiedInstaller struct {
 	AdditionalDrivers       []string
 }
 
-func NewOSTreeSimplifiedInstaller(rawImage *OSTreeDiskImage, installDevice string) *OSTreeSimplifiedInstaller {
+func NewOSTreeSimplifiedInstaller(platform platform.Platform, filename string, rawImage *OSTreeDiskImage, installDevice string) *OSTreeSimplifiedInstaller {
 	return &OSTreeSimplifiedInstaller{
-		Base:          NewBase("ostree-simplified-installer"),
+		Base:     NewBase("ostree-simplified-installer"),
+		Platform: platform,
+		Filename: filename,
+
 		rawImage:      rawImage,
 		installDevice: installDevice,
 	}

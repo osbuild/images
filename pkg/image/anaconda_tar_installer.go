@@ -59,9 +59,11 @@ type AnacondaTarInstaller struct {
 	Filename string
 }
 
-func NewAnacondaTarInstaller() *AnacondaTarInstaller {
+func NewAnacondaTarInstaller(platform platform.Platform, filename string) *AnacondaTarInstaller {
 	return &AnacondaTarInstaller{
-		Base: NewBase("image-installer"),
+		Base:     NewBase("image-installer"),
+		Platform: platform,
+		Filename: filename,
 	}
 }
 

@@ -39,16 +39,21 @@ type OSTreeDiskImage struct {
 	ContainerBuildable bool
 }
 
-func NewOSTreeDiskImageFromCommit(commit ostree.SourceSpec) *OSTreeDiskImage {
+func NewOSTreeDiskImageFromCommit(platform platform.Platform, filename string, commit ostree.SourceSpec) *OSTreeDiskImage {
 	return &OSTreeDiskImage{
-		Base:         NewBase("ostree-raw-image"),
+		Base:     NewBase("ostree-raw-image"),
+		Platform: platform,
+		Filename: filename,
+
 		CommitSource: &commit,
 	}
 }
 
-func NewOSTreeDiskImageFromContainer(container container.SourceSpec, ref string) *OSTreeDiskImage {
+func NewOSTreeDiskImageFromContainer(platform platform.Platform, filename string, container container.SourceSpec, ref string) *OSTreeDiskImage {
 	return &OSTreeDiskImage{
 		Base:            NewBase("ostree-raw-image"),
+		Platform:        platform,
+		Filename:        filename,
 		ContainerSource: &container,
 		Ref:             ref,
 	}

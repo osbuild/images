@@ -87,7 +87,7 @@ const (
 )
 
 func TestContainerInstallerUnsetKSOptions(t *testing.T) {
-	img := image.NewAnacondaContainerInstaller(container.SourceSpec{}, "")
+	img := image.NewAnacondaContainerInstaller(testPlatform, "filename", container.SourceSpec{}, "")
 	assert.NotNil(t, img)
 
 	img.Product = product
@@ -100,7 +100,7 @@ func TestContainerInstallerUnsetKSOptions(t *testing.T) {
 }
 
 func TestContainerInstallerUnsetKSPath(t *testing.T) {
-	img := image.NewAnacondaContainerInstaller(container.SourceSpec{}, "")
+	img := image.NewAnacondaContainerInstaller(testPlatform, "filename", container.SourceSpec{}, "")
 	assert.NotNil(t, img)
 
 	img.Product = product
@@ -115,7 +115,7 @@ func TestContainerInstallerUnsetKSPath(t *testing.T) {
 }
 
 func TestContainerInstallerSetKSPath(t *testing.T) {
-	img := image.NewAnacondaContainerInstaller(container.SourceSpec{}, "")
+	img := image.NewAnacondaContainerInstaller(testPlatform, "filename", container.SourceSpec{}, "")
 	assert.NotNil(t, img)
 
 	img.Product = product
@@ -132,7 +132,7 @@ func TestContainerInstallerSetKSPath(t *testing.T) {
 }
 
 func TestContainerInstallerExt4Rootfs(t *testing.T) {
-	img := image.NewAnacondaContainerInstaller(container.SourceSpec{}, "")
+	img := image.NewAnacondaContainerInstaller(testPlatform, "filename", container.SourceSpec{}, "")
 	assert.NotNil(t, img)
 
 	img.Product = product
@@ -148,7 +148,7 @@ func TestContainerInstallerExt4Rootfs(t *testing.T) {
 }
 
 func TestContainerInstallerSquashfsRootfs(t *testing.T) {
-	img := image.NewAnacondaContainerInstaller(container.SourceSpec{}, "")
+	img := image.NewAnacondaContainerInstaller(testPlatform, "filename", container.SourceSpec{}, "")
 	assert.NotNil(t, img)
 
 	img.Product = product
@@ -165,7 +165,7 @@ func TestContainerInstallerSquashfsRootfs(t *testing.T) {
 }
 
 func TestOSTreeInstallerUnsetKSPath(t *testing.T) {
-	img := image.NewAnacondaOSTreeInstaller(ostree.SourceSpec{})
+	img := image.NewAnacondaOSTreeInstaller(testPlatform, "filename", ostree.SourceSpec{})
 	assert.NotNil(t, img)
 
 	img.Product = product
@@ -182,7 +182,7 @@ func TestOSTreeInstallerUnsetKSPath(t *testing.T) {
 }
 
 func TestOSTreeInstallerSetKSPath(t *testing.T) {
-	img := image.NewAnacondaOSTreeInstaller(ostree.SourceSpec{})
+	img := image.NewAnacondaOSTreeInstaller(testPlatform, "filename", ostree.SourceSpec{})
 	assert.NotNil(t, img)
 
 	img.Product = product
@@ -201,7 +201,7 @@ func TestOSTreeInstallerSetKSPath(t *testing.T) {
 }
 
 func TestOSTreeInstallerExt4Rootfs(t *testing.T) {
-	img := image.NewAnacondaOSTreeInstaller(ostree.SourceSpec{})
+	img := image.NewAnacondaOSTreeInstaller(testPlatform, "filename", ostree.SourceSpec{})
 	assert.NotNil(t, img)
 
 	img.Product = product
@@ -221,7 +221,7 @@ func TestOSTreeInstallerExt4Rootfs(t *testing.T) {
 }
 
 func TestOSTreeInstallerSquashfsRootfs(t *testing.T) {
-	img := image.NewAnacondaOSTreeInstaller(ostree.SourceSpec{})
+	img := image.NewAnacondaOSTreeInstaller(testPlatform, "filename", ostree.SourceSpec{})
 	assert.NotNil(t, img)
 
 	img.Product = product
@@ -242,7 +242,7 @@ func TestOSTreeInstallerSquashfsRootfs(t *testing.T) {
 }
 
 func TestTarInstallerUnsetKSOptions(t *testing.T) {
-	img := image.NewAnacondaTarInstaller()
+	img := image.NewAnacondaTarInstaller(testPlatform, "filename")
 	assert.NotNil(t, img)
 
 	img.Product = product
@@ -257,7 +257,7 @@ func TestTarInstallerUnsetKSOptions(t *testing.T) {
 }
 
 func TestTarInstallerUnsetKSPath(t *testing.T) {
-	img := image.NewAnacondaTarInstaller()
+	img := image.NewAnacondaTarInstaller(testPlatform, "filename")
 	assert.NotNil(t, img)
 
 	img.Product = product
@@ -273,7 +273,7 @@ func TestTarInstallerUnsetKSPath(t *testing.T) {
 }
 
 func TestTarInstallerSetKSPath(t *testing.T) {
-	img := image.NewAnacondaTarInstaller()
+	img := image.NewAnacondaTarInstaller(testPlatform, "filename")
 	assert.NotNil(t, img)
 
 	img.Product = product
@@ -292,7 +292,7 @@ func TestTarInstallerSetKSPath(t *testing.T) {
 }
 
 func TestTarInstallerExt4Rootfs(t *testing.T) {
-	img := image.NewAnacondaTarInstaller()
+	img := image.NewAnacondaTarInstaller(testPlatform, "filename")
 	assert.NotNil(t, img)
 
 	img.Product = product
@@ -307,7 +307,7 @@ func TestTarInstallerExt4Rootfs(t *testing.T) {
 }
 
 func TestTarInstallerSquashfsRootfs(t *testing.T) {
-	img := image.NewAnacondaTarInstaller()
+	img := image.NewAnacondaTarInstaller(testPlatform, "filename")
 	assert.NotNil(t, img)
 
 	img.Product = product
@@ -323,7 +323,7 @@ func TestTarInstallerSquashfsRootfs(t *testing.T) {
 }
 
 func TestLiveInstallerExt4Rootfs(t *testing.T) {
-	img := image.NewAnacondaLiveInstaller()
+	img := image.NewAnacondaLiveInstaller(testPlatform, "filename")
 	assert.NotNil(t, img)
 
 	img.Product = product
@@ -338,7 +338,7 @@ func TestLiveInstallerExt4Rootfs(t *testing.T) {
 }
 
 func TestLiveInstallerSquashfsRootfs(t *testing.T) {
-	img := image.NewAnacondaLiveInstaller()
+	img := image.NewAnacondaLiveInstaller(testPlatform, "filename")
 	assert.NotNil(t, img)
 
 	img.Product = product
@@ -379,7 +379,7 @@ func instantiateAndSerialize(t *testing.T, img image.ImageKind, depsolved map[st
 
 func TestContainerInstallerPanics(t *testing.T) {
 	assert := assert.New(t)
-	img := image.NewAnacondaContainerInstaller(container.SourceSpec{}, "")
+	img := image.NewAnacondaContainerInstaller(testPlatform, "filename", container.SourceSpec{}, "")
 	img.Platform = testPlatform
 	assert.PanicsWithError("org.osbuild.grub2.iso: product.name option is required", func() { instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil) })
 	img.Product = product
@@ -390,7 +390,7 @@ func TestContainerInstallerPanics(t *testing.T) {
 
 func TestOSTreeInstallerPanics(t *testing.T) {
 	assert := assert.New(t)
-	img := image.NewAnacondaOSTreeInstaller(ostree.SourceSpec{})
+	img := image.NewAnacondaOSTreeInstaller(testPlatform, "filename", ostree.SourceSpec{})
 	img.Platform = testPlatform
 	img.Kickstart = &kickstart.Options{
 		// the ostree options must be non-nil
@@ -411,8 +411,7 @@ func TestOSTreeInstallerPanics(t *testing.T) {
 
 func TestTarInstallerPanics(t *testing.T) {
 	assert := assert.New(t)
-	img := image.NewAnacondaTarInstaller()
-	img.Platform = testPlatform
+	img := image.NewAnacondaTarInstaller(testPlatform, "filename")
 
 	assert.PanicsWithError("org.osbuild.grub2.iso: product.name option is required",
 		func() { instantiateAndSerialize(t, img, mockPackageSets(), nil, nil) })
@@ -493,7 +492,7 @@ func TestContainerInstallerModules(t *testing.T) {
 		// Remove this when we drop support for RHEL 8.
 		for _, legacy := range []bool{true, false} {
 			t.Run(name, func(t *testing.T) {
-				img := image.NewAnacondaContainerInstaller(container.SourceSpec{}, "")
+				img := image.NewAnacondaContainerInstaller(testPlatform, "filename", container.SourceSpec{}, "")
 				img.Product = product
 				img.OSVersion = osversion
 				img.ISOLabel = isolabel
@@ -520,7 +519,7 @@ func TestOSTreeInstallerModules(t *testing.T) {
 		// Remove this when we drop support for RHEL 8.
 		for _, legacy := range []bool{true, false} {
 			t.Run(name, func(t *testing.T) {
-				img := image.NewAnacondaOSTreeInstaller(ostree.SourceSpec{})
+				img := image.NewAnacondaOSTreeInstaller(testPlatform, "filename", ostree.SourceSpec{})
 				img.Product = product
 				img.OSVersion = osversion
 				img.ISOLabel = isolabel
@@ -551,7 +550,7 @@ func TestTarInstallerModules(t *testing.T) {
 		// Remove this when we drop support for RHEL 8.
 		for _, legacy := range []bool{true, false} {
 			t.Run(name, func(t *testing.T) {
-				img := image.NewAnacondaTarInstaller()
+				img := image.NewAnacondaTarInstaller(testPlatform, "filename")
 				img.Product = product
 				img.OSVersion = osversion
 				img.ISOLabel = isolabel
@@ -593,7 +592,7 @@ func TestInstallerLocales(t *testing.T) {
 
 	for input, expected := range locales {
 		{ // Container
-			img := image.NewAnacondaContainerInstaller(container.SourceSpec{}, "")
+			img := image.NewAnacondaContainerInstaller(testPlatform, "filename", container.SourceSpec{}, "")
 			assert.NotNil(t, img)
 
 			img.Product = product
@@ -609,7 +608,7 @@ func TestInstallerLocales(t *testing.T) {
 		}
 
 		{ // OSTree
-			img := image.NewAnacondaOSTreeInstaller(ostree.SourceSpec{})
+			img := image.NewAnacondaOSTreeInstaller(testPlatform, "filename", ostree.SourceSpec{})
 			assert.NotNil(t, img)
 
 			img.Product = product
@@ -629,7 +628,7 @@ func TestInstallerLocales(t *testing.T) {
 		}
 
 		{ // Tar
-			img := image.NewAnacondaTarInstaller()
+			img := image.NewAnacondaTarInstaller(testPlatform, "filename")
 			assert.NotNil(t, img)
 
 			img.Product = product
@@ -645,7 +644,7 @@ func TestInstallerLocales(t *testing.T) {
 		}
 
 		{ // Net
-			img := image.NewAnacondaNetInstaller()
+			img := image.NewAnacondaNetInstaller(testPlatform, "filename")
 			assert.NotNil(t, img)
 
 			img.Product = product
@@ -661,7 +660,7 @@ func TestInstallerLocales(t *testing.T) {
 		}
 
 		{ // Live
-			img := image.NewAnacondaLiveInstaller()
+			img := image.NewAnacondaLiveInstaller(testPlatform, "filename")
 			assert.NotNil(t, img)
 
 			img.Product = product
@@ -729,7 +728,7 @@ func findGrub2IsoStageOptions(t *testing.T, mf manifest.OSBuildManifest, pipelin
 }
 
 func TestContainerInstallerDracut(t *testing.T) {
-	img := image.NewAnacondaContainerInstaller(container.SourceSpec{}, "")
+	img := image.NewAnacondaContainerInstaller(testPlatform, "filename", container.SourceSpec{}, "")
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
@@ -754,7 +753,7 @@ func TestContainerInstallerDracut(t *testing.T) {
 }
 
 func TestOSTreeInstallerDracut(t *testing.T) {
-	img := image.NewAnacondaOSTreeInstaller(ostree.SourceSpec{})
+	img := image.NewAnacondaOSTreeInstaller(testPlatform, "filename", ostree.SourceSpec{})
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
@@ -783,7 +782,7 @@ func TestOSTreeInstallerDracut(t *testing.T) {
 }
 
 func TestTarInstallerDracut(t *testing.T) {
-	img := image.NewAnacondaTarInstaller()
+	img := image.NewAnacondaTarInstaller(testPlatform, "filename")
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
@@ -808,7 +807,7 @@ func TestTarInstallerDracut(t *testing.T) {
 }
 
 func TestTarInstallerKernelOpts(t *testing.T) {
-	img := image.NewAnacondaTarInstaller()
+	img := image.NewAnacondaTarInstaller(testPlatform, "filename")
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel
@@ -828,7 +827,7 @@ func TestTarInstallerKernelOpts(t *testing.T) {
 }
 
 func TestNetInstallerExt4Rootfs(t *testing.T) {
-	img := image.NewAnacondaNetInstaller()
+	img := image.NewAnacondaNetInstaller(testPlatform, "filename")
 	assert.NotNil(t, img)
 
 	img.Product = product
@@ -843,7 +842,7 @@ func TestNetInstallerExt4Rootfs(t *testing.T) {
 }
 
 func TestNetInstallerSquashfsRootfs(t *testing.T) {
-	img := image.NewAnacondaNetInstaller()
+	img := image.NewAnacondaNetInstaller(testPlatform, "filename")
 	assert.NotNil(t, img)
 
 	img.Product = product
@@ -859,7 +858,7 @@ func TestNetInstallerSquashfsRootfs(t *testing.T) {
 }
 
 func TestNetInstallerDracut(t *testing.T) {
-	img := image.NewAnacondaNetInstaller()
+	img := image.NewAnacondaNetInstaller(testPlatform, "filename")
 	img.Product = product
 	img.OSVersion = osversion
 	img.ISOLabel = isolabel

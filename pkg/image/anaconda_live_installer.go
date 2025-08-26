@@ -41,9 +41,11 @@ type AnacondaLiveInstaller struct {
 	AdditionalDrivers       []string
 }
 
-func NewAnacondaLiveInstaller() *AnacondaLiveInstaller {
+func NewAnacondaLiveInstaller(platform platform.Platform, filename string) *AnacondaLiveInstaller {
 	return &AnacondaLiveInstaller{
-		Base: NewBase("live-installer"),
+		Base:     NewBase("live-installer"),
+		Platform: platform,
+		Filename: filename,
 	}
 }
 

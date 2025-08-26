@@ -49,9 +49,11 @@ type AnacondaContainerInstaller struct {
 	InstallRootfsType disk.FSType
 }
 
-func NewAnacondaContainerInstaller(container container.SourceSpec, ref string) *AnacondaContainerInstaller {
+func NewAnacondaContainerInstaller(platform platform.Platform, filename string, container container.SourceSpec, ref string) *AnacondaContainerInstaller {
 	return &AnacondaContainerInstaller{
 		Base:            NewBase("container-installer"),
+		Platform:        platform,
+		Filename:        filename,
 		ContainerSource: container,
 		Ref:             ref,
 	}

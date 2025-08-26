@@ -26,7 +26,7 @@ func TestBootcDiskImageNew(t *testing.T) {
 		Name:   "name",
 	}
 
-	img := image.NewBootcDiskImage(containerSource, containerSource)
+	img := image.NewBootcDiskImage(testPlatform, "filename", containerSource, containerSource)
 	require.NotNil(t, img)
 	assert.Equal(t, img.Base.Name(), "bootc-raw-image")
 }
@@ -74,10 +74,8 @@ func makeBootcDiskImageOsbuildManifest(t *testing.T, opts *bootcDiskImageTestOpt
 	}
 	containers := []container.SourceSpec{containerSource}
 
-	img := image.NewBootcDiskImage(containerSource, containerSource)
-	img.Filename = "fake-disk"
+	img := image.NewBootcDiskImage(makeFakePlatform(opts), "fake-disk", containerSource, containerSource)
 	require.NotNil(t, img)
-	img.Platform = makeFakePlatform(opts)
 	img.PartitionTable = testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi")
 	img.OSCustomizations.KernelOptionsAppend = opts.KernelOptionsAppend
 	img.OSCustomizations.Users = opts.Users

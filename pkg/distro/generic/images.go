@@ -447,8 +447,7 @@ func diskImage(t *imageType,
 	containers []container.SourceSpec,
 	rng *rand.Rand) (image.ImageKind, error) {
 
-	img := image.NewDiskImage()
-	img.Platform = t.platform
+	img := image.NewDiskImage(t.platform, t.Filename())
 
 	var err error
 	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, bp)
@@ -469,8 +468,6 @@ func diskImage(t *imageType,
 		return nil, err
 	}
 	img.PartitionTable = pt
-
-	img.Filename = t.Filename()
 
 	img.VPCForceSize = t.ImageTypeYAML.DiskImageVPCForceSize
 
@@ -494,9 +491,7 @@ func tarImage(t *imageType,
 	payloadRepos []rpmmd.RepoConfig,
 	containers []container.SourceSpec,
 	rng *rand.Rand) (image.ImageKind, error) {
-	img := image.NewArchive()
-
-	img.Platform = t.platform
+	img := image.NewArchive(t.platform, t.Filename())
 
 	var err error
 	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, bp)
@@ -511,8 +506,6 @@ func tarImage(t *imageType,
 	img.Compression = t.ImageTypeYAML.Compression
 	img.OSVersion = d.OsVersion()
 
-	img.Filename = t.Filename()
-
 	return img, nil
 }
 
@@ -523,9 +516,7 @@ func containerImage(t *imageType,
 	payloadRepos []rpmmd.RepoConfig,
 	containers []container.SourceSpec,
 	rng *rand.Rand) (image.ImageKind, error) {
-	img := image.NewBaseContainer()
-
-	img.Platform = t.platform
+	img := image.NewBaseContainer(t.platform, t.Filename())
 
 	var err error
 	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, bp)
@@ -534,8 +525,6 @@ func containerImage(t *imageType,
 	}
 	img.OSCustomizations.PayloadRepos = payloadRepos
 	img.Environment = &t.ImageTypeYAML.Environment
-
-	img.Filename = t.Filename()
 
 	return img, nil
 }
@@ -548,9 +537,8 @@ func liveInstallerImage(t *imageType,
 	containers []container.SourceSpec,
 	rng *rand.Rand) (image.ImageKind, error) {
 
-	img := image.NewAnacondaLiveInstaller()
+	img := image.NewAnacondaLiveInstaller(t.platform, t.Filename())
 
-	img.Platform = t.platform
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
 	d := t.arch.distro
 
@@ -565,8 +553,6 @@ func liveInstallerImage(t *imageType,
 	if err != nil {
 		return nil, err
 	}
-
-	img.Filename = t.Filename()
 
 	imgConfig := t.getDefaultImageConfig()
 	if locale := imgConfig.Locale; locale != nil {
@@ -592,7 +578,7 @@ func imageInstallerImage(t *imageType,
 
 	customizations := bp.Customizations
 
-	img := image.NewAnacondaTarInstaller()
+	img := image.NewAnacondaTarInstaller(t.platform, t.Filename())
 
 	var err error
 	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, bp)
@@ -608,8 +594,6 @@ func imageInstallerImage(t *imageType,
 	img.Kickstart.Language = &img.OSCustomizations.Language
 	img.Kickstart.Keyboard = img.OSCustomizations.Keyboard
 	img.Kickstart.Timezone = &img.OSCustomizations.Timezone
-
-	img.Platform = t.platform
 
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
 
@@ -645,8 +629,6 @@ func imageInstallerImage(t *imageType,
 		return nil, err
 	}
 
-	img.Filename = t.Filename()
-
 	img.RootfsCompression = "xz" // This also triggers using the bcj filter
 
 	return img, nil
@@ -661,11 +643,9 @@ func iotCommitImage(t *imageType,
 	rng *rand.Rand) (image.ImageKind, error) {
 
 	parentCommit, commitRef := makeOSTreeParentCommit(options.OSTree, t.OSTreeRef())
-	img := image.NewOSTreeArchive(commitRef)
+	img := image.NewOSTreeArchive(t.platform, t.Filename(), commitRef)
 
 	d := t.arch.distro
-
-	img.Platform = t.platform
 
 	var err error
 	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, bp)
@@ -683,7 +663,6 @@ func iotCommitImage(t *imageType,
 	img.Environment = &t.ImageTypeYAML.Environment
 	img.OSTreeParent = parentCommit
 	img.OSVersion = d.OsVersion()
-	img.Filename = t.Filename()
 
 	return img, nil
 }
@@ -697,11 +676,9 @@ func bootableContainerImage(t *imageType,
 	rng *rand.Rand) (image.ImageKind, error) {
 
 	parentCommit, commitRef := makeOSTreeParentCommit(options.OSTree, t.OSTreeRef())
-	img := image.NewOSTreeArchive(commitRef)
+	img := image.NewOSTreeArchive(t.platform, t.Filename(), commitRef)
 
 	d := t.arch.distro
-
-	img.Platform = t.platform
 
 	var err error
 	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, bp)
@@ -713,7 +690,6 @@ func bootableContainerImage(t *imageType,
 	img.Environment = &t.ImageTypeYAML.Environment
 	img.OSTreeParent = parentCommit
 	img.OSVersion = d.OsVersion()
-	img.Filename = t.Filename()
 	img.InstallWeakDeps = false
 	img.BootContainer = true
 	id, err := distro.ParseID(d.Name())
@@ -737,9 +713,8 @@ func iotContainerImage(t *imageType,
 	rng *rand.Rand) (image.ImageKind, error) {
 
 	parentCommit, commitRef := makeOSTreeParentCommit(options.OSTree, t.OSTreeRef())
-	img := image.NewOSTreeContainer(commitRef)
+	img := image.NewOSTreeContainer(t.platform, t.Filename(), commitRef)
 	d := t.arch.distro
-	img.Platform = t.platform
 
 	var err error
 	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, bp)
@@ -759,7 +734,6 @@ func iotContainerImage(t *imageType,
 	img.OSTreeParent = parentCommit
 	img.OSVersion = d.OsVersion()
 	img.ExtraContainerPackages = packageSets[containerPkgsKey]
-	img.Filename = t.Filename()
 
 	return img, nil
 }
@@ -779,10 +753,9 @@ func iotInstallerImage(t *imageType,
 		return nil, fmt.Errorf("%s: %s", t.Name(), err.Error())
 	}
 
-	img := image.NewAnacondaOSTreeInstaller(commit)
+	img := image.NewAnacondaOSTreeInstaller(t.platform, t.Filename(), commit)
 
 	customizations := bp.Customizations
-	img.Platform = t.platform
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
 	img.Kickstart, err = kickstart.New(customizations)
 	if err != nil {
@@ -822,8 +795,6 @@ func iotInstallerImage(t *imageType,
 		return nil, err
 	}
 
-	img.Filename = t.Filename()
-
 	img.RootfsCompression = "xz" // This also triggers using the bcj filter
 	imgConfig := t.getDefaultImageConfig()
 	if locale := imgConfig.Locale; locale != nil {
@@ -845,7 +816,7 @@ func iotImage(t *imageType,
 	if err != nil {
 		return nil, fmt.Errorf("%s: %s", t.Name(), err.Error())
 	}
-	img := image.NewOSTreeDiskImageFromCommit(commit)
+	img := image.NewOSTreeDiskImageFromCommit(t.platform, t.Filename(), commit)
 
 	customizations := bp.Customizations
 	deploymentConfig, err := ostreeDeploymentCustomizations(t, customizations)
@@ -854,8 +825,6 @@ func iotImage(t *imageType,
 	}
 	img.OSTreeDeploymentCustomizations = deploymentConfig
 	img.OSCustomizations.PayloadRepos = payloadRepos
-
-	img.Platform = t.platform
 
 	img.Remote = ostree.Remote{
 		Name: t.ImageTypeYAML.OSTree.RemoteName,
@@ -875,7 +844,6 @@ func iotImage(t *imageType,
 	}
 	img.PartitionTable = pt
 
-	img.Filename = t.Filename()
 	img.Compression = t.ImageTypeYAML.Compression
 
 	return img, nil
@@ -893,7 +861,7 @@ func iotSimplifiedInstallerImage(t *imageType,
 	if err != nil {
 		return nil, fmt.Errorf("%s: %s", t.Name(), err.Error())
 	}
-	rawImg := image.NewOSTreeDiskImageFromCommit(commit)
+	rawImg := image.NewOSTreeDiskImageFromCommit(t.platform, t.Filename(), commit)
 
 	customizations := bp.Customizations
 	deploymentConfig, err := ostreeDeploymentCustomizations(t, customizations)
@@ -902,7 +870,6 @@ func iotSimplifiedInstallerImage(t *imageType,
 	}
 	rawImg.OSTreeDeploymentCustomizations = deploymentConfig
 
-	rawImg.Platform = t.platform
 	rawImg.OSCustomizations.PayloadRepos = payloadRepos
 	rawImg.Remote = ostree.Remote{
 		Name: t.OSTree.RemoteName,
@@ -920,12 +887,9 @@ func iotSimplifiedInstallerImage(t *imageType,
 	}
 	rawImg.PartitionTable = pt
 
-	rawImg.Filename = t.Filename()
-
-	img := image.NewOSTreeSimplifiedInstaller(rawImg, customizations.InstallationDevice)
+	// XXX: can we take platform/filename in NewOSTreeSimplifiedInstaller from rawImg instead?
+	img := image.NewOSTreeSimplifiedInstaller(t.platform, t.Filename(), rawImg, customizations.InstallationDevice)
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
-	img.Platform = t.platform
-	img.Filename = t.Filename()
 	if bpFDO := customizations.GetFDO(); bpFDO != nil {
 		img.FDO = fdo.FromBP(*bpFDO)
 	}
@@ -975,13 +939,12 @@ func netinstImage(t *imageType,
 
 	customizations := bp.Customizations
 
-	img := image.NewAnacondaNetInstaller()
+	img := image.NewAnacondaNetInstaller(t.platform, t.Filename())
 	language, _ := customizations.GetPrimaryLocale()
 	if language != nil {
 		img.Language = *language
 	}
 
-	img.Platform = t.platform
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
 
 	var err error
@@ -1004,8 +967,6 @@ func netinstImage(t *imageType,
 	if err != nil {
 		return nil, err
 	}
-
-	img.Filename = t.Filename()
 
 	img.RootfsCompression = "xz" // This also triggers using the bcj filter
 
