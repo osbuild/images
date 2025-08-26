@@ -47,10 +47,12 @@ type AnacondaOSTreeInstaller struct {
 	Locale string
 }
 
-func NewAnacondaOSTreeInstaller(commit ostree.SourceSpec) *AnacondaOSTreeInstaller {
+func NewAnacondaOSTreeInstaller(platform platform.Platform, filename string, commit ostree.SourceSpec) *AnacondaOSTreeInstaller {
 	return &AnacondaOSTreeInstaller{
-		Base:   NewBase("ostree-installer"),
-		Commit: commit,
+		Base:     NewBase("ostree-installer"),
+		Platform: platform,
+		Filename: filename,
+		Commit:   commit,
 	}
 }
 

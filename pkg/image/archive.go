@@ -22,9 +22,11 @@ type Archive struct {
 	OSVersion string
 }
 
-func NewArchive() *Archive {
+func NewArchive(platform platform.Platform, filename string) *Archive {
 	return &Archive{
-		Base: NewBase("archive"),
+		Base:     NewBase("archive"),
+		Platform: platform,
+		Filename: filename,
 	}
 }
 

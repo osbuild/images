@@ -35,9 +35,11 @@ type DiskImage struct {
 	OSNick    string
 }
 
-func NewDiskImage() *DiskImage {
+func NewDiskImage(platform platform.Platform, filename string) *DiskImage {
 	return &DiskImage{
 		Base:     NewBase("disk"),
+		Platform: platform,
+		Filename: filename,
 		PartTool: osbuild.PTSfdisk,
 	}
 }

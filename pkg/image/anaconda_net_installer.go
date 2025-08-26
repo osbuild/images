@@ -36,9 +36,11 @@ type AnacondaNetInstaller struct {
 	Language string
 }
 
-func NewAnacondaNetInstaller() *AnacondaNetInstaller {
+func NewAnacondaNetInstaller(platform platform.Platform, filename string) *AnacondaNetInstaller {
 	return &AnacondaNetInstaller{
-		Base: NewBase("netinst"),
+		Base:     NewBase("netinst"),
+		Platform: platform,
+		Filename: filename,
 	}
 }
 

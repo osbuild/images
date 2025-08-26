@@ -19,9 +19,11 @@ type BaseContainer struct {
 	Filename         string
 }
 
-func NewBaseContainer() *BaseContainer {
+func NewBaseContainer(platform platform.Platform, filename string) *BaseContainer {
 	return &BaseContainer{
-		Base: NewBase("base-container"),
+		Base:     NewBase("base-container"),
+		Platform: platform,
+		Filename: filename,
 	}
 }
 

@@ -28,9 +28,11 @@ type BootcDiskImage struct {
 	OSCustomizations manifest.OSCustomizations
 }
 
-func NewBootcDiskImage(container container.SourceSpec, buildContainer container.SourceSpec) *BootcDiskImage {
+func NewBootcDiskImage(platform platform.Platform, filename string, container container.SourceSpec, buildContainer container.SourceSpec) *BootcDiskImage {
 	return &BootcDiskImage{
 		Base:                 NewBase("bootc-raw-image"),
+		Platform:             platform,
+		Filename:             filename,
 		ContainerSource:      &container,
 		BuildContainerSource: &buildContainer,
 	}

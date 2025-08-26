@@ -31,9 +31,12 @@ type OSTreeContainer struct {
 	Filename               string
 }
 
-func NewOSTreeContainer(ref string) *OSTreeContainer {
+func NewOSTreeContainer(platform platform.Platform, filename string, ref string) *OSTreeContainer {
 	return &OSTreeContainer{
-		Base:      NewBase("ostree-container"),
+		Base:     NewBase("ostree-container"),
+		Platform: platform,
+		Filename: filename,
+
 		OSTreeRef: ref,
 	}
 }

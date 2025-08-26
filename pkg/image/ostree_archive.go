@@ -39,9 +39,11 @@ type OSTreeArchive struct {
 	BootcConfig *bootc.Config
 }
 
-func NewOSTreeArchive(ref string) *OSTreeArchive {
+func NewOSTreeArchive(platform platform.Platform, filename string, ref string) *OSTreeArchive {
 	return &OSTreeArchive{
 		Base:            NewBase("ostree-archive"),
+		Platform:        platform,
+		Filename:        filename,
 		OSTreeRef:       ref,
 		InstallWeakDeps: true,
 	}
