@@ -328,9 +328,22 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 }
 
 func installerCustomizations(t *imageType, c *blueprint.Customizations) (manifest.InstallerCustomizations, error) {
-	isc := manifest.InstallerCustomizations{}
-	isc.FIPS = c.GetFIPS()
-	isc.UseLegacyAnacondaConfig = t.ImageTypeYAML.UseLegacyAnacondaConfig
+	d := t.arch.distro
+	isoLabel, err := t.ISOLabel()
+	if err != nil {
+		return manifest.InstallerCustomizations{}, err
+	}
+
+	isc := manifest.InstallerCustomizations{
+		FIPS:                    c.GetFIPS(),
+		UseLegacyAnacondaConfig: t.ImageTypeYAML.UseLegacyAnacondaConfig,
+		Product:                 d.Product(),
+		OSVersion:               d.OsVersion(),
+		Release:                 fmt.Sprintf("%s %s", d.Product(), d.OsVersion()),
+		Preview:                 d.DistroYAML.Preview,
+		ISOLabel:                isoLabel,
+		Variant:                 t.Variant,
+	}
 
 	installerConfig, err := t.getDefaultInstallerConfig()
 	if err != nil {
@@ -540,30 +553,19 @@ func liveInstallerImage(t *imageType,
 	img := image.NewAnacondaLiveInstaller(t.platform, t.Filename())
 
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
-	d := t.arch.distro
-
-	img.Product = d.Product()
-	img.Variant = "Workstation"
-	img.OSVersion = d.OsVersion()
-	img.Release = fmt.Sprintf("%s %s", d.Product(), d.OsVersion())
-	img.Preview = d.DistroYAML.Preview
-
-	var err error
-	img.ISOLabel, err = t.ISOLabel()
-	if err != nil {
-		return nil, err
-	}
 
 	imgConfig := t.getDefaultImageConfig()
 	if locale := imgConfig.Locale; locale != nil {
 		img.Locale = *locale
 	}
 
+	var err error
 	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations)
-
 	if err != nil {
 		return nil, err
 	}
+	// XXX: get from yaml
+	img.InstallerCustomizations.Variant = "Workstation"
 
 	return img, nil
 }
@@ -613,20 +615,6 @@ func imageInstallerImage(t *imageType,
 
 	if img.Kickstart.Unattended {
 		img.InstallerCustomizations.AdditionalKernelOpts = append(img.InstallerCustomizations.AdditionalKernelOpts, installerConfig.KickstartUnattendedExtraKernelOpts...)
-	}
-
-	d := t.arch.distro
-
-	img.Product = d.Product()
-
-	img.OSVersion = d.OsVersion()
-	img.Release = fmt.Sprintf("%s %s", d.Product(), d.OsVersion())
-	img.Variant = t.Variant
-	img.Preview = d.DistroYAML.Preview
-
-	img.ISOLabel, err = t.ISOLabel()
-	if err != nil {
-		return nil, err
 	}
 
 	img.RootfsCompression = "xz" // This also triggers using the bcj filter
@@ -746,8 +734,6 @@ func iotInstallerImage(t *imageType,
 	containers []container.SourceSpec,
 	rng *rand.Rand) (image.ImageKind, error) {
 
-	d := t.arch.distro
-
 	commit, err := makeOSTreePayloadCommit(options.OSTree, t.OSTreeRef())
 	if err != nil {
 		return nil, fmt.Errorf("%s: %s", t.Name(), err.Error())
@@ -782,17 +768,6 @@ func iotInstallerImage(t *imageType,
 	if len(img.Kickstart.Users)+len(img.Kickstart.Groups) > 0 {
 		// only enable the users module if needed
 		img.InstallerCustomizations.EnabledAnacondaModules = append(img.InstallerCustomizations.EnabledAnacondaModules, anaconda.ModuleUsers)
-	}
-
-	img.Product = d.Product()
-	img.Variant = t.ImageTypeYAML.Variant
-	img.OSVersion = d.OsVersion()
-	img.Release = fmt.Sprintf("%s %s", d.Product(), d.OsVersion())
-	img.Preview = d.DistroYAML.Preview
-
-	img.ISOLabel, err = t.ISOLabel()
-	if err != nil {
-		return nil, err
 	}
 
 	img.RootfsCompression = "xz" // This also triggers using the bcj filter
@@ -914,6 +889,7 @@ func iotSimplifiedInstallerImage(t *imageType,
 		img.AdditionalDrivers = append(img.AdditionalDrivers, installerConfig.AdditionalDrivers...)
 	}
 
+	// XXX: move to use InstallerCustomizations too
 	d := t.arch.distro
 	img.Product = d.Product()
 	img.Variant = t.ImageTypeYAML.Variant
@@ -948,22 +924,7 @@ func netinstImage(t *imageType,
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
 
 	var err error
-
 	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations)
-
-	if err != nil {
-		return nil, err
-	}
-
-	d := t.arch.distro
-
-	img.Product = d.Product()
-	img.Variant = t.Variant
-	img.OSVersion = d.OsVersion()
-	img.Release = fmt.Sprintf("%s %s", d.Product(), d.OsVersion())
-	img.Preview = d.DistroYAML.Preview
-
-	img.ISOLabel, err = t.ISOLabel()
 	if err != nil {
 		return nil, err
 	}
