@@ -244,6 +244,21 @@ func (t *BootcImageType) Exports() []string {
 	return []string{t.export}
 }
 
+func (t *BootcImageType) SupportedBlueprintOptions() []string {
+	return []string{
+		"customizations.directories",
+		"customizations.disk",
+		"customizations.files",
+		"customizations.filesystem",
+		"customizations.group",
+		"customizations.kernel",
+		"customizations.user",
+	}
+}
+func (t *BootcImageType) RequiredBlueprintOptions() []string {
+	return nil
+}
+
 func (t *BootcImageType) Manifest(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, seedp *int64) (*manifest.Manifest, []string, error) {
 	if t.arch.distro.imgref == "" {
 		return nil, nil, fmt.Errorf("internal error: no base image defined")
@@ -265,7 +280,25 @@ func (t *BootcImageType) Manifest(bp *blueprint.Blueprint, options distro.ImageO
 		customizations = bp.Customizations
 	}
 
-	img := image.NewBootcDiskImage(containerSource, buildContainerSource)
+	archi := common.Must(arch.FromString(t.arch.Name()))
+	platform := &platform.Data{
+		Arch:        archi,
+		UEFIVendor:  t.arch.distro.sourceInfo.UEFIVendor,
+		QCOW2Compat: "1.1",
+	}
+	switch archi {
+	case arch.ARCH_X86_64:
+		platform.BIOSPlatform = "i386-pc"
+	case arch.ARCH_PPC64LE:
+		platform.BIOSPlatform = "powerpc-ieee1275"
+	case arch.ARCH_S390X:
+		platform.ZiplSupport = true
+	}
+	// For the bootc-disk image, the filename is the basename and
+	// the extension is added automatically for each disk format
+	filename := "disk"
+
+	img := image.NewBootcDiskImage(platform, filename, containerSource, buildContainerSource)
 	img.OSCustomizations.Users = users.UsersFromBP(customizations.GetUsers())
 	img.OSCustomizations.Groups = users.GroupsFromBP(customizations.GetGroups())
 	img.OSCustomizations.SELinux = t.arch.distro.sourceInfo.SELinuxPolicy
@@ -280,35 +313,6 @@ func (t *BootcImageType) Manifest(bp *blueprint.Blueprint, options distro.ImageO
 		// xref https://github.com/CentOS/centos-bootc-layered/blob/main/cloud/usr/lib/bootc/install/05-cloud-kargs.toml
 		"console=tty0",
 		"console=ttyS0",
-	}
-
-	switch common.Must(arch.FromString(t.arch.Name())) {
-	case arch.ARCH_X86_64:
-		img.Platform = &platform.X86{
-			BasePlatform: platform.BasePlatform{},
-			BIOS:         true,
-		}
-	case arch.ARCH_AARCH64:
-		img.Platform = &platform.Aarch64{
-			UEFIVendor: "fedora",
-			BasePlatform: platform.BasePlatform{
-				QCOW2Compat: "1.1",
-			},
-		}
-	case arch.ARCH_S390X:
-		img.Platform = &platform.S390X{
-			BasePlatform: platform.BasePlatform{
-				QCOW2Compat: "1.1",
-			},
-			Zipl: true,
-		}
-	case arch.ARCH_PPC64LE:
-		img.Platform = &platform.PPC64LE{
-			BasePlatform: platform.BasePlatform{
-				QCOW2Compat: "1.1",
-			},
-			BIOS: true,
-		}
 	}
 
 	if kopts := customizations.GetKernel(); kopts != nil && kopts.Append != "" {
@@ -343,10 +347,6 @@ func (t *BootcImageType) Manifest(bp *blueprint.Blueprint, options distro.ImageO
 	if err != nil {
 		return nil, nil, err
 	}
-
-	// For the bootc-disk image, the filename is the basename and the extension
-	// is added automatically for each disk format
-	img.Filename = "disk"
 
 	mf := manifest.New()
 	mf.Distro = manifest.DISTRO_FEDORA
