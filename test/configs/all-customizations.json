@@ -23,6 +23,7 @@
     "customizations": {
       "hostname": "my-host",
       "kernel": {
+        "name": "kernel-debug",
         "append": "debug"
       },
       "user": [
