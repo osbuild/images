@@ -3,7 +3,7 @@
 *               @osbuild/osbuild-reviewers
 
 # Package-specific reviewers
-/pkg/disk/      @achilleas-k
+/pkg/disk/      @achilleas-k @osbuild/osbuild-reviewers
 
 # Test scripts
-/test/scripts   @achilleas-k @thozza
+/test/scripts   @achilleas-k @thozza @osbuild/osbuild-reviewers
