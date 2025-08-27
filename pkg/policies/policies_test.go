@@ -31,7 +31,7 @@ func TestMountpointPolicies(t *testing.T) {
 
 		{"/boot", true},
 		{"/boot/dir", true},
-		{"/boot/efi", false},
+		{"/boot/efi", true},
 
 		{"/var", true},
 		{"/var/lib", true},
