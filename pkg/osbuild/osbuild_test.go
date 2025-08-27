@@ -27,8 +27,34 @@ func TestPipeline_AddStage(t *testing.T) {
 	assert.Equal(t, 1, len(actualPipeline.Stages))
 }
 
+var fakeOsbuildManifestWithIdentifiers = []byte(`{
+  "version": "2",
+  "pipelines": [
+    {
+       "name": "build",
+       "stages": [
+         {
+			"id": "1234",
+            "type": "org.osbuild.rpm"
+         },
+         {
+			"id": "5678",
+            "type": "org.osbuild.mkdir"
+         }
+       ]
+    }
+  ]
+}`)
+
 func TestManifestFromBytes(t *testing.T) {
-	bytes := []byte(`{}`)
-	_, err := NewManifestFromBytes(bytes)
+	manifest, err := NewManifestFromBytes(fakeOsbuildManifestWithIdentifiers)
 	assert.NoError(t, err)
+
+	assert.Equal(t, manifest.Pipelines[0].Stages[0].ID, "1234")
+	assert.Equal(t, manifest.Pipelines[0].Stages[1].ID, "5678")
+
+	pID, err := manifest.Pipelines[0].GetID()
+	assert.NoError(t, err)
+
+	assert.Equal(t, pID, "5678")
 }
