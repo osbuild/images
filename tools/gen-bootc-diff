@@ -8,7 +8,7 @@
 set -e
 set -o pipefail
 
-(cd "$(dirname "$0")"/../cmd/gen-manifests && go build)
+(cd "$(dirname "$0")"/../cmd/gen-manifests && go build -buildvcs=false)
 
 # we only need to test a single type, all bootc disk manifests
 # contain all possible types by default
@@ -92,7 +92,9 @@ do
 		ROOTFS="ext4"
 	    fi
 
-	    sudo go run github.com/osbuild/bootc-image-builder/bib/cmd/bootc-image-builder@main \
+	    sudo go run \
+		 -buildvcs=false \
+		 github.com/osbuild/bootc-image-builder/bib/cmd/bootc-image-builder@main \
 		manifest -v "$REF" \
 		--config "$BP" \
 		--target-arch "$ARCH" \
