@@ -81,7 +81,7 @@ func TestKickstartStageUsers(t *testing.T) {
 			},
 			expErr: "",
 		},
-		"2-user+root": {
+		"2-user+root-error": {
 			users: []users.User{
 				{
 					Name:               "user",
@@ -138,7 +138,7 @@ func TestKickstartStageUsers(t *testing.T) {
 					},
 				},
 			},
-			expErr: "",
+			expErr: "org.osbuild.kickstart: unsupported options for user \"root\": expiredate, force_password_reset, gid, groups, home, shell, uid",
 		},
 	}
 
