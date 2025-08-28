@@ -56,6 +56,8 @@ type BootcImageType struct {
 
 	name   string
 	export string
+	// file extension
+	ext string
 }
 
 func (d *BootcDistro) SetBuildContainer(imgref string) (err error) {
@@ -194,7 +196,7 @@ func (t *BootcImageType) Arch() distro.Arch {
 }
 
 func (t *BootcImageType) Filename() string {
-	return "disk"
+	return fmt.Sprintf("disk.%s", t.ext)
 }
 
 func (t *BootcImageType) MIMEType() string {
@@ -402,30 +404,41 @@ func NewBootcDistro(imgref string) (bd *BootcDistro, err error) {
 			arch: common.Must(arch.FromString(archStr)),
 		}
 		// TODO: add iso image types, see bootc-image-builder
+		//
+		// Note that the file extension is hardcoded in
+		// pkg/image/bootc_disk.go, we have no way to access
+		// it here so we need to duplicate it
+		// XXX: find a way to avoid this duplication
 		ba.addImageTypes(
 			BootcImageType{
 				name:   "ami",
 				export: "image",
+				ext:    "raw",
 			},
 			BootcImageType{
 				name:   "qcow2",
 				export: "qcow2",
+				ext:    "qcow2",
 			},
 			BootcImageType{
 				name:   "raw",
 				export: "image",
+				ext:    "raw",
 			},
 			BootcImageType{
 				name:   "vmdk",
 				export: "vmdk",
+				ext:    "vmdk",
 			},
 			BootcImageType{
 				name:   "vhd",
 				export: "bpc",
+				ext:    "vhd",
 			},
 			BootcImageType{
 				name:   "gce",
 				export: "gce",
+				ext:    "tar.gz",
 			},
 		)
 		bd.addArches(ba)
