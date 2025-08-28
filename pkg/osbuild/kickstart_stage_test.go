@@ -81,6 +81,54 @@ func TestKickstartStageUsers(t *testing.T) {
 			},
 			expErr: "",
 		},
+		"2-user+root": {
+			users: []users.User{
+				{
+					Name:               "user",
+					Description:        common.ToPtr("I am user"),
+					Password:           common.ToPtr("$6$fakesalt$fakehashedpassword"),
+					Key:                common.ToPtr("ssh-ed25519 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
+					Home:               common.ToPtr("/var/home/user"),
+					Shell:              common.ToPtr("/usr/bin/fish"),
+					Groups:             []string{"grp1", "wheel"},
+					UID:                common.ToPtr(1010),
+					GID:                common.ToPtr(1020),
+					ExpireDate:         common.ToPtr(1756486205),
+					ForcePasswordReset: common.ToPtr(false),
+				},
+				{
+					Name:     "root",
+					Password: common.ToPtr("$6$fakesaltroot$fakehashedpasswordroot"),
+					Key:      common.ToPtr("ssh-ed25519 BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"),
+				},
+			},
+			expected: &osbuild.KickstartStageOptions{
+				Users: map[string]osbuild.UsersStageOptionsUser{
+					"user": {
+						Description:        common.ToPtr("I am user"),
+						Password:           common.ToPtr("$6$fakesalt$fakehashedpassword"),
+						Key:                common.ToPtr("ssh-ed25519 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
+						Home:               common.ToPtr("/var/home/user"),
+						Shell:              common.ToPtr("/usr/bin/fish"),
+						Groups:             []string{"grp1", "wheel"},
+						UID:                common.ToPtr(1010),
+						GID:                common.ToPtr(1020),
+						ExpireDate:         common.ToPtr(1756486205),
+						ForcePasswordReset: common.ToPtr(false),
+					},
+					"root": {
+						Key: common.ToPtr("ssh-ed25519 BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"),
+					},
+				},
+				RootPassword: &osbuild.RootPasswordOptions{
+					Lock:      false,
+					PlainText: false,
+					IsCrypted: true,
+					AllowSSH:  false,
+					Password:  "$6$fakesaltroot$fakehashedpasswordroot",
+				},
+			},
+		},
 		"2-user+root-error": {
 			users: []users.User{
 				{
