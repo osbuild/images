@@ -52,6 +52,9 @@ func newTestClient(
 	intfs InterfacesClient,
 	vms VMsClient,
 	disks DisksClient,
+	gs GalleriesClient,
+	gis GalleryImagesClient,
+	givs GalleryImageVersionsClient,
 ) *Client {
 	return &Client{
 		subscription:   "test-subscription",
@@ -67,6 +70,9 @@ func newTestClient(
 		interfaces:     intfs,
 		vms:            vms,
 		disks:          disks,
+		galleries:      gs,
+		galleryImgs:    gis,
+		galleryImgVs:   givs,
 	}
 }
 
