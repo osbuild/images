@@ -1564,12 +1564,16 @@ image_types:
         - &minimal_raw_pkgset
           include:
             - "@core"
+            - "bash-completion"
+            - "grubby"
+            - "fwupd-efi"
             - "initial-setup"
             - "libxkbcommon"
             - "NetworkManager-wifi"
+            - "linux-firmware"
             - "brcmfmac-firmware"
-            - "realtek-firmware"
             - "iwlwifi-mvm-firmware"
+            - "realtek-firmware"
           exclude:
             - "dracut-config-rescue"
           conditions:
