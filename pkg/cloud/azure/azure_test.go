@@ -24,6 +24,9 @@ type azm struct {
 	intfm *intfMock
 	vmm   *vmMock
 	diskm *diskMock
+	gm    *galleriesMock
+	gim   *galleryImagesMock
+	givm  *galleryImageVersionsMock
 }
 
 func newAZ() azm {
@@ -38,8 +41,11 @@ func newAZ() azm {
 	intfm := &intfMock{}
 	vmm := &vmMock{}
 	diskm := &diskMock{}
+	gm := &galleriesMock{}
+	gim := &galleryImagesMock{}
+	givm := &galleryImageVersionsMock{}
 	return azm{
-		azure.NewTestclient(rcm, rgm, acm, im, vnetm, snm, pipm, sgm, intfm, vmm, diskm),
+		azure.NewTestclient(rcm, rgm, acm, im, vnetm, snm, pipm, sgm, intfm, vmm, diskm, gm, gim, givm),
 		rcm,
 		rgm,
 		acm,
@@ -51,6 +57,9 @@ func newAZ() azm {
 		intfm,
 		vmm,
 		diskm,
+		gm,
+		gim,
+		givm,
 	}
 }
 
