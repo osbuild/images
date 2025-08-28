@@ -33,6 +33,7 @@ func NewTestBootcImageType() *BootcImageType {
 		arch:   a,
 		name:   "qcow2",
 		export: "qcow2",
+		ext:    "qcow2",
 	}
 	a.addImageTypes(*imgType)
 
