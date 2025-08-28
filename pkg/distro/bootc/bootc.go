@@ -237,6 +237,9 @@ func (t *BootcImageType) Arch() distro.Arch {
 }
 
 func (t *BootcImageType) Filename() string {
+	if t.iso {
+		return "install.iso"
+	}
 	return fmt.Sprintf("disk.%s", t.ext)
 }
 
