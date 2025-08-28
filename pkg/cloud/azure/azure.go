@@ -22,6 +22,7 @@ const (
 )
 
 type Client struct {
+	subscription   string
 	creds          *azidentity.ClientSecretCredential
 	resources      ResourcesClient
 	resourceGroups ResourceGroupsClient
@@ -29,6 +30,9 @@ type Client struct {
 	images         ImagesClient
 	vms            VMsClient
 	disks          DisksClient
+	galleries      GalleriesClient
+	galleryImgs    GalleryImagesClient
+	galleryImgVs   GalleryImageVersionsClient
 	vnets          VirtualNetworksClient
 	subnets        SubnetsClient
 	securityGroups SecurityGroupsClient
@@ -50,6 +54,7 @@ func newTestClient(
 	disks DisksClient,
 ) *Client {
 	return &Client{
+		subscription:   "test-subscription",
 		creds:          nil,
 		resources:      rc,
 		resourceGroups: rgc,
@@ -93,7 +98,9 @@ func NewClient(credentials Credentials, tenantID, subscriptionID string) (*Clien
 	if err != nil {
 		return nil, fmt.Errorf("creating compute client factory failed: %w", err)
 	}
+
 	return &Client{
+		subscriptionID,
 		creds,
 		resFact.NewClient(),
 		resFact.NewResourceGroupsClient(),
@@ -101,6 +108,9 @@ func NewClient(credentials Credentials, tenantID, subscriptionID string) (*Clien
 		compFact.NewImagesClient(),
 		compFact.NewVirtualMachinesClient(),
 		compFact.NewDisksClient(),
+		compFact.NewGalleriesClient(),
+		compFact.NewGalleryImagesClient(),
+		compFact.NewGalleryImageVersionsClient(),
 		networkFact.NewVirtualNetworksClient(),
 		networkFact.NewSubnetsClient(),
 		networkFact.NewSecurityGroupsClient(),
@@ -252,6 +262,10 @@ func (ac Client) RegisterImage(ctx context.Context, resourceGroup, storageAccoun
 }
 
 func (ac Client) DeleteImage(ctx context.Context, resourceGroup, imageName string) error {
+	if imageName == "" {
+		return nil
+	}
+
 	poller, err := ac.images.BeginDelete(ctx, resourceGroup, imageName, nil)
 	if err != nil {
 		return err
