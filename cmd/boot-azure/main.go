@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/osbuild/images/internal/test"
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/cloud/azure"
 )
 
@@ -31,9 +32,10 @@ func exitCheck(err error) {
 // resources created or allocated for an instance that can be cleaned up when
 // tearing down.
 type resources struct {
-	VM        *azure.VM `json:"vm,omitempty"`
-	BlobName  *string   `json:"blob,omitempty"`
-	ImageName *string   `json:"image,omitempty"`
+	VM        *azure.VM           `json:"vm,omitempty"`
+	GI        *azure.GalleryImage `json:"galleryimage,omitempty"`
+	BlobName  *string             `json:"blob,omitempty"`
+	ImageName *string             `json:"image,omitempty"`
 }
 
 func newClientFromArgs(flags *pflag.FlagSet) (*azure.Client, error) {
@@ -64,18 +66,18 @@ func newClientFromArgs(flags *pflag.FlagSet) (*azure.Client, error) {
 	)
 }
 
-func getDefaultSize(arch string) (string, error) {
-	switch arch {
+func getDefaultSize(architecture string) (string, error) {
+	switch architecture {
 	case "x86_64":
 		return "Standard_DS1_v2", nil
 	case "aarch64":
 		return "Standard_D2pls_v5", nil
 	default:
-		return "", fmt.Errorf("getDefaultSize(): unknown architecture %q", arch)
+		return "", fmt.Errorf("getDefaultSize(): unknown architecture %q", architecture)
 	}
 }
 
-func upload(ac *azure.Client, subscription, resourceGroup, localImage, remoteName string, res *resources) (string, error) {
+func upload(ac *azure.Client, subscription, resourceGroup, localImage, remoteName, architecture string, res *resources) (string, error) {
 	ctx := context.Background()
 	location, err := ac.GetResourceGroupLocation(ctx, resourceGroup)
 	if err != nil {
@@ -132,24 +134,46 @@ func upload(ac *azure.Client, subscription, resourceGroup, localImage, remoteNam
 	}
 	res.BlobName = &blobName
 
-	err = ac.RegisterImage(
-		ctx,
-		resourceGroup,
-		stacc,
-		StorageContainer,
-		blobName,
-		remoteName,
-		"",
-		azure.HyperVGenV2,
-	)
-	if err != nil {
-		return "", err
+	switch architecture {
+	case "x86_64":
+		err = ac.RegisterImage(
+			ctx,
+			resourceGroup,
+			stacc,
+			StorageContainer,
+			blobName,
+			remoteName,
+			"",
+			azure.HyperVGenV2,
+		)
+		if err != nil {
+			return "", err
+		}
+		res.ImageName = &remoteName
+		image := fmt.Sprintf(
+			"/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Compute/images/%s",
+			subscription, resourceGroup, remoteName)
+		return image, nil
+	case "aarch64":
+		gi, err := ac.RegisterGalleryImage(
+			ctx,
+			resourceGroup,
+			stacc,
+			StorageContainer,
+			blobName,
+			remoteName,
+			"",
+			azure.HyperVGenV2,
+			arch.ARCH_AARCH64,
+		)
+		if err != nil {
+			return "", err
+		}
+		res.GI = gi
+		return res.GI.ImageRef, nil
+	default:
+		return "", fmt.Errorf("upload(): unknown architecture %q", architecture)
 	}
-	res.ImageName = &remoteName
-	image := fmt.Sprintf(
-		"/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Compute/images/%s",
-		subscription, resourceGroup, remoteName)
-	return image, nil
 }
 
 func doSetup(ac *azure.Client, flags *pflag.FlagSet, localImage string, res *resources) error {
@@ -163,6 +187,11 @@ func doSetup(ac *azure.Client, flags *pflag.FlagSet, localImage string, res *res
 		return err
 	}
 
+	architecture, err := flags.GetString("arch")
+	if err != nil {
+		return err
+	}
+
 	if localImage != "" {
 		subscription, err := flags.GetString("subscription")
 		if err != nil {
@@ -172,7 +201,7 @@ func doSetup(ac *azure.Client, flags *pflag.FlagSet, localImage string, res *res
 		if err != nil {
 			return err
 		}
-		image, err = upload(ac, subscription, rg, localImage, remoteImageName, res)
+		image, err = upload(ac, subscription, rg, localImage, remoteImageName, architecture, res)
 		if err != nil {
 			return err
 		}
@@ -188,11 +217,7 @@ func doSetup(ac *azure.Client, flags *pflag.FlagSet, localImage string, res *res
 		return err
 	}
 	if size == "" {
-		arch, err := flags.GetString("arch")
-		if err != nil {
-			return err
-		}
-		size, err = getDefaultSize(arch)
+		size, err = getDefaultSize(architecture)
 		if err != nil {
 			return err
 		}
@@ -308,6 +333,12 @@ func doTeardown(ac *azure.Client, resourceGroup string, res *resources) error {
 
 	if res.VM != nil {
 		if err := ac.DestroyVM(ctx, res.VM); err != nil {
+			return err
+		}
+	}
+
+	if res.GI != nil {
+		if err := ac.DeleteGalleryImage(ctx, res.GI); err != nil {
 			return err
 		}
 	}
