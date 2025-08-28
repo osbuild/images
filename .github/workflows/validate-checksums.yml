@@ -4,6 +4,8 @@ on:  # yamllint disable-line rule:truthy
   pull_request:
     branches:
       - "*"
+  # for merge queue
+  merge_group:
 
 jobs:
   manifest-checksums:
