@@ -90,6 +90,10 @@ func (d *BootcDistro) SetDefaultFs(defaultFs string) error {
 	return nil
 }
 
+func (d *BootcDistro) DefaultFs() string {
+	return d.defaultFs
+}
+
 func (d *BootcDistro) Name() string {
 	return d.name
 }
