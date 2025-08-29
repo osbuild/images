@@ -69,5 +69,19 @@
         "commit": "3c676700b81baf7e0ff57887e97eac7d6192b4af"
       }
     }
+  },
+  "fedora-43": {
+    "dependencies": {
+      "osbuild": {
+        "commit": "3c676700b81baf7e0ff57887e97eac7d6192b4af"
+      }
+    }
+  },
+  "fedora-44": {
+    "dependencies": {
+      "osbuild": {
+        "commit": "3c676700b81baf7e0ff57887e97eac7d6192b4af"
+      }
+    }
   }
 }
