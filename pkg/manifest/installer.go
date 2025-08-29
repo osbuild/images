@@ -20,6 +20,10 @@ type InstallerCustomizations struct {
 	// Temporary
 	UseRHELLoraxTemplates bool
 
+	// CustomLoraxTemplatePath allows overriding the default lorax template selection
+	// If set, this takes priority over UseRHELLoraxTemplates
+	CustomLoraxTemplatePath string
+
 	ISORootfsType ISORootfsType
 	ISOBoot       ISOBootType
 
