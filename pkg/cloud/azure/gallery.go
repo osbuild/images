@@ -2,12 +2,9 @@ package azure
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
-	"time"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v5"
 
 	"github.com/osbuild/images/internal/common"
@@ -214,17 +211,6 @@ func (ac Client) deleteGalleryImageDefinition(ctx context.Context, gi *GalleryIm
 	if err != nil {
 		return err
 	}
-
-	// TODO: poller doesn't actually complete?
-	for tries := 0; tries < 10; tries++ {
-		_, err = ac.galleryImgs.Get(ctx, gi.ResourceGroup, gi.Gallery, gi.ImageDef, nil)
-		var azErr *azcore.ResponseError
-		if errors.As(err, &azErr) && azErr.StatusCode == 404 {
-			break
-		}
-		time.Sleep(20 * time.Second)
-	}
-
 	return nil
 }
 

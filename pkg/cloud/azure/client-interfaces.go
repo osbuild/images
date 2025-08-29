@@ -45,7 +45,6 @@ type GalleriesClient interface {
 type GalleryImagesClient interface {
 	BeginCreateOrUpdate(context.Context, string, string, string, armcompute.GalleryImage, *armcompute.GalleryImagesClientBeginCreateOrUpdateOptions) (*runtime.Poller[armcompute.GalleryImagesClientCreateOrUpdateResponse], error)
 	BeginDelete(context.Context, string, string, string, *armcompute.GalleryImagesClientBeginDeleteOptions) (*runtime.Poller[armcompute.GalleryImagesClientDeleteResponse], error)
-	Get(context.Context, string, string, string, *armcompute.GalleryImagesClientGetOptions) (armcompute.GalleryImagesClientGetResponse, error)
 }
 
 type GalleryImageVersionsClient interface {
