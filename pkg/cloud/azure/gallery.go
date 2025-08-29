@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v5"
 
@@ -237,10 +238,20 @@ func (ac Client) DeleteGalleryImage(ctx context.Context, gi *GalleryImage) error
 	if err := ac.deleteGalleryImageDefinition(ctx, gi); err != nil {
 		return err
 	}
-	if err := ac.deleteImageGallery(ctx, gi); err != nil {
+
+	var err error
+	// TODO: 409 / conflict (img def still exists) even though the above call succeeded?
+	for tries := 0; tries < 10; tries++ {
+		if err = ac.deleteImageGallery(ctx, gi); err == nil {
+			break
+		}
+		time.Sleep(20 * time.Second)
+	}
+	if err != nil {
 		return err
 	}
-	if err := ac.DeleteImage(ctx, gi.ResourceGroup, gi.Image); err != nil {
+
+	if err = ac.DeleteImage(ctx, gi.ResourceGroup, gi.Image); err != nil {
 		return err
 	}
 	return nil
