@@ -149,6 +149,70 @@ func NewKickstartStageOptions(
 		users = usersOptions.Users
 	}
 
+	var rootpw *RootPasswordOptions
+	for name, user := range users {
+		// User options for the root user have no effect in kickstart. In other
+		// words, the
+		//
+		//   user --name "root" ...
+		//
+		// line is ignored, because when the users are being processed, the root
+		// user already exists. To set a root password, the rootpw command must be
+		// used. If an SSH key is added for the root user however, we need to keep
+		// the root user account in the kickstart options, because osbuild will use
+		// it to add the sshkey line for the root user. Unfortunately, this means
+		// that we will get a bare user line for root that will have no effect.
+		// See also https://github.com/osbuild/osbuild/issues/2178
+		if name == "root" {
+			if user.Password != nil {
+				rootpw = &RootPasswordOptions{
+					IsCrypted: true, // NewUserStageOptions() always encrypts plaintext passwords
+					Password:  *user.Password,
+				}
+
+				// remove the password since the --password option for the user
+				// kickstart command has no effect on root
+				user.Password = nil
+			}
+
+			// return an error if any other field is set (except SSH)
+			unsupportedOptionsSet := make([]string, 0, 7)
+			if user.ExpireDate != nil {
+				unsupportedOptionsSet = append(unsupportedOptionsSet, "expiredate")
+			}
+			if user.ForcePasswordReset != nil {
+				unsupportedOptionsSet = append(unsupportedOptionsSet, "force_password_reset")
+			}
+			if user.GID != nil {
+				unsupportedOptionsSet = append(unsupportedOptionsSet, "gid")
+			}
+			if user.Groups != nil {
+				unsupportedOptionsSet = append(unsupportedOptionsSet, "groups")
+			}
+			if user.Home != nil {
+				unsupportedOptionsSet = append(unsupportedOptionsSet, "home")
+			}
+			if user.Shell != nil {
+				unsupportedOptionsSet = append(unsupportedOptionsSet, "shell")
+			}
+			if user.UID != nil {
+				unsupportedOptionsSet = append(unsupportedOptionsSet, "uid")
+			}
+			if len(unsupportedOptionsSet) > 0 {
+				return nil, fmt.Errorf("org.osbuild.kickstart: unsupported options for user \"root\": %s", strings.Join(unsupportedOptionsSet, ", "))
+			}
+
+			// if the ssh key is set, update the options in the map (unset
+			// password), otherwise remove it entirely
+			if user.Key != nil {
+				users[name] = user
+			} else {
+				delete(users, name)
+			}
+			break
+		}
+	}
+
 	var groups map[string]GroupsStageOptionsGroup
 	if groupsOptions := NewGroupsStageOptions(groupCustomizations); groupsOptions != nil {
 		groups = groupsOptions.Groups
@@ -160,6 +224,7 @@ func NewKickstartStageOptions(
 		LiveIMG:      nil,
 		Users:        users,
 		Groups:       groups,
+		RootPassword: rootpw,
 	}, nil
 }
 

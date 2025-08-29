@@ -23,6 +23,11 @@
       "hostname": "custombase",
       "user": [
         {
+          "name": "root",
+          "description": "Mr. Root",
+          "password": "$6$BhyxFBgrEFh0VrPJ$MllG8auiU26x2pmzL4.1maHzPHrA.4gTdCvlATFp8HJU9UPee4zCS9BVl2HOzKaUYD/zEm8r/OF05F2icWB0K/"
+        },
+        {
           "name": "admin",
           "description": "admin",
           "password": "$6$BhyxFBgrEFh0VrPJ$MllG8auiU26x2pmzL4.1maHzPHrA.4gTdCvlATFp8HJU9UPee4zCS9BVl2HOzKaUYD/zEm8r/OF05F2icWB0K/",
