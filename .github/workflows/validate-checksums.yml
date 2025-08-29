@@ -43,6 +43,7 @@ jobs:
       # Run the manifest checksum generator on each commit on the branch.
       # If it changes, it will interrupt the rebase and exit with non-zero.
       - name: Validate manifest checksums for every commit in the PR
+        if: ${{ github.event_name == 'pull_request' }}
         env:
           # commit ID of target branch
           base_sha: ${{ github.event.pull_request.base.sha }}
@@ -60,3 +61,11 @@ jobs:
               echo "-----------------------------------------------------------------------------"
               exit 1
           fi
+
+      # Run the manifest checksum generator on the HEAD (merge group temporary
+      # branch) and fail if there are changes.
+      - name: Validate manifest checksums (merge queue)
+        if: ${{ github.event_name == 'merge_group' }}
+        run: |
+           ./tools/gen-manifest-checksums.sh
+           git diff --exit-code
