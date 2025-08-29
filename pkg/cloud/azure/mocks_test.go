@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v5"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v7"
@@ -471,6 +472,7 @@ func (gm *galleriesMock) BeginDelete(ctx context.Context, rg, name string, optio
 
 type galleryImagesMock struct {
 	createOrUpdate []galleryImagesCreateOrUpdateArgs
+	get            []galleryImagesGetArgs
 	delete         []galleryImagesDeleteArgs
 }
 
@@ -480,6 +482,13 @@ type galleryImagesCreateOrUpdateArgs struct {
 	name    string
 	image   armcompute.GalleryImage
 	options *armcompute.GalleryImagesClientBeginCreateOrUpdateOptions
+}
+
+type galleryImagesGetArgs struct {
+	rg      string
+	gallery string
+	name    string
+	options *armcompute.GalleryImagesClientGetOptions
 }
 
 type galleryImagesDeleteArgs struct {
@@ -497,6 +506,13 @@ func (gim *galleryImagesMock) BeginCreateOrUpdate(ctx context.Context, rg, galle
 			GalleryImage: image,
 		},
 	)
+}
+
+func (gim *galleryImagesMock) Get(ctx context.Context, rg, gallery, name string, options *armcompute.GalleryImagesClientGetOptions) (armcompute.GalleryImagesClientGetResponse, error) {
+	gim.get = append(gim.get, galleryImagesGetArgs{rg, gallery, name, options})
+	return armcompute.GalleryImagesClientGetResponse{}, &azcore.ResponseError{
+		StatusCode: 404,
+	}
 }
 
 func (gim *galleryImagesMock) BeginDelete(ctx context.Context, rg, gallery, name string, options *armcompute.GalleryImagesClientBeginDeleteOptions) (*runtime.Poller[armcompute.GalleryImagesClientDeleteResponse], error) {
