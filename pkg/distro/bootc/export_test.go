@@ -16,6 +16,8 @@ var (
 	UpdateFilesystemSizes         = updateFilesystemSizes
 	CreateRand                    = createRand
 	CalcRequiredDirectorySizes    = calcRequiredDirectorySizes
+
+	TestDiskContainers = diskContainers
 )
 
 func NewTestBootcImageType() *BootcImageType {
@@ -38,6 +40,10 @@ func NewTestBootcImageType() *BootcImageType {
 	a.addImageTypes(*imgType)
 
 	return imgType
+}
+
+func (t *BootcImageType) SetSourceInfoPartitionTable(basept *disk.PartitionTable) {
+	t.arch.distro.sourceInfo.PartitionTable = basept
 }
 
 func (t *BootcImageType) GenPartitionTable(customizations *blueprint.Customizations, rootfsMinSize uint64, rng *rand.Rand) (*disk.PartitionTable, error) {
