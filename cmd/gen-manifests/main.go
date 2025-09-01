@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -141,12 +140,9 @@ func loadConfigMap(configPath string, opts *buildconfig.Options) *BuildConfigs {
 		panic(fmt.Sprintf("failed to open config map %q: %s", configPath, err.Error()))
 	}
 	defer fp.Close()
-	data, err := io.ReadAll(fp)
-	if err != nil {
-		panic(fmt.Sprintf("failed to read config map %q: %s", configPath, err.Error()))
-	}
+
 	var cfgMap configMap
-	if err := json.Unmarshal(data, &cfgMap); err != nil {
+	if err := json.NewDecoder(fp).Decode(&cfgMap); err != nil {
 		panic(fmt.Sprintf("failed to unmarshal config map %q: %s", configPath, err.Error()))
 	}
 
