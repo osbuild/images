@@ -105,36 +105,6 @@ type Package struct {
 	License     string
 }
 
-func (pkg Package) ToPackageBuild() PackageBuild {
-	// Convert the time to the API time format
-	return PackageBuild{
-		Arch:           pkg.Arch,
-		BuildTime:      pkg.BuildTime.Format("2006-01-02T15:04:05"),
-		Epoch:          pkg.Epoch,
-		Release:        pkg.Release,
-		Changelog:      "CHANGELOG_NEEDED", // the same value as lorax-composer puts here
-		BuildConfigRef: "BUILD_CONFIG_REF", // the same value as lorax-composer puts here
-		BuildEnvRef:    "BUILD_ENV_REF",    // the same value as lorax-composer puts here
-		Source: PackageSource{
-			License:   pkg.License,
-			Version:   pkg.Version,
-			SourceRef: "SOURCE_REF", // the same value as lorax-composer puts here
-		},
-	}
-}
-
-func (pkg Package) ToPackageInfo() PackageInfo {
-	return PackageInfo{
-		Name:         pkg.Name,
-		Summary:      pkg.Summary,
-		Description:  pkg.Description,
-		Homepage:     pkg.URL,
-		UpstreamVCS:  "UPSTREAM_VCS", // the same value as lorax-composer puts here
-		Builds:       []PackageBuild{pkg.ToPackageBuild()},
-		Dependencies: nil,
-	}
-}
-
 // The inputs to depsolve, a set of packages to include and a set of packages
 // to exclude. The Repositories are used when depsolving this package set in
 // addition to the base repositories.
@@ -170,35 +140,6 @@ type PackageSpec struct {
 
 	Path   string `json:"path,omitempty"`
 	RepoID string `json:"repo_id,omitempty"`
-}
-
-type PackageSource struct {
-	License   string   `json:"license"`
-	Version   string   `json:"version"`
-	SourceRef string   `json:"source_ref"`
-	Metadata  struct{} `json:"metadata"` // it's just an empty struct in lorax-composer
-}
-
-type PackageBuild struct {
-	Arch           string        `json:"arch"`
-	BuildTime      string        `json:"build_time"`
-	Epoch          uint          `json:"epoch"`
-	Release        string        `json:"release"`
-	Source         PackageSource `json:"source"`
-	Changelog      string        `json:"changelog"`
-	BuildConfigRef string        `json:"build_config_ref"`
-	BuildEnvRef    string        `json:"build_env_ref"`
-	Metadata       struct{}      `json:"metadata"` // it's just an empty struct in lorax-composer
-}
-
-type PackageInfo struct {
-	Name         string         `json:"name"`
-	Summary      string         `json:"summary"`
-	Description  string         `json:"description"`
-	Homepage     string         `json:"homepage"`
-	UpstreamVCS  string         `json:"upstream_vcs"`
-	Builds       []PackageBuild `json:"builds"`
-	Dependencies []PackageSpec  `json:"dependencies,omitempty"`
 }
 
 type ModuleSpec struct {
@@ -328,26 +269,4 @@ func (packages PackageList) Search(globPatterns ...string) (PackageList, error) 
 	})
 
 	return foundPackages, nil
-}
-
-func (packages PackageList) ToPackageInfos() []PackageInfo {
-	resultsNames := make(map[string]int)
-	var results []PackageInfo
-
-	for _, pkg := range packages {
-		if index, ok := resultsNames[pkg.Name]; ok {
-			foundPkg := &results[index]
-
-			foundPkg.Builds = append(foundPkg.Builds, pkg.ToPackageBuild())
-		} else {
-			newIndex := len(results)
-			resultsNames[pkg.Name] = newIndex
-
-			packageInfo := pkg.ToPackageInfo()
-
-			results = append(results, packageInfo)
-		}
-	}
-
-	return results
 }
