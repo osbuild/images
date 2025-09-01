@@ -212,7 +212,11 @@ def main():
         case "ami" | "ec2" | "ec2-ha" | "ec2-sap" | "edge-ami":
             boot_ami(distro, arch, image_type, image_path, build_config_path)
         case "vhd":
-            boot_vhd(distro, arch, image_path, build_config_path)
+            if arch == "x86_64":
+                boot_vhd(distro, arch, image_path, build_config_path)
+            else:
+                print(f"{image_type} boot tests on {arch} are not supported yet")
+                return
         case "iot-bootable-container":
             manifest_id = build_info["manifest-checksum"]
             boot_container(distro, arch, image_type, image_path, manifest_id)
