@@ -368,6 +368,10 @@ func installerCustomizations(t *imageType, c *blueprint.Customizations) (manifes
 		if isoboot := installerConfig.ISOBootType; isoboot != nil {
 			isc.ISOBoot = *isoboot
 		}
+
+		if customPath := installerConfig.CustomLoraxTemplatePath; customPath != nil {
+			isc.CustomLoraxTemplatePath = *customPath
+		}
 	}
 
 	installerCust, err := c.GetInstaller()
