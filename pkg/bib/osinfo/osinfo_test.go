@@ -9,6 +9,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/osbuild/images/pkg/datasizes"
+	"github.com/osbuild/images/pkg/disk"
 )
 
 func writeOSRelease(root, id, versionID, name, platformID, variantID, idLike string) error {
@@ -211,4 +214,57 @@ func TestLoadInfoKernel(t *testing.T) {
 			}
 		})
 	}
+}
+
+var fakePartitionTableYAML = `
+.common:
+  partitioning:
+    guids:
+      - &bios_boot_partition_guid "21686148-6449-6E6F-744E-656564454649"
+
+partition_table:
+  type: "gpt"
+  partitions:
+    - &bios_boot_partition
+      size: 1 MiB
+      uuid: 2866630c-0c7e-469c-bc82-c458e3fd6223
+      bootable: true
+      type: *bios_boot_partition_guid
+`
+
+func createPartitionTable(root, fakePartitionTableYAML string) error {
+	dst := path.Join(root, "/usr/lib/bootc-image-builder/disk.yaml")
+	if err := os.MkdirAll(path.Dir(dst), 0755); err != nil {
+		return err
+	}
+	return os.WriteFile(dst, []byte(fakePartitionTableYAML), 0644)
+}
+
+func TestLoadInfoPartitionTableHappy(t *testing.T) {
+	root := t.TempDir()
+	require.NoError(t, writeOSRelease(root, "fedora", "40", "Fedora Linux", "fedora", "platform:f40", "coreos"))
+	require.NoError(t, createPartitionTable(root, fakePartitionTableYAML))
+
+	info, err := Load(root)
+	require.NoError(t, err)
+	assert.Equal(t, &disk.PartitionTable{
+		Type: disk.PT_GPT,
+		Partitions: []disk.Partition{
+			{
+				Bootable: true,
+				Size:     1 * datasizes.MiB,
+				Type:     "21686148-6449-6E6F-744E-656564454649",
+				UUID:     "2866630c-0c7e-469c-bc82-c458e3fd6223",
+			},
+		},
+	}, info.PartitionTable)
+}
+
+func TestLoadInfoPartitionTableSad(t *testing.T) {
+	root := t.TempDir()
+	require.NoError(t, writeOSRelease(root, "fedora", "40", "Fedora Linux", "fedora", "platform:f40", "coreos"))
+	require.NoError(t, createPartitionTable(root, "@invalidYAML"))
+
+	_, err := Load(root)
+	assert.EqualError(t, err, fmt.Sprintf(`cannot parse disk definitions from "%s/usr/lib/bootc-image-builder/disk.yaml": yaml: found character that cannot start any token`, root))
 }
