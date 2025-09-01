@@ -1183,6 +1183,8 @@
           grub2_config:
             <<: *azure_common_grub2_config
             terminal: ["serial"]
+            terminal_input: ["serial"]
+            terminal_output: ["serial"]
       "aarch64 grub2 config terminal=console":
         when:
           arch: "aarch64"
