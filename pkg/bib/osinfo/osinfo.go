@@ -9,12 +9,15 @@ import (
 	"strings"
 
 	"github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v3"
 
 	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/pkg/bib/blueprintload"
+	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 )
 
+// XXX: use image-builder instead?
 const bibPathPrefix = "usr/lib/bootc-image-builder"
 
 type OSRelease struct {
@@ -37,6 +40,8 @@ type Info struct {
 	SELinuxPolicy      string
 	ImageCustomization *blueprint.Customizations
 	KernelInfo         *KernelInfo
+
+	PartitionTable *disk.PartitionTable
 }
 
 func validateOSRelease(osrelease map[string]string) error {
@@ -125,6 +130,29 @@ func readImageCustomization(root string) (*blueprint.Customizations, error) {
 	return config.Customizations, nil
 }
 
+type diskYAML struct {
+	PartitionTable *disk.PartitionTable `json:"partition_table" yaml:"partition_table"`
+}
+
+func readPartitionTable(root string) (*disk.PartitionTable, error) {
+	p := path.Join(root, bibPathPrefix, "disk.yaml")
+	var disk diskYAML
+	f, err := os.Open(p)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("cannot load disk definitions from %q: %w", p, err)
+	}
+	defer f.Close()
+
+	if err := yaml.NewDecoder(f).Decode(&disk); err != nil {
+		return nil, fmt.Errorf("cannot parse disk definitions from %q: %w", p, err)
+	}
+
+	return disk.PartitionTable, nil
+}
+
 func readKernelInfo(root string) (*KernelInfo, error) {
 	modulesDir := path.Join(root, "usr/lib/modules")
 	entries, err := os.ReadDir(modulesDir)
@@ -177,6 +205,11 @@ func Load(root string) (*Info, error) {
 		return nil, err
 	}
 
+	pt, err := readPartitionTable(root)
+	if err != nil {
+		return nil, err
+	}
+
 	kernelInfo, err := readKernelInfo(root)
 	if err != nil {
 		logrus.Debugf("cannot read kernel info: %v", err)
@@ -206,5 +239,6 @@ func Load(root string) (*Info, error) {
 		SELinuxPolicy:      selinuxPolicy,
 		ImageCustomization: customization,
 		KernelInfo:         kernelInfo,
+		PartitionTable:     pt,
 	}, nil
 }
