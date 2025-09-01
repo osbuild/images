@@ -8,6 +8,7 @@ import (
 	"github.com/osbuild/blueprint/pkg/blueprint"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/disk/partition"
@@ -659,4 +660,22 @@ func TestManifestDirCustomizationsSad(t *testing.T) {
 
 	_, _, err := imgType.Manifest(bp, distro.ImageOptions{}, nil, common.ToPtr(int64(0)))
 	assert.EqualError(t, err, `the following custom directories are not allowed: ["/dir/not/allowed"]`)
+}
+
+func TestGenPartitionTableFromOSInfo(t *testing.T) {
+	var bp blueprint.Blueprint
+	imgType := bootc.NewTestBootcImageType()
+	// pretend a custom partition table is set via the bootc
+	// container sourceInfo mechanism
+	newPt := bootc.PartitionTables[arch.Current().String()]
+	newPt.UUID = "01010101-01011-01011-01011-01010101"
+	imgType.SetSourceInfoPartitionTable(&newPt)
+
+	// validate that the container uuid is part of the generated
+	// manifest
+	mf, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, common.ToPtr(int64(0)))
+	assert.NoError(t, err)
+	manifestJson, err := mf.Serialize(nil, bootc.TestDiskContainers, nil, nil)
+	assert.NoError(t, err)
+	assert.Contains(t, string(manifestJson), "01010101-01011-01011-01011-01010101")
 }

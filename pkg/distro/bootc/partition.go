@@ -61,11 +61,27 @@ var (
 	})
 )
 
+func (t *BootcImageType) basePartitionTable() (*disk.PartitionTable, error) {
+	// base partition table can come from the container
+	if t.arch.distro.sourceInfo != nil && t.arch.distro.sourceInfo.PartitionTable != nil {
+		return t.arch.distro.sourceInfo.PartitionTable, nil
+	}
+	// get it from the build-in fallback partition tables
+	if pt, ok := partitionTables[t.arch.Name()]; ok {
+		return &pt, nil
+	}
+	return nil, fmt.Errorf("cannot find a base partition table for %q", t.Name())
+}
+
 func (t *BootcImageType) genPartitionTable(customizations *blueprint.Customizations, rootfsMinSize uint64, rng *rand.Rand) (*disk.PartitionTable, error) {
 	fsCust := customizations.GetFilesystems()
 	diskCust, err := customizations.GetPartitioning()
 	if err != nil {
 		return nil, fmt.Errorf("error reading disk customizations: %w", err)
+	}
+	basept, err := t.basePartitionTable()
+	if err != nil {
+		return nil, err
 	}
 
 	// Embedded disk customization applies if there was no local customization
@@ -85,12 +101,12 @@ func (t *BootcImageType) genPartitionTable(customizations *blueprint.Customizati
 	case fsCust != nil && diskCust != nil:
 		return nil, fmt.Errorf("cannot combine disk and filesystem customizations")
 	case diskCust != nil:
-		partitionTable, err = t.genPartitionTableDiskCust(diskCust, rootfsMinSize, rng)
+		partitionTable, err = t.genPartitionTableDiskCust(basept, diskCust, rootfsMinSize, rng)
 		if err != nil {
 			return nil, err
 		}
 	default:
-		partitionTable, err = t.genPartitionTableFsCust(fsCust, rootfsMinSize, rng)
+		partitionTable, err = t.genPartitionTableFsCust(basept, fsCust, rootfsMinSize, rng)
 		if err != nil {
 			return nil, err
 		}
@@ -110,15 +126,14 @@ func (t *BootcImageType) genPartitionTable(customizations *blueprint.Customizati
 	return partitionTable, nil
 }
 
-func (t *BootcImageType) genPartitionTableDiskCust(diskCust *blueprint.DiskCustomization, rootfsMinSize uint64, rng *rand.Rand) (*disk.PartitionTable, error) {
+func (t *BootcImageType) genPartitionTableDiskCust(basept *disk.PartitionTable, diskCust *blueprint.DiskCustomization, rootfsMinSize uint64, rng *rand.Rand) (*disk.PartitionTable, error) {
 	if err := diskCust.ValidateLayoutConstraints(); err != nil {
 		return nil, fmt.Errorf("cannot use disk customization: %w", err)
 	}
 
 	diskCust.MinSize = max(diskCust.MinSize, rootfsMinSize)
 
-	basept, ok := partitionTables[t.arch.Name()]
-	if !ok {
+	if basept == nil {
 		return nil, fmt.Errorf("pipelines: no partition tables defined for %s", t.arch.Name())
 	}
 	defaultFSType, err := disk.NewFSType(t.arch.distro.defaultFs)
@@ -140,9 +155,8 @@ func (t *BootcImageType) genPartitionTableDiskCust(diskCust *blueprint.DiskCusto
 	return disk.NewCustomPartitionTable(diskCust, partOptions, rng)
 }
 
-func (t *BootcImageType) genPartitionTableFsCust(fsCust []blueprint.FilesystemCustomization, rootfsMinSize uint64, rng *rand.Rand) (*disk.PartitionTable, error) {
-	basept, ok := partitionTables[t.arch.Name()]
-	if !ok {
+func (t *BootcImageType) genPartitionTableFsCust(basept *disk.PartitionTable, fsCust []blueprint.FilesystemCustomization, rootfsMinSize uint64, rng *rand.Rand) (*disk.PartitionTable, error) {
+	if basept == nil {
 		return nil, fmt.Errorf("pipelines: no partition tables defined for %s", t.arch.Name())
 	}
 
@@ -155,7 +169,7 @@ func (t *BootcImageType) genPartitionTableFsCust(fsCust []blueprint.FilesystemCu
 	}
 	fsCustomizations := updateFilesystemSizes(fsCust, rootfsMinSize)
 
-	pt, err := disk.NewPartitionTable(&basept, fsCustomizations, DEFAULT_SIZE, partitioningMode, t.arch.arch, nil, rng)
+	pt, err := disk.NewPartitionTable(basept, fsCustomizations, DEFAULT_SIZE, partitioningMode, t.arch.arch, nil, rng)
 	if err != nil {
 		return nil, err
 	}
