@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"go/types"
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -199,4 +200,22 @@ func TestIsBIOSBoot(t *testing.T) {
 			assert.Equal(t, tt.expected, result)
 		})
 	}
+}
+
+func TestPartitionClone(t *testing.T) {
+	p1 := &disk.Partition{
+		Start:    123,
+		Size:     456,
+		Type:     "0x83",
+		Bootable: true,
+		UUID:     "7a23f22e-3da3-4b3c-a1b7-cc3ebb995307",
+		Label:    "part-label",
+		Payload:  &disk.Raw{SourcePath: "/source/path"},
+		Attrs:    []uint{7, 8, 9},
+	}
+	p2 := p1.Clone().(*disk.Partition)
+	assert.Equal(t, p1, p2)
+	// payload/attrs got cloned as well
+	assert.False(t, reflect.ValueOf(p1.Payload).Pointer() == reflect.ValueOf(p2.Payload).Pointer())
+	assert.False(t, reflect.ValueOf(p1.Attrs).Pointer() == reflect.ValueOf(p2.Attrs).Pointer())
 }
