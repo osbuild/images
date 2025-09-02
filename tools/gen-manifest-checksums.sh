@@ -35,6 +35,7 @@ echo "Generating mock manifests"
 if ! "${tmpdir}/bin/gen-manifests" \
     --packages=false --containers=false --commits=false \
     --metadata=false \
+    --fake-bootc=true \
     --arches "x86_64,aarch64,ppc64le,s390x" \
     --output "${tmpdir}/manifests" \
     > /dev/null 2> "${tmpdir}/stderr"; then

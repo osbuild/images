@@ -1,6 +1,7 @@
 package bootc_test
 
 import (
+	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,6 +16,10 @@ import (
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/bootc"
 )
+
+func createRand() *rand.Rand {
+	return rand.New(rand.NewSource(0))
+}
 
 func TestCheckFilesystemCustomizationsValidates(t *testing.T) {
 	for _, tc := range []struct {
@@ -326,7 +331,7 @@ func findMountableSizeableFor(pt *disk.PartitionTable, needle string) (disk.Moun
 }
 
 func TestGenPartitionTableSetsRootfsForAllFilesystemsXFS(t *testing.T) {
-	rng := bootc.CreateRand()
+	rng := createRand()
 
 	imgType := bootc.NewTestBootcImageType()
 
@@ -356,7 +361,7 @@ func TestGenPartitionTableSetsRootfsForAllFilesystemsXFS(t *testing.T) {
 }
 
 func TestGenPartitionTableSetsRootfsForAllFilesystemsBtrfs(t *testing.T) {
-	rng := bootc.CreateRand()
+	rng := createRand()
 
 	imgType := bootc.NewTestBootcImageType()
 	err := imgType.Arch().Distro().(*bootc.BootcDistro).SetDefaultFs("btrfs")
@@ -378,7 +383,7 @@ func TestGenPartitionTableSetsRootfsForAllFilesystemsBtrfs(t *testing.T) {
 	assert.Equal(t, "vfat", mnt.GetFSType())
 }
 func TestGenPartitionTableDiskCustomizationRunsValidateLayoutConstraints(t *testing.T) {
-	rng := bootc.CreateRand()
+	rng := createRand()
 
 	imgType := bootc.NewTestBootcImageType()
 
@@ -415,7 +420,7 @@ func TestGenPartitionTableDiskCustomizationUnknownTypesError(t *testing.T) {
 }
 
 func TestGenPartitionTableDiskCustomizationSizes(t *testing.T) {
-	rng := bootc.CreateRand()
+	rng := createRand()
 
 	for _, tc := range []struct {
 		name                string

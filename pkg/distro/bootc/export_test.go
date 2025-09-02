@@ -14,7 +14,6 @@ var (
 	CheckFilesystemCustomizations = checkFilesystemCustomizations
 	PartitionTables               = partitionTables
 	UpdateFilesystemSizes         = updateFilesystemSizes
-	CreateRand                    = createRand
 	CalcRequiredDirectorySizes    = calcRequiredDirectorySizes
 
 	TestDiskContainers = diskContainers
