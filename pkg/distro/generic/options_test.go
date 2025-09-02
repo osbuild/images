@@ -58,6 +58,11 @@ func TestCheckOptions(t *testing.T) {
 		"f42/ostree-disk-supported": {
 			distro: "fedora-42",
 			it:     "iot-qcow2",
+			options: distro.ImageOptions{
+				OSTree: &ostree.ImageOptions{
+					URL: "https://example.org/repo",
+				},
+			},
 			bp: blueprint.Blueprint{
 				Customizations: &blueprint.Customizations{
 					User:  []blueprint.UserCustomization{{Name: "root"}},
@@ -75,7 +80,6 @@ func TestCheckOptions(t *testing.T) {
 					FIPS: common.ToPtr(true),
 				},
 			},
-			// NOTE: this should also require an ostree URL
 		},
 		"f42/ostree-disk-not-supported": {
 			distro: "fedora-42",
@@ -509,17 +513,15 @@ func TestCheckOptions(t *testing.T) {
 			expErr: "blueprint validation failed for image type \"server-vhd\": customizations.oscap.profile_id: required when using customizations.oscap",
 		},
 
-		// NOTE: the following tests verify the current behaviour of the
-		// function, but the behaviour itself is wrong
 		"f42/ostree-disk-requires-ostree-url": {
 			distro: "fedora-42",
 			it:     "iot-qcow2",
-			expErr: "", // NOTE: it should require a URL
+			expErr: "options validation failed for image type \"iot-qcow2\": ostree.url: required",
 		},
 		"f42/ostree-disk2-requires-ostree-url": {
 			distro: "fedora-42",
 			it:     "iot-raw-xz",
-			expErr: "", // NOTE: it should require a URL
+			expErr: "options validation failed for image type \"iot-raw-xz\": ostree.url: required",
 		},
 
 		"r8/ami-ok": {

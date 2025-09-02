@@ -542,7 +542,7 @@ func checkOptionsFedora(t *imageType, bp *blueprint.Blueprint, options distro.Im
 		}
 	}
 
-	if t.BootISO && t.RPMOSTree {
+	if (t.BootISO || t.Bootable) && t.RPMOSTree {
 		// ostree-based ISOs require a URL from which to pull a payload commit
 		if options.OSTree == nil || options.OSTree.URL == "" {
 			return warnings, fmt.Errorf("options validation failed for image type %q: ostree.url: required", t.Name())
