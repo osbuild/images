@@ -230,6 +230,9 @@ image_types:
         partitions:
           - size: 1_048_576
             bootable: true
+            attrs:
+              - 50
+              - 51
           - payload_type: filesystem
             size: 209_715_200
             payload:
@@ -273,6 +276,7 @@ image_types:
 			{
 				Size:     1048576,
 				Bootable: true,
+				Attrs:    []uint{50, 51},
 			},
 			{
 				Size: 209_715_200,
