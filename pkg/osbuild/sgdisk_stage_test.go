@@ -35,4 +35,9 @@ func TestNewSgdiskStage(t *testing.T) {
 
 	actualStage := NewSgdiskStage(&options, device)
 	assert.Equal(t, expectedStage, actualStage)
+
+	// test with attributes
+	options.Partitions[0].Attrs = []uint{50, 51}
+	actualStageAttr := NewSgdiskStage(&options, device)
+	assert.Equal(t, expectedStage, actualStageAttr)
 }

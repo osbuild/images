@@ -40,6 +40,11 @@ func TestNewSfdiskStage(t *testing.T) {
 	options.Label = "dos"
 	actualStageDOS := NewSfdiskStage(&options, device)
 	assert.Equal(t, expectedStage, actualStageDOS)
+
+	// test with attributes
+	options.Partitions[0].Attrs = []uint{50, 51}
+	actualStageAttr := NewSfdiskStage(&options, device)
+	assert.Equal(t, expectedStage, actualStageAttr)
 }
 
 func TestNewSfdiskStageInvalid(t *testing.T) {
