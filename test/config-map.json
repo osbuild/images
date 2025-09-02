@@ -159,7 +159,6 @@
       "tar",
       "vagrant-libvirt",
       "vagrant-virtualbox",
-      "vhd",
       "vmdk",
       "wsl"
     ]
@@ -501,6 +500,31 @@
     ],
     "image-types": [
       "azure-rhui"
+    ]
+  },
+  "./configs/empty-rhel-vhd.json": {
+    "distros": [
+      "rhel-8*",
+      "rhel-9.4",
+      "rhel-9.6",
+      "rhel-9.7",
+      "rhel-9.8",
+      "rhel-10*",
+      "centos-*"
+    ],
+    "arches": [],
+    "image-types": [
+      "vhd"
+    ]
+
+  },
+  "./configs/disable-nm-cloud-setup.json": {
+    "distros": [
+      "rhel-9.0",
+      "rhel-9.2"
+    ],
+    "image-types": [
+      "vhd"
     ]
   }
 }
