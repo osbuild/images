@@ -3,11 +3,13 @@ package bootc
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"sort"
 	"strings"
 
 	"github.com/osbuild/blueprint/pkg/blueprint"
 
+	"github.com/osbuild/images/internal/cmdutil"
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
 	bibcontainer "github.com/osbuild/images/pkg/bib/container"
@@ -270,7 +272,6 @@ func (t *BootcImageType) Manifest(bp *blueprint.Blueprint, options distro.ImageO
 	if t.arch.distro.imgref == "" {
 		return nil, nil, fmt.Errorf("internal error: no base image defined")
 	}
-
 	containerSource := container.SourceSpec{
 		Source: t.arch.distro.imgref,
 		Name:   t.arch.distro.imgref,
@@ -286,6 +287,12 @@ func (t *BootcImageType) Manifest(bp *blueprint.Blueprint, options distro.ImageO
 	if bp != nil {
 		customizations = bp.Customizations
 	}
+	seed, err := cmdutil.SeedArgFor(nil, t.Name(), t.arch.Name(), t.arch.distro.Name())
+	if err != nil {
+		return nil, nil, err
+	}
+	//nolint:gosec
+	rng := rand.New(rand.NewSource(seed))
 
 	archi := common.Must(arch.FromString(t.arch.Name()))
 	platform := &platform.Data{
@@ -327,7 +334,7 @@ func (t *BootcImageType) Manifest(bp *blueprint.Blueprint, options distro.ImageO
 	}
 
 	rootfsMinSize := max(t.arch.distro.rootfsMinSize, options.Size)
-	rng := createRand()
+
 	pt, err := t.genPartitionTable(customizations, rootfsMinSize, rng)
 	if err != nil {
 		return nil, nil, err
