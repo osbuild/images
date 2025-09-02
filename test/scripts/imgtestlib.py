@@ -65,6 +65,8 @@ NullBuild:
   script: "true"
   tags:
     - "shell"
+  rules:
+    - when: never
 """
 
 
