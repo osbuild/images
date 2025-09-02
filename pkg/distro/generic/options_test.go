@@ -1568,7 +1568,7 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			expErr: "embedding containers is not supported for azure-rhui on rhel-7.9",
+			expErr: "blueprint validation failed for image type \"azure-rhui\": containers: not supported",
 		},
 
 		"r7/oscap-empty-profile": {
@@ -1581,7 +1581,7 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			expErr: "OpenSCAP unsupported os version: 7.9",
+			expErr: "blueprint validation failed for image type \"qcow2\": customizations.openscap: not supported",
 		},
 	}
 

@@ -481,43 +481,68 @@ func checkOptionsRhel8(t *imageType, bp *blueprint.Blueprint, options distro.Ima
 
 }
 
-func checkOptionsRhel7(t *imageType, bp *blueprint.Blueprint, options distro.ImageOptions) ([]string, error) {
+func checkOptionsRhel7(t *imageType, bp *blueprint.Blueprint, _ distro.ImageOptions) ([]string, error) {
 	customizations := bp.Customizations
-	// holds warnings (e.g. deprecation notices)
+
 	var warnings []string
-	if len(bp.Containers) > 0 {
-		return warnings, fmt.Errorf("embedding containers is not supported for %s on %s", t.Name(), t.Arch().Distro().Name())
+
+	errPrefix := fmt.Sprintf("blueprint validation failed for image type %q", t.Name())
+
+	if err := distro.ValidateConfig(t, *bp); err != nil {
+		return warnings, fmt.Errorf("%s: %w", errPrefix, err)
 	}
+
 	mountpoints := customizations.GetFilesystems()
-	err := blueprint.CheckMountpointsPolicy(mountpoints, policies.MountpointPolicies)
+	partitioning, err := customizations.GetPartitioning()
 	if err != nil {
 		return warnings, err
 	}
-	if osc := customizations.GetOpenSCAP(); osc != nil {
-		return warnings, fmt.Errorf("OpenSCAP unsupported os version: %s", t.Arch().Distro().OsVersion())
+	if len(mountpoints) > 0 && partitioning != nil {
+		return warnings, fmt.Errorf("%s: customizations.disk cannot be used with customizations.filesystem", errPrefix)
 	}
+
+	if err := blueprint.CheckMountpointsPolicy(mountpoints, policies.MountpointPolicies); err != nil {
+		return warnings, fmt.Errorf("%s: %w", errPrefix, err)
+	}
+	if err := blueprint.CheckDiskMountpointsPolicy(partitioning, policies.MountpointPolicies); err != nil {
+		return warnings, fmt.Errorf("%s: %w", errPrefix, err)
+	}
+	if err := partitioning.ValidateLayoutConstraints(); err != nil {
+		return warnings, fmt.Errorf("%s: %w", errPrefix, err)
+	}
+
 	// Check Directory/File Customizations are valid
 	dc := customizations.GetDirectories()
 	fc := customizations.GetFiles()
+
 	err = blueprint.ValidateDirFileCustomizations(dc, fc)
 	if err != nil {
 		return warnings, err
 	}
+
 	dcp := policies.CustomDirectoriesPolicies
 	fcp := policies.CustomFilesPolicies
+
 	err = blueprint.CheckDirectoryCustomizationsPolicy(dc, dcp)
 	if err != nil {
-		return warnings, err
+		return warnings, fmt.Errorf("%s: %w", errPrefix, err)
 	}
+
 	err = blueprint.CheckFileCustomizationsPolicy(fc, fcp)
 	if err != nil {
-		return warnings, err
+		return warnings, fmt.Errorf("%s: %w", errPrefix, err)
 	}
+
 	// check if repository customizations are valid
 	_, err = customizations.GetRepositories()
 	if err != nil {
-		return warnings, err
+		return warnings, fmt.Errorf("%s: %w", errPrefix, err)
 	}
+
+	if customizations.GetFIPS() && !common.IsBuildHostFIPSEnabled() {
+		warnings = append(warnings, fmt.Sprintln(common.FIPSEnabledImageWarning))
+	}
+
 	return warnings, nil
 }
 
