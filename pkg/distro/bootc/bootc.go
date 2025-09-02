@@ -77,6 +77,7 @@ func (d *BootcDistro) SetBuildContainer(imgref string) (err error) {
 	if err != nil {
 		return err
 	}
+	d.buildImgref = imgref
 	d.buildSourceInfo = info
 	return nil
 }
@@ -399,8 +400,7 @@ func NewBootcDistro(imgref string) (bd *BootcDistro, err error) {
 		sourceInfo:    info,
 		rootfsMinSize: cntSize * containerSizeToDiskSizeMultiplier,
 
-		imgref:      imgref,
-		buildImgref: imgref,
+		imgref: imgref,
 	}
 
 	for _, archStr := range []string{"x86_64", "aarch64", "ppc64le", "s390x", "riscv64"} {
