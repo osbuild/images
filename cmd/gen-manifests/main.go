@@ -258,6 +258,11 @@ func makeManifestJob(
 			}
 			msgq <- msg
 		}()
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("[%s] failed with panic: %s", filename, r)
+			}
+		}()
 		msgq <- fmt.Sprintf("Starting job %s", filename)
 
 		manifest, _, err := imgType.Manifest(&bp, options, repos, &seedArg)
