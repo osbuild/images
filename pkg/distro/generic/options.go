@@ -549,39 +549,32 @@ func checkOptionsFedora(t *imageType, bp *blueprint.Blueprint, options distro.Im
 		}
 	}
 
-	// BootISOs have limited support for customizations.
-	// TODO: Support kernel name selection for image-installer
-	if t.BootISO {
-		if t.Name() == "iot-simplified-installer" {
-			// FDO is optional, but when specified has some restrictions
-			if customizations.GetFDO() != nil {
-				if customizations.GetFDO().ManufacturingServerURL == "" {
-					return warnings, fmt.Errorf("%s: customizations.fdo.manufacturing_server_url: required when using fdo", errPrefix)
-				}
-				var diunSet int
-				if customizations.GetFDO().DiunPubKeyHash != "" {
-					diunSet++
-				}
-				if customizations.GetFDO().DiunPubKeyInsecure != "" {
-					diunSet++
-				}
-				if customizations.GetFDO().DiunPubKeyRootCerts != "" {
-					diunSet++
-				}
-				if diunSet != 1 {
-					return warnings, fmt.Errorf("%s: one of customizations.fdo.diun_pub_key_hash, customizations.fdo.diun_pub_key_insecure, customizations.fdo.diun_pub_key_root_certs: required when using fdo", errPrefix)
-				}
-			}
+	// FDO is optional, but when specified has some restrictions
+	if customizations.GetFDO() != nil {
+		if customizations.GetFDO().ManufacturingServerURL == "" {
+			return warnings, fmt.Errorf("%s: customizations.fdo.manufacturing_server_url: required when using fdo", errPrefix)
+		}
+		var diunSet int
+		if customizations.GetFDO().DiunPubKeyHash != "" {
+			diunSet++
+		}
+		if customizations.GetFDO().DiunPubKeyInsecure != "" {
+			diunSet++
+		}
+		if customizations.GetFDO().DiunPubKeyRootCerts != "" {
+			diunSet++
+		}
+		if diunSet != 1 {
+			return warnings, fmt.Errorf("%s: one of customizations.fdo.diun_pub_key_hash, customizations.fdo.diun_pub_key_insecure, customizations.fdo.diun_pub_key_root_certs: required when using fdo", errPrefix)
+		}
+	}
 
-			// ignition is optional, we might be using FDO
-			if customizations.GetIgnition() != nil {
-				if customizations.GetIgnition().Embedded != nil && customizations.GetIgnition().FirstBoot != nil {
-					return warnings, fmt.Errorf("%s: customizations.ignition.embedded cannot be used with customizations.ignition.firstboot", errPrefix)
-				}
-				if customizations.GetIgnition().FirstBoot != nil && customizations.GetIgnition().FirstBoot.ProvisioningURL == "" {
-					return warnings, fmt.Errorf("%s: customizations.ignition.firstboot requires customizations.ignition.firstboot.provisioning_url", errPrefix)
-				}
-			}
+	if customizations.GetIgnition() != nil {
+		if customizations.GetIgnition().Embedded != nil && customizations.GetIgnition().FirstBoot != nil {
+			return warnings, fmt.Errorf("%s: customizations.ignition.embedded cannot be used with customizations.ignition.firstboot", errPrefix)
+		}
+		if customizations.GetIgnition().FirstBoot != nil && customizations.GetIgnition().FirstBoot.ProvisioningURL == "" {
+			return warnings, fmt.Errorf("%s: customizations.ignition.firstboot requires customizations.ignition.firstboot.provisioning_url", errPrefix)
 		}
 	}
 
