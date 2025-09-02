@@ -1,6 +1,7 @@
 package generic_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -298,7 +299,7 @@ func TestRhel7Distro_CustomFileSystemManifestError(t *testing.T) {
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
-			assert.EqualError(t, err, "The following custom mountpoints are not supported [\"/etc\"]")
+			assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: The following custom mountpoints are not supported [\"/etc\"]", imgTypeName))
 		}
 	}
 }
@@ -410,7 +411,7 @@ func TestRhel7Distro_DirtyMountpointsNotAllowed(t *testing.T) {
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
-			assert.EqualError(t, err, "The following custom mountpoints are not supported [\"//\" \"/var//\" \"/var//log/audit/\"]")
+			assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: The following custom mountpoints are not supported [\"//\" \"/var//\" \"/var//log/audit/\"]", imgTypeName))
 		}
 	}
 }
