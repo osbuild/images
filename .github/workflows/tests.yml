@@ -263,15 +263,13 @@ jobs:
           sudo apt install -y yamllint yq
 
       - name: YAML Lint
-        # We only care about distro definitions for this check
         run: |
-          find pkg/distro/defs "(" -iname "*.yaml" -or -iname "*.yml" ")" -exec yamllint --strict {} \+
+          find . "(" -iname "*.yaml" -or -iname "*.yml" ")" -exec yamllint --strict {} \+
 
       - name: Check YAML definitions with yq
         # yq will catch issues that yamllint will not, like duplicate anchros
-        # We only care about distro definitions for this check
         run: |
-          find pkg/distro/defs "(" -iname "*.yaml" -or -iname "*.yml" ")" -exec yq . {} \+ > /dev/null
+          find . "(" -iname "*.yaml" -or -iname "*.yml" ")" -exec yq . {} \+ > /dev/null
 
   bib-manifest-diff:
     name: "bib manifest diff validation"
