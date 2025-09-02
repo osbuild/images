@@ -513,7 +513,7 @@ func TestFedoraDistro_ManifestError(t *testing.T) {
 					case "iot-simplified-installer":
 						assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.installation_device: required", imgTypeName))
 					case "iot-raw-xz", "iot-qcow2":
-						assert.EqualError(t, err, fmt.Sprintf("%s: ostree commit URL required", imgTypeName))
+						assert.EqualError(t, err, fmt.Sprintf("options validation failed for image type %q: ostree.url: required", imgTypeName))
 					case "container", "wsl", "iot-bootable-container":
 						assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations: not supported", imgTypeName))
 					default:
