@@ -22,12 +22,12 @@ jobs:
             version: 41
           - name: current
             version: 42
-        # Enable these when we get osbuild rpm builds for each distro version
-        # - name: branched
-        #   version: 43
-        # - name: rawhide
-        #   version: rawhide
-        #   continue-on-error: true
+            # Enable these when we get osbuild rpm builds for each distro version
+            # - name: branched
+            #   version: 43
+            # - name: rawhide
+            #   version: rawhide
+            #   continue-on-error: true
       fail-fast: false  # if one fails, keep the other(s) running
     name: "🛃 Unit tests (Fedora ${{ matrix.fedora_version.name }})"
     runs-on: ubuntu-24.04
