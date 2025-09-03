@@ -513,10 +513,22 @@ func main() {
 			}
 		}
 	}
-	for _, bootcRef := range bootcRefs {
+	for _, bootcRefTuple := range bootcRefs {
+		l := strings.SplitN(bootcRefTuple, "#", 2)
+		bootcRef := l[0]
+		var buildBootcRef string
+		if len(l) > 1 {
+			buildBootcRef = l[1]
+		}
+
 		distribution, err := bootc.NewBootcDistro(bootcRef)
 		if err != nil {
 			panic(err)
+		}
+		if buildBootcRef != "" {
+			if err := distribution.SetBuildContainer(buildBootcRef); err != nil {
+				panic(err)
+			}
 		}
 		// XXX: consider making this configurable but for now
 		// we just need diffable manifests

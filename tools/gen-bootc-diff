@@ -81,43 +81,49 @@ for REF in quay.io/centos-bootc/centos-bootc:stream9 \
 do
     for ARCH in x86_64 aarch64; do
 	for BP in "$BP_FULL_FS" "$BP_LVM" "$BP_EMPTY"; do
-	    echo "Testing $REF;$ARCH;$(basename "$BP")"
-	    sudo podman pull -q --arch "$ARCH" "$REF"
+	    for BUILD_REF in "" "quay.io/fedora/fedora-bootc:41"; do
+		echo "Testing $REF;$ARCH;$(basename "$BP")"
+		sudo podman pull -q --arch "$ARCH" "$REF"
+		if [ -n "$BUILD_REF" ]; then
+		    sudo podman pull -q --arch "$ARCH" "$BUILD_REF"
+		fi
 
-	    TMPDIR=$(mktemp -d)
-	    trap 'rm -rf -- "$TMPDIR"' EXIT
+		TMPDIR=$(mktemp -d)
+		trap 'rm -rf -- "$TMPDIR"' EXIT
 
-	    ROOTFS=""
-	    if grep -q fedora <(echo "$REF"); then
-		ROOTFS="ext4"
-	    fi
+		ROOTFS=""
+		if grep -q fedora <(echo "$REF"); then
+		    ROOTFS="ext4"
+		fi
 
-	    sudo go run \
-		 -buildvcs=false \
-		 github.com/osbuild/bootc-image-builder/bib/cmd/bootc-image-builder@main \
-		manifest -v "$REF" \
-		--config "$BP" \
-		--target-arch "$ARCH" \
-		--rootfs "$ROOTFS" \
-		--type "$TYPE" | jq > "$TMPDIR/bib.json"
+		sudo go run \
+		     -buildvcs=false \
+		     github.com/osbuild/bootc-image-builder/bib/cmd/bootc-image-builder@main \
+		    manifest -v "$REF" \
+		    --config "$BP" \
+		    --target-arch "$ARCH" \
+		    --rootfs "$ROOTFS" \
+		    --build-container "$BUILD_REF" \
+		    --type "$TYPE" | jq > "$TMPDIR/bib.json"
 
-	    # oh well, we need to convert our blueprint into the
-	    # gen-manifests config :/
-	    echo '{"blueprint":' >  "$TMPDIR"/gm-conf.json
-	    cat "$BP" >> "$TMPDIR"/gm-conf.json
-	    echo '}' >>  "$TMPDIR"/gm-conf.json
-	    sudo ./cmd/gen-manifests/gen-manifests \
-		-types "$TYPE" \
-		-arches "$ARCH" \
-		-distros ignore \
-		-metadata=false \
-		-config "$TMPDIR"/gm-conf.json \
-		-bootc-refs "$REF" \
-		-output "$TMPDIR"
+		# oh well, we need to convert our blueprint into the
+		# gen-manifests config :/
+		echo '{"blueprint":' >  "$TMPDIR"/gm-conf.json
+		cat "$BP" >> "$TMPDIR"/gm-conf.json
+		echo '}' >>  "$TMPDIR"/gm-conf.json
+		sudo ./cmd/gen-manifests/gen-manifests \
+		    -types "$TYPE" \
+		    -arches "$ARCH" \
+		    -distros ignore \
+		    -metadata=false \
+		    -config "$TMPDIR"/gm-conf.json \
+		    -bootc-refs "$REF#$BUILD_REF" \
+		    -output "$TMPDIR"
 
-	    # ensure manifests are identical (but skip uuid diffs)
-	    echo "Comparing images and bootc-image-builder generated manifests"
-	    diff -u <(grep -v uuid "$TMPDIR"/bootc_*.json) <(grep -v uuid "$TMPDIR"/bib.json)
+		# ensure manifests are identical (but skip uuid diffs)
+		echo "Comparing images and bootc-image-builder generated manifests"
+		diff -u <(grep -v uuid "$TMPDIR"/bootc_*.json) <(grep -v uuid "$TMPDIR"/bib.json)
+	    done
 	done
     done
 done
