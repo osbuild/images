@@ -62,10 +62,14 @@ jobs:
               exit 1
           fi
 
-      # Run the manifest checksum generator on the HEAD (merge group temporary
-      # branch) and fail if there are changes.
-      - name: Validate manifest checksums (merge queue)
+      # Run the manifest checksum generator on the HEAD (which also works for
+      # the merge group temporary branch) and fail if there are changes.
+      - name: Validate manifest checksums (HEAD)
         if: ${{ github.event_name == 'merge_group' }}
         run: |
            ./tools/gen-manifest-checksums.sh
-           git diff --exit-code
+           if [ -n "$(git status --porcelain)" ]; then
+             echo "Manifest checksum differences detected"
+             git status -vv
+             exit 1
+           fi
