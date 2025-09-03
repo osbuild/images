@@ -49,6 +49,13 @@ func GenFsStages(pt *disk.PartitionTable, filename string, soucePipeline string)
 					VolID: strings.ReplaceAll(e.UUID, "-", ""),
 					Label: e.Label,
 				}
+				if e.MkfsOptions.Geometry != nil {
+					options.Geometry = &MkfsFATStageGeometryOptions{
+						Heads:           e.MkfsOptions.Geometry.Heads,
+						SectorsPerTrack: e.MkfsOptions.Geometry.SectorsPerTrack,
+					}
+				}
+
 				stages = append(stages, NewMkfsFATStage(options, stageDevices))
 			case "ext4":
 				options := &MkfsExt4StageOptions{
