@@ -525,3 +525,45 @@ func TestGenFsStagesUnhappy(t *testing.T) {
 		GenFsStages(pt, "file.img", "build")
 	})
 }
+
+func TestGenFsStagesUnhappyWrongOptionsVerity(t *testing.T) {
+	pt := &disk.PartitionTable{
+		Type: disk.PT_GPT,
+		Partitions: []disk.Partition{
+			{
+				Payload: &disk.Filesystem{
+					Type: "xfs",
+					MkfsOptions: disk.MkfsOptions{
+						Verity: true,
+					},
+				},
+			},
+		},
+	}
+
+	assert.PanicsWithValue(t, "fs type: xfs does not support verity option", func() {
+		GenFsStages(pt, "file.img", "build")
+	})
+}
+
+func TestGenFsStagesUnhappyWrongOptionsGeometry(t *testing.T) {
+	pt := &disk.PartitionTable{
+		Type: disk.PT_GPT,
+		Partitions: []disk.Partition{
+			{
+				Payload: &disk.Filesystem{
+					Type: "ext4",
+					MkfsOptions: disk.MkfsOptions{
+						Geometry: &disk.MkfsOptionGeometry{
+							Heads: 16,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	assert.PanicsWithValue(t, "fs type: ext4 does not support geometry option", func() {
+		GenFsStages(pt, "file.img", "build")
+	})
+}

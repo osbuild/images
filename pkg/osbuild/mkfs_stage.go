@@ -37,6 +37,8 @@ func GenFsStages(pt *disk.PartitionTable, filename string, soucePipeline string)
 		case *disk.Filesystem:
 			stageDevices := getDevicesForFsStage(path, filename)
 
+			// Make a copy so we can mark the ones we handled
+			mkfsOptions := e.MkfsOptions
 			switch e.GetFSType() {
 			case "xfs":
 				options := &MkfsXfsStageOptions{
@@ -49,11 +51,12 @@ func GenFsStages(pt *disk.PartitionTable, filename string, soucePipeline string)
 					VolID: strings.ReplaceAll(e.UUID, "-", ""),
 					Label: e.Label,
 				}
-				if e.MkfsOptions.Geometry != nil {
+				if mkfsOptions.Geometry != nil {
 					options.Geometry = &MkfsFATStageGeometryOptions{
 						Heads:           e.MkfsOptions.Geometry.Heads,
 						SectorsPerTrack: e.MkfsOptions.Geometry.SectorsPerTrack,
 					}
+					mkfsOptions.Geometry = nil // Handled
 				}
 
 				stages = append(stages, NewMkfsFATStage(options, stageDevices))
@@ -62,14 +65,23 @@ func GenFsStages(pt *disk.PartitionTable, filename string, soucePipeline string)
 					UUID:  e.UUID,
 					Label: e.Label,
 				}
-				if e.MkfsOptions.Verity {
+				if mkfsOptions.Verity {
 					options.Verity = common.ToPtr(true)
+					mkfsOptions.Verity = false // Handled
 				}
 
 				stages = append(stages, NewMkfsExt4Stage(options, stageDevices))
 			default:
 				panic(fmt.Sprintf("unknown fs type: %s", e.GetFSType()))
 			}
+
+			if mkfsOptions.Geometry != nil {
+				panic(fmt.Sprintf("fs type: %s does not support geometry option", e.GetFSType()))
+			}
+			if mkfsOptions.Verity {
+				panic(fmt.Sprintf("fs type: %s does not support verity option", e.GetFSType()))
+			}
+
 		case *disk.Btrfs:
 			stageDevices := getDevicesForFsStage(path, filename)
 
