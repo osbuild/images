@@ -397,10 +397,14 @@ func NewBootcDistro(imgref string) (bd *BootcDistro, err error) {
 		name:          nameVer,
 		releasever:    info.OSRelease.VersionID,
 		defaultFs:     defaultFs,
-		sourceInfo:    info,
 		rootfsMinSize: cntSize * containerSizeToDiskSizeMultiplier,
 
-		imgref: imgref,
+		imgref:     imgref,
+		sourceInfo: info,
+		// default buildref/info to regular container, this can
+		// be overriden with SetBuildContainer()
+		buildImgref:     imgref,
+		buildSourceInfo: info,
 	}
 
 	for _, archStr := range []string{"x86_64", "aarch64", "ppc64le", "s390x", "riscv64"} {
