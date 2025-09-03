@@ -8,6 +8,121 @@ import (
 	"github.com/gobwas/glob"
 )
 
+// RelDep represents an RPM dependency with a name, an optional relationship
+// operator and an optional version.
+type RelDep struct {
+	Name         string
+	Relationship string
+	Version      string
+}
+
+type RelDepList []RelDep
+
+// Checksum represents a checksum with its type
+type Checksum struct {
+	Type  string
+	Value string
+}
+
+// RPM package representation
+//
+// Based on libdnf5: https://github.com/rpm-software-management/dnf5/blob/main/include/libdnf5/rpm/package.hpp
+// DNF4 version: https://github.com/rpm-software-management/libdnf/blob/dnf-4-master/libdnf/hy-package.h
+//
+// Some fields that are not relevant for us, or can be deduced from existing fields, are omitted, specifically:
+// - Various EVR or NEVRA getter methods, which would use existing fields
+// - get_source_name() - RPM package source package name
+// - get_debugsource_name() - RPM package debugsource package name
+// - get_debuginfo_name_of_source() - RPM package debuginfo package name for the source package
+// - get_debuginfo_name() - RPM package debuginfo package name
+// - get_prereq_ignoreinst()
+// - get_depends() - RPM package dependencies (requires + enhances + suggests + supplements + recommends)
+// - get_changelogs()
+// - get_hdr_end()
+// - get_media_number()
+// - get_package_path() - Path to the RPM package on the local file system
+// - is_available_locally()
+// - is_installed()
+// - is_excluded()
+// - get_from_repo_id() -  For an installed package, return id of repo from the package was installed
+// - get_install_time()
+// - get_rpmdbid()
+type PackageNG struct {
+	Name    string
+	Epoch   uint
+	Version string
+	Release string
+	Arch    string
+
+	// RPM package Group
+	Group string
+
+	// File size of the RPM package
+	DownloadSize uint64
+	// Size the RPM package should occupy after installing on disk
+	// NB: The actual size on disk may vary based on block size and filesystem overhead.
+	InstallSize uint64
+
+	License string
+
+	// RPM package source package filename
+	SourceRpm string
+
+	BuildTime time.Time
+	Packager  string
+	Vendor    string
+
+	// RPM package URL (project home address)
+	URL string
+
+	Summary     string
+	Description string
+
+	// Regular dependencies
+	Provides        RelDepList
+	Requires        RelDepList // RegularRequires + PreRequires
+	RequiresPre     RelDepList
+	Conflicts       RelDepList
+	Obsoletes       RelDepList
+	RegularRequires RelDepList
+
+	// Weak dependencies
+	Recommends  RelDepList
+	Suggests    RelDepList
+	Enhances    RelDepList
+	Supplements RelDepList
+
+	// List of files and directories the RPM package contains
+	Files []string
+
+	// Repodata
+	// RPM package baseurl from repodata
+	BaseURL string
+	// RPM package relative path/location from repodata
+	Location string
+	// RPM package remote location where the package can be download from
+	RemoteLocations []string
+
+	// Checksum object representing RPM package checksum and its type
+	Checksum Checksum
+	// Checksum object representing RPM package header checksum and its type.
+	HeaderChecksum Checksum
+
+	// Repository ID this package belongs to
+	// XXX: We should should eventually hold a reference to the RepoConfig
+	RepoID string
+
+	// Resolved reason why a package was / would be installed.
+	Reason string
+
+	// Convenience values coming from the respective repository config
+	Secrets   string
+	CheckGPG  bool
+	IgnoreSSL bool
+}
+
+type PackageListNG []PackageNG
+
 type PackageList []Package
 
 type Package struct {
