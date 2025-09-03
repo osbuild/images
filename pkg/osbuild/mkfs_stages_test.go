@@ -13,6 +13,16 @@ import (
 	"github.com/osbuild/images/pkg/disk"
 )
 
+var defaultStageDevices = map[string]Device{
+	"device": {
+		Type: "org.osbuild.loopback",
+		Options: &LoopbackDeviceOptions{
+			Filename: "file.img",
+			Lock:     true,
+		},
+	},
+}
+
 func TestNewMkfsStage(t *testing.T) {
 	devOpts := LoopbackDeviceOptions{
 		Filename:   "file.img",
@@ -431,6 +441,33 @@ func TestGenFsStagesRaw(t *testing.T) {
 					},
 				},
 			},
+		},
+	}, stages)
+}
+
+func TestGenFsStagesUnitExt4Verity(t *testing.T) {
+	pt := &disk.PartitionTable{
+		Type: disk.PT_GPT,
+		Partitions: []disk.Partition{
+			{
+				Payload: &disk.Filesystem{
+					Type:       "ext4",
+					Mountpoint: "/",
+					MkfsOptions: disk.MkfsOptions{
+						Verity: true,
+					},
+				},
+			},
+		},
+	}
+	stages := GenFsStages(pt, "file.img", "build")
+	assert.Equal(t, []*Stage{
+		{
+			Type: "org.osbuild.mkfs.ext4",
+			Options: &MkfsExt4StageOptions{
+				Verity: common.ToPtr(true),
+			},
+			Devices: defaultStageDevices,
 		},
 	}, stages)
 }

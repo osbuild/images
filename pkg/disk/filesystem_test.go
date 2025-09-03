@@ -1,8 +1,7 @@
 package disk_test
 
 import (
-	"encoding/json"
-	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,32 +15,17 @@ func TestImplementsInterfacesCompileTimeCheckFilesystem(t *testing.T) {
 	var _ = disk.FSTabEntity(&disk.Filesystem{})
 }
 
-func TestMkfsOptionUnmarshalHappy(t *testing.T) {
-	for _, tc := range []struct {
-		inp      string
-		expected disk.MkfsOption
-	}{
-		{`"verity"`, disk.MkfsVerity},
-	} {
-		var opt disk.MkfsOption
-		// unmarshaling works
-		err := json.Unmarshal([]byte(tc.inp), &opt)
-		assert.NoError(t, err)
-		assert.Equal(t, tc.expected, opt)
-
-		// encoding again yields the same result
-		encoded, err := json.Marshal(opt)
-		assert.NoError(t, err)
-		assert.Equal(t, tc.inp, string(encoded))
-
-		// and converting to a string gives us the mkfs option
-		// again
-		assert.Equal(t, tc.inp, fmt.Sprintf("%q", opt))
+func TestMkfsOptionsClone(t *testing.T) {
+	Geometry := disk.MkfsOptionGeometry{
+		Heads:           12,
+		SectorsPerTrack: 21,
 	}
-}
+	orig := disk.MkfsOptions{
+		Verity:   true,
+		Geometry: &Geometry,
+	}
+	clone := orig.Clone()
+	assert.Equal(t, orig, clone)
+	assert.False(t, reflect.ValueOf(orig.Geometry).Pointer() == reflect.ValueOf(clone.Geometry).Pointer())
 
-func TestMkfsOptionUnmarshalSad(t *testing.T) {
-	var opt disk.MkfsOption
-	err := json.Unmarshal([]byte(`"invalid-mkfs-option"`), &opt)
-	assert.EqualError(t, err, `invalid mkfsoption: invalid-mkfs-option`)
 }

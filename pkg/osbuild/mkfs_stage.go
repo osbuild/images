@@ -3,7 +3,6 @@ package osbuild
 import (
 	"fmt"
 	"path/filepath"
-	"slices"
 	"strings"
 
 	"github.com/osbuild/images/internal/common"
@@ -56,7 +55,7 @@ func GenFsStages(pt *disk.PartitionTable, filename string, soucePipeline string)
 					UUID:  e.UUID,
 					Label: e.Label,
 				}
-				if slices.Contains(e.MkfsOptions, disk.MkfsVerity) {
+				if e.MkfsOptions.Verity {
 					options.Verity = common.ToPtr(true)
 				}
 
