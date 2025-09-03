@@ -30,7 +30,7 @@ func getDevicesForFsStage(path []disk.Entity, filename string) map[string]Device
 //   - org.osbuild.mkfs.*: for all filesystems and btrfs volumes
 //   - org.osbuild.btrfs.subvol: for all btrfs subvolumes
 //   - org.osbuild.mkswap: for swap areas
-func GenFsStages(pt *disk.PartitionTable, filename string) []*Stage {
+func GenFsStages(pt *disk.PartitionTable, filename string, soucePipeline string) []*Stage {
 	stages := make([]*Stage, 0, len(pt.Partitions))
 
 	genStage := func(ent disk.Entity, path []disk.Entity) error {
@@ -99,7 +99,7 @@ func GenFsStages(pt *disk.PartitionTable, filename string) []*Stage {
 			options := &WriteDeviceStageOptions{
 				From: fmt.Sprintf("input://%s", filepath.Join(inputName, e.SourcePath)),
 			}
-			inputs := NewPipelineTreeInputs(inputName, e.SourcePipeline)
+			inputs := NewPipelineTreeInputs(inputName, soucePipeline)
 			stages = append(stages, NewWriteDeviceStage(options, inputs, stageDevices))
 		}
 		return nil

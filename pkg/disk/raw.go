@@ -7,8 +7,7 @@ import (
 // Raw defines the payload for a raw partition. It's similar to a
 // [Filesystem] but with fewer fields. It is a [PayloadEntity].
 type Raw struct {
-	SourcePipeline string
-	SourcePath     string
+	SourcePath string `json:"source_path" yaml:"source_path"`
 }
 
 func init() {
@@ -25,7 +24,6 @@ func (s *Raw) Clone() Entity {
 	}
 
 	return &Raw{
-		SourcePipeline: s.SourcePipeline,
-		SourcePath:     s.SourcePath,
+		SourcePath: s.SourcePath,
 	}
 }

@@ -46,6 +46,7 @@ func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifes
 	var copyFilesFrom map[string][]string
 	var ensureDirs []*fsnode.Directory
 
+	var customSourcePipeline = ""
 	if *img.ContainerSource != *img.BuildContainerSource {
 		// If we're using a different build container from the target container then we copy
 		// the bootc customization file directories from the target container. This includes the
@@ -79,6 +80,8 @@ func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifes
 				EnsureDirs:         ensureDirs,
 			})
 		targetBuildPipeline.Checkpoint()
+
+		customSourcePipeline = targetBuildPipeline.Name()
 	}
 
 	buildContainers := []container.SourceSpec{*img.BuildContainerSource}
@@ -97,6 +100,9 @@ func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifes
 	var hostPipeline manifest.Build
 
 	rawImage := manifest.NewRawBootcImage(buildPipeline, containers, img.platform)
+	if customSourcePipeline != "" {
+		rawImage.SourcePipeline = customSourcePipeline
+	}
 	rawImage.PartitionTable = img.PartitionTable
 	rawImage.Users = img.OSCustomizations.Users
 	rawImage.Groups = img.OSCustomizations.Groups

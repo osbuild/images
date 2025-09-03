@@ -79,7 +79,7 @@ func TestNewMkfsStage(t *testing.T) {
 
 func TestGenFsStages(t *testing.T) {
 	pt := testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi", "swap")
-	stages := GenFsStages(pt, "file.img")
+	stages := GenFsStages(pt, "file.img", "build")
 	assert.Equal(t, []*Stage{
 		{
 			Type: "org.osbuild.mkfs.ext4",
@@ -152,7 +152,7 @@ func TestGenFsStages(t *testing.T) {
 func TestGenFsStagesBtrfs(t *testing.T) {
 	// Let's put there /extra to make sure that / and /extra creates only one btrfs partition
 	pt := testdisk.MakeFakeBtrfsPartitionTable("/", "/boot", "/boot/efi", "/extra", "swap")
-	stages := GenFsStages(pt, "file.img")
+	stages := GenFsStages(pt, "file.img", "build")
 	assert.Equal(t, []*Stage{
 		{
 			Type:    "org.osbuild.mkfs.ext4",
@@ -258,7 +258,7 @@ func TestGenFsStagesBtrfs(t *testing.T) {
 
 func TestGenFsStagesLVM(t *testing.T) {
 	pt := testdisk.MakeFakeLVMPartitionTable("/", "/boot", "/boot/efi", "/home", "swap")
-	stages := GenFsStages(pt, "file.img")
+	stages := GenFsStages(pt, "file.img", "build")
 	assert.Equal(t, []*Stage{
 		{
 			Type:    "org.osbuild.mkfs.ext4",
@@ -365,7 +365,7 @@ func TestGenFsStagesLVM(t *testing.T) {
 
 func TestGenFsStagesRaw(t *testing.T) {
 	pt := testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi", "raw")
-	stages := GenFsStages(pt, "file.img")
+	stages := GenFsStages(pt, "file.img", "build")
 	assert.Equal(t, []*Stage{
 		{
 			Type: "org.osbuild.mkfs.ext4",
@@ -448,6 +448,6 @@ func TestGenFsStagesUnhappy(t *testing.T) {
 	}
 
 	assert.PanicsWithValue(t, "unknown fs type: ext2", func() {
-		GenFsStages(pt, "file.img")
+		GenFsStages(pt, "file.img", "build")
 	})
 }
