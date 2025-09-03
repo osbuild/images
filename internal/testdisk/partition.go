@@ -400,8 +400,7 @@ func MakeFakePartitionTable(mntPoints ...string) *disk.PartitionTable {
 			payload = swap
 		case "raw":
 			payload = &disk.Raw{
-				SourcePipeline: "build",
-				SourcePath:     "/usr/lib/modules/5.0/aboot.img",
+				SourcePath: "/usr/lib/modules/5.0/aboot.img",
 			}
 		default:
 			payload = &disk.Filesystem{

@@ -484,7 +484,7 @@ func (p *AnacondaInstallerISOTree) serialize() osbuild.Pipeline {
 		Size:     fmt.Sprintf("%d", p.PartitionTable.Size),
 	}))
 
-	for _, stage := range osbuild.GenFsStages(p.PartitionTable, filename) {
+	for _, stage := range osbuild.GenFsStages(p.PartitionTable, filename, p.anacondaPipeline.Name()) {
 		pipeline.AddStage(stage)
 	}
 

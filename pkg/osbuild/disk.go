@@ -67,7 +67,7 @@ const (
 	PTSgdisk PartTool = "sgdisk"
 )
 
-func GenImagePrepareStages(pt *disk.PartitionTable, filename string, partTool PartTool) []*Stage {
+func GenImagePrepareStages(pt *disk.PartitionTable, filename string, partTool PartTool, sourcePipeline string) []*Stage {
 	stages := make([]*Stage, 0)
 
 	// create an empty file of the given size via `org.osbuild.truncate`
@@ -106,7 +106,7 @@ func GenImagePrepareStages(pt *disk.PartitionTable, filename string, partTool Pa
 
 	// Generate all the filesystems, subvolumes, and swap areas on partitons
 	// and devices
-	s = GenFsStages(pt, filename)
+	s = GenFsStages(pt, filename, sourcePipeline)
 	stages = append(stages, s...)
 
 	return stages

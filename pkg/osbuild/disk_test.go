@@ -74,7 +74,7 @@ func TestGenImageKernelOptionsBtrfsNotRootCmdlineGenerated(t *testing.T) {
 func TestGenImagePrepareStages(t *testing.T) {
 	pt := testdisk.MakeFakeBtrfsPartitionTable("/", "/boot")
 	filename := "image.raw"
-	actualStages := GenImagePrepareStages(pt, filename, PTSfdisk)
+	actualStages := GenImagePrepareStages(pt, filename, PTSfdisk, "build")
 
 	assert.Equal(t, []*Stage{
 		{
