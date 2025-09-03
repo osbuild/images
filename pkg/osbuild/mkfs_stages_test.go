@@ -65,6 +65,10 @@ func TestNewMkfsStage(t *testing.T) {
 		VolID:   "7B7795E7",
 		Label:   "test",
 		FATSize: common.ToPtr(12),
+		Geometry: &MkfsFATStageGeometryOptions{
+			Heads:           64,
+			SectorsPerTrack: 32,
+		},
 	}
 	mkfat := NewMkfsFATStage(fatOptions, devices)
 	mkfatExpected := &Stage{
@@ -466,6 +470,39 @@ func TestGenFsStagesUnitExt4Verity(t *testing.T) {
 			Type: "org.osbuild.mkfs.ext4",
 			Options: &MkfsExt4StageOptions{
 				Verity: common.ToPtr(true),
+			},
+			Devices: defaultStageDevices,
+		},
+	}, stages)
+}
+
+func TestGenFsStagesUnitVfatGeometry(t *testing.T) {
+	pt := &disk.PartitionTable{
+		Type: disk.PT_GPT,
+		Partitions: []disk.Partition{
+			{
+				Payload: &disk.Filesystem{
+					Type:       "vfat",
+					Mountpoint: "/boot/efi",
+					MkfsOptions: disk.MkfsOptions{
+						Geometry: &disk.MkfsOptionGeometry{
+							Heads:           64,
+							SectorsPerTrack: 32,
+						},
+					},
+				},
+			},
+		},
+	}
+	stages := GenFsStages(pt, "file.img", "build")
+	assert.Equal(t, []*Stage{
+		{
+			Type: "org.osbuild.mkfs.fat",
+			Options: &MkfsFATStageOptions{
+				Geometry: &MkfsFATStageGeometryOptions{
+					Heads:           64,
+					SectorsPerTrack: 32,
+				},
 			},
 			Devices: defaultStageDevices,
 		},
