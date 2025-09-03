@@ -789,6 +789,7 @@
       - "modules"
       - "groups"
       - "minimal"
+      - "containers"
       - "customizations.directories"
       - "customizations.files"
       - "customizations.fips"
