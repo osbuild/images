@@ -760,6 +760,7 @@
       - "packages"
       - "modules"
       - "groups"
+      - "enabled_modules"
       - "containers"
       - "minimal"
       - "customizations.cacerts"
@@ -788,6 +789,7 @@
       - "packages"
       - "modules"
       - "groups"
+      - "enabled_modules"
       - "minimal"
       - "customizations.directories"
       - "customizations.files"
@@ -1493,6 +1495,7 @@ image_types:
       - "packages"
       - "modules"
       - "groups"
+      - "enabled_modules"
       - "minimal"
 
   "minimal-raw-xz": &minimal_raw_xz
@@ -1815,6 +1818,7 @@ image_types:
       - "packages"
       - "modules"
       - "groups"
+      - "enabled_modules"
       - "minimal"
 
   wsl:
@@ -1928,6 +1932,7 @@ image_types:
       - "packages"
       - "modules"
       - "groups"
+      - "enabled_modules"
       - "minimal"
 
   "iot-simplified-installer":
