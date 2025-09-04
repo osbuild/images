@@ -101,6 +101,9 @@ jobs:
       - name: Run unit tests for bib container
         run: sudo go test ./pkg/bib/container/... --fail-if-podman-missing
 
+      - name: Run tests for bootc container
+        run: sudo go test ./pkg/distro/bootc/...
+
   unit-tests-cs:
     strategy:
       matrix:
