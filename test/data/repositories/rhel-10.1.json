@@ -148,14 +148,6 @@
       ]
     },
     {
-      "name": "google-cloud-sdk",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/el10/el10-x86_64-google-cloud-sdk-20250901",
-      "check_gpg": false,
-      "image_type_tags": [
-        "gce"
-      ]
-    },
-    {
       "name": "rhui-azure",
       "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/rhvpn/el10/el10-x86_64-rhui-azure-20250825",
       "image_type_tags": [
