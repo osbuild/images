@@ -57,13 +57,22 @@ func makeFakeBinaries(t *testing.T, buildDir string) {
 	require.NoError(t, err, string(output))
 }
 
-func makeContainerfile(t *testing.T, buildDir string) {
+func makeContainerfile(t *testing.T, buildDir string, extraFiles map[string]string) {
 	var fakeBootcCnt = `
 FROM scratch
 COPY etc /etc
 COPY usr/bin /usr/bin
 COPY usr/lib/bootc/install /usr/lib/bootc/install 
 `
+	for path, content := range extraFiles {
+		fakeBootcCnt += fmt.Sprintf("COPY %s %s\n", path[1:], path)
+
+		err := os.MkdirAll(filepath.Join(buildDir, filepath.Dir(path)), 0755)
+		require.NoError(t, err)
+		//nolint:gosec
+		err = os.WriteFile(filepath.Join(buildDir, path), []byte(content), 0644)
+		require.NoError(t, err)
+	}
 
 	cntFilePath := filepath.Join(buildDir, "Containerfile")
 	//nolint:gosec
@@ -89,13 +98,13 @@ func makeFakeContainerImage(t *testing.T, buildDir, purpose string) string {
 	return fmt.Sprintf("localhost/%s", imgTag)
 }
 
-func NewFakeContainer(t *testing.T, purpose string) string {
+func NewFakeContainer(t *testing.T, purpose string, extraFiles map[string]string) string {
 	t.Helper()
 
 	buildDir := t.TempDir()
 
 	// XXX: allow adding test specific content
-	makeContainerfile(t, buildDir)
+	makeContainerfile(t, buildDir, extraFiles)
 	makeFakeBinaries(t, buildDir)
 	// XXX: make os-release content configurable
 	makeOsRelease(t, buildDir)
