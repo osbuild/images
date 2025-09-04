@@ -62,8 +62,8 @@ func genManifest(t *testing.T, imgType distro.ImageType) string {
 func TestBuildContainerHandling(t *testing.T) {
 	canRunIntegration(t)
 
-	imgTag := bootctest.NewFakeContainer(t, "bootc")
-	buildImgTag := bootctest.NewFakeContainer(t, "build")
+	imgTag := bootctest.NewFakeContainer(t, "bootc", nil)
+	buildImgTag := bootctest.NewFakeContainer(t, "build", nil)
 
 	for _, withBuildContainer := range []bool{true, false} {
 		t.Run(fmt.Sprintf("build-cnt:%v", withBuildContainer), func(t *testing.T) {
@@ -98,6 +98,62 @@ func TestBuildContainerHandling(t *testing.T) {
 				assert.NotContains(t, manifestJson, "usr/lib/bootc/install/")
 				assert.NotContains(t, buildStages, "org.osbuild.copy")
 				assert.NotContains(t, pipelineNames, "target")
+			}
+		})
+	}
+}
+
+func TestInteratedBuildDiskYAML(t *testing.T) {
+	canRunIntegration(t)
+
+	diskYAML := `
+partition_table:
+  type: gpt
+  partitions:
+    - size: 100_000_000
+      payload_type: raw
+      payload:
+        source_path: /lib/modules/6.17/aboot.img
+    - size: 10_000_000_000
+      payload_type: filesystem
+      payload:
+        type: ext4
+        mountpoint: /
+`
+	extraFiles := map[string]string{
+		"/usr/lib/bootc-image-builder/disk.yaml": diskYAML,
+		"/lib/modules/6.17/aboot.img":            "fake aboot.img content",
+	}
+
+	imgTag := bootctest.NewFakeContainer(t, "bootc", extraFiles)
+	buildImgTag := bootctest.NewFakeContainer(t, "build", nil)
+
+	for _, withBuildContainer := range []bool{true, false} {
+		t.Run(fmt.Sprintf("build-cnt:%v", withBuildContainer), func(t *testing.T) {
+			distri, err := bootc.NewBootcDistro(imgTag)
+			require.NoError(t, err)
+			if withBuildContainer {
+				err = distri.SetBuildContainer(buildImgTag)
+				assert.NoError(t, err)
+			}
+
+			archi, err := distri.GetArch(arch.Current().String())
+			require.NoError(t, err)
+			imgType, err := archi.GetImageType("qcow2")
+			assert.NoError(t, err)
+
+			manifestJson := genManifest(t, imgType)
+			stagesForPipeline, err := manifesttest.StagesForPipeline([]byte(manifestJson), "image")
+			assert.Contains(t, stagesForPipeline, "org.osbuild.write-device")
+			// The binary file comes from the target bootc
+			// container. We mount the target as the build env
+			// by default but when using a custom build container
+			// we setup a special "target" pipeline that points
+			// to the real bootc container. Ensure this is honored.
+			if withBuildContainer {
+				assert.Contains(t, manifestJson, `{"type":"org.osbuild.write-device","inputs":{"tree":{"type":"org.osbuild.tree","origin":"org.osbuild.pipeline","references":["name:target"]}}`)
+			} else {
+				assert.Contains(t, manifestJson, `{"type":"org.osbuild.write-device","inputs":{"tree":{"type":"org.osbuild.tree","origin":"org.osbuild.pipeline","references":["name:build"]}}`)
 			}
 		})
 	}
