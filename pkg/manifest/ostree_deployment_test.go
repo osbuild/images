@@ -8,6 +8,7 @@ import (
 	"github.com/osbuild/images/internal/testdisk"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/manifest"
+	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -45,8 +46,8 @@ func NewTestOSTreeDeployment() *manifest.OSTreeDeployment {
 func TestOSTreeDeploymentPipelineFStabStage(t *testing.T) {
 	pipeline := NewTestOSTreeDeployment()
 
-	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/") // PT specifics don't matter
-	pipeline.MountUnits = false                                    // set it explicitly just to be sure
+	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/")  // PT specifics don't matter
+	pipeline.MountConfiguration = osbuild.MOUNT_CONFIGURATION_FSTAB // set it explicitly just to be sure
 
 	checkStagesForFSTab(t, manifest.SerializeWith(pipeline, testCommitInputs()).Stages)
 }
@@ -56,9 +57,18 @@ func TestOSTreeDeploymentPipelineMountUnitStages(t *testing.T) {
 
 	expectedUnits := []string{"-.mount", "home.mount"}
 	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/home")
-	pipeline.MountUnits = true
+	pipeline.MountConfiguration = osbuild.MOUNT_CONFIGURATION_UNITS
 
 	checkStagesForMountUnits(t, manifest.SerializeWith(pipeline, testCommitInputs()).Stages, expectedUnits)
+}
+
+func TestOSTreeDeploymentPipelineNoMountUnitStages(t *testing.T) {
+	pipeline := NewTestOSTreeDeployment()
+
+	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/home")
+	pipeline.MountConfiguration = osbuild.MOUNT_CONFIGURATION_NONE
+
+	checkStagesForNoMounts(t, manifest.SerializeWith(pipeline, testCommitInputs()).Stages)
 }
 
 func TestAddInlineOSTreeDeployment(t *testing.T) {
