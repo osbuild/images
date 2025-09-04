@@ -703,7 +703,6 @@
       - "NetworkManager-cloud-setup"
       - "nvme-cli"
       - "patch"
-      - "rng-tools"
       - "selinux-policy-targeted"
       - "system-reinstall-bootc"
       - "uuid"
@@ -764,6 +763,12 @@
         append:
           include:
             - "insights-client"
+      "x86_64 alone supports rngd":
+        when:
+          arch: "x86_64"
+        append:
+          include:
+            - "rng-tools"
 
 image_config:
   default:
