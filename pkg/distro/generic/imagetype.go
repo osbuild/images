@@ -68,6 +68,8 @@ func newImageTypeFrom(d *distribution, ar *architecture, imgYAML defs.ImageTypeY
 		it.image = tarImage
 	case "netinst":
 		it.image = netinstImage
+	case "pxe_tar":
+		it.image = pxeTarImage
 	default:
 		err := fmt.Errorf("unknown image func: %v for %v", imgYAML.Image, imgYAML.Name())
 		panic(err)
