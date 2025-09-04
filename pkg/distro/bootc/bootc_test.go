@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,6 +11,7 @@ import (
 	"github.com/osbuild/blueprint/pkg/blueprint"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/internal/randutil"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/dnfjson"
@@ -54,19 +54,9 @@ func TestManifestGenerationEmptyConfig(t *testing.T) {
 	}
 }
 
-func randomLetters(n int) string {
-	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-	b := make([]byte, n)
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
-	}
-	return string(b)
-}
-
 func getUserConfig() *blueprint.Blueprint {
 	// add a user
-	pass := randomLetters(20)
+	pass := randutil.String(20)
 	key := "ssh-ed25519 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 	return &blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
