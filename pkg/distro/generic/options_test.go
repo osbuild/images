@@ -256,7 +256,7 @@ func TestCheckOptions(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "blueprint validation failed for image type \"iot-simplified-installer\": one of customizations.fdo.diun_pub_key_hash, customizations.fdo.diun_pub_key_insecure, customizations.fdo.diun_pub_key_root_certs: required when using fdo",
+			expErr: "blueprint validation failed for image type \"iot-simplified-installer\": exactly one of customizations.fdo.diun_pub_key_hash, customizations.fdo.diun_pub_key_insecure, customizations.fdo.diun_pub_key_root_certs: required when using fdo",
 		},
 		"f42/iot-simplified-fdo-requires-exactly-one-diun-option": {
 			distro: "fedora-42",
@@ -287,7 +287,7 @@ func TestCheckOptions(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "blueprint validation failed for image type \"iot-simplified-installer\": one of customizations.fdo.diun_pub_key_hash, customizations.fdo.diun_pub_key_insecure, customizations.fdo.diun_pub_key_root_certs: required when using fdo",
+			expErr: "blueprint validation failed for image type \"iot-simplified-installer\": exactly one of customizations.fdo.diun_pub_key_hash, customizations.fdo.diun_pub_key_insecure, customizations.fdo.diun_pub_key_root_certs: required when using fdo",
 		},
 		"f42/iot-simplified-ignition": {
 			distro: "fedora-42",
@@ -725,7 +725,7 @@ func TestCheckOptions(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "blueprint validation failed for image type \"edge-simplified-installer\": one of customizations.fdo.diun_pub_key_hash, customizations.fdo.diun_pub_key_insecure, customizations.fdo.diun_pub_key_root_certs: required when using fdo",
+			expErr: "blueprint validation failed for image type \"edge-simplified-installer\": exactly one of customizations.fdo.diun_pub_key_hash, customizations.fdo.diun_pub_key_insecure, customizations.fdo.diun_pub_key_root_certs: required when using fdo",
 		},
 		"r8/edge-simplified-fdo-requires-exactly-one-diun-option": {
 			distro: "rhel-8.10",
@@ -748,7 +748,7 @@ func TestCheckOptions(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "blueprint validation failed for image type \"edge-simplified-installer\": one of customizations.fdo.diun_pub_key_hash, customizations.fdo.diun_pub_key_insecure, customizations.fdo.diun_pub_key_root_certs: required when using fdo",
+			expErr: "blueprint validation failed for image type \"edge-simplified-installer\": exactly one of customizations.fdo.diun_pub_key_hash, customizations.fdo.diun_pub_key_insecure, customizations.fdo.diun_pub_key_root_certs: required when using fdo",
 		},
 
 		"r8/edge-installer-supported-customizations": {
@@ -1156,7 +1156,7 @@ func TestCheckOptions(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "blueprint validation failed for image type \"edge-simplified-installer\": one of customizations.fdo.diun_pub_key_hash, customizations.fdo.diun_pub_key_insecure, customizations.fdo.diun_pub_key_root_certs: required when using fdo",
+			expErr: "blueprint validation failed for image type \"edge-simplified-installer\": exactly one of customizations.fdo.diun_pub_key_hash, customizations.fdo.diun_pub_key_insecure, customizations.fdo.diun_pub_key_root_certs: required when using fdo",
 		},
 		"r9/edge-simplified-fdo-requires-exactly-one-diun-option": {
 			distro: "rhel-9.7",
@@ -1187,7 +1187,7 @@ func TestCheckOptions(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "blueprint validation failed for image type \"edge-simplified-installer\": one of customizations.fdo.diun_pub_key_hash, customizations.fdo.diun_pub_key_insecure, customizations.fdo.diun_pub_key_root_certs: required when using fdo",
+			expErr: "blueprint validation failed for image type \"edge-simplified-installer\": exactly one of customizations.fdo.diun_pub_key_hash, customizations.fdo.diun_pub_key_insecure, customizations.fdo.diun_pub_key_root_certs: required when using fdo",
 		},
 		"r9/edge-simplified-ignition": {
 			distro: "rhel-9.7",
