@@ -506,7 +506,7 @@ func TestFedoraDistro_ManifestError(t *testing.T) {
 					}
 					_, _, err := imgType.Manifest(&bp, imgOpts, nil, nil)
 					switch imgTypeName {
-					case "iot-commit", "iot-container":
+					case "iot-commit", "iot-container", "iot-bootable-container":
 						assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.kernel.append: not supported", imgTypeName))
 					case "minimal-installer", "iot-installer", "workstation-live-installer", "everything-netinst":
 						assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.kernel: not supported", imgTypeName))
@@ -514,7 +514,7 @@ func TestFedoraDistro_ManifestError(t *testing.T) {
 						assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.installation_device: required", imgTypeName))
 					case "iot-raw-xz", "iot-qcow2":
 						assert.EqualError(t, err, fmt.Sprintf("options validation failed for image type %q: ostree.url: required", imgTypeName))
-					case "container", "wsl", "iot-bootable-container":
+					case "container", "wsl":
 						assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations: not supported", imgTypeName))
 					default:
 						assert.NoError(t, err)
@@ -719,9 +719,9 @@ func TestFedoraDistro_CustomFileSystemManifestError(t *testing.T) {
 				imgType, _ := arch.GetImageType(imgTypeName)
 				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{OSTree: maybeMakeOSTreeURL(imgTypeName)}, nil, nil)
 				switch imgTypeName {
-				case "minimal-installer", "iot-installer", "workstation-live-installer", "iot-simplified-installer", "iot-commit", "iot-container", "everything-netinst":
+				case "minimal-installer", "iot-installer", "workstation-live-installer", "iot-simplified-installer", "iot-commit", "iot-container", "iot-bootable-container", "everything-netinst":
 					assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.filesystem: not supported", imgTypeName))
-				case "container", "wsl", "iot-bootable-container":
+				case "container", "wsl":
 					assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations: not supported", imgTypeName))
 				default:
 					// TODO: this error message is a bit clunky; bring it more in line with the other messages (remove "The following errors ...")
@@ -750,9 +750,9 @@ func TestFedoraDistro_TestRootMountPoint(t *testing.T) {
 				imgType, _ := arch.GetImageType(imgTypeName)
 				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{OSTree: maybeMakeOSTreeURL(imgTypeName)}, nil, nil)
 				switch imgTypeName {
-				case "minimal-installer", "workstation-live-installer", "iot-simplified-installer", "iot-installer", "iot-commit", "iot-container", "everything-netinst":
+				case "minimal-installer", "workstation-live-installer", "iot-simplified-installer", "iot-installer", "iot-commit", "iot-container", "iot-bootable-container", "everything-netinst":
 					assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.filesystem: not supported", imgTypeName))
-				case "wsl", "iot-bootable-container", "container":
+				case "wsl", "container":
 					assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations: not supported", imgTypeName))
 				default:
 					assert.NoError(t, err)
@@ -784,9 +784,9 @@ func TestFedoraDistro_CustomFileSystemSubDirectories(t *testing.T) {
 				imgType, _ := arch.GetImageType(imgTypeName)
 				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{OSTree: maybeMakeOSTreeURL(imgTypeName)}, nil, nil)
 				switch imgTypeName {
-				case "minimal-installer", "workstation-live-installer", "iot-simplified-installer", "iot-installer", "iot-commit", "iot-container", "everything-netinst":
+				case "minimal-installer", "workstation-live-installer", "iot-simplified-installer", "iot-installer", "iot-commit", "iot-container", "iot-bootable-container", "everything-netinst":
 					assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.filesystem: not supported", imgTypeName))
-				case "wsl", "iot-bootable-container", "container":
+				case "wsl", "container":
 					assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations: not supported", imgTypeName))
 				default:
 					assert.NoError(t, err)
@@ -826,9 +826,9 @@ func TestFedoraDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
 				imgType, _ := arch.GetImageType(imgTypeName)
 				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{OSTree: maybeMakeOSTreeURL(imgTypeName)}, nil, nil)
 				switch imgTypeName {
-				case "minimal-installer", "workstation-live-installer", "iot-simplified-installer", "iot-installer", "iot-commit", "iot-container", "everything-netinst":
+				case "minimal-installer", "workstation-live-installer", "iot-simplified-installer", "iot-installer", "iot-commit", "iot-container", "iot-bootable-container", "everything-netinst":
 					assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.filesystem: not supported", imgTypeName))
-				case "wsl", "iot-bootable-container", "container":
+				case "wsl", "container":
 					assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations: not supported", imgTypeName))
 				default:
 					assert.NoError(t, err)
@@ -864,9 +864,9 @@ func TestFedoraDistro_DirtyMountpointsNotAllowed(t *testing.T) {
 				imgType, _ := arch.GetImageType(imgTypeName)
 				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{OSTree: maybeMakeOSTreeURL(imgTypeName)}, nil, nil)
 				switch imgTypeName {
-				case "minimal-installer", "workstation-live-installer", "iot-simplified-installer", "iot-installer", "iot-commit", "iot-container", "everything-netinst":
+				case "minimal-installer", "workstation-live-installer", "iot-simplified-installer", "iot-installer", "iot-commit", "iot-container", "iot-bootable-container", "everything-netinst":
 					assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.filesystem: not supported", imgTypeName))
-				case "wsl", "iot-bootable-container", "container":
+				case "wsl", "container":
 					assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations: not supported", imgTypeName))
 				default:
 					// TODO: this error message is a bit clunky; bring it more in line with the other messages (remove "The following errors ...")
@@ -898,9 +898,9 @@ func TestFedoraDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 				imgType, _ := arch.GetImageType(imgTypeName)
 				_, _, err := imgType.Manifest(&bp, options, nil, nil)
 				switch imgTypeName {
-				case "workstation-live-installer", "iot-container", "iot-commit", "iot-installer", "iot-simplified-installer", "minimal-installer", "everything-netinst":
+				case "workstation-live-installer", "iot-container", "iot-commit", "iot-bootable-container", "iot-installer", "iot-simplified-installer", "minimal-installer", "everything-netinst":
 					assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.filesystem: not supported", imgTypeName))
-				case "wsl", "iot-bootable-container", "container":
+				case "wsl", "container":
 					assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations: not supported", imgTypeName))
 				default:
 					assert.NoError(t, err)
@@ -942,9 +942,9 @@ func TestFedoraDistro_PartitioningConflict(t *testing.T) {
 				}
 				_, _, err := imgType.Manifest(&bp, options, nil, nil)
 				switch imgTypeName {
-				case "workstation-live-installer", "iot-container", "iot-commit", "iot-installer", "iot-simplified-installer", "minimal-installer", "everything-netinst":
+				case "workstation-live-installer", "iot-container", "iot-commit", "iot-bootable-container", "iot-installer", "iot-simplified-installer", "minimal-installer", "everything-netinst":
 					assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.filesystem: not supported", imgTypeName))
-				case "wsl", "iot-bootable-container", "container":
+				case "wsl", "container":
 					assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations: not supported", imgTypeName))
 				default:
 					assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.disk cannot be used with customizations.filesystem", imgTypeName))

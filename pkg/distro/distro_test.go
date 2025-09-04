@@ -640,7 +640,7 @@ func TestDistro_ManifestFIPSWarning(t *testing.T) {
 						switch imgTypeName {
 						case "workstation-live-installer":
 							assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.fips: not supported", imgTypeName))
-						case "wsl", "iot-bootable-container", "container":
+						case "wsl", "container":
 							assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations: not supported", imgTypeName))
 						default:
 							assert.Equal(t, slices.Contains(warn, msg), !common.IsBuildHostFIPSEnabled(),
