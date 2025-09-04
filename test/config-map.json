@@ -186,7 +186,8 @@
       "wsl",
       "iot-bootable-container",
       "iot-container",
-      "everything-netinst"
+      "everything-netinst",
+      "pxe-tar-xz"
     ]
   },
   "./configs/iot-customizations-full.json": {

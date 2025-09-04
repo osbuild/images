@@ -513,6 +513,7 @@ func TestFedoraArchitecture_ListImageTypes(t *testing.T) {
 				"iot-bootable-container",
 				"iot-simplified-installer",
 				"everything-netinst",
+				"pxe-tar-xz",
 			},
 		},
 		{
@@ -536,6 +537,7 @@ func TestFedoraArchitecture_ListImageTypes(t *testing.T) {
 				"iot-bootable-container",
 				"iot-simplified-installer",
 				"everything-netinst",
+				"pxe-tar-xz",
 			},
 		},
 		{
