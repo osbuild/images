@@ -348,7 +348,7 @@ func TestRawBootcPipelineFSTabStage(t *testing.T) {
 	pipeline := makeFakeRawBootcPipeline()
 
 	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/boot/efi") // PT requires /boot/efi
-	pipeline.MountUnits = false                                                 // set it explicitly just to be sure
+	pipeline.MountConfiguration = osbuild.MOUNT_CONFIGURATION_FSTAB             // set it explicitly just to be sure
 
 	checkStagesForFSTab(t, pipeline.Serialize().Stages)
 }
@@ -358,7 +358,16 @@ func TestRawBootcPipelineMountUnitStages(t *testing.T) {
 
 	expectedUnits := []string{"-.mount", "home.mount", "boot-efi.mount"}
 	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/home", "/boot/efi")
-	pipeline.MountUnits = true
+	pipeline.MountConfiguration = osbuild.MOUNT_CONFIGURATION_UNITS
 
 	checkStagesForMountUnits(t, pipeline.Serialize().Stages, expectedUnits)
+}
+
+func TestRawBootcPipelineNoMountsStages(t *testing.T) {
+	pipeline := makeFakeRawBootcPipeline()
+
+	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/home", "/boot/efi")
+	pipeline.MountConfiguration = osbuild.MOUNT_CONFIGURATION_NONE
+
+	checkStagesForNoMounts(t, pipeline.Serialize().Stages)
 }
