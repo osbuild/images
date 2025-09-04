@@ -48,7 +48,7 @@
     },
     {
       "name": "google-compute-engine",
-      "baseurl": "https://packages.cloud.google.com/yum/repos/google-compute-engine-el9-x86_64-stable",
+      "baseurl": "https://packages.cloud.google.com/yum/repos/google-compute-engine-el10-x86-64-stable",
       "check_gpg": false,
       "image_type_tags": [
         "gce"
@@ -56,7 +56,7 @@
     },
     {
       "name": "google-cloud-sdk",
-      "baseurl": "https://packages.cloud.google.com/yum/repos/cloud-sdk-el9-x86_64",
+      "baseurl": "https://packages.cloud.google.com/yum/repos/cloud-sdk-el10-x86_64",
       "check_gpg": false,
       "image_type_tags": [
         "gce"
