@@ -847,6 +847,31 @@
       - "customizations.locale"
       - "customizations.services"
 
+    # options supported by PXE image type
+    # Includes everything except disk, filesystem, and partitioning_mode
+    supported_options_pxe: &supported_options_pxe
+      - "distro"
+      - "packages"
+      - "modules"
+      - "groups"
+      - "containers"
+      - "minimal"
+      - "customizations.cacerts"
+      - "customizations.directories"
+      - "customizations.files"
+      - "customizations.fips"
+      - "customizations.firewall"
+      - "customizations.user"
+      - "customizations.sshkey"
+      - "customizations.group"
+      - "customizations.hostname"
+      - "customizations.kernel"
+      - "customizations.locale"
+      - "customizations.openscap"
+      - "customizations.repositories"
+      - "customizations.rpm"
+      - "customizations.services"
+      - "customizations.timezone"
 
 image_config:
   default:
@@ -2254,3 +2279,23 @@ image_types:
       - "distro"
       - "customizations.fips"
       - "customizations.locale"
+
+  "pxe-tar-xz":
+    filename: "pxe.tar.xz"
+    compression: "xz"
+    mime_type: "application/x-tar"
+    image_func: "pxe_tar"
+    exports: ["xz"]
+    bootable: true
+    package_sets:
+      os:
+        - include:
+            - "bash"
+            - "coreutils"
+            - "dracut-live"
+            - "dracut-network"
+            - "dracut-config-generic"
+    platforms:
+      - *x86_64_bios_platform
+      - *aarch64_platform
+    supported_blueprint_options: *supported_options_pxe
