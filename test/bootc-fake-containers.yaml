@@ -1,12 +1,12 @@
 ---
 containers:
   - &default_fake_container
+    image_ref: "bootc-fake-imgref"
     arch: riscv64
     info: &default_info
       os_release:
         id: "test-os"
         versionid: "1"
-    image_ref: "bootc-fake-imgref"
     default_fs: "ext4"
     container_size: 10_000_000_000
   - <<: *default_fake_container
@@ -23,3 +23,14 @@ containers:
     info:
       <<: *default_info
       uefi_vendor: "uefi-vendor-aarch64"
+
+  - <<: *default_fake_container
+    arch: x86_64
+    info:
+      os_release:
+        id: "test-os-with-build-container"
+        versionid: "1"
+    build_container_ref: "build-container-fake-ref"
+    build_container_info:
+      os_release:
+        id: "build-test-os"

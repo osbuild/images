@@ -586,6 +586,9 @@ func main() {
 			DefaultFs     string      `yaml:"default_fs"`
 			ContainerSize uint64      `yaml:"container_size"`
 			ImageRef      string      `yaml:"image_ref"`
+
+			BuildContainerRef  string      `yaml:"build_container_ref"`
+			BuildContainerInfo osinfo.Info `yaml:"build_container_info"`
 		}
 		type fakeContainersYAML struct {
 			Containers []fakeBootcContainerYAML
@@ -601,6 +604,12 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
+			if fakeBootcCnt.BuildContainerRef != "" {
+				if err := distribution.SetBuildContainerForTesting(fakeBootcCnt.BuildContainerRef, &fakeBootcCnt.BuildContainerInfo); err != nil {
+					panic(err)
+				}
+			}
+
 			arches, _ := arches.ResolveArgValues(distribution.ListArches())
 			for _, archName := range arches {
 				archi, err := distribution.GetArch(archName)

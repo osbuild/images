@@ -79,9 +79,19 @@ func (d *BootcDistro) SetBuildContainer(imgref string) (err error) {
 	if err != nil {
 		return err
 	}
+	return d.setBuildContainer(imgref, info)
+}
+
+func (d *BootcDistro) setBuildContainer(imgref string, info *osinfo.Info) error {
 	d.buildImgref = imgref
 	d.buildSourceInfo = info
 	return nil
+}
+
+// SetBuildContainerForTesting should only be used for in tests
+// please use "SetBuildContainer" instead
+func (d *BootcDistro) SetBuildContainerForTesting(imgref string, info *osinfo.Info) error {
+	return d.setBuildContainer(imgref, info)
 }
 
 func (d *BootcDistro) SetDefaultFs(defaultFs string) error {
