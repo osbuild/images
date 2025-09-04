@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/osbuild"
 )
@@ -114,16 +115,15 @@ func (p *PXETree) serialize() (osbuild.Pipeline, error) {
 
 // dracutStageOptions returns the basic dracut setup for booting from a compressed
 // root filesystem using root=live:... on the kernel cmdline.
-func (p *PXETree) dracutStageOptions() *osbuild.DracutStageOptions {
-	// Common settings
-	options := osbuild.DracutStageOptions{
-		Kernel:         []string{p.osPipeline.kernelVer},
-		EarlyMicrocode: false,
-		AddModules:     []string{"qemu", "qemu-net", "livenet", "dmsquash-live"},
-		Extra:          []string{"--xz"},
+func (p *PXETree) DracutConfStageOptions() *osbuild.DracutConfStageOptions {
+	return &osbuild.DracutConfStageOptions{
+		Filename: "40-pxe.conf",
+		Config: osbuild.DracutConfigFile{
+			EarlyMicrocode: common.ToPtr(false),
+			AddModules:     []string{"qemu", "qemu-net", "livenet", "dmsquash-live"},
+			Compress:       "xz",
+		},
 	}
-
-	return &options
 }
 
 // TODO - find a better way to specify the template
