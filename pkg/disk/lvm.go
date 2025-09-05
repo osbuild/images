@@ -76,6 +76,10 @@ func (vg *LVMVolumeGroup) GetChild(n uint) Entity {
 }
 
 func (vg *LVMVolumeGroup) CreateMountpoint(mountpoint, defaultFs string, size uint64) (Entity, error) {
+	if defaultFs == "btrfs" {
+		return nil, fmt.Errorf("btrfs under lvm is not supported")
+	}
+
 	filesystem := Filesystem{
 		Type:         defaultFs,
 		Mountpoint:   mountpoint,
