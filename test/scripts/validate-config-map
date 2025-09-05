@@ -6,6 +6,7 @@ image-types produces at least one valid build configuration for each config file
 The config map is read as test/config-map.json relative to the repository root.
 """
 import argparse
+import copy
 import json
 import pathlib
 import sys
@@ -59,6 +60,17 @@ def validate_build_config(config_map):
     return no_matches
 
 
+def filter_bootc(orig_config_map):
+    """ returns a copy of the config_map without booc distros """
+    config_map = copy.deepcopy(orig_config_map)
+    for build_config in config_map.values():
+        if distros := build_config.get("distros"):
+            build_config["distros"] = [
+                d for d in distros if not d.startswith("bootc-")]
+
+    return config_map
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("path", default=".", nargs="?", help="path to repository root")
@@ -78,7 +90,9 @@ def main():
     print("OK: All config files found")
 
     print("Validating build configurations (distros, arches, image types)")
-    no_matches = validate_build_config(config_map)
+    # filter out all bootc-* distros, they are "virtual" and will not
+    # show up in "list-images" which is used to validate known distros
+    no_matches = validate_build_config(filter_bootc(config_map))
     if no_matches:
         print("failed: the following configs do not match any known build configurations", file=sys.stderr)
         for idx, (config, build_config) in enumerate(no_matches, start=1):
