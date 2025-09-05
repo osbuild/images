@@ -41,11 +41,6 @@ func getTestingRepoRegistry() *RepoRegistry {
 						BaseURLs:      []string{"https://packages.cloud.google.com/yum/repos/google-compute-engine-el8-x86_64-stable"},
 						ImageTypeTags: []string{test_distro.TestImageType2Name},
 					},
-					{
-						Name:          "google-cloud-sdk",
-						BaseURLs:      []string{"https://packages.cloud.google.com/yum/repos/cloud-sdk-el8-x86_64"},
-						ImageTypeTags: []string{test_distro.TestImageType2Name},
-					},
 				},
 			},
 		},
@@ -91,7 +86,7 @@ func TestReposByImageType_reposByImageTypeName(t *testing.T) {
 			args: args{
 				input: ta2_it2,
 			},
-			want: []string{"baseos", "appstream", "google-compute-engine", "google-cloud-sdk"},
+			want: []string{"baseos", "appstream", "google-compute-engine"},
 		},
 	}
 	for _, tt := range tests {
@@ -251,7 +246,7 @@ func TestReposByArch(t *testing.T) {
 				arch:        ta2,
 				taggedRepos: true,
 			},
-			want: []string{"baseos", "appstream", "google-compute-engine", "google-cloud-sdk"},
+			want: []string{"baseos", "appstream", "google-compute-engine"},
 		},
 	}
 	for _, tt := range tests {

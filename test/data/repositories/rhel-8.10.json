@@ -125,15 +125,6 @@
         "gce",
         "gce-rhui"
       ]
-    },
-    {
-      "name": "google-cloud-sdk",
-      "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/el8/el8-x86_64-google-cloud-sdk-20250401",
-      "check_gpg": false,
-      "image_type_tags": [
-        "gce",
-        "gce-rhui"
-      ]
     }
   ],
   "aarch64": [
