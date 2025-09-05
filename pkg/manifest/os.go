@@ -638,7 +638,7 @@ func (p *OS) serialize() osbuild.Pipeline {
 	}
 
 	for _, dracutConfConfig := range p.OSCustomizations.DracutConf {
-		pipeline.AddStage(osbuild.NewDracutConfStage(dracutConfConfig))
+		pipeline = prependStage(pipeline, osbuild.NewDracutConfStage(dracutConfConfig))
 	}
 
 	for _, systemdUnitConfig := range p.OSCustomizations.SystemdDropin {
@@ -987,6 +987,11 @@ func (p *OS) serialize() osbuild.Pipeline {
 func prependKernelCmdlineStage(pipeline osbuild.Pipeline, rootUUID string, kernelOptions []string) osbuild.Pipeline {
 	kernelStage := osbuild.NewKernelCmdlineStage(osbuild.NewKernelCmdlineStageOptions(rootUUID, strings.Join(kernelOptions, " ")))
 	pipeline.Stages = append([]*osbuild.Stage{kernelStage}, pipeline.Stages...)
+	return pipeline
+}
+
+func prependStage(pipeline osbuild.Pipeline, stage *osbuild.Stage) osbuild.Pipeline {
+	pipeline.Stages = append([]*osbuild.Stage{stage}, pipeline.Stages...)
 	return pipeline
 }
 
