@@ -29,7 +29,7 @@ func newFakeResult(t *testing.T, resultSpec string) imagefilter.Result {
 	require.NoError(t, err)
 	im, err := ar.GetImageType(l[1])
 	require.NoError(t, err)
-	return imagefilter.Result{di, ar, im, nil}
+	return imagefilter.Result{im, nil}
 }
 
 func TestResultsFormatter(t *testing.T) {
