@@ -2,7 +2,6 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	"os"
@@ -104,9 +103,7 @@ func run() error {
 	}
 
 	fmt.Printf("Generating manifest for %s: ", config.Name)
-	var mf bytes.Buffer
 	manifestOpts := manifestgen.Options{
-		Output:         &mf,
 		Cachedir:       filepath.Join(rpmCacheRoot, archName+distribution.Name()),
 		WarningsOutput: os.Stderr,
 		OverrideRepos:  overrideRepos,
@@ -124,21 +121,22 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("[ERROR] manifest generator creation failed: %w", err)
 	}
-	if err := mg.Generate(config.Blueprint, imgType, &config.Options); err != nil {
+	mf, err := mg.Generate(config.Blueprint, imgType, &config.Options)
+	if err != nil {
 		return fmt.Errorf("[ERROR] manifest generation failed: %w", err)
 	}
 	fmt.Print("DONE\n")
 
 	manifestPath := filepath.Join(buildDir, "manifest.json")
 	// nolint:gosec
-	if err := os.WriteFile(manifestPath, mf.Bytes(), 0644); err != nil {
+	if err := os.WriteFile(manifestPath, mf, 0644); err != nil {
 		return fmt.Errorf("failed to write output file %q: %w", manifestPath, err)
 	}
 
 	fmt.Printf("Building manifest: %s\n", manifestPath)
 
 	jobOutput := filepath.Join(outputDir, buildName)
-	_, err = osbuild.RunOSBuild(mf.Bytes(), osbuildStore, jobOutput, imgType.Exports(), checkpoints, nil, false, os.Stderr)
+	_, err = osbuild.RunOSBuild(mf, osbuildStore, jobOutput, imgType.Exports(), checkpoints, nil, false, os.Stderr)
 	if err != nil {
 		return err
 	}

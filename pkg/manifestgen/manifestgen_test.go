@@ -54,9 +54,7 @@ func TestManifestGeneratorDepsolve(t *testing.T) {
 				rpmDownloader = osbuild.RpmDownloaderLibrepo
 			}
 
-			var osbuildManifest bytes.Buffer
 			opts := &manifestgen.Options{
-				Output:            &osbuildManifest,
 				Depsolver:         fakeDepsolve,
 				CommitResolver:    panicCommitResolver,
 				ContainerResolver: panicContainerResolver,
@@ -67,10 +65,10 @@ func TestManifestGeneratorDepsolve(t *testing.T) {
 			assert.NoError(t, err)
 			assert.NotNil(t, mg)
 			var bp blueprint.Blueprint
-			err = mg.Generate(&bp, res[0].ImgType, nil)
+			osbuildManifest, err := mg.Generate(&bp, res[0].ImgType, nil)
 			require.NoError(t, err)
 
-			pipelineNames, err := manifesttest.PipelineNamesFrom(osbuildManifest.Bytes())
+			pipelineNames, err := manifesttest.PipelineNamesFrom(osbuildManifest)
 			assert.NoError(t, err)
 			assert.Equal(t, []string{"build", "os", "image", "qcow2"}, pipelineNames)
 
@@ -79,16 +77,14 @@ func TestManifestGeneratorDepsolve(t *testing.T) {
 			// need to use this as a canary that resolving happend
 			// XXX: add testhelper to manifesttest for this
 			expectedSha256 := sha256For("kernel")
-			assert.Contains(t, osbuildManifest.String(), expectedSha256)
+			assert.Contains(t, string(osbuildManifest), expectedSha256)
 
-			assert.Equal(t, strings.Contains(osbuildManifest.String(), "org.osbuild.librepo"), useLibrepo)
+			assert.Equal(t, strings.Contains(string(osbuildManifest), "org.osbuild.librepo"), useLibrepo)
 		})
 	}
 }
 
 func TestManifestGeneratorWithOstreeCommit(t *testing.T) {
-	var osbuildManifest bytes.Buffer
-
 	repos, err := testrepos.New()
 	assert.NoError(t, err)
 
@@ -100,7 +96,6 @@ func TestManifestGeneratorWithOstreeCommit(t *testing.T) {
 	assert.Equal(t, 1, len(res))
 
 	opts := &manifestgen.Options{
-		Output:            &osbuildManifest,
 		Depsolver:         fakeDepsolve,
 		CommitResolver:    fakeCommitResolver,
 		ContainerResolver: panicContainerResolver,
@@ -115,21 +110,21 @@ func TestManifestGeneratorWithOstreeCommit(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, mg)
 	var bp blueprint.Blueprint
-	err = mg.Generate(&bp, res[0].ImgType, imageOpts)
+	osbuildManifest, err := mg.Generate(&bp, res[0].ImgType, imageOpts)
 	assert.NoError(t, err)
 
-	pipelineNames, err := manifesttest.PipelineNamesFrom(osbuildManifest.Bytes())
+	pipelineNames, err := manifesttest.PipelineNamesFrom(osbuildManifest)
 	assert.NoError(t, err)
 	assert.Equal(t, []string{"build", "ostree-deployment", "image"}, pipelineNames)
 
 	// XXX: add testhelper to manifesttest for this
-	assert.Contains(t, osbuildManifest.String(), `{"url":"resolved-url-for-centos/9/x86_64/edge"}`)
+	assert.Contains(t, string(osbuildManifest), `{"url":"resolved-url-for-centos/9/x86_64/edge"}`)
 	// we expect at least a "glibc" package in the manifest,
 	// sadly the test distro does not really generate much here so we
 	// need to use this as a canary that resolving happend
 	// XXX: add testhelper to manifesttest for this
 	expectedSha256 := sha256For("glibc")
-	assert.Contains(t, osbuildManifest.String(), expectedSha256)
+	assert.Contains(t, string(osbuildManifest), expectedSha256)
 }
 
 func fakeDepsolve(cacheDir string, depsolveWarningsOutput io.Writer, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]depsolvednf.DepsolveResult, error) {
@@ -222,9 +217,7 @@ func TestManifestGeneratorContainers(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(res))
 
-	var osbuildManifest bytes.Buffer
 	opts := &manifestgen.Options{
-		Output:            &osbuildManifest,
 		Depsolver:         fakeDepsolve,
 		CommitResolver:    panicCommitResolver,
 		ContainerResolver: fakeContainerResolver,
@@ -240,11 +233,11 @@ func TestManifestGeneratorContainers(t *testing.T) {
 			},
 		},
 	}
-	err = mg.Generate(&bp, res[0].ImgType, nil)
+	osbuildManifest, err := mg.Generate(&bp, res[0].ImgType, nil)
 	assert.NoError(t, err)
 
 	// container is included
-	assert.Contains(t, osbuildManifest.String(), "resolved-cnt-"+fakeContainerSource)
+	assert.Contains(t, string(osbuildManifest), "resolved-cnt-"+fakeContainerSource)
 }
 
 func TestManifestGeneratorDepsolveWithSbomWriter(t *testing.T) {
@@ -258,10 +251,8 @@ func TestManifestGeneratorDepsolveWithSbomWriter(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(res))
 
-	var osbuildManifest bytes.Buffer
 	generatedSboms := map[string]string{}
 	opts := &manifestgen.Options{
-		Output:            &osbuildManifest,
 		Depsolver:         fakeDepsolve,
 		CommitResolver:    panicCommitResolver,
 		ContainerResolver: panicContainerResolver,
@@ -279,7 +270,7 @@ func TestManifestGeneratorDepsolveWithSbomWriter(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, mg)
 	var bp blueprint.Blueprint
-	err = mg.Generate(&bp, res[0].ImgType, nil)
+	_, err = mg.Generate(&bp, res[0].ImgType, nil)
 	require.NoError(t, err)
 
 	assert.Contains(t, generatedSboms, "centos-9-qcow2-x86_64.buildroot-build.spdx.json")
@@ -303,9 +294,7 @@ func TestManifestGeneratorSeed(t *testing.T) {
 	assert.Equal(t, 1, len(res))
 
 	for _, withCustomSeed := range []bool{false, true} {
-		var osbuildManifest bytes.Buffer
 		opts := &manifestgen.Options{
-			Output:    &osbuildManifest,
 			Depsolver: fakeDepsolve,
 		}
 		if withCustomSeed {
@@ -317,16 +306,16 @@ func TestManifestGeneratorSeed(t *testing.T) {
 		assert.NoError(t, err)
 
 		var bp blueprint.Blueprint
-		err = mg.Generate(&bp, res[0].ImgType, nil)
+		osbuildManifest, err := mg.Generate(&bp, res[0].ImgType, nil)
 		assert.NoError(t, err)
 
 		// with the customSeed we always get a predicatable uuid for
 		// the xfs boot partition
 		needle := `f1405ced-8b99-48ba-b910-9259515bf702`
 		if withCustomSeed {
-			assert.Contains(t, osbuildManifest.String(), needle)
+			assert.Contains(t, string(osbuildManifest), needle)
 		} else {
-			assert.NotContains(t, osbuildManifest.String(), needle)
+			assert.NotContains(t, string(osbuildManifest), needle)
 		}
 	}
 }
@@ -343,9 +332,7 @@ func TestManifestGeneratorDepsolveOutput(t *testing.T) {
 	assert.Equal(t, 1, len(res))
 
 	var depsolveWarningsOutput bytes.Buffer
-	var osbuildManifest bytes.Buffer
 	opts := &manifestgen.Options{
-		Output:                 &osbuildManifest,
 		Depsolver:              fakeDepsolve,
 		DepsolveWarningsOutput: &depsolveWarningsOutput,
 	}
@@ -354,7 +341,7 @@ func TestManifestGeneratorDepsolveOutput(t *testing.T) {
 	assert.NoError(t, err)
 
 	var bp blueprint.Blueprint
-	err = mg.Generate(&bp, res[0].ImgType, nil)
+	_, err = mg.Generate(&bp, res[0].ImgType, nil)
 	assert.NoError(t, err)
 
 	assert.Equal(t, []byte("fake depsolve output"), depsolveWarningsOutput.Bytes())
@@ -373,9 +360,7 @@ func TestManifestGeneratorOverrideRepos(t *testing.T) {
 
 	for _, withOverrideRepos := range []bool{false, true} {
 		t.Run(fmt.Sprintf("withOverrideRepos: %v", withOverrideRepos), func(t *testing.T) {
-			var osbuildManifest bytes.Buffer
 			opts := &manifestgen.Options{
-				Output:    &osbuildManifest,
 				Depsolver: fakeDepsolve,
 			}
 			if withOverrideRepos {
@@ -391,12 +376,12 @@ func TestManifestGeneratorOverrideRepos(t *testing.T) {
 			assert.NoError(t, err)
 
 			var bp blueprint.Blueprint
-			err = mg.Generate(&bp, res[0].ImgType, nil)
+			osbuildManifest, err := mg.Generate(&bp, res[0].ImgType, nil)
 			assert.NoError(t, err)
 			if withOverrideRepos {
-				assert.Contains(t, osbuildManifest.String(), "http://example.com/overriden-repo/kernel.rpm")
+				assert.Contains(t, string(osbuildManifest), "http://example.com/overriden-repo/kernel.rpm")
 			} else {
-				assert.NotContains(t, osbuildManifest.String(), "http://example.com/overriden-repo/kernel.rpm")
+				assert.NotContains(t, string(osbuildManifest), "http://example.com/overriden-repo/kernel.rpm")
 			}
 		})
 	}
@@ -415,9 +400,7 @@ func TestManifestGeneratorUseBootstrapContainer(t *testing.T) {
 
 	for _, useBootstrapContainer := range []bool{false, true} {
 		t.Run(fmt.Sprintf("useBootstrapContainer: %v", useBootstrapContainer), func(t *testing.T) {
-			var osbuildManifest bytes.Buffer
 			opts := &manifestgen.Options{
-				Output:                &osbuildManifest,
 				Depsolver:             fakeDepsolve,
 				ContainerResolver:     fakeContainerResolver,
 				UseBootstrapContainer: useBootstrapContainer,
@@ -427,9 +410,9 @@ func TestManifestGeneratorUseBootstrapContainer(t *testing.T) {
 			assert.NoError(t, err)
 
 			var bp blueprint.Blueprint
-			err = mg.Generate(&bp, res[0].ImgType, nil)
+			osbuildManifest, err := mg.Generate(&bp, res[0].ImgType, nil)
 			assert.NoError(t, err)
-			pipelines, err := manifesttest.PipelineNamesFrom(osbuildManifest.Bytes())
+			pipelines, err := manifesttest.PipelineNamesFrom(osbuildManifest)
 			assert.NoError(t, err)
 			needle := "bootstrap-buildroot"
 			if useBootstrapContainer {
