@@ -38,9 +38,6 @@ var (
 // For unset values defaults will be used.
 type Options struct {
 	Cachedir string
-	// Output is the writer that the generated osbuild manifest will
-	// written to.
-	Output io.Writer
 
 	RpmDownloader osbuild.RpmDownloader
 
@@ -82,7 +79,6 @@ type Options struct {
 // and options.
 type Generator struct {
 	cacheDir string
-	out      io.Writer
 
 	depsolver              DepsolveFunc
 	containerResolver      ContainerResolverFunc
@@ -110,7 +106,6 @@ func New(reporegistry *reporegistry.RepoRegistry, opts *Options) (*Generator, er
 		reporegistry: reporegistry,
 
 		cacheDir:               opts.Cachedir,
-		out:                    opts.Output,
 		depsolver:              opts.Depsolver,
 		containerResolver:      opts.ContainerResolver,
 		commitResolver:         opts.CommitResolver,
@@ -121,9 +116,6 @@ func New(reporegistry *reporegistry.RepoRegistry, opts *Options) (*Generator, er
 		customSeed:             opts.CustomSeed,
 		overrideRepos:          opts.OverrideRepos,
 		useBootstrapContainer:  opts.UseBootstrapContainer,
-	}
-	if mg.out == nil {
-		mg.out = os.Stdout
 	}
 	if mg.depsolver == nil {
 		mg.depsolver = DefaultDepsolver
@@ -140,7 +132,7 @@ func New(reporegistry *reporegistry.RepoRegistry, opts *Options) (*Generator, er
 
 // Generate will generate a new manifest for the given distro/imageType/arch
 // combination.
-func (mg *Generator) Generate(bp *blueprint.Blueprint, imgType distro.ImageType, imgOpts *distro.ImageOptions) (err error) {
+func (mg *Generator) Generate(bp *blueprint.Blueprint, imgType distro.ImageType, imgOpts *distro.ImageOptions) ([]byte, error) {
 	if imgOpts == nil {
 		imgOpts = &distro.ImageOptions{}
 	}
@@ -152,9 +144,10 @@ func (mg *Generator) Generate(bp *blueprint.Blueprint, imgType distro.ImageType,
 	if mg.overrideRepos != nil {
 		repos = mg.overrideRepos
 	} else {
+		var err error
 		repos, err = mg.reporegistry.ReposByImageTypeName(dist.Name(), a.Name(), imgType.Name())
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 	// To support "user" a.k.a. "3rd party" repositories, these
@@ -163,44 +156,43 @@ func (mg *Generator) Generate(bp *blueprint.Blueprint, imgType distro.ImageType,
 	// for the given image type, see e.g. distro/rhel/imagetype.go:Manifest()
 	preManifest, warnings, err := imgType.Manifest(bp, *imgOpts, repos, mg.customSeed)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if len(warnings) > 0 {
 		warn := strings.Join(warnings, "\n")
 		if mg.warningsOutput != nil {
 			fmt.Fprint(mg.warningsOutput, warn)
 		} else {
-			return fmt.Errorf("Warnings during manifest creation:\n%v", warn)
+			return nil, fmt.Errorf("Warnings during manifest creation:\n%v", warn)
 		}
 	}
 	depsolved, err := mg.depsolver(mg.cacheDir, mg.depsolveWarningsOutput, preManifest.GetPackageSetChains(), dist, a.Name())
 	if err != nil {
-		return err
+		return nil, err
 	}
 	containerSpecs, err := mg.containerResolver(preManifest.GetContainerSourceSpecs(), a.Name())
 	if err != nil {
-		return err
+		return nil, err
 	}
 	for _, specs := range containerSpecs {
 		for _, spec := range specs {
 			if spec.Arch.String() != a.Name() {
-				return fmt.Errorf("%w: %q != %q", ErrContainerArchMismatch, spec.Arch, a.Name())
+				return nil, fmt.Errorf("%w: %q != %q", ErrContainerArchMismatch, spec.Arch, a.Name())
 			}
 		}
 	}
 
 	commitSpecs, err := mg.commitResolver(preManifest.GetOSTreeSourceSpecs())
 	if err != nil {
-		return err
+		return nil, err
 	}
 	opts := &manifest.SerializeOptions{
 		RpmDownloader: mg.rpmDownloader,
 	}
 	mf, err := preManifest.Serialize(depsolved, containerSpecs, commitSpecs, opts)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	fmt.Fprintf(mg.out, "%s\n", mf)
 
 	if mg.sbomWriter != nil {
 		// XXX: this is very similar to
@@ -221,15 +213,15 @@ func (mg *Generator) Generate(bp *blueprint.Blueprint, imgType distro.ImageType,
 			var buf bytes.Buffer
 			enc := json.NewEncoder(&buf)
 			if err := enc.Encode(depsolvedPipeline.SBOM.Document); err != nil {
-				return err
+				return nil, err
 			}
 			if err := mg.sbomWriter(sbomDocOutputFilename, &buf, depsolvedPipeline.SBOM.DocType); err != nil {
-				return err
+				return nil, err
 			}
 		}
 	}
 
-	return nil
+	return mf, nil
 }
 
 func xdgCacheHome() (string, error) {
