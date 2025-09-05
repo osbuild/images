@@ -140,11 +140,13 @@ func New(reporegistry *reporegistry.RepoRegistry, opts *Options) (*Generator, er
 
 // Generate will generate a new manifest for the given distro/imageType/arch
 // combination.
-func (mg *Generator) Generate(bp *blueprint.Blueprint, dist distro.Distro, imgType distro.ImageType, a distro.Arch, imgOpts *distro.ImageOptions) (err error) {
+func (mg *Generator) Generate(bp *blueprint.Blueprint, imgType distro.ImageType, imgOpts *distro.ImageOptions) (err error) {
 	if imgOpts == nil {
 		imgOpts = &distro.ImageOptions{}
 	}
 	imgOpts.UseBootstrapContainer = mg.useBootstrapContainer
+	a := imgType.Arch()
+	dist := a.Distro()
 
 	var repos []rpmmd.RepoConfig
 	if mg.overrideRepos != nil {
