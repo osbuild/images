@@ -14,8 +14,6 @@ type DistroLister interface {
 
 // Result contains a result from a imagefilter.Filter run
 type Result struct {
-	Distro  distro.Distro
-	Arch    distro.Arch
 	ImgType distro.ImageType
 }
 
@@ -80,7 +78,7 @@ func (i *ImageFilter) Filter(searchTerms ...string) ([]Result, error) {
 					return nil, err
 				}
 				if filter.Matches(distro, a, imgType) {
-					res = append(res, Result{distro, a, imgType})
+					res = append(res, Result{imgType})
 				}
 			}
 		}
