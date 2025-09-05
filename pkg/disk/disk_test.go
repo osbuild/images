@@ -194,6 +194,9 @@ func TestCreatePartitionTable(t *testing.T) {
 			if ptName == "luks+lvm" {
 				ptMode = partition.AutoLVMPartitioningMode
 			}
+			if ptName == "btrfs" {
+				ptMode = partition.BtrfsPartitioningMode
+			}
 			mpt, err := disk.NewPartitionTable(&pt, bp, uint64(13*MiB), ptMode, arch.ARCH_PPC64LE, nil, "", rng)
 			require.NoError(t, err, "Partition table generation failed: PT %q BP %q (%s)", ptName, bpName, err)
 			assert.NotNil(mpt, "Partition table generation failed: PT %q BP %q (nil partition table)", ptName, bpName)
