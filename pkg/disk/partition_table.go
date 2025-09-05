@@ -117,6 +117,7 @@ func NewPartitionTable(basePT *PartitionTable, mountpoints []blueprint.Filesyste
 		ensureLVM = len(newMountpoints) > 0
 	case partition.BtrfsPartitioningMode:
 		ensureBtrfs = true
+		defaultFs = "btrfs"
 	default:
 		return nil, fmt.Errorf("unsupported partitioning mode %q", mode)
 	}
