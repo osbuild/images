@@ -18,8 +18,6 @@ type MinimalRepoRegistry interface {
 
 // Result contains a result from a imagefilter.Filter run
 type Result struct {
-	Distro  distro.Distro
-	Arch    distro.Arch
 	ImgType distro.ImageType
 	Repos   []rpmmd.RepoConfig
 }
@@ -93,7 +91,7 @@ func (i *ImageFilter) Filter(searchTerms ...string) ([]Result, error) {
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, Result{distro, a, imgType, repos})
+					res = append(res, Result{imgType, repos})
 				}
 			}
 		}

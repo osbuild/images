@@ -36,8 +36,8 @@ func TestImageFilterSpecificResult(t *testing.T) {
 	res, err := imgFilter.Filter("distro:centos-9", "arch:x86_64", "type:qcow2")
 	require.NoError(t, err)
 	assert.Len(t, res, 1)
-	assert.Equal(t, "centos-9", res[0].Distro.Name())
-	assert.Equal(t, "x86_64", res[0].Arch.Name())
+	assert.Equal(t, "centos-9", res[0].ImgType.Arch().Distro().Name())
+	assert.Equal(t, "x86_64", res[0].ImgType.Arch().Name())
 	assert.Equal(t, "qcow2", res[0].ImgType.Name())
 	assert.True(t, len(res[0].Repos) > 0)
 	assert.True(t, slices.IndexFunc(res[0].Repos, func(r rpmmd.RepoConfig) bool {
