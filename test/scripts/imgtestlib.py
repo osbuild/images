@@ -28,9 +28,7 @@ CAN_BOOT_TEST = {
         "ec2-sap",
         "edge-ami",
         "iot-bootable-container",
-    ],
-    "x86_64": [
-        "vhd"
+        "vhd",
     ],
 }
 

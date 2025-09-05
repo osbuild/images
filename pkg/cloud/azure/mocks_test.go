@@ -433,3 +433,114 @@ func (diskm *diskMock) BeginDelete(ctx context.Context, rg, name string, options
 		&armcompute.DisksClientDeleteResponse{},
 	)
 }
+
+type galleriesMock struct {
+	createOrUpdate []galleriesCreateOrUpdateArgs
+	delete         []galleriesDeleteArgs
+}
+
+type galleriesCreateOrUpdateArgs struct {
+	rg      string
+	name    string
+	gallery armcompute.Gallery
+	options *armcompute.GalleriesClientBeginCreateOrUpdateOptions
+}
+
+type galleriesDeleteArgs struct {
+	rg      string
+	name    string
+	options *armcompute.GalleriesClientBeginDeleteOptions
+}
+
+func (gm *galleriesMock) BeginCreateOrUpdate(ctx context.Context, rg, name string, gallery armcompute.Gallery, options *armcompute.GalleriesClientBeginCreateOrUpdateOptions) (*runtime.Poller[armcompute.GalleriesClientCreateOrUpdateResponse], error) {
+	gm.createOrUpdate = append(gm.createOrUpdate, galleriesCreateOrUpdateArgs{rg, name, gallery, options})
+	gallery.Name = &name
+	return makePoller[armcompute.GalleriesClientCreateOrUpdateResponse](
+		&armcompute.GalleriesClientCreateOrUpdateResponse{
+			Gallery: gallery,
+		},
+	)
+}
+
+func (gm *galleriesMock) BeginDelete(ctx context.Context, rg, name string, options *armcompute.GalleriesClientBeginDeleteOptions) (*runtime.Poller[armcompute.GalleriesClientDeleteResponse], error) {
+	gm.delete = append(gm.delete, galleriesDeleteArgs{rg, name, options})
+	return makePoller[armcompute.GalleriesClientDeleteResponse](
+		&armcompute.GalleriesClientDeleteResponse{},
+	)
+}
+
+type galleryImagesMock struct {
+	createOrUpdate []galleryImagesCreateOrUpdateArgs
+	delete         []galleryImagesDeleteArgs
+}
+
+type galleryImagesCreateOrUpdateArgs struct {
+	rg      string
+	gallery string
+	name    string
+	image   armcompute.GalleryImage
+	options *armcompute.GalleryImagesClientBeginCreateOrUpdateOptions
+}
+
+type galleryImagesDeleteArgs struct {
+	rg      string
+	gallery string
+	name    string
+	options *armcompute.GalleryImagesClientBeginDeleteOptions
+}
+
+func (gim *galleryImagesMock) BeginCreateOrUpdate(ctx context.Context, rg, gallery, name string, image armcompute.GalleryImage, options *armcompute.GalleryImagesClientBeginCreateOrUpdateOptions) (*runtime.Poller[armcompute.GalleryImagesClientCreateOrUpdateResponse], error) {
+	gim.createOrUpdate = append(gim.createOrUpdate, galleryImagesCreateOrUpdateArgs{rg, gallery, name, image, options})
+	image.Name = &name
+	return makePoller[armcompute.GalleryImagesClientCreateOrUpdateResponse](
+		&armcompute.GalleryImagesClientCreateOrUpdateResponse{
+			GalleryImage: image,
+		},
+	)
+}
+
+func (gim *galleryImagesMock) BeginDelete(ctx context.Context, rg, gallery, name string, options *armcompute.GalleryImagesClientBeginDeleteOptions) (*runtime.Poller[armcompute.GalleryImagesClientDeleteResponse], error) {
+	gim.delete = append(gim.delete, galleryImagesDeleteArgs{rg, gallery, name, options})
+	return makePoller[armcompute.GalleryImagesClientDeleteResponse](
+		&armcompute.GalleryImagesClientDeleteResponse{},
+	)
+}
+
+type galleryImageVersionsMock struct {
+	createOrUpdate []galleryImageVersionsCreateOrUpdateArgs
+	delete         []galleryImageVersionsDeleteArgs
+}
+
+type galleryImageVersionsCreateOrUpdateArgs struct {
+	rg      string
+	gallery string
+	img     string
+	name    string
+	version armcompute.GalleryImageVersion
+	options *armcompute.GalleryImageVersionsClientBeginCreateOrUpdateOptions
+}
+
+type galleryImageVersionsDeleteArgs struct {
+	rg      string
+	gallery string
+	image   string
+	name    string
+	options *armcompute.GalleryImageVersionsClientBeginDeleteOptions
+}
+
+func (givm *galleryImageVersionsMock) BeginCreateOrUpdate(ctx context.Context, rg, gallery, img, name string, version armcompute.GalleryImageVersion, options *armcompute.GalleryImageVersionsClientBeginCreateOrUpdateOptions) (*runtime.Poller[armcompute.GalleryImageVersionsClientCreateOrUpdateResponse], error) {
+	givm.createOrUpdate = append(givm.createOrUpdate, galleryImageVersionsCreateOrUpdateArgs{rg, gallery, img, name, version, options})
+	version.Name = &name
+	return makePoller[armcompute.GalleryImageVersionsClientCreateOrUpdateResponse](
+		&armcompute.GalleryImageVersionsClientCreateOrUpdateResponse{
+			GalleryImageVersion: version,
+		},
+	)
+}
+
+func (givm *galleryImageVersionsMock) BeginDelete(ctx context.Context, rg, gallery, img, name string, options *armcompute.GalleryImageVersionsClientBeginDeleteOptions) (*runtime.Poller[armcompute.GalleryImageVersionsClientDeleteResponse], error) {
+	givm.delete = append(givm.delete, galleryImageVersionsDeleteArgs{rg, gallery, img, name, options})
+	return makePoller[armcompute.GalleryImageVersionsClientDeleteResponse](
+		&armcompute.GalleryImageVersionsClientDeleteResponse{},
+	)
+}
