@@ -124,7 +124,7 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("[ERROR] manifest generator creation failed: %w", err)
 	}
-	if err := mg.Generate(config.Blueprint, distribution, imgType, arch, &config.Options); err != nil {
+	if err := mg.Generate(config.Blueprint, imgType, &config.Options); err != nil {
 		return fmt.Errorf("[ERROR] manifest generation failed: %w", err)
 	}
 	fmt.Print("DONE\n")

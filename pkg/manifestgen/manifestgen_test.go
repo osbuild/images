@@ -67,7 +67,7 @@ func TestManifestGeneratorDepsolve(t *testing.T) {
 			assert.NoError(t, err)
 			assert.NotNil(t, mg)
 			var bp blueprint.Blueprint
-			err = mg.Generate(&bp, res[0].Distro, res[0].ImgType, res[0].Arch, nil)
+			err = mg.Generate(&bp, res[0].ImgType, nil)
 			require.NoError(t, err)
 
 			pipelineNames, err := manifesttest.PipelineNamesFrom(osbuildManifest.Bytes())
@@ -115,7 +115,7 @@ func TestManifestGeneratorWithOstreeCommit(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, mg)
 	var bp blueprint.Blueprint
-	err = mg.Generate(&bp, res[0].Distro, res[0].ImgType, res[0].Arch, imageOpts)
+	err = mg.Generate(&bp, res[0].ImgType, imageOpts)
 	assert.NoError(t, err)
 
 	pipelineNames, err := manifesttest.PipelineNamesFrom(osbuildManifest.Bytes())
@@ -240,7 +240,7 @@ func TestManifestGeneratorContainers(t *testing.T) {
 			},
 		},
 	}
-	err = mg.Generate(&bp, res[0].Distro, res[0].ImgType, res[0].Arch, nil)
+	err = mg.Generate(&bp, res[0].ImgType, nil)
 	assert.NoError(t, err)
 
 	// container is included
@@ -279,7 +279,7 @@ func TestManifestGeneratorDepsolveWithSbomWriter(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, mg)
 	var bp blueprint.Blueprint
-	err = mg.Generate(&bp, res[0].Distro, res[0].ImgType, res[0].Arch, nil)
+	err = mg.Generate(&bp, res[0].ImgType, nil)
 	require.NoError(t, err)
 
 	assert.Contains(t, generatedSboms, "centos-9-qcow2-x86_64.buildroot-build.spdx.json")
@@ -317,7 +317,7 @@ func TestManifestGeneratorSeed(t *testing.T) {
 		assert.NoError(t, err)
 
 		var bp blueprint.Blueprint
-		err = mg.Generate(&bp, res[0].Distro, res[0].ImgType, res[0].Arch, nil)
+		err = mg.Generate(&bp, res[0].ImgType, nil)
 		assert.NoError(t, err)
 
 		// with the customSeed we always get a predicatable uuid for
@@ -354,7 +354,7 @@ func TestManifestGeneratorDepsolveOutput(t *testing.T) {
 	assert.NoError(t, err)
 
 	var bp blueprint.Blueprint
-	err = mg.Generate(&bp, res[0].Distro, res[0].ImgType, res[0].Arch, nil)
+	err = mg.Generate(&bp, res[0].ImgType, nil)
 	assert.NoError(t, err)
 
 	assert.Equal(t, []byte("fake depsolve output"), depsolveWarningsOutput.Bytes())
@@ -391,7 +391,7 @@ func TestManifestGeneratorOverrideRepos(t *testing.T) {
 			assert.NoError(t, err)
 
 			var bp blueprint.Blueprint
-			err = mg.Generate(&bp, res[0].Distro, res[0].ImgType, res[0].Arch, nil)
+			err = mg.Generate(&bp, res[0].ImgType, nil)
 			assert.NoError(t, err)
 			if withOverrideRepos {
 				assert.Contains(t, osbuildManifest.String(), "http://example.com/overriden-repo/kernel.rpm")
@@ -427,7 +427,7 @@ func TestManifestGeneratorUseBootstrapContainer(t *testing.T) {
 			assert.NoError(t, err)
 
 			var bp blueprint.Blueprint
-			err = mg.Generate(&bp, res[0].Distro, res[0].ImgType, res[0].Arch, nil)
+			err = mg.Generate(&bp, res[0].ImgType, nil)
 			assert.NoError(t, err)
 			pipelines, err := manifesttest.PipelineNamesFrom(osbuildManifest.Bytes())
 			assert.NoError(t, err)
