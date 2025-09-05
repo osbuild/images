@@ -12,6 +12,8 @@ import (
 	"strings"
 
 	"github.com/osbuild/blueprint/pkg/blueprint"
+	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/dnfjson"
@@ -171,9 +173,33 @@ func (mg *Generator) Generate(bp *blueprint.Blueprint, dist distro.Distro, imgTy
 			return fmt.Errorf("Warnings during manifest creation:\n%v", warn)
 		}
 	}
-	depsolved, err := mg.depsolver(mg.cacheDir, mg.depsolveWarningsOutput, preManifest.GetPackageSetChains(), dist, a.Name())
-	if err != nil {
-		return err
+
+	// XXX: make nicer
+	// XXX2: find a way to pass custom solver to depsolverFunc
+	var depsolved map[string]dnfjson.DepsolveResult
+	if dd, ok := dist.(distro.CustomDepsolverDistro); ok {
+		archi := common.Must(arch.FromString(a.Name()))
+		solver, cleanupFunc, err := dd.Depsolver(mg.cacheDir, archi)
+		if err != nil {
+			return err
+		}
+		defer cleanupFunc()
+
+		depsolvedSets := make(map[string]dnfjson.DepsolveResult)
+		packageSets := preManifest.GetPackageSetChains()
+		for name, pkgSet := range packageSets {
+			res, err := solver.Depsolve(pkgSet, sbom.StandardTypeSpdx)
+			if err != nil {
+				return fmt.Errorf("error depsolving: %w", err)
+			}
+			depsolvedSets[name] = *res
+		}
+		depsolved = depsolvedSets
+	} else {
+		depsolved, err = mg.depsolver(mg.cacheDir, mg.depsolveWarningsOutput, preManifest.GetPackageSetChains(), dist, a.Name())
+		if err != nil {
+			return err
+		}
 	}
 	containerSpecs, err := mg.containerResolver(preManifest.GetContainerSourceSpecs(), a.Name())
 	if err != nil {

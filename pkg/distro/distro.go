@@ -4,9 +4,11 @@ import (
 	"math/rand"
 
 	"github.com/osbuild/blueprint/pkg/blueprint"
+	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/customizations/subscription"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/disk/partition"
+	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/platform"
@@ -54,6 +56,12 @@ type Distro interface {
 	// Returns an object representing the given architecture as support
 	// by this distro.
 	GetArch(arch string) (Arch, error)
+}
+
+type CustomDepsolverDistro interface {
+	Distro
+
+	Depsolver(cacheDir string, archi arch.Arch) (solver *dnfjson.Solver, cleanup func(), err error)
 }
 
 // An Arch represents a given distribution's support for a given architecture.
