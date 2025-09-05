@@ -305,11 +305,19 @@ func checkStagesForMountUnits(t *testing.T, stages []*osbuild.Stage, expectedUni
 
 }
 
+func checkStagesForNoMounts(t *testing.T, stages []*osbuild.Stage) {
+	fstab := findStage("org.osbuild.fstab", stages)
+	require.Nil(t, fstab)
+
+	systemdStages := findStages("org.osbuild.systemd.unit.create", stages)
+	require.Nil(t, systemdStages)
+}
+
 func TestOSPipelineFStabStage(t *testing.T) {
 	os := manifest.NewTestOS()
 
-	os.PartitionTable = testdisk.MakeFakePartitionTable("/") // PT specifics don't matter
-	os.OSCustomizations.MountUnits = false                   // set it explicitly just to be sure
+	os.PartitionTable = testdisk.MakeFakePartitionTable("/")                   // PT specifics don't matter
+	os.OSCustomizations.MountConfiguration = osbuild.MOUNT_CONFIGURATION_FSTAB // set it explicitly just to be sure
 
 	checkStagesForFSTab(t, os.Serialize().Stages)
 }
@@ -319,9 +327,18 @@ func TestOSPipelineMountUnitStages(t *testing.T) {
 
 	expectedUnits := []string{"-.mount", "home.mount"}
 	os.PartitionTable = testdisk.MakeFakePartitionTable("/", "/home")
-	os.OSCustomizations.MountUnits = true
+	os.OSCustomizations.MountConfiguration = osbuild.MOUNT_CONFIGURATION_UNITS
 
 	checkStagesForMountUnits(t, os.Serialize().Stages, expectedUnits)
+}
+
+func TestOSPipelineMountNoneStages(t *testing.T) {
+	os := manifest.NewTestOS()
+
+	os.PartitionTable = testdisk.MakeFakePartitionTable("/", "/home")
+	os.OSCustomizations.MountConfiguration = osbuild.MOUNT_CONFIGURATION_NONE
+
+	checkStagesForNoMounts(t, os.Serialize().Stages)
 }
 
 func TestLanguageIncludesLocaleStage(t *testing.T) {

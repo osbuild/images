@@ -313,6 +313,9 @@ func (t *BootcImageType) Manifest(bp *blueprint.Blueprint, options distro.ImageO
 	if t.arch.distro.buildSourceInfo != nil {
 		img.OSCustomizations.BuildSELinux = t.arch.distro.buildSourceInfo.SELinuxPolicy
 	}
+	if t.arch.distro.sourceInfo != nil && t.arch.distro.sourceInfo.MountConfiguration != nil {
+		img.OSCustomizations.MountConfiguration = *t.arch.distro.sourceInfo.MountConfiguration
+	}
 
 	img.OSCustomizations.KernelOptionsAppend = []string{
 		"rw",
