@@ -299,7 +299,11 @@ func (p *AnacondaInstaller) payloadStages() []*osbuild.Stage {
 	}
 
 	LoraxPath := "99-generic/runtime-postinstall.tmpl"
-	if p.InstallerCustomizations.UseRHELLoraxTemplates {
+
+	// Check for custom lorax template path first (highest priority)
+	if p.InstallerCustomizations.CustomLoraxTemplatePath != "" {
+		LoraxPath = p.InstallerCustomizations.CustomLoraxTemplatePath
+	} else if p.InstallerCustomizations.UseRHELLoraxTemplates {
 		LoraxPath = "80-rhel/runtime-postinstall.tmpl"
 	}
 	stages = append(stages, osbuild.NewLoraxScriptStage(&osbuild.LoraxScriptStageOptions{
