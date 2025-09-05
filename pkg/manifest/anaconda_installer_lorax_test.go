@@ -72,13 +72,13 @@ func TestAnacondaInstallerCustomLoraxTemplatePath(t *testing.T) {
 			preview := false
 
 			installer := manifest.NewAnacondaInstaller(manifest.AnacondaInstallerTypePayload, build, x86plat, nil, "kernel", product, osversion, preview)
-			
+
 			// Configure installer customizations
 			installer.InstallerCustomizations.CustomLoraxTemplatePath = tc.customLoraxTemplatePath
 			installer.InstallerCustomizations.UseRHELLoraxTemplates = tc.useRHELLoraxTemplates
 
 			pipeline := manifest.SerializeWith(installer, manifest.Inputs{Depsolved: dnfjson.DepsolveResult{Packages: pkgs}})
-			
+
 			require := require.New(t)
 			require.NotNil(pipeline)
 			require.NotNil(pipeline.Stages)
@@ -93,13 +93,13 @@ func TestAnacondaInstallerCustomLoraxTemplatePath(t *testing.T) {
 			}
 
 			require.NotNil(loraxScriptStage, "serialized anaconda pipeline does not contain an org.osbuild.lorax-script stage")
-			
+
 			// Check lorax script stage options
 			loraxOptions, ok := loraxScriptStage.Options.(*osbuild.LoraxScriptStageOptions)
 			require.True(ok, "lorax-script stage options are not of correct type")
-			
+
 			// Verify the correct lorax template path is used
-			require.Equal(tc.expectedLoraxScriptPath, loraxOptions.Path, 
+			require.Equal(tc.expectedLoraxScriptPath, loraxOptions.Path,
 				"lorax template path should match expected value")
 		})
 	}
@@ -108,7 +108,7 @@ func TestAnacondaInstallerCustomLoraxTemplatePath(t *testing.T) {
 func TestAnacondaInstallerLoraxTemplatePathPriority(t *testing.T) {
 	pkgs := []rpmmd.PackageSpec{
 		{
-			Name:     "kernel", 
+			Name:     "kernel",
 			Checksum: "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
 		},
 	}
@@ -128,7 +128,7 @@ func TestAnacondaInstallerLoraxTemplatePathPriority(t *testing.T) {
 	installer.InstallerCustomizations.UseRHELLoraxTemplates = true // This should be ignored
 
 	pipeline := manifest.SerializeWith(installer, manifest.Inputs{Depsolved: dnfjson.DepsolveResult{Packages: pkgs}})
-	
+
 	require := require.New(t)
 	require.NotNil(pipeline)
 
@@ -145,7 +145,7 @@ func TestAnacondaInstallerLoraxTemplatePathPriority(t *testing.T) {
 
 	loraxOptions, ok := loraxScriptStage.Options.(*osbuild.LoraxScriptStageOptions)
 	require.True(ok, "lorax-script stage options are not of correct type")
-	
+
 	// Custom path should take priority
 	require.Equal("priority-test/custom.tmpl", loraxOptions.Path,
 		"custom lorax template path should take priority over UseRHELLoraxTemplates flag")
@@ -160,19 +160,19 @@ func TestAnacondaInstallerEmptyCustomLoraxTemplatePath(t *testing.T) {
 	}
 
 	testCases := []struct {
-		name                     string
-		useRHELLoraxTemplates    bool
-		expectedLoraxScriptPath  string
+		name                    string
+		useRHELLoraxTemplates   bool
+		expectedLoraxScriptPath string
 	}{
 		{
-			name:                     "empty-custom-path-with-rhel-templates",
-			useRHELLoraxTemplates:    true,
-			expectedLoraxScriptPath:  "80-rhel/runtime-postinstall.tmpl",
+			name:                    "empty-custom-path-with-rhel-templates",
+			useRHELLoraxTemplates:   true,
+			expectedLoraxScriptPath: "80-rhel/runtime-postinstall.tmpl",
 		},
 		{
-			name:                     "empty-custom-path-with-generic-templates",
-			useRHELLoraxTemplates:    false,
-			expectedLoraxScriptPath:  "99-generic/runtime-postinstall.tmpl",
+			name:                    "empty-custom-path-with-generic-templates",
+			useRHELLoraxTemplates:   false,
+			expectedLoraxScriptPath: "99-generic/runtime-postinstall.tmpl",
 		},
 	}
 
@@ -187,13 +187,13 @@ func TestAnacondaInstallerEmptyCustomLoraxTemplatePath(t *testing.T) {
 			preview := false
 
 			installer := manifest.NewAnacondaInstaller(manifest.AnacondaInstallerTypePayload, build, x86plat, nil, "kernel", product, osversion, preview)
-			
+
 			// Empty custom path should fall back to UseRHELLoraxTemplates flag
 			installer.InstallerCustomizations.CustomLoraxTemplatePath = ""
 			installer.InstallerCustomizations.UseRHELLoraxTemplates = tc.useRHELLoraxTemplates
 
 			pipeline := manifest.SerializeWith(installer, manifest.Inputs{Depsolved: dnfjson.DepsolveResult{Packages: pkgs}})
-			
+
 			require := require.New(t)
 			require.NotNil(pipeline)
 
@@ -210,7 +210,7 @@ func TestAnacondaInstallerEmptyCustomLoraxTemplatePath(t *testing.T) {
 
 			loraxOptions, ok := loraxScriptStage.Options.(*osbuild.LoraxScriptStageOptions)
 			require.True(ok, "lorax-script stage options are not of correct type")
-			
+
 			// Should fall back to automatic template selection
 			require.Equal(tc.expectedLoraxScriptPath, loraxOptions.Path,
 				"should fall back to automatic lorax template selection when custom path is empty")
