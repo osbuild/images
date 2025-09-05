@@ -502,5 +502,10 @@
     "image-types": [
       "azure-rhui"
     ]
+  },
+  "./configs/empty.json": {
+    "distros": [
+      "bootc-*"
+    ]
   }
 }

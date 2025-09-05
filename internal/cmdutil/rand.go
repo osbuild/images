@@ -42,7 +42,9 @@ func SeedArgFor(bc *buildconfig.BuildConfig, imgTypeName, distributionName, arch
 	h.Write([]byte(distributionName))
 	h.Write([]byte(archName))
 	h.Write([]byte(imgTypeName))
-	h.Write([]byte(bc.Name))
+	if bc != nil {
+		h.Write([]byte(bc.Name))
+	}
 
 	// nolint:gosec
 	return rngSeed + int64(h.Sum64()), nil
