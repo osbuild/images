@@ -1,7 +1,6 @@
 package bootc_test
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -42,15 +41,13 @@ func canRunIntegration(t *testing.T) {
 func genManifest(t *testing.T, imgType distro.ImageType) string {
 	var bp blueprint.Blueprint
 
-	var manifestJson bytes.Buffer
 	mg, err := manifestgen.New(nil, &manifestgen.Options{
-		Output: &manifestJson,
 		OverrideRepos: []rpmmd.RepoConfig{
 			{Id: "not-used", BaseURLs: []string{"not-used"}},
 		},
 	})
 	assert.NoError(t, err)
-	err = mg.Generate(&bp, imgType.Arch().Distro(), imgType, imgType.Arch(), nil)
+	manifestJson, err := mg.Generate(&bp, imgType, nil)
 	assert.NoError(t, err)
 
 	// XXX: it would be nice to return an *osbuild.Manifest here
@@ -58,7 +55,7 @@ func genManifest(t *testing.T, imgType distro.ImageType) string {
 	// working currently as osbuild.NewManifestsFromBytes() cannot
 	// unmarshal our manifests because of:
 	// "unexpected source name: org.osbuild.containers-storage"
-	return manifestJson.String()
+	return string(manifestJson)
 }
 
 func TestBuildContainerHandling(t *testing.T) {
