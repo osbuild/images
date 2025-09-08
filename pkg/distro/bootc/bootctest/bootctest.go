@@ -51,21 +51,10 @@ func makeFakeBinaries(t *testing.T, buildDir string) {
 	require.True(t, ok)
 	currentDir := filepath.Dir(currentFile)
 
-	fakeBootcPath := filepath.Join(buildDir, "usr/bin/bootc")
-	err := os.MkdirAll(filepath.Dir(fakeBootcPath), 0755)
-	require.NoError(t, err)
-	cmd := exec.Command(
-		"go", "build",
-		"-o", fakeBootcPath,
-		filepath.Join(currentDir, "./exe"),
-	)
-	cmd.Env = append(os.Environ(), "CGO_ENABLED=0")
-	output, err := cmd.CombinedOutput()
+	destDir := fmt.Sprintf("DESTDIR=%s", filepath.Join(buildDir, "/usr/bin"))
+	//nolint:gosec
+	output, err := exec.Command("make", "-C", filepath.Join(currentDir, "exe"), destDir).CombinedOutput()
 	require.NoError(t, err, string(output))
-
-	fakeSleepPath := filepath.Join(buildDir, "usr/bin/sleep")
-	err = os.Symlink("bootc", fakeSleepPath)
-	require.NoError(t, err)
 }
 
 func makeContainerfile(t *testing.T, buildDir string) {
