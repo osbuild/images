@@ -307,8 +307,8 @@ func TestCacheCleanup(t *testing.T) {
 }
 
 // Mock package list to use in testing
-var PackageList = rpmmd.PackageList{
-	rpmmd.Package{
+var PackageList = rpmmd.PackageListNG{
+	rpmmd.PackageNG{
 		Name:        "package0",
 		Summary:     "package summary",
 		Description: "package description",
