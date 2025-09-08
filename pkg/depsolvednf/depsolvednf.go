@@ -756,8 +756,8 @@ type transactionArgs struct {
 	InstallWeakDeps bool `json:"install_weak_deps"`
 }
 
-type packageSpecs []PackageSpec
-type moduleSpecs map[string]ModuleSpec
+type packageSpecs []packageSpec
+type moduleSpecs map[string]moduleSpec
 
 type depsolveResult struct {
 	Packages packageSpecs          `json:"packages"`
@@ -810,7 +810,7 @@ func (pl legacyPackageList) toRPMMD() rpmmd.PackageList {
 }
 
 // Package specification
-type PackageSpec struct {
+type packageSpec struct {
 	Name           string `json:"name"`
 	Epoch          uint   `json:"epoch"`
 	Version        string `json:"version,omitempty"`
@@ -824,24 +824,24 @@ type PackageSpec struct {
 }
 
 // Module specification
-type ModuleSpec struct {
-	ModuleConfigFile ModuleConfigFile   `json:"module-file"`
-	FailsafeFile     ModuleFailsafeFile `json:"failsafe-file"`
+type moduleSpec struct {
+	ModuleConfigFile moduleConfigFile   `json:"module-file"`
+	FailsafeFile     moduleFailsafeFile `json:"failsafe-file"`
 }
 
-type ModuleConfigFile struct {
+type moduleConfigFile struct {
 	Path string           `json:"path"`
-	Data ModuleConfigData `json:"data"`
+	Data moduleConfigData `json:"data"`
 }
 
-type ModuleConfigData struct {
+type moduleConfigData struct {
 	Name     string   `json:"name"`
 	Stream   string   `json:"stream"`
 	Profiles []string `json:"profiles"`
 	State    string   `json:"state"`
 }
 
-type ModuleFailsafeFile struct {
+type moduleFailsafeFile struct {
 	Path string `json:"path"`
 	Data string `json:"data"`
 }
