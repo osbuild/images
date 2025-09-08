@@ -24,7 +24,7 @@ const (
 	dnfTestingImageFedoraLatest = "registry.fedoraproject.org/fedora:latest"
 )
 
-func ensureCanRunDNFJsonTests(t *testing.T) {
+func ensureCanRunDepsolveDNFTests(t *testing.T) {
 	if os.Geteuid() != 0 {
 		t.Skip("skipping test; not running as root")
 	}
@@ -39,12 +39,12 @@ func ensureAMD64(t *testing.T) {
 	}
 }
 
-func TestDNFJsonWorks(t *testing.T) {
+func TestDepsolveDNFWorks(t *testing.T) {
 	if !hasPodman() {
 		t.Skip("skipping test: no podman")
 	}
 
-	ensureCanRunDNFJsonTests(t)
+	ensureCanRunDepsolveDNFTests(t)
 
 	cacheRoot := t.TempDir()
 
@@ -118,8 +118,8 @@ func TestDNFInitGivesAccessToSubscribedContent(t *testing.T) {
 	assert.Contains(t, string(content), "rhel-9-for-x86_64-baseos-rpms")
 }
 
-func TestDNFJsonWorkWithSubscribedContent(t *testing.T) {
-	ensureCanRunDNFJsonTests(t)
+func TestDepsolveDNFWorkWithSubscribedContent(t *testing.T) {
+	ensureCanRunDepsolveDNFTests(t)
 	ensureAMD64(t)
 	cacheRoot := t.TempDir()
 
@@ -157,8 +157,8 @@ func runCmd(t *testing.T, args ...string) {
 	require.NoError(t, err)
 }
 
-func TestDNFJsonWorkWithSubscribedContentNestedContainers(t *testing.T) {
-	ensureCanRunDNFJsonTests(t)
+func TestDepsolveDNFWorkWithSubscribedContentNestedContainers(t *testing.T) {
+	ensureCanRunDepsolveDNFTests(t)
 	ensureAMD64(t)
 	tmpdir := t.TempDir()
 
@@ -166,13 +166,13 @@ func TestDNFJsonWorkWithSubscribedContentNestedContainers(t *testing.T) {
 	defer restore()
 
 	// build a test binary from the existing
-	// TestDNFJsonWorkWithSubscribedContent that is then
+	// TestDepsolveDNFWorkWithSubscribedContent that is then
 	// transfered and run *inside* the centos container
 	testBinary := filepath.Join(tmpdir, "dnftest")
 	runCmd(t, "go", "test",
 		"-c",
 		"-o", testBinary,
-		"-run", "^TestDNFJsonWorkWithSubscribedContent$")
+		"-run", "^TestDepsolveDNFWorkWithSubscribedContent$")
 
 	output, err := exec.Command(
 		"podman", "run", "--rm",

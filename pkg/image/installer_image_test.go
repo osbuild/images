@@ -11,7 +11,7 @@ import (
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/anaconda"
 	"github.com/osbuild/images/pkg/customizations/kickstart"
-	"github.com/osbuild/images/pkg/dnfjson"
+	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/image"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/ostree"
@@ -20,8 +20,8 @@ import (
 	"github.com/osbuild/images/pkg/runner"
 )
 
-func mockPackageSets() map[string]dnfjson.DepsolveResult {
-	return map[string]dnfjson.DepsolveResult{
+func mockPackageSets() map[string]depsolvednf.DepsolveResult {
+	return map[string]depsolvednf.DepsolveResult{
 		"build": {
 			Packages: []rpmmd.PackageSpec{
 				{
@@ -337,7 +337,7 @@ func TestLiveInstallerSquashfsRootfs(t *testing.T) {
 	assert.NotContains(t, mfs, `"name:rootfs-image"`)
 }
 
-func instantiateAndSerialize(t *testing.T, img image.ImageKind, depsolved map[string]dnfjson.DepsolveResult, containers map[string][]container.Spec, commits map[string][]ostree.CommitSpec) string {
+func instantiateAndSerialize(t *testing.T, img image.ImageKind, depsolved map[string]depsolvednf.DepsolveResult, containers map[string][]container.Spec, commits map[string][]ostree.CommitSpec) string {
 	source := rand.NewSource(int64(0))
 	// math/rand is good enough in this case
 	/* #nosec G404 */

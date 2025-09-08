@@ -1,4 +1,4 @@
-package dnfjson
+package depsolvednf
 
 import (
 	"fmt"
@@ -269,14 +269,14 @@ func dirSize(path string) (uint64, error) {
 	return size, err
 }
 
-// dnfResults holds the results of a dnfjson request
+// dnfResults holds the results of a osbuild-depsolve-dnf request
 // expire is the time the request was made, used to expire the entry
 type dnfResults struct {
 	expire time.Time
 	pkgs   rpmmd.PackageList
 }
 
-// dnfCache is a cache of results from dnf-json requests
+// dnfCache is a cache of results from osbuild-depsolve-dnf requests
 type dnfCache struct {
 	results map[string]dnfResults
 	timeout time.Duration

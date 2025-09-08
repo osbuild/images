@@ -1,5 +1,5 @@
-// Package dnfjson is an interface to the dnf-json Python script that is
-// packaged with the osbuild-composer project. The core component of this
+// Package depsolvednf is an interface to the osbuild-depsolve-dnf Python script
+// that is packaged with the osbuild project. The core component of this
 // package is the Solver type. The Solver can be configured with
 // distribution-specific values (platform ID, architecture, and version
 // information) and provides methods for dependency resolution (Depsolve) and
@@ -11,7 +11,7 @@
 //
 // This package relies on the types defined in rpmmd to describe RPM package
 // metadata.
-package dnfjson
+package depsolvednf
 
 import (
 	"bytes"
@@ -41,8 +41,8 @@ type BaseSolver struct {
 	// Cache information
 	cache *rpmCache
 
-	// Path to the dnf-json binary and optional args (default: "/usr/libexec/osbuild-depsolve-dnf")
-	dnfJsonCmd []string
+	// Path to the osbuild-depsolve-dnf binary and optional args (default: "/usr/libexec/osbuild-depsolve-dnf")
+	depsolveDNFCmd []string
 
 	resultCache *dnfCache
 }
@@ -87,13 +87,13 @@ func (s *BaseSolver) SetMaxCacheSize(size uint64) {
 	s.cache.maxSize = size
 }
 
-// SetDNFJSONPath sets the path to the dnf-json binary and optionally any command line arguments.
-func (s *BaseSolver) SetDNFJSONPath(cmd string, args ...string) {
-	s.dnfJsonCmd = append([]string{cmd}, args...)
+// SetDepsolveDNFPath sets the path to the osbuild-depsolve-dnf binary and optionally any command line arguments.
+func (s *BaseSolver) SetDepsolveDNFPath(cmd string, args ...string) {
+	s.depsolveDNFCmd = append([]string{cmd}, args...)
 }
 
 // NewWithConfig initialises a Solver with the platform information and the
-// BaseSolver's subscription info, cache directory, and dnf-json path.
+// BaseSolver's subscription info, cache directory, and osbuild-depsolve-dnf path.
 // Also loads system subscription information.
 func (bs *BaseSolver) NewWithConfig(modulePlatformID, releaseVer, arch, distro string) *Solver {
 	s := new(Solver)
@@ -156,7 +156,7 @@ type Solver struct {
 	subscriptions    *rhsm.Subscriptions
 	subscriptionsErr error
 
-	// Stderr is the stderr output from dnfjson, if unset os.Stderr
+	// Stderr is the stderr output from osbuild-depsolve-dnf, if unset os.Stderr
 	// will be used.
 	//
 	// XXX: ideally this would not be public but just passed via
@@ -222,7 +222,7 @@ func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet, sbomType sbom.StandardType
 	s.cache.locker.RLock()
 	defer s.cache.locker.RUnlock()
 
-	output, err := run(s.dnfJsonCmd, req, s.Stderr)
+	output, err := run(s.depsolveDNFCmd, req, s.Stderr)
 	if err != nil {
 		return nil, fmt.Errorf("running osbuild-depsolve-dnf failed:\n%w", err)
 	}
@@ -277,7 +277,7 @@ func (s *Solver) FetchMetadata(repos []rpmmd.RepoConfig) (rpmmd.PackageList, err
 		return pkgs, nil
 	}
 
-	result, err := run(s.dnfJsonCmd, req, s.Stderr)
+	result, err := run(s.depsolveDNFCmd, req, s.Stderr)
 	if err != nil {
 		return nil, err
 	}
@@ -323,7 +323,7 @@ func (s *Solver) SearchMetadata(repos []rpmmd.RepoConfig, packages []string) (rp
 		return pkgs, nil
 	}
 
-	result, err := run(s.dnfJsonCmd, req, s.Stderr)
+	result, err := run(s.depsolveDNFCmd, req, s.Stderr)
 	if err != nil {
 		return nil, err
 	}
@@ -442,9 +442,9 @@ func (r *repoConfig) Hash() string {
 // The RHSM property is not part of the dnf repository configuration so it's
 // returned separately for setting the value on each package that requires it.
 //
-// NOTE: Due to implementation limitations of DNF and dnf-json, each package set
-// in the chain must use all of the repositories used by its predecessor.
-// An error is returned if this requirement is not met.
+// NOTE: Due to implementation limitations of DNF and osbuild-depsolve-dnf,
+// each package set in the chain must use all of the repositories used by its
+// predecessor. An error is returned if this requirement is not met.
 func (s *Solver) makeDepsolveRequest(pkgSets []rpmmd.PackageSet, sbomType sbom.StandardType) (*Request, map[string]bool, error) {
 	// dedupe repository configurations but maintain order
 	// the order in which repositories are added to the request affects the
@@ -657,7 +657,7 @@ func (result depsolveResult) toRPMMD(rhsm map[string]bool) ([]rpmmd.PackageSpec,
 	return rpmDependencies, moduleSpecs, repoConfigs
 }
 
-// Request command and arguments for dnf-json
+// Request command and arguments for osbuild-depsolve-dnf
 type Request struct {
 	// Command should be either "depsolve" or "dump"
 	Command string `json:"command"`
@@ -703,7 +703,7 @@ type sbomRequest struct {
 	Type string `json:"type"`
 }
 
-// arguments for a dnf-json request
+// arguments for a osbuild-depsolve-dnf request
 type arguments struct {
 	// Repositories to use for depsolving
 	Repos []repoConfig `json:"repos"`
@@ -804,7 +804,7 @@ type ModuleFailsafeFile struct {
 	Data string `json:"data"`
 }
 
-// dnf-json error structure
+// osbuild-depsolve-dnf error structure
 type Error struct {
 	Kind   string `json:"kind"`
 	Reason string `json:"reason"`
@@ -814,7 +814,7 @@ func (err Error) Error() string {
 	return fmt.Sprintf("DNF error occurred: %s: %s", err.Kind, err.Reason)
 }
 
-// parseError parses the response from dnf-json into the Error type and appends
+// parseError parses the response from osbuild-depsolve-dnf into the Error type and appends
 // the name and URL of a repository to all detected repository IDs in the
 // message.
 func parseError(data []byte, repos []repoConfig) Error {
@@ -822,7 +822,7 @@ func parseError(data []byte, repos []repoConfig) Error {
 	if len(data) == 0 {
 		return Error{
 			Kind:   "InternalError",
-			Reason: "dnf-json output was empty",
+			Reason: "osbuild-depsolve-dnf output was empty",
 		}
 	}
 
@@ -830,7 +830,7 @@ func parseError(data []byte, repos []repoConfig) Error {
 		// dumping the error into the Reason can get noisy, but it's good for troubleshooting
 		return Error{
 			Kind:   "InternalError",
-			Reason: fmt.Sprintf("Failed to unmarshal dnf-json error output %q: %s", string(data), err.Error()),
+			Reason: fmt.Sprintf("Failed to unmarshal osbuild-depsolve-dnf error output %q: %s", string(data), err.Error()),
 		}
 	}
 
@@ -860,7 +860,7 @@ func ParseError(data []byte) Error {
 		// dumping the error into the Reason can get noisy, but it's good for troubleshooting
 		return Error{
 			Kind:   "InternalError",
-			Reason: fmt.Sprintf("Failed to unmarshal dnf-json error output %q: %s", string(data), err.Error()),
+			Reason: fmt.Sprintf("Failed to unmarshal osbuild-depsolve-dnf error output %q: %s", string(data), err.Error()),
 		}
 	}
 	return e

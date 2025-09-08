@@ -63,7 +63,7 @@ jobs:
         run: go test  -race -timeout 20m ./... -test.skip 'TestBlockingResolverLocalManifest|TestResolverLocalManifest'
 
       - name: Run depsolver tests with force-dnf to make sure it's not skipped
-        run: go test -race ./pkg/dnfjson/... -force-dnf
+        run: go test -race ./pkg/depsolvednf/... -force-dnf
 
   container-resolver-tests:
     name: "🛃 Container resolver tests"

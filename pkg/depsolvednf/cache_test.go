@@ -1,4 +1,4 @@
-package dnfjson
+package depsolvednf
 
 import (
 	"io/fs"

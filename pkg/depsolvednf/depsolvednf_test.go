@@ -1,4 +1,4 @@
-package dnfjson
+package depsolvednf
 
 import (
 	"bytes"
@@ -850,16 +850,16 @@ func TestRepoConfigMarshalAlsmostEmpty(t *testing.T) {
 }
 
 func TestRunErrorEmptyOutput(t *testing.T) {
-	fakeDnfJsonPath := filepath.Join(t.TempDir(), "dnfjson")
-	fakeDnfJsonNoOutput := `#!/bin/sh -e
+	fakeDepsolveDNFPath := filepath.Join(t.TempDir(), "osbuild-depsolve-dnf")
+	fakeDepsolveDNFNoOutput := `#!/bin/sh -e
 cat - > "$0".stdin
 exit 1
 `
-	err := os.WriteFile(fakeDnfJsonPath, []byte(fakeDnfJsonNoOutput), 0o755)
+	err := os.WriteFile(fakeDepsolveDNFPath, []byte(fakeDepsolveDNFNoOutput), 0o755)
 	assert.NoError(t, err)
 
-	_, err = run([]string{fakeDnfJsonPath}, &Request{}, nil)
-	assert.EqualError(t, err, `DNF error occurred: InternalError: dnf-json output was empty`)
+	_, err = run([]string{fakeDepsolveDNFPath}, &Request{}, nil)
+	assert.EqualError(t, err, `DNF error occurred: InternalError: osbuild-depsolve-dnf output was empty`)
 }
 
 func TestSolverRunWithSolverNoError(t *testing.T) {
@@ -876,7 +876,7 @@ echo '{"solver": "zypper"}'
 	var capturedStderr bytes.Buffer
 	solver := NewSolver("platform:f38", "38", "x86_64", "fedora-38", "/tmp/cache")
 	solver.Stderr = &capturedStderr
-	solver.dnfJsonCmd = []string{fakeSolverPath}
+	solver.depsolveDNFCmd = []string{fakeSolverPath}
 	res, err := solver.Depsolve(nil, sbom.StandardTypeNone)
 	assert.NoError(t, err)
 	assert.NotNil(t, res)

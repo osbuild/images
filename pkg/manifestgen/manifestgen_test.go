@@ -16,9 +16,9 @@ import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/container"
+	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distrofactory"
-	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/imagefilter"
 	"github.com/osbuild/images/pkg/manifestgen"
 	"github.com/osbuild/images/pkg/osbuild"
@@ -132,14 +132,14 @@ func TestManifestGeneratorWithOstreeCommit(t *testing.T) {
 	assert.Contains(t, osbuildManifest.String(), expectedSha256)
 }
 
-func fakeDepsolve(cacheDir string, depsolveWarningsOutput io.Writer, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]dnfjson.DepsolveResult, error) {
-	depsolvedSets := make(map[string]dnfjson.DepsolveResult)
+func fakeDepsolve(cacheDir string, depsolveWarningsOutput io.Writer, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]depsolvednf.DepsolveResult, error) {
+	depsolvedSets := make(map[string]depsolvednf.DepsolveResult)
 	if depsolveWarningsOutput != nil {
 		_, _ = depsolveWarningsOutput.Write([]byte(`fake depsolve output`))
 	}
 	for name, pkgSets := range packageSets {
 		repoId := fmt.Sprintf("repo_id_%s", name)
-		var resolvedSet dnfjson.DepsolveResult
+		var resolvedSet depsolvednf.DepsolveResult
 		for _, pkgSet := range pkgSets {
 			for _, pkgName := range pkgSet.Include {
 				resolvedSet.Packages = append(resolvedSet.Packages, rpmmd.PackageSpec{

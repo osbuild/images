@@ -22,10 +22,10 @@ import (
 	"github.com/osbuild/images/internal/buildconfig"
 	"github.com/osbuild/images/internal/cmdutil"
 	"github.com/osbuild/images/pkg/container"
+	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/bootc"
 	"github.com/osbuild/images/pkg/distrofactory"
-	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/experimentalflags"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/manifestgen"
@@ -266,7 +266,7 @@ func makeManifestJob(
 			return
 		}
 
-		var depsolvedSets map[string]dnfjson.DepsolveResult
+		var depsolvedSets map[string]depsolvednf.DepsolveResult
 		if content["packages"] {
 			depsolvedSets, err = manifestgen.DefaultDepsolver(cacheDir, os.Stderr, manifest.GetPackageSetChains(), distribution, archName)
 			if err != nil {
@@ -321,7 +321,7 @@ func makeManifestJob(
 	return job
 }
 
-func save(ms manifest.OSBuildManifest, depsolved map[string]dnfjson.DepsolveResult, containers map[string][]container.Spec, commits map[string][]ostree.CommitSpec, cr buildRequest, path, filename string, metadata bool) error {
+func save(ms manifest.OSBuildManifest, depsolved map[string]depsolvednf.DepsolveResult, containers map[string][]container.Spec, commits map[string][]ostree.CommitSpec, cr buildRequest, path, filename string, metadata bool) error {
 	var data interface{}
 	if metadata {
 		rpmmds := make(map[string][]rpmmd.PackageSpec)

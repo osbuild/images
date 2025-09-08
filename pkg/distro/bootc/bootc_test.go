@@ -13,8 +13,8 @@ import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/randutil"
 	"github.com/osbuild/images/pkg/container"
+	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/manifest"
 )
 
@@ -23,7 +23,7 @@ type manifestTestCase struct {
 	imageOptions      distro.ImageOptions
 	imageRef          string
 	imageTypes        []string
-	depsolved         map[string]dnfjson.DepsolveResult
+	depsolved         map[string]depsolvednf.DepsolveResult
 	containers        map[string][]container.Spec
 	expStages         map[string][]string
 	notExpectedStages map[string][]string

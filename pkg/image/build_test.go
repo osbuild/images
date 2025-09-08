@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/pkg/container"
-	"github.com/osbuild/images/pkg/dnfjson"
+	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/image"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild/manifesttest"
@@ -17,8 +17,8 @@ import (
 
 var (
 	fakeDigest   = "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
-	fakeDepsolve = map[string]dnfjson.DepsolveResult{
-		"build": dnfjson.DepsolveResult{
+	fakeDepsolve = map[string]depsolvednf.DepsolveResult{
+		"build": depsolvednf.DepsolveResult{
 			Packages: []rpmmd.PackageSpec{
 				{Name: "foo", Checksum: fakeDigest},
 			},

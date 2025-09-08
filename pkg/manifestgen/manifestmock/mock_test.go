@@ -7,7 +7,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/container"
-	"github.com/osbuild/images/pkg/dnfjson"
+	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/manifestgen/manifestmock"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -77,10 +77,10 @@ func TestResolveCommits_Smoke(t *testing.T) {
 
 func TestDepsolve_EmptyInput(t *testing.T) {
 	result := manifestmock.Depsolve(nil, nil, "x86_64")
-	assert.Equal(t, map[string]dnfjson.DepsolveResult{}, result)
+	assert.Equal(t, map[string]depsolvednf.DepsolveResult{}, result)
 
 	result = manifestmock.Depsolve(map[string][]rpmmd.PackageSet{}, []rpmmd.RepoConfig{}, "x86_64")
-	assert.Equal(t, map[string]dnfjson.DepsolveResult{}, result)
+	assert.Equal(t, map[string]depsolvednf.DepsolveResult{}, result)
 }
 
 func TestDepsolve_Smoke(t *testing.T) {
@@ -102,8 +102,8 @@ func TestDepsolve_Smoke(t *testing.T) {
 	}
 	arch := "x86_64"
 	result := manifestmock.Depsolve(packageSets, repos, arch)
-	assert.Equal(t, map[string]dnfjson.DepsolveResult{
-		"build": dnfjson.DepsolveResult{
+	assert.Equal(t, map[string]depsolvednf.DepsolveResult{
+		"build": depsolvednf.DepsolveResult{
 			Packages: []rpmmd.PackageSpec{
 				{
 					Name:           "inc1",

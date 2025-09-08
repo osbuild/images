@@ -33,7 +33,7 @@ test: ## run all tests locally
         # keep tags in sync with BUILDTAGS_CROSS in https://github.com/containers/podman/blob/2981262215f563461d449b9841741339f4d9a894/Makefile#L85
 	CGO_ENABLED=0 go test -tags "containers_image_openpgp exclude_graphdriver_btrfs exclude_graphdriver_devicemapper exclude_graphdriver_overlay" ./...
 	# Run depsolver tests with force-dnf to make sure it's not skipped for any reason
-	go test -race ./pkg/dnfjson/... -force-dnf
+	go test -race ./pkg/depsolvednf/... -force-dnf
 	# ensure our tags are consistent
 	go run github.com/mvo5/vet-tagseq/cmd/tagseq@latest ./...
 
