@@ -15,9 +15,9 @@ import (
 	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/container"
+	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distrofactory"
-	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rpmmd"
 	testrepos "github.com/osbuild/images/test/data/repositories"
@@ -114,7 +114,7 @@ func TestImageTypePipelineNames(t *testing.T) {
 					// Get the content and "fake resolve" it to pass to
 					// Serialize().
 					packageSets := m.GetPackageSetChains()
-					depsolvedSets := make(map[string]dnfjson.DepsolveResult, len(packageSets))
+					depsolvedSets := make(map[string]depsolvednf.DepsolveResult, len(packageSets))
 					for name, sets := range packageSets {
 						packages := make([]rpmmd.PackageSpec, 0)
 						for _, set := range sets {
@@ -134,7 +134,7 @@ func TestImageTypePipelineNames(t *testing.T) {
 							}
 						}
 
-						depsolvedSets[name] = dnfjson.DepsolveResult{
+						depsolvedSets[name] = depsolvednf.DepsolveResult{
 							Packages: packages,
 						}
 					}

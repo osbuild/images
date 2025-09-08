@@ -15,7 +15,7 @@ import (
 	"github.com/osbuild/images/pkg/customizations/bootc"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/subscription"
-	"github.com/osbuild/images/pkg/dnfjson"
+	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
@@ -239,7 +239,7 @@ func TestModularityIncludesConfigStage(t *testing.T) {
 	testFailsafeConfigPath := filepath.Join(t.TempDir(), "failsafe-config")
 
 	inputs := manifest.Inputs{
-		Depsolved: dnfjson.DepsolveResult{
+		Depsolved: depsolvednf.DepsolveResult{
 			Packages: []rpmmd.PackageSpec{
 				{Name: "pkg1", Checksum: "sha1:c02524e2bd19490f2a7167958f792262754c5f46"},
 			},
@@ -459,7 +459,7 @@ func TestHMACStageInclusion(t *testing.T) {
 
 	t.Run("add-hmac-stage", func(t *testing.T) {
 		inputs := manifest.Inputs{
-			Depsolved: dnfjson.DepsolveResult{
+			Depsolved: depsolvednf.DepsolveResult{
 				Packages: []rpmmd.PackageSpec{
 					{
 						Name:     "test-kernel",
@@ -514,7 +514,7 @@ func TestHMACStageInclusion(t *testing.T) {
 
 	t.Run("no-hmac-stage", func(t *testing.T) {
 		inputs := manifest.Inputs{
-			Depsolved: dnfjson.DepsolveResult{
+			Depsolved: depsolvednf.DepsolveResult{
 				Packages: []rpmmd.PackageSpec{
 					{
 						Name:     "test-kernel",
@@ -583,7 +583,7 @@ func TestShimVersionLock(t *testing.T) {
 	os.OSCustomizations.VersionlockPackages = []string{"shim-x64"}
 
 	inputs := manifest.Inputs{
-		Depsolved: dnfjson.DepsolveResult{
+		Depsolved: depsolvednf.DepsolveResult{
 			Packages: []rpmmd.PackageSpec{
 				{
 					Name:     "test-kernel",

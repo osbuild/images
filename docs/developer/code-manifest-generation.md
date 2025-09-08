@@ -100,9 +100,10 @@ use to resolve and retrieve the packages.
 _Note:_ The package source specification is special in that it defines an array
 of package _sets_, which means each element in the array specifies multiple
 packages. We sometimes refer to this array as a _package set chain_. Chains of
-package sets are depsolved in order as part of the same call to `dnf-json`. The
-result of a depsolve of each package set in the chain is merged with the
-subsequent set and the result is a single array of package specs.
+package sets are depsolved in order as part of the same call to
+`osbuild-depsolve-dnf`. The result of a depsolve of each package set in the
+chain is merged with the subsequent set and the result is a single array of
+package specs.
 
 **Content specification**: The content specification for packages is the
 [`rpmmd.PackageSpec`][godoc-rpmmd-packagespec]. Each package spec is a fully resolved
@@ -110,7 +111,7 @@ description of an RPM, with metadata, a checksum, and a URL from which to
 retrieve the package.
 
 **Resolving**: Resolving **package sets** to **package specs** is done using
-the [`dnfjson.Solver.Depsolve()`][godoc-dnfjson-solver-depsolve] function. This
+the [`depsolvednf.Solver.Depsolve()`][godoc-depsolvednf-solver-depsolve] function. This
 call resolves the dependencies of an array of package sets and returns all the
 packages that were specified, their dependencies, and the metadata for each
 package.
@@ -169,7 +170,7 @@ function.
 [godoc-manifest-osbuildmanifest]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/manifest#OSBuildManifest
 [godoc-rpmmd-packageset]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/rpmmd#PackageSet
 [godoc-rpmmd-packagespec]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/rpmmd#PackageSpec
-[godoc-dnfjson-solver-depsolve]: https://pkg.go.dev/github.com/osbuild/images@main/internal/dnfjson#Solver.Depsolve
+[godoc-depsolvednf-solver-depsolve]: https://pkg.go.dev/github.com/osbuild/images@main/internal/depsolvednf#Solver.Depsolve
 [godoc-container-sourcespec]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/container#SourceSpec
 [godoc-container-spec]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/container#Spec
 [godoc-container-resolver]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/container#Resolver

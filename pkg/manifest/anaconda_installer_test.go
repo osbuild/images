@@ -7,7 +7,7 @@ import (
 
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/customizations/anaconda"
-	"github.com/osbuild/images/pkg/dnfjson"
+	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
@@ -90,7 +90,7 @@ func TestAnacondaInstallerModules(t *testing.T) {
 				installerPipeline.InstallerCustomizations.UseLegacyAnacondaConfig = legacy
 				installerPipeline.InstallerCustomizations.EnabledAnacondaModules = tc.enable
 				installerPipeline.InstallerCustomizations.DisabledAnacondaModules = tc.disable
-				pipeline := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: dnfjson.DepsolveResult{Packages: pkgs}})
+				pipeline := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: depsolvednf.DepsolveResult{Packages: pkgs}})
 				require := require.New(t)
 				require.NotNil(pipeline)
 				require.NotNil(pipeline.Stages)
@@ -135,7 +135,7 @@ func TestISOLocale(t *testing.T) {
 		t.Run(input, func(t *testing.T) {
 			installerPipeline := newAnacondaInstaller()
 			installerPipeline.Locale = input
-			pipeline := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: dnfjson.DepsolveResult{Packages: pkgs}})
+			pipeline := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: depsolvednf.DepsolveResult{Packages: pkgs}})
 			require := require.New(t)
 			require.NotNil(pipeline)
 			require.NotNil(pipeline.Stages)
@@ -164,7 +164,7 @@ func TestAnacondaInstallerDracutModulesAndDrivers(t *testing.T) {
 	installerPipeline := newAnacondaInstaller()
 	installerPipeline.InstallerCustomizations.AdditionalDracutModules = []string{"test-module"}
 	installerPipeline.InstallerCustomizations.AdditionalDrivers = []string{"test-driver"}
-	pipeline := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: dnfjson.DepsolveResult{Packages: pkgs}})
+	pipeline := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: depsolvednf.DepsolveResult{Packages: pkgs}})
 
 	require := require.New(t)
 	require.NotNil(pipeline)

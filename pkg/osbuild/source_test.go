@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/osbuild/images/pkg/container"
-	"github.com/osbuild/images/pkg/dnfjson"
+	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
@@ -263,7 +263,7 @@ var fakeRepos = []rpmmd.RepoConfig{
 
 func TestGenSourcesRpmDefaultRpmDownloaderIsCurl(t *testing.T) {
 	inputs := SourceInputs{
-		Depsolved: dnfjson.DepsolveResult{
+		Depsolved: depsolvednf.DepsolveResult{
 			Packages: []rpmmd.PackageSpec{opensslPkg},
 			Repos:    fakeRepos,
 		},
@@ -278,7 +278,7 @@ func TestGenSourcesRpmDefaultRpmDownloaderIsCurl(t *testing.T) {
 
 func TestGenSourcesRpmWithLibcurl(t *testing.T) {
 	inputs := SourceInputs{
-		Depsolved: dnfjson.DepsolveResult{
+		Depsolved: depsolvednf.DepsolveResult{
 			Packages: []rpmmd.PackageSpec{opensslPkg},
 			Repos:    fakeRepos,
 		},
@@ -301,7 +301,7 @@ func TestGenSourcesRpmWithLibcurl(t *testing.T) {
 
 func TestGenSourcesRpmWithLibrepo(t *testing.T) {
 	inputs := SourceInputs{
-		Depsolved: dnfjson.DepsolveResult{
+		Depsolved: depsolvednf.DepsolveResult{
 			Packages: []rpmmd.PackageSpec{opensslPkg},
 			Repos:    fakeRepos,
 		},
@@ -333,7 +333,7 @@ func TestGenSourcesRpmWithLibrepo(t *testing.T) {
 
 func TestGenSourcesRpmBad(t *testing.T) {
 	inputs := SourceInputs{
-		Depsolved: dnfjson.DepsolveResult{
+		Depsolved: depsolvednf.DepsolveResult{
 			Packages: []rpmmd.PackageSpec{opensslPkg},
 			Repos:    fakeRepos,
 		},

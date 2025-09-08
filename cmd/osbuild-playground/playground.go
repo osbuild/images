@@ -7,8 +7,8 @@ import (
 	"path"
 
 	"github.com/osbuild/images/pkg/datasizes"
+	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/dnfjson"
 	"github.com/osbuild/images/pkg/image"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
@@ -19,7 +19,7 @@ import (
 
 func RunPlayground(img image.ImageKind, d distro.Distro, arch distro.Arch, repos map[string][]rpmmd.RepoConfig, state_dir string) {
 
-	solver := dnfjson.NewSolver(d.ModulePlatformID(), d.Releasever(), arch.Name(), d.Name(), path.Join(state_dir, "rpmmd"))
+	solver := depsolvednf.NewSolver(d.ModulePlatformID(), d.Releasever(), arch.Name(), d.Name(), path.Join(state_dir, "rpmmd"))
 
 	// Set cache size to 1 GiB
 	solver.SetMaxCacheSize(1 * datasizes.GiB)
@@ -35,7 +35,7 @@ func RunPlayground(img image.ImageKind, d distro.Distro, arch distro.Arch, repos
 		panic("InstantiateManifest() failed: " + err.Error())
 	}
 
-	depsolvedSets := make(map[string]dnfjson.DepsolveResult)
+	depsolvedSets := make(map[string]depsolvednf.DepsolveResult)
 	for name, chain := range manifest.GetPackageSetChains() {
 		res, err := solver.Depsolve(chain, sbom.StandardTypeNone)
 		if err != nil {

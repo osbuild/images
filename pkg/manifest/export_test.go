@@ -3,7 +3,7 @@ package manifest
 import (
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
-	"github.com/osbuild/images/pkg/dnfjson"
+	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -72,7 +72,7 @@ func (p *OS) Serialize() osbuild.Pipeline {
 		{Name: "pkg1", Checksum: "sha1:c02524e2bd19490f2a7167958f792262754c5f46"},
 	}
 	p.serializeStart(Inputs{
-		Depsolved: dnfjson.DepsolveResult{
+		Depsolved: depsolvednf.DepsolveResult{
 			Packages: packages,
 			Repos:    repos,
 		},

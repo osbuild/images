@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/pkg/arch"
-	"github.com/osbuild/images/pkg/dnfjson"
+	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -38,7 +38,7 @@ func TestCoreOSInstallerDracutModulesAndDrivers(t *testing.T) {
 	coiPipeline := newCoreOSInstaller()
 	coiPipeline.AdditionalDracutModules = []string{"test-module"}
 	coiPipeline.AdditionalDrivers = []string{"test-driver"}
-	coiPipeline.serializeStart(Inputs{Depsolved: dnfjson.DepsolveResult{Packages: pkgs}})
+	coiPipeline.serializeStart(Inputs{Depsolved: depsolvednf.DepsolveResult{Packages: pkgs}})
 	pipeline := coiPipeline.serialize()
 
 	require := require.New(t)

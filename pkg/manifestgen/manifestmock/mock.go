@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/osbuild/images/pkg/container"
-	"github.com/osbuild/images/pkg/dnfjson"
+	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
@@ -53,8 +53,8 @@ func ResolveCommits(commitSources map[string][]ostree.SourceSpec) map[string][]o
 	return commits
 }
 
-func Depsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfig, archName string) map[string]dnfjson.DepsolveResult {
-	depsolvedSets := make(map[string]dnfjson.DepsolveResult)
+func Depsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfig, archName string) map[string]depsolvednf.DepsolveResult {
+	depsolvedSets := make(map[string]depsolvednf.DepsolveResult)
 
 	for name, pkgSetChain := range packageSets {
 		specSet := make([]rpmmd.PackageSpec, 0)
@@ -157,7 +157,7 @@ func Depsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfi
 			})
 		}
 
-		depsolvedSets[name] = dnfjson.DepsolveResult{
+		depsolvedSets[name] = depsolvednf.DepsolveResult{
 			Packages: specSet,
 			Repos:    repos,
 		}

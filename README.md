@@ -62,7 +62,7 @@ Other dependencies only needed in some cases are:
 - `krb5-devel`  
   build dependency for the unit tests and projects that import `pkg/upload/koji`
 - `osbuild-depsolve-dnf`  
-  runtime dependency for the unit tests and projects that import `pkg/dnfjson`.
+  runtime dependency for the unit tests and projects that import `pkg/depsolvednf`.
   or to run `cmd/gen-manifests` and `cmd/build`
 - `osbuild` (and subpackages)  
   runtime dependencies for `cmd/build`.
