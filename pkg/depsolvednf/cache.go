@@ -273,7 +273,7 @@ func dirSize(path string) (uint64, error) {
 // expire is the time the request was made, used to expire the entry
 type dnfResults struct {
 	expire time.Time
-	pkgs   rpmmd.PackageListNG
+	pkgs   rpmmd.PackageList
 }
 
 // dnfCache is a cache of results from osbuild-depsolve-dnf requests
@@ -308,19 +308,19 @@ func (d *dnfCache) CleanCache() {
 
 // Get returns the package list and true if cached
 // or an empty list and false if not cached or if cache is timed out
-func (d *dnfCache) Get(hash string) (rpmmd.PackageListNG, bool) {
+func (d *dnfCache) Get(hash string) (rpmmd.PackageList, bool) {
 	d.RLock()
 	defer d.RUnlock()
 
 	result, ok := d.results[hash]
 	if !ok || time.Since(result.expire) >= d.timeout {
-		return rpmmd.PackageListNG{}, false
+		return rpmmd.PackageList{}, false
 	}
 	return result.pkgs, true
 }
 
 // Store saves the package list in the cache
-func (d *dnfCache) Store(hash string, pkgs rpmmd.PackageListNG) {
+func (d *dnfCache) Store(hash string, pkgs rpmmd.PackageList) {
 	d.Lock()
 	defer d.Unlock()
 	d.results[hash] = dnfResults{expire: time.Now(), pkgs: pkgs}
