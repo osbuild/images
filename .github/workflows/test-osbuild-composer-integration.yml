@@ -95,7 +95,6 @@ jobs:
         run: |
           cd osbuild-composer
           go mod edit -replace github.com/osbuild/images=github.com/osbuild/images@$base_sha
-          ./tools/prepare-source.sh
 
       - name: Run unit tests (main)
         working-directory: osbuild-composer
@@ -103,7 +102,7 @@ jobs:
         # This step will not fail if the test fails, but it will write the
         # failure to GITHUB_OUTPUT
         run: |
-          if go test -v -race ./...; then
+          if ./tools/prepare-source.sh && go test -v -race ./...; then
             echo "base_test=1" >> $GITHUB_OUTPUT
           else
             echo "base_test=0" >> $GITHUB_OUTPUT
@@ -119,7 +118,6 @@ jobs:
           git restore .
           git clean -xfd .
           go mod edit -replace github.com/osbuild/images=../images
-          ./tools/prepare-source.sh
 
       - name: Run unit tests (PR HEAD)
         id: tests-pr
@@ -129,7 +127,7 @@ jobs:
         # This step will not fail if the test fails, but it will write the
         # failure to GITHUB_OUTPUT
         run: |
-          if go test -v -race ./...; then
+          if ./tools/prepare-source.sh && go test -v -race ./...; then
             echo "pr_test=1" >> $GITHUB_OUTPUT
           else
             echo "pr_test=0" >> $GITHUB_OUTPUT
@@ -209,7 +207,6 @@ jobs:
         run: |
           cd image-builder-cli
           go mod edit -replace github.com/osbuild/images=github.com/osbuild/images@$base_sha
-          go mod tidy
 
       - name: Run unit tests (main)
         working-directory: image-builder-cli
@@ -217,7 +214,7 @@ jobs:
         # This step will not fail if the test fails, but it will write the
         # failure to GITHUB_OUTPUT
         run: |
-          if go test -v -race ./...; then
+          if go mod tidy && go test -v -race ./...; then
             echo "base_test=1" >> $GITHUB_OUTPUT
           else
             echo "base_test=0" >> $GITHUB_OUTPUT
@@ -233,7 +230,6 @@ jobs:
           git restore .
           git clean -xfd .
           go mod edit -replace github.com/osbuild/images=../images
-          go mod tidy
 
       - name: Run unit tests (PR HEAD)
         id: tests-pr
@@ -243,7 +239,7 @@ jobs:
         # This step will not fail if the test fails, but it will write the
         # failure to GITHUB_OUTPUT
         run: |
-          if go test -v -race ./...; then
+          if go mod tidy && go test -v -race ./...; then
             echo "pr_test=1" >> $GITHUB_OUTPUT
           else
             echo "pr_test=0" >> $GITHUB_OUTPUT
