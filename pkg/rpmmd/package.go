@@ -49,7 +49,7 @@ type Checksum struct {
 // - get_from_repo_id() -  For an installed package, return id of repo from the package was installed
 // - get_install_time()
 // - get_rpmdbid()
-type PackageNG struct {
+type Package struct {
 	Name    string
 	Epoch   uint
 	Version string
@@ -123,7 +123,7 @@ type PackageNG struct {
 	IgnoreSSL bool
 }
 
-type PackageListNG []PackageNG
+type PackageList []Package
 
 // The inputs to depsolve, a set of packages to include and a set of packages
 // to exclude. The Repositories are used when depsolving this package set in
