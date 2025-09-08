@@ -113,8 +113,8 @@ func (p *Pipeline) Stage(typ string) *Stage {
 type Stage struct {
 	Type string `json:"type"`
 
-	Inputs  map[string]map[string]any `json:"inputs,omitempty"`
-	Options map[string]any            `json:"options,omitempty"`
+	Inputs  json.RawMessage `json:"inputs,omitempty"`
+	Options json.RawMessage `json:"options,omitempty"`
 }
 
 type Sources map[string]Source
