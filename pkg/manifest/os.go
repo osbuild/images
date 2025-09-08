@@ -737,6 +737,18 @@ func (p *OS) serialize() osbuild.Pipeline {
 		pipeline.AddStage(osbuild.NewUdevRulesStage(p.OSCustomizations.UdevRules))
 	}
 
+	// Run dracut to create new initrd to fips and/or custom dracut configurations
+	if p.OSCustomizations.FIPS || len(p.OSCustomizations.DracutConf) > 0 {
+		if p.OSCustomizations.FIPS {
+			pipeline.AddStages(osbuild.GenFIPSStages()...)
+			p.addStagesForAllFilesAndInlineData(&pipeline, osbuild.GenFIPSFiles())
+		}
+
+		pipeline.AddStage(osbuild.NewDracutStage(&osbuild.DracutStageOptions{
+			Kernel: []string{p.kernelVer},
+		}))
+	}
+
 	if pt := p.PartitionTable; pt != nil {
 		rootUUID, kernelOptions, err := osbuild.GenImageKernelOptions(p.PartitionTable, p.OSCustomizations.MountUnits)
 		if err != nil {
@@ -746,10 +758,6 @@ func (p *OS) serialize() osbuild.Pipeline {
 
 		if p.OSCustomizations.FIPS {
 			kernelOptions = append(kernelOptions, osbuild.GenFIPSKernelOptions(p.PartitionTable)...)
-			pipeline.AddStage(osbuild.NewDracutStage(&osbuild.DracutStageOptions{
-				Kernel:     []string{p.kernelVer},
-				AddModules: []string{"fips"},
-			}))
 		}
 
 		fsCfgStages, err := filesystemConfigStages(pt, p.OSCustomizations.MountUnits)
@@ -892,11 +900,6 @@ func (p *OS) serialize() osbuild.Pipeline {
 		)
 
 		pipeline.AddStage(osbuild.NewWSLDistributionConfStage(p.OSCustomizations.WSLDistributionConfig))
-	}
-
-	if p.OSCustomizations.FIPS {
-		pipeline.AddStages(osbuild.GenFIPSStages()...)
-		p.addStagesForAllFilesAndInlineData(&pipeline, osbuild.GenFIPSFiles())
 	}
 
 	// NOTE: We need to run the OpenSCAP stages as the last stage before SELinux

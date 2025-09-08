@@ -387,7 +387,7 @@ func TestAddInlineOS(t *testing.T) {
 	// of the pipeline
 	os.OSCustomizations.Files = createTestFilesForPipeline()
 
-	// enabling FIPS adds files after the Files defined above
+	// enabling FIPS adds files before the Files defined above
 	os.OSCustomizations.FIPS = true
 
 	// adding subscription options adds a file before the rest
@@ -398,9 +398,9 @@ func TestAddInlineOS(t *testing.T) {
 
 	expectedPaths := []string{
 		"tree:///etc/osbuild-subscription-register.env", // from the subscription options
+		"tree:///etc/system-fips",                       // from FIPS = true
 		"tree:///etc/test/one",                          // directly from the OS customizations
 		"tree:///etc/test/two",
-		"tree:///etc/system-fips", // from FIPS = true
 	}
 
 	pipeline := os.Serialize()
@@ -412,9 +412,9 @@ func TestAddInlineOS(t *testing.T) {
 
 	expectedContents := []string{
 		"ORG_ID=000\nACTIVATION_KEY=111",
+		"# FIPS module installation complete\n",
 		"test 1",
 		"test 2",
-		"# FIPS module installation complete\n",
 	}
 
 	fileContents := manifest.GetInline(os)
