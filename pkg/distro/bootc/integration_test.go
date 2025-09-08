@@ -2,6 +2,7 @@ package bootc_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -17,6 +18,7 @@ import (
 	"github.com/osbuild/images/pkg/distro/bootc"
 	"github.com/osbuild/images/pkg/distro/bootc/bootctest"
 	"github.com/osbuild/images/pkg/manifestgen"
+	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/osbuild/manifesttest"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
@@ -143,20 +145,10 @@ partition_table:
 			assert.NoError(t, err)
 
 			manifestJson := genManifest(t, imgType)
-			mani, err := manifesttest.NewFromBytes([]byte(manifestJson))
+			mani, err := manifesttest.NewManifestFromBytes([]byte(manifestJson))
 			require.NoError(t, err)
-			expectedStage := &manifesttest.Stage{
-				Type: "org.osbuild.write-device",
-				Inputs: map[string]map[string]any{
-					"tree": map[string]any{
-						"type":   "org.osbuild.tree",
-						"origin": "org.osbuild.pipeline",
-					},
-				},
-				Options: map[string]any{
-					"from": "input://tree/lib/modules/6.17/aboot.img",
-				},
-			}
+			var stage *manifesttest.Stage
+			var refPipeline string
 			// The binary file comes from the target bootc
 			// container. We mount the target as the build env
 			// by default but when using a custom build container
@@ -165,15 +157,28 @@ partition_table:
 			if withBuildContainer {
 				assert.Equal(t, []string{"target", "build", "image", "qcow2"}, mani.PipelineNames()[:4])
 
-				stage := mani.Pipelines[2].Stage("org.osbuild.write-device")
-				expectedStage.Inputs["tree"]["references"] = []any{"name:target"}
-				assert.Equal(t, expectedStage, stage)
+				stage = mani.Pipelines[2].Stage("org.osbuild.write-device")
+				assert.NotNil(t, stage)
+				refPipeline = "name:target"
 			} else {
-				stage := mani.Pipelines[1].Stage("org.osbuild.write-device")
+				stage = mani.Pipelines[1].Stage("org.osbuild.write-device")
+				assert.NotNil(t, stage)
 				assert.Equal(t, []string{"build", "image", "qcow2"}, mani.PipelineNames()[:3])
-				expectedStage.Inputs["tree"]["references"] = []any{"name:build"}
-				assert.Equal(t, expectedStage, stage)
+				refPipeline = "name:build"
 			}
+			// check write device stage options
+			var opts osbuild.WriteDeviceStageOptions
+			err = json.Unmarshal(stage.Options, &opts)
+			require.NoError(t, err)
+			assert.Equal(t, osbuild.WriteDeviceStageOptions{From: "input://tree/lib/modules/6.17/aboot.img"}, opts)
+			// check write device stage inputs
+			var inputs osbuild.PipelineTreeInputs
+			err = json.Unmarshal(stage.Inputs, &inputs)
+			require.NoError(t, err)
+			expected := osbuild.PipelineTreeInputs{
+				"tree": *osbuild.NewTreeInput(refPipeline),
+			}
+			assert.Equal(t, expected, inputs)
 		})
 	}
 }
