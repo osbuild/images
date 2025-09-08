@@ -2,10 +2,7 @@ package rpmmd
 
 import (
 	"fmt"
-	"sort"
 	"time"
-
-	"github.com/gobwas/glob"
 )
 
 // RelDep represents an RPM dependency with a name, an optional relationship
@@ -128,21 +125,6 @@ type PackageNG struct {
 
 type PackageListNG []PackageNG
 
-type PackageList []Package
-
-type Package struct {
-	Name        string
-	Summary     string
-	Description string
-	URL         string
-	Epoch       uint
-	Version     string
-	Release     string
-	Arch        string
-	BuildTime   time.Time
-	License     string
-}
-
 // The inputs to depsolve, a set of packages to include and a set of packages
 // to exclude. The Repositories are used when depsolving this package set in
 // addition to the base repositories.
@@ -201,34 +183,4 @@ func GetPackage(pkgs []PackageSpec, packageName string) (PackageSpec, error) {
 	}
 
 	return PackageSpec{}, fmt.Errorf("package %q not found in the PackageSpec list", packageName)
-}
-
-func (packages PackageList) Search(globPatterns ...string) (PackageList, error) {
-	var globs []glob.Glob
-
-	for _, globPattern := range globPatterns {
-		g, err := glob.Compile(globPattern)
-		if err != nil {
-			return nil, err
-		}
-
-		globs = append(globs, g)
-	}
-
-	var foundPackages PackageList
-
-	for _, pkg := range packages {
-		for _, g := range globs {
-			if g.Match(pkg.Name) {
-				foundPackages = append(foundPackages, pkg)
-				break
-			}
-		}
-	}
-
-	sort.Slice(packages, func(i, j int) bool {
-		return packages[i].Name < packages[j].Name
-	})
-
-	return foundPackages, nil
 }
