@@ -143,17 +143,36 @@ partition_table:
 			assert.NoError(t, err)
 
 			manifestJson := genManifest(t, imgType)
-			stagesForPipeline, err := manifesttest.StagesForPipeline([]byte(manifestJson), "image")
-			assert.Contains(t, stagesForPipeline, "org.osbuild.write-device")
+			mani, err := manifesttest.NewFromBytes([]byte(manifestJson))
+			require.NoError(t, err)
+			expectedStage := &manifesttest.Stage{
+				Type: "org.osbuild.write-device",
+				Inputs: map[string]map[string]any{
+					"tree": map[string]any{
+						"type":   "org.osbuild.tree",
+						"origin": "org.osbuild.pipeline",
+					},
+				},
+				Options: map[string]any{
+					"from": "input://tree/lib/modules/6.17/aboot.img",
+				},
+			}
 			// The binary file comes from the target bootc
 			// container. We mount the target as the build env
 			// by default but when using a custom build container
 			// we setup a special "target" pipeline that points
 			// to the real bootc container. Ensure this is honored.
 			if withBuildContainer {
-				assert.Contains(t, manifestJson, `{"type":"org.osbuild.write-device","inputs":{"tree":{"type":"org.osbuild.tree","origin":"org.osbuild.pipeline","references":["name:target"]}}`)
+				assert.Equal(t, []string{"target", "build", "image", "qcow2"}, mani.PipelineNames()[:4])
+
+				stage := mani.Pipelines[2].Stage("org.osbuild.write-device")
+				expectedStage.Inputs["tree"]["references"] = []any{"name:target"}
+				assert.Equal(t, expectedStage, stage)
 			} else {
-				assert.Contains(t, manifestJson, `{"type":"org.osbuild.write-device","inputs":{"tree":{"type":"org.osbuild.tree","origin":"org.osbuild.pipeline","references":["name:build"]}}`)
+				stage := mani.Pipelines[1].Stage("org.osbuild.write-device")
+				assert.Equal(t, []string{"build", "image", "qcow2"}, mani.PipelineNames()[:3])
+				expectedStage.Inputs["tree"]["references"] = []any{"name:build"}
+				assert.Equal(t, expectedStage, stage)
 			}
 		})
 	}
