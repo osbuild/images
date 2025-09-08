@@ -277,7 +277,7 @@ func (s *Solver) FetchMetadata(repos []rpmmd.RepoConfig) (rpmmd.PackageList, err
 		return pkgs, nil
 	}
 
-	result, err := run(s.depsolveDNFCmd, req, s.Stderr)
+	rawRes, err := run(s.depsolveDNFCmd, req, s.Stderr)
 	if err != nil {
 		return nil, err
 	}
@@ -290,10 +290,12 @@ func (s *Solver) FetchMetadata(repos []rpmmd.RepoConfig) (rpmmd.PackageList, err
 	}
 	s.cache.updateInfo()
 
-	var pkgs rpmmd.PackageList
-	if err := json.Unmarshal(result, &pkgs); err != nil {
+	var res dumpResult
+	if err := json.Unmarshal(rawRes, &res); err != nil {
 		return nil, err
 	}
+
+	pkgs := res.toRPMMD()
 
 	sortID := func(pkg rpmmd.Package) string {
 		return fmt.Sprintf("%s-%s-%s", pkg.Name, pkg.Version, pkg.Release)
@@ -323,7 +325,7 @@ func (s *Solver) SearchMetadata(repos []rpmmd.RepoConfig, packages []string) (rp
 		return pkgs, nil
 	}
 
-	result, err := run(s.depsolveDNFCmd, req, s.Stderr)
+	rawRes, err := run(s.depsolveDNFCmd, req, s.Stderr)
 	if err != nil {
 		return nil, err
 	}
@@ -336,10 +338,12 @@ func (s *Solver) SearchMetadata(repos []rpmmd.RepoConfig, packages []string) (rp
 	}
 	s.cache.updateInfo()
 
-	var pkgs rpmmd.PackageList
-	if err := json.Unmarshal(result, &pkgs); err != nil {
+	var res searchResult
+	if err := json.Unmarshal(rawRes, &res); err != nil {
 		return nil, err
 	}
+
+	pkgs := res.toRPMMD()
 
 	sortID := func(pkg rpmmd.Package) string {
 		return fmt.Sprintf("%s-%s-%s", pkg.Name, pkg.Version, pkg.Release)
@@ -765,6 +769,33 @@ type depsolveResult struct {
 
 	// (optional) contains the SBOM for the depsolved transaction
 	SBOM json.RawMessage `json:"sbom,omitempty"`
+}
+
+// legacyPackageList represents the old 'PackageList' structure, which
+// was used for both dump and search results. It is kept here for unmarshaling
+// the results.
+type legacyPackageList []struct {
+	Name        string    `json:"name"`
+	Summary     string    `json:"summary"`
+	Description string    `json:"description"`
+	URL         string    `json:"url"`
+	Epoch       uint      `json:"epoch"`
+	Version     string    `json:"version"`
+	Release     string    `json:"release"`
+	Arch        string    `json:"arch"`
+	BuildTime   time.Time `json:"build_time"`
+	License     string    `json:"license"`
+}
+
+type dumpResult = legacyPackageList
+type searchResult = legacyPackageList
+
+func (pl legacyPackageList) toRPMMD() rpmmd.PackageList {
+	rpmPkgs := make(rpmmd.PackageList, len(pl))
+	for i, p := range pl {
+		rpmPkgs[i] = rpmmd.Package(p)
+	}
+	return rpmPkgs
 }
 
 // Package specification
