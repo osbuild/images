@@ -67,5 +67,66 @@ func StagesForPipeline(osbuildManifest []byte, searchedPipeline string) ([]strin
 	}
 
 	return nil, fmt.Errorf("cannot find pipeline %q in %v", searchedPipeline, pipelines)
+}
 
+// Manifest is a unmarshalable version of osbuild.Manifest with extra
+// debug helpers
+type Manifest struct {
+	Version   string     `json:"version"`
+	Pipelines []Pipeline `json:"pipelines"`
+	Sources   Sources    `json:"sources"`
+}
+
+func (m *Manifest) PipelineNames() []string {
+	names := make([]string, len(m.Pipelines))
+	for idx, pipeline := range m.Pipelines {
+		names[idx] = pipeline.Name
+	}
+	return names
+}
+
+// Pipeline is a unmarshalable version of osbuild.Pipeline with extra
+// debug helpers
+type Pipeline struct {
+	Name string `json:"name,omitempty"`
+	// The build environment which can run this pipeline
+	Build string `json:"build,omitempty"`
+
+	Runner string `json:"runner,omitempty"`
+
+	// Sequence of stages that produce the filesystem tree, which is the
+	// payload of the produced image.
+	Stages []*Stage `json:"stages,omitempty"`
+}
+
+func (p *Pipeline) Stage(typ string) *Stage {
+	for _, stage := range p.Stages {
+		if stage.Type == typ {
+			return stage
+		}
+	}
+	return nil
+}
+
+// Stage is a unmarshalable version of osbuild.Stage with extra
+// debug helpers
+type Stage struct {
+	Type string `json:"type"`
+
+	Inputs  map[string]map[string]any `json:"inputs,omitempty"`
+	Options map[string]any            `json:"options,omitempty"`
+}
+
+type Sources map[string]Source
+
+type Source map[string]any
+
+// NewManifestFromBytes uses the manifesttest data structures to
+// unmarshal
+func NewManifestFromBytes(osbuildManifest []byte) (*Manifest, error) {
+	var mani Manifest
+	if err := json.Unmarshal(osbuildManifest, &mani); err != nil {
+		return nil, err
+	}
+	return &mani, nil
 }
