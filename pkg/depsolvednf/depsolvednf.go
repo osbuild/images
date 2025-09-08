@@ -262,7 +262,7 @@ func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet, sbomType sbom.StandardType
 
 // FetchMetadata returns the list of all the available packages in repos and
 // their info.
-func (s *Solver) FetchMetadata(repos []rpmmd.RepoConfig) (rpmmd.PackageList, error) {
+func (s *Solver) FetchMetadata(repos []rpmmd.RepoConfig) (rpmmd.PackageListNG, error) {
 	req, err := s.makeDumpRequest(repos)
 	if err != nil {
 		return nil, err
@@ -297,7 +297,7 @@ func (s *Solver) FetchMetadata(repos []rpmmd.RepoConfig) (rpmmd.PackageList, err
 
 	pkgs := res.toRPMMD()
 
-	sortID := func(pkg rpmmd.Package) string {
+	sortID := func(pkg rpmmd.PackageNG) string {
 		return fmt.Sprintf("%s-%s-%s", pkg.Name, pkg.Version, pkg.Release)
 	}
 	sort.Slice(pkgs, func(i, j int) bool {
@@ -310,7 +310,7 @@ func (s *Solver) FetchMetadata(repos []rpmmd.RepoConfig) (rpmmd.PackageList, err
 }
 
 // SearchMetadata searches for packages and returns a list of the info for matches.
-func (s *Solver) SearchMetadata(repos []rpmmd.RepoConfig, packages []string) (rpmmd.PackageList, error) {
+func (s *Solver) SearchMetadata(repos []rpmmd.RepoConfig, packages []string) (rpmmd.PackageListNG, error) {
 	req, err := s.makeSearchRequest(repos, packages)
 	if err != nil {
 		return nil, err
@@ -345,7 +345,7 @@ func (s *Solver) SearchMetadata(repos []rpmmd.RepoConfig, packages []string) (rp
 
 	pkgs := res.toRPMMD()
 
-	sortID := func(pkg rpmmd.Package) string {
+	sortID := func(pkg rpmmd.PackageNG) string {
 		return fmt.Sprintf("%s-%s-%s", pkg.Name, pkg.Version, pkg.Release)
 	}
 	sort.Slice(pkgs, func(i, j int) bool {
@@ -790,10 +790,21 @@ type legacyPackageList []struct {
 type dumpResult = legacyPackageList
 type searchResult = legacyPackageList
 
-func (pl legacyPackageList) toRPMMD() rpmmd.PackageList {
-	rpmPkgs := make(rpmmd.PackageList, len(pl))
+func (pl legacyPackageList) toRPMMD() rpmmd.PackageListNG {
+	rpmPkgs := make(rpmmd.PackageListNG, len(pl))
 	for i, p := range pl {
-		rpmPkgs[i] = rpmmd.Package(p)
+		rpmPkgs[i] = rpmmd.PackageNG{
+			Name:        p.Name,
+			Summary:     p.Summary,
+			Description: p.Description,
+			URL:         p.URL,
+			Epoch:       p.Epoch,
+			Version:     p.Version,
+			Release:     p.Release,
+			Arch:        p.Arch,
+			BuildTime:   p.BuildTime,
+			License:     p.License,
+		}
 	}
 	return rpmPkgs
 }
