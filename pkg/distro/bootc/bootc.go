@@ -520,6 +520,10 @@ func (t *BootcImageType) manifestForISO(bp *blueprint.Blueprint, options distro.
 	img.ContainerRemoveSignatures = true
 	img.RootfsCompression = "zstd"
 
+	if archi == arch.ARCH_X86_64 {
+		img.InstallerCustomizations.ISOBoot = manifest.Grub2ISOBoot
+	}
+
 	img.InstallerCustomizations.Product = t.arch.distro.sourceInfo.OSRelease.Name
 	img.InstallerCustomizations.OSVersion = t.arch.distro.sourceInfo.OSRelease.VersionID
 
