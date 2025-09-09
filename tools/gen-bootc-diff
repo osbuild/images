@@ -128,7 +128,7 @@ do
 
 		    # ensure manifests are identical (but skip uuid diffs)
 		    echo "Comparing images and bootc-image-builder generated manifests"
-		    diff -u <(grep -v uuid "$TMPDIR"/bootc_*.json) <(grep -v uuid "$TMPDIR"/bib.json)
+		    diff -u <(grep -E -v '(uuid|volid)' "$TMPDIR"/bootc_*.json) <(grep -E -v '(uuid|volid)' "$TMPDIR"/bib.json)
 		done
 	    done
 	done
