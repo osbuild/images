@@ -1,6 +1,7 @@
 package distro
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -8,9 +9,10 @@ import (
 
 func TestDistroIDParser(t *testing.T) {
 	type testCase struct {
-		stringID string
-		expected *ID
-		err      bool
+		stringID        string
+		expected        *ID
+		expectedErr     string
+		expectedErrType error
 	}
 
 	testCases := []testCase{
@@ -71,20 +73,24 @@ func TestDistroIDParser(t *testing.T) {
 			},
 		},
 		{
-			stringID: "rhel-8.4.1",
-			err:      true,
+			stringID:    "rhel-8.4.1",
+			expectedErr: `error when parsing distro name "rhel-8.4.1": too many dots in the version (2)`,
 		},
 		{
-			stringID: "rhel",
-			err:      true,
+			stringID:    "rhel",
+			expectedErr: `error when parsing distro name "rhel": A dash is expected to separate distro name and version`,
 		},
 		{
 			stringID: "rhel-",
-			err:      true,
+			expectedErr: `error when parsing distro name "rhel-": parsing major version failed, inner error:
+strconv.Atoi: parsing "": invalid syntax`,
+			expectedErrType: strconv.ErrSyntax,
 		},
 		{
 			stringID: "centos-stream",
-			err:      true,
+			expectedErr: `error when parsing distro name "centos-stream": parsing major version failed, inner error:
+strconv.Atoi: parsing "stream": invalid syntax`,
+			expectedErrType: strconv.ErrSyntax,
 		},
 	}
 
@@ -92,9 +98,12 @@ func TestDistroIDParser(t *testing.T) {
 		t.Run(tc.stringID, func(t *testing.T) {
 			id, err := ParseID(tc.stringID)
 
-			if tc.err {
-				assert.Error(t, err)
+			if tc.expectedErr != "" {
+				assert.ErrorContains(t, err, tc.expectedErr)
 				assert.Nil(t, id)
+				if tc.expectedErrType != nil {
+					assert.ErrorAs(t, err, &tc.expectedErrType)
+				}
 				return
 			}
 
