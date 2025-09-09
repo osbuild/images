@@ -1763,6 +1763,8 @@ image_types:
 
   "bootc-installer":
     <<: *minimal_installer
+    # unset aliases
+    name_aliases:
     package_sets:
       installer:
         - include:
