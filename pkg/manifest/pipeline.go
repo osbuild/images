@@ -50,7 +50,7 @@ type Pipeline interface {
 	// its full Spec. See the ostree package for more details.
 	getOSTreeCommitSources() []ostree.SourceSpec
 
-	serializeStart(Inputs)
+	serializeStart(Inputs) error
 	serializeEnd()
 	serialize() osbuild.Pipeline
 
@@ -174,7 +174,9 @@ func NewBase(name string, build Build) Base {
 
 // serializeStart must be called exactly once before each call
 // to serialize().
-func (p Base) serializeStart(inputs Inputs) {
+func (p Base) serializeStart(inputs Inputs) error {
+	// XXX: we could do the "double call" check and other common mistakes here
+	return nil
 }
 
 // serializeEnd must be called exactly once after each call to

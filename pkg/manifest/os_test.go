@@ -254,7 +254,8 @@ func TestModularityIncludesConfigStage(t *testing.T) {
 				},
 			}},
 	}
-	pipeline := manifest.SerializeWith(os, inputs)
+	pipeline, err := manifest.SerializeWith(os, inputs)
+	require.NoError(t, err)
 	st := findStage("org.osbuild.dnf.module-config", pipeline.Stages)
 	require.NotNil(t, st)
 }
@@ -523,7 +524,9 @@ func TestHMACStageInclusion(t *testing.T) {
 		os := manifest.NewOS(build, platform, repos)
 		os.PartitionTable = &pt
 		os.OSCustomizations.KernelName = "test-kernel"
-		pipeline := manifest.SerializeWith(os, inputs)
+		pipeline, err := manifest.SerializeWith(os, inputs)
+		assert.NoError(t, err)
+		assert.NotNil(t, pipeline)
 
 		hmacStage := findStage("org.osbuild.hmac", pipeline.Stages)
 		assert.NotNil(t, hmacStage)
@@ -577,7 +580,9 @@ func TestHMACStageInclusion(t *testing.T) {
 		build := manifest.NewBuild(&m, runner, repos, nil)
 		os := manifest.NewOS(build, platform, repos)
 		os.PartitionTable = &pt
-		pipeline := manifest.SerializeWith(os, inputs)
+		pipeline, err := manifest.SerializeWith(os, inputs)
+		assert.NoError(t, err)
+		assert.NotNil(t, pipeline)
 
 		hmacStage := findStage("org.osbuild.hmac", pipeline.Stages)
 		assert.Nil(t, hmacStage)
@@ -656,7 +661,9 @@ func TestShimVersionLock(t *testing.T) {
 		},
 	}
 
-	pipeline := manifest.SerializeWith(os, inputs)
+	pipeline, err := manifest.SerializeWith(os, inputs)
+	assert.NoError(t, err)
+	assert.NotNil(t, pipeline)
 	versionlockStage := findStage("org.osbuild.dnf4.versionlock", pipeline.Stages)
 	assert.NotNil(t, versionlockStage)
 	stageOptions := versionlockStage.Options.(*osbuild.DNF4VersionlockOptions)

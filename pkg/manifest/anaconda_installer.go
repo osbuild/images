@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -183,15 +184,17 @@ func (p *AnacondaInstaller) getPackageSpecs() []rpmmd.PackageSpec {
 	return p.packageSpecs
 }
 
-func (p *AnacondaInstaller) serializeStart(inputs Inputs) {
+func (p *AnacondaInstaller) serializeStart(inputs Inputs) error {
 	if len(p.packageSpecs) > 0 {
-		panic("double call to serializeStart()")
+		return errors.New("AnacondaInstaller: double call to serializeStart()")
 	}
 	p.packageSpecs = inputs.Depsolved.Packages
 	if p.kernelName != "" {
+		// XXX: return error instead of panic
 		p.kernelVer = rpmmd.GetVerStrFromPackageSpecListPanic(p.packageSpecs, p.kernelName)
 	}
 	p.repos = append(p.repos, inputs.Depsolved.Repos...)
+	return nil
 }
 
 func (p *AnacondaInstaller) serializeEnd() {

@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -82,11 +83,12 @@ func (p *RawBootcImage) getContainerSpecs() []container.Spec {
 	return p.containerSpecs
 }
 
-func (p *RawBootcImage) serializeStart(inputs Inputs) {
+func (p *RawBootcImage) serializeStart(inputs Inputs) error {
 	if len(p.containerSpecs) > 0 {
-		panic("double call to serializeStart()")
+		return errors.New("RawBootcImage: double call to serializeStart()")
 	}
 	p.containerSpecs = inputs.Containers
+	return nil
 }
 
 func (p *RawBootcImage) serializeEnd() {

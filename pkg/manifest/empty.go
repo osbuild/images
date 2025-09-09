@@ -1,6 +1,8 @@
 package manifest
 
 import (
+	"errors"
+
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/ostree"
@@ -65,9 +67,9 @@ func (p *ContentTest) getOSTreeCommits() []ostree.CommitSpec {
 	return p.commitSpecs
 }
 
-func (p *ContentTest) serializeStart(inputs Inputs) {
+func (p *ContentTest) serializeStart(inputs Inputs) error {
 	if p.serializing {
-		panic("double call to serializeStart()")
+		return errors.New("ContentTest: double call to serializeStart()")
 	}
 	p.packageSpecs = inputs.Depsolved.Packages
 	p.containerSpecs = inputs.Containers
@@ -75,6 +77,7 @@ func (p *ContentTest) serializeStart(inputs Inputs) {
 	p.repos = inputs.Depsolved.Repos
 
 	p.serializing = true
+	return nil
 }
 
 func (p *ContentTest) serializeEnd() {

@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"errors"
 	"path/filepath"
 
 	"github.com/osbuild/images/internal/common"
@@ -78,12 +79,13 @@ func (p *OSTreeCommitServer) getPackageSpecs() []rpmmd.PackageSpec {
 	return p.packageSpecs
 }
 
-func (p *OSTreeCommitServer) serializeStart(inputs Inputs) {
+func (p *OSTreeCommitServer) serializeStart(inputs Inputs) error {
 	if len(p.packageSpecs) > 0 {
-		panic("double call to serializeStart()")
+		return errors.New("OSTreeCommitServer: double call to serializeStart()")
 	}
 	p.packageSpecs = inputs.Depsolved.Packages
 	p.repos = append(p.repos, inputs.Depsolved.Repos...)
+	return nil
 }
 
 func (p *OSTreeCommitServer) serializeEnd() {

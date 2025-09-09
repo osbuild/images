@@ -85,13 +85,14 @@ func TestAnacondaInstallerModules(t *testing.T) {
 		// Run each test case twice: once with activatable-modules and once with kickstart-modules.
 		// Remove this when we drop support for RHEL 8.
 		t.Run(name, func(t *testing.T) {
+			require := require.New(t)
 			for _, legacy := range []bool{true, false} {
 				installerPipeline := newAnacondaInstaller()
 				installerPipeline.InstallerCustomizations.UseLegacyAnacondaConfig = legacy
 				installerPipeline.InstallerCustomizations.EnabledAnacondaModules = tc.enable
 				installerPipeline.InstallerCustomizations.DisabledAnacondaModules = tc.disable
-				pipeline := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: depsolvednf.DepsolveResult{Packages: pkgs}})
-				require := require.New(t)
+				pipeline, err := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: depsolvednf.DepsolveResult{Packages: pkgs}})
+				require.NoError(err)
 				require.NotNil(pipeline)
 				require.NotNil(pipeline.Stages)
 
@@ -133,10 +134,11 @@ func TestISOLocale(t *testing.T) {
 
 	for input, expected := range locales {
 		t.Run(input, func(t *testing.T) {
+			require := require.New(t)
 			installerPipeline := newAnacondaInstaller()
 			installerPipeline.Locale = input
-			pipeline := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: depsolvednf.DepsolveResult{Packages: pkgs}})
-			require := require.New(t)
+			pipeline, err := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: depsolvednf.DepsolveResult{Packages: pkgs}})
+			require.NoError(err)
 			require.NotNil(pipeline)
 			require.NotNil(pipeline.Stages)
 
@@ -160,13 +162,13 @@ func TestAnacondaInstallerDracutModulesAndDrivers(t *testing.T) {
 			Checksum: "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
 		},
 	}
+	require := require.New(t)
 
 	installerPipeline := newAnacondaInstaller()
 	installerPipeline.InstallerCustomizations.AdditionalDracutModules = []string{"test-module"}
 	installerPipeline.InstallerCustomizations.AdditionalDrivers = []string{"test-driver"}
-	pipeline := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: depsolvednf.DepsolveResult{Packages: pkgs}})
-
-	require := require.New(t)
+	pipeline, err := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: depsolvednf.DepsolveResult{Packages: pkgs}})
+	require.NoError(err)
 	require.NotNil(pipeline)
 	require.NotNil(pipeline.Stages)
 
