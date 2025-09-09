@@ -123,12 +123,15 @@ func (sr *StatusScanner) Status() (*Status, error) {
 		Trace:   trace,
 		Message: msg,
 		Progress: &Progress{
-			Done:    status.Progress.Done,
-			Total:   status.Progress.Total,
-			Message: fmt.Sprintf("Pipeline %s", pipelineName),
+			Done:  status.Progress.Done,
+			Total: status.Progress.Total,
 		},
 		Timestamp: ts,
 		Duration:  time.Duration(status.Duration * float64(time.Second)),
+	}
+
+	if pipelineName != "" {
+		st.Progress.Message = fmt.Sprintf("Pipeline %s", pipelineName)
 	}
 
 	// add subprogress
@@ -138,7 +141,10 @@ func (sr *StatusScanner) Status() (*Status, error) {
 		sr.stageContextMap[id] = &context.Pipeline.Stage
 		stageContext = &context.Pipeline.Stage
 	}
-	stageName := fmt.Sprintf("Stage %s", stageContext.Name)
+	var stageName string
+	if stageContext.Name != "" {
+		stageName = fmt.Sprintf("Stage %s", stageContext.Name)
+	}
 	prog := st.Progress
 	for subProg := status.Progress.SubProgress; subProg != nil; subProg = subProg.SubProgress {
 		prog.SubProgress = &Progress{

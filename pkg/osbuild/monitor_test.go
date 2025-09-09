@@ -58,9 +58,8 @@ func TestScannerSimple(t *testing.T) {
 			Total:   4,
 			Message: "Pipeline build",
 			SubProgress: &osbuild.Progress{
-				Message: "Stage ",
-				Done:    0,
-				Total:   2,
+				Done:  0,
+				Total: 2,
 			},
 		},
 		Timestamp: time.UnixMilli(int64(ts3)),
@@ -144,13 +143,11 @@ func TestScannerDuration(t *testing.T) {
 	assert.Equal(t, &osbuild.Status{
 		Trace: "Finished module org.osbuild.selinux",
 		Progress: &osbuild.Progress{
-			Total:   2,
-			Done:    1,
-			Message: "Pipeline ",
+			Total: 2,
+			Done:  1,
 			SubProgress: &osbuild.Progress{
-				Total:   3,
-				Done:    3,
-				Message: "Stage ",
+				Total: 3,
+				Done:  3,
 			},
 		},
 		Timestamp: time.UnixMilli(int64(ts1)),
