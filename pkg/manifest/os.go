@@ -485,8 +485,11 @@ func (p *OS) serializeStart(inputs Inputs) error {
 	}
 
 	if p.OSCustomizations.KernelName != "" {
-		// XXX: return error instead of panicking
-		p.kernelVer = rpmmd.GetVerStrFromPackageSpecListPanic(p.packageSpecs, p.OSCustomizations.KernelName)
+		kernelPkg, err := rpmmd.GetPackage(p.packageSpecs, p.OSCustomizations.KernelName)
+		if err != nil {
+			return fmt.Errorf("OS: failed to find kernel package %q in the depsolved packages", p.OSCustomizations.KernelName)
+		}
+		p.kernelVer = kernelPkg.GetEVRA()
 	}
 
 	p.repos = append(p.repos, inputs.Depsolved.Repos...)
