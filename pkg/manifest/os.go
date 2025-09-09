@@ -1043,7 +1043,7 @@ func grubStage(p *OS, pt *disk.PartitionTable, kernelOptions []string) *osbuild.
 			Nick:    p.OSNick,
 		}
 
-		_, err := rpmmd.GetVerStrFromPackageSpecList(p.packageSpecs, "dracut-config-rescue")
+		_, err := rpmmd.GetPackage(p.packageSpecs, "dracut-config-rescue")
 		hasRescue := err == nil
 		return osbuild.NewGrub2LegacyStage(
 			osbuild.NewGrub2LegacyStageOptions(
