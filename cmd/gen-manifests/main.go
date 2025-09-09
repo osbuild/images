@@ -30,6 +30,7 @@ import (
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/manifestgen"
 	"github.com/osbuild/images/pkg/manifestgen/manifestmock"
+	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rhsm/facts"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -260,6 +261,10 @@ func makeManifestJob(
 		}()
 		msgq <- fmt.Sprintf("Starting job %s", filename)
 
+		opts := &manifest.SerializeOptions{
+			RpmDownloader: osbuild.RpmDownloaderLibrepo,
+		}
+
 		manifest, _, err := imgType.Manifest(&bp, options, repos, &seedArg)
 		if err != nil {
 			err = fmt.Errorf("[%s] failed: %s", filename, err)
@@ -303,7 +308,7 @@ func makeManifestJob(
 			commitSpecs = manifestmock.ResolveCommits(manifest.GetOSTreeSourceSpecs())
 		}
 
-		mf, err := manifest.Serialize(depsolvedSets, containerSpecs, commitSpecs, nil)
+		mf, err := manifest.Serialize(depsolvedSets, containerSpecs, commitSpecs, opts)
 		if err != nil {
 			return fmt.Errorf("[%s] manifest serialization failed: %s", filename, err.Error())
 		}

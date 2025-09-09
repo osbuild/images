@@ -282,7 +282,18 @@ jobs:
 
       - *apt_install_dependencies
 
-      - run: sudo apt install -y qemu-user-static
+      - run: sudo apt install -y qemu-user-static dnf
+
+      - uses: actions/checkout@v5
+        with:
+          path: osbuild
+          repository: osbuild/osbuild
+          ref: main
+
+      - name: install osbuild
+        run:
+          cd osbuild
+          sudo python3 -m pip install --break-system-packages -e .
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v5
