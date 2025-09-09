@@ -80,15 +80,3 @@ func TestPackageSpecFull(t *testing.T) {
  "repo_id": "813859d10fe28ff54dbde44655a18b071c8adbaa849a551ec23cc415f0f7f1b0"
 }`)
 }
-
-func TestGetVerStrFromPackageSpecList(t *testing.T) {
-	assert := assert.New(t)
-
-	tmuxEvra, err := rpmmd.GetVerStrFromPackageSpecList(specs, "tmux")
-	assert.NoError(err)
-	assert.Equal("3.3a-3.fc38.x86_64", tmuxEvra)
-
-	grub2Evra, err := rpmmd.GetVerStrFromPackageSpecList(specs, "grub2")
-	assert.NoError(err)
-	assert.Equal("1:2.06-94.fc38.noarch", grub2Evra)
-}
