@@ -10,10 +10,6 @@ set -o pipefail
 
 (cd "$(dirname "$0")"/../cmd/gen-manifests && go build -buildvcs=false)
 
-# we only need to test a single type, all bootc disk manifests
-# contain all possible types by default
-TYPE=qcow2
-
 BPDIR=$(mktemp -d)
 trap 'rm -rf -- "$BPDIR"' EXIT
 BP_EMPTY="$BPDIR/empty.json"
@@ -82,47 +78,58 @@ do
     for ARCH in x86_64 aarch64; do
 	for BP in "$BP_FULL_FS" "$BP_LVM" "$BP_EMPTY"; do
 	    for BUILD_REF in "" "quay.io/fedora/fedora-bootc:41"; do
-		echo "Testing $REF;$ARCH;$(basename "$BP")"
-		sudo podman pull -q --arch "$ARCH" "$REF"
-		if [ -n "$BUILD_REF" ]; then
-		    sudo podman pull -q --arch "$ARCH" "$BUILD_REF"
-		fi
+		for TYPE in anaconda-iso qcow2; do
+		    echo "Testing $REF;$ARCH;$(basename "$BP")"
+		    sudo podman pull -q --arch "$ARCH" "$REF"
+		    if [ -n "$BUILD_REF" ]; then
+			sudo podman pull -q --arch "$ARCH" "$BUILD_REF"
+		    fi
 
-		TMPDIR=$(mktemp -d)
-		trap 'rm -rf -- "$TMPDIR"' EXIT
+		    TMPDIR=$(mktemp -d)
+		    trap 'rm -rf -- "$TMPDIR"' EXIT
 
-		ROOTFS=""
-		if grep -q fedora <(echo "$REF"); then
-		    ROOTFS="ext4"
-		fi
+		    ROOTFS=""
+		    if grep -q fedora <(echo "$REF"); then
+			ROOTFS="ext4"
+		    fi
 
-		sudo go run \
-		     -buildvcs=false \
-		     github.com/osbuild/bootc-image-builder/bib/cmd/bootc-image-builder@main \
-		    manifest -v "$REF" \
-		    --config "$BP" \
-		    --target-arch "$ARCH" \
-		    --rootfs "$ROOTFS" \
-		    --build-container "$BUILD_REF" \
-		    --type "$TYPE" | jq > "$TMPDIR/bib.json"
+		    sudo podman run \
+			--quiet \
+			--rm -i \
+			--privileged \
+			--pull=newer \
+			--security-opt label=type:unconfined_t \
+			-v "$BP":/config.json \
+			-v /var/lib/containers/storage:/var/lib/containers/storage \
+			ghcr.io/osbuild/bootc-image-builder:latest \
+			manifest "$REF" \
+			--target-arch "$ARCH" \
+			--rootfs "$ROOTFS" \
+			--build-container "$BUILD_REF" \
+			--type "$TYPE" > "$TMPDIR/bib-raw.json"
 
-		# oh well, we need to convert our blueprint into the
-		# gen-manifests config :/
-		echo '{"blueprint":' >  "$TMPDIR"/gm-conf.json
-		cat "$BP" >> "$TMPDIR"/gm-conf.json
-		echo '}' >>  "$TMPDIR"/gm-conf.json
-		sudo ./cmd/gen-manifests/gen-manifests \
-		    -types "$TYPE" \
-		    -arches "$ARCH" \
-		    -distros ignore \
-		    -metadata=false \
-		    -config "$TMPDIR"/gm-conf.json \
-		    -bootc-refs "$REF#$BUILD_REF" \
-		    -output "$TMPDIR"
+		    # XXX: podman hangs when using | jq above so we
+		    # use this workaround
+		    jq < "$TMPDIR/bib-raw.json" > "$TMPDIR/bib.json"
 
-		# ensure manifests are identical (but skip uuid diffs)
-		echo "Comparing images and bootc-image-builder generated manifests"
-		diff -u <(grep -v uuid "$TMPDIR"/bootc_*.json) <(grep -v uuid "$TMPDIR"/bib.json)
+		    # oh well, we need to convert our blueprint into the
+		    # gen-manifests config :/
+		    echo '{"blueprint":' >  "$TMPDIR"/gm-conf.json
+		    cat "$BP" >> "$TMPDIR"/gm-conf.json
+		    echo '}' >>  "$TMPDIR"/gm-conf.json
+		    sudo ./cmd/gen-manifests/gen-manifests \
+			-types "$TYPE" \
+			-arches "$ARCH" \
+			-distros ignore \
+			-metadata=false \
+			-config "$TMPDIR"/gm-conf.json \
+			-bootc-refs "$REF#$BUILD_REF" \
+			-output "$TMPDIR"
+
+		    # ensure manifests are identical (but skip uuid diffs)
+		    echo "Comparing images and bootc-image-builder generated manifests"
+		    diff -u <(grep -v uuid "$TMPDIR"/bootc_*.json) <(grep -v uuid "$TMPDIR"/bib.json)
+		done
 	    done
 	done
     done
