@@ -38,7 +38,8 @@ func TestCoreOSInstallerDracutModulesAndDrivers(t *testing.T) {
 	coiPipeline := newCoreOSInstaller()
 	coiPipeline.AdditionalDracutModules = []string{"test-module"}
 	coiPipeline.AdditionalDrivers = []string{"test-driver"}
-	coiPipeline.serializeStart(Inputs{Depsolved: depsolvednf.DepsolveResult{Packages: pkgs}})
+	err := coiPipeline.serializeStart(Inputs{Depsolved: depsolvednf.DepsolveResult{Packages: pkgs}})
+	require.NoError(t, err)
 	pipeline := coiPipeline.serialize()
 
 	require := require.New(t)

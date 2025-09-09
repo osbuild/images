@@ -111,7 +111,8 @@ func TestNewBuildFromContainerSpecs(t *testing.T) {
 
 	// containerSpecs is "nil" until serializeStart populates it
 	require.Nil(t, build.getContainerSpecs())
-	build.serializeStart(Inputs{Containers: fakeContainerSpecs})
+	err := build.serializeStart(Inputs{Containers: fakeContainerSpecs})
+	assert.NoError(t, err)
 	assert.Equal(t, build.getContainerSpecs(), fakeContainerSpecs)
 
 	osbuildPipeline := build.serialize()

@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/osbuild/images/pkg/arch"
@@ -135,15 +136,16 @@ func (p *CoreOSInstaller) getPackageSpecs() []rpmmd.PackageSpec {
 	return p.packageSpecs
 }
 
-func (p *CoreOSInstaller) serializeStart(inputs Inputs) {
+func (p *CoreOSInstaller) serializeStart(inputs Inputs) error {
 	if len(p.packageSpecs) > 0 {
-		panic("double call to serializeStart()")
+		return errors.New("CoreOSInstaller: double call to serializeStart()")
 	}
 	p.packageSpecs = inputs.Depsolved.Packages
 	if p.kernelName != "" {
 		p.kernelVer = rpmmd.GetVerStrFromPackageSpecListPanic(p.packageSpecs, p.kernelName)
 	}
 	p.repos = append(p.repos, inputs.Depsolved.Repos...)
+	return nil
 }
 
 func (p *CoreOSInstaller) getInline() []string {

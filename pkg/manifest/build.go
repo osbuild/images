@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/osbuild/images/pkg/container"
@@ -149,12 +150,13 @@ func (p *BuildrootFromPackages) getPackageSpecs() []rpmmd.PackageSpec {
 	return p.packageSpecs
 }
 
-func (p *BuildrootFromPackages) serializeStart(inputs Inputs) {
+func (p *BuildrootFromPackages) serializeStart(inputs Inputs) error {
 	if len(p.packageSpecs) > 0 {
-		panic("double call to serializeStart()")
+		return errors.New("BuildrootFromPackages: double call to serializeStart()")
 	}
 	p.packageSpecs = inputs.Depsolved.Packages
 	p.repos = append(p.repos, inputs.Depsolved.Repos...)
+	return nil
 }
 
 func (p *BuildrootFromPackages) serializeEnd() {
@@ -264,11 +266,12 @@ func (p *BuildrootFromContainer) getContainerSpecs() []container.Spec {
 	return p.containerSpecs
 }
 
-func (p *BuildrootFromContainer) serializeStart(inputs Inputs) {
+func (p *BuildrootFromContainer) serializeStart(inputs Inputs) error {
 	if len(p.containerSpecs) > 0 {
-		panic("double call to serializeStart()")
+		return errors.New("BuildrootFromContainer: double call to serializeStart()")
 	}
 	p.containerSpecs = inputs.Containers
+	return nil
 }
 
 func (p *BuildrootFromContainer) serializeEnd() {

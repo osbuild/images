@@ -55,9 +55,13 @@ func Serialize(p Pipeline) osbuild.Pipeline {
 	return p.serialize()
 }
 
-func SerializeWith(p Pipeline, inputs Inputs) osbuild.Pipeline {
-	p.serializeStart(inputs)
-	return p.serialize()
+func SerializeWith(p Pipeline, inputs Inputs) (osbuild.Pipeline, error) {
+	err := p.serializeStart(inputs)
+	if err != nil {
+		return osbuild.Pipeline{}, err
+	}
+	// XXX: we may want to return an error from the serialize() call too
+	return p.serialize(), nil
 }
 
 var MakeKickstartSudoersPost = makeKickstartSudoersPost
@@ -71,11 +75,15 @@ func (p *OS) Serialize() osbuild.Pipeline {
 	packages := []rpmmd.PackageSpec{
 		{Name: "pkg1", Checksum: "sha1:c02524e2bd19490f2a7167958f792262754c5f46"},
 	}
-	p.serializeStart(Inputs{
+	err := p.serializeStart(Inputs{
 		Depsolved: depsolvednf.DepsolveResult{
 			Packages: packages,
 			Repos:    repos,
 		},
 	})
+	if err != nil {
+		// XXX: we may want to return an error from this function instead of panicking
+		panic(err)
+	}
 	return p.serialize()
 }

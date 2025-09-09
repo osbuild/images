@@ -64,7 +64,8 @@ func TestRawBootcImageSerialize(t *testing.T) {
 	rawBootcPipeline.Users = []users.User{{Name: "root", Key: common.ToPtr("some-ssh-key")}}
 	rawBootcPipeline.KernelOptionsAppend = []string{"karg1", "karg2"}
 
-	rawBootcPipeline.SerializeStart(manifest.Inputs{Containers: []container.Spec{{Source: "foo"}}})
+	err := rawBootcPipeline.SerializeStart(manifest.Inputs{Containers: []container.Spec{{Source: "foo"}}})
+	assert.NoError(t, err)
 	imagePipeline := rawBootcPipeline.Serialize()
 	assert.Equal(t, "image", imagePipeline.Name)
 
@@ -90,7 +91,8 @@ func TestRawBootcImageSerializeMountsValidated(t *testing.T) {
 	rawBootcPipeline := manifest.NewRawBootcImage(build, nil, pf)
 	// note that we create a partition table without /boot here
 	rawBootcPipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/missing-boot")
-	rawBootcPipeline.SerializeStart(manifest.Inputs{Containers: []container.Spec{{Source: "foo"}}})
+	err := rawBootcPipeline.SerializeStart(manifest.Inputs{Containers: []container.Spec{{Source: "foo"}}})
+	assert.NoError(t, err)
 	assert.PanicsWithError(t, `required mounts for bootupd stage [/boot/efi] missing`, func() {
 		rawBootcPipeline.Serialize()
 	})
@@ -115,7 +117,10 @@ func makeFakeRawBootcPipeline() *manifest.RawBootcImage {
 	build := manifest.NewBuildFromContainer(&mani, runner, nil, nil)
 	rawBootcPipeline := manifest.NewRawBootcImage(build, nil, pf)
 	rawBootcPipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi")
-	rawBootcPipeline.SerializeStart(manifest.Inputs{Containers: []container.Spec{{Source: "foo"}}})
+	err := rawBootcPipeline.SerializeStart(manifest.Inputs{Containers: []container.Spec{{Source: "foo"}}})
+	if err != nil {
+		panic(err)
+	}
 
 	return rawBootcPipeline
 }
