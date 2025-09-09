@@ -71,15 +71,23 @@ cat <<EOF > "$BP_LVM"
 }
 EOF
 
-
 for REF in quay.io/centos-bootc/centos-bootc:stream9 \
 	   quay.io/fedora/fedora-bootc:42;
 do
     for ARCH in x86_64 aarch64; do
 	for BP in "$BP_FULL_FS" "$BP_LVM" "$BP_EMPTY"; do
-	    for BUILD_REF in "" "quay.io/fedora/fedora-bootc:41"; do
+	    for BUILD_REF in "quay.io/fedora/fedora-bootc:41" ""; do
 		for TYPE in anaconda-iso qcow2; do
-		    echo "Testing $REF;$ARCH;$(basename "$BP")"
+		    echo "Testing $REF;$ARCH;$(basename "$BP");$BUILD_REF"
+
+		    # XXX: --build-ref for ISO is very problematic
+		    # as the buildcontainer will point to different
+		    # repos.
+		    if [ "$TYPE" = "anaconda-iso" ] && [ -n "$BUILD_REF" ]; then
+			echo "Skipping ISO with buildref"
+			continue
+		    fi
+
 		    sudo podman pull -q --arch "$ARCH" "$REF"
 		    if [ -n "$BUILD_REF" ]; then
 			sudo podman pull -q --arch "$ARCH" "$BUILD_REF"
