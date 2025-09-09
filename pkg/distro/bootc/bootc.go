@@ -528,11 +528,15 @@ func (t *BootcImageType) manifestForISO(bp *blueprint.Blueprint, options distro.
 	if err != nil {
 		return nil, nil, err
 	}
+	// XXX: we need to fallback to distro-like here
 	dy, err := defs.NewDistroYAML(nameVer)
 	if err != nil {
 		return nil, nil, err
 	}
-	di := dy.ImageTypes()["image-installer"]
+	di, ok := dy.ImageTypes()["bootc-installer"]
+	if !ok {
+		return nil, nil, fmt.Errorf("no image bootc image type for %q", dy.Name)
+	}
 	img.ExtraBasePackages = rpmmd.PackageSet{
 		Include: di.PackageSets(*id, t.arch.Name())["installer"].Include,
 	}
