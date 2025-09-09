@@ -595,7 +595,7 @@ func (t *BootcImageType) manifestForISO(bp *blueprint.Blueprint, options distro.
 	mf.Distro = foundDistro
 
 	rng := createRand()
-	_, err = img.InstantiateManifest(&mf, nil, foundRunner, rng)
+	_, err = img.InstantiateManifest(&mf, repos, foundRunner, rng)
 	return &mf, nil, err
 }
 

@@ -154,7 +154,10 @@ func (mg *Generator) Generate(bp *blueprint.Blueprint, dist distro.Distro, imgTy
 	} else {
 		repos, err = mg.reporegistry.ReposByImageTypeName(dist.Name(), a.Name(), imgType.Name())
 		if err != nil {
-			return err
+			// XXX: hack!
+			if !strings.HasPrefix(dist.Name(), "bootc-") {
+				return err
+			}
 		}
 	}
 	// To support "user" a.k.a. "3rd party" repositories, these
@@ -174,33 +177,11 @@ func (mg *Generator) Generate(bp *blueprint.Blueprint, dist distro.Distro, imgTy
 		}
 	}
 
-	// XXX: make nicer
-	// XXX2: find a way to pass custom solver to depsolverFunc
-	var depsolved map[string]dnfjson.DepsolveResult
-	if dd, ok := dist.(distro.CustomDepsolverDistro); ok {
-		archi := common.Must(arch.FromString(a.Name()))
-		solver, cleanupFunc, err := dd.Depsolver(mg.cacheDir, archi)
-		if err != nil {
-			return err
-		}
-		defer cleanupFunc()
-
-		depsolvedSets := make(map[string]dnfjson.DepsolveResult)
-		packageSets := preManifest.GetPackageSetChains()
-		for name, pkgSet := range packageSets {
-			res, err := solver.Depsolve(pkgSet, sbom.StandardTypeSpdx)
-			if err != nil {
-				return fmt.Errorf("error depsolving: %w", err)
-			}
-			depsolvedSets[name] = *res
-		}
-		depsolved = depsolvedSets
-	} else {
-		depsolved, err = mg.depsolver(mg.cacheDir, mg.depsolveWarningsOutput, preManifest.GetPackageSetChains(), dist, a.Name())
-		if err != nil {
-			return err
-		}
+	depsolved, err := mg.depsolver(mg.cacheDir, mg.depsolveWarningsOutput, preManifest.GetPackageSetChains(), dist, a.Name())
+	if err != nil {
+		return err
 	}
+
 	containerSpecs, err := mg.containerResolver(preManifest.GetContainerSourceSpecs(), a.Name())
 	if err != nil {
 		return err
@@ -271,7 +252,7 @@ func xdgCacheHome() (string, error) {
 // DefaultDepsolver provides a default implementation for depsolving.
 // It should rarely be necessary to use it directly and will be used
 // by default by manifestgen (unless overriden)
-func DefaultDepsolver(cacheDir string, depsolveWarningsOutput io.Writer, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]dnfjson.DepsolveResult, error) {
+func DefaultDepsolver(cacheDir string, depsolveWarningsOutput io.Writer, packageSets map[string][]rpmmd.PackageSet, dist distro.Distro, archi string) (map[string]dnfjson.DepsolveResult, error) {
 	if cacheDir == "" {
 		xdgCacheHomeDir, err := xdgCacheHome()
 		if err != nil {
@@ -279,8 +260,17 @@ func DefaultDepsolver(cacheDir string, depsolveWarningsOutput io.Writer, package
 		}
 		cacheDir = filepath.Join(xdgCacheHomeDir, defaultDepsolveCacheDir)
 	}
-
-	solver := dnfjson.NewSolver(d.ModulePlatformID(), d.Releasever(), arch, d.Name(), cacheDir)
+	var solver *dnfjson.Solver
+	if dd, ok := dist.(distro.CustomDepsolverDistro); ok {
+		soli, cleanupFunc, err := dd.Depsolver(cacheDir, common.Must(arch.FromString(archi)))
+		if err != nil {
+			return nil, err
+		}
+		solver = soli
+		defer cleanupFunc()
+	} else {
+		solver = dnfjson.NewSolver(dist.ModulePlatformID(), dist.Releasever(), archi, dist.Name(), cacheDir)
+	}
 
 	if depsolveWarningsOutput != nil {
 		solver.Stderr = depsolveWarningsOutput
