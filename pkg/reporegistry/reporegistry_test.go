@@ -2,6 +2,7 @@ package reporegistry
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -117,24 +118,29 @@ func TestInvalidreposByImageTypeName(t *testing.T) {
 		imageType string
 	}
 	tests := []struct {
-		name string
-		args args
-		want func(repos []rpmmd.RepoConfig, err error) bool
+		name             string
+		args             args
+		expectedErr      string
+		expectedReposLen int
 	}{
 		{
-			name: "invalid distro, valid arch and image type",
+			name: "invalid distro name, valid arch and image type",
 			args: args{
-				distro:    testDistro.Name() + "-invalid",
+				distro:    testDistro.Name() + "-invalid-name",
 				arch:      test_distro.TestArchName,
 				imageType: test_distro.TestImageTypeName,
 			},
-			want: func(repos []rpmmd.RepoConfig, err error) bool {
-				// the list of repos should be nil and an error should be returned
-				if repos != nil || err == nil {
-					return false
-				}
-				return true
+			expectedErr: `failed to parse distro ID string: error when parsing distro name "test-distro-1-invalid-name": parsing major version failed, inner error:
+strconv.Atoi: parsing "name": invalid syntax`,
+		},
+		{
+			name: "unknown distro, valid arch and image type",
+			args: args{
+				distro:    strings.ReplaceAll(testDistro.Name(), "-1", "-99"),
+				arch:      test_distro.TestArchName,
+				imageType: test_distro.TestImageTypeName,
 			},
+			expectedErr: `requested repository not found: for distribution "test-distro-99"`,
 		},
 		{
 			name: "invalid arch, valid distro and image type",
@@ -143,13 +149,7 @@ func TestInvalidreposByImageTypeName(t *testing.T) {
 				arch:      test_distro.TestArchName + "-invalid",
 				imageType: test_distro.TestImageTypeName,
 			},
-			want: func(repos []rpmmd.RepoConfig, err error) bool {
-				// the list of repos should be nil and an error should be returned
-				if repos != nil || err == nil {
-					return false
-				}
-				return true
-			},
+			expectedErr: `requested repository not found: for distribution "test-distro-1" and architecture "test_arch-invalid"`,
 		},
 		{
 			name: "invalid image type, valid distro and arch, without tagged repos",
@@ -158,18 +158,9 @@ func TestInvalidreposByImageTypeName(t *testing.T) {
 				arch:      test_distro.TestArchName,
 				imageType: test_distro.TestImageTypeName + "-invalid",
 			},
-			want: func(repos []rpmmd.RepoConfig, err error) bool {
-				// a non-empty list of repos should be returned without an error
-				if repos == nil || err != nil {
-					return false
-				}
-				// only the list of common distro-arch repos should be returned
-				// these are repos without any explicit imageType tag
-				if len(repos) != 2 {
-					return false
-				}
-				return true
-			},
+			// only the list of common distro-arch repos should be returned
+			// these are repos without any explicit imageType tag
+			expectedReposLen: 2,
 		},
 		{
 			name: "invalid image type, valid distro and arch, with tagged repos",
@@ -178,24 +169,21 @@ func TestInvalidreposByImageTypeName(t *testing.T) {
 				arch:      test_distro.TestArch2Name,
 				imageType: test_distro.TestImageTypeName + "-invalid",
 			},
-			want: func(repos []rpmmd.RepoConfig, err error) bool {
-				// a non-empty list of repos should be returned without an error
-				if repos == nil || err != nil {
-					return false
-				}
-				// only the list of common distro-arch repos should be returned
-				// these are repos without any explicit imageType tag
-				if len(repos) != 2 {
-					return false
-				}
-				return true
-			},
+			// only the list of common distro-arch repos should be returned
+			// these are repos without any explicit imageType tag
+			expectedReposLen: 2,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := rr.ReposByImageTypeName(tt.args.distro, tt.args.arch, tt.args.imageType)
-			assert.True(t, tt.want(got, err))
+			if tt.expectedErr != "" {
+				assert.ErrorContains(t, err, tt.expectedErr)
+				assert.Nil(t, got)
+			} else {
+				assert.NoError(t, err)
+				assert.Len(t, got, tt.expectedReposLen)
+			}
 		})
 	}
 }
