@@ -154,3 +154,16 @@ func TestScannerDuration(t *testing.T) {
 		Duration:  time.Duration(dur1 * float64(time.Second)),
 	}, st)
 }
+
+func TestScannerEmpty(t *testing.T) {
+	r := bytes.NewBufferString("{}")
+	scanner := osbuild.NewStatusScanner(r)
+	st, err := scanner.Status()
+	assert.NoError(t, err)
+	assert.Equal(t, &osbuild.Status{
+		Progress: &osbuild.Progress{
+			Total: 0,
+			Done:  0,
+		},
+	}, st)
+}
