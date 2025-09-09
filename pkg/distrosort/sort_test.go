@@ -41,15 +41,17 @@ func TestSortNamesInvalidVersion(t *testing.T) {
 	}{
 		{
 			[]string{"foo-1.x", "foo-2"},
-			"error when parsing distro name (foo-1.x): parsing minor version failed, inner error:\nstrconv.Atoi: parsing \"x\": invalid syntax",
+			`error when parsing distro name "foo-1.x": parsing minor version failed, inner error:
+strconv.Atoi: parsing "x": invalid syntax`,
 		}, {
 			// missing "-" is not supported
 			[]string{"foo", "bar-1"},
-			`error when parsing distro name (foo): A dash is expected to separate distro name and version`,
+			`error when parsing distro name "foo": A dash is expected to separate distro name and version`,
 		}, {
 			// foo-1.4-beta is not supported
 			[]string{"foo-1.4", "foo-1.4-beta", "foo-1.0"},
-			"error when parsing distro name (foo-1.4-beta): parsing major version failed, inner error:\nstrconv.Atoi: parsing \"beta\": invalid syntax",
+			`error when parsing distro name "foo-1.4-beta": parsing major version failed, inner error:
+strconv.Atoi: parsing "beta": invalid syntax`,
 		},
 	} {
 		err := distrosort.Names(tc.inp)
