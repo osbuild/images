@@ -93,6 +93,10 @@ do
 			ROOTFS="ext4"
 		    fi
 
+		    # we cannot just go run
+		    # github.com/osbuild/bootc-image-builder... here
+		    # because bib uses a "imagedefs" directory that
+		    # is loaded from real files
 		    sudo podman run \
 			--quiet \
 			--rm -i \
@@ -106,11 +110,7 @@ do
 			--target-arch "$ARCH" \
 			--rootfs "$ROOTFS" \
 			--build-container "$BUILD_REF" \
-			--type "$TYPE" > "$TMPDIR/bib-raw.json"
-
-		    # XXX: podman hangs when using | jq above so we
-		    # use this workaround
-		    jq < "$TMPDIR/bib-raw.json" > "$TMPDIR/bib.json"
+			--type "$TYPE" > "$TMPDIR/bib.json"
 
 		    # oh well, we need to convert our blueprint into the
 		    # gen-manifests config :/
@@ -128,7 +128,10 @@ do
 
 		    # ensure manifests are identical (but skip uuid diffs)
 		    echo "Comparing images and bootc-image-builder generated manifests"
-		    diff -u <(grep -E -v '(uuid|volid)' "$TMPDIR"/bootc_*.json) <(grep -E -v '(uuid|volid)' "$TMPDIR"/bib.json)
+		    diff -u <(jq < "$TMPDIR"/bootc_*.json | grep -E -v '(uuid|volid)' ) <(jq <  "$TMPDIR"/bib.json | grep -E -v '(uuid|volid)')
+
+		    echo "DONE"
+		    echo
 		done
 	    done
 	done
