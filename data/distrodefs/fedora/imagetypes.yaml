@@ -1775,11 +1775,13 @@ image_types:
             - alsa-tools-firmware
             - anaconda
             - anaconda-dracut
-            - anaconda-install-env-deps
+            - anaconda-install-img-deps
             - anaconda-widgets
+            - atheros-firmware
             - audit
             - bind-utils
             - bitmap-fangsongti-fonts
+            - brcmfmac-firmware
             - bzip2
             - cryptsetup
             - curl
@@ -1810,6 +1812,8 @@ image_types:
             - hostname
             - initscripts
             - ipmitool
+            - iwlwifi-dvm-firmware
+            - iwlwifi-mvm-firmware
             - jomolhari-fonts
             - kbd
             - kbd-misc
@@ -1843,6 +1847,8 @@ image_types:
             - prefixdevname
             - python3-pyatspi
             - rdma-core
+            - realtek-firmware
+            - rit-meera-new-fonts
             - rng-tools
             - rpcbind
             - rpm-ostree
