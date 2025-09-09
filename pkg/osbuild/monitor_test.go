@@ -130,3 +130,30 @@ func TestScannerVeryLongLines(t *testing.T) {
 	require.NotNil(t, st)
 	assert.Equal(t, 128_000, len(st.Trace))
 }
+
+//go:embed testdata/monitor-duration.seq.json
+var osbuildMonitorDuration_selinux []byte
+
+func TestScannerDuration(t *testing.T) {
+	ts1 := 1757401310.172594 * 1000
+	dur1 := 0.5353707351023331
+
+	scanner := osbuild.NewStatusScanner(bytes.NewBuffer(osbuildMonitorDuration_selinux))
+	st, err := scanner.Status()
+	assert.NoError(t, err)
+	assert.Equal(t, &osbuild.Status{
+		Trace: "Finished module org.osbuild.selinux",
+		Progress: &osbuild.Progress{
+			Total:   2,
+			Done:    1,
+			Message: "Pipeline ",
+			SubProgress: &osbuild.Progress{
+				Total:   3,
+				Done:    3,
+				Message: "Stage ",
+			},
+		},
+		Timestamp: time.UnixMilli(int64(ts1)),
+		Duration:  time.Duration(dur1 * float64(time.Second)),
+	}, st)
+}

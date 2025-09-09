@@ -34,6 +34,9 @@ type Status struct {
 
 	// Timestamp contains the timestamp the message was recieved in
 	Timestamp time.Time
+
+	// Duration as measured by osbuild
+	Duration time.Duration
 }
 
 // Progress provides progress information from an osbuild build.
@@ -125,6 +128,7 @@ func (sr *StatusScanner) Status() (*Status, error) {
 			Message: fmt.Sprintf("Pipeline %s", pipelineName),
 		},
 		Timestamp: ts,
+		Duration:  time.Duration(status.Duration * float64(time.Second)),
 	}
 
 	// add subprogress
@@ -157,6 +161,7 @@ type statusJSON struct {
 
 	Message   string  `json:"message"`
 	Timestamp float64 `json:"timestamp"`
+	Duration  float64 `json:"duration"`
 }
 
 // contextJSON is the context for which a status is given. Once a context
