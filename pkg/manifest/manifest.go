@@ -178,11 +178,14 @@ func (m Manifest) Serialize(depsolvedSets map[string]depsolvednf.DepsolveResult,
 	}
 
 	for _, pipeline := range m.pipelines {
-		pipeline.serializeStart(Inputs{
+		err := pipeline.serializeStart(Inputs{
 			Depsolved:  depsolvedSets[pipeline.Name()],
 			Containers: containerSpecs[pipeline.Name()],
 			Commits:    ostreeCommits[pipeline.Name()],
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var pipelines []osbuild.Pipeline
