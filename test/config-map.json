@@ -305,12 +305,9 @@
     ]
   },
   "./configs/unattended-iso.json": {
-    "distros": [
-      "rhel-*",
-      "centos-*"
-    ],
     "image-types": [
-      "image-installer"
+      "image-installer",
+      "minimal-installer"
     ]
   },
   "./configs/interactive-iso-userkickstart.json": {
@@ -516,7 +513,6 @@
     "image-types": [
       "vhd"
     ]
-
   },
   "./configs/disable-nm-cloud-setup.json": {
     "distros": [
