@@ -633,7 +633,7 @@ func TestDistro_ManifestFIPSWarning(t *testing.T) {
 						bp.Customizations.InstallationDevice = "/dev/dummy"
 					}
 					_, warn, err := imgType.Manifest(&bp, imgOpts, nil, nil)
-					if strings.Contains(distroName, "fedora") || strings.Contains(distroName, "rhel-8") {
+					if !strings.Contains(distroName, "centos-10") && !strings.Contains(distroName, "rhel-10") {
 						// NOTE: Fedora uses the new customization validation
 						// functionality which produces different error
 						// messages. These will be added to RHEL as well soon.
