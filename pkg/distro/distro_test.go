@@ -592,11 +592,6 @@ func TestDistro_ManifestFIPSWarning(t *testing.T) {
 		"iot-simplified-installer",
 		"iot-qcow2",
 	}
-	noCustomizableImages := []string{
-		"workstation-live-installer",
-		"azure-eap7-rhui",
-		"container",
-	}
 
 	distroFactory := distrofactory.NewDefault()
 	distros := listTestedDistros(t)
@@ -633,25 +628,12 @@ func TestDistro_ManifestFIPSWarning(t *testing.T) {
 						bp.Customizations.InstallationDevice = "/dev/dummy"
 					}
 					_, warn, err := imgType.Manifest(&bp, imgOpts, nil, nil)
-					if !strings.Contains(distroName, "centos-10") && !strings.Contains(distroName, "rhel-10") {
-						// NOTE: Fedora uses the new customization validation
-						// functionality which produces different error
-						// messages. These will be added to RHEL as well soon.
-						switch imgTypeName {
-						case "workstation-live-installer", "container", "wsl", "tar":
-							assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.fips: not supported", imgTypeName))
-						default:
-							assert.Equal(t, slices.Contains(warn, msg), !common.IsBuildHostFIPSEnabled(),
-								"FIPS warning not shown for image: distro='%s', imgTypeName='%s', archName='%s', warn='%v'", distroName, imgTypeName, archName, warn)
-						}
-					} else {
-						if err != nil {
-							assert.True(t, slices.Contains(noCustomizableImages, imgTypeName))
-							assert.Equal(t, err, fmt.Errorf(distro.NoCustomizationsAllowedError, imgTypeName))
-						} else {
-							assert.Equal(t, slices.Contains(warn, msg), !common.IsBuildHostFIPSEnabled(),
-								"FIPS warning not shown for image: distro='%s', imgTypeName='%s', archName='%s', warn='%v'", distroName, imgTypeName, archName, warn)
-						}
+					switch imgTypeName {
+					case "workstation-live-installer", "container", "wsl", "tar":
+						assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.fips: not supported", imgTypeName))
+					default:
+						assert.Equal(t, slices.Contains(warn, msg), !common.IsBuildHostFIPSEnabled(),
+							"FIPS warning not shown for image: distro='%s', imgTypeName='%s', archName='%s', warn='%v'", distroName, imgTypeName, archName, warn)
 					}
 				})
 			}

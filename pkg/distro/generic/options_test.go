@@ -1509,7 +1509,7 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			expErr: "installer customizations are not supported for \"ami\"",
+			expErr: "blueprint validation failed for image type \"ami\": customizations.installer: not supported",
 		},
 		"r10/ami-ostree-error": {
 			distro: "rhel-10.0",
@@ -1532,7 +1532,7 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			expErr: "OpenSCAP profile cannot be empty",
+			expErr: "blueprint validation failed for image type \"vhd\": customizations.oscap.profile_id: required when using customizations.oscap",
 		},
 
 		"r10/cvm-kernel-unsupported": {
@@ -1545,7 +1545,7 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			// NOTE: this should be an error
+			expErr: "blueprint validation failed for image type \"azure-cvm\": customizations.kernel: not supported",
 		},
 
 		"r7/ok": {
