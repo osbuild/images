@@ -506,9 +506,9 @@ func TestFedoraDistro_ManifestError(t *testing.T) {
 					}
 					_, _, err := imgType.Manifest(&bp, imgOpts, nil, nil)
 					switch imgTypeName {
-					case "iot-commit", "iot-container", "iot-bootable-container":
+					case "minimal-installer", "iot-commit", "iot-container", "iot-bootable-container":
 						assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.kernel.append: not supported", imgTypeName))
-					case "minimal-installer", "iot-installer", "workstation-live-installer", "everything-netinst":
+					case "iot-installer", "workstation-live-installer", "everything-netinst":
 						assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.kernel: not supported", imgTypeName))
 					case "iot-simplified-installer":
 						assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.installation_device: required", imgTypeName))
