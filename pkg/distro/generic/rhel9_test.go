@@ -2,7 +2,6 @@ package generic_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -463,8 +462,6 @@ func TestRhel9_ImageTypeAliases(t *testing.T) {
 // Check that Manifest() function returns an error for unsupported
 // configurations.
 func TestRhel9_Distro_ManifestError(t *testing.T) {
-	// Currently, the only unsupported configuration is OSTree commit types
-	// with Kernel boot options
 	r9distro := rhel9_FamilyDistros[0].distro
 	bp := blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
@@ -484,13 +481,15 @@ func TestRhel9_Distro_ManifestError(t *testing.T) {
 			_, _, err := imgType.Manifest(&bp, imgOpts, nil, nil)
 			switch imgTypeName {
 			case "edge-commit", "edge-container":
-				assert.EqualError(t, err, "kernel boot parameter customizations are not supported for ostree types")
-			case "edge-raw-image", "edge-ami", "edge-vsphere":
-				assert.EqualError(t, err, fmt.Sprintf("\"%s\" images require specifying a URL from which to retrieve the OSTree commit", imgTypeName))
-			case "edge-installer", "edge-simplified-installer":
-				assert.EqualError(t, err, fmt.Sprintf("boot ISO image type \"%s\" requires specifying a URL from which to retrieve the OSTree commit", imgTypeName))
-			case "azure-cvm":
-				assert.EqualError(t, err, fmt.Sprintf("kernel customizations are not supported for %q", imgTypeName))
+				assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.kernel.append: not supported", imgTypeName))
+			case "edge-raw-image", "edge-vsphere", "edge-ami":
+				assert.EqualError(t, err, fmt.Sprintf("options validation failed for image type %q: ostree.url: required", imgTypeName))
+			case "edge-simplified-installer":
+				assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.installation_device: required", imgTypeName))
+			case "edge-installer", "netinst", "wsl":
+				assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.kernel: not supported", imgTypeName))
+			case "tar", "image-installer":
+				assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.kernel.append: not supported", imgTypeName))
 			default:
 				assert.NoError(t, err)
 			}
@@ -681,12 +680,15 @@ func TestRhel9_Distro_CustomFileSystemManifestError(t *testing.T) {
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
-			if imgTypeName == "edge-commit" || imgTypeName == "edge-container" {
-				assert.EqualError(t, err, "custom mountpoints and partitioning are not supported for ostree types")
-			} else if imgTypeName == "edge-installer" || imgTypeName == "edge-simplified-installer" || imgTypeName == "edge-raw-image" || imgTypeName == "edge-ami" || imgTypeName == "edge-vsphere" {
-				continue
-			} else {
-				assert.EqualError(t, err, "The following custom mountpoints are not supported [\"/etc\"]")
+			switch imgTypeName {
+			case "tar", "wsl", "edge-installer", "edge-commit", "edge-container", "image-installer", "netinst":
+				assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.filesystem: not supported", imgTypeName))
+			case "edge-simplified-installer":
+				assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.installation_device: required", imgTypeName))
+			case "edge-raw-image", "edge-ami", "edge-vsphere":
+				assert.EqualError(t, err, fmt.Sprintf("options validation failed for image type %q: ostree.url: required", imgTypeName))
+			default:
+				assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: The following custom mountpoints are not supported [\"/etc\"]", imgTypeName))
 			}
 		}
 	}
@@ -709,11 +711,14 @@ func TestRhel9_Distro_TestRootMountPoint(t *testing.T) {
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
-			if imgTypeName == "edge-commit" || imgTypeName == "edge-container" {
-				assert.EqualError(t, err, "custom mountpoints and partitioning are not supported for ostree types")
-			} else if imgTypeName == "edge-installer" || imgTypeName == "edge-simplified-installer" || imgTypeName == "edge-raw-image" || imgTypeName == "edge-ami" || imgTypeName == "edge-vsphere" {
-				continue
-			} else {
+			switch imgTypeName {
+			case "tar", "wsl", "edge-installer", "edge-commit", "edge-container", "image-installer", "netinst":
+				assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.filesystem: not supported", imgTypeName))
+			case "edge-simplified-installer":
+				assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.installation_device: required", imgTypeName))
+			case "edge-raw-image", "edge-ami", "edge-vsphere":
+				assert.EqualError(t, err, fmt.Sprintf("options validation failed for image type %q: ostree.url: required", imgTypeName))
+			default:
 				assert.NoError(t, err)
 			}
 		}
@@ -741,9 +746,14 @@ func TestRhel9_Distro_CustomFileSystemSubDirectories(t *testing.T) {
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
-			if strings.HasPrefix(imgTypeName, "edge-") {
-				continue
-			} else {
+			switch imgTypeName {
+			case "tar", "wsl", "edge-installer", "edge-commit", "edge-container", "image-installer", "netinst":
+				assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.filesystem: not supported", imgTypeName))
+			case "edge-simplified-installer":
+				assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.installation_device: required", imgTypeName))
+			case "edge-raw-image", "edge-ami", "edge-vsphere":
+				assert.EqualError(t, err, fmt.Sprintf("options validation failed for image type %q: ostree.url: required", imgTypeName))
+			default:
 				assert.NoError(t, err)
 			}
 		}
@@ -779,9 +789,14 @@ func TestRhel9_Distro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
-			if strings.HasPrefix(imgTypeName, "edge-") {
-				continue
-			} else {
+			switch imgTypeName {
+			case "tar", "wsl", "edge-installer", "edge-commit", "edge-container", "image-installer", "netinst":
+				assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.filesystem: not supported", imgTypeName))
+			case "edge-simplified-installer":
+				assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.installation_device: required", imgTypeName))
+			case "edge-raw-image", "edge-ami", "edge-vsphere":
+				assert.EqualError(t, err, fmt.Sprintf("options validation failed for image type %q: ostree.url: required", imgTypeName))
+			default:
 				assert.NoError(t, err)
 			}
 		}
@@ -813,10 +828,15 @@ func TestRhel9_Distro_DirtyMountpointsNotAllowed(t *testing.T) {
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
-			if strings.HasPrefix(imgTypeName, "edge-") {
-				continue
-			} else {
-				assert.EqualError(t, err, "The following custom mountpoints are not supported [\"//\" \"/var//\" \"/var//log/audit/\"]")
+			switch imgTypeName {
+			case "tar", "wsl", "edge-installer", "edge-commit", "edge-container", "image-installer", "netinst":
+				assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.filesystem: not supported", imgTypeName))
+			case "edge-simplified-installer":
+				assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.installation_device: required", imgTypeName))
+			case "edge-raw-image", "edge-ami", "edge-vsphere":
+				assert.EqualError(t, err, fmt.Sprintf("options validation failed for image type %q: ostree.url: required", imgTypeName))
+			default:
+				assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: The following custom mountpoints are not supported [\"//\" \"/var//\" \"/var//log/audit/\"]", imgTypeName))
 			}
 		}
 	}
@@ -839,11 +859,14 @@ func TestRhel9_Distro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
 			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
-			if imgTypeName == "edge-commit" || imgTypeName == "edge-container" {
-				assert.EqualError(t, err, "custom mountpoints and partitioning are not supported for ostree types")
-			} else if imgTypeName == "edge-installer" || imgTypeName == "edge-simplified-installer" || imgTypeName == "edge-raw-image" || imgTypeName == "edge-ami" || imgTypeName == "edge-vsphere" {
-				continue
-			} else {
+			switch imgTypeName {
+			case "tar", "wsl", "edge-installer", "edge-commit", "edge-container", "image-installer", "netinst":
+				assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.filesystem: not supported", imgTypeName))
+			case "edge-simplified-installer":
+				assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.installation_device: required", imgTypeName))
+			case "edge-raw-image", "edge-ami", "edge-vsphere":
+				assert.EqualError(t, err, fmt.Sprintf("options validation failed for image type %q: ostree.url: required", imgTypeName))
+			default:
 				assert.NoError(t, err)
 			}
 		}
@@ -876,28 +899,21 @@ func TestRhel9_DiskAndFilesystemCustomizationsError(t *testing.T) {
 		},
 	}
 
-	// these produce error message and are tested elsewhere
-	skipTest := map[string]bool{
-		"edge-commit":               true,
-		"edge-container":            true,
-		"edge-installer":            true,
-		"edge-simplified-installer": true,
-		"azure-eap7-rhui":           true,
-		"edge-vsphere":              true,
-		"edge-raw-image":            true,
-		"edge-ami":                  true,
-	}
-
 	for _, archName := range r9distro.ListArches() {
 		arch, _ := r9distro.GetArch(archName)
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
-			options := distro.ImageOptions{}
-			_, _, err := imgType.Manifest(&bp, options, nil, nil)
-			if skipTest[imgTypeName] {
-				continue
+			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
+			switch imgTypeName {
+			case "tar", "wsl", "edge-installer", "edge-commit", "edge-container", "image-installer", "netinst":
+				assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.filesystem: not supported", imgTypeName))
+			case "edge-simplified-installer":
+				assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.installation_device: required", imgTypeName))
+			case "edge-raw-image", "edge-ami", "edge-vsphere":
+				assert.EqualError(t, err, fmt.Sprintf("options validation failed for image type %q: ostree.url: required", imgTypeName))
+			default:
+				assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.disk cannot be used with customizations.filesystem", imgTypeName))
 			}
-			assert.EqualError(t, err, "partitioning customizations cannot be used with custom filesystems (mountpoints)")
 		}
 	}
 }
@@ -922,28 +938,21 @@ func TestRhel9_NoDiskCustomizationsNoError(t *testing.T) {
 		},
 	}
 
-	// these produce error message and are tested elsewhere
-	skipTest := map[string]bool{
-		"edge-commit":               true,
-		"edge-container":            true,
-		"edge-installer":            true,
-		"edge-simplified-installer": true,
-		"azure-eap7-rhui":           true,
-		"edge-vsphere":              true,
-		"edge-raw-image":            true,
-		"edge-ami":                  true,
-	}
-
 	for _, archName := range r9distro.ListArches() {
 		arch, _ := r9distro.GetArch(archName)
 		for _, imgTypeName := range arch.ListImageTypes() {
 			imgType, _ := arch.GetImageType(imgTypeName)
-			options := distro.ImageOptions{}
-			_, _, err := imgType.Manifest(&bp, options, nil, nil)
-			if skipTest[imgTypeName] {
-				continue
+			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
+			switch imgTypeName {
+			case "tar", "wsl", "edge-installer", "edge-commit", "edge-container", "image-installer", "netinst":
+				assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.disk: not supported", imgTypeName))
+			case "edge-simplified-installer":
+				assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.installation_device: required", imgTypeName))
+			case "edge-raw-image", "edge-ami", "edge-vsphere":
+				assert.EqualError(t, err, fmt.Sprintf("options validation failed for image type %q: ostree.url: required", imgTypeName))
+			default:
+				assert.NoError(t, err)
 			}
-			assert.NoError(t, err, "architecture was %s", imgType.Arch().Name())
 		}
 	}
 }

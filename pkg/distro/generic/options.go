@@ -3,7 +3,6 @@ package generic
 import (
 	"fmt"
 	"slices"
-	"strings"
 
 	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/internal/common"
@@ -95,15 +94,18 @@ func checkOptionsRhel10(t *imageType, bp *blueprint.Blueprint, options distro.Im
 	return warnings, nil
 }
 func checkOptionsRhel9(t *imageType, bp *blueprint.Blueprint, options distro.ImageOptions) ([]string, error) {
-
 	customizations := bp.Customizations
 
-	// holds warnings (e.g. deprecation notices)
 	var warnings []string
 
-	// we do not support embedding containers on ostree-derived images, only on commits themselves
-	if len(bp.Containers) > 0 && t.RPMOSTree && (t.Name() != "edge-commit" && t.Name() != "edge-container") {
-		return warnings, fmt.Errorf("embedding containers is not supported for %s on %s", t.Name(), t.Arch().Distro().Name())
+	errPrefix := fmt.Sprintf("blueprint validation failed for image type %q", t.Name())
+
+	if !t.RPMOSTree && options.OSTree != nil {
+		return warnings, fmt.Errorf("OSTree is not supported for %q", t.Name())
+	}
+
+	if err := distro.ValidateConfig(t, *bp); err != nil {
+		return warnings, fmt.Errorf("%s: %w", errPrefix, err)
 	}
 
 	if options.OSTree != nil {
@@ -112,118 +114,74 @@ func checkOptionsRhel9(t *imageType, bp *blueprint.Blueprint, options distro.Ima
 		}
 	}
 
-	if t.BootISO && t.RPMOSTree {
-		// ostree-based ISOs require a URL from which to pull a payload commit
+	if (t.BootISO || t.Bootable) && t.RPMOSTree {
+		// ostree-based disks and ISOs require a URL from which to pull a payload commit
 		if options.OSTree == nil || options.OSTree.URL == "" {
-			return warnings, fmt.Errorf("boot ISO image type %q requires specifying a URL from which to retrieve the OSTree commit", t.Name())
-		}
-
-		if t.Name() == "edge-simplified-installer" {
-			allowed := []string{"InstallationDevice", "FDO", "Ignition", "Kernel", "User", "Group", "FIPS", "Filesystem"}
-			if err := customizations.CheckAllowed(allowed...); err != nil {
-				return warnings, fmt.Errorf(distro.UnsupportedCustomizationError, t.Name(), strings.Join(allowed, ", "))
-			}
-			if customizations.GetInstallationDevice() == "" {
-				return warnings, fmt.Errorf("boot ISO image type %q requires specifying an installation device to install to", t.Name())
-			}
-
-			// FDO is optional, but when specified has some restrictions
-			if customizations.GetFDO() != nil {
-				if customizations.GetFDO().ManufacturingServerURL == "" {
-					return warnings, fmt.Errorf("boot ISO image type %q requires specifying FDO.ManufacturingServerURL configuration to install to when using FDO", t.Name())
-				}
-				var diunSet int
-				if customizations.GetFDO().DiunPubKeyHash != "" {
-					diunSet++
-				}
-				if customizations.GetFDO().DiunPubKeyInsecure != "" {
-					diunSet++
-				}
-				if customizations.GetFDO().DiunPubKeyRootCerts != "" {
-					diunSet++
-				}
-				if diunSet != 1 {
-					return warnings, fmt.Errorf("boot ISO image type %q requires specifying one of [FDO.DiunPubKeyHash,FDO.DiunPubKeyInsecure,FDO.DiunPubKeyRootCerts] configuration to install to when using FDO", t.Name())
-				}
-			}
-
-			// ignition is optional, we might be using FDO
-			if customizations.GetIgnition() != nil {
-				if customizations.GetIgnition().Embedded != nil && customizations.GetIgnition().FirstBoot != nil {
-					return warnings, fmt.Errorf("both ignition embedded and firstboot configurations found")
-				}
-				if customizations.GetIgnition().FirstBoot != nil && customizations.GetIgnition().FirstBoot.ProvisioningURL == "" {
-					return warnings, fmt.Errorf("ignition.firstboot requires a provisioning url")
-				}
-			}
-		} else if t.Name() == "edge-installer" {
-			allowed := []string{"User", "Group", "FIPS", "Installer", "Timezone", "Locale"}
-			if err := customizations.CheckAllowed(allowed...); err != nil {
-				return warnings, fmt.Errorf(distro.UnsupportedCustomizationError, t.Name(), strings.Join(allowed, ", "))
-			}
+			return warnings, fmt.Errorf("options validation failed for image type %q: ostree.url: required", t.Name())
 		}
 	}
 
-	if t.Name() == "edge-raw-image" || t.Name() == "edge-ami" || t.Name() == "edge-vsphere" {
-		// ostree-based bootable images require a URL from which to pull a payload commit
-		if options.OSTree == nil || options.OSTree.URL == "" {
-			return warnings, fmt.Errorf("%q images require specifying a URL from which to retrieve the OSTree commit", t.Name())
+	// FDO is optional, but when specified has some restrictions
+	if customizations.GetFDO() != nil {
+		if customizations.GetFDO().ManufacturingServerURL == "" {
+			return warnings, fmt.Errorf("%s: customizations.fdo.manufacturing_server_url: required when using fdo", errPrefix)
 		}
-
-		allowed := []string{"Ignition", "Kernel", "User", "Group", "FIPS", "Filesystem"}
-		if err := customizations.CheckAllowed(allowed...); err != nil {
-			return warnings, fmt.Errorf(distro.UnsupportedCustomizationError, t.Name(), strings.Join(allowed, ", "))
+		var diunSet int
+		if customizations.GetFDO().DiunPubKeyHash != "" {
+			diunSet++
 		}
-		// TODO: consider additional checks, such as those in "edge-simplified-installer"
+		if customizations.GetFDO().DiunPubKeyInsecure != "" {
+			diunSet++
+		}
+		if customizations.GetFDO().DiunPubKeyRootCerts != "" {
+			diunSet++
+		}
+		if diunSet != 1 {
+			return warnings, fmt.Errorf("%s: one of customizations.fdo.diun_pub_key_hash, customizations.fdo.diun_pub_key_insecure, customizations.fdo.diun_pub_key_root_certs: required when using fdo", errPrefix)
+		}
 	}
 
-	if kernelOpts := customizations.GetKernel(); kernelOpts.Append != "" && t.RPMOSTree && t.Name() != "edge-raw-image" && t.Name() != "edge-simplified-installer" {
-		return warnings, fmt.Errorf("kernel boot parameter customizations are not supported for ostree types")
+	// ignition is optional, we might be using FDO
+	if customizations.GetIgnition() != nil {
+		if customizations.GetIgnition().Embedded != nil && customizations.GetIgnition().FirstBoot != nil {
+			return warnings, fmt.Errorf("%s: customizations.ignition.embedded cannot be used with customizations.ignition.firstboot", errPrefix)
+		}
+		if customizations.GetIgnition().FirstBoot != nil && customizations.GetIgnition().FirstBoot.ProvisioningURL == "" {
+			return warnings, fmt.Errorf("%s: customizations.ignition.firstboot requires customizations.ignition.firstboot.provisioning_url", errPrefix)
+		}
 	}
 
 	mountpoints := customizations.GetFilesystems()
 	partitioning, err := customizations.GetPartitioning()
 	if err != nil {
-		return nil, err
+		return warnings, err
 	}
-	if (mountpoints != nil || partitioning != nil) && t.RPMOSTree && (t.Name() == "edge-container" || t.Name() == "edge-commit") {
-		return warnings, fmt.Errorf("custom mountpoints and partitioning are not supported for ostree types")
-	} else if (mountpoints != nil || partitioning != nil) && t.RPMOSTree && (t.Name() != "edge-container" && t.Name() != "edge-commit") {
-		//customization allowed for edge-raw-image,edge-ami,edge-vsphere,edge-simplified-installer
-		err := blueprint.CheckMountpointsPolicy(mountpoints, policies.OstreeMountpointPolicies)
-		if err != nil {
-			return warnings, err
-		}
-	}
-
 	if len(mountpoints) > 0 && partitioning != nil {
-		return nil, fmt.Errorf("partitioning customizations cannot be used with custom filesystems (mountpoints)")
+		return warnings, fmt.Errorf("%s: customizations.disk cannot be used with customizations.filesystem", errPrefix)
 	}
 
 	if err := blueprint.CheckMountpointsPolicy(mountpoints, policies.MountpointPolicies); err != nil {
-		return warnings, err
+		return warnings, fmt.Errorf("%s: %w", errPrefix, err)
 	}
-
 	if err := blueprint.CheckDiskMountpointsPolicy(partitioning, policies.MountpointPolicies); err != nil {
-		return warnings, err
+		return warnings, fmt.Errorf("%s: %w", errPrefix, err)
 	}
-
 	if err := partitioning.ValidateLayoutConstraints(); err != nil {
-		return warnings, err
+		return warnings, fmt.Errorf("%s: %w", errPrefix, err)
 	}
 
 	if osc := customizations.GetOpenSCAP(); osc != nil {
+		// TODO: remove this check when we add support for conditions in
+		// supported_blueprint_options.
 		if t.Arch().Distro().OsVersion() == "9.0" {
-			return warnings, fmt.Errorf("OpenSCAP unsupported os version: %s", t.Arch().Distro().OsVersion())
+			return warnings, fmt.Errorf("%s: customizations.oscap: not supported for distro version: %s", errPrefix, t.Arch().Distro().OsVersion())
 		}
-		if !oscap.IsProfileAllowed(osc.ProfileID, t.arch.distro.DistroYAML.OscapProfilesAllowList) {
-			return warnings, fmt.Errorf("OpenSCAP unsupported profile: %s", osc.ProfileID)
-		}
-		if t.RPMOSTree {
-			return warnings, fmt.Errorf("OpenSCAP customizations are not supported for ostree types")
+		supported := oscap.IsProfileAllowed(osc.ProfileID, t.arch.distro.DistroYAML.OscapProfilesAllowList)
+		if !supported {
+			return warnings, fmt.Errorf("%s: customizations.oscap.profile_id: unsupported profile %s", errPrefix, osc.ProfileID)
 		}
 		if osc.ProfileID == "" {
-			return warnings, fmt.Errorf("OpenSCAP profile cannot be empty")
+			return warnings, fmt.Errorf("%s: customizations.oscap.profile_id: required when using customizations.oscap", errPrefix)
 		}
 	}
 
@@ -246,18 +204,18 @@ func checkOptionsRhel9(t *imageType, bp *blueprint.Blueprint, options distro.Ima
 
 	err = blueprint.CheckDirectoryCustomizationsPolicy(dc, dcp)
 	if err != nil {
-		return warnings, err
+		return warnings, fmt.Errorf("%s: %w", errPrefix, err)
 	}
 
 	err = blueprint.CheckFileCustomizationsPolicy(fc, fcp)
 	if err != nil {
-		return warnings, err
+		return warnings, fmt.Errorf("%s: %w", errPrefix, err)
 	}
 
 	// check if repository customizations are valid
 	_, err = customizations.GetRepositories()
 	if err != nil {
-		return warnings, err
+		return warnings, fmt.Errorf("%s: %w", errPrefix, err)
 	}
 
 	if customizations.GetFIPS() && !common.IsBuildHostFIPSEnabled() {
@@ -266,32 +224,12 @@ func checkOptionsRhel9(t *imageType, bp *blueprint.Blueprint, options distro.Ima
 
 	instCust, err := customizations.GetInstaller()
 	if err != nil {
-		return warnings, err
+		return warnings, fmt.Errorf("%s: %w", errPrefix, err)
 	}
-	if instCust != nil {
-		// only supported by the Anaconda installer
-		if slices.Index([]string{"image-installer", "edge-installer", "live-installer"}, t.Name()) == -1 {
-			return warnings, fmt.Errorf("installer customizations are not supported for %q", t.Name())
-		}
-
-		if t.Name() == "edge-installer" &&
-			instCust.Kickstart != nil &&
-			len(instCust.Kickstart.Contents) > 0 &&
-			(customizations.GetUsers() != nil || customizations.GetGroups() != nil) {
-			return warnings, fmt.Errorf("edge-installer installer.kickstart.contents are not supported in combination with users or groups")
-		}
+	if instCust != nil && instCust.Kickstart != nil && len(instCust.Kickstart.Contents) > 0 &&
+		(customizations.GetUsers() != nil || customizations.GetGroups() != nil) {
+		return warnings, fmt.Errorf("%s: customizations.installer.kickstart.contents cannot be used with customizations.user or customizations.group", errPrefix)
 	}
-
-	// don't support setting any kernel customizations for image types with
-	// UKIs
-	// NOTE: this is very ugly and stupid, it should not be based on the image
-	// type name, but we want to redo this whole function anyway
-	// NOTE: we can't use customizations.GetKernel() because it returns
-	// 'Name: "kernel"' when unset.
-	if t.Name() == "azure-cvm" && customizations != nil && customizations.Kernel != nil {
-		return warnings, fmt.Errorf("kernel customizations are not supported for %q", t.Name())
-	}
-
 	return warnings, nil
 }
 

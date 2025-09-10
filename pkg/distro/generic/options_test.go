@@ -948,7 +948,7 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			expErr: "installer customizations are not supported for \"ami\"",
+			expErr: "blueprint validation failed for image type \"ami\": customizations.installer: not supported",
 		},
 		"r9/ami-ostree-error": {
 			distro: "rhel-9.7",
@@ -963,7 +963,7 @@ func TestCheckOptions(t *testing.T) {
 		"r9/ostree-installer-requires-ostree-url": {
 			distro: "rhel-9.7",
 			it:     "edge-installer",
-			expErr: "boot ISO image type \"edge-installer\" requires specifying a URL from which to retrieve the OSTree commit",
+			expErr: "options validation failed for image type \"edge-installer\": ostree.url: required",
 		},
 		"r9/ostree-disk-supported": {
 			distro: "rhel-9.7",
@@ -1009,7 +1009,7 @@ func TestCheckOptions(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "unsupported blueprint customizations found for image type \"edge-raw-image\": (allowed: Ignition, Kernel, User, Group, FIPS, Filesystem)",
+			expErr: "blueprint validation failed for image type \"edge-raw-image\": customizations.kernel.name: not supported",
 		},
 		"r9/edge-simplified-requires-install-device": {
 			distro: "rhel-9.7",
@@ -1036,7 +1036,7 @@ func TestCheckOptions(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "boot ISO image type \"edge-simplified-installer\" requires specifying an installation device to install to",
+			expErr: "blueprint validation failed for image type \"edge-simplified-installer\": customizations.installation_device: required",
 		},
 		"r9/edge-simplified-supported-customizations": {
 			distro: "rhel-9.7",
@@ -1098,7 +1098,7 @@ func TestCheckOptions(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "unsupported blueprint customizations found for image type \"edge-simplified-installer\": (allowed: InstallationDevice, FDO, Ignition, Kernel, User, Group, FIPS, Filesystem)",
+			expErr: "blueprint validation failed for image type \"edge-simplified-installer\": customizations.services: not supported",
 		},
 		"r9/edge-simplified-fdo-does-not-require-manufacturing-url": {
 			distro: "rhel-9.7",
@@ -1127,7 +1127,7 @@ func TestCheckOptions(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "boot ISO image type \"edge-simplified-installer\" requires specifying FDO.ManufacturingServerURL configuration to install to when using FDO",
+			expErr: "blueprint validation failed for image type \"edge-simplified-installer\": customizations.fdo.manufacturing_server_url: required when using fdo",
 		},
 		"r9/edge-simplified-fdo-requires-a-diun-option": {
 			distro: "rhel-9.7",
@@ -1156,7 +1156,7 @@ func TestCheckOptions(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "boot ISO image type \"edge-simplified-installer\" requires specifying one of [FDO.DiunPubKeyHash,FDO.DiunPubKeyInsecure,FDO.DiunPubKeyRootCerts] configuration to install to when using FDO",
+			expErr: "blueprint validation failed for image type \"edge-simplified-installer\": one of customizations.fdo.diun_pub_key_hash, customizations.fdo.diun_pub_key_insecure, customizations.fdo.diun_pub_key_root_certs: required when using fdo",
 		},
 		"r9/edge-simplified-fdo-requires-exactly-one-diun-option": {
 			distro: "rhel-9.7",
@@ -1187,7 +1187,7 @@ func TestCheckOptions(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "boot ISO image type \"edge-simplified-installer\" requires specifying one of [FDO.DiunPubKeyHash,FDO.DiunPubKeyInsecure,FDO.DiunPubKeyRootCerts] configuration to install to when using FDO",
+			expErr: "blueprint validation failed for image type \"edge-simplified-installer\": one of customizations.fdo.diun_pub_key_hash, customizations.fdo.diun_pub_key_insecure, customizations.fdo.diun_pub_key_root_certs: required when using fdo",
 		},
 		"r9/edge-simplified-ignition": {
 			distro: "rhel-9.7",
@@ -1224,7 +1224,7 @@ func TestCheckOptions(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "ignition.firstboot requires a provisioning url",
+			expErr: "blueprint validation failed for image type \"edge-simplified-installer\": customizations.ignition.firstboot requires customizations.ignition.firstboot.provisioning_url",
 		},
 		"r9/edge-simplified-ignition-option-conflict": {
 			distro: "rhel-9.7",
@@ -1247,7 +1247,7 @@ func TestCheckOptions(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "both ignition embedded and firstboot configurations found",
+			expErr: "blueprint validation failed for image type \"edge-simplified-installer\": customizations.ignition.embedded cannot be used with customizations.ignition.firstboot",
 		},
 
 		"r9/edge-installer-supported-customizations": {
@@ -1296,7 +1296,7 @@ func TestCheckOptions(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "unsupported blueprint customizations found for image type \"edge-installer\": (allowed: User, Group, FIPS, Installer, Timezone, Locale)",
+			expErr: "blueprint validation failed for image type \"edge-installer\": customizations.kernel: not supported",
 		},
 
 		"r9/ostree-types-no-oscap": {
@@ -1309,7 +1309,7 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			expErr: "OpenSCAP customizations are not supported for ostree types",
+			expErr: "blueprint validation failed for image type \"edge-container\": customizations.openscap: not supported",
 		},
 
 		"r9/oscap-empty-profile": {
@@ -1322,7 +1322,7 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			expErr: "OpenSCAP profile cannot be empty",
+			expErr: "blueprint validation failed for image type \"vhd\": customizations.oscap.profile_id: required when using customizations.oscap",
 		},
 
 		"r9/edge-installer-installer-customizations": {
@@ -1359,7 +1359,7 @@ func TestCheckOptions(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "edge-installer installer.kickstart.contents are not supported in combination with users or groups",
+			expErr: "blueprint validation failed for image type \"edge-installer\": customizations.installer.kickstart.contents cannot be used with customizations.user or customizations.group",
 		},
 
 		"r9/ostree-disk-unsupported-containers": {
@@ -1372,7 +1372,7 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			expErr: "embedding containers is not supported for edge-ami on rhel-9.7",
+			expErr: "blueprint validation failed for image type \"edge-ami\": containers: not supported",
 		},
 
 		"r9/ostree-commit-unsupported-kernel-append": {
@@ -1385,18 +1385,18 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			expErr: "kernel boot parameter customizations are not supported for ostree types",
+			expErr: "blueprint validation failed for image type \"edge-commit\": customizations.kernel.append: not supported",
 		},
 
 		"r9/ostree-disk-requires-ostree-url": {
 			distro: "rhel-9.7",
 			it:     "edge-vsphere",
-			expErr: "\"edge-vsphere\" images require specifying a URL from which to retrieve the OSTree commit",
+			expErr: "options validation failed for image type \"edge-vsphere\": ostree.url: required",
 		},
 		"r9/ostree-disk2-requires-ostree-url": {
 			distro: "rhel-9.7",
 			it:     "edge-ami",
-			expErr: "\"edge-ami\" images require specifying a URL from which to retrieve the OSTree commit",
+			expErr: "options validation failed for image type \"edge-ami\": ostree.url: required",
 		},
 
 		"r9/ostree-mountpoints-not-supported": {
@@ -1411,7 +1411,7 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			expErr: "custom mountpoints and partitioning are not supported for ostree types",
+			expErr: "blueprint validation failed for image type \"edge-commit\": customizations.filesystem: not supported",
 		},
 
 		"r9/ostree-partitioning-not-supported": {
@@ -1432,7 +1432,7 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			expErr: "custom mountpoints and partitioning are not supported for ostree types",
+			expErr: "blueprint validation failed for image type \"edge-commit\": customizations.disk: not supported",
 		},
 
 		"r9/ostree-disk-mountpoints-supported": {
@@ -1454,7 +1454,7 @@ func TestCheckOptions(t *testing.T) {
 			},
 		},
 
-		"r9/ostree-disk-partitioning-unsupported": {
+		"r9/ostree-disk-partitioning-supported": {
 			distro: "rhel-9.7",
 			it:     "edge-vsphere",
 			bp: blueprint.Blueprint{
@@ -1477,8 +1477,6 @@ func TestCheckOptions(t *testing.T) {
 					URL: "https://example.org/repo",
 				},
 			},
-			// NOTE: this should be supported
-			expErr: "unsupported blueprint customizations found for image type \"edge-vsphere\": (allowed: Ignition, Kernel, User, Group, FIPS, Filesystem)",
 		},
 
 		"r9/cvm-kernel-unsupported": {
@@ -1491,7 +1489,7 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			expErr: "kernel customizations are not supported for \"azure-cvm\"",
+			expErr: "blueprint validation failed for image type \"azure-cvm\": customizations.kernel: not supported",
 		},
 
 		"r10/ami-ok": {
