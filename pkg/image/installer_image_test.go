@@ -785,7 +785,7 @@ func TestTarInstallerKernelOpts(t *testing.T) {
 
 	testOpts := []string{"foo=1", "bar=2"}
 
-	img.InstallerCustomizations.AdditionalKernelOpts = testOpts
+	img.InstallerCustomizations.KernelOptionsAppend = testOpts
 
 	assert.NotNil(t, img)
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
