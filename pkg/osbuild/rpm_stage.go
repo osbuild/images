@@ -26,6 +26,9 @@ type RPMStageOptions struct {
 
 	// Set environment variables understood by kernel-install and plugins (kernel-install(8))
 	KernelInstallEnv *KernelInstallEnv `json:"kernel_install_env,omitempty"`
+
+	// Only install certain locales (sets `_install_langs` RPM macro)
+	InstallLangs []string `json:"install_langs,omitempty"`
 }
 
 type Exclude struct {
