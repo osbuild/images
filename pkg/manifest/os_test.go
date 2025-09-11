@@ -378,6 +378,18 @@ func TestHostnameDoesNotIncludeHostnameStage(t *testing.T) {
 	require.Nil(t, st)
 }
 
+func TestRpmlang(t *testing.T) {
+	os := manifest.NewTestOS()
+	os.OSCustomizations.InstallLangs = []string{"nl"}
+
+	pipeline := os.Serialize()
+	st := findStage("org.osbuild.rpm", pipeline.Stages)
+	require.NotNil(t, st)
+	assert.Equal(t, &osbuild.RPMStageOptions{
+		InstallLangs: []string{"nl"},
+	}, st.Options)
+}
+
 func TestAddInlineOS(t *testing.T) {
 	os := manifest.NewTestOS()
 

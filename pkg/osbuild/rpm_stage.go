@@ -128,7 +128,7 @@ func pkgRefs(specs []rpmmd.PackageSpec) FilesInputRef {
 }
 
 func NewRPMStageOptions(repos []rpmmd.RepoConfig) *RPMStageOptions {
-	gpgKeys := make([]string, 0)
+	var gpgKeys []string
 	keyMap := make(map[string]bool) // for deduplicating keys
 	for _, repo := range repos {
 		if len(repo.GPGKeys) == 0 {
