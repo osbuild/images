@@ -191,6 +191,9 @@ type OSCustomizations struct {
 	// This is only supported for distributions that use dnf4, because osbuild
 	// only has a stage for dnf4 version locking.
 	VersionlockPackages []string
+
+	// InstallLangs determines which locale files are installed by RPMs
+	InstallLangs []string
 }
 
 // OS represents the filesystem tree of the target image. This roughly
@@ -531,6 +534,8 @@ func (p *OS) serialize() osbuild.Pipeline {
 		// https://github.com/osbuild/images/issues/624
 		rpmOptions.DisableDracut = true
 	}
+	rpmOptions.InstallLangs = p.OSCustomizations.InstallLangs
+
 	if p.platform.GetBootloader() == platform.BOOTLOADER_UKI && p.PartitionTable != nil {
 		espMountpoint, err := findESPMountpoint(p.PartitionTable)
 		if err != nil {
