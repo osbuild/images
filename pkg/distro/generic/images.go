@@ -140,6 +140,8 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 		osc.InstallWeakDeps = *imageConfig.InstallWeakDeps
 	}
 
+	osc.InstallLangs = imageConfig.InstallLangs
+
 	timezone, ntpServers := c.GetTimezoneSettings()
 	if timezone != nil {
 		osc.Timezone = *timezone
