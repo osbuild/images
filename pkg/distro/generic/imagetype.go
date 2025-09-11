@@ -163,6 +163,8 @@ func (t *imageType) getPartitionTable(customizations *blueprint.Customizations, 
 	if err != nil {
 		return nil, err
 	}
+
+	defaultFsType := t.arch.distro.DefaultFSType
 	if partitioning != nil {
 		// Use the new custom partition table to create a PT fully based on the user's customizations.
 		// This overrides FilesystemCustomizations, but we should never have both defined.
@@ -175,7 +177,7 @@ func (t *imageType) getPartitionTable(customizations *blueprint.Customizations, 
 		partOptions := &disk.CustomPartitionTableOptions{
 			PartitionTableType: basePartitionTable.Type, // PT type is not customizable, it is determined by the base PT for an image type or architecture
 			BootMode:           t.BootMode(),
-			DefaultFSType:      t.arch.distro.DefaultFSType,
+			DefaultFSType:      defaultFsType,
 			RequiredMinSizes:   t.ImageTypeYAML.RequiredPartitionSizes,
 			Architecture:       t.platform.GetArch(),
 		}
@@ -183,7 +185,7 @@ func (t *imageType) getPartitionTable(customizations *blueprint.Customizations, 
 	}
 
 	mountpoints := customizations.GetFilesystems()
-	return disk.NewPartitionTable(basePartitionTable, mountpoints, imageSize, options.PartitioningMode, t.platform.GetArch(), t.ImageTypeYAML.RequiredPartitionSizes, rng)
+	return disk.NewPartitionTable(basePartitionTable, mountpoints, imageSize, options.PartitioningMode, t.platform.GetArch(), t.ImageTypeYAML.RequiredPartitionSizes, defaultFsType.String(), rng)
 }
 
 func (t *imageType) getDefaultImageConfig() *distro.ImageConfig {
