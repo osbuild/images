@@ -172,7 +172,6 @@
       - "ro"
     cloud_kernel_options: &cloud_kernel_options
       - "ro"
-      - "no_timer_check"
       - "console=ttyS0,115200n8"
       - "biosdevname=0"
       - "net.ifnames=0"
