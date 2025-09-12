@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"strings"
 	"time"
 )
@@ -34,6 +35,9 @@ type Status struct {
 
 	// Timestamp contains the timestamp the message was recieved in
 	Timestamp time.Time
+
+	// Duration as measured by osbuild
+	Duration time.Duration
 }
 
 // Progress provides progress information from an osbuild build.
@@ -120,11 +124,18 @@ func (sr *StatusScanner) Status() (*Status, error) {
 		Trace:   trace,
 		Message: msg,
 		Progress: &Progress{
-			Done:    status.Progress.Done,
-			Total:   status.Progress.Total,
-			Message: fmt.Sprintf("Pipeline %s", pipelineName),
+			Done:  status.Progress.Done,
+			Total: status.Progress.Total,
 		},
-		Timestamp: ts,
+		Duration: time.Duration(status.Duration * float64(time.Second)),
+	}
+
+	if math.Abs(status.Timestamp) > 0.0001 {
+		st.Timestamp = ts
+	}
+
+	if pipelineName != "" {
+		st.Progress.Message = fmt.Sprintf("Pipeline %s", pipelineName)
 	}
 
 	// add subprogress
@@ -134,7 +145,10 @@ func (sr *StatusScanner) Status() (*Status, error) {
 		sr.stageContextMap[id] = &context.Pipeline.Stage
 		stageContext = &context.Pipeline.Stage
 	}
-	stageName := fmt.Sprintf("Stage %s", stageContext.Name)
+	var stageName string
+	if stageContext.Name != "" {
+		stageName = fmt.Sprintf("Stage %s", stageContext.Name)
+	}
 	prog := st.Progress
 	for subProg := status.Progress.SubProgress; subProg != nil; subProg = subProg.SubProgress {
 		prog.SubProgress = &Progress{
@@ -157,6 +171,7 @@ type statusJSON struct {
 
 	Message   string  `json:"message"`
 	Timestamp float64 `json:"timestamp"`
+	Duration  float64 `json:"duration"`
 }
 
 // contextJSON is the context for which a status is given. Once a context
