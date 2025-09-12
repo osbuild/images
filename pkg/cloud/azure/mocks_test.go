@@ -418,13 +418,31 @@ func (vmm *vmMock) BeginDelete(ctx context.Context, rg, name string, options *ar
 }
 
 type diskMock struct {
-	delete []diskDeleteArgs
+	createOrUpdate []diskCreateOrUpdateArgs
+	delete         []diskDeleteArgs
+}
+
+type diskCreateOrUpdateArgs struct {
+	rg      string
+	name    string
+	disk    armcompute.Disk
+	options *armcompute.DisksClientBeginCreateOrUpdateOptions
 }
 
 type diskDeleteArgs struct {
 	rg      string
 	name    string
 	options *armcompute.DisksClientBeginDeleteOptions
+}
+
+func (diskm *diskMock) BeginCreateOrUpdate(ctx context.Context, rg, name string, disk armcompute.Disk, options *armcompute.DisksClientBeginCreateOrUpdateOptions) (*runtime.Poller[armcompute.DisksClientCreateOrUpdateResponse], error) {
+	diskm.createOrUpdate = append(diskm.createOrUpdate, diskCreateOrUpdateArgs{rg, name, disk, options})
+	disk.Name = &name
+	return makePoller[armcompute.DisksClientCreateOrUpdateResponse](
+		&armcompute.DisksClientCreateOrUpdateResponse{
+			Disk: disk,
+		},
+	)
 }
 
 func (diskm *diskMock) BeginDelete(ctx context.Context, rg, name string, options *armcompute.DisksClientBeginDeleteOptions) (*runtime.Poller[armcompute.DisksClientDeleteResponse], error) {
