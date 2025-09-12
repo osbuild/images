@@ -63,7 +63,9 @@ func (*textResultsFormatter) Output(w io.Writer, all []Result) error {
 		// cmdline should support:
 		//   image-builder manifest centos-9 type:qcow2 arch:s390
 		//   image-builder build centos-9 type:qcow2 arch:x86_64
-		if _, err := fmt.Fprintf(w, "%s type:%s arch:%s\n", res.Distro.Name(), res.ImgType.Name(), res.Arch.Name()); err != nil {
+		arch := res.ImgType.Arch()
+		distro := arch.Distro()
+		if _, err := fmt.Fprintf(w, "%s type:%s arch:%s\n", distro.Name(), res.ImgType.Name(), arch.Name()); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -80,10 +82,12 @@ func (*shellResultsFormatter) Output(w io.Writer, all []Result) error {
 	var errs []error
 
 	for _, res := range all {
+		arch := res.ImgType.Arch()
+		distro := arch.Distro()
 		if _, err := fmt.Fprintf(w, "%s --distro %s --arch %s\n",
 			res.ImgType.Name(),
-			res.Distro.Name(),
-			res.Arch.Name()); err != nil {
+			distro.Name(),
+			arch.Name()); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -101,10 +105,12 @@ func (*textShortResultsFormatter) Output(w io.Writer, all []Result) error {
 
 	outputMap := make(map[string]map[string][]string)
 	for _, res := range all {
-		if _, ok := outputMap[res.Distro.Name()]; !ok {
-			outputMap[res.Distro.Name()] = make(map[string][]string)
+		arch := res.ImgType.Arch()
+		distro := arch.Distro()
+		if _, ok := outputMap[distro.Name()]; !ok {
+			outputMap[distro.Name()] = make(map[string][]string)
 		}
-		outputMap[res.Distro.Name()][res.ImgType.Name()] = append(outputMap[res.Distro.Name()][res.ImgType.Name()], res.Arch.Name())
+		outputMap[distro.Name()][res.ImgType.Name()] = append(outputMap[distro.Name()][res.ImgType.Name()], arch.Name())
 	}
 
 	// Sort and prepare output
@@ -165,12 +171,14 @@ func (*jsonResultsFormatter) Output(w io.Writer, all []Result) error {
 	var out []filteredResultJSON
 
 	for _, res := range all {
+		arch := res.ImgType.Arch()
+		distro := arch.Distro()
 		out = append(out, filteredResultJSON{
 			Distro: distroResultJSON{
-				Name: res.Distro.Name(),
+				Name: distro.Name(),
 			},
 			Arch: archResultJSON{
-				Name: res.Arch.Name(),
+				Name: arch.Name(),
 			},
 			ImgType: imgTypeResultJSON{
 				Name: res.ImgType.Name(),
