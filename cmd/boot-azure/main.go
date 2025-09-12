@@ -252,11 +252,13 @@ func doSetup(ac *azure.Client, flags *pflag.FlagSet, localImage string, res *res
 	vm, err := ac.CreateVM(
 		ctx,
 		rg,
-		image,
-		vmName,
-		size,
-		username,
-		string(keyData),
+		azure.VMOptions{
+			Name:   vmName,
+			Image:  image,
+			Size:   size,
+			User:   username,
+			SSHKey: string(keyData),
+		},
 	)
 	if err != nil {
 		return err

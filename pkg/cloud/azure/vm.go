@@ -23,10 +23,18 @@ type VM struct {
 	Disk          string `json:"disk"`
 }
 
-func (ac Client) CreateVM(ctx context.Context, resourceGroup, image, name, size, username, sshKey string) (*VM, error) {
+type VMOptions struct {
+	Name   string
+	Image  string
+	Size   string
+	User   string
+	SSHKey string
+}
+
+func (ac Client) CreateVM(ctx context.Context, resourceGroup string, options VMOptions) (*VM, error) {
 	vm := VM{
 		ResourceGroup: resourceGroup,
-		Name:          name,
+		Name:          options.Name,
 	}
 	var err error
 	defer func() {
@@ -74,7 +82,7 @@ func (ac Client) CreateVM(ctx context.Context, resourceGroup, image, name, size,
 	}
 	vm.Nic = common.ValueOrEmpty(intf.Name)
 
-	virtualMachine, err := ac.createVM(ctx, resourceGroup, location, image, size, *intf.ID, fmt.Sprintf("%s-disk", vm.Name), vm.Name, username, sshKey)
+	virtualMachine, err := ac.createVM(ctx, resourceGroup, location, options.Image, options.Size, *intf.ID, fmt.Sprintf("%s-disk", vm.Name), vm.Name, options.User, options.SSHKey)
 	if err != nil {
 		return nil, err
 	}
