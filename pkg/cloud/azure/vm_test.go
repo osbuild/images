@@ -12,7 +12,7 @@ import (
 	"github.com/osbuild/images/pkg/cloud/azure"
 )
 
-func TestLaunchVM(t *testing.T) {
+func TestCreateLinuxVM(t *testing.T) {
 	azm := newAZ()
 
 	vm, err := azm.az.CreateVM(
@@ -46,7 +46,7 @@ func TestLaunchVM(t *testing.T) {
 							ID: common.ToPtr("test-image"),
 						},
 						OSDisk: &armcompute.OSDisk{
-							Name:         &vm.Disk,
+							Name:         &vm.DiskName,
 							CreateOption: common.ToPtr(armcompute.DiskCreateOptionTypesFromImage),
 							Caching:      common.ToPtr(armcompute.CachingTypesReadWrite),
 							ManagedDisk: &armcompute.ManagedDiskParameters{
@@ -184,7 +184,8 @@ func TestLaunchVM(t *testing.T) {
 		},
 	}, azm.vnetm.createOrUpdate[0])
 
-	require.Equal(t, "vm-name-disk", vm.Disk)
+	require.Equal(t, "vm-name-disk", vm.DiskName)
+	require.Empty(t, vm.DiskID)
 
 	require.NoError(t, azm.az.DestroyVM(context.Background(), vm))
 	require.Len(t, azm.vmm.delete, 1)
@@ -196,7 +197,7 @@ func TestLaunchVM(t *testing.T) {
 	require.Len(t, azm.diskm.delete, 1)
 	require.Equal(t, diskDeleteArgs{
 		rg:   "rg",
-		name: vm.Disk,
+		name: vm.DiskName,
 	}, azm.diskm.delete[0])
 
 	require.Len(t, azm.intfm.delete, 1)
@@ -229,4 +230,93 @@ func TestLaunchVM(t *testing.T) {
 		rg:   "rg",
 		name: vm.VNet,
 	}, azm.vnetm.delete[0])
+}
+
+func TestCreateWindowsVM(t *testing.T) {
+	azm := newAZ()
+
+	vm, err := azm.az.CreateVM(
+		context.Background(),
+		"rg",
+		azure.VMOptions{
+			Name:     "vm-name",
+			Size:     "size",
+			User:     "username",
+			SSHKey:   "ssh-key",
+			Snapshot: "snapshot",
+			Windows:  true,
+		},
+	)
+	require.NoError(t, err)
+	require.Equal(t, "rg", vm.ResourceGroup)
+
+	require.Equal(t, "vm-name", vm.Name)
+	require.Len(t, azm.vmm.createOrUpdate, 1)
+	require.Equal(t,
+		vmCreateOrUpdateArgs{
+			name: "vm-name",
+			rg:   "rg",
+			vm: armcompute.VirtualMachine{
+				Location: common.ToPtr("test-universe"),
+				Identity: &armcompute.VirtualMachineIdentity{
+					Type: common.ToPtr(armcompute.ResourceIdentityTypeNone),
+				},
+				Properties: &armcompute.VirtualMachineProperties{
+					StorageProfile: &armcompute.StorageProfile{
+						OSDisk: &armcompute.OSDisk{
+							CreateOption: common.ToPtr(armcompute.DiskCreateOptionTypesAttach),
+							OSType:       common.ToPtr(armcompute.OperatingSystemTypesWindows),
+							ManagedDisk: &armcompute.ManagedDiskParameters{
+								ID: &vm.DiskID,
+							},
+						},
+					},
+					HardwareProfile: &armcompute.HardwareProfile{
+						VMSize: common.ToPtr(armcompute.VirtualMachineSizeTypes("size")),
+					},
+					NetworkProfile: &armcompute.NetworkProfile{
+						NetworkInterfaces: []*armcompute.NetworkInterfaceReference{
+							{
+								ID: common.ToPtr("intf-id"),
+							},
+						},
+					},
+					SecurityProfile: &armcompute.SecurityProfile{
+						SecurityType: common.ToPtr(armcompute.SecurityTypesTrustedLaunch),
+					},
+				},
+			},
+		}, azm.vmm.createOrUpdate[0])
+
+	require.Len(t, azm.diskm.createOrUpdate, 1)
+	require.Equal(t, diskCreateOrUpdateArgs{
+		rg:   "rg",
+		name: "vm-name-disk",
+		disk: armcompute.Disk{
+			Location: common.ToPtr("test-universe"),
+			Properties: &armcompute.DiskProperties{
+				CreationData: &armcompute.CreationData{
+					CreateOption:     common.ToPtr(armcompute.DiskCreateOptionCopy),
+					SourceResourceID: common.ToPtr("snapshot"),
+				},
+			},
+		},
+	}, azm.diskm.createOrUpdate[0])
+}
+
+func TestCreateVMError(t *testing.T) {
+	azm := newAZ()
+
+	_, err := azm.az.CreateVM(
+		context.Background(),
+		"rg",
+		azure.VMOptions{
+			Name:     "vm-name",
+			Image:    "test-image",
+			Size:     "size",
+			User:     "username",
+			Snapshot: "snapshot",
+		},
+	)
+	require.ErrorContains(t, err, "Either an image or a snapshot must be given to create a VM, not both")
 }
