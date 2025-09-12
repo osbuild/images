@@ -49,7 +49,10 @@ func TestOSTreeDeploymentPipelineFStabStage(t *testing.T) {
 	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/")  // PT specifics don't matter
 	pipeline.MountConfiguration = osbuild.MOUNT_CONFIGURATION_FSTAB // set it explicitly just to be sure
 
-	checkStagesForFSTab(t, manifest.SerializeWith(pipeline, testCommitInputs()).Stages)
+	osbuildPipeline, err := manifest.SerializeWith(pipeline, testCommitInputs())
+	require.NoError(t, err)
+	require.NotNil(t, osbuildPipeline)
+	checkStagesForFSTab(t, osbuildPipeline.Stages)
 }
 
 func TestOSTreeDeploymentPipelineMountUnitStages(t *testing.T) {
@@ -59,7 +62,10 @@ func TestOSTreeDeploymentPipelineMountUnitStages(t *testing.T) {
 	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/home")
 	pipeline.MountConfiguration = osbuild.MOUNT_CONFIGURATION_UNITS
 
-	checkStagesForMountUnits(t, manifest.SerializeWith(pipeline, testCommitInputs()).Stages, expectedUnits)
+	osbuildPipeline, err := manifest.SerializeWith(pipeline, testCommitInputs())
+	require.NoError(t, err)
+	require.NotNil(t, osbuildPipeline)
+	checkStagesForMountUnits(t, osbuildPipeline.Stages, expectedUnits)
 }
 
 func TestOSTreeDeploymentPipelineNoMountUnitStages(t *testing.T) {
@@ -68,7 +74,10 @@ func TestOSTreeDeploymentPipelineNoMountUnitStages(t *testing.T) {
 	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/home")
 	pipeline.MountConfiguration = osbuild.MOUNT_CONFIGURATION_NONE
 
-	checkStagesForNoMounts(t, manifest.SerializeWith(pipeline, testCommitInputs()).Stages)
+	osbuildPipeline, err := manifest.SerializeWith(pipeline, testCommitInputs())
+	require.NoError(t, err)
+	require.NotNil(t, osbuildPipeline)
+	checkStagesForNoMounts(t, osbuildPipeline.Stages)
 }
 
 func TestAddInlineOSTreeDeployment(t *testing.T) {
@@ -91,7 +100,9 @@ func TestAddInlineOSTreeDeployment(t *testing.T) {
 
 	// the OSTreeDeployment pipeline *requires* a partition table
 	deployment.PartitionTable = testdisk.MakeFakeBtrfsPartitionTable("/")
-	pipeline := manifest.SerializeWith(deployment, testCommitInputs())
+	pipeline, err := manifest.SerializeWith(deployment, testCommitInputs())
+	require.NoError(err)
+	require.NotNil(pipeline)
 
 	destinationPaths := collectCopyDestinationPaths(pipeline.Stages)
 

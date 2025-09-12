@@ -12,6 +12,6 @@ func (rbc *RawBootcImage) Serialize() osbuild.Pipeline {
 	return rbc.serialize()
 }
 
-func (rbc *RawBootcImage) SerializeStart(inputs Inputs) {
-	rbc.serializeStart(inputs)
+func (rbc *RawBootcImage) SerializeStart(inputs Inputs) error {
+	return rbc.serializeStart(inputs)
 }

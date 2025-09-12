@@ -2,6 +2,7 @@ package manifest
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"path"
 	"path/filepath"
@@ -317,17 +318,17 @@ func (p *AnacondaInstallerISOTree) NewErofsStage() *osbuild.Stage {
 	return osbuild.NewErofsStage(&erofsOptions, p.anacondaPipeline.Name())
 }
 
-func (p *AnacondaInstallerISOTree) serializeStart(inputs Inputs) {
+func (p *AnacondaInstallerISOTree) serializeStart(inputs Inputs) error {
 	if p.ostreeCommitSpec != nil || p.containerSpec != nil {
-		panic("double call to serializeStart()")
+		return errors.New("AnacondaInstallerISOTree: double call to serializeStart()")
 	}
 
 	if len(inputs.Commits) > 1 {
-		panic("pipeline supports at most one ostree commit")
+		return errors.New("AnacondaInstallerISOTree: pipeline supports at most one ostree commit")
 	}
 
 	if len(inputs.Containers) > 1 {
-		panic("pipeline supports at most one container")
+		return errors.New("AnacondaInstallerISOTree: pipeline supports at most one container")
 	}
 
 	if len(inputs.Commits) > 0 {
@@ -337,6 +338,8 @@ func (p *AnacondaInstallerISOTree) serializeStart(inputs Inputs) {
 	if len(inputs.Containers) > 0 {
 		p.containerSpec = &inputs.Containers[0]
 	}
+
+	return nil
 }
 
 func (p *AnacondaInstallerISOTree) serializeEnd() {

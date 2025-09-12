@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -171,9 +172,9 @@ func (p *OSTreeDeployment) getContainerSources() []container.SourceSpec {
 	}
 }
 
-func (p *OSTreeDeployment) serializeStart(inputs Inputs) {
+func (p *OSTreeDeployment) serializeStart(inputs Inputs) error {
 	if p.ostreeSpec != nil || p.containerSpec != nil {
-		panic("double call to serializeStart()")
+		return errors.New("OSTreeDeployment: double call to serializeStart()")
 	}
 
 	switch {
@@ -182,8 +183,9 @@ func (p *OSTreeDeployment) serializeStart(inputs Inputs) {
 	case len(inputs.Containers) == 1:
 		p.containerSpec = &inputs.Containers[0]
 	default:
-		panic(fmt.Sprintf("pipeline %s requires exactly one ostree commit or one container (have commits: %v; containers: %v)", p.Name(), inputs.Commits, inputs.Containers))
+		return fmt.Errorf("OSTreeDeployment: pipeline %s requires exactly one ostree commit or one container (have commits: %v; containers: %v)", p.Name(), inputs.Commits, inputs.Containers)
 	}
+	return nil
 }
 
 func (p *OSTreeDeployment) serializeEnd() {

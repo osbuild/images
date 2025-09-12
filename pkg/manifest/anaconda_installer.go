@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -183,15 +184,20 @@ func (p *AnacondaInstaller) getPackageSpecs() []rpmmd.PackageSpec {
 	return p.packageSpecs
 }
 
-func (p *AnacondaInstaller) serializeStart(inputs Inputs) {
+func (p *AnacondaInstaller) serializeStart(inputs Inputs) error {
 	if len(p.packageSpecs) > 0 {
-		panic("double call to serializeStart()")
+		return errors.New("AnacondaInstaller: double call to serializeStart()")
 	}
 	p.packageSpecs = inputs.Depsolved.Packages
 	if p.kernelName != "" {
-		p.kernelVer = rpmmd.GetVerStrFromPackageSpecListPanic(p.packageSpecs, p.kernelName)
+		kernelPkg, err := rpmmd.GetPackage(p.packageSpecs, p.kernelName)
+		if err != nil {
+			return fmt.Errorf("AnacondaInstaller: failed to find kernel package %q in the depsolved packages", p.kernelName)
+		}
+		p.kernelVer = kernelPkg.GetEVRA()
 	}
 	p.repos = append(p.repos, inputs.Depsolved.Repos...)
+	return nil
 }
 
 func (p *AnacondaInstaller) serializeEnd() {

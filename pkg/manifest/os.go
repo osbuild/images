@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"path/filepath"
@@ -468,9 +469,9 @@ func (p *OS) getContainerSpecs() []container.Spec {
 	return p.containerSpecs
 }
 
-func (p *OS) serializeStart(inputs Inputs) {
+func (p *OS) serializeStart(inputs Inputs) error {
 	if len(p.packageSpecs) > 0 {
-		panic("double call to serializeStart()")
+		return errors.New("OS: double call to serializeStart()")
 	}
 
 	p.packageSpecs = inputs.Depsolved.Packages
@@ -478,16 +479,21 @@ func (p *OS) serializeStart(inputs Inputs) {
 	p.containerSpecs = inputs.Containers
 	if len(inputs.Commits) > 0 {
 		if len(inputs.Commits) > 1 {
-			panic("pipeline supports at most one ostree commit")
+			return errors.New("OS: pipeline supports at most one ostree commit")
 		}
 		p.ostreeParentSpec = &inputs.Commits[0]
 	}
 
 	if p.OSCustomizations.KernelName != "" {
-		p.kernelVer = rpmmd.GetVerStrFromPackageSpecListPanic(p.packageSpecs, p.OSCustomizations.KernelName)
+		kernelPkg, err := rpmmd.GetPackage(p.packageSpecs, p.OSCustomizations.KernelName)
+		if err != nil {
+			return fmt.Errorf("OS: failed to find kernel package %q in the depsolved packages", p.OSCustomizations.KernelName)
+		}
+		p.kernelVer = kernelPkg.GetEVRA()
 	}
 
 	p.repos = append(p.repos, inputs.Depsolved.Repos...)
+	return nil
 }
 
 func (p *OS) serializeEnd() {
@@ -1040,7 +1046,7 @@ func grubStage(p *OS, pt *disk.PartitionTable, kernelOptions []string) *osbuild.
 			Nick:    p.OSNick,
 		}
 
-		_, err := rpmmd.GetVerStrFromPackageSpecList(p.packageSpecs, "dracut-config-rescue")
+		_, err := rpmmd.GetPackage(p.packageSpecs, "dracut-config-rescue")
 		hasRescue := err == nil
 		return osbuild.NewGrub2LegacyStage(
 			osbuild.NewGrub2LegacyStageOptions(
