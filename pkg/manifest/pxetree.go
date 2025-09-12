@@ -11,9 +11,8 @@ import (
 
 type PXETree struct {
 	Base
-
-	// TODO
-	// - Add compression control (squashfs/erofs, etc.)
+	RootfsCompression string
+	RootfsType        ISORootfsType
 
 	osPipeline *OS
 	files      []*fsnode.File // grub template and README files
@@ -21,17 +20,25 @@ type PXETree struct {
 
 // NewPXETree creates a pipeline with a kernel, initrd, and compressed root filesystem
 // suitable for use with PXE booting a system.
+// Defaults to using xz compressed squashfs rootfs
 func NewPXETree(buildPipeline Build, osPipeline *OS) *PXETree {
 	p := &PXETree{
-		Base:       NewBase("pxe-tree", buildPipeline),
-		osPipeline: osPipeline,
+		Base:              NewBase("pxe-tree", buildPipeline),
+		osPipeline:        osPipeline,
+		RootfsCompression: "xz",
+		RootfsType:        SquashfsRootfs,
 	}
 	buildPipeline.addDependent(p)
 	return p
 }
 
 func (p *PXETree) getBuildPackages(Distro) []string {
-	return []string{"squashfs-tools"}
+	switch p.RootfsType {
+	case ErofsRootfs:
+		return []string{"erofs-utils"}
+	default:
+		return []string{"squashfs-tools"}
+	}
 }
 
 // Create a directory tree containing the kernel, initrd, and compressed rootfs
@@ -62,22 +69,45 @@ func (p *PXETree) serialize() (osbuild.Pipeline, error) {
 	copyStage := osbuild.NewCopyStageSimple(copyStageOptions, copyStageInputs)
 	pipeline.AddStage(copyStage)
 
-	// TODO compression selection
-	var squashfsOptions osbuild.SquashfsStageOptions
-
-	squashfsOptions.Filename = "rootfs.img"
-	squashfsOptions.Compression.Method = "xz"
-
-	if squashfsOptions.Compression.Method == "xz" {
-		squashfsOptions.Compression.Options = &osbuild.FSCompressionOptions{
-			BCJ: osbuild.BCJOption(p.osPipeline.platform.GetArch().String()),
+	// Compress the os tree
+	if p.RootfsType == ErofsRootfs {
+		erofsOptions := osbuild.ErofsStageOptions{
+			Filename: "rootfs.img",
 		}
-	}
 
-	// TODO this is share with the ISO, should it be?
-	// Clean up the root filesystem's /boot to save space
-	squashfsOptions.ExcludePaths = installerBootExcludePaths
-	pipeline.AddStage(osbuild.NewSquashfsStage(&squashfsOptions, p.osPipeline.Name()))
+		var compression osbuild.ErofsCompression
+		if p.RootfsCompression != "" {
+			compression.Method = p.RootfsCompression
+		} else {
+			// default to zstd if not specified
+			compression.Method = "zstd"
+		}
+		compression.Level = common.ToPtr(8)
+		erofsOptions.Compression = &compression
+		erofsOptions.ExtendedOptions = []string{"all-fragments", "dedupe"}
+		erofsOptions.ClusterSize = common.ToPtr(131072)
+
+		// TODO this is shared with the ISO, should it be?
+		// Clean up the root filesystem's /boot to save space
+		erofsOptions.ExcludePaths = installerBootExcludePaths
+		pipeline.AddStage(osbuild.NewErofsStage(&erofsOptions, p.osPipeline.Name()))
+	} else {
+		var squashfsOptions osbuild.SquashfsStageOptions
+
+		squashfsOptions.Filename = "rootfs.img"
+		squashfsOptions.Compression.Method = "xz"
+
+		if squashfsOptions.Compression.Method == "xz" {
+			squashfsOptions.Compression.Options = &osbuild.FSCompressionOptions{
+				BCJ: osbuild.BCJOption(p.osPipeline.platform.GetArch().String()),
+			}
+		}
+
+		// TODO this is shared with the ISO, should it be?
+		// Clean up the root filesystem's /boot to save space
+		squashfsOptions.ExcludePaths = installerBootExcludePaths
+		pipeline.AddStage(osbuild.NewSquashfsStage(&squashfsOptions, p.osPipeline.Name()))
+	}
 
 	// Make an example grub.cfg
 	pipeline.AddStages(p.makeGrubConfig()...)
