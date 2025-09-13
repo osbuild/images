@@ -4,6 +4,7 @@ dnf -y install \
     awscli2 \
     btrfs-progs-devel \
     device-mapper-devel \
+    libvirt-devel \
     gcc \
     go \
     gpgme-devel \

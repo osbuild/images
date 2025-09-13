@@ -139,7 +139,7 @@ jobs:
         run: ./test/scripts/setup-osbuild-repo
 
       - name: Install build and test dependencies
-        run: dnf -y install krb5-devel gcc git-core go gpgme-devel osbuild-depsolve-dnf device-mapper-devel
+        run: dnf -y install krb5-devel libvirt-devel gcc git-core go gpgme-devel osbuild-depsolve-dnf device-mapper-devel
 
       - name: Mark the working directory as safe for git
         run: git config --global --add safe.directory "$(pwd)"
@@ -175,6 +175,10 @@ jobs:
       # This is needed to lint internal/upload/koji package
       - name: Install kerberos devel package
         run: sudo apt install -y libkrb5-dev
+
+      # This is needed to lint pkg/cloud/libvirt package
+      - name: Install libvirt devel package
+        run: sudo apt install -y libvirt-dev
 
       # This is needed for the container upload dependencies
       - *apt_install_dependencies
