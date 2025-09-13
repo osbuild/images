@@ -769,6 +769,12 @@
         append:
           include:
             - "rng-tools"
+      "rhel-10.2+ gets azure-vm-utils":
+        when:
+          version_greater_or_equal: "10.2"
+        append:
+          include:
+            - "azure-vm-utils"
   supported_options_lists:
     # Common options supported by all disk image types.
     # This includes everything that is not specific to installers.
@@ -2120,6 +2126,13 @@ image_types:
             # package here.
             - "linux-firmware"
             - "os-prober"
+          conditions:
+            "rhel-10.2+ gets azure-vm-utils":
+              when:
+                version_greater_or_equal: "10.2"
+              append:
+                include:
+                  - "azure-vm-utils"
     supported_blueprint_options:
       # same as disk image types, but kernel customizations are not supported
       - "distro"
