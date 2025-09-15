@@ -471,8 +471,8 @@ func checkOptionsRhel8(t *imageType, bp *blueprint.Blueprint, options distro.Ima
 	}
 
 	if osc := customizations.GetOpenSCAP(); osc != nil {
-		if t.Arch().Distro().OsVersion() == "9.0" {
-			return warnings, fmt.Errorf("%s: customizations.oscap: not supported for distro version: %s", errPrefix, t.Arch().Distro().OsVersion())
+		if osVersion := t.Arch().Distro().OsVersion(); common.VersionLessThan(osVersion, "8.7") {
+			return warnings, fmt.Errorf("%s: customizations.oscap: not supported for distro version: %s", errPrefix, osVersion)
 		}
 		supported := oscap.IsProfileAllowed(osc.ProfileID, t.arch.distro.DistroYAML.OscapProfilesAllowList)
 		if !supported {
