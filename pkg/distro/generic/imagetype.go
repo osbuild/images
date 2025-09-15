@@ -314,21 +314,16 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 	}
 
 	switch idLike := t.arch.distro.DistroYAML.DistroLike; idLike {
-	case manifest.DISTRO_FEDORA:
-	case manifest.DISTRO_EL7:
+	case manifest.DISTRO_FEDORA, manifest.DISTRO_EL7, manifest.DISTRO_EL10:
+		// no specific options checkers
 	case manifest.DISTRO_EL8:
-		w, err := checkOptionsRhel8(t, bp, options)
-		warnings = append(warnings, w...)
-		if err != nil {
+		if err := checkOptionsRhel8(t, bp); err != nil {
 			return warnings, err
 		}
 	case manifest.DISTRO_EL9:
-		w, err := checkOptionsRhel9(t, bp, options)
-		warnings = append(warnings, w...)
-		if err != nil {
+		if err := checkOptionsRhel9(t, bp); err != nil {
 			return warnings, err
 		}
-	case manifest.DISTRO_EL10:
 	default:
 		return nil, fmt.Errorf("checkOptions called with unknown distro-like %v", idLike)
 	}
