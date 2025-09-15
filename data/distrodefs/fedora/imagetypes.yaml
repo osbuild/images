@@ -231,7 +231,7 @@
     x86_64_installer_platform: &x86_64_installer_platform
       <<: *x86_64_bios_platform
       image_format: "raw"
-      packages:
+      packages: &x86_64_installer_platform_packages
         <<: *x86_64_bios_platform_packages
         booting:
           - "biosdevname"
@@ -239,7 +239,6 @@
           - "grub2-tools-efi"
           - "grub2-tools"
           - "grub2-tools-extra"
-          - "shim-ia32"
           - "grub2-efi-ia32-cdboot"
         firmware:
           - "microcode_ctl"
@@ -263,6 +262,12 @@
           - "tiwilink-firmware"
           - "zd1211-firmware"
       bootloader: "grub2"
+    x86_64_installer_platform_compat: &x86_64_installer_platform_compat
+      <<: *x86_64_installer_platform
+      packages:
+        <<: *x86_64_installer_platform_packages
+        compat:
+          - "shim-ia32"
     aarch64_platform: &aarch64_platform
       arch: "aarch64"
       uefi_vendor: "fedora"
@@ -1106,6 +1111,14 @@ image_types:
     platforms:
       - *x86_64_installer_platform
       - *aarch64_installer_platform
+    platforms_override:
+      conditions:
+        "Fedora 44 no longer has shim-ia32":
+          when:
+            version_less_than: "44"
+          override:
+            - *x86_64_installer_platform_compat
+            - *aarch64_installer_platform
     package_sets:
       os:
         - include:
@@ -1246,6 +1259,14 @@ image_types:
     platforms:
       - *x86_64_installer_platform
       - *aarch64_installer_platform
+    platforms_override:
+      conditions:
+        "Fedora 44 no longer has shim-ia32":
+          when:
+            version_less_than: "44"
+          override:
+            - *x86_64_installer_platform_compat
+            - *aarch64_installer_platform
 
   "iot-raw-xz":
     <<: *rpm_ostree_imgtype_common
@@ -1635,6 +1656,14 @@ image_types:
     platforms:
       - *x86_64_installer_platform
       - *aarch64_installer_platform
+    platforms_override:
+      conditions:
+        "Fedora 44 no longer has shim-ia32":
+          when:
+            version_less_than: "44"
+          override:
+            - *x86_64_installer_platform_compat
+            - *aarch64_installer_platform
     supported_blueprint_options:
       - "distro"
       - "customizations.installer"
@@ -1711,6 +1740,14 @@ image_types:
     platforms:
       - *x86_64_installer_platform
       - *aarch64_installer_platform
+    platforms_override:
+      conditions:
+        "Fedora 44 no longer has shim-ia32":
+          when:
+            version_less_than: "44"
+          override:
+            - *x86_64_installer_platform_compat
+            - *aarch64_installer_platform
     supported_blueprint_options:
       - "distro"
       - "customizations.installer"
@@ -1751,6 +1788,14 @@ image_types:
     platforms:
       - *x86_64_installer_platform
       - *aarch64_installer_platform
+    platforms_override:
+      conditions:
+        "Fedora 44 no longer has shim-ia32":
+          when:
+            version_less_than: "44"
+          override:
+            - *x86_64_installer_platform_compat
+            - *aarch64_installer_platform
     package_sets:
       os:
         - *minimal_raw_pkgset
@@ -2197,6 +2242,14 @@ image_types:
     platforms:
       - *x86_64_installer_platform
       - *aarch64_installer_platform
+    platforms_override:
+      conditions:
+        "Fedora 44 no longer has shim-ia32":
+          when:
+            version_less_than: "44"
+          override:
+            - *x86_64_installer_platform_compat
+            - *aarch64_installer_platform
     supported_blueprint_options:
       - "distro"
       - "customizations.fips"
