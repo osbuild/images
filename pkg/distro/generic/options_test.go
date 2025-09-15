@@ -1101,6 +1101,20 @@ func TestCheckOptions(t *testing.T) {
 			},
 			expErr: "blueprint validation failed for image type \"qcow2\": customizations.disk: swap logical volume creation is not supported on rhel-8.10 aarch64",
 		},
+		"r8/oscap-8.6-unsupported": {
+			distro: "rhel-8.6",
+			it:     "ami",
+			bp: blueprint.Blueprint{
+				Customizations: &blueprint.Customizations{
+					OpenSCAP: &blueprint.OpenSCAPCustomization{
+						// must be a valid ID, otherwise it will return the
+						// invalid profile ID error from checkOptionsCommon()
+						ProfileID: "xccdf_org.ssgproject.content_profile_stig",
+					},
+				},
+			},
+			expErr: "blueprint validation failed for image type \"ami\": customizations.oscap: not supported for distro version: 8.6",
+		},
 
 		"r9/ami-ok": {
 			distro:  "rhel-9.7",

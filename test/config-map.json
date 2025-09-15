@@ -235,7 +235,8 @@
   "./configs/oscap-generic.json": {
     "distros": [
       "rhel-9.2",
-      "rhel-8*",
+      "rhel-8.8",
+      "rhel-8.10",
       "centos-9",
       "fedora*"
     ],
