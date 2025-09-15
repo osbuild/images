@@ -323,7 +323,11 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 			return warnings, err
 		}
 	case manifest.DISTRO_EL9:
-		return checkOptionsRhel9(t, bp, options)
+		w, err := checkOptionsRhel9(t, bp, options)
+		warnings = append(warnings, w...)
+		if err != nil {
+			return warnings, err
+		}
 	case manifest.DISTRO_EL10:
 		return checkOptionsRhel10(t, bp, options)
 	default:
