@@ -329,7 +329,6 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 			return warnings, err
 		}
 	case manifest.DISTRO_EL10:
-		return checkOptionsRhel10(t, bp, options)
 	default:
 		return nil, fmt.Errorf("checkOptions called with unknown distro-like %v", idLike)
 	}
