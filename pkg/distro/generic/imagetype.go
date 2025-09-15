@@ -316,7 +316,6 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 	switch idLike := t.arch.distro.DistroYAML.DistroLike; idLike {
 	case manifest.DISTRO_FEDORA:
 	case manifest.DISTRO_EL7:
-		return checkOptionsRhel7(t, bp, options)
 	case manifest.DISTRO_EL8:
 		return checkOptionsRhel8(t, bp, options)
 	case manifest.DISTRO_EL9:
