@@ -49,6 +49,7 @@ def run_gen_manifests(cmd, output_dir):
         "-metadata=false",
         "-containers=false",
         "-arches", ",".join(arches),
+        "-fake-bootc=true",
         "-output", output_dir,
     ], env=env, text=True, capture_output=True, check=False)
     if p.returncode != 0:
