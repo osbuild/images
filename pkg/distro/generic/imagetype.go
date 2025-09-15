@@ -308,13 +308,13 @@ func (t *imageType) Manifest(bp *blueprint.Blueprint,
 // Returns ([]string, error) where []string, if non-nil, will hold any generated warnings (e.g. deprecation notices).
 func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOptions) ([]string, error) {
 
-	if warnings, err := checkOptionsCommon(t, bp, options); err != nil {
+	warnings, err := checkOptionsCommon(t, bp, options)
+	if err != nil {
 		return warnings, err
 	}
 
 	switch idLike := t.arch.distro.DistroYAML.DistroLike; idLike {
 	case manifest.DISTRO_FEDORA:
-		return checkOptionsFedora(t, bp, options)
 	case manifest.DISTRO_EL7:
 		return checkOptionsRhel7(t, bp, options)
 	case manifest.DISTRO_EL8:
@@ -326,6 +326,8 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOp
 	default:
 		return nil, fmt.Errorf("checkOptions called with unknown distro-like %v", idLike)
 	}
+
+	return warnings, nil
 }
 
 func (t *imageType) RequiredBlueprintOptions() []string {
