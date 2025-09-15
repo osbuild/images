@@ -150,33 +150,28 @@ func checkOptionsCommon(t *imageType, bp *blueprint.Blueprint, options distro.Im
 	return warnings, nil
 }
 
-func checkOptionsRhel9(t *imageType, bp *blueprint.Blueprint, options distro.ImageOptions) ([]string, error) {
+func checkOptionsRhel9(t *imageType, bp *blueprint.Blueprint) error {
 	customizations := bp.Customizations
-
-	var warnings []string
-
 	errPrefix := fmt.Sprintf("blueprint validation failed for image type %q", t.Name())
 
 	if osc := customizations.GetOpenSCAP(); osc != nil {
 		// TODO: remove this check when we add support for conditions in
 		// supported_blueprint_options.
 		if t.Arch().Distro().OsVersion() == "9.0" {
-			return warnings, fmt.Errorf("%s: customizations.oscap: not supported for distro version: %s", errPrefix, t.Arch().Distro().OsVersion())
+			return fmt.Errorf("%s: customizations.oscap: not supported for distro version: %s", errPrefix, t.Arch().Distro().OsVersion())
 		}
 	}
-	return warnings, nil
+	return nil
 }
 
-func checkOptionsRhel8(t *imageType, bp *blueprint.Blueprint, options distro.ImageOptions) ([]string, error) {
+func checkOptionsRhel8(t *imageType, bp *blueprint.Blueprint) error {
 	customizations := bp.Customizations
-
-	var warnings []string
 
 	errPrefix := fmt.Sprintf("blueprint validation failed for image type %q", t.Name())
 
 	partitioning, err := customizations.GetPartitioning()
 	if err != nil {
-		return warnings, err
+		return err
 	}
 
 	if partitioning != nil {
@@ -189,11 +184,11 @@ func checkOptionsRhel8(t *imageType, bp *blueprint.Blueprint, options distro.Ima
 				// running on RHEL 8, and the RHEL 9 aarch64 kernel uses a
 				// different page size.
 				if partition.FSType == "swap" {
-					return warnings, fmt.Errorf("%s: customizations.disk: swap partition creation is not supported on %s %s", errPrefix, t.Arch().Distro().Name(), t.Arch().Name())
+					return fmt.Errorf("%s: customizations.disk: swap partition creation is not supported on %s %s", errPrefix, t.Arch().Distro().Name(), t.Arch().Name())
 				}
 				for _, lv := range partition.LogicalVolumes {
 					if lv.FSType == "swap" {
-						return warnings, fmt.Errorf("%s: customizations.disk: swap logical volume creation is not supported on %s %s", errPrefix, t.Arch().Distro().Name(), t.Arch().Name())
+						return fmt.Errorf("%s: customizations.disk: swap logical volume creation is not supported on %s %s", errPrefix, t.Arch().Distro().Name(), t.Arch().Name())
 					}
 				}
 			}
@@ -201,9 +196,9 @@ func checkOptionsRhel8(t *imageType, bp *blueprint.Blueprint, options distro.Ima
 	}
 	if osc := customizations.GetOpenSCAP(); osc != nil {
 		if osVersion := t.Arch().Distro().OsVersion(); common.VersionLessThan(osVersion, "8.7") {
-			return warnings, fmt.Errorf("%s: customizations.oscap: not supported for distro version: %s", errPrefix, osVersion)
+			return fmt.Errorf("%s: customizations.oscap: not supported for distro version: %s", errPrefix, osVersion)
 		}
 	}
 
-	return warnings, nil
+	return nil
 }
