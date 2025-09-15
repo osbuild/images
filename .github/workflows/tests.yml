@@ -280,6 +280,9 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
+      - name: Apt update
+        run: sudo apt update
+
       - *apt_install_dependencies
 
       - run: sudo apt install -y qemu-user-static
