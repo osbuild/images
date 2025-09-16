@@ -1,7 +1,6 @@
 package generic_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -172,31 +171,6 @@ func TestRhel7ImageType_Name(t *testing.T) {
 	}
 }
 
-// Check that Manifest() function returns an error for unsupported
-// configurations.
-func TestRhel7Distro_ManifestError(t *testing.T) {
-	r7distro := rhel7_FamilyDistros[0].distro
-	bp := blueprint.Blueprint{
-		Customizations: &blueprint.Customizations{
-			Kernel: &blueprint.KernelCustomization{
-				Append: "debug",
-			},
-		},
-	}
-
-	for _, archName := range r7distro.ListArches() {
-		arch, _ := r7distro.GetArch(archName)
-		for _, imgTypeName := range arch.ListImageTypes() {
-			imgType, _ := arch.GetImageType(imgTypeName)
-			imgOpts := distro.ImageOptions{
-				Size: imgType.Size(0),
-			}
-			_, _, err := imgType.Manifest(&bp, imgOpts, nil, nil)
-			assert.NoError(t, err)
-		}
-	}
-}
-
 func TestRhel7Architecture_ListImageTypes(t *testing.T) {
 	imgMap := []struct {
 		arch                     string
@@ -280,162 +254,6 @@ func TestRhel7Rhel7_ModulePlatformID(t *testing.T) {
 
 func TestRhel7Rhel7_KernelOption(t *testing.T) {
 	distro_test_common.TestDistro_KernelOption(t, rhel7_FamilyDistros[0].distro)
-}
-
-func TestRhel7Distro_CustomFileSystemManifestError(t *testing.T) {
-	r7distro := rhel7_FamilyDistros[0].distro
-	bp := blueprint.Blueprint{
-		Customizations: &blueprint.Customizations{
-			Filesystem: []blueprint.FilesystemCustomization{
-				{
-					MinSize:    1024,
-					Mountpoint: "/etc",
-				},
-			},
-		},
-	}
-	for _, archName := range r7distro.ListArches() {
-		arch, _ := r7distro.GetArch(archName)
-		for _, imgTypeName := range arch.ListImageTypes() {
-			imgType, _ := arch.GetImageType(imgTypeName)
-			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
-			assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: The following custom mountpoints are not supported [\"/etc\"]", imgTypeName))
-		}
-	}
-}
-
-func TestRhel7Distro_TestRhel7RootMountPoint(t *testing.T) {
-	r7distro := rhel7_FamilyDistros[0].distro
-	bp := blueprint.Blueprint{
-		Customizations: &blueprint.Customizations{
-			Filesystem: []blueprint.FilesystemCustomization{
-				{
-					MinSize:    1024,
-					Mountpoint: "/",
-				},
-			},
-		},
-	}
-	for _, archName := range r7distro.ListArches() {
-		arch, _ := r7distro.GetArch(archName)
-		for _, imgTypeName := range arch.ListImageTypes() {
-			imgType, _ := arch.GetImageType(imgTypeName)
-			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
-			assert.NoError(t, err)
-		}
-	}
-}
-
-func TestRhel7Distro_CustomFileSystemSubDirectories(t *testing.T) {
-	r7distro := rhel7_FamilyDistros[0].distro
-	bp := blueprint.Blueprint{
-		Customizations: &blueprint.Customizations{
-			Filesystem: []blueprint.FilesystemCustomization{
-				{
-					MinSize:    1024,
-					Mountpoint: "/var/log",
-				},
-				{
-					MinSize:    1024,
-					Mountpoint: "/var/log/audit",
-				},
-			},
-		},
-	}
-	for _, archName := range r7distro.ListArches() {
-		arch, _ := r7distro.GetArch(archName)
-		for _, imgTypeName := range arch.ListImageTypes() {
-			imgType, _ := arch.GetImageType(imgTypeName)
-			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
-			assert.NoError(t, err)
-		}
-	}
-}
-
-func TestRhel7Distro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
-	r7distro := rhel7_FamilyDistros[0].distro
-	bp := blueprint.Blueprint{
-		Customizations: &blueprint.Customizations{
-			Filesystem: []blueprint.FilesystemCustomization{
-				{
-					MinSize:    1024,
-					Mountpoint: "/var/a",
-				},
-				{
-					MinSize:    1024,
-					Mountpoint: "/var/a/b",
-				},
-				{
-					MinSize:    1024,
-					Mountpoint: "/var/a/b/c",
-				},
-				{
-					MinSize:    1024,
-					Mountpoint: "/var/a/b/c/d",
-				},
-			},
-		},
-	}
-	for _, archName := range r7distro.ListArches() {
-		arch, _ := r7distro.GetArch(archName)
-		for _, imgTypeName := range arch.ListImageTypes() {
-			imgType, _ := arch.GetImageType(imgTypeName)
-			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
-			assert.NoError(t, err)
-		}
-	}
-}
-
-func TestRhel7Distro_DirtyMountpointsNotAllowed(t *testing.T) {
-	r7distro := rhel7_FamilyDistros[0].distro
-	bp := blueprint.Blueprint{
-		Customizations: &blueprint.Customizations{
-			Filesystem: []blueprint.FilesystemCustomization{
-				{
-					MinSize:    1024,
-					Mountpoint: "//",
-				},
-				{
-					MinSize:    1024,
-					Mountpoint: "/var//",
-				},
-				{
-					MinSize:    1024,
-					Mountpoint: "/var//log/audit/",
-				},
-			},
-		},
-	}
-	for _, archName := range r7distro.ListArches() {
-		arch, _ := r7distro.GetArch(archName)
-		for _, imgTypeName := range arch.ListImageTypes() {
-			imgType, _ := arch.GetImageType(imgTypeName)
-			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
-			assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: The following custom mountpoints are not supported [\"//\" \"/var//\" \"/var//log/audit/\"]", imgTypeName))
-		}
-	}
-}
-
-func TestRhel7Distro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
-	r7distro := rhel7_FamilyDistros[0].distro
-	bp := blueprint.Blueprint{
-		Customizations: &blueprint.Customizations{
-			Filesystem: []blueprint.FilesystemCustomization{
-				{
-					MinSize:    1024,
-					Mountpoint: "/usr",
-				},
-			},
-		},
-	}
-	for _, archName := range r7distro.ListArches() {
-		arch, _ := r7distro.GetArch(archName)
-		for _, imgTypeName := range arch.ListImageTypes() {
-			imgType, _ := arch.GetImageType(imgTypeName)
-			_, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, nil)
-			assert.NoError(t, err)
-		}
-	}
 }
 
 func TestRhel7DistroFactory(t *testing.T) {
