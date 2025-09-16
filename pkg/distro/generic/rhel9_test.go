@@ -326,6 +326,7 @@ func TestRhel9_ImageType_Name(t *testing.T) {
 				"image-installer",
 				"minimal-raw",
 				"netinst",
+				"pxe-tar-xz",
 			},
 		},
 		{
@@ -343,6 +344,7 @@ func TestRhel9_ImageType_Name(t *testing.T) {
 				"azure-rhui",
 				"minimal-raw",
 				"netinst",
+				"pxe-tar-xz",
 			},
 		},
 		{
@@ -496,6 +498,7 @@ func TestRhel9_Architecture_ListImageTypes(t *testing.T) {
 				"netinst",
 				"vagrant-libvirt",
 				"vagrant-virtualbox",
+				"pxe-tar-xz",
 			},
 			verTypes: map[string][]string{
 				"9.6": {
@@ -525,6 +528,7 @@ func TestRhel9_Architecture_ListImageTypes(t *testing.T) {
 				"wsl",
 				"minimal-raw",
 				"netinst",
+				"pxe-tar-xz",
 			},
 		},
 		{
