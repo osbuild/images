@@ -20,7 +20,10 @@ func BootstrapContainerFor(it distro.ImageType) string {
 	return bootstrapContainerFor(it.(*imageType))
 }
 
-type ImageType = imageType
+type (
+	ImageType    = imageType
+	Distribution = distribution
+)
 
 func (t *imageType) GetDefaultImageConfig() *distro.ImageConfig {
 	return t.getDefaultImageConfig()
