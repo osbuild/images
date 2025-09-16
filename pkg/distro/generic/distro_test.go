@@ -20,10 +20,6 @@ func TestBootstrapContainers(t *testing.T) {
 	for _, distroName := range repos.ListDistros() {
 		t.Run(distroName, func(t *testing.T) {
 			d := generic.DistroFactory(distroName)
-			// TODO: remove once everthing is a generic distro
-			if d == nil {
-				t.Skipf("%s not a generic distro yet", distroName)
-			}
 			assert.NotNil(t, d)
 			assert.NotEmpty(t, d.(*generic.Distribution).DistroYAML.BootstrapContainers)
 		})
