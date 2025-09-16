@@ -41,6 +41,7 @@ if ! "${tmpdir}/bin/gen-manifests" \
     > /dev/null 2> "${tmpdir}/stderr"; then
 
     cat "${tmpdir}/stderr"
+    exit 1
 fi
 
 
