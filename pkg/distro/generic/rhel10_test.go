@@ -264,6 +264,7 @@ func TestRH10Architecture_ListImageTypes(t *testing.T) {
 				"ec2-sap",
 				"vagrant-libvirt",
 				"vagrant-virtualbox",
+				"pxe-tar-xz",
 			},
 		},
 		{
@@ -274,6 +275,7 @@ func TestRH10Architecture_ListImageTypes(t *testing.T) {
 				"ec2",
 				"image-installer",
 				"netinst",
+				"pxe-tar-xz",
 				"qcow2",
 				"tar",
 				"vagrant-libvirt",

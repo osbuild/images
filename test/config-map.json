@@ -155,6 +155,7 @@
       "oci",
       "openstack",
       "ova",
+      "pxe-tar-xz",
       "qcow2",
       "tar",
       "vagrant-libvirt",
