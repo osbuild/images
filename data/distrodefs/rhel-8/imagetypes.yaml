@@ -1998,6 +1998,7 @@ image_types:
       - "customizations.rpm"
       - "customizations.services"
       - "customizations.rhsm"
+      - "customizations.kernel.append"
 
   tar:
     filename: "root.tar.xz"
