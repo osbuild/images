@@ -14,6 +14,7 @@ import (
 
 func TestCheckOptions(t *testing.T) {
 	type testCase struct {
+		arch    string // for when it's relevant; if empty, defaults to x86_64
 		distro  string
 		it      string
 		bp      blueprint.Blueprint
@@ -1039,6 +1040,67 @@ func TestCheckOptions(t *testing.T) {
 			},
 			expErr: "partitioning mode btrfs not supported for \"edge-raw-image\"",
 		},
+		"r8/aarch-swap-partition-not-supported": {
+			distro: "rhel-8.10",
+			it:     "qcow2",
+			arch:   "aarch64",
+			bp: blueprint.Blueprint{
+				Customizations: &blueprint.Customizations{
+					Disk: &blueprint.DiskCustomization{
+						Partitions: []blueprint.PartitionCustomization{
+							{
+								Type: "plain",
+								FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+									Mountpoint: "/",
+									Label:      "root",
+									FSType:     "ext4",
+								},
+							},
+							{
+								Type: "plain",
+								FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+									FSType: "swap",
+								},
+							},
+						},
+					},
+				},
+			},
+			expErr: "blueprint validation failed for image type \"qcow2\": customizations.disk: swap partition creation is not supported on rhel-8.10 aarch64",
+		},
+		"r8/aarch-swap-lv-not-supported": {
+			distro: "rhel-8.10",
+			it:     "qcow2",
+			arch:   "aarch64",
+			bp: blueprint.Blueprint{
+				Customizations: &blueprint.Customizations{
+					Disk: &blueprint.DiskCustomization{
+						Partitions: []blueprint.PartitionCustomization{
+							{
+								Type: "lvm",
+								VGCustomization: blueprint.VGCustomization{
+									LogicalVolumes: []blueprint.LVCustomization{
+										{
+											FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+												Mountpoint: "/",
+												Label:      "root",
+												FSType:     "ext4",
+											},
+										},
+										{
+											FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+												FSType: "swap",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expErr: "blueprint validation failed for image type \"qcow2\": customizations.disk: swap logical volume creation is not supported on rhel-8.10 aarch64",
+		},
 
 		"r9/ami-ok": {
 			distro:  "rhel-9.7",
@@ -1827,12 +1889,13 @@ func TestCheckOptions(t *testing.T) {
 			assert := assert.New(t)
 
 			d := generic.DistroFactory(tc.distro)
-			// NOTE: The architecture is only relevant in one small case: swap
-			// partitions on RHEL 8. Let's ignore that for now and return to it
-			// when we redo the validation.
-			imageTypes, err := d.GetArch("x86_64")
+			archName := tc.arch
+			if archName == "" {
+				archName = "x86_64"
+			}
+			arch, err := d.GetArch(archName)
 			assert.NoError(err)
-			it, err := imageTypes.GetImageType(tc.it)
+			it, err := arch.GetImageType(tc.it)
 			assert.NoError(err)
 
 			genit, ok := it.(*generic.ImageType) // checkOptions() function is defined on generic.ImageType
