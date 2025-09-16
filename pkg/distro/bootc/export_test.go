@@ -8,6 +8,7 @@ import (
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/bib/osinfo"
 	"github.com/osbuild/images/pkg/disk"
+	"github.com/osbuild/images/pkg/distro"
 )
 
 var (
@@ -30,6 +31,10 @@ func NewTestBootcImageType() *BootcImageType {
 		defaultFs: "xfs",
 	}
 	a := &BootcArch{distro: d, arch: arch.ARCH_X86_64}
+	d.arches = map[string]distro.Arch{
+		"x86_64": a,
+	}
+
 	imgType := &BootcImageType{
 		arch:   a,
 		name:   "qcow2",

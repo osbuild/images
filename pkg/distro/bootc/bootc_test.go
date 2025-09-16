@@ -236,3 +236,15 @@ func TestManifestSerialization(t *testing.T) {
 		})
 	}
 }
+
+func TestBootcDistroGetArch(t *testing.T) {
+	imgType := NewTestBootcImageType()
+	distro := imgType.Arch().Distro()
+
+	arch, err := distro.GetArch("x86_64")
+	assert.NoError(t, err)
+	assert.Equal(t, arch, imgType.Arch())
+
+	_, err = distro.GetArch("aarch64")
+	assert.EqualError(t, err, `requested bootc arch "aarch64" does not match available arches [x86_64]`)
+}
