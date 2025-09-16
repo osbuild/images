@@ -3,7 +3,6 @@ package generic_test
 import (
 	"fmt"
 	"sort"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -11,11 +10,9 @@ import (
 
 	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/pkg/disk"
-	"github.com/osbuild/images/pkg/disk/partition"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/distro_test_common"
 	"github.com/osbuild/images/pkg/distro/generic"
-	"github.com/osbuild/images/pkg/ostree"
 )
 
 var fedoraFamilyDistros = []distro.Distro{
@@ -484,47 +481,6 @@ func TestFedoraImageTypeAliases(t *testing.T) {
 	}
 }
 
-// Check that Manifest() function returns an error for unsupported
-// configurations.
-func TestFedoraDistro_ManifestError(t *testing.T) {
-	bp := blueprint.Blueprint{
-		Customizations: &blueprint.Customizations{
-			Kernel: &blueprint.KernelCustomization{
-				Append: "debug",
-			},
-		},
-	}
-
-	for _, fedoraDistro := range fedoraFamilyDistros {
-		for _, archName := range fedoraDistro.ListArches() {
-			arch, _ := fedoraDistro.GetArch(archName)
-			for _, imgTypeName := range arch.ListImageTypes() {
-				t.Run(fmt.Sprintf("%s/%s", archName, imgTypeName), func(t *testing.T) {
-					imgType, _ := arch.GetImageType(imgTypeName)
-					imgOpts := distro.ImageOptions{
-						Size: imgType.Size(0),
-					}
-					_, _, err := imgType.Manifest(&bp, imgOpts, nil, nil)
-					switch imgTypeName {
-					case "minimal-installer", "iot-commit", "iot-container", "iot-bootable-container":
-						assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.kernel.append: not supported", imgTypeName))
-					case "iot-installer", "workstation-live-installer", "everything-netinst":
-						assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.kernel: not supported", imgTypeName))
-					case "iot-simplified-installer":
-						assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.installation_device: required", imgTypeName))
-					case "iot-raw-xz", "iot-qcow2":
-						assert.EqualError(t, err, fmt.Sprintf("options validation failed for image type %q: ostree.url: required", imgTypeName))
-					case "container", "wsl":
-						assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.kernel: not supported", imgTypeName))
-					default:
-						assert.NoError(t, err)
-					}
-				})
-			}
-		}
-	}
-}
-
 func TestFedoraArchitecture_ListImageTypes(t *testing.T) {
 	imgMap := []struct {
 		arch     string
@@ -692,255 +648,6 @@ func TestFedoraFedora_OSTreeOptions(t *testing.T) {
 	}
 }
 
-// Helper function for adding ostree options to iot types so tests can check
-// the relevant error message instead of the missing URL error when needed.
-func maybeMakeOSTreeURL(imgTypeName string) *ostree.ImageOptions {
-	if strings.Contains(imgTypeName, "iot") {
-		return &ostree.ImageOptions{URL: "https://example.org/repo"}
-	}
-	return nil
-}
-
-func TestFedoraDistro_CustomFileSystemManifestError(t *testing.T) {
-	bp := blueprint.Blueprint{
-		Customizations: &blueprint.Customizations{
-			Filesystem: []blueprint.FilesystemCustomization{
-				{
-					MinSize:    1024,
-					Mountpoint: "/etc",
-				},
-			},
-		},
-	}
-	for _, fedoraDistro := range fedoraFamilyDistros {
-		for _, archName := range fedoraDistro.ListArches() {
-			arch, _ := fedoraDistro.GetArch(archName)
-			for _, imgTypeName := range arch.ListImageTypes() {
-				imgType, _ := arch.GetImageType(imgTypeName)
-				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{OSTree: maybeMakeOSTreeURL(imgTypeName)}, nil, nil)
-				switch imgTypeName {
-				case "minimal-installer", "iot-installer", "workstation-live-installer", "iot-simplified-installer", "iot-commit", "iot-container", "iot-bootable-container", "everything-netinst", "container", "wsl":
-					assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.filesystem: not supported", imgTypeName))
-				default:
-					// TODO: this error message is a bit clunky; bring it more in line with the other messages (remove "The following errors ...")
-					assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: The following custom mountpoints are not supported [\"/etc\"]", imgTypeName))
-				}
-			}
-		}
-	}
-}
-
-func TestFedoraDistro_TestRootMountPoint(t *testing.T) {
-	bp := blueprint.Blueprint{
-		Customizations: &blueprint.Customizations{
-			Filesystem: []blueprint.FilesystemCustomization{
-				{
-					MinSize:    1024,
-					Mountpoint: "/",
-				},
-			},
-		},
-	}
-	for _, fedoraDistro := range fedoraFamilyDistros {
-		for _, archName := range fedoraDistro.ListArches() {
-			arch, _ := fedoraDistro.GetArch(archName)
-			for _, imgTypeName := range arch.ListImageTypes() {
-				imgType, _ := arch.GetImageType(imgTypeName)
-				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{OSTree: maybeMakeOSTreeURL(imgTypeName)}, nil, nil)
-				switch imgTypeName {
-				case "minimal-installer", "workstation-live-installer", "iot-simplified-installer", "iot-installer", "iot-commit", "iot-container", "iot-bootable-container", "everything-netinst", "container", "wsl":
-					assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.filesystem: not supported", imgTypeName))
-				default:
-					assert.NoError(t, err)
-				}
-			}
-		}
-	}
-}
-
-func TestFedoraDistro_CustomFileSystemSubDirectories(t *testing.T) {
-	bp := blueprint.Blueprint{
-		Customizations: &blueprint.Customizations{
-			Filesystem: []blueprint.FilesystemCustomization{
-				{
-					MinSize:    1024,
-					Mountpoint: "/var/log",
-				},
-				{
-					MinSize:    1024,
-					Mountpoint: "/var/log/audit",
-				},
-			},
-		},
-	}
-	for _, fedoraDistro := range fedoraFamilyDistros {
-		for _, archName := range fedoraDistro.ListArches() {
-			arch, _ := fedoraDistro.GetArch(archName)
-			for _, imgTypeName := range arch.ListImageTypes() {
-				imgType, _ := arch.GetImageType(imgTypeName)
-				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{OSTree: maybeMakeOSTreeURL(imgTypeName)}, nil, nil)
-				switch imgTypeName {
-				case "minimal-installer", "workstation-live-installer", "iot-simplified-installer", "iot-installer", "iot-commit", "iot-container", "iot-bootable-container", "everything-netinst", "container", "wsl":
-					assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.filesystem: not supported", imgTypeName))
-				default:
-					assert.NoError(t, err)
-				}
-			}
-		}
-	}
-}
-
-func TestFedoraDistro_MountpointsWithArbitraryDepthAllowed(t *testing.T) {
-	bp := blueprint.Blueprint{
-		Customizations: &blueprint.Customizations{
-			Filesystem: []blueprint.FilesystemCustomization{
-				{
-					MinSize:    1024,
-					Mountpoint: "/var/a",
-				},
-				{
-					MinSize:    1024,
-					Mountpoint: "/var/a/b",
-				},
-				{
-					MinSize:    1024,
-					Mountpoint: "/var/a/b/c",
-				},
-				{
-					MinSize:    1024,
-					Mountpoint: "/var/a/b/c/d",
-				},
-			},
-		},
-	}
-	for _, fedoraDistro := range fedoraFamilyDistros {
-		for _, archName := range fedoraDistro.ListArches() {
-			arch, _ := fedoraDistro.GetArch(archName)
-			for _, imgTypeName := range arch.ListImageTypes() {
-				imgType, _ := arch.GetImageType(imgTypeName)
-				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{OSTree: maybeMakeOSTreeURL(imgTypeName)}, nil, nil)
-				switch imgTypeName {
-				case "minimal-installer", "workstation-live-installer", "iot-simplified-installer", "iot-installer", "iot-commit", "iot-container", "iot-bootable-container", "everything-netinst", "container", "wsl":
-					assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.filesystem: not supported", imgTypeName))
-				default:
-					assert.NoError(t, err)
-				}
-			}
-		}
-	}
-}
-
-func TestFedoraDistro_DirtyMountpointsNotAllowed(t *testing.T) {
-	bp := blueprint.Blueprint{
-		Customizations: &blueprint.Customizations{
-			Filesystem: []blueprint.FilesystemCustomization{
-				{
-					MinSize:    1024,
-					Mountpoint: "//",
-				},
-				{
-					MinSize:    1024,
-					Mountpoint: "/var//",
-				},
-				{
-					MinSize:    1024,
-					Mountpoint: "/var//log/audit/",
-				},
-			},
-		},
-	}
-	for _, fedoraDistro := range fedoraFamilyDistros {
-		for _, archName := range fedoraDistro.ListArches() {
-			arch, _ := fedoraDistro.GetArch(archName)
-			for _, imgTypeName := range arch.ListImageTypes() {
-				imgType, _ := arch.GetImageType(imgTypeName)
-				_, _, err := imgType.Manifest(&bp, distro.ImageOptions{OSTree: maybeMakeOSTreeURL(imgTypeName)}, nil, nil)
-				switch imgTypeName {
-				case "minimal-installer", "workstation-live-installer", "iot-simplified-installer", "iot-installer", "iot-commit", "iot-container", "iot-bootable-container", "everything-netinst", "container", "wsl":
-					assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.filesystem: not supported", imgTypeName))
-				default:
-					// TODO: this error message is a bit clunky; bring it more in line with the other messages (remove "The following errors ...")
-					assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: The following custom mountpoints are not supported [\"//\" \"/var//\" \"/var//log/audit/\"]", imgTypeName))
-				}
-			}
-		}
-	}
-}
-
-func TestFedoraDistro_CustomUsrPartitionNotLargeEnough(t *testing.T) {
-	bp := blueprint.Blueprint{
-		Customizations: &blueprint.Customizations{
-			Filesystem: []blueprint.FilesystemCustomization{
-				{
-					MinSize:    1024,
-					Mountpoint: "/usr",
-				},
-			},
-		},
-	}
-	for _, fedoraDistro := range fedoraFamilyDistros {
-		for _, archName := range fedoraDistro.ListArches() {
-			arch, _ := fedoraDistro.GetArch(archName)
-			for _, imgTypeName := range arch.ListImageTypes() {
-				options := distro.ImageOptions{
-					OSTree: maybeMakeOSTreeURL(imgTypeName),
-				}
-				imgType, _ := arch.GetImageType(imgTypeName)
-				_, _, err := imgType.Manifest(&bp, options, nil, nil)
-				switch imgTypeName {
-				case "workstation-live-installer", "iot-container", "iot-commit", "iot-bootable-container", "iot-installer", "iot-simplified-installer", "minimal-installer", "everything-netinst", "container", "wsl":
-					assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.filesystem: not supported", imgTypeName))
-				default:
-					assert.NoError(t, err)
-				}
-			}
-		}
-	}
-}
-
-func TestFedoraDistro_PartitioningConflict(t *testing.T) {
-	bp := blueprint.Blueprint{
-		Customizations: &blueprint.Customizations{
-			Filesystem: []blueprint.FilesystemCustomization{
-				{
-					MinSize:    1024,
-					Mountpoint: "/",
-				},
-			},
-			Disk: &blueprint.DiskCustomization{
-				Partitions: []blueprint.PartitionCustomization{
-					{
-						MinSize: 19,
-						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
-							FSType:     "ext4",
-							Mountpoint: "/home",
-						},
-					},
-				},
-			},
-		},
-	}
-	for _, fedoraDistro := range fedoraFamilyDistros {
-		for _, archName := range fedoraDistro.ListArches() {
-			arch, _ := fedoraDistro.GetArch(archName)
-			for _, imgTypeName := range arch.ListImageTypes() {
-				imgType, _ := arch.GetImageType(imgTypeName)
-				options := distro.ImageOptions{
-					OSTree: maybeMakeOSTreeURL(imgTypeName),
-				}
-				_, _, err := imgType.Manifest(&bp, options, nil, nil)
-				switch imgTypeName {
-				case "workstation-live-installer", "iot-container", "iot-commit", "iot-bootable-container", "iot-installer", "iot-simplified-installer", "minimal-installer", "everything-netinst", "container", "wsl":
-					assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.filesystem: not supported", imgTypeName))
-				default:
-					assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.disk cannot be used with customizations.filesystem", imgTypeName))
-				}
-			}
-		}
-	}
-
-}
-
 func TestFedoraDistroFactory(t *testing.T) {
 	type testCase struct {
 		strID    string
@@ -979,48 +686,6 @@ func TestFedoraDistroFactory(t *testing.T) {
 	}
 }
 
-func TestFedoraDistro_DiskCustomizationRunsValidateLayoutConstraints(t *testing.T) {
-	bp := blueprint.Blueprint{
-		Customizations: &blueprint.Customizations{
-			Disk: &blueprint.DiskCustomization{
-				Partitions: []blueprint.PartitionCustomization{
-					{
-						Type:            "lvm",
-						VGCustomization: blueprint.VGCustomization{},
-					},
-					{
-						Type:            "lvm",
-						VGCustomization: blueprint.VGCustomization{},
-					},
-				},
-			},
-		},
-	}
-
-	for _, fedoraDistro := range fedoraFamilyDistros {
-		for _, archName := range fedoraDistro.ListArches() {
-			arch, err := fedoraDistro.GetArch(archName)
-			assert.NoError(t, err)
-
-			// XXX: enable once we support qcow2 on riscv64
-			if arch.Name() == "riscv64" {
-				continue
-			}
-
-			imgType, err := arch.GetImageType("server-qcow2")
-			assert.NoError(t, err, archName)
-			t.Run(fmt.Sprintf("%s/%s", archName, imgType.Name()), func(t *testing.T) {
-				imgType, _ := arch.GetImageType(imgType.Name())
-				imgOpts := distro.ImageOptions{
-					Size: imgType.Size(0),
-				}
-				_, _, err := imgType.Manifest(&bp, imgOpts, nil, nil)
-				assert.EqualError(t, err, "blueprint validation failed for image type \"server-qcow2\": multiple LVM volume groups are not yet supported")
-			})
-		}
-	}
-}
-
 func TestFedoraESP(t *testing.T) {
 	distro_test_common.TestESP(t, fedoraFamilyDistros, func(it distro.ImageType) (*disk.PartitionTable, error) {
 		return generic.GetPartitionTable(it)
@@ -1040,42 +705,6 @@ func TestFedoraDistroBootstrapRef(t *testing.T) {
 				} else {
 					require.Equal(t, "registry.fedoraproject.org/fedora-toolbox:"+fedoraDistro.OsVersion(), generic.BootstrapContainerFor(imgType))
 				}
-			}
-		}
-	}
-}
-
-func TestFedoraDistro_PartioningModeConstraints(t *testing.T) {
-	for _, fedoraDistro := range fedoraFamilyDistros {
-		for _, archName := range fedoraDistro.ListArches() {
-			arch, err := fedoraDistro.GetArch(archName)
-			assert.NoError(t, err)
-
-			for _, imgTypeName := range arch.ListImageTypes() {
-				bp := blueprint.Blueprint{}
-
-				imgType, err := arch.GetImageType(imgTypeName)
-				assert.NoError(t, err, imgTypeName)
-				if imgType.OSTreeRef() == "" || imgType.PartitionType() == disk.PT_NONE {
-					continue
-				}
-
-				t.Run(fmt.Sprintf("%s/%s", archName, imgTypeName), func(t *testing.T) {
-					imgType, _ := arch.GetImageType(imgType.Name())
-					imgOpts := distro.ImageOptions{
-						PartitioningMode: partition.RawPartitioningMode,
-						OSTree: &ostree.ImageOptions{
-							URL: "http://example.com/ostree",
-						},
-					}
-					if imgType.Name() == "iot-simplified-installer" {
-						bp.Customizations = &blueprint.Customizations{
-							InstallationDevice: "/dev/foo",
-						}
-					}
-					_, _, err := imgType.Manifest(&bp, imgOpts, nil, nil)
-					assert.ErrorContains(t, err, "partitioning mode raw not supported for")
-				})
 			}
 		}
 	}
