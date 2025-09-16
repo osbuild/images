@@ -1612,6 +1612,21 @@ func TestCheckOptions(t *testing.T) {
 			expErr: "invalid ostree image ref \"-bad-ref\"",
 		},
 
+		"r9/oscap-9.0-unsupported": {
+			distro: "rhel-9.0",
+			it:     "ami",
+			bp: blueprint.Blueprint{
+				Customizations: &blueprint.Customizations{
+					OpenSCAP: &blueprint.OpenSCAPCustomization{
+						// must be a valid ID, otherwise it will return the
+						// invalid profile ID error from checkOptionsCommon()
+						ProfileID: "xccdf_org.ssgproject.content_profile_stig",
+					},
+				},
+			},
+			expErr: "blueprint validation failed for image type \"ami\": customizations.oscap: not supported for distro version: 9.0",
+		},
+
 		"r10/ami-ok": {
 			distro:  "rhel-10.0",
 			it:      "ami",
