@@ -144,7 +144,7 @@ func (p *CoreOSInstaller) serializeStart(inputs Inputs) error {
 	if p.kernelName != "" {
 		kernelPkg, err := rpmmd.GetPackage(p.packageSpecs, p.kernelName)
 		if err != nil {
-			return fmt.Errorf("CoreOSInstaller: failed to find kernel package %q in the depsolved packages", p.kernelName)
+			return fmt.Errorf("CoreOSInstaller: %w", err)
 		}
 		p.kernelVer = kernelPkg.GetEVRA()
 	}
