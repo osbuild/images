@@ -192,7 +192,7 @@ func (p *AnacondaInstaller) serializeStart(inputs Inputs) error {
 	if p.kernelName != "" {
 		kernelPkg, err := rpmmd.GetPackage(p.packageSpecs, p.kernelName)
 		if err != nil {
-			return fmt.Errorf("AnacondaInstaller: failed to find kernel package %q in the depsolved packages", p.kernelName)
+			return fmt.Errorf("AnacondaInstaller: %w", err)
 		}
 		p.kernelVer = kernelPkg.GetEVRA()
 	}
