@@ -5,6 +5,7 @@ import (
 
 	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/disk/partition"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/generic"
 	"github.com/osbuild/images/pkg/ostree"
@@ -523,6 +524,106 @@ func TestCheckOptions(t *testing.T) {
 			it:     "iot-raw-xz",
 			expErr: "options validation failed for image type \"iot-raw-xz\": ostree.url: required",
 		},
+		"f42/disk-and-filesystems": {
+			distro: "fedora-42",
+			it:     "server-qcow2",
+			bp: blueprint.Blueprint{
+				Customizations: &blueprint.Customizations{
+					Filesystem: []blueprint.FilesystemCustomization{
+						{
+							MinSize:    1024,
+							Mountpoint: "/home",
+						},
+					},
+					Disk: &blueprint.DiskCustomization{
+						Partitions: []blueprint.PartitionCustomization{
+							{
+								Type: "plain",
+								FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+									Mountpoint: "/",
+									Label:      "root",
+									FSType:     "ext4",
+								},
+							},
+						},
+					},
+				},
+			},
+			expErr: "blueprint validation failed for image type \"server-qcow2\": customizations.disk cannot be used with customizations.filesystem",
+		},
+		"f42/bad-filesystem-mountpoint": {
+			distro: "fedora-42",
+			it:     "server-qcow2",
+			bp: blueprint.Blueprint{
+				Customizations: &blueprint.Customizations{
+					Filesystem: []blueprint.FilesystemCustomization{
+						{
+							MinSize:    1024,
+							Mountpoint: "/etc",
+						},
+					},
+				},
+			},
+			expErr: "blueprint validation failed for image type \"server-qcow2\": The following custom mountpoints are not supported [\"/etc\"]",
+		},
+		"f42/bad-disk-mountpoint": {
+			distro: "fedora-42",
+			it:     "server-qcow2",
+			bp: blueprint.Blueprint{
+				Customizations: &blueprint.Customizations{
+					Disk: &blueprint.DiskCustomization{
+						Partitions: []blueprint.PartitionCustomization{
+							{
+								Type: "plain",
+								FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+									Mountpoint: "/etc",
+									FSType:     "ext4",
+								},
+							},
+						},
+					},
+				},
+			},
+			expErr: "blueprint validation failed for image type \"server-qcow2\": The following errors occurred while setting up custom mountpoints:\npath \"/etc\" is not allowed",
+		},
+		"f42/two-lvm+btrfs": {
+			distro: "fedora-42",
+			it:     "server-qcow2",
+			bp: blueprint.Blueprint{
+				Customizations: &blueprint.Customizations{
+					Disk: &blueprint.DiskCustomization{
+						Partitions: []blueprint.PartitionCustomization{
+							{
+								Type: "lvm",
+								VGCustomization: blueprint.VGCustomization{
+									LogicalVolumes: []blueprint.LVCustomization{
+										{
+											Name: "lv1",
+											FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+												Mountpoint: "/data",
+												FSType:     "ext4",
+											},
+										},
+									},
+								},
+							},
+							{
+								Type: "btrfs",
+								BtrfsVolumeCustomization: blueprint.BtrfsVolumeCustomization{
+									Subvolumes: []blueprint.BtrfsSubvolumeCustomization{
+										{
+											Name:       "b1",
+											Mountpoint: "/stuff",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expErr: "blueprint validation failed for image type \"server-qcow2\": btrfs and lvm partitioning cannot be combined",
+		},
 
 		"r8/ami-ok": {
 			distro:  "rhel-8.10",
@@ -929,6 +1030,14 @@ func TestCheckOptions(t *testing.T) {
 				},
 			},
 			expErr: "blueprint validation failed for image type \"vhd\": customizations.oscap.profile_id: required when using customizations.oscap",
+		},
+		"r8/btrfs-mode-unsupported": {
+			distro: "rhel-8.10",
+			it:     "edge-raw-image",
+			options: distro.ImageOptions{
+				PartitioningMode: partition.BtrfsPartitioningMode,
+			},
+			expErr: "partitioning mode btrfs not supported for \"edge-raw-image\"",
 		},
 
 		"r9/ami-ok": {
@@ -1492,6 +1601,17 @@ func TestCheckOptions(t *testing.T) {
 			expErr: "blueprint validation failed for image type \"azure-cvm\": customizations.kernel: not supported",
 		},
 
+		"r9/bad-ostree-ref": {
+			distro: "rhel-9.4",
+			it:     "edge-commit",
+			options: distro.ImageOptions{
+				OSTree: &ostree.ImageOptions{
+					ImageRef: "-bad-ref",
+				},
+			},
+			expErr: "invalid ostree image ref \"-bad-ref\"",
+		},
+
 		"r10/ami-ok": {
 			distro:  "rhel-10.0",
 			it:      "ami",
@@ -1546,6 +1666,110 @@ func TestCheckOptions(t *testing.T) {
 				},
 			},
 			expErr: "blueprint validation failed for image type \"azure-cvm\": customizations.kernel: not supported",
+		},
+
+		"r10/bad-partitioning": {
+			distro: "rhel-10.0",
+			it:     "qcow2",
+			bp: blueprint.Blueprint{
+				Customizations: &blueprint.Customizations{
+					Disk: &blueprint.DiskCustomization{
+						Partitions: []blueprint.PartitionCustomization{
+							{
+								Type: "wrong",
+							},
+						},
+					},
+				},
+			},
+			expErr: "invalid partitioning customizations:\nunknown partition type: wrong",
+		},
+		"r10/unsupported-oscap-policy": {
+			distro: "rhel-10.1",
+			it:     "qcow2",
+			bp: blueprint.Blueprint{
+				Customizations: &blueprint.Customizations{
+					OpenSCAP: &blueprint.OpenSCAPCustomization{
+						ProfileID: "unsupported-profile",
+					},
+				},
+			},
+			expErr: "blueprint validation failed for image type \"qcow2\": customizations.oscap.profile_id: unsupported profile unsupported-profile",
+		},
+		"r10/duplicate-file-customization": {
+			distro: "rhel-10.1",
+			it:     "qcow2",
+			bp: blueprint.Blueprint{
+				Customizations: &blueprint.Customizations{
+					Files: []blueprint.FileCustomization{
+						{
+							Path: "/file1",
+						},
+						{
+							Path: "/file1",
+						},
+					},
+				},
+			},
+			expErr: "duplicate files / directory customization paths: [/file1]",
+		},
+		"r10/bad-path-for-file-customization": {
+			distro: "rhel-10.1",
+			it:     "qcow2",
+			bp: blueprint.Blueprint{
+				Customizations: &blueprint.Customizations{
+					Files: []blueprint.FileCustomization{
+						{
+							Path: "/bin/bin",
+						},
+					},
+				},
+			},
+			expErr: "blueprint validation failed for image type \"qcow2\": the following custom files are not allowed: [\"/bin/bin\"]",
+		},
+		"r10/bad-path-for-dir-customization": {
+			distro: "rhel-10.1",
+			it:     "qcow2",
+			bp: blueprint.Blueprint{
+				Customizations: &blueprint.Customizations{
+					Directories: []blueprint.DirectoryCustomization{
+						{
+							Path: "/bin",
+						},
+					},
+				},
+			},
+			expErr: "blueprint validation failed for image type \"qcow2\": the following custom directories are not allowed: [\"/bin\"]",
+		},
+		"r10/bad-repo-customization": {
+			distro: "rhel-10.1",
+			it:     "qcow2",
+			bp: blueprint.Blueprint{
+				Customizations: &blueprint.Customizations{
+					Repositories: []blueprint.RepositoryCustomization{
+						{
+							// Invalid: requires ID
+							BaseURLs: []string{"https://example.org/repo"},
+						},
+					},
+				},
+			},
+			expErr: "blueprint validation failed for image type \"qcow2\": Repository ID is required",
+		},
+		"r10/bad-installer-combinations": {
+			distro: "rhel-10.1",
+			it:     "image-installer",
+			bp: blueprint.Blueprint{
+				Customizations: &blueprint.Customizations{
+					Installer: &blueprint.InstallerCustomization{
+						Unattended: true,
+						Kickstart: &blueprint.Kickstart{
+							Contents: "echo 'bork'",
+						},
+					},
+				},
+			},
+			expErr: "blueprint validation failed for image type \"image-installer\": installer.unattended is not supported when adding custom kickstart contents",
 		},
 
 		"r7/ok": {
