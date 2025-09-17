@@ -24,23 +24,34 @@ type Result struct {
 	Repos   []rpmmd.RepoConfig
 }
 
+// Options that can be used to modify `ImageFilter.Filter` behaviour
+type FilterOptions struct {
+	// Controls if image types that are hidden should be included in the
+	// results
+	ShowHidden bool
+}
+
 // ImageFilter is an a flexible way to filter the available images.
 type ImageFilter struct {
 	fac   *distrofactory.Factory
 	repos MinimalRepoRegistry
+	opts  *FilterOptions
 }
 
 // New creates a new ImageFilter that can be used to filter the list
 // of available images
-func New(fac *distrofactory.Factory, repos MinimalRepoRegistry) (*ImageFilter, error) {
+func New(fac *distrofactory.Factory, repos MinimalRepoRegistry, opts *FilterOptions) (*ImageFilter, error) {
 	if fac == nil {
 		return nil, fmt.Errorf("cannot create ImageFilter without a valid distrofactory")
 	}
 	if repos == nil {
 		return nil, fmt.Errorf("cannot create ImageFilter without a valid reporegistry")
 	}
+	if opts == nil {
+		opts = &FilterOptions{}
+	}
 
-	return &ImageFilter{fac: fac, repos: repos}, nil
+	return &ImageFilter{fac: fac, repos: repos, opts: opts}, nil
 }
 
 // Filter filters the available images for the given
@@ -83,6 +94,9 @@ func (i *ImageFilter) Filter(searchTerms ...string) ([]Result, error) {
 				imgType, err := a.GetImageType(imgTypeName)
 				if err != nil {
 					return nil, err
+				}
+				if i.opts != nil && !i.opts.ShowHidden && imgType.Hidden() {
+					continue
 				}
 				if filter.Matches(distro, a, imgType) {
 					repos, err := i.repos.ReposByImageTypeName(distroName, archName, imgTypeName)
