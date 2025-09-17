@@ -194,13 +194,15 @@ func TestKickstartStageUsers(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			assert := assert.New(t)
 
-			ksOpts, err := osbuild.NewKickstartStageOptions("", tc.users, nil)
+			ksOpts, err := osbuild.NewKickstartStageOptions("/test.ks", tc.users, nil)
 			if tc.expErr != "" {
 				assert.EqualError(err, tc.expErr)
 				return
 			}
 
 			assert.NoError(err)
+			exp := tc.expected
+			exp.Path = "/test.ks"
 			assert.Equal(tc.expected, ksOpts)
 		})
 	}
@@ -219,10 +221,20 @@ func TestNewKickstartOptionsPlain(t *testing.T) {
 
 	testCases := map[string]testCase{
 		"empty": {
-			// TODO: path should be required
-			expOptions: &osbuild.KickstartStageOptions{},
+			expErr: "org.osbuild.kickstart: kickstart path \"\" is invalid",
+		},
+		"bad-path": {
+			path:   `C:\Wrong\Operating\System`,
+			expErr: `org.osbuild.kickstart: kickstart path "C:\\Wrong\\Operating\\System" is invalid`,
+		},
+		"path-only": {
+			path: "/osbuild-test.ks",
+			expOptions: &osbuild.KickstartStageOptions{
+				Path: "/osbuild-test.ks",
+			},
 		},
 		"user": {
+			path: "/osbuild-test.ks",
 			userCustomizations: []users.User{
 				{
 					Name:  "fisher",
@@ -230,6 +242,7 @@ func TestNewKickstartOptionsPlain(t *testing.T) {
 				},
 			},
 			expOptions: &osbuild.KickstartStageOptions{
+				Path: "/osbuild-test.ks",
 				Users: map[string]osbuild.UsersStageOptionsUser{
 					"fisher": {
 						Shell: common.ToPtr("/bin/fish"),
@@ -238,6 +251,7 @@ func TestNewKickstartOptionsPlain(t *testing.T) {
 			},
 		},
 		"user+group": {
+			path: "/osbuild-test.ks",
 			userCustomizations: []users.User{
 				{
 					Name:  "fisher",
@@ -251,6 +265,7 @@ func TestNewKickstartOptionsPlain(t *testing.T) {
 				},
 			},
 			expOptions: &osbuild.KickstartStageOptions{
+				Path: "/osbuild-test.ks",
 				Users: map[string]osbuild.UsersStageOptionsUser{
 					"fisher": {
 						Shell: common.ToPtr("/bin/fish"),
@@ -264,6 +279,7 @@ func TestNewKickstartOptionsPlain(t *testing.T) {
 			},
 		},
 		"good-root-options": {
+			path: "/osbuild-test.ks",
 			userCustomizations: []users.User{
 				{
 					Name:     "root",
@@ -271,6 +287,7 @@ func TestNewKickstartOptionsPlain(t *testing.T) {
 				},
 			},
 			expOptions: &osbuild.KickstartStageOptions{
+				Path:  "/osbuild-test.ks",
 				Users: map[string]osbuild.UsersStageOptionsUser{}, // non-nil empty map is returned
 				RootPassword: &osbuild.RootPasswordOptions{
 					IsCrypted: true,
@@ -279,6 +296,7 @@ func TestNewKickstartOptionsPlain(t *testing.T) {
 			},
 		},
 		"bad-root-options": {
+			path: "/osbuild-test.ks",
 			userCustomizations: []users.User{
 				{
 					Name:   "root",
@@ -324,10 +342,11 @@ func TestNewKicstartStageOptionsWithOSTreeCommit(t *testing.T) {
 
 	testCases := map[string]testCase{
 		"empty": {
-			// TODO: path should be required
-			expOptions: &osbuild.KickstartStageOptions{},
+			expErr: "org.osbuild.kickstart: kickstart path \"\" is invalid",
 		},
 		"user": {
+
+			path: "/osbuild-test.ks",
 			userCustomizations: []users.User{
 				{
 					Name:  "fisher",
@@ -335,6 +354,7 @@ func TestNewKicstartStageOptionsWithOSTreeCommit(t *testing.T) {
 				},
 			},
 			expOptions: &osbuild.KickstartStageOptions{
+				Path: "/osbuild-test.ks",
 				Users: map[string]osbuild.UsersStageOptionsUser{
 					"fisher": {
 						Shell: common.ToPtr("/bin/fish"),
@@ -343,12 +363,14 @@ func TestNewKicstartStageOptionsWithOSTreeCommit(t *testing.T) {
 			},
 		},
 		"ostree": {
+			path:         "/osbuild-test.ks",
 			ostreeURL:    "https://example.org/internal/ostree/repo",
 			ostreeRef:    "example/aarch64/1",
 			ostreeRemote: "https://example.org/prod/ostree/repo",
 			osName:       "guess-what-its-example",
 
 			expOptions: &osbuild.KickstartStageOptions{
+				Path: "/osbuild-test.ks",
 				OSTreeCommit: &osbuild.OSTreeCommitOptions{
 					OSName: "guess-what-its-example",
 					Remote: "https://example.org/prod/ostree/repo",
@@ -359,6 +381,7 @@ func TestNewKicstartStageOptionsWithOSTreeCommit(t *testing.T) {
 			},
 		},
 		"user+ostree": {
+			path: "/osbuild-test.ks",
 			userCustomizations: []users.User{
 				{
 					Name:  "fisher",
@@ -369,6 +392,7 @@ func TestNewKicstartStageOptionsWithOSTreeCommit(t *testing.T) {
 			ostreeRef: "example/aarch64/1",
 
 			expOptions: &osbuild.KickstartStageOptions{
+				Path: "/osbuild-test.ks",
 				Users: map[string]osbuild.UsersStageOptionsUser{
 					"fisher": {
 						Shell: common.ToPtr("/bin/fish"),
@@ -381,6 +405,7 @@ func TestNewKicstartStageOptionsWithOSTreeCommit(t *testing.T) {
 			},
 		},
 		"internal-error": {
+			path: "/osbuild-test.ks",
 			// only need to check that an error from NewKickstartStageOptions
 			// is propagated
 			userCustomizations: []users.User{
@@ -432,10 +457,10 @@ func TestNewKicstartStageOptionsWithOSTreeContainer(t *testing.T) {
 
 	testCases := map[string]testCase{
 		"empty": {
-			// TODO: path should be required
-			expOptions: &osbuild.KickstartStageOptions{},
+			expErr: "org.osbuild.kickstart: kickstart path \"\" is invalid",
 		},
 		"user": {
+			path: "/osbuild-test.ks",
 			userCustomizations: []users.User{
 				{
 					Name:  "fisher",
@@ -443,6 +468,7 @@ func TestNewKicstartStageOptionsWithOSTreeContainer(t *testing.T) {
 				},
 			},
 			expOptions: &osbuild.KickstartStageOptions{
+				Path: "/osbuild-test.ks",
 				Users: map[string]osbuild.UsersStageOptionsUser{
 					"fisher": {
 						Shell: common.ToPtr("/bin/fish"),
@@ -451,12 +477,14 @@ func TestNewKicstartStageOptionsWithOSTreeContainer(t *testing.T) {
 			},
 		},
 		"container": {
+			path:               "/osbuild-test.ks",
 			containerURL:       "https://example.org/internal/some-kind-of-container",
 			containerTransport: "docker",
 			containerRemote:    "origin",
 			containerStateRoot: "default",
 
 			expOptions: &osbuild.KickstartStageOptions{
+				Path: "/osbuild-test.ks",
 				OSTreeContainer: &osbuild.OSTreeContainerOptions{
 					StateRoot: "default",
 					URL:       "https://example.org/internal/some-kind-of-container",
@@ -466,6 +494,7 @@ func TestNewKicstartStageOptionsWithOSTreeContainer(t *testing.T) {
 			},
 		},
 		"user+container": {
+			path: "/osbuild-test.ks",
 			userCustomizations: []users.User{
 				{
 					Name:  "fisher",
@@ -478,6 +507,7 @@ func TestNewKicstartStageOptionsWithOSTreeContainer(t *testing.T) {
 			containerStateRoot: "default",
 
 			expOptions: &osbuild.KickstartStageOptions{
+				Path: "/osbuild-test.ks",
 				Users: map[string]osbuild.UsersStageOptionsUser{
 					"fisher": {
 						Shell: common.ToPtr("/bin/fish"),
@@ -492,6 +522,7 @@ func TestNewKicstartStageOptionsWithOSTreeContainer(t *testing.T) {
 			},
 		},
 		"internal-error": {
+			path: "/osbuild-test.ks",
 			// only need to check that an error from NewKickstartStageOptions
 			// is propagated
 			userCustomizations: []users.User{
@@ -540,10 +571,10 @@ func TestNewKicstartStageOptionsWithLiveIMG(t *testing.T) {
 
 	testCases := map[string]testCase{
 		"empty": {
-			// TODO: path should be required
-			expOptions: &osbuild.KickstartStageOptions{},
+			expErr: "org.osbuild.kickstart: kickstart path \"\" is invalid",
 		},
 		"user": {
+			path: "/osbuild-test.ks",
 			userCustomizations: []users.User{
 				{
 					Name:  "fisher",
@@ -551,6 +582,7 @@ func TestNewKicstartStageOptionsWithLiveIMG(t *testing.T) {
 				},
 			},
 			expOptions: &osbuild.KickstartStageOptions{
+				Path: "/osbuild-test.ks",
 				Users: map[string]osbuild.UsersStageOptionsUser{
 					"fisher": {
 						Shell: common.ToPtr("/bin/fish"),
@@ -559,15 +591,18 @@ func TestNewKicstartStageOptionsWithLiveIMG(t *testing.T) {
 			},
 		},
 		"img": {
+			path:   "/osbuild-test.ks",
 			imgURL: "/path/to/tarball/image.tar",
 
 			expOptions: &osbuild.KickstartStageOptions{
+				Path: "/osbuild-test.ks",
 				LiveIMG: &osbuild.LiveIMGOptions{
 					URL: "/path/to/tarball/image.tar",
 				},
 			},
 		},
 		"user+img": {
+			path: "/osbuild-test.ks",
 			userCustomizations: []users.User{
 				{
 					Name:  "fisher",
@@ -577,6 +612,7 @@ func TestNewKicstartStageOptionsWithLiveIMG(t *testing.T) {
 			imgURL: "/path/to/tarball/image.tar",
 
 			expOptions: &osbuild.KickstartStageOptions{
+				Path: "/osbuild-test.ks",
 				Users: map[string]osbuild.UsersStageOptionsUser{
 					"fisher": {
 						Shell: common.ToPtr("/bin/fish"),
@@ -588,6 +624,7 @@ func TestNewKicstartStageOptionsWithLiveIMG(t *testing.T) {
 			},
 		},
 		"internal-error": {
+			path: "/osbuild-test.ks",
 			// only need to check that an error from NewKickstartStageOptions
 			// is propagated
 			userCustomizations: []users.User{
