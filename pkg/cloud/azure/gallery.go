@@ -167,8 +167,10 @@ func (ac Client) createGalleryImageVersion(ctx context.Context, resourceGroup, l
 				},
 			},
 			StorageProfile: &armcompute.GalleryImageVersionStorageProfile{
-				Source: &armcompute.GalleryArtifactVersionFullSource{
-					ID: &uri,
+				OSDiskImage: &armcompute.GalleryOSDiskImage{
+					Source: &armcompute.GalleryDiskImageSource{
+						URI: &uri,
+					},
 				},
 			},
 		},

@@ -94,8 +94,10 @@ func TestRegisterGalleryImage(t *testing.T) {
 				},
 			},
 			StorageProfile: &armcompute.GalleryImageVersionStorageProfile{
-				Source: &armcompute.GalleryArtifactVersionFullSource{
-					ID: common.ToPtr("/subscriptions/test-subscription/resourceGroups/rg/providers/Microsoft.Compute/images/img-name-mimg"),
+				OSDiskImage: &armcompute.GalleryOSDiskImage{
+					Source: &armcompute.GalleryDiskImageSource{
+						URI: common.ToPtr("/subscriptions/test-subscription/resourceGroups/rg/providers/Microsoft.Compute/images/img-name-mimg"),
+					},
 				},
 			},
 		},
