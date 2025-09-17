@@ -17,6 +17,7 @@ import (
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/kickstart"
+	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/manifest"
@@ -488,6 +489,38 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 			append(variantStages, []string{"org.osbuild.kickstart", "org.osbuild.isolinux", "org.osbuild.squashfs"}...)),
 			dumpStages(sp.Stages))
 	})
+
+	t.Run("happy/kickstart-with-users", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.OSPipeline = osPayload
+		pipeline.Kickstart = &kickstart.Options{
+			Path: testKsPath,
+			Users: []users.User{
+				{
+					Name:  "me",
+					Shell: common.ToPtr("/bin/true"),
+				},
+			},
+		}
+		_, err := manifest.SerializeWith(pipeline, manifest.Inputs{})
+		assert.NoError(t, err)
+	})
+
+	t.Run("unhappy/kickstart-with-root-options", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.OSPipeline = osPayload
+		pipeline.Kickstart = &kickstart.Options{
+			Path: testKsPath,
+			Users: []users.User{
+				{
+					Name:  "root",
+					Shell: common.ToPtr("/bin/true"),
+				},
+			},
+		}
+		_, err := manifest.SerializeWith(pipeline, manifest.Inputs{})
+		assert.EqualError(t, err, "cannot create ostree container stages: failed to create kickstart stage options: org.osbuild.kickstart: unsupported options for user \"root\": shell")
+	})
 }
 
 func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
@@ -624,6 +657,38 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 			append(variantStages, []string{"org.osbuild.isolinux", "org.osbuild.squashfs"}...)),
 			dumpStages(sp.Stages))
 	})
+
+	t.Run("happy/kickstart-with-users", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.Kickstart = &kickstart.Options{
+			Path: testKsPath,
+			Users: []users.User{
+				{
+					Name:  "me",
+					Shell: common.ToPtr("/bin/true"),
+				},
+			},
+			OSTree: &kickstart.OSTree{},
+		}
+		_, err := manifest.SerializeWith(pipeline, manifest.Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
+		assert.NoError(t, err)
+	})
+
+	t.Run("unhappy/kickstart-with-root-options", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.Kickstart = &kickstart.Options{
+			Path: testKsPath,
+			Users: []users.User{
+				{
+					Name:  "root",
+					Shell: common.ToPtr("/bin/true"),
+				},
+			},
+			OSTree: &kickstart.OSTree{},
+		}
+		_, err := manifest.SerializeWith(pipeline, manifest.Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
+		assert.EqualError(t, err, "cannot create ostree commit stages: failed to create kickstart stage options: org.osbuild.kickstart: unsupported options for user \"root\": shell")
+	})
 }
 
 func makeFakeContainerPayload() container.Spec {
@@ -742,6 +807,36 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 			append(payloadStages, "org.osbuild.erofs"),
 			append(variantStages, []string{"org.osbuild.isolinux", "org.osbuild.squashfs"}...)),
 			dumpStages(sp.Stages))
+	})
+
+	t.Run("happy/kickstart-with-users", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.Kickstart = &kickstart.Options{
+			Path: testKsPath,
+			Users: []users.User{
+				{
+					Name:  "me",
+					Shell: common.ToPtr("/bin/true"),
+				},
+			},
+		}
+		_, err := manifest.SerializeWith(pipeline, manifest.Inputs{Containers: []container.Spec{containerPayload}})
+		assert.NoError(t, err)
+	})
+
+	t.Run("unhappy/kickstart-with-root-options", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.Kickstart = &kickstart.Options{
+			Path: testKsPath,
+			Users: []users.User{
+				{
+					Name:  "root",
+					Shell: common.ToPtr("/bin/true"),
+				},
+			},
+		}
+		_, err := manifest.SerializeWith(pipeline, manifest.Inputs{Containers: []container.Spec{containerPayload}})
+		assert.EqualError(t, err, "cannot create ostree container stages: cannot generate bootc installer kickstart stages: failed to create kickstart stage options: org.osbuild.kickstart: unsupported options for user \"root\": shell")
 	})
 }
 
