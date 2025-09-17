@@ -57,7 +57,8 @@ mkdir -p "${checksums_dir}"
 
 for manifest_path in "${tmpdir}/manifests/"*; do
     filename=$(basename "${manifest_path/.json}")
-    sha1sum -- "${manifest_path}" | cut -d' ' -f1 > "${checksums_dir}/${filename}"
+    CKSUM=$(sha1sum -- "${manifest_path}")
+    echo "${CKSUM}" | cut -d' ' -f1 > "${checksums_dir}/${filename}-${CKSUM:0:13}"
 done
 
 echo "Checksums saved to ${checksums_dir}"
