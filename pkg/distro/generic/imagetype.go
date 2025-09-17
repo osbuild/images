@@ -84,6 +84,10 @@ func (t *imageType) Aliases() []string {
 	return t.ImageTypeYAML.NameAliases
 }
 
+func (t *imageType) Hidden() bool {
+	return t.ImageTypeYAML.Hidden
+}
+
 func (t *imageType) Arch() distro.Arch {
 	return t.arch
 }

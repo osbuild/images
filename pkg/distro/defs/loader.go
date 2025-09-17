@@ -395,6 +395,12 @@ type ImageTypeYAML struct {
 	SupportedBlueprintOptions []string `yaml:"supported_blueprint_options"`
 	RequiredBlueprintOptions  []string `yaml:"required_blueprint_options"`
 
+	// Determines if an image should be included by default in image type listings, note
+	// that this does not prevent the image type from being selected directly. This is useful
+	// for image types that are not supposed to be built by end-users. For example image types
+	// that are non-official, or image types that are only built by build systems.
+	Hidden bool `yaml:"hidden"`
+
 	// name is set by the loader
 	name string
 }

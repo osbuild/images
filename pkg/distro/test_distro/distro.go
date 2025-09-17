@@ -183,6 +183,10 @@ func (t *TestImageType) Aliases() []string {
 	return t.aliases
 }
 
+func (t *TestImageType) Hidden() bool {
+	return false
+}
+
 func (t *TestImageType) Arch() distro.Arch {
 	return t.architecture
 }
