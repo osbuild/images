@@ -1378,6 +1378,7 @@ image_types:
   "iot-bootable-container":
     <<: *rpm_ostree_imgtype_common
     filename: "iot-bootable-container.tar"
+    hidden: true
     mime_type: "application/x-tar"
     image_func: "bootable_container"
     exports: ["ostree-encapsulate"]

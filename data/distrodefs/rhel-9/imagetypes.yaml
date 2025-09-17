@@ -1771,6 +1771,7 @@ image_types:
 
   "azure-rhui": &azure_rhui
     <<: *azure
+    hidden: true
     supported_blueprint_options: *supported_options_disk
 
   "azure-sap-rhui":
@@ -1887,6 +1888,7 @@ image_types:
     supported_blueprint_options: *supported_options_disk
 
   ec2: &ec2
+    hidden: true
     filename: "image.raw.xz"
     mime_type: "application/xz"
     exports: ["xz"]
