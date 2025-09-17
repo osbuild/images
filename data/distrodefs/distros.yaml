@@ -93,7 +93,6 @@ distros:
           - azure-rhui
           - azure-sap-rhui
           - azure-sapapps-rhui
-          - ec2
           - ec2-sap
           - ec2-ha
       "some image types are non-rhel-only":
@@ -188,7 +187,6 @@ distros:
           - azure-rhui
           - azure-sap-rhui
           - azure-sapapps-rhui
-          - ec2
           - ec2-sap
           - ec2-ha
       "some image types are non-rhel-only":
