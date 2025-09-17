@@ -820,7 +820,6 @@ type packageSpec struct {
 	Path           string `json:"path,omitempty"`
 	RemoteLocation string `json:"remote_location,omitempty"`
 	Checksum       string `json:"checksum,omitempty"`
-	Secrets        string `json:"secrets,omitempty"`
 }
 
 // Module specification
