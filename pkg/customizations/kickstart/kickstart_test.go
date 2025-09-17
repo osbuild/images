@@ -125,6 +125,21 @@ func TestNewKickstart(t *testing.T) {
 
 			expErr: "installer.unattended is not supported when adding custom kickstart contents",
 		},
+
+		"error/unsupported-root-options": {
+			customizations: &blueprint.Customizations{
+				User: []blueprint.UserCustomization{
+					{
+						Name:   "root",
+						Home:   common.ToPtr("/megaroot"),
+						Shell:  common.ToPtr("/bin/zsh"),
+						Groups: []string{"cups"},
+					},
+				},
+			},
+
+			expErr: "unsupported kickstart options for user \"root\": groups, home, shell",
+		},
 	}
 
 	for name, tc := range testCases {
