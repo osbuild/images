@@ -206,3 +206,481 @@ func TestKickstartStageUsers(t *testing.T) {
 	}
 
 }
+
+func TestNewKickstartOptionsPlain(t *testing.T) {
+	type testCase struct {
+		path                string
+		userCustomizations  []users.User
+		groupCustomizations []users.Group
+
+		expOptions *osbuild.KickstartStageOptions
+		expErr     string
+	}
+
+	testCases := map[string]testCase{
+		"empty": {
+			// TODO: path should be required
+			expOptions: &osbuild.KickstartStageOptions{},
+		},
+		"user": {
+			userCustomizations: []users.User{
+				{
+					Name:  "fisher",
+					Shell: common.ToPtr("/bin/fish"),
+				},
+			},
+			expOptions: &osbuild.KickstartStageOptions{
+				Users: map[string]osbuild.UsersStageOptionsUser{
+					"fisher": {
+						Shell: common.ToPtr("/bin/fish"),
+					},
+				},
+			},
+		},
+		"user+group": {
+			userCustomizations: []users.User{
+				{
+					Name:  "fisher",
+					Shell: common.ToPtr("/bin/fish"),
+				},
+			},
+			groupCustomizations: []users.Group{
+				{
+					Name: "staff",
+					GID:  common.ToPtr(2000),
+				},
+			},
+			expOptions: &osbuild.KickstartStageOptions{
+				Users: map[string]osbuild.UsersStageOptionsUser{
+					"fisher": {
+						Shell: common.ToPtr("/bin/fish"),
+					},
+				},
+				Groups: map[string]osbuild.GroupsStageOptionsGroup{
+					"staff": {
+						GID: common.ToPtr(2000),
+					},
+				},
+			},
+		},
+		"good-root-options": {
+			userCustomizations: []users.User{
+				{
+					Name:     "root",
+					Password: common.ToPtr("$6$BhyxFBgrEFh0VrPJ$MllG8auiU26x2pmzL4.1maHzPHrA.4gTdCvlATFp8HJU9UPee4zCS9BVl2HOzKaUYD/zEm8r/OF05F2icWB0K/"),
+				},
+			},
+			expOptions: &osbuild.KickstartStageOptions{
+				Users: map[string]osbuild.UsersStageOptionsUser{}, // non-nil empty map is returned
+				RootPassword: &osbuild.RootPasswordOptions{
+					IsCrypted: true,
+					Password:  "$6$BhyxFBgrEFh0VrPJ$MllG8auiU26x2pmzL4.1maHzPHrA.4gTdCvlATFp8HJU9UPee4zCS9BVl2HOzKaUYD/zEm8r/OF05F2icWB0K/",
+				},
+			},
+		},
+		"bad-root-options": {
+			userCustomizations: []users.User{
+				{
+					Name:   "root",
+					Groups: []string{"wheel"},
+				},
+			},
+			expErr: "org.osbuild.kickstart: unsupported options for user \"root\": groups",
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+
+			ksOptions, err := osbuild.NewKickstartStageOptions(
+				tc.path,
+				tc.userCustomizations,
+				tc.groupCustomizations,
+			)
+			if tc.expErr != "" {
+				assert.EqualError(err, tc.expErr)
+				return
+			}
+
+			assert.NoError(err)
+			assert.Equal(tc.expOptions, ksOptions) // new file path must be the original kickstart path
+		})
+	}
+}
+
+func TestNewKicstartStageOptionsWithOSTreeCommit(t *testing.T) {
+	type testCase struct {
+		path               string
+		userCustomizations []users.User
+		ostreeURL          string
+		ostreeRef          string
+		ostreeRemote       string
+		osName             string
+
+		expOptions *osbuild.KickstartStageOptions
+		expErr     string
+	}
+
+	testCases := map[string]testCase{
+		"empty": {
+			// TODO: path should be required
+			expOptions: &osbuild.KickstartStageOptions{},
+		},
+		"user": {
+			userCustomizations: []users.User{
+				{
+					Name:  "fisher",
+					Shell: common.ToPtr("/bin/fish"),
+				},
+			},
+			expOptions: &osbuild.KickstartStageOptions{
+				Users: map[string]osbuild.UsersStageOptionsUser{
+					"fisher": {
+						Shell: common.ToPtr("/bin/fish"),
+					},
+				},
+			},
+		},
+		"ostree": {
+			ostreeURL:    "https://example.org/internal/ostree/repo",
+			ostreeRef:    "example/aarch64/1",
+			ostreeRemote: "https://example.org/prod/ostree/repo",
+			osName:       "guess-what-its-example",
+
+			expOptions: &osbuild.KickstartStageOptions{
+				OSTreeCommit: &osbuild.OSTreeCommitOptions{
+					OSName: "guess-what-its-example",
+					Remote: "https://example.org/prod/ostree/repo",
+					URL:    "https://example.org/internal/ostree/repo",
+					Ref:    "example/aarch64/1",
+					GPG:    false,
+				},
+			},
+		},
+		"user+ostree": {
+			userCustomizations: []users.User{
+				{
+					Name:  "fisher",
+					Shell: common.ToPtr("/bin/fish"),
+				},
+			},
+			ostreeURL: "https://example.org/ostree/repo",
+			ostreeRef: "example/aarch64/1",
+
+			expOptions: &osbuild.KickstartStageOptions{
+				Users: map[string]osbuild.UsersStageOptionsUser{
+					"fisher": {
+						Shell: common.ToPtr("/bin/fish"),
+					},
+				},
+				OSTreeCommit: &osbuild.OSTreeCommitOptions{
+					Ref: "example/aarch64/1",
+					URL: "https://example.org/ostree/repo",
+				},
+			},
+		},
+		"internal-error": {
+			// only need to check that an error from NewKickstartStageOptions
+			// is propagated
+			userCustomizations: []users.User{
+				{
+					Name:  "root",
+					Shell: common.ToPtr("/bin/tsh"),
+				},
+			},
+			expErr: "org.osbuild.kickstart: unsupported options for user \"root\": shell",
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+
+			ksOptions, err := osbuild.NewKickstartStageOptionsWithOSTreeCommit(
+				tc.path,
+				tc.userCustomizations,
+				nil,
+				tc.ostreeURL,
+				tc.ostreeRef,
+				tc.ostreeRemote,
+				tc.osName,
+			)
+			if tc.expErr != "" {
+				assert.EqualError(err, tc.expErr)
+				return
+			}
+
+			assert.NoError(err)
+			assert.Equal(tc.expOptions, ksOptions) // new file path must be the original kickstart path
+		})
+	}
+}
+
+func TestNewKicstartStageOptionsWithOSTreeContainer(t *testing.T) {
+	type testCase struct {
+		path               string
+		userCustomizations []users.User
+		containerURL       string
+		containerTransport string
+		containerRemote    string
+		containerStateRoot string
+
+		expOptions *osbuild.KickstartStageOptions
+		expErr     string
+	}
+
+	testCases := map[string]testCase{
+		"empty": {
+			// TODO: path should be required
+			expOptions: &osbuild.KickstartStageOptions{},
+		},
+		"user": {
+			userCustomizations: []users.User{
+				{
+					Name:  "fisher",
+					Shell: common.ToPtr("/bin/fish"),
+				},
+			},
+			expOptions: &osbuild.KickstartStageOptions{
+				Users: map[string]osbuild.UsersStageOptionsUser{
+					"fisher": {
+						Shell: common.ToPtr("/bin/fish"),
+					},
+				},
+			},
+		},
+		"container": {
+			containerURL:       "https://example.org/internal/some-kind-of-container",
+			containerTransport: "docker",
+			containerRemote:    "origin",
+			containerStateRoot: "default",
+
+			expOptions: &osbuild.KickstartStageOptions{
+				OSTreeContainer: &osbuild.OSTreeContainerOptions{
+					StateRoot: "default",
+					URL:       "https://example.org/internal/some-kind-of-container",
+					Transport: "docker",
+					Remote:    "origin",
+				},
+			},
+		},
+		"user+container": {
+			userCustomizations: []users.User{
+				{
+					Name:  "fisher",
+					Shell: common.ToPtr("/bin/fish"),
+				},
+			},
+			containerURL:       "https://example.org/internal/some-kind-of-container",
+			containerTransport: "docker",
+			containerRemote:    "origin",
+			containerStateRoot: "default",
+
+			expOptions: &osbuild.KickstartStageOptions{
+				Users: map[string]osbuild.UsersStageOptionsUser{
+					"fisher": {
+						Shell: common.ToPtr("/bin/fish"),
+					},
+				},
+				OSTreeContainer: &osbuild.OSTreeContainerOptions{
+					StateRoot: "default",
+					URL:       "https://example.org/internal/some-kind-of-container",
+					Transport: "docker",
+					Remote:    "origin",
+				},
+			},
+		},
+		"internal-error": {
+			// only need to check that an error from NewKickstartStageOptions
+			// is propagated
+			userCustomizations: []users.User{
+				{
+					Name:  "root",
+					Shell: common.ToPtr("/bin/tsh"),
+				},
+			},
+			expErr: "org.osbuild.kickstart: unsupported options for user \"root\": shell",
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+
+			ksOptions, err := osbuild.NewKickstartStageOptionsWithOSTreeContainer(
+				tc.path,
+				tc.userCustomizations,
+				nil,
+				tc.containerURL,
+				tc.containerTransport,
+				tc.containerRemote,
+				tc.containerStateRoot,
+			)
+			if tc.expErr != "" {
+				assert.EqualError(err, tc.expErr)
+				return
+			}
+
+			assert.NoError(err)
+			assert.Equal(tc.expOptions, ksOptions) // new file path must be the original kickstart path
+		})
+	}
+}
+
+func TestNewKicstartStageOptionsWithLiveIMG(t *testing.T) {
+	type testCase struct {
+		path               string
+		userCustomizations []users.User
+		imgURL             string
+
+		expOptions *osbuild.KickstartStageOptions
+		expErr     string
+	}
+
+	testCases := map[string]testCase{
+		"empty": {
+			// TODO: path should be required
+			expOptions: &osbuild.KickstartStageOptions{},
+		},
+		"user": {
+			userCustomizations: []users.User{
+				{
+					Name:  "fisher",
+					Shell: common.ToPtr("/bin/fish"),
+				},
+			},
+			expOptions: &osbuild.KickstartStageOptions{
+				Users: map[string]osbuild.UsersStageOptionsUser{
+					"fisher": {
+						Shell: common.ToPtr("/bin/fish"),
+					},
+				},
+			},
+		},
+		"img": {
+			imgURL: "/path/to/tarball/image.tar",
+
+			expOptions: &osbuild.KickstartStageOptions{
+				LiveIMG: &osbuild.LiveIMGOptions{
+					URL: "/path/to/tarball/image.tar",
+				},
+			},
+		},
+		"user+img": {
+			userCustomizations: []users.User{
+				{
+					Name:  "fisher",
+					Shell: common.ToPtr("/bin/fish"),
+				},
+			},
+			imgURL: "/path/to/tarball/image.tar",
+
+			expOptions: &osbuild.KickstartStageOptions{
+				Users: map[string]osbuild.UsersStageOptionsUser{
+					"fisher": {
+						Shell: common.ToPtr("/bin/fish"),
+					},
+				},
+				LiveIMG: &osbuild.LiveIMGOptions{
+					URL: "/path/to/tarball/image.tar",
+				},
+			},
+		},
+		"internal-error": {
+			// only need to check that an error from NewKickstartStageOptions
+			// is propagated
+			userCustomizations: []users.User{
+				{
+					Name:  "root",
+					Shell: common.ToPtr("/bin/tsh"),
+				},
+			},
+			expErr: "org.osbuild.kickstart: unsupported options for user \"root\": shell",
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+
+			ksOptions, err := osbuild.NewKickstartStageOptionsWithLiveIMG(
+				tc.path,
+				tc.userCustomizations,
+				nil,
+				tc.imgURL,
+			)
+			if tc.expErr != "" {
+				assert.EqualError(err, tc.expErr)
+				return
+			}
+
+			assert.NoError(err)
+			assert.Equal(tc.expOptions, ksOptions) // new file path must be the original kickstart path
+		})
+	}
+}
+
+func TestIncludeRaw(t *testing.T) {
+	type testCase struct {
+		path string
+		raw  string
+
+		expPath string
+		expData string
+		expErr  string
+	}
+
+	testCases := map[string]testCase{
+		"ok-empty": {
+			path: "/t.ks",
+			raw:  "",
+
+			expPath: "/t-base.ks",
+			expData: "%include /run/install/repo/t-base.ks\n",
+		},
+		"empty-path": {
+			expErr: "path must not be empty",
+		},
+		"rel-path": {
+			path:   "42.ps",
+			expErr: "path must be absolute",
+		},
+
+		"kickstart-command": {
+			path: "/my.ks",
+			raw:  "bootc switch --mutate-in-plase --transport registry registry.example.org/my-weird-stuff:v42",
+
+			expPath: "/my-base.ks",
+			expData: "%include /run/install/repo/my-base.ks\nbootc switch --mutate-in-plase --transport registry registry.example.org/my-weird-stuff:v42",
+		},
+		"kickstart-commands": {
+			path: "/your.ks",
+			raw:  "autopart --nohome --type=btrfs\neula --agreed",
+
+			expPath: "/your-base.ks",
+			expData: "%include /run/install/repo/your-base.ks\nautopart --nohome --type=btrfs\neula --agreed",
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+
+			// only the path is relevant
+			ksOptions := &osbuild.KickstartStageOptions{
+				Path: tc.path,
+			}
+			file, err := ksOptions.IncludeRaw(tc.raw)
+			if tc.expErr != "" {
+				assert.EqualError(err, tc.expErr)
+				return
+			}
+
+			assert.NoError(err)
+			assert.Equal(tc.expPath, ksOptions.Path)
+			assert.Equal(tc.expData, string(file.Data()))
+			assert.Equal(tc.path, string(file.Path())) // new file path must be the original kickstart path
+		})
+	}
+}
