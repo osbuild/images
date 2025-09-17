@@ -187,12 +187,18 @@ func doSetup(ac *azure.Client, flags *pflag.FlagSet, localImage string, res *res
 		return err
 	}
 
+	snapshot, err := flags.GetString("snapshot")
+	if err != nil {
+		return err
+	}
+
 	architecture, err := flags.GetString("arch")
 	if err != nil {
 		return err
 	}
 
-	if localImage != "" {
+	// in the case of snapshots, the image should be scp'd to the host
+	if localImage != "" && snapshot != "" {
 		subscription, err := flags.GetString("subscription")
 		if err != nil {
 			return err
@@ -253,11 +259,14 @@ func doSetup(ac *azure.Client, flags *pflag.FlagSet, localImage string, res *res
 		ctx,
 		rg,
 		azure.VMOptions{
-			Name:   vmName,
-			Image:  image,
-			Size:   size,
-			User:   username,
-			SSHKey: string(keyData),
+			Name:     vmName,
+			Image:    image,
+			Snapshot: snapshot,
+			Size:     size,
+			User:     username,
+			SSHKey:   string(keyData),
+			// snapshots are only set in the wsl case
+			Windows: snapshot != "",
 		},
 	)
 	if err != nil {
@@ -445,7 +454,7 @@ func teardown(cmd *cobra.Command, args []string) {
 	fnerr = doTeardown(ac, rg, res)
 }
 
-func doRunExec(ac *azure.Client, command []string, flags *pflag.FlagSet, res *resources) error {
+func doRunExec(ac *azure.Client, command []string, flags *pflag.FlagSet, localImage string, res *resources) error {
 	privKey, err := flags.GetString("ssh-privkey")
 	if err != nil {
 		return err
@@ -482,6 +491,18 @@ func doRunExec(ac *azure.Client, command []string, flags *pflag.FlagSet, res *re
 
 		// Check if it's a regular file
 		return fileInfo.Mode().IsRegular()
+	}
+
+	snapshot, err := flags.GetString("snapshot")
+	if err != nil {
+		return err
+	}
+	// in the wsl (snapshot) case, copy the image over
+	if snapshot != "" {
+		remotePath := filepath.Base(localImage)
+		if err := test.ScpFile(ip, username, privKey, hostsfile, localImage, remotePath); err != nil {
+			return err
+		}
 	}
 
 	// copy every argument that is a file to the remote host (basename only)
@@ -542,7 +563,7 @@ func runExec(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	fnerr = doRunExec(ac, command, flags, res)
+	fnerr = doRunExec(ac, command, flags, image, res)
 }
 
 func setupCLI() *cobra.Command {
@@ -562,6 +583,7 @@ func setupCLI() *cobra.Command {
 	rootFlags.String("ssh-pubkey", "", "path to user's public ssh key, must be an rsa key")
 	rootFlags.String("ssh-privkey", "", "path to user's private ssh key")
 	rootFlags.String("image", "", "full resource ID of the remote image name, this should already exist in the resource group, if no local image is provided")
+	rootFlags.String("snapshot", "", "full resource ID of the snapshot, this should already exist in the resource group, if no local image is provided")
 	rootFlags.String("vm-name", "vm-name", "name of the VM to create, all dependencies will be prefixed with this name")
 	rootFlags.String("image-name", "image-name", "the image and blob will")
 	rootFlags.String("size", "", "size or instance type of the VM to create")
@@ -591,6 +613,9 @@ func setupCLI() *cobra.Command {
 	teardownCmd.Flags().StringP("resourcefile", "r", "resources.json", "path to store the resource IDs")
 	rootCmd.AddCommand(teardownCmd)
 
+	// todo
+	// 3rd arg <wsl-image> => copy wsl image and import it
+	// => then run <executable> on the wsl image somehow
 	runCmd := &cobra.Command{
 		Use:   "run <image> <executable>...",
 		Short: "upload and boot an image, then upload the specified executable and run it on the remote host",

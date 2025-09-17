@@ -1,0 +1,13 @@
+{
+  "vm": {
+    "resourcegroup": "sanne",
+    "vnet": "vm-name-vnet",
+    "subnet": "vm-name-subnet",
+    "sg": "vm-name-sg",
+    "ip-name": "vm-name-ip",
+    "ip-address": "52.224.120.35",
+    "nic": "vm-name-intf",
+    "name": "vm-name",
+    "disk": "vm-name-disk"
+  }
+}
