@@ -52,7 +52,7 @@ func (p *RawImage) serialize() (osbuild.Pipeline, error) {
 
 	pt := p.treePipeline.PartitionTable
 	if pt == nil {
-		panic("no partition table in live image")
+		return osbuild.Pipeline{}, fmt.Errorf("no partition table in live image")
 	}
 
 	for _, stage := range osbuild.GenImagePrepareStages(pt, p.Filename(), p.PartTool, p.treePipeline.Name()) {
@@ -83,7 +83,7 @@ func (p *RawImage) serialize() (osbuild.Pipeline, error) {
 		}
 
 		if fsRootMntName == "" {
-			panic("no mount found for the filesystem root")
+			return osbuild.Pipeline{}, fmt.Errorf("no mount found for the filesystem root")
 		}
 
 		for _, paths := range bootFiles {

@@ -365,12 +365,12 @@ func (p *AnacondaInstallerISOTree) serialize() (osbuild.Pipeline, error) {
 		}
 
 		if count == 0 {
-			panic("missing ostree, container, or ospipeline parameters in ISO tree pipeline")
+			return osbuild.Pipeline{}, fmt.Errorf("missing ostree, container, or ospipeline parameters in ISO tree pipeline")
 		}
 
 		// But not more than one payloads
 		if count > 1 {
-			panic("got multiple payloads in ISO tree pipeline")
+			return osbuild.Pipeline{}, fmt.Errorf("got multiple payloads in ISO tree pipeline")
 		}
 	}
 
@@ -524,7 +524,7 @@ func (p *AnacondaInstallerISOTree) serialize() (osbuild.Pipeline, error) {
 		default:
 			// this should have been caught at the top of the function, but
 			// let's check again in case we refactor the function.
-			panic("missing ostree, container, or ospipeline parameters in ISO tree pipeline")
+			return osbuild.Pipeline{}, fmt.Errorf("missing ostree, container, or ospipeline parameters in ISO tree pipeline")
 		}
 	}
 

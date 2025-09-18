@@ -45,13 +45,13 @@ func (p *Subscription) serialize() (osbuild.Pipeline, error) {
 	if p.Subscription != nil {
 		serviceDir, err := fsnode.NewDirectory("/etc/systemd/system", nil, nil, nil, true)
 		if err != nil {
-			panic(err)
+			return osbuild.Pipeline{}, err
 		}
 		p.Directories = append(p.Directories, serviceDir)
 
 		subStage, subDirs, subFiles, _, err := subscriptionService(*p.Subscription, &subscriptionServiceOptions{InsightsOnBoot: true, UnitPath: osbuild.EtcUnitPath})
 		if err != nil {
-			panic(err)
+			return osbuild.Pipeline{}, err
 		}
 		p.Directories = append(p.Directories, subDirs...)
 		p.Files = append(p.Files, subFiles...)

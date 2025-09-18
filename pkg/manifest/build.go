@@ -168,7 +168,7 @@ func (p *BuildrootFromPackages) serializeEnd() {
 
 func (p *BuildrootFromPackages) serialize() (osbuild.Pipeline, error) {
 	if len(p.packageSpecs) == 0 {
-		panic("serialization not started")
+		return osbuild.Pipeline{}, fmt.Errorf("BuildrootFromPackages: serialization not started")
 	}
 	pipeline, err := p.Base.serialize()
 	if err != nil {
@@ -302,10 +302,10 @@ func (p *BuildrootFromContainer) getSELinuxLabels() map[string]string {
 
 func (p *BuildrootFromContainer) serialize() (osbuild.Pipeline, error) {
 	if len(p.containerSpecs) == 0 {
-		panic("serialization not started")
+		return osbuild.Pipeline{}, fmt.Errorf("BuildrootFromContainer: serialization not started")
 	}
 	if len(p.containerSpecs) != 1 {
-		panic(fmt.Sprintf("BuildrootFromContainer expectes exactly one container input, got: %v", p.containerSpecs))
+		return osbuild.Pipeline{}, fmt.Errorf("BuildrootFromContainer expectes exactly one container input, got: %v", p.containerSpecs)
 	}
 
 	pipeline, err := p.Base.serialize()
@@ -320,7 +320,7 @@ func (p *BuildrootFromContainer) serialize() (osbuild.Pipeline, error) {
 	// build failures until https://github.com/containers/image/issues/2599 is implemented
 	stage, err := osbuild.NewContainerDeployStage(image, &osbuild.ContainerDeployOptions{RemoveSignatures: true})
 	if err != nil {
-		panic(err)
+		return osbuild.Pipeline{}, err
 	}
 	pipeline.AddStage(stage)
 

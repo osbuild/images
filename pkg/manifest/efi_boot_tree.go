@@ -1,6 +1,8 @@
 package manifest
 
 import (
+	"fmt"
+
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
@@ -46,7 +48,7 @@ func (p *EFIBootTree) serialize() (osbuild.Pipeline, error) {
 	} else if a == arch.ARCH_AARCH64.String() {
 		architectures = []string{"AA64"}
 	} else {
-		panic("unsupported architecture")
+		return osbuild.Pipeline{}, fmt.Errorf("EFIBootTree: unsupported architecture %q", a)
 	}
 
 	var grub2config *osbuild.Grub2Config
