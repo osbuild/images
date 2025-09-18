@@ -75,7 +75,8 @@ func TestSubscriptionManagerCommands(t *testing.T) {
 		ServerUrl:     "subscription.rhsm.redhat.com",
 		BaseUrl:       "http://cdn.redhat.com/",
 	}
-	pipeline := os.Serialize()
+	pipeline, err := os.Serialize()
+	assert.NoError(t, err)
 	CheckSystemdStageOptions(t, pipeline.Stages, []string{
 		`/usr/sbin/subscription-manager register --org="${ORG_ID}" --activationkey="${ACTIVATION_KEY}" --serverurl 'subscription.rhsm.redhat.com' --baseurl 'http://cdn.redhat.com/'`,
 	})
@@ -90,7 +91,8 @@ func TestSubscriptionManagerInsightsCommands(t *testing.T) {
 		BaseUrl:       "http://cdn.redhat.com/",
 		Insights:      true,
 	}
-	pipeline := os.Serialize()
+	pipeline, err := os.Serialize()
+	assert.NoError(t, err)
 	CheckSystemdStageOptions(t, pipeline.Stages, []string{
 		`/usr/sbin/subscription-manager register --org="${ORG_ID}" --activationkey="${ACTIVATION_KEY}" --serverurl 'subscription.rhsm.redhat.com' --baseurl 'http://cdn.redhat.com/'`,
 		"/usr/bin/insights-client --register",
@@ -108,7 +110,8 @@ func TestRhcInsightsCommands(t *testing.T) {
 		Rhc:           true,
 	}
 	os.OSCustomizations.PermissiveRHC = common.ToPtr(true)
-	pipeline := os.Serialize()
+	pipeline, err := os.Serialize()
+	assert.NoError(t, err)
 	CheckSystemdStageOptions(t, pipeline.Stages, []string{
 		`/usr/bin/rhc connect --organization="${ORG_ID}" --activation-key="${ACTIVATION_KEY}" --server 'subscription.rhsm.redhat.com'`,
 		"/usr/sbin/semanage permissive --add rhcd_t",
@@ -156,7 +159,9 @@ func TestBootupdStage(t *testing.T) {
 	os := manifest.NewTestOS()
 	os.OSTreeRef = "some/ref"
 	os.Bootupd = true
-	pipeline := os.Serialize()
+	pipeline, err := os.Serialize()
+	assert.NoError(t, err)
+
 	st := findStage("org.osbuild.bootupd.gen-metadata", pipeline.Stages)
 	require.NotNil(t, st)
 }
@@ -169,7 +174,9 @@ func TestInsightsClientConfigStage(t *testing.T) {
 			Path:  "some/path",
 		},
 	}
-	pipeline := os.Serialize()
+	pipeline, err := os.Serialize()
+	assert.NoError(t, err)
+
 	st := findStage("org.osbuild.insights-client.config", pipeline.Stages)
 	require.NotNil(t, st)
 }
@@ -219,7 +226,9 @@ func TestMachineIdUninitializedIncludesMachineIdStage(t *testing.T) {
 
 	os.OSCustomizations.MachineIdUninitialized = true
 
-	pipeline := os.Serialize()
+	pipeline, err := os.Serialize()
+	assert.NoError(t, err)
+
 	st := findStage("org.osbuild.machine-id", pipeline.Stages)
 	require.NotNil(t, st)
 }
@@ -227,7 +236,9 @@ func TestMachineIdUninitializedIncludesMachineIdStage(t *testing.T) {
 func TestMachineIdUninitializedDoesNotIncludeMachineIdStage(t *testing.T) {
 	os := manifest.NewTestOS()
 
-	pipeline := os.Serialize()
+	pipeline, err := os.Serialize()
+	assert.NoError(t, err)
+
 	st := findStage("org.osbuild.machine-id", pipeline.Stages)
 	require.Nil(t, st)
 }
@@ -263,7 +274,9 @@ func TestModularityIncludesConfigStage(t *testing.T) {
 func TestModularityDoesNotIncludeConfigStage(t *testing.T) {
 	os := manifest.NewTestOS()
 
-	pipeline := os.Serialize()
+	pipeline, err := os.Serialize()
+	assert.NoError(t, err)
+
 	st := findStage("org.osbuild.dnf.module-config", pipeline.Stages)
 	require.Nil(t, st)
 }
@@ -320,7 +333,7 @@ func TestOSPipelineFStabStage(t *testing.T) {
 	os.PartitionTable = testdisk.MakeFakePartitionTable("/")                   // PT specifics don't matter
 	os.OSCustomizations.MountConfiguration = osbuild.MOUNT_CONFIGURATION_FSTAB // set it explicitly just to be sure
 
-	checkStagesForFSTab(t, os.Serialize().Stages)
+	checkStagesForFSTab(t, common.Must(os.Serialize()).Stages)
 }
 
 func TestOSPipelineMountUnitStages(t *testing.T) {
@@ -330,7 +343,7 @@ func TestOSPipelineMountUnitStages(t *testing.T) {
 	os.PartitionTable = testdisk.MakeFakePartitionTable("/", "/home")
 	os.OSCustomizations.MountConfiguration = osbuild.MOUNT_CONFIGURATION_UNITS
 
-	checkStagesForMountUnits(t, os.Serialize().Stages, expectedUnits)
+	checkStagesForMountUnits(t, common.Must(os.Serialize()).Stages, expectedUnits)
 }
 
 func TestOSPipelineMountNoneStages(t *testing.T) {
@@ -339,7 +352,7 @@ func TestOSPipelineMountNoneStages(t *testing.T) {
 	os.PartitionTable = testdisk.MakeFakePartitionTable("/", "/home")
 	os.OSCustomizations.MountConfiguration = osbuild.MOUNT_CONFIGURATION_NONE
 
-	checkStagesForNoMounts(t, os.Serialize().Stages)
+	checkStagesForNoMounts(t, common.Must(os.Serialize()).Stages)
 }
 
 func TestLanguageIncludesLocaleStage(t *testing.T) {
@@ -347,7 +360,9 @@ func TestLanguageIncludesLocaleStage(t *testing.T) {
 
 	os.OSCustomizations.Language = "en_US.UTF-8"
 
-	pipeline := os.Serialize()
+	pipeline, err := os.Serialize()
+	assert.NoError(t, err)
+
 	st := findStage("org.osbuild.locale", pipeline.Stages)
 	require.NotNil(t, st)
 }
@@ -355,7 +370,9 @@ func TestLanguageIncludesLocaleStage(t *testing.T) {
 func TestLanguageDoesNotIncludeLocaleStage(t *testing.T) {
 	os := manifest.NewTestOS()
 
-	pipeline := os.Serialize()
+	pipeline, err := os.Serialize()
+	assert.NoError(t, err)
+
 	st := findStage("org.osbuild.locale", pipeline.Stages)
 	require.Nil(t, st)
 }
@@ -365,7 +382,9 @@ func TestTimezoneIncludesTimezoneStage(t *testing.T) {
 
 	os.OSCustomizations.Timezone = "Etc/UTC"
 
-	pipeline := os.Serialize()
+	pipeline, err := os.Serialize()
+	assert.NoError(t, err)
+
 	st := findStage("org.osbuild.timezone", pipeline.Stages)
 	require.NotNil(t, st)
 }
@@ -373,7 +392,9 @@ func TestTimezoneIncludesTimezoneStage(t *testing.T) {
 func TestTimezoneDoesNotIncludeTimezoneStage(t *testing.T) {
 	os := manifest.NewTestOS()
 
-	pipeline := os.Serialize()
+	pipeline, err := os.Serialize()
+	assert.NoError(t, err)
+
 	st := findStage("org.osbuild.timezone", pipeline.Stages)
 	require.Nil(t, st)
 }
@@ -383,7 +404,9 @@ func TestHostnameIncludesHostnameStage(t *testing.T) {
 
 	os.OSCustomizations.Hostname = "funky.name"
 
-	pipeline := os.Serialize()
+	pipeline, err := os.Serialize()
+	assert.NoError(t, err)
+
 	st := findStage("org.osbuild.hostname", pipeline.Stages)
 	require.NotNil(t, st)
 }
@@ -391,7 +414,9 @@ func TestHostnameIncludesHostnameStage(t *testing.T) {
 func TestHostnameDoesNotIncludeHostnameStage(t *testing.T) {
 	os := manifest.NewTestOS()
 
-	pipeline := os.Serialize()
+	pipeline, err := os.Serialize()
+	assert.NoError(t, err)
+
 	st := findStage("org.osbuild.hostname", pipeline.Stages)
 	require.Nil(t, st)
 }
@@ -400,7 +425,9 @@ func TestRpmlang(t *testing.T) {
 	os := manifest.NewTestOS()
 	os.OSCustomizations.InstallLangs = []string{"nl"}
 
-	pipeline := os.Serialize()
+	pipeline, err := os.Serialize()
+	assert.NoError(t, err)
+
 	st := findStage("org.osbuild.rpm", pipeline.Stages)
 	require.NotNil(t, st)
 	assert.Equal(t, &osbuild.RPMStageOptions{
@@ -433,7 +460,8 @@ func TestAddInlineOS(t *testing.T) {
 		"tree:///etc/system-fips", // from FIPS = true
 	}
 
-	pipeline := os.Serialize()
+	pipeline, err := os.Serialize()
+	assert.NoError(t, err)
 
 	destinationPaths := collectCopyDestinationPaths(pipeline.Stages)
 

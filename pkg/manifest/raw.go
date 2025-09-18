@@ -44,8 +44,11 @@ func (p *RawImage) getBuildPackages(d Distro) []string {
 	return pkgs
 }
 
-func (p *RawImage) serialize() osbuild.Pipeline {
-	pipeline := p.Base.serialize()
+func (p *RawImage) serialize() (osbuild.Pipeline, error) {
+	pipeline, err := p.Base.serialize()
+	if err != nil {
+		return osbuild.Pipeline{}, err
+	}
 
 	pt := p.treePipeline.PartitionTable
 	if pt == nil {
@@ -107,7 +110,7 @@ func (p *RawImage) serialize() osbuild.Pipeline {
 		}
 	}
 
-	return pipeline
+	return pipeline, nil
 }
 
 func (p *RawImage) Export() *artifact.Artifact {

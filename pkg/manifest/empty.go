@@ -91,7 +91,7 @@ func (p *ContentTest) serializeEnd() {
 	p.serializing = false
 }
 
-func (p *ContentTest) serialize() osbuild.Pipeline {
+func (p *ContentTest) serialize() (osbuild.Pipeline, error) {
 	if !p.serializing {
 		panic("serialization not started")
 	}
@@ -100,5 +100,5 @@ func (p *ContentTest) serialize() osbuild.Pipeline {
 
 	return osbuild.Pipeline{
 		Name: p.name,
-	}
+	}, nil
 }

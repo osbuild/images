@@ -66,7 +66,8 @@ func TestRawBootcImageSerialize(t *testing.T) {
 
 	err := rawBootcPipeline.SerializeStart(manifest.Inputs{Containers: []container.Spec{{Source: "foo"}}})
 	assert.NoError(t, err)
-	imagePipeline := rawBootcPipeline.Serialize()
+	imagePipeline, err := rawBootcPipeline.Serialize()
+	assert.NoError(t, err)
 	assert.Equal(t, "image", imagePipeline.Name)
 
 	bootcInst := findStage("org.osbuild.bootc.install-to-filesystem", imagePipeline.Stages)
@@ -139,7 +140,9 @@ func TestRawBootcImageSerializeCreateUsersOptions(t *testing.T) {
 	} {
 		rawBootcPipeline.Users = tc.users
 
-		pipeline := rawBootcPipeline.Serialize()
+		pipeline, err := rawBootcPipeline.Serialize()
+		assert.NoError(t, err)
+
 		usersStage := findStage("org.osbuild.users", pipeline.Stages)
 		if tc.expectedUsersStage {
 			// ensure options got passed
@@ -181,7 +184,9 @@ func TestRawBootcImageSerializeMkdirOptions(t *testing.T) {
 	} {
 		rawBootcPipeline.Users = tc.users
 
-		pipeline := rawBootcPipeline.Serialize()
+		pipeline, err := rawBootcPipeline.Serialize()
+		assert.NoError(t, err)
+
 		mkdirStage := findStage("org.osbuild.mkdir", pipeline.Stages)
 		if len(tc.expectedMkdirPaths) > 0 {
 			// ensure options got passed
@@ -208,7 +213,9 @@ func TestRawBootcImageSerializeCreateGroupOptions(t *testing.T) {
 	} {
 		rawBootcPipeline.Groups = tc.groups
 
-		pipeline := rawBootcPipeline.Serialize()
+		pipeline, err := rawBootcPipeline.Serialize()
+		assert.NoError(t, err)
+
 		groupsStage := findStage("org.osbuild.groups", pipeline.Stages)
 		if tc.expectedGroupsStage {
 			// ensure options got passed
@@ -252,7 +259,9 @@ func TestRawBootcImageSerializeCustomizationGenCorrectStages(t *testing.T) {
 		rawBootcPipeline.Users = tc.users
 		rawBootcPipeline.SELinux = tc.SELinux
 
-		pipeline := rawBootcPipeline.Serialize()
+		pipeline, err := rawBootcPipeline.Serialize()
+		assert.NoError(t, err)
+
 		for _, expectedStage := range tc.expectedStages {
 			stage := findStage(expectedStage, pipeline.Stages)
 			assert.NotNil(t, stage)
@@ -272,7 +281,8 @@ func RawBootcImageSerializeCommonPipelines(t *testing.T) {
 		"org.osbuild.fstab",
 	}
 	rawBootcPipeline := makeFakeRawBootcPipeline()
-	pipeline := rawBootcPipeline.Serialize()
+	pipeline, err := rawBootcPipeline.Serialize()
+	assert.NoError(t, err)
 
 	pipelineStages := make([]string, len(pipeline.Stages))
 	for i, st := range pipeline.Stages {
@@ -283,7 +293,8 @@ func RawBootcImageSerializeCommonPipelines(t *testing.T) {
 
 func RawBootcImageSerializeFstabPipelineHasBootcMounts(t *testing.T) {
 	rawBootcPipeline := makeFakeRawBootcPipeline()
-	pipeline := rawBootcPipeline.Serialize()
+	pipeline, err := rawBootcPipeline.Serialize()
+	assert.NoError(t, err)
 
 	stage := findStage("org.osbuild.fstab", pipeline.Stages)
 	assert.NotNil(t, stage)
@@ -312,7 +323,8 @@ func TestRawBootcImageSerializeCreateFilesDirs(t *testing.T) {
 			rawBootcPipeline.Directories = tc.dirs
 			rawBootcPipeline.Files = tc.files
 
-			pipeline := rawBootcPipeline.Serialize()
+			pipeline, err := rawBootcPipeline.Serialize()
+			assert.NoError(t, err)
 
 			// check dirs
 			mkdirStage := findStage("org.osbuild.mkdir", pipeline.Stages)
@@ -355,7 +367,7 @@ func TestRawBootcPipelineFSTabStage(t *testing.T) {
 	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/boot/efi") // PT requires /boot/efi
 	pipeline.MountConfiguration = osbuild.MOUNT_CONFIGURATION_FSTAB             // set it explicitly just to be sure
 
-	checkStagesForFSTab(t, pipeline.Serialize().Stages)
+	checkStagesForFSTab(t, common.Must(pipeline.Serialize()).Stages)
 }
 
 func TestRawBootcPipelineMountUnitStages(t *testing.T) {
@@ -365,7 +377,7 @@ func TestRawBootcPipelineMountUnitStages(t *testing.T) {
 	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/home", "/boot/efi")
 	pipeline.MountConfiguration = osbuild.MOUNT_CONFIGURATION_UNITS
 
-	checkStagesForMountUnits(t, pipeline.Serialize().Stages, expectedUnits)
+	checkStagesForMountUnits(t, common.Must(pipeline.Serialize()).Stages, expectedUnits)
 }
 
 func TestRawBootcPipelineNoMountsStages(t *testing.T) {
@@ -374,5 +386,5 @@ func TestRawBootcPipelineNoMountsStages(t *testing.T) {
 	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/home", "/boot/efi")
 	pipeline.MountConfiguration = osbuild.MOUNT_CONFIGURATION_NONE
 
-	checkStagesForNoMounts(t, pipeline.Serialize().Stages)
+	checkStagesForNoMounts(t, common.Must(pipeline.Serialize()).Stages)
 }

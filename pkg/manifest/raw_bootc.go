@@ -131,8 +131,11 @@ func buildHomedirPaths(users []users.User) []osbuild.MkdirStagePath {
 	}
 }
 
-func (p *RawBootcImage) serialize() osbuild.Pipeline {
-	pipeline := p.Base.serialize()
+func (p *RawBootcImage) serialize() (osbuild.Pipeline, error) {
+	pipeline, err := p.Base.serialize()
+	if err != nil {
+		return osbuild.Pipeline{}, err
+	}
 
 	pt := p.PartitionTable
 	if pt == nil {
@@ -250,7 +253,7 @@ func (p *RawBootcImage) serialize() osbuild.Pipeline {
 		pipeline.AddStage(selinuxStage)
 	}
 
-	return pipeline
+	return pipeline, nil
 }
 
 // XXX: duplicated from os.go

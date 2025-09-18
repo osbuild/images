@@ -51,7 +51,7 @@ func (p *Vagrant) GetMacAddress() string {
 	return p.macAddress
 }
 
-func Serialize(p Pipeline) osbuild.Pipeline {
+func Serialize(p Pipeline) (osbuild.Pipeline, error) {
 	return p.serialize()
 }
 
@@ -60,8 +60,7 @@ func SerializeWith(p Pipeline, inputs Inputs) (osbuild.Pipeline, error) {
 	if err != nil {
 		return osbuild.Pipeline{}, err
 	}
-	// XXX: we may want to return an error from the serialize() call too
-	return p.serialize(), nil
+	return p.serialize()
 }
 
 var MakeKickstartSudoersPost = makeKickstartSudoersPost
@@ -70,7 +69,7 @@ func GetInline(p Pipeline) []string {
 	return p.getInline()
 }
 
-func (p *OS) Serialize() osbuild.Pipeline {
+func (p *OS) Serialize() (osbuild.Pipeline, error) {
 	repos := []rpmmd.RepoConfig{}
 	packages := []rpmmd.PackageSpec{
 		{Name: "pkg1", Checksum: "sha1:c02524e2bd19490f2a7167958f792262754c5f46"},
@@ -82,8 +81,7 @@ func (p *OS) Serialize() osbuild.Pipeline {
 		},
 	})
 	if err != nil {
-		// XXX: we may want to return an error from this function instead of panicking
-		panic(err)
+		return osbuild.Pipeline{}, err
 	}
 	return p.serialize()
 }

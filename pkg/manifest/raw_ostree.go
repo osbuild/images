@@ -50,8 +50,11 @@ func (p *RawOSTreeImage) getBuildPackages(Distro) []string {
 	return packages
 }
 
-func (p *RawOSTreeImage) serialize() osbuild.Pipeline {
-	pipeline := p.Base.serialize()
+func (p *RawOSTreeImage) serialize() (osbuild.Pipeline, error) {
+	pipeline, err := p.Base.serialize()
+	if err != nil {
+		return osbuild.Pipeline{}, err
+	}
 
 	pt := p.treePipeline.PartitionTable
 	if pt == nil {
@@ -116,7 +119,7 @@ func (p *RawOSTreeImage) serialize() osbuild.Pipeline {
 		p.maybeAddGrubInstStage(&pipeline)
 	}
 
-	return pipeline
+	return pipeline, nil
 }
 
 func (p *RawOSTreeImage) addBootupdStage(pipeline *osbuild.Pipeline) {

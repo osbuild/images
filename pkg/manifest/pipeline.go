@@ -52,7 +52,7 @@ type Pipeline interface {
 
 	serializeStart(Inputs) error
 	serializeEnd()
-	serialize() osbuild.Pipeline
+	serialize() (osbuild.Pipeline, error)
 
 	// getPackageSpecs returns the list of specifications for packages that
 	// will be installed to the pipeline tree.
@@ -187,14 +187,14 @@ func (p Base) serializeEnd() {
 // Serialize turns a given pipeline into an osbuild.Pipeline object. This object is
 // meant to be treated as opaque and not to be modified further outside of the pipeline
 // package.
-func (p Base) serialize() osbuild.Pipeline {
+func (p Base) serialize() (osbuild.Pipeline, error) {
 	pipeline := osbuild.Pipeline{
 		Name: p.name,
 	}
 	if p.build != nil {
 		pipeline.Build = "name:" + p.build.Name()
 	}
-	return pipeline
+	return pipeline, nil
 }
 
 // TreePipeline is any pipeline that produces a directory tree.

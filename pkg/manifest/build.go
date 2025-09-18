@@ -166,11 +166,15 @@ func (p *BuildrootFromPackages) serializeEnd() {
 	p.packageSpecs = nil
 }
 
-func (p *BuildrootFromPackages) serialize() osbuild.Pipeline {
+func (p *BuildrootFromPackages) serialize() (osbuild.Pipeline, error) {
 	if len(p.packageSpecs) == 0 {
 		panic("serialization not started")
 	}
-	pipeline := p.Base.serialize()
+	pipeline, err := p.Base.serialize()
+	if err != nil {
+		return osbuild.Pipeline{}, err
+	}
+
 	pipeline.Runner = p.runner.String()
 
 	pipeline.AddStage(osbuild.NewRPMStage(osbuild.NewRPMStageOptions(p.repos), osbuild.NewRpmStageSourceFilesInputs(p.packageSpecs)))
@@ -182,7 +186,7 @@ func (p *BuildrootFromPackages) serialize() osbuild.Pipeline {
 		))
 	}
 
-	return pipeline
+	return pipeline, nil
 }
 
 // Returns a map of paths to labels for the SELinux stage based on specific
@@ -296,7 +300,7 @@ func (p *BuildrootFromContainer) getSELinuxLabels() map[string]string {
 	return labels
 }
 
-func (p *BuildrootFromContainer) serialize() osbuild.Pipeline {
+func (p *BuildrootFromContainer) serialize() (osbuild.Pipeline, error) {
 	if len(p.containerSpecs) == 0 {
 		panic("serialization not started")
 	}
@@ -304,7 +308,11 @@ func (p *BuildrootFromContainer) serialize() osbuild.Pipeline {
 		panic(fmt.Sprintf("BuildrootFromContainer expectes exactly one container input, got: %v", p.containerSpecs))
 	}
 
-	pipeline := p.Base.serialize()
+	pipeline, err := p.Base.serialize()
+	if err != nil {
+		return osbuild.Pipeline{}, err
+	}
+
 	pipeline.Runner = p.runner.String()
 
 	image := osbuild.NewContainersInputForSingleSource(p.containerSpecs[0])
@@ -346,7 +354,7 @@ func (p *BuildrootFromContainer) serialize() osbuild.Pipeline {
 		))
 	}
 
-	return pipeline
+	return pipeline, nil
 }
 
 // NewBootstrap creates a new bootstrap build pipeline from the given

@@ -8,7 +8,7 @@ func (br *BuildrootFromContainer) Dependents() []Pipeline {
 	return br.dependents
 }
 
-func (rbc *RawBootcImage) Serialize() osbuild.Pipeline {
+func (rbc *RawBootcImage) Serialize() (osbuild.Pipeline, error) {
 	return rbc.serialize()
 }
 

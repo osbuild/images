@@ -276,7 +276,7 @@ func (p *OSTreeDeployment) doOSTreeContainerSpec(pipeline *osbuild.Pipeline, rep
 	return ref
 }
 
-func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
+func (p *OSTreeDeployment) serialize() (osbuild.Pipeline, error) {
 	switch {
 	case p.ostreeSpec == nil && p.containerSpec == nil:
 		panic("serialization not started")
@@ -286,7 +286,10 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 
 	const repoPath = "/ostree/repo"
 
-	pipeline := p.Base.serialize()
+	pipeline, err := p.Base.serialize()
+	if err != nil {
+		return osbuild.Pipeline{}, err
+	}
 
 	pipeline.AddStage(osbuild.OSTreeInitFsStage())
 	pipeline.AddStage(osbuild.NewOSTreeOsInitStage(
@@ -506,7 +509,7 @@ func (p *OSTreeDeployment) serialize() osbuild.Pipeline {
 		},
 	))
 
-	return pipeline
+	return pipeline, nil
 }
 
 func (p *OSTreeDeployment) getInline() []string {

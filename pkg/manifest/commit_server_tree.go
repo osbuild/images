@@ -95,11 +95,14 @@ func (p *OSTreeCommitServer) serializeEnd() {
 	p.packageSpecs = nil
 }
 
-func (p *OSTreeCommitServer) serialize() osbuild.Pipeline {
+func (p *OSTreeCommitServer) serialize() (osbuild.Pipeline, error) {
 	if len(p.packageSpecs) == 0 {
 		panic("serialization not started")
 	}
-	pipeline := p.Base.serialize()
+	pipeline, err := p.Base.serialize()
+	if err != nil {
+		return osbuild.Pipeline{}, err
+	}
 
 	pipeline.AddStage(osbuild.NewRPMStage(osbuild.NewRPMStageOptions(p.repos), osbuild.NewRpmStageSourceFilesInputs(p.packageSpecs)))
 	pipeline.AddStage(osbuild.NewLocaleStage(&osbuild.LocaleStageOptions{Language: p.Language}))
@@ -120,7 +123,7 @@ func (p *OSTreeCommitServer) serialize() osbuild.Pipeline {
 
 	pipeline.AddStage(osbuild.NewNginxConfigStage(nginxConfigStageOptions(p.nginxConfigPath, htmlRoot, p.listenPort)))
 
-	return pipeline
+	return pipeline, nil
 }
 
 func nginxConfigStageOptions(path, htmlRoot, listen string) *osbuild.NginxConfigStageOptions {

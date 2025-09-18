@@ -33,8 +33,11 @@ func (p *OSTreeCommit) getBuildPackages(Distro) []string {
 	return packages
 }
 
-func (p *OSTreeCommit) serialize() osbuild.Pipeline {
-	pipeline := p.Base.serialize()
+func (p *OSTreeCommit) serialize() (osbuild.Pipeline, error) {
+	pipeline, err := p.Base.serialize()
+	if err != nil {
+		return osbuild.Pipeline{}, err
+	}
 
 	if p.treePipeline.OSTreeRef == "" {
 		panic("tree is not ostree")
@@ -61,5 +64,5 @@ func (p *OSTreeCommit) serialize() osbuild.Pipeline {
 		p.treePipeline.Name()),
 	)
 
-	return pipeline
+	return pipeline, nil
 }

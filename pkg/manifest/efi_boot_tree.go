@@ -33,8 +33,11 @@ func NewEFIBootTree(buildPipeline Build, product, version string) *EFIBootTree {
 	return p
 }
 
-func (p *EFIBootTree) serialize() osbuild.Pipeline {
-	pipeline := p.Base.serialize()
+func (p *EFIBootTree) serialize() (osbuild.Pipeline, error) {
+	pipeline, err := p.Base.serialize()
+	if err != nil {
+		return osbuild.Pipeline{}, err
+	}
 
 	a := p.Platform.GetArch().String()
 	var architectures []string
@@ -70,5 +73,5 @@ func (p *EFIBootTree) serialize() osbuild.Pipeline {
 	}
 	grub2Stage := osbuild.NewGrubISOStage(grubOptions)
 	pipeline.AddStage(grub2Stage)
-	return pipeline
+	return pipeline, nil
 }

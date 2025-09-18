@@ -214,12 +214,16 @@ func installerRootUser() osbuild.UsersStageOptionsUser {
 	}
 }
 
-func (p *AnacondaInstaller) serialize() osbuild.Pipeline {
+func (p *AnacondaInstaller) serialize() (osbuild.Pipeline, error) {
 	if len(p.packageSpecs) == 0 {
 		panic("serialization not started")
 	}
 
-	pipeline := p.Base.serialize()
+	pipeline, err := p.Base.serialize()
+	if err != nil {
+		return osbuild.Pipeline{}, err
+	}
+
 	options := osbuild.NewRPMStageOptions(p.repos)
 	// Documentation is only installed on live installer images
 	if p.Type != AnacondaInstallerTypeLive {
@@ -259,7 +263,7 @@ func (p *AnacondaInstaller) serialize() osbuild.Pipeline {
 		panic("invalid anaconda installer type")
 	}
 
-	return pipeline
+	return pipeline, nil
 }
 
 // payloadStages creates the stages needed to boot Anaconda
