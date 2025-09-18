@@ -2,7 +2,6 @@ package bootc
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -27,7 +26,7 @@ type manifestTestCase struct {
 	containers        map[string][]container.Spec
 	expStages         map[string][]string
 	notExpectedStages map[string][]string
-	err               interface{}
+	err               string
 }
 
 func TestManifestGenerationEmptyConfig(t *testing.T) {
@@ -41,7 +40,7 @@ func TestManifestGenerationEmptyConfig(t *testing.T) {
 		"empty-imgref": {
 			imageRef:   "",
 			imageTypes: []string{"qcow2"},
-			err:        errors.New("internal error: no base image defined"),
+			err:        "internal error: no base image defined",
 		},
 	}
 
@@ -49,7 +48,9 @@ func TestManifestGenerationEmptyConfig(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			imgType.arch.distro.imgref = tc.imageRef
 			_, _, err := imgType.Manifest(tc.config, tc.imageOptions, nil, common.ToPtr(int64(0)))
-			assert.Equal(t, err, tc.err)
+			if tc.err != "" {
+				assert.EqualError(t, err, tc.err)
+			}
 		})
 	}
 }
@@ -208,9 +209,7 @@ func TestManifestSerialization(t *testing.T) {
 		"qcow2-nocontainer": {
 			config:     userConfig,
 			imageTypes: []string{"qcow2"},
-			// errors come from BuildrootFromContainer()
-			// TODO: think about better error and testing here (not the ideal layer or err msg)
-			err: "serialization not started",
+			err:        `cannot serialize pipeline "target": BuildrootFromContainer: serialization not started`,
 		},
 	}
 
@@ -223,11 +222,9 @@ func TestManifestSerialization(t *testing.T) {
 			mf, _, err := imgType.Manifest(tc.config, tc.imageOptions, nil, common.ToPtr(int64(0)))
 			assert.NoError(err) // this isn't the error we're testing for
 
-			if tc.err != nil {
-				assert.PanicsWithValue(tc.err, func() {
-					_, err := mf.Serialize(tc.depsolved, tc.containers, nil, nil)
-					assert.NoError(err)
-				})
+			if tc.err != "" {
+				_, err := mf.Serialize(tc.depsolved, tc.containers, nil, nil)
+				assert.EqualError(err, tc.err)
 			} else {
 				manifestJson, err := mf.Serialize(tc.depsolved, tc.containers, nil, nil)
 				assert.NoError(err)
