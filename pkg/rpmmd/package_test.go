@@ -8,6 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestChecksumString(t *testing.T) {
+	assert.Equal(t, "sha256:1234567890", (&rpmmd.Checksum{Type: "sha256", Value: "1234567890"}).String())
+}
+
 var specs = []rpmmd.PackageSpec{
 	{
 		Name:    "tmux",

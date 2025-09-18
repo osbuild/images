@@ -26,6 +26,10 @@ type Checksum struct {
 	Value string
 }
 
+func (c Checksum) String() string {
+	return fmt.Sprintf("%s:%s", c.Type, c.Value)
+}
+
 // RPM package representation
 //
 // Based on libdnf5: https://github.com/rpm-software-management/dnf5/blob/main/include/libdnf5/rpm/package.hpp
