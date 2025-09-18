@@ -40,18 +40,20 @@ def top_srcdir() -> pathlib.Path:
     return d
 
 
-def run_gen_manifests(cmd, output_dir):
+def run_gen_manifests(images_dir, output_dir):
     env = os.environ.copy()
     env["OSBUILD_TESTING_RNG_SEED"] = "0"
     env["IMAGE_BUILDER_EXPERIMENTAL"] = "gen-manifest-mock-bpfile-uris"
-    p = subprocess.run(cmd + [
+    cmd = [
+        "go", "run", "./cmd/gen-manifests",
         "-packages=false",
         "-metadata=false",
         "-containers=false",
         "-arches", ",".join(arches),
         "-fake-bootc=true",
         "-output", output_dir,
-    ], env=env, text=True, capture_output=True, check=False)
+    ]
+    p = subprocess.run(cmd, env=env, text=True, capture_output=True, check=False, cwd=images_dir)
     if p.returncode != 0:
         print(p.stdout)
         print(p.stderr)
@@ -63,11 +65,13 @@ def manifests_diff(tmp_path, rev):
     manifests_new = tmp_path / "new"
 
     print(f"calculating diff against '{rev}'")
-    cmd_new = ["go", "run", f"github.com/osbuild/images/cmd/gen-manifests@{rev}"]
-    run_gen_manifests(cmd_new, manifests_old)
-
-    cmd_new = ["go", "run", os.fspath(top_srcdir() / "cmd/gen-manifests"), "-fake-bootc=true"]
-    run_gen_manifests(cmd_new, manifests_new)
+    images_at_rev_path = tmp_path / f"images-{rev}"
+    # note that we do not use "clone --revision" as it does not
+    # support pseudo revisions like "HEAD~1"
+    subprocess.check_call(["git", "clone", ".", images_at_rev_path])
+    subprocess.check_call(["git", "checkout", rev], cwd=images_at_rev_path)
+    run_gen_manifests(images_at_rev_path, manifests_old)
+    run_gen_manifests(top_srcdir(), manifests_new)
 
     ret = subprocess.run([
         "diff", "-uNr", manifests_old, manifests_new,
