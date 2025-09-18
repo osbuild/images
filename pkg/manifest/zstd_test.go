@@ -21,7 +21,8 @@ func TestZstdSerialize(t *testing.T) {
 	zstdPipeline.SetFilename("filename.zst")
 
 	// run
-	osbuildPipeline := manifest.Serialize(zstdPipeline)
+	osbuildPipeline, err := manifest.Serialize(zstdPipeline)
+	assert.NoError(t, err)
 
 	// assert
 	assert.Equal(t, "zstd", osbuildPipeline.Name)

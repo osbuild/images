@@ -30,8 +30,11 @@ func (p *OSTreeEncapsulate) SetFilename(filename string) {
 	p.filename = filename
 }
 
-func (p *OSTreeEncapsulate) serialize() osbuild.Pipeline {
-	pipeline := p.Base.serialize()
+func (p *OSTreeEncapsulate) serialize() (osbuild.Pipeline, error) {
+	pipeline, err := p.Base.serialize()
+	if err != nil {
+		return osbuild.Pipeline{}, err
+	}
 
 	encOptions := &osbuild.OSTreeEncapsulateStageOptions{
 		Filename: p.Filename(),
@@ -39,7 +42,7 @@ func (p *OSTreeEncapsulate) serialize() osbuild.Pipeline {
 	encStage := osbuild.NewOSTreeEncapsulateStage(encOptions, p.inputPipeline.Name())
 	pipeline.AddStage(encStage)
 
-	return pipeline
+	return pipeline, nil
 }
 
 func (p *OSTreeEncapsulate) getBuildPackages(Distro) []string {

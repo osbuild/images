@@ -115,7 +115,8 @@ func TestNewBuildFromContainerSpecs(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, build.getContainerSpecs(), fakeContainerSpecs)
 
-	osbuildPipeline := build.serialize()
+	osbuildPipeline, err := build.serialize()
+	require.NoError(t, err)
 	require.Len(t, osbuildPipeline.Stages, 2)
 	assert.Equal(t, osbuildPipeline.Stages[0].Type, "org.osbuild.container-deploy")
 	// one container src input is added
@@ -164,7 +165,8 @@ func TestNewBuildOptionDisableSELinux(t *testing.T) {
 		build.packageSpecs = []rpmmd.PackageSpec{
 			{Name: "foo", Checksum: "sha256:" + strings.Repeat("x", 32)},
 		}
-		osbuildPipeline := build.serialize()
+		osbuildPipeline, err := build.serialize()
+		require.NoError(t, err)
 		if disableSELinux {
 			require.Len(t, osbuildPipeline.Stages, 1)
 			assert.Equal(t, osbuildPipeline.Stages[0].Type, "org.osbuild.rpm")
@@ -196,7 +198,8 @@ func TestNewBuildOptionSELinuxPolicyBuildrootFromPackages(t *testing.T) {
 		build.packageSpecs = []rpmmd.PackageSpec{
 			{Name: "foo", Checksum: "sha256:" + strings.Repeat("x", 32)},
 		}
-		osbuildPipeline := build.serialize()
+		osbuildPipeline, err := build.serialize()
+		require.NoError(t, err)
 		require.Len(t, osbuildPipeline.Stages, 2)
 		assert.Equal(t, "org.osbuild.selinux", osbuildPipeline.Stages[1].Type)
 		assert.Equal(t, tc.expectedFileContext, osbuildPipeline.Stages[1].Options.(*osbuild.SELinuxStageOptions).FileContexts)
@@ -222,7 +225,8 @@ func TestNewBuildOptionSELinuxPolicyBuildFromCnt(t *testing.T) {
 		require.NotNil(t, buildIf)
 		build := buildIf.(*BuildrootFromContainer)
 		build.containerSpecs = fakeContainerSpecs
-		osbuildPipeline := build.serialize()
+		osbuildPipeline, err := build.serialize()
+		require.NoError(t, err)
 		require.Len(t, osbuildPipeline.Stages, 2)
 		assert.Equal(t, "org.osbuild.selinux", osbuildPipeline.Stages[1].Type)
 		assert.Equal(t, tc.expectedFileContext, osbuildPipeline.Stages[1].Options.(*osbuild.SELinuxStageOptions).FileContexts)
@@ -241,7 +245,8 @@ func TestNewBuildFromContainerOptionDisableSELinux(t *testing.T) {
 		build := buildIf.(*BuildrootFromContainer)
 
 		build.containerSpecs = fakeContainerSpecs
-		osbuildPipeline := build.serialize()
+		osbuildPipeline, err := build.serialize()
+		require.NoError(t, err)
 		if disableSELinux {
 			require.Len(t, osbuildPipeline.Stages, 1)
 			assert.Equal(t, osbuildPipeline.Stages[0].Type, "org.osbuild.container-deploy")

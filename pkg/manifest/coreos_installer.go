@@ -175,8 +175,11 @@ func (p *CoreOSInstaller) serializeEnd() {
 	p.packageSpecs = nil
 }
 
-func (p *CoreOSInstaller) serialize() osbuild.Pipeline {
-	pipeline := p.Base.serialize()
+func (p *CoreOSInstaller) serialize() (osbuild.Pipeline, error) {
+	pipeline, err := p.Base.serialize()
+	if err != nil {
+		return osbuild.Pipeline{}, err
+	}
 
 	pipeline.AddStage(osbuild.NewRPMStage(osbuild.NewRPMStageOptions(p.repos), osbuild.NewRpmStageSourceFilesInputs(p.packageSpecs)))
 	pipeline.AddStage(osbuild.NewBuildstampStage(&osbuild.BuildstampStageOptions{
@@ -225,7 +228,7 @@ func (p *CoreOSInstaller) serialize() osbuild.Pipeline {
 		dracutStageOptions.Install = []string{"/fdo_diun_pub_key_root_certs.pem"}
 	}
 	pipeline.AddStage(osbuild.NewDracutStage(dracutStageOptions))
-	return pipeline
+	return pipeline, nil
 }
 
 func (p *CoreOSInstaller) Platform() platform.Platform {

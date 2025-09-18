@@ -506,12 +506,15 @@ func (p *OS) serializeEnd() {
 	p.ostreeParentSpec = nil
 }
 
-func (p *OS) serialize() osbuild.Pipeline {
+func (p *OS) serialize() (osbuild.Pipeline, error) {
 	if len(p.packageSpecs) == 0 {
 		panic("serialization not started")
 	}
 
-	pipeline := p.Base.serialize()
+	pipeline, err := p.Base.serialize()
+	if err != nil {
+		return osbuild.Pipeline{}, err
+	}
 
 	if p.ostreeParentSpec != nil {
 		pipeline.AddStage(osbuild.NewOSTreePasswdStage("org.osbuild.source", p.ostreeParentSpec.Checksum))
@@ -987,7 +990,7 @@ func (p *OS) serialize() osbuild.Pipeline {
 		}
 	}
 
-	return pipeline
+	return pipeline, nil
 }
 
 func prependKernelCmdlineStage(pipeline osbuild.Pipeline, rootUUID string, kernelOptions []string) osbuild.Pipeline {

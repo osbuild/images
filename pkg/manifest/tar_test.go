@@ -23,7 +23,8 @@ func TestTarSerialize(t *testing.T) {
 	tarPipeline.Compression = osbuild.TarArchiveCompressionZstd
 
 	// run
-	osbuildPipeline := manifest.Serialize(tarPipeline)
+	osbuildPipeline, err := manifest.Serialize(tarPipeline)
+	assert.NoError(t, err)
 
 	// assert
 	assert.Equal(t, "tar-pipeline", osbuildPipeline.Name)

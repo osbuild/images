@@ -347,7 +347,7 @@ func (p *AnacondaInstallerISOTree) serializeEnd() {
 	p.containerSpec = nil
 }
 
-func (p *AnacondaInstallerISOTree) serialize() osbuild.Pipeline {
+func (p *AnacondaInstallerISOTree) serialize() (osbuild.Pipeline, error) {
 	// If the anaconda pipeline is a payload then we need one of three payload types
 	if p.anacondaPipeline.Type == AnacondaInstallerTypePayload {
 		count := 0
@@ -374,7 +374,10 @@ func (p *AnacondaInstallerISOTree) serialize() osbuild.Pipeline {
 		}
 	}
 
-	pipeline := p.Base.serialize()
+	pipeline, err := p.Base.serialize()
+	if err != nil {
+		return osbuild.Pipeline{}, err
+	}
 
 	kernelOpts := []string{}
 
@@ -530,7 +533,7 @@ func (p *AnacondaInstallerISOTree) serialize() osbuild.Pipeline {
 		Release:  p.Release,
 	}))
 
-	return pipeline
+	return pipeline, nil
 }
 
 func (p *AnacondaInstallerISOTree) ostreeCommitStages() []*osbuild.Stage {
