@@ -122,6 +122,15 @@ type Package struct {
 	IgnoreSSL bool
 }
 
+// GetEVRA returns the package's Epoch:Version-Release.Arch string.
+// If the package Epoch is 0, it is omitted and only Version-Release.Arch is returned.
+func (p *Package) GetEVRA() string {
+	if p.Epoch == 0 {
+		return fmt.Sprintf("%s-%s.%s", p.Version, p.Release, p.Arch)
+	}
+	return fmt.Sprintf("%d:%s-%s.%s", p.Epoch, p.Version, p.Release, p.Arch)
+}
+
 type PackageList []Package
 
 func (pl *PackageList) GetPackage(packageName string) (Package, error) {
