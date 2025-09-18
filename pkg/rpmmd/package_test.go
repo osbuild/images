@@ -75,6 +75,11 @@ func TestPackageGetEVRA(t *testing.T) {
 	assert.Equal(t, "1:2.06-94.fc38.noarch", packageList[1].GetEVRA())
 }
 
+func TestPackageGetNEVRA(t *testing.T) {
+	assert.Equal(t, "tmux-3.3a-3.fc38.x86_64", packageList[0].GetNEVRA())
+	assert.Equal(t, "grub2-1:2.06-94.fc38.noarch", packageList[1].GetNEVRA())
+}
+
 var specs = []rpmmd.PackageSpec{
 	{
 		Name:    "tmux",

@@ -131,6 +131,12 @@ func (p *Package) GetEVRA() string {
 	return fmt.Sprintf("%d:%s-%s.%s", p.Epoch, p.Version, p.Release, p.Arch)
 }
 
+// GetNEVRA returns the package's Name-Epoch:Version-Release.Arch string.
+// If the package Epoch is 0, it is omitted and only Name-Version-Release.Arch is returned.
+func (p *Package) GetNEVRA() string {
+	return fmt.Sprintf("%s-%s", p.Name, p.GetEVRA())
+}
+
 type PackageList []Package
 
 func (pl *PackageList) GetPackage(packageName string) (Package, error) {
