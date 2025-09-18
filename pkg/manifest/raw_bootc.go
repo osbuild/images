@@ -139,7 +139,7 @@ func (p *RawBootcImage) serialize() (osbuild.Pipeline, error) {
 
 	pt := p.PartitionTable
 	if pt == nil {
-		panic(fmt.Errorf("no partition table in live image"))
+		return osbuild.Pipeline{}, fmt.Errorf("no partition table in live image")
 	}
 
 	for _, stage := range osbuild.GenImagePrepareStages(pt, p.filename, osbuild.PTSfdisk, p.SourcePipeline) {
@@ -147,7 +147,7 @@ func (p *RawBootcImage) serialize() (osbuild.Pipeline, error) {
 	}
 
 	if len(p.containerSpecs) != 1 {
-		panic(fmt.Errorf("expected a single container input got %v", p.containerSpecs))
+		return osbuild.Pipeline{}, fmt.Errorf("expected a single container input got %v", p.containerSpecs)
 	}
 	opts := &osbuild.BootcInstallToFilesystemOptions{
 		Kargs: p.KernelOptionsAppend,
@@ -160,11 +160,11 @@ func (p *RawBootcImage) serialize() (osbuild.Pipeline, error) {
 	}
 	devices, mounts, err := osbuild.GenBootupdDevicesMounts(p.filename, p.PartitionTable, p.platform)
 	if err != nil {
-		panic(err)
+		return osbuild.Pipeline{}, err
 	}
 	st, err := osbuild.NewBootcInstallToFilesystemStage(opts, inputs, devices, mounts, p.platform)
 	if err != nil {
-		panic(err)
+		return osbuild.Pipeline{}, err
 	}
 	pipeline.AddStage(st)
 
@@ -176,14 +176,14 @@ func (p *RawBootcImage) serialize() (osbuild.Pipeline, error) {
 	// root from the image so generate the devices/mounts for all
 	devices, mounts, err = osbuild.GenBootupdDevicesMounts(p.filename, p.PartitionTable, p.platform)
 	if err != nil {
-		panic(fmt.Sprintf("gen devices stage failed %v", err))
+		return osbuild.Pipeline{}, fmt.Errorf("gen devices stage failed %w", err)
 	}
 	mounts = append(mounts, *osbuild.NewOSTreeDeploymentMountDefault("ostree.deployment", osbuild.OSTreeMountSourceMount))
 	mounts = append(mounts, *osbuild.NewBindMount("bind-ostree-deployment-to-tree", "mount://", "tree://"))
 
 	fsCfgStages, err := filesystemConfigStages(pt, p.MountConfiguration)
 	if err != nil {
-		panic(err)
+		return osbuild.Pipeline{}, err
 	}
 	for _, stage := range fsCfgStages {
 		stage.Mounts = mounts
@@ -212,7 +212,7 @@ func (p *RawBootcImage) serialize() (osbuild.Pipeline, error) {
 		// add the users
 		usersStage, err := osbuild.GenUsersStage(p.Users, false)
 		if err != nil {
-			panic(fmt.Sprintf("user stage failed %v", err))
+			return osbuild.Pipeline{}, fmt.Errorf("user stage failed %w", err)
 		}
 		usersStage.Mounts = mounts
 		usersStage.Devices = devices

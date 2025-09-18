@@ -58,7 +58,7 @@ func (p *RawOSTreeImage) serialize() (osbuild.Pipeline, error) {
 
 	pt := p.treePipeline.PartitionTable
 	if pt == nil {
-		panic("no partition table in live image")
+		return osbuild.Pipeline{}, fmt.Errorf("no partition table in live image")
 	}
 
 	for _, stage := range osbuild.GenImagePrepareStages(pt, p.Filename(), osbuild.PTSfdisk, p.treePipeline.Name()) {
@@ -96,7 +96,7 @@ func (p *RawOSTreeImage) serialize() (osbuild.Pipeline, error) {
 		}
 
 		if fsRootMntName == "" {
-			panic("no mount found for the filesystem root")
+			return osbuild.Pipeline{}, fmt.Errorf("no mount found for the filesystem root")
 		}
 
 		for _, paths := range bootFiles {
@@ -114,7 +114,9 @@ func (p *RawOSTreeImage) serialize() (osbuild.Pipeline, error) {
 	}
 
 	if p.treePipeline.UseBootupd {
-		p.addBootupdStage(&pipeline)
+		if err := p.addBootupdStage(&pipeline); err != nil {
+			return osbuild.Pipeline{}, err
+		}
 	} else {
 		p.maybeAddGrubInstStage(&pipeline)
 	}
@@ -122,12 +124,12 @@ func (p *RawOSTreeImage) serialize() (osbuild.Pipeline, error) {
 	return pipeline, nil
 }
 
-func (p *RawOSTreeImage) addBootupdStage(pipeline *osbuild.Pipeline) {
+func (p *RawOSTreeImage) addBootupdStage(pipeline *osbuild.Pipeline) error {
 	pt := p.treePipeline.PartitionTable
 
 	treeBootupdDevices, treeBootupdMounts, err := osbuild.GenBootupdDevicesMounts(p.Filename(), pt, p.platform)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	opts := &osbuild.BootupdStageOptions{
 		Deployment: &osbuild.OSTreeDeployment{
@@ -143,10 +145,11 @@ func (p *RawOSTreeImage) addBootupdStage(pipeline *osbuild.Pipeline) {
 	}
 	bootupd, err := osbuild.NewBootupdStage(opts, treeBootupdDevices, treeBootupdMounts, p.platform)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	pipeline.AddStage(bootupd)
+	return nil
 }
 
 func (p *RawOSTreeImage) maybeAddGrubInstStage(pipeline *osbuild.Pipeline) {

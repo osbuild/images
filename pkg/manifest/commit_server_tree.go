@@ -2,6 +2,7 @@ package manifest
 
 import (
 	"errors"
+	"fmt"
 	"path/filepath"
 
 	"github.com/osbuild/images/internal/common"
@@ -97,7 +98,7 @@ func (p *OSTreeCommitServer) serializeEnd() {
 
 func (p *OSTreeCommitServer) serialize() (osbuild.Pipeline, error) {
 	if len(p.packageSpecs) == 0 {
-		panic("serialization not started")
+		return osbuild.Pipeline{}, fmt.Errorf("OSTreeCommitServer: serialization not started")
 	}
 	pipeline, err := p.Base.serialize()
 	if err != nil {

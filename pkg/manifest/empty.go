@@ -2,6 +2,7 @@ package manifest
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/osbuild"
@@ -93,7 +94,7 @@ func (p *ContentTest) serializeEnd() {
 
 func (p *ContentTest) serialize() (osbuild.Pipeline, error) {
 	if !p.serializing {
-		panic("serialization not started")
+		return osbuild.Pipeline{}, fmt.Errorf("ContentTest: serialization not started")
 	}
 
 	// no stages

@@ -1,6 +1,8 @@
 package manifest
 
 import (
+	"fmt"
+
 	"github.com/osbuild/images/pkg/osbuild"
 )
 
@@ -40,7 +42,7 @@ func (p *OSTreeCommit) serialize() (osbuild.Pipeline, error) {
 	}
 
 	if p.treePipeline.OSTreeRef == "" {
-		panic("tree is not ostree")
+		return osbuild.Pipeline{}, fmt.Errorf("tree is not ostree")
 	}
 
 	pipeline.AddStage(osbuild.NewOSTreeInitStage(&osbuild.OSTreeInitStageOptions{Path: "/repo"}))
@@ -49,7 +51,7 @@ func (p *OSTreeCommit) serialize() (osbuild.Pipeline, error) {
 	treeCommits := p.treePipeline.getOSTreeCommits()
 	if len(treeCommits) > 0 {
 		if len(treeCommits) > 1 {
-			panic("multiple ostree commit specs found; this is a programming error")
+			return osbuild.Pipeline{}, fmt.Errorf("multiple ostree commit specs found; this is a programming error")
 		}
 		parentCommit := &treeCommits[0]
 		parentID = parentCommit.Checksum

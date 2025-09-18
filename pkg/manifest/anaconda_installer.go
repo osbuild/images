@@ -216,7 +216,7 @@ func installerRootUser() osbuild.UsersStageOptionsUser {
 
 func (p *AnacondaInstaller) serialize() (osbuild.Pipeline, error) {
 	if len(p.packageSpecs) == 0 {
-		panic("serialization not started")
+		return osbuild.Pipeline{}, fmt.Errorf("AnacondaInstaller: serialization not started")
 	}
 
 	pipeline, err := p.Base.serialize()
@@ -251,16 +251,16 @@ func (p *AnacondaInstaller) serialize() (osbuild.Pipeline, error) {
 	switch p.Type {
 	case AnacondaInstallerTypeLive:
 		if p.InteractiveDefaultsKickstart != nil && (len(p.InteractiveDefaultsKickstart.Users) != 0 || len(p.InteractiveDefaultsKickstart.Groups) != 0) {
-			panic("anaconda installer type live does not support users and groups customization")
+			return osbuild.Pipeline{}, fmt.Errorf("anaconda installer type live does not support users and groups customization")
 		}
 		if p.InteractiveDefaults != nil {
-			panic("anaconda installer type live does not support interactive defaults")
+			return osbuild.Pipeline{}, fmt.Errorf("anaconda installer type live does not support interactive defaults")
 		}
 		pipeline.AddStages(p.liveStages()...)
 	case AnacondaInstallerTypePayload, AnacondaInstallerTypeNetinst:
 		pipeline.AddStages(p.payloadStages()...)
 	default:
-		panic("invalid anaconda installer type")
+		return osbuild.Pipeline{}, fmt.Errorf("invalid anaconda installer type")
 	}
 
 	return pipeline, nil

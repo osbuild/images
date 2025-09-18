@@ -508,7 +508,7 @@ func (p *OS) serializeEnd() {
 
 func (p *OS) serialize() (osbuild.Pipeline, error) {
 	if len(p.packageSpecs) == 0 {
-		panic("serialization not started")
+		return osbuild.Pipeline{}, fmt.Errorf("serialization not started")
 	}
 
 	pipeline, err := p.Base.serialize()
@@ -548,7 +548,7 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 	if p.platform.GetBootloader() == platform.BOOTLOADER_UKI && p.PartitionTable != nil {
 		espMountpoint, err := findESPMountpoint(p.PartitionTable)
 		if err != nil {
-			panic(err)
+			return osbuild.Pipeline{}, err
 		}
 		rpmOptions.KernelInstallEnv = &osbuild.KernelInstallEnv{
 			BootRoot: espMountpoint,
@@ -612,7 +612,7 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 			usersStageSansKeys, err := osbuild.GenUsersStage(p.OSCustomizations.Users, true)
 			if err != nil {
 				// TODO: move encryption into weldr
-				panic("password encryption failed")
+				return osbuild.Pipeline{}, fmt.Errorf("password encryption failed")
 			}
 			pipeline.AddStage(usersStageSansKeys)
 			pipeline.AddStage(osbuild.NewFirstBootStage(usersFirstBootOptions(p.OSCustomizations.Users)))
@@ -620,7 +620,7 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 			usersStage, err := osbuild.GenUsersStage(p.OSCustomizations.Users, false)
 			if err != nil {
 				// TODO: move encryption into weldr
-				panic("password encryption failed")
+				return osbuild.Pipeline{}, fmt.Errorf("password encryption failed")
 			}
 			pipeline.AddStage(usersStage)
 		}
@@ -731,7 +731,7 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 			},
 		)
 		if err != nil {
-			panic(err)
+			return osbuild.Pipeline{}, err
 		}
 		pipeline.AddStage(subStage)
 		pipeline.AddStages(osbuild.GenDirectoryNodesStages(subDirs)...)
@@ -754,7 +754,7 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 	if pt := p.PartitionTable; pt != nil {
 		rootUUID, kernelOptions, err := osbuild.GenImageKernelOptions(p.PartitionTable, p.OSCustomizations.MountConfiguration)
 		if err != nil {
-			panic(err)
+			return osbuild.Pipeline{}, err
 		}
 		kernelOptions = append(kernelOptions, p.OSCustomizations.KernelOptionsAppend...)
 
@@ -768,7 +768,7 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 
 		fsCfgStages, err := filesystemConfigStages(pt, p.OSCustomizations.MountConfiguration)
 		if err != nil {
-			panic(err)
+			return osbuild.Pipeline{}, err
 		}
 		pipeline.AddStages(fsCfgStages...)
 
@@ -784,17 +784,17 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 		case platform.BOOTLOADER_UKI:
 			espMountpoint, err := findESPMountpoint(pt)
 			if err != nil {
-				panic(err)
+				return osbuild.Pipeline{}, err
 			}
 			csvfile, err := ukiBootCSVfile(espMountpoint, p.platform.GetArch(), p.kernelVer, p.platform.GetUEFIVendor())
 			if err != nil {
-				panic(err)
+				return osbuild.Pipeline{}, err
 			}
 			p.addStagesForAllFilesAndInlineData(&pipeline, []*fsnode.File{csvfile})
 
 			stages, err := maybeAddHMACandDirStage(p.packageSpecs, espMountpoint, p.kernelVer)
 			if err != nil {
-				panic(err)
+				return osbuild.Pipeline{}, err
 			}
 			pipeline.AddStages(stages...)
 		}
@@ -842,7 +842,7 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 			moduleFailsafeFile, err := fsnode.NewFile(module.FailsafeFile.Path, nil, nil, nil, []byte(module.FailsafeFile.Data))
 
 			if err != nil {
-				panic("failed to create module failsafe file")
+				return osbuild.Pipeline{}, fmt.Errorf("failed to create module failsafe file")
 			}
 
 			failsafeFiles = append(failsafeFiles, moduleFailsafeFile)
@@ -850,7 +850,7 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 
 		failsafeDir, err := fsnode.NewDirectory("/var/lib/dnf/modulefailsafe", nil, nil, nil, true)
 		if err != nil {
-			panic("failed to create module failsafe directory")
+			return osbuild.Pipeline{}, fmt.Errorf("failed to create module failsafe directory")
 		}
 
 		pipeline.AddStages(osbuild.GenDirectoryNodesStages([]*fsnode.Directory{failsafeDir})...)
@@ -935,7 +935,7 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 		for _, cc := range p.OSCustomizations.CACerts {
 			files, err := osbuild.NewCAFileNodes(cc)
 			if err != nil {
-				panic(err.Error())
+				return osbuild.Pipeline{}, err
 			}
 
 			if len(files) > 0 {
@@ -948,7 +948,7 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 	if len(p.OSCustomizations.VersionlockPackages) > 0 {
 		versionlockStageOptions, err := osbuild.GenDNF4VersionlockStageOptions(p.OSCustomizations.VersionlockPackages, p.packageSpecs)
 		if err != nil {
-			panic(err)
+			return osbuild.Pipeline{}, err
 		}
 		pipeline.AddStage(osbuild.NewDNF4VersionlockStage(versionlockStageOptions))
 	}
@@ -983,10 +983,10 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 		}
 	} else {
 		if p.Bootupd {
-			panic("bootupd is only compatible with ostree-based images, this is a programming error")
+			return osbuild.Pipeline{}, fmt.Errorf("bootupd is only compatible with ostree-based images, this is a programming error")
 		}
 		if p.BootcConfig != nil {
-			panic("bootc config is only compatible with ostree-based images, this is a programming error")
+			return osbuild.Pipeline{}, fmt.Errorf("bootc config is only compatible with ostree-based images, this is a programming error")
 		}
 	}
 

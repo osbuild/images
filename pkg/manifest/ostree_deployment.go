@@ -279,9 +279,9 @@ func (p *OSTreeDeployment) doOSTreeContainerSpec(pipeline *osbuild.Pipeline, rep
 func (p *OSTreeDeployment) serialize() (osbuild.Pipeline, error) {
 	switch {
 	case p.ostreeSpec == nil && p.containerSpec == nil:
-		panic("serialization not started")
+		return osbuild.Pipeline{}, fmt.Errorf("serialization not started")
 	case p.ostreeSpec != nil && p.containerSpec != nil:
-		panic("serialize() multiple payload sources defined")
+		return osbuild.Pipeline{}, fmt.Errorf("serialize() multiple payload sources defined")
 	}
 
 	const repoPath = "/ostree/repo"
@@ -307,7 +307,7 @@ func (p *OSTreeDeployment) serialize() (osbuild.Pipeline, error) {
 	}))
 	_, kernelOpts, err := osbuild.GenImageKernelOptions(p.PartitionTable, p.MountConfiguration)
 	if err != nil {
-		panic(err)
+		return osbuild.Pipeline{}, err
 	}
 	kernelOpts = append(kernelOpts, p.KernelOptionsAppend...)
 
@@ -331,7 +331,7 @@ func (p *OSTreeDeployment) serialize() (osbuild.Pipeline, error) {
 	default:
 		// this should be caught at the top of the function, but let's check
 		// again to avoid bugs from bad refactoring.
-		panic("no content source defined for ostree deployment")
+		return osbuild.Pipeline{}, fmt.Errorf("no content source defined for ostree deployment")
 	}
 
 	configStage := osbuild.NewOSTreeConfigStage(
@@ -350,7 +350,7 @@ func (p *OSTreeDeployment) serialize() (osbuild.Pipeline, error) {
 
 	fsCfgStages, err := filesystemConfigStages(p.PartitionTable, p.MountConfiguration)
 	if err != nil {
-		panic(err)
+		return osbuild.Pipeline{}, err
 	}
 	for _, stage := range fsCfgStages {
 		stage.MountOSTree(p.osName, ref, 0)
@@ -366,7 +366,7 @@ func (p *OSTreeDeployment) serialize() (osbuild.Pipeline, error) {
 	if len(p.Users) > 0 {
 		usersStage, err := osbuild.GenUsersStage(p.Users, false)
 		if err != nil {
-			panic("password encryption failed")
+			return osbuild.Pipeline{}, fmt.Errorf("password encryption failed")
 		}
 		usersStage.MountOSTree(p.osName, ref, 0)
 		pipeline.AddStage(usersStage)
@@ -392,7 +392,11 @@ func (p *OSTreeDeployment) serialize() (osbuild.Pipeline, error) {
 		// issue # https://github.com/osbuild/images/issues/352
 		if len(p.CustomFileSystems) != 0 {
 			serviceName := "osbuild-ostree-mountpoints.service"
-			stageOption := osbuild.NewSystemdUnitCreateStage(createMountpointService(serviceName, p.CustomFileSystems))
+			mps, err := createMountpointService(serviceName, p.CustomFileSystems)
+			if err != nil {
+				return osbuild.Pipeline{}, err
+			}
+			stageOption := osbuild.NewSystemdUnitCreateStage(mps)
 			stageOption.MountOSTree(p.osName, ref, 0)
 			pipeline.AddStage(stageOption)
 			p.EnabledServices = append(p.EnabledServices, serviceName)
@@ -531,7 +535,7 @@ func (p *OSTreeDeployment) addStagesForAllFilesAndInlineData(pipeline *osbuild.P
 }
 
 // Creates systemd unit stage by ingesting the servicename and mount-points
-func createMountpointService(serviceName string, mountpoints []string) *osbuild.SystemdUnitCreateStageOptions {
+func createMountpointService(serviceName string, mountpoints []string) (*osbuild.SystemdUnitCreateStageOptions, error) {
 	var conditionPathIsDirectory []string
 	for _, mountpoint := range mountpoints {
 		conditionPathIsDirectory = append(conditionPathIsDirectory, "|!"+mountpoint)
@@ -558,7 +562,7 @@ func createMountpointService(serviceName string, mountpoints []string) *osbuild.
 	for idx, mp := range mountpoints {
 		before, err := common.MountUnitNameFor(mp)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 		befores[idx] = before
 	}
@@ -577,5 +581,5 @@ func createMountpointService(serviceName string, mountpoints []string) *osbuild.
 			Install: &install,
 		},
 	}
-	return &options
+	return &options, nil
 }
