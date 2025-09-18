@@ -188,14 +188,14 @@ func (m Manifest) Serialize(depsolvedSets map[string]depsolvednf.DepsolveResult,
 		}
 	}
 
-	var pipelines []osbuild.Pipeline
+	var osbuildPipelines []osbuild.Pipeline
 	var mergedInputs osbuild.SourceInputs
 	for _, pipeline := range m.pipelines {
-		pip, err := pipeline.serialize()
+		osbuildPipeline, err := pipeline.serialize()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("cannot serialize pipeline %q: %w", pipeline.Name(), err)
 		}
-		pipelines = append(pipelines, pip)
+		osbuildPipelines = append(osbuildPipelines, osbuildPipeline)
 		mergedInputs.Commits = append(mergedInputs.Commits, pipeline.getOSTreeCommits()...)
 		mergedInputs.Depsolved.Packages = append(mergedInputs.Depsolved.Packages, depsolvedSets[pipeline.Name()].Packages...)
 		mergedInputs.Depsolved.Repos = append(mergedInputs.Depsolved.Repos, depsolvedSets[pipeline.Name()].Repos...)
@@ -215,7 +215,7 @@ func (m Manifest) Serialize(depsolvedSets map[string]depsolvednf.DepsolveResult,
 	return json.Marshal(
 		osbuild.Manifest{
 			Version:   "2",
-			Pipelines: pipelines,
+			Pipelines: osbuildPipelines,
 			Sources:   sources,
 		},
 	)
