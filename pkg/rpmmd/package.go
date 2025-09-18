@@ -124,6 +124,19 @@ type Package struct {
 
 type PackageList []Package
 
+func (pl *PackageList) GetPackage(packageName string) (Package, error) {
+	if pl == nil || len(*pl) == 0 {
+		return Package{}, fmt.Errorf("package list is empty")
+	}
+	for _, pkg := range *pl {
+		if pkg.Name == packageName {
+			return pkg, nil
+		}
+	}
+
+	return Package{}, fmt.Errorf("package %q not found in the Package list", packageName)
+}
+
 // The inputs to depsolve, a set of packages to include and a set of packages
 // to exclude. The Repositories are used when depsolving this package set in
 // addition to the base repositories.
