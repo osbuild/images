@@ -30,6 +30,9 @@ CAN_BOOT_TEST = {
         "iot-bootable-container",
         "vhd",
     ],
+    "x86_64": [
+        "wsl"
+    ]
 }
 
 BIB_TYPES = [

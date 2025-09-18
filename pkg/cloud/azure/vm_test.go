@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/cloud/azure"
 )
 
 func TestLaunchVM(t *testing.T) {
@@ -17,11 +18,13 @@ func TestLaunchVM(t *testing.T) {
 	vm, err := azm.az.CreateVM(
 		context.Background(),
 		"rg",
-		"test-image",
-		"vm-name",
-		"size",
-		"username",
-		"ssh-key",
+		azure.VMOptions{
+			Name:   "vm-name",
+			Image:  "test-image",
+			Size:   "size",
+			User:   "username",
+			SSHKey: "ssh-key",
+		},
 	)
 	require.NoError(t, err)
 	require.Equal(t, "rg", vm.ResourceGroup)
