@@ -256,9 +256,17 @@ func (p *AnacondaInstaller) serialize() (osbuild.Pipeline, error) {
 		if p.InteractiveDefaults != nil {
 			return osbuild.Pipeline{}, fmt.Errorf("anaconda installer type live does not support interactive defaults")
 		}
-		pipeline.AddStages(p.liveStages()...)
+		liveStages, err := p.liveStages()
+		if err != nil {
+			return osbuild.Pipeline{}, fmt.Errorf("live stages generation failed: %w", err)
+		}
+		pipeline.AddStages(liveStages...)
 	case AnacondaInstallerTypePayload, AnacondaInstallerTypeNetinst:
-		pipeline.AddStages(p.payloadStages()...)
+		payloadStages, err := p.payloadStages()
+		if err != nil {
+			return osbuild.Pipeline{}, fmt.Errorf("payload stages generation failed: %w", err)
+		}
+		pipeline.AddStages(payloadStages...)
 	default:
 		return osbuild.Pipeline{}, fmt.Errorf("invalid anaconda installer type")
 	}
@@ -273,7 +281,7 @@ func (p *AnacondaInstaller) serialize() (osbuild.Pipeline, error) {
 // - Generic initrd with support for the boot iso
 // - SELinux in permissive mode
 // - Default Anaconda kickstart (optional)
-func (p *AnacondaInstaller) payloadStages() []*osbuild.Stage {
+func (p *AnacondaInstaller) payloadStages() ([]*osbuild.Stage, error) {
 	stages := make([]*osbuild.Stage, 0)
 
 	installUID := 0
@@ -318,7 +326,10 @@ func (p *AnacondaInstaller) payloadStages() []*osbuild.Stage {
 	}))
 
 	// Create a generic initrd suitable for booting Anaconda and activating supported hardware
-	dracutOptions := p.dracutStageOptions()
+	dracutOptions, err := p.dracutStageOptions()
+	if err != nil {
+		return nil, fmt.Errorf("cannot get dracut stage options: %w", err)
+	}
 	stages = append(stages, osbuild.NewDracutStage(dracutOptions))
 
 	stages = append(stages, osbuild.NewSELinuxConfigStage(&osbuild.SELinuxConfigStageOptions{State: osbuild.SELinuxStatePermissive}))
@@ -327,7 +338,7 @@ func (p *AnacondaInstaller) payloadStages() []*osbuild.Stage {
 	// stage setting SELinux to permissive. It's an error to set it to anything
 	// that isn't an empty string
 	if p.SELinux != "" {
-		panic("payload installers do not support SELinux policies")
+		return nil, fmt.Errorf("payload installers do not support SELinux policies (got policy %q)", p.SELinux)
 	}
 
 	if p.InteractiveDefaults != nil {
@@ -345,13 +356,13 @@ func (p *AnacondaInstaller) payloadStages() []*osbuild.Stage {
 		)
 
 		if err != nil {
-			panic(fmt.Sprintf("failed to create kickstart stage options for interactive defaults: %v", err))
+			return nil, fmt.Errorf("failed to create kickstart stage options for interactive defaults: %w", err)
 		}
 
 		stages = append(stages, osbuild.NewKickstartStage(kickstartOptions))
 	}
 
-	return stages
+	return stages, nil
 }
 
 // liveStages creates the stages needed to boot a live image with Anaconda installed
@@ -361,7 +372,7 @@ func (p *AnacondaInstaller) payloadStages() []*osbuild.Stage {
 // - Generic initrd with support for the boot iso
 // - SELinux in permissive mode
 // - Default Anaconda kickstart (optional)
-func (p *AnacondaInstaller) liveStages() []*osbuild.Stage {
+func (p *AnacondaInstaller) liveStages() ([]*osbuild.Stage, error) {
 	stages := make([]*osbuild.Stage, 0)
 
 	usersStageOptions := &osbuild.UsersStageOptions{
@@ -384,7 +395,7 @@ func (p *AnacondaInstaller) liveStages() []*osbuild.Stage {
 	livesysFile, err := fsnode.NewFile("/etc/sysconfig/livesys", &livesysMode, "root", "root", []byte("livesys_session=\"gnome\""))
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	p.Files = []*fsnode.File{livesysFile}
@@ -392,7 +403,10 @@ func (p *AnacondaInstaller) liveStages() []*osbuild.Stage {
 	stages = append(stages, osbuild.GenFileNodesStages(p.Files)...)
 
 	// Create a generic initrd suitable for booting the live iso and activating supported hardware
-	dracutOptions := p.dracutStageOptions()
+	dracutOptions, err := p.dracutStageOptions()
+	if err != nil {
+		return nil, fmt.Errorf("cannot get dracut stage options: %w", err)
+	}
 	stages = append(stages, osbuild.NewDracutStage(dracutOptions))
 
 	if p.SELinux != "" {
@@ -401,7 +415,7 @@ func (p *AnacondaInstaller) liveStages() []*osbuild.Stage {
 		}))
 	}
 
-	return stages
+	return stages, nil
 }
 
 // dracutStageOptions returns the basic dracut setup with anaconda support
@@ -412,7 +426,7 @@ func (p *AnacondaInstaller) liveStages() []*osbuild.Stage {
 // only add what is needed to support the boot iso and anaconda. When new
 // hardware support is needed in the inird it just needs to be added to dracut,
 // not everything that uses dracut (eg. anaconda, lorax, osbuild).
-func (p *AnacondaInstaller) dracutStageOptions() *osbuild.DracutStageOptions {
+func (p *AnacondaInstaller) dracutStageOptions() (*osbuild.DracutStageOptions, error) {
 	// Common settings
 	options := osbuild.DracutStageOptions{
 		Kernel:         []string{p.kernelVer},
@@ -452,10 +466,10 @@ func (p *AnacondaInstaller) dracutStageOptions() *osbuild.DracutStageOptions {
 			"convertfs",
 		}...)
 	default:
-		panic(fmt.Errorf("unknown AnacondaInstallerType %v in dracutStageOptions", p.Type))
+		return nil, fmt.Errorf("unknown AnacondaInstallerType %v in dracutStageOptions", p.Type)
 	}
 
-	return &options
+	return &options, nil
 }
 
 func (p *AnacondaInstaller) Platform() platform.Platform {
