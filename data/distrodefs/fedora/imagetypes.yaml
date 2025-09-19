@@ -407,6 +407,7 @@
     lorax_template_package: lorax-templates-generic
     lorax_templates:
       - 99-generic/runtime-postinstall.tmpl
+      - 99-generic/runtime-cleanup.tmpl
     lorax_logos_package: fedora-logos
     lorax_release_package: fedora-release
     conditions: &default_installer_config_conditions
