@@ -36,6 +36,9 @@ type Status struct {
 	// Timestamp contains the timestamp the message was recieved in
 	Timestamp time.Time
 
+	// Pipeline name
+	Pipeline string
+
 	// Duration as measured by osbuild
 	Duration time.Duration
 }
@@ -127,6 +130,7 @@ func (sr *StatusScanner) Status() (*Status, error) {
 			Done:  status.Progress.Done,
 			Total: status.Progress.Total,
 		},
+		Pipeline: pipelineName,
 		Duration: time.Duration(status.Duration * float64(time.Second)),
 	}
 

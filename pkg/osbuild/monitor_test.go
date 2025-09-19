@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -34,6 +35,7 @@ func TestScannerSimple(t *testing.T) {
 			Total:   4,
 			Message: "Pipeline source org.osbuild.curl",
 		},
+		Pipeline:  "source org.osbuild.curl",
 		Timestamp: time.UnixMilli(int64(ts1)),
 	}, st)
 	// second line
@@ -46,6 +48,7 @@ func TestScannerSimple(t *testing.T) {
 			Total:   4,
 			Message: "Pipeline source org.osbuild.curl",
 		},
+		Pipeline:  "source org.osbuild.curl",
 		Timestamp: time.UnixMilli(int64(ts2)),
 	}, st)
 	// third line
@@ -62,6 +65,7 @@ func TestScannerSimple(t *testing.T) {
 				Total: 2,
 			},
 		},
+		Pipeline:  "build",
 		Timestamp: time.UnixMilli(int64(ts3)),
 	}, st)
 	// end
@@ -96,6 +100,7 @@ func TestScannerSubprogress(t *testing.T) {
 				},
 			},
 		},
+		Pipeline:  "build",
 		Timestamp: time.UnixMilli(int64(ts1)),
 	}, st)
 }
@@ -153,6 +158,35 @@ func TestScannerDuration(t *testing.T) {
 		Timestamp: time.UnixMilli(int64(ts1)),
 		Duration:  time.Duration(dur1 * float64(time.Second)),
 	}, st)
+}
+
+//go:embed testdata/monitor-fedora-42-raw-v159.seq.json
+var osbuildMonitorDuration_fedora []byte
+
+func TestScannerPipelineName(t *testing.T) {
+	scanner := osbuild.NewStatusScanner(bytes.NewBuffer(osbuildMonitorDuration_fedora))
+
+	// the first line is context-less
+	_, err := scanner.Status()
+	assert.NoError(t, err)
+
+	var pipelines []string
+	for {
+		st, err := scanner.Status()
+		assert.NoError(t, err)
+		if st == nil {
+			break
+		}
+
+		assert.NotEmpty(t, st.Pipeline)
+		pipelines = append(pipelines, st.Pipeline)
+	}
+
+	assert.Equal(t, []string{
+		"source org.osbuild.inline",
+		"source org.osbuild.librepo",
+		"build",
+	}, slices.Compact(pipelines))
 }
 
 func TestScannerEmpty(t *testing.T) {
