@@ -240,7 +240,7 @@ var installerBootExcludePaths = []string{
 
 // NewSquashfsStage returns an osbuild stage configured to build
 // the squashfs root filesystem for the ISO.
-func (p *AnacondaInstallerISOTree) NewSquashfsStage() *osbuild.Stage {
+func (p *AnacondaInstallerISOTree) NewSquashfsStage() (*osbuild.Stage, error) {
 	var squashfsOptions osbuild.SquashfsStageOptions
 
 	switch p.anacondaPipeline.Type {
@@ -254,7 +254,7 @@ func (p *AnacondaInstallerISOTree) NewSquashfsStage() *osbuild.Stage {
 		}
 	default:
 		// Shouldn't be possible, but catch it anyway
-		panic(fmt.Errorf("unknown AnacondaInstallerType %v in NewSquashfsStage", p.anacondaPipeline.Type))
+		return nil, fmt.Errorf("unknown AnacondaInstallerType %v in NewSquashfsStage", p.anacondaPipeline.Type)
 	}
 
 	if p.RootfsCompression != "" {
@@ -276,14 +276,14 @@ func (p *AnacondaInstallerISOTree) NewSquashfsStage() *osbuild.Stage {
 	// The iso's rootfs can either be an ext4 filesystem compressed with squashfs, or
 	// a squashfs of the plain directory tree
 	if p.RootfsType == SquashfsExt4Rootfs && p.rootfsPipeline != nil {
-		return osbuild.NewSquashfsStage(&squashfsOptions, p.rootfsPipeline.Name())
+		return osbuild.NewSquashfsStage(&squashfsOptions, p.rootfsPipeline.Name()), nil
 	}
-	return osbuild.NewSquashfsStage(&squashfsOptions, p.anacondaPipeline.Name())
+	return osbuild.NewSquashfsStage(&squashfsOptions, p.anacondaPipeline.Name()), nil
 }
 
 // NewErofsStage returns an osbuild stage configured to build
 // the erofs root filesystem for the ISO.
-func (p *AnacondaInstallerISOTree) NewErofsStage() *osbuild.Stage {
+func (p *AnacondaInstallerISOTree) NewErofsStage() (*osbuild.Stage, error) {
 	var erofsOptions osbuild.ErofsStageOptions
 
 	switch p.anacondaPipeline.Type {
@@ -297,7 +297,7 @@ func (p *AnacondaInstallerISOTree) NewErofsStage() *osbuild.Stage {
 		}
 	default:
 		// Shouldn't be possible, but catch it anyway
-		panic(fmt.Errorf("unknown AnacondaInstallerType %v in NewErofsStage", p.anacondaPipeline.Type))
+		return nil, fmt.Errorf("unknown AnacondaInstallerType %v in NewErofsStage", p.anacondaPipeline.Type)
 	}
 
 	var compression osbuild.ErofsCompression
@@ -315,7 +315,7 @@ func (p *AnacondaInstallerISOTree) NewErofsStage() *osbuild.Stage {
 	// Clean up the root filesystem's /boot to save space
 	erofsOptions.ExcludePaths = installerBootExcludePaths
 
-	return osbuild.NewErofsStage(&erofsOptions, p.anacondaPipeline.Name())
+	return osbuild.NewErofsStage(&erofsOptions, p.anacondaPipeline.Name()), nil
 }
 
 func (p *AnacondaInstallerISOTree) serializeStart(inputs Inputs) error {
@@ -434,9 +434,17 @@ func (p *AnacondaInstallerISOTree) serialize() (osbuild.Pipeline, error) {
 	// Add the selected roofs stage
 	switch p.RootfsType {
 	case SquashfsExt4Rootfs, SquashfsRootfs:
-		pipeline.AddStage(p.NewSquashfsStage())
+		stage, err := p.NewSquashfsStage()
+		if err != nil {
+			return osbuild.Pipeline{}, fmt.Errorf("cannot create squashfs stage: %w", err)
+		}
+		pipeline.AddStage(stage)
 	case ErofsRootfs:
-		pipeline.AddStage(p.NewErofsStage())
+		stage, err := p.NewErofsStage()
+		if err != nil {
+			return osbuild.Pipeline{}, fmt.Errorf("cannot create erofs stage: %w", err)
+		}
+		pipeline.AddStage(stage)
 	default:
 	}
 
@@ -516,11 +524,23 @@ func (p *AnacondaInstallerISOTree) serialize() (osbuild.Pipeline, error) {
 		// the following pipelines are only relevant for payload installers
 		switch {
 		case p.ostreeCommitSpec != nil:
-			pipeline.AddStages(p.ostreeCommitStages()...)
+			ostreeCommitStages, err := p.ostreeCommitStages()
+			if err != nil {
+				return osbuild.Pipeline{}, fmt.Errorf("cannot create ostree commit stages: %w", err)
+			}
+			pipeline.AddStages(ostreeCommitStages...)
 		case p.containerSpec != nil:
-			pipeline.AddStages(p.ostreeContainerStages()...)
+			ostreeContainerStages, err := p.ostreeContainerStages()
+			if err != nil {
+				return osbuild.Pipeline{}, fmt.Errorf("cannot create ostree container stages: %w", err)
+			}
+			pipeline.AddStages(ostreeContainerStages...)
 		case p.OSPipeline != nil:
-			pipeline.AddStages(p.tarPayloadStages()...)
+			tarPayloadStages, err := p.tarPayloadStages()
+			if err != nil {
+				return osbuild.Pipeline{}, fmt.Errorf("cannot create ostree container stages: %w", err)
+			}
+			pipeline.AddStages(tarPayloadStages...)
 		default:
 			// this should have been caught at the top of the function, but
 			// let's check again in case we refactor the function.
@@ -536,7 +556,7 @@ func (p *AnacondaInstallerISOTree) serialize() (osbuild.Pipeline, error) {
 	return pipeline, nil
 }
 
-func (p *AnacondaInstallerISOTree) ostreeCommitStages() []*osbuild.Stage {
+func (p *AnacondaInstallerISOTree) ostreeCommitStages() ([]*osbuild.Stage, error) {
 	stages := make([]*osbuild.Stage, 0)
 
 	// Set up the payload ostree repo
@@ -547,11 +567,11 @@ func (p *AnacondaInstallerISOTree) ostreeCommitStages() []*osbuild.Stage {
 	))
 
 	if p.Kickstart == nil {
-		panic(fmt.Sprintf("Kickstart options not set for %s pipeline", p.name))
+		return nil, fmt.Errorf("Kickstart options not set for %s pipeline", p.name)
 	}
 
 	if p.Kickstart.OSTree == nil {
-		panic(fmt.Sprintf("Kickstart ostree options not set for %s pipeline", p.name))
+		return nil, fmt.Errorf("Kickstart ostree options not set for %s pipeline", p.name)
 	}
 	// Configure the kickstart file with the payload and any user options
 	kickstartOptions, err := osbuild.NewKickstartStageOptionsWithOSTreeCommit(
@@ -564,15 +584,19 @@ func (p *AnacondaInstallerISOTree) ostreeCommitStages() []*osbuild.Stage {
 		p.Kickstart.OSTree.OSName)
 
 	if err != nil {
-		panic(fmt.Sprintf("failed to create kickstart stage options: %v", err))
+		return nil, fmt.Errorf("failed to create kickstart stage options: %w", err)
 	}
 
-	stages = append(stages, p.makeKickstartStages(kickstartOptions)...)
+	kickstartStages, err := p.makeKickstartStages(kickstartOptions)
+	if err != nil {
+		return nil, fmt.Errorf("cannot create kickstart stages: %w", err)
+	}
+	stages = append(stages, kickstartStages...)
 
-	return stages
+	return stages, nil
 }
 
-func (p *AnacondaInstallerISOTree) ostreeContainerStages() []*osbuild.Stage {
+func (p *AnacondaInstallerISOTree) ostreeContainerStages() ([]*osbuild.Stage, error) {
 	stages := make([]*osbuild.Stage, 0)
 
 	image := osbuild.NewContainersInputForSingleSource(*p.containerSpec)
@@ -596,15 +620,19 @@ func (p *AnacondaInstallerISOTree) ostreeContainerStages() []*osbuild.Stage {
 	}
 	stages = append(stages, skopeoStage)
 
-	stages = append(stages, p.bootcInstallerKickstartStages()...)
-	return stages
+	kickstartStages, err := p.bootcInstallerKickstartStages()
+	if err != nil {
+		return nil, fmt.Errorf("cannot generate bootc installer kickstart stages: %w", err)
+	}
+	stages = append(stages, kickstartStages...)
+	return stages, nil
 }
 
 // bootcInstallerKickstartStages sets up kickstart-related stages for Anaconda
 // ISOs that install a bootc bootable container.
-func (p *AnacondaInstallerISOTree) bootcInstallerKickstartStages() []*osbuild.Stage {
+func (p *AnacondaInstallerISOTree) bootcInstallerKickstartStages() ([]*osbuild.Stage, error) {
 	if p.Kickstart == nil {
-		panic(fmt.Sprintf("Kickstart options not set for %s pipeline", p.name))
+		return nil, fmt.Errorf("Kickstart options not set for %s pipeline", p.name)
 	}
 
 	stages := make([]*osbuild.Stage, 0)
@@ -619,7 +647,7 @@ func (p *AnacondaInstallerISOTree) bootcInstallerKickstartStages() []*osbuild.St
 		"",
 		"")
 	if err != nil {
-		panic(fmt.Sprintf("failed to create kickstart stage options: %v", err))
+		return nil, fmt.Errorf("failed to create kickstart stage options: %w", err)
 	}
 
 	// Workaround for lack of --target-imgref in Anaconda, xref https://github.com/osbuild/images/issues/380
@@ -638,7 +666,7 @@ func (p *AnacondaInstallerISOTree) bootcInstallerKickstartStages() []*osbuild.St
 	// kickstart.New() already validates the options but they may have been
 	// modified since then, so validate them before we create the stages
 	if err := p.Kickstart.Validate(); err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	if p.Kickstart.UserFile != nil {
@@ -649,10 +677,10 @@ func (p *AnacondaInstallerISOTree) bootcInstallerKickstartStages() []*osbuild.St
 		stages = append(stages, osbuild.NewKickstartStage(kickstartOptions))
 		kickstartFile, err := kickstartOptions.IncludeRaw(p.Kickstart.UserFile.Contents)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 		p.Files = append(p.Files, kickstartFile)
-		return append(stages, osbuild.GenFileNodesStages(p.Files)...)
+		return append(stages, osbuild.GenFileNodesStages(p.Files)...), nil
 	}
 
 	// create a fully unattended/automated kickstart
@@ -723,14 +751,14 @@ reboot --eject
 
 	kickstartFile, err := kickstartOptions.IncludeRaw(hardcodedKickstartBits)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	p.Files = append(p.Files, kickstartFile)
-	return append(stages, osbuild.GenFileNodesStages(p.Files)...)
+	return append(stages, osbuild.GenFileNodesStages(p.Files)...), nil
 }
 
-func (p *AnacondaInstallerISOTree) tarPayloadStages() []*osbuild.Stage {
+func (p *AnacondaInstallerISOTree) tarPayloadStages() ([]*osbuild.Stage, error) {
 	stages := make([]*osbuild.Stage, 0)
 
 	// Create the payload tarball
@@ -746,18 +774,22 @@ func (p *AnacondaInstallerISOTree) tarPayloadStages() []*osbuild.Stage {
 			makeISORootPath(p.PayloadPath))
 
 		if err != nil {
-			panic(fmt.Sprintf("failed to create kickstart stage options: %v", err))
+			return nil, fmt.Errorf("failed to create kickstart stage options: %w", err)
 		}
 
-		stages = append(stages, p.makeKickstartStages(kickstartOptions)...)
+		kickstartStages, err := p.makeKickstartStages(kickstartOptions)
+		if err != nil {
+			return nil, fmt.Errorf("cannot create kickstart stages: %w", err)
+		}
+		stages = append(stages, kickstartStages...)
 	}
-	return stages
+	return stages, nil
 }
 
 // Create the base kickstart stage with any options required for unattended
 // installation if set and with any extra file insertion stage required for
 // extra kickstart content.
-func (p *AnacondaInstallerISOTree) makeKickstartStages(stageOptions *osbuild.KickstartStageOptions) []*osbuild.Stage {
+func (p *AnacondaInstallerISOTree) makeKickstartStages(stageOptions *osbuild.KickstartStageOptions) ([]*osbuild.Stage, error) {
 	kickstartOptions := p.Kickstart
 	if kickstartOptions == nil {
 		kickstartOptions = new(kickstart.Options)
@@ -768,7 +800,7 @@ func (p *AnacondaInstallerISOTree) makeKickstartStages(stageOptions *osbuild.Kic
 	// kickstart.New() already validates the options but they may have been
 	// modified since then, so validate them before we create the stages
 	if err := p.Kickstart.Validate(); err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	if kickstartOptions.UserFile != nil {
@@ -776,7 +808,7 @@ func (p *AnacondaInstallerISOTree) makeKickstartStages(stageOptions *osbuild.Kic
 		if kickstartOptions.UserFile != nil {
 			kickstartFile, err := stageOptions.IncludeRaw(kickstartOptions.UserFile.Contents)
 			if err != nil {
-				panic(err)
+				return nil, err
 			}
 
 			p.Files = append(p.Files, kickstartFile)
@@ -850,14 +882,14 @@ func (p *AnacondaInstallerISOTree) makeKickstartStages(stageOptions *osbuild.Kic
 This directory contains files necessary for registering the system on first boot after installation. These files are copied to the installed system and services are enabled to activate the subscription on boot.`),
 		)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 		p.Files = append(p.Files, subscriptionReadme)
 	}
 
 	stages = append(stages, osbuild.GenFileNodesStages(p.Files)...)
 
-	return stages
+	return stages, nil
 }
 
 // makeISORootPath return a path that can be used to address files and folders

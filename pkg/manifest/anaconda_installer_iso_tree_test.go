@@ -446,8 +446,8 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 			},
 		}
 		pipeline.ISOBoot = manifest.SyslinuxISOBoot
-		// XXX: we should check the error instead
-		assert.Panics(t, func() { _, _ = manifest.SerializeWith(pipeline, manifest.Inputs{}) })
+		_, err := manifest.SerializeWith(pipeline, manifest.Inputs{})
+		assert.EqualError(t, err, "cannot create ostree container stages: cannot create kickstart stages: kickstart unattended options are not compatible with user-supplied kickstart content")
 	})
 
 	t.Run("unhappy/user-kickstart-with-sudo-bits", func(t *testing.T) {
@@ -462,8 +462,8 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 			},
 		}
 		pipeline.ISOBoot = manifest.SyslinuxISOBoot
-		// XXX: we should check the error instead
-		assert.Panics(t, func() { _, _ = manifest.SerializeWith(pipeline, manifest.Inputs{}) })
+		_, err := manifest.SerializeWith(pipeline, manifest.Inputs{})
+		assert.EqualError(t, err, "cannot create ostree container stages: cannot create kickstart stages: kickstart sudo nopasswd drop-in file creation is not compatible with user-supplied kickstart content")
 	})
 
 	t.Run("plain+squashfs-rootfs", func(t *testing.T) {
@@ -583,10 +583,8 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 			OSTree: &kickstart.OSTree{},
 		}
 		pipeline.ISOBoot = manifest.SyslinuxISOBoot
-		// XXX: we should check the error instead
-		assert.Panics(t, func() {
-			_, _ = manifest.SerializeWith(pipeline, manifest.Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
-		})
+		_, err := manifest.SerializeWith(pipeline, manifest.Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
+		assert.EqualError(t, err, "cannot create ostree commit stages: cannot create kickstart stages: kickstart unattended options are not compatible with user-supplied kickstart content")
 	})
 
 	t.Run("unhappy/user-kickstart-with-sudo-bits", func(t *testing.T) {
@@ -602,10 +600,8 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 			OSTree:       &kickstart.OSTree{},
 		}
 		pipeline.ISOBoot = manifest.SyslinuxISOBoot
-		// XXX: we should check the error instead
-		assert.Panics(t, func() {
-			_, _ = manifest.SerializeWith(pipeline, manifest.Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
-		})
+		_, err := manifest.SerializeWith(pipeline, manifest.Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
+		assert.EqualError(t, err, "cannot create ostree commit stages: cannot create kickstart stages: kickstart sudo nopasswd drop-in file creation is not compatible with user-supplied kickstart content")
 	})
 
 	t.Run("plain+squashfs-rootfs", func(t *testing.T) {
