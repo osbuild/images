@@ -1814,35 +1814,18 @@ func TestNewCustomPartitionTable(t *testing.T) {
 
 				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
 				Partitions: []disk.Partition{
-					// root is aligned to the end but not reindexed
-					{
-						Start:    (20 + 12 + 1) * datasizes.MiB,
-						Size:     3*datasizes.GiB + datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
-						Type:     disk.RootPartitionS390xGUID,
-						UUID:     "e2d3d0d0-de6b-48f9-b44c-e85ff044c6b1",
-						Bootable: false,
-						Payload: &disk.Filesystem{
-							Type:         "xfs",
-							Label:        "root",
-							Mountpoint:   "/",
-							FSTabOptions: "defaults",
-							UUID:         "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
-							FSTabFreq:    0,
-							FSTabPassNo:  0,
-						},
-					},
 					{
 						Start:    1 * datasizes.MiB,
 						Size:     20 * datasizes.MiB,
 						Type:     disk.FilesystemDataGUID,
-						UUID:     "f83b8e88-3bbf-457a-ab99-c5b252c7429c",
+						UUID:     "e2d3d0d0-de6b-48f9-b44c-e85ff044c6b1",
 						Bootable: false,
 						Payload: &disk.Filesystem{
 							Type:         "ext4",
 							Label:        "home",
 							Mountpoint:   "/home",
 							FSTabOptions: "defaults",
-							UUID:         "fb180daf-48a7-4ee0-b10d-394651850fd4",
+							UUID:         "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
 							FSTabFreq:    0,
 							FSTabPassNo:  0,
 						},
@@ -1851,11 +1834,27 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						Start: (20 + 1) * datasizes.MiB,
 						Size:  12 * datasizes.MiB,
 						Type:  disk.SwapPartitionGUID,
-						UUID:  "32f3a8ae-b79e-4856-b659-c18f0dcecc77",
+						UUID:  "f83b8e88-3bbf-457a-ab99-c5b252c7429c",
 						Payload: &disk.Swap{
 							Label:        "swappyswaps",
-							UUID:         "a178892e-e285-4ce1-9114-55780875d64e",
+							UUID:         "fb180daf-48a7-4ee0-b10d-394651850fd4",
 							FSTabOptions: "defaults",
+						},
+					},
+					{
+						Start:    (20 + 12 + 1) * datasizes.MiB,
+						Size:     3*datasizes.GiB + datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
+						Type:     disk.RootPartitionS390xGUID,
+						UUID:     "32f3a8ae-b79e-4856-b659-c18f0dcecc77",
+						Bootable: false,
+						Payload: &disk.Filesystem{
+							Type:         "xfs",
+							Label:        "root",
+							Mountpoint:   "/",
+							FSTabOptions: "defaults",
+							UUID:         "a178892e-e285-4ce1-9114-55780875d64e",
+							FSTabFreq:    0,
+							FSTabPassNo:  0,
 						},
 					},
 				},
@@ -2363,10 +2362,34 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						},
 					},
 					{
+						Start:    1226 * datasizes.MiB,
+						Size:     104 * datasizes.MiB, // the sum of the LVs (rounded to the next 4 MiB extent) grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
+						Type:     disk.LVMPartitionGUID,
+						UUID:     "32f3a8ae-b79e-4856-b659-c18f0dcecc77",
+						Bootable: false,
+						Payload: &disk.LVMVolumeGroup{
+							Name:        "vg01",
+							Description: "created via lvm2 and osbuild",
+							LogicalVolumes: []disk.LVMLogicalVolume{
+								{
+									Name: "datalv",
+									Size: 100 * datasizes.MiB,
+									Payload: &disk.Filesystem{
+										Label:        "data",
+										Type:         "ext4", // the defaultType
+										Mountpoint:   "/data",
+										FSTabOptions: "defaults",
+										UUID:         "fb180daf-48a7-4ee0-b10d-394651850fd4",
+									},
+								},
+							},
+						},
+					},
+					{
 						Start:    1330 * datasizes.MiB,                                                                        // the root vg is moved to the end of the partition table by relayout()
 						Size:     3*datasizes.GiB + 16*datasizes.MiB + datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // the sum of the LVs (rounded to the next 4 MiB extent) grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
 						Type:     disk.LVMPartitionGUID,
-						UUID:     "32f3a8ae-b79e-4856-b659-c18f0dcecc77",
+						UUID:     "c75e7a81-bfde-475f-a7cf-e242cf3cc354",
 						Bootable: false,
 						Payload: &disk.LVMVolumeGroup{
 							Name:        "vg00",
@@ -2380,7 +2403,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 										Type:         "xfs",
 										Mountpoint:   "/var/log",
 										FSTabOptions: "defaults",
-										UUID:         "fb180daf-48a7-4ee0-b10d-394651850fd4",
+										UUID:         "a178892e-e285-4ce1-9114-55780875d64e",
 									},
 								},
 								{
@@ -2390,30 +2413,6 @@ func TestNewCustomPartitionTable(t *testing.T) {
 										Label:        "root",
 										Type:         "ext4", // the defaultType
 										Mountpoint:   "/",
-										FSTabOptions: "defaults",
-										UUID:         "a178892e-e285-4ce1-9114-55780875d64e",
-									},
-								},
-							},
-						},
-					},
-					{
-						Start:    1226 * datasizes.MiB,
-						Size:     104 * datasizes.MiB, // the sum of the LVs (rounded to the next 4 MiB extent) grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
-						Type:     disk.LVMPartitionGUID,
-						UUID:     "c75e7a81-bfde-475f-a7cf-e242cf3cc354",
-						Bootable: false,
-						Payload: &disk.LVMVolumeGroup{
-							Name:        "vg01",
-							Description: "created via lvm2 and osbuild",
-							LogicalVolumes: []disk.LVMLogicalVolume{
-								{
-									Name: "datalv",
-									Size: 100 * datasizes.MiB,
-									Payload: &disk.Filesystem{
-										Label:        "data",
-										Type:         "ext4", // the defaultType
-										Mountpoint:   "/data",
 										FSTabOptions: "defaults",
 										UUID:         "e2d3d0d0-de6b-48f9-b44c-e85ff044c6b1",
 									},
@@ -2606,41 +2605,41 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						},
 					},
 					{
+						Start: 1226 * datasizes.MiB,
+						Size:  120 * datasizes.MiB,
+						Type:  disk.SwapPartitionGUID,
+						UUID:  "f83b8e88-3bbf-457a-ab99-c5b252c7429c",
+						Payload: &disk.Swap{
+							Label:        "butterswap",
+							UUID:         "fb180daf-48a7-4ee0-b10d-394651850fd4", // same as volume UUID
+							FSTabOptions: "defaults",
+						},
+					},
+					{
 						Start:    1346 * datasizes.MiB,
 						Size:     231*datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
 						Type:     disk.FilesystemDataGUID,
-						UUID:     "f83b8e88-3bbf-457a-ab99-c5b252c7429c",
+						UUID:     "32f3a8ae-b79e-4856-b659-c18f0dcecc77",
 						Bootable: false,
 						Payload: &disk.Btrfs{
-							UUID: "fb180daf-48a7-4ee0-b10d-394651850fd4",
+							UUID: "a178892e-e285-4ce1-9114-55780875d64e",
 							Subvolumes: []disk.BtrfsSubvolume{
 								{
 									Name:       "subvol/root",
 									Mountpoint: "/",
-									UUID:       "fb180daf-48a7-4ee0-b10d-394651850fd4", // same as volume UUID
+									UUID:       "a178892e-e285-4ce1-9114-55780875d64e", // same as volume UUID
 								},
 								{
 									Name:       "subvol/home",
 									Mountpoint: "/home",
-									UUID:       "fb180daf-48a7-4ee0-b10d-394651850fd4", // same as volume UUID
+									UUID:       "a178892e-e285-4ce1-9114-55780875d64e", // same as volume UUID
 								},
 								{
 									Name:       "subvol/varlog",
 									Mountpoint: "/var/log",
-									UUID:       "fb180daf-48a7-4ee0-b10d-394651850fd4", // same as volume UUID
+									UUID:       "a178892e-e285-4ce1-9114-55780875d64e", // same as volume UUID
 								},
 							},
-						},
-					},
-					{
-						Start: 1226 * datasizes.MiB,
-						Size:  120 * datasizes.MiB,
-						Type:  disk.SwapPartitionGUID,
-						UUID:  "32f3a8ae-b79e-4856-b659-c18f0dcecc77",
-						Payload: &disk.Swap{
-							Label:        "butterswap",
-							UUID:         "a178892e-e285-4ce1-9114-55780875d64e",
-							FSTabOptions: "defaults",
 						},
 					},
 				},
