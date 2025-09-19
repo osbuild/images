@@ -3,13 +3,14 @@ package generic_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/disk/partition"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/generic"
 	"github.com/osbuild/images/pkg/ostree"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestCheckOptions(t *testing.T) {
