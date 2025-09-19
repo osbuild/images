@@ -155,6 +155,7 @@
       "oci",
       "openstack",
       "ova",
+      "pxe-tar-xz",
       "qcow2",
       "tar",
       "vagrant-libvirt",
@@ -186,7 +187,8 @@
       "wsl",
       "iot-bootable-container",
       "iot-container",
-      "everything-netinst"
+      "everything-netinst",
+      "pxe-tar-xz"
     ]
   },
   "./configs/iot-customizations-full.json": {
