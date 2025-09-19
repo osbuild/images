@@ -54,6 +54,11 @@
           {
             "fs_type": "swap",
             "minsize": "1 GiB"
+          },
+          {
+            "mountpoint": "/boot/efi",
+            "fs_type": "vfat",
+            "minsize": 536870912 
           }
         ]
       }
