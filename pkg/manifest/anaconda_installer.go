@@ -137,13 +137,9 @@ func (p *AnacondaInstaller) getBuildPackages(Distro) []string {
 		"shadow-utils", // The pipeline always creates a root and installer user
 	)
 
-	if p.InstallerCustomizations.UseRHELLoraxTemplates {
+	if len(p.InstallerCustomizations.LoraxTemplatePackage) > 0 {
 		packages = append(packages,
-			"lorax-templates-rhel",
-		)
-	} else {
-		packages = append(packages,
-			"lorax-templates-generic",
+			p.InstallerCustomizations.LoraxTemplatePackage,
 		)
 	}
 
@@ -308,14 +304,16 @@ func (p *AnacondaInstaller) payloadStages() []*osbuild.Stage {
 		stages = append(stages, osbuild.NewAnacondaStage(anacondaStageOptions))
 	}
 
-	LoraxPath := "99-generic/runtime-postinstall.tmpl"
-	if p.InstallerCustomizations.UseRHELLoraxTemplates {
-		LoraxPath = "80-rhel/runtime-postinstall.tmpl"
+	for _, tmpl := range p.InstallerCustomizations.LoraxTemplates {
+		stages = append(stages, osbuild.NewLoraxScriptStage(&osbuild.LoraxScriptStageOptions{
+			Path: tmpl,
+			Branding: osbuild.Branding{
+				Release: p.InstallerCustomizations.LoraxReleasePackage,
+				Logos:   p.InstallerCustomizations.LoraxLogosPackage,
+			},
+			BaseArch: p.platform.GetArch().String(),
+		}))
 	}
-	stages = append(stages, osbuild.NewLoraxScriptStage(&osbuild.LoraxScriptStageOptions{
-		Path:     LoraxPath,
-		BaseArch: p.platform.GetArch().String(),
-	}))
 
 	// Create a generic initrd suitable for booting Anaconda and activating supported hardware
 	dracutOptions := p.dracutStageOptions()
