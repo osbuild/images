@@ -201,7 +201,11 @@ func (m Manifest) Serialize(depsolvedSets map[string]depsolvednf.DepsolveResult,
 		mergedInputs.Depsolved.Repos = append(mergedInputs.Depsolved.Repos, depsolvedSets[pipeline.Name()].Repos...)
 		mergedInputs.Containers = append(mergedInputs.Containers, pipeline.getContainerSpecs()...)
 		mergedInputs.InlineData = append(mergedInputs.InlineData, pipeline.getInline()...)
-		mergedInputs.FileRefs = append(mergedInputs.FileRefs, pipeline.fileRefs()...)
+		fileRefs, err := pipeline.fileRefs()
+		if err != nil {
+			return nil, fmt.Errorf("cannot get files ref from %q: %w", pipeline.Name(), err)
+		}
+		mergedInputs.FileRefs = append(mergedInputs.FileRefs, fileRefs...)
 	}
 	for _, pipeline := range m.pipelines {
 		pipeline.serializeEnd()

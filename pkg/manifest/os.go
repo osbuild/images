@@ -1220,24 +1220,24 @@ func (p *OS) addStagesForAllFilesAndInlineData(pipeline *osbuild.Pipeline, files
 // (e.g. via the "uri" key in customizations) are added to the manifests "sources"
 //
 // Note that the actual copy/chmod/... stages are generated via addStagesForAllFilesAndInlineData
-func (p *OS) fileRefs() []string {
+func (p *OS) fileRefs() ([]string, error) {
 	var fileRefs []string
 
 	for _, file := range p.OSCustomizations.Files {
 		if uriStr := file.URI(); uriStr != "" {
 			uri, err := url.Parse(uriStr)
 			if err != nil {
-				panic(fmt.Errorf("internal error: file customizations is not a valid URL: %w", err))
+				return nil, fmt.Errorf("internal error: file customizations is not a valid URL: %w", err)
 			}
 
 			switch uri.Scheme {
 			case "", "file":
 				fileRefs = append(fileRefs, uri.Path)
 			default:
-				panic(fmt.Errorf("internal error: unsupported schema for OSCustomizations.Files: %v", uriStr))
+				return nil, fmt.Errorf("internal error: unsupported schema for OSCustomizations.Files: %v", uriStr)
 			}
 		}
 	}
 
-	return fileRefs
+	return fileRefs, nil
 }
