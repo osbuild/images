@@ -318,6 +318,15 @@ func (p *AnacondaInstaller) payloadStages() ([]*osbuild.Stage, error) {
 		stages = append(stages, osbuild.NewAnacondaStage(anacondaStageOptions))
 	}
 
+	// Create a generic initrd suitable for booting Anaconda and activating supported hardware
+	dracutOptions, err := p.dracutStageOptions()
+	if err != nil {
+		return nil, fmt.Errorf("cannot get dracut stage options: %w", err)
+	}
+	stages = append(stages, osbuild.NewDracutStage(dracutOptions))
+
+	// Run lorax scripts to setup booting the iso and removing unneeded files
+	// NOTE: MUST run after dracut stage, it removes some of the dracut files from the rootfs
 	for _, tmpl := range p.InstallerCustomizations.LoraxTemplates {
 		stages = append(stages, osbuild.NewLoraxScriptStage(&osbuild.LoraxScriptStageOptions{
 			Path: tmpl,
@@ -328,13 +337,6 @@ func (p *AnacondaInstaller) payloadStages() ([]*osbuild.Stage, error) {
 			BaseArch: p.platform.GetArch().String(),
 		}))
 	}
-
-	// Create a generic initrd suitable for booting Anaconda and activating supported hardware
-	dracutOptions, err := p.dracutStageOptions()
-	if err != nil {
-		return nil, fmt.Errorf("cannot get dracut stage options: %w", err)
-	}
-	stages = append(stages, osbuild.NewDracutStage(dracutOptions))
 
 	stages = append(stages, osbuild.NewSELinuxConfigStage(&osbuild.SELinuxConfigStageOptions{State: osbuild.SELinuxStatePermissive}))
 
