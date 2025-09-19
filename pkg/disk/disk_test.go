@@ -1072,6 +1072,12 @@ func TestCreatePartitionTableDefaultFs(t *testing.T) {
 
 	mpt, err := disk.NewPartitionTable(&pt, fsCust, 0, partition.RawPartitioningMode, arch.ARCH_X86_64, nil, "ext4", rng)
 	assert.NoError(t, err)
-	assert.Equal(t, "/var/stuff", mpt.Partitions[4].Payload.(*disk.Filesystem).Mountpoint)
-	assert.Equal(t, "ext4", mpt.Partitions[4].Payload.(*disk.Filesystem).Type)
+
+	// root partition is always last
+	// custom partition is before that
+	nParts := len(mpt.Partitions)
+	assert.Equal(t, "/", mpt.Partitions[nParts-1].Payload.(*disk.Filesystem).Mountpoint)
+	assert.Equal(t, "xfs", mpt.Partitions[nParts-1].Payload.(*disk.Filesystem).Type)
+	assert.Equal(t, "/var/stuff", mpt.Partitions[nParts-2].Payload.(*disk.Filesystem).Mountpoint)
+	assert.Equal(t, "ext4", mpt.Partitions[nParts-2].Payload.(*disk.Filesystem).Type)
 }
