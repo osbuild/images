@@ -203,7 +203,9 @@ func TestNewBuildOptionSELinuxPolicyBuildrootFromPackages(t *testing.T) {
 		require.Len(t, osbuildPipeline.Stages, 2)
 		assert.Equal(t, "org.osbuild.selinux", osbuildPipeline.Stages[1].Type)
 		assert.Equal(t, tc.expectedFileContext, osbuildPipeline.Stages[1].Options.(*osbuild.SELinuxStageOptions).FileContexts)
-		assert.Contains(t, build.getPackageSetChain(DISTRO_NULL)[0].Include, tc.expectedBuildPkg)
+		buildPackageSetChain, err := build.getPackageSetChain(DISTRO_NULL)
+		assert.NoError(t, err)
+		assert.Contains(t, buildPackageSetChain[0].Include, tc.expectedBuildPkg)
 	}
 }
 

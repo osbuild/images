@@ -56,7 +56,7 @@ func NewOSTreeCommitServer(buildPipeline Build,
 	return p
 }
 
-func (p *OSTreeCommitServer) getPackageSetChain(Distro) []rpmmd.PackageSet {
+func (p *OSTreeCommitServer) getPackageSetChain(Distro) ([]rpmmd.PackageSet, error) {
 	// FIXME: container package is defined here
 	packages := []string{"nginx"}
 	return []rpmmd.PackageSet{
@@ -65,15 +65,15 @@ func (p *OSTreeCommitServer) getPackageSetChain(Distro) []rpmmd.PackageSet {
 			Repositories:    append(p.repos, p.ExtraRepos...),
 			InstallWeakDeps: true,
 		},
-	}
+	}, nil
 }
 
-func (p *OSTreeCommitServer) getBuildPackages(Distro) []string {
+func (p *OSTreeCommitServer) getBuildPackages(Distro) ([]string, error) {
 	packages := []string{
 		"rpm",
 		"rpm-ostree",
 	}
-	return packages
+	return packages, nil
 }
 
 func (p *OSTreeCommitServer) getPackageSpecs() []rpmmd.PackageSpec {

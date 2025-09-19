@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/blueprint/pkg/blueprint"
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/ostree"
@@ -41,7 +42,7 @@ func kernelCount(imgType distro.ImageType, bp blueprint.Blueprint) int {
 	if err != nil {
 		panic(err)
 	}
-	sets := manifest.GetPackageSetChains()
+	sets := common.Must(manifest.GetPackageSetChains())
 
 	// Use a map to count unique kernels in a package set. If the same kernel
 	// name appears twice, it will only be installed once, so we only count it

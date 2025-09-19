@@ -57,8 +57,8 @@ func (p *VPC) serialize() (osbuild.Pipeline, error) {
 	return pipeline, nil
 }
 
-func (p *VPC) getBuildPackages(Distro) []string {
-	return []string{"qemu-img"}
+func (p *VPC) getBuildPackages(Distro) ([]string, error) {
+	return []string{"qemu-img"}, nil
 }
 
 func (p *VPC) Export() *artifact.Artifact {

@@ -15,11 +15,11 @@ var (
 	DISTRO_COUNT = _distro_count
 )
 
-func (p *OS) GetBuildPackages(d Distro) []string {
+func (p *OS) GetBuildPackages(d Distro) ([]string, error) {
 	return p.getBuildPackages(d)
 }
 
-func (p *OS) GetPackageSetChain(d Distro) []rpmmd.PackageSet {
+func (p *OS) GetPackageSetChain(d Distro) ([]rpmmd.PackageSet, error) {
 	return p.getPackageSetChain(d)
 }
 

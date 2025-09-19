@@ -54,6 +54,6 @@ func (p *OVF) serialize() (osbuild.Pipeline, error) {
 	return pipeline, nil
 }
 
-func (p *OVF) getBuildPackages(Distro) []string {
-	return []string{"qemu-img"}
+func (p *OVF) getBuildPackages(Distro) ([]string, error) {
+	return []string{"qemu-img"}, nil
 }

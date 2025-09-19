@@ -35,11 +35,11 @@ func NewISO(buildPipeline Build, treePipeline Pipeline, isoLabel string) *ISO {
 	return p
 }
 
-func (p *ISO) getBuildPackages(Distro) []string {
+func (p *ISO) getBuildPackages(Distro) ([]string, error) {
 	return []string{
 		"isomd5sum",
 		"xorriso",
-	}
+	}, nil
 }
 
 func (p *ISO) serialize() (osbuild.Pipeline, error) {

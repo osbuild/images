@@ -44,8 +44,8 @@ func NewContentTest(m *Manifest, name string, packageSets []rpmmd.PackageSet, co
 	return pipeline
 }
 
-func (p *ContentTest) getPackageSetChain(Distro) []rpmmd.PackageSet {
-	return p.packageSets
+func (p *ContentTest) getPackageSetChain(Distro) ([]rpmmd.PackageSet, error) {
+	return p.packageSets, nil
 }
 
 func (p *ContentTest) getContainerSources() []container.SourceSpec {

@@ -21,6 +21,7 @@ import (
 	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/internal/buildconfig"
 	"github.com/osbuild/images/internal/cmdutil"
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/bib/osinfo"
 	"github.com/osbuild/images/pkg/container"
@@ -272,7 +273,7 @@ func makeManifestJob(
 
 		var depsolvedSets map[string]depsolvednf.DepsolveResult
 		if content["packages"] {
-			depsolvedSets, err = manifestgen.DefaultDepsolver(cacheDir, os.Stderr, manifest.GetPackageSetChains(), distribution, archName)
+			depsolvedSets, err = manifestgen.DefaultDepsolver(cacheDir, os.Stderr, common.Must(manifest.GetPackageSetChains()), distribution, archName)
 			if err != nil {
 				err = fmt.Errorf("[%s] depsolve failed: %s", filename, err.Error())
 				return
@@ -284,7 +285,7 @@ func makeManifestJob(
 				}
 			}
 		} else {
-			depsolvedSets = manifestmock.Depsolve(manifest.GetPackageSetChains(), repos, archName)
+			depsolvedSets = manifestmock.Depsolve(common.Must(manifest.GetPackageSetChains()), repos, archName)
 		}
 
 		var containerSpecs map[string][]container.Spec

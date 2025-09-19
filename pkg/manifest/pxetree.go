@@ -32,12 +32,12 @@ func NewPXETree(buildPipeline Build, osPipeline *OS) *PXETree {
 	return p
 }
 
-func (p *PXETree) getBuildPackages(Distro) []string {
+func (p *PXETree) getBuildPackages(Distro) ([]string, error) {
 	switch p.RootfsType {
 	case ErofsRootfs:
-		return []string{"erofs-utils"}
+		return []string{"erofs-utils"}, nil
 	default:
-		return []string{"squashfs-tools"}
+		return []string{"squashfs-tools"}, nil
 	}
 }
 

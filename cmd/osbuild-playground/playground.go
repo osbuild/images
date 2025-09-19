@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/distro"
@@ -36,7 +37,7 @@ func RunPlayground(img image.ImageKind, d distro.Distro, arch distro.Arch, repos
 	}
 
 	depsolvedSets := make(map[string]depsolvednf.DepsolveResult)
-	for name, chain := range manifest.GetPackageSetChains() {
+	for name, chain := range common.Must(manifest.GetPackageSetChains()) {
 		res, err := solver.Depsolve(chain, sbom.StandardTypeNone)
 		if err != nil {
 			panic(fmt.Sprintf("failed to depsolve for pipeline %s: %s\n", name, err.Error()))

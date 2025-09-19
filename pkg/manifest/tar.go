@@ -71,8 +71,8 @@ func (p *Tar) serialize() (osbuild.Pipeline, error) {
 	return pipeline, nil
 }
 
-func (p *Tar) getBuildPackages(Distro) []string {
-	return []string{"tar"}
+func (p *Tar) getBuildPackages(Distro) ([]string, error) {
+	return []string{"tar"}, nil
 }
 
 func (p *Tar) Export() *artifact.Artifact {

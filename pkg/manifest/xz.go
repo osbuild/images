@@ -47,8 +47,8 @@ func (p *XZ) serialize() (osbuild.Pipeline, error) {
 	return pipeline, nil
 }
 
-func (p *XZ) getBuildPackages(Distro) []string {
-	return []string{"xz"}
+func (p *XZ) getBuildPackages(Distro) ([]string, error) {
+	return []string{"xz"}, nil
 }
 
 func (p *XZ) Export() *artifact.Artifact {

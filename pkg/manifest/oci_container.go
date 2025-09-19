@@ -55,8 +55,8 @@ func (p *OCIContainer) serialize() (osbuild.Pipeline, error) {
 	return pipeline, nil
 }
 
-func (p *OCIContainer) getBuildPackages(Distro) []string {
-	return []string{"tar"}
+func (p *OCIContainer) getBuildPackages(Distro) ([]string, error) {
+	return []string{"tar"}, nil
 }
 
 func (p *OCIContainer) Export() *artifact.Artifact {

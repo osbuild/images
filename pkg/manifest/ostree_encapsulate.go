@@ -45,11 +45,11 @@ func (p *OSTreeEncapsulate) serialize() (osbuild.Pipeline, error) {
 	return pipeline, nil
 }
 
-func (p *OSTreeEncapsulate) getBuildPackages(Distro) []string {
+func (p *OSTreeEncapsulate) getBuildPackages(Distro) ([]string, error) {
 	return []string{
 		"rpm-ostree",
 		"python3-pyyaml",
-	}
+	}, nil
 }
 
 func (p *OSTreeEncapsulate) Export() *artifact.Artifact {

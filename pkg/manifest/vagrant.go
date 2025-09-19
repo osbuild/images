@@ -107,8 +107,8 @@ func (p *Vagrant) serialize() (osbuild.Pipeline, error) {
 	return pipeline, nil
 }
 
-func (p *Vagrant) getBuildPackages(Distro) []string {
-	return []string{"qemu-img"}
+func (p *Vagrant) getBuildPackages(Distro) ([]string, error) {
+	return []string{"qemu-img"}, nil
 }
 
 func (p *Vagrant) Export() *artifact.Artifact {

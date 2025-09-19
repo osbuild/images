@@ -128,7 +128,7 @@ func NewOSTreeContainerDeployment(buildPipeline Build,
 	return p
 }
 
-func (p *OSTreeDeployment) getBuildPackages(Distro) []string {
+func (p *OSTreeDeployment) getBuildPackages(Distro) ([]string, error) {
 	packages := []string{
 		"rpm-ostree",
 	}
@@ -137,7 +137,7 @@ func (p *OSTreeDeployment) getBuildPackages(Distro) []string {
 		packages = append(packages, "shadow-utils")
 	}
 
-	return packages
+	return packages, nil
 }
 
 func (p *OSTreeDeployment) getOSTreeCommits() []ostree.CommitSpec {
