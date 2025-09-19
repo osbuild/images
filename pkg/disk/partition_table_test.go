@@ -109,7 +109,7 @@ func TestPartitionTable_GenerateUUIDs_VFAT(t *testing.T) {
 
 	pt.GenerateUUIDs(rnd)
 
-	assert.Equal(t, "6e4ff95f", pt.Partitions[0].Payload.(*disk.Filesystem).UUID)
+	assert.Equal(t, "6E4F-F95F", pt.Partitions[0].Payload.(*disk.Filesystem).UUID)
 }
 
 func TestEnsureRootFilesystem(t *testing.T) {
@@ -2846,7 +2846,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						UUID:  "48a79ee0-b10d-4946-9185-0fd4a178892e",
 						Payload: &disk.Filesystem{
 							Type:         "vfat",
-							UUID:         "6e4ff95f",
+							UUID:         "6E4F-F95F",
 							Mountpoint:   "/boot/efi",
 							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
 							FSTabFreq:    0,
@@ -2901,7 +2901,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						Type:  disk.EFISystemPartitionDOSID,
 						Payload: &disk.Filesystem{
 							Type:         "vfat",
-							UUID:         "6e4ff95f",
+							UUID:         "6E4F-F95F",
 							Mountpoint:   "/boot/efi",
 							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
 							FSTabFreq:    0,
