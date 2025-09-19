@@ -68,7 +68,7 @@ type Pipeline interface {
 	getInline() []string
 
 	// files generated from url references
-	fileRefs() []string
+	fileRefs() ([]string, error)
 }
 
 // ExportingPipeline is a pipeline that can export an artifact
@@ -152,8 +152,8 @@ func (p Base) getInline() []string {
 	return []string{}
 }
 
-func (p Base) fileRefs() []string {
-	return nil
+func (p Base) fileRefs() ([]string, error) {
+	return nil, nil
 }
 
 // NewBase returns a generic Pipeline object. The name is mandatory, immutable and must
