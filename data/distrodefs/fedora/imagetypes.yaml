@@ -404,6 +404,11 @@
       - "net-lib"
       - "dbus-broker"
     default_menu: 1
+    lorax_template_package: lorax-templates-generic
+    lorax_templates:
+      - 99-generic/runtime-postinstall.tmpl
+    lorax_logos_package: fedora-logos
+    lorax_release_package: fedora-release
     conditions: &default_installer_config_conditions
       "f41 dracut requires ifcfg, rootfs is squashfs":
         when:
