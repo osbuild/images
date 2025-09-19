@@ -127,7 +127,9 @@ func TestSubscriptionManagerPackages(t *testing.T) {
 		BaseUrl:       "http://cdn.redhat.com/",
 	}
 
-	CheckPkgSetInclude(t, os.GetPackageSetChain(manifest.DISTRO_NULL), []string{"subscription-manager"})
+	pkgSetChain, err := os.GetPackageSetChain(manifest.DISTRO_NULL)
+	assert.NoError(t, err)
+	CheckPkgSetInclude(t, pkgSetChain, []string{"subscription-manager"})
 }
 
 func TestSubscriptionManagerInsightsPackages(t *testing.T) {
@@ -139,7 +141,9 @@ func TestSubscriptionManagerInsightsPackages(t *testing.T) {
 		BaseUrl:       "http://cdn.redhat.com/",
 		Insights:      true,
 	}
-	CheckPkgSetInclude(t, os.GetPackageSetChain(manifest.DISTRO_NULL), []string{"subscription-manager", "insights-client"})
+	pkgSetChain, err := os.GetPackageSetChain(manifest.DISTRO_NULL)
+	assert.NoError(t, err)
+	CheckPkgSetInclude(t, pkgSetChain, []string{"subscription-manager", "insights-client"})
 }
 
 func TestRhcInsightsPackages(t *testing.T) {
@@ -152,7 +156,9 @@ func TestRhcInsightsPackages(t *testing.T) {
 		Insights:      false,
 		Rhc:           true,
 	}
-	CheckPkgSetInclude(t, os.GetPackageSetChain(manifest.DISTRO_NULL), []string{"rhc", "subscription-manager", "insights-client"})
+	pkgSetChain, err := os.GetPackageSetChain(manifest.DISTRO_NULL)
+	assert.NoError(t, err)
+	CheckPkgSetInclude(t, pkgSetChain, []string{"rhc", "subscription-manager", "insights-client"})
 }
 
 func TestBootupdStage(t *testing.T) {
@@ -183,7 +189,8 @@ func TestInsightsClientConfigStage(t *testing.T) {
 
 func TestTomlLibUsedNoneByDefault(t *testing.T) {
 	os := manifest.NewTestOS()
-	buildPkgs := os.GetBuildPackages(manifest.DISTRO_FEDORA)
+	buildPkgs, err := os.GetBuildPackages(manifest.DISTRO_FEDORA)
+	assert.NoError(t, err)
 	for _, pkg := range []string{"python3-pytoml", "python3-toml", "python3-tomli-w"} {
 		assert.NotContains(t, buildPkgs, pkg)
 	}
@@ -216,7 +223,8 @@ func testTomlPkgsFor(t *testing.T, os *manifest.OS) {
 		{manifest.DISTRO_EL10, "python3-tomli-w"},
 		{manifest.DISTRO_FEDORA, "python3-tomli-w"},
 	} {
-		buildPkgs := os.GetBuildPackages(tc.distro)
+		buildPkgs, err := os.GetBuildPackages(tc.distro)
+		assert.NoError(t, err)
 		assert.Contains(t, buildPkgs, tc.expectedTomlPkg)
 	}
 }

@@ -290,7 +290,9 @@ func TestRH8_ImageType_BuildPackages(t *testing.T) {
 					}
 					manifest, _, err := itStruct.Manifest(&blueprint.Blueprint{}, distro.ImageOptions{}, nil, nil)
 					assert.NoError(t, err)
-					buildPkgs := manifest.GetPackageSetChains()["build"]
+					pkgSetChain, err := manifest.GetPackageSetChains()
+					assert.NoError(t, err)
+					buildPkgs := pkgSetChain["build"]
 					assert.NotNil(t, buildPkgs)
 					assert.Len(t, buildPkgs, 1)
 					assert.ElementsMatch(t, buildPackages[archLabel], buildPkgs[0].Include)

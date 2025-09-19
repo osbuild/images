@@ -35,12 +35,12 @@ type Pipeline interface {
 
 	// getBuildPackages returns the list of packages required for the pipeline
 	// at build time.
-	getBuildPackages(Distro) []string
+	getBuildPackages(Distro) ([]string, error)
 	// getPackageSetChain returns the list of package names to be required by
 	// the pipeline. Each set should be depsolved sequentially to resolve
 	// dependencies and full package specs. See the depsolvednf package for more
 	// details.
-	getPackageSetChain(Distro) []rpmmd.PackageSet
+	getPackageSetChain(Distro) ([]rpmmd.PackageSet, error)
 	// getContainerSources returns the list of containers sources to be resolved and
 	// embedded by the pipeline. Each source should be resolved to its full
 	// Spec. See the container package for more details.
@@ -120,12 +120,12 @@ func (p *Base) setManifest(m *Manifest) {
 	p.manifest = m
 }
 
-func (p Base) getBuildPackages(Distro) []string {
-	return []string{}
+func (p Base) getBuildPackages(Distro) ([]string, error) {
+	return nil, nil
 }
 
-func (p Base) getPackageSetChain(Distro) []rpmmd.PackageSet {
-	return nil
+func (p Base) getPackageSetChain(Distro) ([]rpmmd.PackageSet, error) {
+	return nil, nil
 }
 
 func (p Base) getContainerSources() []container.SourceSpec {

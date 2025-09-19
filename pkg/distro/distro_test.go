@@ -113,7 +113,8 @@ func TestImageTypePipelineNames(t *testing.T) {
 					// for the image (or 'kernel' if it's not defined).
 					// Get the content and "fake resolve" it to pass to
 					// Serialize().
-					packageSets := m.GetPackageSetChains()
+					packageSets, err := m.GetPackageSetChains()
+					assert.NoError(err)
 					depsolvedSets := make(map[string]depsolvednf.DepsolveResult, len(packageSets))
 					for name, sets := range packageSets {
 						packages := make([]rpmmd.PackageSpec, 0)
@@ -476,7 +477,8 @@ func TestPipelineRepositories(t *testing.T) {
 							repos := tCase.repos
 							manifest, _, err := imageType.Manifest(&bp, options, repos, nil)
 							require.NoError(err)
-							packageSets := manifest.GetPackageSetChains()
+							packageSets, err := manifest.GetPackageSetChains()
+							assert.NoError(t, err)
 
 							var globals stringSet
 							if len(tCase.result["*"]) > 0 {

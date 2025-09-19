@@ -255,7 +255,7 @@ func NewOS(buildPipeline Build, platform platform.Platform, repos []rpmmd.RepoCo
 	return p
 }
 
-func (p *OS) getPackageSetChain(Distro) []rpmmd.PackageSet {
+func (p *OS) getPackageSetChain(Distro) ([]rpmmd.PackageSet, error) {
 	platformPackages := p.platform.GetPackages()
 
 	var environmentPackages []string
@@ -365,33 +365,33 @@ func (p *OS) getPackageSetChain(Distro) []rpmmd.PackageSet {
 		chain = append(chain, ps)
 	}
 
-	return chain
+	return chain, nil
 }
 
 func (p *OS) getContainerSources() []container.SourceSpec {
 	return p.OSCustomizations.Containers
 }
 
-func tomlPkgsFor(distro Distro) []string {
+func tomlPkgsFor(distro Distro) ([]string, error) {
 	switch distro {
 	case DISTRO_EL7:
 		// nothing needs toml in rhel7
-		panic("no support for toml on rhel7")
+		return nil, fmt.Errorf("no support for toml on rhel7")
 	case DISTRO_EL8:
 		// deprecated, needed for backwards compatibility (EL8 manifests)
-		return []string{"python3-pytoml"}
+		return []string{"python3-pytoml"}, nil
 	case DISTRO_EL9:
 		// older unmaintained lib, needed for backwards compatibility
-		return []string{"python3-toml"}
+		return []string{"python3-toml"}, nil
 	default:
 		// No extra package needed for reading, on rhel10 and
 		// fedora as stdlib has "tomlib" but we need tomli-w
 		// for writing
-		return []string{"python3-tomli-w"}
+		return []string{"python3-tomli-w"}, nil
 	}
 }
 
-func (p *OS) getBuildPackages(distro Distro) []string {
+func (p *OS) getBuildPackages(distro Distro) ([]string, error) {
 	packages := p.platform.GetBuildPackages()
 	if p.PartitionTable != nil {
 		packages = append(packages, p.PartitionTable.GetBuildPackages()...)
@@ -417,7 +417,11 @@ func (p *OS) getBuildPackages(distro Distro) []string {
 
 	if len(p.OSCustomizations.Containers) > 0 {
 		if p.OSCustomizations.ContainersStorage != nil {
-			packages = append(packages, tomlPkgsFor(distro)...)
+			tomlPkgs, err := tomlPkgsFor(distro)
+			if err != nil {
+				return nil, fmt.Errorf("cannot get toml packages for %s: %w", distro, err)
+			}
+			packages = append(packages, tomlPkgs...)
 		}
 		packages = append(packages, "skopeo")
 	}
@@ -427,7 +431,11 @@ func (p *OS) getBuildPackages(distro Distro) []string {
 	}
 
 	if p.BootcConfig != nil {
-		packages = append(packages, tomlPkgsFor(distro)...)
+		tomlPkgs, err := tomlPkgsFor(distro)
+		if err != nil {
+			return nil, fmt.Errorf("cannot get bootconfig toml packages for %s: %w", distro, err)
+		}
+		packages = append(packages, tomlPkgs...)
 	}
 
 	if p.platform.GetBootloader() == platform.BOOTLOADER_UKI {
@@ -441,7 +449,7 @@ func (p *OS) getBuildPackages(distro Distro) []string {
 		packages = append(packages, "shadow-utils")
 	}
 
-	return packages
+	return packages, nil
 }
 
 func (p *OS) getOSTreeCommitSources() []ostree.SourceSpec {

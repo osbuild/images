@@ -37,7 +37,8 @@ func TestManifestRepositoryCustomization(t *testing.T) {
 				}
 				mani, _, err := imgType.Manifest(bp, options, repos, nil)
 				assert.NoError(t, err)
-				chains := mani.GetPackageSetChains()
+				chains, err := mani.GetPackageSetChains()
+				assert.NoError(t, err)
 				osChains := chains["os"]
 				baseChain := osChains[0]
 				assert.Contains(t, baseChain.Include, "kernel")

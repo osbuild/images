@@ -121,7 +121,7 @@ func (p *BuildrootFromPackages) addDependent(dep Pipeline) {
 	man.addPipeline(dep)
 }
 
-func (p *BuildrootFromPackages) getPackageSetChain(distro Distro) []rpmmd.PackageSet {
+func (p *BuildrootFromPackages) getPackageSetChain(distro Distro) ([]rpmmd.PackageSet, error) {
 	// TODO: make the /usr/bin/cp dependency conditional
 	// TODO: make the /usr/bin/xz dependency conditional
 	policyPackage := fmt.Sprintf("selinux-policy-%s", p.selinuxPolicy)
@@ -134,7 +134,11 @@ func (p *BuildrootFromPackages) getPackageSetChain(distro Distro) []rpmmd.Packag
 	packages = append(packages, p.runner.GetBuildPackages()...)
 
 	for _, pipeline := range p.dependents {
-		packages = append(packages, pipeline.getBuildPackages(distro)...)
+		pipelineBuildPackages, err := pipeline.getBuildPackages(distro)
+		if err != nil {
+			return nil, fmt.Errorf("cannot get build packages for %s: %w", distro, err)
+		}
+		packages = append(packages, pipelineBuildPackages...)
 	}
 
 	return []rpmmd.PackageSet{
@@ -143,7 +147,7 @@ func (p *BuildrootFromPackages) getPackageSetChain(distro Distro) []rpmmd.Packag
 			Repositories:    p.repos,
 			InstallWeakDeps: true,
 		},
-	}
+	}, nil
 }
 
 func (p *BuildrootFromPackages) getPackageSpecs() []rpmmd.PackageSpec {

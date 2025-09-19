@@ -36,12 +36,15 @@ func NewRawImage(buildPipeline Build, treePipeline *OS) *RawImage {
 	return p
 }
 
-func (p *RawImage) getBuildPackages(d Distro) []string {
-	pkgs := p.treePipeline.getBuildPackages(d)
+func (p *RawImage) getBuildPackages(d Distro) ([]string, error) {
+	pkgs, err := p.treePipeline.getBuildPackages(d)
+	if err != nil {
+		return nil, fmt.Errorf("cannget get build packages from %q: %w", p.treePipeline.Name(), err)
+	}
 	if p.PartTool == osbuild.PTSgdisk {
 		pkgs = append(pkgs, "gdisk")
 	}
-	return pkgs
+	return pkgs, nil
 }
 
 func (p *RawImage) serialize() (osbuild.Pipeline, error) {

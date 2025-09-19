@@ -194,7 +194,7 @@ func (p *AnacondaInstallerISOTree) getInline() []string {
 
 	return inlineData
 }
-func (p *AnacondaInstallerISOTree) getBuildPackages(_ Distro) []string {
+func (p *AnacondaInstallerISOTree) getBuildPackages(_ Distro) ([]string, error) {
 	var packages []string
 	switch p.RootfsType {
 	case SquashfsExt4Rootfs, SquashfsRootfs:
@@ -202,6 +202,7 @@ func (p *AnacondaInstallerISOTree) getBuildPackages(_ Distro) []string {
 	case ErofsRootfs:
 		packages = []string{"erofs-utils"}
 	default:
+		return nil, fmt.Errorf("unknown rootfs type: %q", p.RootfsType)
 	}
 
 	if p.ISOBoot == Grub2ISOBoot {
@@ -221,7 +222,7 @@ func (p *AnacondaInstallerISOTree) getBuildPackages(_ Distro) []string {
 		packages = append(packages, "tar")
 	}
 
-	return packages
+	return packages, nil
 }
 
 // Exclude most of the /boot files inside the rootfs to save space

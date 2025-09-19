@@ -47,8 +47,8 @@ func (p *Zstd) serialize() (osbuild.Pipeline, error) {
 	return pipeline, nil
 }
 
-func (p *Zstd) getBuildPackages(Distro) []string {
-	return []string{"zstd"}
+func (p *Zstd) getBuildPackages(Distro) ([]string, error) {
+	return []string{"zstd"}, nil
 }
 
 func (p *Zstd) Export() *artifact.Artifact {

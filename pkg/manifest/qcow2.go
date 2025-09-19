@@ -58,8 +58,8 @@ func (p *QCOW2) serialize() (osbuild.Pipeline, error) {
 	return pipeline, nil
 }
 
-func (p *QCOW2) getBuildPackages(Distro) []string {
-	return []string{"qemu-img"}
+func (p *QCOW2) getBuildPackages(Distro) ([]string, error) {
+	return []string{"qemu-img"}, nil
 }
 
 func (p *QCOW2) Export() *artifact.Artifact {

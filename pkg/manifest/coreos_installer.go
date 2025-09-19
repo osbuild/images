@@ -70,7 +70,7 @@ func NewCoreOSInstaller(buildPipeline Build,
 // - what is required to boot and what to build?
 // - do they all belong in this pipeline?
 // - should these be moved to the platform for the image type?
-func (p *CoreOSInstaller) getBootPackages() []string {
+func (p *CoreOSInstaller) getBootPackages() ([]string, error) {
 	packages := []string{
 		"grub2-tools",
 		"grub2-tools-extra",
@@ -101,27 +101,33 @@ func (p *CoreOSInstaller) getBootPackages() []string {
 			"shim-aa64",
 		)
 	default:
-		panic(fmt.Sprintf("unsupported arch: %s", p.platform.GetArch()))
+		return nil, fmt.Errorf("unsupported arch: %s", p.platform.GetArch())
 	}
 
 	if p.Biosdevname {
 		packages = append(packages, "biosdevname")
 	}
 
-	return packages
+	return packages, nil
 }
 
-func (p *CoreOSInstaller) getBuildPackages(Distro) []string {
-	packages := p.getBootPackages()
+func (p *CoreOSInstaller) getBuildPackages(Distro) ([]string, error) {
+	packages, err := p.getBootPackages()
+	if err != nil {
+		return nil, fmt.Errorf("cannot get boot packages for build packages: %w", err)
+	}
 	packages = append(packages,
 		"rpm",
 		"lorax-templates-generic",
 	)
-	return packages
+	return packages, nil
 }
 
-func (p *CoreOSInstaller) getPackageSetChain(Distro) []rpmmd.PackageSet {
-	packages := p.getBootPackages()
+func (p *CoreOSInstaller) getPackageSetChain(Distro) ([]rpmmd.PackageSet, error) {
+	packages, err := p.getBootPackages()
+	if err != nil {
+		return nil, fmt.Errorf("cannot boot package set for package set chain: %w", err)
+	}
 	return []rpmmd.PackageSet{
 		{
 			Include:         append(packages, p.ExtraPackages...),
@@ -129,7 +135,7 @@ func (p *CoreOSInstaller) getPackageSetChain(Distro) []rpmmd.PackageSet {
 			Repositories:    append(p.repos, p.ExtraRepos...),
 			InstallWeakDeps: true,
 		},
-	}
+	}, nil
 }
 
 func (p *CoreOSInstaller) getPackageSpecs() []rpmmd.PackageSpec {

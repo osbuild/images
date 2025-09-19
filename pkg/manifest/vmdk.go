@@ -56,8 +56,8 @@ func (p *VMDK) serialize() (osbuild.Pipeline, error) {
 	return pipeline, nil
 }
 
-func (p *VMDK) getBuildPackages(Distro) []string {
-	return []string{"qemu-img"}
+func (p *VMDK) getBuildPackages(Distro) ([]string, error) {
+	return []string{"qemu-img"}, nil
 }
 
 func (p *VMDK) Export() *artifact.Artifact {

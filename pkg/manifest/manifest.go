@@ -140,16 +140,20 @@ func (m *Manifest) addPipeline(p Pipeline) {
 
 type PackageSelector func([]rpmmd.PackageSet) []rpmmd.PackageSet
 
-func (m Manifest) GetPackageSetChains() map[string][]rpmmd.PackageSet {
+func (m Manifest) GetPackageSetChains() (map[string][]rpmmd.PackageSet, error) {
 	chains := make(map[string][]rpmmd.PackageSet)
 
 	for _, pipeline := range m.pipelines {
-		if chain := pipeline.getPackageSetChain(m.Distro); chain != nil {
+		chain, err := pipeline.getPackageSetChain(m.Distro)
+		if err != nil {
+			return nil, fmt.Errorf("cannot get package set chain for %q: %w", pipeline.Name(), err)
+		}
+		if chain != nil {
 			chains[pipeline.Name()] = chain
 		}
 	}
 
-	return chains
+	return chains, nil
 }
 
 func (m Manifest) GetContainerSourceSpecs() map[string][]container.SourceSpec {

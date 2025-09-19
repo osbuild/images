@@ -36,7 +36,7 @@ func NewRawOStreeImage(buildPipeline Build, treePipeline *OSTreeDeployment, plat
 	return p
 }
 
-func (p *RawOSTreeImage) getBuildPackages(Distro) []string {
+func (p *RawOSTreeImage) getBuildPackages(Distro) ([]string, error) {
 	packages := p.platform.GetBuildPackages()
 	packages = append(packages, p.platform.GetPackages()...)
 	packages = append(packages, p.treePipeline.PartitionTable.GetBuildPackages()...)
@@ -47,7 +47,7 @@ func (p *RawOSTreeImage) getBuildPackages(Distro) []string {
 		"dracut-config-generic",
 		"efibootmgr",
 	)
-	return packages
+	return packages, nil
 }
 
 func (p *RawOSTreeImage) serialize() (osbuild.Pipeline, error) {

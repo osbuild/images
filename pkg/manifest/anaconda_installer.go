@@ -98,7 +98,7 @@ func NewAnacondaInstaller(installerType AnacondaInstallerType,
 
 // TODO: refactor - what is required to boot and what to build, and
 // do they all belong in this pipeline?
-func (p *AnacondaInstaller) anacondaBootPackageSet() []string {
+func (p *AnacondaInstaller) anacondaBootPackageSet() ([]string, error) {
 	packages := []string{
 		"grub2-tools",
 		"grub2-tools-extra",
@@ -124,14 +124,17 @@ func (p *AnacondaInstaller) anacondaBootPackageSet() []string {
 			"shim-aa64",
 		)
 	default:
-		panic(fmt.Sprintf("unsupported arch: %s", p.platform.GetArch()))
+		return nil, fmt.Errorf("unsupported arch: %s", p.platform.GetArch())
 	}
 
-	return packages
+	return packages, nil
 }
 
-func (p *AnacondaInstaller) getBuildPackages(Distro) []string {
-	packages := p.anacondaBootPackageSet()
+func (p *AnacondaInstaller) getBuildPackages(Distro) ([]string, error) {
+	packages, err := p.anacondaBootPackageSet()
+	if err != nil {
+		return nil, fmt.Errorf("cannot get anaconda boot packages: %w", err)
+	}
 	packages = append(packages,
 		"rpm",
 		"shadow-utils", // The pipeline always creates a root and installer user
@@ -151,13 +154,16 @@ func (p *AnacondaInstaller) getBuildPackages(Distro) []string {
 		packages = append(packages, "policycoreutils", fmt.Sprintf("selinux-policy-%s", p.SELinux))
 	}
 
-	return packages
+	return packages, nil
 }
 
 // getPackageSetChain returns the packages to install
 // It will also include weak deps for the Live installer type
-func (p *AnacondaInstaller) getPackageSetChain(Distro) []rpmmd.PackageSet {
-	packages := p.anacondaBootPackageSet()
+func (p *AnacondaInstaller) getPackageSetChain(Distro) ([]rpmmd.PackageSet, error) {
+	packages, err := p.anacondaBootPackageSet()
+	if err != nil {
+		return nil, fmt.Errorf("cannot get anaconda boot packages: %w", err)
+	}
 
 	// Install firmware packages and other platform specific packages
 	packages = append(packages, p.platform.GetPackages()...)
@@ -177,7 +183,7 @@ func (p *AnacondaInstaller) getPackageSetChain(Distro) []rpmmd.PackageSet {
 			Repositories:    append(p.repos, p.ExtraRepos...),
 			InstallWeakDeps: true,
 		},
-	}
+	}, nil
 }
 
 func (p *AnacondaInstaller) getPackageSpecs() []rpmmd.PackageSpec {
