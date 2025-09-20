@@ -282,6 +282,7 @@ image_config:
 
 image_types:
   "azure-rhui":
+    hidden: true
     filename: "disk.vhd.xz"
     mime_type: "application/xz"
     image_func: "disk"

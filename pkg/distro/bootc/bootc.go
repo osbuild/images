@@ -210,6 +210,10 @@ func (t *BootcImageType) Aliases() []string {
 	return nil
 }
 
+func (t *BootcImageType) Hidden() bool {
+	return false
+}
+
 func (t *BootcImageType) Arch() distro.Arch {
 	return t.arch
 }

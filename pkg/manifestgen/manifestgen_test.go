@@ -41,7 +41,7 @@ func TestManifestGeneratorDepsolve(t *testing.T) {
 	assert.NoError(t, err)
 	fac := distrofactory.NewDefault()
 
-	filter, err := imagefilter.New(fac, repos)
+	filter, err := imagefilter.New(fac, repos, nil)
 	assert.NoError(t, err)
 	res, err := filter.Filter("distro:centos-9", "type:qcow2", "arch:x86_64")
 	assert.NoError(t, err)
@@ -89,7 +89,7 @@ func TestManifestGeneratorWithOstreeCommit(t *testing.T) {
 	assert.NoError(t, err)
 
 	fac := distrofactory.NewDefault()
-	filter, err := imagefilter.New(fac, repos)
+	filter, err := imagefilter.New(fac, repos, nil)
 	assert.NoError(t, err)
 	res, err := filter.Filter("distro:centos-9", "type:edge-ami", "arch:x86_64")
 	assert.NoError(t, err)
@@ -211,7 +211,7 @@ func TestManifestGeneratorContainers(t *testing.T) {
 	assert.NoError(t, err)
 	fac := distrofactory.NewDefault()
 
-	filter, err := imagefilter.New(fac, repos)
+	filter, err := imagefilter.New(fac, repos, nil)
 	assert.NoError(t, err)
 	res, err := filter.Filter("distro:centos-9", "type:qcow2", "arch:x86_64")
 	assert.NoError(t, err)
@@ -245,7 +245,7 @@ func TestManifestGeneratorDepsolveWithSbomWriter(t *testing.T) {
 	assert.NoError(t, err)
 	fac := distrofactory.NewDefault()
 
-	filter, err := imagefilter.New(fac, repos)
+	filter, err := imagefilter.New(fac, repos, nil)
 	assert.NoError(t, err)
 	res, err := filter.Filter("distro:centos-9", "type:qcow2", "arch:x86_64")
 	assert.NoError(t, err)
@@ -287,7 +287,7 @@ func TestManifestGeneratorSeed(t *testing.T) {
 	assert.NoError(t, err)
 	fac := distrofactory.NewDefault()
 
-	filter, err := imagefilter.New(fac, repos)
+	filter, err := imagefilter.New(fac, repos, nil)
 	assert.NoError(t, err)
 	res, err := filter.Filter("distro:centos-9", "type:qcow2", "arch:x86_64")
 	assert.NoError(t, err)
@@ -325,7 +325,7 @@ func TestManifestGeneratorDepsolveOutput(t *testing.T) {
 	assert.NoError(t, err)
 	fac := distrofactory.NewDefault()
 
-	filter, err := imagefilter.New(fac, repos)
+	filter, err := imagefilter.New(fac, repos, nil)
 	assert.NoError(t, err)
 	res, err := filter.Filter("distro:centos-9", "type:qcow2", "arch:x86_64")
 	assert.NoError(t, err)
@@ -352,7 +352,7 @@ func TestManifestGeneratorOverrideRepos(t *testing.T) {
 	assert.NoError(t, err)
 	fac := distrofactory.NewDefault()
 
-	filter, err := imagefilter.New(fac, repos)
+	filter, err := imagefilter.New(fac, repos, nil)
 	assert.NoError(t, err)
 	res, err := filter.Filter("distro:centos-9", "type:qcow2", "arch:x86_64")
 	assert.NoError(t, err)
@@ -392,7 +392,7 @@ func TestManifestGeneratorUseBootstrapContainer(t *testing.T) {
 	assert.NoError(t, err)
 	fac := distrofactory.NewDefault()
 
-	filter, err := imagefilter.New(fac, repos)
+	filter, err := imagefilter.New(fac, repos, nil)
 	assert.NoError(t, err)
 	res, err := filter.Filter("distro:centos-9", "type:qcow2", "arch:x86_64")
 	assert.NoError(t, err)

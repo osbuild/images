@@ -1187,6 +1187,7 @@ image_types:
 
   "azure-rhui": &azure_rhui
     <<: *azure
+    hidden: true
     supported_blueprint_options: *supported_options_disk
 
   "azure-sap-rhui":
@@ -1484,6 +1485,7 @@ image_types:
   # RHEL internal-only x86_64 EC2 image type
   ec2: &ec2
     <<: *ami
+    hidden: true
     # we have to reset the aliases otherwise this type
     # will inherit the name aliases causing a conflict
     name_aliases: []

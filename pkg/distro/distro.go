@@ -82,6 +82,9 @@ type ImageType interface {
 	// Returns the aliases for the image type.
 	Aliases() []string
 
+	// Returns the hidden flag for the image type
+	Hidden() bool
+
 	// Returns the parent architecture
 	Arch() Arch
 
