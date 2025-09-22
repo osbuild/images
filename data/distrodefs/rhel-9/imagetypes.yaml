@@ -3138,7 +3138,7 @@ image_types:
         uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
         type: "gpt"
         partitions:
-          - size: 264_241_152  # 52 MiB
+          - size: "512 MiB"
             type: *efi_system_partition_guid
             uuid: *efi_system_partition_uuid
             payload_type: "filesystem"
