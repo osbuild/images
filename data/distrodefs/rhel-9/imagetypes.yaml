@@ -206,6 +206,12 @@
       append:
         include:
           - "insights-client"
+    "add system-reinstall-bootc to 9.6+": &conditions_pkgsets_system_reinstall_bootc
+      when:
+        version_greater_or_equal: "9.6"
+      append:
+        include:
+          - "system-reinstall-bootc"
 
   ec2_base_pkgset: &ec2_base_pkgset
     include:
@@ -260,12 +266,7 @@
       - "qemu-guest-agent"
     conditions:
       "insights client on rhel": *conditions_pkgsets_insights_client_on_rhel
-      "rhel-9.6+ gets system-reinstall-bootc":
-        when:
-          version_greater_or_equal: "9.6"
-        append:
-          include:
-            - "system-reinstall-bootc"
+      "system reinstall bootc": *conditions_pkgsets_system_reinstall_bootc
 
   azure_base_pkgset: &azure_base_pkgset
     include:
@@ -335,12 +336,11 @@
       - "usb_modeswitch"
     conditions:
       "insights clients on rhel": *conditions_pkgsets_insights_client_on_rhel
+      "system-reinstall-bootc": *conditions_pkgsets_system_reinstall_bootc
       "rhel-9.6+ drops microcode_ctl":
         when:
           version_greater_or_equal: "9.6"
         append:
-          include:
-            - "system-reinstall-bootc"
           exclude:
             - "microcode_ctl"
       "x86_64 alone supports rngd":
