@@ -674,7 +674,7 @@
       aarch64: &minimal_raw_partition_table_aarch64
         uuid: "0xc1748067"
         type: "dos"
-        start_offset: "8 MiB"
+        start_offset: "16 MiB"
         partitions:
           - <<: *default_partition_table_part_efi
             bootable: true
@@ -700,7 +700,7 @@
       aarch64: &iot_base_partition_table_aarch64
         uuid: "0xc1748067"
         type: "dos"
-        start_offset: "8 MiB"
+        start_offset: "16 MiB"
         partitions:
           - *iot_base_partition_table_part_efi_aarch64
           - *iot_base_partition_table_part_boot_aarch64
