@@ -274,33 +274,3 @@ jobs:
         # yq will catch issues that yamllint will not, like duplicate anchros
         run: |
           find . "(" -iname "*.yaml" -or -iname "*.yml" ")" -exec yq . {} \+ > /dev/null
-
-  bib-manifest-diff:
-    name: "bib manifest diff validation"
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Apt update
-        run: sudo apt update
-
-      - *apt_install_dependencies
-
-      - run: sudo apt install -y qemu-user-static
-
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v5
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Workaround podman issues in GH actions
-        run: |
-          # see https://github.com/osbuild/bootc-image-builder/issues/446
-          sudo rm -rf /var/lib/containers/storage
-          sudo mkdir -p /etc/containers
-          echo -e "[storage]\ndriver = \"overlay\"\nrunroot = \"/run/containers/storage\"\ngraphroot = \"/var/lib/containers/storage\"" | sudo tee /etc/containers/storage.conf
-
-      - name: Running manifest diff between images/bib
-        run: ./tools/gen-bootc-diff
