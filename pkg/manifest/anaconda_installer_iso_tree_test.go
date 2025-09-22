@@ -448,7 +448,7 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		}
 		pipeline.ISOBoot = manifest.SyslinuxISOBoot
 		_, err := manifest.SerializeWith(pipeline, manifest.Inputs{})
-		assert.EqualError(t, err, "cannot create ostree container stages: cannot create kickstart stages: kickstart unattended options are not compatible with user-supplied kickstart content")
+		assert.EqualError(t, err, "cannot create tar payload stages: cannot create kickstart stages: kickstart unattended options are not compatible with user-supplied kickstart content")
 	})
 
 	t.Run("unhappy/user-kickstart-with-sudo-bits", func(t *testing.T) {
@@ -464,7 +464,7 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 		}
 		pipeline.ISOBoot = manifest.SyslinuxISOBoot
 		_, err := manifest.SerializeWith(pipeline, manifest.Inputs{})
-		assert.EqualError(t, err, "cannot create ostree container stages: cannot create kickstart stages: kickstart sudo nopasswd drop-in file creation is not compatible with user-supplied kickstart content")
+		assert.EqualError(t, err, "cannot create tar payload stages: cannot create kickstart stages: kickstart sudo nopasswd drop-in file creation is not compatible with user-supplied kickstart content")
 	})
 
 	t.Run("plain+squashfs-rootfs", func(t *testing.T) {
@@ -519,7 +519,7 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 			},
 		}
 		_, err := manifest.SerializeWith(pipeline, manifest.Inputs{})
-		assert.EqualError(t, err, "cannot create ostree container stages: failed to create kickstart stage options: org.osbuild.kickstart: unsupported options for user \"root\": shell")
+		assert.EqualError(t, err, "cannot create tar payload stages: failed to create kickstart stage options: org.osbuild.kickstart: unsupported options for user \"root\": shell")
 	})
 }
 
