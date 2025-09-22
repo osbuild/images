@@ -694,7 +694,6 @@
       - "bzip2"
       - "cloud-init"
       - "cloud-utils-growpart"
-      - "dracut-config-generic"
       - "efibootmgr"
       - "hyperv-daemons"
       - "langpacks-en"
