@@ -283,6 +283,7 @@
       - "NetworkManager-cloud-setup"
       - "nvme-cli"
       - "patch"
+      - "rsync"
       - "selinux-policy-targeted"
       - "uuid"
       - "WALinuxAgent"
