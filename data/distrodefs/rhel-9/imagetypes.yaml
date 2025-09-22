@@ -273,7 +273,6 @@
       - "bzip2"
       - "cloud-init"
       - "cloud-utils-growpart"
-      - "dracut-config-generic"
       - "efibootmgr"
       - "gdisk"
       - "hyperv-daemons"
