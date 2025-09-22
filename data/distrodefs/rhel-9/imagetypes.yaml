@@ -200,13 +200,12 @@
           - "s390utils-base"
 
   common_conditions:
-    conditions: &conditions_pkgsets_insights_client_on_rhel
-      "add insights client on rhel":
-        when:
-          distro_name: "rhel"
-        append:
-          include:
-            - "insights-client"
+    "add insights client on rhel": &conditions_pkgsets_insights_client_on_rhel
+      when:
+        distro_name: "rhel"
+      append:
+        include:
+          - "insights-client"
 
   ec2_base_pkgset: &ec2_base_pkgset
     include:
@@ -260,13 +259,14 @@
       # RHBZ#2075815
       - "qemu-guest-agent"
     conditions:
-      <<: *conditions_pkgsets_insights_client_on_rhel
+      "insights client on rhel": *conditions_pkgsets_insights_client_on_rhel
       "rhel-9.6+ gets system-reinstall-bootc":
         when:
           version_greater_or_equal: "9.6"
         append:
           include:
             - "system-reinstall-bootc"
+
   azure_base_pkgset: &azure_base_pkgset
     include:
       - "@Server"
@@ -334,8 +334,8 @@
       - "rhnsd"
       - "usb_modeswitch"
     conditions:
-      <<: *conditions_pkgsets_insights_client_on_rhel
-      "rhel-9.6+ gets system-reinstall-bootc and drops microcode_ctl":
+      "insights clients on rhel": *conditions_pkgsets_insights_client_on_rhel
+      "rhel-9.6+ drops microcode_ctl":
         when:
           version_greater_or_equal: "9.6"
         append:
@@ -2497,7 +2497,7 @@ image_types:
             # RHBZ#2075815
             - "qemu-guest-agent"
           conditions:
-            <<: *conditions_pkgsets_insights_client_on_rhel
+            "insights clients on rhel": *conditions_pkgsets_insights_client_on_rhel
     supported_blueprint_options: *supported_options_disk
 
   "minimal-raw":
