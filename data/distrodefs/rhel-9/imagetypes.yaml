@@ -3187,36 +3187,7 @@ image_types:
               - "shim-x64"
     package_sets:
       os:
-        - include:
-            - "@minimal-environment"
-            - "chrony"
-            - "cloud-init"
-            - "cloud-utils-growpart"
-            - "cryptsetup"
-            - "langpacks-en"
-            - "lvm2"
-            - "NetworkManager-cloud-setup"
-            - "nvme-cli"
-            - "openssh-server"
-            - "redhat-cloud-client-configuration"
-            - "redhat-release"
-            - "tpm2-tools"
-            - "uuid"
-            - "WALinuxAgent"
-            - "yum-utils"
-          exclude:
-            - "dracut-config-rescue"
-            - "iwl*"
-            - "linux-firmware*"
-            - "grubby"
-            - "os-prober"
-          conditions:
-            "rhel-9.8+ gets azure-vm-utils":
-              when:
-                version_greater_or_equal: "9.8"
-              append:
-                include:
-                  - "azure-vm-utils"
+        - *azure_base_pkgset
     supported_blueprint_options:
       # same as disk image types, but kernel customizations are not supported
       - "distro"
