@@ -1,13 +1,17 @@
 package manifest
 
 import (
+	"embed"
 	"fmt"
 	"strings"
 
+	"github.com/osbuild/images/data/files"
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/osbuild"
 )
+
+var fileDataFS embed.FS = files.Data
 
 type PXETree struct {
 	Base
@@ -110,10 +114,18 @@ func (p *PXETree) serialize() (osbuild.Pipeline, error) {
 	}
 
 	// Make an example grub.cfg
-	pipeline.AddStages(p.makeGrubConfig()...)
+	stages, err := p.makeGrubConfig()
+	if err != nil {
+		return pipeline, err
+	}
+	pipeline.AddStages(stages...)
 
 	// Make a README file
-	pipeline.AddStages(p.makeREADME()...)
+	stages, err = p.makeREADME()
+	if err != nil {
+		return pipeline, err
+	}
+	pipeline.AddStages(stages...)
 
 	// Make sure all the files are readable
 	options := osbuild.ChmodStageOptions{
@@ -156,83 +168,36 @@ func (p *PXETree) DracutConfStageOptions() *osbuild.DracutConfStageOptions {
 	}
 }
 
-// TODO - find a better way to specify the template
-var grubTemplate = `set timeout=60
-menuentry 'http-rootfs' {
-    linux /vmlinuz root=live:http://HTTP-SERVER/rootfs.img rd.live.image @CMDLINE@
-    initrd /initrd.img
-}
-menuentry 'combined-rootfs' {
-    linux /vmlinuz root=live:/rootfs.img rd.live.image @CMDLINE@
-    initrd /combined.img
-}
-`
-
 // makeGrubConfig returns stages that creates an example grub config file
 // It adds any kernel arguments from the blueprint to the cmdline in the template
-func (p *PXETree) makeGrubConfig() []*osbuild.Stage {
-	template := strings.ReplaceAll(grubTemplate, "@CMDLINE@", strings.Join(p.osPipeline.OSCustomizations.KernelOptionsAppend, " "))
+func (p *PXETree) makeGrubConfig() ([]*osbuild.Stage, error) {
+	grubTemplate, err := fileDataFS.ReadFile("pxetree/grub.cfg")
+	if err != nil {
+		return nil, err
+	}
+
+	template := strings.ReplaceAll(string(grubTemplate), "@CMDLINE@", strings.Join(p.osPipeline.OSCustomizations.KernelOptionsAppend, " "))
 	f, err := fsnode.NewFile("/grub.cfg", nil, nil, nil, []byte(template))
 	if err != nil {
 		panic(err)
 	}
 	p.files = append(p.files, f)
-	return osbuild.GenFileNodesStages([]*fsnode.File{f})
+	return osbuild.GenFileNodesStages([]*fsnode.File{f}), nil
 }
 
-// TODO - find a better way to specify the README
-var readme = `
-# About this archive
-
-This archive contains files suitable for use with PXE booting or UEFI HTTP booting.
-It includes this following:
-
-* EFI/ directory tree of shim and Grub2 bootloader files
-* vmlinuz - kernel
-* inird.img - initial ramdisk
-* rootfs.img - compressed root filesystem
-* grub.cfg - a grub2 template
-
-Make sure that the system has enough RAM to hold the kernel, initrd, and roofs
-in memory. This size will depend on how large your rootfs.img is and what kinds
-of workloads you are running. 2GiB is usually enough for a small image. If there isn't
-enough RAM to boot you will likely see a kernel panic.
-
-# PXE booting with a HTTP server
-
-The grub.cfg file is a template that will need to be modified for your speific situation.
-It expects the kernel, initrd, and rootfs to be placed at the / of the tftp server's
-directory tree.
-
-The first entry uses http to serve the rootfs.img you will need to replace
-'HTTP-SERVER' with the url of a http server. For experimentation you can launch
-a simple server using python like this:
-
-    python3 -m http.server 8000
-
-Run that from the directory with the rootfs.img file.
-
-# PXE booting with combined image
-
-The second entry is for use with a combined initrd and rootfs image. This saves you the
-step of setting up a HTTP server but requires that you assemble the combined image from
-the initrd and the root filesystem.
-
-## Create a combined image
-
-    echo rootfs.img | cpio -c --quiet -L -o > rootfs.cpio
-    cat initrd.img rootfs.cpio > combined.img
-
-`
-
 // makeREADME returns a stage that creates a README file
-func (p *PXETree) makeREADME() []*osbuild.Stage {
-	f, err := fsnode.NewFile("/README", nil, nil, nil, []byte(readme))
+func (p *PXETree) makeREADME() ([]*osbuild.Stage, error) {
+	readme, err := fileDataFS.ReadFile("pxetree/README")
 	if err != nil {
-		panic(err)
+		return nil, err
+	}
+
+	f, err := fsnode.NewFile("/README", nil, nil, nil, readme)
+	if err != nil {
+		return nil, err
 	}
 	p.files = append(p.files, f)
-	return osbuild.GenFileNodesStages([]*fsnode.File{f})
+	return osbuild.GenFileNodesStages([]*fsnode.File{f}), nil
 }
 
 func (p *PXETree) getInline() []string {
