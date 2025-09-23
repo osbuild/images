@@ -132,3 +132,101 @@ func TestDNFConfigValidate(t *testing.T) {
 		}
 	}
 }
+
+func TestDNFConfigUpdateVar(t *testing.T) {
+	type testCase struct {
+		options     DNFConfigStageOptions
+		newVarName  string
+		newVarValue string
+		expected    DNFConfigStageOptions
+	}
+
+	testCases := map[string]testCase{
+		"append-to-empty": {
+			options:     DNFConfigStageOptions{},
+			newVarName:  "new",
+			newVarValue: "new-value",
+			expected: DNFConfigStageOptions{
+				Variables: []DNFVariable{
+					{
+						Name:  "new",
+						Value: "new-value",
+					},
+				},
+			},
+		},
+		"append-to-non-empty": {
+			options: DNFConfigStageOptions{
+				Variables: []DNFVariable{
+					{
+						Name:  "existing",
+						Value: "existing-value",
+					},
+				},
+			},
+			newVarName:  "new2",
+			newVarValue: "new2-value",
+			expected: DNFConfigStageOptions{
+				Variables: []DNFVariable{
+					{
+						Name:  "existing",
+						Value: "existing-value",
+					},
+					{
+						Name:  "new2",
+						Value: "new2-value",
+					},
+				},
+			},
+		},
+		"update-value": {
+			options: DNFConfigStageOptions{
+				Variables: []DNFVariable{
+					{
+						Name:  "existing",
+						Value: "existing-value",
+					},
+					{
+						Name:  "tobeupdated",
+						Value: "old-value",
+					},
+					{
+						Name:  "three",
+						Value: "third-value",
+					},
+				},
+			},
+			newVarName:  "tobeupdated",
+			newVarValue: "updated-value",
+			expected: DNFConfigStageOptions{
+				Variables: []DNFVariable{
+					{
+						Name:  "existing",
+						Value: "existing-value",
+					},
+					{
+						Name:  "tobeupdated",
+						Value: "updated-value",
+					},
+					{
+						Name:  "three",
+						Value: "third-value",
+					},
+				},
+			},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			input := &tc.options
+			input.UpdateVar(tc.newVarName, tc.newVarValue)
+			assert.Equal(t, tc.expected, *input)
+		})
+	}
+
+	assert.PanicsWithError(t, "UpdateVar() call on nil DNFConfigStageOptions", func() {
+		var dnf *DNFConfigStageOptions
+		dnf.UpdateVar("", "")
+	})
+}
