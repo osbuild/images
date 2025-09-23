@@ -236,7 +236,7 @@
           - key: "vm.max_map_count"
             value: "2147483647"
     dnf_config:
-      set_release_ver_var: true
+      set_releasever_var: true
 
   sap_image_config: &sap_image_config
     <<: *sapapps_image_config
