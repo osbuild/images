@@ -179,7 +179,7 @@ func shallowMerge[T any](child *T, parent *T) *T {
 
 type DNFConfig struct {
 	Options          []*osbuild.DNFConfigStageOptions
-	SetReleaseVerVar *bool `yaml:"set_release_ver_var"`
+	SetReleaseVerVar *bool `yaml:"set_releasever_var"`
 }
 
 // InheritFrom inherits unset values from the provided parent configuration and

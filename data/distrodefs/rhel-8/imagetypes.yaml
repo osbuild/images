@@ -353,7 +353,7 @@
           - key: "vm.max_map_count"
             value: "2147483647"
     dnf_config:
-      set_release_ver_var: false
+      set_releasever_var: false
     conditions: &conditions_sap_image_config
       "rhel-8.9 and below needs to set the release ver in dnf config":
         when:
@@ -361,7 +361,7 @@
         shallow_merge:
           dnf_config:
             # E4S/EUS
-            set_release_ver_var: true
+            set_releasever_var: true
 
   sap_pkgset: &sap_pkgset
     include:
