@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/blueprint/pkg/blueprint"
-	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/ostree"
@@ -29,7 +28,9 @@ func isUbi(imgType distro.ImageType) bool {
 var knownKernels = []string{"kernel", "kernel-debug", "kernel-rt", "kernel-uki-virt"}
 
 // Returns the number of known kernels in the package list
-func kernelCount(imgType distro.ImageType, bp blueprint.Blueprint) int {
+func kernelCount(t *testing.T, imgType distro.ImageType, bp blueprint.Blueprint) int {
+	t.Helper()
+
 	var ostreeOptions *ostree.ImageOptions
 	// OSTree image types require OSTree options
 	if imgType.OSTreeRef() != "" {
@@ -39,10 +40,9 @@ func kernelCount(imgType distro.ImageType, bp blueprint.Blueprint) int {
 	}
 
 	manifest, _, err := imgType.Manifest(&bp, distro.ImageOptions{OSTree: ostreeOptions}, nil, nil)
-	if err != nil {
-		panic(err)
-	}
-	sets := common.Must(manifest.GetPackageSetChains())
+	require.NoError(t, err)
+	sets, err := manifest.GetPackageSetChains()
+	require.NoError(t, err)
 
 	// Use a map to count unique kernels in a package set. If the same kernel
 	// name appears twice, it will only be installed once, so we only count it
@@ -114,7 +114,7 @@ func TestDistro_KernelOption(t *testing.T, d distro.Distro) {
 				}
 				imgType, err := arch.GetImageType(typeName)
 				assert.NoError(t, err)
-				nk := kernelCount(imgType, blueprint.Blueprint{})
+				nk := kernelCount(t, imgType, blueprint.Blueprint{})
 
 				if isUbi(imgType) {
 					if nk != 0 {
@@ -153,7 +153,7 @@ func TestDistro_KernelOption(t *testing.T, d distro.Distro) {
 					}
 					imgType, err := arch.GetImageType(typeName)
 					assert.NoError(t, err)
-					nk := kernelCount(imgType, bp)
+					nk := kernelCount(t, imgType, bp)
 
 					// ostree image types should have only one kernel
 					// ubi image types should have no kernels
