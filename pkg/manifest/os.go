@@ -129,7 +129,7 @@ type OSCustomizations struct {
 	Tmpfilesd             []*osbuild.TmpfilesdStageOptions
 	PamLimitsConf         []*osbuild.PamLimitsConfStageOptions
 	Sysctld               []*osbuild.SysctldStageOptions
-	DNFConfig             []*osbuild.DNFConfigStageOptions
+	DNFConfig             *osbuild.DNFConfigStageOptions
 	DNFAutomaticConfig    *osbuild.DNFAutomaticConfigStageOptions
 	YUMConfig             *osbuild.YumConfigStageOptions
 	YUMRepos              []*osbuild.YumReposStageOptions
@@ -411,7 +411,7 @@ func (p *OS) getBuildPackages(distro Distro) ([]string, error) {
 			packages = append(packages, "python3-pyyaml")
 		}
 	}
-	if len(p.OSCustomizations.DNFConfig) > 0 || p.OSCustomizations.RHSMConfig != nil || p.OSCustomizations.WSLConfig != nil || p.OSCustomizations.WSLDistributionConfig != nil {
+	if p.OSCustomizations.DNFConfig != nil || p.OSCustomizations.RHSMConfig != nil || p.OSCustomizations.WSLConfig != nil || p.OSCustomizations.WSLDistributionConfig != nil {
 		packages = append(packages, "python3-iniparse")
 	}
 
@@ -690,7 +690,7 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 		pipeline.AddStage(osbuild.NewSysctldStage(sysctldConfig))
 	}
 
-	for _, dnfConfig := range p.OSCustomizations.DNFConfig {
+	if dnfConfig := p.OSCustomizations.DNFConfig; dnfConfig != nil {
 		pipeline.AddStage(osbuild.NewDNFConfigStage(dnfConfig))
 	}
 

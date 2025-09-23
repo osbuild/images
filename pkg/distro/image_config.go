@@ -178,7 +178,7 @@ func shallowMerge[T any](child *T, parent *T) *T {
 }
 
 type DNFConfig struct {
-	Options          []*osbuild.DNFConfigStageOptions
+	Options          *osbuild.DNFConfigStageOptions
 	SetReleaseverVar *bool `yaml:"set_releasever_var"`
 }
 
@@ -191,7 +191,7 @@ func (c *ImageConfig) InheritFrom(parentConfig *ImageConfig) *ImageConfig {
 	return shallowMerge(c, parentConfig)
 }
 
-func (c *ImageConfig) DNFConfigOptions(osVersion string) []*osbuild.DNFConfigStageOptions {
+func (c *ImageConfig) DNFConfigOptions(osVersion string) *osbuild.DNFConfigStageOptions {
 	if c.DNFConfig == nil {
 		return nil
 	}
@@ -210,17 +210,15 @@ func (c *ImageConfig) DNFConfigOptions(osVersion string) []*osbuild.DNFConfigSta
 		err := fmt.Errorf("internal error: currently DNFConfig and DNFSetReleaseverVar cannot be used together, please report this as a feature request")
 		panic(err)
 	}
-	return []*osbuild.DNFConfigStageOptions{
-		osbuild.NewDNFConfigStageOptions(
-			[]osbuild.DNFVariable{
-				{
-					Name:  "releasever",
-					Value: osVersion,
-				},
+	return osbuild.NewDNFConfigStageOptions(
+		[]osbuild.DNFVariable{
+			{
+				Name:  "releasever",
+				Value: osVersion,
 			},
-			nil,
-		),
-	}
+		},
+		nil,
+	)
 }
 
 type Sysconfig struct {
