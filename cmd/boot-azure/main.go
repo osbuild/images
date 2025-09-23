@@ -77,6 +77,16 @@ func getDefaultSize(architecture string) (string, error) {
 	}
 }
 
+// Assume that any image launched from a snapshot is a windows image. Booting from a snapshot is
+// used for the WSL test case.
+func isWindows(flags *pflag.FlagSet) (bool, error) {
+	snapshot, err := flags.GetString("snapshot")
+	if err != nil {
+		return false, err
+	}
+	return snapshot != "", err
+}
+
 func upload(ac *azure.Client, subscription, resourceGroup, localImage, remoteName, architecture string, res *resources) (string, error) {
 	ctx := context.Background()
 	location, err := ac.GetResourceGroupLocation(ctx, resourceGroup)
@@ -192,7 +202,13 @@ func doSetup(ac *azure.Client, flags *pflag.FlagSet, localImage string, res *res
 		return err
 	}
 
-	if localImage != "" {
+	windows, err := isWindows(flags)
+	if err != nil {
+		return err
+	}
+
+	// on windows the (wsl) image should be scp'd to the host
+	if localImage != "" && !windows {
 		subscription, err := flags.GetString("subscription")
 		if err != nil {
 			return err
@@ -248,16 +264,23 @@ func doSetup(ac *azure.Client, flags *pflag.FlagSet, localImage string, res *res
 		return err
 	}
 
+	snapshot, err := flags.GetString("snapshot")
+	if err != nil {
+		return err
+	}
+
 	ctx := context.Background()
 	vm, err := ac.CreateVM(
 		ctx,
 		rg,
 		azure.VMOptions{
-			Name:   vmName,
-			Image:  image,
-			Size:   size,
-			User:   username,
-			SSHKey: string(keyData),
+			Name:     vmName,
+			Image:    image,
+			Snapshot: snapshot,
+			Size:     size,
+			User:     username,
+			SSHKey:   string(keyData),
+			Windows:  windows,
 		},
 	)
 	if err != nil {
@@ -445,7 +468,7 @@ func teardown(cmd *cobra.Command, args []string) {
 	fnerr = doTeardown(ac, rg, res)
 }
 
-func doRunExec(ac *azure.Client, command []string, flags *pflag.FlagSet, res *resources) error {
+func doRunExec(ac *azure.Client, command []string, flags *pflag.FlagSet, localImage string, res *resources) error {
 	privKey, err := flags.GetString("ssh-privkey")
 	if err != nil {
 		return err
@@ -484,6 +507,18 @@ func doRunExec(ac *azure.Client, command []string, flags *pflag.FlagSet, res *re
 		return fileInfo.Mode().IsRegular()
 	}
 
+	windows, err := isWindows(flags)
+	if err != nil {
+		return err
+	}
+	// on windows the (wsl) image should be scp'd to the host so it can be imported into wsl
+	if windows {
+		remotePath := filepath.Base(localImage)
+		if err := test.ScpFile(ip, username, privKey, hostsfile, localImage, remotePath); err != nil {
+			return err
+		}
+	}
+
 	// copy every argument that is a file to the remote host (basename only)
 	// and construct remote command
 	// NOTE: this wont work with directories or with multiple args in different
@@ -504,8 +539,10 @@ func doRunExec(ac *azure.Client, command []string, flags *pflag.FlagSet, res *re
 		}
 	}
 
-	// add ./ to first element for the executable
-	remoteCommand[0] = fmt.Sprintf("./%s", remoteCommand[0])
+	// batch (cmd.exe) cannot interpret ./
+	if !windows {
+		remoteCommand[0] = fmt.Sprintf("./%s", remoteCommand[0])
+	}
 
 	// run the executable
 	return test.SshRun(ip, username, privKey, hostsfile, remoteCommand...)
@@ -542,7 +579,7 @@ func runExec(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	fnerr = doRunExec(ac, command, flags, res)
+	fnerr = doRunExec(ac, command, flags, image, res)
 }
 
 func setupCLI() *cobra.Command {
@@ -562,6 +599,7 @@ func setupCLI() *cobra.Command {
 	rootFlags.String("ssh-pubkey", "", "path to user's public ssh key, must be an rsa key")
 	rootFlags.String("ssh-privkey", "", "path to user's private ssh key")
 	rootFlags.String("image", "", "full resource ID of the remote image name, this should already exist in the resource group, if no local image is provided")
+	rootFlags.String("snapshot", "", "full resource ID of the snapshot, this should already exist in the resource group and is assumed to be a windows image, local image will be scp'd instead of uploaded")
 	rootFlags.String("vm-name", "vm-name", "name of the VM to create, all dependencies will be prefixed with this name")
 	rootFlags.String("image-name", "image-name", "the image and blob will")
 	rootFlags.String("size", "", "size or instance type of the VM to create")
