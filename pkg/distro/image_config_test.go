@@ -184,12 +184,16 @@ func TestImageConfigInheritFrom(t *testing.T) {
 func TestImageConfigDNFSetReleaseverNotSet(t *testing.T) {
 	var expected *osbuild.DNFConfigStageOptions
 	cnf := &ImageConfig{}
-	assert.Equal(t, expected, cnf.DNFConfigOptions("9-stream"))
+	options, err := cnf.DNFConfigOptions("9-stream")
+	assert.NoError(t, err)
+	assert.Equal(t, expected, options)
 
 	cnf.DNFConfig = &DNFConfig{
 		SetReleaseverVar: common.ToPtr(false),
 	}
-	assert.Equal(t, expected, cnf.DNFConfigOptions("9-stream"))
+	options, err = cnf.DNFConfigOptions("9-stream")
+	assert.NoError(t, err)
+	assert.Equal(t, expected, options)
 }
 
 func TestImageConfigDNFConfigOptionsPreExisting(t *testing.T) {
@@ -204,10 +208,11 @@ func TestImageConfigDNFConfigOptionsPreExisting(t *testing.T) {
 			},
 		},
 	}
-	assert.Equal(t, cnf.DNFConfig.Options, cnf.DNFConfigOptions("9-stream"))
+	options, err := cnf.DNFConfigOptions("9-stream")
+	assert.NoError(t, err)
+	assert.Equal(t, cnf.DNFConfig.Options, options)
 
 	cnf.DNFConfig.SetReleaseverVar = common.ToPtr(true)
-	assert.PanicsWithError(t, "internal error: currently DNFConfig and DNFSetReleaseverVar cannot be used together, please report this as a feature request", func() {
-		cnf.DNFConfigOptions("9-stream")
-	})
+	_, err = cnf.DNFConfigOptions("9-stream")
+	assert.EqualError(t, err, "internal error: currently DNFConfig and DNFSetReleaseverVar cannot be used together, please report this as a feature request")
 }

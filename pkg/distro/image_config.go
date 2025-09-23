@@ -191,12 +191,12 @@ func (c *ImageConfig) InheritFrom(parentConfig *ImageConfig) *ImageConfig {
 	return shallowMerge(c, parentConfig)
 }
 
-func (c *ImageConfig) DNFConfigOptions(osVersion string) *osbuild.DNFConfigStageOptions {
+func (c *ImageConfig) DNFConfigOptions(osVersion string) (*osbuild.DNFConfigStageOptions, error) {
 	if c.DNFConfig == nil {
-		return nil
+		return nil, nil
 	}
 	if c.DNFConfig.SetReleaseverVar == nil || !*c.DNFConfig.SetReleaseverVar {
-		return c.DNFConfig.Options
+		return c.DNFConfig.Options, nil
 	}
 
 	// We currently have no use-case where we set both a custom
@@ -207,8 +207,7 @@ func (c *ImageConfig) DNFConfigOptions(osVersion string) *osbuild.DNFConfigStage
 	// do about potentially conflicting (manually set) "releasever"
 	// values by the user.
 	if c.DNFConfig.SetReleaseverVar != nil && c.DNFConfig.Options != nil {
-		err := fmt.Errorf("internal error: currently DNFConfig and DNFSetReleaseverVar cannot be used together, please report this as a feature request")
-		panic(err)
+		return nil, fmt.Errorf("internal error: currently DNFConfig and DNFSetReleaseverVar cannot be used together, please report this as a feature request")
 	}
 	return osbuild.NewDNFConfigStageOptions(
 		[]osbuild.DNFVariable{
@@ -218,7 +217,7 @@ func (c *ImageConfig) DNFConfigOptions(osVersion string) *osbuild.DNFConfigStage
 			},
 		},
 		nil,
-	)
+	), nil
 }
 
 type Sysconfig struct {
