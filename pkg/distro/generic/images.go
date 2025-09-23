@@ -265,6 +265,11 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 		osc.RHSMConfig = osc.RHSMConfig.Update(bpRhsmConfig)
 	}
 
+	osc.DNFConfig, err = imageConfig.DNFConfigOptions(t.arch.distro.OsVersion())
+	if err != nil {
+		panic(fmt.Errorf("error creating dnf configs: %w", err))
+	}
+
 	osc.ShellInit = imageConfig.ShellInit
 	osc.Grub2Config = imageConfig.Grub2Config
 	osc.Sysconfig = imageConfig.SysconfigStageOptions()
@@ -280,7 +285,6 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 	osc.Tmpfilesd = imageConfig.Tmpfilesd
 	osc.PamLimitsConf = imageConfig.PamLimitsConf
 	osc.Sysctld = imageConfig.Sysctld
-	osc.DNFConfig = imageConfig.DNFConfigOptions(t.arch.distro.OsVersion())
 	osc.DNFAutomaticConfig = imageConfig.DNFAutomaticConfig
 	osc.YUMConfig = imageConfig.YumConfig
 	osc.SshdConfig = imageConfig.SshdConfig
