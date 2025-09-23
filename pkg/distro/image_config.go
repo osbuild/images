@@ -195,29 +195,35 @@ func (c *ImageConfig) DNFConfigOptions(osVersion string) (*osbuild.DNFConfigStag
 	if c.DNFConfig == nil {
 		return nil, nil
 	}
+
 	if c.DNFConfig.SetReleaseverVar == nil || !*c.DNFConfig.SetReleaseverVar {
+		// without the set_releasever_var option enabled, we don't need to do
+		// anything else
 		return c.DNFConfig.Options, nil
 	}
 
-	// We currently have no use-case where we set both a custom
-	// DNFConfig and DNFSetReleaseverVar. If we have one this needs
-	// to change and we need to decide if we want two dnf
-	// configurations or if we want to merge the variable into all
-	// existing once (exactly once) and we need to consider what to
-	// do about potentially conflicting (manually set) "releasever"
-	// values by the user.
-	if c.DNFConfig.SetReleaseverVar != nil && c.DNFConfig.Options != nil {
-		return nil, fmt.Errorf("internal error: currently DNFConfig and DNFSetReleaseverVar cannot be used together, please report this as a feature request")
+	// Beyond this point, c.DNFConfig.SetReleaseverVar is assumed to be true
+
+	options := c.DNFConfig.Options
+	if options == nil {
+		options = &osbuild.DNFConfigStageOptions{}
 	}
-	return osbuild.NewDNFConfigStageOptions(
-		[]osbuild.DNFVariable{
-			{
-				Name:  "releasever",
-				Value: osVersion,
-			},
-		},
-		nil,
-	), nil
+	// The set_releasever_var option is set, which creates the 'releasever'
+	// variable: check if 'releasever' is already set in the
+	// options.variables, and return an error if there's a conflict.
+	for _, v := range options.Variables {
+		if v.Name == "releasever" {
+			return nil, fmt.Errorf("dnf_config.set_releasever_var is enabled and conflicts with the releasever variable set in dnf_config.options.variables with value: %s", v.Value)
+		}
+	}
+
+	releaseVer := osbuild.DNFVariable{
+		Name:  "releasever",
+		Value: osVersion,
+	}
+	options.Variables = append(options.Variables, releaseVer)
+
+	return options, nil
 }
 
 type Sysconfig struct {

@@ -196,10 +196,30 @@ func TestImageConfigDNFSetReleaseverNotSet(t *testing.T) {
 	assert.Equal(t, expected, options)
 }
 
-func TestImageConfigDNFConfigOptionsPreExisting(t *testing.T) {
-	cnf := &ImageConfig{
-		DNFConfig: &DNFConfig{
-			Options: &osbuild.DNFConfigStageOptions{
+func TestImageConfigDNFConfigOptions(t *testing.T) {
+	type testCase struct {
+		config *DNFConfig
+
+		expected *osbuild.DNFConfigStageOptions
+		expErr   string
+	}
+
+	// the exact value of os release doesn't matter, so we use the same one for all cases
+	osRelease := "9-stream"
+
+	testCases := map[string]testCase{
+		"nothing": {},
+		"ipresolve": {
+			config: &DNFConfig{
+				Options: &osbuild.DNFConfigStageOptions{
+					Config: &osbuild.DNFConfig{
+						Main: &osbuild.DNFConfigMain{
+							IPResolve: "4",
+						},
+					},
+				},
+			},
+			expected: &osbuild.DNFConfigStageOptions{
 				Config: &osbuild.DNFConfig{
 					Main: &osbuild.DNFConfigMain{
 						IPResolve: "4",
@@ -207,12 +227,193 @@ func TestImageConfigDNFConfigOptionsPreExisting(t *testing.T) {
 				},
 			},
 		},
+		"ipresolve+noreleasever": {
+			config: &DNFConfig{
+				Options: &osbuild.DNFConfigStageOptions{
+					Config: &osbuild.DNFConfig{
+						Main: &osbuild.DNFConfigMain{
+							IPResolve: "4",
+						},
+					},
+				},
+				SetReleaseverVar: common.ToPtr(false),
+			},
+			expected: &osbuild.DNFConfigStageOptions{
+				Config: &osbuild.DNFConfig{
+					Main: &osbuild.DNFConfigMain{
+						IPResolve: "4",
+					},
+				},
+			},
+		},
+		"ipresolve+releasever": {
+			config: &DNFConfig{
+				Options: &osbuild.DNFConfigStageOptions{
+					Config: &osbuild.DNFConfig{
+						Main: &osbuild.DNFConfigMain{
+							IPResolve: "4",
+						},
+					},
+				},
+				SetReleaseverVar: common.ToPtr(true),
+			},
+			expected: &osbuild.DNFConfigStageOptions{
+				Variables: []osbuild.DNFVariable{
+					{
+						Name:  "releasever",
+						Value: osRelease,
+					},
+				},
+				Config: &osbuild.DNFConfig{
+					Main: &osbuild.DNFConfigMain{
+						IPResolve: "4",
+					},
+				},
+			},
+		},
+		"releasever": {
+			config: &DNFConfig{
+				SetReleaseverVar: common.ToPtr(true),
+			},
+			expected: &osbuild.DNFConfigStageOptions{
+				Variables: []osbuild.DNFVariable{
+					{
+						Name:  "releasever",
+						Value: osRelease,
+					},
+				},
+			},
+		},
+		"ipresolve+somevar": {
+			config: &DNFConfig{
+				Options: &osbuild.DNFConfigStageOptions{
+					Variables: []osbuild.DNFVariable{
+						{
+							Name:  "custom-var",
+							Value: "custom-val",
+						},
+					},
+					Config: &osbuild.DNFConfig{
+						Main: &osbuild.DNFConfigMain{
+							IPResolve: "4",
+						},
+					},
+				},
+			},
+			expected: &osbuild.DNFConfigStageOptions{
+				Variables: []osbuild.DNFVariable{
+					{
+						Name:  "custom-var",
+						Value: "custom-val",
+					},
+				},
+				Config: &osbuild.DNFConfig{
+					Main: &osbuild.DNFConfigMain{
+						IPResolve: "4",
+					},
+				},
+			},
+		},
+		"somevar+releasever": {
+			config: &DNFConfig{
+				Options: &osbuild.DNFConfigStageOptions{
+					Variables: []osbuild.DNFVariable{
+						{
+							Name:  "custom-var",
+							Value: "custom-val",
+						},
+					},
+				},
+				SetReleaseverVar: common.ToPtr(true),
+			},
+			expected: &osbuild.DNFConfigStageOptions{
+				Variables: []osbuild.DNFVariable{
+					{
+						Name:  "custom-var",
+						Value: "custom-val",
+					},
+					{
+						Name:  "releasever",
+						Value: osRelease,
+					},
+				},
+			},
+		},
+		"ipresolve+somevar+releasever": {
+			config: &DNFConfig{
+				Options: &osbuild.DNFConfigStageOptions{
+					Variables: []osbuild.DNFVariable{
+						{
+							Name:  "custom-var",
+							Value: "custom-val",
+						},
+					},
+					Config: &osbuild.DNFConfig{
+						Main: &osbuild.DNFConfigMain{
+							IPResolve: "4",
+						},
+					},
+				},
+				SetReleaseverVar: common.ToPtr(true),
+			},
+			expected: &osbuild.DNFConfigStageOptions{
+				Variables: []osbuild.DNFVariable{
+					{
+						Name:  "custom-var",
+						Value: "custom-val",
+					},
+					{
+						Name:  "releasever",
+						Value: osRelease,
+					},
+				},
+				Config: &osbuild.DNFConfig{
+					Main: &osbuild.DNFConfigMain{
+						IPResolve: "4",
+					},
+				},
+			},
+		},
+		"variable-conflict": {
+			config: &DNFConfig{
+				Options: &osbuild.DNFConfigStageOptions{
+					Variables: []osbuild.DNFVariable{
+						{
+							Name:  "custom-var",
+							Value: "custom-val",
+						},
+						{
+							Name:  "releasever",
+							Value: "100.42",
+						},
+					},
+					Config: &osbuild.DNFConfig{
+						Main: &osbuild.DNFConfigMain{
+							IPResolve: "4",
+						},
+					},
+				},
+				SetReleaseverVar: common.ToPtr(true),
+			},
+			expErr: "dnf_config.set_releasever_var is enabled and conflicts with the releasever variable set in dnf_config.options.variables with value: 100.42",
+		},
 	}
-	options, err := cnf.DNFConfigOptions("9-stream")
-	assert.NoError(t, err)
-	assert.Equal(t, cnf.DNFConfig.Options, options)
 
-	cnf.DNFConfig.SetReleaseverVar = common.ToPtr(true)
-	_, err = cnf.DNFConfigOptions("9-stream")
-	assert.EqualError(t, err, "internal error: currently DNFConfig and DNFSetReleaseverVar cannot be used together, please report this as a feature request")
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+
+			ic := &ImageConfig{
+				DNFConfig: tc.config,
+			}
+
+			options, err := ic.DNFConfigOptions(osRelease)
+			if tc.expErr != "" {
+				assert.EqualError(err, tc.expErr)
+				return
+			}
+
+			assert.Equal(tc.expected, options)
+		})
+	}
 }
