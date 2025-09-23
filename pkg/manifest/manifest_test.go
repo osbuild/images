@@ -37,6 +37,10 @@ func TestUnknownDistroPanic(t *testing.T) {
 	})
 }
 
+func TestAllDistrosHaveNames(t *testing.T) {
+	assert.Equal(t, len(manifest.DistroNames), int(manifest.DISTRO_COUNT))
+}
+
 func findStage(name string, stages []*osbuild.Stage) *osbuild.Stage {
 	for _, s := range stages {
 		if s.Type == name {

@@ -10,6 +10,11 @@ import (
 	"github.com/osbuild/images/pkg/runner"
 )
 
+var (
+	DistroNames  = distroNames
+	DISTRO_COUNT = _distro_count
+)
+
 func (p *OS) GetBuildPackages(d Distro) []string {
 	return p.getBuildPackages(d)
 }
