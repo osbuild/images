@@ -182,7 +182,7 @@ func TestImageConfigInheritFrom(t *testing.T) {
 }
 
 func TestImageConfigDNFSetReleaseverNotSet(t *testing.T) {
-	var expected []*osbuild.DNFConfigStageOptions
+	var expected *osbuild.DNFConfigStageOptions
 	cnf := &ImageConfig{}
 	assert.Equal(t, expected, cnf.DNFConfigOptions("9-stream"))
 
@@ -195,12 +195,10 @@ func TestImageConfigDNFSetReleaseverNotSet(t *testing.T) {
 func TestImageConfigDNFConfigOptionsPreExisting(t *testing.T) {
 	cnf := &ImageConfig{
 		DNFConfig: &DNFConfig{
-			Options: []*osbuild.DNFConfigStageOptions{
-				{
-					Config: &osbuild.DNFConfig{
-						Main: &osbuild.DNFConfigMain{
-							IPResolve: "4",
-						},
+			Options: &osbuild.DNFConfigStageOptions{
+				Config: &osbuild.DNFConfig{
+					Main: &osbuild.DNFConfigMain{
+						IPResolve: "4",
 					},
 				},
 			},

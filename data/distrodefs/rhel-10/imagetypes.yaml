@@ -1907,9 +1907,9 @@ image_types:
         keymap: "us"
       dnf_config:
         options:
-          - config:
-              main:
-                ipresolve: "4"
+          config:
+            main:
+              ipresolve: "4"
       dnf_automatic_config:
         config:
           commands:
