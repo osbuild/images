@@ -27,13 +27,30 @@ import (
 type Distro uint64
 
 const (
-	DISTRO_NULL = iota
+	DISTRO_NULL Distro = iota
 	DISTRO_EL10
 	DISTRO_EL9
 	DISTRO_EL8
 	DISTRO_EL7
 	DISTRO_FEDORA
 )
+
+func (d Distro) String() string {
+	switch d {
+	case DISTRO_EL10:
+		return "rhel-10"
+	case DISTRO_EL9:
+		return "rhel-9"
+	case DISTRO_EL8:
+		return "rhel-8"
+	case DISTRO_EL7:
+		return "rhel-7"
+	case DISTRO_FEDORA:
+		return "fedora"
+	default:
+		panic(fmt.Errorf("unknown distro: %d", d))
+	}
+}
 
 func (d *Distro) UnmarshalJSON(data []byte) error {
 	var s string
