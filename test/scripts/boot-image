@@ -5,10 +5,12 @@ import json
 import os
 import uuid
 from tempfile import TemporaryDirectory
+import shutil
 
 import imgtestlib as testlib
 
 BASE_TEST_SCRIPT = "test/scripts/base-host-check.sh"
+WSL_TEST_SCRIPT = "test/scripts/wsl-entrypoint.bat"
 
 
 def get_aws_config():
@@ -26,16 +28,27 @@ def get_azure_config():
         "tenant": os.environ.get("AZURE_TENANT"),
         "client_id": os.environ.get("AZURE_CLIENT_ID"),
         "client_secret": os.environ.get("AZURE_CLIENT_SECRET"),
-        "resource_group": os.environ.get("AZURE_RESOURCE_GROUP")
+        "resource_group": os.environ.get("AZURE_RESOURCE_GROUP"),
+        "windows_snapshot": os.environ.get("AZURE_WINDOWS_SNAPSHOT"),
+        "windows_ssh_privkey": os.environ.get("AZURE_WINDOWS_SSH_PRIVKEY"),
     }
 
 
 @contextlib.contextmanager
-def create_ssh_key(key_type = None):
+def create_ssh_key(privkey_file = None, key_type = None):
     with TemporaryDirectory() as tmpdir:
         keypath = os.path.join(tmpdir, "testkey")
         ci_priv_key = os.environ.get("CI_PRIV_SSH_KEY_2")
-        if not key_type and ci_priv_key:
+        if privkey_file is not None:
+            shutil.copyfile(privkey_file, keypath)
+            os.chmod(keypath, 0o600)
+
+            cmd = ["ssh-keygen", "-y", "-f", keypath]
+            out, _ = testlib.runcmd(cmd)
+            pubkey = out.decode()
+            with open(keypath + ".pub", "w", encoding="utf-8") as pubkeyfile:
+                pubkeyfile.write(pubkey)
+        elif not key_type and ci_priv_key:
             # running in CI: use key from env
             with open(keypath, "w", encoding="utf-8") as keyfile:
                 keyfile.write(ci_priv_key + "\n")
@@ -187,6 +200,32 @@ def boot_vhd(distro, arch, image_path, config):
             testlib.runcmd_nc(cmd)
 
 
+def boot_wsl(distro, arch, image_path, config):
+    with ensure_uncompressed(image_path) as raw_image_path:
+        cmd = [WSL_TEST_SCRIPT, raw_image_path, BASE_TEST_SCRIPT, config]
+        # pylint: disable=too-many-arguments,too-many-positional-arguments
+        az_config = get_azure_config()
+        with create_ssh_key(privkey_file = az_config["windows_ssh_privkey"]) as (privkey, pubkey):
+            # a lot of resources have <=64 character naming constraint
+            name = f"{distro}-" + str(uuid.uuid4())
+
+            cmd = ["go", "run", "./cmd/boot-azure", "run",
+                   "--subscription", az_config["subscription"],
+                   "--tenant", az_config["tenant"],
+                   "--client-id", az_config["client_id"],
+                   "--client-secret", az_config["client_secret"],
+                   "--resource-group", az_config["resource_group"],
+                   "--snapshot", az_config["windows_snapshot"],
+                   "--username", "azureuser",
+                   "--ssh-privkey", privkey,
+                   "--ssh-pubkey", pubkey,
+                   "--vm-name", name,
+                   "--arch", arch,
+                   "--size", "Standard_D2as_v5",
+                   raw_image_path, *cmd]
+            testlib.runcmd_nc(cmd)
+
+
 def main():
     desc = "Boot an image in the cloud environment it is built for and validate the configuration"
     parser = argparse.ArgumentParser(description=desc)
@@ -218,6 +257,11 @@ def main():
             boot_container(distro, arch, image_type, image_path, manifest_id)
             bib_ref = testlib.get_bib_ref()
             bib_image_id = testlib.skopeo_inspect_id(f"docker://{bib_ref}", testlib.host_container_arch())
+        case "wsl":
+            if distro == "fedora-41":
+                print(f"{distro} {image_type} boot tests are not supported, fails on wsl import")
+                return
+            boot_wsl(distro, arch, image_path, build_config_path)
         case _:
             # skip
             print(f"{image_type} boot tests are not supported yet")
