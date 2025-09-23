@@ -179,7 +179,7 @@ func shallowMerge[T any](child *T, parent *T) *T {
 
 type DNFConfig struct {
 	Options          []*osbuild.DNFConfigStageOptions
-	SetReleaseVerVar *bool `yaml:"set_release_ver_var"`
+	SetReleaseverVar *bool `yaml:"set_releasever_var"`
 }
 
 // InheritFrom inherits unset values from the provided parent configuration and
@@ -195,19 +195,19 @@ func (c *ImageConfig) DNFConfigOptions(osVersion string) []*osbuild.DNFConfigSta
 	if c.DNFConfig == nil {
 		return nil
 	}
-	if c.DNFConfig.SetReleaseVerVar == nil || !*c.DNFConfig.SetReleaseVerVar {
+	if c.DNFConfig.SetReleaseverVar == nil || !*c.DNFConfig.SetReleaseverVar {
 		return c.DNFConfig.Options
 	}
 
 	// We currently have no use-case where we set both a custom
-	// DNFConfig and DNFSetReleaseVerVar. If we have one this needs
+	// DNFConfig and DNFSetReleaseverVar. If we have one this needs
 	// to change and we need to decide if we want two dnf
 	// configurations or if we want to merge the variable into all
 	// existing once (exactly once) and we need to consider what to
 	// do about potentially conflicting (manually set) "releasever"
 	// values by the user.
-	if c.DNFConfig.SetReleaseVerVar != nil && c.DNFConfig.Options != nil {
-		err := fmt.Errorf("internal error: currently DNFConfig and DNFSetReleaseVerVar cannot be used together, please reporting this as a feature request")
+	if c.DNFConfig.SetReleaseverVar != nil && c.DNFConfig.Options != nil {
+		err := fmt.Errorf("internal error: currently DNFConfig and DNFSetReleaseverVar cannot be used together, please reporting this as a feature request")
 		panic(err)
 	}
 	return []*osbuild.DNFConfigStageOptions{
