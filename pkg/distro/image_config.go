@@ -207,7 +207,7 @@ func (c *ImageConfig) DNFConfigOptions(osVersion string) []*osbuild.DNFConfigSta
 	// do about potentially conflicting (manually set) "releasever"
 	// values by the user.
 	if c.DNFConfig.SetReleaseverVar != nil && c.DNFConfig.Options != nil {
-		err := fmt.Errorf("internal error: currently DNFConfig and DNFSetReleaseverVar cannot be used together, please reporting this as a feature request")
+		err := fmt.Errorf("internal error: currently DNFConfig and DNFSetReleaseverVar cannot be used together, please report this as a feature request")
 		panic(err)
 	}
 	return []*osbuild.DNFConfigStageOptions{
