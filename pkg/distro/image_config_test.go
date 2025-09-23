@@ -214,5 +214,13 @@ func TestImageConfigDNFConfigOptionsPreExisting(t *testing.T) {
 
 	cnf.DNFConfig.SetReleaseVerVar = common.ToPtr(true)
 	_, err = cnf.DNFConfigOptions("9-stream")
-	assert.EqualError(t, err, "internal error: currently DNFConfig and DNFSetReleaseVerVar cannot be used together, please report this as a feature request")
+	assert.NoError(t, err)
+
+	cnf.DNFConfig.Options.Variables = append(cnf.DNFConfig.Options.Variables, osbuild.DNFVariable{Name: "somevariable", Value: "avalue"})
+	_, err = cnf.DNFConfigOptions("9-stream")
+	assert.NoError(t, err)
+
+	cnf.DNFConfig.Options.Variables = append(cnf.DNFConfig.Options.Variables, osbuild.DNFVariable{Name: "releasever", Value: "100.42"})
+	_, err = cnf.DNFConfigOptions("9-stream")
+	assert.EqualError(t, err, "dnf_config.set_releasever_var is enabled and conflicts with the releasever variable set in dnf_config.options.variables with value: 100.42")
 }
