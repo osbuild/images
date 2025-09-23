@@ -33,23 +33,24 @@ const (
 	DISTRO_EL8
 	DISTRO_EL7
 	DISTRO_FEDORA
+	_distro_count
 )
 
+var distroNames = map[Distro]string{
+	DISTRO_NULL:   "unset",
+	DISTRO_EL10:   "rhel-10",
+	DISTRO_EL9:    "rhel-9",
+	DISTRO_EL8:    "rhel-8",
+	DISTRO_EL7:    "rhel-7",
+	DISTRO_FEDORA: "fedora",
+}
+
 func (d Distro) String() string {
-	switch d {
-	case DISTRO_EL10:
-		return "rhel-10"
-	case DISTRO_EL9:
-		return "rhel-9"
-	case DISTRO_EL8:
-		return "rhel-8"
-	case DISTRO_EL7:
-		return "rhel-7"
-	case DISTRO_FEDORA:
-		return "fedora"
-	default:
+	s, ok := distroNames[d]
+	if !ok {
 		panic(fmt.Errorf("unknown distro: %d", d))
 	}
+	return s
 }
 
 func (d *Distro) UnmarshalJSON(data []byte) error {
@@ -58,21 +59,13 @@ func (d *Distro) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	switch s {
-	case "rhel-10":
-		*d = DISTRO_EL10
-	case "rhel-9":
-		*d = DISTRO_EL9
-	case "rhel-8":
-		*d = DISTRO_EL8
-	case "rhel-7":
-		*d = DISTRO_EL7
-	case "fedora":
-		*d = DISTRO_FEDORA
-	default:
-		return fmt.Errorf("unknown distro: %q", s)
+	for distro, distroName := range distroNames {
+		if s == distroName {
+			*d = distro
+			return nil
+		}
 	}
-	return nil
+	return fmt.Errorf("unknown distro: %q", s)
 }
 
 func (d *Distro) UnmarshalYAML(unmarshal func(any) error) error {
