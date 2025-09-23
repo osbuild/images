@@ -269,10 +269,24 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 		osc.RHSMConfig = osc.RHSMConfig.Update(bpRhsmConfig)
 	}
 
-	osc.DNFConfig, err = imageConfig.DNFConfigOptions(t.arch.distro.OsVersion())
+	dnfConfig, err := imageConfig.DNFConfigOptions(t.arch.distro.OsVersion())
 	if err != nil {
 		panic(fmt.Errorf("error creating dnf configs: %w", err))
 	}
+	if bpDnf := c.GetDNF(); bpDnf != nil && bpDnf.Config != nil {
+		if dnfConfig == nil {
+			dnfConfig = &osbuild.DNFConfigStageOptions{}
+		}
+		if bpDnf.Config.SetReleaseVer {
+			// NOTE: currently this is either a no-op or an append (i.e. it
+			// will never change the value of an existing releasever), but will
+			// become useful if we ever support adding custom variables through
+			// the blueprint
+			dnfConfig.UpdateVar("releasever", t.arch.distro.OsVersion())
+		}
+	}
+
+	osc.DNFConfig = dnfConfig
 
 	osc.ShellInit = imageConfig.ShellInit
 	osc.Grub2Config = imageConfig.Grub2Config
