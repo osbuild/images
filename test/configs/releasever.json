@@ -1,0 +1,15 @@
+{
+  "name": "releasever",
+  "blueprint": {
+    "name": "releasever",
+    "description": "Enables the dnf releasever option for tying a system to a specific release of RHEL",
+    "version": "1.0",
+    "customizations": {
+      "dnf": {
+        "config": {
+          "set_releasever": true
+        }
+      }
+    }
+  }
+}
