@@ -1,6 +1,7 @@
 package manifest_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -25,7 +26,15 @@ func TestDistroUnmarshal(t *testing.T) {
 		err := distro.UnmarshalJSON([]byte(tc.inp))
 		assert.NoError(t, err)
 		assert.Equal(t, tc.expected, distro)
+		// and distro can be converted back to the same string
+		assert.Equal(t, tc.inp, fmt.Sprintf("%q", distro))
 	}
+}
+
+func TestUnknownDistroPanic(t *testing.T) {
+	assert.PanicsWithError(t, "unknown distro: 911", func() {
+		_ = manifest.Distro(911).String()
+	})
 }
 
 func findStage(name string, stages []*osbuild.Stage) *osbuild.Stage {
