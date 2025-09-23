@@ -209,7 +209,7 @@ func TestImageConfigDNFConfigOptionsPreExisting(t *testing.T) {
 	assert.Equal(t, cnf.DNFConfig.Options, cnf.DNFConfigOptions("9-stream"))
 
 	cnf.DNFConfig.SetReleaseVerVar = common.ToPtr(true)
-	assert.PanicsWithError(t, "internal error: currently DNFConfig and DNFSetReleaseVerVar cannot be used together, please reporting this as a feature request", func() {
+	assert.PanicsWithError(t, "internal error: currently DNFConfig and DNFSetReleaseVerVar cannot be used together, please report this as a feature request", func() {
 		cnf.DNFConfigOptions("9-stream")
 	})
 }
