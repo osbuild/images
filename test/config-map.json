@@ -546,5 +546,14 @@
     "distros": [
       "rhel-7*"
     ]
+  },
+  "./configs/releasever.json": {
+    "distros": [
+      "rhel-9*",
+      "rhel-10*"
+    ],
+    "image-types": [
+      "qcow2"
+    ]
   }
 }
