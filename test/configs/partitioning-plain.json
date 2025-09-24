@@ -58,7 +58,7 @@
           {
             "mountpoint": "/boot/efi",
             "fs_type": "vfat",
-            "minsize": 536870912 
+            "minsize": 536870912
           }
         ]
       }

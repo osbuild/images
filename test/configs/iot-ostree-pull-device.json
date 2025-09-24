@@ -5,10 +5,10 @@
     "description": "For the iot-simplified-installer.",
     "version": "1.0",
     "customizations": {
-	"installation_device": "/dev/sda",
-	"kernel": {
-	    "append": "debug"
-	}
+      "installation_device": "/dev/sda",
+      "kernel": {
+        "append": "debug"
+      }
     }
   },
   "options": {
