@@ -9,7 +9,7 @@ import shutil
 
 import imgtestlib as testlib
 
-BASE_TEST_SCRIPT = "test/scripts/base-host-check.sh"
+BASE_TEST_SCRIPT = "test/scripts/check-host-config.sh"
 WSL_TEST_SCRIPT = "test/scripts/wsl-entrypoint.bat"
 
 
