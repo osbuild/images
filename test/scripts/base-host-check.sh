@@ -134,7 +134,7 @@ check_hostname() {
 
     # we only emit a warning here since the hostname gets reset by cloud-init and we're not
     # entirely sure how to deal with it yet on the service level
-    if [[ $actual_hostname != "${expected_hostname}" ]]; then 
+    if [[ $actual_hostname != "${expected_hostname}" ]]; then
         echo "🟡 Hostname was not set: hostname=${actual_hostname} expected=${expected_hostname}"
     else
         echo "Hostname was set"
@@ -157,10 +157,10 @@ check_files_customizations() {
     expected_paths=$(jq -r '.blueprint.customizations.files | .[] | .path' "${config}")
 
     for path in $expected_paths; do
-	if [ ! -e "$path" ]; then
-	    echo "❌ Expected path from filesystem customization is not there: $path"
-	    exit 1
-	fi
+        if [ ! -e "$path" ]; then
+            echo "❌ Expected path from filesystem customization is not there: $path"
+            exit 1
+        fi
     done
 }
 
