@@ -316,8 +316,22 @@ uname -a
 echo "🕰️ uptime"
 uptime
 
+
+# RHEL 7 does not include iq, so we skip it unconditionally
+source /etc/os-release
+if [[ "$ID" == "rhel" && "$VERSION_ID" == "7.9" ]]; then
+    echo "RHEL 7.9 host: skipping checks"
+    exit 0
+fi
+
 # NOTE: we should do a lot more here
 if (( $# > 0 )); then
+
+    if ! command -v jq; then
+        echo "jq not installed. Exiting"
+        exit 1
+    fi
+
     config="$1"
     if jq -e .blueprint.customizations.openscap "${config}"; then
         get_oscap_score "${config}"
