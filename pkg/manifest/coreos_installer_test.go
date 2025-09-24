@@ -28,10 +28,10 @@ func newCoreOSInstaller() *CoreOSInstaller {
 }
 
 func TestCoreOSInstallerDracutModulesAndDrivers(t *testing.T) {
-	pkgs := []rpmmd.PackageSpec{
+	pkgs := rpmmd.PackageList{
 		{
 			Name:     "kernel",
-			Checksum: "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+			Checksum: rpmmd.Checksum{Type: "sha256", Value: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"},
 		},
 	}
 

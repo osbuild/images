@@ -33,7 +33,7 @@ func sha256For(s string) string {
 	h := sha256.New()
 	h.Write([]byte(s))
 	bs := h.Sum(nil)
-	return fmt.Sprintf("sha256:%x", bs)
+	return fmt.Sprintf("%x", bs)
 }
 
 func TestManifestGeneratorDepsolve(t *testing.T) {
@@ -137,12 +137,12 @@ func fakeDepsolve(cacheDir string, depsolveWarningsOutput io.Writer, packageSets
 		var resolvedSet depsolvednf.DepsolveResult
 		for _, pkgSet := range pkgSets {
 			for _, pkgName := range pkgSet.Include {
-				resolvedSet.Packages = append(resolvedSet.Packages, rpmmd.PackageSpec{
-					Name:           pkgName,
-					Checksum:       sha256For(pkgName),
-					Path:           fmt.Sprintf("path/%s.rpm", pkgName),
-					RepoID:         repoId,
-					RemoteLocation: fmt.Sprintf("%s/%s.rpm", pkgSet.Repositories[0].BaseURLs[0], pkgName),
+				resolvedSet.Packages = append(resolvedSet.Packages, rpmmd.Package{
+					Name:            pkgName,
+					Checksum:        rpmmd.Checksum{Type: "sha256", Value: sha256For(pkgName)},
+					Location:        fmt.Sprintf("path/%s.rpm", pkgName),
+					RepoID:          repoId,
+					RemoteLocations: []string{fmt.Sprintf("%s/%s.rpm", pkgSet.Repositories[0].BaseURLs[0], pkgName)},
 				})
 				resolvedSet.Repos = append(resolvedSet.Repos, rpmmd.RepoConfig{
 					Id:       repoId,

@@ -226,7 +226,7 @@ type OS struct {
 
 	// content-related fields
 	repos            []rpmmd.RepoConfig
-	packageSpecs     []rpmmd.PackageSpec
+	packageSpecs     rpmmd.PackageList
 	moduleSpecs      []rpmmd.ModuleSpec
 	containerSpecs   []container.Spec
 	ostreeParentSpec *ostree.CommitSpec
@@ -469,7 +469,7 @@ func (p *OS) getOSTreeCommits() []ostree.CommitSpec {
 	return []ostree.CommitSpec{*p.ostreeParentSpec}
 }
 
-func (p *OS) getPackageSpecs() []rpmmd.PackageSpec {
+func (p *OS) getPackageSpecs() rpmmd.PackageList {
 	return p.packageSpecs
 }
 
@@ -493,11 +493,11 @@ func (p *OS) serializeStart(inputs Inputs) error {
 	}
 
 	if p.OSCustomizations.KernelName != "" {
-		kernelPkg, err := rpmmd.GetPackage(p.packageSpecs, p.OSCustomizations.KernelName)
+		kernelPkg, err := p.packageSpecs.Package(p.OSCustomizations.KernelName)
 		if err != nil {
 			return fmt.Errorf("OS: %w", err)
 		}
-		p.kernelVer = kernelPkg.GetEVRA()
+		p.kernelVer = kernelPkg.EVRA()
 	}
 
 	p.repos = append(p.repos, inputs.Depsolved.Repos...)
@@ -1057,7 +1057,7 @@ func grubStage(p *OS, pt *disk.PartitionTable, kernelOptions []string) *osbuild.
 			Nick:    p.OSNick,
 		}
 
-		_, err := rpmmd.GetPackage(p.packageSpecs, "dracut-config-rescue")
+		_, err := p.packageSpecs.Package("dracut-config-rescue")
 		hasRescue := err == nil
 		return osbuild.NewGrub2LegacyStage(
 			osbuild.NewGrub2LegacyStageOptions(
@@ -1170,8 +1170,8 @@ func findESPMountpoint(pt *disk.PartitionTable) (string, error) {
 // (v25.3+) or if the uki-direct package is not included in the package list.
 //
 // [1] https://gitlab.com/kraxel/virt-firmware/-/commit/ca385db4f74a4d542455b9d40c91c8448c7be90c
-func maybeAddHMACandDirStage(packages []rpmmd.PackageSpec, espMountpoint, kernelVer string) ([]*osbuild.Stage, error) {
-	ukiDirect, err := rpmmd.GetPackage(packages, "uki-direct")
+func maybeAddHMACandDirStage(packages rpmmd.PackageList, espMountpoint, kernelVer string) ([]*osbuild.Stage, error) {
+	ukiDirect, err := packages.Package("uki-direct")
 	if err != nil {
 		// the uki-direct package isn't in the list: no override necessary
 		return nil, nil

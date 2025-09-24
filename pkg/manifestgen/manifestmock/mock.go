@@ -57,7 +57,7 @@ func Depsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfi
 	depsolvedSets := make(map[string]depsolvednf.DepsolveResult)
 
 	for name, pkgSetChain := range packageSets {
-		specSet := make([]rpmmd.PackageSpec, 0)
+		specSet := make(rpmmd.PackageList, 0)
 		seenChksumsInc := make(map[string]bool)
 		seenChksumsExc := make(map[string]bool)
 		for idx, pkgSet := range pkgSetChain {
@@ -69,19 +69,19 @@ func Depsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfi
 				// release/version numbers
 				ver := strconv.Itoa(int(pkgName[0]) % 9)
 				rel := strconv.Itoa(int(pkgName[1]) % 9)
-				spec := rpmmd.PackageSpec{
-					Name:           pkgName,
-					Epoch:          0,
-					Version:        ver,
-					Release:        rel + ".fk1",
-					Arch:           archName,
-					RemoteLocation: fmt.Sprintf("https://example.com/repo/packages/%s", pkgName),
-					Checksum:       "sha256:" + checksum,
+				spec := rpmmd.Package{
+					Name:            pkgName,
+					Epoch:           0,
+					Version:         ver,
+					Release:         rel + ".fk1",
+					Arch:            archName,
+					RemoteLocations: []string{fmt.Sprintf("https://example.com/repo/packages/%s", pkgName)},
+					Checksum:        rpmmd.Checksum{Type: "sha256", Value: checksum},
 				}
-				if seenChksumsInc[spec.Checksum] {
+				if seenChksumsInc[spec.Checksum.String()] {
 					continue
 				}
-				seenChksumsInc[spec.Checksum] = true
+				seenChksumsInc[spec.Checksum.String()] = true
 
 				specSet = append(specSet, spec)
 			}
@@ -91,19 +91,19 @@ func Depsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfi
 			for _, excludeName := range exclude {
 				pkgName := fmt.Sprintf("exclude:%s", excludeName)
 				checksum := fmt.Sprintf("%x", sha256.Sum256([]byte(pkgName)))
-				spec := rpmmd.PackageSpec{
-					Name:           pkgName,
-					Epoch:          0,
-					Version:        "0",
-					Release:        "0",
-					Arch:           "noarch",
-					RemoteLocation: fmt.Sprintf("https://example.com/repo/packages/%s", pkgName),
-					Checksum:       "sha256:" + checksum,
+				spec := rpmmd.Package{
+					Name:            pkgName,
+					Epoch:           0,
+					Version:         "0",
+					Release:         "0",
+					Arch:            "noarch",
+					RemoteLocations: []string{fmt.Sprintf("https://example.com/repo/packages/%s", pkgName)},
+					Checksum:        rpmmd.Checksum{Type: "sha256", Value: checksum},
 				}
-				if seenChksumsExc[spec.Checksum] {
+				if seenChksumsExc[spec.Checksum.String()] {
 					continue
 				}
-				seenChksumsExc[spec.Checksum] = true
+				seenChksumsExc[spec.Checksum.String()] = true
 
 				specSet = append(specSet, spec)
 			}
@@ -117,19 +117,19 @@ func Depsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfi
 			if pkgSet.InstallWeakDeps {
 				configPackageName += "-weak"
 			}
-			depsolveConfigPackage := rpmmd.PackageSpec{
-				Name:           configPackageName,
-				Epoch:          0,
-				Version:        "",
-				Release:        "",
-				Arch:           "noarch",
-				RemoteLocation: fmt.Sprintf("https://example.com/repo/packages/%s", configPackageName),
-				Checksum:       fmt.Sprintf("sha256:%x", sha256.Sum256([]byte(configPackageName))),
-				Secrets:        "",
-				CheckGPG:       false,
-				IgnoreSSL:      false,
-				Path:           "",
-				RepoID:         "",
+			depsolveConfigPackage := rpmmd.Package{
+				Name:            configPackageName,
+				Epoch:           0,
+				Version:         "",
+				Release:         "",
+				Arch:            "noarch",
+				RemoteLocations: []string{fmt.Sprintf("https://example.com/repo/packages/%s", configPackageName)},
+				Checksum:        rpmmd.Checksum{Type: "sha256", Value: fmt.Sprintf("%x", sha256.Sum256([]byte(configPackageName)))},
+				Secrets:         "",
+				CheckGPG:        false,
+				IgnoreSSL:       false,
+				Location:        "",
+				RepoID:          "",
 			}
 			specSet = append(specSet, depsolveConfigPackage)
 		}
@@ -150,10 +150,10 @@ func Depsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfi
 			}
 			url.Host = "example.com"
 			url.Path = fmt.Sprintf("passed-arch:%s/passed-repo:%s", archName, url.Path)
-			specSet = append(specSet, rpmmd.PackageSpec{
-				Name:           url.String(),
-				RemoteLocation: url.String(),
-				Checksum:       "sha256:" + fmt.Sprintf("%x", sha256.Sum256([]byte(url.String()))),
+			specSet = append(specSet, rpmmd.Package{
+				Name:            url.String(),
+				RemoteLocations: []string{url.String()},
+				Checksum:        rpmmd.Checksum{Type: "sha256", Value: fmt.Sprintf("%x", sha256.Sum256([]byte(url.String())))},
 			})
 		}
 

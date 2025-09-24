@@ -259,8 +259,8 @@ func TestModularityIncludesConfigStage(t *testing.T) {
 
 	inputs := manifest.Inputs{
 		Depsolved: depsolvednf.DepsolveResult{
-			Packages: []rpmmd.PackageSpec{
-				{Name: "pkg1", Checksum: "sha1:c02524e2bd19490f2a7167958f792262754c5f46"},
+			Packages: []rpmmd.Package{
+				{Name: "pkg1", Checksum: rpmmd.Checksum{Type: "sha1", Value: "c02524e2bd19490f2a7167958f792262754c5f46"}},
 			},
 			Modules: []rpmmd.ModuleSpec{
 				{
@@ -526,14 +526,14 @@ func TestHMACStageInclusion(t *testing.T) {
 	t.Run("add-hmac-stage", func(t *testing.T) {
 		inputs := manifest.Inputs{
 			Depsolved: depsolvednf.DepsolveResult{
-				Packages: []rpmmd.PackageSpec{
+				Packages: []rpmmd.Package{
 					{
 						Name:     "test-kernel",
 						Epoch:    0,
 						Version:  "13.3",
 						Release:  "7.el9",
 						Arch:     "x86_64",
-						Checksum: "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+						Checksum: rpmmd.Checksum{Type: "sha256", Value: "7777777777777777777777777777777777777777777777777777777777777777"},
 					},
 					{
 						Name:     "uki-direct",
@@ -541,7 +541,7 @@ func TestHMACStageInclusion(t *testing.T) {
 						Version:  "24.11",
 						Release:  "1.el9",
 						Arch:     "noarch",
-						Checksum: "sha256:c6ade8aef0282a228e1011f4f4b7efe41c035f6e635feb27082ac36cb1a1384b",
+						Checksum: rpmmd.Checksum{Type: "sha256", Value: "c6ade8aef0282a228e1011f4f4b7efe41c035f6e635feb27082ac36cb1a1384b"},
 					},
 					{
 						Name:     "shim-x64",
@@ -549,7 +549,7 @@ func TestHMACStageInclusion(t *testing.T) {
 						Version:  "15.8",
 						Release:  "3",
 						Arch:     "x86_64",
-						Checksum: "sha256:aae94b3b8451ef28b02594d9abca5979e153c14f4db25283b011403fa92254fd",
+						Checksum: rpmmd.Checksum{Type: "sha256", Value: "aae94b3b8451ef28b02594d9abca5979e153c14f4db25283b011403fa92254fd"},
 					},
 				},
 			},
@@ -583,14 +583,14 @@ func TestHMACStageInclusion(t *testing.T) {
 	t.Run("no-hmac-stage", func(t *testing.T) {
 		inputs := manifest.Inputs{
 			Depsolved: depsolvednf.DepsolveResult{
-				Packages: []rpmmd.PackageSpec{
+				Packages: []rpmmd.Package{
 					{
 						Name:     "test-kernel",
 						Epoch:    0,
 						Version:  "13.3",
 						Release:  "7.el9",
 						Arch:     "x86_64",
-						Checksum: "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+						Checksum: rpmmd.Checksum{Type: "sha256", Value: "7777777777777777777777777777777777777777777777777777777777777777"},
 					},
 					{
 						Name:     "uki-direct",
@@ -598,7 +598,7 @@ func TestHMACStageInclusion(t *testing.T) {
 						Version:  "25.11",
 						Release:  "1.el9",
 						Arch:     "noarch",
-						Checksum: "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+						Checksum: rpmmd.Checksum{Type: "sha256", Value: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
 					},
 					{
 						Name:     "shim-x64",
@@ -606,7 +606,7 @@ func TestHMACStageInclusion(t *testing.T) {
 						Version:  "15.8",
 						Release:  "3",
 						Arch:     "x86_64",
-						Checksum: "sha256:aae94b3b8451ef28b02594d9abca5979e153c14f4db25283b011403fa92254fd",
+						Checksum: rpmmd.Checksum{Type: "sha256", Value: "aae94b3b8451ef28b02594d9abca5979e153c14f4db25283b011403fa92254fd"},
 					},
 				},
 			},
@@ -654,14 +654,14 @@ func TestShimVersionLock(t *testing.T) {
 
 	inputs := manifest.Inputs{
 		Depsolved: depsolvednf.DepsolveResult{
-			Packages: []rpmmd.PackageSpec{
+			Packages: []rpmmd.Package{
 				{
 					Name:     "test-kernel",
 					Epoch:    0,
 					Version:  "13.3",
 					Release:  "7.el9",
 					Arch:     "x86_64",
-					Checksum: "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+					Checksum: rpmmd.Checksum{Type: "sha256", Value: "7777777777777777777777777777777777777777777777777777777777777777"},
 				},
 				{
 					Name:     "uki-direct",
@@ -669,7 +669,7 @@ func TestShimVersionLock(t *testing.T) {
 					Version:  "25.11",
 					Release:  "1.el9",
 					Arch:     "noarch",
-					Checksum: "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+					Checksum: rpmmd.Checksum{Type: "sha256", Value: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
 				},
 				{
 					Name:     "shim-x64",
@@ -677,21 +677,23 @@ func TestShimVersionLock(t *testing.T) {
 					Version:  "15.8",
 					Release:  "3",
 					Arch:     "x86_64",
-					Checksum: "sha256:aae94b3b8451ef28b02594d9abca5979e153c14f4db25283b011403fa92254fd",
+					Checksum: rpmmd.Checksum{Type: "sha256", Value: "aae94b3b8451ef28b02594d9abca5979e153c14f4db25283b011403fa92254fd"},
 				},
 				{
 					Name:     "dnf",
+					Epoch:    0,
 					Version:  "4.14.0",
 					Release:  "29.el9",
 					Arch:     "noarch",
-					Checksum: "sha256:72874726d1a16651933e382a4f4683046efd4b278830ad564932ce481ab8b9eb",
+					Checksum: rpmmd.Checksum{Type: "sha256", Value: "72874726d1a16651933e382a4f4683046efd4b278830ad564932ce481ab8b9eb"},
 				},
 				{
 					Name:     "python3-dnf-plugin-versionlock",
+					Epoch:    0,
 					Version:  "4.3.0",
 					Release:  "21.el9",
 					Arch:     "noarch",
-					Checksum: "sha256:e14c57f7d0011ea378e4319bbc523000d0e7be4d35b6af7177aa6246c5aaa9ef",
+					Checksum: rpmmd.Checksum{Type: "sha256", Value: "e14c57f7d0011ea378e4319bbc523000d0e7be4d35b6af7177aa6246c5aaa9ef"},
 				},
 			},
 		},

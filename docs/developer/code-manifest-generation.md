@@ -106,7 +106,7 @@ chain is merged with the subsequent set and the result is a single array of
 package specs.
 
 **Content specification**: The content specification for packages is the
-[`rpmmd.PackageSpec`][godoc-rpmmd-packagespec]. Each package spec is a fully resolved
+[`rpmmd.Package`][godoc-rpmmd-package]. Each package spec is a fully resolved
 description of an RPM, with metadata, a checksum, and a URL from which to
 retrieve the package.
 
@@ -168,8 +168,8 @@ function.
 [godoc-manifest-pipeline]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/manifest#Pipeline
 [godoc-distro-imagetype]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/distro/ImageType
 [godoc-manifest-osbuildmanifest]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/manifest#OSBuildManifest
+[godoc-rpmmd-package]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/rpmmd#Package
 [godoc-rpmmd-packageset]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/rpmmd#PackageSet
-[godoc-rpmmd-packagespec]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/rpmmd#PackageSpec
 [godoc-depsolvednf-solver-depsolve]: https://pkg.go.dev/github.com/osbuild/images@main/internal/depsolvednf#Solver.Depsolve
 [godoc-container-sourcespec]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/container#SourceSpec
 [godoc-container-spec]: https://pkg.go.dev/github.com/osbuild/images@main/pkg/container#Spec

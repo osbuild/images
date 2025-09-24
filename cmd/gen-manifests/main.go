@@ -344,14 +344,14 @@ func makeManifestJob(
 func save(ms manifest.OSBuildManifest, depsolved map[string]depsolvednf.DepsolveResult, containers map[string][]container.Spec, commits map[string][]ostree.CommitSpec, cr buildRequest, path, filename string, metadata bool) error {
 	var data interface{}
 	if metadata {
-		rpmmds := make(map[string][]rpmmd.PackageSpec)
+		rpmmds := make(map[string]rpmmd.PackageList)
 		for plName, res := range depsolved {
 			rpmmds[plName] = res.Packages
 		}
 		data = struct {
 			BuidRequest   buildRequest                   `json:"build-request"`
 			Manifest      manifest.OSBuildManifest       `json:"manifest"`
-			RPMMD         map[string][]rpmmd.PackageSpec `json:"rpmmd"`
+			RPMMD         map[string]rpmmd.PackageList   `json:"rpmmd"`
 			Containers    map[string][]container.Spec    `json:"containers,omitempty"`
 			OSTreeCommits map[string][]ostree.CommitSpec `json:"ostree-commits,omitempty"`
 			NoImageInfo   bool                           `json:"no-image-info"`
