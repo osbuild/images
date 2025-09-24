@@ -50,9 +50,9 @@ jobs:
             exit "0"
           fi
 
-      - name: Check that the config-map is valid
+      - name: Check that the config-list is valid
         run: |
-          ./test/scripts/validate-config-map
+          ./test/scripts/validate-config-list
 
 
   gitlab-ci-helper:
