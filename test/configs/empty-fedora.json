@@ -1,8 +1,0 @@
-{
-  "name": "empty-fedora",
-  "blueprint": {
-    "name": "empty-fedora",
-    "description": "Empty blueprint for Fedora. We need this so we can have separate filters in the config-map for Fedora image type names.",
-    "version": "1.0"
-  }
-}
