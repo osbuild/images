@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Reads the config map and verifies that: 1. All listed config files exist, and 2. The combination of distros, arches, and
-image-types produces at least one valid build configuration for each config file.
+Reads the config list and verifies that: 1. All listed config files exist, and 2. The combination of distros, arches,
+and image-types produces at least one valid build configuration for each config file.
 
-The config map is read as test/config-map.json relative to the repository root.
+The config list is read as test/config-list.json relative to the repository root.
 """
 import argparse
 import copy
@@ -14,61 +14,65 @@ import sys
 import imgtestlib as testlib
 
 
-def read_config_map(root):
-    config_map_path = root / "test/config-map.json"
-    if not config_map_path.exists():
-        print(f"config map not found at {config_map_path}", file=sys.stderr)
+def read_config_list(root):
+    config_list_path = root / "test/config-list.json"
+    if not config_list_path.exists():
+        print(f"config list not found at {config_list_path}", file=sys.stderr)
         sys.exit(1)
 
-    print(f"Reading config map: {config_map_path}")
-    with config_map_path.open(encoding="utf-8") as config_map_fp:
-        return json.load(config_map_fp), config_map_path.parent
+    print(f"Reading config list: {config_list_path}")
+    with config_list_path.open(encoding="utf-8") as config_list_fp:
+        return json.load(config_list_fp), config_list_path.parent
 
 
-def validate_config_file_paths(config_map, config_map_dir):
+def validate_config_file_paths(config_list, config_list_dir):
     """
-    Validate that all paths used as keys in the config map exist. Paths must be relative to config_map_dir (the parent
-    directory of the config map).
+    Validate that all paths in the config list exist. Paths must be relative to config_list_dir (the parent directory of
+    the config list).
 
-    Returns a list of paths found in the config map that were not found in the directory.
+    Returns a list of paths found in the config list that were not found in the directory.
     """
     not_found = []
-    for path in config_map.keys():
-        config_path = config_map_dir / path
+    for item in config_list:
+        path = item["path"]
+        config_path = config_list_dir / path
         if not config_path.exists():
             not_found.append(config_path)
 
     return not_found
 
 
-def validate_build_config(config_map):
+def validate_build_config(config_list):
     """
     Validate that all build configurations (distros, arches, image types) match at least one valid, known configuration.
 
     Returns a list of 2-tuples, each consisting of the config file path and the build configuration.
     """
     no_matches = []
-    for config, build_config in config_map.items():
-        distros = build_config.get("distros", ["*"])
-        arches = build_config.get("arches", ["*"])
-        image_types = build_config.get("image-types", ["*"])
+    for item in config_list:
+        config = item["path"]
+        filters = item["filters"]
+        distros = filters.get("distros", ["*"])
+        arches = filters.get("arches", ["*"])
+        image_types = filters.get("image-types", ["*"])
 
         matches = testlib.list_images(distros=distros, arches=arches, images=image_types)
         if not matches:
-            no_matches.append((config, build_config))
+            no_matches.append((config, filters))
 
     return no_matches
 
 
-def filter_bootc(orig_config_map):
-    """ returns a copy of the config_map without booc distros """
-    config_map = copy.deepcopy(orig_config_map)
-    for build_config in config_map.values():
-        if distros := build_config.get("distros"):
-            build_config["distros"] = [
+def filter_bootc(orig_config_list):
+    """ returns a copy of the config_list without booc distros """
+    config_list = copy.deepcopy(orig_config_list)
+    for item in config_list:
+        filters = item["filters"]
+        if distros := filters.get("distros"):
+            filters["distros"] = [
                 d for d in distros if not d.startswith("bootc-")]
 
-    return config_map
+    return config_list
 
 
 def main():
@@ -78,10 +82,10 @@ def main():
 
     root = pathlib.Path(args.path)
 
-    config_map, config_map_dir = read_config_map(root)
+    config_list, config_list_dir = read_config_list(root)
 
     print("Validating config file paths")
-    not_found = validate_config_file_paths(config_map, config_map_dir)
+    not_found = validate_config_file_paths(config_list, config_list_dir)
     if not_found:
         print("  failed: the following config files were not found:", file=sys.stderr)
         for idx, path in enumerate(not_found, start=1):
@@ -92,7 +96,7 @@ def main():
     print("Validating build configurations (distros, arches, image types)")
     # filter out all bootc-* distros, they are "virtual" and will not
     # show up in "list-images" which is used to validate known distros
-    no_matches = validate_build_config(filter_bootc(config_map))
+    no_matches = validate_build_config(filter_bootc(config_list))
     if no_matches:
         print("failed: the following configs do not match any known build configurations", file=sys.stderr)
         for idx, (config, build_config) in enumerate(no_matches, start=1):
