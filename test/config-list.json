@@ -58,7 +58,7 @@
     }
   },
   {
-    "path": "./configs/ec2-sap-empty.json",
+    "path": "./configs/empty.json",
     "filters": {
       "distros": [
         "rhel-8.6",
@@ -173,7 +173,7 @@
     }
   },
   {
-    "path": "./configs/jq-only-rhel.json",
+    "path": "./configs/jq-only.json",
     "filters": {
       "arches": [],
       "distros": [
@@ -214,7 +214,7 @@
     }
   },
   {
-    "path": "./configs/empty-rhel.json",
+    "path": "./configs/empty.json",
     "filters": {
       "arches": [],
       "distros": [
@@ -227,7 +227,7 @@
     }
   },
   {
-    "path": "./configs/empty-fedora.json",
+    "path": "./configs/empty.json",
     "filters": {
       "arches": [],
       "distros": [
@@ -519,7 +519,7 @@
     }
   },
   {
-    "path": "./configs/partitioning-plain-r8.json",
+    "path": "./configs/partitioning-plain.json",
     "filters": {
       "image-types": [
         "ami"
@@ -544,7 +544,7 @@
     }
   },
   {
-    "path": "./configs/partitioning-lvm-r8.json",
+    "path": "./configs/partitioning-lvm.json",
     "filters": {
       "image-types": [
         "ami"
@@ -679,7 +679,7 @@
     }
   },
   {
-    "path": "./configs/empty-rhel-vhd.json",
+    "path": "./configs/jq-only.json",
     "filters": {
       "distros": [
         "rhel-8*",
@@ -717,7 +717,7 @@
     }
   },
   {
-    "path": "./configs/empty-rhel7.json",
+    "path": "./configs/empty.json",
     "filters": {
       "distros": [
         "rhel-7*"
