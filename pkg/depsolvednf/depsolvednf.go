@@ -167,7 +167,7 @@ type Solver struct {
 
 // DepsolveResult contains the results of a depsolve operation.
 type DepsolveResult struct {
-	Packages []rpmmd.PackageSpec
+	Packages rpmmd.PackageList
 	Modules  []rpmmd.ModuleSpec
 	Repos    []rpmmd.RepoConfig
 	SBOM     *sbom.Document
@@ -584,10 +584,10 @@ func (s *Solver) makeSearchRequest(repos []rpmmd.RepoConfig, packages []string) 
 // convert internal a list of PackageSpecs and map of repoConfig to the rpmmd
 // equivalents and attach key and subscription information based on the
 // repository configs.
-func (result depsolveResult) toRPMMD(rhsm map[string]bool) ([]rpmmd.PackageSpec, []rpmmd.ModuleSpec, []rpmmd.RepoConfig) {
+func (result depsolveResult) toRPMMD(rhsm map[string]bool) (rpmmd.PackageList, []rpmmd.ModuleSpec, []rpmmd.RepoConfig) {
 	pkgs := result.Packages
 	repos := result.Repos
-	rpmDependencies := make([]rpmmd.PackageSpec, len(pkgs))
+	rpmDependencies := make(rpmmd.PackageList, len(pkgs))
 	for i, dep := range pkgs {
 		repo, ok := repos[dep.RepoID]
 		if !ok {
@@ -599,11 +599,19 @@ func (result depsolveResult) toRPMMD(rhsm map[string]bool) ([]rpmmd.PackageSpec,
 		rpmDependencies[i].Version = dep.Version
 		rpmDependencies[i].Release = dep.Release
 		rpmDependencies[i].Arch = dep.Arch
-		rpmDependencies[i].RemoteLocation = dep.RemoteLocation
-		rpmDependencies[i].Checksum = dep.Checksum
+		rpmDependencies[i].RemoteLocations = []string{dep.RemoteLocation}
+
+		depChecksum := strings.Split(dep.Checksum, ":")
+		if len(depChecksum) != 2 {
+			panic(fmt.Sprintf("invalid checksum format for package %s: %s", dep.Name, dep.Checksum))
+		}
+		rpmDependencies[i].Checksum = rpmmd.Checksum{
+			Type:  depChecksum[0],
+			Value: depChecksum[1],
+		}
 		rpmDependencies[i].CheckGPG = repo.GPGCheck
 		rpmDependencies[i].RepoID = dep.RepoID
-		rpmDependencies[i].Path = dep.Path
+		rpmDependencies[i].Location = dep.Path
 		if verify := repo.SSLVerify; verify != nil {
 			rpmDependencies[i].IgnoreSSL = !*verify
 		}

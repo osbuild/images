@@ -33,18 +33,26 @@ func TestPXETarNoCustomizations(t *testing.T) {
 	// Fake packages to keep serialization happy
 	packages := map[string]depsolvednf.DepsolveResult{
 		"build": {
-			Packages: []rpmmd.PackageSpec{
+			Packages: rpmmd.PackageList{
 				{
-					Name:     "coreutils",
-					Checksum: "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+					Name: "coreutils",
+					Checksum: rpmmd.Checksum{
+						Type:  "sha256",
+						Value: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+					},
+					RemoteLocations: []string{"https://example.com/coreutils"},
 				},
 			},
 		},
 		"os": {
-			Packages: []rpmmd.PackageSpec{
+			Packages: rpmmd.PackageList{
 				{
-					Name:     "kernel",
-					Checksum: "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+					Name: "kernel",
+					Checksum: rpmmd.Checksum{
+						Type:  "sha256",
+						Value: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+					},
+					RemoteLocations: []string{"https://example.com/kernel"},
 				},
 			},
 		},

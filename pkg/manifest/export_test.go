@@ -76,8 +76,8 @@ func GetInline(p Pipeline) []string {
 
 func (p *OS) Serialize() (osbuild.Pipeline, error) {
 	repos := []rpmmd.RepoConfig{}
-	packages := []rpmmd.PackageSpec{
-		{Name: "pkg1", Checksum: "sha1:c02524e2bd19490f2a7167958f792262754c5f46"},
+	packages := rpmmd.PackageList{
+		{Name: "pkg1", Checksum: rpmmd.Checksum{Type: "sha1", Value: "c02524e2bd19490f2a7167958f792262754c5f46"}},
 	}
 	err := p.serializeStart(Inputs{
 		Depsolved: depsolvednf.DepsolveResult{
