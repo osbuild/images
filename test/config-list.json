@@ -1,0 +1,727 @@
+[
+  {
+    "path": "./configs/all-customizations.json",
+    "filters": {
+      "distros": [
+        "rhel-10*",
+        "rhel-9*",
+        "rhel-8*",
+        "centos*",
+        "fedora*"
+      ],
+      "image-types": [
+        "ami",
+        "server-ami"
+      ]
+    }
+  },
+  {
+    "path": "./configs/all-with-fips.json",
+    "filters": {
+      "distros": [
+        "rhel-9.4",
+        "rhel-8.10",
+        "centos*",
+        "fedora*"
+      ],
+      "image-types": [
+        "qcow2",
+        "server-qcow2"
+      ]
+    }
+  },
+  {
+    "path": "./configs/file-customizations.json",
+    "filters": {
+      "distros": [
+        "rhel-8.10",
+        "rhel-9.6",
+        "rhel-10.0",
+        "centos*",
+        "fedora*"
+      ],
+      "image-types": [
+        "ami",
+        "server-ami"
+      ]
+    }
+  },
+  {
+    "path": "./configs/disable-lm_sensors.json",
+    "filters": {
+      "distros": [
+        "rhel-8.4"
+      ],
+      "image-types": [
+        "ec2-sap"
+      ]
+    }
+  },
+  {
+    "path": "./configs/ec2-sap-empty.json",
+    "filters": {
+      "distros": [
+        "rhel-8.6",
+        "rhel-8.8",
+        "rhel-8.10",
+        "rhel-9.*",
+        "rhel-10.*"
+      ],
+      "image-types": [
+        "ec2-sap"
+      ]
+    }
+  },
+  {
+    "path": "./configs/edge-ostree-pull-device-fips.json",
+    "filters": {
+      "distros": [
+        "rhel-9.4"
+      ],
+      "image-types": [
+        "edge-simplified-installer"
+      ]
+    }
+  },
+  {
+    "path": "./configs/edge-ostree-pull-device.json",
+    "filters": {
+      "image-types": [
+        "edge-simplified-installer"
+      ]
+    }
+  },
+  {
+    "path": "./configs/edge-ostree-pull-empty.json",
+    "filters": {
+      "image-types": [
+        "edge-installer",
+        "edge-raw-image",
+        "edge-vsphere"
+      ]
+    }
+  },
+  {
+    "path": "./configs/edge-ostree-pull-fips.json",
+    "filters": {
+      "distros": [
+        "rhel-9.4"
+      ],
+      "image-types": [
+        "edge-installer",
+        "edge-raw-image",
+        "edge-vsphere"
+      ]
+    }
+  },
+  {
+    "path": "./configs/edge-ostree-pull-user-fips.json",
+    "filters": {
+      "distros": [
+        "rhel-9.4"
+      ],
+      "image-types": [
+        "edge-ami"
+      ]
+    }
+  },
+  {
+    "path": "./configs/edge-ostree-pull-user.json",
+    "filters": {
+      "image-types": [
+        "edge-ami",
+        "edge-commit"
+      ]
+    }
+  },
+  {
+    "path": "./configs/minimal-environment.json",
+    "filters": {
+      "image-types": [
+        "edge-container"
+      ],
+      "distros": [
+        "rhel-9*"
+      ]
+    }
+  },
+  {
+    "path": "./configs/edge-ostree-pull-user-minimalenv.json",
+    "filters": {
+      "image-types": [
+        "edge-ami"
+      ],
+      "distros": [
+        "rhel-9*"
+      ]
+    }
+  },
+  {
+    "path": "./configs/embed-containers-2.json",
+    "filters": {
+      "image-types": [
+        "edge-container"
+      ]
+    }
+  },
+  {
+    "path": "./configs/embed-containers.json",
+    "filters": {
+      "image-types": [
+        "edge-commit"
+      ]
+    }
+  },
+  {
+    "path": "./configs/jq-only-rhel.json",
+    "filters": {
+      "arches": [],
+      "distros": [
+        "rhel-8*",
+        "rhel-9*",
+        "rhel-10*",
+        "centos-*"
+      ],
+      "image-types": [
+        "ami",
+        "azure",
+        "azure-cvm",
+        "azure-eap7-rhui",
+        "azure-rhui",
+        "azure-sap-rhui",
+        "azure-sapapps-rhui",
+        "container",
+        "ec2",
+        "ec2-ha",
+        "edge-container",
+        "gce",
+        "gce-rhui",
+        "image-installer",
+        "live-installer",
+        "minimal-raw",
+        "minimal-raw-zst",
+        "oci",
+        "openstack",
+        "ova",
+        "pxe-tar-xz",
+        "qcow2",
+        "tar",
+        "vagrant-libvirt",
+        "vagrant-virtualbox",
+        "vmdk",
+        "wsl"
+      ]
+    }
+  },
+  {
+    "path": "./configs/empty-rhel.json",
+    "filters": {
+      "arches": [],
+      "distros": [
+        "rhel-*",
+        "centos-*"
+      ],
+      "image-types": [
+        "netinst"
+      ]
+    }
+  },
+  {
+    "path": "./configs/empty-fedora.json",
+    "filters": {
+      "arches": [],
+      "distros": [
+        "fedora-*"
+      ],
+      "image-types": [
+        "container",
+        "server-ami",
+        "minimal-installer",
+        "workstation-live-installer",
+        "minimal-raw-xz",
+        "minimal-raw-zst",
+        "server-oci",
+        "server-openstack",
+        "server-ova",
+        "server-qcow2",
+        "server-vhd",
+        "server-vmdk",
+        "server-vagrant-libvirt",
+        "server-vagrant-virtualbox",
+        "wsl",
+        "iot-bootable-container",
+        "iot-container",
+        "everything-netinst",
+        "pxe-tar-xz"
+      ]
+    }
+  },
+  {
+    "path": "./configs/iot-customizations-full.json",
+    "filters": {
+      "image-types": [
+        "iot-container"
+      ]
+    }
+  },
+  {
+    "path": "./configs/iot-ostree-pull-device.json",
+    "filters": {
+      "image-types": [
+        "iot-simplified-installer"
+      ]
+    }
+  },
+  {
+    "path": "./configs/iot-ostree-pull-empty.json",
+    "filters": {
+      "image-types": [
+        "iot-installer",
+        "iot-qcow2",
+        "iot-raw-xz"
+      ]
+    }
+  },
+  {
+    "path": "./configs/iot-ostree-pull-user.json",
+    "filters": {
+      "image-types": [
+        "iot-qcow2"
+      ]
+    }
+  },
+  {
+    "path": "./configs/kernel-debug.json",
+    "filters": {
+      "image-types": [
+        "iot-commit"
+      ]
+    }
+  },
+  {
+    "path": "./configs/minimal-pkgs.json",
+    "filters": {
+      "distros": [
+        "fedora*"
+      ],
+      "image-types": [
+        "server-qcow2"
+      ]
+    }
+  },
+  {
+    "path": "./configs/minimal.json",
+    "filters": {
+      "distros": [
+        "fedora*"
+      ],
+      "image-types": [
+        "server-qcow2"
+      ]
+    }
+  },
+  {
+    "path": "./configs/oscap-generic.json",
+    "filters": {
+      "distros": [
+        "rhel-9.2",
+        "rhel-8.8",
+        "rhel-8.10",
+        "centos-9",
+        "fedora*"
+      ],
+      "image-types": [
+        "qcow2",
+        "server-qcow2"
+      ]
+    }
+  },
+  {
+    "path": "./configs/oscap-rhel8.json",
+    "filters": {
+      "distros": [
+        "rhel-8.10"
+      ],
+      "image-types": [
+        "ami"
+      ]
+    }
+  },
+  {
+    "path": "./configs/oscap-rhel9.json",
+    "filters": {
+      "distros": [
+        "rhel-9.4"
+      ],
+      "image-types": [
+        "ami"
+      ]
+    }
+  },
+  {
+    "path": "./configs/oscap-rhel9-with-json-tailoring.json",
+    "filters": {
+      "distros": [
+        "rhel-9.4"
+      ],
+      "image-types": [
+        "ami"
+      ]
+    }
+  },
+  {
+    "path": "./configs/oscap-rhel10.json",
+    "filters": {
+      "distros": [
+        "rhel-10.0"
+      ],
+      "image-types": [
+        "ami"
+      ]
+    }
+  },
+  {
+    "path": "./configs/ostree.json",
+    "filters": {
+      "image-types": [
+        "edge-commit",
+        "edge-container",
+        "iot-container"
+      ]
+    }
+  },
+  {
+    "path": "./configs/unattended-iso-edge.json",
+    "filters": {
+      "image-types": [
+        "edge-installer"
+      ]
+    }
+  },
+  {
+    "path": "./configs/unattended-iso-iot.json",
+    "filters": {
+      "image-types": [
+        "iot-installer"
+      ]
+    }
+  },
+  {
+    "path": "./configs/bigiso.json",
+    "filters": {
+      "distros": [
+        "rhel-9.4"
+      ],
+      "arches": [
+        "x86_64"
+      ],
+      "image-types": [
+        "image-installer"
+      ]
+    }
+  },
+  {
+    "path": "./configs/unattended-iso.json",
+    "filters": {
+      "image-types": [
+        "image-installer",
+        "minimal-installer"
+      ]
+    }
+  },
+  {
+    "path": "./configs/interactive-iso-userkickstart.json",
+    "filters": {
+      "distros": [
+        "rhel-9.4"
+      ],
+      "image-types": [
+        "image-installer"
+      ]
+    }
+  },
+  {
+    "path": "./configs/ostree-filesystem-customizations-installer.json",
+    "filters": {
+      "image-types": [
+        "edge-simplified-installer"
+      ],
+      "distros": [
+        "rhel-9.2",
+        "rhel-9.4"
+      ]
+    }
+  },
+  {
+    "path": "./configs/ostree-filesystem-customizations.json",
+    "filters": {
+      "image-types": [
+        "edge-raw-image",
+        "edge-ami",
+        "edge-vsphere"
+      ],
+      "distros": [
+        "rhel-9.2",
+        "rhel-9.4"
+      ]
+    }
+  },
+  {
+    "path": "./configs/import-rpm-gpg-keys-from-tree-rhel.json",
+    "filters": {
+      "image-types": [
+        "qcow2"
+      ],
+      "distros": [
+        "rhel-8.10",
+        "rhel-9.6"
+      ]
+    }
+  },
+  {
+    "path": "./configs/import-rpm-gpg-keys-from-tree-fedora.json",
+    "filters": {
+      "image-types": [
+        "server-qcow2"
+      ],
+      "distros": [
+        "fedora*"
+      ]
+    }
+  },
+  {
+    "path": "./configs/rhsm.json",
+    "filters": {
+      "image-types": [
+        "qcow2"
+      ],
+      "distros": [
+        "rhel-8.10",
+        "rhel-9.6",
+        "rhel-10.0"
+      ]
+    }
+  },
+  {
+    "path": "./configs/partitioning-plain.json",
+    "filters": {
+      "image-types": [
+        "ami",
+        "server-ami"
+      ],
+      "distros": [
+        "centos-10",
+        "centos-9",
+        "fedora*",
+        "rhel-10*",
+        "rhel-9*"
+      ]
+    }
+  },
+  {
+    "path": "./configs/partitioning-plain-r8.json",
+    "filters": {
+      "image-types": [
+        "ami"
+      ],
+      "arches": [
+        "x86_64"
+      ],
+      "distros": [
+        "rhel-8*"
+      ]
+    }
+  },
+  {
+    "path": "./configs/partitioning-btrfs.json",
+    "filters": {
+      "image-types": [
+        "server-ami"
+      ],
+      "distros": [
+        "fedora*"
+      ]
+    }
+  },
+  {
+    "path": "./configs/partitioning-lvm-r8.json",
+    "filters": {
+      "image-types": [
+        "ami"
+      ],
+      "arches": [
+        "x86_64"
+      ],
+      "distros": [
+        "rhel-8*"
+      ]
+    }
+  },
+  {
+    "path": "./configs/partitioning-lvm.json",
+    "filters": {
+      "image-types": [
+        "ami",
+        "server-ami"
+      ],
+      "distros": [
+        "centos-10",
+        "centos-9",
+        "fedora*",
+        "rhel-10*",
+        "rhel-9*"
+      ]
+    }
+  },
+  {
+    "path": "./configs/partitioning-lvm-noswap.json",
+    "filters": {
+      "image-types": [
+        "ami"
+      ],
+      "distros": [
+        "rhel-8*"
+      ]
+    }
+  },
+  {
+    "path": "./configs/partitioning-dos-lvm.json",
+    "filters": {
+      "image-types": [
+        "ami"
+      ],
+      "distros": [
+        "centos-10",
+        "centos-9"
+      ]
+    }
+  },
+  {
+    "path": "./configs/modularity-in-packages.json",
+    "filters": {
+      "image-types": [
+        "ami"
+      ],
+      "distros": [
+        "centos-9"
+      ]
+    }
+  },
+  {
+    "path": "./configs/modularity-enabled-modules.json",
+    "filters": {
+      "image-types": [
+        "ami"
+      ],
+      "distros": [
+        "centos-9"
+      ]
+    }
+  },
+  {
+    "path": "./configs/firewall.json",
+    "filters": {
+      "image-types": [
+        "minimal-raw"
+      ]
+    }
+  },
+  {
+    "path": "./configs/rhel9-azure-rhui-cdn.json",
+    "filters": {
+      "distros": [
+        "rhel-9.6",
+        "rhel-9.7",
+        "rhel-9.8",
+        "rhel-9.9",
+        "rhel-9.10"
+      ],
+      "image-types": [
+        "azure-rhui"
+      ]
+    }
+  },
+  {
+    "path": "./configs/rhel9-azure-rhui.json",
+    "filters": {
+      "distros": [
+        "rhel-9.6",
+        "rhel-9.7",
+        "rhel-9.8",
+        "rhel-9.9",
+        "rhel-9.10"
+      ],
+      "image-types": [
+        "azure-rhui"
+      ]
+    }
+  },
+  {
+    "path": "./configs/rhel10-azure-rhui-cdn.json",
+    "filters": {
+      "distros": [
+        "rhel-10*"
+      ],
+      "image-types": [
+        "azure-rhui"
+      ]
+    }
+  },
+  {
+    "path": "./configs/rhel10-azure-rhui.json",
+    "filters": {
+      "distros": [
+        "rhel-10*"
+      ],
+      "image-types": [
+        "azure-rhui"
+      ]
+    }
+  },
+  {
+    "path": "./configs/empty-rhel-vhd.json",
+    "filters": {
+      "distros": [
+        "rhel-8*",
+        "rhel-9.4",
+        "rhel-9.6",
+        "rhel-9.7",
+        "rhel-9.8",
+        "rhel-10*",
+        "centos-*"
+      ],
+      "arches": [],
+      "image-types": [
+        "vhd"
+      ]
+    }
+  },
+  {
+    "path": "./configs/disable-nm-cloud-setup.json",
+    "filters": {
+      "distros": [
+        "rhel-9.0",
+        "rhel-9.2"
+      ],
+      "image-types": [
+        "vhd"
+      ]
+    }
+  },
+  {
+    "path": "./configs/empty.json",
+    "filters": {
+      "distros": [
+        "bootc-*"
+      ]
+    }
+  },
+  {
+    "path": "./configs/empty-rhel7.json",
+    "filters": {
+      "distros": [
+        "rhel-7*"
+      ]
+    }
+  }
+]
