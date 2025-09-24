@@ -8,7 +8,7 @@ from tempfile import TemporaryDirectory
 
 import imgtestlib as testlib
 
-BASE_TEST_SCRIPT = "test/scripts/base-host-check.sh"
+BASE_TEST_SCRIPT = "test/scripts/check-host-config"
 
 
 def get_aws_config():
