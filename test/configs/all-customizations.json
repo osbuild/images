@@ -12,6 +12,9 @@
       {
         "name": "bluez",
         "version": "*"
+      },
+      {
+        "name": "jq"
       }
     ],
     "modules": [],

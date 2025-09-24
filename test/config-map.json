@@ -127,10 +127,12 @@
       "edge-commit"
     ]
   },
-  "./configs/empty-rhel.json": {
+  "./configs/jq-only-rhel.json": {
     "arches": [],
     "distros": [
-      "rhel-*",
+      "rhel-8*",
+      "rhel-9*",
+      "rhel-10*",
       "centos-*"
     ],
     "image-types": [
@@ -151,7 +153,6 @@
       "live-installer",
       "minimal-raw",
       "minimal-raw-zst",
-      "netinst",
       "oci",
       "openstack",
       "ova",
@@ -162,6 +163,16 @@
       "vagrant-virtualbox",
       "vmdk",
       "wsl"
+    ]
+  },
+  "./configs/empty-rhel.json": {
+    "arches": [],
+    "distros": [
+      "rhel-*",
+      "centos-*"
+    ],
+    "image-types": [
+      "netinst"
     ]
   },
   "./configs/empty-fedora.json": {
@@ -529,6 +540,11 @@
   "./configs/empty.json": {
     "distros": [
       "bootc-*"
+    ]
+  },
+  "./configs/empty-rhel7.json": {
+    "distros": [
+      "rhel-7*"
     ]
   }
 }

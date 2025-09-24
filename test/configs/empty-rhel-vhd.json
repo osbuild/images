@@ -2,7 +2,12 @@
   "name": "empty-rhel-vhd",
   "blueprint": {
     "name": "empty-rhel-vhd",
-    "description": "Empty blueprint for RHEL. We need this so we can have separate filters in the config-map for RHEL image type names.",
-    "version": "1.0"
+    "description": "Empty blueprint for RHEL (jq only for testing). We need this so we can have separate filters in the config-map for RHEL image type names.",
+    "version": "1.0",
+    "packages": [
+      {
+        "name": "jq"
+      }
+    ]
   }
 }

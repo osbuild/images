@@ -2,6 +2,11 @@
   "name": "partitioning-lvm-r8",
   "blueprint": {
     "description": "Disk customizations to create an LVM volume group with logical volumes and a plain data partition. RHEL 8 variant required to set separate filters in config-map (no aarch64).",
+    "packages": [
+      {
+        "name": "jq"
+      }
+    ],
     "customizations": {
       "disk": {
         "type": "gpt",

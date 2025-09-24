@@ -4,6 +4,11 @@
     "name": "paritioning-plain-r8",
     "description": "Disk customizations with plain partitioning. RHEL 8 variant required to set separate filters in config-map (no aarch64).",
     "version": "1.0",
+    "packages": [
+      {
+        "name": "jq"
+      }
+    ],
     "customizations": {
       "disk": {
         "partitions": [

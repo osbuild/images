@@ -1,0 +1,8 @@
+{
+  "name": "empty-rhel7",
+  "blueprint": {
+    "name": "empty-rhel7",
+    "description": "Empty blueprint for RHEL 7. We need this so we can have separate filters in the config-map for RHEL 7 images.",
+    "version": "1.0"
+  }
+}
