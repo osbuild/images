@@ -38,10 +38,13 @@ func newAnacondaInstaller() *manifest.AnacondaInstaller {
 }
 
 func TestAnacondaInstallerModules(t *testing.T) {
-	pkgs := []rpmmd.PackageSpec{
+	pkgs := rpmmd.PackageList{
 		{
-			Name:     "kernel",
-			Checksum: "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+			Name: "kernel",
+			Checksum: rpmmd.Checksum{
+				Type:  "sha256",
+				Value: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+			},
 		},
 	}
 	type testCase struct {
@@ -118,10 +121,13 @@ func TestAnacondaInstallerModules(t *testing.T) {
 }
 
 func TestISOLocale(t *testing.T) {
-	pkgs := []rpmmd.PackageSpec{
+	pkgs := rpmmd.PackageList{
 		{
-			Name:     "kernel",
-			Checksum: "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+			Name: "kernel",
+			Checksum: rpmmd.Checksum{
+				Type:  "sha256",
+				Value: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+			},
 		},
 	}
 
@@ -157,10 +163,13 @@ func TestISOLocale(t *testing.T) {
 }
 
 func TestAnacondaInstallerDracutModulesAndDrivers(t *testing.T) {
-	pkgs := []rpmmd.PackageSpec{
+	pkgs := rpmmd.PackageList{
 		{
-			Name:     "kernel",
-			Checksum: "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+			Name: "kernel",
+			Checksum: rpmmd.Checksum{
+				Type:  "sha256",
+				Value: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+			},
 		},
 	}
 	require := require.New(t)
@@ -186,10 +195,13 @@ func TestAnacondaInstallerDracutModulesAndDrivers(t *testing.T) {
 }
 
 func TestAnacondaInstallerConfigLorax(t *testing.T) {
-	pkgs := []rpmmd.PackageSpec{
+	pkgs := rpmmd.PackageList{
 		{
-			Name:     "kernel",
-			Checksum: "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+			Name: "kernel",
+			Checksum: rpmmd.Checksum{
+				Type:  "sha256",
+				Value: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+			},
 		},
 	}
 	require := require.New(t)

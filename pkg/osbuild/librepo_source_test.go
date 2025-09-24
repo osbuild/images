@@ -13,40 +13,40 @@ import (
 )
 
 var (
-	opensslPkg = rpmmd.PackageSpec{
-		Name:           "openssl-libs",
-		Epoch:          1,
-		Version:        "3.0.1",
-		Release:        "5.el9",
-		Arch:           "x86_64",
-		RemoteLocation: "https://example.com/repo/Packages/openssl-libs-3.0.1-5.el9.x86_64.rpm",
-		Checksum:       "sha256:fcf2515ec9115551c99d552da721803ecbca23b7ae5a974309975000e8bef666",
-		Path:           "Packages/openssl-libs-3.0.1-5.el9.x86_64.rpm",
-		RepoID:         "repo_id_metalink",
+	opensslPkg = rpmmd.Package{
+		Name:            "openssl-libs",
+		Epoch:           1,
+		Version:         "3.0.1",
+		Release:         "5.el9",
+		Arch:            "x86_64",
+		RemoteLocations: []string{"https://example.com/repo/Packages/openssl-libs-3.0.1-5.el9.x86_64.rpm"},
+		Checksum:        rpmmd.Checksum{Type: "sha256", Value: "fcf2515ec9115551c99d552da721803ecbca23b7ae5a974309975000e8bef666"},
+		Location:        "Packages/openssl-libs-3.0.1-5.el9.x86_64.rpm",
+		RepoID:          "repo_id_metalink",
 	}
 
-	pamPkg = rpmmd.PackageSpec{
-		Name:           "pam",
-		Epoch:          0,
-		Version:        "1.5.1",
-		Release:        "9.el9",
-		Arch:           "x86_64",
-		RemoteLocation: "https://example.com/repo/Packages/pam-1.5.1-9.el9.x86_64.rpm",
-		Checksum:       "sha256:e64caedce811645ecdd78e7b4ae83c189aa884ff1ba6445374f39186c588c52c",
-		Path:           "Packages/pam-1.5.1-9.el9.x86_64.rpm",
-		RepoID:         "repo_id_mirrorlist",
+	pamPkg = rpmmd.Package{
+		Name:            "pam",
+		Epoch:           0,
+		Version:         "1.5.1",
+		Release:         "9.el9",
+		Arch:            "x86_64",
+		RemoteLocations: []string{"https://example.com/repo/Packages/pam-1.5.1-9.el9.x86_64.rpm"},
+		Checksum:        rpmmd.Checksum{Type: "sha256", Value: "e64caedce811645ecdd78e7b4ae83c189aa884ff1ba6445374f39186c588c52c"},
+		Location:        "Packages/pam-1.5.1-9.el9.x86_64.rpm",
+		RepoID:          "repo_id_mirrorlist",
 	}
 
-	dbusPkg = rpmmd.PackageSpec{
-		Name:           "dbus",
-		Epoch:          1,
-		Version:        "1.12.20",
-		Release:        "5.el9",
-		Arch:           "x86_64",
-		RemoteLocation: "https://example.com/repo/Packages/dbus-1.12.20-5.el9.x86_64.rpm",
-		Checksum:       "sha256:bb85bd28cc162e98da53b756b988ffd9350f4dbcc186f4c6962ae047e27f83d3",
-		Path:           "Packages/dbus-1.12.20-5.el9.x86_64.rpm",
-		RepoID:         "repo_id_baseurls",
+	dbusPkg = rpmmd.Package{
+		Name:            "dbus",
+		Epoch:           1,
+		Version:         "1.12.20",
+		Release:         "5.el9",
+		Arch:            "x86_64",
+		RemoteLocations: []string{"https://example.com/repo/Packages/dbus-1.12.20-5.el9.x86_64.rpm"},
+		Checksum:        rpmmd.Checksum{Type: "sha256", Value: "bb85bd28cc162e98da53b756b988ffd9350f4dbcc186f4c6962ae047e27f83d3"},
+		Location:        "Packages/dbus-1.12.20-5.el9.x86_64.rpm",
+		RepoID:          "repo_id_baseurls",
 	}
 )
 
