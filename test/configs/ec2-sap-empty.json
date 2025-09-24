@@ -1,8 +1,0 @@
-{
-  "name": "ec2-sap-empty",
-  "blueprint": {
-    "name": "ec-sap-empty",
-    "description": "Empty blueprint to be used specifically for ec2-sap builds. We need a separate config from the regular 'empty' blueprint because we need to restrict this to smaller set of distributions",
-    "version": "1.0"
-  }
-}
