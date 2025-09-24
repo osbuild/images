@@ -1,8 +1,0 @@
-{
-  "name": "empty-rhel",
-  "blueprint": {
-    "name": "empty-rhel",
-    "description": "Empty blueprint for RHEL. We need this so we can have separate filters in the config-map for RHEL image type names.",
-    "version": "1.0"
-  }
-}
