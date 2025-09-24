@@ -16,17 +16,21 @@ import (
 )
 
 var (
-	fakeDigest   = "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+	fakeDigest = rpmmd.Checksum{
+		Type:  "sha256",
+		Value: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+	}
 	fakeDepsolve = map[string]depsolvednf.DepsolveResult{
 		"build": depsolvednf.DepsolveResult{
-			Packages: []rpmmd.PackageSpec{
-				{Name: "foo", Checksum: fakeDigest},
+			Packages: rpmmd.PackageList{
+				{Name: "foo", Checksum: fakeDigest, RemoteLocations: []string{"https://example.com/foo"}},
 			},
 		},
 	}
 
-	fakeCntSpecs = map[string][]container.Spec{
-		"bootstrap-buildroot": []container.Spec{{Source: "some-src", Digest: fakeDigest, ImageID: fakeDigest}},
+	fakeCntDigest = fakeDigest.String()
+	fakeCntSpecs  = map[string][]container.Spec{
+		"bootstrap-buildroot": []container.Spec{{Source: "some-src", Digest: fakeCntDigest, ImageID: fakeCntDigest}},
 	}
 )
 

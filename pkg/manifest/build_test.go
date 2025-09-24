@@ -23,37 +23,37 @@ func TestBuildContainerBuildableNo(t *testing.T) {
 	require.NotNil(t, build)
 
 	for _, tc := range []struct {
-		packageSpec           []rpmmd.PackageSpec
+		packageSpec           rpmmd.PackageList
 		containerBuildable    bool
 		expectedSELinuxLabels map[string]string
 	}{
 		// no pkgs means no selinux labels (container build or not)
 		{
-			[]rpmmd.PackageSpec{},
+			rpmmd.PackageList{},
 			false,
 			map[string]string{},
 		},
 		{
-			[]rpmmd.PackageSpec{},
+			rpmmd.PackageList{},
 			true,
 			map[string]string{},
 		},
 		{
-			[]rpmmd.PackageSpec{{Name: "coreutils"}},
+			rpmmd.PackageList{{Name: "coreutils"}},
 			false,
 			map[string]string{
 				"/usr/bin/cp": "system_u:object_r:install_exec_t:s0",
 			},
 		},
 		{
-			[]rpmmd.PackageSpec{{Name: "tar"}},
+			rpmmd.PackageList{{Name: "tar"}},
 			false,
 			map[string]string{
 				"/usr/bin/tar": "system_u:object_r:install_exec_t:s0",
 			},
 		},
 		{
-			[]rpmmd.PackageSpec{{Name: "coreutils"}, {Name: "tar"}},
+			rpmmd.PackageList{{Name: "coreutils"}, {Name: "tar"}},
 			false,
 			map[string]string{
 				"/usr/bin/cp":  "system_u:object_r:install_exec_t:s0",
@@ -61,7 +61,7 @@ func TestBuildContainerBuildableNo(t *testing.T) {
 			},
 		},
 		{
-			[]rpmmd.PackageSpec{{Name: "coreutils"}},
+			rpmmd.PackageList{{Name: "coreutils"}},
 			true,
 			map[string]string{
 				"/usr/bin/cp":     "system_u:object_r:install_exec_t:s0",
@@ -70,7 +70,7 @@ func TestBuildContainerBuildableNo(t *testing.T) {
 			},
 		},
 		{
-			[]rpmmd.PackageSpec{{Name: "coreutils"}, {Name: "tar"}},
+			rpmmd.PackageList{{Name: "coreutils"}, {Name: "tar"}},
 			true,
 			map[string]string{
 				"/usr/bin/cp":     "system_u:object_r:install_exec_t:s0",
@@ -162,8 +162,8 @@ func TestNewBuildOptionDisableSELinux(t *testing.T) {
 		require.NotNil(t, buildIf)
 		build := buildIf.(*BuildrootFromPackages)
 
-		build.packageSpecs = []rpmmd.PackageSpec{
-			{Name: "foo", Checksum: "sha256:" + strings.Repeat("x", 32)},
+		build.packageSpecs = rpmmd.PackageList{
+			{Name: "foo", Checksum: rpmmd.Checksum{Type: "sha256", Value: strings.Repeat("x", 32)}},
 		}
 		osbuildPipeline, err := build.serialize()
 		require.NoError(t, err)
@@ -195,8 +195,8 @@ func TestNewBuildOptionSELinuxPolicyBuildrootFromPackages(t *testing.T) {
 		buildIf := NewBuild(&mf, runner, nil, opts)
 		require.NotNil(t, buildIf)
 		build := buildIf.(*BuildrootFromPackages)
-		build.packageSpecs = []rpmmd.PackageSpec{
-			{Name: "foo", Checksum: "sha256:" + strings.Repeat("x", 32)},
+		build.packageSpecs = rpmmd.PackageList{
+			{Name: "foo", Checksum: rpmmd.Checksum{Type: "sha256", Value: strings.Repeat("x", 32)}},
 		}
 		osbuildPipeline, err := build.serialize()
 		require.NoError(t, err)
