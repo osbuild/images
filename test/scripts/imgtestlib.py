@@ -9,7 +9,7 @@ from typing import Dict, List, Optional
 
 TEST_CACHE_ROOT = ".cache/osbuild-images"
 CONFIGS_PATH = "./test/configs"
-CONFIG_MAP = "./test/config-map.json"
+CONFIG_LIST = "./test/config-list.json"
 
 S3_BUCKET = "s3://" + os.environ.get("AWS_BUCKET", "images-ci-cache")
 S3_PREFIX = "images/builds"
@@ -238,15 +238,15 @@ def check_config_names():
         sys.exit(1)
 
 
-def gen_manifests(outputdir, config_map=None, distros=None, arches=None, images=None,
+def gen_manifests(outputdir, config_list=None, distros=None, arches=None, images=None,
                   commits=False, skip_no_config=False):
     # pylint: disable=too-many-arguments,too-many-positional-arguments
     cmd = ["go", "run", "./cmd/gen-manifests",
            "--cache", os.path.join(TEST_CACHE_ROOT, "rpmmd"),
            "--output", outputdir,
            "--workers", "100"]
-    if config_map:
-        cmd.extend(["--config-map", config_map])
+    if config_list:
+        cmd.extend(["--config-list", config_list])
     if distros:
         cmd.extend(["--distros", ",".join(distros)])
     if arches:
