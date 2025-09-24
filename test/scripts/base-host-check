@@ -1,0 +1,441 @@
+#!/usr/bin/env python3
+import json
+import os
+import subprocess as sp
+import sys
+import time
+
+
+def runcmd(cmd, check=False, capture=False):
+    """
+    Prints the command to be run and then runs it using sp.run().
+    If capture is enabled, returns stdout as a string and prints stderr if non-empty.
+    """
+    print(" ".join(cmd))
+    job = sp.run(cmd, check=check, capture_output=capture, text=True)
+    if capture:
+        if job.stderr:
+            print(job.stderr.strip)
+        return job.stdout.strip()
+
+    return None
+
+
+def running_wait():
+    """
+    Simple implementation of 'systemctl is-system-running --wait' for older versions of systemd that don't support the
+    option (EL8)
+
+    From SYSTEMCTL(1)
+      If --wait is in use, states initializing or starting will not be reported, instead the command will block until a
+      later state (such as running or degraded) is reached.
+    """
+    print("❓ Checking system status")
+
+    while True:
+        state = runcmd(["systemctl", "is-system-running"], capture=True)
+        print(state)
+
+        if state in ["initializing", "starting"]:
+            # wait and try again
+            time.sleep(3)
+            continue
+
+        if state == "running":
+            # the only good state
+            return 0
+
+        # fail on anything else
+        print("❌ Listing units")
+
+        # system is not fully operational (try to) list units so we can troubleshoot any failures
+        runcmd(["systemctl", "list-units"])
+
+        print("❌ Status for all failed units")
+
+        # the default 10 lines might be a bit too short for troubleshooting some units, 100 should be more than
+        # enough
+        runcmd(["systemctl", "status", "--failed", "--full", "--lines=100"])
+
+        # exit with failure; we don't care about the exact exit code from the failed condition
+        return 1
+
+    return 0
+
+
+def check_oscap_score(config):
+    openscap = config.get("blueprint", {}).get("customizations", {}).get("openscap", {})
+    if not openscap:
+        # nothing to check
+        return 0
+
+    baseline_score = 0.8
+    print("🔒 Running oscap scanner")
+
+    # NOTE: sudo works here without password because we test this only on ami initialised with cloud-init, which sets
+    # sudo NOPASSWD for the user
+    profile = openscap.get("profile_id")
+    datastream = openscap.get("datastream")
+    runcmd(["sudo", "oscap", "xccdf", "eval", "--results", "results.xml",
+            "--profile", f"{profile}_osbuild_tailoring",
+            "--tailoring-file", "/oscap_data/tailoring.xml",
+            datastream])
+
+    print("📄 Saving results")
+    uid = os.getuid()
+    runcmd(["sudo", "chown", uid, "results.xml"])
+
+    print("📗 Checking oscap score")
+    hardened_score = runcmd(["xmlstarlet", "sel",
+                             "-N", 'x="http://checklists.nist.gov/xccdf/1.2"',
+                             "-t", "-v", "//x:score",
+                             "results.xml"],
+                            check=True, capture=True)
+    print(f"Hardened score: {hardened_score}%")
+
+    print("📗 Checking for failed rules")
+    high_severity = runcmd(["xmlstarlet", "sel",
+                            "-N", 'x="http://checklists.nist.gov/xccdf/1.2"',
+                            "-t", "-v", "//x:rule-result[@severity='high']",
+                            "results.xml"],
+                           check=True, capture=True)
+    severity_count = high_severity.count("fail")
+    print(f"Severity count: {severity_count}")
+
+    print("🎏 Checking for test result")
+    print(f"Baseline score: {baseline_score}%")
+    print(f"Hardened score: {hardened_score}%")
+
+    if hardened_score < baseline_score:
+        print("❌ Failed")
+        print(f"Hardened image score ({hardened_score}) did not improve baseline score ({baseline_score})")
+        sys.exit(1)
+
+    if severity_count:
+        print("❌ Failed")
+        print(f"{severity_count} oscap rules with high severity failed")
+        for line in high_severity.split("\n"):
+            if "fail" in line:
+                print(line)
+        return 1
+
+    return 0
+
+
+def check_ca_cert(config):
+    cacerts = config.get("blueprint", {}).get("customizations", {}).get("cacerts")
+    if not cacerts:
+        # nothing to check
+        return 0
+
+    pem_cert = cacerts["pem_certs"][0]
+    serial = runcmd(["openssl", "x509", "-noout", "-serial", pem_cert], capture=True)
+    serial = "=".join(serial.split("=")[1:]).lower()
+
+    cn = runcmd(["openssl", "x509", "-noout", "-subject", pem_cert], capture=True)
+    delim = "CN ?= ?"
+    cn_index = cn.index(delim)
+    cn = cn[cn_index+len(delim):]
+
+    print(f"📗 Checking CA cert anchor file serial '{serial}'")
+    if not os.path.exists(f"/etc/pki/ca-trust/source/anchors/{serial}.pem"):
+        print("Anchor CA file does not exist, directory contents:")
+        runcmd(["find", "/etc/pki/ca-trust/source/anchors"])
+        return 1
+
+    print(f"📗 Checking extracted CA cert file named '{cn}'")
+    # lets grep here instead of reading the file in
+    grep_out = runcmd(["grep", cn, "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"], capture=True)
+    if not grep_out:
+        print("Extracted CA cert not found in the bundle, tls-ca-bundle.pem contents:")
+        runcmd(["grep", '^#', "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"])
+        return 1
+
+    return 0
+
+
+def check_modularity(config):
+    """
+    Verify modules that are enabled on a system, if any. Modules can either be enabled separately or they can be
+    installed through packages directly. We test both cases here.
+
+    Caveat is that when a module is enabled yet _no_ packages are installed from it this breaks. Let's not do that in
+    the test.
+    """
+    enabled_modules = config.get("blueprint", {}).get("enabled_modules", [])
+    packages = config.get("blueprint", {}).get("packages", [])
+
+    expected_modules = []
+    for module in enabled_modules:
+        expected_modules.append(module["name"] + ":" + module["stream"])
+
+    for pkg in packages:
+        name = pkg["name"]
+        if name[0] == "@" and ":" in name:
+            # package is a module (without the @)
+            expected_modules.append(name[1:])
+
+    if not expected_modules:
+        # nothing to check
+        return 0
+
+    print("📗 Checking enabled modules")
+    dnf_modules_output = runcmd(["dnf", "module", "list", "--enabled"], capture=True).split("\n")
+    # Grab the first and second words of each line that contains the character [e], which marks an enabled module. The
+    # first word is the name and the second is the stream.
+    # TODO: find a more reliable way to read this information # pylint: disable=fixme
+    system_modules = []
+    for module_line in dnf_modules_output:
+        if "[e]" not in module_line:
+            continue
+        module_parts = module_line.split()
+        name = module_parts[0]
+        stream = module_parts[1]
+        system_modules.append(f"{name}:{stream}")
+
+    # Go over the expected modules and check if each of them is installed
+    if set(expected_modules) != set(system_modules):
+        print("❌ Enabled modules do not match expected")
+        print("📗 Expected modules:")
+        print("\n".join(expected_modules))
+        print("📗 Enabled modules:")
+        print("\n".join(system_modules))
+
+    return 1
+
+
+def check_hostname(config):
+    expected_hostname = config.get("blueprint", {}).get("customizations", {}).get("hostname")
+    if not expected_hostname:
+        # nothing to check
+        return 0
+
+    print("📗 Checking hostname")
+
+    actual_hostname = os.uname().nodename
+
+    # we only emit a warning here since the hostname gets reset by cloud-init and we're not entirely sure how to deal
+    # with it yet on the service level
+    if actual_hostname != expected_hostname:
+        print(f"🟡 Hostname was not set:\nhostname: {actual_hostname}\nexpected: {expected_hostname}")
+    else:
+        print(f"Hostname matches expected: {expected_hostname}")
+
+    return 0
+
+
+def check_files_customizations(config):
+    """
+    This test only checks for the existence of the file customizations target path not the content. For the simple
+    case when "data" is provided we could check but for the "uri" case we do not know the content as the file usually
+    comes from the host. The existing testing framework makes the content check difficult, so we settle for this for
+    now. There is an alternative approach in
+    https://github.com/osbuild/images/pull/1157/commits/7784f3dc6b435fa03951263e48ea7cfca84c2ebd that may eventually be
+    considered that is more direct and runs runs locally but different from the existing paradigm so it needs further
+    discussion.
+    """
+
+    expected_paths = config.get("blueprint", {}).get("customizations", {}).get("files")
+    if not expected_paths:
+        # nothing to check
+        return 0
+
+    print("📗 Checking files customization (basic file existence check only)")
+
+    for path in expected_paths:
+        if not os.path.exists(path):
+            print(f"❌ Expected path from filesystem customization is not there: {path}")
+            return 1
+
+    return 0
+
+
+def check_services_enabled(config):
+    expected_services = config.get("blueprint", {}).get("customizations", {}).get("services", {}).get("enabled")
+    if not expected_services:
+        # nothing to check
+        return 0
+
+    print("📗 Checking enabled services")
+
+    for service in expected_services:
+        state = runcmd(["systemctl", "is-enabled", service], capture=True)
+        if state == "enabled":
+            print(f"Service was enabled service={service} state={state}")
+        else:
+            print(f"❌ Service was not enabled service={service} state={state}")
+            return 1
+
+    return 0
+
+
+def check_services_disabled(config):
+    expected_services = config.get("blueprint", {}).get("customizations", {}).get("services", {}).get("disabled")
+    if not expected_services:
+        # nothing to check
+        return 0
+
+    print("📗 Checking disabled services")
+
+    for service in expected_services:
+        state = runcmd(["systemctl", "is-enabled", service], capture=True)
+        if state == "disabled":
+            print(f"Service was disabled service={service} state={state}")
+        else:
+            print(f"❌ Service was not disabled service={service} state={state}")
+            return 1
+
+    return 0
+
+
+def check_services_masked(config):
+    expected_services = config.get("blueprint", {}).get("customizations", {}).get("services", {}).get("masked")
+    if not expected_services:
+        # nothing to check
+        return 0
+
+    print("📗 Checking masked services")
+
+    masked_services = runcmd(["systemctl", "list-unit-files", "--state=masked"]).split("\n")
+    for service in expected_services:
+        if service in masked_services:
+            print(f"Service was masked service={service}")
+        else:
+            print(f"❌ Service was not masked service=${service}")
+            print("Masked services:")
+            print(masked_services)
+            return 1
+
+    return 0
+
+
+def check_firewall_services_enabled(config):
+    firewall = config.get("blueprint", {}).get("customizations", {}).get("firewall", {})
+    expected_services = firewall.get("services", {}).get("enabled")
+    if not expected_services:
+        # nothing to check
+        return 0
+
+    print("📗 Checking enabled firewall services")
+
+    for service in expected_services:
+        state = runcmd(["sudo", "firewall-cmd", f"--query-service={service}"], capture=True)
+        if state == "yes":
+            print(f"Firewall service was enabled service={service} state={state}")
+        else:
+            print(f"❌ Firewall service was not enabled service={service} state={state}")
+            return 1
+
+    return 0
+
+
+def check_firewall_ports(config):
+    expected_ports = config.get("blueprint", {}).get("customizations", {}).get("firewall", {}).get("ports")
+    if not expected_ports:
+        # nothing to check
+        return 0
+
+    print("📗 Checking enabled firewall ports")
+
+    for port in expected_ports:
+        # firewall-cmd --query-port uses / as the port/protocol separator, but
+        # in the blueprint we use :.
+        port = port.replace(":", "/")
+        state = runcmd(["sudo", "firewall-cmd", f"--query-port={port}"], capture=True)
+        if state == "yes":
+            print(f"Firewall port was enabled port={port} state={state}")
+        else:
+            print(f"❌ Firewall port was not enabled port={port} state={state}")
+            return 1
+
+    return 0
+
+
+def check_firewall_services_disabled(config):
+    firewall = config.get("blueprint", {}).get("customizations", {}).get("firewall", {})
+    expected_services = firewall.get("services", {}).get("disabled")
+    if not expected_services:
+        # nothing to check
+        return 0
+
+    print("📗 Checking disabled firewall services")
+
+    for service in expected_services:
+        state = runcmd(["sudo", "firewall-cmd", f"--query-service={service}"], capture=True)
+        if state == "no":
+            print(f"Firewall service was disabled service={service} state={state}")
+        else:
+            print(f"❌ Firewall service was not disabled service={service} state={state}")
+            return 1
+
+    return 0
+
+
+def check_users(config):
+    expected_users = config.get("blueprint", {}).get("customizations", {}).get("user")
+    if not expected_users:
+        # nothing to check
+        return 0
+
+    print("📗 Checking users")
+
+    for user in expected_users:
+        username = user["name"]
+        out = runcmd(["id", username], check=False, capture=True)
+        # if it doesn't exist, output will be empty and an error is printed on stderr
+        if out:
+            print(f"User {username} exists")
+            print(out)
+        else:
+            print(f"❌ User does not exist: username={username}")
+            return 1
+
+    return 0
+
+
+def main():
+    if running_wait():
+        # don't run any other checks
+        return 1
+
+    print("📦 Listing packages")
+    runcmd(["rpm", "-qa"])
+
+    print("ℹ️ os-release")
+    runcmd(["cat", "/etc/os-release"])
+
+    print("ℹ️ system information")
+    runcmd(["uname", "-a"])
+
+    print("🕰️ uptime")
+    runcmd(["uptime"])
+
+    if len(sys.argv) != 2:
+        print("No build config provided. Skipping config checks")
+        return 0
+
+    config_path = sys.argv[1]
+    print(f"Running config checks with {config_path}")
+    with open(config_path, mode="r", encoding="utf-8") as config_fp:
+        config = json.load(config_fp)
+
+    # NOTE: we should do a lot more here
+    errs = 0
+    errs += check_oscap_score(config)
+    errs += check_ca_cert(config)
+    errs += check_modularity(config)
+    errs += check_users(config)
+    errs += check_services_enabled(config)
+    errs += check_services_disabled(config)
+    errs += check_services_masked(config)
+    errs += check_firewall_services_enabled(config)
+    errs += check_firewall_services_disabled(config)
+    errs += check_firewall_ports(config)
+    errs += check_hostname(config)
+    errs += check_files_customizations(config)
+
+    return errs
+
+
+if __name__ == "__main__":
+    sys.exit(main())
