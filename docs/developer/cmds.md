@@ -38,7 +38,7 @@ a new image type, might be:
 2. Make changes in an existing image definition or add a new image type.
 3. Add appropriate configuration changes:
     - If a new image type is added, add it to the [config
-      map](test/config-map.json) under an appropriate configuration file or
+      list](test/config-list.json) under an appropriate configuration file or
       write a new one.
     - If an existing image type is being modified, and the change depends on an
       image customization, make sure the modification is covered by an existing
