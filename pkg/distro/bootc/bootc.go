@@ -31,8 +31,10 @@ import (
 var _ = distro.Distro(&BootcDistro{})
 
 type BootcDistro struct {
-	imgref          string
-	buildImgref     string
+	imgref      string
+	buildImgref string
+	// XXX: wrong place?
+	payloadRef      string
 	sourceInfo      *osinfo.Info
 	buildSourceInfo *osinfo.Info
 
@@ -82,6 +84,12 @@ func (d *BootcDistro) SetBuildContainer(imgref string) (err error) {
 		return err
 	}
 	return d.setBuildContainer(imgref, info)
+}
+
+// XXX: wrong layer
+func (d *BootcDistro) SetInstallerPayload(imgref string) error {
+	d.payloadRef = imgref
+	return nil
 }
 
 func (d *BootcDistro) setBuildContainer(imgref string, info *osinfo.Info) error {
@@ -313,20 +321,7 @@ func (t *BootcImageType) Manifest(bp *blueprint.Blueprint, options distro.ImageO
 	//nolint:gosec
 	rng := rand.New(rand.NewSource(seed))
 
-	archi := common.Must(arch.FromString(t.arch.Name()))
-	platform := &platform.Data{
-		Arch:        archi,
-		UEFIVendor:  t.arch.distro.sourceInfo.UEFIVendor,
-		QCOW2Compat: "1.1",
-	}
-	switch archi {
-	case arch.ARCH_X86_64:
-		platform.BIOSPlatform = "i386-pc"
-	case arch.ARCH_PPC64LE:
-		platform.BIOSPlatform = "powerpc-ieee1275"
-	case arch.ARCH_S390X:
-		platform.ZiplSupport = true
-	}
+	platform := PlatformFor(t.arch.Name(), t.arch.distro.sourceInfo.UEFIVendor)
 	// For the bootc-disk image, the filename is the basename and
 	// the extension is added automatically for each disk format
 	filename := "disk"
@@ -483,6 +478,12 @@ func newBootcDistroAfterIntrospect(archStr string, info *osinfo.Info, imgref, de
 			ext:    "tar.gz",
 		},
 	)
+	ba.imageTypes["bootc-installer"] = &BootcAnacondaInstaller{
+		arch:   ba,
+		name:   "bootc-installer",
+		export: "bootiso",
+	}
+
 	bd.addArches(ba)
 
 	return bd, nil
