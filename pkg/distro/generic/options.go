@@ -28,7 +28,10 @@ func checkOptionsCommon(t *imageType, bp *blueprint.Blueprint, options distro.Im
 	errPrefix := fmt.Sprintf("blueprint validation failed for image type %q", t.Name())
 
 	if err := distro.ValidateConfig(t, *bp); err != nil {
-		return warnings, fmt.Errorf("%s: %w", errPrefix, err)
+		// NOTE (validation-warnings): appending to warnings now, because this
+		// is breaking a lot of things the service
+		errAsWarning := fmt.Errorf("%s: %w", errPrefix, err)
+		warnings = append(warnings, errAsWarning.Error())
 	}
 
 	if options.OSTree != nil {
