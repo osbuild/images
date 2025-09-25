@@ -167,7 +167,7 @@ func doSetup(a *awscloud.AWS, filename string, flags *pflag.FlagSet, res *resour
 		return err
 	}
 
-	ami, snapshot, err := a.Register(imageName, bucketName, keyName, nil, imgArch, bootMode, importRole)
+	ami, snapshot, err := a.Register(imageName, bucketName, keyName, nil, nil, imgArch, bootMode, importRole)
 	if err != nil {
 		return fmt.Errorf("Register(): %s", err.Error())
 	}
