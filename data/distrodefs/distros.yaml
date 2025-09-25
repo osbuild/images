@@ -366,6 +366,6 @@ distros:
         # Install python36 explicitly for RHEL 8.
         - "python36"
     bootstrap_containers:
-      x86_64: "registry.access.redhat.com/ubi{{.MajorVersion}}/ub i:latest"
+      x86_64: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
       ppc64le: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
       s390x: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
