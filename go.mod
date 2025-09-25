@@ -185,3 +185,5 @@ require (
 	google.golang.org/grpc v1.74.2 // indirect
 	google.golang.org/protobuf v1.36.7 // indirect
 )
+
+replace github.com/osbuild/blueprint => github.com/achilleas-k/blueprint v0.0.0-20250925131725-af1902bcfcc1

@@ -182,34 +182,45 @@ func TestImageConfigInheritFrom(t *testing.T) {
 }
 
 func TestImageConfigDNFSetReleaseVerNotSet(t *testing.T) {
-	var expected []*osbuild.DNFConfigStageOptions
+	var expected *osbuild.DNFConfigStageOptions
 	cnf := &ImageConfig{}
-	assert.Equal(t, expected, cnf.DNFConfigOptions("9-stream"))
+	options, err := cnf.DNFConfigOptions("9-stream")
+	assert.NoError(t, err)
+	assert.Equal(t, expected, options)
 
 	cnf.DNFConfig = &DNFConfig{
 		SetReleaseVerVar: common.ToPtr(false),
 	}
-	assert.Equal(t, expected, cnf.DNFConfigOptions("9-stream"))
+	options, err = cnf.DNFConfigOptions("9-stream")
+	assert.NoError(t, err)
+	assert.Equal(t, expected, options)
 }
 
 func TestImageConfigDNFConfigOptionsPreExisting(t *testing.T) {
 	cnf := &ImageConfig{
 		DNFConfig: &DNFConfig{
-			Options: []*osbuild.DNFConfigStageOptions{
-				{
-					Config: &osbuild.DNFConfig{
-						Main: &osbuild.DNFConfigMain{
-							IPResolve: "4",
-						},
+			Options: &osbuild.DNFConfigStageOptions{
+				Config: &osbuild.DNFConfig{
+					Main: &osbuild.DNFConfigMain{
+						IPResolve: "4",
 					},
 				},
 			},
 		},
 	}
-	assert.Equal(t, cnf.DNFConfig.Options, cnf.DNFConfigOptions("9-stream"))
+	options, err := cnf.DNFConfigOptions("9-stream")
+	assert.NoError(t, err)
+	assert.Equal(t, cnf.DNFConfig.Options, options)
 
 	cnf.DNFConfig.SetReleaseVerVar = common.ToPtr(true)
-	assert.PanicsWithError(t, "internal error: currently DNFConfig and DNFSetReleaseVerVar cannot be used together, please reporting this as a feature request", func() {
-		cnf.DNFConfigOptions("9-stream")
-	})
+	_, err = cnf.DNFConfigOptions("9-stream")
+	assert.NoError(t, err)
+
+	cnf.DNFConfig.Options.Variables = append(cnf.DNFConfig.Options.Variables, osbuild.DNFVariable{Name: "somevariable", Value: "avalue"})
+	_, err = cnf.DNFConfigOptions("9-stream")
+	assert.NoError(t, err)
+
+	cnf.DNFConfig.Options.Variables = append(cnf.DNFConfig.Options.Variables, osbuild.DNFVariable{Name: "releasever", Value: "100.42"})
+	_, err = cnf.DNFConfigOptions("9-stream")
+	assert.EqualError(t, err, "dnf_config.set_releasever_var is enabled and conflicts with the releasever variable set in dnf_config.options.variables with value: 100.42")
 }

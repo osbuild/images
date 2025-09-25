@@ -232,7 +232,7 @@
           - key: "vm.max_map_count"
             value: "2147483647"
     dnf_config:
-      set_release_ver_var: true
+      set_releasever_var: true
 
   sap_image_config: &sap_image_config
     <<: *sapapps_image_config
@@ -789,6 +789,7 @@
       - "customizations.cacerts"
       - "customizations.directories"
       - "customizations.disk"
+      - "customizations.dnf"
       - "customizations.files"
       - "customizations.filesystem"
       - "customizations.partitioning_mode"
@@ -1274,6 +1275,7 @@ image_types:
       - "minimal"
       - "customizations.cacerts"
       - "customizations.directories"
+      - "customizations.dnf"
       - "customizations.files"
       - "customizations.firewall"
       - "customizations.user"
@@ -1701,6 +1703,7 @@ image_types:
       - "enabled_modules"
       - "minimal"
       - "containers"
+      - "customizations.dnf"
       - "customizations.directories"
       - "customizations.files"
       - "customizations.firewall"
@@ -1879,6 +1882,7 @@ image_types:
       - "minimal"
       - "customizations.installer"
       - "customizations.cacerts"
+      - "customizations.dnf"
       - "customizations.directories"
       - "customizations.files"
       - "customizations.firewall"
@@ -1930,9 +1934,9 @@ image_types:
         keymap: "us"
       dnf_config:
         options:
-          - config:
-              main:
-                ipresolve: "4"
+          config:
+            main:
+              ipresolve: "4"
       dnf_automatic_config:
         config:
           commands:
@@ -2141,6 +2145,7 @@ image_types:
       - "customizations.cacerts"
       - "customizations.directories"
       - "customizations.disk"
+      - "customizations.dnf"
       - "customizations.files"
       - "customizations.filesystem"
       - "customizations.partitioning_mode"

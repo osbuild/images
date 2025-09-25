@@ -530,5 +530,14 @@
     "distros": [
       "bootc-*"
     ]
+  },
+  "./configs/releasever.json": {
+    "distros": [
+      "rhel-9*",
+      "rhel-10*"
+    ],
+    "image-types": [
+      "qcow2"
+    ]
   }
 }
