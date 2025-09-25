@@ -566,6 +566,13 @@ func TestValidateConfig(t *testing.T) {
 			},
 			err: `customizations.user[1].name: required`,
 		},
+		"empty-slices-cause-errors": {
+			// TODO: this should not be an error
+			bp: blueprint.Blueprint{
+				Packages: []blueprint.Package{},
+			},
+			err: `packages: not supported`,
+		},
 	}
 
 	for name := range testCases {
@@ -847,6 +854,13 @@ func TestValidateSupportedConfig(t *testing.T) {
 				},
 			},
 			expErr: "customizations.embed.name: not supported",
+		},
+		"empty-slices-cause-errors": {
+			// TODO: this should not be an error
+			config: testConfigType{
+				Packages: []pkg{},
+			},
+			expErr: "packages: not supported",
 		},
 	}
 	for name, tc := range testCases {
