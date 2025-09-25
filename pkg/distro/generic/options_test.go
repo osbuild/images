@@ -512,7 +512,7 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			expErr: "blueprint validation failed for image type \"server-vhd\": customizations.oscap.profile_id: required when using customizations.oscap",
+			expErr: "blueprint validation failed for image type \"server-vhd\": customizations.openscap.profile_id: required when using customizations.openscap",
 		},
 
 		"f42/ostree-disk-requires-ostree-url": {
@@ -1030,7 +1030,7 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			expErr: "blueprint validation failed for image type \"vhd\": customizations.oscap.profile_id: required when using customizations.oscap",
+			expErr: "blueprint validation failed for image type \"vhd\": customizations.openscap.profile_id: required when using customizations.openscap",
 		},
 		"r8/btrfs-mode-unsupported": {
 			distro: "rhel-8.10",
@@ -1113,7 +1113,7 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			expErr: "blueprint validation failed for image type \"ami\": customizations.oscap: not supported for distro version: 8.6",
+			expErr: "blueprint validation failed for image type \"ami\": customizations.openscap: not supported for distro version: 8.6",
 		},
 
 		"r9/ami-ok": {
@@ -1507,7 +1507,7 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			expErr: "blueprint validation failed for image type \"vhd\": customizations.oscap.profile_id: required when using customizations.oscap",
+			expErr: "blueprint validation failed for image type \"vhd\": customizations.openscap.profile_id: required when using customizations.openscap",
 		},
 
 		"r9/edge-installer-installer-customizations": {
@@ -1700,7 +1700,7 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			expErr: "blueprint validation failed for image type \"ami\": customizations.oscap: not supported for distro version: 9.0",
+			expErr: "blueprint validation failed for image type \"ami\": customizations.openscap: not supported for distro version: 9.0",
 		},
 
 		"r10/ami-ok": {
@@ -1743,7 +1743,7 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			expErr: "blueprint validation failed for image type \"vhd\": customizations.oscap.profile_id: required when using customizations.oscap",
+			expErr: "blueprint validation failed for image type \"vhd\": customizations.openscap.profile_id: required when using customizations.openscap",
 		},
 
 		"r10/cvm-kernel-unsupported": {
@@ -1785,7 +1785,7 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			expErr: "blueprint validation failed for image type \"qcow2\": customizations.oscap.profile_id: unsupported profile unsupported-profile",
+			expErr: "blueprint validation failed for image type \"qcow2\": customizations.openscap.profile_id: unsupported profile unsupported-profile",
 		},
 		"r10/duplicate-file-customization": {
 			distro: "rhel-10.1",
