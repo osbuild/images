@@ -1,12 +1,16 @@
 ---
 containers:
   - &default_fake_container
+    image_types: ["qcow2", "ami", "raw", "gce", "vhd", "vmdk", "ova"]
     image_ref: "bootc-fake-imgref"
     arch: riscv64
     info: &default_info
       os_release:
+        name: "bootc Test OS"
         id: "test-os"
         versionid: "1"
+      kernel_info:
+        version: 6.6
     default_fs: "ext4"
     container_size: 10_000_000_000
   - <<: *default_fake_container
@@ -24,6 +28,7 @@ containers:
       <<: *default_info
       uefi_vendor: "uefi-vendor-aarch64"
 
+  # test build container
   - <<: *default_fake_container
     arch: x86_64
     info:
@@ -34,3 +39,13 @@ containers:
     build_container_info:
       os_release:
         id: "build-test-os"
+
+  # test ISO installer
+  - <<: *default_fake_container
+    image_types: ["bootc-installer"]
+    arch: x86_64
+    payload_container_ref: "payload-container-fake-ref"
+  - <<: *default_fake_container
+    image_types: ["bootc-installer"]
+    arch: aarch64
+    payload_container_ref: "payload-container-fake-ref"
