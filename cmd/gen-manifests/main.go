@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime/debug"
+	"slices"
 	"strings"
 	"time"
 
@@ -611,9 +612,11 @@ func main() {
 			DefaultFs     string      `yaml:"default_fs"`
 			ContainerSize uint64      `yaml:"container_size"`
 			ImageRef      string      `yaml:"image_ref"`
+			ImageTypes    []string    `yaml:"image_types"`
 
-			BuildContainerRef  string      `yaml:"build_container_ref"`
-			BuildContainerInfo osinfo.Info `yaml:"build_container_info"`
+			BuildContainerRef   string      `yaml:"build_container_ref"`
+			BuildContainerInfo  osinfo.Info `yaml:"build_container_info"`
+			PayloadContainerRef string      `yaml:"payload_container_ref"`
 		}
 		type fakeContainersYAML struct {
 			Containers []fakeBootcContainerYAML
@@ -629,11 +632,6 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
-			if fakeBootcCnt.BuildContainerRef != "" {
-				if err := distribution.SetBuildContainerForTesting(fakeBootcCnt.BuildContainerRef, &fakeBootcCnt.BuildContainerInfo); err != nil {
-					panic(err)
-				}
-			}
 
 			arches, _ := arches.ResolveArgValues(distribution.ListArches())
 			for _, archName := range arches {
@@ -643,6 +641,21 @@ func main() {
 				}
 				imgTypes, _ := imgTypes.ResolveArgValues(archi.ListImageTypes())
 				for _, imgTypeName := range imgTypes {
+					if !slices.Contains(fakeBootcCnt.ImageTypes, imgTypeName) {
+						continue
+					}
+
+					if fakeBootcCnt.BuildContainerRef != "" {
+						if err := distribution.SetBuildContainerForTesting(fakeBootcCnt.BuildContainerRef, &fakeBootcCnt.BuildContainerInfo); err != nil {
+							panic(err)
+						}
+					}
+					if fakeBootcCnt.PayloadContainerRef != "" {
+						if err := distribution.SetInstallerPayload(fakeBootcCnt.PayloadContainerRef); err != nil {
+							panic(err)
+						}
+					}
+
 					imgType, err := archi.GetImageType(imgTypeName)
 					if err != nil {
 						panic(err)
