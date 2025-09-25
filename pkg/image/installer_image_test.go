@@ -99,7 +99,7 @@ const (
 )
 
 func TestContainerInstallerUnsetKSOptions(t *testing.T) {
-	img := image.NewAnacondaContainerInstaller(testPlatform, "filename", container.SourceSpec{}, "")
+	img := image.NewAnacondaContainerInstallerLegacy(testPlatform, "filename", container.SourceSpec{}, "")
 	assert.NotNil(t, img)
 
 	img.InstallerCustomizations.Product = product
@@ -111,7 +111,7 @@ func TestContainerInstallerUnsetKSOptions(t *testing.T) {
 }
 
 func TestContainerInstallerUnsetKSPath(t *testing.T) {
-	img := image.NewAnacondaContainerInstaller(testPlatform, "filename", container.SourceSpec{}, "")
+	img := image.NewAnacondaContainerInstallerLegacy(testPlatform, "filename", container.SourceSpec{}, "")
 	assert.NotNil(t, img)
 
 	img.InstallerCustomizations.Product = product
@@ -125,7 +125,7 @@ func TestContainerInstallerUnsetKSPath(t *testing.T) {
 }
 
 func TestContainerInstallerSetKSPath(t *testing.T) {
-	img := image.NewAnacondaContainerInstaller(testPlatform, "filename", container.SourceSpec{}, "")
+	img := image.NewAnacondaContainerInstallerLegacy(testPlatform, "filename", container.SourceSpec{}, "")
 	assert.NotNil(t, img)
 
 	img.InstallerCustomizations.Product = product
@@ -141,7 +141,7 @@ func TestContainerInstallerSetKSPath(t *testing.T) {
 }
 
 func TestContainerInstallerExt4Rootfs(t *testing.T) {
-	img := image.NewAnacondaContainerInstaller(testPlatform, "filename", container.SourceSpec{}, "")
+	img := image.NewAnacondaContainerInstallerLegacy(testPlatform, "filename", container.SourceSpec{}, "")
 	assert.NotNil(t, img)
 
 	img.InstallerCustomizations.Product = product
@@ -156,7 +156,7 @@ func TestContainerInstallerExt4Rootfs(t *testing.T) {
 }
 
 func TestContainerInstallerSquashfsRootfs(t *testing.T) {
-	img := image.NewAnacondaContainerInstaller(testPlatform, "filename", container.SourceSpec{}, "")
+	img := image.NewAnacondaContainerInstallerLegacy(testPlatform, "filename", container.SourceSpec{}, "")
 	assert.NotNil(t, img)
 
 	img.InstallerCustomizations.Product = product
@@ -375,7 +375,7 @@ func instantiateAndSerialize(t *testing.T, img image.ImageKind, depsolved map[st
 
 func TestContainerInstallerPanics(t *testing.T) {
 	assert := assert.New(t)
-	img := image.NewAnacondaContainerInstaller(testPlatform, "filename", container.SourceSpec{}, "")
+	img := image.NewAnacondaContainerInstallerLegacy(testPlatform, "filename", container.SourceSpec{}, "")
 	assert.PanicsWithError("org.osbuild.grub2.iso: product.name option is required", func() { instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil) })
 	img.InstallerCustomizations.Product = product
 	assert.PanicsWithError("org.osbuild.grub2.iso: product.version option is required", func() { instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil) })
@@ -486,7 +486,7 @@ func TestContainerInstallerModules(t *testing.T) {
 		// Remove this when we drop support for RHEL 8.
 		for _, legacy := range []bool{true, false} {
 			t.Run(name, func(t *testing.T) {
-				img := image.NewAnacondaContainerInstaller(testPlatform, "filename", container.SourceSpec{}, "")
+				img := image.NewAnacondaContainerInstallerLegacy(testPlatform, "filename", container.SourceSpec{}, "")
 				img.InstallerCustomizations.Product = product
 				img.InstallerCustomizations.OSVersion = osversion
 				img.InstallerCustomizations.ISOLabel = isolabel
@@ -582,7 +582,7 @@ func TestInstallerLocales(t *testing.T) {
 
 	for input, expected := range locales {
 		{ // Container
-			img := image.NewAnacondaContainerInstaller(testPlatform, "filename", container.SourceSpec{}, "")
+			img := image.NewAnacondaContainerInstallerLegacy(testPlatform, "filename", container.SourceSpec{}, "")
 			assert.NotNil(t, img)
 
 			img.InstallerCustomizations.Product = product
@@ -713,7 +713,7 @@ func findGrub2IsoStageOptions(t *testing.T, mf manifest.OSBuildManifest, pipelin
 }
 
 func TestContainerInstallerDracut(t *testing.T) {
-	img := image.NewAnacondaContainerInstaller(testPlatform, "filename", container.SourceSpec{}, "")
+	img := image.NewAnacondaContainerInstallerLegacy(testPlatform, "filename", container.SourceSpec{}, "")
 	img.InstallerCustomizations.Product = product
 	img.InstallerCustomizations.OSVersion = osversion
 	img.InstallerCustomizations.ISOLabel = isolabel
