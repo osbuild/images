@@ -486,6 +486,11 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
+			options: distro.ImageOptions{
+				OSTree: &ostree.ImageOptions{
+					URL: "https://example.org/repo",
+				},
+			},
 			expErr: "blueprint validation failed for image type \"iot-qcow2\": containers: not supported",
 		},
 
@@ -966,6 +971,11 @@ func TestCheckOptions(t *testing.T) {
 					{
 						Source: "example.org/containers/test:42",
 					},
+				},
+			},
+			options: distro.ImageOptions{
+				OSTree: &ostree.ImageOptions{
+					URL: "https://example.org/repo",
 				},
 			},
 			expErr: "blueprint validation failed for image type \"edge-raw-image\": containers: not supported",
@@ -1555,6 +1565,11 @@ func TestCheckOptions(t *testing.T) {
 					{
 						Source: "example.org/containers/test:42",
 					},
+				},
+			},
+			options: distro.ImageOptions{
+				OSTree: &ostree.ImageOptions{
+					URL: "https://example.org/repo",
 				},
 			},
 			expErr: "blueprint validation failed for image type \"edge-ami\": containers: not supported",
