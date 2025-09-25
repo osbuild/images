@@ -1909,7 +1909,8 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			expErr: "blueprint validation failed for image type \"qcow2\": customizations.openscap: not supported",
+			// NOTE (validation-warnings): temporary change in error message due to change from errors to warnings in distro.ValidateConfig()
+			expErr: "blueprint validation failed for image type \"qcow2\": customizations.openscap.profile_id: unsupported profile xccdf_org.ssgproject.content_profile_ospp",
 		},
 	}
 
@@ -1929,11 +1930,17 @@ func TestCheckOptions(t *testing.T) {
 
 			genit, ok := it.(*generic.ImageType) // checkOptions() function is defined on generic.ImageType
 			assert.True(ok, "image type %q for distro %q does not appear to be valid", tc.it, d.Name())
-			_, err = generic.ImageTypeCheckOptions(genit, &tc.bp, tc.options)
+			warnings, err := generic.ImageTypeCheckOptions(genit, &tc.bp, tc.options)
 			if tc.expErr == "" {
 				assert.NoError(err)
 			} else {
-				assert.EqualError(err, tc.expErr)
+				// NOTE (validation-warnings): errors from distro.ValidateConfig() have been temporarily converted to warnings.
+				// If we don't get an error, assume the expected error is in the warnings and check for that.
+				if err == nil {
+					assert.Contains(warnings, tc.expErr)
+				} else {
+					assert.EqualError(err, tc.expErr)
+				}
 			}
 		})
 	}

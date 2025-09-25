@@ -629,10 +629,12 @@ func TestDistro_ManifestFIPSWarning(t *testing.T) {
 					if strings.HasSuffix(imgTypeName, "simplified-installer") {
 						bp.Customizations.InstallationDevice = "/dev/dummy"
 					}
-					_, warn, err := imgType.Manifest(&bp, imgOpts, nil, nil)
+					_, warn, _ := imgType.Manifest(&bp, imgOpts, nil, nil)
 					switch imgTypeName {
 					case "workstation-live-installer", "container", "wsl", "tar":
-						assert.EqualError(t, err, fmt.Sprintf("blueprint validation failed for image type %q: customizations.fips: not supported", imgTypeName))
+						// NOTE (validation-warnings): blueprint validation errors have temporarily been converted to warnings
+						assert.Contains(t, warn, fmt.Sprintf("blueprint validation failed for image type %q: customizations.fips: not supported", imgTypeName))
+						assert.Equal(t, slices.Contains(warn, msg), !common.IsBuildHostFIPSEnabled(), "FIPS warning not shown for image: distro='%s', imgTypeName='%s', archName='%s', warn='%v'", distroName, imgTypeName, archName, warn)
 					default:
 						assert.Equal(t, slices.Contains(warn, msg), !common.IsBuildHostFIPSEnabled(),
 							"FIPS warning not shown for image: distro='%s', imgTypeName='%s', archName='%s', warn='%v'", distroName, imgTypeName, archName, warn)
