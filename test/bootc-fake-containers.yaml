@@ -7,6 +7,8 @@ containers:
       os_release:
         id: "test-os"
         versionid: "1"
+      kernel_info:
+        version: 6.6
     default_fs: "ext4"
     container_size: 10_000_000_000
   - <<: *default_fake_container

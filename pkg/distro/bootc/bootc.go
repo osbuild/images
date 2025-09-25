@@ -31,8 +31,10 @@ import (
 var _ = distro.Distro(&BootcDistro{})
 
 type BootcDistro struct {
-	imgref          string
-	buildImgref     string
+	imgref      string
+	buildImgref string
+	// XXX: wrong place?
+	payloadRef      string
 	sourceInfo      *osinfo.Info
 	buildSourceInfo *osinfo.Info
 
@@ -82,6 +84,12 @@ func (d *BootcDistro) SetBuildContainer(imgref string) (err error) {
 		return err
 	}
 	return d.setBuildContainer(imgref, info)
+}
+
+// XXX: wrong layer
+func (d *BootcDistro) SetInstallerPayload(imgref string) error {
+	d.payloadRef = imgref
+	return nil
 }
 
 func (d *BootcDistro) setBuildContainer(imgref string, info *osinfo.Info) error {
@@ -476,6 +484,12 @@ func newBootcDistroAfterIntrospect(archStr string, info *osinfo.Info, imgref, de
 			ext:    "tar.gz",
 		},
 	)
+	ba.imageTypes["bootc-installer"] = &BootcAnacondaInstaller{
+		arch:   ba,
+		name:   "bootc-installer",
+		export: "bootiso",
+	}
+
 	bd.addArches(ba)
 
 	return bd, nil
