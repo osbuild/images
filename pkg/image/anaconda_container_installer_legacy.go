@@ -18,7 +18,7 @@ import (
 	"github.com/osbuild/images/pkg/runner"
 )
 
-type AnacondaContainerInstaller struct {
+type AnacondaContainerInstallerLegacy struct {
 	Base
 
 	InstallerCustomizations manifest.InstallerCustomizations
@@ -41,15 +41,15 @@ type AnacondaContainerInstaller struct {
 	InstallRootfsType disk.FSType
 }
 
-func NewAnacondaContainerInstaller(platform platform.Platform, filename string, container container.SourceSpec, ref string) *AnacondaContainerInstaller {
-	return &AnacondaContainerInstaller{
+func NewAnacondaContainerInstallerLegacy(platform platform.Platform, filename string, container container.SourceSpec, ref string) *AnacondaContainerInstallerLegacy {
+	return &AnacondaContainerInstallerLegacy{
 		Base:            NewBase("container-installer", platform, filename),
 		ContainerSource: container,
 		Ref:             ref,
 	}
 }
 
-func (img *AnacondaContainerInstaller) InstantiateManifest(m *manifest.Manifest,
+func (img *AnacondaContainerInstallerLegacy) InstantiateManifest(m *manifest.Manifest,
 	repos []rpmmd.RepoConfig,
 	runner runner.Runner,
 	rng *rand.Rand) (*artifact.Artifact, error) {
