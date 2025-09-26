@@ -21,7 +21,7 @@ type ContentTest struct {
 	commits     []ostree.SourceSpec
 
 	// resolved content
-	packageSpecs   []rpmmd.PackageSpec
+	packageSpecs   rpmmd.PackageList
 	containerSpecs []container.Spec
 	commitSpecs    []ostree.CommitSpec
 
@@ -56,7 +56,7 @@ func (p *ContentTest) getOSTreeCommitSources() []ostree.SourceSpec {
 	return p.commits
 }
 
-func (p *ContentTest) getPackageSpecs() []rpmmd.PackageSpec {
+func (p *ContentTest) getPackageSpecs() rpmmd.PackageList {
 	return p.packageSpecs
 }
 

@@ -117,10 +117,10 @@ func TestImageTypePipelineNames(t *testing.T) {
 					assert.NoError(err)
 					depsolvedSets := make(map[string]depsolvednf.DepsolveResult, len(packageSets))
 					for name, sets := range packageSets {
-						packages := make([]rpmmd.PackageSpec, 0)
+						packages := make(rpmmd.PackageList, 0)
 						for _, set := range sets {
 							for idx, pkginc := range set.Include {
-								packages = append(packages, rpmmd.PackageSpec{
+								packages = append(packages, rpmmd.Package{
 									Name: pkginc,
 									// for most packages, the version is not
 									// required, but for some (e.g. uki-direct
@@ -130,7 +130,11 @@ func TestImageTypePipelineNames(t *testing.T) {
 									Version: "0.0",
 									// the exact checksum doesn't matter as
 									// long as it's a valid 256 bit hex number
-									Checksum: fmt.Sprintf("sha256:%064x", idx),
+									Checksum: rpmmd.Checksum{
+										Type:  "sha256",
+										Value: fmt.Sprintf("%064x", idx),
+									},
+									RemoteLocations: []string{fmt.Sprintf("https://example.com/%s", pkginc)},
 								})
 							}
 						}
@@ -144,17 +148,25 @@ func TestImageTypePipelineNames(t *testing.T) {
 					// azure-cvm requires dnf and python3-dnf-plugin-versionlock in the OS pipeline
 					osPkgs := depsolvedSets["os"]
 					osPkgs.Packages = append(osPkgs.Packages,
-						rpmmd.PackageSpec{
-							Name:     "dnf",
-							Version:  "4",
-							Checksum: fmt.Sprintf("sha256:%064x", len(osPkgs.Packages)),
+						rpmmd.Package{
+							Name:    "dnf",
+							Version: "4",
+							Checksum: rpmmd.Checksum{
+								Type:  "sha256",
+								Value: fmt.Sprintf("%064x", len(osPkgs.Packages)),
+							},
+							RemoteLocations: []string{"https://example.com/dnf"},
 						},
 					)
 					osPkgs.Packages = append(osPkgs.Packages,
-						rpmmd.PackageSpec{
-							Name:     "python3-dnf-plugin-versionlock",
-							Version:  "3",
-							Checksum: fmt.Sprintf("sha256:%064x", len(osPkgs.Packages)),
+						rpmmd.Package{
+							Name:    "python3-dnf-plugin-versionlock",
+							Version: "3",
+							Checksum: rpmmd.Checksum{
+								Type:  "sha256",
+								Value: fmt.Sprintf("%064x", len(osPkgs.Packages)),
+							},
+							RemoteLocations: []string{"https://example.com/python3-dnf-plugin-versionlock"},
 						},
 					)
 					depsolvedSets["os"] = osPkgs
