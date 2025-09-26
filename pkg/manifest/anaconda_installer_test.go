@@ -3,6 +3,7 @@ package manifest_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/pkg/arch"
@@ -182,4 +183,38 @@ func TestAnacondaInstallerDracutModulesAndDrivers(t *testing.T) {
 	require.NotNil(stageOptions, "serialized anaconda pipeline does not contain an org.osbuild.anaconda stage")
 	require.Contains(stageOptions.AddModules, "test-module")
 	require.Contains(stageOptions.AddDrivers, "test-driver")
+}
+
+func TestAnacondaInstallerConfigLorax(t *testing.T) {
+	pkgs := []rpmmd.PackageSpec{
+		{
+			Name:     "kernel",
+			Checksum: "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+		},
+	}
+	require := require.New(t)
+
+	installerPipeline := newAnacondaInstaller()
+	installerPipeline.InstallerCustomizations.LoraxTemplatePackage = "lorax-templates-generic"
+	installerPipeline.InstallerCustomizations.LoraxLogosPackage = "fedora-logos"
+	installerPipeline.InstallerCustomizations.LoraxReleasePackage = "fedora-release"
+	installerPipeline.InstallerCustomizations.LoraxTemplates = []string{
+		"99-generic/runtime-postinstall.tmpl",
+	}
+	pipeline, err := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: depsolvednf.DepsolveResult{Packages: pkgs}})
+	require.NoError(err)
+	require.NotNil(pipeline)
+	require.NotNil(pipeline.Stages)
+
+	var stageOptions []*osbuild.LoraxScriptStageOptions
+	for _, stage := range pipeline.Stages {
+		if stage.Type == "org.osbuild.lorax-script" {
+			stageOptions = append(stageOptions, stage.Options.(*osbuild.LoraxScriptStageOptions))
+		}
+	}
+
+	require.Greater(len(stageOptions), 0, "serialized anaconda pipeline does not contain an org.osbuild.lorax stage")
+	assert.Equal(t, stageOptions[0].Path, "99-generic/runtime-postinstall.tmpl")
+	assert.Equal(t, stageOptions[0].Branding.Logos, "fedora-logos")
+	assert.Equal(t, stageOptions[0].Branding.Logos, "fedora-logos")
 }
