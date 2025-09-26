@@ -116,11 +116,10 @@ func (img *AnacondaContainerInstaller) InstantiateManifestFromContainer(m *manif
 	bootTreePipeline.KernelOpts = []string{
 		fmt.Sprintf("inst.stage2=hd:LABEL=%s", img.InstallerCustomizations.ISOLabel),
 		fmt.Sprintf("inst.ks=hd:LABEL=%s:%s", img.InstallerCustomizations.ISOLabel, img.Kickstart.Path),
-		// XXX: allow this to be configured
+		"console=tty0",
+		// XXX: we want the graphical installer eventually, just
+		// need to figure out the dependencies
 		"inst.text",
-		// last console is what anaconda uses to disply its
-		// content, should we switch to tty0 by default here?
-		"console=tty0", "console=ttyS0",
 	}
 	if anacondaPipeline.InstallerCustomizations.FIPS {
 		bootTreePipeline.KernelOpts = append(bootTreePipeline.KernelOpts, "fips=1")
