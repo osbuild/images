@@ -32,6 +32,7 @@ func TestRegister(t *testing.T) {
 	testCases := []struct {
 		testName string
 
+		tags         []string
 		shareWith    []string
 		architecture arch.Arch
 		bootMode     *platform.BootMode
@@ -178,6 +179,12 @@ func TestRegister(t *testing.T) {
 			expectErr: true,
 			errMsg:    "modify image attribute error",
 		},
+		{
+			testName:     "set custom AWS tags",
+			architecture: arch.ARCH_X86_64,
+			tags:         []string{"Debug=True", "Production=False"},
+			expectErr:    false,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -222,7 +229,7 @@ func TestRegister(t *testing.T) {
 			awsClient := awscloud.NewAWSForTest(fec2, fs3, fs3u, nil)
 			require.NotNil(t, awsClient)
 
-			imageId, snapshotId, err := awsClient.Register(testImageName, testBucketName, testObjectName, tc.shareWith, tc.architecture, tc.bootMode, tc.importRole)
+			imageId, snapshotId, err := awsClient.Register(testImageName, testBucketName, testObjectName, tc.tags, tc.shareWith, tc.architecture, tc.bootMode, tc.importRole)
 
 			if tc.expectErr {
 				require.Error(t, err)
@@ -255,7 +262,11 @@ func TestRegister(t *testing.T) {
 			// the image and the snapshot are tagged with the same name
 			require.Len(t, fec2.createTagsCalls, 2)
 			for _, tagCalls := range fec2.createTagsCalls {
-				require.Len(t, tagCalls.Tags, 1)
+				if len(tc.tags) > 0 {
+					require.Len(t, tagCalls.Tags, 1+len(tc.tags))
+				} else {
+					require.Len(t, tagCalls.Tags, 1)
+				}
 				require.Equal(t, "Name", *tagCalls.Tags[0].Key)
 				require.Equal(t, testImageName, *tagCalls.Tags[0].Value)
 			}
