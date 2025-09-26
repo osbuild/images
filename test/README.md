@@ -9,9 +9,9 @@ sudo ./bin/build --output ./buildtest --rpmmd /tmp/rpmmd --distro fedora-41 --ty
 ```
 will build a Fedora 38 qcow2 image using the configuration specified in the file `embed-containers.json`
 
-- [./cmd/gen-manifests](../cmd/gen-manifests) generates manifests based on the configs specified in [./test/config-map.json](./config-map.json). The config map maps configuration files to image types, distributions, and architectures.  An empty list means it applies to all values.  Globs are supported.
+- [./cmd/gen-manifests](../cmd/gen-manifests) generates manifests based on the configs specified in [./test/config-list.json](./config-list.json). The config list maps configuration files to image types, distributions, and architectures.  An empty list means it applies to all values.  Globs are supported.
 
-The config map is also used in CI to dynamically generate test builds using the [./test/scripts/generate-build-config](./scripts/generate-build-config) and [./test/scripts/generate-ostree-build-config](./scripts/generate-ostree-build-config) scripts.
+The config list is also used in CI to dynamically generate test builds using the [./test/scripts/generate-build-config](./scripts/generate-build-config) and [./test/scripts/generate-ostree-build-config](./scripts/generate-ostree-build-config) scripts.
 
 - [./test/data/repositories/](./data/repositories/) contains repository configurations for manifest generation ([./cmd/gen-manifests](../cmd/gen-manifests)) and image building ([./cmd/build](../cmd/build)).
 
@@ -123,10 +123,10 @@ The config generator:
   - For example [iot-ostree-pull-empty](./configs/iot-ostree-pull-empty.json)) will cause a manifest to be generated for `iot-container` with the `empty` config for all distros.
 - Determines the container name and tag from the build name and manifest ID and pulls each container from the registry.
 - Runs each container with a unique port mapped to the internal web service port.
-- For each build config that defines a dependency and for each image that config applies to, creates build configs and a config map that defines the URL, port, and ref for the ostree commit source.
-  - For example, the config [iot-ostree-pull-empty](./configs/iot-ostree-pull-empty.json)) is mapped in the [config-map](config-map.json) to the image types `iot-ami`, `iot-installer`, `iot-raw-image`, and `iot-vsphere`. This will create four configs for each distro, one for each image type, that will all have ostree options to pull an ostree commit from an `iot-container` of the same distro.
-- Generates all the manifests defined in the config map that was generated in the previous step.
-  - Note that this manifest generation step uses the `-skip-noconfig` flag, which means that any image type not defined in the map is skipped.
+- For each build config that defines a dependency and for each image that config applies to, creates build configs and a config list that defines the URL, port, and ref for the ostree commit source.
+  - For example, the config [iot-ostree-pull-empty](./configs/iot-ostree-pull-empty.json)) is mapped in the [config-list](config-list.json) to the image types `iot-ami`, `iot-installer`, `iot-raw-image`, and `iot-vsphere`. This will create four configs for each distro, one for each image type, that will all have ostree options to pull an ostree commit from an `iot-container` of the same distro.
+- Generates all the manifests defined in the config list that was generated in the previous step.
+  - Note that this manifest generation step uses the `-skip-noconfig` flag, which means that any image type not defined in the list is skipped.
 - Downloads the test build cache.
 - Filters out any manifest with an ID that exists in the build cache.
 - For each remaining manifest, creates a job which builds, boots (if applicable), and uploads the results to the build cache for a given distro, image type, and config file.
