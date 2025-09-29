@@ -14,6 +14,7 @@ import (
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/bootc"
+	"github.com/osbuild/images/pkg/customizations/firstboot"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/customizations/shell"
@@ -167,6 +168,8 @@ type OSCustomizations struct {
 	Files []*fsnode.File
 
 	CACerts []string
+
+	Firstboot *firstboot.FirstbootOptions
 
 	FIPS bool
 
@@ -656,6 +659,24 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 
 	for _, dracutConfConfig := range p.OSCustomizations.DracutConf {
 		pipeline = prependStage(pipeline, osbuild.NewDracutConfStage(dracutConfConfig))
+	}
+
+	fbCerts, fbFiles, fbUnit, err := parse(p.OSCustomizations.Firstboot)
+	if err != nil {
+		panic(err)
+	}
+
+	if len(fbFiles) > 0 {
+		p.addStagesForAllFilesAndInlineData(&pipeline, fbFiles)
+	}
+
+	if len(fbCerts) > 0 {
+		p.OSCustomizations.CACerts = append(p.OSCustomizations.CACerts, fbCerts...)
+	}
+
+	if fbUnit != nil {
+		p.OSCustomizations.EnabledServices = append(p.OSCustomizations.EnabledServices, fbUnit.Filename)
+		p.OSCustomizations.SystemdUnit = append(p.OSCustomizations.SystemdUnit, fbUnit)
 	}
 
 	for _, systemdUnitConfig := range p.OSCustomizations.SystemdDropin {
