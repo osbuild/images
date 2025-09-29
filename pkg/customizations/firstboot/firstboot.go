@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
-	"strings"
-	"text/template"
 
 	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/pkg/shutil"
@@ -90,25 +88,6 @@ func (AAPFirstbootOptions) isFirstbootOption()       {}
 
 var ErrFirstbootAlreadySet = errors.New("firstboot customization already set")
 
-var tmplFirstbootAAP = `#!/usr/bin/bash
-curl -i --data {{ .HostConfigKey }} {{ .URL }}
-`
-
-func renderFirstboot(tmplStr string, data any) (string, error) {
-	tmpl, err := template.New("firstboot-unit").Parse(tmplStr)
-	if err != nil {
-		return "", fmt.Errorf("error parsing firstboot unit template: %w", err)
-	}
-
-	var result strings.Builder
-	err = tmpl.Execute(&result, data)
-	if err != nil {
-		return "", fmt.Errorf("error rendering firstboot unit: %w", err)
-	}
-
-	return result.String(), nil
-}
-
 // FirstbootOptionsFromBP converts a blueprint FirstbootCustomization to
 // FirstbootOptions. Validation is done in the blueprint package, so this function
 // assumes the input is valid, however, JSON unmarshalling errors are possible.
@@ -162,17 +141,10 @@ func FirstbootOptionsFromBP(bpFirstboot blueprint.FirstbootCustomization) (*Firs
 			}
 			aapDone = true
 
-			data := struct {
-				URL           string
-				HostConfigKey string
-			}{
-				URL:           shutil.Quote(aap.JobTemplateURL),
-				HostConfigKey: shutil.Quote("host_config_key=" + aap.HostConfigKey),
-			}
-			contents, err := renderFirstboot(tmplFirstbootAAP, data)
-			if err != nil {
-				return nil, err
-			}
+			contents := fmt.Sprintf("#!/usr/bin/bash\ncurl -i --data %s %s\n",
+				shutil.Quote("host_config_key="+aap.HostConfigKey),
+				shutil.Quote(aap.JobTemplateURL),
+			)
 
 			fo.Scripts = append(fo.Scripts, Script{
 				Filename:      nameFunc(aap.Name, "aap"),
