@@ -8,10 +8,12 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -38,6 +40,16 @@ import (
 	"github.com/osbuild/images/pkg/rpmmd"
 	testrepos "github.com/osbuild/images/test/data/repositories"
 )
+
+// panicError is a custom error type to wrap a panic and its stack trace.
+type panicError struct {
+	panic any
+	stack []byte
+}
+
+func (e *panicError) Error() string {
+	return fmt.Sprintf("panic: %v", e.panic)
+}
 
 type buildRequest struct {
 	Distro       string                   `json:"distro,omitempty"`
@@ -260,7 +272,10 @@ func makeManifestJob(
 		}()
 		defer func() {
 			if r := recover(); r != nil {
-				err = fmt.Errorf("[%s] failed with panic: %s", filename, r)
+				err = fmt.Errorf("[%s] failed: %w", filename, &panicError{
+					panic: r,
+					stack: debug.Stack(),
+				})
 			}
 		}()
 		msgq <- fmt.Sprintf("Starting job %s", filename)
@@ -660,10 +675,18 @@ func main() {
 	fmt.Println("done")
 	errs := wq.wait()
 	exit := 0
-	if len(errs) > 0 {
-		fmt.Fprintf(os.Stderr, "Encountered %d errors:\n", len(errs))
+	if nErrs := len(errs); nErrs > 0 {
+		fmt.Fprintf(os.Stderr, "Encountered %d errors:\n", nErrs)
+		var err1 *panicError
 		for idx, err := range errs {
 			fmt.Fprintf(os.Stderr, "%3d: %s\n", idx, err.Error())
+			if err1 == nil {
+				errors.As(err, &err1)
+			}
+		}
+
+		if err1 != nil {
+			fmt.Fprintf(os.Stderr, "\nStack trace of the first error:\n%s\n", err1.stack)
 		}
 		exit = 1
 	}
