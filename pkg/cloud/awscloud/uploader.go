@@ -21,7 +21,7 @@ type awsUploader struct {
 	region     string
 	bucketName string
 	imageName  string
-	tags       []string
+	tags       [][2]string
 	targetArch arch.Arch
 	bootMode   *platform.BootMode
 }
@@ -30,7 +30,7 @@ type UploaderOptions struct {
 	TargetArch arch.Arch
 	// BootMode to set for the AMI. If nil, no explicit boot mode will be set.
 	BootMode *platform.BootMode
-	Tags     []string
+	Tags     [][2]string
 }
 
 // testing support
@@ -39,7 +39,7 @@ type awsClient interface {
 	Buckets() ([]string, error)
 	CheckBucketPermission(string, s3types.Permission) (bool, error)
 	UploadFromReader(io.Reader, string, string) (*s3manager.UploadOutput, error)
-	Register(name, bucket, key string, tags []string, shareWith []string, architecture arch.Arch, bootMode *platform.BootMode, importRole *string) (string, string, error)
+	Register(name, bucket, key string, tags [][2]string, shareWith []string, architecture arch.Arch, bootMode *platform.BootMode, importRole *string) (string, string, error)
 	DeleteObject(string, string) error
 }
 
