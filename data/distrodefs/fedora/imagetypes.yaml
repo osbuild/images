@@ -527,7 +527,7 @@
           fstab_freq: 0
           fstab_passno: 2
       - &default_partition_table_part_boot
-        size: "1 GiB"
+        size: "2 GiB"
         type: *filesystem_data_guid
         uuid: *data_partition_uuid
         payload_type: "filesystem"
@@ -565,7 +565,7 @@
           fstab_freq: 0
           fstab_passno: 2
       - &iot_base_partition_table_part_boot
-        size: "1 GiB"
+        size: "2 GiB"
         type: *filesystem_data_guid
         uuid: *data_partition_uuid
         payload_type: "filesystem"
@@ -638,7 +638,7 @@
             bootable: true
             type: *prep_partition_dosid
           - &default_partition_table_part_boot_ppc64le
-            size: "1 GiB"
+            size: "2 GiB"
             payload_type: "filesystem"
             payload:
               type: "ext4"
@@ -718,7 +718,7 @@
         type: "gpt"
         partitions:
           - *iot_base_partition_table_part_efi
-          - size: "1 GiB"
+          - size: "2 GiB"
             type: *xboot_ldr_partition_guid
             uuid: *data_partition_uuid
             payload_type: "filesystem"
@@ -1304,7 +1304,7 @@ image_types:
     filename: "image.raw.xz"
     compression: "xz"
     mime_type: "application/xz"
-    default_size: 5_368_709_120  # 5 * datasizes.GibiByte
+    default_size: 6_442_450_944  # 6 * datasizes.GibiByte
     bootable: true
     image_func: "iot"
     ostree:
