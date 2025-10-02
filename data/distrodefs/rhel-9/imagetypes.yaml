@@ -413,7 +413,7 @@
           - key: "vm.max_map_count"
             value: "2147483647"
     dnf_config:
-      set_release_ver_var: true
+      set_releasever_var: true
 
   sap_image_config: &sap_image_config
     <<: *sapapps_image_config
@@ -1268,6 +1268,7 @@
       - "customizations.cacerts"
       - "customizations.directories"
       - "customizations.disk"
+      - "customizations.dnf"
       - "customizations.files"
       - "customizations.filesystem"
       - "customizations.partitioning_mode"
@@ -1295,6 +1296,7 @@
       - "enabled_modules"
       - "minimal"
       - "containers"
+      - "customizations.dnf"
       - "customizations.directories"
       - "customizations.files"
       - "customizations.fips"
@@ -1316,6 +1318,7 @@
       - "customizations.files"
       - "customizations.directories"
       - "customizations.disk"
+      - "customizations.dnf"
       - "customizations.filesystem"
       - "customizations.partitioning_mode"
       - "customizations.fips"
@@ -1803,6 +1806,7 @@ image_types:
       - "containers"
       - "enabled_modules"
       - "minimal"
+      - "customizations.dnf"
       - "customizations.cacerts"
       - "customizations.directories"
       - "customizations.files"
@@ -2215,6 +2219,7 @@ image_types:
       - "enabled_modules"
       - "minimal"
       - "containers"
+      - "customizations.dnf"
       - "customizations.directories"
       - "customizations.files"
       - "customizations.firewall"
@@ -2299,6 +2304,7 @@ image_types:
       - "enabled_modules"
       - "containers"
       - "minimal"
+      - "customizations.dnf"
       - "customizations.installer"
       - "customizations.cacerts"
       - "customizations.directories"
@@ -2353,9 +2359,9 @@ image_types:
         keymap: "us"
       dnf_config:
         options:
-          - config:
-              main:
-                ipresolve: "4"
+          config:
+            main:
+              ipresolve: "4"
       dnf_automatic_config:
         config:
           commands:
@@ -2994,6 +3000,7 @@ image_types:
                 <<: *edge_commit_aarch64_pkgset
     supported_blueprint_options:
       - "distro"
+      - "customizations.dnf"
       - "customizations.installation_device"
       - "customizations.filesystem"
       - "customizations.disk"
@@ -3177,6 +3184,7 @@ image_types:
       - "customizations.cacerts"
       - "customizations.directories"
       - "customizations.disk"
+      - "customizations.dnf"
       - "customizations.files"
       - "customizations.filesystem"
       - "customizations.partitioning_mode"
