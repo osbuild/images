@@ -246,12 +246,12 @@ func TestGenSourcesWithSkopeoIndex(t *testing.T) {
 }
 
 // TODO: move into a common "rpmtest" package
-var opensslPkg = rpmmd.PackageSpec{
-	Name:           "openssl-libs",
-	RemoteLocation: "https://example.com/repo/Packages/openssl-libs-3.0.1-5.el9.x86_64.rpm",
-	Checksum:       "sha256:fcf2515ec9115551c99d552da721803ecbca23b7ae5a974309975000e8bef666",
-	Path:           "Packages/openssl-libs-3.0.1-5.el9.x86_64.rpm",
-	RepoID:         "repo_id_metalink",
+var opensslPkg = rpmmd.Package{
+	Name:            "openssl-libs",
+	RemoteLocations: []string{"https://example.com/repo/Packages/openssl-libs-3.0.1-5.el9.x86_64.rpm"},
+	Checksum:        rpmmd.Checksum{Type: "sha256", Value: "fcf2515ec9115551c99d552da721803ecbca23b7ae5a974309975000e8bef666"},
+	Location:        "Packages/openssl-libs-3.0.1-5.el9.x86_64.rpm",
+	RepoID:          "repo_id_metalink",
 }
 
 var fakeRepos = []rpmmd.RepoConfig{
@@ -264,7 +264,7 @@ var fakeRepos = []rpmmd.RepoConfig{
 func TestGenSourcesRpmDefaultRpmDownloaderIsCurl(t *testing.T) {
 	inputs := SourceInputs{
 		Depsolved: depsolvednf.DepsolveResult{
-			Packages: []rpmmd.PackageSpec{opensslPkg},
+			Packages: rpmmd.PackageList{opensslPkg},
 			Repos:    fakeRepos,
 		},
 	}
@@ -279,7 +279,7 @@ func TestGenSourcesRpmDefaultRpmDownloaderIsCurl(t *testing.T) {
 func TestGenSourcesRpmWithLibcurl(t *testing.T) {
 	inputs := SourceInputs{
 		Depsolved: depsolvednf.DepsolveResult{
-			Packages: []rpmmd.PackageSpec{opensslPkg},
+			Packages: rpmmd.PackageList{opensslPkg},
 			Repos:    fakeRepos,
 		},
 	}
@@ -302,7 +302,7 @@ func TestGenSourcesRpmWithLibcurl(t *testing.T) {
 func TestGenSourcesRpmWithLibrepo(t *testing.T) {
 	inputs := SourceInputs{
 		Depsolved: depsolvednf.DepsolveResult{
-			Packages: []rpmmd.PackageSpec{opensslPkg},
+			Packages: rpmmd.PackageList{opensslPkg},
 			Repos:    fakeRepos,
 		},
 	}
@@ -334,7 +334,7 @@ func TestGenSourcesRpmWithLibrepo(t *testing.T) {
 func TestGenSourcesRpmBad(t *testing.T) {
 	inputs := SourceInputs{
 		Depsolved: depsolvednf.DepsolveResult{
-			Packages: []rpmmd.PackageSpec{opensslPkg},
+			Packages: rpmmd.PackageList{opensslPkg},
 			Repos:    fakeRepos,
 		},
 	}

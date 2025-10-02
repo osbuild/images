@@ -51,7 +51,7 @@ type AnacondaInstaller struct {
 
 	platform     platform.Platform
 	repos        []rpmmd.RepoConfig
-	packageSpecs []rpmmd.PackageSpec
+	packageSpecs rpmmd.PackageList
 	kernelName   string
 	kernelVer    string
 
@@ -182,7 +182,7 @@ func (p *AnacondaInstaller) getPackageSetChain(Distro) ([]rpmmd.PackageSet, erro
 	}, nil
 }
 
-func (p *AnacondaInstaller) getPackageSpecs() []rpmmd.PackageSpec {
+func (p *AnacondaInstaller) getPackageSpecs() rpmmd.PackageList {
 	return p.packageSpecs
 }
 
@@ -192,7 +192,7 @@ func (p *AnacondaInstaller) serializeStart(inputs Inputs) error {
 	}
 	p.packageSpecs = inputs.Depsolved.Packages
 	if p.kernelName != "" {
-		kernelPkg, err := rpmmd.GetPackage(p.packageSpecs, p.kernelName)
+		kernelPkg, err := p.packageSpecs.GetPackage(p.kernelName)
 		if err != nil {
 			return fmt.Errorf("AnacondaInstaller: %w", err)
 		}

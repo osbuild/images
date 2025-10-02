@@ -104,31 +104,34 @@ func TestDepsolve_Smoke(t *testing.T) {
 	result := manifestmock.Depsolve(packageSets, repos, arch)
 	assert.Equal(t, map[string]depsolvednf.DepsolveResult{
 		"build": depsolvednf.DepsolveResult{
-			Packages: []rpmmd.PackageSpec{
+			Packages: rpmmd.PackageList{
 				{
-					Name:           "inc1",
-					Version:        "6",
-					Release:        "2.fk1",
-					Arch:           "x86_64",
-					RemoteLocation: "https://example.com/repo/packages/inc1",
-					Checksum:       "sha256:ff49f5b2f0aded095860d2c231ace1047a84b11f55c10640c57ad62e1a51504f",
+					Name:            "inc1",
+					Epoch:           0,
+					Version:         "6",
+					Release:         "2.fk1",
+					Arch:            "x86_64",
+					RemoteLocations: []string{"https://example.com/repo/packages/inc1"},
+					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "ff49f5b2f0aded095860d2c231ace1047a84b11f55c10640c57ad62e1a51504f"},
 				},
 				{
-					Name:           "exclude:exc1",
-					Version:        "0",
-					Release:        "0",
-					Arch:           "noarch",
-					RemoteLocation: "https://example.com/repo/packages/exclude:exc1",
-					Checksum:       "sha256:ea431ebfa6a382e01751570ebfef3db0b8038f63a5dd63941ab6f624a40243c2",
+					Name:            "exclude:exc1",
+					Epoch:           0,
+					Version:         "0",
+					Release:         "0",
+					Arch:            "noarch",
+					RemoteLocations: []string{"https://example.com/repo/packages/exclude:exc1"},
+					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "ea431ebfa6a382e01751570ebfef3db0b8038f63a5dd63941ab6f624a40243c2"},
 				}, {
-					Name:           "build:transaction-0-repos:repo1-weak",
-					Arch:           "noarch",
-					RemoteLocation: "https://example.com/repo/packages/build:transaction-0-repos:repo1-weak",
-					Checksum:       "sha256:9df9e587e73cd4526ea565f0d05e077cefbd5f55e314862ac844a232f0d718c0",
+					Name:            "build:transaction-0-repos:repo1-weak",
+					Epoch:           0,
+					Arch:            "noarch",
+					RemoteLocations: []string{"https://example.com/repo/packages/build:transaction-0-repos:repo1-weak"},
+					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "9df9e587e73cd4526ea565f0d05e077cefbd5f55e314862ac844a232f0d718c0"},
 				}, {
-					Name:           "https://example.com/passed-arch:x86_64/passed-repo:/foo",
-					RemoteLocation: "https://example.com/passed-arch:x86_64/passed-repo:/foo",
-					Checksum:       "sha256:63c9a60a4f279e4825c170c3cd893560716635f84a9a71fb262a6206d59ca74d",
+					Name:            "https://example.com/passed-arch:x86_64/passed-repo:/foo",
+					RemoteLocations: []string{"https://example.com/passed-arch:x86_64/passed-repo:/foo"},
+					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "63c9a60a4f279e4825c170c3cd893560716635f84a9a71fb262a6206d59ca74d"},
 				},
 			},
 			Repos: []rpmmd.RepoConfig{

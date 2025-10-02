@@ -46,14 +46,14 @@ func TestDNF4VersionlockStageValidate(t *testing.T) {
 }
 
 func TestGenVersionlockStageOptions(t *testing.T) {
-	packages := []rpmmd.PackageSpec{
+	packages := rpmmd.PackageList{
 		{
 			Name:     "test-kernel",
 			Epoch:    0,
 			Version:  "13.3",
 			Release:  "7.el9",
 			Arch:     "x86_64",
-			Checksum: "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+			Checksum: rpmmd.Checksum{Type: "sha256", Value: "7777777777777777777777777777777777777777777777777777777777777777"},
 		},
 		{
 			Name:     "uki-direct",
@@ -61,7 +61,7 @@ func TestGenVersionlockStageOptions(t *testing.T) {
 			Version:  "25.11",
 			Release:  "1.el9",
 			Arch:     "noarch",
-			Checksum: "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+			Checksum: rpmmd.Checksum{Type: "sha256", Value: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
 		},
 		{
 			Name:     "shim-x64",
@@ -69,7 +69,7 @@ func TestGenVersionlockStageOptions(t *testing.T) {
 			Version:  "15.8",
 			Release:  "3",
 			Arch:     "x86_64",
-			Checksum: "sha256:aae94b3b8451ef28b02594d9abca5979e153c14f4db25283b011403fa92254fd",
+			Checksum: rpmmd.Checksum{Type: "sha256", Value: "aae94b3b8451ef28b02594d9abca5979e153c14f4db25283b011403fa92254fd"},
 		},
 		{
 			Name:     "pkg42",
@@ -77,21 +77,21 @@ func TestGenVersionlockStageOptions(t *testing.T) {
 			Version:  "42.13",
 			Release:  "9",
 			Arch:     "x86_64",
-			Checksum: "sha256:4242424242424242424242424242424242424242424242424242424242424242",
+			Checksum: rpmmd.Checksum{Type: "sha256", Value: "4242424242424242424242424242424242424242424242424242424242424242"},
 		},
 		{
 			Name:     "dnf",
 			Version:  "4.14.0",
 			Release:  "29.el9",
 			Arch:     "noarch",
-			Checksum: "sha256:72874726d1a16651933e382a4f4683046efd4b278830ad564932ce481ab8b9eb",
+			Checksum: rpmmd.Checksum{Type: "sha256", Value: "72874726d1a16651933e382a4f4683046efd4b278830ad564932ce481ab8b9eb"},
 		},
 		{
 			Name:     "python3-dnf-plugin-versionlock",
 			Version:  "4.3.0",
 			Release:  "21.el9",
 			Arch:     "noarch",
-			Checksum: "sha256:e14c57f7d0011ea378e4319bbc523000d0e7be4d35b6af7177aa6246c5aaa9ef",
+			Checksum: rpmmd.Checksum{Type: "sha256", Value: "e14c57f7d0011ea378e4319bbc523000d0e7be4d35b6af7177aa6246c5aaa9ef"},
 		},
 	}
 
@@ -141,32 +141,34 @@ func TestGenVersionlockStageOptions(t *testing.T) {
 }
 
 func TestGenVersionlockStageOptionsError(t *testing.T) {
-	dnfPkg := rpmmd.PackageSpec{
+	dnfPkg := rpmmd.Package{
 		Name:     "dnf",
+		Epoch:    0,
 		Version:  "4.14.0",
 		Release:  "29.el9",
 		Arch:     "noarch",
-		Checksum: "sha256:72874726d1a16651933e382a4f4683046efd4b278830ad564932ce481ab8b9eb",
+		Checksum: rpmmd.Checksum{Type: "sha256", Value: "72874726d1a16651933e382a4f4683046efd4b278830ad564932ce481ab8b9eb"},
 	}
-	pluginPkg := rpmmd.PackageSpec{
+	pluginPkg := rpmmd.Package{
 		Name:     "python3-dnf-plugin-versionlock",
+		Epoch:    0,
 		Version:  "4.3.0",
 		Release:  "21.el9",
 		Arch:     "noarch",
-		Checksum: "sha256:e14c57f7d0011ea378e4319bbc523000d0e7be4d35b6af7177aa6246c5aaa9ef",
+		Checksum: rpmmd.Checksum{Type: "sha256", Value: "e14c57f7d0011ea378e4319bbc523000d0e7be4d35b6af7177aa6246c5aaa9ef"},
 	}
-	fakePkg := rpmmd.PackageSpec{
+	fakePkg := rpmmd.Package{
 		Name:     "pkg42",
 		Epoch:    7,
 		Version:  "42.13",
 		Release:  "9",
 		Arch:     "x86_64",
-		Checksum: "sha256:4242424242424242424242424242424242424242424242424242424242424242",
+		Checksum: rpmmd.Checksum{Type: "sha256", Value: "4242424242424242424242424242424242424242424242424242424242424242"},
 	}
 
 	type testCase struct {
 		packageNames []string
-		packageSpecs []rpmmd.PackageSpec
+		packageSpecs rpmmd.PackageList
 		expErr       string
 	}
 
@@ -175,7 +177,7 @@ func TestGenVersionlockStageOptionsError(t *testing.T) {
 			packageNames: []string{
 				"not-a-package",
 			},
-			packageSpecs: []rpmmd.PackageSpec{
+			packageSpecs: rpmmd.PackageList{
 				fakePkg,
 				dnfPkg,
 				pluginPkg,
@@ -187,7 +189,7 @@ func TestGenVersionlockStageOptionsError(t *testing.T) {
 				fakePkg.Name,
 				"not-a-package",
 			},
-			packageSpecs: []rpmmd.PackageSpec{
+			packageSpecs: rpmmd.PackageList{
 				fakePkg,
 				dnfPkg,
 				pluginPkg,
@@ -198,21 +200,21 @@ func TestGenVersionlockStageOptionsError(t *testing.T) {
 			packageNames: []string{
 				fakePkg.Name,
 			},
-			packageSpecs: []rpmmd.PackageSpec{
+			packageSpecs: rpmmd.PackageList{
 				fakePkg,
 				pluginPkg,
 			},
-			expErr: `org.osbuild.dnf4.versionlock: dnf version locking enabled for an image that does not contain dnf: package "dnf" not found in the PackageSpec list`,
+			expErr: `org.osbuild.dnf4.versionlock: dnf version locking enabled for an image that does not contain dnf: package "dnf" not found in the Package list`,
 		},
 		"noplugin": {
 			packageNames: []string{
 				fakePkg.Name,
 			},
-			packageSpecs: []rpmmd.PackageSpec{
+			packageSpecs: rpmmd.PackageList{
 				fakePkg,
 				dnfPkg,
 			},
-			expErr: `org.osbuild.dnf4.versionlock: dnf version locking enabled for an image that does not contain the versionlock plugin: package "python3-dnf-plugin-versionlock" not found in the PackageSpec list`,
+			expErr: `org.osbuild.dnf4.versionlock: dnf version locking enabled for an image that does not contain the versionlock plugin: package "python3-dnf-plugin-versionlock" not found in the Package list`,
 		},
 	}
 
