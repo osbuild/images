@@ -28,9 +28,9 @@ build/{distro}/{arch}/{image_type}/{config_name}:
 """
 
 
-def read_config_map():
-    with open(testlib.CONFIG_MAP, "r", encoding="utf-8") as config_map_file:
-        return json.load(config_map_file)
+def read_config_list():
+    with open(testlib.CONFIG_LIST, "r", encoding="utf-8") as config_list_file:
+        return json.load(config_list_file)
 
 
 def matches(name: str, filters: list[str]) -> bool:
@@ -39,14 +39,16 @@ def matches(name: str, filters: list[str]) -> bool:
 
 def configs_with_deps(configs, distro=None, arch=None):
     """
-    Return a config map with only the config files that have dependencies.
+    Return a config list with only the config files that have dependencies.
     Filter on distro and arch if specified.
     """
-    with_deps: dict[str, str] = {}
-    config_map_dir = os.path.abspath(os.path.dirname(testlib.CONFIG_MAP))
-    for path, filters in configs.items():
+    with_deps = []
+    config_list_dir = os.path.abspath(os.path.dirname(testlib.CONFIG_LIST))
+    for item in configs:
+        path = item["path"]
+        filters = item["filters"]
         # load config and check if it requires a commit
-        config_path = os.path.join(config_map_dir, path)
+        config_path = os.path.join(config_list_dir, path)
         with open(config_path, "r", encoding="utf-8") as config_file:
             data = json.load(config_file)
         if not data.get("depends"):
@@ -60,16 +62,16 @@ def configs_with_deps(configs, distro=None, arch=None):
         if arch_filters and arch and not matches(arch, arch_filters):
             continue
 
-        with_deps[config_path] = filters
+        with_deps.append({"path": config_path, "filters": filters})
 
     return with_deps
 
 
-def gen_dependency_manifests(config_map, distro, arch, outputdir):
+def gen_dependency_manifests(config_list, distro, arch, outputdir):
     """
-    Generate manifests for the dependencies of the configs in config map. The function generates a temporary config map
-    that maps each config that appears in a dependency to the dependency image type and runs gen-manifests with that
-    config map.
+    Generate manifests for the dependencies of the configs in config list. The function generates a temporary config
+    list that maps each config that appears in a dependency to the dependency image type and runs gen-manifests with
+    that config list.
 
     Returns a dictionary mapping manifest file name (without path) to the manifest data and its ID.
     """
@@ -80,11 +82,12 @@ def gen_dependency_manifests(config_map, distro, arch, outputdir):
         distros = [distro]
 
     print(f"🗒️ Generating manifests for dependencies for {target}")
-    dep_config_map: dict = {}  # config map for the dependencies
+    dep_config_list: list = []  # config list for the dependencies
     gen_image_types = set()  # set of all the image types to generate manifests for
 
-    # generate a config map for the dependencies
-    for config_path in config_map.keys():
+    # generate a config list for the dependencies
+    for item in config_list:
+        config_path = item["path"]
         with open(config_path, encoding="utf-8") as config_file:
             cfg = json.load(config_file)
 
@@ -95,16 +98,14 @@ def gen_dependency_manifests(config_map, distro, arch, outputdir):
         configs_dir = os.path.abspath(os.path.dirname(config_path))
         dep_config_path = os.path.join(configs_dir, dep["config"])
 
-        dep_image_types = dep_config_map.get(dep_config_path, {}).get("image-types", [])
-        dep_image_types.append(image_type)
-        dep_config_map[dep_config_path] = {"image-types": dep_image_types}
+        dep_config_list.append({"path": dep_config_path, "filters": {"image-types": [image_type]}})
         gen_image_types.add(image_type)
 
     # write dependency configs to temporary file and use as input to gen-manifests
     with NamedTemporaryFile(mode="w") as tmpfile:
-        json.dump(dep_config_map, tmpfile)
+        json.dump(dep_config_list, tmpfile)
         tmpfile.flush()
-        err = testlib.gen_manifests(outputdir, config_map=tmpfile.name,
+        err = testlib.gen_manifests(outputdir, config_list=tmpfile.name,
                                     distros=distros, arches=[arch], images=gen_image_types)
     # print stderr in case there were errors or warnings about skipped configurations
     # but filter out the annoying ones
@@ -120,11 +121,11 @@ def gen_dependency_manifests(config_map, distro, arch, outputdir):
     return testlib.read_manifests(outputdir)
 
 
-def gen_image_manifests(config_map, configs, distro, arch, outputdir):
+def gen_image_manifests(config_list, configs, distro, arch, outputdir):
     """
-    Write the config map and configs to a temporary directory and generate the corresponding manifests in the output
+    Write the config list and configs to a temporary directory and generate the corresponding manifests in the output
     directory. The manifest generation skips any distro + arch + image-type configuration that isn't covered by the
-    config map.
+    config list.
 
     Returns a dictionary mapping manifest file name (without path) to the manifest data and its ID.
     """
@@ -141,12 +142,12 @@ def gen_image_manifests(config_map, configs, distro, arch, outputdir):
             with open(os.path.join(tmpdir, config["name"] + ".json"), "w", encoding="utf-8") as config_file:
                 json.dump(config, config_file)
 
-        # write config map in the same dir
-        config_map_path = os.path.join(tmpdir, "config-map.json")
-        with open(config_map_path, "w", encoding="utf-8") as config_map_file:
-            json.dump(config_map, config_map_file)
+        # write config list in the same dir
+        config_list_path = os.path.join(tmpdir, "config-list.json")
+        with open(config_list_path, "w", encoding="utf-8") as config_list_file:
+            json.dump(config_list, config_list_file)
 
-        err = testlib.gen_manifests(outputdir, config_map=config_map_path,
+        err = testlib.gen_manifests(outputdir, config_list=config_list_path,
                                     arches=[arch], distros=distros, commits=True, skip_no_config=True)
 
     # print stderr in case there were errors or warnings about skipped configurations
@@ -180,23 +181,25 @@ def default_ref(distro, arch):
 
 
 @contextmanager
-def setup_dependencies(manifests, config_map, distro, arch):
+def setup_dependencies(manifests, config_list, distro, arch):
     # pylint: disable=too-many-statements
     """
-    For each config in the config map, list all image configurations (distro, arch, image type) that it applies to and
+    For each config in the config list, list all image configurations (distro, arch, image type) that it applies to and
     use the manifests to find the corresponding manifest IDs. Pull and run the corresponding dependency container from
-    the registry and write a new config (and config map) that replaces the ostree options with the container URL and
+    the registry and write a new config (and config list) that replaces the ostree options with the container URL and
     port.
-    The config map and configs that function yields can be used to generate manifests with ostree commits resolved.
+    The config list and configs that function yields can be used to generate manifests with ostree commits resolved.
     The containers are stopped when the context exits.
     """
     container_ids = []
-    new_config_map: dict[str, dict] = {}
+    new_config_list: list = []
     new_configs = {}
     container_configs = {}
 
     container_ports: dict[str, int] = {}
-    for config_path, filters in config_map.items():
+    for item in config_list:
+        config_path = item["path"]
+        filters = item["filters"]
         with open(config_path, encoding="utf-8") as config_file:
             config_data = json.load(config_file)
         config_name = config_data["name"]
@@ -239,7 +242,7 @@ def setup_dependencies(manifests, config_map, distro, arch):
             port = container_ports.get(container_s3_path)
             if not port:
                 # Pulling and launching the container will fail if the specific container config was never built.  This
-                # can happen if a dependency is specified that does not exist in the config-map.
+                # can happen if a dependency is specified that does not exist in the config-list.
                 port = 42000 + len(container_ports)
                 container_ports[container_s3_path] = port
 
@@ -266,11 +269,14 @@ def setup_dependencies(manifests, config_map, distro, arch):
             }
 
             config_fname = config_name + ".json"
-            new_filters = new_config_map.get(config_fname, {"distros": [], "arches": [], "image-types": []})
-            new_filters["distros"].append(ic_distro)
-            new_filters["arches"].append(ic_arch)
-            new_filters["image-types"].append(ic_image_type)
-            new_config_map[config_fname] = new_filters
+            new_config_list.append({
+                "path": config_fname,
+                "filters": {
+                    "distros": [ic_distro],
+                    "arches": [ic_arch],
+                    "image-types": [ic_image_type],
+                },
+            })
 
     try:
         for container_s3_path, port in container_ports.items():
@@ -285,7 +291,7 @@ def setup_dependencies(manifests, config_map, distro, arch):
                                              f"oci-archive:{container_archive}"])
                 container_ids.append(cont_id.strip().decode())
 
-        yield new_config_map, new_configs, container_configs
+        yield new_config_list, new_configs, container_configs
     finally:
         if container_ids:
             print("📦 Stopping containers")
@@ -342,15 +348,16 @@ def main():
 
     testlib.check_config_names()
 
-    config_map = configs_with_deps(read_config_map(), distro, arch)  # filtered config map: only configs with deps
+    config_list = configs_with_deps(read_config_list(), distro, arch)  # filtered config list: only configs with deps
 
     with TemporaryDirectory() as cache_root:
         dep_manifest_dir = os.path.join(cache_root, "dependencies")
-        dep_manifests = gen_dependency_manifests(config_map, distro, arch, dep_manifest_dir)
+        dep_manifests = gen_dependency_manifests(config_list, distro, arch, dep_manifest_dir)
 
-        with setup_dependencies(dep_manifests, config_map, distro, arch) as (pull_config_map, pull_configs, containers):
+        with setup_dependencies(dep_manifests, config_list, distro, arch) as \
+                (pull_config_list, pull_configs, containers):
             manifest_dir = os.path.join(cache_root, "manifests")
-            manifests = gen_image_manifests(pull_config_map, pull_configs, distro, arch, manifest_dir)
+            manifests = gen_image_manifests(pull_config_list, pull_configs, distro, arch, manifest_dir)
 
         build_requests = testlib.filter_builds(manifests, distro=distro, arch=arch, skip_ostree_pull=False)
 

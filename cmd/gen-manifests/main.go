@@ -1,7 +1,7 @@
 // Standalone executable for generating all test manifests in parallel.
 // Collects list of image types from the distro list.  Must be run from the
 // root of the repository and reads test/data/repositories for repositories
-// test/config-map.json to match image types with configuration files.
+// test/config-list.json to match image types with configuration files.
 // Collects errors and failures and prints them after all jobs are finished.
 package main
 
@@ -142,24 +142,31 @@ func (bc BuildConfigs) Get(distro, arch, imageType string) []*buildconfig.BuildC
 	return configs
 }
 
-func loadConfigMap(configPath string, opts *buildconfig.Options) *BuildConfigs {
+func loadConfigList(configPath string, opts *buildconfig.Options) *BuildConfigs {
+
 	type configFilters struct {
 		ImageTypes  []string     `json:"image-types"`
 		Distros     []string     `json:"distros"`
 		SkipDistros []skipDistro `json:"skip-distros"`
 		Arches      []string     `json:"arches"`
 	}
-	type configMap map[string]configFilters
+
+	type configItem struct {
+		Path    string        `json:"path"`
+		Filters configFilters `json:"filters"`
+	}
+
+	type configList []configItem
 
 	fp, err := os.Open(configPath)
 	if err != nil {
-		panic(fmt.Sprintf("failed to open config map %q: %s", configPath, err.Error()))
+		panic(fmt.Sprintf("failed to open config list %q: %s", configPath, err.Error()))
 	}
 	defer fp.Close()
 
-	var cfgMap configMap
-	if err := json.NewDecoder(fp).Decode(&cfgMap); err != nil {
-		panic(fmt.Sprintf("failed to unmarshal config map %q: %s", configPath, err.Error()))
+	var cfgList configList
+	if err := json.NewDecoder(fp).Decode(&cfgList); err != nil {
+		panic(fmt.Sprintf("failed to unmarshal config list %q: %s", configPath, err.Error()))
 	}
 
 	emptyFallback := func(list []string) []string {
@@ -173,8 +180,10 @@ func loadConfigMap(configPath string, opts *buildconfig.Options) *BuildConfigs {
 
 	// load each config from its path
 	cm := newBuildConfigs()
-	for path, filters := range cfgMap {
-		// config paths can be relative to the location of the config map
+	for _, cfgItem := range cfgList {
+		// config paths can be relative to the location of the config list
+		path := cfgItem.Path
+		filters := cfgItem.Filters
 		if !filepath.IsAbs(path) {
 			cfgDir := filepath.Dir(configPath)
 			path = filepath.Join(cfgDir, path)
@@ -199,8 +208,8 @@ func loadConfigMap(configPath string, opts *buildconfig.Options) *BuildConfigs {
 }
 
 // loadImgConfig loads a single image config from a file and returns a
-// a BuildConfigs map with the config mapped to all distros, arches, and
-// image types.
+// BuildConfigs map with the config mapped to all distros, arches, and image
+// types.
 func loadImgConfig(configPath string, opts *buildconfig.Options) *BuildConfigs {
 	cm := newBuildConfigs()
 	config, err := buildconfig.New(configPath, opts)
@@ -408,8 +417,8 @@ func main() {
 	flag.IntVar(&nWorkers, "workers", 16, "number of workers to run concurrently")
 	flag.StringVar(&cacheRoot, "cache", "/tmp/rpmmd", "rpm metadata cache directory")
 	flag.BoolVar(&metadata, "metadata", true, "store metadata in the file")
-	flag.StringVar(&configPath, "config", "", "image config file to use for all images (overrides -config-map)")
-	flag.StringVar(&configMapPath, "config-map", "test/config-map.json", "configuration file mapping image types to configs")
+	flag.StringVar(&configPath, "config", "", "image config file to use for all images (overrides -config-list)")
+	flag.StringVar(&configMapPath, "config-list", "test/config-list.json", "configuration file mapping image types to configs")
 	flag.BoolVar(&skipNoconfig, "skip-noconfig", false, "skip distro-arch-image configurations that have no config (otherwise fail)")
 	flag.BoolVar(&skipNorepos, "skip-norepos", false, "skip distro-arch-image configurations that have no repositories (otherwise fail)")
 	flag.BoolVar(&buildconfigAllowUnknown, "buildconfig-allow-unknown", false, "allow unknown keys in buildconfig")
@@ -447,10 +456,10 @@ func main() {
 	var configs *BuildConfigs
 	opts := &buildconfig.Options{AllowUnknownFields: buildconfigAllowUnknown}
 	if configPath != "" {
-		fmt.Println("'-config' was provided, thus ignoring '-config-map' option")
+		fmt.Println("'-config' was provided, thus ignoring '-config-list' option")
 		configs = loadImgConfig(configPath, opts)
 	} else {
-		configs = loadConfigMap(configMapPath, opts)
+		configs = loadConfigList(configMapPath, opts)
 	}
 
 	if err := os.MkdirAll(outputDir, 0770); err != nil {
