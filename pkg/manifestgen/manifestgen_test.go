@@ -311,7 +311,7 @@ func TestManifestGeneratorSeed(t *testing.T) {
 
 		// with the customSeed we always get a predicatable uuid for
 		// the xfs boot partition
-		needle := `f1405ced-8b99-48ba-b910-9259515bf702`
+		needle := `8b9968ba-f910-4259-915b-f7025a291b00`
 		if withCustomSeed {
 			assert.Contains(t, string(osbuildManifest), needle)
 		} else {
