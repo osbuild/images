@@ -1304,6 +1304,12 @@ func NewCustomPartitionTable(customizations *blueprint.DiskCustomization, option
 	if customizations == nil {
 		customizations = &blueprint.DiskCustomization{}
 	}
+	if customizations.BootMode != "" {
+		bootMode, ok := platform.BootModeMap[customizations.BootMode]
+		if ok {
+			options.BootMode = bootMode
+		}
+	}
 
 	errPrefix := "error generating partition table:"
 

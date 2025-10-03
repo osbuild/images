@@ -144,13 +144,23 @@ func (t *BootcImageType) genPartitionTableDiskCust(basept *disk.PartitionTable, 
 	if err != nil {
 		return nil, err
 	}
+
+	// XXX: not setting/defaults will fail to boot with btrfs/lvm
+	bootMode := platform.BOOT_HYBRID
+
+	if diskCust.BootMode != "" {
+		customMode, ok := platform.BootModeMap[diskCust.BootMode]
+		if ok {
+			bootMode = customMode
+		}
+	}
+
 	partOptions := &disk.CustomPartitionTableOptions{
 		PartitionTableType: basept.Type,
-		// XXX: not setting/defaults will fail to boot with btrfs/lvm
-		BootMode:         platform.BOOT_HYBRID,
-		DefaultFSType:    defaultFSType,
-		RequiredMinSizes: requiredMinSizes,
-		Architecture:     t.arch.arch,
+		BootMode:           bootMode,
+		DefaultFSType:      defaultFSType,
+		RequiredMinSizes:   requiredMinSizes,
+		Architecture:       t.arch.arch,
 	}
 	return disk.NewCustomPartitionTable(diskCust, partOptions, rng)
 }

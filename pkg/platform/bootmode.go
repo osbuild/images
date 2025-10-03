@@ -23,3 +23,12 @@ func (m BootMode) String() string {
 		panic("invalid boot mode")
 	}
 }
+
+var BootModeMap = make(map[string]BootMode)
+
+func init() {
+	BootModeMap["none"] = BOOT_NONE
+	BootModeMap["legacy"] = BOOT_LEGACY
+	BootModeMap["uefi"] = BOOT_UEFI
+	BootModeMap["hybrid"] = BOOT_HYBRID
+}
