@@ -1398,7 +1398,7 @@ image_types:
     image_func: "disk"
     exports: ["image"]
     bootable: true
-    default_size: 10_737_418_240  # 10 * datasizes.GibiByte
+    default_size: "10 GiB"
     required_partition_sizes: *default_required_dir_sizes
     platforms:
       - <<: *x86_64_bios_platform
@@ -1548,7 +1548,7 @@ image_types:
     # note that unlike fedora rhel does not use the environment.KVM
     # for unknown reasons
     bootable: true
-    default_size: 10_737_418_240  # 10 * datasizes.GibiByte
+    default_size: "10 GiB"
     image_func: "disk"
     exports: ["qcow2"]
     required_partition_sizes: *default_required_dir_sizes
@@ -1596,7 +1596,7 @@ image_types:
     filename: "disk.vhd"
     mime_type: "application/x-vhd"
     image_func: "disk"
-    default_size: 4_294_967_296  # 4 * datasizes.GibiByte
+    default_size: "4 GiB"
     exports: ["vpc"]
     bootable: true
     # note that unlike fedora no "environment.Azure" is used here for
@@ -1756,7 +1756,7 @@ image_types:
     filename: "disk.vhd.xz"
     mime_type: "application/xz"
     image_func: "disk"
-    default_size: 68_719_476_736  # 64 * datasizes.GibiByte
+    default_size: "64 GiB"
     exports: ["xz"]
     compression: "xz"
     bootable: true
@@ -2248,7 +2248,7 @@ image_types:
     filename: "image.raw.xz"
     compression: "xz"
     mime_type: "application/xz"
-    default_size: 10_737_418_240  # 10 * datasizes.GibiByte
+    default_size: "10 GiB"
     rpm_ostree: true
     bootable: true
     image_func: "iot"
@@ -2285,7 +2285,7 @@ image_types:
     use_syslinux: true
     # NOTE: RHEL 8 only supports the older Anaconda configs
     use_legacy_anaconda_config: true
-    default_size: 10_737_418_240  # 10 * datasizes.GibiByte
+    default_size: "10 GiB"
     image_func: "iot_simplified_installer"
     iso_label: "edge"
     variant: "edge"
@@ -2415,7 +2415,7 @@ image_types:
     filename: "disk.vmdk"
     mime_type: "application/x-vmdk"
     bootable: true
-    default_size: 4_294_967_296  # 4 * datasizes.GibiByte
+    default_size: "4 GiB"
     image_func: "disk"
     exports: ["vmdk"]
     required_partition_sizes: *default_required_dir_sizes
@@ -2463,7 +2463,7 @@ image_types:
     image_func: "disk"
     exports: ["archive"]
     bootable: true
-    default_size: 21_474_836_480  # 20 * datasizes.GibiByte
+    default_size: "20 GiB"
     # The configuration for non-RHUI images does not touch the RHSM configuration at all.
     # https://issues.redhat.com/browse/COMPOSER-2157
     image_config: &gce_image_config
@@ -2600,7 +2600,7 @@ image_types:
     # we have to reset the aliases otherwise this type
     # will inherit the name aliases causing a conflict
     name_aliases: []
-    default_size: 4_294_967_296  # 4 * datasizes.GibiByte
+    default_size: "4 GiB"
     image_config:
       kernel_options:
         - "ro"
@@ -2773,7 +2773,7 @@ image_types:
     mime_type: "application/xz"
     compression: "xz"
     bootable: true
-    default_size: 2_147_483_648  # 2 * datasizes.GibiByte
+    default_size: "2 GiB"
     image_func: "disk"
     exports: ["xz"]
     required_partition_sizes: *default_required_dir_sizes

@@ -871,7 +871,7 @@ image_types:
     mime_type: "application/x-tar"
     environment: *kvm_env
     bootable: true
-    default_size: 5_368_709_120  # 5 * datasizes.GibiByte
+    default_size: "5 GiB"
     image_func: "disk"
     exports: ["archive"]
     required_partition_sizes: *default_required_dir_sizes
@@ -932,7 +932,7 @@ image_types:
     mime_type: "application/x-qemu-disk"
     environment: *kvm_env
     bootable: true
-    default_size: 5_368_709_120  # 5 * datasizes.GibiByte
+    default_size: "5 GiB"
     image_func: "disk"
     exports: ["qcow2"]
     required_partition_sizes: *default_required_dir_sizes
@@ -1032,7 +1032,7 @@ image_types:
     filename: "disk.vmdk"
     mime_type: "application/x-vmdk"
     bootable: true
-    default_size: 2_147_483_648  # 2 * datasizes.GibiByte
+    default_size: "2 GiB"
     image_func: "disk"
     exports: ["vmdk"]
     required_partition_sizes: *default_required_dir_sizes
@@ -1281,7 +1281,7 @@ image_types:
     filename: "image.raw.xz"
     compression: "xz"
     mime_type: "application/xz"
-    default_size: 6_442_450_944  # 6 * datasizes.GibiByte
+    default_size: "6 GiB"
     bootable: true
     image_func: "iot"
     ostree:
@@ -1359,7 +1359,7 @@ image_types:
     name_aliases: ["iot-qcow2-image"]
     filename: "image.qcow2"
     mime_type: "application/x-qemu-disk"
-    default_size: 10_737_418_240  # 10 * datasizes.GibiByte
+    default_size: "10 GiB"
     bootable: true
     image_func: "iot"
     ostree:
@@ -1535,7 +1535,7 @@ image_types:
     compression: "xz"
     mime_type: "application/xz"
     bootable: true
-    default_size: 2_147_483_648  # 2 * datasizes.GibiByte
+    default_size: "2 GiB"
     image_func: "disk"
     exports: ["xz"]
     required_partition_sizes: *default_required_dir_sizes
@@ -2013,7 +2013,7 @@ image_types:
     mime_type: "application/x-iso9660-image"
     bootable: true
     boot_iso: true
-    default_size: 10_737_418_240  # 10 * datasizes.GibiByte
+    default_size: "10 GiB"
     image_func: "iot_simplified_installer"
     iso_label: "IoT"
     variant: "IoT"

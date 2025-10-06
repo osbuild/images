@@ -262,7 +262,7 @@ image_types:
     filename: "disk.vhd.xz"
     mime_type: "application/xz"
     image_func: "disk"
-    default_size: 68_719_476_736  # 64 * datasizes.GibiByte
+    default_size: "64 GiB"
     exports: ["xz"]
     compression: "xz"
     bootable: true
@@ -422,7 +422,7 @@ image_types:
     exports: ["xz"]
     compression: "xz"
     bootable: true
-    default_size: 10_737_418_240  # 10 * datasizes.GibiByte
+    default_size: "10 GiB"
     required_partition_sizes: *default_required_dir_sizes
     platforms:
       - <<: *x86_64_bios_platform
@@ -573,7 +573,7 @@ image_types:
     filename: "disk.qcow2"
     mime_type: "application/x-qemu-disk"
     bootable: true
-    default_size: 10_737_418_240  # 10 * datasizes.GibiByte
+    default_size: "10 GiB"
     image_func: "disk"
     exports: ["qcow2"]
     required_partition_sizes: *default_required_dir_sizes

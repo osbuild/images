@@ -19,6 +19,7 @@ import (
 	"github.com/osbuild/images/internal/environment"
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/customizations/oscap"
+	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/disk/partition"
 	"github.com/osbuild/images/pkg/distro"
@@ -372,7 +373,7 @@ type ImageTypeYAML struct {
 	// XXX: rhel-8 uses this
 	UseOstreeRemotes bool `yaml:"use_ostree_remotes"`
 
-	DefaultSize uint64 `yaml:"default_size"`
+	DefaultSize datasizes.Size `yaml:"default_size"`
 	// the image func name: disk,container,live-installer,...
 	Image                  string            `yaml:"image_func"`
 	Exports                []string          `yaml:"exports"`
