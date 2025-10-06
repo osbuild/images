@@ -123,7 +123,7 @@ func (t *imageType) Size(size uint64) uint64 {
 		size = (size/datasizes.MebiByte + 1) * datasizes.MebiByte
 	}
 	if size == 0 {
-		size = t.ImageTypeYAML.DefaultSize
+		size = t.ImageTypeYAML.DefaultSize.Uint64()
 	}
 	return size
 }

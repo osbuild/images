@@ -775,7 +775,7 @@ image_types:
 	assert.Equal(t, true, imgType.BootISO)
 	assert.Equal(t, false, imgType.RPMOSTree)
 	assert.Equal(t, "Workstation", imgType.ISOLabel)
-	assert.Equal(t, uint64(5*datasizes.GibiByte), imgType.DefaultSize)
+	assert.Equal(t, datasizes.Size(5*datasizes.GibiByte), imgType.DefaultSize)
 	assert.Equal(t, "disk", imgType.Image)
 	assert.Equal(t, []string{"qcow2"}, imgType.Exports)
 	assert.Equal(t, map[string]uint64{"/": 1_073_741_824}, imgType.RequiredPartitionSizes)

@@ -1435,7 +1435,7 @@ image_types:
     # note that unlike fedora rhel does not use the environment.KVM
     # for unknown reasons
     bootable: true
-    default_size: 10_737_418_240  # 10 * datasizes.GibiByte
+    default_size: "10 GiB"
     image_func: "disk"
     exports: ["qcow2"]
     required_partition_sizes: *default_required_dir_sizes
@@ -1546,7 +1546,7 @@ image_types:
     filename: "vagrant-libvirt.box"
     mime_type: "application/x-tar"
     bootable: true
-    default_size: 10_737_418_240  # 10 * datasizes.GibiByte
+    default_size: "10 GiB"
     image_func: "disk"
     exports: ["archive"]
     required_partition_sizes: *default_required_dir_sizes
@@ -1598,7 +1598,7 @@ image_types:
     name_aliases: []
     filename: "disk.vhd"
     mime_type: "application/x-vhd"
-    default_size: 4_294_967_296  # 4 * datasizes.GibiByte
+    default_size: "4 GiB"
     exports: ["vpc"]
     platforms:
       - <<: *x86_64_bios_platform
@@ -1823,7 +1823,7 @@ image_types:
     filename: "disk.vmdk"
     mime_type: "application/x-vmdk"
     bootable: true
-    default_size: 4_294_967_296  # 4 * datasizes.GibiByte
+    default_size: "4 GiB"
     image_func: "disk"
     exports: ["vmdk"]
     required_partition_sizes: *default_required_dir_sizes
@@ -1868,7 +1868,7 @@ image_types:
     compression: "xz"
     image_func: "disk"
     bootable: true
-    default_size: 10_737_418_240  # 10 * datasizes.GibiByte
+    default_size: "10 GiB"
     required_partition_sizes: *default_required_dir_sizes
     platforms:
       - <<: *x86_64_bios_platform
@@ -2328,7 +2328,7 @@ image_types:
     image_func: "disk"
     exports: ["archive"]
     bootable: true
-    default_size: 21_474_836_480  # 20 * datasizes.GibiByte
+    default_size: "20 GiB"
     required_partition_sizes: *default_required_dir_sizes
     platforms:
       - <<: *x86_64_uefi_platform
@@ -2482,7 +2482,7 @@ image_types:
     mime_type: "application/xz"
     compression: "xz"
     bootable: true
-    default_size: 2_147_483_648  # 2 * datasizes.GibiByte
+    default_size: "2 GiB"
     image_func: "disk"
     exports: ["xz"]
     required_partition_sizes: *default_required_dir_sizes
@@ -2587,7 +2587,7 @@ image_types:
     # we have to reset the aliases otherwise this type
     # will inherit the name aliases causing a conflict
     name_aliases: []
-    default_size: 4_294_967_296  # 4 * datasizes.GibiByte
+    default_size: "4 GiB"
     platforms:
       - <<: *x86_64_bios_platform
         image_format: "qcow2"
@@ -2803,7 +2803,7 @@ image_types:
     compression: "xz"
     mime_type: "application/xz"
     exports: ["xz"]
-    default_size: 10_737_418_240  # 10 * datasizes.GibiByte
+    default_size: "10 GiB"
     rpm_ostree: true
     bootable: true
     image_func: "iot"
@@ -2897,7 +2897,7 @@ image_types:
     use_syslinux: true
     # NOTE: RHEL 8 only supports the older Anaconda configs
     use_legacy_anaconda_config: true
-    default_size: 10_737_418_240  # 10 * datasizes.GibiByte
+    default_size: "10 GiB"
     image_func: "iot_simplified_installer"
     iso_label: "edge"
     variant: "edge"
@@ -3012,7 +3012,7 @@ image_types:
   "edge-ami": &edge_ami
     filename: "image.raw"
     mime_type: "application/octet-stream"
-    default_size: 10_737_418_240  # 10 * datasizes.GibiByte
+    default_size: "10 GiB"
     exports: ["image"]
     rpm_ostree: true
     bootable: true
@@ -3097,7 +3097,7 @@ image_types:
     mime_type: "application/xz"
     exports: ["xz"]
     compression: "xz"
-    default_size: 34_359_738_368  # 32 * datasizes.GibiByte
+    default_size: "32 GiB"
     platforms:
       - arch: "x86_64"
         bootloader: "uki"
