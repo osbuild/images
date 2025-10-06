@@ -1151,18 +1151,11 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			},
 			expected: &disk.PartitionTable{
 				Type: disk.PT_DOS,
-				Size: 202 * datasizes.MiB,
+				Size: 201 * datasizes.MiB,
 				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
 				Partitions: []disk.Partition{
 					{
-						Start:    1 * datasizes.MiB, // header
-						Bootable: true,
-						Size:     1 * datasizes.MiB,
-						Type:     disk.BIOSBootPartitionDOSID,
-						UUID:     disk.BIOSBootPartitionUUID,
-					},
-					{
-						Start: 2 * datasizes.MiB,
+						Start: 1 * datasizes.MiB,
 						Size:  200 * datasizes.MiB,
 						Type:  disk.EFISystemPartitionDOSID,
 						UUID:  disk.EFISystemPartitionUUID,
@@ -1177,7 +1170,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						},
 					},
 					{
-						Start:    202 * datasizes.MiB,
+						Start:    201 * datasizes.MiB,
 						Size:     0,
 						Type:     disk.FilesystemLinuxDOSID,
 						Bootable: false,
@@ -1210,6 +1203,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				DefaultFSType:      disk.FS_XFS,
 				BootMode:           platform.BOOT_HYBRID,
 				PartitionTableType: disk.PT_DOS,
+				Architecture:       arch.ARCH_X86_64,
 			},
 			expected: &disk.PartitionTable{
 				Type: disk.PT_DOS,
@@ -1385,18 +1379,11 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			},
 			expected: &disk.PartitionTable{
 				Type: disk.PT_GPT,
-				Size: (1+1+200+20+5)*datasizes.MiB + datasizes.MiB,
+				Size: (1+200+20+5)*datasizes.MiB + datasizes.MiB,
 				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
 				Partitions: []disk.Partition{
 					{
-						Start:    1 * datasizes.MiB, // header
-						Size:     1 * datasizes.MiB,
-						Bootable: true,
-						Type:     disk.BIOSBootPartitionGUID,
-						UUID:     disk.BIOSBootPartitionUUID,
-					},
-					{
-						Start: 2 * datasizes.MiB,
+						Start: 1 * datasizes.MiB,
 						Size:  200 * datasizes.MiB,
 						Type:  disk.EFISystemPartitionGUID,
 						UUID:  disk.EFISystemPartitionUUID,
@@ -1411,7 +1398,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						},
 					},
 					{
-						Start:    202 * datasizes.MiB,
+						Start:    201 * datasizes.MiB,
 						Size:     20 * datasizes.MiB,
 						Type:     disk.FilesystemDataGUID,
 						Bootable: false,
@@ -1427,7 +1414,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						},
 					},
 					{
-						Start:    222 * datasizes.MiB,
+						Start:    221 * datasizes.MiB,
 						Size:     5 * datasizes.MiB,
 						Type:     disk.FilesystemDataGUID,
 						UUID:     "e2d3d0d0-de6b-48f9-b44c-e85ff044c6b1",
@@ -1435,7 +1422,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						Payload:  nil,
 					},
 					{
-						Start:    227 * datasizes.MiB,
+						Start:    226 * datasizes.MiB,
 						Size:     1*datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
 						Type:     disk.RootPartitionAarch64GUID,
 						UUID:     "f83b8e88-3bbf-457a-ab99-c5b252c7429c",
@@ -1481,18 +1468,11 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			},
 			expected: &disk.PartitionTable{
 				Type: disk.PT_GPT,
-				Size: 227*datasizes.MiB + datasizes.MiB, // last part + footer
+				Size: 226*datasizes.MiB + datasizes.MiB, // last part + footer
 				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
 				Partitions: []disk.Partition{
 					{
-						Start:    1 * datasizes.MiB, // header
-						Size:     1 * datasizes.MiB,
-						Bootable: true,
-						Type:     disk.BIOSBootPartitionGUID,
-						UUID:     disk.BIOSBootPartitionUUID,
-					},
-					{
-						Start: 2 * datasizes.MiB,
+						Start: 1 * datasizes.MiB,
 						Size:  200 * datasizes.MiB,
 						Type:  disk.EFISystemPartitionGUID,
 						UUID:  disk.EFISystemPartitionUUID,
@@ -1507,7 +1487,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						},
 					},
 					{
-						Start:    202 * datasizes.MiB,
+						Start:    201 * datasizes.MiB,
 						Size:     20 * datasizes.MiB,
 						Type:     disk.FilesystemDataGUID,
 						Bootable: false,
@@ -1523,7 +1503,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						},
 					},
 					{
-						Start:    222 * datasizes.MiB,
+						Start:    221 * datasizes.MiB,
 						Size:     5 * datasizes.MiB,
 						Type:     disk.SwapPartitionGUID,
 						UUID:     "f83b8e88-3bbf-457a-ab99-c5b252c7429c",
@@ -1535,7 +1515,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						},
 					},
 					{
-						Start:    227 * datasizes.MiB,
+						Start:    226 * datasizes.MiB,
 						Size:     1*datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
 						Type:     disk.RootPartitionAarch64GUID,
 						UUID:     "32f3a8ae-b79e-4856-b659-c18f0dcecc77",
@@ -1570,6 +1550,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				DefaultFSType:      disk.FS_XFS,
 				BootMode:           platform.BOOT_LEGACY,
 				PartitionTableType: disk.PT_DOS,
+				Architecture:       arch.ARCH_X86_64,
 			},
 			expected: &disk.PartitionTable{
 				Type: disk.PT_DOS,
@@ -1635,6 +1616,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				DefaultFSType:      disk.FS_XFS,
 				BootMode:           platform.BOOT_UEFI,
 				PartitionTableType: disk.PT_DOS,
+				Architecture:       arch.ARCH_X86_64,
 			},
 			expected: &disk.PartitionTable{
 				Type: disk.PT_DOS,
@@ -1709,6 +1691,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				BootMode:           platform.BOOT_HYBRID,
 				RequiredMinSizes:   map[string]datasizes.Size{"/": 1 * datasizes.GiB, "/usr": 2 * datasizes.GiB}, // the default for our distro definitions
 				PartitionTableType: disk.PT_DOS,
+				Architecture:       arch.ARCH_X86_64,
 			},
 			expected: &disk.PartitionTable{
 				Type: disk.PT_DOS,
@@ -2018,6 +2001,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			options: &disk.CustomPartitionTableOptions{
 				DefaultFSType: disk.FS_EXT4,
 				BootMode:      platform.BOOT_HYBRID,
+				Architecture:  arch.ARCH_X86_64,
 			},
 			expected: &disk.PartitionTable{
 				Type: disk.PT_DOS,
@@ -2171,6 +2155,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			options: &disk.CustomPartitionTableOptions{
 				DefaultFSType: disk.FS_EXT4,
 				BootMode:      platform.BOOT_HYBRID,
+				Architecture:  arch.ARCH_X86_64,
 			},
 			expected: &disk.PartitionTable{
 				Type: disk.PT_GPT, // default when unspecified
@@ -2317,6 +2302,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				DefaultFSType:    disk.FS_EXT4,
 				BootMode:         platform.BOOT_HYBRID,
 				RequiredMinSizes: map[string]datasizes.Size{"/": 3 * datasizes.GiB},
+				Architecture:     arch.ARCH_X86_64,
 			},
 			expected: &disk.PartitionTable{
 				Type: disk.PT_GPT, // default when unspecified
@@ -2453,6 +2439,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				DefaultFSType:      disk.FS_EXT4,
 				BootMode:           platform.BOOT_HYBRID,
 				PartitionTableType: disk.PT_GPT,
+				Architecture:       arch.ARCH_X86_64,
 			},
 			expected: &disk.PartitionTable{
 				Type: disk.PT_DOS,
@@ -2560,6 +2547,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				DefaultFSType:      disk.FS_EXT4,
 				BootMode:           platform.BOOT_HYBRID,
 				PartitionTableType: disk.PT_GPT,
+				Architecture:       arch.ARCH_X86_64,
 			},
 			expected: &disk.PartitionTable{
 				Type: disk.PT_GPT,
@@ -3047,6 +3035,7 @@ func TestNewCustomPartitionTableErrors(t *testing.T) {
 				DefaultFSType:      disk.FS_XFS,
 				BootMode:           platform.BOOT_HYBRID,
 				PartitionTableType: disk.PT_DOS,
+				Architecture:       arch.ARCH_X86_64,
 			},
 			errmsg: `error generating partition table: invalid partition table: "dos" partition table type only supports up to 4 partitions: got 5 after creating the partition table with all necessary partitions`,
 		},
@@ -3068,6 +3057,7 @@ func TestNewCustomPartitionTableErrors(t *testing.T) {
 			options: &disk.CustomPartitionTableOptions{
 				DefaultFSType: disk.FS_XFS,
 				BootMode:      platform.BOOT_HYBRID,
+				Architecture:  arch.ARCH_X86_64,
 			},
 			errmsg: "error generating partition table: invalid partitioning customizations:\ninvalid partition part_type \"01234567-89ab-cdef-0123-456789abcdef\" for partition table type \"dos\" (must be a 2-digit hex number)",
 		},
@@ -3089,6 +3079,7 @@ func TestNewCustomPartitionTableErrors(t *testing.T) {
 			options: &disk.CustomPartitionTableOptions{
 				DefaultFSType: disk.FS_XFS,
 				BootMode:      platform.BOOT_HYBRID,
+				Architecture:  arch.ARCH_X86_64,
 			},
 			errmsg: "error generating partition table: invalid partitioning customizations:\ninvalid partition part_type \"EF\" for partition table type \"gpt\" (must be a valid UUID): invalid UUID length: 2",
 		},
@@ -3110,6 +3101,7 @@ func TestNewCustomPartitionTableErrors(t *testing.T) {
 				DefaultFSType:      disk.FS_XFS,
 				BootMode:           platform.BOOT_HYBRID,
 				PartitionTableType: disk.PT_DOS,
+				Architecture:       arch.ARCH_X86_64,
 			},
 			errmsg: "error generating partition table: error validating partition type ID for \"/data\": invalid partition part_type \"01234567-89ab-cdef-0123-456789abcdef\" for partition table type \"dos\" (must be a 2-digit hex number)",
 		},
@@ -3131,6 +3123,7 @@ func TestNewCustomPartitionTableErrors(t *testing.T) {
 				DefaultFSType:      disk.FS_XFS,
 				BootMode:           platform.BOOT_HYBRID,
 				PartitionTableType: disk.PT_GPT,
+				Architecture:       arch.ARCH_X86_64,
 			},
 			errmsg: "error generating partition table: error validating partition type ID for \"/data\": invalid partition part_type \"EF\" for partition table type \"gpt\" (must be a valid UUID): invalid UUID length: 2",
 		},
@@ -3151,6 +3144,7 @@ func TestNewCustomPartitionTableErrors(t *testing.T) {
 			options: &disk.CustomPartitionTableOptions{
 				DefaultFSType: disk.FS_XFS,
 				BootMode:      platform.BOOT_HYBRID,
+				Architecture:  arch.ARCH_X86_64,
 			},
 			errmsg: "error generating partition table: error validating partition type ID for \"/data\": invalid partition part_type \"AA\" for partition table type \"gpt\" (must be a valid UUID): invalid UUID length: 2",
 		},
