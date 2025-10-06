@@ -729,17 +729,17 @@ func TestFindDirectoryPartition(t *testing.T) {
 func TestEnsureDirectorySizes(t *testing.T) {
 	assert := assert.New(t)
 
-	varSizes := map[string]uint64{
-		"/var/lib":         uint64(3 * GiB),
-		"/var/cache":       uint64(2 * GiB),
-		"/var/log/journal": uint64(2 * GiB),
+	varSizes := map[string]datasizes.Size{
+		"/var/lib":         datasizes.Size(3 * GiB),
+		"/var/cache":       datasizes.Size(2 * GiB),
+		"/var/log/journal": datasizes.Size(2 * GiB),
 	}
 
-	varAndHomeSizes := map[string]uint64{
-		"/var/lib":         uint64(3 * GiB),
-		"/var/cache":       uint64(2 * GiB),
-		"/var/log/journal": uint64(2 * GiB),
-		"/home/user/data":  uint64(10 * GiB),
+	varAndHomeSizes := map[string]datasizes.Size{
+		"/var/lib":         datasizes.Size(3 * GiB),
+		"/var/cache":       datasizes.Size(2 * GiB),
+		"/var/log/journal": datasizes.Size(2 * GiB),
+		"/home/user/data":  datasizes.Size(10 * GiB),
 	}
 
 	partitionTables := testdisk.TestPartitionTables()
@@ -765,7 +765,7 @@ func TestEnsureDirectorySizes(t *testing.T) {
 			assert.Equal(uint64(7*GiB), rootPart.Size)
 
 			// invalid
-			assert.Panics(func() { pt.EnsureDirectorySizes(map[string]uint64{"invalid": uint64(300)}) })
+			assert.Panics(func() { pt.EnsureDirectorySizes(map[string]datasizes.Size{"invalid": datasizes.Size(300)}) })
 		}
 	}
 
@@ -804,7 +804,7 @@ func TestEnsureDirectorySizes(t *testing.T) {
 			assert.Equal(uint64(10*GiB), homeLV.Size)
 
 			// invalid
-			assert.Panics(func() { pt.EnsureDirectorySizes(map[string]uint64{"invalid": uint64(300)}) })
+			assert.Panics(func() { pt.EnsureDirectorySizes(map[string]datasizes.Size{"invalid": datasizes.Size(300)}) })
 		}
 	}
 
@@ -831,7 +831,7 @@ func TestEnsureDirectorySizes(t *testing.T) {
 			assert.Equal(uint64(7*GiB), rootPayload.Subvolumes[1].Size)
 
 			// invalid
-			assert.Panics(func() { pt.EnsureDirectorySizes(map[string]uint64{"invalid": uint64(300)}) })
+			assert.Panics(func() { pt.EnsureDirectorySizes(map[string]datasizes.Size{"invalid": datasizes.Size(300)}) })
 		}
 	}
 
@@ -847,7 +847,7 @@ func TestMinimumSizesWithRequiredSizes(t *testing.T) {
 
 	type testCase struct {
 		Blueprint        []blueprint.FilesystemCustomization
-		ExpectedMinSizes map[string]uint64
+		ExpectedMinSizes map[string]datasizes.Size
 	}
 
 	testCases := []testCase{
@@ -858,7 +858,7 @@ func TestMinimumSizesWithRequiredSizes(t *testing.T) {
 					MinSize:    1 * MiB,
 				},
 			},
-			ExpectedMinSizes: map[string]uint64{
+			ExpectedMinSizes: map[string]datasizes.Size{
 				"/usr": 3 * GiB,
 				"/":    1 * GiB,
 			},
@@ -874,7 +874,7 @@ func TestMinimumSizesWithRequiredSizes(t *testing.T) {
 					MinSize:    1 * KiB,
 				},
 			},
-			ExpectedMinSizes: map[string]uint64{
+			ExpectedMinSizes: map[string]datasizes.Size{
 				"/usr": 3 * GiB,
 				"/":    1 * GiB,
 			},
@@ -886,7 +886,7 @@ func TestMinimumSizesWithRequiredSizes(t *testing.T) {
 					MinSize:    10 * GiB,
 				},
 			},
-			ExpectedMinSizes: map[string]uint64{
+			ExpectedMinSizes: map[string]datasizes.Size{
 				"/usr": 10 * GiB,
 				"/":    1 * GiB,
 			},
@@ -902,7 +902,7 @@ func TestMinimumSizesWithRequiredSizes(t *testing.T) {
 					MinSize:    1 * MiB,
 				},
 			},
-			ExpectedMinSizes: map[string]uint64{
+			ExpectedMinSizes: map[string]datasizes.Size{
 				"/":     10 * GiB,
 				"/home": 1 * GiB,
 			},
@@ -914,7 +914,7 @@ func TestMinimumSizesWithRequiredSizes(t *testing.T) {
 					MinSize:    10 * GiB,
 				},
 			},
-			ExpectedMinSizes: map[string]uint64{
+			ExpectedMinSizes: map[string]datasizes.Size{
 				"/opt": 10 * GiB,
 				"/":    4 * GiB,
 			},
@@ -923,7 +923,7 @@ func TestMinimumSizesWithRequiredSizes(t *testing.T) {
 
 	for idx, tc := range testCases {
 		{ // without LVM
-			mpt, err := disk.NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), partition.RawPartitioningMode, arch.ARCH_AARCH64, map[string]uint64{"/": 1 * GiB, "/usr": 3 * GiB}, "", rng)
+			mpt, err := disk.NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), partition.RawPartitioningMode, arch.ARCH_AARCH64, map[string]datasizes.Size{"/": 1 * GiB, "/usr": 3 * GiB}, "", rng)
 			assert.NoError(err)
 			for mnt, minSize := range tc.ExpectedMinSizes {
 				path := disk.EntityPath(mpt, mnt)
@@ -937,7 +937,7 @@ func TestMinimumSizesWithRequiredSizes(t *testing.T) {
 		}
 
 		{ // with LVM
-			mpt, err := disk.NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), partition.AutoLVMPartitioningMode, arch.ARCH_AARCH64, map[string]uint64{"/": 1 * GiB, "/usr": 3 * GiB}, "", rng)
+			mpt, err := disk.NewPartitionTable(&pt, tc.Blueprint, uint64(3*GiB), partition.AutoLVMPartitioningMode, arch.ARCH_AARCH64, map[string]datasizes.Size{"/": 1 * GiB, "/usr": 3 * GiB}, "", rng)
 			assert.NoError(err)
 			for mnt, minSize := range tc.ExpectedMinSizes {
 				path := disk.EntityPath(mpt, mnt)

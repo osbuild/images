@@ -767,8 +767,8 @@
 
   disk_sizes:
     default_required_partition_sizes: &default_required_dir_sizes
-      "/": 1_073_741_824     # 1 * datasizes.GiB
-      "/usr": 2_147_483_648  # 2 * datasizes.GiB
+      "/": "1 GiB"
+      "/usr": "2 GiB"
 
   platforms:
     x86_64_uefi_platform: &x86_64_uefi_platform

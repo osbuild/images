@@ -1707,7 +1707,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			options: &disk.CustomPartitionTableOptions{
 				DefaultFSType:      disk.FS_XFS,
 				BootMode:           platform.BOOT_HYBRID,
-				RequiredMinSizes:   map[string]uint64{"/": 1 * datasizes.GiB, "/usr": 2 * datasizes.GiB}, // the default for our distro definitions
+				RequiredMinSizes:   map[string]datasizes.Size{"/": 1 * datasizes.GiB, "/usr": 2 * datasizes.GiB}, // the default for our distro definitions
 				PartitionTableType: disk.PT_DOS,
 			},
 			expected: &disk.PartitionTable{
@@ -1805,7 +1805,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				DefaultFSType:      disk.FS_EXT4,
 				BootMode:           platform.BOOT_HYBRID,
 				PartitionTableType: disk.PT_DOS,
-				RequiredMinSizes:   map[string]uint64{"/": 3 * datasizes.GiB},
+				RequiredMinSizes:   map[string]datasizes.Size{"/": 3 * datasizes.GiB},
 				Architecture:       arch.ARCH_S390X,
 			},
 			expected: &disk.PartitionTable{
@@ -1878,7 +1878,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				DefaultFSType:      disk.FS_EXT4,
 				BootMode:           platform.BOOT_HYBRID,
 				PartitionTableType: disk.PT_DOS,
-				RequiredMinSizes:   map[string]uint64{"/": 3 * datasizes.GiB},
+				RequiredMinSizes:   map[string]datasizes.Size{"/": 3 * datasizes.GiB},
 				Architecture:       arch.ARCH_PPC64LE,
 			},
 			expected: &disk.PartitionTable{
@@ -1930,7 +1930,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				DefaultFSType:      disk.FS_EXT4,
 				BootMode:           platform.BOOT_HYBRID,
 				PartitionTableType: disk.PT_DOS,
-				RequiredMinSizes:   map[string]uint64{"/": 3 * datasizes.GiB},
+				RequiredMinSizes:   map[string]datasizes.Size{"/": 3 * datasizes.GiB},
 				Architecture:       arch.ARCH_PPC64LE,
 			},
 			expected: &disk.PartitionTable{
@@ -2316,7 +2316,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 			options: &disk.CustomPartitionTableOptions{
 				DefaultFSType:    disk.FS_EXT4,
 				BootMode:         platform.BOOT_HYBRID,
-				RequiredMinSizes: map[string]uint64{"/": 3 * datasizes.GiB},
+				RequiredMinSizes: map[string]datasizes.Size{"/": 3 * datasizes.GiB},
 			},
 			expected: &disk.PartitionTable{
 				Type: disk.PT_GPT, // default when unspecified
