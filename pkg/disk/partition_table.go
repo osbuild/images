@@ -93,7 +93,7 @@ const DefaultBootPartitionSize = 1 * datasizes.GiB
 // containing the root filesystem is grown to fill any left over space on the
 // partition table. Logical Volumes are not grown to fill the space in the
 // Volume Group since they are trivial to grow on a live system.
-func NewPartitionTable(basePT *PartitionTable, mountpoints []blueprint.FilesystemCustomization, imageSize uint64, mode partition.PartitioningMode, architecture arch.Arch, requiredSizes map[string]uint64, defaultFs string, rng *rand.Rand) (*PartitionTable, error) {
+func NewPartitionTable(basePT *PartitionTable, mountpoints []blueprint.FilesystemCustomization, imageSize uint64, mode partition.PartitioningMode, architecture arch.Arch, requiredSizes map[string]datasizes.Size, defaultFs string, rng *rand.Rand) (*PartitionTable, error) {
 	newPT := basePT.Clone().(*PartitionTable)
 
 	if basePT.features().LVM && (mode == partition.RawPartitioningMode || mode == partition.BtrfsPartitioningMode) {
@@ -143,9 +143,9 @@ func NewPartitionTable(basePT *PartitionTable, mountpoints []blueprint.Filesyste
 
 	// If no separate requiredSizes are given then we use our defaults
 	if requiredSizes == nil {
-		requiredSizes = map[string]uint64{
-			"/":    1073741824,
-			"/usr": 2147483648,
+		requiredSizes = map[string]datasizes.Size{
+			"/":    1 * datasizes.GiB,
+			"/usr": 2 * datasizes.GiB,
 		}
 	}
 
@@ -316,7 +316,7 @@ func (pt *PartitionTable) findDirectoryEntityPath(dir string) []Entity {
 // and resizes the appropriate partitions such that they are at least the size
 // of the sum of their subdirectories plus their own sizes.
 // The function will panic if any of the directory paths are invalid.
-func (pt *PartitionTable) EnsureDirectorySizes(dirSizeMap map[string]uint64) {
+func (pt *PartitionTable) EnsureDirectorySizes(dirSizeMap map[string]datasizes.Size) {
 
 	type mntSize struct {
 		entPath []Entity
@@ -336,7 +336,7 @@ func (pt *PartitionTable) EnsureDirectorySizes(dirSizeMap map[string]uint64) {
 			mntSizeMap[mountpoint] = &mntSize{entPath, 0}
 		}
 		es := mntSizeMap[mountpoint]
-		es.newSize += size
+		es.newSize += size.Uint64()
 	}
 
 	// resize all the entities in the map
@@ -1251,7 +1251,7 @@ type CustomPartitionTableOptions struct {
 	// directory requirements are additive, meaning the minimum size for a
 	// mountpoint's partition is the sum of all the required directory sizes it
 	// will contain.
-	RequiredMinSizes map[string]uint64
+	RequiredMinSizes map[string]datasizes.Size
 
 	// Architecture of the hardware that will use the partition table. This is
 	// used to select appropriate partition types for GPT formatted disks to

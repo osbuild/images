@@ -375,9 +375,9 @@ type ImageTypeYAML struct {
 
 	DefaultSize datasizes.Size `yaml:"default_size"`
 	// the image func name: disk,container,live-installer,...
-	Image                  string            `yaml:"image_func"`
-	Exports                []string          `yaml:"exports"`
-	RequiredPartitionSizes map[string]uint64 `yaml:"required_partition_sizes"`
+	Image                  string                    `yaml:"image_func"`
+	Exports                []string                  `yaml:"exports"`
+	RequiredPartitionSizes map[string]datasizes.Size `yaml:"required_partition_sizes"`
 
 	InternalPlatforms []platform.Data    `yaml:"platforms"`
 	PlatformsOverride *platformsOverride `yaml:"platforms_override"`
