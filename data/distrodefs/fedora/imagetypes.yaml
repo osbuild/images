@@ -1614,9 +1614,12 @@ image_types:
             "riscv64 specific pkgs for minimal-raw-xz":
               when:
                 arch: "riscv64"
+                version_less_than: "42"
               append:
                 include:
-                  # missing from @core in riscv64
+                  # missing from @core in riscv64 but only
+                  # in Fedora 41, they've been subsequently
+                  # added in 42 and up
                   - "dnf5"
                   - "policycoreutils"
                   - "selinux-policy-targeted"
