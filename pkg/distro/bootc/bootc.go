@@ -58,10 +58,9 @@ var _ = distro.ImageType(&BootcImageType{})
 type BootcImageType struct {
 	arch *BootcArch
 
-	name   string
-	export string
-	// file extension
-	ext string
+	name     string
+	export   string
+	filename string
 }
 
 func (d *BootcDistro) SetBuildContainer(imgref string) (err error) {
@@ -215,7 +214,7 @@ func (t *BootcImageType) Arch() distro.Arch {
 }
 
 func (t *BootcImageType) Filename() string {
-	return fmt.Sprintf("disk.%s", t.ext)
+	return t.filename
 }
 
 func (t *BootcImageType) MIMEType() string {
@@ -453,39 +452,39 @@ func newBootcDistroAfterIntrospect(archStr string, info *osinfo.Info, imgref, de
 	// XXX: find a way to avoid this duplication
 	ba.addImageTypes(
 		BootcImageType{
-			name:   "ami",
-			export: "image",
-			ext:    "raw",
+			name:     "ami",
+			export:   "image",
+			filename: "disk.raw",
 		},
 		BootcImageType{
-			name:   "qcow2",
-			export: "qcow2",
-			ext:    "qcow2",
+			name:     "qcow2",
+			export:   "qcow2",
+			filename: "disk.qcow2",
 		},
 		BootcImageType{
-			name:   "raw",
-			export: "image",
-			ext:    "raw",
+			name:     "raw",
+			export:   "image",
+			filename: "disk.raw",
 		},
 		BootcImageType{
-			name:   "vmdk",
-			export: "vmdk",
-			ext:    "vmdk",
+			name:     "vmdk",
+			export:   "vmdk",
+			filename: "disk.vmdk",
 		},
 		BootcImageType{
-			name:   "vhd",
-			export: "bpc",
-			ext:    "vhd",
+			name:     "vhd",
+			export:   "bpc",
+			filename: "disk.vhd",
 		},
 		BootcImageType{
-			name:   "gce",
-			export: "gce",
-			ext:    "tar.gz",
+			name:     "gce",
+			export:   "gce",
+			filename: "image.tar.gz",
 		},
 		BootcImageType{
-			name:   "ova",
-			export: "archive",
-			ext:    "tar.gz",
+			name:     "ova",
+			export:   "archive",
+			filename: "disk.tar",
 		},
 	)
 	bd.addArches(ba)
