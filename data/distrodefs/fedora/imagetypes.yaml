@@ -646,7 +646,6 @@
 
     minimal_raw_partition_tables: &minimal_raw_partition_tables
       x86_64:
-        uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
         type: "gpt"
         partitions:
           - *default_partition_table_part_efi
@@ -656,20 +655,16 @@
           - &minimal_raw_partition_table_part_root
             <<: *default_partition_table_part_root
       aarch64: &minimal_raw_partition_table_aarch64
-        uuid: "0xc1748067"
         type: "dos"
         start_offset: "16 MiB"
         partitions:
           - <<: *default_partition_table_part_efi
             bootable: true
             type: *fat16_bdosid
-            uuid: ""
           - <<: *minimal_raw_partition_table_part_boot
             type: *filesystem_linux_dosid
-            uuid: ""
           - <<: *default_partition_table_part_root
             type: *filesystem_linux_dosid
-            uuid: ""
       riscv64: *minimal_raw_partition_table_aarch64
 
     iot_base_partition_tables: &iot_base_partition_tables
