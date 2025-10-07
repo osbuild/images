@@ -77,14 +77,14 @@ func TestLVMLogicalVolumeEnsureSize(t *testing.T) {
 	}
 	resized := lv.EnsureSize(1024*1024 + 17)
 	assert.True(t, resized)
-	assert.Equal(t, uint64(4*datasizes.MiB), lv.Size)
+	assert.Equal(t, datasizes.Size(4*datasizes.MiB), lv.Size)
 }
 
 func TestUnmarshalSizeUnitString(t *testing.T) {
 	testCases := []struct {
 		name     string
 		input    string
-		expected uint64
+		expected datasizes.Size
 		err      error
 	}{
 		{
