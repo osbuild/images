@@ -11,7 +11,6 @@ import (
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/disk/partition"
 	"github.com/osbuild/images/pkg/pathpolicy"
-	"github.com/osbuild/images/pkg/platform"
 )
 
 const (
@@ -148,7 +147,7 @@ func (t *BootcImageType) genPartitionTableDiskCust(basept *disk.PartitionTable, 
 	partOptions := &disk.CustomPartitionTableOptions{
 		PartitionTableType: basept.Type,
 		// XXX: not setting/defaults will fail to boot with btrfs/lvm
-		BootMode:         platform.BOOT_HYBRID,
+		BootMode:         t.BootMode(),
 		DefaultFSType:    defaultFSType,
 		RequiredMinSizes: requiredMinSizes,
 		Architecture:     t.arch.arch,
