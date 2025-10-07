@@ -48,6 +48,21 @@ func TestPackageSourceValidation(t *testing.T) {
 		},
 		{
 			pkg: rpmmd.PackageSpec{
+				Name:           "package-with-no-remote-location",
+				Epoch:          0,
+				Version:        "0.4.11",
+				Release:        "7.el9",
+				Arch:           "x86_64",
+				RemoteLocation: "",
+				Checksum:       "sha256:4be41142a5fb2b4cd6d812e126838cffa57b7c84e5a79d65f66bb9cf1d2830a3",
+				Secrets:        "",
+				CheckGPG:       false,
+				IgnoreSSL:      true,
+			},
+			valid: false,
+		},
+		{
+			pkg: rpmmd.PackageSpec{
 				Name:           "openssl-pkcs11",
 				Epoch:          0,
 				Version:        "0.4.11",
