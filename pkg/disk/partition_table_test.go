@@ -3222,13 +3222,13 @@ func TestUnmarshalSizeUnitStringPartitionTable(t *testing.T) {
 			name:     "invalid size with unit",
 			input:    `{"start_offset": "1 GGB"}`,
 			expected: 0,
-			err:      fmt.Errorf("error parsing \"start_offset\" in partition table: failed to parse size field named \"start_offset\" to bytes: unknown data size units in string: 1 GGB"),
+			err:      fmt.Errorf("unknown data size units in string: 1 GGB"),
 		},
 		{
 			name:     "invalid size with unit",
 			input:    `{"size": "1 GGB"}`,
 			expected: 0,
-			err:      fmt.Errorf("error parsing \"size\" in partition table: failed to parse size field named \"size\" to bytes: unknown data size units in string: 1 GGB"),
+			err:      fmt.Errorf("error decoding size: unknown data size units in string: 1 GGB"),
 		},
 	}
 

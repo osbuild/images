@@ -69,7 +69,7 @@ func TestUnmarshalSizeUnitStringBtrfsSubvolume(t *testing.T) {
 			name:     "invalid size with unit",
 			input:    `{"size": "1 GGB"}`,
 			expected: 0,
-			err:      fmt.Errorf("error parsing size in btrfs subvolume: failed to parse size field named \"size\" to bytes: unknown data size units in string: 1 GGB"),
+			err:      fmt.Errorf("error decoding size: unknown data size units in string: 1 GGB"),
 		},
 	}
 

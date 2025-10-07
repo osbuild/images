@@ -127,11 +127,6 @@ type BtrfsSubvolume struct {
 }
 
 func (sv *BtrfsSubvolume) UnmarshalJSON(data []byte) (err error) {
-	data, err = datasizes.ParseSizeInJSONMapping("size", data)
-	if err != nil {
-		return fmt.Errorf("error parsing size in btrfs subvolume: %w", err)
-	}
-
 	type aliasStruct BtrfsSubvolume
 	var alias aliasStruct
 	if err := jsonUnmarshalStrict(data, &alias); err != nil {
