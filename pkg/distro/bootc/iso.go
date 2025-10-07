@@ -110,6 +110,11 @@ func (t *BootcAnacondaInstaller) Manifest(bp *blueprint.Blueprint, options distr
 	if t.arch.distro.imgref == "" {
 		return nil, nil, fmt.Errorf("internal error: no base image defined")
 	}
+	if options.Bootc == nil || options.Bootc.InstallerPayloadRef == "" {
+		return nil, nil, fmt.Errorf("no installer payload bootc ref set")
+	}
+	payloadRef := options.Bootc.InstallerPayloadRef
+
 	containerSource := container.SourceSpec{
 		Source: t.arch.distro.imgref,
 		Name:   t.arch.distro.imgref,
@@ -153,8 +158,8 @@ func (t *BootcAnacondaInstaller) Manifest(bp *blueprint.Blueprint, options distr
 	img.InitramfsPath = fmt.Sprintf("lib/modules/%s/initramfs.img", t.arch.distro.sourceInfo.KernelInfo.Version)
 	img.InstallerHome = "/var/roothome"
 	payloadSource := container.SourceSpec{
-		Source: t.arch.distro.payloadRef,
-		Name:   t.arch.distro.payloadRef,
+		Source: payloadRef,
+		Name:   payloadRef,
 		Local:  true,
 	}
 	img.InstallerPayload = payloadSource
