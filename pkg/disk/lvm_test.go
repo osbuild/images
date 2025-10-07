@@ -109,7 +109,7 @@ func TestUnmarshalSizeUnitString(t *testing.T) {
 			name:     "invalid size with unit",
 			input:    `{"size": "1 GGB"}`,
 			expected: 0,
-			err:      fmt.Errorf("error parsing size in LVM LV: failed to parse size field named \"size\" to bytes: unknown data size units in string: 1 GGB"),
+			err:      fmt.Errorf("error decoding size: unknown data size units in string: 1 GGB"),
 		},
 	}
 

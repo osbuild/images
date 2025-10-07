@@ -169,13 +169,6 @@ func NewPartitionTable(basePT *PartitionTable, mountpoints []blueprint.Filesyste
 }
 
 func (pt *PartitionTable) UnmarshalJSON(data []byte) (err error) {
-	for _, field := range []string{"size", "start_offset"} {
-		data, err = datasizes.ParseSizeInJSONMapping(field, data)
-		if err != nil {
-			return fmt.Errorf("error parsing %q in partition table: %w", field, err)
-		}
-	}
-
 	type aliasStruct PartitionTable
 	var alias aliasStruct
 	if err := jsonUnmarshalStrict(data, &alias); err != nil {
