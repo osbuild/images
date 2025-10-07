@@ -650,11 +650,6 @@ func main() {
 							panic(err)
 						}
 					}
-					if fakeBootcCnt.PayloadContainerRef != "" {
-						if err := distribution.SetInstallerPayload(fakeBootcCnt.PayloadContainerRef); err != nil {
-							panic(err)
-						}
-					}
 
 					imgType, err := archi.GetImageType(imgTypeName)
 					if err != nil {
@@ -672,6 +667,11 @@ func main() {
 						if needsSkipping, reason := configs.needsSkipping(distribution.Name(), itConfig); needsSkipping {
 							fmt.Printf("Skipping %s for %s/%s (reason: %v)\n", itConfig.Name, imgTypeName, distribution.Name(), reason)
 							continue
+						}
+						if fakeBootcCnt.PayloadContainerRef != "" {
+							itConfig.Options.Bootc = &distro.BootcImageOptions{
+								InstallerPayloadRef: fakeBootcCnt.PayloadContainerRef,
+							}
 						}
 
 						var repos []rpmmd.RepoConfig
