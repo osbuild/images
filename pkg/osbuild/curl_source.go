@@ -35,6 +35,10 @@ func NewCurlPackageItem(pkg rpmmd.PackageSpec) (CurlSourceItem, error) {
 	if !curlDigestPattern.MatchString(pkg.Checksum) {
 		return nil, fmt.Errorf("curl package source item with name %q has invalid digest %q", pkg.Name, pkg.Checksum)
 	}
+	if len(pkg.RemoteLocation) == 0 {
+		return nil, fmt.Errorf("curl package source item with name %q has no remote location", pkg.Name)
+	}
+
 	item := new(CurlSourceOptions)
 	item.URL = pkg.RemoteLocation
 	switch pkg.Secrets {
