@@ -140,7 +140,6 @@ func (img *BootcDiskImage) InstantiateManifestFromContainers(m *manifest.Manifes
 		fmt.Sprintf("%s.ovf", fileBasename),
 		fmt.Sprintf("%s.mf", fileBasename),
 		fmt.Sprintf("%s.vmdk", fileBasename),
-		fmt.Sprintf("%s.vhd", fileBasename),
 	}
 
 	gcePipeline := newGCETarPipelineForImg(buildPipeline, rawImage, "gce")

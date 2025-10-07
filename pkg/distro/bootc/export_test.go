@@ -36,10 +36,10 @@ func NewTestBootcImageType() *BootcImageType {
 	}
 
 	imgType := &BootcImageType{
-		arch:   a,
-		name:   "qcow2",
-		export: "qcow2",
-		ext:    "qcow2",
+		arch:     a,
+		name:     "qcow2",
+		export:   "qcow2",
+		filename: "disk.qcow2",
 	}
 	a.addImageTypes(*imgType)
 
