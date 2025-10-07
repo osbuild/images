@@ -30,10 +30,16 @@ type PartitionTable struct {
 	// Extra space at the end of the partition table (sectors)
 	ExtraPadding uint64 `json:"extra_padding,omitempty" yaml:"extra_padding,omitempty"`
 	// Starting offset of the first partition in the table (in bytes)
-	StartOffset uint64 `json:"start_offset,omitempty" yaml:"start_offset,omitempty"`
+	StartOffset Offset `json:"start_offset,omitempty" yaml:"start_offset,omitempty"`
 }
 
 var _ = MountpointCreator(&PartitionTable{})
+
+// Offset describes the offset as a "size", this allows us to reuse
+// the datasize.Size json/toml/yaml loaders to specify the offset
+// as a nice string. We still make it a distinct type for readability
+// (as `StartOffset datasize.Size` would be weird).
+type Offset = datasizes.Size
 
 // DefaultBootPartitionSize is the default size of the /boot partition if it
 // needs to be auto-created. This happens if the custom partitioning don't
@@ -483,7 +489,7 @@ func (pt *PartitionTable) relayout(size datasizes.Size) uint64 {
 	}
 
 	start := pt.AlignUp(header).Uint64()
-	start += pt.StartOffset
+	start += pt.StartOffset.Uint64()
 	size = pt.AlignUp(size)
 
 	var rootIdx = -1
