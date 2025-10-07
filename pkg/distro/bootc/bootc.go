@@ -482,6 +482,11 @@ func newBootcDistroAfterIntrospect(archStr string, info *osinfo.Info, imgref, de
 			export: "gce",
 			ext:    "tar.gz",
 		},
+		BootcImageType{
+			name:   "ova",
+			export: "archive",
+			ext:    "tar.gz",
+		},
 	)
 	bd.addArches(ba)
 
