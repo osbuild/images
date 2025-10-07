@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	DEFAULT_SIZE = uint64(10 * GibiByte)
+	DEFAULT_SIZE = datasizes.Size(10 * GibiByte)
 
 	// As a baseline heuristic we double the size of
 	// the input container to support in-place updates.

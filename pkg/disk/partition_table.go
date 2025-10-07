@@ -18,7 +18,7 @@ import (
 
 type PartitionTable struct {
 	// Size of the disk (in bytes).
-	Size uint64 `json:"size,omitempty" yaml:"size,omitempty"`
+	Size datasizes.Size `json:"size,omitempty" yaml:"size,omitempty"`
 	// Unique identifier of the partition table (GPT only).
 	UUID string `json:"uuid,omitempty" yaml:"uuid,omitempty"`
 	// Partition table type, e.g. dos, gpt.
@@ -93,7 +93,7 @@ const DefaultBootPartitionSize = 1 * datasizes.GiB
 // containing the root filesystem is grown to fill any left over space on the
 // partition table. Logical Volumes are not grown to fill the space in the
 // Volume Group since they are trivial to grow on a live system.
-func NewPartitionTable(basePT *PartitionTable, mountpoints []blueprint.FilesystemCustomization, imageSize uint64, mode partition.PartitioningMode, architecture arch.Arch, requiredSizes map[string]datasizes.Size, defaultFs string, rng *rand.Rand) (*PartitionTable, error) {
+func NewPartitionTable(basePT *PartitionTable, mountpoints []blueprint.FilesystemCustomization, imageSize datasizes.Size, mode partition.PartitioningMode, architecture arch.Arch, requiredSizes map[string]datasizes.Size, defaultFs string, rng *rand.Rand) (*PartitionTable, error) {
 	newPT := basePT.Clone().(*PartitionTable)
 
 	if basePT.features().LVM && (mode == partition.RawPartitioningMode || mode == partition.BtrfsPartitioningMode) {
@@ -218,7 +218,7 @@ func (pt *PartitionTable) Clone() Entity {
 
 // AlignUp will round up the given size value to the default grain if not
 // already aligned.
-func (pt *PartitionTable) AlignUp(size uint64) uint64 {
+func (pt *PartitionTable) AlignUp(size datasizes.Size) datasizes.Size {
 	grain := DefaultGrainBytes
 	if size%grain == 0 {
 		// already aligned: return unchanged
@@ -285,13 +285,13 @@ func (pt *PartitionTable) GetChild(n uint) Entity {
 	return &pt.Partitions[n]
 }
 
-func (pt *PartitionTable) GetSize() uint64 {
+func (pt *PartitionTable) GetSize() datasizes.Size {
 	return pt.Size
 }
 
-func (pt *PartitionTable) EnsureSize(s uint64) bool {
+func (pt *PartitionTable) EnsureSize(s datasizes.Size) bool {
 	if s > pt.Size {
-		pt.Size = s
+		pt.Size = datasizes.Size(s)
 		return true
 	}
 	return false
@@ -320,7 +320,7 @@ func (pt *PartitionTable) EnsureDirectorySizes(dirSizeMap map[string]datasizes.S
 
 	type mntSize struct {
 		entPath []Entity
-		newSize uint64
+		newSize datasizes.Size
 	}
 
 	// add up the required size for each directory grouped by their mountpoints
@@ -336,7 +336,7 @@ func (pt *PartitionTable) EnsureDirectorySizes(dirSizeMap map[string]datasizes.S
 			mntSizeMap[mountpoint] = &mntSize{entPath, 0}
 		}
 		es := mntSizeMap[mountpoint]
-		es.newSize += size.Uint64()
+		es.newSize += size
 	}
 
 	// resize all the entities in the map
@@ -345,7 +345,7 @@ func (pt *PartitionTable) EnsureDirectorySizes(dirSizeMap map[string]datasizes.S
 	}
 }
 
-func (pt *PartitionTable) CreateMountpoint(mountpoint, defaultFs string, size uint64) (Entity, error) {
+func (pt *PartitionTable) CreateMountpoint(mountpoint, defaultFs string, size datasizes.Size) (Entity, error) {
 	filesystem := Filesystem{
 		Type:         defaultFs,
 		Mountpoint:   mountpoint,
@@ -416,13 +416,13 @@ func (pt *PartitionTable) ForEachEntity(cb EntityCallback) error {
 	return forEachEntity(pt, []Entity{}, cb)
 }
 
-func (pt *PartitionTable) HeaderSize() uint64 {
+func (pt *PartitionTable) HeaderSize() datasizes.Size {
 	// always reserve one extra sector for the GPT header
 	// this also ensure we have enough space for the MBR
 	header := pt.SectorsToBytes(1)
 
 	if pt.Type == PT_DOS {
-		return header
+		return datasizes.Size(header)
 	}
 
 	// calculate the space we need for
@@ -438,7 +438,7 @@ func (pt *PartitionTable) HeaderSize() uint64 {
 	// name exceeds 72 bytes
 	header += parts * 128
 
-	return header
+	return datasizes.Size(header)
 }
 
 // Apply filesystem customization to the partition table. If create is false,
@@ -451,7 +451,8 @@ func (pt *PartitionTable) applyCustomization(mountpoints []blueprint.FilesystemC
 	newMountpoints := []blueprint.FilesystemCustomization{}
 
 	for _, mnt := range mountpoints {
-		size := clampFSSize(mnt.Mountpoint, mnt.MinSize)
+		// TODO: make blueprint.MinSize type datasize.Size too
+		size := clampFSSize(mnt.Mountpoint, datasizes.Size(mnt.MinSize))
 		if path := entityPath(pt, mnt.Mountpoint); len(path) != 0 {
 			size = alignEntityBranch(path, size)
 			resizeEntityBranch(path, size)
@@ -471,17 +472,17 @@ func (pt *PartitionTable) applyCustomization(mountpoints []blueprint.FilesystemC
 // partitions. Adjusts the overall size of image to either the supplied value
 // in `size` or to the sum of all partitions if that is larger. Will grow the
 // root partition if there is any empty space. Returns the updated start point.
-func (pt *PartitionTable) relayout(size uint64) uint64 {
+func (pt *PartitionTable) relayout(size datasizes.Size) uint64 {
 	// always reserve one extra sector for the GPT header
 	header := pt.HeaderSize()
-	footer := uint64(0)
+	footer := datasizes.Size(0)
 
 	// The GPT header is also at the end of the partition table
 	if pt.Type == PT_GPT {
 		footer = header
 	}
 
-	start := pt.AlignUp(header)
+	start := pt.AlignUp(header).Uint64()
 	start += pt.StartOffset
 	size = pt.AlignUp(size)
 
@@ -497,7 +498,7 @@ func (pt *PartitionTable) relayout(size uint64) uint64 {
 		partition.Start = start
 		partition.fitTo(partition.Size)
 		partition.Size = pt.AlignUp(partition.Size)
-		start += partition.Size
+		start += partition.Size.Uint64()
 	}
 
 	if rootIdx < 0 {
@@ -509,21 +510,21 @@ func (pt *PartitionTable) relayout(size uint64) uint64 {
 	root.fitTo(root.Size)
 
 	// add the extra padding specified in the partition table
-	footer += pt.ExtraPadding
+	footer += datasizes.Size(pt.ExtraPadding)
 
 	// If the sum of all partitions is bigger then the specified size,
 	// we use that instead. Grow the partition table size if needed.
-	end := pt.AlignUp(root.Start + footer + root.Size)
+	end := pt.AlignUp(datasizes.Size(root.Start) + footer + root.Size)
 	if end > size {
 		size = end
 	}
 
 	if size > pt.Size {
-		pt.Size = size
+		pt.Size = datasizes.Size(size)
 	}
 
 	// If there is space left in the partition table, grow root
-	root.Size = pt.Size - root.Start
+	root.Size = pt.Size - datasizes.Size(root.Start)
 
 	// Finally we shrink the last partition, i.e. the root partition,
 	// to leave space for the footer, e.g. the secondary GPT header.
@@ -534,7 +535,7 @@ func (pt *PartitionTable) relayout(size uint64) uint64 {
 	return start
 }
 
-func (pt *PartitionTable) createFilesystem(mountpoint, defaultFs string, size uint64) error {
+func (pt *PartitionTable) createFilesystem(mountpoint, defaultFs string, size datasizes.Size) error {
 	rootPath := entityPath(pt, "/")
 	if rootPath == nil {
 		panic("no root mountpoint for PartitionTable")
@@ -653,10 +654,10 @@ func (pt *PartitionTable) FindMountable(mountpoint string) Mountable {
 	return path[0].(Mountable)
 }
 
-func clampFSSize(mountpoint string, size uint64) uint64 {
+func clampFSSize(mountpoint string, size datasizes.Size) datasizes.Size {
 	// set a minimum size of 1GB for all mountpoints
 	// with the exception for '/boot' (= 500 MB)
-	var minSize uint64 = 1073741824
+	var minSize datasizes.Size = 1073741824
 
 	if mountpoint == "/boot" {
 		minSize = 524288000
@@ -668,7 +669,7 @@ func clampFSSize(mountpoint string, size uint64) uint64 {
 	return size
 }
 
-func alignEntityBranch(path []Entity, size uint64) uint64 {
+func alignEntityBranch(path []Entity, size datasizes.Size) datasizes.Size {
 	if len(path) == 0 {
 		return size
 	}
@@ -685,7 +686,7 @@ func alignEntityBranch(path []Entity, size uint64) uint64 {
 // resizeEntityBranch resizes the first entity in the specified path to be at
 // least the specified size and then grows every entity up the path to the
 // PartitionTable accordingly.
-func resizeEntityBranch(path []Entity, size uint64) {
+func resizeEntityBranch(path []Entity, size datasizes.Size) {
 	if len(path) == 0 {
 		return
 	}
@@ -693,7 +694,7 @@ func resizeEntityBranch(path []Entity, size uint64) {
 	element := path[0]
 
 	if c, ok := element.(Container); ok {
-		containerSize := uint64(0)
+		containerSize := datasizes.Size(0)
 		for idx := uint(0); idx < c.GetItemCount(); idx++ {
 			if s, ok := c.GetChild(idx).(Sizeable); ok {
 				containerSize += s.GetSize()
@@ -945,7 +946,7 @@ func (pt *PartitionTable) GetBuildPackages() []string {
 
 // GetMountpointSize takes a mountpoint and returns the size of the entity this
 // mountpoint belongs to.
-func (pt *PartitionTable) GetMountpointSize(mountpoint string) (uint64, error) {
+func (pt *PartitionTable) GetMountpointSize(mountpoint string) (datasizes.Size, error) {
 	path := entityPath(pt, mountpoint)
 	if path == nil {
 		return 0, fmt.Errorf("cannot find mountpoint %s", mountpoint)
@@ -1205,7 +1206,7 @@ func mkBIOSBoot(ptType PartitionTableType) (Partition, error) {
 	}, nil
 }
 
-func mkESP(size uint64, ptType PartitionTableType) (Partition, error) {
+func mkESP(size datasizes.Size, ptType PartitionTableType) (Partition, error) {
 	partType, err := getPartitionTypeIDfor(ptType, "esp", arch.ARCH_UNSET)
 	if err != nil {
 		return Partition{}, fmt.Errorf("error creating EFI system partition: %w", err)
@@ -1385,7 +1386,8 @@ func NewCustomPartitionTable(customizations *blueprint.DiskCustomization, option
 		pt.EnsureDirectorySizes(options.RequiredMinSizes)
 	}
 
-	pt.relayout(customizations.MinSize)
+	// TODO: make blueprint MinSize of type datatypes.Size too
+	pt.relayout(datasizes.Size(customizations.MinSize))
 	pt.GenerateUUIDs(rng)
 
 	// One thing not caught by the customization validation is if a final "dos"
@@ -1473,10 +1475,11 @@ func addPlainPartition(pt *PartitionTable, partition blueprint.PartitionCustomiz
 	}
 
 	newpart := Partition{
-		Type:    partType,
-		UUID:    partition.PartUUID,
-		Label:   partition.PartLabel,
-		Size:    partition.MinSize,
+		Type:  partType,
+		UUID:  partition.PartUUID,
+		Label: partition.PartLabel,
+		// TODO: make disk customization MinSize type datasizes.Size
+		Size:    datasizes.Size(partition.MinSize),
 		Payload: payload,
 	}
 	pt.Partitions = append(pt.Partitions, newpart)
@@ -1531,7 +1534,7 @@ func addLVMPartition(pt *PartitionTable, partition blueprint.PartitionCustomizat
 				FSTabOptions: "defaults", // TODO: add customization
 			}
 		}
-		if _, err := newvg.CreateLogicalVolume(lv.Name, lv.MinSize, newfs); err != nil {
+		if _, err := newvg.CreateLogicalVolume(lv.Name, datasizes.Size(lv.MinSize), newfs); err != nil {
 			return fmt.Errorf("error creating logical volume %q (%s): %w", lv.Name, lv.Mountpoint, err)
 		}
 	}
@@ -1550,7 +1553,7 @@ func addLVMPartition(pt *PartitionTable, partition blueprint.PartitionCustomizat
 		Type:     partType,
 		UUID:     partition.PartUUID,
 		Label:    partition.PartLabel,
-		Size:     partition.MinSize,
+		Size:     datasizes.Size(partition.MinSize),
 		Bootable: false,
 		Payload:  newvg,
 	}
@@ -1587,7 +1590,7 @@ func addBtrfsPartition(pt *PartitionTable, partition blueprint.PartitionCustomiz
 		Label:    partition.PartLabel,
 		Bootable: false,
 		Payload:  newvol,
-		Size:     partition.MinSize,
+		Size:     datasizes.Size(partition.MinSize),
 	}
 
 	pt.Partitions = append(pt.Partitions, newpart)

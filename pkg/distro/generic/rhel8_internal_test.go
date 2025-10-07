@@ -19,7 +19,7 @@ import (
 func TestRH8_EC2Partitioning(t *testing.T) {
 	testCases := []struct {
 		distro             string
-		aarch64bootSizeMiB uint64
+		aarch64bootSizeMiB datasizes.Size
 	}{
 		{
 			distro:             "rhel-8.8",

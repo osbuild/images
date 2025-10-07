@@ -13,7 +13,7 @@ const (
 	GiB = datasizes.GiB
 )
 
-const FakePartitionSize = uint64(789) * MiB
+const FakePartitionSize = datasizes.Size(789 * MiB)
 
 // TODO: Tidy up and unify TestPartitionTables with the fake partition table
 // generators below (MakeFake*). Maybe use NewCustomPartitionTable() to
@@ -498,7 +498,7 @@ func MakeFakeBtrfsPartitionTable(mntPoints ...string) *disk.PartitionTable {
 	})
 
 	size += 9 * GiB
-	pt.Size = size
+	pt.Size = datasizes.Size(size)
 
 	return pt
 }
@@ -581,7 +581,7 @@ func MakeFakeLVMPartitionTable(mntPoints ...string) *disk.PartitionTable {
 	})
 
 	size += 9 * GiB
-	pt.Size = size
+	pt.Size = datasizes.Size(size)
 
 	return pt
 }

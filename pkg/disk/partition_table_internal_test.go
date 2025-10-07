@@ -17,7 +17,7 @@ const (
 // validatePTSize checks that each Partition is large enough to contain every
 // sizeable under it.
 func validatePTSize(pt *PartitionTable) error {
-	ptTotal := uint64(0)
+	ptTotal := datasizes.Size(0)
 	for _, partition := range pt.Partitions {
 		if err := validateEntitySize(&partition, partition.GetSize()); err != nil {
 			return err
@@ -33,12 +33,12 @@ func validatePTSize(pt *PartitionTable) error {
 
 // validateEntitySize checks that every sizeable under a given Entity can be
 // contained in the given size.
-func validateEntitySize(ent Entity, size uint64) error {
+func validateEntitySize(ent Entity, size datasizes.Size) error {
 	if cont, ok := ent.(Container); ok {
-		containerTotal := uint64(0)
+		containerTotal := datasizes.Size(0)
 		for idx := uint(0); idx < cont.GetItemCount(); idx++ {
 			child := cont.GetChild(idx)
-			var childSize uint64
+			var childSize datasizes.Size
 			if sizeable, convOk := child.(Sizeable); convOk {
 				childSize = sizeable.GetSize()
 				containerTotal += childSize
@@ -233,7 +233,7 @@ func TestValidateFunctions(t *testing.T) {
 func TestRelayout(t *testing.T) {
 	type testCase struct {
 		pt       *PartitionTable
-		size     uint64
+		size     datasizes.Size
 		expected *PartitionTable
 	}
 

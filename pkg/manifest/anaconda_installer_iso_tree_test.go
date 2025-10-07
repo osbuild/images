@@ -62,7 +62,7 @@ func newTestAnacondaISOTree() *manifest.AnacondaInstallerISOTree {
 
 	pipeline := manifest.NewAnacondaInstallerISOTree(build, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
 	// copy of the default in pkg/image - will be moved to the pipeline
-	var efibootImageSize uint64 = 20 * datasizes.MebiByte
+	efibootImageSize := datasizes.Size(20 * datasizes.MebiByte)
 	pipeline.PartitionTable = &disk.PartitionTable{
 		Size: efibootImageSize,
 		Partitions: []disk.Partition{

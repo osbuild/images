@@ -44,7 +44,7 @@ func TestUnmarshalSizeUnitStringBtrfsSubvolume(t *testing.T) {
 	testCases := []struct {
 		name     string
 		input    string
-		expected uint64
+		expected datasizes.Size
 		err      error
 	}{
 		{

@@ -426,7 +426,7 @@ func TestGenPartitionTableDiskCustomizationSizes(t *testing.T) {
 		name                string
 		rootfsMinSize       uint64
 		partitions          []blueprint.PartitionCustomization
-		expectedMinRootSize uint64
+		expectedMinRootSize datasizes.Size
 	}{
 		{
 			"empty disk customizaton, root expands to rootfsMinsize",
@@ -615,7 +615,7 @@ func TestGenPartitionTableDiskCustomizationSizes(t *testing.T) {
 			pt, err := imgType.GenPartitionTable(cus, rootfsMinsize, rng)
 			assert.NoError(t, err)
 
-			var rootSize uint64
+			var rootSize datasizes.Size
 			err = pt.ForEachMountable(func(mnt disk.Mountable, path []disk.Entity) error {
 				if mnt.GetMountpoint() == "/" {
 					for idx := len(path) - 1; idx >= 0; idx-- {

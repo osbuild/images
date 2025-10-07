@@ -205,21 +205,21 @@ func TestMountsDeviceFromPtHappy(t *testing.T) {
 			Type: "org.osbuild.loopback",
 			Options: &LoopbackDeviceOptions{
 				Filename: "fake-disk.img",
-				Size:     testdisk.FakePartitionSize / 512,
+				Size:     uint64(testdisk.FakePartitionSize / 512),
 			},
 		},
 		"boot": {
 			Type: "org.osbuild.loopback",
 			Options: &LoopbackDeviceOptions{
 				Filename: "fake-disk.img",
-				Size:     testdisk.FakePartitionSize / 512,
+				Size:     uint64(testdisk.FakePartitionSize / 512),
 			},
 		},
 		"boot-efi": {
 			Type: "org.osbuild.loopback",
 			Options: &LoopbackDeviceOptions{
 				Filename: "fake-disk.img",
-				Size:     testdisk.FakePartitionSize / 512,
+				Size:     uint64(testdisk.FakePartitionSize / 512),
 			},
 		},
 	})
@@ -240,7 +240,7 @@ func TestMountsDeviceFromBrfs(t *testing.T) {
 			Type: "org.osbuild.loopback",
 			Options: &LoopbackDeviceOptions{
 				Filename: "fake-disk.img",
-				Size:     1 * datasizes.GiB / 512,
+				Size:     uint64(1 * datasizes.GiB / 512),
 			},
 		},
 		"btrfs-6264": {
@@ -248,7 +248,7 @@ func TestMountsDeviceFromBrfs(t *testing.T) {
 			Options: &LoopbackDeviceOptions{
 				Filename: "fake-disk.img",
 				Start:    1 * datasizes.GiB / 512,
-				Size:     9 * datasizes.GiB / 512,
+				Size:     uint64(9 * datasizes.GiB / 512),
 			},
 		},
 	}, devices)

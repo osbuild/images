@@ -105,7 +105,7 @@ func TestGenFsStages(t *testing.T) {
 					Type: "org.osbuild.loopback",
 					Options: &LoopbackDeviceOptions{
 						Filename: "file.img",
-						Size:     testdisk.FakePartitionSize / disk.DefaultSectorSize,
+						Size:     testdisk.FakePartitionSize.Uint64() / disk.DefaultSectorSize,
 						Lock:     true,
 					},
 				},
@@ -121,7 +121,7 @@ func TestGenFsStages(t *testing.T) {
 					Type: "org.osbuild.loopback",
 					Options: &LoopbackDeviceOptions{
 						Filename: "file.img",
-						Size:     testdisk.FakePartitionSize / disk.DefaultSectorSize,
+						Size:     testdisk.FakePartitionSize.Uint64() / disk.DefaultSectorSize,
 						Lock:     true,
 					},
 				},
@@ -137,7 +137,7 @@ func TestGenFsStages(t *testing.T) {
 					Type: "org.osbuild.loopback",
 					Options: &LoopbackDeviceOptions{
 						Filename: "file.img",
-						Size:     testdisk.FakePartitionSize / disk.DefaultSectorSize,
+						Size:     testdisk.FakePartitionSize.Uint64() / disk.DefaultSectorSize,
 						Lock:     true,
 					},
 				},
@@ -154,7 +154,7 @@ func TestGenFsStages(t *testing.T) {
 					Type: "org.osbuild.loopback",
 					Options: &LoopbackDeviceOptions{
 						Filename: "file.img",
-						Size:     testdisk.FakePartitionSize / disk.DefaultSectorSize,
+						Size:     testdisk.FakePartitionSize.Uint64() / disk.DefaultSectorSize,
 						Lock:     true,
 					},
 				},
@@ -391,7 +391,7 @@ func TestGenFsStagesRaw(t *testing.T) {
 					Type: "org.osbuild.loopback",
 					Options: &LoopbackDeviceOptions{
 						Filename: "file.img",
-						Size:     testdisk.FakePartitionSize / disk.DefaultSectorSize,
+						Size:     testdisk.FakePartitionSize.Uint64() / disk.DefaultSectorSize,
 						Lock:     true,
 					},
 				},
@@ -407,7 +407,7 @@ func TestGenFsStagesRaw(t *testing.T) {
 					Type: "org.osbuild.loopback",
 					Options: &LoopbackDeviceOptions{
 						Filename: "file.img",
-						Size:     testdisk.FakePartitionSize / disk.DefaultSectorSize,
+						Size:     testdisk.FakePartitionSize.Uint64() / disk.DefaultSectorSize,
 						Lock:     true,
 					},
 				},
@@ -423,7 +423,7 @@ func TestGenFsStagesRaw(t *testing.T) {
 					Type: "org.osbuild.loopback",
 					Options: &LoopbackDeviceOptions{
 						Filename: "file.img",
-						Size:     testdisk.FakePartitionSize / disk.DefaultSectorSize,
+						Size:     testdisk.FakePartitionSize.Uint64() / disk.DefaultSectorSize,
 						Lock:     true,
 					},
 				},
@@ -440,7 +440,7 @@ func TestGenFsStagesRaw(t *testing.T) {
 					Type: "org.osbuild.loopback",
 					Options: &LoopbackDeviceOptions{
 						Filename: "file.img",
-						Size:     testdisk.FakePartitionSize / disk.DefaultSectorSize,
+						Size:     testdisk.FakePartitionSize.Uint64() / disk.DefaultSectorSize,
 						Lock:     true,
 					},
 				},

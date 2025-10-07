@@ -3242,7 +3242,7 @@ func TestUnmarshalSizeUnitStringPartitionTable(t *testing.T) {
 			}
 			assert.NoError(t, err)
 			assert.Equal(t, tc.expected, pt.StartOffset)
-			assert.Equal(t, tc.expected, pt.Size)
+			assert.Equal(t, datasizes.Size(tc.expected), pt.Size)
 		})
 	}
 }

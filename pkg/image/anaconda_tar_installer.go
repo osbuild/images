@@ -19,7 +19,7 @@ import (
 )
 
 func efiBootPartitionTable(rng *rand.Rand) *disk.PartitionTable {
-	var efibootImageSize uint64 = 20 * datasizes.MebiByte
+	efibootImageSize := datasizes.Size(20 * datasizes.MebiByte)
 	return &disk.PartitionTable{
 		Size: efibootImageSize,
 		Partitions: []disk.Partition{

@@ -17,7 +17,7 @@ import (
 func TestRhel9_EC2Partitioning(t *testing.T) {
 	testCases := []struct {
 		distro      string
-		bootSizeMiB uint64
+		bootSizeMiB datasizes.Size
 	}{
 		// x86_64
 		{
