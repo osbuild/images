@@ -187,6 +187,10 @@ func TestScannerPipelineName(t *testing.T) {
 		"source org.osbuild.librepo",
 		"build",
 	}, slices.Compact(pipelines))
+
+	res, err := scanner.Result()
+	assert.NoError(t, err)
+	assert.True(t, res.Success)
 }
 
 func TestScannerEmpty(t *testing.T) {
@@ -200,4 +204,42 @@ func TestScannerEmpty(t *testing.T) {
 			Done:  0,
 		},
 	}, st)
+}
+
+//go:embed testdata/monitor-validation.json
+var osbuildMonitorValidation []byte
+
+func TestScannerValidationFailure(t *testing.T) {
+	scanner := osbuild.NewStatusScanner(bytes.NewBuffer(osbuildMonitorValidation))
+
+	st, err := scanner.Status()
+	assert.NoError(t, err)
+	assert.Equal(t, &osbuild.Status{
+		Progress: &osbuild.Progress{
+			Total: 0,
+			Done:  0,
+		},
+	}, st)
+
+	res, err := scanner.Result()
+	assert.NoError(t, err)
+	assert.False(t, res.Success)
+	assert.Equal(t, &osbuild.Result{
+		Type:     "https://osbuild.org/validation-error",
+		Success:  false,
+		Error:    nil,
+		Log:      nil,
+		Metadata: nil,
+		Errors: []osbuild.ValidationError{
+			{
+				Message: "{'type': 'org.osbuild.files', 'origin': 'org.osbuild.source', 'somekey': 'bad', 'references': [{}] is not valid under any of the given schemas}",
+				Path:    []string{"pipelines", "[0]", "stages", "[0]", "inputs", "packages"},
+			},
+			{
+				Message: "Additional properties are not allowed ('somekey' was unexpected)",
+				Path:    []string{"pipelines", "[0]", "stages", "[0]", "inputs", "packages"},
+			},
+		},
+		Title: "JSON Schema validation failed",
+	}, res)
 }

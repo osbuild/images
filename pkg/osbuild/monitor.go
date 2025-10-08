@@ -80,6 +80,7 @@ func NewStatusScanner(r io.Reader) *StatusScanner {
 		scanner:         scanner,
 		contextMap:      make(map[string]*contextJSON),
 		stageContextMap: make(map[string]*stageContextJSON),
+		resultMap:       make(map[string]*resultJSON),
 	}
 }
 
@@ -88,6 +89,7 @@ type StatusScanner struct {
 	scanner         *bufio.Scanner
 	contextMap      map[string]*contextJSON
 	stageContextMap map[string]*stageContextJSON
+	resultMap       map[string]*resultJSON
 }
 
 // Status returns a single status struct from the scanner or nil
@@ -163,15 +165,67 @@ func (sr *StatusScanner) Status() (*Status, error) {
 		prog = prog.SubProgress
 	}
 
+	// add result if set
+	if status.Result.ID != "" {
+		sr.resultMap[id] = &status.Result
+	}
+	// TODO add metadata if set once osbuild>=v163
+
 	return st, nil
+}
+
+func (sr *StatusScanner) Result() (*Result, error) {
+	// attempt to capture validation errors first
+	var valRes Result
+	line := sr.scanner.Bytes()
+	line = bytes.Trim(line, "\x1e")
+	if err := json.Unmarshal(line, &valRes); err == nil {
+		if valRes.Type == "https://osbuild.org/validation-error" {
+			return &valRes, nil
+		}
+	}
+
+	result := &Result{
+		Type: "result",
+		Log:  make(map[string]PipelineResult),
+		// success is sum of all stages, set to true at first
+		Success: true,
+	}
+
+	for contextID, stageResult := range sr.resultMap {
+		if !stageResult.Success {
+			result.Success = false
+		}
+		pipelineName := sr.contextMap[contextID].Pipeline.Name
+		stageName := sr.contextMap[contextID].Pipeline.Stage.Name
+		if stageName == "" {
+			fmt.Println("skipping pipeline result for result.logs")
+			continue
+		}
+		stageError := ""
+		if !stageResult.Success {
+			stageError = stageResult.Output
+		}
+		result.Log[pipelineName] = append(result.Log[pipelineName], StageResult{
+			// STAGE RESULT ID or STAGE ID? seems like it's one and the same. If the
+			// result belongs to a stage, then the result id == the stage id?
+			ID:      stageResult.ID,
+			Type:    sr.contextMap[contextID].Pipeline.Stage.Name,
+			Output:  stageResult.Output,
+			Success: stageResult.Success,
+			Error:   stageError,
+		})
+		// TODO fill in result.Metadata as well once osbuild>=v163
+	}
+
+	return result, nil
 }
 
 // statusJSON is a single status entry from the osbuild monitor
 type statusJSON struct {
 	Context  contextJSON  `json:"context"`
 	Progress progressJSON `json:"progress"`
-	// Add "Result" here once
-	// https://github.com/osbuild/osbuild/pull/1831 is merged
+	Result   resultJSON   `json:"result"`
 
 	Message   string  `json:"message"`
 	Timestamp float64 `json:"timestamp"`
@@ -203,4 +257,11 @@ type progressJSON struct {
 	Done  int    `json:"done"`
 
 	SubProgress *progressJSON `json:"progress"`
+}
+
+type resultJSON struct {
+	Name    string `json:"name"`
+	ID      string `json:"id"`
+	Success bool   `json:"success"`
+	Output  string `json:"output"`
 }
