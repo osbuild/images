@@ -201,6 +201,9 @@ func (t *BootcAnacondaInstaller) Manifest(bp *blueprint.Blueprint, options distr
 		anaconda.ModuleRuntime,
 		anaconda.ModuleStorage,
 	)
+	if bpKernel := customizations.GetKernel(); bpKernel.Append != "" {
+		img.InstallerCustomizations.KernelOptionsAppend = append(img.InstallerCustomizations.KernelOptionsAppend, bpKernel.Append)
+	}
 
 	img.Kickstart.OSTree = &kickstart.OSTree{
 		OSName: "default",
