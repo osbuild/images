@@ -32,7 +32,7 @@ func TestRegister(t *testing.T) {
 	testCases := []struct {
 		testName string
 
-		tags         [][2]string
+		tags         []awscloud.AWSTag
 		shareWith    []string
 		architecture arch.Arch
 		bootMode     *platform.BootMode
@@ -182,7 +182,7 @@ func TestRegister(t *testing.T) {
 		{
 			testName:     "set custom AWS tags",
 			architecture: arch.ARCH_X86_64,
-			tags: [][2]string{
+			tags: []awscloud.AWSTag{
 				{"Debug", "True"},
 				{"Production", "False"},
 			},
