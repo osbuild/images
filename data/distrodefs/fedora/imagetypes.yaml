@@ -121,8 +121,6 @@
       - "systemd"
       - "tar"
       - "thai-scalable-waree-fonts"
-      - "tigervnc-server-minimal"
-      - "tigervnc-server-module"
       - "udisks2"
       - "udisks2-iscsi"
       - "usbutils"
@@ -139,6 +137,13 @@
       - "xrdb"
       - "xz"
     conditions:
+      "f41 and below use tigervnc":
+        when:
+          version_less_than: "42"
+        append:
+          include:
+            - "tigervnc-server-minimal"
+            - "tigervnc-server-module"
       "x86_64 specific anaconda pkgs":
         when:
           arch: "x86_64"
@@ -2193,8 +2198,6 @@ image_types:
             - openssh-server
             - nfs-utils
             - openssh-clients
-            - tigervnc-server-minimal
-            - tigervnc-server-module
             - net-tools
             - bridge-utils
             - nmap-ncat
@@ -2234,6 +2237,13 @@ image_types:
             - hexedit
             - sg3_utils
           conditions:
+            "f41 and below use tigervnc":
+              when:
+                version_less_than: "42"
+              append:
+                include:
+                  - "tigervnc-server-minimal"
+                  - "tigervnc-server-module"
             "x86_64 specific anaconda pkgs":
               when:
                 arch: "x86_64"
