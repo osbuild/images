@@ -516,7 +516,6 @@
   "./configs/empty-rhel-vhd.json": {
     "distros": [
       "rhel-8*",
-      "rhel-9.4",
       "rhel-9.6",
       "rhel-9.7",
       "rhel-9.8",
@@ -531,7 +530,8 @@
   "./configs/disable-nm-cloud-setup.json": {
     "distros": [
       "rhel-9.0",
-      "rhel-9.2"
+      "rhel-9.2",
+      "rhel-9.4"
     ],
     "image-types": [
       "vhd"
