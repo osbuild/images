@@ -359,9 +359,9 @@ func TestGenPartitionTableSetsRootfsForAllFilesystemsBtrfs(t *testing.T) {
 	mnt, _ := findMountableSizeableFor(pt, "/")
 	assert.Equal(t, "btrfs", mnt.GetFSType())
 
-	// btrfs has a default (ext4) /boot
+	// btrfs has a default (xfs) /boot
 	mnt, _ = findMountableSizeableFor(pt, "/boot")
-	assert.Equal(t, "ext4", mnt.GetFSType())
+	assert.Equal(t, "xfs", mnt.GetFSType())
 
 	// ESP is always vfat
 	mnt, _ = findMountableSizeableFor(pt, "/boot/efi")

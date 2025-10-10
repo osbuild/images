@@ -386,5 +386,3 @@ distros:
   # definitions
   - name: bootc-generic-1
     defs_path: bootc-generic
-    # XXX: this should go away, currently needed or yaml loader will panic
-    default_fs_type: "ext4"
