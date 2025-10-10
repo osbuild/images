@@ -328,7 +328,7 @@ func (t *BootcImageType) Manifest(bp *blueprint.Blueprint, options distro.ImageO
 	}
 	// For the bootc-disk image, the filename is the basename and
 	// the extension is added automatically for each disk format
-	filename := "disk"
+	filename := strings.Split(t.filename, ".")[0]
 
 	img := image.NewBootcDiskImage(platform, filename, containerSource, buildContainerSource)
 	img.OSCustomizations.Users = users.UsersFromBP(customizations.GetUsers())
@@ -484,7 +484,7 @@ func newBootcDistroAfterIntrospect(archStr string, info *osinfo.Info, imgref, de
 		BootcImageType{
 			name:     "ova",
 			export:   "archive",
-			filename: "disk.tar",
+			filename: "image.ova",
 		},
 	)
 	bd.addArches(ba)

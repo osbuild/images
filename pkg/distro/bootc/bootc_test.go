@@ -15,6 +15,8 @@ import (
 	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/manifest"
+	"github.com/osbuild/images/pkg/osbuild"
+	"github.com/osbuild/images/pkg/osbuild/manifesttest"
 )
 
 type manifestTestCase struct {
@@ -244,4 +246,28 @@ func TestBootcDistroGetArch(t *testing.T) {
 
 	_, err = distro.GetArch("aarch64")
 	assert.EqualError(t, err, `requested bootc arch "aarch64" does not match available arches [x86_64]`)
+}
+
+func TestManifestGenerationOvaFilename(t *testing.T) {
+	bp := getUserConfig()
+	imgOptions := distro.ImageOptions{}
+
+	bd := NewTestBootcDistro()
+	imgType, err := bd.arches["x86_64"].GetImageType("ova")
+	assert.NoError(t, err)
+
+	mf, _, err := imgType.Manifest(bp, imgOptions, nil, common.ToPtr(int64(0)))
+	assert.NoError(t, err)
+	manifestJson, err := mf.Serialize(nil, diskContainers, nil, nil)
+	assert.NoError(t, err)
+	mani, err := manifesttest.NewManifestFromBytes(manifestJson)
+	assert.NoError(t, err)
+	archivePipeline := mani.Pipeline("archive")
+	assert.NotNil(t, archivePipeline)
+	stages := archivePipeline.Stages
+	assert.Len(t, stages, 1)
+	var tarStageOptions osbuild.TarStageOptions
+	err = json.Unmarshal(stages[0].Options, &tarStageOptions)
+	assert.NoError(t, err)
+	assert.Equal(t, "image.ova", tarStageOptions.Filename)
 }
