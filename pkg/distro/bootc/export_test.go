@@ -5,10 +5,9 @@ import (
 
 	"github.com/osbuild/blueprint/pkg/blueprint"
 
-	"github.com/osbuild/images/pkg/arch"
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/bib/osinfo"
 	"github.com/osbuild/images/pkg/disk"
-	"github.com/osbuild/images/pkg/distro"
 )
 
 var (
@@ -20,30 +19,22 @@ var (
 	TestDiskContainers = diskContainers
 )
 
-func NewTestBootcImageType() *BootcImageType {
-	d := &BootcDistro{
-		sourceInfo: &osinfo.Info{
-			OSRelease: osinfo.OSRelease{
-				ID: "bootc-test",
-			},
+func NewTestBootcDistro() *BootcDistro {
+	info := &osinfo.Info{
+		OSRelease: osinfo.OSRelease{
+			ID: "bootc-test",
 		},
-		imgref:    "quay.io/example/example:ref",
-		defaultFs: "xfs",
 	}
-	a := &BootcArch{distro: d, arch: arch.ARCH_X86_64}
-	d.arches = map[string]distro.Arch{
-		"x86_64": a,
-	}
+	return common.Must(newBootcDistroAfterIntrospect("x86_64", info, "quay.io/example/example:ref", "xfs", 0))
+}
 
-	imgType := &BootcImageType{
-		arch:     a,
-		name:     "qcow2",
-		export:   "qcow2",
-		filename: "disk.qcow2",
+func NewTestBootcImageType() *BootcImageType {
+	d := NewTestBootcDistro()
+	it, err := d.arches["x86_64"].GetImageType("qcow2")
+	if err != nil {
+		panic(err)
 	}
-	a.addImageTypes(*imgType)
-
-	return imgType
+	return it.(*BootcImageType)
 }
 
 func (t *BootcImageType) SetSourceInfoPartitionTable(basept *disk.PartitionTable) {

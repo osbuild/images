@@ -209,7 +209,7 @@ func TestManifestSerialization(t *testing.T) {
 		"qcow2-nocontainer": {
 			config:     userConfig,
 			imageTypes: []string{"qcow2"},
-			err:        `cannot serialize pipeline "target": BuildrootFromContainer: serialization not started`,
+			err:        `cannot serialize pipeline "build": BuildrootFromContainer: serialization not started`,
 		},
 	}
 
