@@ -12,7 +12,6 @@ import (
 
 var (
 	CheckFilesystemCustomizations = checkFilesystemCustomizations
-	PartitionTables               = partitionTables
 	UpdateFilesystemSizes         = updateFilesystemSizes
 	CalcRequiredDirectorySizes    = calcRequiredDirectorySizes
 
@@ -22,7 +21,8 @@ var (
 func NewTestBootcDistro() *BootcDistro {
 	info := &osinfo.Info{
 		OSRelease: osinfo.OSRelease{
-			ID: "bootc-test",
+			ID:        "bootc-test",
+			VersionID: "1",
 		},
 	}
 	return common.Must(newBootcDistroAfterIntrospect("x86_64", info, "quay.io/example/example:ref", "xfs", 0))

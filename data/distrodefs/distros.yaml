@@ -379,3 +379,12 @@ distros:
       x86_64: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
       ppc64le: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
       s390x: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
+
+  # Note that this will not be visible by default because we do not
+  # ship with a reporegistry that contains repositories for it. It
+  # is used by the pkg/distro/bootc distro to externalize image
+  # definitions
+  - name: bootc-generic-1
+    defs_path: bootc-generic
+    # XXX: this should go away, currently needed or yaml loader will panic
+    default_fs_type: "ext4"
