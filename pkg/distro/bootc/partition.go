@@ -14,8 +14,6 @@ import (
 )
 
 const (
-	DEFAULT_SIZE = datasizes.Size(10 * GibiByte)
-
 	// As a baseline heuristic we double the size of
 	// the input container to support in-place updates.
 	// This is planned to be more configurable in the
@@ -66,14 +64,12 @@ func (t *BootcImageType) basePartitionTable() (*disk.PartitionTable, error) {
 	if t.arch.distro.sourceInfo != nil && t.arch.distro.sourceInfo.PartitionTable != nil {
 		return t.arch.distro.sourceInfo.PartitionTable, nil
 	}
-	// get it from the build-in fallback partition tables
-	if pt, ok := partitionTables[t.arch.Name()]; ok {
-		return &pt, nil
-	}
-	return nil, fmt.Errorf("cannot find a base partition table for %q", t.Name())
+	// otherwise we use our YAML
+	return t.ImageTypeYAML.PartitionTable(t.arch.distro.id, t.arch.Name())
 }
 
 func (t *BootcImageType) genPartitionTable(customizations *blueprint.Customizations, rootfsMinSize uint64, rng *rand.Rand) (*disk.PartitionTable, error) {
+	// XXX: much duplication with generic/imagetype.go:getPartitionTable()
 	fsCust := customizations.GetFilesystems()
 	diskCust, err := customizations.GetPartitioning()
 	if err != nil {
@@ -97,7 +93,6 @@ func (t *BootcImageType) genPartitionTable(customizations *blueprint.Customizati
 
 	var partitionTable *disk.PartitionTable
 	switch {
-	// XXX: move into images library
 	case fsCust != nil && diskCust != nil:
 		return nil, fmt.Errorf("cannot combine disk and filesystem customizations")
 	case diskCust != nil:
@@ -112,6 +107,7 @@ func (t *BootcImageType) genPartitionTable(customizations *blueprint.Customizati
 		}
 	}
 
+	// XXX: make this generic/configurable
 	// Ensure ext4 rootfs has fs-verity enabled
 	rootfs := partitionTable.FindMountable("/")
 	if rootfs != nil {
@@ -169,11 +165,16 @@ func (t *BootcImageType) genPartitionTableFsCust(basept *disk.PartitionTable, fs
 	}
 	fsCustomizations := updateFilesystemSizes(fsCust, rootfsMinSize)
 
-	pt, err := disk.NewPartitionTable(basept, fsCustomizations, DEFAULT_SIZE, partitioningMode, t.arch.arch, nil, t.arch.distro.defaultFs, rng)
+	pt, err := disk.NewPartitionTable(basept, fsCustomizations, t.ImageTypeYAML.DefaultSize, partitioningMode, t.arch.arch, nil, t.arch.distro.defaultFs, rng)
 	if err != nil {
 		return nil, err
 	}
 
+	// XXX: images now DTRT if the "default_fs_type" is set in
+	// the distros.yaml for the given distro. but because currently
+	// that is a static file for the "bootc-generic" distro we
+	// need to adjust things here. We should instead set the
+	// defaultFS on distro loading (in NewBootcDistro()).
 	if err := setFSTypes(pt, t.arch.distro.defaultFs); err != nil {
 		return nil, fmt.Errorf("error setting root filesystem type: %w", err)
 	}

@@ -20,6 +20,7 @@ import (
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/distro/defs"
 	"github.com/osbuild/images/pkg/image"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/platform"
@@ -36,7 +37,7 @@ type BootcDistro struct {
 	sourceInfo      *osinfo.Info
 	buildSourceInfo *osinfo.Info
 
-	name          string
+	id            distro.ID
 	defaultFs     string
 	releasever    string
 	rootfsMinSize uint64
@@ -51,16 +52,6 @@ type BootcArch struct {
 	arch   arch.Arch
 
 	imageTypes map[string]distro.ImageType
-}
-
-var _ = distro.ImageType(&BootcImageType{})
-
-type BootcImageType struct {
-	arch *BootcArch
-
-	name     string
-	export   string
-	filename string
 }
 
 func (d *BootcDistro) SetBuildContainer(imgref string) (err error) {
@@ -109,7 +100,7 @@ func (d *BootcDistro) DefaultFs() string {
 }
 
 func (d *BootcDistro) Name() string {
-	return d.name
+	return d.id.String()
 }
 
 func (d *BootcDistro) Codename() string {
@@ -125,7 +116,7 @@ func (d *BootcDistro) OsVersion() string {
 }
 
 func (d *BootcDistro) Product() string {
-	return d.name
+	return d.id.String()
 }
 
 func (d *BootcDistro) ModulePlatformID() string {
@@ -201,12 +192,20 @@ func (a *BootcArch) addImageTypes(imageTypes ...BootcImageType) {
 	}
 }
 
+var _ = distro.ImageType(&BootcImageType{})
+
+type BootcImageType struct {
+	defs.ImageTypeYAML
+
+	arch *BootcArch
+}
+
 func (t *BootcImageType) Name() string {
-	return t.name
+	return t.ImageTypeYAML.Name()
 }
 
 func (t *BootcImageType) Aliases() []string {
-	return nil
+	return t.ImageTypeYAML.NameAliases
 }
 
 func (t *BootcImageType) Arch() distro.Arch {
@@ -214,11 +213,11 @@ func (t *BootcImageType) Arch() distro.Arch {
 }
 
 func (t *BootcImageType) Filename() string {
-	return t.filename
+	return t.ImageTypeYAML.Filename
 }
 
 func (t *BootcImageType) MIMEType() string {
-	return "application/x-test"
+	return t.ImageTypeYAML.MimeType
 }
 
 func (t *BootcImageType) OSTreeRef() string {
@@ -237,11 +236,20 @@ func (t *BootcImageType) Size(size uint64) uint64 {
 }
 
 func (t *BootcImageType) PartitionType() disk.PartitionTableType {
-	return disk.PT_NONE
+	// XXX: duplicated from generic/imagetype.go
+	basePartitionTable, err := t.BasePartitionTable()
+	if errors.Is(err, defs.ErrNoPartitionTableForImgType) {
+		return disk.PT_NONE
+	}
+	if err != nil {
+		panic(err)
+	}
+
+	return basePartitionTable.Type
 }
 
 func (t *BootcImageType) BasePartitionTable() (*disk.PartitionTable, error) {
-	return nil, nil
+	return t.ImageTypeYAML.PartitionTable(t.arch.distro.id, t.arch.arch.String())
 }
 
 func (t *BootcImageType) BootMode() platform.BootMode {
@@ -255,20 +263,12 @@ func (t *BootcImageType) BootMode() platform.BootMode {
 	return platform.BOOT_HYBRID
 }
 
-func (t *BootcImageType) BuildPipelines() []string {
-	return []string{"build"}
-}
-
-func (t *BootcImageType) PayloadPipelines() []string {
-	return []string{""}
-}
-
 func (t *BootcImageType) PayloadPackageSets() []string {
 	return nil
 }
 
 func (t *BootcImageType) Exports() []string {
-	return []string{t.export}
+	return t.ImageTypeYAML.Exports
 }
 
 func (t *BootcImageType) SupportedBlueprintOptions() []string {
@@ -315,7 +315,7 @@ func (t *BootcImageType) Manifest(bp *blueprint.Blueprint, options distro.ImageO
 	platform := PlatformFor(t.arch.Name(), t.arch.distro.sourceInfo.UEFIVendor)
 	// For the bootc-disk image, the filename is the basename and
 	// the extension is added automatically for each disk format
-	filename := strings.Split(t.filename, ".")[0]
+	filename := strings.Split(t.Filename(), ".")[0]
 
 	img := image.NewBootcDiskImage(platform, filename, containerSource, buildContainerSource)
 	img.OSCustomizations.Users = users.UsersFromBP(customizations.GetUsers())
@@ -410,8 +410,12 @@ func NewBootcDistro(imgref string) (*BootcDistro, error) {
 
 func newBootcDistroAfterIntrospect(archStr string, info *osinfo.Info, imgref, defaultFs string, cntSize uint64) (*BootcDistro, error) {
 	nameVer := fmt.Sprintf("bootc-%s-%s", info.OSRelease.ID, info.OSRelease.VersionID)
+	id, err := distro.ParseID(nameVer)
+	if err != nil {
+		return nil, err
+	}
 	bd := &BootcDistro{
-		name:          nameVer,
+		id:            *id,
 		releasever:    info.OSRelease.VersionID,
 		defaultFs:     defaultFs,
 		rootfsMinSize: cntSize * containerSizeToDiskSizeMultiplier,
@@ -431,55 +435,25 @@ func newBootcDistroAfterIntrospect(archStr string, info *osinfo.Info, imgref, de
 	ba := &BootcArch{
 		arch: archi,
 	}
-	// TODO: add iso image types, see bootc-image-builder
-	//
-	// Note that the file extension is hardcoded in
-	// pkg/image/bootc_disk.go, we have no way to access
-	// it here so we need to duplicate it
-	// XXX: find a way to avoid this duplication
-	ba.addImageTypes(
-		BootcImageType{
-			name:     "ami",
-			export:   "image",
-			filename: "disk.raw",
-		},
-		BootcImageType{
-			name:     "qcow2",
-			export:   "qcow2",
-			filename: "disk.qcow2",
-		},
-		BootcImageType{
-			name:     "raw",
-			export:   "image",
-			filename: "disk.raw",
-		},
-		BootcImageType{
-			name:     "vmdk",
-			export:   "vmdk",
-			filename: "disk.vmdk",
-		},
-		BootcImageType{
-			name:     "vhd",
-			export:   "bpc",
-			filename: "disk.vhd",
-		},
-		BootcImageType{
-			name:     "gce",
-			export:   "gce",
-			filename: "image.tar.gz",
-		},
-		BootcImageType{
-			name:     "ova",
-			export:   "archive",
-			filename: "image.ova",
-		},
-	)
+
+	// XXX: this currently has a default_fs_type in the
+	// bootc-generic-1 YAML. Refactor so that we can set
+	// this later, i.e. split NewDistroYAML().
+	distroYAML, err := defs.NewDistroYAML("bootc-generic-1")
+	if err != nil {
+		return nil, err
+	}
+	for _, imgTypeYaml := range distroYAML.ImageTypes() {
+		ba.addImageTypes(BootcImageType{
+			ImageTypeYAML: imgTypeYaml,
+		})
+	}
+	// XXX: move into YAML as well
 	ba.imageTypes["bootc-installer"] = &BootcAnacondaInstaller{
 		arch:   ba,
 		name:   "bootc-installer",
 		export: "bootiso",
 	}
-
 	bd.addArches(ba)
 
 	return bd, nil
