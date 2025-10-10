@@ -329,14 +329,8 @@ func (t *BootcImageType) Manifest(bp *blueprint.Blueprint, options distro.ImageO
 		img.OSCustomizations.MountConfiguration = *t.arch.distro.sourceInfo.MountConfiguration
 	}
 
-	img.OSCustomizations.KernelOptionsAppend = []string{
-		"rw",
-		// TODO: Drop this as we expect kargs to come from the container image,
-		// xref https://github.com/CentOS/centos-bootc-layered/blob/main/cloud/usr/lib/bootc/install/05-cloud-kargs.toml
-		"console=tty0",
-		"console=ttyS0",
-	}
-
+	imageConfig := t.ImageTypeYAML.ImageConfig(t.arch.distro.id, t.arch.Name())
+	img.OSCustomizations.KernelOptionsAppend = imageConfig.KernelOptions
 	if kopts := customizations.GetKernel(); kopts != nil && kopts.Append != "" {
 		img.OSCustomizations.KernelOptionsAppend = append(img.OSCustomizations.KernelOptionsAppend, kopts.Append)
 	}
