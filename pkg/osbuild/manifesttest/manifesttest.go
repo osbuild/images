@@ -108,6 +108,15 @@ func (p *Pipeline) Stage(typ string) *Stage {
 	return nil
 }
 
+func (m *Manifest) Pipeline(name string) *Pipeline {
+	for _, p := range m.Pipelines {
+		if p.Name == name {
+			return &p
+		}
+	}
+	return nil
+}
+
 // Stage is a unmarshalable version of osbuild.Stage with extra
 // debug helpers
 type Stage struct {
