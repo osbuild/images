@@ -9,7 +9,6 @@ import (
 	"github.com/osbuild/blueprint/pkg/blueprint"
 
 	"github.com/osbuild/images/internal/common"
-	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/disk/partition"
@@ -169,20 +168,6 @@ func TestLocalMountpointPolicy(t *testing.T) {
 				t.Errorf("expected %s to be denied, but got no error", tc.path)
 			}
 		})
-	}
-}
-
-func TestBasePartitionTablesHaveRoot(t *testing.T) {
-	// make sure that all base partition tables have at least a root partition defined
-	for arch, pt := range bootc.PartitionTables {
-		rootMountable := pt.FindMountable("/")
-		if rootMountable == nil {
-			t.Errorf("partition table %q does not define a root filesystem", arch)
-		}
-		_, isFS := rootMountable.(*disk.Filesystem)
-		if !isFS {
-			t.Errorf("root mountable for %q is not an ordinary filesystem", arch)
-		}
 	}
 }
 
@@ -374,9 +359,9 @@ func TestGenPartitionTableSetsRootfsForAllFilesystemsBtrfs(t *testing.T) {
 	mnt, _ := findMountableSizeableFor(pt, "/")
 	assert.Equal(t, "btrfs", mnt.GetFSType())
 
-	// btrfs has a default (ext4) /boot
+	// btrfs has a default (xfs) /boot
 	mnt, _ = findMountableSizeableFor(pt, "/boot")
-	assert.Equal(t, "ext4", mnt.GetFSType())
+	assert.Equal(t, "xfs", mnt.GetFSType())
 
 	// ESP is always vfat
 	mnt, _ = findMountableSizeableFor(pt, "/boot/efi")
@@ -672,9 +657,10 @@ func TestGenPartitionTableFromOSInfo(t *testing.T) {
 	imgType := bootc.NewTestBootcImageType()
 	// pretend a custom partition table is set via the bootc
 	// container sourceInfo mechanism
-	newPt := bootc.PartitionTables[arch.Current().String()]
+	newPt, err := imgType.BasePartitionTable()
+	assert.NoError(t, err)
 	newPt.UUID = "01010101-01011-01011-01011-01010101"
-	imgType.SetSourceInfoPartitionTable(&newPt)
+	imgType.SetSourceInfoPartitionTable(newPt)
 
 	// validate that the container uuid is part of the generated
 	// manifest
