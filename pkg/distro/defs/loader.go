@@ -184,6 +184,21 @@ func loadDistros() (*distrosYAML, error) {
 // with the way distrofactory/reporegistry work which is by defining
 // distros via repository files.
 func NewDistroYAML(nameVer string) (*DistroYAML, error) {
+	foundDistro, err := LoadDistroWithoutImageTypes(nameVer)
+	if err != nil {
+		return nil, err
+	}
+	if foundDistro == nil {
+		return nil, nil
+	}
+
+	if err := foundDistro.LoadImageTypes(); err != nil {
+		return nil, err
+	}
+	return foundDistro, nil
+}
+
+func LoadDistroWithoutImageTypes(nameVer string) (*DistroYAML, error) {
 	distros, err := loadDistros()
 	if err != nil {
 		return nil, err
@@ -210,6 +225,7 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 	if foundDistro == nil {
 		return nil, nil
 	}
+
 	// having "foundDistro.id" avoid re-parsing this in the various helpers
 	id, err := distro.ParseID(nameVer)
 	if err != nil {
@@ -220,10 +236,13 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 		return nil, err
 	}
 
-	// load imageTypes
-	f, err := dataFS().Open(filepath.Join(foundDistro.DefsPath, "imagetypes.yaml"))
+	return foundDistro, err
+}
+
+func (d *DistroYAML) LoadImageTypes() error {
+	f, err := dataFS().Open(filepath.Join(d.DefsPath, "imagetypes.yaml"))
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer f.Close()
 
@@ -231,26 +250,25 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 	decoder := yaml.NewDecoder(f)
 	decoder.KnownFields(true)
 	if err := decoder.Decode(&toplevel); err != nil {
-		return nil, err
+		return err
 	}
 	if len(toplevel.ImageTypes) > 0 {
-		foundDistro.imageTypes = make(map[string]ImageTypeYAML, len(toplevel.ImageTypes))
+		d.imageTypes = make(map[string]ImageTypeYAML, len(toplevel.ImageTypes))
 		for name := range toplevel.ImageTypes {
 			v := toplevel.ImageTypes[name]
 			v.name = name
-			if err := v.runTemplates(foundDistro); err != nil {
-				return nil, err
+			if err := v.runTemplates(d); err != nil {
+				return err
 			}
-			if err := v.setupDefaultFS(foundDistro.DefaultFSType.String()); err != nil {
-				return nil, err
+			if err := v.setupDefaultFS(d.DefaultFSType.String()); err != nil {
+				return err
 			}
 
-			foundDistro.imageTypes[name] = v
+			d.imageTypes[name] = v
 		}
 	}
-	foundDistro.imageConfig = toplevel.ImageConfig.For(foundDistro.ID)
-
-	return foundDistro, nil
+	d.imageConfig = toplevel.ImageConfig.For(d.ID)
+	return nil
 }
 
 // imageTypesYAML describes the image types for a given distribution
