@@ -165,20 +165,7 @@ func (t *BootcImageType) genPartitionTableFsCust(basept *disk.PartitionTable, fs
 	}
 	fsCustomizations := updateFilesystemSizes(fsCust, rootfsMinSize)
 
-	pt, err := disk.NewPartitionTable(basept, fsCustomizations, t.ImageTypeYAML.DefaultSize, partitioningMode, t.arch.arch, nil, t.arch.distro.defaultFs, rng)
-	if err != nil {
-		return nil, err
-	}
-
-	// XXX: images now DTRT if the "default_fs_type" is set in
-	// the distros.yaml for the given distro. but because currently
-	// that is a static file for the "bootc-generic" distro we
-	// need to adjust things here. We should instead set the
-	// defaultFS on distro loading (in NewBootcDistro()).
-	if err := setFSTypes(pt, t.arch.distro.defaultFs); err != nil {
-		return nil, fmt.Errorf("error setting root filesystem type: %w", err)
-	}
-	return pt, nil
+	return disk.NewPartitionTable(basept, fsCustomizations, t.ImageTypeYAML.DefaultSize, partitioningMode, t.arch.arch, nil, t.arch.distro.defaultFs, rng)
 }
 
 func checkMountpoints(filesystems []blueprint.FilesystemCustomization, policy *pathpolicy.PathPolicies) error {
@@ -274,37 +261,4 @@ func updateFilesystemSizes(fsCustomizations []blueprint.FilesystemCustomization,
 		updated = append(updated, blueprint.FilesystemCustomization{Mountpoint: "/", MinSize: minRootSize})
 	}
 	return updated
-}
-
-// setFSTypes sets the filesystem types for all mountable entities to match the
-// selected rootfs type.
-// If rootfs is 'btrfs', the function will keep '/boot' to its default.
-func setFSTypes(pt *disk.PartitionTable, rootfs string) error {
-	if rootfs == "" {
-		return fmt.Errorf("root filesystem type is empty")
-	}
-
-	return pt.ForEachMountable(func(mnt disk.Mountable, _ []disk.Entity) error {
-		switch mnt.GetMountpoint() {
-		case "/boot/efi":
-			// never change the efi partition's type
-			return nil
-		case "/boot":
-			// change only if we're not doing btrfs
-			if rootfs == "btrfs" {
-				return nil
-			}
-			fallthrough
-		default:
-			switch elem := mnt.(type) {
-			case *disk.Filesystem:
-				elem.Type = rootfs
-			case *disk.BtrfsSubvolume:
-				// nothing to do
-			default:
-				return fmt.Errorf("the mountable disk entity for %q of the base partition table is not an ordinary filesystem but %T", mnt.GetMountpoint(), mnt)
-			}
-			return nil
-		}
-	})
 }
