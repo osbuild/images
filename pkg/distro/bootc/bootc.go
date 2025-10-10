@@ -408,7 +408,7 @@ func NewBootcDistro(imgref string) (*BootcDistro, error) {
 	return newBootcDistroAfterIntrospect(cnt.Arch(), info, imgref, defaultFs, cntSize)
 }
 
-func newBootcDistroAfterIntrospect(archStr string, info *osinfo.Info, imgref, defaultFs string, cntSize uint64) (*BootcDistro, error) {
+func newBootcDistroAfterIntrospect(archStr string, info *osinfo.Info, imgref, defaultFsStr string, cntSize uint64) (*BootcDistro, error) {
 	nameVer := fmt.Sprintf("bootc-%s-%s", info.OSRelease.ID, info.OSRelease.VersionID)
 	id, err := distro.ParseID(nameVer)
 	if err != nil {
@@ -417,7 +417,7 @@ func newBootcDistroAfterIntrospect(archStr string, info *osinfo.Info, imgref, de
 	bd := &BootcDistro{
 		id:            *id,
 		releasever:    info.OSRelease.VersionID,
-		defaultFs:     defaultFs,
+		defaultFs:     defaultFsStr,
 		rootfsMinSize: cntSize * containerSizeToDiskSizeMultiplier,
 
 		imgref:     imgref,
@@ -436,11 +436,16 @@ func newBootcDistroAfterIntrospect(archStr string, info *osinfo.Info, imgref, de
 		arch: archi,
 	}
 
-	// XXX: this currently has a default_fs_type in the
-	// bootc-generic-1 YAML. Refactor so that we can set
-	// this later, i.e. split NewDistroYAML().
-	distroYAML, err := defs.NewDistroYAML("bootc-generic-1")
+	distroYAML, err := defs.LoadDistroWithoutImageTypes("bootc-generic-1")
 	if err != nil {
+		return nil, err
+	}
+	defaultFs, err := disk.NewFSType(defaultFsStr)
+	if err != nil {
+		return nil, err
+	}
+	distroYAML.DefaultFSType = defaultFs
+	if err := distroYAML.LoadImageTypes(); err != nil {
 		return nil, err
 	}
 	for _, imgTypeYaml := range distroYAML.ImageTypes() {
