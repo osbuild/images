@@ -1654,6 +1654,10 @@ image_types:
       locale: "en_US.UTF-8"
       # iot-installer is not using the default ostree kernel options
       kernel_options:
+        # XXX temporary workaround for ISO's not booting when booted as
+        # XXX EFI disks. See [1].
+        # [1]: https://github.com/osbuild/images/issues/1946
+        - "systemd.gpt_auto=0"
     package_sets:
       installer:
         - *anaconda_pkgset
@@ -1791,6 +1795,11 @@ image_types:
         - "org.fedoraproject.Anaconda.Modules.Users"
     image_config:
       locale: "en_US.UTF-8"
+      kernel_options:
+        # XXX temporary workaround for ISO's not booting when booted as
+        # XXX EFI disks. See [1].
+        # [1]: https://github.com/osbuild/images/issues/1946
+        - "systemd.gpt_auto=0"
     platforms:
       - *x86_64_installer_platform
       - *aarch64_installer_platform
@@ -2153,6 +2162,11 @@ image_types:
     installer_config: *default_installer_config
     image_config:
       locale: "en_US.UTF-8"
+      kernel_options:
+        # XXX temporary workaround for ISO's not booting when booted as
+        # XXX EFI disks. See [1].
+        # [1]: https://github.com/osbuild/images/issues/1946
+        - "systemd.gpt_auto=0"
     package_sets:
       installer:
         - include:
