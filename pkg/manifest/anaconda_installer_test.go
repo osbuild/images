@@ -210,8 +210,8 @@ func TestAnacondaInstallerConfigLorax(t *testing.T) {
 	installerPipeline.InstallerCustomizations.LoraxTemplatePackage = "lorax-templates-generic"
 	installerPipeline.InstallerCustomizations.LoraxLogosPackage = "fedora-logos"
 	installerPipeline.InstallerCustomizations.LoraxReleasePackage = "fedora-release"
-	installerPipeline.InstallerCustomizations.LoraxTemplates = []string{
-		"99-generic/runtime-postinstall.tmpl",
+	installerPipeline.InstallerCustomizations.LoraxTemplates = []manifest.InstallerLoraxTemplate{
+		manifest.InstallerLoraxTemplate{Path: "99-generic/runtime-postinstall.tmpl"},
 	}
 	pipeline, err := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: depsolvednf.DepsolveResult{Packages: pkgs}})
 	require.NoError(err)
