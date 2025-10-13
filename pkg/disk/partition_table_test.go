@@ -1685,6 +1685,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						},
 					},
 				},
+				StartOffset: 3 * datasizes.MiB,
 			},
 			options: &disk.CustomPartitionTableOptions{
 				DefaultFSType:      disk.FS_XFS,
@@ -1694,19 +1695,20 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				Architecture:       arch.ARCH_X86_64,
 			},
 			expected: &disk.PartitionTable{
-				Type: disk.PT_DOS,
-				Size: 222*datasizes.MiB + 3*datasizes.GiB,
-				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+				Type:        disk.PT_DOS,
+				Size:        225*datasizes.MiB + 3*datasizes.GiB,
+				StartOffset: 3 * datasizes.MiB,
+				UUID:        "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
 				Partitions: []disk.Partition{
 					{
-						Start:    1 * datasizes.MiB, // header
+						Start:    4 * datasizes.MiB, // header + offset
 						Size:     1 * datasizes.MiB,
 						Bootable: true,
 						Type:     disk.BIOSBootPartitionDOSID,
 						UUID:     disk.BIOSBootPartitionUUID,
 					},
 					{
-						Start: 2 * datasizes.MiB,
+						Start: 5 * datasizes.MiB,
 						Size:  200 * datasizes.MiB,
 						Type:  disk.EFISystemPartitionDOSID,
 						UUID:  disk.EFISystemPartitionUUID,
@@ -1721,7 +1723,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						},
 					},
 					{
-						Start:    202 * datasizes.MiB,
+						Start:    205 * datasizes.MiB,
 						Size:     20 * datasizes.MiB,
 						Type:     disk.FilesystemLinuxDOSID,
 						Bootable: false,
@@ -1737,7 +1739,7 @@ func TestNewCustomPartitionTable(t *testing.T) {
 						},
 					},
 					{
-						Start:    222 * datasizes.MiB,
+						Start:    225 * datasizes.MiB,
 						Size:     3 * datasizes.GiB,
 						Type:     disk.FilesystemLinuxDOSID,
 						UUID:     "", // partitions on dos PTs don't have UUIDs
