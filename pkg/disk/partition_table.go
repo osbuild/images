@@ -472,23 +472,21 @@ func (pt *PartitionTable) applyCustomization(mountpoints []blueprint.FilesystemC
 // in `size` or to the sum of all partitions if that is larger. Will grow the
 // root partition if there is any empty space. Returns the updated start point.
 func (pt *PartitionTable) relayout(size datasizes.Size) uint64 {
-	header := datasizes.Size(0)
+	header := pt.HeaderSize()
 	footer := datasizes.Size(0)
 
+	// The GPT header is also at the end of the partition table
 	if pt.Type == PT_GPT {
-		// always reserve one extra sector for the GPT header
-		header = pt.HeaderSize()
-		// The GPT header is also at the end of the partition table
 		footer = header
 	}
 
-	start := pt.AlignUp(header).Uint64()
-	start += pt.StartOffset.Uint64()
+	start := pt.StartOffset.Uint64()
 
-	// sfdisk does not accept start == 0
-	if start < pt.AlignUp(pt.HeaderSize()).Uint64() {
-		start = pt.AlignUp(pt.HeaderSize()).Uint64()
+	if start < header.Uint64() {
+		start = header.Uint64()
 	}
+
+	start = pt.AlignUp(datasizes.Size(start)).Uint64()
 
 	size = pt.AlignUp(size)
 
