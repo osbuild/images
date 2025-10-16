@@ -4,7 +4,7 @@
     "bootc-image-builder": {
       "ref": "quay.io/centos-bootc/bootc-image-builder@sha256:9893e7209e5f449b86ababfd2ee02a58cca2e5990f77b06c3539227531fc8120"
     },
-    "gitlab-ci-runner": "aws/fedora-41"
+    "gitlab-ci-runner": "aws/fedora-42"
   },
   "centos-9": {
     "dependencies": {
@@ -25,6 +25,13 @@
       "osbuild": {
         "commit": "f29f4f2ea0b37d3cfbaa4371452458fdffb0c4f9"
       }
+    }
+  },
+  "fedora-42": {
+    "dependencies": {
+      "osbuild": {
+        "commit": "565b4163311391707de75b4d1aeb75e229820f33"
+      }
     },
     "repos": [
       {
@@ -33,42 +40,28 @@
           {
             "title": "fedora",
             "name": "fedora",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f41/f41-x86_64-fedora-20241107"
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f42/f42-x86_64-fedora-20250512"
+          },
+          {
+            "title": "fedora-updates",
+            "name": "fedora-updates",
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f42/f42-x86_64-updates-released-20251001"
           }
         ],
         "aarch64": [
           {
             "title": "fedora",
             "name": "fedora",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f41/f41-aarch64-fedora-20241107"
-          }
-        ]
-      },
-      {
-        "file": "/etc/yum.repos.d/fedora-updates.repo",
-        "x86_64": [
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f42/f42-aarch64-fedora-20250512"
+          },
           {
-            "title": "updates",
-            "name": "updates",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f41/f41-x86_64-updates-released-20251001"
-          }
-        ],
-        "aarch64": [
-          {
-            "title": "updates",
-            "name": "updates",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f41/f41-aarch64-updates-released-20251001"
+            "title": "fedora-updates",
+            "name": "fedora-updates",
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f42/f42-aarch64-updates-released-20251001"
           }
         ]
       }
     ]
-  },
-  "fedora-42": {
-    "dependencies": {
-      "osbuild": {
-        "commit": "f29f4f2ea0b37d3cfbaa4371452458fdffb0c4f9"
-      }
-    }
   },
   "fedora-43": {
     "dependencies": {
