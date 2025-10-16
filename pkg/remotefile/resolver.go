@@ -2,8 +2,8 @@ package remotefile
 
 import (
 	"context"
-
-	"github.com/osbuild/images/internal/worker/clienterrors"
+	"fmt"
+	"strings"
 )
 
 type resolveResult struct {
@@ -39,28 +39,28 @@ func (r *Resolver) Add(url string) {
 	}()
 }
 
-func (r *Resolver) Finish() []Spec {
+func (r *Resolver) Finish() ([]Spec, error) {
 
 	resultItems := make([]Spec, 0, r.jobs)
+	var errs []string
 	for r.jobs > 0 {
 		result := <-r.queue
 		r.jobs -= 1
 
-		var resultError *clienterrors.Error
 		if result.err != nil {
-			resultError = clienterrors.WorkerClientError(
-				clienterrors.ErrorRemoteFileResolution,
-				result.err.Error(),
-				result.url,
-			)
+			errs = append(errs, result.err.Error())
+			continue
 		}
 
 		resultItems = append(resultItems, Spec{
-			URL:             result.url,
-			Content:         result.content,
-			ResolutionError: resultError,
+			URL:     result.url,
+			Content: result.content,
 		})
 	}
 
-	return resultItems
+	if len(errs) > 0 {
+		return resultItems, fmt.Errorf("failed to resolve remote files: %s", strings.Join(errs, "; "))
+	}
+
+	return resultItems, nil
 }
