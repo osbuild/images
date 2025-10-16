@@ -33,7 +33,7 @@ CAN_BOOT_TEST = {
     ],
     "x86_64": [
         "image-installer", "minimal-installer", "network-installer",
-        "qcow2", "server-qcow2",
+        "qcow2", "generic-qcow2",
         "wsl"
     ]
 }
