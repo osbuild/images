@@ -480,13 +480,7 @@ func (pt *PartitionTable) relayout(size datasizes.Size) uint64 {
 		footer = header
 	}
 
-	start := pt.StartOffset.Uint64()
-
-	if start < header.Uint64() {
-		start = header.Uint64()
-	}
-
-	start = pt.AlignUp(datasizes.Size(start)).Uint64()
+	start := pt.AlignUp(header + pt.StartOffset).Uint64()
 
 	size = pt.AlignUp(size)
 
