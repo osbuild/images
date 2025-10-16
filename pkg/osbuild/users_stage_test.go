@@ -99,3 +99,10 @@ func TestGenUsersStageSameAsNewUsersStageOptions(t *testing.T) {
 	// the same
 	assert.Equal(t, usrStageOptions, opts)
 }
+
+func TestNewUsersStageOptionsForLockedRoot(t *testing.T) {
+	options := NewUsersStageOptionsForLockedRoot()
+	require.NotNil(t, options)
+
+	assert.Equal(t, "!locked", *options.Users["root"].Password)
+}
