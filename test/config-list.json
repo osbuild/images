@@ -12,7 +12,8 @@
       "image-types": [
         "ami",
         "generic-ami",
-        "generic-qcow2"
+        "generic-qcow2",
+        "server-qcow2"
       ]
     }
   },
@@ -338,7 +339,8 @@
       ],
       "image-types": [
         "qcow2",
-        "generic-qcow2"
+        "generic-qcow2",
+        "server-qcow2"
       ]
     }
   },
@@ -488,7 +490,8 @@
     "path": "./configs/import-rpm-gpg-keys-from-tree-fedora.json",
     "filters": {
       "image-types": [
-        "generic-qcow2"
+        "generic-qcow2",
+        "server-qcow2"
       ],
       "distros": [
         "fedora*"

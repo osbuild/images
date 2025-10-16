@@ -349,6 +349,7 @@ func TestFedoraImageType_Name(t *testing.T) {
 				"generic-vagrant-libvirt",
 				"generic-vagrant-virtualbox",
 				"generic-wsl",
+				"server-qcow2",
 			},
 			verTypes: map[string][]string{
 				"40": {
@@ -377,6 +378,7 @@ func TestFedoraImageType_Name(t *testing.T) {
 				"generic-openstack",
 				"generic-qcow2",
 				"generic-vagrant-libvirt",
+				"server-qcow2",
 			},
 			verTypes: map[string][]string{
 				"40": {
@@ -512,6 +514,7 @@ func TestFedoraArchitecture_ListImageTypes(t *testing.T) {
 				"generic-vagrant-libvirt",
 				"generic-vagrant-virtualbox",
 				"generic-wsl",
+				"server-qcow2",
 				"iot-bootable-container",
 				"iot-simplified-installer",
 				"everything-network-installer",
@@ -536,6 +539,7 @@ func TestFedoraArchitecture_ListImageTypes(t *testing.T) {
 				"generic-openstack",
 				"generic-qcow2",
 				"generic-vagrant-libvirt",
+				"server-qcow2",
 				"iot-bootable-container",
 				"iot-simplified-installer",
 				"everything-network-installer",
@@ -547,6 +551,7 @@ func TestFedoraArchitecture_ListImageTypes(t *testing.T) {
 			imgNames: []string{
 				"generic-container",
 				"generic-qcow2",
+				"server-qcow2",
 				"iot-bootable-container",
 			},
 		},
@@ -555,6 +560,7 @@ func TestFedoraArchitecture_ListImageTypes(t *testing.T) {
 			imgNames: []string{
 				"generic-container",
 				"generic-qcow2",
+				"server-qcow2",
 				"iot-bootable-container",
 			},
 		},
