@@ -22,9 +22,9 @@ jobs:
             version: 41
           - name: current
             version: 42
-            # Enable these when we get osbuild rpm builds for each distro version
-            # - name: branched
-            #   version: 43
+          - name: branched
+            version: 43
+            # Enable this when we get osbuild rpm builds for Fedora 44
             # - name: rawhide
             #   version: rawhide
             #   continue-on-error: true
