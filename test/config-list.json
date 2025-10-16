@@ -26,7 +26,8 @@
       ],
       "image-types": [
         "qcow2",
-        "generic-qcow2"
+        "generic-qcow2",
+        "server-qcow2"
       ]
     }
   },
@@ -250,6 +251,7 @@
         "generic-vmdk",
         "generic-vagrant-libvirt",
         "generic-vagrant-virtualbox",
+        "server-qcow2",
         "wsl",
         "iot-bootable-container",
         "iot-container",
@@ -334,7 +336,8 @@
       ],
       "image-types": [
         "qcow2",
-        "generic-qcow2"
+        "generic-qcow2",
+        "server-qcow2"
       ]
     }
   },
@@ -484,7 +487,8 @@
     "path": "./configs/import-rpm-gpg-keys-from-tree-fedora.json",
     "filters": {
       "image-types": [
-        "generic-qcow2"
+        "generic-qcow2",
+        "server-qcow2"
       ],
       "distros": [
         "fedora*"
