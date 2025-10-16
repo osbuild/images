@@ -1,6 +1,7 @@
 package osbuild
 
 import (
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/crypt"
 	"github.com/osbuild/images/pkg/customizations/users"
 )
@@ -69,6 +70,14 @@ func NewUsersStageOptions(userCustomizations []users.User, omitKey bool) (*Users
 			user.Key = uc.Key
 		}
 		users[uc.Name] = user
+	}
+
+	return &UsersStageOptions{Users: users}, nil
+}
+
+func NewUsersStageOptionsForLockedRoot() (*UsersStageOptions, error) {
+	users := map[string]UsersStageOptionsUser{
+		"root": UsersStageOptionsUser{Password: common.ToPtr("!")},
 	}
 
 	return &UsersStageOptions{Users: users}, nil
