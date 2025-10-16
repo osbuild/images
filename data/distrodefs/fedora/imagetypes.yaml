@@ -1,5 +1,34 @@
 ---
 .common:
+  server_core_pkgset: &server_core_pkgset
+    include:
+      - "@server-product-environment"
+      - "@domain-client"
+      - "glibc-all-langpacks"
+      - "initial-setup"
+      - "lvm2"
+      - "xfsprogs"
+    exclude:
+      - "initial-setup-gui"
+      - "plymouth"
+
+  server_guest_pkgset: &server_guest_pkgset
+    include:
+      - "@guest-agents"
+    exclude:
+      - "dracut-config-rescue"
+      - "*-firmware"
+      - "smartmontools"
+      - "smartmontools-selinux"
+
+  server_host_pkgset: &server_host_pkgset
+    include:
+      - "@container-management"
+      - "@server-hardware-support"
+      - "dracut-config-rescue"
+      - "kernel"
+      - "linux-firmware"
+
   generic_base_pkgset: &generic_base_pkgset
     include:
       - "@Fedora Cloud Server"
@@ -463,12 +492,18 @@
     ids:
       - &prep_partition_dosid "41"
       - &filesystem_linux_dosid "83"
+      - &filesystem_linux_lvm_dosid "8e"
       - &fat16_bdosid "06"
     guids:
       - &bios_boot_partition_guid "21686148-6449-6E6F-744E-656564454649"
+      - &prep_boot_partition_guid "21686148-6449-6E6F-744E-656564454649"
       - &efi_system_partition_guid "C12A7328-F81F-11D2-BA4B-00A0C93EC93B"
       - &filesystem_data_guid "0FC63DAF-8483-4772-8E79-3D69D8477DE4"
       - &xboot_ldr_partition_guid "BC13C2FF-59E6-4262-A352-B275FD6F7172"
+      - &root_partition_guid_x86_64 "4f68bce3-e8cd-4db1-96e7-fbcaf984b709"
+      - &root_partition_guid_aarch64 "b921b045-1df0-41c3-af44-4c6f280d3fae"
+      - &root_partition_guid_ppc64le "c31c45e6-3f39-412e-80fb-4809c4980599"
+      - &root_partition_guid_s390x "5eead9a9-fe09-4a1e-a1d7-520d00531306"
 
     # the invidual partitions for easier composibility
     partitions:
@@ -491,7 +526,7 @@
         size: "2 GiB"
         type: *filesystem_data_guid
         payload_type: "filesystem"
-        payload:
+        payload: &default_partition_table_part_boot_payload
           type: "ext4"
           mountpoint: "/boot"
           label: "boot"
@@ -568,6 +603,66 @@
         payload:
           <<: *iot_base_partition_table_part_root_payload
           fstab_options: "defaults,ro"
+
+      # Fedora Server uses XFS on top of LVM
+      - &server_partition_table_part_bios
+        <<: *default_partition_table_part_bios
+        size: "2 MiB"
+      - &server_partition_table_part_efi
+        <<: *default_partition_table_part_efi
+        size: "500 MiB"
+      - &server_partition_table_part_boot
+        <<: *default_partition_table_part_boot
+        type: *xboot_ldr_partition_guid
+        payload:
+          <<: *default_partition_table_part_boot_payload
+          type: "xfs"
+      - &server_partition_table_part_root
+        payload_type: "lvm"
+        payload:
+          name: "systemVG"
+          description: "built with lvm2"
+          logical_volumes:
+            - size: "3 GiB"
+              name: "LVroot"
+              payload_type: "filesystem"
+              payload:
+                type: "xfs"
+                label: "root"
+                mountpoint: "/"
+                fstab_options: "defaults"
+
+    server_partition_tables: &server_partition_tables
+      x86_64:
+        type: "gpt"
+        partitions:
+          - *server_partition_table_part_bios
+          - *server_partition_table_part_efi
+          - *server_partition_table_part_boot
+          - <<: *server_partition_table_part_root
+            type: *root_partition_guid_x86_64
+      aarch64:
+        type: "gpt"
+        partitions:
+          - *server_partition_table_part_efi
+          - *server_partition_table_part_boot
+          - <<: *server_partition_table_part_root
+            type: *root_partition_guid_aarch64
+      ppc64le:
+        type: "gpt"
+        partitions:
+          - size: "8 MiB"
+            type: *prep_boot_partition_guid
+          - *server_partition_table_part_boot
+          - <<: *server_partition_table_part_root
+            type: *root_partition_guid_ppc64le
+      s390x:
+        type: "dos"
+        partitions:
+          - <<: *server_partition_table_part_boot
+            type: *filesystem_linux_dosid
+          - <<: *server_partition_table_part_root
+            type: *filesystem_linux_lvm_dosid
 
     default_partition_tables: &default_partition_tables
       x86_64:
@@ -2236,6 +2331,48 @@ image_types:
       - *aarch64_platform
     blueprint:
       supported_options: *supported_options_pxe
+
+  "server-qcow2": &server_qcow2
+    filename: "disk.qcow2"
+    mime_type: "application/x-qemu-disk"
+    bootable: true
+    default_size: "10 GiB"
+    image_func: "disk"
+    exports: ["qcow2"]
+    required_partition_sizes: *default_required_dir_sizes
+    partition_table:
+      <<: *server_partition_tables
+    package_sets:
+      os:
+        - *server_core_pkgset
+        - *server_guest_pkgset
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "qcow2"
+      - <<: *aarch64_platform
+        image_format: "qcow2"
+      - <<: *ppc64le_bios_platform
+        image_format: "qcow2"
+      - <<: *s390x_zipl_platform
+        image_format: "qcow2"
+    image_config:
+      default_kernel: "kernel-core"
+      kernel_options:
+        - "no_timer-check"
+        - "console=tty1"
+        - "console=ttyS0,115200n8"
+      enabled_services:
+        - "initial-setup.service"
+      files:
+        # Triggers Anaconda's initial-setup to reconfigure the system when it
+        # boots the first time.
+        - path: "/etc/reconfigSys"
+          user: "root"
+          group: "root"
+          data: ""
+      lock_root_user: true
+    blueprint:
+      supported_options: *supported_options_disk
 
   "bootc-rpm-installer":
     # Note that this image type is partial and only used by
