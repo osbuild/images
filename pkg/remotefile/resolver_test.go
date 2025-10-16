@@ -14,19 +14,15 @@ func TestSingleInputResolver(t *testing.T) {
 	resolver := NewResolver()
 
 	expectedOutput := Spec{
-		URL:             url,
-		Content:         []byte("key1\n"),
-		ResolutionError: nil,
+		URL:     url,
+		Content: []byte("key1\n"),
 	}
 
 	resolver.Add(url)
 
-	resultItems := resolver.Finish()
+	resultItems, err := resolver.Finish()
+	assert.NoError(t, err)
 	assert.Contains(t, resultItems, expectedOutput)
-
-	for _, item := range resultItems {
-		assert.Nil(t, item.ResolutionError)
-	}
 }
 
 func TestMultiInputResolver(t *testing.T) {
@@ -36,15 +32,13 @@ func TestMultiInputResolver(t *testing.T) {
 	urlTwo := server.URL + "/key2"
 
 	expectedOutputOne := Spec{
-		URL:             urlOne,
-		Content:         []byte("key1\n"),
-		ResolutionError: nil,
+		URL:     urlOne,
+		Content: []byte("key1\n"),
 	}
 
 	expectedOutputTwo := Spec{
-		URL:             urlTwo,
-		Content:         []byte("key2\n"),
-		ResolutionError: nil,
+		URL:     urlTwo,
+		Content: []byte("key2\n"),
 	}
 
 	resolver := NewResolver()
@@ -52,14 +46,11 @@ func TestMultiInputResolver(t *testing.T) {
 	resolver.Add(urlOne)
 	resolver.Add(urlTwo)
 
-	resultItems := resolver.Finish()
+	resultItems, err := resolver.Finish()
+	assert.NoError(t, err)
 
 	assert.Contains(t, resultItems, expectedOutputOne)
 	assert.Contains(t, resultItems, expectedOutputTwo)
-
-	for _, item := range resultItems {
-		assert.Nil(t, item.ResolutionError)
-	}
 }
 
 func TestInvalidInputResolver(t *testing.T) {
@@ -71,11 +62,10 @@ func TestInvalidInputResolver(t *testing.T) {
 
 	expectedErr := fmt.Errorf("File resolver: url is required")
 
-	resultItems := resolver.Finish()
-
-	for _, item := range resultItems {
-		assert.Equal(t, item.ResolutionError.Reason, expectedErr.Error())
-	}
+	resultItems, err := resolver.Finish()
+	assert.Error(t, err)
+	assert.Equal(t, fmt.Errorf("failed to resolve remote files: %s", expectedErr.Error()), err)
+	assert.Len(t, resultItems, 0)
 }
 
 func TestMultiInvalidInputResolver(t *testing.T) {
@@ -90,13 +80,9 @@ func TestMultiInvalidInputResolver(t *testing.T) {
 	expectedErrMessageOne := "File resolver: url is required"
 	expectedErrMessageTwo := fmt.Sprintf("File resolver: invalid url %s", urlTwo)
 
-	resultItems := resolver.Finish()
+	resultItems, err := resolver.Finish()
+	assert.Error(t, err)
+	assert.Equal(t, fmt.Errorf("failed to resolve remote files: %s; %s", expectedErrMessageTwo, expectedErrMessageOne), err)
 
-	errs := []string{}
-	for _, item := range resultItems {
-		errs = append(errs, item.ResolutionError.Reason)
-	}
-
-	assert.Contains(t, errs, expectedErrMessageOne)
-	assert.Contains(t, errs, expectedErrMessageTwo)
+	assert.Len(t, resultItems, 0)
 }
