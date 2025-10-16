@@ -59,7 +59,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -78,7 +78,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -97,7 +97,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -116,7 +116,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -135,7 +135,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -154,7 +154,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -173,7 +173,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -192,7 +192,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -211,7 +211,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -230,7 +230,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -249,7 +249,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -268,7 +268,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -287,7 +287,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -306,7 +306,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -325,7 +325,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -344,7 +344,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -363,7 +363,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -382,7 +382,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -401,7 +401,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -420,7 +420,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -439,7 +439,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -458,7 +458,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -477,7 +477,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -496,7 +496,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -515,7 +515,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -534,7 +534,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -553,7 +553,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -572,7 +572,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -591,7 +591,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -610,7 +610,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -629,7 +629,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -648,7 +648,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -667,7 +667,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -686,7 +686,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -705,7 +705,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -724,7 +724,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -743,7 +743,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -762,7 +762,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -781,7 +781,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1227,7 +1227,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1249,7 +1249,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1271,7 +1271,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1293,7 +1293,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1315,7 +1315,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1337,7 +1337,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1359,7 +1359,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1381,7 +1381,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1403,7 +1403,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1425,7 +1425,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1447,7 +1447,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1469,7 +1469,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1491,7 +1491,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1513,7 +1513,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1535,7 +1535,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1557,7 +1557,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1579,7 +1579,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1601,7 +1601,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1623,7 +1623,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1645,7 +1645,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1667,7 +1667,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1689,7 +1689,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1711,7 +1711,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1733,7 +1733,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1755,7 +1755,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1777,7 +1777,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1799,7 +1799,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1821,7 +1821,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1843,7 +1843,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1865,7 +1865,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1887,7 +1887,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1909,7 +1909,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1931,7 +1931,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1953,7 +1953,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1975,7 +1975,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -1997,7 +1997,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2019,7 +2019,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2041,7 +2041,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-aarch64
+    RUNNER: aws/fedora-42-aarch64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2063,7 +2063,7 @@ fail:
   stage: ostree-gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2512,7 +2512,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2532,7 +2532,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2552,7 +2552,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2572,7 +2572,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2592,7 +2592,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2612,7 +2612,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2632,7 +2632,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2652,7 +2652,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2672,7 +2672,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2692,7 +2692,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2712,7 +2712,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2732,7 +2732,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2752,7 +2752,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2772,7 +2772,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2792,7 +2792,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2812,7 +2812,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2832,7 +2832,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2852,7 +2852,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2872,7 +2872,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2892,7 +2892,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2912,7 +2912,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2932,7 +2932,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2952,7 +2952,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2972,7 +2972,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -2992,7 +2992,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -3012,7 +3012,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -3032,7 +3032,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -3052,7 +3052,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -3072,7 +3072,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -3092,7 +3092,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -3112,7 +3112,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -3132,7 +3132,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -3152,7 +3152,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -3172,7 +3172,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -3192,7 +3192,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -3212,7 +3212,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -3232,7 +3232,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
@@ -3252,7 +3252,7 @@ fail:
   stage: gen
   extends: .terraform
   variables:
-    RUNNER: aws/fedora-41-x86_64
+    RUNNER: aws/fedora-42-x86_64
     INTERNAL_NETWORK: "true"
   script:
     - sudo ./test/scripts/setup-osbuild-repo
