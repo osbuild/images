@@ -73,7 +73,7 @@
   "fedora-43": {
     "dependencies": {
       "osbuild": {
-        "commit": "f29f4f2ea0b37d3cfbaa4371452458fdffb0c4f9"
+        "commit": "285a0243ec5596e0adecfafbdf21b7d335bfd19d"
       }
     }
   },
