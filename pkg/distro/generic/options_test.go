@@ -26,14 +26,14 @@ func TestCheckOptions(t *testing.T) {
 	testCases := map[string]testCase{
 		"f42/ami-ok": {
 			distro:  "fedora-42",
-			it:      "server-ami",
+			it:      "generic-ami",
 			bp:      blueprint.Blueprint{},
 			options: distro.ImageOptions{},
 			expErr:  "",
 		},
 		"f42/ami-installer-error": {
 			distro: "fedora-42",
-			it:     "server-ami",
+			it:     "generic-ami",
 			bp: blueprint.Blueprint{
 				Customizations: &blueprint.Customizations{
 					Installer: &blueprint.InstallerCustomization{
@@ -41,17 +41,17 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			expErr: "blueprint validation failed for image type \"server-ami\": customizations.installer: not supported",
+			expErr: "blueprint validation failed for image type \"generic-ami\": customizations.installer: not supported",
 		},
 		"f42/ami-ostree-error": {
 			distro: "fedora-42",
-			it:     "server-ami",
+			it:     "generic-ami",
 			options: distro.ImageOptions{
 				OSTree: &ostree.ImageOptions{
 					URL: "https://example.org/repo",
 				},
 			},
-			expErr: "OSTree is not supported for \"server-ami\"",
+			expErr: "OSTree is not supported for \"generic-ami\"",
 		},
 		"f42/ostree-installer-requires-ostree-url": {
 			distro: "fedora-42",
@@ -518,7 +518,7 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			expErr: "blueprint validation failed for image type \"server-vhd\": customizations.openscap.profile_id: required when using customizations.openscap",
+			expErr: "blueprint validation failed for image type \"generic-vhd\": customizations.openscap.profile_id: required when using customizations.openscap",
 		},
 
 		"f42/ostree-disk-requires-ostree-url": {
@@ -533,7 +533,7 @@ func TestCheckOptions(t *testing.T) {
 		},
 		"f42/disk-and-filesystems": {
 			distro: "fedora-42",
-			it:     "server-qcow2",
+			it:     "generic-qcow2",
 			bp: blueprint.Blueprint{
 				Customizations: &blueprint.Customizations{
 					Filesystem: []blueprint.FilesystemCustomization{
@@ -556,11 +556,11 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			expErr: "blueprint validation failed for image type \"server-qcow2\": customizations.disk cannot be used with customizations.filesystem",
+			expErr: "blueprint validation failed for image type \"generic-qcow2\": customizations.disk cannot be used with customizations.filesystem",
 		},
 		"f42/bad-filesystem-mountpoint": {
 			distro: "fedora-42",
-			it:     "server-qcow2",
+			it:     "generic-qcow2",
 			bp: blueprint.Blueprint{
 				Customizations: &blueprint.Customizations{
 					Filesystem: []blueprint.FilesystemCustomization{
@@ -571,11 +571,11 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			expErr: "blueprint validation failed for image type \"server-qcow2\": The following custom mountpoints are not supported [\"/etc\"]",
+			expErr: "blueprint validation failed for image type \"generic-qcow2\": The following custom mountpoints are not supported [\"/etc\"]",
 		},
 		"f42/bad-disk-mountpoint": {
 			distro: "fedora-42",
-			it:     "server-qcow2",
+			it:     "generic-qcow2",
 			bp: blueprint.Blueprint{
 				Customizations: &blueprint.Customizations{
 					Disk: &blueprint.DiskCustomization{
@@ -591,11 +591,11 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			expErr: "blueprint validation failed for image type \"server-qcow2\": The following errors occurred while setting up custom mountpoints:\npath \"/etc\" is not allowed",
+			expErr: "blueprint validation failed for image type \"generic-qcow2\": The following errors occurred while setting up custom mountpoints:\npath \"/etc\" is not allowed",
 		},
 		"f42/two-lvm+btrfs": {
 			distro: "fedora-42",
-			it:     "server-qcow2",
+			it:     "generic-qcow2",
 			bp: blueprint.Blueprint{
 				Customizations: &blueprint.Customizations{
 					Disk: &blueprint.DiskCustomization{
@@ -629,7 +629,7 @@ func TestCheckOptions(t *testing.T) {
 					},
 				},
 			},
-			expErr: "blueprint validation failed for image type \"server-qcow2\": btrfs and lvm partitioning cannot be combined",
+			expErr: "blueprint validation failed for image type \"generic-qcow2\": btrfs and lvm partitioning cannot be combined",
 		},
 
 		"r8/ami-ok": {
