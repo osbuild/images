@@ -1,6 +1,6 @@
 ---
 .common:
-  cloud_base_pkgset: &cloud_base_pkgset
+  generic_base_pkgset: &generic_base_pkgset
     include:
       - "@Fedora Cloud Server"
       - "chrony"  # not mentioned in the kickstart anaconda pulls it when setting the timezone
@@ -168,7 +168,7 @@
   kernel_options:
     default_kernel_optons:
       - "ro"
-    cloud_kernel_options: &cloud_kernel_options
+    generic_kernel_options: &generic_kernel_options
       - "no_timer_check"
       - "console=tty1"
       - "console=ttyS0,115200n8"
@@ -838,7 +838,7 @@ image_config:
     update_default_kernel: true
 
 image_types:
-  "server-vagrant-libvirt": &server_vagrant_libvirt
+  "generic-vagrant-libvirt": &generic_vagrant_libvirt
     filename: "vagrant-libvirt.box"
     mime_type: "application/x-tar"
     environment: *kvm_env
@@ -862,7 +862,7 @@ image_types:
             enabled_services:
               *cloud_init_services_f43plus
       default_target: "multi-user.target"
-      kernel_options: *cloud_kernel_options
+      kernel_options: *generic_kernel_options
       users:
         - name: "vagrant"
           # yamllint disable rule:line-length
@@ -881,7 +881,7 @@ image_types:
       <<: *default_partition_tables
     package_sets:
       os:
-        - *cloud_base_pkgset
+        - *generic_base_pkgset
         - include:
             - "qemu-guest-agent"
     platforms:
@@ -892,14 +892,14 @@ image_types:
     blueprint:
       supported_options: *supported_options_disk
 
-  "server-vagrant-virtualbox": &server_vagrant_virtualbox
-    <<: *server_vagrant_libvirt
+  "generic-vagrant-virtualbox": &generic_vagrant_virtualbox
+    <<: *generic_vagrant_libvirt
     filename: "vagrant-virtualbox.box"
     platforms:
       - <<: *x86_64_bios_platform
         image_format: "vagrant_virtualbox"
 
-  "server-qcow2": &server_qcow2
+  "generic-qcow2": &generic_qcow2
     name_aliases: ["qcow2", "guest-image"]
     filename: "disk.qcow2"
     mime_type: "application/x-qemu-disk"
@@ -911,7 +911,7 @@ image_types:
     required_partition_sizes: *default_required_dir_sizes
     image_config: &image_config_qcow2
       default_target: "multi-user.target"
-      kernel_options: *cloud_kernel_options
+      kernel_options: *generic_kernel_options
       conditions:
         "f42 and below cloud init service names":
           when:
@@ -929,7 +929,7 @@ image_types:
       <<: *default_partition_tables
     package_sets:
       os:
-        - *cloud_base_pkgset
+        - *generic_base_pkgset
         - include:
             - "qemu-guest-agent"
     platforms:
@@ -944,8 +944,8 @@ image_types:
     blueprint:
       supported_options: *supported_options_disk
 
-  "server-ami":
-    <<: *server_qcow2
+  "generic-ami":
+    <<: *generic_qcow2
     name_aliases: ["ami", "aws"]
     filename: "image.raw"
     mime_type: "application/octet-stream"
@@ -957,8 +957,8 @@ image_types:
       - <<: *aarch64_platform
         image_format: "raw"
 
-  "server-oci":
-    <<: *server_qcow2
+  "generic-oci":
+    <<: *generic_qcow2
     name_aliases: ["oci"]
     platforms:
       - <<: *x86_64_bios_platform
@@ -966,8 +966,8 @@ image_types:
       - <<: *aarch64_platform
         image_format: "qcow2"
 
-  "server-openstack":
-    <<: *server_qcow2
+  "generic-openstack":
+    <<: *generic_qcow2
     name_aliases: ["openstack"]
     platforms:
       - <<: *x86_64_bios_platform
@@ -977,8 +977,8 @@ image_types:
         qcow2_compat: ""
         image_format: "qcow2"
 
-  "server-vhd":
-    <<: *server_qcow2
+  "generic-vhd":
+    <<: *generic_qcow2
     name_aliases: ["vhd", "azure"]
     filename: "disk.vhd"
     mime_type: "application/x-vhd"
@@ -997,11 +997,11 @@ image_types:
       <<: *default_partition_tables
     package_sets:
       os:
-        - *cloud_base_pkgset
+        - *generic_base_pkgset
         - include:
             - "WALinuxAgent"
 
-  "server-vmdk": &server_vmdk
+  "generic-vmdk": &generic_vmdk
     name_aliases: ["vmdk", "vsphere"]
     filename: "disk.vmdk"
     mime_type: "application/x-vmdk"
@@ -1028,7 +1028,7 @@ image_types:
           shallow_merge:
             enabled_services:
               *cloud_init_services_f43plus
-      kernel_options: *cloud_kernel_options
+      kernel_options: *generic_kernel_options
     partition_table:
       <<: *default_partition_tables
     package_sets:
@@ -1053,8 +1053,8 @@ image_types:
     blueprint:
       supported_options: *supported_options_disk
 
-  "server-ova":
-    <<: *server_vmdk
+  "generic-ova":
+    <<: *generic_vmdk
     name_aliases: ["ova", "vsphere-ova"]
     filename: "image.ova"
     mime_type: "application/ovf"
@@ -1854,7 +1854,7 @@ image_types:
   wsl:
     # this is the eventual name, and `wsl` the alias but we've been
     # having issues with CI renaming it
-    name_aliases: ["server-wsl"]
+    name_aliases: ["generic-wsl"]
     # note that other distributions in images differ and use a .tar suffix, however .wsl is the
     # correct suffix, see:
     # https://learn.microsoft.com/en-us/windows/wsl/build-custom-distro#what-are-wsl-root-filesystem-tar-files

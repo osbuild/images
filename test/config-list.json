@@ -11,7 +11,8 @@
       ],
       "image-types": [
         "ami",
-        "server-ami"
+        "generic-ami",
+        "generic-qcow2"
       ]
     }
   },
@@ -24,8 +25,7 @@
         "centos*"
       ],
       "image-types": [
-        "qcow2",
-        "server-qcow2"
+        "qcow2"
       ]
     }
   },
@@ -41,7 +41,7 @@
       ],
       "image-types": [
         "ami",
-        "server-ami"
+        "generic-ami"
       ]
     }
   },
@@ -236,19 +236,19 @@
       ],
       "image-types": [
         "container",
-        "server-ami",
+        "generic-ami",
         "minimal-installer",
         "workstation-live-installer",
         "minimal-raw-xz",
         "minimal-raw-zst",
-        "server-oci",
-        "server-openstack",
-        "server-ova",
-        "server-qcow2",
-        "server-vhd",
-        "server-vmdk",
-        "server-vagrant-libvirt",
-        "server-vagrant-virtualbox",
+        "generic-oci",
+        "generic-openstack",
+        "generic-ova",
+        "generic-qcow2",
+        "generic-vhd",
+        "generic-vmdk",
+        "generic-vagrant-libvirt",
+        "generic-vagrant-virtualbox",
         "wsl",
         "iot-bootable-container",
         "iot-container",
@@ -306,7 +306,7 @@
         "fedora*"
       ],
       "image-types": [
-        "server-qcow2"
+        "generic-qcow2"
       ]
     }
   },
@@ -317,7 +317,7 @@
         "fedora*"
       ],
       "image-types": [
-        "server-qcow2"
+        "generic-qcow2"
       ]
     }
   },
@@ -332,7 +332,7 @@
       ],
       "image-types": [
         "qcow2",
-        "server-qcow2"
+        "generic-qcow2"
       ]
     }
   },
@@ -482,7 +482,7 @@
     "path": "./configs/import-rpm-gpg-keys-from-tree-fedora.json",
     "filters": {
       "image-types": [
-        "server-qcow2"
+        "generic-qcow2"
       ],
       "distros": [
         "fedora*"
@@ -507,7 +507,7 @@
     "filters": {
       "image-types": [
         "ami",
-        "server-ami"
+        "generic-ami"
       ],
       "distros": [
         "centos-10",
@@ -536,7 +536,7 @@
     "path": "./configs/partitioning-btrfs.json",
     "filters": {
       "image-types": [
-        "server-ami"
+        "generic-ami"
       ],
       "distros": [
         "fedora*"
@@ -562,7 +562,7 @@
     "filters": {
       "image-types": [
         "ami",
-        "server-ami"
+        "generic-ami"
       ],
       "distros": [
         "centos-10",
