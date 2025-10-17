@@ -441,7 +441,7 @@ def main():
     # Keep test/scripts/imagetestlib.py:CAN_BOOT_TEST in sync as it
     # has the same checks again
     match image_type:
-        case "qcow2" | "generic-qcow2":
+        case "qcow2" | "generic-qcow2" | "cloud-qcow2":
             try:
                 boot_qemu(arch, image_path, build_config_path)
             except CannotRunQemuTest as e:
@@ -459,7 +459,7 @@ def main():
             except CannotRunQemuTest as e:
                 print(f"WARNING: skipping iso {image_path}: {e.skip_reason}")
                 return
-        case "ami" | "ec2" | "ec2-ha" | "ec2-sap" | "edge-ami":
+        case "ami" | "ec2" | "ec2-ha" | "ec2-sap" | "edge-ami" | "cloud-ec2":
             boot_ami(distro, arch, image_type, image_path, build_config_path)
         case "vhd":
             boot_vhd(distro, arch, image_path, build_config_path)
