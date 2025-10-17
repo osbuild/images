@@ -160,11 +160,11 @@ func TestScannerDuration(t *testing.T) {
 	}, st)
 }
 
-//go:embed testdata/monitor-fedora-42-raw-v159.seq.json
-var osbuildMonitorDuration_fedora []byte
+//go:embed testdata/monitor-fedora-42-raw-v197.seq.json
+var osbuildMonitor_fedora []byte
 
 func TestScannerPipelineName(t *testing.T) {
-	scanner := osbuild.NewStatusScanner(bytes.NewBuffer(osbuildMonitorDuration_fedora))
+	scanner := osbuild.NewStatusScanner(bytes.NewBuffer(osbuildMonitor_fedora))
 
 	// the first line is context-less
 	_, err := scanner.Status()
@@ -187,6 +187,14 @@ func TestScannerPipelineName(t *testing.T) {
 		"source org.osbuild.librepo",
 		"build",
 	}, slices.Compact(pipelines))
+
+	res, err := scanner.Result()
+	assert.NoError(t, err)
+	assert.True(t, res.Success)
+	assert.Contains(t, res.Metadata["build"], "org.osbuild.rpm")
+	metadata, ok := res.Metadata["build"]["org.osbuild.rpm"].(*osbuild.RPMStageMetadata)
+	assert.True(t, ok)
+	assert.Len(t, metadata.Packages, 162)
 }
 
 func TestScannerEmpty(t *testing.T) {
@@ -200,4 +208,42 @@ func TestScannerEmpty(t *testing.T) {
 			Done:  0,
 		},
 	}, st)
+}
+
+//go:embed testdata/monitor-validation.json
+var osbuildMonitorValidation []byte
+
+func TestScannerValidationFailure(t *testing.T) {
+	scanner := osbuild.NewStatusScanner(bytes.NewBuffer(osbuildMonitorValidation))
+
+	st, err := scanner.Status()
+	assert.NoError(t, err)
+	assert.Equal(t, &osbuild.Status{
+		Progress: &osbuild.Progress{
+			Total: 0,
+			Done:  0,
+		},
+	}, st)
+
+	res, err := scanner.Result()
+	assert.NoError(t, err)
+	assert.False(t, res.Success)
+	assert.Equal(t, &osbuild.Result{
+		Type:     "https://osbuild.org/validation-error",
+		Success:  false,
+		Error:    nil,
+		Log:      nil,
+		Metadata: nil,
+		Errors: []osbuild.ValidationError{
+			{
+				Message: "{'type': 'org.osbuild.files', 'origin': 'org.osbuild.source', 'somekey': 'bad', 'references': [{}] is not valid under any of the given schemas}",
+				Path:    []string{"pipelines", "[0]", "stages", "[0]", "inputs", "packages"},
+			},
+			{
+				Message: "Additional properties are not allowed ('somekey' was unexpected)",
+				Path:    []string{"pipelines", "[0]", "stages", "[0]", "inputs", "packages"},
+			},
+		},
+		Title: "JSON Schema validation failed",
+	}, res)
 }
