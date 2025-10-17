@@ -250,6 +250,10 @@
         "generic-vagrant-libvirt",
         "generic-vagrant-virtualbox",
         "server-qcow2",
+        "cloud-qcow2",
+        "cloud-ec2",
+        "cloud-azure",
+        "cloud-gce",
         "wsl",
         "iot-bootable-container",
         "iot-container",
@@ -308,7 +312,8 @@
       ],
       "image-types": [
         "generic-qcow2",
-        "server-qcow2"
+        "server-qcow2",
+        "cloud-qcow2"
       ]
     }
   },
@@ -320,7 +325,8 @@
       ],
       "image-types": [
         "generic-qcow2",
-        "server-qcow2"
+        "server-qcow2",
+        "cloud-qcow2"
       ]
     }
   },
@@ -488,7 +494,8 @@
     "filters": {
       "image-types": [
         "generic-qcow2",
-        "server-qcow2"
+        "server-qcow2",
+        "cloud-qcow2"
       ],
       "distros": [
         "fedora*"
