@@ -180,7 +180,8 @@
         "rhel-8*",
         "rhel-9*",
         "rhel-10*",
-        "centos-*"
+        "centos-*",
+        "fedora-*"
       ],
       "image-types": [
         "ami",
@@ -209,7 +210,11 @@
         "vagrant-libvirt",
         "vagrant-virtualbox",
         "vmdk",
-        "wsl"
+        "wsl",
+        "cloud-qcow2",
+        "cloud-ec2",
+        "cloud-azure",
+        "cloud-gce"
       ]
     }
   },
@@ -486,7 +491,8 @@
     "filters": {
       "image-types": [
         "generic-qcow2",
-        "server-qcow2"
+        "server-qcow2",
+        "cloud-qcow2"
       ],
       "distros": [
         "fedora*"

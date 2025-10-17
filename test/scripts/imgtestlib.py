@@ -30,10 +30,11 @@ CAN_BOOT_TEST = {
         "edge-ami",
         "iot-bootable-container",
         "vhd",
+        "cloud-ec2",
     ],
     "x86_64": [
         "image-installer", "minimal-installer", "network-installer",
-        "qcow2", "generic-qcow2",
+        "qcow2", "generic-qcow2", "cloud-qcow2",
         "wsl", "generic-wsl",
     ]
 }
