@@ -691,6 +691,7 @@ func iotCommitImage(t *imageType,
 	img.Environment = &t.ImageTypeYAML.Environment
 	img.OSTreeParent = parentCommit
 	img.OSVersion = d.OsVersion()
+	img.Bootupd = true  // Enable bootupd metadata generation
 
 	return img, nil
 }
