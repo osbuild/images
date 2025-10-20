@@ -8,6 +8,7 @@ import imgtestlib as testlib
 ARCHITECTURES = ["x86_64", "aarch64"]
 MANIFEST_ONLY_ARCHES = ["ppc64le", "s390x"]
 RUNNER = testlib.get_common_ci_runner()
+OSTREE_DISTROS = ["fedora", "rhel-8", "rhel-9", "centos-9"]
 
 
 BASE_CONFIG = """---
@@ -174,6 +175,12 @@ def main():
             arch=img["arch"],
             runner=RUNNER,
             cache=cache))
+
+        for ostree_distro_prefix in OSTREE_DISTROS:
+            if img["distro"].startswith(ostree_distro_prefix):
+                break
+        else:
+            continue
 
         ostree_gen_stage.append(OSTREE_GEN_TEMPLATE.format(
             distro=img["distro"],
