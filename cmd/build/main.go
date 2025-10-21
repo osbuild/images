@@ -136,7 +136,11 @@ func run() error {
 	fmt.Printf("Building manifest: %s\n", manifestPath)
 
 	jobOutput := filepath.Join(outputDir, buildName)
-	_, err = osbuild.RunOSBuild(mf, osbuildStore, jobOutput, imgType.Exports(), checkpoints, nil, false, os.Stderr)
+	_, err = osbuild.RunOSBuild(mf, imgType.Exports(), checkpoints, os.Stderr, &osbuild.OSBuildOptions{
+		StoreDir:   osbuildStore,
+		OutputDir:  jobOutput,
+		JSONOutput: false,
+	})
 	if err != nil {
 		return err
 	}
