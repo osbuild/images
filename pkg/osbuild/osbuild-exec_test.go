@@ -3,6 +3,8 @@ package osbuild_test
 import (
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,6 +12,21 @@ import (
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/osbuild"
 )
+
+func mockOsbuildCmd(s string) (restore func()) {
+	saved := osbuild.OSBuildCmd
+	osbuild.OSBuildCmd = s
+	return func() {
+		osbuild.OSBuildCmd = saved
+	}
+}
+
+func makeFakeOsbuild(t *testing.T, content string) string {
+	p := filepath.Join(t.TempDir(), "fake-osbuild")
+	err := os.WriteFile(p, []byte("#!/bin/sh\n"+content), 0755)
+	assert.NoError(t, err)
+	return p
+}
 
 func TestNewOSBuildCmdNilOptions(t *testing.T) {
 	mf := []byte(`{"real": "manifest"}`)
@@ -90,4 +107,24 @@ func TestNewOSBuildCmdFullOptions(t *testing.T) {
 	stdin, err := io.ReadAll(cmd.Stdin)
 	assert.NoError(t, err)
 	assert.Equal(t, mf, stdin)
+}
+
+func TestRunOSBuild(t *testing.T) {
+	fakeOsbuildBinary := makeFakeOsbuild(t, `
+if [ "$1" = "--version" ]; then
+    echo '90000.0'
+else
+    echo '{"success": true}'
+fi
+`)
+	restore := mockOsbuildCmd(fakeOsbuildBinary)
+	defer restore()
+
+	opts := &osbuild.OSBuildOptions{
+		JSONOutput: true,
+	}
+	result, err := osbuild.RunOSBuild([]byte(`{"fake":"manifest"}`), nil, nil, nil, opts)
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.True(t, result.Success)
 }
