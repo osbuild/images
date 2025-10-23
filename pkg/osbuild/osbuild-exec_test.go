@@ -22,7 +22,7 @@ func makeFakeOsbuild(t *testing.T, content string) string {
 
 func TestNewOSBuildCmdNilOptions(t *testing.T) {
 	mf := []byte(`{"real": "manifest"}`)
-	cmd := osbuild.NewOSBuildCmd(mf, nil, nil, nil)
+	cmd := osbuild.NewOSBuildCmd(mf, nil)
 	assert.NotNil(t, cmd)
 
 	assert.Equal(
@@ -48,17 +48,14 @@ func TestNewOSBuildCmdFullOptions(t *testing.T) {
 	mf := []byte(`{"real": "manifest"}`)
 	cmd := osbuild.NewOSBuildCmd(
 		mf,
-		[]string{
-			"export-1",
-			"export-2",
-		},
-		[]string{
-			"checkpoint-1",
-			"checkpoint-2",
-		},
 		&osbuild.OSBuildOptions{
-			StoreDir:     "store",
-			OutputDir:    "output",
+			StoreDir:  "store",
+			OutputDir: "output",
+			Exports: []string{
+				"export-1",
+				"export-2",
+			},
+			Checkpoints:  []string{"checkpoint-1", "checkpoint-2"},
 			ExtraEnv:     []string{"EXTRA_ENV_1=1", "EXTRA_ENV_2=2"},
 			Monitor:      osbuild.MonitorLog,
 			MonitorFD:    10,
@@ -115,7 +112,7 @@ fi
 	opts := &osbuild.OSBuildOptions{
 		JSONOutput: true,
 	}
-	result, err := osbuild.RunOSBuild([]byte(`{"fake":"manifest"}`), nil, nil, nil, opts)
+	result, err := osbuild.RunOSBuild([]byte(`{"fake":"manifest"}`), nil, opts)
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.True(t, result.Success)
