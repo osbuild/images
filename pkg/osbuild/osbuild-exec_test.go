@@ -51,6 +51,8 @@ func TestNewOSBuildCmdNilOptions(t *testing.T) {
 
 func TestNewOSBuildCmdFullOptions(t *testing.T) {
 	mf := []byte(`{"real": "manifest"}`)
+	_, wp, err := os.Pipe()
+	assert.NoError(t, err)
 	cmd := osbuild.NewOSBuildCmd(
 		mf,
 		&osbuild.OSBuildOptions{
@@ -64,6 +66,7 @@ func TestNewOSBuildCmdFullOptions(t *testing.T) {
 			ExtraEnv:     []string{"EXTRA_ENV_1=1", "EXTRA_ENV_2=2"},
 			Monitor:      osbuild.MonitorLog,
 			MonitorFD:    10,
+			MonitorFile:  wp,
 			JSONOutput:   true,
 			CacheMaxSize: 10 * datasizes.GiB,
 		},
@@ -101,6 +104,8 @@ func TestNewOSBuildCmdFullOptions(t *testing.T) {
 	stdin, err := io.ReadAll(cmd.Stdin)
 	assert.NoError(t, err)
 	assert.Equal(t, mf, stdin)
+
+	assert.Equal(t, wp, cmd.ExtraFiles[0])
 }
 
 func TestRunOSBuildJSONOutput(t *testing.T) {
@@ -155,6 +160,45 @@ osbuild-stderr-output
 osbuild-stderr-output
 `, stdout.String())
 	assert.Empty(t, stderr.Bytes())
+}
+
+func TestRunOSBuildMonitor(t *testing.T) {
+	fakeOSBuildBinary := makeFakeOSBuild(t, `
+>&3 echo -n '{"some": "monitor"}'
+
+if [ "$1" = "--version" ]; then
+    echo '90000.0'
+else
+    echo -n osbuild-stdout-output
+fi
+>&2 echo -n osbuild-stderr-output
+`)
+	restore := mockOSBuildCmd(fakeOSBuildBinary)
+	defer restore()
+
+	rp, wp, err := os.Pipe()
+	assert.NoError(t, err)
+	defer wp.Close()
+
+	var stdout, stderr bytes.Buffer
+	opts := &osbuild.OSBuildOptions{
+		Stdout:      &stdout,
+		Stderr:      &stderr,
+		Monitor:     osbuild.MonitorJSONSeq,
+		MonitorFD:   3,
+		MonitorFile: wp,
+	}
+
+	// without json output set the result will be empty
+	_, err = osbuild.RunOSBuild(nil, nil, opts)
+	assert.NoError(t, err)
+	assert.NoError(t, wp.Close())
+
+	monitorOutput, err := io.ReadAll(rp)
+	assert.NoError(t, err)
+	assert.Equal(t, `{"some": "monitor"}`, string(monitorOutput))
+	assert.Equal(t, "osbuild-stdout-output", stdout.String())
+	assert.Equal(t, "osbuild-stderr-output", stderr.String())
 }
 
 func TestSyncWriter(t *testing.T) {
