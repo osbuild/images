@@ -1,11 +1,16 @@
 package osbuild_test
 
 import (
+	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -13,7 +18,7 @@ import (
 	"github.com/osbuild/images/pkg/osbuild"
 )
 
-func makeFakeOsbuild(t *testing.T, content string) string {
+func makeFakeOSBuild(t *testing.T, content string) string {
 	p := filepath.Join(t.TempDir(), "fake-osbuild")
 	err := os.WriteFile(p, []byte("#!/bin/sh\n"+content), 0755)
 	assert.NoError(t, err)
@@ -98,22 +103,82 @@ func TestNewOSBuildCmdFullOptions(t *testing.T) {
 	assert.Equal(t, mf, stdin)
 }
 
-func TestRunOSBuild(t *testing.T) {
-	fakeOsbuildBinary := makeFakeOsbuild(t, `
+func TestRunOSBuildJSONOutput(t *testing.T) {
+	fakeOSBuildBinary := makeFakeOSBuild(t, `
 if [ "$1" = "--version" ]; then
     echo '90000.0'
 else
     echo '{"success": true}'
 fi
 `)
-	restore := osbuild.MockOsbuildCmd(fakeOsbuildBinary)
+	restore := osbuild.MockOSBuildCmd(fakeOSBuildBinary)
 	defer restore()
 
 	opts := &osbuild.OSBuildOptions{
 		JSONOutput: true,
 	}
-	result, err := osbuild.RunOSBuild([]byte(`{"fake":"manifest"}`), nil, opts)
+	result, err := osbuild.RunOSBuild([]byte(`{"fake":"manifest"}`), opts)
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.True(t, result.Success)
+}
+
+func TestRunOSBuildBuildLog(t *testing.T) {
+	fakeOSBuildBinary := makeFakeOSBuild(t, `
+if [ "$1" = "--version" ]; then
+    echo '90000.0'
+else
+    echo osbuild-stdout-output
+fi
+>&2 echo osbuild-stderr-output
+`)
+	restore := osbuild.MockOSBuildCmd(fakeOSBuildBinary)
+	defer restore()
+
+	var buildLog, stdout, stderr bytes.Buffer
+	opts := &osbuild.OSBuildOptions{
+		BuildLog: &buildLog,
+		Stdout:   &stdout,
+		Stderr:   &stderr,
+	}
+
+	result, err := osbuild.RunOSBuild(nil, opts)
+	assert.NoError(t, err)
+	// without json output set the result should be empty
+	assert.Empty(t, result)
+
+	assert.NoError(t, err)
+	assert.Equal(t, `osbuild-stdout-output
+osbuild-stderr-output
+`, buildLog.String())
+	assert.Equal(t, `osbuild-stdout-output
+osbuild-stderr-output
+`, stdout.String())
+	assert.Empty(t, stderr.Bytes())
+}
+
+func TestSyncWriter(t *testing.T) {
+	var mu sync.Mutex
+	var buf bytes.Buffer
+	var wg sync.WaitGroup
+
+	for id := 0; id < 100; id++ {
+		wg.Add(1)
+		w := osbuild.NewSyncedWriter(&mu, &buf)
+		go func(id int) {
+			defer wg.Done()
+			for i := 0; i < 500; i++ {
+				fmt.Fprintln(w, strings.Repeat(fmt.Sprintf("%v", id%10), 60))
+				time.Sleep(10 * time.Nanosecond)
+			}
+		}(id)
+	}
+	wg.Wait()
+
+	scanner := bufio.NewScanner(&buf)
+	for res := scanner.Scan(); res; res = scanner.Scan() {
+		line := scanner.Text()
+		assert.True(t, len(line) == 60, fmt.Sprintf("len %v: line: %v", len(line), line))
+	}
+	assert.NoError(t, scanner.Err())
 }
