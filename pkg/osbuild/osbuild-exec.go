@@ -41,8 +41,11 @@ type OSBuildOptions struct {
 	Stdout     io.Writer
 	Stderr     io.Writer
 
-	Monitor   MonitorType
-	MonitorFD uintptr
+	// If MonitorFD is set, a file (MonitorW) needs to be inherited by the osbuild process. The
+	// caller should make sure to close it afterwards.
+	Monitor     MonitorType
+	MonitorFD   uintptr
+	MonitorFile *os.File
 
 	JSONOutput bool
 
@@ -79,6 +82,9 @@ func NewOSBuildCmd(manifest []byte, exports []string, optsPtr *OSBuildOptions) *
 	}
 	if opts.MonitorFD != 0 {
 		cmd.Args = append(cmd.Args, fmt.Sprintf("--monitor-fd=%d", opts.MonitorFD))
+	}
+	if opts.MonitorFile != nil {
+		cmd.ExtraFiles = []*os.File{opts.MonitorFile}
 	}
 
 	if opts.JSONOutput {
