@@ -4,7 +4,11 @@ type (
 	StatusJSON = statusJSON
 )
 
-func MockOsbuildCmd(s string) (restore func()) {
+var (
+	NewSyncedWriter = newSyncedWriter
+)
+
+func MockOSBuildCmd(s string) (restore func()) {
 	saved := osbuildCmd
 	osbuildCmd = s
 	return func() {
