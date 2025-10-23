@@ -29,7 +29,10 @@ var osbuildCmd = "osbuild"
 type OSBuildOptions struct {
 	StoreDir  string
 	OutputDir string
-	ExtraEnv  []string
+
+	Exports     []string
+	Checkpoints []string
+	ExtraEnv    []string
 
 	Monitor   MonitorType
 	MonitorFD uintptr
@@ -39,7 +42,7 @@ type OSBuildOptions struct {
 	CacheMaxSize int64
 }
 
-func NewOSBuildCmd(manifest []byte, exports, checkpoints []string, optsPtr *OSBuildOptions) *exec.Cmd {
+func NewOSBuildCmd(manifest []byte, optsPtr *OSBuildOptions) *exec.Cmd {
 	opts := common.ValueOrEmpty(optsPtr)
 
 	cacheMaxSize := int64(20 * datasizes.GiB)
@@ -56,11 +59,11 @@ func NewOSBuildCmd(manifest []byte, exports, checkpoints []string, optsPtr *OSBu
 		"-",
 	)
 
-	for _, export := range exports {
+	for _, export := range opts.Exports {
 		cmd.Args = append(cmd.Args, "--export", export)
 	}
 
-	for _, checkpoint := range checkpoints {
+	for _, checkpoint := range opts.Checkpoints {
 		cmd.Args = append(cmd.Args, "--checkpoint", checkpoint)
 	}
 
@@ -84,7 +87,7 @@ func NewOSBuildCmd(manifest []byte, exports, checkpoints []string, optsPtr *OSBu
 // Note that osbuild returns non-zero when the pipeline fails. This function
 // does not return an error in this case. Instead, the failure is communicated
 // with its corresponding logs through osbuild.Result.
-func RunOSBuild(manifest []byte, exports, checkpoints []string, errorWriter io.Writer, optsPtr *OSBuildOptions) (*Result, error) {
+func RunOSBuild(manifest []byte, errorWriter io.Writer, optsPtr *OSBuildOptions) (*Result, error) {
 	opts := common.ValueOrEmpty(optsPtr)
 
 	if err := CheckMinimumOSBuildVersion(); err != nil {
@@ -93,7 +96,7 @@ func RunOSBuild(manifest []byte, exports, checkpoints []string, errorWriter io.W
 
 	var stdoutBuffer bytes.Buffer
 	var res Result
-	cmd := NewOSBuildCmd(manifest, exports, checkpoints, &opts)
+	cmd := NewOSBuildCmd(manifest, &opts)
 
 	if opts.JSONOutput {
 		cmd.Stdout = &stdoutBuffer
@@ -106,8 +109,8 @@ func RunOSBuild(manifest []byte, exports, checkpoints []string, errorWriter io.W
 	if err != nil {
 		return nil, fmt.Errorf("error starting osbuild: %v", err)
 	}
-
 	err = cmd.Wait()
+
 	if opts.JSONOutput {
 		// try to decode the output even though the job could have failed
 		if stdoutBuffer.Len() == 0 {

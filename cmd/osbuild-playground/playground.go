@@ -57,10 +57,12 @@ func RunPlayground(img image.ImageKind, d distro.Distro, arch distro.Arch, repos
 
 	store := path.Join(state_dir, "osbuild-store")
 
-	_, err = osbuild.RunOSBuild(bytes, manifest.GetExports(), manifest.GetCheckpoints(), os.Stdout, &osbuild.OSBuildOptions{
-		StoreDir:   store,
-		OutputDir:  "./",
-		JSONOutput: false,
+	_, err = osbuild.RunOSBuild(bytes, nil, &osbuild.OSBuildOptions{
+		StoreDir:    store,
+		OutputDir:   "./",
+		Exports:     manifest.GetExports(),
+		Checkpoints: manifest.GetCheckpoints(),
+		JSONOutput:  false,
 	})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "could not run osbuild: %s", err.Error())
