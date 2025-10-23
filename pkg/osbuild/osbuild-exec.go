@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 
 	"github.com/hashicorp/go-version"
 
@@ -31,6 +32,14 @@ type OSBuildOptions struct {
 	OutputDir   string
 	Checkpoints []string
 	ExtraEnv    []string
+
+	// If specified, the mutex is used for the syncwriter so the caller may write to the build
+	// log as well. Also note that in case BuildLog is specified, stderr will be combined into
+	// stdout.
+	BuildLog   io.Writer
+	BuildLogMu *sync.Mutex
+	Stdout     io.Writer
+	Stderr     io.Writer
 
 	Monitor   MonitorType
 	MonitorFD uintptr
@@ -71,8 +80,42 @@ func NewOSBuildCmd(manifest []byte, exports []string, optsPtr *OSBuildOptions) *
 	if opts.MonitorFD != 0 {
 		cmd.Args = append(cmd.Args, fmt.Sprintf("--monitor-fd=%d", opts.MonitorFD))
 	}
+
 	if opts.JSONOutput {
 		cmd.Args = append(cmd.Args, "--json")
+	}
+
+	// Default to os stdout/stderr. This is for maximum compatibility with the existing
+	// bootc-image-builder in "verbose" mode where stdout, stderr come directly from osbuild.
+	var stdout, stderr io.Writer
+	stdout = os.Stdout
+	if opts.Stdout != nil {
+		stdout = opts.Stdout
+	}
+	cmd.Stdout = stdout
+	stderr = os.Stderr
+	if opts.Stderr != nil {
+		stderr = opts.Stderr
+	}
+	cmd.Stderr = stderr
+
+	if opts.BuildLog != nil {
+		// There is a slight wrinkle here: when requesting a buildlog we can no longer write
+		// to separate stdout/stderr streams without being racy and give potential
+		// out-of-order output (which is very bad and confusing in a log). The reason is
+		// that if cmd.Std{out,err} are different "go" will start two go-routine to
+		// monitor/copy those are racy when both stdout,stderr output happens close together
+		// (TestRunOSBuildWithBuildlog demos that). We cannot have our cake and eat it so
+		// here we need to combine osbuilds stderr into our stdout.
+		// stdout → syncw → multiw → stdoutw or os stdout
+		// stderr ↗↗↗             → buildlog
+		var mw io.Writer
+		if opts.BuildLogMu == nil {
+			opts.BuildLogMu = new(sync.Mutex)
+		}
+		mw = newSyncedWriter(opts.BuildLogMu, io.MultiWriter(stdout, opts.BuildLog))
+		cmd.Stdout = mw
+		cmd.Stderr = mw
 	}
 
 	cmd.Env = append(os.Environ(), opts.ExtraEnv...)
@@ -85,7 +128,7 @@ func NewOSBuildCmd(manifest []byte, exports []string, optsPtr *OSBuildOptions) *
 // Note that osbuild returns non-zero when the pipeline fails. This function
 // does not return an error in this case. Instead, the failure is communicated
 // with its corresponding logs through osbuild.Result.
-func RunOSBuild(manifest []byte, exports []string, errorWriter io.Writer, optsPtr *OSBuildOptions) (*Result, error) {
+func RunOSBuild(manifest []byte, exports []string, optsPtr *OSBuildOptions) (*Result, error) {
 	opts := common.ValueOrEmpty(optsPtr)
 
 	if err := CheckMinimumOSBuildVersion(); err != nil {
@@ -95,14 +138,9 @@ func RunOSBuild(manifest []byte, exports []string, errorWriter io.Writer, optsPt
 	var stdoutBuffer bytes.Buffer
 	var res Result
 	cmd := NewOSBuildCmd(manifest, exports, &opts)
-
 	if opts.JSONOutput {
 		cmd.Stdout = &stdoutBuffer
-	} else {
-		cmd.Stdout = os.Stdout
 	}
-	cmd.Stderr = errorWriter
-
 	err := cmd.Start()
 	if err != nil {
 		return nil, fmt.Errorf("error starting osbuild: %v", err)
@@ -183,4 +221,20 @@ func OSBuildInspect(manifest []byte) ([]byte, error) {
 	}
 
 	return out, nil
+}
+
+type syncedWriter struct {
+	mu *sync.Mutex
+	w  io.Writer
+}
+
+func newSyncedWriter(mu *sync.Mutex, w io.Writer) io.Writer {
+	return &syncedWriter{mu: mu, w: w}
+}
+
+func (sw *syncedWriter) Write(p []byte) (n int, err error) {
+	sw.mu.Lock()
+	defer sw.mu.Unlock()
+
+	return sw.w.Write(p)
 }
