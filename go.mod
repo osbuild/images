@@ -40,13 +40,13 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/ubccr/kerby v0.0.0-20230802201021-412be7bfaee5
 	github.com/vmware/govmomi v0.52.0
+	go.yaml.in/yaml/v3 v3.0.3
 	golang.org/x/exp v0.0.0-20250103183323-7d7fa50e5329
 	golang.org/x/oauth2 v0.30.0
 	golang.org/x/sys v0.35.0
 	golang.org/x/tools v0.36.0
 	google.golang.org/api v0.248.0
 	gopkg.in/ini.v1 v1.67.0
-	gopkg.in/yaml.v3 v3.0.1
 	libvirt.org/go/libvirt v1.11006.0
 )
 
@@ -200,5 +200,6 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c // indirect
 	google.golang.org/grpc v1.74.2 // indirect
 	google.golang.org/protobuf v1.36.7 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.5.0 // indirect
 )
