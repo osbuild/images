@@ -72,10 +72,10 @@ func NewStatusScanner(r io.Reader) *StatusScanner {
 	scanner := bufio.NewScanner(r)
 	// osbuild can currently generate very long messages, the default
 	// 64kb is too small for e.g. the dracut stage (see also
-	// https://github.com/osbuild/osbuild/issues/1976). Increase for
-	// but to unblock us.
-	buf := make([]byte, 0, 512_000)
-	scanner.Buffer(buf, 512_000)
+	// https://github.com/osbuild/osbuild/issues/1976) and the rpm stage.
+	// Increase for but to unblock us.
+	buf := make([]byte, 0, 1024_000*16)
+	scanner.Buffer(buf, 1024_000*16)
 	return &StatusScanner{
 		scanner:         scanner,
 		contextMap:      make(map[string]*contextJSON),
