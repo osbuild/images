@@ -136,3 +136,9 @@ image_types:
     filename: "image.ova"
     mime_type: "application/ovf"
     exports: ["archive"]
+
+  bootc-installer:
+    mime_type: "application/x-iso9660-image"
+    exports: ["bootiso"]
+    filename: "install.iso"
+    boot_iso: true
