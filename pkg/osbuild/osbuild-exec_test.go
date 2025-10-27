@@ -13,14 +13,6 @@ import (
 	"github.com/osbuild/images/pkg/osbuild"
 )
 
-func mockOsbuildCmd(s string) (restore func()) {
-	saved := osbuild.OSBuildCmd
-	osbuild.OSBuildCmd = s
-	return func() {
-		osbuild.OSBuildCmd = saved
-	}
-}
-
 func makeFakeOsbuild(t *testing.T, content string) string {
 	p := filepath.Join(t.TempDir(), "fake-osbuild")
 	err := os.WriteFile(p, []byte("#!/bin/sh\n"+content), 0755)
@@ -117,7 +109,7 @@ else
     echo '{"success": true}'
 fi
 `)
-	restore := mockOsbuildCmd(fakeOsbuildBinary)
+	restore := osbuild.MockOsbuildCmd(fakeOsbuildBinary)
 	defer restore()
 
 	opts := &osbuild.OSBuildOptions{

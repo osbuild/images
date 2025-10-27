@@ -24,7 +24,7 @@ const (
 	MonitorLog     = "LogMonitor"
 )
 
-var OSBuildCmd = "osbuild"
+var osbuildCmd = "osbuild"
 
 type OSBuildOptions struct {
 	StoreDir  string
@@ -49,7 +49,7 @@ func NewOSBuildCmd(manifest []byte, exports, checkpoints []string, optsPtr *OSBu
 
 	// nolint: gosec
 	cmd := exec.Command(
-		OSBuildCmd,
+		osbuildCmd,
 		"--store", opts.StoreDir,
 		"--output-directory", opts.OutputDir,
 		fmt.Sprintf("--cache-max-size=%v", cacheMaxSize),
@@ -156,7 +156,7 @@ func CheckMinimumOSBuildVersion() error {
 // OSBuildVersion returns the version of osbuild.
 func OSBuildVersion() (string, error) {
 	var stdoutBuffer bytes.Buffer
-	cmd := exec.Command(OSBuildCmd, "--version")
+	cmd := exec.Command(osbuildCmd, "--version")
 	cmd.Stdout = &stdoutBuffer
 
 	err := cmd.Run()
@@ -173,7 +173,7 @@ func OSBuildVersion() (string, error) {
 
 // OSBuildInspect converts a manifest to an inspected manifest.
 func OSBuildInspect(manifest []byte) ([]byte, error) {
-	cmd := exec.Command(OSBuildCmd, "--inspect")
+	cmd := exec.Command(osbuildCmd, "--inspect")
 	cmd.Stdin = bytes.NewBuffer(manifest)
 
 	out, err := cmd.Output()
