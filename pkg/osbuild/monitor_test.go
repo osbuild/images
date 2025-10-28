@@ -124,7 +124,7 @@ func TestScannerSmoke(t *testing.T) {
 func TestScannerVeryLongLines(t *testing.T) {
 	buf := bytes.NewBuffer(nil)
 	fmt.Fprint(buf, `{"message": "`)
-	fmt.Fprint(buf, strings.Repeat("1", 128_000))
+	fmt.Fprint(buf, strings.Repeat("1", 16*1024*1024))
 	fmt.Fprint(buf, `"}`)
 
 	r := bytes.NewBufferString(buf.String())
@@ -132,7 +132,7 @@ func TestScannerVeryLongLines(t *testing.T) {
 	st, err := scanner.Status()
 	assert.NoError(t, err)
 	require.NotNil(t, st)
-	assert.Equal(t, 128_000, len(st.Trace))
+	assert.Equal(t, 16*1024*1024, len(st.Trace))
 }
 
 //go:embed testdata/monitor-duration.seq.json
