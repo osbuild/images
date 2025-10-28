@@ -51,7 +51,9 @@ func dataFS() fs.FS {
 	return dataFS
 }
 
-// distrosYAML defines all supported YAML based distributions
+// distrosYAML defines all supported YAML based distributions, since this can
+// come from multiple sources we should make sure that we only have things in
+// here that are easily merged
 type distrosYAML struct {
 	Distros []DistroYAML
 }
@@ -158,22 +160,38 @@ func (d *DistroYAML) runTemplates(id distro.ID) error {
 	return errors.Join(errs...)
 }
 
+// Load all YAML files directly in the root of the definitions filesystem. Each
+// file is read in sorted order and the entries found under the `distros` key
+// are appended together.
+// Note that files are read separately from each other, so anchors and other
+// references can only be done within the same file.
 func loadDistros() (*distrosYAML, error) {
-	f, err := dataFS().Open("distros.yaml")
+	dents, err := fs.Glob(dataFS(), "*.yaml")
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
 
-	decoder := yaml.NewDecoder(f)
-	decoder.KnownFields(true)
+	var allDistros distrosYAML
 
-	var distros distrosYAML
-	if err := decoder.Decode(&distros); err != nil {
-		return nil, err
+	for _, name := range dents {
+		f, err := dataFS().Open(name)
+		if err != nil {
+			return nil, err
+		}
+		defer f.Close()
+
+		decoder := yaml.NewDecoder(f)
+		decoder.KnownFields(true)
+
+		var distros distrosYAML
+		if err := decoder.Decode(&distros); err != nil {
+			return nil, err
+		}
+
+		allDistros.Distros = append(allDistros.Distros, distros.Distros...)
 	}
 
-	return &distros, nil
+	return &allDistros, nil
 }
 
 // NewDistroYAML return the given distro or nil if the distro is not
