@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -220,15 +221,22 @@ func NewDistroYAML(nameVer string) (*DistroYAML, error) {
 		return nil, err
 	}
 
-	// load imageTypes
-	f, err := dataFS().Open(filepath.Join(foundDistro.DefsPath, "imagetypes.yaml"))
+	// load shared yaml
+	f1, err := dataFS().Open("shared/shared.yaml")
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer f1.Close()
+
+	// load imageTypes
+	f2, err := dataFS().Open(filepath.Join(foundDistro.DefsPath, "imagetypes.yaml"))
+	if err != nil {
+		return nil, err
+	}
+	defer f2.Close()
 
 	var toplevel imageTypesYAML
-	decoder := yaml.NewDecoder(f)
+	decoder := yaml.NewDecoder(io.MultiReader(f1, f2))
 	decoder.KnownFields(true)
 	if err := decoder.Decode(&toplevel); err != nil {
 		return nil, err
@@ -260,6 +268,7 @@ type imageTypesYAML struct {
 	ImageConfig distroImageConfig        `yaml:"image_config,omitempty"`
 	ImageTypes  map[string]ImageTypeYAML `yaml:"image_types"`
 	Common      map[string]any           `yaml:".common,omitempty"`
+	Shared      map[string]any           `yaml:".shared,omitempty"`
 }
 
 type distroImageConfig struct {

@@ -4,3 +4,7 @@ extends: default
 rules:
   line-length:
     max: 300
+  anchors:
+    forbid-undeclared-aliases: false
+  document-start:
+    present: false

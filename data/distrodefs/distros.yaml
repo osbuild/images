@@ -1,4 +1,3 @@
----
 distros:
   - &fedora_rawhide
     name: fedora-44
