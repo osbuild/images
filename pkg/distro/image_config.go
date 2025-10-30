@@ -89,7 +89,8 @@ type ImageConfig struct {
 
 	WSL *wsl.WSL `yaml:"wsl,omitempty"`
 
-	Users []users.User
+	Users    []users.User
+	LockRoot *bool `yaml:"lock_root,omitempty"`
 
 	Files       []*fsnode.File
 	Directories []*fsnode.Directory

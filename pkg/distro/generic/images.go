@@ -83,6 +83,12 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 
 		osc.Users = users.UsersFromBP(c.GetUsers())
 		osc.Users = append(osc.Users, imageConfig.Users...)
+
+		// we also don't really want to lock the root account (as far
+		// as it exists) on installer ISOs
+		if imageConfig.LockRoot != nil {
+			osc.LockRoot = *imageConfig.LockRoot
+		}
 	}
 
 	osc.EnabledServices = imageConfig.EnabledServices
