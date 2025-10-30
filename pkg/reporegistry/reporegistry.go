@@ -45,7 +45,7 @@ func NewFromDistrosRepoConfigs(distrosRepoConfigs rpmmd.DistrosRepoConfigs) *Rep
 // Therefore in general, all common distro-arch-specific repositories are returned for any image type name,
 // even for non-existing ones.
 func (r *RepoRegistry) ReposByImageTypeName(distro, arch, imageType string) ([]rpmmd.RepoConfig, error) {
-	repositories := []rpmmd.RepoConfig{}
+	var repositories []rpmmd.RepoConfig
 
 	archRepos, err := r.ReposByArchName(distro, arch, true)
 	if err != nil {
@@ -78,7 +78,7 @@ func (r *RepoRegistry) ReposByImageTypeName(distro, arch, imageType string) ([]r
 //
 // The method does not verify if the given architecture name is actually part of the specific distribution definition.
 func (r *RepoRegistry) ReposByArchName(distro, arch string, includeTagged bool) ([]rpmmd.RepoConfig, error) {
-	repositories := []rpmmd.RepoConfig{}
+	var repositories []rpmmd.RepoConfig
 
 	archRepos, err := r.DistroHasRepos(distro, arch)
 	if err != nil {
