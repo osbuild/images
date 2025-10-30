@@ -258,16 +258,15 @@ func TestReposByArch(t *testing.T) {
 func TestInvalidReposByArch(t *testing.T) {
 	rr := getTestingRepoRegistry()
 
-	ta := test_distro.TestArch{}
-	td := test_distro.TestDistro{}
+	td := test_distro.DistroFactory(test_distro.TestDistro1Name)
 
-	repos, err := rr.ReposByArchName(td.Name(), ta.Name(), false)
+	repos, err := rr.ReposByArchName(td.Name(), "invalid-arch", false)
 	assert.Nil(t, repos)
-	assert.NotNil(t, err)
+	assert.EqualError(t, err, `requested repository not found: for distribution "test-distro-1" and architecture "invalid-arch"`)
 
-	repos, err = rr.ReposByArchName(td.Name(), ta.Name(), false)
+	repos, err = rr.ReposByArchName(td.Name(), "invalid-arch", true)
 	assert.Nil(t, repos)
-	assert.NotNil(t, err)
+	assert.EqualError(t, err, `requested repository not found: for distribution "test-distro-1" and architecture "invalid-arch"`)
 }
 
 // TestInvalidReposByArchName tests return values from ReposByArchName
