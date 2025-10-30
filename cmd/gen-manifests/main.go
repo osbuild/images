@@ -388,23 +388,6 @@ func save(ms manifest.OSBuildManifest, depsolved map[string]depsolvednf.Depsolve
 	return nil
 }
 
-func filterRepos(repos []rpmmd.RepoConfig, typeName string) []rpmmd.RepoConfig {
-	filtered := make([]rpmmd.RepoConfig, 0)
-	for _, repo := range repos {
-		if len(repo.ImageTypeTags) == 0 {
-			filtered = append(filtered, repo)
-		} else {
-			for _, tt := range repo.ImageTypeTags {
-				if tt == typeName {
-					filtered = append(filtered, repo)
-					break
-				}
-			}
-		}
-	}
-	return filtered
-}
-
 func u(s string) string {
 	return strings.ReplaceAll(s, "-", "_")
 }
@@ -510,11 +493,10 @@ func main() {
 				}
 
 				// get repositories
-				repos, err := testedRepoRegistry.ReposByArchName(distroName, archName, true)
+				repos, err := testedRepoRegistry.ReposByImageTypeName(distroName, archName, imgTypeName)
 				if err != nil {
 					panic(fmt.Sprintf("failed to get repositories for %s/%s: %v", distroName, archName, err))
 				}
-				repos = filterRepos(repos, imgTypeName)
 				if len(repos) == 0 {
 					fmt.Printf("no repositories defined for %s/%s/%s\n", distroName, archName, imgTypeName)
 					if skipNorepos {
