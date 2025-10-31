@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 import argparse
+import asyncio
 import contextlib
 import json
 import os
+import pathlib
 import uuid
-from tempfile import TemporaryDirectory
+import subprocess
+import shlex
 import shutil
+import textwrap
+from tempfile import mkdtemp, TemporaryDirectory
 
 import imgtestlib as testlib
 
@@ -88,6 +93,85 @@ def ensure_uncompressed(filepath):
     else:
         # we only do xz for now so it must be raw: return as is and hope for the best
         yield filepath
+
+
+@contextlib.contextmanager
+def ensure_qcow2(filepath):
+    base, ext = os.path.splitext(filepath)
+    if ext != ".qcow2":
+        print(f"Converting {filepath} to qcow2")
+        filepath_qcow2 = base + ".qcow2"
+        testlib.runcmd_nc([
+            "qemu-img", "convert",
+            "-f", "raw",
+            "-O", "qcow2",
+            "-o", "preallocation=metadata",
+            filepath, filepath_qcow2,
+        ])
+        yield filepath_qcow2
+        os.unlink(filepath_qcow2)
+    else:
+        yield filepath
+
+
+def make_cloud_init_iso(ssh_key, extra_files = None) -> pathlib.Path:
+    with TemporaryDirectory() as tmpdir:
+        user_data = pathlib.Path(tmpdir) / "user-data.yaml"
+        user_data_content = textwrap.dedent(f"""\
+        #cloud-config
+        users:
+          - name: root
+            ssh_authorized_keys:
+              - {ssh_key}
+        """)
+        user_data.write_text(user_data_content)
+        meta_data = pathlib.Path(tmpdir) / "meta-data"
+        meta_data.write_text('{"instance-id": "i-1234567890abcdef0"}')
+        if extra_files:
+            extra_files_tar = pathlib.Path(tmpdir) / "extra-files.tar"
+            subprocess.check_call(
+                ["tar", "cf", os.fspath(extra_files_tar), *extra_files],
+            )
+            user_data = pathlib.Path(tmpdir) / "user-data-bundle"
+            subprocess.check_call(
+                ["write-mime-multipart",
+                 "--output", user_data,
+                 "user-data.yaml:text/cloud-config",
+                 "extra-files.tar:text/x-tarfile",
+                 ], cwd=tmpdir,
+            )
+        # XXX: cleanup
+        iso_path = pathlib.Path(mkdtemp(prefix="ci-")) / "cloud-init.iso"
+        subprocess.check_call(
+            ["cloud-localds", os.fspath(iso_path), user_data.name, meta_data.name],
+            cwd=tmpdir,
+        )
+        return iso_path
+
+
+def boot_qemu(arch, image_path, config):
+    try:
+        from vmtest.vm import QEMU
+    except ImportError as e:
+        print(textwrap.dedent("""\
+        ****
+        cannot import vmtest, please run 'pip install .'
+        ****
+        """))
+        raise e
+
+    # XXX: cmd must be a script and all arguments must be files too
+    cmd = [BASE_TEST_SCRIPT, config]
+    with ensure_uncompressed(image_path) as raw_image_path:
+        with create_ssh_key(key_type="rsa") as (privkey_path, pubkey_path):
+            ssh_key = pathlib.Path(pubkey_path).read_text().strip()
+            # put cmd into iso as well via cloud-init
+            cloud_init_iso = make_cloud_init_iso(ssh_key, cmd)
+            with QEMU(raw_image_path, arch=arch, cdrom=cloud_init_iso) as vm:
+                # run the script, this assumes that we always have a script
+                # and files as arguments
+                cmd = "/" + shlex.join(cmd)
+                vm.run(cmd, user="root", keyfile=privkey_path)
 
 
 def cmd_boot_aws(arch, image_name, privkey, pubkey, image_path, script_cmd):
@@ -248,6 +332,8 @@ def main():
     print(f"Testing image at {image_path}")
     bib_image_id = ""
     match image_type:
+        case "qcow2":
+            boot_qemu(arch, image_path, build_config_path)
         case "ami" | "ec2" | "ec2-ha" | "ec2-sap" | "edge-ami":
             boot_ami(distro, arch, image_type, image_path, build_config_path)
         case "vhd":

@@ -6,8 +6,10 @@ name = "images"
 version = "0.1.0"
 
 dependencies = [
+    "boto3",
+    "paramiko",
     # XXX: point to github.com/osbuild/bootc-image-builder instead
-    "vmtest @ git+https://github.com/mvo5/bootc-image-builder.git@vmtest-as-py-package"
+    "vmtest @ git+https://github.com/mvo5/bootc-image-builder.git@vmtest-as-py-package",
 ]
 
 [tool.setuptools]
