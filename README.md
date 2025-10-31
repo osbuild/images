@@ -48,12 +48,20 @@ required.
 
 #### Build requirements
 
-The build-requirements of the Go library for Fedora and rpm-based distributions are:
+The build-requirements of the Go library for Fedora and rpm-based
+distributions can be installed with:
+
+```console
+sudo ./test/scripts/install-dependencies
+```
+
+(see also [`Containerfile`](Containerfile) )
+
+The minimal dependencies are:
 
 - `go`
 - `gpgme-devel`
-
-(see also [`Containerfile`](Containerfile) )
+- `libvirt-devel`
 
 Other dependencies only needed in some cases are:
 

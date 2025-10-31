@@ -9,9 +9,7 @@ WORKDIR /setup
 COPY ./test/scripts ./test/scripts/
 COPY Schutzfile .
 RUN ./test/scripts/setup-osbuild-repo
-
-# NOTE: keep in sync with README.md#Contributing
-RUN dnf -y install krb5-devel go gpgme-devel osbuild-depsolve-dnf btrfs-progs-devel device-mapper-devel
+RUN ./test/scripts/install-dependencies
 
 COPY go.mod go.sum .
 RUN go mod download
