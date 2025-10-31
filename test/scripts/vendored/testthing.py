@@ -858,6 +858,7 @@ class VirtualMachine:
             args = (
                 "ssh",
                 *self.ssh_direct_args,
+                "-v",
                 ("-N", "-n"),  # no command, stdin disconnected
                 ("-M", "-S", control_socket),  # listen on the control socket
                 self.get_id(),  # unused, but shows up in messages
@@ -870,12 +871,15 @@ class VirtualMachine:
 
             # ssh sends EOF after the connection succeeds
             assert ssh.stdout
-            await ssh.stdout.read()
+            stdout = await ssh.stdout.read()
 
             # ..but that might have been because of an error, so check if the
             # control socket actually exists
             if not control_socket.exists():
-                raise SubprocessError(args, await ssh.wait())
+                #self._ui.print_status(f"ssh control socket ERROR: {await ssh.stdout.read(256)}")
+                ret_code = await ssh.wait()
+                print(f"ERROR ssh control socket: {stdout}", file=sys.stderr)
+                raise SubprocessError(args, ret_code)
 
             # we're online!
             self._ssh_control_ready.set()
