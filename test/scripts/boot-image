@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 import argparse
+import asyncio
 import contextlib
 import json
 import os
+import pathlib
 import uuid
 from tempfile import TemporaryDirectory
 import shutil
 
 import imgtestlib as testlib
+from vendored.testthing import IpcDirectory, VirtualMachine
 
 BASE_TEST_SCRIPT = "test/scripts/check-host-config.sh"
 WSL_TEST_SCRIPT = "test/scripts/wsl-entrypoint.bat"
@@ -88,6 +91,98 @@ def ensure_uncompressed(filepath):
     else:
         # we only do xz for now so it must be raw: return as is and hope for the best
         yield filepath
+
+
+@contextlib.contextmanager
+def ensure_qcow2(filepath):
+    base, ext = os.path.splitext(filepath)
+    if ext != ".qcow2":
+        print(f"Converting {filepath} to qcow2")
+        filepath_qcow2 = base + ".qcow2"
+        testlib.runcmd_nc([
+            "qemu-img", "convert",
+            "-f", "raw",
+            "-O", "qcow2",
+            "-o", "preallocation=metadata",
+            filepath, filepath_qcow2,
+        ])
+        yield filepath_qcow2
+        os.unlink(filepath_qcow2)
+    else:
+        yield filepath
+
+
+def mutate_qemu_image_for_login(filepath, pubkey_path):
+    here = pathlib.Path(__file__).parent
+    pubkey = pathlib.Path(pubkey_path).read_text(encoding="utf8")
+    # pylint: disable=import-outside-toplevel
+    import guestfs
+    g = guestfs.GuestFS()
+    try:
+        g.add_drive_opts(filepath, readonly=False)
+        g.launch()
+        roots = g.inspect_os()
+        if not roots:
+            raise RuntimeError("No operating system found in the image")
+        root_device = roots[0]
+        g.mount(root_device, "/")
+        # add root ssh key for systems that lack systemd credentials
+        ssh_dir = "/root/.ssh"
+        g.mkdir_p(ssh_dir)
+        g.chmod(0o700, ssh_dir)
+        auth_keys_file = f"{ssh_dir}/authorized_keys"
+        g.write_append(auth_keys_file, pubkey.encode('utf-8'))
+        g.chmod(0o600, auth_keys_file)
+        # we need /root/.ssh/authorized_keys to be labeled correctly
+        # XXX: detect contexts file path
+        g.sh("setfiles -F -v /etc/selinux/targeted/contexts/files/file_contexts /root/.ssh/authorized_keys")
+        # Install selinux workaround policy, see
+        # https://issues.redhat.com/browse/RHEL-113647
+        # It assumes policycoreutils-devel is installed
+        g.copy_in(os.fspath(here / "vendored/workarounds/sshd_vsock.te"), "/root/")
+        # Note that once if we ever have anything but a static string
+        # we need to use "g.command()" here instead
+        g.sh("cd /root && checkmodule -M -m -o sshd_vsock.mod sshd_vsock.te")
+        g.sh("cd /root && semodule_package -o sshd_vsock.pp -m sshd_vsock.mod")
+        g.sh("semodule -i /root/sshd_vsock.pp")
+    finally:
+        g.close()
+
+
+def boot_qemu(image_path, config):
+    # prereq checks: test.thing needs a working vhost-device-vsock
+    # which is not packaged on Debian/Ubuntu so add help about
+    # installing it via cargo too
+    if not shutil.which("vhost-device-vsock"):
+        raise RuntimeError(
+            "test.thing requires vhost-device-vsock, use dnf install "
+            "or cargo install and update PATH to include ~/.cargo/bin)")
+    with ensure_uncompressed(image_path) as raw_image_path:
+        # test.thing only supports qcow2
+        with ensure_qcow2(raw_image_path) as qcow2_image_path:
+            with create_ssh_key() as (privkey_path, pubkey_path):
+                # prepare the image to work with test.thing, note that
+                # any image that follows the VirtualMachineAPI
+                # (https://codeberg.org/lis/test.thing/src/branch/main/doc/VirtualMachineAPI.md)
+                # does not need any mutations and would work automatically
+                # via SMBIOS11 and systemd-credentials
+                mutate_qemu_image_for_login(qcow2_image_path, pubkey_path)
+                asyncio.run(boot_qemu_async(qcow2_image_path, config, privkey_path, pubkey_path))
+
+
+async def boot_qemu_async(image_path, config, privkey_path, pubkey_path):
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
+    cmd = [BASE_TEST_SCRIPT, config]
+    with IpcDirectory() as ipc:
+        async with VirtualMachine(image_path, ipc=ipc, identity=(privkey_path, pubkey_path)) as vm:
+            cmd_dir = pathlib.Path("/root")
+            for arg in cmd:
+                maybe_file = pathlib.Path(arg)
+                if maybe_file.exists():
+                    await vm.scp(maybe_file, f"vm:{cmd_dir / maybe_file.name}")
+            await vm.execute(*[
+                cmd_dir / pathlib.Path(p).name for p in cmd
+            ])
 
 
 def cmd_boot_aws(arch, image_name, privkey, pubkey, image_path, script_cmd):
@@ -248,6 +343,8 @@ def main():
     print(f"Testing image at {image_path}")
     bib_image_id = ""
     match image_type:
+        case "qcow2":
+            boot_qemu(image_path, build_config_path)
         case "ami" | "ec2" | "ec2-ha" | "ec2-sap" | "edge-ami":
             boot_ami(distro, arch, image_type, image_path, build_config_path)
         case "vhd":
