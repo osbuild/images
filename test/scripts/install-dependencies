@@ -4,6 +4,7 @@
 dnf -y install \
     awscli2 \
     btrfs-progs-devel \
+    cloud-utils \
     device-mapper-devel \
     libvirt-devel \
     gcc \
@@ -18,5 +19,10 @@ dnf -y install \
     osbuild-selinux \
     podman \
     python3 \
+    python3-pip \
     yamllint \
     xz
+
+# we need this for the qemu boot tests and for any python tests but
+# could skip it for other testing.
+pip install .

@@ -20,6 +20,7 @@ SCHUTZFILE = "Schutzfile"
 OS_RELEASE_FILE = "/etc/os-release"
 
 # image types that can be boot tested
+# Keep in sync with test/scripts/boot-image which has the same checks again
 CAN_BOOT_TEST = {
     "*": [
         "ami",
@@ -31,6 +32,8 @@ CAN_BOOT_TEST = {
         "vhd",
     ],
     "x86_64": [
+        "qcow2",
+        "server-qcow2",
         "wsl"
     ]
 }
