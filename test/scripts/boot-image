@@ -3,11 +3,16 @@ import argparse
 import contextlib
 import json
 import os
+import pathlib
 import uuid
-from tempfile import TemporaryDirectory
+import subprocess
+import shlex
 import shutil
+import textwrap
+from tempfile import TemporaryDirectory
 
 import imgtestlib as testlib
+from vmtest.vm import QEMU
 
 BASE_TEST_SCRIPT = "test/scripts/check-host-config.sh"
 WSL_TEST_SCRIPT = "test/scripts/wsl-entrypoint.bat"
@@ -88,6 +93,93 @@ def ensure_uncompressed(filepath):
     else:
         # we only do xz for now so it must be raw: return as is and hope for the best
         yield filepath
+
+
+@contextlib.contextmanager
+def make_cloud_init_iso(pubkey_path) -> pathlib.Path:
+    ssh_key = pathlib.Path(pubkey_path).read_text(encoding="utf8").strip()
+    with TemporaryDirectory() as tmpdir:
+        user_data = pathlib.Path(tmpdir) / "user-data.yaml"
+        user_data_content = textwrap.dedent(f"""\
+        #cloud-config
+        users:
+          - name: root
+            ssh_authorized_keys:
+              - {ssh_key}
+        """)
+        user_data.write_text(user_data_content)
+        meta_data = pathlib.Path(tmpdir) / "meta-data"
+        meta_data.write_text('{"instance-id": "i-1234567890abcdef0"}')
+        iso_path = pathlib.Path(tmpdir) / "cloud-init.iso"
+        subprocess.check_call(
+            ["cloud-localds", os.fspath(iso_path), user_data.name, meta_data.name],
+            cwd=tmpdir,
+        )
+        yield iso_path
+
+
+class CannotRunQemuTest(Exception):
+    def __init__(self, skip_reason):
+        super().__init__(skip_reason)
+        self.skip_reason = skip_reason
+
+
+def ensure_can_run_qemu_test(arch, image_path, config_file):
+    """
+    Check if the given image_path, config_file is capable of running a
+    qemu based test. Will return a bool and a skip_reason.
+    """
+    # keep in sync with imagetestlib.py:CAN_BOOT_TEST
+    if arch not in ["x86_64"]:
+        raise CannotRunQemuTest(f"no qemu boot test support for {arch} yet")
+    manifest_path = pathlib.Path(image_path).parent / "../manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf8"))
+    # Note that this needs adjustment when we switch to librepo
+    urls = [src["url"] for src in manifest["sources"]["org.osbuild.curl"]["items"].values()]
+    if not any("ssh-server" in url for url in urls):
+        # This can happen e.g. when an image is build with the
+        # "minimal: true" customization.
+        # We could use guestfs to inject keys, see PR#1995
+        raise CannotRunQemuTest("no ssh-server in image")
+    # We need jq in the image many images do not have it
+    # (e.g. centos-9/rhel-9 with releasever config) so skip those too
+    if not any("jq" in url for url in urls):
+        raise CannotRunQemuTest("no jq package in image")
+    # We cannot test openscap right now because it seems to prevent RSA keys,
+    # we currently use paramiko and need to update to something modern, see
+    # https://github.com/paramiko/paramiko/issues/2048
+    config = json.loads(pathlib.Path(config_file).read_text(encoding="utf8"))
+    customizations = config.get("blueprint", {}).get("customizations", {})
+    if "openscap" in customizations:
+        raise CannotRunQemuTest("openscap requires non RSA keys")
+    # We cannot test fips right now because it seems to prevent RSA keys
+    # (see above)
+    if customizations.get("fips"):
+        raise CannotRunQemuTest("fips does not work with out RSA keys")
+
+
+def boot_qemu(arch, image_path, config_file):
+    try:
+        ensure_can_run_qemu_test(arch, image_path, config_file)
+    except CannotRunQemuTest as e:
+        print(f"WARNING: skipping {image_path} with {config_file}: {e.skip_reason}")
+        return
+    cmd = [BASE_TEST_SCRIPT, config_file]
+    with contextlib.ExitStack() as cm:
+        uncompressed_image_path = cm.enter_context(ensure_uncompressed(image_path))
+        (privkey_path, pubkey_path) = cm.enter_context(create_ssh_key(key_type="rsa"))
+        cloud_init_iso = cm.enter_context(make_cloud_init_iso(pubkey_path))
+        with QEMU(uncompressed_image_path, arch=arch, cdrom=cloud_init_iso) as vm:
+            # This is similar to what the other runners are doing but
+            # it would be nice to find a better way, e.g. create a
+            # bundle or compsoe a single script with the config
+            # build-in/appended
+            for arg in cmd:
+                if os.path.exists(arg):
+                    vm.scp(arg, "/tmp/", user="root", keyfile=privkey_path)
+            vmcmd = shlex.join(["/tmp/" + os.path.basename(arg) for arg in cmd])
+            exit_status, _ = vm.run(vmcmd, user="root", keyfile=privkey_path)
+            assert exit_status == 0
 
 
 def cmd_boot_aws(arch, image_name, privkey, pubkey, image_path, script_cmd):
@@ -244,7 +336,11 @@ def main():
 
     print(f"Testing image at {image_path}")
     bib_image_id = ""
+    # Keep test/scripts/imagetestlib.py:CAN_BOOT_TEST in sync as it
+    # has the same checks again
     match image_type:
+        case "qcow2" | "server-qcow2":
+            boot_qemu(arch, image_path, build_config_path)
         case "ami" | "ec2" | "ec2-ha" | "ec2-sap" | "edge-ami":
             boot_ami(distro, arch, image_type, image_path, build_config_path)
         case "vhd":
