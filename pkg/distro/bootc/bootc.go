@@ -62,7 +62,7 @@ func (d *BootcDistro) SetBuildContainer(imgref string) (err error) {
 		return nil
 	}
 
-	cnt, err := bibcontainer.New(imgref)
+	cnt, err := bibcontainer.NewNxContainer(imgref)
 	if err != nil {
 		return err
 	}
@@ -526,7 +526,7 @@ func (t *BootcImageType) manifestForISO(bp *blueprint.Blueprint, options distro.
 // newBootcDistro returns a new instance of BootcDistro
 // from the given url
 func NewBootcDistro(imgref string) (*BootcDistro, error) {
-	cnt, err := bibcontainer.New(imgref)
+	cnt, err := bibcontainer.NewNxContainer(imgref)
 	if err != nil {
 		return nil, err
 	}
