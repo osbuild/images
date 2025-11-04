@@ -222,7 +222,7 @@
         "centos-*"
       ],
       "image-types": [
-        "netinst"
+        "network-installer"
       ]
     }
   },
@@ -251,7 +251,7 @@
         "wsl",
         "iot-bootable-container",
         "iot-container",
-        "everything-netinst",
+        "everything-network-installer",
         "pxe-tar-xz"
       ]
     }

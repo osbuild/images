@@ -2150,13 +2150,13 @@ image_types:
       - "customizations.installation_device"
 
   # Based on lorax runtime-install.tmpl
-  "everything-netinst":
+  "everything-network-installer":
     name_aliases: ["netinst"]
     filename: "netinst.iso"
     mime_type: "application/x-iso9660-image"
     bootable: true
     boot_iso: true
-    image_func: "netinst"
+    image_func: "network-installer"
     iso_label: "Everything"
     variant: "Everything"
     exports: ["bootiso"]

@@ -926,7 +926,7 @@ func iotSimplifiedInstallerImage(t *imageType,
 }
 
 // Make an Anaconda installer boot.iso
-func netinstImage(t *imageType,
+func networkInstallerImage(t *imageType,
 	bp *blueprint.Blueprint,
 	options distro.ImageOptions,
 	packageSets map[string]rpmmd.PackageSet,

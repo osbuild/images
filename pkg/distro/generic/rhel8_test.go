@@ -330,7 +330,7 @@ func TestRH8_ImageType_Name(t *testing.T) {
 				"tar",
 				"image-installer",
 				"minimal-raw",
-				"netinst",
+				"network-installer",
 			},
 		},
 		{
@@ -346,7 +346,7 @@ func TestRH8_ImageType_Name(t *testing.T) {
 				"edge-container",
 				"tar",
 				"minimal-raw",
-				"netinst",
+				"network-installer",
 			},
 		},
 		{
@@ -498,7 +498,7 @@ func TestRH8_Architecture_ListImageTypes(t *testing.T) {
 				"oci",
 				"wsl",
 				"minimal-raw",
-				"netinst",
+				"network-installer",
 			},
 		},
 		{
@@ -519,7 +519,7 @@ func TestRH8_Architecture_ListImageTypes(t *testing.T) {
 				"image-installer",
 				"wsl",
 				"minimal-raw",
-				"netinst",
+				"network-installer",
 			},
 		},
 		{
