@@ -66,8 +66,8 @@ func newImageTypeFrom(d *distribution, ar *architecture, imgYAML defs.ImageTypeY
 		it.image = iotSimplifiedInstallerImage
 	case "tar":
 		it.image = tarImage
-	case "netinst":
-		it.image = netinstImage
+	case "network-installer":
+		it.image = networkInstallerImage
 	case "pxe_tar":
 		it.image = pxeTarImage
 	default:

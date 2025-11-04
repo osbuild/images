@@ -2139,12 +2139,12 @@ image_types:
       - "customizations.rhsm"
 
   # Based on lorax runtime-install.tmpl
-  "netinst":
+  "network-installer":
     filename: "netinst.iso"
     mime_type: "application/x-iso9660-image"
     bootable: true
     boot_iso: true
-    image_func: "netinst"
+    image_func: "network-installer"
     # We don't know the variant of the OS pipeline being installed
     iso_label: "Unknown"
     exports: ["bootiso"]
