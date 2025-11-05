@@ -1,2 +1,14 @@
 [tool.autopep8]
 max_line_length = 120
+
+[project]
+name = "images"
+version = "0.1.0"
+
+dependencies = [
+    # XXX: point to github.com/osbuild/bootc-image-builder instead
+    "vmtest @ git+https://github.com/mvo5/bootc-image-builder.git@vmtest-as-py-package"
+]
+
+[tool.setuptools]
+packages = []
