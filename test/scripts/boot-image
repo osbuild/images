@@ -153,6 +153,18 @@ def ensure_can_run_qemu_test(arch, image_path, config_file):
         raise CannotRunQemuTest("openscap is not working right now")
 
 
+def qemu_cmd_scp_and_run(vm, cmd, privkey_path):
+    # This is similar to what the other runners are doing but
+    # it would be nice to find a better way, e.g. create a
+    # bundle or compsoe a single script with the config
+    # build-in/appended
+    for arg in cmd:
+        if os.path.exists(arg):
+            vm.scp(arg, "/tmp/", user="root", keyfile=privkey_path)
+    vmcmd = shlex.join(["/tmp/" + os.path.basename(arg) for arg in cmd])
+    return vm.run(vmcmd, user="root", keyfile=privkey_path)
+
+
 def boot_qemu(arch, image_path, config_file):
     try:
         ensure_can_run_qemu_test(arch, image_path, config_file)
@@ -165,16 +177,53 @@ def boot_qemu(arch, image_path, config_file):
         (privkey_path, pubkey_path) = cm.enter_context(create_ssh_key())
         cloud_init_iso = cm.enter_context(make_cloud_init_iso(pubkey_path))
         with QEMU(uncompressed_image_path, arch=arch, cdrom=cloud_init_iso) as vm:
-            # This is similar to what the other runners are doing but
-            # it would be nice to find a better way, e.g. create a
-            # bundle or compsoe a single script with the config
-            # build-in/appended
-            for arg in cmd:
-                if os.path.exists(arg):
-                    vm.scp(arg, "/tmp/", user="root", keyfile=privkey_path)
-            vmcmd = shlex.join(["/tmp/" + os.path.basename(arg) for arg in cmd])
-            exit_status, _ = vm.run(vmcmd, user="root", keyfile=privkey_path)
+            exit_status, _ = qemu_cmd_scp_and_run(vm, cmd, privkey_path)
             assert exit_status == 0
+
+
+def boot_qemu_iso(arch, installer_iso_path, config_file):
+    try:
+        ensure_can_run_qemu_test(arch, installer_iso_path, config_file)
+    except CannotRunQemuTest as e:
+        print(f"WARNING: skipping {installer_iso_path} with {config_file}: {e.skip_reason}")
+        return
+    config = json.loads(pathlib.Path(config_file).read_text(encoding="utf8"))
+    # We can only test the unattended-iso as the other configs require
+    # interactive setup of the installer which we do not support in this
+    # test-runner.
+    if not config.get("blueprint", {}).get("customizations", {}).get("installer", {}).get("unattended"):
+        print("WARNING: skipping {installer_iso_path} with {config_file}: only unattended installs are supported")
+        return
+    cmd = [BASE_TEST_SCRIPT, config_file]
+    # we should pass console=ttyS0 to instaler os that we see install
+    # progress on the serial console, in the meantime for interactive use
+    # one cans set the OSBUILD_TEST_QEMU_GUI=1 environment
+    with contextlib.ExitStack() as cm:
+        # we need /var/tmp here as /tmp might be on a (small) tmpfs
+        tmpdir = cm.enter_context(TemporaryDirectory(dir="/var/tmp"))
+        # create an (empty) target disk, truncate ensures its sparse
+        # so it will not take up real disk space until things are
+        # written to it
+        test_disk_path = pathlib.Path(tmpdir) / "disk.img"
+        with open(test_disk_path, "w", encoding="utf8") as fp:
+            fp.truncate(10_000_000_000)
+        # boot from installer to install to test disk, anaconda will
+        # reboot automatically for the unattended-iso config.
+        with QEMU(test_disk_path, cdrom=installer_iso_path) as vm:
+            vm.start(wait_event="qmp:RESET", snapshot=False, use_ovmf=True)
+            vm.force_stop()
+        # now boot test disk and wait for ssh to come up as a minimal boot test
+        with QEMU(test_disk_path) as vm:
+            vm.start(use_ovmf=True)
+            vm.wait_ssh_ready()
+            # The "unattended-iso" has the CI ssh key, so if we are running
+            # in CI we can actually do a real image test. Sadly not locally
+            # because we have no way to log into the installed disk in this
+            # case, the CI ssh key is secret.
+            if os.environ.get("CI_PRIV_SSH_KEY_2"):
+                with create_ssh_key() as (privkey_path, _):
+                    exit_status, _ = qemu_cmd_scp_and_run(vm, cmd, privkey_path)
+                    assert exit_status == 0
 
 
 def cmd_boot_aws(arch, image_name, privkey, pubkey, image_path, script_cmd):
@@ -336,6 +385,8 @@ def main():
     match image_type:
         case "qcow2" | "server-qcow2":
             boot_qemu(arch, image_path, build_config_path)
+        case "image-installer" | "minimal-installer":
+            boot_qemu_iso(arch, image_path, build_config_path)
         case "ami" | "ec2" | "ec2-ha" | "ec2-sap" | "edge-ami":
             boot_ami(distro, arch, image_type, image_path, build_config_path)
         case "vhd":

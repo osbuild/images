@@ -8,7 +8,9 @@
     "gitlab-ci-runner-for": {
       "x86_64": {
         "qcow2": "rhos-01/fedora-42",
-        "server-qcow2": "rhos-01/fedora-42"
+        "server-qcow2": "rhos-01/fedora-42",
+        "image-installer": "rhos-01/fedora-42",
+        "minimal-installer": "rhos-01/fedora-42"
        }
     }
   },
