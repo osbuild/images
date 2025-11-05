@@ -32,8 +32,8 @@ CAN_BOOT_TEST = {
         "vhd",
     ],
     "x86_64": [
-        "qcow2",
-        "server-qcow2",
+        "image-installer", "minimal-installer",
+        "qcow2", "server-qcow2",
         "wsl"
     ]
 }
