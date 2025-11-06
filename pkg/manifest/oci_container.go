@@ -13,6 +13,8 @@ type OCIContainer struct {
 	Cmd          []string
 	ExposedPorts []string
 
+	OSCustomizations OSCustomizations
+
 	treePipeline TreePipeline
 }
 
