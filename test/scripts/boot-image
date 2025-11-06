@@ -149,7 +149,42 @@ def make_cloud_init_iso(ssh_key, extra_files = None) -> pathlib.Path:
         return iso_path
 
 
-def boot_qemu(arch, image_path, config):
+def mutate_qemu_image_for_login(filepath, pubkey_path):
+    here = pathlib.Path(__file__).parent
+    pubkey = pathlib.Path(pubkey_path).read_text(encoding="utf8")
+    # pylint: disable=import-outside-toplevel
+    import guestfs
+    g = guestfs.GuestFS()
+    try:
+        g.add_drive_opts(filepath, readonly=False)
+        g.launch()
+        roots = g.inspect_os()
+        if not roots:
+            raise RuntimeError("No operating system found in the image")
+        root_device = roots[0]
+        g.mount(root_device, "/")
+        # we need the right mount in /root (all-customizations sets it on its own lv),
+        # sadly "/" and "/root" both are called "rootlv", but the later is rootlv00
+        if any([fs[0] == "/dev/rootvg/rootlv00" for fs in g.list_filesystems()]):
+            g.mount("/dev/rootvg/rootlv00", "/root")
+        # setfiles needs a setup /usr, on lvm setups we need to mount it
+        if any([fs[0] == "/dev/rootvg/usrlv" for fs in g.list_filesystems()]):
+            g.mount("/dev/rootvg/usrlv", "/usr")
+        # add root ssh key for systems that lack systemd credentials
+        ssh_dir = "/root/.ssh"
+        g.mkdir_p(ssh_dir)
+        g.chmod(0o700, ssh_dir)
+        auth_keys_file = f"{ssh_dir}/authorized_keys"
+        g.write_append(auth_keys_file, pubkey.encode('utf-8'))
+        g.chmod(0o600, auth_keys_file)
+        # we need /root/.ssh/authorized_keys to be labeled correctly
+        # XXX: slightly hackish this will break if we have more than one match (right now "targeted")
+        g.sh("setfiles -F -v /etc/selinux/*/contexts/files/file_contexts /root/.ssh/authorized_keys")
+    finally:
+        g.close()
+
+
+def boot_qemu(arch, image_path, config, image_type):
     try:
         from vmtest.vm import QEMU
     except ImportError as e:
@@ -167,11 +202,21 @@ def boot_qemu(arch, image_path, config):
             ssh_key = pathlib.Path(pubkey_path).read_text().strip()
             # put cmd into iso as well via cloud-init
             cloud_init_iso = make_cloud_init_iso(ssh_key, cmd)
+            # image types without cloud init
+            if image_type in ["minimal-raw"]:
+                print("WARNING: modifiyng the image to include root ssh login")
+                mutate_qemu_image_for_login(raw_image_path, pubkey_path)
+                # XXX: we include the script via cloud-init, for non-cloud init
+                # we should implement "scp" and use that. See
+                # https://github.com/osbuild/images/compare/main...mvo5:non-test-thing?expand=1
+                cmd = ["bin/true"]
             with QEMU(raw_image_path, arch=arch, cdrom=cloud_init_iso) as vm:
+                vm.start(use_ovmf=True)
                 # run the script, this assumes that we always have a script
                 # and files as arguments
                 cmd = "/" + shlex.join(cmd)
-                vm.run(cmd, user="root", keyfile=privkey_path)
+                exit_status, _ = vm.run(cmd, user="root", keyfile=privkey_path)
+                assert exit_status == 0
 
 
 def cmd_boot_aws(arch, image_name, privkey, pubkey, image_path, script_cmd):
@@ -332,8 +377,8 @@ def main():
     print(f"Testing image at {image_path}")
     bib_image_id = ""
     match image_type:
-        case "qcow2":
-            boot_qemu(arch, image_path, build_config_path)
+        case "qcow2" | "minimal-raw":
+            boot_qemu(arch, image_path, build_config_path, image_type)
         case "ami" | "ec2" | "ec2-ha" | "ec2-sap" | "edge-ami":
             boot_ami(distro, arch, image_type, image_path, build_config_path)
         case "vhd":
