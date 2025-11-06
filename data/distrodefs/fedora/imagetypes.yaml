@@ -1802,6 +1802,22 @@ image_types:
       exclude_docs: true
       locale: "C.UTF-8"
       timezone: "Etc/UTC"
+      oci:
+        archive:
+          env:
+            - "PATH=/usr/local/bin:/usr/bin"
+            - "container=oci"
+          cmd:
+            - "/bin/bash"
+          working_dir: "/"
+          labels:
+            license: "MIT"
+            name: "fedora"
+            vendor: "Fedora Project"
+            org.opencontainers.image.license: "MIT"
+            org.opencontainers.image.name: "fedora"
+            org.opencontainers.image.url: "https://fedoraproject.org/"
+            org.opencontainers.image.vendor: "Fedora Project"
     package_sets:
       os:
         - include:
