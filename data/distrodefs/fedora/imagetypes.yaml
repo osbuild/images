@@ -734,7 +734,7 @@
                       type: "ext4"
                       label: "root"
                       mountpoint: "/"
-                      fstab_options: "defaults"
+                      fstab_options: "defaults,ro"
                       fstab_freq: 0
                       fstab_passno: 0
       aarch64:
