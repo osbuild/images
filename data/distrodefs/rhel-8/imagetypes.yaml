@@ -2412,6 +2412,11 @@ image_types:
       - *aarch64_platform
     image_config:
       <<: *edge_commit_image_config
+      oci:
+        archive:
+          cmd: ["nginx", "-c", "/etc/nginx.conf"]
+          exposed_ports:
+            - "8080"
     package_sets:
       os:
         - *edge_commit_pkgset

@@ -2793,6 +2793,13 @@ image_types:
     image_func: "iot_container"
     exports: ["container"]
     <<: *edge_commit
+    image_config:
+      <<: *edge_commit_image_config
+      oci:
+        archive:
+          cmd: ["nginx", "-c", "/etc/nginx.conf"]
+          exposed_ports:
+            - "8080"
     supported_blueprint_options: *supported_options_ostree_commit
 
   "edge-raw-image":

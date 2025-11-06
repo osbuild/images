@@ -1215,6 +1215,11 @@ image_types:
     image_config:
       <<: *image_config_iot_commit
       install_weak_deps: true
+      oci:
+        archive:
+          cmd: ["nginx", "-c", "/etc/nginx.conf"]
+          exposed_ports:
+            - "8080"
     platforms:
       - *x86_64_installer_platform
       - *aarch64_installer_platform
