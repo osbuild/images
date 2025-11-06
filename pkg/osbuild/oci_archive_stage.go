@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"regexp"
 	"sort"
+
+	"github.com/osbuild/images/pkg/customizations/oci"
 )
 
 type OCIArchiveStageOptions struct {
@@ -28,6 +30,23 @@ type OCIArchiveConfig struct {
 	StopSignal   string            `json:"StopSignal,omitempty"`
 	Volumes      []string          `json:"Volumes,omitempty"`
 	WorkingDir   string            `json:"WorkingDir,omitempty"`
+}
+
+func NewOCIArchiveConfig(config *oci.OCI) *OCIArchiveConfig {
+	if config == nil || config.Archive == nil {
+		return &OCIArchiveConfig{}
+	}
+
+	return &OCIArchiveConfig{
+		Cmd:          config.Archive.Cmd,
+		Env:          config.Archive.Env,
+		ExposedPorts: config.Archive.ExposedPorts,
+		User:         config.Archive.User,
+		Labels:       config.Archive.Labels,
+		StopSignal:   config.Archive.StopSignal,
+		Volumes:      config.Archive.Volumes,
+		WorkingDir:   config.Archive.WorkingDir,
+	}
 }
 
 func (OCIArchiveStageOptions) isStageOptions() {}

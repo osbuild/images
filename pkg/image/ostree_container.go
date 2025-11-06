@@ -14,8 +14,9 @@ import (
 
 type OSTreeContainer struct {
 	Base
-	OSCustomizations manifest.OSCustomizations
-	Environment      environment.Environment
+	OSCustomizations           manifest.OSCustomizations
+	OCIContainerCustomizations manifest.OCIContainerCustomizations
+	Environment                environment.Environment
 
 	// OSTreeParent specifies the source for an optional parent commit for the
 	// new commit being built.
@@ -67,8 +68,8 @@ func (img *OSTreeContainer) InstantiateManifest(m *manifest.Manifest,
 	serverPipeline.Language = img.ContainerLanguage
 
 	containerPipeline := manifest.NewOCIContainer(buildPipeline, serverPipeline)
-	containerPipeline.Cmd = []string{"nginx", "-c", nginxConfigPath}
-	containerPipeline.ExposedPorts = []string{listenPort}
+	containerPipeline.OCIContainerCustomizations = img.OCIContainerCustomizations
+
 	containerPipeline.SetFilename(img.filename)
 	artifact := containerPipeline.Export()
 

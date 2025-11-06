@@ -351,6 +351,14 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 	return osc, nil
 }
 
+func ociContainerCustomizations(t *imageType) manifest.OCIContainerCustomizations {
+	imageConfig := t.getDefaultImageConfig()
+
+	return manifest.OCIContainerCustomizations{
+		OCIArchiveConfig: osbuild.NewOCIArchiveConfig(imageConfig.OCI),
+	}
+}
+
 func installerCustomizations(t *imageType, c *blueprint.Customizations) (manifest.InstallerCustomizations, error) {
 	d := t.arch.distro
 	isoLabel, err := t.ISOLabel()
@@ -575,6 +583,8 @@ func containerImage(t *imageType,
 	img.OSCustomizations.PayloadRepos = payloadRepos
 	img.Environment = &t.ImageTypeYAML.Environment
 
+	img.OCIContainerCustomizations = ociContainerCustomizations(t)
+
 	return img, nil
 }
 
@@ -761,6 +771,8 @@ func iotContainerImage(t *imageType,
 	img.OSTreeParent = parentCommit
 	img.OSVersion = d.OsVersion()
 	img.ExtraContainerPackages = packageSets[containerPkgsKey]
+
+	img.OCIContainerCustomizations = ociContainerCustomizations(t)
 
 	return img, nil
 }

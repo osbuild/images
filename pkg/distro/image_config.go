@@ -6,6 +6,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
+	"github.com/osbuild/images/pkg/customizations/oci"
 	"github.com/osbuild/images/pkg/customizations/shell"
 	"github.com/osbuild/images/pkg/customizations/subscription"
 	"github.com/osbuild/images/pkg/customizations/users"
@@ -88,6 +89,7 @@ type ImageConfig struct {
 	Presets             []osbuild.Preset                    `yaml:"presets,omitempty"`
 
 	WSL *wsl.WSL `yaml:"wsl,omitempty"`
+	OCI *oci.OCI `yaml:"oci,omitempty"`
 
 	Users []users.User
 
