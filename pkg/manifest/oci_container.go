@@ -9,9 +9,7 @@ import (
 // tree created by another Pipeline.
 type OCIContainer struct {
 	Base
-	filename     string
-	Cmd          []string
-	ExposedPorts []string
+	filename string
 
 	OSCustomizations OSCustomizations
 
@@ -45,10 +43,7 @@ func (p *OCIContainer) serialize() (osbuild.Pipeline, error) {
 	options := &osbuild.OCIArchiveStageOptions{
 		Architecture: p.treePipeline.Platform().GetArch().String(),
 		Filename:     p.Filename(),
-		Config: &osbuild.OCIArchiveConfig{
-			Cmd:          p.Cmd,
-			ExposedPorts: p.ExposedPorts,
-		},
+		Config:       p.OSCustomizations.OCIArchiveConfig,
 	}
 	baseInput := osbuild.NewTreeInput("name:" + p.treePipeline.Name())
 	inputs := &osbuild.OCIArchiveStageInputs{Base: baseInput}

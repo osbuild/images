@@ -67,8 +67,8 @@ func (img *OSTreeContainer) InstantiateManifest(m *manifest.Manifest,
 	serverPipeline.Language = img.ContainerLanguage
 
 	containerPipeline := manifest.NewOCIContainer(buildPipeline, serverPipeline)
-	containerPipeline.Cmd = []string{"nginx", "-c", nginxConfigPath}
-	containerPipeline.ExposedPorts = []string{listenPort}
+	containerPipeline.OSCustomizations = img.OSCustomizations
+
 	containerPipeline.SetFilename(img.filename)
 	artifact := containerPipeline.Export()
 
