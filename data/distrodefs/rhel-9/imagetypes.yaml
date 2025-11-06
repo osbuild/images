@@ -1337,6 +1337,27 @@
       - "customizations.timezone"
       - "customizations.rhsm"
 
+    # supported options for container types
+    supported_options_container: &supported_options_container
+      - "distro"
+      - "packages"
+      - "modules"
+      - "groups"
+      - "enabled_modules"
+      - "minimal"
+      - "containers"
+      - "customizations.directories"
+      - "customizations.files"
+      - "customizations.firewall"
+      - "customizations.user"
+      - "customizations.sshkey"
+      - "customizations.group"
+      - "customizations.hostname"
+      - "customizations.locale"
+      - "customizations.repositories"
+      - "customizations.services"
+      - "customizations.timezone"
+
 image_config:
   default:
     default_kernel: "kernel"
@@ -3459,3 +3480,77 @@ image_types:
             - xorg-x11-xauth
             - xrdb
             - xz
+
+  container: &container
+    filename: "container.tar"
+    mime_type: "application/x-tar"
+    image_func: "container"
+    bootable: false
+    exports: ["container"]
+    required_partition_sizes: *default_required_dir_sizes
+    platforms:
+      - arch: "x86_64"
+      - arch: "aarch64"
+      - arch: "ppc64le"
+      - arch: "s390x"
+    image_config:
+      no_selinux: true
+      exclude_docs: true
+      locale: "C.UTF-8"
+      timezone: "Etc/UTC"
+    package_sets:
+      os:
+        - include:
+            - "bash"
+            - "coreutils-single"
+            - "crypto-policies-scripts"
+            - "curl-minimal"
+            - "findutils"
+            - "gdb-gdbserver"
+            - "glibc-minimal-langpack"
+            - "gzip"
+            - "python3-dnf-plugins-core"
+            - "redhat-release"
+            - "tar"
+            - "tzdata"
+            - "util-linux"
+            - "vim-minimal"
+            - "virt-what"
+            - "which"
+            - "yum"
+          exclude:
+            - "chrony"
+            - "coreutils"
+            - "coreutils-common"
+            - "libbrotli"
+            - "libcurl"
+            - "libpsl"
+            - "libssh"
+            - "libssh-config"
+            - "libxkbcommon"
+            - "publicsuffix-list-dafsa"
+            - "rpm-plugin-audit"
+            - "xkeyboard-config"
+    supported_blueprint_options: *supported_options_container
+
+  container-minimal:
+    <<: *container
+    filename: "container-minimal.tar"
+    package_sets:
+      os:
+        - include:
+            - "bash"
+            - "coreutils-single"
+            - "redhat-release"
+            - "rpm"
+            - "microdnf"
+          exclude:
+            - "coreutils"
+            - "coreutils-common"
+            - "libbrotli"
+            - "libcurl"
+            - "libpsl"
+            - "libssh"
+            - "libssh-config"
+            - "publicsuffix-list-dafsa"
+            - "rpm-plugin-audit"
