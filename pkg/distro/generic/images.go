@@ -483,7 +483,7 @@ func ostreeDeploymentCustomizations(
 	}
 
 	if imageConfig.LockRootUser != nil {
-		deploymentConf.LockRoot = *imageConfig.LockRootUser
+		deploymentConf.LockRootUser = *imageConfig.LockRootUser
 	}
 
 	for _, fs := range c.GetFilesystems() {
