@@ -148,9 +148,7 @@ func NewGrub2LegacyStageOptions(cfg *GRUB2Config,
 		},
 	}
 
-	if cfg != nil {
-		stageOptions.Config.GRUB2Config = *cfg
-	}
+	stageOptions.Config.GRUB2Config = common.ValueOrEmpty(cfg)
 
 	// NB: previously, the distributor was part of the GRUB2LegacyConfig struct and
 	// was always set. Now it is part of GRUB2Config, which could override it above.
