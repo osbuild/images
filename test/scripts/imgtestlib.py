@@ -544,6 +544,16 @@ def skopeo_inspect_id(image_name: str, arch: str) -> str:
     return ""
 
 
+def get_ci_runner_for(arch, image_type):
+    with open(SCHUTZFILE, encoding="utf-8") as schutzfile:
+        data = json.load(schutzfile)
+
+    if (runner := data.get("common", {}).get("gitlab-ci-runner-for", {}).get(arch, {}).get(image_type)) is not None:
+        return runner
+
+    return get_common_ci_runner()
+
+
 def get_common_ci_runner():
     """
     CI runner for common tasks.
