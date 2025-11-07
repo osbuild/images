@@ -919,7 +919,7 @@ func run(dnfJsonCmd []string, req *Request, stderr io.Writer) ([]byte, error) {
 	if len(dnfJsonCmd) == 0 {
 		dnfJsonCmd = []string{findDepsolveDnf()}
 	}
-	if len(dnfJsonCmd) == 0 {
+	if len(dnfJsonCmd) == 0 || len(dnfJsonCmd[0]) == 0 {
 		return nil, fmt.Errorf("osbuild-depsolve-dnf command undefined")
 	}
 	ex := dnfJsonCmd[0]
