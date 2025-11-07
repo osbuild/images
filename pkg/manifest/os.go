@@ -575,9 +575,7 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 
 	if len(p.containerSpecs) > 0 {
 		var storagePath string
-		if containerStore := p.OSCustomizations.ContainersStorage; containerStore != nil {
-			storagePath = *containerStore
-		}
+		storagePath = common.ValueOrEmpty(p.OSCustomizations.ContainersStorage)
 
 		for _, stage := range osbuild.GenContainerStorageStages(storagePath, p.containerSpecs) {
 			pipeline.AddStage(stage)
