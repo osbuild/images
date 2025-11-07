@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/osbuild/blueprint/pkg/blueprint"
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/anaconda"
 	"github.com/osbuild/images/pkg/customizations/bootc"
@@ -47,13 +48,9 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 		// an argument as fallback or make it not return the standard "kernel"
 		// when it's unset.
 		osc.KernelName = c.GetKernel().Name
-		if imageConfig.DefaultKernelName != nil {
-			osc.KernelName = *imageConfig.DefaultKernelName
-		}
+		osc.KernelName = common.ValueOrEmpty(imageConfig.DefaultKernelName)
 		osc.KernelOptionsAppend = kernelOptions(t, c)
-		if imageConfig.KernelOptionsBootloader != nil {
-			osc.KernelOptionsBootloader = *imageConfig.KernelOptionsBootloader
-		}
+		osc.KernelOptionsBootloader = common.ValueOrEmpty(imageConfig.KernelOptionsBootloader)
 	}
 
 	osc.FIPS = c.GetFIPS()
@@ -72,9 +69,7 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 		osc.GPGKeyFiles = append(osc.GPGKeyFiles, rpm.ImportKeys.Files...)
 	}
 
-	if imageConfig.ExcludeDocs != nil {
-		osc.ExcludeDocs = *imageConfig.ExcludeDocs
-	}
+	osc.ExcludeDocs = common.ValueOrEmpty(imageConfig.ExcludeDocs)
 
 	if !t.ImageTypeYAML.BootISO {
 		// don't put users and groups in the payload of an installer
@@ -94,9 +89,7 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 		osc.MaskedServices = append(osc.MaskedServices, services.Masked...)
 	}
 
-	if imageConfig.DefaultTarget != nil {
-		osc.DefaultTarget = *imageConfig.DefaultTarget
-	}
+	osc.DefaultTarget = common.ValueOrEmpty(imageConfig.DefaultTarget)
 
 	osc.Firewall = imageConfig.Firewall
 	if fw := c.GetFirewall(); fw != nil {
@@ -121,9 +114,9 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 
 	language, keyboard := c.GetPrimaryLocale()
 	if language != nil {
-		osc.Language = *language
+		osc.Language = common.ValueOrEmpty(language)
 	} else if imageConfig.Locale != nil {
-		osc.Language = *imageConfig.Locale
+		osc.Language = common.ValueOrEmpty(imageConfig.Locale)
 	}
 	if keyboard != nil {
 		osc.Keyboard = keyboard
@@ -135,22 +128,20 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 	}
 
 	if hostname := c.GetHostname(); hostname != nil {
-		osc.Hostname = *hostname
+		osc.Hostname = common.ValueOrEmpty(hostname)
 	} else if imageConfig.Hostname != nil {
-		osc.Hostname = *imageConfig.Hostname
+		osc.Hostname = common.ValueOrEmpty(imageConfig.Hostname)
 	}
 
-	if imageConfig.InstallWeakDeps != nil {
-		osc.InstallWeakDeps = *imageConfig.InstallWeakDeps
-	}
+	osc.InstallWeakDeps = common.ValueOrEmpty(imageConfig.InstallWeakDeps)
 
 	osc.InstallLangs = imageConfig.InstallLangs
 
 	timezone, ntpServers := c.GetTimezoneSettings()
 	if timezone != nil {
-		osc.Timezone = *timezone
+		osc.Timezone = common.ValueOrEmpty(timezone)
 	} else if imageConfig.Timezone != nil {
-		osc.Timezone = *imageConfig.Timezone
+		osc.Timezone = common.ValueOrEmpty(imageConfig.Timezone)
 	}
 
 	if len(ntpServers) > 0 {
@@ -322,9 +313,7 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 	osc.Files = append(osc.Files, imageConfig.Files...)
 	osc.Directories = append(osc.Directories, imageConfig.Directories...)
 
-	if imageConfig.NoBLS != nil {
-		osc.NoBLS = *imageConfig.NoBLS
-	}
+	osc.NoBLS = common.ValueOrEmpty(imageConfig.NoBLS)
 
 	ca, err := c.GetCACerts()
 	if err != nil {
@@ -334,13 +323,9 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 		osc.CACerts = ca.PEMCerts
 	}
 
-	if imageConfig.InstallWeakDeps != nil {
-		osc.InstallWeakDeps = *imageConfig.InstallWeakDeps
-	}
+	osc.InstallWeakDeps = common.ValueOrEmpty(imageConfig.InstallWeakDeps)
 
-	if imageConfig.MachineIdUninitialized != nil {
-		osc.MachineIdUninitialized = *imageConfig.MachineIdUninitialized
-	}
+	osc.MachineIdUninitialized = common.ValueOrEmpty(imageConfig.MachineIdUninitialized)
 
 	if imageConfig.MountUnits != nil && *imageConfig.MountUnits {
 		osc.MountConfiguration = osbuild.MOUNT_CONFIGURATION_UNITS
@@ -379,28 +364,16 @@ func installerCustomizations(t *imageType, c *blueprint.Customizations) (manifes
 		isc.AdditionalDracutModules = append(isc.AdditionalDracutModules, installerConfig.AdditionalDracutModules...)
 		isc.AdditionalDrivers = append(isc.AdditionalDrivers, installerConfig.AdditionalDrivers...)
 
-		if menu := installerConfig.DefaultMenu; menu != nil {
-			isc.DefaultMenu = *menu
-		}
+		isc.DefaultMenu = common.ValueOrEmpty(installerConfig.DefaultMenu)
 
-		if isoroot := installerConfig.ISORootfsType; isoroot != nil {
-			isc.ISORootfsType = *isoroot
-		}
+		isc.ISORootfsType = common.ValueOrEmpty(installerConfig.ISORootfsType)
 
-		if isoboot := installerConfig.ISOBootType; isoboot != nil {
-			isc.ISOBoot = *isoboot
-		}
+		isc.ISOBoot = common.ValueOrEmpty(installerConfig.ISOBootType)
 
 		isc.LoraxTemplates = installerConfig.LoraxTemplates
-		if pkg := installerConfig.LoraxTemplatePackage; pkg != nil {
-			isc.LoraxTemplatePackage = *pkg
-		}
-		if pkg := installerConfig.LoraxLogosPackage; pkg != nil {
-			isc.LoraxLogosPackage = *pkg
-		}
-		if pkg := installerConfig.LoraxReleasePackage; pkg != nil {
-			isc.LoraxReleasePackage = *pkg
-		}
+		isc.LoraxTemplatePackage = common.ValueOrEmpty(installerConfig.LoraxTemplatePackage)
+		isc.LoraxLogosPackage = common.ValueOrEmpty(installerConfig.LoraxLogosPackage)
+		isc.LoraxReleasePackage = common.ValueOrEmpty(installerConfig.LoraxReleasePackage)
 	}
 
 	installerCust, err := c.GetInstaller()
@@ -432,9 +405,7 @@ func ostreeDeploymentCustomizations(
 		kernelOptions = append(kernelOptions, bpKernel.Append)
 	}
 
-	if imageConfig.IgnitionPlatform != nil {
-		deploymentConf.IgnitionPlatform = *imageConfig.IgnitionPlatform
-	}
+	deploymentConf.IgnitionPlatform = common.ValueOrEmpty(imageConfig.IgnitionPlatform)
 
 	switch deploymentConf.IgnitionPlatform {
 	case "metal":
@@ -461,23 +432,19 @@ func ostreeDeploymentCustomizations(
 
 	language, keyboard := c.GetPrimaryLocale()
 	if language != nil {
-		deploymentConf.Locale = *language
+		deploymentConf.Locale = common.ValueOrEmpty(language)
 	} else if imageConfig.Locale != nil {
-		deploymentConf.Locale = *imageConfig.Locale
+		deploymentConf.Locale = common.ValueOrEmpty(imageConfig.Locale)
 	}
 	if keyboard != nil {
-		deploymentConf.Keyboard = *keyboard
+		deploymentConf.Keyboard = common.ValueOrEmpty(keyboard)
 	} else if imageConfig.Keyboard != nil {
 		deploymentConf.Keyboard = imageConfig.Keyboard.Keymap
 	}
 
-	if imageConfig.OSTreeConfSysrootReadOnly != nil {
-		deploymentConf.SysrootReadOnly = *imageConfig.OSTreeConfSysrootReadOnly
-	}
+	deploymentConf.SysrootReadOnly = common.ValueOrEmpty(imageConfig.OSTreeConfSysrootReadOnly)
 
-	if imageConfig.LockRootUser != nil {
-		deploymentConf.LockRoot = *imageConfig.LockRootUser
-	}
+	deploymentConf.LockRoot = common.ValueOrEmpty(imageConfig.LockRootUser)
 
 	for _, fs := range c.GetFilesystems() {
 		deploymentConf.CustomFileSystems = append(deploymentConf.CustomFileSystems, fs.Mountpoint)
@@ -526,9 +493,7 @@ func diskImage(t *imageType,
 		img.OSNick = t.Arch().Distro().Codename()
 	}
 
-	if t.ImageTypeYAML.DiskImagePartTool != nil {
-		img.PartTool = *t.ImageTypeYAML.DiskImagePartTool
-	}
+	img.PartTool = common.ValueOrEmpty(t.ImageTypeYAML.DiskImagePartTool)
 
 	return img, nil
 }
@@ -591,9 +556,7 @@ func liveInstallerImage(t *imageType,
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
 
 	imgConfig := t.getDefaultImageConfig()
-	if locale := imgConfig.Locale; locale != nil {
-		img.Locale = *locale
-	}
+	img.Locale = common.ValueOrEmpty(imgConfig.Locale)
 
 	var err error
 	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations)
@@ -678,9 +641,7 @@ func iotCommitImage(t *imageType,
 
 	imgConfig := t.getDefaultImageConfig()
 	img.OSCustomizations.Presets = imgConfig.Presets
-	if imgConfig.InstallWeakDeps != nil {
-		img.InstallWeakDeps = *imgConfig.InstallWeakDeps
-	}
+	img.InstallWeakDeps = common.ValueOrEmpty(imgConfig.InstallWeakDeps)
 
 	img.Environment = &t.ImageTypeYAML.Environment
 	img.OSTreeParent = parentCommit
@@ -751,9 +712,7 @@ func iotContainerImage(t *imageType,
 
 	imgConfig := t.getDefaultImageConfig()
 	img.OSCustomizations.Presets = imgConfig.Presets
-	if imgConfig.InstallWeakDeps != nil {
-		img.OSCustomizations.InstallWeakDeps = *imgConfig.InstallWeakDeps
-	}
+	img.OSCustomizations.InstallWeakDeps = common.ValueOrEmpty(imgConfig.InstallWeakDeps)
 	img.OSCustomizations.PayloadRepos = payloadRepos
 
 	img.ContainerLanguage = img.OSCustomizations.Language
@@ -810,9 +769,7 @@ func iotInstallerImage(t *imageType,
 
 	img.RootfsCompression = "xz" // This also triggers using the bcj filter
 	imgConfig := t.getDefaultImageConfig()
-	if locale := imgConfig.Locale; locale != nil {
-		img.Locale = *locale
-	}
+	img.Locale = common.ValueOrEmpty(imgConfig.Locale)
 
 	return img, nil
 }
@@ -938,9 +895,7 @@ func networkInstallerImage(t *imageType,
 
 	img := image.NewAnacondaNetInstaller(t.platform, t.Filename())
 	language, _ := customizations.GetPrimaryLocale()
-	if language != nil {
-		img.Language = *language
-	}
+	img.Language = common.ValueOrEmpty(language)
 
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
 
