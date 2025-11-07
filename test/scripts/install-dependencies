@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# we need qemu-kvm here but libvirt-devel pulls this in
 dnf -y install \
     awscli2 \
     btrfs-progs-devel \
