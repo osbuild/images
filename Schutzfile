@@ -10,8 +10,10 @@
         "qcow2": "rhos-01/fedora-42",
         "server-qcow2": "rhos-01/fedora-42",
         "image-installer": "rhos-01/fedora-42",
-        "minimal-installer": "rhos-01/fedora-42"
-      }
+        "minimal-installer": "rhos-01/fedora-42",
+        "network-installer": "rhos-01/fedora-42",
+        "everything-network-installer": "rhos-01/fedora-42"
+       }
     }
   },
   "centos-9": {
