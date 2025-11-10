@@ -229,21 +229,18 @@ def boot_wsl(distro, arch, image_path, config):
 def main():
     desc = "Boot an image in the cloud environment it is built for and validate the configuration"
     parser = argparse.ArgumentParser(description=desc)
-    parser.add_argument("distro", type=str, default=None, help="distro for the image to boot test")
-    parser.add_argument("arch", type=str, default=None, help="architecture of the image to boot test")
-    parser.add_argument("image_type", type=str, default=None, help="type of the image to boot test")
     parser.add_argument("image_search_path", type=str, help="path to search for image file")
 
     args = parser.parse_args()
-    distro = args.distro
-    arch = args.arch
-    image_type = args.image_type
     search_path = args.image_search_path
 
     image_path = testlib.find_image_file(search_path)
     build_info = testlib.read_build_info(search_path)
     build_config_name = build_info["config"]
     build_config_path = f"test/configs/{build_config_name}.json"
+    distro = build_info["distro"]
+    arch = build_info["arch"]
+    image_type = build_info["image-type"]
 
     print(f"Testing image at {image_path}")
     bib_image_id = ""
