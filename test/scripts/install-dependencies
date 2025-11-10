@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 # we need qemu-kvm here but libvirt-devel pulls this in
 dnf -y install \
     awscli2 \
@@ -22,6 +24,9 @@ dnf -y install \
     python3-pip \
     yamllint \
     xz
+
+# for mkksiso
+dnf install -y lorax
 
 # we need this for the qemu boot tests and for any python tests but
 # could skip it for other testing.

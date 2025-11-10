@@ -4,9 +4,11 @@ import contextlib
 import json
 import os
 import pathlib
+import random
 import uuid
 import subprocess
 import shutil
+import string
 import textwrap
 from tempfile import TemporaryDirectory
 
@@ -155,6 +157,21 @@ def ensure_can_run_qemu_test(arch, image_path, config_file):
     customizations = config.get("blueprint", {}).get("customizations", {})
     if "openscap" in customizations:
         raise CannotRunQemuTest("openscap is not working right now")
+    # network-installer has a bunch of extra constraints
+    info_path = pathlib.Path(image_path).parent / "../info.json"
+    info = json.loads(info_path.read_text(encoding="utf8"))
+    if info.get("image-type") in ["network-installer", "everything-network-installer"]:
+        # network install needs subscribed content but we cannot provide
+        # that currently
+        match info.get("distro"):
+            case name if name.startswith("rhel"):
+                raise CannotRunQemuTest("rhel network-installer needs subscription keys which we cannot provide yet")
+            case name if name.startswith("fedora"):
+                raise CannotRunQemuTest(
+                    "fedora network-installer crashes in sshd, "
+                    "see https://bugzilla.redhat.com/show_bug.cgi?id=2415883")
+            case "centos-9":
+                raise CannotRunQemuTest("centos-9 will not start an install and waits on source selection")
 
 
 def qemu_cmd_scp_and_run(vm, cmd, privkey_path):
@@ -180,6 +197,48 @@ def boot_qemu(arch, image_path, config_file):
             qemu_cmd_scp_and_run(vm, cmd, privkey_path)
 
 
+def boot_qemu_iso_no_unattended_support(arch, installer_iso_path, config_file):
+    ensure_can_run_qemu_test(arch, installer_iso_path, config_file)
+    # this is for ISOs that have no "unattneded" support in their blueprint,
+    # manually create one and modify the ISO
+    rootpw = "".join(
+        random.choices(string.ascii_uppercase + string.digits, k=18))
+    with contextlib.ExitStack() as cm:
+        tmpdir = cm.enter_context(TemporaryDirectory(dir="/var/tmp"))
+        (privkey_path, pubkey_path) = cm.enter_context(create_ssh_key())
+        pubkey = pathlib.Path(pubkey_path).read_text("utf8").strip()
+        unattended_ks = pathlib.Path(tmpdir) / "ks.cfg"
+        unattended_ks.write_text(textwrap.dedent(f"""\
+        text --non-interactive
+        zerombr
+        clearpart --all --initlabel
+        autopart --type=plain
+        network --activate --onboot=on
+        reboot --eject
+        user --name=osbuild --group=wheel --shell=/bin/bash
+        sshkey --username=osbuild "{pubkey}"
+        rootpw {rootpw}
+        # better debug for the sshd failure
+        bootloader --append="console=ttyS0 systemd.journald.forward_to_console=1"
+        %post
+        # workaround for centos-10 as it fails to start here and that causes issue
+        # with out "check-host-config.sh" that expects a non-degraded boot
+        systemctl mask mcelog.service || true
+        %end
+        """))
+        new_installer_iso_path = pathlib.Path(tmpdir) / os.path.basename(installer_iso_path)
+        subprocess.check_call(
+            ["sudo", "mkksiso",
+             # Note that we could add:
+             #    systemd.journald.forward_to_console=1
+             # here as well but it produces extrem amounts of logs
+             # that exceeds the gitlab limit
+             "-c", "console=ttyS0",
+             "--ks", os.fspath(unattended_ks),
+             os.fspath(installer_iso_path), new_installer_iso_path])
+        return _boot_qemu_iso(arch, new_installer_iso_path, config_file, privkey_path)
+
+
 def boot_qemu_iso(arch, installer_iso_path, config_file):
     ensure_can_run_qemu_test(arch, installer_iso_path, config_file)
     # We can only test the unattended-iso as the other configs require
@@ -188,6 +247,18 @@ def boot_qemu_iso(arch, installer_iso_path, config_file):
     config = json.loads(pathlib.Path(config_file).read_text(encoding="utf8"))
     if not config.get("blueprint", {}).get("customizations", {}).get("installer", {}).get("unattended"):
         raise CannotRunQemuTest("only unattended installs are supported")
+    with contextlib.ExitStack() as cm:
+        # The "unattended-iso" has the CI ssh key, so if we are running
+        # in CI we can actually do a real image test. Sadly not locally
+        # because we have no way to log into the installed disk in this
+        # case, the CI ssh key is secret.
+        privkey_path = None
+        if os.environ.get("CI_PRIV_SSH_KEY"):
+            (privkey_path, _) = cm.enter_context(create_ssh_key())
+        return _boot_qemu_iso(arch, installer_iso_path, config_file, privkey_path)
+
+
+def _boot_qemu_iso(arch, installer_iso_path, config_file, privkey_path):
     cmd = [BASE_TEST_SCRIPT, config_file]
     # we should pass console=ttyS0 to instaler os that we see install
     # progress on the serial console, in the meantime for interactive use
@@ -200,23 +271,18 @@ def boot_qemu_iso(arch, installer_iso_path, config_file):
         # written to it
         test_disk_path = pathlib.Path(tmpdir) / "disk.img"
         with open(test_disk_path, "w", encoding="utf8") as fp:
-            fp.truncate(10_000_000_000)
+            fp.truncate(20_000_000_000)
         # boot from installer to install to test disk, anaconda will
         # reboot automatically for the unattended-iso config.
         with QEMU(test_disk_path, cdrom=installer_iso_path) as vm:
             vm.start(wait_event="qmp:RESET", snapshot=False, use_ovmf=True)
             vm.force_stop()
         # now boot test disk and wait for ssh to come up as a minimal boot test
-        with QEMU(test_disk_path) as vm:
+        with QEMU(test_disk_path, arch=arch) as vm:
             vm.start(use_ovmf=True)
             vm.wait_ssh_ready()
-            # The "unattended-iso" has the CI ssh key, so if we are running
-            # in CI we can actually do a real image test. Sadly not locally
-            # because we have no way to log into the installed disk in this
-            # case, the CI ssh key is secret.
-            if os.environ.get("CI_PRIV_SSH_KEY"):
-                with create_ssh_key() as (privkey_path, _):
-                    qemu_cmd_scp_and_run(vm, cmd, privkey_path)
+            if privkey_path:
+                qemu_cmd_scp_and_run(vm, cmd, privkey_path)
 
 
 def cmd_boot_aws(arch, image_name, privkey, pubkey, image_path, script_cmd):
@@ -385,6 +451,12 @@ def main():
         case "image-installer" | "minimal-installer":
             try:
                 boot_qemu_iso(arch, image_path, build_config_path)
+            except CannotRunQemuTest as e:
+                print(f"WARNING: skipping iso {image_path}: {e.skip_reason}")
+                return
+        case "network-installer" | "everything-network-installer":
+            try:
+                boot_qemu_iso_no_unattended_support(arch, image_path, build_config_path)
             except CannotRunQemuTest as e:
                 print(f"WARNING: skipping iso {image_path}: {e.skip_reason}")
                 return
