@@ -184,7 +184,7 @@ jobs:
       - *apt_install_dependencies
 
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
         with:
           version: v2.3
           args: --verbose --timeout 5m0s
