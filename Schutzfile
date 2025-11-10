@@ -26,13 +26,6 @@
       }
     }
   },
-  "fedora-41": {
-    "dependencies": {
-      "osbuild": {
-        "commit": "7d59370ca7d727af588471300baeb82e80c8d3a0"
-      }
-    }
-  },
   "fedora-42": {
     "dependencies": {
       "osbuild": {
