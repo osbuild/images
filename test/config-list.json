@@ -432,6 +432,15 @@
     }
   },
   {
+    "path": "./configs/unattended-no-pkgs-iso.json",
+    "filters": {
+      "image-types": [
+        "network-installer",
+        "everything-network-installer"
+      ]
+    }
+  },
+  {
     "path": "./configs/interactive-iso-userkickstart.json",
     "filters": {
       "distros": [
