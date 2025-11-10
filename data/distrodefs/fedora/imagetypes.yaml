@@ -137,13 +137,6 @@
       - "xrdb"
       - "xz"
     conditions:
-      "f41 and below use tigervnc":
-        when:
-          version_less_than: "42"
-        append:
-          include:
-            - "tigervnc-server-minimal"
-            - "tigervnc-server-module"
       "x86_64 specific anaconda pkgs":
         when:
           arch: "x86_64"
@@ -418,13 +411,6 @@
     lorax_logos_package: fedora-logos
     lorax_release_package: fedora-release
     conditions: &default_installer_config_conditions
-      "f41 dracut requires ifcfg, rootfs is squashfs":
-        when:
-          version_equal: "41"
-        shallow_merge:
-          additional_dracut_modules:
-            - "ifcfg"
-            - "dbus-broker"
       "x86_64 uses grub2":
         when:
           arch: "x86_64"
@@ -447,27 +433,6 @@
         - "redboot-task-runner"
       kernel_options: *ostree_deployment_kernel_options
       conditions:
-        "f41 and below used zezere and parsec":
-          when:
-            version_less_than: "42"
-          shallow_merge:
-            enabled_services:
-              - "NetworkManager.service"
-              - "firewalld.service"
-              - "sshd.service"
-              - "greenboot-grub2-set-counter"
-              - "greenboot-grub2-set-success"
-              - "greenboot-healthcheck"
-              - "greenboot-rpm-ostree-grub2-check-fallback"
-              - "greenboot-status"
-              - "greenboot-task-runner"
-              - "redboot-auto-reboot"
-              - "redboot-task-runner"
-              # only in < 42
-              - "zezere_ignition.timer"
-              - "zezere_ignition_banner.service"
-              - "parsec"
-              - "dbus-parsec"
         "f43 uses new greenboot":
           when:
             version_greater_or_equal: "43"
@@ -682,7 +647,7 @@
         partitions:
           - *iot_base_partition_table_part_efi
           - *iot_base_partition_table_part_boot
-          - *iot_base_partition_table_part_root
+          - *iot_base_partition_table_part_root_fstab_ro
       aarch64: &iot_base_partition_table_aarch64
         uuid: "0xc1748067"
         type: "dos"
@@ -690,7 +655,7 @@
         partitions:
           - *iot_base_partition_table_part_efi_aarch64
           - *iot_base_partition_table_part_boot_aarch64
-          - *iot_base_partition_table_part_root_aarch64
+          - *iot_base_partition_table_part_root_fstab_ro_aarch64
 
     iot_simplified_installer_partition_tables: &iot_simplified_installer_partition_tables
       x86_64: &iot_simplified_installer_partition_tables_x86
@@ -1140,6 +1105,7 @@ image_types:
             - "authselect"
             - "bash"
             - "bash-completion"
+            - "bootupd"
             - "brcmfmac-firmware"
             - "chrony"
             - "clevis"
@@ -1224,28 +1190,12 @@ image_types:
             - "xz"
             - "zram-generator"
           conditions:
-            "f41 and below uses parsec/zezere":
-              when:
-                version_less_than: "42"
-              append:
-                include:
-                  - "dbus-parsec"
-                  - "kernel-tools"
-                  - "parsec"
-                  - "policycoreutils-python-utils"
-                  - "zezere-ignition"
             "f42 and below uses basesystem":
               when:
                 version_less_than: "43"
               append:
                 include:
                   - "basesystem"
-            "f41 and above need bootupd":
-              when:
-                version_greater_or_equal: "41"
-              append:
-                include:
-                  - "bootupd"
             "f43+ needs the filesystem pkg":
               when:
                 version_greater_or_equal: "43"
@@ -1336,24 +1286,6 @@ image_types:
           - ["/usr/lib/ostree-boot/efi/start_x.elf", "/boot/efi/"]
     partition_table:
       <<: *iot_base_partition_tables
-    partition_tables_override:
-      conditions:
-        "conditions for iot-raw-xz":
-          when:
-            version_greater_or_equal: "42"
-          override:
-            x86_64:
-              <<: *iot_base_partition_table_x86_64
-              partitions:
-                - *iot_base_partition_table_part_efi
-                - *iot_base_partition_table_part_boot
-                - *iot_base_partition_table_part_root_fstab_ro
-            aarch64:
-              <<: *iot_base_partition_table_aarch64
-              partitions:
-                - *iot_base_partition_table_part_efi_aarch64
-                - *iot_base_partition_table_part_boot_aarch64
-                - *iot_base_partition_table_part_root_fstab_ro_aarch64
     supported_blueprint_options: *supported_options_ostree_disk
 
   "iot-qcow2":
@@ -1616,18 +1548,6 @@ image_types:
           exclude:
             - "dracut-config-rescue"
           conditions:
-            "riscv64 specific pkgs for minimal-raw-xz":
-              when:
-                arch: "riscv64"
-                version_less_than: "42"
-              append:
-                include:
-                  # missing from @core in riscv64 but only
-                  # in Fedora 41, they've been subsequently
-                  # added in 42 and up
-                  - "dnf5"
-                  - "policycoreutils"
-                  - "selinux-policy-targeted"
             "no firewalld on f43+":
               when:
                 version_greater_or_equal: "43"
@@ -1709,13 +1629,6 @@ image_types:
       # them to empty to avoid changing the live-installer definition
       additional_dracut_modules: []
       # also reset the condition that adds dracut modules
-      conditions:
-        <<: *default_installer_config_conditions
-        "f41 dracut requires ifcfg, rootfs is squashfs":
-          when:
-            version_equal: "41"
-          shallow_merge:
-            additional_dracut_modules: []
 
     image_config:
       locale: "en_US.UTF-8"
@@ -1970,11 +1883,13 @@ image_types:
             - "tar"
             - "util-linux-core"
             - "vim-minimal"
+            - "wsl-setup"
           exclude:
             - "crypto-policies-scripts"
             - "deltarpm"
             - "dosfstools"
             - "elfutils-debuginfod-client"
+            - "fuse-libs"
             - "gawk-all-langpacks"
             - "glibc-gconv-extra"
             - "glibc-langpack-en"
@@ -1996,25 +1911,6 @@ image_types:
             - "trousers"
             - "whois-nls"
             - "xkeyboard-config"
-          conditions:
-            "new f42 use the wsl-setup for setup":
-              when:
-                version_greater_or_equal: "42"
-              append:
-                include:
-                  - "wsl-setup"
-            "only f41 and below need cloud-init":
-              when:
-                version_less_than: "42"
-              append:
-                include:
-                  - "cloud-init"
-            "f41+ drops fuse-libs":
-              when:
-                version_greater_or_equal: "41"
-              append:
-                exclude:
-                  - "fuse-libs"
     supported_blueprint_options: *supported_options_container
 
   "iot-simplified-installer":
@@ -2243,13 +2139,6 @@ image_types:
             - hexedit
             - sg3_utils
           conditions:
-            "f41 and below use tigervnc":
-              when:
-                version_less_than: "42"
-              append:
-                include:
-                  - "tigervnc-server-minimal"
-                  - "tigervnc-server-module"
             "x86_64 specific anaconda pkgs":
               when:
                 arch: "x86_64"
