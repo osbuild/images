@@ -8,8 +8,10 @@ import (
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/artifact"
 	"github.com/osbuild/images/pkg/customizations/anaconda"
+	"github.com/osbuild/images/pkg/customizations/kickstart"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/manifest"
+	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/runner"
@@ -25,6 +27,8 @@ type AnacondaNetInstaller struct {
 	RootfsCompression string
 
 	Language string
+
+	Kickstart *kickstart.Options
 }
 
 func NewAnacondaNetInstaller(platform platform.Platform, filename string) *AnacondaNetInstaller {
@@ -80,7 +84,17 @@ func (img *AnacondaNetInstaller) InstantiateManifest(m *manifest.Manifest,
 	bootTreePipeline.ISOLabel = img.InstallerCustomizations.ISOLabel
 	bootTreePipeline.DefaultMenu = img.InstallerCustomizations.DefaultMenu
 
-	kernelOpts := []string{fmt.Sprintf("inst.stage2=hd:LABEL=%s", img.InstallerCustomizations.ISOLabel)}
+	if img.Kickstart == nil {
+		img.Kickstart = &kickstart.Options{}
+	}
+	if img.Kickstart.Path == "" {
+		img.Kickstart.Path = osbuild.KickstartPathOSBuild
+	}
+
+	kernelOpts := []string{
+		fmt.Sprintf("inst.stage2=hd:LABEL=%s", img.InstallerCustomizations.ISOLabel),
+		fmt.Sprintf("inst.ks=hd:LABEL=%s:%s", img.InstallerCustomizations.ISOLabel, img.Kickstart.Path),
+	}
 	if anacondaPipeline.InstallerCustomizations.FIPS {
 		kernelOpts = append(kernelOpts, "fips=1")
 	}
@@ -91,6 +105,7 @@ func (img *AnacondaNetInstaller) InstantiateManifest(m *manifest.Manifest,
 	// TODO: the partition table is required - make it a ctor arg or set a default one in the pipeline
 	isoTreePipeline.PartitionTable = efiBootPartitionTable(rng)
 	isoTreePipeline.Release = img.InstallerCustomizations.Release
+	isoTreePipeline.Kickstart = img.Kickstart
 
 	isoTreePipeline.RootfsCompression = img.RootfsCompression
 	isoTreePipeline.RootfsType = img.InstallerCustomizations.ISORootfsType

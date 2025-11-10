@@ -2962,5 +2962,6 @@ image_types:
             - "perl-interpreter"
     supported_blueprint_options:
       - "distro"
+      - "customizations.installer.unattended"
       - "customizations.fips"
       - "customizations.locale"

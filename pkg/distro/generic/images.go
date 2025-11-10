@@ -604,6 +604,19 @@ func liveInstallerImage(t *imageType,
 	return img, nil
 }
 
+func kickstartCustomizations(customizations *blueprint.Customizations, osCustomizations *manifest.OSCustomizations) (*kickstart.Options, error) {
+	ks, err := kickstart.New(customizations)
+	if err != nil {
+		return nil, err
+	}
+	if osCustomizations != nil {
+		ks.Language = &osCustomizations.Language
+		ks.Keyboard = osCustomizations.Keyboard
+		ks.Timezone = &osCustomizations.Timezone
+	}
+	return ks, nil
+}
+
 func imageInstallerImage(t *imageType,
 	bp *blueprint.Blueprint,
 	options distro.ImageOptions,
@@ -623,14 +636,10 @@ func imageInstallerImage(t *imageType,
 	}
 	img.OSCustomizations.PayloadRepos = payloadRepos
 
-	img.Kickstart, err = kickstart.New(customizations)
+	img.Kickstart, err = kickstartCustomizations(customizations, &img.OSCustomizations)
 	if err != nil {
 		return nil, err
 	}
-	img.Kickstart.Language = &img.OSCustomizations.Language
-	img.Kickstart.Keyboard = img.OSCustomizations.Keyboard
-	img.Kickstart.Timezone = &img.OSCustomizations.Timezone
-
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
 
 	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations)
@@ -942,12 +951,27 @@ func networkInstallerImage(t *imageType,
 		img.Language = *language
 	}
 
+	var err error
+	// XXX: it would be nice to make this consistent with the
+	// constainer-installer
+	img.Kickstart, err = kickstartCustomizations(customizations, nil)
+	if err != nil {
+		return nil, err
+	}
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
 
-	var err error
 	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations)
 	if err != nil {
 		return nil, err
+	}
+
+	installerConfig, err := t.getDefaultInstallerConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	if img.Kickstart.Unattended {
+		img.InstallerCustomizations.KernelOptionsAppend = append(installerConfig.KickstartUnattendedExtraKernelOpts, img.InstallerCustomizations.KernelOptionsAppend...)
 	}
 
 	img.RootfsCompression = "xz" // This also triggers using the bcj filter

@@ -2271,6 +2271,7 @@ image_types:
             - "restore"
     supported_blueprint_options:
       - "distro"
+      - "customizations.installer.unattended"
       - "customizations.fips"
       - "customizations.locale"
 

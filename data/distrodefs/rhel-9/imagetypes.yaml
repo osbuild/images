@@ -3342,6 +3342,7 @@ image_types:
             - "spice-vdagent"
     supported_blueprint_options:
       - "distro"
+      - "customizations.installer.unattended"
       - "customizations.fips"
       - "customizations.locale"
 
