@@ -1322,6 +1322,10 @@
       - "customizations.services"
       - "customizations.rhsm"
 
+    ostree_server: &ostree_server
+      port: &ostree_server_port "8080"
+      config_path: &ostree_server_config_path "/etc/nginx.conf"
+
 
 image_config:
   default:
@@ -2412,11 +2416,15 @@ image_types:
       - *aarch64_platform
     image_config:
       <<: *edge_commit_image_config
+      ostree_server: *ostree_server
       oci:
         archive:
-          cmd: ["nginx", "-c", "/etc/nginx.conf"]
+          cmd:
+            - "nginx"
+            - "-c"
+            - *ostree_server_config_path
           exposed_ports:
-            - "8080"
+            - *ostree_server_port
     package_sets:
       os:
         - *edge_commit_pkgset
