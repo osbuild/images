@@ -7,6 +7,7 @@ import (
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/oci"
+	"github.com/osbuild/images/pkg/customizations/ostreeserver"
 	"github.com/osbuild/images/pkg/customizations/shell"
 	"github.com/osbuild/images/pkg/customizations/subscription"
 	"github.com/osbuild/images/pkg/customizations/users"
@@ -90,6 +91,8 @@ type ImageConfig struct {
 
 	WSL *wsl.WSL `yaml:"wsl,omitempty"`
 	OCI *oci.OCI `yaml:"oci,omitempty"`
+
+	OSTreeServer *ostreeserver.OSTreeServer `yaml:"ostree_server,omitempty"`
 
 	Users []users.User
 

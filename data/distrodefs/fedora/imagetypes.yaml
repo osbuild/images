@@ -450,6 +450,10 @@
       ostree_conf_sysroot_readonly: true
       lock_root_user: true
 
+    ostree_server: &ostree_server
+      port: &ostree_server_port "8080"
+      config_path: &ostree_server_config_path "/etc/nginx.conf"
+
   disk_sizes:
     default_required_partition_sizes: &default_required_dir_sizes
       "/": "1 GiB"
@@ -1215,11 +1219,15 @@ image_types:
     image_config:
       <<: *image_config_iot_commit
       install_weak_deps: true
+      ostree_server: *ostree_server
       oci:
         archive:
-          cmd: ["nginx", "-c", "/etc/nginx.conf"]
+          cmd:
+            - "nginx"
+            - "-c"
+            - *ostree_server_config_path
           exposed_ports:
-            - "8080"
+            - *ostree_server_port
     platforms:
       - *x86_64_installer_platform
       - *aarch64_installer_platform

@@ -366,6 +366,18 @@ func ociContainerCustomizations(t *imageType) manifest.OCIContainerCustomization
 	}
 }
 
+func ostreeCommitServerCustomizations(t *imageType) manifest.OSTreeCommitServerCustomizations {
+	imageConfig := t.getDefaultImageConfig()
+
+	c := manifest.OSTreeCommitServerCustomizations{}
+
+	if imageConfig.OSTreeServer != nil {
+		c.OSTreeServer = imageConfig.OSTreeServer
+	}
+
+	return c
+}
+
 func installerCustomizations(t *imageType, c *blueprint.Customizations) (manifest.InstallerCustomizations, error) {
 	d := t.arch.distro
 	isoLabel, err := t.ISOLabel()
@@ -780,6 +792,7 @@ func iotContainerImage(t *imageType,
 	img.ExtraContainerPackages = packageSets[containerPkgsKey]
 
 	img.OCIContainerCustomizations = ociContainerCustomizations(t)
+	img.OSTreeCommitServerCustomizations = ostreeCommitServerCustomizations(t)
 
 	return img, nil
 }
