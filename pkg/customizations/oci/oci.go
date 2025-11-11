@@ -1,5 +1,8 @@
 package oci
 
+// KEEP IN SYNC:
+// this is a copy of osbuild/oci_archive_stage.go:OCIArchiveConfig
+// with nicer names
 type OCIArchiveConfig struct {
 	Cmd          []string          `yaml:"cmd,omitempty"`
 	Env          []string          `yaml:"env,omitempty"`
