@@ -127,7 +127,7 @@ func TestManifestGeneratorWithOstreeCommit(t *testing.T) {
 	assert.Contains(t, string(osbuildManifest), expectedSha256)
 }
 
-func fakeDepsolve(cacheDir string, depsolveWarningsOutput io.Writer, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]depsolvednf.DepsolveResult, error) {
+func fakeDepsolve(cacheDir string, depsolveWarningsOutput io.Writer, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string, solver *depsolvednf.Solver) (map[string]depsolvednf.DepsolveResult, error) {
 	depsolvedSets := make(map[string]depsolvednf.DepsolveResult)
 	if depsolveWarningsOutput != nil {
 		_, _ = depsolveWarningsOutput.Write([]byte(`fake depsolve output`))
