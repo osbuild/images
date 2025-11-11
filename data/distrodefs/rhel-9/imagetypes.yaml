@@ -1358,6 +1358,10 @@
       - "customizations.services"
       - "customizations.timezone"
 
+    ostree_server: &ostree_server
+      port: &ostree_server_port "8080"
+      config_path: &ostree_server_config_path "/etc/nginx.conf"
+
 image_config:
   default:
     default_kernel: "kernel"
@@ -2795,11 +2799,15 @@ image_types:
     <<: *edge_commit
     image_config:
       <<: *edge_commit_image_config
+      ostree_server: *ostree_server
       oci:
         archive:
-          cmd: ["nginx", "-c", "/etc/nginx.conf"]
+          cmd:
+            - "nginx"
+            - "-c"
+            - *ostree_server_config_path
           exposed_ports:
-            - "8080"
+            - *ostree_server_port
     supported_blueprint_options: *supported_options_ostree_commit
 
   "edge-raw-image":
