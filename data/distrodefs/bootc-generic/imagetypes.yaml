@@ -149,3 +149,16 @@ image_types:
     exports: ["bootiso"]
     filename: "install.iso"
     boot_iso: true
+
+  # this image type is special (in many ways) and all is a bit ugly:
+  # - we want to get rid of it (here for compat with bib)
+  # - its "indirect" in the sense that it pulls the RPMs from a
+  #   "real" distro, i.e. if a bootc centos-10 is found it will
+  #   load the imagetypes.yaml for that to load the
+  #   bootc-rpm-installer
+  anaconda-iso:
+    name_aliases: ["iso"]
+    mime_type: "application/x-iso9660-image"
+    exports: ["bootiso"]
+    filename: "install.iso"
+    boot_iso: true
