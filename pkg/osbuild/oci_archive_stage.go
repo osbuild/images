@@ -21,6 +21,9 @@ type OCIArchiveStageOptions struct {
 	Config *OCIArchiveConfig `json:"config,omitempty"`
 }
 
+// KEEP IN SYNC:
+// this is a copy of customizations/oci.go:OCIArchiveConfig with
+// less nice names
 type OCIArchiveConfig struct {
 	Cmd          []string          `json:"Cmd,omitempty"`
 	Env          []string          `json:"Env,omitempty"`
