@@ -19,13 +19,17 @@ var (
 )
 
 func NewTestBootcDistro() *BootcDistro {
+	return NewTestBootcDistroWithDefaultFs("xfs")
+}
+
+func NewTestBootcDistroWithDefaultFs(defaultFs string) *BootcDistro {
 	info := &osinfo.Info{
 		OSRelease: osinfo.OSRelease{
 			ID:        "bootc-test",
 			VersionID: "1",
 		},
 	}
-	return common.Must(newBootcDistroAfterIntrospect("x86_64", info, "quay.io/example/example:ref", "xfs", 0))
+	return common.Must(newBootcDistroAfterIntrospect("x86_64", info, "quay.io/example/example:ref", defaultFs, 0))
 }
 
 func NewTestBootcImageType() *BootcImageType {

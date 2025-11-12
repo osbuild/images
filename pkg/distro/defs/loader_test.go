@@ -438,7 +438,7 @@ image_types:
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 	_, err := defs.NewDistroYAML("test-distro-1")
-	assert.EqualError(t, err, `mount "/" requires a default filesystem for the distribution but none set`)
+	assert.EqualError(t, err, `no default fs set: mount "/" requires a filesystem but none set`)
 }
 
 var fakeImageTypesYaml = `

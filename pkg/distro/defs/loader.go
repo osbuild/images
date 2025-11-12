@@ -35,6 +35,7 @@ import (
 var (
 	ErrNoPartitionTableForImgType = errors.New("no partition table for image type")
 	ErrNoPartitionTableForArch    = errors.New("no partition table for arch")
+	ErrNoDefaultFs                = errors.New("no default fs set")
 )
 
 // this can be overriden in tests
@@ -512,12 +513,19 @@ func (it *ImageTypeYAML) setupDefaultFS(distroDefaultFS string) error {
 				if !ok {
 					return nil
 				}
-				if elem.Type == "" {
-					if distroDefaultFS == "" {
-						return fmt.Errorf("mount %q requires a default filesystem for the distribution but none set", mnt.GetMountpoint())
-					}
-					elem.Type = distroDefaultFS
+				if elem.Type != "" {
+					return nil
 				}
+				if distroDefaultFS == "" {
+					return fmt.Errorf("%w: mount %q requires a filesystem but none set", ErrNoDefaultFs, mnt.GetMountpoint())
+				}
+				// XXX: this is really the wrong layer, we need to move this into disk
+				// btrfs cannot be on /boot, we need to select a conservative option here instead
+				if mnt.GetMountpoint() == "/boot" && distroDefaultFS == "btrfs" {
+					elem.Type = "ext4"
+					return nil
+				}
+				elem.Type = distroDefaultFS
 				return nil
 			})
 			if err != nil {

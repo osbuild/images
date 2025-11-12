@@ -66,7 +66,7 @@ func TestBuildContainerHandling(t *testing.T) {
 
 	for _, withBuildContainer := range []bool{true, false} {
 		t.Run(fmt.Sprintf("build-cnt:%v", withBuildContainer), func(t *testing.T) {
-			distri, err := bootc.NewBootcDistro(imgTag)
+			distri, err := bootc.NewBootcDistro(imgTag, nil)
 			require.NoError(t, err)
 			if withBuildContainer {
 				err = distri.SetBuildContainer(buildImgTag)
@@ -129,7 +129,7 @@ partition_table:
 
 	for _, withBuildContainer := range []bool{true, false} {
 		t.Run(fmt.Sprintf("build-cnt:%v", withBuildContainer), func(t *testing.T) {
-			distri, err := bootc.NewBootcDistro(imgTag)
+			distri, err := bootc.NewBootcDistro(imgTag, nil)
 			require.NoError(t, err)
 			if withBuildContainer {
 				err = distri.SetBuildContainer(buildImgTag)

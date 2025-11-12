@@ -31,6 +31,7 @@ import (
 	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/bootc"
+	"github.com/osbuild/images/pkg/distro/defs"
 	"github.com/osbuild/images/pkg/distrofactory"
 	"github.com/osbuild/images/pkg/experimentalflags"
 	"github.com/osbuild/images/pkg/manifest"
@@ -534,19 +535,19 @@ func main() {
 			buildBootcRef = l[1]
 		}
 
-		distribution, err := bootc.NewBootcDistro(bootcRef)
+		distribution, err := bootc.NewBootcDistro(bootcRef, nil)
+		if err != nil && errors.Is(err, defs.ErrNoDefaultFs) {
+			// XXX: consider making this configurable but for now
+			// we just need diffable manifests
+			distribution, err = bootc.NewBootcDistro(bootcRef, &bootc.DistroOptions{
+				DefaultFs: "ext4",
+			})
+		}
 		if err != nil {
 			panic(err)
 		}
 		if buildBootcRef != "" {
 			if err := distribution.SetBuildContainer(buildBootcRef); err != nil {
-				panic(err)
-			}
-		}
-		// XXX: consider making this configurable but for now
-		// we just need diffable manifests
-		if distribution.DefaultFs() == "" {
-			if err := distribution.SetDefaultFs("ext4"); err != nil {
 				panic(err)
 			}
 		}
