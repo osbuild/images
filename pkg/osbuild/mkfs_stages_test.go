@@ -515,13 +515,14 @@ func TestGenFsStagesUnhappy(t *testing.T) {
 		Partitions: []disk.Partition{
 			{
 				Payload: &disk.Filesystem{
-					Type: "ext2",
+					Type:       "ext2",
+					Mountpoint: "/",
 				},
 			},
 		},
 	}
 
-	assert.PanicsWithValue(t, "unknown fs type: ext2", func() {
+	assert.PanicsWithValue(t, "unknown fs type: ext2 for /", func() {
 		GenFsStages(pt, "file.img", "build")
 	})
 }

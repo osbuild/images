@@ -348,9 +348,10 @@ func TestGenPartitionTableSetsRootfsForAllFilesystemsXFS(t *testing.T) {
 func TestGenPartitionTableSetsRootfsForAllFilesystemsBtrfs(t *testing.T) {
 	rng := createRand()
 
-	imgType := bootc.NewTestBootcImageType()
-	err := imgType.Arch().Distro().(*bootc.BootcDistro).SetDefaultFs("btrfs")
+	d := bootc.NewTestBootcDistroWithDefaultFs("btrfs")
+	it, err := common.Must(d.GetArch("x86_64")).GetImageType("qcow2")
 	assert.NoError(t, err)
+	imgType := it.(*bootc.BootcImageType)
 	cus := &blueprint.Customizations{}
 	rootfsMinSize := uint64(0)
 	pt, err := imgType.GenPartitionTable(cus, rootfsMinSize, rng)
@@ -359,9 +360,9 @@ func TestGenPartitionTableSetsRootfsForAllFilesystemsBtrfs(t *testing.T) {
 	mnt, _ := findMountableSizeableFor(pt, "/")
 	assert.Equal(t, "btrfs", mnt.GetFSType())
 
-	// btrfs has a default (xfs) /boot
+	// btrfs has a default (ext4) /boot
 	mnt, _ = findMountableSizeableFor(pt, "/boot")
-	assert.Equal(t, "xfs", mnt.GetFSType())
+	assert.Equal(t, "ext4", mnt.GetFSType())
 
 	// ESP is always vfat
 	mnt, _ = findMountableSizeableFor(pt, "/boot/efi")
