@@ -2166,6 +2166,7 @@ image_types:
       - "distro"
       - "customizations.fips"
       - "customizations.locale"
+      - "customizations.installer"
 
   "pxe-tar-xz":
     filename: "pxe.tar.xz"
