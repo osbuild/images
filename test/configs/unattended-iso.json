@@ -11,7 +11,7 @@
     ],
     "customizations": {
       "kernel": {
-        "append": "debug"
+        "append": "debug console=ttyS0"
       },
       "user": [
         {
