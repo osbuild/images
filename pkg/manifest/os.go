@@ -143,6 +143,7 @@ type OSCustomizations struct {
 	UdevRules             *osbuild.UdevRulesStageOptions
 	WSLConfig             *osbuild.WSLConfStageOptions
 	WSLDistributionConfig *osbuild.WSLDistributionConfStageOptions
+	OCIArchiveConfig      *osbuild.OCIArchiveConfig
 	InsightsClientConfig  *osbuild.InsightsClientConfigStageOptions
 	NetworkManager        *osbuild.NMConfStageOptions
 	Presets               []osbuild.Preset

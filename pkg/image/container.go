@@ -35,6 +35,8 @@ func (img *BaseContainer) InstantiateManifest(m *manifest.Manifest,
 	osPipeline.Environment = img.Environment
 
 	ociPipeline := manifest.NewOCIContainer(buildPipeline, osPipeline)
+	ociPipeline.OSCustomizations = img.OSCustomizations
+
 	ociPipeline.SetFilename(img.filename)
 	artifact := ociPipeline.Export()
 
