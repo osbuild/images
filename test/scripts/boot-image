@@ -145,29 +145,24 @@ def ensure_can_run_qemu_test(arch, image_path, config_file):
     # (e.g. centos-9/rhel-9 with releasever config) so skip those too
     if not any("jq" in url for url in urls):
         raise CannotRunQemuTest("no jq package in image")
-    # We cannot test openscap right now because it seems to prevent RSA keys,
-    # we currently use paramiko and need to update to something modern, see
-    # https://github.com/paramiko/paramiko/issues/2048
+    # We cannot test openscap right now, its unclear why, we get a permission denied
+    # from the root login
     config = json.loads(pathlib.Path(config_file).read_text(encoding="utf8"))
     customizations = config.get("blueprint", {}).get("customizations", {})
     if "openscap" in customizations:
-        raise CannotRunQemuTest("openscap requires non RSA keys")
-    # We cannot test fips right now because it seems to prevent RSA keys
-    # (see above)
-    if customizations.get("fips"):
-        raise CannotRunQemuTest("fips does not work with out RSA keys")
+        raise CannotRunQemuTest("openscap is not working right now")
 
 
 def boot_qemu(arch, image_path, config_file):
     try:
         ensure_can_run_qemu_test(arch, image_path, config_file)
     except CannotRunQemuTest as e:
-        print(f"WARNING: skipping {image_path} with {config_file}: {e.skip_reason}")
+        print(f"WARNING: skipping {image_path}: {e.skip_reason}")
         return
     cmd = [BASE_TEST_SCRIPT, config_file]
     with contextlib.ExitStack() as cm:
         uncompressed_image_path = cm.enter_context(ensure_uncompressed(image_path))
-        (privkey_path, pubkey_path) = cm.enter_context(create_ssh_key(key_type="rsa"))
+        (privkey_path, pubkey_path) = cm.enter_context(create_ssh_key())
         cloud_init_iso = cm.enter_context(make_cloud_init_iso(pubkey_path))
         with QEMU(uncompressed_image_path, arch=arch, cdrom=cloud_init_iso) as vm:
             # This is similar to what the other runners are doing but
