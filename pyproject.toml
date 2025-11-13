@@ -11,3 +11,4 @@ dependencies = [
 
 [tool.setuptools]
 packages = []
+py-modules = []
