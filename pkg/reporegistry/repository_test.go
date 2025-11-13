@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -312,4 +313,47 @@ func TestLoadRepositoriesLogging(t *testing.T) {
 	require.NoError(t, err)
 	want := "Loaded repository configuration file: rhel-8.10.json"
 	require.Contains(t, buf.String(), want, fmt.Sprintf("%q not found in look entries %+v", want, buf.String()))
+}
+
+func TestLoadRepositoriesError(t *testing.T) {
+	t.Run("empty-dir", func(t *testing.T) {
+		emptyDir := t.TempDir()
+		_, err := LoadAllRepositories([]string{emptyDir}, nil)
+		assert.ErrorContains(t, err, "no repositories found in the given paths")
+	})
+
+	t.Run("dir-not-exist", func(t *testing.T) {
+		emptyDir := t.TempDir()
+		nepath := filepath.Join(emptyDir, "does-not-exist")
+		_, err := LoadAllRepositories([]string{nepath}, nil)
+		assert.ErrorContains(t, err, "no repositories found in the given paths")
+	})
+
+	t.Run("empty-file", func(t *testing.T) {
+		reposDir := t.TempDir()
+		assert := assert.New(t)
+
+		reposFilePath := filepath.Join(reposDir, "fedora-42.json")
+		reposFile, err := os.Create(reposFilePath)
+		assert.NoError(err)
+		assert.NoError(reposFile.Close())
+
+		_, err = LoadAllRepositories([]string{reposDir}, nil)
+		assert.ErrorContains(err, "failed to load repositories: EOF")
+	})
+
+	t.Run("error-parsing-repos", func(t *testing.T) {
+		reposDir := t.TempDir()
+		assert := assert.New(t)
+		reposFilePath := filepath.Join(reposDir, "fedora-42.json")
+		reposFile, err := os.Create(reposFilePath)
+		assert.NoError(err)
+
+		_, err = reposFile.Write([]byte("<this is not json>"))
+		assert.NoError(err)
+		assert.NoError(reposFile.Close())
+
+		_, err = LoadAllRepositories([]string{reposDir}, nil)
+		assert.ErrorContains(err, "failed to load repositories: invalid character '<' looking for beginning of value")
+	})
 }
