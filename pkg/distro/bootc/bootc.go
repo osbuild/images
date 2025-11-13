@@ -349,7 +349,8 @@ func (t *BootcImageType) manifestWithoutValidation(bp *blueprint.Blueprint, opti
 	rng := rand.New(rand.NewSource(seed))
 
 	switch {
-	case t.Name() == "anaconda-iso":
+	// XXX: make this a yaml property
+	case slices.Contains([]string{"iso", "anaconda-iso"}, t.Name()):
 		return t.manifestForLegacyISO(bp, options, repos, rng)
 	case t.BootISO:
 		return t.manifestForISO(bp, options, repos, rng)
