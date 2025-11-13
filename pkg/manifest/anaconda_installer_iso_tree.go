@@ -122,6 +122,9 @@ type AnacondaInstallerISOTree struct {
 	// ISOBoot selects the type of boot support on the iso
 	ISOBoot ISOBootType
 
+	// Stage2 image used for .treeinfo
+	Stage2Image string
+
 	Kickstart *kickstart.Options
 
 	Files []*fsnode.File
@@ -254,12 +257,15 @@ func (p *AnacondaInstallerISOTree) NewSquashfsStage() (*osbuild.Stage, error) {
 
 	switch p.anacondaPipeline.Type {
 	case AnacondaInstallerTypePayload, AnacondaInstallerTypeNetinst:
+		p.Stage2Image = "images/install.img"
 		squashfsOptions = osbuild.SquashfsStageOptions{
-			Filename: "images/install.img",
+			Filename: p.Stage2Image,
 		}
+
 	case AnacondaInstallerTypeLive:
+		p.Stage2Image = "LiveOS/squashfs.img"
 		squashfsOptions = osbuild.SquashfsStageOptions{
-			Filename: "LiveOS/squashfs.img",
+			Filename: p.Stage2Image,
 		}
 	default:
 		// Shouldn't be possible, but catch it anyway
@@ -300,10 +306,14 @@ func (p *AnacondaInstallerISOTree) NewErofsStage() (*osbuild.Stage, error) {
 		erofsOptions = osbuild.ErofsStageOptions{
 			Filename: "images/install.img",
 		}
+
+		p.Stage2Image = "images/install.img"
 	case AnacondaInstallerTypeLive:
 		erofsOptions = osbuild.ErofsStageOptions{
 			Filename: "LiveOS/squashfs.img",
 		}
+
+		p.Stage2Image = "LiveOS/squashfs.img"
 	default:
 		// Shouldn't be possible, but catch it anyway
 		return nil, fmt.Errorf("unknown AnacondaInstallerType %v in NewErofsStage", p.anacondaPipeline.Type)
@@ -432,15 +442,17 @@ func (p *AnacondaInstallerISOTree) serialize() (osbuild.Pipeline, error) {
 	}
 
 	inputName := "tree"
+	kernelPath := "images/pxeboot/vmlinuz"
+	initrdPath := "images/pxeboot/initrd.img"
 	copyStageOptions := &osbuild.CopyStageOptions{
 		Paths: []osbuild.CopyStagePath{
 			{
 				From: fmt.Sprintf("input://%s/%s", inputName, p.anacondaPipeline.KernelPath),
-				To:   "tree:///images/pxeboot/vmlinuz",
+				To:   fmt.Sprintf("tree:///%s", kernelPath),
 			},
 			{
 				From: fmt.Sprintf("input://%s/%s", inputName, p.anacondaPipeline.InitramfsPath),
-				To:   "tree:///images/pxeboot/initrd.img",
+				To:   fmt.Sprintf("tree:///%s", initrdPath),
 			},
 		},
 	}
@@ -573,10 +585,22 @@ func (p *AnacondaInstallerISOTree) serialize() (osbuild.Pipeline, error) {
 		pipeline.AddStages(kickstartStages...)
 	}
 
+	// create .discinfo
 	pipeline.AddStage(osbuild.NewDiscinfoStage(&osbuild.DiscinfoStageOptions{
 		BaseArch: p.anacondaPipeline.platform.GetArch().String(),
 		Release:  p.Release,
 	}))
+
+	// create .treeinfo
+	pipeline.AddStage(osbuild.NewTreeinfoStage(
+		p.anacondaPipeline.InstallerCustomizations.Product,
+		p.anacondaPipeline.InstallerCustomizations.ReleaseVersion,
+		p.anacondaPipeline.platform.GetArch(),
+		p.anacondaPipeline.InstallerCustomizations.Variant,
+		kernelPath,
+		initrdPath,
+		p.Stage2Image,
+	))
 
 	return pipeline, nil
 }

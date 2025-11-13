@@ -391,6 +391,7 @@ func installerCustomizations(t *imageType, c *blueprint.Customizations) (manifes
 		Product:                 d.Product(),
 		OSVersion:               d.OsVersion(),
 		Release:                 fmt.Sprintf("%s %s", d.Product(), d.OsVersion()),
+		ReleaseVersion:          d.Releasever(),
 		Preview:                 d.DistroYAML.Preview,
 		ISOLabel:                isoLabel,
 		Variant:                 t.Variant,

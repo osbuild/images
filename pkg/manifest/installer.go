@@ -27,12 +27,13 @@ type InstallerCustomizations struct {
 
 	DefaultMenu int
 
-	ISOLabel  string
-	Product   string
-	Variant   string
-	OSVersion string
-	Release   string
-	Preview   bool
+	ISOLabel       string
+	Product        string
+	Variant        string
+	OSVersion      string
+	Release        string
+	ReleaseVersion string
+	Preview        bool
 }
 
 type InstallerLoraxTemplate struct {
