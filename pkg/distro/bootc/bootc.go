@@ -137,6 +137,14 @@ func (d *BootcDistro) Depsolver(rpmCacheRoot string, archi arch.Arch) (solver *d
 		return cnt.Stop()
 	}
 	if err := cnt.InitDNF(); err != nil {
+		// Not all bootc container have dnf, so check if it can
+		// be run here and if not just return nil which will
+		// ensure the depsolver of the host is used
+		if errors.Is(err, bibcontainer.ErrNoDnf) {
+			return nil, cleanup, nil
+		}
+		// Return any other errors to the caller, it means
+		// dnf is installed but not working.
 		return nil, nil, err
 	}
 	solver, err = cnt.NewContainerSolver(rpmCacheRoot, archi, d.buildSourceInfo)

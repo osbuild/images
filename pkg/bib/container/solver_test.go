@@ -21,6 +21,7 @@ import (
 const (
 	dnfTestingImageRHEL         = "registry.access.redhat.com/ubi9:latest"
 	dnfTestingImageCentos       = "quay.io/centos/centos:stream9"
+	dnfTestingImageNoDnf        = "alpine:latest"
 	dnfTestingImageFedoraLatest = "registry.fedoraproject.org/fedora:latest"
 )
 
@@ -199,4 +200,20 @@ func TestDepsolveDNFWorkWithSubscribedContentNestedContainers(t *testing.T) {
 		"gpgme", "podman")
 	// run the test
 	runCmd(t, "podman", "exec", cntID, "/dnftest")
+}
+
+func TestDepsolveDNFdetectsMissingDnf(t *testing.T) {
+	if !hasPodman() {
+		t.Skip("skipping test: no podman")
+	}
+	ensureCanRunDepsolveDNFTests(t)
+
+	cnt, err := container.New(dnfTestingImageNoDnf)
+	require.NoError(t, err)
+	defer func() {
+		assert.NoError(t, cnt.Stop())
+	}()
+
+	err = cnt.InitDNF()
+	require.Equal(t, container.ErrNoDnf, err)
 }
