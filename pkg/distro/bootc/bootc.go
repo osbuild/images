@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"maps"
 	"math/rand"
+	"os/exec"
 	"slices"
 	"sort"
 	"strings"
@@ -136,6 +137,13 @@ func (d *BootcDistro) Depsolver(rpmCacheRoot string, archi arch.Arch) (solver *d
 	cleanup = func() error {
 		return cnt.Stop()
 	}
+	// not all bootc container have dnf, if they don't we will
+	// not use the dnf from the container but from the host
+	cmd := append(cnt.ExecArgv(), "which", "dnf")
+	if err := exec.Command(cmd[0], cmd[1:]...).Run(); err != nil {
+		return nil, cleanup, nil
+	}
+
 	if err := cnt.InitDNF(); err != nil {
 		return nil, nil, err
 	}
