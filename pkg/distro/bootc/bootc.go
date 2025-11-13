@@ -291,7 +291,30 @@ func (t *BootcImageType) RequiredBlueprintOptions() []string {
 	return nil
 }
 
+// keep in sync with "generic/imagetype.go:checkOptions()"
+func (t *BootcImageType) checkOptions(bp *blueprint.Blueprint, options distro.ImageOptions) []string {
+	if bp == nil {
+		return nil
+	}
+
+	if err := distro.ValidateConfig(t, *bp); err != nil {
+		errPrefix := fmt.Sprintf("blueprint validation failed for image type %q", t.Name())
+		// NOTE (validation-warnings): appending to warnings now, because this
+		// is breaking a lot of things the service
+		errAsWarning := fmt.Errorf("%s: %w", errPrefix, err)
+		return []string{errAsWarning.Error()}
+	}
+	return nil
+}
+
 func (t *BootcImageType) Manifest(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, seedp *int64) (*manifest.Manifest, []string, error) {
+	validationWarnings := t.checkOptions(bp, options)
+
+	mani, manifestWarnings, err := t.manifestWithoutValidation(bp, options, repos, seedp)
+	return mani, append(validationWarnings, manifestWarnings...), err
+}
+
+func (t *BootcImageType) manifestWithoutValidation(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, seedp *int64) (*manifest.Manifest, []string, error) {
 	if t.BootISO {
 		return t.manifestForISO(bp, options, repos, seedp)
 	}

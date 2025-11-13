@@ -271,3 +271,22 @@ func TestManifestGenerationOvaFilename(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "image.ova", tarStageOptions.Filename)
 }
+
+func TestManifestGenerationBlueprintValidation(t *testing.T) {
+	imgType := NewTestBootcImageType()
+
+	imageOptions := distro.ImageOptions{}
+	config := &blueprint.Blueprint{
+		Customizations: &blueprint.Customizations{
+			Repositories: []blueprint.RepositoryCustomization{
+				{
+					Id: "foo",
+				},
+			},
+		},
+	}
+
+	_, warnings, err := imgType.Manifest(config, imageOptions, nil, common.ToPtr(int64(0)))
+	assert.NoError(t, err)
+	assert.Equal(t, []string{`blueprint validation failed for image type "qcow2": customizations.repositories: not supported`}, warnings)
+}
