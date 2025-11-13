@@ -101,6 +101,13 @@ image_types:
     partition_table: *default_bootc_partition_table
     image_config:
       kernel_options: *bootc_kernel_options
+    supported_blueprint_options:
+      - "customizations.directories"
+      - "customizations.disk"
+      - "customizations.files"
+      - "customizations.user"
+      - "customizations.group"
+      - "customizations.kernel.append"
 
   "ami":
     <<: *raw_image_type
