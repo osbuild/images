@@ -156,9 +156,12 @@ image_types:
   #   "real" distro, i.e. if a bootc centos-10 is found it will
   #   load the imagetypes.yaml for that to load the
   #   bootc-rpm-installer
-  anaconda-iso:
-    name_aliases: ["iso"]
+  anaconda-iso: &anaconda_iso
     mime_type: "application/x-iso9660-image"
     exports: ["bootiso"]
     filename: "install.iso"
     boot_iso: true
+
+  # XXX: ideally we would use name_aliases but the loader lib
+  # does not not fully support this yet
+  iso: *anaconda_iso
