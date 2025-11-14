@@ -1,0 +1,38 @@
+{
+  "name": "unattended-no-pkgs-iso",
+  "blueprint": {
+    "name": "unattended-no-pkgs-iso",
+    "description": "Configures Anaconda-based ISO to install the system with no user interaction and no extra pkgs.",
+    "version": "1.0",
+    "customizations": {
+      "kernel": {
+        "append": "debug console=ttyS0"
+      },
+      "user": [
+        {
+          "groups": [
+            "wheel"
+          ],
+          "key": "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBNebAh6SjpAn8wB53K4695cGnHGuCtl4RdaX3futZgJUultHyzeYHnzMO7d4++qnRL+Rworew62LKP560uvtncc= github.com/osbuild/images",
+          "name": "osbuild"
+        }
+      ],
+      "locale": {
+        "languages": [
+          "en_GB.UTF-8"
+        ],
+        "keyboard": "uk"
+      },
+      "timezone": {
+        "timezone": "Europe/Berlin"
+      },
+      "installer": {
+        "unattended": true,
+        "sudo-nopasswd": [
+          "%wheel",
+          "%sudo"
+        ]
+      }
+    }
+  }
+}
