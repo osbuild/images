@@ -2165,7 +2165,11 @@ image_types:
     supported_blueprint_options:
       - "distro"
       - "customizations.fips"
+      - "customizations.group"
+      - "customizations.installer"
+      - "customizations.kernel.append"
       - "customizations.locale"
+      - "customizations.user"
 
   "pxe-tar-xz":
     filename: "pxe.tar.xz"
