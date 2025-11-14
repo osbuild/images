@@ -6,10 +6,15 @@ import (
 	"path/filepath"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/customizations/ostreeserver"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
+
+type OSTreeCommitServerCustomizations struct {
+	OSTreeServer *ostreeserver.OSTreeServer
+}
 
 // An OSTreeCommitServer contains an nginx server serving
 // an embedded ostree commit.
@@ -22,6 +27,8 @@ type OSTreeCommitServer struct {
 	ExtraRepos []rpmmd.RepoConfig
 	// TODO: should this be configurable?
 	Language string
+
+	OSTreeCommitServerCustomizations OSTreeCommitServerCustomizations
 
 	platform        platform.Platform
 	repos           []rpmmd.RepoConfig
@@ -39,18 +46,15 @@ type OSTreeCommitServer struct {
 func NewOSTreeCommitServer(buildPipeline Build,
 	platform platform.Platform,
 	repos []rpmmd.RepoConfig,
-	commitPipeline *OSTreeCommit,
-	nginxConfigPath,
-	listenPort string) *OSTreeCommitServer {
+	commitPipeline *OSTreeCommit) *OSTreeCommitServer {
+
 	name := "container-tree"
 	p := &OSTreeCommitServer{
-		Base:            NewBase(name, buildPipeline),
-		platform:        platform,
-		repos:           filterRepos(repos, name),
-		commitPipeline:  commitPipeline,
-		nginxConfigPath: nginxConfigPath,
-		listenPort:      listenPort,
-		Language:        "en_US",
+		Base:           NewBase(name, buildPipeline),
+		platform:       platform,
+		repos:          filterRepos(repos, name),
+		commitPipeline: commitPipeline,
+		Language:       "en_US",
 	}
 	buildPipeline.addDependent(p)
 	return p
@@ -122,7 +126,11 @@ func (p *OSTreeCommitServer) serialize() (osbuild.Pipeline, error) {
 	pipeline.AddStage(osbuild.NewChmodStage(chmodStageOptions("/var/log/nginx", "a+rwX", true)))
 	pipeline.AddStage(osbuild.NewChmodStage(chmodStageOptions("/var/lib/nginx", "a+rwX", true)))
 
-	pipeline.AddStage(osbuild.NewNginxConfigStage(nginxConfigStageOptions(p.nginxConfigPath, htmlRoot, p.listenPort)))
+	pipeline.AddStage(osbuild.NewNginxConfigStage(nginxConfigStageOptions(
+		p.OSTreeCommitServerCustomizations.OSTreeServer.ConfigPath,
+		htmlRoot,
+		p.OSTreeCommitServerCustomizations.OSTreeServer.Port,
+	)))
 
 	return pipeline, nil
 }
