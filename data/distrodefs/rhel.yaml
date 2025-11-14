@@ -179,6 +179,14 @@ distros:
       ppc64le: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
       s390x: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
 
+  - <<: *rhel9
+    name: "almalinux-{{.MajorVersion}}.{{.MinorVersion}}"
+    match: 'almalinux-9\.[0-9]{1,2}'
+    product: "AlmaLinux"
+    vendor: "almalinux"
+    ostree_ref_tmpl: "almalinux/9/%%s/edge"
+    iso_label_tmpl: "AlmaLinux-{{.Distro.MajorVersion}}-{{.Distro.MinorVersion}}-{{.Arch}}-dvd"
+
   - &centos9
     <<: *rhel9
     name: centos-9
@@ -272,6 +280,14 @@ distros:
       aarch64: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
       ppc64le: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
       s390x: "registry.access.redhat.com/ubi{{.MajorVersion}}/ubi:latest"
+
+  - <<: *rhel8
+    name: "almalinux-{{.MajorVersion}}.{{.MinorVersion}}"
+    match: 'almalinux-8\.[0-9]{1,2}'
+    product: "AlmaLinux"
+    vendor: "almalinux"
+    ostree_ref_tmpl: "almalinux/8/%%s/edge"
+    iso_label_tmpl: "AlmaLinux-{{.Distro.MajorVersion}}-{{.Distro.MinorVersion}}-{{.Arch}}-dvd"
 
   - &centos8
     <<: *rhel8
