@@ -11,7 +11,7 @@
         "server-qcow2": "rhos-01/fedora-42",
         "image-installer": "rhos-01/fedora-42",
         "minimal-installer": "rhos-01/fedora-42"
-       }
+      }
     }
   },
   "centos-9": {
@@ -46,7 +46,7 @@
           {
             "title": "fedora-updates",
             "name": "fedora-updates",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f42/f42-x86_64-updates-released-20251023"
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f42/f42-x86_64-updates-released-20251115"
           }
         ],
         "aarch64": [
@@ -58,7 +58,7 @@
           {
             "title": "fedora-updates",
             "name": "fedora-updates",
-            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f42/f42-aarch64-updates-released-20251023"
+            "baseurl": "https://rpmrepo.osbuild.org/v2/mirror/public/f42/f42-aarch64-updates-released-20251115"
           }
         ]
       }
