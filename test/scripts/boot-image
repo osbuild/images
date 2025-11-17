@@ -171,11 +171,7 @@ def qemu_cmd_scp_and_run(vm, cmd, privkey_path):
 
 
 def boot_qemu(arch, image_path, config_file):
-    try:
-        ensure_can_run_qemu_test(arch, image_path, config_file)
-    except CannotRunQemuTest as e:
-        print(f"WARNING: skipping {image_path}: {e.skip_reason}")
-        return
+    ensure_can_run_qemu_test(arch, image_path, config_file)
     cmd = [BASE_TEST_SCRIPT, config_file]
     with contextlib.ExitStack() as cm:
         uncompressed_image_path = cm.enter_context(ensure_uncompressed(image_path))
@@ -187,18 +183,13 @@ def boot_qemu(arch, image_path, config_file):
 
 
 def boot_qemu_iso(arch, installer_iso_path, config_file):
-    try:
-        ensure_can_run_qemu_test(arch, installer_iso_path, config_file)
-    except CannotRunQemuTest as e:
-        print(f"WARNING: skipping {installer_iso_path} with {config_file}: {e.skip_reason}")
-        return
-    config = json.loads(pathlib.Path(config_file).read_text(encoding="utf8"))
+    ensure_can_run_qemu_test(arch, installer_iso_path, config_file)
     # We can only test the unattended-iso as the other configs require
     # interactive setup of the installer which we do not support in this
     # test-runner.
+    config = json.loads(pathlib.Path(config_file).read_text(encoding="utf8"))
     if not config.get("blueprint", {}).get("customizations", {}).get("installer", {}).get("unattended"):
-        print("WARNING: skipping {installer_iso_path} with {config_file}: only unattended installs are supported")
-        return
+        raise CannotRunQemuTest("only unattended installs are supported")
     cmd = [BASE_TEST_SCRIPT, config_file]
     # we should pass console=ttyS0 to instaler os that we see install
     # progress on the serial console, in the meantime for interactive use
@@ -389,9 +380,17 @@ def main():
     # has the same checks again
     match image_type:
         case "qcow2" | "server-qcow2":
-            boot_qemu(arch, image_path, build_config_path)
+            try:
+                boot_qemu(arch, image_path, build_config_path)
+            except CannotRunQemuTest as e:
+                print(f"WARNING: skipping {image_path}: {e.skip_reason}")
+                return
         case "image-installer" | "minimal-installer":
-            boot_qemu_iso(arch, image_path, build_config_path)
+            try:
+                boot_qemu_iso(arch, image_path, build_config_path)
+            except CannotRunQemuTest as e:
+                print(f"WARNING: skipping iso {image_path}: {e.skip_reason}")
+                return
         case "ami" | "ec2" | "ec2-ha" | "ec2-sap" | "edge-ami":
             boot_ami(distro, arch, image_type, image_path, build_config_path)
         case "vhd":
