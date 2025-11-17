@@ -40,7 +40,7 @@ containers:
       os_release:
         id: "build-test-os"
 
-  # test ISO installer
+  # test bootc based ISO installer
   - <<: *default_fake_container
     image_types: ["bootc-installer"]
     arch: x86_64
@@ -49,3 +49,44 @@ containers:
     image_types: ["bootc-installer"]
     arch: aarch64
     payload_container_ref: "payload-container-fake-ref"
+
+  # test rpm based ISO installer
+  - <<: *default_fake_container
+    image_types: ["anaconda-iso"]
+    arch: x86_64
+    info:
+      <<: *default_info
+      os_release:
+        # we need a "real" distro here as the packages will
+        # be selected from the distros
+        #   imagetypes.yaml:bootc-rpm-installer
+        name: "RHEL 10"
+        id: "rhel"
+        versionid: "10.1"
+  - <<: *default_fake_container
+    image_types: ["anaconda-iso"]
+    arch: x86_64
+    info:
+      <<: *default_info
+      os_release:
+        name: "Centos 9"
+        id: "centos"
+        versionid: "9"
+  - <<: *default_fake_container
+    image_types: ["anaconda-iso"]
+    arch: x86_64
+    info:
+      <<: *default_info
+      os_release:
+        name: "Fedora 43"
+        id: "fedora"
+        versionid: "43"
+  - <<: *default_fake_container
+    image_types: ["anaconda-iso"]
+    arch: x86_64
+    info:
+      <<: *default_info
+      os_release:
+        name: "Fedora 42"
+        id: "fedora"
+        versionid: "42"
