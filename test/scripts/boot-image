@@ -468,7 +468,7 @@ def main():
             boot_container(distro, arch, image_type, image_path, manifest_id)
             bib_ref = testlib.get_bib_ref()
             bib_image_id = testlib.skopeo_inspect_id(f"docker://{bib_ref}", testlib.host_container_arch())
-        case "wsl":
+        case "wsl" | "generic-wsl":
             if distro == "fedora-41":
                 print(f"{distro} {image_type} boot tests are not supported, fails on wsl import")
                 return
