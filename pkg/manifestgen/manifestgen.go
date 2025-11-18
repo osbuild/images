@@ -68,7 +68,7 @@ type Options struct {
 
 	// Custom "solver" functions, if unset the defaults will be
 	// used. Only needed for specialized use-cases.
-	Depsolver         DepsolveFunc
+	Depsolve          DepsolveFunc
 	ContainerResolver ContainerResolverFunc
 	CommitResolver    CommitResolverFunc
 
@@ -82,7 +82,7 @@ type Options struct {
 type Generator struct {
 	cacheDir string
 
-	depsolver              DepsolveFunc
+	depsolve               DepsolveFunc
 	containerResolver      ContainerResolverFunc
 	commitResolver         CommitResolverFunc
 	sbomWriter             SBOMWriterFunc
@@ -108,7 +108,7 @@ func New(reporegistry *reporegistry.RepoRegistry, opts *Options) (*Generator, er
 		reporegistry: reporegistry,
 
 		cacheDir:               opts.Cachedir,
-		depsolver:              opts.Depsolver,
+		depsolve:               opts.Depsolve,
 		containerResolver:      opts.ContainerResolver,
 		commitResolver:         opts.CommitResolver,
 		rpmDownloader:          opts.RpmDownloader,
@@ -119,14 +119,21 @@ func New(reporegistry *reporegistry.RepoRegistry, opts *Options) (*Generator, er
 		overrideRepos:          opts.OverrideRepos,
 		useBootstrapContainer:  opts.UseBootstrapContainer,
 	}
-	if mg.depsolver == nil {
-		mg.depsolver = DefaultDepsolver
+	if mg.depsolve == nil {
+		mg.depsolve = DefaultDepsolve
 	}
 	if mg.containerResolver == nil {
 		mg.containerResolver = DefaultContainerResolver
 	}
 	if mg.commitResolver == nil {
 		mg.commitResolver = DefaultCommitResolver
+	}
+	if mg.cacheDir == "" {
+		xdgCacheHomeDir, err := xdgCacheHome()
+		if err != nil {
+			return nil, err
+		}
+		mg.cacheDir = filepath.Join(xdgCacheHomeDir, defaultDepsolveCacheDir)
 	}
 
 	return mg, nil
@@ -172,7 +179,7 @@ func (mg *Generator) Generate(bp *blueprint.Blueprint, imgType distro.ImageType,
 	if err != nil {
 		return nil, err
 	}
-	var solver *depsolvednf.Solver
+	solver := depsolvednf.NewSolver(dist.ModulePlatformID(), dist.Releasever(), a.Name(), dist.Name(), mg.cacheDir)
 	if dd, ok := dist.(distro.CustomDepsolverDistro); ok {
 		// XXX: it would be nice to have access to arch.Arch
 		// from distro.Arch but we dont so we have to do without.
@@ -181,15 +188,16 @@ func (mg *Generator) Generate(bp *blueprint.Blueprint, imgType distro.ImageType,
 		if err != nil {
 			return nil, err
 		}
-		// Note that its fine if customSolver is nil,
-		solver = customSolver
+		if customSolver != nil {
+			solver = customSolver
+		}
 		defer func() {
 			if err := cleanupFunc(); err != nil {
 				fmt.Fprintf(mg.warningsOutput, "WARNING: cleanup failed: %v\n", err)
 			}
 		}()
 	}
-	depsolved, err := mg.depsolver(mg.cacheDir, mg.depsolveWarningsOutput, pkgSetChains, dist, a.Name(), solver)
+	depsolved, err := mg.depsolve(solver, mg.cacheDir, mg.depsolveWarningsOutput, pkgSetChains, dist, a.Name())
 	if err != nil {
 		return nil, err
 	}
@@ -259,27 +267,15 @@ func xdgCacheHome() (string, error) {
 	return filepath.Join(home, ".cache"), nil
 }
 
-// DefaultDepsolver provides a default implementation for depsolving.
+// DefaultDepsolve provides a default implementation for depsolving.
 // It should rarely be necessary to use it directly and will be used
 // by default by manifestgen (unless overriden)
 //
 // The customSolver argument can be nil
-func DefaultDepsolver(cacheDir string, depsolveWarningsOutput io.Writer, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string, customSolver *depsolvednf.Solver) (map[string]depsolvednf.DepsolveResult, error) {
-	if cacheDir == "" {
-		xdgCacheHomeDir, err := xdgCacheHome()
-		if err != nil {
-			return nil, err
-		}
-		cacheDir = filepath.Join(xdgCacheHomeDir, defaultDepsolveCacheDir)
+func DefaultDepsolve(solver *depsolvednf.Solver, cacheDir string, depsolveWarningsOutput io.Writer, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]depsolvednf.DepsolveResult, error) {
+	if solver == nil {
+		return nil, fmt.Errorf("need a valid solver, got nil")
 	}
-
-	var solver *depsolvednf.Solver
-	if customSolver != nil {
-		solver = customSolver
-	} else {
-		solver = depsolvednf.NewSolver(d.ModulePlatformID(), d.Releasever(), arch, d.Name(), cacheDir)
-	}
-
 	if depsolveWarningsOutput != nil {
 		solver.Stderr = depsolveWarningsOutput
 	}
@@ -347,7 +343,7 @@ func DefaultCommitResolver(commitSources map[string][]ostree.SourceSpec) (map[st
 }
 
 type (
-	DepsolveFunc func(cacheDir string, depsolveWarningsOutput io.Writer, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string, solver *depsolvednf.Solver) (map[string]depsolvednf.DepsolveResult, error)
+	DepsolveFunc func(solver *depsolvednf.Solver, cacheDir string, depsolveWarningsOutput io.Writer, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]depsolvednf.DepsolveResult, error)
 
 	ContainerResolverFunc func(containerSources map[string][]container.SourceSpec, archName string) (map[string][]container.Spec, error)
 
