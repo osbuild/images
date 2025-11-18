@@ -101,8 +101,8 @@ func TestFedoraFilenameFromType(t *testing.T) {
 			},
 		},
 		{
-			name: "container",
-			args: args{"container"},
+			name: "generic-container",
+			args: args{"generic-container"},
 			want: wantResult{
 				filename: "container.tar",
 				mimeType: "application/x-tar",
@@ -493,7 +493,7 @@ func TestFedoraArchitecture_ListImageTypes(t *testing.T) {
 			arch: "x86_64",
 			imgNames: []string{
 				"generic-ami",
-				"container",
+				"generic-container",
 				"minimal-installer",
 				"iot-commit",
 				"iot-container",
@@ -522,7 +522,7 @@ func TestFedoraArchitecture_ListImageTypes(t *testing.T) {
 			arch: "aarch64",
 			imgNames: []string{
 				"generic-ami",
-				"container",
+				"generic-container",
 				"minimal-installer",
 				"iot-commit",
 				"iot-container",
@@ -545,7 +545,7 @@ func TestFedoraArchitecture_ListImageTypes(t *testing.T) {
 		{
 			arch: "ppc64le",
 			imgNames: []string{
-				"container",
+				"generic-container",
 				"generic-qcow2",
 				"iot-bootable-container",
 			},
@@ -553,7 +553,7 @@ func TestFedoraArchitecture_ListImageTypes(t *testing.T) {
 		{
 			arch: "s390x",
 			imgNames: []string{
-				"container",
+				"generic-container",
 				"generic-qcow2",
 				"iot-bootable-container",
 			},
@@ -561,7 +561,7 @@ func TestFedoraArchitecture_ListImageTypes(t *testing.T) {
 		{
 			arch: "riscv64",
 			imgNames: []string{
-				"container",
+				"generic-container",
 				"minimal-raw-xz",
 				"minimal-raw-zst",
 			},

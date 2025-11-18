@@ -235,7 +235,7 @@
         "fedora-*"
       ],
       "image-types": [
-        "container",
+        "generic-container",
         "generic-ami",
         "minimal-installer",
         "workstation-live-installer",

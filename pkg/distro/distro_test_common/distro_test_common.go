@@ -94,7 +94,8 @@ func TestDistro_KernelOption(t *testing.T, d distro.Distro) {
 		"tar": true,
 
 		// containers don't have kernels
-		"container": true,
+		"container":         true,
+		"generic-container": true,
 
 		// image installer on Fedora doesn't support kernel customizations
 		// on RHEL we support kernel name
