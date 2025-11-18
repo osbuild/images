@@ -22,7 +22,7 @@ func isOSTree(imgType distro.ImageType) bool {
 }
 
 func isUbi(imgType distro.ImageType) bool {
-	return imgType.Name() == "wsl" || imgType.Name() == "server-wsl"
+	return imgType.Name() == "wsl" || imgType.Name() == "generic-wsl"
 }
 
 var knownKernels = []string{"kernel", "kernel-debug", "kernel-rt", "kernel-uki-virt"}
