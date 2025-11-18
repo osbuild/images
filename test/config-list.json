@@ -249,7 +249,7 @@
         "generic-vmdk",
         "generic-vagrant-libvirt",
         "generic-vagrant-virtualbox",
-        "wsl",
+        "generic-wsl",
         "iot-bootable-container",
         "iot-container",
         "everything-network-installer",
