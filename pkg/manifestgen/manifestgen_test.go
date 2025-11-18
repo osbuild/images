@@ -55,7 +55,7 @@ func TestManifestGeneratorDepsolve(t *testing.T) {
 			}
 
 			opts := &manifestgen.Options{
-				Depsolver:         fakeDepsolve,
+				Depsolve:          fakeDepsolve,
 				CommitResolver:    panicCommitResolver,
 				ContainerResolver: panicContainerResolver,
 
@@ -96,7 +96,7 @@ func TestManifestGeneratorWithOstreeCommit(t *testing.T) {
 	assert.Equal(t, 1, len(res))
 
 	opts := &manifestgen.Options{
-		Depsolver:         fakeDepsolve,
+		Depsolve:          fakeDepsolve,
 		CommitResolver:    fakeCommitResolver,
 		ContainerResolver: panicContainerResolver,
 	}
@@ -127,7 +127,7 @@ func TestManifestGeneratorWithOstreeCommit(t *testing.T) {
 	assert.Contains(t, string(osbuildManifest), expectedSha256)
 }
 
-func fakeDepsolve(cacheDir string, depsolveWarningsOutput io.Writer, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string, solver *depsolvednf.Solver) (map[string]depsolvednf.DepsolveResult, error) {
+func fakeDepsolve(solver *depsolvednf.Solver, cacheDir string, depsolveWarningsOutput io.Writer, packageSets map[string][]rpmmd.PackageSet, d distro.Distro, arch string) (map[string]depsolvednf.DepsolveResult, error) {
 	depsolvedSets := make(map[string]depsolvednf.DepsolveResult)
 	if depsolveWarningsOutput != nil {
 		_, _ = depsolveWarningsOutput.Write([]byte(`fake depsolve output`))
@@ -218,7 +218,7 @@ func TestManifestGeneratorContainers(t *testing.T) {
 	assert.Equal(t, 1, len(res))
 
 	opts := &manifestgen.Options{
-		Depsolver:         fakeDepsolve,
+		Depsolve:          fakeDepsolve,
 		CommitResolver:    panicCommitResolver,
 		ContainerResolver: fakeContainerResolver,
 	}
@@ -253,7 +253,7 @@ func TestManifestGeneratorDepsolveWithSbomWriter(t *testing.T) {
 
 	generatedSboms := map[string]string{}
 	opts := &manifestgen.Options{
-		Depsolver:         fakeDepsolve,
+		Depsolve:          fakeDepsolve,
 		CommitResolver:    panicCommitResolver,
 		ContainerResolver: panicContainerResolver,
 
@@ -295,7 +295,7 @@ func TestManifestGeneratorSeed(t *testing.T) {
 
 	for _, withCustomSeed := range []bool{false, true} {
 		opts := &manifestgen.Options{
-			Depsolver: fakeDepsolve,
+			Depsolve: fakeDepsolve,
 		}
 		if withCustomSeed {
 			customSeed := int64(123)
@@ -333,7 +333,7 @@ func TestManifestGeneratorDepsolveOutput(t *testing.T) {
 
 	var depsolveWarningsOutput bytes.Buffer
 	opts := &manifestgen.Options{
-		Depsolver:              fakeDepsolve,
+		Depsolve:               fakeDepsolve,
 		DepsolveWarningsOutput: &depsolveWarningsOutput,
 	}
 
@@ -361,7 +361,7 @@ func TestManifestGeneratorOverrideRepos(t *testing.T) {
 	for _, withOverrideRepos := range []bool{false, true} {
 		t.Run(fmt.Sprintf("withOverrideRepos: %v", withOverrideRepos), func(t *testing.T) {
 			opts := &manifestgen.Options{
-				Depsolver: fakeDepsolve,
+				Depsolve: fakeDepsolve,
 			}
 			if withOverrideRepos {
 				opts.OverrideRepos = []rpmmd.RepoConfig{
@@ -401,7 +401,7 @@ func TestManifestGeneratorUseBootstrapContainer(t *testing.T) {
 	for _, useBootstrapContainer := range []bool{false, true} {
 		t.Run(fmt.Sprintf("useBootstrapContainer: %v", useBootstrapContainer), func(t *testing.T) {
 			opts := &manifestgen.Options{
-				Depsolver:             fakeDepsolve,
+				Depsolve:              fakeDepsolve,
 				ContainerResolver:     fakeContainerResolver,
 				UseBootstrapContainer: useBootstrapContainer,
 			}

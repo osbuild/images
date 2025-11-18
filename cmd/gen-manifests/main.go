@@ -299,7 +299,8 @@ func makeManifestJob(
 
 		var depsolvedSets map[string]depsolvednf.DepsolveResult
 		if content["packages"] {
-			depsolvedSets, err = manifestgen.DefaultDepsolver(cacheDir, os.Stderr, common.Must(manifest.GetPackageSetChains()), distribution, archName, nil)
+			solver := depsolvednf.NewSolver(distribution.ModulePlatformID(), distribution.Releasever(), archName, distribution.Name(), cacheDir)
+			depsolvedSets, err = manifestgen.DefaultDepsolve(solver, cacheDir, os.Stderr, common.Must(manifest.GetPackageSetChains()), distribution, archName)
 			if err != nil {
 				err = fmt.Errorf("[%s] depsolve failed: %s", filename, err.Error())
 				return
