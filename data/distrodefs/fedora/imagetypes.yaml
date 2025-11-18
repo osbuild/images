@@ -1868,10 +1868,8 @@ image_types:
     blueprint:
       supported_options: *supported_options_container
 
-  wsl:
-    # this is the eventual name, and `wsl` the alias but we've been
-    # having issues with CI renaming it
-    name_aliases: ["generic-wsl"]
+  generic-wsl:
+    name_aliases: ["wsl"]
     # note that other distributions in images differ and use a .tar suffix, however .wsl is the
     # correct suffix, see:
     # https://learn.microsoft.com/en-us/windows/wsl/build-custom-distro#what-are-wsl-root-filesystem-tar-files

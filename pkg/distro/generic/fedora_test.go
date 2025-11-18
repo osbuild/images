@@ -109,8 +109,8 @@ func TestFedoraFilenameFromType(t *testing.T) {
 			},
 		},
 		{
-			name: "wsl",
-			args: args{"wsl"},
+			name: "generic-wsl",
+			args: args{"generic-wsl"},
 			want: wantResult{
 				filename: "image.wsl",
 				mimeType: "application/x-tar",
@@ -348,7 +348,7 @@ func TestFedoraImageType_Name(t *testing.T) {
 				"generic-vmdk",
 				"generic-vagrant-libvirt",
 				"generic-vagrant-virtualbox",
-				"wsl",
+				"generic-wsl",
 			},
 			verTypes: map[string][]string{
 				"40": {
@@ -511,7 +511,7 @@ func TestFedoraArchitecture_ListImageTypes(t *testing.T) {
 				"generic-vmdk",
 				"generic-vagrant-libvirt",
 				"generic-vagrant-virtualbox",
-				"wsl",
+				"generic-wsl",
 				"iot-bootable-container",
 				"iot-simplified-installer",
 				"everything-network-installer",
