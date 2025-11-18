@@ -1784,7 +1784,8 @@ image_types:
         - "customizations.services"
         - "customizations.kernel.append"
 
-  container: &container
+  "generic-container": &generic_container
+    name_aliases: ["container"]
     filename: "container.tar"
     mime_type: "application/x-tar"
     image_func: "container"
