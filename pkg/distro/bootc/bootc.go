@@ -356,14 +356,16 @@ func (t *BootcImageType) manifestWithoutValidation(bp *blueprint.Blueprint, opti
 	//nolint:gosec
 	rng := rand.New(rand.NewSource(seed))
 
-	switch {
-	// XXX: make this a yaml property
-	case slices.Contains([]string{"iso", "anaconda-iso"}, t.Name()):
+	switch t.Image {
+	case "bootc_legacy_iso":
 		return t.manifestForLegacyISO(bp, options, repos, rng)
-	case t.BootISO:
+	case "bootc_iso":
 		return t.manifestForISO(bp, options, repos, rng)
-	default:
+	case "bootc_disk":
 		return t.manifestForDisk(bp, options, repos, rng)
+	default:
+		err := fmt.Errorf("unknown image func: %v for %v", t.Image, t.Name())
+		panic(err)
 	}
 }
 

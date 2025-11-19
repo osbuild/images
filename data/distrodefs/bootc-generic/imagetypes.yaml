@@ -149,6 +149,7 @@ image_types:
     exports: ["bootiso"]
     filename: "installer.iso"
     boot_iso: true
+    image_func: "bootc_iso"
 
   # this image type is special (in many ways) and all is a bit ugly:
   # - we want to get rid of it (here for compat with bib)
@@ -161,6 +162,7 @@ image_types:
     exports: ["bootiso"]
     filename: "installer.iso"
     boot_iso: true
+    image_func: "bootc_legacy_iso"
 
   # XXX: ideally we would use name_aliases but the loader lib
   # does not not fully support this yet
