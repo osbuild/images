@@ -147,7 +147,7 @@ image_types:
   bootc-installer:
     mime_type: "application/x-iso9660-image"
     exports: ["bootiso"]
-    filename: "install.iso"
+    filename: "installer.iso"
     boot_iso: true
 
   # this image type is special (in many ways) and all is a bit ugly:
@@ -159,7 +159,7 @@ image_types:
   anaconda-iso: &anaconda_iso
     mime_type: "application/x-iso9660-image"
     exports: ["bootiso"]
-    filename: "install.iso"
+    filename: "installer.iso"
     boot_iso: true
 
   # XXX: ideally we would use name_aliases but the loader lib
