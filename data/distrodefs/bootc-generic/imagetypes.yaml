@@ -89,6 +89,21 @@
           - *default_partition_table_part_boot
           - *default_partition_table_part_root
 
+  supported_options_lists:
+    supported_options_disk: &supported_options_disk
+      - "customizations.directories"
+      - "customizations.disk"
+      - "customizations.files"
+      - "customizations.user"
+      - "customizations.group"
+      - "customizations.kernel.append"
+    supported_options_iso: &supported_options_iso
+      - "customizations.fips"
+      - "customizations.group"
+      - "customizations.installer"
+      - "customizations.kernel.append"
+      - "customizations.user"
+
 image_types:
   "raw": &raw_image_type
     filename: "disk.raw"
@@ -101,13 +116,7 @@ image_types:
     partition_table: *default_bootc_partition_table
     image_config:
       kernel_options: *bootc_kernel_options
-    supported_blueprint_options:
-      - "customizations.directories"
-      - "customizations.disk"
-      - "customizations.files"
-      - "customizations.user"
-      - "customizations.group"
-      - "customizations.kernel.append"
+    supported_blueprint_options: *supported_options_disk
 
   "ami":
     <<: *raw_image_type
@@ -150,6 +159,7 @@ image_types:
     filename: "installer.iso"
     boot_iso: true
     image_func: "bootc_iso"
+    supported_blueprint_options: *supported_options_iso
 
   # this image type is special (in many ways) and all is a bit ugly:
   # - we want to get rid of it (here for compat with bib)
@@ -163,6 +173,7 @@ image_types:
     filename: "installer.iso"
     boot_iso: true
     image_func: "bootc_legacy_iso"
+    supported_blueprint_options: *supported_options_iso
 
   # XXX: ideally we would use name_aliases but the loader lib
   # does not not fully support this yet

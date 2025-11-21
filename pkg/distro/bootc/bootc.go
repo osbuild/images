@@ -300,27 +300,12 @@ func (t *BootcImageType) Exports() []string {
 }
 
 func (t *BootcImageType) SupportedBlueprintOptions() []string {
-	if t.BootISO {
-		// XXX: this is probably too minimal but lets start small
-		// and expand
-		return []string{
-			"customizations.fips",
-			"customizations.group",
-			"customizations.installer",
-			"customizations.kernel.append",
-			"customizations.user",
-		}
-	}
-	return []string{
-		"customizations.directories",
-		"customizations.disk",
-		"customizations.files",
-		"customizations.filesystem",
-		"customizations.group",
-		"customizations.kernel",
-		"customizations.user",
-	}
+	// The blueprint contains a few fields that are essentially metadata and
+	// not configuration / customizations. These should always be implicitly
+	// supported by all image types.
+	return append(t.ImageTypeYAML.SupportedBlueprintOptions, "name", "version", "description")
 }
+
 func (t *BootcImageType) RequiredBlueprintOptions() []string {
 	return nil
 }
