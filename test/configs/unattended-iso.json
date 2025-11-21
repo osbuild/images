@@ -18,7 +18,7 @@
           "groups": [
             "wheel"
           ],
-          "key": "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBNebAh6SjpAn8wB53K4695cGnHGuCtl4RdaX3futZgJUultHyzeYHnzMO7d4++qnRL+Rworew62LKP560uvtncc= github.com/osbuild/images",
+          "key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDdTgop5/nzXkukq336Mb2A+pMJ14CL84Eh5byfhuPDz6xMhlBFhnJQnf3bBSH5hXPRIHFUO484VWJCX43EQXYsijIz4ZUufT2GLwLa92Va4yqfzAXngKlGS985VlttjgZYv/5qK/8EyTMhxn0Y3KnaN3jmAnf7ufS017cjtwmoPAoWqkHvJ0gc3Nfdou1FuhF+Injtshf1GZVJtAp5rdUQdk+CX5LEYPm4axYdoGlV9vwU0pSDv3WdYuXC2akzOUCBqDaHGWwMca3Iri5vsgW0NyuGLcecfNR7plEBOwNPMQm3w6qq45lB+NaOqZMtUHc1SQks2ZpsQWXGUOqcLI4H2sKP3mfar0h1zlj0VJS89Y3Ht57J3uLfExXyZUHmWfronOW9YWcBT77gQT0jzb6K0bOHyV1PRNu3BOIoMxeprtZd3TDdpAfEweNbHOcmJCve5hOV+Eg+xHcpqEaxd2d2110QnFa5L5tnC22o5jjA1lf9ObQRaV+3evwwuG9MOooD57jETdPi3tEOifofxVaG/jq+OBbXnwvM8UUSRA62QDccw8vcDIsE8TjoZcteStJ1fh/m9wCD0zUoocBL78P1Ecv+2Z13KNE0erm2IKVjb17i+y+oLnVlrt9/c47Tv/XdeLk6FisK5QrKd61FHxGUgq4RqoKVLnO3ov4hwXvwmw== sanne@worky",
           "name": "osbuild"
         }
       ],
