@@ -43,7 +43,7 @@ def get_azure_config():
 def create_ssh_key(privkey_file = None, key_type = None):
     with TemporaryDirectory() as tmpdir:
         keypath = os.path.join(tmpdir, "testkey")
-        ci_priv_key = os.environ.get("CI_PRIV_SSH_KEY_2")
+        ci_priv_key = os.environ.get("CI_PRIV_SSH_KEY")
         if privkey_file is not None:
             shutil.copyfile(privkey_file, keypath)
             os.chmod(keypath, 0o600)
@@ -216,7 +216,7 @@ def boot_qemu_iso(arch, installer_iso_path, config_file):
             # in CI we can actually do a real image test. Sadly not locally
             # because we have no way to log into the installed disk in this
             # case, the CI ssh key is secret.
-            if os.environ.get("CI_PRIV_SSH_KEY_2"):
+            if os.environ.get("CI_PRIV_SSH_KEY"):
                 with create_ssh_key() as (privkey_path, _):
                     exit_status, _ = qemu_cmd_scp_and_run(vm, cmd, privkey_path)
                     assert exit_status == 0
