@@ -35,7 +35,7 @@ func forceSymlink(symlinkPath, target string) error {
 // option).
 func (c *Container) InitDNF() error {
 	/* #nosec G204 */
-	if err := exec.Command("podman", "exec", c.id, "dnf", "--version").Run(); err != nil {
+	if err := exec.Command("podman", "exec", c.id, "sh", "-c", `command -v dnf`).Run(); err != nil {
 		return ErrNoDnf
 	}
 
