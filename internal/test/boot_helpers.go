@@ -31,14 +31,19 @@ func run(c string, args ...string) ([]byte, []byte, error) {
 	return stdout, stderr, err
 }
 
+// SshRun runs the ssh command, retrying 3 times with a 10s delay if there is an error
 func SshRun(ip, user, key, hostsfile string, command ...string) error {
 	sshargs := []string{"-i", key, "-o", fmt.Sprintf("UserKnownHostsFile=%s", hostsfile), "-l", user, ip}
 	sshargs = append(sshargs, command...)
-	_, _, err := run("ssh", sshargs...)
-	if err != nil {
-		return err
+	var err error
+	for try := 0; try < 3; try++ {
+		_, _, err = run("ssh", sshargs...)
+		if err == nil {
+			break
+		}
+		time.Sleep(10 * time.Second)
 	}
-	return nil
+	return err
 }
 
 func ScpFile(ip, user, key, hostsfile, source, dest string) error {
