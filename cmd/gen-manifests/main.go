@@ -241,8 +241,8 @@ func makeManifestJob(
 	filename := fmt.Sprintf("%s-%s-%s-%s.json", u(distroName), u(archName), u(imgType.Name()), u(name))
 	cacheDir := filepath.Join(cacheRoot, archName+distribution.Name())
 
-	// ensure that each file has a unique seed based on filename
-	seedArg, err := cmdutil.SeedArgFor(bc, imgType.Name(), distribution.Name(), archName)
+	// ensure that each file has a unique-ish seed based on filename
+	seedArg, err := cmdutil.SeedArgFor(bc, "", distribution.Name(), archName)
 	if err != nil {
 		panic(err)
 	}
