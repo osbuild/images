@@ -22,6 +22,7 @@ type KickstartStageOptions struct {
 
 	OSTreeCommit    *OSTreeCommitOptions    `json:"ostree,omitempty"`
 	OSTreeContainer *OSTreeContainerOptions `json:"ostreecontainer,omitempty"`
+	Bootc           *BootcOptions           `json:"bootc,omitempty"`
 
 	LiveIMG *LiveIMGOptions `json:"liveimg,omitempty"`
 
@@ -65,6 +66,11 @@ type OSTreeContainerOptions struct {
 	Transport             string `json:"transport"`
 	Remote                string `json:"remote"`
 	SignatureVerification bool   `json:"signatureverification"`
+}
+
+type BootcOptions struct {
+	SourceImgRef string `json:"source-imgref"`
+	TargetImgRef string `json:"target-imgref,omitempty"`
 }
 
 type RebootOptions struct {
@@ -303,6 +309,31 @@ func NewKickstartStageOptionsWithOSTreeContainer(
 		}
 
 		options.OSTreeContainer = ostreeContainerOptions
+	}
+
+	return options, nil
+}
+
+func NewKickstartStageOptionsWithBootc(
+	path string,
+	userCustomizations []users.User,
+	groupCustomizations []users.Group,
+	sourceImgRef string,
+	targetImgRef string) (*KickstartStageOptions, error) {
+
+	options, err := NewKickstartStageOptions(path, userCustomizations, groupCustomizations)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if sourceImgRef != "" {
+		bootcOptions := &BootcOptions{
+			SourceImgRef: sourceImgRef,
+			TargetImgRef: targetImgRef,
+		}
+
+		options.Bootc = bootcOptions
 	}
 
 	return options, nil
