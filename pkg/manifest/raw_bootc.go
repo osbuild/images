@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
+	"strings"
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/artifact"
@@ -131,6 +133,62 @@ func buildHomedirPaths(users []users.User) []osbuild.MkdirStagePath {
 	}
 }
 
+func findChangedFilesInStage(stage *osbuild.Stage) ([]string, error) {
+	paths := []string{}
+
+	switch stage.Type {
+	case "org.osbuild.systemd", "org.osbuild.systemd.unit.create", "org.osbuild.fstab", "org.osbuild.groups", "org.osbuild.users":
+		paths = append(paths, "/etc")
+	case "org.osbuild.mkdir":
+		if options, ok := stage.Options.(*osbuild.MkdirStageOptions); ok {
+			for _, path := range options.Paths {
+				paths = append(paths, path.Path)
+			}
+		}
+	case "org.osbuild.copy":
+		if options, ok := stage.Options.(*osbuild.CopyStageOptions); ok {
+			for _, p := range options.Paths {
+				if strings.HasPrefix(p.To, "tree://") {
+					paths = append(paths, p.To[len("tree://"):])
+				}
+			}
+		}
+	case "org.osbuild.chmod":
+		if options, ok := stage.Options.(*osbuild.ChmodStageOptions); ok {
+			for path := range options.Items {
+				paths = append(paths, path)
+			}
+		}
+	case "org.osbuild.chown":
+		if options, ok := stage.Options.(*osbuild.ChownStageOptions); ok {
+			for path := range options.Items {
+				paths = append(paths, path)
+			}
+		}
+	default:
+		return nil, fmt.Errorf("findChangedFilesInStage(): unhandled stage type %s", stage.Type)
+	}
+
+	return paths, nil
+}
+
+func findChangedFilesInStages(stages []*osbuild.Stage) ([]string, error) {
+	changes := []string{}
+	for _, stage := range stages {
+		stageChanges, err := findChangedFilesInStage(stage)
+		if err != nil {
+			return nil, err
+		}
+		for _, change := range stageChanges {
+			if !slices.Contains(changes, change) {
+				changes = append(changes, change)
+			}
+		}
+
+	}
+	return changes, nil
+}
+
 func (p *RawBootcImage) serialize() (osbuild.Pipeline, error) {
 	pipeline, err := p.Base.serialize()
 	if err != nil {
@@ -181,6 +239,8 @@ func (p *RawBootcImage) serialize() (osbuild.Pipeline, error) {
 	mounts = append(mounts, *osbuild.NewOSTreeDeploymentMountDefault("ostree.deployment", osbuild.OSTreeMountSourceMount))
 	mounts = append(mounts, *osbuild.NewBindMount("bind-ostree-deployment-to-tree", "mount://", "tree://"))
 
+	postStages := []*osbuild.Stage{}
+
 	fsCfgStages, err := filesystemConfigStages(pt, p.MountConfiguration)
 	if err != nil {
 		return osbuild.Pipeline{}, err
@@ -188,7 +248,7 @@ func (p *RawBootcImage) serialize() (osbuild.Pipeline, error) {
 	for _, stage := range fsCfgStages {
 		stage.Mounts = mounts
 		stage.Devices = devices
-		pipeline.AddStage(stage)
+		postStages = append(postStages, stage)
 	}
 
 	// customize the image
@@ -196,7 +256,7 @@ func (p *RawBootcImage) serialize() (osbuild.Pipeline, error) {
 		groupsStage := osbuild.GenGroupsStage(p.Groups)
 		groupsStage.Mounts = mounts
 		groupsStage.Devices = devices
-		pipeline.AddStage(groupsStage)
+		postStages = append(postStages, groupsStage)
 	}
 
 	if len(p.Users) > 0 {
@@ -207,7 +267,7 @@ func (p *RawBootcImage) serialize() (osbuild.Pipeline, error) {
 		})
 		mkdirStage.Mounts = mounts
 		mkdirStage.Devices = devices
-		pipeline.AddStage(mkdirStage)
+		postStages = append(postStages, mkdirStage)
 
 		// add the users
 		usersStage, err := osbuild.GenUsersStage(p.Users, false)
@@ -216,7 +276,7 @@ func (p *RawBootcImage) serialize() (osbuild.Pipeline, error) {
 		}
 		usersStage.Mounts = mounts
 		usersStage.Devices = devices
-		pipeline.AddStage(usersStage)
+		postStages = append(postStages, usersStage)
 	}
 
 	// First create custom directories, because some of the custom files may depend on them
@@ -227,7 +287,7 @@ func (p *RawBootcImage) serialize() (osbuild.Pipeline, error) {
 			stage.Mounts = mounts
 			stage.Devices = devices
 		}
-		pipeline.AddStages(stages...)
+		postStages = append(postStages, stages...)
 	}
 
 	if len(p.Files) > 0 {
@@ -236,21 +296,29 @@ func (p *RawBootcImage) serialize() (osbuild.Pipeline, error) {
 			stage.Mounts = mounts
 			stage.Devices = devices
 		}
-		pipeline.AddStages(stages...)
+		postStages = append(postStages, stages...)
 	}
 
-	// XXX: maybe go back to adding this conditionally when we stop
-	// writing an /etc/fstab by default (see issue #756)
-	// add selinux
+	pipeline.AddStages(postStages...)
+
+	// In case we created any files in the deploy directory we need to relabel
+	// then per the selinux policy
 	if p.SELinux != "" {
-		opts := &osbuild.SELinuxStageOptions{
-			FileContexts: fmt.Sprintf("etc/selinux/%s/contexts/files/file_contexts", p.SELinux),
-			ExcludePaths: []string{"/sysroot"},
+		changedFiles, err := findChangedFilesInStages(postStages)
+		if err != nil {
+			return osbuild.Pipeline{}, err
 		}
-		selinuxStage := osbuild.NewSELinuxStage(opts)
-		selinuxStage.Mounts = mounts
-		selinuxStage.Devices = devices
-		pipeline.AddStage(selinuxStage)
+		for _, changedFile := range changedFiles {
+			opts := &osbuild.SELinuxStageOptions{
+				Target:       "tree://" + changedFile,
+				FileContexts: fmt.Sprintf("etc/selinux/%s/contexts/files/file_contexts", p.SELinux),
+				ExcludePaths: []string{"/sysroot"},
+			}
+			selinuxStage := osbuild.NewSELinuxStage(opts)
+			selinuxStage.Mounts = mounts
+			selinuxStage.Devices = devices
+			pipeline.AddStage(selinuxStage)
+		}
 	}
 
 	return pipeline, nil
