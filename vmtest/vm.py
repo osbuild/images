@@ -23,6 +23,10 @@ _non_interactive_ssh = [
     "-o", "LogLevel=ERROR",
 ]
 
+# constants when waiting for ssh ready
+ssh_ready_n_retries = 3
+ssh_ready_wait_sec = 10
+
 
 class VM(abc.ABC):
 
@@ -60,17 +64,14 @@ class VM(abc.ABC):
     def _ensure_ssh(self, user, password="", keyfile=None):
         if not self.running():
             self.start()
-        n_retries = 3
-        wait_sec = 10
-        for _ in range(n_retries):
+        for _ in range(ssh_ready_n_retries):
             try:
-                ret, _ = self._run("true", user, password, keyfile)
-                if ret == 0:
-                    return
+                self._run("true", user, password, keyfile)
+                return
             except Exception as e:
                 print(f"ssh not ready {e}")
-                time.sleep(wait_sec)
-        raise RuntimeError(f"no ssh after {n_retries} retries of {wait_sec}")
+            time.sleep(ssh_ready_wait_sec)
+        raise RuntimeError(f"no ssh after {ssh_ready_n_retries} retries of {ssh_ready_wait_sec}s")
 
     def run(self, cmd, user, password="", keyfile=None):
         self._ensure_ssh(user, password, keyfile)
@@ -96,7 +97,11 @@ class VM(abc.ABC):
             for out in p.stdout:
                 self._log(out)
                 output.write(out)
-        return p.returncode, output.getvalue()
+        ret = subprocess.CompletedProcess(cmd, p.returncode)
+        ret.stdout = output.getvalue()
+        # this will raise an CalledProcessError on error
+        ret.check_returncode()
+        return ret
 
     def scp(self, src, dst, user, password="", keyfile=None):
         self._ensure_ssh(user, password, keyfile)
