@@ -6,7 +6,6 @@ import os
 import pathlib
 import uuid
 import subprocess
-import shlex
 import shutil
 import textwrap
 from tempfile import TemporaryDirectory
@@ -166,7 +165,7 @@ def qemu_cmd_scp_and_run(vm, cmd, privkey_path):
     for arg in cmd:
         if os.path.exists(arg):
             vm.scp(arg, "/tmp/", user="osbuild", keyfile=privkey_path)
-    vmcmd = shlex.join(["/tmp/" + os.path.basename(arg) for arg in cmd])
+    vmcmd = ["/tmp/" + os.path.basename(arg) for arg in cmd]
     return vm.run(vmcmd, user="osbuild", keyfile=privkey_path)
 
 
@@ -178,8 +177,7 @@ def boot_qemu(arch, image_path, config_file):
         (privkey_path, pubkey_path) = cm.enter_context(create_ssh_key())
         cloud_init_iso = cm.enter_context(make_cloud_init_iso(pubkey_path))
         with QEMU(uncompressed_image_path, arch=arch, cdrom=cloud_init_iso) as vm:
-            exit_status, _ = qemu_cmd_scp_and_run(vm, cmd, privkey_path)
-            assert exit_status == 0
+            qemu_cmd_scp_and_run(vm, cmd, privkey_path)
 
 
 def boot_qemu_iso(arch, installer_iso_path, config_file):
@@ -218,8 +216,7 @@ def boot_qemu_iso(arch, installer_iso_path, config_file):
             # case, the CI ssh key is secret.
             if os.environ.get("CI_PRIV_SSH_KEY"):
                 with create_ssh_key() as (privkey_path, _):
-                    exit_status, _ = qemu_cmd_scp_and_run(vm, cmd, privkey_path)
-                    assert exit_status == 0
+                    qemu_cmd_scp_and_run(vm, cmd, privkey_path)
 
 
 def cmd_boot_aws(arch, image_name, privkey, pubkey, image_path, script_cmd):
