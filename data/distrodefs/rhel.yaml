@@ -243,6 +243,15 @@ distros:
         ignore_image_types:
           - "azure-rhui"
           - "vhd"
+      "some image types are rhel-only":
+        when:
+          not_distro_name: "rhel"
+        ignore_image_types:
+          - azure-eap7-rhui
+          - azure-rhui
+          - ec2-sap
+          - ec2-ha
+          - gce-rhui
     runner:
       name: "org.osbuild.rhel{{.MajorVersion}}{{.MinorVersion}}"
       build_packages: &rhel8_runner_build_packages
