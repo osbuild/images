@@ -20,7 +20,7 @@ jobs:
         run: sudo apt install -y skopeo python3
 
       - name: Check out main
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           path: images
           ref: main
