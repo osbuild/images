@@ -2,6 +2,7 @@ import abc
 import os
 import pathlib
 import platform
+import shlex
 import shutil
 import subprocess
 import sys
@@ -66,28 +67,31 @@ class VM(abc.ABC):
             self.start()
         for _ in range(ssh_ready_n_retries):
             try:
-                self._run("true", user, password, keyfile)
+                self._run("true", user=user, password=password, keyfile=keyfile)
                 return
             except Exception as e:
-                print(f"ssh not ready {e}")
+                print(f"ssh not ready: {e}", file=sys.stderr)
             time.sleep(ssh_ready_wait_sec)
         raise RuntimeError(f"no ssh after {ssh_ready_n_retries} retries of {ssh_ready_wait_sec}s")
 
-    def run(self, cmd, user, password="", keyfile=None):
+    def run(self, args, user, password="", keyfile=None):
         self._ensure_ssh(user, password, keyfile)
-        return self._run(cmd, user, password, keyfile)
+        return self._run(args, user=user, password=password, keyfile=keyfile)
 
-    def _run(self, cmd, user, password="", keyfile=None):
+    def _run(self, args, user, password="", keyfile=None):
         """
         Run a command on the VM via SSH using the provided credentials.
         """
+        if isinstance(args, str):
+            args = [args]
+        run_cmd = shlex.join(args)
         ssh_cmd = self._sshpass(password) + [
             "ssh", "-p", str(self._ssh_port),
         ] + _non_interactive_ssh
         if keyfile:
             ssh_cmd.extend(["-i", keyfile])
         ssh_cmd.append(f"{user}@{self._address}")
-        ssh_cmd.append(cmd)
+        ssh_cmd.append(run_cmd)
         output = StringIO()
         with subprocess.Popen(
                 ssh_cmd,
@@ -97,7 +101,7 @@ class VM(abc.ABC):
             for out in p.stdout:
                 self._log(out)
                 output.write(out)
-        ret = subprocess.CompletedProcess(cmd, p.returncode)
+        ret = subprocess.CompletedProcess(run_cmd, p.returncode)
         ret.stdout = output.getvalue()
         # this will raise an CalledProcessError on error
         ret.check_returncode()

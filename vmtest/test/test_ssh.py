@@ -34,10 +34,27 @@ def test_ssh_calls_cmd_happy(tmp_path, monkeypatch):
     monkeypatch.setenv("PATH", os.fspath(tmp_path), prepend=os.pathsep)
     make_fake_ssh(tmp_path)
     vm = MockVM()
-    res = vm.run("cmd1 arg1 arg2", user="user1", keyfile="keyfile1")
+    res = vm.run(["cmd1", "arg1", "arg2"], user="user1", keyfile="keyfile1")
     assert res.returncode == 0
     assert res.stdout.endswith("cmd1 arg1 arg2\n")
 
+
+def test_ssh_calls_cmd_happy_single_cmd(tmp_path, monkeypatch):
+    monkeypatch.setenv("PATH", os.fspath(tmp_path), prepend=os.pathsep)
+    make_fake_ssh(tmp_path)
+    vm = MockVM()
+    res = vm.run("true", user="user1", keyfile="keyfile1")
+    assert res.returncode == 0
+    assert res.stdout.endswith("true\n")
+
+
+def test_ssh_calls_cmd_happy_quoting_works(tmp_path, monkeypatch):
+    monkeypatch.setenv("PATH", os.fspath(tmp_path), prepend=os.pathsep)
+    make_fake_ssh(tmp_path)
+    vm = MockVM()
+    res = vm.run("this needs quoting", user="user1", keyfile="keyfile1")
+    assert res.returncode == 0
+    assert res.stdout.endswith("'this needs quoting'\n")
 
 def test_ssh_calls_cmd_sad(tmp_path, monkeypatch):
     monkeypatch.setenv("PATH", os.fspath(tmp_path), prepend=os.pathsep)
@@ -50,11 +67,12 @@ def test_ssh_calls_cmd_sad(tmp_path, monkeypatch):
 
 
 @patch("time.sleep")
-def test_ssh_calls_retries(mocked_sleep, tmp_path, monkeypatch):
+def test_ssh_calls_retries(mocked_sleep, tmp_path, monkeypatch, capsys):
     monkeypatch.setenv("PATH", os.fspath(tmp_path), prepend=os.pathsep)
-    make_fake_ssh(tmp_path, "echo ssh-very-sad; exit 1")
+    make_fake_ssh(tmp_path, "echo ssh-very-sad; exit 21")
     vm = MockVM()
     with pytest.raises(RuntimeError) as e:
-        res = vm.run("cmd1 arg1 arg2", user="user1", keyfile="keyfile1")
+        res = vm.run(["cmd1", "arg1", "arg2"], user="user1", keyfile="keyfile1")
     assert str(e.value) == "no ssh after 3 retries of 10s"
     assert mocked_sleep.call_args_list == [ call(10), call(10), call(10) ]
+    assert capsys.readouterr().err == 3 * "ssh not ready: Command 'true' returned non-zero exit status 21.\n"
