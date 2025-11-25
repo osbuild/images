@@ -46,6 +46,10 @@ type AnacondaContainerInstaller struct {
 	InitramfsPath string
 	// bootc installer cannot use /root as installer home
 	InstallerHome string
+
+	// BootcInstallVerb controls which directive to use in kickstart files.
+	// Valid values are "ostreecontainer" (default) and "bootc"
+	BootcInstallVerb string
 }
 
 func NewAnacondaContainerInstaller(platform platform.Platform, filename string, container container.SourceSpec, ref string) *AnacondaContainerInstaller {
@@ -131,6 +135,7 @@ func (img *AnacondaContainerInstaller) InstantiateManifestFromContainer(m *manif
 	isoTreePipeline.PartitionTable = efiBootPartitionTable(rng)
 	isoTreePipeline.Release = img.InstallerCustomizations.Release
 	isoTreePipeline.Kickstart = img.Kickstart
+	isoTreePipeline.BootcInstallVerb = img.BootcInstallVerb
 
 	isoTreePipeline.RootfsCompression = img.RootfsCompression
 	isoTreePipeline.RootfsType = img.InstallerCustomizations.ISORootfsType
