@@ -28,3 +28,7 @@ func (s *Stage) MountOSTree(osName, ref string, serial int) {
 	ostreeMount := NewOSTreeDeploymentMount(name, osName, ref, serial)
 	s.Mounts = append(s.Mounts, *ostreeMount)
 }
+
+type PathChanger interface {
+	PathsChanged() []string
+}

@@ -16,6 +16,16 @@ type MkdirStagePath struct {
 
 func (MkdirStageOptions) isStageOptions() {}
 
+var _ = PathChanger(MkdirStageOptions{})
+
+func (m MkdirStageOptions) PathsChanged() []string {
+	var paths []string
+	for _, path := range m.Paths {
+		paths = append(paths, path.Path)
+	}
+	return paths
+}
+
 // NewMkdirStage creates a new org.osbuild.mkdir stage to create FS directories
 func NewMkdirStage(options *MkdirStageOptions) *Stage {
 	return &Stage{

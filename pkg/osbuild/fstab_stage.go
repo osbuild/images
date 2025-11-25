@@ -20,6 +20,12 @@ type FSTabStageOptions struct {
 
 func (FSTabStageOptions) isStageOptions() {}
 
+var _ = PathChanger(FSTabStageOptions{})
+
+func (f FSTabStageOptions) PathsChanged() []string {
+	return []string{"/etc/fstab"}
+}
+
 type OSTreeFstab struct {
 	Deployment OSTreeDeployment `json:"deployment"`
 }

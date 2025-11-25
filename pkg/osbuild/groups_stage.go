@@ -10,6 +10,15 @@ type GroupsStageOptions struct {
 
 func (GroupsStageOptions) isStageOptions() {}
 
+var _ = PathChanger(GroupsStageOptions{})
+
+func (g GroupsStageOptions) PathsChanged() []string {
+	// this is very precise but because we don't own the groupadd code if it
+	// would start writing some extra/aux files (in a few years) we would
+	// not catch it so maybe just return /etc here?
+	return []string{"/etc/group", "/etc/gshadow", "/etc/group-", "/etc/gshadow-"}
+}
+
 type GroupsStageOptionsGroup struct {
 	GID *int `json:"gid,omitempty"`
 }

@@ -12,6 +12,22 @@ type UsersStageOptions struct {
 
 func (UsersStageOptions) isStageOptions() {}
 
+var _ = PathChanger(UsersStageOptions{})
+
+func (g UsersStageOptions) PathsChanged() []string {
+	// this is very precise but because we don't own the groupadd code if it
+	// would start writing some extra/aux files (in a few years) we would
+	// not catch it so maybe just return /etc here?
+	return []string{
+		"/etc/passwd", "/etc/shadow",
+		"/etc/passwd-", "/etc/shadow-",
+		"/etc/group", "/etc/gshadow",
+		"/etc/group-", "/etc/gshadow-",
+		"/etc/subuid", "/etc/subuid-",
+		"/etc/subgid", "/etc/subgid-",
+	}
+}
+
 type UsersStageOptionsUser struct {
 	UID                *int     `json:"uid,omitempty"`
 	GID                *int     `json:"gid,omitempty"`

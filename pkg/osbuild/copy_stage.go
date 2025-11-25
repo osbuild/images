@@ -2,6 +2,7 @@ package osbuild
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/osbuild/images/pkg/disk"
 )
@@ -23,6 +24,18 @@ type CopyStagePath struct {
 }
 
 func (CopyStageOptions) isStageOptions() {}
+
+var _ = PathChanger(CopyStageOptions{})
+
+func (c CopyStageOptions) PathsChanged() []string {
+	var paths []string
+	for _, p := range c.Paths {
+		if strings.HasPrefix(p.To, "tree://") {
+			paths = append(paths, p.To[len("tree://"):])
+		}
+	}
+	return paths
+}
 
 func NewCopyStage(options *CopyStageOptions, inputs Inputs, devices map[string]Device, mounts []Mount) *Stage {
 	return &Stage{

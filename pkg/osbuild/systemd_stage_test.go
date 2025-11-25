@@ -13,4 +13,10 @@ func TestNewSystemdStage(t *testing.T) {
 	}
 	actualStage := NewSystemdStage(&SystemdStageOptions{})
 	assert.Equal(t, expectedStage, actualStage)
+	assert.Len(t, actualStage.Options.(PathChanger).PathsChanged(), 0)
+}
+
+func TestNewSystemdStageFilesChanged(t *testing.T) {
+	st := NewSystemdStage(&SystemdStageOptions{EnabledServices: []string{"foo"}})
+	assert.Equal(t, []string{"/etc"}, st.Options.(PathChanger).PathsChanged())
 }

@@ -114,6 +114,13 @@ type SystemdUnitCreateStageOptions struct {
 
 func (SystemdUnitCreateStageOptions) isStageOptions() {}
 
+var _ = PathChanger(SystemdUnitCreateStageOptions{})
+
+func (s SystemdUnitCreateStageOptions) PathsChanged() []string {
+	// XXX: be more precise, I think we can
+	return []string{"/etc"}
+}
+
 func (o *SystemdUnitCreateStageOptions) validateService() error {
 	if o.Config.Service == nil {
 		return fmt.Errorf("systemd service unit %q requires a Service section", o.Filename)

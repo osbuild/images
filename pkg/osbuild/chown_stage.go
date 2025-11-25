@@ -16,6 +16,16 @@ type ChownStageOptions struct {
 
 func (ChownStageOptions) isStageOptions() {}
 
+var _ = PathChanger(ChownStageOptions{})
+
+func (c ChownStageOptions) PathsChanged() []string {
+	var paths []string
+	for path := range c.Items {
+		paths = append(paths, path)
+	}
+	return paths
+}
+
 func (o *ChownStageOptions) validate() error {
 	for path, options := range o.Items {
 		invalidPathRegex := regexp.MustCompile(invalidPathRegex)

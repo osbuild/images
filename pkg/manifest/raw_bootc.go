@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"slices"
-	"strings"
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/artifact"
@@ -133,60 +132,14 @@ func buildHomedirPaths(users []users.User) []osbuild.MkdirStagePath {
 	}
 }
 
-func findChangedFilesInStage(stage *osbuild.Stage) ([]string, error) {
-	paths := []string{}
-
-	switch stage.Type {
-	case "org.osbuild.systemd", "org.osbuild.systemd.unit.create", "org.osbuild.fstab", "org.osbuild.groups", "org.osbuild.users":
-		paths = append(paths, "/etc")
-	case "org.osbuild.mkdir":
-		if options, ok := stage.Options.(*osbuild.MkdirStageOptions); ok {
-			for _, path := range options.Paths {
-				paths = append(paths, path.Path)
-			}
-		}
-	case "org.osbuild.copy":
-		if options, ok := stage.Options.(*osbuild.CopyStageOptions); ok {
-			for _, p := range options.Paths {
-				if strings.HasPrefix(p.To, "tree://") {
-					paths = append(paths, p.To[len("tree://"):])
-				}
-			}
-		}
-	case "org.osbuild.chmod":
-		if options, ok := stage.Options.(*osbuild.ChmodStageOptions); ok {
-			for path := range options.Items {
-				paths = append(paths, path)
-			}
-		}
-	case "org.osbuild.chown":
-		if options, ok := stage.Options.(*osbuild.ChownStageOptions); ok {
-			for path := range options.Items {
-				paths = append(paths, path)
-			}
-		}
-	default:
-		return nil, fmt.Errorf("findChangedFilesInStage(): unhandled stage type %s", stage.Type)
-	}
-
-	return paths, nil
-}
-
-func findChangedFilesInStages(stages []*osbuild.Stage) ([]string, error) {
-	changes := []string{}
+func findChangedFilesInStages(stages []*osbuild.Stage) []string {
+	var changes []string
 	for _, stage := range stages {
-		stageChanges, err := findChangedFilesInStage(stage)
-		if err != nil {
-			return nil, err
-		}
-		for _, change := range stageChanges {
-			if !slices.Contains(changes, change) {
-				changes = append(changes, change)
-			}
-		}
-
+		changes = append(changes, stage.Options.(osbuild.PathChanger).PathsChanged()...)
 	}
-	return changes, nil
+	slices.Sort(changes)
+	slices.Compact(changes)
+	return changes
 }
 
 func (p *RawBootcImage) serialize() (osbuild.Pipeline, error) {
@@ -304,10 +257,7 @@ func (p *RawBootcImage) serialize() (osbuild.Pipeline, error) {
 	// In case we created any files in the deploy directory we need to relabel
 	// then per the selinux policy
 	if p.SELinux != "" {
-		changedFiles, err := findChangedFilesInStages(postStages)
-		if err != nil {
-			return osbuild.Pipeline{}, err
-		}
+		changedFiles := findChangedFilesInStages(postStages)
 		for _, changedFile := range changedFiles {
 			opts := &osbuild.SELinuxStageOptions{
 				Target:       "tree://" + changedFile,
