@@ -32,6 +32,10 @@ type InstallerConfig struct {
 	LoraxTemplatePackage *string                           `yaml:"lorax_template_package"`
 	LoraxLogosPackage    *string                           `yaml:"lorax_logos_package"`
 	LoraxReleasePackage  *string                           `yaml:"lorax_release_package"`
+
+	// BootcInstallVerb controls which directive to use in kickstart files for bootc installer ISOs.
+	// Valid values are "ostreecontainer" (default) and "bootc"
+	BootcInstallVerb *string `yaml:"bootc_install_verb,omitempty"`
 }
 
 // InheritFrom inherits unset values from the provided parent configuration and

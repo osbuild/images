@@ -559,6 +559,123 @@ func TestNewKicstartStageOptionsWithOSTreeContainer(t *testing.T) {
 	}
 }
 
+func TestNewKickstartStageOptionsWithBootc(t *testing.T) {
+	type testCase struct {
+		path               string
+		userCustomizations []users.User
+		sourceImgRef       string
+		targetImgRef       string
+
+		expOptions *osbuild.KickstartStageOptions
+		expErr     string
+	}
+
+	testCases := map[string]testCase{
+		"empty": {
+			expErr: "org.osbuild.kickstart: kickstart path \"\" is invalid",
+		},
+		"user": {
+			path: "/osbuild-test.ks",
+			userCustomizations: []users.User{
+				{
+					Name:  "fisher",
+					Shell: common.ToPtr("/bin/fish"),
+				},
+			},
+			expOptions: &osbuild.KickstartStageOptions{
+				Path: "/osbuild-test.ks",
+				Users: map[string]osbuild.UsersStageOptionsUser{
+					"fisher": {
+						Shell: common.ToPtr("/bin/fish"),
+					},
+				},
+			},
+		},
+		"bootc": {
+			path:         "/osbuild-test.ks",
+			sourceImgRef: "docker://quay.io/fedora/fedora-bootc:latest",
+
+			expOptions: &osbuild.KickstartStageOptions{
+				Path: "/osbuild-test.ks",
+				Bootc: &osbuild.BootcOptions{
+					SourceImgRef: "docker://quay.io/fedora/fedora-bootc:latest",
+					TargetImgRef: "",
+				},
+			},
+		},
+		"bootc-with-target": {
+			path:         "/osbuild-test.ks",
+			sourceImgRef: "oci:/run/install/repo/container",
+			targetImgRef: "docker://quay.io/fedora/fedora-bootc:latest",
+
+			expOptions: &osbuild.KickstartStageOptions{
+				Path: "/osbuild-test.ks",
+				Bootc: &osbuild.BootcOptions{
+					SourceImgRef: "oci:/run/install/repo/container",
+					TargetImgRef: "docker://quay.io/fedora/fedora-bootc:latest",
+				},
+			},
+		},
+		"user+bootc": {
+			path: "/osbuild-test.ks",
+			userCustomizations: []users.User{
+				{
+					Name:  "fisher",
+					Shell: common.ToPtr("/bin/fish"),
+				},
+			},
+			sourceImgRef: "registry.example.org/my-image:latest",
+			targetImgRef: "registry.example.org/my-image:stable",
+
+			expOptions: &osbuild.KickstartStageOptions{
+				Path: "/osbuild-test.ks",
+				Users: map[string]osbuild.UsersStageOptionsUser{
+					"fisher": {
+						Shell: common.ToPtr("/bin/fish"),
+					},
+				},
+				Bootc: &osbuild.BootcOptions{
+					SourceImgRef: "registry.example.org/my-image:latest",
+					TargetImgRef: "registry.example.org/my-image:stable",
+				},
+			},
+		},
+		"internal-error": {
+			path: "/osbuild-test.ks",
+			// only need to check that an error from NewKickstartStageOptions
+			// is propagated
+			userCustomizations: []users.User{
+				{
+					Name:  "root",
+					Shell: common.ToPtr("/bin/tsh"),
+				},
+			},
+			expErr: "org.osbuild.kickstart: unsupported options for user \"root\": shell",
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+
+			ksOptions, err := osbuild.NewKickstartStageOptionsWithBootc(
+				tc.path,
+				tc.userCustomizations,
+				nil,
+				tc.sourceImgRef,
+				tc.targetImgRef,
+			)
+			if tc.expErr != "" {
+				assert.EqualError(err, tc.expErr)
+				return
+			}
+
+			assert.NoError(err)
+			assert.Equal(tc.expOptions, ksOptions) // new file path must be the original kickstart path
+		})
+	}
+}
+
 func TestNewKicstartStageOptionsWithLiveIMG(t *testing.T) {
 	type testCase struct {
 		path               string

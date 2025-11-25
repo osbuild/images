@@ -963,3 +963,73 @@ func TestAnacondaISOTreeSerializeInstallRootfsType(t *testing.T) {
 		assert.Contains(t, inlineData[0], tc.expected)
 	}
 }
+
+func containerBootcSwitchInPost(ksOptions *osbuild.KickstartStageOptions) bool {
+	for _, post := range ksOptions.Post {
+		for _, cmd := range post.Commands {
+			if strings.Contains(cmd, "bootc switch") {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func TestAnacondaISOTreeBootcInstallVerb(t *testing.T) {
+	containerPayload := makeFakeContainerPayload()
+
+	t.Run("bootc-install-verb-bootc", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
+		pipeline.BootcInstallVerb = "bootc"
+		pipeline.PayloadPath = "/container"
+		sp, err := manifest.SerializeWith(pipeline, manifest.Inputs{Containers: []container.Spec{containerPayload}})
+		assert.NoError(t, err)
+
+		ksOptions := getKickstartOptions(sp.Stages)
+		assert.NotNil(t, ksOptions.Bootc)
+		assert.Nil(t, ksOptions.OSTreeContainer)
+		assert.Equal(t, "oci:/run/install/repo/container", ksOptions.Bootc.SourceImgRef)
+		assert.Equal(t, containerPayload.LocalName, ksOptions.Bootc.TargetImgRef)
+		assert.False(t, containerBootcSwitchInPost(ksOptions), "bootc switch command should not be present when using bootc install verb")
+	})
+
+	t.Run("bootc-install-verb-ostreecontainer", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
+		pipeline.BootcInstallVerb = "ostreecontainer"
+		pipeline.PayloadPath = "/container"
+		sp, err := manifest.SerializeWith(pipeline, manifest.Inputs{Containers: []container.Spec{containerPayload}})
+		assert.NoError(t, err)
+
+		ksOptions := getKickstartOptions(sp.Stages)
+		assert.Nil(t, ksOptions.Bootc)
+		assert.NotNil(t, ksOptions.OSTreeContainer)
+		assert.Equal(t, "/run/install/repo/container", ksOptions.OSTreeContainer.URL)
+		assert.True(t, containerBootcSwitchInPost(ksOptions), "bootc switch command should be present when using ostreecontainer install verb")
+	})
+
+	t.Run("bootc-install-verb-empty-default", func(t *testing.T) {
+		// Empty string should default to ostreecontainer behavior
+		pipeline := newTestAnacondaISOTree()
+		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
+		pipeline.BootcInstallVerb = ""
+		pipeline.PayloadPath = "/container"
+		sp, err := manifest.SerializeWith(pipeline, manifest.Inputs{Containers: []container.Spec{containerPayload}})
+		assert.NoError(t, err)
+
+		ksOptions := getKickstartOptions(sp.Stages)
+		assert.Nil(t, ksOptions.Bootc)
+		assert.NotNil(t, ksOptions.OSTreeContainer)
+		assert.True(t, containerBootcSwitchInPost(ksOptions), "bootc switch command should be present when using empty install verb (default)")
+	})
+
+	t.Run("bootc-install-verb-invalid", func(t *testing.T) {
+		pipeline := newTestAnacondaISOTree()
+		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
+		pipeline.BootcInstallVerb = "invalid"
+		pipeline.PayloadPath = "/container"
+		_, err := manifest.SerializeWith(pipeline, manifest.Inputs{Containers: []container.Spec{containerPayload}})
+		assert.EqualError(t, err, "cannot create ostree container stages: cannot generate bootc installer kickstart stages: invalid bootcInstallVerb: invalid")
+	})
+}

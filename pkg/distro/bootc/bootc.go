@@ -556,6 +556,11 @@ func (t *BootcImageType) manifestForISO(bp *blueprint.Blueprint, options distro.
 	// see https://github.com/osbuild/bootc-image-builder/issues/733
 	img.InstallerCustomizations.ISORootfsType = manifest.SquashfsRootfs
 
+	installerConfig := t.ImageTypeYAML.InstallerConfig(t.arch.distro.id, t.arch.Name())
+	if installerConfig != nil && installerConfig.BootcInstallVerb != nil {
+		img.BootcInstallVerb = *installerConfig.BootcInstallVerb
+	}
+
 	installRootfsType, err := disk.NewFSType(t.arch.distro.defaultFs)
 	if err != nil {
 		return nil, nil, err

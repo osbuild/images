@@ -163,6 +163,9 @@ image_types:
     filename: "installer.iso"
     boot_iso: true
     image_func: "bootc_legacy_iso"
+    # Uncomment the following lines to use the bootc verb instead of ostreecontainer
+    # installer_config:
+      # bootc_install_verb: bootc
 
   # XXX: ideally we would use name_aliases but the loader lib
   # does not not fully support this yet
