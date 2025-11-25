@@ -156,7 +156,7 @@ image_types:
   bootc-installer:
     mime_type: "application/x-iso9660-image"
     exports: ["bootiso"]
-    filename: "installer.iso"
+    filename: "install.iso"
     boot_iso: true
     image_func: "bootc_iso"
     supported_blueprint_options: *supported_options_iso
@@ -170,7 +170,7 @@ image_types:
   anaconda-iso: &anaconda_iso
     mime_type: "application/x-iso9660-image"
     exports: ["bootiso"]
-    filename: "installer.iso"
+    filename: "install.iso"
     boot_iso: true
     image_func: "bootc_legacy_iso"
     supported_blueprint_options: *supported_options_iso
