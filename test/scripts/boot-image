@@ -441,6 +441,8 @@ def main():
     # Keep test/scripts/imagetestlib.py:CAN_BOOT_TEST in sync as it
     # has the same checks again
     match image_type:
+        # Not all qcow2 types can be boot-tested, for example `server-qcow2` uses
+        # initial-setup and this blocks the boot.
         case "qcow2" | "generic-qcow2" | "cloud-qcow2":
             try:
                 boot_qemu(arch, image_path, build_config_path)
