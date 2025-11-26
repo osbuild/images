@@ -3,7 +3,8 @@
 
 set wsl_img=%1
 set test_script=%2
-set img_config=%3
+set config_flag=%3
+set img_config=%4
 
 echo "import wsl img"
 set errorlevel=
@@ -13,7 +14,7 @@ if %errorlevel%!==!0 exit /b 1
 
 echo "run test script"
 set errorlevel=
-"C:\Program Files\WSL\wsl.exe" -d ibwsl "/mnt/c/Users/azureuser/%test_script%" "/mnt/c/Users/azureuser/%img_config%"
+"C:\Program Files\WSL\wsl.exe" -d ibwsl "/mnt/c/Users/azureuser/%test_script%" "/mnt/c/Users/azureuser/%config_flag%" "/mnt/c/Users/azureuser/%img_config%"
 echo "test script result: %errorlevel%"
 if %errorlevel%!==!0 exit /b 1
 
