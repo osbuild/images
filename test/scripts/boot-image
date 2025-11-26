@@ -166,15 +166,18 @@ def ensure_can_run_qemu_test(arch, image_path, config_file):
     if info.get("image-type") in ["network-installer", "everything-network-installer"]:
         # network install needs subscribed content but we cannot provide
         # that currently
+        if info.get("distro") in ["rhel-10.1", "rhel-10.2"]:
+            raise CannotRunQemuTest(
+                "rhel network-installer tests have incomplete repos in nightly snapshot and won't install")
         match info.get("distro"):
-            case name if name.startswith("rhel"):
-                raise CannotRunQemuTest("rhel network-installer needs subscription keys which we cannot provide yet")
             case name if name.startswith("fedora"):
                 raise CannotRunQemuTest(
                     "fedora network-installer crashes in sshd, "
                     "see https://bugzilla.redhat.com/show_bug.cgi?id=2415883")
             case "centos-9":
                 raise CannotRunQemuTest("centos-9 will not start an install and waits on source selection")
+            case name if name.startswith("rhel-9"):
+                raise CannotRunQemuTest("rhel-9 will not start an install and waits on source selection")
 
 
 def qemu_cmd_scp_and_run(vm, cmd, privkey_path):
@@ -206,6 +209,14 @@ def boot_qemu_iso_no_unattended_support(arch, installer_iso_path, config_file):
     # manually create one and modify the ISO
     rootpw = "".join(
         random.choices(string.ascii_uppercase + string.digits, k=18))
+    rhsm = ""
+    # this is too crude, use "distro" from info file
+    if "rhel" in installer_iso_path:
+        org_id = os.getenv("SUBSCRIPTION_ORG")
+        activation_key = os.getenv("SUBSCRIPTION_ACTIVATION_KEY")
+        if not org_id or not activation_key:
+            raise CannotRunQemuTest("rhel unattended tests need SUBSCRIPTION_ORG and SUBSCRIPTION_ACTIVATION_KEY env")
+        rhsm = f'rhsm --organization="{org_id}" --activation-key="{activation_key}"'
     with contextlib.ExitStack() as cm:
         tmpdir = cm.enter_context(TemporaryDirectory(dir="/var/tmp"))
         (privkey_path, pubkey_path) = cm.enter_context(create_ssh_key())
@@ -221,6 +232,8 @@ def boot_qemu_iso_no_unattended_support(arch, installer_iso_path, config_file):
         user --name=osbuild --group=wheel --shell=/bin/bash
         sshkey --username=osbuild "{pubkey}"
         rootpw {rootpw}
+        {rhsm}
+        eula --agree
         # better debug for the sshd failure
         bootloader --append="console=ttyS0 systemd.journald.forward_to_console=1"
         %post
