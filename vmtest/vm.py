@@ -26,8 +26,10 @@ _non_interactive_ssh = [
     "-o", "IdentitiesOnly=yes",
 ]
 
-# constants when waiting for ssh ready
-ssh_ready_n_retries = 3
+# constants when waiting for ssh ready, this needs to be big as
+# some image types (like oscap) reboot in between and relabel
+# which can take some time
+ssh_ready_n_retries = 30
 ssh_ready_wait_sec = 10
 
 
@@ -67,12 +69,12 @@ class VM(abc.ABC):
     def _ensure_ssh(self, user, password="", keyfile=None):
         if not self.running():
             self.start()
-        for _ in range(ssh_ready_n_retries):
+        for i in range(ssh_ready_n_retries):
             try:
                 self._run("true", user=user, password=password, keyfile=keyfile)
                 return
             except Exception as e:
-                print(f"ssh not ready: {e}", file=sys.stderr)
+                print(f"ssh not ready {i+1}/{ssh_ready_n_retries}: {e}", file=sys.stderr)
             time.sleep(ssh_ready_wait_sec)
         raise RuntimeError(f"no ssh after {ssh_ready_n_retries} retries of {ssh_ready_wait_sec}s")
 
