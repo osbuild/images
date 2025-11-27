@@ -22,6 +22,8 @@ _non_interactive_ssh = [
     "-o", "UserKnownHostsFile=/dev/null",
     "-o", "StrictHostKeyChecking=no",
     "-o", "LogLevel=ERROR",
+    # ensure ssh-agent is skipped, we only ever provide keys via "-i"
+    "-o", "IdentitiesOnly=yes",
 ]
 
 # constants when waiting for ssh ready
