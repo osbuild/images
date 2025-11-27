@@ -73,6 +73,9 @@ def test_ssh_calls_retries(mocked_sleep, tmp_path, monkeypatch, capsys):
     vm = MockVM()
     with pytest.raises(RuntimeError) as e:
         res = vm.run(["cmd1", "arg1", "arg2"], user="user1", keyfile="keyfile1")
-    assert str(e.value) == "no ssh after 3 retries of 10s"
-    assert mocked_sleep.call_args_list == [ call(10), call(10), call(10) ]
-    assert capsys.readouterr().err == 3 * "ssh not ready: Command 'true' returned non-zero exit status 21.\n"
+    assert str(e.value) == "no ssh after 30 retries of 10s"
+    assert mocked_sleep.call_args_list == 30 * [ call(10) ]
+    assert capsys.readouterr().err == "\n".join([
+        f"ssh not ready {i+1}/30: Command 'true' returned non-zero exit status 21."
+        for i in range(30)
+    ]) + "\n"
