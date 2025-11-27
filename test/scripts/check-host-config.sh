@@ -37,10 +37,17 @@ get_oscap_score() {
     config_file="$1"
     baseline_score=0.8
     echo "🔒 Running oscap scanner"
-    # NOTE: sudo works here without password because we test this only on ami
+    # NOTE: sudo works here without password because we test this only on images
     # initialised with cloud-init, which sets sudo NOPASSWD for the user
     profile=$(jq -r .blueprint.customizations.openscap.profile_id "${config_file}")
     datastream=$(jq -r .blueprint.customizations.openscap.datastream "${config_file}")
+    if [ "$datastream" = "null" ]; then
+	# we could do a datastream=$(find /usr/share/xml/scap/ssg/content -name "*.xml") here
+	# but for that we would have to build a lookup to match e.g. /etc/os-release centos-9
+	# to cs9 and similar for rhel, fedora etc
+	echo "SKIPPING oscap score as there is no datastream defined"
+	return
+    fi
     sudo oscap xccdf eval \
         --results results.xml \
         --profile "${profile}_osbuild_tailoring" \
