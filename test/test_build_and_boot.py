@@ -1,8 +1,12 @@
+import os
 import platform
 import subprocess
 
 import pytest
 import scripts.imgtestlib as testlib
+
+if os.getuid() != 0:
+    pytest.skip(reason="need root to build the images", allow_module_level=True)
 
 def _test_cases():
     # XXX: make testcase a data class
