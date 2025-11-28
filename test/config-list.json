@@ -21,8 +21,7 @@
       "distros": [
         "rhel-9.4",
         "rhel-8.10",
-        "centos*",
-        "fedora*"
+        "centos*"
       ],
       "image-types": [
         "qcow2",
@@ -329,8 +328,7 @@
         "rhel-9.2",
         "rhel-8.8",
         "rhel-8.10",
-        "centos-9",
-        "fedora*"
+        "centos-9"
       ],
       "image-types": [
         "qcow2",
