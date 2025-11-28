@@ -22,7 +22,7 @@ func isOSTree(imgType distro.ImageType) bool {
 }
 
 func isUbi(imgType distro.ImageType) bool {
-	return imgType.Name() == "wsl" || imgType.Name() == "server-wsl"
+	return imgType.Name() == "wsl" || imgType.Name() == "generic-wsl"
 }
 
 var knownKernels = []string{"kernel", "kernel-debug", "kernel-rt", "kernel-uki-virt"}
@@ -94,7 +94,8 @@ func TestDistro_KernelOption(t *testing.T, d distro.Distro) {
 		"tar": true,
 
 		// containers don't have kernels
-		"container": true,
+		"container":         true,
+		"generic-container": true,
 
 		// image installer on Fedora doesn't support kernel customizations
 		// on RHEL we support kernel name
