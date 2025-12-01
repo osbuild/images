@@ -346,6 +346,8 @@ func (t *BootcImageType) manifestWithoutValidation(bp *blueprint.Blueprint, opti
 		return t.manifestForLegacyISO(bp, options, repos, rng)
 	case "bootc_iso":
 		return t.manifestForISO(bp, options, repos, rng)
+	case "bootc_generic_iso":
+		return t.manifestForGenericISO(bp, options, repos, rng)
 	case "bootc_disk":
 		return t.manifestForDisk(bp, options, repos, rng)
 	case "pxe_tar":
@@ -557,6 +559,42 @@ func (t *BootcImageType) manifestForISO(bp *blueprint.Blueprint, options distro.
 	mf := manifest.New()
 
 	foundDistro, foundRunner, err := GetDistroAndRunner(sourceInfo.OSRelease)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to infer distro and runner: %w", err)
+	}
+	mf.Distro = foundDistro
+
+	_, err = img.InstantiateManifestFromContainer(&mf, []container.SourceSpec{containerSource}, foundRunner, rng)
+	return &mf, nil, err
+}
+
+func (t *BootcImageType) manifestForGenericISO(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, rng *rand.Rand) (*manifest.Manifest, []string, error) {
+	if t.arch.distro.imgref == "" {
+		return nil, nil, fmt.Errorf("internal error: no base image defined")
+	}
+
+	containerSource := container.SourceSpec{
+		Source: t.arch.distro.imgref,
+		Name:   t.arch.distro.imgref,
+		Local:  true,
+	}
+
+	platformi := PlatformFor(t.arch.Name(), t.arch.distro.sourceInfo.UEFIVendor)
+	platformi.ImageFormat = platform.FORMAT_ISO
+
+	img := image.NewContainerBasedIso(platformi, t.Filename(), containerSource)
+	img.RootfsCompression = "zstd"
+	img.RootfsType = manifest.SquashfsRootfs
+	img.KernelPath = fmt.Sprintf("lib/modules/%s/vmlinuz", t.arch.distro.sourceInfo.KernelInfo.Version)
+	img.InitramfsPath = fmt.Sprintf("lib/modules/%s/initramfs.img", t.arch.distro.sourceInfo.KernelInfo.Version)
+	img.Product = t.arch.distro.sourceInfo.OSRelease.Name
+	img.Version = t.arch.distro.sourceInfo.OSRelease.VersionID
+	img.Release = t.arch.distro.sourceInfo.OSRelease.VersionID
+	img.ISOLabel = LabelForISO(&t.arch.distro.sourceInfo.OSRelease, t.arch.Name())
+
+	mf := manifest.New()
+
+	foundDistro, foundRunner, err := GetDistroAndRunner(t.arch.distro.sourceInfo.OSRelease)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to infer distro and runner: %w", err)
 	}
