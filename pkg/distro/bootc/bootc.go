@@ -303,7 +303,7 @@ func (t *BootcImageType) SupportedBlueprintOptions() []string {
 	// The blueprint contains a few fields that are essentially metadata and
 	// not configuration / customizations. These should always be implicitly
 	// supported by all image types.
-	return append(t.ImageTypeYAML.SupportedBlueprintOptions, "name", "version", "description")
+	return append(t.ImageTypeYAML.Blueprint.SupportedOptions, "name", "version", "description")
 }
 
 func (t *BootcImageType) RequiredBlueprintOptions() []string {
