@@ -289,60 +289,46 @@ def _boot_qemu_iso(arch, installer_iso_path, config_file, privkey_path):
                 qemu_cmd_scp_and_run(vm, cmd, privkey_path)
 
 
-def boot_qemu_pxe(arch, pxe_tar_path, config):
+def boot_qemu_pxe(arch, pxe_tar_path, config_file):
+    cmd = [BASE_TEST_SCRIPT, config_file]
     with contextlib.ExitStack() as cm:
         tmpdir = cm.enter_context(TemporaryDirectory(dir="/var/tmp"))
-        # setup tftp boot dir
-        tftp_dir = pathlib.Path(tmpdir) / "tftp"
+        root_dir = pathlib.Path(tmpdir)
         subprocess.check_call(
-            ["cp", "-a", "/usr/share/syslinux/", os.fspath(tftp_dir)])
-        subprocess.check_call(
-            ["tar", "-C", tftp_dir, "-x","-f", pxe_tar_path])
+            ["tar", "-C", root_dir, "-x","-f", pxe_tar_path])
         http_port = get_free_port()
-        # we need to serve the dir
-        cmd = subprocess.Popen([
-            "python3", "-m", "http.server", f"{http_port}"], cwd=tftp_dir)
-        cm.callback(cmd.kill)
-        # XXX: add waitport
-        # write pxelinux config
-        pxelinux_cfg_path = tftp_dir / "pxelinux.cfg/default"
-        pxelinux_cfg_path.parent.mkdir(exist_ok=True)
-        # XXX: use systemd.unit to force reboot
-        pxelinux_cfg_path.write_text(textwrap.dedent(f"""\
-        default menu.c32
-        prompt 0
-        timeout 10
+        with open(os.devnull, 'w') as null:
+            cmd = subprocess.Popen(
+                ["python3", "-m", "http.server", f"{http_port}"],
+                cwd=root_dir,
+                # prevent blocking output
+                stdout=null,
+                stderr=null)
+            cm.callback(cmd.kill)
 
-        label boot
-          kernel /vmlinuz
-        append initrd=/initrd.img console=ttyS0 rd.live.image root=live:http://10.0.2.2:{http_port}/rootfs.img systemd.debug-shell=ttyS0 systemd.mask=serial-getty@ttyS0.service systemd.unit=reboot.target
-        """))
-
-        # boot pxe and wait for ssh to come up as a simplistic
-        # boot test
+        # test disk is unused for live OS
         test_disk_path = pathlib.Path(tmpdir) / "disk.img"
         with open(test_disk_path, "w", encoding="utf8") as fp:
-            fp.truncate(10_000_000_000)
-        with QEMU(test_disk_path) as vm:
-            # XXX: port to vmtest/vm.py to support tftp
-            qemu_cmdline_orig = vm._gen_qemu_cmdline
-            def patched_qemu_cmdline(*args):
-                res = qemu_cmdline_orig(*args)
-                res.extend(["-nic", f"user,tftp={tftp_dir},bootfile=/pxelinux.0"])
-                return res
-            vm._gen_qemu_cmdline = patched_qemu_cmdline
-            # ----------
-            # XXX: also test with OVMF, how to configure pxe for that?
-            vm.start(wait_event="qmp:RESET", snapshot=False, use_ovmf=False)
-            # There is really very little in the rootfs.img (i.e. no ssh, cloud-init
-            # or other things that open ports or dnf) and we can only control it via the
-            # kernel commandline. So via the "systemd.unit=reboot.target" kernel commandline
-            # above we boot and then force a reboot right away as our test. This is not great
-            # but the best we can do right now. Other options:
-            # 1. have a blueprint with sshd-server so that we can check for ssh port
-            # 2. modify vm.py to be able to talk directly to the serial console
-            #    and then run commands directly via that
-            vm.force_stop()
+            fp.truncate(0)
+
+        extra_args = [
+            "-kernel", root_dir / "vmlinuz",
+            "-initrd", root_dir / "initrd.img",
+            "-append",
+            (
+                f"console=ttyS0 rd.live.image root=live:http://10.0.2.2:{http_port}/rootfs.img "
+                f"systemd.debug-shell=ttyS0 systemd.mask=serial-getty@ttyS0.service"
+            )
+        ]
+
+        privkey_path = None
+        if os.environ.get("CI_PRIV_SSH_KEY"):
+            (privkey_path, _) = cm.enter_context(create_ssh_key())
+        with QEMU(test_disk_path, extra_args=extra_args) as vm:
+            vm.start(snapshot=False, use_ovmf=False)
+            vm.wait_ssh_ready()
+            if privkey_path:
+                qemu_cmd_scp_and_run(vm, cmd, privkey_path)
 
 
 def cmd_boot_aws(arch, image_name, privkey, pubkey, image_path, script_cmd):
@@ -520,6 +506,8 @@ def main():
             except CannotRunQemuTest as e:
                 print(f"WARNING: skipping iso {image_path}: {e.skip_reason}")
                 return
+        case "pxe-tar-xz":
+            boot_qemu_pxe(arch, image_path, build_config_path)
         case "ami" | "ec2" | "ec2-ha" | "ec2-sap" | "edge-ami":
             boot_ami(distro, arch, image_type, image_path, build_config_path)
         case "vhd":
