@@ -102,8 +102,6 @@ type Package struct {
 	Files []string
 
 	// Repodata
-	// RPM package baseurl from repodata
-	BaseURL string
 	// RPM package relative path/location from repodata
 	Location string
 	// RPM package remote location where the package can be download from
