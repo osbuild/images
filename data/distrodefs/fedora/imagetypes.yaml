@@ -834,6 +834,8 @@ image_config:
     locale: "C.UTF-8"
     machine_id_uninitialized: true
     timezone: "UTC"
+    default_kernel: "kernel-core"
+    update_default_kernel: true
 
 image_types:
   "server-vagrant-libvirt": &server_vagrant_libvirt
