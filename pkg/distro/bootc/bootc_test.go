@@ -125,6 +125,16 @@ var diskContainers = map[string][]container.Spec{
 	},
 }
 
+// isoContainers can be passed to Serialize() to get a minimal bootc-generic-iso image
+var isoContainers = map[string][]container.Spec{
+	"build": {
+		containerSpec,
+	},
+	"os-tree": {
+		containerSpec,
+	},
+}
+
 // simplified representation of a manifest
 type testManifest struct {
 	Pipelines []pipeline `json:"pipelines"`
@@ -363,4 +373,26 @@ func TestManifestGenerationBlueprintValidation(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestBootcIsoManifestSerialization(t *testing.T) {
+	bd := NewTestBootcDistro()
+	imgType, err := bd.arches["x86_64"].GetImageType("bootc-generic-iso")
+	assert.NoError(t, err)
+
+	bp := &blueprint.Blueprint{}
+	imgOptions := distro.ImageOptions{}
+
+	mf, _, err := imgType.Manifest(bp, imgOptions, nil, common.ToPtr(int64(0)))
+	assert.NoError(t, err)
+
+	manifestJson, err := mf.Serialize(nil, isoContainers, nil, nil)
+	assert.NoError(t, err)
+
+	expStages := map[string][]string{
+		"build":   {"org.osbuild.container-deploy"},
+		"os-tree": {"org.osbuild.container-deploy"},
+		"bootiso": {"org.osbuild.xorrisofs"},
+	}
+	assert.NoError(t, checkStages(manifestJson, expStages, nil))
 }
