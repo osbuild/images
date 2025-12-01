@@ -226,6 +226,77 @@ func TestSolverSearchMetadata(t *testing.T) {
 	}
 }
 
+func TestValidatePackageSetRepoChain(t *testing.T) {
+	baseOS := rpmmd.RepoConfig{
+		Name:     "baseos",
+		BaseURLs: []string{"https://example.org/baseos"},
+	}
+	appstream := rpmmd.RepoConfig{
+		Name:     "appstream",
+		BaseURLs: []string{"https://example.org/appstream"},
+	}
+	userRepo := rpmmd.RepoConfig{
+		Name:     "user-repo",
+		BaseURLs: []string{"https://example.org/user-repo"},
+	}
+	userRepo2 := rpmmd.RepoConfig{
+		Name:     "user-repo-2",
+		BaseURLs: []string{"https://example.org/user-repo-2"},
+	}
+
+	testCases := []struct {
+		name    string
+		pkgSets []rpmmd.PackageSet
+		errMsg  string
+	}{
+		{
+			name: "happy path - single transaction",
+			pkgSets: []rpmmd.PackageSet{
+				{Include: []string{"pkg1"}, Repositories: []rpmmd.RepoConfig{baseOS}},
+			},
+		},
+		{
+			name: "happy path",
+			pkgSets: []rpmmd.PackageSet{
+				{Include: []string{"pkg1"}, Repositories: []rpmmd.RepoConfig{baseOS}},
+				{Include: []string{"pkg2"}, Repositories: []rpmmd.RepoConfig{baseOS, appstream}},
+				{Include: []string{"pkg3"}, Repositories: []rpmmd.RepoConfig{baseOS, appstream, userRepo}},
+			},
+		},
+		{
+			name: "Error: 3 transactions + 3rd one not using repo used by 2nd",
+			pkgSets: []rpmmd.PackageSet{
+				{Include: []string{"pkg1"}, Repositories: []rpmmd.RepoConfig{baseOS}},
+				{Include: []string{"pkg2"}, Repositories: []rpmmd.RepoConfig{baseOS, appstream, userRepo}},
+				{Include: []string{"pkg3"}, Repositories: []rpmmd.RepoConfig{baseOS, appstream, userRepo2}},
+			},
+			errMsg: "chained packageSet 2 does not use all of the repos used by its predecessor",
+		},
+		{
+			name: "Error: 3 transactions but last one doesn't specify user repos in 2nd",
+			pkgSets: []rpmmd.PackageSet{
+				{Include: []string{"pkg1"}, Repositories: []rpmmd.RepoConfig{baseOS}},
+				{Include: []string{"pkg2"}, Repositories: []rpmmd.RepoConfig{baseOS, appstream, userRepo}},
+				{Include: []string{"pkg3"}, Repositories: []rpmmd.RepoConfig{baseOS, appstream}},
+			},
+			errMsg: "chained packageSet 2 does not use all of the repos used by its predecessor",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validatePackageSetRepoChain(tc.pkgSets)
+			if tc.errMsg != "" {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tc.errMsg)
+				return
+			}
+
+			assert.NoError(t, err)
+		})
+	}
+}
+
 func TestMakeDepsolveRequest(t *testing.T) {
 	baseOS := rpmmd.RepoConfig{
 		Name:     "baseos",
@@ -261,7 +332,6 @@ func TestMakeDepsolveRequest(t *testing.T) {
 		args        []transactionArgs
 		wantRepos   []repoConfig
 		withSbom    bool
-		err         bool
 	}{
 		// single transaction
 		{
@@ -504,46 +574,6 @@ func TestMakeDepsolveRequest(t *testing.T) {
 				},
 			},
 		},
-		// Error: 3 transactions + 3rd one not using repo used by 2nd one
-		{
-			packageSets: []rpmmd.PackageSet{
-				{
-					Include:         []string{"pkg1"},
-					Exclude:         []string{"pkg2"},
-					Repositories:    []rpmmd.RepoConfig{baseOS, appstream},
-					InstallWeakDeps: true,
-				},
-				{
-					Include:      []string{"pkg3"},
-					Repositories: []rpmmd.RepoConfig{baseOS, appstream, userRepo},
-				},
-				{
-					Include:      []string{"pkg4"},
-					Repositories: []rpmmd.RepoConfig{baseOS, appstream, userRepo2},
-				},
-			},
-			err: true,
-		},
-		// Error: 3 transactions but last one doesn't specify user repos in 2nd
-		{
-			packageSets: []rpmmd.PackageSet{
-				{
-					Include:         []string{"pkg1"},
-					Exclude:         []string{"pkg2"},
-					Repositories:    []rpmmd.RepoConfig{baseOS, appstream},
-					InstallWeakDeps: true,
-				},
-				{
-					Include:      []string{"pkg3"},
-					Repositories: []rpmmd.RepoConfig{baseOS, appstream, userRepo, userRepo2},
-				},
-				{
-					Include:      []string{"pkg4"},
-					Repositories: []rpmmd.RepoConfig{baseOS, appstream},
-				},
-			},
-			err: true,
-		},
 		// module hotfixes flag passed
 		{
 			packageSets: []rpmmd.PackageSet{
@@ -669,21 +699,16 @@ func TestMakeDepsolveRequest(t *testing.T) {
 				sbomType = sbom.StandardTypeSpdx
 			}
 			req, _, err := solver.makeDepsolveRequest(tt.packageSets, sbomType)
-			if tt.err {
-				assert.NotNilf(t, err, "expected an error, but got 'nil' instead")
-				assert.Nilf(t, req, "got non-nill request, but expected an error")
-			} else {
-				assert.Nilf(t, err, "expected 'nil', but got error instead")
-				assert.NotNilf(t, req, "expected non-nill request, but got 'nil' instead")
+			assert.NoError(t, err)
+			assert.NotNilf(t, req, "expected non-nill request, but got 'nil' instead")
 
-				assert.Equal(t, tt.args, req.Arguments.Transactions)
-				assert.Equal(t, tt.wantRepos, req.Arguments.Repos)
-				if tt.withSbom {
-					assert.NotNil(t, req.Arguments.Sbom)
-					assert.Equal(t, req.Arguments.Sbom.Type, sbom.StandardTypeSpdx.String())
-				} else {
-					assert.Nil(t, req.Arguments.Sbom)
-				}
+			assert.Equal(t, tt.args, req.Arguments.Transactions)
+			assert.Equal(t, tt.wantRepos, req.Arguments.Repos)
+			if tt.withSbom {
+				assert.NotNil(t, req.Arguments.Sbom)
+				assert.Equal(t, req.Arguments.Sbom.Type, sbom.StandardTypeSpdx.String())
+			} else {
+				assert.Nil(t, req.Arguments.Sbom)
 			}
 		})
 	}
