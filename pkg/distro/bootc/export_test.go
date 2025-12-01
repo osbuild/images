@@ -27,6 +27,10 @@ func NewTestBootcDistroWithDefaultFs(defaultFs string) *BootcDistro {
 		OSRelease: osinfo.OSRelease{
 			ID:        "bootc-test",
 			VersionID: "1",
+			Name:      "Bootc Test OS",
+		},
+		KernelInfo: &osinfo.KernelInfo{
+			Version: "6.17.7-300.fc43.x86_64",
 		},
 	}
 	return common.Must(newBootcDistroAfterIntrospect("x86_64", info, "quay.io/example/example:ref", defaultFs, 0))

@@ -163,6 +163,15 @@ image_types:
     blueprint:
       supported_options: *supported_options_iso
 
+  bootc-iso:
+    mime_type: "application/x-iso9660-image"
+    exports: ["bootiso"]
+    filename: "install.iso"
+    boot_iso: true
+    image_func: "bootc_generic_iso"
+    blueprint:
+      supported_options: *supported_options_iso
+
   # this image type is special (in many ways) and all is a bit ugly:
   # - we want to get rid of it (here for compat with bib)
   # - its "indirect" in the sense that it pulls the RPMs from a
