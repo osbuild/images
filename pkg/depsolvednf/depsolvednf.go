@@ -903,17 +903,6 @@ func parseError(data []byte, repos []repoConfig) Error {
 
 	return e
 }
-func ParseError(data []byte) Error {
-	var e Error
-	if err := json.Unmarshal(data, &e); err != nil {
-		// dumping the error into the Reason can get noisy, but it's good for troubleshooting
-		return Error{
-			Kind:   "InternalError",
-			Reason: fmt.Sprintf("Failed to unmarshal osbuild-depsolve-dnf error output %q: %s", string(data), err.Error()),
-		}
-	}
-	return e
-}
 
 func run(dnfJsonCmd []string, req *Request, stderr io.Writer) ([]byte, error) {
 	if len(dnfJsonCmd) == 0 {
