@@ -887,7 +887,8 @@ image_types:
         image_format: "vagrant_libvirt"
       - <<: *aarch64_platform
         image_format: "vagrant_libvirt"
-    supported_blueprint_options: *supported_options_disk
+    blueprint:
+      supported_options: *supported_options_disk
 
   "server-vagrant-virtualbox": &server_vagrant_virtualbox
     <<: *server_vagrant_libvirt
@@ -938,7 +939,8 @@ image_types:
         image_format: "qcow2"
       - <<: *s390x_zipl_platform
         image_format: "qcow2"
-    supported_blueprint_options: *supported_options_disk
+    blueprint:
+      supported_options: *supported_options_disk
 
   "server-ami":
     <<: *server_qcow2
@@ -1046,7 +1048,8 @@ image_types:
             - "zram-generator-defaults"
             - "grubby-deprecated"
             - "extlinux-bootloader"
-    supported_blueprint_options: *supported_options_disk
+    blueprint:
+      supported_options: *supported_options_disk
 
   "server-ova":
     <<: *server_vmdk
@@ -1206,7 +1209,8 @@ image_types:
               append:
                 include:
                   - "filesystem"
-    supported_blueprint_options: *supported_options_ostree_commit
+    blueprint:
+      supported_options: *supported_options_ostree_commit
 
   "iot-container":
     <<: *iot_commit
@@ -1299,7 +1303,8 @@ image_types:
           - ["/usr/lib/ostree-boot/efi/start_x.elf", "/boot/efi/"]
     partition_table:
       <<: *iot_base_partition_tables
-    supported_blueprint_options: *supported_options_ostree_disk
+    blueprint:
+      supported_options: *supported_options_ostree_disk
 
   "iot-qcow2":
     <<: *rpm_ostree_imgtype_common
@@ -1327,7 +1332,8 @@ image_types:
       - <<: *aarch64_platform
         image_format: "qcow2"
         qcow2_compat: "1.1"
-    supported_blueprint_options: *supported_options_ostree_disk
+    blueprint:
+      supported_options: *supported_options_ostree_disk
 
   "iot-bootable-container":
     <<: *rpm_ostree_imgtype_common
@@ -1474,7 +1480,8 @@ image_types:
                 exclude:
                   - "perl"
                   - "perl-interpreter"
-    supported_blueprint_options: *supported_options_ostree_commit
+    blueprint:
+      supported_options: *supported_options_ostree_commit
 
   "minimal-raw-xz": &minimal_raw_xz
     name_aliases: ["minimal-raw"]
@@ -1567,7 +1574,8 @@ image_types:
               append:
                 exclude:
                   - "firewalld"
-    supported_blueprint_options: *supported_options_disk
+    blueprint:
+      supported_options: *supported_options_disk
 
   "minimal-raw-zst":
     <<: *minimal_raw_xz
@@ -1614,15 +1622,16 @@ image_types:
           override:
             - *x86_64_installer_platform_compat
             - *aarch64_installer_platform
-    supported_blueprint_options:
-      - "distro"
-      - "customizations.installer"
-      - "customizations.user"
-      - "customizations.sshkey"
-      - "customizations.group"
-      - "customizations.fips"
-      - "customizations.timezone"
-      - "customizations.locale"
+    blueprint:
+      supported_options:
+        - "distro"
+        - "customizations.installer"
+        - "customizations.user"
+        - "customizations.sshkey"
+        - "customizations.group"
+        - "customizations.fips"
+        - "customizations.timezone"
+        - "customizations.locale"
 
   "workstation-live-installer":
     name_aliases: ["live-installer"]
@@ -1691,9 +1700,10 @@ image_types:
           override:
             - *x86_64_installer_platform_compat
             - *aarch64_installer_platform
-    supported_blueprint_options:
-      - "distro"
-      - "customizations.installer"
+    blueprint:
+      supported_options:
+        - "distro"
+        - "customizations.installer"
 
   "minimal-installer":
     name_aliases: ["image-installer", "fedora-image-installer"]
@@ -1744,32 +1754,33 @@ image_types:
         - *minimal_raw_pkgset
       installer:
         - *anaconda_pkgset
-    supported_blueprint_options:
-      - "distro"
-      - "packages"
-      - "modules"
-      - "groups"
-      - "enabled_modules"
-      - "containers"
-      - "minimal"
-      - "customizations.installer"
-      - "customizations.cacerts"
-      - "customizations.directories"
-      - "customizations.files"
-      - "customizations.firewall"
-      - "customizations.user"
-      - "customizations.sshkey"
-      - "customizations.group"
-      - "customizations.fips"
-      - "customizations.timezone"
-      - "customizations.hostname"
-      - "customizations.kernel.name"
-      - "customizations.locale"
-      - "customizations.openscap"
-      - "customizations.repositories"
-      - "customizations.rpm"
-      - "customizations.services"
-      - "customizations.kernel.append"
+    blueprint:
+      supported_options:
+        - "distro"
+        - "packages"
+        - "modules"
+        - "groups"
+        - "enabled_modules"
+        - "containers"
+        - "minimal"
+        - "customizations.installer"
+        - "customizations.cacerts"
+        - "customizations.directories"
+        - "customizations.files"
+        - "customizations.firewall"
+        - "customizations.user"
+        - "customizations.sshkey"
+        - "customizations.group"
+        - "customizations.fips"
+        - "customizations.timezone"
+        - "customizations.hostname"
+        - "customizations.kernel.name"
+        - "customizations.locale"
+        - "customizations.openscap"
+        - "customizations.repositories"
+        - "customizations.rpm"
+        - "customizations.services"
+        - "customizations.kernel.append"
 
   container: &container
     filename: "container.tar"
@@ -1835,7 +1846,8 @@ image_types:
             - "trousers"
             - "whois-nls"
             - "xkeyboard-config"
-    supported_blueprint_options: *supported_options_container
+    blueprint:
+      supported_options: *supported_options_container
 
   wsl:
     # this is the eventual name, and `wsl` the alias but we've been
@@ -1924,7 +1936,8 @@ image_types:
             - "trousers"
             - "whois-nls"
             - "xkeyboard-config"
-    supported_blueprint_options: *supported_options_container
+    blueprint:
+      supported_options: *supported_options_container
 
   "iot-simplified-installer":
     <<: *rpm_ostree_imgtype_common
@@ -2045,18 +2058,19 @@ image_types:
             - "iwlwifi-mvm-firmware"
             - "realtek-firmware"
             - "uboot-images-armv8"
-    supported_blueprint_options:
-      - "distro"
-      - "customizations.installation_device"
-      - "customizations.fdo"
-      - "customizations.ignition"
-      - "customizations.kernel"
-      - "customizations.user"
-      - "customizations.sshkey"
-      - "customizations.group"
-      - "customizations.fips"
-    required_blueprint_options:
-      - "customizations.installation_device"
+    blueprint:
+      supported_options:
+        - "distro"
+        - "customizations.installation_device"
+        - "customizations.fdo"
+        - "customizations.ignition"
+        - "customizations.kernel"
+        - "customizations.user"
+        - "customizations.sshkey"
+        - "customizations.group"
+        - "customizations.fips"
+      required_options:
+        - "customizations.installation_device"
 
   # Based on lorax runtime-install.tmpl
   "everything-network-installer":
@@ -2175,14 +2189,15 @@ image_types:
           override:
             - *x86_64_installer_platform_compat
             - *aarch64_installer_platform
-    supported_blueprint_options:
-      - "distro"
-      - "customizations.fips"
-      - "customizations.group"
-      - "customizations.installer"
-      - "customizations.kernel.append"
-      - "customizations.locale"
-      - "customizations.user"
+    blueprint:
+      supported_options:
+        - "distro"
+        - "customizations.fips"
+        - "customizations.group"
+        - "customizations.installer"
+        - "customizations.kernel.append"
+        - "customizations.locale"
+        - "customizations.user"
 
   "pxe-tar-xz":
     filename: "pxe.tar.xz"
@@ -2202,7 +2217,8 @@ image_types:
     platforms:
       - *x86_64_bios_platform
       - *aarch64_platform
-    supported_blueprint_options: *supported_options_pxe
+    blueprint:
+      supported_options: *supported_options_pxe
 
   "bootc-rpm-installer":
     # Note that this image type is partial and only used by
