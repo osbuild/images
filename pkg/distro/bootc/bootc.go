@@ -334,7 +334,7 @@ func (t *BootcImageType) Manifest(bp *blueprint.Blueprint, options distro.ImageO
 }
 
 func (t *BootcImageType) manifestWithoutValidation(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, seedp *int64) (*manifest.Manifest, []string, error) {
-	seed, err := cmdutil.SeedArgFor(nil, t.Name(), t.arch.Name(), t.arch.distro.Name())
+	seed, err := cmdutil.SeedArgFor(nil, t.arch.Name(), t.arch.distro.Name())
 	if err != nil {
 		return nil, nil, err
 	}
