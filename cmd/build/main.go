@@ -97,7 +97,7 @@ func run() error {
 			return fmt.Errorf("failed to load repositories from %q: %w", repositories, err)
 		}
 	}
-	seedArg, err := cmdutil.SeedArgFor(config, "", distribution.Name(), archName)
+	seedArg, err := cmdutil.SeedArgFor(config, distribution.Name(), archName)
 	if err != nil {
 		return err
 	}
