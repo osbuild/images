@@ -218,6 +218,20 @@ func (s *Solver) SetProxy(proxy string) error {
 	return nil
 }
 
+// solverCfg creates a solverConfig from the Solver's current state.
+// nolint:unused
+func (s *Solver) solverCfg() *solverConfig {
+	return &solverConfig{
+		modulePlatformID: s.modulePlatformID,
+		arch:             s.arch,
+		releaseVer:       s.releaseVer,
+		cacheDir:         s.GetCacheDir(),
+		rootDir:          s.rootDir,
+		proxy:            s.proxy,
+		subscriptions:    s.subscriptions,
+	}
+}
+
 // collectRepos extracts unique repos from package sets maintaining order
 func collectRepos(pkgSets []rpmmd.PackageSet) []rpmmd.RepoConfig {
 	seen := make(map[string]bool)
