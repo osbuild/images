@@ -557,7 +557,7 @@ func (s *Solver) makeDepsolveRequest(pkgSets []rpmmd.PackageSet, sbomType sbom.S
 		Repos:            dnfRepos,
 		RootDir:          s.rootDir,
 		Transactions:     transactions,
-		OptionalMetadata: s.optionalMetadataForDistro(),
+		OptionalMetadata: optionalMetadataForDistro(s.modulePlatformID),
 	}
 
 	req := Request{
@@ -577,14 +577,16 @@ func (s *Solver) makeDepsolveRequest(pkgSets []rpmmd.PackageSet, sbomType sbom.S
 	return &req, nil
 }
 
-func (s *Solver) optionalMetadataForDistro() []string {
+// optionalMetadataForDistro returns optional repository metadata types
+// that should be downloaded for the given distro.
+func optionalMetadataForDistro(modulePlatformID string) []string {
 	// filelist repo metadata is required when using newer versions of libdnf
 	// with old repositories or packages that specify dependencies on files.
 	// EL10+ and Fedora 40+ packaging guidelines prohibit depending on
 	// filepaths so filelist downloads are disabled by default and are not
 	// required when depsolving for those distros. Explicitly enable the option
 	// for older distro versions in case we are using a newer libdnf.
-	switch s.modulePlatformID {
+	switch modulePlatformID {
 	case "platform:f39", "platform:el7", "platform:el8", "platform:el9":
 		return []string{"filelists"}
 	}
