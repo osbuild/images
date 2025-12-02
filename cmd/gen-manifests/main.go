@@ -424,6 +424,10 @@ func main() {
 	flag.Var(&imgTypes, "types", "comma-separated list of image types (globs supported)")
 	flag.Var(&bootcRefs, "bootc-refs", "comma-separated list of bootc-refs")
 
+	// print-only
+	var printOnly bool
+	flag.BoolVar(&printOnly, "print-only", false, "print what manifests would be generate")
+
 	flag.Parse()
 
 	testedRepoRegistry, err := testrepos.New()
@@ -443,7 +447,7 @@ func main() {
 	var configs *BuildConfigs
 	opts := &buildconfig.Options{AllowUnknownFields: buildconfigAllowUnknown}
 	if configPath != "" {
-		fmt.Println("'-config' was provided, thus ignoring '-config-list' option")
+		fmt.Fprintln(os.Stderr, "'-config' was provided, thus ignoring '-config-list' option")
 		configs = loadImgConfig(configPath, opts)
 	} else {
 		configs = loadConfigList(configMapPath, opts)
@@ -460,7 +464,7 @@ func main() {
 	tmpdirRoot := filepath.Join(os.TempDir(), "gen-manifests-tmpdir")
 	defer os.RemoveAll(tmpdirRoot)
 
-	fmt.Println("Collecting jobs")
+	fmt.Fprintln(os.Stderr, "Collecting jobs")
 
 	distros, invalidDistros := distros.ResolveArgValues(testedRepoRegistry.ListDistros())
 	if len(invalidDistros) > 0 {
@@ -503,7 +507,7 @@ func main() {
 				if len(repos) == 0 {
 					fmt.Printf("no repositories defined for %s/%s/%s\n", distroName, archName, imgTypeName)
 					if skipNorepos {
-						fmt.Println("Skipping")
+						fmt.Fprintln(os.Stderr, "Skipping")
 						continue
 					}
 					panic("no repositories found, pass --skip-norepos to skip")
@@ -523,8 +527,12 @@ func main() {
 						continue
 					}
 
-					job := makeManifestJob(itConfig, imgType, distribution, repos, archName, cacheRoot, outputDir, contentResolve, metadata, tmpdirRoot)
-					jobs = append(jobs, job)
+					if printOnly {
+						fmt.Printf("%s,%s,%s,%s\n", distribution.Name(), archName, imgType.Name(), itConfig.Name)
+					} else {
+						job := makeManifestJob(itConfig, imgType, distribution, repos, archName, cacheRoot, outputDir, contentResolve, metadata, tmpdirRoot)
+						jobs = append(jobs, job)
+					}
 				}
 			}
 		}
@@ -577,9 +585,13 @@ func main() {
 						continue
 					}
 
-					var repos []rpmmd.RepoConfig
-					job := makeManifestJob(itConfig, imgType, distribution, repos, archName, cacheRoot, outputDir, contentResolve, metadata, tmpdirRoot)
-					jobs = append(jobs, job)
+					if printOnly {
+						fmt.Printf("%s,%s,%s,%s\n", distribution.Name(), archName, imgType.Name(), itConfig.Name)
+					} else {
+						var repos []rpmmd.RepoConfig
+						job := makeManifestJob(itConfig, imgType, distribution, repos, archName, cacheRoot, outputDir, contentResolve, metadata, tmpdirRoot)
+						jobs = append(jobs, job)
+					}
 				}
 			}
 		}
@@ -669,17 +681,17 @@ func main() {
 	}
 
 	nJobs := len(jobs)
-	fmt.Printf("Collected %d jobs\n", nJobs)
+	fmt.Fprintf(os.Stderr, "Collected %d jobs\n", nJobs)
 
 	// nolint:gosec
 	wq := newWorkerQueue(uint32(nWorkers), uint32(nJobs))
 	wq.start()
-	fmt.Printf("Initialised %d workers\n", nWorkers)
-	fmt.Printf("Submitting %d jobs... ", nJobs)
+	fmt.Fprintf(os.Stderr, "Initialised %d workers\n", nWorkers)
+	fmt.Fprintf(os.Stderr, "Submitting %d jobs... ", nJobs)
 	for _, j := range jobs {
 		wq.submitJob(j)
 	}
-	fmt.Println("done")
+	fmt.Fprintln(os.Stderr, "done")
 	errs := wq.wait()
 	exit := 0
 	if nErrs := len(errs); nErrs > 0 {
@@ -697,6 +709,6 @@ func main() {
 		}
 		exit = 1
 	}
-	fmt.Printf("RPM metadata cache kept in %s\n", cacheRoot)
+	fmt.Fprintf(os.Stderr, "RPM metadata cache kept in %s\n", cacheRoot)
 	os.Exit(exit)
 }
