@@ -174,6 +174,16 @@ type DepsolveResult struct {
 	Solver   string
 }
 
+// DumpResult contains the results of a dump operation.
+type DumpResult struct {
+	Packages rpmmd.PackageList
+}
+
+// SearchResult contains the results of a search operation.
+type SearchResult struct {
+	Packages rpmmd.PackageList
+}
+
 // Create a new Solver with the given configuration. Initialising a Solver also loads system subscription information.
 func NewSolver(modulePlatformID, releaseVer, arch, distro, cacheDir string) *Solver {
 	s := NewBaseSolver(cacheDir)
