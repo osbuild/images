@@ -238,7 +238,7 @@ func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet, sbomType sbom.StandardType
 		return nil, err
 	}
 
-	req, rhsmMap, err := s.makeDepsolveRequest(pkgSets, sbomType)
+	req, err := s.makeDepsolveRequest(pkgSets, sbomType)
 	if err != nil {
 		return nil, fmt.Errorf("makeDepsolveRequest failed: %w", err)
 	}
@@ -270,7 +270,15 @@ func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet, sbomType sbom.StandardType
 		return nil, fmt.Errorf("decoding depsolve result failed: %w", err)
 	}
 
-	packages, modules, repos := result.toRPMMD(rhsmMap)
+	// Map of repository IDs that have RHSM enabled.
+	// The RHSM property is not part of the DNF repo config as returned by the
+	// Solver. So we construct the map here and pass it to the response parser.
+	rhsmReposMap := make(map[string]bool)
+	for _, repo := range allRepos {
+		rhsmReposMap[repo.Hash()] = repo.RHSM
+	}
+
+	packages, modules, repos := result.toRPMMD(rhsmReposMap)
 
 	var sbomDoc *sbom.Document
 	if sbomType != sbom.StandardTypeNone {
@@ -519,26 +527,12 @@ func validateSubscriptionsForRepos(pkgSets []rpmmd.PackageSet, haveSubscriptions
 // in the order they appear. The repositories are collected in the request
 // arguments indexed by their ID, and each transaction lists the repositories
 // it will use for depsolving.
-//
-// The second return value is a map of repository IDs that have RHSM enabled.
-// The RHSM property is not part of the dnf repository configuration so it's
-// returned separately for setting the value on each package that requires it.
-func (s *Solver) makeDepsolveRequest(pkgSets []rpmmd.PackageSet, sbomType sbom.StandardType) (*Request, map[string]bool, error) {
-	// dedupe repository configurations but maintain order
-	// the order in which repositories are added to the request affects the
-	// order of the dependencies in the result
-	repos := make([]rpmmd.RepoConfig, 0)
-	rhsmMap := make(map[string]bool)
-
-	for _, ps := range pkgSets {
-		for _, repo := range ps.Repositories {
-			id := repo.Hash()
-			if _, ok := rhsmMap[id]; !ok {
-				rhsmMap[id] = repo.RHSM
-				repos = append(repos, repo)
-			}
-		}
-	}
+func (s *Solver) makeDepsolveRequest(pkgSets []rpmmd.PackageSet, sbomType sbom.StandardType) (*Request, error) {
+	// NB: we could have the allRepos be passed in as a parameter from
+	// Depsolve() instead of collecting it here. However, it feels weird
+	// to depend on pre-processed data, when the pkgSets are the supposed
+	// source of truth.
+	allRepos := collectRepos(pkgSets)
 
 	transactions := make([]transactionArgs, len(pkgSets))
 	for dsIdx, pkgSet := range pkgSets {
@@ -554,13 +548,13 @@ func (s *Solver) makeDepsolveRequest(pkgSets []rpmmd.PackageSet, sbomType sbom.S
 		}
 	}
 
-	dnfRepoMap, err := s.reposFromRPMMD(repos)
+	dnfRepos, err := s.reposFromRPMMD(allRepos)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	args := arguments{
-		Repos:            dnfRepoMap,
+		Repos:            dnfRepos,
 		RootDir:          s.rootDir,
 		Transactions:     transactions,
 		OptionalMetadata: s.optionalMetadataForDistro(),
@@ -580,7 +574,7 @@ func (s *Solver) makeDepsolveRequest(pkgSets []rpmmd.PackageSet, sbomType sbom.S
 		req.Arguments.Sbom = &sbomRequest{Type: sbomType.String()}
 	}
 
-	return &req, rhsmMap, nil
+	return &req, nil
 }
 
 func (s *Solver) optionalMetadataForDistro() []string {
