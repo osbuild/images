@@ -924,7 +924,7 @@ func TestRepoConfigHash(t *testing.T) {
 	assert.NotEqual(t, hash, rcs[1].Hash())
 }
 
-func TestRequestHash(t *testing.T) {
+func TestHashRequest(t *testing.T) {
 	solver := NewSolver("platform:f38", "38", "x86_64", "fedora-38", "/tmp/cache")
 	repos := []rpmmd.RepoConfig{
 		rpmmd.RepoConfig{
@@ -936,13 +936,22 @@ func TestRequestHash(t *testing.T) {
 
 	req, err := solver.makeDumpRequest(repos)
 	assert.Nil(t, err)
-	hash := req.Hash()
-	assert.Equal(t, 64, len(hash))
+	reqData, err := json.Marshal(req)
+	if err != nil {
+		t.Fatalf("marshalling dump request failed: %v", err)
+	}
+	reqHash := hashRequest(reqData)
+	assert.Equal(t, 64, len(reqHash))
 
-	req, err = solver.makeSearchRequest(repos, []string{"package0*"})
+	req2, err := solver.makeSearchRequest(repos, []string{"package0*"})
 	assert.Nil(t, err)
-	assert.Equal(t, 64, len(req.Hash()))
-	assert.NotEqual(t, hash, req.Hash())
+	reqData2, err := json.Marshal(req2)
+	if err != nil {
+		t.Fatalf("marshalling search request failed: %v", err)
+	}
+	reqHash2 := hashRequest(reqData2)
+	assert.Equal(t, 64, len(reqHash2))
+	assert.NotEqual(t, reqHash, reqHash2)
 }
 
 func TestRepoConfigMarshalAlsmostEmpty(t *testing.T) {
