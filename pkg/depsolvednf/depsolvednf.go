@@ -208,6 +208,22 @@ func (s *Solver) SetProxy(proxy string) error {
 	return nil
 }
 
+// collectRepos extracts unique repos from package sets maintaining order
+func collectRepos(pkgSets []rpmmd.PackageSet) []rpmmd.RepoConfig {
+	seen := make(map[string]bool)
+	repos := make([]rpmmd.RepoConfig, 0)
+	for _, ps := range pkgSets {
+		for _, repo := range ps.Repositories {
+			id := repo.Hash()
+			if !seen[id] {
+				seen[id] = true
+				repos = append(repos, repo)
+			}
+		}
+	}
+	return repos
+}
+
 // Depsolve the list of required package sets with explicit excludes using
 // their associated repositories.  Each package set is depsolved as a separate
 // transactions in a chain.  It returns a list of all packages (with solved
@@ -227,14 +243,18 @@ func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet, sbomType sbom.StandardType
 		return nil, fmt.Errorf("makeDepsolveRequest failed: %w", err)
 	}
 
+	// collect all repos for error reporting
+	allRepos := collectRepos(pkgSets)
+
 	// get non-exclusive read lock
 	s.cache.locker.RLock()
 	defer s.cache.locker.RUnlock()
 
 	output, err := run(s.depsolveDNFCmd, req, s.Stderr)
 	if err != nil {
-		return nil, fmt.Errorf("running osbuild-depsolve-dnf failed:\n%w", err)
+		return nil, parseError(output, allRepos)
 	}
+
 	// touch repos to now
 	now := time.Now().Local()
 	for _, r := range req.Arguments.Repos {
@@ -288,7 +308,7 @@ func (s *Solver) FetchMetadata(repos []rpmmd.RepoConfig) (rpmmd.PackageList, err
 
 	rawRes, err := run(s.depsolveDNFCmd, req, s.Stderr)
 	if err != nil {
-		return nil, err
+		return nil, parseError(rawRes, repos)
 	}
 
 	// touch repos to now
@@ -336,7 +356,7 @@ func (s *Solver) SearchMetadata(repos []rpmmd.RepoConfig, packages []string) (rp
 
 	rawRes, err := run(s.depsolveDNFCmd, req, s.Stderr)
 	if err != nil {
-		return nil, err
+		return nil, parseError(rawRes, repos)
 	}
 
 	// touch repos to now
@@ -905,7 +925,7 @@ func (err Error) Error() string {
 // parseError parses the response from osbuild-depsolve-dnf into the Error type and appends
 // the name and URL of a repository to all detected repository IDs in the
 // message.
-func parseError(data []byte, repos []repoConfig) Error {
+func parseError(data []byte, repos []rpmmd.RepoConfig) Error {
 	var e Error
 	if len(data) == 0 {
 		return Error{
@@ -924,7 +944,7 @@ func parseError(data []byte, repos []repoConfig) Error {
 
 	// append to any instance of a repository ID the URL (or metalink, mirrorlist, etc)
 	for _, repo := range repos {
-		idstr := fmt.Sprintf("'%s'", repo.ID)
+		idstr := fmt.Sprintf("'%s'", repo.Hash())
 		var nameURL string
 		if len(repo.BaseURLs) > 0 {
 			nameURL = strings.Join(repo.BaseURLs, ",")
@@ -983,7 +1003,7 @@ func run(dnfJsonCmd []string, req *Request, stderr io.Writer) ([]byte, error) {
 	err = cmd.Wait()
 	output := stdout.Bytes()
 	if runError, ok := err.(*exec.ExitError); ok && runError.ExitCode() != 0 {
-		return nil, parseError(output, req.Arguments.Repos)
+		return output, fmt.Errorf("depsolve failed with exit code %d", runError.ExitCode())
 	}
 	return output, nil
 }
