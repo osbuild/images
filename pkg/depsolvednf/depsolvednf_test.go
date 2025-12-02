@@ -526,7 +526,7 @@ func TestHashRequest(t *testing.T) {
 	reqHash := hashRequest(reqData)
 	assert.Equal(t, 64, len(reqHash))
 
-	req2, err := solver.makeSearchRequest(repos, []string{"package0*"})
+	req2, err := activeHandler.makeSearchRequest(solver.solverCfg(), repos, []string{"package0*"})
 	assert.Nil(t, err)
 	reqData2, err := json.Marshal(req2)
 	if err != nil {
