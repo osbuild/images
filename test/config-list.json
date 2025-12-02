@@ -307,28 +307,6 @@
     }
   },
   {
-    "path": "./configs/minimal-pkgs.json",
-    "filters": {
-      "distros": [
-        "fedora*"
-      ],
-      "image-types": [
-        "generic-qcow2"
-      ]
-    }
-  },
-  {
-    "path": "./configs/minimal.json",
-    "filters": {
-      "distros": [
-        "fedora*"
-      ],
-      "image-types": [
-        "generic-qcow2"
-      ]
-    }
-  },
-  {
     "path": "./configs/oscap-generic.json",
     "filters": {
       "distros": [

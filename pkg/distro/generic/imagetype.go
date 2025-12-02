@@ -229,12 +229,9 @@ func (t *imageType) Manifest(bp *blueprint.Blueprint,
 	// of the same name from the distro and arch
 	staticPackageSets := make(map[string]rpmmd.PackageSet)
 
-	// don't add any static packages if Minimal was selected
-	if !bp.Minimal {
-		pkgSets := t.ImageTypeYAML.PackageSets(t.arch.distro.ID, t.arch.arch.String())
-		for name, pkgSet := range pkgSets {
-			staticPackageSets[name] = pkgSet
-		}
+	pkgSets := t.ImageTypeYAML.PackageSets(t.arch.distro.ID, t.arch.arch.String())
+	for name, pkgSet := range pkgSets {
+		staticPackageSets[name] = pkgSet
 	}
 
 	// amend with repository information and collect payload repos
