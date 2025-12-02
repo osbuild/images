@@ -331,7 +331,8 @@ func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet, sbomType sbom.StandardType
 // FetchMetadata returns the list of all the available packages in repos and
 // their info.
 func (s *Solver) FetchMetadata(repos []rpmmd.RepoConfig) (rpmmd.PackageList, error) {
-	req, err := s.makeDumpRequest(repos)
+	cfg := s.solverCfg()
+	reqData, err := activeHandler.makeDumpRequest(cfg, repos)
 	if err != nil {
 		return nil, err
 	}
@@ -341,11 +342,6 @@ func (s *Solver) FetchMetadata(repos []rpmmd.RepoConfig) (rpmmd.PackageList, err
 	defer s.cache.locker.RUnlock()
 
 	// Is this cached?
-	reqData, err := json.Marshal(req)
-	if err != nil {
-		return nil, fmt.Errorf("marshalling dump request failed: %w", err)
-	}
-
 	reqHash := hashRequest(reqData)
 	if pkgs, ok := s.resultCache.Get(reqHash); ok {
 		return pkgs, nil
@@ -364,18 +360,14 @@ func (s *Solver) FetchMetadata(repos []rpmmd.RepoConfig) (rpmmd.PackageList, err
 	}
 	s.cache.updateInfo()
 
-	var res dumpResult
-	if err := json.Unmarshal(rawRes, &res); err != nil {
+	res, err := activeHandler.parseDumpResult(rawRes)
+	if err != nil {
 		return nil, err
 	}
 
-	pkgs := res.toRPMMD()
-
-	sortID := func(pkg rpmmd.Package) string {
-		return fmt.Sprintf("%s-%s-%s", pkg.Name, pkg.Version, pkg.Release)
-	}
+	pkgs := res.Packages
 	sort.Slice(pkgs, func(i, j int) bool {
-		return sortID(pkgs[i]) < sortID(pkgs[j])
+		return pkgs[i].NVR() < pkgs[j].NVR()
 	})
 
 	// Cache the results
@@ -581,26 +573,6 @@ func optionalMetadataForDistro(modulePlatformID string) []string {
 	return nil
 }
 
-// Helper function for creating a dump request payload
-func (s *Solver) makeDumpRequest(repos []rpmmd.RepoConfig) (*Request, error) {
-	dnfRepos, err := s.reposFromRPMMD(repos)
-	if err != nil {
-		return nil, err
-	}
-	req := Request{
-		Command:          "dump",
-		ModulePlatformID: s.modulePlatformID,
-		Arch:             s.arch,
-		Releasever:       s.releaseVer,
-		CacheDir:         s.GetCacheDir(),
-		Proxy:            s.proxy,
-		Arguments: arguments{
-			Repos: dnfRepos,
-		},
-	}
-	return &req, nil
-}
-
 // Helper function for creating a search request payload
 func (s *Solver) makeSearchRequest(repos []rpmmd.RepoConfig, packages []string) (*Request, error) {
 	dnfRepos, err := s.reposFromRPMMD(repos)
@@ -732,7 +704,6 @@ type legacyPackageList []struct {
 	License     string    `json:"license"`
 }
 
-type dumpResult = legacyPackageList
 type searchResult = legacyPackageList
 
 func (pl legacyPackageList) toRPMMD() rpmmd.PackageList {
