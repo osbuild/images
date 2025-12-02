@@ -546,6 +546,13 @@ def skopeo_inspect_id(image_name: str, arch: str) -> str:
     # don't error out, just return an empty string and let the caller handle it
     return ""
 
+def get_tag_for(runner):
+    if runner.startswith("aws/"):
+        return "terraform"
+    if runner.startswith("rhos-01/"):
+        return "terraform/openstack"
+
+    raise ValueError(f"Unknown runner: {runner}")
 
 def get_ci_runner_for(arch, image_type):
     with open(SCHUTZFILE, encoding="utf-8") as schutzfile:
