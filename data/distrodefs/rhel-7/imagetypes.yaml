@@ -221,7 +221,6 @@
       - "packages"
       - "modules"
       - "groups"
-      - "minimal"
       - "customizations.cacerts"
       - "customizations.directories"
       - "customizations.disk"

@@ -534,10 +534,7 @@ func diskImage(t *imageType,
 
 	img.Environment = &t.ImageTypeYAML.Environment
 	img.Compression = t.ImageTypeYAML.Compression
-	if bp.Minimal {
-		// Disable weak dependencies if the 'minimal' option is enabled
-		img.OSCustomizations.InstallWeakDeps = false
-	}
+
 	// TODO: move generation into LiveImage
 	pt, err := t.getPartitionTable(bp.Customizations, options, rng)
 	if err != nil {
