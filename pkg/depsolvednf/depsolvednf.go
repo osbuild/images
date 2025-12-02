@@ -232,6 +232,12 @@ func (s *Solver) solverCfg() *solverConfig {
 	}
 }
 
+// hashRequest computes a SHA256 hash of the request raw data for caching.
+func hashRequest(data []byte) string {
+	h := sha256.Sum256(data)
+	return fmt.Sprintf("%x", h[:])
+}
+
 // collectRepos extracts unique repos from package sets maintaining order
 func collectRepos(pkgSets []rpmmd.PackageSet) []rpmmd.RepoConfig {
 	seen := make(map[string]bool)
@@ -339,13 +345,14 @@ func (s *Solver) FetchMetadata(repos []rpmmd.RepoConfig) (rpmmd.PackageList, err
 	defer s.cache.locker.RUnlock()
 
 	// Is this cached?
-	if pkgs, ok := s.resultCache.Get(req.Hash()); ok {
-		return pkgs, nil
-	}
-
 	reqData, err := json.Marshal(req)
 	if err != nil {
 		return nil, fmt.Errorf("marshalling dump request failed: %w", err)
+	}
+
+	reqHash := hashRequest(reqData)
+	if pkgs, ok := s.resultCache.Get(reqHash); ok {
+		return pkgs, nil
 	}
 
 	rawRes, err := run(s.depsolveDNFCmd, reqData, s.Stderr)
@@ -376,7 +383,7 @@ func (s *Solver) FetchMetadata(repos []rpmmd.RepoConfig) (rpmmd.PackageList, err
 	})
 
 	// Cache the results
-	s.resultCache.Store(req.Hash(), pkgs)
+	s.resultCache.Store(reqHash, pkgs)
 	return pkgs, nil
 }
 
@@ -392,13 +399,14 @@ func (s *Solver) SearchMetadata(repos []rpmmd.RepoConfig, packages []string) (rp
 	defer s.cache.locker.RUnlock()
 
 	// Is this cached?
-	if pkgs, ok := s.resultCache.Get(req.Hash()); ok {
-		return pkgs, nil
-	}
-
 	reqData, err := json.Marshal(req)
 	if err != nil {
 		return nil, fmt.Errorf("marshalling search request failed: %w", err)
+	}
+
+	reqHash := hashRequest(reqData)
+	if pkgs, ok := s.resultCache.Get(reqHash); ok {
+		return pkgs, nil
 	}
 
 	rawRes, err := run(s.depsolveDNFCmd, reqData, s.Stderr)
@@ -429,7 +437,7 @@ func (s *Solver) SearchMetadata(repos []rpmmd.RepoConfig, packages []string) (rp
 	})
 
 	// Cache the results
-	s.resultCache.Store(req.Hash(), pkgs)
+	s.resultCache.Store(reqHash, pkgs)
 	return pkgs, nil
 }
 
@@ -785,24 +793,6 @@ type Request struct {
 
 	// Arguments for the action defined by Command
 	Arguments arguments `json:"arguments"`
-}
-
-// Hash returns a hash of the unique aspects of the Request
-//
-//nolint:errcheck
-func (r *Request) Hash() string {
-	h := sha256.New()
-
-	h.Write([]byte(r.Command))
-	h.Write([]byte(r.ModulePlatformID))
-	h.Write([]byte(r.Arch))
-	for _, repo := range r.Arguments.Repos {
-		h.Write([]byte(repo.Hash()))
-	}
-	fmt.Fprintf(h, "%T", r.Arguments.Search.Latest)
-	h.Write([]byte(strings.Join(r.Arguments.Search.Packages, "")))
-
-	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
 type sbomRequest struct {
