@@ -58,7 +58,6 @@ type solverConfig struct {
 }
 
 // activeHandler is the currently active API handler implementation.
-// nolint:unused
 var activeHandler apiHandler
 
 func init() {

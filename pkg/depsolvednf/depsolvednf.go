@@ -219,7 +219,6 @@ func (s *Solver) SetProxy(proxy string) error {
 }
 
 // solverCfg creates a solverConfig from the Solver's current state.
-// nolint:unused
 func (s *Solver) solverCfg() *solverConfig {
 	return &solverConfig{
 		modulePlatformID: s.modulePlatformID,
@@ -268,7 +267,8 @@ func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet, sbomType sbom.StandardType
 		return nil, err
 	}
 
-	req, err := s.makeDepsolveRequest(pkgSets, sbomType)
+	cfg := s.solverCfg()
+	reqData, err := activeHandler.makeDepsolveRequest(cfg, pkgSets, sbomType)
 	if err != nil {
 		return nil, fmt.Errorf("makeDepsolveRequest failed: %w", err)
 	}
@@ -280,11 +280,6 @@ func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet, sbomType sbom.StandardType
 	s.cache.locker.RLock()
 	defer s.cache.locker.RUnlock()
 
-	reqData, err := json.Marshal(req)
-	if err != nil {
-		return nil, fmt.Errorf("marshalling depsolve request failed: %w", err)
-	}
-
 	output, err := run(s.depsolveDNFCmd, reqData, s.Stderr)
 	if err != nil {
 		return nil, parseError(output, allRepos)
@@ -292,43 +287,44 @@ func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet, sbomType sbom.StandardType
 
 	// touch repos to now
 	now := time.Now().Local()
-	for _, r := range req.Arguments.Repos {
+	for _, r := range allRepos {
 		// ignore errors
 		_ = s.cache.touchRepo(r.Hash(), now)
 	}
 	s.cache.updateInfo()
 
-	var result depsolveResult
-	dec := json.NewDecoder(bytes.NewReader(output))
-	dec.DisallowUnknownFields()
-	if err := dec.Decode(&result); err != nil {
-		return nil, fmt.Errorf("decoding depsolve result failed: %w", err)
+	resultRaw, err := activeHandler.parseDepsolveResult(output)
+	if err != nil {
+		return nil, err
 	}
 
-	// Map of repository IDs that have RHSM enabled.
-	// The RHSM property is not part of the DNF repo config as returned by the
-	// Solver. So we construct the map here and pass it to the response parser.
+	// Apply RHSM secrets to packages.
+	// The handler sets "org.osbuild.mtls" for repos with SSLClientKey,
+	// but RHSM repos need "org.osbuild.rhsm" instead.
 	rhsmReposMap := make(map[string]bool)
 	for _, repo := range allRepos {
 		rhsmReposMap[repo.Hash()] = repo.RHSM
 	}
-
-	packages, modules, repos := result.toRPMMD(rhsmReposMap)
+	for i := range resultRaw.Packages {
+		if rhsmReposMap[resultRaw.Packages[i].RepoID] {
+			resultRaw.Packages[i].Secrets = "org.osbuild.rhsm"
+		}
+	}
 
 	var sbomDoc *sbom.Document
 	if sbomType != sbom.StandardTypeNone {
-		sbomDoc, err = sbom.NewDocument(sbomType, result.SBOM)
+		sbomDoc, err = sbom.NewDocument(sbomType, resultRaw.SBOMRaw)
 		if err != nil {
 			return nil, fmt.Errorf("creating SBOM document failed: %w", err)
 		}
 	}
 
 	return &DepsolveResult{
-		Packages: packages,
-		Modules:  modules,
-		Repos:    repos,
+		Packages: resultRaw.Packages,
+		Modules:  resultRaw.Modules,
+		Repos:    resultRaw.Repos,
 		SBOM:     sbomDoc,
-		Solver:   result.Solver,
+		Solver:   resultRaw.Solver,
 	}, nil
 }
 
@@ -569,61 +565,6 @@ func validateSubscriptionsForRepos(pkgSets []rpmmd.PackageSet, haveSubscriptions
 	return nil
 }
 
-// Helper function for creating a depsolve request payload. The request defines
-// a sequence of transactions, each depsolving one of the elements of `pkgSets`
-// in the order they appear. The repositories are collected in the request
-// arguments indexed by their ID, and each transaction lists the repositories
-// it will use for depsolving.
-func (s *Solver) makeDepsolveRequest(pkgSets []rpmmd.PackageSet, sbomType sbom.StandardType) (*Request, error) {
-	// NB: we could have the allRepos be passed in as a parameter from
-	// Depsolve() instead of collecting it here. However, it feels weird
-	// to depend on pre-processed data, when the pkgSets are the supposed
-	// source of truth.
-	allRepos := collectRepos(pkgSets)
-
-	transactions := make([]transactionArgs, len(pkgSets))
-	for dsIdx, pkgSet := range pkgSets {
-		transactions[dsIdx] = transactionArgs{
-			PackageSpecs:      pkgSet.Include,
-			ExcludeSpecs:      pkgSet.Exclude,
-			ModuleEnableSpecs: pkgSet.EnabledModules,
-			InstallWeakDeps:   pkgSet.InstallWeakDeps,
-		}
-
-		for _, jobRepo := range pkgSet.Repositories {
-			transactions[dsIdx].RepoIDs = append(transactions[dsIdx].RepoIDs, jobRepo.Hash())
-		}
-	}
-
-	dnfRepos, err := s.reposFromRPMMD(allRepos)
-	if err != nil {
-		return nil, err
-	}
-
-	args := arguments{
-		Repos:            dnfRepos,
-		RootDir:          s.rootDir,
-		Transactions:     transactions,
-		OptionalMetadata: optionalMetadataForDistro(s.modulePlatformID),
-	}
-
-	req := Request{
-		Command:          "depsolve",
-		ModulePlatformID: s.modulePlatformID,
-		Arch:             s.arch,
-		Releasever:       s.releaseVer,
-		CacheDir:         s.GetCacheDir(),
-		Proxy:            s.proxy,
-		Arguments:        args,
-	}
-
-	if sbomType != sbom.StandardTypeNone {
-		req.Arguments.Sbom = &sbomRequest{Type: sbomType.String()}
-	}
-
-	return &req, nil
-}
-
 // optionalMetadataForDistro returns optional repository metadata types
 // that should be downloaded for the given distro.
 func optionalMetadataForDistro(modulePlatformID string) []string {
@@ -681,94 +622,6 @@ func (s *Solver) makeSearchRequest(repos []rpmmd.RepoConfig, packages []string) 
 		},
 	}
 	return &req, nil
-}
-
-// convert internal a list of PackageSpecs and map of repoConfig to the rpmmd
-// equivalents and attach key and subscription information based on the
-// repository configs.
-func (result depsolveResult) toRPMMD(rhsm map[string]bool) (rpmmd.PackageList, []rpmmd.ModuleSpec, []rpmmd.RepoConfig) {
-	pkgs := result.Packages
-	repos := result.Repos
-	rpmDependencies := make(rpmmd.PackageList, len(pkgs))
-	for i, dep := range pkgs {
-		repo, ok := repos[dep.RepoID]
-		if !ok {
-			panic("dependency repo ID not found in repositories")
-		}
-		dep := pkgs[i]
-		rpmDependencies[i].Name = dep.Name
-		rpmDependencies[i].Epoch = dep.Epoch
-		rpmDependencies[i].Version = dep.Version
-		rpmDependencies[i].Release = dep.Release
-		rpmDependencies[i].Arch = dep.Arch
-		rpmDependencies[i].RemoteLocations = []string{dep.RemoteLocation}
-
-		depChecksum := strings.Split(dep.Checksum, ":")
-		if len(depChecksum) != 2 {
-			panic(fmt.Sprintf("invalid checksum format for package %s: %s", dep.Name, dep.Checksum))
-		}
-		rpmDependencies[i].Checksum = rpmmd.Checksum{
-			Type:  depChecksum[0],
-			Value: depChecksum[1],
-		}
-		rpmDependencies[i].CheckGPG = repo.GPGCheck
-		rpmDependencies[i].RepoID = dep.RepoID
-		rpmDependencies[i].Location = dep.Path
-		if verify := repo.SSLVerify; verify != nil {
-			rpmDependencies[i].IgnoreSSL = !*verify
-		}
-
-		// The ssl secrets will also be set if rhsm is true,
-		// which should take priority.
-		if rhsm[dep.RepoID] {
-			rpmDependencies[i].Secrets = "org.osbuild.rhsm"
-		} else if repo.SSLClientKey != "" {
-			rpmDependencies[i].Secrets = "org.osbuild.mtls"
-		}
-	}
-
-	mods := result.Modules
-	moduleSpecs := make([]rpmmd.ModuleSpec, len(mods))
-
-	i := 0
-	for _, mod := range mods {
-		moduleSpecs[i].ModuleConfigFile.Data.Name = mod.ModuleConfigFile.Data.Name
-		moduleSpecs[i].ModuleConfigFile.Data.Stream = mod.ModuleConfigFile.Data.Stream
-		moduleSpecs[i].ModuleConfigFile.Data.State = mod.ModuleConfigFile.Data.State
-		moduleSpecs[i].ModuleConfigFile.Data.Profiles = mod.ModuleConfigFile.Data.Profiles
-
-		moduleSpecs[i].FailsafeFile.Path = mod.FailsafeFile.Path
-		moduleSpecs[i].FailsafeFile.Data = mod.FailsafeFile.Data
-
-		i++
-	}
-
-	repoConfigs := make([]rpmmd.RepoConfig, 0, len(repos))
-	for repoID := range repos {
-		repo := repos[repoID]
-		var ignoreSSL bool
-		if sslVerify := repo.SSLVerify; sslVerify != nil {
-			ignoreSSL = !*sslVerify
-		}
-		repoConfigs = append(repoConfigs, rpmmd.RepoConfig{
-			Id:             repo.ID,
-			Name:           repo.Name,
-			BaseURLs:       repo.BaseURLs,
-			Metalink:       repo.Metalink,
-			MirrorList:     repo.MirrorList,
-			GPGKeys:        repo.GPGKeys,
-			CheckGPG:       &repo.GPGCheck,
-			CheckRepoGPG:   &repo.RepoGPGCheck,
-			IgnoreSSL:      &ignoreSSL,
-			MetadataExpire: repo.MetadataExpire,
-			ModuleHotfixes: repo.ModuleHotfixes,
-			Enabled:        common.ToPtr(true),
-			SSLCACert:      repo.SSLCACert,
-			SSLClientKey:   repo.SSLClientKey,
-			SSLClientCert:  repo.SSLClientCert,
-		})
-	}
-	return rpmDependencies, moduleSpecs, repoConfigs
 }
 
 // Request command and arguments for osbuild-depsolve-dnf
