@@ -274,7 +274,12 @@ func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet, sbomType sbom.StandardType
 	s.cache.locker.RLock()
 	defer s.cache.locker.RUnlock()
 
-	output, err := run(s.depsolveDNFCmd, req, s.Stderr)
+	reqData, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("marshalling depsolve request failed: %w", err)
+	}
+
+	output, err := run(s.depsolveDNFCmd, reqData, s.Stderr)
 	if err != nil {
 		return nil, parseError(output, allRepos)
 	}
@@ -338,7 +343,12 @@ func (s *Solver) FetchMetadata(repos []rpmmd.RepoConfig) (rpmmd.PackageList, err
 		return pkgs, nil
 	}
 
-	rawRes, err := run(s.depsolveDNFCmd, req, s.Stderr)
+	reqData, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("marshalling dump request failed: %w", err)
+	}
+
+	rawRes, err := run(s.depsolveDNFCmd, reqData, s.Stderr)
 	if err != nil {
 		return nil, parseError(rawRes, repos)
 	}
@@ -386,7 +396,12 @@ func (s *Solver) SearchMetadata(repos []rpmmd.RepoConfig, packages []string) (rp
 		return pkgs, nil
 	}
 
-	rawRes, err := run(s.depsolveDNFCmd, req, s.Stderr)
+	reqData, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("marshalling search request failed: %w", err)
+	}
+
+	rawRes, err := run(s.depsolveDNFCmd, reqData, s.Stderr)
 	if err != nil {
 		return nil, parseError(rawRes, repos)
 	}
@@ -983,7 +998,7 @@ func parseError(data []byte, repos []rpmmd.RepoConfig) Error {
 	return e
 }
 
-func run(dnfJsonCmd []string, req *Request, stderr io.Writer) ([]byte, error) {
+func run(dnfJsonCmd []string, reqData []byte, stderr io.Writer) ([]byte, error) {
 	if len(dnfJsonCmd) == 0 {
 		dnfJsonCmd = []string{findDepsolveDnf()}
 	}
@@ -1014,9 +1029,9 @@ func run(dnfJsonCmd []string, req *Request, stderr io.Writer) ([]byte, error) {
 		return nil, fmt.Errorf("starting %s failed: %w", ex, err)
 	}
 
-	err = json.NewEncoder(stdin).Encode(req)
+	_, err = stdin.Write(reqData)
 	if err != nil {
-		return nil, fmt.Errorf("encoding request for %s failed: %w", ex, err)
+		return nil, fmt.Errorf("writing request data to stdin for %s failed: %w", ex, err)
 	}
 	stdin.Close()
 
