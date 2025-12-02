@@ -58,8 +58,9 @@ type solverConfig struct {
 }
 
 // activeHandler is the currently active API handler implementation.
+// nolint:unused
 var activeHandler apiHandler
 
-// XXX: remove this once there is an interface implementation that can be used
-// and a code that uses the interface.
-var _ = activeHandler
+func init() {
+	activeHandler = newV1Handler()
+}
