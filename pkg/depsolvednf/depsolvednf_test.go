@@ -952,17 +952,21 @@ func TestRepoConfigMarshalAlsmostEmpty(t *testing.T) {
 	assert.Equal(t, string(js), `{"id":"","gpgcheck":false,"repo_gpgcheck":false}`)
 }
 
-func TestRunErrorEmptyOutput(t *testing.T) {
-	fakeDepsolveDNFPath := filepath.Join(t.TempDir(), "osbuild-depsolve-dnf")
-	fakeDepsolveDNFNoOutput := `#!/bin/sh -e
+func TestSolverRunErrorEmptyOutput(t *testing.T) {
+	fakeSolverPath := filepath.Join(t.TempDir(), "osbuild-depsolve-dnf")
+	fakeSolver := `#!/bin/sh -e
 cat - > "$0".stdin
 exit 1
 `
-	err := os.WriteFile(fakeDepsolveDNFPath, []byte(fakeDepsolveDNFNoOutput), 0o755)
+	err := os.WriteFile(fakeSolverPath, []byte(fakeSolver), 0o755)
 	assert.NoError(t, err)
 
-	_, err = run([]string{fakeDepsolveDNFPath}, &Request{}, nil)
+	solver := NewSolver("platform:f38", "38", "x86_64", "fedora-38", t.TempDir())
+	solver.depsolveDNFCmd = []string{fakeSolverPath}
+	res, err := solver.Depsolve(nil, sbom.StandardTypeNone)
+
 	assert.EqualError(t, err, `DNF error occurred: InternalError: osbuild-depsolve-dnf output was empty`)
+	assert.Nil(t, res)
 }
 
 func TestSolverRunWithSolverNoError(t *testing.T) {
