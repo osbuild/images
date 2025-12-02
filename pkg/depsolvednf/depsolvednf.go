@@ -377,7 +377,8 @@ func (s *Solver) FetchMetadata(repos []rpmmd.RepoConfig) (rpmmd.PackageList, err
 
 // SearchMetadata searches for packages and returns a list of the info for matches.
 func (s *Solver) SearchMetadata(repos []rpmmd.RepoConfig, packages []string) (rpmmd.PackageList, error) {
-	req, err := s.makeSearchRequest(repos, packages)
+	cfg := s.solverCfg()
+	reqData, err := activeHandler.makeSearchRequest(cfg, repos, packages)
 	if err != nil {
 		return nil, err
 	}
@@ -387,11 +388,6 @@ func (s *Solver) SearchMetadata(repos []rpmmd.RepoConfig, packages []string) (rp
 	defer s.cache.locker.RUnlock()
 
 	// Is this cached?
-	reqData, err := json.Marshal(req)
-	if err != nil {
-		return nil, fmt.Errorf("marshalling search request failed: %w", err)
-	}
-
 	reqHash := hashRequest(reqData)
 	if pkgs, ok := s.resultCache.Get(reqHash); ok {
 		return pkgs, nil
@@ -410,18 +406,14 @@ func (s *Solver) SearchMetadata(repos []rpmmd.RepoConfig, packages []string) (rp
 	}
 	s.cache.updateInfo()
 
-	var res searchResult
-	if err := json.Unmarshal(rawRes, &res); err != nil {
+	res, err := activeHandler.parseSearchResult(rawRes)
+	if err != nil {
 		return nil, err
 	}
 
-	pkgs := res.toRPMMD()
-
-	sortID := func(pkg rpmmd.Package) string {
-		return fmt.Sprintf("%s-%s-%s", pkg.Name, pkg.Version, pkg.Release)
-	}
+	pkgs := res.Packages
 	sort.Slice(pkgs, func(i, j int) bool {
-		return sortID(pkgs[i]) < sortID(pkgs[j])
+		return pkgs[i].NVR() < pkgs[j].NVR()
 	})
 
 	// Cache the results
@@ -573,29 +565,6 @@ func optionalMetadataForDistro(modulePlatformID string) []string {
 	return nil
 }
 
-// Helper function for creating a search request payload
-func (s *Solver) makeSearchRequest(repos []rpmmd.RepoConfig, packages []string) (*Request, error) {
-	dnfRepos, err := s.reposFromRPMMD(repos)
-	if err != nil {
-		return nil, err
-	}
-	req := Request{
-		Command:          "search",
-		ModulePlatformID: s.modulePlatformID,
-		Arch:             s.arch,
-		CacheDir:         s.GetCacheDir(),
-		Releasever:       s.releaseVer,
-		Proxy:            s.proxy,
-		Arguments: arguments{
-			Repos: dnfRepos,
-			Search: searchArgs{
-				Packages: packages,
-			},
-		},
-	}
-	return &req, nil
-}
-
 // Request command and arguments for osbuild-depsolve-dnf
 type Request struct {
 	// Command should be either "depsolve" or "dump"
@@ -686,43 +655,6 @@ type depsolveResult struct {
 
 	// (optional) contains the SBOM for the depsolved transaction
 	SBOM json.RawMessage `json:"sbom,omitempty"`
-}
-
-// legacyPackageList represents the old 'PackageList' structure, which
-// was used for both dump and search results. It is kept here for unmarshaling
-// the results.
-type legacyPackageList []struct {
-	Name        string    `json:"name"`
-	Summary     string    `json:"summary"`
-	Description string    `json:"description"`
-	URL         string    `json:"url"`
-	Epoch       uint      `json:"epoch"`
-	Version     string    `json:"version"`
-	Release     string    `json:"release"`
-	Arch        string    `json:"arch"`
-	BuildTime   time.Time `json:"build_time"`
-	License     string    `json:"license"`
-}
-
-type searchResult = legacyPackageList
-
-func (pl legacyPackageList) toRPMMD() rpmmd.PackageList {
-	rpmPkgs := make(rpmmd.PackageList, len(pl))
-	for i, p := range pl {
-		rpmPkgs[i] = rpmmd.Package{
-			Name:        p.Name,
-			Summary:     p.Summary,
-			Description: p.Description,
-			URL:         p.URL,
-			Epoch:       p.Epoch,
-			Version:     p.Version,
-			Release:     p.Release,
-			Arch:        p.Arch,
-			BuildTime:   p.BuildTime,
-			License:     p.License,
-		}
-	}
-	return rpmPkgs
 }
 
 // Package specification
