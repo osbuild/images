@@ -517,7 +517,7 @@ func TestHashRequest(t *testing.T) {
 		},
 	}
 
-	req, err := solver.makeDumpRequest(repos)
+	req, err := activeHandler.makeDumpRequest(solver.solverCfg(), repos)
 	assert.Nil(t, err)
 	reqData, err := json.Marshal(req)
 	if err != nil {
