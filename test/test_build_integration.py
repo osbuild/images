@@ -35,6 +35,7 @@ def _test_cases():
     }
 
 
+@pytest.mark.images_integration
 @pytest.mark.parametrize("distro,arch,image_type,config_name", [tcase.split(",") for tcase in _test_cases()["build_only"]])
 def test_build_only(distro,arch,image_type,config_name):
     subprocess.check_call(
@@ -44,6 +45,7 @@ def test_build_only(distro,arch,image_type,config_name):
         ["./test/scripts/boot-image", build_dir])
 
 
+@pytest.mark.images_integration
 @pytest.mark.parametrize("distro,arch,image_type,config_name", [tcase.split(",") for tcase in _test_cases()["build_and_boot"]])
 def test_build_and_boot(distro,arch,image_type,config_name):
     subprocess.check_call(

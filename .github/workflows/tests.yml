@@ -229,7 +229,7 @@ jobs:
       - name: Testing imgtestlib and test scripts
         run: |
           pip install .
-          python3 -m pytest -v
+          python3 -m pytest -v -k "not images_integration"
 
   python-lint:
     name: "🐍 Lint (test scripts)"
