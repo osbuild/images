@@ -47,7 +47,6 @@ type apiHandler interface {
 // solverConfig contains solver configuration passed to API handlers.
 // This provides handlers with necessary context without coupling them
 // to the Solver type directly.
-// nolint:unused
 type solverConfig struct {
 	modulePlatformID string
 	arch             string
