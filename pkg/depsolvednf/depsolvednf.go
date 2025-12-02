@@ -217,6 +217,11 @@ func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet, sbomType sbom.StandardType
 		return nil, err
 	}
 
+	// XXX: we should let the depsolver handle subscriptions: https://github.com/osbuild/images/issues/2055
+	if err := validateSubscriptionsForRepos(pkgSets, s.subscriptions != nil, s.subscriptionsErr); err != nil {
+		return nil, err
+	}
+
 	req, rhsmMap, err := s.makeDepsolveRequest(pkgSets, sbomType)
 	if err != nil {
 		return nil, fmt.Errorf("makeDepsolveRequest failed: %w", err)
@@ -395,12 +400,11 @@ func (s *Solver) reposFromRPMMD(rpmRepos []rpmmd.RepoConfig) ([]repoConfig, erro
 		}
 
 		if rr.RHSM {
-			if s.subscriptions == nil {
-				return nil, fmt.Errorf("This system does not have any valid subscriptions. Subscribe it before specifying rhsm: true in sources (error details: %w)", s.subscriptionsErr)
-			}
+			// NB: it is assumed that the s.subscriptions are not nil if the repo needs RHSM secrets
+			// because validateSubscriptionsForRepos() is called before makeDepsolveRequest().
 			secrets, err := s.subscriptions.GetSecretsForBaseurl(rr.BaseURLs, s.arch, s.releaseVer)
 			if err != nil {
-				return nil, fmt.Errorf("RHSM secrets not found on the host for this baseurl: %s", rr.BaseURLs)
+				return nil, fmt.Errorf("getting RHSM secrets for baseurl %s failed: %w", rr.BaseURLs, err)
 			}
 			dr.SSLCACert = secrets.SSLCACert
 			dr.SSLClientKey = secrets.SSLClientKey
@@ -471,6 +475,19 @@ func validatePackageSetRepoChain(pkgSets []rpmmd.PackageSet) error {
 		for idx, repoID := range prevRepoIDs {
 			if repoID != currRepoIDs[idx] {
 				return fmt.Errorf("chained packageSet %d does not use all of the repos used by its predecessor", dsIdx)
+			}
+		}
+	}
+	return nil
+}
+
+// validateSubscriptionsForRepos checks that RHSM subscriptions are available
+// for any repositories that require them.
+func validateSubscriptionsForRepos(pkgSets []rpmmd.PackageSet, haveSubscriptions bool, subsErr error) error {
+	for _, ps := range pkgSets {
+		for _, repo := range ps.Repositories {
+			if repo.RHSM && !haveSubscriptions {
+				return fmt.Errorf("This system does not have any valid subscriptions. Subscribe it before specifying rhsm: true in sources (error details: %w)", subsErr)
 			}
 		}
 	}
