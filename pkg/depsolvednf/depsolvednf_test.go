@@ -698,7 +698,7 @@ func TestMakeDepsolveRequest(t *testing.T) {
 			if tt.withSbom {
 				sbomType = sbom.StandardTypeSpdx
 			}
-			req, _, err := solver.makeDepsolveRequest(tt.packageSets, sbomType)
+			req, err := solver.makeDepsolveRequest(tt.packageSets, sbomType)
 			assert.NoError(t, err)
 			assert.NotNilf(t, req, "expected non-nill request, but got 'nil' instead")
 
