@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 
@@ -20,13 +21,25 @@ import (
 
 var forceDNF = flag.Bool("force-dnf", false, "force dnf testing, making them fail instead of skip if dnf isn't installed")
 
-func TestDepsolver(t *testing.T) {
+func requireDNF(t *testing.T) {
+	t.Helper()
 	if !*forceDNF {
 		// dnf tests aren't forced: skip them if the dnf sniff check fails
 		if findDepsolveDnf() == "" {
 			t.Skip("Test needs an installed osbuild-depsolve-dnf")
 		}
 	}
+}
+
+func newTestSolver(t *testing.T) *Solver {
+	t.Helper()
+	tmpdir := t.TempDir()
+	solver := NewSolver("platform:el9", "9", "x86_64", "centos-stream-9", tmpdir)
+	return solver
+}
+
+func TestDepsolver(t *testing.T) {
+	requireDNF(t)
 
 	s := rpmrepo.NewTestServer()
 	defer s.Close()
@@ -39,9 +52,6 @@ func TestDepsolver(t *testing.T) {
 		err      bool
 		expMsg   string
 	}
-
-	tmpdir := t.TempDir()
-	solver := NewSolver("platform:el9", "9", "x86_64", "rhel9.0", tmpdir)
 
 	rootDir := t.TempDir()
 	reposDir := filepath.Join(rootDir, "etc", "yum.repos.d")
@@ -124,6 +134,7 @@ func TestDepsolver(t *testing.T) {
 				pkgsets[idx] = rpmmd.PackageSet{Include: tc.packages[idx], Repositories: tc.repos, InstallWeakDeps: true}
 			}
 
+			solver := newTestSolver(t)
 			solver.SetRootDir(tc.rootDir)
 			res, err := solver.Depsolve(pkgsets, tc.sbomType)
 			if tc.err {
@@ -146,6 +157,23 @@ func TestDepsolver(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSolverFetchMetadata(t *testing.T) {
+	requireDNF(t)
+	repoServer := rpmrepo.NewTestServer()
+	defer repoServer.Close()
+	solver := newTestSolver(t)
+
+	res, err := solver.FetchMetadata([]rpmmd.RepoConfig{repoServer.RepoConfig})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	// 1125 is the number of packages in the test repository (internal/mocks/rpmrepo)
+	require.Equal(t, 1125, len(res))
+	// ensure that the packages are sorted by full NEVRA
+	require.Truef(t, sort.SliceIsSorted(res, func(i, j int) bool {
+		return res[i].NVR() < res[j].NVR()
+	}), "packages are not sorted by NVR")
 }
 
 func TestMakeDepsolveRequest(t *testing.T) {
