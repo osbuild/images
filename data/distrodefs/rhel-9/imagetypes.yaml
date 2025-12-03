@@ -348,12 +348,14 @@
         append:
           include:
             - "rng-tools"
-      "rhel-9.8+ gets azure-vm-utils":
+      "rhel-9.8+ gets azure-vm-utils and excludes initscripts-rename-device":
         when:
           version_greater_or_equal: "9.8"
         append:
           include:
             - "azure-vm-utils"
+          exclude:
+            - "initscripts-rename-device"
 
   sapapps_image_config: &sapapps_image_config
     selinux_config:

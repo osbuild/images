@@ -754,12 +754,14 @@
         append:
           include:
             - "rng-tools"
-      "rhel-10.2+ gets azure-vm-utils":
+      "rhel-10.2+ gets azure-vm-utils and excludes initscripts-rename-device":
         when:
           version_greater_or_equal: "10.2"
         append:
           include:
             - "azure-vm-utils"
+          exclude:
+            - "initscripts-rename-device"
   supported_options_lists:
     # Common options supported by all disk image types.
     # This includes everything that is not specific to installers.
