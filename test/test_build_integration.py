@@ -15,7 +15,7 @@ def _test_cases():
         # we may consider cross arch tests here at some point but for now
         # assume we run native
         "-arches", platform.uname().machine,
-        "-print-only",
+        "-dry-run",
     ], text=True).strip().split("\n")
     boot_tests = set()
     for tcase in all_test_cases:

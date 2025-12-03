@@ -424,9 +424,9 @@ func main() {
 	flag.Var(&imgTypes, "types", "comma-separated list of image types (globs supported)")
 	flag.Var(&bootcRefs, "bootc-refs", "comma-separated list of bootc-refs")
 
-	// print-only
-	var printOnly bool
-	flag.BoolVar(&printOnly, "print-only", false, "print what manifests would be generate")
+	// dry-run
+	var dryRun bool
+	flag.BoolVar(&dryRun, "dry-run", false, "print what manifests would be generated")
 
 	flag.Parse()
 
@@ -527,7 +527,7 @@ func main() {
 						continue
 					}
 
-					if printOnly {
+					if dryRun {
 						fmt.Printf("%s,%s,%s,%s\n", distribution.Name(), archName, imgType.Name(), itConfig.Name)
 					} else {
 						job := makeManifestJob(itConfig, imgType, distribution, repos, archName, cacheRoot, outputDir, contentResolve, metadata, tmpdirRoot)
@@ -585,7 +585,7 @@ func main() {
 						continue
 					}
 
-					if printOnly {
+					if dryRun {
 						fmt.Printf("%s,%s,%s,%s\n", distribution.Name(), archName, imgType.Name(), itConfig.Name)
 					} else {
 						var repos []rpmmd.RepoConfig
