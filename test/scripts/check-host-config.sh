@@ -42,15 +42,11 @@ get_oscap_score() {
     profile=$(jq -r .blueprint.customizations.openscap.profile_id "${config_file}")
     datastream=$(jq -r .blueprint.customizations.openscap.datastream "${config_file}")
     if [ "$datastream" = "null" ]; then
-	# when there is no datastream we try to find the default, see
-	# pkg/customizations/oscap/oscap.go:datastream fallbacks
-	pat="*.xml"
-	if [ "$ID" = "rhel" ]; then
-	    pat="ssg-rhel*.xml"
-	elif [ "$ID" = "centos" ]; then
-	    pat="ssg-cs*.xml"
-	fi
-	datastream=$(find /usr/share/xml/scap/ssg/content -name "$pat")
+	# we could do a datastream=$(find /usr/share/xml/scap/ssg/content -name "*.xml") here
+	# but for that we would have to build a lookup to match e.g. /etc/os-release centos-9
+	# to cs9 and similar for rhel, fedora etc
+	echo "SKIPPING oscap score as there is no datastream defined"
+	return
     fi
     sudo oscap xccdf eval \
         --results results.xml \
