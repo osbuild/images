@@ -2,6 +2,7 @@
 import argparse
 import json
 import os
+import sys
 
 import imgtestlib as testlib
 
@@ -63,6 +64,20 @@ def main():
         "runner-distro": distro_version,
     }
     testlib.write_build_info(build_dir, build_info)
+
+    # Test ISO installer with libosinfo to ensure that virt-install can locate embedded
+    # kernel and initrd for direct boot.
+    image_path = testlib.find_image_file(build_dir)
+    print(f"🔍 Testing ISO installer with libosinfo: {image_path}")
+    # https://gitlab.com/libosinfo/osinfo-db/-/merge_requests/871
+    if image_path.endswith('.iso') and 'x86_64' in image_path:
+        stdout, stderr = testlib.runcmd(["osinfo-detect", image_path])
+        output = stdout.decode() + stderr.decode()
+
+        if "Media is an installer" not in output:
+            print("❌ osinfo-detect output does not detect the image as a valid installer:")
+            print(output)
+            sys.exit(1)
 
 
 if __name__ == "__main__":

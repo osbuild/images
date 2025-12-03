@@ -9,7 +9,7 @@ distros:
     module_platform_id: platform:f44
     product: "Fedora"
     ostree_ref_tmpl: "fedora/44/%s/iot"
-    iso_label_tmpl: "{{.Product}}-{{.Distro.MajorVersion}}-{{.ISOLabel}}-{{.Arch}}"
+    iso_label_tmpl: "{{.Product}}-{{.ISOLabel}}-{{.Arch}}-{{.Distro.MajorVersion}}"
     default_fs_type: "ext4"
     defs_path: fedora
     runner: &fedora_runner
