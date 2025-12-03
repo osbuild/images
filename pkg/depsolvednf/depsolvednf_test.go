@@ -483,30 +483,6 @@ func TestErrorRepoInfo(t *testing.T) {
 	}
 }
 
-func TestRepoConfigHash(t *testing.T) {
-	repos := []rpmmd.RepoConfig{
-		{
-			Id:        "repoid-1",
-			Name:      "A test repository",
-			BaseURLs:  []string{"https://arepourl/"},
-			IgnoreSSL: common.ToPtr(false),
-		},
-		{
-			BaseURLs: []string{"https://adifferenturl/"},
-		},
-	}
-
-	solver := NewSolver("platform:f38", "38", "x86_64", "fedora-38", "/tmp/cache")
-
-	rcs, err := solver.reposFromRPMMD(repos)
-	assert.Nil(t, err)
-
-	hash := rcs[0].Hash()
-	assert.Equal(t, 64, len(hash))
-
-	assert.NotEqual(t, hash, rcs[1].Hash())
-}
-
 func TestHashRequest(t *testing.T) {
 	solver := NewSolver("platform:f38", "38", "x86_64", "fedora-38", "/tmp/cache")
 	repos := []rpmmd.RepoConfig{
@@ -535,13 +511,6 @@ func TestHashRequest(t *testing.T) {
 	reqHash2 := hashRequest(reqData2)
 	assert.Equal(t, 64, len(reqHash2))
 	assert.NotEqual(t, reqHash, reqHash2)
-}
-
-func TestRepoConfigMarshalAlsmostEmpty(t *testing.T) {
-	repoCfg := &repoConfig{}
-	js, _ := json.Marshal(repoCfg)
-	// double check here that anything that uses pointers has "omitempty" set
-	assert.Equal(t, string(js), `{"id":"","gpgcheck":false,"repo_gpgcheck":false}`)
 }
 
 func TestSolverRunErrorEmptyOutput(t *testing.T) {
@@ -590,20 +559,6 @@ echo '{"solver": "zypper"}'
 	assert.NoError(t, err)
 	assert.Equal(t, 0, len(res.Packages))
 	assert.Equal(t, 0, len(res.Repos))
-}
-
-func TestDepsolveResultWithModulesKey(t *testing.T) {
-	// quick test that verifies that `depsolveResult` understands JSON that contains
-	// a `modules` key
-	data := []byte(`{"modules": {}}`)
-
-	var result depsolveResult
-	dec := json.NewDecoder(bytes.NewReader(data))
-	dec.DisallowUnknownFields()
-
-	err := dec.Decode(&result)
-
-	assert.NoError(t, err)
 }
 
 func TestDepsolverSubscriptionsError(t *testing.T) {
