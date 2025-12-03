@@ -134,6 +134,11 @@ func (p Package) EVRA() string {
 	return fmt.Sprintf("%d:%s-%s.%s", p.Epoch, p.Version, p.Release, p.Arch)
 }
 
+// NVR returns the package's Name-Version-Release string.
+func (p Package) NVR() string {
+	return fmt.Sprintf("%s-%s-%s", p.Name, p.Version, p.Release)
+}
+
 type PackageList []Package
 
 func (pl PackageList) Package(packageName string) (*Package, error) {
