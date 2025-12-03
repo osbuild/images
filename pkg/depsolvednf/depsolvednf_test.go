@@ -176,6 +176,56 @@ func TestSolverFetchMetadata(t *testing.T) {
 	}), "packages are not sorted by NVR")
 }
 
+func TestSolverSearchMetadata(t *testing.T) {
+	requireDNF(t)
+
+	testCases := []struct {
+		name     string
+		packages []string
+		expNVRs  []string
+	}{
+		{
+			name:     "single package",
+			packages: []string{"zsh"},
+			expNVRs:  []string{"zsh-5.8-7.el9"},
+		},
+		{
+			name:     "multiple packages",
+			packages: []string{"zsh", "bash"},
+			expNVRs:  []string{"bash-5.1.8-2.el9", "zsh-5.8-7.el9"},
+		},
+		{
+			name:     "single package with wildcard",
+			packages: []string{"zsh*"},
+			expNVRs:  []string{"zsh-5.8-7.el9"},
+		},
+		{
+			name:     "multiple packages with wildcard",
+			packages: []string{"zsh*", "bash*"},
+			expNVRs:  []string{"bash-5.1.8-2.el9", "bash-completion-2.11-4.el9", "zsh-5.8-7.el9"},
+		},
+	}
+
+	s := rpmrepo.NewTestServer()
+	defer s.Close()
+	solver := newTestSolver(t)
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := solver.SearchMetadata([]rpmmd.RepoConfig{s.RepoConfig}, tc.packages)
+			require.NoError(t, err)
+			require.NotNil(t, res)
+			require.Equal(t, len(tc.expNVRs), len(res))
+			require.Truef(t, sort.SliceIsSorted(res, func(i, j int) bool {
+				return res[i].NVR() < res[j].NVR()
+			}), "packages are not sorted by NVR")
+			for i, pkg := range res {
+				require.Equal(t, tc.expNVRs[i], pkg.NVR())
+			}
+		})
+	}
+}
+
 func TestMakeDepsolveRequest(t *testing.T) {
 	baseOS := rpmmd.RepoConfig{
 		Name:     "baseos",
