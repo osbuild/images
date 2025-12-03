@@ -1783,7 +1783,7 @@ image_types:
     mime_type: "application/x-iso9660-image"
     boot_iso: true
     image_func: "iot_installer"
-    iso_label: "IoT"
+    iso_label: "IoT-dvd"
     variant: "IoT"
     ostree:
       name: "fedora-iot"
@@ -1832,7 +1832,7 @@ image_types:
     bootable: true
     boot_iso: true
     image_func: "live_installer"
-    iso_label: "Workstation"
+    iso_label: "Workstation-Live"
     variant: "Workstation"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
@@ -1904,10 +1904,10 @@ image_types:
     bootable: true
     boot_iso: true
     image_func: "image_installer"
-    # We don't know the variant of the OS pipeline being installed
-    iso_label: "Unknown"
-    # We don't know the variant that goes into the OS pipeline that gets installed
-    variant: "Unknown"
+    # We don't know the variant of the OS pipeline being installed, however, let's
+    # set something that libosinfo can detect as a valid Fedora system.
+    iso_label: "Everything-dvd"
+    variant: "Everything"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
     installer_config:
@@ -2153,7 +2153,7 @@ image_types:
     boot_iso: true
     default_size: "10 GiB"
     image_func: "iot_simplified_installer"
-    iso_label: "IoT"
+    iso_label: "IoT-dvd"
     variant: "IoT"
     ostree:
       name: "fedora"
@@ -2286,7 +2286,7 @@ image_types:
     bootable: true
     boot_iso: true
     image_func: "network-installer"
-    iso_label: "Everything"
+    iso_label: "Everything-dvd"
     variant: "Everything"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
