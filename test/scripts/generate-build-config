@@ -13,7 +13,7 @@ build/{distro}/{arch}/{image_type}/{config_name}:
   script:
     - sudo ./test/scripts/setup-osbuild-repo
     - sudo ./test/scripts/install-dependencies
-    - sudo -E pytest -k "{distro}-{arch}-{image_type}-{config_name}" ./test
+    - sudo -E pytest -s -k "{distro}-{arch}-{image_type}-{config_name}" ./test
     - sudo -E ./test/scripts/upload-results "{distro}" "{image_type}" "{config}"
   extends: .terraform
   tags:
