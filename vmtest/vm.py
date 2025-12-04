@@ -151,8 +151,7 @@ def find_ovmf():
 
 
 class QEMU(VM):
-
-    def __init__(self, img, arch="", snapshot=True, cdrom=None, extra_args=None, memory="2000"):
+    def __init__(self, img, arch="", snapshot=True, cdrom=None, extra_args=None, memory="2048"):
         super().__init__()
         self._img = pathlib.Path(img)
         self._tmpdir = tempfile.mkdtemp(prefix="vmtest-", suffix=f"-{self._img.name}")
@@ -172,6 +171,11 @@ class QEMU(VM):
         shutil.rmtree(self._tmpdir)
 
     def _gen_qemu_cmdline(self, snapshot, use_ovmf):
+        virtio_scsi_hd = [
+            "-device", "virtio-scsi-pci,id=scsi",
+            "-device", "scsi-hd,drive=disk0",
+        ]
+        virtio_net_device = "virtio-net-pci"
         if self._arch in ("arm64", "aarch64"):
             qemu_cmdline = [
                 "qemu-system-aarch64",
@@ -179,16 +183,31 @@ class QEMU(VM):
                 "-cpu", "cortex-a57",
                 "-smp", "2",
                 "-bios", "/usr/share/AAVMF/AAVMF_CODE.fd",
-            ]
+            ] + virtio_scsi_hd
         elif self._arch in ("amd64", "x86_64"):
             qemu_cmdline = [
                 "qemu-system-x86_64",
                 "-M", "accel=kvm",
                 # get "illegal instruction" inside the VM otherwise
                 "-cpu", "host",
-            ]
+            ] + virtio_scsi_hd
             if use_ovmf:
                 qemu_cmdline.extend(["-bios", find_ovmf()])
+        elif self._arch in ("ppc64le", "ppc64"):
+            qemu_cmdline = [
+                "qemu-system-ppc64",
+                "-machine", "pseries",
+                "-smp", "2",
+            ] + virtio_scsi_hd
+        elif self._arch == "s390x":
+            qemu_cmdline = [
+                "qemu-system-s390x",
+                "-machine", "s390-ccw-virtio",
+                "-smp", "2",
+                # sepcial disk setup
+                "-device", "virtio-blk,drive=disk0,bootindex=1",
+            ]
+            virtio_net_device = "virtio-net-ccw"
         else:
             raise ValueError(f"unsupported architecture {self._arch}")
 
@@ -197,9 +216,11 @@ class QEMU(VM):
             "-m", self._memory,
             "-serial", "stdio",
             "-monitor", "none",
+            "-device", f"{virtio_net_device},netdev=net.0,id=net.0",
             "-netdev", f"user,id=net.0,hostfwd=tcp::{self._ssh_port}-:22",
-            "-device", "e1000,netdev=net.0",
             "-qmp", f"unix:{self._qmp_socket},server,nowait",
+            # boot
+            "-drive", f"file={self._img},if=none,id=disk0,format=qcow2",
         ]
         if not os.environ.get("OSBUILD_TEST_QEMU_GUI"):
             qemu_cmdline.append("-nographic")
