@@ -297,6 +297,118 @@ func TestValidatePackageSetRepoChain(t *testing.T) {
 	}
 }
 
+func TestApplyRHSMSecrets(t *testing.T) {
+	// Create repos with known hashes for testing
+	rhsmRepo := rpmmd.RepoConfig{
+		Name:          "rhsm-repo",
+		BaseURLs:      []string{"https://cdn.redhat.com/content/"},
+		RHSM:          true,
+		SSLCACert:     "/etc/rhsm/ca/redhat-uep.pem",
+		SSLClientCert: "/etc/pki/entitlement/123.pem",
+		SSLClientKey:  "/etc/pki/entitlement/123-key.pem",
+	}
+	mtlsRepo := rpmmd.RepoConfig{
+		Name:          "mtls-repo",
+		BaseURLs:      []string{"https://example.com/mtls/"},
+		RHSM:          false,
+		SSLCACert:     "/etc/pki/mtls-repo/cacert",
+		SSLClientCert: "/etc/pki/mtls-repo/cert",
+		SSLClientKey:  "/etc/pki/mtls-repo/key",
+	}
+	plainRepo := rpmmd.RepoConfig{
+		Name:     "plain-repo",
+		BaseURLs: []string{"https://example.com/plain/"},
+		RHSM:     false,
+	}
+
+	testCases := []struct {
+		name         string
+		packages     rpmmd.PackageList
+		repos        []rpmmd.RepoConfig
+		wantPackages rpmmd.PackageList
+	}{
+		{
+			name: "RHSM repo overrides mtls to rhsm",
+			packages: rpmmd.PackageList{
+				{Name: "pkg1", RepoID: rhsmRepo.Hash(), Secrets: "org.osbuild.mtls"},
+			},
+			repos: []rpmmd.RepoConfig{rhsmRepo},
+			wantPackages: rpmmd.PackageList{
+				{Name: "pkg1", RepoID: rhsmRepo.Hash(), Secrets: "org.osbuild.rhsm"},
+			},
+		},
+		{
+			name: "non-RHSM repo keeps mtls secrets",
+			packages: rpmmd.PackageList{
+				{Name: "pkg1", RepoID: mtlsRepo.Hash(), Secrets: "org.osbuild.mtls"},
+			},
+			repos: []rpmmd.RepoConfig{mtlsRepo},
+			wantPackages: rpmmd.PackageList{
+				{Name: "pkg1", RepoID: mtlsRepo.Hash(), Secrets: "org.osbuild.mtls"},
+			},
+		},
+		{
+			name: "package from unknown repo keeps original secrets",
+			packages: rpmmd.PackageList{
+				{Name: "pkg1", RepoID: "unknown-repo-hash", Secrets: "org.osbuild.mtls"},
+			},
+			repos: []rpmmd.RepoConfig{},
+			wantPackages: rpmmd.PackageList{
+				{Name: "pkg1", RepoID: "unknown-repo-hash", Secrets: "org.osbuild.mtls"},
+			},
+		},
+		{
+			name: "package without secrets stays empty for non-RHSM repo",
+			packages: rpmmd.PackageList{
+				{Name: "pkg1", RepoID: plainRepo.Hash(), Secrets: ""},
+			},
+			repos: []rpmmd.RepoConfig{plainRepo},
+			wantPackages: rpmmd.PackageList{
+				{Name: "pkg1", RepoID: plainRepo.Hash(), Secrets: ""},
+			},
+		},
+		{
+			name: "RHSM repo sets secrets even if originally empty",
+			packages: rpmmd.PackageList{
+				{Name: "pkg1", RepoID: rhsmRepo.Hash(), Secrets: ""},
+			},
+			repos: []rpmmd.RepoConfig{rhsmRepo},
+			wantPackages: rpmmd.PackageList{
+				{Name: "pkg1", RepoID: rhsmRepo.Hash(), Secrets: "org.osbuild.rhsm"},
+			},
+		},
+		{
+			name: "mixed repos - only RHSM ones get overridden",
+			packages: rpmmd.PackageList{
+				{Name: "pkg1", RepoID: rhsmRepo.Hash(), Secrets: "org.osbuild.mtls"},
+				{Name: "pkg2", RepoID: mtlsRepo.Hash(), Secrets: "org.osbuild.mtls"},
+				{Name: "pkg3", RepoID: plainRepo.Hash(), Secrets: ""},
+			},
+			repos: []rpmmd.RepoConfig{rhsmRepo, mtlsRepo, plainRepo},
+			wantPackages: rpmmd.PackageList{
+				{Name: "pkg1", RepoID: rhsmRepo.Hash(), Secrets: "org.osbuild.rhsm"},
+				{Name: "pkg2", RepoID: mtlsRepo.Hash(), Secrets: "org.osbuild.mtls"},
+				{Name: "pkg3", RepoID: plainRepo.Hash(), Secrets: ""},
+			},
+		},
+		{
+			name:         "empty package list",
+			packages:     rpmmd.PackageList{},
+			repos:        []rpmmd.RepoConfig{rhsmRepo},
+			wantPackages: rpmmd.PackageList{},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			applyRHSMSecrets(tc.packages, tc.repos)
+
+			require.Equal(t, len(tc.wantPackages), len(tc.packages))
+			assert.Equal(t, tc.wantPackages, tc.packages)
+		})
+	}
+}
+
 func expectedDepsolveResult(repo rpmmd.RepoConfig) rpmmd.PackageList {
 	// need to change the url for the RemoteLocation and the repo ID since the port is different each time and we don't want to have a fixed one
 	expectedTemplate := rpmmd.PackageList{

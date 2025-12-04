@@ -297,18 +297,8 @@ func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet, sbomType sbom.StandardType
 		return nil, err
 	}
 
-	// Apply RHSM secrets to packages.
-	// The handler sets "org.osbuild.mtls" for repos with SSLClientKey,
-	// but RHSM repos need "org.osbuild.rhsm" instead.
-	rhsmReposMap := make(map[string]bool)
-	for _, repo := range allRepos {
-		rhsmReposMap[repo.Hash()] = repo.RHSM
-	}
-	for i := range resultRaw.Packages {
-		if rhsmReposMap[resultRaw.Packages[i].RepoID] {
-			resultRaw.Packages[i].Secrets = "org.osbuild.rhsm"
-		}
-	}
+	// Apply RHSM secrets to packages from RHSM repos.
+	applyRHSMSecrets(resultRaw.Packages, allRepos)
 
 	var sbomDoc *sbom.Document
 	if sbomType != sbom.StandardTypeNone {
@@ -418,6 +408,21 @@ func (s *Solver) SearchMetadata(repos []rpmmd.RepoConfig, packages []string) (rp
 	// Cache the results
 	s.resultCache.Store(reqHash, pkgs)
 	return pkgs, nil
+}
+
+// applyRHSMSecrets overrides the Secrets field on packages from RHSM repos.
+// The activeHandler sets "org.osbuild.mtls" for repos with SSLClientKey,
+// but RHSM repos need "org.osbuild.rhsm" instead.
+func applyRHSMSecrets(pkgs rpmmd.PackageList, repos []rpmmd.RepoConfig) {
+	rhsmRepos := make(map[string]bool)
+	for _, repo := range repos {
+		rhsmRepos[repo.Hash()] = repo.RHSM
+	}
+	for i := range pkgs {
+		if rhsmRepos[pkgs[i].RepoID] {
+			pkgs[i].Secrets = "org.osbuild.rhsm"
+		}
+	}
 }
 
 // validatePackageSetRepoChain validates that the repository chain is valid.
