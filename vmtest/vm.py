@@ -147,7 +147,7 @@ def find_ovmf():
 
 
 class QEMU(VM):
-    MEM = "2000"
+    MEM = "2048"
 
     def __init__(self, img, arch="", snapshot=True, cdrom=None):
         super().__init__()
@@ -184,6 +184,18 @@ class QEMU(VM):
             ]
             if use_ovmf:
                 qemu_cmdline.extend(["-bios", find_ovmf()])
+        elif self._arch == "s390x":
+            qemu_cmdline = [
+                "qemu-system-s390x",
+                "-machine", "s390-ccw-virtio",
+                "-smp", "2",
+            ]
+        elif self._arch in ("ppc64le", "ppc64"):
+            qemu_cmdline = [
+                "qemu-system-ppc64",
+                "-machine", "pseries",
+                "-smp", "2",
+            ]
         else:
             raise ValueError(f"unsupported architecture {self._arch}")
 
@@ -195,6 +207,10 @@ class QEMU(VM):
             "-netdev", f"user,id=net.0,hostfwd=tcp::{self._ssh_port}-:22",
             "-device", "e1000,netdev=net.0",
             "-qmp", f"unix:{self._qmp_socket},server,nowait",
+            # boot
+            "-device", "virtio-scsi-pci,id=scsi",
+            "-device", "scsi-hd,drive=disk0",
+            "-drive", f"file={self._img},if=none,id=disk0,format=qcow2",
         ]
         if not os.environ.get("OSBUILD_TEST_QEMU_GUI"):
             qemu_cmdline.append("-nographic")
@@ -202,7 +218,6 @@ class QEMU(VM):
             qemu_cmdline.extend(["-cdrom", self._cdrom])
         if snapshot:
             qemu_cmdline.append("-snapshot")
-        qemu_cmdline.append(self._img)
         return qemu_cmdline
 
     # XXX: move args to init() so that __enter__ can use them?

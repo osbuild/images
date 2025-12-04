@@ -136,8 +136,6 @@ def ensure_can_run_qemu_test(arch, image_path, config_file):
     qemu based test. Will return a bool and a skip_reason.
     """
     # keep in sync with imagetestlib.py:CAN_BOOT_TEST
-    if arch not in ["x86_64"]:
-        raise CannotRunQemuTest(f"no qemu boot test support for {arch} yet")
     manifest_path = pathlib.Path(image_path).parent / "../manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf8"))
     # Note that this needs adjustment when we switch to librepo
