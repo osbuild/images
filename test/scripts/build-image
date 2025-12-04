@@ -31,7 +31,9 @@ def main():
 
     cmd = ["sudo", "-E", "./bin/build", "--output", "./build",
            "--distro", distro, "--type", image_type, "--config", config_path]
+    arch = os.uname().machine
     if args.arch:
+        arch = args.arch
         cmd += ["--arch", args.arch]
     testlib.runcmd_nc(cmd, extra_env=testlib.rng_seed_env())
 
@@ -40,7 +42,6 @@ def main():
     # Build artifacts are owned by root. Make them world accessible.
     testlib.runcmd(["sudo", "chmod", "a+rwX", "-R", "./build"])
 
-    arch = os.uname().machine
     build_dir = os.path.join("build", testlib.gen_build_name(distro, arch, image_type, config_name))
     manifest_path = os.path.join(build_dir, "manifest.json")
     with open(manifest_path, "r", encoding="utf-8") as manifest_fp:
