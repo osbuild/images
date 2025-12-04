@@ -206,6 +206,7 @@ def boot_qemu_iso_no_unattended_support(arch, installer_iso_path, config_file):
     rootpw = "".join(
         random.choices(string.ascii_uppercase + string.digits, k=18))
     rhsm = ""
+    rhsm_unregister = ""
     # this is too crude, use "distro" from info file
     if "rhel" in installer_iso_path:
         org_id = os.getenv("SUBSCRIPTION_ORG")
@@ -213,6 +214,11 @@ def boot_qemu_iso_no_unattended_support(arch, installer_iso_path, config_file):
         if not org_id or not activation_key:
             raise CannotRunQemuTest("rhel unattended tests need SUBSCRIPTION_ORG and SUBSCRIPTION_ACTIVATION_KEY env")
         rhsm = f'rhsm --organization="{org_id}" --activation-key="{activation_key}"'
+        rhsm_unregister = textwrap.dedent("""\
+        # ensure we unregister after the install again, no need to keep the system registered
+        # and show up in the inventory
+        subscription-manager unregister
+        """)
     with contextlib.ExitStack() as cm:
         tmpdir = cm.enter_context(TemporaryDirectory(dir="/var/tmp"))
         (privkey_path, pubkey_path) = cm.enter_context(create_ssh_key())
@@ -236,6 +242,7 @@ def boot_qemu_iso_no_unattended_support(arch, installer_iso_path, config_file):
         # workaround for centos-10 as it fails to start here and that causes issue
         # with out "check-host-config.sh" that expects a non-degraded boot
         systemctl mask mcelog.service || true
+        {rhsm_unregister}
         %end
         """))
         new_installer_iso_path = pathlib.Path(tmpdir) / os.path.basename(installer_iso_path)
