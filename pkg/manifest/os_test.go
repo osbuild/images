@@ -113,7 +113,7 @@ func TestRhcInsightsCommands(t *testing.T) {
 	pipeline, err := os.Serialize()
 	assert.NoError(t, err)
 	CheckSystemdStageOptions(t, pipeline.Stages, []string{
-		`/usr/bin/rhc connect --organization="${ORG_ID}" --activation-key="${ACTIVATION_KEY}" --server 'subscription.rhsm.redhat.com'`,
+		`/usr/bin/rhc connect --organization="${ORG_ID}" --activation-key="${ACTIVATION_KEY}"`,
 		"/usr/sbin/semanage permissive --add rhcd_t",
 	})
 }
