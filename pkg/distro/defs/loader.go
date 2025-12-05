@@ -41,10 +41,13 @@ var (
 // this can be overriden in tests
 var defaultDataFS fs.FS = distrodefs.Data
 
-func dataFS() fs.FS {
+func dataFS(defsDir string) fs.FS {
 	// XXX: this is a short term measure, pass a set of
 	// searchPaths down the stack instead
 	dataFS := defaultDataFS
+	if defsDir != "" {
+		dataFS = os.DirFS(defsDir)
+	}
 	if overrideDir := experimentalflags.String("yamldir"); overrideDir != "" {
 		olog.Printf("WARNING: using experimental override dir %q", overrideDir)
 		dataFS = os.DirFS(overrideDir)
@@ -110,6 +113,8 @@ type DistroYAML struct {
 
 	// set by the loader
 	ID distro.ID
+
+	defsRoot string
 }
 
 func (d *DistroYAML) ImageTypes() map[string]ImageTypeYAML {
@@ -166,8 +171,8 @@ func (d *DistroYAML) runTemplates(id distro.ID) error {
 // are appended together.
 // Note that files are read separately from each other, so anchors and other
 // references can only be done within the same file.
-func loadDistros() (*distrosYAML, error) {
-	dents, err := fs.Glob(dataFS(), "*.yaml")
+func loadDistros(defsDir string) (*distrosYAML, error) {
+	dents, err := fs.Glob(dataFS(defsDir), "*.yaml")
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +180,7 @@ func loadDistros() (*distrosYAML, error) {
 	var allDistros distrosYAML
 
 	for _, name := range dents {
-		f, err := dataFS().Open(name)
+		f, err := dataFS(defsDir).Open(name)
 		if err != nil {
 			return nil, err
 		}
@@ -203,7 +208,7 @@ func loadDistros() (*distrosYAML, error) {
 // with the way distrofactory/reporegistry work which is by defining
 // distros via repository files.
 func NewDistroYAML(defsDir string, nameVer string) (*DistroYAML, error) {
-	foundDistro, err := LoadDistroWithoutImageTypes(nameVer)
+	foundDistro, err := LoadDistroWithoutImageTypes(defsDir, nameVer)
 	if err != nil {
 		return nil, err
 	}
@@ -211,14 +216,16 @@ func NewDistroYAML(defsDir string, nameVer string) (*DistroYAML, error) {
 		return nil, nil
 	}
 
+	foundDistro.defsRoot = defsDir
+
 	if err := foundDistro.LoadImageTypes(); err != nil {
 		return nil, err
 	}
 	return foundDistro, nil
 }
 
-func LoadDistroWithoutImageTypes(nameVer string) (*DistroYAML, error) {
-	distros, err := loadDistros()
+func LoadDistroWithoutImageTypes(defsDir, nameVer string) (*DistroYAML, error) {
+	distros, err := loadDistros(defsDir)
 	if err != nil {
 		return nil, err
 	}
@@ -259,7 +266,7 @@ func LoadDistroWithoutImageTypes(nameVer string) (*DistroYAML, error) {
 }
 
 func (d *DistroYAML) LoadImageTypes() error {
-	f, err := dataFS().Open(filepath.Join(d.DefsPath, "imagetypes.yaml"))
+	f, err := dataFS(d.defsRoot).Open(filepath.Join(d.DefsPath, "imagetypes.yaml"))
 	if err != nil {
 		return err
 	}

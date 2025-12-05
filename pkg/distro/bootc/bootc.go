@@ -767,7 +767,7 @@ func newBootcDistroAfterIntrospect(archStr string, info *osinfo.Info, imgref, de
 		arch: archi,
 	}
 
-	distroYAML, err := defs.LoadDistroWithoutImageTypes("bootc-generic-1")
+	distroYAML, err := defs.LoadDistroWithoutImageTypes("", "bootc-generic-1")
 	if err != nil {
 		return nil, err
 	}

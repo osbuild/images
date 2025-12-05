@@ -62,7 +62,8 @@ func matchAndNormalize(reStr, nameVer string) (string, error) {
 //
 // If no match is found it will "nil" and no error (
 func ParseID(nameVer string) (*distro.ID, error) {
-	distros, err := loadDistros()
+	// XXX defsDir?
+	distros, err := loadDistros("")
 	if err != nil {
 		return nil, err
 	}
