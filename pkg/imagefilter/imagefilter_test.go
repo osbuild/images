@@ -14,7 +14,7 @@ import (
 )
 
 func TestImageFilterSmoke(t *testing.T) {
-	fac := distrofactory.NewDefault()
+	fac := distrofactory.NewDefault("")
 	repos, err := testrepos.New()
 	require.NoError(t, err)
 
@@ -26,7 +26,7 @@ func TestImageFilterSmoke(t *testing.T) {
 }
 
 func TestImageFilterSpecificResult(t *testing.T) {
-	fac := distrofactory.NewDefault()
+	fac := distrofactory.NewDefault("")
 	repos, err := testrepos.New()
 	require.NoError(t, err)
 
@@ -46,7 +46,7 @@ func TestImageFilterSpecificResult(t *testing.T) {
 }
 
 func TestImageFilterFilter(t *testing.T) {
-	fac := distrofactory.NewDefault()
+	fac := distrofactory.NewDefault("")
 	repos, err := testrepos.New()
 	require.NoError(t, err)
 

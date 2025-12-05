@@ -435,7 +435,7 @@ func main() {
 		panic(fmt.Sprintf("failed to create repo registry with tested distros: %v", err))
 	}
 
-	distroFac := distrofactory.NewDefault()
+	distroFac := distrofactory.NewDefault("")
 	jobs := make([]manifestJob, 0)
 
 	contentResolve := map[string]bool{

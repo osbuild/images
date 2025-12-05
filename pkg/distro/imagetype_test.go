@@ -16,7 +16,7 @@ func TestManifestRepositoryCustomization(t *testing.T) {
 	var options distro.ImageOptions
 	var repos []rpmmd.RepoConfig
 
-	distroFactory := distrofactory.NewDefault()
+	distroFactory := distrofactory.NewDefault("")
 	for _, distroName := range []string{"fedora-42", "rhel-9.6"} {
 		distro := distroFactory.GetDistro(distroName)
 		arch, err := distro.GetArch("x86_64")

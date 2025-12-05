@@ -57,7 +57,7 @@ func TestImageTypePipelineNames(t *testing.T) {
 		Pipelines []pipeline `json:"pipelines"`
 	}
 
-	distroFactory := distrofactory.NewDefault()
+	distroFactory := distrofactory.NewDefault("")
 	distros := listTestedDistros(t)
 	for _, distroName := range distros {
 		d := distroFactory.GetDistro(distroName)
@@ -432,7 +432,7 @@ func TestPipelineRepositories(t *testing.T) {
 		},
 	}
 
-	distroFactory := distrofactory.NewDefault()
+	distroFactory := distrofactory.NewDefault("")
 	distros := listTestedDistros(t)
 	for tName, tCase := range testCases {
 		t.Run(tName, func(t *testing.T) {
@@ -607,7 +607,7 @@ func TestDistro_ManifestFIPSWarning(t *testing.T) {
 		"iot-qcow2",
 	}
 
-	distroFactory := distrofactory.NewDefault()
+	distroFactory := distrofactory.NewDefault("")
 	distros := listTestedDistros(t)
 	for _, distroName := range distros {
 		// FIPS blueprint customization is not supported for RHEL 7 images
@@ -660,7 +660,7 @@ func TestDistro_ManifestFIPSWarning(t *testing.T) {
 // Test that passing options.OSTree for non-OSTree image types results in an error
 func TestOSTreeOptionsErrorForNonOSTreeImgTypes(t *testing.T) {
 	assert := assert.New(t)
-	distroFactory := distrofactory.NewDefault()
+	distroFactory := distrofactory.NewDefault("")
 	assert.NotNil(distroFactory)
 
 	distros := listTestedDistros(t)

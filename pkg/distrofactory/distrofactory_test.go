@@ -63,7 +63,7 @@ func TestGetDistroDefaultList(t *testing.T) {
 		},
 	}
 
-	df := NewDefault()
+	df := NewDefault("")
 
 	for _, tc := range testCases {
 		t.Run(tc.strID, func(t *testing.T) {
@@ -117,7 +117,7 @@ func TestGetDistroDefaultListWithAliases(t *testing.T) {
 		},
 	}
 
-	df := NewDefault()
+	df := NewDefault("")
 	for _, tc := range testCases {
 		t.Run(tc.strID, func(t *testing.T) {
 			err := df.RegisterAliases(tc.aliases)

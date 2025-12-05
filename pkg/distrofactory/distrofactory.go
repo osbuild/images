@@ -96,16 +96,18 @@ func (f *Factory) RegisterAliases(aliases map[string]string) error {
 }
 
 // New returns a Factory of distro.Distro factories for the given distros.
-func New(factories ...FactoryFunc) *Factory {
+func New(defsDir string, factories ...FactoryFunc) *Factory {
 	return &Factory{
+		defsDir:   defsDir,
 		factories: factories,
 	}
 }
 
 // NewDefault returns a Factory of distro.Distro factories for all supported
 // distros.
-func NewDefault() *Factory {
+func NewDefault(defsDir string) *Factory {
 	return New(
+		defsDir,
 		generic.DistroFactory,
 		bootc.DistroFactory,
 	)
@@ -114,6 +116,7 @@ func NewDefault() *Factory {
 // NewTestDefault returns a Factory of distro.Distro factory for the test_distro.
 func NewTestDefault() *Factory {
 	return New(
+		"",
 		test_distro.DistroFactory,
 	)
 }
