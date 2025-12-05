@@ -69,8 +69,8 @@ func (d *distribution) getISOLabelFunc(isoLabel string) isoLabelFunc {
 	}
 }
 
-func newDistro(nameVer string) (distro.Distro, error) {
-	distroYAML, err := defs.NewDistroYAML(nameVer)
+func newDistro(defsDir, nameVer string) (distro.Distro, error) {
+	distroYAML, err := defs.NewDistroYAML(defsDir, nameVer)
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +225,7 @@ func (a *architecture) Distro() distro.Distro {
 }
 
 func DistroFactory(defsDir string, idStr string) distro.Distro {
-	distro, err := newDistro(idStr)
+	distro, err := newDistro(defsDir, idStr)
 	if errors.Is(err, ErrDistroNotFound) {
 		return nil
 	}

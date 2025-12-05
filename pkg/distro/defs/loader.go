@@ -202,7 +202,7 @@ func loadDistros() (*distrosYAML, error) {
 // that returns all known distros but for now we keep compatibility
 // with the way distrofactory/reporegistry work which is by defining
 // distros via repository files.
-func NewDistroYAML(nameVer string) (*DistroYAML, error) {
+func NewDistroYAML(defsDir string, nameVer string) (*DistroYAML, error) {
 	foundDistro, err := LoadDistroWithoutImageTypes(nameVer)
 	if err != nil {
 		return nil, err

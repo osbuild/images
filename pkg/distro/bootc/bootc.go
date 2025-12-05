@@ -605,14 +605,14 @@ func NewBootcDistro(imgref string, opts *DistroOptions) (*BootcDistro, error) {
 // if no direct match can be found it will it will use the ID_LIKE.
 // This should ensure we work on every bootc image that puts a correct
 // ID_LIKE= in /etc/os-release
-func newDistroYAMLFrom(sourceInfo *osinfo.Info) (*defs.DistroYAML, *distro.ID, error) {
+func newDistroYAMLFrom(defsDir string, sourceInfo *osinfo.Info) (*defs.DistroYAML, *distro.ID, error) {
 	for _, distroID := range append([]string{sourceInfo.OSRelease.ID}, sourceInfo.OSRelease.IDLike...) {
 		nameVer := fmt.Sprintf("%s-%s", distroID, sourceInfo.OSRelease.VersionID)
 		id, err := distro.ParseID(nameVer)
 		if err != nil {
 			return nil, nil, err
 		}
-		distroYAML, err := defs.NewDistroYAML(nameVer)
+		distroYAML, err := defs.NewDistroYAML(defsDir, nameVer)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -631,7 +631,8 @@ func (t *BootcImageType) manifestForLegacyISO(bp *blueprint.Blueprint, options d
 	if t.arch.distro.imgref == "" {
 		return nil, nil, fmt.Errorf("pipeline: no base image defined")
 	}
-	distroYAML, id, err := newDistroYAMLFrom(t.arch.distro.sourceInfo)
+	// XXX defsdir?
+	distroYAML, id, err := newDistroYAMLFrom("", t.arch.distro.sourceInfo)
 	if err != nil {
 		return nil, nil, err
 	}

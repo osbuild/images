@@ -34,7 +34,7 @@ func makeTestImageType(t *testing.T, fakeContent string) defs.ImageTypeYAML {
 	restore := defs.MockDataFS(baseDir)
 	t.Cleanup(restore)
 
-	distro, err := defs.NewDistroYAML("test-distro-1")
+	distro, err := defs.NewDistroYAML("", "test-distro-1")
 	require.NoError(t, err)
 	it, ok := distro.ImageTypes()["test_type"]
 	require.True(t, ok, "cannot find test_type in %s", fakeContent)
@@ -344,7 +344,7 @@ image_types:
 	baseDir := makeFakeDistrosYAML(t, fakeDistrosYaml, fakeImageTypesYaml)
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
-	td, err := defs.NewDistroYAML("test-distro-1")
+	td, err := defs.NewDistroYAML("", "test-distro-1")
 	require.NoError(t, err)
 	it := td.ImageTypes()["test_type"]
 	require.NotNil(t, it)
@@ -395,7 +395,7 @@ image_types:
 	baseDir := makeFakeDistrosYAML(t, fakeDistrosYaml, fakeImageTypesYaml)
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
-	td, err := defs.NewDistroYAML("test-distro-1")
+	td, err := defs.NewDistroYAML("", "test-distro-1")
 	require.NoError(t, err)
 	it := td.ImageTypes()["test_type"]
 	require.NotNil(t, it)
@@ -437,7 +437,7 @@ image_types:
 	baseDir := makeFakeDistrosYAML(t, fakeDistrosYaml, fakeImageTypesYaml)
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
-	_, err := defs.NewDistroYAML("test-distro-1")
+	_, err := defs.NewDistroYAML("", "test-distro-1")
 	assert.EqualError(t, err, `no default fs set: mount "/" requires a filesystem but none set`)
 }
 
@@ -645,7 +645,7 @@ image_types:
 `
 	makeTestImageType(t, fakeDistroYaml)
 
-	dist, err := defs.NewDistroYAML("test-distro-1")
+	dist, err := defs.NewDistroYAML("", "test-distro-1")
 	assert.NoError(t, err)
 	assert.Equal(t, dist.ImageConfig(), &distro.ImageConfig{
 		Locale:   common.ToPtr("C.UTF-8"),
@@ -757,7 +757,7 @@ image_types:
 `
 	makeTestImageType(t, fakeDistroYaml)
 
-	distro, err := defs.NewDistroYAML("test-distro-1")
+	distro, err := defs.NewDistroYAML("", "test-distro-1")
 	require.NoError(t, err)
 
 	imgTypes := distro.ImageTypes()
@@ -803,7 +803,7 @@ image_types:
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	_, err := defs.NewDistroYAML("test-distro-1")
+	_, err := defs.NewDistroYAML("", "test-distro-1")
 	require.ErrorContains(t, err, `cannot execute template for "vendor" field (is it set?)`)
 }
 
@@ -962,7 +962,7 @@ func TestDistrosLoadingExact(t *testing.T) {
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	dist, err := defs.NewDistroYAML("fedora-43")
+	dist, err := defs.NewDistroYAML("", "fedora-43")
 	require.NoError(t, err)
 	assert.Equal(t, dist, &defs.DistroYAML{
 		Name:             "fedora-43",
@@ -987,7 +987,7 @@ func TestDistrosLoadingExact(t *testing.T) {
 		ID: distro.ID{Name: "fedora", MajorVersion: 43, MinorVersion: -1},
 	})
 
-	dist, err = defs.NewDistroYAML("centos-10")
+	dist, err = defs.NewDistroYAML("", "centos-10")
 	require.NoError(t, err)
 	assert.Equal(t, dist, &defs.DistroYAML{
 		Name:             "centos-10",
@@ -1008,7 +1008,7 @@ func TestDistrosLoadingFactoryCompat(t *testing.T) {
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	dist, err := defs.NewDistroYAML("rhel-10.1")
+	dist, err := defs.NewDistroYAML("", "rhel-10.1")
 	require.NoError(t, err)
 	assert.Equal(t, dist, &defs.DistroYAML{
 		Name:             "rhel-10.1",
@@ -1024,7 +1024,7 @@ func TestDistrosLoadingFactoryCompat(t *testing.T) {
 		ID:               distro.ID{Name: "rhel", MajorVersion: 10, MinorVersion: 1},
 	})
 
-	dist, err = defs.NewDistroYAML("fedora-40")
+	dist, err = defs.NewDistroYAML("", "fedora-40")
 	require.NoError(t, err)
 	assert.Equal(t, dist, &defs.DistroYAML{
 		Name:             "fedora-40",
@@ -1116,7 +1116,7 @@ func TestDistrosLoadingNotFound(t *testing.T) {
 	restore := defs.MockDataFS(baseDir)
 	defer restore()
 
-	distro, err := defs.NewDistroYAML("non-exiting")
+	distro, err := defs.NewDistroYAML("", "non-exiting")
 	assert.Nil(t, err)
 	assert.Nil(t, distro)
 }
@@ -1177,7 +1177,7 @@ distros:
 		{"test-distro-2", "some-uefi-vendor"},
 	} {
 
-		distro, err := defs.NewDistroYAML(tc.distroNameVer)
+		distro, err := defs.NewDistroYAML("", tc.distroNameVer)
 		require.NoError(t, err)
 
 		imgTypes := distro.ImageTypes()
@@ -1219,7 +1219,7 @@ image_types:
 `
 	makeTestImageType(t, fakeImageTypesYaml)
 
-	distro, err := defs.NewDistroYAML("test-distro-1")
+	distro, err := defs.NewDistroYAML("", "test-distro-1")
 	assert.NoError(t, err)
 	require.NotNil(t, distro)
 	imgTypes := distro.ImageTypes()
@@ -1254,7 +1254,7 @@ distros:
 		{"rhel-8.10", "rhel-8.10", "8.10"},
 		{"rhel-810", "rhel-8.10", "8.10"},
 	} {
-		dist, err := defs.NewDistroYAML(tc.nameVer)
+		dist, err := defs.NewDistroYAML("", tc.nameVer)
 		require.NoError(t, err)
 		assert.Equal(t, dist, &defs.DistroYAML{
 			Name:             tc.expectedDistroNameVer,
