@@ -131,7 +131,7 @@ func subscriptionService(
 	if subscriptionOptions.Rhc {
 		var curlToAssociateSystem string
 		// Use rhc for registration instead of subscription manager
-		rhcConnect := fmt.Sprintf(`/usr/bin/rhc connect --organization="${ORG_ID}" --activation-key="${ACTIVATION_KEY}" --server %s`, shutil.Quote(subscriptionOptions.ServerUrl))
+		rhcConnect := `/usr/bin/rhc connect --organization="${ORG_ID}" --activation-key="${ACTIVATION_KEY}"`
 		if subscriptionOptions.TemplateUUID != "" {
 			curlToAssociateSystem = getCurlToAssociateSystem(subscriptionOptions)
 		} else if subscriptionOptions.TemplateName != "" {
