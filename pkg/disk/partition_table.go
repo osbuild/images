@@ -1643,12 +1643,24 @@ func needsBoot(disk *blueprint.DiskCustomization) bool {
 			}
 		case "btrfs":
 			foundBtrfsOrLVM = true
-			// check if any of the subvols is root
+
+			// check if any of the subvols is root and no subvol is boot
+			hasRoot := false
+			hasBoot := false
+
 			for _, subvol := range part.Subvolumes {
 				if subvol.Mountpoint == "/" {
-					return true
+					hasRoot = true
+				}
+				if subvol.Mountpoint == "/boot" {
+					hasBoot = true
 				}
 			}
+
+			if hasRoot {
+				return !hasBoot
+			}
+
 		default:
 			// NOTE: invalid types should be validated elsewhere
 		}
