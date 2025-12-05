@@ -16,9 +16,9 @@ import (
 )
 
 var fedoraFamilyDistros = []distro.Distro{
-	generic.DistroFactory("fedora-40"),
-	generic.DistroFactory("fedora-41"),
-	generic.DistroFactory("fedora-42"),
+	generic.DistroFactory("", "fedora-40"),
+	generic.DistroFactory("", "fedora-41"),
+	generic.DistroFactory("", "fedora-42"),
 }
 
 func TestFedoraFilenameFromType(t *testing.T) {
@@ -677,7 +677,7 @@ func TestFedoraDistroFactory(t *testing.T) {
 	testCases := []testCase{
 		{
 			strID:    "fedora-40",
-			expected: generic.DistroFactory("fedora-40"),
+			expected: generic.DistroFactory("", "fedora-40"),
 		},
 		{
 			strID:    "fedora-40.1",
@@ -695,7 +695,7 @@ func TestFedoraDistroFactory(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.strID, func(t *testing.T) {
-			d := generic.DistroFactory(tc.strID)
+			d := generic.DistroFactory("", tc.strID)
 			if tc.expected == nil {
 				assert.Nil(t, d)
 			} else {

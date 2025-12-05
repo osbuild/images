@@ -224,7 +224,7 @@ func (a *architecture) Distro() distro.Distro {
 	return a.distro
 }
 
-func DistroFactory(idStr string) distro.Distro {
+func DistroFactory(defsDir string, idStr string) distro.Distro {
 	distro, err := newDistro(idStr)
 	if errors.Is(err, ErrDistroNotFound) {
 		return nil

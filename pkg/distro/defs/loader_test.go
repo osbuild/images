@@ -163,7 +163,7 @@ image_types:
 	fakeBaseDir := makeFakeDistrosYAML(t, "", fakeImgTypesYAML)
 
 	t.Setenv("IMAGE_BUILDER_EXPERIMENTAL", fmt.Sprintf("yamldir=%s", fakeBaseDir))
-	dist := generic.DistroFactory("test-distro-1")
+	dist := generic.DistroFactory("", "test-distro-1")
 	assert.NotNil(t, dist)
 	ar, err := dist.GetArch("x86_64")
 	assert.NoError(t, err)
@@ -1100,7 +1100,7 @@ distros:
 			// this layer. XXX: consolidate it to the YAML level
 			// already?
 
-			distro := generic.DistroFactory(tc.distroNameVer)
+			distro := generic.DistroFactory("", tc.distroNameVer)
 			require.NotNil(t, distro)
 			assert.Equal(t, tc.distroNameVer, distro.Name())
 			a, err := distro.GetArch("x86_64")

@@ -22,7 +22,7 @@ type rhel10FamilyDistro struct {
 var rhel10FamilyDistros = []rhel10FamilyDistro{
 	{
 		name:   "rhel-10.0",
-		distro: generic.DistroFactory("rhel-10.0"),
+		distro: generic.DistroFactory("", "rhel-10.0"),
 	},
 }
 
@@ -383,7 +383,7 @@ func TestRH10Rhel10_KernelOption(t *testing.T) {
 
 func TestRH10Rhel10_KernelOption_NoIfnames(t *testing.T) {
 	for _, distroName := range []string{"rhel-10.0", "centos-10"} {
-		distro := generic.DistroFactory(distroName)
+		distro := generic.DistroFactory("", distroName)
 		for _, archName := range distro.ListArches() {
 			arch, err := distro.GetArch(archName)
 			assert.NoError(t, err)

@@ -49,7 +49,7 @@ func TestRhel9_EC2Partitioning(t *testing.T) {
 					continue
 				}
 				t.Run(fmt.Sprintf("%s/%s/%s", tt.distro, arch, it), func(t *testing.T) {
-					a, err := DistroFactory(tt.distro).GetArch(arch)
+					a, err := DistroFactory("", tt.distro).GetArch(arch)
 					require.NoError(t, err)
 					i, err := a.GetImageType(it)
 					require.NoError(t, err)
@@ -116,7 +116,7 @@ func TestRhel9_DistroFactory(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.strID, func(t *testing.T) {
-			d := DistroFactory(tc.strID)
+			d := DistroFactory("", tc.strID)
 			if tc.expected == nil {
 				assert.Nil(t, d)
 			} else {

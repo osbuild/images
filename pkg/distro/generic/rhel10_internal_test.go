@@ -52,7 +52,7 @@ func TestRH10DistroFactory(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.strID, func(t *testing.T) {
-			d := DistroFactory(tc.strID)
+			d := DistroFactory("", tc.strID)
 			if tc.expected == nil {
 				assert.Nil(t, d)
 			} else {
@@ -65,7 +65,7 @@ func TestRH10DistroFactory(t *testing.T) {
 
 func TestRhel10_NoBootPartition(t *testing.T) {
 	for _, distroName := range []string{"rhel-10.0", "centos-10"} {
-		dist := DistroFactory(distroName)
+		dist := DistroFactory("", distroName)
 		require.NotNil(t, dist, distroName)
 		for _, archName := range dist.ListArches() {
 			arch, err := dist.GetArch(archName)

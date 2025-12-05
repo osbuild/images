@@ -1919,7 +1919,7 @@ func TestCheckOptions(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			assert := assert.New(t)
 
-			d := generic.DistroFactory(tc.distro)
+			d := generic.DistroFactory("", tc.distro)
 			archName := tc.arch
 			if archName == "" {
 				archName = "x86_64"

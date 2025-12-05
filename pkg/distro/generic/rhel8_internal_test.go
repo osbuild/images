@@ -50,7 +50,7 @@ func TestRH8_EC2Partitioning(t *testing.T) {
 					continue
 				}
 				t.Run(fmt.Sprintf("%s/%s/%s", tt.distro, arch, it), func(t *testing.T) {
-					d := DistroFactory(tt.distro)
+					d := DistroFactory("", tt.distro)
 					require.NotNil(t, d)
 					a, err := d.GetArch(arch)
 					require.NoError(t, err)
@@ -129,7 +129,7 @@ func TestRH8_DistroFactory(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.strID, func(t *testing.T) {
-			d := DistroFactory(tc.strID)
+			d := DistroFactory("", tc.strID)
 			if tc.expected == nil {
 				assert.Nil(t, d)
 			} else {
@@ -143,7 +143,7 @@ func TestRH8_DistroFactory(t *testing.T) {
 func RH8_TestESP(t *testing.T) {
 	var distros []distro.Distro
 	for _, distroName := range []string{"rhel-8.8", "rhel-8.9", "rhel-8.10", "centos-8"} {
-		distros = append(distros, DistroFactory(distroName))
+		distros = append(distros, DistroFactory("", distroName))
 	}
 
 	distro_test_common.TestESP(t, distros, func(i distro.ImageType) (*disk.PartitionTable, error) {

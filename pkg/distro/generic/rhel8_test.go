@@ -17,7 +17,7 @@ import (
 var rhel8_FamilyDistros = []rhelFamilyDistro{
 	{
 		name:   "rhel-810",
-		distro: generic.DistroFactory("rhel-810"),
+		distro: generic.DistroFactory("", "rhel-810"),
 	},
 }
 
@@ -630,7 +630,7 @@ func TestRhel8_DistroFactory(t *testing.T) {
 	testCases := []testCase{
 		{
 			strID:    "rhel-8.10",
-			expected: generic.DistroFactory("rhel-8.10"),
+			expected: generic.DistroFactory("", "rhel-8.10"),
 		},
 		{
 			strID:    "rhel-8.4.1",
@@ -644,7 +644,7 @@ func TestRhel8_DistroFactory(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.strID, func(t *testing.T) {
-			d := generic.DistroFactory(tc.strID)
+			d := generic.DistroFactory("", tc.strID)
 			if tc.expected == nil {
 				assert.Nil(t, d)
 			} else {

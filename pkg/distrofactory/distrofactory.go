@@ -13,10 +13,12 @@ import (
 // FactoryFunc is a function that returns a distro.Distro for a given distro
 // represented as a string. If the string does not represent a distro, that can
 // be detected by the factory, it should return nil.
-type FactoryFunc func(idStr string) distro.Distro
+type FactoryFunc func(defsDir string, idStr string) distro.Distro
 
 // Factory is a list of distro.Distro factories.
 type Factory struct {
+	defsDir string
+
 	factories []FactoryFunc
 
 	// distro ID string aliases
@@ -28,8 +30,8 @@ type Factory struct {
 // factories match the given distro ID, it panics.
 func (f *Factory) getDistro(name string) distro.Distro {
 	var match distro.Distro
-	for _, f := range f.factories {
-		if d := f(name); d != nil {
+	for _, ff := range f.factories {
+		if d := ff(f.defsDir, name); d != nil {
 			if match != nil {
 				panic(fmt.Sprintf("distro ID was matched by multiple distro factories: %v, %v", match, d))
 			}
@@ -71,10 +73,10 @@ func (f *Factory) RegisterAliases(aliases map[string]string) error {
 	for alias, target := range aliases {
 		var targetExists bool
 		for _, factory := range f.factories {
-			if factory(alias) != nil {
+			if factory(f.defsDir, alias) != nil {
 				errors = append(errors, fmt.Sprintf("alias '%s' masks an existing distro", alias))
 			}
-			if factory(target) != nil {
+			if factory(f.defsDir, target) != nil {
 				targetExists = true
 			}
 		}

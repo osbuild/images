@@ -401,7 +401,7 @@ func newTestDistro(releasever string) *TestDistro {
 	return &td
 }
 
-func DistroFactory(idStr string) distro.Distro {
+func DistroFactory(defsDir string, idStr string) distro.Distro {
 	id, err := distro.ParseID(idStr)
 	if err != nil {
 		return nil

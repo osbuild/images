@@ -793,7 +793,7 @@ func newBootcDistroAfterIntrospect(archStr string, info *osinfo.Info, imgref, de
 // anything but tests.
 var NewBootcDistroForTesting = newBootcDistroAfterIntrospect
 
-func DistroFactory(idStr string) distro.Distro {
+func DistroFactory(defsDir string, idStr string) distro.Distro {
 	l := strings.SplitN(idStr, ":", 2)
 	if l[0] != "bootc" {
 		return nil
