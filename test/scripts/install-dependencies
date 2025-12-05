@@ -8,6 +8,8 @@ dnf -y install \
     btrfs-progs-devel \
     cloud-utils \
     device-mapper-devel \
+    libosinfo \
+    gettext \
     libvirt-devel \
     gcc \
     go \
