@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 
@@ -20,13 +21,25 @@ import (
 
 var forceDNF = flag.Bool("force-dnf", false, "force dnf testing, making them fail instead of skip if dnf isn't installed")
 
-func TestDepsolver(t *testing.T) {
+func requireDNF(t *testing.T) {
+	t.Helper()
 	if !*forceDNF {
 		// dnf tests aren't forced: skip them if the dnf sniff check fails
 		if findDepsolveDnf() == "" {
 			t.Skip("Test needs an installed osbuild-depsolve-dnf")
 		}
 	}
+}
+
+func newTestSolver(t *testing.T) *Solver {
+	t.Helper()
+	tmpdir := t.TempDir()
+	solver := NewSolver("platform:el9", "9", "x86_64", "centos-stream-9", tmpdir)
+	return solver
+}
+
+func TestSolverDepsolve(t *testing.T) {
+	requireDNF(t)
 
 	s := rpmrepo.NewTestServer()
 	defer s.Close()
@@ -39,9 +52,6 @@ func TestDepsolver(t *testing.T) {
 		err      bool
 		expMsg   string
 	}
-
-	tmpdir := t.TempDir()
-	solver := NewSolver("platform:el9", "9", "x86_64", "rhel9.0", tmpdir)
 
 	rootDir := t.TempDir()
 	reposDir := filepath.Join(rootDir, "etc", "yum.repos.d")
@@ -124,6 +134,7 @@ func TestDepsolver(t *testing.T) {
 				pkgsets[idx] = rpmmd.PackageSet{Include: tc.packages[idx], Repositories: tc.repos, InstallWeakDeps: true}
 			}
 
+			solver := newTestSolver(t)
 			solver.SetRootDir(tc.rootDir)
 			res, err := solver.Depsolve(pkgsets, tc.sbomType)
 			if tc.err {
@@ -136,7 +147,7 @@ func TestDepsolver(t *testing.T) {
 			}
 
 			assert.Equal(len(res.Repos), 1)
-			assert.Equal(expectedResult(res.Repos[0]), res.Packages)
+			assert.Equal(expectedDepsolveResult(res.Repos[0]), res.Packages)
 
 			if tc.sbomType != sbom.StandardTypeNone {
 				require.NotNil(t, res.SBOM)
@@ -148,7 +159,74 @@ func TestDepsolver(t *testing.T) {
 	}
 }
 
-func TestMakeDepsolveRequest(t *testing.T) {
+func TestSolverFetchMetadata(t *testing.T) {
+	requireDNF(t)
+	repoServer := rpmrepo.NewTestServer()
+	defer repoServer.Close()
+	solver := newTestSolver(t)
+
+	res, err := solver.FetchMetadata([]rpmmd.RepoConfig{repoServer.RepoConfig})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	// 1125 is the number of packages in the test repository (internal/mocks/rpmrepo)
+	require.Equal(t, 1125, len(res))
+	// ensure that the packages are sorted by full NEVRA
+	require.Truef(t, sort.SliceIsSorted(res, func(i, j int) bool {
+		return res[i].NVR() < res[j].NVR()
+	}), "packages are not sorted by NVR")
+}
+
+func TestSolverSearchMetadata(t *testing.T) {
+	requireDNF(t)
+
+	testCases := []struct {
+		name     string
+		packages []string
+		expNVRs  []string
+	}{
+		{
+			name:     "single package",
+			packages: []string{"zsh"},
+			expNVRs:  []string{"zsh-5.8-7.el9"},
+		},
+		{
+			name:     "multiple packages",
+			packages: []string{"zsh", "bash"},
+			expNVRs:  []string{"bash-5.1.8-2.el9", "zsh-5.8-7.el9"},
+		},
+		{
+			name:     "single package with wildcard",
+			packages: []string{"zsh*"},
+			expNVRs:  []string{"zsh-5.8-7.el9"},
+		},
+		{
+			name:     "multiple packages with wildcard",
+			packages: []string{"zsh*", "bash*"},
+			expNVRs:  []string{"bash-5.1.8-2.el9", "bash-completion-2.11-4.el9", "zsh-5.8-7.el9"},
+		},
+	}
+
+	s := rpmrepo.NewTestServer()
+	defer s.Close()
+	solver := newTestSolver(t)
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := solver.SearchMetadata([]rpmmd.RepoConfig{s.RepoConfig}, tc.packages)
+			require.NoError(t, err)
+			require.NotNil(t, res)
+			require.Equal(t, len(tc.expNVRs), len(res))
+			require.Truef(t, sort.SliceIsSorted(res, func(i, j int) bool {
+				return res[i].NVR() < res[j].NVR()
+			}), "packages are not sorted by NVR")
+			for i, pkg := range res {
+				require.Equal(t, tc.expNVRs[i], pkg.NVR())
+			}
+		})
+	}
+}
+
+func TestValidatePackageSetRepoChain(t *testing.T) {
 	baseOS := rpmmd.RepoConfig{
 		Name:     "baseos",
 		BaseURLs: []string{"https://example.org/baseos"},
@@ -165,453 +243,173 @@ func TestMakeDepsolveRequest(t *testing.T) {
 		Name:     "user-repo-2",
 		BaseURLs: []string{"https://example.org/user-repo-2"},
 	}
-	moduleHotfixRepo := rpmmd.RepoConfig{
-		Name:           "module-hotfixes",
-		BaseURLs:       []string{"https://example.org/nginx"},
-		ModuleHotfixes: common.ToPtr(true),
-	}
-	mtlsRepo := rpmmd.RepoConfig{
-		Name:          "mtls",
-		BaseURLs:      []string{"https://example.org/mtls"},
-		SSLCACert:     "/cacert",
-		SSLClientCert: "/cert",
-		SSLClientKey:  "/key",
-	}
 
-	tests := []struct {
-		packageSets []rpmmd.PackageSet
-		args        []transactionArgs
-		wantRepos   []repoConfig
-		withSbom    bool
-		err         bool
+	testCases := []struct {
+		name    string
+		pkgSets []rpmmd.PackageSet
+		errMsg  string
 	}{
-		// single transaction
 		{
-			packageSets: []rpmmd.PackageSet{
-				{
-					Include: []string{"pkg1"},
-					Exclude: []string{"pkg2"},
-					Repositories: []rpmmd.RepoConfig{
-						baseOS,
-						appstream,
-					},
-					InstallWeakDeps: true,
-				},
-			},
-			args: []transactionArgs{
-				{
-					PackageSpecs:    []string{"pkg1"},
-					ExcludeSpecs:    []string{"pkg2"},
-					RepoIDs:         []string{baseOS.Hash(), appstream.Hash()},
-					InstallWeakDeps: true,
-				},
-			},
-			wantRepos: []repoConfig{
-				{
-					ID:       baseOS.Hash(),
-					Name:     "baseos",
-					BaseURLs: []string{"https://example.org/baseos"},
-					repoHash: "f177f580cf201f52d1c62968d5b85cddae3e06cb9d5058987c07de1dbd769d4b",
-				},
-				{
-					ID:       appstream.Hash(),
-					Name:     "appstream",
-					BaseURLs: []string{"https://example.org/appstream"},
-					repoHash: "5c4a57bbb1b6a1886291819f2ceb25eb7c92e80065bc986a75c5837cf3d55a1f",
-				},
+			name: "happy path - single transaction",
+			pkgSets: []rpmmd.PackageSet{
+				{Include: []string{"pkg1"}, Repositories: []rpmmd.RepoConfig{baseOS}},
 			},
 		},
-		// 2 transactions + package set specific repo
 		{
-			packageSets: []rpmmd.PackageSet{
-				{
-					Include:         []string{"pkg1"},
-					Exclude:         []string{"pkg2"},
-					Repositories:    []rpmmd.RepoConfig{baseOS, appstream},
-					InstallWeakDeps: true,
-				},
-				{
-					Include:      []string{"pkg3"},
-					Repositories: []rpmmd.RepoConfig{baseOS, appstream, userRepo},
-				},
-			},
-			args: []transactionArgs{
-				{
-					PackageSpecs:    []string{"pkg1"},
-					ExcludeSpecs:    []string{"pkg2"},
-					RepoIDs:         []string{baseOS.Hash(), appstream.Hash()},
-					InstallWeakDeps: true,
-				},
-				{
-					PackageSpecs: []string{"pkg3"},
-					RepoIDs:      []string{baseOS.Hash(), appstream.Hash(), userRepo.Hash()},
-				},
-			},
-			wantRepos: []repoConfig{
-				{
-					ID:       baseOS.Hash(),
-					Name:     "baseos",
-					BaseURLs: []string{"https://example.org/baseos"},
-					repoHash: "f177f580cf201f52d1c62968d5b85cddae3e06cb9d5058987c07de1dbd769d4b",
-				},
-				{
-					ID:       appstream.Hash(),
-					Name:     "appstream",
-					BaseURLs: []string{"https://example.org/appstream"},
-					repoHash: "5c4a57bbb1b6a1886291819f2ceb25eb7c92e80065bc986a75c5837cf3d55a1f",
-				},
-				{
-					ID:       userRepo.Hash(),
-					Name:     "user-repo",
-					BaseURLs: []string{"https://example.org/user-repo"},
-					repoHash: "1d3b23c311a5597ae217a0023eab3a401e7ba569066a0b91ffdcae04795af184",
-				},
+			name: "happy path",
+			pkgSets: []rpmmd.PackageSet{
+				{Include: []string{"pkg1"}, Repositories: []rpmmd.RepoConfig{baseOS}},
+				{Include: []string{"pkg2"}, Repositories: []rpmmd.RepoConfig{baseOS, appstream}},
+				{Include: []string{"pkg3"}, Repositories: []rpmmd.RepoConfig{baseOS, appstream, userRepo}},
 			},
 		},
-		// 2 transactions + no package set specific repos
 		{
-			packageSets: []rpmmd.PackageSet{
-				{
-					Include:         []string{"pkg1"},
-					Exclude:         []string{"pkg2"},
-					Repositories:    []rpmmd.RepoConfig{baseOS, appstream},
-					InstallWeakDeps: true,
-				},
-				{
-					Include:      []string{"pkg3"},
-					Repositories: []rpmmd.RepoConfig{baseOS, appstream},
-				},
+			name: "Error: 3 transactions + 3rd one not using repo used by 2nd",
+			pkgSets: []rpmmd.PackageSet{
+				{Include: []string{"pkg1"}, Repositories: []rpmmd.RepoConfig{baseOS}},
+				{Include: []string{"pkg2"}, Repositories: []rpmmd.RepoConfig{baseOS, appstream, userRepo}},
+				{Include: []string{"pkg3"}, Repositories: []rpmmd.RepoConfig{baseOS, appstream, userRepo2}},
 			},
-			args: []transactionArgs{
-				{
-					PackageSpecs:    []string{"pkg1"},
-					ExcludeSpecs:    []string{"pkg2"},
-					RepoIDs:         []string{baseOS.Hash(), appstream.Hash()},
-					InstallWeakDeps: true,
-				},
-				{
-					PackageSpecs: []string{"pkg3"},
-					RepoIDs:      []string{baseOS.Hash(), appstream.Hash()},
-				},
-			},
-			wantRepos: []repoConfig{
-				{
-					ID:       baseOS.Hash(),
-					Name:     "baseos",
-					BaseURLs: []string{"https://example.org/baseos"},
-					repoHash: "f177f580cf201f52d1c62968d5b85cddae3e06cb9d5058987c07de1dbd769d4b",
-				},
-				{
-					ID:       appstream.Hash(),
-					Name:     "appstream",
-					BaseURLs: []string{"https://example.org/appstream"},
-					repoHash: "5c4a57bbb1b6a1886291819f2ceb25eb7c92e80065bc986a75c5837cf3d55a1f",
-				},
-			},
+			errMsg: "chained packageSet 2 does not use all of the repos used by its predecessor",
 		},
-		// 3 transactions + package set specific repo used by 2nd and 3rd transaction
 		{
-			packageSets: []rpmmd.PackageSet{
-				{
-					Include:         []string{"pkg1"},
-					Exclude:         []string{"pkg2"},
-					Repositories:    []rpmmd.RepoConfig{baseOS, appstream},
-					InstallWeakDeps: true,
-				},
-				{
-					Include:      []string{"pkg3"},
-					Repositories: []rpmmd.RepoConfig{baseOS, appstream, userRepo},
-				},
-				{
-					Include:      []string{"pkg4"},
-					Repositories: []rpmmd.RepoConfig{baseOS, appstream, userRepo},
-				},
+			name: "Error: 3 transactions but last one doesn't specify user repos in 2nd",
+			pkgSets: []rpmmd.PackageSet{
+				{Include: []string{"pkg1"}, Repositories: []rpmmd.RepoConfig{baseOS}},
+				{Include: []string{"pkg2"}, Repositories: []rpmmd.RepoConfig{baseOS, appstream, userRepo}},
+				{Include: []string{"pkg3"}, Repositories: []rpmmd.RepoConfig{baseOS, appstream}},
 			},
-			args: []transactionArgs{
-				{
-					PackageSpecs:    []string{"pkg1"},
-					ExcludeSpecs:    []string{"pkg2"},
-					RepoIDs:         []string{baseOS.Hash(), appstream.Hash()},
-					InstallWeakDeps: true,
-				},
-				{
-					PackageSpecs: []string{"pkg3"},
-					RepoIDs:      []string{baseOS.Hash(), appstream.Hash(), userRepo.Hash()},
-				},
-				{
-					PackageSpecs: []string{"pkg4"},
-					RepoIDs:      []string{baseOS.Hash(), appstream.Hash(), userRepo.Hash()},
-				},
-			},
-			wantRepos: []repoConfig{
-				{
-					ID:       baseOS.Hash(),
-					Name:     "baseos",
-					BaseURLs: []string{"https://example.org/baseos"},
-					repoHash: "f177f580cf201f52d1c62968d5b85cddae3e06cb9d5058987c07de1dbd769d4b",
-				},
-				{
-					ID:       appstream.Hash(),
-					Name:     "appstream",
-					BaseURLs: []string{"https://example.org/appstream"},
-					repoHash: "5c4a57bbb1b6a1886291819f2ceb25eb7c92e80065bc986a75c5837cf3d55a1f",
-				},
-				{
-					ID:       userRepo.Hash(),
-					Name:     "user-repo",
-					BaseURLs: []string{"https://example.org/user-repo"},
-					repoHash: "1d3b23c311a5597ae217a0023eab3a401e7ba569066a0b91ffdcae04795af184",
-				},
-			},
-		},
-		// 3 transactions + package set specific repo used by 2nd and 3rd transaction
-		// + 3rd transaction using another repo
-		{
-			packageSets: []rpmmd.PackageSet{
-				{
-					Include:         []string{"pkg1"},
-					Exclude:         []string{"pkg2"},
-					Repositories:    []rpmmd.RepoConfig{baseOS, appstream},
-					InstallWeakDeps: true,
-				},
-				{
-					Include:      []string{"pkg3"},
-					Repositories: []rpmmd.RepoConfig{baseOS, appstream, userRepo},
-				},
-				{
-					Include:      []string{"pkg4"},
-					Repositories: []rpmmd.RepoConfig{baseOS, appstream, userRepo, userRepo2},
-				},
-			},
-			args: []transactionArgs{
-				{
-					PackageSpecs:    []string{"pkg1"},
-					ExcludeSpecs:    []string{"pkg2"},
-					RepoIDs:         []string{baseOS.Hash(), appstream.Hash()},
-					InstallWeakDeps: true,
-				},
-				{
-					PackageSpecs: []string{"pkg3"},
-					RepoIDs:      []string{baseOS.Hash(), appstream.Hash(), userRepo.Hash()},
-				},
-				{
-					PackageSpecs: []string{"pkg4"},
-					RepoIDs:      []string{baseOS.Hash(), appstream.Hash(), userRepo.Hash(), userRepo2.Hash()},
-				},
-			},
-			wantRepos: []repoConfig{
-				{
-					ID:       baseOS.Hash(),
-					Name:     "baseos",
-					BaseURLs: []string{"https://example.org/baseos"},
-					repoHash: "f177f580cf201f52d1c62968d5b85cddae3e06cb9d5058987c07de1dbd769d4b",
-				},
-				{
-					ID:       appstream.Hash(),
-					Name:     "appstream",
-					BaseURLs: []string{"https://example.org/appstream"},
-					repoHash: "5c4a57bbb1b6a1886291819f2ceb25eb7c92e80065bc986a75c5837cf3d55a1f",
-				},
-				{
-					ID:       userRepo.Hash(),
-					Name:     "user-repo",
-					BaseURLs: []string{"https://example.org/user-repo"},
-					repoHash: "1d3b23c311a5597ae217a0023eab3a401e7ba569066a0b91ffdcae04795af184",
-				},
-				{
-					ID:       userRepo2.Hash(),
-					Name:     "user-repo-2",
-					BaseURLs: []string{"https://example.org/user-repo-2"},
-					repoHash: "9fca2ee4a26933d0b2f8e318b398d5e2bff53cb8c14d3c7a8c47f4429ccb4c41",
-				},
-			},
-		},
-		// Error: 3 transactions + 3rd one not using repo used by 2nd one
-		{
-			packageSets: []rpmmd.PackageSet{
-				{
-					Include:         []string{"pkg1"},
-					Exclude:         []string{"pkg2"},
-					Repositories:    []rpmmd.RepoConfig{baseOS, appstream},
-					InstallWeakDeps: true,
-				},
-				{
-					Include:      []string{"pkg3"},
-					Repositories: []rpmmd.RepoConfig{baseOS, appstream, userRepo},
-				},
-				{
-					Include:      []string{"pkg4"},
-					Repositories: []rpmmd.RepoConfig{baseOS, appstream, userRepo2},
-				},
-			},
-			err: true,
-		},
-		// Error: 3 transactions but last one doesn't specify user repos in 2nd
-		{
-			packageSets: []rpmmd.PackageSet{
-				{
-					Include:         []string{"pkg1"},
-					Exclude:         []string{"pkg2"},
-					Repositories:    []rpmmd.RepoConfig{baseOS, appstream},
-					InstallWeakDeps: true,
-				},
-				{
-					Include:      []string{"pkg3"},
-					Repositories: []rpmmd.RepoConfig{baseOS, appstream, userRepo, userRepo2},
-				},
-				{
-					Include:      []string{"pkg4"},
-					Repositories: []rpmmd.RepoConfig{baseOS, appstream},
-				},
-			},
-			err: true,
-		},
-		// module hotfixes flag passed
-		{
-			packageSets: []rpmmd.PackageSet{
-				{
-					Include:      []string{"pkg1"},
-					Repositories: []rpmmd.RepoConfig{baseOS, appstream, moduleHotfixRepo},
-				},
-			},
-			args: []transactionArgs{
-				{
-					PackageSpecs: []string{"pkg1"},
-					RepoIDs:      []string{baseOS.Hash(), appstream.Hash(), moduleHotfixRepo.Hash()},
-				},
-			},
-			wantRepos: []repoConfig{
-				{
-					ID:       baseOS.Hash(),
-					Name:     "baseos",
-					BaseURLs: []string{"https://example.org/baseos"},
-					repoHash: "f177f580cf201f52d1c62968d5b85cddae3e06cb9d5058987c07de1dbd769d4b",
-				},
-				{
-					ID:       appstream.Hash(),
-					Name:     "appstream",
-					BaseURLs: []string{"https://example.org/appstream"},
-					repoHash: "5c4a57bbb1b6a1886291819f2ceb25eb7c92e80065bc986a75c5837cf3d55a1f",
-				},
-				{
-					ID:             moduleHotfixRepo.Hash(),
-					Name:           "module-hotfixes",
-					BaseURLs:       []string{"https://example.org/nginx"},
-					ModuleHotfixes: common.ToPtr(true),
-					repoHash:       "b7d998ee8657964c17709e35ea7eaaffe4c84f9e41cc05250a1d16e8352d52e4",
-				},
-			},
-		},
-		// mtls certs passed
-		{
-			packageSets: []rpmmd.PackageSet{
-				{
-					Include:      []string{"pkg1"},
-					Repositories: []rpmmd.RepoConfig{baseOS, appstream, mtlsRepo},
-				},
-			},
-			args: []transactionArgs{
-				{
-					PackageSpecs: []string{"pkg1"},
-					RepoIDs:      []string{baseOS.Hash(), appstream.Hash(), mtlsRepo.Hash()},
-				},
-			},
-			wantRepos: []repoConfig{
-				{
-					ID:       baseOS.Hash(),
-					Name:     "baseos",
-					BaseURLs: []string{"https://example.org/baseos"},
-					repoHash: "f177f580cf201f52d1c62968d5b85cddae3e06cb9d5058987c07de1dbd769d4b",
-				},
-				{
-					ID:       appstream.Hash(),
-					Name:     "appstream",
-					BaseURLs: []string{"https://example.org/appstream"},
-					repoHash: "5c4a57bbb1b6a1886291819f2ceb25eb7c92e80065bc986a75c5837cf3d55a1f",
-				},
-				{
-					ID:            mtlsRepo.Hash(),
-					Name:          "mtls",
-					BaseURLs:      []string{"https://example.org/mtls"},
-					SSLCACert:     "/cacert",
-					SSLClientCert: "/cert",
-					SSLClientKey:  "/key",
-					repoHash:      "a1e83d633e76a8c6bcf5df21f010f4e97b864f2fa296c3dac214da10efad650a",
-				},
-			},
-		},
-		// 2 transactions + wantSbom flag
-		{
-			packageSets: []rpmmd.PackageSet{
-				{
-					Include:         []string{"pkg1"},
-					Exclude:         []string{"pkg2"},
-					Repositories:    []rpmmd.RepoConfig{baseOS, appstream},
-					InstallWeakDeps: true,
-				},
-				{
-					Include:      []string{"pkg3"},
-					Repositories: []rpmmd.RepoConfig{baseOS, appstream},
-				},
-			},
-			args: []transactionArgs{
-				{
-					PackageSpecs:    []string{"pkg1"},
-					ExcludeSpecs:    []string{"pkg2"},
-					RepoIDs:         []string{baseOS.Hash(), appstream.Hash()},
-					InstallWeakDeps: true,
-				},
-				{
-					PackageSpecs: []string{"pkg3"},
-					RepoIDs:      []string{baseOS.Hash(), appstream.Hash()},
-				},
-			},
-			wantRepos: []repoConfig{
-				{
-					ID:       baseOS.Hash(),
-					Name:     "baseos",
-					BaseURLs: []string{"https://example.org/baseos"},
-					repoHash: "f177f580cf201f52d1c62968d5b85cddae3e06cb9d5058987c07de1dbd769d4b",
-				},
-				{
-					ID:       appstream.Hash(),
-					Name:     "appstream",
-					BaseURLs: []string{"https://example.org/appstream"},
-					repoHash: "5c4a57bbb1b6a1886291819f2ceb25eb7c92e80065bc986a75c5837cf3d55a1f",
-				},
-			},
-			withSbom: true,
+			errMsg: "chained packageSet 2 does not use all of the repos used by its predecessor",
 		},
 	}
-	solver := NewSolver("", "", "", "", "")
-	for idx, tt := range tests {
-		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			var sbomType sbom.StandardType
-			if tt.withSbom {
-				sbomType = sbom.StandardTypeSpdx
-			}
-			req, _, err := solver.makeDepsolveRequest(tt.packageSets, sbomType)
-			if tt.err {
-				assert.NotNilf(t, err, "expected an error, but got 'nil' instead")
-				assert.Nilf(t, req, "got non-nill request, but expected an error")
-			} else {
-				assert.Nilf(t, err, "expected 'nil', but got error instead")
-				assert.NotNilf(t, req, "expected non-nill request, but got 'nil' instead")
 
-				assert.Equal(t, tt.args, req.Arguments.Transactions)
-				assert.Equal(t, tt.wantRepos, req.Arguments.Repos)
-				if tt.withSbom {
-					assert.NotNil(t, req.Arguments.Sbom)
-					assert.Equal(t, req.Arguments.Sbom.Type, sbom.StandardTypeSpdx.String())
-				} else {
-					assert.Nil(t, req.Arguments.Sbom)
-				}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validatePackageSetRepoChain(tc.pkgSets)
+			if tc.errMsg != "" {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tc.errMsg)
+				return
 			}
+
+			assert.NoError(t, err)
 		})
 	}
 }
 
-func expectedResult(repo rpmmd.RepoConfig) rpmmd.PackageList {
+func TestApplyRHSMSecrets(t *testing.T) {
+	// Create repos with known hashes for testing
+	rhsmRepo := rpmmd.RepoConfig{
+		Name:          "rhsm-repo",
+		BaseURLs:      []string{"https://cdn.redhat.com/content/"},
+		RHSM:          true,
+		SSLCACert:     "/etc/rhsm/ca/redhat-uep.pem",
+		SSLClientCert: "/etc/pki/entitlement/123.pem",
+		SSLClientKey:  "/etc/pki/entitlement/123-key.pem",
+	}
+	mtlsRepo := rpmmd.RepoConfig{
+		Name:          "mtls-repo",
+		BaseURLs:      []string{"https://example.com/mtls/"},
+		RHSM:          false,
+		SSLCACert:     "/etc/pki/mtls-repo/cacert",
+		SSLClientCert: "/etc/pki/mtls-repo/cert",
+		SSLClientKey:  "/etc/pki/mtls-repo/key",
+	}
+	plainRepo := rpmmd.RepoConfig{
+		Name:     "plain-repo",
+		BaseURLs: []string{"https://example.com/plain/"},
+		RHSM:     false,
+	}
+
+	testCases := []struct {
+		name         string
+		packages     rpmmd.PackageList
+		repos        []rpmmd.RepoConfig
+		wantPackages rpmmd.PackageList
+	}{
+		{
+			name: "RHSM repo overrides mtls to rhsm",
+			packages: rpmmd.PackageList{
+				{Name: "pkg1", RepoID: rhsmRepo.Hash(), Secrets: "org.osbuild.mtls"},
+			},
+			repos: []rpmmd.RepoConfig{rhsmRepo},
+			wantPackages: rpmmd.PackageList{
+				{Name: "pkg1", RepoID: rhsmRepo.Hash(), Secrets: "org.osbuild.rhsm"},
+			},
+		},
+		{
+			name: "non-RHSM repo keeps mtls secrets",
+			packages: rpmmd.PackageList{
+				{Name: "pkg1", RepoID: mtlsRepo.Hash(), Secrets: "org.osbuild.mtls"},
+			},
+			repos: []rpmmd.RepoConfig{mtlsRepo},
+			wantPackages: rpmmd.PackageList{
+				{Name: "pkg1", RepoID: mtlsRepo.Hash(), Secrets: "org.osbuild.mtls"},
+			},
+		},
+		{
+			name: "package from unknown repo keeps original secrets",
+			packages: rpmmd.PackageList{
+				{Name: "pkg1", RepoID: "unknown-repo-hash", Secrets: "org.osbuild.mtls"},
+			},
+			repos: []rpmmd.RepoConfig{},
+			wantPackages: rpmmd.PackageList{
+				{Name: "pkg1", RepoID: "unknown-repo-hash", Secrets: "org.osbuild.mtls"},
+			},
+		},
+		{
+			name: "package without secrets stays empty for non-RHSM repo",
+			packages: rpmmd.PackageList{
+				{Name: "pkg1", RepoID: plainRepo.Hash(), Secrets: ""},
+			},
+			repos: []rpmmd.RepoConfig{plainRepo},
+			wantPackages: rpmmd.PackageList{
+				{Name: "pkg1", RepoID: plainRepo.Hash(), Secrets: ""},
+			},
+		},
+		{
+			name: "RHSM repo sets secrets even if originally empty",
+			packages: rpmmd.PackageList{
+				{Name: "pkg1", RepoID: rhsmRepo.Hash(), Secrets: ""},
+			},
+			repos: []rpmmd.RepoConfig{rhsmRepo},
+			wantPackages: rpmmd.PackageList{
+				{Name: "pkg1", RepoID: rhsmRepo.Hash(), Secrets: "org.osbuild.rhsm"},
+			},
+		},
+		{
+			name: "mixed repos - only RHSM ones get overridden",
+			packages: rpmmd.PackageList{
+				{Name: "pkg1", RepoID: rhsmRepo.Hash(), Secrets: "org.osbuild.mtls"},
+				{Name: "pkg2", RepoID: mtlsRepo.Hash(), Secrets: "org.osbuild.mtls"},
+				{Name: "pkg3", RepoID: plainRepo.Hash(), Secrets: ""},
+			},
+			repos: []rpmmd.RepoConfig{rhsmRepo, mtlsRepo, plainRepo},
+			wantPackages: rpmmd.PackageList{
+				{Name: "pkg1", RepoID: rhsmRepo.Hash(), Secrets: "org.osbuild.rhsm"},
+				{Name: "pkg2", RepoID: mtlsRepo.Hash(), Secrets: "org.osbuild.mtls"},
+				{Name: "pkg3", RepoID: plainRepo.Hash(), Secrets: ""},
+			},
+		},
+		{
+			name:         "empty package list",
+			packages:     rpmmd.PackageList{},
+			repos:        []rpmmd.RepoConfig{rhsmRepo},
+			wantPackages: rpmmd.PackageList{},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			applyRHSMSecrets(tc.packages, tc.repos)
+
+			require.Equal(t, len(tc.wantPackages), len(tc.packages))
+			assert.Equal(t, tc.wantPackages, tc.packages)
+		})
+	}
+}
+
+func expectedDepsolveResult(repo rpmmd.RepoConfig) rpmmd.PackageList {
 	// need to change the url for the RemoteLocation and the repo ID since the port is different each time and we don't want to have a fixed one
 	expectedTemplate := rpmmd.PackageList{
 		{Name: "acl", Epoch: 0, Version: "2.3.1", Release: "3.el9", Arch: "x86_64", RemoteLocations: []string{"%s/Packages/acl-2.3.1-3.el9.x86_64.rpm"}, Checksum: rpmmd.Checksum{Type: "sha256", Value: "986044c3837eddbc9231d7be5e5fc517e245296978b988a803bc9f9172fe84ea"}, Secrets: "", CheckGPG: false, IgnoreSSL: true},
@@ -797,31 +595,7 @@ func TestErrorRepoInfo(t *testing.T) {
 	}
 }
 
-func TestRepoConfigHash(t *testing.T) {
-	repos := []rpmmd.RepoConfig{
-		{
-			Id:        "repoid-1",
-			Name:      "A test repository",
-			BaseURLs:  []string{"https://arepourl/"},
-			IgnoreSSL: common.ToPtr(false),
-		},
-		{
-			BaseURLs: []string{"https://adifferenturl/"},
-		},
-	}
-
-	solver := NewSolver("platform:f38", "38", "x86_64", "fedora-38", "/tmp/cache")
-
-	rcs, err := solver.reposFromRPMMD(repos)
-	assert.Nil(t, err)
-
-	hash := rcs[0].Hash()
-	assert.Equal(t, 64, len(hash))
-
-	assert.NotEqual(t, hash, rcs[1].Hash())
-}
-
-func TestRequestHash(t *testing.T) {
+func TestHashRequest(t *testing.T) {
 	solver := NewSolver("platform:f38", "38", "x86_64", "fedora-38", "/tmp/cache")
 	repos := []rpmmd.RepoConfig{
 		rpmmd.RepoConfig{
@@ -831,35 +605,41 @@ func TestRequestHash(t *testing.T) {
 		},
 	}
 
-	req, err := solver.makeDumpRequest(repos)
+	req, err := activeHandler.makeDumpRequest(solver.solverCfg(), repos)
 	assert.Nil(t, err)
-	hash := req.Hash()
-	assert.Equal(t, 64, len(hash))
+	reqData, err := json.Marshal(req)
+	if err != nil {
+		t.Fatalf("marshalling dump request failed: %v", err)
+	}
+	reqHash := hashRequest(reqData)
+	assert.Equal(t, 64, len(reqHash))
 
-	req, err = solver.makeSearchRequest(repos, []string{"package0*"})
+	req2, err := activeHandler.makeSearchRequest(solver.solverCfg(), repos, []string{"package0*"})
 	assert.Nil(t, err)
-	assert.Equal(t, 64, len(req.Hash()))
-	assert.NotEqual(t, hash, req.Hash())
+	reqData2, err := json.Marshal(req2)
+	if err != nil {
+		t.Fatalf("marshalling search request failed: %v", err)
+	}
+	reqHash2 := hashRequest(reqData2)
+	assert.Equal(t, 64, len(reqHash2))
+	assert.NotEqual(t, reqHash, reqHash2)
 }
 
-func TestRepoConfigMarshalAlsmostEmpty(t *testing.T) {
-	repoCfg := &repoConfig{}
-	js, _ := json.Marshal(repoCfg)
-	// double check here that anything that uses pointers has "omitempty" set
-	assert.Equal(t, string(js), `{"id":"","gpgcheck":false,"repo_gpgcheck":false}`)
-}
-
-func TestRunErrorEmptyOutput(t *testing.T) {
-	fakeDepsolveDNFPath := filepath.Join(t.TempDir(), "osbuild-depsolve-dnf")
-	fakeDepsolveDNFNoOutput := `#!/bin/sh -e
+func TestSolverRunErrorEmptyOutput(t *testing.T) {
+	fakeSolverPath := filepath.Join(t.TempDir(), "osbuild-depsolve-dnf")
+	fakeSolver := `#!/bin/sh -e
 cat - > "$0".stdin
 exit 1
 `
-	err := os.WriteFile(fakeDepsolveDNFPath, []byte(fakeDepsolveDNFNoOutput), 0o755)
+	err := os.WriteFile(fakeSolverPath, []byte(fakeSolver), 0o755)
 	assert.NoError(t, err)
 
-	_, err = run([]string{fakeDepsolveDNFPath}, &Request{}, nil)
+	solver := NewSolver("platform:f38", "38", "x86_64", "fedora-38", t.TempDir())
+	solver.depsolveDNFCmd = []string{fakeSolverPath}
+	res, err := solver.Depsolve(nil, sbom.StandardTypeNone)
+
 	assert.EqualError(t, err, `DNF error occurred: InternalError: osbuild-depsolve-dnf output was empty`)
+	assert.Nil(t, res)
 }
 
 func TestSolverRunWithSolverNoError(t *testing.T) {
@@ -893,20 +673,6 @@ echo '{"solver": "zypper"}'
 	assert.Equal(t, 0, len(res.Repos))
 }
 
-func TestDepsolveResultWithModulesKey(t *testing.T) {
-	// quick test that verifies that `depsolveResult` understands JSON that contains
-	// a `modules` key
-	data := []byte(`{"modules": {}}`)
-
-	var result depsolveResult
-	dec := json.NewDecoder(bytes.NewReader(data))
-	dec.DisallowUnknownFields()
-
-	err := dec.Decode(&result)
-
-	assert.NoError(t, err)
-}
-
 func TestDepsolverSubscriptionsError(t *testing.T) {
 	if _, err := os.Stat("/etc/yum.repos.d/redhat.repo"); err == nil {
 		t.Skip("Test must run on unsubscribed system")
@@ -932,5 +698,5 @@ func TestDepsolverSubscriptionsError(t *testing.T) {
 	}
 	solver.SetRootDir(rootDir)
 	_, err := solver.Depsolve(pkgsets, 0)
-	assert.EqualError(t, err, "makeDepsolveRequest failed: This system does not have any valid subscriptions. Subscribe it before specifying rhsm: true in sources (error details: no matching key and certificate pair)")
+	assert.EqualError(t, err, "This system does not have any valid subscriptions. Subscribe it before specifying rhsm: true in sources (error details: no matching key and certificate pair)")
 }
