@@ -32,11 +32,15 @@ CAN_BOOT_TEST = {
         "vhd",
         "cloud-ec2",
     ],
-    "x86_64": [
-        "image-installer", "minimal-installer", "network-installer",
-        "qcow2", "generic-qcow2", "cloud-qcow2",
-        "wsl", "generic-wsl",
-    ]
+    # NOTE(akoutsou): Temporarily disabling these because they can be skipped under certain circumstances, based on
+    # specific configs or the presence of specific packages. This causes problems with the cache checks, because the
+    # test is marked as possible to boot here, the boot test is added to pipeline, the test is skipped (and not marked
+    # as boot-success), so the image is built again the next time in order to boot.
+    # "x86_64": [
+    #     "image-installer", "minimal-installer", "network-installer",
+    #     "qcow2", "generic-qcow2", "cloud-qcow2",
+    #     "wsl", "generic-wsl",
+    # ]
 }
 
 BIB_TYPES = [
