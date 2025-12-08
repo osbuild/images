@@ -147,9 +147,8 @@ def find_ovmf():
 
 
 class QEMU(VM):
-    MEM = "2000"
 
-    def __init__(self, img, arch="", snapshot=True, cdrom=None, extra_args=None):
+    def __init__(self, img, arch="", snapshot=True, cdrom=None, extra_args=None, memory="2000"):
         super().__init__()
         self._img = pathlib.Path(img)
         self._tmpdir = tempfile.mkdtemp(prefix="vmtest-", suffix=f"-{self._img.name}")
@@ -158,6 +157,7 @@ class QEMU(VM):
         self._snapshot = snapshot
         self._cdrom = cdrom
         self._extra_args = extra_args
+        self._memory = memory
         self._ssh_port = None
         if not arch:
             arch = platform.machine()
@@ -190,7 +190,7 @@ class QEMU(VM):
 
         # common part
         qemu_cmdline += [
-            "-m", self.MEM,
+            "-m", self._memory,
             "-serial", "stdio",
             "-monitor", "none",
             "-netdev", f"user,id=net.0,hostfwd=tcp::{self._ssh_port}-:22",
