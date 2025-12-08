@@ -5,15 +5,17 @@ import json
 import os
 import pathlib
 import random
-import uuid
-import subprocess
 import shutil
 import string
+import subprocess
 import textwrap
+import uuid
 from tempfile import TemporaryDirectory
 
 import imgtestlib as testlib
+
 from vmtest.vm import QEMU
+
 
 BASE_TEST_SCRIPT = "test/scripts/check-host-config.sh"
 WSL_TEST_SCRIPT = "test/scripts/wsl-entrypoint.bat"
@@ -460,6 +462,8 @@ def main():
     bib_image_id = ""
     # Keep test/scripts/imagetestlib.py:CAN_BOOT_TEST in sync as it
     # has the same checks again
+    # WARNING: skipping boot tests that are listed under CAN_BOOT_TEST will cause the skipped image configuration to be
+    # rebuilt every CI run.
     match image_type:
         # Not all qcow2 types can be boot-tested, for example `server-qcow2` uses
         # initial-setup and this blocks the boot.
