@@ -268,3 +268,15 @@ func TestLoadInfoPartitionTableSad(t *testing.T) {
 	_, err := Load(root)
 	assert.EqualError(t, err, fmt.Sprintf(`cannot parse disk definitions from "%s/usr/lib/bootc-image-builder/disk.yaml": yaml: found character that cannot start any token`, root))
 }
+
+func TestLoadInfoUEFIVendorSearchPath(t *testing.T) {
+	root := t.TempDir()
+
+	require.NoError(t, writeOSRelease(root, "fedora", "40", "Fedora Linux", "fedora", "platform:f40", "coreos"))
+	err := os.MkdirAll(path.Join(root, "usr/lib/efi/shim/1.64/EFI/fedora"), 0755)
+	assert.NoError(t, err)
+
+	info, err := Load(root)
+	assert.NoError(t, err)
+	assert.Equal(t, "fedora", info.UEFIVendor)
+}
