@@ -14,11 +14,11 @@ import (
 	"github.com/osbuild/images/pkg/disk"
 )
 
-func writeOSRelease(root, id, versionID, name, platformID, variantID, idLike string) error {
+func writeOSRelease(t *testing.T, root, id, versionID, name, platformID, variantID, idLike string) {
+	t.Helper()
+
 	err := os.MkdirAll(path.Join(root, "etc"), 0755)
-	if err != nil {
-		return err
-	}
+	require.NoError(t, err)
 
 	var buf string
 	if id != "" {
@@ -40,23 +40,25 @@ func writeOSRelease(root, id, versionID, name, platformID, variantID, idLike str
 		buf += "ID_LIKE=" + idLike + "\n"
 	}
 
-	return os.WriteFile(path.Join(root, "etc/os-release"), []byte(buf), 0644)
+	err = os.WriteFile(path.Join(root, "etc/os-release"), []byte(buf), 0644)
+	require.NoError(t, err)
 }
 
-func createBootupdEFI(root, uefiVendor string) error {
+func createBootupdEFI(t *testing.T, root, uefiVendor string) {
+	t.Helper()
+
 	err := os.MkdirAll(path.Join(root, "usr/lib/bootupd/updates/EFI/BOOT"), 0755)
-	if err != nil {
-		return err
-	}
-	return os.Mkdir(path.Join(root, "usr/lib/bootupd/updates/EFI", uefiVendor), 0755)
+	require.NoError(t, err)
+	err = os.Mkdir(path.Join(root, "usr/lib/bootupd/updates/EFI", uefiVendor), 0755)
+	require.NoError(t, err)
 }
 
-func createImageCustomization(root, custType string) error {
+func createImageCustomization(t *testing.T, root, custType string) {
+	t.Helper()
+
 	bibDir := path.Join(root, "usr/lib/bootc-image-builder/")
 	err := os.MkdirAll(bibDir, 0755)
-	if err != nil {
-		return err
-	}
+	require.NoError(t, err)
 
 	var buf string
 	var filename string
@@ -91,10 +93,11 @@ part_type = "01234567-89ab-cdef-0123-456789abcdef"
 		buf = "{"
 		filename = "config.json"
 	default:
-		return fmt.Errorf("unsupported customization type %s", custType)
+		t.Errorf("unsupported customization type %s", custType)
 	}
 
-	return os.WriteFile(path.Join(bibDir, filename), []byte(buf), 0644)
+	err = os.WriteFile(path.Join(bibDir, filename), []byte(buf), 0644)
+	require.NoError(t, err)
 }
 
 func TestLoadInfo(t *testing.T) {
@@ -126,13 +129,13 @@ func TestLoadInfo(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.desc, func(t *testing.T) {
 			root := t.TempDir()
-			require.NoError(t, writeOSRelease(root, c.id, c.versionID, c.name, c.platformID, c.variantID, c.idLike))
+			writeOSRelease(t, root, c.id, c.versionID, c.name, c.platformID, c.variantID, c.idLike)
 			if c.uefiVendor != "" {
-				require.NoError(t, createBootupdEFI(root, c.uefiVendor))
+				createBootupdEFI(t, root, c.uefiVendor)
 
 			}
 			if c.custType != "" {
-				require.NoError(t, createImageCustomization(root, c.custType))
+				createImageCustomization(t, root, c.custType)
 
 			}
 
@@ -232,18 +235,20 @@ partition_table:
       type: *bios_boot_partition_guid
 `
 
-func createPartitionTable(root, fakePartitionTableYAML string) error {
+func createPartitionTable(t *testing.T, root, fakePartitionTableYAML string) {
+	t.Helper()
+
 	dst := path.Join(root, "/usr/lib/bootc-image-builder/disk.yaml")
-	if err := os.MkdirAll(path.Dir(dst), 0755); err != nil {
-		return err
-	}
-	return os.WriteFile(dst, []byte(fakePartitionTableYAML), 0644)
+	err := os.MkdirAll(path.Dir(dst), 0755)
+	require.NoError(t, err)
+	err = os.WriteFile(dst, []byte(fakePartitionTableYAML), 0644)
+	require.NoError(t, err)
 }
 
 func TestLoadInfoPartitionTableHappy(t *testing.T) {
 	root := t.TempDir()
-	require.NoError(t, writeOSRelease(root, "fedora", "40", "Fedora Linux", "fedora", "platform:f40", "coreos"))
-	require.NoError(t, createPartitionTable(root, fakePartitionTableYAML))
+	writeOSRelease(t, root, "fedora", "40", "Fedora Linux", "fedora", "platform:f40", "coreos")
+	createPartitionTable(t, root, fakePartitionTableYAML)
 
 	info, err := Load(root)
 	require.NoError(t, err)
@@ -262,8 +267,8 @@ func TestLoadInfoPartitionTableHappy(t *testing.T) {
 
 func TestLoadInfoPartitionTableSad(t *testing.T) {
 	root := t.TempDir()
-	require.NoError(t, writeOSRelease(root, "fedora", "40", "Fedora Linux", "fedora", "platform:f40", "coreos"))
-	require.NoError(t, createPartitionTable(root, "@invalidYAML"))
+	writeOSRelease(t, root, "fedora", "40", "Fedora Linux", "fedora", "platform:f40", "coreos")
+	createPartitionTable(t, root, "@invalidYAML")
 
 	_, err := Load(root)
 	assert.EqualError(t, err, fmt.Sprintf(`cannot parse disk definitions from "%s/usr/lib/bootc-image-builder/disk.yaml": yaml: found character that cannot start any token`, root))
@@ -272,7 +277,7 @@ func TestLoadInfoPartitionTableSad(t *testing.T) {
 func TestLoadInfoUEFIVendorSearchPath(t *testing.T) {
 	root := t.TempDir()
 
-	require.NoError(t, writeOSRelease(root, "fedora", "40", "Fedora Linux", "fedora", "platform:f40", "coreos"))
+	writeOSRelease(t, root, "fedora", "40", "Fedora Linux", "fedora", "platform:f40", "coreos")
 	err := os.MkdirAll(path.Join(root, "usr/lib/efi/shim/1.64/EFI/fedora"), 0755)
 	assert.NoError(t, err)
 
