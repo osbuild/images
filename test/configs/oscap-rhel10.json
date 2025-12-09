@@ -10,9 +10,6 @@
       },
       {
         "name": "openscap-utils"
-      },
-      {
-        "name": "jq"
       }
     ],
     "customizations": {
