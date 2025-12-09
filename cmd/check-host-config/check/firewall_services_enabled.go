@@ -1,0 +1,47 @@
+package check
+
+import (
+	"context"
+	"strings"
+	"time"
+
+	"github.com/osbuild/images/cmd/check-host-config/mockos"
+	"github.com/osbuild/images/internal/buildconfig"
+)
+
+type FirewallServicesEnabledCheck struct{}
+
+func (f FirewallServicesEnabledCheck) Metadata() Metadata {
+	return Metadata{
+		Name:                   "Firewall Services Enabled Check",
+		ShortName:              "fw-srv-enabled",
+		Timeout:                30 * time.Second,
+		RequiresBlueprint:      true,
+		RequiresCustomizations: true,
+	}
+}
+
+func (f FirewallServicesEnabledCheck) Run(ctx context.Context, log Logger, config *buildconfig.BuildConfig) error {
+	firewall := config.Blueprint.Customizations.Firewall
+	if firewall == nil || firewall.Services == nil || len(firewall.Services.Enabled) == 0 {
+		return Skip("no enabled firewall services to check")
+	}
+
+	for _, service := range firewall.Services.Enabled {
+		log.Printf("Checking enabled firewall service: %s\n", service)
+		// NOTE: sudo works here without password because we test this only on ami
+		// initialised with cloud-init, which sets sudo NOPASSWD for the user
+		out, _, err := mockos.ExecContext(ctx, log, "sudo", "firewall-cmd", "--query-service="+service)
+		if err != nil {
+			return Fail("firewall service is not enabled:", service, "error:", err.Error())
+		}
+
+		state := strings.TrimSpace(string(out))
+		if state != "yes" {
+			return Fail("firewall service is not enabled:", service, "state:", state)
+		}
+		log.Printf("Firewall service was enabled service=%s state=%s\n", service, state)
+	}
+
+	return Pass()
+}
