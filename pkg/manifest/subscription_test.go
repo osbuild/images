@@ -640,6 +640,59 @@ func TestSubscriptionService(t *testing.T) {
 			expectedDirs:     make([]*fsnode.Directory, 0),
 			expectedServices: []string{serviceFilename},
 		},
+		"with-content-sets": {
+			subOpts: subscription.ImageOptions{
+				Organization:  "theorg-iob-etc",
+				ActivationKey: "thekey-iob-etc",
+				ServerUrl:     "theserverurl-iob-etc",
+				BaseUrl:       "thebaseurl-iob-etc",
+				Rhc:           false,
+				Insights:      false,
+				ContentSets:   []string{"content-label-1", "content-label-2"},
+			},
+			srvcOpts: &subscriptionServiceOptions{
+				InsightsOnBoot: true,
+				UnitPath:       osbuild.EtcUnitPath,
+			},
+			expectedStage: &osbuild.Stage{
+				Type: stageType,
+				Options: &osbuild.SystemdUnitCreateStageOptions{
+					Filename: serviceFilename,
+					UnitType: unitType,
+					UnitPath: osbuild.EtcUnitPath,
+					Config: osbuild.SystemdUnit{
+						Unit: &osbuild.UnitSection{
+							Description: serviceDescription,
+							ConditionPathExists: []string{
+								subkeyFilepath,
+							},
+							Wants: serviceWants,
+							After: serviceAfter,
+						},
+						Service: &osbuild.ServiceSection{
+							Type: osbuild.OneshotServiceType,
+							ExecStart: []string{
+								"/usr/sbin/subscription-manager config --server.hostname 'theserverurl-iob-etc'",
+								`/usr/sbin/subscription-manager register --org="${ORG_ID}" --activationkey="${ACTIVATION_KEY}" --baseurl 'thebaseurl-iob-etc'`,
+								"/usr/sbin/subscription-manager repos --enable='content-label-1' --enable='content-label-2'",
+								"/usr/bin/rm '" + subkeyFilepath + "'",
+							},
+							EnvironmentFile: []string{
+								subkeyFilepath,
+							},
+						},
+						Install: &osbuild.InstallSection{
+							WantedBy: serviceWantedBy,
+						},
+					},
+				},
+			},
+			expectedFiles: []*fsnode.File{
+				mkKeyfile("theorg-iob-etc", "thekey-iob-etc"),
+			},
+			expectedDirs:     make([]*fsnode.Directory, 0),
+			expectedServices: []string{serviceFilename},
+		},
 	}
 
 	for name := range testCases {

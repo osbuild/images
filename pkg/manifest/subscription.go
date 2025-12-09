@@ -188,6 +188,14 @@ func subscriptionService(
 			}
 		}
 	}
+	// Enable content sets if specified
+	if len(subscriptionOptions.ContentSets) > 0 {
+		contentSetsCmd := "/usr/sbin/subscription-manager repos"
+		for _, contentSet := range subscriptionOptions.ContentSets {
+			contentSetsCmd += fmt.Sprintf(" --enable=%s", shutil.Quote(contentSet))
+		}
+		commands = append(commands, contentSetsCmd)
+	}
 
 	commands = append(commands, fmt.Sprintf("/usr/bin/rm %s", shutil.Quote(subkeyFilepath)))
 
