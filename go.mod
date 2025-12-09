@@ -24,6 +24,7 @@ require (
 	github.com/containers/image/v5 v5.36.1
 	github.com/containers/storage v1.59.1
 	github.com/gobwas/glob v0.2.3
+	github.com/gocomply/scap v0.1.3
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
 	github.com/gophercloud/gophercloud/v2 v2.8.0
