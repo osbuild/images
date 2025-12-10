@@ -63,7 +63,8 @@ func TestSubscriptionService(t *testing.T) {
 						Service: &osbuild.ServiceSection{
 							Type: osbuild.OneshotServiceType,
 							ExecStart: []string{
-								`/usr/sbin/subscription-manager register --org="${ORG_ID}" --activationkey="${ACTIVATION_KEY}" --serverurl 'theserverurl' --baseurl 'thebaseurl'`,
+								"/usr/sbin/subscription-manager config --server.hostname 'theserverurl'",
+								`/usr/sbin/subscription-manager register --org="${ORG_ID}" --activationkey="${ACTIVATION_KEY}" --baseurl 'thebaseurl'`,
 								"/usr/bin/rm '" + subkeyFilepath + "'",
 							},
 							EnvironmentFile: []string{
@@ -108,7 +109,8 @@ func TestSubscriptionService(t *testing.T) {
 						Service: &osbuild.ServiceSection{
 							Type: osbuild.OneshotServiceType,
 							ExecStart: []string{
-								`/usr/sbin/subscription-manager register --org="${ORG_ID}" --activationkey="${ACTIVATION_KEY}" --serverurl 'theserverurl-wi' --baseurl 'thebaseurl-wi'`,
+								"/usr/sbin/subscription-manager config --server.hostname 'theserverurl-wi'",
+								`/usr/sbin/subscription-manager register --org="${ORG_ID}" --activationkey="${ACTIVATION_KEY}" --baseurl 'thebaseurl-wi'`,
 								"/usr/bin/insights-client --register", // added when insights is enabled
 								"/usr/bin/rm '" + subkeyFilepath + "'",
 							},
@@ -157,7 +159,9 @@ func TestSubscriptionService(t *testing.T) {
 						Service: &osbuild.ServiceSection{
 							Type: osbuild.OneshotServiceType,
 							ExecStart: []string{
-								`/usr/sbin/subscription-manager register --org="${ORG_ID}" --activationkey="${ACTIVATION_KEY}" --serverurl 'theserverurl-wi' --baseurl 'thebaseurl-wi'`,
+								"/usr/sbin/subscription-manager config --server.hostname 'theserverurl-wi'",
+								"/usr/sbin/subscription-manager config --server.proxy_hostname 'proxy-url'",
+								`/usr/sbin/subscription-manager register --org="${ORG_ID}" --activationkey="${ACTIVATION_KEY}" --baseurl 'thebaseurl-wi'`,
 								"/usr/bin/insights-client --register", // added when insights is enabled
 								"curl -v --retry 5 --cert /etc/pki/consumer/cert.pem --key /etc/pki/consumer/key.pem -X PATCH 'https://cert.console.redhat.com/api/patch/v3/templates/template-uuid/subscribed-systems' --proxy 'proxy-url'",
 								"/usr/sbin/subscription-manager refresh",
@@ -408,6 +412,7 @@ func TestSubscriptionService(t *testing.T) {
 							Type: osbuild.OneshotServiceType,
 							ExecStart: []string{
 								"/usr/sbin/subscription-manager config --server.hostname 'theserverurl-wir'",
+								"/usr/sbin/subscription-manager config --server.proxy_hostname 'proxy-url'",
 								`/usr/bin/rhc connect --organization="${ORG_ID}" --activation-key="${ACTIVATION_KEY}"`,
 								"/usr/sbin/semanage permissive --add rhcd_t", // added when rhc is enabled
 								"curl -v --retry 5 --cert /etc/pki/consumer/cert.pem --key /etc/pki/consumer/key.pem -X PATCH 'https://cert.console.redhat.com/api/patch/v3/templates/template-uuid/subscribed-systems' --proxy 'proxy-url'",
@@ -458,7 +463,8 @@ func TestSubscriptionService(t *testing.T) {
 						Service: &osbuild.ServiceSection{
 							Type: osbuild.OneshotServiceType,
 							ExecStart: []string{
-								`/usr/sbin/subscription-manager register --org="${ORG_ID}" --activationkey="${ACTIVATION_KEY}" --serverurl 'theserverurl-iob' --baseurl 'thebaseurl-iob'`,
+								"/usr/sbin/subscription-manager config --server.hostname 'theserverurl-iob'",
+								`/usr/sbin/subscription-manager register --org="${ORG_ID}" --activationkey="${ACTIVATION_KEY}" --baseurl 'thebaseurl-iob'`,
 								"/usr/bin/insights-client --register", // added when insights is enabled
 								"/usr/bin/rm '" + subkeyFilepath + "'",
 							},
@@ -510,7 +516,8 @@ func TestSubscriptionService(t *testing.T) {
 						Service: &osbuild.ServiceSection{
 							Type: osbuild.OneshotServiceType,
 							ExecStart: []string{
-								`/usr/sbin/subscription-manager register --org="${ORG_ID}" --activationkey="${ACTIVATION_KEY}" --serverurl 'theserverurl-etc' --baseurl 'thebaseurl-etc'`,
+								"/usr/sbin/subscription-manager config --server.hostname 'theserverurl-etc'",
+								`/usr/sbin/subscription-manager register --org="${ORG_ID}" --activationkey="${ACTIVATION_KEY}" --baseurl 'thebaseurl-etc'`,
 								"/usr/bin/rm '" + subkeyFilepath + "'",
 							},
 							EnvironmentFile: []string{
@@ -560,7 +567,8 @@ func TestSubscriptionService(t *testing.T) {
 						Service: &osbuild.ServiceSection{
 							Type: osbuild.OneshotServiceType,
 							ExecStart: []string{
-								`/usr/sbin/subscription-manager register --org="${ORG_ID}" --activationkey="${ACTIVATION_KEY}" --serverurl 'theserverurl-iob-etc' --baseurl 'thebaseurl-iob-etc'`,
+								"/usr/sbin/subscription-manager config --server.hostname 'theserverurl-iob-etc'",
+								`/usr/sbin/subscription-manager register --org="${ORG_ID}" --activationkey="${ACTIVATION_KEY}" --baseurl 'thebaseurl-iob-etc'`,
 								"/usr/bin/insights-client --register", // added when insights is enabled
 								"/usr/bin/rm '" + subkeyFilepath + "'",
 							},

@@ -78,7 +78,8 @@ func TestSubscriptionManagerCommands(t *testing.T) {
 	pipeline, err := os.Serialize()
 	assert.NoError(t, err)
 	CheckSystemdStageOptions(t, pipeline.Stages, []string{
-		`/usr/sbin/subscription-manager register --org="${ORG_ID}" --activationkey="${ACTIVATION_KEY}" --serverurl 'subscription.rhsm.redhat.com' --baseurl 'http://cdn.redhat.com/'`,
+		"/usr/sbin/subscription-manager config --server.hostname 'subscription.rhsm.redhat.com'",
+		`/usr/sbin/subscription-manager register --org="${ORG_ID}" --activationkey="${ACTIVATION_KEY}" --baseurl 'http://cdn.redhat.com/'`,
 	})
 }
 
@@ -94,7 +95,8 @@ func TestSubscriptionManagerInsightsCommands(t *testing.T) {
 	pipeline, err := os.Serialize()
 	assert.NoError(t, err)
 	CheckSystemdStageOptions(t, pipeline.Stages, []string{
-		`/usr/sbin/subscription-manager register --org="${ORG_ID}" --activationkey="${ACTIVATION_KEY}" --serverurl 'subscription.rhsm.redhat.com' --baseurl 'http://cdn.redhat.com/'`,
+		"/usr/sbin/subscription-manager config --server.hostname 'subscription.rhsm.redhat.com'",
+		`/usr/sbin/subscription-manager register --org="${ORG_ID}" --activationkey="${ACTIVATION_KEY}" --baseurl 'http://cdn.redhat.com/'`,
 		"/usr/bin/insights-client --register",
 	})
 }
