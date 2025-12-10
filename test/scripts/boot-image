@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pylint: disable=line-too-long,too-many-arguments,too-many-positional-arguments
 import argparse
 import contextlib
 import json
@@ -18,7 +19,8 @@ import imgtestlib as testlib
 from vmtest.util import get_free_port
 from vmtest.vm import QEMU
 
-BASE_TEST_SCRIPT = "test/scripts/check-host-config.sh"
+
+BASE_TEST_EXEC = "check-host-config-" # + arch
 WSL_TEST_SCRIPT = "test/scripts/wsl-entrypoint.bat"
 
 
@@ -127,6 +129,41 @@ def make_cloud_init_iso(pubkey_path) -> pathlib.Path:
         yield iso_path
 
 
+def arch_to_goarch(arch):
+    """
+    Convert architecture string to GOARCH format.
+    """
+    mapping = {
+        "x86_64": "amd64",
+        "aarch64": "arm64",
+    }
+    goarch = mapping.get(arch.lower())
+    if goarch is None:
+        return arch
+    return goarch
+
+
+def make_check_host_config(arch):
+    goarch = arch_to_goarch(arch)
+    # build without CGO so no dependencies are needed
+    cmd = ["go", "build", "-o", "check-host-config-" + arch,
+           "./cmd/check-host-config"]
+    tags = [
+        "containers_image_openpgp",
+        "exclude_graphdriver_btrfs",
+        "exclude_graphdriver_devicemapper",
+        "exclude_graphdriver_overlay",
+    ]
+    testlib.runcmd_nc(
+        cmd,
+        extra_env={
+            "GOARCH": goarch,
+            "CGO_ENABLED": "0",
+            "GOFLAGS": "-tags=" + ",".join(tags),
+        },
+    )
+
+
 class CannotRunQemuTest(Exception):
     def __init__(self, skip_reason):
         super().__init__(skip_reason)
@@ -152,7 +189,8 @@ def qemu_cmd_scp_and_run(vm, cmd, privkey_path):
 
 
 def boot_qemu(arch, image_path, config_file, keep_booted=False):
-    cmd = [BASE_TEST_SCRIPT, config_file]
+    cmd = [BASE_TEST_EXEC+arch, config_file]
+    make_check_host_config(arch)
     with contextlib.ExitStack() as cm:
         uncompressed_image_path = cm.enter_context(ensure_uncompressed(image_path))
         (privkey_path, pubkey_path) = cm.enter_context(create_ssh_key())
@@ -245,7 +283,8 @@ def boot_qemu_iso(arch, installer_iso_path, config_file):
 
 
 def _boot_qemu_iso(arch, installer_iso_path, config_file, privkey_path):
-    cmd = [BASE_TEST_SCRIPT, config_file]
+    cmd = [BASE_TEST_EXEC+arch, config_file]
+    make_check_host_config(arch)
     # we should pass console=ttyS0 to instaler os that we see install
     # progress on the serial console, in the meantime for interactive use
     # one cans set the OSBUILD_TEST_QEMU_GUI=1 environment
@@ -336,7 +375,6 @@ def boot_qemu_pxe(arch, pxe_tar_path):
 
 
 def cmd_boot_aws(arch, image_name, privkey, pubkey, image_path, script_cmd):
-    # pylint: disable=too-many-arguments,too-many-positional-arguments
     aws_config = get_aws_config()
     cmd = ["go", "run", "./cmd/boot-aws", "run",
            "--access-key-id", aws_config["key_id"],
@@ -354,14 +392,15 @@ def cmd_boot_aws(arch, image_name, privkey, pubkey, image_path, script_cmd):
 
 
 def boot_ami(distro, arch, image_type, image_path, config):
-    cmd = [BASE_TEST_SCRIPT, config]
+    cmd = [BASE_TEST_EXEC+arch, config]
+    make_check_host_config(arch)
     with ensure_uncompressed(image_path) as raw_image_path:
         with create_ssh_key() as (privkey, pubkey):
             image_name = f"image-boot-test-{distro}-{arch}-{image_type}-" + str(uuid.uuid4())
             cmd_boot_aws(arch, image_name, privkey, pubkey, raw_image_path, cmd)
 
 
-def boot_container(distro, arch, image_type, image_path, manifest_id):
+def boot_container(distro, arch, image_type, image_path, manifest_id, host_config):
     """
     Use bootc-image-builder to build an AMI and boot it.
     """
@@ -417,17 +456,17 @@ def boot_container(distro, arch, image_type, image_path, manifest_id):
             # Build artifacts are owned by root. Make them world accessible.
             testlib.runcmd(["sudo", "chmod", "a+rwX", "-R", tmpdir])
             raw_image_path = f"{tmpdir}/image/disk.raw"
-            cmd_boot_aws(arch, image_name, privkey_file, pubkey_file, raw_image_path, [BASE_TEST_SCRIPT])
+            cmd_boot_aws(arch, image_name, privkey_file, pubkey_file, raw_image_path, [BASE_TEST_EXEC+arch, host_config])
 
 
 def boot_vhd(distro, arch, image_path, config):
-    cmd = [BASE_TEST_SCRIPT, config]
+    cmd = [BASE_TEST_EXEC+arch, config]
+    make_check_host_config(arch)
     with ensure_uncompressed(image_path) as raw_image_path:
         with create_ssh_key(key_type="rsa") as (privkey, pubkey):
             # a lot of resources have <=64 character naming constraint
             name = f"{distro}-" + str(uuid.uuid4())
 
-            # pylint: disable=too-many-arguments,too-many-positional-arguments
             az_config = get_azure_config()
             cmd = ["go", "run", "./cmd/boot-azure", "run",
                    "--subscription", az_config["subscription"],
@@ -447,8 +486,8 @@ def boot_vhd(distro, arch, image_path, config):
 
 def boot_wsl(distro, arch, image_path, config):
     with ensure_uncompressed(image_path) as raw_image_path:
-        cmd = [WSL_TEST_SCRIPT, raw_image_path, BASE_TEST_SCRIPT, config]
-        # pylint: disable=too-many-arguments,too-many-positional-arguments
+        cmd = [WSL_TEST_SCRIPT, raw_image_path, BASE_TEST_EXEC+arch, config]
+        make_check_host_config(arch)
         az_config = get_azure_config()
         with create_ssh_key(privkey_file = az_config["windows_ssh_privkey"]) as (privkey, pubkey):
             # a lot of resources have <=64 character naming constraint
@@ -515,7 +554,7 @@ def main():
             boot_vhd(distro, arch, image_path, build_config_path)
         case "iot-bootable-container":
             manifest_id = build_info["manifest-checksum"]
-            boot_container(distro, arch, image_type, image_path, manifest_id)
+            boot_container(distro, arch, image_type, image_path, manifest_id, build_config_path)
             bib_ref = testlib.get_bib_ref()
             bib_image_id = testlib.skopeo_inspect_id(f"docker://{bib_ref}", testlib.host_container_arch())
         case "wsl" | "generic-wsl":
