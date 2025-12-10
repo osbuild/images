@@ -473,9 +473,7 @@ func (t *BootcImageType) manifestForISO(bp *blueprint.Blueprint, options distro.
 	// a shared helper to set the fields won't work (unless
 	// reflection urgh).
 
-	// The ref is not needed and will be removed from the ctor later
-	// in time
-	img := image.NewAnacondaContainerInstaller(platformi, t.Filename(), containerSource, "")
+	img := image.NewAnacondaContainerInstaller(platformi, t.Filename(), containerSource)
 	img.ContainerRemoveSignatures = true
 	img.RootfsCompression = "zstd"
 	// kernelVer is used by dracut
@@ -660,9 +658,7 @@ func (t *BootcImageType) manifestForLegacyISO(bp *blueprint.Blueprint, options d
 	platformi := PlatformFor(archStr, sourceInfo.UEFIVendor)
 	platformi.ImageFormat = platform.FORMAT_ISO
 
-	// The ref is not needed and will be removed from the ctor later
-	// in time
-	img := image.NewAnacondaContainerInstallerLegacy(platformi, t.Filename(), containerSource, "")
+	img := image.NewAnacondaContainerInstallerLegacy(platformi, t.Filename(), containerSource)
 	img.ContainerRemoveSignatures = true
 	img.RootfsCompression = "zstd"
 
