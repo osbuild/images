@@ -278,3 +278,41 @@ jobs:
         # yq will catch issues that yamllint will not, like duplicate anchros
         run: |
           find . "(" -iname "*.yaml" -or -iname "*.yml" ")" -exec yq . {} \+ > /dev/null
+
+  cross-arch-integration-test:
+    strategy:
+      matrix:
+        arch:
+          - ppc64le
+          - s390x
+      fail-fast: false  # if one fails, keep the other(s) running
+    name: "Cross-arch qemu based image build/boot smoke test"
+    runs-on: ubuntu-24.04
+    env:
+      # workaround for expired cert at source of indirect dependency
+      # (go.opencensus.io/trace)
+      GOPROXY: "https://proxy.golang.org|direct"
+      GOFLAGS: "-buildvcs=false"
+    container:
+      image: registry.fedoraproject.org/fedora:latest
+      options: "--privileged"
+    steps:
+      - name: Install build and test dependencies
+        run: dnf -y install python3-pytest podman go btrfs-progs-devel device-mapper-devel gpgme-devel python3-pip qemu-system-s390x-core qemu-system-ppc64 qemu-user-static osbuild osbuild-depsolve-dnf cloud-utils
+      - name: Manually start qemu-user-static
+        run: |
+          # mostly for debugging
+          mount | grep binfmt_misc || true
+          ls /proc/sys/fs/binfmt_misc/
+          sudo mount -t binfmt_misc none /proc/sys/fs/binfmt_misc
+          ls /proc/sys/fs/binfmt_misc/
+          sudo SYSTEMD_LOG_LEVEL=debug /usr/lib/systemd/systemd-binfmt
+          ls /proc/sys/fs/binfmt_misc/
+          sudo SYSTEMD_LOG_LEVEL=debug /usr/lib/systemd/systemd-binfmt /usr/lib/binfmt.d/qemu-*.conf
+          ls /proc/sys/fs/binfmt_misc/
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v6
+      - name: Cross arch integration test
+        run: |
+          pip install .
+          sudo -E pytest -rs -k ${{ matrix.arch }} -s -v ./test/test_cross_arch_integration.py
