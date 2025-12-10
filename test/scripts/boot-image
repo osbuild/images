@@ -6,6 +6,7 @@ import os
 import pathlib
 import random
 import shutil
+import signal
 import string
 import subprocess
 import textwrap
@@ -191,7 +192,7 @@ def qemu_cmd_scp_and_run(vm, cmd, privkey_path):
     return vm.run(vmcmd, user="osbuild", keyfile=privkey_path)
 
 
-def boot_qemu(arch, image_path, config_file):
+def boot_qemu(arch, image_path, config_file, keep_booted=False):
     ensure_can_run_qemu_test(arch, image_path, config_file)
     cmd = [BASE_TEST_SCRIPT, config_file]
     with contextlib.ExitStack() as cm:
@@ -199,7 +200,17 @@ def boot_qemu(arch, image_path, config_file):
         (privkey_path, pubkey_path) = cm.enter_context(create_ssh_key())
         cloud_init_iso = cm.enter_context(make_cloud_init_iso(pubkey_path))
         with QEMU(uncompressed_image_path, arch=arch, cdrom=cloud_init_iso) as vm:
-            qemu_cmd_scp_and_run(vm, cmd, privkey_path)
+            try:
+                qemu_cmd_scp_and_run(vm, cmd, privkey_path)
+            finally:
+                if keep_booted:
+                    print("***********************************")
+                    print(f"keeping the image {image_path} booted as requested, press enter or ctrl-c to stop")
+                    print("to connect run:")
+                    print(
+                        f"ssh -i {privkey_path} -p {vm.ssh_port} -o UserKnownHostsFile=/dev/null "
+                        "-o StrictHostKeyChecking=no osbuild@localhost")
+                    signal.pause()
 
 
 def boot_qemu_iso_no_unattended_support(arch, installer_iso_path, config_file):
@@ -505,6 +516,9 @@ def main():
     desc = "Boot an image in the cloud environment it is built for and validate the configuration"
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument("image_search_path", type=str, help="path to search for image file")
+    parser.add_argument(
+        "--keep-booted", action="store_true",
+        help="keep the image booted (only qcow2 supported right now)")
 
     args = parser.parse_args()
     search_path = args.image_search_path
@@ -528,7 +542,7 @@ def main():
         # initial-setup and this blocks the boot.
         case "qcow2" | "generic-qcow2" | "cloud-qcow2":
             try:
-                boot_qemu(arch, image_path, build_config_path)
+                boot_qemu(arch, image_path, build_config_path, keep_booted=args.keep_booted)
             except CannotRunQemuTest as e:
                 print(f"WARNING: skipping {image_path}: {e.skip_reason}")
                 return
