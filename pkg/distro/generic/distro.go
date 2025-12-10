@@ -157,6 +157,24 @@ func (d *distribution) GetArch(name string) (distro.Arch, error) {
 	return arch, nil
 }
 
+func (d *distribution) GetImageTypes(archName string) ([]distro.ImageType, error) {
+	arch, err := d.GetArch(archName)
+	if err != nil {
+		return nil, err
+	}
+
+	imageTypes := make([]distro.ImageType, len(arch.ListImageTypes()))
+	imageTypeNames := arch.ListImageTypes()
+	for _, imageTypeName := range imageTypeNames {
+		imageType, err := arch.GetImageType(imageTypeName)
+		if err != nil {
+			return nil, err
+		}
+		imageTypes = append(imageTypes, imageType)
+	}
+	return imageTypes, nil
+}
+
 // architecture implements the distro.Arch interface
 var _ = distro.Arch(&architecture{})
 
