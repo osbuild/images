@@ -21,8 +21,6 @@ type AnacondaContainerInstaller struct {
 	Base
 	AnacondaInstallerBase
 
-	Ref string
-
 	ContainerSource           container.SourceSpec
 	InstallerPayload          container.SourceSpec
 	ContainerRemoveSignatures bool
@@ -43,11 +41,10 @@ type AnacondaContainerInstaller struct {
 	InstallerHome string
 }
 
-func NewAnacondaContainerInstaller(platform platform.Platform, filename string, container container.SourceSpec, ref string) *AnacondaContainerInstaller {
+func NewAnacondaContainerInstaller(platform platform.Platform, filename string, container container.SourceSpec) *AnacondaContainerInstaller {
 	return &AnacondaContainerInstaller{
 		Base:            NewBase("bootc-installer", platform, filename),
 		ContainerSource: container,
-		Ref:             ref,
 	}
 }
 

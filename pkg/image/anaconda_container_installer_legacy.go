@@ -24,8 +24,6 @@ type AnacondaContainerInstallerLegacy struct {
 
 	ExtraBasePackages rpmmd.PackageSet
 
-	Ref string
-
 	ContainerSource           container.SourceSpec
 	ContainerRemoveSignatures bool
 
@@ -37,11 +35,10 @@ type AnacondaContainerInstallerLegacy struct {
 	InstallRootfsType disk.FSType
 }
 
-func NewAnacondaContainerInstallerLegacy(platform platform.Platform, filename string, container container.SourceSpec, ref string) *AnacondaContainerInstallerLegacy {
+func NewAnacondaContainerInstallerLegacy(platform platform.Platform, filename string, container container.SourceSpec) *AnacondaContainerInstallerLegacy {
 	return &AnacondaContainerInstallerLegacy{
 		Base:            NewBase("container-installer", platform, filename),
 		ContainerSource: container,
-		Ref:             ref,
 	}
 }
 
