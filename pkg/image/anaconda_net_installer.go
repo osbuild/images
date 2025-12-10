@@ -19,14 +19,11 @@ import (
 
 type AnacondaNetInstaller struct {
 	Base
-	InstallerCustomizations manifest.InstallerCustomizations
-	Environment             environment.Environment
+	AnacondaInstallerBase
+
+	Environment environment.Environment
 
 	ExtraBasePackages rpmmd.PackageSet
-
-	Kickstart *kickstart.Options
-
-	RootfsCompression string
 
 	Language string
 }

@@ -16,12 +16,10 @@ import (
 
 type AnacondaLiveInstaller struct {
 	Base
-	InstallerCustomizations manifest.InstallerCustomizations
-	Environment             environment.Environment
+	AnacondaInstallerBase
 
+	Environment       environment.Environment
 	ExtraBasePackages rpmmd.PackageSet
-
-	RootfsCompression string
 
 	// Locale for the installer. This should be set to the same locale as the
 	// ISO OS payload, if known.

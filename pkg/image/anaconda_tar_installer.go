@@ -38,15 +38,12 @@ func efiBootPartitionTable(rng *rand.Rand) *disk.PartitionTable {
 
 type AnacondaTarInstaller struct {
 	Base
-	OSCustomizations        manifest.OSCustomizations
-	InstallerCustomizations manifest.InstallerCustomizations
-	Environment             environment.Environment
+	AnacondaInstallerBase
+
+	OSCustomizations manifest.OSCustomizations
+	Environment      environment.Environment
 
 	ExtraBasePackages rpmmd.PackageSet
-
-	Kickstart *kickstart.Options
-
-	RootfsCompression string
 }
 
 func NewAnacondaTarInstaller(platform platform.Platform, filename string) *AnacondaTarInstaller {

@@ -20,18 +20,14 @@ import (
 
 type AnacondaContainerInstallerLegacy struct {
 	Base
+	AnacondaInstallerBase
 
-	InstallerCustomizations manifest.InstallerCustomizations
-	ExtraBasePackages       rpmmd.PackageSet
-
-	RootfsCompression string
+	ExtraBasePackages rpmmd.PackageSet
 
 	Ref string
 
 	ContainerSource           container.SourceSpec
 	ContainerRemoveSignatures bool
-
-	Kickstart *kickstart.Options
 
 	// Locale for the installer. This should be set to the same locale as the
 	// ISO OS payload, if known.
