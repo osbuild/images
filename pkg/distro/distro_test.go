@@ -717,3 +717,38 @@ func TestOSTreeOptionsErrorForNonOSTreeImgTypes(t *testing.T) {
 		}
 	}
 }
+
+func TestGetImageTypes(t *testing.T) {
+	assert := assert.New(t)
+	distroFactory := distrofactory.NewDefault()
+	assert.NotNil(distroFactory)
+
+	distros := listTestedDistros(t)
+	assert.NotEmpty(distros)
+
+	for _, distroName := range distros {
+		d := distroFactory.GetDistro(distroName)
+		assert.NotNil(d)
+
+		arches := d.ListArches()
+		assert.NotEmpty(arches)
+
+		for _, archName := range arches {
+			imageTypes, err := distro.GetImageTypes(d, archName)
+			assert.Nil(err)
+			assert.NotEmpty(imageTypes)
+
+			arch, err := d.GetArch(archName)
+			assert.Nil(err)
+
+			expectedNames := arch.ListImageTypes()
+			assert.Len(imageTypes, len(expectedNames))
+
+			for i, imageType := range imageTypes {
+				assert.Equal(expectedNames[i], imageType.Name())
+				assert.Equal(arch, imageType.Arch())
+			}
+
+		}
+	}
+}
