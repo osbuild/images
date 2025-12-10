@@ -318,7 +318,7 @@ func findMountableSizeableFor(pt *disk.PartitionTable, needle string) (disk.Moun
 func TestGenPartitionTableSetsRootfsForAllFilesystemsXFS(t *testing.T) {
 	rng := createRand()
 
-	imgType := bootc.NewTestBootcImageType()
+	imgType := bootc.NewTestBootcImageType("qcow2")
 
 	cus := &blueprint.Customizations{
 		Filesystem: []blueprint.FilesystemCustomization{
@@ -371,7 +371,7 @@ func TestGenPartitionTableSetsRootfsForAllFilesystemsBtrfs(t *testing.T) {
 func TestGenPartitionTableDiskCustomizationRunsValidateLayoutConstraints(t *testing.T) {
 	rng := createRand()
 
-	imgType := bootc.NewTestBootcImageType()
+	imgType := bootc.NewTestBootcImageType("qcow2")
 
 	cus := &blueprint.Customizations{
 		Disk: &blueprint.DiskCustomization{
@@ -590,7 +590,7 @@ func TestGenPartitionTableDiskCustomizationSizes(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			imgType := bootc.NewTestBootcImageType()
+			imgType := bootc.NewTestBootcImageType("qcow2")
 
 			rootfsMinsize := tc.rootfsMinSize
 			cus := &blueprint.Customizations{
@@ -621,7 +621,7 @@ func TestGenPartitionTableDiskCustomizationSizes(t *testing.T) {
 }
 
 func TestManifestFilecustomizationsSad(t *testing.T) {
-	imgType := bootc.NewTestBootcImageType()
+	imgType := bootc.NewTestBootcImageType("qcow2")
 	bp := &blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Files: []blueprint.FileCustomization{
@@ -638,7 +638,7 @@ func TestManifestFilecustomizationsSad(t *testing.T) {
 }
 
 func TestManifestDirCustomizationsSad(t *testing.T) {
-	imgType := bootc.NewTestBootcImageType()
+	imgType := bootc.NewTestBootcImageType("qcow2")
 	bp := &blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Directories: []blueprint.DirectoryCustomization{
@@ -655,7 +655,7 @@ func TestManifestDirCustomizationsSad(t *testing.T) {
 
 func TestGenPartitionTableFromOSInfo(t *testing.T) {
 	var bp blueprint.Blueprint
-	imgType := bootc.NewTestBootcImageType()
+	imgType := bootc.NewTestBootcImageType("qcow2")
 	// pretend a custom partition table is set via the bootc
 	// container sourceInfo mechanism
 	newPt, err := imgType.BasePartitionTable()
