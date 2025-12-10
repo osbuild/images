@@ -88,10 +88,8 @@ func (img *AnacondaLiveInstaller) InstantiateManifest(m *manifest.Manifest,
 	bootTreePipeline.KernelOpts = kernelOpts
 
 	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, livePipeline, rootfsImagePipeline, bootTreePipeline)
-	// TODO: the partition table is required - make it a ctor arg or set a default one in the pipeline
 	initIsoTreePipeline(isoTreePipeline, &img.AnacondaInstallerBase, rng)
 	isoTreePipeline.KernelOpts = kernelOpts
-	isoTreePipeline.ISOBoot = img.InstallerCustomizations.ISOBoot
 
 	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.InstallerCustomizations.ISOLabel)
 	isoPipeline.SetFilename(img.filename)

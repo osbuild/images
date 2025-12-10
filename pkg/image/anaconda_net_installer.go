@@ -108,13 +108,6 @@ func (img *AnacondaNetInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
 	initIsoTreePipeline(isoTreePipeline, &img.AnacondaInstallerBase, rng)
 
-	isoTreePipeline.KernelOpts = img.InstallerCustomizations.KernelOptionsAppend
-	if anacondaPipeline.InstallerCustomizations.FIPS {
-		isoTreePipeline.KernelOpts = append(isoTreePipeline.KernelOpts, "fips=1")
-	}
-
-	isoTreePipeline.ISOBoot = img.InstallerCustomizations.ISOBoot
-
 	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.InstallerCustomizations.ISOLabel)
 	isoPipeline.SetFilename(img.filename)
 	isoPipeline.ISOBoot = img.InstallerCustomizations.ISOBoot

@@ -105,17 +105,10 @@ func (img *AnacondaContainerInstallerLegacy) InstantiateManifest(m *manifest.Man
 
 	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
 	initIsoTreePipeline(isoTreePipeline, &img.AnacondaInstallerBase, rng)
-
 	// For ostree installers, always put the kickstart file in the root of the ISO
 	isoTreePipeline.PayloadPath = "/container"
 	isoTreePipeline.PayloadRemoveSignatures = img.ContainerRemoveSignatures
-
 	isoTreePipeline.ContainerSource = &img.ContainerSource
-	isoTreePipeline.ISOBoot = img.InstallerCustomizations.ISOBoot
-	if anacondaPipeline.InstallerCustomizations.FIPS {
-		isoTreePipeline.KernelOpts = append(isoTreePipeline.KernelOpts, "fips=1")
-	}
-
 	isoTreePipeline.InstallRootfsType = img.InstallRootfsType
 
 	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.InstallerCustomizations.ISOLabel)

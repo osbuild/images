@@ -132,16 +132,7 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
 	initIsoTreePipeline(isoTreePipeline, &img.AnacondaInstallerBase, rng)
 	isoTreePipeline.PayloadPath = tarPath
-	// XXX: this is already set?
-	isoTreePipeline.Kickstart.Path = img.Kickstart.Path
-
 	isoTreePipeline.OSPipeline = osPipeline
-	isoTreePipeline.KernelOpts = img.InstallerCustomizations.KernelOptionsAppend
-	if img.OSCustomizations.FIPS {
-		isoTreePipeline.KernelOpts = append(isoTreePipeline.KernelOpts, "fips=1")
-	}
-
-	isoTreePipeline.ISOBoot = img.InstallerCustomizations.ISOBoot
 
 	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.InstallerCustomizations.ISOLabel)
 	isoPipeline.SetFilename(img.filename)
