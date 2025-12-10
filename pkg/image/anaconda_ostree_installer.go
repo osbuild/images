@@ -20,15 +20,12 @@ import (
 
 type AnacondaOSTreeInstaller struct {
 	Base
-	InstallerCustomizations manifest.InstallerCustomizations
-	ExtraBasePackages       rpmmd.PackageSet
+	AnacondaInstallerBase
 
-	Kickstart *kickstart.Options
+	ExtraBasePackages rpmmd.PackageSet
 
 	// Subscription options to include
 	Subscription *subscription.ImageOptions
-
-	RootfsCompression string
 
 	Commit ostree.SourceSpec
 
