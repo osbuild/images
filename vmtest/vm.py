@@ -122,6 +122,10 @@ class VM(abc.ABC):
         scp_cmd.append(f"{user}@{self._address}:{dst}")
         subprocess.check_call(scp_cmd)
 
+    @property
+    def ssh_port(self):
+        return self._ssh_port
+
     @abc.abstractmethod
     def running(self):
         """
