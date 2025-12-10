@@ -23,31 +23,40 @@ type manifestTestCase struct {
 	config            *blueprint.Blueprint
 	imageOptions      distro.ImageOptions
 	imageRef          string
-	imageTypes        []string
+	imageType         string
 	depsolved         map[string]depsolvednf.DepsolveResult
 	containers        map[string][]container.Spec
 	expStages         map[string][]string
 	notExpectedStages map[string][]string
 	err               string
+	warnings          []string
 }
 
 func TestManifestGenerationEmptyConfig(t *testing.T) {
-	imgType := NewTestBootcImageType()
-
 	testCases := map[string]manifestTestCase{
 		"qcow2-base": {
-			imageRef:   "example-img-ref",
-			imageTypes: []string{"qcow2"},
+			imageRef:  "example-img-ref",
+			imageType: "qcow2",
 		},
-		"empty-imgref": {
-			imageRef:   "",
-			imageTypes: []string{"qcow2"},
-			err:        "internal error: no base image defined",
+		"qcow2-empty-imgref": {
+			imageRef:  "",
+			imageType: "qcow2",
+			err:       "internal error: no base image defined",
+		},
+		"pxe-base": {
+			imageRef:  "example-img-ref",
+			imageType: "pxe-tar-xz",
+		},
+		"pxe-empty-imgref": {
+			imageRef:  "",
+			imageType: "pxe-tar-xz",
+			err:       "internal error: no base image defined",
 		},
 	}
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
+			imgType := NewTestBootcImageType(tc.imageType)
 			imgType.arch.distro.imgref = tc.imageRef
 			_, _, err := imgType.Manifest(tc.config, tc.imageOptions, nil, common.ToPtr(int64(0)))
 			if tc.err != "" {
@@ -75,18 +84,21 @@ func getUserConfig() *blueprint.Blueprint {
 }
 
 func TestManifestGenerationUserConfig(t *testing.T) {
-	imgType := NewTestBootcImageType()
-
 	userConfig := getUserConfig()
 	testCases := map[string]manifestTestCase{
 		"qcow2-user": {
-			config:     userConfig,
-			imageTypes: []string{"qcow2"},
+			config:    userConfig,
+			imageType: "qcow2",
+		},
+		"pxe-user": {
+			config:    userConfig,
+			imageType: "pxe-tar-xz",
 		},
 	}
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
+			imgType := NewTestBootcImageType(tc.imageType)
 			_, _, err := imgType.Manifest(tc.config, tc.imageOptions, nil, common.ToPtr(int64(0)))
 			assert.NoError(t, err)
 		})
@@ -178,7 +190,7 @@ func TestManifestSerialization(t *testing.T) {
 	testCases := map[string]manifestTestCase{
 		"qcow2-base": {
 			config:     baseConfig,
-			imageTypes: []string{"qcow2"},
+			imageType:  "qcow2",
 			containers: diskContainers,
 			expStages: map[string][]string{
 				"build": {"org.osbuild.container-deploy"},
@@ -195,7 +207,7 @@ func TestManifestSerialization(t *testing.T) {
 		},
 		"qcow2-user": {
 			config:     userConfig,
-			imageTypes: []string{"qcow2"},
+			imageType:  "qcow2",
 			containers: diskContainers,
 			expStages: map[string][]string{
 				"build": {"org.osbuild.container-deploy"},
@@ -209,16 +221,53 @@ func TestManifestSerialization(t *testing.T) {
 			},
 		},
 		"qcow2-nocontainer": {
+			config:    userConfig,
+			imageType: "qcow2",
+			err:       `cannot serialize pipeline "build": BuildrootFromContainer: serialization not started`,
+		},
+		"pxe-base": {
+			config:     baseConfig,
+			imageType:  "pxe-tar-xz",
+			containers: diskContainers,
+			expStages: map[string][]string{
+				"build": {"org.osbuild.container-deploy"},
+				"image": {
+					"org.osbuild.bootc.install-to-filesystem",
+				},
+			},
+			notExpectedStages: map[string][]string{
+				"build": {"org.osbuild.rpm"},
+				"image": {
+					"org.osbuild.users",
+				},
+			},
+		},
+		"pxe-user": {
 			config:     userConfig,
-			imageTypes: []string{"qcow2"},
-			err:        `cannot serialize pipeline "build": BuildrootFromContainer: serialization not started`,
+			imageType:  "pxe-tar-xz",
+			containers: diskContainers,
+			expStages: map[string][]string{
+				"build": {"org.osbuild.container-deploy"},
+				"image": {
+					"org.osbuild.users", // user creation stage when we add users
+					"org.osbuild.bootc.install-to-filesystem",
+				},
+			},
+			notExpectedStages: map[string][]string{
+				"build": {"org.osbuild.rpm"},
+			},
+		},
+		"pxe-nocontainer": {
+			config:    userConfig,
+			imageType: "pxe-tar-xz",
+			err:       `cannot serialize pipeline "build": BuildrootFromContainer: serialization not started`,
 		},
 	}
 
 	// Use an empty config: only the imgref is required
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			imgType := NewTestBootcImageType()
+			imgType := NewTestBootcImageType(tc.imageType)
 
 			assert := assert.New(t)
 			mf, _, err := imgType.Manifest(tc.config, tc.imageOptions, nil, common.ToPtr(int64(0)))
@@ -237,7 +286,7 @@ func TestManifestSerialization(t *testing.T) {
 }
 
 func TestBootcDistroGetArch(t *testing.T) {
-	imgType := NewTestBootcImageType()
+	imgType := NewTestBootcImageType("qcow2")
 	distro := imgType.Arch().Distro()
 
 	arch, err := distro.GetArch("x86_64")
@@ -273,8 +322,6 @@ func TestManifestGenerationOvaFilename(t *testing.T) {
 }
 
 func TestManifestGenerationBlueprintValidation(t *testing.T) {
-	imgType := NewTestBootcImageType()
-
 	imageOptions := distro.ImageOptions{}
 	config := &blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
@@ -286,7 +333,34 @@ func TestManifestGenerationBlueprintValidation(t *testing.T) {
 		},
 	}
 
-	_, warnings, err := imgType.Manifest(config, imageOptions, nil, common.ToPtr(int64(0)))
-	assert.NoError(t, err)
-	assert.Equal(t, []string{`blueprint validation failed for image type "qcow2": customizations.repositories: not supported`}, warnings)
+	testCases := map[string]manifestTestCase{
+		"qcow2-base": {
+			config:       config,
+			imageOptions: imageOptions,
+			imageRef:     "example-img-ref",
+			imageType:    "qcow2",
+			warnings:     []string{`blueprint validation failed for image type "qcow2": customizations.repositories: not supported`},
+		},
+		"pxe-base": {
+			config:       config,
+			imageOptions: imageOptions,
+			imageRef:     "example-img-ref",
+			imageType:    "pxe-tar-xz",
+			warnings:     []string{`blueprint validation failed for image type "pxe-tar-xz": customizations.repositories: not supported`},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			imgType := NewTestBootcImageType(tc.imageType)
+			assert := assert.New(t)
+			_, warnings, err := imgType.Manifest(config, imageOptions, nil, common.ToPtr(int64(0)))
+			if tc.err != "" {
+				assert.EqualError(err, tc.err)
+			}
+			if len(tc.warnings) > 0 {
+				assert.Equal(tc.warnings, warnings)
+			}
+		})
+	}
 }
