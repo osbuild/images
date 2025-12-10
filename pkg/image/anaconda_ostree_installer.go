@@ -112,14 +112,8 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 
 	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
 	initIsoTreePipeline(isoTreePipeline, &img.AnacondaInstallerBase, rng)
-
 	isoTreePipeline.PayloadPath = "/ostree/repo"
-
 	isoTreePipeline.OSTreeCommitSource = &img.Commit
-	isoTreePipeline.ISOBoot = img.InstallerCustomizations.ISOBoot
-	if anacondaPipeline.InstallerCustomizations.FIPS {
-		isoTreePipeline.KernelOpts = append(isoTreePipeline.KernelOpts, "fips=1")
-	}
 	isoTreePipeline.SubscriptionPipeline = subscriptionPipeline
 
 	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.InstallerCustomizations.ISOLabel)
