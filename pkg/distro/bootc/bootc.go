@@ -439,68 +439,22 @@ func (t *BootcImageType) manifestForDisk(bp *blueprint.Blueprint, options distro
 	return &mf, nil, nil
 }
 
-func (t *BootcImageType) manifestForISO(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, rng *rand.Rand) (*manifest.Manifest, []string, error) {
-	if t.arch.distro.imgref == "" {
-		return nil, nil, fmt.Errorf("internal error: no base image defined")
-	}
-	if options.Bootc == nil || options.Bootc.InstallerPayloadRef == "" {
-		return nil, nil, fmt.Errorf("no installer payload bootc ref set")
-	}
-	payloadRef := options.Bootc.InstallerPayloadRef
-
-	containerSource := container.SourceSpec{
-		Source: t.arch.distro.imgref,
-		Name:   t.arch.distro.imgref,
-		Local:  true,
-	}
-	// XXX: keep it simple for now, we may allow this in the future
-	if t.arch.distro.buildImgref != t.arch.distro.imgref {
-		return nil, nil, fmt.Errorf("cannot use build-containers with anaconda installer images")
-	}
-
-	var customizations *blueprint.Customizations
-	if bp != nil {
-		customizations = bp.Customizations
-	}
-
-	platformi := PlatformFor(t.arch.Name(), t.arch.distro.sourceInfo.UEFIVendor)
-	platformi.ImageFormat = platform.FORMAT_ISO
-
-	// XXX: tons of copied code from
-	// bootc-image-builder:‎bib/cmd/bootc-image-builder/legacy_iso.go
-	// but sharing is hard because AnacondaContainerInstaller and
-	// AnacondaContainerInstallerLegacy are different types so
-	// a shared helper to set the fields won't work (unless
-	// reflection urgh).
-
-	img := image.NewAnacondaContainerInstaller(platformi, t.Filename(), containerSource)
-	img.ContainerRemoveSignatures = true
+func (t *BootcImageType) initAnacondaInstallerBaseFromSourceInfo(img *image.AnacondaInstallerBase, sourceInfo *osinfo.Info, customizations *blueprint.Customizations) error {
 	img.RootfsCompression = "zstd"
-	// kernelVer is used by dracut
-	img.KernelVer = t.arch.distro.sourceInfo.KernelInfo.Version
-	img.KernelPath = fmt.Sprintf("lib/modules/%s/vmlinuz", t.arch.distro.sourceInfo.KernelInfo.Version)
-	img.InitramfsPath = fmt.Sprintf("lib/modules/%s/initramfs.img", t.arch.distro.sourceInfo.KernelInfo.Version)
-	img.InstallerHome = "/var/roothome"
-	payloadSource := container.SourceSpec{
-		Source: payloadRef,
-		Name:   payloadRef,
-		Local:  true,
-	}
-	img.InstallerPayload = payloadSource
 
 	if t.arch.Name() == arch.ARCH_X86_64.String() {
 		img.InstallerCustomizations.ISOBoot = manifest.Grub2ISOBoot
 	}
 
-	img.InstallerCustomizations.Product = t.arch.distro.sourceInfo.OSRelease.Name
-	img.InstallerCustomizations.OSVersion = t.arch.distro.sourceInfo.OSRelease.VersionID
-	img.InstallerCustomizations.ISOLabel = LabelForISO(&t.arch.distro.sourceInfo.OSRelease, t.arch.Name())
+	img.InstallerCustomizations.Product = sourceInfo.OSRelease.Name
+	img.InstallerCustomizations.OSVersion = sourceInfo.OSRelease.VersionID
+	img.InstallerCustomizations.ISOLabel = LabelForISO(&sourceInfo.OSRelease, t.arch.Name())
 
 	img.InstallerCustomizations.FIPS = customizations.GetFIPS()
 	var err error
 	img.Kickstart, err = kickstart.New(customizations)
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
 	img.Kickstart.Path = osbuild.KickstartPathOSBuild
 	if kopts := customizations.GetKernel(); kopts != nil && kopts.Append != "" {
@@ -510,7 +464,7 @@ func (t *BootcImageType) manifestForISO(bp *blueprint.Blueprint, options distro.
 
 	instCust, err := customizations.GetInstaller()
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
 	if instCust != nil && instCust.Modules != nil {
 		img.InstallerCustomizations.EnabledAnacondaModules = append(img.InstallerCustomizations.EnabledAnacondaModules, instCust.Modules.Enable...)
@@ -533,11 +487,61 @@ func (t *BootcImageType) manifestForISO(bp *blueprint.Blueprint, options distro.
 	img.Kickstart.OSTree = &kickstart.OSTree{
 		OSName: "default",
 	}
-	img.InstallerCustomizations.LoraxTemplates = LoraxTemplates(t.arch.distro.sourceInfo.OSRelease)
-	img.InstallerCustomizations.LoraxTemplatePackage = LoraxTemplatePackage(t.arch.distro.sourceInfo.OSRelease)
 
 	// see https://github.com/osbuild/bootc-image-builder/issues/733
 	img.InstallerCustomizations.ISORootfsType = manifest.SquashfsRootfs
+
+	return nil
+}
+
+func (t *BootcImageType) manifestForISO(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, rng *rand.Rand) (*manifest.Manifest, []string, error) {
+	if t.arch.distro.imgref == "" {
+		return nil, nil, fmt.Errorf("internal error in bootc iso: no base image defined")
+	}
+	if options.Bootc == nil || options.Bootc.InstallerPayloadRef == "" {
+		return nil, nil, fmt.Errorf("no installer payload bootc ref set")
+	}
+	payloadRef := options.Bootc.InstallerPayloadRef
+	imgref := t.arch.distro.imgref
+	containerSource := container.SourceSpec{
+		Source: imgref,
+		Name:   imgref,
+		Local:  true,
+	}
+	sourceInfo := t.arch.distro.sourceInfo
+	// XXX: keep it simple for now, we may allow this in the future
+	if t.arch.distro.buildImgref != t.arch.distro.imgref {
+		return nil, nil, fmt.Errorf("cannot use build-containers with anaconda installer images")
+	}
+
+	var customizations *blueprint.Customizations
+	if bp != nil {
+		customizations = bp.Customizations
+	}
+
+	platformi := PlatformFor(t.arch.Name(), sourceInfo.UEFIVendor)
+	platformi.ImageFormat = platform.FORMAT_ISO
+
+	img := image.NewAnacondaContainerInstaller(platformi, t.Filename(), containerSource)
+	if err := t.initAnacondaInstallerBaseFromSourceInfo(&img.AnacondaInstallerBase, sourceInfo, customizations); err != nil {
+		return nil, nil, err
+	}
+	img.ContainerRemoveSignatures = true
+	// we auto-detect the lorax config from the source info
+	img.InstallerCustomizations.LoraxTemplates = LoraxTemplates(sourceInfo.OSRelease)
+	img.InstallerCustomizations.LoraxTemplatePackage = LoraxTemplatePackage(sourceInfo.OSRelease)
+
+	// kernelVer is used by dracut
+	img.KernelVer = sourceInfo.KernelInfo.Version
+	img.KernelPath = fmt.Sprintf("lib/modules/%s/vmlinuz", sourceInfo.KernelInfo.Version)
+	img.InitramfsPath = fmt.Sprintf("lib/modules/%s/initramfs.img", sourceInfo.KernelInfo.Version)
+	img.InstallerHome = "/var/roothome"
+	payloadSource := container.SourceSpec{
+		Source: payloadRef,
+		Name:   payloadRef,
+		Local:  true,
+	}
+	img.InstallerPayload = payloadSource
 
 	installRootfsType, err := disk.NewFSType(t.arch.distro.defaultFs)
 	if err != nil {
@@ -547,7 +551,7 @@ func (t *BootcImageType) manifestForISO(bp *blueprint.Blueprint, options distro.
 
 	mf := manifest.New()
 
-	foundDistro, foundRunner, err := GetDistroAndRunner(t.arch.distro.sourceInfo.OSRelease)
+	foundDistro, foundRunner, err := GetDistroAndRunner(sourceInfo.OSRelease)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to infer distro and runner: %w", err)
 	}
@@ -622,13 +626,19 @@ func newDistroYAMLFrom(sourceInfo *osinfo.Info) (*defs.DistroYAML, *distro.ID, e
 }
 
 func (t *BootcImageType) manifestForLegacyISO(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, rng *rand.Rand) (*manifest.Manifest, []string, error) {
-	archStr := t.arch.Name()
+	if t.arch.distro.imgref == "" {
+		return nil, nil, fmt.Errorf("internal error in bootc legacy iso: no base image defined")
+	}
 	imgref := t.arch.distro.imgref
+	containerSource := container.SourceSpec{
+		Source: imgref,
+		Name:   imgref,
+		Local:  true,
+	}
+
+	archStr := t.arch.Name()
 	sourceInfo := t.arch.distro.sourceInfo
 
-	if t.arch.distro.imgref == "" {
-		return nil, nil, fmt.Errorf("pipeline: no base image defined")
-	}
 	distroYAML, id, err := newDistroYAMLFrom(t.arch.distro.sourceInfo)
 	if err != nil {
 		return nil, nil, err
@@ -648,73 +658,25 @@ func (t *BootcImageType) manifestForLegacyISO(bp *blueprint.Blueprint, options d
 	if installerConfig == nil {
 		return nil, nil, fmt.Errorf("empty installer config for %s", installerImgTypeName)
 	}
-
-	containerSource := container.SourceSpec{
-		Source: imgref,
-		Name:   imgref,
-		Local:  true,
+	var customizations *blueprint.Customizations
+	if bp != nil {
+		customizations = bp.Customizations
 	}
 
 	platformi := PlatformFor(archStr, sourceInfo.UEFIVendor)
 	platformi.ImageFormat = platform.FORMAT_ISO
 
 	img := image.NewAnacondaContainerInstallerLegacy(platformi, t.Filename(), containerSource)
+	if err := t.initAnacondaInstallerBaseFromSourceInfo(&img.AnacondaInstallerBase, sourceInfo, customizations); err != nil {
+		return nil, nil, err
+	}
 	img.ContainerRemoveSignatures = true
-	img.RootfsCompression = "zstd"
-
-	if archStr == arch.ARCH_X86_64.String() {
-		img.InstallerCustomizations.ISOBoot = manifest.Grub2ISOBoot
-	}
-
-	img.InstallerCustomizations.Product = sourceInfo.OSRelease.Name
-	img.InstallerCustomizations.OSVersion = sourceInfo.OSRelease.VersionID
-	img.InstallerCustomizations.ISOLabel = LabelForISO(&sourceInfo.OSRelease, archStr)
 	img.ExtraBasePackages = installerPkgSet
-
-	var customizations *blueprint.Customizations
-	if bp != nil {
-		customizations = bp.Customizations
-	}
-	img.InstallerCustomizations.FIPS = customizations.GetFIPS()
-	img.Kickstart, err = kickstart.New(customizations)
-	if err != nil {
-		return nil, nil, err
-	}
-	img.Kickstart.Path = osbuild.KickstartPathOSBuild
-	if kopts := customizations.GetKernel(); kopts != nil && kopts.Append != "" {
-		img.Kickstart.KernelOptionsAppend = append(img.Kickstart.KernelOptionsAppend, kopts.Append)
-	}
-	img.Kickstart.NetworkOnBoot = true
-
-	instCust, err := customizations.GetInstaller()
-	if err != nil {
-		return nil, nil, err
-	}
-	if instCust != nil && instCust.Modules != nil {
-		img.InstallerCustomizations.EnabledAnacondaModules = append(img.InstallerCustomizations.EnabledAnacondaModules, instCust.Modules.Enable...)
-		img.InstallerCustomizations.DisabledAnacondaModules = append(img.InstallerCustomizations.DisabledAnacondaModules, instCust.Modules.Disable...)
-	}
-	img.InstallerCustomizations.EnabledAnacondaModules = append(img.InstallerCustomizations.EnabledAnacondaModules,
-		anaconda.ModuleUsers,
-		anaconda.ModuleServices,
-		anaconda.ModuleSecurity,
-		// XXX: get from the imagedefs
-		anaconda.ModuleNetwork,
-		anaconda.ModulePayloads,
-		anaconda.ModuleRuntime,
-		anaconda.ModuleStorage,
-	)
-
-	img.Kickstart.OSTree = &kickstart.OSTree{
-		OSName: "default",
-	}
+	// our installer customizations come from the distrodefs (unlike in manifestForISO)
 	img.InstallerCustomizations.LoraxTemplates = installerConfig.LoraxTemplates
 	if installerConfig.LoraxTemplatePackage != nil {
 		img.InstallerCustomizations.LoraxTemplatePackage = *installerConfig.LoraxTemplatePackage
 	}
-
-	// see https://github.com/osbuild/bootc-image-builder/issues/733
-	img.InstallerCustomizations.ISORootfsType = manifest.SquashfsRootfs
 
 	installRootfsType, err := disk.NewFSType(t.arch.distro.defaultFs)
 	if err != nil {
