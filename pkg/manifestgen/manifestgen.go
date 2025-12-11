@@ -39,8 +39,13 @@ var (
 // Options contains the optional settings for the manifest generation.
 // For unset values defaults will be used.
 type Options struct {
+	// Cachedir specified the rpmmd cache directory (rpm metadata)
+	// If unset a default based on the xdgCacheHome is used
+	// (e.g. /root/.cache/osbuild-store)
 	Cachedir string
 
+	// RpmDownloader allows to switch between the librepo and
+	// libcurl download backends.
 	RpmDownloader osbuild.RpmDownloader
 
 	// SBOMWriter will be called for each generated SBOM the
