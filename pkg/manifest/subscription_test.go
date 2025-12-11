@@ -589,6 +589,57 @@ func TestSubscriptionService(t *testing.T) {
 			expectedDirs:     []*fsnode.Directory{mkInsightsDropinDir()},
 			expectedServices: []string{serviceFilename},
 		},
+		"with-proxy-port": {
+			subOpts: subscription.ImageOptions{
+				Organization:  "theorg-pp",
+				ActivationKey: "thekey-pp",
+				ServerUrl:     "theserverurl-pp",
+				BaseUrl:       "thebaseurl-pp",
+				Insights:      false,
+				Rhc:           false,
+				Proxy:         "proxy-url:8080",
+			},
+			srvcOpts: nil,
+			expectedStage: &osbuild.Stage{
+				Type: stageType,
+				Options: &osbuild.SystemdUnitCreateStageOptions{
+					Filename: serviceFilename,
+					UnitType: unitType,
+					UnitPath: osbuild.UsrUnitPath,
+					Config: osbuild.SystemdUnit{
+						Unit: &osbuild.UnitSection{
+							Description: serviceDescription,
+							ConditionPathExists: []string{
+								subkeyFilepath,
+							},
+							Wants: serviceWants,
+							After: serviceAfter,
+						},
+						Service: &osbuild.ServiceSection{
+							Type: osbuild.OneshotServiceType,
+							ExecStart: []string{
+								"/usr/sbin/subscription-manager config --server.hostname 'theserverurl-pp'",
+								"/usr/sbin/subscription-manager config --server.proxy_hostname 'proxy-url'",
+								"/usr/sbin/subscription-manager config --server.proxy_port '8080'",
+								"/usr/sbin/subscription-manager register --org=\"${ORG_ID}\" --activationkey=\"${ACTIVATION_KEY}\" --baseurl 'thebaseurl-pp'",
+								"/usr/bin/rm '" + subkeyFilepath + "'",
+							},
+							EnvironmentFile: []string{
+								subkeyFilepath,
+							},
+						},
+						Install: &osbuild.InstallSection{
+							WantedBy: serviceWantedBy,
+						},
+					},
+				},
+			},
+			expectedFiles: []*fsnode.File{
+				mkKeyfile("theorg-pp", "thekey-pp"),
+			},
+			expectedDirs:     make([]*fsnode.Directory, 0),
+			expectedServices: []string{serviceFilename},
+		},
 	}
 
 	for name := range testCases {
@@ -643,7 +694,6 @@ WantedBy=multi-user.target
 }
 
 func mkInsightsDropinDir() *fsnode.Directory {
-
 	icDropinDirectory, err := fsnode.NewDirectory("/etc/systemd/system/insights-client-boot.service.d", nil, nil, nil, true)
 	if err != nil {
 		panic(err)
