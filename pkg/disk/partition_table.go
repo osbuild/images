@@ -648,6 +648,28 @@ func (pt *PartitionTable) FindMountable(mountpoint string) Mountable {
 	if len(path) == 0 {
 		return nil
 	}
+
+	// first path element is guaranteed to be Mountable
+	return path[0].(Mountable)
+}
+
+// FindMountableOnPlain returns the Mountable entity with the given mountpoint in
+// PartitionTable if it is directly located on a plain partition. Returns nil if no
+// Entity on a plain partition has the target as a Mountpoint.
+func (pt *PartitionTable) FindMountableOnPlain(mountpoint string) Mountable {
+	path := entityPath(pt, mountpoint)
+
+	// Make sure that the entity actually has a parent
+	if len(path) < 2 {
+		return nil
+	}
+
+	parent := path[1]
+
+	if _, ok := parent.(*Partition); !ok {
+		return nil
+	}
+
 	// first path element is guaranteed to be Mountable
 	return path[0].(Mountable)
 }
