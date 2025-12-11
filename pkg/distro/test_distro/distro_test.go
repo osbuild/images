@@ -10,7 +10,7 @@ import (
 )
 
 func TestTestDistroGetPipelines(t *testing.T) {
-	testDistro := test_distro.DistroFactory(test_distro.TestDistro1Name)
+	testDistro := test_distro.DistroFactory("", test_distro.TestDistro1Name)
 	for _, testArchName := range testDistro.ListArches() {
 		testArch, err := testDistro.GetArch(testArchName)
 		require.NoError(t, err)

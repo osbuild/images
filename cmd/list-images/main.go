@@ -79,7 +79,7 @@ func main() {
 	if err != nil {
 		panic(fmt.Sprintf("failed to create repo registry with tested distros: %v", err))
 	}
-	distroFac := distrofactory.NewDefault()
+	distroFac := distrofactory.NewDefault("")
 	distros, invalidDistros := resolveArgValues(distros, testedRepoRegistry.ListDistros())
 	if len(invalidDistros) > 0 {
 		fmt.Fprintf(os.Stderr, "WARNING: invalid distro names: [%s]\n", strings.Join(invalidDistros, ","))

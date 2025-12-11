@@ -55,7 +55,7 @@ func main() {
 		}
 	}
 
-	distroFac := distrofactory.NewDefault()
+	distroFac := distrofactory.NewDefault("")
 	var d distro.Distro
 	if distroArg == "host" {
 		d = distroFac.FromHost()

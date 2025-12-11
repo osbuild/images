@@ -39,7 +39,7 @@ func sha256For(s string) string {
 func TestManifestGeneratorDepsolve(t *testing.T) {
 	repos, err := testrepos.New()
 	assert.NoError(t, err)
-	fac := distrofactory.NewDefault()
+	fac := distrofactory.NewDefault("")
 
 	filter, err := imagefilter.New(fac, repos)
 	assert.NoError(t, err)
@@ -88,7 +88,7 @@ func TestManifestGeneratorWithOstreeCommit(t *testing.T) {
 	repos, err := testrepos.New()
 	assert.NoError(t, err)
 
-	fac := distrofactory.NewDefault()
+	fac := distrofactory.NewDefault("")
 	filter, err := imagefilter.New(fac, repos)
 	assert.NoError(t, err)
 	res, err := filter.Filter("distro:centos-9", "type:edge-ami", "arch:x86_64")
@@ -209,7 +209,7 @@ func panicContainerResolver(containerSources map[string][]container.SourceSpec, 
 func TestManifestGeneratorContainers(t *testing.T) {
 	repos, err := testrepos.New()
 	assert.NoError(t, err)
-	fac := distrofactory.NewDefault()
+	fac := distrofactory.NewDefault("")
 
 	filter, err := imagefilter.New(fac, repos)
 	assert.NoError(t, err)
@@ -243,7 +243,7 @@ func TestManifestGeneratorContainers(t *testing.T) {
 func TestManifestGeneratorDepsolveWithSbomWriter(t *testing.T) {
 	repos, err := testrepos.New()
 	assert.NoError(t, err)
-	fac := distrofactory.NewDefault()
+	fac := distrofactory.NewDefault("")
 
 	filter, err := imagefilter.New(fac, repos)
 	assert.NoError(t, err)
@@ -285,7 +285,7 @@ func TestManifestGeneratorDepsolveWithSbomWriter(t *testing.T) {
 func TestManifestGeneratorSeed(t *testing.T) {
 	repos, err := testrepos.New()
 	assert.NoError(t, err)
-	fac := distrofactory.NewDefault()
+	fac := distrofactory.NewDefault("")
 
 	filter, err := imagefilter.New(fac, repos)
 	assert.NoError(t, err)
@@ -323,7 +323,7 @@ func TestManifestGeneratorSeed(t *testing.T) {
 func TestManifestGeneratorDepsolveOutput(t *testing.T) {
 	repos, err := testrepos.New()
 	assert.NoError(t, err)
-	fac := distrofactory.NewDefault()
+	fac := distrofactory.NewDefault("")
 
 	filter, err := imagefilter.New(fac, repos)
 	assert.NoError(t, err)
@@ -350,7 +350,7 @@ func TestManifestGeneratorDepsolveOutput(t *testing.T) {
 func TestManifestGeneratorOverrideRepos(t *testing.T) {
 	repos, err := testrepos.New()
 	assert.NoError(t, err)
-	fac := distrofactory.NewDefault()
+	fac := distrofactory.NewDefault("")
 
 	filter, err := imagefilter.New(fac, repos)
 	assert.NoError(t, err)
@@ -390,7 +390,7 @@ func TestManifestGeneratorOverrideRepos(t *testing.T) {
 func TestManifestGeneratorUseBootstrapContainer(t *testing.T) {
 	repos, err := testrepos.New()
 	assert.NoError(t, err)
-	fac := distrofactory.NewDefault()
+	fac := distrofactory.NewDefault("")
 
 	filter, err := imagefilter.New(fac, repos)
 	assert.NoError(t, err)

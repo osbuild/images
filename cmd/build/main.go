@@ -49,7 +49,7 @@ func run() error {
 		os.Exit(1)
 	}
 
-	distroFac := distrofactory.NewDefault()
+	distroFac := distrofactory.NewDefault("")
 	config, err := buildconfig.New(configFile, nil)
 	if err != nil {
 		return err

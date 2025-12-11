@@ -19,7 +19,7 @@ func TestBootstrapContainers(t *testing.T) {
 
 	for _, distroName := range repos.ListDistros() {
 		t.Run(distroName, func(t *testing.T) {
-			d := generic.DistroFactory(distroName)
+			d := generic.DistroFactory("", distroName)
 			assert.NotNil(t, d)
 			assert.NotEmpty(t, d.(*generic.Distribution).DistroYAML.BootstrapContainers)
 		})
@@ -41,7 +41,7 @@ func TestManifestError(t *testing.T) {
 
 	// use a single image type from each distro
 	for _, distroName := range repos.ListDistros() {
-		df := generic.DistroFactory(distroName)
+		df := generic.DistroFactory("", distroName)
 		require.NotNil(df)
 
 		dist := fedoraFamilyDistros[len(fedoraFamilyDistros)-1]
