@@ -26,11 +26,12 @@ func u(s string) string {
 
 func run() error {
 	// common args
-	var outputDir, osbuildStore, rpmCacheRoot, repositories string
+	var outputDir, osbuildStore, rpmCacheRoot, repositories, archName string
 	flag.StringVar(&outputDir, "output", ".", "artifact output directory")
 	flag.StringVar(&osbuildStore, "store", ".osbuild", "osbuild store for intermediate pipeline trees")
 	flag.StringVar(&rpmCacheRoot, "rpmmd", "/tmp/rpmmd", "rpm metadata cache directory")
 	flag.StringVar(&repositories, "repositories", "test/data/repositories", "path to repository file or directory")
+	flag.StringVar(&archName, "arch", "", "target architecture")
 
 	// osbuild checkpoint arg
 	var checkpoints cmdutil.MultiValue
@@ -64,8 +65,10 @@ func run() error {
 		return fmt.Errorf("invalid or unsupported distribution: %q", distroName)
 	}
 
-	archName := arch.Current().String()
-	arch, err := distribution.GetArch(archName)
+	if archName == "" {
+		archName = arch.Current().String()
+	}
+	archi, err := distribution.GetArch(archName)
 	if err != nil {
 		return fmt.Errorf("invalid arch name %q for distro %q: %w", archName, distroName, err)
 	}
@@ -76,7 +79,7 @@ func run() error {
 		return fmt.Errorf("failed to create target directory: %w", err)
 	}
 
-	imgType, err := arch.GetImageType(imgTypeName)
+	imgType, err := archi.GetImageType(imgTypeName)
 	if err != nil {
 		return fmt.Errorf("invalid image type %q for distro %q and arch %q: %w", imgTypeName, distroName, archName, err)
 	}
@@ -108,6 +111,9 @@ func run() error {
 		WarningsOutput: os.Stderr,
 		OverrideRepos:  overrideRepos,
 		CustomSeed:     &seedArg,
+	}
+	if archName != arch.Current().String() {
+		manifestOpts.UseBootstrapContainer = true
 	}
 	// add RHSM fact to detect changes
 	config.Options.Facts = &facts.ImageOptions{

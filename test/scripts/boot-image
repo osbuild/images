@@ -134,14 +134,12 @@ class CannotRunQemuTest(Exception):
         self.skip_reason = skip_reason
 
 
-def ensure_can_run_qemu_test(arch, image_path, config_file):
+def ensure_can_run_qemu_test(image_path, config_file):
     """
     Check if the given image_path, config_file is capable of running a
     qemu based test. Will return a bool and a skip_reason.
     """
     # keep in sync with imagetestlib.py:CAN_BOOT_TEST
-    if arch not in ["x86_64"]:
-        raise CannotRunQemuTest(f"no qemu boot test support for {arch} yet")
     manifest_path = pathlib.Path(image_path).parent / "../manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf8"))
     # Note that this needs adjustment when we switch to librepo
@@ -193,7 +191,7 @@ def qemu_cmd_scp_and_run(vm, cmd, privkey_path):
 
 
 def boot_qemu(arch, image_path, config_file, keep_booted=False):
-    ensure_can_run_qemu_test(arch, image_path, config_file)
+    ensure_can_run_qemu_test(image_path, config_file)
     cmd = [BASE_TEST_SCRIPT, config_file]
     with contextlib.ExitStack() as cm:
         uncompressed_image_path = cm.enter_context(ensure_uncompressed(image_path))
@@ -214,7 +212,7 @@ def boot_qemu(arch, image_path, config_file, keep_booted=False):
 
 
 def boot_qemu_iso_no_unattended_support(arch, installer_iso_path, config_file):
-    ensure_can_run_qemu_test(arch, installer_iso_path, config_file)
+    ensure_can_run_qemu_test(installer_iso_path, config_file)
     # this is for ISOs that have no "unattneded" support in their blueprint,
     # manually create one and modify the ISO
     rootpw = "".join(
@@ -273,7 +271,7 @@ def boot_qemu_iso_no_unattended_support(arch, installer_iso_path, config_file):
 
 
 def boot_qemu_iso(arch, installer_iso_path, config_file):
-    ensure_can_run_qemu_test(arch, installer_iso_path, config_file)
+    ensure_can_run_qemu_test(installer_iso_path, config_file)
     # We can only test the unattended-iso as the other configs require
     # interactive setup of the installer which we do not support in this
     # test-runner.
