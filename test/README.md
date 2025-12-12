@@ -28,7 +28,7 @@ The config list is also used in CI to dynamically generate test builds using the
 
 ## Manually image testing
 
-While most of this document describes our automatic setup, here are some useful tipps if manual
+While most of this document describes our automatic setup, here are some useful tips if manual
 testing/inspection of images is required.
 
 To build an image just run `build-image`, then it can be booted with `boot-image` and the
