@@ -2635,6 +2635,103 @@ func TestNewCustomPartitionTable(t *testing.T) {
 				},
 			},
 		},
+		"btrfs-gpt-with-/boot": {
+			customizations: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						Type:    "btrfs",
+						MinSize: 230 * datasizes.MiB,
+						BtrfsVolumeCustomization: blueprint.BtrfsVolumeCustomization{
+							Subvolumes: []blueprint.BtrfsSubvolumeCustomization{
+								{
+									Name:       "subvol/root",
+									Mountpoint: "/",
+								},
+								{
+									Name:       "subvol/boot",
+									Mountpoint: "/boot",
+								},
+							},
+						},
+					},
+					{
+						MinSize: 120 * datasizes.MiB,
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Label:  "butterswap",
+							FSType: "swap",
+						},
+					},
+				},
+			},
+			options: &disk.CustomPartitionTableOptions{
+				DefaultFSType:      disk.FS_EXT4,
+				BootMode:           platform.BOOT_HYBRID,
+				PartitionTableType: disk.PT_GPT,
+				Architecture:       arch.ARCH_X86_64,
+			},
+			expected: &disk.PartitionTable{
+				Type: disk.PT_GPT,
+				Size: 322*datasizes.MiB + 230*datasizes.MiB + datasizes.MiB, // start + size of last partition + footer
+				UUID: "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+				Partitions: []disk.Partition{
+					{
+						Start:    1 * datasizes.MiB, // header
+						Size:     1 * datasizes.MiB,
+						Bootable: true,
+						Type:     disk.BIOSBootPartitionGUID,
+						UUID:     disk.BIOSBootPartitionUUID,
+					},
+					{
+						Start: 2 * datasizes.MiB, // header
+						Size:  200 * datasizes.MiB,
+						Type:  disk.EFISystemPartitionGUID,
+						UUID:  disk.EFISystemPartitionUUID,
+						Payload: &disk.Filesystem{
+							Type:         "vfat",
+							UUID:         disk.EFIFilesystemUUID,
+							Mountpoint:   "/boot/efi",
+							Label:        "ESP",
+							FSTabOptions: "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+							FSTabFreq:    0,
+							FSTabPassNo:  2,
+						},
+					},
+					{
+						Start: 202 * datasizes.MiB,
+						Size:  120 * datasizes.MiB,
+						Type:  disk.SwapPartitionGUID,
+						UUID:  "a178892e-e285-4ce1-9114-55780875d64e",
+						Payload: &disk.Swap{
+							Label:        "butterswap",
+							UUID:         "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75", // same as volume UUID
+							FSTabOptions: "defaults",
+						},
+					},
+					{
+						Start:    322 * datasizes.MiB,
+						Size:     231*datasizes.MiB - (disk.DefaultSectorSize + (128 * 128)), // grows by 1 grain size (1 MiB) minus the unaligned size of the header to fit the gpt footer
+						Type:     disk.FilesystemDataGUID,
+						UUID:     "e2d3d0d0-de6b-48f9-b44c-e85ff044c6b1",
+						Bootable: false,
+						Payload: &disk.Btrfs{
+							UUID: "fb180daf-48a7-4ee0-b10d-394651850fd4",
+							Subvolumes: []disk.BtrfsSubvolume{
+								{
+									Name:       "subvol/root",
+									Mountpoint: "/",
+									UUID:       "fb180daf-48a7-4ee0-b10d-394651850fd4", // same as volume UUID
+								},
+								{
+									Name:       "subvol/boot",
+									Mountpoint: "/boot",
+									UUID:       "fb180daf-48a7-4ee0-b10d-394651850fd4", // same as volume UUID
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 		"autorootbtrfs": {
 			customizations: &blueprint.DiskCustomization{
 				Partitions: []blueprint.PartitionCustomization{
