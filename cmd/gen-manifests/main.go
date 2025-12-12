@@ -35,7 +35,6 @@ import (
 	"github.com/osbuild/images/pkg/distrofactory"
 	"github.com/osbuild/images/pkg/experimentalflags"
 	"github.com/osbuild/images/pkg/manifest"
-	"github.com/osbuild/images/pkg/manifestgen"
 	"github.com/osbuild/images/pkg/manifestgen/manifestmock"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rhsm/facts"
@@ -301,7 +300,7 @@ func makeManifestJob(
 		var depsolvedSets map[string]depsolvednf.DepsolveResult
 		if content["packages"] {
 			solver := depsolvednf.NewSolver(distribution.ModulePlatformID(), distribution.Releasever(), archName, distribution.Name(), cacheDir)
-			depsolvedSets, err = manifestgen.DefaultDepsolve(solver, cacheDir, os.Stderr, common.Must(manifest.GetPackageSetChains()), distribution, archName)
+			depsolvedSets, err = solver.DepsolveAll(common.Must(manifest.GetPackageSetChains()))
 			if err != nil {
 				err = fmt.Errorf("[%s] depsolve failed: %s", filename, err.Error())
 				return
@@ -318,7 +317,7 @@ func makeManifestJob(
 
 		var containerSpecs map[string][]container.Spec
 		if content["containers"] {
-			containerSpecs, err = manifestgen.DefaultContainerResolver(manifest.GetContainerSourceSpecs(), archName)
+			containerSpecs, err = container.NewResolver(archName).ResolveAll(manifest.GetContainerSourceSpecs())
 			if err != nil {
 				return fmt.Errorf("[%s] container resolution failed: %s", filename, err.Error())
 			}
@@ -328,7 +327,7 @@ func makeManifestJob(
 
 		var commitSpecs map[string][]ostree.CommitSpec
 		if content["commits"] {
-			commitSpecs, err = manifestgen.DefaultCommitResolver(manifest.GetOSTreeSourceSpecs())
+			commitSpecs, err = ostree.ResolveAll(manifest.GetOSTreeSourceSpecs())
 			if err != nil {
 				return fmt.Errorf("[%s] ostree commit resolution failed: %s", filename, err.Error())
 			}
