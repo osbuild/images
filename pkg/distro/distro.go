@@ -56,6 +56,9 @@ type Distro interface {
 	// Returns an object representing the given architecture as support
 	// by this distro.
 	GetArch(arch string) (Arch, error)
+
+	// Returns a list of objects represting the image types supported by the given architecture.
+	GetImageTypes(arch string) ([]ImageType, error)
 }
 
 type CustomDepsolverDistro interface {
