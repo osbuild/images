@@ -24,6 +24,11 @@
             "grub2_password"
           ]
         }
+      },
+      "services": {
+        "masked": [
+          "sssd.service"
+        ]
       }
     }
   }

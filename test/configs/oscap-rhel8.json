@@ -29,6 +29,11 @@
             "mount_option_dev_shm_nodev"
           ]
         }
+      },
+      "services": {
+        "masked": [
+          "sssd.service"
+        ]
       }
     }
   }
