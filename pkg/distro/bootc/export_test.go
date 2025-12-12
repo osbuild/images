@@ -28,13 +28,16 @@ func NewTestBootcDistroWithDefaultFs(defaultFs string) *BootcDistro {
 			ID:        "bootc-test",
 			VersionID: "1",
 		},
+		KernelInfo: &osinfo.KernelInfo{
+			Version: "5.14.0-611.4.1.el9_7.x86_64",
+		},
 	}
 	return common.Must(newBootcDistroAfterIntrospect("x86_64", info, "quay.io/example/example:ref", defaultFs, 0))
 }
 
-func NewTestBootcImageType() *BootcImageType {
+func NewTestBootcImageType(imageType string) *BootcImageType {
 	d := NewTestBootcDistro()
-	it, err := d.arches["x86_64"].GetImageType("qcow2")
+	it, err := d.arches["x86_64"].GetImageType(imageType)
 	if err != nil {
 		panic(err)
 	}
