@@ -3,6 +3,7 @@ package osbuild
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/disk"
@@ -66,23 +67,14 @@ type grub2instStageOptions Grub2InstStageOptions
 func (options Grub2InstStageOptions) MarshalJSON() ([]byte, error) {
 	g2options := grub2instStageOptions(options)
 
-	valueIn := func(v string, options []string) bool {
-		for _, o := range options {
-			if v == o {
-				return true
-			}
-		}
-		return false
-	}
-
 	// verify enum values
 	if g2options.Core.Type != "mkimage" {
 		return nil, fmt.Errorf("org.osbuild.grub2.inst: invalid value %q for core.type", g2options.Core.Type)
 	}
-	if !valueIn(g2options.Core.PartLabel, []string{"gpt", "dos"}) {
+	if !slices.Contains([]string{"gpt", "dos"}, g2options.Core.PartLabel) {
 		return nil, fmt.Errorf("org.osbuild.grub2.inst: invalid value %q for core.partlabel", g2options.Core.PartLabel)
 	}
-	if !valueIn(g2options.Core.Filesystem, []string{"ext4", "xfs", "btrfs", "iso9660"}) {
+	if !slices.Contains([]string{"ext4", "xfs", "btrfs", "iso9660"}, g2options.Core.Filesystem) {
 		return nil, fmt.Errorf("org.osbuild.grub2.inst: invalid value %q for core.filesystem", g2options.Core.Filesystem)
 	}
 
@@ -91,7 +83,7 @@ func (options Grub2InstStageOptions) MarshalJSON() ([]byte, error) {
 		if g2options.Prefix.Type != "partition" {
 			return nil, fmt.Errorf("org.osbuild.grub2.inst: invalid value %q for prefix.type", g2options.Prefix.Type)
 		}
-		if !valueIn(g2options.Prefix.PartLabel, []string{"gpt", "dos"}) {
+		if !slices.Contains([]string{"gpt", "dos"}, g2options.Prefix.PartLabel) {
 			return nil, fmt.Errorf("org.osbuild.grub2.inst: invalid value %q for core.partlabel", g2options.Core.PartLabel)
 		}
 	}
