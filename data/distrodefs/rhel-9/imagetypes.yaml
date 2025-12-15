@@ -1229,6 +1229,7 @@
         after_dracut: true
     lorax_logos_package: redhat-logos
     lorax_release_package: redhat-release
+    install_weak_deps: true
     conditions:
       "x86_64 uses syslinux":
         when:

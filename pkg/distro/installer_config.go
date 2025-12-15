@@ -27,6 +27,10 @@ type InstallerConfig struct {
 	// BootType defines what type of bootloader is used for the iso
 	ISOBootType *manifest.ISOBootType `yaml:"iso_boot_type,omitempty"`
 
+	// InstallWeakDeps determines if weak dependencies are installed in the installer
+	// environment.
+	InstallWeakDeps *bool `yaml:"install_weak_deps,omitempty"`
+
 	// Lorax template settings for org.osbuild.lorax stage
 	LoraxTemplates       []manifest.InstallerLoraxTemplate `yaml:"lorax_templates,omitempty"`
 	LoraxTemplatePackage *string                           `yaml:"lorax_template_package"`

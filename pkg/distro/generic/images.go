@@ -418,6 +418,10 @@ func installerCustomizations(t *imageType, c *blueprint.Customizations) (manifes
 			isc.ISOBoot = *isoboot
 		}
 
+		if installWeakDeps := installerConfig.InstallWeakDeps; installWeakDeps != nil {
+			isc.InstallWeakDeps = *installWeakDeps
+		}
+
 		isc.LoraxTemplates = installerConfig.LoraxTemplates
 		if pkg := installerConfig.LoraxTemplatePackage; pkg != nil {
 			isc.LoraxTemplatePackage = *pkg
