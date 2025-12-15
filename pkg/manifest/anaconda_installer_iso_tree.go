@@ -679,6 +679,7 @@ func (p *AnacondaInstallerISOTree) bootcInstallerKickstartStages() ([]*osbuild.S
 	kickstartOptions.Post = append(kickstartOptions.Post, osbuild.PostOptions{
 		ErrorOnFail: true,
 		Commands: []string{
+			"set -e",
 			fmt.Sprintf("bootc switch --mutate-in-place --transport registry %s", p.containerSpec.LocalName),
 			"# used during automatic image testing as finished marker",
 			"if [ -c /dev/ttyS0 ]; then",
