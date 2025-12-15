@@ -1455,8 +1455,6 @@ image_types:
               - "console=tty0"
               - "console=ttyS0,115200n8"
               - "nvme_core.io_timeout=4294967295"
-              # aarch64 specific
-              - "iommu.strict=0"
     partition_table:
       <<: *default_partition_tables
     package_sets:
