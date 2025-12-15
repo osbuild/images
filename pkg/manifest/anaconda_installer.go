@@ -219,7 +219,7 @@ func (p *AnacondaInstaller) getPackageSetChain(Distro) ([]rpmmd.PackageSet, erro
 			Include:         append(packages, p.ExtraPackages...),
 			Exclude:         p.ExcludePackages,
 			Repositories:    append(p.repos, p.ExtraRepos...),
-			InstallWeakDeps: true,
+			InstallWeakDeps: p.InstallerCustomizations.InstallWeakDeps,
 		},
 	}, nil
 }

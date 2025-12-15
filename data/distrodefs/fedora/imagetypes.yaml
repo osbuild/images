@@ -548,6 +548,7 @@
         after_dracut: true
     lorax_logos_package: fedora-logos
     lorax_release_package: fedora-release
+    install_weak_deps: true
     conditions: &default_installer_config_conditions
       "x86_64 uses grub2":
         when:
