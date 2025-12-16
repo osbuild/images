@@ -21,6 +21,29 @@ import (
 
 var forceDNF = flag.Bool("force-dnf", false, "force dnf testing, making them fail instead of skip if dnf isn't installed")
 
+// testHandler holds an API handler with its name for test iteration.
+type testHandler struct {
+	name    string
+	handler apiHandler
+}
+
+// getTestHandlers returns the list of handlers to test against.
+func getTestHandlers() []testHandler {
+	return []testHandler{
+		{name: "V1", handler: newV1Handler()},
+	}
+}
+
+// mockActiveHandler replaces the activeHandler with the given handler
+// and returns a function to restore the original handler.
+func mockActiveHandler(h apiHandler) func() {
+	original := activeHandler
+	activeHandler = h
+	return func() {
+		activeHandler = original
+	}
+}
+
 func requireDNF(t *testing.T) {
 	t.Helper()
 	if !*forceDNF {
@@ -125,35 +148,42 @@ func TestSolverDepsolve(t *testing.T) {
 		},
 	}
 
-	for tcName := range testCases {
-		t.Run(tcName, func(t *testing.T) {
-			assert := assert.New(t)
-			tc := testCases[tcName]
-			pkgsets := make([]rpmmd.PackageSet, len(tc.packages))
-			for idx := range tc.packages {
-				pkgsets[idx] = rpmmd.PackageSet{Include: tc.packages[idx], Repositories: tc.repos, InstallWeakDeps: true}
-			}
+	for _, h := range getTestHandlers() {
+		t.Run(h.name, func(t *testing.T) {
+			restore := mockActiveHandler(h.handler)
+			defer restore()
 
-			solver := newTestSolver(t)
-			solver.SetRootDir(tc.rootDir)
-			res, err := solver.Depsolve(pkgsets, tc.sbomType)
-			if tc.err {
-				assert.Error(err)
-				assert.Contains(err.Error(), tc.expMsg)
-				return
-			} else {
-				assert.Nil(err)
-				require.NotNil(t, res)
-			}
+			for tcName := range testCases {
+				t.Run(tcName, func(t *testing.T) {
+					assert := assert.New(t)
+					tc := testCases[tcName]
+					pkgsets := make([]rpmmd.PackageSet, len(tc.packages))
+					for idx := range tc.packages {
+						pkgsets[idx] = rpmmd.PackageSet{Include: tc.packages[idx], Repositories: tc.repos, InstallWeakDeps: true}
+					}
 
-			assert.Equal(len(res.Repos), 1)
-			assert.Equal(expectedDepsolveResult(res.Repos[0]), res.Packages)
+					solver := newTestSolver(t)
+					solver.SetRootDir(tc.rootDir)
+					res, err := solver.Depsolve(pkgsets, tc.sbomType)
+					if tc.err {
+						assert.Error(err)
+						assert.Contains(err.Error(), tc.expMsg)
+						return
+					} else {
+						assert.Nil(err)
+						require.NotNil(t, res)
+					}
 
-			if tc.sbomType != sbom.StandardTypeNone {
-				require.NotNil(t, res.SBOM)
-				assert.Equal(sbom.StandardTypeSpdx, res.SBOM.DocType)
-			} else {
-				assert.Nil(res.SBOM)
+					assert.Equal(len(res.Repos), 1)
+					assert.Equal(expectedDepsolveResult(res.Repos[0]), res.Packages)
+
+					if tc.sbomType != sbom.StandardTypeNone {
+						require.NotNil(t, res.SBOM)
+						assert.Equal(sbom.StandardTypeSpdx, res.SBOM.DocType)
+					} else {
+						assert.Nil(res.SBOM)
+					}
+				})
 			}
 		})
 	}
@@ -329,39 +359,46 @@ func TestSolverDepsolveAll(t *testing.T) {
 		},
 	}
 
-	for tcName := range testCases {
-		t.Run(tcName, func(t *testing.T) {
-			assert := assert.New(t)
-			tc := testCases[tcName]
+	for _, h := range getTestHandlers() {
+		t.Run(h.name, func(t *testing.T) {
+			restore := mockActiveHandler(h.handler)
+			defer restore()
 
-			solver := NewSolver("platform:el9", "9", "x86_64", "rhel9.0", tmpdir)
-			solver.SetSBOMType(tc.sbomType)
-			res, err := solver.DepsolveAll(tc.packageSets)
-			if len(tc.expErrs) != 0 {
-				assert.Error(err)
-				for _, expErr := range tc.expErrs {
-					assert.Contains(err.Error(), expErr)
-				}
-				return
-			} else {
-				assert.Nil(err)
-				require.NotNil(t, res)
-			}
+			for tcName := range testCases {
+				t.Run(tcName, func(t *testing.T) {
+					assert := assert.New(t)
+					tc := testCases[tcName]
 
-			assert.Equal(len(res), len(tc.packageSets))
+					solver := NewSolver("platform:el9", "9", "x86_64", "rhel9.0", tmpdir)
+					solver.SetSBOMType(tc.sbomType)
+					res, err := solver.DepsolveAll(tc.packageSets)
+					if len(tc.expErrs) != 0 {
+						assert.Error(err)
+						for _, expErr := range tc.expErrs {
+							assert.Contains(err.Error(), expErr)
+						}
+						return
+					} else {
+						assert.Nil(err)
+						require.NotNil(t, res)
+					}
 
-			for pipelineName := range tc.packageSets {
-				pipelineResult := res[pipelineName]
-				assert.NotNil(pipelineResult)
-				assert.Equal(len(pipelineResult.Repos), 1)
-				assert.Equal(expectedDepsolveResult(pipelineResult.Repos[0]), pipelineResult.Packages)
+					assert.Equal(len(res), len(tc.packageSets))
 
-				if tc.sbomType != sbom.StandardTypeNone {
-					require.NotNil(t, pipelineResult.SBOM)
-					assert.Equal(sbom.StandardTypeSpdx, pipelineResult.SBOM.DocType)
-				} else {
-					assert.Nil(pipelineResult.SBOM)
-				}
+					for pipelineName := range tc.packageSets {
+						pipelineResult := res[pipelineName]
+						assert.NotNil(pipelineResult)
+						assert.Equal(len(pipelineResult.Repos), 1)
+						assert.Equal(expectedDepsolveResult(pipelineResult.Repos[0]), pipelineResult.Packages)
+
+						if tc.sbomType != sbom.StandardTypeNone {
+							require.NotNil(t, pipelineResult.SBOM)
+							assert.Equal(sbom.StandardTypeSpdx, pipelineResult.SBOM.DocType)
+						} else {
+							assert.Nil(pipelineResult.SBOM)
+						}
+					}
+				})
 			}
 		})
 	}
@@ -371,17 +408,25 @@ func TestSolverFetchMetadata(t *testing.T) {
 	requireDNF(t)
 	repoServer := rpmrepo.NewTestServer()
 	defer repoServer.Close()
-	solver := newTestSolver(t)
 
-	res, err := solver.FetchMetadata([]rpmmd.RepoConfig{repoServer.RepoConfig})
-	require.NoError(t, err)
-	require.NotNil(t, res)
-	// 1125 is the number of packages in the test repository (internal/mocks/rpmrepo)
-	require.Equal(t, 1125, len(res))
-	// ensure that the packages are sorted by full NEVRA
-	require.Truef(t, sort.SliceIsSorted(res, func(i, j int) bool {
-		return res[i].NVR() < res[j].NVR()
-	}), "packages are not sorted by NVR")
+	for _, h := range getTestHandlers() {
+		t.Run(h.name, func(t *testing.T) {
+			restore := mockActiveHandler(h.handler)
+			defer restore()
+
+			solver := newTestSolver(t)
+
+			res, err := solver.FetchMetadata([]rpmmd.RepoConfig{repoServer.RepoConfig})
+			require.NoError(t, err)
+			require.NotNil(t, res)
+			// 1125 is the number of packages in the test repository (internal/mocks/rpmrepo)
+			require.Equal(t, 1125, len(res))
+			// ensure that the packages are sorted by full NEVRA
+			require.Truef(t, sort.SliceIsSorted(res, func(i, j int) bool {
+				return res[i].NVR() < res[j].NVR()
+			}), "packages are not sorted by NVR")
+		})
+	}
 }
 
 func TestSolverSearchMetadata(t *testing.T) {
@@ -416,19 +461,27 @@ func TestSolverSearchMetadata(t *testing.T) {
 
 	s := rpmrepo.NewTestServer()
 	defer s.Close()
-	solver := newTestSolver(t)
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			res, err := solver.SearchMetadata([]rpmmd.RepoConfig{s.RepoConfig}, tc.packages)
-			require.NoError(t, err)
-			require.NotNil(t, res)
-			require.Equal(t, len(tc.expNVRs), len(res))
-			require.Truef(t, sort.SliceIsSorted(res, func(i, j int) bool {
-				return res[i].NVR() < res[j].NVR()
-			}), "packages are not sorted by NVR")
-			for i, pkg := range res {
-				require.Equal(t, tc.expNVRs[i], pkg.NVR())
+	for _, h := range getTestHandlers() {
+		t.Run(h.name, func(t *testing.T) {
+			restore := mockActiveHandler(h.handler)
+			defer restore()
+
+			solver := newTestSolver(t)
+
+			for _, tc := range testCases {
+				t.Run(tc.name, func(t *testing.T) {
+					res, err := solver.SearchMetadata([]rpmmd.RepoConfig{s.RepoConfig}, tc.packages)
+					require.NoError(t, err)
+					require.NotNil(t, res)
+					require.Equal(t, len(tc.expNVRs), len(res))
+					require.Truef(t, sort.SliceIsSorted(res, func(i, j int) bool {
+						return res[i].NVR() < res[j].NVR()
+					}), "packages are not sorted by NVR")
+					for i, pkg := range res {
+						require.Equal(t, tc.expNVRs[i], pkg.NVR())
+					}
+				})
 			}
 		})
 	}
@@ -763,8 +816,6 @@ func TestErrorRepoInfo(t *testing.T) {
 		}
 	}
 
-	assert := assert.New(t)
-
 	type testCase struct {
 		repo   rpmmd.RepoConfig
 		expMsg string
@@ -803,98 +854,127 @@ func TestErrorRepoInfo(t *testing.T) {
 		},
 	}
 
-	solver := NewSolver("platform:f38", "38", "x86_64", "fedora-38", "/tmp/cache")
-	for idx, tc := range testCases {
-		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			_, err := solver.Depsolve([]rpmmd.PackageSet{
-				{
-					Include:      []string{"osbuild"},
-					Exclude:      nil,
-					Repositories: []rpmmd.RepoConfig{tc.repo},
-				},
-			}, sbom.StandardTypeNone)
-			assert.Error(err)
-			assert.Contains(err.Error(), tc.expMsg)
+	for _, h := range getTestHandlers() {
+		t.Run(h.name, func(t *testing.T) {
+			restore := mockActiveHandler(h.handler)
+			defer restore()
+
+			assert := assert.New(t)
+			solver := NewSolver("platform:f38", "38", "x86_64", "fedora-38", "/tmp/cache")
+			for idx, tc := range testCases {
+				t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
+					_, err := solver.Depsolve([]rpmmd.PackageSet{
+						{
+							Include:      []string{"osbuild"},
+							Exclude:      nil,
+							Repositories: []rpmmd.RepoConfig{tc.repo},
+						},
+					}, sbom.StandardTypeNone)
+					assert.Error(err)
+					assert.Contains(err.Error(), tc.expMsg)
+				})
+			}
 		})
 	}
 }
 
 func TestHashRequest(t *testing.T) {
-	solver := NewSolver("platform:f38", "38", "x86_64", "fedora-38", "/tmp/cache")
-	repos := []rpmmd.RepoConfig{
-		rpmmd.RepoConfig{
-			Name:      "A test repository",
-			BaseURLs:  []string{"https://arepourl/"},
-			IgnoreSSL: common.ToPtr(false),
-		},
-	}
+	for _, h := range getTestHandlers() {
+		t.Run(h.name, func(t *testing.T) {
+			restore := mockActiveHandler(h.handler)
+			defer restore()
 
-	req, err := activeHandler.makeDumpRequest(solver.solverCfg(), repos)
-	assert.Nil(t, err)
-	reqData, err := json.Marshal(req)
-	if err != nil {
-		t.Fatalf("marshalling dump request failed: %v", err)
-	}
-	reqHash := hashRequest(reqData)
-	assert.Equal(t, 64, len(reqHash))
+			solver := NewSolver("platform:f38", "38", "x86_64", "fedora-38", "/tmp/cache")
+			repos := []rpmmd.RepoConfig{
+				{
+					Name:      "A test repository",
+					BaseURLs:  []string{"https://arepourl/"},
+					IgnoreSSL: common.ToPtr(false),
+				},
+			}
 
-	req2, err := activeHandler.makeSearchRequest(solver.solverCfg(), repos, []string{"package0*"})
-	assert.Nil(t, err)
-	reqData2, err := json.Marshal(req2)
-	if err != nil {
-		t.Fatalf("marshalling search request failed: %v", err)
+			req, err := activeHandler.makeDumpRequest(solver.solverCfg(), repos)
+			assert.Nil(t, err)
+			reqData, err := json.Marshal(req)
+			if err != nil {
+				t.Fatalf("marshalling dump request failed: %v", err)
+			}
+			reqHash := hashRequest(reqData)
+			assert.Equal(t, 64, len(reqHash))
+
+			req2, err := activeHandler.makeSearchRequest(solver.solverCfg(), repos, []string{"package0*"})
+			assert.Nil(t, err)
+			reqData2, err := json.Marshal(req2)
+			if err != nil {
+				t.Fatalf("marshalling search request failed: %v", err)
+			}
+			reqHash2 := hashRequest(reqData2)
+			assert.Equal(t, 64, len(reqHash2))
+			assert.NotEqual(t, reqHash, reqHash2)
+		})
 	}
-	reqHash2 := hashRequest(reqData2)
-	assert.Equal(t, 64, len(reqHash2))
-	assert.NotEqual(t, reqHash, reqHash2)
 }
 
 func TestSolverRunErrorEmptyOutput(t *testing.T) {
-	fakeSolverPath := filepath.Join(t.TempDir(), "osbuild-depsolve-dnf")
-	fakeSolver := `#!/bin/sh -e
+	for _, h := range getTestHandlers() {
+		t.Run(h.name, func(t *testing.T) {
+			restore := mockActiveHandler(h.handler)
+			defer restore()
+
+			fakeSolverPath := filepath.Join(t.TempDir(), "osbuild-depsolve-dnf")
+			fakeSolver := `#!/bin/sh -e
 cat - > "$0".stdin
 exit 1
 `
-	err := os.WriteFile(fakeSolverPath, []byte(fakeSolver), 0o755)
-	assert.NoError(t, err)
+			err := os.WriteFile(fakeSolverPath, []byte(fakeSolver), 0o755)
+			assert.NoError(t, err)
 
-	solver := NewSolver("platform:f38", "38", "x86_64", "fedora-38", t.TempDir())
-	solver.depsolveDNFCmd = []string{fakeSolverPath}
-	res, err := solver.Depsolve(nil, sbom.StandardTypeNone)
+			solver := NewSolver("platform:f38", "38", "x86_64", "fedora-38", t.TempDir())
+			solver.depsolveDNFCmd = []string{fakeSolverPath}
+			res, err := solver.Depsolve(nil, sbom.StandardTypeNone)
 
-	assert.EqualError(t, err, `DNF error occurred: InternalError: osbuild-depsolve-dnf output was empty`)
-	assert.Nil(t, res)
+			assert.EqualError(t, err, `DNF error occurred: InternalError: osbuild-depsolve-dnf output was empty`)
+			assert.Nil(t, res)
+		})
+	}
 }
 
 func TestSolverRunWithSolverNoError(t *testing.T) {
-	tmpdir := t.TempDir()
-	fakeSolver := `#!/bin/sh -e
+	for _, h := range getTestHandlers() {
+		t.Run(h.name, func(t *testing.T) {
+			restore := mockActiveHandler(h.handler)
+			defer restore()
+
+			tmpdir := t.TempDir()
+			fakeSolver := `#!/bin/sh -e
 cat - > "$0".stdin
 echo '{"solver": "zypper"}'
 >&2 echo "output-on-stderr"
 `
-	fakeSolverPath := filepath.Join(tmpdir, "fake-solver")
-	err := os.WriteFile(fakeSolverPath, []byte(fakeSolver), 0755) //nolint:gosec
-	assert.NoError(t, err)
+			fakeSolverPath := filepath.Join(tmpdir, "fake-solver")
+			err := os.WriteFile(fakeSolverPath, []byte(fakeSolver), 0755) //nolint:gosec
+			assert.NoError(t, err)
 
-	var capturedStderr bytes.Buffer
-	solver := NewSolver("platform:f38", "38", "x86_64", "fedora-38", "/tmp/cache")
-	solver.Stderr = &capturedStderr
-	solver.depsolveDNFCmd = []string{fakeSolverPath}
-	res, err := solver.Depsolve(nil, sbom.StandardTypeNone)
-	assert.NoError(t, err)
-	assert.NotNil(t, res)
-	assert.Equal(t, "output-on-stderr\n", capturedStderr.String())
+			var capturedStderr bytes.Buffer
+			solver := NewSolver("platform:f38", "38", "x86_64", "fedora-38", "/tmp/cache")
+			solver.Stderr = &capturedStderr
+			solver.depsolveDNFCmd = []string{fakeSolverPath}
+			res, err := solver.Depsolve(nil, sbom.StandardTypeNone)
+			assert.NoError(t, err)
+			assert.NotNil(t, res)
+			assert.Equal(t, "output-on-stderr\n", capturedStderr.String())
 
-	// prerequisite check, i.e. ensure our fake was called in the right way
-	stdin, err := os.ReadFile(fakeSolverPath + ".stdin")
-	assert.NoError(t, err)
-	assert.Contains(t, string(stdin), `"command":"depsolve"`)
+			// prerequisite check, i.e. ensure our fake was called in the right way
+			stdin, err := os.ReadFile(fakeSolverPath + ".stdin")
+			assert.NoError(t, err)
+			assert.Contains(t, string(stdin), `"command":"depsolve"`)
 
-	// adding the "solver" did not cause any issues
-	assert.NoError(t, err)
-	assert.Equal(t, 0, len(res.Packages))
-	assert.Equal(t, 0, len(res.Repos))
+			// adding the "solver" did not cause any issues
+			assert.NoError(t, err)
+			assert.Equal(t, 0, len(res.Packages))
+			assert.Equal(t, 0, len(res.Repos))
+		})
+	}
 }
 
 func TestDepsolverSubscriptionsError(t *testing.T) {
@@ -902,25 +982,33 @@ func TestDepsolverSubscriptionsError(t *testing.T) {
 		t.Skip("Test must run on unsubscribed system")
 	}
 
-	tmpdir := t.TempDir()
-	solver := NewSolver("platform:el9", "9", "x86_64", "rhel9.0", tmpdir)
-
-	rootDir := t.TempDir()
-	reposDir := filepath.Join(rootDir, "etc", "yum.repos.d")
-	require.NoError(t, os.MkdirAll(reposDir, 0777))
-
 	s := rpmrepo.NewTestServer()
 	defer s.Close()
-	s.WriteConfig(filepath.Join(reposDir, "test.repo"))
-	s.RepoConfig.RHSM = true
 
-	pkgsets := []rpmmd.PackageSet{
-		{
-			Include:      []string{"kernel"},
-			Repositories: []rpmmd.RepoConfig{s.RepoConfig},
-		},
+	for _, h := range getTestHandlers() {
+		t.Run(h.name, func(t *testing.T) {
+			restore := mockActiveHandler(h.handler)
+			defer restore()
+
+			tmpdir := t.TempDir()
+			solver := NewSolver("platform:el9", "9", "x86_64", "rhel9.0", tmpdir)
+
+			rootDir := t.TempDir()
+			reposDir := filepath.Join(rootDir, "etc", "yum.repos.d")
+			require.NoError(t, os.MkdirAll(reposDir, 0777))
+
+			s.WriteConfig(filepath.Join(reposDir, "test.repo"))
+			s.RepoConfig.RHSM = true
+
+			pkgsets := []rpmmd.PackageSet{
+				{
+					Include:      []string{"kernel"},
+					Repositories: []rpmmd.RepoConfig{s.RepoConfig},
+				},
+			}
+			solver.SetRootDir(rootDir)
+			_, err := solver.Depsolve(pkgsets, 0)
+			assert.EqualError(t, err, "This system does not have any valid subscriptions. Subscribe it before specifying rhsm: true in sources (error details: no matching key and certificate pair)")
+		})
 	}
-	solver.SetRootDir(rootDir)
-	_, err := solver.Depsolve(pkgsets, 0)
-	assert.EqualError(t, err, "This system does not have any valid subscriptions. Subscribe it before specifying rhsm: true in sources (error details: no matching key and certificate pair)")
 }
