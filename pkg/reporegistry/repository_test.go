@@ -354,6 +354,6 @@ func TestLoadRepositoriesError(t *testing.T) {
 		assert.NoError(reposFile.Close())
 
 		_, err = LoadAllRepositories([]string{reposDir}, nil)
-		assert.ErrorContains(err, "failed to load repositories: invalid character '<' looking for beginning of value")
+		assert.ErrorContains(err, "cannot unmarshal !!str")
 	})
 }
