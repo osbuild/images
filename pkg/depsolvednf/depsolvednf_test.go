@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"testing"
 
@@ -22,14 +23,15 @@ var forceDNF = flag.Bool("force-dnf", false, "force dnf testing, making them fai
 
 // testHandler holds an API handler with its name for test iteration.
 type testHandler struct {
-	name    string
-	handler apiHandler
+	name                 string
+	handler              apiHandler
+	assertDepsolveResult func(t *testing.T, pkgSets []rpmmd.PackageSet, actual DepsolveResult)
 }
 
 // getTestHandlers returns the list of handlers to test against.
 func getTestHandlers() []testHandler {
 	return []testHandler{
-		{name: "V1", handler: newV1Handler()},
+		{name: "V1", handler: newV1Handler(), assertDepsolveResult: assertDepsolveResultV1},
 	}
 }
 
@@ -40,6 +42,50 @@ func mockActiveHandler(h apiHandler) func() {
 	activeHandler = h
 	return func() {
 		activeHandler = original
+	}
+}
+
+// assertPackagesMatchCore compares two packages by the original core fields only.
+// This is needed because newer versions of the depsolver API return much more
+// metadata than the original core fields, but the newer API is a superset of
+// the original core fields.
+func assertPackagesMatchCore(t *testing.T, expected, actual rpmmd.Package) {
+	t.Helper()
+	// Values set by the original core fields
+	assert.Equal(t, expected.Name, actual.Name, "Name mismatch")
+	assert.Equal(t, expected.Epoch, actual.Epoch, "Epoch mismatch")
+	assert.Equal(t, expected.Version, actual.Version, "Version mismatch")
+	assert.Equal(t, expected.Release, actual.Release, "Release mismatch")
+	assert.Equal(t, expected.Arch, actual.Arch, "Arch mismatch")
+	assert.Equal(t, expected.RepoID, actual.RepoID, "RepoID mismatch")
+	assert.Equal(t, expected.Location, actual.Location, "Location mismatch")
+	assert.Equal(t, expected.RemoteLocations, actual.RemoteLocations, "RemoteLocations mismatch")
+	assert.Equal(t, expected.Checksum, actual.Checksum, "Checksum mismatch")
+	// Values set by the Solver from the Repository metadata
+	assert.Equal(t, expected.CheckGPG, actual.CheckGPG, "CheckGPG mismatch")
+	assert.Equal(t, expected.IgnoreSSL, actual.IgnoreSSL, "IgnoreSSL mismatch")
+}
+
+// assertDepsolveResultV1 checks the expected packages against the actual packages for the V1 API result.
+func assertDepsolveResultV1(t *testing.T, pkgSets []rpmmd.PackageSet, actual DepsolveResult) {
+	t.Helper()
+
+	require.Equal(t, 1, len(actual.Repos), "expected exactly 1 repo")
+	expectedPackages := expectedDepsolvedPackages(actual.Repos[0])
+
+	// Check that the list of packages in the response is the same as the expected packages.
+	require.Equal(t, len(expectedPackages), len(actual.Packages), "package count mismatch")
+	for i := range expectedPackages {
+		assertPackagesMatchCore(t, expectedPackages[i], actual.Packages[i])
+	}
+
+	// Check that all requested packages are present in the response.
+	for _, pkgSet := range pkgSets {
+		for _, reqPkg := range pkgSet.Include {
+			assert.True(t, slices.ContainsFunc(actual.Packages, func(p rpmmd.Package) bool {
+				return p.Name == reqPkg
+			}), "requested package %q not found in the depsolve result", reqPkg)
+		}
 	}
 }
 
@@ -152,10 +198,9 @@ func TestSolverDepsolve(t *testing.T) {
 			restore := mockActiveHandler(h.handler)
 			defer restore()
 
-			for tcName := range testCases {
+			for tcName, tc := range testCases {
 				t.Run(tcName, func(t *testing.T) {
 					assert := assert.New(t)
-					tc := testCases[tcName]
 					pkgsets := make([]rpmmd.PackageSet, len(tc.packages))
 					for idx := range tc.packages {
 						pkgsets[idx] = rpmmd.PackageSet{Include: tc.packages[idx], Repositories: tc.repos, InstallWeakDeps: true}
@@ -163,24 +208,25 @@ func TestSolverDepsolve(t *testing.T) {
 
 					solver := newTestSolver(t)
 					solver.SetRootDir(tc.rootDir)
-					res, err := solver.Depsolve(pkgsets, tc.sbomType)
+					actualResult, err := solver.Depsolve(pkgsets, tc.sbomType)
 					if tc.err {
 						assert.Error(err)
 						assert.Contains(err.Error(), tc.expMsg)
 						return
 					} else {
 						assert.Nil(err)
-						require.NotNil(t, res)
+						require.NotNil(t, actualResult)
 					}
 
-					assert.Equal(len(res.Repos), 1)
-					assert.Equal(expectedDepsolveResult(res.Repos[0]), res.Packages)
+					h.assertDepsolveResult(t, pkgsets, *actualResult)
 
+					// NOTE: The SBOM document is not stable due to UUIDs, so we need to take it from the result
 					if tc.sbomType != sbom.StandardTypeNone {
-						require.NotNil(t, res.SBOM)
-						assert.Equal(sbom.StandardTypeSpdx, res.SBOM.DocType)
+						require.NotNil(t, actualResult.SBOM)
+						assert.Equal(sbom.StandardTypeSpdx, actualResult.SBOM.DocType)
+						assert.NotEmpty(actualResult.SBOM.Document)
 					} else {
-						assert.Nil(res.SBOM)
+						assert.Nil(actualResult.SBOM)
 					}
 				})
 			}
@@ -382,12 +428,13 @@ func TestSolverDepsolveAll(t *testing.T) {
 					for pipelineName := range tc.packageSets {
 						pipelineResult := res[pipelineName]
 						assert.NotNil(pipelineResult)
-						assert.Equal(len(pipelineResult.Repos), 1)
-						assert.Equal(expectedDepsolveResult(pipelineResult.Repos[0]), pipelineResult.Packages)
+
+						h.assertDepsolveResult(t, tc.packageSets[pipelineName], pipelineResult)
 
 						if tc.sbomType != sbom.StandardTypeNone {
 							require.NotNil(t, pipelineResult.SBOM)
 							assert.Equal(sbom.StandardTypeSpdx, pipelineResult.SBOM.DocType)
+							assert.NotEmpty(pipelineResult.SBOM.Document)
 						} else {
 							assert.Nil(pipelineResult.SBOM)
 						}
@@ -680,8 +727,9 @@ func TestApplyRHSMSecrets(t *testing.T) {
 	}
 }
 
-func expectedDepsolveResult(repo rpmmd.RepoConfig) rpmmd.PackageList {
-	// need to change the url for the RemoteLocation and the repo ID since the port is different each time and we don't want to have a fixed one
+// expectedDepsolvedPackages returns expected expected depsolved packages metadata.
+// Repo-specific values (RemoteLocations, RepoID, etc.) are applied at assertion time.
+func expectedDepsolvedPackages(repo rpmmd.RepoConfig) rpmmd.PackageList {
 	expectedTemplate := rpmmd.PackageList{
 		{Name: "acl", Epoch: 0, Version: "2.3.1", Release: "3.el9", Arch: "x86_64", Location: "Packages/acl-2.3.1-3.el9.x86_64.rpm", Checksum: rpmmd.Checksum{Type: "sha256", Value: "986044c3837eddbc9231d7be5e5fc517e245296978b988a803bc9f9172fe84ea"}},
 		{Name: "alternatives", Epoch: 0, Version: "1.20", Release: "2.el9", Arch: "x86_64", Location: "Packages/alternatives-1.20-2.el9.x86_64.rpm", Checksum: rpmmd.Checksum{Type: "sha256", Value: "1851d5f64ebaeac67c5c2d9e4adc1e73aa6433b44a167268a3510c3d056062db"}},
