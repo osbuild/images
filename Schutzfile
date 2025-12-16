@@ -14,7 +14,8 @@
         "image-installer": "rhos-01/fedora-42",
         "minimal-installer": "rhos-01/fedora-42",
         "network-installer": "rhos-01/fedora-42",
-        "everything-network-installer": "rhos-01/fedora-42"
+        "everything-network-installer": "rhos-01/fedora-42",
+        "server-network-installer": "rhos-01/fedora-42"
       }
     }
   },
