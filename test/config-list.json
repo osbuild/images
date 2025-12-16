@@ -260,6 +260,7 @@
         "iot-bootable-container",
         "iot-container",
         "everything-network-installer",
+        "server-network-installer",
         "pxe-tar-xz"
       ]
     }

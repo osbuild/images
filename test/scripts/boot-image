@@ -163,7 +163,7 @@ def ensure_can_run_qemu_test(arch, image_path, config_file):
     if customizations.get("fips") and info.get("distro").startswith("fedora"):
         raise CannotRunQemuTest("fips on fedora is unstable, fails with e.g. dracut: FATAL: FIPS integrity test failed")
     # network-installer has a bunch of extra constraints
-    if info.get("image-type") in ["network-installer", "everything-network-installer"]:
+    if info.get("image-type") in ["network-installer", "everything-network-installer", "server-network-installer"]:
         # network install needs subscribed content but we cannot provide
         # that currently
         if info.get("distro") in ["rhel-10.1", "rhel-10.2"]:
