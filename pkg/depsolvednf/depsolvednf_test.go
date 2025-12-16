@@ -33,6 +33,7 @@ type testHandler struct {
 func getTestHandlers() []testHandler {
 	return []testHandler{
 		{name: "V1", handler: newV1Handler(), assertDepsolveResult: assertDepsolveResultV1},
+		{name: "V2", handler: newV2Handler(), assertDepsolveResult: assertDepsolveResultV2},
 	}
 }
 
@@ -67,6 +68,27 @@ func assertPackagesMatchCore(t *testing.T, expected, actual rpmmd.Package) {
 	assert.Equal(t, expected.IgnoreSSL, actual.IgnoreSSL, "IgnoreSSL mismatch")
 }
 
+// assertExpectedPackages checks actual packages against expected using original core fields,
+// and verifies all requested packages are present. This is shared between V1 and V2 assertions.
+func assertExpectedPackages(t *testing.T, pkgSets []rpmmd.PackageSet, expected, actual rpmmd.PackageList) {
+	t.Helper()
+
+	// Check that the list of packages matches expected
+	require.Equal(t, len(expected), len(actual), "package count mismatch")
+	for i := range expected {
+		assertPackagesMatchCore(t, expected[i], actual[i])
+	}
+
+	// Check that all requested packages are present
+	for _, pkgSet := range pkgSets {
+		for _, reqPkg := range pkgSet.Include {
+			assert.True(t, slices.ContainsFunc(actual, func(p rpmmd.Package) bool {
+				return p.Name == reqPkg
+			}), "requested package %q not found in the depsolve result", reqPkg)
+		}
+	}
+}
+
 // assertDepsolveResultV1 checks the expected packages against the actual packages for the V1 API result.
 func assertDepsolveResultV1(t *testing.T, pkgSets []rpmmd.PackageSet, actual DepsolveResult) {
 	t.Helper()
@@ -74,23 +96,72 @@ func assertDepsolveResultV1(t *testing.T, pkgSets []rpmmd.PackageSet, actual Dep
 	require.Equal(t, 1, len(actual.Repos), "expected exactly 1 repo")
 	expectedPackages := expectedDepsolvedPackages(actual.Repos[0])
 
-	// Check that the list of packages in the response is the same as the expected packages.
-	require.Equal(t, len(expectedPackages), len(actual.Packages), "package count mismatch")
-	for i := range expectedPackages {
-		assertPackagesMatchCore(t, expectedPackages[i], actual.Packages[i])
-	}
-
-	// Check that all requested packages are present in the response.
-	for _, pkgSet := range pkgSets {
-		for _, reqPkg := range pkgSet.Include {
-			assert.True(t, slices.ContainsFunc(actual.Packages, func(p rpmmd.Package) bool {
-				return p.Name == reqPkg
-			}), "requested package %q not found in the depsolve result", reqPkg)
-		}
-	}
+	// Check Packages field
+	assertExpectedPackages(t, pkgSets, expectedPackages, actual.Packages)
 
 	// The Transactions field is not set in the V1 API
 	assert.Empty(t, actual.Transactions)
+}
+
+// assertDepsolveResultV2 checks the expected packages against the actual packages for the V2 API result.
+func assertDepsolveResultV2(t *testing.T, pkgSets []rpmmd.PackageSet, actual DepsolveResult) {
+	t.Helper()
+
+	require.Equal(t, 1, len(actual.Repos), "expected exactly 1 repo")
+	expectedPackages := expectedDepsolvedPackages(actual.Repos[0])
+
+	// Check Packages field (for backwards compat while Packages field exists)
+	assertExpectedPackages(t, pkgSets, expectedPackages, actual.Packages)
+
+	// V2 specific tests below
+
+	// Transaction count must match number of package sets
+	require.Equal(t, len(pkgSets), len(actual.Transactions), "transaction count mismatch")
+
+	// Each requested package must be in the correct transaction
+	for i, pkgSet := range pkgSets {
+		for _, reqPkg := range pkgSet.Include {
+			assert.True(t, slices.ContainsFunc(actual.Transactions[i], func(p rpmmd.Package) bool {
+				return p.Name == reqPkg
+			}), "requested package %q not found in transaction %d", reqPkg, i)
+		}
+	}
+
+	// Union of all Transactions must equal expected packages
+	allTransactionPkgs := make(rpmmd.PackageList, 0)
+	for _, transaction := range actual.Transactions {
+		allTransactionPkgs = append(allTransactionPkgs, transaction...)
+	}
+	sort.Slice(allTransactionPkgs, func(i, j int) bool {
+		return allTransactionPkgs[i].FullNEVRA() < allTransactionPkgs[j].FullNEVRA()
+	})
+	require.Equal(t, len(expectedPackages), len(allTransactionPkgs), "transaction packages count mismatch")
+
+	// Check full metadata for all packages
+	for i := range expectedPackages {
+		// Check full metadata for bash package as a smoke test
+		if expectedPackages[i].Name == "bash" {
+			assert.Equal(t, expectedPackages[i], actual.Packages[i], "full bash metadata mismatch")
+			continue
+		}
+
+		// NOTE: We don't compare the full metadata here, because V2 returns more metadata than what we define in our
+		// test packages metadata. We don't include the full metadata for all packages to keep this source file
+		// reasonably small.
+		assertPackagesMatchCore(t, expectedPackages[i], allTransactionPkgs[i])
+
+		// Sanity test that additional fields that should never be empty for any package are not empty
+		assert.NotEmpty(t, allTransactionPkgs[i].Group)
+		assert.Greater(t, allTransactionPkgs[i].DownloadSize, uint64(0))
+		assert.NotEmpty(t, allTransactionPkgs[i].License)
+		assert.NotEmpty(t, allTransactionPkgs[i].SourceRpm)
+		assert.NotEmpty(t, allTransactionPkgs[i].BuildTime)
+		assert.NotEmpty(t, allTransactionPkgs[i].Packager)
+		assert.NotEmpty(t, allTransactionPkgs[i].Vendor)
+		assert.NotEmpty(t, allTransactionPkgs[i].Summary)
+		assert.NotEmpty(t, allTransactionPkgs[i].Description)
+		assert.NotEmpty(t, allTransactionPkgs[i].Provides)
+	}
 }
 
 func requireDNF(t *testing.T) {
