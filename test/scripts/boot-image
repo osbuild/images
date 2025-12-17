@@ -178,6 +178,10 @@ def ensure_can_run_qemu_test(arch, image_path, config_file):
                 raise CannotRunQemuTest("centos-9 will not start an install and waits on source selection")
             case name if name.startswith("rhel-9"):
                 raise CannotRunQemuTest("rhel-9 will not start an install and waits on source selection")
+    # server-qcow2 has no cloud-init so we need at least a osbuild user
+    if info.get("image-type") == "server-qcow2":
+        if not any(u["name"] == "osbuild" for u in customizations.get("user", [])):
+            raise CannotRunQemuTest("server-qcow2 needs a customization with the osbuild user")
 
 
 def qemu_cmd_scp_and_run(vm, cmd, privkey_path):
@@ -199,6 +203,10 @@ def boot_qemu(arch, image_path, config_file, keep_booted=False):
         uncompressed_image_path = cm.enter_context(ensure_uncompressed(image_path))
         (privkey_path, pubkey_path) = cm.enter_context(create_ssh_key())
         cloud_init_iso = cm.enter_context(make_cloud_init_iso(pubkey_path))
+        # ugly, find a better/declarative way for non-cloud init images
+        if "server_qcow2" in image_path:
+            print("WARNING: modifiyng the image to include osbuild ssh login")
+            mutate_qemu_image_for_login(image_path, pubkey_path)
         with QEMU(uncompressed_image_path, arch=arch, cdrom=cloud_init_iso) as vm:
             try:
                 qemu_cmd_scp_and_run(vm, cmd, privkey_path)
@@ -270,6 +278,63 @@ def boot_qemu_iso_no_unattended_support(arch, installer_iso_path, config_file):
              "--ks", os.fspath(unattended_ks),
              os.fspath(installer_iso_path), new_installer_iso_path])
         return _boot_qemu_iso(arch, new_installer_iso_path, config_file, privkey_path)
+
+
+@contextlib.contextmanager
+def guestfs_open(filepath):
+    # pylint: disable=import-outside-toplevel
+    import guestfs
+    try:
+        g = guestfs.GuestFS()
+        g.add_drive_opts(filepath, readonly=False)
+        g.launch()
+        yield g
+    finally:
+        g.close()
+
+
+def mutate_qemu_image_for_login(filepath, pubkey_path):
+    """
+    Mutate the qemu image using libguestfs which uses qemu to boot a microVM
+    to allow root-login via the given pubkey
+    """
+    pubkey = pathlib.Path(pubkey_path).read_text(encoding="utf8")
+    with guestfs_open(filepath) as g:
+        roots = g.inspect_os()
+        if not roots:
+            raise RuntimeError("No operating system found in the image")
+        root_device = roots[0]
+        g.mount(root_device, "/")
+        fses = g.list_filesystems()
+        # setfiles needs a setup /usr, on lvm setups we need to mount it
+        # we need /usr and /home from the lv, because some fedora image
+        # type set custom lv/vg names we need to do a fuzzy search here
+        # (all-customizations sets up LVM)
+        for lv in ["homelv", "usrlv"]:
+            if lv_path := [fs[0] for fs in fses if fs[0].endswith(lv)]:
+                if lv_path:
+                    mnt_point = f"/{lv.removesuffix('lv')}"
+                    print("mounting", lv_path[0], mnt_point)
+                    g.mount(lv_path[0], mnt_point)
+        # disable initial-setup of the system never indicates it has booted
+        g.touch("/etc/initial-setup.done")
+        g.sh("ln -sf /dev/null /etc/systemd/system/initial-setup.service")
+        # add osbuild ssh key for systems that lack systemd credentials, this assumes
+        # the customization has an osbuild user that can do sudo
+        uid = 1000
+        ssh_dir = "/home/osbuild/.ssh"
+        g.mkdir_p(ssh_dir)
+        g.chmod(0o700, ssh_dir)
+        g.chown(uid, uid, ssh_dir)
+        auth_keys_file = f"{ssh_dir}/authorized_keys"
+        g.write_append(auth_keys_file, pubkey.encode('utf-8'))
+        g.chmod(0o600, auth_keys_file)
+        g.chown(uid, uid, auth_keys_file)
+        # make sudo available
+        sudoers_d_path = "/etc/sudoers"
+        g.write_append(sudoers_d_path, "osbuild ALL=(ALL) NOPASSWD: ALL\n")
+        # slightly hackish this will break if we have more than one glob match
+        g.sh("setfiles -F -v /etc/selinux/*/contexts/files/file_contexts /home/osbuild/.ssh/ /etc/")
 
 
 def boot_qemu_iso(arch, installer_iso_path, config_file):
@@ -538,9 +603,9 @@ def main():
     # WARNING: skipping boot tests that are listed under CAN_BOOT_TEST will cause the skipped image configuration to be
     # rebuilt every CI run.
     match image_type:
-        # Not all qcow2 types can be boot-tested, for example `server-qcow2` uses
-        # initial-setup and this blocks the boot.
-        case "qcow2" | "generic-qcow2" | "cloud-qcow2":
+        # Note that some qcow2 (like server-qcow2) need to be modified to boot, this will
+        # happen automatically
+        case "qcow2" | "generic-qcow2" | "cloud-qcow2" | "server-qcow2":
             try:
                 boot_qemu(arch, image_path, build_config_path, keep_booted=args.keep_booted)
             except CannotRunQemuTest as e:
