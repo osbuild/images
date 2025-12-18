@@ -33,6 +33,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           # we need the history of the branch and main
           fetch-depth: 0
+          set-safe-directory: true
 
       - name: apt update
         run: sudo apt update

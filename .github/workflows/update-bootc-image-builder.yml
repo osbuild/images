@@ -24,6 +24,7 @@ jobs:
         with:
           path: images
           ref: main
+          set-safe-directory: true
 
       - name: Update Schutzfile
         working-directory: ./images
