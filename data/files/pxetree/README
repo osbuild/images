@@ -38,3 +38,42 @@ the initrd and the root filesystem.
 
     echo rootfs.img | cpio -c --quiet -L -o > rootfs.cpio
     cat initrd.img rootfs.cpio > combined.img
+
+# bootc
+
+You can create a bootc based PXE system using the 'bootc-pxe-tar' image type.
+But there are a few requirement to take into account. The container that you
+use must have the dracut-live, squashfs-tools, and erofs-utils installed.
+Otherwise ostree (which is what bootc produces) won't know how to boot the
+rootfs.img
+
+## Simple bootc container
+
+This is a simple example using the `image-builder` cmdline tool and a local install of podman.
+
+Save this in `Containerfile`:
+
+```
+FROM quay.io/centos-bootc/centos-bootc:stream10
+RUN dnf -y install dracut-live squashfs-tools erofs-utils && dnf clean all
+RUN bootc container lint
+```
+
+Build this container using podman:
+
+```
+podman build -f ./Containerfile -t bootc-dracut
+```
+
+Run `image-builder` to create the tar:
+
+```
+image-builder build --bootc-ref localhost/bootc-dracut:latest bootc-pxe-tar
+```
+
+If your container is on a remote system replace the
+`localhost/bootc-dracut:latest` with the right url.
+
+The resulting tar is the same as for the package based `pxe-tar-xz`, the only
+difference is that the `grub.cfg` also has `ostree=...` added to the kernel
+cmdline. And the rootfs.img is an ostree system instead of package based.
