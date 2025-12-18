@@ -26,6 +26,32 @@ The config list is also used in CI to dynamically generate test builds using the
     - `dependencies.osbuild.commit`: the version of osbuild to use, as a commit ID. This must be a commit that was successfully built in osbuild's CI, so that RPMs will be available. It is used by [./test/scripts/setup-osbuild-repo](./scripts/setup-osbuild-repo).
     - `repos`: the repository configurations to use on the runners to install packages such as build dependencies and test tools.
 
+## Manually image testing
+
+While most of this document describes our automatic setup, here are some useful tips if manual
+testing/inspection of images is required.
+
+To build an image just run `build-image`, then it can be booted with `boot-image` and the
+switch `--keep-booted` will keep it around for inspection via ssh (not all image types support
+this yet). E.g.:
+```console
+$ ./test/scripts/build-image centos-10 qcow2 ./tests/configs/empty.json
+$ ./test/scripts/bootc-image --keep-booted ./build/centos_10-x86_64-qcow2-empty/
+...
+***********************************
+keeping the image build/centos_10-x86_64-qcow2-empty/qcow2/disk.qcow2 booted as requested, press enter or ctrl-c to stop
+to connect run:
+ssh -i /tmp/tmpg56bxqko/testkey -p 52387 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no osbuild@localhost
+```
+The ssh command can just be copy/pasted and gives access to the vm running the image. The
+`check-host-config` binary and configuration will be availabe inside /tmp to inspect/run.
+
+If qemu-user-static/qemu-system-$arch is installed `build-image --arch <arch>` is also supported,
+e.g. `build-image --arch ppc64le centos-10 qcow2 ./tests/configs/empty.json` will create a
+ppc64le qcow2 image. The `boot-image` script will auto-detect the architecture and boot the
+vm accordingly.
+
+
 ## Running image build tests locally
 
 Some image build tests are available to run locally via qemu. The easiest way to discover them is to 
