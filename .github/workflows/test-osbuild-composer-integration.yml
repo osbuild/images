@@ -79,12 +79,14 @@ jobs:
           path: osbuild-composer
           repository: osbuild/osbuild-composer
           ref: main
+          set-safe-directory: true
 
       - name: Check out osbuild/images for the PR
         uses: actions/checkout@v6
         with:
           path: images
           ref: ${{ github.event.pull_request.head.sha }}
+          set-safe-directory: true
 
       - name: Mark the working directory as safe for git
         run: git config --global --add safe.directory "$(pwd)"
@@ -191,12 +193,14 @@ jobs:
           path: image-builder-cli
           repository: osbuild/image-builder-cli
           ref: main
+          set-safe-directory: true
 
       - name: Check out osbuild/images for the PR
         uses: actions/checkout@v6
         with:
           path: images
           ref: ${{ github.event.pull_request.head.sha }}
+          set-safe-directory: true
 
       - name: Mark the working directory as safe for git
         run: git config --global --add safe.directory "$(pwd)"
