@@ -30,6 +30,9 @@ type InstallerCustomizations struct {
 	// array of source (in anaconda-tree) and destination (in iso-tree).
 	ISOFiles [][2]string
 
+	// Install weak dependencies in the installer environment
+	InstallWeakDeps bool
+
 	DefaultMenu int
 
 	ISOLabel  string
