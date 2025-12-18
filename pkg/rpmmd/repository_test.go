@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.yaml.in/yaml/v3"
 
 	"github.com/osbuild/images/pkg/rpmmd"
 )
@@ -41,7 +42,7 @@ func TestRepoConfigUnmarshalHappy(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			var repos rpmmd.Repository
-			err := json.Unmarshal([]byte(tc.json), &repos)
+			err := yaml.Unmarshal([]byte(tc.json), &repos)
 			assert.NoError(t, err)
 			assert.Equal(t, tc.repo, repos)
 		})
@@ -67,14 +68,14 @@ func TestRepoConfigUnmarshalSad(t *testing.T) {
 		{
 			name:        "wrong json",
 			json:        `all-wrong`,
-			expectedErr: `invalid character 'a' looking for beginning of value`,
+			expectedErr: `cannot unmarshal string into Go value of type struct`,
 		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			var repos rpmmd.Repository
-			err := json.Unmarshal([]byte(tc.json), &repos)
-			assert.EqualError(t, err, tc.expectedErr)
+			err := yaml.Unmarshal([]byte(tc.json), &repos)
+			assert.ErrorContains(t, err, tc.expectedErr)
 		})
 	}
 }
