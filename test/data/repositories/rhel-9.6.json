@@ -179,7 +179,7 @@
     },
     {
       "name": "rhui-azure-sap",
-      "baseurl": "http://download.eng.bos.redhat.com/devel/stratosphere-rhui-sync/rhui-microsoft-azure-rhel9-sap-ha/",
+      "baseurl": "http://download.devel.redhat.com/devel/stratosphere-rhui-sync/rhui-microsoft-azure-rhel9-sap-ha/",
       "image_type_tags": [
         "azure-sap-rhui"
       ],
