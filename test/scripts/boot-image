@@ -24,7 +24,7 @@ def get_aws_config():
 def create_ssh_key():
     with TemporaryDirectory() as tmpdir:
         keypath = os.path.join(tmpdir, "testkey")
-        if ci_priv_key := os.environ.get("CI_PRIV_SSH_KEY_2"):
+        if ci_priv_key := os.environ.get("CI_PRIV_SSH_KEY"):
             # running in CI: use key from env
             with open(keypath, "w", encoding="utf-8") as keyfile:
                 keyfile.write(ci_priv_key + "\n")
