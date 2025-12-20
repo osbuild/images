@@ -474,6 +474,21 @@ func isoCustomizations(t *imageType, c *blueprint.Customizations) (manifest.ISOC
 		}
 	}
 
+	isoCust := c.GetISO()
+	if isoCust != nil {
+		if isoCust.Publisher != "" {
+			isc.Publisher = isoCust.Publisher
+		}
+
+		if isoCust.VolumeID != "" {
+			isc.Label = isoCust.VolumeID
+		}
+
+		if isoCust.ApplicationID != "" {
+			isc.Application = isoCust.ApplicationID
+		}
+	}
+
 	return isc, nil
 }
 
