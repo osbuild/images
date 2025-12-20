@@ -56,6 +56,7 @@ func (img *AnacondaContainerInstallerLegacy) InstantiateManifest(m *manifest.Man
 		repos,
 		"kernel",
 		img.InstallerCustomizations,
+		img.ISOCustomizations,
 	)
 
 	anacondaPipeline.ExtraPackages = img.ExtraBasePackages.Include
@@ -108,7 +109,7 @@ func (img *AnacondaContainerInstallerLegacy) InstantiateManifest(m *manifest.Man
 	isoTreePipeline.ContainerSource = &img.ContainerSource
 	isoTreePipeline.InstallRootfsType = img.InstallRootfsType
 
-	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.InstallerCustomizations.ISOLabel)
+	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.InstallerCustomizations.ISOLabel, img.ISOCustomizations)
 	isoPipeline.SetFilename(img.filename)
 	isoPipeline.ISOBoot = img.InstallerCustomizations.ISOBoot
 	artifact := isoPipeline.Export()

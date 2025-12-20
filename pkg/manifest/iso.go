@@ -5,7 +5,7 @@ import (
 	"github.com/osbuild/images/pkg/osbuild"
 )
 
-type ISOCustomizations struct {}
+type ISOCustomizations struct{}
 
 // An ISO represents a bootable ISO file created from an
 // an existing ISOTreePipeline.
@@ -28,12 +28,13 @@ func (p *ISO) SetFilename(filename string) {
 	p.filename = filename
 }
 
-func NewISO(buildPipeline Build, treePipeline Pipeline, isoLabel string) *ISO {
+func NewISO(buildPipeline Build, treePipeline Pipeline, isoLabel string, isoCustomizations ISOCustomizations) *ISO {
 	p := &ISO{
-		Base:         NewBase("bootiso", buildPipeline),
-		treePipeline: treePipeline,
-		filename:     "image.iso",
-		isoLabel:     isoLabel,
+		Base:              NewBase("bootiso", buildPipeline),
+		treePipeline:      treePipeline,
+		filename:          "image.iso",
+		isoLabel:          isoLabel,
+		ISOCustomizations: isoCustomizations,
 	}
 	buildPipeline.addDependent(p)
 	return p

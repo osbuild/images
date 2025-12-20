@@ -55,6 +55,7 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 		repos,
 		"kernel",
 		img.InstallerCustomizations,
+		img.ISOCustomizations,
 	)
 	anacondaPipeline.ExtraPackages = img.ExtraBasePackages.Include
 	anacondaPipeline.ExcludePackages = img.ExtraBasePackages.Exclude
@@ -116,7 +117,7 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoTreePipeline.OSTreeCommitSource = &img.Commit
 	isoTreePipeline.SubscriptionPipeline = subscriptionPipeline
 
-	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.InstallerCustomizations.ISOLabel)
+	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.InstallerCustomizations.ISOLabel, img.ISOCustomizations)
 	isoPipeline.SetFilename(img.filename)
 	isoPipeline.ISOBoot = img.InstallerCustomizations.ISOBoot
 	artifact := isoPipeline.Export()

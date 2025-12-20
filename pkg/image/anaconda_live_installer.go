@@ -49,6 +49,7 @@ func (img *AnacondaLiveInstaller) InstantiateManifest(m *manifest.Manifest,
 		repos,
 		"kernel",
 		img.InstallerCustomizations,
+		img.ISOCustomizations,
 	)
 
 	livePipeline.ExtraPackages = img.ExtraBasePackages.Include
@@ -91,7 +92,7 @@ func (img *AnacondaLiveInstaller) InstantiateManifest(m *manifest.Manifest,
 	initIsoTreePipeline(isoTreePipeline, &img.AnacondaInstallerBase, rng)
 	isoTreePipeline.KernelOpts = kernelOpts
 
-	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.InstallerCustomizations.ISOLabel)
+	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.InstallerCustomizations.ISOLabel, img.ISOCustomizations)
 	isoPipeline.SetFilename(img.filename)
 	isoPipeline.ISOBoot = img.InstallerCustomizations.ISOBoot
 
