@@ -35,7 +35,6 @@ type InstallerCustomizations struct {
 
 	DefaultMenu int
 
-	ISOLabel  string
 	Product   string
 	Variant   string
 	OSVersion string

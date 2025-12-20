@@ -380,10 +380,6 @@ func ostreeCommitServerCustomizations(t *imageType) manifest.OSTreeCommitServerC
 
 func installerCustomizations(t *imageType, c *blueprint.Customizations) (manifest.InstallerCustomizations, error) {
 	d := t.arch.distro
-	isoLabel, err := t.ISOLabel()
-	if err != nil {
-		return manifest.InstallerCustomizations{}, err
-	}
 
 	isc := manifest.InstallerCustomizations{
 		FIPS:                    c.GetFIPS(),
@@ -392,7 +388,6 @@ func installerCustomizations(t *imageType, c *blueprint.Customizations) (manifes
 		OSVersion:               d.OsVersion(),
 		Release:                 fmt.Sprintf("%s %s", d.Product(), d.OsVersion()),
 		Preview:                 d.DistroYAML.Preview,
-		ISOLabel:                isoLabel,
 		Variant:                 t.Variant,
 	}
 
@@ -451,9 +446,16 @@ func installerCustomizations(t *imageType, c *blueprint.Customizations) (manifes
 }
 
 func isoCustomizations(t *imageType, c *blueprint.Customizations) (manifest.ISOCustomizations, error) {
-	isc := manifest.ISOCustomizations{}
+	isoLabel, err := t.ISOLabel()
+	if err != nil {
+		return manifest.ISOCustomizations{}, err
+	}
 
-	_, err := t.getDefaultISOConfig()
+	isc := manifest.ISOCustomizations{
+		Label: isoLabel,
+	}
+
+	_, err = t.getDefaultISOConfig()
 	if err != nil {
 		return isc, err
 	}
