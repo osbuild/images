@@ -460,6 +460,18 @@ func isoCustomizations(t *imageType, c *blueprint.Customizations) (manifest.ISOC
 		if isoroot := isoConfig.RootfsType; isoroot != nil {
 			isc.RootfsType = *isoroot
 		}
+
+		if preparer := isoConfig.Preparer; preparer != nil {
+			isc.Preparer = *preparer
+		}
+
+		if publisher := isoConfig.Publisher; publisher != nil {
+			isc.Publisher = *publisher
+		}
+
+		if application := isoConfig.Application; application != nil {
+			isc.Application = *application
+		}
 	}
 
 	return isc, nil
