@@ -5,6 +5,8 @@ import (
 	"github.com/osbuild/images/pkg/osbuild"
 )
 
+type ISOCustomizations struct {}
+
 // An ISO represents a bootable ISO file created from an
 // an existing ISOTreePipeline.
 type ISO struct {
@@ -14,6 +16,8 @@ type ISO struct {
 
 	treePipeline Pipeline
 	isoLabel     string
+
+	ISOCustomizations ISOCustomizations
 }
 
 func (p ISO) Filename() string {
