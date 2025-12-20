@@ -172,15 +172,15 @@
     lorax_logos_package: redhat-logos
     lorax_release_package: redhat-release
     install_weak_deps: true
+
+  default_iso_config: &default_iso_config
+    rootfs_type: "squashfs"
     conditions:
       "x86_64 uses grub2":
         when:
           arch: "x86_64"
         shallow_merge:
-          iso_boot_type: "grub2"
-
-  default_iso_config: &default_iso_config
-    rootfs_type: "squashfs"
+          boot_type: "grub2"
 
   sapapps_image_config: &sapapps_image_config
     selinux_config:

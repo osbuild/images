@@ -20,9 +20,6 @@ type InstallerConfig struct {
 	// DefaultMenu will set the grub2 iso menu's default setting
 	DefaultMenu *int `yaml:"default_menu"`
 
-	// BootType defines what type of bootloader is used for the iso
-	ISOBootType *manifest.ISOBootType `yaml:"iso_boot_type,omitempty"`
-
 	// InstallWeakDeps determines if weak dependencies are installed in the installer
 	// environment.
 	InstallWeakDeps *bool `yaml:"install_weak_deps,omitempty"`
