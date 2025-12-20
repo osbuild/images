@@ -448,7 +448,7 @@ func (t *BootcImageType) initAnacondaInstallerBaseFromSourceInfo(img *image.Anac
 
 	img.InstallerCustomizations.Product = sourceInfo.OSRelease.Name
 	img.InstallerCustomizations.OSVersion = sourceInfo.OSRelease.VersionID
-	img.InstallerCustomizations.ISOLabel = LabelForISO(&sourceInfo.OSRelease, t.arch.Name())
+	img.ISOCustomizations.Label = LabelForISO(&sourceInfo.OSRelease, t.arch.Name())
 
 	img.InstallerCustomizations.FIPS = customizations.GetFIPS()
 	var err error

@@ -5,7 +5,10 @@ import (
 	"github.com/osbuild/images/pkg/osbuild"
 )
 
-type ISOCustomizations struct{}
+type ISOCustomizations struct {
+	// ISO Volume ID
+	Label string
+}
 
 // An ISO represents a bootable ISO file created from an
 // an existing ISOTreePipeline.
@@ -15,7 +18,6 @@ type ISO struct {
 	filename string
 
 	treePipeline Pipeline
-	isoLabel     string
 
 	ISOCustomizations ISOCustomizations
 }
@@ -28,12 +30,11 @@ func (p *ISO) SetFilename(filename string) {
 	p.filename = filename
 }
 
-func NewISO(buildPipeline Build, treePipeline Pipeline, isoLabel string, isoCustomizations ISOCustomizations) *ISO {
+func NewISO(buildPipeline Build, treePipeline Pipeline, isoCustomizations ISOCustomizations) *ISO {
 	p := &ISO{
 		Base:              NewBase("bootiso", buildPipeline),
 		treePipeline:      treePipeline,
 		filename:          "image.iso",
-		isoLabel:          isoLabel,
 		ISOCustomizations: isoCustomizations,
 	}
 	buildPipeline.addDependent(p)
@@ -53,7 +54,7 @@ func (p *ISO) serialize() (osbuild.Pipeline, error) {
 		return osbuild.Pipeline{}, err
 	}
 
-	pipeline.AddStage(osbuild.NewXorrisofsStage(xorrisofsStageOptions(p.Filename(), p.isoLabel, p.ISOBoot), p.treePipeline.Name()))
+	pipeline.AddStage(osbuild.NewXorrisofsStage(xorrisofsStageOptions(p.Filename(), p.ISOCustomizations.Label, p.ISOBoot), p.treePipeline.Name()))
 	pipeline.AddStage(osbuild.NewImplantisomd5Stage(&osbuild.Implantisomd5StageOptions{Filename: p.Filename()}))
 
 	return pipeline, nil
