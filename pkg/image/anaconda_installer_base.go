@@ -10,6 +10,7 @@ import (
 // common struct that all anaconda installers share
 type AnacondaInstallerBase struct {
 	InstallerCustomizations manifest.InstallerCustomizations
+	ISOCustomizations       manifest.ISOCustomizations
 	RootfsCompression       string
 	Kickstart               *kickstart.Options
 }

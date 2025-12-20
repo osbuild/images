@@ -33,7 +33,8 @@ func newAnacondaInstaller() *manifest.AnacondaInstaller {
 		OSVersion: osversion,
 		Preview:   preview,
 	}
-	installer := manifest.NewAnacondaInstaller(manifest.AnacondaInstallerTypePayload, build, x86plat, nil, "kernel", instCust)
+	isoCust := manifest.ISOCustomizations{}
+	installer := manifest.NewAnacondaInstaller(manifest.AnacondaInstallerTypePayload, build, x86plat, nil, "kernel", instCust, isoCust)
 	return installer
 }
 
