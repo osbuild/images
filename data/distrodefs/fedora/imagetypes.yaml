@@ -550,6 +550,8 @@
     install_weak_deps: true
 
   iso_config: &default_iso_config
+    preparer: "image-builder - https://osbuild.org/"
+    publisher: "Fedora Project"
     rootfs_type: "squashfs"
     conditions:
       "x86_64 uses grub2":
