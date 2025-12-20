@@ -6,8 +6,11 @@ import (
 )
 
 type ISOCustomizations struct {
-	// ISO Volume ID
-	Label string
+	// ISO metadata fields
+	Label       string
+	Preparer    string
+	Publisher   string
+	Application string
 
 	RootfsType ISORootfsType
 	BootType   ISOBootType
@@ -69,6 +72,9 @@ func xorrisofsStageOptions(filename string, isoCustomizations ISOCustomizations)
 		SysID:    "LINUX",
 		EFI:      "images/efiboot.img",
 		ISOLevel: 3,
+		Prep:     isoCustomizations.Preparer,
+		Pub:      isoCustomizations.Publisher,
+		AppID:    isoCustomizations.Application,
 	}
 
 	switch isoCustomizations.BootType {

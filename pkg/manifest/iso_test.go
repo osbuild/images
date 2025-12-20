@@ -24,4 +24,12 @@ func TestISOBoot(t *testing.T) {
 	assert.Equal(t, "images/eltorito.img", options.Boot.Image)
 	assert.Equal(t, "/usr/lib/grub/i386-pc/boot_hybrid.img", options.Grub2MBR)
 	assert.Equal(t, "", options.IsohybridMBR)
+
+	options = xorrisofsStageOptions("boot.iso", ISOCustomizations{Label: "test-iso-1", BootType: Grub2ISOBoot, Preparer: "Test", Publisher: "Tester"})
+	require.NotNil(t, options.Boot)
+	assert.Equal(t, "images/eltorito.img", options.Boot.Image)
+	assert.Equal(t, "/usr/lib/grub/i386-pc/boot_hybrid.img", options.Grub2MBR)
+	assert.Equal(t, "", options.IsohybridMBR)
+	assert.Equal(t, "Test", options.Prep)
+	assert.Equal(t, "Tester", options.Pub)
 }
