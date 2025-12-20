@@ -74,6 +74,7 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 		repos,
 		"kernel",
 		img.InstallerCustomizations,
+		img.ISOCustomizations,
 	)
 
 	anacondaPipeline.ExtraPackages = img.ExtraBasePackages.Include
@@ -134,7 +135,7 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoTreePipeline.PayloadPath = tarPath
 	isoTreePipeline.OSPipeline = osPipeline
 
-	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.InstallerCustomizations.ISOLabel)
+	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.InstallerCustomizations.ISOLabel, img.ISOCustomizations)
 	isoPipeline.SetFilename(img.filename)
 	isoPipeline.ISOBoot = img.InstallerCustomizations.ISOBoot
 

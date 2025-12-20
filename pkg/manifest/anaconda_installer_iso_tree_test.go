@@ -56,6 +56,7 @@ func newTestAnacondaISOTree() *manifest.AnacondaInstallerISOTree {
 			OSVersion: osversion,
 			Preview:   preview,
 		},
+		manifest.ISOCustomizations{},
 	)
 	rootfsImagePipeline := manifest.NewISORootfsImg(build, anacondaPipeline)
 	bootTreePipeline := manifest.NewEFIBootTree(build, product, osversion)

@@ -24,6 +24,7 @@ type OSTreeSimplifiedInstaller struct {
 	OSCustomizations        manifest.OSCustomizations
 	Environment             environment.Environment
 	InstallerCustomizations manifest.InstallerCustomizations
+	ISOCustomizations       manifest.ISOCustomizations
 
 	ExtraBasePackages rpmmd.PackageSet
 
@@ -145,7 +146,7 @@ func (img *OSTreeSimplifiedInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoTreePipeline.PayloadPath = fmt.Sprintf("/%s", imageFilename)
 	isoTreePipeline.ISOLinux = isoLinuxEnabled
 
-	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, isoLabel)
+	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, isoLabel, img.ISOCustomizations)
 	isoPipeline.SetFilename(img.filename)
 	if isoLinuxEnabled {
 		isoPipeline.ISOBoot = manifest.SyslinuxISOBoot

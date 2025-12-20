@@ -65,6 +65,7 @@ func (img *AnacondaContainerInstaller) InstantiateManifestFromContainer(m *manif
 		nil, // repos
 		"kernel",
 		img.InstallerCustomizations,
+		img.ISOCustomizations,
 	)
 	// with bootc we need different kernel/initramfs paths
 	anacondaPipeline.BootcLivefsContainer = &img.ContainerSource
@@ -128,7 +129,7 @@ func (img *AnacondaContainerInstaller) InstantiateManifestFromContainer(m *manif
 	isoTreePipeline.ContainerSource = &img.InstallerPayload
 	isoTreePipeline.InstallRootfsType = img.InstallRootfsType
 
-	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.InstallerCustomizations.ISOLabel)
+	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.InstallerCustomizations.ISOLabel, img.ISOCustomizations)
 	isoPipeline.SetFilename(img.filename)
 	isoPipeline.ISOBoot = img.InstallerCustomizations.ISOBoot
 	artifact := isoPipeline.Export()
