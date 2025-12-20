@@ -181,6 +181,7 @@ class QEMU(VM):
                 "qemu-system-aarch64",
                 "-machine", "virt",
                 "-cpu", "cortex-a57",
+                "-accel", "tcg,thread=multi",
                 "-smp", "2",
                 "-bios", "/usr/share/AAVMF/AAVMF_CODE.fd",
             ] + virtio_scsi_hd
