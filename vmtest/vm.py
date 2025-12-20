@@ -187,9 +187,11 @@ class QEMU(VM):
         elif self._arch in ("amd64", "x86_64"):
             qemu_cmdline = [
                 "qemu-system-x86_64",
-                "-M", "accel=kvm",
-                # get "illegal instruction" inside the VM otherwise
-                "-cpu", "host",
+                "-M", "q35,accel=kvm",
+                # RHEL 10 requires x86_64-v3 pass it to avoid "illegal instruction", but
+                # do not use "host" because some modern features are not supported by some
+                # distributions when running locally on very recent laptops.
+                "-cpu", "Haswell-v4",
             ] + virtio_scsi_hd
             if use_ovmf:
                 qemu_cmdline.extend(["-bios", find_ovmf()])
