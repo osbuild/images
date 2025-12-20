@@ -211,6 +211,13 @@ class QEMU(VM):
         else:
             raise ValueError(f"unsupported architecture {self._arch}")
 
+        if self._img.suffix == ".qcow2":
+            img_format = "qcow2"
+        elif self._img.suffix == ".img":
+            img_format = "raw"
+        else:
+            raise ValueError(f"Unsupported image extension: {self._img}. Must be .qcow2 or .img")
+
         # common part
         qemu_cmdline += [
             "-m", self._memory,
@@ -220,7 +227,7 @@ class QEMU(VM):
             "-netdev", f"user,id=net.0,hostfwd=tcp::{self._ssh_port}-:22",
             "-qmp", f"unix:{self._qmp_socket},server,nowait",
             # boot
-            "-drive", f"file={self._img},if=none,id=disk0,format=qcow2",
+            "-drive", f"file={self._img},if=none,id=disk0,format={img_format}",
         ]
         if not os.environ.get("OSBUILD_TEST_QEMU_GUI"):
             qemu_cmdline.append("-nographic")
