@@ -7,6 +7,9 @@ import (
 // ISOConfig represents configuration for the ISO part of images that are packed
 // into ISOs.
 type ISOConfig struct {
+	// BootType defines what type of bootloader is used for the iso
+	BootType *manifest.ISOBootType `yaml:"boot_type,omitempty"`
+
 	// RootfsType defines what rootfs (squashfs, erofs,ext4)
 	// is used
 	RootfsType *manifest.ISORootfsType `yaml:"rootfs_type,omitempty"`

@@ -942,15 +942,15 @@
     lorax_logos_package: redhat-logos
     lorax_release_package: redhat-release
     install_weak_deps: true
+
+  default_iso_config: &default_iso_config
+    rootfs_type: "squashfs-ext4"
     conditions:
       "x86_64 uses syslinux":
         when:
           arch: "x86_64"
         shallow_merge:
-          iso_boot_type: "syslinux"
-
-  default_iso_config: &default_iso_config
-    rootfs_type: "squashfs-ext4"
+          boot_type: "syslinux"
 
   partitioning:
     ids:
@@ -2319,6 +2319,7 @@ image_types:
       additional_dracut_modules:
         - "prefixdevname"
         - "prefixdevname-tools"
+    iso_config: *default_iso_config
     platforms:
       - <<: *x86_64_uefi_platform
       - <<: *aarch64_platform

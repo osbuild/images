@@ -144,7 +144,7 @@ func (img *OSTreeSimplifiedInstaller) InstantiateManifest(m *manifest.Manifest,
 	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.ISOCustomizations)
 	isoPipeline.SetFilename(img.filename)
 	if isoLinuxEnabled {
-		isoPipeline.ISOBoot = manifest.SyslinuxISOBoot
+		img.ISOCustomizations.BootType = manifest.SyslinuxISOBoot
 	}
 
 	artifact := isoPipeline.Export()

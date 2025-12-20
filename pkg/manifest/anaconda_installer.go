@@ -135,7 +135,7 @@ func (p *AnacondaInstaller) anacondaBootPackageSet() ([]string, error) {
 			"shim-x64",
 		)
 
-		if p.InstallerCustomizations.ISOBoot == SyslinuxISOBoot {
+		if p.ISOCustomizations.BootType == SyslinuxISOBoot {
 			packages = append(packages,
 				"syslinux",
 				"syslinux-nonlinux",

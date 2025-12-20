@@ -1230,12 +1230,15 @@
     lorax_logos_package: redhat-logos
     lorax_release_package: redhat-release
     install_weak_deps: true
+
+  default_iso_config: &default_iso_config
     conditions:
       "x86_64 uses syslinux":
         when:
           arch: "x86_64"
         shallow_merge:
-          iso_boot_type: "syslinux"
+          boot_type: "syslinux"
+
   supported_options_lists:
     # Common options supported by all disk image types.
     # This includes everything that is not specific to installers or
@@ -2299,6 +2302,7 @@ image_types:
             - <<: *aarch64_platform
               fips_menu: true
     installer_config: *default_installer_config
+    iso_config: *default_iso_config
     image_config:
       locale: "C.UTF-8"
     package_sets:
@@ -2896,6 +2900,7 @@ image_types:
     installer_config:
       <<: *default_installer_config
       default_menu: 0
+    iso_config: *default_iso_config
     image_config:
       enabled_services: *enabled_services_edge
       locale: "en_US.UTF-8"
@@ -2938,6 +2943,7 @@ image_types:
       additional_dracut_modules:
         - "prefixdevname"
         - "prefixdevname-tools"
+    iso_config: *default_iso_config
     platforms:
       - <<: *x86_64_uefi_platform
       - <<: *aarch64_platform
@@ -3235,6 +3241,7 @@ image_types:
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
     installer_config: *default_installer_config
+    iso_config: *default_iso_config
     image_config:
       locale: "en_US.UTF-8"
     platforms:
@@ -3404,6 +3411,7 @@ image_types:
     # still keep the config here so that there is a single place for
     # all imagetype configs.
     installer_config: *default_installer_config
+    iso_config: *default_iso_config
     package_sets:
       installer:
         - include:

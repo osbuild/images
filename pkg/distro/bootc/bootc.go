@@ -443,7 +443,7 @@ func (t *BootcImageType) initAnacondaInstallerBaseFromSourceInfo(img *image.Anac
 	img.RootfsCompression = "zstd"
 
 	if t.arch.Name() == arch.ARCH_X86_64.String() {
-		img.InstallerCustomizations.ISOBoot = manifest.Grub2ISOBoot
+		img.ISOCustomizations.BootType = manifest.Grub2ISOBoot
 	}
 
 	img.InstallerCustomizations.Product = sourceInfo.OSRelease.Name
