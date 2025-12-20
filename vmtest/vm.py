@@ -229,7 +229,7 @@ class QEMU(VM):
             "-netdev", f"user,id=net.0,hostfwd=tcp::{self._ssh_port}-:22",
             "-qmp", f"unix:{self._qmp_socket},server,nowait",
             # boot
-            "-drive", f"file={self._img},if=none,id=disk0,format={img_format}",
+            "-drive", f"file={self._img},if=none,id=disk0,cache=unsafe,format={img_format}",
         ]
         if not os.environ.get("OSBUILD_TEST_QEMU_GUI"):
             qemu_cmdline.append("-nographic")
