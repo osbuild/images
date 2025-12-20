@@ -164,7 +164,6 @@
       - "ipmi_devintf"
       - "ipmi_msghandler"
     default_menu: 1
-    iso_rootfs_type: "squashfs"
     lorax_template_package: lorax-templates-rhel
     lorax_templates:
       - path: 80-rhel/runtime-postinstall.tmpl
@@ -179,6 +178,9 @@
           arch: "x86_64"
         shallow_merge:
           iso_boot_type: "grub2"
+
+  default_iso_config: &default_iso_config
+    rootfs_type: "squashfs"
 
   sapapps_image_config: &sapapps_image_config
     selinux_config:
@@ -1724,6 +1726,7 @@ image_types:
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
     installer_config: *default_installer_config
+    iso_config: *default_iso_config
     platforms:
       - *x86_64_installer_platform
       - *aarch64_platform
@@ -2168,6 +2171,7 @@ image_types:
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
     installer_config: *default_installer_config
+    iso_config: *default_iso_config
     image_config:
       locale: "en_US.UTF-8"
     platforms:
@@ -2299,6 +2303,7 @@ image_types:
     # still keep the config here so that there is a single place for
     # all imagetype configs.
     installer_config: *default_installer_config
+    iso_config: *default_iso_config
     package_sets:
       installer:
         - include:

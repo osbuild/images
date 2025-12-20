@@ -79,7 +79,7 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 	anacondaPipeline.Locale = img.Locale
 
 	var rootfsImagePipeline *manifest.ISORootfsImg
-	switch img.InstallerCustomizations.ISORootfsType {
+	switch img.ISOCustomizations.RootfsType {
 	case manifest.SquashfsExt4Rootfs:
 		rootfsImagePipeline = manifest.NewISORootfsImg(buildPipeline, anacondaPipeline)
 		rootfsImagePipeline.Size = 4 * datasizes.GibiByte

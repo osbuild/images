@@ -489,7 +489,7 @@ func (t *BootcImageType) initAnacondaInstallerBaseFromSourceInfo(img *image.Anac
 	}
 
 	// see https://github.com/osbuild/bootc-image-builder/issues/733
-	img.InstallerCustomizations.ISORootfsType = manifest.SquashfsRootfs
+	img.ISOCustomizations.RootfsType = manifest.SquashfsRootfs
 
 	// Enabled by default to keep backwards compatibility
 	img.InstallerCustomizations.InstallWeakDeps = true

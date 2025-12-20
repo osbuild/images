@@ -162,7 +162,7 @@ func TestContainerInstallerSquashfsRootfs(t *testing.T) {
 	img.InstallerCustomizations.Product = product
 	img.InstallerCustomizations.OSVersion = osversion
 	img.ISOCustomizations.Label = isolabel
-	img.InstallerCustomizations.ISORootfsType = manifest.SquashfsRootfs
+	img.ISOCustomizations.RootfsType = manifest.SquashfsRootfs
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), mockContainerSpecs(), nil)
 
@@ -231,7 +231,7 @@ func TestOSTreeInstallerSquashfsRootfs(t *testing.T) {
 	img.InstallerCustomizations.Product = product
 	img.InstallerCustomizations.OSVersion = osversion
 	img.ISOCustomizations.Label = isolabel
-	img.InstallerCustomizations.ISORootfsType = manifest.SquashfsRootfs
+	img.ISOCustomizations.RootfsType = manifest.SquashfsRootfs
 	img.Kickstart = &kickstart.Options{
 		// the ostree options must be non-nil
 		OSTree: &kickstart.OSTree{},
@@ -312,7 +312,7 @@ func TestTarInstallerSquashfsRootfs(t *testing.T) {
 	img.InstallerCustomizations.Product = product
 	img.InstallerCustomizations.OSVersion = osversion
 	img.ISOCustomizations.Label = isolabel
-	img.InstallerCustomizations.ISORootfsType = manifest.SquashfsRootfs
+	img.ISOCustomizations.RootfsType = manifest.SquashfsRootfs
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
 	// Confirm that it does not include rootfs-image pipeline
@@ -341,7 +341,7 @@ func TestLiveInstallerSquashfsRootfs(t *testing.T) {
 	img.InstallerCustomizations.Product = product
 	img.InstallerCustomizations.OSVersion = osversion
 	img.ISOCustomizations.Label = isolabel
-	img.InstallerCustomizations.ISORootfsType = manifest.SquashfsRootfs
+	img.ISOCustomizations.RootfsType = manifest.SquashfsRootfs
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
 	// Confirm that it does not include rootfs-image pipeline
@@ -829,7 +829,7 @@ func TestNetInstallerSquashfsRootfs(t *testing.T) {
 	img.InstallerCustomizations.Product = product
 	img.InstallerCustomizations.OSVersion = osversion
 	img.ISOCustomizations.Label = isolabel
-	img.InstallerCustomizations.ISORootfsType = manifest.SquashfsRootfs
+	img.ISOCustomizations.RootfsType = manifest.SquashfsRootfs
 
 	mfs := instantiateAndSerialize(t, img, mockPackageSets(), nil, nil)
 	// Confirm that it does not include rootfs-image pipeline
