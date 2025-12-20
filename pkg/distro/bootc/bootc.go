@@ -443,12 +443,12 @@ func (t *BootcImageType) initAnacondaInstallerBaseFromSourceInfo(img *image.Anac
 	img.RootfsCompression = "zstd"
 
 	if t.arch.Name() == arch.ARCH_X86_64.String() {
-		img.InstallerCustomizations.ISOBoot = manifest.Grub2ISOBoot
+		img.ISOCustomizations.BootType = manifest.Grub2ISOBoot
 	}
 
 	img.InstallerCustomizations.Product = sourceInfo.OSRelease.Name
 	img.InstallerCustomizations.OSVersion = sourceInfo.OSRelease.VersionID
-	img.InstallerCustomizations.ISOLabel = LabelForISO(&sourceInfo.OSRelease, t.arch.Name())
+	img.ISOCustomizations.Label = LabelForISO(&sourceInfo.OSRelease, t.arch.Name())
 
 	img.InstallerCustomizations.FIPS = customizations.GetFIPS()
 	var err error
@@ -489,7 +489,7 @@ func (t *BootcImageType) initAnacondaInstallerBaseFromSourceInfo(img *image.Anac
 	}
 
 	// see https://github.com/osbuild/bootc-image-builder/issues/733
-	img.InstallerCustomizations.ISORootfsType = manifest.SquashfsRootfs
+	img.ISOCustomizations.RootfsType = manifest.SquashfsRootfs
 
 	return nil
 }
