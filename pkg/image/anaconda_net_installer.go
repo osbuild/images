@@ -79,7 +79,7 @@ func (img *AnacondaNetInstaller) InstantiateManifest(m *manifest.Manifest,
 	anacondaPipeline.Checkpoint()
 
 	var rootfsImagePipeline *manifest.ISORootfsImg
-	switch img.InstallerCustomizations.ISORootfsType {
+	switch img.ISOCustomizations.RootfsType {
 	case manifest.SquashfsExt4Rootfs:
 		rootfsImagePipeline = manifest.NewISORootfsImg(buildPipeline, anacondaPipeline)
 		rootfsImagePipeline.Size = 5 * datasizes.GibiByte

@@ -405,10 +405,6 @@ func installerCustomizations(t *imageType, c *blueprint.Customizations) (manifes
 			isc.DefaultMenu = *menu
 		}
 
-		if isoroot := installerConfig.ISORootfsType; isoroot != nil {
-			isc.ISORootfsType = *isoroot
-		}
-
 		if isoboot := installerConfig.ISOBootType; isoboot != nil {
 			isc.ISOBoot = *isoboot
 		}
@@ -455,9 +451,15 @@ func isoCustomizations(t *imageType, c *blueprint.Customizations) (manifest.ISOC
 		Label: isoLabel,
 	}
 
-	_, err = t.getDefaultISOConfig()
+	isoConfig, err := t.getDefaultISOConfig()
 	if err != nil {
 		return isc, err
+	}
+
+	if isoConfig != nil {
+		if isoroot := isoConfig.RootfsType; isoroot != nil {
+			isc.RootfsType = *isoroot
+		}
 	}
 
 	return isc, nil
