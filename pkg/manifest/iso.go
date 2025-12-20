@@ -56,22 +56,22 @@ func (p *ISO) serialize() (osbuild.Pipeline, error) {
 		return osbuild.Pipeline{}, err
 	}
 
-	pipeline.AddStage(osbuild.NewXorrisofsStage(xorrisofsStageOptions(p.Filename(), p.ISOCustomizations.Label, p.ISOCustomizations.BootType), p.treePipeline.Name()))
+	pipeline.AddStage(osbuild.NewXorrisofsStage(xorrisofsStageOptions(p.Filename(), p.ISOCustomizations), p.treePipeline.Name()))
 	pipeline.AddStage(osbuild.NewImplantisomd5Stage(&osbuild.Implantisomd5StageOptions{Filename: p.Filename()}))
 
 	return pipeline, nil
 }
 
-func xorrisofsStageOptions(filename, isolabel string, isoboot ISOBootType) *osbuild.XorrisofsStageOptions {
+func xorrisofsStageOptions(filename string, isoCustomizations ISOCustomizations) *osbuild.XorrisofsStageOptions {
 	options := &osbuild.XorrisofsStageOptions{
 		Filename: filename,
-		VolID:    isolabel,
+		VolID:    isoCustomizations.Label,
 		SysID:    "LINUX",
 		EFI:      "images/efiboot.img",
 		ISOLevel: 3,
 	}
 
-	switch isoboot {
+	switch isoCustomizations.BootType {
 	case SyslinuxISOBoot:
 		// Syslinux BIOS ISO creation
 		options.Boot = &osbuild.XorrisofsBoot{
