@@ -446,6 +446,17 @@ func installerCustomizations(t *imageType, c *blueprint.Customizations) (manifes
 	return isc, nil
 }
 
+func isoCustomizations(t *imageType, c *blueprint.Customizations) (manifest.ISOCustomizations, error) {
+	isc := manifest.ISOCustomizations{}
+
+	_, err := t.getDefaultISOConfig()
+	if err != nil {
+		return isc, err
+	}
+
+	return isc, nil
+}
+
 func ostreeDeploymentCustomizations(
 	t *imageType,
 	c *blueprint.Customizations) (manifest.OSTreeDeploymentCustomizations, error) {
@@ -629,6 +640,11 @@ func liveInstallerImage(t *imageType,
 		return nil, err
 	}
 
+	img.ISOCustomizations, err = isoCustomizations(t, bp.Customizations)
+	if err != nil {
+		return nil, err
+	}
+
 	return img, nil
 }
 
@@ -662,6 +678,11 @@ func imageInstallerImage(t *imageType,
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
 
 	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations)
+	if err != nil {
+		return nil, err
+	}
+
+	img.ISOCustomizations, err = isoCustomizations(t, bp.Customizations)
 	if err != nil {
 		return nil, err
 	}
@@ -832,6 +853,11 @@ func iotInstallerImage(t *imageType,
 		return nil, err
 	}
 
+	img.ISOCustomizations, err = isoCustomizations(t, bp.Customizations)
+	if err != nil {
+		return nil, err
+	}
+
 	// XXX these bits should move into the `installerCustomization` function
 	// XXX directly
 	if len(img.Kickstart.Users)+len(img.Kickstart.Groups) > 0 {
@@ -951,6 +977,12 @@ func iotSimplifiedInstallerImage(t *imageType,
 	if err != nil {
 		return nil, err
 	}
+
+	img.ISOCustomizations, err = isoCustomizations(t, bp.Customizations)
+	if err != nil {
+		return nil, err
+	}
+
 	img.OSName = t.OSTree.Name
 
 	return img, nil
@@ -1010,6 +1042,11 @@ func networkInstallerImage(t *imageType,
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
 
 	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations)
+	if err != nil {
+		return nil, err
+	}
+
+	img.ISOCustomizations, err = isoCustomizations(t, bp.Customizations)
 	if err != nil {
 		return nil, err
 	}
