@@ -807,6 +807,22 @@ image_types:
 	require.ErrorContains(t, err, `cannot execute template for "vendor" field (is it set?)`)
 }
 
+var fakeDistroYamlISOConf = `
+image_types:
+  test_type:
+    iso_config:
+      rootfs_type: "squashfs"
+`
+
+func TestImageTypeISOConfig(t *testing.T) {
+	it := makeTestImageType(t, fakeDistroYamlISOConf)
+
+	installerConfig := it.ISOConfig(distro.ID{Name: "test-distro", MajorVersion: 1}, "test_arch")
+	assert.Equal(t, &distro.ISOConfig{
+		RootfsType: common.ToPtr(manifest.SquashfsRootfs),
+	}, installerConfig)
+}
+
 var fakeDistroYamlInstallerConf = `
 image_types:
   test_type:
@@ -816,7 +832,6 @@ image_types:
       additional_drivers:
         - base-drv1
       default_menu: 1
-      iso_rootfs_type: "squashfs"
 `
 
 func TestImageTypeInstallerConfig(t *testing.T) {
@@ -827,7 +842,6 @@ func TestImageTypeInstallerConfig(t *testing.T) {
 		AdditionalDracutModules: []string{"base-dracut-mod1"},
 		AdditionalDrivers:       []string{"base-drv1"},
 		DefaultMenu:             common.ToPtr(1),
-		ISORootfsType:           common.ToPtr(manifest.SquashfsRootfs),
 	}, installerConfig)
 }
 
@@ -846,10 +860,9 @@ func TestImageTypeInstallerConfigMergeVerLT(t *testing.T) {
 
 	installerConfig := it.InstallerConfig(distro.ID{Name: "test-distro", MajorVersion: 1}, "test_arch")
 	assert.Equal(t, &distro.InstallerConfig{
-		// AdditionalDrivers,ISOrootfsType merged from parent
+		// AdditionalDrivers merged from parent
 		AdditionalDrivers:       []string{"base-drv1"},
 		DefaultMenu:             common.ToPtr(2),
-		ISORootfsType:           common.ToPtr(manifest.SquashfsRootfs),
 		AdditionalDracutModules: []string{"override-dracut-mod1"},
 	}, installerConfig)
 }
@@ -873,8 +886,6 @@ func TestImageTypeInstallerConfigMergeDistroName(t *testing.T) {
 		AdditionalDracutModules: []string{"override-dracut-mod1"},
 		AdditionalDrivers:       []string{"override-drv1"},
 		DefaultMenu:             common.ToPtr(1),
-		// ISORootfsType merged from parent
-		ISORootfsType: common.ToPtr(manifest.SquashfsRootfs),
 	}, installerConfig)
 }
 
@@ -896,7 +907,6 @@ func TestImageTypeInstallerConfigMergeArch(t *testing.T) {
 		// AdditionalDracutModules,ISORootfsType merged from parent
 		AdditionalDracutModules: []string{"base-dracut-mod1"},
 		DefaultMenu:             common.ToPtr(1),
-		ISORootfsType:           common.ToPtr(manifest.SquashfsRootfs),
 	}, installerConfig)
 }
 

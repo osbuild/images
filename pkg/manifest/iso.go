@@ -8,6 +8,8 @@ import (
 type ISOCustomizations struct {
 	// ISO Volume ID
 	Label string
+
+	RootfsType ISORootfsType
 }
 
 // An ISO represents a bootable ISO file created from an

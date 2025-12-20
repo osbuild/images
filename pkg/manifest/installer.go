@@ -22,8 +22,7 @@ type InstallerCustomizations struct {
 	LoraxLogosPackage    string                   // eg. fedora-logos, fedora-eln-logos, redhat-logos
 	LoraxReleasePackage  string                   // eg. fedora-release, fedora-release-eln, redhat-release
 
-	ISORootfsType ISORootfsType
-	ISOBoot       ISOBootType
+	ISOBoot ISOBootType
 
 	// ISOFiles contains files to copy from the `anaconda-tree` to the ISO root, this is
 	// used to copy (for example) license and legal information into the root of the ISO. An

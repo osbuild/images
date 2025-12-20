@@ -21,7 +21,7 @@ func initIsoTreePipeline(isoTreePipeline *manifest.AnacondaInstallerISOTree, img
 	isoTreePipeline.Kickstart = img.Kickstart
 
 	isoTreePipeline.RootfsCompression = img.RootfsCompression
-	isoTreePipeline.RootfsType = img.InstallerCustomizations.ISORootfsType
+	isoTreePipeline.RootfsType = img.ISOCustomizations.RootfsType
 
 	isoTreePipeline.KernelOpts = img.InstallerCustomizations.KernelOptionsAppend
 	if img.InstallerCustomizations.FIPS {
