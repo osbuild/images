@@ -10,13 +10,13 @@ type ISOCustomizations struct {
 	Label string
 
 	RootfsType ISORootfsType
+	BootType   ISOBootType
 }
 
 // An ISO represents a bootable ISO file created from an
 // an existing ISOTreePipeline.
 type ISO struct {
 	Base
-	ISOBoot  ISOBootType
 	filename string
 
 	treePipeline Pipeline
@@ -56,7 +56,7 @@ func (p *ISO) serialize() (osbuild.Pipeline, error) {
 		return osbuild.Pipeline{}, err
 	}
 
-	pipeline.AddStage(osbuild.NewXorrisofsStage(xorrisofsStageOptions(p.Filename(), p.ISOCustomizations.Label, p.ISOBoot), p.treePipeline.Name()))
+	pipeline.AddStage(osbuild.NewXorrisofsStage(xorrisofsStageOptions(p.Filename(), p.ISOCustomizations.Label, p.ISOCustomizations.BootType), p.treePipeline.Name()))
 	pipeline.AddStage(osbuild.NewImplantisomd5Stage(&osbuild.Implantisomd5StageOptions{Filename: p.Filename()}))
 
 	return pipeline, nil

@@ -405,10 +405,6 @@ func installerCustomizations(t *imageType, c *blueprint.Customizations) (manifes
 			isc.DefaultMenu = *menu
 		}
 
-		if isoboot := installerConfig.ISOBootType; isoboot != nil {
-			isc.ISOBoot = *isoboot
-		}
-
 		isc.LoraxTemplates = installerConfig.LoraxTemplates
 		if pkg := installerConfig.LoraxTemplatePackage; pkg != nil {
 			isc.LoraxTemplatePackage = *pkg
@@ -453,6 +449,10 @@ func isoCustomizations(t *imageType, c *blueprint.Customizations) (manifest.ISOC
 	}
 
 	if isoConfig != nil {
+		if isoboot := isoConfig.BootType; isoboot != nil {
+			isc.BootType = *isoboot
+		}
+
 		if isoroot := isoConfig.RootfsType; isoroot != nil {
 			isc.RootfsType = *isoroot
 		}

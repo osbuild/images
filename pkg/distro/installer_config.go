@@ -20,9 +20,6 @@ type InstallerConfig struct {
 	// DefaultMenu will set the grub2 iso menu's default setting
 	DefaultMenu *int `yaml:"default_menu"`
 
-	// BootType defines what type of bootloader is used for the iso
-	ISOBootType *manifest.ISOBootType `yaml:"iso_boot_type,omitempty"`
-
 	// Lorax template settings for org.osbuild.lorax stage
 	LoraxTemplates       []manifest.InstallerLoraxTemplate `yaml:"lorax_templates,omitempty"`
 	LoraxTemplatePackage *string                           `yaml:"lorax_template_package"`

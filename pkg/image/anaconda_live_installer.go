@@ -94,7 +94,6 @@ func (img *AnacondaLiveInstaller) InstantiateManifest(m *manifest.Manifest,
 
 	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.ISOCustomizations)
 	isoPipeline.SetFilename(img.filename)
-	isoPipeline.ISOBoot = img.InstallerCustomizations.ISOBoot
 
 	artifact := isoPipeline.Export()
 
