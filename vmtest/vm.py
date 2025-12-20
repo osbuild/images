@@ -222,7 +222,7 @@ class QEMU(VM):
 
         # common part
         qemu_cmdline += [
-            "-m", self._memory,
+            "-m", str(self._memory),
             "-serial", "stdio",
             "-monitor", "none",
             "-device", f"{virtio_net_device},netdev=net.0,id=net.0",
@@ -234,12 +234,14 @@ class QEMU(VM):
         if not os.environ.get("OSBUILD_TEST_QEMU_GUI"):
             qemu_cmdline.append("-nographic")
         if self._cdrom:
-            qemu_cmdline.extend(["-cdrom", self._cdrom])
+            qemu_cmdline.extend(["-cdrom", str(self._cdrom)])
         if snapshot:
             qemu_cmdline.append("-snapshot")
         if self._extra_args:
-            qemu_cmdline.extend(self._extra_args)
-        qemu_cmdline.append(self._img)
+            qemu_cmdline.extend(str(arg) for arg in self._extra_args)
+        qemu_cmdline.append(str(self._img))
+
+        print("QEMU: " + " ".join(qemu_cmdline))
         return qemu_cmdline
 
     # XXX: move args to init() so that __enter__ can use them?
