@@ -240,7 +240,6 @@ class QEMU(VM):
             qemu_cmdline.append("-snapshot")
         if self._extra_args:
             qemu_cmdline.extend(str(arg) for arg in self._extra_args)
-        qemu_cmdline.append(str(self._img))
 
         print("QEMU: " + " ".join(qemu_cmdline))
         return qemu_cmdline
