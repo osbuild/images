@@ -170,6 +170,12 @@ class QEMU(VM):
         self.force_stop()
         shutil.rmtree(self._tmpdir)
 
+    def _num_cores(self):
+        """
+        Return the number of CPU cores available on the system.
+        """
+        return os.cpu_count() or 1
+
     def _gen_qemu_cmdline(self, snapshot, use_ovmf):
         virtio_scsi_hd = [
             "-device", "virtio-scsi-pci,id=scsi",
@@ -181,15 +187,18 @@ class QEMU(VM):
                 "qemu-system-aarch64",
                 "-machine", "virt",
                 "-cpu", "cortex-a57",
-                "-smp", "2",
+                "-accel", "tcg,thread=multi",
+                "-smp", str(self._num_cores()),
                 "-bios", "/usr/share/AAVMF/AAVMF_CODE.fd",
             ] + virtio_scsi_hd
         elif self._arch in ("amd64", "x86_64"):
             qemu_cmdline = [
                 "qemu-system-x86_64",
-                "-M", "accel=kvm",
-                # get "illegal instruction" inside the VM otherwise
-                "-cpu", "host",
+                "-M", "q35,accel=kvm",
+                # RHEL 10 requires x86_64-v3 pass it to avoid "illegal instruction", but
+                # do not use "host" because some modern features are not supported by some
+                # distributions when running locally on very recent laptops.
+                "-cpu", "Haswell-v4",
             ] + virtio_scsi_hd
             if use_ovmf:
                 qemu_cmdline.extend(["-bios", find_ovmf()])
@@ -197,13 +206,13 @@ class QEMU(VM):
             qemu_cmdline = [
                 "qemu-system-ppc64",
                 "-machine", "pseries",
-                "-smp", "2",
+                "-smp", str(self._num_cores()),
             ] + virtio_scsi_hd
         elif self._arch == "s390x":
             qemu_cmdline = [
                 "qemu-system-s390x",
                 "-machine", "s390-ccw-virtio",
-                "-smp", "2",
+                "-smp", str(self._num_cores()),
                 # sepcial disk setup
                 "-device", "virtio-blk,drive=disk0,bootindex=1",
             ]
@@ -211,26 +220,34 @@ class QEMU(VM):
         else:
             raise ValueError(f"unsupported architecture {self._arch}")
 
+        if self._img.suffix == ".qcow2":
+            img_format = "qcow2"
+        elif self._img.suffix == ".img":
+            img_format = "raw"
+        else:
+            raise ValueError(f"Unsupported image extension: {self._img}. Must be .qcow2 or .img")
+
         # common part
         qemu_cmdline += [
-            "-m", self._memory,
+            "-m", str(self._memory),
             "-serial", "stdio",
             "-monitor", "none",
             "-device", f"{virtio_net_device},netdev=net.0,id=net.0",
             "-netdev", f"user,id=net.0,hostfwd=tcp::{self._ssh_port}-:22",
             "-qmp", f"unix:{self._qmp_socket},server,nowait",
             # boot
-            "-drive", f"file={self._img},if=none,id=disk0,format=qcow2",
+            "-drive", f"file={self._img},if=none,id=disk0,cache=unsafe,format={img_format}",
         ]
         if not os.environ.get("OSBUILD_TEST_QEMU_GUI"):
             qemu_cmdline.append("-nographic")
         if self._cdrom:
-            qemu_cmdline.extend(["-cdrom", self._cdrom])
+            qemu_cmdline.extend(["-cdrom", str(self._cdrom)])
         if snapshot:
             qemu_cmdline.append("-snapshot")
         if self._extra_args:
-            qemu_cmdline.extend(self._extra_args)
-        qemu_cmdline.append(self._img)
+            qemu_cmdline.extend(str(arg) for arg in self._extra_args)
+
+        print("QEMU: " + " ".join(qemu_cmdline))
         return qemu_cmdline
 
     # XXX: move args to init() so that __enter__ can use them?
