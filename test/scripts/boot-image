@@ -327,15 +327,18 @@ def boot_qemu_pxe(arch, pxe_tar_path):
         subprocess.check_call(
             "cat initrd.img rootfs.cpio > combined.img", shell=True, cwd=tmpdir)
 
-        # start an HTTP server to serve the rootfs.img
+        # Start an HTTP server to serve the rootfs.img and terminate it after the test.
+        # Explicitly terminate the HTTP server to avoid blocking on wait(), this cannot
+        # be done with a context manager for subprocesses.
         http_port = get_free_port()
-        with subprocess.Popen(
+        http_server = subprocess.Popen(  # pylint: disable=consider-using-with
             ["python3", "-m", "http.server", f"{http_port}"],
             cwd=tmpdir,
             # prevent blocking output
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
-        ):
+        )
+        try:
             # test disk is unused for live OS
             test_disk_path = pathlib.Path(tmpdir) / "disk.img"
             with open(test_disk_path, "w", encoding="utf-8") as fp:
@@ -372,6 +375,9 @@ def boot_qemu_pxe(arch, pxe_tar_path):
                         # 2. modify vm.py to be able to talk directly to the serial console
                         #    and then run commands directly via that
                         vm.force_stop()
+        finally:
+            http_server.terminate()
+            http_server.wait()
 
 
 def cmd_boot_aws(arch, image_name, privkey, pubkey, image_path, script_cmd):
