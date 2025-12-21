@@ -120,6 +120,23 @@ func (d *TestDistro) GetArch(arch string) (distro.Arch, error) {
 	return a, nil
 }
 
+func (d *TestDistro) GetImageTypes(archName string) ([]distro.ImageType, error) {
+	arch, err := d.GetArch(archName)
+	if err != nil {
+		return nil, err
+	}
+	imageTypes := make([]distro.ImageType, len(arch.ListImageTypes()))
+	imageTypeNames := arch.ListImageTypes()
+	for _, imageTypeName := range imageTypeNames {
+		imageType, err := arch.GetImageType(imageTypeName)
+		if err != nil {
+			return nil, err
+		}
+		imageTypes = append(imageTypes, imageType)
+	}
+	return imageTypes, nil
+}
+
 func (d *TestDistro) addArches(arches ...*TestArch) {
 	if d.arches == nil {
 		d.arches = map[string]distro.Arch{}
