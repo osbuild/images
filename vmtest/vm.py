@@ -170,6 +170,12 @@ class QEMU(VM):
         self.force_stop()
         shutil.rmtree(self._tmpdir)
 
+    def _num_cores(self):
+        """
+        Return the number of CPU cores available on the system.
+        """
+        return os.cpu_count() or 1
+
     def _gen_qemu_cmdline(self, snapshot, use_ovmf):
         virtio_scsi_hd = [
             "-device", "virtio-scsi-pci,id=scsi",
@@ -182,7 +188,7 @@ class QEMU(VM):
                 "-machine", "virt",
                 "-cpu", "cortex-a57",
                 "-accel", "tcg,thread=multi",
-                "-smp", "2",
+                "-smp", str(self._num_cores()),
                 "-bios", "/usr/share/AAVMF/AAVMF_CODE.fd",
             ] + virtio_scsi_hd
         elif self._arch in ("amd64", "x86_64"):
@@ -200,13 +206,13 @@ class QEMU(VM):
             qemu_cmdline = [
                 "qemu-system-ppc64",
                 "-machine", "pseries",
-                "-smp", "2",
+                "-smp", str(self._num_cores()),
             ] + virtio_scsi_hd
         elif self._arch == "s390x":
             qemu_cmdline = [
                 "qemu-system-s390x",
                 "-machine", "s390-ccw-virtio",
-                "-smp", "2",
+                "-smp", str(self._num_cores()),
                 # sepcial disk setup
                 "-device", "virtio-blk,drive=disk0,bootindex=1",
             ]
