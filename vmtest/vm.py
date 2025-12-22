@@ -232,6 +232,10 @@ class QEMU(VM):
             "-m", str(self._memory),
             "-serial", "stdio",
             "-monitor", "none",
+            # make sure SSH key generation during boot does not block due to lack of entropy
+            "-object", "rng-random,filename=/dev/urandom,id=rng0",
+            "-device", "virtio-rng-pci,rng=rng0",
+            # network
             "-device", f"{virtio_net_device},netdev=net.0,id=net.0",
             "-netdev", f"user,id=net.0,hostfwd=tcp::{self._ssh_port}-:22",
             "-qmp", f"unix:{self._qmp_socket},server,nowait",
