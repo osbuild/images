@@ -53,7 +53,7 @@ class VM(abc.ABC):
         sys.stdout.write(msg.rstrip("\n") + "\n")
 
     def wait_ssh_ready(self):
-        wait_ssh_ready(self._address, self._ssh_port, sleep=1, max_wait_sec=600)
+        wait_ssh_ready(self._address, self._ssh_port, sleep=1, max_wait_sec=1800)
 
     @abc.abstractmethod
     def force_stop(self):
