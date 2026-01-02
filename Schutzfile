@@ -15,7 +15,8 @@
         "minimal-installer": "rhos-01/fedora-42",
         "network-installer": "rhos-01/fedora-42",
         "everything-network-installer": "rhos-01/fedora-42",
-        "server-network-installer": "rhos-01/fedora-42"
+        "server-network-installer": "rhos-01/fedora-42",
+        "pxe-tar-xz": "rhos-01/fedora-42"
       }
     }
   },
