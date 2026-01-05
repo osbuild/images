@@ -4,6 +4,7 @@ import os
 import pathlib
 import subprocess as sp
 import sys
+from datetime import datetime
 from glob import glob
 from typing import Dict, List, Optional
 
@@ -402,6 +403,10 @@ def filter_builds(manifests, distro=None, arch=None, skip_ostree_pull=True):
 
         if check_for_build(manifest_fname, build_info_dir, errors):
             build_requests.append(build_request)
+        else:
+            # The specific build configuration exists in the cache and wont be rebuilt. Update the file timestamps to
+            # keep them fresh in the cache.
+            touch_s3(distro, arch, manifest_id)
 
     print("✅ Config filtering done!\n")
     if errors:
@@ -635,3 +640,19 @@ def write_build_info(build_path: str, data: Dict):
     info_file_path = os.path.join(build_path, "info.json")
     with open(info_file_path, "w", encoding="utf-8") as info_fp:
         json.dump(data, info_fp, indent=2)
+
+
+def touch_s3(distro, arch, manifest_id):
+    """
+    Update the timestamps of a path in S3 by adding a metadata field to each file recursively. This can be used to
+    "freshen up" relevant files in the build cache so that images that are still current but haven't been updated in a
+    while don't get garbage collected.
+    """
+    runner_distro = get_host_distro()
+    osbuild_ref = get_osbuild_commit(runner_distro)
+    s3url = gen_build_info_s3_dir_path(distro, arch, manifest_id, osbuild_ref, runner_distro)
+    # the exact key and value don't matter, but let's add the current datetime to make it a bit more meaningful
+    now = str(datetime.now())
+    print(f"⌚ Updating timestamps for {s3url} ({now})")
+    cmd = ["aws", "s3", "cp", "--recursive", "--metadata", f"touched={now}", s3url, s3url]
+    runcmd_nc(cmd)
