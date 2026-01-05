@@ -306,8 +306,9 @@ def check_for_build(manifest_fname, build_info_dir, errors):
         errors.append((
             f"failed to parse {build_info_path}\n"
             f"{jd.msg}\n"
-            "  Adding config to build pipeline.\n"
         ))
+        print("  Adding config to build pipeline.")
+        return True
 
     commit = dl_config["commit"]
     pr = dl_config.get("pr")
