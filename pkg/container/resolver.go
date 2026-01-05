@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 )
 
 type resolveResult struct {
@@ -23,8 +24,6 @@ type Resolver interface {
 type asyncResolver struct {
 	jobs  int
 	queue chan resolveResult
-
-	ctx context.Context
 
 	Arch         string
 	AuthFilePath string
@@ -45,7 +44,6 @@ func NewResolver(arch string) *asyncResolver {
 	// NOTE: this should return the Resolver interface, but osbuild-composer
 	// sets the AuthFilePath and for now we don't want to break the API.
 	return &asyncResolver{
-		ctx:   context.Background(),
 		queue: make(chan resolveResult, 2),
 		Arch:  arch,
 
@@ -69,7 +67,9 @@ func (r *asyncResolver) Add(spec SourceSpec) {
 	}
 
 	go func() {
-		spec, err := client.Resolve(r.ctx, spec.Name, spec.Local)
+		ctx, cancelTimeout := context.WithTimeout(context.Background(), 60*time.Second)
+		defer cancelTimeout()
+		spec, err := client.Resolve(ctx, spec.Name, spec.Local)
 		if err != nil {
 			err = fmt.Errorf("'%s': %w", spec.Source, err)
 		}
@@ -194,7 +194,9 @@ func (r *blockingResolver) Resolve(source SourceSpec) (Spec, error) {
 		client.SetAuthFilePath(r.AuthFilePath)
 	}
 
-	return client.Resolve(context.TODO(), source.Name, source.Local)
+	ctx, cancelTimeout := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancelTimeout()
+	return client.Resolve(ctx, source.Name, source.Local)
 }
 
 // ResolveAll calls [Resolve] with each container source spec in the map and
