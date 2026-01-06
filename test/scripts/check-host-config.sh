@@ -340,6 +340,12 @@ if (( $# > 0 )); then
     fi
 
     config="$1"
+
+    if [[ -e "${config}" ]]; then
+        echo "Error: config file does not exist"
+        exit 1
+    fi
+
     if jq -e .blueprint.customizations.openscap "${config}"; then
         get_oscap_score "${config}"
     fi
