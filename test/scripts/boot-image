@@ -18,7 +18,6 @@ import imgtestlib as testlib
 from vmtest.util import get_free_port
 from vmtest.vm import QEMU
 
-
 BASE_TEST_SCRIPT = "test/scripts/check-host-config.sh"
 WSL_TEST_SCRIPT = "test/scripts/wsl-entrypoint.bat"
 
@@ -476,17 +475,17 @@ def main():
     desc = "Boot an image in the cloud environment it is built for and validate the configuration"
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument("image_search_path", type=str, help="path to search for image file")
+    parser.add_argument("config", type=str, help="path to build configuration")
     parser.add_argument(
         "--keep-booted", action="store_true",
         help="keep the image booted (only qcow2 supported right now)")
 
     args = parser.parse_args()
     search_path = args.image_search_path
+    build_config_path = args.config
 
     image_path = testlib.find_image_file(search_path)
     build_info = testlib.read_build_info(search_path)
-    build_config_name = build_info["config"]
-    build_config_path = f"test/configs/{build_config_name}.json"
     distro = build_info["distro"]
     arch = build_info["arch"]
     image_type = build_info["image-type"]
