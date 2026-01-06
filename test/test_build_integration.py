@@ -9,6 +9,7 @@ import scripts.imgtestlib as testlib
 if os.getuid() != 0:
     pytest.skip(reason="need root to build the images", allow_module_level=True)
 
+
 def _test_cases():
     # XXX: make testcase a data class
     all_test_cases = subprocess.check_output([
@@ -20,7 +21,7 @@ def _test_cases():
     ], text=True).strip().split("\n")
     boot_tests = set()
     for tcase in all_test_cases:
-        distro, arch, image_type, config_name = tcase.split(",")
+        _, arch, image_type, _ = tcase.split(",")
         if not (image_type in testlib.CAN_BOOT_TEST["*"] or image_type in testlib.CAN_BOOT_TEST.get(arch, [])):
             continue
         # XXX: we need to filter further here, i.e. not all qemu tests can be run currently, e.g.
@@ -37,8 +38,9 @@ def _test_cases():
 
 
 @pytest.mark.images_integration
-@pytest.mark.parametrize("distro,arch,image_type,config_name", [tcase.split(",") for tcase in _test_cases()["build_only"]])
-def test_build_only(distro,arch,image_type,config_name):
+@pytest.mark.parametrize("distro,arch,image_type,config_name",
+                         [tcase.split(",") for tcase in _test_cases()["build_only"]])
+def test_build_only(distro, arch, image_type, config_name):
     config_path = f"test/configs/{config_name}.json"
     subprocess.check_call(
         ["./test/scripts/build-image", distro, image_type, config_path])
@@ -48,8 +50,9 @@ def test_build_only(distro,arch,image_type,config_name):
 
 
 @pytest.mark.images_integration
-@pytest.mark.parametrize("distro,arch,image_type,config_name", [tcase.split(",") for tcase in _test_cases()["build_and_boot"]])
-def test_build_and_boot(distro,arch,image_type,config_name):
+@pytest.mark.parametrize("distro,arch,image_type,config_name",
+                         [tcase.split(",") for tcase in _test_cases()["build_and_boot"]])
+def test_build_and_boot(distro, arch, image_type, config_name):
     config_path = f"test/configs/{config_name}.json"
     subprocess.check_call(
         ["./test/scripts/build-image", distro, image_type, config_path])
