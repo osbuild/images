@@ -134,6 +134,12 @@ class CannotRunQemuTest(Exception):
         self.skip_reason = skip_reason
 
 
+class MissingBootImplementation(Exception):
+    def __init__(self, skip_reason):
+        super().__init__(skip_reason)
+        self.skip_reason = skip_reason
+
+
 def ensure_can_run_qemu_test(image_path, config_file):
     """
     Check if the given image_path, config_file is capable of running a
@@ -535,6 +541,10 @@ def main():
     arch = build_info["arch"]
     image_type = build_info["image-type"]
 
+    if not testlib.can_boot_test(image_type, arch):
+        print(f"{image_type} boot tests are not supported yet")
+        return
+
     print(f"Testing image at {image_path}")
     bib_image_id = ""
     # Keep test/scripts/imagetestlib.py:CAN_BOOT_TEST in sync as it
@@ -580,8 +590,7 @@ def main():
             boot_wsl(distro, arch, image_path, build_config_path)
         case _:
             # skip
-            print(f"{image_type} boot tests are not supported yet")
-            return
+            raise MissingBootImplementation(f"{arch} {image_type} is missing a boot implementation.")
 
     print("✅ Marking boot successful")
     # amend build info with boot success
