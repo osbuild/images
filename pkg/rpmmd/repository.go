@@ -7,6 +7,8 @@ import (
 	"io"
 	"os"
 	"strings"
+
+	"github.com/osbuild/images/data/repokeys"
 )
 
 // repository is the presentation of a on-disk repository json file
@@ -139,8 +141,7 @@ func LoadRepositoriesFromReader(r io.Reader) (map[string][]RepoConfig, error) {
 	}
 
 	for arch, repos := range reposMap {
-		for idx := range repos {
-			repo := repos[idx]
+		for _, repo := range repos {
 			var keys []string
 			if repo.GPGKey != "" {
 				keys = []string{repo.GPGKey}
@@ -148,6 +149,15 @@ func LoadRepositoriesFromReader(r io.Reader) (map[string][]RepoConfig, error) {
 			if len(repo.GPGKeys) > 0 {
 				keys = append(keys, repo.GPGKeys...)
 			}
+
+			for i, key := range keys {
+				if uri, ok := strings.CutPrefix(key, "mem://repokeys/"); ok {
+					if content, err := repokeys.GPGFS.ReadFile(uri); err == nil {
+						keys[i] = string(content)
+					}
+				}
+			}
+
 			config := RepoConfig{
 				Name:           repo.Name,
 				BaseURLs:       repo.BaseURL,
