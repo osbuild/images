@@ -1,7 +1,5 @@
 import os
-import platform
 import re
-import shutil
 import subprocess
 
 import pytest
@@ -18,6 +16,8 @@ def test_build_boot_cross_arch_smoke(arch):
     if arch == "s390x":
         output = subprocess.check_output(["qemu-s390x-static", "--version"], text=True)
         m = re.match(r'(?m).*version ([0-9]+)\.([0-9]+)\.([0-9]+)', output)
+        if not m:
+            pytest.skip(f"failed to match version string for qemu-user ({output})")
         major, minor, patch = m.group(1, 2, 3)
         if not (int(major) >= 10 and int(minor) >= 1 and int(patch) >= 91):
             pytest.skip("need qemu-user >= 10.2 to run s390x builds")
