@@ -2143,6 +2143,17 @@ image_types:
                 oobe:
                   <<: *wsl_distribution_oobe_config
                   default_name: AlmaLinux-%s
+        "wsl config for rocky":
+          when:
+            distro_name: "rocky"
+          shallow_merge:
+            wsl: &wsl_distribution_config_rocky
+              <<: *wsl_config
+              distribution_config:
+                <<: *wsl_distribution_config
+                oobe:
+                  <<: *wsl_distribution_oobe_config
+                  default_name: Rocky-%s
         "cloud-init config for non-centos":
           when:
             not_distro_name: "centos"
