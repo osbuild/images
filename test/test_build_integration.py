@@ -3,6 +3,7 @@ import platform
 import subprocess
 
 import pytest
+
 import scripts.imgtestlib as testlib
 
 if os.getuid() != 0:
@@ -38,18 +39,20 @@ def _test_cases():
 @pytest.mark.images_integration
 @pytest.mark.parametrize("distro,arch,image_type,config_name", [tcase.split(",") for tcase in _test_cases()["build_only"]])
 def test_build_only(distro,arch,image_type,config_name):
+    config_path = f"test/configs/{config_name}.json"
     subprocess.check_call(
-        ["./test/scripts/build-image", distro, image_type, f"test/configs/{config_name}.json"])
+        ["./test/scripts/build-image", distro, image_type, config_path])
     build_dir = os.path.join("build", testlib.gen_build_name(distro, arch, image_type, config_name))
     subprocess.check_call(
-        ["./test/scripts/boot-image", build_dir])
+        ["./test/scripts/boot-image", build_dir, config_path])
 
 
 @pytest.mark.images_integration
 @pytest.mark.parametrize("distro,arch,image_type,config_name", [tcase.split(",") for tcase in _test_cases()["build_and_boot"]])
 def test_build_and_boot(distro,arch,image_type,config_name):
+    config_path = f"test/configs/{config_name}.json"
     subprocess.check_call(
-        ["./test/scripts/build-image", distro, image_type, f"test/configs/{config_name}.json"])
+        ["./test/scripts/build-image", distro, image_type, config_path])
     build_dir = os.path.join("build", testlib.gen_build_name(distro, arch, image_type, config_name))
     subprocess.check_call(
-        ["./test/scripts/boot-image", build_dir])
+        ["./test/scripts/boot-image", build_dir, config_path])

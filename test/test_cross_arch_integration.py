@@ -5,6 +5,7 @@ import shutil
 import subprocess
 
 import pytest
+
 import scripts.imgtestlib as testlib
 
 if os.getuid() != 0:
@@ -25,8 +26,9 @@ def test_build_boot_cross_arch_smoke(arch):
     distro = "centos-10"
     image_type = "qcow2"
     config_name = "empty"
+    config_path = f"test/configs/{config_name}.json"
     subprocess.check_call(
-        ["./test/scripts/build-image", f"--arch={arch}", distro, image_type, f"test/configs/{config_name}.json"])
+        ["./test/scripts/build-image", f"--arch={arch}", distro, image_type, config_path])
     build_dir = os.path.join("build", testlib.gen_build_name(distro, arch, image_type, config_name))
     subprocess.check_call(
-        ["./test/scripts/boot-image", build_dir])
+        ["./test/scripts/boot-image", build_dir, config_path])
