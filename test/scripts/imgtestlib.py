@@ -292,7 +292,16 @@ def read_manifests(path):
     return manifests
 
 
+def can_boot_test(image_type, arch):
+    return image_type in CAN_BOOT_TEST.get("*", []) + CAN_BOOT_TEST.get(arch, [])
+
+
 def check_for_build(manifest_fname, build_info_dir, errors):
+    """
+    Checks if a manifest was built (and optionally booted) successfully.
+
+    This function returns True if the image needs to be built.
+    """
     build_info_path = os.path.join(build_info_dir, "info.json")
     # rebuild if matching build info is not found
     if not os.path.exists(build_info_path):
@@ -323,7 +332,7 @@ def check_for_build(manifest_fname, build_info_dir, errors):
         print("  No PR/branch info available")
 
     image_type = dl_config["image-type"]
-    if image_type not in CAN_BOOT_TEST.get("*", []) + CAN_BOOT_TEST.get(dl_config["arch"], []):
+    if not can_boot_test(image_type, dl_config["arch"]):
         print(f"  Boot testing for {image_type} is not yet supported")
         return False
 
