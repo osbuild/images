@@ -140,50 +140,6 @@ class MissingBootImplementation(Exception):
         self.skip_reason = skip_reason
 
 
-def ensure_can_run_qemu_test(image_path, config_file):
-    """
-    Check if the given image_path, config_file is capable of running a
-    qemu based test. Will return a bool and a skip_reason.
-    """
-    # keep in sync with imagetestlib.py:CAN_BOOT_TEST
-    manifest_path = pathlib.Path(image_path).parent / "../manifest.json"
-    manifest = json.loads(manifest_path.read_text(encoding="utf8"))
-    # Note that this needs adjustment when we switch to librepo
-    urls = [src["url"] for src in manifest["sources"]["org.osbuild.curl"]["items"].values()]
-    if not any("ssh-server" in url for url in urls):
-        # This can happen e.g. when an image is build with the
-        # "minimal: true" customization.
-        # We could use guestfs to inject keys, see PR#1995
-        raise CannotRunQemuTest("no ssh-server in image")
-    # We need jq in the image many images do not have it
-    # (e.g. centos-9/rhel-9 with releasever config) so skip those too
-    if not any("jq" in url for url in urls):
-        raise CannotRunQemuTest("no jq package in image")
-    # gather more data
-    info_path = pathlib.Path(image_path).parent / "../info.json"
-    info = json.loads(info_path.read_text(encoding="utf8"))
-    config = json.loads(pathlib.Path(config_file).read_text(encoding="utf8"))
-    customizations = config.get("blueprint", {}).get("customizations", {})
-    if customizations.get("fips") and info.get("distro").startswith("fedora"):
-        raise CannotRunQemuTest("fips on fedora is unstable, fails with e.g. dracut: FATAL: FIPS integrity test failed")
-    # network-installer has a bunch of extra constraints
-    if info.get("image-type") in ["network-installer", "everything-network-installer", "server-network-installer"]:
-        # network install needs subscribed content but we cannot provide
-        # that currently
-        if info.get("distro") in ["rhel-10.1", "rhel-10.2"]:
-            raise CannotRunQemuTest(
-                "rhel network-installer tests have incomplete repos in nightly snapshot and won't install")
-        match info.get("distro"):
-            case name if name.startswith("fedora"):
-                raise CannotRunQemuTest(
-                    "fedora network-installer crashes in sshd, "
-                    "see https://bugzilla.redhat.com/show_bug.cgi?id=2415883")
-            case "centos-9":
-                raise CannotRunQemuTest("centos-9 will not start an install and waits on source selection")
-            case name if name.startswith("rhel-9"):
-                raise CannotRunQemuTest("rhel-9 will not start an install and waits on source selection")
-
-
 def qemu_cmd_scp_and_run(vm, cmd, privkey_path):
     # This is similar to what the other runners are doing but
     # it would be nice to find a better way, e.g. create a
@@ -197,7 +153,6 @@ def qemu_cmd_scp_and_run(vm, cmd, privkey_path):
 
 
 def boot_qemu(arch, image_path, config_file, keep_booted=False):
-    ensure_can_run_qemu_test(image_path, config_file)
     cmd = [BASE_TEST_SCRIPT, config_file]
     with contextlib.ExitStack() as cm:
         uncompressed_image_path = cm.enter_context(ensure_uncompressed(image_path))
@@ -218,7 +173,6 @@ def boot_qemu(arch, image_path, config_file, keep_booted=False):
 
 
 def boot_qemu_iso_no_unattended_support(arch, installer_iso_path, config_file):
-    ensure_can_run_qemu_test(installer_iso_path, config_file)
     # this is for ISOs that have no "unattneded" support in their blueprint,
     # manually create one and modify the ISO
     rootpw = "".join(
@@ -277,13 +231,9 @@ def boot_qemu_iso_no_unattended_support(arch, installer_iso_path, config_file):
 
 
 def boot_qemu_iso(arch, installer_iso_path, config_file):
-    ensure_can_run_qemu_test(installer_iso_path, config_file)
     # We can only test the unattended-iso as the other configs require
     # interactive setup of the installer which we do not support in this
     # test-runner.
-    config = json.loads(pathlib.Path(config_file).read_text(encoding="utf8"))
-    if not config.get("blueprint", {}).get("customizations", {}).get("installer", {}).get("unattended"):
-        raise CannotRunQemuTest("only unattended installs are supported")
     with contextlib.ExitStack() as cm:
         # The "unattended-iso" has the CI ssh key, so if we are running
         # in CI we can actually do a real image test. Sadly not locally
@@ -541,37 +491,23 @@ def main():
     arch = build_info["arch"]
     image_type = build_info["image-type"]
 
-    if not testlib.can_boot_test(image_type, arch):
+    config = json.loads(pathlib.Path(build_config_path).read_text(encoding="utf8"))
+    if not testlib.can_boot_test(image_type, testlib.read_manifest(search_path),
+                                 image_type, arch, distro, config.get("blueprint", {})):
         print(f"{image_type} boot tests are not supported yet")
         return
 
     print(f"Testing image at {image_path}")
     bib_image_id = ""
-    # Keep test/scripts/imagetestlib.py:CAN_BOOT_TEST in sync as it
-    # has the same checks again
-    # WARNING: skipping boot tests that are listed under CAN_BOOT_TEST will cause the skipped image configuration to be
-    # rebuilt every CI run.
     match image_type:
         # Not all qcow2 types can be boot-tested, for example `server-qcow2` uses
         # initial-setup and this blocks the boot.
         case "qcow2" | "generic-qcow2" | "cloud-qcow2":
-            try:
-                boot_qemu(arch, image_path, build_config_path, keep_booted=args.keep_booted)
-            except CannotRunQemuTest as e:
-                print(f"WARNING: skipping {image_path}: {e.skip_reason}")
-                return
+            boot_qemu(arch, image_path, build_config_path, keep_booted=args.keep_booted)
         case "image-installer" | "minimal-installer":
-            try:
-                boot_qemu_iso(arch, image_path, build_config_path)
-            except CannotRunQemuTest as e:
-                print(f"WARNING: skipping iso {image_path}: {e.skip_reason}")
-                return
+            boot_qemu_iso(arch, image_path, build_config_path)
         case "network-installer" | "everything-network-installer":
-            try:
-                boot_qemu_iso_no_unattended_support(arch, image_path, build_config_path)
-            except CannotRunQemuTest as e:
-                print(f"WARNING: skipping iso {image_path}: {e.skip_reason}")
-                return
+            boot_qemu_iso_no_unattended_support(arch, image_path, build_config_path)
         case "pxe-tar-xz":
             boot_qemu_pxe(arch, image_path)
         case "ami" | "ec2" | "ec2-ha" | "ec2-sap" | "edge-ami" | "cloud-ec2":

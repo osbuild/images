@@ -33,15 +33,11 @@ CAN_BOOT_TEST = {
         "vhd",
         "cloud-ec2",
     ],
-    # NOTE(akoutsou): Temporarily disabling these because they can be skipped under certain circumstances, based on
-    # specific configs or the presence of specific packages. This causes problems with the cache checks, because the
-    # test is marked as possible to boot here, the boot test is added to pipeline, the test is skipped (and not marked
-    # as boot-success), so the image is built again the next time in order to boot.
-    # "x86_64": [
-    #     "image-installer", "minimal-installer", "network-installer",
-    #     "qcow2", "generic-qcow2", "cloud-qcow2",
-    #     "wsl", "generic-wsl",
-    # ]
+    "x86_64": [
+        "image-installer", "minimal-installer", "network-installer",
+        "qcow2", "generic-qcow2", "cloud-qcow2",
+        "wsl", "generic-wsl",
+    ]
 }
 
 BIB_TYPES = [
@@ -292,11 +288,56 @@ def read_manifests(path):
     return manifests
 
 
-def can_boot_test(image_type, arch):
-    return image_type in CAN_BOOT_TEST.get("*", []) + CAN_BOOT_TEST.get(arch, [])
+# pylint: disable=too-many-return-statements
+def can_boot_test(manifest_fname, manifest_data, image_type, arch, distro, blueprint):
+    if not image_type in CAN_BOOT_TEST.get("*", []) + CAN_BOOT_TEST.get(arch, []):
+        return False
+
+    if image_type in ["image-installer", "minimal-installer"]:
+        if not blueprint.get("customizations", {}).get("installer", {}).get("unattended"):
+            print("  not bootable: only unattended installers are supported")
+            return False
+
+    if image_type in ["network-installer", "everything-network-installer", "server-network-installer"]:
+        if distro in ["rhel-10.1", "rhel-10.2"]:
+            print("  not bootable: rhel network-installer tests have incomplete repos in nightly snapshot"
+                  "and won't install")
+            return False
+        if distro.startswith("fedora"):
+            print("  not bootable: fedora network-installer crashes in sshd,"
+                  "see https://bugzilla.redhat.com/show_bug.cgi?id=2415883")
+            return False
+        if distro == "centos-9":
+            print("  not bootable: centos-9 will not start an install and waits on source selection")
+            return False
+        if distro.startswith("rhel-9"):
+            print("  not bootable: rhel-9 will not start an install and waits on source selection")
+            return False
+
+    if image_type in ["qcow2", "generic-qcow2", "cloud-qcow2", "image-installer", "minimal-installer",
+                      "network-installer", "everything-network-installer"]:
+        if blueprint.get("customizations", {}).get("fips") and distro.startswith("fedora"):
+            print("  not bootable: fips on fedora is unstable, fails with e.g. dracut:"
+                  "FATAL: FIPS integrity test failed")
+            return False
+        # Note that this needs adjustment when we switch to librepo
+        urls = [src["url"] for src in manifest_data["sources"]["org.osbuild.curl"]["items"].values()]
+        if not any("ssh-server" in url for url in urls):
+            # This can happen e.g. when an image is build with the "minimal: true" customization.
+            # We could use guestfs to inject keys, see PR#1995
+            print(f"  not bootable: ssh-server not found in manifest {manifest_fname} ({arch} {image_type})")
+            return False
+        # We need jq in the image many images do not have it
+        # (e.g. centos-9/rhel-9 with releasever config) so skip those too
+        if not any("jq" in url for url in urls):
+            print(f"  not bootable: jq not found in {manifest_fname} ({arch} {image_type})")
+            return False
+
+    return True
 
 
-def check_for_build(manifest_fname, build_info_dir, errors):
+# pylint: disable=too-many-branches
+def check_for_build(manifest_fname, build_request, manifest_data, build_info_dir, errors):
     """
     Checks if a manifest was built (and optionally booted) successfully.
 
@@ -332,7 +373,8 @@ def check_for_build(manifest_fname, build_info_dir, errors):
         print("  No PR/branch info available")
 
     image_type = dl_config["image-type"]
-    if not can_boot_test(image_type, dl_config["arch"]):
+    if not can_boot_test(manifest_fname, manifest_data, build_request["image-type"], build_request["arch"],
+                         build_request["distro"], build_request["config"].get("blueprint", {})):
         print(f"  Boot testing for {image_type} is not yet supported")
         return False
 
@@ -410,7 +452,7 @@ def filter_builds(manifests, distro=None, arch=None, skip_ostree_pull=True):
             gen_build_info_dir_path_prefix(distro, arch, manifest_id)
         )
 
-        if check_for_build(manifest_fname, build_info_dir, errors):
+        if check_for_build(manifest_fname, build_request, data["manifest"], build_info_dir, errors):
             build_requests.append(build_request)
         else:
             # The specific build configuration exists in the cache and wont be rebuilt. Update the file timestamps to
@@ -638,6 +680,15 @@ def read_build_info(build_path: str) -> Dict:
     Read the info.json file from the build directory and return the data as a dictionary.
     """
     info_file_path = os.path.join(build_path, "info.json")
+    with open(info_file_path, encoding="utf-8") as info_fp:
+        return json.load(info_fp)
+
+
+def read_manifest(build_path: str) -> Dict:
+    """
+    Read the manifest.json file from the build directory and return the data as a dictionary.
+    """
+    info_file_path = os.path.join(build_path, "manifest.json")
     with open(info_file_path, encoding="utf-8") as info_fp:
         return json.load(info_fp)
 
