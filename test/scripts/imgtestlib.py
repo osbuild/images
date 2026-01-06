@@ -651,14 +651,12 @@ def write_build_info(build_path: str, data: Dict):
         json.dump(data, info_fp, indent=2)
 
 
-def touch_s3(distro, arch, manifest_id):
+def touch_s3(distro, arch, manifest_id, osbuild_ref=None, runner_distro=None):
     """
     Update the timestamps of a path in S3 by adding a metadata field to each file recursively. This can be used to
     "freshen up" relevant files in the build cache so that images that are still current but haven't been updated in a
     while don't get garbage collected.
     """
-    runner_distro = get_host_distro()
-    osbuild_ref = get_osbuild_commit(runner_distro)
     s3url = gen_build_info_s3_dir_path(distro, arch, manifest_id, osbuild_ref, runner_distro)
     # the exact key and value don't matter, but let's add the current datetime to make it a bit more meaningful
     now = str(datetime.now())
