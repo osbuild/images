@@ -137,7 +137,7 @@ func TestSubscriptionService(t *testing.T) {
 				Insights:      true,
 				Rhc:           false,
 				TemplateUUID:  "template-uuid",
-				Proxy:         "proxy-url",
+				Proxy:         "https://proxy-url",
 				PatchURL:      "https://cert.console.redhat.com/api/patch/v3/",
 			},
 			srvcOpts: nil,
@@ -160,10 +160,11 @@ func TestSubscriptionService(t *testing.T) {
 							Type: osbuild.OneshotServiceType,
 							ExecStart: []string{
 								"/usr/sbin/subscription-manager config --server.hostname 'theserverurl-wi'",
+								"/usr/sbin/subscription-manager config --server.proxy_scheme 'https'",
 								"/usr/sbin/subscription-manager config --server.proxy_hostname 'proxy-url'",
 								`/usr/sbin/subscription-manager register --org="${ORG_ID}" --activationkey="${ACTIVATION_KEY}" --baseurl 'thebaseurl-wi'`,
 								"/usr/bin/insights-client --register", // added when insights is enabled
-								"curl -v --retry 5 --cert /etc/pki/consumer/cert.pem --key /etc/pki/consumer/key.pem -X PATCH 'https://cert.console.redhat.com/api/patch/v3/templates/template-uuid/subscribed-systems' --proxy 'proxy-url'",
+								"curl -v --retry 5 --cert /etc/pki/consumer/cert.pem --key /etc/pki/consumer/key.pem -X PATCH 'https://cert.console.redhat.com/api/patch/v3/templates/template-uuid/subscribed-systems' --proxy 'https://proxy-url'",
 								"/usr/sbin/subscription-manager refresh",
 								"/usr/bin/rm '" + subkeyFilepath + "'",
 							},
@@ -387,7 +388,7 @@ func TestSubscriptionService(t *testing.T) {
 				Rhc:           true,
 				TemplateName:  "template-name",
 				TemplateUUID:  "template-uuid",
-				Proxy:         "proxy-url",
+				Proxy:         "proxy-url:8080",
 				PatchURL:      "https://cert.console.redhat.com/api/patch/v3/",
 			},
 			srvcOpts: &subscriptionServiceOptions{
@@ -412,10 +413,12 @@ func TestSubscriptionService(t *testing.T) {
 							Type: osbuild.OneshotServiceType,
 							ExecStart: []string{
 								"/usr/sbin/subscription-manager config --server.hostname 'theserverurl-wir'",
+								"/usr/sbin/subscription-manager config --server.proxy_scheme 'http'",
 								"/usr/sbin/subscription-manager config --server.proxy_hostname 'proxy-url'",
+								"/usr/sbin/subscription-manager config --server.proxy_port '8080'",
 								`/usr/bin/rhc connect --organization="${ORG_ID}" --activation-key="${ACTIVATION_KEY}"`,
 								"/usr/sbin/semanage permissive --add rhcd_t", // added when rhc is enabled
-								"curl -v --retry 5 --cert /etc/pki/consumer/cert.pem --key /etc/pki/consumer/key.pem -X PATCH 'https://cert.console.redhat.com/api/patch/v3/templates/template-uuid/subscribed-systems' --proxy 'proxy-url'",
+								"curl -v --retry 5 --cert /etc/pki/consumer/cert.pem --key /etc/pki/consumer/key.pem -X PATCH 'https://cert.console.redhat.com/api/patch/v3/templates/template-uuid/subscribed-systems' --proxy 'proxy-url:8080'",
 								"/usr/sbin/subscription-manager refresh",
 								"/usr/bin/rm '" + subkeyFilepath + "'",
 							},
@@ -597,7 +600,7 @@ func TestSubscriptionService(t *testing.T) {
 				BaseUrl:       "thebaseurl-pp",
 				Insights:      false,
 				Rhc:           false,
-				Proxy:         "proxy-url:8080",
+				Proxy:         "http://proxy-url:8080",
 			},
 			srvcOpts: nil,
 			expectedStage: &osbuild.Stage{
@@ -619,6 +622,7 @@ func TestSubscriptionService(t *testing.T) {
 							Type: osbuild.OneshotServiceType,
 							ExecStart: []string{
 								"/usr/sbin/subscription-manager config --server.hostname 'theserverurl-pp'",
+								"/usr/sbin/subscription-manager config --server.proxy_scheme 'http'",
 								"/usr/sbin/subscription-manager config --server.proxy_hostname 'proxy-url'",
 								"/usr/sbin/subscription-manager config --server.proxy_port '8080'",
 								"/usr/sbin/subscription-manager register --org=\"${ORG_ID}\" --activationkey=\"${ACTIVATION_KEY}\" --baseurl 'thebaseurl-pp'",
