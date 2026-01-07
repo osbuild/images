@@ -144,6 +144,7 @@ def qemu_cmd_scp_and_run(vm, cmd, privkey_path):
     # it would be nice to find a better way, e.g. create a
     # bundle or compsoe a single script with the config
     # build-in/appended
+    print("qemu_scp_and_run", [(a, os.path.exists(a), os.path.abspath(a)) for a in cmd], os.getcwd())
     for arg in cmd:
         if os.path.exists(arg):
             vm.scp(arg, "/tmp/", user="osbuild", keyfile=privkey_path)
