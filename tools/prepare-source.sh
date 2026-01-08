@@ -18,4 +18,8 @@ $GO_BINARY mod tidy
 # Ensure the code is formatted correctly.
 $GO_BINARY fmt ./...
 
+# Generate the GitLab CI configs
 ./test/scripts/generate-gitlab-ci ./.gitlab-ci.yml
+
+# Reformat the repository YAML files
+./tools/reformat-repos
