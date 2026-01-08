@@ -1,0 +1,369 @@
+---
+x86_64:
+  - name: AppStream
+    baseurl: https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/AppStream/x86_64/os/
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+      Version: GnuPG v2.0.22 (GNU/Linux)
+
+      mQINBFzMWxkBEADHrskpBgN9OphmhRkc7P/YrsAGSvvl7kfu+e9KAaU6f5MeAVyn
+      rIoM43syyGkgFyWgjZM8/rur7EMPY2yt+2q/1ZfLVCRn9856JqTIq0XRpDUe4nKQ
+      8BlA7wDVZoSDxUZkSuTIyExbDf0cpw89Tcf62Mxmi8jh74vRlPy1PgjWL5494b3X
+      5fxDidH4bqPZyxTBqPrUFuo+EfUVEqiGF94Ppq6ZUvrBGOVo1V1+Ifm9CGEK597c
+      aevcGc1RFlgxIgN84UpuDjPR9/zSndwJ7XsXYvZ6HXcKGagRKsfYDWGPkA5cOL/e
+      f+yObOnC43yPUvpggQ4KaNJ6+SMTZOKikM8yciyBwLqwrjo8FlJgkv8Vfag/2UR7
+      JINbyqHHoLUhQ2m6HXSwK4YjtwidF9EUkaBZWrrskYR3IRZLXlWqeOi/+ezYOW0m
+      vufrkcvsh+TKlVVnuwmEPjJ8mwUSpsLdfPJo1DHsd8FS03SCKPaXFdD7ePfEjiYk
+      nHpQaKE01aWVSLUiygn7F7rYemGqV9Vt7tBw5pz0vqSC72a5E3zFzIIuHx6aANry
+      Gat3aqU3qtBXOrA/dPkX9cWE+UR5wo/A2UdKJZLlGhM2WRJ3ltmGT48V9CeS6N9Y
+      m4CKdzvg7EWjlTlFrd/8WJ2KoqOE9leDPeXRPncubJfJ6LLIHyG09h9kKQARAQAB
+      tDpDZW50T1MgKENlbnRPUyBPZmZpY2lhbCBTaWduaW5nIEtleSkgPHNlY3VyaXR5
+      QGNlbnRvcy5vcmc+iQI3BBMBCAAhAhsDBgsJCAcDAgYVCAIJCgsDFgIBAh4BAheA
+      BQJczFsaAAoJEAW1VbOEg8ZdvOgQAMFTGIQokADy5+CynFKjfO7R0VVpJxmYGVr1
+      TjnKaHmjxnJaYqoha9ukGgmLu0r+lJ42Kk6nREk1vlxfRAfiWd00Zkm+K3IMq1/D
+      E0heC2vX8qqjsLJs3jzq0hgNvo9X0uHDaA4J1BHsD8sE5in/f4SivjbngvFovRGU
+      1XLNCgoqpFNcROP18LqKUw8WtqgWdnYBa5i6D5qx+WMRX0NHNwcCMy1lz+sTFxIU
+      9mW6cLsMaacPGD8pUXIVli8P9Vlv3jBk1wFIqRgQPW01ph/3bM7pf9hyM9FAfU4X
+      AFcyb1oYI4/82EkICUe6jeuZrz67dPeLVAlYrGW4hp/825g0fqJHxPDp25GS4rAa
+      4RqyibLzNjSGdXYeLj2NcB/8OqaP+T1hv3JDaqe70QoYa/GIC4rh15NyXVbUP+LG
+      V4vUiL7mb9ynzvF5zYHJbcg4R7dOsiZHrMFwy7FZesQaVrXeJlxRcEj65rpm1ZtZ
+      mwAE1k2LsRkvLyr9hpZkXnMeOKYIPwpdmBjXNVNVbq7097OxZOYPPos+iZKMWfl4
+      UQnMsCVxonZtamdI4qEc3jMkSZPJKgOplGOms5jdY+EdSvsFWEQ0Snd3dChfU7DV
+      o4Rbcy5klwHrvuZIOLaovhyxuRPhP6gV9+gzpTK/7vrvDlFbbZE6s212mDZ13RWB
+      mTfAxz4h
+      =agO/
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+  - name: BaseOS
+    baseurl: https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/BaseOS/x86_64/os/
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+      Version: GnuPG v2.0.22 (GNU/Linux)
+
+      mQINBFzMWxkBEADHrskpBgN9OphmhRkc7P/YrsAGSvvl7kfu+e9KAaU6f5MeAVyn
+      rIoM43syyGkgFyWgjZM8/rur7EMPY2yt+2q/1ZfLVCRn9856JqTIq0XRpDUe4nKQ
+      8BlA7wDVZoSDxUZkSuTIyExbDf0cpw89Tcf62Mxmi8jh74vRlPy1PgjWL5494b3X
+      5fxDidH4bqPZyxTBqPrUFuo+EfUVEqiGF94Ppq6ZUvrBGOVo1V1+Ifm9CGEK597c
+      aevcGc1RFlgxIgN84UpuDjPR9/zSndwJ7XsXYvZ6HXcKGagRKsfYDWGPkA5cOL/e
+      f+yObOnC43yPUvpggQ4KaNJ6+SMTZOKikM8yciyBwLqwrjo8FlJgkv8Vfag/2UR7
+      JINbyqHHoLUhQ2m6HXSwK4YjtwidF9EUkaBZWrrskYR3IRZLXlWqeOi/+ezYOW0m
+      vufrkcvsh+TKlVVnuwmEPjJ8mwUSpsLdfPJo1DHsd8FS03SCKPaXFdD7ePfEjiYk
+      nHpQaKE01aWVSLUiygn7F7rYemGqV9Vt7tBw5pz0vqSC72a5E3zFzIIuHx6aANry
+      Gat3aqU3qtBXOrA/dPkX9cWE+UR5wo/A2UdKJZLlGhM2WRJ3ltmGT48V9CeS6N9Y
+      m4CKdzvg7EWjlTlFrd/8WJ2KoqOE9leDPeXRPncubJfJ6LLIHyG09h9kKQARAQAB
+      tDpDZW50T1MgKENlbnRPUyBPZmZpY2lhbCBTaWduaW5nIEtleSkgPHNlY3VyaXR5
+      QGNlbnRvcy5vcmc+iQI3BBMBCAAhAhsDBgsJCAcDAgYVCAIJCgsDFgIBAh4BAheA
+      BQJczFsaAAoJEAW1VbOEg8ZdvOgQAMFTGIQokADy5+CynFKjfO7R0VVpJxmYGVr1
+      TjnKaHmjxnJaYqoha9ukGgmLu0r+lJ42Kk6nREk1vlxfRAfiWd00Zkm+K3IMq1/D
+      E0heC2vX8qqjsLJs3jzq0hgNvo9X0uHDaA4J1BHsD8sE5in/f4SivjbngvFovRGU
+      1XLNCgoqpFNcROP18LqKUw8WtqgWdnYBa5i6D5qx+WMRX0NHNwcCMy1lz+sTFxIU
+      9mW6cLsMaacPGD8pUXIVli8P9Vlv3jBk1wFIqRgQPW01ph/3bM7pf9hyM9FAfU4X
+      AFcyb1oYI4/82EkICUe6jeuZrz67dPeLVAlYrGW4hp/825g0fqJHxPDp25GS4rAa
+      4RqyibLzNjSGdXYeLj2NcB/8OqaP+T1hv3JDaqe70QoYa/GIC4rh15NyXVbUP+LG
+      V4vUiL7mb9ynzvF5zYHJbcg4R7dOsiZHrMFwy7FZesQaVrXeJlxRcEj65rpm1ZtZ
+      mwAE1k2LsRkvLyr9hpZkXnMeOKYIPwpdmBjXNVNVbq7097OxZOYPPos+iZKMWfl4
+      UQnMsCVxonZtamdI4qEc3jMkSZPJKgOplGOms5jdY+EdSvsFWEQ0Snd3dChfU7DV
+      o4Rbcy5klwHrvuZIOLaovhyxuRPhP6gV9+gzpTK/7vrvDlFbbZE6s212mDZ13RWB
+      mTfAxz4h
+      =agO/
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+  - name: RT
+    baseurl: https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/RT/x86_64/os/
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+      Version: GnuPG v2.0.22 (GNU/Linux)
+
+      mQINBFzMWxkBEADHrskpBgN9OphmhRkc7P/YrsAGSvvl7kfu+e9KAaU6f5MeAVyn
+      rIoM43syyGkgFyWgjZM8/rur7EMPY2yt+2q/1ZfLVCRn9856JqTIq0XRpDUe4nKQ
+      8BlA7wDVZoSDxUZkSuTIyExbDf0cpw89Tcf62Mxmi8jh74vRlPy1PgjWL5494b3X
+      5fxDidH4bqPZyxTBqPrUFuo+EfUVEqiGF94Ppq6ZUvrBGOVo1V1+Ifm9CGEK597c
+      aevcGc1RFlgxIgN84UpuDjPR9/zSndwJ7XsXYvZ6HXcKGagRKsfYDWGPkA5cOL/e
+      f+yObOnC43yPUvpggQ4KaNJ6+SMTZOKikM8yciyBwLqwrjo8FlJgkv8Vfag/2UR7
+      JINbyqHHoLUhQ2m6HXSwK4YjtwidF9EUkaBZWrrskYR3IRZLXlWqeOi/+ezYOW0m
+      vufrkcvsh+TKlVVnuwmEPjJ8mwUSpsLdfPJo1DHsd8FS03SCKPaXFdD7ePfEjiYk
+      nHpQaKE01aWVSLUiygn7F7rYemGqV9Vt7tBw5pz0vqSC72a5E3zFzIIuHx6aANry
+      Gat3aqU3qtBXOrA/dPkX9cWE+UR5wo/A2UdKJZLlGhM2WRJ3ltmGT48V9CeS6N9Y
+      m4CKdzvg7EWjlTlFrd/8WJ2KoqOE9leDPeXRPncubJfJ6LLIHyG09h9kKQARAQAB
+      tDpDZW50T1MgKENlbnRPUyBPZmZpY2lhbCBTaWduaW5nIEtleSkgPHNlY3VyaXR5
+      QGNlbnRvcy5vcmc+iQI3BBMBCAAhAhsDBgsJCAcDAgYVCAIJCgsDFgIBAh4BAheA
+      BQJczFsaAAoJEAW1VbOEg8ZdvOgQAMFTGIQokADy5+CynFKjfO7R0VVpJxmYGVr1
+      TjnKaHmjxnJaYqoha9ukGgmLu0r+lJ42Kk6nREk1vlxfRAfiWd00Zkm+K3IMq1/D
+      E0heC2vX8qqjsLJs3jzq0hgNvo9X0uHDaA4J1BHsD8sE5in/f4SivjbngvFovRGU
+      1XLNCgoqpFNcROP18LqKUw8WtqgWdnYBa5i6D5qx+WMRX0NHNwcCMy1lz+sTFxIU
+      9mW6cLsMaacPGD8pUXIVli8P9Vlv3jBk1wFIqRgQPW01ph/3bM7pf9hyM9FAfU4X
+      AFcyb1oYI4/82EkICUe6jeuZrz67dPeLVAlYrGW4hp/825g0fqJHxPDp25GS4rAa
+      4RqyibLzNjSGdXYeLj2NcB/8OqaP+T1hv3JDaqe70QoYa/GIC4rh15NyXVbUP+LG
+      V4vUiL7mb9ynzvF5zYHJbcg4R7dOsiZHrMFwy7FZesQaVrXeJlxRcEj65rpm1ZtZ
+      mwAE1k2LsRkvLyr9hpZkXnMeOKYIPwpdmBjXNVNVbq7097OxZOYPPos+iZKMWfl4
+      UQnMsCVxonZtamdI4qEc3jMkSZPJKgOplGOms5jdY+EdSvsFWEQ0Snd3dChfU7DV
+      o4Rbcy5klwHrvuZIOLaovhyxuRPhP6gV9+gzpTK/7vrvDlFbbZE6s212mDZ13RWB
+      mTfAxz4h
+      =agO/
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+  - name: google-compute-engine
+    baseurl: https://packages.cloud.google.com/yum/repos/google-compute-engine-el10-x86-64-stable
+    gpgkey: |-
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+      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
+      =mYRk
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+    image_type_tags:
+      - gce
+aarch64:
+  - name: AppStream
+    baseurl: https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/AppStream/aarch64/os/
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+      Version: GnuPG v2.0.22 (GNU/Linux)
+
+      mQINBFzMWxkBEADHrskpBgN9OphmhRkc7P/YrsAGSvvl7kfu+e9KAaU6f5MeAVyn
+      rIoM43syyGkgFyWgjZM8/rur7EMPY2yt+2q/1ZfLVCRn9856JqTIq0XRpDUe4nKQ
+      8BlA7wDVZoSDxUZkSuTIyExbDf0cpw89Tcf62Mxmi8jh74vRlPy1PgjWL5494b3X
+      5fxDidH4bqPZyxTBqPrUFuo+EfUVEqiGF94Ppq6ZUvrBGOVo1V1+Ifm9CGEK597c
+      aevcGc1RFlgxIgN84UpuDjPR9/zSndwJ7XsXYvZ6HXcKGagRKsfYDWGPkA5cOL/e
+      f+yObOnC43yPUvpggQ4KaNJ6+SMTZOKikM8yciyBwLqwrjo8FlJgkv8Vfag/2UR7
+      JINbyqHHoLUhQ2m6HXSwK4YjtwidF9EUkaBZWrrskYR3IRZLXlWqeOi/+ezYOW0m
+      vufrkcvsh+TKlVVnuwmEPjJ8mwUSpsLdfPJo1DHsd8FS03SCKPaXFdD7ePfEjiYk
+      nHpQaKE01aWVSLUiygn7F7rYemGqV9Vt7tBw5pz0vqSC72a5E3zFzIIuHx6aANry
+      Gat3aqU3qtBXOrA/dPkX9cWE+UR5wo/A2UdKJZLlGhM2WRJ3ltmGT48V9CeS6N9Y
+      m4CKdzvg7EWjlTlFrd/8WJ2KoqOE9leDPeXRPncubJfJ6LLIHyG09h9kKQARAQAB
+      tDpDZW50T1MgKENlbnRPUyBPZmZpY2lhbCBTaWduaW5nIEtleSkgPHNlY3VyaXR5
+      QGNlbnRvcy5vcmc+iQI3BBMBCAAhAhsDBgsJCAcDAgYVCAIJCgsDFgIBAh4BAheA
+      BQJczFsaAAoJEAW1VbOEg8ZdvOgQAMFTGIQokADy5+CynFKjfO7R0VVpJxmYGVr1
+      TjnKaHmjxnJaYqoha9ukGgmLu0r+lJ42Kk6nREk1vlxfRAfiWd00Zkm+K3IMq1/D
+      E0heC2vX8qqjsLJs3jzq0hgNvo9X0uHDaA4J1BHsD8sE5in/f4SivjbngvFovRGU
+      1XLNCgoqpFNcROP18LqKUw8WtqgWdnYBa5i6D5qx+WMRX0NHNwcCMy1lz+sTFxIU
+      9mW6cLsMaacPGD8pUXIVli8P9Vlv3jBk1wFIqRgQPW01ph/3bM7pf9hyM9FAfU4X
+      AFcyb1oYI4/82EkICUe6jeuZrz67dPeLVAlYrGW4hp/825g0fqJHxPDp25GS4rAa
+      4RqyibLzNjSGdXYeLj2NcB/8OqaP+T1hv3JDaqe70QoYa/GIC4rh15NyXVbUP+LG
+      V4vUiL7mb9ynzvF5zYHJbcg4R7dOsiZHrMFwy7FZesQaVrXeJlxRcEj65rpm1ZtZ
+      mwAE1k2LsRkvLyr9hpZkXnMeOKYIPwpdmBjXNVNVbq7097OxZOYPPos+iZKMWfl4
+      UQnMsCVxonZtamdI4qEc3jMkSZPJKgOplGOms5jdY+EdSvsFWEQ0Snd3dChfU7DV
+      o4Rbcy5klwHrvuZIOLaovhyxuRPhP6gV9+gzpTK/7vrvDlFbbZE6s212mDZ13RWB
+      mTfAxz4h
+      =agO/
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+  - name: BaseOS
+    baseurl: https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/BaseOS/aarch64/os/
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+      Version: GnuPG v2.0.22 (GNU/Linux)
+
+      mQINBFzMWxkBEADHrskpBgN9OphmhRkc7P/YrsAGSvvl7kfu+e9KAaU6f5MeAVyn
+      rIoM43syyGkgFyWgjZM8/rur7EMPY2yt+2q/1ZfLVCRn9856JqTIq0XRpDUe4nKQ
+      8BlA7wDVZoSDxUZkSuTIyExbDf0cpw89Tcf62Mxmi8jh74vRlPy1PgjWL5494b3X
+      5fxDidH4bqPZyxTBqPrUFuo+EfUVEqiGF94Ppq6ZUvrBGOVo1V1+Ifm9CGEK597c
+      aevcGc1RFlgxIgN84UpuDjPR9/zSndwJ7XsXYvZ6HXcKGagRKsfYDWGPkA5cOL/e
+      f+yObOnC43yPUvpggQ4KaNJ6+SMTZOKikM8yciyBwLqwrjo8FlJgkv8Vfag/2UR7
+      JINbyqHHoLUhQ2m6HXSwK4YjtwidF9EUkaBZWrrskYR3IRZLXlWqeOi/+ezYOW0m
+      vufrkcvsh+TKlVVnuwmEPjJ8mwUSpsLdfPJo1DHsd8FS03SCKPaXFdD7ePfEjiYk
+      nHpQaKE01aWVSLUiygn7F7rYemGqV9Vt7tBw5pz0vqSC72a5E3zFzIIuHx6aANry
+      Gat3aqU3qtBXOrA/dPkX9cWE+UR5wo/A2UdKJZLlGhM2WRJ3ltmGT48V9CeS6N9Y
+      m4CKdzvg7EWjlTlFrd/8WJ2KoqOE9leDPeXRPncubJfJ6LLIHyG09h9kKQARAQAB
+      tDpDZW50T1MgKENlbnRPUyBPZmZpY2lhbCBTaWduaW5nIEtleSkgPHNlY3VyaXR5
+      QGNlbnRvcy5vcmc+iQI3BBMBCAAhAhsDBgsJCAcDAgYVCAIJCgsDFgIBAh4BAheA
+      BQJczFsaAAoJEAW1VbOEg8ZdvOgQAMFTGIQokADy5+CynFKjfO7R0VVpJxmYGVr1
+      TjnKaHmjxnJaYqoha9ukGgmLu0r+lJ42Kk6nREk1vlxfRAfiWd00Zkm+K3IMq1/D
+      E0heC2vX8qqjsLJs3jzq0hgNvo9X0uHDaA4J1BHsD8sE5in/f4SivjbngvFovRGU
+      1XLNCgoqpFNcROP18LqKUw8WtqgWdnYBa5i6D5qx+WMRX0NHNwcCMy1lz+sTFxIU
+      9mW6cLsMaacPGD8pUXIVli8P9Vlv3jBk1wFIqRgQPW01ph/3bM7pf9hyM9FAfU4X
+      AFcyb1oYI4/82EkICUe6jeuZrz67dPeLVAlYrGW4hp/825g0fqJHxPDp25GS4rAa
+      4RqyibLzNjSGdXYeLj2NcB/8OqaP+T1hv3JDaqe70QoYa/GIC4rh15NyXVbUP+LG
+      V4vUiL7mb9ynzvF5zYHJbcg4R7dOsiZHrMFwy7FZesQaVrXeJlxRcEj65rpm1ZtZ
+      mwAE1k2LsRkvLyr9hpZkXnMeOKYIPwpdmBjXNVNVbq7097OxZOYPPos+iZKMWfl4
+      UQnMsCVxonZtamdI4qEc3jMkSZPJKgOplGOms5jdY+EdSvsFWEQ0Snd3dChfU7DV
+      o4Rbcy5klwHrvuZIOLaovhyxuRPhP6gV9+gzpTK/7vrvDlFbbZE6s212mDZ13RWB
+      mTfAxz4h
+      =agO/
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+ppc64le:
+  - name: AppStream
+    baseurl: https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/AppStream/ppc64le/os/
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+      Version: GnuPG v2.0.22 (GNU/Linux)
+
+      mQINBFzMWxkBEADHrskpBgN9OphmhRkc7P/YrsAGSvvl7kfu+e9KAaU6f5MeAVyn
+      rIoM43syyGkgFyWgjZM8/rur7EMPY2yt+2q/1ZfLVCRn9856JqTIq0XRpDUe4nKQ
+      8BlA7wDVZoSDxUZkSuTIyExbDf0cpw89Tcf62Mxmi8jh74vRlPy1PgjWL5494b3X
+      5fxDidH4bqPZyxTBqPrUFuo+EfUVEqiGF94Ppq6ZUvrBGOVo1V1+Ifm9CGEK597c
+      aevcGc1RFlgxIgN84UpuDjPR9/zSndwJ7XsXYvZ6HXcKGagRKsfYDWGPkA5cOL/e
+      f+yObOnC43yPUvpggQ4KaNJ6+SMTZOKikM8yciyBwLqwrjo8FlJgkv8Vfag/2UR7
+      JINbyqHHoLUhQ2m6HXSwK4YjtwidF9EUkaBZWrrskYR3IRZLXlWqeOi/+ezYOW0m
+      vufrkcvsh+TKlVVnuwmEPjJ8mwUSpsLdfPJo1DHsd8FS03SCKPaXFdD7ePfEjiYk
+      nHpQaKE01aWVSLUiygn7F7rYemGqV9Vt7tBw5pz0vqSC72a5E3zFzIIuHx6aANry
+      Gat3aqU3qtBXOrA/dPkX9cWE+UR5wo/A2UdKJZLlGhM2WRJ3ltmGT48V9CeS6N9Y
+      m4CKdzvg7EWjlTlFrd/8WJ2KoqOE9leDPeXRPncubJfJ6LLIHyG09h9kKQARAQAB
+      tDpDZW50T1MgKENlbnRPUyBPZmZpY2lhbCBTaWduaW5nIEtleSkgPHNlY3VyaXR5
+      QGNlbnRvcy5vcmc+iQI3BBMBCAAhAhsDBgsJCAcDAgYVCAIJCgsDFgIBAh4BAheA
+      BQJczFsaAAoJEAW1VbOEg8ZdvOgQAMFTGIQokADy5+CynFKjfO7R0VVpJxmYGVr1
+      TjnKaHmjxnJaYqoha9ukGgmLu0r+lJ42Kk6nREk1vlxfRAfiWd00Zkm+K3IMq1/D
+      E0heC2vX8qqjsLJs3jzq0hgNvo9X0uHDaA4J1BHsD8sE5in/f4SivjbngvFovRGU
+      1XLNCgoqpFNcROP18LqKUw8WtqgWdnYBa5i6D5qx+WMRX0NHNwcCMy1lz+sTFxIU
+      9mW6cLsMaacPGD8pUXIVli8P9Vlv3jBk1wFIqRgQPW01ph/3bM7pf9hyM9FAfU4X
+      AFcyb1oYI4/82EkICUe6jeuZrz67dPeLVAlYrGW4hp/825g0fqJHxPDp25GS4rAa
+      4RqyibLzNjSGdXYeLj2NcB/8OqaP+T1hv3JDaqe70QoYa/GIC4rh15NyXVbUP+LG
+      V4vUiL7mb9ynzvF5zYHJbcg4R7dOsiZHrMFwy7FZesQaVrXeJlxRcEj65rpm1ZtZ
+      mwAE1k2LsRkvLyr9hpZkXnMeOKYIPwpdmBjXNVNVbq7097OxZOYPPos+iZKMWfl4
+      UQnMsCVxonZtamdI4qEc3jMkSZPJKgOplGOms5jdY+EdSvsFWEQ0Snd3dChfU7DV
+      o4Rbcy5klwHrvuZIOLaovhyxuRPhP6gV9+gzpTK/7vrvDlFbbZE6s212mDZ13RWB
+      mTfAxz4h
+      =agO/
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+  - name: BaseOS
+    baseurl: https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/BaseOS/ppc64le/os/
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+      Version: GnuPG v2.0.22 (GNU/Linux)
+
+      mQINBFzMWxkBEADHrskpBgN9OphmhRkc7P/YrsAGSvvl7kfu+e9KAaU6f5MeAVyn
+      rIoM43syyGkgFyWgjZM8/rur7EMPY2yt+2q/1ZfLVCRn9856JqTIq0XRpDUe4nKQ
+      8BlA7wDVZoSDxUZkSuTIyExbDf0cpw89Tcf62Mxmi8jh74vRlPy1PgjWL5494b3X
+      5fxDidH4bqPZyxTBqPrUFuo+EfUVEqiGF94Ppq6ZUvrBGOVo1V1+Ifm9CGEK597c
+      aevcGc1RFlgxIgN84UpuDjPR9/zSndwJ7XsXYvZ6HXcKGagRKsfYDWGPkA5cOL/e
+      f+yObOnC43yPUvpggQ4KaNJ6+SMTZOKikM8yciyBwLqwrjo8FlJgkv8Vfag/2UR7
+      JINbyqHHoLUhQ2m6HXSwK4YjtwidF9EUkaBZWrrskYR3IRZLXlWqeOi/+ezYOW0m
+      vufrkcvsh+TKlVVnuwmEPjJ8mwUSpsLdfPJo1DHsd8FS03SCKPaXFdD7ePfEjiYk
+      nHpQaKE01aWVSLUiygn7F7rYemGqV9Vt7tBw5pz0vqSC72a5E3zFzIIuHx6aANry
+      Gat3aqU3qtBXOrA/dPkX9cWE+UR5wo/A2UdKJZLlGhM2WRJ3ltmGT48V9CeS6N9Y
+      m4CKdzvg7EWjlTlFrd/8WJ2KoqOE9leDPeXRPncubJfJ6LLIHyG09h9kKQARAQAB
+      tDpDZW50T1MgKENlbnRPUyBPZmZpY2lhbCBTaWduaW5nIEtleSkgPHNlY3VyaXR5
+      QGNlbnRvcy5vcmc+iQI3BBMBCAAhAhsDBgsJCAcDAgYVCAIJCgsDFgIBAh4BAheA
+      BQJczFsaAAoJEAW1VbOEg8ZdvOgQAMFTGIQokADy5+CynFKjfO7R0VVpJxmYGVr1
+      TjnKaHmjxnJaYqoha9ukGgmLu0r+lJ42Kk6nREk1vlxfRAfiWd00Zkm+K3IMq1/D
+      E0heC2vX8qqjsLJs3jzq0hgNvo9X0uHDaA4J1BHsD8sE5in/f4SivjbngvFovRGU
+      1XLNCgoqpFNcROP18LqKUw8WtqgWdnYBa5i6D5qx+WMRX0NHNwcCMy1lz+sTFxIU
+      9mW6cLsMaacPGD8pUXIVli8P9Vlv3jBk1wFIqRgQPW01ph/3bM7pf9hyM9FAfU4X
+      AFcyb1oYI4/82EkICUe6jeuZrz67dPeLVAlYrGW4hp/825g0fqJHxPDp25GS4rAa
+      4RqyibLzNjSGdXYeLj2NcB/8OqaP+T1hv3JDaqe70QoYa/GIC4rh15NyXVbUP+LG
+      V4vUiL7mb9ynzvF5zYHJbcg4R7dOsiZHrMFwy7FZesQaVrXeJlxRcEj65rpm1ZtZ
+      mwAE1k2LsRkvLyr9hpZkXnMeOKYIPwpdmBjXNVNVbq7097OxZOYPPos+iZKMWfl4
+      UQnMsCVxonZtamdI4qEc3jMkSZPJKgOplGOms5jdY+EdSvsFWEQ0Snd3dChfU7DV
+      o4Rbcy5klwHrvuZIOLaovhyxuRPhP6gV9+gzpTK/7vrvDlFbbZE6s212mDZ13RWB
+      mTfAxz4h
+      =agO/
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+s390x:
+  - name: AppStream
+    baseurl: https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/AppStream/s390x/os/
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+      Version: GnuPG v2.0.22 (GNU/Linux)
+
+      mQINBFzMWxkBEADHrskpBgN9OphmhRkc7P/YrsAGSvvl7kfu+e9KAaU6f5MeAVyn
+      rIoM43syyGkgFyWgjZM8/rur7EMPY2yt+2q/1ZfLVCRn9856JqTIq0XRpDUe4nKQ
+      8BlA7wDVZoSDxUZkSuTIyExbDf0cpw89Tcf62Mxmi8jh74vRlPy1PgjWL5494b3X
+      5fxDidH4bqPZyxTBqPrUFuo+EfUVEqiGF94Ppq6ZUvrBGOVo1V1+Ifm9CGEK597c
+      aevcGc1RFlgxIgN84UpuDjPR9/zSndwJ7XsXYvZ6HXcKGagRKsfYDWGPkA5cOL/e
+      f+yObOnC43yPUvpggQ4KaNJ6+SMTZOKikM8yciyBwLqwrjo8FlJgkv8Vfag/2UR7
+      JINbyqHHoLUhQ2m6HXSwK4YjtwidF9EUkaBZWrrskYR3IRZLXlWqeOi/+ezYOW0m
+      vufrkcvsh+TKlVVnuwmEPjJ8mwUSpsLdfPJo1DHsd8FS03SCKPaXFdD7ePfEjiYk
+      nHpQaKE01aWVSLUiygn7F7rYemGqV9Vt7tBw5pz0vqSC72a5E3zFzIIuHx6aANry
+      Gat3aqU3qtBXOrA/dPkX9cWE+UR5wo/A2UdKJZLlGhM2WRJ3ltmGT48V9CeS6N9Y
+      m4CKdzvg7EWjlTlFrd/8WJ2KoqOE9leDPeXRPncubJfJ6LLIHyG09h9kKQARAQAB
+      tDpDZW50T1MgKENlbnRPUyBPZmZpY2lhbCBTaWduaW5nIEtleSkgPHNlY3VyaXR5
+      QGNlbnRvcy5vcmc+iQI3BBMBCAAhAhsDBgsJCAcDAgYVCAIJCgsDFgIBAh4BAheA
+      BQJczFsaAAoJEAW1VbOEg8ZdvOgQAMFTGIQokADy5+CynFKjfO7R0VVpJxmYGVr1
+      TjnKaHmjxnJaYqoha9ukGgmLu0r+lJ42Kk6nREk1vlxfRAfiWd00Zkm+K3IMq1/D
+      E0heC2vX8qqjsLJs3jzq0hgNvo9X0uHDaA4J1BHsD8sE5in/f4SivjbngvFovRGU
+      1XLNCgoqpFNcROP18LqKUw8WtqgWdnYBa5i6D5qx+WMRX0NHNwcCMy1lz+sTFxIU
+      9mW6cLsMaacPGD8pUXIVli8P9Vlv3jBk1wFIqRgQPW01ph/3bM7pf9hyM9FAfU4X
+      AFcyb1oYI4/82EkICUe6jeuZrz67dPeLVAlYrGW4hp/825g0fqJHxPDp25GS4rAa
+      4RqyibLzNjSGdXYeLj2NcB/8OqaP+T1hv3JDaqe70QoYa/GIC4rh15NyXVbUP+LG
+      V4vUiL7mb9ynzvF5zYHJbcg4R7dOsiZHrMFwy7FZesQaVrXeJlxRcEj65rpm1ZtZ
+      mwAE1k2LsRkvLyr9hpZkXnMeOKYIPwpdmBjXNVNVbq7097OxZOYPPos+iZKMWfl4
+      UQnMsCVxonZtamdI4qEc3jMkSZPJKgOplGOms5jdY+EdSvsFWEQ0Snd3dChfU7DV
+      o4Rbcy5klwHrvuZIOLaovhyxuRPhP6gV9+gzpTK/7vrvDlFbbZE6s212mDZ13RWB
+      mTfAxz4h
+      =agO/
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+  - name: BaseOS
+    baseurl: https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/BaseOS/s390x/os/
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+      Version: GnuPG v2.0.22 (GNU/Linux)
+
+      mQINBFzMWxkBEADHrskpBgN9OphmhRkc7P/YrsAGSvvl7kfu+e9KAaU6f5MeAVyn
+      rIoM43syyGkgFyWgjZM8/rur7EMPY2yt+2q/1ZfLVCRn9856JqTIq0XRpDUe4nKQ
+      8BlA7wDVZoSDxUZkSuTIyExbDf0cpw89Tcf62Mxmi8jh74vRlPy1PgjWL5494b3X
+      5fxDidH4bqPZyxTBqPrUFuo+EfUVEqiGF94Ppq6ZUvrBGOVo1V1+Ifm9CGEK597c
+      aevcGc1RFlgxIgN84UpuDjPR9/zSndwJ7XsXYvZ6HXcKGagRKsfYDWGPkA5cOL/e
+      f+yObOnC43yPUvpggQ4KaNJ6+SMTZOKikM8yciyBwLqwrjo8FlJgkv8Vfag/2UR7
+      JINbyqHHoLUhQ2m6HXSwK4YjtwidF9EUkaBZWrrskYR3IRZLXlWqeOi/+ezYOW0m
+      vufrkcvsh+TKlVVnuwmEPjJ8mwUSpsLdfPJo1DHsd8FS03SCKPaXFdD7ePfEjiYk
+      nHpQaKE01aWVSLUiygn7F7rYemGqV9Vt7tBw5pz0vqSC72a5E3zFzIIuHx6aANry
+      Gat3aqU3qtBXOrA/dPkX9cWE+UR5wo/A2UdKJZLlGhM2WRJ3ltmGT48V9CeS6N9Y
+      m4CKdzvg7EWjlTlFrd/8WJ2KoqOE9leDPeXRPncubJfJ6LLIHyG09h9kKQARAQAB
+      tDpDZW50T1MgKENlbnRPUyBPZmZpY2lhbCBTaWduaW5nIEtleSkgPHNlY3VyaXR5
+      QGNlbnRvcy5vcmc+iQI3BBMBCAAhAhsDBgsJCAcDAgYVCAIJCgsDFgIBAh4BAheA
+      BQJczFsaAAoJEAW1VbOEg8ZdvOgQAMFTGIQokADy5+CynFKjfO7R0VVpJxmYGVr1
+      TjnKaHmjxnJaYqoha9ukGgmLu0r+lJ42Kk6nREk1vlxfRAfiWd00Zkm+K3IMq1/D
+      E0heC2vX8qqjsLJs3jzq0hgNvo9X0uHDaA4J1BHsD8sE5in/f4SivjbngvFovRGU
+      1XLNCgoqpFNcROP18LqKUw8WtqgWdnYBa5i6D5qx+WMRX0NHNwcCMy1lz+sTFxIU
+      9mW6cLsMaacPGD8pUXIVli8P9Vlv3jBk1wFIqRgQPW01ph/3bM7pf9hyM9FAfU4X
+      AFcyb1oYI4/82EkICUe6jeuZrz67dPeLVAlYrGW4hp/825g0fqJHxPDp25GS4rAa
+      4RqyibLzNjSGdXYeLj2NcB/8OqaP+T1hv3JDaqe70QoYa/GIC4rh15NyXVbUP+LG
+      V4vUiL7mb9ynzvF5zYHJbcg4R7dOsiZHrMFwy7FZesQaVrXeJlxRcEj65rpm1ZtZ
+      mwAE1k2LsRkvLyr9hpZkXnMeOKYIPwpdmBjXNVNVbq7097OxZOYPPos+iZKMWfl4
+      UQnMsCVxonZtamdI4qEc3jMkSZPJKgOplGOms5jdY+EdSvsFWEQ0Snd3dChfU7DV
+      o4Rbcy5klwHrvuZIOLaovhyxuRPhP6gV9+gzpTK/7vrvDlFbbZE6s212mDZ13RWB
+      mTfAxz4h
+      =agO/
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true

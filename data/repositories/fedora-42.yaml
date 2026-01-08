@@ -1,0 +1,292 @@
+---
+x86_64:
+  - name: fedora
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+      mQINBGXKg9EBEACvsAjRcllcH6mVReU/0hi5YnwqulP7gNgUM4jYPiqucF51g0oW
+      MbFk0VjDn3QXjrwLNLtj4oxsU+E6OW0jl1732qvjUJ9geEZBuidyFZgq0CCn9K8d
+      661dPDjN/DzWWogFhnDySFHRLdh6dYCuu75/HKSIVfCud2IFCvT7Bhk4AOpxv4c7
+      mmX874LFgi49jkAYC0M6UbJ9o3KSCndipf/k0ra2g9dGacqlPfn3PMiTszPDr99d
+      o4qZ5dVZYC6Sna8GjNhN7b/2xLGQuzdd9LHgPHC/PX7XsvBLu42rqi3q0umJBtjZ
+      CyFxF5Dp0VMwmVfrKFZOHvVsGjPLrxomLU16/EDzIrw6cHikdQKLf4sl0rX0m8j0
+      PNAGOSDmE9YgByiPo12CGMOuAvsDUI0JID4p4WqpBShTBuiIrITn8XVTCOQ+tKq9
+      dE/qI+mm2hnZjJajM2UWfKE0mVH4SDOiSilgKR/h5HuLZqwtYXFExDZsAcxaLfRB
+      KCrIOyJdpV7YIj8PaP89XeycHM2MaIfwdHSx3Pz39zZNzi6vJkLj9SWdQT7lOvZx
+      xTQ3dK0Rcpjx+rGHgihMT4yBd+JO9mZS3ghNGbypYnNn/mohPOAxguXuPuPRj00o
+      C7C3lIEEL/hZXZbN1SuiopZjxbU/x/5lO8n0Un1GCzynObPDvpDLTjsdKQARAQAB
+      tDFGZWRvcmEgKDQyKSA8ZmVkb3JhLTQyLXByaW1hcnlAZmVkb3JhcHJvamVjdC5v
+      cmc+iQJOBBMBCAA4FiEEsPSVBFj2nhFQxsXtyKxJFhBe+UQFAmXKg9ECGw8FCwkI
+      BwIGFQoJCAsCBBYCAwECHgECF4AACgkQyKxJFhBe+US4mQ//e4gIGhA6TJuEqrVP
+      gKtSnDawIj30TGbkXIywECtKCu9N8anTlkU2/XSKGyE3ZDdKDO77O11382Ci1xJg
+      CpdbqKg4G02ecEKT1Dtng37gt55SkhffQ0EeDb3Zl+Pu5qohHQUiMzio4B4q8n0H
+      D+L9klQ3I1rLmymguBRd34jQH/z025GE2SBbCpDnQCChZT7Fq1D/onOQgC6skN6Q
+      E2dvYqOnSlHkkfuVlRRYoLNmynxHKlL6VZkiM7m1zKi7cMEK63mKJQ3jH3Mc9grh
+      +OwBDxOjx5UoYMeYqq7oXyTPKvvf6ssuHtjWM3tNkyi5R1nB+4SHMttrbt2pLMSH
+      Jg6pNXoLAP8ahlvxdgVRjgN/6OMC/DwXnLxippelBXXDyBnwVd8/WohbJDcq7e5t
+      dymZpRsNxzhWSuwbHzeJY1DKtePhbjblShLjxTzLnS4GBPJV5TXpHkZWgQmz2aA0
+      CHV47j37P6kAOEtsJkJUWWz+/Rx1N5Mm5lxvghaAzlTBtwQhRgl9Y8kCTznG40QQ
+      64N2FOrcExUJmujLRISDjM2Ps9MtBlbYs7H4JDziX4jpNyvhVAbEdjbzVfL5oi35
+      l+K/QRtQJnt78qhLpNNB7SdQkNmD8eMeXF7mA/MH6eFM88hF4l6NeKklyMIa5thg
+      LFx0UyEgoLXDBg+thUzby61gnA8=
+      =OCXB
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+    metadata_expire: 6h
+    metalink: https://mirrors.fedoraproject.org/metalink?repo=fedora-42&arch=x86_64
+  - name: updates
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+      mQINBGXKg9EBEACvsAjRcllcH6mVReU/0hi5YnwqulP7gNgUM4jYPiqucF51g0oW
+      MbFk0VjDn3QXjrwLNLtj4oxsU+E6OW0jl1732qvjUJ9geEZBuidyFZgq0CCn9K8d
+      661dPDjN/DzWWogFhnDySFHRLdh6dYCuu75/HKSIVfCud2IFCvT7Bhk4AOpxv4c7
+      mmX874LFgi49jkAYC0M6UbJ9o3KSCndipf/k0ra2g9dGacqlPfn3PMiTszPDr99d
+      o4qZ5dVZYC6Sna8GjNhN7b/2xLGQuzdd9LHgPHC/PX7XsvBLu42rqi3q0umJBtjZ
+      CyFxF5Dp0VMwmVfrKFZOHvVsGjPLrxomLU16/EDzIrw6cHikdQKLf4sl0rX0m8j0
+      PNAGOSDmE9YgByiPo12CGMOuAvsDUI0JID4p4WqpBShTBuiIrITn8XVTCOQ+tKq9
+      dE/qI+mm2hnZjJajM2UWfKE0mVH4SDOiSilgKR/h5HuLZqwtYXFExDZsAcxaLfRB
+      KCrIOyJdpV7YIj8PaP89XeycHM2MaIfwdHSx3Pz39zZNzi6vJkLj9SWdQT7lOvZx
+      xTQ3dK0Rcpjx+rGHgihMT4yBd+JO9mZS3ghNGbypYnNn/mohPOAxguXuPuPRj00o
+      C7C3lIEEL/hZXZbN1SuiopZjxbU/x/5lO8n0Un1GCzynObPDvpDLTjsdKQARAQAB
+      tDFGZWRvcmEgKDQyKSA8ZmVkb3JhLTQyLXByaW1hcnlAZmVkb3JhcHJvamVjdC5v
+      cmc+iQJOBBMBCAA4FiEEsPSVBFj2nhFQxsXtyKxJFhBe+UQFAmXKg9ECGw8FCwkI
+      BwIGFQoJCAsCBBYCAwECHgECF4AACgkQyKxJFhBe+US4mQ//e4gIGhA6TJuEqrVP
+      gKtSnDawIj30TGbkXIywECtKCu9N8anTlkU2/XSKGyE3ZDdKDO77O11382Ci1xJg
+      CpdbqKg4G02ecEKT1Dtng37gt55SkhffQ0EeDb3Zl+Pu5qohHQUiMzio4B4q8n0H
+      D+L9klQ3I1rLmymguBRd34jQH/z025GE2SBbCpDnQCChZT7Fq1D/onOQgC6skN6Q
+      E2dvYqOnSlHkkfuVlRRYoLNmynxHKlL6VZkiM7m1zKi7cMEK63mKJQ3jH3Mc9grh
+      +OwBDxOjx5UoYMeYqq7oXyTPKvvf6ssuHtjWM3tNkyi5R1nB+4SHMttrbt2pLMSH
+      Jg6pNXoLAP8ahlvxdgVRjgN/6OMC/DwXnLxippelBXXDyBnwVd8/WohbJDcq7e5t
+      dymZpRsNxzhWSuwbHzeJY1DKtePhbjblShLjxTzLnS4GBPJV5TXpHkZWgQmz2aA0
+      CHV47j37P6kAOEtsJkJUWWz+/Rx1N5Mm5lxvghaAzlTBtwQhRgl9Y8kCTznG40QQ
+      64N2FOrcExUJmujLRISDjM2Ps9MtBlbYs7H4JDziX4jpNyvhVAbEdjbzVfL5oi35
+      l+K/QRtQJnt78qhLpNNB7SdQkNmD8eMeXF7mA/MH6eFM88hF4l6NeKklyMIa5thg
+      LFx0UyEgoLXDBg+thUzby61gnA8=
+      =OCXB
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+    metalink: https://mirrors.fedoraproject.org/metalink?repo=updates-released-f42&arch=x86_64
+aarch64:
+  - name: fedora
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+      mQINBGXKg9EBEACvsAjRcllcH6mVReU/0hi5YnwqulP7gNgUM4jYPiqucF51g0oW
+      MbFk0VjDn3QXjrwLNLtj4oxsU+E6OW0jl1732qvjUJ9geEZBuidyFZgq0CCn9K8d
+      661dPDjN/DzWWogFhnDySFHRLdh6dYCuu75/HKSIVfCud2IFCvT7Bhk4AOpxv4c7
+      mmX874LFgi49jkAYC0M6UbJ9o3KSCndipf/k0ra2g9dGacqlPfn3PMiTszPDr99d
+      o4qZ5dVZYC6Sna8GjNhN7b/2xLGQuzdd9LHgPHC/PX7XsvBLu42rqi3q0umJBtjZ
+      CyFxF5Dp0VMwmVfrKFZOHvVsGjPLrxomLU16/EDzIrw6cHikdQKLf4sl0rX0m8j0
+      PNAGOSDmE9YgByiPo12CGMOuAvsDUI0JID4p4WqpBShTBuiIrITn8XVTCOQ+tKq9
+      dE/qI+mm2hnZjJajM2UWfKE0mVH4SDOiSilgKR/h5HuLZqwtYXFExDZsAcxaLfRB
+      KCrIOyJdpV7YIj8PaP89XeycHM2MaIfwdHSx3Pz39zZNzi6vJkLj9SWdQT7lOvZx
+      xTQ3dK0Rcpjx+rGHgihMT4yBd+JO9mZS3ghNGbypYnNn/mohPOAxguXuPuPRj00o
+      C7C3lIEEL/hZXZbN1SuiopZjxbU/x/5lO8n0Un1GCzynObPDvpDLTjsdKQARAQAB
+      tDFGZWRvcmEgKDQyKSA8ZmVkb3JhLTQyLXByaW1hcnlAZmVkb3JhcHJvamVjdC5v
+      cmc+iQJOBBMBCAA4FiEEsPSVBFj2nhFQxsXtyKxJFhBe+UQFAmXKg9ECGw8FCwkI
+      BwIGFQoJCAsCBBYCAwECHgECF4AACgkQyKxJFhBe+US4mQ//e4gIGhA6TJuEqrVP
+      gKtSnDawIj30TGbkXIywECtKCu9N8anTlkU2/XSKGyE3ZDdKDO77O11382Ci1xJg
+      CpdbqKg4G02ecEKT1Dtng37gt55SkhffQ0EeDb3Zl+Pu5qohHQUiMzio4B4q8n0H
+      D+L9klQ3I1rLmymguBRd34jQH/z025GE2SBbCpDnQCChZT7Fq1D/onOQgC6skN6Q
+      E2dvYqOnSlHkkfuVlRRYoLNmynxHKlL6VZkiM7m1zKi7cMEK63mKJQ3jH3Mc9grh
+      +OwBDxOjx5UoYMeYqq7oXyTPKvvf6ssuHtjWM3tNkyi5R1nB+4SHMttrbt2pLMSH
+      Jg6pNXoLAP8ahlvxdgVRjgN/6OMC/DwXnLxippelBXXDyBnwVd8/WohbJDcq7e5t
+      dymZpRsNxzhWSuwbHzeJY1DKtePhbjblShLjxTzLnS4GBPJV5TXpHkZWgQmz2aA0
+      CHV47j37P6kAOEtsJkJUWWz+/Rx1N5Mm5lxvghaAzlTBtwQhRgl9Y8kCTznG40QQ
+      64N2FOrcExUJmujLRISDjM2Ps9MtBlbYs7H4JDziX4jpNyvhVAbEdjbzVfL5oi35
+      l+K/QRtQJnt78qhLpNNB7SdQkNmD8eMeXF7mA/MH6eFM88hF4l6NeKklyMIa5thg
+      LFx0UyEgoLXDBg+thUzby61gnA8=
+      =OCXB
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+    metadata_expire: 6h
+    metalink: https://mirrors.fedoraproject.org/metalink?repo=fedora-42&arch=aarch64
+  - name: updates
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+      mQINBGXKg9EBEACvsAjRcllcH6mVReU/0hi5YnwqulP7gNgUM4jYPiqucF51g0oW
+      MbFk0VjDn3QXjrwLNLtj4oxsU+E6OW0jl1732qvjUJ9geEZBuidyFZgq0CCn9K8d
+      661dPDjN/DzWWogFhnDySFHRLdh6dYCuu75/HKSIVfCud2IFCvT7Bhk4AOpxv4c7
+      mmX874LFgi49jkAYC0M6UbJ9o3KSCndipf/k0ra2g9dGacqlPfn3PMiTszPDr99d
+      o4qZ5dVZYC6Sna8GjNhN7b/2xLGQuzdd9LHgPHC/PX7XsvBLu42rqi3q0umJBtjZ
+      CyFxF5Dp0VMwmVfrKFZOHvVsGjPLrxomLU16/EDzIrw6cHikdQKLf4sl0rX0m8j0
+      PNAGOSDmE9YgByiPo12CGMOuAvsDUI0JID4p4WqpBShTBuiIrITn8XVTCOQ+tKq9
+      dE/qI+mm2hnZjJajM2UWfKE0mVH4SDOiSilgKR/h5HuLZqwtYXFExDZsAcxaLfRB
+      KCrIOyJdpV7YIj8PaP89XeycHM2MaIfwdHSx3Pz39zZNzi6vJkLj9SWdQT7lOvZx
+      xTQ3dK0Rcpjx+rGHgihMT4yBd+JO9mZS3ghNGbypYnNn/mohPOAxguXuPuPRj00o
+      C7C3lIEEL/hZXZbN1SuiopZjxbU/x/5lO8n0Un1GCzynObPDvpDLTjsdKQARAQAB
+      tDFGZWRvcmEgKDQyKSA8ZmVkb3JhLTQyLXByaW1hcnlAZmVkb3JhcHJvamVjdC5v
+      cmc+iQJOBBMBCAA4FiEEsPSVBFj2nhFQxsXtyKxJFhBe+UQFAmXKg9ECGw8FCwkI
+      BwIGFQoJCAsCBBYCAwECHgECF4AACgkQyKxJFhBe+US4mQ//e4gIGhA6TJuEqrVP
+      gKtSnDawIj30TGbkXIywECtKCu9N8anTlkU2/XSKGyE3ZDdKDO77O11382Ci1xJg
+      CpdbqKg4G02ecEKT1Dtng37gt55SkhffQ0EeDb3Zl+Pu5qohHQUiMzio4B4q8n0H
+      D+L9klQ3I1rLmymguBRd34jQH/z025GE2SBbCpDnQCChZT7Fq1D/onOQgC6skN6Q
+      E2dvYqOnSlHkkfuVlRRYoLNmynxHKlL6VZkiM7m1zKi7cMEK63mKJQ3jH3Mc9grh
+      +OwBDxOjx5UoYMeYqq7oXyTPKvvf6ssuHtjWM3tNkyi5R1nB+4SHMttrbt2pLMSH
+      Jg6pNXoLAP8ahlvxdgVRjgN/6OMC/DwXnLxippelBXXDyBnwVd8/WohbJDcq7e5t
+      dymZpRsNxzhWSuwbHzeJY1DKtePhbjblShLjxTzLnS4GBPJV5TXpHkZWgQmz2aA0
+      CHV47j37P6kAOEtsJkJUWWz+/Rx1N5Mm5lxvghaAzlTBtwQhRgl9Y8kCTznG40QQ
+      64N2FOrcExUJmujLRISDjM2Ps9MtBlbYs7H4JDziX4jpNyvhVAbEdjbzVfL5oi35
+      l+K/QRtQJnt78qhLpNNB7SdQkNmD8eMeXF7mA/MH6eFM88hF4l6NeKklyMIa5thg
+      LFx0UyEgoLXDBg+thUzby61gnA8=
+      =OCXB
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+    metalink: https://mirrors.fedoraproject.org/metalink?repo=updates-released-f42&arch=aarch64
+ppc64le:
+  - name: fedora
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+      mQINBGXKg9EBEACvsAjRcllcH6mVReU/0hi5YnwqulP7gNgUM4jYPiqucF51g0oW
+      MbFk0VjDn3QXjrwLNLtj4oxsU+E6OW0jl1732qvjUJ9geEZBuidyFZgq0CCn9K8d
+      661dPDjN/DzWWogFhnDySFHRLdh6dYCuu75/HKSIVfCud2IFCvT7Bhk4AOpxv4c7
+      mmX874LFgi49jkAYC0M6UbJ9o3KSCndipf/k0ra2g9dGacqlPfn3PMiTszPDr99d
+      o4qZ5dVZYC6Sna8GjNhN7b/2xLGQuzdd9LHgPHC/PX7XsvBLu42rqi3q0umJBtjZ
+      CyFxF5Dp0VMwmVfrKFZOHvVsGjPLrxomLU16/EDzIrw6cHikdQKLf4sl0rX0m8j0
+      PNAGOSDmE9YgByiPo12CGMOuAvsDUI0JID4p4WqpBShTBuiIrITn8XVTCOQ+tKq9
+      dE/qI+mm2hnZjJajM2UWfKE0mVH4SDOiSilgKR/h5HuLZqwtYXFExDZsAcxaLfRB
+      KCrIOyJdpV7YIj8PaP89XeycHM2MaIfwdHSx3Pz39zZNzi6vJkLj9SWdQT7lOvZx
+      xTQ3dK0Rcpjx+rGHgihMT4yBd+JO9mZS3ghNGbypYnNn/mohPOAxguXuPuPRj00o
+      C7C3lIEEL/hZXZbN1SuiopZjxbU/x/5lO8n0Un1GCzynObPDvpDLTjsdKQARAQAB
+      tDFGZWRvcmEgKDQyKSA8ZmVkb3JhLTQyLXByaW1hcnlAZmVkb3JhcHJvamVjdC5v
+      cmc+iQJOBBMBCAA4FiEEsPSVBFj2nhFQxsXtyKxJFhBe+UQFAmXKg9ECGw8FCwkI
+      BwIGFQoJCAsCBBYCAwECHgECF4AACgkQyKxJFhBe+US4mQ//e4gIGhA6TJuEqrVP
+      gKtSnDawIj30TGbkXIywECtKCu9N8anTlkU2/XSKGyE3ZDdKDO77O11382Ci1xJg
+      CpdbqKg4G02ecEKT1Dtng37gt55SkhffQ0EeDb3Zl+Pu5qohHQUiMzio4B4q8n0H
+      D+L9klQ3I1rLmymguBRd34jQH/z025GE2SBbCpDnQCChZT7Fq1D/onOQgC6skN6Q
+      E2dvYqOnSlHkkfuVlRRYoLNmynxHKlL6VZkiM7m1zKi7cMEK63mKJQ3jH3Mc9grh
+      +OwBDxOjx5UoYMeYqq7oXyTPKvvf6ssuHtjWM3tNkyi5R1nB+4SHMttrbt2pLMSH
+      Jg6pNXoLAP8ahlvxdgVRjgN/6OMC/DwXnLxippelBXXDyBnwVd8/WohbJDcq7e5t
+      dymZpRsNxzhWSuwbHzeJY1DKtePhbjblShLjxTzLnS4GBPJV5TXpHkZWgQmz2aA0
+      CHV47j37P6kAOEtsJkJUWWz+/Rx1N5Mm5lxvghaAzlTBtwQhRgl9Y8kCTznG40QQ
+      64N2FOrcExUJmujLRISDjM2Ps9MtBlbYs7H4JDziX4jpNyvhVAbEdjbzVfL5oi35
+      l+K/QRtQJnt78qhLpNNB7SdQkNmD8eMeXF7mA/MH6eFM88hF4l6NeKklyMIa5thg
+      LFx0UyEgoLXDBg+thUzby61gnA8=
+      =OCXB
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+    metadata_expire: 6h
+    metalink: https://mirrors.fedoraproject.org/metalink?repo=fedora-42&arch=ppc64le
+  - name: updates
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+      mQINBGXKg9EBEACvsAjRcllcH6mVReU/0hi5YnwqulP7gNgUM4jYPiqucF51g0oW
+      MbFk0VjDn3QXjrwLNLtj4oxsU+E6OW0jl1732qvjUJ9geEZBuidyFZgq0CCn9K8d
+      661dPDjN/DzWWogFhnDySFHRLdh6dYCuu75/HKSIVfCud2IFCvT7Bhk4AOpxv4c7
+      mmX874LFgi49jkAYC0M6UbJ9o3KSCndipf/k0ra2g9dGacqlPfn3PMiTszPDr99d
+      o4qZ5dVZYC6Sna8GjNhN7b/2xLGQuzdd9LHgPHC/PX7XsvBLu42rqi3q0umJBtjZ
+      CyFxF5Dp0VMwmVfrKFZOHvVsGjPLrxomLU16/EDzIrw6cHikdQKLf4sl0rX0m8j0
+      PNAGOSDmE9YgByiPo12CGMOuAvsDUI0JID4p4WqpBShTBuiIrITn8XVTCOQ+tKq9
+      dE/qI+mm2hnZjJajM2UWfKE0mVH4SDOiSilgKR/h5HuLZqwtYXFExDZsAcxaLfRB
+      KCrIOyJdpV7YIj8PaP89XeycHM2MaIfwdHSx3Pz39zZNzi6vJkLj9SWdQT7lOvZx
+      xTQ3dK0Rcpjx+rGHgihMT4yBd+JO9mZS3ghNGbypYnNn/mohPOAxguXuPuPRj00o
+      C7C3lIEEL/hZXZbN1SuiopZjxbU/x/5lO8n0Un1GCzynObPDvpDLTjsdKQARAQAB
+      tDFGZWRvcmEgKDQyKSA8ZmVkb3JhLTQyLXByaW1hcnlAZmVkb3JhcHJvamVjdC5v
+      cmc+iQJOBBMBCAA4FiEEsPSVBFj2nhFQxsXtyKxJFhBe+UQFAmXKg9ECGw8FCwkI
+      BwIGFQoJCAsCBBYCAwECHgECF4AACgkQyKxJFhBe+US4mQ//e4gIGhA6TJuEqrVP
+      gKtSnDawIj30TGbkXIywECtKCu9N8anTlkU2/XSKGyE3ZDdKDO77O11382Ci1xJg
+      CpdbqKg4G02ecEKT1Dtng37gt55SkhffQ0EeDb3Zl+Pu5qohHQUiMzio4B4q8n0H
+      D+L9klQ3I1rLmymguBRd34jQH/z025GE2SBbCpDnQCChZT7Fq1D/onOQgC6skN6Q
+      E2dvYqOnSlHkkfuVlRRYoLNmynxHKlL6VZkiM7m1zKi7cMEK63mKJQ3jH3Mc9grh
+      +OwBDxOjx5UoYMeYqq7oXyTPKvvf6ssuHtjWM3tNkyi5R1nB+4SHMttrbt2pLMSH
+      Jg6pNXoLAP8ahlvxdgVRjgN/6OMC/DwXnLxippelBXXDyBnwVd8/WohbJDcq7e5t
+      dymZpRsNxzhWSuwbHzeJY1DKtePhbjblShLjxTzLnS4GBPJV5TXpHkZWgQmz2aA0
+      CHV47j37P6kAOEtsJkJUWWz+/Rx1N5Mm5lxvghaAzlTBtwQhRgl9Y8kCTznG40QQ
+      64N2FOrcExUJmujLRISDjM2Ps9MtBlbYs7H4JDziX4jpNyvhVAbEdjbzVfL5oi35
+      l+K/QRtQJnt78qhLpNNB7SdQkNmD8eMeXF7mA/MH6eFM88hF4l6NeKklyMIa5thg
+      LFx0UyEgoLXDBg+thUzby61gnA8=
+      =OCXB
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+    metalink: https://mirrors.fedoraproject.org/metalink?repo=updates-released-f42&arch=ppc64le
+s390x:
+  - name: fedora
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+      mQINBGXKg9EBEACvsAjRcllcH6mVReU/0hi5YnwqulP7gNgUM4jYPiqucF51g0oW
+      MbFk0VjDn3QXjrwLNLtj4oxsU+E6OW0jl1732qvjUJ9geEZBuidyFZgq0CCn9K8d
+      661dPDjN/DzWWogFhnDySFHRLdh6dYCuu75/HKSIVfCud2IFCvT7Bhk4AOpxv4c7
+      mmX874LFgi49jkAYC0M6UbJ9o3KSCndipf/k0ra2g9dGacqlPfn3PMiTszPDr99d
+      o4qZ5dVZYC6Sna8GjNhN7b/2xLGQuzdd9LHgPHC/PX7XsvBLu42rqi3q0umJBtjZ
+      CyFxF5Dp0VMwmVfrKFZOHvVsGjPLrxomLU16/EDzIrw6cHikdQKLf4sl0rX0m8j0
+      PNAGOSDmE9YgByiPo12CGMOuAvsDUI0JID4p4WqpBShTBuiIrITn8XVTCOQ+tKq9
+      dE/qI+mm2hnZjJajM2UWfKE0mVH4SDOiSilgKR/h5HuLZqwtYXFExDZsAcxaLfRB
+      KCrIOyJdpV7YIj8PaP89XeycHM2MaIfwdHSx3Pz39zZNzi6vJkLj9SWdQT7lOvZx
+      xTQ3dK0Rcpjx+rGHgihMT4yBd+JO9mZS3ghNGbypYnNn/mohPOAxguXuPuPRj00o
+      C7C3lIEEL/hZXZbN1SuiopZjxbU/x/5lO8n0Un1GCzynObPDvpDLTjsdKQARAQAB
+      tDFGZWRvcmEgKDQyKSA8ZmVkb3JhLTQyLXByaW1hcnlAZmVkb3JhcHJvamVjdC5v
+      cmc+iQJOBBMBCAA4FiEEsPSVBFj2nhFQxsXtyKxJFhBe+UQFAmXKg9ECGw8FCwkI
+      BwIGFQoJCAsCBBYCAwECHgECF4AACgkQyKxJFhBe+US4mQ//e4gIGhA6TJuEqrVP
+      gKtSnDawIj30TGbkXIywECtKCu9N8anTlkU2/XSKGyE3ZDdKDO77O11382Ci1xJg
+      CpdbqKg4G02ecEKT1Dtng37gt55SkhffQ0EeDb3Zl+Pu5qohHQUiMzio4B4q8n0H
+      D+L9klQ3I1rLmymguBRd34jQH/z025GE2SBbCpDnQCChZT7Fq1D/onOQgC6skN6Q
+      E2dvYqOnSlHkkfuVlRRYoLNmynxHKlL6VZkiM7m1zKi7cMEK63mKJQ3jH3Mc9grh
+      +OwBDxOjx5UoYMeYqq7oXyTPKvvf6ssuHtjWM3tNkyi5R1nB+4SHMttrbt2pLMSH
+      Jg6pNXoLAP8ahlvxdgVRjgN/6OMC/DwXnLxippelBXXDyBnwVd8/WohbJDcq7e5t
+      dymZpRsNxzhWSuwbHzeJY1DKtePhbjblShLjxTzLnS4GBPJV5TXpHkZWgQmz2aA0
+      CHV47j37P6kAOEtsJkJUWWz+/Rx1N5Mm5lxvghaAzlTBtwQhRgl9Y8kCTznG40QQ
+      64N2FOrcExUJmujLRISDjM2Ps9MtBlbYs7H4JDziX4jpNyvhVAbEdjbzVfL5oi35
+      l+K/QRtQJnt78qhLpNNB7SdQkNmD8eMeXF7mA/MH6eFM88hF4l6NeKklyMIa5thg
+      LFx0UyEgoLXDBg+thUzby61gnA8=
+      =OCXB
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+    metadata_expire: 6h
+    metalink: https://mirrors.fedoraproject.org/metalink?repo=fedora-42&arch=s390x
+  - name: updates
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+      mQINBGXKg9EBEACvsAjRcllcH6mVReU/0hi5YnwqulP7gNgUM4jYPiqucF51g0oW
+      MbFk0VjDn3QXjrwLNLtj4oxsU+E6OW0jl1732qvjUJ9geEZBuidyFZgq0CCn9K8d
+      661dPDjN/DzWWogFhnDySFHRLdh6dYCuu75/HKSIVfCud2IFCvT7Bhk4AOpxv4c7
+      mmX874LFgi49jkAYC0M6UbJ9o3KSCndipf/k0ra2g9dGacqlPfn3PMiTszPDr99d
+      o4qZ5dVZYC6Sna8GjNhN7b/2xLGQuzdd9LHgPHC/PX7XsvBLu42rqi3q0umJBtjZ
+      CyFxF5Dp0VMwmVfrKFZOHvVsGjPLrxomLU16/EDzIrw6cHikdQKLf4sl0rX0m8j0
+      PNAGOSDmE9YgByiPo12CGMOuAvsDUI0JID4p4WqpBShTBuiIrITn8XVTCOQ+tKq9
+      dE/qI+mm2hnZjJajM2UWfKE0mVH4SDOiSilgKR/h5HuLZqwtYXFExDZsAcxaLfRB
+      KCrIOyJdpV7YIj8PaP89XeycHM2MaIfwdHSx3Pz39zZNzi6vJkLj9SWdQT7lOvZx
+      xTQ3dK0Rcpjx+rGHgihMT4yBd+JO9mZS3ghNGbypYnNn/mohPOAxguXuPuPRj00o
+      C7C3lIEEL/hZXZbN1SuiopZjxbU/x/5lO8n0Un1GCzynObPDvpDLTjsdKQARAQAB
+      tDFGZWRvcmEgKDQyKSA8ZmVkb3JhLTQyLXByaW1hcnlAZmVkb3JhcHJvamVjdC5v
+      cmc+iQJOBBMBCAA4FiEEsPSVBFj2nhFQxsXtyKxJFhBe+UQFAmXKg9ECGw8FCwkI
+      BwIGFQoJCAsCBBYCAwECHgECF4AACgkQyKxJFhBe+US4mQ//e4gIGhA6TJuEqrVP
+      gKtSnDawIj30TGbkXIywECtKCu9N8anTlkU2/XSKGyE3ZDdKDO77O11382Ci1xJg
+      CpdbqKg4G02ecEKT1Dtng37gt55SkhffQ0EeDb3Zl+Pu5qohHQUiMzio4B4q8n0H
+      D+L9klQ3I1rLmymguBRd34jQH/z025GE2SBbCpDnQCChZT7Fq1D/onOQgC6skN6Q
+      E2dvYqOnSlHkkfuVlRRYoLNmynxHKlL6VZkiM7m1zKi7cMEK63mKJQ3jH3Mc9grh
+      +OwBDxOjx5UoYMeYqq7oXyTPKvvf6ssuHtjWM3tNkyi5R1nB+4SHMttrbt2pLMSH
+      Jg6pNXoLAP8ahlvxdgVRjgN/6OMC/DwXnLxippelBXXDyBnwVd8/WohbJDcq7e5t
+      dymZpRsNxzhWSuwbHzeJY1DKtePhbjblShLjxTzLnS4GBPJV5TXpHkZWgQmz2aA0
+      CHV47j37P6kAOEtsJkJUWWz+/Rx1N5Mm5lxvghaAzlTBtwQhRgl9Y8kCTznG40QQ
+      64N2FOrcExUJmujLRISDjM2Ps9MtBlbYs7H4JDziX4jpNyvhVAbEdjbzVfL5oi35
+      l+K/QRtQJnt78qhLpNNB7SdQkNmD8eMeXF7mA/MH6eFM88hF4l6NeKklyMIa5thg
+      LFx0UyEgoLXDBg+thUzby61gnA8=
+      =OCXB
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+    metalink: https://mirrors.fedoraproject.org/metalink?repo=updates-released-f42&arch=s390x
+riscv64:
+  - name: fedora
+    baseurl: https://riscv-koji.fedoraproject.org/repos-dist/f42/latest/riscv64/
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+      mQINBGTSYSwBEACTHP7OFONk+1B1awJeYToUFMVbYZIjNvj9M7zwf5vzH52FlpXXdsbs1AWh6NUe0zV1J5JjCGiI24Vjacysg7L2zsbgT48vVv3mXrXorjYOzT/cxsAh7PNhEx+OevKzAx3oy0Ok27c11Dz0W4ynwVy80gB6XHI2rd04v74TiC0xQYlxj1Shj6irdLmHMD/NtTCWmCM7MRf91UcC4rk6JOap715UKey2fk1h/wylv0guMP3o+CpGjxDHENkfl/GsWCSYBaHec7o5/qg5RoAkN5NImVI00CqiEO1WHPBaCJalgwbuQCiW006jwVDHJHRoufS85PEKaY9yqd5Fr76kdqCLsf3Ys9yxGVfOTvCaKOa+ElWBo+i6yOtEO6Qp1Qd5spomBJ+FVPjU89lR9aDnvxIVX7X6zu638qV0K3Lb2HKmqiVG6ccJIdxNVXJAekvu7ypwvRzEc0mGgfkZ47flaj7X8SxiebbXhYWdqRBF0rMYc7ppkbCp5NsD+KJilkfeOGb7VK6Rx5vXmySiNCb9GqN51KRl4Z1qllrc/Q1k5CCMt3AUq0hv1fwK3eFGtd4/YgF9LoZ0tW8WFZ6h/zWnRvJ/SDBPhtovoSpxptCd18MWiakwvwW0sxueKFlctdDjW1a/gri3V4RdTOZbr0AqDjGGcYndt/oxMeLxaK9qvs2xIQARAQABtDFGZWRvcmEgKDQxKSA8ZmVkb3JhLTQxLXByaW1hcnlAZmVkb3JhcHJvamVjdC5vcmc+iQJOBBMBCAA4FiEERmzy2LYLwwV6qUU+0GIkYumdatEFAmTSYSwCGw8FCwkIBwIGFQoJCAsCBBYCAwECHgECF4AACgkQ0GIkYumdatFHIQ//bTSVGDvJGmUxgHJwMnGM2G6Rc9PNAKuXbh6t4qsrRKp22pWNnMmqqcGaoiBxKP989a2cJgIVP49SsC4CewaafEYhsitUtKagx6z3F7UObnvQpOz5U5iFcJCvRDtC4FXq+VkMdhT09zMZY4Eyia29bV1B1R7pe7yXh6l3WyVj9AAXUSEBR/OsakaYEMzScLnROBEU1YbWR9iHsc7MrEsqju8tVUh1XAqIqJgLW3VrKs0g0nDVR0rBc8aDhrtVfylwWVl61gHsPFJfAkjjOPgvQgThrhlCWo23EZSk/Hj8YRrnhUbEDnk+Z3Xv5Uyl1kxGRk5dGBnv+7u3CKvVG6sU3tPtna/8rFblfKSMZIPhzTADdsUZ88Fn9pZkfqgPi8LZ4sS8vHtaykZmbfj6t9a2mBYJQ+/pxiH8olzyhKMdNyesLPeQmESgwM/qlJ+b2Hbogwuuzp8o2JMezxIeCAwLoPh+hxMPGnBRklh6Vj5R5z29wIZd6pKCavVRfJ+ON94wuOSEofhBfQNZIIFVjagEbk60iksysxsObfVEHFhtGnZCEgCRC87BfX6tzIIDv23Zs4Bv9gcaaRXTAml2kZXktduHkV9q3hhcoha5FgGSe244C4GsMUkWCsZtuN6tevUPo+n2ZZAA7ikQ768rIz9rPOI8/Ra7qnwSlNIVnkTb9bc=
+      =e2ew
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+  - name: fedora
+    baseurl: https://riscv-koji.fedoraproject.org/repos-dist/f42-staging/latest/src/
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+      mQINBGTSYSwBEACTHP7OFONk+1B1awJeYToUFMVbYZIjNvj9M7zwf5vzH52FlpXXdsbs1AWh6NUe0zV1J5JjCGiI24Vjacysg7L2zsbgT48vVv3mXrXorjYOzT/cxsAh7PNhEx+OevKzAx3oy0Ok27c11Dz0W4ynwVy80gB6XHI2rd04v74TiC0xQYlxj1Shj6irdLmHMD/NtTCWmCM7MRf91UcC4rk6JOap715UKey2fk1h/wylv0guMP3o+CpGjxDHENkfl/GsWCSYBaHec7o5/qg5RoAkN5NImVI00CqiEO1WHPBaCJalgwbuQCiW006jwVDHJHRoufS85PEKaY9yqd5Fr76kdqCLsf3Ys9yxGVfOTvCaKOa+ElWBo+i6yOtEO6Qp1Qd5spomBJ+FVPjU89lR9aDnvxIVX7X6zu638qV0K3Lb2HKmqiVG6ccJIdxNVXJAekvu7ypwvRzEc0mGgfkZ47flaj7X8SxiebbXhYWdqRBF0rMYc7ppkbCp5NsD+KJilkfeOGb7VK6Rx5vXmySiNCb9GqN51KRl4Z1qllrc/Q1k5CCMt3AUq0hv1fwK3eFGtd4/YgF9LoZ0tW8WFZ6h/zWnRvJ/SDBPhtovoSpxptCd18MWiakwvwW0sxueKFlctdDjW1a/gri3V4RdTOZbr0AqDjGGcYndt/oxMeLxaK9qvs2xIQARAQABtDFGZWRvcmEgKDQxKSA8ZmVkb3JhLTQxLXByaW1hcnlAZmVkb3JhcHJvamVjdC5vcmc+iQJOBBMBCAA4FiEERmzy2LYLwwV6qUU+0GIkYumdatEFAmTSYSwCGw8FCwkIBwIGFQoJCAsCBBYCAwECHgECF4AACgkQ0GIkYumdatFHIQ//bTSVGDvJGmUxgHJwMnGM2G6Rc9PNAKuXbh6t4qsrRKp22pWNnMmqqcGaoiBxKP989a2cJgIVP49SsC4CewaafEYhsitUtKagx6z3F7UObnvQpOz5U5iFcJCvRDtC4FXq+VkMdhT09zMZY4Eyia29bV1B1R7pe7yXh6l3WyVj9AAXUSEBR/OsakaYEMzScLnROBEU1YbWR9iHsc7MrEsqju8tVUh1XAqIqJgLW3VrKs0g0nDVR0rBc8aDhrtVfylwWVl61gHsPFJfAkjjOPgvQgThrhlCWo23EZSk/Hj8YRrnhUbEDnk+Z3Xv5Uyl1kxGRk5dGBnv+7u3CKvVG6sU3tPtna/8rFblfKSMZIPhzTADdsUZ88Fn9pZkfqgPi8LZ4sS8vHtaykZmbfj6t9a2mBYJQ+/pxiH8olzyhKMdNyesLPeQmESgwM/qlJ+b2Hbogwuuzp8o2JMezxIeCAwLoPh+hxMPGnBRklh6Vj5R5z29wIZd6pKCavVRfJ+ON94wuOSEofhBfQNZIIFVjagEbk60iksysxsObfVEHFhtGnZCEgCRC87BfX6tzIIDv23Zs4Bv9gcaaRXTAml2kZXktduHkV9q3hhcoha5FgGSe244C4GsMUkWCsZtuN6tevUPo+n2ZZAA7ikQ768rIz9rPOI8/Ra7qnwSlNIVnkTb9bc=
+      =e2ew
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
