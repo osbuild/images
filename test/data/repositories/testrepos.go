@@ -7,7 +7,7 @@ import (
 	"github.com/osbuild/images/pkg/reporegistry"
 )
 
-//go:embed *.json
+//go:embed *.yaml
 var FS embed.FS
 
 func New() (*reporegistry.RepoRegistry, error) {

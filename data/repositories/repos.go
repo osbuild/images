@@ -4,5 +4,5 @@ import (
 	"embed"
 )
 
-//go:embed *.json
+//go:embed *.yaml
 var FS embed.FS
