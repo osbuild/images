@@ -1,0 +1,399 @@
+---
+x86_64:
+  - name: baseos
+    baseurl: https://cdn.redhat.com/content/dist/rhel8/8.10/x86_64/baseos/os
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+      Version: GnuPG v2.0.22 (GNU/Linux)
+
+      mQINBErgSTsBEACh2A4b0O9t+vzC9VrVtL1AKvUWi9OPCjkvR7Xd8DtJxeeMZ5eF
+      0HtzIG58qDRybwUe89FZprB1ffuUKzdE+HcL3FbNWSSOXVjZIersdXyH3NvnLLLF
+      0DNRB2ix3bXG9Rh/RXpFsNxDp2CEMdUvbYCzE79K1EnUTVh1L0Of023FtPSZXX0c
+      u7Pb5DI5lX5YeoXO6RoodrIGYJsVBQWnrWw4xNTconUfNPk0EGZtEnzvH2zyPoJh
+      XGF+Ncu9XwbalnYde10OCvSWAZ5zTCpoLMTvQjWpbCdWXJzCm6G+/hx9upke546H
+      5IjtYm4dTIVTnc3wvDiODgBKRzOl9rEOCIgOuGtDxRxcQkjrC+xvg5Vkqn7vBUyW
+      9pHedOU+PoF3DGOM+dqv+eNKBvh9YF9ugFAQBkcG7viZgvGEMGGUpzNgN7XnS1gj
+      /DPo9mZESOYnKceve2tIC87p2hqjrxOHuI7fkZYeNIcAoa83rBltFXaBDYhWAKS1
+      PcXS1/7JzP0ky7d0L6Xbu/If5kqWQpKwUInXtySRkuraVfuK3Bpa+X1XecWi24JY
+      HVtlNX025xx1ewVzGNCTlWn1skQN2OOoQTV4C8/qFpTW6DTWYurd4+fE0OJFJZQF
+      buhfXYwmRlVOgN5i77NTIJZJQfYFj38c/Iv5vZBPokO6mffrOTv3MHWVgQARAQAB
+      tDNSZWQgSGF0LCBJbmMuIChyZWxlYXNlIGtleSAyKSA8c2VjdXJpdHlAcmVkaGF0
+      LmNvbT6JAjYEEwEIACACGwMGCwkIBwMCBBUCCAMEFgIDAQIeAQIXgAUCSuBJPAAK
+      CRAZni+R/UMdUfIkD/9m3HWv07uJG26R3KBexTo2FFu3rmZs+m2nfW8R3dBX+k0o
+      AOFpgJCsNgKwU81LOPrkMN19G0+Yn/ZTCDD7cIQ7dhYuDyEX97xh4une/EhnnRuh
+      ASzR+1xYbj/HcYZIL9kbslgpebMn+AhxbUTQF/mziug3hLidR9Bzvygq0Q09E11c
+      OZL4BU6J2HqxL+9m2F+tnLdfhL7MsAq9nbmWAOpkbGefc5SXBSq0sWfwoes3X3yD
+      Q8B5Xqr9AxABU7oUB+wRqvY69ZCxi/BhuuJCUxY89ZmwXfkVxeHl1tYfROUwOnJO
+      GYSbI/o41KBK4DkIiDcT7QqvqvCyudnxZdBjL2QU6OrIJvWmKs319qSF9m3mXRSt
+      ZzWtB89Pj5LZ6cdtuHvW9GO4qSoBLmAfB313pGkbgi1DE6tqCLHlA0yQ8zv99OWV
+      cMDGmS7tVTZqfX1xQJ0N3bNORQNtikJC3G+zBCJzIeZleeDlMDQcww00yWU1oE7/
+      To2UmykMGc7o9iggFWR2g0PIcKsA/SXdRKWPqCHG2uKHBvdRTQGupdXQ1sbV+AHw
+      ycyA/9H/mp/NUSNM2cqnBDcZ6GhlHt59zWtEveiuU5fpTbp4GVcFXbW8jStj8j8z
+      1HI3cywZO8+YNPzqyx0JWsidXGkfzkPHyS4jTG84lfu2JG8m/nqLnRSeKpl20Q==
+      =79bX
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+    rhsm: true
+  - name: appstream
+    baseurl: https://cdn.redhat.com/content/dist/rhel8/8.10/x86_64/appstream/os
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+      Version: GnuPG v2.0.22 (GNU/Linux)
+
+      mQINBErgSTsBEACh2A4b0O9t+vzC9VrVtL1AKvUWi9OPCjkvR7Xd8DtJxeeMZ5eF
+      0HtzIG58qDRybwUe89FZprB1ffuUKzdE+HcL3FbNWSSOXVjZIersdXyH3NvnLLLF
+      0DNRB2ix3bXG9Rh/RXpFsNxDp2CEMdUvbYCzE79K1EnUTVh1L0Of023FtPSZXX0c
+      u7Pb5DI5lX5YeoXO6RoodrIGYJsVBQWnrWw4xNTconUfNPk0EGZtEnzvH2zyPoJh
+      XGF+Ncu9XwbalnYde10OCvSWAZ5zTCpoLMTvQjWpbCdWXJzCm6G+/hx9upke546H
+      5IjtYm4dTIVTnc3wvDiODgBKRzOl9rEOCIgOuGtDxRxcQkjrC+xvg5Vkqn7vBUyW
+      9pHedOU+PoF3DGOM+dqv+eNKBvh9YF9ugFAQBkcG7viZgvGEMGGUpzNgN7XnS1gj
+      /DPo9mZESOYnKceve2tIC87p2hqjrxOHuI7fkZYeNIcAoa83rBltFXaBDYhWAKS1
+      PcXS1/7JzP0ky7d0L6Xbu/If5kqWQpKwUInXtySRkuraVfuK3Bpa+X1XecWi24JY
+      HVtlNX025xx1ewVzGNCTlWn1skQN2OOoQTV4C8/qFpTW6DTWYurd4+fE0OJFJZQF
+      buhfXYwmRlVOgN5i77NTIJZJQfYFj38c/Iv5vZBPokO6mffrOTv3MHWVgQARAQAB
+      tDNSZWQgSGF0LCBJbmMuIChyZWxlYXNlIGtleSAyKSA8c2VjdXJpdHlAcmVkaGF0
+      LmNvbT6JAjYEEwEIACACGwMGCwkIBwMCBBUCCAMEFgIDAQIeAQIXgAUCSuBJPAAK
+      CRAZni+R/UMdUfIkD/9m3HWv07uJG26R3KBexTo2FFu3rmZs+m2nfW8R3dBX+k0o
+      AOFpgJCsNgKwU81LOPrkMN19G0+Yn/ZTCDD7cIQ7dhYuDyEX97xh4une/EhnnRuh
+      ASzR+1xYbj/HcYZIL9kbslgpebMn+AhxbUTQF/mziug3hLidR9Bzvygq0Q09E11c
+      OZL4BU6J2HqxL+9m2F+tnLdfhL7MsAq9nbmWAOpkbGefc5SXBSq0sWfwoes3X3yD
+      Q8B5Xqr9AxABU7oUB+wRqvY69ZCxi/BhuuJCUxY89ZmwXfkVxeHl1tYfROUwOnJO
+      GYSbI/o41KBK4DkIiDcT7QqvqvCyudnxZdBjL2QU6OrIJvWmKs319qSF9m3mXRSt
+      ZzWtB89Pj5LZ6cdtuHvW9GO4qSoBLmAfB313pGkbgi1DE6tqCLHlA0yQ8zv99OWV
+      cMDGmS7tVTZqfX1xQJ0N3bNORQNtikJC3G+zBCJzIeZleeDlMDQcww00yWU1oE7/
+      To2UmykMGc7o9iggFWR2g0PIcKsA/SXdRKWPqCHG2uKHBvdRTQGupdXQ1sbV+AHw
+      ycyA/9H/mp/NUSNM2cqnBDcZ6GhlHt59zWtEveiuU5fpTbp4GVcFXbW8jStj8j8z
+      1HI3cywZO8+YNPzqyx0JWsidXGkfzkPHyS4jTG84lfu2JG8m/nqLnRSeKpl20Q==
+      =79bX
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+    rhsm: true
+  - name: google-compute-engine
+    baseurl: https://packages.cloud.google.com/yum/repos/google-compute-engine-el8-x86_64-stable
+    gpgkey: |-
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+      mQENBGImLN4BCADu+BrO0bANr+qt2gwctCBjLZfxeVHVEftImDGSWHmRgDGRLxPA
+      HUcxIcwMLxvHcTsM6RPK90a+olptYNf5/fvYxhuflxNiglOQsdYilPto0n1VvTkv
+      RgsMPv2PTKY0Eyx+R/RPuDvdv7Ff94Arc/hyLWu5dqu092cfyJXjDogi+K9neI/E
+      NXRnel1PHJCQ7yEN4tdivyxuJzL0iH1C7pUpE8WqcoAApiYAYGS+McLIi+KjoQuk
+      AdGdfHiGepw2u+Llx7whYl6QrINM09YMiFHJEJHhQ358SqKLrpH55QtV7u7Gl2iK
+      vdvD0wMSnPm4Gb49tYynoVgDpM04V+eR/oRtABEBAAG0UVJhcHR1cmUgQXV0b21h
+      dGljIFNpZ25pbmcgS2V5IChjbG91ZC1yYXB0dXJlLXNpZ25pbmcta2V5LTIwMjIt
+      MDMtMDctMDhfMDFfMDEucHViKYkBIgQTAQgAFgUCYiYs3gkQVmhE83qpm4ACGwMC
+      GQEAADmtCACvcL/C04RcM1DgxLbRhstLJcppWGBdim/hTRVNs8s1u87qdaIHPju1
+      NJOhLjjphZ+GshM5aQBTXJNY9ZghJfeeu42S2n+Ww/OggYFhALTv+d55TMTdHUBQ
+      sFWGo+qt0Mp7vc/vlq9RHJVY0qXM7h3IL3xbccDUQmChNvbCgiRvvggIn6cLs6g+
+      2UV76iyzm7oZ5yvMGJr0LZp6YTrm9coWKd2gkqeqCMybEorEi4+vJNnwF12zknBT
+      FRmVfZ5U/+YAcTp+cTRlo753yXcKsmo+NyKhsYA6ISwXTLvXHafBkkhSwEo3Qfqk
+      bnIpIHwe0GgeTKiQ87rP4oTrhviB28NAuQENBGImLN4BCACNHRnw790FK7RxnS1F
+      M407gE1nNK3uQ8xOFDCb5jp0cN9UaKCMflIODq+oEq0EYP6u1VuCuF63xZDrsoua
+      R/BiysO5UvmHFMTPBCBtDZZ5ljgUWI98z6O0VLSWRH0uGHBtmawG5JJtkMVDr3sD
+      D2WqgoI/sgLHgQjgy5TH/LegIiM669Bd6HuRqyKWQBlu85x3YvIRDw8+Y2LYEXNy
+      e2LWSlCeiI1dOxwtck4oZaOnmTHSPZbG7Jqv5bbkxJ1hUDlWd2A2o7s3xNtm6I3Y
+      p6HXjW6TD4SucKrvYY+AqHVxQQJm33rOTaoM6IdqSIZMmq2bOYX9mAtzte7Zv06I
+      Irb5ABEBAAGJAR8EGAEIABMFAmImLN4JEFZoRPN6qZuAAhsMAAA1SAgAsMRE8wXF
+      LN+qlaGEYcuj4F5KiP0sPBxyGHw7JWDrADc7KmoSlNTT4NVXn2ntWKnv6dwqaBYV
+      hQAT7gX120JhKGupVGunRi3Se9env+tlZWqA9ieudzIeMv17bf0XIqhB8r54qWTL
+      fNXeX61tdu/2gMvmod60G4zOjgiu2/3oO6WTQaAzcSotfx2fFEwawFQD8kGaRV2b
+      doQU5WRKD2XgAOLdUoEq2tZFMsaQwx2v5hkQ7S/BcmifGvaf3tPgR4YzCiNlGsj0
+      yWiG542VfKPSfvlK9y9028BzH1TpZ8xoIq+av5OQZRboFuDMx2jG2jw3W78vL/WL
+      AcRfS93VTWHOGpkBDQRgPRBZAQgAtYpc0k9MJ7PrsGchAOSFbWHsgLl02kFBAHe9
+      EqiJUKQ3eBMlYsd0gmp0CLvHRvWat/sdvFgW9jrlz/aHNOsmzlnbtpuzeT2NAVE+
+      AjgN+iVf2K8ZjbPufzPmJwx6ab+t44ESDpM181zaOksE7JdsRvXygd00tCDLwZFn
+      cOTxqwTORoIUXHnIKEgAMEW1iVzkRxilcJVerTsUGf8agNPITyZ3jH7DBTzl7IrY
+      BkR6F45VFi1Xie9JpiGLAv6QYJSMAs5nQ/BHt/TK5Ul27l1UIs9/Ih35712KSxJo
+      DVysyNAx/bSoPN9t5AC86miZSxTiyZv7lSV0VBHykty4VWUDMwARAQABtFFSYXB0
+      dXJlIEF1dG9tYXRpYyBTaWduaW5nIEtleSAoY2xvdWQtcmFwdHVyZS1zaWduaW5n
+      LWtleS0yMDIxLTAzLTAxLTA4XzAxXzA5LnB1YimJASgEEwEIABwFAmA9EFkJEP7q
+      kWkwfqBxAhsDBQkDwwqwAhkBAAB7ZQgAsUljKd8kXC5rB4cRg7efZ4UjV4aLlojX
+      j0jHubxE0AP5YYqfWcfzT0QmuKuY6SAwZRGDoOu2Gp87XI0lhkiN+V25auNx+Li0
+      sYeD7Ss2TKPlI/J9lTRzmVwXRnLDg3FN8pxeuK+3k0Hr1HtmlNCjdqOuejtx6xOI
+      rTlSmMJ55JjbJBuOW/W+wyZ7EOlj7M1HPJTYbGtoASOr3y5evL44+z5VsNN9ATP0
+      aDBD6aDgKaIR6LH5zYcSZhNQMcAZDBM8qNpGYT2RofOSw5w2wL40hSqmEj0XipkR
+      Yy5aNwz1R2f3XkJ+p6B24FAoS6NtRXn4ZWTurcrK29vNzFjCMmP2ErkBDQRgPRBZ
+      AQgA3HTvwMNarnWTkWQjS89704kEhXFBWMknHySZ8FLIPH8tJIIPaJRWNBiuYnE+
+      p/7IXNUZSKbqqzkGAWYLSt3UmXzgFxNjdtB1Lwvp6yirl11/o3DP19ZB8cF+bRun
+      wdX8jR9Kf0KrMxH2ERybtGOD6J02CLJSE5xM5TeIVDev5sdfplj5eD+Ee/4evqe0
+      No7WgpRLXXRdHnjn9ejGuUvH33/NLmQiyaFbt5Tlwk9tqAn+6ph9l3XZqhorFEnK
+      sJm5rr99LXUHnZ/vJ4yqNqX6VRdTmuuwlkV3Sk5J7mcm8SPSKXIr8vAiEi9g6NLs
+      4o+0ke5HlX+xtUNyt4idMJ+pgwARAQABiQEfBBgBCAATBQJgPRBZCRD+6pFpMH6g
+      cQIbDAAAP9wH/RSdoRKdteOH84LTVhzlRb9u4bKzu8GBWcKInPZR0peIhMPJiXP9
+      5BF3YPVX/Ztc2xv5GerJZs6X7+8wwHTd4dx09Adcq298V80V9M4TmAG0ElJ3Og3p
+      oQ2aA1rf8FXHin873mwfVUw80QVFc8Qnbr2Ooo9KdgD2aZ06857wj6Ah5H8wTAt2
+      cpNRbnoj0z6D9fTNAT66DMvKg1UpBa9Ll9zzOeIUDephkUIOR1VQcVDWjJ59sjkH
+      MW0P0/3SpaI3aUZr6RsmI3678hMRPKMGJ/C+5ctje+hnGOpIjdQpk5woHa21NEj2
+      nJu128U2JUB8CQhGvR3+P57ogWscFyrnP8uZAQ0EX8l+XgEIANM9Rd2Q27Tntf4/
+      dJNXELMmlTYyf61RqYp1J1VqZsZ5gUg1yn8QbA0aF1vRrUFsezVJZhlvPCHh3r6n
+      eTgAHNUw75Gky79oHH0Tlo6flzwbMeNn9URqF6osuFJRxILMKFJlw3mPPSFMaGYA
+      Zq+Iy3pEzNJ9siFk+PWQPMGIZ3RDB3+s4+cmvi1o+u5Hd5wGOEe2LX8EwZ3+WPQX
+      vNCcKOns+uqCkQ8FPyOj3BfbC87JezBIj8ax9sWJo4l8Odh6eBoSDywX67dY6zRn
+      bRxKvqRLvooelN9rcmNix8e3w0PDzDh7cfw/BDM2JE/21d4wBIpDPd6YyP96TofG
+      OKFj2oUAEQEAAbS6Z0xpbnV4IFJhcHR1cmUgQXV0b21hdGljIFNpZ25pbmcgS2V5
+      ICgvL2RlcG90L2dvb2dsZTMvcHJvZHVjdGlvbi9ib3JnL2Nsb3VkLXJhcHR1cmUv
+      a2V5cy9jbG91ZC1yYXB0dXJlLXB1YmtleXMvY2xvdWQtcmFwdHVyZS1zaWduaW5n
+      LWtleS0yMDIwLTEyLTAzLTE2XzA4XzA1LnB1YikgPGdsaW51eC10ZWFtQGdvb2ds
+      ZS5jb20+iQEoBBMBCAAcBQJfyX5eCRCLV8XCg29L6wIbAwUJA8MKsAIZAQAAQXoI
+      AJp6SujppQkl3eZW2u0s457BXx63WN6nl7Cak6t7D+lqNFUF4htXVrBWfT/wRx6c
+      V6OY/pYVx0Jai4NUhL9CZEVBX03phc3w+LBqWtFXdtMoUEeTBrVwQfgBp8IajRwO
+      8lvw3cmcz9GZvUpIYqvtlemaQu1hWqvoeDOX6yeuUfRfCyXmvdLK+oGC9FhNApmk
+      qqYER3W52J5WgtIX3zyQp40OMVr5DVKNk8Zb5e6SATyQFRtIPHxjyroKzOHdVVj7
+      klR6qKZGAnYANjb/eUS0Bk62bBwGWFjRw9ZWqBrXgTuRMZJYoLpb3o1/L0rsvhim
+      nydMwSu6zXzVqrDA18yqeme5AQ0EX8l+XgEIAMNKH4p0F42MhyVVWdEq3RBPnn3f
+      IXhZVm39OA25oRnm8qSeihVUir5wkh9j/eVSqrxN7h0SOh20XIp7le56CjqqPOzx
+      NgV0IAdeldGhSiVPXib6qQnyuFKuk3RPEiNYlsl2bc2WuBNqblEonDdKHKk1THKi
+      Wcd6VfGrIoMKTEFIOZHrFx1+3fB1CXkiQgDDF7qfLCZJS2md0YtEl0mtomJpYXYg
+      GMU2De9MRiPh6h6Fl3heu8TItWsxspnmbp/WjpBRG7NKtQf0lP+K9moKaE+miwKV
+      ddfRtuL0rRn/65XKTq/vqazc7nSsirQvRh6Ezwb76qYY7jbX7SoIuR0Pn+MAEQEA
+      AYkBHwQYAQgAEwUCX8l+XgkQi1fFwoNvS+sCGwwAABsaCADDuWFJYSVmkZXVIjZv
+      Yrbo8H3d9UjW1BhXftYgSUImxqMX79kN8knZ3qdy5BKV4flZFxxziFl8rDKwD96m
+      qsKfBzvIqxOhnizDzGwkXVS1DkQ22R0CtWIEkdLhjZVnkMRSavkSCEa1kWH1rpou
+      h4xUz+etkIuy0NWg8oSkuiQe7+B5sLB9P+f1TV2iUUii+Dp4oAKXnE7H6vNwBWnt
+      Hg/nbuN9+53Pd0ox0uE+uy0bTDlhvJ88/BYw4+n6RQXjl5h1HuQoqTT1Wsk2QQYn
+      QpBDqKapHVOfSTK7hy+R+qcJQXSuufsJ0GotIK/VBGGCvpMKFB/vKdaw/PmAZ1WO
+      He0jmQENBGCRt7MBCADkYJHHQQoL6tKrW/LbmfR9ljz7ib2aWno4JO3VKQvLwjyU
+      MPpq/SXXMOnx8jXwgWizpPxQYDRJ0SQXS9ULJ1hXRL/OgMnZAYvYDeV2jBnKsAIE
+      diG/e1qm8P4W9qpWJc+hNq7FOT13RzGWRx57SdLWSXo0KeY38r9lvjjOmT/cuOcm
+      jwlDT9XYf/RSO+yJ/AsyMdAr+ZbDeQUd9HYJiPdI04lGaGM02MjDMnx+monc+y54
+      t+Z+ry1WtQdzoQt9dHlIPlV1tR+xV5DHHsejCZxu9TWzzSlL5wfBBeEz7R/OIziv
+      GJpWQdJzd+2QDXSRg9q2XYWP5ZVtSgjVVJjNlb6ZABEBAAG0VEFydGlmYWN0IFJl
+      Z2lzdHJ5IFJlcG9zaXRvcnkgU2lnbmVyIDxhcnRpZmFjdC1yZWdpc3RyeS1yZXBv
+      c2l0b3J5LXNpZ25lckBnb29nbGUuY29tPokBTgQTAQoAOBYhBDW6oLM+nrOW9Zyo
+      OMC6XObcYxWjBQJgkbezAhsDBQsJCAcCBhUKCQgLAgQWAgMBAh4BAheAAAoJEMC6
+      XObcYxWj+igIAMFh6DrAYMeq9sbZ1ZG6oAMrinUheGQbEqe76nIDQNsZnhDwZ2wW
+      qgVC7DgOMqlhQmOmzm7M6Nzmq2dvPwq3xC2OeI9fQyzjT72deBTzLP7PJok9PJFO
+      MdLfILSsUnmMsheQt4DUO0jYAX2KUuWOIXXJaZ319QyoRNBPYa5qz7qXS7wHLOY8
+      9IDqfHt6Aud8ER5zhyOyhytcYMeaGC1g1IKWmgewnhEq02FantMJGlmmFi2eA0EP
+      D02GC3742QGqRxLwjWsm5/TpyuU24EYKRGCRm7QdVIo3ugFSetKrn0byOxWGBvtu
+      4fH8XWvZkRT+u+yzH1s5yFYBqc2JTrrJvRU=
+      =0lhn
+      -----END PGP PUBLIC KEY BLOCK-----
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+      Version: GnuPG v1
+
+      mQENBFWKtqgBCADmKQWYQF9YoPxLEQZ5XA6DFVg9ZHG4HIuehsSJETMPQ+W9K5c5
+      Us5assCZBjG/k5i62SmWb09eHtWsbbEgexURBWJ7IxA8kM3kpTo7bx+LqySDsSC3
+      /8JRkiyibVV0dDNv/EzRQsGDxmk5Xl8SbQJ/C2ECSUT2ok225f079m2VJsUGHG+5
+      RpyHHgoMaRNedYP8ksYBPSD6sA3Xqpsh/0cF4sm8QtmsxkBmCCIjBa0B0LybDtdX
+      XIq5kPJsIrC2zvERIPm1ez/9FyGmZKEFnBGeFC45z5U//pHdB1z03dYKGrKdDpID
+      17kNbC5wl24k/IeYyTY9IutMXvuNbVSXaVtRABEBAAG0Okdvb2dsZSBDbG91ZCBQ
+      YWNrYWdlcyBSUE0gU2lnbmluZyBLZXkgPGdjLXRlYW1AZ29vZ2xlLmNvbT6JATgE
+      EwECACIFAlWKtqgCGy8GCwkIBwMCBhUIAgkKCwQWAgMBAh4BAheAAAoJEPCcOUw+
+      G6jV+QwH/0wRH+XovIwLGfkg6kYLEvNPvOIYNQWnrT6zZ+XcV47WkJ+i5SR+QpUI
+      udMSWVf4nkv+XVHruxydafRIeocaXY0E8EuIHGBSB2KR3HxG6JbgUiWlCVRNt4Qd
+      6udC6Ep7maKEIpO40M8UHRuKrp4iLGIhPm3ELGO6uc8rks8qOBMH4ozU+3PB9a0b
+      GnPBEsZdOBI1phyftLyyuEvG8PeUYD+uzSx8jp9xbMg66gQRMP9XGzcCkD+b8w1o
+      7v3J3juKKpgvx5Lqwvwv2ywqn/Wr5d5OBCHEw8KtU/tfxycz/oo6XUIshgEbS/+P
+      6yKDuYhRp6qxrYXjmAszIT25cftb4d4=
+      =/PbX
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+    image_type_tags:
+      - gce
+aarch64:
+  - name: baseos
+    baseurl: https://cdn.redhat.com/content/dist/rhel8/8.10/aarch64/baseos/os
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+      Version: GnuPG v2.0.22 (GNU/Linux)
+
+      mQINBErgSTsBEACh2A4b0O9t+vzC9VrVtL1AKvUWi9OPCjkvR7Xd8DtJxeeMZ5eF
+      0HtzIG58qDRybwUe89FZprB1ffuUKzdE+HcL3FbNWSSOXVjZIersdXyH3NvnLLLF
+      0DNRB2ix3bXG9Rh/RXpFsNxDp2CEMdUvbYCzE79K1EnUTVh1L0Of023FtPSZXX0c
+      u7Pb5DI5lX5YeoXO6RoodrIGYJsVBQWnrWw4xNTconUfNPk0EGZtEnzvH2zyPoJh
+      XGF+Ncu9XwbalnYde10OCvSWAZ5zTCpoLMTvQjWpbCdWXJzCm6G+/hx9upke546H
+      5IjtYm4dTIVTnc3wvDiODgBKRzOl9rEOCIgOuGtDxRxcQkjrC+xvg5Vkqn7vBUyW
+      9pHedOU+PoF3DGOM+dqv+eNKBvh9YF9ugFAQBkcG7viZgvGEMGGUpzNgN7XnS1gj
+      /DPo9mZESOYnKceve2tIC87p2hqjrxOHuI7fkZYeNIcAoa83rBltFXaBDYhWAKS1
+      PcXS1/7JzP0ky7d0L6Xbu/If5kqWQpKwUInXtySRkuraVfuK3Bpa+X1XecWi24JY
+      HVtlNX025xx1ewVzGNCTlWn1skQN2OOoQTV4C8/qFpTW6DTWYurd4+fE0OJFJZQF
+      buhfXYwmRlVOgN5i77NTIJZJQfYFj38c/Iv5vZBPokO6mffrOTv3MHWVgQARAQAB
+      tDNSZWQgSGF0LCBJbmMuIChyZWxlYXNlIGtleSAyKSA8c2VjdXJpdHlAcmVkaGF0
+      LmNvbT6JAjYEEwEIACACGwMGCwkIBwMCBBUCCAMEFgIDAQIeAQIXgAUCSuBJPAAK
+      CRAZni+R/UMdUfIkD/9m3HWv07uJG26R3KBexTo2FFu3rmZs+m2nfW8R3dBX+k0o
+      AOFpgJCsNgKwU81LOPrkMN19G0+Yn/ZTCDD7cIQ7dhYuDyEX97xh4une/EhnnRuh
+      ASzR+1xYbj/HcYZIL9kbslgpebMn+AhxbUTQF/mziug3hLidR9Bzvygq0Q09E11c
+      OZL4BU6J2HqxL+9m2F+tnLdfhL7MsAq9nbmWAOpkbGefc5SXBSq0sWfwoes3X3yD
+      Q8B5Xqr9AxABU7oUB+wRqvY69ZCxi/BhuuJCUxY89ZmwXfkVxeHl1tYfROUwOnJO
+      GYSbI/o41KBK4DkIiDcT7QqvqvCyudnxZdBjL2QU6OrIJvWmKs319qSF9m3mXRSt
+      ZzWtB89Pj5LZ6cdtuHvW9GO4qSoBLmAfB313pGkbgi1DE6tqCLHlA0yQ8zv99OWV
+      cMDGmS7tVTZqfX1xQJ0N3bNORQNtikJC3G+zBCJzIeZleeDlMDQcww00yWU1oE7/
+      To2UmykMGc7o9iggFWR2g0PIcKsA/SXdRKWPqCHG2uKHBvdRTQGupdXQ1sbV+AHw
+      ycyA/9H/mp/NUSNM2cqnBDcZ6GhlHt59zWtEveiuU5fpTbp4GVcFXbW8jStj8j8z
+      1HI3cywZO8+YNPzqyx0JWsidXGkfzkPHyS4jTG84lfu2JG8m/nqLnRSeKpl20Q==
+      =79bX
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+    rhsm: true
+  - name: appstream
+    baseurl: https://cdn.redhat.com/content/dist/rhel8/8.10/aarch64/appstream/os
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+      Version: GnuPG v2.0.22 (GNU/Linux)
+
+      mQINBErgSTsBEACh2A4b0O9t+vzC9VrVtL1AKvUWi9OPCjkvR7Xd8DtJxeeMZ5eF
+      0HtzIG58qDRybwUe89FZprB1ffuUKzdE+HcL3FbNWSSOXVjZIersdXyH3NvnLLLF
+      0DNRB2ix3bXG9Rh/RXpFsNxDp2CEMdUvbYCzE79K1EnUTVh1L0Of023FtPSZXX0c
+      u7Pb5DI5lX5YeoXO6RoodrIGYJsVBQWnrWw4xNTconUfNPk0EGZtEnzvH2zyPoJh
+      XGF+Ncu9XwbalnYde10OCvSWAZ5zTCpoLMTvQjWpbCdWXJzCm6G+/hx9upke546H
+      5IjtYm4dTIVTnc3wvDiODgBKRzOl9rEOCIgOuGtDxRxcQkjrC+xvg5Vkqn7vBUyW
+      9pHedOU+PoF3DGOM+dqv+eNKBvh9YF9ugFAQBkcG7viZgvGEMGGUpzNgN7XnS1gj
+      /DPo9mZESOYnKceve2tIC87p2hqjrxOHuI7fkZYeNIcAoa83rBltFXaBDYhWAKS1
+      PcXS1/7JzP0ky7d0L6Xbu/If5kqWQpKwUInXtySRkuraVfuK3Bpa+X1XecWi24JY
+      HVtlNX025xx1ewVzGNCTlWn1skQN2OOoQTV4C8/qFpTW6DTWYurd4+fE0OJFJZQF
+      buhfXYwmRlVOgN5i77NTIJZJQfYFj38c/Iv5vZBPokO6mffrOTv3MHWVgQARAQAB
+      tDNSZWQgSGF0LCBJbmMuIChyZWxlYXNlIGtleSAyKSA8c2VjdXJpdHlAcmVkaGF0
+      LmNvbT6JAjYEEwEIACACGwMGCwkIBwMCBBUCCAMEFgIDAQIeAQIXgAUCSuBJPAAK
+      CRAZni+R/UMdUfIkD/9m3HWv07uJG26R3KBexTo2FFu3rmZs+m2nfW8R3dBX+k0o
+      AOFpgJCsNgKwU81LOPrkMN19G0+Yn/ZTCDD7cIQ7dhYuDyEX97xh4une/EhnnRuh
+      ASzR+1xYbj/HcYZIL9kbslgpebMn+AhxbUTQF/mziug3hLidR9Bzvygq0Q09E11c
+      OZL4BU6J2HqxL+9m2F+tnLdfhL7MsAq9nbmWAOpkbGefc5SXBSq0sWfwoes3X3yD
+      Q8B5Xqr9AxABU7oUB+wRqvY69ZCxi/BhuuJCUxY89ZmwXfkVxeHl1tYfROUwOnJO
+      GYSbI/o41KBK4DkIiDcT7QqvqvCyudnxZdBjL2QU6OrIJvWmKs319qSF9m3mXRSt
+      ZzWtB89Pj5LZ6cdtuHvW9GO4qSoBLmAfB313pGkbgi1DE6tqCLHlA0yQ8zv99OWV
+      cMDGmS7tVTZqfX1xQJ0N3bNORQNtikJC3G+zBCJzIeZleeDlMDQcww00yWU1oE7/
+      To2UmykMGc7o9iggFWR2g0PIcKsA/SXdRKWPqCHG2uKHBvdRTQGupdXQ1sbV+AHw
+      ycyA/9H/mp/NUSNM2cqnBDcZ6GhlHt59zWtEveiuU5fpTbp4GVcFXbW8jStj8j8z
+      1HI3cywZO8+YNPzqyx0JWsidXGkfzkPHyS4jTG84lfu2JG8m/nqLnRSeKpl20Q==
+      =79bX
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+    rhsm: true
+ppc64le:
+  - name: baseos
+    baseurl: https://cdn.redhat.com/content/dist/rhel8/8.10/ppc64le/baseos/os
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+      Version: GnuPG v2.0.22 (GNU/Linux)
+
+      mQINBErgSTsBEACh2A4b0O9t+vzC9VrVtL1AKvUWi9OPCjkvR7Xd8DtJxeeMZ5eF
+      0HtzIG58qDRybwUe89FZprB1ffuUKzdE+HcL3FbNWSSOXVjZIersdXyH3NvnLLLF
+      0DNRB2ix3bXG9Rh/RXpFsNxDp2CEMdUvbYCzE79K1EnUTVh1L0Of023FtPSZXX0c
+      u7Pb5DI5lX5YeoXO6RoodrIGYJsVBQWnrWw4xNTconUfNPk0EGZtEnzvH2zyPoJh
+      XGF+Ncu9XwbalnYde10OCvSWAZ5zTCpoLMTvQjWpbCdWXJzCm6G+/hx9upke546H
+      5IjtYm4dTIVTnc3wvDiODgBKRzOl9rEOCIgOuGtDxRxcQkjrC+xvg5Vkqn7vBUyW
+      9pHedOU+PoF3DGOM+dqv+eNKBvh9YF9ugFAQBkcG7viZgvGEMGGUpzNgN7XnS1gj
+      /DPo9mZESOYnKceve2tIC87p2hqjrxOHuI7fkZYeNIcAoa83rBltFXaBDYhWAKS1
+      PcXS1/7JzP0ky7d0L6Xbu/If5kqWQpKwUInXtySRkuraVfuK3Bpa+X1XecWi24JY
+      HVtlNX025xx1ewVzGNCTlWn1skQN2OOoQTV4C8/qFpTW6DTWYurd4+fE0OJFJZQF
+      buhfXYwmRlVOgN5i77NTIJZJQfYFj38c/Iv5vZBPokO6mffrOTv3MHWVgQARAQAB
+      tDNSZWQgSGF0LCBJbmMuIChyZWxlYXNlIGtleSAyKSA8c2VjdXJpdHlAcmVkaGF0
+      LmNvbT6JAjYEEwEIACACGwMGCwkIBwMCBBUCCAMEFgIDAQIeAQIXgAUCSuBJPAAK
+      CRAZni+R/UMdUfIkD/9m3HWv07uJG26R3KBexTo2FFu3rmZs+m2nfW8R3dBX+k0o
+      AOFpgJCsNgKwU81LOPrkMN19G0+Yn/ZTCDD7cIQ7dhYuDyEX97xh4une/EhnnRuh
+      ASzR+1xYbj/HcYZIL9kbslgpebMn+AhxbUTQF/mziug3hLidR9Bzvygq0Q09E11c
+      OZL4BU6J2HqxL+9m2F+tnLdfhL7MsAq9nbmWAOpkbGefc5SXBSq0sWfwoes3X3yD
+      Q8B5Xqr9AxABU7oUB+wRqvY69ZCxi/BhuuJCUxY89ZmwXfkVxeHl1tYfROUwOnJO
+      GYSbI/o41KBK4DkIiDcT7QqvqvCyudnxZdBjL2QU6OrIJvWmKs319qSF9m3mXRSt
+      ZzWtB89Pj5LZ6cdtuHvW9GO4qSoBLmAfB313pGkbgi1DE6tqCLHlA0yQ8zv99OWV
+      cMDGmS7tVTZqfX1xQJ0N3bNORQNtikJC3G+zBCJzIeZleeDlMDQcww00yWU1oE7/
+      To2UmykMGc7o9iggFWR2g0PIcKsA/SXdRKWPqCHG2uKHBvdRTQGupdXQ1sbV+AHw
+      ycyA/9H/mp/NUSNM2cqnBDcZ6GhlHt59zWtEveiuU5fpTbp4GVcFXbW8jStj8j8z
+      1HI3cywZO8+YNPzqyx0JWsidXGkfzkPHyS4jTG84lfu2JG8m/nqLnRSeKpl20Q==
+      =79bX
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+    rhsm: true
+  - name: appstream
+    baseurl: https://cdn.redhat.com/content/dist/rhel8/8.10/ppc64le/appstream/os
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+      Version: GnuPG v2.0.22 (GNU/Linux)
+
+      mQINBErgSTsBEACh2A4b0O9t+vzC9VrVtL1AKvUWi9OPCjkvR7Xd8DtJxeeMZ5eF
+      0HtzIG58qDRybwUe89FZprB1ffuUKzdE+HcL3FbNWSSOXVjZIersdXyH3NvnLLLF
+      0DNRB2ix3bXG9Rh/RXpFsNxDp2CEMdUvbYCzE79K1EnUTVh1L0Of023FtPSZXX0c
+      u7Pb5DI5lX5YeoXO6RoodrIGYJsVBQWnrWw4xNTconUfNPk0EGZtEnzvH2zyPoJh
+      XGF+Ncu9XwbalnYde10OCvSWAZ5zTCpoLMTvQjWpbCdWXJzCm6G+/hx9upke546H
+      5IjtYm4dTIVTnc3wvDiODgBKRzOl9rEOCIgOuGtDxRxcQkjrC+xvg5Vkqn7vBUyW
+      9pHedOU+PoF3DGOM+dqv+eNKBvh9YF9ugFAQBkcG7viZgvGEMGGUpzNgN7XnS1gj
+      /DPo9mZESOYnKceve2tIC87p2hqjrxOHuI7fkZYeNIcAoa83rBltFXaBDYhWAKS1
+      PcXS1/7JzP0ky7d0L6Xbu/If5kqWQpKwUInXtySRkuraVfuK3Bpa+X1XecWi24JY
+      HVtlNX025xx1ewVzGNCTlWn1skQN2OOoQTV4C8/qFpTW6DTWYurd4+fE0OJFJZQF
+      buhfXYwmRlVOgN5i77NTIJZJQfYFj38c/Iv5vZBPokO6mffrOTv3MHWVgQARAQAB
+      tDNSZWQgSGF0LCBJbmMuIChyZWxlYXNlIGtleSAyKSA8c2VjdXJpdHlAcmVkaGF0
+      LmNvbT6JAjYEEwEIACACGwMGCwkIBwMCBBUCCAMEFgIDAQIeAQIXgAUCSuBJPAAK
+      CRAZni+R/UMdUfIkD/9m3HWv07uJG26R3KBexTo2FFu3rmZs+m2nfW8R3dBX+k0o
+      AOFpgJCsNgKwU81LOPrkMN19G0+Yn/ZTCDD7cIQ7dhYuDyEX97xh4une/EhnnRuh
+      ASzR+1xYbj/HcYZIL9kbslgpebMn+AhxbUTQF/mziug3hLidR9Bzvygq0Q09E11c
+      OZL4BU6J2HqxL+9m2F+tnLdfhL7MsAq9nbmWAOpkbGefc5SXBSq0sWfwoes3X3yD
+      Q8B5Xqr9AxABU7oUB+wRqvY69ZCxi/BhuuJCUxY89ZmwXfkVxeHl1tYfROUwOnJO
+      GYSbI/o41KBK4DkIiDcT7QqvqvCyudnxZdBjL2QU6OrIJvWmKs319qSF9m3mXRSt
+      ZzWtB89Pj5LZ6cdtuHvW9GO4qSoBLmAfB313pGkbgi1DE6tqCLHlA0yQ8zv99OWV
+      cMDGmS7tVTZqfX1xQJ0N3bNORQNtikJC3G+zBCJzIeZleeDlMDQcww00yWU1oE7/
+      To2UmykMGc7o9iggFWR2g0PIcKsA/SXdRKWPqCHG2uKHBvdRTQGupdXQ1sbV+AHw
+      ycyA/9H/mp/NUSNM2cqnBDcZ6GhlHt59zWtEveiuU5fpTbp4GVcFXbW8jStj8j8z
+      1HI3cywZO8+YNPzqyx0JWsidXGkfzkPHyS4jTG84lfu2JG8m/nqLnRSeKpl20Q==
+      =79bX
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+    rhsm: true
+s390x:
+  - name: baseos
+    baseurl: https://cdn.redhat.com/content/dist/rhel8/8.10/s390x/baseos/os
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+      Version: GnuPG v2.0.22 (GNU/Linux)
+
+      mQINBErgSTsBEACh2A4b0O9t+vzC9VrVtL1AKvUWi9OPCjkvR7Xd8DtJxeeMZ5eF
+      0HtzIG58qDRybwUe89FZprB1ffuUKzdE+HcL3FbNWSSOXVjZIersdXyH3NvnLLLF
+      0DNRB2ix3bXG9Rh/RXpFsNxDp2CEMdUvbYCzE79K1EnUTVh1L0Of023FtPSZXX0c
+      u7Pb5DI5lX5YeoXO6RoodrIGYJsVBQWnrWw4xNTconUfNPk0EGZtEnzvH2zyPoJh
+      XGF+Ncu9XwbalnYde10OCvSWAZ5zTCpoLMTvQjWpbCdWXJzCm6G+/hx9upke546H
+      5IjtYm4dTIVTnc3wvDiODgBKRzOl9rEOCIgOuGtDxRxcQkjrC+xvg5Vkqn7vBUyW
+      9pHedOU+PoF3DGOM+dqv+eNKBvh9YF9ugFAQBkcG7viZgvGEMGGUpzNgN7XnS1gj
+      /DPo9mZESOYnKceve2tIC87p2hqjrxOHuI7fkZYeNIcAoa83rBltFXaBDYhWAKS1
+      PcXS1/7JzP0ky7d0L6Xbu/If5kqWQpKwUInXtySRkuraVfuK3Bpa+X1XecWi24JY
+      HVtlNX025xx1ewVzGNCTlWn1skQN2OOoQTV4C8/qFpTW6DTWYurd4+fE0OJFJZQF
+      buhfXYwmRlVOgN5i77NTIJZJQfYFj38c/Iv5vZBPokO6mffrOTv3MHWVgQARAQAB
+      tDNSZWQgSGF0LCBJbmMuIChyZWxlYXNlIGtleSAyKSA8c2VjdXJpdHlAcmVkaGF0
+      LmNvbT6JAjYEEwEIACACGwMGCwkIBwMCBBUCCAMEFgIDAQIeAQIXgAUCSuBJPAAK
+      CRAZni+R/UMdUfIkD/9m3HWv07uJG26R3KBexTo2FFu3rmZs+m2nfW8R3dBX+k0o
+      AOFpgJCsNgKwU81LOPrkMN19G0+Yn/ZTCDD7cIQ7dhYuDyEX97xh4une/EhnnRuh
+      ASzR+1xYbj/HcYZIL9kbslgpebMn+AhxbUTQF/mziug3hLidR9Bzvygq0Q09E11c
+      OZL4BU6J2HqxL+9m2F+tnLdfhL7MsAq9nbmWAOpkbGefc5SXBSq0sWfwoes3X3yD
+      Q8B5Xqr9AxABU7oUB+wRqvY69ZCxi/BhuuJCUxY89ZmwXfkVxeHl1tYfROUwOnJO
+      GYSbI/o41KBK4DkIiDcT7QqvqvCyudnxZdBjL2QU6OrIJvWmKs319qSF9m3mXRSt
+      ZzWtB89Pj5LZ6cdtuHvW9GO4qSoBLmAfB313pGkbgi1DE6tqCLHlA0yQ8zv99OWV
+      cMDGmS7tVTZqfX1xQJ0N3bNORQNtikJC3G+zBCJzIeZleeDlMDQcww00yWU1oE7/
+      To2UmykMGc7o9iggFWR2g0PIcKsA/SXdRKWPqCHG2uKHBvdRTQGupdXQ1sbV+AHw
+      ycyA/9H/mp/NUSNM2cqnBDcZ6GhlHt59zWtEveiuU5fpTbp4GVcFXbW8jStj8j8z
+      1HI3cywZO8+YNPzqyx0JWsidXGkfzkPHyS4jTG84lfu2JG8m/nqLnRSeKpl20Q==
+      =79bX
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+    rhsm: true
+  - name: appstream
+    baseurl: https://cdn.redhat.com/content/dist/rhel8/8.10/s390x/appstream/os
+    gpgkey: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+      Version: GnuPG v2.0.22 (GNU/Linux)
+
+      mQINBErgSTsBEACh2A4b0O9t+vzC9VrVtL1AKvUWi9OPCjkvR7Xd8DtJxeeMZ5eF
+      0HtzIG58qDRybwUe89FZprB1ffuUKzdE+HcL3FbNWSSOXVjZIersdXyH3NvnLLLF
+      0DNRB2ix3bXG9Rh/RXpFsNxDp2CEMdUvbYCzE79K1EnUTVh1L0Of023FtPSZXX0c
+      u7Pb5DI5lX5YeoXO6RoodrIGYJsVBQWnrWw4xNTconUfNPk0EGZtEnzvH2zyPoJh
+      XGF+Ncu9XwbalnYde10OCvSWAZ5zTCpoLMTvQjWpbCdWXJzCm6G+/hx9upke546H
+      5IjtYm4dTIVTnc3wvDiODgBKRzOl9rEOCIgOuGtDxRxcQkjrC+xvg5Vkqn7vBUyW
+      9pHedOU+PoF3DGOM+dqv+eNKBvh9YF9ugFAQBkcG7viZgvGEMGGUpzNgN7XnS1gj
+      /DPo9mZESOYnKceve2tIC87p2hqjrxOHuI7fkZYeNIcAoa83rBltFXaBDYhWAKS1
+      PcXS1/7JzP0ky7d0L6Xbu/If5kqWQpKwUInXtySRkuraVfuK3Bpa+X1XecWi24JY
+      HVtlNX025xx1ewVzGNCTlWn1skQN2OOoQTV4C8/qFpTW6DTWYurd4+fE0OJFJZQF
+      buhfXYwmRlVOgN5i77NTIJZJQfYFj38c/Iv5vZBPokO6mffrOTv3MHWVgQARAQAB
+      tDNSZWQgSGF0LCBJbmMuIChyZWxlYXNlIGtleSAyKSA8c2VjdXJpdHlAcmVkaGF0
+      LmNvbT6JAjYEEwEIACACGwMGCwkIBwMCBBUCCAMEFgIDAQIeAQIXgAUCSuBJPAAK
+      CRAZni+R/UMdUfIkD/9m3HWv07uJG26R3KBexTo2FFu3rmZs+m2nfW8R3dBX+k0o
+      AOFpgJCsNgKwU81LOPrkMN19G0+Yn/ZTCDD7cIQ7dhYuDyEX97xh4une/EhnnRuh
+      ASzR+1xYbj/HcYZIL9kbslgpebMn+AhxbUTQF/mziug3hLidR9Bzvygq0Q09E11c
+      OZL4BU6J2HqxL+9m2F+tnLdfhL7MsAq9nbmWAOpkbGefc5SXBSq0sWfwoes3X3yD
+      Q8B5Xqr9AxABU7oUB+wRqvY69ZCxi/BhuuJCUxY89ZmwXfkVxeHl1tYfROUwOnJO
+      GYSbI/o41KBK4DkIiDcT7QqvqvCyudnxZdBjL2QU6OrIJvWmKs319qSF9m3mXRSt
+      ZzWtB89Pj5LZ6cdtuHvW9GO4qSoBLmAfB313pGkbgi1DE6tqCLHlA0yQ8zv99OWV
+      cMDGmS7tVTZqfX1xQJ0N3bNORQNtikJC3G+zBCJzIeZleeDlMDQcww00yWU1oE7/
+      To2UmykMGc7o9iggFWR2g0PIcKsA/SXdRKWPqCHG2uKHBvdRTQGupdXQ1sbV+AHw
+      ycyA/9H/mp/NUSNM2cqnBDcZ6GhlHt59zWtEveiuU5fpTbp4GVcFXbW8jStj8j8z
+      1HI3cywZO8+YNPzqyx0JWsidXGkfzkPHyS4jTG84lfu2JG8m/nqLnRSeKpl20Q==
+      =79bX
+      -----END PGP PUBLIC KEY BLOCK-----
+    check_gpg: true
+    rhsm: true
