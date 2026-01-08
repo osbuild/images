@@ -343,6 +343,7 @@ if (( $# > 0 )); then
 
     if [[ -e "${config}" ]]; then
         echo "Error: config file does not exist"
+        ls -larth /tmp
         exit 1
     fi
 
