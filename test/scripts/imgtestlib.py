@@ -506,7 +506,13 @@ def get_host_distro():
     """
     Get the host distro version based on data in the os-release file.
     The format is <distro>-<version> (e.g. fedora-41).
+
+    Can be overridden by setting the OSBUILD_IMGTESTLIB_HOST_DISTRO env var.
     """
+    # overriding this is useful for running tests locally on any distro version while still being able to reuse the
+    # cached images from the CI runners
+    if distro := os.environ.get("OSBUILD_IMGTESTLIB_HOST_DISTRO"):
+        return distro
     osrelease = read_osrelease()
     return f"{osrelease['ID']}-{osrelease['VERSION_ID']}"
 
