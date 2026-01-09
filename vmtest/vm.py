@@ -222,7 +222,7 @@ class QEMU(VM):
 
         if self._img.suffix == ".qcow2":
             img_format = "qcow2"
-        elif self._img.suffix == ".img":
+        elif self._img.suffix in (".img", ".raw"):
             img_format = "raw"
         else:
             raise ValueError(f"Unsupported image extension: {self._img}. Must be .qcow2 or .img")
