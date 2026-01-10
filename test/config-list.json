@@ -173,7 +173,7 @@
     }
   },
   {
-    "path": "./configs/jq-only.json",
+    "path": "./configs/empty.json",
     "filters": {
       "arches": [],
       "distros": [
@@ -668,7 +668,7 @@
     }
   },
   {
-    "path": "./configs/jq-only.json",
+    "path": "./configs/empty.json",
     "filters": {
       "distros": [
         "rhel-8*",
