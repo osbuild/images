@@ -2768,8 +2768,17 @@ image_types:
             - "sos"
           exclude:
             - "rng-tools"
-            - "bootupd"
           conditions: &conditions_pkgsets_edge_commit
+            "greenboot in 9.8 and c9s requires bootupd":
+              # we don't want bootupd in edge commits, but greenboot requires
+              # it in 9.8 and c9s, so we can only exclude it for older versions
+              # NOTE: this is temporary
+              # see https://github.com/fedora-iot/greenboot-rs/pull/142
+              when:
+                version_less_than: "9.8"
+              append:
+                exclude:
+                  - "bootupd"
             "x86_64 specific packages for edge-commit":
               when:
                 arch: "x86_64"
