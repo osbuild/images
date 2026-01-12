@@ -3238,6 +3238,13 @@ image_types:
     package_sets:
       os:
         - *azure_base_pkgset
+        - exclude:
+            - "grub2-common"
+            - "grub2-tools"
+            - "grub2-tools-minimal"
+            - "grubby"
+            - "vdo"
+            - "kmod-kvdo"
     blueprint:
       supported_options:
         # same as disk image types, but kernel customizations are not supported
