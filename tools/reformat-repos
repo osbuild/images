@@ -1,0 +1,145 @@
+#!/usr/bin/env python3
+"""
+Reformat YAML repository files for consistency and better editing experience.
+Produces yamllint compliant YAML files.
+
+This script reformats YAML files in data/repositories/*.yaml and
+test/data/repositories/*.yaml to ensure:
+- Consistent formatting
+- Multi-line YAML format for gpgkey/gpgkeys fields (for easy pasting)
+- Proper field ordering
+"""
+
+import sys
+from pathlib import Path
+import yaml
+from yaml import Dumper
+
+
+def process_repo_data(data: dict) -> dict:
+    # keep the most popular architectures first
+    arch_order = ['x86_64', 'aarch64', 'ppc64le', 's390x', 'riscv64']
+    
+    ordered_data = {}
+    for arch in arch_order:
+        if arch in data:
+            ordered_data[arch] = data[arch]
+    
+    for arch, repos in data.items():
+        if arch not in ordered_data:
+            raise ValueError(f"Unknown architecture: {arch}")
+    
+    for arch, repos in ordered_data.items():
+        for i, repo in enumerate(repos):
+            # keep fields in the preferred order
+            ordered_repo = {}
+            
+            if 'name' in repo:
+                ordered_repo['name'] = repo['name']
+            if 'baseurl' in repo:
+                ordered_repo['baseurl'] = repo['baseurl']
+            
+            if 'gpgkey' in repo:
+                gpgkey_value = repo['gpgkey']
+                if isinstance(gpgkey_value, str) and '\n' in gpgkey_value:
+                    ordered_repo['gpgkey'] = MultiLineString(gpgkey_value)
+                else:
+                    ordered_repo['gpgkey'] = gpgkey_value
+            elif 'gpgkeys' in repo:
+                gpgkeys_value = repo['gpgkeys']
+                if isinstance(gpgkeys_value, list):
+                    if len(gpgkeys_value) == 0:
+                        pass
+                    else:
+                        formatted_keys = []
+                        for key in gpgkeys_value:
+                            if isinstance(key, str) and '\n' in key:
+                                formatted_keys.append(MultiLineString(key))
+                            else:
+                                formatted_keys.append(key)
+                        ordered_repo['gpgkeys'] = formatted_keys
+                elif isinstance(gpgkeys_value, str) and '\n' in gpgkeys_value:
+                    ordered_repo['gpgkeys'] = MultiLineString(gpgkeys_value)
+                else:
+                    ordered_repo['gpgkeys'] = gpgkeys_value
+            
+            if 'check_gpg' in repo:
+                ordered_repo['check_gpg'] = repo['check_gpg']
+            if 'rhsm' in repo:
+                ordered_repo['rhsm'] = repo['rhsm']
+
+            # add the rest in alphabetical order            
+            for key in sorted(repo.keys()):
+                if key not in ordered_repo:
+                    ordered_repo[key] = repo[key]
+            
+            repos[i] = ordered_repo
+    
+    return ordered_data
+
+
+class MultiLineString(str):
+    """A string subclass that will be represented as a multi-line literal block in YAML."""
+    pass
+
+
+def multiline_string_representer(dumper, data):
+    return dumper.represent_scalar('tag:yaml.org,2002:str', str(data), style='|')
+
+
+def reformat_yaml_file(yaml_path: Path) -> None:
+    try:
+        with open(yaml_path, 'r', encoding='utf-8') as f:
+            data = yaml.safe_load(f)
+        
+        if data is None:
+            print(f"Warning: {yaml_path.name} is empty or invalid", file=sys.stderr)
+            return
+        
+        processed_data = process_repo_data(data)
+        
+        class IndentDumper(Dumper):
+            def increase_indent(self, flow=False, indentless=False):
+                return super().increase_indent(flow=flow, indentless=False)
+        
+        yaml.add_representer(MultiLineString, multiline_string_representer, Dumper=IndentDumper)
+        
+        with open(yaml_path, 'w', encoding='utf-8') as f:
+            f.write('---\n')
+            yaml.dump(
+                processed_data,
+                f,
+                Dumper=IndentDumper,
+                default_flow_style=False,
+                sort_keys=False,
+                allow_unicode=True,
+                width=120,
+                indent=2
+            )
+    except Exception as e:
+        print(f"Error reformatting {yaml_path}: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+def main():
+    base_dir = Path(__file__).parent.parent
+    repo_dirs = [
+        base_dir / "data" / "repositories",
+        base_dir / "test" / "data" / "repositories",
+    ]
+    
+    yaml_files = []
+    for repo_dir in repo_dirs:
+        if repo_dir.exists():
+            yaml_files.extend(sorted(repo_dir.glob("*.yaml")))
+    
+    if not yaml_files:
+        print("Error: No YAML files found in any repository directory", file=sys.stderr)
+        sys.exit(1)
+    
+    for yaml_file in yaml_files:
+        reformat_yaml_file(yaml_file)
+
+
+if __name__ == "__main__":
+    main()
