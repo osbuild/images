@@ -2,7 +2,7 @@
   "common": {
     "rngseed": 10,
     "bootc-image-builder": {
-      "ref": "quay.io/centos-bootc/bootc-image-builder@sha256:9893e7209e5f449b86ababfd2ee02a58cca2e5990f77b06c3539227531fc8120"
+      "ref": "quay.io/centos-bootc/bootc-image-builder@sha256:773019f6b11766ca48170a4a7bf898be4268f3c2acfd0ec1db612408b3092a90"
     },
     "gitlab-ci-runner": "aws/fedora-42",
     "gitlab-ci-runner-for": {
