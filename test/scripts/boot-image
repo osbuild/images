@@ -367,7 +367,7 @@ def boot_container(distro, arch, image_type, image_path, manifest_id):
     """
     # push container to registry so we can build it with BIB
     # remove when BIB can pull from containers-storage: https://github.com/osbuild/bootc-image-builder/pull/120
-    container_name = f"iot-bootable-container:{distro}-{arch}-{manifest_id}"
+    container_name = f"generic-bootable-container:{distro}-{arch}-{manifest_id}"
     cmd = ["./tools/ci/push-container.sh", image_path, container_name]
     testlib.runcmd_nc(cmd)
     container_ref = f"{testlib.REGISTRY}/{container_name}"
@@ -513,7 +513,7 @@ def main():
             boot_ami(distro, arch, image_type, image_path, build_config_path)
         case "vhd":
             boot_vhd(distro, arch, image_path, build_config_path)
-        case "iot-bootable-container":
+        case "generic-bootable-container":
             manifest_id = build_info["manifest-checksum"]
             boot_container(distro, arch, image_type, image_path, manifest_id)
             bib_ref = testlib.get_bib_ref()
