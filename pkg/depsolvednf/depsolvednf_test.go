@@ -87,6 +87,9 @@ func assertDepsolveResultV1(t *testing.T, pkgSets []rpmmd.PackageSet, actual Dep
 			}), "requested package %q not found in the depsolve result", reqPkg)
 		}
 	}
+
+	// The Transactions field is not set in the V1 API
+	assert.Empty(t, actual.Transactions)
 }
 
 func requireDNF(t *testing.T) {
