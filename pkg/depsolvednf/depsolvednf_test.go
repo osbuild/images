@@ -190,12 +190,7 @@ func TestSolverDepsolve(t *testing.T) {
 }
 
 func TestSolverDepsolveAll(t *testing.T) {
-	if !*forceDNF {
-		// dnf tests aren't forced: skip them if the dnf sniff check fails
-		if findDepsolveDnf() == "" {
-			t.Skip("Test needs an installed osbuild-depsolve-dnf")
-		}
-	}
+	requireDNF(t)
 
 	s := rpmrepo.NewTestServer()
 	defer s.Close()
@@ -809,12 +804,7 @@ func expectedDepsolveResult(repo rpmmd.RepoConfig) rpmmd.PackageList {
 }
 
 func TestErrorRepoInfo(t *testing.T) {
-	if !*forceDNF {
-		// dnf tests aren't forced: skip them if the dnf sniff check fails
-		if findDepsolveDnf() == "" {
-			t.Skip("Test needs an installed osbuild-depsolve-dnf")
-		}
-	}
+	requireDNF(t)
 
 	type testCase struct {
 		repo   rpmmd.RepoConfig
