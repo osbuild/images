@@ -274,6 +274,36 @@ func TestLoadInfoPartitionTableSad(t *testing.T) {
 	assert.EqualError(t, err, fmt.Sprintf(`cannot parse disk definitions from "%s/usr/lib/bootc-image-builder/disk.yaml": yaml: found character that cannot start any token`, root))
 }
 
+var fakeISOYAML = "---"
+
+func createISO(t *testing.T, root, fakeISOYAML string) {
+	t.Helper()
+
+	dst := path.Join(root, "/usr/lib/bootc-image-builder/iso.yaml")
+	err := os.MkdirAll(path.Dir(dst), 0755)
+	require.NoError(t, err)
+	err = os.WriteFile(dst, []byte(fakeISOYAML), 0644)
+	require.NoError(t, err)
+}
+
+func TestLoadInfoISOHappy(t *testing.T) {
+	root := t.TempDir()
+	writeOSRelease(t, root, "fedora", "40", "Fedora Linux", "fedora", "platform:f40", "coreos")
+	createISO(t, root, fakeISOYAML)
+
+	_, err := Load(root)
+	require.NoError(t, err)
+}
+
+func TestLoadInfoISOSad(t *testing.T) {
+	root := t.TempDir()
+	writeOSRelease(t, root, "fedora", "40", "Fedora Linux", "fedora", "platform:f40", "coreos")
+	createISO(t, root, "@invalidYAML")
+
+	_, err := Load(root)
+	assert.EqualError(t, err, fmt.Sprintf(`cannot parse iso definitions from "%s/usr/lib/bootc-image-builder/iso.yaml": yaml: found character that cannot start any token`, root))
+}
+
 func TestLoadInfoUEFIVendorSearchPath(t *testing.T) {
 	root := t.TempDir()
 
