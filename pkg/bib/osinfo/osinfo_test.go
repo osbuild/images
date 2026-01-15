@@ -276,6 +276,9 @@ func TestLoadInfoPartitionTableSad(t *testing.T) {
 
 var fakeISOYAML = `
 label: "My-ISO"
+kernel_args:
+- "root=live:CDLABEL=My-ISO"
+- "foo"
 `
 
 func createISO(t *testing.T, root, fakeISOYAML string) {
@@ -297,6 +300,7 @@ func TestLoadInfoISOHappy(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "My-ISO", info.ISOInfo.Label)
+	assert.Equal(t, []string{"root=live:CDLABEL=My-ISO", "foo"}, info.ISOInfo.KernelArgs)
 }
 
 func TestLoadInfoISOSad(t *testing.T) {
