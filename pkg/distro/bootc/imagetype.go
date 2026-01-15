@@ -136,11 +136,11 @@ func (t *imageType) checkOptions(bp *blueprint.Blueprint) []string {
 func (t *imageType) Manifest(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, seedp *int64) (*manifest.Manifest, []string, error) {
 	validationWarnings := t.checkOptions(bp)
 
-	mani, manifestWarnings, err := t.manifestWithoutValidation(bp, options, repos, seedp)
+	mani, manifestWarnings, err := t.manifestWithoutValidation(bp, options)
 	return mani, append(validationWarnings, manifestWarnings...), err
 }
 
-func (t *imageType) manifestWithoutValidation(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, seedp *int64) (*manifest.Manifest, []string, error) {
+func (t *imageType) manifestWithoutValidation(bp *blueprint.Blueprint, options distro.ImageOptions) (*manifest.Manifest, []string, error) {
 	seed, err := cmdutil.SeedArgFor(nil, t.arch.Name(), t.arch.distro.Name())
 	if err != nil {
 		return nil, nil, err
@@ -150,22 +150,22 @@ func (t *imageType) manifestWithoutValidation(bp *blueprint.Blueprint, options d
 
 	switch t.Image {
 	case "bootc_legacy_iso":
-		return t.manifestForLegacyISO(bp, options, repos, rng)
+		return t.manifestForLegacyISO(bp, rng)
 	case "bootc_iso":
-		return t.manifestForISO(bp, options, repos, rng)
+		return t.manifestForISO(bp, options, rng)
 	case "bootc_generic_iso":
-		return t.manifestForGenericISO(bp, options, repos, rng)
+		return t.manifestForGenericISO(rng)
 	case "bootc_disk":
-		return t.manifestForDisk(bp, options, repos, rng)
+		return t.manifestForDisk(bp, options, rng)
 	case "pxe_tar":
-		return t.manifestForPXETar(bp, options, repos, rng)
+		return t.manifestForPXETar(bp, options, rng)
 	default:
 		err := fmt.Errorf("unknown image func: %v for %v", t.Image, t.Name())
 		panic(err)
 	}
 }
 
-func (t *imageType) manifestForDisk(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, rng *rand.Rand) (*manifest.Manifest, []string, error) {
+func (t *imageType) manifestForDisk(bp *blueprint.Blueprint, options distro.ImageOptions, rng *rand.Rand) (*manifest.Manifest, []string, error) {
 	if t.arch.distro.imgref == "" {
 		return nil, nil, fmt.Errorf("internal error: no base image defined")
 	}
@@ -308,7 +308,7 @@ func (t *imageType) initAnacondaInstallerBaseFromSourceInfo(img *image.AnacondaI
 	return nil
 }
 
-func (t *imageType) manifestForISO(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, rng *rand.Rand) (*manifest.Manifest, []string, error) {
+func (t *imageType) manifestForISO(bp *blueprint.Blueprint, options distro.ImageOptions, rng *rand.Rand) (*manifest.Manifest, []string, error) {
 	if t.arch.distro.imgref == "" {
 		return nil, nil, fmt.Errorf("internal error in bootc iso: no base image defined")
 	}
@@ -375,7 +375,7 @@ func (t *imageType) manifestForISO(bp *blueprint.Blueprint, options distro.Image
 	return &mf, nil, err
 }
 
-func (t *imageType) manifestForGenericISO(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, rng *rand.Rand) (*manifest.Manifest, []string, error) {
+func (t *imageType) manifestForGenericISO(rng *rand.Rand) (*manifest.Manifest, []string, error) {
 	if t.arch.distro.imgref == "" {
 		return nil, nil, fmt.Errorf("internal error: no base image defined")
 	}
@@ -475,7 +475,7 @@ func newDistroYAMLFrom(sourceInfo *osinfo.Info) (*defs.DistroYAML, *distro.ID, e
 	return nil, nil, fmt.Errorf("cannot load distro definitions for %s-%s or any of %v", sourceInfo.OSRelease.ID, sourceInfo.OSRelease.VersionID, sourceInfo.OSRelease.IDLike)
 }
 
-func (t *imageType) manifestForLegacyISO(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, rng *rand.Rand) (*manifest.Manifest, []string, error) {
+func (t *imageType) manifestForLegacyISO(bp *blueprint.Blueprint, rng *rand.Rand) (*manifest.Manifest, []string, error) {
 	if t.arch.distro.imgref == "" {
 		return nil, nil, fmt.Errorf("internal error in bootc legacy iso: no base image defined")
 	}
@@ -547,7 +547,7 @@ func (t *imageType) manifestForLegacyISO(bp *blueprint.Blueprint, options distro
 }
 
 // manifestForPXETar creates a PXE bootable bootc rootfs
-func (t *imageType) manifestForPXETar(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, rng *rand.Rand) (*manifest.Manifest, []string, error) {
+func (t *imageType) manifestForPXETar(bp *blueprint.Blueprint, options distro.ImageOptions, rng *rand.Rand) (*manifest.Manifest, []string, error) {
 	if t.arch.distro.imgref == "" {
 		return nil, nil, fmt.Errorf("internal error: no base image defined")
 	}
