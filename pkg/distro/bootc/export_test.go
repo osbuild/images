@@ -18,6 +18,8 @@ var (
 	TestDiskContainers = diskContainers
 )
 
+type ImageType = imageType
+
 func NewTestBootcDistro() *BootcDistro {
 	return NewTestBootcDistroWithDefaultFs("xfs")
 }
