@@ -711,3 +711,107 @@ func TestShimVersionLock(t *testing.T) {
 
 	assert.Equal(t, []string{"shim-x64-0:15.8-3"}, stageOptions.Add)
 }
+
+func TestOSPackageSetChainStructure(t *testing.T) {
+	testCases := []struct {
+		name                 string
+		customizations       manifest.OSCustomizations
+		expectedChainInclude [][]string
+	}{
+		{
+			name: "no customization packages - one package set",
+			customizations: manifest.OSCustomizations{
+				BasePackages: []string{"bash", "coreutils"},
+			},
+			expectedChainInclude: [][]string{
+				{"bash", "coreutils"},
+				{}, // XXX: this is a bug, we should not have an empty package set here
+			},
+		},
+		{
+			name: "no customization packages with blueprint packages - two package sets",
+			customizations: manifest.OSCustomizations{
+				BasePackages:      []string{"bash", "coreutils"},
+				BlueprintPackages: []string{"vim", "tmux"},
+			},
+			expectedChainInclude: [][]string{
+				{"bash", "coreutils"},
+				{}, // XXX: this is a bug, we should not have an empty package set here
+				{"vim", "tmux"},
+			},
+		},
+		{
+			name: "with SELinux customization - two package sets",
+			customizations: manifest.OSCustomizations{
+				BasePackages: []string{"bash", "coreutils"},
+				SELinux:      "targeted",
+			},
+			expectedChainInclude: [][]string{
+				{"bash", "coreutils"},
+				{"selinux-policy-targeted"},
+			},
+		},
+		{
+			name: "with blueprint packages - three package sets",
+			customizations: manifest.OSCustomizations{
+				BasePackages:      []string{"bash", "coreutils"},
+				SELinux:           "targeted",
+				BlueprintPackages: []string{"vim", "tmux"},
+			},
+			expectedChainInclude: [][]string{
+				{"bash", "coreutils"},
+				{"selinux-policy-targeted"},
+				{"vim", "tmux"},
+			},
+		},
+		{
+			name: "subscription customization",
+			customizations: manifest.OSCustomizations{
+				BasePackages: []string{"bash"},
+				Subscription: &subscription.ImageOptions{Organization: "123", ActivationKey: "key"},
+			},
+			expectedChainInclude: [][]string{
+				{"bash"},
+				{"subscription-manager"},
+			},
+		},
+		{
+			name: "chrony config customization",
+			customizations: manifest.OSCustomizations{
+				BasePackages: []string{"bash"},
+				ChronyConfig: &osbuild.ChronyStageOptions{},
+			},
+			expectedChainInclude: [][]string{
+				{"bash"},
+				{"chrony"},
+			},
+		},
+		{
+			name: "firewall config customization",
+			customizations: manifest.OSCustomizations{
+				BasePackages: []string{"bash"},
+				Firewall:     &osbuild.FirewallStageOptions{},
+			},
+			expectedChainInclude: [][]string{
+				{"bash"},
+				{"firewalld"},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			os := manifest.NewTestOS()
+			os.OSCustomizations = tc.customizations
+
+			pkgSetChain, err := os.GetPackageSetChain(manifest.DISTRO_NULL)
+			require.NoError(t, err)
+			require.Len(t, pkgSetChain, len(tc.expectedChainInclude))
+
+			for idx, expectedPkgs := range tc.expectedChainInclude {
+				assert.ElementsMatch(t, expectedPkgs, pkgSetChain[idx].Include,
+					"package set %d Include mismatch", idx)
+			}
+		})
+	}
+}
