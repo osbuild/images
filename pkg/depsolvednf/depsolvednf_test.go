@@ -10,6 +10,7 @@ import (
 	"slices"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/mocks/rpmrepo"
@@ -738,7 +739,46 @@ func expectedDepsolvedPackages(repo rpmmd.RepoConfig) rpmmd.PackageList {
 		{Name: "alternatives", Epoch: 0, Version: "1.20", Release: "2.el9", Arch: "x86_64", Location: "Packages/alternatives-1.20-2.el9.x86_64.rpm", Checksum: rpmmd.Checksum{Type: "sha256", Value: "1851d5f64ebaeac67c5c2d9e4adc1e73aa6433b44a167268a3510c3d056062db"}},
 		{Name: "audit-libs", Epoch: 0, Version: "3.0.7", Release: "100.el9", Arch: "x86_64", Location: "Packages/audit-libs-3.0.7-100.el9.x86_64.rpm", Checksum: rpmmd.Checksum{Type: "sha256", Value: "a4bdda48abaedffeb74398cd55afbd00cb4153ae24bd2a3e6de9d87462df5ffa"}},
 		{Name: "basesystem", Epoch: 0, Version: "11", Release: "13.el9", Arch: "noarch", Location: "Packages/basesystem-11-13.el9.noarch.rpm", Checksum: rpmmd.Checksum{Type: "sha256", Value: "a7a687ef39dd28d01d34fab18ea7e3e87f649f6c202dded82260b7ea625b9973"}},
-		{Name: "bash", Epoch: 0, Version: "5.1.8", Release: "2.el9", Arch: "x86_64", Location: "Packages/bash-5.1.8-2.el9.x86_64.rpm", Checksum: rpmmd.Checksum{Type: "sha256", Value: "3d45552ea940db0556dd2dc73e92c20c0d7cbc9e617f251904f20475d4ecc6b6"}},
+		{
+			Name:         "bash",
+			Epoch:        0,
+			Version:      "5.1.8",
+			Release:      "2.el9",
+			Arch:         "x86_64",
+			Group:        "Unspecified",
+			DownloadSize: 1772315,
+			InstallSize:  7739748,
+			License:      "GPLv3+",
+			SourceRpm:    "bash-5.1.8-2.el9.src.rpm",
+			BuildTime:    time.Date(2021, time.August, 9, 19, 33, 6, 0, time.UTC),
+			Packager:     "builder@centos.org",
+			Vendor:       "CentOS",
+			URL:          "https://www.gnu.org/software/bash",
+			Summary:      "The GNU Bourne Again shell",
+			Description:  "The GNU Bourne Again shell (Bash) is a shell or command language\ninterpreter that is compatible with the Bourne shell (sh). Bash\nincorporates useful features from the Korn shell (ksh) and the C shell\n(csh). Most sh scripts can be run by bash without modification.",
+			Provides: rpmmd.RelDepList{
+				{Name: "/bin/bash"},
+				{Name: "/bin/sh"},
+				{Name: "bash", Relationship: "=", Version: "5.1.8-2.el9"},
+				{Name: "bash(x86-64)", Relationship: "=", Version: "5.1.8-2.el9"},
+				{Name: "config(bash)", Relationship: "=", Version: "5.1.8-2.el9"},
+			},
+			Requires: rpmmd.RelDepList{
+				{Name: "filesystem", Relationship: ">=", Version: "3"},
+				{Name: "libc.so.6(GLIBC_2.34)(64bit)"},
+				{Name: "libtinfo.so.6()(64bit)"},
+				{Name: "rtld(GNU_HASH)"},
+			},
+			RegularRequires: rpmmd.RelDepList{
+				{Name: "filesystem", Relationship: ">=", Version: "3"},
+				{Name: "libc.so.6(GLIBC_2.34)(64bit)"},
+				{Name: "libtinfo.so.6()(64bit)"},
+				{Name: "rtld(GNU_HASH)"},
+			},
+			Files:    []string{"/etc/skel/.bash_logout", "/etc/skel/.bash_profile", "/etc/skel/.bashrc", "/usr/bin/alias", "/usr/bin/bash", "/usr/bin/bashbug", "/usr/bin/bashbug-64", "/usr/bin/bg", "/usr/bin/cd", "/usr/bin/command", "/usr/bin/fc", "/usr/bin/fg", "/usr/bin/getopts", "/usr/bin/hash", "/usr/bin/jobs", "/usr/bin/read", "/usr/bin/sh", "/usr/bin/type", "/usr/bin/ulimit", "/usr/bin/umask", "/usr/bin/unalias", "/usr/bin/wait", "/usr/lib/.build-id", "/usr/lib/.build-id/41", "/usr/lib/.build-id/41/61a572a65bba4bbed7ba5a976bedceeb471435", "/usr/share/doc/bash", "/usr/share/doc/bash/FAQ", "/usr/share/doc/bash/INTRO", "/usr/share/doc/bash/RBASH", "/usr/share/doc/bash/README", "/usr/share/doc/bash/bash.html", "/usr/share/doc/bash/bashref.html", "/usr/share/info/bash.info.gz", "/usr/share/licenses/bash", "/usr/share/licenses/bash/COPYING", "/usr/share/locale/af/LC_MESSAGES/bash.mo", "/usr/share/locale/bg/LC_MESSAGES/bash.mo", "/usr/share/locale/ca/LC_MESSAGES/bash.mo", "/usr/share/locale/cs/LC_MESSAGES/bash.mo", "/usr/share/locale/da/LC_MESSAGES/bash.mo", "/usr/share/locale/de/LC_MESSAGES/bash.mo", "/usr/share/locale/el/LC_MESSAGES/bash.mo", "/usr/share/locale/en@boldquot/LC_MESSAGES/bash.mo", "/usr/share/locale/en@quot/LC_MESSAGES/bash.mo", "/usr/share/locale/eo/LC_MESSAGES/bash.mo", "/usr/share/locale/es/LC_MESSAGES/bash.mo", "/usr/share/locale/et/LC_MESSAGES/bash.mo", "/usr/share/locale/fi/LC_MESSAGES/bash.mo", "/usr/share/locale/fr/LC_MESSAGES/bash.mo", "/usr/share/locale/ga/LC_MESSAGES/bash.mo", "/usr/share/locale/gl/LC_MESSAGES/bash.mo", "/usr/share/locale/hr/LC_MESSAGES/bash.mo", "/usr/share/locale/hu/LC_MESSAGES/bash.mo", "/usr/share/locale/id/LC_MESSAGES/bash.mo", "/usr/share/locale/it/LC_MESSAGES/bash.mo", "/usr/share/locale/ja/LC_MESSAGES/bash.mo", "/usr/share/locale/ko/LC_MESSAGES/bash.mo", "/usr/share/locale/lt/LC_MESSAGES/bash.mo", "/usr/share/locale/nb/LC_MESSAGES/bash.mo", "/usr/share/locale/nl/LC_MESSAGES/bash.mo", "/usr/share/locale/pl/LC_MESSAGES/bash.mo", "/usr/share/locale/pt/LC_MESSAGES/bash.mo", "/usr/share/locale/pt_BR/LC_MESSAGES/bash.mo", "/usr/share/locale/ro/LC_MESSAGES/bash.mo", "/usr/share/locale/ru/LC_MESSAGES/bash.mo", "/usr/share/locale/sk/LC_MESSAGES/bash.mo", "/usr/share/locale/sl/LC_MESSAGES/bash.mo", "/usr/share/locale/sr/LC_MESSAGES/bash.mo", "/usr/share/locale/sv/LC_MESSAGES/bash.mo", "/usr/share/locale/tr/LC_MESSAGES/bash.mo", "/usr/share/locale/uk/LC_MESSAGES/bash.mo", "/usr/share/locale/vi/LC_MESSAGES/bash.mo", "/usr/share/locale/zh_CN/LC_MESSAGES/bash.mo", "/usr/share/locale/zh_TW/LC_MESSAGES/bash.mo", "/usr/share/man/man1/..1.gz", "/usr/share/man/man1/:.1.gz", "/usr/share/man/man1/[.1.gz", "/usr/share/man/man1/alias.1.gz", "/usr/share/man/man1/bash.1.gz", "/usr/share/man/man1/bashbug-64.1.gz", "/usr/share/man/man1/bashbug.1.gz", "/usr/share/man/man1/bg.1.gz", "/usr/share/man/man1/bind.1.gz", "/usr/share/man/man1/break.1.gz", "/usr/share/man/man1/builtin.1.gz", "/usr/share/man/man1/builtins.1.gz", "/usr/share/man/man1/caller.1.gz", "/usr/share/man/man1/cd.1.gz", "/usr/share/man/man1/command.1.gz", "/usr/share/man/man1/compgen.1.gz", "/usr/share/man/man1/complete.1.gz", "/usr/share/man/man1/compopt.1.gz", "/usr/share/man/man1/continue.1.gz", "/usr/share/man/man1/declare.1.gz", "/usr/share/man/man1/dirs.1.gz", "/usr/share/man/man1/disown.1.gz", "/usr/share/man/man1/enable.1.gz", "/usr/share/man/man1/eval.1.gz", "/usr/share/man/man1/exec.1.gz", "/usr/share/man/man1/exit.1.gz", "/usr/share/man/man1/export.1.gz", "/usr/share/man/man1/fc.1.gz", "/usr/share/man/man1/fg.1.gz", "/usr/share/man/man1/getopts.1.gz", "/usr/share/man/man1/hash.1.gz", "/usr/share/man/man1/help.1.gz", "/usr/share/man/man1/history.1.gz", "/usr/share/man/man1/jobs.1.gz", "/usr/share/man/man1/let.1.gz", "/usr/share/man/man1/local.1.gz", "/usr/share/man/man1/logout.1.gz", "/usr/share/man/man1/mapfile.1.gz", "/usr/share/man/man1/popd.1.gz", "/usr/share/man/man1/pushd.1.gz", "/usr/share/man/man1/read.1.gz", "/usr/share/man/man1/readonly.1.gz", "/usr/share/man/man1/return.1.gz", "/usr/share/man/man1/set.1.gz", "/usr/share/man/man1/sh.1.gz", "/usr/share/man/man1/shift.1.gz", "/usr/share/man/man1/shopt.1.gz", "/usr/share/man/man1/source.1.gz", "/usr/share/man/man1/suspend.1.gz", "/usr/share/man/man1/times.1.gz", "/usr/share/man/man1/trap.1.gz", "/usr/share/man/man1/type.1.gz", "/usr/share/man/man1/typeset.1.gz", "/usr/share/man/man1/ulimit.1.gz", "/usr/share/man/man1/umask.1.gz", "/usr/share/man/man1/unalias.1.gz", "/usr/share/man/man1/unset.1.gz", "/usr/share/man/man1/wait.1.gz"},
+			Location: "Packages/bash-5.1.8-2.el9.x86_64.rpm",
+			Checksum: rpmmd.Checksum{Type: "sha256", Value: "3d45552ea940db0556dd2dc73e92c20c0d7cbc9e617f251904f20475d4ecc6b6"},
+		},
 		{Name: "bzip2-libs", Epoch: 0, Version: "1.0.8", Release: "8.el9", Arch: "x86_64", Location: "Packages/bzip2-libs-1.0.8-8.el9.x86_64.rpm", Checksum: rpmmd.Checksum{Type: "sha256", Value: "fabd6b5c065c2b9d4a8d39a938ae577d801de2ddc73c8cdf6f7803db29c28d0a"}},
 		{Name: "ca-certificates", Epoch: 0, Version: "2020.2.50", Release: "94.el9", Arch: "noarch", Location: "Packages/ca-certificates-2020.2.50-94.el9.noarch.rpm", Checksum: rpmmd.Checksum{Type: "sha256", Value: "3099471d984fb7d9e1cf42406eb08c154b34b8560742ed1f5eb9139f059c2d09"}},
 		{Name: "centos-gpg-keys", Epoch: 0, Version: "9.0", Release: "9.el9", Arch: "noarch", Location: "Packages/centos-gpg-keys-9.0-9.el9.noarch.rpm", Checksum: rpmmd.Checksum{Type: "sha256", Value: "2785ab660c124c9bda4ef4057e72d7fc73e8ac254ddd09a5541a6d323740dad7"}},
