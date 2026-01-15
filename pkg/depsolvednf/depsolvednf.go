@@ -448,16 +448,22 @@ func applyRHSMSecrets(pkgs rpmmd.PackageList, repos []rpmmd.RepoConfig) {
 
 // validatePackageSetRepoChain validates that the repository chain is valid.
 // It checks that:
+//   - No package set has an empty Include list.
 //   - Each package set uses all of the repositories used by its predecessor.
 //     NOTE: Due to implementation limitations of DNF and osbuild-depsolve-dnf,
 //     each package set in the chain must use all of the repositories used by
 //     its predecessor.
 func validatePackageSetRepoChain(pkgSets []rpmmd.PackageSet) error {
+	// Check for empty Include lists
+	for idx, ps := range pkgSets {
+		if len(ps.Include) == 0 {
+			return fmt.Errorf("packageSet %d has empty Include list", idx)
+		}
+	}
+
 	if len(pkgSets) <= 1 {
 		return nil
 	}
-
-	// XXX: we should also verify that no package set has an empty `Include` list.
 
 	for dsIdx := 1; dsIdx < len(pkgSets); dsIdx++ {
 		prevRepoIDs := make([]string, len(pkgSets[dsIdx-1].Repositories))

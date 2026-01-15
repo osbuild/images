@@ -489,6 +489,22 @@ func TestValidatePackageSetRepoChain(t *testing.T) {
 			},
 			errMsg: "chained packageSet 2 does not use all of the repos used by its predecessor",
 		},
+		{
+			name: "Error: single transaction with empty Include",
+			pkgSets: []rpmmd.PackageSet{
+				{Include: []string{}, Repositories: []rpmmd.RepoConfig{baseOS}},
+			},
+			errMsg: "packageSet 0 has empty Include list",
+		},
+		{
+			name: "Error: second transaction with empty Include in chain",
+			pkgSets: []rpmmd.PackageSet{
+				{Include: []string{"pkg1"}, Repositories: []rpmmd.RepoConfig{baseOS}},
+				{Include: []string{}, Repositories: []rpmmd.RepoConfig{baseOS, appstream}},
+				{Include: []string{"pkg3"}, Repositories: []rpmmd.RepoConfig{baseOS, appstream, userRepo}},
+			},
+			errMsg: "packageSet 1 has empty Include list",
+		},
 	}
 
 	for _, tc := range testCases {
