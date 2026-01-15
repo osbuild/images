@@ -209,7 +209,7 @@ func (a *BootcArch) GetImageType(imageType string) (distro.ImageType, error) {
 	return t, nil
 }
 
-func (a *BootcArch) addImageTypes(imageTypes ...ImageType) {
+func (a *BootcArch) addImageTypes(imageTypes ...imageType) {
 	if a.imageTypes == nil {
 		a.imageTypes = map[string]distro.ImageType{}
 	}
@@ -220,50 +220,50 @@ func (a *BootcArch) addImageTypes(imageTypes ...ImageType) {
 	}
 }
 
-var _ = distro.ImageType(&ImageType{})
+var _ = distro.ImageType(&imageType{})
 
-type ImageType struct {
+type imageType struct {
 	defs.ImageTypeYAML
 
 	arch *BootcArch
 }
 
-func (t *ImageType) Name() string {
+func (t *imageType) Name() string {
 	return t.ImageTypeYAML.Name()
 }
 
-func (t *ImageType) Aliases() []string {
+func (t *imageType) Aliases() []string {
 	return t.ImageTypeYAML.NameAliases
 }
 
-func (t *ImageType) Arch() distro.Arch {
+func (t *imageType) Arch() distro.Arch {
 	return t.arch
 }
 
-func (t *ImageType) Filename() string {
+func (t *imageType) Filename() string {
 	return t.ImageTypeYAML.Filename
 }
 
-func (t *ImageType) MIMEType() string {
+func (t *imageType) MIMEType() string {
 	return t.ImageTypeYAML.MimeType
 }
 
-func (t *ImageType) OSTreeRef() string {
+func (t *imageType) OSTreeRef() string {
 	return ""
 }
 
-func (t *ImageType) ISOLabel() (string, error) {
+func (t *imageType) ISOLabel() (string, error) {
 	return "", nil
 }
 
-func (t *ImageType) Size(size uint64) uint64 {
+func (t *imageType) Size(size uint64) uint64 {
 	if size == 0 {
 		size = 1073741824
 	}
 	return size
 }
 
-func (t *ImageType) PartitionType() disk.PartitionTableType {
+func (t *imageType) PartitionType() disk.PartitionTableType {
 	// XXX: duplicated from generic/imagetype.go
 	basePartitionTable, err := t.BasePartitionTable()
 	if errors.Is(err, defs.ErrNoPartitionTableForImgType) {
@@ -276,11 +276,11 @@ func (t *ImageType) PartitionType() disk.PartitionTableType {
 	return basePartitionTable.Type
 }
 
-func (t *ImageType) BasePartitionTable() (*disk.PartitionTable, error) {
+func (t *imageType) BasePartitionTable() (*disk.PartitionTable, error) {
 	return t.ImageTypeYAML.PartitionTable(t.arch.distro.id, t.arch.arch.String())
 }
 
-func (t *ImageType) BootMode() platform.BootMode {
+func (t *imageType) BootMode() platform.BootMode {
 	// We really never want HYBRID or LEGACY on aarch64 platforms. In the future
 	// it might be much nicer to take the same apporach as `Bootmode()` in the
 	// generic distro but that's a bit more involved. Let's start here.
@@ -291,27 +291,27 @@ func (t *ImageType) BootMode() platform.BootMode {
 	return platform.BOOT_HYBRID
 }
 
-func (t *ImageType) PayloadPackageSets() []string {
+func (t *imageType) PayloadPackageSets() []string {
 	return nil
 }
 
-func (t *ImageType) Exports() []string {
+func (t *imageType) Exports() []string {
 	return t.ImageTypeYAML.Exports
 }
 
-func (t *ImageType) SupportedBlueprintOptions() []string {
+func (t *imageType) SupportedBlueprintOptions() []string {
 	// The blueprint contains a few fields that are essentially metadata and
 	// not configuration / customizations. These should always be implicitly
 	// supported by all image types.
 	return append(t.ImageTypeYAML.Blueprint.SupportedOptions, "name", "version", "description")
 }
 
-func (t *ImageType) RequiredBlueprintOptions() []string {
+func (t *imageType) RequiredBlueprintOptions() []string {
 	return nil
 }
 
 // keep in sync with "generic/imagetype.go:checkOptions()"
-func (t *ImageType) checkOptions(bp *blueprint.Blueprint) []string {
+func (t *imageType) checkOptions(bp *blueprint.Blueprint) []string {
 	if bp == nil {
 		return nil
 	}
@@ -326,14 +326,14 @@ func (t *ImageType) checkOptions(bp *blueprint.Blueprint) []string {
 	return nil
 }
 
-func (t *ImageType) Manifest(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, seedp *int64) (*manifest.Manifest, []string, error) {
+func (t *imageType) Manifest(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, seedp *int64) (*manifest.Manifest, []string, error) {
 	validationWarnings := t.checkOptions(bp)
 
 	mani, manifestWarnings, err := t.manifestWithoutValidation(bp, options, repos, seedp)
 	return mani, append(validationWarnings, manifestWarnings...), err
 }
 
-func (t *ImageType) manifestWithoutValidation(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, seedp *int64) (*manifest.Manifest, []string, error) {
+func (t *imageType) manifestWithoutValidation(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, seedp *int64) (*manifest.Manifest, []string, error) {
 	seed, err := cmdutil.SeedArgFor(nil, t.arch.Name(), t.arch.distro.Name())
 	if err != nil {
 		return nil, nil, err
@@ -358,7 +358,7 @@ func (t *ImageType) manifestWithoutValidation(bp *blueprint.Blueprint, options d
 	}
 }
 
-func (t *ImageType) manifestForDisk(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, rng *rand.Rand) (*manifest.Manifest, []string, error) {
+func (t *imageType) manifestForDisk(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, rng *rand.Rand) (*manifest.Manifest, []string, error) {
 	if t.arch.distro.imgref == "" {
 		return nil, nil, fmt.Errorf("internal error: no base image defined")
 	}
@@ -443,7 +443,7 @@ func (t *ImageType) manifestForDisk(bp *blueprint.Blueprint, options distro.Imag
 	return &mf, nil, nil
 }
 
-func (t *ImageType) initAnacondaInstallerBaseFromSourceInfo(img *image.AnacondaInstallerBase, sourceInfo *osinfo.Info, customizations *blueprint.Customizations) error {
+func (t *imageType) initAnacondaInstallerBaseFromSourceInfo(img *image.AnacondaInstallerBase, sourceInfo *osinfo.Info, customizations *blueprint.Customizations) error {
 	img.RootfsCompression = "zstd"
 
 	if t.arch.Name() == arch.ARCH_X86_64.String() {
@@ -501,7 +501,7 @@ func (t *ImageType) initAnacondaInstallerBaseFromSourceInfo(img *image.AnacondaI
 	return nil
 }
 
-func (t *ImageType) manifestForISO(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, rng *rand.Rand) (*manifest.Manifest, []string, error) {
+func (t *imageType) manifestForISO(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, rng *rand.Rand) (*manifest.Manifest, []string, error) {
 	if t.arch.distro.imgref == "" {
 		return nil, nil, fmt.Errorf("internal error in bootc iso: no base image defined")
 	}
@@ -568,7 +568,7 @@ func (t *ImageType) manifestForISO(bp *blueprint.Blueprint, options distro.Image
 	return &mf, nil, err
 }
 
-func (t *ImageType) manifestForGenericISO(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, rng *rand.Rand) (*manifest.Manifest, []string, error) {
+func (t *imageType) manifestForGenericISO(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, rng *rand.Rand) (*manifest.Manifest, []string, error) {
 	if t.arch.distro.imgref == "" {
 		return nil, nil, fmt.Errorf("internal error: no base image defined")
 	}
@@ -668,7 +668,7 @@ func newDistroYAMLFrom(sourceInfo *osinfo.Info) (*defs.DistroYAML, *distro.ID, e
 	return nil, nil, fmt.Errorf("cannot load distro definitions for %s-%s or any of %v", sourceInfo.OSRelease.ID, sourceInfo.OSRelease.VersionID, sourceInfo.OSRelease.IDLike)
 }
 
-func (t *ImageType) manifestForLegacyISO(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, rng *rand.Rand) (*manifest.Manifest, []string, error) {
+func (t *imageType) manifestForLegacyISO(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, rng *rand.Rand) (*manifest.Manifest, []string, error) {
 	if t.arch.distro.imgref == "" {
 		return nil, nil, fmt.Errorf("internal error in bootc legacy iso: no base image defined")
 	}
@@ -740,7 +740,7 @@ func (t *ImageType) manifestForLegacyISO(bp *blueprint.Blueprint, options distro
 }
 
 // manifestForPXETar creates a PXE bootable bootc rootfs
-func (t *ImageType) manifestForPXETar(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, rng *rand.Rand) (*manifest.Manifest, []string, error) {
+func (t *imageType) manifestForPXETar(bp *blueprint.Blueprint, options distro.ImageOptions, repos []rpmmd.RepoConfig, rng *rand.Rand) (*manifest.Manifest, []string, error) {
 	if t.arch.distro.imgref == "" {
 		return nil, nil, fmt.Errorf("internal error: no base image defined")
 	}
@@ -869,7 +869,7 @@ func newBootcDistroAfterIntrospect(archStr string, info *osinfo.Info, imgref, de
 		return nil, err
 	}
 	for _, imgTypeYaml := range distroYAML.ImageTypes() {
-		ba.addImageTypes(ImageType{
+		ba.addImageTypes(imageType{
 			ImageTypeYAML: imgTypeYaml,
 		})
 	}
