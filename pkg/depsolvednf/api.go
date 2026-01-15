@@ -62,5 +62,5 @@ type solverConfig struct {
 var activeHandler apiHandler
 
 func init() {
-	activeHandler = newV1Handler()
+	activeHandler = newV2Handler()
 }
