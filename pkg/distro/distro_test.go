@@ -496,9 +496,33 @@ func TestPipelineRepositories(t *testing.T) {
 							if len(tCase.result["*"]) > 0 {
 								globals = tCase.result["*"][0]
 							}
+
+							// NOTE: Image types that don't use any customizations in their base
+							// definition do not install any customization packages (e.g., SELinux
+							// policy, subscription-manager, etc.). As a result, they have only 2
+							// package sets in the OS chain (base packages and blueprint packages).
+							// Other image types have 3. These are typically minimal/container
+							// image types.
+							// NOTE: This list must be updated when new image types are added that
+							// don't use any customizations in their base definition.
+							noCustomizationPkgsImageTypes := []string{
+								"container",
+								"container-minimal",
+								"generic-container",
+								"wsl",
+								"generic-wsl",
+							}
+
 							for psName, psChain := range packageSets {
 								// test run in parallel but expChain is mutated during the test so we need a clone
 								expChain := slices.Clone(tCase.result[psName])
+
+								// Adjust expected chain for image types without any customization packages
+								if psName == "os" && len(expChain) == 3 && slices.Contains(noCustomizationPkgsImageTypes, imageTypeName) {
+									// Remove the middle entry (customization packages) from expected chain
+									expChain = []stringSet{expChain[0], expChain[2]}
+								}
+
 								if len(expChain) > 0 {
 									// if we specified an expected chain it should match the returned.
 									if len(expChain) != len(psChain) {
