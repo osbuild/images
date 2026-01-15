@@ -27,6 +27,7 @@ type ContainerBasedIso struct {
 	RootfsType        manifest.ISORootfsType
 
 	KernelPath    string
+	KernelOpts    []string
 	InitramfsPath string
 }
 
@@ -43,13 +44,22 @@ func (img *ContainerBasedIso) InstantiateManifestFromContainer(m *manifest.Manif
 	rng *rand.Rand) (*artifact.Artifact, error) {
 	cnts := []container.SourceSpec{img.ContainerSource}
 
-	// org.osbuild.grub2.iso.legacy fails to run with empty kernel options, so let's use something harmless
-	kernelOpts := []string{
-		fmt.Sprintf("root=live:CDLABEL=%s", img.ISOLabel),
-		"rd.live.image",
-		"quiet",
-		"rhgb",
-		"enforcing=0",
+	kernelOpts := []string{}
+
+	if len(img.KernelOpts) > 0 {
+		for _, kopt := range img.KernelOpts {
+			kernelOpts = append(kernelOpts, fmt.Sprintf(kopt, img.ISOLabel))
+		}
+	} else {
+		// org.osbuild.grub2.iso.legacy fails to run with empty kernel options, so let's use something harmless
+		// if we didn't have any specific kernelopts set
+		kernelOpts = []string{
+			fmt.Sprintf("root=live:CDLABEL=%s", img.ISOLabel),
+			"rd.live.image",
+			"quiet",
+			"rhgb",
+			"enforcing=0",
+		}
 	}
 
 	buildPipeline := manifest.NewBuildFromContainer(m, runner, cnts,

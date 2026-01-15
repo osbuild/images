@@ -595,6 +595,10 @@ func (t *BootcImageType) manifestForGenericISO(bp *blueprint.Blueprint, options 
 		img.ISOLabel = LabelForISO(&t.arch.distro.sourceInfo.OSRelease, t.arch.Name())
 	}
 
+	if len(t.arch.distro.sourceInfo.ISOInfo.KernelArgs) > 0 {
+		img.KernelOpts = t.arch.distro.sourceInfo.ISOInfo.KernelArgs
+	}
+
 	mf := manifest.New()
 
 	foundDistro, foundRunner, err := GetDistroAndRunner(t.arch.distro.sourceInfo.OSRelease)

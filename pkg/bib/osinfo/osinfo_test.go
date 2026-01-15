@@ -276,6 +276,9 @@ func TestLoadInfoPartitionTableSad(t *testing.T) {
 
 var fakeISOYAML = `
 label: "My-ISO-%s"
+kernel_args:
+- "root=live:CDLABEL=%s"
+- "foo"
 `
 
 func createISO(t *testing.T, root, fakeISOYAML string) {
@@ -298,6 +301,9 @@ func TestLoadInfoISOHappy(t *testing.T) {
 
 	// note: osinfo contains the pre-formatting label, not the filled out one
 	assert.Equal(t, "My-ISO-%s", info.ISOInfo.Label)
+
+	// note: osinfo contains the pre-formatting args, not the filled out one
+	assert.Equal(t, []string{"root=live:CDLABEL=%s", "foo"}, info.ISOInfo.KernelArgs)
 }
 
 func TestLoadInfoISOSad(t *testing.T) {
