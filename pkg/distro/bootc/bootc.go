@@ -34,9 +34,9 @@ type BootcDistro struct {
 	arches map[string]distro.Arch
 }
 
-var _ = distro.Arch(&BootcArch{})
+var _ = distro.Arch(&Arch{})
 
-type BootcArch struct {
+type Arch struct {
 	distro *BootcDistro
 	arch   arch.Arch
 
@@ -157,7 +157,7 @@ func (d *BootcDistro) GetArch(arch string) (distro.Arch, error) {
 	return a, nil
 }
 
-func (d *BootcDistro) addArches(arches ...*BootcArch) {
+func (d *BootcDistro) addArches(arches ...*Arch) {
 	if d.arches == nil {
 		d.arches = map[string]distro.Arch{}
 	}
@@ -168,15 +168,15 @@ func (d *BootcDistro) addArches(arches ...*BootcArch) {
 	}
 }
 
-func (a *BootcArch) Name() string {
+func (a *Arch) Name() string {
 	return a.arch.String()
 }
 
-func (a *BootcArch) Distro() distro.Distro {
+func (a *Arch) Distro() distro.Distro {
 	return a.distro
 }
 
-func (a *BootcArch) ListImageTypes() []string {
+func (a *Arch) ListImageTypes() []string {
 	formats := make([]string, 0, len(a.imageTypes))
 	for name := range a.imageTypes {
 		formats = append(formats, name)
@@ -185,7 +185,7 @@ func (a *BootcArch) ListImageTypes() []string {
 	return formats
 }
 
-func (a *BootcArch) GetImageType(imageType string) (distro.ImageType, error) {
+func (a *Arch) GetImageType(imageType string) (distro.ImageType, error) {
 	t, exists := a.imageTypes[imageType]
 	if !exists {
 		return nil, errors.New("invalid image type: " + imageType)
@@ -194,7 +194,7 @@ func (a *BootcArch) GetImageType(imageType string) (distro.ImageType, error) {
 	return t, nil
 }
 
-func (a *BootcArch) addImageTypes(imageTypes ...imageType) {
+func (a *Arch) addImageTypes(imageTypes ...imageType) {
 	if a.imageTypes == nil {
 		a.imageTypes = map[string]distro.ImageType{}
 	}
@@ -229,7 +229,7 @@ func newBootcDistroAfterIntrospect(archStr string, info *osinfo.Info, imgref, de
 	if err != nil {
 		return nil, err
 	}
-	ba := &BootcArch{
+	ba := &Arch{
 		arch: archi,
 	}
 

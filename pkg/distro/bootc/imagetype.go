@@ -32,7 +32,7 @@ var _ = distro.ImageType(&imageType{})
 type imageType struct {
 	defs.ImageTypeYAML
 
-	arch *BootcArch
+	arch *Arch
 }
 
 func (t *imageType) Name() string {
