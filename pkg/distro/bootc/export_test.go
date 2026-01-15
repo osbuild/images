@@ -36,19 +36,19 @@ func NewTestBootcDistroWithDefaultFs(defaultFs string) *BootcDistro {
 	return common.Must(newBootcDistroAfterIntrospect("x86_64", info, "quay.io/example/example:ref", defaultFs, 0))
 }
 
-func NewTestBootcImageType(imageType string) *BootcImageType {
+func NewTestBootcImageType(imageType string) *ImageType {
 	d := NewTestBootcDistro()
 	it, err := d.arches["x86_64"].GetImageType(imageType)
 	if err != nil {
 		panic(err)
 	}
-	return it.(*BootcImageType)
+	return it.(*ImageType)
 }
 
-func (t *BootcImageType) SetSourceInfoPartitionTable(basept *disk.PartitionTable) {
+func (t *ImageType) SetSourceInfoPartitionTable(basept *disk.PartitionTable) {
 	t.arch.distro.sourceInfo.PartitionTable = basept
 }
 
-func (t *BootcImageType) GenPartitionTable(customizations *blueprint.Customizations, rootfsMinSize uint64, rng *rand.Rand) (*disk.PartitionTable, error) {
+func (t *ImageType) GenPartitionTable(customizations *blueprint.Customizations, rootfsMinSize uint64, rng *rand.Rand) (*disk.PartitionTable, error) {
 	return t.genPartitionTable(customizations, rootfsMinSize, rng)
 }
