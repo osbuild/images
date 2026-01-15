@@ -274,7 +274,9 @@ func TestLoadInfoPartitionTableSad(t *testing.T) {
 	assert.EqualError(t, err, fmt.Sprintf(`cannot parse disk definitions from "%s/usr/lib/bootc-image-builder/disk.yaml": yaml: found character that cannot start any token`, root))
 }
 
-var fakeISOYAML = "---"
+var fakeISOYAML = `
+label: "My-ISO"
+`
 
 func createISO(t *testing.T, root, fakeISOYAML string) {
 	t.Helper()
@@ -291,8 +293,10 @@ func TestLoadInfoISOHappy(t *testing.T) {
 	writeOSRelease(t, root, "fedora", "40", "Fedora Linux", "fedora", "platform:f40", "coreos")
 	createISO(t, root, fakeISOYAML)
 
-	_, err := Load(root)
+	info, err := Load(root)
 	require.NoError(t, err)
+
+	assert.Equal(t, "My-ISO", info.ISOInfo.Label)
 }
 
 func TestLoadInfoISOSad(t *testing.T) {

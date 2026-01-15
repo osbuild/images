@@ -36,12 +36,17 @@ type KernelInfo struct {
 	HasAbootImg bool
 }
 
+type ISOInfo struct {
+	Label string
+}
+
 type Info struct {
 	OSRelease          OSRelease `yaml:"os_release"`
 	UEFIVendor         string    `yaml:"uefi_vendor"`
 	SELinuxPolicy      string    `yaml:"selinux_policy"`
 	ImageCustomization *blueprint.Customizations
 	KernelInfo         *KernelInfo `yaml:"kernel_info"`
+	ISOInfo            ISOInfo     `yaml:"iso_info"`
 
 	MountConfiguration *osbuild.MountConfiguration
 	PartitionTable     *disk.PartitionTable
@@ -163,7 +168,9 @@ func readDiskYaml(root string) (*diskYAML, error) {
 	return &disk, nil
 }
 
-type isoYAML struct{}
+type isoYAML struct {
+	Label string `json:"label" yaml:"label"`
+}
 
 func readISOYaml(root string) (*isoYAML, error) {
 	p := path.Join(root, bibPathPrefix, "iso.yaml")
@@ -247,9 +254,15 @@ func Load(root string) (*Info, error) {
 		pt = diskYaml.PartitionTable
 	}
 
-	_, err = readISOYaml(root)
+	isoYaml, err := readISOYaml(root)
 	if err != nil {
 		return nil, err
+	}
+
+	isoInfo := ISOInfo{}
+
+	if isoYaml != nil {
+		isoInfo.Label = isoYaml.Label
 	}
 
 	kernelInfo, err := readKernelInfo(root)
@@ -283,5 +296,6 @@ func Load(root string) (*Info, error) {
 		KernelInfo:         kernelInfo,
 		MountConfiguration: mc,
 		PartitionTable:     pt,
+		ISOInfo:            isoInfo,
 	}, nil
 }

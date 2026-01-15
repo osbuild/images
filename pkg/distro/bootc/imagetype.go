@@ -403,7 +403,12 @@ func (t *imageType) manifestForGenericISO(options distro.ImageOptions, rng *rand
 	img.Product = t.arch.distro.sourceInfo.OSRelease.Name
 	img.Version = t.arch.distro.sourceInfo.OSRelease.VersionID
 	img.Release = t.arch.distro.sourceInfo.OSRelease.VersionID
-	img.ISOLabel = LabelForISO(&t.arch.distro.sourceInfo.OSRelease, t.arch.Name())
+
+	if t.arch.distro.sourceInfo.ISOInfo.Label != "" {
+		img.ISOLabel = t.arch.distro.sourceInfo.ISOInfo.Label
+	} else {
+		img.ISOLabel = LabelForISO(&t.arch.distro.sourceInfo.OSRelease, t.arch.Name())
+	}
 
 	mf := manifest.New()
 
