@@ -725,7 +725,6 @@ func TestOSPackageSetChainStructure(t *testing.T) {
 			},
 			expectedChainInclude: [][]string{
 				{"bash", "coreutils"},
-				{}, // XXX: this is a bug, we should not have an empty package set here
 			},
 		},
 		{
@@ -736,7 +735,6 @@ func TestOSPackageSetChainStructure(t *testing.T) {
 			},
 			expectedChainInclude: [][]string{
 				{"bash", "coreutils"},
-				{}, // XXX: this is a bug, we should not have an empty package set here
 				{"vim", "tmux"},
 			},
 		},
