@@ -29,7 +29,7 @@ CAN_BOOT_TEST = {
         "ec2-ha",
         "ec2-sap",
         "edge-ami",
-        "iot-bootable-container",
+        "generic-bootable-container",
         "vhd",
         "cloud-ec2",
     ],
@@ -41,7 +41,7 @@ CAN_BOOT_TEST = {
 }
 
 BIB_TYPES = [
-    "iot-bootable-container"
+    "generic-bootable-container"
 ]
 
 
