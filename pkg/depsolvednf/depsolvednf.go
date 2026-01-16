@@ -186,11 +186,15 @@ type DepsolveResult struct {
 // DumpResult contains the results of a dump operation.
 type DumpResult struct {
 	Packages rpmmd.PackageList
+	Repos    []rpmmd.RepoConfig
+	Solver   string
 }
 
 // SearchResult contains the results of a search operation.
 type SearchResult struct {
 	Packages rpmmd.PackageList
+	Repos    []rpmmd.RepoConfig
+	Solver   string
 }
 
 // Create a new Solver with the given configuration. Initialising a Solver also loads system subscription information.
@@ -389,6 +393,8 @@ func (s *Solver) FetchMetadata(repos []rpmmd.RepoConfig) (rpmmd.PackageList, err
 		return nil, err
 	}
 
+	// XXX: Cache and expose the whole operation result instead of just the packages in the future.
+
 	pkgs := res.Packages
 	sort.Slice(pkgs, func(i, j int) bool {
 		return pkgs[i].NVR() < pkgs[j].NVR()
@@ -434,6 +440,8 @@ func (s *Solver) SearchMetadata(repos []rpmmd.RepoConfig, packages []string) (rp
 	if err != nil {
 		return nil, err
 	}
+
+	// XXX: Cache and expose the whole operation result instead of just the packages in the future.
 
 	pkgs := res.Packages
 	sort.Slice(pkgs, func(i, j int) bool {
