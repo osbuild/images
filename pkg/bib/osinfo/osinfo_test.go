@@ -274,6 +274,47 @@ func TestLoadInfoPartitionTableSad(t *testing.T) {
 	assert.EqualError(t, err, fmt.Sprintf(`cannot parse disk definitions from "%s/usr/lib/bootc-image-builder/disk.yaml": yaml: found character that cannot start any token`, root))
 }
 
+var fakeISOYAML = `
+label: "My-ISO-%s"
+kernel_args:
+- "root=live:CDLABEL=%s"
+- "foo"
+`
+
+func createISO(t *testing.T, root, fakeISOYAML string) {
+	t.Helper()
+
+	dst := path.Join(root, "/usr/lib/bootc-image-builder/iso.yaml")
+	err := os.MkdirAll(path.Dir(dst), 0755)
+	require.NoError(t, err)
+	err = os.WriteFile(dst, []byte(fakeISOYAML), 0644)
+	require.NoError(t, err)
+}
+
+func TestLoadInfoISOHappy(t *testing.T) {
+	root := t.TempDir()
+	writeOSRelease(t, root, "fedora", "40", "Fedora Linux", "fedora", "platform:f40", "coreos")
+	createISO(t, root, fakeISOYAML)
+
+	info, err := Load(root)
+	require.NoError(t, err)
+
+	// note: osinfo contains the pre-formatting label, not the filled out one
+	assert.Equal(t, "My-ISO-%s", info.ISOInfo.Label)
+
+	// note: osinfo contains the pre-formatting args, not the filled out one
+	assert.Equal(t, []string{"root=live:CDLABEL=%s", "foo"}, info.ISOInfo.KernelArgs)
+}
+
+func TestLoadInfoISOSad(t *testing.T) {
+	root := t.TempDir()
+	writeOSRelease(t, root, "fedora", "40", "Fedora Linux", "fedora", "platform:f40", "coreos")
+	createISO(t, root, "@invalidYAML")
+
+	_, err := Load(root)
+	assert.EqualError(t, err, fmt.Sprintf(`cannot parse iso definitions from "%s/usr/lib/bootc-image-builder/iso.yaml": yaml: found character that cannot start any token`, root))
+}
+
 func TestLoadInfoUEFIVendorSearchPath(t *testing.T) {
 	root := t.TempDir()
 

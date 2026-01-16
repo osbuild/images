@@ -90,3 +90,17 @@ containers:
         name: "Fedora 42"
         id: "fedora"
         versionid: "42"
+
+  # test bootc-iso
+  - <<: *default_fake_container
+    image_types: ["bootc-iso"]
+    arch: x86_64
+    info:
+      <<: *default_info
+      uefi_vendor: "uefi-vendor-x86_64"
+  - <<: *default_fake_container
+    image_types: ["bootc-iso"]
+    arch: aarch64
+    info:
+      <<: *default_info
+      uefi_vendor: "uefi-vendor-aarch64"
