@@ -592,6 +592,16 @@ func (t *BootcImageType) manifestForGenericISO(bp *blueprint.Blueprint, options 
 	img.Release = t.arch.distro.sourceInfo.OSRelease.VersionID
 	img.ISOLabel = LabelForISO(&t.arch.distro.sourceInfo.OSRelease, t.arch.Name())
 
+	// Set payload container if provided (for embedding in container storage)
+	if options.Bootc != nil && options.Bootc.InstallerPayloadRef != "" {
+		payloadRef := options.Bootc.InstallerPayloadRef
+		img.PayloadContainer = &container.SourceSpec{
+			Source: payloadRef,
+			Name:   payloadRef,
+			Local:  true,
+		}
+	}
+
 	mf := manifest.New()
 
 	foundDistro, foundRunner, err := GetDistroAndRunner(t.arch.distro.sourceInfo.OSRelease)
