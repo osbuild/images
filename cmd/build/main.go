@@ -50,6 +50,15 @@ func run() error {
 		os.Exit(1)
 	}
 
+	// NOTE: Check the minimum osbuild version before doing anything else.
+	// Building the manifest would fail, but we need to depsolve the packages
+	// also with the minimum osbuild version. Although the depsolve may fail
+	// with an error, it is for the best to fail with the version mismatch
+	// error.
+	if err := osbuild.CheckMinimumOSBuildVersion(); err != nil {
+		return err
+	}
+
 	distroFac := distrofactory.NewDefault()
 	config, err := buildconfig.New(configFile, nil)
 	if err != nil {
