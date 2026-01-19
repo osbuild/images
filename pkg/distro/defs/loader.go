@@ -110,6 +110,8 @@ type DistroYAML struct {
 
 	// set by the loader
 	ID distro.ID
+
+	Tweaks *distro.Tweaks `yaml:"tweaks"`
 }
 
 func (d *DistroYAML) ImageTypes() map[string]ImageTypeYAML {
@@ -159,6 +161,10 @@ func (d *DistroYAML) runTemplates(id distro.ID) error {
 	}
 
 	return errors.Join(errs...)
+}
+
+func (d *DistroYAML) GetTweaks() *distro.Tweaks {
+	return d.Tweaks
 }
 
 // Load all YAML files directly in the root of the definitions filesystem. Each
