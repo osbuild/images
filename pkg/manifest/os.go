@@ -531,11 +531,7 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 		pipeline.AddStage(osbuild.NewOSTreePasswdStage("org.osbuild.source", p.ostreeParentSpec.Checksum))
 	}
 
-	// collect all repos for this pipeline to create the repository options
-	allRepos := append(p.repos, p.OSCustomizations.ExtraBaseRepos...)
-	allRepos = append(allRepos, p.OSCustomizations.PayloadRepos...)
-
-	rpmOptions := osbuild.NewRPMStageOptions(allRepos)
+	rpmOptions := osbuild.NewRPMStageOptions(p.repos)
 	if p.OSCustomizations.ExcludeDocs {
 		if rpmOptions.Exclude == nil {
 			rpmOptions.Exclude = &osbuild.Exclude{}
