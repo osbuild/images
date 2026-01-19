@@ -23,6 +23,9 @@ type EFIBootTree struct {
 
 	// Default Grub2 menu on the ISO
 	DefaultMenu int
+
+	// Default Grub2 menu timeout on the ISO
+	MenuTimeout *int
 }
 
 func NewEFIBootTree(buildPipeline Build, product, version string) *EFIBootTree {
@@ -52,9 +55,20 @@ func (p *EFIBootTree) serialize() (osbuild.Pipeline, error) {
 	}
 
 	var grub2config *osbuild.Grub2Config
+
 	if p.DefaultMenu > 0 {
 		grub2config = &osbuild.Grub2Config{
 			Default: p.DefaultMenu,
+		}
+	}
+
+	if p.MenuTimeout != nil {
+		if grub2config == nil {
+			grub2config = &osbuild.Grub2Config{
+				Timeout: *p.MenuTimeout,
+			}
+		} else {
+			grub2config.Timeout = *p.MenuTimeout
 		}
 	}
 

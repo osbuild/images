@@ -39,6 +39,9 @@ type KernelInfo struct {
 type ISOInfo struct {
 	Label      string
 	KernelArgs []string
+	Grub2      struct {
+		Timeout *int
+	}
 }
 
 type Info struct {
@@ -172,6 +175,9 @@ func readDiskYaml(root string) (*diskYAML, error) {
 type isoYAML struct {
 	Label      string   `json:"label" yaml:"label"`
 	KernelArgs []string `json:"kernel_args" yaml:"kernel_args"`
+	Grub2      struct {
+		Timeout *int `json:"timeout" yaml:"timeout"`
+	} `json:"grub2" yaml:"grub2"`
 }
 
 func readISOYaml(root string) (*isoYAML, error) {
@@ -266,6 +272,7 @@ func Load(root string) (*Info, error) {
 	if isoYaml != nil {
 		isoInfo.Label = isoYaml.Label
 		isoInfo.KernelArgs = isoYaml.KernelArgs
+		isoInfo.Grub2.Timeout = isoYaml.Grub2.Timeout
 	}
 
 	kernelInfo, err := readKernelInfo(root)

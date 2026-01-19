@@ -279,6 +279,8 @@ label: "My-ISO"
 kernel_args:
 - "root=live:CDLABEL=My-ISO"
 - "foo"
+grub2:
+  timeout: 30
 `
 
 func createISO(t *testing.T, root, fakeISOYAML string) {
@@ -301,6 +303,8 @@ func TestLoadInfoISOHappy(t *testing.T) {
 
 	assert.Equal(t, "My-ISO", info.ISOInfo.Label)
 	assert.Equal(t, []string{"root=live:CDLABEL=My-ISO", "foo"}, info.ISOInfo.KernelArgs)
+
+	assert.Equal(t, 30, *info.ISOInfo.Grub2.Timeout)
 }
 
 func TestLoadInfoISOSad(t *testing.T) {

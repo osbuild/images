@@ -185,9 +185,21 @@ func (p *ISOTree) serialize() (osbuild.Pipeline, error) {
 		version = p.Release
 	}
 	var grub2config *osbuild.Grub2Config
-	if p.bootTreePipeline != nil && p.bootTreePipeline.DefaultMenu > 0 {
-		grub2config = &osbuild.Grub2Config{
-			Default: p.bootTreePipeline.DefaultMenu,
+	if p.bootTreePipeline != nil {
+		if p.bootTreePipeline.DefaultMenu > 0 {
+			grub2config = &osbuild.Grub2Config{
+				Default: p.bootTreePipeline.DefaultMenu,
+			}
+		}
+
+		if p.bootTreePipeline.MenuTimeout != nil {
+			if grub2config == nil {
+				grub2config = &osbuild.Grub2Config{
+					Timeout: *p.bootTreePipeline.MenuTimeout,
+				}
+			} else {
+				grub2config.Timeout = *p.bootTreePipeline.MenuTimeout
+			}
 		}
 	}
 	options := &osbuild.Grub2ISOLegacyStageOptions{
