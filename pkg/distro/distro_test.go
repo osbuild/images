@@ -82,15 +82,16 @@ func TestImageTypePipelineNames(t *testing.T) {
 						Customizations: customizations,
 					}
 					options := distro.ImageOptions{}
-					// this repo's gpg keys should get included in the os
-					// pipeline's rpm stage
+					// This base repo's GPG keys should get included in the
+					// OS pipeline's RPM stage since packages are resolved
+					// from it. The repo has no PackageSets filter, so it
+					// applies to all package sets.
 					repos := []rpmmd.RepoConfig{
 						{
-							Name:        "payload",
-							BaseURLs:    []string{"http://payload.example.com"},
-							PackageSets: imageType.PayloadPackageSets(),
-							GPGKeys:     []string{"payload-gpg-key"},
-							CheckGPG:    common.ToPtr(true),
+							Name:     "baseos",
+							BaseURLs: []string{"http://baseos.example.com"},
+							GPGKeys:  []string{"baseos-gpg-key"},
+							CheckGPG: common.ToPtr(true),
 						},
 					}
 					seed := int64(0)
@@ -118,6 +119,9 @@ func TestImageTypePipelineNames(t *testing.T) {
 					depsolvedSets := make(map[string]depsolvednf.DepsolveResult, len(packageSets))
 					for name, sets := range packageSets {
 						packages := make(rpmmd.PackageList, 0)
+						// Collect unique repos from all package sets in the
+						// chain, simulating what a real depsolver would return.
+						reposMap := make(map[string]rpmmd.RepoConfig)
 						for _, set := range sets {
 							for idx, pkginc := range set.Include {
 								packages = append(packages, rpmmd.Package{
@@ -137,10 +141,19 @@ func TestImageTypePipelineNames(t *testing.T) {
 									RemoteLocations: []string{fmt.Sprintf("https://example.com/%s", pkginc)},
 								})
 							}
+							for _, repo := range set.Repositories {
+								reposMap[repo.Name] = repo
+							}
+						}
+
+						depsolvedRepos := make([]rpmmd.RepoConfig, 0, len(reposMap))
+						for _, repo := range reposMap {
+							depsolvedRepos = append(depsolvedRepos, repo)
 						}
 
 						depsolvedSets[name] = depsolvednf.DepsolveResult{
 							Packages: packages,
+							Repos:    depsolvedRepos,
 						}
 					}
 
