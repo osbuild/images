@@ -375,6 +375,7 @@ def boot_qemu_pxe(arch, pxe_tar_path):
 
 
 def cmd_boot_aws(arch, image_name, privkey, pubkey, image_path, script_cmd):
+    make_check_host_config(arch)
     aws_config = get_aws_config()
     cmd = ["go", "run", "./cmd/boot-aws", "run",
            "--access-key-id", aws_config["key_id"],
