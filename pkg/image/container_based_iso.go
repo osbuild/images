@@ -35,6 +35,7 @@ type ContainerBasedIso struct {
 	KernelOpts    []string
 	InitramfsPath string
 
+	Grub2MenuDefault *int
 	Grub2MenuTimeout *int
 }
 
@@ -89,6 +90,10 @@ func (img *ContainerBasedIso) InstantiateManifestFromContainer(m *manifest.Manif
 	bootTreePipeline.ISOLabel = img.ISOLabel
 	bootTreePipeline.KernelOpts = kernelOpts
 	bootTreePipeline.MenuTimeout = img.Grub2MenuTimeout
+
+	if img.Grub2MenuDefault != nil {
+		bootTreePipeline.DefaultMenu = *img.Grub2MenuDefault
+	}
 
 	isoTreePipeline := manifest.NewISOTree(buildPipeline, osTreePipeline, bootTreePipeline)
 	isoTreePipeline.PartitionTable = efiBootPartitionTable(rng)

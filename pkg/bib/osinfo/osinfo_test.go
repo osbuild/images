@@ -280,6 +280,7 @@ kernel_args:
 - "root=live:CDLABEL=My-ISO"
 - "foo"
 grub2:
+  default: 5
   timeout: 30
 `
 
@@ -305,6 +306,7 @@ func TestLoadInfoISOHappy(t *testing.T) {
 	assert.Equal(t, []string{"root=live:CDLABEL=My-ISO", "foo"}, info.ISOInfo.KernelArgs)
 
 	assert.Equal(t, 30, *info.ISOInfo.Grub2.Timeout)
+	assert.Equal(t, 5, *info.ISOInfo.Grub2.Default)
 }
 
 func TestLoadInfoISOSad(t *testing.T) {
