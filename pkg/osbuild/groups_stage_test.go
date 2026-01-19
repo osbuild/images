@@ -41,6 +41,7 @@ func TestNewGroupsStageOptions(t *testing.T) {
 						GID: common.ToPtr(42),
 					},
 				},
+				Force: true,
 			},
 		},
 		"multi": {
@@ -70,6 +71,7 @@ func TestNewGroupsStageOptions(t *testing.T) {
 						GID: common.ToPtr(959),
 					},
 				},
+				Force: true,
 			},
 		},
 	}
