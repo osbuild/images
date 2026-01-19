@@ -61,6 +61,10 @@
         {
           "name": "user3",
           "gid": 1060
+        },
+        {
+          "name": "wheel",
+          "gid": 4242
         }
       ],
       "timezone": {
