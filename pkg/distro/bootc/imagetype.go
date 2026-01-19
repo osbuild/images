@@ -404,18 +404,20 @@ func (t *imageType) manifestForGenericISO(options distro.ImageOptions, rng *rand
 	img.Version = t.arch.distro.sourceInfo.OSRelease.VersionID
 	img.Release = t.arch.distro.sourceInfo.OSRelease.VersionID
 
-	if t.arch.distro.sourceInfo.ISOInfo.Label != "" {
-		img.ISOLabel = t.arch.distro.sourceInfo.ISOInfo.Label
+	isoi := t.arch.distro.sourceInfo.ISOInfo
+
+	if isoi.Label != "" {
+		img.ISOLabel = isoi.Label
 	} else {
 		img.ISOLabel = LabelForISO(&t.arch.distro.sourceInfo.OSRelease, t.arch.Name())
 	}
 
-	if len(t.arch.distro.sourceInfo.ISOInfo.KernelArgs) > 0 {
-		img.KernelOpts = t.arch.distro.sourceInfo.ISOInfo.KernelArgs
+	if len(isoi.KernelArgs) > 0 {
+		img.KernelOpts = isoi.KernelArgs
 	}
 
-	img.Grub2MenuDefault = t.arch.distro.sourceInfo.ISOInfo.Grub2.Default
-	img.Grub2MenuTimeout = t.arch.distro.sourceInfo.ISOInfo.Grub2.Timeout
+	img.Grub2MenuDefault = isoi.Grub2.Default
+	img.Grub2MenuTimeout = isoi.Grub2.Timeout
 
 	mf := manifest.New()
 
