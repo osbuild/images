@@ -414,6 +414,7 @@ func (t *imageType) manifestForGenericISO(options distro.ImageOptions, rng *rand
 		img.KernelOpts = t.arch.distro.sourceInfo.ISOInfo.KernelArgs
 	}
 
+	img.Grub2MenuDefault = t.arch.distro.sourceInfo.ISOInfo.Grub2.Default
 	img.Grub2MenuTimeout = t.arch.distro.sourceInfo.ISOInfo.Grub2.Timeout
 
 	mf := manifest.New()
