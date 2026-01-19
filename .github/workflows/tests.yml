@@ -305,8 +305,16 @@ jobs:
       image: registry.fedoraproject.org/fedora:latest
       options: "--privileged"
     steps:
-      - name: Install build and test dependencies
-        run: dnf -y install python3-pytest podman go btrfs-progs-devel device-mapper-devel gpgme-devel python3-pip qemu-system-s390x-core qemu-system-ppc64 qemu-user-static osbuild osbuild-depsolve-dnf cloud-utils
+      - name: Install build and test dependencies (without osbuild)
+        run: dnf -y install python3-pytest podman go btrfs-progs-devel device-mapper-devel gpgme-devel python3-pip qemu-system-s390x-core qemu-system-ppc64 qemu-user-static cloud-utils
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v6
+        with:
+          set-safe-directory: true
+      - name: Setup repository for pinned osbuild commit
+        run: ./test/scripts/setup-osbuild-repo
+      - name: Install osbuild dependencies
+        run: dnf -y install osbuild osbuild-depsolve-dnf
       - name: Manually start qemu-user-static
         run: |
           # mostly for debugging
@@ -318,10 +326,6 @@ jobs:
           ls /proc/sys/fs/binfmt_misc/
           sudo SYSTEMD_LOG_LEVEL=debug /usr/lib/systemd/systemd-binfmt /usr/lib/binfmt.d/qemu-*.conf
           ls /proc/sys/fs/binfmt_misc/
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v6
-        with:
-          set-safe-directory: true
       - name: Cross arch integration test
         run: |
           pip install .
