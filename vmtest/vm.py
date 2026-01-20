@@ -52,8 +52,8 @@ class VM(abc.ABC):
         # XXX: use a proper logger
         sys.stdout.write(msg.rstrip("\n") + "\n")
 
-    def wait_ssh_ready(self):
-        wait_ssh_ready(self._address, self._ssh_port, sleep=1, max_wait_sec=1800)
+    def wait_ssh_ready(self, timeout_sec=600):
+        wait_ssh_ready(self._address, self._ssh_port, sleep=1, max_wait_sec=timeout_sec)
 
     @abc.abstractmethod
     def force_stop(self):
@@ -255,7 +255,7 @@ class QEMU(VM):
         return qemu_cmdline
 
     # XXX: move args to init() so that __enter__ can use them?
-    def start(self, wait_event="ssh", snapshot=True, use_ovmf=False):
+    def start(self, wait_event="ssh", snapshot=True, use_ovmf=False, timeout_sec=120):
         if self.running():
             return
         self._ssh_port = get_free_port()
@@ -271,11 +271,11 @@ class QEMU(VM):
         # XXX: also check that qemu is working and did not crash
         ev = wait_event.split(":")
         if ev == ["ssh"]:
-            self.wait_ssh_ready()
+            self.wait_ssh_ready(timeout_sec=timeout_sec)
             self._log(f"vm ready at port {self._ssh_port}")
         elif ev[0] == "qmp":
             qmp_event = ev[1]
-            self.wait_qmp_event(qmp_event)
+            self.wait_qmp_event(qmp_event, timeout_sec=timeout_sec)
             self._log(f"qmp event {qmp_event}")
         else:
             raise ValueError(f"unsupported wait_event {wait_event}")
@@ -287,14 +287,20 @@ class QEMU(VM):
             time.sleep(1)
         raise TimeoutError(f"no {self._qmp_socket} after {timeout_sec} seconds")
 
-    def wait_qmp_event(self, qmp_event):
+    def wait_qmp_event(self, qmp_event, timeout_sec=120):
         # import lazy to avoid requiring it for all operations
         import qmp  # pylint: disable=import-outside-toplevel
         self._wait_qmp_socket(30)
         mon = qmp.QEMUMonitorProtocol(os.fspath(self._qmp_socket))
         mon.connect()
+        start = time.monotonic()
         while True:
-            event = mon.pull_event(wait=True)
+            try:
+                event = mon.pull_event(wait=1.0)
+            except (qmp.QMPTimeoutError, qmp.QMPConnectError):
+                if time.monotonic() > start + timeout_sec:
+                    raise TimeoutError(f"no {qmp_event} event after {timeout_sec} seconds")
+                continue
             self._log(f"DEBUG: got event {event}")
             if event["event"] == qmp_event:
                 return
