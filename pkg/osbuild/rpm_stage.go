@@ -29,6 +29,8 @@ type RPMStageOptions struct {
 
 	// Only install certain locales (sets `_install_langs` RPM macro)
 	InstallLangs []string `json:"install_langs,omitempty"`
+
+	RPMKeys *RPMKeys `json:"rpmkeys,omitempty"`
 }
 
 type Exclude struct {
@@ -40,6 +42,11 @@ type KernelInstallEnv struct {
 	// Sets $BOOT_ROOT for kernel-install to override
 	// $KERNEL_INSTALL_BOOT_ROOT, the installation location for boot entries
 	BootRoot string `json:"boot_root,omitempty"`
+}
+
+type RPMKeys struct {
+	BinPath              *string `json:"bin_path,omitempty"`
+	IgnoreImportFailures *bool   `json:"ignore_import_failures,omitempty"`
 }
 
 // RPMPackage represents one RPM, as referenced by its content hash
