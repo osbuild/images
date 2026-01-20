@@ -32,7 +32,6 @@ type testHandler struct {
 // getTestHandlers returns the list of handlers to test against.
 func getTestHandlers() []testHandler {
 	return []testHandler{
-		{name: "V1", handler: newV1Handler(), assertDepsolveResult: assertDepsolveResultV1},
 		{name: "V2", handler: newV2Handler(), assertDepsolveResult: assertDepsolveResultV2},
 	}
 }
@@ -87,20 +86,6 @@ func assertExpectedPackages(t *testing.T, pkgSets []rpmmd.PackageSet, expected, 
 			}), "requested package %q not found in the depsolve result", reqPkg)
 		}
 	}
-}
-
-// assertDepsolveResultV1 checks the expected packages against the actual packages for the V1 API result.
-func assertDepsolveResultV1(t *testing.T, pkgSets []rpmmd.PackageSet, actual DepsolveResult) {
-	t.Helper()
-
-	require.Equal(t, 1, len(actual.Repos), "expected exactly 1 repo")
-	expectedPackages := expectedDepsolvedPackages(actual.Repos[0])
-
-	// Check Packages field
-	assertExpectedPackages(t, pkgSets, expectedPackages, actual.Packages)
-
-	// The Transactions field is not set in the V1 API
-	assert.Empty(t, actual.Transactions)
 }
 
 // assertDepsolveResultV2 checks the expected packages against the actual packages for the V2 API result.
