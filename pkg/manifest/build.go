@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/osbuild"
@@ -49,6 +50,8 @@ type BuildrootFromPackages struct {
 	disableSelinux bool
 
 	selinuxPolicy string
+
+	rpmStageIgnoreGPGImportFailures bool
 }
 
 type BuildOptions struct {
@@ -76,6 +79,9 @@ type BuildOptions struct {
 
 	// Ensure directories exist
 	EnsureDirs []*fsnode.Directory
+
+	// Ignore gpg import failures
+	RPMStageIgnoreGPGImportFailures bool
 }
 
 // policy or default returns the selinuxPolicy or (if unset) the
@@ -99,13 +105,14 @@ func NewBuild(m *Manifest, runner runner.Runner, repos []rpmmd.RepoConfig, opts 
 		name = opts.PipelineName
 	}
 	pipeline := &BuildrootFromPackages{
-		Base:               NewBase(name, opts.BootstrapPipeline),
-		runner:             runner,
-		dependents:         make([]Pipeline, 0),
-		repos:              filterRepos(repos, name),
-		containerBuildable: opts.ContainerBuildable,
-		disableSelinux:     opts.DisableSELinux,
-		selinuxPolicy:      policyOrDefault(opts.SELinuxPolicy),
+		Base:                            NewBase(name, opts.BootstrapPipeline),
+		runner:                          runner,
+		dependents:                      make([]Pipeline, 0),
+		repos:                           filterRepos(repos, name),
+		containerBuildable:              opts.ContainerBuildable,
+		disableSelinux:                  opts.DisableSELinux,
+		selinuxPolicy:                   policyOrDefault(opts.SELinuxPolicy),
+		rpmStageIgnoreGPGImportFailures: opts.RPMStageIgnoreGPGImportFailures,
 	}
 
 	m.addPipeline(pipeline)
@@ -181,7 +188,13 @@ func (p *BuildrootFromPackages) serialize() (osbuild.Pipeline, error) {
 
 	pipeline.Runner = p.runner.String()
 
-	pipeline.AddStage(osbuild.NewRPMStage(osbuild.NewRPMStageOptions(p.repos), osbuild.NewRpmStageSourceFilesInputs(p.packageSpecs)))
+	rpmStageOpts := osbuild.NewRPMStageOptions(p.repos)
+	if p.rpmStageIgnoreGPGImportFailures {
+		rpmStageOpts.RPMKeys = &osbuild.RPMKeys{
+			IgnoreImportFailures: common.ToPtr(true),
+		}
+	}
+	pipeline.AddStage(osbuild.NewRPMStage(rpmStageOpts, osbuild.NewRpmStageSourceFilesInputs(p.packageSpecs)))
 	if !p.disableSelinux {
 		pipeline.AddStage(osbuild.NewSELinuxStage(&osbuild.SELinuxStageOptions{
 			FileContexts: fmt.Sprintf("etc/selinux/%s/contexts/files/file_contexts", p.selinuxPolicy),
