@@ -8,15 +8,22 @@ import pytest
 
 import vmtest.vm
 from vmtest.vm import VM
+from vmtest.util import get_free_port
 
 
 class MockVM(VM):
+    _address = None
+    _ssh_port = None
     def start(self):
         pass
     def force_stop(self):
         pass
     def running(self):
         return True
+    def set_ssh(self, address, port):
+        self._address = address
+        self._ssh_port = port
+
 
 
 def make_fake_ssh(fake_bin_path, extra_script=""):
@@ -79,3 +86,10 @@ def test_ssh_calls_retries(mocked_sleep, tmp_path, monkeypatch, capsys):
         f"ssh not ready {i+1}/30: Command 'true' returned non-zero exit status 21."
         for i in range(30)
     ]) + "\n"
+
+def test_wait_ssh_ready_timeout():
+    vm = MockVM()
+    vm.set_ssh("localhost", get_free_port())
+    with pytest.raises(ConnectionRefusedError) as e:
+        vm.wait_ssh_ready(timeout_sec=3)
+    assert "after 3s" in str(e.value)
