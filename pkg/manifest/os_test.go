@@ -453,6 +453,30 @@ func TestRpmlang(t *testing.T) {
 	}, st.Options)
 }
 
+func TestRpmKeys(t *testing.T) {
+	os := manifest.NewTestOS()
+
+	pipeline, err := os.Serialize()
+	assert.NoError(t, err)
+
+	st := findStage("org.osbuild.rpm", pipeline.Stages)
+	require.NotNil(t, st)
+	assert.Equal(t, &osbuild.RPMStageOptions{}, st.Options)
+
+	os = manifest.NewTestOS()
+	os.OSCustomizations.RPMKeysBinary = "chickens"
+	pipeline, err = os.Serialize()
+	assert.NoError(t, err)
+
+	st = findStage("org.osbuild.rpm", pipeline.Stages)
+	require.NotNil(t, st)
+	assert.Equal(t, &osbuild.RPMStageOptions{
+		RPMKeys: &osbuild.RPMKeys{
+			BinPath: "chickens",
+		},
+	}, st.Options)
+}
+
 func TestAddInlineOS(t *testing.T) {
 	os := manifest.NewTestOS()
 
