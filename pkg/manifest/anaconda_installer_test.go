@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/pkg/arch"
+	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/anaconda"
 	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/manifest"
@@ -230,4 +231,22 @@ func TestAnacondaInstallerConfigLorax(t *testing.T) {
 	assert.Equal(t, stageOptions[0].Path, "99-generic/runtime-postinstall.tmpl")
 	assert.Equal(t, stageOptions[0].Branding.Logos, "fedora-logos")
 	assert.Equal(t, stageOptions[0].Branding.Logos, "fedora-logos")
+}
+
+// TestAnacondaInstallerBootcSerialize verifies that AnacondaInstaller correctly
+// handles the bootc installer case where containers are provided but packages
+// are empty. Bootc installers get the kernel version via introspection, so
+// serialization should succeed even when kernelName is set but no packages
+// are provided.
+func TestAnacondaInstallerBootcSerialize(t *testing.T) {
+	installer := newAnacondaInstaller() // This sets kernelName to "kernel"
+
+	// Serialize with containers but NO packages (bootc mode)
+	containerSpec := container.Spec{Source: "quay.io/example/bootc-image:latest"}
+	_, err := manifest.SerializeWith(installer, manifest.Inputs{
+		Containers: []container.Spec{containerSpec},
+		// Depsolved is intentionally empty - no packages for bootc installers
+	})
+
+	assert.NoError(t, err)
 }

@@ -19,6 +19,7 @@ import (
 	"github.com/osbuild/images/pkg/customizations/shell"
 	"github.com/osbuild/images/pkg/customizations/subscription"
 	"github.com/osbuild/images/pkg/customizations/users"
+	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/ostree"
@@ -226,9 +227,12 @@ type OS struct {
 	PartitionTable *disk.PartitionTable
 
 	// content-related fields
-	repos            []rpmmd.RepoConfig
-	packageSpecs     rpmmd.PackageList
-	moduleSpecs      []rpmmd.ModuleSpec
+
+	// depsolveRepos holds the repository configuration used by
+	// getPackageSetChain() for depsolving. After depsolving, use
+	// depsolveResult.Repos which contains only repos that provided packages.
+	depsolveRepos    []rpmmd.RepoConfig
+	depsolveResult   *depsolvednf.DepsolveResult
 	containerSpecs   []container.Spec
 	ostreeParentSpec *ostree.CommitSpec
 
@@ -248,9 +252,9 @@ type OS struct {
 func NewOS(buildPipeline Build, platform platform.Platform, repos []rpmmd.RepoConfig) *OS {
 	name := "os"
 	p := &OS{
-		Base:     NewBase(name, buildPipeline),
-		repos:    filterRepos(repos, name),
-		platform: platform,
+		Base:          NewBase(name, buildPipeline),
+		depsolveRepos: filterRepos(repos, name),
+		platform:      platform,
 	}
 	buildPipeline.addDependent(p)
 	return p
@@ -320,7 +324,7 @@ func (p *OS) getPackageSetChain(Distro) ([]rpmmd.PackageSet, error) {
 		customizationPackages = append(customizationPackages, "dnf", "python3-dnf-plugin-versionlock")
 	}
 
-	osRepos := append(p.repos, p.OSCustomizations.ExtraBaseRepos...)
+	osRepos := append(p.depsolveRepos, p.OSCustomizations.ExtraBaseRepos...)
 
 	// merge all package lists for the pipeline
 	baseOSPackages := make([]string, 0)
@@ -473,7 +477,10 @@ func (p *OS) getOSTreeCommits() []ostree.CommitSpec {
 }
 
 func (p *OS) getPackageSpecs() rpmmd.PackageList {
-	return p.packageSpecs
+	if p.depsolveResult == nil {
+		return nil
+	}
+	return p.depsolveResult.Packages
 }
 
 func (p *OS) getContainerSpecs() []container.Spec {
@@ -481,12 +488,11 @@ func (p *OS) getContainerSpecs() []container.Spec {
 }
 
 func (p *OS) serializeStart(inputs Inputs) error {
-	if len(p.packageSpecs) > 0 {
+	if p.depsolveResult != nil {
 		return errors.New("OS: double call to serializeStart()")
 	}
 
-	p.packageSpecs = inputs.Depsolved.Packages
-	p.moduleSpecs = inputs.Depsolved.Modules
+	p.depsolveResult = &inputs.Depsolved
 	p.containerSpecs = inputs.Containers
 	if len(inputs.Commits) > 0 {
 		if len(inputs.Commits) > 1 {
@@ -496,29 +502,28 @@ func (p *OS) serializeStart(inputs Inputs) error {
 	}
 
 	if p.OSCustomizations.KernelName != "" {
-		kernelPkg, err := p.packageSpecs.Package(p.OSCustomizations.KernelName)
+		kernelPkg, err := p.depsolveResult.Packages.Package(p.OSCustomizations.KernelName)
 		if err != nil {
 			return fmt.Errorf("OS: %w", err)
 		}
 		p.kernelVer = kernelPkg.EVRA()
 	}
 
-	p.repos = append(p.repos, inputs.Depsolved.Repos...)
 	return nil
 }
 
 func (p *OS) serializeEnd() {
-	if len(p.packageSpecs) == 0 {
+	if p.depsolveResult == nil {
 		panic("serializeEnd() call when serialization not in progress")
 	}
 	p.kernelVer = ""
-	p.packageSpecs = nil
+	p.depsolveResult = nil
 	p.containerSpecs = nil
 	p.ostreeParentSpec = nil
 }
 
 func (p *OS) serialize() (osbuild.Pipeline, error) {
-	if len(p.packageSpecs) == 0 {
+	if p.depsolveResult == nil {
 		return osbuild.Pipeline{}, fmt.Errorf("serialization not started")
 	}
 
@@ -531,7 +536,7 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 		pipeline.AddStage(osbuild.NewOSTreePasswdStage("org.osbuild.source", p.ostreeParentSpec.Checksum))
 	}
 
-	rpmOptions := osbuild.NewRPMStageOptions(p.repos)
+	rpmOptions := osbuild.NewRPMStageOptions(p.depsolveResult.Repos)
 	if p.OSCustomizations.ExcludeDocs {
 		if rpmOptions.Exclude == nil {
 			rpmOptions.Exclude = &osbuild.Exclude{}
@@ -561,7 +566,7 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 			BootRoot: espMountpoint,
 		}
 	}
-	pipeline.AddStage(osbuild.NewRPMStage(rpmOptions, osbuild.NewRpmStageSourceFilesInputs(p.packageSpecs)))
+	pipeline.AddStage(osbuild.NewRPMStage(rpmOptions, osbuild.NewRpmStageSourceFilesInputs(p.depsolveResult.Packages)))
 
 	if !p.OSCustomizations.NoBLS {
 		// If the /boot is on a separate partition, the prefix for the BLS stage must be ""
@@ -803,7 +808,7 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 			}
 			p.addStagesForAllFilesAndInlineData(&pipeline, []*fsnode.File{csvfile})
 
-			stages, err := maybeAddHMACandDirStage(p.packageSpecs, espMountpoint, p.kernelVer)
+			stages, err := maybeAddHMACandDirStage(p.depsolveResult.Packages, espMountpoint, p.kernelVer)
 			if err != nil {
 				return osbuild.Pipeline{}, err
 			}
@@ -846,14 +851,14 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 	}
 
 	// write modularity related configuration files
-	if len(p.moduleSpecs) > 0 {
-		pipeline.AddStages(osbuild.GenDNFModuleConfigStages(p.moduleSpecs)...)
+	if len(p.depsolveResult.Modules) > 0 {
+		pipeline.AddStages(osbuild.GenDNFModuleConfigStages(p.depsolveResult.Modules)...)
 
 		var failsafeFiles []*fsnode.File
 
 		// the failsafe file is a blob of YAML returned directly from the depsolver,
 		// we write them as 'normal files' without a special stage
-		for _, module := range p.moduleSpecs {
+		for _, module := range p.depsolveResult.Modules {
 			moduleFailsafeFile, err := fsnode.NewFile(module.FailsafeFile.Path, nil, nil, nil, []byte(module.FailsafeFile.Data))
 
 			if err != nil {
@@ -961,7 +966,7 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 	}
 
 	if len(p.OSCustomizations.VersionlockPackages) > 0 {
-		versionlockStageOptions, err := osbuild.GenDNF4VersionlockStageOptions(p.OSCustomizations.VersionlockPackages, p.packageSpecs)
+		versionlockStageOptions, err := osbuild.GenDNF4VersionlockStageOptions(p.OSCustomizations.VersionlockPackages, p.depsolveResult.Packages)
 		if err != nil {
 			return osbuild.Pipeline{}, err
 		}
@@ -1064,7 +1069,7 @@ func grubStage(p *OS, pt *disk.PartitionTable, kernelOptions []string) *osbuild.
 			Nick:    p.OSNick,
 		}
 
-		_, err := p.packageSpecs.Package("dracut-config-rescue")
+		_, err := p.depsolveResult.Packages.Package("dracut-config-rescue")
 		hasRescue := err == nil
 		return osbuild.NewGrub2LegacyStage(
 			osbuild.NewGrub2LegacyStageOptions(
