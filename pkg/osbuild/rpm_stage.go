@@ -1,6 +1,7 @@
 package osbuild
 
 import (
+	"fmt"
 	"slices"
 
 	"github.com/osbuild/images/internal/common"
@@ -163,4 +164,40 @@ func NewRPMStageOptions(repos []rpmmd.RepoConfig) *RPMStageOptions {
 	return &RPMStageOptions{
 		GPGKeys: gpgKeys,
 	}
+}
+
+// GPGKeysForPackages collects and returns deduplicated GPG keys from the
+// repositories that the given packages come from. This is used to import
+// only the GPG keys needed for a specific set of packages, rather than
+// importing all keys from all configured repositories.
+//
+// Returns an error if:
+// - Any package has a nil Repo pointer (indicates a bug in depsolving)
+// - Any package requires GPG checking but its repo has no GPG keys configured
+//
+// The returned keys are sorted for deterministic output.
+//
+// NOTE: Currently collects keys even for packages/repos with CheckGPG=false.
+// This could be changed if importing unused keys is not desirable.
+func GPGKeysForPackages(pkgs rpmmd.PackageList) ([]string, error) {
+	keyMap := make(map[string]bool)
+	var gpgKeys []string
+	for _, pkg := range pkgs {
+		if pkg.Repo == nil {
+			return nil, fmt.Errorf("package %q has nil Repo pointer. This is a bug in depsolving.", pkg.Name)
+		}
+		if pkg.CheckGPG && len(pkg.Repo.GPGKeys) == 0 {
+			return nil, fmt.Errorf(
+				"package %q requires GPG check but repo %q has no GPG keys configured",
+				pkg.Name, pkg.Repo.Id)
+		}
+		for _, key := range pkg.Repo.GPGKeys {
+			if !keyMap[key] {
+				gpgKeys = append(gpgKeys, key)
+				keyMap[key] = true
+			}
+		}
+	}
+	slices.Sort(gpgKeys)
+	return gpgKeys, nil
 }
