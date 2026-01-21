@@ -427,7 +427,7 @@ type DistroOptions struct {
 
 // newBootcDistro returns a new instance of BootcDistro
 // from the given url
-func NewBootcDistro(imgref string, opts *DistroOptions) (*BootcDistro, error) {
+func NewBootcDistro(imgref string, opts *DistroOptions) (*Distro, error) {
 	if opts == nil {
 		opts = &DistroOptions{}
 	}

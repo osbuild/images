@@ -20,11 +20,11 @@ var (
 
 type ImageType = imageType
 
-func NewTestBootcDistro() *BootcDistro {
+func NewTestBootcDistro() *Distro {
 	return NewTestBootcDistroWithDefaultFs("xfs")
 }
 
-func NewTestBootcDistroWithDefaultFs(defaultFs string) *BootcDistro {
+func NewTestBootcDistroWithDefaultFs(defaultFs string) *Distro {
 	info := &osinfo.Info{
 		OSRelease: osinfo.OSRelease{
 			ID:        "bootc-test",

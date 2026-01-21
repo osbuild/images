@@ -18,9 +18,9 @@ import (
 	"github.com/osbuild/images/pkg/distro/defs"
 )
 
-var _ = distro.CustomDepsolverDistro(&BootcDistro{})
+var _ = distro.CustomDepsolverDistro(&Distro{})
 
-type BootcDistro struct {
+type Distro struct {
 	imgref          string
 	buildImgref     string
 	sourceInfo      *osinfo.Info
@@ -37,13 +37,13 @@ type BootcDistro struct {
 var _ = distro.Arch(&Arch{})
 
 type Arch struct {
-	distro *BootcDistro
+	distro *Distro
 	arch   arch.Arch
 
 	imageTypes map[string]distro.ImageType
 }
 
-func (d *BootcDistro) SetBuildContainer(imgref string) (err error) {
+func (d *Distro) SetBuildContainer(imgref string) (err error) {
 	if imgref == "" {
 		return nil
 	}
@@ -63,7 +63,7 @@ func (d *BootcDistro) SetBuildContainer(imgref string) (err error) {
 	return d.setBuildContainer(imgref, info)
 }
 
-func (d *BootcDistro) setBuildContainer(imgref string, info *osinfo.Info) error {
+func (d *Distro) setBuildContainer(imgref string, info *osinfo.Info) error {
 	d.buildImgref = imgref
 	d.buildSourceInfo = info
 	return nil
@@ -71,43 +71,43 @@ func (d *BootcDistro) setBuildContainer(imgref string, info *osinfo.Info) error 
 
 // SetBuildContainerForTesting should only be used for in tests
 // please use "SetBuildContainer" instead
-func (d *BootcDistro) SetBuildContainerForTesting(imgref string, info *osinfo.Info) error {
+func (d *Distro) SetBuildContainerForTesting(imgref string, info *osinfo.Info) error {
 	return d.setBuildContainer(imgref, info)
 }
 
-func (d *BootcDistro) DefaultFs() string {
+func (d *Distro) DefaultFs() string {
 	return d.defaultFs
 }
 
-func (d *BootcDistro) Name() string {
+func (d *Distro) Name() string {
 	return d.id.String()
 }
 
-func (d *BootcDistro) Codename() string {
+func (d *Distro) Codename() string {
 	return ""
 }
 
-func (d *BootcDistro) Releasever() string {
+func (d *Distro) Releasever() string {
 	return d.releasever
 }
 
-func (d *BootcDistro) OsVersion() string {
+func (d *Distro) OsVersion() string {
 	return d.releasever
 }
 
-func (d *BootcDistro) Product() string {
+func (d *Distro) Product() string {
 	return d.id.String()
 }
 
-func (d *BootcDistro) ModulePlatformID() string {
+func (d *Distro) ModulePlatformID() string {
 	return ""
 }
 
-func (d *BootcDistro) OSTreeRef() string {
+func (d *Distro) OSTreeRef() string {
 	return ""
 }
 
-func (d *BootcDistro) Depsolver(rpmCacheRoot string, archi arch.Arch) (solver *depsolvednf.Solver, cleanup func() error, err error) {
+func (d *Distro) Depsolver(rpmCacheRoot string, archi arch.Arch) (solver *depsolvednf.Solver, cleanup func() error, err error) {
 	cnt, err := bibcontainer.New(d.buildImgref)
 	if err != nil {
 		return nil, nil, err
@@ -140,7 +140,7 @@ func (d *BootcDistro) Depsolver(rpmCacheRoot string, archi arch.Arch) (solver *d
 	return solver, cleanup, nil
 }
 
-func (d *BootcDistro) ListArches() []string {
+func (d *Distro) ListArches() []string {
 	archs := make([]string, 0, len(d.arches))
 	for name := range d.arches {
 		archs = append(archs, name)
@@ -149,7 +149,7 @@ func (d *BootcDistro) ListArches() []string {
 	return archs
 }
 
-func (d *BootcDistro) GetArch(arch string) (distro.Arch, error) {
+func (d *Distro) GetArch(arch string) (distro.Arch, error) {
 	a, exists := d.arches[arch]
 	if !exists {
 		return nil, fmt.Errorf("requested bootc arch %q does not match available arches %v", arch, slices.Collect(maps.Keys(d.arches)))
@@ -157,7 +157,7 @@ func (d *BootcDistro) GetArch(arch string) (distro.Arch, error) {
 	return a, nil
 }
 
-func (d *BootcDistro) addArches(arches ...*Arch) {
+func (d *Distro) addArches(arches ...*Arch) {
 	if d.arches == nil {
 		d.arches = map[string]distro.Arch{}
 	}
@@ -205,13 +205,13 @@ func (a *Arch) addImageTypes(imageTypes ...imageType) {
 	}
 }
 
-func newBootcDistroAfterIntrospect(archStr string, info *osinfo.Info, imgref, defaultFsStr string, cntSize uint64) (*BootcDistro, error) {
+func newBootcDistroAfterIntrospect(archStr string, info *osinfo.Info, imgref, defaultFsStr string, cntSize uint64) (*Distro, error) {
 	nameVer := fmt.Sprintf("bootc-%s-%s", info.OSRelease.ID, info.OSRelease.VersionID)
 	id, err := distro.ParseID(nameVer)
 	if err != nil {
 		return nil, err
 	}
-	bd := &BootcDistro{
+	bd := &Distro{
 		id:            *id,
 		releasever:    info.OSRelease.VersionID,
 		defaultFs:     defaultFsStr,
