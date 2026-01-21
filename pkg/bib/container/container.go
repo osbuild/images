@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/osbuild/images/pkg/bib/osinfo"
 	"golang.org/x/exp/slices"
 )
 
@@ -101,6 +102,57 @@ func (c *Container) Stop() error {
 	}
 
 	return nil
+}
+
+// BootcInfo contains all the information from the bootc container that is
+// required to create a manifest for a bootc-based image.
+type BootcInfo struct {
+	// The name of the container image that generated the info
+	Imgref string
+
+	// The container image ID
+	ImageID string
+
+	// Information related to the OS in the container
+	OSInfo *osinfo.Info
+
+	// The container's hardware architecture
+	Arch string
+
+	// The default root filesystem from the container's bootc config
+	DefaultRootFs string
+
+	// The size of the container image
+	Size uint64
+}
+
+// ResolveInfo loads all information from the running container.
+func (c *Container) ResolveInfo() (*BootcInfo, error) {
+	bootcInfo := &BootcInfo{
+		Imgref:  c.ref,
+		ImageID: c.id,
+		Arch:    c.Arch(),
+	}
+
+	os, err := osinfo.Load(c.Root())
+	if err != nil {
+		return nil, err
+	}
+	bootcInfo.OSInfo = os
+
+	defaultFs, err := c.DefaultRootfsType()
+	if err != nil {
+		return nil, err
+	}
+	bootcInfo.DefaultRootFs = defaultFs
+
+	size, err := getContainerSize(c.ref)
+	if err != nil {
+		return nil, err
+	}
+	bootcInfo.Size = size
+
+	return bootcInfo, nil
 }
 
 // Root returns the root directory of the container as available on the host.
