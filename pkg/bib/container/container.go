@@ -14,6 +14,7 @@ import (
 // This type isn't meant as a general-purpose container management tool, but
 // as an opinonated library for bootc-image-builder.
 type Container struct {
+	ref  string
 	id   string
 	root string
 	arch string
@@ -52,7 +53,9 @@ func New(ref string) (*Container, error) {
 		return nil, fmt.Errorf("running %s container failed with generic error: %w", ref, err)
 	}
 
-	c := &Container{}
+	c := &Container{
+		ref: ref,
+	}
 	c.id = strings.TrimSpace(string(output))
 	// Ensure that the container is stopped when this function errors
 	defer func() {
