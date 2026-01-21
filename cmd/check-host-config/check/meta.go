@@ -83,3 +83,11 @@ func FindCheckByName(name string) (RegisteredCheck, bool) {
 	}
 	return RegisteredCheck{Meta: nil, Func: nil}, false
 }
+
+func MustFindCheckByName(name string) RegisteredCheck {
+	chk, found := FindCheckByName(name)
+	if !found {
+		panic("check not found: " + name)
+	}
+	return chk
+}
