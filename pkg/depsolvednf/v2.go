@@ -327,7 +327,7 @@ func (h *v2Handler) parseDepsolveResult(output []byte) (*depsolveResultRaw, erro
 
 	// Build both per-transaction lists and a flattened list of all packages.
 	// V2 returns disjoint sets per transaction
-	transactions := make([]rpmmd.PackageList, len(result.Transactions))
+	transactions := make(TransactionList, len(result.Transactions))
 	var allPkgs rpmmd.PackageList
 
 	// Convert depsolved packages

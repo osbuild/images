@@ -176,7 +176,7 @@ type DepsolveResult struct {
 	// installed that are unique to that transaction. The transaction results
 	// are disjoint sets that should be installed in the order they appear in
 	// the list.
-	Transactions []rpmmd.PackageList
+	Transactions TransactionList
 	Modules      []rpmmd.ModuleSpec
 	Repos        []rpmmd.RepoConfig
 	SBOM         *sbom.Document

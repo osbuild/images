@@ -15,7 +15,7 @@ import (
 // sbom.Document).
 type depsolveResultRaw struct {
 	Packages     rpmmd.PackageList
-	Transactions []rpmmd.PackageList
+	Transactions TransactionList
 	Modules      []rpmmd.ModuleSpec
 	Repos        []rpmmd.RepoConfig
 	Solver       string
