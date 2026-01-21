@@ -1,6 +1,7 @@
 package osbuild
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/osbuild/images/internal/common"
@@ -205,5 +206,94 @@ func TestNewRpmStageSourceFilesInputs(t *testing.T) {
 			require.NotNil(md)
 			assert.Equal(md.CheckGPG, pkg.CheckGPG)
 		}
+	}
+}
+
+func TestGPGKeysForPackages(t *testing.T) {
+	// Define key values as variables for reuse
+	key1 := "-----BEGIN PGP PUBLIC KEY BLOCK-----\nkey1\n-----END PGP PUBLIC KEY BLOCK-----"
+	key2 := "-----BEGIN PGP PUBLIC KEY BLOCK-----\nkey2\n-----END PGP PUBLIC KEY BLOCK-----"
+	keyA := "-----BEGIN PGP PUBLIC KEY BLOCK-----\nkeyA\n-----END PGP PUBLIC KEY BLOCK-----"
+	keyB := "-----BEGIN PGP PUBLIC KEY BLOCK-----\nkeyB\n-----END PGP PUBLIC KEY BLOCK-----"
+
+	repoWithKey1 := &rpmmd.RepoConfig{GPGKeys: []string{key1}}
+	repoWithKey2 := &rpmmd.RepoConfig{GPGKeys: []string{key2}}
+	repoWithMultipleKeys := &rpmmd.RepoConfig{GPGKeys: []string{keyA, keyB}}
+	repoNoKeys := &rpmmd.RepoConfig{GPGKeys: nil}
+
+	tests := map[string]struct {
+		pkgs        rpmmd.PackageList
+		expected    []string
+		expectError string
+	}{
+		"empty-package-list": {
+			pkgs:     rpmmd.PackageList{},
+			expected: nil,
+		},
+		"repo-without-gpg-keys-checkgpg-false": {
+			pkgs: rpmmd.PackageList{
+				{Name: "pkg1", Repo: repoNoKeys, CheckGPG: false},
+			},
+			expected: nil,
+		},
+		// NOTE: for now we collect keys even for packages/repos with CheckGPG=false.
+		"single-package-with-keys": {
+			pkgs: rpmmd.PackageList{
+				{Name: "pkg1", Repo: repoWithKey1},
+			},
+			expected: []string{key1},
+		},
+		"multiple-packages-same-repo-deduplicated": {
+			pkgs: rpmmd.PackageList{
+				{Name: "pkg1", Repo: repoWithKey1, CheckGPG: true},
+				{Name: "pkg2", Repo: repoWithKey1, CheckGPG: true},
+				{Name: "pkg3", Repo: repoWithKey1, CheckGPG: true},
+			},
+			expected: []string{key1},
+		},
+		"multiple-packages-different-repos": {
+			pkgs: rpmmd.PackageList{
+				{Name: "pkg1", Repo: repoWithKey1, CheckGPG: true},
+				{Name: "pkg3", Repo: repoNoKeys, CheckGPG: false},
+				{Name: "pkg2", Repo: repoWithKey2, CheckGPG: true},
+			},
+			expected: []string{key1, key2},
+		},
+		"repo-with-multiple-keys": {
+			pkgs: rpmmd.PackageList{
+				{Name: "pkg1", Repo: repoWithMultipleKeys, CheckGPG: true},
+			},
+			expected: []string{keyA, keyB},
+		},
+		// Error cases
+		"error-checkgpg-true-no-keys": {
+			pkgs: rpmmd.PackageList{
+				{Name: "pkg1", Repo: repoNoKeys, CheckGPG: true},
+			},
+			expectError: fmt.Sprintf(
+				"package \"pkg1\" requires GPG check but repo %q has no GPG keys configured", repoNoKeys.Id),
+		},
+		"error-nil-repo-among-valid": {
+			pkgs: rpmmd.PackageList{
+				{Name: "pkg1", Repo: repoWithKey1},
+				{Name: "pkg2", Repo: nil},
+			},
+			expectError: "package \"pkg2\" has nil Repo pointer. This is a bug in depsolving.",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result, err := GPGKeysForPackages(tc.pkgs)
+
+			if tc.expectError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tc.expectError)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, result)
+		})
 	}
 }
