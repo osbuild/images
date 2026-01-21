@@ -43,6 +43,47 @@ type Arch struct {
 	imageTypes map[string]distro.ImageType
 }
 
+type DistroOptions struct {
+	// DefaultFs to use, this takes precedence over the default
+	// from the container and is required if the container does
+	// not declare a default.
+	DefaultFs string
+}
+
+// NewBootcDistro returns a new instance of BootcDistro from the given URL.
+func NewBootcDistro(imgref string, opts *DistroOptions) (*Distro, error) {
+	if opts == nil {
+		opts = &DistroOptions{}
+	}
+
+	cnt, err := bibcontainer.New(imgref)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		err = errors.Join(err, cnt.Stop())
+	}()
+
+	info, err := osinfo.Load(cnt.Root())
+	if err != nil {
+		return nil, err
+	}
+
+	defaultFs, err := cnt.DefaultRootfsType()
+	if err != nil {
+		return nil, err
+	}
+	if opts.DefaultFs != "" {
+		defaultFs = opts.DefaultFs
+	}
+
+	cntSize, err := getContainerSize(imgref)
+	if err != nil {
+		return nil, fmt.Errorf("cannot get container size: %w", err)
+	}
+	return newBootcDistroAfterIntrospect(cnt.Arch(), info, imgref, defaultFs, cntSize)
+}
+
 func (d *Distro) SetBuildContainer(imgref string) (err error) {
 	if imgref == "" {
 		return nil
