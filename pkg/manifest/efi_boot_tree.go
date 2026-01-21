@@ -81,11 +81,14 @@ func (p *EFIBootTree) serialize() (osbuild.Pipeline, error) {
 			Dir:  "/images/pxeboot",
 			Opts: p.KernelOpts,
 		},
-		ISOLabel:      p.ISOLabel,
-		Architectures: architectures,
-		Vendor:        p.UEFIVendor,
-		FIPS:          p.Platform.GetFIPSMenu(),
-		Config:        grub2config,
+		ISOLabel:        p.ISOLabel,
+		Architectures:   architectures,
+		Vendor:          p.UEFIVendor,
+		FIPS:            p.Platform.GetFIPSMenu(),
+		Install:         true,
+		Test:            true,
+		Troubleshooting: true,
+		Config:          grub2config,
 	}
 	grub2Stage := osbuild.NewGrubISOStage(grubOptions)
 	pipeline.AddStage(grub2Stage)

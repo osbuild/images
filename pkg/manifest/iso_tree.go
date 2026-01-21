@@ -211,9 +211,12 @@ func (p *ISOTree) serialize() (osbuild.Pipeline, error) {
 			Dir:  "/images/pxeboot",
 			Opts: kernelOpts,
 		},
-		ISOLabel: p.isoLabel,
-		FIPS:     false,
-		Config:   grub2config,
+		ISOLabel:        p.isoLabel,
+		FIPS:            false,
+		Install:         true,
+		Test:            true,
+		Troubleshooting: true,
+		Config:          grub2config,
 	}
 	if p.bootTreePipeline != nil && p.bootTreePipeline.Platform != nil {
 		options.FIPS = p.bootTreePipeline.Platform.GetFIPSMenu()
