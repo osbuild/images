@@ -50,6 +50,7 @@ var testExpectedPackage = rpmmd.Package{
 	Files:     []string{"/bin/bash", "/usr/bin/bash"},
 	CheckGPG:  true, // from repo.GPGCheck=true
 	IgnoreSSL: true, // from repo.SSLVerify=false
+	Repo:      &testExpectedRepo,
 }
 
 // testExpectedRepo is the expected rpmmd.RepoConfig after parsing testRepoJSON.
@@ -1382,8 +1383,8 @@ func TestV2HandlerToRPMMDPackageWithMTLS(t *testing.T) {
 		Supplements:     []v2Dependency{},
 		Files:           []string{},
 	}
-
-	rpmPkg, err := v2Handler.toRPMMDPackage(pkg, repo)
+	rpmmdRepo := v2Handler.toRPMMDRepoConfig(repo)
+	rpmPkg, err := v2Handler.toRPMMDPackage(pkg, &rpmmdRepo)
 	require.NoError(t, err)
 
 	assert.Equal(t, "org.osbuild.mtls", rpmPkg.Secrets)
@@ -1565,4 +1566,24 @@ func TestV2HandlerParseDumpSearchResultDetails(t *testing.T) {
 		// Verify repo - single assert compares all fields
 		assert.Equal(t, testExpectedRepo, result.Repos[0])
 	})
+}
+
+func TestV2HandlerToRPMMDRepoConfigs(t *testing.T) {
+	h := newV2Handler()
+	v2Repos := map[string]v2Repository{
+		"repo-b": {ID: "repo-b", Name: "Repo B"},
+		"repo-a": {ID: "repo-a", Name: "Repo A"},
+	}
+
+	repos, repoMap := h.toRPMMDRepoConfigs(v2Repos)
+
+	// Check slice is sorted by ID
+	require.Len(t, repos, 2)
+	assert.Equal(t, "repo-a", repos[0].Id)
+	assert.Equal(t, "repo-b", repos[1].Id)
+
+	// Check map points to correct repos
+	require.Len(t, repoMap, 2)
+	assert.Equal(t, "Repo A", repoMap["repo-a"].Name)
+	assert.Equal(t, "Repo B", repoMap["repo-b"].Name)
 }

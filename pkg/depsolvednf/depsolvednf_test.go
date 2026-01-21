@@ -950,6 +950,7 @@ func expectedDepsolvedPackages(repo rpmmd.RepoConfig) rpmmd.PackageList {
 			expectedTemplate[idx].IgnoreSSL = *repo.IgnoreSSL
 		}
 		expectedTemplate[idx].RepoID = repo.Id
+		expectedTemplate[idx].Repo = &repo
 	}
 	return expectedTemplate
 }
