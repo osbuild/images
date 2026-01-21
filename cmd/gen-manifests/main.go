@@ -26,6 +26,7 @@ import (
 	"github.com/osbuild/images/internal/cmdutil"
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
+	bibcontainer "github.com/osbuild/images/pkg/bib/container"
 	"github.com/osbuild/images/pkg/bib/osinfo"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/depsolvednf"
@@ -624,7 +625,14 @@ func main() {
 			panic(err)
 		}
 		for _, fakeBootcCnt := range fakeContainers.Containers {
-			distribution, err := bootc.NewBootcDistroForTesting(fakeBootcCnt.Arch.String(), &fakeBootcCnt.Info, fakeBootcCnt.ImageRef, fakeBootcCnt.DefaultFs, fakeBootcCnt.ContainerSize)
+			fakeBootcInfo := &bibcontainer.BootcInfo{
+				Imgref:        fakeBootcCnt.ImageRef,
+				OSInfo:        &fakeBootcCnt.Info,
+				Arch:          fakeBootcCnt.Arch.String(),
+				DefaultRootFs: fakeBootcCnt.DefaultFs,
+				Size:          fakeBootcCnt.ContainerSize,
+			}
+			distribution, err := bootc.NewBootcDistroForTesting(fakeBootcInfo)
 			if err != nil {
 				panic(err)
 			}

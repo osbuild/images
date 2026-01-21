@@ -72,7 +72,7 @@ func NewBootcDistro(imgref string, opts *DistroOptions) (*Distro, error) {
 		// override container rootfs option with external option
 		bootcInfo.DefaultRootFs = opts.DefaultFs
 	}
-	return newBootcDistroAfterIntrospect(bootcInfo.Arch, bootcInfo.OSInfo, bootcInfo.ImageID, bootcInfo.DefaultRootFs, bootcInfo.Size)
+	return newBootcDistroAfterIntrospect(bootcInfo)
 }
 
 func (d *Distro) SetBuildContainer(imgref string) (err error) {
@@ -237,27 +237,32 @@ func (a *Arch) addImageTypes(imageTypes ...imageType) {
 	}
 }
 
-func newBootcDistroAfterIntrospect(archStr string, info *osinfo.Info, imgref, defaultFsStr string, cntSize uint64) (*Distro, error) {
-	nameVer := fmt.Sprintf("bootc-%s-%s", info.OSRelease.ID, info.OSRelease.VersionID)
+func newBootcDistroAfterIntrospect(cinfo *bibcontainer.BootcInfo) (*Distro, error) {
+	if cinfo == nil {
+		return nil, fmt.Errorf("missing required info while initialising bootc distro")
+	}
+
+	os := cinfo.OSInfo
+	nameVer := fmt.Sprintf("bootc-%s-%s", os.OSRelease.ID, os.OSRelease.VersionID)
 	id, err := distro.ParseID(nameVer)
 	if err != nil {
 		return nil, err
 	}
 	bd := &Distro{
 		id:            *id,
-		releasever:    info.OSRelease.VersionID,
-		defaultFs:     defaultFsStr,
-		rootfsMinSize: cntSize * containerSizeToDiskSizeMultiplier,
+		releasever:    os.OSRelease.VersionID,
+		defaultFs:     cinfo.DefaultRootFs,
+		rootfsMinSize: cinfo.Size * containerSizeToDiskSizeMultiplier,
 
-		imgref:     imgref,
-		sourceInfo: info,
+		imgref:     cinfo.Imgref,
+		sourceInfo: os,
 		// default buildref/info to regular container, this can
 		// be overriden with SetBuildContainer()
-		buildImgref:     imgref,
-		buildSourceInfo: info,
+		buildImgref:     cinfo.Imgref,
+		buildSourceInfo: os,
 	}
 
-	archi, err := arch.FromString(archStr)
+	archi, err := arch.FromString(cinfo.Arch)
 	if err != nil {
 		return nil, err
 	}
@@ -269,7 +274,7 @@ func newBootcDistroAfterIntrospect(archStr string, info *osinfo.Info, imgref, de
 	if err != nil {
 		return nil, err
 	}
-	defaultFs, err := disk.NewFSType(defaultFsStr)
+	defaultFs, err := disk.NewFSType(cinfo.DefaultRootFs)
 	if err != nil {
 		return nil, err
 	}
