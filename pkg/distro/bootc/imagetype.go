@@ -9,7 +9,6 @@ import (
 	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/internal/cmdutil"
 	"github.com/osbuild/images/pkg/arch"
-	bibcontainer "github.com/osbuild/images/pkg/bib/container"
 	"github.com/osbuild/images/pkg/bib/osinfo"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/anaconda"
@@ -416,48 +415,6 @@ func (t *imageType) manifestForGenericISO(options distro.ImageOptions, rng *rand
 
 	_, err = img.InstantiateManifestFromContainer(&mf, []container.SourceSpec{containerSource}, foundRunner, rng)
 	return &mf, nil, err
-}
-
-type DistroOptions struct {
-	// DefaultFs to use, this takes precedence over the default
-	// from the container and is required if the container does
-	// not declare a default.
-	DefaultFs string
-}
-
-// newBootcDistro returns a new instance of BootcDistro
-// from the given url
-func NewBootcDistro(imgref string, opts *DistroOptions) (*Distro, error) {
-	if opts == nil {
-		opts = &DistroOptions{}
-	}
-
-	cnt, err := bibcontainer.New(imgref)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		err = errors.Join(err, cnt.Stop())
-	}()
-
-	info, err := osinfo.Load(cnt.Root())
-	if err != nil {
-		return nil, err
-	}
-
-	defaultFs, err := cnt.DefaultRootfsType()
-	if err != nil {
-		return nil, err
-	}
-	if opts.DefaultFs != "" {
-		defaultFs = opts.DefaultFs
-	}
-
-	cntSize, err := getContainerSize(imgref)
-	if err != nil {
-		return nil, fmt.Errorf("cannot get container size: %w", err)
-	}
-	return newBootcDistroAfterIntrospect(cnt.Arch(), info, imgref, defaultFs, cntSize)
 }
 
 // newDistroYAMLFrom() returns the distroYAML for the given sourceInfo,
