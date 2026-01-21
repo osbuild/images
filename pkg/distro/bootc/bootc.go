@@ -64,24 +64,15 @@ func NewBootcDistro(imgref string, opts *DistroOptions) (*Distro, error) {
 		err = errors.Join(err, cnt.Stop())
 	}()
 
-	info, err := osinfo.Load(cnt.Root())
-	if err != nil {
-		return nil, err
-	}
-
-	defaultFs, err := cnt.DefaultRootfsType()
+	bootcInfo, err := cnt.ResolveInfo()
 	if err != nil {
 		return nil, err
 	}
 	if opts.DefaultFs != "" {
-		defaultFs = opts.DefaultFs
+		// override container rootfs option with external option
+		bootcInfo.DefaultRootFs = opts.DefaultFs
 	}
-
-	cntSize, err := getContainerSize(imgref)
-	if err != nil {
-		return nil, fmt.Errorf("cannot get container size: %w", err)
-	}
-	return newBootcDistroAfterIntrospect(cnt.Arch(), info, imgref, defaultFs, cntSize)
+	return newBootcDistroAfterIntrospect(bootcInfo.Arch, bootcInfo.OSInfo, bootcInfo.ImageID, bootcInfo.DefaultRootFs, bootcInfo.Size)
 }
 
 func (d *Distro) SetBuildContainer(imgref string) (err error) {
