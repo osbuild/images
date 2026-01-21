@@ -6,6 +6,7 @@ import (
 	"github.com/osbuild/blueprint/pkg/blueprint"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/bib/container"
 	"github.com/osbuild/images/pkg/bib/osinfo"
 	"github.com/osbuild/images/pkg/disk"
 )
@@ -25,7 +26,7 @@ func NewTestBootcDistro() *Distro {
 }
 
 func NewTestBootcDistroWithDefaultFs(defaultFs string) *Distro {
-	info := &osinfo.Info{
+	os := &osinfo.Info{
 		OSRelease: osinfo.OSRelease{
 			ID:        "bootc-test",
 			VersionID: "1",
@@ -35,7 +36,15 @@ func NewTestBootcDistroWithDefaultFs(defaultFs string) *Distro {
 			Version: "6.17.7-300.fc43.x86_64",
 		},
 	}
-	return common.Must(newBootcDistroAfterIntrospect("x86_64", info, "quay.io/example/example:ref", defaultFs, 0))
+	bootcInfo := &container.BootcInfo{
+		Imgref:        "quay.io/example/example:ref",
+		ImageID:       "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+		OSInfo:        os,
+		Arch:          "x86_64",
+		DefaultRootFs: defaultFs,
+		Size:          0,
+	}
+	return common.Must(newBootcDistroAfterIntrospect(bootcInfo))
 }
 
 func NewTestBootcImageType(imageType string) *ImageType {
