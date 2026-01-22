@@ -84,7 +84,7 @@ func (p *OSTreeCommitServer) getPackageSpecs() rpmmd.PackageList {
 	if p.depsolveResult == nil {
 		return nil
 	}
-	return p.depsolveResult.Packages
+	return p.depsolveResult.Transactions.AllPackages()
 }
 
 func (p *OSTreeCommitServer) serializeStart(inputs Inputs) error {
@@ -111,10 +111,12 @@ func (p *OSTreeCommitServer) serialize() (osbuild.Pipeline, error) {
 		return osbuild.Pipeline{}, err
 	}
 
-	pipeline.AddStage(osbuild.NewRPMStage(
-		osbuild.NewRPMStageOptions(p.depsolveResult.Repos),
-		osbuild.NewRpmStageSourceFilesInputs(p.depsolveResult.Packages),
-	))
+	rpmStages, err := osbuild.GenRPMStagesFromTransactions(p.depsolveResult.Transactions, nil)
+	if err != nil {
+		return osbuild.Pipeline{}, err
+	}
+	pipeline.AddStages(rpmStages...)
+
 	pipeline.AddStage(osbuild.NewLocaleStage(&osbuild.LocaleStageOptions{Language: p.Language}))
 
 	htmlRoot := "/usr/share/nginx/html"
