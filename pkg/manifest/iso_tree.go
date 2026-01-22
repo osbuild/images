@@ -218,6 +218,24 @@ func (p *ISOTree) serialize() (osbuild.Pipeline, error) {
 		Troubleshooting: true,
 		Config:          grub2config,
 	}
+
+	// If any menu entries are defined we turn off all default
+	// entries and instead append our own
+	// entries only
+	if len(p.bootTreePipeline.MenuEntries) > 0 {
+		options.Troubleshooting = false
+		options.Test = false
+		options.Install = false
+
+		for _, entry := range p.bootTreePipeline.MenuEntries {
+			options.Custom = append(options.Custom, osbuild.Grub2ISOLegacyCustomEntryOptions{
+				Name:   entry.Name,
+				Linux:  entry.Linux,
+				Initrd: entry.Initrd,
+			})
+		}
+	}
+
 	if p.bootTreePipeline != nil && p.bootTreePipeline.Platform != nil {
 		options.FIPS = p.bootTreePipeline.Platform.GetFIPSMenu()
 	}

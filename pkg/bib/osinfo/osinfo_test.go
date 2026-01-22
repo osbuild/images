@@ -282,6 +282,13 @@ kernel_args:
 grub2:
   default: 5
   timeout: 30
+  entries:
+    - name: "My First Entry"
+      linux: "/foo"
+      initrd: "/bar"
+    - name: "My Second Entry"
+      linux: "/bar"
+      initrd: "/foo"
 `
 
 func createISO(t *testing.T, root, fakeISOYAML string) {
@@ -307,6 +314,17 @@ func TestLoadInfoISOHappy(t *testing.T) {
 
 	assert.Equal(t, 30, *info.ISOInfo.Grub2.Timeout)
 	assert.Equal(t, 5, *info.ISOInfo.Grub2.Default)
+
+	assert.Equal(t, 2, len(info.ISOInfo.Grub2.Entries))
+
+	assert.Equal(t, "My First Entry", info.ISOInfo.Grub2.Entries[0].Name)
+	assert.Equal(t, "/foo", info.ISOInfo.Grub2.Entries[0].Linux)
+	assert.Equal(t, "/bar", info.ISOInfo.Grub2.Entries[0].Initrd)
+
+	assert.Equal(t, "My Second Entry", info.ISOInfo.Grub2.Entries[1].Name)
+	assert.Equal(t, "/bar", info.ISOInfo.Grub2.Entries[1].Linux)
+	assert.Equal(t, "/foo", info.ISOInfo.Grub2.Entries[1].Initrd)
+
 }
 
 func TestLoadInfoISOSad(t *testing.T) {

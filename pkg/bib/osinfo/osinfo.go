@@ -36,12 +36,19 @@ type KernelInfo struct {
 	HasAbootImg bool
 }
 
+type ISOInfoGrub2Entry struct {
+	Name   string
+	Linux  string
+	Initrd string
+}
+
 type ISOInfo struct {
 	Label      string
 	KernelArgs []string
 	Grub2      struct {
 		Default *int
 		Timeout *int
+		Entries []ISOInfoGrub2Entry
 	}
 }
 
@@ -179,6 +186,11 @@ type isoYAML struct {
 	Grub2      struct {
 		Default *int `json:"default" yaml:"default"`
 		Timeout *int `json:"timeout" yaml:"timeout"`
+		Entries []struct {
+			Name   string `json:"name" yaml:"name"`
+			Linux  string `json:"linux" yaml:"linux"`
+			Initrd string `json:"initrd" yaml:"initrd"`
+		} `json:"entries" yaml:"entries"`
 	} `json:"grub2" yaml:"grub2"`
 }
 
@@ -276,6 +288,14 @@ func Load(root string) (*Info, error) {
 		isoInfo.KernelArgs = isoYaml.KernelArgs
 		isoInfo.Grub2.Default = isoYaml.Grub2.Default
 		isoInfo.Grub2.Timeout = isoYaml.Grub2.Timeout
+
+		for _, isoEntry := range isoYaml.Grub2.Entries {
+			isoInfo.Grub2.Entries = append(isoInfo.Grub2.Entries, ISOInfoGrub2Entry{
+				Name:   isoEntry.Name,
+				Linux:  isoEntry.Linux,
+				Initrd: isoEntry.Initrd,
+			})
+		}
 	}
 
 	kernelInfo, err := readKernelInfo(root)
