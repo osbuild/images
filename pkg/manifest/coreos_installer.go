@@ -146,7 +146,7 @@ func (p *CoreOSInstaller) getPackageSpecs() rpmmd.PackageList {
 	if p.depsolveResult == nil {
 		return nil
 	}
-	return p.depsolveResult.Packages
+	return p.depsolveResult.Transactions.AllPackages()
 }
 
 func (p *CoreOSInstaller) serializeStart(inputs Inputs) error {
@@ -155,7 +155,7 @@ func (p *CoreOSInstaller) serializeStart(inputs Inputs) error {
 	}
 	p.depsolveResult = &inputs.Depsolved
 	if p.kernelName != "" {
-		kernelPkg, err := p.depsolveResult.Packages.Package(p.kernelName)
+		kernelPkg, err := p.depsolveResult.Transactions.FindPackage(p.kernelName)
 		if err != nil {
 			return fmt.Errorf("CoreOSInstaller: %w", err)
 		}
@@ -193,10 +193,12 @@ func (p *CoreOSInstaller) serialize() (osbuild.Pipeline, error) {
 		return osbuild.Pipeline{}, err
 	}
 
-	pipeline.AddStage(osbuild.NewRPMStage(
-		osbuild.NewRPMStageOptions(p.depsolveResult.Repos),
-		osbuild.NewRpmStageSourceFilesInputs(p.depsolveResult.Packages),
-	))
+	rpmStages, err := osbuild.GenRPMStagesFromTransactions(p.depsolveResult.Transactions, nil)
+	if err != nil {
+		return osbuild.Pipeline{}, err
+	}
+	pipeline.AddStages(rpmStages...)
+
 	pipeline.AddStage(osbuild.NewBuildstampStage(&osbuild.BuildstampStageOptions{
 		Arch:    p.platform.GetArch().String(),
 		Product: p.product,
