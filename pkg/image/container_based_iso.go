@@ -37,6 +37,8 @@ type ContainerBasedIso struct {
 
 	Grub2MenuDefault *int
 	Grub2MenuTimeout *int
+
+	Grub2MenuEntries []manifest.ISOGrub2MenuEntry
 }
 
 func NewContainerBasedIso(platform platform.Platform, filename string, container container.SourceSpec) *ContainerBasedIso {
@@ -94,6 +96,8 @@ func (img *ContainerBasedIso) InstantiateManifestFromContainer(m *manifest.Manif
 	if img.Grub2MenuDefault != nil {
 		bootTreePipeline.DefaultMenu = *img.Grub2MenuDefault
 	}
+
+	bootTreePipeline.MenuEntries = img.Grub2MenuEntries
 
 	isoTreePipeline := manifest.NewISOTree(buildPipeline, osTreePipeline, bootTreePipeline)
 	isoTreePipeline.PartitionTable = efiBootPartitionTable(rng)

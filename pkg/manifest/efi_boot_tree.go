@@ -26,6 +26,9 @@ type EFIBootTree struct {
 
 	// Default Grub2 menu timeout on the ISO
 	MenuTimeout *int
+
+	// Potentially custom menu entries
+	MenuEntries []ISOGrub2MenuEntry
 }
 
 func NewEFIBootTree(buildPipeline Build, product, version string) *EFIBootTree {
@@ -90,6 +93,24 @@ func (p *EFIBootTree) serialize() (osbuild.Pipeline, error) {
 		Troubleshooting: true,
 		Config:          grub2config,
 	}
+
+	// If any menu entries are defined we turn off all default
+	// entries and instead append our own
+	// entries only
+	if len(p.MenuEntries) > 0 {
+		grubOptions.Troubleshooting = false
+		grubOptions.Test = false
+		grubOptions.Install = false
+
+		for _, entry := range p.MenuEntries {
+			grubOptions.Custom = append(grubOptions.Custom, osbuild.GrubISOCustomEntryOptions{
+				Name:   entry.Name,
+				Linux:  entry.Linux,
+				Initrd: entry.Initrd,
+			})
+		}
+	}
+
 	grub2Stage := osbuild.NewGrubISOStage(grubOptions)
 	pipeline.AddStage(grub2Stage)
 	return pipeline, nil

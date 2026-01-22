@@ -418,6 +418,15 @@ func (t *imageType) manifestForGenericISO(options distro.ImageOptions, rng *rand
 
 	img.Grub2MenuDefault = isoi.Grub2.Default
 	img.Grub2MenuTimeout = isoi.Grub2.Timeout
+	img.Grub2MenuEntries = []manifest.ISOGrub2MenuEntry{}
+
+	for _, entry := range isoi.Grub2.Entries {
+		img.Grub2MenuEntries = append(img.Grub2MenuEntries, manifest.ISOGrub2MenuEntry{
+			Name:   entry.Name,
+			Linux:  entry.Linux,
+			Initrd: entry.Initrd,
+		})
+	}
 
 	mf := manifest.New()
 
