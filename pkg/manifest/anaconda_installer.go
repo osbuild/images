@@ -237,7 +237,7 @@ func (p *AnacondaInstaller) getPackageSpecs() rpmmd.PackageList {
 	if p.depsolveResult == nil {
 		return nil
 	}
-	return p.depsolveResult.Packages
+	return p.depsolveResult.Transactions.AllPackages()
 }
 
 func (p *AnacondaInstaller) serializeStart(inputs Inputs) error {
@@ -246,8 +246,8 @@ func (p *AnacondaInstaller) serializeStart(inputs Inputs) error {
 	}
 	p.depsolveResult = &inputs.Depsolved
 	// bootc-installers will get the kernelVer via introspection
-	if len(p.depsolveResult.Packages) > 0 && p.kernelName != "" {
-		kernelPkg, err := p.depsolveResult.Packages.Package(p.kernelName)
+	if len(p.depsolveResult.Transactions) > 0 && p.kernelName != "" {
+		kernelPkg, err := p.depsolveResult.Transactions.FindPackage(p.kernelName)
 		if err != nil {
 			return fmt.Errorf("AnacondaInstaller: %w", err)
 		}
@@ -276,7 +276,7 @@ func (p *AnacondaInstaller) serialize() (osbuild.Pipeline, error) {
 	if p.depsolveResult == nil && len(p.bootcLivefsContainerSpecs) == 0 {
 		return osbuild.Pipeline{}, fmt.Errorf("AnacondaInstaller: serialization not started")
 	}
-	if len(p.depsolveResult.Packages) > 0 && len(p.bootcLivefsContainerSpecs) > 0 {
+	if len(p.depsolveResult.Transactions) > 0 && len(p.bootcLivefsContainerSpecs) > 0 {
 		return osbuild.Pipeline{}, fmt.Errorf("AnacondaInstaller: using packages and containers at the same time is not allowed")
 	}
 
@@ -285,14 +285,17 @@ func (p *AnacondaInstaller) serialize() (osbuild.Pipeline, error) {
 		return osbuild.Pipeline{}, err
 	}
 
-	if len(p.depsolveResult.Packages) > 0 {
-		options := osbuild.NewRPMStageOptions(p.depsolveResult.Repos)
+	if len(p.depsolveResult.Transactions) > 0 {
+		baseOptions := osbuild.RPMStageOptions{}
 		// Documentation is only installed on live installer images
 		if p.Type != AnacondaInstallerTypeLive {
-			options.Exclude = &osbuild.Exclude{Docs: true}
+			baseOptions.Exclude = &osbuild.Exclude{Docs: true}
 		}
-
-		pipeline.AddStage(osbuild.NewRPMStage(options, osbuild.NewRpmStageSourceFilesInputs(p.depsolveResult.Packages)))
+		rpmStages, err := osbuild.GenRPMStagesFromTransactions(p.depsolveResult.Transactions, &baseOptions)
+		if err != nil {
+			return osbuild.Pipeline{}, err
+		}
+		pipeline.AddStages(rpmStages...)
 	} else {
 		image := osbuild.NewContainersInputForSingleSource(p.bootcLivefsContainerSpecs[0])
 		stage, err := osbuild.NewContainerDeployStage(image, &osbuild.ContainerDeployOptions{RemoveSignatures: true})

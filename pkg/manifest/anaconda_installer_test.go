@@ -17,6 +17,27 @@ import (
 	"github.com/osbuild/images/pkg/runner"
 )
 
+var dummyDepsolveResult = depsolvednf.DepsolveResult{
+	Transactions: depsolvednf.TransactionList{
+		{
+			{
+				Name: "kernel",
+				Checksum: rpmmd.Checksum{
+					Type:  "sha256",
+					Value: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+				},
+				RepoID: "dummy-repo-id",
+				Repo:   &rpmmd.RepoConfig{Id: "dummy-repo-id"},
+			},
+		},
+	},
+	Repos: []rpmmd.RepoConfig{
+		{
+			Id: "dummy-repo-id",
+		},
+	},
+}
+
 func newAnacondaInstaller() *manifest.AnacondaInstaller {
 	m := &manifest.Manifest{}
 	runner := &runner.Linux{}
@@ -40,15 +61,6 @@ func newAnacondaInstaller() *manifest.AnacondaInstaller {
 }
 
 func TestAnacondaInstallerModules(t *testing.T) {
-	pkgs := rpmmd.PackageList{
-		{
-			Name: "kernel",
-			Checksum: rpmmd.Checksum{
-				Type:  "sha256",
-				Value: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-			},
-		},
-	}
 	type testCase struct {
 		enable   []string
 		disable  []string
@@ -97,7 +109,7 @@ func TestAnacondaInstallerModules(t *testing.T) {
 				installerPipeline.InstallerCustomizations.UseLegacyAnacondaConfig = legacy
 				installerPipeline.InstallerCustomizations.EnabledAnacondaModules = tc.enable
 				installerPipeline.InstallerCustomizations.DisabledAnacondaModules = tc.disable
-				pipeline, err := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: depsolvednf.DepsolveResult{Packages: pkgs}})
+				pipeline, err := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: dummyDepsolveResult})
 				require.NoError(err)
 				require.NotNil(pipeline)
 				require.NotNil(pipeline.Stages)
@@ -123,16 +135,6 @@ func TestAnacondaInstallerModules(t *testing.T) {
 }
 
 func TestISOLocale(t *testing.T) {
-	pkgs := rpmmd.PackageList{
-		{
-			Name: "kernel",
-			Checksum: rpmmd.Checksum{
-				Type:  "sha256",
-				Value: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-			},
-		},
-	}
-
 	locales := map[string]string{
 		// input: expected
 		"C.UTF-8":     "C.UTF-8",
@@ -146,7 +148,7 @@ func TestISOLocale(t *testing.T) {
 			require := require.New(t)
 			installerPipeline := newAnacondaInstaller()
 			installerPipeline.Locale = input
-			pipeline, err := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: depsolvednf.DepsolveResult{Packages: pkgs}})
+			pipeline, err := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: dummyDepsolveResult})
 			require.NoError(err)
 			require.NotNil(pipeline)
 			require.NotNil(pipeline.Stages)
@@ -165,21 +167,12 @@ func TestISOLocale(t *testing.T) {
 }
 
 func TestAnacondaInstallerDracutModulesAndDrivers(t *testing.T) {
-	pkgs := rpmmd.PackageList{
-		{
-			Name: "kernel",
-			Checksum: rpmmd.Checksum{
-				Type:  "sha256",
-				Value: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-			},
-		},
-	}
 	require := require.New(t)
 
 	installerPipeline := newAnacondaInstaller()
 	installerPipeline.InstallerCustomizations.AdditionalDracutModules = []string{"test-module"}
 	installerPipeline.InstallerCustomizations.AdditionalDrivers = []string{"test-driver"}
-	pipeline, err := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: depsolvednf.DepsolveResult{Packages: pkgs}})
+	pipeline, err := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: dummyDepsolveResult})
 	require.NoError(err)
 	require.NotNil(pipeline)
 	require.NotNil(pipeline.Stages)
@@ -197,15 +190,6 @@ func TestAnacondaInstallerDracutModulesAndDrivers(t *testing.T) {
 }
 
 func TestAnacondaInstallerConfigLorax(t *testing.T) {
-	pkgs := rpmmd.PackageList{
-		{
-			Name: "kernel",
-			Checksum: rpmmd.Checksum{
-				Type:  "sha256",
-				Value: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-			},
-		},
-	}
 	require := require.New(t)
 
 	installerPipeline := newAnacondaInstaller()
@@ -215,7 +199,7 @@ func TestAnacondaInstallerConfigLorax(t *testing.T) {
 	installerPipeline.InstallerCustomizations.LoraxTemplates = []manifest.InstallerLoraxTemplate{
 		manifest.InstallerLoraxTemplate{Path: "99-generic/runtime-postinstall.tmpl"},
 	}
-	pipeline, err := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: depsolvednf.DepsolveResult{Packages: pkgs}})
+	pipeline, err := manifest.SerializeWith(installerPipeline, manifest.Inputs{Depsolved: dummyDepsolveResult})
 	require.NoError(err)
 	require.NotNil(pipeline)
 	require.NotNil(pipeline.Stages)
