@@ -3,6 +3,7 @@ package osbuild
 import (
 	"slices"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
@@ -29,6 +30,22 @@ type RPMStageOptions struct {
 
 	// Only install certain locales (sets `_install_langs` RPM macro)
 	InstallLangs []string `json:"install_langs,omitempty"`
+}
+
+func (o *RPMStageOptions) Clone() *RPMStageOptions {
+	if o == nil {
+		return nil
+	}
+	return &RPMStageOptions{
+		DBPath:           o.DBPath,
+		GPGKeys:          slices.Clone(o.GPGKeys),
+		GPGKeysFromTree:  slices.Clone(o.GPGKeysFromTree),
+		DisableDracut:    o.DisableDracut,
+		Exclude:          common.ClonePtr(o.Exclude),
+		OSTreeBooted:     common.ClonePtr(o.OSTreeBooted),
+		KernelInstallEnv: common.ClonePtr(o.KernelInstallEnv),
+		InstallLangs:     slices.Clone(o.InstallLangs),
+	}
 }
 
 type Exclude struct {
