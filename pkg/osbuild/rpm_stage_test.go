@@ -3,10 +3,107 @@ package osbuild
 import (
 	"testing"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestRPMStageOptionsClone(t *testing.T) {
+	tests := []struct {
+		name string
+		opts *RPMStageOptions
+	}{
+		{
+			name: "nil",
+			opts: nil,
+		},
+		{
+			name: "empty",
+			opts: &RPMStageOptions{},
+		},
+		{
+			name: "all-fields",
+			opts: &RPMStageOptions{
+				DBPath:           "/var/lib/rpm",
+				GPGKeys:          []string{"key1", "key2"},
+				GPGKeysFromTree:  []string{"/etc/pki/rpm-gpg/RPM-GPG-KEY-fedora"},
+				DisableDracut:    true,
+				Exclude:          &Exclude{Docs: true},
+				OSTreeBooted:     common.ToPtr(true),
+				KernelInstallEnv: &KernelInstallEnv{BootRoot: "/boot"},
+				InstallLangs:     []string{"en_US", "de_DE"},
+			},
+		},
+		{
+			name: "only-slices",
+			opts: &RPMStageOptions{
+				GPGKeys:         []string{"single-key"},
+				GPGKeysFromTree: []string{"/path/to/key"},
+				InstallLangs:    []string{"en_US"},
+			},
+		},
+		{
+			name: "only-pointers",
+			opts: &RPMStageOptions{
+				Exclude:          &Exclude{Docs: false},
+				OSTreeBooted:     common.ToPtr(false),
+				KernelInstallEnv: &KernelInstallEnv{BootRoot: ""},
+			},
+		},
+		{
+			name: "empty-slices",
+			opts: &RPMStageOptions{
+				GPGKeys:         []string{},
+				GPGKeysFromTree: []string{},
+				InstallLangs:    []string{},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			clone := tt.opts.Clone()
+			assert.Equal(t, tt.opts, clone)
+
+			if tt.opts == nil {
+				assert.Nil(t, clone)
+				return
+			}
+
+			assert.NotSame(t, tt.opts, clone)
+
+			// Verify deep copy of slices (modifying clone shouldn't affect original)
+			if len(clone.GPGKeys) > 0 {
+				clone.GPGKeys[0] = "modified"
+				assert.NotEqual(t, tt.opts.GPGKeys[0], clone.GPGKeys[0])
+			}
+			if len(clone.GPGKeysFromTree) > 0 {
+				clone.GPGKeysFromTree[0] = "modified"
+				assert.NotEqual(t, tt.opts.GPGKeysFromTree[0], clone.GPGKeysFromTree[0])
+			}
+			if len(clone.InstallLangs) > 0 {
+				clone.InstallLangs[0] = "modified"
+				assert.NotEqual(t, tt.opts.InstallLangs[0], clone.InstallLangs[0])
+			}
+
+			// Verify deep copy of pointer fields
+			if clone.Exclude != nil {
+				assert.NotSame(t, tt.opts.Exclude, clone.Exclude)
+				clone.Exclude.Docs = !clone.Exclude.Docs
+				assert.NotEqual(t, tt.opts.Exclude.Docs, clone.Exclude.Docs)
+			}
+			if clone.OSTreeBooted != nil {
+				assert.NotSame(t, tt.opts.OSTreeBooted, clone.OSTreeBooted)
+			}
+			if clone.KernelInstallEnv != nil {
+				assert.NotSame(t, tt.opts.KernelInstallEnv, clone.KernelInstallEnv)
+				clone.KernelInstallEnv.BootRoot = "modified"
+				assert.NotEqual(t, tt.opts.KernelInstallEnv.BootRoot, clone.KernelInstallEnv.BootRoot)
+			}
+		})
+	}
+}
 
 func TestNewRPMStage(t *testing.T) {
 	expectedStage := &Stage{
