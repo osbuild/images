@@ -29,6 +29,9 @@ type EFIBootTree struct {
 
 	// Potentially custom menu entries
 	MenuEntries []ISOGrub2MenuEntry
+
+	DisableTestEntry            bool
+	DisableTroubleshootingEntry bool
 }
 
 func NewEFIBootTree(buildPipeline Build, product, version string) *EFIBootTree {
@@ -89,8 +92,8 @@ func (p *EFIBootTree) serialize() (osbuild.Pipeline, error) {
 		Vendor:          p.UEFIVendor,
 		FIPS:            p.Platform.GetFIPSMenu(),
 		Install:         true,
-		Test:            true,
-		Troubleshooting: true,
+		Test:            !p.DisableTestEntry,
+		Troubleshooting: !p.DisableTroubleshootingEntry,
 		Config:          grub2config,
 	}
 

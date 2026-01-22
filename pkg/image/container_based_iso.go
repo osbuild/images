@@ -92,6 +92,8 @@ func (img *ContainerBasedIso) InstantiateManifestFromContainer(m *manifest.Manif
 	bootTreePipeline.ISOLabel = img.ISOLabel
 	bootTreePipeline.KernelOpts = kernelOpts
 	bootTreePipeline.MenuTimeout = img.Grub2MenuTimeout
+	bootTreePipeline.DisableTestEntry = true
+	bootTreePipeline.DisableTroubleshootingEntry = true
 
 	if img.Grub2MenuDefault != nil {
 		bootTreePipeline.DefaultMenu = *img.Grub2MenuDefault
