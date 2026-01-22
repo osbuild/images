@@ -5,6 +5,7 @@ import (
 	"slices"
 
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
@@ -200,4 +201,69 @@ func GPGKeysForPackages(pkgs rpmmd.PackageList) ([]string, error) {
 	}
 	slices.Sort(gpgKeys)
 	return gpgKeys, nil
+}
+
+// GenRPMStagesFromTransactions creates RPM stages for each transaction.
+// Each stage installs only the packages in its transaction and imports
+// only the GPG keys needed for those packages.
+//
+// The baseOpts parameter provides template options that are copied to each
+// stage. GPGKeys will be computed per transaction from package repos.
+// GPGKeysFromTree will be filtered per transaction based on when the
+// providing package is installed.
+//
+// Returns an error if any GPGKeysFromTree path is not provided by any package
+// in the transactions.
+func GenRPMStagesFromTransactions(
+	transactions depsolvednf.TransactionList,
+	baseOpts *RPMStageOptions,
+) ([]*Stage, error) {
+	if len(transactions) == 0 {
+		return nil, nil
+	}
+
+	if baseOpts == nil {
+		baseOpts = &RPMStageOptions{}
+	}
+
+	// Lookup which GPGKeysFromTree files come from which transaction
+	var fileInfos map[string]depsolvednf.TransactionFileInfo
+	if len(baseOpts.GPGKeysFromTree) > 0 {
+		fileInfos = transactions.GetFilesTransactionInfo(baseOpts.GPGKeysFromTree)
+		// Validate all paths are provided by some package in the transactions
+		for _, keyPath := range baseOpts.GPGKeysFromTree {
+			if _, found := fileInfos[keyPath]; !found {
+				return nil, fmt.Errorf(
+					"GPGKeysFromTree path %q not provided by any package in the transactions", keyPath)
+			}
+		}
+	}
+
+	stages := make([]*Stage, 0, len(transactions))
+	for txIdx, pkgs := range transactions {
+		if len(pkgs) == 0 {
+			continue
+		}
+
+		opts := baseOpts.Clone()
+		// Set repo-specific GPGKeys for this transaction's packages repos
+		var err error
+		opts.GPGKeys, err = GPGKeysForPackages(pkgs)
+		if err != nil {
+			return nil, err
+		}
+		// Filter GPGKeysFromTree for this transaction
+		// NOTE: We need to reset the GPGKeysFromTree slice to avoid accumulating
+		// keys from previous transactions or keeping the original slice from the base options.
+		opts.GPGKeysFromTree = nil
+		for _, keyPath := range baseOpts.GPGKeysFromTree {
+			if info, found := fileInfos[keyPath]; !found || info.TxIndex != txIdx {
+				continue
+			}
+			opts.GPGKeysFromTree = append(opts.GPGKeysFromTree, keyPath)
+		}
+
+		stages = append(stages, NewRPMStage(opts, NewRpmStageSourceFilesInputs(pkgs)))
+	}
+	return stages, nil
 }
