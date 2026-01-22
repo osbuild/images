@@ -21,44 +21,65 @@ import (
 )
 
 func mockPackageSets() map[string]depsolvednf.DepsolveResult {
-	return map[string]depsolvednf.DepsolveResult{
+	repo := rpmmd.RepoConfig{Id: "dummy-repo-id"}
+	pkgSets := map[string]depsolvednf.DepsolveResult{
 		"build": {
-			Packages: rpmmd.PackageList{
+			Transactions: depsolvednf.TransactionList{
 				{
-					Name: "coreutils",
-					Checksum: rpmmd.Checksum{
-						Type:  "sha256",
-						Value: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+					{
+						Name: "coreutils",
+						Checksum: rpmmd.Checksum{
+							Type:  "sha256",
+							Value: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+						},
+						RemoteLocations: []string{"https://example.com/coreutils"},
+						RepoID:          repo.Id,
+						Repo:            &repo,
 					},
-					RemoteLocations: []string{"https://example.com/coreutils"},
 				},
 			},
+			Repos: []rpmmd.RepoConfig{repo},
 		},
 		"os": {
-			Packages: rpmmd.PackageList{
+			Transactions: depsolvednf.TransactionList{
 				{
-					Name: "kernel",
-					Checksum: rpmmd.Checksum{
-						Type:  "sha256",
-						Value: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+					{
+						Name: "kernel",
+						Checksum: rpmmd.Checksum{
+							Type:  "sha256",
+							Value: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+						},
+						RemoteLocations: []string{"https://example.com/kernel"},
+						RepoID:          repo.Id,
+						Repo:            &repo,
 					},
-					RemoteLocations: []string{"https://example.com/kernel"},
 				},
 			},
+			Repos: []rpmmd.RepoConfig{repo},
 		},
 		"anaconda-tree": {
-			Packages: rpmmd.PackageList{
+			Transactions: depsolvednf.TransactionList{
 				{
-					Name: "kernel",
-					Checksum: rpmmd.Checksum{
-						Type:  "sha256",
-						Value: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+					{
+						Name: "kernel",
+						Checksum: rpmmd.Checksum{
+							Type:  "sha256",
+							Value: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+						},
+						RemoteLocations: []string{"https://example.com/kernel"},
+						RepoID:          repo.Id,
+						Repo:            &repo,
 					},
-					RemoteLocations: []string{"https://example.com/kernel"},
 				},
 			},
+			Repos: []rpmmd.RepoConfig{repo},
 		},
 	}
+	for name, pkgSet := range pkgSets {
+		pkgSet.Packages = pkgSet.Transactions.AllPackages()
+		pkgSets[name] = pkgSet
+	}
+	return pkgSets
 }
 
 func mockContainerSpecs() map[string][]container.Spec {
