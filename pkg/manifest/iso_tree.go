@@ -184,7 +184,11 @@ func (p *ISOTree) serialize() (osbuild.Pipeline, error) {
 	if version == "" {
 		version = p.Release
 	}
+
 	var grub2config *osbuild.Grub2Config
+	var disableTestEntry bool
+	var disableTroubleshootingEntry bool
+
 	if p.bootTreePipeline != nil {
 		if p.bootTreePipeline.DefaultMenu > 0 {
 			grub2config = &osbuild.Grub2Config{
@@ -201,6 +205,9 @@ func (p *ISOTree) serialize() (osbuild.Pipeline, error) {
 				grub2config.Timeout = *p.bootTreePipeline.MenuTimeout
 			}
 		}
+
+		disableTestEntry = p.bootTreePipeline.DisableTestEntry
+		disableTroubleshootingEntry = p.bootTreePipeline.DisableTroubleshootingEntry
 	}
 	options := &osbuild.Grub2ISOLegacyStageOptions{
 		Product: osbuild.Product{
@@ -214,8 +221,8 @@ func (p *ISOTree) serialize() (osbuild.Pipeline, error) {
 		ISOLabel:        p.isoLabel,
 		FIPS:            false,
 		Install:         true,
-		Test:            true,
-		Troubleshooting: true,
+		Test:            !disableTestEntry,
+		Troubleshooting: !disableTroubleshootingEntry,
 		Config:          grub2config,
 	}
 
