@@ -17,3 +17,10 @@ type RPMKeysTweaks struct {
 	// target distro's repository configs.
 	IgnoreBuildImportFailures bool `yaml:"ignore_build_import_failures"`
 }
+
+func (t *Tweaks) InheritFrom(parentConfig *Tweaks) *Tweaks {
+	if t == nil {
+		t = &Tweaks{}
+	}
+	return shallowMerge(t, parentConfig)
+}
