@@ -75,10 +75,6 @@ func mockPackageSets() map[string]depsolvednf.DepsolveResult {
 			Repos: []rpmmd.RepoConfig{repo},
 		},
 	}
-	for name, pkgSet := range pkgSets {
-		pkgSet.Packages = pkgSet.Transactions.AllPackages()
-		pkgSets[name] = pkgSet
-	}
 	return pkgSets
 }
 
