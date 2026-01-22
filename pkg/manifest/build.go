@@ -159,7 +159,7 @@ func (p *BuildrootFromPackages) getPackageSpecs() rpmmd.PackageList {
 	if p.depsolveResult == nil {
 		return nil
 	}
-	return p.depsolveResult.Packages
+	return p.depsolveResult.Transactions.AllPackages()
 }
 
 func (p *BuildrootFromPackages) serializeStart(inputs Inputs) error {
@@ -188,10 +188,12 @@ func (p *BuildrootFromPackages) serialize() (osbuild.Pipeline, error) {
 
 	pipeline.Runner = p.runner.String()
 
-	pipeline.AddStage(osbuild.NewRPMStage(
-		osbuild.NewRPMStageOptions(p.depsolveResult.Repos),
-		osbuild.NewRpmStageSourceFilesInputs(p.depsolveResult.Packages),
-	))
+	rpmStages, err := osbuild.GenRPMStagesFromTransactions(p.depsolveResult.Transactions, nil)
+	if err != nil {
+		return osbuild.Pipeline{}, err
+	}
+	pipeline.AddStages(rpmStages...)
+
 	if !p.disableSelinux {
 		pipeline.AddStage(osbuild.NewSELinuxStage(&osbuild.SELinuxStageOptions{
 			FileContexts: fmt.Sprintf("etc/selinux/%s/contexts/files/file_contexts", p.selinuxPolicy),
