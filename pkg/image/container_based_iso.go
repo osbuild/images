@@ -17,6 +17,11 @@ type ContainerBasedIso struct {
 	// Container source for the OS tree
 	ContainerSource container.SourceSpec
 
+	// PayloadContainer is an optional container to embed in the image's
+	// container storage (for bootc installer scenarios where the payload
+	// container needs to be available at install time).
+	PayloadContainer *container.SourceSpec
+
 	Product string
 	Version string
 	Release string
@@ -58,6 +63,7 @@ func (img *ContainerBasedIso) InstantiateManifestFromContainer(m *manifest.Manif
 		})
 
 	osTreePipeline := manifest.NewOSFromContainer("os-tree", buildPipeline, &img.ContainerSource)
+	osTreePipeline.PayloadContainer = img.PayloadContainer
 
 	product := img.Product
 	if product == "" {
