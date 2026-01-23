@@ -44,11 +44,9 @@ containers:
   - <<: *default_fake_container
     image_types: ["bootc-installer"]
     arch: x86_64
-    payload_container_ref: "payload-container-fake-ref"
   - <<: *default_fake_container
     image_types: ["bootc-installer"]
     arch: aarch64
-    payload_container_ref: "payload-container-fake-ref"
 
   # test rpm based ISO installer
   - <<: *default_fake_container

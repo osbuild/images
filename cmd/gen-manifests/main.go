@@ -610,9 +610,8 @@ func main() {
 			ImageRef      string      `yaml:"image_ref"`
 			ImageTypes    []string    `yaml:"image_types"`
 
-			BuildContainerRef   string      `yaml:"build_container_ref"`
-			BuildContainerInfo  osinfo.Info `yaml:"build_container_info"`
-			PayloadContainerRef string      `yaml:"payload_container_ref"`
+			BuildContainerRef  string      `yaml:"build_container_ref"`
+			BuildContainerInfo osinfo.Info `yaml:"build_container_info"`
 		}
 		type fakeContainersYAML struct {
 			Containers []fakeBootcContainerYAML
@@ -663,11 +662,6 @@ func main() {
 						if needsSkipping, reason := configs.needsSkipping(distribution.Name(), itConfig); needsSkipping {
 							fmt.Printf("Skipping %s for %s/%s (reason: %v)\n", itConfig.Name, imgTypeName, distribution.Name(), reason)
 							continue
-						}
-						if fakeBootcCnt.PayloadContainerRef != "" {
-							itConfig.Options.Bootc = &distro.BootcImageOptions{
-								InstallerPayloadRef: fakeBootcCnt.PayloadContainerRef,
-							}
 						}
 
 						var repos []rpmmd.RepoConfig
