@@ -317,7 +317,7 @@ def boot_qemu_pxe(arch, pxe_tar_path):
         subprocess.check_call(
             ["tar", "-C", tmpdir, "-x", "-f", pxe_tar_path])
         subprocess.check_call(
-            "echo rootfs.img | cpio -c --quiet -L -o > rootfs.cpio", shell=True, cwd=tmpdir)
+            "echo rootfs.img | cpio -H newc --quiet -L -o > rootfs.cpio", shell=True, cwd=tmpdir)
         subprocess.check_call(
             "cat initrd.img rootfs.cpio > combined.img", shell=True, cwd=tmpdir)
 
