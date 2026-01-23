@@ -154,7 +154,7 @@ func (t *imageType) manifestWithoutValidation(bp *blueprint.Blueprint, options d
 	case "bootc_iso":
 		return t.manifestForISO(bp, options, rng)
 	case "bootc_generic_iso":
-		return t.manifestForGenericISO(rng)
+		return t.manifestForGenericISO(options, rng)
 	case "bootc_disk":
 		return t.manifestForDisk(bp, options, rng)
 	case "pxe_tar":
@@ -375,7 +375,7 @@ func (t *imageType) manifestForISO(bp *blueprint.Blueprint, options distro.Image
 	return &mf, nil, err
 }
 
-func (t *imageType) manifestForGenericISO(rng *rand.Rand) (*manifest.Manifest, []string, error) {
+func (t *imageType) manifestForGenericISO(options distro.ImageOptions, rng *rand.Rand) (*manifest.Manifest, []string, error) {
 	if t.arch.distro.imgref == "" {
 		return nil, nil, fmt.Errorf("internal error: no base image defined")
 	}
@@ -390,6 +390,13 @@ func (t *imageType) manifestForGenericISO(rng *rand.Rand) (*manifest.Manifest, [
 	platformi.ImageFormat = platform.FORMAT_ISO
 
 	img := image.NewContainerBasedIso(platformi, t.Filename(), containerSource)
+	if options.Bootc != nil && options.Bootc.InstallerPayloadRef != "" {
+		img.PayloadContainer = &container.SourceSpec{
+			Source: options.Bootc.InstallerPayloadRef,
+			Name:   options.Bootc.InstallerPayloadRef,
+			Local:  true,
+		}
+	}
 	img.RootfsCompression = "zstd"
 	img.RootfsType = manifest.SquashfsRootfs
 	img.KernelPath = fmt.Sprintf("lib/modules/%s/vmlinuz", t.arch.distro.sourceInfo.KernelInfo.Version)
