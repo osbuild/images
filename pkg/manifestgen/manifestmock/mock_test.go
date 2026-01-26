@@ -1,6 +1,7 @@
 package manifestmock_test
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -84,66 +85,205 @@ func TestDepsolve_EmptyInput(t *testing.T) {
 }
 
 func TestDepsolve_Smoke(t *testing.T) {
+	baseRepos := []rpmmd.RepoConfig{
+		{
+			Name:     "baseos",
+			BaseURLs: []string{"https://example.com/baseos"},
+		},
+		{
+			Name:     "appstream",
+			BaseURLs: []string{"https://example.com/appstream"},
+		},
+	}
+	userRepos := []rpmmd.RepoConfig{
+		{
+			Name:     "user",
+			BaseURLs: []string{"https://example.com/user"},
+		},
+	}
+	allRepos := slices.Concat(baseRepos, userRepos)
+
 	packageSets := map[string][]rpmmd.PackageSet{
 		"build": {
 			{
-				Include:         []string{"inc1"},
-				Exclude:         []string{"exc1"},
-				Repositories:    []rpmmd.RepoConfig{{Name: "repo1"}},
+				Include:         []string{"build-inc1", "dnf"},
+				Exclude:         []string{"build-exc1"},
+				Repositories:    baseRepos,
 				InstallWeakDeps: true,
 			},
 		},
-	}
-	repos := []rpmmd.RepoConfig{
-		{
-			Name:     "repo1",
-			BaseURLs: []string{"https://example.com/foo"},
+		"os": {
+			{
+				Include:         []string{"os-inc1", "dnf"},
+				Exclude:         []string{"os-exc1"},
+				Repositories:    baseRepos,
+				InstallWeakDeps: true,
+			},
+			{
+				Include:         []string{"os-inc2", "dnf"},
+				Exclude:         []string{"os-exc2"},
+				Repositories:    allRepos,
+				InstallWeakDeps: false,
+			},
 		},
 	}
+
 	arch := "x86_64"
-	result := manifestmock.Depsolve(packageSets, repos, arch)
+	result := manifestmock.Depsolve(packageSets, allRepos, arch)
 	assert.Equal(t, map[string]depsolvednf.DepsolveResult{
 		"build": depsolvednf.DepsolveResult{
 			Packages: rpmmd.PackageList{
 				{
-					Name:            "inc1",
-					Version:         "2",
+					Name:            "build-inc1",
+					Version:         "1",
 					Release:         "3.pkgset~build^trans~0",
 					Arch:            "x86_64",
-					RemoteLocations: []string{"https://example.com/repo/packages/inc1-0:2-3.pkgset~build^trans~0.x86_64.rpm"},
-					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "4060c918d6fd91bffe885125b1aa1d6a691e871d6f3e924ccecdbacca899c111"},
+					RemoteLocations: []string{"https://example.com/repo/packages/build-inc1-0:1-3.pkgset~build^trans~0.x86_64.rpm"},
+					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "efd4f3331ab734995ccbd2fa9d16ee989b17b8160e7f79baf23118b19849c027"},
 				},
 				{
-					Name:            "exclude:exc1",
-					Version:         "2",
-					Release:         "2.pkgset~build^trans~0",
+					Name:            "dnf",
+					Version:         "3",
+					Release:         "7.pkgset~build^trans~0",
 					Arch:            "x86_64",
-					RemoteLocations: []string{"https://example.com/repo/packages/exclude:exc1-0:2-2.pkgset~build^trans~0.x86_64.rpm"},
-					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "ee11e9be701d637dc94d627456f0b61635210035d9f59ad7a0a6f089d496ca8e"},
+					RemoteLocations: []string{"https://example.com/repo/packages/dnf-0:3-7.pkgset~build^trans~0.x86_64.rpm"},
+					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "ba61ee16bedef613c9779ecc5d40be8304ece49473923c828082ab5c48dcf8ee"},
 				},
 				{
-					Name:            "pkgset:build_trans:0_repos:repo1+weak",
+					Name:            "exclude:build-exc1",
+					Version:         "1",
+					Release:         "8.pkgset~build^trans~0",
+					Arch:            "x86_64",
+					RemoteLocations: []string{"https://example.com/repo/packages/exclude:build-exc1-0:1-8.pkgset~build^trans~0.x86_64.rpm"},
+					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "75dacb0c543a006c4ba5f339dbbd2e53006a7f918079b4f5e5fdb683aa395ab7"},
+				},
+				{
+					Name:            "pkgset:build_trans:0_repos:baseos+appstream+weak",
 					Version:         "7",
-					Release:         "4.fk1",
+					Release:         "7.fk1",
 					Arch:            "x86_64",
-					RemoteLocations: []string{"https://example.com/repo/packages/pkgset:build_trans:0_repos:repo1+weak-0:7-4.fk1.x86_64.rpm"},
-					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "a16f5db781c832938af5d8c0c7fc91cba80e8e269324d8382c22213b1795526f"},
+					RemoteLocations: []string{"https://example.com/repo/packages/pkgset:build_trans:0_repos:baseos+appstream+weak-0:7-7.fk1.x86_64.rpm"},
+					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "aa52cccdc067ec6796580b2cf1a0a6c34b7e996fbd8740c9cff8f0e82c6f4646"},
 				},
 				{
-					Name:            "https://example.com/passed-arch:x86_64/passed-repo:/foo",
+					Name:            "https://example.com/passed-arch:x86_64/passed-repo:/baseos",
+					Version:         "6",
+					Release:         "0.fk1",
+					Arch:            "x86_64",
+					RemoteLocations: []string{"https://example.com/passed-arch:x86_64/passed-repo:/baseos"},
+					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "3cdb35e9d0c01e60bc3362af2544e8b46429c3b1d5177579a0bec588ac65e707"},
+				},
+				{
+					Name:            "https://example.com/passed-arch:x86_64/passed-repo:/appstream",
+					Version:         "2",
+					Release:         "1.fk1",
+					Arch:            "x86_64",
+					RemoteLocations: []string{"https://example.com/passed-arch:x86_64/passed-repo:/appstream"},
+					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "e795634c003b026414b3299574c7b847d9168280e8d2bbdbe3e881cbed194c9d"},
+				},
+				{
+					Name:            "https://example.com/passed-arch:x86_64/passed-repo:/user",
+					Version:         "3",
+					Release:         "0.fk1",
+					Arch:            "x86_64",
+					RemoteLocations: []string{"https://example.com/passed-arch:x86_64/passed-repo:/user"},
+					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "0c676fb4e895762dc80cd8abadec73e49970317f281ad5b94b93df9afdcad4e9"},
+				},
+			},
+			Repos: allRepos,
+		},
+		"os": depsolvednf.DepsolveResult{
+			Packages: rpmmd.PackageList{
+				{
+					Name:            "dnf",
 					Version:         "0",
-					Release:         "6.fk1",
+					Release:         "5.pkgset~os^trans~0",
 					Arch:            "x86_64",
-					RemoteLocations: []string{"https://example.com/passed-arch:x86_64/passed-repo:/foo"},
-					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "63c9a60a4f279e4825c170c3cd893560716635f84a9a71fb262a6206d59ca74d"},
+					RemoteLocations: []string{"https://example.com/repo/packages/dnf-0:0-5.pkgset~os^trans~0.x86_64.rpm"},
+					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "22c603fbf9285e567b76ea505f365da7d013cc48174b494e40a5032e153291ac"},
 				},
-			},
-			Repos: []rpmmd.RepoConfig{
 				{
-					Name:     "repo1",
-					BaseURLs: []string{"https://example.com/foo"},
+					Name:            "os-inc1",
+					Version:         "3",
+					Release:         "7.pkgset~os^trans~0",
+					Arch:            "x86_64",
+					RemoteLocations: []string{"https://example.com/repo/packages/os-inc1-0:3-7.pkgset~os^trans~0.x86_64.rpm"},
+					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "540bb70a104b25dce75c51363eadbdb9c0ed0387467fa2ee28fec5c3103b7f0a"},
+				},
+				{
+					Name:            "exclude:os-exc1",
+					Version:         "1",
+					Release:         "5.pkgset~os^trans~0",
+					Arch:            "x86_64",
+					RemoteLocations: []string{"https://example.com/repo/packages/exclude:os-exc1-0:1-5.pkgset~os^trans~0.x86_64.rpm"},
+					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "d292792edfe3ffd70bd96aae58368cf64607fd8ca5d989df23138bacba271a8d"},
+				},
+				{
+					Name:            "pkgset:os_trans:0_repos:baseos+appstream+weak",
+					Version:         "4",
+					Release:         "7.fk1",
+					Arch:            "x86_64",
+					RemoteLocations: []string{"https://example.com/repo/packages/pkgset:os_trans:0_repos:baseos+appstream+weak-0:4-7.fk1.x86_64.rpm"},
+					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "14f5cd42c2f0cf10809965631f90375e9a4a8593b144cfe0e3c27fe83d1ee7f9"},
+				},
+				{
+					Name:            "dnf",
+					Version:         "3",
+					Release:         "1.pkgset~os^trans~1",
+					Arch:            "x86_64",
+					RemoteLocations: []string{"https://example.com/repo/packages/dnf-0:3-1.pkgset~os^trans~1.x86_64.rpm"},
+					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "5d182a7a8683bbc8e3f64a2d9d9547de758e7ff9d98cdebdcac97c62d4912602"},
+				},
+				{
+					Name:            "os-inc2",
+					Version:         "2",
+					Release:         "0.pkgset~os^trans~1",
+					Arch:            "x86_64",
+					RemoteLocations: []string{"https://example.com/repo/packages/os-inc2-0:2-0.pkgset~os^trans~1.x86_64.rpm"},
+					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "fc429287a10941ecc73ad362fa2e0cf97226613de5206025f92f6fd5da24fd73"},
+				},
+				{
+					Name:            "exclude:os-exc2",
+					Version:         "1",
+					Release:         "2.pkgset~os^trans~1",
+					Arch:            "x86_64",
+					RemoteLocations: []string{"https://example.com/repo/packages/exclude:os-exc2-0:1-2.pkgset~os^trans~1.x86_64.rpm"},
+					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "780cae4f0a0ccba5ba6ecb647e03d7dd1d38cd1c5843e67b00432d5c478d6018"},
+				},
+				{
+					Name:            "pkgset:os_trans:1_repos:baseos+appstream+user",
+					Version:         "0",
+					Release:         "3.fk1",
+					Arch:            "x86_64",
+					RemoteLocations: []string{"https://example.com/repo/packages/pkgset:os_trans:1_repos:baseos+appstream+user-0:0-3.fk1.x86_64.rpm"},
+					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "c9d715c8576f7f5037c9a1f139aacc7a7208631eff8eba40c24fc18dd5fe44a2"},
+				},
+				{
+					Name:            "https://example.com/passed-arch:x86_64/passed-repo:/baseos",
+					Version:         "6",
+					Release:         "0.fk1",
+					Arch:            "x86_64",
+					RemoteLocations: []string{"https://example.com/passed-arch:x86_64/passed-repo:/baseos"},
+					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "3cdb35e9d0c01e60bc3362af2544e8b46429c3b1d5177579a0bec588ac65e707"},
+				},
+				{
+					Name:            "https://example.com/passed-arch:x86_64/passed-repo:/appstream",
+					Version:         "2",
+					Release:         "1.fk1",
+					Arch:            "x86_64",
+					RemoteLocations: []string{"https://example.com/passed-arch:x86_64/passed-repo:/appstream"},
+					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "e795634c003b026414b3299574c7b847d9168280e8d2bbdbe3e881cbed194c9d"},
+				},
+				{
+					Name:            "https://example.com/passed-arch:x86_64/passed-repo:/user",
+					Version:         "3",
+					Release:         "0.fk1",
+					Arch:            "x86_64",
+					RemoteLocations: []string{"https://example.com/passed-arch:x86_64/passed-repo:/user"},
+					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "0c676fb4e895762dc80cd8abadec73e49970317f281ad5b94b93df9afdcad4e9"},
 				},
 			},
+			Repos: allRepos,
 		},
 	}, result)
 }
