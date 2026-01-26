@@ -56,56 +56,63 @@ func ResolveCommits(commitSources map[string][]ostree.SourceSpec) map[string][]o
 func Depsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfig, archName string) map[string]depsolvednf.DepsolveResult {
 	depsolvedSets := make(map[string]depsolvednf.DepsolveResult)
 
-	for name, pkgSetChain := range packageSets {
+	for pkgSetName, pkgSetChain := range packageSets {
 		specSet := make(rpmmd.PackageList, 0)
-		seenChksumsInc := make(map[string]bool)
-		seenChksumsExc := make(map[string]bool)
-		for idx, pkgSet := range pkgSetChain {
+
+		// Each PackageSet in the chain represents a single transaction.
+		for txIdx, pkgSet := range pkgSetChain {
 			include := pkgSet.Include
 			slices.Sort(include)
 			for _, pkgName := range include {
-				checksum := fmt.Sprintf("%x", sha256.Sum256([]byte(pkgName)))
-				// generate predictable but non-empty
-				// release/version numbers
-				ver := strconv.Itoa(int(pkgName[0]) % 9)
-				rel := strconv.Itoa(int(pkgName[1]) % 9)
-				spec := rpmmd.Package{
-					Name:            pkgName,
-					Epoch:           0,
-					Version:         ver,
-					Release:         rel + ".fk1",
-					Arch:            archName,
-					RemoteLocations: []string{fmt.Sprintf("https://example.com/repo/packages/%s", pkgName)},
-					Checksum:        rpmmd.Checksum{Type: "sha256", Value: checksum},
+				// Generate a unique package checksum, so that the same included package name from different
+				// transactions are not considered the same package. This allows us to catch changes in the default
+				// package sets when generating test manifests.
+				checksum := fmt.Sprintf(
+					"%x",
+					sha256.Sum256([]byte(fmt.Sprintf("pkgset:%s_trans:%d_include:%s", pkgSetName, txIdx, pkgName))),
+				)
+				pkg := rpmmd.Package{
+					// NOTE: for included packages, we use the plain package name, because some pipeline generators
+					// are searching the depsolved package set for specific package names (such as 'kernel')
+					// and fail if they are not found.
+					Name: pkgName,
+					// generate predictable but non-empty release/version numbers
+					// NOTE: we can't use version higher than 4, because the OS pipeline's
+					// GenDNF4VersionlockStageOptions() searches for packages with version "4"
+					// to identify DNF4-related packages.
+					Version:  strconv.Itoa(int(checksum[0]) % 5),
+					Release:  fmt.Sprintf("%d.pkgset~%s^trans~%d", int(checksum[1])%9, pkgSetName, txIdx),
+					Arch:     archName,
+					Checksum: rpmmd.Checksum{Type: "sha256", Value: checksum},
 				}
-				if seenChksumsInc[spec.Checksum.String()] {
-					continue
+				pkg.RemoteLocations = []string{
+					fmt.Sprintf("https://example.com/repo/packages/%s.rpm", pkg.FullNEVRA()),
 				}
-				seenChksumsInc[spec.Checksum.String()] = true
-
-				specSet = append(specSet, spec)
+				specSet = append(specSet, pkg)
 			}
 
 			exclude := pkgSet.Exclude
 			slices.Sort(exclude)
-			for _, excludeName := range exclude {
-				pkgName := fmt.Sprintf("exclude:%s", excludeName)
-				checksum := fmt.Sprintf("%x", sha256.Sum256([]byte(pkgName)))
-				spec := rpmmd.Package{
-					Name:            pkgName,
-					Epoch:           0,
-					Version:         "0",
-					Release:         "0",
-					Arch:            "noarch",
-					RemoteLocations: []string{fmt.Sprintf("https://example.com/repo/packages/%s", pkgName)},
-					Checksum:        rpmmd.Checksum{Type: "sha256", Value: checksum},
+			for _, pkgName := range exclude {
+				// Generate a unique package checksum, so that the same included package name from different
+				// transactions are not considered the same package. This allows us to catch changes in the default
+				// package sets when generating test manifests.
+				checksum := fmt.Sprintf(
+					"%x",
+					sha256.Sum256([]byte(fmt.Sprintf("pkgset:%s_trans:%d_exclude:%s", pkgSetName, txIdx, pkgName))),
+				)
+				pkg := rpmmd.Package{
+					Name: fmt.Sprintf("exclude:%s", pkgName),
+					// generate predictable but non-empty release/version numbers
+					Version:  strconv.Itoa(int(checksum[0]) % 9),
+					Release:  fmt.Sprintf("%d.pkgset~%s^trans~%d", int(checksum[1])%9, pkgSetName, txIdx),
+					Arch:     archName,
+					Checksum: rpmmd.Checksum{Type: "sha256", Value: checksum},
 				}
-				if seenChksumsExc[spec.Checksum.String()] {
-					continue
+				pkg.RemoteLocations = []string{
+					fmt.Sprintf("https://example.com/repo/packages/%s.rpm", pkg.FullNEVRA()),
 				}
-				seenChksumsExc[spec.Checksum.String()] = true
-
-				specSet = append(specSet, spec)
+				specSet = append(specSet, pkg)
 			}
 
 			// generate pseudo packages for the config of each transaction
@@ -113,23 +120,21 @@ func Depsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfi
 			for _, setRepo := range pkgSet.Repositories {
 				setRepoNames = append(setRepoNames, setRepo.Name)
 			}
-			configPackageName := fmt.Sprintf("%s:transaction-%d-repos:%s", name, idx, strings.Join(setRepoNames, "+"))
+			configPackageName := fmt.Sprintf("pkgset:%s_trans:%d_repos:%s", pkgSetName, txIdx, strings.Join(setRepoNames, "+"))
 			if pkgSet.InstallWeakDeps {
-				configPackageName += "-weak"
+				configPackageName += "+weak"
 			}
+			configPkgChecksum := fmt.Sprintf("%x", sha256.Sum256([]byte(configPackageName)))
 			depsolveConfigPackage := rpmmd.Package{
-				Name:            configPackageName,
-				Epoch:           0,
-				Version:         "",
-				Release:         "",
-				Arch:            "noarch",
-				RemoteLocations: []string{fmt.Sprintf("https://example.com/repo/packages/%s", configPackageName)},
-				Checksum:        rpmmd.Checksum{Type: "sha256", Value: fmt.Sprintf("%x", sha256.Sum256([]byte(configPackageName)))},
-				Secrets:         "",
-				CheckGPG:        false,
-				IgnoreSSL:       false,
-				Location:        "",
-				RepoID:          "",
+				Name: configPackageName,
+				// generate predictable but non-empty release/version numbers
+				Version:  strconv.Itoa(int(configPkgChecksum[0]) % 9),
+				Release:  strconv.Itoa(int(configPkgChecksum[1])%9) + ".fk1",
+				Arch:     archName,
+				Checksum: rpmmd.Checksum{Type: "sha256", Value: configPkgChecksum},
+			}
+			depsolveConfigPackage.RemoteLocations = []string{
+				fmt.Sprintf("https://example.com/repo/packages/%s.rpm", depsolveConfigPackage.FullNEVRA()),
 			}
 			specSet = append(specSet, depsolveConfigPackage)
 		}
@@ -138,8 +143,7 @@ func Depsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfi
 		for _, repo := range repos {
 			// the test repos have the form:
 			//   https://rpmrepo..../el9/cs9-x86_64-rt-20240915
-			// drop the date as it's not needed for this level of
-			// mocks
+			// drop the date as it's not needed for this level of mocks
 			baseURL := repo.BaseURLs[0]
 			if idx := strings.LastIndex(baseURL, "-"); idx > 0 {
 				baseURL = baseURL[:idx]
@@ -150,14 +154,19 @@ func Depsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfi
 			}
 			url.Host = "example.com"
 			url.Path = fmt.Sprintf("passed-arch:%s/passed-repo:%s", archName, url.Path)
+			checksum := fmt.Sprintf("%x", sha256.Sum256([]byte(url.String())))
 			specSet = append(specSet, rpmmd.Package{
-				Name:            url.String(),
+				Name: url.String(),
+				// generate predictable but non-empty release/version numbers
+				Version:         strconv.Itoa(int(checksum[0]) % 9),
+				Release:         strconv.Itoa(int(checksum[1])%9) + ".fk1",
+				Arch:            archName,
 				RemoteLocations: []string{url.String()},
-				Checksum:        rpmmd.Checksum{Type: "sha256", Value: fmt.Sprintf("%x", sha256.Sum256([]byte(url.String())))},
+				Checksum:        rpmmd.Checksum{Type: "sha256", Value: checksum},
 			})
 		}
 
-		depsolvedSets[name] = depsolvednf.DepsolveResult{
+		depsolvedSets[pkgSetName] = depsolvednf.DepsolveResult{
 			Packages: specSet,
 			Repos:    repos,
 		}
