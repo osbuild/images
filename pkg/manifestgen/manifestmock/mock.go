@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"slices"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -61,9 +62,7 @@ func Depsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfi
 
 		// Each PackageSet in the chain represents a single transaction.
 		for txIdx, pkgSet := range pkgSetChain {
-			include := pkgSet.Include
-			slices.Sort(include)
-			for _, pkgName := range include {
+			for _, pkgName := range pkgSet.Include {
 				// Generate a unique package checksum, so that the same included package name from different
 				// transactions are not considered the same package. This allows us to catch changes in the default
 				// package sets when generating test manifests.
@@ -91,9 +90,7 @@ func Depsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfi
 				specSet = append(specSet, pkg)
 			}
 
-			exclude := pkgSet.Exclude
-			slices.Sort(exclude)
-			for _, pkgName := range exclude {
+			for _, pkgName := range pkgSet.Exclude {
 				// Generate a unique package checksum, so that the same included package name from different
 				// transactions are not considered the same package. This allows us to catch changes in the default
 				// package sets when generating test manifests.
@@ -166,9 +163,24 @@ func Depsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfi
 			})
 		}
 
+		// Sort the list of depsolved packages by full NEVRA, as a real depsolver would do.
+		sort.Slice(specSet, func(i, j int) bool {
+			return specSet[i].FullNEVRA() < specSet[j].FullNEVRA()
+		})
+
+		// Sort the list of repos by ID, as a real depsolver would do. Note that the IDs are set by the real depsolver
+		// when depsolving o the Hash() method value of the RepoConfig. Therefore we sort by that value.
+		// NOTE: the repos slice passed to this function is shared between multiple concurrent jobs doing depsolve
+		// in the gen-manifests command. Therefore we need to make a copy of the slice before sorting. Otherwise
+		// the sorting has undefined behavior and the results are not deterministic.
+		reposCopy := slices.Clone(repos)
+		sort.Slice(reposCopy, func(i, j int) bool {
+			return reposCopy[i].Hash() < reposCopy[j].Hash()
+		})
+
 		depsolvedSets[pkgSetName] = depsolvednf.DepsolveResult{
 			Packages: specSet,
-			Repos:    repos,
+			Repos:    reposCopy,
 		}
 	}
 
