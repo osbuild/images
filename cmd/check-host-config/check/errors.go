@@ -10,21 +10,34 @@ var ErrCheckSkipped = errors.New("skip")
 var ErrCheckFailed = errors.New("fail")
 var ErrCheckWarning = errors.New("warn")
 
-func Skip(reason string) error {
-	return fmt.Errorf("%w: %s", ErrCheckSkipped, reason)
+func Skip(reason ...any) error {
+	var parts []string
+	for _, r := range reason {
+		parts = append(parts, fmt.Sprintf("%v", r))
+	}
+	msg := strings.Join(parts, " ")
+	return fmt.Errorf("%w: %s", ErrCheckSkipped, msg)
 }
 
 func Pass() error {
 	return nil
 }
 
-func Fail(reason ...string) error {
-	msg := strings.Join(reason, " ")
+func Fail(reason ...any) error {
+	var parts []string
+	for _, r := range reason {
+		parts = append(parts, fmt.Sprintf("%v", r))
+	}
+	msg := strings.Join(parts, " ")
 	return fmt.Errorf("%w: %s", ErrCheckFailed, msg)
 }
 
-func Warning(reason ...string) error {
-	msg := strings.Join(reason, " ")
+func Warning(reason ...any) error {
+	var parts []string
+	for _, r := range reason {
+		parts = append(parts, fmt.Sprintf("%v", r))
+	}
+	msg := strings.Join(parts, " ")
 	return fmt.Errorf("%w: %s", ErrCheckWarning, msg)
 }
 

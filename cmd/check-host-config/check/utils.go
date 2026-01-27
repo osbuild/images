@@ -1,9 +1,13 @@
 package check
 
 import (
+	"fmt"
+	"io/fs"
 	"log"
+	"os/user"
 	"strconv"
 	"strings"
+	"syscall"
 
 	"github.com/osbuild/images/pkg/distro"
 )
@@ -20,7 +24,7 @@ type OSRelease struct {
 // The default implementation calls distro.ReadOSReleaseFromTree("/") to read from
 // the system root, which automatically tries /etc/os-release and /usr/lib/os-release.
 // The osReleasePath parameter is kept for API compatibility but ignored in the default implementation.
-var ParseOSRelease func(osReleasePath string) (*OSRelease, error) = func(osReleasePath string) (*OSRelease, error) {
+var ParseOSRelease = func(osReleasePath string) (*OSRelease, error) {
 	log.Printf("ParseOSRelease: reading from system root\n")
 	osrelease, err := distro.ReadOSReleaseFromTree("/")
 	if err != nil {
@@ -51,4 +55,47 @@ var ParseOSRelease func(osReleasePath string) (*OSRelease, error) = func(osRelea
 	}
 
 	return release, nil
+}
+
+// FileInfo returns UNIX file information (mode, uid, gid).
+func FileInfo(name string) (fs.FileMode, uint32, uint32, error) {
+	info, err := Stat(name)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	stat, ok := info.Sys().(*syscall.Stat_t)
+	if !ok {
+		return 0, 0, 0, fmt.Errorf("Host checks only work on UNIX-like")
+	}
+
+	return info.Mode(), stat.Uid, stat.Gid, nil
+}
+
+// LookupUID is a mockable function that looks up a user by name and returns the UID.
+// The default implementation uses os/user.Lookup.
+var LookupUID = func(username string) (uint32, error) {
+	u, err := user.Lookup(username)
+	if err != nil {
+		return 0, err
+	}
+	uid, err := strconv.ParseUint(u.Uid, 10, 32)
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse UID: %w", err)
+	}
+	return uint32(uid), nil
+}
+
+// LookupGID is a mockable function that looks up a group by name and returns the GID.
+// The default implementation uses os/user.LookupGroup.
+var LookupGID = func(groupname string) (uint32, error) {
+	g, err := user.LookupGroup(groupname)
+	if err != nil {
+		return 0, err
+	}
+	gid, err := strconv.ParseUint(g.Gid, 10, 32)
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse GID: %w", err)
+	}
+	return uint32(gid), nil
 }
