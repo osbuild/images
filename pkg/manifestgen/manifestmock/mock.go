@@ -62,7 +62,12 @@ func Depsolve(
 
 	for pkgSetName, pkgSetChain := range packageSets {
 		transactions := make(depsolvednf.TransactionList, 0, len(pkgSetChain))
-		reposByHash := make(map[string]rpmmd.RepoConfig)
+		reposById := make(map[string]rpmmd.RepoConfig)
+
+		// NOTE: Unlike the real depsolver, the Repo pointers assigned to packages
+		// don't point into DepsolveResult.Repos. This is intentional for simplicity -
+		// the mock only needs non-nil, deterministic Repo assignments for test manifest
+		// generation. Nothing checks pointer identity with the Repos slice.
 
 		// Each PackageSet in the chain represents a single transaction.
 		for txIdx, pkgSet := range pkgSetChain {
@@ -81,6 +86,13 @@ func Depsolve(
 				}
 			}
 
+			// Normalize repo IDs: if Id is not set, use Hash()
+			for i := range pkgSet.Repositories {
+				if pkgSet.Repositories[i].Id == "" {
+					pkgSet.Repositories[i].Id = pkgSet.Repositories[i].Hash()
+				}
+			}
+
 			transactionPackages := make(
 				rpmmd.PackageList, 0,
 				len(pkgSet.Include)+len(pkgSet.Exclude)+len(pkgSet.Repositories)+1,
@@ -94,6 +106,13 @@ func Depsolve(
 					"%x",
 					sha256.Sum256([]byte(fmt.Sprintf("pkgset:%s_trans:%d_include:%s", pkgSetName, txIdx, pkgName))),
 				)
+				// Assign repos to packages using round-robin across the transaction's
+				// repositories. This ensures deterministic output for test manifest
+				// diffing and distributes packages across repos similar to how a real
+				// depsolver would source packages from multiple repositories.
+				// Use package name hash for deterministic selection.
+				repoIdx := int(sha256.Sum256([]byte(pkgName))[0]) % len(pkgSet.Repositories)
+				pkgRepo := pkgSet.Repositories[repoIdx]
 				pkg := rpmmd.Package{
 					// NOTE: for included packages, we use the plain package name, because some pipeline generators
 					// are searching the depsolved package set for specific package names (such as 'kernel')
@@ -107,6 +126,8 @@ func Depsolve(
 					Release:  fmt.Sprintf("%d.pkgset~%s^trans~%d", int(checksum[1])%9, pkgSetName, txIdx),
 					Arch:     archName,
 					Checksum: rpmmd.Checksum{Type: "sha256", Value: checksum},
+					RepoID:   pkgRepo.Id,
+					Repo:     &pkgRepo,
 				}
 				pkg.RemoteLocations = []string{
 					fmt.Sprintf("https://example.com/repo/packages/%s.rpm", pkg.FullNEVRA()),
@@ -122,6 +143,13 @@ func Depsolve(
 					"%x",
 					sha256.Sum256([]byte(fmt.Sprintf("pkgset:%s_trans:%d_exclude:%s", pkgSetName, txIdx, pkgName))),
 				)
+				// Assign repos to packages using round-robin across the transaction's
+				// repositories. This ensures deterministic output for test manifest
+				// diffing and distributes packages across repos similar to how a real
+				// depsolver would source packages from multiple repositories.
+				// Use package name hash for deterministic selection.
+				repoIdx := int(sha256.Sum256([]byte(pkgName))[0]) % len(pkgSet.Repositories)
+				pkgRepo := pkgSet.Repositories[repoIdx]
 				pkg := rpmmd.Package{
 					Name: fmt.Sprintf("exclude:%s", pkgName),
 					// generate predictable but non-empty release/version numbers
@@ -129,6 +157,8 @@ func Depsolve(
 					Release:  fmt.Sprintf("%d.pkgset~%s^trans~%d", int(checksum[1])%9, pkgSetName, txIdx),
 					Arch:     archName,
 					Checksum: rpmmd.Checksum{Type: "sha256", Value: checksum},
+					RepoID:   pkgRepo.Id,
+					Repo:     &pkgRepo,
 				}
 				pkg.RemoteLocations = []string{
 					fmt.Sprintf("https://example.com/repo/packages/%s.rpm", pkg.FullNEVRA()),
@@ -153,6 +183,8 @@ func Depsolve(
 				Release:  strconv.Itoa(int(configPkgChecksum[1])%9) + ".fk1",
 				Arch:     archName,
 				Checksum: rpmmd.Checksum{Type: "sha256", Value: configPkgChecksum},
+				RepoID:   pkgSet.Repositories[0].Id,
+				Repo:     &pkgSet.Repositories[0],
 			}
 			depsolveConfigPackage.RemoteLocations = []string{
 				fmt.Sprintf("https://example.com/repo/packages/%s.rpm", depsolveConfigPackage.FullNEVRA()),
@@ -161,11 +193,13 @@ func Depsolve(
 
 			// Add repo pseudo-packages only for repos not seen before
 			for _, repo := range pkgSet.Repositories {
-				repoHash := repo.Hash()
-				if _, ok := reposByHash[repoHash]; ok {
+				if existingRepo, ok := reposById[repo.Id]; ok {
+					if existingRepo.Hash() != repo.Hash() {
+						return nil, fmt.Errorf("repo ID %q collision: different configs with same ID", repo.Id)
+					}
 					continue
 				}
-				reposByHash[repoHash] = repo
+				reposById[repo.Id] = repo
 
 				// the test repos have the form:
 				//   https://rpmrepo..../el9/cs9-x86_64-rt-20240915
@@ -189,6 +223,8 @@ func Depsolve(
 					Arch:            archName,
 					RemoteLocations: []string{url.String()},
 					Checksum:        rpmmd.Checksum{Type: "sha256", Value: checksum},
+					RepoID:          repo.Id,
+					Repo:            &repo,
 				})
 			}
 
@@ -199,14 +235,13 @@ func Depsolve(
 			transactions = append(transactions, transactionPackages)
 		}
 
-		// Sort the list of repos by ID, as a real depsolver would do. Note that the IDs are set by the real depsolver
-		// when depsolving o the Hash() method value of the RepoConfig. Therefore we sort by that value.
-		allRepos := make([]rpmmd.RepoConfig, 0, len(reposByHash))
-		for _, repo := range reposByHash {
+		// Sort the list of repos by ID, as a real depsolver would do.
+		allRepos := make([]rpmmd.RepoConfig, 0, len(reposById))
+		for _, repo := range reposById {
 			allRepos = append(allRepos, repo)
 		}
 		sort.Slice(allRepos, func(i, j int) bool {
-			return allRepos[i].Hash() < allRepos[j].Hash()
+			return allRepos[i].Id < allRepos[j].Id
 		})
 
 		depsolvedSets[pkgSetName] = depsolvednf.DepsolveResult{
