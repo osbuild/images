@@ -174,14 +174,6 @@ func TestDepsolve_Smoke(t *testing.T) {
 					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "3cdb35e9d0c01e60bc3362af2544e8b46429c3b1d5177579a0bec588ac65e707"},
 				},
 				{
-					Name:            "https://example.com/passed-arch:x86_64/passed-repo:/user",
-					Version:         "3",
-					Release:         "0.fk1",
-					Arch:            "x86_64",
-					RemoteLocations: []string{"https://example.com/passed-arch:x86_64/passed-repo:/user"},
-					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "0c676fb4e895762dc80cd8abadec73e49970317f281ad5b94b93df9afdcad4e9"},
-				},
-				{
 					Name:            "pkgset:build_trans:0_repos:baseos+appstream+weak",
 					Version:         "7",
 					Release:         "7.fk1",
