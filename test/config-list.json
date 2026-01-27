@@ -698,7 +698,7 @@
     }
   },
   {
-    "path": "./configs/empty.json",
+    "path": "./configs/bootc-empty.json",
     "filters": {
       "distros": [
         "bootc-*"

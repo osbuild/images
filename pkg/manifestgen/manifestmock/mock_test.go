@@ -77,10 +77,12 @@ func TestResolveCommits_Smoke(t *testing.T) {
 }
 
 func TestDepsolve_EmptyInput(t *testing.T) {
-	result := manifestmock.Depsolve(nil, "x86_64")
+	result, err := manifestmock.Depsolve(nil, "x86_64", false)
+	assert.NoError(t, err)
 	assert.Equal(t, map[string]depsolvednf.DepsolveResult{}, result)
 
-	result = manifestmock.Depsolve(map[string][]rpmmd.PackageSet{}, "x86_64")
+	result, err = manifestmock.Depsolve(map[string][]rpmmd.PackageSet{}, "x86_64", false)
+	assert.NoError(t, err)
 	assert.Equal(t, map[string]depsolvednf.DepsolveResult{}, result)
 }
 
@@ -129,7 +131,8 @@ func TestDepsolve_Smoke(t *testing.T) {
 	}
 
 	arch := "x86_64"
-	result := manifestmock.Depsolve(packageSets, arch)
+	result, err := manifestmock.Depsolve(packageSets, arch, false)
+	assert.NoError(t, err)
 	assert.Equal(t, map[string]depsolvednf.DepsolveResult{
 		"build": depsolvednf.DepsolveResult{
 			Packages: rpmmd.PackageList{

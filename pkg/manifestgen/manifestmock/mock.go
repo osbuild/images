@@ -53,7 +53,11 @@ func ResolveCommits(commitSources map[string][]ostree.SourceSpec) map[string][]o
 	return commits
 }
 
-func Depsolve(packageSets map[string][]rpmmd.PackageSet, archName string) map[string]depsolvednf.DepsolveResult {
+func Depsolve(
+	packageSets map[string][]rpmmd.PackageSet,
+	archName string,
+	useRootDir bool,
+) (map[string]depsolvednf.DepsolveResult, error) {
 	depsolvedSets := make(map[string]depsolvednf.DepsolveResult)
 
 	for pkgSetName, pkgSetChain := range packageSets {
@@ -62,6 +66,21 @@ func Depsolve(packageSets map[string][]rpmmd.PackageSet, archName string) map[st
 
 		// Each PackageSet in the chain represents a single transaction.
 		for txIdx, pkgSet := range pkgSetChain {
+
+			if useRootDir {
+				if len(pkgSet.Repositories) > 0 {
+					return nil, fmt.Errorf("package set %s has repositories when useRootDir is true", pkgSetName)
+				}
+				// We don't have any way to properly leverage the root dir for this mock, so we just
+				// add a dummy repository to the package set.
+				pkgSet.Repositories = []rpmmd.RepoConfig{
+					{
+						Name:     "root-dir-repo",
+						BaseURLs: []string{"https://example.com/root_dir_repo"},
+					},
+				}
+			}
+
 			transactionPackages := make(
 				rpmmd.PackageList, 0,
 				len(pkgSet.Include)+len(pkgSet.Exclude)+len(pkgSet.Repositories)+1,
@@ -197,7 +216,7 @@ func Depsolve(packageSets map[string][]rpmmd.PackageSet, archName string) map[st
 		}
 	}
 
-	return depsolvedSets
+	return depsolvedSets, nil
 }
 
 var OSTreeResolve = mockOSTreeResolve
