@@ -36,12 +36,29 @@ type KernelInfo struct {
 	HasAbootImg bool
 }
 
+type ISOInfoGrub2Entry struct {
+	Name   string
+	Linux  string
+	Initrd string
+}
+
+type ISOInfo struct {
+	Label      string
+	KernelArgs []string
+	Grub2      struct {
+		Default *int
+		Timeout *int
+		Entries []ISOInfoGrub2Entry
+	}
+}
+
 type Info struct {
 	OSRelease          OSRelease `yaml:"os_release"`
 	UEFIVendor         string    `yaml:"uefi_vendor"`
 	SELinuxPolicy      string    `yaml:"selinux_policy"`
 	ImageCustomization *blueprint.Customizations
 	KernelInfo         *KernelInfo `yaml:"kernel_info"`
+	ISOInfo            ISOInfo     `yaml:"iso_info"`
 
 	MountConfiguration *osbuild.MountConfiguration
 	PartitionTable     *disk.PartitionTable
@@ -163,6 +180,39 @@ func readDiskYaml(root string) (*diskYAML, error) {
 	return &disk, nil
 }
 
+type isoYAML struct {
+	Label      string   `json:"label" yaml:"label"`
+	KernelArgs []string `json:"kernel_args" yaml:"kernel_args"`
+	Grub2      struct {
+		Default *int `json:"default" yaml:"default"`
+		Timeout *int `json:"timeout" yaml:"timeout"`
+		Entries []struct {
+			Name   string `json:"name" yaml:"name"`
+			Linux  string `json:"linux" yaml:"linux"`
+			Initrd string `json:"initrd" yaml:"initrd"`
+		}
+	} `json:"grub2" yaml:"grub2"`
+}
+
+func readISOYaml(root string) (*isoYAML, error) {
+	p := path.Join(root, bibPathPrefix, "iso.yaml")
+	var iso isoYAML
+	f, err := os.Open(p)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("cannot load iso definitions from %q: %w", p, err)
+	}
+	defer f.Close()
+
+	if err := yaml.NewDecoder(f).Decode(&iso); err != nil {
+		return nil, fmt.Errorf("cannot parse iso definitions from %q: %w", p, err)
+	}
+
+	return &iso, nil
+}
+
 func readKernelInfo(root string) (*KernelInfo, error) {
 	modulesDir := path.Join(root, "usr/lib/modules")
 	entries, err := os.ReadDir(modulesDir)
@@ -226,6 +276,28 @@ func Load(root string) (*Info, error) {
 		pt = diskYaml.PartitionTable
 	}
 
+	isoYaml, err := readISOYaml(root)
+	if err != nil {
+		return nil, err
+	}
+
+	isoInfo := ISOInfo{}
+
+	if isoYaml != nil {
+		isoInfo.Label = isoYaml.Label
+		isoInfo.KernelArgs = isoYaml.KernelArgs
+		isoInfo.Grub2.Default = isoYaml.Grub2.Default
+		isoInfo.Grub2.Timeout = isoYaml.Grub2.Timeout
+
+		for _, isoEntry := range isoYaml.Grub2.Entries {
+			isoInfo.Grub2.Entries = append(isoInfo.Grub2.Entries, ISOInfoGrub2Entry{
+				Name:   isoEntry.Name,
+				Linux:  isoEntry.Linux,
+				Initrd: isoEntry.Initrd,
+			})
+		}
+	}
+
 	kernelInfo, err := readKernelInfo(root)
 	if err != nil {
 		logrus.Debugf("cannot read kernel info: %v", err)
@@ -257,5 +329,6 @@ func Load(root string) (*Info, error) {
 		KernelInfo:         kernelInfo,
 		MountConfiguration: mc,
 		PartitionTable:     pt,
+		ISOInfo:            isoInfo,
 	}, nil
 }

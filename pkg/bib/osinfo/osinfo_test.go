@@ -274,6 +274,68 @@ func TestLoadInfoPartitionTableSad(t *testing.T) {
 	assert.EqualError(t, err, fmt.Sprintf(`cannot parse disk definitions from "%s/usr/lib/bootc-image-builder/disk.yaml": yaml: found character that cannot start any token`, root))
 }
 
+var fakeISOYAML = `
+label: "My-ISO"
+kernel_args:
+- "root=live:CDLABEL=My-ISO"
+- "foo"
+grub2:
+  default: 5
+  timeout: 30
+  entries:
+    - name: "My First Entry"
+      linux: "/foo"
+      initrd: "/bar"
+    - name: "My Second Entry"
+      linux: "/bar"
+      initrd: "/foo"
+`
+
+func createISO(t *testing.T, root, fakeISOYAML string) {
+	t.Helper()
+
+	dst := path.Join(root, "/usr/lib/bootc-image-builder/iso.yaml")
+	err := os.MkdirAll(path.Dir(dst), 0755)
+	require.NoError(t, err)
+	err = os.WriteFile(dst, []byte(fakeISOYAML), 0644)
+	require.NoError(t, err)
+}
+
+func TestLoadInfoISOHappy(t *testing.T) {
+	root := t.TempDir()
+	writeOSRelease(t, root, "fedora", "40", "Fedora Linux", "fedora", "platform:f40", "coreos")
+	createISO(t, root, fakeISOYAML)
+
+	info, err := Load(root)
+	require.NoError(t, err)
+
+	assert.Equal(t, "My-ISO", info.ISOInfo.Label)
+	assert.Equal(t, []string{"root=live:CDLABEL=My-ISO", "foo"}, info.ISOInfo.KernelArgs)
+
+	assert.Equal(t, 30, *info.ISOInfo.Grub2.Timeout)
+	assert.Equal(t, 5, *info.ISOInfo.Grub2.Default)
+
+	assert.Equal(t, 2, len(info.ISOInfo.Grub2.Entries))
+
+	assert.Equal(t, "My First Entry", info.ISOInfo.Grub2.Entries[0].Name)
+	assert.Equal(t, "/foo", info.ISOInfo.Grub2.Entries[0].Linux)
+	assert.Equal(t, "/bar", info.ISOInfo.Grub2.Entries[0].Initrd)
+
+	assert.Equal(t, "My Second Entry", info.ISOInfo.Grub2.Entries[1].Name)
+	assert.Equal(t, "/bar", info.ISOInfo.Grub2.Entries[1].Linux)
+	assert.Equal(t, "/foo", info.ISOInfo.Grub2.Entries[1].Initrd)
+
+}
+
+func TestLoadInfoISOSad(t *testing.T) {
+	root := t.TempDir()
+	writeOSRelease(t, root, "fedora", "40", "Fedora Linux", "fedora", "platform:f40", "coreos")
+	createISO(t, root, "@invalidYAML")
+
+	_, err := Load(root)
+	assert.EqualError(t, err, fmt.Sprintf(`cannot parse iso definitions from "%s/usr/lib/bootc-image-builder/iso.yaml": yaml: found character that cannot start any token`, root))
+}
+
 func TestLoadInfoUEFIVendorSearchPath(t *testing.T) {
 	root := t.TempDir()
 

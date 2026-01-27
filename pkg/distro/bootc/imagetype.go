@@ -403,7 +403,30 @@ func (t *imageType) manifestForGenericISO(options distro.ImageOptions, rng *rand
 	img.Product = t.arch.distro.sourceInfo.OSRelease.Name
 	img.Version = t.arch.distro.sourceInfo.OSRelease.VersionID
 	img.Release = t.arch.distro.sourceInfo.OSRelease.VersionID
-	img.ISOLabel = LabelForISO(&t.arch.distro.sourceInfo.OSRelease, t.arch.Name())
+
+	isoi := t.arch.distro.sourceInfo.ISOInfo
+
+	if isoi.Label != "" {
+		img.ISOLabel = isoi.Label
+	} else {
+		img.ISOLabel = LabelForISO(&t.arch.distro.sourceInfo.OSRelease, t.arch.Name())
+	}
+
+	if len(isoi.KernelArgs) > 0 {
+		img.KernelOpts = isoi.KernelArgs
+	}
+
+	img.Grub2MenuDefault = isoi.Grub2.Default
+	img.Grub2MenuTimeout = isoi.Grub2.Timeout
+	img.Grub2MenuEntries = []manifest.ISOGrub2MenuEntry{}
+
+	for _, entry := range isoi.Grub2.Entries {
+		img.Grub2MenuEntries = append(img.Grub2MenuEntries, manifest.ISOGrub2MenuEntry{
+			Name:   entry.Name,
+			Linux:  entry.Linux,
+			Initrd: entry.Initrd,
+		})
+	}
 
 	mf := manifest.New()
 
