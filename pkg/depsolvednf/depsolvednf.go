@@ -300,7 +300,7 @@ func (s *Solver) Depsolve(pkgSets []rpmmd.PackageSet, sbomType sbom.StandardType
 
 	output, err := run(s.depsolveDNFCmd, reqData, s.Stderr)
 	if err != nil {
-		return nil, parseError(output, allRepos)
+		return nil, parseError(err, output, allRepos)
 	}
 
 	// touch repos to now
@@ -377,7 +377,7 @@ func (s *Solver) FetchMetadata(repos []rpmmd.RepoConfig) (rpmmd.PackageList, err
 
 	rawRes, err := run(s.depsolveDNFCmd, reqData, s.Stderr)
 	if err != nil {
-		return nil, parseError(rawRes, repos)
+		return nil, parseError(err, rawRes, repos)
 	}
 
 	// touch repos to now
@@ -425,7 +425,7 @@ func (s *Solver) SearchMetadata(repos []rpmmd.RepoConfig, packages []string) (rp
 
 	rawRes, err := run(s.depsolveDNFCmd, reqData, s.Stderr)
 	if err != nil {
-		return nil, parseError(rawRes, repos)
+		return nil, parseError(err, rawRes, repos)
 	}
 
 	// touch repos to now
@@ -542,31 +542,38 @@ func optionalMetadataForDistro(modulePlatformID string) []string {
 
 // osbuild-depsolve-dnf error structure
 type Error struct {
-	Kind   string `json:"kind"`
-	Reason string `json:"reason"`
+	Kind    string `json:"kind"`
+	Reason  string `json:"reason"`
+	OSError error  `json:"command_error,omitempty"`
 }
 
 func (err Error) Error() string {
-	return fmt.Sprintf("DNF error occurred: %s: %s", err.Kind, err.Reason)
+	return fmt.Sprintf("DNF error occurred: %s: %s: %s", err.Kind, err.Reason, err.OSError)
+}
+
+func (err Error) Unwrap() error {
+	return err.OSError
 }
 
 // parseError parses the response from osbuild-depsolve-dnf into the Error type and appends
 // the name and URL of a repository to all detected repository IDs in the
 // message.
-func parseError(data []byte, repos []rpmmd.RepoConfig) Error {
+func parseError(cmdError error, data []byte, repos []rpmmd.RepoConfig) Error {
 	var e Error
 	if len(data) == 0 {
 		return Error{
-			Kind:   "InternalError",
-			Reason: "osbuild-depsolve-dnf output was empty",
+			Kind:    "InternalError",
+			Reason:  "osbuild-depsolve-dnf output was empty",
+			OSError: cmdError,
 		}
 	}
 
 	if err := json.Unmarshal(data, &e); err != nil {
 		// dumping the error into the Reason can get noisy, but it's good for troubleshooting
 		return Error{
-			Kind:   "InternalError",
-			Reason: fmt.Sprintf("Failed to unmarshal osbuild-depsolve-dnf error output %q: %s", string(data), err.Error()),
+			Kind:    "InternalError",
+			Reason:  fmt.Sprintf("Failed to unmarshal osbuild-depsolve-dnf error output %q: %s", string(data), err.Error()),
+			OSError: cmdError,
 		}
 	}
 
