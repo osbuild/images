@@ -59,6 +59,7 @@ func Depsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfi
 
 	for pkgSetName, pkgSetChain := range packageSets {
 		specSet := make(rpmmd.PackageList, 0)
+		reposByHash := make(map[string]rpmmd.RepoConfig)
 
 		// Each PackageSet in the chain represents a single transaction.
 		for txIdx, pkgSet := range pkgSetChain {
@@ -134,33 +135,39 @@ func Depsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfi
 				fmt.Sprintf("https://example.com/repo/packages/%s.rpm", depsolveConfigPackage.FullNEVRA()),
 			}
 			specSet = append(specSet, depsolveConfigPackage)
-		}
 
-		// generate pseudo packages for the repos
-		for _, repo := range repos {
-			// the test repos have the form:
-			//   https://rpmrepo..../el9/cs9-x86_64-rt-20240915
-			// drop the date as it's not needed for this level of mocks
-			baseURL := repo.BaseURLs[0]
-			if idx := strings.LastIndex(baseURL, "-"); idx > 0 {
-				baseURL = baseURL[:idx]
+			// Add repo pseudo-packages only for repos not seen before
+			for _, repo := range pkgSet.Repositories {
+				repoHash := repo.Hash()
+				if _, ok := reposByHash[repoHash]; ok {
+					continue
+				}
+				reposByHash[repoHash] = repo
+
+				// the test repos have the form:
+				//   https://rpmrepo..../el9/cs9-x86_64-rt-20240915
+				// drop the date as it's not needed for this level of mocks
+				baseURL := repo.BaseURLs[0]
+				if idx := strings.LastIndex(baseURL, "-"); idx > 0 {
+					baseURL = baseURL[:idx]
+				}
+				url, err := url.Parse(baseURL)
+				if err != nil {
+					panic(err)
+				}
+				url.Host = "example.com"
+				url.Path = fmt.Sprintf("passed-arch:%s/passed-repo:%s", archName, url.Path)
+				checksum := fmt.Sprintf("%x", sha256.Sum256([]byte(url.String())))
+				specSet = append(specSet, rpmmd.Package{
+					Name: url.String(),
+					// generate predictable but non-empty release/version numbers
+					Version:         strconv.Itoa(int(checksum[0]) % 9),
+					Release:         strconv.Itoa(int(checksum[1])%9) + ".fk1",
+					Arch:            archName,
+					RemoteLocations: []string{url.String()},
+					Checksum:        rpmmd.Checksum{Type: "sha256", Value: checksum},
+				})
 			}
-			url, err := url.Parse(baseURL)
-			if err != nil {
-				panic(err)
-			}
-			url.Host = "example.com"
-			url.Path = fmt.Sprintf("passed-arch:%s/passed-repo:%s", archName, url.Path)
-			checksum := fmt.Sprintf("%x", sha256.Sum256([]byte(url.String())))
-			specSet = append(specSet, rpmmd.Package{
-				Name: url.String(),
-				// generate predictable but non-empty release/version numbers
-				Version:         strconv.Itoa(int(checksum[0]) % 9),
-				Release:         strconv.Itoa(int(checksum[1])%9) + ".fk1",
-				Arch:            archName,
-				RemoteLocations: []string{url.String()},
-				Checksum:        rpmmd.Checksum{Type: "sha256", Value: checksum},
-			})
 		}
 
 		// Sort the list of depsolved packages by full NEVRA, as a real depsolver would do.
