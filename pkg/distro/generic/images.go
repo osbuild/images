@@ -561,6 +561,14 @@ func ostreeDeploymentCustomizations(
 	return deploymentConf, nil
 }
 
+func buildOptions(t *imageType) *manifest.BuildOptions {
+	buildOpts := &manifest.BuildOptions{}
+	if tweaks := t.arch.distro.GetTweaks(); tweaks != nil && tweaks.RPMKeys != nil && tweaks.RPMKeys.IgnoreBuildImportFailures {
+		buildOpts.RPMStageIgnoreGPGImportFailures = tweaks.RPMKeys.IgnoreBuildImportFailures
+	}
+	return buildOpts
+}
+
 // IMAGES
 
 func diskImage(t *imageType,
@@ -572,7 +580,9 @@ func diskImage(t *imageType,
 	rng *rand.Rand) (image.ImageKind, error) {
 
 	img := image.NewDiskImage(t.platform, t.Filename())
-
+	if opts := buildOptions(t); opts != nil {
+		img.BuildOptions = opts
+	}
 	var err error
 	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, bp)
 	if err != nil {
@@ -613,6 +623,9 @@ func tarImage(t *imageType,
 	containers []container.SourceSpec,
 	rng *rand.Rand) (image.ImageKind, error) {
 	img := image.NewArchive(t.platform, t.Filename())
+	if opts := buildOptions(t); opts != nil {
+		img.BuildOptions = opts
+	}
 
 	var err error
 	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, bp)
@@ -638,6 +651,9 @@ func containerImage(t *imageType,
 	containers []container.SourceSpec,
 	rng *rand.Rand) (image.ImageKind, error) {
 	img := image.NewBaseContainer(t.platform, t.Filename())
+	if opts := buildOptions(t); opts != nil {
+		img.BuildOptions = opts
+	}
 
 	var err error
 	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, bp)
@@ -661,6 +677,9 @@ func liveInstallerImage(t *imageType,
 	rng *rand.Rand) (image.ImageKind, error) {
 
 	img := image.NewAnacondaLiveInstaller(t.platform, t.Filename())
+	if opts := buildOptions(t); opts != nil {
+		img.BuildOptions = opts
+	}
 
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
 
@@ -694,6 +713,9 @@ func imageInstallerImage(t *imageType,
 	customizations := bp.Customizations
 
 	img := image.NewAnacondaTarInstaller(t.platform, t.Filename())
+	if opts := buildOptions(t); opts != nil {
+		img.BuildOptions = opts
+	}
 
 	var err error
 	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, bp)
@@ -750,6 +772,9 @@ func iotCommitImage(t *imageType,
 
 	parentCommit, commitRef := makeOSTreeParentCommit(options.OSTree, t.OSTreeRef())
 	img := image.NewOSTreeArchive(t.platform, t.Filename(), commitRef)
+	if opts := buildOptions(t); opts != nil {
+		img.BuildOptions = opts
+	}
 
 	d := t.arch.distro
 
@@ -788,6 +813,9 @@ func bootableContainerImage(t *imageType,
 
 	parentCommit, commitRef := makeOSTreeParentCommit(options.OSTree, t.OSTreeRef())
 	img := image.NewOSTreeArchive(t.platform, t.Filename(), commitRef)
+	if opts := buildOptions(t); opts != nil {
+		img.BuildOptions = opts
+	}
 
 	d := t.arch.distro
 
@@ -825,6 +853,9 @@ func iotContainerImage(t *imageType,
 
 	parentCommit, commitRef := makeOSTreeParentCommit(options.OSTree, t.OSTreeRef())
 	img := image.NewOSTreeContainer(t.platform, t.Filename(), commitRef)
+	if opts := buildOptions(t); opts != nil {
+		img.BuildOptions = opts
+	}
 	d := t.arch.distro
 
 	var err error
@@ -866,6 +897,9 @@ func iotInstallerImage(t *imageType,
 	}
 
 	img := image.NewAnacondaOSTreeInstaller(t.platform, t.Filename(), commit)
+	if opts := buildOptions(t); opts != nil {
+		img.BuildOptions = opts
+	}
 
 	customizations := bp.Customizations
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
@@ -922,6 +956,9 @@ func iotImage(t *imageType,
 		return nil, fmt.Errorf("%s: %s", t.Name(), err.Error())
 	}
 	img := image.NewOSTreeDiskImageFromCommit(t.platform, t.Filename(), commit)
+	if opts := buildOptions(t); opts != nil {
+		img.BuildOptions = opts
+	}
 
 	customizations := bp.Customizations
 	deploymentConfig, err := ostreeDeploymentCustomizations(t, customizations)
@@ -967,6 +1004,9 @@ func iotSimplifiedInstallerImage(t *imageType,
 		return nil, fmt.Errorf("%s: %s", t.Name(), err.Error())
 	}
 	rawImg := image.NewOSTreeDiskImageFromCommit(t.platform, t.Filename(), commit)
+	if opts := buildOptions(t); opts != nil {
+		rawImg.BuildOptions = opts
+	}
 
 	customizations := bp.Customizations
 	deploymentConfig, err := ostreeDeploymentCustomizations(t, customizations)
@@ -994,6 +1034,9 @@ func iotSimplifiedInstallerImage(t *imageType,
 
 	// XXX: can we take platform/filename in NewOSTreeSimplifiedInstaller from rawImg instead?
 	img := image.NewOSTreeSimplifiedInstaller(t.platform, t.Filename(), rawImg, customizations.InstallationDevice)
+	if opts := buildOptions(t); opts != nil {
+		img.BuildOptions = opts
+	}
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
 	if bpFDO := customizations.GetFDO(); bpFDO != nil {
 		img.FDO = fdo.FromBP(*bpFDO)
@@ -1035,6 +1078,9 @@ func networkInstallerImage(t *imageType,
 	customizations := bp.Customizations
 
 	img := image.NewAnacondaNetInstaller(t.platform, t.Filename())
+	if opts := buildOptions(t); opts != nil {
+		img.BuildOptions = opts
+	}
 
 	var err error
 	img.Kickstart, err = kickstart.New(customizations)
@@ -1099,6 +1145,9 @@ func pxeTarImage(t *imageType,
 	containers []container.SourceSpec,
 	rng *rand.Rand) (image.ImageKind, error) {
 	img := image.NewPXETar(t.platform, t.Filename())
+	if opts := buildOptions(t); opts != nil {
+		img.BuildOptions = opts
+	}
 
 	var err error
 	img.OSCustomizations, err = osCustomizations(t, packageSets[osPkgsKey], options, containers, bp)
