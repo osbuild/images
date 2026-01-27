@@ -57,11 +57,16 @@ func Depsolve(packageSets map[string][]rpmmd.PackageSet, archName string) map[st
 	depsolvedSets := make(map[string]depsolvednf.DepsolveResult)
 
 	for pkgSetName, pkgSetChain := range packageSets {
-		specSet := make(rpmmd.PackageList, 0)
+		transactions := make(depsolvednf.TransactionList, 0, len(pkgSetChain))
 		reposByHash := make(map[string]rpmmd.RepoConfig)
 
 		// Each PackageSet in the chain represents a single transaction.
 		for txIdx, pkgSet := range pkgSetChain {
+			transactionPackages := make(
+				rpmmd.PackageList, 0,
+				len(pkgSet.Include)+len(pkgSet.Exclude)+len(pkgSet.Repositories)+1,
+			)
+
 			for _, pkgName := range pkgSet.Include {
 				// Generate a unique package checksum, so that the same included package name from different
 				// transactions are not considered the same package. This allows us to catch changes in the default
@@ -87,7 +92,7 @@ func Depsolve(packageSets map[string][]rpmmd.PackageSet, archName string) map[st
 				pkg.RemoteLocations = []string{
 					fmt.Sprintf("https://example.com/repo/packages/%s.rpm", pkg.FullNEVRA()),
 				}
-				specSet = append(specSet, pkg)
+				transactionPackages = append(transactionPackages, pkg)
 			}
 
 			for _, pkgName := range pkgSet.Exclude {
@@ -109,7 +114,7 @@ func Depsolve(packageSets map[string][]rpmmd.PackageSet, archName string) map[st
 				pkg.RemoteLocations = []string{
 					fmt.Sprintf("https://example.com/repo/packages/%s.rpm", pkg.FullNEVRA()),
 				}
-				specSet = append(specSet, pkg)
+				transactionPackages = append(transactionPackages, pkg)
 			}
 
 			// generate pseudo packages for the config of each transaction
@@ -133,7 +138,7 @@ func Depsolve(packageSets map[string][]rpmmd.PackageSet, archName string) map[st
 			depsolveConfigPackage.RemoteLocations = []string{
 				fmt.Sprintf("https://example.com/repo/packages/%s.rpm", depsolveConfigPackage.FullNEVRA()),
 			}
-			specSet = append(specSet, depsolveConfigPackage)
+			transactionPackages = append(transactionPackages, depsolveConfigPackage)
 
 			// Add repo pseudo-packages only for repos not seen before
 			for _, repo := range pkgSet.Repositories {
@@ -157,7 +162,7 @@ func Depsolve(packageSets map[string][]rpmmd.PackageSet, archName string) map[st
 				url.Host = "example.com"
 				url.Path = fmt.Sprintf("passed-arch:%s/passed-repo:%s", archName, url.Path)
 				checksum := fmt.Sprintf("%x", sha256.Sum256([]byte(url.String())))
-				specSet = append(specSet, rpmmd.Package{
+				transactionPackages = append(transactionPackages, rpmmd.Package{
 					Name: url.String(),
 					// generate predictable but non-empty release/version numbers
 					Version:         strconv.Itoa(int(checksum[0]) % 9),
@@ -167,12 +172,13 @@ func Depsolve(packageSets map[string][]rpmmd.PackageSet, archName string) map[st
 					Checksum:        rpmmd.Checksum{Type: "sha256", Value: checksum},
 				})
 			}
-		}
 
-		// Sort the list of depsolved packages by full NEVRA, as a real depsolver would do.
-		sort.Slice(specSet, func(i, j int) bool {
-			return specSet[i].FullNEVRA() < specSet[j].FullNEVRA()
-		})
+			// The packages list in each transaction result is sorted by full NEVRA, as a real depsolver would do.
+			sort.Slice(transactionPackages, func(i, j int) bool {
+				return transactionPackages[i].FullNEVRA() < transactionPackages[j].FullNEVRA()
+			})
+			transactions = append(transactions, transactionPackages)
+		}
 
 		// Sort the list of repos by ID, as a real depsolver would do. Note that the IDs are set by the real depsolver
 		// when depsolving o the Hash() method value of the RepoConfig. Therefore we sort by that value.
@@ -185,8 +191,9 @@ func Depsolve(packageSets map[string][]rpmmd.PackageSet, archName string) map[st
 		})
 
 		depsolvedSets[pkgSetName] = depsolvednf.DepsolveResult{
-			Packages: specSet,
-			Repos:    allRepos,
+			Packages:     transactions.AllPackages(),
+			Transactions: transactions,
+			Repos:        allRepos,
 		}
 	}
 
