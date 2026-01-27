@@ -1488,8 +1488,6 @@ image_types:
             - "tar"
             - "tcpdump"
             - "tuned"
-          exclude:
-            - "dracut-config-rescue"
           conditions: &conditions_subscription_manager_cockpit
             "add subscription-manager-cockpit on rhel":
               when:
@@ -1550,7 +1548,7 @@ image_types:
         - "console=tty0"
         - "console=ttyS0,115200n8"
         - "net.ifnames=0"
-      conditions:
+      conditions: &qcow2_image_config_conditions
         "tweak the rhsm config on rhel":
           when:
             distro_name: "rhel"
@@ -1637,10 +1635,10 @@ image_types:
                 distro_name: "ol"
               append:
                 exclude:
-                 - "rhn-check"
-                 - "rhn-setup"
-                 - "rhnsd"
-                 - "dnf-plugin-spacewalk"
+                  - "rhn-check"
+                  - "rhn-setup"
+                  - "rhnsd"
+                  - "dnf-plugin-spacewalk"
             "include redhat-release-eula when not Oracle Linux":
               when:
                 not_distro_name: "ol"
@@ -1722,6 +1720,13 @@ image_types:
           config:
             add_drivers:
               - "mlx5_core"
+      conditions:
+        <<: *qcow2_image_config_conditions
+        "oracle linux is hostonly":
+          when:
+            distro_name: "ol"
+          shallow_merge:
+            hostonly: true
     partition_table:
       x86_64:
         type: "gpt"
