@@ -355,6 +355,10 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 
 	osc.VersionlockPackages = imageConfig.VersionlockPackages
 
+	if tweaks := t.arch.distro.GetTweaks(); tweaks != nil && tweaks.RPMKeys != nil && tweaks.RPMKeys.BinPath != "" {
+		osc.RPMKeysBinary = tweaks.RPMKeys.BinPath
+	}
+
 	return osc, nil
 }
 
@@ -699,6 +703,10 @@ func liveInstallerImage(t *imageType,
 		return nil, err
 	}
 
+	if tweaks := t.arch.distro.GetTweaks(); tweaks != nil && tweaks.RPMKeys != nil && tweaks.RPMKeys.BinPath != "" {
+		img.InstallerCustomizations.RPMKeysBinary = tweaks.RPMKeys.BinPath
+	}
+
 	return img, nil
 }
 
@@ -758,6 +766,10 @@ func imageInstallerImage(t *imageType,
 	}
 
 	img.RootfsCompression = "xz" // This also triggers using the bcj filter
+
+	if tweaks := t.arch.distro.GetTweaks(); tweaks != nil && tweaks.RPMKeys != nil && tweaks.RPMKeys.BinPath != "" {
+		img.InstallerCustomizations.RPMKeysBinary = tweaks.RPMKeys.BinPath
+	}
 
 	return img, nil
 }
@@ -940,6 +952,10 @@ func iotInstallerImage(t *imageType,
 		img.Locale = *locale
 	}
 
+	if tweaks := t.arch.distro.GetTweaks(); tweaks != nil && tweaks.RPMKeys != nil && tweaks.RPMKeys.BinPath != "" {
+		img.InstallerCustomizations.RPMKeysBinary = tweaks.RPMKeys.BinPath
+	}
+
 	return img, nil
 }
 
@@ -1032,6 +1048,10 @@ func iotSimplifiedInstallerImage(t *imageType,
 	}
 	rawImg.PartitionTable = pt
 
+	if tweaks := t.arch.distro.GetTweaks(); tweaks != nil && tweaks.RPMKeys != nil && tweaks.RPMKeys.BinPath != "" {
+		rawImg.OSCustomizations.RPMKeysBinary = tweaks.RPMKeys.BinPath
+	}
+
 	// XXX: can we take platform/filename in NewOSTreeSimplifiedInstaller from rawImg instead?
 	img := image.NewOSTreeSimplifiedInstaller(t.platform, t.Filename(), rawImg, customizations.InstallationDevice)
 	if opts := buildOptions(t); opts != nil {
@@ -1062,6 +1082,10 @@ func iotSimplifiedInstallerImage(t *imageType,
 	}
 
 	img.OSName = t.OSTree.Name
+
+	if tweaks := t.arch.distro.GetTweaks(); tweaks != nil && tweaks.RPMKeys != nil && tweaks.RPMKeys.BinPath != "" {
+		img.OSCustomizations.RPMKeysBinary = tweaks.RPMKeys.BinPath
+	}
 
 	return img, nil
 }
@@ -1133,6 +1157,10 @@ func networkInstallerImage(t *imageType,
 	}
 
 	img.RootfsCompression = "xz" // This also triggers using the bcj filter
+
+	if tweaks := t.arch.distro.GetTweaks(); tweaks != nil && tweaks.RPMKeys != nil && tweaks.RPMKeys.BinPath != "" {
+		img.InstallerCustomizations.RPMKeysBinary = tweaks.RPMKeys.BinPath
+	}
 
 	return img, nil
 }

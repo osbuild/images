@@ -83,6 +83,7 @@ func (img *OSTreeSimplifiedInstaller) InstantiateManifest(m *manifest.Manifest,
 	coiPipeline.Variant = img.InstallerCustomizations.Variant
 	coiPipeline.AdditionalDracutModules = img.InstallerCustomizations.AdditionalDracutModules
 	coiPipeline.AdditionalDrivers = img.InstallerCustomizations.AdditionalDrivers
+	coiPipeline.RPMKeysBinary = img.OSCustomizations.RPMKeysBinary
 
 	if len(img.ISOCustomizations.Label) == 0 {
 		img.ISOCustomizations.Label = fmt.Sprintf(img.ISOLabelTmpl, img.platform.GetArch())
