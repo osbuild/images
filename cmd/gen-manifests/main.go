@@ -313,7 +313,15 @@ func makeManifestJob(
 				}
 			}
 		} else {
-			depsolvedSets = manifestmock.Depsolve(common.Must(manifest.GetPackageSetChains()), archName)
+			depsolvedSets, err = manifestmock.Depsolve(
+				common.Must(manifest.GetPackageSetChains()),
+				archName,
+				bc.Solver != nil && bc.Solver.UseRootDir,
+			)
+			if err != nil {
+				err = fmt.Errorf("[%s] manifestmock depsolve failed: %s", filename, err.Error())
+				return
+			}
 		}
 
 		var containerSpecs map[string][]container.Spec
