@@ -313,7 +313,7 @@ func makeManifestJob(
 				}
 			}
 		} else {
-			depsolvedSets = manifestmock.Depsolve(common.Must(manifest.GetPackageSetChains()), repos, archName)
+			depsolvedSets = manifestmock.Depsolve(common.Must(manifest.GetPackageSetChains()), archName)
 		}
 
 		var containerSpecs map[string][]container.Spec
