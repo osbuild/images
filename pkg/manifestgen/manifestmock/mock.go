@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"net/url"
-	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -54,7 +53,7 @@ func ResolveCommits(commitSources map[string][]ostree.SourceSpec) map[string][]o
 	return commits
 }
 
-func Depsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfig, archName string) map[string]depsolvednf.DepsolveResult {
+func Depsolve(packageSets map[string][]rpmmd.PackageSet, archName string) map[string]depsolvednf.DepsolveResult {
 	depsolvedSets := make(map[string]depsolvednf.DepsolveResult)
 
 	for pkgSetName, pkgSetChain := range packageSets {
@@ -177,17 +176,17 @@ func Depsolve(packageSets map[string][]rpmmd.PackageSet, repos []rpmmd.RepoConfi
 
 		// Sort the list of repos by ID, as a real depsolver would do. Note that the IDs are set by the real depsolver
 		// when depsolving o the Hash() method value of the RepoConfig. Therefore we sort by that value.
-		// NOTE: the repos slice passed to this function is shared between multiple concurrent jobs doing depsolve
-		// in the gen-manifests command. Therefore we need to make a copy of the slice before sorting. Otherwise
-		// the sorting has undefined behavior and the results are not deterministic.
-		reposCopy := slices.Clone(repos)
-		sort.Slice(reposCopy, func(i, j int) bool {
-			return reposCopy[i].Hash() < reposCopy[j].Hash()
+		allRepos := make([]rpmmd.RepoConfig, 0, len(reposByHash))
+		for _, repo := range reposByHash {
+			allRepos = append(allRepos, repo)
+		}
+		sort.Slice(allRepos, func(i, j int) bool {
+			return allRepos[i].Hash() < allRepos[j].Hash()
 		})
 
 		depsolvedSets[pkgSetName] = depsolvednf.DepsolveResult{
 			Packages: specSet,
-			Repos:    reposCopy,
+			Repos:    allRepos,
 		}
 	}
 
