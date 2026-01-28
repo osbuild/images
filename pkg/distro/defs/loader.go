@@ -10,10 +10,12 @@ import (
 	"path/filepath"
 	"slices"
 	"sort"
+	"sync"
 	"text/template"
 
 	"go.yaml.in/yaml/v3"
 
+	"github.com/brunoga/deep"
 	"github.com/osbuild/images/data/distrodefs"
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/environment"
@@ -161,37 +163,57 @@ func (d *DistroYAML) runTemplates(id distro.ID) error {
 	return errors.Join(errs...)
 }
 
+func cacheEnabled() bool {
+	return dataFS() == distrodefs.Data
+}
+
+// distrosCache holds prototype entry that is cloned when needed
+var distrosCache struct {
+	mu        sync.Mutex
+	prototype *distrosYAML
+}
+
 // Load all YAML files directly in the root of the definitions filesystem. Each
 // file is read in sorted order and the entries found under the `distros` key
 // are appended together.
 // Note that files are read separately from each other, so anchors and other
 // references can only be done within the same file.
 func loadDistros() (*distrosYAML, error) {
-	dents, err := fs.Glob(dataFS(), "*.yaml")
+	distrosCache.mu.Lock()
+	defer distrosCache.mu.Unlock()
+
+	if distrosCache.prototype != nil && cacheEnabled() {
+		return deep.MustCopy(distrosCache.prototype), nil
+	}
+
+	dfs := dataFS()
+	dents, err := fs.Glob(dfs, "*.yaml")
 	if err != nil {
 		return nil, err
 	}
 
 	var allDistros distrosYAML
-
 	for _, name := range dents {
-		f, err := dataFS().Open(name)
+		f, err := dfs.Open(name)
 		if err != nil {
 			return nil, err
 		}
-		defer f.Close()
 
 		decoder := yaml.NewDecoder(f)
 		decoder.KnownFields(true)
-
 		var distros distrosYAML
 		if err := decoder.Decode(&distros); err != nil {
+			f.Close()
 			return nil, err
 		}
+		f.Close()
 
 		allDistros.Distros = append(allDistros.Distros, distros.Distros...)
 	}
 
+	if cacheEnabled() {
+		distrosCache.prototype = &allDistros
+	}
 	return &allDistros, nil
 }
 
@@ -224,9 +246,10 @@ func LoadDistroWithoutImageTypes(nameVer string) (*DistroYAML, error) {
 	}
 
 	var foundDistro *DistroYAML
-	for _, distro := range distros.Distros {
+	for i := range distros.Distros {
+		distro := &distros.Distros[i]
 		if distro.Name == nameVer {
-			foundDistro = &distro
+			foundDistro = distro
 			break
 		}
 
@@ -235,7 +258,7 @@ func LoadDistroWithoutImageTypes(nameVer string) (*DistroYAML, error) {
 			return nil, err
 		}
 		if found != "" {
-			foundDistro = &distro
+			foundDistro = distro
 			// nameVer must be replaced with normalized name
 			nameVer = found
 			break
@@ -258,19 +281,44 @@ func LoadDistroWithoutImageTypes(nameVer string) (*DistroYAML, error) {
 	return foundDistro, err
 }
 
-func (d *DistroYAML) LoadImageTypes() error {
+// imageTypesCache holds prototype entries that is cloned when needed
+var imageTypesCache struct {
+	mu     sync.Mutex
+	protos map[string]*imageTypesYAML
+}
+
+func (d *DistroYAML) loadImageTypesOnce() *imageTypesYAML {
+	imageTypesCache.mu.Lock()
+	defer imageTypesCache.mu.Unlock()
+
+	if imageTypesCache.protos == nil {
+		imageTypesCache.protos = make(map[string]*imageTypesYAML)
+	}
+	if cached := imageTypesCache.protos[d.DefsPath]; cached != nil && cacheEnabled() {
+		return deep.MustCopy(cached)
+	}
+
 	f, err := dataFS().Open(filepath.Join(d.DefsPath, "imagetypes.yaml"))
 	if err != nil {
-		return err
+		panic(err)
 	}
 	defer f.Close()
 
-	var toplevel imageTypesYAML
+	parsed := &imageTypesYAML{}
 	decoder := yaml.NewDecoder(f)
 	decoder.KnownFields(true)
-	if err := decoder.Decode(&toplevel); err != nil {
-		return err
+	if err := decoder.Decode(parsed); err != nil {
+		panic(err)
 	}
+
+	if cacheEnabled() {
+		imageTypesCache.protos[d.DefsPath] = parsed
+	}
+	return parsed
+}
+
+func (d *DistroYAML) LoadImageTypes() error {
+	toplevel := d.loadImageTypesOnce()
 	if len(toplevel.ImageTypes) > 0 {
 		d.imageTypes = make(map[string]ImageTypeYAML, len(toplevel.ImageTypes))
 		for name := range toplevel.ImageTypes {
