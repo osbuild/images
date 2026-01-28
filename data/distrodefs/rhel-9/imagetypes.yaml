@@ -29,6 +29,13 @@
           include:
             - "grub2-ppc64le"
             - "grub2-ppc64le-modules"
+      "support pqc keys on rhel":
+        when:
+          distro_name: "rhel"
+          version_greater_or_equal: "9.7"
+        append:
+          include:
+            - "pqrpm"
 
   disk_sizes:
     default_required_partition_sizes: &default_required_dir_sizes

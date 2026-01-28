@@ -35,7 +35,7 @@ type ContainerBasedIso struct {
 	InitramfsPath string
 }
 
-func NewContainerBasedIso(platform platform.Platform, filename string, container container.SourceSpec) *ContainerBasedIso {
+func NewContainerBasedIso(platform platform.Platform, filename string, container container.SourceSpec, buildOpts *manifest.BuildOptions) *ContainerBasedIso {
 	return &ContainerBasedIso{
 		Base:            NewBase("container-based-iso", platform, filename),
 		ContainerSource: container,
@@ -57,11 +57,12 @@ func (img *ContainerBasedIso) InstantiateManifestFromContainer(m *manifest.Manif
 		"enforcing=0",
 	}
 
-	buildPipeline := manifest.NewBuildFromContainer(m, runner, cnts,
-		&manifest.BuildOptions{
-			ContainerBuildable: true,
-		})
-
+	buildOptions := img.BuildOptions
+	if buildOptions == nil {
+		buildOptions = &manifest.BuildOptions{}
+	}
+	buildOptions.ContainerBuildable = true
+	buildPipeline := manifest.NewBuildFromContainer(m, runner, cnts, buildOptions)
 	osTreePipeline := manifest.NewOSFromContainer("os-tree", buildPipeline, &img.ContainerSource)
 	osTreePipeline.PayloadContainer = img.PayloadContainer
 

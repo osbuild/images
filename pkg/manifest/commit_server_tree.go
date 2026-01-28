@@ -26,7 +26,8 @@ type OSTreeCommitServer struct {
 	// Extra repositories to install packages from
 	ExtraRepos []rpmmd.RepoConfig
 	// TODO: should this be configurable?
-	Language string
+	Language      string
+	RPMKeysBinary string
 
 	OSTreeCommitServerCustomizations OSTreeCommitServerCustomizations
 
@@ -104,8 +105,14 @@ func (p *OSTreeCommitServer) serialize() (osbuild.Pipeline, error) {
 	if err != nil {
 		return osbuild.Pipeline{}, err
 	}
+	rpmOptions := osbuild.NewRPMStageOptions(p.repos)
+	if p.RPMKeysBinary != "" {
+		rpmOptions.RPMKeys = &osbuild.RPMKeys{
+			BinPath: &p.RPMKeysBinary,
+		}
+	}
 
-	pipeline.AddStage(osbuild.NewRPMStage(osbuild.NewRPMStageOptions(p.repos), osbuild.NewRpmStageSourceFilesInputs(p.packageSpecs)))
+	pipeline.AddStage(osbuild.NewRPMStage(rpmOptions, osbuild.NewRpmStageSourceFilesInputs(p.packageSpecs)))
 	pipeline.AddStage(osbuild.NewLocaleStage(&osbuild.LocaleStageOptions{Language: p.Language}))
 
 	htmlRoot := "/usr/share/nginx/html"

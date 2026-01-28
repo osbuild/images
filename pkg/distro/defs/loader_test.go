@@ -965,6 +965,10 @@ distros:
     ostree_ref_tmpl: "rhel/{{.MajorVersion}}/%s/edge"
     default_fs_type: "xfs"
     defs_path: rhel-10
+    tweaks:
+      rpmkeys:
+        binary_path: "/chickens"
+        ignore_build_import_failures: true
 `
 
 func TestDistrosLoadingExact(t *testing.T) {
@@ -1032,6 +1036,12 @@ func TestDistrosLoadingFactoryCompat(t *testing.T) {
 		DefsPath:         "rhel-10",
 		DefaultFSType:    disk.FS_XFS,
 		ID:               distro.ID{Name: "rhel", MajorVersion: 10, MinorVersion: 1},
+		Tweaks: &distro.Tweaks{
+			RPMKeys: &distro.RPMKeysTweaks{
+				BinPath:                   "/chickens",
+				IgnoreBuildImportFailures: true,
+			},
+		},
 	})
 
 	dist, err = defs.NewDistroYAML("fedora-40")
