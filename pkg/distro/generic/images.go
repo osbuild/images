@@ -79,7 +79,11 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 	if !t.ImageTypeYAML.BootISO {
 		// don't put users and groups in the payload of an installer
 		// add them via kickstart instead
-		osc.Groups = users.GroupsFromBP(c.GetGroups())
+		groups, err := c.GetGroups()
+		if err != nil {
+			return osc, err
+		}
+		osc.Groups = users.GroupsFromBP(groups)
 
 		osc.Users = users.UsersFromBP(c.GetUsers())
 		osc.Users = append(osc.Users, imageConfig.Users...)
@@ -522,9 +526,14 @@ func ostreeDeploymentCustomizations(
 	deploymentConf.FIPS = c.GetFIPS()
 
 	deploymentConf.Users = users.UsersFromBP(c.GetUsers())
-	deploymentConf.Groups = users.GroupsFromBP(c.GetGroups())
 
 	var err error
+	groups, err := c.GetGroups()
+	if err != nil {
+		return manifest.OSTreeDeploymentCustomizations{}, err
+	}
+	deploymentConf.Groups = users.GroupsFromBP(groups)
+
 	deploymentConf.Directories, err = blueprint.DirectoryCustomizationsToFsNodeDirectories(c.GetDirectories())
 	if err != nil {
 		return manifest.OSTreeDeploymentCustomizations{}, err

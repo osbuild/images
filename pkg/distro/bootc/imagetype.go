@@ -191,7 +191,12 @@ func (t *imageType) manifestForDisk(bp *blueprint.Blueprint, options distro.Imag
 
 	img := image.NewBootcDiskImage(platform, filename, containerSource, buildContainerSource)
 	img.OSCustomizations.Users = users.UsersFromBP(customizations.GetUsers())
-	img.OSCustomizations.Groups = users.GroupsFromBP(customizations.GetGroups())
+
+	groups, err := customizations.GetGroups()
+	if err != nil {
+		return nil, nil, err
+	}
+	img.OSCustomizations.Groups = users.GroupsFromBP(groups)
 	img.OSCustomizations.SELinux = t.arch.distro.sourceInfo.SELinuxPolicy
 	img.OSCustomizations.BuildSELinux = img.OSCustomizations.SELinux
 	if t.arch.distro.buildSourceInfo != nil {
@@ -535,7 +540,12 @@ func (t *imageType) manifestForPXETar(bp *blueprint.Blueprint, options distro.Im
 	img := image.NewBootcPXEImage(platform, t.Filename(), containerSource, buildContainerSource)
 	img.Compression = t.ImageTypeYAML.Compression
 	img.OSCustomizations.Users = users.UsersFromBP(customizations.GetUsers())
-	img.OSCustomizations.Groups = users.GroupsFromBP(customizations.GetGroups())
+
+	groups, err := customizations.GetGroups()
+	if err != nil {
+		return nil, nil, err
+	}
+	img.OSCustomizations.Groups = users.GroupsFromBP(groups)
 	img.OSCustomizations.SELinux = t.arch.distro.sourceInfo.SELinuxPolicy
 	img.OSCustomizations.BuildSELinux = img.OSCustomizations.SELinux
 	if t.arch.distro.buildSourceInfo != nil {
