@@ -9,13 +9,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/sirupsen/logrus"
 	"go.yaml.in/yaml/v3"
 
 	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/pkg/bib/blueprintload"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/olog"
 	"github.com/osbuild/images/pkg/osbuild"
 )
 
@@ -257,7 +257,7 @@ func Load(root string) (*Info, error) {
 
 	vendor, err := uefiVendor(root)
 	if err != nil {
-		logrus.Debugf("cannot read UEFI vendor: %v, setting it to none", err)
+		olog.Printf("cannot read UEFI vendor: %v, setting it to none", err)
 	}
 
 	customization, err := readImageCustomization(root)
@@ -300,12 +300,12 @@ func Load(root string) (*Info, error) {
 
 	kernelInfo, err := readKernelInfo(root)
 	if err != nil {
-		logrus.Debugf("cannot read kernel info: %v", err)
+		olog.Printf("cannot read kernel info: %v", err)
 	}
 
 	selinuxPolicy, err := readSelinuxPolicy(root)
 	if err != nil {
-		logrus.Debugf("cannot read selinux policy: %v, setting it to none", err)
+		olog.Printf("cannot read selinux policy: %v, setting it to none", err)
 	}
 
 	var idLike []string
