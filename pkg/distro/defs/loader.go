@@ -5,16 +5,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/fs"
-	"os"
 	"path/filepath"
 	"slices"
 	"sort"
 	"text/template"
 
-	"go.yaml.in/yaml/v3"
-
-	"github.com/osbuild/images/data/distrodefs"
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/internal/environment"
 	"github.com/osbuild/images/pkg/arch"
@@ -23,9 +18,7 @@ import (
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/disk/partition"
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/experimentalflags"
 	"github.com/osbuild/images/pkg/manifest"
-	"github.com/osbuild/images/pkg/olog"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -37,20 +30,6 @@ var (
 	ErrNoPartitionTableForArch    = errors.New("no partition table for arch")
 	ErrNoDefaultFs                = errors.New("no default fs set")
 )
-
-// this can be overriden in tests
-var defaultDataFS fs.FS = distrodefs.Data
-
-func dataFS() fs.FS {
-	// XXX: this is a short term measure, pass a set of
-	// searchPaths down the stack instead
-	dataFS := defaultDataFS
-	if overrideDir := experimentalflags.String("yamldir"); overrideDir != "" {
-		olog.Printf("WARNING: using experimental override dir %q", overrideDir)
-		dataFS = os.DirFS(overrideDir)
-	}
-	return dataFS
-}
 
 // distrosYAML defines all supported YAML based distributions, since this can
 // come from multiple sources we should make sure that we only have things in
@@ -167,28 +146,17 @@ func (d *DistroYAML) runTemplates(id distro.ID) error {
 // Note that files are read separately from each other, so anchors and other
 // references can only be done within the same file.
 func loadDistros() (*distrosYAML, error) {
-	dents, err := fs.Glob(dataFS(), "*.yaml")
+	dents, err := globFiles("*.yaml")
 	if err != nil {
 		return nil, err
 	}
 
 	var allDistros distrosYAML
-
 	for _, name := range dents {
-		f, err := dataFS().Open(name)
-		if err != nil {
-			return nil, err
-		}
-		defer f.Close()
-
-		decoder := yaml.NewDecoder(f)
-		decoder.KnownFields(true)
-
 		var distros distrosYAML
-		if err := decoder.Decode(&distros); err != nil {
+		if err := cachedDecodeYAML(name, &distros); err != nil {
 			return nil, err
 		}
-
 		allDistros.Distros = append(allDistros.Distros, distros.Distros...)
 	}
 
@@ -259,18 +227,11 @@ func LoadDistroWithoutImageTypes(nameVer string) (*DistroYAML, error) {
 }
 
 func (d *DistroYAML) LoadImageTypes() error {
-	f, err := dataFS().Open(filepath.Join(d.DefsPath, "imagetypes.yaml"))
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
 	var toplevel imageTypesYAML
-	decoder := yaml.NewDecoder(f)
-	decoder.KnownFields(true)
-	if err := decoder.Decode(&toplevel); err != nil {
+	if err := cachedDecodeYAML(filepath.Join(d.DefsPath, "imagetypes.yaml"), &toplevel); err != nil {
 		return err
 	}
+
 	if len(toplevel.ImageTypes) > 0 {
 		d.imageTypes = make(map[string]ImageTypeYAML, len(toplevel.ImageTypes))
 		for name := range toplevel.ImageTypes {

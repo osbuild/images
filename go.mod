@@ -20,6 +20,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.19.4
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.249.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.87.3
+	github.com/brunoga/deep v1.2.5
 	github.com/containers/common v0.64.1
 	github.com/containers/image/v5 v5.36.1
 	github.com/containers/storage v1.59.1
