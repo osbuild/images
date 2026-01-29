@@ -15,6 +15,12 @@ $GO_BINARY download
 # Ensure that go.mod and go.sum are up to date.
 $GO_BINARY mod tidy
 
+# Check banned packages
+if grep "github.com/(go-yaml/yaml|sirupsen/logrus)" go.mod | grep -v "// indirect" | grep -q .; then
+	echo "error: banned direct dependency found" >&2
+	exit 1
+fi
+
 # Ensure the code is formatted correctly.
 $GO_BINARY fmt ./...
 
