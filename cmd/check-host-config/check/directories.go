@@ -2,6 +2,7 @@ package check
 
 import (
 	"strconv"
+	"syscall"
 
 	"github.com/osbuild/images/internal/buildconfig"
 )
@@ -27,16 +28,15 @@ func directoriesCheck(meta *Metadata, config *buildconfig.BuildConfig) error {
 			return Fail("directory does not exist:", dir.Path)
 		}
 
-		mode, uid, gid, err := FileInfo(dir.Path)
+		info, err := Stat(dir.Path)
 		if err != nil {
 			return Fail("failed to get directory info:", dir.Path)
 		}
-
-		// Verify it's actually a directory
-		info, err := Stat(dir.Path)
-		if err != nil {
-			return Fail("failed to stat directory:", dir.Path)
+		stat, ok := info.Sys().(*syscall.Stat_t)
+		if !ok {
+			return Fail("check only works on UNIX-like")
 		}
+		mode, uid, gid := info.Mode(), stat.Uid, stat.Gid
 		if !info.IsDir() {
 			return Fail("path is not a directory:", dir.Path)
 		}

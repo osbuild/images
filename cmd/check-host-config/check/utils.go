@@ -2,12 +2,10 @@ package check
 
 import (
 	"fmt"
-	"io/fs"
 	"log"
 	"os/user"
 	"strconv"
 	"strings"
-	"syscall"
 
 	"github.com/osbuild/images/pkg/distro"
 )
@@ -55,21 +53,6 @@ var ParseOSRelease = func(osReleasePath string) (*OSRelease, error) {
 	}
 
 	return release, nil
-}
-
-// FileInfo returns UNIX file information (mode, uid, gid).
-func FileInfo(name string) (fs.FileMode, uint32, uint32, error) {
-	info, err := Stat(name)
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	stat, ok := info.Sys().(*syscall.Stat_t)
-	if !ok {
-		return 0, 0, 0, fmt.Errorf("Host checks only work on UNIX-like")
-	}
-
-	return info.Mode(), stat.Uid, stat.Gid, nil
 }
 
 // LookupUID is a mockable function that looks up a user by name and returns the UID.
