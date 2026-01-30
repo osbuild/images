@@ -2,6 +2,7 @@ package manifestmock
 
 import (
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"sort"
@@ -12,6 +13,7 @@ import (
 	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rpmmd"
+	"github.com/osbuild/images/pkg/sbom"
 )
 
 func ResolveContainers(containerSources map[string][]container.SourceSpec) map[string][]container.Spec {
@@ -57,6 +59,7 @@ func Depsolve(
 	packageSets map[string][]rpmmd.PackageSet,
 	archName string,
 	useRootDir bool,
+	generateSBOM bool,
 ) (map[string]depsolvednf.DepsolveResult, error) {
 	depsolvedSets := make(map[string]depsolvednf.DepsolveResult)
 
@@ -248,10 +251,23 @@ func Depsolve(
 			return allRepos[i].Id < allRepos[j].Id
 		})
 
+		var sbomDoc *sbom.Document
+		if generateSBOM {
+			var err error
+			sbomDoc, err = sbom.NewDocument(
+				sbom.StandardTypeSpdx,
+				json.RawMessage(fmt.Sprintf(`{"sbom-for":"%s"}`, pkgSetName)),
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		depsolvedSets[pkgSetName] = depsolvednf.DepsolveResult{
 			Packages:     transactions.AllPackages(),
 			Transactions: transactions,
 			Repos:        allRepos,
+			SBOM:         sbomDoc,
 		}
 	}
 

@@ -317,6 +317,7 @@ func makeManifestJob(
 				common.Must(manifest.GetPackageSetChains()),
 				archName,
 				bc.Solver != nil && bc.Solver.UseRootDir,
+				false,
 			)
 			if err != nil {
 				err = fmt.Errorf("[%s] manifestmock depsolve failed: %s", filename, err.Error())
