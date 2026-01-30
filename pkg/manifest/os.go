@@ -828,6 +828,10 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 			rhsmFacts.CompliancePolicyID = p.OSCustomizations.RHSMFacts.CompliancePolicyID.String()
 		}
 
+		if p.OSCustomizations.RHSMFacts.BlueprintID != uuid.Nil {
+			rhsmFacts.BlueprintID = p.OSCustomizations.RHSMFacts.BlueprintID.String()
+		}
+
 		pipeline.AddStage(osbuild.NewRHSMFactsStage(&osbuild.RHSMFactsStageOptions{
 			Facts: rhsmFacts,
 		}))
