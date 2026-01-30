@@ -146,27 +146,6 @@ func pkgRefs(pkgs rpmmd.PackageList) FilesInputRef {
 	return NewFilesInputSourceArrayRef(refs)
 }
 
-func NewRPMStageOptions(repos []rpmmd.RepoConfig) *RPMStageOptions {
-	var gpgKeys []string
-	keyMap := make(map[string]bool) // for deduplicating keys
-	for _, repo := range repos {
-		if len(repo.GPGKeys) == 0 {
-			continue
-		}
-		for _, key := range repo.GPGKeys {
-			if !keyMap[key] {
-				gpgKeys = append(gpgKeys, key)
-				keyMap[key] = true
-			}
-		}
-	}
-
-	slices.Sort(gpgKeys)
-	return &RPMStageOptions{
-		GPGKeys: gpgKeys,
-	}
-}
-
 // GPGKeysForPackages collects and returns deduplicated GPG keys from the
 // repositories that the given packages come from. This is used to import
 // only the GPG keys needed for a specific set of packages, rather than
