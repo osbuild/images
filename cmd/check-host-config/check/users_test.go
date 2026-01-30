@@ -1,42 +1,61 @@
 package check_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/osbuild/blueprint/pkg/blueprint"
 	check "github.com/osbuild/images/cmd/check-host-config/check"
-	"github.com/osbuild/images/internal/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestUsersCheck(t *testing.T) {
-	test.MockGlobal(t, &check.Exec, func(name string, arg ...string) ([]byte, []byte, int, error) {
-		if joinArgs(name, arg...) == "id testuser" {
-			return []byte("uid=1000(testuser) gid=1000(testuser) groups=1000(testuser)\n"), nil, 0, nil
-		}
-		return nil, nil, 0, nil
-	})
-
-	chk, found := check.FindCheckByName("users")
-	require.True(t, found, "Users Check not found")
-	config := buildConfig(&blueprint.Customizations{
-		User: []blueprint.UserCustomization{
-			{Name: "testuser"},
+	tests := []struct {
+		name     string
+		config   []blueprint.UserCustomization
+		mockExec map[string]ExecResult
+		wantErr  error
+	}{
+		{
+			name:    "skip when no users",
+			config:  []blueprint.UserCustomization{},
+			wantErr: check.ErrCheckSkipped,
 		},
-	})
+		{
+			name:   "pass when user exists",
+			config: []blueprint.UserCustomization{{Name: "testuser"}},
+			mockExec: map[string]ExecResult{
+				"id testuser": {Stdout: []byte("uid=1000(testuser) gid=1000(testuser) groups=1000(testuser)\n")},
+			},
+		},
+		{
+			name:   "fail when user does not exist",
+			config: []blueprint.UserCustomization{{Name: "nonexistent"}},
+			mockExec: map[string]ExecResult{
+				"id nonexistent": {Code: 1, Err: errors.New("id: nonexistent: no such user")},
+			},
+			wantErr: check.ErrCheckFailed,
+		},
+	}
 
-	require.NoError(t, chk.Func(chk.Meta, config))
-}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			installMockExec(t, tt.mockExec)
 
-func TestUsersCheckSkip(t *testing.T) {
-	chk, found := check.FindCheckByName("users")
-	require.True(t, found, "Users Check not found")
-	config := buildConfig(&blueprint.Customizations{
-		User: []blueprint.UserCustomization{},
-	})
+			chk, found := check.FindCheckByName("users")
+			require.True(t, found, "users check not found")
+			config := buildConfig(&blueprint.Customizations{
+				User: tt.config,
+			})
 
-	err := chk.Func(chk.Meta, config)
-	require.Error(t, err)
-	assert.True(t, check.IsSkip(err))
+			err := chk.Func(chk.Meta, config)
+			if tt.wantErr != nil {
+				require.Error(t, err)
+				assert.True(t, errors.Is(err, tt.wantErr))
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }
