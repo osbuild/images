@@ -1,7 +1,6 @@
 package check
 
 import (
-	"fmt"
 	"log"
 	"strconv"
 
@@ -15,31 +14,6 @@ func init() {
 		RequiresBlueprint:      true,
 		RequiresCustomizations: true,
 	}, filesCheck)
-}
-
-// resolveUserOrGroup converts an any value (string, int, or int64) to a uint32 UID/GID.
-// If the value is a string, it looks up the user/group name. If it's numeric, it converts it directly.
-// This function should only be called when value is not nil.
-func resolveUserOrGroup(value any, isGroup bool) (uint32, error) {
-	switch v := value.(type) {
-	case string:
-		if isGroup {
-			return LookupGID(v)
-		}
-		return LookupUID(v)
-	case int:
-		if v < 0 || v > int(^uint32(0)) {
-			return 0, fmt.Errorf("integer value %d out of range for uint32", v)
-		}
-		return uint32(v), nil
-	case int64:
-		if v < 0 || v > int64(^uint32(0)) {
-			return 0, fmt.Errorf("integer value %d out of range for uint32", v)
-		}
-		return uint32(v), nil
-	default:
-		return 0, fmt.Errorf("unsupported type for user/group: %T (expected string, int, or int64)", value)
-	}
 }
 
 func filesCheck(meta *Metadata, config *buildconfig.BuildConfig) error {
@@ -71,7 +45,7 @@ func filesCheck(meta *Metadata, config *buildconfig.BuildConfig) error {
 		}
 
 		if file.User != nil {
-			expectedUid, err := resolveUserOrGroup(file.User, false)
+			expectedUid, err := resolveUser(file.User)
 			if err != nil {
 				return Fail("failed to resolve user:", file.Path, err)
 			}
@@ -81,7 +55,7 @@ func filesCheck(meta *Metadata, config *buildconfig.BuildConfig) error {
 		}
 
 		if file.Group != nil {
-			expectedGid, err := resolveUserOrGroup(file.Group, true)
+			expectedGid, err := resolveGroup(file.Group)
 			if err != nil {
 				return Fail("failed to resolve group:", file.Path, err)
 			}
