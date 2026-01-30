@@ -30,7 +30,7 @@ func firewallPortsCheck(meta *Metadata, config *buildconfig.BuildConfig) error {
 		// initialised with cloud-init, which sets sudo NOPASSWD for the user
 		state, _, _, err := ExecString("sudo", "firewall-cmd", "--query-port="+portQuery)
 		if err != nil {
-			return Fail("firewall port is not enabled:", port, "error:", err.Error())
+			return Fail("firewall port is not enabled:", port, "error:", err)
 		}
 		if state != "yes" {
 			return Fail("firewall port is not enabled:", port, "state:", state)
