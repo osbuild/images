@@ -2,6 +2,7 @@ package check
 
 import (
 	"log"
+	"os"
 	"strconv"
 
 	"github.com/osbuild/images/internal/buildconfig"
@@ -39,7 +40,7 @@ func filesCheck(meta *Metadata, config *buildconfig.BuildConfig) error {
 				return Fail("failed to parse file mode:", file.Path)
 			}
 
-			if int64(mode.Perm()) != int64(userMode) {
+			if mode.Perm() != os.FileMode(userMode) {
 				return Fail("file mode does not match:", file.Path)
 			}
 		}
