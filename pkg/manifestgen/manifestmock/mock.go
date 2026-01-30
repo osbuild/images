@@ -129,8 +129,9 @@ func Depsolve(
 					RepoID:   pkgRepo.Id,
 					Repo:     &pkgRepo,
 				}
+				pkg.Location = fmt.Sprintf("packages/%s.rpm", pkg.FullNEVRA())
 				pkg.RemoteLocations = []string{
-					fmt.Sprintf("https://example.com/repo/packages/%s.rpm", pkg.FullNEVRA()),
+					fmt.Sprintf("https://example.com/repo/%s", pkg.Location),
 				}
 				transactionPackages = append(transactionPackages, pkg)
 			}
@@ -160,8 +161,9 @@ func Depsolve(
 					RepoID:   pkgRepo.Id,
 					Repo:     &pkgRepo,
 				}
+				pkg.Location = fmt.Sprintf("packages/%s.rpm", pkg.FullNEVRA())
 				pkg.RemoteLocations = []string{
-					fmt.Sprintf("https://example.com/repo/packages/%s.rpm", pkg.FullNEVRA()),
+					fmt.Sprintf("https://example.com/repo/%s", pkg.Location),
 				}
 				transactionPackages = append(transactionPackages, pkg)
 			}
@@ -186,8 +188,9 @@ func Depsolve(
 				RepoID:   pkgSet.Repositories[0].Id,
 				Repo:     &pkgSet.Repositories[0],
 			}
+			depsolveConfigPackage.Location = fmt.Sprintf("packages/%s.rpm", depsolveConfigPackage.FullNEVRA())
 			depsolveConfigPackage.RemoteLocations = []string{
-				fmt.Sprintf("https://example.com/repo/packages/%s.rpm", depsolveConfigPackage.FullNEVRA()),
+				fmt.Sprintf("https://example.com/repo/%s", depsolveConfigPackage.Location),
 			}
 			transactionPackages = append(transactionPackages, depsolveConfigPackage)
 
@@ -221,6 +224,7 @@ func Depsolve(
 					Version:         strconv.Itoa(int(checksum[0]) % 9),
 					Release:         strconv.Itoa(int(checksum[1])%9) + ".fk1",
 					Arch:            archName,
+					Location:        url.Path,
 					RemoteLocations: []string{url.String()},
 					Checksum:        rpmmd.Checksum{Type: "sha256", Value: checksum},
 					RepoID:          repo.Id,
