@@ -187,6 +187,10 @@ func (p *AnacondaInstaller) getBuildPackages(Distro) ([]string, error) {
 		packages = append(packages, "policycoreutils", fmt.Sprintf("selinux-policy-%s", p.SELinux))
 	}
 
+	if p.InstallerCustomizations.RPMKeysBinary != "" {
+		packages = append(packages, "pqrpm")
+	}
+
 	return packages, nil
 }
 
@@ -284,6 +288,12 @@ func (p *AnacondaInstaller) serialize() (osbuild.Pipeline, error) {
 		// Documentation is only installed on live installer images
 		if p.Type != AnacondaInstallerTypeLive {
 			options.Exclude = &osbuild.Exclude{Docs: true}
+		}
+
+		if p.InstallerCustomizations.RPMKeysBinary != "" {
+			options.RPMKeys = &osbuild.RPMKeys{
+				BinPath: &p.InstallerCustomizations.RPMKeysBinary,
+			}
 		}
 
 		pipeline.AddStage(osbuild.NewRPMStage(options, osbuild.NewRpmStageSourceFilesInputs(p.packageSpecs)))
