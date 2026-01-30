@@ -480,7 +480,7 @@ func (p *OS) getPackageSpecs() rpmmd.PackageList {
 	if p.depsolveResult == nil {
 		return nil
 	}
-	return p.depsolveResult.Packages
+	return p.depsolveResult.Transactions.AllPackages()
 }
 
 func (p *OS) getContainerSpecs() []container.Spec {
@@ -502,7 +502,7 @@ func (p *OS) serializeStart(inputs Inputs) error {
 	}
 
 	if p.OSCustomizations.KernelName != "" {
-		kernelPkg, err := p.depsolveResult.Packages.Package(p.OSCustomizations.KernelName)
+		kernelPkg, err := p.depsolveResult.Transactions.FindPackage(p.OSCustomizations.KernelName)
 		if err != nil {
 			return fmt.Errorf("OS: %w", err)
 		}
@@ -536,37 +536,39 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 		pipeline.AddStage(osbuild.NewOSTreePasswdStage("org.osbuild.source", p.ostreeParentSpec.Checksum))
 	}
 
-	rpmOptions := osbuild.NewRPMStageOptions(p.depsolveResult.Repos)
+	baseRPMOptions := &osbuild.RPMStageOptions{}
 	if p.OSCustomizations.ExcludeDocs {
-		if rpmOptions.Exclude == nil {
-			rpmOptions.Exclude = &osbuild.Exclude{}
-		}
-		rpmOptions.Exclude.Docs = true
+		baseRPMOptions.Exclude = &osbuild.Exclude{Docs: true}
 	}
-	rpmOptions.GPGKeysFromTree = p.OSCustomizations.GPGKeyFiles
+	baseRPMOptions.GPGKeysFromTree = p.OSCustomizations.GPGKeyFiles
 	if p.OSTreeRef != "" {
-		rpmOptions.OSTreeBooted = common.ToPtr(true)
-		rpmOptions.DBPath = "/usr/share/rpm"
+		baseRPMOptions.OSTreeBooted = common.ToPtr(true)
+		baseRPMOptions.DBPath = "/usr/share/rpm"
 		// The dracut-config-rescue package will create a rescue kernel when
 		// installed. This creates an issue with ostree-based images because
 		// rpm-ostree requires that only one kernel exists in the image.
 		// Disabling dracut for ostree-based systems resolves this issue.
 		// Dracut will be run by rpm-ostree itself while composing the image.
 		// https://github.com/osbuild/images/issues/624
-		rpmOptions.DisableDracut = true
+		baseRPMOptions.DisableDracut = true
 	}
-	rpmOptions.InstallLangs = p.OSCustomizations.InstallLangs
+	baseRPMOptions.InstallLangs = p.OSCustomizations.InstallLangs
 
 	if p.platform.GetBootloader() == platform.BOOTLOADER_UKI && p.PartitionTable != nil {
 		espMountpoint, err := findESPMountpoint(p.PartitionTable)
 		if err != nil {
 			return osbuild.Pipeline{}, err
 		}
-		rpmOptions.KernelInstallEnv = &osbuild.KernelInstallEnv{
+		baseRPMOptions.KernelInstallEnv = &osbuild.KernelInstallEnv{
 			BootRoot: espMountpoint,
 		}
 	}
-	pipeline.AddStage(osbuild.NewRPMStage(rpmOptions, osbuild.NewRpmStageSourceFilesInputs(p.depsolveResult.Packages)))
+
+	rpmStages, err := osbuild.GenRPMStagesFromTransactions(p.depsolveResult.Transactions, baseRPMOptions)
+	if err != nil {
+		return osbuild.Pipeline{}, err
+	}
+	pipeline.AddStages(rpmStages...)
 
 	if !p.OSCustomizations.NoBLS {
 		// If the /boot is on a separate partition, the prefix for the BLS stage must be ""
@@ -808,7 +810,7 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 			}
 			p.addStagesForAllFilesAndInlineData(&pipeline, []*fsnode.File{csvfile})
 
-			stages, err := maybeAddHMACandDirStage(p.depsolveResult.Packages, espMountpoint, p.kernelVer)
+			stages, err := maybeAddHMACandDirStage(p.depsolveResult.Transactions.AllPackages(), espMountpoint, p.kernelVer)
 			if err != nil {
 				return osbuild.Pipeline{}, err
 			}
@@ -966,7 +968,10 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 	}
 
 	if len(p.OSCustomizations.VersionlockPackages) > 0 {
-		versionlockStageOptions, err := osbuild.GenDNF4VersionlockStageOptions(p.OSCustomizations.VersionlockPackages, p.depsolveResult.Packages)
+		versionlockStageOptions, err := osbuild.GenDNF4VersionlockStageOptions(
+			p.OSCustomizations.VersionlockPackages,
+			p.depsolveResult.Transactions.AllPackages(),
+		)
 		if err != nil {
 			return osbuild.Pipeline{}, err
 		}
@@ -1069,7 +1074,7 @@ func grubStage(p *OS, pt *disk.PartitionTable, kernelOptions []string) *osbuild.
 			Nick:    p.OSNick,
 		}
 
-		_, err := p.depsolveResult.Packages.Package("dracut-config-rescue")
+		_, err := p.depsolveResult.Transactions.FindPackage("dracut-config-rescue")
 		hasRescue := err == nil
 		return osbuild.NewGrub2LegacyStage(
 			osbuild.NewGrub2LegacyStageOptions(
