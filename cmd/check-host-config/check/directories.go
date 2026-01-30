@@ -53,7 +53,7 @@ func directoriesCheck(meta *Metadata, config *buildconfig.BuildConfig) error {
 		}
 
 		if dir.User != nil {
-			expectedUid, err := resolveUserOrGroup(dir.User, false)
+			expectedUid, err := resolveUser(dir.User)
 			if err != nil {
 				return Fail("failed to resolve user:", dir.Path, err)
 			}
@@ -63,7 +63,7 @@ func directoriesCheck(meta *Metadata, config *buildconfig.BuildConfig) error {
 		}
 
 		if dir.Group != nil {
-			expectedGid, err := resolveUserOrGroup(dir.Group, true)
+			expectedGid, err := resolveGroup(dir.Group)
 			if err != nil {
 				return Fail("failed to resolve group:", dir.Path, err)
 			}

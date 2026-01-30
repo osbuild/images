@@ -99,3 +99,37 @@ var LookupGID = func(groupname string) (uint32, error) {
 	}
 	return uint32(gid), nil
 }
+
+// resolveUser converts an any value (string, int, or int64) to a uint32 UID.
+// If the value is a string, it looks up the user name. If it's numeric, it converts directly.
+//
+//nolint:gosec // G115: caller guarantees UID is in uint32 range
+func resolveUser(value any) (uint32, error) {
+	switch v := value.(type) {
+	case string:
+		return LookupUID(v)
+	case int:
+		return uint32(v), nil
+	case int64:
+		return uint32(v), nil
+	default:
+		return 0, fmt.Errorf("unsupported type for user: %T (expected string, int, or int64)", value)
+	}
+}
+
+// resolveGroup converts an any value (string, int, or int64) to a uint32 GID.
+// If the value is a string, it looks up the group name. If it's numeric, it converts directly.
+//
+//nolint:gosec // G115: caller guarantees GID is in uint32 range
+func resolveGroup(value any) (uint32, error) {
+	switch v := value.(type) {
+	case string:
+		return LookupGID(v)
+	case int:
+		return uint32(v), nil
+	case int64:
+		return uint32(v), nil
+	default:
+		return 0, fmt.Errorf("unsupported type for group: %T (expected string, int, or int64)", value)
+	}
+}
