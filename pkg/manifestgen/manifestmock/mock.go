@@ -134,7 +134,7 @@ func Depsolve(
 				}
 				pkg.Location = fmt.Sprintf("packages/%s.rpm", pkg.FullNEVRA())
 				pkg.RemoteLocations = []string{
-					fmt.Sprintf("https://example.com/repo/%s", pkg.Location),
+					fmt.Sprintf("%s/%s", pkg.Repo.BaseURLs[0], pkg.Location),
 				}
 				transactionPackages = append(transactionPackages, pkg)
 			}
@@ -166,7 +166,7 @@ func Depsolve(
 				}
 				pkg.Location = fmt.Sprintf("packages/%s.rpm", pkg.FullNEVRA())
 				pkg.RemoteLocations = []string{
-					fmt.Sprintf("https://example.com/repo/%s", pkg.Location),
+					fmt.Sprintf("%s/%s", pkg.Repo.BaseURLs[0], pkg.Location),
 				}
 				transactionPackages = append(transactionPackages, pkg)
 			}
@@ -193,7 +193,7 @@ func Depsolve(
 			}
 			depsolveConfigPackage.Location = fmt.Sprintf("packages/%s.rpm", depsolveConfigPackage.FullNEVRA())
 			depsolveConfigPackage.RemoteLocations = []string{
-				fmt.Sprintf("https://example.com/repo/%s", depsolveConfigPackage.Location),
+				fmt.Sprintf("%s/%s", depsolveConfigPackage.Repo.BaseURLs[0], depsolveConfigPackage.Location),
 			}
 			transactionPackages = append(transactionPackages, depsolveConfigPackage)
 
