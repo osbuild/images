@@ -26,7 +26,7 @@ func firewallServicesDisabledCheck(meta *Metadata, config *buildconfig.BuildConf
 		// initialised with cloud-init, which sets sudo NOPASSWD for the user
 		state, _, code, err := ExecString("sudo", "firewall-cmd", "--query-service="+service)
 		if err != nil && code != 1 { // 1 is the exit code for "service not found"
-			return Fail("problem checking firewall service:", service, "error:", err.Error())
+			return Fail("problem checking firewall service:", service, "error:", err)
 		}
 		if state == "yes" {
 			return Fail("firewall service is not disabled:", service, "state:", state)

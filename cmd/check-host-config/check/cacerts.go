@@ -3,7 +3,6 @@ package check
 import (
 	"crypto/x509"
 	"encoding/pem"
-	"fmt"
 	"log"
 	"strings"
 
@@ -36,16 +35,16 @@ func cacertsCheck(meta *Metadata, config *buildconfig.BuildConfig) error {
 		log.Printf("Parsing CA cert %d\n", i+1)
 		block, _ := pem.Decode([]byte(pemCert))
 		if block == nil {
-			return Fail("failed to decode PEM certificate at index", fmt.Sprintf("%d", i))
+			return Fail("failed to decode PEM certificate at index", i)
 		}
 
 		if block.Type != "CERTIFICATE" {
-			return Fail("PEM block is not a CERTIFICATE at index", fmt.Sprintf("%d", i), "got:", block.Type)
+			return Fail("PEM block is not a CERTIFICATE at index", i, "got:", block.Type)
 		}
 
 		cert, err := x509.ParseCertificate(block.Bytes)
 		if err != nil {
-			return Fail("failed to parse certificate at index", fmt.Sprintf("%d", i), "error:", err.Error())
+			return Fail("failed to parse certificate at index", i, "error:", err)
 		}
 
 		// Extract serial number (format as hex, lowercase)
@@ -71,14 +70,14 @@ func cacertsCheck(meta *Metadata, config *buildconfig.BuildConfig) error {
 		}
 
 		if cn == "" {
-			return Fail("failed to extract CN from CA cert subject at index", fmt.Sprintf("%d", i))
+			return Fail("failed to extract CN from CA cert subject at index", i)
 		}
 
 		// Check anchor file
 		anchorPath := "/etc/pki/ca-trust/source/anchors/" + serial + ".pem"
 		log.Printf("Checking CA cert %d anchor file serial '%s'\n", i+1, serial)
 		if !Exists(anchorPath) {
-			return Fail("file missing for cert", fmt.Sprintf("%d", i+1), "at", anchorPath)
+			return Fail("file missing for cert", i+1, "at", anchorPath)
 		}
 
 		// Check extracted CA cert file
@@ -86,11 +85,11 @@ func cacertsCheck(meta *Metadata, config *buildconfig.BuildConfig) error {
 		bundlePath := "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"
 		found, err := Grep(cn, bundlePath)
 		if err != nil {
-			return Fail("extracted CA cert not found in the bundle for cert", fmt.Sprintf("%d", i+1), "cn:", cn, "error:", err.Error())
+			return Fail("extracted CA cert not found in the bundle for cert", i+1, "cn:", cn, "error:", err)
 		}
 		if !found {
 			log.Printf("Pattern not found in file: %s\n", bundlePath)
-			return Fail("extracted CA cert not found in the bundle for cert", fmt.Sprintf("%d", i+1), "cn:", cn)
+			return Fail("extracted CA cert not found in the bundle for cert", i+1, "cn:", cn)
 		}
 		log.Printf("Pattern found in %s\n", bundlePath)
 	}

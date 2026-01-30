@@ -22,7 +22,7 @@ func servicesMaskedCheck(meta *Metadata, config *buildconfig.BuildConfig) error 
 
 	stdout, _, _, err := ExecString("systemctl", "list-unit-files", "--state=masked")
 	if err != nil {
-		return Fail("failed to list masked services:", err.Error())
+		return Fail("failed to list masked services:", err)
 	}
 
 	for _, service := range services.Masked {

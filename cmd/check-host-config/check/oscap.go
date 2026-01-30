@@ -112,7 +112,7 @@ func openSCAPCheck(meta *Metadata, config *buildconfig.BuildConfig) error {
 
 	osRelease, err := ParseOSRelease("/etc/os-release")
 	if err != nil {
-		return Fail("failed to read OS ID from /etc/os-release:", err.Error())
+		return Fail("failed to read OS ID from /etc/os-release:", err)
 	}
 
 	if osRelease.ID == "rhel" && osRelease.MajorVersion < 8 {
@@ -132,7 +132,7 @@ func openSCAPCheck(meta *Metadata, config *buildconfig.BuildConfig) error {
 	if datastream == "" || datastream == "null" {
 		datastream, err = GetDatastreamFilename(osRelease)
 		if err != nil {
-			return Fail("failed to determine datastream filename:", err.Error())
+			return Fail("failed to determine datastream filename:", err)
 		}
 
 		log.Printf("Using default datastream: %s\n", datastream)
@@ -153,11 +153,7 @@ func openSCAPCheck(meta *Metadata, config *buildconfig.BuildConfig) error {
 	// oscap may return non-zero exit code even on success (exit code 2 for failed rules)
 	// so we check if results.xml was created instead
 	if !Exists("results.xml") {
-		errMsg := ""
-		if err != nil {
-			errMsg = err.Error()
-		}
-		return Fail("oscap evaluation failed:", string(stdout), "error:", errMsg)
+		return Fail("oscap evaluation failed:", string(stdout), "error:", err)
 	}
 
 	_, _, _, err = Exec("sudo", "chown", fmt.Sprintf("%d", os.Getuid()), "results.xml")
@@ -167,12 +163,12 @@ func openSCAPCheck(meta *Metadata, config *buildconfig.BuildConfig) error {
 
 	scoreStr, failedRules, err := parseOSCAPResults("results.xml")
 	if err != nil {
-		return Fail("failed to parse results.xml:", err.Error())
+		return Fail("failed to parse results.xml:", err)
 	}
 
 	hardenedScore, err := strconv.ParseFloat(scoreStr, 64)
 	if err != nil {
-		return Fail("failed to parse oscap score:", scoreStr, "error:", err.Error())
+		return Fail("failed to parse oscap score:", scoreStr, "error:", err)
 	}
 	// XCCDF scores are already normalized between 0 and 1
 	// If score is > 1, it's a percentage that needs conversion
@@ -189,8 +185,8 @@ func openSCAPCheck(meta *Metadata, config *buildconfig.BuildConfig) error {
 	log.Printf("Hardened score: %.2f%%\n", hardenedScore*100)
 
 	if hardenedScore < baselineScore {
-		return Fail("hardened image score (", fmt.Sprintf("%.2f", hardenedScore*100),
-			"%) did not improve baseline score (", fmt.Sprintf("%.2f", baselineScore*100), "%)")
+		return Fail("hardened image score (", hardenedScore*100,
+			"%) did not improve baseline score (", baselineScore*100, "%)")
 	}
 
 	if severityCount > 0 {
