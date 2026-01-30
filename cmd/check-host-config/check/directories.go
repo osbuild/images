@@ -9,8 +9,7 @@ import (
 
 func init() {
 	RegisterCheck(Metadata{
-		Name:                   "Directories Check",
-		ShortName:              "directories",
+		Name:                   "directories",
 		RequiresBlueprint:      true,
 		RequiresCustomizations: true,
 	}, directoriesCheck)

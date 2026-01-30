@@ -20,14 +20,14 @@ func getAllChecks() []check.RegisteredCheck {
 
 var checks = getAllChecks()
 
-// MaxShortCheckName is the length of the longest check short name. This is only used
+// MaxCheckNameLen is the length of the longest check name. This is only used
 // for formatting the log output in a nice and readable way.
-var MaxShortCheckName int
+var MaxCheckNameLen int
 
 func init() {
 	for _, c := range checks {
-		if nameLen := len(c.Meta.ShortName); nameLen > MaxShortCheckName {
-			MaxShortCheckName = nameLen
+		if nameLen := len(c.Meta.Name); nameLen > MaxCheckNameLen {
+			MaxCheckNameLen = nameLen
 		}
 	}
 }

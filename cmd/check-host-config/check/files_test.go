@@ -336,7 +336,7 @@ func TestFilesCheck(t *testing.T) {
 				})
 			}
 
-			chk, found := check.FindCheckByName("Files Check")
+			chk, found := check.FindCheckByName("files")
 			require.True(t, found, "Files Check not found")
 			config := buildConfig(&blueprint.Customizations{
 				Files: []blueprint.FileCustomization{tt.config},

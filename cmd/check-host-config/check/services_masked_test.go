@@ -19,7 +19,7 @@ func TestServicesMaskedCheck(t *testing.T) {
 		return nil, nil, 0, nil
 	})
 
-	chk, found := check.FindCheckByName("Services Masked Check")
+	chk, found := check.FindCheckByName("srv-masked")
 	require.True(t, found, "Services Masked Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		Services: &blueprint.ServicesCustomization{

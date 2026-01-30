@@ -9,8 +9,7 @@ import (
 
 func init() {
 	RegisterCheck(Metadata{
-		Name:                   "Kernel Check",
-		ShortName:              "kernel",
+		Name:                   "kernel",
 		RequiresBlueprint:      true,
 		RequiresCustomizations: true,
 	}, kernelCheck)

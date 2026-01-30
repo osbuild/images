@@ -18,7 +18,7 @@ func TestServicesEnabledCheck(t *testing.T) {
 		return nil, nil, 0, nil
 	})
 
-	chk, found := check.FindCheckByName("Services Enabled Check")
+	chk, found := check.FindCheckByName("srv-enabled")
 	require.True(t, found, "Services Enabled Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		Services: &blueprint.ServicesCustomization{
@@ -30,7 +30,7 @@ func TestServicesEnabledCheck(t *testing.T) {
 }
 
 func TestServicesEnabledCheckSkip(t *testing.T) {
-	chk, found := check.FindCheckByName("Services Enabled Check")
+	chk, found := check.FindCheckByName("srv-enabled")
 	require.True(t, found, "Services Enabled Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		Services: &blueprint.ServicesCustomization{

@@ -17,7 +17,7 @@ func TestServicesDisabledCheck(t *testing.T) {
 		return nil, nil, 0, nil
 	})
 
-	chk, found := check.FindCheckByName("Services Disabled Check")
+	chk, found := check.FindCheckByName("srv-disabled")
 	require.True(t, found, "Services Disabled Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		Services: &blueprint.ServicesCustomization{
