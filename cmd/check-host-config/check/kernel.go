@@ -26,8 +26,8 @@ func kernelCheck(meta *Metadata, config *buildconfig.BuildConfig) error {
 	// specific kernel is actually booted as the testing in container is not
 	// reliable.
 	if expected.Name != "" {
-		_, _, exitCode, err := ExecString("rpm", "-q", "--provides", expected.Name)
-		if err != nil || exitCode != 0 {
+		_, _, _, err := ExecString("rpm", "-q", "--provides", expected.Name)
+		if err != nil {
 			return Fail("kernel package not found:", expected.Name, "error:", err)
 		}
 
