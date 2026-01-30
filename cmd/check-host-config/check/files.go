@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"syscall"
 
 	"github.com/osbuild/images/internal/buildconfig"
 )
@@ -29,10 +30,15 @@ func filesCheck(meta *Metadata, config *buildconfig.BuildConfig) error {
 			return Fail("file does not exist:", file.Path)
 		}
 
-		mode, uid, gid, err := FileInfo(file.Path)
+		info, err := Stat(file.Path)
 		if err != nil {
 			return Fail("failed to get file info:", file.Path)
 		}
+		stat, ok := info.Sys().(*syscall.Stat_t)
+		if !ok {
+			return Fail("check only works on UNIX-like")
+		}
+		mode, uid, gid := info.Mode(), stat.Uid, stat.Gid
 
 		if file.Mode != "" {
 			userMode, err := strconv.ParseUint(file.Mode, 8, 32)
