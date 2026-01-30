@@ -262,8 +262,15 @@ func TestModularityIncludesConfigStage(t *testing.T) {
 
 	inputs := manifest.Inputs{
 		Depsolved: depsolvednf.DepsolveResult{
-			Packages: []rpmmd.Package{
-				{Name: "pkg1", Checksum: rpmmd.Checksum{Type: "sha1", Value: "c02524e2bd19490f2a7167958f792262754c5f46"}},
+			Transactions: depsolvednf.TransactionList{
+				{
+					{
+						Name:     "pkg1",
+						Checksum: rpmmd.Checksum{Type: "sha1", Value: "c02524e2bd19490f2a71677958f792262754c5f46"},
+						RepoID:   "dummy-repo-id",
+						Repo:     &rpmmd.RepoConfig{Id: "dummy-repo-id"},
+					},
+				},
 			},
 			Modules: []rpmmd.ModuleSpec{
 				{
@@ -527,34 +534,44 @@ func TestHMACStageInclusion(t *testing.T) {
 	pt := testdisk.TestPartitionTables()["plain"]
 
 	t.Run("add-hmac-stage", func(t *testing.T) {
+		repo := rpmmd.RepoConfig{Id: "dummy-repo-id"}
 		inputs := manifest.Inputs{
 			Depsolved: depsolvednf.DepsolveResult{
-				Packages: []rpmmd.Package{
+				Transactions: depsolvednf.TransactionList{
 					{
-						Name:     "test-kernel",
-						Epoch:    0,
-						Version:  "13.3",
-						Release:  "7.el9",
-						Arch:     "x86_64",
-						Checksum: rpmmd.Checksum{Type: "sha256", Value: "7777777777777777777777777777777777777777777777777777777777777777"},
-					},
-					{
-						Name:     "uki-direct",
-						Epoch:    0,
-						Version:  "24.11",
-						Release:  "1.el9",
-						Arch:     "noarch",
-						Checksum: rpmmd.Checksum{Type: "sha256", Value: "c6ade8aef0282a228e1011f4f4b7efe41c035f6e635feb27082ac36cb1a1384b"},
-					},
-					{
-						Name:     "shim-x64",
-						Epoch:    0,
-						Version:  "15.8",
-						Release:  "3",
-						Arch:     "x86_64",
-						Checksum: rpmmd.Checksum{Type: "sha256", Value: "aae94b3b8451ef28b02594d9abca5979e153c14f4db25283b011403fa92254fd"},
+						{
+							Name:     "test-kernel",
+							Epoch:    0,
+							Version:  "13.3",
+							Release:  "7.el9",
+							Arch:     "x86_64",
+							Checksum: rpmmd.Checksum{Type: "sha256", Value: "7777777777777777777777777777777777777777777777777777777777777777"},
+							RepoID:   repo.Id,
+							Repo:     &repo,
+						},
+						{
+							Name:     "uki-direct",
+							Epoch:    0,
+							Version:  "24.11",
+							Release:  "1.el9",
+							Arch:     "noarch",
+							Checksum: rpmmd.Checksum{Type: "sha256", Value: "c6ade8aef0282a228e1011f4f4b7efe41c035f6e635feb27082ac36cb1a1384b"},
+							RepoID:   repo.Id,
+							Repo:     &repo,
+						},
+						{
+							Name:     "shim-x64",
+							Epoch:    0,
+							Version:  "15.8",
+							Release:  "3",
+							Arch:     "x86_64",
+							Checksum: rpmmd.Checksum{Type: "sha256", Value: "aae94b3b8451ef28b02594d9abca5979e153c14f4db25283b011403fa92254fd"},
+							RepoID:   repo.Id,
+							Repo:     &repo,
+						},
 					},
 				},
+				Repos: []rpmmd.RepoConfig{repo},
 			},
 		}
 
@@ -584,32 +601,41 @@ func TestHMACStageInclusion(t *testing.T) {
 	})
 
 	t.Run("no-hmac-stage", func(t *testing.T) {
+		repo := rpmmd.RepoConfig{Id: "dummy-repo-id"}
 		inputs := manifest.Inputs{
 			Depsolved: depsolvednf.DepsolveResult{
-				Packages: []rpmmd.Package{
+				Transactions: depsolvednf.TransactionList{
 					{
-						Name:     "test-kernel",
-						Epoch:    0,
-						Version:  "13.3",
-						Release:  "7.el9",
-						Arch:     "x86_64",
-						Checksum: rpmmd.Checksum{Type: "sha256", Value: "7777777777777777777777777777777777777777777777777777777777777777"},
-					},
-					{
-						Name:     "uki-direct",
-						Epoch:    0,
-						Version:  "25.11",
-						Release:  "1.el9",
-						Arch:     "noarch",
-						Checksum: rpmmd.Checksum{Type: "sha256", Value: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
-					},
-					{
-						Name:     "shim-x64",
-						Epoch:    0,
-						Version:  "15.8",
-						Release:  "3",
-						Arch:     "x86_64",
-						Checksum: rpmmd.Checksum{Type: "sha256", Value: "aae94b3b8451ef28b02594d9abca5979e153c14f4db25283b011403fa92254fd"},
+						{
+							Name:     "test-kernel",
+							Epoch:    0,
+							Version:  "13.3",
+							Release:  "7.el9",
+							Arch:     "x86_64",
+							Checksum: rpmmd.Checksum{Type: "sha256", Value: "7777777777777777777777777777777777777777777777777777777777777777"},
+							RepoID:   repo.Id,
+							Repo:     &repo,
+						},
+						{
+							Name:     "uki-direct",
+							Epoch:    0,
+							Version:  "25.11",
+							Release:  "1.el9",
+							Arch:     "noarch",
+							Checksum: rpmmd.Checksum{Type: "sha256", Value: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+							RepoID:   repo.Id,
+							Repo:     &repo,
+						},
+						{
+							Name:     "shim-x64",
+							Epoch:    0,
+							Version:  "15.8",
+							Release:  "3",
+							Arch:     "x86_64",
+							Checksum: rpmmd.Checksum{Type: "sha256", Value: "aae94b3b8451ef28b02594d9abca5979e153c14f4db25283b011403fa92254fd"},
+							RepoID:   repo.Id,
+							Repo:     &repo,
+						},
 					},
 				},
 			},
@@ -655,50 +681,64 @@ func TestShimVersionLock(t *testing.T) {
 	// mark the shim-x64 package for version locking
 	os.OSCustomizations.VersionlockPackages = []string{"shim-x64"}
 
+	repo := rpmmd.RepoConfig{Id: "dummy-repo-id"}
 	inputs := manifest.Inputs{
 		Depsolved: depsolvednf.DepsolveResult{
-			Packages: []rpmmd.Package{
+			Transactions: depsolvednf.TransactionList{
 				{
-					Name:     "test-kernel",
-					Epoch:    0,
-					Version:  "13.3",
-					Release:  "7.el9",
-					Arch:     "x86_64",
-					Checksum: rpmmd.Checksum{Type: "sha256", Value: "7777777777777777777777777777777777777777777777777777777777777777"},
-				},
-				{
-					Name:     "uki-direct",
-					Epoch:    0,
-					Version:  "25.11",
-					Release:  "1.el9",
-					Arch:     "noarch",
-					Checksum: rpmmd.Checksum{Type: "sha256", Value: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
-				},
-				{
-					Name:     "shim-x64",
-					Epoch:    0,
-					Version:  "15.8",
-					Release:  "3",
-					Arch:     "x86_64",
-					Checksum: rpmmd.Checksum{Type: "sha256", Value: "aae94b3b8451ef28b02594d9abca5979e153c14f4db25283b011403fa92254fd"},
-				},
-				{
-					Name:     "dnf",
-					Epoch:    0,
-					Version:  "4.14.0",
-					Release:  "29.el9",
-					Arch:     "noarch",
-					Checksum: rpmmd.Checksum{Type: "sha256", Value: "72874726d1a16651933e382a4f4683046efd4b278830ad564932ce481ab8b9eb"},
-				},
-				{
-					Name:     "python3-dnf-plugin-versionlock",
-					Epoch:    0,
-					Version:  "4.3.0",
-					Release:  "21.el9",
-					Arch:     "noarch",
-					Checksum: rpmmd.Checksum{Type: "sha256", Value: "e14c57f7d0011ea378e4319bbc523000d0e7be4d35b6af7177aa6246c5aaa9ef"},
+					{
+						Name:     "test-kernel",
+						Epoch:    0,
+						Version:  "13.3",
+						Release:  "7.el9",
+						Arch:     "x86_64",
+						Checksum: rpmmd.Checksum{Type: "sha256", Value: "7777777777777777777777777777777777777777777777777777777777777777"},
+						RepoID:   repo.Id,
+						Repo:     &repo,
+					},
+					{
+						Name:     "uki-direct",
+						Epoch:    0,
+						Version:  "25.11",
+						Release:  "1.el9",
+						Arch:     "noarch",
+						Checksum: rpmmd.Checksum{Type: "sha256", Value: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+						RepoID:   repo.Id,
+						Repo:     &repo,
+					},
+					{
+						Name:     "shim-x64",
+						Epoch:    0,
+						Version:  "15.8",
+						Release:  "3",
+						Arch:     "x86_64",
+						Checksum: rpmmd.Checksum{Type: "sha256", Value: "aae94b3b8451ef28b02594d9abca5979e153c14f4db25283b011403fa92254fd"},
+						RepoID:   repo.Id,
+						Repo:     &repo,
+					},
+					{
+						Name:     "dnf",
+						Epoch:    0,
+						Version:  "4.14.0",
+						Release:  "29.el9",
+						Arch:     "noarch",
+						Checksum: rpmmd.Checksum{Type: "sha256", Value: "72874726d1a16651933e382a4f4683046efd4b278830ad564932ce481ab8b9eb"},
+						RepoID:   repo.Id,
+						Repo:     &repo,
+					},
+					{
+						Name:     "python3-dnf-plugin-versionlock",
+						Epoch:    0,
+						Version:  "4.3.0",
+						Release:  "21.el9",
+						Arch:     "noarch",
+						Checksum: rpmmd.Checksum{Type: "sha256", Value: "e14c57f7d0011ea378e4319bbc523000d0e7be4d35b6af7177aa6246c5aaa9ef"},
+						RepoID:   repo.Id,
+						Repo:     &repo,
+					},
 				},
 			},
+			Repos: []rpmmd.RepoConfig{repo},
 		},
 	}
 
