@@ -16,7 +16,7 @@ func TestHostnameCheck(t *testing.T) {
 		return []byte("test-hostname\n"), nil, 0, nil
 	})
 
-	chk, found := check.FindCheckByName("Hostname Check")
+	chk, found := check.FindCheckByName("hostname")
 	require.True(t, found, "Hostname Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		Hostname: common.ToPtr("test-hostname"),
@@ -30,7 +30,7 @@ func TestHostnameCheckWarning(t *testing.T) {
 		return []byte("changed-by-cloud-init\n"), nil, 0, nil
 	})
 
-	chk, found := check.FindCheckByName("Hostname Check")
+	chk, found := check.FindCheckByName("hostname")
 	require.True(t, found, "Hostname Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		Hostname: common.ToPtr("test-hostname"),

@@ -8,8 +8,7 @@ import (
 
 func init() {
 	RegisterCheck(Metadata{
-		Name:                   "Users Check",
-		ShortName:              "users",
+		Name:                   "users",
 		RequiresBlueprint:      true,
 		RequiresCustomizations: true,
 	}, usersCheck)

@@ -71,7 +71,7 @@ func TestCACertsCheck(t *testing.T) {
 		return false, nil
 	})
 
-	chk, found := check.FindCheckByName("CA Certs Check")
+	chk, found := check.FindCheckByName("cacerts")
 	require.True(t, found, "CA Certs Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		CACerts: &blueprint.CACustomization{
@@ -113,7 +113,7 @@ func TestCACertsCheckMultiple(t *testing.T) {
 		return false, nil
 	})
 
-	chk, found := check.FindCheckByName("CA Certs Check")
+	chk, found := check.FindCheckByName("cacerts")
 	require.True(t, found, "CA Certs Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		CACerts: &blueprint.CACustomization{
@@ -125,7 +125,7 @@ func TestCACertsCheckMultiple(t *testing.T) {
 }
 
 func TestCACertsCheckSkip(t *testing.T) {
-	chk, found := check.FindCheckByName("CA Certs Check")
+	chk, found := check.FindCheckByName("cacerts")
 	require.True(t, found, "CA Certs Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		CACerts: &blueprint.CACustomization{
@@ -139,7 +139,7 @@ func TestCACertsCheckSkip(t *testing.T) {
 }
 
 func TestCACertsCheckEmptyCert(t *testing.T) {
-	chk, found := check.FindCheckByName("CA Certs Check")
+	chk, found := check.FindCheckByName("cacerts")
 	require.True(t, found, "CA Certs Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		CACerts: &blueprint.CACustomization{
@@ -167,7 +167,7 @@ func TestCACertsCheckMissingAnchor(t *testing.T) {
 		return false, nil
 	})
 
-	chk, found := check.FindCheckByName("CA Certs Check")
+	chk, found := check.FindCheckByName("cacerts")
 	require.True(t, found, "CA Certs Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		CACerts: &blueprint.CACustomization{

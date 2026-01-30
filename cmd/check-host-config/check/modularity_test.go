@@ -23,7 +23,7 @@ func TestModularityCheck(t *testing.T) {
 		return nil, nil, 0, nil
 	})
 
-	chk, found := check.FindCheckByName("Modularity Check")
+	chk, found := check.FindCheckByName("modularity")
 	require.True(t, found, "Modularity Check not found")
 	config := buildConfigWithBlueprint(func(bp *blueprint.Blueprint) {
 		bp.EnabledModules = []blueprint.EnabledModule{
@@ -35,7 +35,7 @@ func TestModularityCheck(t *testing.T) {
 }
 
 func TestModularityCheckSkip(t *testing.T) {
-	chk, found := check.FindCheckByName("Modularity Check")
+	chk, found := check.FindCheckByName("modularity")
 	require.True(t, found, "Modularity Check not found")
 	config := buildConfigWithBlueprint(func(bp *blueprint.Blueprint) {
 		bp.EnabledModules = []blueprint.EnabledModule{}
@@ -113,7 +113,7 @@ func TestModularityCheckRHEL7(t *testing.T) {
 		return nil, nil, 0, nil
 	})
 
-	chk, found := check.FindCheckByName("Modularity Check")
+	chk, found := check.FindCheckByName("modularity")
 	require.True(t, found, "Modularity Check not found")
 	config := buildConfigWithBlueprint(func(bp *blueprint.Blueprint) {
 		bp.EnabledModules = []blueprint.EnabledModule{
@@ -133,7 +133,7 @@ func TestModularityCheckRHEL8(t *testing.T) {
 		return nil, nil, 0, nil
 	})
 
-	chk, found := check.FindCheckByName("Modularity Check")
+	chk, found := check.FindCheckByName("modularity")
 	require.True(t, found, "Modularity Check not found")
 	config := buildConfigWithBlueprint(func(bp *blueprint.Blueprint) {
 		bp.EnabledModules = []blueprint.EnabledModule{
@@ -154,7 +154,7 @@ func TestModularityCheckRHEL9(t *testing.T) {
 		return nil, nil, 0, nil
 	})
 
-	chk, found := check.FindCheckByName("Modularity Check")
+	chk, found := check.FindCheckByName("modularity")
 	require.True(t, found, "Modularity Check not found")
 	config := buildConfigWithBlueprint(func(bp *blueprint.Blueprint) {
 		bp.EnabledModules = []blueprint.EnabledModule{
@@ -174,7 +174,7 @@ func TestModularityCheckRHEL10(t *testing.T) {
 		return nil, nil, 0, nil
 	})
 
-	chk, found := check.FindCheckByName("Modularity Check")
+	chk, found := check.FindCheckByName("modularity")
 	require.True(t, found, "Modularity Check not found")
 	config := buildConfigWithBlueprint(func(bp *blueprint.Blueprint) {
 		bp.EnabledModules = []blueprint.EnabledModule{
@@ -195,7 +195,7 @@ func TestModularityCheckMultipleModules(t *testing.T) {
 		return nil, nil, 0, nil
 	})
 
-	chk, found := check.FindCheckByName("Modularity Check")
+	chk, found := check.FindCheckByName("modularity")
 	require.True(t, found, "Modularity Check not found")
 	config := buildConfigWithBlueprint(func(bp *blueprint.Blueprint) {
 		bp.EnabledModules = []blueprint.EnabledModule{

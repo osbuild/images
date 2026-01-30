@@ -337,7 +337,7 @@ func TestDirectoriesCheck(t *testing.T) {
 				})
 			}
 
-			chk, found := check.FindCheckByName("Directories Check")
+			chk, found := check.FindCheckByName("directories")
 			require.True(t, found, "Directories Check not found")
 			config := buildConfig(&blueprint.Customizations{
 				Directories: []blueprint.DirectoryCustomization{tt.config},

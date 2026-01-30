@@ -9,8 +9,7 @@ import (
 
 func init() {
 	RegisterCheck(Metadata{
-		Name:                   "Firewall Ports Check",
-		ShortName:              "fw-ports",
+		Name:                   "fw-ports",
 		RequiresBlueprint:      true,
 		RequiresCustomizations: true,
 	}, firewallPortsCheck)

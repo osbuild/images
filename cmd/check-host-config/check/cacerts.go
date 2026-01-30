@@ -12,8 +12,7 @@ import (
 
 func init() {
 	RegisterCheck(Metadata{
-		Name:                   "CA Certs Check",
-		ShortName:              "cacerts",
+		Name:                   "cacerts",
 		RequiresBlueprint:      true,
 		RequiresCustomizations: true,
 	}, cacertsCheck)

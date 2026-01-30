@@ -14,7 +14,7 @@ import (
 // temporary Fedora container. It is ran on our CI/CD. To run it locally (in
 // podman), execute `make host-check-test`.
 //
-//nolint:gosec // G303: Temporary files need to be consitently named
+//nolint:gosec // G303: Temporary files need to be consistently named
 func TestSmokeAll(t *testing.T) {
 	if os.Getenv("OSBUILD_TEST_CONTAINER") != "true" {
 		t.Skip("Not running in container, skipping host check test")
@@ -29,11 +29,13 @@ func TestSmokeAll(t *testing.T) {
 	}
 
 	tests := []struct {
-		chk check.RegisteredCheck
-		c   blueprint.Customizations
+		chk  string
+		name string
+		c    blueprint.Customizations
 	}{
 		{
-			chk: check.MustFindCheckByName("Kernel Check"),
+			chk:  "kernel",
+			name: "params",
 			c: blueprint.Customizations{
 				Kernel: &blueprint.KernelCustomization{
 					Name:   "kernel",
@@ -42,7 +44,8 @@ func TestSmokeAll(t *testing.T) {
 			},
 		},
 		{
-			chk: check.MustFindCheckByName("Kernel Check"),
+			chk:  "kernel",
+			name: "package",
 			c: blueprint.Customizations{
 				Kernel: &blueprint.KernelCustomization{
 					Name: "kernel-debug",
@@ -50,7 +53,8 @@ func TestSmokeAll(t *testing.T) {
 			},
 		},
 		{
-			chk: check.MustFindCheckByName("Directories Check"),
+			chk:  "directories",
+			name: "all",
 			c: blueprint.Customizations{
 				Directories: []blueprint.DirectoryCustomization{
 					{Path: "/tmp/dir"},
@@ -61,7 +65,8 @@ func TestSmokeAll(t *testing.T) {
 			},
 		},
 		{
-			chk: check.MustFindCheckByName("Files Check"),
+			chk:  "files",
+			name: "all",
 			c: blueprint.Customizations{
 				Files: []blueprint.FileCustomization{
 					{Path: "/tmp/dir/file"},
@@ -73,7 +78,8 @@ func TestSmokeAll(t *testing.T) {
 			},
 		},
 		{
-			chk: check.MustFindCheckByName("Users Check"),
+			chk:  "users",
+			name: "root",
 			c: blueprint.Customizations{
 				User: []blueprint.UserCustomization{
 					{Name: "root"},
@@ -83,18 +89,19 @@ func TestSmokeAll(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.chk.Meta.Name, func(t *testing.T) {
+		t.Run(tt.chk+"/"+tt.name, func(t *testing.T) {
+			chk := check.MustFindCheckByName(tt.chk)
 			config := &buildconfig.BuildConfig{
 				Blueprint: &blueprint.Blueprint{
 					Customizations: &tt.c,
 				},
 			}
-			err := tt.chk.Func(tt.chk.Meta, config)
+			err := chk.Func(chk.Meta, config)
 			if errors.Is(err, check.ErrCheckSkipped) {
-				t.Logf("Check %s skipped", tt.chk.Meta.Name)
+				t.Logf("Check %s skipped", chk.Meta.Name)
 				return
 			} else if err != nil {
-				t.Fatalf("Check %s failed: %v", tt.chk.Meta.Name, err)
+				t.Fatalf("Check %s failed: %v", chk.Meta.Name, err)
 			}
 		})
 	}

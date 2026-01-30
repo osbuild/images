@@ -17,7 +17,7 @@ func TestFirewallPortsCheck(t *testing.T) {
 		return nil, nil, 0, nil
 	})
 
-	chk, found := check.FindCheckByName("Firewall Ports Check")
+	chk, found := check.FindCheckByName("fw-ports")
 	require.True(t, found, "Firewall Ports Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		Firewall: &blueprint.FirewallCustomization{

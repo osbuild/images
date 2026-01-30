@@ -8,8 +8,7 @@ import (
 
 func init() {
 	RegisterCheck(Metadata{
-		Name:                   "Firewall Services Disabled Check",
-		ShortName:              "fw-srv-disabled",
+		Name:                   "fw-srv-disabled",
 		RequiresBlueprint:      true,
 		RequiresCustomizations: true,
 	}, firewallServicesDisabledCheck)
