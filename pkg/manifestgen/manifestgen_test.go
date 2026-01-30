@@ -138,7 +138,7 @@ func fakeDepsolve(solver *depsolvednf.Solver, cacheDir string, depsolveWarningsO
 	if depsolveWarningsOutput != nil {
 		_, _ = depsolveWarningsOutput.Write([]byte(`fake depsolve output`))
 	}
-	depsolvedSets, err := manifestmock.Depsolve(packageSets, arch, false, true)
+	depsolvedSets, err := manifestmock.Depsolve(packageSets, arch, nil, true)
 	if err != nil {
 		return nil, err
 	}

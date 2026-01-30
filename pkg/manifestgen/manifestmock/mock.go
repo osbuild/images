@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
 
+	"github.com/osbuild/images/internal/buildconfig"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/ostree"
@@ -58,10 +60,26 @@ func ResolveCommits(commitSources map[string][]ostree.SourceSpec) map[string][]o
 func Depsolve(
 	packageSets map[string][]rpmmd.PackageSet,
 	archName string,
-	useRootDir bool,
+	bc *buildconfig.BuildConfig,
 	generateSBOM bool,
 ) (map[string]depsolvednf.DepsolveResult, error) {
+	useRootDir := bc != nil && bc.Solver != nil && bc.Solver.UseRootDir
 	depsolvedSets := make(map[string]depsolvednf.DepsolveResult)
+
+	// NOTE: We need to simulate that the requested GPG keys that are to be imported
+	// from the filesystem are actually provided by the package sets. Otherwise,
+	// generating the test manifests without depsolving would fail. Define all the
+	// common GPG keys imported by our base image definitions and and merge them with
+	// the GPG keys from the blueprint customizations. If a new base image type imports
+	// additional GPG keys, add them to this list.
+	gpgKeysFromTree := []string{
+		"/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release",
+		"/etc/pki/rpm-gpg/RPM-GPG-KEY-microsoft-azure-release",
+	}
+	if bc != nil && bc.Blueprint != nil && bc.Blueprint.Customizations != nil &&
+		bc.Blueprint.Customizations.RPM != nil && bc.Blueprint.Customizations.RPM.ImportKeys != nil {
+		gpgKeysFromTree = slices.Concat(gpgKeysFromTree, bc.Blueprint.Customizations.RPM.ImportKeys.Files)
+	}
 
 	for pkgSetName, pkgSetChain := range packageSets {
 		transactions := make(depsolvednf.TransactionList, 0, len(pkgSetChain))
@@ -195,6 +213,12 @@ func Depsolve(
 			depsolveConfigPackage.RemoteLocations = []string{
 				fmt.Sprintf("%s/%s", depsolveConfigPackage.Repo.BaseURLs[0], depsolveConfigPackage.Location),
 			}
+			// Since we can't make any assumptions about the package sets, we just add all the
+			// GPG keys that should be imported from the tree to the first transaction's pseudo-package.
+			if txIdx == 0 {
+				depsolveConfigPackage.Files = gpgKeysFromTree
+			}
+
 			transactionPackages = append(transactionPackages, depsolveConfigPackage)
 
 			// Add repo pseudo-packages only for repos not seen before

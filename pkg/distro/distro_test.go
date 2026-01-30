@@ -116,7 +116,7 @@ func TestImageTypePipelineNames(t *testing.T) {
 					// Serialize().
 					packageSets, err := m.GetPackageSetChains()
 					assert.NoError(err)
-					depsolvedSets, err := manifestmock.Depsolve(packageSets, archName, false, false)
+					depsolvedSets, err := manifestmock.Depsolve(packageSets, archName, nil, false)
 					assert.NoError(err)
 
 					ostreeSources := m.GetOSTreeSourceSpecs()

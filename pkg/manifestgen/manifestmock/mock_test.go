@@ -77,11 +77,11 @@ func TestResolveCommits_Smoke(t *testing.T) {
 }
 
 func TestDepsolve_EmptyInput(t *testing.T) {
-	result, err := manifestmock.Depsolve(nil, "x86_64", false, false)
+	result, err := manifestmock.Depsolve(nil, "x86_64", nil, false)
 	assert.NoError(t, err)
 	assert.Equal(t, map[string]depsolvednf.DepsolveResult{}, result)
 
-	result, err = manifestmock.Depsolve(map[string][]rpmmd.PackageSet{}, "x86_64", false, false)
+	result, err = manifestmock.Depsolve(map[string][]rpmmd.PackageSet{}, "x86_64", nil, false)
 	assert.NoError(t, err)
 	assert.Equal(t, map[string]depsolvednf.DepsolveResult{}, result)
 }
@@ -131,7 +131,7 @@ func TestDepsolve_Smoke(t *testing.T) {
 	}
 
 	arch := "x86_64"
-	result, err := manifestmock.Depsolve(packageSets, arch, false, false)
+	result, err := manifestmock.Depsolve(packageSets, arch, nil, false)
 	assert.NoError(t, err)
 	assert.Equal(t, map[string]depsolvednf.DepsolveResult{
 		"build": depsolvednf.DepsolveResult{
@@ -201,6 +201,7 @@ func TestDepsolve_Smoke(t *testing.T) {
 					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "856ccc87e01cd2c6ad3a72c6168f8f0b149e28e8bc1b9eb5e52e7d7a3e57e7d8"},
 					RepoID:          baseRepos[0].Id,
 					Repo:            &baseRepos[0],
+					Files:           []string{"/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release", "/etc/pki/rpm-gpg/RPM-GPG-KEY-microsoft-azure-release"},
 				},
 			},
 			Transactions: depsolvednf.TransactionList{
@@ -270,6 +271,7 @@ func TestDepsolve_Smoke(t *testing.T) {
 						Checksum:        rpmmd.Checksum{Type: "sha256", Value: "856ccc87e01cd2c6ad3a72c6168f8f0b149e28e8bc1b9eb5e52e7d7a3e57e7d8"},
 						RepoID:          baseRepos[0].Id,
 						Repo:            &baseRepos[0],
+						Files:           []string{"/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release", "/etc/pki/rpm-gpg/RPM-GPG-KEY-microsoft-azure-release"},
 					},
 				},
 			},
@@ -386,6 +388,7 @@ func TestDepsolve_Smoke(t *testing.T) {
 					Checksum:        rpmmd.Checksum{Type: "sha256", Value: "d87ebe584488771c23c9304d4c7f11f33eb67ab9aa0494b416e010dab3213bf9"},
 					RepoID:          appstreamRepo.Id,
 					Repo:            &appstreamRepo,
+					Files:           []string{"/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release", "/etc/pki/rpm-gpg/RPM-GPG-KEY-microsoft-azure-release"},
 				},
 				{
 					Name:            "pkgset:os_trans:1_repos:appstream+baseos+user",
@@ -466,6 +469,7 @@ func TestDepsolve_Smoke(t *testing.T) {
 						Checksum:        rpmmd.Checksum{Type: "sha256", Value: "d87ebe584488771c23c9304d4c7f11f33eb67ab9aa0494b416e010dab3213bf9"},
 						RepoID:          appstreamRepo.Id,
 						Repo:            &appstreamRepo,
+						Files:           []string{"/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release", "/etc/pki/rpm-gpg/RPM-GPG-KEY-microsoft-azure-release"},
 					},
 				},
 				{
