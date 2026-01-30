@@ -9,8 +9,7 @@ import (
 
 func init() {
 	RegisterCheck(Metadata{
-		Name:              "Modularity Check",
-		ShortName:         "modularity",
+		Name:              "modularity",
 		RequiresBlueprint: true,
 		TempDisabled:      "https://github.com/osbuild/images/issues/2061",
 	}, modularityCheck)
@@ -49,7 +48,7 @@ func modularityCheck(meta *Metadata, config *buildconfig.BuildConfig) error {
 	// Get list of enabled modules from dnf (use -q to suppress download progress output)
 	stdout, _, _, err := Exec("dnf", "-q", "module", "list", "--enabled")
 	if err != nil {
-		return Fail("failed to list enabled modules:", err.Error())
+		return Fail("failed to list enabled modules:", err)
 	}
 
 	// Parse dnf output: skip first 3 lines (header) and last 2 lines (footer)

@@ -8,8 +8,7 @@ import (
 
 func init() {
 	RegisterCheck(Metadata{
-		Name:                   "Services Masked Check",
-		ShortName:              "srv-masked",
+		Name:                   "srv-masked",
 		RequiresBlueprint:      true,
 		RequiresCustomizations: true,
 	}, servicesMaskedCheck)
@@ -23,7 +22,7 @@ func servicesMaskedCheck(meta *Metadata, config *buildconfig.BuildConfig) error 
 
 	stdout, _, _, err := ExecString("systemctl", "list-unit-files", "--state=masked")
 	if err != nil {
-		return Fail("failed to list masked services:", err.Error())
+		return Fail("failed to list masked services:", err)
 	}
 
 	for _, service := range services.Masked {

@@ -2,14 +2,14 @@ package check
 
 import (
 	"strconv"
+	"syscall"
 
 	"github.com/osbuild/images/internal/buildconfig"
 )
 
 func init() {
 	RegisterCheck(Metadata{
-		Name:                   "Directories Check",
-		ShortName:              "directories",
+		Name:                   "directories",
 		RequiresBlueprint:      true,
 		RequiresCustomizations: true,
 	}, directoriesCheck)
@@ -27,16 +27,15 @@ func directoriesCheck(meta *Metadata, config *buildconfig.BuildConfig) error {
 			return Fail("directory does not exist:", dir.Path)
 		}
 
-		mode, uid, gid, err := FileInfo(dir.Path)
+		info, err := Stat(dir.Path)
 		if err != nil {
 			return Fail("failed to get directory info:", dir.Path)
 		}
-
-		// Verify it's actually a directory
-		info, err := Stat(dir.Path)
-		if err != nil {
-			return Fail("failed to stat directory:", dir.Path)
+		stat, ok := info.Sys().(*syscall.Stat_t)
+		if !ok {
+			return Fail("check only works on UNIX-like")
 		}
+		mode, uid, gid := info.Mode(), stat.Uid, stat.Gid
 		if !info.IsDir() {
 			return Fail("path is not a directory:", dir.Path)
 		}
@@ -53,7 +52,7 @@ func directoriesCheck(meta *Metadata, config *buildconfig.BuildConfig) error {
 		}
 
 		if dir.User != nil {
-			expectedUid, err := resolveUserOrGroup(dir.User, false)
+			expectedUid, err := resolveUser(dir.User)
 			if err != nil {
 				return Fail("failed to resolve user:", dir.Path, err)
 			}
@@ -63,7 +62,7 @@ func directoriesCheck(meta *Metadata, config *buildconfig.BuildConfig) error {
 		}
 
 		if dir.Group != nil {
-			expectedGid, err := resolveUserOrGroup(dir.Group, true)
+			expectedGid, err := resolveGroup(dir.Group)
 			if err != nil {
 				return Fail("failed to resolve group:", dir.Path, err)
 			}

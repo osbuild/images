@@ -8,8 +8,7 @@ import (
 
 func init() {
 	RegisterCheck(Metadata{
-		Name:                   "Services Enabled Check",
-		ShortName:              "srv-enabled",
+		Name:                   "srv-enabled",
 		RequiresBlueprint:      true,
 		RequiresCustomizations: true,
 	}, servicesEnabledCheck)
@@ -25,7 +24,7 @@ func servicesEnabledCheck(meta *Metadata, config *buildconfig.BuildConfig) error
 		log.Printf("Checking enabled service: %s\n", service)
 		state, _, _, err := ExecString("systemctl", "is-enabled", service)
 		if err != nil {
-			return Fail("service is not enabled:", service, "error:", err.Error())
+			return Fail("service is not enabled:", service, "error:", err)
 		}
 		if state != "enabled" {
 			return Fail("service is not enabled:", service, "state:", state)

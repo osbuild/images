@@ -8,8 +8,7 @@ import (
 
 func init() {
 	RegisterCheck(Metadata{
-		Name:                   "Services Disabled Check",
-		ShortName:              "srv-disabled",
+		Name:                   "srv-disabled",
 		RequiresBlueprint:      true,
 		RequiresCustomizations: true,
 	}, servicesDisabledCheck)
@@ -28,7 +27,7 @@ func servicesDisabledCheck(meta *Metadata, config *buildconfig.BuildConfig) erro
 		state, _, _, err := ExecString("systemctl", "is-enabled", service)
 		if state == "" && err != nil {
 			// If we got no output and an error, the service might not exist
-			return Fail("service is not disabled:", service, "error:", err.Error())
+			return Fail("service is not disabled:", service, "error:", err)
 		}
 
 		if state != "disabled" {

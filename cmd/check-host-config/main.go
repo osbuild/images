@@ -44,7 +44,7 @@ func runChecks(checks []check.RegisteredCheck, config *buildconfig.BuildConfig, 
 	for _, chk := range checks {
 		var err error
 		meta := chk.Meta
-		log.SetPrefix(meta.ShortName + ": ")
+		log.SetPrefix(meta.Name + ": ")
 
 		switch {
 		case meta.TempDisabled != "":
