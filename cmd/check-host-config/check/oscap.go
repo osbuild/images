@@ -20,8 +20,7 @@ var ignoredSeverityRules = []string{
 
 func init() {
 	RegisterCheck(Metadata{
-		Name:                   "OpenSCAP Check",
-		ShortName:              "oscap",
+		Name:                   "oscap",
 		RequiresBlueprint:      true,
 		RequiresCustomizations: true,
 	}, openSCAPCheck)

@@ -9,8 +9,7 @@ import (
 
 func init() {
 	RegisterCheck(Metadata{
-		Name:              "Modularity Check",
-		ShortName:         "modularity",
+		Name:                   "modularity",
 		RequiresBlueprint: true,
 		TempDisabled:      "https://github.com/osbuild/images/issues/2061",
 	}, modularityCheck)

@@ -18,7 +18,7 @@ func TestUsersCheck(t *testing.T) {
 		return nil, nil, 0, nil
 	})
 
-	chk, found := check.FindCheckByName("Users Check")
+	chk, found := check.FindCheckByName("users")
 	require.True(t, found, "Users Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		User: []blueprint.UserCustomization{
@@ -30,7 +30,7 @@ func TestUsersCheck(t *testing.T) {
 }
 
 func TestUsersCheckSkip(t *testing.T) {
-	chk, found := check.FindCheckByName("Users Check")
+	chk, found := check.FindCheckByName("users")
 	require.True(t, found, "Users Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		User: []blueprint.UserCustomization{},

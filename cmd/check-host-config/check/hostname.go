@@ -6,8 +6,7 @@ import (
 
 func init() {
 	RegisterCheck(Metadata{
-		Name:                   "Hostname Check",
-		ShortName:              "hostname",
+		Name:                   "hostname",
 		RequiresBlueprint:      true,
 		RequiresCustomizations: true,
 	}, hostnameCheck)

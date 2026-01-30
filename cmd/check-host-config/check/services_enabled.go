@@ -8,8 +8,7 @@ import (
 
 func init() {
 	RegisterCheck(Metadata{
-		Name:                   "Services Enabled Check",
-		ShortName:              "srv-enabled",
+		Name:                   "srv-enabled",
 		RequiresBlueprint:      true,
 		RequiresCustomizations: true,
 	}, servicesEnabledCheck)

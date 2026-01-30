@@ -17,7 +17,7 @@ func TestFirewallServicesDisabledCheck(t *testing.T) {
 		return nil, nil, 0, nil
 	})
 
-	chk, found := check.FindCheckByName("Firewall Services Disabled Check")
+	chk, found := check.FindCheckByName("fw-srv-disabled")
 	require.True(t, found, "Firewall Services Disabled Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		Firewall: &blueprint.FirewallCustomization{

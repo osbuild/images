@@ -11,8 +11,7 @@ import (
 
 func init() {
 	RegisterCheck(Metadata{
-		Name:                   "Files Check",
-		ShortName:              "files",
+		Name:                   "files",
 		RequiresBlueprint:      true,
 		RequiresCustomizations: true,
 	}, filesCheck)

@@ -58,7 +58,7 @@ func TestOpenSCAPCheck(t *testing.T) {
 		return nil, nil, 0, nil
 	})
 
-	chk, found := check.FindCheckByName("OpenSCAP Check")
+	chk, found := check.FindCheckByName("oscap")
 	require.True(t, found, "OpenSCAP Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		OpenSCAP: &blueprint.OpenSCAPCustomization{
@@ -71,7 +71,7 @@ func TestOpenSCAPCheck(t *testing.T) {
 }
 
 func TestOpenSCAPCheckSkip(t *testing.T) {
-	chk, found := check.FindCheckByName("OpenSCAP Check")
+	chk, found := check.FindCheckByName("oscap")
 	require.True(t, found, "OpenSCAP Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		OpenSCAP: nil,
@@ -83,7 +83,7 @@ func TestOpenSCAPCheckSkip(t *testing.T) {
 }
 
 func TestOpenSCAPCheckSkipIncomplete(t *testing.T) {
-	chk, found := check.FindCheckByName("OpenSCAP Check")
+	chk, found := check.FindCheckByName("oscap")
 	require.True(t, found, "OpenSCAP Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		OpenSCAP: &blueprint.OpenSCAPCustomization{
@@ -114,7 +114,7 @@ func TestOpenSCAPCheckFailNoResults(t *testing.T) {
 		return nil, nil, 0, nil
 	})
 
-	chk, found := check.FindCheckByName("OpenSCAP Check")
+	chk, found := check.FindCheckByName("oscap")
 	require.True(t, found, "OpenSCAP Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		OpenSCAP: &blueprint.OpenSCAPCustomization{
@@ -171,7 +171,7 @@ func TestOpenSCAPCheckFailLowScore(t *testing.T) {
 		return nil, nil, 0, nil
 	})
 
-	chk, found := check.FindCheckByName("OpenSCAP Check")
+	chk, found := check.FindCheckByName("oscap")
 	require.True(t, found, "OpenSCAP Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		OpenSCAP: &blueprint.OpenSCAPCustomization{
@@ -234,7 +234,7 @@ func TestOpenSCAPCheckFailHighSeverityRules(t *testing.T) {
 		return nil, nil, 0, nil
 	})
 
-	chk, found := check.FindCheckByName("OpenSCAP Check")
+	chk, found := check.FindCheckByName("oscap")
 	require.True(t, found, "OpenSCAP Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		OpenSCAP: &blueprint.OpenSCAPCustomization{
@@ -295,7 +295,7 @@ func TestOpenSCAPCheckIgnoreHighSeverityRules(t *testing.T) {
 		return nil, nil, 0, nil
 	})
 
-	chk, found := check.FindCheckByName("OpenSCAP Check")
+	chk, found := check.FindCheckByName("oscap")
 	require.True(t, found, "OpenSCAP Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		OpenSCAP: &blueprint.OpenSCAPCustomization{
@@ -354,7 +354,7 @@ func TestOpenSCAPCheckIgnoreAndFailHighSeverityRules(t *testing.T) {
 		return nil, nil, 0, nil
 	})
 
-	chk, found := check.FindCheckByName("OpenSCAP Check")
+	chk, found := check.FindCheckByName("oscap")
 	require.True(t, found, "OpenSCAP Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		OpenSCAP: &blueprint.OpenSCAPCustomization{
@@ -410,7 +410,7 @@ func TestOpenSCAPCheckFailExtractScore(t *testing.T) {
 		return nil, nil, 0, nil
 	})
 
-	chk, found := check.FindCheckByName("OpenSCAP Check")
+	chk, found := check.FindCheckByName("oscap")
 	require.True(t, found, "OpenSCAP Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		OpenSCAP: &blueprint.OpenSCAPCustomization{
@@ -467,7 +467,7 @@ func TestOpenSCAPCheckFailExtractRules(t *testing.T) {
 		return nil, nil, 0, nil
 	})
 
-	chk, found := check.FindCheckByName("OpenSCAP Check")
+	chk, found := check.FindCheckByName("oscap")
 	require.True(t, found, "OpenSCAP Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		OpenSCAP: &blueprint.OpenSCAPCustomization{
@@ -527,7 +527,7 @@ func TestOpenSCAPCheckNullDatastreamRHEL(t *testing.T) {
 		return nil, nil, 0, nil
 	})
 
-	chk, found := check.FindCheckByName("OpenSCAP Check")
+	chk, found := check.FindCheckByName("oscap")
 	require.True(t, found, "OpenSCAP Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		OpenSCAP: &blueprint.OpenSCAPCustomization{
@@ -549,7 +549,7 @@ func TestOpenSCAPCheckSkipRHEL7(t *testing.T) {
 		}, nil
 	})
 
-	chk, found := check.FindCheckByName("OpenSCAP Check")
+	chk, found := check.FindCheckByName("oscap")
 	require.True(t, found, "OpenSCAP Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		OpenSCAP: &blueprint.OpenSCAPCustomization{
@@ -601,7 +601,7 @@ func TestOpenSCAPCheckFailNoTestResult(t *testing.T) {
 		return nil, nil, 0, nil
 	})
 
-	chk, found := check.FindCheckByName("OpenSCAP Check")
+	chk, found := check.FindCheckByName("oscap")
 	require.True(t, found, "OpenSCAP Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		OpenSCAP: &blueprint.OpenSCAPCustomization{
@@ -665,7 +665,7 @@ func TestOpenSCAPCheckFailMultipleTestResults(t *testing.T) {
 		return nil, nil, 0, nil
 	})
 
-	chk, found := check.FindCheckByName("OpenSCAP Check")
+	chk, found := check.FindCheckByName("oscap")
 	require.True(t, found, "OpenSCAP Check not found")
 	config := buildConfig(&blueprint.Customizations{
 		OpenSCAP: &blueprint.OpenSCAPCustomization{

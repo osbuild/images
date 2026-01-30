@@ -109,7 +109,7 @@ func TestKernelCheck(t *testing.T) {
 				})
 			}
 
-			chk, found := check.FindCheckByName("Kernel Check")
+			chk, found := check.FindCheckByName("kernel")
 			require.True(t, found, "Kernel Check not found")
 			config := buildConfig(&blueprint.Customizations{
 				Kernel: tt.kernel,
