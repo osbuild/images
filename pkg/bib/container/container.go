@@ -1,8 +1,12 @@
 package container
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"strconv"
@@ -12,14 +16,43 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+// envPath is written by podman
+const envPath = "/run/.containerenv"
+
+// rootlessKey is set when we are rootless
+const rootlessKey = "rootless=1"
+
+// isPodmanRootless detects if we are running rootless in podman;
+// other situations (e.g. docker) will successfuly return false.
+func isPodmanRootless() (bool, error) {
+	buf, err := os.ReadFile(envPath)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return false, nil
+		}
+		return false, err
+	}
+	scanner := bufio.NewScanner(bytes.NewReader(buf))
+	for scanner.Scan() {
+		if scanner.Text() == rootlessKey {
+			return true, nil
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return false, fmt.Errorf("parsing %s: %w", envPath, err)
+	}
+	return false, nil
+}
+
 // Container is a simpler wrapper around a running podman container.
 // This type isn't meant as a general-purpose container management tool, but
 // as an opinonated library for bootc-image-builder.
 type Container struct {
-	ref  string
-	id   string
-	root string
-	arch string
+	ref       string
+	id        string
+	root      string
+	arch      string
+	extraOpts []string
 }
 
 // New creates a new running container from the given image reference.
@@ -28,6 +61,20 @@ type Container struct {
 // - --net host is used to make networking work in a nested container
 // - /run/secrets is mounted from the host to make sure RHSM credentials are available
 func New(ref string) (*Container, error) {
+	extraOpts := []string{}
+	if isRootless, _ := isPodmanRootless(); isRootless {
+		// When running bc-i-b In a rootless container, its typically the case that /var/lib/containers/storage
+		// is a bind-mount of ~/.local/share/containers/storage, and we can't use this directly with podman
+		// because it will complain:
+		//     database static dir "~/.local/share/containers/storage/libpod" does not match our
+		//     static dir "/var/lib/containers/storage/libpod": database configuration mismatch
+		// To avoid this we use an empty graphroot, and point --imagestore at /var/lib/containers/storage.
+		// This means the database is in the right place, and we only look at the image layers in the real store.
+		extraOpts = append(extraOpts,
+			"--root=/run/osbuild/containers/store",
+			"--imagestore=/var/lib/containers/storage")
+	}
+
 	const secretDir = "/run/secrets"
 	secretVolume := fmt.Sprintf("%s:%s", secretDir, secretDir)
 
@@ -45,6 +92,8 @@ func New(ref string) (*Container, error) {
 		args = append(args, "--volume", secretVolume)
 	}
 
+	args = append(args, extraOpts...)
+
 	args = append(args, ref, "infinity")
 
 	output, err := exec.Command("podman", args...).Output()
@@ -56,7 +105,8 @@ func New(ref string) (*Container, error) {
 	}
 
 	c := &Container{
-		ref: ref,
+		ref:       ref,
+		extraOpts: extraOpts,
 	}
 	c.id = strings.TrimSpace(string(output))
 	// Ensure that the container is stopped when this function errors
@@ -69,13 +119,17 @@ func New(ref string) (*Container, error) {
 		}
 	}()
 	// not all containers set {{.Architecture}} so fallback
-	c.arch, err = findContainerArchInspect(c.id, ref)
+	c.arch, err = findContainerArchInspect(c.id, ref, extraOpts)
 	if err != nil {
 		return nil, err
 	}
 
+	args = []string{"mount"}
+	args = append(args, extraOpts...)
+	args = append(args, c.id)
+
 	/* #nosec G204 */
-	output, err = exec.Command("podman", "mount", c.id).Output()
+	output, err = exec.Command("podman", args...).Output()
 	if err != nil {
 		if err, ok := err.(*exec.ExitError); ok {
 			return nil, fmt.Errorf("mounting %s container failed: %w\nstderr:\n%s", ref, err, err.Stderr)
@@ -90,14 +144,24 @@ func New(ref string) (*Container, error) {
 // Stop stops the container. Since New() creates a container with --rm, this
 // removes the container as well.
 func (c *Container) Stop() error {
+
+	args := []string{"stop"}
+	args = append(args, c.extraOpts...)
+	args = append(args, c.id)
+
 	/* #nosec G204 */
-	if output, err := exec.Command("podman", "stop", c.id).CombinedOutput(); err != nil {
+	if output, err := exec.Command("podman", args...).CombinedOutput(); err != nil {
 		return fmt.Errorf("stopping %s container failed: %w\noutput:\n%s", c.id, err, output)
 	}
+
+	args = []string{"rm"}
+	args = append(args, c.extraOpts...)
+	args = append(args, "--ignore", c.id)
+
 	// when the container is stopped by podman it may not honor the "--rm"
 	// that was passed in `New()` so manually remove the container here if it is still available
 	/* #nosec G204 */
-	if output, err := exec.Command("podman", "rm", "--ignore", c.id).CombinedOutput(); err != nil {
+	if output, err := exec.Command("podman", args...).CombinedOutput(); err != nil {
 		return fmt.Errorf("removing %s container failed: %w\noutput:\n%s", c.id, err, output)
 	}
 
@@ -146,7 +210,7 @@ func (c *Container) ResolveInfo() (*BootcInfo, error) {
 	}
 	bootcInfo.DefaultRootFs = defaultFs
 
-	size, err := getContainerSize(c.ref)
+	size, err := getContainerSize(c.ref, c.extraOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -167,8 +231,12 @@ func (c *Container) Arch() string {
 
 // Reads a file from the container
 func (c *Container) ReadFile(path string) ([]byte, error) {
+	args := []string{"exec"}
+	args = append(args, c.extraOpts...)
+	args = append(args, c.id, "cat", path)
+
 	/* #nosec G204 */
-	output, err := exec.Command("podman", "exec", c.id, "cat", path).Output()
+	output, err := exec.Command("podman", args...).Output()
 	if err != nil {
 		if err, ok := err.(*exec.ExitError); ok {
 			return nil, fmt.Errorf("reading %s from %s container failed: %w\nstderr:\n%s", path, c.id, err, err.Stderr)
@@ -181,8 +249,12 @@ func (c *Container) ReadFile(path string) ([]byte, error) {
 
 // CopyInto copies a file into the container.
 func (c *Container) CopyInto(src, dest string) error {
+	args := []string{"cp"}
+	args = append(args, c.extraOpts...)
+	args = append(args, src, c.id+":"+dest)
+
 	/* #nosec G204 */
-	if output, err := exec.Command("podman", "cp", src, c.id+":"+dest).CombinedOutput(); err != nil {
+	if output, err := exec.Command("podman", args...).CombinedOutput(); err != nil {
 		return fmt.Errorf("copying %s into %s container failed: %w\noutput:\n%s", src, c.id, err, output)
 	}
 
@@ -190,15 +262,22 @@ func (c *Container) CopyInto(src, dest string) error {
 }
 
 func (c *Container) ExecArgv() []string {
-	return []string{"podman", "exec", "-i", c.id}
+	args := []string{"podman", "exec"}
+	args = append(args, c.extraOpts...)
+	args = append(args, "-i", c.id)
+	return args
 }
 
 // DefaultRootfsType returns the default rootfs type (e.g. "ext4") as
 // specified by the bootc container install configuration. An empty
 // string is valid and means the container sets no default.
 func (c *Container) DefaultRootfsType() (string, error) {
+	args := []string{"exec"}
+	args = append(args, c.extraOpts...)
+	args = append(args, c.id, "bootc", "install", "print-configuration")
+
 	/* #nosec G204 */
-	output, err := exec.Command("podman", "exec", c.id, "bootc", "install", "print-configuration").Output()
+	output, err := exec.Command("podman", args...).Output()
 	if err != nil {
 		return "", fmt.Errorf("failed to run bootc install print-configuration: %w, output:\n%s", err, output)
 	}
@@ -236,9 +315,13 @@ func (c *Container) DefaultRootfsType() (string, error) {
 	return fsType, nil
 }
 
-func findImageIdFor(cntId, ref string) (string, error) {
+func findImageIdFor(cntId, ref string, extraOpts []string) (string, error) {
+	args := []string{"inspect"}
+	args = append(args, extraOpts...)
+	args = append(args, "-f", "{{.Image}}", cntId)
+
 	/* #nosec G204 */
-	output, err := exec.Command("podman", "inspect", "-f", "{{.Image}}", cntId).Output()
+	output, err := exec.Command("podman", args...).Output()
 	if err != nil {
 		if err, ok := err.(*exec.ExitError); ok {
 			return "", fmt.Errorf("inspecting container %q failed: %w\nstderr:\n%s", ref, err, err.Stderr)
@@ -248,17 +331,21 @@ func findImageIdFor(cntId, ref string) (string, error) {
 	return strings.TrimSpace(string(output)), nil
 }
 
-func findContainerArchInspect(cntId, ref string) (string, error) {
+func findContainerArchInspect(cntId, ref string, extraOpts []string) (string, error) {
 	// get image id first, then get the arch from the image,
 	// it seems this is the most reliable way to get the
 	// architecture
-	imageId, err := findImageIdFor(cntId, ref)
+	imageId, err := findImageIdFor(cntId, ref, extraOpts)
 	if err != nil {
 		return "", err
 	}
 
+	args := []string{"inspect"}
+	args = append(args, extraOpts...)
+	args = append(args, "-f", "{{.Architecture}}", imageId)
+
 	/* #nosec G204 */
-	output, err := exec.Command("podman", "inspect", "-f", "{{.Architecture}}", imageId).Output()
+	output, err := exec.Command("podman", args...).Output()
 	if err != nil {
 		if err, ok := err.(*exec.ExitError); ok {
 			return "", fmt.Errorf("inspecting container %q failed: %w\nstderr:\n%s", ref, err, err.Stderr)
@@ -269,8 +356,12 @@ func findContainerArchInspect(cntId, ref string) (string, error) {
 }
 
 // getContainerSize returns the size of an already pulled container image in bytes
-func getContainerSize(imgref string) (uint64, error) {
-	output, err := exec.Command("podman", "image", "inspect", imgref, "--format", "{{.Size}}").Output()
+func getContainerSize(imgref string, extraOpts []string) (uint64, error) {
+	args := []string{"image", "inspect"}
+	args = append(args, extraOpts...)
+	args = append(args, imgref, "--format", "{{.Size}}")
+
+	output, err := exec.Command("podman", args...).Output()
 	if err != nil {
 		return 0, fmt.Errorf("failed inspect image: %w, output\n%s", err, output)
 	}
