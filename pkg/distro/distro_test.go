@@ -15,9 +15,9 @@ import (
 	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/container"
-	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distrofactory"
+	"github.com/osbuild/images/pkg/manifestgen/manifestmock"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rpmmd"
 	testrepos "github.com/osbuild/images/test/data/repositories"
@@ -116,73 +116,8 @@ func TestImageTypePipelineNames(t *testing.T) {
 					// Serialize().
 					packageSets, err := m.GetPackageSetChains()
 					assert.NoError(err)
-					depsolvedSets := make(map[string]depsolvednf.DepsolveResult, len(packageSets))
-					for name, sets := range packageSets {
-						packages := make(rpmmd.PackageList, 0)
-						// Collect unique repos from all package sets in the
-						// chain, simulating what a real depsolver would return.
-						reposMap := make(map[string]rpmmd.RepoConfig)
-						for _, set := range sets {
-							for idx, pkginc := range set.Include {
-								packages = append(packages, rpmmd.Package{
-									Name: pkginc,
-									// for most packages, the version is not
-									// required, but for some (e.g. uki-direct
-									// in images with UKI) it needs to be a
-									// valid version string that can be parsed
-									// by the version package.
-									Version: "0.0",
-									// the exact checksum doesn't matter as
-									// long as it's a valid 256 bit hex number
-									Checksum: rpmmd.Checksum{
-										Type:  "sha256",
-										Value: fmt.Sprintf("%064x", idx),
-									},
-									RemoteLocations: []string{fmt.Sprintf("https://example.com/%s", pkginc)},
-								})
-							}
-							for _, repo := range set.Repositories {
-								reposMap[repo.Name] = repo
-							}
-						}
-
-						depsolvedRepos := make([]rpmmd.RepoConfig, 0, len(reposMap))
-						for _, repo := range reposMap {
-							depsolvedRepos = append(depsolvedRepos, repo)
-						}
-
-						depsolvedSets[name] = depsolvednf.DepsolveResult{
-							Packages: packages,
-							Repos:    depsolvedRepos,
-						}
-					}
-
-					// Some parts of the manifest generation for certain image types require specific packages. Add them here.
-					// azure-cvm requires dnf and python3-dnf-plugin-versionlock in the OS pipeline
-					osPkgs := depsolvedSets["os"]
-					osPkgs.Packages = append(osPkgs.Packages,
-						rpmmd.Package{
-							Name:    "dnf",
-							Version: "4",
-							Checksum: rpmmd.Checksum{
-								Type:  "sha256",
-								Value: fmt.Sprintf("%064x", len(osPkgs.Packages)),
-							},
-							RemoteLocations: []string{"https://example.com/dnf"},
-						},
-					)
-					osPkgs.Packages = append(osPkgs.Packages,
-						rpmmd.Package{
-							Name:    "python3-dnf-plugin-versionlock",
-							Version: "3",
-							Checksum: rpmmd.Checksum{
-								Type:  "sha256",
-								Value: fmt.Sprintf("%064x", len(osPkgs.Packages)),
-							},
-							RemoteLocations: []string{"https://example.com/python3-dnf-plugin-versionlock"},
-						},
-					)
-					depsolvedSets["os"] = osPkgs
+					depsolvedSets, err := manifestmock.Depsolve(packageSets, archName, false, false)
+					assert.NoError(err)
 
 					ostreeSources := m.GetOSTreeSourceSpecs()
 					commits := make(map[string][]ostree.CommitSpec, len(ostreeSources))
