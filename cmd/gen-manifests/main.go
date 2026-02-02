@@ -26,12 +26,12 @@ import (
 	"github.com/osbuild/images/internal/cmdutil"
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
-	bibcontainer "github.com/osbuild/images/pkg/bib/container"
 	"github.com/osbuild/images/pkg/bib/osinfo"
+	"github.com/osbuild/images/pkg/bootc"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/distro/bootc"
+	bootcdistro "github.com/osbuild/images/pkg/distro/bootc"
 	"github.com/osbuild/images/pkg/distro/defs"
 	"github.com/osbuild/images/pkg/distrofactory"
 	"github.com/osbuild/images/pkg/experimentalflags"
@@ -555,11 +555,11 @@ func main() {
 			buildBootcRef = l[1]
 		}
 
-		distribution, err := bootc.NewBootcDistro(bootcRef, nil)
+		distribution, err := bootcdistro.NewBootcDistro(bootcRef, nil)
 		if err != nil && errors.Is(err, defs.ErrNoDefaultFs) {
 			// XXX: consider making this configurable but for now
 			// we just need diffable manifests
-			distribution, err = bootc.NewBootcDistro(bootcRef, &bootc.DistroOptions{
+			distribution, err = bootcdistro.NewBootcDistro(bootcRef, &bootcdistro.DistroOptions{
 				DefaultFs: "ext4",
 			})
 		}
@@ -634,14 +634,14 @@ func main() {
 			panic(err)
 		}
 		for _, fakeBootcCnt := range fakeContainers.Containers {
-			fakeBootcInfo := &bibcontainer.BootcInfo{
+			fakeBootcInfo := &bootc.Info{
 				Imgref:        fakeBootcCnt.ImageRef,
 				OSInfo:        &fakeBootcCnt.Info,
 				Arch:          fakeBootcCnt.Arch.String(),
 				DefaultRootFs: fakeBootcCnt.DefaultFs,
 				Size:          fakeBootcCnt.ContainerSize,
 			}
-			distribution, err := bootc.NewBootcDistroForTesting(fakeBootcInfo)
+			distribution, err := bootcdistro.NewBootcDistroForTesting(fakeBootcInfo)
 			if err != nil {
 				panic(err)
 			}
