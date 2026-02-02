@@ -307,8 +307,8 @@ func makeManifestJob(
 				return
 			}
 			for plName, depsolved := range depsolvedSets {
-				if depsolved.Packages == nil {
-					err = fmt.Errorf("[%s] nil package specs in %v", filename, plName)
+				if len(depsolved.Transactions.AllPackages()) == 0 {
+					err = fmt.Errorf("[%s] no packages in the depsolve result for %v", filename, plName)
 					return
 				}
 			}
@@ -363,7 +363,7 @@ func save(ms manifest.OSBuildManifest, depsolved map[string]depsolvednf.Depsolve
 	if metadata {
 		rpmmds := make(map[string]rpmmd.PackageList)
 		for plName, res := range depsolved {
-			rpmmds[plName] = res.Packages
+			rpmmds[plName] = res.Transactions.AllPackages()
 		}
 		data = struct {
 			BuidRequest   buildRequest                   `json:"build-request"`

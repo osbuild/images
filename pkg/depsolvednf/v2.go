@@ -328,7 +328,6 @@ func (h *v2Handler) parseDepsolveResult(output []byte) (*depsolveResultRaw, erro
 	// Build both per-transaction lists and a flattened list of all packages.
 	// V2 returns disjoint sets per transaction
 	transactions := make(TransactionList, len(result.Transactions))
-	var allPkgs rpmmd.PackageList
 
 	// Convert depsolved packages
 	for transIdx, transaction := range result.Transactions {
@@ -344,15 +343,9 @@ func (h *v2Handler) parseDepsolveResult(output []byte) (*depsolveResultRaw, erro
 				return nil, err
 			}
 			transPkgs = append(transPkgs, rpmPkg)
-			allPkgs = append(allPkgs, rpmPkg)
 		}
 		transactions[transIdx] = transPkgs
 	}
-
-	// Sort flattened packages by full NEVRA to ensure consistent ordering
-	sort.Slice(allPkgs, func(i, j int) bool {
-		return allPkgs[i].FullNEVRA() < allPkgs[j].FullNEVRA()
-	})
 
 	// Convert modules
 	modules := make([]rpmmd.ModuleSpec, 0, len(result.Modules))
@@ -361,7 +354,6 @@ func (h *v2Handler) parseDepsolveResult(output []byte) (*depsolveResultRaw, erro
 	}
 
 	return &depsolveResultRaw{
-		Packages:     allPkgs,
 		Transactions: transactions,
 		Modules:      modules,
 		Repos:        repos,

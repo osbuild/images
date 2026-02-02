@@ -288,7 +288,6 @@ func Depsolve(
 		}
 
 		depsolvedSets[pkgSetName] = depsolvednf.DepsolveResult{
-			Packages:     transactions.AllPackages(),
 			Transactions: transactions,
 			Repos:        allRepos,
 			SBOM:         sbomDoc,

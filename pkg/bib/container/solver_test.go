@@ -68,7 +68,7 @@ func TestDepsolveDNFWorks(t *testing.T) {
 		},
 	}, 0)
 	require.NoError(t, err)
-	assert.True(t, len(res.Packages) > 0)
+	assert.True(t, len(res.Transactions.AllPackages()) > 0)
 }
 
 func subscribeMachine(t *testing.T) (restore func()) {
@@ -147,7 +147,7 @@ func TestDepsolveDNFWorkWithSubscribedContent(t *testing.T) {
 		},
 	}, 0)
 	require.NoError(t, err)
-	assert.True(t, len(res.Packages) > 0)
+	assert.True(t, len(res.Transactions.AllPackages()) > 0)
 }
 
 func runCmd(t *testing.T, args ...string) {

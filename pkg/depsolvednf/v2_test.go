@@ -1113,13 +1113,6 @@ func TestV2HandlerParseDepsolveResult(t *testing.T) {
 				assert.Len(t, result.Transactions[i], wantPkgCount, "transaction %d package count", i)
 			}
 
-			// Check flattened packages (sum of all transaction packages)
-			wantTotalPkgs := 0
-			for _, count := range tt.wantTransactions {
-				wantTotalPkgs += count
-			}
-			assert.Len(t, result.Packages, wantTotalPkgs, "total packages count")
-
 			// Check other fields
 			assert.Len(t, result.Repos, tt.wantRepos)
 			assert.Equal(t, tt.wantSolver, result.Solver)
@@ -1517,12 +1510,11 @@ func TestV2HandlerParseDepsolveResultDetails(t *testing.T) {
 	// Verify structure
 	require.Len(t, result.Transactions, 1)
 	require.Len(t, result.Transactions[0], 1)
-	require.Len(t, result.Packages, 1)
 	require.Len(t, result.Repos, 1)
 	assert.Equal(t, "dnf5", result.Solver)
 
 	// Verify package - single assert compares all fields
-	assert.Equal(t, testExpectedPackage, result.Packages[0])
+	assert.Equal(t, testExpectedPackage, result.Transactions[0][0])
 
 	// Verify repo - single assert compares all fields
 	assert.Equal(t, testExpectedRepo, result.Repos[0])
