@@ -9,8 +9,8 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
-	bibcontainer "github.com/osbuild/images/pkg/bib/container"
 	"github.com/osbuild/images/pkg/bib/osinfo"
+	"github.com/osbuild/images/pkg/bootc"
 	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
@@ -55,7 +55,7 @@ func NewBootcDistro(imgref string, opts *DistroOptions) (*Distro, error) {
 		opts = &DistroOptions{}
 	}
 
-	cnt, err := bibcontainer.New(imgref)
+	cnt, err := bootc.NewContainer(imgref)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func (d *Distro) SetBuildContainer(imgref string) (err error) {
 		return nil
 	}
 
-	cnt, err := bibcontainer.New(imgref)
+	cnt, err := bootc.NewContainer(imgref)
 	if err != nil {
 		return err
 	}
@@ -135,7 +135,7 @@ func (d *Distro) ModulePlatformID() string {
 }
 
 func (d *Distro) Depsolver(rpmCacheRoot string, archi arch.Arch) (solver *depsolvednf.Solver, cleanup func() error, err error) {
-	cnt, err := bibcontainer.New(d.buildImgref)
+	cnt, err := bootc.NewContainer(d.buildImgref)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -152,7 +152,7 @@ func (d *Distro) Depsolver(rpmCacheRoot string, archi arch.Arch) (solver *depsol
 		// Not all bootc container have dnf, so check if it can
 		// be run here and if not just return nil which will
 		// ensure the depsolver of the host is used
-		if errors.Is(err, bibcontainer.ErrNoDnf) {
+		if errors.Is(err, bootc.ErrNoDnf) {
 			return nil, cleanup, nil
 		}
 		// Return any other errors to the caller, it means
@@ -227,7 +227,7 @@ func (a *Arch) addImageTypes(imageTypes ...imageType) {
 	}
 }
 
-func newBootcDistroAfterIntrospect(cinfo *bibcontainer.BootcInfo) (*Distro, error) {
+func newBootcDistroAfterIntrospect(cinfo *bootc.Info) (*Distro, error) {
 	if cinfo == nil {
 		return nil, fmt.Errorf("missing required info while initialising bootc distro")
 	}

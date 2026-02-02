@@ -1,4 +1,4 @@
-package container_test
+package bootc_test
 
 import (
 	"os"
@@ -12,9 +12,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/pkg/arch"
+	"github.com/osbuild/images/pkg/bootc"
 	"github.com/osbuild/images/pkg/rpmmd"
 
-	"github.com/osbuild/images/pkg/bib/container"
 	"github.com/osbuild/images/pkg/bib/osinfo"
 )
 
@@ -49,7 +49,7 @@ func TestDepsolveDNFWorks(t *testing.T) {
 
 	cacheRoot := t.TempDir()
 
-	cnt, err := container.New(dnfTestingImageCentos)
+	cnt, err := bootc.NewContainer(dnfTestingImageCentos)
 	require.NoError(t, err)
 	defer func() {
 		assert.NoError(t, cnt.Stop())
@@ -109,7 +109,7 @@ func TestDNFInitGivesAccessToSubscribedContent(t *testing.T) {
 	restore := subscribeMachine(t)
 	defer restore()
 
-	cnt, err := container.New(dnfTestingImageRHEL)
+	cnt, err := bootc.NewContainer(dnfTestingImageRHEL)
 	require.NoError(t, err)
 	err = cnt.InitDNF()
 	require.NoError(t, err)
@@ -127,7 +127,7 @@ func TestDepsolveDNFWorkWithSubscribedContent(t *testing.T) {
 	restore := subscribeMachine(t)
 	defer restore()
 
-	cnt, err := container.New(dnfTestingImageRHEL)
+	cnt, err := bootc.NewContainer(dnfTestingImageRHEL)
 	require.NoError(t, err)
 	defer func() {
 		assert.NoError(t, cnt.Stop())
@@ -208,12 +208,12 @@ func TestDepsolveDNFdetectsMissingDnf(t *testing.T) {
 	}
 	ensureCanRunDepsolveDNFTests(t)
 
-	cnt, err := container.New(dnfTestingImageNoDnf)
+	cnt, err := bootc.NewContainer(dnfTestingImageNoDnf)
 	require.NoError(t, err)
 	defer func() {
 		assert.NoError(t, cnt.Stop())
 	}()
 
 	err = cnt.InitDNF()
-	require.Equal(t, container.ErrNoDnf, err)
+	require.Equal(t, bootc.ErrNoDnf, err)
 }
