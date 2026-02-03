@@ -96,7 +96,8 @@ func checkOptionsCommon(t *imageType, bp *blueprint.Blueprint, options distro.Im
 	}
 
 	if osc := customizations.GetOpenSCAP(); osc != nil {
-		supported := oscap.IsProfileAllowed(osc.ProfileID, t.arch.distro.DistroYAML.OscapProfilesAllowList)
+		d := t.arch.distro.(*distribution)
+		supported := oscap.IsProfileAllowed(osc.ProfileID, d.DistroYAML.OscapProfilesAllowList)
 		if !supported {
 			return warnings, fmt.Errorf("%s: customizations.openscap.profile_id: unsupported profile %s", errPrefix, osc.ProfileID)
 		}

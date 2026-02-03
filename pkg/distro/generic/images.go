@@ -387,7 +387,7 @@ func ostreeCommitServerCustomizations(t *imageType) manifest.OSTreeCommitServerC
 }
 
 func installerCustomizations(t *imageType, c *blueprint.Customizations, o distro.ImageOptions) (manifest.InstallerCustomizations, error) {
-	d := t.arch.distro
+	d := t.arch.distro.(*distribution)
 
 	// By default we get the preview state from the distro. When given through
 	// the image options we set it explicitly to that value. This allows us to

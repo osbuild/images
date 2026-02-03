@@ -97,7 +97,8 @@ func TestInstallerCustomizationsOverridePreview(t *testing.T) {
 		},
 	} {
 		it := isoTestImageType()
-		it.arch.distro.Preview = tc.distroPreview
+		distro := it.arch.distro.(*distribution)
+		distro.Preview = tc.distroPreview
 
 		isc, err := installerCustomizations(it, nil, tc.imageOptions)
 		require.NoError(t, err)

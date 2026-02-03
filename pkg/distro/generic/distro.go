@@ -157,7 +157,7 @@ func (d *distribution) GetArch(name string) (distro.Arch, error) {
 var _ = distro.Arch(&architecture{})
 
 type architecture struct {
-	distro           *distribution
+	distro           distro.Distro
 	arch             arch.Arch
 	imageTypes       map[string]distro.ImageType
 	imageTypeAliases map[string]string
