@@ -44,33 +44,7 @@ type distribution struct {
 	arches map[string]*architecture
 }
 
-func (d *distribution) getISOLabelFunc(isoLabel string) isoLabelFunc {
-	id := common.Must(distro.ParseID(d.Name()))
-
-	return func(t *imageType) string {
-		type inputs struct {
-			Distro   *distro.ID
-			Product  string
-			Arch     string
-			ISOLabel string
-		}
-		templ := common.Must(template.New("iso-label").Parse(d.DistroYAML.ISOLabelTmpl))
-		var buf bytes.Buffer
-		err := templ.Execute(&buf, inputs{
-			Distro:   id,
-			Product:  d.Product(),
-			Arch:     t.Arch().Name(),
-			ISOLabel: isoLabel,
-		})
-		if err != nil {
-			// XXX: cleanup isoLabelFunc to allow error
-			panic(err)
-		}
-		return buf.String()
-	}
-}
-
-func newDistro(nameVer string) (distro.Distro, error) {
+func New(nameVer string) (distro.Distro, error) {
 	distroYAML, err := defs.NewDistroYAML(nameVer)
 	if err != nil {
 		return nil, err
@@ -115,6 +89,32 @@ func newDistro(nameVer string) (distro.Distro, error) {
 	}
 
 	return rd, nil
+}
+
+func (d *distribution) getISOLabelFunc(isoLabel string) isoLabelFunc {
+	id := common.Must(distro.ParseID(d.Name()))
+
+	return func(t *imageType) string {
+		type inputs struct {
+			Distro   *distro.ID
+			Product  string
+			Arch     string
+			ISOLabel string
+		}
+		templ := common.Must(template.New("iso-label").Parse(d.DistroYAML.ISOLabelTmpl))
+		var buf bytes.Buffer
+		err := templ.Execute(&buf, inputs{
+			Distro:   id,
+			Product:  d.Product(),
+			Arch:     t.Arch().Name(),
+			ISOLabel: isoLabel,
+		})
+		if err != nil {
+			// XXX: cleanup isoLabelFunc to allow error
+			panic(err)
+		}
+		return buf.String()
+	}
 }
 
 func (d *distribution) Name() string {
@@ -216,7 +216,7 @@ func (a *architecture) Distro() distro.Distro {
 }
 
 func DistroFactory(idStr string) distro.Distro {
-	distro, err := newDistro(idStr)
+	distro, err := New(idStr)
 	if errors.Is(err, ErrDistroNotFound) {
 		return nil
 	}
