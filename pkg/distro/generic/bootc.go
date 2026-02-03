@@ -118,7 +118,7 @@ func NewBootc(name string, cinfo *bootc.Info) (distro.Distro, error) {
 		imageTypes: map[string]distro.ImageType{},
 	}
 	for _, imgTypeYaml := range distroYAML.ImageTypes() {
-		err := ba.addImageType(nil, imageType{ // NOTE: platform does not apply to bootc image types
+		err := ba.addBootcImageType(bootcImageType{
 			ImageTypeYAML: imgTypeYaml,
 		})
 		if err != nil {
