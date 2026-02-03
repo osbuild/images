@@ -211,6 +211,21 @@ func (a *architecture) addImageType(platform platform.Platform, it imageType) er
 	return nil
 }
 
+func (a *architecture) addBootcImageType(it bootcImageType) error {
+	it.arch = a
+	a.imageTypes[it.Name()] = &it
+	for _, alias := range it.ImageTypeYAML.NameAliases {
+		if a.imageTypeAliases == nil {
+			a.imageTypeAliases = map[string]string{}
+		}
+		if existingAliasFor, exists := a.imageTypeAliases[alias]; exists {
+			return fmt.Errorf("image type alias '%s' for '%s' is already defined for another image type '%s'", alias, it.Name(), existingAliasFor)
+		}
+		a.imageTypeAliases[alias] = it.Name()
+	}
+	return nil
+}
+
 func (a *architecture) Distro() distro.Distro {
 	return a.distro
 }
