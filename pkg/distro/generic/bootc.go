@@ -114,6 +114,7 @@ func NewBootc(name string, cinfo *bootc.Info) (distro.Distro, error) {
 	}
 
 	ba := &architecture{
+		distro:     d,
 		arch:       archi,
 		imageTypes: map[string]distro.ImageType{},
 	}
