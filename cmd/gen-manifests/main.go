@@ -365,7 +365,7 @@ func makeManifestJob(
 }
 
 func save(ms manifest.OSBuildManifest, depsolved map[string]depsolvednf.DepsolveResult, containers map[string][]container.Spec, commits map[string][]ostree.CommitSpec, cr buildRequest, path, filename string, metadata bool) error {
-	var data interface{}
+	var data any
 	if metadata {
 		rpmmds := make(map[string]rpmmd.PackageList)
 		for plName, res := range depsolved {
