@@ -129,6 +129,7 @@ func loadImageTypes(t *testing.T, d *BootcDistro) {
 	for archName, arch := range d.arches {
 		darch := arch.(*architecture)
 		darch.imageTypes = map[string]distro.ImageType{}
+		darch.distro = d // link distro to architecture as well
 		require.NotNil(darch)
 		for _, imgTypeYaml := range distroYAML.ImageTypes() {
 			require.NoError(darch.addBootcImageType(bootcImageType{ImageTypeYAML: imgTypeYaml}))
