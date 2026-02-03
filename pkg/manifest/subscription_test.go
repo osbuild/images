@@ -31,7 +31,7 @@ func TestSubscriptionService(t *testing.T) {
 	unitType := osbuild.SystemUnitType
 	serviceDescription := "First-boot service for registering with Red Hat subscription manager and/or insights"
 	serviceWants := []string{"network-online.target"}
-	serviceAfter := serviceWants
+	serviceAfter := []string{"selinux-autorelabel.service", "network-online.target"}
 	serviceWantedBy := []string{"default.target"}
 
 	testCases := map[string]testCase{
