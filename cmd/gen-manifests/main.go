@@ -274,6 +274,12 @@ func makeManifestJob(
 		APIType: facts.TEST_APITYPE,
 	}
 
+	// Extend the repositories with the custom repositories from the build config
+	allRepos := slices.Clone(repos)
+	if len(bc.CustomRepos) > 0 {
+		allRepos = append(allRepos, bc.CustomRepos...)
+	}
+
 	job := func(msgq chan string) (err error) {
 		defer func() {
 			msg := fmt.Sprintf("Finished job %s", filename)
@@ -292,7 +298,7 @@ func makeManifestJob(
 		}()
 		msgq <- fmt.Sprintf("Starting job %s", filename)
 
-		manifest, _, err := imgType.Manifest(&bp, options, repos, &seedArg)
+		manifest, _, err := imgType.Manifest(&bp, options, allRepos, &seedArg)
 		if err != nil {
 			err = fmt.Errorf("[%s] failed: %s", filename, err)
 			return
@@ -349,7 +355,7 @@ func makeManifestJob(
 			Distro:       distribution.Name(),
 			Arch:         archName,
 			ImageType:    imgType.Name(),
-			Repositories: repos,
+			Repositories: allRepos,
 			Config:       bc,
 		}
 		err = save(mf, depsolvedSets, containerSpecs, commitSpecs, request, path, filename, metadata)

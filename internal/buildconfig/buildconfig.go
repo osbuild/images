@@ -7,6 +7,7 @@ import (
 
 	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/rpmmd"
 )
 
 type BuildConfig struct {
@@ -15,6 +16,10 @@ type BuildConfig struct {
 	Options   distro.ImageOptions  `json:"options"`
 	Depends   interface{}          `json:"depends,omitempty"` // ignored
 	Solver    *SolverConfig        `json:"solver,omitempty"`
+
+	// CustomRepos is a list of additional repositories that will be used for
+	// depsolving the image package sets.
+	CustomRepos []rpmmd.RepoConfig `json:"custom_repos,omitempty"`
 }
 
 // SolverConfig is a configuration for the depsolver used by gen-manifests.
