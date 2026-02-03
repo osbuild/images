@@ -31,8 +31,7 @@ import (
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/distro"
-	bootcdistro "github.com/osbuild/images/pkg/distro/bootc"
-	"github.com/osbuild/images/pkg/distro/defs"
+	"github.com/osbuild/images/pkg/distro/generic"
 	"github.com/osbuild/images/pkg/distrofactory"
 	"github.com/osbuild/images/pkg/experimentalflags"
 	"github.com/osbuild/images/pkg/manifest"
@@ -547,30 +546,38 @@ func main() {
 			}
 		}
 	}
+
 	for _, bootcRefTuple := range bootcRefs {
 		l := strings.SplitN(bootcRefTuple, "#", 2)
 		bootcRef := l[0]
-		var buildBootcRef string
-		if len(l) > 1 {
-			buildBootcRef = l[1]
-		}
 
-		distribution, err := bootcdistro.NewBootcDistro(bootcRef, nil)
-		if err != nil && errors.Is(err, defs.ErrNoDefaultFs) {
-			// XXX: consider making this configurable but for now
-			// we just need diffable manifests
-			distribution, err = bootcdistro.NewBootcDistro(bootcRef, &bootcdistro.DistroOptions{
-				DefaultFs: "ext4",
-			})
-		}
+		bootcInfo, err := resolveBootcInfo(bootcRef)
 		if err != nil {
 			panic(err)
 		}
-		if buildBootcRef != "" {
-			if err := distribution.SetBuildContainer(buildBootcRef); err != nil {
+		// consider making this configurable but for now we just need
+		// diffable manifests
+		if bootcInfo.DefaultRootFs == "" {
+			bootcInfo.DefaultRootFs = "ext4"
+		}
+
+		distribution, err := generic.NewBootc("bootc", bootcInfo)
+		if err != nil {
+			panic(err)
+		}
+
+		var buildBootcRef string
+		if len(l) > 1 {
+			buildBootcRef = l[1]
+			buildBootcInfo, err := resolveBootcInfo(buildBootcRef)
+			if err != nil {
+				panic(err)
+			}
+			if err := distribution.SetBuildContainer(buildBootcInfo); err != nil {
 				panic(err)
 			}
 		}
+
 		for _, archName := range arches {
 			archi, err := distribution.GetArch(archName)
 			if err != nil {
@@ -641,7 +648,7 @@ func main() {
 				DefaultRootFs: fakeBootcCnt.DefaultFs,
 				Size:          fakeBootcCnt.ContainerSize,
 			}
-			distribution, err := bootcdistro.NewBootcDistroForTesting(fakeBootcInfo)
+			distribution, err := generic.NewBootc("bootc", fakeBootcInfo)
 			if err != nil {
 				panic(err)
 			}
@@ -659,7 +666,12 @@ func main() {
 					}
 
 					if fakeBootcCnt.BuildContainerRef != "" {
-						if err := distribution.SetBuildContainerForTesting(fakeBootcCnt.BuildContainerRef, &fakeBootcCnt.BuildContainerInfo); err != nil {
+						buildContainerInfo := &bootc.Info{
+							Imgref: fakeBootcCnt.BuildContainerRef,
+							OSInfo: &fakeBootcCnt.BuildContainerInfo,
+							Arch:   fakeBootcInfo.Arch,
+						}
+						if err := distribution.SetBuildContainer(buildContainerInfo); err != nil {
 							panic(err)
 						}
 					}
@@ -722,4 +734,12 @@ func main() {
 	}
 	fmt.Fprintf(os.Stderr, "RPM metadata cache kept in %s\n", cacheRoot)
 	os.Exit(exit)
+}
+
+func resolveBootcInfo(ref string) (*bootc.Info, error) {
+	c, err := bootc.NewContainer(ref)
+	if err != nil {
+		return nil, err
+	}
+	return c.ResolveInfo()
 }
