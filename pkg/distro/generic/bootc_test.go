@@ -70,14 +70,30 @@ func TestNewBootc(t *testing.T) {
 				DefaultRootFs: "xfs",
 				Size:          100 * datasizes.MiB,
 			},
-			expectedError: "failed to initialize bootc distro: missing required info: ImageID",
+			expectedDistro: &BootcDistro{
+				imgref:          "example.com/containers/distro-bootc:version12",
+				buildImgref:     "example.com/containers/distro-bootc:version12",
+				sourceInfo:      &osinfo.Info{},
+				buildSourceInfo: &osinfo.Info{},
+				id: distro.ID{
+					Name: "bootc",
+				},
+
+				defaultFs:     "xfs",
+				rootfsMinSize: 200 * datasizes.MiB,
+				arches: map[string]distro.Arch{
+					"x86_64": &architecture{
+						arch: arch.ARCH_X86_64,
+					},
+				},
+			},
 		},
 
 		"missing-multiple": {
 			info: &bootc.Info{
 				Imgref: "example.com/containers/distro-bootc:version12",
 			},
-			expectedError: "failed to initialize bootc distro: missing required info: ImageID, Arch, DefaultRootFs, Size",
+			expectedError: "failed to initialize bootc distro: missing required info: Arch, DefaultRootFs, Size",
 		},
 
 		"unknown-arch": {
