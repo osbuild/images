@@ -19,6 +19,7 @@ type BootcDistro struct {
 	imgref          string
 	imageID         string
 	buildImgref     string
+	buildImageID    string
 	sourceInfo      *osinfo.Info
 	buildSourceInfo *osinfo.Info
 
@@ -45,7 +46,7 @@ const (
 // To generate the [github.com/osbuild/images/pkg/bootc.Info] from a container
 // ref, use the [github.com/osbuild/images/pkg/bootc.Container] type and its
 // methods.
-func NewBootc(name string, cinfo *bootc.Info) (distro.Distro, error) {
+func NewBootc(name string, cinfo *bootc.Info) (*BootcDistro, error) {
 	if cinfo == nil {
 		return nil, errors.New("failed to initialize bootc distro: container info is empty")
 	}
@@ -179,5 +180,57 @@ func (d *BootcDistro) GetArch(arch string) (distro.Arch, error) {
 
 func (d *BootcDistro) GetTweaks() *distro.Tweaks {
 	// The bootc distro does not require or support tweaks (yet)
+	return nil
+}
+
+// SetBuildContainer configures the build to use a separate container for the
+// build root.
+// To generate the [github.com/osbuild/images/pkg/bootc.Info] from a container
+// ref, use the [github.com/osbuild/images/pkg/bootc.Container] type and its
+// methods.
+func (d *BootcDistro) SetBuildContainer(cinfo *bootc.Info) error {
+	if cinfo == nil {
+		return errors.New("failed to set build container for bootc distro: container info is empty")
+	}
+
+	// verify required information
+	var missing []string
+	if cinfo.Imgref == "" {
+		missing = append(missing, "Imgref")
+	}
+	if cinfo.Arch == "" {
+		missing = append(missing, "Arch")
+	}
+	if len(missing) > 0 {
+		return fmt.Errorf("failed to set build container for bootc distro: missing required info: %s", strings.Join(missing, ", "))
+	}
+
+	// TODO: make ImageID a requirement when we start using it instead of
+	// requiring a container spec in the serialize function (see note in
+	// NewBootc()).
+
+	// use the arch package to resolve architecture name aliases (amd64 ->
+	// x86_64) and to verify that the architecture is supported
+	buildArch, err := arch.FromString(cinfo.Arch)
+	if err != nil {
+		return fmt.Errorf("failed to determine architecture of build container for bootc distro: %w", err)
+	}
+
+	distroArches := d.ListArches()
+	if len(distroArches) != 1 {
+		// there should only ever be one architecture for a bootc distro
+		return fmt.Errorf("found %d architectures for bootc distro while setting build container: bootc distro should have exactly 1 architecture", len(distroArches))
+	}
+
+	// build container arch must match the base container arch
+	if _, err := d.GetArch(buildArch.String()); err != nil {
+		baseArch := distroArches[0]
+		return fmt.Errorf("failed to set build container for bootc distro: build container architecture %q does not match base container %q", buildArch, baseArch)
+	}
+
+	d.buildImgref = cinfo.Imgref
+	d.buildImageID = cinfo.ImageID
+	d.buildSourceInfo = cinfo.OSInfo
+
 	return nil
 }
