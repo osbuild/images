@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/osbuild/images/pkg/arch"
+	"github.com/osbuild/images/pkg/customizations/fsnode"
+	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
 )
@@ -117,4 +119,37 @@ func (p *EFIBootTree) serialize() (osbuild.Pipeline, error) {
 	grub2Stage := osbuild.NewGrubISOStage(grubOptions)
 	pipeline.AddStage(grub2Stage)
 	return pipeline, nil
+}
+
+// GetISOBootStages returns stages needed to setup booting from an ISO
+// This creates the efiboot.img, copies the EFI files into it, and copies
+// them to the /EFI directory of the pipeline
+func (bt *EFIBootTree) GetISOBootStages(inputName string, pt *disk.PartitionTable) ([]*osbuild.Stage, []*fsnode.File, error) {
+	stages := make([]*osbuild.Stage, 0)
+
+	filename := "images/efiboot.img"
+	stages = append(stages, osbuild.NewTruncateStage(&osbuild.TruncateStageOptions{
+		Filename: filename,
+		Size:     fmt.Sprintf("%d", pt.Size),
+	}))
+	stages = append(stages, osbuild.GenFsStages(pt, filename, inputName)...)
+
+	copyInputs := osbuild.NewPipelineTreeInputs("root-tree", bt.Name())
+	copyOptions, copyDevices, copyMounts := osbuild.GenCopyFSTreeOptions("root-tree", bt.Name(), filename, pt)
+	stages = append(stages, osbuild.NewCopyStage(copyOptions, copyInputs, copyDevices, copyMounts))
+
+	copyInputs = osbuild.NewPipelineTreeInputs("root-tree", bt.Name())
+	stages = append(stages, osbuild.NewCopyStageSimple(
+		&osbuild.CopyStageOptions{
+			Paths: []osbuild.CopyStagePath{
+				{
+					From: "input://root-tree/EFI",
+					To:   "tree:///",
+				},
+			},
+		},
+		copyInputs,
+	))
+
+	return stages, []*fsnode.File{}, nil
 }
