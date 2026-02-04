@@ -198,6 +198,9 @@ func (t *bootcImageType) manifestForDisk(bp *blueprint.Blueprint, options distro
 	filename := strings.Split(t.Filename(), ".")[0]
 
 	img := image.NewBootcDiskImage(platform, filename, containerSource, buildContainerSource)
+	if opts := buildOptions(t); opts != nil {
+		img.BuildOptions = opts
+	}
 	img.OSCustomizations.Users = users.UsersFromBP(customizations.GetUsers())
 
 	groups, err := customizations.GetGroups()
@@ -352,6 +355,9 @@ func (t *bootcImageType) manifestForISO(bp *blueprint.Blueprint, options distro.
 	img := image.NewAnacondaContainerInstaller(platformi, t.Filename(), containerSource)
 	if err := t.initAnacondaInstallerBaseFromSourceInfo(&img.AnacondaInstallerBase, sourceInfo, customizations); err != nil {
 		return nil, nil, err
+	}
+	if opts := buildOptions(t); opts != nil {
+		img.BuildOptions = opts
 	}
 	img.ContainerRemoveSignatures = true
 	// we auto-detect the lorax config from the source info
@@ -523,6 +529,9 @@ func (t *bootcImageType) manifestForLegacyISO(bp *blueprint.Blueprint, rng *rand
 	if err := t.initAnacondaInstallerBaseFromSourceInfo(&img.AnacondaInstallerBase, sourceInfo, customizations); err != nil {
 		return nil, nil, err
 	}
+	if opts := buildOptions(t); opts != nil {
+		img.BuildOptions = opts
+	}
 	img.ContainerRemoveSignatures = true
 	img.ExtraBasePackages = installerPkgSet
 	// our installer customizations come from the distrodefs (unlike in manifestForISO)
@@ -573,6 +582,9 @@ func (t *bootcImageType) manifestForPXETar(bp *blueprint.Blueprint, options dist
 
 	platform := PlatformFor(t.arch.Name(), bd.sourceInfo.UEFIVendor)
 	img := image.NewBootcPXEImage(platform, t.Filename(), containerSource, buildContainerSource)
+	if opts := buildOptions(t); opts != nil {
+		img.BuildOptions = opts
+	}
 	img.Compression = t.ImageTypeYAML.Compression
 	img.OSCustomizations.Users = users.UsersFromBP(customizations.GetUsers())
 
