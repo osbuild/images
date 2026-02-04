@@ -126,6 +126,123 @@ func TestNewBootc(t *testing.T) {
 	}
 }
 
+func TestSetBuildContainer(t *testing.T) {
+	// base bootc container info to initialise the distro before setting the
+	// build container info
+	baseBootcInfo := &bootc.Info{
+		Imgref:        "example.com/containers/distro-bootc:version12",
+		ImageID:       "acf88e518194fac963a1b2e2e4110e38a4ce5fb3fceddd624fae8997d4566930",
+		Arch:          "aarch64",
+		DefaultRootFs: "xfs",
+		Size:          100 * datasizes.MiB,
+	}
+
+	type testCase struct {
+		buildInfo       *bootc.Info
+		expectedImgref  string
+		expectedImageID string
+		expectedError   string
+	}
+
+	testCases := map[string]testCase{
+		"empty": {
+			expectedError: "failed to set build container for bootc distro: container info is empty",
+		},
+
+		"ok": {
+			buildInfo: &bootc.Info{
+				Imgref:  "example.com/containers/distro-bootc:build42",
+				ImageID: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+				Arch:    "arm64",
+			},
+			expectedImgref:  "example.com/containers/distro-bootc:build42",
+			expectedImageID: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+		},
+
+		"noimgref": {
+			buildInfo: &bootc.Info{
+				ImageID: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+				Arch:    "arm64",
+			},
+			expectedError: "failed to set build container for bootc distro: missing required info: Imgref",
+		},
+
+		"missing-multiple": {
+			buildInfo: &bootc.Info{
+				ImageID: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+			},
+			expectedError: "failed to set build container for bootc distro: missing required info: Imgref, Arch",
+		},
+
+		"noimageid": {
+			buildInfo: &bootc.Info{
+				Imgref: "example.com/containers/distro-bootc:build13",
+				Arch:   "arm64",
+			},
+			expectedImgref: "example.com/containers/distro-bootc:build13",
+		},
+
+		"arch-mismatch": {
+			buildInfo: &bootc.Info{
+				Imgref: "example.com/containers/distro-bootc:build99",
+				Arch:   "amd64",
+			},
+			expectedError: "failed to set build container for bootc distro: build container architecture \"x86_64\" does not match base container \"aarch64\"",
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			require := require.New(t)
+			bd, err := NewBootc("bootc", baseBootcInfo)
+			require.NoError(err)
+			require.NotNil(bd)
+
+			err = bd.SetBuildContainer(tc.buildInfo)
+			if tc.expectedError != "" {
+				require.EqualError(err, tc.expectedError)
+				return
+			}
+
+			require.Equal(tc.expectedImgref, bd.buildImgref)
+			require.Equal(tc.expectedImageID, bd.buildImageID)
+		})
+	}
+}
+
+func TestSetBuildContainerWrongNumArches(t *testing.T) {
+	baseBootcInfo := &bootc.Info{
+		Imgref:        "example.com/containers/distro-bootc:version12",
+		ImageID:       "acf88e518194fac963a1b2e2e4110e38a4ce5fb3fceddd624fae8997d4566930",
+		Arch:          "aarch64",
+		DefaultRootFs: "xfs",
+		Size:          100 * datasizes.MiB,
+	}
+	buildInfo := &bootc.Info{
+		Imgref: "example.com/containers/distro-bootc:build99",
+		Arch:   "aarch64",
+	}
+
+	require := require.New(t)
+	bd, err := NewBootc("bootc", baseBootcInfo)
+	require.NoError(err)
+	require.NotNil(bd)
+
+	require.Len(bd.arches, 1)
+
+	// add a second architecture to test the error handling
+	bd.arches["s390x"] = &architecture{
+		distro:     bd,
+		arch:       arch.ARCH_S390X,
+		imageTypes: map[string]distro.ImageType{},
+	}
+	require.EqualError(bd.SetBuildContainer(buildInfo), "found 2 architectures for bootc distro while setting build container: bootc distro should have exactly 1 architecture")
+
+	// remove the architectures to test the error handling
+	bd.arches = nil
+	require.EqualError(bd.SetBuildContainer(buildInfo), "found 0 architectures for bootc distro while setting build container: bootc distro should have exactly 1 architecture")
+}
+
 // Helper function for loading static bootc image type definitions onto the
 // expected distro object.
 func loadImageTypes(t *testing.T, d *BootcDistro) {
