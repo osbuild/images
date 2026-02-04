@@ -1,19 +1,16 @@
-package bootc_test
+package generic
 
 import (
 	"math/rand"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/osbuild/blueprint/pkg/blueprint"
-
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/disk/partition"
 	"github.com/osbuild/images/pkg/distro"
-	"github.com/osbuild/images/pkg/distro/bootc"
+	"github.com/stretchr/testify/assert"
 )
 
 func createRand() *rand.Rand {
@@ -103,9 +100,9 @@ func TestCheckFilesystemCustomizationsValidates(t *testing.T) {
 		},
 	} {
 		if tc.expectedErr == "" {
-			assert.NoError(t, bootc.CheckFilesystemCustomizations(tc.fsCust, tc.ptmode))
+			assert.NoError(t, checkFilesystemCustomizations(tc.fsCust, tc.ptmode))
 		} else {
-			assert.ErrorContains(t, bootc.CheckFilesystemCustomizations(tc.fsCust, tc.ptmode), tc.expectedErr)
+			assert.ErrorContains(t, checkFilesystemCustomizations(tc.fsCust, tc.ptmode), tc.expectedErr)
 		}
 	}
 }
@@ -161,7 +158,7 @@ func TestLocalMountpointPolicy(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.path, func(t *testing.T) {
-			err := bootc.CheckFilesystemCustomizations([]blueprint.FilesystemCustomization{{Mountpoint: tc.path}}, partition.RawPartitioningMode)
+			err := checkFilesystemCustomizations([]blueprint.FilesystemCustomization{{Mountpoint: tc.path}}, partition.RawPartitioningMode)
 			if err != nil && tc.allowed {
 				t.Errorf("expected %s to be allowed, but got error: %v", tc.path, err)
 			} else if err == nil && !tc.allowed {
@@ -288,7 +285,7 @@ func TestUpdateFilesystemSizes(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			assert.ElementsMatch(t, bootc.UpdateFilesystemSizes(tc.customizations, tc.minRootSize), tc.expected)
+			assert.ElementsMatch(t, updateFilesystemSizes(tc.customizations, tc.minRootSize), tc.expected)
 		})
 	}
 
@@ -318,7 +315,7 @@ func findMountableSizeableFor(pt *disk.PartitionTable, needle string) (disk.Moun
 func TestGenPartitionTableSetsRootfsForAllFilesystemsXFS(t *testing.T) {
 	rng := createRand()
 
-	imgType := bootc.NewTestBootcImageType("qcow2")
+	imgType := NewTestBootcImageType(t, "qcow2")
 
 	cus := &blueprint.Customizations{
 		Filesystem: []blueprint.FilesystemCustomization{
@@ -327,7 +324,7 @@ func TestGenPartitionTableSetsRootfsForAllFilesystemsXFS(t *testing.T) {
 		},
 	}
 	rootfsMinSize := uint64(0)
-	pt, err := imgType.GenPartitionTable(cus, rootfsMinSize, rng)
+	pt, err := imgType.genPartitionTable(cus, rootfsMinSize, rng)
 	assert.NoError(t, err)
 
 	for _, mntPoint := range []string{"/", "/boot", "/var/data"} {
@@ -348,21 +345,22 @@ func TestGenPartitionTableSetsRootfsForAllFilesystemsXFS(t *testing.T) {
 func TestGenPartitionTableSetsRootfsForAllFilesystemsBtrfs(t *testing.T) {
 	rng := createRand()
 
-	d := bootc.NewTestBootcDistroWithDefaultFs("btrfs")
+	d := NewTestBootcDistro(t)
+	d.defaultFs = "btrfs"
 	it, err := common.Must(d.GetArch("x86_64")).GetImageType("qcow2")
 	assert.NoError(t, err)
-	imgType := it.(*bootc.ImageType)
+	imgType := it.(*bootcImageType)
 	cus := &blueprint.Customizations{}
 	rootfsMinSize := uint64(0)
-	pt, err := imgType.GenPartitionTable(cus, rootfsMinSize, rng)
+	pt, err := imgType.genPartitionTable(cus, rootfsMinSize, rng)
 	assert.NoError(t, err)
 
 	mnt, _ := findMountableSizeableFor(pt, "/")
 	assert.Equal(t, "btrfs", mnt.GetFSType())
 
-	// btrfs has a default (ext4) /boot
+	// btrfs has a default (xfs) /boot
 	mnt, _ = findMountableSizeableFor(pt, "/boot")
-	assert.Equal(t, "ext4", mnt.GetFSType())
+	assert.Equal(t, "xfs", mnt.GetFSType())
 
 	// ESP is always vfat
 	mnt, _ = findMountableSizeableFor(pt, "/boot/efi")
@@ -371,7 +369,7 @@ func TestGenPartitionTableSetsRootfsForAllFilesystemsBtrfs(t *testing.T) {
 func TestGenPartitionTableDiskCustomizationRunsValidateLayoutConstraints(t *testing.T) {
 	rng := createRand()
 
-	imgType := bootc.NewTestBootcImageType("qcow2")
+	imgType := NewTestBootcImageType(t, "qcow2")
 
 	cus := &blueprint.Customizations{
 		Disk: &blueprint.DiskCustomization{
@@ -387,7 +385,7 @@ func TestGenPartitionTableDiskCustomizationRunsValidateLayoutConstraints(t *test
 			},
 		},
 	}
-	_, err := imgType.GenPartitionTable(cus, 0, rng)
+	_, err := imgType.genPartitionTable(cus, 0, rng)
 	assert.EqualError(t, err, "cannot use disk customization: multiple LVM volume groups are not yet supported")
 }
 
@@ -401,7 +399,7 @@ func TestGenPartitionTableDiskCustomizationUnknownTypesError(t *testing.T) {
 			},
 		},
 	}
-	_, err := bootc.CalcRequiredDirectorySizes(cus.Disk, 5*datasizes.GiB)
+	_, err := calcRequiredDirectorySizes(cus.Disk, 5*datasizes.GiB)
 	assert.EqualError(t, err, `unknown disk customization type "rando"`)
 }
 
@@ -590,7 +588,7 @@ func TestGenPartitionTableDiskCustomizationSizes(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			imgType := bootc.NewTestBootcImageType("qcow2")
+			imgType := NewTestBootcImageType(t, "qcow2")
 
 			rootfsMinsize := tc.rootfsMinSize
 			cus := &blueprint.Customizations{
@@ -598,7 +596,7 @@ func TestGenPartitionTableDiskCustomizationSizes(t *testing.T) {
 					Partitions: tc.partitions,
 				},
 			}
-			pt, err := imgType.GenPartitionTable(cus, rootfsMinsize, rng)
+			pt, err := imgType.genPartitionTable(cus, rootfsMinsize, rng)
 			assert.NoError(t, err)
 
 			var rootSize datasizes.Size
@@ -621,7 +619,7 @@ func TestGenPartitionTableDiskCustomizationSizes(t *testing.T) {
 }
 
 func TestManifestFilecustomizationsSad(t *testing.T) {
-	imgType := bootc.NewTestBootcImageType("qcow2")
+	imgType := NewTestBootcImageType(t, "qcow2")
 	bp := &blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Files: []blueprint.FileCustomization{
@@ -638,7 +636,7 @@ func TestManifestFilecustomizationsSad(t *testing.T) {
 }
 
 func TestManifestDirCustomizationsSad(t *testing.T) {
-	imgType := bootc.NewTestBootcImageType("qcow2")
+	imgType := NewTestBootcImageType(t, "qcow2")
 	bp := &blueprint.Blueprint{
 		Customizations: &blueprint.Customizations{
 			Directories: []blueprint.DirectoryCustomization{
@@ -655,19 +653,20 @@ func TestManifestDirCustomizationsSad(t *testing.T) {
 
 func TestGenPartitionTableFromOSInfo(t *testing.T) {
 	var bp blueprint.Blueprint
-	imgType := bootc.NewTestBootcImageType("qcow2")
+	imgType := NewTestBootcImageType(t, "qcow2")
 	// pretend a custom partition table is set via the bootc
 	// container sourceInfo mechanism
 	newPt, err := imgType.BasePartitionTable()
 	assert.NoError(t, err)
 	newPt.UUID = "01010101-01011-01011-01011-01010101"
-	imgType.SetSourceInfoPartitionTable(newPt)
+	d := imgType.arch.distro.(*BootcDistro)
+	d.sourceInfo.PartitionTable = newPt
 
 	// validate that the container uuid is part of the generated
 	// manifest
 	mf, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, common.ToPtr(int64(0)))
 	assert.NoError(t, err)
-	manifestJson, err := mf.Serialize(nil, bootc.TestDiskContainers, nil, nil)
+	manifestJson, err := mf.Serialize(nil, diskContainers, nil, nil)
 	assert.NoError(t, err)
 	assert.Contains(t, string(manifestJson), "01010101-01011-01011-01011-01010101")
 }

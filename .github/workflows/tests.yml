@@ -102,7 +102,7 @@ jobs:
         run: sudo go test ./pkg/bootc/... --fail-if-podman-missing
 
       - name: Run tests for bootc container
-        run: sudo go test ./pkg/distro/bootc/...
+        run: sudo go test ./pkg/distro/bootc/... ./pkg/distro/generic/...
 
   unit-tests-cs:
     strategy:
