@@ -99,10 +99,21 @@ func NewBootc(name string, cinfo *bootc.Info) (*BootcDistro, error) {
 	}
 
 	osInfo := cinfo.OSInfo
+
+	// Append the ID and version ID from the container to the distro name. This
+	// is consistent with the previous implementation from bootc-image-builder.
+	// It may be removed to allow the caller to set the ID directly based on
+	// the name string.
+	nameVer := fmt.Sprintf("%s-%s-%s", name, osInfo.OSRelease.ID, osInfo.OSRelease.VersionID)
+	id, err := distro.ParseID(nameVer)
+	if err != nil {
+		return nil, err
+	}
+
 	d := &BootcDistro{
 		// the ID is technically not allowed by the ID parser, as it doesn't
 		// contain a version, but we will relax this requirement later
-		id:              distro.ID{Name: name},
+		id:              *id,
 		imgref:          cinfo.Imgref,
 		imageID:         cinfo.ImageID,
 		buildImgref:     cinfo.Imgref, // default to using the same image for build for now
