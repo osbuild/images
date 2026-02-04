@@ -10,6 +10,7 @@ import (
 	"github.com/osbuild/images/pkg/customizations/anaconda"
 	"github.com/osbuild/images/pkg/customizations/bootc"
 	"github.com/osbuild/images/pkg/customizations/fdo"
+	"github.com/osbuild/images/pkg/customizations/firstboot"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/ignition"
 	"github.com/osbuild/images/pkg/customizations/kickstart"
@@ -343,6 +344,13 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 	}
 	if ca != nil {
 		osc.CACerts = ca.PEMCerts
+	}
+
+	if c != nil && c.Firstboot != nil {
+		osc.Firstboot, err = firstboot.FirstbootOptionsFromBP(*c.Firstboot)
+		if err != nil {
+			return manifest.OSCustomizations{}, fmt.Errorf("firstboot customization: %w", err)
+		}
 	}
 
 	if imageConfig.InstallWeakDeps != nil {
