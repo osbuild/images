@@ -56,7 +56,9 @@ func TestNewBootc(t *testing.T) {
 					},
 				},
 				id: distro.ID{
-					Name: "bootc",
+					Name:         "bootc-distroID",
+					MajorVersion: 83,
+					MinorVersion: -1,
 				},
 
 				releasever:    "83",
@@ -115,7 +117,9 @@ func TestNewBootc(t *testing.T) {
 					},
 				},
 				id: distro.ID{
-					Name: "bootc",
+					Name:         "bootc-aos",
+					MajorVersion: 5000,
+					MinorVersion: -1,
 				},
 
 				releasever:    "5000",
