@@ -32,17 +32,34 @@ func TestNewBootc(t *testing.T) {
 				Arch:          "arm64",
 				DefaultRootFs: "xfs",
 				Size:          100 * datasizes.MiB,
+				OSInfo: &osinfo.Info{
+					OSRelease: osinfo.OSRelease{
+						ID:        "distroID",
+						VersionID: "83",
+					},
+				},
 			},
 			expectedDistro: &BootcDistro{
-				imgref:          "example.com/containers/distro-bootc:version12",
-				imageID:         "acf88e518194fac963a1b2e2e4110e38a4ce5fb3fceddd624fae8997d4566930",
-				buildImgref:     "example.com/containers/distro-bootc:version12",
-				sourceInfo:      &osinfo.Info{},
-				buildSourceInfo: &osinfo.Info{},
+				imgref:      "example.com/containers/distro-bootc:version12",
+				imageID:     "acf88e518194fac963a1b2e2e4110e38a4ce5fb3fceddd624fae8997d4566930",
+				buildImgref: "example.com/containers/distro-bootc:version12",
+				sourceInfo: &osinfo.Info{
+					OSRelease: osinfo.OSRelease{
+						ID:        "distroID",
+						VersionID: "83",
+					},
+				},
+				buildSourceInfo: &osinfo.Info{
+					OSRelease: osinfo.OSRelease{
+						ID:        "distroID",
+						VersionID: "83",
+					},
+				},
 				id: distro.ID{
 					Name: "bootc",
 				},
 
+				releasever:    "83",
 				defaultFs:     "xfs",
 				rootfsMinSize: 200 * datasizes.MiB,
 				arches: map[string]distro.Arch{
@@ -59,6 +76,12 @@ func TestNewBootc(t *testing.T) {
 				Arch:          "aarch64",
 				DefaultRootFs: "xfs",
 				Size:          100 * datasizes.MiB,
+				OSInfo: &osinfo.Info{
+					OSRelease: osinfo.OSRelease{
+						ID:        "fedora",
+						VersionID: "2000",
+					},
+				},
 			},
 			expectedError: "failed to initialize bootc distro: missing required info: Imgref",
 		},
@@ -69,16 +92,33 @@ func TestNewBootc(t *testing.T) {
 				Arch:          "amd64",
 				DefaultRootFs: "xfs",
 				Size:          100 * datasizes.MiB,
+				OSInfo: &osinfo.Info{
+					OSRelease: osinfo.OSRelease{
+						ID:        "aos",
+						VersionID: "5000",
+					},
+				},
 			},
 			expectedDistro: &BootcDistro{
-				imgref:          "example.com/containers/distro-bootc:version12",
-				buildImgref:     "example.com/containers/distro-bootc:version12",
-				sourceInfo:      &osinfo.Info{},
-				buildSourceInfo: &osinfo.Info{},
+				imgref:      "example.com/containers/distro-bootc:version12",
+				buildImgref: "example.com/containers/distro-bootc:version12",
+				sourceInfo: &osinfo.Info{
+					OSRelease: osinfo.OSRelease{
+						ID:        "aos",
+						VersionID: "5000",
+					},
+				},
+				buildSourceInfo: &osinfo.Info{
+					OSRelease: osinfo.OSRelease{
+						ID:        "aos",
+						VersionID: "5000",
+					},
+				},
 				id: distro.ID{
 					Name: "bootc",
 				},
 
+				releasever:    "5000",
 				defaultFs:     "xfs",
 				rootfsMinSize: 200 * datasizes.MiB,
 				arches: map[string]distro.Arch{
@@ -93,7 +133,19 @@ func TestNewBootc(t *testing.T) {
 			info: &bootc.Info{
 				Imgref: "example.com/containers/distro-bootc:version12",
 			},
-			expectedError: "failed to initialize bootc distro: missing required info: Arch, DefaultRootFs, Size",
+			expectedError: "failed to initialize bootc distro: missing required info: Arch, DefaultRootFs, Size, OSInfo",
+		},
+
+		"osinfo-without-values": {
+			info: &bootc.Info{
+				Imgref:        "example.com/containers/distro-bootc:version12",
+				ImageID:       "acf88e518194fac963a1b2e2e4110e38a4ce5fb3fceddd624fae8997d4566930",
+				Arch:          "aarch64",
+				DefaultRootFs: "xfs",
+				Size:          100 * datasizes.MiB,
+				OSInfo:        &osinfo.Info{},
+			},
+			expectedError: "failed to initialize bootc distro: missing required info: OSInfo.OSRelease.ID, OSInfo.OSRelease.VersionID",
 		},
 
 		"unknown-arch": {
@@ -103,6 +155,12 @@ func TestNewBootc(t *testing.T) {
 				Arch:          "not-an-arch",
 				DefaultRootFs: "xfs",
 				Size:          100 * datasizes.MiB,
+				OSInfo: &osinfo.Info{
+					OSRelease: osinfo.OSRelease{
+						ID:        "aos",
+						VersionID: "5000",
+					},
+				},
 			},
 			expectedError: "failed to set bootc distro architecture: unsupported architecture \"not-an-arch\"",
 		},
@@ -135,6 +193,12 @@ func TestSetBuildContainer(t *testing.T) {
 		Arch:          "aarch64",
 		DefaultRootFs: "xfs",
 		Size:          100 * datasizes.MiB,
+		OSInfo: &osinfo.Info{
+			OSRelease: osinfo.OSRelease{
+				ID:        "whatever",
+				VersionID: "39",
+			},
+		},
 	}
 
 	type testCase struct {
@@ -217,6 +281,12 @@ func TestSetBuildContainerWrongNumArches(t *testing.T) {
 		Arch:          "aarch64",
 		DefaultRootFs: "xfs",
 		Size:          100 * datasizes.MiB,
+		OSInfo: &osinfo.Info{
+			OSRelease: osinfo.OSRelease{
+				ID:        "whatever",
+				VersionID: "39",
+			},
+		},
 	}
 	buildInfo := &bootc.Info{
 		Imgref: "example.com/containers/distro-bootc:build99",
