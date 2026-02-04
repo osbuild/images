@@ -55,9 +55,19 @@ func NewBootc(name string, cinfo *bootc.Info) (distro.Distro, error) {
 	if cinfo.Imgref == "" {
 		missing = append(missing, "Imgref")
 	}
-	if cinfo.ImageID == "" {
-		missing = append(missing, "ImageID")
-	}
+	// NOTE: Manifest generation for bootc-based images requires resolving the
+	// container ID through the traditional, application container resolver,
+	// and passed as a container spec to the serialize function. If we resolve
+	// the ImageID here, we wont need to do that second container resolve and
+	// we can keep the bootc-container information resolution in one place,
+	// instead of needing to resolve most information using pkg/bootc and just
+	// the image ID using pkg/container.
+	// After being copied to the BootcDistro struct, the ImageID has no effect,
+	// so we shouldn't require it, but we'll keep setting it until we need it
+	// to replace the requirement for the separate resolve operation.
+	// if cinfo.ImageID == "" {
+	// 	missing = append(missing, "ImageID")
+	// }
 	if cinfo.Arch == "" {
 		missing = append(missing, "Arch")
 	}
