@@ -778,8 +778,15 @@ func genManifest(t *testing.T, imgType distro.ImageType) string {
 func TestBuildContainerHandling(t *testing.T) {
 	canRunIntegration(t)
 
-	imgTag := bootctest.NewFakeContainer(t, "bootc", nil)
-	buildImgTag := bootctest.NewFakeContainer(t, "build", nil)
+	extraFiles := map[string]string{
+		"/test.md": "Build container handling: base image",
+	}
+	imgTag := bootctest.NewFakeContainer(t, "bootc", extraFiles)
+
+	extraFilesBuild := map[string]string{
+		"/test.md": "Build container handling: build image",
+	}
+	buildImgTag := bootctest.NewFakeContainer(t, "build", extraFilesBuild)
 
 	for _, withBuildContainer := range []bool{true, false} {
 		t.Run(fmt.Sprintf("build-cnt:%v", withBuildContainer), func(t *testing.T) {
@@ -830,7 +837,7 @@ func TestBuildContainerHandling(t *testing.T) {
 	}
 }
 
-func TestInteratedBuildDiskYAML(t *testing.T) {
+func TestIntegratedBuildDiskYAML(t *testing.T) {
 	canRunIntegration(t)
 
 	diskYAML := `
@@ -853,7 +860,11 @@ partition_table:
 	}
 
 	imgTag := bootctest.NewFakeContainer(t, "bootc", extraFiles)
-	buildImgTag := bootctest.NewFakeContainer(t, "build", nil)
+
+	extraFilesBuild := map[string]string{
+		"/test.md": "Integrated build disk YAML",
+	}
+	buildImgTag := bootctest.NewFakeContainer(t, "build", extraFilesBuild)
 
 	for _, withBuildContainer := range []bool{true, false} {
 		t.Run(fmt.Sprintf("build-cnt:%v", withBuildContainer), func(t *testing.T) {
