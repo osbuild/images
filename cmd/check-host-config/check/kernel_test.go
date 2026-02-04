@@ -22,6 +22,7 @@ func TestKernelCheck(t *testing.T) {
 		wantError     bool
 		wantSkip      bool
 		wantFail      bool
+		wantWarn      bool
 	}{
 		{
 			name:      "skip when kernel is nil",
@@ -69,7 +70,7 @@ func TestKernelCheck(t *testing.T) {
 			},
 			readFileData: []byte("BOOT_IMAGE=/vmlinuz-6.1.0 root=UUID=1234-5678 ro quiet"),
 			wantError:    true,
-			wantFail:     true,
+			wantWarn:     true,
 		},
 		{
 			name: "pass with matching kernel-debug name",
@@ -123,6 +124,9 @@ func TestKernelCheck(t *testing.T) {
 				}
 				if tt.wantFail {
 					assert.True(t, check.IsFail(err))
+				}
+				if tt.wantWarn {
+					assert.True(t, check.IsWarning(err))
 				}
 			} else {
 				require.NoError(t, err)
