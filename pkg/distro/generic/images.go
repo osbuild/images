@@ -584,9 +584,9 @@ func ostreeDeploymentCustomizations(
 	return deploymentConf, nil
 }
 
-func buildOptions(t *imageType) *manifest.BuildOptions {
+func buildOptions(t distro.ImageType) *manifest.BuildOptions {
 	buildOpts := &manifest.BuildOptions{}
-	if tweaks := t.arch.distro.GetTweaks(); tweaks != nil && tweaks.RPMKeys != nil && tweaks.RPMKeys.IgnoreBuildImportFailures {
+	if tweaks := t.Arch().Distro().GetTweaks(); tweaks != nil && tweaks.RPMKeys != nil && tweaks.RPMKeys.IgnoreBuildImportFailures {
 		buildOpts.RPMStageIgnoreGPGImportFailures = tweaks.RPMKeys.IgnoreBuildImportFailures
 	}
 	return buildOpts
