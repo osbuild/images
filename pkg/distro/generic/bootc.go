@@ -79,16 +79,26 @@ func NewBootc(name string, cinfo *bootc.Info) (*BootcDistro, error) {
 		missing = append(missing, "Size")
 	}
 
+	// The following may not be strictly required, but they were used to define
+	// the name of the distribution in the previous implementation of the bootc
+	// distro. We set them to required and use them the same way for now, but
+	// will likely drop this requirement and the naming behaviour later.
+	if cinfo.OSInfo == nil {
+		missing = append(missing, "OSInfo")
+	} else {
+		if cinfo.OSInfo.OSRelease.ID == "" {
+			missing = append(missing, "OSInfo.OSRelease.ID")
+		}
+		if cinfo.OSInfo.OSRelease.VersionID == "" {
+			missing = append(missing, "OSInfo.OSRelease.VersionID")
+		}
+	}
+
 	if len(missing) > 0 {
 		return nil, fmt.Errorf("failed to initialize bootc distro: missing required info: %s", strings.Join(missing, ", "))
 	}
 
 	osInfo := cinfo.OSInfo
-	if osInfo == nil {
-		// TODO: required?
-		osInfo = &osinfo.Info{}
-	}
-
 	d := &BootcDistro{
 		// the ID is technically not allowed by the ID parser, as it doesn't
 		// contain a version, but we will relax this requirement later
