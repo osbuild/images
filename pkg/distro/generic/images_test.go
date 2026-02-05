@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/blueprint/pkg/blueprint"
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
 )
@@ -24,7 +25,6 @@ func isoTestImageType() *imageType {
 }
 
 func TestInstallerCustomizationsHonorKernelOptions(t *testing.T) {
-
 	for _, tc := range []struct {
 		imageConfig          *distro.ImageConfig
 		kernelCustomizations *blueprint.KernelCustomization
@@ -63,8 +63,45 @@ func TestInstallerCustomizationsHonorKernelOptions(t *testing.T) {
 		it.ImageConfigYAML.ImageConfig = tc.imageConfig
 		c := &blueprint.Customizations{Kernel: tc.kernelCustomizations}
 
-		isc, err := installerCustomizations(it, c)
+		isc, err := installerCustomizations(it, c, distro.ImageOptions{})
 		require.NoError(t, err)
 		assert.Equal(t, tc.expected, isc.KernelOptionsAppend)
 	}
+}
+
+func TestInstallerCustomizationsOverridePreview(t *testing.T) {
+	for _, tc := range []struct {
+		distroPreview bool
+		imageOptions  distro.ImageOptions
+		expected      bool
+	}{
+		{
+			true,
+			distro.ImageOptions{},
+			true,
+		},
+		{
+			false,
+			distro.ImageOptions{},
+			false,
+		},
+		{
+			true,
+			distro.ImageOptions{Preview: common.ToPtr(false)},
+			false,
+		},
+		{
+			false,
+			distro.ImageOptions{Preview: common.ToPtr(true)},
+			true,
+		},
+	} {
+		it := isoTestImageType()
+		it.arch.distro.Preview = tc.distroPreview
+
+		isc, err := installerCustomizations(it, nil, tc.imageOptions)
+		require.NoError(t, err)
+		assert.Equal(t, tc.expected, isc.Preview)
+	}
+
 }
