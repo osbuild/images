@@ -41,7 +41,7 @@ func kernelCheck(meta *Metadata, config *buildconfig.BuildConfig) error {
 		}
 
 		if !strings.Contains(string(cmdline), expected.Append) {
-			return Warning("kernel options append does not match:", expected.Append)
+			return Fail("kernel options append does not match:", expected.Append)
 		}
 	}
 
