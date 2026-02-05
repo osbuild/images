@@ -262,6 +262,7 @@ func TestRH10Architecture_ListImageTypes(t *testing.T) {
 				"azure-sap-rhui",
 				"azure-sapapps-rhui",
 				"ec2",
+				"ec2-cvm",
 				"ec2-ha",
 				"ec2-sap",
 				"vagrant-libvirt",

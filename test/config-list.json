@@ -194,6 +194,7 @@
         "container",
         "ec2",
         "ec2-ha",
+        "ec2-cvm",
         "edge-container",
         "gce",
         "gce-rhui",
