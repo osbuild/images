@@ -141,6 +141,7 @@ distros:
           - azure-sapapps-rhui
           - ec2-sap
           - ec2-ha
+          - ec2-cvm
       "some image types are non-rhel-only":
         when:
           distro_name: "rhel"
@@ -153,6 +154,7 @@ distros:
           version_less_than: "9.6"
         ignore_image_types:
           - "azure-cvm"
+          - "ec2-cvm"
       "handle PQC for rhel only":
         when:
           distro_name: "rhel"
