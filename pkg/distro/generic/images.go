@@ -382,8 +382,18 @@ func ostreeCommitServerCustomizations(t *imageType) manifest.OSTreeCommitServerC
 	return c
 }
 
-func installerCustomizations(t *imageType, c *blueprint.Customizations) (manifest.InstallerCustomizations, error) {
+func installerCustomizations(t *imageType, c *blueprint.Customizations, o distro.ImageOptions) (manifest.InstallerCustomizations, error) {
 	d := t.arch.distro
+
+	// By default we get the preview state from the distro. When given through
+	// the image options we set it explicitly to that value. This allows us to
+	// still mark next releases as 'preview' by default but also allows for a
+	// user to override this per-build (e.g. when a release candidate is produced
+	// by pungi).
+	preview := d.DistroYAML.Preview
+	if o.Preview != nil {
+		preview = *o.Preview
+	}
 
 	isc := manifest.InstallerCustomizations{
 		FIPS:                    c.GetFIPS(),
@@ -391,7 +401,7 @@ func installerCustomizations(t *imageType, c *blueprint.Customizations) (manifes
 		Product:                 d.Product(),
 		OSVersion:               d.OsVersion(),
 		Release:                 fmt.Sprintf("%s %s", d.Product(), d.OsVersion()),
-		Preview:                 d.DistroYAML.Preview,
+		Preview:                 preview,
 		Variant:                 t.Variant,
 	}
 
@@ -679,7 +689,7 @@ func liveInstallerImage(t *imageType,
 	}
 
 	var err error
-	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations)
+	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations, options)
 	if err != nil {
 		return nil, err
 	}
@@ -721,7 +731,7 @@ func imageInstallerImage(t *imageType,
 
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
 
-	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations)
+	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations, options)
 	if err != nil {
 		return nil, err
 	}
@@ -892,7 +902,7 @@ func iotInstallerImage(t *imageType,
 	// kickstart though kickstart does support setting them
 	img.Kickstart.Timezone, _ = customizations.GetTimezoneSettings()
 
-	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations)
+	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations, options)
 	if err != nil {
 		return nil, err
 	}
@@ -1017,7 +1027,7 @@ func iotSimplifiedInstallerImage(t *imageType,
 			}
 		}
 	}
-	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations)
+	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations, options)
 	if err != nil {
 		return nil, err
 	}
@@ -1085,7 +1095,7 @@ func networkInstallerImage(t *imageType,
 
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
 
-	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations)
+	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations, options)
 	if err != nil {
 		return nil, err
 	}
