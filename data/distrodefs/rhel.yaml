@@ -30,6 +30,7 @@ distros:
           - azure-sapapps-rhui
           - ec2-sap
           - ec2-ha
+          - ec2-cvm
       "some image types are non-rhel-only":
         when:
           distro_name: "rhel"
