@@ -1670,9 +1670,9 @@ image_types:
     blueprint:
       supported_options: *supported_options_ostree_disk
 
-  "iot-bootable-container":
+  "generic-bootable-container":
     <<: *rpm_ostree_imgtype_common
-    filename: "iot-bootable-container.tar"
+    filename: "generic-bootable-container.tar"
     mime_type: "application/x-tar"
     image_func: "bootable_container"
     exports: ["ostree-encapsulate"]
@@ -1787,7 +1787,7 @@ image_types:
             - "plymouth"         # for (datacenter/cloud oriented) servers we want to see the details by default.  https:#lists.fedoraproject.org/archives/list/devel@lists.fedoraproject.org/thread/HSMISZ3ETWQ4ETVLWZQJ55ARZT27AAV3/
             - "systemd-networkd"  # we use NetworkManager
           conditions:
-            "iot-bootable-container aarch64 extras":
+            "generic-bootable-container aarch64 extras":
               when:
                 arch: "aarch64"
               append:
@@ -1797,7 +1797,7 @@ image_types:
                 exclude:
                   - "perl"
                   - "perl-interpreter"
-            "iot-bootable-container ppc64le extras":
+            "generic-bootable-container ppc64le extras":
               when:
                 arch: "ppc64le"
               append:
@@ -1806,7 +1806,7 @@ image_types:
                   - "librtas"
                   - "powerpc-utils-core"
                   - "ppc64-diag-rtas"
-            "iot-bootable-container x86_64 extras":
+            "generic-bootable-container x86_64 extras":
               when:
                 arch: "x86_64"
               append:
