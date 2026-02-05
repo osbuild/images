@@ -86,12 +86,7 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 	default:
 	}
 
-	bootTreePipeline := manifest.NewEFIBootTree(buildPipeline, img.InstallerCustomizations.Product, img.InstallerCustomizations.OSVersion)
-	bootTreePipeline.Platform = img.platform
-	bootTreePipeline.UEFIVendor = img.platform.GetUEFIVendor()
-	bootTreePipeline.ISOLabel = img.ISOCustomizations.Label
-	bootTreePipeline.DefaultMenu = img.InstallerCustomizations.DefaultMenu
-
+	// Setup the kernel options for the ostree installer
 	if img.Kickstart == nil || img.Kickstart.OSTree == nil {
 		return nil, fmt.Errorf("kickstart options not set for ostree installer")
 	}
@@ -103,7 +98,9 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 		kernelOpts = append(kernelOpts, "fips=1")
 	}
 	kernelOpts = append(kernelOpts, img.InstallerCustomizations.KernelOptionsAppend...)
-	bootTreePipeline.KernelOpts = kernelOpts
+
+	// Setup the bootloaders
+	bootloaders := img.Bootloaders(buildPipeline, img.platform, kernelOpts)
 
 	var subscriptionPipeline *manifest.Subscription
 	if img.Subscription != nil {
@@ -111,8 +108,9 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 		subscriptionPipeline = manifest.NewSubscription(buildPipeline, img.Subscription)
 	}
 
-	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
+	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, anacondaPipeline, rootfsImagePipeline, bootloaders)
 	initIsoTreePipeline(isoTreePipeline, &img.AnacondaInstallerBase, rng)
+
 	isoTreePipeline.PayloadPath = "/ostree/repo"
 	isoTreePipeline.OSTreeCommitSource = &img.Commit
 	isoTreePipeline.SubscriptionPipeline = subscriptionPipeline
