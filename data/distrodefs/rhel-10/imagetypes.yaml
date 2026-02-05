@@ -45,6 +45,7 @@
         uefi:
           - "dracut-config-generic"
           - "efibootmgr"
+          - "grub2"
           - "grub2-efi-x64"
           - "shim-x64"
     x86_64_bios_platform: &x86_64_bios_platform
@@ -93,6 +94,7 @@
         uefi:
           - "dracut-config-generic"
           - "efibootmgr"
+          - "grub2"
           - "grub2-efi-aa64"
           - "grub2-tools"
           - "shim-aa64"
@@ -129,6 +131,7 @@
         bios:
           - "dracut-config-generic"
           - "powerpc-utils"
+          - "grub2"
           - "grub2-ppc64le"
           - "grub2-ppc64le-modules"
       build_packages:
@@ -1478,7 +1481,6 @@ image_types:
             - "dhcpcd"
             - "yum-utils"
             - "dracut-config-generic"
-            - "grub2"
             - "langpacks-en"
             - "NetworkManager-cloud-setup"
             - "redhat-release"
