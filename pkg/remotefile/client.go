@@ -1,6 +1,7 @@
 package remotefile
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,8 +18,8 @@ func NewClient() *Client {
 	}
 }
 
-func (c *Client) makeRequest(u *url.URL) ([]byte, error) {
-	req, err := http.NewRequest("GET", u.String(), nil)
+func (c *Client) makeRequest(ctx context.Context, u *url.URL) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -50,11 +51,11 @@ func (c *Client) validateURL(u string) (*url.URL, error) {
 
 // resolve and return the contents of a remote file
 // which can be used later, in the pipeline
-func (c *Client) Resolve(u string) ([]byte, error) {
+func (c *Client) Resolve(ctx context.Context, u string) ([]byte, error) {
 	parsedURL, err := c.validateURL(u)
 	if err != nil {
 		return nil, err
 	}
 
-	return c.makeRequest(parsedURL)
+	return c.makeRequest(ctx, parsedURL)
 }

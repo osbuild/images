@@ -14,8 +14,7 @@ type resolveResult struct {
 	err     error
 }
 
-// TODO: could make this more generic
-// since this is shared with the container
+// TODO: could make this more generic since this is shared with the container
 // resolver
 type Resolver struct {
 	jobs  int
@@ -24,9 +23,9 @@ type Resolver struct {
 	ctx context.Context
 }
 
-func NewResolver() *Resolver {
+func NewResolver(ctx context.Context) *Resolver {
 	return &Resolver{
-		ctx:   context.Background(),
+		ctx:   ctx,
 		queue: make(chan resolveResult, 2),
 	}
 }
@@ -36,7 +35,7 @@ func (r *Resolver) Add(url string) {
 	r.jobs += 1
 
 	go func() {
-		content, err := client.Resolve(url)
+		content, err := client.Resolve(r.ctx, url)
 		r.queue <- resolveResult{url: url, content: content, err: err}
 	}()
 }

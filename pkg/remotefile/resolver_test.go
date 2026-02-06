@@ -1,6 +1,7 @@
 package remotefile
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -11,7 +12,7 @@ func TestSingleInputResolver(t *testing.T) {
 	server := makeTestServer()
 	url := server.URL + "/key1"
 
-	resolver := NewResolver()
+	resolver := NewResolver(context.Background())
 
 	expectedOutput := Spec{
 		URL:     url,
@@ -41,7 +42,7 @@ func TestMultiInputResolver(t *testing.T) {
 		Content: []byte("key2\n"),
 	}
 
-	resolver := NewResolver()
+	resolver := NewResolver(context.Background())
 
 	resolver.Add(urlOne)
 	resolver.Add(urlTwo)
@@ -56,7 +57,7 @@ func TestMultiInputResolver(t *testing.T) {
 func TestInvalidInputResolver(t *testing.T) {
 	url := ""
 
-	resolver := NewResolver()
+	resolver := NewResolver(context.Background())
 
 	resolver.Add(url)
 
@@ -72,7 +73,7 @@ func TestMultiInvalidInputResolver(t *testing.T) {
 	urlOne := ""
 	urlTwo := "hello"
 
-	resolver := NewResolver()
+	resolver := NewResolver(context.Background())
 
 	resolver.Add(urlOne)
 	resolver.Add(urlTwo)
