@@ -25,7 +25,7 @@ type Resolver struct {
 
 func NewResolver(ctx context.Context) *Resolver {
 	return &Resolver{
-		queue: make(chan resolveResult, 2),
+		queue: make(chan resolveResult),
 		wg:    sync.WaitGroup{},
 		ctx:   ctx,
 	}
