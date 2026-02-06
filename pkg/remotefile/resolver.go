@@ -3,6 +3,8 @@ package remotefile
 import (
 	"context"
 	"fmt"
+	"slices"
+	"sort"
 	"strings"
 )
 
@@ -59,7 +61,8 @@ func (r *Resolver) Finish() ([]Spec, error) {
 	}
 
 	if len(errs) > 0 {
-		return resultItems, fmt.Errorf("failed to resolve remote files: %s", strings.Join(errs, "; "))
+		sort.Strings(errs)
+		return resultItems, fmt.Errorf("failed to resolve remote files: %s", strings.Join(slices.Compact(errs), "; "))
 	}
 
 	return resultItems, nil
