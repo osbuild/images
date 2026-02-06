@@ -1481,6 +1481,7 @@ image_types:
             - "dhcpcd"
             - "yum-utils"
             - "dracut-config-generic"
+            - "kdump-utils"
             - "langpacks-en"
             - "NetworkManager-cloud-setup"
             - "redhat-release"
