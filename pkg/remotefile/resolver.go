@@ -6,6 +6,7 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"sync"
 )
 
 type resolveResult struct {
@@ -17,46 +18,49 @@ type resolveResult struct {
 // TODO: could make this more generic since this is shared with the container
 // resolver
 type Resolver struct {
-	jobs  int
 	queue chan resolveResult
-
-	ctx context.Context
+	wg    sync.WaitGroup
+	ctx   context.Context
 }
 
 func NewResolver(ctx context.Context) *Resolver {
 	return &Resolver{
-		ctx:   ctx,
 		queue: make(chan resolveResult, 2),
+		wg:    sync.WaitGroup{},
+		ctx:   ctx,
 	}
 }
 
+// Add a URL to the resolver queue. When called after Finish was called,
+// it may panic.
 func (r *Resolver) Add(url string) {
+	r.wg.Add(1)
 	client := NewClient()
-	r.jobs += 1
 
 	go func() {
+		defer r.wg.Done()
+
 		content, err := client.Resolve(r.ctx, url)
 		r.queue <- resolveResult{url: url, content: content, err: err}
 	}()
 }
 
+// Finish starts collecting of results and returns them. No further calls to Add
+// are allowed after this call. It blocks until all results are collected.
 func (r *Resolver) Finish() ([]Spec, error) {
+	go func() {
+		r.wg.Wait()
+		close(r.queue)
+	}()
 
-	resultItems := make([]Spec, 0, r.jobs)
+	var resultItems []Spec
 	var errs []string
-	for r.jobs > 0 {
-		result := <-r.queue
-		r.jobs -= 1
-
-		if result.err != nil {
+	for result := range r.queue {
+		if result.err == nil {
+			resultItems = append(resultItems, Spec{URL: result.url, Content: result.content})
+		} else {
 			errs = append(errs, result.err.Error())
-			continue
 		}
-
-		resultItems = append(resultItems, Spec{
-			URL:     result.url,
-			Content: result.content,
-		})
 	}
 
 	if len(errs) > 0 {
