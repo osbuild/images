@@ -18,6 +18,11 @@ import (
 	"github.com/osbuild/images/pkg/ostree"
 )
 
+type ISOBootloader interface {
+	Manifest() *Manifest
+	GetISOBootStages(inputName string, pt *disk.PartitionTable) ([]*osbuild.Stage, []*fsnode.File, error)
+}
+
 type ISORootfsType uint64
 
 // These constants are used by the ISO images to control the style of the root filesystem
