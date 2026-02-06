@@ -28,8 +28,12 @@ func (c *Client) makeRequest(ctx context.Context, u *url.URL) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("unexpected status %d: %s", resp.StatusCode, u.String())
+	}
+
 	output, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err

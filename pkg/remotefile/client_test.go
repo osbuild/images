@@ -20,6 +20,9 @@ func makeTestServer() *httptest.Server {
 		if r.URL.Path == "/key2" {
 			fmt.Fprintln(w, "key2")
 		}
+		if r.URL.Path == "/notfound" {
+			w.WriteHeader(http.StatusNotFound)
+		}
 	}))
 }
 
@@ -36,6 +39,15 @@ func TestClientResolve(t *testing.T) {
 	expectedOutput := "key1\n"
 
 	assert.Equal(t, expectedOutput, string(output))
+}
+
+func TestClientResolveNonOKStatus(t *testing.T) {
+	server := makeTestServer()
+
+	client := NewClient()
+	_, err := client.Resolve(context.Background(), server.URL+"/notfound")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unexpected status 404")
 }
 
 func TestInputSpecValidation(t *testing.T) {
