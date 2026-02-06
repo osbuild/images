@@ -1,6 +1,7 @@
 package remotefile
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -29,7 +30,7 @@ func TestClientResolve(t *testing.T) {
 
 	client := NewClient()
 
-	output, err := client.Resolve(url)
+	output, err := client.Resolve(context.Background(), url)
 	assert.NoError(t, err)
 
 	expectedOutput := "key1\n"
