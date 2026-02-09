@@ -919,7 +919,6 @@ distros:
     release_version: 43
     module_platform_id: platform:f43
     product: "Fedora"
-    ostree_ref_tmpl: "fedora/43/%s/iot"
     defs_path: fedora
     iso_label_tmpl: "{{.Product}}-ISO"
     runner: &fedora_runner
@@ -938,7 +937,6 @@ distros:
     os_version: "{{.MajorVersion}}"
     release_version: "{{.MajorVersion}}"
     module_platform_id: "platform:f{{.MajorVersion}}"
-    ostree_ref_tmpl: "fedora/{{.MajorVersion}}/%s/iot"
     runner:
       <<: *fedora_runner
       name: org.osbuild.fedora{{.MajorVersion}}
@@ -951,7 +949,6 @@ distros:
     release_version: 10
     module_platform_id: "platform:el10"
     vendor: "centos"
-    ostree_ref_tmpl: "centos/10/%s/edge"
     default_fs_type: "xfs"
     defs_path: rhel-10
 
@@ -962,7 +959,6 @@ distros:
     release_version: "{{.MajorVersion}}"
     module_platform_id: "platform:el{{.MajorVersion}}"
     vendor: "redhat"
-    ostree_ref_tmpl: "rhel/{{.MajorVersion}}/%s/edge"
     default_fs_type: "xfs"
     defs_path: rhel-10
     tweaks:
@@ -985,7 +981,6 @@ func TestDistrosLoadingExact(t *testing.T) {
 		ReleaseVersion:   "43",
 		ModulePlatformID: "platform:f43",
 		Product:          "Fedora",
-		OSTreeRefTmpl:    "fedora/43/%s/iot",
 		DefsPath:         "fedora",
 		ISOLabelTmpl:     "{{.Product}}-ISO",
 		Runner: runner.RunnerConf{
@@ -1010,7 +1005,6 @@ func TestDistrosLoadingExact(t *testing.T) {
 		ReleaseVersion:   "10",
 		ModulePlatformID: "platform:el10",
 		Product:          "CentOS Stream",
-		OSTreeRefTmpl:    "centos/10/%s/edge",
 		DefsPath:         "rhel-10",
 		DefaultFSType:    disk.FS_XFS,
 		ID:               distro.ID{Name: "centos", MajorVersion: 10, MinorVersion: -1},
@@ -1032,7 +1026,6 @@ func TestDistrosLoadingFactoryCompat(t *testing.T) {
 		ReleaseVersion:   "10",
 		ModulePlatformID: "platform:el10",
 		Product:          "Red Hat Enterprise Linux",
-		OSTreeRefTmpl:    "rhel/10/%s/edge",
 		DefsPath:         "rhel-10",
 		DefaultFSType:    disk.FS_XFS,
 		ID:               distro.ID{Name: "rhel", MajorVersion: 10, MinorVersion: 1},
@@ -1053,7 +1046,6 @@ func TestDistrosLoadingFactoryCompat(t *testing.T) {
 		ReleaseVersion:   "40",
 		ModulePlatformID: "platform:f40",
 		Product:          "Fedora",
-		OSTreeRefTmpl:    "fedora/40/%s/iot",
 		DefsPath:         "fedora",
 		ISOLabelTmpl:     "{{.Product}}-ISO",
 		Runner: runner.RunnerConf{

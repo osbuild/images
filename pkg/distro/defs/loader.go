@@ -78,7 +78,6 @@ type DistroYAML struct {
 	ReleaseVersion   string            `yaml:"release_version"`
 	ModulePlatformID string            `yaml:"module_platform_id"`
 	Product          string            `yaml:"product"`
-	OSTreeRefTmpl    string            `yaml:"ostree_ref_tmpl"`
 	Runner           runner.RunnerConf `yaml:"runner"`
 
 	// ISOLabelTmpl can contain {{.Product}},{{.OsVersion}},{{.Arch}},{{.ISOLabel}}
@@ -153,7 +152,6 @@ func (d *DistroYAML) runTemplates(id distro.ID) error {
 	d.Name = subs(d.Name)
 	d.OsVersion = subs(d.OsVersion)
 	d.ReleaseVersion = subs(d.ReleaseVersion)
-	d.OSTreeRefTmpl = subs(d.OSTreeRefTmpl)
 	d.ModulePlatformID = subs(d.ModulePlatformID)
 	d.Runner.Name = subs(d.Runner.Name)
 	for a := range d.BootstrapContainers {
