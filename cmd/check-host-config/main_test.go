@@ -46,7 +46,8 @@ func generateSmokeCACert(t *testing.T) string {
 // temporary Fedora container. It is ran on our CI/CD. To run it locally (in
 // podman), execute `make host-check-test`.
 //
-// Tests which require running services are not supported in the smoke test.
+// Tests which require running services or commands which are not relevant for
+// Fedora environment (dnf modularity, OpenSCAP) are not supported in the smoke test.
 //
 //nolint:gosec // G303: Temporary files need to be consistently named
 func TestSmokeAll(t *testing.T) {
@@ -86,6 +87,11 @@ func TestSmokeAll(t *testing.T) {
 	}
 	if err := os.WriteFile("/etc/hostname", []byte(smokeHostname+"\n"), 0644); err != nil {
 		t.Fatal(err)
+	}
+
+	// users: create a dedicated user with UID 1000 for the users check
+	if out, err := exec.Command("useradd", "-u", "1000", "-m", "smokeuser").CombinedOutput(); err != nil {
+		t.Fatalf("useradd smokeuser: %v, output: %s", err, out)
 	}
 
 	tests := []struct {
@@ -140,6 +146,7 @@ func TestSmokeAll(t *testing.T) {
 			c: blueprint.Customizations{
 				User: []blueprint.UserCustomization{
 					{Name: "root"},
+					{Name: "smokeuser"},
 				},
 			},
 		},
