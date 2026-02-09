@@ -1,10 +1,12 @@
 package generic
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"math/rand"
 	"slices"
+	"text/template"
 
 	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/internal/common"
@@ -35,9 +37,11 @@ type imageType struct {
 
 	image    imageFunc
 	isoLabel isoLabelFunc
+
+	ostreeRef string
 }
 
-func newImageTypeFrom(d *distribution, ar *architecture, imgYAML defs.ImageTypeYAML) imageType {
+func newImageTypeFrom(d *distribution, ar *architecture, imgYAML defs.ImageTypeYAML) (imageType, error) {
 	it := imageType{
 		ImageTypeYAML: imgYAML,
 		isoLabel:      d.getISOLabelFunc(imgYAML.ISOLabel),
@@ -71,11 +75,14 @@ func newImageTypeFrom(d *distribution, ar *architecture, imgYAML defs.ImageTypeY
 	case "pxe_tar":
 		it.image = pxeTarImage
 	default:
-		err := fmt.Errorf("unknown image func: %v for %v", imgYAML.Image, imgYAML.Name())
-		panic(err)
+		return imageType{}, fmt.Errorf("unknown image func: %v for %v", imgYAML.Image, imgYAML.Name())
 	}
 
-	return it
+	if err := it.expandOSTreeRefTemplate(ar, d.ID); err != nil {
+		return imageType{}, nil
+	}
+
+	return it, nil
 }
 
 func (t *imageType) Name() string {
@@ -99,11 +106,7 @@ func (t *imageType) MIMEType() string {
 }
 
 func (t *imageType) OSTreeRef() string {
-	d := t.arch.distro
-	if t.ImageTypeYAML.RPMOSTree {
-		return fmt.Sprintf(d.OSTreeRef(), t.arch.Name())
-	}
-	return ""
+	return t.ostreeRef
 }
 
 func (t *imageType) ISOLabel() (string, error) {
@@ -345,6 +348,27 @@ func (t *imageType) SupportedBlueprintOptions() []string {
 	// not configuration / customizations. These should always be implicitly
 	// supported by all image types.
 	return append(t.ImageTypeYAML.Blueprint.SupportedOptions, "name", "version", "description")
+}
+
+func (t *imageType) expandOSTreeRefTemplate(ar *architecture, id distro.ID) error {
+	if t.ImageTypeYAML.RPMOSTree {
+		var buf bytes.Buffer
+
+		tmpl, err := template.New("ostree-ref").Parse(t.ImageTypeYAML.OSTree.Ref)
+		if err != nil {
+			return err
+		}
+
+		if err := tmpl.Execute(&buf, id); err != nil {
+			return err
+		}
+
+		t.ostreeRef = fmt.Sprintf(buf.String(), ar.Name())
+
+		return nil
+	}
+
+	return nil
 }
 
 func bootstrapContainerFor(t *imageType) string {

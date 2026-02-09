@@ -43,6 +43,7 @@ type TestImageType struct {
 	architecture *TestArch
 	name         string
 	aliases      []string
+	ostreeRef    string
 }
 
 const (
@@ -198,7 +199,7 @@ func (t *TestImageType) MIMEType() string {
 
 func (t *TestImageType) OSTreeRef() string {
 	if t.name == TestImageTypeEdgeCommit || t.name == TestImageTypeEdgeInstaller || t.name == TestImageTypeOSTree {
-		return t.architecture.distribution.OSTreeRef()
+		return t.ostreeRef
 	}
 	return ""
 }
@@ -322,7 +323,6 @@ func newTestDistro(releasever string) *TestDistro {
 		name:             fmt.Sprintf("%s-%s", TestDistroNameBase, releasever),
 		releasever:       releasever,
 		modulePlatformID: fmt.Sprintf("platform:%s-%s", TestDistroNameBase, releasever),
-		ostreeRef:        fmt.Sprintf("test/%s/x86_64/edge", releasever),
 	}
 
 	ta1 := TestArch{
@@ -338,11 +338,13 @@ func newTestDistro(releasever string) *TestDistro {
 	}
 
 	it1 := TestImageType{
-		name: TestImageTypeName,
+		name:      TestImageTypeName,
+		ostreeRef: fmt.Sprintf("test/%s/x86_64/edge", releasever),
 	}
 
 	it2 := TestImageType{
-		name: TestImageType2Name,
+		name:      TestImageType2Name,
+		ostreeRef: fmt.Sprintf("test/%s/x86_64/edge", releasever),
 	}
 
 	it3 := TestImageType{
@@ -350,6 +352,7 @@ func newTestDistro(releasever string) *TestDistro {
 		aliases: []string{
 			"aws",
 		},
+		ostreeRef: fmt.Sprintf("test/%s/x86_64/edge", releasever),
 	}
 
 	it4 := TestImageType{
@@ -357,6 +360,7 @@ func newTestDistro(releasever string) *TestDistro {
 		aliases: []string{
 			"azure",
 		},
+		ostreeRef: fmt.Sprintf("test/%s/x86_64/edge", releasever),
 	}
 
 	it5 := TestImageType{
