@@ -9,12 +9,16 @@ import (
 )
 
 type Client struct {
-	client *http.Client
+	doer Doer
 }
 
-func NewClient() *Client {
+func NewClient(doer Doer) *Client {
+	if doer == nil {
+		doer = &http.Client{}
+	}
+
 	return &Client{
-		client: &http.Client{},
+		doer: doer,
 	}
 }
 
@@ -24,7 +28,7 @@ func (c *Client) makeRequest(ctx context.Context, u *url.URL) ([]byte, error) {
 		return nil, err
 	}
 
-	resp, err := c.client.Do(req)
+	resp, err := c.doer.Do(req)
 	if err != nil {
 		return nil, err
 	}
