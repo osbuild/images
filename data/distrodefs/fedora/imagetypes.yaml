@@ -1159,6 +1159,11 @@
           - <<: *aarch64_platform
             image_format: "raw"
 
+  ostree_iot: &ostree_iot
+    name: "fedora-iot"
+    remote_name: "fedora-iot"
+    ref: &ostree_iot_ref "fedora/{{.MajorVersion}}/%s/iot"
+
 image_config:
   default:
     default_oscap_datastream: "/usr/share/xml/scap/ssg/content/ssg-fedora-ds.xml"
@@ -1406,6 +1411,8 @@ image_types:
     image_func: "iot_commit"
     exports: ["commit-archive"]
     required_partition_sizes: *default_required_dir_sizes
+    ostree:
+      ref: *ostree_iot_ref
     image_config: &image_config_iot_commit
       <<: *image_config_iot_enabled_services
       bootupd_gen_metadata: true
@@ -1555,6 +1562,8 @@ image_types:
     image_func: "iot_container"
     exports: ["container"]
     required_partition_sizes: *default_required_dir_sizes
+    ostree:
+      ref: *ostree_iot_ref
     image_config:
       <<: *image_config_iot_commit
       install_weak_deps: true
@@ -1588,9 +1597,7 @@ image_types:
     default_size: "6 GiB"
     bootable: true
     image_func: "iot"
-    ostree:
-      name: "fedora-iot"
-      remote_name: "fedora-iot"
+    ostree: *ostree_iot
     exports: ["xz"]
     # Passing an empty map into the required partition sizes disables the
     # default partition sizes normally set so our `basePartitionTables` can
@@ -1649,9 +1656,7 @@ image_types:
     default_size: "10 GiB"
     bootable: true
     image_func: "iot"
-    ostree:
-      name: "fedora-iot"
-      remote_name: "fedora-iot"
+    ostree: *ostree_iot
     exports: ["qcow2"]
     required_partition_sizes: *default_required_dir_sizes
     image_config:
@@ -1677,6 +1682,8 @@ image_types:
     image_func: "bootable_container"
     exports: ["ostree-encapsulate"]
     required_partition_sizes: *default_required_dir_sizes
+    ostree:
+      ref: *ostree_iot_ref
     image_config:
       machine_id_uninitialized: false
     platforms:
@@ -1928,9 +1935,7 @@ image_types:
     image_func: "iot_installer"
     iso_label: "IoT"
     variant: "IoT"
-    ostree:
-      name: "fedora-iot"
-      remote_name: "fedora-iot"
+    ostree: *ostree_iot
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
     installer_config:
@@ -2301,8 +2306,8 @@ image_types:
     iso_label: "IoT"
     variant: "IoT"
     ostree:
+      <<: *ostree_iot
       name: "fedora"
-      remote_name: "fedora-iot"
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
     installer_config:

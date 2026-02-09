@@ -418,6 +418,7 @@ type ImageTypeYAML struct {
 	OSTree struct {
 		Name       string `yaml:"name"`
 		RemoteName string `yaml:"remote_name"`
+		Ref        string `yaml:"ref"`
 	} `yaml:"ostree"`
 	// XXX: rhel-8 uses this
 	UseOstreeRemotes bool `yaml:"use_ostree_remotes"`
