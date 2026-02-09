@@ -18,16 +18,16 @@ type resolveResult struct {
 // TODO: could make this more generic since this is shared with the container
 // resolver
 type Resolver struct {
-	queue chan resolveResult
-	wg    sync.WaitGroup
-	ctx   context.Context
+	results chan resolveResult
+	wg      sync.WaitGroup
+	ctx     context.Context
 }
 
 func NewResolver(ctx context.Context) *Resolver {
 	return &Resolver{
-		queue: make(chan resolveResult),
-		wg:    sync.WaitGroup{},
-		ctx:   ctx,
+		results: make(chan resolveResult),
+		wg:      sync.WaitGroup{},
+		ctx:     ctx,
 	}
 }
 
@@ -41,7 +41,7 @@ func (r *Resolver) Add(url string) {
 		defer r.wg.Done()
 
 		content, err := client.Resolve(r.ctx, url)
-		r.queue <- resolveResult{url: url, content: content, err: err}
+		r.results <- resolveResult{url: url, content: content, err: err}
 	}()
 }
 
@@ -50,12 +50,12 @@ func (r *Resolver) Add(url string) {
 func (r *Resolver) Finish() ([]Spec, error) {
 	go func() {
 		r.wg.Wait()
-		close(r.queue)
+		close(r.results)
 	}()
 
 	var resultItems []Spec
 	var errs []string
-	for result := range r.queue {
+	for result := range r.results {
 		if result.err == nil {
 			resultItems = append(resultItems, Spec{URL: result.url, Content: result.content})
 		} else {
