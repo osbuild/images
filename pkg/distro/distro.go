@@ -46,9 +46,6 @@ type Distro interface {
 	// Returns the product name of the distro.
 	Product() string
 
-	// Returns the ostree reference template
-	OSTreeRef() string
-
 	// Returns a sorted list of the names of the architectures this distro
 	// supports.
 	ListArches() []string

@@ -135,10 +135,6 @@ func (d *Distro) ModulePlatformID() string {
 	return ""
 }
 
-func (d *Distro) OSTreeRef() string {
-	return ""
-}
-
 func (d *Distro) Depsolver(rpmCacheRoot string, archi arch.Arch) (solver *depsolvednf.Solver, cleanup func() error, err error) {
 	cnt, err := bibcontainer.New(d.buildImgref)
 	if err != nil {

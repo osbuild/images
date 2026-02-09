@@ -140,10 +140,6 @@ func (d *distribution) ModulePlatformID() string {
 	return d.DistroYAML.ModulePlatformID
 }
 
-func (d *distribution) OSTreeRef() string {
-	return d.DistroYAML.OSTreeRefTmpl
-}
-
 func (d *distribution) ListArches() []string {
 	archNames := make([]string, 0, len(d.arches))
 	for name := range d.arches {
