@@ -12,6 +12,7 @@ func init() {
 		Name:                   "kernel",
 		RequiresBlueprint:      true,
 		RequiresCustomizations: true,
+		TempDisabled:           "https://github.com/osbuild/images/pull/2175",
 	}, kernelCheck)
 }
 
