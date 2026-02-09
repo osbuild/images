@@ -1163,6 +1163,7 @@
     name: "fedora-iot"
     remote_name: "fedora-iot"
     ref: &ostree_iot_ref "{{.Distro.Name}}/{{.Distro.MajorVersion}}/{{.Arch}}/iot"
+    url: "https://d2ju0wfl996cmc.cloudfront.net/"
 
 image_config:
   default:

@@ -53,11 +53,6 @@ func TestCheckOptions(t *testing.T) {
 			},
 			expErr: "OSTree is not supported for \"generic-ami\"",
 		},
-		"f42/ostree-installer-requires-ostree-url": {
-			distro: "fedora-42",
-			it:     "iot-installer",
-			expErr: "options validation failed for image type \"iot-installer\": ostree.url: required, there is no default available",
-		},
 		"f42/ostree-disk-supported": {
 			distro: "fedora-42",
 			it:     "iot-qcow2",
@@ -519,17 +514,6 @@ func TestCheckOptions(t *testing.T) {
 				},
 			},
 			expErr: "blueprint validation failed for image type \"generic-vhd\": customizations.openscap.profile_id: required when using customizations.openscap",
-		},
-
-		"f42/ostree-disk-requires-ostree-url": {
-			distro: "fedora-42",
-			it:     "iot-qcow2",
-			expErr: "options validation failed for image type \"iot-qcow2\": ostree.url: required, there is no default available",
-		},
-		"f42/ostree-disk2-requires-ostree-url": {
-			distro: "fedora-42",
-			it:     "iot-raw-xz",
-			expErr: "options validation failed for image type \"iot-raw-xz\": ostree.url: required, there is no default available",
 		},
 		"f42/disk-and-filesystems": {
 			distro: "fedora-42",
