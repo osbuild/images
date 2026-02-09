@@ -3,6 +3,7 @@ package remotefile
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"slices"
 	"sort"
 	"strings"
@@ -15,19 +16,42 @@ type resolveResult struct {
 	err     error
 }
 
+type Doer interface {
+	Do(*http.Request) (*http.Response, error)
+}
+
+type ResolverOption func(*resolverOptions)
+
+type resolverOptions struct {
+	doer Doer
+}
+
+func WithDoer(doer Doer) ResolverOption {
+	return func(opts *resolverOptions) {
+		opts.doer = doer
+	}
+}
+
 // TODO: could make this more generic since this is shared with the container
 // resolver
 type Resolver struct {
 	results chan resolveResult
 	wg      sync.WaitGroup
 	ctx     context.Context
+	client  *Client
 }
 
-func NewResolver(ctx context.Context) *Resolver {
+func NewResolver(ctx context.Context, opts ...ResolverOption) *Resolver {
+	options := &resolverOptions{}
+	for _, opt := range opts {
+		opt(options)
+	}
+
 	return &Resolver{
 		results: make(chan resolveResult),
 		wg:      sync.WaitGroup{},
 		ctx:     ctx,
+		client:  NewClient(options.doer),
 	}
 }
 
@@ -35,12 +59,11 @@ func NewResolver(ctx context.Context) *Resolver {
 // it may panic.
 func (r *Resolver) Add(url string) {
 	r.wg.Add(1)
-	client := NewClient()
 
 	go func() {
 		defer r.wg.Done()
 
-		content, err := client.Resolve(r.ctx, url)
+		content, err := r.client.Resolve(r.ctx, url)
 		r.results <- resolveResult{url: url, content: content, err: err}
 	}()
 }

@@ -31,7 +31,7 @@ func TestClientResolve(t *testing.T) {
 
 	url := server.URL + "/key1"
 
-	client := NewClient()
+	client := NewClient(nil)
 
 	output, err := client.Resolve(context.Background(), url)
 	assert.NoError(t, err)
@@ -44,7 +44,7 @@ func TestClientResolve(t *testing.T) {
 func TestClientResolveNonOKStatus(t *testing.T) {
 	server := makeTestServer()
 
-	client := NewClient()
+	client := NewClient(nil)
 	_, err := client.Resolve(context.Background(), server.URL+"/notfound")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "unexpected status 404")
@@ -70,7 +70,7 @@ func TestInputSpecValidation(t *testing.T) {
 		},
 	}
 
-	client := NewClient()
+	client := NewClient(nil)
 
 	for _, tt := range test {
 		url, err := client.validateURL(tt.url)
