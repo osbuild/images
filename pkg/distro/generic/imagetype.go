@@ -352,6 +352,14 @@ func (t *imageType) SupportedBlueprintOptions() []string {
 
 func (t *imageType) expandOSTreeRefTemplate(ar *architecture, id distro.ID) error {
 	if t.ImageTypeYAML.RPMOSTree {
+		subs := struct {
+			Arch   string
+			Distro distro.ID
+		}{
+			Arch:   ar.Name(),
+			Distro: id,
+		}
+
 		var buf bytes.Buffer
 
 		tmpl, err := template.New("ostree-ref").Parse(t.ImageTypeYAML.OSTree.Ref)
@@ -359,11 +367,11 @@ func (t *imageType) expandOSTreeRefTemplate(ar *architecture, id distro.ID) erro
 			return err
 		}
 
-		if err := tmpl.Execute(&buf, id); err != nil {
+		if err := tmpl.Execute(&buf, subs); err != nil {
 			return err
 		}
 
-		t.ostreeRef = fmt.Sprintf(buf.String(), ar.Name())
+		t.ostreeRef = buf.String()
 
 		return nil
 	}

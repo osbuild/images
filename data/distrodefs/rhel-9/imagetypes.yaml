@@ -1386,7 +1386,7 @@
     ostree_edge: &ostree_edge
       name: "rhel-edge"
       remote_name: "rhel-edge"
-      ref: &ostree_edge_ref "{{.Name}}/{{.MajorVersion}}/%s/edge"
+      ref: &ostree_edge_ref "{{.Distro.Name}}/{{.Distro.MajorVersion}}/{{.Arch}}/edge"
 
 image_config:
   default:
