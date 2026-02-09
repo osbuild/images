@@ -109,6 +109,14 @@ func (t *imageType) OSTreeRef() string {
 	return t.ostreeRef
 }
 
+func (t *imageType) OSTreeURL() string {
+	if t.ImageTypeYAML.RPMOSTree {
+		return t.ImageTypeYAML.OSTree.URL
+	}
+
+	return ""
+}
+
 func (t *imageType) ISOLabel() (string, error) {
 	if !t.ImageTypeYAML.BootISO {
 		return "", fmt.Errorf("image type %q is not an ISO", t.Name())
