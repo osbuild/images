@@ -1,14 +1,46 @@
 package main
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
 	"errors"
+	"math/big"
 	"os"
+	"os/exec"
 	"testing"
+	"time"
 
 	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/cmd/check-host-config/check"
 	"github.com/osbuild/images/internal/buildconfig"
 )
+
+// generateSmokeCACert returns a CA cert PEM (serial 1, CN "Smoke Test CA").
+func generateSmokeCACert(t *testing.T) string {
+	t.Helper()
+	privKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatal(err)
+	}
+	template := x509.Certificate{
+		SerialNumber:          big.NewInt(1),
+		Subject:               pkix.Name{CommonName: "Smoke Test CA"},
+		NotBefore:             time.Now(),
+		NotAfter:              time.Now().Add(999 * 24 * time.Hour),
+		KeyUsage:              x509.KeyUsageCertSign,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		BasicConstraintsValid: true,
+		IsCA:                  true,
+	}
+	certDER, err := x509.CreateCertificate(rand.Reader, &template, &template, &privKey.PublicKey, privKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certDER}))
+}
 
 // This is a happy-path smoke test that is supposed to be executed in a
 // temporary Fedora container. It is ran on our CI/CD. To run it locally (in
@@ -21,11 +53,28 @@ func TestSmokeAll(t *testing.T) {
 	}
 
 	// Prepare the container environment (cleanup not needed)
-	if err := os.Mkdir("/tmp/dir", 0700); err != nil {
-		t.Fatalf("Failed to create test directory: %v", err)
+
+	// cacerts
+	smokeCACertPEM := generateSmokeCACert(t)
+	anchorsDir := "/etc/pki/ca-trust/source/anchors"
+	if err := os.MkdirAll(anchorsDir, 0755); err != nil {
+		t.Fatal(err)
 	}
+	if err := os.WriteFile(anchorsDir+"/1.pem", []byte(smokeCACertPEM), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := exec.Command("update-ca-trust", "extract").Run(); err != nil {
+		t.Fatal(err)
+	}
+
+	// directories
+	if err := os.Mkdir("/tmp/dir", 0700); err != nil {
+		t.Fatal(err)
+	}
+
+	// files
 	if err := os.WriteFile("/tmp/dir/file", []byte("data"), 0600); err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
+		t.Fatal(err)
 	}
 
 	tests := []struct {
@@ -83,6 +132,15 @@ func TestSmokeAll(t *testing.T) {
 			c: blueprint.Customizations{
 				User: []blueprint.UserCustomization{
 					{Name: "root"},
+				},
+			},
+		},
+		{
+			chk:  "cacerts",
+			name: "smoke",
+			c: blueprint.Customizations{
+				CACerts: &blueprint.CACustomization{
+					PEMCerts: []string{smokeCACertPEM},
 				},
 			},
 		},
