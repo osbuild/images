@@ -14,6 +14,9 @@ import (
 
 // joinArgs is a test helper function that joins a name and a list of arguments into a single string
 func joinArgs(name string, arg ...string) string {
+	if len(arg) == 0 {
+		return name
+	}
 	return name + " " + strings.Join(arg, " ")
 }
 
