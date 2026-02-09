@@ -1162,7 +1162,7 @@
   ostree_iot: &ostree_iot
     name: "fedora-iot"
     remote_name: "fedora-iot"
-    ref: &ostree_iot_ref "fedora/{{.MajorVersion}}/%s/iot"
+    ref: &ostree_iot_ref "{{.Distro.Name}}/{{.Distro.MajorVersion}}/{{.Arch}}/iot"
 
 image_config:
   default:
