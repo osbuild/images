@@ -46,6 +46,8 @@ func generateSmokeCACert(t *testing.T) string {
 // temporary Fedora container. It is ran on our CI/CD. To run it locally (in
 // podman), execute `make host-check-test`.
 //
+// Tests which require running services are not supported in the smoke test.
+//
 //nolint:gosec // G303: Temporary files need to be consistently named
 func TestSmokeAll(t *testing.T) {
 	if os.Getenv("OSBUILD_TEST_CONTAINER") != "true" {
@@ -102,8 +104,7 @@ func TestSmokeAll(t *testing.T) {
 			},
 		},
 		{
-			chk:  "directories",
-			name: "all",
+			chk: "directories",
 			c: blueprint.Customizations{
 				Directories: []blueprint.DirectoryCustomization{
 					{Path: "/tmp/dir"},
@@ -114,8 +115,7 @@ func TestSmokeAll(t *testing.T) {
 			},
 		},
 		{
-			chk:  "files",
-			name: "all",
+			chk: "files",
 			c: blueprint.Customizations{
 				Files: []blueprint.FileCustomization{
 					{Path: "/tmp/dir/file"},
@@ -127,8 +127,7 @@ func TestSmokeAll(t *testing.T) {
 			},
 		},
 		{
-			chk:  "users",
-			name: "root",
+			chk: "users",
 			c: blueprint.Customizations{
 				User: []blueprint.UserCustomization{
 					{Name: "root"},
@@ -136,8 +135,7 @@ func TestSmokeAll(t *testing.T) {
 			},
 		},
 		{
-			chk:  "cacerts",
-			name: "smoke",
+			chk: "cacerts",
 			c: blueprint.Customizations{
 				CACerts: &blueprint.CACustomization{
 					PEMCerts: []string{smokeCACertPEM},
@@ -147,7 +145,12 @@ func TestSmokeAll(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.chk+"/"+tt.name, func(t *testing.T) {
+		name := tt.chk
+		if tt.name != "" {
+			name += "/" + tt.name
+		}
+
+		t.Run(name, func(t *testing.T) {
 			chk := check.MustFindCheckByName(tt.chk)
 			config := &buildconfig.BuildConfig{
 				Blueprint: &blueprint.Blueprint{
