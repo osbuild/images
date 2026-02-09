@@ -79,6 +79,15 @@ func TestSmokeAll(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// hostname: use current hostname and ensure /etc/hostname exists so the check's fallback works
+	smokeHostname, err := os.Hostname()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile("/etc/hostname", []byte(smokeHostname+"\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
 	tests := []struct {
 		chk  string
 		name string
@@ -140,6 +149,12 @@ func TestSmokeAll(t *testing.T) {
 				CACerts: &blueprint.CACustomization{
 					PEMCerts: []string{smokeCACertPEM},
 				},
+			},
+		},
+		{
+			chk: "hostname",
+			c: blueprint.Customizations{
+				Hostname: &smokeHostname,
 			},
 		},
 	}
