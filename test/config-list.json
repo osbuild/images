@@ -289,7 +289,9 @@
         "iot-qcow2",
         "iot-raw-xz",
         "kinoite-installer",
+        "kinoite-qcow2",
         "silverblue-installer",
+        "silverblue-qcow2",
         "sway-atomic-installer",
         "budgie-atomic-installer",
         "cosmic-atomic-installer"
@@ -300,7 +302,9 @@
     "path": "./configs/iot-ostree-pull-user.json",
     "filters": {
       "image-types": [
-        "iot-qcow2"
+        "iot-qcow2",
+        "kinoite-qcow2",
+        "silverblue-qcow2"
       ]
     }
   },
