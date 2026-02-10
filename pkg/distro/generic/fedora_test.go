@@ -592,6 +592,8 @@ func TestFedoraArchitecture_ListImageTypes(t *testing.T) {
 				"server-qcow2",
 				"cloud-qcow2",
 				"iot-bootable-container",
+				"everything-network-installer",
+				"server-network-installer",
 			},
 		},
 		{
