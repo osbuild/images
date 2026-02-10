@@ -289,6 +289,7 @@ func TestRH10Architecture_ListImageTypes(t *testing.T) {
 		{
 			arch: "ppc64le",
 			imgNames: []string{
+				"network-installer",
 				"qcow2",
 				"tar",
 			},
