@@ -287,7 +287,12 @@
       "image-types": [
         "iot-installer",
         "iot-qcow2",
-        "iot-raw-xz"
+        "iot-raw-xz",
+        "kinoite-installer",
+        "silverblue-installer",
+        "sway-atomic-installer",
+        "budgie-atomic-installer",
+        "cosmic-atomic-installer"
       ]
     }
   },

@@ -350,6 +350,11 @@ func TestFedoraImageType_Name(t *testing.T) {
 				"generic-vagrant-virtualbox",
 				"generic-wsl",
 				"server-qcow2",
+				"kinoite-installer",
+				"silverblue-installer",
+				"sway-atomic-installer",
+				"budgie-atomic-installer",
+				"cosmic-atomic-installer",
 			},
 			verTypes: map[string][]string{
 				"40": {
@@ -379,6 +384,11 @@ func TestFedoraImageType_Name(t *testing.T) {
 				"generic-qcow2",
 				"generic-vagrant-libvirt",
 				"server-qcow2",
+				"kinoite-installer",
+				"silverblue-installer",
+				"sway-atomic-installer",
+				"budgie-atomic-installer",
+				"cosmic-atomic-installer",
 			},
 			verTypes: map[string][]string{
 				"40": {
@@ -524,6 +534,11 @@ func TestFedoraArchitecture_ListImageTypes(t *testing.T) {
 				"everything-network-installer",
 				"server-network-installer",
 				"pxe-tar-xz",
+				"kinoite-installer",
+				"silverblue-installer",
+				"sway-atomic-installer",
+				"budgie-atomic-installer",
+				"cosmic-atomic-installer",
 			},
 		},
 		{
@@ -554,6 +569,11 @@ func TestFedoraArchitecture_ListImageTypes(t *testing.T) {
 				"everything-network-installer",
 				"server-network-installer",
 				"pxe-tar-xz",
+				"kinoite-installer",
+				"silverblue-installer",
+				"sway-atomic-installer",
+				"budgie-atomic-installer",
+				"cosmic-atomic-installer",
 			},
 		},
 		{

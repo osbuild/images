@@ -577,6 +577,11 @@ func TestDistro_ManifestFIPSWarning(t *testing.T) {
 		"iot-raw-xz",
 		"iot-simplified-installer",
 		"iot-qcow2",
+		"kinoite-installer",
+		"silverblue-installer",
+		"sway-atomic-installer",
+		"budgie-atomic-installer",
+		"cosmic-atomic-installer",
 	}
 
 	distroFactory := distrofactory.NewDefault()

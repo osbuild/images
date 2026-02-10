@@ -88,6 +88,11 @@ func TestDistro_KernelOption(t *testing.T, d distro.Distro) {
 		"iot-qcow2":                 true,
 		"iot-raw-xz":                true,
 		"iot-simplified-installer":  true,
+		"kinoite-installer":         true,
+		"silverblue-installer":      true,
+		"sway-atomic-installer":     true,
+		"budgie-atomic-installer":   true,
+		"cosmic-atomic-installer":   true,
 
 		// the tar image type is a minimal image type which is not expected to
 		// be usable without a blueprint (see commit 83a63aaf172f556f6176e6099ffaa2b5357b58f5).
@@ -188,6 +193,11 @@ func TestDistro_OSTreeOptions(t *testing.T, d distro.Distro) {
 		"iot-ami":                   true,
 		"iot-installer":             true,
 		"iot-simplified-installer":  true,
+		"kinoite-installer":         true,
+		"silverblue-installer":      true,
+		"sway-atomic-installer":     true,
+		"budgie-atomic-installer":   true,
+		"cosmic-atomic-installer":   true,
 	}
 
 	assert := assert.New(t)
