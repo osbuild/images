@@ -12,7 +12,9 @@ import (
 	"github.com/osbuild/images/pkg/arch"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
+	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/platform"
+	"github.com/osbuild/images/pkg/runner"
 )
 
 const (
@@ -117,6 +119,14 @@ func (d *distribution) getISOLabelFunc(isoLabel string) isoLabelFunc {
 	}
 }
 
+func (d *distribution) ID() distro.ID {
+	return d.DistroYAML.ID
+}
+
+func (d *distribution) IDLike() manifest.Distro {
+	return d.DistroLike
+}
+
 func (d *distribution) Name() string {
 	return d.DistroYAML.Name
 }
@@ -151,6 +161,18 @@ func (d *distribution) GetArch(name string) (distro.Arch, error) {
 		return nil, fmt.Errorf("invalid architecture: %v", name)
 	}
 	return arch, nil
+}
+
+func (d *distribution) Runner() runner.RunnerConf {
+	return d.DistroYAML.Runner
+}
+
+func (d *distribution) BootstrapContainer(a string) (string, error) {
+	aa, err := arch.FromString(a)
+	if err != nil {
+		return "", err
+	}
+	return d.DistroYAML.BootstrapContainers[aa], nil
 }
 
 // architecture implements the distro.Arch interface

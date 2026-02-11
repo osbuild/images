@@ -717,15 +717,19 @@ func TestFedoraESP(t *testing.T) {
 func TestFedoraDistroBootstrapRef(t *testing.T) {
 	for _, fedoraDistro := range fedoraFamilyDistros {
 		for _, archName := range fedoraDistro.ListArches() {
-			arch, err := fedoraDistro.GetArch(archName)
+			distroArch, err := fedoraDistro.GetArch(archName)
 			require.NoError(t, err)
-			for _, imgTypeName := range arch.ListImageTypes() {
-				imgType, err := arch.GetImageType(imgTypeName)
+			for _, imgTypeName := range distroArch.ListImageTypes() {
+				imgType, err := distroArch.GetImageType(imgTypeName)
 				require.NoError(t, err)
-				if arch.Name() == "riscv64" {
-					require.Equal(t, "ghcr.io/mvo5/fedora-buildroot:"+fedoraDistro.OsVersion(), generic.BootstrapContainerFor(imgType))
+				if distroArch.Name() == "riscv64" {
+					bootstrapRef, err := imgType.Arch().Distro().BootstrapContainer(distroArch.Name())
+					require.NoError(t, err)
+					require.Equal(t, "ghcr.io/mvo5/fedora-buildroot:"+fedoraDistro.OsVersion(), bootstrapRef)
 				} else {
-					require.Equal(t, "registry.fedoraproject.org/fedora-toolbox:"+fedoraDistro.OsVersion(), generic.BootstrapContainerFor(imgType))
+					bootstrapRef, err := imgType.Arch().Distro().BootstrapContainer(distroArch.Name())
+					require.NoError(t, err)
+					require.Equal(t, "registry.fedoraproject.org/fedora-toolbox:"+fedoraDistro.OsVersion(), bootstrapRef)
 				}
 			}
 		}
