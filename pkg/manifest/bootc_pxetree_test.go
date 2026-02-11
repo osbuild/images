@@ -27,7 +27,7 @@ func makeFakeBootcPXETreePipeline(kernelVersion string) *manifest.BootcPXETree {
 	rawBootcPipeline := manifest.NewRawBootcImage(build, nil, pf)
 	rawBootcPipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/boot", "/boot/efi")
 	rawBootcPipeline.KernelVersion = kernelVersion
-	rawBootcPipeline.RebuildInitramfs = true
+	rawBootcPipeline.LiveBoot = true
 	err := rawBootcPipeline.SerializeStart(manifest.Inputs{Containers: []container.Spec{{Source: "foo"}}})
 	if err != nil {
 		panic(err)
