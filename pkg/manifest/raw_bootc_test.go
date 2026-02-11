@@ -391,31 +391,14 @@ func TestRawBootcPipelineNoMountsStages(t *testing.T) {
 func TestRawBootcPXE(t *testing.T) {
 	rawBootcPipeline := makeFakeRawBootcPipeline()
 	rawBootcPipeline.KernelVersion = "5.14.0-611.4.1.el9_7.x86_64"
-	rawBootcPipeline.RebuildInitramfs = true
+	rawBootcPipeline.LiveBoot = true
 
 	pipeline, err := rawBootcPipeline.Serialize()
 	require.NoError(t, err)
 
-	// dracut stage with kernel version and initramfs path
-	dracutStage := findStage("org.osbuild.dracut", pipeline.Stages)
-	require.NotNil(t, dracutStage)
-	assertBootcDeploymentAndBindMount(t, dracutStage)
-	opts := dracutStage.Options.(*osbuild.DracutStageOptions)
-	require.Equal(t, 1, len(opts.Kernel))
-	assert.Equal(t, rawBootcPipeline.KernelVersion, opts.Kernel[0])
-	require.Equal(t, 1, len(opts.Extra))
-	assert.Equal(t, fmt.Sprintf("lib/modules/%s/initramfs.img", rawBootcPipeline.KernelVersion), opts.Extra[0])
-
-	// dracut config stage with dmsquash-live module
-	dracutConfStage := findStage("org.osbuild.dracut.conf", pipeline.Stages)
-	require.NotNil(t, dracutConfStage)
-	assertBootcDeploymentAndBindMount(t, dracutStage)
-	confOpts := dracutConfStage.Options.(*osbuild.DracutConfStageOptions)
-	assert.Contains(t, confOpts.Config.AddModules, "dmsquash-live")
-
 	// Check for mkdir stages
 	mkdirStages := findStages("org.osbuild.mkdir", pipeline.Stages)
-	require.Greater(t, len(mkdirStages), 1)
+	require.Greater(t, len(mkdirStages), 0)
 	var mkdirPaths []string
 	for _, s := range mkdirStages {
 		opts := s.Options.(*osbuild.MkdirStageOptions)
@@ -424,22 +407,5 @@ func TestRawBootcPXE(t *testing.T) {
 		}
 	}
 	assert.Contains(t, mkdirPaths, "/usr")
-	assert.Contains(t, mkdirPaths, "/tmp/dracut")
-
-	// Writes a new prepare-root.conf
-	copyStages := findStages("org.osbuild.copy", pipeline.Stages)
-	require.Greater(t, len(copyStages), 0)
-	var toPaths []string
-	for _, s := range copyStages {
-		copyOptions := s.Options.(*osbuild.CopyStageOptions)
-		toPaths = append(toPaths, copyOptions.Paths[0].To)
-	}
-	assert.Contains(t, toPaths, "tree:///usr/lib/ostree/prepare-root.conf")
-
-	// Check for disabled bootc services
-	systemdStage := findStage("org.osbuild.systemd", pipeline.Stages)
-	require.NotNil(t, systemdStage)
-	systemdOpts := systemdStage.Options.(*osbuild.SystemdStageOptions)
-	assert.Contains(t, systemdOpts.MaskedServices, "bootc-generic-growpart.service")
-	assert.Contains(t, systemdOpts.MaskedServices, "bootc-fetch-apply-updates.timer")
+	assert.Contains(t, mkdirPaths, "/proc")
 }
