@@ -14,6 +14,7 @@ import (
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/policies"
 	"github.com/osbuild/images/pkg/rpmmd"
+	"github.com/osbuild/images/pkg/runner"
 )
 
 const (
@@ -80,6 +81,14 @@ func (d *TestDistro) Name() string {
 	return d.name
 }
 
+func (d *TestDistro) ID() distro.ID {
+	return distro.ID{Name: d.name}
+}
+
+func (d *TestDistro) IDLike() manifest.Distro {
+	return 0
+}
+
 func (d *TestDistro) Codename() string {
 	return "" // not supported
 }
@@ -125,6 +134,18 @@ func (d *TestDistro) addArches(arches ...*TestArch) {
 
 func (d *TestDistro) GetTweaks() *distro.Tweaks {
 	return nil
+}
+
+func (d *TestDistro) Runner() runner.RunnerConf {
+	return runner.RunnerConf{}
+}
+
+func (d *TestDistro) ImageConfig() *distro.ImageConfig {
+	return nil
+}
+
+func (d *TestDistro) BootstrapContainer(a string) (string, error) {
+	return "", nil
 }
 
 // TestArch

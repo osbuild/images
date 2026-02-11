@@ -13,6 +13,8 @@ import (
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
+	"github.com/osbuild/images/pkg/manifest"
+	"github.com/osbuild/images/pkg/runner"
 )
 
 type BootcDistro struct {
@@ -167,6 +169,15 @@ func (d *BootcDistro) Name() string {
 	return d.id.String()
 }
 
+func (d *BootcDistro) ID() distro.ID {
+	return d.id
+}
+
+func (d *BootcDistro) IDLike() manifest.Distro {
+	// not applicable or needed for bootc
+	return 0
+}
+
 func (d *BootcDistro) Codename() string {
 	return ""
 }
@@ -201,6 +212,16 @@ func (d *BootcDistro) GetArch(arch string) (distro.Arch, error) {
 
 func (d *BootcDistro) GetTweaks() *distro.Tweaks {
 	// The bootc distro does not require or support tweaks (yet)
+	return nil
+}
+
+func (d *BootcDistro) Runner() runner.RunnerConf {
+	// To get the bootc distro runner, use [bootc.GetDistroAndRunner]
+	return runner.RunnerConf{}
+}
+
+func (d *BootcDistro) ImageConfig() *distro.ImageConfig {
+	// not applicable for bootc distro
 	return nil
 }
 
@@ -254,4 +275,23 @@ func (d *BootcDistro) SetBuildContainer(cinfo *bootc.Info) error {
 	d.buildSourceInfo = cinfo.OSInfo
 
 	return nil
+}
+
+func (d *BootcDistro) BootstrapContainer(a string) (string, error) {
+	// NOTE: Return the build container ref instead and we will unify these two
+	// concepts later.
+
+	// verify that the architecture matches the bootc distro's architecture
+	// (there should be only one)
+	distroArches := d.ListArches()
+	if len(distroArches) != 1 {
+		// there should only ever be one architecture for a bootc distro
+		return "", fmt.Errorf("found %d architectures for bootc distro while getting build container: bootc distro should have exactly 1 architecture", len(distroArches))
+	}
+	if _, err := d.GetArch(a); err != nil {
+		baseArch := distroArches[0]
+		return "", fmt.Errorf("failed to get build container for bootc distro: requested container architecture %q does not match base container %q", a, baseArch)
+	}
+
+	return d.buildImgref, nil
 }
