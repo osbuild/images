@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"sort"
+	"slices"
 	"strings"
 
 	"github.com/osbuild/images/pkg/distrosort"
-	// we cannot use "maps" yet, as it needs go1.23
-	"golang.org/x/exp/maps"
 )
 
 // OutputFormat contains the valid output formats for formatting results
@@ -39,9 +39,7 @@ var supportedFormatters = map[string]ResultsFormatter{
 
 // SupportedOutputFormats returns a list of supported output formats
 func SupportedOutputFormats() []string {
-	keys := maps.Keys(supportedFormatters)
-	sort.Strings(keys)
-	return keys
+	return slices.Sorted(maps.Keys(supportedFormatters))
 }
 
 // NewResultsFormatter will create a formatter based on the given format.

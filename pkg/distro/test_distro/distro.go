@@ -3,7 +3,8 @@ package test_distro
 import (
 	"errors"
 	"fmt"
-	"sort"
+	"maps"
+	"slices"
 
 	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/pkg/disk"
@@ -100,12 +101,7 @@ func (d *TestDistro) ModulePlatformID() string {
 }
 
 func (d *TestDistro) ListArches() []string {
-	archs := make([]string, 0, len(d.arches))
-	for name := range d.arches {
-		archs = append(archs, name)
-	}
-	sort.Strings(archs)
-	return archs
+	return slices.Sorted(maps.Keys(d.arches))
 }
 
 func (d *TestDistro) GetArch(arch string) (distro.Arch, error) {
@@ -142,12 +138,7 @@ func (a *TestArch) Distro() distro.Distro {
 }
 
 func (a *TestArch) ListImageTypes() []string {
-	formats := make([]string, 0, len(a.imageTypes))
-	for name := range a.imageTypes {
-		formats = append(formats, name)
-	}
-	sort.Strings(formats)
-	return formats
+	return slices.Sorted(maps.Keys(a.imageTypes))
 }
 
 func (a *TestArch) GetImageType(imageType string) (distro.ImageType, error) {

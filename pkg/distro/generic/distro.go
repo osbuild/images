@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"sort"
+	"maps"
+	"slices"
 	"text/template"
 
 	"github.com/osbuild/images/internal/common"
@@ -141,12 +142,7 @@ func (d *distribution) ModulePlatformID() string {
 }
 
 func (d *distribution) ListArches() []string {
-	archNames := make([]string, 0, len(d.arches))
-	for name := range d.arches {
-		archNames = append(archNames, name)
-	}
-	sort.Strings(archNames)
-	return archNames
+	return slices.Sorted(maps.Keys(d.arches))
 }
 
 func (d *distribution) GetArch(name string) (distro.Arch, error) {
@@ -181,12 +177,7 @@ func (a *architecture) Name() string {
 }
 
 func (a *architecture) ListImageTypes() []string {
-	itNames := make([]string, 0, len(a.imageTypes))
-	for name := range a.imageTypes {
-		itNames = append(itNames, name)
-	}
-	sort.Strings(itNames)
-	return itNames
+	return slices.Sorted(maps.Keys(a.imageTypes))
 }
 
 func (a *architecture) GetImageType(name string) (distro.ImageType, error) {
