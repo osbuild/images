@@ -2,7 +2,7 @@ package generic_test
 
 import (
 	"fmt"
-	"sort"
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -597,8 +597,8 @@ func TestFedoraArchitecture_ListImageTypes(t *testing.T) {
 				expectedImageTypes = append(expectedImageTypes, mapping.imgNames...)
 				expectedImageTypes = append(expectedImageTypes, mapping.verTypes[dist.Releasever()]...)
 
-				sort.Strings(expectedImageTypes)
-				sort.Strings(imageTypes)
+				slices.Sort(expectedImageTypes)
+				slices.Sort(imageTypes)
 				require.Equal(t, expectedImageTypes, imageTypes, "extra images for arch %v", arch.Name())
 			}
 		})

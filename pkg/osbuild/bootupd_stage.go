@@ -2,6 +2,7 @@ package osbuild
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 
 	"github.com/osbuild/images/internal/common"
@@ -29,7 +30,7 @@ func (opts *BootupdStageOptions) validate(devices map[string]Device) error {
 			for devname := range devices {
 				devnames = append(devnames, devname)
 			}
-			sort.Strings(devnames)
+			slices.Sort(devnames)
 			return fmt.Errorf("cannot find expected device %q for bootupd bios option in %v", opts.Bios.Device, devnames)
 		}
 	}
@@ -54,7 +55,7 @@ func validateBootupdMounts(mounts []Mount, pf platform.Platform) error {
 		for mnt := range requiredMounts {
 			missingMounts = append(missingMounts, mnt)
 		}
-		sort.Strings(missingMounts)
+		slices.Sort(missingMounts)
 		return fmt.Errorf("required mounts for bootupd stage %v missing", missingMounts)
 	}
 	return nil

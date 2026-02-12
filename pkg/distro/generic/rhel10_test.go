@@ -1,7 +1,7 @@
 package generic_test
 
 import (
-	"sort"
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -314,8 +314,8 @@ func TestRH10Architecture_ListImageTypes(t *testing.T) {
 					expectedImageTypes = append(expectedImageTypes, mapping.rhelAdditionalImageTypes...)
 				}
 
-				sort.Strings(expectedImageTypes)
-				sort.Strings(imageTypes)
+				slices.Sort(expectedImageTypes)
+				slices.Sort(imageTypes)
 				require.Equal(t, expectedImageTypes, imageTypes)
 			}
 		})

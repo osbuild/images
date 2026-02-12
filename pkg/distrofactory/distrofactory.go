@@ -2,7 +2,7 @@ package distrofactory
 
 import (
 	"fmt"
-	"sort"
+	"slices"
 
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/bootc"
@@ -85,7 +85,7 @@ func (f *Factory) RegisterAliases(aliases map[string]string) error {
 
 	// NB: iterating over a map of aliases is not deterministic, so sort the
 	// errors to make the output deterministic
-	sort.Strings(errors)
+	slices.Sort(errors)
 
 	if len(errors) > 0 {
 		return fmt.Errorf("invalid aliases: %q", errors)
