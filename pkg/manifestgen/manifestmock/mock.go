@@ -1,12 +1,12 @@
 package manifestmock
 
 import (
+	"cmp"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"net/url"
 	"slices"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -260,8 +260,8 @@ func Depsolve(
 			}
 
 			// The packages list in each transaction result is sorted by full NEVRA, as a real depsolver would do.
-			sort.Slice(transactionPackages, func(i, j int) bool {
-				return transactionPackages[i].FullNEVRA() < transactionPackages[j].FullNEVRA()
+			slices.SortFunc(transactionPackages, func(a, b rpmmd.Package) int {
+				return cmp.Compare(a.FullNEVRA(), b.FullNEVRA())
 			})
 			transactions = append(transactions, transactionPackages)
 		}
@@ -271,8 +271,8 @@ func Depsolve(
 		for _, repo := range reposById {
 			allRepos = append(allRepos, repo)
 		}
-		sort.Slice(allRepos, func(i, j int) bool {
-			return allRepos[i].Id < allRepos[j].Id
+		slices.SortFunc(allRepos, func(a, b rpmmd.RepoConfig) int {
+			return cmp.Compare(a.Id, b.Id)
 		})
 
 		var sbomDoc *sbom.Document
