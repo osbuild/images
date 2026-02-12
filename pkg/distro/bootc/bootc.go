@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"maps"
 	"slices"
-	"sort"
 	"strings"
 
 	"github.com/osbuild/images/internal/common"
@@ -173,12 +172,7 @@ func (d *Distro) Depsolver(rpmCacheRoot string, archi arch.Arch) (solver *depsol
 }
 
 func (d *Distro) ListArches() []string {
-	archs := make([]string, 0, len(d.arches))
-	for name := range d.arches {
-		archs = append(archs, name)
-	}
-	sort.Strings(archs)
-	return archs
+	return slices.Sorted(maps.Keys(d.arches))
 }
 
 func (d *Distro) GetArch(arch string) (distro.Arch, error) {
@@ -214,12 +208,7 @@ func (a *Arch) Distro() distro.Distro {
 }
 
 func (a *Arch) ListImageTypes() []string {
-	formats := make([]string, 0, len(a.imageTypes))
-	for name := range a.imageTypes {
-		formats = append(formats, name)
-	}
-	sort.Strings(formats)
-	return formats
+	return slices.Sorted(maps.Keys(a.imageTypes))
 }
 
 func (a *Arch) GetImageType(imageType string) (distro.ImageType, error) {
