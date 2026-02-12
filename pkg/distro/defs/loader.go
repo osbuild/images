@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
-	"sort"
 	"text/template"
 
 	"go.yaml.in/yaml/v3"
@@ -666,8 +665,8 @@ func (imgType *ImageTypeYAML) PackageSets(id distro.ID, archName string) map[str
 			}
 		}
 		// mostly for tests
-		sort.Strings(rpmmdPkgSet.Include)
-		sort.Strings(rpmmdPkgSet.Exclude)
+		slices.Sort(rpmmdPkgSet.Include)
+		slices.Sort(rpmmdPkgSet.Exclude)
 		res[key] = rpmmdPkgSet
 	}
 

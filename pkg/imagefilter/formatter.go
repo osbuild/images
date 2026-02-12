@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"maps"
-	"sort"
 	"slices"
 	"strings"
 
@@ -125,12 +124,12 @@ func (*textShortResultsFormatter) Output(w io.Writer, all []Result) error {
 		for t := range outputMap[distro] {
 			types = append(types, t)
 		}
-		sort.Strings(types)
+		slices.Sort(types)
 
 		var typeArchPairs []string
 		for _, t := range types {
 			arches := outputMap[distro][t]
-			sort.Strings(arches)
+			slices.Sort(arches)
 			typeArchPairs = append(typeArchPairs, fmt.Sprintf("%s: %s", t, strings.Join(arches, ", ")))
 		}
 
