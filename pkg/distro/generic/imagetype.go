@@ -373,6 +373,12 @@ func (t *imageType) expandOSTreeRefTemplate(ar *architecture, id distro.ID) erro
 
 		t.ostreeRef = buf.String()
 
+		// if we're empty after templating that's an error as we can't
+		// have an empty commit
+		if t.ostreeRef == "" {
+			return fmt.Errorf("empty ostree ref after expansion")
+		}
+
 		return nil
 	}
 
