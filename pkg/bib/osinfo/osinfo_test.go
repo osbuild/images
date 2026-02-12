@@ -347,3 +347,40 @@ func TestLoadInfoUEFIVendorSearchPath(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "fedora", info.UEFIVendor)
 }
+
+func TestHasModules(t *testing.T) {
+	type testCase struct {
+		desc    string
+		info    Info
+		modules []string
+		result  bool
+		err     error
+	}
+
+	cases := []testCase{
+		{"both empty", Info{}, []string{}, true, nil},
+		{"empty initrd",
+			Info{},
+			[]string{"livenet"},
+			false, fmt.Errorf("The initrd module list is empty")},
+		{"empty request",
+			Info{InitrdModules: []string{"livenet"}},
+			[]string{},
+			true, nil},
+		{"missing module",
+			Info{InitrdModules: []string{"qemu", "livenet"}},
+			[]string{"livenet", "dmsquash-live"},
+			false, nil},
+		{"modules ok",
+			Info{InitrdModules: []string{"qemu", "livenet", "dmsquash-live"}},
+			[]string{"livenet", "dmsquash-live"},
+			true, nil},
+	}
+	for _, c := range cases {
+		t.Run(c.desc, func(t *testing.T) {
+			r, err := c.info.HasModules(c.modules)
+			assert.Equal(t, c.result, r)
+			assert.Equal(t, err, c.err)
+		})
+	}
+}
