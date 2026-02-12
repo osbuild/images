@@ -15,6 +15,7 @@ package depsolvednf
 
 import (
 	"bytes"
+	"cmp"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
@@ -23,7 +24,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -389,8 +390,8 @@ func (s *Solver) FetchMetadata(repos []rpmmd.RepoConfig) (rpmmd.PackageList, err
 	// XXX: Cache and expose the whole operation result instead of just the packages in the future.
 
 	pkgs := res.Packages
-	sort.Slice(pkgs, func(i, j int) bool {
-		return pkgs[i].NVR() < pkgs[j].NVR()
+	slices.SortFunc(pkgs, func(a, b rpmmd.Package) int {
+		return cmp.Compare(a.NVR(), b.NVR())
 	})
 
 	// Cache the results
@@ -437,8 +438,8 @@ func (s *Solver) SearchMetadata(repos []rpmmd.RepoConfig, packages []string) (rp
 	// XXX: Cache and expose the whole operation result instead of just the packages in the future.
 
 	pkgs := res.Packages
-	sort.Slice(pkgs, func(i, j int) bool {
-		return pkgs[i].NVR() < pkgs[j].NVR()
+	slices.SortFunc(pkgs, func(a, b rpmmd.Package) int {
+		return cmp.Compare(a.NVR(), b.NVR())
 	})
 
 	// Cache the results

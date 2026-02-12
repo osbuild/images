@@ -1,9 +1,9 @@
 package osbuild
 
 import (
+	"cmp"
 	"fmt"
 	"slices"
-	"sort"
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/disk"
@@ -132,8 +132,8 @@ func genMountsForBootupd(source string, pt *disk.PartitionTable) ([]Mount, error
 		}
 	}
 	// this must be sorted in so that mounts do not shadow each other
-	sort.Slice(mounts, func(i, j int) bool {
-		return mounts[i].Target < mounts[j].Target
+	slices.SortFunc(mounts, func(a, b Mount) int {
+		return cmp.Compare(a.Target, b.Target)
 	})
 
 	return mounts, nil

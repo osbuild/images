@@ -1,7 +1,8 @@
 package main
 
 import (
-	"sort"
+	"cmp"
+	"slices"
 
 	"github.com/osbuild/images/cmd/check-host-config/check"
 )
@@ -11,8 +12,8 @@ import (
 func getAllChecks() []check.RegisteredCheck {
 	checks := check.GetAllChecks()
 	// Sort checks by name for consistent ordering
-	sort.Slice(checks, func(i, j int) bool {
-		return checks[i].Meta.Name < checks[j].Meta.Name
+	slices.SortFunc(checks, func(a, b check.RegisteredCheck) int {
+		return cmp.Compare(a.Meta.Name, b.Meta.Name)
 	})
 	return checks
 }
