@@ -22,6 +22,7 @@ import (
 	"github.com/osbuild/images/pkg/distro/defs"
 	"github.com/osbuild/images/pkg/distro/generic"
 	"github.com/osbuild/images/pkg/manifest"
+	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/platform"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/runner"
@@ -820,6 +821,40 @@ func TestImageTypeISOConfig(t *testing.T) {
 	installerConfig := it.ISOConfig(distro.ID{Name: "test-distro", MajorVersion: 1}, "test_arch")
 	assert.Equal(t, &distro.ISOConfig{
 		RootfsType: common.ToPtr(manifest.SquashfsRootfs),
+	}, installerConfig)
+}
+
+var fakeDistroYamlISOConfErofs = `
+image_types:
+  test_type:
+    iso_config:
+      rootfs_type: "erofs"
+      erofs_options:
+        compression:
+          method: "zstd"
+          level: 8
+        options:
+          - "all-fragments"
+          - "dedupe"
+        cluster-size: 262144
+`
+
+func TestImageTypeISOConfigErofs(t *testing.T) {
+	it := makeTestImageType(t, fakeDistroYamlISOConfErofs)
+
+	installerConfig := it.ISOConfig(distro.ID{Name: "test-distro", MajorVersion: 1}, "test_arch")
+	clusterSize := 262144
+	compressionLevel := 8
+	assert.Equal(t, &distro.ISOConfig{
+		RootfsType: common.ToPtr(manifest.ErofsRootfs),
+		ErofsOptions: &osbuild.ErofsStageOptions{
+			Compression: &osbuild.ErofsCompression{
+				Method: "zstd",
+				Level:  &compressionLevel,
+			},
+			ExtendedOptions: []string{"all-fragments", "dedupe"},
+			ClusterSize:     &clusterSize,
+		},
 	}, installerConfig)
 }
 
