@@ -390,6 +390,7 @@ func NewTestBootcDistro(t *testing.T) *BootcDistro {
 			KernelInfo: &osinfo.KernelInfo{
 				Version: "6.17.7-300.fc43.x86_64",
 			},
+			InitrdModules: []string{"ostree", "livenet", "dmsquash-live"},
 		},
 	})
 	require.NoError(t, err)
