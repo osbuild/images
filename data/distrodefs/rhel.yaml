@@ -50,6 +50,7 @@ distros:
       - "xccdf_org.ssgproject.content_profile_anssi_bp28_high"
       - "xccdf_org.ssgproject.content_profile_anssi_bp28_intermediary"
       - "xccdf_org.ssgproject.content_profile_anssi_bp28_minimal"
+      - "xccdf_org.ssgproject.content_profile_bsi"
       - "xccdf_org.ssgproject.content_profile_cis"
       - "xccdf_org.ssgproject.content_profile_cis_server_l1"
       - "xccdf_org.ssgproject.content_profile_cis_workstation_l1"
