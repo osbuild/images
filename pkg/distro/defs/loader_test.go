@@ -651,7 +651,7 @@ image_types:
 	assert.Equal(t, dist.ImageConfig(), &distro.ImageConfig{
 		Locale:   common.ToPtr("C.UTF-8"),
 		Timezone: common.ToPtr("OverrideTZ"),
-		Users:    []users.User{users.User{Name: "testuser"}},
+		Users:    []users.User{{Name: "testuser"}},
 	})
 }
 
