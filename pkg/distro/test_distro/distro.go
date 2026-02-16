@@ -205,10 +205,7 @@ func (t *TestImageType) MIMEType() string {
 }
 
 func (t *TestImageType) OSTreeRef() string {
-	if t.name == TestImageTypeEdgeCommit || t.name == TestImageTypeEdgeInstaller || t.name == TestImageTypeOSTree {
-		return t.ostreeRef
-	}
-	return ""
+	return t.ostreeRef
 }
 
 func (t *TestImageType) ISOLabel() (string, error) {
@@ -345,13 +342,11 @@ func newTestDistro(releasever string) *TestDistro {
 	}
 
 	it1 := TestImageType{
-		name:      TestImageTypeName,
-		ostreeRef: fmt.Sprintf("test/%s/x86_64/edge", releasever),
+		name: TestImageTypeName,
 	}
 
 	it2 := TestImageType{
-		name:      TestImageType2Name,
-		ostreeRef: fmt.Sprintf("test/%s/x86_64/edge", releasever),
+		name: TestImageType2Name,
 	}
 
 	it3 := TestImageType{
@@ -359,7 +354,6 @@ func newTestDistro(releasever string) *TestDistro {
 		aliases: []string{
 			"aws",
 		},
-		ostreeRef: fmt.Sprintf("test/%s/x86_64/edge", releasever),
 	}
 
 	it4 := TestImageType{
@@ -367,15 +361,16 @@ func newTestDistro(releasever string) *TestDistro {
 		aliases: []string{
 			"azure",
 		},
-		ostreeRef: fmt.Sprintf("test/%s/x86_64/edge", releasever),
 	}
 
 	it5 := TestImageType{
-		name: TestImageTypeEdgeCommit,
+		name:      TestImageTypeEdgeCommit,
+		ostreeRef: fmt.Sprintf("test/%s/x86_64/edge", releasever),
 	}
 
 	it6 := TestImageType{
-		name: TestImageTypeEdgeInstaller,
+		name:      TestImageTypeEdgeInstaller,
+		ostreeRef: fmt.Sprintf("test/%s/x86_64/edge", releasever),
 	}
 
 	it7 := TestImageType{
@@ -404,7 +399,8 @@ func newTestDistro(releasever string) *TestDistro {
 	}
 
 	it11 := TestImageType{
-		name: TestImageTypeOSTree,
+		name:      TestImageTypeOSTree,
+		ostreeRef: fmt.Sprintf("test/%s/x86_64/edge", releasever),
 	}
 
 	ta1.addImageTypes(it1, it11)
