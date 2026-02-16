@@ -84,6 +84,61 @@ func newTestAnacondaISOTree() *manifest.AnacondaInstallerISOTree {
 	return pipeline
 }
 
+// newTestAnacondaISOTreeErofs returns a base AnacondaInstallerISOTree pipeline
+// with ISOCustomizations.ErofsOptions set
+func newTestAnacondaISOTreeErofs() *manifest.AnacondaInstallerISOTree {
+	m := &manifest.Manifest{}
+	runner := &runner.Linux{}
+	build := manifest.NewBuild(m, runner, nil, nil)
+
+	x86plat := &platform.Data{Arch: arch.ARCH_X86_64}
+
+	product := "test-iso"
+	osversion := "1"
+
+	preview := false
+
+	anacondaPipeline := manifest.NewAnacondaInstaller(
+		manifest.AnacondaInstallerTypePayload,
+		build,
+		x86plat,
+		nil,
+		"kernel",
+		manifest.InstallerCustomizations{
+			Product:   product,
+			OSVersion: osversion,
+			Preview:   preview,
+		},
+		manifest.ISOCustomizations{
+			ErofsOptions: &osbuild.ErofsStageOptions{},
+		},
+	)
+	rootfsImagePipeline := manifest.NewISORootfsImg(build, anacondaPipeline)
+	bootTreePipeline := manifest.NewEFIBootTree(build, product, osversion)
+	bootTreePipeline.ISOLabel = "test-iso-1"
+
+	pipeline := manifest.NewAnacondaInstallerISOTree(build, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
+	// copy of the default in pkg/image - will be moved to the pipeline
+	efibootImageSize := datasizes.Size(20 * datasizes.MebiByte)
+	pipeline.PartitionTable = &disk.PartitionTable{
+		Size: efibootImageSize,
+		Partitions: []disk.Partition{
+			{
+				Start: 0,
+				Size:  efibootImageSize,
+				Payload: &disk.Filesystem{
+					Type:       "vfat",
+					Mountpoint: "/",
+					// math/rand is good enough in this case
+					/* #nosec G404 */
+					UUID: disk.NewVolIDFromRand(rand.New(rand.NewSource(0))),
+				},
+			},
+		},
+	}
+	return pipeline
+}
+
 // Helper to return a comma separated string of the stage names
 // used to help debug failures
 func dumpStages(stages []*osbuild.Stage) string {
@@ -480,7 +535,7 @@ func TestAnacondaISOTreeSerializeWithOS(t *testing.T) {
 	})
 
 	t.Run("plain+erofs-rootfs", func(t *testing.T) {
-		pipeline := newTestAnacondaISOTree()
+		pipeline := newTestAnacondaISOTreeErofs()
 		pipeline.OSPipeline = osPayload
 		pipeline.RootfsType = manifest.ErofsRootfs
 		sp, err := manifest.SerializeWith(pipeline, manifest.Inputs{})
@@ -648,7 +703,7 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 	})
 
 	t.Run("plain+erofs-erofs", func(t *testing.T) {
-		pipeline := newTestAnacondaISOTree()
+		pipeline := newTestAnacondaISOTreeErofs()
 		pipeline.RootfsType = manifest.ErofsRootfs
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath, OSTree: &kickstart.OSTree{}}
 		sp, err := manifest.SerializeWith(pipeline, manifest.Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
@@ -799,7 +854,7 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 	})
 
 	t.Run("plain+erofs-rootfs", func(t *testing.T) {
-		pipeline := newTestAnacondaISOTree()
+		pipeline := newTestAnacondaISOTreeErofs()
 		pipeline.RootfsType = manifest.ErofsRootfs
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
 		sp, err := manifest.SerializeWith(pipeline, manifest.Inputs{Containers: []container.Spec{containerPayload}})
@@ -963,4 +1018,19 @@ func TestAnacondaISOTreeSerializeInstallRootfsType(t *testing.T) {
 
 		assert.Contains(t, inlineData[0], tc.expected)
 	}
+}
+
+func TestAnacondaInstallerISOTreeNewErofsStage(t *testing.T) {
+	pipeline := newTestAnacondaISOTreeErofs()
+	pipeline.RootfsType = manifest.ErofsRootfs
+
+	stage, err := pipeline.NewErofsStage()
+	require.NoError(t, err)
+	require.NotNil(t, stage)
+	assert.Equal(t, "org.osbuild.erofs", stage.Type)
+
+	opts, ok := stage.Options.(*osbuild.ErofsStageOptions)
+	require.True(t, ok)
+	assert.Equal(t, "images/install.img", opts.Filename)
+	assert.NotEmpty(t, opts.ExcludePaths, "exclude paths for installer boot should be set")
 }
