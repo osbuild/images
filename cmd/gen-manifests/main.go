@@ -551,7 +551,7 @@ func main() {
 		l := strings.SplitN(bootcRefTuple, "#", 2)
 		bootcRef := l[0]
 
-		bootcInfo, err := resolveBootcInfo(bootcRef)
+		bootcInfo, err := bootc.ResolveBootcInfo(bootcRef)
 		if err != nil {
 			panic(err)
 		}
@@ -569,7 +569,7 @@ func main() {
 		var buildBootcRef string
 		if len(l) > 1 {
 			buildBootcRef = l[1]
-			buildBootcInfo, err := resolveBootcInfo(buildBootcRef)
+			buildBootcInfo, err := bootc.ResolveBootcInfo(buildBootcRef)
 			if err != nil {
 				panic(err)
 			}
@@ -734,12 +734,4 @@ func main() {
 	}
 	fmt.Fprintf(os.Stderr, "RPM metadata cache kept in %s\n", cacheRoot)
 	os.Exit(exit)
-}
-
-func resolveBootcInfo(ref string) (*bootc.Info, error) {
-	c, err := bootc.NewContainer(ref)
-	if err != nil {
-		return nil, err
-	}
-	return c.ResolveInfo()
 }
