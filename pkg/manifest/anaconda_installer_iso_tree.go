@@ -294,6 +294,9 @@ func (p *AnacondaInstallerISOTree) NewSquashfsStage() (*osbuild.Stage, error) {
 // the erofs root filesystem for the ISO.
 func (p *AnacondaInstallerISOTree) NewErofsStage() (*osbuild.Stage, error) {
 	var erofsOptions osbuild.ErofsStageOptions
+	if p.anacondaPipeline == nil {
+		return nil, fmt.Errorf("Anaconda pipeline not set for %s pipeline", p.name)
+	}
 
 	switch p.anacondaPipeline.Type {
 	case AnacondaInstallerTypePayload, AnacondaInstallerTypeNetinst:
