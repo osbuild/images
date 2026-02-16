@@ -499,3 +499,20 @@ func forceSymlink(symlinkPath, target string) error {
 	}
 	return nil
 }
+
+// ResolveBootcInfo resolves the bootc container reference and returns the info structure
+func ResolveBootcInfo(ref string) (*Info, error) {
+	c, err := NewContainer(ref)
+	if err != nil {
+		return nil, err
+	}
+	info, err := c.ResolveInfo()
+	if stopErr := c.Stop(); stopErr != nil {
+		if err != nil {
+			err = fmt.Errorf("%w\nstopping the container failed too: %s", err, stopErr)
+		} else {
+			err = fmt.Errorf("stopping the container failed: %s", stopErr)
+		}
+	}
+	return info, err
+}
