@@ -2565,7 +2565,7 @@ image_types:
               fstab_freq: 0
               fstab_passno: 2
           - &minimal_raw_partition_table_part_boot
-            size: "600 MiB"
+            size: "500 MiB"
             type: *xboot_ldr_partition_guid
             payload_type: "filesystem"
             payload:
@@ -2582,22 +2582,42 @@ image_types:
       conditions:
         "RHEL >= 9.3 needs to have a bigger /boot, see RHEL-7999":
           when:
-            version_less_than: "9.3"
+            version_greater_or_equal: "9.3"
+            version_less_than: "9.8"
           override:
             x86_64:
               <<: *partition_table_minimal_raw_x86_64
               partitions:
                 - *minimal_raw_partition_table_part_efi
-                - &minimal_raw_partition_table_part_boot_500
+                - &minimal_raw_partition_table_part_boot_600
                   <<: *minimal_raw_partition_table_part_boot
-                  size: "500 MiB"
+                  size: "600 MiB"
                 - *minimal_raw_partition_table_part_root
             aarch64:
               <<: *partition_table_minimal_raw_aarch64
               partitions:
                 - *minimal_raw_partition_table_part_efi
-                - *minimal_raw_partition_table_part_boot_500
+                - *minimal_raw_partition_table_part_boot_600
                 - *minimal_raw_partition_table_part_root
+        "RHEL >= 9.8 needs to have a bigger /boot, see RHEL-7999":
+          when:
+            version_greater_or_equal: "9.8"
+          override:
+            x86_64:
+              <<: *partition_table_minimal_raw_x86_64
+              partitions:
+                - *minimal_raw_partition_table_part_efi
+                - &minimal_raw_partition_table_part_boot_1000
+                  <<: *minimal_raw_partition_table_part_boot
+                  size: "1 GiB"
+                - *minimal_raw_partition_table_part_root
+            aarch64:
+              <<: *partition_table_minimal_raw_aarch64
+              partitions:
+                - *minimal_raw_partition_table_part_efi
+                - *minimal_raw_partition_table_part_boot_1000
+                - *minimal_raw_partition_table_part_root
+
     image_config:
       enabled_services:
         - "NetworkManager.service"
