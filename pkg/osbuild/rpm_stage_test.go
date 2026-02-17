@@ -237,12 +237,11 @@ func TestGPGKeysForPackages(t *testing.T) {
 			},
 			expected: nil,
 		},
-		// NOTE: for now we collect keys even for packages/repos with CheckGPG=false.
 		"single-package-with-keys": {
 			pkgs: rpmmd.PackageList{
 				{Name: "pkg1", Repo: repoWithKey1},
 			},
-			expected: []string{key1},
+			expected: nil,
 		},
 		"multiple-packages-same-repo-deduplicated": {
 			pkgs: rpmmd.PackageList{
@@ -322,7 +321,12 @@ func TestGenRPMStagesFromTransactions(t *testing.T) {
 		},
 		"nil-base-opts": {
 			transactions: depsolvednf.TransactionList{
-				{{Name: "pkg-a", Repo: repoWithKey1, Checksum: rpmmd.Checksum{Type: "sha256", Value: "aaa"}}},
+				{{
+					Name:     "pkg-a",
+					Repo:     repoWithKey1,
+					Checksum: rpmmd.Checksum{Type: "sha256", Value: "aaa"},
+					CheckGPG: true,
+				}},
 			},
 			baseOpts:     nil,
 			expectStages: 1,
@@ -334,8 +338,18 @@ func TestGenRPMStagesFromTransactions(t *testing.T) {
 		"single-transaction-with-gpg-keys": {
 			transactions: depsolvednf.TransactionList{
 				{
-					{Name: "pkg-a", Repo: repoWithKey1, Checksum: rpmmd.Checksum{Type: "sha256", Value: "aaa"}},
-					{Name: "pkg-b", Repo: repoWithKey1, Checksum: rpmmd.Checksum{Type: "sha256", Value: "bbb"}},
+					{
+						Name:     "pkg-a",
+						Repo:     repoWithKey1,
+						Checksum: rpmmd.Checksum{Type: "sha256", Value: "aaa"},
+						CheckGPG: true,
+					},
+					{
+						Name:     "pkg-b",
+						Repo:     repoWithKey1,
+						Checksum: rpmmd.Checksum{Type: "sha256", Value: "bbb"},
+						CheckGPG: true,
+					},
 				},
 			},
 			baseOpts:     &RPMStageOptions{},
@@ -348,11 +362,26 @@ func TestGenRPMStagesFromTransactions(t *testing.T) {
 		"multiple-transactions-different-repos": {
 			transactions: depsolvednf.TransactionList{
 				{
-					{Name: "pkg-a", Repo: repoWithKey1, Checksum: rpmmd.Checksum{Type: "sha256", Value: "aaa"}},
+					{
+						Name:     "pkg-a",
+						Repo:     repoWithKey1,
+						Checksum: rpmmd.Checksum{Type: "sha256", Value: "aaa"},
+						CheckGPG: true,
+					},
 				},
 				{
-					{Name: "pkg-b", Repo: repoWithKey2, Checksum: rpmmd.Checksum{Type: "sha256", Value: "bbb"}},
-					{Name: "pkg-c", Repo: repoWithKey1, Checksum: rpmmd.Checksum{Type: "sha256", Value: "ccc"}},
+					{
+						Name:     "pkg-b",
+						Repo:     repoWithKey2,
+						Checksum: rpmmd.Checksum{Type: "sha256", Value: "bbb"},
+						CheckGPG: true,
+					},
+					{
+						Name:     "pkg-c",
+						Repo:     repoWithKey1,
+						Checksum: rpmmd.Checksum{Type: "sha256", Value: "ccc"},
+						CheckGPG: true,
+					},
 				},
 			},
 			baseOpts:     &RPMStageOptions{},
