@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/osbuild/images/internal/test"
+	"github.com/osbuild/images/pkg/remotefile"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -234,11 +236,8 @@ func TestResolveAddURLs(t *testing.T) {
 					status int
 				}{body: r.body, status: r.status}
 			}
-			// Override package-level resolveDoer for test; restore when done.
-			// (Cannot use internal/test.MockGlobal here due to import cycle.)
-			old := resolveDoer
-			resolveDoer = doer
-			t.Cleanup(func() { resolveDoer = old })
+			var doerIf remotefile.Doer = doer
+			test.MockGlobal(t, &resolveDoer, doerIf)
 			source := NewCurlSource()
 			err := source.ResolveAddURLs(context.Background(), tc.urls...)
 			if tc.wantErr != nil {
