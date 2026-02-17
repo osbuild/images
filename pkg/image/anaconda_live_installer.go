@@ -88,11 +88,13 @@ func (img *AnacondaLiveInstaller) InstantiateManifest(m *manifest.Manifest,
 
 	bootTreePipeline.KernelOpts = kernelOpts
 
+	bootImagePipeline := manifest.NewEFIBootImage(buildPipeline, bootTreePipeline, livePipeline)
+
 	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, livePipeline, rootfsImagePipeline, bootTreePipeline)
-	initIsoTreePipeline(isoTreePipeline, &img.AnacondaInstallerBase, rng)
+	initIsoTreePipeline(isoTreePipeline, bootImagePipeline, &img.AnacondaInstallerBase, rng)
 	isoTreePipeline.KernelOpts = kernelOpts
 
-	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.ISOCustomizations)
+	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, bootImagePipeline, img.ISOCustomizations)
 	isoPipeline.SetFilename(img.filename)
 
 	artifact := isoPipeline.Export()

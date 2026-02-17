@@ -28,7 +28,8 @@ type ISO struct {
 	Base
 	filename string
 
-	treePipeline Pipeline
+	treePipeline         Pipeline
+	efiBootImagePipeline FilePipeline
 
 	ISOCustomizations ISOCustomizations
 }
@@ -41,12 +42,13 @@ func (p *ISO) SetFilename(filename string) {
 	p.filename = filename
 }
 
-func NewISO(buildPipeline Build, treePipeline Pipeline, isoCustomizations ISOCustomizations) *ISO {
+func NewISO(buildPipeline Build, treePipeline Pipeline, efiBootImagePipeline FilePipeline, isoCustomizations ISOCustomizations) *ISO {
 	p := &ISO{
-		Base:              NewBase("bootiso", buildPipeline),
-		treePipeline:      treePipeline,
-		filename:          "image.iso",
-		ISOCustomizations: isoCustomizations,
+		Base:                 NewBase("bootiso", buildPipeline),
+		treePipeline:         treePipeline,
+		efiBootImagePipeline: efiBootImagePipeline,
+		filename:             "image.iso",
+		ISOCustomizations:    isoCustomizations,
 	}
 	buildPipeline.addDependent(p)
 	return p
@@ -65,22 +67,36 @@ func (p *ISO) serialize() (osbuild.Pipeline, error) {
 		return osbuild.Pipeline{}, err
 	}
 
-	pipeline.AddStage(osbuild.NewXorrisofsStage(xorrisofsStageOptions(p.Filename(), p.ISOCustomizations), p.treePipeline.Name()))
+	inputs := osbuild.NewXorrisofsStageInputs(p.treePipeline.Name())
+
+	if p.efiBootImagePipeline != nil {
+		inputs = osbuild.NewXorrisofsStageInputsWithEFIImage(p.treePipeline.Name(), p.efiBootImagePipeline.Name(), p.efiBootImagePipeline.Filename())
+	}
+
+	pipeline.AddStage(
+		osbuild.NewXorrisofsStage(
+			xorrisofsStageOptions(p.Filename(), p.ISOCustomizations, p.efiBootImagePipeline != nil),
+			inputs,
+		),
+	)
 	pipeline.AddStage(osbuild.NewImplantisomd5Stage(&osbuild.Implantisomd5StageOptions{Filename: p.Filename()}))
 
 	return pipeline, nil
 }
 
-func xorrisofsStageOptions(filename string, isoCustomizations ISOCustomizations) *osbuild.XorrisofsStageOptions {
+func xorrisofsStageOptions(filename string, isoCustomizations ISOCustomizations, efiImage bool) *osbuild.XorrisofsStageOptions {
 	options := &osbuild.XorrisofsStageOptions{
 		Filename: filename,
 		VolID:    isoCustomizations.Label,
 		SysID:    "LINUX",
-		EFI:      "images/efiboot.img",
 		ISOLevel: 3,
 		Prep:     isoCustomizations.Preparer,
 		Pub:      isoCustomizations.Publisher,
 		AppID:    isoCustomizations.Application,
+	}
+
+	if !efiImage {
+		options.EFI = "images/efiboot.img"
 	}
 
 	switch isoCustomizations.BootType {
