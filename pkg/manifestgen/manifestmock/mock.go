@@ -149,6 +149,7 @@ func Depsolve(
 					Checksum: rpmmd.Checksum{Type: "sha256", Value: checksum},
 					RepoID:   pkgRepo.Id,
 					Repo:     &pkgRepo,
+					CheckGPG: pkgRepo.CheckGPG != nil && *pkgRepo.CheckGPG,
 				}
 				pkg.Location = fmt.Sprintf("packages/%s.rpm", pkg.FullNEVRA())
 				pkg.RemoteLocations = []string{
@@ -181,6 +182,7 @@ func Depsolve(
 					Checksum: rpmmd.Checksum{Type: "sha256", Value: checksum},
 					RepoID:   pkgRepo.Id,
 					Repo:     &pkgRepo,
+					CheckGPG: pkgRepo.CheckGPG != nil && *pkgRepo.CheckGPG,
 				}
 				pkg.Location = fmt.Sprintf("packages/%s.rpm", pkg.FullNEVRA())
 				pkg.RemoteLocations = []string{
