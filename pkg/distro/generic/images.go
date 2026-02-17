@@ -759,6 +759,11 @@ func imageInstallerImage(t *imageType,
 	img.Kickstart.Keyboard = img.OSCustomizations.Keyboard
 	img.Kickstart.Timezone = &img.OSCustomizations.Timezone
 
+	// Set kernel options for the installed system's bootloader
+	if kopts := customizations.GetKernel(); kopts != nil && kopts.Append != "" {
+		img.Kickstart.KernelOptionsAppend = append(img.Kickstart.KernelOptionsAppend, kopts.Append)
+	}
+
 	img.ExtraBasePackages = packageSets[installerPkgsKey]
 
 	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations, options)
@@ -947,6 +952,11 @@ func iotInstallerImage(t *imageType,
 	// ignore ntp servers - we don't currently support setting these in the
 	// kickstart though kickstart does support setting them
 	img.Kickstart.Timezone, _ = customizations.GetTimezoneSettings()
+
+	// Set kernel options for the installed system's bootloader
+	if kopts := customizations.GetKernel(); kopts != nil && kopts.Append != "" {
+		img.Kickstart.KernelOptionsAppend = append(img.Kickstart.KernelOptionsAppend, kopts.Append)
+	}
 
 	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations, options)
 	if err != nil {
@@ -1154,6 +1164,11 @@ func networkInstallerImage(t *imageType,
 	timezone, _ := customizations.GetTimezoneSettings()
 	if timezone != nil {
 		img.Kickstart.Timezone = timezone
+	}
+
+	// Set kernel options for the installed system's bootloader
+	if kopts := customizations.GetKernel(); kopts != nil && kopts.Append != "" {
+		img.Kickstart.KernelOptionsAppend = append(img.Kickstart.KernelOptionsAppend, kopts.Append)
 	}
 
 	// If we have an empty kickstart options we don't want to put it on
