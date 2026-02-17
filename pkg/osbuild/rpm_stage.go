@@ -169,8 +169,7 @@ func pkgRefs(pkgs rpmmd.PackageList) FilesInputRef {
 // NOTE: Currently collects keys even for packages/repos with CheckGPG=false.
 // This could be changed if importing unused keys is not desirable.
 func GPGKeysForPackages(pkgs rpmmd.PackageList) ([]string, error) {
-	keyMap := make(map[string]bool)
-	var gpgKeys []string
+	var keys []string
 	for _, pkg := range pkgs {
 		if pkg.Repo == nil {
 			return nil, fmt.Errorf("package %q has nil Repo pointer. This is a bug in depsolving.", pkg.Name)
@@ -180,15 +179,14 @@ func GPGKeysForPackages(pkgs rpmmd.PackageList) ([]string, error) {
 				"package %q requires GPG check but repo %q has no GPG keys configured",
 				pkg.Name, pkg.Repo.Id)
 		}
-		for _, key := range pkg.Repo.GPGKeys {
-			if !keyMap[key] {
-				gpgKeys = append(gpgKeys, key)
-				keyMap[key] = true
-			}
-		}
+		keys = append(keys, pkg.Repo.GPGKeys...)
 	}
-	slices.Sort(gpgKeys)
-	return gpgKeys, nil
+	slices.Sort(keys)
+	keys = slices.Compact(keys)
+	if len(keys) == 0 {
+		return nil, nil
+	}
+	return keys, nil
 }
 
 // GenRPMStagesFromTransactions creates RPM stages for each transaction.
