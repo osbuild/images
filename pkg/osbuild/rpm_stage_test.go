@@ -216,11 +216,16 @@ func TestGPGKeysForPackages(t *testing.T) {
 	key2 := "-----BEGIN PGP PUBLIC KEY BLOCK-----\nkey2\n-----END PGP PUBLIC KEY BLOCK-----"
 	keyA := "-----BEGIN PGP PUBLIC KEY BLOCK-----\nkeyA\n-----END PGP PUBLIC KEY BLOCK-----"
 	keyB := "-----BEGIN PGP PUBLIC KEY BLOCK-----\nkeyB\n-----END PGP PUBLIC KEY BLOCK-----"
+	keyURL1 := "http://example.com/key1.gpg"
+	keyURL2 := "http://example.com/key2.gpg"
 
 	repoWithKey1 := &rpmmd.RepoConfig{GPGKeys: []string{key1}}
 	repoWithKey2 := &rpmmd.RepoConfig{GPGKeys: []string{key2}}
 	repoWithMultipleKeys := &rpmmd.RepoConfig{GPGKeys: []string{keyA, keyB}}
 	repoNoKeys := &rpmmd.RepoConfig{GPGKeys: nil}
+	repoWithOnlyURLKeys := &rpmmd.RepoConfig{GPGKeys: []string{keyURL1, keyURL2}}
+	repoWithInvalidKey := &rpmmd.RepoConfig{GPGKeys: []string{"invalid-key"}}
+	repoWithMixedKeys := &rpmmd.RepoConfig{GPGKeys: []string{key1, keyURL1}}
 
 	tests := map[string]struct {
 		pkgs        rpmmd.PackageList
@@ -265,6 +270,24 @@ func TestGPGKeysForPackages(t *testing.T) {
 				{Name: "pkg1", Repo: repoWithMultipleKeys, CheckGPG: true},
 			},
 			expected: []string{keyA, keyB},
+		},
+		"repo-with-url-keys": {
+			pkgs: rpmmd.PackageList{
+				{Name: "pkg1", Repo: repoWithOnlyURLKeys, CheckGPG: true},
+			},
+			expected: nil,
+		},
+		"repo-with-invalid-keys": {
+			pkgs: rpmmd.PackageList{
+				{Name: "pkg1", Repo: repoWithInvalidKey, CheckGPG: true},
+			},
+			expected: nil,
+		},
+		"repo-with-mixed-keys": {
+			pkgs: rpmmd.PackageList{
+				{Name: "pkg1", Repo: repoWithMixedKeys, CheckGPG: true},
+			},
+			expected: []string{key1},
 		},
 		// Error cases
 		"error-checkgpg-true-no-keys": {

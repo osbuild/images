@@ -3,6 +3,7 @@ package osbuild
 import (
 	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/depsolvednf"
@@ -160,6 +161,9 @@ func pkgRefs(pkgs rpmmd.PackageList) FilesInputRef {
 // only the GPG keys needed for a specific set of packages, rather than
 // importing all keys from all configured repositories.
 //
+// Strings which are not valid ASCII armored GPG keys are removed from the
+// list before returning. This includes keys which are entered as URLs.
+//
 // Returns an error if:
 // - Any package has a nil Repo pointer (indicates a bug in depsolving)
 // - Any package requires GPG checking but its repo has no GPG keys configured
@@ -179,7 +183,11 @@ func GPGKeysForPackages(pkgs rpmmd.PackageList) ([]string, error) {
 				"package %q requires GPG check but repo %q has no GPG keys configured",
 				pkg.Name, pkg.Repo.Id)
 		}
-		keys = append(keys, pkg.Repo.GPGKeys...)
+		for _, key := range pkg.Repo.GPGKeys {
+			if strings.HasPrefix(key, "-----BEGIN PGP") {
+				keys = append(keys, key)
+			}
+		}
 	}
 	slices.Sort(keys)
 	keys = slices.Compact(keys)
