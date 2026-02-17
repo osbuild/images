@@ -44,11 +44,31 @@ type XorrisofsBoot struct {
 
 func (XorrisofsStageOptions) isStageOptions() {}
 
+type XorrisofsStageInputs struct {
+	Tree     *TreeInput  `json:"tree"`
+	EFIImage *FilesInput `json:"efi-image,omitempty"`
+}
+
+func NewXorrisofsStageInputs(inputPipeline string) *XorrisofsStageInputs {
+	return &XorrisofsStageInputs{
+		Tree: NewTreeInput("name:" + inputPipeline),
+	}
+}
+
+func NewXorrisofsStageInputsWithEFIImage(inputPipeline, efiBootImagePipeline, file string) *XorrisofsStageInputs {
+	return &XorrisofsStageInputs{
+		Tree:     NewTreeInput("name:" + inputPipeline),
+		EFIImage: NewFilesInput(NewFilesInputPipelineObjectRef(efiBootImagePipeline, file, nil)),
+	}
+}
+
+func (XorrisofsStageInputs) isStageInputs() {}
+
 // Assembles a Rock Ridge enhanced ISO 9660 filesystem (iso)
-func NewXorrisofsStage(options *XorrisofsStageOptions, inputPipeline string) *Stage {
+func NewXorrisofsStage(options *XorrisofsStageOptions, inputs *XorrisofsStageInputs) *Stage {
 	return &Stage{
 		Type:    "org.osbuild.xorrisofs",
 		Options: options,
-		Inputs:  NewPipelineTreeInputs("tree", inputPipeline),
+		Inputs:  inputs,
 	}
 }

@@ -65,7 +65,18 @@ func (p *ISO) serialize() (osbuild.Pipeline, error) {
 		return osbuild.Pipeline{}, err
 	}
 
-	pipeline.AddStage(osbuild.NewXorrisofsStage(xorrisofsStageOptions(p.Filename(), p.ISOCustomizations), p.treePipeline.Name()))
+	inputs := osbuild.NewXorrisofsStageInputs(p.treePipeline.Name())
+
+	if p.efiBootImagePipeline != nil {
+		inputs = osbuild.NewXorrisofsStageInputsWithEFIImage(p.treePipeline.Name(), p.efiBootImagePipeline.Name(), p.efiBootImagePipeline.Filename())
+	}
+
+	pipeline.AddStage(
+		osbuild.NewXorrisofsStage(
+			xorrisofsStageOptions(p.Filename(), p.ISOCustomizations),
+			inputs,
+		),
+	)
 	pipeline.AddStage(osbuild.NewImplantisomd5Stage(&osbuild.Implantisomd5StageOptions{Filename: p.Filename()}))
 
 	return pipeline, nil
