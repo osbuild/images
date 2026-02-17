@@ -92,10 +92,9 @@ type AnacondaInstallerISOTree struct {
 	// TODO: review optional and mandatory fields and their meaning
 	Release string
 
-	PartitionTable *disk.PartitionTable
-
 	anacondaPipeline *AnacondaInstaller
 	rootfsPipeline   *ISORootfsImg // May be nil for plain squashfs rootfs
+
 	bootTreePipeline *EFIBootTree
 
 	// The path where the payload (tarball, ostree repo, or container) will be stored.
@@ -413,6 +412,20 @@ func (p *AnacondaInstallerISOTree) serialize() (osbuild.Pipeline, error) {
 		},
 	}))
 
+	inputName := "efi-boot-tree"
+	copyInputs := osbuild.NewPipelineTreeInputs(inputName, p.bootTreePipeline.Name())
+	pipeline.AddStage(osbuild.NewCopyStageSimple(
+		&osbuild.CopyStageOptions{
+			Paths: []osbuild.CopyStagePath{
+				{
+					From: fmt.Sprintf("input://%s/EFI", inputName),
+					To:   "tree:///",
+				},
+			},
+		},
+		copyInputs,
+	))
+
 	if p.anacondaPipeline.Type == AnacondaInstallerTypeLive {
 		pipeline.AddStage(osbuild.NewMkdirStage(&osbuild.MkdirStageOptions{
 			Paths: []osbuild.MkdirStagePath{
@@ -432,7 +445,7 @@ func (p *AnacondaInstallerISOTree) serialize() (osbuild.Pipeline, error) {
 	}
 
 	// Copy the kernel and initramfs from the anaconda tree into the ISO
-	inputName := "tree"
+	inputName = "tree"
 	copyStageOptions := &osbuild.CopyStageOptions{
 		Paths: []osbuild.CopyStagePath{
 			{
@@ -522,34 +535,6 @@ func (p *AnacondaInstallerISOTree) serialize() (osbuild.Pipeline, error) {
 		// Add a stage to create the eltorito.img file for grub2 BIOS boot support
 		pipeline.AddStage(osbuild.NewGrub2InstStage(osbuild.NewGrub2InstISO9660StageOption("images/eltorito.img", "/boot/grub2")))
 	}
-
-	filename := "images/efiboot.img"
-	pipeline.AddStage(osbuild.NewTruncateStage(&osbuild.TruncateStageOptions{
-		Filename: filename,
-		Size:     fmt.Sprintf("%d", p.PartitionTable.Size),
-	}))
-
-	for _, stage := range osbuild.GenFsStages(p.PartitionTable, filename, p.anacondaPipeline.Name()) {
-		pipeline.AddStage(stage)
-	}
-
-	inputName = "root-tree"
-	copyInputs := osbuild.NewPipelineTreeInputs(inputName, p.bootTreePipeline.Name())
-	copyOptions, copyDevices, copyMounts := osbuild.GenCopyFSTreeOptions(inputName, p.bootTreePipeline.Name(), filename, p.PartitionTable)
-	pipeline.AddStage(osbuild.NewCopyStage(copyOptions, copyInputs, copyDevices, copyMounts))
-
-	copyInputs = osbuild.NewPipelineTreeInputs(inputName, p.bootTreePipeline.Name())
-	pipeline.AddStage(osbuild.NewCopyStageSimple(
-		&osbuild.CopyStageOptions{
-			Paths: []osbuild.CopyStagePath{
-				{
-					From: fmt.Sprintf("input://%s/EFI", inputName),
-					To:   "tree:///",
-				},
-			},
-		},
-		copyInputs,
-	))
 
 	if p.anacondaPipeline.Type == AnacondaInstallerTypePayload {
 		// the following pipelines are only relevant for payload installers

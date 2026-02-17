@@ -122,8 +122,10 @@ func (img *AnacondaContainerInstaller) InstantiateManifestFromContainer(m *manif
 	kernelOpts = append(kernelOpts, img.InstallerCustomizations.KernelOptionsAppend...)
 	bootTreePipeline.KernelOpts = kernelOpts
 
+	bootImagePipeline := manifest.NewEFIBootImage(buildPipeline, bootTreePipeline, anacondaPipeline)
+
 	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
-	initIsoTreePipeline(isoTreePipeline, &img.AnacondaInstallerBase, rng)
+	initIsoTreePipeline(isoTreePipeline, bootImagePipeline, &img.AnacondaInstallerBase, rng)
 
 	// For ostree installers, always put the kickstart file in the root of the ISO
 	isoTreePipeline.PayloadPath = "/container"
@@ -131,7 +133,7 @@ func (img *AnacondaContainerInstaller) InstantiateManifestFromContainer(m *manif
 	isoTreePipeline.ContainerSource = &img.InstallerPayload
 	isoTreePipeline.InstallRootfsType = img.InstallRootfsType
 
-	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.ISOCustomizations)
+	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, bootImagePipeline, img.ISOCustomizations)
 	isoPipeline.SetFilename(img.filename)
 	artifact := isoPipeline.Export()
 

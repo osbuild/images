@@ -15,8 +15,7 @@ type AnacondaInstallerBase struct {
 	Kickstart               *kickstart.Options
 }
 
-func initIsoTreePipeline(isoTreePipeline *manifest.AnacondaInstallerISOTree, img *AnacondaInstallerBase, rng *rand.Rand) {
-	isoTreePipeline.PartitionTable = efiBootPartitionTable(rng)
+func initIsoTreePipeline(isoTreePipeline *manifest.AnacondaInstallerISOTree, efiBootImagePipeline *manifest.EFIBootImage, img *AnacondaInstallerBase, rng *rand.Rand) {
 	isoTreePipeline.Release = img.InstallerCustomizations.Release
 	isoTreePipeline.Kickstart = img.Kickstart
 
@@ -28,4 +27,6 @@ func initIsoTreePipeline(isoTreePipeline *manifest.AnacondaInstallerISOTree, img
 		isoTreePipeline.KernelOpts = append(isoTreePipeline.KernelOpts, "fips=1")
 	}
 	isoTreePipeline.ISOBoot = img.ISOCustomizations.BootType
+
+	efiBootImagePipeline.PartitionTable = efiBootPartitionTable(rng)
 }

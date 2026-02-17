@@ -3,7 +3,6 @@ package manifest_test
 import (
 	"crypto/sha256"
 	"fmt"
-	"math/rand"
 	"reflect"
 	"slices"
 	"strings"
@@ -18,7 +17,6 @@ import (
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/kickstart"
 	"github.com/osbuild/images/pkg/customizations/users"
-	"github.com/osbuild/images/pkg/datasizes"
 	"github.com/osbuild/images/pkg/disk"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
@@ -63,24 +61,7 @@ func newTestAnacondaISOTree() *manifest.AnacondaInstallerISOTree {
 	bootTreePipeline.ISOLabel = "test-iso-1"
 
 	pipeline := manifest.NewAnacondaInstallerISOTree(build, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
-	// copy of the default in pkg/image - will be moved to the pipeline
-	efibootImageSize := datasizes.Size(20 * datasizes.MebiByte)
-	pipeline.PartitionTable = &disk.PartitionTable{
-		Size: efibootImageSize,
-		Partitions: []disk.Partition{
-			{
-				Start: 0,
-				Size:  efibootImageSize,
-				Payload: &disk.Filesystem{
-					Type:       "vfat",
-					Mountpoint: "/",
-					// math/rand is good enough in this case
-					/* #nosec G404 */
-					UUID: disk.NewVolIDFromRand(rand.New(rand.NewSource(0))),
-				},
-			},
-		},
-	}
+
 	return pipeline
 }
 
@@ -99,10 +80,6 @@ func checkISOTreeStages(stages []*osbuild.Stage, expected, exclude []string) err
 		"org.osbuild.mkdir",
 		"org.osbuild.copy",
 		"org.osbuild.squashfs",
-		"org.osbuild.truncate",
-		"org.osbuild.mkfs.fat",
-		"org.osbuild.copy",
-		"org.osbuild.copy",
 		"org.osbuild.discinfo",
 	}
 

@@ -105,6 +105,8 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 	kernelOpts = append(kernelOpts, img.InstallerCustomizations.KernelOptionsAppend...)
 	bootTreePipeline.KernelOpts = kernelOpts
 
+	bootImagePipeline := manifest.NewEFIBootImage(buildPipeline, bootTreePipeline, anacondaPipeline)
+
 	var subscriptionPipeline *manifest.Subscription
 	if img.Subscription != nil {
 		// pipeline that will create subscription service and key file to be copied out
@@ -112,12 +114,12 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 	}
 
 	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
-	initIsoTreePipeline(isoTreePipeline, &img.AnacondaInstallerBase, rng)
+	initIsoTreePipeline(isoTreePipeline, bootImagePipeline, &img.AnacondaInstallerBase, rng)
 	isoTreePipeline.PayloadPath = "/ostree/repo"
 	isoTreePipeline.OSTreeCommitSource = &img.Commit
 	isoTreePipeline.SubscriptionPipeline = subscriptionPipeline
 
-	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.ISOCustomizations)
+	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, bootImagePipeline, img.ISOCustomizations)
 	isoPipeline.SetFilename(img.filename)
 	artifact := isoPipeline.Export()
 

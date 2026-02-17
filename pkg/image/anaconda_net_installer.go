@@ -106,10 +106,12 @@ func (img *AnacondaNetInstaller) InstantiateManifest(m *manifest.Manifest,
 	kernelOpts = append(kernelOpts, img.InstallerCustomizations.KernelOptionsAppend...)
 	bootTreePipeline.KernelOpts = kernelOpts
 
-	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
-	initIsoTreePipeline(isoTreePipeline, &img.AnacondaInstallerBase, rng)
+	bootImagePipeline := manifest.NewEFIBootImage(buildPipeline, bootTreePipeline, anacondaPipeline)
 
-	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.ISOCustomizations)
+	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
+	initIsoTreePipeline(isoTreePipeline, bootImagePipeline, &img.AnacondaInstallerBase, rng)
+
+	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, bootImagePipeline, img.ISOCustomizations)
 	isoPipeline.SetFilename(img.filename)
 
 	artifact := isoPipeline.Export()

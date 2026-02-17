@@ -118,7 +118,8 @@ func (img *ContainerBasedIso) InstantiateManifestFromContainer(m *manifest.Manif
 		BootType: manifest.Grub2ISOBoot,
 	}
 
-	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, isoCustomizations)
+	// XXX TODO
+	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, nil, isoCustomizations)
 	isoPipeline.SetFilename(img.filename)
 	artifact := isoPipeline.Export()
 

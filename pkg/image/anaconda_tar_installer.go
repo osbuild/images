@@ -126,16 +126,18 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	kernelOpts = append(kernelOpts, img.InstallerCustomizations.KernelOptionsAppend...)
 	bootTreePipeline.KernelOpts = kernelOpts
 
+	bootImagePipeline := manifest.NewEFIBootImage(buildPipeline, bootTreePipeline, anacondaPipeline)
+
 	osPipeline := manifest.NewOS(buildPipeline, img.platform, repos)
 	osPipeline.OSCustomizations = img.OSCustomizations
 	osPipeline.Environment = img.Environment
 
 	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, anacondaPipeline, rootfsImagePipeline, bootTreePipeline)
-	initIsoTreePipeline(isoTreePipeline, &img.AnacondaInstallerBase, rng)
+	initIsoTreePipeline(isoTreePipeline, bootImagePipeline, &img.AnacondaInstallerBase, rng)
 	isoTreePipeline.PayloadPath = tarPath
 	isoTreePipeline.OSPipeline = osPipeline
 
-	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.ISOCustomizations)
+	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, bootImagePipeline, img.ISOCustomizations)
 	isoPipeline.SetFilename(img.filename)
 
 	artifact := isoPipeline.Export()
