@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"regexp"
 
 	"github.com/osbuild/images/pkg/remotefile"
@@ -87,6 +88,12 @@ type URLSecrets struct {
 }
 
 var resolveDoer remotefile.Doer = &http.Client{}
+
+// ValidURL checks if a URL string is valid and has a scheme and host.
+func IsValidURL(urlStr string) bool {
+	u, err := url.Parse(urlStr)
+	return err == nil && u.Scheme != "" && u.Host != ""
+}
 
 // ResolveAddURLs downloads each URL via the remotefile package, computes the
 // checksum, and adds a new item to the source.

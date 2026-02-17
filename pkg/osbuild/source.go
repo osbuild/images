@@ -1,9 +1,11 @@
 package osbuild
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/depsolvednf"
@@ -29,10 +31,9 @@ type SourceInputs struct {
 	Depsolved  depsolvednf.DepsolveResult
 	Containers []container.Spec
 	Commits    []ostree.CommitSpec
-	// InlineData contans the inline data for fsnode.Files
-	InlineData []string
-	// FileRefs contains the references of paths/urls for fsnode.Files
-	FileRefs []string
+	InlineData []string // the inline data for fsnode.Files
+	FileRefs   []string // the references of paths/urls for fsnode.Files
+	GPGKeyURLs []string // URLs to resolve GPG keys from; invalid entries are ignored
 }
 
 // A Sources map contains all the sources made available to an osbuild run
@@ -178,7 +179,7 @@ func GenSources(inputs SourceInputs, rpmDownloader RpmDownloader) (Sources, erro
 	// collect host resources
 	if len(inputs.FileRefs) > 0 {
 		// XXX: fugly
-		curl, ok := sources["org.osbuild.curl"].(*CurlSource)
+		curl, ok := sources[SourceNameCurl].(*CurlSource)
 		if !ok || curl == nil {
 			curl = NewCurlSource()
 		}
@@ -191,7 +192,32 @@ func GenSources(inputs SourceInputs, rpmDownloader RpmDownloader) (Sources, erro
 				URL: fmt.Sprintf("file:%s", hostRes),
 			}
 		}
-		sources["org.osbuild.curl"] = curl
+		sources[SourceNameCurl] = curl
+	}
+
+	// collect and resolve GPG key URLs
+	var validURLs []string
+	for _, repo := range inputs.Depsolved.Repos {
+		for _, u := range repo.GPGKeys {
+			if IsValidURL(u) && !slices.Contains(validURLs, u) {
+				validURLs = append(validURLs, u)
+			}
+		}
+	}
+	for _, u := range inputs.GPGKeyURLs {
+		if IsValidURL(u) && !slices.Contains(validURLs, u) {
+			validURLs = append(validURLs, u)
+		}
+	}
+	if len(validURLs) > 0 {
+		curl, ok := sources[SourceNameCurl].(*CurlSource)
+		if !ok || curl == nil {
+			curl = NewCurlSource()
+		}
+		if err := curl.ResolveAddURLs(context.Background(), validURLs...); err != nil {
+			return nil, err
+		}
+		sources[SourceNameCurl] = curl
 	}
 
 	return sources, nil
