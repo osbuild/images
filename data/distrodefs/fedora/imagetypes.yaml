@@ -2520,7 +2520,17 @@ image_types:
         - ["/usr/share/licenses/fedora-release-common/Fedora-Legal-README.txt", "/Fedora-Legal-README.txt"]
         - ["/usr/share/licenses/fedora-release-common/LICENSE", "/LICENSE"]
       install_weak_deps: false
-    iso_config: *default_iso_config
+    iso_config:
+      <<: *default_iso_config
+      rootfs_type: "erofs"
+      erofs_options:
+        compression:
+          method: "lzma"
+          level: 6
+        options:
+          - "fragments"
+        cluster-size: 1048576
+
     image_config:
       locale: "en_US.UTF-8"
     package_sets:
