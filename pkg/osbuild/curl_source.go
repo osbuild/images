@@ -2,10 +2,15 @@ package osbuild
 
 import (
 	"bytes"
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"regexp"
 
+	"github.com/osbuild/images/pkg/remotefile"
 	"github.com/osbuild/images/pkg/rpmmd"
 )
 
@@ -79,6 +84,31 @@ func (CurlSourceOptions) isCurlSourceItem() {}
 
 type URLSecrets struct {
 	Name string `json:"name"`
+}
+
+var resolveDoer remotefile.Doer = &http.Client{}
+
+// ResolveAddURLs downloads each URL via the remotefile package, computes the
+// checksum, and adds a new item to the source.
+func (source *CurlSource) ResolveAddURLs(ctx context.Context, urls ...string) error {
+	if len(urls) == 0 {
+		return nil
+	}
+
+	resolver := remotefile.NewResolver(ctx, remotefile.WithDoer(resolveDoer))
+	resolver.Add(urls...)
+	specs, err := resolver.Finish()
+	if err != nil {
+		return err
+	}
+
+	for _, spec := range specs {
+		sum := sha256.Sum256(spec.Content)
+		checksum := "sha256:" + hex.EncodeToString(sum[:])
+		source.Items[checksum] = URL(spec.URL)
+	}
+
+	return nil
 }
 
 // Unmarshal method for CurlSource for handling the CurlSourceItem interface:
