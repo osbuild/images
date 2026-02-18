@@ -1190,6 +1190,8 @@
     required_partition_sizes: *default_required_dir_sizes
     iso_config:
       <<: *default_iso_config
+      rootfs_type: "erofs"
+      erofs_options: *default_erofs_options
     installer_config:
       <<: *default_installer_config
       install_weak_deps: false
