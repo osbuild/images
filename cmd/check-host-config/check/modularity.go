@@ -11,7 +11,6 @@ func init() {
 	RegisterCheck(Metadata{
 		Name:              "modularity",
 		RequiresBlueprint: true,
-		TempDisabled:      "https://github.com/osbuild/images/issues/2061",
 	}, modularityCheck)
 }
 
