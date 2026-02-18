@@ -560,6 +560,14 @@
         shallow_merge:
           boot_type: "grub2"
 
+  erofs_options: &default_erofs_options
+    compression:
+      method: "lzma"
+      level: 6
+    options:
+      - "fragments"
+    cluster-size: 1048576
+
   image_config:
     iot_enabled_services: &image_config_iot_enabled_services
       enabled_services:
@@ -2523,14 +2531,7 @@ image_types:
     iso_config:
       <<: *default_iso_config
       rootfs_type: "erofs"
-      erofs_options:
-        compression:
-          method: "lzma"
-          level: 6
-        options:
-          - "fragments"
-        cluster-size: 1048576
-
+      erofs_options: *default_erofs_options
     image_config:
       locale: "en_US.UTF-8"
     package_sets:
