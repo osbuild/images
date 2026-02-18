@@ -1188,6 +1188,8 @@
     ostree: *ostree_atomic
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
+    iso_config:
+      <<: *default_iso_config
     installer_config:
       <<: *default_installer_config
       install_weak_deps: false
