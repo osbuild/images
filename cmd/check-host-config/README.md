@@ -21,6 +21,7 @@ func init() {
 		RequiresBlueprint:      true,
 		RequiresCustomizations: true,
         TempDisabled:           "",
+        RunOn:                  []string{"centos", "!rhel"},
 	}, usersCheck)
 }
 ```
@@ -31,6 +32,7 @@ Metadata fields have the following semantics:
 * **RequiresBlueprint**: when set to true and the blueprint is empty, the check is automatically skipped.
 * **RequiresCustomizations**: when set to true and config, blueprint, or customizations is nil, the check is skipped.
 * **TempDisabled**: the check is temporarily disabled (skipped) when this is not an empty string (e.g. issue URL).
+* **RunOn**: when set, run on specific distro IDs (or use bang to exclude specific OS).
 
 Checks can return:
 

@@ -7,10 +7,11 @@ import (
 // Metadata provides information about a check. It is used to manage the execution
 // of the check and to provide context in logs and reports.
 type Metadata struct {
-	Name                   string // Name of the check (used for lookup and logging)
-	RequiresBlueprint      bool   // Ensure Blueprint is not nil, skip the check otherwise
-	RequiresCustomizations bool   // Ensure Customizations is not nil, skip the check otherwise
-	TempDisabled           string // Set to non-empty string with URL to issue tracker to disable the check temporarily
+	Name                   string   // Name of the check (used for lookup and logging)
+	RequiresBlueprint      bool     // Ensure Blueprint is not nil, skip the check otherwise
+	RequiresCustomizations bool     // Ensure Customizations is not nil, skip the check otherwise
+	TempDisabled           string   // Set to non-empty string with URL to issue tracker to disable the check temporarily
+	RunOn                  []string // List of OS IDs to run the check on (prefix with `!` to exclude)
 }
 
 // CheckFunc is the function type that all checks must implement.
