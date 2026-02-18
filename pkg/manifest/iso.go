@@ -19,7 +19,7 @@ type ISOCustomizations struct {
 	Application string
 
 	RootfsType   ISORootfsType
-	ErofsOptions *osbuild.ErofsStageOptions
+	ErofsOptions osbuild.ErofsStageOptions
 	BootType     ISOBootType
 }
 

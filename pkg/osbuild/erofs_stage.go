@@ -17,10 +17,11 @@ type ErofsStageOptions struct {
 
 func (ErofsStageOptions) isStageOptions() {}
 
-func NewErofsStage(options *ErofsStageOptions, inputPipeline string) *Stage {
+func NewErofsStage(options ErofsStageOptions, inputPipeline string) *Stage {
+	opts := options
 	return &Stage{
 		Type:    "org.osbuild.erofs",
-		Options: options,
+		Options: &opts,
 		Inputs:  NewPipelineTreeInputs("tree", inputPipeline),
 	}
 }

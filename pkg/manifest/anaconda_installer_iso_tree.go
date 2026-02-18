@@ -293,16 +293,15 @@ func (p *AnacondaInstallerISOTree) NewSquashfsStage() (*osbuild.Stage, error) {
 // NewErofsStage returns an osbuild stage configured to build
 // the erofs root filesystem for the ISO.
 func (p *AnacondaInstallerISOTree) NewErofsStage() (*osbuild.Stage, error) {
-	var erofsOptions *osbuild.ErofsStageOptions
 	if p.anacondaPipeline == nil {
 		return nil, fmt.Errorf("Anaconda pipeline not set for %s pipeline", p.name)
 	}
 
-	if p.RootfsType != ErofsRootfs || p.anacondaPipeline.ISOCustomizations.ErofsOptions == nil {
-		return nil, fmt.Errorf("Rootfs not set to Erofs or options set to nil for %s pipeline, can not create erofs stage", p.name)
+	if p.RootfsType != ErofsRootfs {
+		return nil, fmt.Errorf("Rootfs not set to Erofs for %s pipeline, can not create erofs stage", p.name)
 	}
 
-	erofsOptions = p.anacondaPipeline.ISOCustomizations.ErofsOptions
+	erofsOptions := p.anacondaPipeline.ISOCustomizations.ErofsOptions
 
 	switch p.anacondaPipeline.Type {
 	case AnacondaInstallerTypePayload, AnacondaInstallerTypeNetinst:

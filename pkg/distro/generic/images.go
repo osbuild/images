@@ -492,7 +492,7 @@ func isoCustomizations(t *imageType, c *blueprint.Customizations) (manifest.ISOC
 		}
 
 		if erofsOptions := isoConfig.ErofsOptions; erofsOptions != nil {
-			isc.ErofsOptions = erofsOptions
+			isc.ErofsOptions = *erofsOptions
 		}
 	}
 

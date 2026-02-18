@@ -28,7 +28,7 @@ func TestErofStageJsonMinimal(t *testing.T) {
         }
 }`
 
-	opts := &osbuild.ErofsStageOptions{
+	opts := osbuild.ErofsStageOptions{
 		Filename: "foo.ero",
 	}
 	stage := osbuild.NewErofsStage(opts, "input-pipeline")
@@ -70,7 +70,7 @@ func TestErofStageJsonFull(t *testing.T) {
         }
 }`
 
-	opts := &osbuild.ErofsStageOptions{
+	opts := osbuild.ErofsStageOptions{
 		Filename: "foo.ero",
 		Source:   "mount://-/",
 		ExcludePaths: []string{
