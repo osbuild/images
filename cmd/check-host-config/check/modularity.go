@@ -11,6 +11,7 @@ func init() {
 	RegisterCheck(Metadata{
 		Name:              "modularity",
 		RequiresBlueprint: true,
+		RunOn:             []string{"centos-9"},
 	}, modularityCheck)
 }
 
