@@ -93,7 +93,7 @@ func (p *ISOTree) NewErofsStage() (*osbuild.Stage, error) {
 		return nil, fmt.Errorf("Rootfs not set to Erofs or options set to nil for %s pipeline, can not create erofs stage", p.name)
 	}
 
-	erofsOptions := p.ErofsOptions
+	erofsOptions := *p.ErofsOptions
 	erofsOptions.Filename = "LiveOS/squashfs.img"
 
 	// Clean up the root filesystem's /boot to save space

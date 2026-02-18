@@ -110,7 +110,7 @@ func newTestAnacondaISOTreeErofs() *manifest.AnacondaInstallerISOTree {
 			Preview:   preview,
 		},
 		manifest.ISOCustomizations{
-			ErofsOptions: &osbuild.ErofsStageOptions{},
+			ErofsOptions: osbuild.ErofsStageOptions{},
 		},
 	)
 	rootfsImagePipeline := manifest.NewISORootfsImg(build, anacondaPipeline)
