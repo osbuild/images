@@ -1,11 +1,40 @@
 package osbuild
 
 import (
+	"bytes"
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"errors"
+	"io"
+	"net/http"
 	"testing"
 
+	"github.com/osbuild/images/internal/test"
+	"github.com/osbuild/images/pkg/remotefile"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+// mockDoer is a remotefile.Doer that returns predefined bodies and status codes per URL.
+type mockDoer struct {
+	responses map[string]struct {
+		body   []byte
+		status int
+	}
+}
+
+func (m *mockDoer) Do(req *http.Request) (*http.Response, error) {
+	r, ok := m.responses[req.URL.String()]
+	if !ok {
+		return &http.Response{StatusCode: http.StatusNotFound, Body: io.NopCloser(bytes.NewReader(nil))}, nil
+	}
+	return &http.Response{
+		StatusCode: r.status,
+		Body:       io.NopCloser(bytes.NewReader(r.body)),
+	}, nil
+}
 
 func TestPackageSourceValidation(t *testing.T) {
 	assert := assert.New(t)
@@ -130,5 +159,102 @@ func TestPackageSourceValidation(t *testing.T) {
 		} else {
 			assert.Error(curl.AddPackage(tc.pkg))
 		}
+	}
+}
+
+func TestResolveAddURLs(t *testing.T) {
+	type response struct {
+		body   []byte
+		status int
+	}
+	type wantItem struct {
+		body []byte
+		url  string
+	}
+	cases := []struct {
+		name      string
+		responses map[string]response
+		urls      []string
+		wantErr   error
+		wantItems []wantItem
+	}{
+		{
+			name:      "empty URLs",
+			responses: map[string]response{},
+			urls:      nil,
+			wantErr:   nil,
+			wantItems: nil,
+		},
+		{
+			name: "single URL",
+			responses: map[string]response{
+				"https://example.com/key1": {body: []byte("key1\n"), status: http.StatusOK},
+			},
+			urls:      []string{"https://example.com/key1"},
+			wantErr:   nil,
+			wantItems: []wantItem{{body: []byte("key1\n"), url: "https://example.com/key1"}},
+		},
+		{
+			name: "multiple URLs",
+			responses: map[string]response{
+				"https://example.com/key1": {body: []byte("key1\n"), status: http.StatusOK},
+				"https://example.com/key2": {body: []byte("key2\n"), status: http.StatusOK},
+			},
+			urls:    []string{"https://example.com/key1", "https://example.com/key2"},
+			wantErr: nil,
+			wantItems: []wantItem{
+				{body: []byte("key1\n"), url: "https://example.com/key1"},
+				{body: []byte("key2\n"), url: "https://example.com/key2"},
+			},
+		},
+		{
+			name:      "resolve error",
+			responses: map[string]response{},
+			urls:      []string{"https://example.com/notfound"},
+			wantErr:   errors.New("failed to resolve remote files"),
+		},
+		{
+			name: "non-OK status",
+			responses: map[string]response{
+				"https://example.com/error": {body: []byte("error"), status: http.StatusInternalServerError},
+			},
+			urls:    []string{"https://example.com/error"},
+			wantErr: errors.New("unexpected status 500"),
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			doer := &mockDoer{
+				responses: make(map[string]struct {
+					body   []byte
+					status int
+				}),
+			}
+			for u, r := range tc.responses {
+				doer.responses[u] = struct {
+					body   []byte
+					status int
+				}{body: r.body, status: r.status}
+			}
+			var doerIf remotefile.Doer = doer
+			test.MockGlobal(t, &resolveDoer, doerIf)
+			source := NewCurlSource()
+			err := source.ResolveAddURLs(context.Background(), tc.urls...)
+			if tc.wantErr != nil {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tc.wantErr.Error())
+				assert.Empty(t, source.Items)
+				return
+			}
+			require.NoError(t, err)
+			require.Len(t, source.Items, len(tc.wantItems))
+			for _, wi := range tc.wantItems {
+				sum := sha256.Sum256(wi.body)
+				checksum := "sha256:" + hex.EncodeToString(sum[:])
+				item, ok := source.Items[checksum].(URL)
+				require.True(t, ok, "item for %s", checksum)
+				assert.Equal(t, wi.url, string(item))
+			}
+		})
 	}
 }

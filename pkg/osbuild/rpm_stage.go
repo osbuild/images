@@ -3,6 +3,7 @@ package osbuild
 import (
 	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/depsolvednf"
@@ -160,6 +161,9 @@ func pkgRefs(pkgs rpmmd.PackageList) FilesInputRef {
 // only the GPG keys needed for a specific set of packages, rather than
 // importing all keys from all configured repositories.
 //
+// Strings which are not valid ASCII armored GPG keys are removed from the
+// list before returning. This includes keys which are entered as URLs.
+//
 // Returns an error if:
 // - Any package has a nil Repo pointer (indicates a bug in depsolving)
 // - Any package requires GPG checking but its repo has no GPG keys configured
@@ -169,8 +173,7 @@ func pkgRefs(pkgs rpmmd.PackageList) FilesInputRef {
 // NOTE: Currently collects keys even for packages/repos with CheckGPG=false.
 // This could be changed if importing unused keys is not desirable.
 func GPGKeysForPackages(pkgs rpmmd.PackageList) ([]string, error) {
-	keyMap := make(map[string]bool)
-	var gpgKeys []string
+	var keys []string
 	for _, pkg := range pkgs {
 		if pkg.Repo == nil {
 			return nil, fmt.Errorf("package %q has nil Repo pointer. This is a bug in depsolving.", pkg.Name)
@@ -181,14 +184,17 @@ func GPGKeysForPackages(pkgs rpmmd.PackageList) ([]string, error) {
 				pkg.Name, pkg.Repo.Id)
 		}
 		for _, key := range pkg.Repo.GPGKeys {
-			if !keyMap[key] {
-				gpgKeys = append(gpgKeys, key)
-				keyMap[key] = true
+			if strings.HasPrefix(key, "-----BEGIN PGP") {
+				keys = append(keys, key)
 			}
 		}
 	}
-	slices.Sort(gpgKeys)
-	return gpgKeys, nil
+	slices.Sort(keys)
+	keys = slices.Compact(keys)
+	if len(keys) == 0 {
+		return nil, nil
+	}
+	return keys, nil
 }
 
 // GenRPMStagesFromTransactions creates RPM stages for each transaction.

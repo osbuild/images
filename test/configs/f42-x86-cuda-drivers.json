@@ -16,7 +16,8 @@
   "custom_repos": [
     {
       "name": "cuda-drivers",
-      "baseurls": ["https://developer.download.nvidia.com/compute/cuda/repos/fedora42/x86_64/"]
+      "baseurls": ["https://developer.download.nvidia.com/compute/cuda/repos/fedora42/x86_64/"],
+      "gpgkeys": ["https://developer.download.nvidia.com/compute/cuda/repos/fedora42/x86_64/D42D0685.pub"]
     }
   ]
 }

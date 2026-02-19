@@ -57,15 +57,17 @@ func NewResolver(ctx context.Context, opts ...ResolverOption) *Resolver {
 
 // Add a URL to the resolver queue. When called after Finish was called,
 // it may panic.
-func (r *Resolver) Add(url string) {
-	r.wg.Add(1)
+func (r *Resolver) Add(urls ...string) {
+	for _, u := range urls {
+		r.wg.Add(1)
 
-	go func() {
-		defer r.wg.Done()
+		go func() {
+			defer r.wg.Done()
 
-		content, err := r.client.Resolve(r.ctx, url)
-		r.results <- resolveResult{url: url, content: content, err: err}
-	}()
+			content, err := r.client.Resolve(r.ctx, u)
+			r.results <- resolveResult{url: u, content: content, err: err}
+		}()
+	}
 }
 
 // Finish starts collecting of results and returns them. No further calls to Add

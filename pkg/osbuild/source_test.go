@@ -4,12 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/depsolvednf"
@@ -370,4 +373,90 @@ func TestGenSourcesFileRefs(t *testing.T) {
     }
   }
 }`, testFile))
+}
+
+func TestGenSourcesGPGKeyURLs(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/valid":
+			w.Write([]byte("a"))
+		case "/invalid1", "/invalid2":
+			w.WriteHeader(http.StatusNotFound)
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer srv.Close()
+
+	validURL := srv.URL + "/valid"
+	cases := []struct {
+		name          string
+		inputs        SourceInputs
+		rpmDownloader RpmDownloader
+		want          string
+	}{
+		{
+			name:   "empty GPGKeyURLs",
+			inputs: SourceInputs{GPGKeyURLs: []string{}},
+			want:   `{}`,
+		},
+		{
+			name:   "single valid URL",
+			inputs: SourceInputs{GPGKeyURLs: []string{validURL}},
+			want: fmt.Sprintf(`{
+  "org.osbuild.curl": {
+    "items": {
+      "sha256:ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb": "%s"
+    }
+  }
+}`, validURL),
+		},
+		{
+			name: "invalid URLs ignored",
+			inputs: SourceInputs{
+				GPGKeyURLs: []string{
+					"",
+					"----- BEGIN TOTALLY NOT A URL -----",
+					validURL,
+				},
+			},
+			want: fmt.Sprintf(`{
+  "org.osbuild.curl": {
+    "items": {
+      "sha256:ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb": "%s"
+    }
+  }
+}`, validURL),
+		},
+		{
+			name: "GPGKeyURLs merged with curl (RPM)",
+			inputs: SourceInputs{
+				Depsolved: depsolvednf.DepsolveResult{
+					Transactions: depsolvednf.TransactionList{{opensslPkg}},
+					Repos:        []rpmmd.RepoConfig{fakeRepo},
+				},
+				GPGKeyURLs: []string{validURL},
+			},
+			rpmDownloader: RpmDownloaderCurl,
+			want: fmt.Sprintf(`{
+  "org.osbuild.curl": {
+    "items": {
+      "sha256:ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb": "%s",
+      "sha256:fcf2515ec9115551c99d552da721803ecbca23b7ae5a974309975000e8bef666": {
+        "url": "https://example.com/repo/Packages/openssl-libs-3.0.1-5.el9.x86_64.rpm"
+      }
+    }
+  }
+}`, validURL),
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			sources, err := GenSources(tc.inputs, tc.rpmDownloader)
+			require.NoError(t, err)
+			jsonOutput, err := json.MarshalIndent(sources, "", "  ")
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, string(jsonOutput))
+		})
+	}
 }
