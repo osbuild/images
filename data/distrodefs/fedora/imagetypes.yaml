@@ -553,7 +553,7 @@
     preparer: "image-builder - https://osbuild.org/"
     publisher: "Fedora Project"
     rootfs_type: "squashfs"
-    conditions:
+    conditions: &default_iso_config_conditions
       "x86_64 uses grub2":
         when:
           arch: "x86_64"
@@ -2019,7 +2019,16 @@ image_types:
     installer_config:
       <<: *default_installer_config
       default_menu: 0
-    iso_config: *default_iso_config
+    iso_config:
+      <<: *default_iso_config
+      conditions:
+        <<: *default_iso_config_conditions
+        "f45 and above use erofs":
+          when:
+            version_greater_or_equal: "45"
+          shallow_merge:
+            rootfs_type: "erofs"
+            erofs_options: *default_erofs_options
     image_config:
       <<: *image_config_iot_enabled_services
       locale: "en_US.UTF-8"
