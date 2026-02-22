@@ -353,8 +353,8 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 		osc.MachineIdUninitialized = *imageConfig.MachineIdUninitialized
 	}
 
-	if imageConfig.MountUnits != nil && *imageConfig.MountUnits {
-		osc.MountConfiguration = osbuild.MOUNT_CONFIGURATION_UNITS
+	if imageConfig.MountConfiguration != nil {
+		osc.MountConfiguration = *imageConfig.MountConfiguration
 	}
 
 	osc.VersionlockPackages = imageConfig.VersionlockPackages
