@@ -1946,7 +1946,7 @@ image_types:
       grub2_config:
         timeout: 5
       install_weak_deps: false
-      mount_units: true
+      mount_configuration: "units"
       machine_id_uninitialized: false
       enabled_services:
         - "NetworkManager.service"
@@ -1960,7 +1960,7 @@ image_types:
             version_less_than: "43"
           shallow_merge:
             install_weak_deps: true
-            mount_units: false
+            mount_configuration: "fstab"
             enabled_services:
               - "NetworkManager.service"
               - "initial-setup.service"
