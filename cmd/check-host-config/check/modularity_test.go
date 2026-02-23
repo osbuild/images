@@ -10,65 +10,62 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// dnf module list --enabled output fixtures for different RHEL versions
-func dnfModuleListOutputRHEL7() string {
-	return "Last metadata expiration check: 1:23:45 ago on Mon 01 Jan 2024 12:00:00 PM UTC.\n" +
-		"Dependencies resolved.\n" +
-		"Module Stream Profiles\n" +
-		"nodejs           10        [e]       common [d], development, minimal\n" +
-		"python36         3.6       [e]       build, common [d], devel\n" +
-		"Hint: [d]efault, [e]nabled, [x]disabled, [i]nstalled, [a]ctive\n"
-}
+// dnf module list --enabled output fixtures for different distro versions
+var (
+	dnfModuleListOutputRHEL7 = `Last metadata expiration check: 1:23:45 ago on Mon 01 Jan 2024 12:00:00 PM UTC.
+Dependencies resolved.
+Module Stream Profiles
+nodejs           10        [e]       common [d], development, minimal
+python36         3.6       [e]       build, common [d], devel
+Hint: [d]efault, [e]nabled, [x]disabled, [i]nstalled, [a]ctive
+`
 
-func dnfModuleListOutputRHEL8() string {
-	return "Last metadata expiration check: 0:00:00 ago on Mon 01 Jan 2024 12:00:00 PM UTC.\n" +
-		"Dependencies resolved.\n" +
-		"Module Stream Profiles\n" +
-		"nodejs           12        [e]       common [d], development, minimal, s2i\n" +
-		"python38         3.8       [e]       build, common [d], devel, minimal\n" +
-		"postgresql       12        [e]       client, server [d]\n" +
-		"Hint: [d]efault, [e]nabled, [x]disabled, [i]nstalled, [a]ctive\n"
-}
+	dnfModuleListOutputRHEL8 = `Last metadata expiration check: 0:00:00 ago on Mon 01 Jan 2024 12:00:00 PM UTC.
+Dependencies resolved.
+Module Stream Profiles
+nodejs           12        [e]       common [d], development, minimal, s2i
+python38         3.8       [e]       build, common [d], devel, minimal
+postgresql       12        [e]       client, server [d]
+Hint: [d]efault, [e]nabled, [x]disabled, [i]nstalled, [a]ctive
+`
 
-func dnfModuleListOutputRHEL9() string {
-	return "Last metadata expiration check: 0:00:00 ago\n" +
-		"Dependencies resolved.\n" +
-		"Module Stream Profiles\n" +
-		"nodejs           18        [d]       common [d], development, minimal, s2i\n" +
-		"python39         3.9       [d]       build, common [d], devel, minimal\n" +
-		"Hint: [d]efault, [e]nabled, [x]disabled, [i]nstalled, [a]ctive\n"
-}
+	dnfModuleListOutputRHEL9 = `Last metadata expiration check: 0:00:00 ago
+Dependencies resolved.
+Module Stream Profiles
+nodejs           18        [d]       common [d], development, minimal, s2i
+python39         3.9       [d]       build, common [d], devel, minimal
+Hint: [d]efault, [e]nabled, [x]disabled, [i]nstalled, [a]ctive
+`
 
-func dnfModuleListOutputRHEL10() string {
-	return "Last metadata expiration check: 0:00:00 ago\n" +
-		"Dependencies resolved.\n" +
-		"Module Stream Profiles\n" +
-		"nodejs           20        [e]       common [d], development, minimal, s2i\n" +
-		"python312        3.12      [e]       build, common [d], devel, minimal\n" +
-		"postgresql       16        [e]       client, server [d], devel\n" +
-		"Use \"dnf module info <module:stream>\" to get more information.\n" +
-		"Hint: [d]efault, [e]nabled, [x]disabled, [i]nstalled, [a]ctive\n"
-}
+	dnfModuleListOutputRHEL10 = `Last metadata expiration check: 0:00:00 ago
+Dependencies resolved.
+Module Stream Profiles
+nodejs           20        [e]       common [d], development, minimal, s2i
+python312        3.12      [e]       build, common [d], devel, minimal
+postgresql       16        [e]       client, server [d], devel
+Use "dnf module info <module:stream>" to get more information.
+Hint: [d]efault, [e]nabled, [x]disabled, [i]nstalled, [a]ctive
+`
 
-func dnfModuleListOutputCentOS9() string {
-	return `CentOS Stream 9 - AppStream
+	dnfModuleListOutputCentOS9 = `CentOS Stream 9 - AppStream
 Name      Stream    Profiles                                Summary             
 nodejs    18 [e]    common [d], development, minimal, s2i   Javascript runtime  
 
 Hint: [d]efault, [e]nabled, [x]disabled, [i]nstalled
 `
-}
 
-func dnfModuleListOutputMultiple() string {
-	return "Last metadata expiration check: 0:00:00 ago\n" +
-		"Dependencies resolved.\n" +
-		"Module Stream Profiles\n" +
-		"nodejs           18        [e]       common [d], development, minimal, s2i\n" +
-		"python39         3.9       [e]       build, common [d], devel, minimal\n" +
-		"postgresql       13        [e]       client, server [d]\n" +
-		"ruby              3.1       [e]       common [d], devel\n" +
-		"Hint: [d]efault, [e]nabled, [x]disabled, [i]nstalled, [a]ctive\n"
-}
+	dnfModuleListOutputMultiple = `Last metadata expiration check: 0:00:00 ago
+Dependencies resolved.
+Module Stream Profiles
+nodejs           18        [e]       common [d], development, minimal, s2i
+python39         3.9       [e]       build, common [d], devel, minimal
+postgresql       13        [e]       client, server [d]
+ruby              3.1       [e]       common [d], devel
+Hint: [d]efault, [e]nabled, [x]disabled, [i]nstalled, [a]ctive
+`
+)
+
+const dnfModuleListCmd = "dnf -y -q module list --enabled"
 
 func TestModularityCheck(t *testing.T) {
 	tests := []struct {
@@ -88,7 +85,7 @@ func TestModularityCheck(t *testing.T) {
 				{Name: "nodejs", Stream: "18"},
 			},
 			mockExec: map[string]ExecResult{
-				"dnf -y -q module list --enabled": {Stdout: []byte(dnfModuleListOutputRHEL9())},
+				dnfModuleListCmd: {Stdout: []byte(dnfModuleListOutputRHEL9)},
 			},
 		},
 		{
@@ -98,7 +95,7 @@ func TestModularityCheck(t *testing.T) {
 				{Name: "python36", Stream: "3.6"},
 			},
 			mockExec: map[string]ExecResult{
-				"dnf -y -q module list --enabled": {Stdout: []byte(dnfModuleListOutputRHEL7())},
+				dnfModuleListCmd: {Stdout: []byte(dnfModuleListOutputRHEL7)},
 			},
 		},
 		{
@@ -109,7 +106,7 @@ func TestModularityCheck(t *testing.T) {
 				{Name: "postgresql", Stream: "12"},
 			},
 			mockExec: map[string]ExecResult{
-				"dnf -y -q module list --enabled": {Stdout: []byte(dnfModuleListOutputRHEL8())},
+				dnfModuleListCmd: {Stdout: []byte(dnfModuleListOutputRHEL8)},
 			},
 		},
 		{
@@ -119,7 +116,7 @@ func TestModularityCheck(t *testing.T) {
 				{Name: "python39", Stream: "3.9"},
 			},
 			mockExec: map[string]ExecResult{
-				"dnf -y -q module list --enabled": {Stdout: []byte(dnfModuleListOutputRHEL9())},
+				dnfModuleListCmd: {Stdout: []byte(dnfModuleListOutputRHEL9)},
 			},
 		},
 		{
@@ -130,7 +127,7 @@ func TestModularityCheck(t *testing.T) {
 				{Name: "postgresql", Stream: "16"},
 			},
 			mockExec: map[string]ExecResult{
-				"dnf -y -q module list --enabled": {Stdout: []byte(dnfModuleListOutputRHEL10())},
+				dnfModuleListCmd: {Stdout: []byte(dnfModuleListOutputRHEL10)},
 			},
 		},
 		{
@@ -139,7 +136,7 @@ func TestModularityCheck(t *testing.T) {
 				{Name: "nodejs", Stream: "18"},
 			},
 			mockExec: map[string]ExecResult{
-				"dnf -y -q module list --enabled": {Stdout: []byte(dnfModuleListOutputCentOS9())},
+				dnfModuleListCmd: {Stdout: []byte(dnfModuleListOutputCentOS9)},
 			},
 		},
 		{
@@ -151,7 +148,7 @@ func TestModularityCheck(t *testing.T) {
 				{Name: "ruby", Stream: "3.1"},
 			},
 			mockExec: map[string]ExecResult{
-				"dnf -y -q module list --enabled": {Stdout: []byte(dnfModuleListOutputMultiple())},
+				dnfModuleListCmd: {Stdout: []byte(dnfModuleListOutputMultiple)},
 			},
 		},
 		{
@@ -160,7 +157,7 @@ func TestModularityCheck(t *testing.T) {
 				{Name: "nodejs", Stream: "18"},
 			},
 			mockExec: map[string]ExecResult{
-				"dnf -y -q module list --enabled": {Code: 1, Err: errors.New("dnf failed")},
+				dnfModuleListCmd: {Code: 1, Err: errors.New("dnf failed")},
 			},
 			wantErr: check.ErrCheckFailed,
 		},
