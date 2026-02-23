@@ -22,6 +22,7 @@ from vmtest.vm import QEMU
 
 BASE_TEST_EXEC = "check-host-config-" # + arch
 WSL_TEST_SCRIPT = "test/scripts/wsl-entrypoint.bat"
+ISO_BOOT_TIMEOUT = 240
 
 
 def get_aws_config():
@@ -300,7 +301,7 @@ def _boot_qemu_iso(arch, installer_iso_path, config_file, privkey_path):
         # boot from installer to install to test disk, anaconda will
         # reboot automatically for the unattended-iso config.
         with QEMU(test_disk_path, cdrom=installer_iso_path) as vm:
-            vm.start(wait_event="qmp:RESET", snapshot=False, use_ovmf=True)
+            vm.start(wait_event="qmp:RESET", snapshot=False, use_ovmf=True, timeout_sec=ISO_BOOT_TIMEOUT)
             vm.force_stop()
         # now boot test disk and wait for ssh to come up as a minimal boot test
         with QEMU(test_disk_path, arch=arch) as vm:
