@@ -50,6 +50,15 @@ func dnfModuleListOutputRHEL10() string {
 		"Hint: [d]efault, [e]nabled, [x]disabled, [i]nstalled, [a]ctive\n"
 }
 
+func dnfModuleListOutputCentOS9() string {
+	return `CentOS Stream 9 - AppStream
+Name      Stream    Profiles                                Summary             
+nodejs    18 [e]    common [d], development, minimal, s2i   Javascript runtime  
+
+Hint: [d]efault, [e]nabled, [x]disabled, [i]nstalled
+`
+}
+
 func dnfModuleListOutputMultiple() string {
 	return "Last metadata expiration check: 0:00:00 ago\n" +
 		"Dependencies resolved.\n" +
@@ -122,6 +131,15 @@ func TestModularityCheck(t *testing.T) {
 			},
 			mockExec: map[string]ExecResult{
 				"dnf -y -q module list --enabled": {Stdout: []byte(dnfModuleListOutputRHEL10())},
+			},
+		},
+		{
+			name: "pass CentOS 9 format",
+			config: []blueprint.EnabledModule{
+				{Name: "nodejs", Stream: "18"},
+			},
+			mockExec: map[string]ExecResult{
+				"dnf -y -q module list --enabled": {Stdout: []byte(dnfModuleListOutputCentOS9())},
 			},
 		},
 		{
