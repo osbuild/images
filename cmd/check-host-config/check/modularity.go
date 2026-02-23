@@ -51,24 +51,23 @@ func modularityCheck(meta *Metadata, config *buildconfig.BuildConfig) error {
 		return Fail("failed to list enabled modules:", err)
 	}
 
-	// Parse dnf output: skip first 3 lines (header) and last 2 lines (footer)
+	// Parse dnf output: detect table rows dynamically (lines with at least 3 columns)
 	lines := strings.Split(string(stdout), "\n")
-	if len(lines) < 5 {
-		return Fail("dnf module list returned nothing")
-	}
-
 	enabledModules := make(map[string]bool)
-	for i := 3; i < len(lines)-2; i++ {
-		line := strings.TrimSpace(lines[i])
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
 		}
-		// Format: "name stream" or "name    stream"
 		fields := strings.Fields(line)
-		if len(fields) >= 2 {
-			moduleKey := fields[0] + ":" + fields[1]
-			enabledModules[moduleKey] = true
+		if len(fields) < 3 {
+			continue
 		}
+		moduleKey := fields[0] + ":" + fields[1]
+		enabledModules[moduleKey] = true
+	}
+	if len(enabledModules) == 0 {
+		return Fail("dnf module list returned nothing")
 	}
 
 	for _, expected := range expectedModules {
