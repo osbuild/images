@@ -1172,12 +1172,12 @@
     name: "fedora-iot"
     remote_name: "fedora-iot"
     ref: &ostree_iot_ref "{{.Distro.Name}}/{{.Distro.MajorVersion}}/{{.Arch}}/iot"
-    url: "https://d2ju0wfl996cmc.cloudfront.net/"
+    url: "mirrorlist=https://ostree.fedoraproject.org/iot/mirrorlist"
 
   ostree_atomic: &ostree_atomic
     name: "fedora"
     remote_name: "fedora"
-    url: "https://d2uk5hbyrobdzx.cloudfront.net/"
+    url: "mirrorlist=https://ostree.fedoraproject.org/mirrorlist"
 
   atomic_installer_common: &atomic_installer_common
     <<: *rpm_ostree_imgtype_common
