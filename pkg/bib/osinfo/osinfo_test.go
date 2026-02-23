@@ -235,10 +235,10 @@ partition_table:
       type: *bios_boot_partition_guid
 `
 
-func createPartitionTable(t *testing.T, root, fakePartitionTableYAML string) {
+func createPartitionTable(t *testing.T, root, fakePartitionTableYAML string, dest string) {
 	t.Helper()
 
-	dst := path.Join(root, "/usr/lib/bootc-image-builder/disk.yaml")
+	dst := path.Join(root, dest)
 	err := os.MkdirAll(path.Dir(dst), 0755)
 	require.NoError(t, err)
 	err = os.WriteFile(dst, []byte(fakePartitionTableYAML), 0644)
@@ -246,29 +246,36 @@ func createPartitionTable(t *testing.T, root, fakePartitionTableYAML string) {
 }
 
 func TestLoadInfoPartitionTableHappy(t *testing.T) {
-	root := t.TempDir()
-	writeOSRelease(t, root, "fedora", "40", "Fedora Linux", "fedora", "platform:f40", "coreos")
-	createPartitionTable(t, root, fakePartitionTableYAML)
+	dests := []string{
+		"/usr/lib/bootc-image-builder/disk.yaml",
+		"/usr/lib/image-builder/bootc/disk.yaml",
+	}
 
-	info, err := Load(root)
-	require.NoError(t, err)
-	assert.Equal(t, &disk.PartitionTable{
-		Type: disk.PT_GPT,
-		Partitions: []disk.Partition{
-			{
-				Bootable: true,
-				Size:     1 * datasizes.MiB,
-				Type:     "21686148-6449-6E6F-744E-656564454649",
-				UUID:     "2866630c-0c7e-469c-bc82-c458e3fd6223",
+	for _, dest := range dests {
+		root := t.TempDir()
+		writeOSRelease(t, root, "fedora", "40", "Fedora Linux", "fedora", "platform:f40", "coreos")
+		createPartitionTable(t, root, fakePartitionTableYAML, dest)
+
+		info, err := Load(root)
+		require.NoError(t, err)
+		assert.Equal(t, &disk.PartitionTable{
+			Type: disk.PT_GPT,
+			Partitions: []disk.Partition{
+				{
+					Bootable: true,
+					Size:     1 * datasizes.MiB,
+					Type:     "21686148-6449-6E6F-744E-656564454649",
+					UUID:     "2866630c-0c7e-469c-bc82-c458e3fd6223",
+				},
 			},
-		},
-	}, info.PartitionTable)
+		}, info.PartitionTable)
+	}
 }
 
 func TestLoadInfoPartitionTableSad(t *testing.T) {
 	root := t.TempDir()
 	writeOSRelease(t, root, "fedora", "40", "Fedora Linux", "fedora", "platform:f40", "coreos")
-	createPartitionTable(t, root, "@invalidYAML")
+	createPartitionTable(t, root, "@invalidYAML", "/usr/lib/bootc-image-builder/disk.yaml")
 
 	_, err := Load(root)
 	assert.EqualError(t, err, fmt.Sprintf(`cannot parse disk definitions from "%s/usr/lib/bootc-image-builder/disk.yaml": yaml: found character that cannot start any token`, root))
@@ -291,10 +298,10 @@ grub2:
       initrd: "/foo"
 `
 
-func createISO(t *testing.T, root, fakeISOYAML string) {
+func createISO(t *testing.T, root, fakeISOYAML string, dest string) {
 	t.Helper()
 
-	dst := path.Join(root, "/usr/lib/bootc-image-builder/iso.yaml")
+	dst := path.Join(root, dest)
 	err := os.MkdirAll(path.Dir(dst), 0755)
 	require.NoError(t, err)
 	err = os.WriteFile(dst, []byte(fakeISOYAML), 0644)
@@ -302,35 +309,41 @@ func createISO(t *testing.T, root, fakeISOYAML string) {
 }
 
 func TestLoadInfoISOHappy(t *testing.T) {
-	root := t.TempDir()
-	writeOSRelease(t, root, "fedora", "40", "Fedora Linux", "fedora", "platform:f40", "coreos")
-	createISO(t, root, fakeISOYAML)
+	dests := []string{
+		"/usr/lib/bootc-image-builder/iso.yaml",
+		"/usr/lib/image-builder/bootc/iso.yaml",
+	}
 
-	info, err := Load(root)
-	require.NoError(t, err)
+	for _, dest := range dests {
+		root := t.TempDir()
+		writeOSRelease(t, root, "fedora", "40", "Fedora Linux", "fedora", "platform:f40", "coreos")
+		createISO(t, root, fakeISOYAML, dest)
 
-	assert.Equal(t, "My-ISO", info.ISOInfo.Label)
-	assert.Equal(t, []string{"root=live:CDLABEL=My-ISO", "foo"}, info.ISOInfo.KernelArgs)
+		info, err := Load(root)
+		require.NoError(t, err)
 
-	assert.Equal(t, 30, *info.ISOInfo.Grub2.Timeout)
-	assert.Equal(t, 5, *info.ISOInfo.Grub2.Default)
+		assert.Equal(t, "My-ISO", info.ISOInfo.Label)
+		assert.Equal(t, []string{"root=live:CDLABEL=My-ISO", "foo"}, info.ISOInfo.KernelArgs)
 
-	assert.Equal(t, 2, len(info.ISOInfo.Grub2.Entries))
+		assert.Equal(t, 30, *info.ISOInfo.Grub2.Timeout)
+		assert.Equal(t, 5, *info.ISOInfo.Grub2.Default)
 
-	assert.Equal(t, "My First Entry", info.ISOInfo.Grub2.Entries[0].Name)
-	assert.Equal(t, "/foo", info.ISOInfo.Grub2.Entries[0].Linux)
-	assert.Equal(t, "/bar", info.ISOInfo.Grub2.Entries[0].Initrd)
+		assert.Equal(t, 2, len(info.ISOInfo.Grub2.Entries))
 
-	assert.Equal(t, "My Second Entry", info.ISOInfo.Grub2.Entries[1].Name)
-	assert.Equal(t, "/bar", info.ISOInfo.Grub2.Entries[1].Linux)
-	assert.Equal(t, "/foo", info.ISOInfo.Grub2.Entries[1].Initrd)
+		assert.Equal(t, "My First Entry", info.ISOInfo.Grub2.Entries[0].Name)
+		assert.Equal(t, "/foo", info.ISOInfo.Grub2.Entries[0].Linux)
+		assert.Equal(t, "/bar", info.ISOInfo.Grub2.Entries[0].Initrd)
 
+		assert.Equal(t, "My Second Entry", info.ISOInfo.Grub2.Entries[1].Name)
+		assert.Equal(t, "/bar", info.ISOInfo.Grub2.Entries[1].Linux)
+		assert.Equal(t, "/foo", info.ISOInfo.Grub2.Entries[1].Initrd)
+	}
 }
 
 func TestLoadInfoISOSad(t *testing.T) {
 	root := t.TempDir()
 	writeOSRelease(t, root, "fedora", "40", "Fedora Linux", "fedora", "platform:f40", "coreos")
-	createISO(t, root, "@invalidYAML")
+	createISO(t, root, "@invalidYAML", "/usr/lib/bootc-image-builder/iso.yaml")
 
 	_, err := Load(root)
 	assert.EqualError(t, err, fmt.Sprintf(`cannot parse iso definitions from "%s/usr/lib/bootc-image-builder/iso.yaml": yaml: found character that cannot start any token`, root))
