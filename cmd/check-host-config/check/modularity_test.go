@@ -79,7 +79,7 @@ func TestModularityCheck(t *testing.T) {
 				{Name: "nodejs", Stream: "18"},
 			},
 			mockExec: map[string]ExecResult{
-				"dnf -q module list --enabled": {Stdout: []byte(dnfModuleListOutputRHEL9())},
+				"dnf -y -q module list --enabled": {Stdout: []byte(dnfModuleListOutputRHEL9())},
 			},
 		},
 		{
@@ -89,7 +89,7 @@ func TestModularityCheck(t *testing.T) {
 				{Name: "python36", Stream: "3.6"},
 			},
 			mockExec: map[string]ExecResult{
-				"dnf -q module list --enabled": {Stdout: []byte(dnfModuleListOutputRHEL7())},
+				"dnf -y -q module list --enabled": {Stdout: []byte(dnfModuleListOutputRHEL7())},
 			},
 		},
 		{
@@ -100,7 +100,7 @@ func TestModularityCheck(t *testing.T) {
 				{Name: "postgresql", Stream: "12"},
 			},
 			mockExec: map[string]ExecResult{
-				"dnf -q module list --enabled": {Stdout: []byte(dnfModuleListOutputRHEL8())},
+				"dnf -y -q module list --enabled": {Stdout: []byte(dnfModuleListOutputRHEL8())},
 			},
 		},
 		{
@@ -110,7 +110,7 @@ func TestModularityCheck(t *testing.T) {
 				{Name: "python39", Stream: "3.9"},
 			},
 			mockExec: map[string]ExecResult{
-				"dnf -q module list --enabled": {Stdout: []byte(dnfModuleListOutputRHEL9())},
+				"dnf -y -q module list --enabled": {Stdout: []byte(dnfModuleListOutputRHEL9())},
 			},
 		},
 		{
@@ -121,7 +121,7 @@ func TestModularityCheck(t *testing.T) {
 				{Name: "postgresql", Stream: "16"},
 			},
 			mockExec: map[string]ExecResult{
-				"dnf -q module list --enabled": {Stdout: []byte(dnfModuleListOutputRHEL10())},
+				"dnf -y -q module list --enabled": {Stdout: []byte(dnfModuleListOutputRHEL10())},
 			},
 		},
 		{
@@ -133,7 +133,7 @@ func TestModularityCheck(t *testing.T) {
 				{Name: "ruby", Stream: "3.1"},
 			},
 			mockExec: map[string]ExecResult{
-				"dnf -q module list --enabled": {Stdout: []byte(dnfModuleListOutputMultiple())},
+				"dnf -y -q module list --enabled": {Stdout: []byte(dnfModuleListOutputMultiple())},
 			},
 		},
 		{
@@ -142,7 +142,7 @@ func TestModularityCheck(t *testing.T) {
 				{Name: "nodejs", Stream: "18"},
 			},
 			mockExec: map[string]ExecResult{
-				"dnf -q module list --enabled": {Code: 1, Err: errors.New("dnf failed")},
+				"dnf -y -q module list --enabled": {Code: 1, Err: errors.New("dnf failed")},
 			},
 			wantErr: check.ErrCheckFailed,
 		},
