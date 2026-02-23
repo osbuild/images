@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -76,7 +77,7 @@ bar.service loaded activating auto vendor preset: enabled
 				return nil, nil, 0, nil
 			})
 
-			result := listBadUnits()
+			result := strings.Join(listBadUnits(), " ")
 			if result != tt.expected {
 				t.Errorf("expected %q, got %q", tt.expected, result)
 			}

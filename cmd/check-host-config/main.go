@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/osbuild/images/cmd/check-host-config/check"
@@ -23,8 +24,8 @@ func waitForSystem(timeout time.Duration) error {
 	if err := runningWait(timeout, 15*time.Second); err != nil {
 		fmt.Fprintf(os.Stderr, "Error while waiting for system to be running: %v\n", err)
 		if errors.Is(err, ErrTimeout) {
-			if activatingUnits := listBadUnits(); activatingUnits != "" {
-				fmt.Fprintf(os.Stderr, "Units still activating: %s\n", activatingUnits)
+			if activatingUnits := listBadUnits(); len(activatingUnits) > 0 {
+				fmt.Fprintf(os.Stderr, "Units still activating: %s\n", strings.Join(activatingUnits, " "))
 			}
 		}
 		return err

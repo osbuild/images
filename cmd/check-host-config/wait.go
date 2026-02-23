@@ -56,13 +56,13 @@ func runningWait(timeout time.Duration, ticks time.Duration) error {
 	}
 }
 
-// listBadUnits returns a space-separated string of systemd units that are
-// still in the activating state. It calls systemctl list-units to get the list.
+// listBadUnits returns systemd units that are still in the activating state.
+// It calls systemctl list-units to get the list.
 // This is only used in case of timeout to help with debugging.
-func listBadUnits() string {
+func listBadUnits() []string {
 	stdout, _, _, err := check.Exec("systemctl", "list-units", "--state=activating,failed", "--plain", "--no-legend", "--no-pager")
 	if err != nil {
-		return ""
+		return nil
 	}
 	out := stdout
 
@@ -81,5 +81,5 @@ func listBadUnits() string {
 		}
 	}
 
-	return strings.Join(units, " ")
+	return units
 }
