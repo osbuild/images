@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -82,4 +83,9 @@ func listBadUnits() []string {
 	}
 
 	return units
+}
+
+func printUnitJournal(unit string) {
+	stdout, _, _, _ := check.Exec("journalctl", "-u", unit, "-o", "cat")
+	fmt.Fprintf(os.Stderr, "%s\n", stdout)
 }

@@ -26,6 +26,10 @@ func waitForSystem(timeout time.Duration) error {
 		if errors.Is(err, ErrTimeout) {
 			if activatingUnits := listBadUnits(); len(activatingUnits) > 0 {
 				fmt.Fprintf(os.Stderr, "Units still activating: %s\n", strings.Join(activatingUnits, " "))
+				for _, unit := range activatingUnits {
+					fmt.Fprintf(os.Stderr, "Unit %s journal:\n", unit)
+					printUnitJournal(unit)
+				}
 			}
 		}
 		return err
