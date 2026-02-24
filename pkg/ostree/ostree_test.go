@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -34,6 +35,14 @@ func TestOstreeResolveRef(t *testing.T) {
 	})
 	handler.HandleFunc("/refs/heads/valid/ostree/ref", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, goodRef)
+	})
+
+	handler.HandleFunc("/mirrorlist", func(w http.ResponseWriter, r *http.Request) {
+		scheme := "http"
+		if r.TLS != nil {
+			scheme = "https"
+		}
+		fmt.Fprintf(w, "%s://%s", scheme, r.Host)
 	})
 
 	srv := httptest.NewServer(handler)
@@ -75,8 +84,9 @@ func TestOstreeResolveRef(t *testing.T) {
 
 	for _, srvConf := range srvConfs {
 		validCases := map[input]string{
-			{srvConf.Srv.URL, "test_redir"}:       goodRef,
-			{srvConf.Srv.URL, "valid/ostree/ref"}: goodRef,
+			{srvConf.Srv.URL, "test_redir"}:                                       goodRef,
+			{srvConf.Srv.URL, "valid/ostree/ref"}:                                 goodRef,
+			{"mirrorlist=" + srvConf.Srv.URL + "/mirrorlist", "valid/ostree/ref"}: goodRef,
 		}
 		for in, expOut := range validCases {
 			url, out, err := resolveRef(SourceSpec{
@@ -88,7 +98,12 @@ func TestOstreeResolveRef(t *testing.T) {
 			})
 			require.NoError(t, err)
 			assert.Equal(t, expOut, out)
-			assert.Equal(t, url, in.location)
+
+			expectedURL := in.location
+			if strings.HasPrefix(in.location, "mirrorlist=") {
+				expectedURL = srvConf.Srv.URL
+			}
+			assert.Equal(t, expectedURL, url)
 		}
 
 		errCases := map[input]string{
