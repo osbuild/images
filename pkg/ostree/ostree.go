@@ -227,6 +227,8 @@ func resolveRef(ss SourceSpec) (string, string, error) {
 	if err != nil {
 		return "", "", NewResolveRefError("error sending request to ostree repository %q: %v", u.String(), err)
 	}
+	defer resp.Body.Close()
+
 	if resp.StatusCode != http.StatusOK {
 		return "", "", NewResolveRefError("ostree repository %q returned status: %s", u.String(), resp.Status)
 	}
