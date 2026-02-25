@@ -221,6 +221,12 @@ func (t *bootcImageType) manifestForDisk(bp *blueprint.Blueprint, options distro
 	if imageConfig != nil {
 		img.OSCustomizations.KernelOptionsAppend = imageConfig.KernelOptions
 	}
+
+	// when we omit default kernel options reset them to be empty
+	if options.Bootc != nil && options.Bootc.OmitDefaultKernelArgs {
+		img.OSCustomizations.KernelOptionsAppend = []string{}
+	}
+
 	if kopts := customizations.GetKernel(); kopts != nil && kopts.Append != "" {
 		img.OSCustomizations.KernelOptionsAppend = append(img.OSCustomizations.KernelOptionsAppend, kopts.Append)
 	}
