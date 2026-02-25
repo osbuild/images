@@ -569,7 +569,7 @@ func main() {
 		var buildBootcRef string
 		if len(l) > 1 {
 			buildBootcRef = l[1]
-			buildBootcInfo, err := bootc.ResolveBootcInfo(buildBootcRef)
+			buildBootcInfo, err := bootc.ResolveBootcBuildInfo(buildBootcRef)
 			if err != nil {
 				panic(err)
 			}
