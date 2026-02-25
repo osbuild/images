@@ -27,6 +27,8 @@ type Grub2ISOLegacyStageOptions struct {
 
 	Custom []Grub2ISOLegacyCustomEntryOptions `json:"custom,omitempty"`
 
+	Platform string `json:"platform,omitempty"`
+
 	Config *Grub2Config `json:"config,omitempty"`
 }
 
