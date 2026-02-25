@@ -36,6 +36,14 @@ func (img *AnacondaInstallerBase) Bootloaders(buildPipeline manifest.Build, plat
 		grub2.KernelOpts = kernelOpts
 		grub2.DefaultMenu = img.InstallerCustomizations.DefaultMenu
 		bootloaders = append(bootloaders, grub2)
+
+	case manifest.Grub2PPCISOBoot:
+		grub2ppc64 := manifest.NewGrub2PPC64Bootloader(buildPipeline, img.InstallerCustomizations.Product, img.InstallerCustomizations.OSVersion)
+		grub2ppc64.Platform = platform
+		grub2ppc64.ISOLabel = img.ISOCustomizations.Label
+		grub2ppc64.KernelOpts = kernelOpts
+		grub2ppc64.DefaultMenu = img.InstallerCustomizations.DefaultMenu
+		bootloaders = append(bootloaders, grub2ppc64)
 	}
 
 	// Skip using UEFI on PPC64LE
