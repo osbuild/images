@@ -496,7 +496,10 @@ func isoCustomizations(t *imageType, c *blueprint.Customizations) (manifest.ISOC
 		}
 	}
 
-	isoCust := c.GetISO()
+	isoCust, err := c.GetISO()
+	if err != nil {
+		return isc, err
+	}
 	if isoCust != nil {
 		if isoCust.Publisher != "" {
 			isc.Publisher = isoCust.Publisher
