@@ -506,11 +506,13 @@ func validatePackageSetRepoChain(pkgSets []rpmmd.PackageSet) error {
 }
 
 // validateSubscriptionsForRepos checks that RHSM subscriptions are available
-// for any repositories that require them.
+// for any repositories that require them. Repositories with RHUI set to true
+// are skipped since they use cloud instance identity for authentication
+// instead of RHSM entitlement certificates.
 func validateSubscriptionsForRepos(pkgSets []rpmmd.PackageSet, haveSubscriptions bool, subsErr error) error {
 	for _, ps := range pkgSets {
 		for _, repo := range ps.Repositories {
-			if repo.RHSM && !haveSubscriptions {
+			if repo.RHSM && !repo.RHUI && !haveSubscriptions {
 				return fmt.Errorf("This system does not have any valid subscriptions. Subscribe it before specifying rhsm: true in sources (error details: %w)", subsErr)
 			}
 		}
