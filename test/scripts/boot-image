@@ -22,7 +22,8 @@ from vmtest.vm import QEMU
 
 BASE_TEST_EXEC = "check-host-config-" # + arch
 WSL_TEST_SCRIPT = "test/scripts/wsl-entrypoint.bat"
-ISO_BOOT_TIMEOUT = 420
+# We need up to 15 minutes for full Anaconda ISO installations
+ISO_BOOT_TIMEOUT = 900
 
 
 def get_aws_config():
