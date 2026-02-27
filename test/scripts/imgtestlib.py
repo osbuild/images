@@ -68,7 +68,7 @@ BASE_CONFIG = """
 NULL_CONFIG = """
 NullBuild:
   stage: test
-  script: "true"
+  script: echo "No manifest changes detected. Skipping build."
   tags:
     - "shell"
 """
