@@ -538,7 +538,11 @@ func ostreeDeploymentCustomizations(
 
 	switch deploymentConf.IgnitionPlatform {
 	case "metal":
-		if bpIgnition := c.GetIgnition(); bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
+		bpIgnition, err := c.GetIgnition()
+		if err != nil {
+			return deploymentConf, err
+		}
+		if bpIgnition != nil && bpIgnition.FirstBoot != nil && bpIgnition.FirstBoot.ProvisioningURL != "" {
 			kernelOptions = append(kernelOptions, "ignition.config.url="+bpIgnition.FirstBoot.ProvisioningURL)
 		}
 	}
@@ -1097,13 +1101,15 @@ func iotSimplifiedInstallerImage(t *imageType,
 		img.FDO = fdo.FromBP(*bpFDO)
 	}
 	// ignition configs from blueprint
-	if bpIgnition := customizations.GetIgnition(); bpIgnition != nil {
-		if bpIgnition.Embedded != nil {
-			var err error
-			img.IgnitionEmbedded, err = ignition.EmbeddedOptionsFromBP(*bpIgnition.Embedded)
-			if err != nil {
-				return nil, err
-			}
+	bpIgnition, err := customizations.GetIgnition()
+	if err != nil {
+		return nil, err
+	}
+	if bpIgnition != nil && bpIgnition.Embedded != nil {
+		var err error
+		img.IgnitionEmbedded, err = ignition.EmbeddedOptionsFromBP(*bpIgnition.Embedded)
+		if err != nil {
+			return nil, err
 		}
 	}
 	img.InstallerCustomizations, err = installerCustomizations(t, bp.Customizations, options)

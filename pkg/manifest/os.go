@@ -15,6 +15,7 @@ import (
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/bootc"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
+	"github.com/osbuild/images/pkg/customizations/ignition"
 	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/customizations/shell"
 	"github.com/osbuild/images/pkg/customizations/subscription"
@@ -148,6 +149,7 @@ type OSCustomizations struct {
 	NetworkManager        *osbuild.NMConfStageOptions
 	Presets               []osbuild.Preset
 	ContainersStorage     *string
+	Ignition              *ignition.FirstBootOptions
 
 	// OpenSCAP config
 	OpenSCAPRemediationConfig *oscap.RemediationConfig
