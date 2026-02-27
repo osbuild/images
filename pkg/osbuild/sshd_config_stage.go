@@ -51,22 +51,32 @@ type rawSshdConfigConfig struct {
 	PermitRootLogin                 interface{} `json:"PermitRootLogin,omitempty" yaml:"PermitRootLogin,omitempty"`
 }
 
+func ConvertPermitRootLogin(value any) (PermitRootLoginValue, error) {
+	var permitRootLogin PermitRootLoginValue
+
+	if value != nil {
+		switch valueType := value.(type) {
+		case bool:
+			permitRootLogin = PermitRootLoginValueBool(value.(bool))
+		case string:
+			permitRootLogin = PermitRootLoginValueStr(value.(string))
+		default:
+			return PermitRootLoginValueNo, fmt.Errorf("the 'PermitRootLogin' item has unsupported type %q", valueType)
+		}
+	}
+
+	return permitRootLogin, nil
+}
+
 func (c *SshdConfigConfig) UnmarshalJSON(data []byte) error {
 	var rawConfig rawSshdConfigConfig
 	if err := json.Unmarshal(data, &rawConfig); err != nil {
 		return err
 	}
 
-	var permitRootLogin PermitRootLoginValue
-	if rawConfig.PermitRootLogin != nil {
-		switch valueType := rawConfig.PermitRootLogin.(type) {
-		case bool:
-			permitRootLogin = PermitRootLoginValueBool(rawConfig.PermitRootLogin.(bool))
-		case string:
-			permitRootLogin = PermitRootLoginValueStr(rawConfig.PermitRootLogin.(string))
-		default:
-			return fmt.Errorf("the 'PermitRootLogin' item has unsupported type %q", valueType)
-		}
+	permitRootLogin, err := ConvertPermitRootLogin(rawConfig.PermitRootLogin)
+	if err != nil {
+		return err
 	}
 
 	c.PasswordAuthentication = rawConfig.PasswordAuthentication
