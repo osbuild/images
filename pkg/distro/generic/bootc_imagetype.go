@@ -13,6 +13,7 @@ import (
 	"github.com/osbuild/images/pkg/bib/osinfo"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/anaconda"
+	"github.com/osbuild/images/pkg/customizations/ignition"
 	"github.com/osbuild/images/pkg/customizations/kickstart"
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/datasizes"
@@ -258,6 +259,16 @@ func (t *bootcImageType) manifestForDisk(bp *blueprint.Blueprint, options distro
 	img.OSCustomizations.Directories, err = blueprint.DirectoryCustomizationsToFsNodeDirectories(dc)
 	if err != nil {
 		return nil, nil, err
+	}
+
+	bpIgnitionCustomization, err := customizations.GetIgnition()
+	if err != nil {
+		return nil, nil, err
+	}
+	if bpIgnitionCustomization != nil {
+		if bpIgnitionCustomization.FirstBoot != nil {
+			img.OSCustomizations.Ignition = ignition.FirstbootOptionsFromBP(*bpIgnitionCustomization.FirstBoot)
+		}
 	}
 
 	mf := manifest.New()
