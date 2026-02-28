@@ -295,15 +295,17 @@ class QEMU(VM):
         mon.connect()
         start = time.monotonic()
         while True:
-            try:
-                event = mon.pull_event(wait=1.0)
-            except (qmp.QMPTimeoutError, qmp.QMPConnectError):
-                if time.monotonic() > start + timeout_sec:
-                    raise TimeoutError(f"no {qmp_event} event after {timeout_sec} seconds")
-                continue
-            self._log(f"DEBUG: got event {event}")
-            if event["event"] == qmp_event:
-                return
+            # NOTE: Using wait=1.0 with pull_event only works once.
+            #       So we do the timeout ourselves.
+            time.sleep(1)
+            event = mon.pull_event(wait=False)
+            if event is not None:
+                self._log(f"DEBUG: got event {event}")
+                if event["event"] == qmp_event:
+                    return
+
+            if time.monotonic() > start + timeout_sec:
+                raise TimeoutError(f"no {qmp_event} event after {timeout_sec} seconds")
 
     def force_stop(self):
         if self._qemu_p:

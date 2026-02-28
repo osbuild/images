@@ -1,6 +1,6 @@
 {
   "common": {
-    "rngseed": 13,
+    "rngseed": 14,
     "bootc-image-builder": {
       "ref": "quay.io/centos-bootc/bootc-image-builder@sha256:9893e7209e5f449b86ababfd2ee02a58cca2e5990f77b06c3539227531fc8120"
     },
@@ -23,21 +23,21 @@
   "centos-9": {
     "dependencies": {
       "osbuild": {
-        "commit": "21ac61bbdd3a40ca28057359009fcbe6fda1aed6"
+        "commit": "99f54c2db386fbcb786d05c0eb4e95ffed7f5581"
       }
     }
   },
   "centos-10": {
     "dependencies": {
       "osbuild": {
-        "commit": "21ac61bbdd3a40ca28057359009fcbe6fda1aed6"
+        "commit": "99f54c2db386fbcb786d05c0eb4e95ffed7f5581"
       }
     }
   },
   "fedora-42": {
     "dependencies": {
       "osbuild": {
-        "commit": "21ac61bbdd3a40ca28057359009fcbe6fda1aed6"
+        "commit": "99f54c2db386fbcb786d05c0eb4e95ffed7f5581"
       }
     },
     "repos": [
@@ -73,14 +73,14 @@
   "fedora-43": {
     "dependencies": {
       "osbuild": {
-        "commit": "21ac61bbdd3a40ca28057359009fcbe6fda1aed6"
+        "commit": "99f54c2db386fbcb786d05c0eb4e95ffed7f5581"
       }
     }
   },
   "fedora-44": {
     "dependencies": {
       "osbuild": {
-        "commit": "21ac61bbdd3a40ca28057359009fcbe6fda1aed6"
+        "commit": "99f54c2db386fbcb786d05c0eb4e95ffed7f5581"
       }
     }
   }
