@@ -31,12 +31,15 @@ The config list is also used in CI to dynamically generate test builds using the
 While most of this document describes our automatic setup, here are some useful tips if manual
 testing/inspection of images is required.
 
+Install required packages:
+dnf install -y cloud-utils-cloud-localds gpgme-devel btrfs-progs-devel krb5-devel
+
 To build an image just run `build-image`, then it can be booted with `boot-image` and the
 switch `--keep-booted` will keep it around for inspection via ssh (not all image types support
 this yet). E.g.:
 ```console
-$ ./test/scripts/build-image centos-10 qcow2 ./tests/configs/empty.json
-$ ./test/scripts/bootc-image --keep-booted ./build/centos_10-x86_64-qcow2-empty/
+$ ./test/scripts/build-image centos-10 qcow2 ./test/configs/empty.json
+$ ./test/scripts/boot-image --keep-booted ./build/centos_10-x86_64-qcow2-empty/ ./test/configs/empty.json
 ...
 ***********************************
 keeping the image build/centos_10-x86_64-qcow2-empty/qcow2/disk.qcow2 booted as requested, press enter or ctrl-c to stop
@@ -47,7 +50,7 @@ The ssh command can just be copy/pasted and gives access to the vm running the i
 `check-host-config` binary and configuration will be availabe inside /tmp to inspect/run.
 
 If qemu-user-static/qemu-system-$arch is installed `build-image --arch <arch>` is also supported,
-e.g. `build-image --arch ppc64le centos-10 qcow2 ./tests/configs/empty.json` will create a
+e.g. `build-image --arch ppc64le centos-10 qcow2 ./test/configs/empty.json` will create a
 ppc64le qcow2 image. The `boot-image` script will auto-detect the architecture and boot the
 vm accordingly.
 
