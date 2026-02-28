@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -37,8 +38,30 @@ func waitForSystem(timeout time.Duration) error {
 	return nil
 }
 
+// shouldRunOn returns whether a check should run on the current system.
+func shouldRunOn(osRelease *check.OSRelease, runOn []string) bool {
+	if len(runOn) == 0 || osRelease == nil {
+		return true
+	}
+
+	currentID := strings.ToLower(strings.TrimSpace(osRelease.ID + "-" + osRelease.VersionID))
+	var inclusions []string
+	for _, entry := range runOn {
+		entry = strings.TrimSpace(entry)
+		if after, ok := strings.CutPrefix(entry, "!"); ok {
+			if strings.ToLower(after) == currentID {
+				return false
+			}
+		} else {
+			inclusions = append(inclusions, strings.ToLower(entry))
+		}
+	}
+
+	return len(inclusions) == 0 || slices.Contains(inclusions, currentID)
+}
+
 // runChecks runs all checks sequentially and processes their results.
-func runChecks(checks []check.RegisteredCheck, config *buildconfig.BuildConfig, quiet bool) bool {
+func runChecks(checks []check.RegisteredCheck, config *buildconfig.BuildConfig, osRelease *check.OSRelease, quiet bool) bool {
 	defer log.SetPrefix("")
 	if quiet {
 		log.SetOutput(io.Discard)
@@ -52,6 +75,8 @@ func runChecks(checks []check.RegisteredCheck, config *buildconfig.BuildConfig, 
 		log.SetPrefix(meta.Name + ": ")
 
 		switch {
+		case !shouldRunOn(osRelease, meta.RunOn):
+			err = check.Skip(osRelease.ID + "-" + osRelease.VersionID + " excluded via RunOn: " + strings.Join(meta.RunOn, ", "))
 		case meta.TempDisabled != "":
 			err = check.Skip("temporarily disabled: " + meta.TempDisabled)
 		case meta.RequiresBlueprint && (config == nil || config.Blueprint == nil):
@@ -113,7 +138,12 @@ func main() {
 		log.Fatalf("Problem during waiting for system to be running: %v\n", err)
 	}
 
-	if !runChecks(checks, config, *quiet) {
+	osRelease, _ := check.ParseOSRelease("")
+	if osRelease == nil {
+		log.Println("Could not parse /etc/os-release, RunOn filtering disabled")
+	}
+
+	if !runChecks(checks, config, osRelease, *quiet) {
 		log.Fatalf("Host check with config %q failed, return code 1\n", configFile)
 	}
 }

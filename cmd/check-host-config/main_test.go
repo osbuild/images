@@ -18,6 +18,90 @@ import (
 	"github.com/osbuild/images/internal/buildconfig"
 )
 
+func TestShouldRunOn(t *testing.T) {
+	tests := []struct {
+		name      string
+		osRelease *check.OSRelease
+		runOn     []string
+		want      bool
+	}{
+		{
+			name:      "nil osRelease returns true",
+			osRelease: nil,
+			runOn:     []string{"fedora-39"},
+			want:      true,
+		},
+		{
+			name:      "empty runOn returns true",
+			osRelease: &check.OSRelease{ID: "fedora", VersionID: "39"},
+			runOn:     nil,
+			want:      true,
+		},
+		{
+			name:      "empty runOn slice returns true",
+			osRelease: &check.OSRelease{ID: "fedora", VersionID: "39"},
+			runOn:     []string{},
+			want:      true,
+		},
+		{
+			name:      "inclusion matches current ID",
+			osRelease: &check.OSRelease{ID: "Fedora", VersionID: "39"},
+			runOn:     []string{"fedora-39"},
+			want:      true,
+		},
+		{
+			name:      "inclusion does not match",
+			osRelease: &check.OSRelease{ID: "fedora", VersionID: "39"},
+			runOn:     []string{"rhel-9"},
+			want:      false,
+		},
+		{
+			name:      "exclusion matches current ID",
+			osRelease: &check.OSRelease{ID: "fedora", VersionID: "39"},
+			runOn:     []string{"!fedora-39"},
+			want:      false,
+		},
+		{
+			name:      "exclusion match is case-insensitive",
+			osRelease: &check.OSRelease{ID: "RHEL", VersionID: "9.0"},
+			runOn:     []string{"!rhel-9.0"},
+			want:      false,
+		},
+		{
+			name:      "exclusion does not match, no inclusions",
+			osRelease: &check.OSRelease{ID: "fedora", VersionID: "39"},
+			runOn:     []string{"!rhel-9"},
+			want:      true,
+		},
+		{
+			name:      "exclusions does not match, no inclusions",
+			osRelease: &check.OSRelease{ID: "fedora", VersionID: "39"},
+			runOn:     []string{"!rhel-9", "!centos-9"},
+			want:      true,
+		},
+		{
+			name:      "exclusion does not match, inclusion matches",
+			osRelease: &check.OSRelease{ID: "fedora", VersionID: "39"},
+			runOn:     []string{"fedora-39", "!rhel-9"},
+			want:      true,
+		},
+		{
+			name:      "multiple inclusions, one matches",
+			osRelease: &check.OSRelease{ID: "rhel", VersionID: "9.0"},
+			runOn:     []string{"fedora-39", "rhel-9.0", "centos-9"},
+			want:      true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := shouldRunOn(tt.osRelease, tt.runOn)
+			if got != tt.want {
+				t.Errorf("shouldRunOn() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 // generateSmokeCACert returns a CA cert PEM (serial 1, CN "Smoke Test CA").
 func generateSmokeCACert(t *testing.T) string {
 	t.Helper()
