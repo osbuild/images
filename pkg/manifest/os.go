@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/google/uuid"
@@ -329,7 +330,7 @@ func (p *OS) getPackageSetChain(Distro) ([]rpmmd.PackageSet, error) {
 		customizationPackages = append(customizationPackages, "dnf", "python3-dnf-plugin-versionlock")
 	}
 
-	osRepos := append(p.depsolveRepos, p.OSCustomizations.ExtraBaseRepos...)
+	osRepos := slices.Concat(p.depsolveRepos, p.OSCustomizations.ExtraBaseRepos)
 
 	// merge all package lists for the pipeline
 	baseOSPackages := make([]string, 0)
@@ -364,7 +365,7 @@ func (p *OS) getPackageSetChain(Distro) ([]rpmmd.PackageSet, error) {
 	if len(bpPackages) > 0 {
 		ps := rpmmd.PackageSet{
 			Include:      bpPackages,
-			Repositories: append(osRepos, p.OSCustomizations.PayloadRepos...),
+			Repositories: slices.Concat(osRepos, p.OSCustomizations.PayloadRepos),
 			// Although 'false' is the default value, set it explicitly to make
 			// it visible that we are not adding weak dependencies.
 			InstallWeakDeps: false,
