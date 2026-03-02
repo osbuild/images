@@ -9,6 +9,8 @@ import (
 	"math"
 	"strings"
 	"time"
+
+	"github.com/osbuild/images/pkg/olog"
 )
 
 // Status is a high level aggregation of the low-level osbuild monitor
@@ -41,6 +43,9 @@ type Status struct {
 
 	// Duration as measured by osbuild
 	Duration time.Duration
+
+	// Error is set to the last error message from the status message (or empty if no error)
+	Error string
 }
 
 // Progress provides progress information from an osbuild build.
@@ -183,6 +188,12 @@ func (sr *StatusScanner) Status() (*Status, error) {
 		sr.metadataMap[id] = status.Metadata
 	}
 
+	// log error if set via olog
+	if status.Error && status.Result.Output != "" {
+		olog.Printf("Error in stage %q in pipeline %q: %q, result output: %s", context.Pipeline.Stage.Name, pipelineName, status.Message, status.Result.Output)
+		st.Error = status.Result.Output
+	}
+
 	return st, nil
 }
 
@@ -273,6 +284,7 @@ type statusJSON struct {
 	Message   string  `json:"message"`
 	Timestamp float64 `json:"timestamp"`
 	Duration  float64 `json:"duration"`
+	Error     bool    `json:"error"`
 }
 
 // contextJSON is the context for which a status is given. Once a context

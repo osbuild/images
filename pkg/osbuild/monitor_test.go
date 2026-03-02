@@ -210,6 +210,16 @@ func TestScannerEmpty(t *testing.T) {
 	}, st)
 }
 
+func TestScannerErrorFlag(t *testing.T) {
+	r := bytes.NewBufferString(`{"message": "stage failed", "context": {"origin": "org.osbuild", "id": "ctx1", "pipeline": {"name": "build", "id": "p1", "stage": {"name": "org.osbuild.rpm", "id": "s1"}}}, "progress": {"total": 1, "done": 1}, "result": {"id": "s1", "success": false, "output": "error output"}, "timestamp": 1731589338.0, "error": true}` + "\n")
+	scanner := osbuild.NewStatusScanner(r)
+	st, err := scanner.Status()
+	assert.NoError(t, err)
+	require.NotNil(t, st)
+	assert.Equal(t, "error output", st.Error, "Status.Error should be set to result output when error flag is set")
+	assert.Equal(t, "stage failed", strings.TrimSpace(st.Trace))
+}
+
 //go:embed testdata/monitor-validation.json
 var osbuildMonitorValidation []byte
 
