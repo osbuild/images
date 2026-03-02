@@ -258,6 +258,15 @@ func (p *AnacondaInstaller) serializeStart(inputs Inputs) error {
 		p.kernelVer = kernelPkg.EVRA()
 	}
 	p.bootcLivefsContainerSpecs = inputs.Containers
+
+	hasRPMs := len(p.depsolveResult.Transactions) > 0
+	hasContainers := len(p.bootcLivefsContainerSpecs) > 0
+	if hasRPMs && hasContainers {
+		return errors.New("AnacondaInstaller: using packages and containers at the same time is not allowed")
+	}
+	if !hasRPMs && !hasContainers {
+		return errors.New("AnacondaInstaller: need either repos (for RPM install) or a bootc container source")
+	}
 	return nil
 }
 
@@ -279,9 +288,6 @@ func installerRootUser() osbuild.UsersStageOptionsUser {
 func (p *AnacondaInstaller) serialize() (osbuild.Pipeline, error) {
 	if p.depsolveResult == nil && len(p.bootcLivefsContainerSpecs) == 0 {
 		return osbuild.Pipeline{}, fmt.Errorf("AnacondaInstaller: serialization not started")
-	}
-	if len(p.depsolveResult.Transactions) > 0 && len(p.bootcLivefsContainerSpecs) > 0 {
-		return osbuild.Pipeline{}, fmt.Errorf("AnacondaInstaller: using packages and containers at the same time is not allowed")
 	}
 
 	pipeline, err := p.Base.serialize()
