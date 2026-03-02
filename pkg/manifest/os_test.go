@@ -348,8 +348,8 @@ func checkStagesForNoMounts(t *testing.T, stages []*osbuild.Stage) {
 func TestOSPipelineFStabStage(t *testing.T) {
 	os := manifest.NewTestOS()
 
-	os.PartitionTable = testdisk.MakeFakePartitionTable("/")                   // PT specifics don't matter
-	os.OSCustomizations.MountConfiguration = osbuild.MOUNT_CONFIGURATION_FSTAB // set it explicitly just to be sure
+	os.PartitionTable = testdisk.MakeFakePartitionTable("/")                     // PT specifics don't matter
+	os.DiskCustomizations.MountConfiguration = osbuild.MOUNT_CONFIGURATION_FSTAB // set it explicitly just to be sure
 
 	checkStagesForFSTab(t, common.Must(os.Serialize()).Stages)
 }
@@ -359,7 +359,7 @@ func TestOSPipelineMountUnitStages(t *testing.T) {
 
 	expectedUnits := []string{"-.mount", "home.mount"}
 	os.PartitionTable = testdisk.MakeFakePartitionTable("/", "/home")
-	os.OSCustomizations.MountConfiguration = osbuild.MOUNT_CONFIGURATION_UNITS
+	os.DiskCustomizations.MountConfiguration = osbuild.MOUNT_CONFIGURATION_UNITS
 
 	checkStagesForMountUnits(t, common.Must(os.Serialize()).Stages, expectedUnits)
 }
@@ -368,7 +368,7 @@ func TestOSPipelineMountNoneStages(t *testing.T) {
 	os := manifest.NewTestOS()
 
 	os.PartitionTable = testdisk.MakeFakePartitionTable("/", "/home")
-	os.OSCustomizations.MountConfiguration = osbuild.MOUNT_CONFIGURATION_NONE
+	os.DiskCustomizations.MountConfiguration = osbuild.MOUNT_CONFIGURATION_NONE
 
 	checkStagesForNoMounts(t, common.Must(os.Serialize()).Stages)
 }

@@ -1934,6 +1934,14 @@ image_types:
           - ["/usr/share/uboot/rpi_arm64/u-boot.bin", "/boot/efi/rpi-u-boot.bin"]
         bootloader: "grub2"
       - *riscv64_uefi_platform
+    disk_config:
+      mount_configuration: "units"
+      conditions:
+        "f42 and below was quite different":
+          when:
+            version_less_than: "43"
+          shallow_merge:
+            mount_configuration: "fstab"
     image_config:
       # NOTE: initial-setup doesn't allow a system to be reconfigured
       # NOTE: if certain files are already configured (locale, users,
@@ -1951,7 +1959,6 @@ image_types:
       grub2_config:
         timeout: 5
       install_weak_deps: false
-      mount_configuration: "units"
       machine_id_uninitialized: false
       enabled_services:
         - "NetworkManager.service"
@@ -1965,7 +1972,6 @@ image_types:
             version_less_than: "43"
           shallow_merge:
             install_weak_deps: true
-            mount_configuration: "fstab"
             enabled_services:
               - "NetworkManager.service"
               - "initial-setup.service"

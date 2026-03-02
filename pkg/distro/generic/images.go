@@ -353,10 +353,6 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 		osc.MachineIdUninitialized = *imageConfig.MachineIdUninitialized
 	}
 
-	if imageConfig.MountConfiguration != nil {
-		osc.MountConfiguration = *imageConfig.MountConfiguration
-	}
-
 	osc.VersionlockPackages = imageConfig.VersionlockPackages
 
 	if tweaks := t.arch.distro.GetTweaks(); tweaks != nil && tweaks.RPMKeys != nil && tweaks.RPMKeys.BinPath != "" {
@@ -517,6 +513,23 @@ func isoCustomizations(t *imageType, c *blueprint.Customizations) (manifest.ISOC
 	return isc, nil
 }
 
+func diskCustomizations(t *imageType) (manifest.DiskCustomizations, error) {
+	diskCust := manifest.DiskCustomizations{}
+
+	diskConfig, err := t.getDefaultDiskConfig()
+	if err != nil {
+		return diskCust, err
+	}
+
+	if diskConfig != nil {
+		if diskConfig.MountConfiguration != nil {
+			diskCust.MountConfiguration = *diskConfig.MountConfiguration
+		}
+	}
+
+	return diskCust, nil
+}
+
 func ostreeDeploymentCustomizations(
 	t *imageType,
 	c *blueprint.Customizations) (manifest.OSTreeDeploymentCustomizations, error) {
@@ -623,6 +636,11 @@ func diskImage(t *imageType,
 		return nil, err
 	}
 	img.OSCustomizations.PayloadRepos = payloadRepos
+
+	img.DiskCustomizations, err = diskCustomizations(t)
+	if err != nil {
+		return nil, err
+	}
 
 	img.Environment = &t.ImageTypeYAML.Environment
 	img.Compression = t.ImageTypeYAML.Compression

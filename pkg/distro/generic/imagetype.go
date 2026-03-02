@@ -226,6 +226,11 @@ func (t *imageType) getDefaultISOConfig() (*distro.ISOConfig, error) {
 	return t.ISOConfig(d.ID(), t.arch.arch.String()), nil
 }
 
+func (t *imageType) getDefaultDiskConfig() (*distro.DiskConfig, error) {
+	d := t.Arch().Distro()
+	return t.DiskConfig(d.ID(), t.arch.arch.String()), nil
+}
+
 func (t *imageType) PartitionType() disk.PartitionTableType {
 	basePartitionTable, err := t.BasePartitionTable()
 	if errors.Is(err, defs.ErrNoPartitionTableForImgType) {

@@ -187,10 +187,6 @@ type OSCustomizations struct {
 	// "ConditionFirstBoot" to work in systemd
 	MachineIdUninitialized bool
 
-	// What type of mount configuration should we create, systemd units, fstab
-	// or none
-	MountConfiguration osbuild.MountConfiguration
-
 	// VersionlockPackges uses dnf versionlock to lock a package to the version
 	// that is installed during image build, preventing it from being updated.
 	// This is only supported for distributions that use dnf4, because osbuild
@@ -211,6 +207,9 @@ type OS struct {
 
 	// OSCustomizations to apply to the base OS
 	OSCustomizations OSCustomizations
+
+	// DiskCustomizations can influence things in the base OS tree
+	DiskCustomizations DiskCustomizations
 
 	// Environment the system will run in
 	Environment environment.Environment
@@ -784,7 +783,7 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 	}
 
 	if pt := p.PartitionTable; pt != nil {
-		rootUUID, kernelOptions, err := osbuild.GenImageKernelOptions(p.PartitionTable, p.OSCustomizations.MountConfiguration)
+		rootUUID, kernelOptions, err := osbuild.GenImageKernelOptions(p.PartitionTable, p.DiskCustomizations.MountConfiguration)
 		if err != nil {
 			return osbuild.Pipeline{}, err
 		}
@@ -798,7 +797,7 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 			}))
 		}
 
-		fsCfgStages, err := filesystemConfigStages(pt, p.OSCustomizations.MountConfiguration)
+		fsCfgStages, err := filesystemConfigStages(pt, p.DiskCustomizations.MountConfiguration)
 		if err != nil {
 			return osbuild.Pipeline{}, err
 		}
