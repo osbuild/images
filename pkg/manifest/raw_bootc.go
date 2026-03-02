@@ -43,6 +43,9 @@ type RawBootcImage struct {
 
 	// OSCustomizations to apply to the base OS
 	OSCustomizations OSCustomizations
+
+	// DiskCustomizations can influence things in the base OS tree
+	DiskCustomizations DiskCustomizations
 }
 
 func (p RawBootcImage) Filename() string {
@@ -174,7 +177,7 @@ func (p *RawBootcImage) serialize() (osbuild.Pipeline, error) {
 
 	postStages := []*osbuild.Stage{}
 
-	fsCfgStages, err := filesystemConfigStages(pt, p.OSCustomizations.MountConfiguration)
+	fsCfgStages, err := filesystemConfigStages(pt, p.DiskCustomizations.MountConfiguration)
 	if err != nil {
 		return osbuild.Pipeline{}, err
 	}

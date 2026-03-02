@@ -215,7 +215,7 @@ func (t *bootcImageType) manifestForDisk(bp *blueprint.Blueprint, options distro
 		img.OSCustomizations.BuildSELinux = bd.buildSourceInfo.SELinuxPolicy
 	}
 	if bd.sourceInfo != nil && bd.sourceInfo.MountConfiguration != nil {
-		img.OSCustomizations.MountConfiguration = *bd.sourceInfo.MountConfiguration
+		img.DiskCustomizations.MountConfiguration = *bd.sourceInfo.MountConfiguration
 	}
 
 	imageConfig := t.ImageTypeYAML.ImageConfig(bd.id, t.arch.Name())
@@ -627,7 +627,7 @@ func (t *bootcImageType) manifestForPXETar(bp *blueprint.Blueprint, options dist
 		img.OSCustomizations.BuildSELinux = bd.buildSourceInfo.SELinuxPolicy
 	}
 	if bd.sourceInfo != nil && bd.sourceInfo.MountConfiguration != nil {
-		img.OSCustomizations.MountConfiguration = *bd.sourceInfo.MountConfiguration
+		img.DiskCustomizations.MountConfiguration = *bd.sourceInfo.MountConfiguration
 	}
 
 	imageConfig := t.ImageTypeYAML.ImageConfig(bd.id, t.arch.Name())
