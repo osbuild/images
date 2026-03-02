@@ -59,8 +59,7 @@ func (img *DiskImage) InstantiateManifest(m *manifest.Manifest,
 	osPipeline.OSVersion = img.OSVersion
 	osPipeline.OSNick = img.OSNick
 
-	rawImagePipeline := manifest.NewRawImage(buildPipeline, osPipeline)
-	rawImagePipeline.PartTool = img.PartTool
+	rawImagePipeline := manifest.NewRawImage(buildPipeline, osPipeline, img.DiskCustomizations)
 
 	var imagePipeline manifest.FilePipeline
 	switch img.platform.GetImageFormat() {
