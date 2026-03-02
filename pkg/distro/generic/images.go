@@ -514,7 +514,7 @@ func isoCustomizations(t *imageType, c *blueprint.Customizations) (manifest.ISOC
 }
 
 func diskCustomizations(t *imageType) (manifest.DiskCustomizations, error) {
-	diskCust := manifest.DiskCustomizations{}
+	diskCust := manifest.NewDiskCustomizations()
 
 	diskConfig, err := t.getDefaultDiskConfig()
 	if err != nil {
@@ -524,6 +524,10 @@ func diskCustomizations(t *imageType) (manifest.DiskCustomizations, error) {
 	if diskConfig != nil {
 		if diskConfig.MountConfiguration != nil {
 			diskCust.MountConfiguration = *diskConfig.MountConfiguration
+		}
+
+		if diskConfig.PartitioningTool != nil {
+			diskCust.PartitioningTool = *diskConfig.PartitioningTool
 		}
 	}
 
@@ -658,10 +662,6 @@ func diskImage(t *imageType,
 		img.OSProduct = t.Arch().Distro().Product()
 		img.OSVersion = t.Arch().Distro().OsVersion()
 		img.OSNick = t.Arch().Distro().Codename()
-	}
-
-	if t.ImageTypeYAML.DiskImagePartTool != nil {
-		img.PartTool = *t.ImageTypeYAML.DiskImagePartTool
 	}
 
 	return img, nil
