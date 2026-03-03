@@ -106,7 +106,6 @@ type AnacondaInstaller struct {
 	// need directly; container installers should move to different image types
 	// that don't need this anymore and the image installer can be a separate
 	// follow-up if ever needed to reduce its size since it might get deprecated?
-	PayloadPath             string
 	PayloadRemoveSignatures bool
 
 	OSTreeCommitSource *ostree.SourceSpec
@@ -430,9 +429,9 @@ func (p *AnacondaInstaller) ostreeCommitStages() ([]*osbuild.Stage, error) {
 	stages := make([]*osbuild.Stage, 0)
 
 	// Set up the payload ostree repo
-	stages = append(stages, osbuild.NewOSTreeInitStage(&osbuild.OSTreeInitStageOptions{Path: p.PayloadPath}))
+	stages = append(stages, osbuild.NewOSTreeInitStage(&osbuild.OSTreeInitStageOptions{Path: p.InstallerCustomizations.Payload.Path}))
 	stages = append(stages, osbuild.NewOSTreePullStage(
-		&osbuild.OSTreePullStageOptions{Repo: p.PayloadPath},
+		&osbuild.OSTreePullStageOptions{Repo: p.InstallerCustomizations.Payload.Path},
 		osbuild.NewOstreePullStageInputs("org.osbuild.source", p.ostreeCommitSpec.Checksum, p.ostreeCommitSpec.Ref),
 	))
 
