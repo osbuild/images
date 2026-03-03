@@ -24,4 +24,4 @@ fi
 # Ensure the code is formatted correctly.
 $GO_BINARY fmt ./...
 
-./test/scripts/generate-gitlab-ci ./.gitlab-ci.yml
+# ./test/scripts/generate-gitlab-ci ./.gitlab-ci.yml
