@@ -1196,6 +1196,9 @@
       <<: *default_installer_config
       install_weak_deps: false
       default_menu: 1
+      iso_files:
+        - ["/usr/share/licenses/fedora-release-common/Fedora-Legal-README.txt", "/Fedora-Legal-README.txt"]
+        - ["/usr/share/licenses/fedora-release-common/LICENSE", "/LICENSE"]
     image_config:
       locale: "en_US.UTF-8"
       kernel_options:
