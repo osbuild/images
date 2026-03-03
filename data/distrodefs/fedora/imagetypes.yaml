@@ -2084,7 +2084,10 @@ image_types:
       # them to empty to avoid changing the live-installer definition
       additional_dracut_modules: []
       # also reset the condition that adds dracut modules
-    iso_config: *default_iso_config
+    iso_config:
+      <<: *default_iso_config
+      rootfs_type: "erofs"
+      erofs_options: *default_erofs_options
     image_config:
       locale: "en_US.UTF-8"
     package_sets:
