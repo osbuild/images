@@ -68,26 +68,36 @@ func newTestAnacondaISOTree(bootType manifest.ISOBootType) *manifest.AnacondaIns
 
 	preview := false
 
+	instCust := manifest.InstallerCustomizations{
+		Product:   product,
+		OSVersion: osversion,
+		Preview:   preview,
+	}
+
+	isoCust := manifest.ISOCustomizations{
+		ErofsOptions: osbuild.ErofsStageOptions{},
+	}
+
 	anacondaPipeline := manifest.NewAnacondaInstaller(
 		manifest.AnacondaInstallerTypePayload,
 		build,
 		x86plat,
 		nil,
 		"kernel",
-		manifest.InstallerCustomizations{
-			Product:   product,
-			OSVersion: osversion,
-			Preview:   preview,
-		},
-		manifest.ISOCustomizations{
-			BootType: bootType,
-		},
+		instCust,
+		isoCust,
 	)
 	rootfsImagePipeline := manifest.NewISORootfsImg(build, anacondaPipeline)
 
 	bootloaders := newTestBootloaders(bootType, build, x86plat, product, osversion)
-	pipeline := manifest.NewAnacondaInstallerISOTree(build, anacondaPipeline, rootfsImagePipeline, bootloaders)
-
+	pipeline := manifest.NewAnacondaInstallerISOTree(
+		build,
+		anacondaPipeline,
+		rootfsImagePipeline,
+		bootloaders,
+		instCust,
+		isoCust,
+	)
 	// copy of the default in pkg/image - will be moved to the pipeline
 	efibootImageSize := datasizes.Size(20 * datasizes.MebiByte)
 	pipeline.PartitionTable = &disk.PartitionTable{
@@ -123,26 +133,36 @@ func newTestAnacondaISOTreeErofs(bootType manifest.ISOBootType) *manifest.Anacon
 
 	preview := false
 
+	instCust := manifest.InstallerCustomizations{
+		Product:   product,
+		OSVersion: osversion,
+		Preview:   preview,
+	}
+
+	isoCust := manifest.ISOCustomizations{
+		ErofsOptions: osbuild.ErofsStageOptions{},
+	}
+
 	anacondaPipeline := manifest.NewAnacondaInstaller(
 		manifest.AnacondaInstallerTypePayload,
 		build,
 		x86plat,
 		nil,
 		"kernel",
-		manifest.InstallerCustomizations{
-			Product:   product,
-			OSVersion: osversion,
-			Preview:   preview,
-		},
-		manifest.ISOCustomizations{
-			BootType:     bootType,
-			ErofsOptions: osbuild.ErofsStageOptions{},
-		},
+		instCust,
+		isoCust,
 	)
 	rootfsImagePipeline := manifest.NewISORootfsImg(build, anacondaPipeline)
 
 	bootloaders := newTestBootloaders(bootType, build, x86plat, product, osversion)
-	pipeline := manifest.NewAnacondaInstallerISOTree(build, anacondaPipeline, rootfsImagePipeline, bootloaders)
+	pipeline := manifest.NewAnacondaInstallerISOTree(
+		build,
+		anacondaPipeline,
+		rootfsImagePipeline,
+		bootloaders,
+		instCust,
+		isoCust,
+	)
 	// copy of the default in pkg/image - will be moved to the pipeline
 	efibootImageSize := datasizes.Size(20 * datasizes.MebiByte)
 	pipeline.PartitionTable = &disk.PartitionTable{
