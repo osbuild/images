@@ -127,7 +127,14 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	osPipeline.OSCustomizations = img.OSCustomizations
 	osPipeline.Environment = img.Environment
 
-	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, anacondaPipeline, rootfsImagePipeline, bootloaders)
+	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(
+		buildPipeline,
+		anacondaPipeline,
+		rootfsImagePipeline,
+		bootloaders,
+		img.InstallerCustomizations,
+		img.ISOCustomizations,
+	)
 	initIsoTreePipeline(isoTreePipeline, &img.AnacondaInstallerBase, rng)
 
 	isoTreePipeline.PayloadPath = tarPath

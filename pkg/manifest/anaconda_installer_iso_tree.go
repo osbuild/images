@@ -94,6 +94,12 @@ func (r *ISOBootType) UnmarshalYAML(unmarshal func(any) error) error {
 type AnacondaInstallerISOTree struct {
 	Base
 
+	// InstallerCustomizations to apply to the installer pipeline(s)
+	InstallerCustomizations InstallerCustomizations
+
+	// ISOCustomizations to apply to the ISO pipeline(s)
+	ISOCustomizations ISOCustomizations
+
 	// TODO: review optional and mandatory fields and their meaning
 	Release string
 
@@ -133,7 +139,14 @@ type AnacondaInstallerISOTree struct {
 	InstallRootfsType disk.FSType
 }
 
-func NewAnacondaInstallerISOTree(buildPipeline Build, anacondaPipeline *AnacondaInstaller, rootfsPipeline *ISORootfsImg, bootloaders []ISOBootloader) *AnacondaInstallerISOTree {
+func NewAnacondaInstallerISOTree(
+	buildPipeline Build,
+	anacondaPipeline *AnacondaInstaller,
+	rootfsPipeline *ISORootfsImg,
+	bootloaders []ISOBootloader,
+	installerCustomizations InstallerCustomizations,
+	isoCustomizations ISOCustomizations,
+) *AnacondaInstallerISOTree {
 
 	// Check that the pipeline manifests all match the anacondaPipeline manifest
 	var manifests []*Manifest
@@ -152,10 +165,12 @@ func NewAnacondaInstallerISOTree(buildPipeline Build, anacondaPipeline *Anaconda
 	}
 
 	p := &AnacondaInstallerISOTree{
-		Base:             NewBase("bootiso-tree", buildPipeline),
-		anacondaPipeline: anacondaPipeline,
-		rootfsPipeline:   rootfsPipeline,
-		bootloaders:      bootloaders,
+		Base:                    NewBase("bootiso-tree", buildPipeline),
+		anacondaPipeline:        anacondaPipeline,
+		rootfsPipeline:          rootfsPipeline,
+		bootloaders:             bootloaders,
+		InstallerCustomizations: installerCustomizations,
+		ISOCustomizations:       isoCustomizations,
 	}
 	buildPipeline.addDependent(p)
 	return p
@@ -311,7 +326,7 @@ func (p *AnacondaInstallerISOTree) NewErofsStage() (*osbuild.Stage, error) {
 		return nil, fmt.Errorf("Rootfs not set to Erofs for %s pipeline, can not create erofs stage", p.name)
 	}
 
-	erofsOptions := p.anacondaPipeline.ISOCustomizations.ErofsOptions
+	erofsOptions := p.ISOCustomizations.ErofsOptions
 
 	switch p.anacondaPipeline.Type {
 	case AnacondaInstallerTypePayload, AnacondaInstallerTypeNetinst:
@@ -436,7 +451,7 @@ func (p *AnacondaInstallerISOTree) serialize() (osbuild.Pipeline, error) {
 
 	// Potentially copy more files into the ISO depending on our definitions. For example the
 	// legal notice and license files.
-	for _, paths := range p.anacondaPipeline.InstallerCustomizations.ISOFiles {
+	for _, paths := range p.InstallerCustomizations.ISOFiles {
 		copyStageOptions.Paths = append(copyStageOptions.Paths, osbuild.CopyStagePath{
 			From: fmt.Sprintf("input://%s%s", inputName, paths[0]),
 			To:   fmt.Sprintf("tree://%s", paths[1]),
