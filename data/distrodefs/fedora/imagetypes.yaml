@@ -559,6 +559,14 @@
           arch: "x86_64"
         shallow_merge:
           boot_type: "grub2"
+      "fedora 45 and up exclude efiboot.img on x86":
+        when:
+          version_greater_or_equal: "45"
+          arch: "x86_64"
+        shallow_merge:
+          exclude_paths:
+            - "efiboot.img"
+
 
   erofs_options: &default_erofs_options
     compression:

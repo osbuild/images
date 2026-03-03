@@ -494,6 +494,11 @@ func isoCustomizations(t *imageType, c *blueprint.Customizations) (manifest.ISOC
 		if erofsOptions := isoConfig.ErofsOptions; erofsOptions != nil {
 			isc.ErofsOptions = *erofsOptions
 		}
+
+		if excludePaths := isoConfig.ExcludePaths; len(excludePaths) > 0 {
+			isc.ExcludePaths = excludePaths
+		}
+
 	}
 
 	isoCust, err := c.GetISO()
