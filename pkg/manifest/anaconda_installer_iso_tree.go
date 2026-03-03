@@ -378,7 +378,8 @@ func (p *AnacondaInstallerISOTree) serialize() (osbuild.Pipeline, error) {
 	if p.anacondaPipeline.Type == AnacondaInstallerTypePayload {
 		count := 0
 
-		if p.ostreeCommitSpec != nil {
+		// can either be here, or on the anaconda pipeline
+		if p.ostreeCommitSpec != nil || p.anacondaPipeline.ostreeCommitSpec != nil {
 			count++
 		}
 
@@ -491,7 +492,9 @@ func (p *AnacondaInstallerISOTree) serialize() (osbuild.Pipeline, error) {
 	if p.anacondaPipeline.Type == AnacondaInstallerTypePayload {
 		// the following pipelines are only relevant for payload installers
 		switch {
-		case p.ostreeCommitSpec != nil:
+		case p.ostreeCommitSpec != nil || p.anacondaPipeline.ostreeCommitSpec != nil:
+			// bit of a hack, but this is for now the best way to see if we do this; will get
+			// cleaned up once interactive-defaults get re-introduced
 			ostreeCommitStages, err := p.ostreeCommitStages()
 			if err != nil {
 				return osbuild.Pipeline{}, fmt.Errorf("cannot create ostree commit stages: %w", err)
@@ -535,12 +538,24 @@ func (p *AnacondaInstallerISOTree) serialize() (osbuild.Pipeline, error) {
 func (p *AnacondaInstallerISOTree) ostreeCommitStages() ([]*osbuild.Stage, error) {
 	stages := make([]*osbuild.Stage, 0)
 
-	// Set up the payload ostree repo
-	stages = append(stages, osbuild.NewOSTreeInitStage(&osbuild.OSTreeInitStageOptions{Path: p.PayloadPath}))
-	stages = append(stages, osbuild.NewOSTreePullStage(
-		&osbuild.OSTreePullStageOptions{Repo: p.PayloadPath},
-		osbuild.NewOstreePullStageInputs("org.osbuild.source", p.ostreeCommitSpec.Checksum, p.ostreeCommitSpec.Ref),
-	))
+	var payloadPath string
+	var ostreeCommitSpec *ostree.CommitSpec
+
+	// Set up the payload ostree repo *if* the repo is on the ISO root filesystem otherwise
+	// this is done inside the anaconda pipeline and the repo is in the CROFS
+	if p.InstallerCustomizations.Payload.Location == PAYLOAD_LOCATION_ISO {
+		stages = append(stages, osbuild.NewOSTreeInitStage(&osbuild.OSTreeInitStageOptions{Path: p.PayloadPath}))
+		stages = append(stages, osbuild.NewOSTreePullStage(
+			&osbuild.OSTreePullStageOptions{Repo: p.PayloadPath},
+			osbuild.NewOstreePullStageInputs("org.osbuild.source", p.ostreeCommitSpec.Checksum, p.ostreeCommitSpec.Ref),
+		))
+
+		ostreeCommitSpec = p.ostreeCommitSpec
+		payloadPath = makeISORootPath(p.PayloadPath)
+	} else {
+		ostreeCommitSpec = p.anacondaPipeline.ostreeCommitSpec
+		payloadPath = makeCROFSRootPath(p.PayloadPath)
+	}
 
 	if p.Kickstart == nil {
 		return nil, fmt.Errorf("Kickstart options not set for %s pipeline", p.name)
@@ -549,13 +564,14 @@ func (p *AnacondaInstallerISOTree) ostreeCommitStages() ([]*osbuild.Stage, error
 	if p.Kickstart.OSTree == nil {
 		return nil, fmt.Errorf("Kickstart ostree options not set for %s pipeline", p.name)
 	}
+
 	// Configure the kickstart file with the payload and any user options
 	kickstartOptions, err := osbuild.NewKickstartStageOptionsWithOSTreeCommit(
 		p.Kickstart.Path,
 		p.Kickstart.Users,
 		p.Kickstart.Groups,
-		makeISORootPath(p.PayloadPath),
-		p.ostreeCommitSpec.Ref,
+		payloadPath,
+		ostreeCommitSpec.Ref,
 		p.Kickstart.OSTree.Remote,
 		p.Kickstart.OSTree.OSName)
 
@@ -899,6 +915,13 @@ This directory contains files necessary for registering the system on first boot
 // in the root of the iso
 func makeISORootPath(p string) string {
 	fullpath := path.Join("/run/install/repo", p)
+	return fmt.Sprintf("file://%s", fullpath)
+}
+
+// makeCROFSRootPath return a path that can be used to address files and folders
+// in the CROFS on the ISO
+func makeCROFSRootPath(p string) string {
+	fullpath := path.Join("/", p)
 	return fmt.Sprintf("file://%s", fullpath)
 }
 
