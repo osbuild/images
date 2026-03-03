@@ -55,13 +55,17 @@ def build_new_images(build_requests):
 def build_image(distro, image_type, config_path):
     # NOTE: copy of test/scripts/build-image
     # TODO: unify into imgtestlib
-    print(f"👷 Building image {distro}/{image_type} using config {config_path}")
 
-    # print the config for logging
     with open(config_path, "r", encoding="utf-8") as config_file:
         config = json.load(config_file)
-        print(json.dumps(config, indent=2))
-        config_name = config["name"]
+
+    config_name = config["name"]
+
+    log_section_name = f"build_{distro}_{image_type}_{config_name}"
+    testlib.print_section_start(log_section_name, f"👷 Building image {distro}/{image_type} using config {config_path}")
+
+    # print the config for logging
+    print(json.dumps(config, indent=2))
 
     testlib.runcmd(["go", "build", "-o", "./bin/build", "./cmd/build"])
 
@@ -100,6 +104,7 @@ def build_image(distro, image_type, config_path):
         "runner-distro": distro_version,
     }
     testlib.write_build_info(build_dir, build_info)
+    testlib.print_section_end(log_section_name)
 
 
 def main():
