@@ -99,6 +99,10 @@ type InstallerCustomizations struct {
 		// The path where the payload (tarball, ostree repo, or container) will be stored.
 		Path string
 
+		// If set the skopeo stage will remove signatures during copy (relevant for container
+		// payloads)
+		ContainerRemoveSignatures bool
+
 		Location PayloadLocation
 	}
 }
