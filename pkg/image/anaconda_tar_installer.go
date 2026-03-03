@@ -67,6 +67,8 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 		img.Kickstart.Path = osbuild.KickstartPathOSBuild
 	}
 
+	img.InstallerCustomizations.Payload.Path = "/liveimg.tar.gz"
+
 	anacondaPipeline := manifest.NewAnacondaInstaller(
 		manifest.AnacondaInstallerTypePayload,
 		buildPipeline,
@@ -96,8 +98,6 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	}
 
 	anacondaPipeline.Locale = img.OSCustomizations.Language
-
-	tarPath := "/liveimg.tar.gz"
 
 	anacondaPipeline.Checkpoint()
 
@@ -137,7 +137,6 @@ func (img *AnacondaTarInstaller) InstantiateManifest(m *manifest.Manifest,
 	)
 	initIsoTreePipeline(isoTreePipeline, &img.AnacondaInstallerBase, rng)
 
-	isoTreePipeline.PayloadPath = tarPath
 	isoTreePipeline.OSPipeline = osPipeline
 
 	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.ISOCustomizations)

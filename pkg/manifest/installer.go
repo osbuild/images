@@ -96,6 +96,9 @@ type InstallerCustomizations struct {
 	RPMKeysBinary string
 
 	Payload struct {
+		// The path where the payload (tarball, ostree repo, or container) will be stored.
+		Path string
+
 		Location PayloadLocation
 	}
 }

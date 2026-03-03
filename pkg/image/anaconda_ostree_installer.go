@@ -48,6 +48,8 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 	buildPipeline := addBuildBootstrapPipelines(m, runner, repos, img.BuildOptions)
 	buildPipeline.Checkpoint()
 
+	img.InstallerCustomizations.Payload.Path = "/ostree/repo"
+
 	anacondaPipeline := manifest.NewAnacondaInstaller(
 		manifest.AnacondaInstallerTypePayload,
 		buildPipeline,
@@ -67,7 +69,6 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 		}
 	}
 	anacondaPipeline.Biosdevname = (img.platform.GetArch() == arch.ARCH_X86_64)
-	anacondaPipeline.PayloadPath = "/ostree/repo"
 
 	if img.InstallerCustomizations.Payload.Location == manifest.PAYLOAD_LOCATION_ROOTFS {
 		anacondaPipeline.OSTreeCommitSource = &img.Commit
@@ -123,8 +124,6 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 		img.ISOCustomizations,
 	)
 	initIsoTreePipeline(isoTreePipeline, &img.AnacondaInstallerBase, rng)
-
-	isoTreePipeline.PayloadPath = "/ostree/repo"
 
 	if img.InstallerCustomizations.Payload.Location == manifest.PAYLOAD_LOCATION_ISO {
 		isoTreePipeline.OSTreeCommitSource = &img.Commit
