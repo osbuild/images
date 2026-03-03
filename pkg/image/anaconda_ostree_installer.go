@@ -108,7 +108,14 @@ func (img *AnacondaOSTreeInstaller) InstantiateManifest(m *manifest.Manifest,
 		subscriptionPipeline = manifest.NewSubscription(buildPipeline, img.Subscription)
 	}
 
-	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, anacondaPipeline, rootfsImagePipeline, bootloaders)
+	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(
+		buildPipeline,
+		anacondaPipeline,
+		rootfsImagePipeline,
+		bootloaders,
+		img.InstallerCustomizations,
+		img.ISOCustomizations,
+	)
 	initIsoTreePipeline(isoTreePipeline, &img.AnacondaInstallerBase, rng)
 
 	isoTreePipeline.PayloadPath = "/ostree/repo"

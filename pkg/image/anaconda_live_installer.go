@@ -84,7 +84,14 @@ func (img *AnacondaLiveInstaller) InstantiateManifest(m *manifest.Manifest,
 	// Setup the bootloaders
 	bootloaders := img.Bootloaders(buildPipeline, img.platform, kernelOpts)
 
-	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, livePipeline, rootfsImagePipeline, bootloaders)
+	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(
+		buildPipeline,
+		livePipeline,
+		rootfsImagePipeline,
+		bootloaders,
+		img.InstallerCustomizations,
+		img.ISOCustomizations,
+	)
 	initIsoTreePipeline(isoTreePipeline, &img.AnacondaInstallerBase, rng)
 
 	isoPipeline := manifest.NewISO(buildPipeline, isoTreePipeline, img.ISOCustomizations)

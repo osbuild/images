@@ -120,7 +120,14 @@ func (img *AnacondaContainerInstaller) InstantiateManifestFromContainer(m *manif
 	// Setup the bootloaders
 	bootloaders := img.Bootloaders(buildPipeline, img.platform, kernelOpts)
 
-	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(buildPipeline, anacondaPipeline, rootfsImagePipeline, bootloaders)
+	isoTreePipeline := manifest.NewAnacondaInstallerISOTree(
+		buildPipeline,
+		anacondaPipeline,
+		rootfsImagePipeline,
+		bootloaders,
+		img.InstallerCustomizations,
+		img.ISOCustomizations,
+	)
 	initIsoTreePipeline(isoTreePipeline, &img.AnacondaInstallerBase, rng)
 
 	// For ostree installers, always put the kickstart file in the root of the ISO
