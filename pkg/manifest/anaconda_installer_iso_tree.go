@@ -109,9 +109,6 @@ type AnacondaInstallerISOTree struct {
 	rootfsPipeline   *ISORootfsImg // May be nil for plain squashfs rootfs
 	bootloaders      []ISOBootloader
 
-	// If set the skopeo stage will remove signatures during copy
-	PayloadRemoveSignatures bool
-
 	RootfsCompression string
 	RootfsType        ISORootfsType
 
@@ -603,7 +600,7 @@ func (p *AnacondaInstallerISOTree) ostreeContainerStages() ([]*osbuild.Stage, er
 		p.InstallerCustomizations.Payload.Path,
 		image,
 		nil)
-	if p.PayloadRemoveSignatures {
+	if p.InstallerCustomizations.Payload.ContainerRemoveSignatures {
 		opts := skopeoStage.Options.(*osbuild.SkopeoStageOptions)
 		opts.RemoveSignatures = common.ToPtr(true)
 	}

@@ -864,7 +864,7 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 	t.Run("remove-payload-signtures", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree(manifest.Grub2UEFIOnlyISOBoot)
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
-		pipeline.PayloadRemoveSignatures = true
+		pipeline.InstallerCustomizations.Payload.ContainerRemoveSignatures = true
 		sp, err := manifest.SerializeWith(pipeline, manifest.Inputs{Containers: []container.Spec{containerPayload}})
 		assert.NoError(t, err)
 		skopeoStage := findStage("org.osbuild.skopeo", sp.Stages)
@@ -960,7 +960,7 @@ func TestPayloadRemoveSignatures(t *testing.T) {
 	} {
 		pipeline := newTestAnacondaISOTree(manifest.Grub2UEFIOnlyISOBoot)
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
-		pipeline.PayloadRemoveSignatures = tc.removeSig
+		pipeline.InstallerCustomizations.Payload.ContainerRemoveSignatures = tc.removeSig
 
 		skopeoStage := findStage("org.osbuild.skopeo", stagesFrom(t, pipeline))
 		assert.NotNil(t, skopeoStage)
