@@ -738,7 +738,7 @@ def print_section_start(name: str, msg: str = ""):
     """
     now = datetime.now()
     if running_in_gitlab():
-        print(f"\033[0Ksection_start:{int(now.timestamp())}:{name}\r\033[0K{msg}")
+        print(f"\033[0Ksection_start:{int(now.timestamp())}:{name}[collapsed=true]\r\033[0K{msg}")
         return
 
     # custom line for non CI runs
