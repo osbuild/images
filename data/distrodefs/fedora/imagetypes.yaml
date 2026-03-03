@@ -1207,6 +1207,8 @@
       iso_files:
         - ["/usr/share/licenses/fedora-release-common/Fedora-Legal-README.txt", "/Fedora-Legal-README.txt"]
         - ["/usr/share/licenses/fedora-release-common/LICENSE", "/LICENSE"]
+      payload:
+        location: "rootfs"
     image_config:
       locale: "en_US.UTF-8"
       kernel_options:
