@@ -414,7 +414,7 @@ def filter_builds(manifests, distro=None, arch=None, skip_ostree_pull=True):
     """
     Returns a list of build requests for the manifests that have no matching config in the test build cache.
     """
-    print(f"⚙️ Filtering {len(manifests)} build configurations")
+    print_section_start("filter-build-configs", f"⚙️ Filtering {len(manifests)} build configurations")
     dl_root_path = os.path.join(TEST_CACHE_ROOT, "s3configs", "builds")
     dl_path = os.path.join(dl_root_path, gen_build_info_dir_path_prefix(distro, arch))
     os.makedirs(dl_path, exist_ok=True)
@@ -465,6 +465,7 @@ def filter_builds(manifests, distro=None, arch=None, skip_ostree_pull=True):
         print("⚠️ Errors:")
         print("\n".join(errors))
 
+    print_section_end("filter-build-configs")
     return build_requests
 
 

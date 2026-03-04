@@ -18,7 +18,8 @@ def generate_manifests(outputdir, distro, arch):
         target = distro + "/" + arch
         distros = [distro]
 
-    print(f"🗒️ Generating all manifests using the default config list for {target}")
+    testlib.print_section_start("generate-all-manifests",
+                                f"🗒️ Generating all manifests using the default config list for {target}")
     err = testlib.gen_manifests(outputdir, arches=[arch], distros=distros)
 
     # print stderr in case there were errors or warnings about skipped configurations
@@ -32,7 +33,9 @@ def generate_manifests(outputdir, distro, arch):
         print(line)
 
     print("✅ Manifest generation done!\n")
-    return testlib.read_manifests(outputdir)
+    manifests = testlib.read_manifests(outputdir)
+    testlib.print_section_end("generate-all-manifests")
+    return manifests
 
 
 def build_new_images(build_requests):
