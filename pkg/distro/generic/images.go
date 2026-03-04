@@ -363,6 +363,25 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 		osc.RPMKeysBinary = tweaks.RPMKeys.BinPath
 	}
 
+	if sshdCust := c.GetSshd(); sshdCust != nil && imageConfig.SshdConfig != nil {
+		if sshdCust.PasswordAuthentication != nil {
+			osc.SshdConfig.Config.PasswordAuthentication = sshdCust.PasswordAuthentication
+		}
+		if sshdCust.ChallengeResponseAuthentication != nil {
+			osc.SshdConfig.Config.ChallengeResponseAuthentication = sshdCust.ChallengeResponseAuthentication
+		}
+		if sshdCust.ClientAliveInterval != nil {
+			osc.SshdConfig.Config.ClientAliveInterval = sshdCust.ClientAliveInterval
+		}
+		if sshdCust.PermitRootLogin != nil {
+			permitRootLogin, err := osbuild.ConvertPermitRootLogin(sshdCust.PermitRootLogin)
+			if err != nil {
+				return osc, err
+			}
+			osc.SshdConfig.Config.PermitRootLogin = permitRootLogin
+		}
+	}
+
 	return osc, nil
 }
 
