@@ -363,8 +363,8 @@ func TestRawBootcImageSerializeCreateFilesDirs(t *testing.T) {
 func TestRawBootcPipelineFSTabStage(t *testing.T) {
 	pipeline := makeFakeRawBootcPipeline()
 
-	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/boot/efi")      // PT requires /boot/efi
-	pipeline.OSCustomizations.MountConfiguration = osbuild.MOUNT_CONFIGURATION_FSTAB // set it explicitly just to be sure
+	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/boot/efi")        // PT requires /boot/efi
+	pipeline.DiskCustomizations.MountConfiguration = osbuild.MOUNT_CONFIGURATION_FSTAB // set it explicitly just to be sure
 
 	checkStagesForFSTab(t, common.Must(pipeline.Serialize()).Stages)
 }
@@ -374,7 +374,7 @@ func TestRawBootcPipelineMountUnitStages(t *testing.T) {
 
 	expectedUnits := []string{"-.mount", "home.mount", "boot-efi.mount"}
 	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/home", "/boot/efi")
-	pipeline.OSCustomizations.MountConfiguration = osbuild.MOUNT_CONFIGURATION_UNITS
+	pipeline.DiskCustomizations.MountConfiguration = osbuild.MOUNT_CONFIGURATION_UNITS
 
 	checkStagesForMountUnits(t, common.Must(pipeline.Serialize()).Stages, expectedUnits)
 }
@@ -383,7 +383,7 @@ func TestRawBootcPipelineNoMountsStages(t *testing.T) {
 	pipeline := makeFakeRawBootcPipeline()
 
 	pipeline.PartitionTable = testdisk.MakeFakePartitionTable("/", "/home", "/boot/efi")
-	pipeline.OSCustomizations.MountConfiguration = osbuild.MOUNT_CONFIGURATION_NONE
+	pipeline.DiskCustomizations.MountConfiguration = osbuild.MOUNT_CONFIGURATION_NONE
 
 	checkStagesForNoMounts(t, common.Must(pipeline.Serialize()).Stages)
 }
