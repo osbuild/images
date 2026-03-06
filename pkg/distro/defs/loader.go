@@ -267,22 +267,36 @@ func LoadDistroWithoutImageTypes(nameVer string) (*DistroYAML, error) {
 }
 
 func (d *DistroYAML) LoadImageTypes() error {
-	f, err := dataFS().Open(filepath.Join(d.DefsPath, "imagetypes.yaml"))
+	files, err := fs.Glob(dataFS(), filepath.Join(d.DefsPath, "*.yaml"))
 	if err != nil {
 		return err
 	}
-	defer f.Close()
 
-	var toplevel imageTypesYAML
-	decoder := yaml.NewDecoder(f)
-	decoder.KnownFields(true)
-	if err := decoder.Decode(&toplevel); err != nil {
-		return err
+	var configs []imageTypesYAML
+	for _, fileName := range files {
+		f, err := dataFS().Open(fileName)
+		if err != nil {
+			return err
+		}
+
+		var toplevel imageTypesYAML
+		decoder := yaml.NewDecoder(f)
+		decoder.KnownFields(true)
+		decodeErr := decoder.Decode(&toplevel)
+		if decodeErr != nil {
+			return err
+		}
+		f.Close()
+
+		configs = append(configs, toplevel)
 	}
-	if len(toplevel.ImageTypes) > 0 {
-		d.imageTypes = make(map[string]ImageTypeYAML, len(toplevel.ImageTypes))
-		for name := range toplevel.ImageTypes {
-			v := toplevel.ImageTypes[name]
+
+	imageTypes := make(map[string]ImageTypeYAML)
+	for _, cfg := range configs {
+		for name, v := range cfg.ImageTypes {
+			if _, exists := d.imageTypes[name]; exists {
+				return fmt.Errorf("duplicate image type %s found", name)
+			}
 			v.name = name
 			if err := v.runTemplates(d); err != nil {
 				return err
@@ -291,10 +305,19 @@ func (d *DistroYAML) LoadImageTypes() error {
 				return err
 			}
 
-			d.imageTypes[name] = v
+			imageTypes[name] = v
 		}
+
+		if d.imageConfig == nil && (cfg.ImageConfig.Default != nil) {
+			d.imageConfig = cfg.ImageConfig.For(d.ID)
+		}
+
 	}
-	d.imageConfig = toplevel.ImageConfig.For(d.ID)
+
+	if len(imageTypes) > 0 {
+		d.imageTypes = imageTypes
+	}
+
 	return nil
 }
 
