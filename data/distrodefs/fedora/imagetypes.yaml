@@ -2939,7 +2939,7 @@ image_types:
 
   "sway-atomic-installer":
     <<: *atomic_installer_common
-    iso_label: "Sway Atomic"
+    iso_label: "Sway-Atomic"
     variant: "Sway Atomic"
     ostree:
       <<: *ostree_atomic
@@ -2952,7 +2952,7 @@ image_types:
 
   "budgie-atomic-installer":
     <<: *atomic_installer_common
-    iso_label: "Budgie Atomic"
+    iso_label: "Budgie-Atomic"
     variant: "Budgie Atomic"
     ostree:
       <<: *ostree_atomic
@@ -2965,7 +2965,7 @@ image_types:
 
   "cosmic-atomic-installer":
     <<: *atomic_installer_common
-    iso_label: "Cosmic Atomic"
+    iso_label: "Cosmic-Atomic"
     variant: "Cosmic Atomic"
     ostree:
       <<: *ostree_atomic
