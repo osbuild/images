@@ -68,26 +68,36 @@ func newTestAnacondaISOTree(bootType manifest.ISOBootType) *manifest.AnacondaIns
 
 	preview := false
 
+	instCust := manifest.InstallerCustomizations{
+		Product:   product,
+		OSVersion: osversion,
+		Preview:   preview,
+	}
+
+	isoCust := manifest.ISOCustomizations{
+		ErofsOptions: osbuild.ErofsStageOptions{},
+	}
+
 	anacondaPipeline := manifest.NewAnacondaInstaller(
 		manifest.AnacondaInstallerTypePayload,
 		build,
 		x86plat,
 		nil,
 		"kernel",
-		manifest.InstallerCustomizations{
-			Product:   product,
-			OSVersion: osversion,
-			Preview:   preview,
-		},
-		manifest.ISOCustomizations{
-			BootType: bootType,
-		},
+		instCust,
+		isoCust,
 	)
 	rootfsImagePipeline := manifest.NewISORootfsImg(build, anacondaPipeline)
 
 	bootloaders := newTestBootloaders(bootType, build, x86plat, product, osversion)
-	pipeline := manifest.NewAnacondaInstallerISOTree(build, anacondaPipeline, rootfsImagePipeline, bootloaders)
-
+	pipeline := manifest.NewAnacondaInstallerISOTree(
+		build,
+		anacondaPipeline,
+		rootfsImagePipeline,
+		bootloaders,
+		instCust,
+		isoCust,
+	)
 	// copy of the default in pkg/image - will be moved to the pipeline
 	efibootImageSize := datasizes.Size(20 * datasizes.MebiByte)
 	pipeline.PartitionTable = &disk.PartitionTable{
@@ -123,26 +133,36 @@ func newTestAnacondaISOTreeErofs(bootType manifest.ISOBootType) *manifest.Anacon
 
 	preview := false
 
+	instCust := manifest.InstallerCustomizations{
+		Product:   product,
+		OSVersion: osversion,
+		Preview:   preview,
+	}
+
+	isoCust := manifest.ISOCustomizations{
+		ErofsOptions: osbuild.ErofsStageOptions{},
+	}
+
 	anacondaPipeline := manifest.NewAnacondaInstaller(
 		manifest.AnacondaInstallerTypePayload,
 		build,
 		x86plat,
 		nil,
 		"kernel",
-		manifest.InstallerCustomizations{
-			Product:   product,
-			OSVersion: osversion,
-			Preview:   preview,
-		},
-		manifest.ISOCustomizations{
-			BootType:     bootType,
-			ErofsOptions: osbuild.ErofsStageOptions{},
-		},
+		instCust,
+		isoCust,
 	)
 	rootfsImagePipeline := manifest.NewISORootfsImg(build, anacondaPipeline)
 
 	bootloaders := newTestBootloaders(bootType, build, x86plat, product, osversion)
-	pipeline := manifest.NewAnacondaInstallerISOTree(build, anacondaPipeline, rootfsImagePipeline, bootloaders)
+	pipeline := manifest.NewAnacondaInstallerISOTree(
+		build,
+		anacondaPipeline,
+		rootfsImagePipeline,
+		bootloaders,
+		instCust,
+		isoCust,
+	)
 	// copy of the default in pkg/image - will be moved to the pipeline
 	efibootImageSize := datasizes.Size(20 * datasizes.MebiByte)
 	pipeline.PartitionTable = &disk.PartitionTable{
@@ -844,7 +864,7 @@ func TestAnacondaISOTreeSerializeWithContainer(t *testing.T) {
 	t.Run("remove-payload-signtures", func(t *testing.T) {
 		pipeline := newTestAnacondaISOTree(manifest.Grub2UEFIOnlyISOBoot)
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
-		pipeline.PayloadRemoveSignatures = true
+		pipeline.InstallerCustomizations.Payload.ContainerRemoveSignatures = true
 		sp, err := manifest.SerializeWith(pipeline, manifest.Inputs{Containers: []container.Spec{containerPayload}})
 		assert.NoError(t, err)
 		skopeoStage := findStage("org.osbuild.skopeo", sp.Stages)
@@ -940,7 +960,7 @@ func TestPayloadRemoveSignatures(t *testing.T) {
 	} {
 		pipeline := newTestAnacondaISOTree(manifest.Grub2UEFIOnlyISOBoot)
 		pipeline.Kickstart = &kickstart.Options{Path: testKsPath}
-		pipeline.PayloadRemoveSignatures = tc.removeSig
+		pipeline.InstallerCustomizations.Payload.ContainerRemoveSignatures = tc.removeSig
 
 		skopeoStage := findStage("org.osbuild.skopeo", stagesFrom(t, pipeline))
 		assert.NotNil(t, skopeoStage)

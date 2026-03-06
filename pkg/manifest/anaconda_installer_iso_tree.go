@@ -94,6 +94,12 @@ func (r *ISOBootType) UnmarshalYAML(unmarshal func(any) error) error {
 type AnacondaInstallerISOTree struct {
 	Base
 
+	// InstallerCustomizations to apply to the installer pipeline(s)
+	InstallerCustomizations InstallerCustomizations
+
+	// ISOCustomizations to apply to the ISO pipeline(s)
+	ISOCustomizations ISOCustomizations
+
 	// TODO: review optional and mandatory fields and their meaning
 	Release string
 
@@ -102,12 +108,6 @@ type AnacondaInstallerISOTree struct {
 	anacondaPipeline *AnacondaInstaller
 	rootfsPipeline   *ISORootfsImg // May be nil for plain squashfs rootfs
 	bootloaders      []ISOBootloader
-
-	// The path where the payload (tarball, ostree repo, or container) will be stored.
-	PayloadPath string
-
-	// If set the skopeo stage will remove signatures during copy
-	PayloadRemoveSignatures bool
 
 	RootfsCompression string
 	RootfsType        ISORootfsType
@@ -133,7 +133,14 @@ type AnacondaInstallerISOTree struct {
 	InstallRootfsType disk.FSType
 }
 
-func NewAnacondaInstallerISOTree(buildPipeline Build, anacondaPipeline *AnacondaInstaller, rootfsPipeline *ISORootfsImg, bootloaders []ISOBootloader) *AnacondaInstallerISOTree {
+func NewAnacondaInstallerISOTree(
+	buildPipeline Build,
+	anacondaPipeline *AnacondaInstaller,
+	rootfsPipeline *ISORootfsImg,
+	bootloaders []ISOBootloader,
+	installerCustomizations InstallerCustomizations,
+	isoCustomizations ISOCustomizations,
+) *AnacondaInstallerISOTree {
 
 	// Check that the pipeline manifests all match the anacondaPipeline manifest
 	var manifests []*Manifest
@@ -152,10 +159,12 @@ func NewAnacondaInstallerISOTree(buildPipeline Build, anacondaPipeline *Anaconda
 	}
 
 	p := &AnacondaInstallerISOTree{
-		Base:             NewBase("bootiso-tree", buildPipeline),
-		anacondaPipeline: anacondaPipeline,
-		rootfsPipeline:   rootfsPipeline,
-		bootloaders:      bootloaders,
+		Base:                    NewBase("bootiso-tree", buildPipeline),
+		anacondaPipeline:        anacondaPipeline,
+		rootfsPipeline:          rootfsPipeline,
+		bootloaders:             bootloaders,
+		InstallerCustomizations: installerCustomizations,
+		ISOCustomizations:       isoCustomizations,
 	}
 	buildPipeline.addDependent(p)
 	return p
@@ -311,7 +320,7 @@ func (p *AnacondaInstallerISOTree) NewErofsStage() (*osbuild.Stage, error) {
 		return nil, fmt.Errorf("Rootfs not set to Erofs for %s pipeline, can not create erofs stage", p.name)
 	}
 
-	erofsOptions := p.anacondaPipeline.ISOCustomizations.ErofsOptions
+	erofsOptions := p.ISOCustomizations.ErofsOptions
 
 	switch p.anacondaPipeline.Type {
 	case AnacondaInstallerTypePayload, AnacondaInstallerTypeNetinst:
@@ -363,7 +372,8 @@ func (p *AnacondaInstallerISOTree) serialize() (osbuild.Pipeline, error) {
 	if p.anacondaPipeline.Type == AnacondaInstallerTypePayload {
 		count := 0
 
-		if p.ostreeCommitSpec != nil {
+		// can either be here, or on the anaconda pipeline
+		if p.ostreeCommitSpec != nil || p.anacondaPipeline.ostreeCommitSpec != nil {
 			count++
 		}
 
@@ -436,7 +446,7 @@ func (p *AnacondaInstallerISOTree) serialize() (osbuild.Pipeline, error) {
 
 	// Potentially copy more files into the ISO depending on our definitions. For example the
 	// legal notice and license files.
-	for _, paths := range p.anacondaPipeline.InstallerCustomizations.ISOFiles {
+	for _, paths := range p.InstallerCustomizations.ISOFiles {
 		copyStageOptions.Paths = append(copyStageOptions.Paths, osbuild.CopyStagePath{
 			From: fmt.Sprintf("input://%s%s", inputName, paths[0]),
 			To:   fmt.Sprintf("tree://%s", paths[1]),
@@ -476,7 +486,9 @@ func (p *AnacondaInstallerISOTree) serialize() (osbuild.Pipeline, error) {
 	if p.anacondaPipeline.Type == AnacondaInstallerTypePayload {
 		// the following pipelines are only relevant for payload installers
 		switch {
-		case p.ostreeCommitSpec != nil:
+		case p.ostreeCommitSpec != nil || p.anacondaPipeline.ostreeCommitSpec != nil:
+			// bit of a hack, but this is for now the best way to see if we do this; will get
+			// cleaned up once interactive-defaults get re-introduced
 			ostreeCommitStages, err := p.ostreeCommitStages()
 			if err != nil {
 				return osbuild.Pipeline{}, fmt.Errorf("cannot create ostree commit stages: %w", err)
@@ -520,12 +532,24 @@ func (p *AnacondaInstallerISOTree) serialize() (osbuild.Pipeline, error) {
 func (p *AnacondaInstallerISOTree) ostreeCommitStages() ([]*osbuild.Stage, error) {
 	stages := make([]*osbuild.Stage, 0)
 
-	// Set up the payload ostree repo
-	stages = append(stages, osbuild.NewOSTreeInitStage(&osbuild.OSTreeInitStageOptions{Path: p.PayloadPath}))
-	stages = append(stages, osbuild.NewOSTreePullStage(
-		&osbuild.OSTreePullStageOptions{Repo: p.PayloadPath},
-		osbuild.NewOstreePullStageInputs("org.osbuild.source", p.ostreeCommitSpec.Checksum, p.ostreeCommitSpec.Ref),
-	))
+	var payloadPath string
+	var ostreeCommitSpec *ostree.CommitSpec
+
+	// Set up the payload ostree repo *if* the repo is on the ISO root filesystem otherwise
+	// this is done inside the anaconda pipeline and the repo is in the CROFS
+	if p.InstallerCustomizations.Payload.Location == PAYLOAD_LOCATION_ISO {
+		stages = append(stages, osbuild.NewOSTreeInitStage(&osbuild.OSTreeInitStageOptions{Path: p.InstallerCustomizations.Payload.Path}))
+		stages = append(stages, osbuild.NewOSTreePullStage(
+			&osbuild.OSTreePullStageOptions{Repo: p.InstallerCustomizations.Payload.Path},
+			osbuild.NewOstreePullStageInputs("org.osbuild.source", p.ostreeCommitSpec.Checksum, p.ostreeCommitSpec.Ref),
+		))
+
+		ostreeCommitSpec = p.ostreeCommitSpec
+		payloadPath = makeISORootPath(p.InstallerCustomizations.Payload.Path)
+	} else {
+		ostreeCommitSpec = p.anacondaPipeline.ostreeCommitSpec
+		payloadPath = makeCROFSRootPath(p.InstallerCustomizations.Payload.Path)
+	}
 
 	if p.Kickstart == nil {
 		return nil, fmt.Errorf("Kickstart options not set for %s pipeline", p.name)
@@ -534,13 +558,14 @@ func (p *AnacondaInstallerISOTree) ostreeCommitStages() ([]*osbuild.Stage, error
 	if p.Kickstart.OSTree == nil {
 		return nil, fmt.Errorf("Kickstart ostree options not set for %s pipeline", p.name)
 	}
+
 	// Configure the kickstart file with the payload and any user options
 	kickstartOptions, err := osbuild.NewKickstartStageOptionsWithOSTreeCommit(
 		p.Kickstart.Path,
 		p.Kickstart.Users,
 		p.Kickstart.Groups,
-		makeISORootPath(p.PayloadPath),
-		p.ostreeCommitSpec.Ref,
+		payloadPath,
+		ostreeCommitSpec.Ref,
 		p.Kickstart.OSTree.Remote,
 		p.Kickstart.OSTree.OSName)
 
@@ -565,17 +590,17 @@ func (p *AnacondaInstallerISOTree) ostreeContainerStages() ([]*osbuild.Stage, er
 	stages = append(stages, osbuild.NewMkdirStage(&osbuild.MkdirStageOptions{
 		Paths: []osbuild.MkdirStagePath{
 			{
-				Path: p.PayloadPath,
+				Path: p.InstallerCustomizations.Payload.Path,
 			},
 		},
 	}))
 
 	// copy the container in
 	skopeoStage := osbuild.NewSkopeoStageWithOCI(
-		p.PayloadPath,
+		p.InstallerCustomizations.Payload.Path,
 		image,
 		nil)
-	if p.PayloadRemoveSignatures {
+	if p.InstallerCustomizations.Payload.ContainerRemoveSignatures {
 		opts := skopeoStage.Options.(*osbuild.SkopeoStageOptions)
 		opts.RemoveSignatures = common.ToPtr(true)
 	}
@@ -603,7 +628,7 @@ func (p *AnacondaInstallerISOTree) bootcInstallerKickstartStages() ([]*osbuild.S
 		p.Kickstart.Path,
 		p.Kickstart.Users,
 		p.Kickstart.Groups,
-		path.Join("/run/install/repo", p.PayloadPath),
+		path.Join("/run/install/repo", p.InstallerCustomizations.Payload.Path),
 		"oci",
 		"",
 		"")
@@ -724,7 +749,7 @@ func (p *AnacondaInstallerISOTree) tarPayloadStages() ([]*osbuild.Stage, error) 
 	stages := make([]*osbuild.Stage, 0)
 
 	// Create the payload tarball
-	stages = append(stages, osbuild.NewTarStage(&osbuild.TarStageOptions{Filename: p.PayloadPath}, p.OSPipeline.name))
+	stages = append(stages, osbuild.NewTarStage(&osbuild.TarStageOptions{Filename: p.InstallerCustomizations.Payload.Path}, p.OSPipeline.name))
 
 	// If the KSPath is set, we need to add the kickstart stage to this (bootiso-tree) pipeline.
 	// If it's not specified here, it should have been added to the InteractiveDefaults in the anaconda-tree.
@@ -733,7 +758,7 @@ func (p *AnacondaInstallerISOTree) tarPayloadStages() ([]*osbuild.Stage, error) 
 			p.Kickstart.Path,
 			p.Kickstart.Users,
 			p.Kickstart.Groups,
-			makeISORootPath(p.PayloadPath))
+			makeISORootPath(p.InstallerCustomizations.Payload.Path))
 
 		if err != nil {
 			return nil, fmt.Errorf("failed to create kickstart stage options: %w", err)
@@ -884,6 +909,13 @@ This directory contains files necessary for registering the system on first boot
 // in the root of the iso
 func makeISORootPath(p string) string {
 	fullpath := path.Join("/run/install/repo", p)
+	return fmt.Sprintf("file://%s", fullpath)
+}
+
+// makeCROFSRootPath return a path that can be used to address files and folders
+// in the CROFS on the ISO
+func makeCROFSRootPath(p string) string {
+	fullpath := path.Join("/", p)
 	return fmt.Sprintf("file://%s", fullpath)
 }
 
