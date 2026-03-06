@@ -1,0 +1,138 @@
+#!/usr/bin/env python3
+import argparse
+import json
+import os
+from tempfile import TemporaryDirectory
+
+import imgtestlib as testlib
+
+
+def generate_manifests(outputdir, distro, arch):
+    """
+    Generate all manifest using the default config list and return a dictionary mapping each manifest file to the
+    manifest data and its ID.
+    """
+    target = arch
+    distros = None
+    if distro:
+        target = distro + "/" + arch
+        distros = [distro]
+
+    testlib.print_section_start("generate-all-manifests",
+                                f"🗒️ Generating all manifests using the default config list for {target}")
+    err = testlib.gen_manifests(outputdir, arches=[arch], distros=distros)
+
+    # print stderr in case there were errors or warnings about skipped configurations
+    # but filter out the annoying ones
+    stderr = err.decode().splitlines()
+    for line in stderr:
+        if "No match for group package" in line:
+            continue
+        if "Failed to load consumer certs" in line:
+            continue
+        print(line)
+
+    print("✅ Manifest generation done!\n")
+    manifests = testlib.read_manifests(outputdir)
+    testlib.print_section_end("generate-all-manifests")
+    return manifests
+
+
+def build_new_images(build_requests):
+    print(f"Building {len(build_requests)} new images")
+    for build in build_requests:
+        distro = build["distro"]
+        image_type = build["image-type"]
+        config = build["config"]
+
+        config_name = config["name"]
+
+        config_path = os.path.join(testlib.CONFIGS_PATH, config_name+".json")
+        build_image(distro, image_type, config_path)
+
+        # TODO: boot test
+
+    print("✅ DONE!")
+
+
+def build_image(distro, image_type, config_path):
+    # NOTE: copy of test/scripts/build-image
+    # TODO: unify into imgtestlib
+
+    with open(config_path, "r", encoding="utf-8") as config_file:
+        config = json.load(config_file)
+
+    config_name = config["name"]
+
+    log_section_name = f"build_{distro}_{image_type}_{config_name}"
+    testlib.print_section_start(log_section_name, f"👷 Building image {distro}/{image_type} using config {config_path}")
+
+    # print the config for logging
+    print(json.dumps(config, indent=2))
+
+    testlib.runcmd(["go", "build", "-o", "./bin/build", "./cmd/build"])
+
+    cmd = ["sudo", "-E", "./bin/build", "--output", "./build", "--checkpoints", "build",
+           "--distro", distro, "--type", image_type, "--config", config_path]
+    arch = os.uname().machine
+    testlib.runcmd_nc(cmd, extra_env=testlib.rng_seed_env())
+
+    print("✅ Build finished!!")
+
+    # Build artifacts are owned by root. Make them world accessible.
+    testlib.runcmd(["sudo", "chmod", "a+rwX", "-R", "./build"])
+
+    build_dir = os.path.join("build", testlib.gen_build_name(distro, arch, image_type, config_name))
+    manifest_path = os.path.join(build_dir, "manifest.json")
+    with open(manifest_path, "r", encoding="utf-8") as manifest_fp:
+        manifest_data = json.load(manifest_fp)
+    manifest_id = testlib.get_manifest_id(manifest_data)
+
+    osbuild_ver, _ = testlib.runcmd(["osbuild", "--version"])
+
+    distro_version = testlib.get_host_distro()
+    osbuild_commit = testlib.get_osbuild_commit(distro_version)
+    if osbuild_commit is None:
+        osbuild_commit = "RELEASE"
+
+    build_info = {
+        "distro": distro,
+        "arch": arch,
+        "image-type": image_type,
+        "config": config_name,
+        "manifest-checksum": manifest_id,
+        "osbuild-version": osbuild_ver.decode().strip(),
+        "osbuild-commit": osbuild_commit,
+        "commit": os.environ.get("CI_COMMIT_SHA", "N/A"),
+        "runner-distro": distro_version,
+    }
+    testlib.write_build_info(build_dir, build_info)
+    testlib.print_section_end(log_section_name)
+
+
+def main():
+    default_arch = os.uname().machine
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--distro", type=str, required=True, help="distro to generate configs for")
+    parser.add_argument("--arch", type=str, default=default_arch,
+                        help="architecture to generate configs for (defaults to host architecture)")
+    args = parser.parse_args()
+
+    distro = args.distro
+    arch = args.arch
+
+    testlib.check_config_names()
+
+    with TemporaryDirectory() as manifest_dir:
+        manifests = generate_manifests(manifest_dir, distro, arch)
+        build_requests = testlib.filter_builds(manifests, distro=distro, arch=arch)
+
+    if len(build_requests) == 0:
+        print("⚫ No manifest changes detected. Exiting.")
+        return
+
+    build_new_images(build_requests)
+
+
+if __name__ == "__main__":
+    main()
