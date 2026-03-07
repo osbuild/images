@@ -566,7 +566,11 @@
         shallow_merge:
           exclude_paths:
             - "efiboot.img"
-
+      "ppc64le uses grub2-ppc64le":
+        when:
+          arch: "ppc64le"
+        shallow_merge:
+          boot_type: "grub2-ppc64le"
 
   erofs_options: &default_erofs_options
     compression:
@@ -2569,6 +2573,7 @@ image_types:
     platforms:
       - *x86_64_installer_platform
       - *aarch64_installer_platform
+      - *ppc64le_installer_platform
     platforms_override:
       conditions:
         "Fedora 44 no longer has shim-ia32":
@@ -2577,6 +2582,7 @@ image_types:
           override:
             - *x86_64_installer_platform_compat
             - *aarch64_installer_platform
+            - *ppc64le_installer_platform
     blueprint:
       supported_options:
         - "distro"
