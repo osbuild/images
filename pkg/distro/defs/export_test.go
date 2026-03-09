@@ -13,3 +13,10 @@ func MockDataFS(path string) (restore func()) {
 		defaultDataFS = saved
 	}
 }
+
+func ResetYamlCache() {
+	yamlCache.mu.Lock()
+	defer yamlCache.mu.Unlock()
+
+	yamlCache.prototypes = nil
+}
