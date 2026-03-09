@@ -666,7 +666,7 @@ func TestGenPartitionTableFromOSInfo(t *testing.T) {
 	// manifest
 	mf, _, err := imgType.Manifest(&bp, distro.ImageOptions{}, nil, common.ToPtr(int64(0)))
 	assert.NoError(t, err)
-	manifestJson, err := mf.Serialize(nil, diskContainers, nil, nil)
+	manifestJson, err := mf.Serialize(nil, diskContainers, nil, nil, nil)
 	assert.NoError(t, err)
 	assert.Contains(t, string(manifestJson), "01010101-01011-01011-01011-01010101")
 }

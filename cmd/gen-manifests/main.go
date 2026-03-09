@@ -34,6 +34,7 @@ import (
 	"github.com/osbuild/images/pkg/distro/generic"
 	"github.com/osbuild/images/pkg/distrofactory"
 	"github.com/osbuild/images/pkg/experimentalflags"
+	"github.com/osbuild/images/pkg/flatpak"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/manifestgen/manifestmock"
 	"github.com/osbuild/images/pkg/ostree"
@@ -361,7 +362,17 @@ func makeManifestJob(
 			commitSpecs = manifestmock.ResolveCommits(manifest.GetOSTreeSourceSpecs())
 		}
 
-		mf, err := manifest.Serialize(depsolvedSets, containerSpecs, commitSpecs, nil)
+		var flatpakSpecs map[string][]flatpak.Spec
+		if content["flatpaks"] {
+			flatpakSpecs, err = flatpak.ResolveAll(manifest.GetFlatpakSourceSpecs())
+			if err != nil {
+				return fmt.Errorf("[%s] flatpak resolution failed: %s", filename, err.Error())
+			}
+		} else {
+			flatpakSpecs = manifestmock.ResolveFlatpaks(manifest.GetFlatpakSourceSpecs())
+		}
+
+		mf, err := manifest.Serialize(depsolvedSets, containerSpecs, commitSpecs, flatpakSpecs, nil)
 		if err != nil {
 			return fmt.Errorf("[%s] manifest serialization failed: %s", filename, err.Error())
 		}
@@ -373,13 +384,13 @@ func makeManifestJob(
 			Repositories: allRepos,
 			Config:       bc,
 		}
-		err = save(mf, depsolvedSets, containerSpecs, commitSpecs, request, path, filename, metadata)
+		err = save(mf, depsolvedSets, containerSpecs, commitSpecs, flatpakSpecs, request, path, filename, metadata)
 		return
 	}
 	return job
 }
 
-func save(ms manifest.OSBuildManifest, depsolved map[string]depsolvednf.DepsolveResult, containers map[string][]container.Spec, commits map[string][]ostree.CommitSpec, cr buildRequest, path, filename string, metadata bool) error {
+func save(ms manifest.OSBuildManifest, depsolved map[string]depsolvednf.DepsolveResult, containers map[string][]container.Spec, commits map[string][]ostree.CommitSpec, flatpaks map[string][]flatpak.Spec, cr buildRequest, path, filename string, metadata bool) error {
 	var data any
 	if metadata {
 		rpmmds := make(map[string]rpmmd.PackageList)
@@ -392,9 +403,10 @@ func save(ms manifest.OSBuildManifest, depsolved map[string]depsolvednf.Depsolve
 			RPMMD         map[string]rpmmd.PackageList   `json:"rpmmd"`
 			Containers    map[string][]container.Spec    `json:"containers,omitempty"`
 			OSTreeCommits map[string][]ostree.CommitSpec `json:"ostree-commits,omitempty"`
+			Flatpaks      map[string][]flatpak.Spec      `json:"flatpaks,omitempty"`
 			NoImageInfo   bool                           `json:"no-image-info"`
 		}{
-			cr, ms, rpmmds, containers, commits, true,
+			cr, ms, rpmmds, containers, commits, flatpaks, true,
 		}
 	} else {
 		data = ms
@@ -436,10 +448,11 @@ func main() {
 	flag.BoolVar(&buildconfigAllowUnknown, "buildconfig-allow-unknown", false, "allow unknown keys in buildconfig")
 
 	// content args
-	var packages, containers, commits, fakeBootc bool
+	var packages, containers, commits, flatpaks, fakeBootc bool
 	flag.BoolVar(&packages, "packages", true, "depsolve package sets")
 	flag.BoolVar(&containers, "containers", true, "resolve container checksums")
 	flag.BoolVar(&commits, "commits", false, "resolve ostree commit IDs")
+	flag.BoolVar(&flatpaks, "flatpaks", false, "resolve flatpak checksums")
 	flag.BoolVar(&fakeBootc, "fake-bootc", false, "create fake bootc containers based on test/bootc-fake-containers.yaml")
 
 	// manifest selection args
@@ -473,6 +486,7 @@ func main() {
 		"packages":   packages,
 		"containers": containers,
 		"commits":    commits,
+		"flatpaks":   flatpaks,
 	}
 
 	var configs *BuildConfigs

@@ -17,6 +17,7 @@ import (
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distrofactory"
+	"github.com/osbuild/images/pkg/flatpak"
 	"github.com/osbuild/images/pkg/manifestgen/manifestmock"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -107,6 +108,7 @@ func TestImageTypePipelineNames(t *testing.T) {
 					assert.NoError(err)
 
 					containers := make(map[string][]container.Spec, 0)
+					flatpaks := make(map[string][]flatpak.Spec, 0)
 
 					// Pipelines that require content (packages, ostree
 					// commits) will fail if none are defined. OS pipelines
@@ -133,7 +135,7 @@ func TestImageTypePipelineNames(t *testing.T) {
 						commits[name] = commitSpecs
 					}
 
-					mf, err := m.Serialize(depsolvedSets, containers, commits, nil)
+					mf, err := m.Serialize(depsolvedSets, containers, commits, flatpaks, nil)
 					assert.NoError(err)
 					pm := new(manifest)
 					err = json.Unmarshal(mf, pm)
