@@ -377,7 +377,7 @@ func instantiateAndSerialize(t *testing.T, img image.ImageKind, depsolved map[st
 	assert.NoError(t, err)
 
 	fmt.Printf("Serializing with commits: %+v\n", commits)
-	mfs, err := mf.Serialize(depsolved, containers, commits, nil)
+	mfs, err := mf.Serialize(depsolved, containers, commits, nil, nil)
 	assert.NoError(t, err)
 
 	return string(mfs)

@@ -13,6 +13,7 @@ import (
 	"github.com/osbuild/images/internal/buildconfig"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/depsolvednf"
+	"github.com/osbuild/images/pkg/flatpak"
 	"github.com/osbuild/images/pkg/ostree"
 	"github.com/osbuild/images/pkg/rpmmd"
 	"github.com/osbuild/images/pkg/sbom"
@@ -56,6 +57,41 @@ func ResolveCommits(commitSources map[string][]ostree.SourceSpec) map[string][]o
 		commits[name] = commitSpecs
 	}
 	return commits
+}
+
+func ResolveFlatpaks(flatpakSources map[string][]flatpak.SourceSpec) map[string][]flatpak.Spec {
+	flatpakSpecs := make(map[string][]flatpak.Spec, len(flatpakSources))
+
+	for plName, sourceSpecs := range flatpakSources {
+		specs := make([]flatpak.Spec, len(sourceSpecs))
+		for idx, src := range sourceSpecs {
+			base := fmt.Sprintf(
+				"%d%s%s%s",
+				src.Registry.Type,
+				src.Registry.RemoteName,
+				src.Registry.URI,
+				src.Reference.String())
+
+			digest := fmt.Sprintf("sha256:%x", sha256.Sum256([]byte(base+"digest")))
+			id := fmt.Sprintf("sha256:%x", sha256.Sum256([]byte(base+"imageid")))
+
+			specs[idx] = flatpak.Spec{}
+
+			if src.Registry.Type == flatpak.REGISTRY_TYPE_OCI {
+				specs[idx].ContainerSpec = &container.Spec{
+					Source:  src.Reference.String(),
+					Digest:  digest,
+					ImageID: id,
+				}
+			} else {
+				panic("non-implemented registry type for flatpak")
+			}
+		}
+
+		flatpakSpecs[plName] = specs
+	}
+
+	return flatpakSpecs
 }
 
 func Depsolve(

@@ -628,10 +628,10 @@ func TestManifestSerialization(t *testing.T) {
 			assert.NoError(err) // this isn't the error we're testing for
 
 			if tc.err != "" {
-				_, err := mf.Serialize(tc.depsolved, tc.containers, nil, nil)
+				_, err := mf.Serialize(tc.depsolved, tc.containers, nil, nil, nil)
 				assert.EqualError(err, tc.err)
 			} else {
-				manifestJson, err := mf.Serialize(tc.depsolved, tc.containers, nil, nil)
+				manifestJson, err := mf.Serialize(tc.depsolved, tc.containers, nil, nil, nil)
 				assert.NoError(err)
 				assert.NoError(checkStages(manifestJson, tc.expStages, tc.notExpectedStages))
 			}
@@ -661,7 +661,7 @@ func TestManifestGenerationOvaFilename(t *testing.T) {
 
 	mf, _, err := imgType.Manifest(bp, imgOptions, nil, common.ToPtr(int64(0)))
 	assert.NoError(t, err)
-	manifestJson, err := mf.Serialize(nil, diskContainers, nil, nil)
+	manifestJson, err := mf.Serialize(nil, diskContainers, nil, nil, nil)
 	assert.NoError(t, err)
 	mani, err := manifesttest.NewManifestFromBytes(manifestJson)
 	assert.NoError(t, err)
@@ -730,7 +730,7 @@ func TestBootcIsoManifestSerialization(t *testing.T) {
 	mf, _, err := imgType.Manifest(bp, imgOptions, nil, common.ToPtr(int64(0)))
 	assert.NoError(t, err)
 
-	manifestJson, err := mf.Serialize(nil, isoContainers, nil, nil)
+	manifestJson, err := mf.Serialize(nil, isoContainers, nil, nil, nil)
 	assert.NoError(t, err)
 
 	expStages := map[string][]string{
@@ -779,7 +779,7 @@ func TestContainerSourceLocality(t *testing.T) {
 
 				containerSpecs := manifestmock.ResolveContainers(mf.GetContainerSourceSpecs())
 
-				manifestJson, err := mf.Serialize(nil, containerSpecs, nil, nil)
+				manifestJson, err := mf.Serialize(nil, containerSpecs, nil, nil, nil)
 				require.NoError(t, err)
 
 				mani, err := manifesttest.NewManifestFromBytes(manifestJson)

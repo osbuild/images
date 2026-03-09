@@ -33,7 +33,7 @@ func TestBootcPXETarNoCustomizations(t *testing.T) {
 		"build": []container.Spec{{Source: "some-src", Digest: makeFakeDigest(t), ImageID: makeFakeDigest(t)}},
 		"image": []container.Spec{{Source: "other-src", Digest: makeFakeDigest(t), ImageID: makeFakeDigest(t)}},
 	}
-	osbm, err := mf.Serialize(nil, fakeSourceSpecs, nil, nil)
+	osbm, err := mf.Serialize(nil, fakeSourceSpecs, nil, nil, nil)
 	require.NoError(t, err)
 
 	// find the tar stage in the tar pipeline
