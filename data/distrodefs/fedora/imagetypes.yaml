@@ -21,14 +21,6 @@
       - "smartmontools"
       - "smartmontools-selinux"
 
-  server_host_pkgset: &server_host_pkgset
-    include:
-      - "@container-management"
-      - "@server-hardware-support"
-      - "dracut-config-rescue"
-      - "kernel"
-      - "linux-firmware"
-
   cloud_core_pkgset: &cloud_core_pkgset
     include:
       - "@cloud-server-environment"
@@ -470,36 +462,6 @@
           - "grub2-ppc64le"
           - "grub2-ppc64le-modules"
       bootloader: "grub2"
-    ppc64le_installer_platform: &ppc64le_installer_platform
-      <<: *ppc64le_bios_platform
-      image_format: "qcow2"
-      packages:
-        <<: *ppc64le_bios_platform_packages
-        booting:
-          - "lsvpd"
-          - "ppc64-diag"
-          - "grub2-tools"
-          - "grub2-tools-minimal"
-          - "grub2-tools-extra"
-        firmware:
-          - "amd-gpu-firmware"
-          - "atheros-firmware"
-          - "atmel-firmware"
-          - "b43-openfwwf"
-          - "brcmfmac-firmware"
-          - "intel-gpu-firmware"
-          - "iwlegacy-firmware"
-          - "iwlwifi-dvm-firmware"
-          - "iwlwifi-mvm-firmware"
-          - "libertas-firmware"
-          - "linux-firmware"
-          - "mt7xxx-firmware"
-          - "nvidia-gpu-firmware"
-          - "nxpwireless-firmware"
-          - "qed-firmware"
-          - "realtek-firmware"
-          - "tiwilink-firmware"
-          - "zd1211-firmware"
     s390x_zipl_platform: &s390x_zipl_platform
       arch: "s390x"
       zipl_support: true
@@ -637,7 +599,6 @@
       - &root_partition_guid_x86_64 "4f68bce3-e8cd-4db1-96e7-fbcaf984b709"
       - &root_partition_guid_aarch64 "b921b045-1df0-41c3-af44-4c6f280d3fae"
       - &root_partition_guid_ppc64le "c31c45e6-3f39-412e-80fb-4809c4980599"
-      - &root_partition_guid_s390x "5eead9a9-fe09-4a1e-a1d7-520d00531306"
 
     # the invidual partitions for easier composibility
     partitions:
