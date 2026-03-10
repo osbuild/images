@@ -455,6 +455,10 @@ func installerCustomizations(t *imageType, c *blueprint.Customizations, o distro
 			if location := installerConfig.Payload.Location; location != nil {
 				isc.Payload.Location = *location
 			}
+
+			if kickstart := installerConfig.Payload.Kickstart; kickstart != nil {
+				isc.Payload.Kickstart = *kickstart
+			}
 		}
 	}
 
