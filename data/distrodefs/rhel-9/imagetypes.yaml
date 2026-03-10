@@ -1394,6 +1394,7 @@
 image_config:
   default:
     default_kernel: "kernel"
+    podman_default_net_backend: "netavark"
     default_oscap_datastream: "/usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml"
     install_weak_deps: true
     locale: "C.UTF-8"
