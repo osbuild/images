@@ -12,6 +12,15 @@
       {
         "name": "bluez",
         "version": "*"
+      },
+      {
+        "name": "podman",
+        "version": "*"
+      }
+    ],
+    "containers": [
+      {
+        "source": "registry.access.redhat.com/ubi9/ubi:latest"
       }
     ],
     "modules": [],
