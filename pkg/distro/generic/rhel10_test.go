@@ -297,6 +297,7 @@ func TestRH10Architecture_ListImageTypes(t *testing.T) {
 		{
 			arch: "s390x",
 			imgNames: []string{
+				"network-installer",
 				"qcow2",
 				"tar",
 			},

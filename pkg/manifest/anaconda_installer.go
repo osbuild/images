@@ -129,15 +129,14 @@ func NewAnacondaInstaller(installerType AnacondaInstallerType,
 // TODO: refactor - what is required to boot and what to build, and
 // do they all belong in this pipeline?
 func (p *AnacondaInstaller) anacondaBootPackageSet() ([]string, error) {
-	packages := []string{
-		"grub2-tools",
-		"grub2-tools-extra",
-		"grub2-tools-minimal",
-	}
+	var packages []string
 
 	switch p.platform.GetArch() {
 	case arch.ARCH_X86_64:
 		packages = append(packages,
+			"grub2-tools",
+			"grub2-tools-extra",
+			"grub2-tools-minimal",
 			"efibootmgr",
 			"grub2-efi-x64",
 			"grub2-efi-x64-cdboot",
@@ -154,13 +153,25 @@ func (p *AnacondaInstaller) anacondaBootPackageSet() ([]string, error) {
 		}
 	case arch.ARCH_AARCH64:
 		packages = append(packages,
+			"grub2-tools",
+			"grub2-tools-extra",
+			"grub2-tools-minimal",
 			"efibootmgr",
 			"grub2-efi-aa64-cdboot",
 			"grub2-efi-aa64",
 			"shim-aa64",
 		)
 	case arch.ARCH_PPC64LE:
-		// No additional packages needed
+		packages = append(packages,
+			"grub2-tools",
+			"grub2-tools-extra",
+			"grub2-tools-minimal",
+		)
+
+	case arch.ARCH_S390X:
+		packages = append(packages,
+			"s390utils-core",
+		)
 	default:
 		return nil, fmt.Errorf("unsupported arch: %s", p.platform.GetArch())
 	}
