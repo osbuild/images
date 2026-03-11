@@ -55,9 +55,9 @@ func (p *EFIBootTree) serialize() (osbuild.Pipeline, error) {
 	a := p.Platform.GetArch().String()
 	var architectures []string
 	if a == arch.ARCH_X86_64.String() {
-		architectures = []string{"X64"}
+		architectures = append([]string{"X64"}, p.Platform.GetExtraUEFIArchitectures()...)
 	} else if a == arch.ARCH_AARCH64.String() {
-		architectures = []string{"AA64"}
+		architectures = append([]string{"AA64"}, p.Platform.GetExtraUEFIArchitectures()...)
 	} else {
 		return osbuild.Pipeline{}, fmt.Errorf("EFIBootTree: unsupported architecture %q", a)
 	}

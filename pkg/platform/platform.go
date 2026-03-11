@@ -131,6 +131,7 @@ type Platform interface {
 	GetQCOW2Compat() string
 	GetBIOSPlatform() string
 	GetUEFIVendor() string
+	GetExtraUEFIArchitectures() []string
 	GetZiplSupport() bool
 	GetPackages() []string
 	GetBuildPackages() []string
@@ -160,6 +161,10 @@ func (p BasePlatform) GetBIOSPlatform() string {
 
 func (p BasePlatform) GetUEFIVendor() string {
 	return ""
+}
+
+func (p BasePlatform) GetExtraUEFIArchitectures() []string {
+	return []string{}
 }
 
 func (p BasePlatform) GetZiplSupport() bool {
