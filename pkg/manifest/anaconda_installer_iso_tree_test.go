@@ -706,7 +706,7 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 			OSTree: &kickstart.OSTree{},
 		}
 		_, err := manifest.SerializeWith(pipeline, manifest.Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
-		assert.EqualError(t, err, "cannot create ostree commit stages: cannot create kickstart stages: kickstart unattended options are not compatible with user-supplied kickstart content")
+		assert.EqualError(t, err, "cannot create ostree kickstart stages: kickstart unattended options are not compatible with user-supplied kickstart content")
 	})
 
 	t.Run("unhappy/user-kickstart-with-sudo-bits", func(t *testing.T) {
@@ -722,7 +722,7 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 			OSTree:       &kickstart.OSTree{},
 		}
 		_, err := manifest.SerializeWith(pipeline, manifest.Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
-		assert.EqualError(t, err, "cannot create ostree commit stages: cannot create kickstart stages: kickstart sudo nopasswd drop-in file creation is not compatible with user-supplied kickstart content")
+		assert.EqualError(t, err, "cannot create ostree kickstart stages: kickstart sudo nopasswd drop-in file creation is not compatible with user-supplied kickstart content")
 	})
 
 	t.Run("plain+squashfs-rootfs", func(t *testing.T) {
@@ -775,7 +775,7 @@ func TestAnacondaISOTreeSerializeWithOSTree(t *testing.T) {
 			OSTree: &kickstart.OSTree{},
 		}
 		_, err := manifest.SerializeWith(pipeline, manifest.Inputs{Commits: []ostree.CommitSpec{ostreeCommit}})
-		assert.EqualError(t, err, "cannot create ostree commit stages: failed to create kickstart stage options: org.osbuild.kickstart: unsupported options for user \"root\": shell")
+		assert.EqualError(t, err, "cannot create ostree kickstart stages: failed to create kickstart stage options: org.osbuild.kickstart: unsupported options for user \"root\": shell")
 	})
 }
 
