@@ -98,6 +98,7 @@
       - "customizations.ignition"
       - "customizations.kernel.append"
       - "customizations.user"
+      - "customizations.sshd"
     supported_options_iso: &supported_options_iso
       - "customizations.fips"
       - "customizations.group"
