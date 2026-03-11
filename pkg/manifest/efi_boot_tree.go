@@ -153,3 +153,7 @@ func (bt *EFIBootTree) GetISOBootStages(inputName string, pt *disk.PartitionTabl
 
 	return stages, []*fsnode.File{}, nil
 }
+
+func (p *EFIBootTree) getBuildPackages(distro Distro) ([]string, error) {
+	return p.Platform.GetBuildPackages(), nil
+}
