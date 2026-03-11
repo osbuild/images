@@ -239,6 +239,7 @@
       - "customizations.rpm"
       - "customizations.services"
       - "customizations.timezone"
+      - "customizations.sshd"
 
 image_config:
   default:
