@@ -50,6 +50,12 @@ func (img *AnacondaInstallerBase) Bootloaders(buildPipeline manifest.Build, plat
 		grub2ppc64.KernelOpts = kernelOpts
 		grub2ppc64.DefaultMenu = img.InstallerCustomizations.DefaultMenu
 		bootloaders = append(bootloaders, grub2ppc64)
+
+	case manifest.S390ISOBoot:
+		s390 := manifest.NewS390Bootloader(buildPipeline)
+		s390.Platform = platform
+		s390.KernelOpts = kernelOpts
+		bootloaders = append(bootloaders, s390)
 	}
 
 	if addUEFIBootTree {
