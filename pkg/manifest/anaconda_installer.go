@@ -11,7 +11,6 @@ import (
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/fsnode"
 	"github.com/osbuild/images/pkg/customizations/kickstart"
-	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/depsolvednf"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/ostree"
@@ -78,15 +77,6 @@ type AnacondaInstaller struct {
 	BootcLivefsContainer      *container.SourceSpec
 	bootcLivefsContainerSpecs []container.Spec
 
-	// Interactive defaults is a kickstart stage that can be provided, it
-	// will be written to /usr/share/anaconda/interactive-defaults
-	InteractiveDefaults *AnacondaInteractiveDefaults
-
-	// Kickstart options that will be written to the interactive defaults
-	// kickstart file. Currently only supports Users and Groups. Other
-	// properties are ignored.
-	InteractiveDefaultsKickstart *kickstart.Options
-
 	Files []*fsnode.File
 
 	// SELinux policy, when set it enables the labeling of the installer
@@ -110,6 +100,8 @@ type AnacondaInstaller struct {
 
 	OSTreeCommitSource *ostree.SourceSpec
 	ostreeCommitSpec   *ostree.CommitSpec
+
+	Kickstart *kickstart.Options
 }
 
 func NewAnacondaInstaller(installerType AnacondaInstallerType,
@@ -399,10 +391,7 @@ func (p *AnacondaInstaller) serialize() (osbuild.Pipeline, error) {
 	// being serialized
 	switch p.Type {
 	case AnacondaInstallerTypeLive:
-		if p.InteractiveDefaultsKickstart != nil && (len(p.InteractiveDefaultsKickstart.Users) != 0 || len(p.InteractiveDefaultsKickstart.Groups) != 0) {
-			return osbuild.Pipeline{}, fmt.Errorf("anaconda installer type live does not support users and groups customization")
-		}
-		if p.InteractiveDefaults != nil {
+		if p.Kickstart != nil {
 			return osbuild.Pipeline{}, fmt.Errorf("anaconda installer type live does not support interactive defaults")
 		}
 		liveStages, err := p.liveStages()
@@ -533,27 +522,6 @@ func (p *AnacondaInstaller) payloadStages() ([]*osbuild.Stage, error) {
 		return nil, fmt.Errorf("payload installers do not support SELinux policies (got policy %q)", p.SELinux)
 	}
 
-	if p.InteractiveDefaults != nil {
-		var ksUsers []users.User
-		var ksGroups []users.Group
-		if p.InteractiveDefaultsKickstart != nil {
-			ksUsers = p.InteractiveDefaultsKickstart.Users
-			ksGroups = p.InteractiveDefaultsKickstart.Groups
-		}
-		kickstartOptions, err := osbuild.NewKickstartStageOptionsWithLiveIMG(
-			osbuild.KickstartPathInteractiveDefaults,
-			ksUsers,
-			ksGroups,
-			p.InteractiveDefaults.TarPath,
-		)
-
-		if err != nil {
-			return nil, fmt.Errorf("failed to create kickstart stage options for interactive defaults: %w", err)
-		}
-
-		stages = append(stages, osbuild.NewKickstartStage(kickstartOptions))
-	}
-
 	return stages, nil
 }
 
@@ -672,18 +640,6 @@ func (p *AnacondaInstaller) dracutStageOptions() (*osbuild.DracutStageOptions, e
 
 func (p *AnacondaInstaller) Platform() platform.Platform {
 	return p.platform
-}
-
-type AnacondaInteractiveDefaults struct {
-	TarPath string
-}
-
-func NewAnacondaInteractiveDefaults(tarPath string) *AnacondaInteractiveDefaults {
-	i := &AnacondaInteractiveDefaults{
-		TarPath: tarPath,
-	}
-
-	return i
 }
 
 func (p *AnacondaInstaller) getInline() []string {
