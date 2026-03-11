@@ -375,6 +375,7 @@
           - "grub2-tools-efi"
           - "grub2-tools"
           - "grub2-tools-extra"
+          - "grub2-efi-ia32"
           - "grub2-efi-ia32-cdboot"
           - "shim-ia32"
         firmware:
@@ -398,7 +399,14 @@
           - "realtek-firmware"
           - "tiwilink-firmware"
           - "zd1211-firmware"
+      build_packages:
+        booting:
+          - "shim-ia32"
+          - "grub2-efi-ia32"
+          - "grub2-efi-ia32-cdboot"
       bootloader: "grub2"
+      extra_uefi_architectures:
+        - "ia32"
     aarch64_platform: &aarch64_platform
       arch: "aarch64"
       uefi_vendor: "fedora"
