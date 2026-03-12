@@ -60,6 +60,8 @@ type XorrisofsBoot struct {
 	Image string `json:"image"`
 	// Path to the boot catalog file (on the ISO)
 	Catalog string `json:"catalog"`
+	// Skip adding -boot-info-table and --grub2-info-table when true
+	NoBootInfo bool `json:"nobootinfo,omitempty"`
 }
 
 func (XorrisofsStageOptions) isStageOptions() {}
