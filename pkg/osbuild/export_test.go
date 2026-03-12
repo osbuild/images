@@ -15,3 +15,11 @@ func MockOSBuildCmd(s string) (restore func()) {
 		osbuildCmd = saved
 	}
 }
+
+func MockOSBuildStoreCmd(s string) (restore func()) {
+	saved := osbuildStoreCmd
+	osbuildStoreCmd = s
+	return func() {
+		osbuildStoreCmd = saved
+	}
+}
