@@ -115,6 +115,13 @@ func xorrisofsStageOptions(filename string, isoCustomizations ISOCustomizations)
 		options.FullFilenames = true
 		options.CHRPBoot = true
 		options.VolSet = isoCustomizations.Label
+	case S390ISOBoot:
+		// S390x ISO creation
+		options.Boot = &osbuild.XorrisofsBoot{
+			Image:      "images/cdboot.img",
+			Catalog:    "images/boot.cat",
+			NoBootInfo: true,
+		}
 	}
 
 	return options
