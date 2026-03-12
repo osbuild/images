@@ -872,25 +872,6 @@
       - "customizations.timezone"
 
 
-image_config:
-  default:
-    default_kernel: "kernel"
-    default_oscap_datastream: "/usr/share/xml/scap/ssg/content/ssg-rhel10-ds.xml"
-    install_weak_deps: true
-    locale: "C.UTF-8"
-    permissive_rhc: true
-    sysconfig:
-      networking: true
-      no_zero_conf: true
-    timezone: "UTC"
-    update_default_kernel: true
-  conditions:
-    "centos oscap datastream path":
-      when:
-        distro_name: "centos"
-      shallow_merge:
-        default_oscap_datastream: "/usr/share/xml/scap/ssg/content/ssg-cs10-ds.xml"
-
 image_types:
   # XXX: not a real pkgset but the "os" pipeline pkgset for image-installer
   # find a nicer way to represent this

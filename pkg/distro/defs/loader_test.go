@@ -627,25 +627,32 @@ image_types:
 
 func TestDefsDistroImageConfig(t *testing.T) {
 	fakeDistroYaml := `
-image_config:
-  default:
-    locale: "C.UTF-8"
-    timezone: "DefaultTZ"
-    users:
-      - name: testuser
-  conditions:
-    "some description":
-      when:
-        distro_name: "test-distro"
-      shallow_merge:
+distros:
+  - name: test-distro-1
+    vendor: test-vendor
+    defs_path: test-distro-1/
+    image_config:
+      default:
+        locale: "C.UTF-8"
         timezone: "OverrideTZ"
+        users:
+          - name: testuser
+      conditions:
+        "centos oscap datastream path":
+          when:
+            distro_name: "centos"
+          shallow_merge:
+            timezone: "OverrideTZ"
+`
 
+	fakeImageTypeYaml := `
 image_types:
   test_type:
     filename: foo
 `
-	makeTestImageType(t, fakeDistroYaml)
-
+	baseDir := makeFakeDistrosYAML(t, fakeDistroYaml, fakeImageTypeYaml)
+	restore := defs.MockDataFS(baseDir)
+	defer restore()
 	dist, err := defs.NewDistroYAML("test-distro-1")
 	assert.NoError(t, err)
 	assert.Equal(t, dist.ImageConfig(), &distro.ImageConfig{
@@ -1284,6 +1291,7 @@ distros:
     os_version: "{{.MajorVersion}}.{{.MinorVersion}}"
     release_version: "{{.MajorVersion}}"
     module_platform_id: "platform:el{{.MajorVersion}}"
+    defs_path: rhel-8
 `
 	baseDir := makeFakeDistrosYAML(t, fakeDistrosYAML, "")
 	restore := defs.MockDataFS(baseDir)
@@ -1309,6 +1317,7 @@ distros:
 			OsVersion:        tc.expectedOsVersion,
 			ReleaseVersion:   "8",
 			ModulePlatformID: "platform:el8",
+			DefsPath:         "rhel-8",
 			ID:               *common.Must(distro.ParseID(tc.expectedDistroNameVer)),
 		})
 	}

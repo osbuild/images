@@ -94,7 +94,7 @@ type DistroYAML struct {
 
 	imageTypes map[string]ImageTypeYAML
 	// distro wide default image config
-	imageConfig *distro.ImageConfig `yaml:"default"`
+	DistroImageConfig *distroImageConfig `yaml:"image_config,omitempty"`
 
 	// ignore the given image types & override tweaks
 	Conditions map[string]distroConditions `yaml:"conditions"`
@@ -119,7 +119,10 @@ func (d *DistroYAML) ImageTypes() map[string]ImageTypeYAML {
 //
 // Each ImageType gets this as their default ImageConfig.
 func (d *DistroYAML) ImageConfig() *distro.ImageConfig {
-	return d.imageConfig
+	if d.DistroImageConfig != nil {
+		return d.DistroImageConfig.For(d.ID)
+	}
+	return &distro.ImageConfig{}
 }
 
 func (d *DistroYAML) SkipImageType(imgTypeName, archName string) bool {
@@ -284,15 +287,21 @@ func (d *DistroYAML) LoadImageTypes() error {
 		decoder.KnownFields(true)
 		decodeErr := decoder.Decode(&toplevel)
 		if decodeErr != nil {
-			return err
+			f.Close()
+			return decodeErr
 		}
 		f.Close()
 
 		configs = append(configs, toplevel)
 	}
 
-	if d.imageTypes == nil {
-		d.imageTypes = make(map[string]ImageTypeYAML)
+	count := 0
+	for _, cfg := range configs {
+		count += len(cfg.ImageTypes)
+	}
+
+	if count > 0 {
+		d.imageTypes = make(map[string]ImageTypeYAML, count)
 	}
 
 	for _, cfg := range configs {
@@ -307,13 +316,8 @@ func (d *DistroYAML) LoadImageTypes() error {
 			if err := v.setupDefaultFS(d.DefaultFSType.String()); err != nil {
 				return err
 			}
+
 			d.imageTypes[name] = v
-		}
-		if cfg.ImageConfig.Default != nil {
-			if d.imageConfig != nil {
-				return fmt.Errorf("top level image_config cannot be defined in multiple files")
-			}
-			d.imageConfig = cfg.ImageConfig.For(d.ID)
 		}
 	}
 
@@ -324,9 +328,8 @@ func (d *DistroYAML) LoadImageTypes() error {
 // family. Note that multiple distros may use the same image types,
 // e.g. centos/rhel
 type imageTypesYAML struct {
-	ImageConfig distroImageConfig        `yaml:"image_config,omitempty"`
-	ImageTypes  map[string]ImageTypeYAML `yaml:"image_types"`
-	Common      map[string]any           `yaml:".common,omitempty"`
+	ImageTypes map[string]ImageTypeYAML `yaml:"image_types"`
+	Common     map[string]any           `yaml:".common,omitempty"`
 }
 
 type distroImageConfig struct {
