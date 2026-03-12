@@ -42,6 +42,17 @@ distros:
       # we will need to update two places which is clearly a regression from
       # before.
 
+    image_config:
+      default:
+        default_oscap_datastream: "/usr/share/xml/scap/ssg/content/ssg-fedora-ds.xml"
+        hostname: "localhost.localdomain"
+        install_weak_deps: true
+        locale: "C.UTF-8"
+        machine_id_uninitialized: true
+        timezone: "UTC"
+        default_kernel: "kernel-core"
+        update_default_kernel: true
+
   - &fedora_stable
     <<: *fedora_rawhide
     name: "fedora-{{.MajorVersion}}"
