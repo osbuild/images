@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -270,31 +271,50 @@ func LoadDistroWithoutImageTypes(nameVer string) (*DistroYAML, error) {
 }
 
 func (d *DistroYAML) LoadImageTypes() error {
-	files, err := fs.Glob(dataFS(), filepath.Join(d.DefsPath, "*.yaml"))
+	configs, err := loadImageTypeConfigs(d)
 	if err != nil {
 		return err
 	}
+	return mergeImageTypeConfigs(d, configs)
+}
 
-	var configs []imageTypesYAML
+func loadImageTypeConfigs(d *DistroYAML) ([]imageTypesYAML, error) {
+	files, err := fs.Glob(dataFS(), filepath.Join(d.DefsPath, "[^_]*.yaml"))
+	if err != nil {
+		return nil, err
+	}
+
+	commonPath := filepath.Join(d.DefsPath, "_common.yaml")
+	commonContent, _ := fs.ReadFile(dataFS(), commonPath)
+
+	configs := make([]imageTypesYAML, 0, len(files))
 	for _, fileName := range files {
 		f, err := dataFS().Open(fileName)
 		if err != nil {
-			return err
+			return nil, err
+		}
+		defer f.Close()
+
+		var reader io.Reader = f
+		if len(commonContent) > 0 {
+			reader = io.MultiReader(bytes.NewReader(commonContent), f)
 		}
 
 		var toplevel imageTypesYAML
-		decoder := yaml.NewDecoder(f)
+		decoder := yaml.NewDecoder(reader)
 		decoder.KnownFields(true)
 		decodeErr := decoder.Decode(&toplevel)
 		if decodeErr != nil {
-			f.Close()
-			return decodeErr
+			return nil, err
 		}
-		f.Close()
 
 		configs = append(configs, toplevel)
 	}
 
+	return configs, nil
+}
+
+func mergeImageTypeConfigs(d *DistroYAML, configs []imageTypesYAML) error {
 	imageTypes := make(map[string]ImageTypeYAML)
 	for _, cfg := range configs {
 		for name, v := range cfg.ImageTypes {
