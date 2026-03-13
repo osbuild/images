@@ -770,19 +770,19 @@
           - *default_partition_table_part_efi
           - *default_partition_table_part_boot
           - *default_partition_table_part_root
-      ppc64le: &default_partition_table_ppc64le
+      ppc64le:
         uuid: "0x14fc63d2"
         type: "dos"
         partitions:
           - *default_partition_table_part_bios_ppc64le
           - *default_partition_table_part_boot_ppc64le
           - *default_partition_table_part_root_ppc64le
-      s390x: &default_partition_table_s390x
+      s390x:
         uuid: "0x14fc63d2"
         type: "dos"
         partitions:
           - *default_partition_table_part_boot_ppc64le
-          - &default_partition_table_part_root_s390x
+          -
             <<: *default_partition_table_part_root_ppc64le
             bootable: true
 
@@ -862,7 +862,7 @@
                       fstab_options: "defaults"
                       fstab_freq: 0
                       fstab_passno: 0
-      aarch64: &edge_base_partition_table_aarch64
+      aarch64:
         uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
         type: "gpt"
         partitions:
@@ -1183,7 +1183,7 @@
                     V: "1"
 
   default_installer_config: &default_installer_config
-    enabled_anaconda_modules: &install_config_enabled_anaconda_modules
+    enabled_anaconda_modules:
       - "org.fedoraproject.Anaconda.Modules.Network"
       - "org.fedoraproject.Anaconda.Modules.Payloads"
       - "org.fedoraproject.Anaconda.Modules.Runtime"
@@ -1410,7 +1410,7 @@ image_types:
             - "tuned"
           exclude:
             - "dracut-config-rescue"
-          conditions: &conditions_subscription_manager_cockpit
+          conditions:
             "add subscription-manager-cockpit on rhel":
               when:
                 distro_name: "rhel"
@@ -1518,7 +1518,7 @@ image_types:
             - "plymouth"
             - "rng-tools"
             - "udisks2"
-          conditions: &conditions_pkgsets_insigths_pkgs
+          conditions:
             "add insights pkgs on rhel":
               when:
                 distro_name: "rhel"
@@ -1645,8 +1645,8 @@ image_types:
     exports: ["xz"]
     compression: "xz"
     filename: "disk.vhd.xz"
-    partition_table: &partition_table_azure_internal
-      x86_64: &azure_rhui_partition_table_x86_64
+    partition_table:
+      x86_64:
         uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
         type: "gpt"
         size: "64 GiB"
@@ -1672,7 +1672,7 @@ image_types:
               fstab_options: "defaults"
               fstab_freq: 0
               fstab_passno: 0
-          - &azure_rhui_part_bios
+          -
             size: "2 MiB"
             bootable: true
             type: *bios_boot_partition_guid
@@ -1723,7 +1723,7 @@ image_types:
                     label: "var"
                     mountpoint: "/var"
                     fstab_options: "defaults"
-      aarch64: &azure_rhui_partition_table_aarch64
+      aarch64:
         uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
         type: "gpt"
         size: "64 GiB"
@@ -2186,7 +2186,7 @@ image_types:
         - "customizations.rhsm"
 
 
-  wsl: &wsl
+  wsl:
     filename: "image.wsl"
     mime_type: "application/x-tar"
     image_func: "tar"
@@ -2214,7 +2214,7 @@ image_types:
           when:
             distro_name: "almalinux"
           shallow_merge:
-            wsl: &wsl_distribution_config_almalinux
+            wsl:
               <<: *wsl_config
               distribution_config:
                 <<: *wsl_distribution_config
@@ -2225,7 +2225,7 @@ image_types:
           when:
             distro_name: "rocky"
           shallow_merge:
-            wsl: &wsl_distribution_config_rocky
+            wsl:
               <<: *wsl_config
               distribution_config:
                 <<: *wsl_distribution_config
@@ -2796,7 +2796,7 @@ image_types:
             bootupd_gen_metadata: false
     package_sets:
       os:
-        - &edge_commit_pkgset
+        -
           include:
             - "redhat-release"
             - "glibc"
@@ -2875,7 +2875,7 @@ image_types:
             - "sos"
           exclude:
             - "rng-tools"
-          conditions: &conditions_pkgsets_edge_commit
+          conditions:
             "greenboot in 9.8 and c9s requires bootupd":
               # we don't want bootupd in edge commits, but greenboot requires
               # it in 9.8 and c9s, so we can only exclude it for older versions
@@ -2981,7 +2981,7 @@ image_types:
         keymap: "us"
       locale: "C.UTF-8"
       lock_root_user: true
-      kernel_options: &kernel_options_raw_image
+      kernel_options:
         - "modprobe.blacklist=vc4"
         - "rw"
         - "coreos.no_persist_ip"
