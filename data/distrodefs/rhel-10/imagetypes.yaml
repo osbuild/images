@@ -155,7 +155,7 @@
           - "s390utils-base"
 
   default_installer_config: &default_installer_config
-    enabled_anaconda_modules: &install_config_enabled_anaconda_modules
+    enabled_anaconda_modules:
       - "org.fedoraproject.Anaconda.Modules.Network"
       - "org.fedoraproject.Anaconda.Modules.Payloads"
       - "org.fedoraproject.Anaconda.Modules.Runtime"
@@ -432,7 +432,7 @@
               fstab_options: "defaults"
               fstab_freq: 0
               fstab_passno: 0
-      aarch64: &default_partition_table_aarch64
+      aarch64:
         type: "gpt"
         partitions:
           - *default_partition_table_part_efi
@@ -980,8 +980,7 @@ image_types:
       <<: *default_partition_tables
     package_sets:
       os:
-        - &qcow2_pkgset
-          include:
+        - include:
             - "@core"
             - "chrony"
             - "cloud-init"
@@ -1728,7 +1727,7 @@ image_types:
           when:
             distro_name: "rocky"
           shallow_merge:
-            wsl: &wsl_distribution_config_rocky
+            wsl:
               <<: *wsl_config
               distribution_config:
                 <<: *wsl_distribution_config
