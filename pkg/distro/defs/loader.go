@@ -350,6 +350,7 @@ func mergeImageTypeConfigs(d *DistroYAML, configs []imageTypesYAML) error {
 type imageTypesYAML struct {
 	ImageTypes map[string]ImageTypeYAML `yaml:"image_types"`
 	Common     map[string]any           `yaml:".common,omitempty"`
+	Global     map[string]any           `yaml:".global,omitempty"`
 }
 
 type distroImageConfig struct {
