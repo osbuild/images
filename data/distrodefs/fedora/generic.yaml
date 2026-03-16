@@ -1,0 +1,422 @@
+image_types:
+  "generic-vagrant-libvirt": &generic_vagrant_libvirt
+    filename: "vagrant-libvirt.box"
+    mime_type: "application/x-tar"
+    environment: *kvm_env
+    bootable: true
+    default_size: "5 GiB"
+    image_func: "disk"
+    exports: ["archive"]
+    required_partition_sizes: *default_required_dir_sizes
+    image_config: &image_config_vagrant
+      conditions:
+        "f42 and below cloud init service names":
+          when:
+            version_less_than: "43"
+          shallow_merge:
+            enabled_services:
+              *cloud_init_services
+        "f43 and above new cloud init service names":
+          when:
+            version_greater_or_equal: "43"
+          shallow_merge:
+            enabled_services:
+              *cloud_init_services_f43plus
+      default_target: "multi-user.target"
+      kernel_options: *generic_kernel_options
+      users:
+        - name: "vagrant"
+          # yamllint disable rule:line-length
+          key: |
+            ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zQPyUecp4pzC6kivAIhyfHilFR61RGL+GPXQ2MWZWFYbAGjyiYJnAmCP3NOTd0jMZEnDkbUvxhMmBYSdETk1rRgm+R4LOzFUGaHqHDLKLX+FIPKcF96hrucXzcWyLbIbEgE98OHlnVYCzRdK8jlqm8tehUc9c9WhQ== vagrant insecure public key
+            ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN1YdxBpNlzxDqfJyw/QKow1F+wvG9hXGoqiysfJOn5Y vagrant insecure public key
+          # yamllint enable rule:line-length
+      files:
+        - path: "/etc/sudoers.d/vagrant"
+          user: "root"
+          group: "root"
+          mode: 440
+          data: |
+            vagrant ALL=(ALL) NOPASSWD: ALL
+    partition_table:
+      <<: *default_partition_tables
+    package_sets:
+      os:
+        - *generic_base_pkgset
+        - include:
+            - "qemu-guest-agent"
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "vagrant_libvirt"
+      - <<: *aarch64_platform
+        image_format: "vagrant_libvirt"
+    blueprint:
+      supported_options: *supported_options_disk
+
+  "generic-vagrant-virtualbox": &generic_vagrant_virtualbox
+    <<: *generic_vagrant_libvirt
+    filename: "vagrant-virtualbox.box"
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "vagrant_virtualbox"
+
+  "generic-qcow2": &generic_qcow2
+    name_aliases: ["qcow2", "guest-image"]
+    filename: "disk.qcow2"
+    mime_type: "application/x-qemu-disk"
+    environment: *kvm_env
+    bootable: true
+    default_size: "5 GiB"
+    image_func: "disk"
+    exports: ["qcow2"]
+    required_partition_sizes: *default_required_dir_sizes
+    image_config: &image_config_qcow2
+      default_target: "multi-user.target"
+      kernel_options: *generic_kernel_options
+      conditions:
+        "f42 and below cloud init service names":
+          when:
+            version_less_than: "43"
+          shallow_merge:
+            enabled_services:
+              *cloud_init_services
+        "f43 and above new cloud init service names":
+          when:
+            version_greater_or_equal: "43"
+          shallow_merge:
+            enabled_services:
+              *cloud_init_services_f43plus
+    partition_table:
+      <<: *default_partition_tables
+    package_sets:
+      os:
+        - *generic_base_pkgset
+        - include:
+            - "qemu-guest-agent"
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "qcow2"
+      - <<: *aarch64_platform
+        image_format: "qcow2"
+      - <<: *ppc64le_bios_platform
+        image_format: "qcow2"
+      - <<: *s390x_zipl_platform
+        image_format: "qcow2"
+    blueprint:
+      supported_options: *supported_options_disk
+
+  "generic-ami":
+    <<: *generic_qcow2
+    name_aliases: ["ami", "aws"]
+    filename: "image.raw"
+    mime_type: "application/octet-stream"
+    exports: ["image"]
+    environment: *ec2_env
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "raw"
+      - <<: *aarch64_platform
+        image_format: "raw"
+
+  "generic-oci":
+    <<: *generic_qcow2
+    name_aliases: ["oci"]
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "qcow2"
+      - <<: *aarch64_platform
+        image_format: "qcow2"
+
+  "generic-openstack":
+    <<: *generic_qcow2
+    name_aliases: ["openstack"]
+    platforms:
+      - <<: *x86_64_bios_platform
+        qcow2_compat: ""
+        image_format: "qcow2"
+      - <<: *aarch64_platform
+        qcow2_compat: ""
+        image_format: "qcow2"
+
+  "generic-vhd":
+    <<: *generic_qcow2
+    name_aliases: ["vhd", "azure"]
+    filename: "disk.vhd"
+    mime_type: "application/x-vhd"
+    exports: ["vpc"]
+    environment: *azure_env
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "vhd"
+    image_config:
+      <<: *image_config_qcow2
+      sshd_config:
+        # follows https://github.com/osbuild/osbuild/blob/main/stages/org.osbuild.sshd.config.meta.json
+        config:
+          ClientAliveInterval: 120
+    partition_table:
+      <<: *default_partition_tables
+    package_sets:
+      os:
+        - *generic_base_pkgset
+        - include:
+            - "WALinuxAgent"
+
+  "generic-vmdk": &generic_vmdk
+    name_aliases: ["vmdk", "vsphere"]
+    filename: "disk.vmdk"
+    mime_type: "application/x-vmdk"
+    bootable: true
+    default_size: "2 GiB"
+    image_func: "disk"
+    exports: ["vmdk"]
+    required_partition_sizes: *default_required_dir_sizes
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "vmdk"
+    image_config:
+      locale: "en_US.UTF-8"
+      conditions:
+        "f42 and below cloud init service names":
+          when:
+            version_less_than: "43"
+          shallow_merge:
+            enabled_services:
+              *cloud_init_services
+        "f43 and above new cloud init service names":
+          when:
+            version_greater_or_equal: "43"
+          shallow_merge:
+            enabled_services:
+              *cloud_init_services_f43plus
+      kernel_options: *generic_kernel_options
+    partition_table:
+      <<: *default_partition_tables
+    package_sets:
+      os:
+        - include:
+            - "@Fedora Cloud Server"
+            - "chrony"
+            - "systemd-udev"
+            - "langpacks-en"
+            - "open-vm-tools"
+          exclude:
+            - "dracut-config-rescue"
+            - "etables"
+            - "firewalld"
+            - "geolite2-city"
+            - "geolite2-country"
+            - "gobject-introspection"
+            - "plymouth"
+            - "zram-generator-defaults"
+            - "grubby-deprecated"
+            - "extlinux-bootloader"
+    blueprint:
+      supported_options: *supported_options_disk
+
+  "generic-ova":
+    <<: *generic_vmdk
+    name_aliases: ["ova", "vsphere-ova"]
+    filename: "image.ova"
+    mime_type: "application/ovf"
+    exports: ["archive"]
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "ova"
+
+  "generic-container": &generic_container
+    name_aliases: ["container"]
+    filename: "container.tar"
+    mime_type: "application/x-tar"
+    image_func: "container"
+    bootable: false
+    exports: ["container"]
+    required_partition_sizes: *default_required_dir_sizes
+    platforms:
+      - arch: "x86_64"
+      - arch: "aarch64"
+      - arch: "ppc64le"
+      - arch: "s390x"
+      - arch: "riscv64"
+    image_config: &image_config_container
+      no_selinux: true
+      exclude_docs: true
+      locale: "C.UTF-8"
+      timezone: "Etc/UTC"
+      oci:
+        archive:
+          env:
+            - "PATH=/usr/local/bin:/usr/bin"
+            - "container=oci"
+          cmd:
+            - "/bin/bash"
+          working_dir: "/"
+          labels:
+            license: "MIT"
+            name: "fedora"
+            vendor: "Fedora Project"
+            org.opencontainers.image.license: "MIT"
+            org.opencontainers.image.name: "fedora"
+            org.opencontainers.image.url: "https://fedoraproject.org/"
+            org.opencontainers.image.vendor: "Fedora Project"
+    package_sets:
+      os:
+        - include:
+            - "bash"
+            - "coreutils"
+            - "yum"
+            - "dnf"
+            - "fedora-release-container"
+            - "glibc-minimal-langpack"
+            - "rootfiles"
+            - "rpm"
+            - "sudo"
+            - "tar"
+            - "util-linux-core"
+            - "vim-minimal"
+          exclude:
+            - "crypto-policies-scripts"
+            - "dbus-broker"
+            - "deltarpm"
+            - "dosfstools"
+            - "e2fsprogs"
+            - "elfutils-debuginfod-client"
+            - "fuse-libs"
+            - "gawk-all-langpacks"
+            - "glibc-gconv-extra"
+            - "glibc-langpack-en"
+            - "gnupg2-smime"
+            - "grubby"
+            - "kernel-core"
+            - "kernel-debug-core"
+            - "kernel"
+            - "langpacks-en_GB"
+            - "langpacks-en"
+            - "libss"
+            - "libxcrypt-compat"
+            - "nano"
+            - "openssl-pkcs11"
+            - "pinentry"
+            - "python3-unbound"
+            - "shared-mime-info"
+            - "sssd-client"
+            - "sudo-python-plugin"
+            - "systemd"
+            - "trousers"
+            - "whois-nls"
+            - "xkeyboard-config"
+    blueprint:
+      supported_options: *supported_options_container
+
+  generic-wsl:
+    name_aliases: ["wsl"]
+    # note that other distributions in images differ and use a .tar suffix, however .wsl is the
+    # correct suffix, see:
+    # https://learn.microsoft.com/en-us/windows/wsl/build-custom-distro#what-are-wsl-root-filesystem-tar-files
+    filename: "image.wsl"
+    compression: "xz"
+    mime_type: "application/x-tar"
+    image_func: "tar"
+    exports: ["xz"]
+    required_partition_sizes: *default_required_dir_sizes
+    platforms:
+      - arch: "x86_64"
+    image_config:
+      <<: *image_config_container
+      conditions:
+        "on f42 and below we use cloud-init instead of wsl-setup":
+          when:
+            version_less_than: "42"
+          shallow_merge:
+            wsl:
+              config:
+                boot_systemd: true
+            cloud_init:
+              - filename: "99_wsl.cfg"
+                config:
+                  datasource_list:
+                    - "WSL"
+                    - "None"
+                  network:
+                    config: "disabled"
+        # https://github.com/microsoft/WSL/issues/13207
+        "work around WSL not reading /etc/locale.conf":
+          when:
+            version_greater_or_equal: "43"
+          shallow_merge:
+            files:
+              - path: "/etc/default/locale"
+                data: |
+                  LANG=C.UTF-8
+    package_sets:
+      os:
+        - include:
+            - "bash"
+            - "coreutils"
+            - "yum"
+            - "dnf"
+            - "fedora-release-container"
+            - "glibc-minimal-langpack"
+            - "rootfiles"
+            - "rpm"
+            - "shadow-utils"  # the oobe needs to be able to call adduser
+            - "sudo"
+            - "systemd"  # the oobe needs to be able to check services
+            - "tar"
+            - "util-linux-core"
+            - "vim-minimal"
+            - "wsl-setup"
+          exclude:
+            - "crypto-policies-scripts"
+            - "deltarpm"
+            - "dosfstools"
+            - "elfutils-debuginfod-client"
+            - "fuse-libs"
+            - "gawk-all-langpacks"
+            - "glibc-gconv-extra"
+            - "glibc-langpack-en"
+            - "gnupg2-smime"
+            - "grubby"
+            - "kernel-core"
+            - "kernel-debug-core"
+            - "kernel"
+            - "langpacks-en_GB"
+            - "langpacks-en"
+            - "libxcrypt-compat"
+            - "nano"
+            - "openssl-pkcs11"
+            - "pinentry"
+            - "python3-unbound"
+            - "shared-mime-info"
+            - "sssd-client"
+            - "sudo-python-plugin"
+            - "trousers"
+            - "whois-nls"
+            - "xkeyboard-config"
+    blueprint:
+      supported_options: *supported_options_container
+
+  "pxe-tar-xz":
+    filename: "pxe.tar.xz"
+    compression: "xz"
+    mime_type: "application/x-tar"
+    image_func: "pxe_tar"
+    exports: ["xz"]
+    bootable: true
+    package_sets:
+      os:
+        - include:
+            - "bash"
+            - "coreutils"
+            - "dracut-live"
+            - "dracut-network"
+            - "dracut-config-generic"
+            # gawk provides /usr/bin/awk which is a runtime dependency of
+            # dracut's net-lib module. Without it, dracut fails to build the
+            # initramfs with network support.
+            - "gawk"
+    platforms:
+      - *x86_64_bios_platform
+      - *aarch64_platform
+    blueprint:
+      supported_options: *supported_options_pxe

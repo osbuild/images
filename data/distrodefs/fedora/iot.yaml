@@ -1,0 +1,603 @@
+image_types:
+  # NOTE: keep in sync with official fedora-iot definitions:
+  # https://pagure.io/fedora-iot/ostree/blob/main/f/fedora-iot-base.yaml
+  "iot-commit": &iot_commit
+    <<: *rpm_ostree_imgtype_common
+    name_aliases: ["fedora-iot-commit"]
+    filename: "commit.tar"
+    mime_type: "application/x-tar"
+    image_func: "iot_commit"
+    exports: ["commit-archive"]
+    required_partition_sizes: *default_required_dir_sizes
+    ostree:
+      ref: *ostree_iot_ref
+    image_config: &image_config_iot_commit
+      <<: *image_config_iot_enabled_services
+      bootupd_gen_metadata: true
+      install_weak_deps: false
+      dracut_conf:
+        - filename: "40-fips.conf"
+          config:
+            add_dracutmodules:
+              - "fips"
+      # see https://github.com/ostreedev/ostree/issues/2840
+      presets:
+        - name: "ignition-firstboot-complete.service"
+          state: "enable"
+        - name: "coreos-ignition-write-issues.service"
+          state: "enable"
+        - name: "fdo-client-linuxapp.service"
+          state: "enable"
+      machine_id_uninitialized: false
+    platforms:
+      - *x86_64_installer_platform
+      - *aarch64_installer_platform
+    package_sets:
+      os:
+        - include:
+            - "NetworkManager"
+            - "NetworkManager-wifi"
+            - "NetworkManager-wwan"
+            - "aardvark-dns"
+            - "atheros-firmware"
+            - "attr"
+            - "authselect"
+            - "bash"
+            - "bash-completion"
+            - "bootupd"
+            - "brcmfmac-firmware"
+            - "chrony"
+            - "clevis"
+            - "clevis-dracut"
+            - "clevis-luks"
+            - "clevis-pin-tpm2"
+            - "container-selinux"
+            - "containernetworking-plugins"
+            - "coreutils"
+            - "cracklib-dicts"
+            - "criu"
+            - "cryptsetup"
+            - "curl"
+            - "dosfstools"
+            - "dracut-config-generic"
+            - "dracut-network"
+            - "e2fsprogs"
+            - "efibootmgr"
+            - "fdo-client"
+            - "fdo-owner-cli"
+            - "fedora-iot-config"
+            - "fedora-release-iot"
+            - "firewalld"
+            - "fwupd"
+            - "fwupd-efi"
+            - "fwupd-plugin-modem-manager"
+            - "fwupd-plugin-uefi-capsule-data"
+            - "glibc"
+            - "glibc-minimal-langpack"
+            - "gnupg2"
+            - "greenboot"
+            - "greenboot-default-health-checks"
+            - "gzip"
+            - "hostname"
+            - "ignition"
+            - "ignition-edge"
+            - "ima-evm-utils"
+            - "iproute"
+            - "iputils"
+            - "iwd"
+            - "iwlwifi-mvm-firmware"
+            - "keyutils"
+            - "less"
+            - "libsss_sudo"
+            - "linux-firmware"
+            - "lvm2"
+            - "netavark"
+            - "nss-altfiles"
+            - "openssh-clients"
+            - "openssh-server"
+            - "openssl"
+            - "pinentry"
+            - "podman"
+            - "policycoreutils"
+            - "polkit"
+            - "procps-ng"
+            - "realtek-firmware"
+            - "rootfiles"
+            - "rpm"
+            - "screen"
+            - "selinux-policy-targeted"
+            - "setools-console"
+            - "setup"
+            - "shadow-utils"
+            - "skopeo"
+            - "slirp4netns"
+            - "sssd-client"
+            - "sudo"
+            - "systemd"
+            - "systemd-resolved"
+            - "tar"
+            - "tmux"
+            - "tpm2-pkcs11"
+            - "traceroute"
+            - "usbguard"
+            - "util-linux"
+            - "vim-minimal"
+            - "wireless-regdb"
+            - "wpa_supplicant"
+            - "xfsprogs"
+            - "xz"
+            - "zram-generator"
+          conditions:
+            "f42 and below uses basesystem":
+              when:
+                version_less_than: "43"
+              append:
+                include:
+                  - "basesystem"
+            "f43+ needs the filesystem pkg":
+              when:
+                version_greater_or_equal: "43"
+              append:
+                include:
+                  - "filesystem"
+            "f44 does not have ssh-key-dir":
+              when:
+                version_less_than: "44"
+              append:
+                include:
+                  - "ssh-key-dir"
+    blueprint:
+      supported_options: *supported_options_ostree_commit
+
+  "iot-container":
+    <<: *iot_commit
+    name_aliases: ["fedora-iot-container"]
+    filename: "container.tar"
+    mime_type: "application/x-tar"
+    image_func: "iot_container"
+    exports: ["container"]
+    required_partition_sizes: *default_required_dir_sizes
+    ostree:
+      ref: *ostree_iot_ref
+    image_config:
+      <<: *image_config_iot_commit
+      install_weak_deps: true
+      ostree_server: *ostree_server
+      oci:
+        archive:
+          cmd:
+            - "nginx"
+            - "-c"
+            - *ostree_server_config_path
+          exposed_ports:
+            - *ostree_server_port
+    platforms:
+      - *x86_64_installer_platform
+      - *aarch64_installer_platform
+
+  "iot-raw-xz":
+    <<: *rpm_ostree_imgtype_common
+    name_aliases: ["iot-raw-image", "fedora-iot-raw-image"]
+    filename: "image.raw.xz"
+    compression: "xz"
+    mime_type: "application/xz"
+    default_size: "6 GiB"
+    bootable: true
+    image_func: "iot"
+    ostree: *ostree_iot
+    exports: ["xz"]
+    # Passing an empty map into the required partition sizes disables the
+    # default partition sizes normally set so our `basePartitionTables` can
+    # override them (and make them smaller, in this case).
+    required_partition_sizes:
+      "/": 0
+    image_config:
+      <<: *image_config_iot
+      ignition_platform: "metal"
+    platforms:
+      - <<: *x86_64_uefi_platform
+        image_format: "raw"
+      - <<: *aarch64_platform
+        image_format: "raw"
+        boot_files:
+          - ["/usr/lib/ostree-boot/efi/bcm2710-rpi-2-b.dtb", "/boot/efi/"]
+          - ["/usr/lib/ostree-boot/efi/bcm2710-rpi-3-b-plus.dtb", "/boot/efi/"]
+          - ["/usr/lib/ostree-boot/efi/bcm2710-rpi-3-b.dtb", "/boot/efi/"]
+          - ["/usr/lib/ostree-boot/efi/bcm2710-rpi-cm3.dtb", "/boot/efi/"]
+          - ["/usr/lib/ostree-boot/efi/bcm2710-rpi-zero-2-w.dtb", "/boot/efi/"]
+          - ["/usr/lib/ostree-boot/efi/bcm2710-rpi-zero-2.dtb", "/boot/efi/"]
+          - ["/usr/lib/ostree-boot/efi/bcm2711-rpi-4-b.dtb", "/boot/efi/"]
+          - ["/usr/lib/ostree-boot/efi/bcm2711-rpi-400.dtb", "/boot/efi/"]
+          - ["/usr/lib/ostree-boot/efi/bcm2711-rpi-cm4.dtb", "/boot/efi/"]
+          - ["/usr/lib/ostree-boot/efi/bcm2711-rpi-cm4s.dtb", "/boot/efi/"]
+          - ["/usr/lib/ostree-boot/efi/bootcode.bin", "/boot/efi/"]
+          - ["/usr/lib/ostree-boot/efi/config.txt", "/boot/efi/config.txt"]
+          - ["/usr/lib/ostree-boot/efi/fixup.dat", "/boot/efi/"]
+          - ["/usr/lib/ostree-boot/efi/fixup4.dat", "/boot/efi/"]
+          - ["/usr/lib/ostree-boot/efi/fixup4cd.dat", "/boot/efi/"]
+          - ["/usr/lib/ostree-boot/efi/fixup4db.dat", "/boot/efi/"]
+          - ["/usr/lib/ostree-boot/efi/fixup4x.dat", "/boot/efi/"]
+          - ["/usr/lib/ostree-boot/efi/fixup_cd.dat", "/boot/efi/"]
+          - ["/usr/lib/ostree-boot/efi/fixup_db.dat", "/boot/efi/"]
+          - ["/usr/lib/ostree-boot/efi/fixup_x.dat", "/boot/efi/"]
+          - ["/usr/lib/ostree-boot/efi/overlays", "/boot/efi/"]
+          - ["/usr/share/uboot/rpi_arm64/u-boot.bin", "/boot/efi/rpi-u-boot.bin"]
+          - ["/usr/lib/ostree-boot/efi/start.elf", "/boot/efi/"]
+          - ["/usr/lib/ostree-boot/efi/start4.elf", "/boot/efi/"]
+          - ["/usr/lib/ostree-boot/efi/start4cd.elf", "/boot/efi/"]
+          - ["/usr/lib/ostree-boot/efi/start4db.elf", "/boot/efi/"]
+          - ["/usr/lib/ostree-boot/efi/start4x.elf", "/boot/efi/"]
+          - ["/usr/lib/ostree-boot/efi/start_cd.elf", "/boot/efi/"]
+          - ["/usr/lib/ostree-boot/efi/start_db.elf", "/boot/efi/"]
+          - ["/usr/lib/ostree-boot/efi/start_x.elf", "/boot/efi/"]
+    partition_table:
+      <<: *iot_base_partition_tables
+    blueprint:
+      supported_options: *supported_options_ostree_disk
+
+  "iot-qcow2":
+    <<: *rpm_ostree_imgtype_common
+    name_aliases: ["iot-qcow2-image"]
+    filename: "image.qcow2"
+    mime_type: "application/x-qemu-disk"
+    default_size: "10 GiB"
+    bootable: true
+    image_func: "iot"
+    ostree: *ostree_iot
+    exports: ["qcow2"]
+    required_partition_sizes: *default_required_dir_sizes
+    image_config:
+      <<: *image_config_iot
+      ignition_platform: "qemu"
+    partition_table:
+      <<: *iot_base_partition_tables
+    platforms:
+      - <<: *x86_64_uefi_platform
+        image_format: "qcow2"
+        # XXX: the original images lib defined no qcow2Compat
+        qcow2_compat: ""
+      - <<: *aarch64_platform
+        image_format: "qcow2"
+        qcow2_compat: "1.1"
+    blueprint:
+      supported_options: *supported_options_ostree_disk
+
+  "iot-bootable-container":
+    <<: *rpm_ostree_imgtype_common
+    filename: "iot-bootable-container.tar"
+    mime_type: "application/x-tar"
+    image_func: "bootable_container"
+    exports: ["ostree-encapsulate"]
+    required_partition_sizes: *default_required_dir_sizes
+    ostree:
+      ref: *ostree_iot_ref
+    image_config:
+      machine_id_uninitialized: false
+    platforms:
+      - <<: *x86_64_bios_platform
+        packages:
+          <<: *x86_64_bios_platform_packages
+          firmware:
+            - "biosdevname"
+            - "iwlwifi-dvm-firmware"
+            - "iwlwifi-mvm-firmware"
+            - "microcode_ctl"
+      - <<: *aarch64_platform
+        packages:
+          <<: *aarch64_uefi_platform_packages
+          firmware:
+            - "arm-image-installer"
+            - "bcm283x-firmware"
+            - "brcmfmac-firmware"
+            - "iwlwifi-mvm-firmware"
+            - "realtek-firmware"
+            - "uboot-images-armv8"
+      - <<: *ppc64le_bios_platform
+        image_format: "qcow2"
+        qcow2_compat: "1.1"
+      - <<: *s390x_zipl_platform
+        image_format: "qcow2"
+        qcow2_compat: "1.1"
+    package_sets:
+      os:
+        - include:
+            - "acl"
+            - "attr"  # used by admins interactively
+            - "bootc"
+            - "bootupd"
+            - "chrony"  # NTP support
+            - "container-selinux"
+            - "container-selinux"
+            - "crun"
+            - "cryptsetup"
+            - "dnf"
+            - "dosfstools"
+            - "e2fsprogs"
+            - "fwupd"  # if you're using linux-firmware you probably also want fwupd
+            - "gdisk"
+            - "iproute"  # route manipulation and QoS
+            - "iproute-tc"
+            - "iptables"  # firewall manipulation
+            - "nftables"
+            - "iptables-services"  # additional firewall support
+            - "kbd"               # i18n
+            - "keyutils"          # Manipulating the kernel keyring; used by bootc
+            - "libsss_sudo"       # allow communication between sudo and SSSD for caching sudo rules by SSSD
+            - "linux-firmware"    # linux-firmware now a recommends so let's explicitly include it
+            # There are things that write outside of the journal still
+            # (such as the classic wtmp etc.). auditd also writes
+            # outside the journal but it has its own log rotation.
+            # Anything package layered will also tend to expect files
+            # dropped in /etc/logrotate.d to work. Really this is a
+            # legacy thing but if we don't have it then people's disks
+            # will slowly fill up with logs.
+            - "logrotate"
+            - "lsof"
+            - "lvm2"                       # Storage configuration/management
+            - "nano"                       # default editor
+            - "ncurses"                    # provides terminal tools like clear reset tput and tset
+            - "NetworkManager-cloud-setup"  # support for cloud quirks and dynamic config in real rootfs: https:#github.com/coreos/fedora-coreos-tracker/issues/320
+            - "NetworkManager"  # standard tools for configuring network/hostname
+            - "hostname"
+            - "NetworkManager-team"  # teaming https:#github.com/coreos/fedora-coreos-config/pull/289 and http:#bugzilla.redhat.com/1758162
+            - "teamd"
+            - "NetworkManager-tui"               # interactive Networking configuration during coreos-install
+            - "nfs-utils-coreos"  # minimal NFS client
+            - "iptables-nft"
+            - "nss-altfiles"
+            - "openssh-clients"
+            - "openssh-server"
+            - "openssl"
+            - "ostree"
+            - "shadow-utils"  # User configuration
+            - "podman"
+            - "rpm-ostree"
+            - "selinux-policy-targeted"
+            - "sg3_utils"
+            - "skopeo"
+            - "socat"  # interactive network tools for admins
+            - "net-tools"
+            - "bind-utils"
+            - "sssd-client"  # SSSD backends
+            - "sssd-ad"
+            - "sssd-ipa"
+            - "sssd-krb5"
+            - "sssd-ldap"
+            - "stalld"               # Boost starving threads https:#github.com/coreos/fedora-coreos-tracker/issues/753
+            - "subscription-manager"  # To ensure we can enable client certs to access RHEL content
+            - "sudo"
+            - "systemd"
+            - "systemd-resolved"  # resolved was broken out to its own package in rawhide/f35
+            - "tpm2-tools"        # needed for tpm2 bound luks
+            - "WALinuxAgent-udev"  # udev rules for Azure (rhbz#1748432)
+            - "xfsprogs"
+            - "zram-generator"  # zram-generator (but not zram-generator-defaults) for F33 change
+          exclude:
+            - "cowsay"  # just in case
+            - "grubby"
+            - "initscripts"                         # make sure initscripts doesn't get pulled back in https:#github.com/coreos/fedora-coreos-tracker/issues/220#issuecomment-611566254
+            - "NetworkManager-initscripts-ifcfg-rh"  # do not use legacy ifcfg config format in NetworkManager See https:#github.com/coreos/fedora-coreos-config/pull/1991
+            - "nodejs"
+            - "plymouth"         # for (datacenter/cloud oriented) servers we want to see the details by default.  https:#lists.fedoraproject.org/archives/list/devel@lists.fedoraproject.org/thread/HSMISZ3ETWQ4ETVLWZQJ55ARZT27AAV3/
+            - "systemd-networkd"  # we use NetworkManager
+          conditions:
+            "iot-bootable-container aarch64 extras":
+              when:
+                arch: "aarch64"
+              append:
+                include:
+                  - "irqbalance"
+                  - "ostree-grub2"
+                exclude:
+                  - "perl"
+                  - "perl-interpreter"
+            "iot-bootable-container ppc64le extras":
+              when:
+                arch: "ppc64le"
+              append:
+                include:
+                  - "irqbalance"
+                  - "librtas"
+                  - "powerpc-utils-core"
+                  - "ppc64-diag-rtas"
+            "iot-bootable-container x86_64 extras":
+              when:
+                arch: "x86_64"
+              append:
+                include:
+                  - "irqbalance"
+                exclude:
+                  - "perl"
+                  - "perl-interpreter"
+    blueprint:
+      supported_options: *supported_options_ostree_commit
+
+  "iot-installer":
+    <<: *rpm_ostree_imgtype_common
+    name_aliases: ["fedora-iot-installer"]
+    filename: "installer.iso"
+    mime_type: "application/x-iso9660-image"
+    boot_iso: true
+    image_func: "iot_installer"
+    iso_label: "IoT"
+    variant: "IoT"
+    ostree: *ostree_iot
+    exports: ["bootiso"]
+    required_partition_sizes: *default_required_dir_sizes
+    installer_config:
+      <<: *default_installer_config
+      default_menu: 0
+    iso_config:
+      <<: *default_iso_config
+      conditions:
+        <<: *default_iso_config_conditions
+        "f45 and above use erofs":
+          when:
+            version_greater_or_equal: "45"
+          shallow_merge:
+            rootfs_type: "erofs"
+            erofs_options: *default_erofs_options
+    image_config:
+      <<: *image_config_iot_enabled_services
+      locale: "en_US.UTF-8"
+      # iot-installer is not using the default ostree kernel options
+      kernel_options:
+    package_sets:
+      installer:
+        - *anaconda_pkgset
+        - include:
+            - "fedora-release-iot"
+    platforms:
+      - *x86_64_installer_platform
+      - *aarch64_installer_platform
+    blueprint:
+      supported_options:
+        - "distro"
+        - "customizations.installer"
+        - "customizations.user"
+        - "customizations.sshkey"
+        - "customizations.group"
+        - "customizations.fips"
+        - "customizations.timezone"
+        - "customizations.locale"
+
+  "iot-simplified-installer":
+    <<: *rpm_ostree_imgtype_common
+    filename: "simplified-installer.iso"
+    mime_type: "application/x-iso9660-image"
+    bootable: true
+    boot_iso: true
+    default_size: "10 GiB"
+    image_func: "iot_simplified_installer"
+    iso_label: "IoT"
+    variant: "IoT"
+    ostree:
+      <<: *ostree_iot
+      name: "fedora"
+    exports: ["bootiso"]
+    required_partition_sizes: *default_required_dir_sizes
+    installer_config:
+      <<: *default_installer_config
+      default_menu: 0
+    iso_config:
+      boot_type: "grub2-uefi"
+      conditions:
+        "x86_64 uses syslinux":
+          when:
+            arch: "x86_64"
+          shallow_merge:
+            boot_type: "syslinux"
+    image_config:
+      <<: *image_config_iot
+      ignition_platform: "metal"
+    partition_table:
+      <<: *iot_simplified_installer_partition_tables
+    package_sets:
+      installer:
+        - include:
+            - "anaconda-dracut"
+            - "atheros-firmware"
+            - "attr"
+            - "basesystem"
+            - "binutils"
+            - "brcmfmac-firmware"
+            - "bsdtar"
+            - "clevis-dracut"
+            - "clevis-luks"
+            - "cloud-utils-growpart"
+            - "coreos-installer"
+            - "coreos-installer-dracut"
+            - "coreutils"
+            - "curl"
+            - "device-mapper-multipath"
+            - "dosfstools"
+            - "dracut-config-generic"
+            - "dracut-live"
+            - "dracut-network"
+            - "e2fsprogs"
+            - "fcoe-utils"
+            - "fdo-init"
+            - "fedora-logos"
+            - "gdisk"
+            - "gzip"
+            - "hostname"
+            - "ima-evm-utils"
+            - "iproute"
+            - "iptables"
+            - "iputils"
+            - "iscsi-initiator-utils"
+            - "iwlwifi-dvm-firmware"
+            - "iwlwifi-mvm-firmware"
+            - "kernel"
+            - "keyutils"
+            - "less"
+            - "linux-firmware"
+            - "lldpad"
+            - "lvm2"
+            - "mdadm"
+            - "nfs-utils"
+            - "nss-softokn"
+            - "openssh-clients"
+            - "ostree"
+            - "plymouth"
+            - "policycoreutils"
+            - "policycoreutils-python-utils"
+            - "procps-ng"
+            - "realtek-firmware"
+            - "rng-tools"
+            - "rootfiles"
+            - "rpcbind"
+            - "selinux-policy-targeted"
+            - "setools-console"
+            - "shadow-utils"  # includes passwd
+            - "sudo"
+            - "systemd"
+            - "tar"
+            - "traceroute"
+            - "util-linux"
+            - "xfsprogs"
+            - "xz"
+    platforms:
+      - <<: *x86_64_uefi_platform
+        packages:
+          <<: *x86_64_uefi_platform_packages
+          firmware:
+            - "grub2-efi-x64"
+            - "grub2-tools"
+            - "grub2-tools-minimal"
+            - "efibootmgr"
+            - "shim-x64"
+            - "brcmfmac-firmware"
+            - "iwlwifi-dvm-firmware"
+            - "iwlwifi-mvm-firmware"
+            - "realtek-firmware"
+            - "microcode_ctl"
+      - <<: *aarch64_installer_platform
+        packages:
+          <<: *aarch64_uefi_platform_packages
+          firmware:
+            - "arm-image-installer"
+            - "bcm283x-firmware"
+            - "grub2-efi-aa64"
+            - "grub2-tools"
+            - "grub2-tools-minimal"
+            - "efibootmgr"
+            - "shim-aa64"
+            - "brcmfmac-firmware"
+            - "iwlwifi-dvm-firmware"
+            - "iwlwifi-mvm-firmware"
+            - "realtek-firmware"
+            - "uboot-images-armv8"
+    blueprint:
+      supported_options:
+        - "distro"
+        - "customizations.installation_device"
+        - "customizations.fdo"
+        - "customizations.ignition"
+        - "customizations.kernel"
+        - "customizations.user"
+        - "customizations.sshkey"
+        - "customizations.group"
+        - "customizations.fips"
+      required_options:
+        - "customizations.installation_device"

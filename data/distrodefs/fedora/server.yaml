@@ -1,0 +1,91 @@
+image_types:
+  # Based on lorax runtime-install.tmpl
+  "everything-network-installer": &everything_network_installer
+    name_aliases: ["netinst"]
+    filename: "netinst.iso"
+    mime_type: "application/x-iso9660-image"
+    bootable: true
+    boot_iso: true
+    image_func: "network-installer"
+    iso_label: "Everything"
+    variant: "Everything"
+    exports: ["bootiso"]
+    required_partition_sizes: *default_required_dir_sizes
+    installer_config:
+      <<: *default_installer_config
+      iso_files:
+        - ["/usr/share/licenses/fedora-release-common/Fedora-Legal-README.txt", "/Fedora-Legal-README.txt"]
+        - ["/usr/share/licenses/fedora-release-common/LICENSE", "/LICENSE"]
+      install_weak_deps: false
+    iso_config:
+      <<: *default_iso_config
+      rootfs_type: "erofs"
+      erofs_options: *default_erofs_options
+    image_config:
+      locale: "en_US.UTF-8"
+    package_sets:
+      installer:
+        - *network_installer_pkgset
+    platforms:
+      - *x86_64_installer_platform
+      - *aarch64_installer_platform
+    blueprint:
+      supported_options:
+        - "distro"
+        - "customizations.fips"
+        - "customizations.group"
+        - "customizations.installer"
+        - "customizations.kernel.append"
+        - "customizations.locale"
+        - "customizations.user"
+
+  "server-network-installer":
+    <<: *everything_network_installer
+    name_aliases: []
+    package_sets:
+      installer:
+        - *network_installer_pkgset
+        - include:
+            - fedora-release-server
+
+  "server-qcow2": &server_qcow2
+    filename: "disk.qcow2"
+    mime_type: "application/x-qemu-disk"
+    bootable: true
+    default_size: "10 GiB"
+    image_func: "disk"
+    exports: ["qcow2"]
+    required_partition_sizes: *default_required_dir_sizes
+    partition_table:
+      <<: *server_partition_tables
+    package_sets:
+      os:
+        - *server_core_pkgset
+        - *server_guest_pkgset
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "qcow2"
+      - <<: *aarch64_platform
+        image_format: "qcow2"
+      - <<: *ppc64le_bios_platform
+        image_format: "qcow2"
+      - <<: *s390x_zipl_platform
+        image_format: "qcow2"
+    image_config:
+      default_kernel: "kernel-core"
+      kernel_options:
+        - "no_timer-check"
+        - "console=tty1"
+        - "console=ttyS0,115200n8"
+      enabled_services:
+        - "initial-setup.service"
+      files:
+        # Triggers Anaconda's initial-setup to reconfigure the system when it
+        # boots the first time.
+        - path: "/etc/reconfigSys"
+          user: "root"
+          group: "root"
+          data: ""
+      lock_root_user: true
+    blueprint:
+      supported_options: *supported_options_disk

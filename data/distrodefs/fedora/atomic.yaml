@@ -1,0 +1,85 @@
+image_types:
+
+  ## Fedora Atomic
+
+  "kinoite-installer":
+    <<: *atomic_installer_common
+    iso_label: "Kinoite"
+    variant: "Kinoite"
+    ostree:
+      <<: *ostree_atomic
+      ref: "{{.Distro.Name}}/{{.Distro.MajorVersion}}/{{.Arch}}/kinoite"
+    package_sets:
+      installer:
+        - *network_installer_pkgset
+        - include:
+            - "fedora-release-kinoite"
+
+  "silverblue-installer":
+    <<: *atomic_installer_common
+    iso_label: "Silverblue"
+    variant: "Silverblue"
+    ostree:
+      <<: *ostree_atomic
+      ref: "{{.Distro.Name}}/{{.Distro.MajorVersion}}/{{.Arch}}/silverblue"
+    package_sets:
+      installer:
+        - *network_installer_pkgset
+        - include:
+            - "fedora-release-silverblue"
+
+  "sway-atomic-installer":
+    <<: *atomic_installer_common
+    iso_label: "Sway-Atomic"
+    variant: "Sway Atomic"
+    ostree:
+      <<: *ostree_atomic
+      ref: "{{.Distro.Name}}/{{.Distro.MajorVersion}}/{{.Arch}}/sericea"
+    package_sets:
+      installer:
+        - *network_installer_pkgset
+        - include:
+            - "fedora-release-sway-atomic"
+
+  "budgie-atomic-installer":
+    <<: *atomic_installer_common
+    iso_label: "Budgie-Atomic"
+    variant: "Budgie Atomic"
+    ostree:
+      <<: *ostree_atomic
+      ref: "{{.Distro.Name}}/{{.Distro.MajorVersion}}/{{.Arch}}/onyx"
+    package_sets:
+      installer:
+        - *network_installer_pkgset
+        - include:
+            - "fedora-release-budgie-atomic"
+
+  "cosmic-atomic-installer":
+    <<: *atomic_installer_common
+    iso_label: "Cosmic-Atomic"
+    variant: "Cosmic Atomic"
+    ostree:
+      <<: *ostree_atomic
+      ref: "{{.Distro.Name}}/{{.Distro.MajorVersion}}/{{.Arch}}/cosmic-atomic"
+    package_sets:
+      installer:
+        - *network_installer_pkgset
+        - include:
+            - "fedora-release-cosmic-atomic"
+
+  ### Note we only have disk images for those Atomic variants that have a form of
+  ### initial setup to provision the system.
+
+  "kinoite-qcow2":
+    <<: *atomic_qcow2_common
+    variant: "Kinoite"
+    ostree:
+      <<: *ostree_atomic
+      ref: "{{.Distro.Name}}/{{.Distro.MajorVersion}}/{{.Arch}}/kinoite"
+
+  "silverblue-qcow2":
+    <<: *atomic_qcow2_common
+    variant: "Kinoite"
+    ostree:
+      <<: *ostree_atomic
+      ref: "{{.Distro.Name}}/{{.Distro.MajorVersion}}/{{.Arch}}/kinoite"

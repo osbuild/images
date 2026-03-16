@@ -1,0 +1,126 @@
+image_types:
+
+  #
+  # Fedora Cloud image types
+  #
+
+  "cloud-qcow2": &cloud_qcow2
+    <<: *cloud_base
+    filename: "disk.qcow2"
+    mime_type: "application/x-qemu-disk"
+    exports: ["qcow2"]
+    image_config:
+      <<: *cloud_base_image_config
+      conditions:
+        "f42 and below cloud init service names":
+          when:
+            version_less_than: "43"
+          shallow_merge:
+            enabled_services:
+              *cloud_init_services
+        "f43 and above new cloud init service names":
+          when:
+            version_greater_or_equal: "43"
+          shallow_merge:
+            enabled_services:
+              *cloud_init_services_f43plus
+    package_sets:
+      os:
+        - *cloud_core_pkgset
+        - include:
+            - "qemu-guest-agent"
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "qcow2"
+      - <<: *aarch64_platform
+        image_format: "qcow2"
+      - <<: *ppc64le_bios_platform
+        image_format: "qcow2"
+      - <<: *s390x_zipl_platform
+        image_format: "qcow2"
+
+  "cloud-ec2": &cloud_ec2
+    <<: *cloud_base
+    filename: "image.raw.xz"
+    compression: "xz"
+    mime_type: "application/xz"
+    exports: ["xz"]
+    image_config:
+      <<: *cloud_base_image_config
+      conditions:
+        "f42 and below cloud init service names":
+          when:
+            version_less_than: "43"
+          shallow_merge:
+            enabled_services:
+              *cloud_init_services
+        "f43 and above new cloud init service names":
+          when:
+            version_greater_or_equal: "43"
+          shallow_merge:
+            enabled_services:
+              *cloud_init_services_f43plus
+    package_sets:
+      os:
+        - *cloud_core_pkgset
+        - include:
+            - "amazon-ec2-utils"
+            - "awscli2"
+            - "ec2-instance-connect"
+
+  "cloud-azure": &cloud_azure
+    <<: *cloud_base
+    filename: "disk.vhd"
+    mime_type: "application/x-vhd"
+    exports: ["vpc"]  # XXX Should be .vhd.xz
+    image_config:
+      <<: *cloud_base_image_config
+      conditions:
+        "f42 and below cloud init service names":
+          when:
+            version_less_than: "43"
+          shallow_merge:
+            enabled_services:
+              *cloud_init_services
+        "f43 and above new cloud init service names":
+          when:
+            version_greater_or_equal: "43"
+          shallow_merge:
+            enabled_services:
+              *cloud_init_services_f43plus
+    package_sets:
+      os:
+        - *cloud_core_pkgset
+        - include:
+            - "WALinuxAgent"
+            - "azure-vm-utils"
+            - "kernel-modules"
+            - "hyperv-daemons"
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "vhd"
+      - <<: *aarch64_platform
+        image_format: "vhd"
+
+  "cloud-gce": &cloud_gce
+    <<: *cloud_base
+    filename: "image.tar.gz"
+    mime_type: "application/gzip"
+    exports: ["archive"]
+    # Note the larger size here, upstream descriptions mention that GCE has bad perf with small disks
+    default_size: "10 GiB"
+    package_sets:
+      os:
+        - *cloud_core_pkgset
+        - include:
+            - "google-compute-engine-guest-configs"
+            - "google-compute-engine-oslogin"
+            - "google-guest-agent"
+          exclude:
+            - "cloud-init"
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "gce"
+      - <<: *aarch64_platform
+        image_format: "gce"
+    image_config: *cloud_base_image_config

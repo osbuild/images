@@ -1,0 +1,64 @@
+image_types:
+  "workstation-live-installer":
+    name_aliases: ["live-installer"]
+    filename: "live-installer.iso"
+    mime_type: "application/x-iso9660-image"
+    bootable: true
+    boot_iso: true
+    image_func: "live_installer"
+    iso_label: "Workstation"
+    variant: "Workstation"
+    exports: ["bootiso"]
+    required_partition_sizes: *default_required_dir_sizes
+    installer_config:
+      <<: *default_installer_config
+      # for some reason the live-installer never had or never took into account
+      # the additional dracut modules. This might be a bug but for now we reset
+      # them to empty to avoid changing the live-installer definition
+      additional_dracut_modules: []
+      # also reset the condition that adds dracut modules
+    iso_config: *default_iso_config
+    image_config:
+      locale: "en_US.UTF-8"
+    package_sets:
+      installer:
+        - include:
+            - "@workstation-product-environment"
+            - "@anaconda-tools"
+            - "anaconda-install-env-deps"
+            - "anaconda-live"
+            - "anaconda-dracut"
+            - "dracut-live"
+            - "glibc-all-langpacks"
+            - "kernel"
+            - "kernel-modules"
+            - "kernel-modules-extra"
+            - "livesys-scripts"
+            - "rng-tools"
+            - "rdma-core"
+            - "gnome-kiosk"
+          exclude:
+            - "@dial-up"
+            - "@input-methods"
+            - "@standard"
+            - "device-mapper-multipath"
+            - "fcoe-utils"
+            - "gfs2-utils"
+            - "reiserfs-utils"
+            - "sdubby"
+          conditions:
+            "include anaconda webui in 43+":
+              when:
+                version_greater_or_equal: "43"
+              append:
+                # XXX: this was VERSION_RAWHIDE, if we need this again lets add
+                # "alias" to defs.DistroYAML
+                include:
+                  - "anaconda-webui"
+    platforms:
+      - *x86_64_installer_platform
+      - *aarch64_installer_platform
+    blueprint:
+      supported_options:
+        - "distro"
+        - "customizations.installer"
