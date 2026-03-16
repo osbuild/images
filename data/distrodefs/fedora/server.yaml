@@ -1,3 +1,57 @@
+.common:
+  server_core_pkgset: &server_core_pkgset
+    include:
+      - "@server-product-environment"
+      - "@domain-client"
+      - "glibc-all-langpacks"
+      - "initial-setup"
+      - "lvm2"
+      - "xfsprogs"
+    exclude:
+      - "initial-setup-gui"
+      - "plymouth"
+
+  server_guest_pkgset: &server_guest_pkgset
+    include:
+      - "@guest-agents"
+    exclude:
+      - "dracut-config-rescue"
+      - "*-firmware"
+      - "smartmontools"
+      - "smartmontools-selinux"
+
+  server_partition_tables: &server_partition_tables
+    x86_64:
+      type: "gpt"
+      partitions:
+        - *server_partition_table_part_bios
+        - *server_partition_table_part_efi
+        - *server_partition_table_part_boot
+        - <<: *server_partition_table_part_root
+          type: *root_partition_guid_x86_64
+    aarch64:
+      type: "gpt"
+      partitions:
+        - *server_partition_table_part_efi
+        - *server_partition_table_part_boot
+        - <<: *server_partition_table_part_root
+          type: *root_partition_guid_aarch64
+    ppc64le:
+      type: "gpt"
+      partitions:
+        - size: "8 MiB"
+          type: *prep_boot_partition_guid
+        - *server_partition_table_part_boot
+        - <<: *server_partition_table_part_root
+          type: *root_partition_guid_ppc64le
+    s390x:
+      type: "dos"
+      partitions:
+        - <<: *server_partition_table_part_boot
+          type: *filesystem_linux_dosid
+        - <<: *server_partition_table_part_root
+          type: *filesystem_linux_lvm_dosid
+
 image_types:
   # Based on lorax runtime-install.tmpl
   "everything-network-installer": &everything_network_installer

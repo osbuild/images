@@ -1,3 +1,16 @@
+.common:
+  generic_base_pkgset: &generic_base_pkgset
+    include:
+      - "@Fedora Cloud Server"
+      - "chrony"  # not mentioned in the kickstart anaconda pulls it when setting the timezone
+      - "langpacks-en"
+    exclude:
+      - "dracut-config-rescue"
+      - "firewalld"
+      - "geolite2-city"
+      - "geolite2-country"
+      - "plymouth"
+
 image_types:
   "generic-vagrant-libvirt": &generic_vagrant_libvirt
     filename: "vagrant-libvirt.box"

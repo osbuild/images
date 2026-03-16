@@ -1,3 +1,94 @@
+.common:
+  ostree_iot: &ostree_iot
+    name: "fedora-iot"
+    remote_name: "fedora-iot"
+    ref: &ostree_iot_ref "{{.Distro.Name}}/{{.Distro.MajorVersion}}/{{.Arch}}/iot"
+    url: "mirrorlist=https://ostree.fedoraproject.org/iot/mirrorlist"
+
+  iot_enabled_services: &image_config_iot_enabled_services
+    enabled_services:
+      - "NetworkManager.service"
+      - "firewalld.service"
+      - "sshd.service"
+      - "greenboot-grub2-set-counter"
+      - "greenboot-grub2-set-success"
+      - "greenboot-healthcheck"
+      - "greenboot-rpm-ostree-grub2-check-fallback"
+      - "greenboot-status"
+      - "greenboot-task-runner"
+      - "redboot-auto-reboot"
+      - "redboot-task-runner"
+    kernel_options: *ostree_deployment_kernel_options
+    conditions:
+      "f43 uses new greenboot":
+        when:
+          version_greater_or_equal: "43"
+        shallow_merge:
+          enabled_services:
+            - "NetworkManager.service"
+            - "firewalld.service"
+            - "sshd.service"
+            - "greenboot-healthcheck"
+  iot: &image_config_iot
+    <<: *image_config_iot_enabled_services
+    keyboard:
+      keymap: "us"
+    locale: "C.UTF-8"
+    ostree_conf_sysroot_readonly: true
+    lock_root_user: true
+
+  ostree_server: &ostree_server
+    port: &ostree_server_port "8080"
+    config_path: &ostree_server_config_path "/etc/nginx.conf"
+
+  iot_simplified_installer_partition_tables: &iot_simplified_installer_partition_tables
+    x86_64: &iot_simplified_installer_partition_tables_x86
+      uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
+      type: "gpt"
+      partitions:
+        - *iot_base_partition_table_part_efi
+        - size: "2 GiB"
+          type: *xboot_ldr_partition_guid
+          payload_type: "filesystem"
+          payload:
+            type: "ext4"
+            label: "boot"
+            mountpoint: "/boot"
+            fstab_options: "defaults"
+            fstab_freq: 1
+            fstab_passno: 1
+        - type: *filesystem_data_guid
+          payload_type: "luks"
+          payload:
+            label: "crypt_root"
+            cipher: "cipher_null"
+            passphrase: "osbuild"
+            pbkdf:
+              memory: 32
+              iterations: 4
+              parallelism: 1
+            clevis:
+              pin: "null"
+              policy: "{}"
+              remove_passphrase: true
+            payload_type: "lvm"
+            payload:
+              name: "rootvg"
+              description: "built with lvm2 and osbuild"
+              logical_volumes:
+                - size: "8 GiB"
+                  name: "rootlv"
+                  payload_type: "filesystem"
+                  payload:
+                    type: "ext4"
+                    label: "root"
+                    mountpoint: "/"
+                    fstab_options: "defaults,ro"
+                    fstab_freq: 0
+                    fstab_passno: 0
+    aarch64:
+      <<: *iot_simplified_installer_partition_tables_x86
+
 image_types:
   # NOTE: keep in sync with official fedora-iot definitions:
   # https://pagure.io/fedora-iot/ostree/blob/main/f/fedora-iot-base.yaml

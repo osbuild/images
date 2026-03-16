@@ -1,3 +1,150 @@
+.common:
+  cloud_core_pkgset: &cloud_core_pkgset
+    include:
+      - "@cloud-server-environment"
+      - "btrfs-progs"
+      - "python3-dnf-plugin-tracer"
+      - "glibc-langpack-en"
+    exclude:
+      - "dracut-config-rescue"
+      - "firewalld"
+      - "fwupd"
+      - "*-firmware"
+      - "geolite2-city"
+      - "geolite2-country"
+      - "plymouth"
+      # XXX we want to exclude kernel here
+      # XXX so we get kernel-core?
+      # XXX same for server
+
+  partitions:
+    # Fedora Cloud uses BTRFS and ext4 boot
+    - &cloud_partition_table_part_bios
+      <<: *default_partition_table_part_bios
+      size: "2 MiB"
+    - &cloud_partition_table_part_efi
+      <<: *default_partition_table_part_efi
+      size: "100 MiB"
+    - &cloud_partition_table_part_boot
+      <<: *default_partition_table_part_boot
+      type: *xboot_ldr_partition_guid
+      payload:
+        <<: *default_partition_table_part_boot_payload
+        type: "ext4"
+    - &cloud_partition_table_part_root
+      payload_type: "btrfs"
+      payload:
+        subvolumes:
+          - name: "root"  # @root=root XXX
+            mountpoint: "/"
+          - name: "home"
+            mountpoint: "/home"
+            # XXX we want a parent and no mountpoint
+          - name: "var"
+            mountpoint: "/var"
+            # XXX we want a parent and no mountpoint
+    - &cloud_partition_table_part_root_with_boot_on_btrfs
+      payload_type: "btrfs"
+      payload:
+        subvolumes:
+          - name: "root"
+            mountpoint: "/"
+          - name: "boot"
+            mountpoint: "/boot"
+          - name: "home"
+            mountpoint: "/home"
+          - name: "var"
+            mountpoint: "/var"
+   
+  cloud_partition_tables: &cloud_partition_tables
+    x86_64:
+      type: "gpt"
+      partitions:
+        - *cloud_partition_table_part_bios
+        - *cloud_partition_table_part_efi
+        - *cloud_partition_table_part_boot
+        - <<: *cloud_partition_table_part_root
+          type: *root_partition_guid_x86_64
+    aarch64:
+      type: "gpt"
+      partitions:
+        - *cloud_partition_table_part_efi
+        - *cloud_partition_table_part_boot
+        - <<: *cloud_partition_table_part_root
+          type: *root_partition_guid_aarch64
+    ppc64le:
+      type: "gpt"
+      partitions:
+        - size: "8 MiB"
+          type: *prep_boot_partition_guid
+        - *cloud_partition_table_part_boot
+        - <<: *cloud_partition_table_part_root
+          type: *root_partition_guid_ppc64le
+    s390x:
+      type: "dos"
+      partitions:
+        - <<: *cloud_partition_table_part_boot
+          type: *filesystem_linux_dosid
+        - <<: *cloud_partition_table_part_root
+          type: *filesystem_linux_dosid
+
+  cloud_partition_tables_with_boot_on_btrfs: &cloud_partition_tables_with_boot_on_btrfs
+    x86_64:
+      type: "gpt"
+      partitions:
+        - *cloud_partition_table_part_bios
+        - *cloud_partition_table_part_efi
+        - <<: *cloud_partition_table_part_root_with_boot_on_btrfs
+          type: *root_partition_guid_x86_64
+    aarch64:
+      type: "gpt"
+      partitions:
+        - *cloud_partition_table_part_efi
+        - <<: *cloud_partition_table_part_root_with_boot_on_btrfs
+          type: *root_partition_guid_aarch64
+    ppc64le:
+      type: "gpt"
+      partitions:
+        - size: "8 MiB"
+          type: *prep_boot_partition_guid
+        - <<: *cloud_partition_table_part_root_with_boot_on_btrfs
+          type: *root_partition_guid_ppc64le
+    s390x:
+      type: "dos"
+      partitions:
+        - <<: *cloud_partition_table_part_boot
+          type: *filesystem_linux_dosid
+        - <<: *cloud_partition_table_part_root
+          type: *filesystem_linux_dosid
+
+  cloud_base: &cloud_base
+    bootable: true
+    default_size: "5 GiB"
+    image_func: "disk"
+    required_partition_sizes: *default_required_dir_sizes
+    partition_table:
+      <<: *cloud_partition_tables
+    partition_tables_override:
+      conditions:
+        "f44 and up have /boot on btrfs":
+          when:
+            version_greater_or_equal: "44"
+          override: *cloud_partition_tables_with_boot_on_btrfs
+    image_config: &cloud_base_image_config
+      default_kernel: "kernel-core"
+      kernel_options:
+        - "no_timer-check"
+        - "console=tty1"
+        - "console=ttyS0,115200n8"
+        - "systemd.firstboot=off"
+    blueprint:
+      supported_options: *supported_options_disk
+    platforms:
+      - <<: *x86_64_bios_platform
+        image_format: "raw"
+      - <<: *aarch64_platform
+        image_format: "raw"
+
 image_types:
 
   #
