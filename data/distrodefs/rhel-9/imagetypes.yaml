@@ -1590,6 +1590,12 @@ image_types:
         - "net.ifnames=0"
         - "netroot=iscsi"
         - "rd.iscsi.firmware=1"
+      cloud_init:
+        - filename: "00-rhel-default-user.cfg"
+          config:
+            system_info:
+              default_user:
+                name: "opc"
     blueprint:
       supported_options: *supported_options_disk
 
