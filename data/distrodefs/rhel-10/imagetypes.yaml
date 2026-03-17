@@ -1099,6 +1099,13 @@ image_types:
     platforms:
       - <<: *x86_64_bios_platform
         image_format: "qcow2"
+    image_config:
+      <<: *qcow2_image_config
+      kernel_options:
+        - "console=tty0"
+        - "console=ttyS0,115200n8"
+        - "netroot=iscsi"
+        - "rd.iscsi.firmware=1"
     blueprint:
       supported_options: *supported_options_disk
 
