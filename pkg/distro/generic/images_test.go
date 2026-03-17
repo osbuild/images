@@ -8,8 +8,10 @@ import (
 
 	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
+	"github.com/osbuild/images/pkg/rpmmd"
 )
 
 func isoTestImageType() *imageType {
@@ -105,4 +107,80 @@ func TestInstallerCustomizationsOverridePreview(t *testing.T) {
 		assert.Equal(t, tc.expected, isc.Preview)
 	}
 
+}
+
+func diskTestImageType() *imageType {
+	return &imageType{
+		arch: &architecture{
+			distro: &distribution{},
+		},
+		ImageTypeYAML: defs.ImageTypeYAML{},
+	}
+}
+
+func TestOSCustomizationsPodmanDefaultNetBackend(t *testing.T) {
+	netavark := container.NetworkBackendNetavark
+
+	tests := []struct {
+		name        string
+		backend     *container.NetworkBackend
+		containers  []container.SourceSpec
+		expectFile  bool
+		expectedVal string
+	}{
+		{
+			name:    "backend set with containers creates file",
+			backend: &netavark,
+			containers: []container.SourceSpec{
+				{Source: "registry.example.com/test:latest"},
+			},
+			expectFile:  true,
+			expectedVal: "netavark",
+		},
+		{
+			name:    "nil backend with containers does not create file",
+			backend: nil,
+			containers: []container.SourceSpec{
+				{Source: "registry.example.com/test:latest"},
+			},
+			expectFile: false,
+		},
+		{
+			name:       "backend set without containers does not create file",
+			backend:    &netavark,
+			containers: nil,
+			expectFile: false,
+		},
+		{
+			name:       "nil backend without containers does not create file",
+			backend:    nil,
+			containers: nil,
+			expectFile: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			it := diskTestImageType()
+			it.ImageConfigYAML.ImageConfig = &distro.ImageConfig{
+				PodmanDefaultNetBackend: tt.backend,
+			}
+
+			bp := &blueprint.Blueprint{}
+			osc, err := osCustomizations(it, rpmmd.PackageSet{}, distro.ImageOptions{}, tt.containers, bp)
+			require.NoError(t, err)
+
+			const backendPath = "/var/lib/containers/storage/defaultNetworkBackend"
+			var found bool
+			for _, f := range osc.Files {
+				if f.Path() == backendPath {
+					found = true
+					assert.Equal(t, []byte(tt.expectedVal), f.Data())
+					break
+				}
+			}
+			assert.Equal(t, tt.expectFile, found,
+				"expected file present=%v at %s", tt.expectFile, backendPath)
+		})
+	}
 }

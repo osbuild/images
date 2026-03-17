@@ -14,6 +14,7 @@ import (
 
 	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/arch"
+	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/oscap"
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/datasizes"
@@ -653,6 +654,53 @@ image_types:
 		Timezone: common.ToPtr("OverrideTZ"),
 		Users:    []users.User{{Name: "testuser"}},
 	})
+}
+
+func TestDefsDistroImageConfigPodmanDefaultNetBackend(t *testing.T) {
+	netavark := container.NetworkBackendNetavark
+
+	tests := []struct {
+		name     string
+		yaml     string
+		expected *container.NetworkBackend
+	}{
+		{
+			name: "podman_default_net_backend is loaded",
+			yaml: `
+image_config:
+  default:
+    podman_default_net_backend: "netavark"
+
+image_types:
+  test_type:
+    filename: foo
+`,
+			expected: &netavark,
+		},
+		{
+			name: "podman_default_net_backend absent is nil",
+			yaml: `
+image_config:
+  default:
+    locale: "C.UTF-8"
+
+image_types:
+  test_type:
+    filename: foo
+`,
+			expected: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			makeTestImageType(t, tt.yaml)
+
+			dist, err := defs.NewDistroYAML("test-distro-1")
+			require.NoError(t, err)
+			assert.Equal(t, tt.expected, dist.ImageConfig().PodmanDefaultNetBackend)
+		})
+	}
 }
 
 func TestDefsPartitionTableErrorsNotForImageType(t *testing.T) {
