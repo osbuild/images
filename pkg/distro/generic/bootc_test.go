@@ -22,6 +22,7 @@ import (
 	"github.com/osbuild/images/pkg/distro/defs"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/manifestgen"
+	"github.com/osbuild/images/pkg/manifestgen/manifestmock"
 	"github.com/osbuild/images/pkg/osbuild"
 	"github.com/osbuild/images/pkg/osbuild/manifesttest"
 	"github.com/osbuild/images/pkg/rpmmd"
@@ -384,6 +385,7 @@ func NewTestBootcDistro(t *testing.T) *BootcDistro {
 		Size:          100 * datasizes.MiB,
 		OSInfo: &osinfo.Info{
 			OSRelease: osinfo.OSRelease{
+				Name:      "DistroID",
 				ID:        "distroID",
 				VersionID: "83",
 			},
@@ -737,6 +739,67 @@ func TestBootcIsoManifestSerialization(t *testing.T) {
 		"bootiso": {"org.osbuild.xorrisofs"},
 	}
 	assert.NoError(t, checkStages(manifestJson, expStages, nil))
+}
+
+func TestContainerSourceLocality(t *testing.T) {
+	bd := NewTestBootcDistro(t)
+	archi, err := bd.GetArch("x86_64")
+	require.NoError(t, err)
+
+	for _, local := range []bool{true, false} {
+		for _, imgTypeName := range archi.ListImageTypes() {
+			name := fmt.Sprintf("%s-local=%v", imgTypeName, local)
+			t.Run(name, func(t *testing.T) {
+				imgType, err := archi.GetImageType(imgTypeName)
+				require.NoError(t, err)
+
+				// The legacy ISO (anaconda-iso, iso) loads a real distro
+				// definition via newDistroYAMLFrom() to find installer
+				// packages. The generic test distro doesn't carry real OS
+				// release data, so this image type cannot be tested here.
+				if imgTypeName == "anaconda-iso" || imgTypeName == "iso" {
+					t.Skipf("skipping %s: legacy ISO requires real distro definitions not available in the test distro", imgTypeName)
+				}
+
+				imgOptions := distro.ImageOptions{}
+				if !local {
+					imgOptions.Bootc = &distro.BootcImageOptions{
+						UseRemoteContainerSource: true,
+					}
+				}
+
+				// InstallerPayloadRef is required by the bootc_iso image
+				// type (bootc-installer) but harmlessly ignored by disk and
+				// PXE types. For bootc_generic_iso it adds an optional
+				// payload container whose locality follows the same flag.
+				// Setting it unconditionally keeps the test simple and
+				// focused on container source locality.
+				if imgOptions.Bootc == nil {
+					imgOptions.Bootc = &distro.BootcImageOptions{}
+				}
+				imgOptions.Bootc.InstallerPayloadRef = "registry.example.com/payload:latest"
+
+				mf, _, err := imgType.Manifest(&blueprint.Blueprint{}, imgOptions, nil, common.ToPtr(int64(0)))
+				require.NoError(t, err)
+
+				containerSpecs := manifestmock.ResolveContainers(mf.GetContainerSourceSpecs())
+
+				manifestJson, err := mf.Serialize(nil, containerSpecs, nil, nil)
+				require.NoError(t, err)
+
+				mani, err := manifesttest.NewManifestFromBytes(manifestJson)
+				require.NoError(t, err)
+
+				if local {
+					assert.Contains(t, mani.Sources, "org.osbuild.containers-storage")
+					assert.NotContains(t, mani.Sources, "org.osbuild.skopeo")
+				} else {
+					assert.Contains(t, mani.Sources, "org.osbuild.skopeo")
+					assert.NotContains(t, mani.Sources, "org.osbuild.containers-storage")
+				}
+			})
+		}
+	}
 }
 
 func canRunIntegration(t *testing.T) {
