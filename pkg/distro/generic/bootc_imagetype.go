@@ -157,7 +157,7 @@ func (t *bootcImageType) manifestWithoutValidation(bp *blueprint.Blueprint, opti
 
 	switch t.Image {
 	case "bootc_legacy_iso":
-		return t.manifestForLegacyISO(bp, rng)
+		return t.manifestForLegacyISO(bp, options, rng)
 	case "bootc_iso":
 		return t.manifestForISO(bp, options, rng)
 	case "bootc_generic_iso":
@@ -500,7 +500,7 @@ func newDistroYAMLFrom(sourceInfo *osinfo.Info) (*defs.DistroYAML, *distro.ID, e
 	return nil, nil, fmt.Errorf("cannot load distro definitions for %s-%s or any of %v", sourceInfo.OSRelease.ID, sourceInfo.OSRelease.VersionID, sourceInfo.OSRelease.IDLike)
 }
 
-func (t *bootcImageType) manifestForLegacyISO(bp *blueprint.Blueprint, rng *rand.Rand) (*manifest.Manifest, []string, error) {
+func (t *bootcImageType) manifestForLegacyISO(bp *blueprint.Blueprint, options distro.ImageOptions, rng *rand.Rand) (*manifest.Manifest, []string, error) {
 	bd := t.arch.distro.(*BootcDistro)
 	if bd.imgref == "" {
 		return nil, nil, fmt.Errorf("internal error in bootc legacy iso: no base image defined")
