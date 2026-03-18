@@ -234,6 +234,7 @@ func makeManifestJob(
 	content map[string]bool,
 	metadata bool,
 	tmpdirRoot string,
+	bootcRemote bool,
 ) manifestJob {
 	name := bc.Name
 	distroName := distribution.Name()
@@ -248,6 +249,15 @@ func makeManifestJob(
 	}
 
 	options := bc.Options
+	if bootcRemote {
+		if options.Bootc == nil {
+			options.Bootc = &distro.BootcImageOptions{}
+		} else {
+			bootcOpts := *options.Bootc
+			options.Bootc = &bootcOpts
+		}
+		options.Bootc.UseRemoteContainerSource = true
+	}
 
 	var bp blueprint.Blueprint
 	if bc.Blueprint != nil {
@@ -433,6 +443,10 @@ func main() {
 	flag.Var(&imgTypes, "types", "comma-separated list of image types (globs supported)")
 	flag.Var(&bootcRefs, "bootc-refs", "comma-separated list of bootc container refs to generate manifests for (format: ref or ref#build-ref)")
 
+	// bootc options
+	var bootcRemote bool
+	flag.BoolVar(&bootcRemote, "bootc-remote", false, "generate bootc manifests with org.osbuild.skopeo sources instead of containers-storage")
+
 	// dry-run
 	var dryRun bool
 	flag.BoolVar(&dryRun, "dry-run", false, "print what manifests would be generated")
@@ -539,7 +553,7 @@ func main() {
 					if dryRun {
 						fmt.Printf("%s,%s,%s,%s\n", distribution.Name(), archName, imgType.Name(), itConfig.Name)
 					} else {
-						job := makeManifestJob(itConfig, imgType, distribution, repos, archName, cacheRoot, outputDir, contentResolve, metadata, tmpdirRoot)
+						job := makeManifestJob(itConfig, imgType, distribution, repos, archName, cacheRoot, outputDir, contentResolve, metadata, tmpdirRoot, false)
 						jobs = append(jobs, job)
 					}
 				}
@@ -606,7 +620,7 @@ func main() {
 						fmt.Printf("%s,%s,%s,%s\n", distribution.Name(), archName, imgType.Name(), itConfig.Name)
 					} else {
 						var repos []rpmmd.RepoConfig
-						job := makeManifestJob(itConfig, imgType, distribution, repos, archName, cacheRoot, outputDir, contentResolve, metadata, tmpdirRoot)
+						job := makeManifestJob(itConfig, imgType, distribution, repos, archName, cacheRoot, outputDir, contentResolve, metadata, tmpdirRoot, bootcRemote)
 						jobs = append(jobs, job)
 					}
 				}
@@ -695,7 +709,7 @@ func main() {
 						}
 
 						var repos []rpmmd.RepoConfig
-						job := makeManifestJob(itConfig, imgType, distribution, repos, archName, cacheRoot, outputDir, contentResolve, metadata, tmpdirRoot)
+						job := makeManifestJob(itConfig, imgType, distribution, repos, archName, cacheRoot, outputDir, contentResolve, metadata, tmpdirRoot, bootcRemote)
 						jobs = append(jobs, job)
 					}
 				}
