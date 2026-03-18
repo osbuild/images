@@ -31,12 +31,13 @@ func ResolveContainers(containerSources map[string][]container.SourceSpec) map[s
 				name = src.Source
 			}
 			spec := container.Spec{
-				Source:     src.Source,
-				Digest:     digest,
-				TLSVerify:  src.TLSVerify,
-				ImageID:    id,
-				LocalName:  name,
-				ListDigest: listDigest,
+				Source:       src.Source,
+				Digest:       digest,
+				TLSVerify:    src.TLSVerify,
+				ImageID:      id,
+				LocalName:    name,
+				ListDigest:   listDigest,
+				LocalStorage: src.Local,
 			}
 			specs[idx] = spec
 		}
