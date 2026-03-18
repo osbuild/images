@@ -37,15 +37,15 @@ func Parse(size string) (uint64, error) {
 	size = strings.TrimSpace(size)
 
 	// Get the number from the string
-	number_as_str := plainNumberRegexp.FindString(size)
-	if number_as_str == "" {
+	numberAsStr := plainNumberRegexp.FindString(size)
+	if numberAsStr == "" {
 		return 0, fmt.Errorf("the size string is not a valid positive float number: %s", size)
 	}
 
 	// Parse the number
-	numberFloat, err := strconv.ParseFloat(number_as_str, 64)
+	numberFloat, err := strconv.ParseFloat(numberAsStr, 64)
 	if err != nil {
-		return 0, fmt.Errorf("failed to parse size as float: %s", number_as_str)
+		return 0, fmt.Errorf("failed to parse size as float: %s", numberAsStr)
 	}
 
 	for _, unit := range supportedUnitsRegexp {
