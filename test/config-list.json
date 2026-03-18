@@ -740,6 +740,38 @@
     }
   },
   {
+    "path": "./configs/bootc-remote-empty.json",
+    "filters": {
+      "distros": [
+        "bootc-*"
+      ],
+      "image-types": [
+        "qcow2",
+        "ami",
+        "raw",
+        "gce",
+        "vhd",
+        "vmdk",
+        "ova",
+        "anaconda-iso",
+        "bootc-generic-iso",
+        "pxe-tar-xz"
+      ]
+    }
+  },
+  {
+    "path": "./configs/bootc-remote-with-payload.json",
+    "filters": {
+      "distros": [
+        "bootc-*"
+      ],
+      "image-types": [
+        "bootc-installer",
+        "bootc-generic-iso"
+      ]
+    }
+  },
+  {
     "path": "./configs/empty.json",
     "filters": {
       "distros": [
