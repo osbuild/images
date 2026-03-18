@@ -8,29 +8,11 @@ import (
 	"strings"
 )
 
-// Parse converts a size specified as a string in KB/KiB/MB/etc. to
-// a number of bytes represented by uint64.
-// Floats are allowed for units other than bytes (e.g., "1.5 GiB" converts to bytes).
-// For bytes (no unit), fractional values like "1.5" or "123.45 B" error out.
-func Parse(size string) (uint64, error) {
-	// Pre-process the input
-	size = strings.TrimSpace(size)
-
-	// Get the number from the string
-	plain_number := regexp.MustCompile(`^(\d+(\.\d+)?)`)
-	number_as_str := plain_number.FindString(size)
-	if number_as_str == "" {
-		return 0, fmt.Errorf("the size string is not a valid positive float number: %s", size)
-	}
-
-	// Parse the number
-	numberFloat, err := strconv.ParseFloat(number_as_str, 64)
-	if err != nil {
-		return 0, fmt.Errorf("failed to parse size as float: %s", number_as_str)
-	}
+var (
+	plainNumberRegexp = regexp.MustCompile(`^(\d+(\.\d+)?)`)
 
 	// List of all supported units (from kB to TB and KiB to TiB)
-	supported_units := []struct {
+	supportedUnitsRegexp = []struct {
 		re       *regexp.Regexp
 		multiple uint64
 	}{
@@ -44,8 +26,29 @@ func Parse(size string) (uint64, error) {
 		{regexp.MustCompile(`^\d+(\.\d+)?\s*TiB$`), TebiByte},
 		{regexp.MustCompile(`^\d+(\.\d+)?$`), 1},
 	}
+)
 
-	for _, unit := range supported_units {
+// Parse converts a size specified as a string in KB/KiB/MB/etc. to
+// a number of bytes represented by uint64.
+// Floats are allowed for units other than bytes (e.g., "1.5 GiB" converts to bytes).
+// For bytes (no unit), fractional values like "1.5" or "123.45 B" error out.
+func Parse(size string) (uint64, error) {
+	// Pre-process the input
+	size = strings.TrimSpace(size)
+
+	// Get the number from the string
+	number_as_str := plainNumberRegexp.FindString(size)
+	if number_as_str == "" {
+		return 0, fmt.Errorf("the size string is not a valid positive float number: %s", size)
+	}
+
+	// Parse the number
+	numberFloat, err := strconv.ParseFloat(number_as_str, 64)
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse size as float: %s", number_as_str)
+	}
+
+	for _, unit := range supportedUnitsRegexp {
 		if unit.re.MatchString(size) {
 			if unit.multiple == 1 && numberFloat != math.Trunc(numberFloat) {
 				return 0, fmt.Errorf("cannot have fractional bytes: %s", size)
