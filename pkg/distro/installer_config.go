@@ -39,6 +39,14 @@ type InstallerConfig struct {
 		Location  *manifest.PayloadLocation  `yaml:"location,omitempty"`
 		Kickstart *manifest.PayloadKickstart `yaml:"kickstart,omitempty"`
 	} `yaml:"payload,omitempty"`
+
+	Flatpaks []*struct {
+		Registry *struct {
+			RemoteName string `yaml:"remote_name,omitempty"`
+			URL        string `yaml:"url,omitempty"`
+		} `yaml:"registry,omitempty"`
+		References []string `yaml:"references,omitempty"`
+	} `yaml:"flatpaks,omitempty"`
 }
 
 // InheritFrom inherits unset values from the provided parent configuration and
