@@ -17,6 +17,7 @@ import (
 	"github.com/osbuild/images/pkg/customizations/subscription"
 	"github.com/osbuild/images/pkg/customizations/users"
 	"github.com/osbuild/images/pkg/distro"
+	"github.com/osbuild/images/pkg/flatpak"
 	"github.com/osbuild/images/pkg/image"
 	"github.com/osbuild/images/pkg/manifest"
 	"github.com/osbuild/images/pkg/osbuild"
@@ -458,6 +459,38 @@ func installerCustomizations(t *imageType, c *blueprint.Customizations, o distro
 
 			if kickstart := installerConfig.Payload.Kickstart; kickstart != nil {
 				isc.Payload.Kickstart = *kickstart
+			}
+		}
+
+		for _, flatpaks := range installerConfig.Flatpaks {
+			if flatpaks == nil {
+				return isc, fmt.Errorf("flatpak object was nil")
+			}
+
+			if flatpaks.Registry == nil {
+				return isc, fmt.Errorf("registry is mandatory for flatpak")
+			}
+
+			registry, err := flatpak.NewRegistryFromURI(flatpaks.Registry.URL)
+			if err != nil {
+				return isc, err
+			}
+			registry.RemoteName = flatpaks.Registry.RemoteName
+
+			if len(flatpaks.References) == 0 {
+				return isc, fmt.Errorf("references are mandatory for flatpak")
+			}
+
+			for _, reference := range flatpaks.References {
+				ref, err := flatpak.NewReferenceFromString(reference)
+				if err != nil {
+					return isc, err
+				}
+
+				isc.Flatpaks = append(isc.Flatpaks, flatpak.SourceSpec{
+					Registry:  *registry,
+					Reference: ref,
+				})
 			}
 		}
 	}
