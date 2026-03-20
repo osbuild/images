@@ -1,6 +1,7 @@
 package generic
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -8,8 +9,10 @@ import (
 
 	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/internal/common"
+	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/distro"
 	"github.com/osbuild/images/pkg/distro/defs"
+	"github.com/osbuild/images/pkg/rpmmd"
 )
 
 func isoTestImageType() *imageType {
@@ -105,4 +108,53 @@ func TestInstallerCustomizationsOverridePreview(t *testing.T) {
 		assert.Equal(t, tc.expected, isc.Preview)
 	}
 
+}
+
+func testImageType() *imageType {
+	return &imageType{
+		arch: &architecture{
+			distro: &distribution{},
+		},
+	}
+}
+
+func TestOSCustomizationsRedactsPasswords(t *testing.T) {
+	password := "super-secret-password"
+	bp := &blueprint.Blueprint{
+		Customizations: &blueprint.Customizations{
+			User: []blueprint.UserCustomization{
+				{
+					Name:     "testuser",
+					Password: &password,
+				},
+			},
+		},
+	}
+
+	it := testImageType()
+	osc, err := osCustomizations(it, rpmmd.PackageSet{}, distro.ImageOptions{}, nil, bp)
+	require.NoError(t, err)
+	require.NotEmpty(t, osc.BlueprintTOML)
+
+	tomlStr := string(osc.BlueprintTOML)
+	assert.True(t, strings.Contains(tomlStr, "testuser"), "blueprint TOML should contain the username")
+	assert.False(t, strings.Contains(tomlStr, password), "blueprint TOML should not contain the password")
+
+	// DeepCopy must not mutate the original blueprint
+	require.NotNil(t, bp.Customizations.User[0].Password)
+	assert.Equal(t, password, *bp.Customizations.User[0].Password)
+}
+
+func TestOSCustomizationsBlueprintTOMLPopulated(t *testing.T) {
+	bp := &blueprint.Blueprint{
+		Name: "my-test-blueprint",
+	}
+
+	it := testImageType()
+	osc, err := osCustomizations(it, rpmmd.PackageSet{}, distro.ImageOptions{}, []container.SourceSpec{}, bp)
+	require.NoError(t, err)
+	require.NotEmpty(t, osc.BlueprintTOML)
+
+	tomlStr := string(osc.BlueprintTOML)
+	assert.True(t, strings.Contains(tomlStr, "my-test-blueprint"))
 }

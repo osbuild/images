@@ -189,7 +189,13 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 	}
 
 	var err error
-	osc.BlueprintTOML, err = toml.Marshal(bp)
+	redactedBP := bp.DeepCopy()
+	if redactedBP.Customizations != nil {
+		for i := range redactedBP.Customizations.User {
+			redactedBP.Customizations.User[i].Password = nil
+		}
+	}
+	osc.BlueprintTOML, err = toml.Marshal(&redactedBP)
 	if err != nil {
 		return osc, fmt.Errorf("failed to marshal blueprint to TOML: %w", err)
 	}
