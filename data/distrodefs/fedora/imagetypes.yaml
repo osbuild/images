@@ -1196,7 +1196,7 @@
     filename: "installer.iso"
     mime_type: "application/x-iso9660-image"
     boot_iso: true
-    image_func: "iot_installer"
+    image_func: "ostree_installer"
     ostree: *ostree_atomic
     exports: ["bootiso"]
     required_partition_sizes: *default_required_dir_sizes
@@ -1240,7 +1240,7 @@
     mime_type: "application/x-qemu-disk"
     default_size: "10 GiB"
     bootable: true
-    image_func: "iot"
+    image_func: "ostree_disk"
     ostree: *ostree_atomic
     exports: ["qcow2"]
     required_partition_sizes: *default_required_dir_sizes
@@ -1504,7 +1504,7 @@ image_types:
     name_aliases: ["fedora-iot-commit"]
     filename: "commit.tar"
     mime_type: "application/x-tar"
-    image_func: "iot_commit"
+    image_func: "ostree_commit"
     exports: ["commit-archive"]
     required_partition_sizes: *default_required_dir_sizes
     ostree:
@@ -1652,7 +1652,7 @@ image_types:
     name_aliases: ["fedora-iot-container"]
     filename: "container.tar"
     mime_type: "application/x-tar"
-    image_func: "iot_container"
+    image_func: "ostree_container"
     exports: ["container"]
     required_partition_sizes: *default_required_dir_sizes
     ostree:
@@ -1681,7 +1681,7 @@ image_types:
     mime_type: "application/xz"
     default_size: "6 GiB"
     bootable: true
-    image_func: "iot"
+    image_func: "ostree_disk"
     ostree: *ostree_iot
     exports: ["xz"]
     # Passing an empty map into the required partition sizes disables the
@@ -1740,7 +1740,7 @@ image_types:
     mime_type: "application/x-qemu-disk"
     default_size: "10 GiB"
     bootable: true
-    image_func: "iot"
+    image_func: "ostree_disk"
     ostree: *ostree_iot
     exports: ["qcow2"]
     required_partition_sizes: *default_required_dir_sizes
@@ -2023,7 +2023,7 @@ image_types:
     filename: "installer.iso"
     mime_type: "application/x-iso9660-image"
     boot_iso: true
-    image_func: "iot_installer"
+    image_func: "ostree_installer"
     iso_label: "IoT"
     variant: "IoT"
     ostree: *ostree_iot
@@ -2378,7 +2378,7 @@ image_types:
     bootable: true
     boot_iso: true
     default_size: "10 GiB"
-    image_func: "iot_simplified_installer"
+    image_func: "ostree_simplified_installer"
     iso_label: "IoT"
     variant: "IoT"
     ostree:

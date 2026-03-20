@@ -2046,7 +2046,7 @@ image_types:
     filename: "commit.tar"
     mime_type: "application/x-tar"
     rpm_ostree: true
-    image_func: "iot_commit"
+    image_func: "ostree_commit"
     exports: ["commit-archive"]
     platforms:
       - *x86_64_bios_platform
@@ -2230,7 +2230,7 @@ image_types:
     boot_iso: true
     # NOTE: RHEL 8 only supports the older Anaconda configs
     use_legacy_anaconda_config: true
-    image_func: "iot_installer"
+    image_func: "ostree_installer"
     iso_label: "edge"
     variant: "edge"
     ostree:
@@ -2277,7 +2277,7 @@ image_types:
     default_size: "10 GiB"
     rpm_ostree: true
     bootable: true
-    image_func: "iot"
+    image_func: "ostree_disk"
     ostree: *ostree_edge
     use_ostree_remotes: true
     exports: ["xz"]
@@ -2309,7 +2309,7 @@ image_types:
     # NOTE: RHEL 8 only supports the older Anaconda configs
     use_legacy_anaconda_config: true
     default_size: "10 GiB"
-    image_func: "iot_simplified_installer"
+    image_func: "ostree_simplified_installer"
     iso_label: "edge"
     variant: "edge"
     ostree: *ostree_edge
@@ -2421,7 +2421,7 @@ image_types:
     filename: "container.tar"
     mime_type: "application/x-tar"
     rpm_ostree: true
-    image_func: "iot_container"
+    image_func: "ostree_container"
     exports: ["container"]
     required_partition_sizes: *default_required_dir_sizes
     platforms:
