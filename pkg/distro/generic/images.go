@@ -856,7 +856,7 @@ func imageInstallerImage(t *imageType,
 	return img, nil
 }
 
-func iotCommitImage(t *imageType,
+func ostreeCommitImage(t *imageType,
 	bp *blueprint.Blueprint,
 	options distro.ImageOptions,
 	packageSets map[string]rpmmd.PackageSet,
@@ -937,7 +937,7 @@ func bootableContainerImage(t *imageType,
 	return img, nil
 }
 
-func iotContainerImage(t *imageType,
+func ostreeContainerImage(t *imageType,
 	bp *blueprint.Blueprint,
 	options distro.ImageOptions,
 	packageSets map[string]rpmmd.PackageSet,
@@ -977,7 +977,7 @@ func iotContainerImage(t *imageType,
 	return img, nil
 }
 
-func iotInstallerImage(t *imageType,
+func ostreeInstallerImage(t *imageType,
 	bp *blueprint.Blueprint,
 	options distro.ImageOptions,
 	packageSets map[string]rpmmd.PackageSet,
@@ -1078,7 +1078,7 @@ func iotInstallerImage(t *imageType,
 	return img, nil
 }
 
-func iotImage(t *imageType,
+func ostreeDiskImage(t *imageType,
 	bp *blueprint.Blueprint,
 	options distro.ImageOptions,
 	packageSets map[string]rpmmd.PackageSet,
@@ -1126,7 +1126,7 @@ func iotImage(t *imageType,
 	return img, nil
 }
 
-func iotSimplifiedInstallerImage(t *imageType,
+func ostreeSimplifiedInstallerImage(t *imageType,
 	bp *blueprint.Blueprint,
 	options distro.ImageOptions,
 	packageSets map[string]rpmmd.PackageSet,
