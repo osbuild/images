@@ -1215,7 +1215,7 @@
       <<: *default_iso_config
       rootfs_type: "erofs"
       erofs_options: *default_erofs_options
-    installer_config:
+    installer_config: &atomic_installer_installer_config_common
       <<: *default_installer_config
       install_weak_deps: false
       default_menu: 1
@@ -2890,6 +2890,47 @@ image_types:
         - *network_installer_pkgset
         - include:
             - "fedora-release-kinoite"
+    installer_config:
+      <<: *atomic_installer_installer_config_common
+      flatpaks:
+        - registry:
+            remote_name: "fedora"
+            url: "oci+https://registry.fedoraproject.org"
+          references:
+            - "runtime/org.fedoraproject.KDE6Platform/{{.Arch}}/f{{.Distro.MajorVersion}}"
+            - "runtime/org.fedoraproject.Platform.GL.default/{{.Arch}}/f{{.Distro.MajorVersion}}"
+            - "app/org.kde.elisa/{{.Arch}}/stable"
+            - "app/org.kde.gwenview/{{.Arch}}/stable"
+            - "app/org.kde.kcalc/{{.Arch}}/stable"
+            - "app/org.kde.kmahjongg/{{.Arch}}/stable"
+            - "app/org.kde.kmines/{{.Arch}}/stable"
+            - "app/org.kde.kolourpaint/{{.Arch}}/stable"
+            - "app/org.kde.krdc/{{.Arch}}/stable"
+            - "app/org.kde.okular/{{.Arch}}/stable"
+            - "app/org.kde.skanpage/{{.Arch}}/stable"
+            - "app/org.kde.qrca/{{.Arch}}/stable"
+      conditions:
+        "there are no 45 runtimes":
+          when:
+            version_greater_or_equal: "45"
+          shallow_merge:
+            flatpaks:
+              - registry:
+                  remote_name: "fedora"
+                  url: "oci+https://registry.fedoraproject.org"
+                references:
+                  - "runtime/org.fedoraproject.KDE6Platform/{{.Arch}}/f44"
+                  - "runtime/org.fedoraproject.Platform.GL.default/{{.Arch}}/f44"
+                  - "app/org.kde.elisa/{{.Arch}}/stable"
+                  - "app/org.kde.gwenview/{{.Arch}}/stable"
+                  - "app/org.kde.kcalc/{{.Arch}}/stable"
+                  - "app/org.kde.kmahjongg/{{.Arch}}/stable"
+                  - "app/org.kde.kmines/{{.Arch}}/stable"
+                  - "app/org.kde.kolourpaint/{{.Arch}}/stable"
+                  - "app/org.kde.krdc/{{.Arch}}/stable"
+                  - "app/org.kde.okular/{{.Arch}}/stable"
+                  - "app/org.kde.skanpage/{{.Arch}}/stable"
+                  - "app/org.kde.qrca/{{.Arch}}/stable"
 
   "silverblue-installer":
     <<: *atomic_installer_common
@@ -2903,6 +2944,63 @@ image_types:
         - *network_installer_pkgset
         - include:
             - "fedora-release-silverblue"
+    installer_config:
+      <<: *atomic_installer_installer_config_common
+      flatpaks:
+        - registry:
+            remote_name: "fedora"
+            url: "oci+https://registry.fedoraproject.org"
+          references:
+            - "runtime/org.fedoraproject.Platform/{{.Arch}}/f{{.Distro.MajorVersion}}"
+            - "runtime/org.fedoraproject.Platform.GL.default/{{.Arch}}/f{{.Distro.MajorVersion}}"
+            - "app/org.gnome.baobab/{{.Arch}}/stable"
+            - "app/org.gnome.Calculator/{{.Arch}}/stable"
+            - "app/org.gnome.Calendar/{{.Arch}}/stable"
+            - "app/org.gnome.Characters/{{.Arch}}/stable"
+            - "app/org.gnome.Snapshot/{{.Arch}}/stable"
+            - "app/org.gnome.clocks/{{.Arch}}/stable"
+            - "app/org.gnome.Connections/{{.Arch}}/stable"
+            - "app/org.gnome.Contacts/{{.Arch}}/stable"
+            - "app/org.gnome.Extensions/{{.Arch}}/stable"
+            - "app/org.gnome.font-viewer/{{.Arch}}/stable"
+            - "app/org.gnome.TextEditor/{{.Arch}}/stable"
+            - "app/org.gnome.Loupe/{{.Arch}}/stable"
+            - "app/org.gnome.Logs/{{.Arch}}/stable"
+            - "app/org.gnome.Maps/{{.Arch}}/stable"
+            - "app/org.fedoraproject.MediaWriter/{{.Arch}}/stable"
+            - "app/org.gnome.NautilusPreviewer/{{.Arch}}/stable"
+            - "app/org.gnome.Papers/{{.Arch}}/stable"
+            - "app/org.gnome.Weather/{{.Arch}}/stable"
+      conditions:
+        "there are no 45 runtimes":
+          when:
+            version_greater_or_equal: "45"
+          shallow_merge:
+            flatpaks:
+              - registry:
+                  remote_name: "fedora"
+                  url: "oci+https://registry.fedoraproject.org"
+                references:
+                  - "runtime/org.fedoraproject.Platform/{{.Arch}}/f44"
+                  - "runtime/org.fedoraproject.Platform.GL.default/{{.Arch}}/f44"
+                  - "app/org.gnome.baobab/{{.Arch}}/stable"
+                  - "app/org.gnome.Calculator/{{.Arch}}/stable"
+                  - "app/org.gnome.Calendar/{{.Arch}}/stable"
+                  - "app/org.gnome.Characters/{{.Arch}}/stable"
+                  - "app/org.gnome.Snapshot/{{.Arch}}/stable"
+                  - "app/org.gnome.clocks/{{.Arch}}/stable"
+                  - "app/org.gnome.Connections/{{.Arch}}/stable"
+                  - "app/org.gnome.Contacts/{{.Arch}}/stable"
+                  - "app/org.gnome.Extensions/{{.Arch}}/stable"
+                  - "app/org.gnome.font-viewer/{{.Arch}}/stable"
+                  - "app/org.gnome.TextEditor/{{.Arch}}/stable"
+                  - "app/org.gnome.Loupe/{{.Arch}}/stable"
+                  - "app/org.gnome.Logs/{{.Arch}}/stable"
+                  - "app/org.gnome.Maps/{{.Arch}}/stable"
+                  - "app/org.fedoraproject.MediaWriter/{{.Arch}}/stable"
+                  - "app/org.gnome.NautilusPreviewer/{{.Arch}}/stable"
+                  - "app/org.gnome.Papers/{{.Arch}}/stable"
+                  - "app/org.gnome.Weather/{{.Arch}}/stable"
 
   "sway-atomic-installer":
     <<: *atomic_installer_common
