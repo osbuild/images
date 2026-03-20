@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"strings"
 
+	"github.com/BurntSushi/toml"
 	"github.com/osbuild/blueprint/pkg/blueprint"
 	"github.com/osbuild/images/pkg/container"
 	"github.com/osbuild/images/pkg/customizations/anaconda"
@@ -188,6 +189,10 @@ func osCustomizations(t *imageType, osPackageSet rpmmd.PackageSet, options distr
 	}
 
 	var err error
+	osc.BlueprintTOML, err = toml.Marshal(bp)
+	if err != nil {
+		return osc, fmt.Errorf("failed to marshal blueprint to TOML: %w", err)
+	}
 	osc.Directories, err = blueprint.DirectoryCustomizationsToFsNodeDirectories(c.GetDirectories())
 	if err != nil {
 		// In theory this should never happen, because the blueprint directory customizations

@@ -523,6 +523,30 @@ func TestAddInlineOS(t *testing.T) {
 	require.ElementsMatch(expectedContents, fileContents)
 }
 
+func TestBlueprintTOMLProducesCopyStage(t *testing.T) {
+	os := manifest.NewTestOS()
+	os.OSCustomizations.BlueprintTOML = []byte("name = \"my-blueprint\"\n")
+
+	pipeline, err := os.Serialize()
+	require.NoError(t, err)
+
+	destinationPaths := collectCopyDestinationPaths(pipeline.Stages)
+	assert.Contains(t, destinationPaths, "tree:///root/blueprint.toml")
+
+	fileContents := manifest.GetInline(os)
+	assert.Contains(t, fileContents, "name = \"my-blueprint\"\n")
+}
+
+func TestNoBlueprintTOMLNoCopyStage(t *testing.T) {
+	os := manifest.NewTestOS()
+
+	pipeline, err := os.Serialize()
+	require.NoError(t, err)
+
+	destinationPaths := collectCopyDestinationPaths(pipeline.Stages)
+	assert.NotContains(t, destinationPaths, "tree:///root/blueprint.toml")
+}
+
 func createTestFilesForPipeline() []*fsnode.File {
 	fileOne := common.Must(fsnode.NewFile("/etc/test/one", nil, nil, nil, []byte("test 1")))
 	fileTwo := common.Must(fsnode.NewFile("/etc/test/two", nil, nil, nil, []byte("test 2")))
