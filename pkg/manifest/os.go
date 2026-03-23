@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -162,6 +163,10 @@ type OSCustomizations struct {
 	// The final RHSM config to be applied to the image
 	RHSMConfig *subscription.RHSMConfig
 	RHSMFacts  *facts.ImageOptions
+
+	// BlueprintTOML is the TOML-encoded blueprint used to build this image,
+	// written to /root/blueprint.toml as build provenance.
+	BlueprintTOML []byte
 
 	// Custom directories to create in the image. The stages for the
 	// directories defined here are always added at the end of the pipeline.
@@ -852,6 +857,14 @@ func (p *OS) serialize() (osbuild.Pipeline, error) {
 		pipeline.AddStage(osbuild.NewRHSMFactsStage(&osbuild.RHSMFactsStageOptions{
 			Facts: rhsmFacts,
 		}))
+	}
+
+	if len(p.OSCustomizations.BlueprintTOML) > 0 {
+		bpFile, err := fsnode.NewFile("/root/blueprint.toml", common.ToPtr(os.FileMode(0644)), "root", "root", p.OSCustomizations.BlueprintTOML)
+		if err != nil {
+			return osbuild.Pipeline{}, fmt.Errorf("failed to create blueprint file node: %w", err)
+		}
+		p.addStagesForAllFilesAndInlineData(&pipeline, []*fsnode.File{bpFile})
 	}
 
 	if p.OSTreeRef != "" {
