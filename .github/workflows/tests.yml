@@ -43,7 +43,7 @@ jobs:
           set-safe-directory: true
 
       - name: Install python3
-        # The Fedora 41 container doesn't have python3 installed by default
+        # The Fedora container doesn't have python3 installed by default
         run: dnf -y install python3
 
       - name: Set up repository for pinned osbuild commit
@@ -223,18 +223,17 @@ jobs:
       image: registry.fedoraproject.org/fedora:latest
     steps:
 
-      - name: Install build and test dependencies
-        run: dnf -y install python3-pytest podman skopeo go btrfs-progs-devel device-mapper-devel gpgme-devel python3-pip
-
       - name: Check out code into the Go module directory
         uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           set-safe-directory: true
 
+      - name: Install build and test dependencies
+        run: ./test/scripts/install-dependencies
+
       - name: Testing imgtestlib and test scripts
         run: |
-          pip install .
           python3 -m pytest -v -k "not images_integration"
 
   python-lint:
@@ -248,18 +247,19 @@ jobs:
       image: registry.fedoraproject.org/fedora:latest
     steps:
 
-      - name: Install build and test dependencies
-        run: dnf -y install python3-pylint git-core grep python3-pytest python3-pip
-
       - name: Check out code into the Go module directory
         uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           set-safe-directory: true
 
+      - name: Install build and test dependencies
+        run: |
+          ./test/scripts/install-dependencies
+          dnf -y install python3-pylint
+
       - name: Analysing the code with pylint
         run: |
-          pip install .
           python3 -m pylint --version
           python3 -m pylint $(grep -l "/usr/bin/env python3" -r test/scripts) test/scripts/*.py
 
@@ -305,16 +305,24 @@ jobs:
       image: registry.fedoraproject.org/fedora:latest
       options: "--privileged"
     steps:
-      - name: Install build and test dependencies (without osbuild)
-        run: dnf -y install python3-pytest podman go btrfs-progs-devel device-mapper-devel gpgme-devel python3-pip qemu-system-s390x-core qemu-system-ppc64 qemu-user-static cloud-utils
       - name: Check out code into the Go module directory
         uses: actions/checkout@v6
         with:
           set-safe-directory: true
+
+      - name: Install python3
+        # The Fedora container doesn't have python3 installed by default
+        run: dnf -y install python3
+
       - name: Setup repository for pinned osbuild commit
         run: ./test/scripts/setup-osbuild-repo
+
       - name: Install osbuild dependencies
         run: dnf -y install osbuild osbuild-depsolve-dnf
+
+      - name: Install build and test dependencies
+        run: ./test/scripts/install-dependencies
+
       - name: Manually start qemu-user-static
         run: |
           # mostly for debugging
@@ -326,7 +334,7 @@ jobs:
           ls /proc/sys/fs/binfmt_misc/
           sudo SYSTEMD_LOG_LEVEL=debug /usr/lib/systemd/systemd-binfmt /usr/lib/binfmt.d/qemu-*.conf
           ls /proc/sys/fs/binfmt_misc/
+
       - name: Cross arch integration test
         run: |
-          pip install .
           sudo -E pytest -rs -k ${{ matrix.arch }} -s -v ./test/test_cross_arch_integration.py
