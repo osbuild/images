@@ -1,0 +1,821 @@
+---
+.global:
+  anaconda_pkgset: &anaconda_pkgset
+    include:
+      - "aajohan-comfortaa-fonts"
+      - "abattis-cantarell-fonts"
+      - "alsa-firmware"
+      - "alsa-tools-firmware"
+      - "anaconda"
+      - "anaconda-dracut"
+      - "anaconda-install-img-deps"
+      - "anaconda-widgets"
+      - "atheros-firmware"
+      - "audit"
+      - "bind-utils"
+      - "bitmap-fangsongti-fonts"
+      - "brcmfmac-firmware"
+      - "bzip2"
+      - "cryptsetup"
+      - "curl"
+      - "dbus-x11"
+      - "dejavu-sans-fonts"
+      - "dejavu-sans-mono-fonts"
+      - "device-mapper-persistent-data"
+      - "dmidecode"
+      - "dnf"
+      - "dracut-config-generic"
+      - "dracut-network"
+      - "efibootmgr"
+      - "ethtool"
+      - "fcoe-utils"
+      - "ftp"
+      - "gdb-gdbserver"
+      - "gdisk"
+      - "glibc-all-langpacks"
+      - "gnome-kiosk"
+      - "google-noto-sans-cjk-ttc-fonts"
+      - "grub2-tools"
+      - "grub2-tools-extra"
+      - "grub2-tools-minimal"
+      - "grubby"
+      - "gsettings-desktop-schemas"
+      - "hdparm"
+      - "hexedit"
+      - "hostname"
+      - "initscripts"
+      - "ipmitool"
+      - "iwlwifi-dvm-firmware"
+      - "iwlwifi-mvm-firmware"
+      - "jomolhari-fonts"
+      - "kacst-farsi-fonts"
+      - "kacst-qurn-fonts"
+      - "kbd"
+      - "kbd-misc"
+      - "kdump-anaconda-addon"
+      - "kernel"
+      - "khmeros-base-fonts"
+      - "less"
+      - "libblockdev-lvm-dbus"
+      - "libibverbs"
+      - "libreport-plugin-bugzilla"
+      - "libreport-plugin-reportuploader"
+      - "librsvg2"
+      - "linux-firmware"
+      - "lldpad"
+      - "lohit-assamese-fonts"
+      - "lohit-bengali-fonts"
+      - "lohit-devanagari-fonts"
+      - "lohit-gujarati-fonts"
+      - "lohit-gurmukhi-fonts"
+      - "lohit-kannada-fonts"
+      - "lohit-odia-fonts"
+      - "lohit-tamil-fonts"
+      - "lohit-telugu-fonts"
+      - "lsof"
+      - "madan-fonts"
+      - "mtr"
+      - "mt-st"
+      - "net-tools"
+      - "nfs-utils"
+      - "nmap-ncat"
+      - "nm-connection-editor"
+      - "nss-tools"
+      - "openssh-clients"
+      - "openssh-server"
+      - "ostree"
+      - "pciutils"
+      - "perl-interpreter"
+      - "pigz"
+      - "plymouth"
+      - "prefixdevname"
+      - "python3-pyatspi"
+      - "rdma-core"
+      - "realtek-firmware"
+      - "rit-meera-new-fonts"
+      - "rng-tools"
+      - "rpcbind"
+      - "rpm-ostree"
+      - "rsync"
+      - "rsyslog"
+      - "selinux-policy-targeted"
+      - "sg3_utils"
+      - "sil-abyssinica-fonts"
+      - "sil-padauk-fonts"
+      - "sil-scheherazade-new-fonts"
+      - "smartmontools"
+      - "spice-vdagent"
+      - "strace"
+      - "systemd"
+      - "tar"
+      - "thai-scalable-waree-fonts"
+      - "udisks2"
+      - "udisks2-iscsi"
+      - "usbutils"
+      - "vim-minimal"
+      - "volume_key"
+      - "wget"
+      - "xfsdump"
+      - "xfsprogs"
+      - "xorg-x11-drivers"
+      - "xorg-x11-fonts-misc"
+      - "xorg-x11-server-Xorg"
+      - "xorg-x11-xauth"
+      - "metacity"
+      - "xrdb"
+      - "xz"
+    conditions:
+      "x86_64 specific anaconda pkgs":
+        when:
+          arch: "x86_64"
+        append:
+          include:
+            - "biosdevname"
+            - "dmidecode"
+            - "grub2-tools-efi"
+            - "memtest86+"
+      "aarch64 specific anaconda pkgs":
+        when:
+          arch: "aarch64"
+        append:
+          include:
+            - "dmidecode"
+
+  network_installer_pkgset: &network_installer_pkgset
+    include:
+      - anaconda
+      - anaconda-widgets
+      - anaconda-install-img-deps
+      - ostree
+      - rpm-ostree
+      - pigz
+      - audit
+      - bind-utils
+      - kernel
+      - kernel-modules
+      - kernel-modules-extra
+      - grubby
+      - glibc-all-langpacks
+      - plymouth
+      - anaconda-dracut
+      - dracut-network
+      - dracut-config-generic
+      - initscripts
+      - cryptsetup
+      - rpcbind
+      - kbd
+      - kbd-misc
+      - tar
+      - xz
+      - curl
+      - bzip2
+      - rsyslog
+      - device-mapper-persistent-data
+      - xfsdump
+      - volume_key
+      - nss-tools
+      - selinux-policy-targeted
+      - audit
+      - ethtool
+      - openssh-server
+      - nfs-utils
+      - openssh-clients
+      - net-tools
+      - bridge-utils
+      - nmap-ncat
+      - prefixdevname
+      - pciutils
+      - usbutils
+      - ipmitool
+      - mt-st
+      - smartmontools
+      - hdparm
+      - rdma-core
+      - rng-tools
+      - nvme-cli
+      - default-fonts-core-sans
+      - default-fonts-other-sans
+      - google-noto-sans-cjk-fonts
+      - gdb-gdbserver
+      - libreport-plugin-bugzilla
+      - libreport-plugin-reportuploader
+      - fpaste
+      - python3-pyatspi
+      - nano
+      - nano-default-editor
+      - vim-minimal
+      - strace
+      - lsof
+      - dump
+      - less
+      - wget2-wget
+      - rsync
+      - bind-utils
+      - ftp
+      - mtr
+      - vconfig
+      - spice-vdagent
+      - gdisk
+      - hexedit
+      - sg3_utils
+    conditions:
+      "x86_64 specific anaconda pkgs":
+        when:
+          arch: "x86_64"
+        append:
+          include:
+            - dmidecode
+      "aarch64 specific anaconda pkgs":
+        when:
+          arch: "aarch64"
+        append:
+          include:
+            - dmidecode
+
+  cloud_init_services: &cloud_init_services
+    - "cloud-init.service"
+    - "cloud-config.service"
+    - "cloud-final.service"
+    - "cloud-init-local.service"
+
+  cloud_init_services_f43plus: &cloud_init_services_f43plus
+    - "cloud-init-network.service"
+    - "cloud-config.service"
+    - "cloud-final.service"
+    - "cloud-init-local.service"
+
+  kernel_options:
+    generic_kernel_options: &generic_kernel_options
+      - "no_timer_check"
+      - "console=tty1"
+      - "console=ttyS0,115200n8"
+      - "earlyprintk=ttyS0"
+      - "systemd.firstboot=off"
+    ostree_deployment_kernel_options: &ostree_deployment_kernel_options
+      - "modprobe.blacklist=vc4"
+      - "rw"
+      - "coreos.no_persist_ip"
+
+  rpm_ostree_imgtype_common: &rpm_ostree_imgtype_common
+    rpm_ostree: true
+    supported_partitioning_modes:
+      - ""  # empty string means default partitioning mode
+      - "auto-lvm"
+      - "lvm"
+
+  environments:
+    kvm: &kvm_env
+      packages:
+        - "cloud-init"
+        - "qemu-guest-agent"
+    ec2_env: &ec2_env
+      packages:
+        - "cloud-init"
+    azure_env: &azure_env
+      packages:
+        - "cloud-init"
+        - "WALinuxAgent"
+      services:
+        - "waagent"
+
+  platforms:
+    x86_64_uefi_platform: &x86_64_uefi_platform
+      arch: "x86_64"
+      uefi_vendor: "fedora"
+      qcow2_compat: "1.1"
+      packages: &x86_64_uefi_platform_packages
+        uefi:
+          - "dracut-config-generic"
+          - "efibootmgr"
+          - "grub2-efi-x64"
+          - "shim-x64"
+      bootloader: "grub2"
+    x86_64_bios_platform: &x86_64_bios_platform
+      <<: *x86_64_uefi_platform
+      bios_platform: "i386-pc"
+      packages: &x86_64_bios_platform_packages
+        <<: *x86_64_uefi_platform_packages
+        bios:
+          - "dracut-config-generic"
+          - "grub2-pc"
+      build_packages:
+        bios:
+          - "grub2-pc"
+      bootloader: "grub2"
+    # XXX: the name is not 100% accurate, this platform is also used for iot-container, iot-commit
+    x86_64_installer_platform: &x86_64_installer_platform
+      <<: *x86_64_bios_platform
+      image_format: "raw"
+      packages: &x86_64_installer_platform_packages
+        <<: *x86_64_bios_platform_packages
+        booting:
+          - "biosdevname"
+          - "grub2-pc-modules"
+          - "grub2-tools-efi"
+          - "grub2-tools"
+          - "grub2-tools-extra"
+          - "grub2-efi-ia32"
+          - "grub2-efi-ia32-cdboot"
+          - "shim-ia32"
+        firmware:
+          - "microcode_ctl"
+          - "amd-gpu-firmware"
+          - "amd-ucode-firmware"
+          - "atheros-firmware"
+          - "atmel-firmware"
+          - "b43-openfwwf"
+          - "brcmfmac-firmware"
+          - "intel-gpu-firmware"
+          - "iwlegacy-firmware"
+          - "iwlwifi-dvm-firmware"
+          - "iwlwifi-mvm-firmware"
+          - "libertas-firmware"
+          - "linux-firmware"
+          - "mt7xxx-firmware"
+          - "nvidia-gpu-firmware"
+          - "nxpwireless-firmware"
+          - "qed-firmware"
+          - "realtek-firmware"
+          - "tiwilink-firmware"
+          - "zd1211-firmware"
+      build_packages:
+        booting:
+          - "shim-ia32"
+          - "grub2-efi-ia32"
+          - "grub2-efi-ia32-cdboot"
+      bootloader: "grub2"
+      extra_uefi_architectures:
+        - "ia32"
+    aarch64_platform: &aarch64_platform
+      arch: "aarch64"
+      uefi_vendor: "fedora"
+      image_format: "qcow2"
+      qcow2_compat: "1.1"
+      packages: &aarch64_uefi_platform_packages
+        uefi:
+          - "dracut-config-generic"
+          - "efibootmgr"
+          - "grub2-efi-aa64"
+          - "grub2-tools"
+          - "shim-aa64"
+      bootloader: "grub2"
+    aarch64_installer_platform: &aarch64_installer_platform
+      arch: "aarch64"
+      uefi_vendor: "fedora"
+      packages:
+        <<: *aarch64_uefi_platform_packages
+        booting:
+          - "arm-image-installer"
+          - "grub2-efi-aa64-cdboot"
+          - "uboot-images-armv8"
+          - "uboot-tools"
+        firmware:
+          - "amd-gpu-firmware"
+          - "atheros-firmware"
+          - "atmel-firmware"
+          - "b43-openfwwf"
+          - "bcm2711-firmware"
+          - "bcm2835-firmware"
+          - "bcm283x-firmware"
+          - "brcmfmac-firmware"
+          - "intel-gpu-firmware"
+          - "iwlegacy-firmware"
+          - "iwlwifi-dvm-firmware"
+          - "iwlwifi-mvm-firmware"
+          - "libertas-firmware"
+          - "linux-firmware"
+          - "mt7xxx-firmware"
+          - "nvidia-gpu-firmware"
+          - "nxpwireless-firmware"
+          - "qcom-firmware"
+          - "qed-firmware"
+          - "realtek-firmware"
+          - "tiwilink-firmware"
+          - "zd1211-firmware"
+      bootloader: "grub2"
+    ppc64le_bios_platform: &ppc64le_bios_platform
+      arch: "ppc64le"
+      bios_platform: "powerpc-ieee1275"
+      image_format: "qcow2"
+      qcow2_compat: "1.1"
+      packages: &ppc64le_bios_platform_packages
+        bios:
+          - "dracut-config-generic"
+          - "powerpc-utils"
+          - "grub2-ppc64le"
+          - "grub2-ppc64le-modules"
+      build_packages:
+        bios:
+          - "grub2-ppc64le"
+          - "grub2-ppc64le-modules"
+      bootloader: "grub2"
+    s390x_zipl_platform: &s390x_zipl_platform
+      arch: "s390x"
+      zipl_support: true
+      image_format: "qcow2"
+      qcow2_compat: "1.1"
+      packages:
+        zipl:
+          - "dracut-config-generic"
+          - "s390utils-base"
+          - "s390utils-core"
+      build_packages:
+        zipl:
+          - "s390utils-base"
+      bootloader: "zipl"
+    riscv64_uefi_platform: &riscv64_uefi_platform
+      arch: "riscv64"
+      uefi_vendor: "uefi"
+      image_format: "raw"
+      packages:
+        # XXX: this is needed to get a generic bootkernel,
+        # this should probably be part of any bootable img
+        # packagelist
+        uefi:
+          - "dracut-config-generic"
+          - "grub2-efi-riscv64"
+          - "grub2-efi-riscv64-modules"
+          - "shim-unsigned-riscv64"
+      bootloader: "grub2"
+
+
+  installer_config: &default_installer_config
+    enabled_anaconda_modules: &install_config_enabled_anaconda_modules
+      - "org.fedoraproject.Anaconda.Modules.Localization"
+      - "org.fedoraproject.Anaconda.Modules.Network"
+      - "org.fedoraproject.Anaconda.Modules.Payloads"
+      - "org.fedoraproject.Anaconda.Modules.Runtime"
+      - "org.fedoraproject.Anaconda.Modules.Storage"
+      - "org.fedoraproject.Anaconda.Modules.Timezone"
+      - "org.fedoraproject.Anaconda.Modules.Users"
+    additional_dracut_modules:
+      - "net-lib"
+      - "dbus-broker"
+    default_menu: 1
+    lorax_template_package: lorax-templates-generic
+    lorax_templates:
+      - path: 99-generic/runtime-postinstall.tmpl
+      - path: 99-generic/runtime-cleanup.tmpl
+        after_dracut: true
+    lorax_logos_package: fedora-logos
+    lorax_release_package: fedora-release
+    install_weak_deps: true
+
+  iso_config: &default_iso_config
+    preparer: "image-builder - https://osbuild.org/"
+    publisher: "Fedora Project"
+    rootfs_type: "squashfs"
+    conditions: &default_iso_config_conditions
+      "x86_64 uses grub2":
+        when:
+          arch: "x86_64"
+        shallow_merge:
+          boot_type: "grub2"
+      "fedora 45 and up exclude efiboot.img on x86":
+        when:
+          version_greater_or_equal: "45"
+          arch: "x86_64"
+        shallow_merge:
+          exclude_paths:
+            - "efiboot.img"
+
+
+  erofs_options: &default_erofs_options
+    compression:
+      method: "lzma"
+      level: 6
+    options:
+      - "fragments"
+    cluster-size: 1048576
+
+  disk_sizes:
+    default_required_partition_sizes: &default_required_dir_sizes
+      "/": "1 GiB"
+      "/usr": "2 GiB"
+
+  partitioning:
+    ids:
+      - &prep_partition_dosid "41"
+      - &filesystem_linux_dosid "83"
+      - &filesystem_linux_lvm_dosid "8e"
+      - &fat16_bdosid "06"
+    guids:
+      - &bios_boot_partition_guid "21686148-6449-6E6F-744E-656564454649"
+      - &prep_boot_partition_guid "21686148-6449-6E6F-744E-656564454649"
+      - &efi_system_partition_guid "C12A7328-F81F-11D2-BA4B-00A0C93EC93B"
+      - &filesystem_data_guid "0FC63DAF-8483-4772-8E79-3D69D8477DE4"
+      - &xboot_ldr_partition_guid "BC13C2FF-59E6-4262-A352-B275FD6F7172"
+      - &root_partition_guid_x86_64 "4f68bce3-e8cd-4db1-96e7-fbcaf984b709"
+      - &root_partition_guid_aarch64 "b921b045-1df0-41c3-af44-4c6f280d3fae"
+      - &root_partition_guid_ppc64le "c31c45e6-3f39-412e-80fb-4809c4980599"
+
+    # the invidual partitions for easier composibility
+    partitions:
+      - &default_partition_table_part_bios
+        size: "1 MiB"
+        bootable: true
+        type: *bios_boot_partition_guid
+      - &default_partition_table_part_efi
+        size: "200 MiB"
+        type: *efi_system_partition_guid
+        payload_type: "filesystem"
+        payload:
+          type: vfat
+          mountpoint: "/boot/efi"
+          label: "ESP"
+          fstab_options: "defaults,uid=0,gid=0,umask=077,shortname=winnt"
+          fstab_freq: 0
+          fstab_passno: 2
+      - &default_partition_table_part_boot
+        size: "2 GiB"
+        type: *filesystem_data_guid
+        payload_type: "filesystem"
+        payload: &default_partition_table_part_boot_payload
+          type: "ext4"
+          mountpoint: "/boot"
+          label: "boot"
+          fstab_options: "defaults"
+          fstab_freq: 0
+          fstab_passno: 0
+      - &default_partition_table_part_root
+        size: "2 GiB"
+        type: *filesystem_data_guid
+        payload_type: "filesystem"
+        payload: &default_partition_table_part_root_payload
+          type: "ext4"
+          label: "root"
+          mountpoint: "/"
+          fstab_options: "defaults"
+          fstab_freq: 0
+          fstab_passno: 0
+      # iot partitions
+      - &iot_base_partition_table_part_efi
+        size: "501 MiB"
+        type: *efi_system_partition_guid
+        payload_type: "filesystem"
+        payload:
+          type: vfat
+          mountpoint: "/boot/efi"
+          label: "ESP"
+          fstab_options: "umask=0077,shortname=winnt"
+          fstab_freq: 0
+          fstab_passno: 2
+      - &iot_base_partition_table_part_boot
+        size: "2 GiB"
+        type: *filesystem_data_guid
+        payload_type: "filesystem"
+        payload:
+          type: "ext4"
+          label: "boot"
+          mountpoint: "/boot"
+          fstab_options: "defaults"
+          fstab_freq: 1
+          fstab_passno: 2
+      - &iot_base_partition_table_part_root
+        size: "2569 MiB"
+        type: *filesystem_data_guid
+        payload_type: "filesystem"
+        payload: &iot_base_partition_table_part_root_payload
+          type: "ext4"
+          label: "root"
+          mountpoint: "/"
+          fstab_options: "defaults,ro"
+          fstab_freq: 1
+          fstab_passno: 1
+      # identical to above but has "fstab_options"
+      - &iot_base_partition_table_part_root_fstab_ro
+        <<: *iot_base_partition_table_part_root
+        payload:
+          <<: *iot_base_partition_table_part_root_payload
+          fstab_options: "defaults,ro"
+      # minimal raw aarch64
+      - &iot_base_partition_table_part_efi_aarch64
+        <<: *iot_base_partition_table_part_efi
+        bootable: true
+        type: *fat16_bdosid
+        uuid: ""
+      - &iot_base_partition_table_part_boot_aarch64
+        <<: *iot_base_partition_table_part_boot
+        type: *filesystem_linux_dosid
+        uuid: ""
+      - &iot_base_partition_table_part_root_aarch64
+        <<: *iot_base_partition_table_part_root
+        type: *filesystem_linux_dosid
+        uuid: ""
+      - &iot_base_partition_table_part_root_fstab_ro_aarch64
+        <<: *iot_base_partition_table_part_root_aarch64
+        payload:
+          <<: *iot_base_partition_table_part_root_payload
+          fstab_options: "defaults,ro"
+
+      # Fedora Server uses XFS on top of LVM
+      - &server_partition_table_part_bios
+        <<: *default_partition_table_part_bios
+        size: "2 MiB"
+      - &server_partition_table_part_efi
+        <<: *default_partition_table_part_efi
+        size: "500 MiB"
+      - &server_partition_table_part_boot
+        <<: *default_partition_table_part_boot
+        type: *xboot_ldr_partition_guid
+        payload:
+          <<: *default_partition_table_part_boot_payload
+          type: "xfs"
+      - &server_partition_table_part_root
+        payload_type: "lvm"
+        payload:
+          name: "systemVG"
+          description: "built with lvm2"
+          logical_volumes:
+            - size: "3 GiB"
+              name: "LVroot"
+              payload_type: "filesystem"
+              payload:
+                type: "xfs"
+                label: "root"
+                mountpoint: "/"
+                fstab_options: "defaults"
+
+    iot_base_partition_tables: &iot_base_partition_tables
+      x86_64: &iot_base_partition_table_x86_64
+        uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
+        type: "gpt"
+        start_offset: "8 MiB"
+        partitions:
+          - *iot_base_partition_table_part_efi
+          - *iot_base_partition_table_part_boot
+          - *iot_base_partition_table_part_root_fstab_ro
+      aarch64: &iot_base_partition_table_aarch64
+        uuid: "0xc1748067"
+        type: "dos"
+        start_offset: "16 MiB"
+        partitions:
+          - *iot_base_partition_table_part_efi_aarch64
+          - *iot_base_partition_table_part_boot_aarch64
+          - *iot_base_partition_table_part_root_fstab_ro_aarch64
+
+    default_partition_tables: &default_partition_tables
+      x86_64:
+        uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
+        type: "gpt"
+        partitions:
+          - *default_partition_table_part_bios
+          - *default_partition_table_part_efi
+          - *default_partition_table_part_boot
+          - *default_partition_table_part_root
+      aarch64: &default_partition_table_aarch64
+        uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
+        type: "gpt"
+        partitions:
+          - *default_partition_table_part_efi
+          - *default_partition_table_part_boot
+          - *default_partition_table_part_root
+      ppc64le:
+        uuid: "0x14fc63d2"
+        type: "dos"
+        partitions:
+          - size: "4 MiB"
+            bootable: true
+            type: *prep_partition_dosid
+          - &default_partition_table_part_boot_ppc64le
+            size: "2 GiB"
+            payload_type: "filesystem"
+            payload:
+              type: "ext4"
+              mountpoint: "/boot"
+              label: "boot"
+              fstab_options: "defaults"
+              fstab_freq: 0
+              fstab_passno: 0
+          - &default_partition_table_part_root_ppc64le
+            size: "2 GiB"
+            payload_type: "filesystem"
+            payload:
+              type: "ext4"
+              mountpoint: "/"
+              fstab_options: "defaults"
+              fstab_freq: 0
+              fstab_passno: 0
+      s390x:
+        uuid: "0x14fc63d2"
+        type: "dos"
+        partitions:
+          - *default_partition_table_part_boot_ppc64le
+          - <<: *default_partition_table_part_root_ppc64le
+            bootable: true
+      riscv64: *default_partition_table_aarch64
+
+
+  supported_options_lists:
+    # common options supported by all disk image types this includes everything
+    # that is not specific to installers or ostree-based images
+    supported_options_disk: &supported_options_disk
+      - "distro"
+      - "packages"
+      - "modules"
+      - "groups"
+      - "enabled_modules"
+      - "containers"
+      - "customizations.cacerts"
+      - "customizations.directories"
+      - "customizations.disk"
+      - "customizations.files"
+      - "customizations.filesystem"
+      - "customizations.partitioning_mode"
+      - "customizations.fips"
+      - "customizations.firewall"
+      - "customizations.user"
+      - "customizations.sshkey"
+      - "customizations.group"
+      - "customizations.hostname"
+      - "customizations.kernel"
+      - "customizations.locale"
+      - "customizations.openscap"
+      - "customizations.repositories"
+      - "customizations.rpm"
+      - "customizations.services"
+      - "customizations.timezone"
+      - "customizations.sshd"
+
+    # options supported by base ostree image types (commit and container)
+    supported_options_ostree_commit: &supported_options_ostree_commit
+      - "distro"
+      - "packages"
+      - "modules"
+      - "groups"
+      - "enabled_modules"
+      - "containers"
+      - "customizations.directories"
+      - "customizations.files"
+      - "customizations.fips"
+      - "customizations.firewall"
+      - "customizations.user"
+      - "customizations.sshkey"
+      - "customizations.group"
+      - "customizations.hostname"
+      - "customizations.kernel.name"
+      - "customizations.locale"
+      - "customizations.repositories"
+      - "customizations.services"
+      - "customizations.timezone"
+
+    # supported options for container types (container and wsl)
+    supported_options_container: &supported_options_container
+      - "distro"
+      - "packages"
+      - "modules"
+      - "groups"
+      - "enabled_modules"
+      - "containers"
+      - "customizations.directories"
+      - "customizations.files"
+      - "customizations.firewall"
+      - "customizations.user"
+      - "customizations.sshkey"
+      - "customizations.group"
+      - "customizations.hostname"
+      - "customizations.locale"
+      - "customizations.repositories"
+      - "customizations.services"
+      - "customizations.timezone"
+
+    # options supported by ostree disk (deployment) image types
+    supported_options_ostree_disk: &supported_options_ostree_disk
+      - "distro"
+      - "customizations.files"
+      - "customizations.directories"
+      - "customizations.disk"
+      - "customizations.filesystem"
+      - "customizations.partitioning_mode"
+      - "customizations.fips"
+      - "customizations.user"
+      - "customizations.sshkey"
+      - "customizations.group"
+      - "customizations.kernel.append"
+      - "customizations.locale"
+      - "customizations.services"
+
+    # options supported by PXE image type
+    # Includes everything except disk, filesystem, and partitioning_mode
+    supported_options_pxe: &supported_options_pxe
+      - "distro"
+      - "packages"
+      - "modules"
+      - "groups"
+      - "containers"
+      - "customizations.cacerts"
+      - "customizations.directories"
+      - "customizations.files"
+      - "customizations.fips"
+      - "customizations.firewall"
+      - "customizations.user"
+      - "customizations.sshkey"
+      - "customizations.group"
+      - "customizations.hostname"
+      - "customizations.kernel"
+      - "customizations.locale"
+      - "customizations.openscap"
+      - "customizations.repositories"
+      - "customizations.rpm"
+      - "customizations.services"
+      - "customizations.timezone"

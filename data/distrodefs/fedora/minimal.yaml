@@ -1,0 +1,200 @@
+.common:
+  minimal_raw_partition_tables: &minimal_raw_partition_tables
+    x86_64:
+      type: "gpt"
+      partitions:
+        - *default_partition_table_part_efi
+        - &minimal_raw_partition_table_part_boot
+          <<: *default_partition_table_part_boot
+          type: *xboot_ldr_partition_guid
+        - &minimal_raw_partition_table_part_root
+          <<: *default_partition_table_part_root
+    aarch64: &minimal_raw_partition_table_aarch64
+      type: "dos"
+      start_offset: "16 MiB"
+      partitions:
+        - <<: *default_partition_table_part_efi
+          bootable: true
+          type: *fat16_bdosid
+        - <<: *minimal_raw_partition_table_part_boot
+          type: *filesystem_linux_dosid
+        - <<: *default_partition_table_part_root
+          type: *filesystem_linux_dosid
+    riscv64: *minimal_raw_partition_table_aarch64
+
+image_types:
+  "minimal-raw-xz": &minimal_raw_xz
+    name_aliases: ["minimal-raw"]
+    filename: "disk.raw.xz"
+    compression: "xz"
+    mime_type: "application/xz"
+    bootable: true
+    default_size: "2 GiB"
+    image_func: "disk"
+    exports: ["xz"]
+    required_partition_sizes: *default_required_dir_sizes
+    platforms:
+      - <<: *x86_64_uefi_platform
+        image_format: "raw"
+      - arch: "aarch64"
+        uefi_vendor: "fedora"
+        image_format: "raw"
+        packages:
+          <<: *aarch64_uefi_platform_packages
+          firmware:
+            - "arm-image-installer"
+            - "bcm283x-firmware"
+            - "uboot-images-armv8"
+        boot_files:
+          - ["/usr/share/uboot/rpi_arm64/u-boot.bin", "/boot/efi/rpi-u-boot.bin"]
+        bootloader: "grub2"
+      - *riscv64_uefi_platform
+    disk_config:
+      mount_configuration: "units"
+      conditions:
+        "f42 and below was quite different":
+          when:
+            version_less_than: "43"
+          shallow_merge:
+            mount_configuration: "fstab"
+    image_config:
+      # NOTE: initial-setup doesn't allow a system to be reconfigured
+      # NOTE: if certain files are already configured (locale, users,
+      # NOTE: that sort of stuff). With this kickstart we enable reconfig
+      # NOTE: of those values since we have already written them in the
+      # NOTE: disk image but they might not be what the user wants.
+      files:
+        - path: "/root/anaconda-ks.cfg"
+          user: "root"
+          group: "root"
+          data: |
+            # Run initial-setup on first boot
+            # Created by osbuild
+            firstboot --reconfig
+      grub2_config:
+        timeout: 5
+      install_weak_deps: false
+      machine_id_uninitialized: false
+      enabled_services:
+        - "NetworkManager.service"
+        - "initial-setup.service"
+        - "sshd.service"
+      kernel_options:
+        - "rw"
+      conditions:
+        "f42 and below was quite different":
+          when:
+            version_less_than: "43"
+          shallow_merge:
+            install_weak_deps: true
+            enabled_services:
+              - "NetworkManager.service"
+              - "initial-setup.service"
+              - "sshd.service"
+              - "firewalld.service"
+            kernel_options:
+              - "ro"
+    partition_table:
+      <<: *minimal_raw_partition_tables
+    package_sets:
+      os:
+        - &minimal_raw_pkgset
+          include:
+            - "@core"
+            - "bash-completion"
+            - "grubby"
+            - "fwupd-efi"
+            - "initial-setup"
+            - "libxkbcommon"
+            - "NetworkManager-wifi"
+            - "linux-firmware"
+            - "brcmfmac-firmware"
+            - "iwlwifi-mvm-firmware"
+            - "realtek-firmware"
+          exclude:
+            - "dracut-config-rescue"
+          conditions:
+            "no firewalld on f43+":
+              when:
+                version_greater_or_equal: "43"
+              append:
+                exclude:
+                  - "firewalld"
+    blueprint:
+      supported_options: *supported_options_disk
+
+  "minimal-raw-zst":
+    <<: *minimal_raw_xz
+    name_aliases: []
+    filename: "disk.raw.zst"
+    compression: zstd
+    exports: ["zstd"]
+
+  "minimal-installer":
+    name_aliases: ["image-installer", "fedora-image-installer"]
+    filename: "installer.iso"
+    mime_type: "application/x-iso9660-image"
+    bootable: true
+    boot_iso: true
+    image_func: "image_installer"
+    # We don't know the variant of the OS pipeline being installed
+    iso_label: "Unknown"
+    # We don't know the variant that goes into the OS pipeline that gets installed
+    variant: "Unknown"
+    exports: ["bootiso"]
+    required_partition_sizes: *default_required_dir_sizes
+    installer_config:
+      <<: *default_installer_config
+      # NOTE: this is not supported right now because the
+      # image-installer on Fedora isn't working when unattended.
+      # These options are probably necessary but could change.
+      # Unattended/non-interactive installations are better set to text,
+      # since they might be running headless and a UI is unnecessary.
+      kickstart_unattended_extra_kernel_opts:
+        - "inst.text"
+        - "inst.noninteractive"
+      # NOTE the minimal installer uses a different set of enabled modules
+      # but the why is unclear
+      enabled_anaconda_modules:
+        - "org.fedoraproject.Anaconda.Modules.Network"
+        - "org.fedoraproject.Anaconda.Modules.Payloads"
+        - "org.fedoraproject.Anaconda.Modules.Runtime"
+        - "org.fedoraproject.Anaconda.Modules.Storage"
+        - "org.fedoraproject.Anaconda.Modules.Users"
+    iso_config: *default_iso_config
+    image_config:
+      locale: "en_US.UTF-8"
+    platforms:
+      - *x86_64_installer_platform
+      - *aarch64_installer_platform
+    package_sets:
+      os:
+        - *minimal_raw_pkgset
+      installer:
+        - *anaconda_pkgset
+    blueprint:
+      supported_options:
+        - "distro"
+        - "packages"
+        - "modules"
+        - "groups"
+        - "enabled_modules"
+        - "containers"
+        - "customizations.installer"
+        - "customizations.cacerts"
+        - "customizations.directories"
+        - "customizations.files"
+        - "customizations.firewall"
+        - "customizations.user"
+        - "customizations.sshkey"
+        - "customizations.group"
+        - "customizations.fips"
+        - "customizations.timezone"
+        - "customizations.hostname"
+        - "customizations.kernel.name"
+        - "customizations.locale"
+        - "customizations.openscap"
+        - "customizations.repositories"
+        - "customizations.rpm"
+        - "customizations.services"
+        - "customizations.kernel.append"

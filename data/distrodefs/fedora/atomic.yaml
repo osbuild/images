@@ -1,0 +1,159 @@
+# Image types for the Fedora Atomic variants: Kinoite, Silverblue, Sway Atomic, Budgie Atomic, and Cosmic Atomic
+
+.common:
+  atomic_ostree: &atomic_ostree
+    name: "fedora"
+    remote_name: "fedora"
+    url: "mirrorlist=https://ostree.fedoraproject.org/mirrorlist"
+
+  atomic_installer_common: &atomic_installer_common
+    <<: *rpm_ostree_imgtype_common
+    filename: "installer.iso"
+    mime_type: "application/x-iso9660-image"
+    boot_iso: true
+    image_func: "iot_installer"
+    ostree: *atomic_ostree
+    exports: ["bootiso"]
+    required_partition_sizes: *default_required_dir_sizes
+    iso_config:
+      <<: *default_iso_config
+      rootfs_type: "erofs"
+      erofs_options: *default_erofs_options
+    installer_config:
+      <<: *default_installer_config
+      install_weak_deps: false
+      default_menu: 1
+      iso_files:
+        - ["/usr/share/licenses/fedora-release-common/Fedora-Legal-README.txt", "/Fedora-Legal-README.txt"]
+        - ["/usr/share/licenses/fedora-release-common/LICENSE", "/LICENSE"]
+      payload:
+        location: "rootfs"
+        kickstart: "interactive-defaults"
+    image_config:
+      locale: "en_US.UTF-8"
+      kernel_options:
+    package_sets:
+      installer:
+        - *network_installer_pkgset
+    platforms:
+      - *x86_64_installer_platform
+      - *aarch64_installer_platform
+    blueprint:
+      supported_options:
+        - "distro"
+        - "customizations.installer"
+        - "customizations.user"
+        - "customizations.sshkey"
+        - "customizations.group"
+        - "customizations.fips"
+        - "customizations.timezone"
+        - "customizations.locale"
+
+  atomic_qcow2_common: &atomic_qcow2_common
+    <<: *rpm_ostree_imgtype_common
+    filename: "image.qcow2"
+    mime_type: "application/x-qemu-disk"
+    default_size: "10 GiB"
+    bootable: true
+    image_func: "iot"
+    ostree: *atomic_ostree
+    exports: ["qcow2"]
+    required_partition_sizes: *default_required_dir_sizes
+    image_config:
+      kernel_options: *ostree_deployment_kernel_options
+      ignition_platform: "qemu"
+    partition_table:
+      <<: *iot_base_partition_tables
+    platforms:
+      - <<: *x86_64_uefi_platform
+        image_format: "qcow2"
+        # XXX: the original images lib defined no qcow2Compat
+        qcow2_compat: ""
+      - <<: *aarch64_platform
+        image_format: "qcow2"
+        qcow2_compat: "1.1"
+    blueprint:
+      supported_options: *supported_options_ostree_disk
+
+image_types:
+  "kinoite-installer":
+    <<: *atomic_installer_common
+    iso_label: "Kinoite"
+    variant: "Kinoite"
+    ostree:
+      <<: *atomic_ostree
+      ref: "{{.Distro.Name}}/{{.Distro.MajorVersion}}/{{.Arch}}/kinoite"
+    package_sets:
+      installer:
+        - *network_installer_pkgset
+        - include:
+            - "fedora-release-kinoite"
+
+  "silverblue-installer":
+    <<: *atomic_installer_common
+    iso_label: "Silverblue"
+    variant: "Silverblue"
+    ostree:
+      <<: *atomic_ostree
+      ref: "{{.Distro.Name}}/{{.Distro.MajorVersion}}/{{.Arch}}/silverblue"
+    package_sets:
+      installer:
+        - *network_installer_pkgset
+        - include:
+            - "fedora-release-silverblue"
+
+  "sway-atomic-installer":
+    <<: *atomic_installer_common
+    iso_label: "Sway-Atomic"
+    variant: "Sway Atomic"
+    ostree:
+      <<: *atomic_ostree
+      ref: "{{.Distro.Name}}/{{.Distro.MajorVersion}}/{{.Arch}}/sericea"
+    package_sets:
+      installer:
+        - *network_installer_pkgset
+        - include:
+            - "fedora-release-sway-atomic"
+
+  "budgie-atomic-installer":
+    <<: *atomic_installer_common
+    iso_label: "Budgie-Atomic"
+    variant: "Budgie Atomic"
+    ostree:
+      <<: *atomic_ostree
+      ref: "{{.Distro.Name}}/{{.Distro.MajorVersion}}/{{.Arch}}/onyx"
+    package_sets:
+      installer:
+        - *network_installer_pkgset
+        - include:
+            - "fedora-release-budgie-atomic"
+
+  "cosmic-atomic-installer":
+    <<: *atomic_installer_common
+    iso_label: "Cosmic-Atomic"
+    variant: "Cosmic Atomic"
+    ostree:
+      <<: *atomic_ostree
+      ref: "{{.Distro.Name}}/{{.Distro.MajorVersion}}/{{.Arch}}/cosmic-atomic"
+    package_sets:
+      installer:
+        - *network_installer_pkgset
+        - include:
+            - "fedora-release-cosmic-atomic"
+
+  ### Note we only have disk images for those Atomic variants that have a form of
+  ### initial setup to provision the system.
+
+  "kinoite-qcow2":
+    <<: *atomic_qcow2_common
+    variant: "Kinoite"
+    ostree:
+      <<: *atomic_ostree
+      ref: "{{.Distro.Name}}/{{.Distro.MajorVersion}}/{{.Arch}}/kinoite"
+
+  "silverblue-qcow2":
+    <<: *atomic_qcow2_common
+    variant: "Kinoite"
+    ostree:
+      <<: *atomic_ostree
+      ref: "{{.Distro.Name}}/{{.Distro.MajorVersion}}/{{.Arch}}/kinoite"
