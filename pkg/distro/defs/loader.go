@@ -759,7 +759,7 @@ func (imgType *ImageTypeYAML) ImageConfig(id distro.ID, archName string) *distro
 // InstallerConfig returns the InstallerConfig for the given imgType
 // Note that on conditions the InstallerConfig is fully replaced, do
 // any merging in YAML
-func (imgType *ImageTypeYAML) InstallerConfig(id distro.ID, archName string) *distro.InstallerConfig {
+func (imgType *ImageTypeYAML) InstallerConfig(id distro.ID, archName string) (*distro.InstallerConfig, error) {
 	installerConfig := imgType.InstallerConfigYAML.InstallerConfig
 	for _, cond := range imgType.InstallerConfigYAML.Conditions {
 		if cond.When.Eval(id, archName) {
@@ -767,7 +767,13 @@ func (imgType *ImageTypeYAML) InstallerConfig(id distro.ID, archName string) *di
 		}
 	}
 
-	return installerConfig
+	if installerConfig != nil {
+		if err := installerConfig.ExpandTemplates(id, archName); err != nil {
+			return nil, err
+		}
+	}
+
+	return installerConfig, nil
 }
 
 // ISOConfig returns the ISOConfig for the given imgType
