@@ -919,12 +919,33 @@ image_types:
 func TestImageTypeInstallerConfig(t *testing.T) {
 	it := makeTestImageType(t, fakeDistroYamlInstallerConf)
 
-	installerConfig := it.InstallerConfig(distro.ID{Name: "test-distro", MajorVersion: 1}, "test_arch")
+	installerConfig, err := it.InstallerConfig(distro.ID{Name: "test-distro", MajorVersion: 1}, "test_arch")
+	require.NoError(t, err)
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDracutModules: []string{"base-dracut-mod1"},
 		AdditionalDrivers:       []string{"base-drv1"},
 		DefaultMenu:             common.ToPtr(1),
 	}, installerConfig)
+}
+
+var fakeDistroYamlInstallerConfError = `
+image_types:
+  test_type:
+    installer_config:
+      flatpaks:
+        - registry:
+            url: oci+https://registry.fedora-project.org
+            remote_name: fedora
+          references:
+            - ""
+`
+
+func TestImageTypeInstallerConfigError(t *testing.T) {
+	it := makeTestImageType(t, fakeDistroYamlInstallerConfError)
+
+	_, err := it.InstallerConfig(distro.ID{Name: "test-distro", MajorVersion: 1}, "test_arch")
+	require.Error(t, err)
+	assert.ErrorContains(t, err, "empty flatpak ref after expansion")
 }
 
 func TestImageTypeInstallerConfigMergeVerLT(t *testing.T) {
@@ -940,7 +961,8 @@ func TestImageTypeInstallerConfigMergeVerLT(t *testing.T) {
 `
 	it := makeTestImageType(t, fakeDistroYaml)
 
-	installerConfig := it.InstallerConfig(distro.ID{Name: "test-distro", MajorVersion: 1}, "test_arch")
+	installerConfig, err := it.InstallerConfig(distro.ID{Name: "test-distro", MajorVersion: 1}, "test_arch")
+	require.NoError(t, err)
 	assert.Equal(t, &distro.InstallerConfig{
 		// AdditionalDrivers merged from parent
 		AdditionalDrivers:       []string{"base-drv1"},
@@ -963,7 +985,8 @@ func TestImageTypeInstallerConfigMergeDistroName(t *testing.T) {
 `
 	it := makeTestImageType(t, fakeDistroYaml)
 
-	installerConfig := it.InstallerConfig(distro.ID{Name: "test-distro", MajorVersion: 1}, "test_arch")
+	installerConfig, err := it.InstallerConfig(distro.ID{Name: "test-distro", MajorVersion: 1}, "test_arch")
+	require.NoError(t, err)
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDracutModules: []string{"override-dracut-mod1"},
 		AdditionalDrivers:       []string{"override-drv1"},
@@ -983,7 +1006,8 @@ func TestImageTypeInstallerConfigMergeArch(t *testing.T) {
 `
 	it := makeTestImageType(t, fakeDistroYaml)
 
-	installerConfig := it.InstallerConfig(distro.ID{Name: "test-distro", MajorVersion: 1}, "test_arch")
+	installerConfig, err := it.InstallerConfig(distro.ID{Name: "test-distro", MajorVersion: 1}, "test_arch")
+	require.NoError(t, err)
 	assert.Equal(t, &distro.InstallerConfig{
 		AdditionalDrivers: []string{"override-drv1"},
 		// AdditionalDracutModules,ISORootfsType merged from parent

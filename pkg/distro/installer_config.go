@@ -1,6 +1,10 @@
 package distro
 
 import (
+	"bytes"
+	"fmt"
+	"text/template"
+
 	"github.com/osbuild/images/pkg/manifest"
 )
 
@@ -53,4 +57,44 @@ type InstallerConfig struct {
 // returns a new structure instance, which is a result of the inheritance.
 func (c *InstallerConfig) InheritFrom(parentConfig *InstallerConfig) *InstallerConfig {
 	return shallowMerge(c, parentConfig)
+}
+
+// Expand templates anywhere relevant inside the installer config, locking is handled
+// higher up in the caller of this function
+func (c *InstallerConfig) ExpandTemplates(id ID, archName string) error {
+	subs := struct {
+		Arch   string
+		Distro ID
+	}{
+		Arch:   archName,
+		Distro: id,
+	}
+
+	// Flatpak references can be templated if they exist
+	for flatpakIdx, flatpaks := range c.Flatpaks {
+		if flatpaks == nil {
+			return fmt.Errorf("flatpak object was nil")
+		}
+
+		for refIdx, ref := range flatpaks.References {
+			var buf bytes.Buffer
+
+			tmpl, err := template.New("installer-config").Parse(ref)
+			if err != nil {
+				return err
+			}
+
+			if err := tmpl.Execute(&buf, subs); err != nil {
+				return err
+			}
+
+			c.Flatpaks[flatpakIdx].References[refIdx] = buf.String()
+
+			if len(c.Flatpaks[flatpakIdx].References[refIdx]) == 0 {
+				return fmt.Errorf("empty flatpak ref after expansion")
+			}
+		}
+	}
+
+	return nil
 }
