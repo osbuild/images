@@ -13,6 +13,7 @@ dnf -y install \
     go \
     gpgme-devel \
     krb5-devel \
+    lorax \
     osbuild \
     osbuild-depsolve-dnf \
     osbuild-luks2 \
@@ -23,12 +24,8 @@ dnf -y install \
     python3 \
     python3-pip \
     python3-pytest \
+    python3-boto3 \
+    python3-qemu-qmp \
+    python3-scp \
     yamllint \
     xz
-
-# for mkksiso
-dnf install -y lorax
-
-# we need this for the qemu boot tests and for any python tests but
-# could skip it for other testing.
-pip install .
