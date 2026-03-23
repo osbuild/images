@@ -761,23 +761,18 @@ func TestContainerSourceLocality(t *testing.T) {
 					t.Skipf("skipping %s: legacy ISO requires real distro definitions not available in the test distro", imgTypeName)
 				}
 
-				imgOptions := distro.ImageOptions{}
-				if !local {
-					imgOptions.Bootc = &distro.BootcImageOptions{
-						UseRemoteContainerSource: true,
-					}
+				imgOptions := distro.ImageOptions{
+					Bootc: &distro.BootcImageOptions{
+						// InstallerPayloadRef is required by the bootc_iso image
+						// type (bootc-installer) but harmlessly ignored by disk and
+						// PXE types. For bootc_generic_iso it adds an optional
+						// payload container whose locality follows the same flag.
+						// Setting it unconditionally keeps the test simple and
+						// focused on container source locality.
+						InstallerPayloadRef:      "registry.example.com/payload:latest",
+						UseRemoteContainerSource: !local,
+					},
 				}
-
-				// InstallerPayloadRef is required by the bootc_iso image
-				// type (bootc-installer) but harmlessly ignored by disk and
-				// PXE types. For bootc_generic_iso it adds an optional
-				// payload container whose locality follows the same flag.
-				// Setting it unconditionally keeps the test simple and
-				// focused on container source locality.
-				if imgOptions.Bootc == nil {
-					imgOptions.Bootc = &distro.BootcImageOptions{}
-				}
-				imgOptions.Bootc.InstallerPayloadRef = "registry.example.com/payload:latest"
 
 				mf, _, err := imgType.Manifest(&blueprint.Blueprint{}, imgOptions, nil, common.ToPtr(int64(0)))
 				require.NoError(t, err)
