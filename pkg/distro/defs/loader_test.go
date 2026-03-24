@@ -76,6 +76,46 @@ distros:
 	return tmpdir
 }
 
+func makeFakeDistrosWithImageYAMLFiles(t *testing.T, distrosContent string, defsFiles map[string]string) string {
+	t.Helper()
+
+	if distrosContent == "" {
+		distrosContent = `
+distros:
+ - name: test-distro-1
+   vendor: test-vendor
+   defs_path: test-distro-1/
+`
+	}
+
+	tmpdir := t.TempDir()
+	distrosPath := filepath.Join(tmpdir, "distros.yaml")
+	err := os.WriteFile(distrosPath, []byte(distrosContent), 0644)
+	assert.NoError(t, err)
+
+	var di struct {
+		Distros []defs.DistroYAML `yaml:"distros"`
+	}
+	err = yaml.Unmarshal([]byte(distrosContent), &di)
+	assert.NoError(t, err)
+	require.NotEmpty(t, di.Distros)
+
+	for _, d := range di.Distros {
+		p := filepath.Join(tmpdir, d.DefsPath)
+		err = os.MkdirAll(p, 0755)
+		assert.NoError(t, err)
+	}
+
+	defsBase := filepath.Join(tmpdir, di.Distros[0].DefsPath)
+	for name, content := range defsFiles {
+		p := filepath.Join(defsBase, name)
+		err = os.WriteFile(p, []byte(content), 0644)
+		assert.NoError(t, err)
+	}
+
+	return tmpdir
+}
+
 func TestYamlLintClean(t *testing.T) {
 	_, err := exec.LookPath("yamllint")
 	if errors.Is(err, exec.ErrNotFound) {
@@ -1281,6 +1321,153 @@ image_types:
 	imgType := imgTypes["test_type"]
 	_, err = imgType.PlatformsFor(distro.ID)
 	assert.EqualError(t, err, `platform conditionals for image type "test_type" should match only once but matched 2 times`)
+}
+
+func TestLoadImageTypesMergesMultipleYAMLFiles(t *testing.T) {
+	fakeImageTypesYaml1 := `
+image_types:
+  "ec2":
+    filename: "image.raw.xz"
+    image_func: "disk"
+    package_sets:
+      os:
+        - include:
+            - "@core"
+            - "bash-completion"
+            - "grubby"
+            - "fwupd-efi"
+          exclude:
+            - "dracut-config-rescue"
+`
+	fakeImageTypesYaml2 := `
+image_types:
+  "iot":
+    filename: "image.qcow2"
+    image_func: disk
+    package_sets:
+      os:
+        - include:
+            - "acl"
+            - "bootc"
+            - "bootupd"
+            - "container-selinux"
+            - "crun"
+            - "cryptsetup"
+            - "dnf"
+          exclude:
+            - "initial-setup-gui"
+`
+	baseDir := makeFakeDistrosWithImageYAMLFiles(t, "", map[string]string{
+		"cloud.yaml": fakeImageTypesYaml1,
+		"iot.yaml":   fakeImageTypesYaml2,
+	})
+	restore := defs.MockDataFS(baseDir)
+	t.Cleanup(restore)
+
+	d, err := defs.LoadDistroWithoutImageTypes("test-distro-1")
+	require.NoError(t, err)
+	err = d.LoadImageTypes()
+	require.NoError(t, err)
+
+	imageTypes := d.ImageTypes()
+	require.Len(t, imageTypes, 2)
+	assert.Equal(t, "image.raw.xz", imageTypes["ec2"].Filename)
+	assert.Equal(t, "image.qcow2", imageTypes["iot"].Filename)
+}
+
+func TestLoadImageTypesDuplicateImageTypeError(t *testing.T) {
+	dup := `
+image_types:
+  "ec2":
+    filename: "image.raw.xz"
+    image_func: "disk"
+    package_sets:
+      os:
+        - include:
+            - "@core"
+            - "bash-completion"
+            - "grubby"
+            - "fwupd-efi"
+          exclude:
+            - "dracut-config-rescue"
+`
+	baseDir := makeFakeDistrosWithImageYAMLFiles(t, "", map[string]string{
+		"cloud.yaml":  dup,
+		"cloud2.yaml": dup,
+	})
+	restore := defs.MockDataFS(baseDir)
+	t.Cleanup(restore)
+
+	d, err := defs.LoadDistroWithoutImageTypes("test-distro-1")
+	require.NoError(t, err)
+	err = d.LoadImageTypes()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), `duplicate image type ec2 found`)
+}
+
+func TestLoadImageTypesPrependsCommonYAML(t *testing.T) {
+	common := `
+.common:
+  cloud_core_pkgset: &cloud_core_pkgset
+    include:
+      - qemu-guest-agent
+    exclude:
+      - dracut-config-rescue
+`
+	cloud := `
+image_types:
+  "ec2":
+    filename: "image.raw.xz"
+    image_func: "disk"
+    package_sets:
+      os:
+        - *cloud_core_pkgset
+        - include:
+            - "@core"
+            - "bash-completion"
+            - "grubby"
+            - "fwupd-efi"
+`
+	baseDir := makeFakeDistrosWithImageYAMLFiles(t, "", map[string]string{
+		"_common.yaml": common,
+		"main.yaml":    cloud,
+	})
+	restore := defs.MockDataFS(baseDir)
+	t.Cleanup(restore)
+
+	d, err := defs.LoadDistroWithoutImageTypes("test-distro-1")
+	require.NoError(t, err)
+	require.NoError(t, d.LoadImageTypes())
+
+	imageType, ok := d.ImageTypes()["ec2"]
+	require.True(t, ok)
+	osSet := imageType.PackageSets(d.ID, "x86_64")["os"]
+	assert.Equal(t, []string{"@core", "bash-completion", "fwupd-efi", "grubby", "qemu-guest-agent"}, osSet.Include)
+	assert.Equal(t, []string{"dracut-config-rescue"}, osSet.Exclude)
+}
+
+func TestLoadImageTypesInvalidYAMLReturnsError(t *testing.T) {
+	baseDir := makeFakeDistrosWithImageYAMLFiles(t, "", map[string]string{
+		"broken.yaml": "image_types: [some invalid structure is living here",
+	})
+	restore := defs.MockDataFS(baseDir)
+	t.Cleanup(restore)
+
+	d, err := defs.LoadDistroWithoutImageTypes("test-distro-1")
+	require.NoError(t, err)
+	err = d.LoadImageTypes()
+	require.Error(t, err)
+}
+
+func TestLoadImageTypesWithNoImageTypesLeavesImageTypesUnset(t *testing.T) {
+	baseDir := makeFakeDistrosWithImageYAMLFiles(t, "", map[string]string{})
+	restore := defs.MockDataFS(baseDir)
+	t.Cleanup(restore)
+
+	d, err := defs.LoadDistroWithoutImageTypes("test-distro-1")
+	require.NoError(t, err)
+	require.NoError(t, d.LoadImageTypes())
+	assert.Nil(t, d.ImageTypes())
 }
 
 func TestDistrosLoadingMatchTransforms(t *testing.T) {
