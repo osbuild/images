@@ -50,16 +50,9 @@ func Parse(size string) (uint64, error) {
 
 	for _, unit := range supportedUnitsRegexp {
 		if unit.re.MatchString(size) {
-			if unit.multiple == 1 && numberFloat != math.Trunc(numberFloat) {
-				return 0, fmt.Errorf("cannot have fractional bytes: %s", size)
-			}
-
-			convertedNumber := numberFloat * float64(unit.multiple)
-			if convertedNumber != math.Trunc(convertedNumber) {
-				return 0, fmt.Errorf("cannot have fractional bytes: %s is %f B", size, convertedNumber)
-			}
-
-			return uint64(convertedNumber), nil
+			sizeInBytes := numberFloat * float64(unit.multiple)
+			sizeInBytesInt := uint64(math.Round(sizeInBytes))
+			return sizeInBytesInt, nil
 		}
 	}
 
