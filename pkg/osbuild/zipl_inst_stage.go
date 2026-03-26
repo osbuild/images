@@ -63,8 +63,15 @@ func NewZiplInstStageOptions(kernel string, pt *disk.PartitionTable) *ZiplInstSt
 	}
 
 	bootPart := pt.Partitions[bootIdx]
+
+	var blocksize *uint64
+	if pt.SectorSize != 0 {
+		blocksize = &pt.SectorSize
+	}
+
 	return &ZiplInstStageOptions{
-		Kernel:   kernel,
-		Location: pt.BytesToSectors(bootPart.Start),
+		Kernel:    kernel,
+		Location:  pt.BytesToSectors(bootPart.Start),
+		Blocksize: blocksize,
 	}
 }
