@@ -3032,6 +3032,87 @@ func TestNewCustomPartitionTable(t *testing.T) {
 
 }
 
+func TestNewCustomPartitionTableSectorSize(t *testing.T) {
+	type testCase struct {
+		customizations *blueprint.DiskCustomization
+		expectedSize   uint64
+	}
+
+	testCases := map[string]testCase{
+		"default-sector-size": {
+			customizations: &blueprint.DiskCustomization{
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						MinSize: 1 * datasizes.GiB,
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Mountpoint: "/",
+							FSType:     "xfs",
+						},
+					},
+				},
+			},
+			expectedSize: 0, // default, will use DefaultSectorSize
+		},
+		"sector-size-512": {
+			customizations: &blueprint.DiskCustomization{
+				SectorSize: 512,
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						MinSize: 1 * datasizes.GiB,
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Mountpoint: "/",
+							FSType:     "xfs",
+						},
+					},
+				},
+			},
+			expectedSize: 512,
+		},
+		"sector-size-4096": {
+			customizations: &blueprint.DiskCustomization{
+				SectorSize: 4096,
+				Partitions: []blueprint.PartitionCustomization{
+					{
+						MinSize: 1 * datasizes.GiB,
+						FilesystemTypedCustomization: blueprint.FilesystemTypedCustomization{
+							Mountpoint: "/",
+							FSType:     "xfs",
+						},
+					},
+				},
+			},
+			expectedSize: 4096,
+		},
+	}
+
+	options := &disk.CustomPartitionTableOptions{
+		DefaultFSType:      disk.FS_XFS,
+		BootMode:           platform.BOOT_NONE,
+		PartitionTableType: disk.PT_GPT,
+		Architecture:       arch.ARCH_X86_64,
+	}
+
+	for name := range testCases {
+		tc := testCases[name]
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			/* #nosec G404 */
+			rnd := rand.New(rand.NewSource(0))
+			pt, err := disk.NewCustomPartitionTable(tc.customizations, options, rnd)
+
+			assert.NoError(err)
+			assert.Equal(tc.expectedSize, pt.SectorSize, "SectorSize should match the customization")
+
+			// Verify BytesToSectors uses the correct sector size
+			effectiveSectorSize := tc.expectedSize
+			if effectiveSectorSize == 0 {
+				effectiveSectorSize = disk.DefaultSectorSize
+			}
+			assert.Equal(uint64(1024), pt.BytesToSectors(1024*effectiveSectorSize))
+		})
+	}
+}
+
 func TestNewCustomPartitionTableErrors(t *testing.T) {
 	type testCase struct {
 		customizations *blueprint.DiskCustomization
