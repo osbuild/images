@@ -17,4 +17,5 @@ dependencies = [
 ]
 
 [tool.setuptools.packages.find]
+where = ["test/scripts"]
 include = ["vmtest"]
