@@ -601,6 +601,8 @@ func TestFedoraArchitecture_ListImageTypes(t *testing.T) {
 			imgNames: []string{
 				"generic-container",
 				"generic-qcow2",
+				"everything-network-installer",
+				"server-network-installer",
 				"server-qcow2",
 				"cloud-qcow2",
 				"iot-bootable-container",

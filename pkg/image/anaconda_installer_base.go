@@ -22,12 +22,17 @@ func (img *AnacondaInstallerBase) Bootloaders(buildPipeline manifest.Build, plat
 	// Setup the bootloaders
 	bootloaders := make([]manifest.ISOBootloader, 0)
 
+	var addUEFIBootTree bool
 	switch img.ISOCustomizations.BootType {
+	case manifest.Grub2UEFIOnlyISOBoot:
+		addUEFIBootTree = true
+
 	case manifest.SyslinuxISOBoot:
 		syslinux := manifest.NewISOLinuxBootloader(buildPipeline, img.InstallerCustomizations.Product, img.InstallerCustomizations.OSVersion)
 		syslinux.Platform = platform
 		syslinux.KernelOpts = kernelOpts
 		bootloaders = append(bootloaders, syslinux)
+		addUEFIBootTree = true
 
 	case manifest.Grub2ISOBoot:
 		grub2 := manifest.NewGrub2X86Bootloader(buildPipeline, img.InstallerCustomizations.Product, img.InstallerCustomizations.OSVersion)
@@ -36,6 +41,7 @@ func (img *AnacondaInstallerBase) Bootloaders(buildPipeline manifest.Build, plat
 		grub2.KernelOpts = kernelOpts
 		grub2.DefaultMenu = img.InstallerCustomizations.DefaultMenu
 		bootloaders = append(bootloaders, grub2)
+		addUEFIBootTree = true
 
 	case manifest.Grub2PPCISOBoot:
 		grub2ppc64 := manifest.NewGrub2PPC64Bootloader(buildPipeline, img.InstallerCustomizations.Product, img.InstallerCustomizations.OSVersion)
@@ -44,10 +50,15 @@ func (img *AnacondaInstallerBase) Bootloaders(buildPipeline manifest.Build, plat
 		grub2ppc64.KernelOpts = kernelOpts
 		grub2ppc64.DefaultMenu = img.InstallerCustomizations.DefaultMenu
 		bootloaders = append(bootloaders, grub2ppc64)
+
+	case manifest.S390ISOBoot:
+		s390 := manifest.NewS390Bootloader(buildPipeline)
+		s390.Platform = platform
+		s390.KernelOpts = kernelOpts
+		bootloaders = append(bootloaders, s390)
 	}
 
-	// Skip using UEFI on PPC64LE
-	if img.ISOCustomizations.BootType != manifest.Grub2PPCISOBoot {
+	if addUEFIBootTree {
 		// EFI bootloader adds a pipeline and adds stages
 		bootTreePipeline := manifest.NewEFIBootTree(buildPipeline, img.InstallerCustomizations.Product, img.InstallerCustomizations.OSVersion)
 		bootTreePipeline.Platform = platform

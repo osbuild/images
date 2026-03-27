@@ -63,6 +63,7 @@ const ( // ISOBoot type enum
 	SyslinuxISOBoot                         // Boot with grub2 UEFI and syslinux/isolinux BIOS
 	Grub2ISOBoot                            // Boot with grub2 UEFI and grub2 BIOS
 	Grub2PPCISOBoot                         // Boot with grub2 BIOS for ppc64le
+	S390ISOBoot                             // Boot with S390 bootloader
 )
 
 func (r *ISOBootType) UnmarshalJSON(data []byte) error {
@@ -79,6 +80,8 @@ func (r *ISOBootType) UnmarshalJSON(data []byte) error {
 		*r = Grub2ISOBoot
 	case "grub2-ppc64le":
 		*r = Grub2PPCISOBoot
+	case "s390-iso":
+		*r = S390ISOBoot
 	default:
 		return fmt.Errorf("unknown ISOBootType: %q", s)
 	}

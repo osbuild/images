@@ -359,6 +359,7 @@ func TestRhel9_ImageType_Name(t *testing.T) {
 		{
 			arch: "s390x",
 			imgNames: []string{
+				"network-installer",
 				"qcow2",
 				"tar",
 			},
@@ -544,6 +545,7 @@ func TestRhel9_Architecture_ListImageTypes(t *testing.T) {
 		{
 			arch: "s390x",
 			imgNames: []string{
+				"network-installer",
 				"qcow2",
 				"tar",
 			},

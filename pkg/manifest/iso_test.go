@@ -45,5 +45,11 @@ func TestISOBoot(t *testing.T) {
 	assert.Equal(t, "Tester", options.Pub)
 	assert.Equal(t, true, options.CHRPBoot)
 	assert.Equal(t, "test-iso-1", options.VolSet)
+
+	options = xorrisofsStageOptions("boot.iso", ISOCustomizations{Label: "test-iso-1", BootType: S390ISOBoot, Preparer: "Test", Publisher: "Tester"})
+	require.NotNil(t, options.Boot)
+	assert.Equal(t, "images/cdboot.img", options.Boot.Image)
+	assert.Equal(t, "", options.IsohybridMBR)
+	assert.Equal(t, "", options.Grub2MBR)
 	assert.Equal(t, "", options.EFI)
 }

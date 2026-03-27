@@ -504,6 +504,19 @@
         zipl:
           - "s390utils-base"
       bootloader: "zipl"
+    s390x_installer_platform: &s390x_installer_platform
+      arch: "s390x"
+      image_format: "qcow2"
+      qcow2_compat: "1.1"
+      packages:
+        booting:
+          - "dracut-config-generic"
+          - "s390utils-base"
+          - "s390utils-core"
+      build_packages:
+        booting:
+          - "s390utils-base"
+      bootloader: "zipl"
     riscv64_uefi_platform: &riscv64_uefi_platform
       arch: "riscv64"
       uefi_vendor: "uefi"
@@ -564,6 +577,11 @@
           arch: "ppc64le"
         shallow_merge:
           boot_type: "grub2-ppc64le"
+      "s390x uses s390-iso":
+        when:
+          arch: "s390x"
+        shallow_merge:
+          boot_type: "s390-iso"
 
   erofs_options: &default_erofs_options
     compression:
@@ -2525,6 +2543,7 @@ image_types:
       - *x86_64_installer_platform
       - *aarch64_installer_platform
       - *ppc64le_installer_platform
+      - *s390x_installer_platform
     blueprint:
       supported_options:
         - "distro"
