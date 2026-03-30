@@ -469,8 +469,15 @@ func (p *AnacondaInstaller) serialize() (osbuild.Pipeline, error) {
 func (p *AnacondaInstaller) ostreeCommitStages() ([]*osbuild.Stage, error) {
 	stages := make([]*osbuild.Stage, 0)
 
-	// Set up the payload ostree repo
-	stages = append(stages, osbuild.NewOSTreeInitStage(&osbuild.OSTreeInitStageOptions{Path: p.InstallerCustomizations.Payload.Path}))
+	// set up the payload ostree repo, if the commit is embedded here (on the anaconda tree)
+	// itself then we want to have a bare repository so the files are uncompressed, this lets
+	// erofs or squashfs be efficient, saving us ~500-750 MiB on the rootfs size
+	stages = append(stages, osbuild.NewOSTreeInitStage(
+		&osbuild.OSTreeInitStageOptions{
+			Path: p.InstallerCustomizations.Payload.Path,
+			Mode: osbuild.ModeBare,
+		},
+	))
 	stages = append(stages, osbuild.NewOSTreePullStage(
 		&osbuild.OSTreePullStageOptions{Repo: p.InstallerCustomizations.Payload.Path},
 		osbuild.NewOstreePullStageInputs("org.osbuild.source", p.ostreeCommitSpec.Checksum, p.ostreeCommitSpec.Ref),
