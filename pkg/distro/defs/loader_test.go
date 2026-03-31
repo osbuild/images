@@ -1324,6 +1324,14 @@ image_types:
 }
 
 func TestLoadImageTypesMergesMultipleYAMLFiles(t *testing.T) {
+	common := `
+.common:
+  shared_pkgset: &shared_pkgset
+    include:
+      - qemu-guest-agent
+    exclude:
+      - dracut-config-rescue
+`
 	fakeImageTypesYaml1 := `
 image_types:
   "ec2":
@@ -1331,13 +1339,12 @@ image_types:
     image_func: "disk"
     package_sets:
       os:
+        - *shared_pkgset
         - include:
             - "@core"
             - "bash-completion"
             - "grubby"
             - "fwupd-efi"
-          exclude:
-            - "dracut-config-rescue"
 `
 	fakeImageTypesYaml2 := `
 image_types:
@@ -1346,6 +1353,7 @@ image_types:
     image_func: disk
     package_sets:
       os:
+        - *shared_pkgset
         - include:
             - "acl"
             - "bootc"
@@ -1358,8 +1366,9 @@ image_types:
             - "initial-setup-gui"
 `
 	baseDir := makeFakeDistrosWithImageYAMLFiles(t, "", map[string]string{
-		"cloud.yaml": fakeImageTypesYaml1,
-		"iot.yaml":   fakeImageTypesYaml2,
+		"_common.yaml": common,
+		"cloud.yaml":   fakeImageTypesYaml1,
+		"iot.yaml":     fakeImageTypesYaml2,
 	})
 	restore := defs.MockDataFS(baseDir)
 	t.Cleanup(restore)
@@ -1373,6 +1382,16 @@ image_types:
 	require.Len(t, imageTypes, 2)
 	assert.Equal(t, "image.raw.xz", imageTypes["ec2"].Filename)
 	assert.Equal(t, "image.qcow2", imageTypes["iot"].Filename)
+
+	ec2Img := imageTypes["ec2"]
+	ec2OS := (&ec2Img).PackageSets(d.ID, "x86_64")["os"]
+	assert.Equal(t, []string{"@core", "bash-completion", "fwupd-efi", "grubby", "qemu-guest-agent"}, ec2OS.Include)
+	assert.Equal(t, []string{"dracut-config-rescue"}, ec2OS.Exclude)
+
+	iotImg := imageTypes["iot"]
+	iotOS := (&iotImg).PackageSets(d.ID, "x86_64")["os"]
+	assert.Equal(t, []string{"acl", "bootc", "bootupd", "container-selinux", "crun", "cryptsetup", "dnf", "qemu-guest-agent"}, iotOS.Include)
+	assert.Equal(t, []string{"dracut-config-rescue", "initial-setup-gui"}, iotOS.Exclude)
 }
 
 func TestLoadImageTypesDuplicateImageTypeError(t *testing.T) {
