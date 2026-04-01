@@ -685,6 +685,7 @@
         "rhel-9.6",
         "rhel-9.7",
         "rhel-9.8",
+        "rhel-9.9",
         "rhel-10*",
         "centos-*"
       ],
