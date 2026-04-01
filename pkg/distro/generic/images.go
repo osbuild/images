@@ -508,10 +508,48 @@ func installerCustomizations(t *imageType, c *blueprint.Customizations, o distro
 		return isc, err
 	}
 
-	if installerCust != nil && installerCust.Modules != nil {
-		isc.EnabledAnacondaModules = append(isc.EnabledAnacondaModules, installerCust.Modules.Enable...)
-		isc.DisabledAnacondaModules = append(isc.DisabledAnacondaModules, installerCust.Modules.Disable...)
+	if installerCust != nil {
+		if installerCust.Modules != nil {
+			isc.EnabledAnacondaModules = append(isc.EnabledAnacondaModules, installerCust.Modules.Enable...)
+			isc.DisabledAnacondaModules = append(isc.DisabledAnacondaModules, installerCust.Modules.Disable...)
+		}
+
+		if installerCust.Payload != nil && installerCust.Payload.Flatpaks != nil {
+			flatpakMeta := installerCust.Payload.Flatpaks
+
+			// if there's a list at all we want to reset the flatpaks, this is to allow
+			// a user to remove all flatpaks by using `force = []`
+			if flatpakMeta.Force != nil {
+				isc.Flatpaks = []flatpak.SourceSpec{}
+			}
+
+			for _, bpFlatpak := range flatpakMeta.Force {
+				// in the future (for non-forced flatpaks) we have a use for this; for now
+				// we don't
+				if bpFlatpak.Registry == nil {
+					return isc, fmt.Errorf("registry is mandatory for blueprint flatpak")
+				}
+
+				registry, err := flatpak.NewRegistryFromURI(bpFlatpak.Registry.URL)
+				if err != nil {
+					return isc, err
+				}
+
+				for _, reference := range bpFlatpak.References {
+					ref, err := flatpak.NewReferenceFromString(reference)
+					if err != nil {
+						return isc, err
+					}
+
+					isc.Flatpaks = append(isc.Flatpaks, flatpak.SourceSpec{
+						Registry:  *registry,
+						Reference: ref,
+					})
+				}
+			}
+		}
 	}
+
 	isc.KernelOptionsAppend = kernelOptions(t, c)
 
 	return isc, nil
