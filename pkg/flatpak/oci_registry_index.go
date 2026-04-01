@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -95,7 +96,10 @@ func fetchRegistryIndex(uri, os, tag string) (*ResponseRoot, error) {
 		return nil, err
 	}
 
-	uri += ENDPOINT_STATIC
+	uri, err = url.JoinPath(uri, ENDPOINT_STATIC)
+	if err != nil {
+		return nil, fmt.Errorf("could not format URI: %w", err)
+	}
 
 	req, err := http.NewRequest(http.MethodGet, uri, nil)
 	if err != nil {
@@ -140,7 +144,10 @@ func fetchDockerAPIConfigDigest(registry, name, digest string) (string, error) {
 		return "", err
 	}
 
-	uri := fmt.Sprintf("%sv2/%s/manifests/%s", registry, name, digest)
+	uri, err := url.JoinPath(registry, "v2", name, "manifests", digest)
+	if err != nil {
+		return "", fmt.Errorf("could not format URI: %w", err)
+	}
 
 	req, err := http.NewRequest(http.MethodGet, uri, nil)
 	if err != nil {
