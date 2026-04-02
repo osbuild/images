@@ -29,3 +29,10 @@ dnf -y install \
     python3-scp \
     yamllint \
     xz
+
+# We need this for the qemu boot tests and for any python tests but
+# could skip it for other testing. This can be removed once we figure
+# out why it actually does not work:
+#
+#   https://github.com/osbuild/images/issues/2288
+pip install .
