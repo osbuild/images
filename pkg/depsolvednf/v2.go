@@ -47,6 +47,7 @@ type v2Repository struct {
 	MetadataExpire string   `json:"metadata_expire,omitempty"`
 	ModuleHotfixes *bool    `json:"module_hotfixes,omitempty"`
 	RHSM           bool     `json:"rhsm,omitempty"`
+	RHUI           bool     `json:"rhui,omitempty"`
 }
 
 // v2Package represents an RPM package with full metadata.
@@ -429,7 +430,12 @@ func (h *v2Handler) reposFromRPMMD(cfg *solverConfig, rpmRepos []rpmmd.RepoConfi
 			dr.SSLVerify = common.ToPtr(!*rr.IgnoreSSL)
 		}
 
-		if rr.RHSM {
+		if rr.RHUI {
+			// RHUI repos delegate secret discovery to osbuild-depsolve-dnf.
+			// The Python solver reads the host RHUI repo files and discovers
+			// SSL certs from /etc/pki/rhui/ directly.
+			dr.RHUI = true
+		} else if rr.RHSM {
 			// TODO: Enable V2 RHSM secrets discovery by setting dr.RHSM = true
 			// and removing the client-side secrets resolution below.
 			// This requires functional testing to ensure RHSM secrets discovery
@@ -539,9 +545,14 @@ func (h *v2Handler) toRPMMDPackage(pkg v2Package, repo *rpmmd.RepoConfig) (rpmmd
 		rpmPkg.IgnoreSSL = *repo.IgnoreSSL
 	}
 
-	// Set mTLS secrets if SSLClientKey is set.
-	// The Solver will override secrets to 'org.osbuild.rhsm' if the repo needs RHSM secrets.
-	if repo.SSLClientKey != "" {
+	// Set secrets based on the repository's authentication type.
+	// The solver response includes rhui/rhsm flags indicating which
+	// secrets provider to use for packages from this repo.
+	if repo.RHUI {
+		rpmPkg.Secrets = "org.osbuild.rhui"
+	} else if repo.RHSM {
+		rpmPkg.Secrets = "org.osbuild.rhsm"
+	} else if repo.SSLClientKey != "" {
 		rpmPkg.Secrets = "org.osbuild.mtls"
 	}
 
@@ -604,6 +615,7 @@ func (h *v2Handler) toRPMMDRepoConfig(repo v2Repository) rpmmd.RepoConfig {
 		SSLClientKey:   repo.SSLClientKey,
 		SSLClientCert:  repo.SSLClientCert,
 		RHSM:           repo.RHSM,
+		RHUI:           repo.RHUI,
 	}
 }
 
