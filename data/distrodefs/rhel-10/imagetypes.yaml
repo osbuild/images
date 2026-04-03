@@ -2673,3 +2673,68 @@ image_types:
             - "rpm-plugin-audit"
             - "shadow-utils"
             - "tzdata"
+
+  "minimal-raw":
+    filename: "disk.raw.xz"
+    mime_type: "application/xz"
+    compression: "xz"
+    bootable: true
+    default_size: "4 GiB"
+    image_func: "disk"
+    exports: ["xz"]
+    required_partition_sizes: *default_required_dir_sizes
+    platforms:
+      - <<: *x86_64_uefi_platform
+        image_format: "raw"
+      - <<: *aarch64_platform
+        image_format: "raw"
+    partition_table:
+      x86_64: &partition_table_minimal_raw_x86_64
+        uuid: "D209C89E-EA5E-4FBD-B161-B461CCE297E0"
+        type: "gpt"
+        start_offset: 8_388_608  # 8 * datasizes.MebiByte,
+        partitions:
+          - &minimal_raw_partition_table_part_efi
+            size: "200 MiB"
+            type: *efi_system_partition_guid
+            payload_type: "filesystem"
+            payload:
+              type: vfat
+              mountpoint: "/boot/efi"
+              label: "ESP"
+              fstab_options: "defaults,uid=0,gid=0,umask=077,shortname=winnt"
+              fstab_freq: 0
+              fstab_passno: 2
+          - &minimal_raw_partition_table_part_root
+            size: "2 GiB"
+            type: *filesystem_data_guid
+            payload_type: "filesystem"
+            payload:
+              <<: *default_partition_table_part_root_payload
+      aarch64: &partition_table_minimal_raw_aarch64
+        <<: *partition_table_minimal_raw_x86_64
+    image_config:
+      enabled_services:
+        - "NetworkManager.service"
+        - "firewalld.service"
+        - "sshd.service"
+        - "initial-setup.service"
+      files:
+        # Triggers Anaconda's initial-setup to reconfigure the system when it
+        # boots the first time.
+        - path: "/etc/reconfigSys"
+          user: "root"
+          group: "root"
+          data: ""
+      kernel_options: ["ro"]
+    package_sets:
+      os:
+        - include:
+            - "@core"
+            - "initial-setup"
+            - "libxkbcommon"
+            - "NetworkManager-wifi"
+            - "iwl7260-firmware"
+            - "iwl3160-firmware"
+    blueprint:
+      supported_options: *supported_options_disk
