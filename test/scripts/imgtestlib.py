@@ -17,7 +17,8 @@ S3_PREFIX = "images/builds"
 
 REGISTRY = "registry.gitlab.com/redhat/services/products/image-builder/ci/images"
 
-SCHUTZFILE = "Schutzfile"
+# Path to the Schutzfile relative to the root of the repository
+SCHUTZFILE = str(pathlib.Path(__file__).resolve().parents[2] / "Schutzfile")
 OS_RELEASE_FILE = "/etc/os-release"
 
 # image types that can be boot tested
@@ -37,6 +38,7 @@ CAN_BOOT_TEST = {
         "image-installer", "minimal-installer", "network-installer",
         "qcow2", "generic-qcow2", "cloud-qcow2",
         "wsl", "generic-wsl",
+        "bootc-generic-iso",
     ]
 }
 
@@ -288,7 +290,22 @@ def read_manifests(path):
     return manifests
 
 
-# pylint: disable=too-many-return-statements
+def _is_bootc_manifest(manifest_data):
+    """
+    Check if the manifest is a bootc manifest by looking for the
+    `org.osbuild.bootc.install-to-filesystem` stage in any of the pipelines
+    other than the build pipeline.
+    """
+    for pipeline in manifest_data.get("pipelines", []):
+        if pipeline.get("name") == "build":
+            continue
+        for stage in pipeline.get("stages", []):
+            if stage.get("type") == "org.osbuild.bootc.install-to-filesystem":
+                return True
+    return False
+
+
+# pylint: disable=too-many-return-statements,too-many-branches
 def can_boot_test(manifest_fname, manifest_data, image_type, arch, distro, blueprint):
     if not image_type in CAN_BOOT_TEST.get("*", []) + CAN_BOOT_TEST.get(arch, []):
         return False
@@ -315,23 +332,24 @@ def can_boot_test(manifest_fname, manifest_data, image_type, arch, distro, bluep
             return False
 
     if image_type in ["qcow2", "generic-qcow2", "cloud-qcow2", "image-installer", "minimal-installer",
-                      "network-installer", "everything-network-installer"]:
+                      "network-installer", "everything-network-installer", "bootc-generic-iso"]:
         if blueprint.get("customizations", {}).get("fips") and distro.startswith("fedora"):
             print("  not bootable: fips on fedora is unstable, fails with e.g. dracut:"
                   "FATAL: FIPS integrity test failed")
             return False
-        # Note that this needs adjustment when we switch to librepo
-        urls = [src["url"] for src in manifest_data["sources"]["org.osbuild.curl"]["items"].values()]
-        if not any("ssh-server" in url for url in urls):
-            # This can happen e.g. when an image is build with the "minimal: true" customization.
-            # We could use guestfs to inject keys, see PR#1995
-            print(f"  not bootable: ssh-server not found in manifest {manifest_fname} ({arch} {image_type})")
-            return False
-        # We need jq in the image many images do not have it
-        # (e.g. centos-9/rhel-9 with releasever config) so skip those too
-        if not any("jq" in url for url in urls):
-            print(f"  not bootable: jq not found in {manifest_fname} ({arch} {image_type})")
-            return False
+        if not image_type.startswith("bootc-") and not _is_bootc_manifest(manifest_data):
+            # Note that this needs adjustment when we switch to librepo
+            urls = [src["url"] for src in manifest_data["sources"]["org.osbuild.curl"]["items"].values()]
+            if not any("ssh-server" in url for url in urls):
+                # This can happen e.g. when an image is build with the "minimal: true" customization.
+                # We could use guestfs to inject keys, see PR#1995
+                print(f"  not bootable: ssh-server not found in manifest {manifest_fname} ({arch} {image_type})")
+                return False
+            # We need jq in the image many images do not have it
+            # (e.g. centos-9/rhel-9 with releasever config) so skip those too
+            if not any("jq" in url for url in urls):
+                print(f"  not bootable: jq not found in {manifest_fname} ({arch} {image_type})")
+                return False
 
     return True
 
@@ -519,13 +537,16 @@ def get_host_distro():
 
 def get_osbuild_commit(distro_version):
     """
-    Get the osbuild commit defined in the Schutzfile for the host distro.
+    Get the osbuild commit defined in the Schutzfile for the host distro or common.
     If not set, returns None.
     """
     with open(SCHUTZFILE, encoding="utf-8") as schutzfile:
         data = json.load(schutzfile)
 
-    return data.get(distro_version, {}).get("dependencies", {}).get("osbuild", {}).get("commit", None)
+    commit = data.get(distro_version, {}).get("dependencies", {}).get("osbuild", {}).get("commit", None)
+    if commit is None:
+        commit = data.get("common", {}).get("dependencies", {}).get("osbuild", {}).get("commit", None)
+    return commit
 
 
 def get_bib_ref():
@@ -536,7 +557,7 @@ def get_bib_ref():
     with open(SCHUTZFILE, encoding="utf-8") as schutzfile:
         data = json.load(schutzfile)
 
-    return data.get("common", {}).get("bootc-image-builder", {}).get("ref", None)
+    return data.get("common", {}).get("dependencies", {}).get("bootc-image-builder", {}).get("ref", None)
 
 
 def rng_seed_env():
@@ -660,25 +681,28 @@ def get_common_ci_runner_distro():
 
 def find_image_file(build_path: str) -> str:
     """
-    Find the path to the image by reading the manifest to get the name of the last pipeline and searching for the file
-    under the directory named after the pipeline. Raises RuntimeError if no or multiple files are found in the expected
-    path.
+    Find the path to the image by reading the manifest and finding the exported pipeline's output directory.
+    A manifest may contain multiple pipelines but only one is exported during a build. This function finds the
+    exported pipeline by checking which pipeline directory exists in the build output.
+    Raises RuntimeError if no or multiple exported directories are found, or if the directory doesn't contain
+    exactly one file.
     """
     manifest_file = os.path.join(build_path, "manifest.json")
     with open(manifest_file, encoding="utf-8") as manifest:
         data = json.load(manifest)
 
-    last_pipeline = data["pipelines"][-1]["name"]
-    files = os.listdir(os.path.join(build_path, last_pipeline))
-    if len(files) > 1:
-        error = "Multiple files found in build path while searching for image file"
-        error += "\n".join(files)
-        raise RuntimeError(error)
+    pipeline_names = [p["name"] for p in data["pipelines"] if p["name"] != "build"]
+    export_dirs = [p for p in pipeline_names if os.path.isdir(os.path.join(build_path, p))]
 
-    if len(files) == 0:
-        raise RuntimeError("No found in build path while searching for image file")
+    if len(export_dirs) != 1:
+        raise RuntimeError(f"Expected exactly one exported pipeline directory in {build_path}, found: {export_dirs}")
 
-    return os.path.join(build_path, last_pipeline, files[0])
+    files = os.listdir(os.path.join(build_path, export_dirs[0]))
+    if len(files) != 1:
+        raise RuntimeError(
+            f"Expected exactly one file in export directory '{export_dirs[0]}', found: {files}")
+
+    return os.path.join(build_path, export_dirs[0], files[0])
 
 
 def read_build_info(build_path: str) -> Dict:
