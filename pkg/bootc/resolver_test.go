@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/osbuild/images/internal/common"
 	"github.com/osbuild/images/pkg/bootc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -205,9 +206,9 @@ func TestRootfsTypeHappy(t *testing.T) {
 echo '%s'
 `, jsonStr))
 		cnt := bootc.Container{}
-		rootfs, err := cnt.DefaultRootfsType()
+		installConfig, err := cnt.InstallConfiguration()
 		assert.NoError(t, err)
-		assert.Equal(t, tc, rootfs)
+		assert.Equal(t, tc, installConfig.Filesystem.Root.Type)
 	}
 }
 
@@ -218,7 +219,51 @@ func TestRootfsTypeSad(t *testing.T) {
 echo '%s'
 `, jsonStr))
 		cnt := bootc.Container{}
-		_, err := cnt.DefaultRootfsType()
+		_, err := cnt.InstallConfiguration()
 		assert.ErrorContains(t, err, "unsupported root filesystem type: ext1, supported: ")
+	}
+}
+
+func TestUnifiedKernelHappy(t *testing.T) {
+	for _, tc := range []struct {
+		In  string
+		Out bool
+	}{
+		{`{"kernel": {"unified": true}}`, true},
+		{`{"kernel": {"unified": false}}`, false},
+		{`{"kernel": {}}`, false},
+		{`{}`, false},
+	} {
+		makeFakePodman(t, fmt.Sprintf(`#!/bin/sh
+echo '%s'
+`, tc.In))
+		cnt := bootc.Container{}
+		unified, err := cnt.UnifiedKernel()
+		assert.NoError(t, err)
+		assert.Equal(t, tc.Out, unified)
+	}
+}
+
+func TestBootloaderHappy(t *testing.T) {
+	for _, tc := range []struct {
+		In  string
+		Out *string
+	}{
+		{"", nil},
+		{"systemd", common.ToPtr("systemd")},
+		{"none", common.ToPtr("none")},
+		{"grub", common.ToPtr("grub")},
+	} {
+		jsonStr := "{}"
+		if tc.In != "" {
+			jsonStr = fmt.Sprintf(`{"bootloader": "%s"}`, tc.In)
+		}
+		makeFakePodman(t, fmt.Sprintf(`#!/bin/sh
+echo '%s'
+`, jsonStr))
+		cnt := bootc.Container{}
+		installConfig, err := cnt.InstallConfiguration()
+		assert.NoError(t, err)
+		assert.Equal(t, tc.Out, installConfig.Bootloader)
 	}
 }
