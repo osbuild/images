@@ -11,8 +11,10 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"runtime/debug"
 	"slices"
 	"strings"
@@ -237,6 +239,7 @@ func makeManifestJob(
 	tmpdirRoot string,
 	bootcRemote bool,
 	bootcInstallerRef string,
+	cs *Checksums,
 ) manifestJob {
 	name := bc.Name
 	distroName := distribution.Name()
@@ -384,13 +387,23 @@ func makeManifestJob(
 			Repositories: allRepos,
 			Config:       bc,
 		}
-		err = save(mf, depsolvedSets, containerSpecs, commitSpecs, flatpakSpecs, request, path, filename, metadata)
+		if cs != nil {
+			err = cs.recordManifestChecksum(mf, depsolvedSets, containerSpecs, commitSpecs, flatpakSpecs, request, filename, metadata)
+		} else {
+			fpath := filepath.Join(path, filename)
+			fp, createErr := os.Create(fpath)
+			if createErr != nil {
+				return fmt.Errorf("failed to create output file %q: %s\n", fpath, createErr.Error())
+			}
+			defer fp.Close()
+			err = save(fp, true, mf, depsolvedSets, containerSpecs, commitSpecs, flatpakSpecs, request, filename, metadata)
+		}
 		return
 	}
 	return job
 }
 
-func save(ms manifest.OSBuildManifest, depsolved map[string]depsolvednf.DepsolveResult, containers map[string][]container.Spec, commits map[string][]ostree.CommitSpec, flatpaks map[string][]flatpak.Spec, cr buildRequest, path, filename string, metadata bool) error {
+func save(w io.Writer, indent bool, ms manifest.OSBuildManifest, depsolved map[string]depsolvednf.DepsolveResult, containers map[string][]container.Spec, commits map[string][]ostree.CommitSpec, flatpaks map[string][]flatpak.Spec, cr buildRequest, filename string, metadata bool) error {
 	var data any
 	if metadata {
 		rpmmds := make(map[string]rpmmd.PackageList)
@@ -411,19 +424,19 @@ func save(ms manifest.OSBuildManifest, depsolved map[string]depsolvednf.Depsolve
 	} else {
 		data = ms
 	}
-	b, err := json.MarshalIndent(data, "", "  ")
+	var b []byte
+	var err error
+	if indent {
+		b, err = json.MarshalIndent(data, "", "  ")
+	} else {
+		b, err = json.Marshal(data)
+	}
 	if err != nil {
 		return fmt.Errorf("failed to marshal data for %q: %s\n", filename, err.Error())
 	}
 	b = append(b, '\n') // add new line at end of file
-	fpath := filepath.Join(path, filename)
-	fp, err := os.Create(fpath)
-	if err != nil {
-		return fmt.Errorf("failed to create output file %q: %s\n", fpath, err.Error())
-	}
-	defer fp.Close()
-	if _, err := fp.Write(b); err != nil {
-		return fmt.Errorf("failed to write output file %q: %s\n", fpath, err.Error())
+	if _, err := w.Write(b); err != nil {
+		return fmt.Errorf("failed to write output for %q: %s\n", filename, err.Error())
 	}
 	return nil
 }
@@ -438,7 +451,7 @@ func main() {
 	var nWorkers int
 	var metadata, skipNoconfig, skipNorepos, buildconfigAllowUnknown bool
 	flag.StringVar(&outputDir, "output", "test/data/manifests/", "manifest store directory")
-	flag.IntVar(&nWorkers, "workers", 16, "number of workers to run concurrently")
+	flag.IntVar(&nWorkers, "workers", runtime.NumCPU()+1, "number of workers to run concurrently")
 	flag.StringVar(&cacheRoot, "cache", "/tmp/rpmmd", "rpm metadata cache directory")
 	flag.BoolVar(&metadata, "metadata", true, "store metadata in the file")
 	flag.StringVar(&configPath, "config", "", "image config file to use for all images (overrides -config-list)")
@@ -472,6 +485,9 @@ func main() {
 	var dryRun bool
 	flag.BoolVar(&dryRun, "dry-run", false, "print what manifests would be generated")
 
+	var checksumsOnly bool
+	flag.BoolVar(&checksumsOnly, "checksums-only", false, "write manifest SHA-256 checksum files instead of JSON manifests")
+
 	flag.Parse()
 
 	testedRepoRegistry, err := testrepos.New()
@@ -500,6 +516,11 @@ func main() {
 
 	if err := os.MkdirAll(outputDir, 0770); err != nil {
 		panic(fmt.Sprintf("failed to create target directory: %s", err.Error()))
+	}
+
+	var cs *Checksums
+	if checksumsOnly {
+		cs = newChecksums(outputDir)
 	}
 
 	// temporary directory for mocking file embeds with URIs (and anything else
@@ -575,7 +596,7 @@ func main() {
 					if dryRun {
 						fmt.Printf("%s,%s,%s,%s\n", distribution.Name(), archName, imgType.Name(), itConfig.Name)
 					} else {
-						job := makeManifestJob(itConfig, imgType, distribution, repos, archName, cacheRoot, outputDir, contentResolve, metadata, tmpdirRoot, false, "")
+						job := makeManifestJob(itConfig, imgType, distribution, repos, archName, cacheRoot, outputDir, contentResolve, metadata, tmpdirRoot, false, "", cs)
 						jobs = append(jobs, job)
 					}
 				}
@@ -642,7 +663,7 @@ func main() {
 						fmt.Printf("%s,%s,%s,%s\n", distribution.Name(), archName, imgType.Name(), itConfig.Name)
 					} else {
 						var repos []rpmmd.RepoConfig
-						job := makeManifestJob(itConfig, imgType, distribution, repos, archName, cacheRoot, outputDir, contentResolve, metadata, tmpdirRoot, bootcRemote, bootcInstallerRef)
+						job := makeManifestJob(itConfig, imgType, distribution, repos, archName, cacheRoot, outputDir, contentResolve, metadata, tmpdirRoot, bootcRemote, bootcInstallerRef, cs)
 						jobs = append(jobs, job)
 					}
 				}
@@ -731,7 +752,7 @@ func main() {
 						}
 
 						var repos []rpmmd.RepoConfig
-						job := makeManifestJob(itConfig, imgType, distribution, repos, archName, cacheRoot, outputDir, contentResolve, metadata, tmpdirRoot, bootcRemote, bootcInstallerRef)
+						job := makeManifestJob(itConfig, imgType, distribution, repos, archName, cacheRoot, outputDir, contentResolve, metadata, tmpdirRoot, bootcRemote, bootcInstallerRef, cs)
 						jobs = append(jobs, job)
 					}
 				}
@@ -767,6 +788,11 @@ func main() {
 			fmt.Fprintf(os.Stderr, "\nStack trace of the first error:\n%s\n", err1.stack)
 		}
 		exit = 1
+	} else if cs != nil {
+		if err := cs.deleteStaleChecksums(); err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+			exit = 1
+		}
 	}
 	fmt.Fprintf(os.Stderr, "RPM metadata cache kept in %s\n", cacheRoot)
 	os.Exit(exit)
