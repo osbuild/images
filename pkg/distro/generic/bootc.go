@@ -80,8 +80,21 @@ func NewBootcWithLoader(loader *defs.Loader, name string, cinfo *bootc.Info) (*B
 	if cinfo.Arch == "" {
 		missing = append(missing, "Arch")
 	}
+	// DefaultRootFs can be derived from the partition table in disk.yaml if not
+	// provided by the bootc container's install configuration. This allows
+	// containers to define their root filesystem type via disk.yaml instead of
+	// requiring bootc install print-configuration to return it.
 	if cinfo.DefaultRootFs == "" {
-		missing = append(missing, "DefaultRootFs")
+		if cinfo.OSInfo != nil && cinfo.OSInfo.PartitionTable != nil {
+			rootMountable := cinfo.OSInfo.PartitionTable.FindMountable("/")
+			if rootMountable != nil {
+				cinfo.DefaultRootFs = rootMountable.GetFSType()
+			}
+		}
+		// Only report as missing if we couldn't derive it from the partition table
+		if cinfo.DefaultRootFs == "" {
+			missing = append(missing, "DefaultRootFs")
+		}
 	}
 	if cinfo.Size == 0 {
 		missing = append(missing, "Size")
